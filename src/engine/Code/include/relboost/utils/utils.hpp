@@ -12,22 +12,22 @@
 #include <type_traits>
 #include <vector>
 
-#include "enums/enums.hpp"
+#include "relboost/enums/enums.hpp"
 
-#include "containers/containers.hpp"
+#include "relboost/containers/containers.hpp"
 
-#include "Hyperparameters.hpp"
+#include "relboost/Hyperparameters.hpp"
 
 // ------------------------------------------------------------------------
 
-#include "utils/ConditionMaker.hpp"
-#include "utils/CriticalValueSorter.hpp"
-#include "utils/CriticalValues.hpp"
-#include "utils/Finder.hpp"
-#include "utils/Matchmaker.hpp"
-#include "utils/Partitioner.hpp"
-#include "utils/Sampler.hpp"
-#include "utils/Sorter.hpp"
+#include "relboost/utils/ConditionMaker.hpp"
+#include "relboost/utils/CriticalValueSorter.hpp"
+#include "relboost/utils/CriticalValues.hpp"
+#include "relboost/utils/Finder.hpp"
+#include "relboost/utils/Matchmaker.hpp"
+#include "relboost/utils/Partitioner.hpp"
+#include "relboost/utils/Sampler.hpp"
+#include "relboost/utils/Sorter.hpp"
 
 // ----------------------------------------------------------------------------
 

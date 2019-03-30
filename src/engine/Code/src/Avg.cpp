@@ -1,4 +1,4 @@
-#include "aggregations/aggregations.hpp"
+#include "relboost/aggregations/aggregations.hpp"
 
 namespace relboost
 {

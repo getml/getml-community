@@ -6,17 +6,17 @@
 
 #include <memory>
 
-#include "containers/containers.hpp"
+#include "relboost/containers/containers.hpp"
 
-#include "lossfunctions/lossfunctions.hpp"
+#include "relboost/lossfunctions/lossfunctions.hpp"
 
 // ----------------------------------------------------------------------------
 
-#include "aggregations/AggregationImpl.hpp"
+#include "relboost/aggregations/AggregationImpl.hpp"
 
-#include "aggregations/Avg.hpp"
+#include "relboost/aggregations/Avg.hpp"
 
-#include "aggregations/Sum.hpp"
+#include "relboost/aggregations/Sum.hpp"
 
 // ----------------------------------------------------------------------------
 

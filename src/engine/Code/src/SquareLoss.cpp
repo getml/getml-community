@@ -1,4 +1,4 @@
-#include "lossfunctions/lossfunctions.hpp"
+#include "relboost/lossfunctions/lossfunctions.hpp"
 
 namespace relboost
 {

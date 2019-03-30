@@ -1,4 +1,4 @@
-#include "Hyperparameters.hpp"
+#include "relboost/Hyperparameters.hpp"
 
 namespace relboost
 {

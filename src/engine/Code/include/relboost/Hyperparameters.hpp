@@ -8,9 +8,9 @@
 
 #include <Poco/JSON/Object.h>
 
-#include "types.hpp"
+#include "relboost/types.hpp"
 
-#include "JSON.hpp"
+#include "relboost/JSON.hpp"
 
 // ----------------------------------------------------------------------------
 

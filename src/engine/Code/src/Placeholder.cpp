@@ -1,4 +1,4 @@
-#include "ensemble/ensemble.hpp"
+#include "relboost/ensemble/ensemble.hpp"
 
 namespace relboost
 {

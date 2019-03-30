@@ -3,10 +3,10 @@
 
 // ----------------------------------------------------------------------------
 
-#include "enums/Aggregation.hpp"
-#include "enums/DataUsed.hpp"
-#include "enums/Revert.hpp"
-#include "enums/Update.hpp"
+#include "relboost/enums/Aggregation.hpp"
+#include "relboost/enums/DataUsed.hpp"
+#include "relboost/enums/Revert.hpp"
+#include "relboost/enums/Update.hpp"
 
 // ----------------------------------------------------------------------------
 

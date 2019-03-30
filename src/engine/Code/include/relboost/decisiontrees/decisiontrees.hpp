@@ -9,21 +9,21 @@
 
 #include <Poco/JSON/Object.h>
 
-#include "types.hpp"
+#include "relboost/types.hpp"
 
-#include "Hyperparameters.hpp"
+#include "relboost/Hyperparameters.hpp"
 
-#include "lossfunctions/lossfunctions.hpp"
+#include "relboost/lossfunctions/lossfunctions.hpp"
 
-#include "aggregations/aggregations.hpp"
+#include "relboost/aggregations/aggregations.hpp"
 
-#include "utils/utils.hpp"
+#include "relboost/utils/utils.hpp"
 
 // ----------------------------------------------------------------------------
 
-#include "decisiontrees/DecisionTreeNode.hpp"
+#include "relboost/decisiontrees/DecisionTreeNode.hpp"
 
-#include "decisiontrees/DecisionTree.hpp"
+#include "relboost/decisiontrees/DecisionTree.hpp"
 
 // ----------------------------------------------------------------------------
 

@@ -1,4 +1,4 @@
-#include "decisiontrees/decisiontrees.hpp"
+#include "relboost/decisiontrees/decisiontrees.hpp"
 
 namespace relboost
 {

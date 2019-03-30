@@ -11,9 +11,9 @@
 
 // ----------------------------------------------------------------------------
 
-#include "debug/Debugger.hpp"
+#include "relboost/debug/Debugger.hpp"
 
-#include "debug/debug_log.hpp"
+#include "relboost/debug/debug_log.hpp"
 
 // ----------------------------------------------------------------------------
 

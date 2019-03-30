@@ -10,7 +10,7 @@
 
 #include <Poco/JSON/Parser.h>
 
-#include "enums/enums.hpp"
+#include "relboost/enums/enums.hpp"
 
 // ------------------------------------------------------------------------
 

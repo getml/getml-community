@@ -1,4 +1,4 @@
-#include "tests/tests.hpp"
+#include "relboost/tests/tests.hpp"
 
 int main( int argc, char* argv[] )
 {

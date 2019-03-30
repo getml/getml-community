@@ -15,23 +15,23 @@
 
 #include <Eigen/Dense>
 
-#include "types.hpp"
+#include "relboost/types.hpp"
 
-#include "Hyperparameters.hpp"
+#include "relboost/Hyperparameters.hpp"
 
-#include "containers/containers.hpp"
+#include "relboost/containers/containers.hpp"
 
-#include "enums/enums.hpp"
+#include "relboost/enums/enums.hpp"
 
 // ----------------------------------------------------------------------------
 
-#include "lossfunctions/LossFunction.hpp"
+#include "relboost/lossfunctions/LossFunction.hpp"
 
-#include "lossfunctions/LossFunctionImpl.hpp"
+#include "relboost/lossfunctions/LossFunctionImpl.hpp"
 
-#include "lossfunctions/SquareLoss.hpp"
+#include "relboost/lossfunctions/SquareLoss.hpp"
 
-#include "lossfunctions/LossFunctionParser.hpp"
+#include "relboost/lossfunctions/LossFunctionParser.hpp"
 
 // ----------------------------------------------------------------------------
 

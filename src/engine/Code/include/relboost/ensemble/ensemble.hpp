@@ -13,25 +13,25 @@
 #include <Poco/JSON/Object.h>
 #include <Poco/JSON/Stringifier.h>
 
-#include "types.hpp"
+#include "relboost/types.hpp"
 
-#include "debug/debug.hpp"
+#include "relboost/debug/debug.hpp"
 
-#include "Hyperparameters.hpp"
+#include "relboost/Hyperparameters.hpp"
 
-#include "lossfunctions/lossfunctions.hpp"
+#include "relboost/lossfunctions/lossfunctions.hpp"
 
-#include "decisiontrees/decisiontrees.hpp"
+#include "relboost/decisiontrees/decisiontrees.hpp"
 
 // ----------------------------------------------------------------------------
 
-#include "ensemble/Placeholder.hpp"
+#include "relboost/ensemble/Placeholder.hpp"
 
-#include "ensemble/TableHolder.hpp"
+#include "relboost/ensemble/TableHolder.hpp"
 
-#include "ensemble/DecisionTreeEnsembleImpl.hpp"
+#include "relboost/ensemble/DecisionTreeEnsembleImpl.hpp"
 
-#include "ensemble/DecisionTreeEnsemble.hpp"
+#include "relboost/ensemble/DecisionTreeEnsemble.hpp"
 
 // ----------------------------------------------------------------------------
 
