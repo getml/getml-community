@@ -1,0 +1,10 @@
+{
+    "eta_": 1.0,
+    "gamma_": 1.0,
+    "lambda_": 1e-100,
+    "max_depth_": 2,
+    "n_iter_": 10,
+    "objective_": "SquareLoss",
+    "silent_": true,
+    "use_timestamps_": true
+}

@@ -1,0 +1,4 @@
+/Users/patrickurbanke/autosql/relboost/relboost-0.8-macos/build/CMakeFiles/rebuild_cache.dir
+/Users/patrickurbanke/autosql/relboost/relboost-0.8-macos/build/CMakeFiles/edit_cache.dir
+/Users/patrickurbanke/autosql/relboost/relboost-0.8-macos/build/CMakeFiles/relboost-0.8-macos-64bit.dir
+/Users/patrickurbanke/autosql/relboost/relboost-0.8-macos/build/CMakeFiles/relboost-0.8-macos-64bit-test.dir

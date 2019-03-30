@@ -1,0 +1,713 @@
+#ifndef RELBOOST_UTILS_PARTITIONER_HPP_
+#define RELBOOST_UTILS_PARTITIONER_HPP_
+
+// ----------------------------------------------------------------------------
+
+namespace relboost
+{
+namespace utils
+{
+// ----------------------------------------------------------------------------
+// This uses template specialization to implement different partition functions
+// for the different enumerations of DataUsed.
+
+template <enums::DataUsed>
+struct Partitioner
+{
+};
+
+// ----------------------------------------------------------------------------
+
+template <>
+struct Partitioner<enums::DataUsed::categorical_input>
+{
+    // --------------------------------------------------------------------
+
+    static std::vector<const containers::Match*>::iterator partition(
+        const containers::Split& _split,
+        const containers::DataFrame& _input,
+        const std::vector<const containers::Match*>::iterator _begin,
+        const std::vector<const containers::Match*>::iterator _end )
+    {
+        const auto partition_function =
+            [&_split, &_input]( const containers::Match* ptr ) {
+                return is_greater( _split, _input, *ptr );
+            };
+
+        return std::partition( _begin, _end, partition_function );
+    }
+
+    // --------------------------------------------------------------------
+
+    static bool is_greater(
+        const containers::Split& _split,
+        const containers::DataFrame& _input,
+        const containers::Match& _match )
+    {
+        const auto i = _match.ix_input;
+        const auto j = _split.column_;
+
+        assert( i < _input.nrows() );
+        assert( j < _input.categorical_.colnames_.size() );
+
+        const auto it = std::find(
+            _split.categories_used_begin_,
+            _split.categories_used_end_,
+            _input.categorical_( i, j ) );
+
+        return it != _split.categories_used_end_;
+    }
+
+    // --------------------------------------------------------------------
+};
+
+// ----------------------------------------------------------------------------
+
+template <>
+struct Partitioner<enums::DataUsed::categorical_output>
+{
+    // --------------------------------------------------------------------
+
+    static std::vector<const containers::Match*>::iterator partition(
+        const containers::Split& _split,
+        const containers::DataFrame& _output,
+        const std::vector<const containers::Match*>::iterator _begin,
+        const std::vector<const containers::Match*>::iterator _end )
+    {
+        const auto partition_function =
+            [_split, &_output]( const containers::Match* ptr ) {
+                return is_greater( _split, _output, *ptr );
+            };
+
+        return std::partition( _begin, _end, partition_function );
+    }
+
+    // --------------------------------------------------------------------
+
+    static bool is_greater(
+        const containers::Split& _split,
+        const containers::DataFrame& _output,
+        const containers::Match& _match )
+    {
+        const auto i = _match.ix_output;
+        const auto j = _split.column_;
+
+        assert( i < _output.nrows() );
+        assert( j < _output.categorical_.colnames_.size() );
+
+        const auto it = std::find(
+            _split.categories_used_begin_,
+            _split.categories_used_end_,
+            _output.categorical_( i, j ) );
+
+        return it != _split.categories_used_end_;
+    }
+
+    // --------------------------------------------------------------------
+};
+
+// ----------------------------------------------------------------------------
+
+template <>
+struct Partitioner<enums::DataUsed::discrete_input>
+{
+    // --------------------------------------------------------------------
+
+    static std::vector<const containers::Match*>::iterator partition(
+        const containers::Split& _split,
+        const containers::DataFrame& _input,
+        const std::vector<const containers::Match*>::iterator _begin,
+        const std::vector<const containers::Match*>::iterator _end )
+    {
+        const auto partition_function =
+            [&_split, &_input]( const containers::Match* ptr ) {
+                return is_greater( _split, _input, *ptr );
+            };
+
+        return std::partition( _begin, _end, partition_function );
+    }
+
+    // --------------------------------------------------------------------
+
+    static bool is_greater(
+        const containers::Split& _split,
+        const containers::DataFrame& _input,
+        const containers::Match& _match )
+    {
+        const auto i = _match.ix_input;
+        const auto j = _split.column_;
+
+        assert( i < _input.nrows() );
+        assert( j < _input.discrete_.colnames_.size() );
+
+        return _input.discrete_( i, j ) > _split.critical_value_;
+    }
+
+    // --------------------------------------------------------------------
+};
+
+// ----------------------------------------------------------------------------
+
+template <>
+struct Partitioner<enums::DataUsed::discrete_input_is_nan>
+{
+    static std::vector<const containers::Match*>::iterator partition(
+        const size_t _num_column,
+        const containers::DataFrame& _input,
+        const std::vector<const containers::Match*>::iterator _begin,
+        const std::vector<const containers::Match*>::iterator _end )
+    {
+        assert( _end >= _begin );
+
+        return std::partition(
+            _begin,
+            _end,
+            [_num_column, &_input]( const containers::Match* ptr ) {
+                return is_greater( _num_column, _input, *ptr );
+            } );
+    }
+
+    // --------------------------------------------------------------------
+
+    static bool is_greater(
+        const size_t _num_column,
+        const containers::DataFrame& _input,
+        const containers::Match& _match )
+    {
+        const auto i = _match.ix_input;
+
+        assert( i < _input.nrows() );
+        assert( _num_column < _input.discrete_.colnames_.size() );
+
+        return !std::isnan( _input.discrete_( _match.ix_input, _num_column ) );
+    }
+
+    // --------------------------------------------------------------------
+};
+
+// ----------------------------------------------------------------------------
+
+template <>
+struct Partitioner<enums::DataUsed::discrete_output>
+{
+    // --------------------------------------------------------------------
+
+    static std::vector<const containers::Match*>::iterator partition(
+        const containers::Split& _split,
+        const containers::DataFrame& _output,
+        const std::vector<const containers::Match*>::iterator _begin,
+        const std::vector<const containers::Match*>::iterator _end )
+    {
+        const auto partition_function =
+            [_split, &_output]( const containers::Match* ptr ) {
+                return is_greater( _split, _output, *ptr );
+            };
+
+        return std::partition( _begin, _end, partition_function );
+    }
+
+    // --------------------------------------------------------------------
+
+    static bool is_greater(
+        const containers::Split& _split,
+        const containers::DataFrame& _output,
+        const containers::Match& _match )
+    {
+        const auto i = _match.ix_output;
+        const auto j = _split.column_;
+
+        assert( i < _output.nrows() );
+        assert( j < _output.discrete_.colnames_.size() );
+
+        return ( _output.discrete_( i, j ) > _split.critical_value_ );
+    }
+
+    // --------------------------------------------------------------------
+};
+
+// ----------------------------------------------------------------------------
+
+template <>
+struct Partitioner<enums::DataUsed::discrete_output_is_nan>
+{
+    static std::vector<const containers::Match*>::iterator partition(
+        const size_t _num_column,
+        const containers::DataFrame& _output,
+        const std::vector<const containers::Match*>::iterator _begin,
+        const std::vector<const containers::Match*>::iterator _end )
+    {
+        assert( _end >= _begin );
+
+        return std::partition(
+            _begin,
+            _end,
+            [_num_column, &_output]( const containers::Match* ptr ) {
+                return is_greater( _num_column, _output, *ptr );
+            } );
+    }
+
+    // --------------------------------------------------------------------
+
+    static bool is_greater(
+        const size_t _num_column,
+        const containers::DataFrame& _output,
+        const containers::Match& _match )
+    {
+        const auto i = _match.ix_output;
+
+        assert( i < _output.nrows() );
+        assert( _num_column < _output.discrete_.colnames_.size() );
+
+        return !std::isnan(
+            _output.discrete_( _match.ix_output, _num_column ) );
+    }
+
+    // --------------------------------------------------------------------
+};
+
+// ----------------------------------------------------------------------------
+
+template <>
+struct Partitioner<enums::DataUsed::numerical_input>
+{
+    // --------------------------------------------------------------------
+
+    static std::vector<const containers::Match*>::iterator partition(
+        const containers::Split& _split,
+        const containers::DataFrame& _input,
+        const std::vector<const containers::Match*>::iterator _begin,
+        const std::vector<const containers::Match*>::iterator _end )
+    {
+        const auto partition_function =
+            [&_split, &_input]( const containers::Match* ptr ) {
+                return is_greater( _split, _input, *ptr );
+            };
+
+        return std::partition( _begin, _end, partition_function );
+    }
+
+    // --------------------------------------------------------------------
+
+    static bool is_greater(
+        const containers::Split& _split,
+        const containers::DataFrame& _input,
+        const containers::Match& _match )
+    {
+        const auto i = _match.ix_input;
+        const auto j = _split.column_;
+
+        assert( i < _input.nrows() );
+        assert( j < _input.numerical_.colnames_.size() );
+
+        return _input.numerical_( i, j ) > _split.critical_value_;
+    }
+
+    // --------------------------------------------------------------------
+};
+
+// ----------------------------------------------------------------------------
+
+template <>
+struct Partitioner<enums::DataUsed::numerical_input_is_nan>
+{
+    static std::vector<const containers::Match*>::iterator partition(
+        const size_t _num_column,
+        const containers::DataFrame& _input,
+        const std::vector<const containers::Match*>::iterator _begin,
+        const std::vector<const containers::Match*>::iterator _end )
+    {
+        assert( _end >= _begin );
+
+        return std::partition(
+            _begin,
+            _end,
+            [_num_column, &_input]( const containers::Match* ptr ) {
+                return is_greater( _num_column, _input, *ptr );
+            } );
+    }
+
+    // --------------------------------------------------------------------
+
+    static bool is_greater(
+        const size_t _num_column,
+        const containers::DataFrame& _input,
+        const containers::Match& _match )
+    {
+        const auto i = _match.ix_input;
+
+        assert( i < _input.nrows() );
+        assert( _num_column < _input.numerical_.colnames_.size() );
+
+        return !std::isnan( _input.numerical_( _match.ix_input, _num_column ) );
+    }
+
+    // --------------------------------------------------------------------
+};
+
+// ----------------------------------------------------------------------------
+
+template <>
+struct Partitioner<enums::DataUsed::numerical_output>
+{
+    // --------------------------------------------------------------------
+
+    static std::vector<const containers::Match*>::iterator partition(
+        const containers::Split& _split,
+        const containers::DataFrame& _output,
+        const std::vector<const containers::Match*>::iterator _begin,
+        const std::vector<const containers::Match*>::iterator _end )
+    {
+        const auto partition_function =
+            [_split, &_output]( const containers::Match* ptr ) {
+                return is_greater( _split, _output, *ptr );
+            };
+
+        return std::partition( _begin, _end, partition_function );
+    }
+
+    // --------------------------------------------------------------------
+
+    static bool is_greater(
+        const containers::Split& _split,
+        const containers::DataFrame& _output,
+        const containers::Match& _match )
+    {
+        const auto i = _match.ix_output;
+        const auto j = _split.column_;
+
+        assert( i < _output.nrows() );
+        assert( j < _output.numerical_.colnames_.size() );
+
+        return ( _output.numerical_( i, j ) > _split.critical_value_ );
+    }
+
+    // --------------------------------------------------------------------
+};
+
+// ----------------------------------------------------------------------------
+
+template <>
+struct Partitioner<enums::DataUsed::numerical_output_is_nan>
+{
+    static std::vector<const containers::Match*>::iterator partition(
+        const size_t _num_column,
+        const containers::DataFrame& _output,
+        const std::vector<const containers::Match*>::iterator _begin,
+        const std::vector<const containers::Match*>::iterator _end )
+    {
+        assert( _end >= _begin );
+
+        return std::partition(
+            _begin,
+            _end,
+            [_num_column, &_output]( const containers::Match* ptr ) {
+                return is_greater( _num_column, _output, *ptr );
+            } );
+    }
+
+    // --------------------------------------------------------------------
+
+    static bool is_greater(
+        const size_t _num_column,
+        const containers::DataFrame& _output,
+        const containers::Match& _match )
+    {
+        const auto i = _match.ix_output;
+
+        assert( i < _output.nrows() );
+        assert( _num_column < _output.numerical_.colnames_.size() );
+
+        return !std::isnan(
+            _output.numerical_( _match.ix_output, _num_column ) );
+    }
+
+    // --------------------------------------------------------------------
+};
+
+// ----------------------------------------------------------------------------
+
+template <>
+struct Partitioner<enums::DataUsed::same_units_categorical>
+{
+    // --------------------------------------------------------------------
+
+    static std::vector<const containers::Match*>::iterator partition(
+        const containers::Split& _split,
+        const containers::DataFrame& _input,
+        const containers::DataFrame& _output,
+        const std::vector<const containers::Match*>::iterator _begin,
+        const std::vector<const containers::Match*>::iterator _end )
+    {
+        const auto partition_function =
+            [_split, &_input, &_output]( const containers::Match* ptr ) {
+                return is_greater( _split, _input, _output, *ptr );
+            };
+
+        return std::partition( _begin, _end, partition_function );
+    }
+
+    // --------------------------------------------------------------------
+
+    static bool is_greater(
+        const containers::Split& _split,
+        const containers::DataFrame& _input,
+        const containers::DataFrame& _output,
+        const containers::Match& _match )
+    {
+        assert( _match.ix_input < _input.nrows() );
+        assert( _match.ix_output < _output.nrows() );
+
+        assert( _split.column_input_ < _input.categorical_.colnames_.size() );
+        assert( _split.column_ < _output.categorical_.colnames_.size() );
+
+        const bool is_same =
+            ( _input.categorical_( _match.ix_input, _split.column_input_ ) ==
+              _output.categorical_( _match.ix_output, _split.column_ ) );
+
+        return is_same;
+    }
+
+    // --------------------------------------------------------------------
+};
+
+// ----------------------------------------------------------------------------
+
+template <>
+struct Partitioner<enums::DataUsed::same_units_discrete>
+{
+    // --------------------------------------------------------------------
+
+    static std::vector<const containers::Match*>::iterator partition(
+        const containers::Split& _split,
+        const containers::DataFrame& _input,
+        const containers::DataFrame& _output,
+        const std::vector<const containers::Match*>::iterator _begin,
+        const std::vector<const containers::Match*>::iterator _end )
+    {
+        const auto partition_function =
+            [&_split, &_input, &_output]( const containers::Match* ptr ) {
+                return is_greater( _split, _input, _output, *ptr );
+            };
+
+        return std::partition( _begin, _end, partition_function );
+    }
+
+    // --------------------------------------------------------------------
+
+    static bool is_greater(
+        const containers::Split& _split,
+        const containers::DataFrame& _input,
+        const containers::DataFrame& _output,
+        const containers::Match& _match )
+    {
+        assert( _match.ix_input < _input.nrows() );
+        assert( _match.ix_output < _output.nrows() );
+
+        assert( _split.column_input_ < _input.discrete_.colnames_.size() );
+        assert( _split.column_ < _output.discrete_.colnames_.size() );
+
+        const auto diff =
+            _output.discrete_( _match.ix_output, _split.column_ ) -
+            _input.discrete_( _match.ix_input, _split.column_input_ );
+
+        return ( diff > _split.critical_value_ );
+    }
+
+    // --------------------------------------------------------------------
+};
+
+// ----------------------------------------------------------------------------
+
+template <>
+struct Partitioner<enums::DataUsed::same_units_discrete_is_nan>
+{
+    // --------------------------------------------------------------------
+
+    static std::vector<const containers::Match*>::iterator partition(
+        const size_t _input_col,
+        const size_t _output_col,
+        const containers::DataFrame& _input,
+        const containers::DataFrame& _output,
+        const std::vector<const containers::Match*>::iterator _begin,
+        const std::vector<const containers::Match*>::iterator _end )
+    {
+        const auto partition_function =
+            [_input_col, _output_col, &_input, &_output](
+                const containers::Match* ptr ) {
+                return is_greater(
+                    _input_col, _output_col, _input, _output, *ptr );
+            };
+
+        return std::partition( _begin, _end, partition_function );
+    }
+
+    // --------------------------------------------------------------------
+
+    static bool is_greater(
+        const size_t _input_col,
+        const size_t _output_col,
+        const containers::DataFrame& _input,
+        const containers::DataFrame& _output,
+        const containers::Match& _match )
+    {
+        assert( _match.ix_input < _input.nrows() );
+        assert( _match.ix_output < _output.nrows() );
+
+        assert( _input_col < _input.discrete_.colnames_.size() );
+        assert( _output_col < _output.discrete_.colnames_.size() );
+
+        const auto val1 = _input.discrete_( _match.ix_input, _input_col );
+        const auto val2 = _output.discrete_( _match.ix_output, _output_col );
+
+        return !std::isnan( val1 ) && !std::isnan( val2 );
+    }
+
+    // --------------------------------------------------------------------
+};
+
+// ----------------------------------------------------------------------------
+
+template <>
+struct Partitioner<enums::DataUsed::same_units_numerical>
+{
+    // --------------------------------------------------------------------
+
+    static std::vector<const containers::Match*>::iterator partition(
+        const containers::Split& _split,
+        const containers::DataFrame& _input,
+        const containers::DataFrame& _output,
+        const std::vector<const containers::Match*>::iterator _begin,
+        const std::vector<const containers::Match*>::iterator _end )
+    {
+        const auto partition_function =
+            [&_split, &_input, &_output]( const containers::Match* ptr ) {
+                return is_greater( _split, _input, _output, *ptr );
+            };
+
+        return std::partition( _begin, _end, partition_function );
+    }
+
+    // --------------------------------------------------------------------
+
+    static bool is_greater(
+        const containers::Split& _split,
+        const containers::DataFrame& _input,
+        const containers::DataFrame& _output,
+        const containers::Match& _match )
+    {
+        assert( _match.ix_input < _input.nrows() );
+        assert( _match.ix_output < _output.nrows() );
+
+        assert( _split.column_input_ < _input.numerical_.colnames_.size() );
+        assert( _split.column_ < _output.numerical_.colnames_.size() );
+
+        const auto diff =
+            _output.numerical_( _match.ix_output, _split.column_ ) -
+            _input.numerical_( _match.ix_input, _split.column_input_ );
+
+        return ( diff > _split.critical_value_ );
+    }
+
+    // --------------------------------------------------------------------
+};
+
+// ----------------------------------------------------------------------------
+
+template <>
+struct Partitioner<enums::DataUsed::same_units_numerical_is_nan>
+{
+    // --------------------------------------------------------------------
+
+    static std::vector<const containers::Match*>::iterator partition(
+        const size_t _input_col,
+        const size_t _output_col,
+        const containers::DataFrame& _input,
+        const containers::DataFrame& _output,
+        const std::vector<const containers::Match*>::iterator _begin,
+        const std::vector<const containers::Match*>::iterator _end )
+    {
+        const auto partition_function =
+            [_input_col, _output_col, &_input, &_output](
+                const containers::Match* ptr ) {
+                return is_greater(
+                    _input_col, _output_col, _input, _output, *ptr );
+            };
+
+        return std::partition( _begin, _end, partition_function );
+    }
+
+    // --------------------------------------------------------------------
+
+    static bool is_greater(
+        const size_t _input_col,
+        const size_t _output_col,
+        const containers::DataFrame& _input,
+        const containers::DataFrame& _output,
+        const containers::Match& _match )
+    {
+        assert( _match.ix_input < _input.nrows() );
+        assert( _match.ix_output < _output.nrows() );
+
+        assert( _input_col < _input.numerical_.colnames_.size() );
+        assert( _output_col < _output.numerical_.colnames_.size() );
+
+        const auto val1 = _input.numerical_( _match.ix_input, _input_col );
+        const auto val2 = _output.numerical_( _match.ix_output, _output_col );
+
+        return !std::isnan( val1 ) && !std::isnan( val2 );
+    }
+
+    // --------------------------------------------------------------------
+};
+
+// ----------------------------------------------------------------------------
+
+template <>
+struct Partitioner<enums::DataUsed::time_stamps_diff>
+{
+    // --------------------------------------------------------------------
+
+    static std::vector<const containers::Match*>::iterator partition(
+        const containers::Split& _split,
+        const containers::DataFrame& _input,
+        const containers::DataFrame& _output,
+        const std::vector<const containers::Match*>::iterator _begin,
+        const std::vector<const containers::Match*>::iterator _end )
+    {
+        const auto partition_function =
+            [_split, &_input, &_output]( const containers::Match* ptr ) {
+                return is_greater( _split, _input, _output, *ptr );
+            };
+
+        return std::partition( _begin, _end, partition_function );
+    }
+
+    // --------------------------------------------------------------------
+
+    static bool is_greater(
+        const containers::Split& _split,
+        const containers::DataFrame& _input,
+        const containers::DataFrame& _output,
+        const containers::Match& _match )
+    {
+        const auto in = _match.ix_input;
+        const auto out = _match.ix_output;
+
+        assert( in < _input.nrows() );
+        assert( out < _output.nrows() );
+
+        return (
+            _output.time_stamps( out ) - _input.time_stamps( in ) >
+            _split.critical_value_ );
+    }
+
+    // --------------------------------------------------------------------
+};
+
+// ----------------------------------------------------------------------------
+}  // namespace utils
+}  // namespace relboost
+
+// ----------------------------------------------------------------------------
+
+#endif  // RELBOOST_UTILS_PARTITIONER_HPP_

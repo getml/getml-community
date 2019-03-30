@@ -1,0 +1,468 @@
+#include "utils/utils.hpp"
+
+namespace relboost
+{
+namespace utils
+{
+// ----------------------------------------------------------------------------
+
+const std::shared_ptr<const std::vector<RELBOOST_INT>>
+CriticalValues::calc_categorical(
+    const enums::DataUsed _data_used,
+    const size_t _num_column,
+    const containers::DataFrame& _input,
+    const containers::DataFrame& _output,
+    const std::vector<const containers::Match*>::iterator _begin,
+    const std::vector<const containers::Match*>::iterator _end )
+{
+    // ---------------------------------------------------------------------------
+    // In parallel versions, it is possible that there are no sample sizes
+    // left in this process rank. In that case we effectively pass plus infinity
+    // to min and minus infinity to max, ensuring that they not will be the
+    // chosen minimum or maximum.
+
+    RELBOOST_INT min = std::numeric_limits<RELBOOST_INT>::max();
+
+    RELBOOST_INT max = std::numeric_limits<RELBOOST_INT>::min();
+
+    find_min_max(
+        _data_used, _num_column, _input, _output, _begin, _end, &min, &max );
+
+    // ---------------------------------------------------------------------------
+    // There is a possibility that all critical values are NAN in all processes.
+    // This accounts for this edge case.
+
+    if ( min >= max )
+        {
+            return std::make_shared<std::vector<RELBOOST_INT>>( 0 );
+        }
+
+    // ------------------------------------------------------------------------
+    // Find unique categories (signified by a boolean vector). We cannot use the
+    // actual boolean type, because bool is smaller than char and therefore the
+    // all_reduce operator won't work. So we use std::int8_t instead.
+
+    auto included = std::vector<std::int8_t>( max - min, 0 );
+
+    for ( auto it = _begin; it != _end; ++it )
+        {
+            RELBOOST_INT cat = 0;
+
+            switch ( _data_used )
+                {
+                    case enums::DataUsed::categorical_input:
+                        cat = _input.categorical_(
+                            ( *it )->ix_input, _num_column );
+                        break;
+
+                    case enums::DataUsed::categorical_output:
+                        cat = _output.categorical_(
+                            ( *it )->ix_output, _num_column );
+                        break;
+
+                    default:
+                        assert( false && "Unknown _data_used!" );
+                }
+
+            if ( cat < 0 )
+                {
+                    continue;
+                }
+
+            assert( cat >= min );
+            assert( cat < max );
+
+            included[cat - min] = 1;
+        }
+
+    // ------------------------------------------------------------------------
+    // Reduce included, if necessary.
+
+    // TODO
+
+    // ------------------------------------------------------------------------
+    // Build vector.
+
+    auto categories = std::make_shared<std::vector<RELBOOST_INT>>( 0 );
+
+    for ( RELBOOST_INT i = 0; i < max - min; ++i )
+        {
+            if ( included[i] == 1 )
+                {
+                    categories->push_back( min + i );
+                }
+        }
+
+    // ------------------------------------------------------------------------
+
+    return categories;
+
+    // ---------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<RELBOOST_FLOAT> CriticalValues::calc_discrete(
+    const enums::DataUsed _data_used,
+    const size_t _input_col,
+    const size_t _output_col,
+    const containers::DataFrame& _input,
+    const containers::DataFrame& _output,
+    const std::vector<const containers::Match*>::iterator _begin,
+    const std::vector<const containers::Match*>::iterator _end )
+{
+    // ---------------------------------------------------------------------------
+    // In parallel versions, it is possible that there are no sample sizes
+    // left in this process rank. In that case we effectively pass plus infinity
+    // to min and minus infinity to max, ensuring that they not will be the
+    // chosen minimum or maximum.
+
+    RELBOOST_FLOAT min = std::numeric_limits<RELBOOST_FLOAT>::max();
+
+    RELBOOST_FLOAT max = std::numeric_limits<RELBOOST_FLOAT>::lowest();
+
+    if ( is_same_units( _data_used ) )
+        {
+            find_min_max(
+                _data_used,
+                _input_col,
+                _output_col,
+                _input,
+                _output,
+                _begin,
+                _end,
+                &min,
+                &max );
+        }
+    else
+        {
+            assert( _input_col == _output_col );
+
+            find_min_max(
+                _data_used,
+                _output_col,
+                _input,
+                _output,
+                _begin,
+                _end,
+                &min,
+                &max );
+        }
+
+    // ---------------------------------------------------------------------------
+
+    min = std::ceil( min );
+
+    max = std::ceil( max );
+
+    // ---------------------------------------------------------------------------
+    // There is a possibility that all critical values are NAN in all processes.
+    // This accounts for this edge case.
+
+    if ( min > max )
+        {
+            return std::vector<RELBOOST_FLOAT>( 0 );
+        }
+
+    // ---------------------------------------------------------------------------
+
+    std::vector<RELBOOST_FLOAT> critical_values(
+        static_cast<int>( max - min ) );
+
+    for ( size_t i = 0; i < critical_values.size(); ++i )
+        {
+            critical_values[i] = max - static_cast<RELBOOST_FLOAT>( i + 1 );
+        }
+
+    return critical_values;
+
+    // ---------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<RELBOOST_FLOAT> CriticalValues::calc_numerical(
+    const enums::DataUsed _data_used,
+    const size_t _input_col,
+    const size_t _output_col,
+    const containers::DataFrame& _input,
+    const containers::DataFrame& _output,
+    const std::vector<const containers::Match*>::iterator _begin,
+    const std::vector<const containers::Match*>::iterator _end )
+{
+    // ---------------------------------------------------------------------------
+    // In parallel versions, it is possible that there are no sample sizes
+    // left in this process rank. In that case we effectively pass plus infinity
+    // to min and minus infinity to max, ensuring that they not will be the
+    // chosen minimum or maximum.
+
+    RELBOOST_FLOAT min = std::numeric_limits<RELBOOST_FLOAT>::max();
+
+    RELBOOST_FLOAT max = std::numeric_limits<RELBOOST_FLOAT>::lowest();
+
+    if ( is_same_units( _data_used ) )
+        {
+            find_min_max(
+                _data_used,
+                _input_col,
+                _output_col,
+                _input,
+                _output,
+                _begin,
+                _end,
+                &min,
+                &max );
+        }
+    else
+        {
+            assert( _input_col == _output_col );
+
+            find_min_max(
+                _data_used,
+                _output_col,
+                _input,
+                _output,
+                _begin,
+                _end,
+                &min,
+                &max );
+        }
+
+    // ---------------------------------------------------------------------------
+    // There is a possibility that all critical values are NAN in all processes.
+    // This accounts for this edge case.
+
+    if ( min > max )
+        {
+            return std::vector<RELBOOST_FLOAT>( 0 );
+        }
+
+    // ---------------------------------------------------------------------------
+
+    size_t num_critical_values = calc_num_critical_values(
+        static_cast<RELBOOST_INT>( std::distance( _begin, _end ) ) );
+
+    RELBOOST_FLOAT step_size =
+        ( max - min ) / static_cast<RELBOOST_FLOAT>( num_critical_values + 1 );
+
+    std::vector<RELBOOST_FLOAT> critical_values( num_critical_values );
+
+    for ( size_t i = 0; i < num_critical_values; ++i )
+        {
+            critical_values[i] =
+                max - static_cast<RELBOOST_FLOAT>( i + 1 ) * step_size;
+        }
+
+    return critical_values;
+
+    // ---------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+void CriticalValues::find_min_max(
+    const enums::DataUsed _data_used,
+    const size_t _num_column,
+    const containers::DataFrame& _input,
+    const containers::DataFrame& _output,
+    const std::vector<const containers::Match*>::iterator _begin,
+    const std::vector<const containers::Match*>::iterator _end,
+    RELBOOST_INT* _min,
+    RELBOOST_INT* _max )
+{
+    if ( std::distance( _begin, _end ) > 0 )
+        {
+            switch ( _data_used )
+                {
+                    case enums::DataUsed::categorical_input:
+                        *_min = _input.categorical_(
+                            ( *_begin )->ix_input, _num_column );
+
+                        *_max = _input.categorical_(
+                                    ( *( _end - 1 ) )->ix_input, _num_column ) +
+                                1;
+                        break;
+
+                    case enums::DataUsed::categorical_output:
+                        *_min = _output.categorical_(
+                            ( *_begin )->ix_output, _num_column );
+
+                        *_max =
+                            _output.categorical_(
+                                ( *( _end - 1 ) )->ix_output, _num_column ) +
+                            1;
+                        break;
+
+                    default:
+                        assert( false && "Unknown _data_used!" );
+                }
+
+            if ( *_min < 0 )
+                {
+                    *_min = 0;
+                }
+
+            if ( *_max < 0 )
+                {
+                    *_max = 0;
+                }
+        }
+
+#ifdef RELBOOST_PARALLEL
+
+    reduce_min_max( _min, _max );
+
+#endif  // RELBOOST_PARALLEL
+
+    debug_log( "find_min_max, min: " + std::to_string( *_min ) );
+    debug_log( "find_min_max, max: " + std::to_string( *_max ) );
+}
+
+// ----------------------------------------------------------------------------
+
+void CriticalValues::find_min_max(
+    const enums::DataUsed _data_used,
+    const size_t _input_col,
+    const size_t _output_col,
+    const containers::DataFrame& _input,
+    const containers::DataFrame& _output,
+    const std::vector<const containers::Match*>::iterator _begin,
+    const std::vector<const containers::Match*>::iterator _end,
+    RELBOOST_FLOAT* _min,
+    RELBOOST_FLOAT* _max )
+{
+    if ( std::distance( _begin, _end ) > 0 )
+        {
+            switch ( _data_used )
+                {
+                    case enums::DataUsed::same_units_discrete:
+
+                        *_max = _output.discrete_(
+                                    ( *_begin )->ix_output, _output_col ) -
+                                _input.discrete_(
+                                    ( *_begin )->ix_input, _input_col );
+
+                        *_min =
+                            _output.discrete_(
+                                ( *( _end - 1 ) )->ix_output, _output_col ) -
+                            _input.discrete_(
+                                ( *( _end - 1 ) )->ix_input, _input_col );
+
+                        break;
+
+                    case enums::DataUsed::same_units_numerical:
+
+                        *_max = _output.numerical_(
+                                    ( *_begin )->ix_output, _output_col ) -
+                                _input.numerical_(
+                                    ( *_begin )->ix_input, _input_col );
+
+                        *_min =
+                            _output.numerical_(
+                                ( *( _end - 1 ) )->ix_output, _output_col ) -
+                            _input.numerical_(
+                                ( *( _end - 1 ) )->ix_input, _input_col );
+
+                        break;
+
+                    default:
+                        assert( false && "Unknown _data_used!" );
+                }
+        }
+
+#ifdef RELBOOST_PARALLEL
+
+    reduce_min_max( _min, _max );
+
+#endif  // RELBOOST_PARALLEL
+
+    debug_log( "find_min_max, min: " + std::to_string( *_min ) );
+    debug_log( "find_min_max, max: " + std::to_string( *_max ) );
+}
+
+// ----------------------------------------------------------------------------
+
+void CriticalValues::find_min_max(
+    const enums::DataUsed _data_used,
+    const size_t _num_column,
+    const containers::DataFrame& _input,
+    const containers::DataFrame& _output,
+    const std::vector<const containers::Match*>::iterator _begin,
+    const std::vector<const containers::Match*>::iterator _end,
+    RELBOOST_FLOAT* _min,
+    RELBOOST_FLOAT* _max )
+{
+    if ( std::distance( _begin, _end ) > 0 )
+        {
+            switch ( _data_used )
+                {
+                    case enums::DataUsed::discrete_output:
+
+                        *_max = _output.discrete_(
+                            ( *_begin )->ix_output, _num_column );
+
+                        *_min = _output.discrete_(
+                            ( *( _end - 1 ) )->ix_output, _num_column );
+
+                        break;
+
+                    case enums::DataUsed::discrete_input:
+
+                        *_max = _input.discrete_(
+                            ( *_begin )->ix_input, _num_column );
+
+                        *_min = _input.discrete_(
+                            ( *( _end - 1 ) )->ix_input, _num_column );
+
+                        break;
+
+                    case enums::DataUsed::numerical_output:
+
+                        *_max = _output.numerical_(
+                            ( *_begin )->ix_output, _num_column );
+
+                        *_min = _output.numerical_(
+                            ( *( _end - 1 ) )->ix_output, _num_column );
+
+                        break;
+
+                    case enums::DataUsed::numerical_input:
+
+                        *_max = _input.numerical_(
+                            ( *_begin )->ix_input, _num_column );
+
+                        *_min = _input.numerical_(
+                            ( *( _end - 1 ) )->ix_input, _num_column );
+
+                        break;
+
+                    case enums::DataUsed::time_stamps_diff:
+
+                        *_max = _output.time_stamps( ( *_begin )->ix_output ) -
+                                _input.time_stamps( ( *_begin )->ix_input );
+
+                        *_min =
+                            _output.time_stamps(
+                                ( *( _end - 1 ) )->ix_output ) -
+                            _input.time_stamps( ( *( _end - 1 ) )->ix_input );
+
+                        break;
+
+                    default:
+                        assert( false && "Unknown _data_used!" );
+                }
+        }
+
+#ifdef RELBOOST_PARALLEL
+
+    reduce_min_max( _min, _max );
+
+#endif  // RELBOOST_PARALLEL
+
+    debug_log( "find_min_max, min: " + std::to_string( *_min ) );
+    debug_log( "find_min_max, max: " + std::to_string( *_max ) );
+}
+
+// ----------------------------------------------------------------------------
+}  // namespace utils
+}  // namespace relboost
