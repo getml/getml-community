@@ -25,12 +25,15 @@ include_directories(
     "${POCO_DIR}/Foundation/include" 
 )
 
-# Defines ${OBJ}
-set(SOURCE_DIRECTORY "${PROJECT_SOURCE_DIR}/../Code/src")
-include(${SOURCE_DIRECTORY}/obj.txt)
-add_executable(${RELBOOST_VERSION}-64bit-test ${OBJ} ${SOURCE_DIRECTORY}/main.cpp)
+set(ENGINE_SOURCE_DIRECTORY "${PROJECT_SOURCE_DIR}/../Code/src/engine")
+set(RELBOOST_SOURCE_DIRECTORY "${PROJECT_SOURCE_DIR}/../Code/src/relboost")
 
-add_library(${RELBOOST_VERSION}-64bit SHARED ${OBJ})
+include(${ENGINE_SOURCE_DIRECTORY}/obj.txt)
+include(${RELBOOST_SOURCE_DIRECTORY}/obj.txt)
+
+add_executable(${RELBOOST_VERSION}-64bit-relboost-test ${RELBOOST_OBJ} ${RELBOOST_SOURCE_DIRECTORY}/main.cpp)
+
+add_executable(${RELBOOST_VERSION}-64bit ${RELBOOST_OBJ} ${ENGINE_OBJ} ${RELBOOST_SOURCE_DIRECTORY}/main.cpp)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11 -Wall -Wno-sign-compare -Wno-missing-braces -pthread -fno-strict-aliasing -fwrapv -O2 -D NDEBUGLOG")
     
@@ -43,11 +46,12 @@ set(
 )
 
 target_link_libraries(
-    ${RELBOOST_VERSION}-64bit
+    ${RELBOOST_VERSION}-64bit-relboost-test
+    ${TARGET_LINK_LIB}
 )
 
 target_link_libraries(
-    ${RELBOOST_VERSION}-64bit-test
+    ${RELBOOST_VERSION}-64bit
     ${TARGET_LINK_LIB}
 )
 
