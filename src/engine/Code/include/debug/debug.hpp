@@ -1,5 +1,5 @@
-#ifndef RELBOOST_DEBUG_DEBUG_HPP_
-#define RELBOOST_DEBUG_DEBUG_HPP_
+#ifndef DEBUG_DEBUG_HPP_
+#define DEBUG_DEBUG_HPP_
 
 // ----------------------------------------------------------------------------
 // Dependencies
@@ -11,11 +11,11 @@
 
 // ----------------------------------------------------------------------------
 
-#include "relboost/debug/Debugger.hpp"
+#include "debug/Debugger.hpp"
 
-#include "relboost/debug/debug_log.hpp"
+#include "debug/debug_log.hpp"
 
 // ----------------------------------------------------------------------------
 
 
-#endif  // RELBOOST_DEBUG_DEBUG_HPP_
+#endif  // DEBUG_DEBUG_HPP_

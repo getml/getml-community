@@ -8,7 +8,7 @@
 set(RELBOOST_VERSION relboost-0.8-ubuntu)
 
 cmake_minimum_required(VERSION 2.8)
-
+/Users/patrickurbanke/relboost-engine/relboost-0.8-ubuntu/CMakeLists.txt
 # Set the path containing poco. 
 # Should contain the folder "Net", among others.
 set(POCO_DIR $ENV{HOME}/poco-1.9.0-all)

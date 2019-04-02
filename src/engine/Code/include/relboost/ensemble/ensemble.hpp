@@ -15,7 +15,7 @@
 
 #include "relboost/types.hpp"
 
-#include "relboost/debug/debug.hpp"
+#include "debug/debug.hpp"
 
 #include "relboost/Hyperparameters.hpp"
 

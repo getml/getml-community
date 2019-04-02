@@ -1,0 +1,24 @@
+set(
+    RELBOOST_OBJ 
+    ${RELBOOST_SOURCE_DIRECTORY}/Avg.cpp
+    ${RELBOOST_SOURCE_DIRECTORY}/AggregationImpl.cpp
+    ${RELBOOST_SOURCE_DIRECTORY}/ConditionMaker.cpp
+    ${RELBOOST_SOURCE_DIRECTORY}/CriticalValues.cpp
+    ${RELBOOST_SOURCE_DIRECTORY}/CriticalValueSorter.cpp
+    ${RELBOOST_SOURCE_DIRECTORY}/DataFrame.cpp
+    ${RELBOOST_SOURCE_DIRECTORY}/DecisionTree.cpp
+    ${RELBOOST_SOURCE_DIRECTORY}/DecisionTreeEnsemble.cpp
+    ${RELBOOST_SOURCE_DIRECTORY}/DecisionTreeEnsembleImpl.cpp
+    ${RELBOOST_SOURCE_DIRECTORY}/DecisionTreeNode.cpp
+    ${RELBOOST_SOURCE_DIRECTORY}/Hyperparameters.cpp
+    ${RELBOOST_SOURCE_DIRECTORY}/JSON.cpp
+    ${RELBOOST_SOURCE_DIRECTORY}/LossFunctionImpl.cpp
+    ${RELBOOST_SOURCE_DIRECTORY}/LossFunctionParser.cpp
+    ${RELBOOST_SOURCE_DIRECTORY}/Matchmaker.cpp
+    ${RELBOOST_SOURCE_DIRECTORY}/Placeholder.cpp
+    ${RELBOOST_SOURCE_DIRECTORY}/Sampler.cpp
+    ${RELBOOST_SOURCE_DIRECTORY}/SquareLoss.cpp
+    ${RELBOOST_SOURCE_DIRECTORY}/Sum.cpp
+    ${RELBOOST_SOURCE_DIRECTORY}/TableHolder.cpp
+)
+

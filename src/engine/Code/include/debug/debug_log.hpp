@@ -1,5 +1,5 @@
-#ifndef RELBOOST_DEBUG_DEBUG_LOG_HPP_
-#define RELBOOST_DEBUG_DEBUG_LOG_HPP_
+#ifndef DEBUG_DEBUG_LOG_HPP_
+#define DEBUG_DEBUG_LOG_HPP_
 
 // ----------------------------------------------------------------------------
 // NDEBUG implies NDEBUGLOG
@@ -17,7 +17,7 @@
 #ifndef debug_log
 
 #ifndef NDEBUGLOG
-#define debug_log( _msg ) relboost::debug::Debugger::log( _msg )
+#define debug_log( _msg ) debug::Debugger::log( _msg )
 #else  // NDEBUGLOG
 #define debug_log( _msg )
 #endif  // NDEBUGLOG
@@ -26,4 +26,4 @@
 
 // ----------------------------------------------------------------------------
 
-#endif  // RELBOOST_DEBUG_DEBUG_LOG_HPP_
+#endif  // DEBUG_DEBUG_LOG_HPP_

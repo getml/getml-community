@@ -13,7 +13,7 @@
 #include <type_traits>
 #include <vector>
 
-#include "relboost/debug/debug.hpp"
+#include "debug/debug.hpp"
 #include "relboost/types.hpp"
 
 #include "relboost/enums/enums.hpp"

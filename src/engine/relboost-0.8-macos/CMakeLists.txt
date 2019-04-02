@@ -1,5 +1,3 @@
-# https://stackoverflow.com/questions/17511496/how-to-create-a-shared-library-with-cmake
-
 # Run as follows:
 # cmake -H. -Bbuild
 # cd build
@@ -28,11 +26,15 @@ include_directories(
 set(CMAKE_CXX_COMPILER g++-8)
 
 # Defines ${OBJ}
-set(SOURCE_DIRECTORY "${PROJECT_SOURCE_DIR}/../Code/src")
-include(${SOURCE_DIRECTORY}/obj.txt)
-add_executable(${RELBOOST_VERSION}-64bit-test ${OBJ} ${SOURCE_DIRECTORY}/main.cpp)
+set(ENGINE_SOURCE_DIRECTORY "${PROJECT_SOURCE_DIR}/../Code/src/engine")
+set(RELBOOST_SOURCE_DIRECTORY "${PROJECT_SOURCE_DIR}/../Code/src/relboost")
 
-add_library(${RELBOOST_VERSION}-64bit SHARED ${OBJ})
+include(${ENGINE_SOURCE_DIRECTORY}/obj.txt)
+include(${RELBOOST_SOURCE_DIRECTORY}/obj.txt)
+
+add_executable(${RELBOOST_VERSION}-64bit-test ${RELBOOST_OBJ} ${RELBOOST_SOURCE_DIRECTORY}/main.cpp)
+
+add_executable(${RELBOOST_VERSION}-64bit ${RELBOOST_OBJ} ${ENGINE_OBJ} ${RELBOOST_SOURCE_DIRECTORY}/main.cpp)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11 -Wall -Wno-sign-compare -Wno-missing-braces -pthread -fno-strict-aliasing -fwrapv -O2 -D NDEBUGLOG")
     

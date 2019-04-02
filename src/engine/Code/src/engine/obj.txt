@@ -1,0 +1,6 @@
+set(
+    ENGINE_OBJ 
+    ${ENGINE_SOURCE_DIRECTORY}/DataFrame.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/Encoding.cpp
+)
+
