@@ -1,0 +1,81 @@
+#ifndef ENGINE_SRV_SERVERCONNECTIONFACTORYIMPL_HPP_
+#define ENGINE_SRV_SERVERCONNECTIONFACTORYIMPL_HPP_
+
+namespace engine
+{
+namespace srv
+{
+// -----------------------------------------------------------------
+
+class ServerConnectionFactoryImpl : public Poco::Net::TCPServerConnectionFactory
+{
+    // -------------------------------------------------------------
+
+   public:
+    ServerConnectionFactoryImpl(
+        /*const std::shared_ptr<DataFrameManager>& _data_frame_manager,
+        const std::shared_ptr<const autosql::logging::Logger>& _logger,
+        const std::shared_ptr<ModelManager>& _model_manager,
+        const std::shared_ptr<const autosql::logging::Monitor>& _monitor,
+        const autosql::config::Options& _options,
+        const std::shared_ptr<ProjectManager>& _project_manager,*/
+        const std::shared_ptr<std::atomic<bool>>& _shutdown )
+        : /*data_frame_manager_( _data_frame_manager ),
+          logger_( _logger ),
+          model_manager_( _model_manager ),
+          monitor_( _monitor ),
+          options_( _options ),
+          project_manager_( _project_manager ),*/
+          shutdown_( _shutdown )
+    {
+    }
+
+    /// Required by Poco::Net::TCPServerConnectionFactory. Does the actual
+    /// handling.
+    Poco::Net::TCPServerConnection* createConnection(
+        const Poco::Net::StreamSocket& _socket )
+    {
+        return new RequestHandler(
+            _socket,
+            /*data_frame_manager_,
+            logger_,
+            model_manager_,
+            monitor_,
+            options_,
+            project_manager_,*/
+            shutdown_ );
+    }
+
+    // -------------------------------------------------------------
+
+   private:
+    /// Handles requests related to the data frames.
+    /* const std::shared_ptr<DataFrameManager> data_frame_manager_;
+
+     /// Logs commands.
+     const std::shared_ptr<const autosql::logging::Logger> logger_;
+
+     /// Handles requests related to the models such as fit or transform.
+     const std::shared_ptr<ModelManager> model_manager_;
+
+     /// Handles the communication with the monitor
+     const std::shared_ptr<const autosql::logging::Monitor> monitor_;
+
+     /// Contains information on the port of the monitor process
+     const autosql::config::Options options_;
+
+     /// Handles requests related to the project as a whole, such as save or
+     /// load.
+     const std::shared_ptr<ProjectManager> project_manager_;*/
+
+    /// Signals to the main process that we want to shut down.
+    const std::shared_ptr<std::atomic<bool>>& shutdown_;
+
+    // -------------------------------------------------------------
+};
+
+// -----------------------------------------------------------------
+}  // namespace srv
+}  // namespace engine
+
+#endif  // ENGINE_SRV_SERVERCONNECTIONFACTORYIMPL_HPP_

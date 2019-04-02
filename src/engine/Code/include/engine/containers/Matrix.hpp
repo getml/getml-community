@@ -70,10 +70,6 @@ class Matrix
     Matrix<T> sort_by_key( const std::vector<size_t> &_key ) const;
 
     /// Returns a shallow copy of a subselection of rows
-    // template <class T2>
-    // Matrix<T> subview( T2 _row_begin, T2 _row_end );
-
-    /// Returns a shallow copy of a subselection of rows
     template <class T2>
     const Matrix<T> subview( T2 _row_begin, T2 _row_end ) const;
 
@@ -467,11 +463,11 @@ void Matrix<T>::load( const std::string &_fname )
         {
             debug_log( "Matrix.load: Is little endian (1)..." );
 
-            utils::Endianness::reverse_byte_order( nrows );
+            utils::Endianness::reverse_byte_order( &nrows );
 
-            utils::Endianness::reverse_byte_order( ncols );
+            utils::Endianness::reverse_byte_order( &ncols );
 
-            utils::Endianness::reverse_byte_order( num_batches );
+            utils::Endianness::reverse_byte_order( &num_batches );
         }
 
     // -------------------------------------------------------------------------
@@ -494,7 +490,7 @@ void Matrix<T>::load( const std::string &_fname )
             debug_log( "Matrix.load: Reverse byte order of batches..." );
 
             auto reverse_batches = []( size_t &_val ) {
-                utils::Endianness::reverse_byte_order( _val );
+                utils::Endianness::reverse_byte_order( &_val );
             };
 
             std::for_each( batches.begin(), batches.end(), reverse_batches );
@@ -543,7 +539,7 @@ void Matrix<T>::load( const std::string &_fname )
 
             {
                 auto reverse_data = []( T &_val ) {
-                    utils::Endianness::reverse_byte_order( _val );
+                    utils::Endianness::reverse_byte_order( &_val );
                 };
 
                 std::for_each( begin(), end(), reverse_data );
@@ -562,7 +558,7 @@ void Matrix<T>::load( const std::string &_fname )
                         reinterpret_cast<char *>( &str_size ),
                         sizeof( size_t ) );
 
-                    utils::Endianness::reverse_byte_order( str_size );
+                    utils::Endianness::reverse_byte_order( &str_size );
 
                     _str.resize( str_size );
 
@@ -706,7 +702,7 @@ void Matrix<T>::save( const std::string &_fname ) const
             {
                 size_t nrows = nrows_;
 
-                utils::Endianness::reverse_byte_order( nrows );
+                utils::Endianness::reverse_byte_order( &nrows );
 
                 output.write(
                     reinterpret_cast<const char *>( &nrows ),
@@ -721,7 +717,7 @@ void Matrix<T>::save( const std::string &_fname ) const
             {
                 size_t ncols = ncols_;
 
-                utils::Endianness::reverse_byte_order( ncols );
+                utils::Endianness::reverse_byte_order( &ncols );
 
                 output.write(
                     reinterpret_cast<const char *>( &ncols ),
@@ -738,7 +734,7 @@ void Matrix<T>::save( const std::string &_fname ) const
             {
                 size_t num_batches = batches_->size();
 
-                utils::Endianness::reverse_byte_order( num_batches );
+                utils::Endianness::reverse_byte_order( &num_batches );
 
                 output.write(
                     reinterpret_cast<const char *>( &num_batches ),
@@ -760,7 +756,7 @@ void Matrix<T>::save( const std::string &_fname ) const
                 auto write_inverted_batches = [&output]( size_t &_val ) {
                     size_t val_reversed = _val;
 
-                    utils::Endianness::reverse_byte_order( val_reversed );
+                    utils::Endianness::reverse_byte_order( &val_reversed );
 
                     output.write(
                         reinterpret_cast<const char *>( &val_reversed ),
@@ -786,7 +782,7 @@ void Matrix<T>::save( const std::string &_fname ) const
                 auto write_reversed_data = [&output]( T &_val ) {
                     T val_reversed = _val;
 
-                    utils::Endianness::reverse_byte_order( val_reversed );
+                    utils::Endianness::reverse_byte_order( &val_reversed );
 
                     output.write(
                         reinterpret_cast<const char *>( &val_reversed ),
@@ -819,7 +815,7 @@ void Matrix<T>::save( const std::string &_fname ) const
                 auto write_string = [&output]( std::string &_str ) {
                     size_t str_size = _str.size();
 
-                    utils::Endianness::reverse_byte_order( str_size );
+                    utils::Endianness::reverse_byte_order( &str_size );
 
                     output.write(
                         reinterpret_cast<const char *>( &str_size ),
@@ -986,37 +982,6 @@ Matrix<T> Matrix<T>::sort_by_key( const Matrix<size_t> &_key ) const
 
     return sorted;
 }
-
-// -------------------------------------------------------------------------
-
-/*template <class T>
-template <class T2>
-Matrix<T> Matrix<T>::subview( T2 _row_begin, T2 _row_end )
-{
-    assert(
-        ( _row_begin >= 0 && _row_begin < nrows_ ) &&
-        "Matrix::subview: _row_begin out of bounds!" );
-
-    assert(
-        ( _row_end >= 0 && _row_end <= nrows_ ) &&
-        "Matrix::subview: _row_end out of bounds!" );
-
-    assert( ( _row_end >= _row_begin ) && "Matrix::subview!" );
-
-    auto mat = Matrix<T>(
-        static_cast<size_t>( _row_end - _row_begin ),
-        ncols_,
-        data_ptr_ +
-            static_cast<ENGINE_UNSIGNED_LONG>( _row_begin ) * ncols_long_ );
-
-    mat.set_colnames( *( colnames_.get() ) );
-
-    mat.set_units( *( units_ ) );
-
-    mat.name() = name();
-
-    return mat;
-}*/
 
 // -------------------------------------------------------------------------
 

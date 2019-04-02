@@ -25,9 +25,9 @@ struct Endianness
 
     /// Reverses the byteorder of the value passed to it
     template <typename T>
-    static void reverse_byte_order( T &_val )
+    static void reverse_byte_order( T *_val )
     {
-        char *v = reinterpret_cast<char *>( &_val );
+        char *v = reinterpret_cast<char *>( _val );
 
         std::reverse( v, v + sizeof( T ) );
     }
