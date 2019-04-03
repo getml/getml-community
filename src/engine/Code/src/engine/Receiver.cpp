@@ -19,13 +19,13 @@ containers::Matrix<size_t> Receiver::recv_categorical_matrix(
     // ------------------------------------------------
     // Init matrix
 
-    if ( shape[0] <= 0 )
+    if ( std::get<0>( shape ) <= 0 )
         {
             throw std::runtime_error(
                 "Your data frame must contain at least one row!" );
         }
 
-    if ( shape[1] < 0 )
+    if ( std::get<1>( shape ) < 0 )
         {
             throw std::runtime_error(
                 "Number of columns can not be negative!" );
@@ -107,13 +107,13 @@ containers::Matrix<ENGINE_FLOAT> Receiver::recv_matrix(
     // ------------------------------------------------
     // Init matrix
 
-    if ( shape[0] <= 0 )
+    if ( std::get<0>( shape ) <= 0 )
         {
             throw std::runtime_error(
                 "Your data frame must contain at least one row!" );
         }
 
-    if ( shape[1] < 0 )
+    if ( std::get<1>( shape ) < 0 )
         {
             throw std::runtime_error(
                 "Number of columns can not be negative!" );
