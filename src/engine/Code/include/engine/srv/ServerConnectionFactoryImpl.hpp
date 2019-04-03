@@ -13,19 +13,19 @@ class ServerConnectionFactoryImpl : public Poco::Net::TCPServerConnectionFactory
 
    public:
     ServerConnectionFactoryImpl(
-        // const std::shared_ptr<DataFrameManager>& _data_frame_manager,
+        const std::shared_ptr<handlers::DataFrameManager>& _data_frame_manager,
         const std::shared_ptr<const engine::logging::Logger>& _logger,
         /*const std::shared_ptr<ModelManager>& _model_manager,
-        const std::shared_ptr<const engine::logging::Monitor>& _monitor,
+        const std::shared_ptr<const engine::logging::Monitor>& _monitor,*/
         const config::Options& _options,
-        const std::shared_ptr<ProjectManager>& _project_manager,*/
+        // const std::shared_ptr<ProjectManager>& _project_manager,
         const std::shared_ptr<std::atomic<bool>>& _shutdown )
-        :  // data_frame_manager_( _data_frame_manager ),
+        : data_frame_manager_( _data_frame_manager ),
           logger_( _logger ),
           /* model_manager_( _model_manager ),
-          monitor_( _monitor ),
+          monitor_( _monitor ),*/
           options_( _options ),
-          project_manager_( _project_manager ),*/
+          // project_manager_( _project_manager ),
           shutdown_( _shutdown )
     {
     }
@@ -37,12 +37,12 @@ class ServerConnectionFactoryImpl : public Poco::Net::TCPServerConnectionFactory
     {
         return new RequestHandler(
             _socket,
-            // data_frame_manager_,
+            data_frame_manager_,
             logger_,
             /* model_manager_,
-             monitor_,
-             options_,
-             project_manager_,*/
+             monitor_,*/
+            options_,
+            // project_manager_,
             shutdown_ );
     }
 
@@ -50,7 +50,7 @@ class ServerConnectionFactoryImpl : public Poco::Net::TCPServerConnectionFactory
 
    private:
     /// Handles requests related to the data frames.
-    // const std::shared_ptr<DataFrameManager> data_frame_manager_;
+    const std::shared_ptr<handlers::DataFrameManager> data_frame_manager_;
 
     /// Logs commands.
     const std::shared_ptr<const engine::logging::Logger> logger_;
@@ -59,14 +59,14 @@ class ServerConnectionFactoryImpl : public Poco::Net::TCPServerConnectionFactory
     /* const std::shared_ptr<ModelManager> model_manager_;
 
      /// Handles the communication with the monitor
-     const std::shared_ptr<const engine::logging::Monitor> monitor_;
+     const std::shared_ptr<const engine::logging::Monitor> monitor_;*/
 
-     /// Contains information on the port of the monitor process
-     const config::Options options_;
+    /// Contains information on the port of the monitor process
+    const config::Options options_;
 
-     /// Handles requests related to the project as a whole, such as save or
-     /// load.
-     const std::shared_ptr<ProjectManager> project_manager_;*/
+    /// Handles requests related to the project as a whole, such as save or
+    /// load.
+    // const std::shared_ptr<ProjectManager> project_manager_;
 
     /// Signals to the main process that we want to shut down.
     const std::shared_ptr<std::atomic<bool>>& shutdown_;

@@ -24,6 +24,8 @@
 
 #include "engine/communication/communication.hpp"
 
+#include "engine/handlers/handlers.hpp"
+
 // ----------------------------------------------------
 // Module files
 

@@ -22,7 +22,7 @@
 #include <Poco/Net/HTTPResponse.h>
 #include <Poco/Net/HTTPSClientSession.h>
 
-#include "multithreading/multithreading.hpp"
+#include <multithreading/multithreading.hpp>
 
 // #include "config/config.hpp"
 
@@ -33,8 +33,6 @@
 #include "engine/containers/containers.hpp"
 
 #include "engine/communication/communication.hpp"
-
-#include "engine/srv/srv.hpp"
 
 // ----------------------------------------------------
 // Module files

@@ -37,19 +37,20 @@ int main( int argc, char *argv[] )
 
     // -------------------------------------------
 
-    /*const auto read_write_lock =
+    const auto read_write_lock =
         std::make_shared<multithreading::ReadWriteLock>();
 
-    const auto data_frame_manager = std::make_shared<engine::DataFrameManager>(
-        categories,
-        data_frames,
-        join_keys_encoding,
-        license_checker,
-        logger,
-        monitor,
-        read_write_lock );
+    const auto data_frame_manager =
+        std::make_shared<engine::handlers::DataFrameManager>(
+            categories,
+            data_frames,
+            join_keys_encoding,
+            // license_checker,
+            logger,
+            // monitor,
+            read_write_lock );
 
-    const auto model_manager = std::make_shared<engine::ModelManager>(
+    /*const auto model_manager = std::make_shared<engine::ModelManager>(
         categories,
         data_frames,
         join_keys_encoding,
@@ -104,12 +105,12 @@ int main( int argc, char *argv[] )
 
     Poco::Net::TCPServer srv(
         new engine::srv::ServerConnectionFactoryImpl(
-            // data_frame_manager,
+            data_frame_manager,
             logger,
             /*model_manager,
-            monitor,
+            monitor,*/
             options,
-            project_manager,*/
+            // project_manager,
             shutdown ),
         server_socket );
 

@@ -4,6 +4,7 @@
 // ----------------------------------------------------
 // Dependencies
 
+#include <algorithm>
 #include <atomic>
 #include <cassert>
 #include <condition_variable>
