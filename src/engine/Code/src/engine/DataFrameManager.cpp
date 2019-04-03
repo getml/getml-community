@@ -19,7 +19,7 @@ void DataFrameManager::add_categorical_matrix(
     const size_t num_join_key =
         JSON::get_value<size_t>( _cmd, "num_join_key_" );
 
-    containers::Matrix<size_t> mat;
+    containers::Matrix<ENGINE_INT> mat;
 
     if ( role == "categorical" )
         {

@@ -18,7 +18,7 @@ class Receiver
         T *_data );
 
     /// Receives a categorical matrix from the client
-    static containers::Matrix<size_t> recv_categorical_matrix(
+    static containers::Matrix<ENGINE_INT> recv_categorical_matrix(
         containers::Encoding *_encoding, Poco::Net::StreamSocket *_socket );
 
     /// Receives a command from the client

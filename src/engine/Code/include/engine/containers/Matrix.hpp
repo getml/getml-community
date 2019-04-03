@@ -64,10 +64,10 @@ class Matrix
     void save( const std::string &_fname ) const;
 
     /// Sorts the rows of the matrix by the key provided
-    Matrix<T> sort_by_key( const Matrix<size_t> &_key ) const;
+    Matrix<T> sort_by_key( const Matrix<ENGINE_INT> &_key ) const;
 
     /// Sorts the rows of the matrix by the key provided
-    Matrix<T> sort_by_key( const std::vector<size_t> &_key ) const;
+    Matrix<T> sort_by_key( const std::vector<ENGINE_INT> &_key ) const;
 
     /// Returns a shallow copy of a subselection of rows
     template <class T2>
@@ -949,9 +949,10 @@ void Matrix<T>::save( const std::string &_fname ) const
 // -------------------------------------------------------------------------
 
 template <class T>
-Matrix<T> Matrix<T>::sort_by_key( const std::vector<size_t> &_key ) const
+Matrix<T> Matrix<T>::sort_by_key( const std::vector<ENGINE_INT> &_key ) const
 {
-    Matrix<size_t> key( _key.size(), static_cast<size_t>( 1 ), _key.data() );
+    Matrix<ENGINE_INT> key(
+        _key.size(), static_cast<ENGINE_INT>( 1 ), _key.data() );
 
     return sort_by_key( key );
 }
@@ -959,7 +960,7 @@ Matrix<T> Matrix<T>::sort_by_key( const std::vector<size_t> &_key ) const
 // -------------------------------------------------------------------------
 
 template <class T>
-Matrix<T> Matrix<T>::sort_by_key( const Matrix<size_t> &_key ) const
+Matrix<T> Matrix<T>::sort_by_key( const Matrix<ENGINE_INT> &_key ) const
 {
     assert(
         _key.nrows() == nrows() &&

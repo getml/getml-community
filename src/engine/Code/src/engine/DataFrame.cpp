@@ -48,7 +48,7 @@ void DataFrame::clear()
     discrete().clear();
 
     std::for_each(
-        join_keys().begin(), join_keys().end(), []( Matrix<size_t> &mat ) {
+        join_keys().begin(), join_keys().end(), []( Matrix<ENGINE_INT> &mat ) {
             mat.clear();
         } );
 
@@ -87,7 +87,7 @@ void DataFrame::check_plausibility() const
     const bool any_join_key_does_not_match = std::any_of(
         join_keys().begin(),
         join_keys().end(),
-        [expected_nrows]( const Matrix<size_t> &mat ) {
+        [expected_nrows]( const Matrix<ENGINE_INT> &mat ) {
             return mat.nrows() != expected_nrows;
         } );
 
@@ -252,7 +252,7 @@ Poco::JSON::Object DataFrame::get_colnames()
         std::for_each(
             join_keys().begin(),
             join_keys().end(),
-            [&join_keys_names]( Matrix<size_t> &mat ) {
+            [&join_keys_names]( Matrix<ENGINE_INT> &mat ) {
                 join_keys_names.push_back( mat.colname( 0 ) );
             } );
 
@@ -379,7 +379,7 @@ Poco::JSON::Object DataFrame::get_content(
 // ----------------------------------------------------------------------------
 
 void DataFrame::int_matrix(
-    Matrix<size_t> &_mat,
+    Matrix<ENGINE_INT> &_mat,
     const std::string _role,
     const std::string _name,
     const size_t _num )
@@ -417,7 +417,7 @@ void DataFrame::int_matrix(
 
 // ----------------------------------------------------------------------------
 
-Matrix<size_t> &DataFrame::int_matrix(
+Matrix<ENGINE_INT> &DataFrame::int_matrix(
     const std::string &_role, const size_t _num )
 {
     if ( _role == "categorical" )
@@ -507,7 +507,7 @@ void DataFrame::load_join_keys( const std::string &_path )
                     break;
                 }
 
-            Matrix<size_t> join_key;
+            Matrix<ENGINE_INT> join_key;
 
             join_key.load( join_key_name );
 
@@ -554,7 +554,7 @@ ENGINE_UNSIGNED_LONG DataFrame::nbytes()
         join_keys().begin(),
         join_keys().end(),
         nbytes,
-        []( ENGINE_UNSIGNED_LONG &init, Matrix<size_t> &mat ) {
+        []( ENGINE_UNSIGNED_LONG &init, Matrix<ENGINE_INT> &mat ) {
             return init + mat.nbytes();
         } );
 

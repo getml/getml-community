@@ -67,13 +67,14 @@ class DataFrame
 
     /// Setter for an int_matrix (either join keys or categorical)
     void int_matrix(
-        Matrix<size_t> &_mat,
+        Matrix<ENGINE_INT> &_mat,
         const std::string _role,
         const std::string _name,
         const size_t _num );
 
     /// Getter for an int_matrix (either join keys or categorical)
-    Matrix<size_t> &int_matrix( const std::string &_role, const size_t _num );
+    Matrix<ENGINE_INT> &int_matrix(
+        const std::string &_role, const size_t _num );
 
     /// Loads the data from the hard-disk into the engine
     void load( const std::string &_path );
@@ -91,10 +92,10 @@ class DataFrame
     // -------------------------------
 
     /// Trivial accessor
-    Matrix<size_t> &categorical() { return categorical_; }
+    Matrix<ENGINE_INT> &categorical() { return categorical_; }
 
     /// Trivial accessor
-    Matrix<size_t> const &categorical() const { return categorical_; }
+    Matrix<ENGINE_INT> const &categorical() const { return categorical_; }
 
     /// Trivial accessor
     const Encoding &categories() const { return *categories_.get(); }
@@ -168,7 +169,7 @@ class DataFrame
 
     /// Returns the join key signified by index _i
     template <class T>
-    Matrix<size_t> &join_key( const T _i )
+    Matrix<ENGINE_INT> &join_key( const T _i )
     {
         assert( join_keys_.size() > 0 );
         assert( _i >= 0 );
@@ -179,7 +180,7 @@ class DataFrame
 
     /// Returns the join key signified by index _i
     template <class T>
-    Matrix<size_t> const &join_key( const T _i ) const
+    Matrix<ENGINE_INT> const &join_key( const T _i ) const
     {
         assert( join_keys_.size() > 0 );
         assert( _i >= 0 );
@@ -189,7 +190,7 @@ class DataFrame
     }
 
     /// Returns the join key signified by index join_key_used_
-    Matrix<size_t> &join_key()
+    Matrix<ENGINE_INT> &join_key()
     {
         assert( join_keys_.size() > 0 );
         assert( join_key_used_ < join_keys_.size() );
@@ -198,7 +199,7 @@ class DataFrame
     }
 
     /// Returns the join key signified by index join_key_used_
-    Matrix<size_t> const &join_key() const
+    Matrix<ENGINE_INT> const &join_key() const
     {
         assert( join_keys_.size() > 0 );
         assert( join_key_used_ < static_cast<size_t>( join_keys_.size() ) );
@@ -207,10 +208,13 @@ class DataFrame
     }
 
     /// Trivial accessor
-    std::vector<Matrix<size_t>> &join_keys() { return join_keys_; }
+    std::vector<Matrix<ENGINE_INT>> &join_keys() { return join_keys_; }
 
     /// Trivial accessor
-    std::vector<Matrix<size_t>> const &join_keys() const { return join_keys_; }
+    std::vector<Matrix<ENGINE_INT>> const &join_keys() const
+    {
+        return join_keys_;
+    }
 
     /// Primitive abstraction for member join_keys_encoding_
     const Encoding &join_keys_encoding() const
@@ -345,7 +349,7 @@ class DataFrame
 
    private:
     /// Categorical data
-    Matrix<size_t> categorical_;
+    Matrix<ENGINE_INT> categorical_;
 
     /// Maps integers to names of categories
     std::shared_ptr<Encoding> categories_;
@@ -357,7 +361,7 @@ class DataFrame
     std::vector<std::shared_ptr<ENGINE_INDEX>> indices_;
 
     /// Join keys - note that their might be several
-    std::vector<Matrix<size_t>> join_keys_;
+    std::vector<Matrix<ENGINE_INT>> join_keys_;
 
     /// Maps integers to names of join keys
     std::shared_ptr<Encoding> join_keys_encoding_;
