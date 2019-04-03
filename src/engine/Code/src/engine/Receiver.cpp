@@ -6,15 +6,15 @@ namespace communication
 {
 // ------------------------------------------------------------------------
 
-/*containers::Matrix<SQLNET_INT> Receiver::recv_categorical_matrix(
-    Poco::Net::StreamSocket& _socket, containers::Encoding& _encoding )
+containers::Matrix<size_t> Receiver::recv_categorical_matrix(
+    containers::Encoding *_encoding, Poco::Net::StreamSocket *_socket )
 {
     // ------------------------------------------------
     // Receive shape
 
-    std::array<SQLNET_INT, 2> shape;
+    std::array<ENGINE_INT, 2> shape;
 
-    recv<SQLNET_INT>( _socket, sizeof( SQLNET_INT ) * 2, shape.data() );
+    recv<ENGINE_INT>( sizeof( ENGINE_INT ) * 2, _socket, shape.data() );
 
     // ------------------------------------------------
     // Init matrix
@@ -25,18 +25,25 @@ namespace communication
                 "Your data frame must contain at least one row!" );
         }
 
-    containers::Matrix<SQLNET_INT> matrix(
-        std::get<0>( shape ), std::get<1>( shape ) );
+    if ( shape[1] < 0 )
+        {
+            throw std::runtime_error(
+                "Number of columns can not be negative!" );
+        }
+
+    containers::Matrix<size_t> matrix(
+        static_cast<size_t>( std::get<0>( shape ) ),
+        static_cast<size_t>( std::get<1>( shape ) ) );
 
     // ------------------------------------------------
     // Receive strings and map to int matrix
 
-    for ( SQLNET_INT i = 0; i < matrix.nrows(); ++i )
+    for ( size_t i = 0; i < matrix.nrows(); ++i )
         {
-            for ( SQLNET_INT j = 0; j < matrix.ncols(); ++j )
+            for ( size_t j = 0; j < matrix.ncols(); ++j )
                 {
                     matrix( i, j ) =
-                        _encoding[Receiver::recv_string( _socket )];
+                        ( *_encoding )[Receiver::recv_string( _socket )];
                 }
         }
 
@@ -45,7 +52,7 @@ namespace communication
     return matrix;
 
     // ------------------------------------------------
-}*/
+}
 
 // ------------------------------------------------------------------------
 
@@ -87,15 +94,15 @@ Poco::JSON::Object Receiver::recv_cmd(
 
 // ------------------------------------------------------------------------
 
-/*containers::Matrix<SQLNET_FLOAT> Receiver::recv_matrix(
-    Poco::Net::StreamSocket& _socket, bool _scatter )
+containers::Matrix<ENGINE_FLOAT> Receiver::recv_matrix(
+    Poco::Net::StreamSocket *_socket )
 {
     // ------------------------------------------------
     // Receive shape
 
-    std::array<SQLNET_INT, 2> shape;
+    std::array<ENGINE_INT, 2> shape;
 
-    recv<SQLNET_INT>( _socket, sizeof( SQLNET_INT ) * 2, shape.data() );
+    recv<ENGINE_INT>( sizeof( ENGINE_INT ) * 2, _socket, shape.data() );
 
     // ------------------------------------------------
     // Init matrix
@@ -106,23 +113,32 @@ Poco::JSON::Object Receiver::recv_cmd(
                 "Your data frame must contain at least one row!" );
         }
 
-    containers::Matrix<SQLNET_FLOAT> matrix(
-        std::get<0>( shape ), std::get<1>( shape ) );
+    if ( shape[1] < 0 )
+        {
+            throw std::runtime_error(
+                "Number of columns can not be negative!" );
+        }
+
+    containers::Matrix<ENGINE_FLOAT> matrix(
+        static_cast<size_t>( std::get<0>( shape ) ),
+        static_cast<size_t>( std::get<1>( shape ) ) );
 
     // ------------------------------------------------
     // Fill with data
 
-    recv<SQLNET_FLOAT>(
+    recv<ENGINE_FLOAT>(
+        sizeof( ENGINE_FLOAT ) *
+            static_cast<ENGINE_UNSIGNED_LONG>( std::get<0>( shape ) ) *
+            static_cast<ENGINE_UNSIGNED_LONG>( std::get<1>( shape ) ),
         _socket,
-        sizeof( SQLNET_FLOAT ) *
-            static_cast<SQLNET_UNSIGNED_LONG>( std::get<0>( shape ) ) *
-            static_cast<SQLNET_UNSIGNED_LONG>( std::get<1>( shape ) ),
         matrix.data() );
 
     // ------------------------------------------------
 
     return matrix;
-}*/
+
+    // ------------------------------------------------
+}
 
 // ------------------------------------------------------------------------
 

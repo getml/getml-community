@@ -18,8 +18,8 @@ class Receiver
         T *_data );
 
     /// Receives a categorical matrix from the client
-    /*static containers::Matrix<ENGINE_INT> recv_categorical_matrix(
-        Poco::Net::StreamSocket &_socket, containers::Encoding &_encoding );*/
+    static containers::Matrix<size_t> recv_categorical_matrix(
+        containers::Encoding *_encoding, Poco::Net::StreamSocket *_socket );
 
     /// Receives a command from the client
     static Poco::JSON::Object recv_cmd(
@@ -27,8 +27,8 @@ class Receiver
         Poco::Net::StreamSocket *_socket );
 
     /// Receives a matrix from the client
-    /* static containers::Matrix<ENGINE_FLOAT> recv_matrix(
-         Poco::Net::StreamSocket &_socket, bool _scatter );*/
+    static containers::Matrix<ENGINE_FLOAT> recv_matrix(
+        Poco::Net::StreamSocket *_socket );
 
    private:
     /// Receives a string - useful for commands and categorical matrices
