@@ -23,6 +23,7 @@
 // Module files
 
 #include "engine/communication/Receiver.hpp"
+#include "engine/communication/Sender.hpp"
 
 // ----------------------------------------------------
 
