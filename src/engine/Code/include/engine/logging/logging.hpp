@@ -1,10 +1,12 @@
-#ifndef ENGINE_SRV_SRV_HPP_
-#define ENGINE_SRV_SRV_HPP_
+#ifndef ENGINE_LOGGING_LOGGING_HPP_
+#define ENGINE_LOGGING_LOGGING_HPP_
 
 // ----------------------------------------------------
 // Dependencies
 
-#include <memory>
+#include <chrono>
+#include <thread>
+#include <vector>
 
 #include <Poco/Crypto/DigestEngine.h>
 #include <Poco/File.h>
@@ -13,22 +15,22 @@
 #include <Poco/Net/Context.h>
 #include <Poco/Net/ServerSocket.h>
 #include <Poco/Net/StreamSocket.h>
-#include <Poco/Net/TCPServer.h>
-#include <Poco/Net/TCPServerConnection.h>
-#include <Poco/Net/TCPServerConnectionFactory.h>
 #include <Poco/Path.h>
 
-#include "engine/logging/logging.hpp"
+#include <Poco/Net/HTTPClientSession.h>
+#include <Poco/Net/HTTPRequest.h>
+#include <Poco/Net/HTTPResponse.h>
+#include <Poco/Net/HTTPSClientSession.h>
 
-#include "engine/communication/communication.hpp"
+// #include "config/config.hpp"
 
 // ----------------------------------------------------
 // Module files
 
-#include "engine/srv/RequestHandler.hpp"
+// #include "logging/Monitor.hpp"
 
-#include "engine/srv/ServerConnectionFactoryImpl.hpp"
+#include "engine/logging/Logger.hpp"
 
 // ----------------------------------------------------
 
-#endif  // ENGINE_SRV_SRV_HPP_
+#endif  // ENGINE_LOGGING_LOGGING_HPP_

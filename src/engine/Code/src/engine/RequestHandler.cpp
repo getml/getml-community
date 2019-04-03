@@ -27,7 +27,7 @@ void RequestHandler::run()
                 }
 
             // Poco::JSON::Object cmd =
-            communication::Receiver::recv_cmd( &socket() );
+            communication::Receiver::recv_cmd( logger_, &socket() );
 
             /* std::string type = cmd.SQLNET_GET( "type_" );
 
@@ -156,8 +156,7 @@ void RequestHandler::run()
         }
     catch ( std::exception& e )
         {
-            // logger_->log( std::string( "Error: " ) + e.what() );
-            std::cout << e.what() << std::endl;
+            logger_->log( std::string( "Error: " ) + e.what() );
         }
 }
 

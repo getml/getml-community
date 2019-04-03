@@ -23,9 +23,8 @@ class Receiver
 
     /// Receives a command from the client
     static Poco::JSON::Object recv_cmd(
-        Poco::Net::StreamSocket *_socket
-        /* const std::shared_ptr<const logging::Logger> &_logger,
-        const bool _log = true*/ );
+        const std::shared_ptr<const logging::Logger> &_logger,
+        Poco::Net::StreamSocket *_socket );
 
     /// Receives a matrix from the client
     /* static containers::Matrix<ENGINE_FLOAT> recv_matrix(

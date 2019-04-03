@@ -50,9 +50,8 @@ namespace communication
 // ------------------------------------------------------------------------
 
 Poco::JSON::Object Receiver::recv_cmd(
-    Poco::Net::StreamSocket* _socket/*,
-    const std::shared_ptr<const logging::Logger>& _logger,
-    const bool _log*/ )
+    const std::shared_ptr<const logging::Logger> &_logger,
+    Poco::Net::StreamSocket *_socket )
 {
     // ------------------------------------------------
     // Receive string
@@ -62,20 +61,20 @@ Poco::JSON::Object Receiver::recv_cmd(
     // ------------------------------------------------
     // Print on screen
 
-    /* if ( _log )
-         {
-             std::stringstream cmd_log;
+    if ( _logger )
+        {
+            std::stringstream cmd_log;
 
-             cmd_log << "Command sent by " << _socket.peerAddress().toString()
-                     << ":" << std::endl
-                     << str;
+            cmd_log << "Command sent by " << _socket->peerAddress().toString()
+                    << ":" << std::endl
+                    << str;
 
-             _logger->log( cmd_log.str() );
-         }*/
+            _logger->log( cmd_log.str() );
+        }
 
     // ------------------------------------------------
     // Interpret command string - note that all
-    // commands are always JSON form
+    // commands are always JSON form.
 
     Poco::JSON::Parser parser;
 
@@ -127,7 +126,7 @@ Poco::JSON::Object Receiver::recv_cmd(
 
 // ------------------------------------------------------------------------
 
-std::string Receiver::recv_string( Poco::Net::StreamSocket* _socket )
+std::string Receiver::recv_string( Poco::Net::StreamSocket *_socket )
 {
     // ------------------------------------------------
     // Init string

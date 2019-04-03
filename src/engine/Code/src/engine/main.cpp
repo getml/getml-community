@@ -12,13 +12,14 @@ int main( int argc, char *argv[] )
 
     // -------------------------------------------
 
-    /*const auto monitor = std::make_shared<const logging::Monitor>( options );
+    // const auto monitor = std::make_shared<const logging::Monitor>( options );
 
-    const auto logger = std::make_shared<const logging::Logger>( monitor );
+    const auto logger =
+        std::make_shared<const engine::logging::Logger>( /*monitor*/ );
 
-    const auto license_checker =
-        std::make_shared<engine::licensing::LicenseChecker>(
-            logger, monitor, options );*/
+    /*  const auto license_checker =
+          std::make_shared<engine::licensing::LicenseChecker>(
+              logger, monitor, options );*/
 
     // -------------------------------------------
 
@@ -103,9 +104,9 @@ int main( int argc, char *argv[] )
 
     Poco::Net::TCPServer srv(
         new engine::srv::ServerConnectionFactoryImpl(
-            /*data_frame_manager,
+            // data_frame_manager,
             logger,
-            model_manager,
+            /*model_manager,
             monitor,
             options,
             project_manager,*/

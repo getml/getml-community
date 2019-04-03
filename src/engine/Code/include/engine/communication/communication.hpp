@@ -15,6 +15,8 @@
 
 #include "engine/utils/utils.hpp"
 
+#include "engine/logging/logging.hpp"
+
 // ----------------------------------------------------
 // Module files
 
