@@ -1,0 +1,76 @@
+#ifndef MULTITHREADING_WEAKWRITELOCK_HPP_
+#define MULTITHREADING_WEAKWRITELOCK_HPP_
+
+namespace multithreading
+{
+// ----------------------------------------------------------------------------
+
+class WeakWriteLock
+{
+    // -------------------------------
+
+   public:
+    WeakWriteLock( const std::shared_ptr<ReadWriteLock>& _lock )
+        : lock_( _lock ), released_( true ), weak_released_( false )
+    {
+        lock_->weak_write_lock();
+    }
+
+    ~WeakWriteLock() { unlock(); };
+
+    // -------------------------------
+
+    /// Because of the boolean variable, this operator is forbidden.
+    WeakWriteLock& operator=( const WeakWriteLock& _other ) = delete;
+
+    /// Lock the ReadWriteLock.
+    void lock()
+    {
+        assert( released_ );
+        assert( weak_released_ );
+        weak_released_ = false;
+        lock_->weak_write_lock();
+    }
+
+    /// Unlock the ReadWriteLock.
+    void unlock()
+    {
+        if ( !released_ )
+            {
+                lock_->write_unlock();
+                released_ = true;
+            }
+
+        if ( !weak_released_ )
+            {
+                lock_->weak_write_unlock();
+                weak_released_ = true;
+            }
+    }
+
+    /// Upgrade from a weak write lock to a strong write lock.
+    void upgrade()
+    {
+        assert( !weak_released_ );
+        assert( released_ );
+        lock_->upgrade_weak_write_lock();
+        weak_released_ = true;
+        released_ = false;
+    }
+
+    // -------------------------------
+   private:
+    /// Lock to the WeakWriteLock.
+    const std::shared_ptr<ReadWriteLock> lock_;
+
+    /// Whether the acquirer has been released.
+    bool released_;
+
+    /// Whether the weak acquirer has been released.
+    bool weak_released_;
+};
+
+// ----------------------------------------------------------------------------
+}  // namespace multithreading
+
+#endif  // MULTITHREADING_WEAKWRITELOCK_HPP_

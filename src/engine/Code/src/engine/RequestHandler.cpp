@@ -81,7 +81,7 @@ void RequestHandler::run()
                  {
                      monitor().send( "deleteallusers", "" );
 
-                     engine::Sender::send_string( socket(), "Success!" );
+                     communication::Sender::send_string( socket(), "Success!" );
                  }
              else if ( type == "delete_project" )
                  {

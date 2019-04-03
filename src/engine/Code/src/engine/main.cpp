@@ -38,7 +38,7 @@ int main( int argc, char *argv[] )
     // -------------------------------------------
 
     /*const auto read_write_lock =
-        std::make_shared<autosql::multithreading::ReadWriteLock>();
+        std::make_shared<multithreading::ReadWriteLock>();
 
     const auto data_frame_manager = std::make_shared<engine::DataFrameManager>(
         categories,

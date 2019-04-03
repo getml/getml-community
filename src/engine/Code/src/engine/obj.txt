@@ -1,7 +1,9 @@
 set(
     ENGINE_OBJ 
     ${ENGINE_SOURCE_DIRECTORY}/DataFrame.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/DataFrameManager.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Encoding.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/JSON.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Receiver.cpp
     ${ENGINE_SOURCE_DIRECTORY}/RequestHandler.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Sender.cpp

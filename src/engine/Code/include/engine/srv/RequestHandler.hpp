@@ -19,7 +19,7 @@ class RequestHandler : public Poco::Net::TCPServerConnection
         const std::shared_ptr<const engine::logging::Logger>& _logger,
         /*const std::shared_ptr<ModelManager>& _model_manager,
         const std::shared_ptr<const engine::logging::Monitor>& _monitor,
-        const autosql::config::Options& _options,
+        const config::Options& _options,
         const std::shared_ptr<ProjectManager>& _project_manager,*/
         const std::shared_ptr<std::atomic<bool>>& _shutdown )
         : Poco::Net::TCPServerConnection( _socket ),
@@ -72,7 +72,7 @@ class RequestHandler : public Poco::Net::TCPServerConnection
     const std::shared_ptr<const engine::logging::Monitor> monitor_;
 
     /// Contains information on the port of the monitor process
-    const autosql::config::Options options_;
+    const config::Options options_;
 
     /// Handles requests related to the project as a whole, such as save or
     /// load.

@@ -65,6 +65,8 @@
         "typeinfo": "cpp",
         "unordered_map": "cpp",
         "utility": "cpp",
-        "vector": "cpp"
+        "vector": "cpp",
+        "__functional_base_03": "cpp",
+        "condition_variable": "cpp"
     }
 }
