@@ -58,15 +58,13 @@ struct JSON
     static T get_value(
         const Poco::JSON::Object& _obj, const std::string& _key )
     {
-        auto val = _obj.get( _key );
-
-        if ( !val )
+        if ( !_obj.has( _key ) )
             {
                 throw std::runtime_error(
                     "Value named '" + _key + "' not found!" );
             }
 
-        return val.convert<T>();
+        return _obj.get( _key ).convert<T>();
     }
 
     /// Transforms a vector to a Poco array

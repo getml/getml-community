@@ -4,11 +4,11 @@ int main( int argc, char *argv[] )
 {
     // -------------------------------------------
 
-    // const auto options = config::Options::make_options();
+    const auto options = engine::config::Options::make_options();
 
     // -------------------------------------------
 
-    // Poco::File( options.all_projects_directory ).createDirectories();
+    Poco::File( options.all_projects_directory_ ).createDirectories();
 
     // -------------------------------------------
 

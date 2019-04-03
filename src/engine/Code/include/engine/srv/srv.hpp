@@ -18,6 +18,8 @@
 #include <Poco/Net/TCPServerConnectionFactory.h>
 #include <Poco/Path.h>
 
+#include "engine/config/config.hpp"
+
 #include "engine/logging/logging.hpp"
 
 #include "engine/communication/communication.hpp"
