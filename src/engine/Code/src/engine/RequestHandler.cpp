@@ -49,12 +49,11 @@ void RequestHandler::run()
                 }
             else if ( type == "DataFrame.delete" )
                 {
-                    // project_manager().delete_data_frame( name, cmd, socket()
-                    // );
+                    project_manager().delete_data_frame( name, cmd, &socket() );
                 }
             else if ( type == "DataFrame.load" )
                 {
-                    //  project_manager().load_data_frame( name, socket() );
+                    project_manager().load_data_frame( name, &socket() );
                 }
             else if ( type == "DataFrame.get_content" )
                 {
@@ -81,12 +80,13 @@ void RequestHandler::run()
                 {
                     /*    monitor().send( "deleteallusers", "" );
 
-                        communication::Sender::send_string( socket(), "Success!"
+                        communication::Sender::send_string( "Success!",
+                       &socket()
                        );*/
                 }
             else if ( type == "delete_project" )
                 {
-                    //  project_manager().delete_project( name, socket() );
+                    project_manager().delete_project( name, &socket() );
                 }
             else if ( type == "is_alive" )
                 {

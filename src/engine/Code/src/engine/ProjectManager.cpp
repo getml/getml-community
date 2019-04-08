@@ -89,20 +89,19 @@ void ProjectManager::clear()
 
 // ------------------------------------------------------------------------
 
-/*void ProjectManager::delete_data_frame(
+void ProjectManager::delete_data_frame(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,
     Poco::Net::StreamSocket* _socket )
 {
     multithreading::WriteLock write_lock( read_write_lock_ );
 
-    engine::FileHandler::remove(
-        _name, project_directory_, _cmd, data_frames() );
+    FileHandler::remove( _name, project_directory_, _cmd, &data_frames() );
 
     // monitor_->send( "removedataframe", "{\"name\":\"" + _name + "\"}" );
 
-    engine::communication::Sender::send_string( _socket, "Success!" );
-}*/
+    engine::communication::Sender::send_string( "Success!", _socket );
+}
 
 // ------------------------------------------------------------------------
 
@@ -146,7 +145,7 @@ void ProjectManager::delete_project(
 
 // ------------------------------------------------------------------------
 
-/*void ProjectManager::load_data_frame(
+void ProjectManager::load_data_frame(
     const std::string& _name, Poco::Net::StreamSocket* _socket )
 {
     // --------------------------------------------------------------------
@@ -156,13 +155,13 @@ void ProjectManager::delete_project(
     // --------------------------------------------------------------------
     // Load data frame
 
-    auto df = engine::FileHandler::load(
+    auto df = FileHandler::load(
         data_frames(),
         categories_,
         join_keys_encoding_,
         project_directory_,
-        _name,
-        license_checker() );
+        _name/*,
+        license_checker()*/ );
 
     // --------------------------------------------------------------------
 
@@ -175,10 +174,11 @@ void ProjectManager::delete_project(
 
     data_frames()[_name].create_indices();
 
-    monitor_->send( "postdataframe", data_frames()[_name].to_monitor( _name ) );
+    // monitor_->send( "postdataframe", data_frames()[_name].to_monitor( _name )
+    // );
 
-    engine::communication::Sender::send_string( _socket, "Success!" );
-}*/
+    engine::communication::Sender::send_string( "Success!", _socket );
+}
 
 // ------------------------------------------------------------------------
 
@@ -221,7 +221,7 @@ void ProjectManager::refresh( Poco::Net::StreamSocket* _socket )
 
 // ------------------------------------------------------------------------
 
-/*void ProjectManager::save_data_frame(
+void ProjectManager::save_data_frame(
     const std::string& _name, Poco::Net::StreamSocket* _socket )
 {
     multithreading::ReadLock read_lock( read_write_lock_ );
@@ -231,15 +231,15 @@ void ProjectManager::refresh( Poco::Net::StreamSocket* _socket )
             throw std::invalid_argument( "You have not set a project!" );
         }
 
-    auto& df = engine::Getter::get( data_frames(), _name );
+    auto& df = utils::Getter::get( _name, &data_frames() );
 
     df.save( project_directory_ + "data/" + _name + "/" );
 
     FileHandler::save_encodings(
         project_directory_, categories(), join_keys_encoding() );
 
-    engine::communication::Sender::send_string( _socket, "Success!" );
-}*/
+    communication::Sender::send_string( "Success!", _socket );
+}
 
 // ------------------------------------------------------------------------
 

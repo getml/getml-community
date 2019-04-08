@@ -66,8 +66,8 @@ class ProjectManager
         const std::string& _name, Poco::Net::StreamSocket* _socket );
 
     /// Loads a data frame
-    /*void load_data_frame(
-        const std::string& _name, Poco::Net::StreamSocket* _socket );*/
+    void load_data_frame(
+        const std::string& _name, Poco::Net::StreamSocket* _socket );
 
     /// Loads a model
     /*void load_model(
