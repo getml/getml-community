@@ -88,11 +88,6 @@ void RequestHandler::run()
                 {
                     //  project_manager().delete_project( name, socket() );
                 }
-            else if ( type == "fit" )
-                {
-                    //   model_manager().fit_model( name, cmd, logger_, socket()
-                    //   );
-                }
             else if ( type == "is_alive" )
                 {
                     return;
@@ -101,33 +96,53 @@ void RequestHandler::run()
                 {
                     data_frame_manager().get_matrix( name, cmd, &socket() );
                 }
-            else if ( type == "Model" )
+            else if ( type == "RelboostModel" )
                 {
                     // project_manager().add_model( name, cmd, socket() );
                 }
-            else if ( type == "Model.copy" )
+            else if ( type == "RelboostModel.copy" )
                 {
                     //   model_manager().copy_model( name, cmd, socket() );
                 }
-            else if ( type == "Model.delete" )
+            else if ( type == "RelboostModel.delete" )
                 {
                     //  project_manager().delete_model( name, cmd, socket() );
                 }
-            else if ( type == "Model.load" )
+            else if ( type == "RelboostModel.fit" )
+                {
+                    //   relboost_model_manager().fit_model( name, cmd, logger_,
+                    //   socket()
+                    //   );
+                }
+            else if ( type == "RelboostModel.load" )
                 {
                     //  project_manager().load_model( name, socket() );
                 }
-            else if ( type == "Model.refresh" )
+            else if ( type == "RelboostModel.refresh" )
                 {
-                    //  model_manager().refresh_model( name, socket() );
+                    //  relboost_model_manager().refresh_model( name, socket()
+                    //  );
                 }
-            else if ( type == "Model.save" )
+            else if ( type == "RelboostModel.save" )
                 {
                     //   project_manager().save_model( name, socket() );
                 }
-            else if ( type == "Model.score" )
+            else if ( type == "RelboostModel.score" )
                 {
-                    // model_manager().score( name, cmd, socket() );
+                    // relboost_model_manager().score( name, cmd, socket() );
+                }
+            else if ( type == "RelboostModel.to_json" )
+                {
+                    // relboost_model_manager().to_json( name, socket() );
+                }
+            else if ( type == "RelboostModel.to_sql" )
+                {
+                    // relboost_model_manager().to_sql( name, socket() );
+                }
+            else if ( type == "RelboostModel.transform" )
+                {
+                    // relboost_model_manager().transform( name, cmd, socket()
+                    // );
                 }
             else if ( type == "refresh" )
                 {
@@ -141,18 +156,6 @@ void RequestHandler::run()
                 {
                     /*    monitor().shutdown();
                      *shutdown_ = true;*/
-                }
-            else if ( type == "to_json" )
-                {
-                    // model_manager().to_json( name, socket() );
-                }
-            else if ( type == "to_sql" )
-                {
-                    // model_manager().to_sql( name, socket() );
-                }
-            else if ( type == "transform" )
-                {
-                    // model_manager().transform( name, cmd, socket() );
                 }
         }
     catch ( std::exception& e )
