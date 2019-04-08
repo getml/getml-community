@@ -58,18 +58,19 @@ int main( int argc, char *argv[] )
         logger,
         models,
         monitor,
-        read_write_lock );
-
-    const auto project_manager = std::make_shared<engine::ProjectManager>(
-        categories,
-        data_frame_manager,
-        data_frames,
-        join_keys_encoding,
-        license_checker,
-        models,
-        monitor,
-        options,
         read_write_lock );*/
+
+    const auto project_manager =
+        std::make_shared<engine::handlers::ProjectManager>(
+            categories,
+            data_frame_manager,
+            data_frames,
+            join_keys_encoding,
+            // license_checker,
+            // models,
+            // monitor,
+            options,
+            read_write_lock );
 
     // -------------------------------------------
     // Print some output
@@ -109,7 +110,7 @@ int main( int argc, char *argv[] )
             /*model_manager,
             monitor,*/
             options,
-            // project_manager,
+            project_manager,
             shutdown ),
         server_socket );
 

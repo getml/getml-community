@@ -67,6 +67,7 @@
         "utility": "cpp",
         "vector": "cpp",
         "__functional_base_03": "cpp",
-        "condition_variable": "cpp"
+        "condition_variable": "cpp",
+        "deque": "cpp"
     }
 }

@@ -24,7 +24,7 @@
 
 #include <multithreading/multithreading.hpp>
 
-// #include "config/config.hpp"
+#include "engine/config/config.hpp"
 
 #include "engine/utils/utils.hpp"
 
@@ -37,7 +37,11 @@
 // ----------------------------------------------------
 // Module files
 
+#include "engine/handlers/FileHandler.hpp"
+
 #include "engine/handlers/DataFrameManager.hpp"
+
+#include "engine/handlers/ProjectManager.hpp"
 
 // ----------------------------------------------------
 

@@ -18,14 +18,14 @@ class ServerConnectionFactoryImpl : public Poco::Net::TCPServerConnectionFactory
         /*const std::shared_ptr<ModelManager>& _model_manager,
         const std::shared_ptr<const engine::logging::Monitor>& _monitor,*/
         const config::Options& _options,
-        // const std::shared_ptr<ProjectManager>& _project_manager,
+        const std::shared_ptr<handlers::ProjectManager>& _project_manager,
         const std::shared_ptr<std::atomic<bool>>& _shutdown )
         : data_frame_manager_( _data_frame_manager ),
           logger_( _logger ),
           /* model_manager_( _model_manager ),
           monitor_( _monitor ),*/
           options_( _options ),
-          // project_manager_( _project_manager ),
+          project_manager_( _project_manager ),
           shutdown_( _shutdown )
     {
     }
@@ -42,7 +42,7 @@ class ServerConnectionFactoryImpl : public Poco::Net::TCPServerConnectionFactory
             /* model_manager_,
              monitor_,*/
             options_,
-            // project_manager_,
+            project_manager_,
             shutdown_ );
     }
 
@@ -66,7 +66,7 @@ class ServerConnectionFactoryImpl : public Poco::Net::TCPServerConnectionFactory
 
     /// Handles requests related to the project as a whole, such as save or
     /// load.
-    // const std::shared_ptr<ProjectManager> project_manager_;
+    const std::shared_ptr<handlers::ProjectManager> project_manager_;
 
     /// Signals to the main process that we want to shut down.
     const std::shared_ptr<std::atomic<bool>>& shutdown_;

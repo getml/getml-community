@@ -16,8 +16,8 @@ void RequestHandler::run()
 
     try
         {
-            if (  //! options_.engine.allow_remote &&
-                socket().peerAddress().host().toString() != "127.0.0.1" )
+            if ( options_.engine_.allow_remote_ &&
+                 socket().peerAddress().host().toString() != "127.0.0.1" )
                 {
                     throw std::invalid_argument(
                         "Illegal connection attempt from " +
@@ -40,7 +40,7 @@ void RequestHandler::run()
                 }
             else if ( type == "DataFrame" )
                 {
-                    // project_manager().add_data_frame( name, socket() );
+                    project_manager().add_data_frame( name, &socket() );
                 }
             else if ( type == "DataFrame.append" )
                 {
@@ -102,7 +102,8 @@ void RequestHandler::run()
                 }
             else if ( type == "RelboostModel.copy" )
                 {
-                    //   model_manager().copy_model( name, cmd, socket() );
+                    //   relboost_model_manager().copy_model( name, cmd,
+                    //   socket() );
                 }
             else if ( type == "RelboostModel.delete" )
                 {
@@ -150,7 +151,7 @@ void RequestHandler::run()
                 }
             else if ( type == "set_project" )
                 {
-                    // project_manager().set_project( name, socket() );
+                    project_manager().set_project( name, &socket() );
                 }
             else if ( type == "shutdown" )
                 {
@@ -161,6 +162,8 @@ void RequestHandler::run()
     catch ( std::exception& e )
         {
             logger_->log( std::string( "Error: " ) + e.what() );
+
+            communication::Sender::send_string( e.what(), &socket() );
         }
 }
 
