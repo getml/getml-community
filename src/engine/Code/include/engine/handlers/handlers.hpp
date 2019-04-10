@@ -24,6 +24,8 @@
 
 #include <multithreading/multithreading.hpp>
 
+#include "relboost/ensemble/ensemble.hpp"
+
 #include "engine/config/config.hpp"
 
 #include "engine/utils/utils.hpp"
@@ -40,6 +42,8 @@
 #include "engine/handlers/FileHandler.hpp"
 
 #include "engine/handlers/DataFrameManager.hpp"
+
+#include "engine/handlers/ModelManager.hpp"
 
 #include "engine/handlers/ProjectManager.hpp"
 

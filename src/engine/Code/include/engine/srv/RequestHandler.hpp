@@ -17,16 +17,16 @@ class RequestHandler : public Poco::Net::TCPServerConnection
         const Poco::Net::StreamSocket& _socket,
         const std::shared_ptr<handlers::DataFrameManager>& _data_frame_manager,
         const std::shared_ptr<const engine::logging::Logger>& _logger,
-        /*const std::shared_ptr<ModelManager>& _model_manager,
-        const std::shared_ptr<const engine::logging::Monitor>& _monitor,*/
+        const std::shared_ptr<handlers::ModelManager>& _relboost_model_manager,
+        // const std::shared_ptr<const engine::logging::Monitor>& _monitor,
         const config::Options& _options,
         const std::shared_ptr<handlers::ProjectManager>& _project_manager,
         const std::shared_ptr<std::atomic<bool>>& _shutdown )
         : Poco::Net::TCPServerConnection( _socket ),
           data_frame_manager_( _data_frame_manager ),
           logger_( _logger ),
-          /*model_manager_( _model_manager ),
-          monitor_( _monitor ),*/
+          relboost_model_manager_( _relboost_model_manager ),
+          // monitor_( _monitor ),
           options_( _options ),
           project_manager_( _project_manager ),
           shutdown_( _shutdown )
@@ -51,10 +51,13 @@ class RequestHandler : public Poco::Net::TCPServerConnection
     const engine::logging::Logger& logger() { return *logger_; }
 
     /// Trivial accessor
-    /*ModelManager& model_manager() { return *model_manager_; }
+    handlers::ModelManager& relboost_model_manager()
+    {
+        return *relboost_model_manager_;
+    }
 
     /// Trivial accessor
-    const engine::logging::Monitor& monitor() { return *monitor_; }*/
+    // const engine::logging::Monitor& monitor() { return *monitor_; }
 
     /// Trivial accessor
     handlers::ProjectManager& project_manager() { return *project_manager_; }
@@ -69,10 +72,10 @@ class RequestHandler : public Poco::Net::TCPServerConnection
     const std::shared_ptr<const logging::Logger> logger_;
 
     /// Handles requests related to the models such as fit or transform.
-    /*const std::shared_ptr<ModelManager> model_manager_;
+    const std::shared_ptr<handlers::ModelManager> relboost_model_manager_;
 
     /// Handles the communication with the monitor
-    const std::shared_ptr<const engine::logging::Monitor> monitor_;*/
+    // const std::shared_ptr<const logging::Monitor> monitor_;
 
     /// Contains information on the port of the monitor process
     const config::Options options_;

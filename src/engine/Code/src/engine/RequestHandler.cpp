@@ -70,7 +70,7 @@ void RequestHandler::run()
                 }
             else if ( type == "DataFrame.save" )
                 {
-                    //  project_manager().save_data_frame( name, socket() );
+                    project_manager().save_data_frame( name, &socket() );
                 }
             else if ( type == "DataFrame.summarize" )
                 {
@@ -102,8 +102,7 @@ void RequestHandler::run()
                 }
             else if ( type == "RelboostModel.copy" )
                 {
-                    //   relboost_model_manager().copy_model( name, cmd,
-                    //   socket() );
+                    relboost_model_manager().copy_model( name, cmd, &socket() );
                 }
             else if ( type == "RelboostModel.delete" )
                 {
@@ -111,39 +110,32 @@ void RequestHandler::run()
                 }
             else if ( type == "RelboostModel.fit" )
                 {
-                    //   relboost_model_manager().fit_model( name, cmd, logger_,
-                    //   socket()
-                    //   );
+                    relboost_model_manager().fit_model(
+                        name, cmd, logger_, &socket() );
                 }
             else if ( type == "RelboostModel.load" )
                 {
                     //  project_manager().load_model( name, socket() );
                 }
-            else if ( type == "RelboostModel.refresh" )
-                {
-                    //  relboost_model_manager().refresh_model( name, socket()
-                    //  );
-                }
             else if ( type == "RelboostModel.save" )
                 {
-                    //   project_manager().save_model( name, socket() );
+                    // project_manager().save_model( name, socket() );
                 }
             else if ( type == "RelboostModel.score" )
                 {
-                    // relboost_model_manager().score( name, cmd, socket() );
+                    relboost_model_manager().score( name, cmd, &socket() );
                 }
             else if ( type == "RelboostModel.to_json" )
                 {
-                    // relboost_model_manager().to_json( name, socket() );
+                    relboost_model_manager().to_json( name, &socket() );
                 }
             else if ( type == "RelboostModel.to_sql" )
                 {
-                    // relboost_model_manager().to_sql( name, socket() );
+                    relboost_model_manager().to_sql( name, &socket() );
                 }
             else if ( type == "RelboostModel.transform" )
                 {
-                    // relboost_model_manager().transform( name, cmd, socket()
-                    // );
+                    relboost_model_manager().transform( name, cmd, &socket() );
                 }
             else if ( type == "refresh" )
                 {
@@ -155,8 +147,8 @@ void RequestHandler::run()
                 }
             else if ( type == "shutdown" )
                 {
-                    /*    monitor().shutdown();
-                     *shutdown_ = true;*/
+                    //    monitor().shutdown();
+                    *shutdown_ = true;
                 }
         }
     catch ( std::exception& e )

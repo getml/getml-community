@@ -33,7 +33,8 @@ int main( int argc, char *argv[] )
     const auto data_frames = std::make_shared<
         std::map<std::string, engine::containers::DataFrame>>();
 
-    // const auto models = std::make_shared<SQLNET_MODEL_MAP>();
+    const auto models =
+        std::make_shared<engine::handlers::ModelManager::ModelMapType>();
 
     // -------------------------------------------
 
@@ -50,15 +51,16 @@ int main( int argc, char *argv[] )
             // monitor,
             read_write_lock );
 
-    /*const auto model_manager = std::make_shared<engine::ModelManager>(
-        categories,
-        data_frames,
-        join_keys_encoding,
-        license_checker,
-        logger,
-        models,
-        monitor,
-        read_write_lock );*/
+    const auto relboost_model_manager =
+        std::make_shared<engine::handlers::ModelManager>(
+            categories,
+            data_frames,
+            join_keys_encoding,
+            // license_checker,
+            logger,
+            models,
+            // monitor,
+            read_write_lock );
 
     const auto project_manager =
         std::make_shared<engine::handlers::ProjectManager>(
@@ -107,8 +109,8 @@ int main( int argc, char *argv[] )
         new engine::srv::ServerConnectionFactoryImpl(
             data_frame_manager,
             logger,
-            /*model_manager,
-            monitor,*/
+            relboost_model_manager,
+            // monitor,
             options,
             project_manager,
             shutdown ),
