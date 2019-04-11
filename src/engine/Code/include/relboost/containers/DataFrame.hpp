@@ -11,6 +11,12 @@ struct DataFrame
 {
     // ---------------------------------------------------------------------
 
+    typedef relboost::containers::Matrix<RELBOOST_FLOAT> FloatMatrixType;
+
+    typedef relboost::containers::Matrix<RELBOOST_INT> IntMatrixType;
+
+    // ---------------------------------------------------------------------
+
     DataFrame(
         const Matrix<RELBOOST_INT>& _categorical,
         const Matrix<RELBOOST_FLOAT>& _discrete,
@@ -35,7 +41,11 @@ struct DataFrame
     // ---------------------------------------------------------------------
 
     /// Trivial getter
-    size_t nrows() const { return join_keys_[0].nrows_; }
+    size_t nrows() const
+    {
+        assert( join_keys_.size() > 0 );
+        return join_keys_[0].nrows_;
+    }
 
     /// Trivial getter
     RELBOOST_FLOAT time_stamps( size_t _nrow ) const
@@ -77,10 +87,10 @@ struct DataFrame
     // ---------------------------------------------------------------------
 
     /// Pointer to categorical columns.
-    const Matrix<RELBOOST_INT>& categorical_;
+    const Matrix<RELBOOST_INT> categorical_;
 
     /// Pointer to discrete columns.
-    const Matrix<RELBOOST_FLOAT>& discrete_;
+    const Matrix<RELBOOST_FLOAT> discrete_;
 
     /// Indices assiciated with join keys.
     const std::vector<std::shared_ptr<RELBOOST_INDEX>> indices_;

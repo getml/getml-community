@@ -11,6 +11,13 @@ namespace ensemble
 
 class DecisionTreeEnsemble
 {
+    // ------------------------------------------------------------------------
+
+   public:
+    typedef relboost::containers::DataFrame DataFrameType;
+
+    // ------------------------------------------------------------------------
+
    public:
     DecisionTreeEnsemble(
         const std::shared_ptr<const std::vector<std::string>>& _encoding,

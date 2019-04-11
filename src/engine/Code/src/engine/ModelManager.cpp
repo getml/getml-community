@@ -54,15 +54,12 @@ void ModelManager::fit_model(
 
     auto cmd = communication::Receiver::recv_cmd( logger_, _socket );
 
-    receive_data( cmd, local_categories, local_data_frames, _socket );
+    cmd = receive_data( cmd, local_categories, local_data_frames, _socket );
 
     // -------------------------------------------------------
     // Do the actual fitting
 
-    std::string msg = "";
-    /*std::string msg =
-        engine::Models::fit( _socket, cmd, _logger, *local_data_frames, model
-       );*/
+    Models::fit( cmd, _logger, *local_data_frames, &model, _socket );
 
     // -------------------------------------------------------
     // Upgrade to a strong write lock - we are about to write something.
@@ -96,7 +93,7 @@ void ModelManager::fit_model(
 
     // monitor_->send( "postmodel", model.to_monitor( _name ) );
 
-    communication::Sender::send_string( msg, _socket );
+    communication::Sender::send_string( "Trained RelboostModel.", _socket );
 
     send_data( categories_, local_data_frames, _socket );
 
@@ -105,7 +102,7 @@ void ModelManager::fit_model(
 
 // ------------------------------------------------------------------------
 
-void ModelManager::receive_data(
+Poco::JSON::Object ModelManager::receive_data(
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<containers::Encoding>& _categories,
     const std::shared_ptr<std::map<std::string, containers::DataFrame>>&
@@ -154,6 +151,10 @@ void ModelManager::receive_data(
 
             cmd = communication::Receiver::recv_cmd( logger_, _socket );
         }
+
+    // -------------------------------------------------------
+
+    return cmd;
 
     // -------------------------------------------------------
 }
@@ -316,7 +317,7 @@ void ModelManager::transform(
 
     auto cmd = communication::Receiver::recv_cmd( logger_, _socket );
 
-    receive_data( cmd, local_categories, local_data_frames, _socket );
+    cmd = receive_data( cmd, local_categories, local_data_frames, _socket );
 
     // -------------------------------------------------------
     // Do the actual transformation

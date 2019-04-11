@@ -89,7 +89,7 @@ class ModelManager
     /// Receives data from the client. This data will not be stored permanently,
     /// but locally. Once the training/transformation process is complete, it
     /// will be deleted.
-    void receive_data(
+    Poco::JSON::Object receive_data(
         const Poco::JSON::Object& _cmd,
         const std::shared_ptr<containers::Encoding>& _categories,
         const std::shared_ptr<std::map<std::string, containers::DataFrame>>&

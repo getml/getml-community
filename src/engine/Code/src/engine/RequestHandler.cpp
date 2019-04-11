@@ -98,7 +98,8 @@ void RequestHandler::run()
                 }
             else if ( type == "RelboostModel" )
                 {
-                    // project_manager().add_model( name, cmd, socket() );
+                    project_manager().add_relboost_model(
+                        name, cmd, &socket() );
                 }
             else if ( type == "RelboostModel.copy" )
                 {
@@ -106,7 +107,8 @@ void RequestHandler::run()
                 }
             else if ( type == "RelboostModel.delete" )
                 {
-                    //  project_manager().delete_model( name, cmd, socket() );
+                    project_manager().delete_relboost_model(
+                        name, cmd, &socket() );
                 }
             else if ( type == "RelboostModel.fit" )
                 {
@@ -119,7 +121,7 @@ void RequestHandler::run()
                 }
             else if ( type == "RelboostModel.save" )
                 {
-                    // project_manager().save_model( name, socket() );
+                    project_manager().save_relboost_model( name, &socket() );
                 }
             else if ( type == "RelboostModel.score" )
                 {
