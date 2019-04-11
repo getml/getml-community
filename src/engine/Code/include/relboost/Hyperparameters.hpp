@@ -26,6 +26,11 @@ struct Hyperparameters
 
     Hyperparameters( const Poco::JSON::Object& _obj );
 
+    Hyperparameters( const Poco::JSON::Object::Ptr& _obj )
+        : Hyperparameters( *_obj )
+    {
+    }
+
     ~Hyperparameters() = default;
 
     // --------------------------------------------------------

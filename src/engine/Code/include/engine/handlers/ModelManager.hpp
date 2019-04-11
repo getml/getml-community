@@ -130,13 +130,11 @@ class ModelManager
         const std::string& _name,
         const relboost::ensemble::DecisionTreeEnsemble& _model )
     {
-        multithreading::ReadLock read_lock( read_write_lock_ );
+        multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
 
         auto it = models_->find( _name );
 
-        read_lock.unlock();
-
-        multithreading::WriteLock write_lock( read_write_lock_ );
+        weak_write_lock.upgrade();
 
         if ( it == models_->end() )
             {

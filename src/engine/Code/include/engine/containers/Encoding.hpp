@@ -15,7 +15,8 @@ class Encoding
             std::shared_ptr<const Encoding>() )
         : null_value_( "" ),
           subencoding_( _subencoding ),
-          subsize_( _subencoding ? _subencoding->size() : 0 )
+          subsize_( _subencoding ? _subencoding->size() : 0 ),
+          vector_( std::make_shared<std::vector<std::string>>( 0 ) )
     {
     }
 
@@ -44,27 +45,30 @@ class Encoding
     /// Returns beginning of unique integers
     std::vector<std::string>::const_iterator begin() const
     {
-        return vector_.cbegin();
+        return vector_->cbegin();
     }
 
     /// Deletes all entries
     void clear()
     {
         map_.clear();
-        vector_.clear();
+        vector_->clear();
     }
 
     /// Returns end of unique integers
     std::vector<std::string>::const_iterator end() const
     {
-        return vector_.cend();
+        return vector_->cend();
     }
 
     /// Number of encoded elements
-    size_t size() const { return subsize_ + vector_.size(); }
+    size_t size() const { return subsize_ + vector_->size(); }
 
     /// Get the vector containing the names.
-    inline const std::vector<std::string>& vector() const { return vector_; }
+    inline const std::shared_ptr<const std::vector<std::string>> vector() const
+    {
+        return vector_;
+    }
 
     // -------------------------------
 
@@ -90,7 +94,7 @@ class Encoding
     const size_t subsize_;
 
     /// Maps integers to strings
-    std::vector<std::string> vector_;
+    const std::shared_ptr<std::vector<std::string>> vector_;
 };
 
 // -------------------------------------------------------------------------
@@ -116,12 +120,12 @@ const std::string& Encoding::operator[]( const T _i ) const
                 }
             else
                 {
-                    return vector_[_i - subsize_];
+                    return ( *vector_ )[_i - subsize_];
                 }
         }
     else
         {
-            return vector_[_i];
+            return ( *vector_ )[_i];
         }
 }
 

@@ -24,31 +24,35 @@ void ProjectManager::add_data_frame(
 
 // ------------------------------------------------------------------------
 
-/*void ProjectManager::add_model(
+void ProjectManager::add_relboost_model(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,
-    Poco::Net::StreamSocket& _socket )
+    Poco::Net::StreamSocket* _socket )
 {
     if ( project_directory_ == "" )
         {
             throw std::invalid_argument( "You have not set a project!" );
         }
 
-    auto placeholders_peripheral = JSON::array_to_vector<std::string>(
-        _cmd.SQLNET_GET_ARRAY( "peripheral_" ) );
+    auto hyperparameters = std::make_shared<relboost::Hyperparameters>(
+        JSON::get_object( _cmd, "hyperparameters_" ) );
 
-    auto placeholder_population =
-        Placeholder( *_cmd.SQLNET_GET_OBJECT( "population_" ) );
+    auto peripheral = std::make_shared<std::vector<std::string>>(
+        JSON::array_to_vector<std::string>(
+            JSON::get_array( _cmd, "peripheral_" ) ) );
 
-    auto model = decisiontrees::DecisionTreeEnsemble(
-        categories_, placeholders_peripheral, placeholder_population );
+    auto placeholder = std::make_shared<relboost::ensemble::Placeholder>(
+        JSON::get_object( _cmd, "population_" ) );
+
+    auto model = relboost::ensemble::DecisionTreeEnsemble(
+        categories_->vector(), hyperparameters, peripheral, placeholder );
 
     set_model( _name, model );
 
-    monitor_->send( "postmodel", model.to_monitor( _name ) );
+    // monitor_->send( "postmodel", model.to_monitor( _name ) );
 
-    engine::communication::Sender::send_string( _socket, "Success!" );
-}*/
+    engine::communication::Sender::send_string( "Success!", _socket );
+}
 
 // ------------------------------------------------------------------------
 
@@ -105,19 +109,19 @@ void ProjectManager::delete_data_frame(
 
 // ------------------------------------------------------------------------
 
-/*void ProjectManager::delete_model(
+void ProjectManager::delete_relboost_model(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,
     Poco::Net::StreamSocket* _socket )
 {
     multithreading::WriteLock write_lock( read_write_lock_ );
 
-    engine::FileHandler::remove( _name, project_directory_, _cmd, models() );
+    FileHandler::remove( _name, project_directory_, _cmd, &relboost_models() );
 
     // monitor_->send( "removemodel", "{\"name\":\"" + _name + "\"}" );
 
-    engine::communication::Sender::send_string( _socket, "Success!" );
-}*/
+    communication::Sender::send_string( "Success!", _socket );
+}
 
 // ------------------------------------------------------------------------
 
@@ -183,7 +187,7 @@ void ProjectManager::load_data_frame(
 // ------------------------------------------------------------------------
 
 /*void ProjectManager::load_model(
-    const std::string& _name, Poco::Net::StreamSocket& _socket )
+    const std::string& _name, Poco::Net::StreamSocket* _socket )
 {
     if ( project_directory_ == "" )
         {
@@ -196,7 +200,7 @@ void ProjectManager::load_data_frame(
 
     set_model( _name, model );
 
-    monitor_->send( "postmodel", model.to_monitor( _name ) );
+    // monitor_->send( "postmodel", model.to_monitor( _name ) );
 
     engine::communication::Sender::send_string( _socket, "Success!" );
 }*/
@@ -209,11 +213,11 @@ void ProjectManager::refresh( Poco::Net::StreamSocket* _socket )
 
     Poco::JSON::Object obj;
 
-    obj.set( "categories_", JSON::vector_to_array( categories().vector() ) );
+    obj.set( "categories_", JSON::vector_to_array( *categories().vector() ) );
 
     obj.set(
         "join_keys_encoding_",
-        JSON::vector_to_array( join_keys_encoding().vector() ) );
+        JSON::vector_to_array( *join_keys_encoding().vector() ) );
 
     engine::communication::Sender::send_string(
         JSON::stringify( obj ), _socket );
@@ -243,8 +247,8 @@ void ProjectManager::save_data_frame(
 
 // ------------------------------------------------------------------------
 
-/*void ProjectManager::save_model(
-    const std::string& _name, Poco::Net::StreamSocket& _socket )
+void ProjectManager::save_relboost_model(
+    const std::string& _name, Poco::Net::StreamSocket* _socket )
 {
     if ( project_directory_ == "" )
         {
@@ -260,8 +264,8 @@ void ProjectManager::save_data_frame(
     FileHandler::save_encodings(
         project_directory_, categories(), containers::Encoding() );
 
-    engine::communication::Sender::send_string( _socket, "Success!" );
-}*/
+    engine::communication::Sender::send_string( "Success!", _socket );
+}
 
 // ------------------------------------------------------------------------
 

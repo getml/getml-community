@@ -8,7 +8,7 @@ namespace containers
 
 void Encoding::append( const Encoding& _other, bool _include_subencoding )
 {
-    for ( auto& elem : _other.vector_ )
+    for ( auto& elem : *_other.vector_ )
         {
             ( *this )[elem];
         }
@@ -25,11 +25,11 @@ ENGINE_INT Encoding::insert( const std::string& _val )
 {
     assert( map_.find( _val ) == map_.end() );
 
-    const auto ix = static_cast<size_t>( vector_.size() + subsize_ );
+    const auto ix = static_cast<size_t>( vector_->size() + subsize_ );
 
     map_[_val] = ix;
 
-    vector_.push_back( _val );
+    vector_->push_back( _val );
 
     return ix;
 }
@@ -126,13 +126,13 @@ Encoding& Encoding::operator=( std::vector<std::string>&& _vector ) noexcept
 {
     assert( !subencoding_ );
 
-    vector_ = _vector;
+    *vector_ = _vector;
 
     map_.clear();
 
-    for ( size_t ix = 0; ix < static_cast<size_t>( vector_.size() ); ++ix )
+    for ( size_t ix = 0; ix < static_cast<size_t>( vector_->size() ); ++ix )
         {
-            auto& val = vector_[ix];
+            auto& val = ( *vector_ )[ix];
 
             assert( map_.find( val ) == map_.end() );
 

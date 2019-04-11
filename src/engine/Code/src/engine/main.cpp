@@ -69,7 +69,7 @@ int main( int argc, char *argv[] )
             data_frames,
             join_keys_encoding,
             // license_checker,
-            // models,
+            models,
             // monitor,
             options,
             read_write_lock );

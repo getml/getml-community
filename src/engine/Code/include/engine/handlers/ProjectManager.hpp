@@ -17,9 +17,9 @@ class ProjectManager
             _data_frames,
         const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
         /*const std::shared_ptr<engine::licensing::LicenseChecker>&
-            _license_checker,
-        const std::shared_ptr<SQLNET_MODEL_MAP> _models,
-        const std::shared_ptr<const logging::Monitor>& _monitor,*/
+            _license_checker,*/
+        const std::shared_ptr<ModelManager::ModelMapType>& _relboost_models,
+        // const std::shared_ptr<const logging::Monitor>& _monitor,
         const config::Options& _options,
         const std::shared_ptr<multithreading::ReadWriteLock>& _read_write_lock )
         : categories_( _categories ),
@@ -27,10 +27,10 @@ class ProjectManager
           data_frames_( _data_frames ),
           join_keys_encoding_( _join_keys_encoding ),
           // license_checker_( _license_checker ),
-          // models_( _models ),
           // monitor_( _monitor ),
           options_( _options ),
-          read_write_lock_( _read_write_lock )
+          read_write_lock_( _read_write_lock ),
+          relboost_models_( _relboost_models )
     {
     }
 
@@ -44,10 +44,10 @@ class ProjectManager
         const std::string& _name, Poco::Net::StreamSocket* _socket );
 
     /// Adds a new model
-    /*void add_model(
+    void add_relboost_model(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
-        Poco::Net::StreamSocket& _socket );*/
+        Poco::Net::StreamSocket* _socket );
 
     /// Deletes a data frame
     void delete_data_frame(
@@ -56,10 +56,10 @@ class ProjectManager
         Poco::Net::StreamSocket* _socket );
 
     /// Deletes a model
-    /*void delete_model(
+    void delete_relboost_model(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
-        Poco::Net::StreamSocket& _socket );*/
+        Poco::Net::StreamSocket* _socket );
 
     /// Deletes a project
     void delete_project(
@@ -70,8 +70,8 @@ class ProjectManager
         const std::string& _name, Poco::Net::StreamSocket* _socket );
 
     /// Loads a model
-    /*void load_model(
-        const std::string& _name, Poco::Net::StreamSocket& _socket );*/
+    /*void load_relboost_model(
+        const std::string& _name, Poco::Net::StreamSocket* _socket );*/
 
     /// Updates the encodings in the client
     void refresh( Poco::Net::StreamSocket* _socket );
@@ -81,8 +81,8 @@ class ProjectManager
         const std::string& _name, Poco::Net::StreamSocket* _socket );
 
     /// Loads a model
-    /*void save_model(
-        const std::string& _name, Poco::Net::StreamSocket& _socket );*/
+    void save_relboost_model(
+        const std::string& _name, Poco::Net::StreamSocket* _socket );
 
     /// Sets the current project
     void set_project(
@@ -114,12 +114,13 @@ class ProjectManager
     }
 
     /// Returns a deep copy of a model.
-    /*decisiontrees::DecisionTreeEnsemble get_model( const std::string& _name )
+    relboost::ensemble::DecisionTreeEnsemble get_model(
+        const std::string& _name )
     {
         multithreading::ReadLock read_lock( read_write_lock_ );
-        auto ptr = engine::Getter::get( *models_, _name );
+        auto ptr = utils::Getter::get( _name, relboost_models_.get() );
         return *ptr;
-    }*/
+    }
 
     /// Trivial accessor
     containers::Encoding& join_keys_encoding() { return *join_keys_encoding_; }
@@ -131,33 +132,32 @@ class ProjectManager
     }*/
 
     /// Trivial accessor
-    // SQLNET_MODEL_MAP& models() { return *models_; }
+    ModelManager::ModelMapType& relboost_models() { return *relboost_models_; }
 
     /// Sets a model.
-    /*void set_model(
+    void set_model(
         const std::string& _name,
-        const decisiontrees::DecisionTreeEnsemble& _model )
+        const relboost::ensemble::DecisionTreeEnsemble& _model )
     {
-        multithreading::ReadLock read_lock( read_write_lock_ );
+        multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
 
-        auto it = models_->find( _name );
+        auto it = relboost_models_->find( _name );
 
-        if ( it == models_->end() )
+        weak_write_lock.upgrade();
+
+        if ( it == relboost_models_->end() )
             {
-                read_lock.unlock();
-                multithreading::WriteLock write_lock(
-                    read_write_lock_ );
-                ( *models_ )[_name] =
-                    std::make_shared<decisiontrees::DecisionTreeEnsemble>(
+                ( *relboost_models_ )[_name] =
+                    std::make_shared<relboost::ensemble::DecisionTreeEnsemble>(
                         _model );
             }
         else
             {
                 it->second =
-                    std::make_shared<decisiontrees::DecisionTreeEnsemble>(
+                    std::make_shared<relboost::ensemble::DecisionTreeEnsemble>(
                         _model );
             }
-    }*/
+    }
 
     // ------------------------------------------------------------------------
 
@@ -179,9 +179,6 @@ class ProjectManager
     // const std::shared_ptr<engine::licensing::LicenseChecker>
     // license_checker_;
 
-    /// The models currently held in memory
-    // const std::shared_ptr<SQLNET_MODEL_MAP> models_;
-
     /// For communication with the monitor
     // const std::shared_ptr<const logging::Monitor> monitor_;
 
@@ -193,6 +190,9 @@ class ProjectManager
 
     /// For synchronization
     const std::shared_ptr<multithreading::ReadWriteLock>& read_write_lock_;
+
+    /// The relboost models currently held in memory
+    const std::shared_ptr<ModelManager::ModelMapType> relboost_models_;
 
     // ------------------------------------------------------------------------
 };

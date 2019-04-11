@@ -48,6 +48,13 @@ struct Placeholder
         check_vector_length();
     }
 
+    Placeholder( const Poco::JSON::Object::Ptr& _json_obj )
+        : Placeholder( *_json_obj )
+    {
+    }
+
+    ~Placeholder() = default;
+
     // --------------------------------------------------------
 
     /// Checks the length of the vectors.

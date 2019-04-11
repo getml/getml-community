@@ -13,13 +13,11 @@ void ModelManager::copy_model(
 {
     const std::string other = JSON::get_value<std::string>( _cmd, "other_" );
 
-    auto model = get_model( _name );
-
     auto other_model = get_model( other );
 
     // monitor_->send( "postmodel", other_model.to_monitor( _name ) );
 
-    set_model( _name, model );
+    set_model( _name, other_model );
 
     communication::Sender::send_string( "Success!", _socket );
 }

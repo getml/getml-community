@@ -24,6 +24,8 @@
 
 #include <multithreading/multithreading.hpp>
 
+#include "relboost/Hyperparameters.hpp"
+
 #include "relboost/ensemble/ensemble.hpp"
 
 #include "engine/config/config.hpp"
