@@ -52,16 +52,27 @@ class DecisionTreeEnsemble
     // -----------------------------------------------------------------
 
    public:
-    /// Copy constructor
-    DecisionTreeEnsemble& operator=( const DecisionTreeEnsemble& _other );
-
-    /// Copy assignment constructor
-    DecisionTreeEnsemble& operator=( DecisionTreeEnsemble&& _other ) noexcept;
+    /// Deletes ressources that are no longer needed.
+    void clean_up();
 
     /// Fits the DecisionTreeEnsemble.
     void fit(
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral );
+
+    /// Fits one more feature.
+    void fit_new_feature();
+
+    /// Initializes the fitting process.
+    void init(
+        const containers::DataFrame& _population,
+        const std::vector<containers::DataFrame>& _peripheral );
+
+    /// Copy constructor
+    DecisionTreeEnsemble& operator=( const DecisionTreeEnsemble& _other );
+
+    /// Copy assignment constructor
+    DecisionTreeEnsemble& operator=( DecisionTreeEnsemble&& _other ) noexcept;
 
     /// Generates predictions.
     std::vector<RELBOOST_FLOAT> predict(
@@ -86,6 +97,13 @@ class DecisionTreeEnsemble
     // -----------------------------------------------------------------
 
    public:
+    /// Trivial  accessor
+    const Hyperparameters& hyperparameters() const
+    {
+        assert( impl().hyperparameters_ );
+        return *impl().hyperparameters_;
+    }
+
     /// Trivial accessor.
     size_t num_features() const { return trees().size(); }
 
@@ -98,12 +116,6 @@ class DecisionTreeEnsemble
         const decisiontrees::DecisionTree& _decision_tree,
         const std::vector<RELBOOST_FLOAT>& _yhat_old,
         const std::vector<RELBOOST_FLOAT>& _predictions ) const;
-
-    /// Fits a new slate of candidate trees.
-    decisiontrees::DecisionTree fit_new_tree(
-        const std::shared_ptr<lossfunctions::LossFunction>& _loss_function,
-        const TableHolder& _table_holder,
-        std::vector<RELBOOST_FLOAT>* _yhat_old );
 
     /// Generates a new slate of predictions.
     std::vector<RELBOOST_FLOAT> generate_predictions(
@@ -118,13 +130,6 @@ class DecisionTreeEnsemble
     // -----------------------------------------------------------------
 
    private:
-    /// Trivial (private) accessor
-    const Hyperparameters& hyperparameters() const
-    {
-        assert( impl().hyperparameters_ );
-        return *impl().hyperparameters_;
-    }
-
     /// Trivial (private) accessor
     DecisionTreeEnsembleImpl& impl() { return impl_; }
 
@@ -172,6 +177,13 @@ class DecisionTreeEnsemble
     utils::Sampler& sampler() { return impl().sampler_; }
 
     /// Trivial (private) accessor
+    const TableHolder& table_holder() const
+    {
+        assert( table_holder_ );
+        return *table_holder_;
+    }
+
+    /// Trivial (private) accessor
     std::vector<RELBOOST_FLOAT>& targets()
     {
         assert( targets_ );
@@ -212,6 +224,13 @@ class DecisionTreeEnsemble
             } );
     }
 
+    /// Trivial (private) accessor
+    std::vector<RELBOOST_FLOAT>& yhat_old()
+    {
+        assert( yhat_old_ );
+        return *yhat_old_;
+    }
+
     // -----------------------------------------------------------------
 
    private:
@@ -221,8 +240,14 @@ class DecisionTreeEnsemble
     /// The loss function to be minimized.
     std::shared_ptr<lossfunctions::LossFunction> loss_function_;
 
+    /// Keeps the structures of the tables for fitting.
+    std::shared_ptr<const TableHolder> table_holder_;
+
     /// Target variables (previous trees already substracted).
     std::shared_ptr<std::vector<RELBOOST_FLOAT>> targets_;
+
+    /// The sum of all previous features.
+    std::shared_ptr<std::vector<RELBOOST_FLOAT>> yhat_old_;
 
     // -----------------------------------------------------------------
 };

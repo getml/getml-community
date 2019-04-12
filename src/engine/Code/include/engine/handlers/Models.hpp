@@ -174,7 +174,21 @@ void Models::fit(
     // ------------------------------------------------
     // Do the actual fitting.
 
-    _model->fit( population_table, peripheral_tables );
+    _model->init( population_table, peripheral_tables );
+
+    for ( size_t i = 0; i < _model->hyperparameters().num_features_; ++i )
+        {
+            _model->fit_new_feature();
+
+            if ( !_model->hyperparameters().silent_ )
+                {
+                    _logger->log(
+                        "Trained FEATURE_" +
+                        std::to_string( _model->num_features() ) );
+                }
+        }
+
+    _model->clean_up();
 
     // ------------------------------------------------
     // Do feature selection, if applicable

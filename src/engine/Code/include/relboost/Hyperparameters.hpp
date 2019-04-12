@@ -76,8 +76,8 @@ struct Hyperparameters
     /// Minimum sum of instance weight needed in a child
     // const RELBOOST_FLOAT min_child_weights;
 
-    /// Number of iterations (number of trees in boosted ensemble)
-    const RELBOOST_INT n_iter_;
+    /// Number of features (number of trees in boosted ensemble)
+    const RELBOOST_INT num_features_;
 
     /// ...
     // const RELBOOST_INT num_parallel_tree;

@@ -36,7 +36,199 @@ RELBOOST_FLOAT DecisionTreeEnsemble::calc_loss_reduction(
 
 // ----------------------------------------------------------------------------
 
+void DecisionTreeEnsemble::clean_up()
+{
+    table_holder_.reset();
+    yhat_old_.reset();
+}
+
+// ----------------------------------------------------------------------------
+
 void DecisionTreeEnsemble::fit(
+    const containers::DataFrame &_population,
+    const std::vector<containers::DataFrame> &_peripheral )
+{
+    // ------------------------------------------------------------------------
+    // Initialize fitting.
+
+    init( _population, _peripheral );
+
+    // ------------------------------------------------------------------------
+    // Do the actual fitting.
+
+    for ( size_t i = 0; i < hyperparameters().num_features_; ++i )
+        {
+            fit_new_feature();
+        }
+
+    // ------------------------------------------------------------------------
+    // Delete ressources that are no longer needed.
+
+    clean_up();
+
+    // ------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+void DecisionTreeEnsemble::fit_new_feature()
+{
+    // ------------------------------------------------------------------------
+
+    assert(
+        table_holder().main_tables_.size() ==
+        table_holder().peripheral_tables_.size() );
+
+    assert( table_holder().main_tables_.size() > 0 );
+
+    // ------------------------------------------------------------------------
+    // Create new sample weights.
+
+    const auto sample_weights =
+        sampler().make_sample_weights( table_holder().main_tables_[0].nrows() );
+
+    // ------------------------------------------------------------------------
+    // Recalculate the sums.
+
+    loss_function().calc_sums( sample_weights );
+
+    loss_function().commit();
+
+    // ------------------------------------------------------------------------
+
+    std::vector<decisiontrees::DecisionTree> candidates;
+
+    std::vector<RELBOOST_FLOAT> loss;
+
+    std::vector<std::vector<RELBOOST_FLOAT>> predictions;
+
+    for ( size_t ix_table_used = 0;
+          ix_table_used < table_holder().main_tables_.size();
+          ++ix_table_used )
+        {
+            // ------------------------------------------------------------------------
+
+            const auto &output_table =
+                table_holder().main_tables_[ix_table_used];
+
+            const auto &input_table =
+                table_holder().peripheral_tables_[ix_table_used];
+
+            // ------------------------------------------------------------------------
+
+            assert( output_table.nrows() == sample_weights->size() );
+
+            // ------------------------------------------------------------------------
+            // Matches can potentially use a lot of memory - better to create
+            // them anew when needed.
+
+            const auto matches = utils::Matchmaker::make_matches(
+                output_table,
+                input_table,
+                sample_weights,
+                hyperparameters().use_timestamps_ );
+
+            auto matches_ptr = utils::Matchmaker::make_pointers( matches );
+
+            assert( matches.size() == matches_ptr.size() );
+
+            debug_log(
+                "Number of matches: " + std::to_string( matches.size() ) );
+
+            // ------------------------------------------------------------------------
+            // Build aggregations.
+
+            std::vector<std::shared_ptr<lossfunctions::LossFunction>>
+                aggregations;
+
+            aggregations.push_back( std::make_shared<aggregations::Avg>(
+                loss_function_, matches_ptr, input_table, output_table ) );
+
+            aggregations.push_back( std::make_shared<aggregations::Sum>(
+                loss_function_, input_table, output_table ) );
+
+            // ------------------------------------------------------------------------
+            // Iterate through aggregations.
+
+            for ( auto &agg : aggregations )
+                {
+                    candidates.push_back( decisiontrees::DecisionTree(
+                        impl().encoding_,
+                        impl().hyperparameters_,
+                        agg,
+                        ix_table_used ) );
+
+                    candidates.back().fit(
+                        output_table,
+                        input_table,
+                        matches_ptr.begin(),
+                        matches_ptr.end() );
+
+                    const auto new_predictions = candidates.back().transform(
+                        output_table, input_table );
+
+                    candidates.back().calc_update_rate(
+                        yhat_old(), new_predictions );
+
+                    auto loss_reduction = calc_loss_reduction(
+                        candidates.back(), yhat_old(), new_predictions );
+
+                    loss.push_back( loss_reduction );
+
+                    predictions.emplace_back( std::move( new_predictions ) );
+                }
+
+            // ------------------------------------------------------------------------
+        }
+
+    // ------------------------------------------------------------------------
+    // Find best candidate
+
+    assert( loss.size() == candidates.size() );
+    assert( predictions.size() == candidates.size() );
+
+    const auto it = std::min_element( loss.begin(), loss.end() );
+
+    const auto dist = std::distance( loss.begin(), it );
+
+    const auto &best_predictions = predictions[dist];
+
+    // ------------------------------------------------------------------------
+    // Update yhat_old_.
+
+    assert( yhat_old_ );
+
+    update_predictions(
+        candidates[dist].update_rate(), best_predictions, &yhat_old() );
+
+    loss_function().calc_gradients( yhat_old_ );
+
+    loss_function().commit();
+
+    // ------------------------------------------------------------------------
+    // Add best candidate to trees
+
+    trees().push_back( std::move( candidates[dist] ) );
+
+    // ------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<RELBOOST_FLOAT> DecisionTreeEnsemble::generate_predictions(
+    const decisiontrees::DecisionTree &_decision_tree,
+    const TableHolder &_table_holder ) const
+{
+    const auto peripheral_used = _decision_tree.peripheral_used();
+
+    return _decision_tree.transform(
+        _table_holder.main_tables_[peripheral_used],
+        _table_holder.peripheral_tables_[peripheral_used] );
+}
+
+// ----------------------------------------------------------------------------
+
+void DecisionTreeEnsemble::init(
     const containers::DataFrame &_population,
     const std::vector<containers::DataFrame> &_peripheral )
 {
@@ -67,182 +259,18 @@ void DecisionTreeEnsemble::fit(
     // ------------------------------------------------------------------------
     // Calculate gradient.
 
-    auto yhat_old = std::make_shared<std::vector<RELBOOST_FLOAT>>(
+    yhat_old_ = std::make_shared<std::vector<RELBOOST_FLOAT>>(
         _population.nrows(), initial_prediction() );
 
-    loss_function().calc_gradients( yhat_old );
+    loss_function().calc_gradients( yhat_old_ );
 
     // ------------------------------------------------------------------------
     // Build table holder.
 
-    const auto table_holder = TableHolder(
+    table_holder_ = std::make_shared<const TableHolder>(
         placeholder(), _population, _peripheral, peripheral_names() );
 
     // ------------------------------------------------------------------------
-    // Do the actual fitting.
-
-    for ( size_t i = 0; i < hyperparameters().n_iter_; ++i )
-        {
-            trees().push_back(
-                fit_new_tree( loss_function_, table_holder, yhat_old.get() ) );
-
-            loss_function().calc_gradients( yhat_old );
-
-            loss_function().commit();
-        }
-
-    // ------------------------------------------------------------------------
-}
-
-// ----------------------------------------------------------------------------
-
-decisiontrees::DecisionTree DecisionTreeEnsemble::fit_new_tree(
-    const std::shared_ptr<lossfunctions::LossFunction> &_loss_function,
-    const TableHolder &_table_holder,
-    std::vector<RELBOOST_FLOAT> *_yhat_old )
-{
-    // ------------------------------------------------------------------------
-
-    assert(
-        _table_holder.main_tables_.size() ==
-        _table_holder.peripheral_tables_.size() );
-
-    assert( _table_holder.main_tables_.size() > 0 );
-
-    // ------------------------------------------------------------------------
-    // Create new sample weights.
-
-    const auto sample_weights =
-        sampler().make_sample_weights( _table_holder.main_tables_[0].nrows() );
-
-    // ------------------------------------------------------------------------
-    // Recalculate the sums.
-
-    loss_function().calc_sums( sample_weights );
-
-    loss_function().commit();
-
-    // ------------------------------------------------------------------------
-
-    std::vector<decisiontrees::DecisionTree> candidates;
-
-    std::vector<RELBOOST_FLOAT> loss;
-
-    std::vector<std::vector<RELBOOST_FLOAT>> predictions;
-
-    for ( size_t ix_table_used = 0;
-          ix_table_used < _table_holder.main_tables_.size();
-          ++ix_table_used )
-        {
-            // ------------------------------------------------------------------------
-
-            const auto &output_table =
-                _table_holder.main_tables_[ix_table_used];
-
-            const auto &input_table =
-                _table_holder.peripheral_tables_[ix_table_used];
-
-            // ------------------------------------------------------------------------
-
-            assert( output_table.nrows() == sample_weights->size() );
-
-            // ------------------------------------------------------------------------
-            // Matches can potentially use a lot of memory - better to create
-            // them anew when needed.
-
-            const auto matches = utils::Matchmaker::make_matches(
-                output_table,
-                input_table,
-                sample_weights,
-                hyperparameters().use_timestamps_ );
-
-            auto matches_ptr = utils::Matchmaker::make_pointers( matches );
-
-            assert( matches.size() == matches_ptr.size() );
-
-            debug_log(
-                "Number of matches: " + std::to_string( matches.size() ) );
-
-            // ------------------------------------------------------------------------
-            // Build aggregations.
-
-            std::vector<std::shared_ptr<lossfunctions::LossFunction>>
-                aggregations;
-
-            aggregations.push_back( std::make_shared<aggregations::Avg>(
-                _loss_function, matches_ptr, input_table, output_table ) );
-
-            aggregations.push_back( std::make_shared<aggregations::Sum>(
-                _loss_function, input_table, output_table ) );
-
-            // ------------------------------------------------------------------------
-            // Iterate through aggregations.
-
-            for ( auto &agg : aggregations )
-                {
-                    candidates.push_back( decisiontrees::DecisionTree(
-                        impl().encoding_,
-                        impl().hyperparameters_,
-                        agg,
-                        ix_table_used ) );
-
-                    candidates.back().fit(
-                        output_table,
-                        input_table,
-                        matches_ptr.begin(),
-                        matches_ptr.end() );
-
-                    const auto new_predictions = candidates.back().transform(
-                        output_table, input_table );
-
-                    candidates.back().calc_update_rate(
-                        *_yhat_old, new_predictions );
-
-                    auto loss_reduction = calc_loss_reduction(
-                        candidates.back(), *_yhat_old, new_predictions );
-
-                    loss.push_back( loss_reduction );
-
-                    predictions.emplace_back( std::move( new_predictions ) );
-                }
-
-            // ------------------------------------------------------------------------
-        }
-
-    // ------------------------------------------------------------------------
-    // Find best candidate
-
-    assert( loss.size() == candidates.size() );
-    assert( predictions.size() == candidates.size() );
-
-    const auto it = std::min_element( loss.begin(), loss.end() );
-
-    const auto dist = std::distance( loss.begin(), it );
-
-    const auto &best_predictions = predictions[dist];
-
-    // ------------------------------------------------------------------------
-    // Update _yhat_old.
-
-    update_predictions(
-        candidates[dist].update_rate(), best_predictions, _yhat_old );
-
-    // ------------------------------------------------------------------------
-
-    return candidates[dist];
-}
-
-// ----------------------------------------------------------------------------
-
-std::vector<RELBOOST_FLOAT> DecisionTreeEnsemble::generate_predictions(
-    const decisiontrees::DecisionTree &_decision_tree,
-    const TableHolder &_table_holder ) const
-{
-    const auto peripheral_used = _decision_tree.peripheral_used();
-
-    return _decision_tree.transform(
-        _table_holder.main_tables_[peripheral_used],
-        _table_holder.peripheral_tables_[peripheral_used] );
 }
 
 // ----------------------------------------------------------------------------
