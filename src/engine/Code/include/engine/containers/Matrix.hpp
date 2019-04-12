@@ -35,7 +35,20 @@ class Matrix
     {
         data_ = std::make_shared<std::vector<T>>( nrows_long_ * ncols_long_ );
 
-        data_ptr_ = data_.get()->data();
+        data_ptr_ = data_->data();
+    }
+
+    Matrix(
+        const size_t _nrows,
+        const size_t _ncols,
+        const std::shared_ptr<std::vector<T>> &_data )
+        : Matrix( _nrows, _ncols, nullptr )
+    {
+        data_ = _data;
+
+        data_ptr_ = data_->data();
+
+        assert( nrows_ * ncols_ == data_->size() );
     }
 
     ~Matrix() {}

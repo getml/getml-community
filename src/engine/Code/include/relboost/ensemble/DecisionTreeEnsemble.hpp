@@ -73,7 +73,7 @@ class DecisionTreeEnsemble
 
     /// Returns the features underlying the model (the predictions of the
     /// individual trees as opposed to the entire prediction)
-    std::vector<RELBOOST_FLOAT> transform(
+    std::shared_ptr<std::vector<RELBOOST_FLOAT>> transform(
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral ) const;
 
@@ -82,6 +82,12 @@ class DecisionTreeEnsemble
 
     /// Expresses DecisionTreeEnsemble as SQL code.
     std::string to_sql() const;
+
+    // -----------------------------------------------------------------
+
+   public:
+    /// Trivial accessor.
+    size_t num_features() const { return trees().size(); }
 
     // -----------------------------------------------------------------
 

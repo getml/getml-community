@@ -112,8 +112,7 @@ void RequestHandler::run()
                 }
             else if ( type == "RelboostModel.fit" )
                 {
-                    relboost_model_manager().fit_model(
-                        name, cmd, logger_, &socket() );
+                    relboost_model_manager().fit_model( name, cmd, &socket() );
                 }
             else if ( type == "RelboostModel.load" )
                 {

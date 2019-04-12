@@ -21,6 +21,15 @@ class Models
         ModelType* _model,
         Poco::Net::StreamSocket* _socket );
 
+    /// Generate features.
+    template <typename ModelType>
+    static containers::Matrix<ENGINE_FLOAT> transform(
+        const Poco::JSON::Object& _cmd,
+        const std::shared_ptr<const logging::Logger>& _logger,
+        const std::map<std::string, containers::DataFrame>& _data_frames,
+        const ModelType& _model,
+        Poco::Net::StreamSocket* _socket );
+
    private:
     /// Extract a data frame of type ModelType::DataFrameType from an
     /// engine::containers::DataFrame.
@@ -204,6 +213,68 @@ void Models::fit(
              msg += _model.fit_predictors(
                  _logger, features, population_table.targets() );
          }*/
+
+    // ------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+template <typename ModelType>
+containers::Matrix<ENGINE_FLOAT> Models::transform(
+    const Poco::JSON::Object& _cmd,
+    const std::shared_ptr<const logging::Logger>& _logger,
+    const std::map<std::string, containers::DataFrame>& _data_frames,
+    const ModelType& _model,
+    Poco::Net::StreamSocket* _socket )
+{
+    // ------------------------------------------------
+    // Extract the peripheral tables
+
+    auto peripheral_names = JSON::array_to_vector<std::string>(
+        JSON::get_array( _cmd, "peripheral_names_" ) );
+
+    std::vector<typename ModelType::DataFrameType> peripheral_tables = {};
+
+    for ( auto& name : peripheral_names )
+        {
+            const auto df = extract_df<typename ModelType::DataFrameType>(
+                name, _data_frames );
+
+            peripheral_tables.push_back( df );
+        }
+
+    // ------------------------------------------------
+    // Extract the population table
+
+    const auto population_name =
+        JSON::get_value<std::string>( _cmd, "population_name_" );
+
+    const auto population_table = extract_df<typename ModelType::DataFrameType>(
+        population_name, _data_frames );
+
+    // ------------------------------------------------
+    // Do the actual transformation.
+
+    /*const bool score = JSON::get_value<bool>( _cmd, "score_" );
+
+    const bool predict = JSON::get_value<bool>( _cmd, "predict_" );*/
+
+    const auto data = _model.transform( population_table, peripheral_tables );
+
+    // ------------------------------------------------
+    // Build matrix.
+
+    assert( data->size() % _model.num_features() == 0 );
+
+    const auto nrows = data->size() / _model.num_features();
+
+    const auto ncols = _model.num_features();
+
+    const auto mat = containers::Matrix<ENGINE_FLOAT>( nrows, ncols, data );
+
+    // ------------------------------------------------
+
+    return mat;
 
     // ------------------------------------------------
 }

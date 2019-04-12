@@ -337,7 +337,7 @@ void DecisionTreeEnsemble::save( const std::string &_fname ) const
 
 // ----------------------------------------------------------------------------
 
-std::vector<RELBOOST_FLOAT> DecisionTreeEnsemble::transform(
+std::shared_ptr<std::vector<RELBOOST_FLOAT>> DecisionTreeEnsemble::transform(
     const containers::DataFrame &_population,
     const std::vector<containers::DataFrame> &_peripheral ) const
 {
@@ -361,7 +361,8 @@ std::vector<RELBOOST_FLOAT> DecisionTreeEnsemble::transform(
 
     const auto ncols = static_cast<uint64_t>( trees().size() );
 
-    std::vector<RELBOOST_FLOAT> features( nrows * ncols );
+    auto features =
+        std::make_shared<std::vector<RELBOOST_FLOAT>>( nrows * ncols );
 
     // ------------------------------------------------------------------------
     // Generate new features.
@@ -375,7 +376,7 @@ std::vector<RELBOOST_FLOAT> DecisionTreeEnsemble::transform(
 
             for ( uint64_t i = 0; i < nrows; ++i )
                 {
-                    features[i * ncols + j] = predictions[i];
+                    ( *features )[i * ncols + j] = predictions[i];
                 }
         }
 

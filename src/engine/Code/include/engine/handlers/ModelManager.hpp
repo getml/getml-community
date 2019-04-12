@@ -58,7 +58,6 @@ class ModelManager
     void fit_model(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
-        const std::shared_ptr<const logging::Logger> _logger,
         Poco::Net::StreamSocket* _socket );
 
     /// Refreshes a model in the target language

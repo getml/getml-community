@@ -27,7 +27,6 @@ void ModelManager::copy_model(
 void ModelManager::fit_model(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,
-    const std::shared_ptr<const logging::Logger> _logger,
     Poco::Net::StreamSocket* _socket )
 {
     // -------------------------------------------------------
@@ -59,7 +58,7 @@ void ModelManager::fit_model(
     // -------------------------------------------------------
     // Do the actual fitting
 
-    Models::fit( cmd, _logger, *local_data_frames, &model, _socket );
+    Models::fit( cmd, logger_, *local_data_frames, &model, _socket );
 
     // -------------------------------------------------------
     // Upgrade to a strong write lock - we are about to write something.
@@ -322,14 +321,10 @@ void ModelManager::transform(
     // -------------------------------------------------------
     // Do the actual transformation
 
-    const bool score = JSON::get_value<bool>( cmd, "score_" );
+    auto yhat =
+        Models::transform( cmd, logger_, *local_data_frames, model, _socket );
 
-    /* const bool predict = JSON::get_value<bool>( cmd, "predict_" );
-
-    auto yhat = engine::Models::transform(
-        _socket, cmd, logger_, *local_data_frames, model, score, predict );*/
-
-    if ( score )
+    if ( JSON::get_value<bool>( cmd, "score_" ) )
         {
             set_model( _name, model );
         }
@@ -339,9 +334,7 @@ void ModelManager::transform(
     // -------------------------------------------------------
     // Send data
 
-    // communication::Sender::send_matrix<SQLNET_FLOAT>( _socket, false, yhat );
-
-    // -------------------------------------------------------
+    communication::Sender::send_matrix<ENGINE_FLOAT>( yhat, _socket );
 
     send_data( categories_, local_data_frames, _socket );
 
