@@ -38,5 +38,6 @@
 #include "relboost/tests/test16_nan_values_numerical.hpp"
 #include "relboost/tests/test17_nan_values_discrete.hpp"
 #include "relboost/tests/test18_upper_time_stamps.hpp"
+#include "relboost/tests/test19_classification.hpp"
 
 // ---------------------------------------------------------------------------

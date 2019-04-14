@@ -115,6 +115,18 @@ class Avg : public lossfunctions::LossFunction
     // -----------------------------------------------------------------
 
    public:
+    // Applies the inverse of the transformation function below. Some loss
+    // functions (such as CrossEntropyLoss) require this. For others, this won't
+    // do anything at all.
+    void apply_inverse( RELBOOST_FLOAT* yhat_ ) const final {}
+
+    // Applies a transformation function. Some loss functions (such as
+    // CrossEntropyLoss) require this. For others, this won't do anything at
+    // all.
+    void apply_transformation( std::vector<RELBOOST_FLOAT>* yhat_ ) const final
+    {
+    }
+
     /// Aggregations do not calculate gradients, only real loss functions do.
     void calc_gradients(
         const std::shared_ptr<const std::vector<RELBOOST_FLOAT>>& _yhat_old )

@@ -5,6 +5,7 @@ set(
     ${RELBOOST_SOURCE_DIRECTORY}/ConditionMaker.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/CriticalValues.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/CriticalValueSorter.cpp
+    ${RELBOOST_SOURCE_DIRECTORY}/CrossEntropyLoss.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/DataFrame.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/DecisionTree.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/DecisionTreeEnsemble.cpp

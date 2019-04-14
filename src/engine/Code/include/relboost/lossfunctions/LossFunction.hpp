@@ -12,6 +12,17 @@ namespace lossfunctions
 class LossFunction
 {
    public:
+    // Applies the inverse of the transformation function below. Some loss
+    // functions (such as CrossEntropyLoss) require this. For others, this won't
+    // do anything at all.
+    virtual void apply_inverse( RELBOOST_FLOAT* yhat_ ) const = 0;
+
+    // Applies a transformation function. Some loss functions (such as
+    // CrossEntropyLoss) require this. For others, this won't do anything at
+    // all.
+    virtual void apply_transformation(
+        std::vector<RELBOOST_FLOAT>* yhat_ ) const = 0;
+
     /// Calculates first and second derivatives.
     virtual void calc_gradients(
         const std::shared_ptr<const std::vector<RELBOOST_FLOAT>>&

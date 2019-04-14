@@ -1,12 +1,12 @@
 
 // ---------------------------------------------------------------------------
 
-void test1_sum()
+void test19_classification()
 {
     // ------------------------------------------------------------------------
 
     std::cout << std::endl
-              << "Test 1 (SUM aggregation): " << std::endl
+              << "Test 19 (classification): " << std::endl
               << std::endl;
 
     // ------------------------------------------------------------------------
@@ -108,6 +108,11 @@ void test1_sum()
                 }
         }
 
+    for ( auto& val : targets_population )
+        {
+            val = ( val > 100.0 ? 1.0 : 0.0 );
+        }
+
     const auto target_population_mat = relboost::containers::Matrix<double>(
         {"target"}, targets_population.data(), targets_population.size() );
 
@@ -123,7 +128,7 @@ void test1_sum()
     // ---------------------------------------------
     // Build data model.
 
-    const auto population_json = load_json( "../../tests/test1/schema.json" );
+    const auto population_json = load_json( "../../tests/test19/schema.json" );
 
     const auto population =
         std::make_shared<const relboost::ensemble::Placeholder>(
@@ -136,7 +141,7 @@ void test1_sum()
     // Load hyperparameters.
 
     const auto hyperparameters_json =
-        load_json( "../../tests/test1/hyperparameters.json" );
+        load_json( "../../tests/test19/hyperparameters.json" );
 
     std::cout << relboost::JSON::stringify( *hyperparameters_json ) << std::endl
               << std::endl;
@@ -160,12 +165,12 @@ void test1_sum()
 
     model.fit( population_df, {peripheral_df} );
 
-    model.save( "../../tests/test1/Model.json" );
+    model.save( "../../tests/test19/Model.json" );
 
     // ------------------------------------------------------------------------
     // Express as SQL code.
 
-    std::ofstream sql( "../../tests/test1/Model.sql" );
+    std::ofstream sql( "../../tests/test19/Model.sql" );
     sql << model.to_sql();
     sql.close();
 
@@ -176,14 +181,26 @@ void test1_sum()
 
     assert( predictions.size() == population_df.nrows() );
 
+    RELBOOST_FLOAT accuracy = 0.0;
+
     for ( size_t i = 0; i < predictions.size(); ++i )
         {
             // std::cout << "target: " << population_df.target_[i]
-            //          << ", prediction: " << predictions[i] << std::endl;
+            //           << ", prediction: " << predictions[i] << std::endl;
 
-            assert(
-                std::abs( population_df.target_[i] - predictions[i] ) < 5.0 );
+            if ( ( predictions[i] > 0.5 && population_df.target_[i] == 1.0 ) ||
+                 ( predictions[i] < 0.5 && population_df.target_[i] == 0.0 ) )
+                {
+                    ++accuracy;
+                }
         }
+
+    accuracy /= 500.0;
+
+    std::cout << " accuracy: " << accuracy << std::endl;
+
+    assert( accuracy > 0.96 );
+
     std::cout << std::endl << std::endl;
 
     // ------------------------------------------------------------------------

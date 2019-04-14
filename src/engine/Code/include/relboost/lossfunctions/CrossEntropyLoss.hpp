@@ -1,5 +1,5 @@
-#ifndef RELBOOST_LOSSFUNCTIONS_SQUARELOSS_HPP_
-#define RELBOOST_LOSSFUNCTIONS_SQUARELOSS_HPP_
+#ifndef RELBOOST_LOSSFUNCTIONS_CROSSENTROPYLOSS_HPP_
+#define RELBOOST_LOSSFUNCTIONS_CROSSENTROPYLOSS_HPP_
 
 // ----------------------------------------------------------------------------
 
@@ -9,12 +9,12 @@ namespace lossfunctions
 {
 // ------------------------------------------------------------------------
 
-class SquareLoss : public LossFunction
+class CrossEntropyLoss : public LossFunction
 {
     // -----------------------------------------------------------------
 
    public:
-    SquareLoss(
+    CrossEntropyLoss(
         const std::shared_ptr<const Hyperparameters>& _hyperparameters,
         const std::shared_ptr<std::vector<RELBOOST_FLOAT>>& _targets )
         : hyperparameters_( _hyperparameters ),
@@ -33,9 +33,53 @@ class SquareLoss : public LossFunction
               sum_h_yhat_committed_,
               targets_ ) )
     {
+        assert(
+            std::abs(
+                logistic_function( inverse_logistic_function( 0.0001 ) ) -
+                0.0001 ) < 1e-7 );
+
+        assert(
+            std::abs(
+                logistic_function( inverse_logistic_function( 0.001 ) ) -
+                0.001 ) < 1e-7 );
+
+        assert(
+            std::abs(
+                logistic_function( inverse_logistic_function( 0.01 ) ) -
+                0.01 ) < 1e-7 );
+
+        assert(
+            std::abs(
+                logistic_function( inverse_logistic_function( 0.1 ) ) - 0.1 ) <
+            1e-7 );
+
+        assert(
+            std::abs(
+                logistic_function( inverse_logistic_function( 0.5 ) ) - 0.5 ) <
+            1e-7 );
+
+        assert(
+            std::abs(
+                logistic_function( inverse_logistic_function( 0.9 ) ) - 0.9 ) <
+            1e-7 );
+
+        assert(
+            std::abs(
+                logistic_function( inverse_logistic_function( 0.99 ) ) -
+                0.99 ) < 1e-7 );
+
+        assert(
+            std::abs(
+                logistic_function( inverse_logistic_function( 0.999 ) ) -
+                0.999 ) < 1e-7 );
+
+        assert(
+            std::abs(
+                logistic_function( inverse_logistic_function( 0.9999 ) ) -
+                0.9999 ) < 1e-7 );
     }
 
-    ~SquareLoss() = default;
+    ~CrossEntropyLoss() = default;
 
     // -----------------------------------------------------------------
 
@@ -62,13 +106,20 @@ class SquareLoss : public LossFunction
     // Applies the inverse of the transformation function below. Some loss
     // functions (such as CrossEntropyLoss) require this. For others, this won't
     // do anything at all.
-    void apply_inverse( RELBOOST_FLOAT* yhat_ ) const final {}
+    void apply_inverse( RELBOOST_FLOAT* yhat_ ) const final
+    {
+        *yhat_ = inverse_logistic_function( *yhat_ );
+    }
 
     // Applies a transformation function. Some loss functions (such as
     // CrossEntropyLoss) require this. For others, this won't do anything at
     // all.
     void apply_transformation( std::vector<RELBOOST_FLOAT>* yhat_ ) const final
     {
+        std::for_each(
+            yhat_->begin(), yhat_->end(), [this]( RELBOOST_FLOAT& _val ) {
+                _val = logistic_function( _val );
+            } );
     }
 
     /// Calculates sum_g_ and sum_h_.
@@ -245,7 +296,7 @@ class SquareLoss : public LossFunction
 
     /// Describes the type of the loss function (SquareLoss, CrossEntropyLoss,
     /// etc.)
-    std::string type() const final { return "SquareLoss"; }
+    std::string type() const final { return "CrossEntropyLoss"; }
 
     // -----------------------------------------------------------------
 
@@ -261,6 +312,68 @@ class SquareLoss : public LossFunction
     {
         assert( hyperparameters_ );
         return *hyperparameters_;
+    }
+
+    /// Applies the inverse logistic function.
+    RELBOOST_FLOAT inverse_logistic_function( const RELBOOST_FLOAT _val ) const
+    {
+        const RELBOOST_FLOAT result = std::log( _val ) - std::log( 1.0 - _val );
+
+        if ( std::isnan( result ) || std::isinf( result ) )
+            {
+                if ( _val > 0.5 )
+                    {
+                        return 1e10;
+                    }
+                else
+                    {
+                        return -1e10;
+                    }
+            }
+
+        return result;
+    }
+
+    /// Applies the logistic function.
+    RELBOOST_FLOAT logistic_function( const RELBOOST_FLOAT _val ) const
+    {
+        const RELBOOST_FLOAT result = 1.0 / ( 1.0 + std::exp( -_val ) );
+
+        if ( std::isnan( result ) || std::isinf( result ) )
+            {
+                if ( _val > 0.0 )
+                    {
+                        return 1.0;
+                    }
+                else
+                    {
+                        return 0.0;
+                    }
+            }
+
+        return result;
+    }
+
+    /// Applies the log loss function.
+    RELBOOST_FLOAT log_loss(
+        const RELBOOST_FLOAT _sigma_yhat, const RELBOOST_FLOAT _target ) const
+    {
+        RELBOOST_FLOAT part1 = -_target * std::log( _sigma_yhat );
+
+        if ( std::isnan( part1 ) || std::isinf( part1 ) )
+            {
+                part1 = _target * 1e10;
+            }
+
+        RELBOOST_FLOAT part2 =
+            -( 1.0 - _target ) * std::log( 1.0 - _sigma_yhat );
+
+        if ( std::isnan( part2 ) || std::isinf( part2 ) )
+            {
+                part2 = -_target * 1e10;
+            }
+
+        return part1 + part2;
     }
 
     /// Trivial accessor
@@ -329,4 +442,4 @@ class SquareLoss : public LossFunction
 
 // ----------------------------------------------------------------------------
 
-#endif  // RELBOOST_LOSSFUNCTIONS_SQUARELOSS_HPP_
+#endif  // RELBOOST_LOSSFUNCTIONS_CROSSENTROPYLOSS_HPP_

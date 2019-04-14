@@ -256,6 +256,8 @@ void DecisionTreeEnsemble::init(
 
     initial_prediction() /= static_cast<RELBOOST_FLOAT>( targets().size() );
 
+    loss_function().apply_inverse( &initial_prediction() );
+
     // ------------------------------------------------------------------------
     // Calculate gradient.
 
@@ -346,6 +348,13 @@ std::vector<RELBOOST_FLOAT> DecisionTreeEnsemble::predict(
             update_predictions(
                 decision_tree.update_rate(), predictions, &yhat );
         }
+
+    // ------------------------------------------------------------------------
+    // Apply transformation function. Some loss functions (such as
+    // CrossEntropyLoss) require this. For others, this won't do anything at
+    // all.
+
+    loss_function().apply_transformation( &yhat );
 
     // ------------------------------------------------------------------------
 

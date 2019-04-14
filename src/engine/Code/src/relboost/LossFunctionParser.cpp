@@ -11,10 +11,14 @@ std::shared_ptr<LossFunction> LossFunctionParser::parse(
     const std::shared_ptr<const Hyperparameters>& _hyperparameters,
     const std::shared_ptr<std::vector<RELBOOST_FLOAT>> _targets )
 {
-    if ( _type == "SquareLoss" )
+    if ( _type == "CrossEntropyLoss" )
         {
-            return std::make_shared<SquareLoss>(
+            return std::make_shared<CrossEntropyLoss>(
                 _hyperparameters, _targets );
+        }
+    else if ( _type == "SquareLoss" )
+        {
+            return std::make_shared<SquareLoss>( _hyperparameters, _targets );
         }
     else
         {

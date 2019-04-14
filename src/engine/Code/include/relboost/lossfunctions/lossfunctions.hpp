@@ -29,6 +29,7 @@
 
 #include "relboost/lossfunctions/LossFunctionImpl.hpp"
 
+#include "relboost/lossfunctions/CrossEntropyLoss.hpp"
 #include "relboost/lossfunctions/SquareLoss.hpp"
 
 #include "relboost/lossfunctions/LossFunctionParser.hpp"

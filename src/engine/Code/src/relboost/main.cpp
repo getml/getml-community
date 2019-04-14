@@ -29,4 +29,6 @@ int main( int argc, char* argv[] )
     test17_nan_values_discrete();
 
     test18_upper_time_stamps();
+
+    test19_classification();
 }
