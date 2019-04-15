@@ -339,7 +339,7 @@ std::vector<const containers::Match*>::iterator DecisionTreeNode::partition(
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object DecisionTreeNode::to_json() const
+Poco::JSON::Object DecisionTreeNode::to_json_obj() const
 {
     Poco::JSON::Object obj;
 
@@ -364,9 +364,9 @@ Poco::JSON::Object DecisionTreeNode::to_json() const
 
             obj.set( "data_used_", JSON::stringify( split_.data_used_ ) );
 
-            obj.set( "child_greater_", child_greater_->to_json() );
+            obj.set( "child_greater_", child_greater_->to_json_obj() );
 
-            obj.set( "child_smaller_", child_smaller_->to_json() );
+            obj.set( "child_smaller_", child_smaller_->to_json_obj() );
         }
 
     return obj;

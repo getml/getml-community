@@ -36,7 +36,7 @@ class DecisionTree
         const std::vector<const containers::Match*>::iterator _end );
 
     /// Expresses DecisionTree as Poco::JSON::Object.
-    Poco::JSON::Object to_json() const;
+    Poco::JSON::Object to_json_obj() const;
 
     /// Transforms the data to form a prediction.
     std::vector<RELBOOST_FLOAT> transform(

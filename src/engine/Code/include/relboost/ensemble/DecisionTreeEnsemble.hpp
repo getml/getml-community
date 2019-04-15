@@ -75,7 +75,7 @@ class DecisionTreeEnsemble
         const std::vector<containers::DataFrame>& _peripheral ) const;
 
     /// Expresses DecisionTreeEnsemble as Poco::JSON::Object.
-    Poco::JSON::Object to_json() const;
+    Poco::JSON::Object to_json_obj() const;
 
     /// Expresses DecisionTreeEnsemble as SQL code.
     std::string to_sql() const;

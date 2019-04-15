@@ -271,7 +271,7 @@ void ModelManager::to_json(
     communication::Sender::send_string( "Found!", _socket );
 
     communication::Sender::send_string(
-        JSON::stringify( model.to_json() ), _socket );
+        JSON::stringify( model.to_json_obj() ), _socket );
 }
 
 // ------------------------------------------------------------------------

@@ -40,7 +40,7 @@ class DecisionTreeNode
         RELBOOST_FLOAT* _intercept );
 
     /// Expresses the DecisionTreeNode as a Poco::JSON::Object.
-    Poco::JSON::Object to_json() const;
+    Poco::JSON::Object to_json_obj() const;
 
     /// Expresses the DecisionTreeNode as SQL code.
     void to_sql(

@@ -436,7 +436,7 @@ void DecisionTreeEnsemble::save( const std::string &_fname ) const
 {
     std::ofstream fs( _fname, std::ofstream::out );
 
-    Poco::JSON::Stringifier::stringify( to_json(), fs );
+    Poco::JSON::Stringifier::stringify( to_json_obj(), fs );
 
     fs.close();
 }
@@ -493,7 +493,7 @@ std::shared_ptr<std::vector<RELBOOST_FLOAT>> DecisionTreeEnsemble::transform(
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object DecisionTreeEnsemble::to_json() const
+Poco::JSON::Object DecisionTreeEnsemble::to_json_obj() const
 {
     // ------------------------------------------------------------------------
 
@@ -515,7 +515,7 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json() const
 
     for ( auto &tree : trees() )
         {
-            arr.add( tree.to_json() );
+            arr.add( tree.to_json_obj() );
         }
 
     obj.set( "trees_", arr );
