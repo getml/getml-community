@@ -171,10 +171,13 @@ std::array<RELBOOST_FLOAT, 3> Sum::calc_weights(
 
             assert( _eta1.size() == _eta2.size() );
 
-            auto it =
-                output_.indices_[0]->find( input_.join_keys_[0][ix_input] );
+            assert( output_indices_.size() > 0 );
+            assert( input_join_keys_.size() > 0 );
+            assert( input_join_keys_[0].nrows_ > ix_input );
 
-            if ( it == output_.indices_[0]->end() )
+            auto it = output_indices_[0]->find( input_join_keys_[0][ix_input] );
+
+            if ( it == output_indices_[0]->end() )
                 {
                     continue;
                 }

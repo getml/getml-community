@@ -6,6 +6,80 @@ namespace decisiontrees
 {
 // ----------------------------------------------------------------------------
 
+DecisionTreeNode::DecisionTreeNode(
+    const utils::ConditionMaker& _condition_maker,
+    const RELBOOST_INT _depth,
+    const std::shared_ptr<const Hyperparameters>& _hyperparameters,
+    const std::shared_ptr<lossfunctions::LossFunction>& _loss_function,
+    const RELBOOST_FLOAT _weight )
+    : condition_maker_( _condition_maker ),
+      depth_( _depth ),
+      hyperparameters_( _hyperparameters ),
+      loss_function_( _loss_function ),
+      weight_( _weight )
+{
+}
+
+// ----------------------------------------------------------------------------
+
+DecisionTreeNode::DecisionTreeNode(
+    const utils::ConditionMaker& _condition_maker,
+    const RELBOOST_INT _depth,
+    const std::shared_ptr<const Hyperparameters>& _hyperparameters,
+    const std::shared_ptr<lossfunctions::LossFunction>& _loss_function,
+    const Poco::JSON::Object& _obj )
+    : condition_maker_( _condition_maker ),
+      depth_( _depth ),
+      hyperparameters_( _hyperparameters ),
+      loss_function_( _loss_function ),
+      weight_(
+          _obj.has( "weight_" )
+              ? JSON::get_value<RELBOOST_FLOAT>( _obj, "weight_" )
+              : NAN )
+{
+    if ( _obj.has( "child_greater_" ) )
+        {
+            const auto categories_used =
+                std::make_shared<const std::vector<RELBOOST_INT>>(
+                    JSON::array_to_vector<RELBOOST_INT>(
+                        JSON::get_array( _obj, "categories_used_" ) ) );
+
+            const auto column = JSON::get_value<size_t>( _obj, "column_" );
+
+            const auto column_input =
+                JSON::get_value<size_t>( _obj, "column_input_" );
+
+            const auto critical_value =
+                JSON::get_value<RELBOOST_FLOAT>( _obj, "critical_value_" );
+
+            const auto data_used = JSON::destringify(
+                JSON::get_value<std::string>( _obj, "data_used_" ) );
+
+            split_ = containers::Split(
+                categories_used,
+                column,
+                column_input,
+                critical_value,
+                data_used );
+
+            child_greater_.reset( new DecisionTreeNode(
+                condition_maker_,
+                depth_ + 1,
+                hyperparameters_,
+                loss_function_,
+                *JSON::get_object( _obj, "child_greater_" ) ) );
+
+            child_smaller_.reset( new DecisionTreeNode(
+                condition_maker_,
+                depth_ + 1,
+                hyperparameters_,
+                loss_function_,
+                *JSON::get_object( _obj, "child_smaller_" ) ) );
+        }
+}
+
+// ----------------------------------------------------------------------------
+
 void DecisionTreeNode::add_candidates(
     const enums::Revert _revert,
     const enums::Update _update,

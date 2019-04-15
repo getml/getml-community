@@ -23,29 +23,15 @@ class DecisionTreeEnsemble
         const std::shared_ptr<const std::vector<std::string>>& _encoding,
         const std::shared_ptr<const Hyperparameters>& _hyperparameters,
         const std::shared_ptr<const std::vector<std::string>>& _peripheral,
-        const std::shared_ptr<const Placeholder>& _placeholder )
-        : impl_( DecisionTreeEnsembleImpl(
-              _encoding, _hyperparameters, _peripheral, _placeholder ) ),
-          targets_( std::make_shared<std::vector<RELBOOST_FLOAT>>( 0 ) )
-    {
-        loss_function_ = lossfunctions::LossFunctionParser::parse(
-            _hyperparameters->objective_, impl().hyperparameters_, targets_ );
-    }
+        const std::shared_ptr<const Placeholder>& _placeholder );
 
-    DecisionTreeEnsemble( const DecisionTreeEnsemble& _other )
-        : impl_( _other.impl() ),
-          targets_( std::make_shared<std::vector<RELBOOST_FLOAT>>( 0 ) )
-    {
-        loss_function_ = lossfunctions::LossFunctionParser::parse(
-            _other.loss_function().type(), impl().hyperparameters_, targets_ );
-    }
+    DecisionTreeEnsemble(
+        const std::shared_ptr<const std::vector<std::string>>& _encoding,
+        const Poco::JSON::Object& _obj );
 
-    DecisionTreeEnsemble( DecisionTreeEnsemble&& _other ) noexcept
-        : impl_( std::move( _other.impl() ) ), targets_( _other.targets_ )
-    {
-        loss_function_ = lossfunctions::LossFunctionParser::parse(
-            _other.loss_function().type(), impl().hyperparameters_, targets_ );
-    }
+    DecisionTreeEnsemble( const DecisionTreeEnsemble& _other );
+
+    DecisionTreeEnsemble( DecisionTreeEnsemble&& _other ) noexcept;
 
     ~DecisionTreeEnsemble() = default;
 

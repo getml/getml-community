@@ -22,6 +22,9 @@ struct JSON
 {
     // ------------------------------------------------------------------------
 
+    /// Parses the correct DataUsed from a string.
+    static enums::DataUsed destringify( const std::string& _data_used );
+
     /// Gets an array from a JSON object or throws.
     static Poco::JSON::Array::Ptr get_array(
         const Poco::JSON::Object& _obj, const std::string& _key );

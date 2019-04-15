@@ -22,7 +22,8 @@ std::shared_ptr<LossFunction> LossFunctionParser::parse(
         }
     else
         {
-            assert( false );
+            throw std::runtime_error(
+                "Unknown loss function: '" + _type + "' !" );
             return std::shared_ptr<LossFunction>();
         }
 }

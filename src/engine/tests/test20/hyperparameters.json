@@ -1,0 +1,12 @@
+{
+    "eta_": 0.4,
+    "gamma_": 1.0,
+    "lambda_": 1e-20,
+    "max_depth_": 1,
+    "num_features_": 10,
+    "objective_": "SquareLoss",
+    "seed_": 5849,
+    "silent_": true,
+    "subsample_": 1.0,
+    "use_timestamps_": true
+}

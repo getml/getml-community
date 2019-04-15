@@ -17,14 +17,14 @@ class DecisionTreeNode
         const RELBOOST_INT _depth,
         const std::shared_ptr<const Hyperparameters>& _hyperparameters,
         const std::shared_ptr<lossfunctions::LossFunction>& _loss_function,
-        const RELBOOST_FLOAT _weight )
-        : condition_maker_( _condition_maker ),
-          depth_( _depth ),
-          hyperparameters_( _hyperparameters ),
-          loss_function_( _loss_function ),
-          weight_( _weight )
-    {
-    }
+        const RELBOOST_FLOAT _weight );
+
+    DecisionTreeNode(
+        const utils::ConditionMaker& _condition_maker,
+        const RELBOOST_INT _depth,
+        const std::shared_ptr<const Hyperparameters>& _hyperparameters,
+        const std::shared_ptr<lossfunctions::LossFunction>& _loss_function,
+        const Poco::JSON::Object& _obj );
 
     ~DecisionTreeNode() = default;
 

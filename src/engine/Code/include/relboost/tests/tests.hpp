@@ -40,4 +40,6 @@
 #include "relboost/tests/test18_upper_time_stamps.hpp"
 #include "relboost/tests/test19_classification.hpp"
 
+#include "relboost/tests/test20_saving_and_loading.hpp"
+
 // ---------------------------------------------------------------------------

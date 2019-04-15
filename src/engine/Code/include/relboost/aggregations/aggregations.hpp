@@ -18,6 +18,8 @@
 
 #include "relboost/aggregations/Sum.hpp"
 
+#include "relboost/aggregations/AggregationParser.hpp"
+
 // ----------------------------------------------------------------------------
 
 #endif  // RELBOOST_AGGREGATIONS_AGGREGATIONS_HPP_

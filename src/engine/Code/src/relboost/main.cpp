@@ -31,4 +31,6 @@ int main( int argc, char* argv[] )
     test18_upper_time_stamps();
 
     test19_classification();
+
+    test20_saving_and_loading();
 }

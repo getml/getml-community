@@ -186,7 +186,37 @@ void ProjectManager::load_data_frame(
 
 // ------------------------------------------------------------------------
 
-/*void ProjectManager::load_model(
+Poco::JSON::Object ProjectManager::load_json_obj(
+    const std::string& _fname ) const
+{
+    std::ifstream input( _fname );
+
+    std::stringstream json;
+
+    std::string line;
+
+    if ( input.is_open() )
+        {
+            while ( std::getline( input, line ) )
+                {
+                    json << line;
+                }
+
+            input.close();
+        }
+    else
+        {
+            throw std::invalid_argument( "File '" + _fname + "' not found!" );
+        }
+
+    return *Poco::JSON::Parser()
+                .parse( json.str() )
+                .extract<Poco::JSON::Object::Ptr>();
+}
+
+// ------------------------------------------------------------------------
+
+void ProjectManager::load_relboost_model(
     const std::string& _name, Poco::Net::StreamSocket* _socket )
 {
     if ( project_directory_ == "" )
@@ -194,16 +224,18 @@ void ProjectManager::load_data_frame(
             throw std::invalid_argument( "You have not set a project!" );
         }
 
-    auto model = decisiontrees::DecisionTreeEnsemble( categories_ );
+    const auto obj =
+        load_json_obj( project_directory_ + "models/" + _name + "/Model.json" );
 
-    model.load( project_directory_ + "models/" + _name + "/" );
+    auto model =
+        relboost::ensemble::DecisionTreeEnsemble( categories_->vector(), obj );
 
     set_model( _name, model );
 
     // monitor_->send( "postmodel", model.to_monitor( _name ) );
 
-    engine::communication::Sender::send_string( _socket, "Success!" );
-}*/
+    engine::communication::Sender::send_string( "Success!", _socket );
+}
 
 // ------------------------------------------------------------------------
 

@@ -21,12 +21,22 @@ class Sum : public lossfunctions::LossFunction
           depth_( _child->depth() + 1 ),
           indices_( _output.nrows() ),
           indices_current_( _output.nrows() ),
-          input_( _input ),
-          output_( _output ),
+          input_join_keys_( _input.join_keys_ ),
+          output_indices_( _output.indices_ ),
           impl_( AggregationImpl(
               _child.get(), &eta1_, &eta2_, &indices_, &indices_current_ ) )
     {
-        resize( output_.nrows() );
+        resize( _output.nrows() );
+    }
+
+    Sum( const std::shared_ptr<lossfunctions::LossFunction>& _child )
+        : child_( _child ),
+          depth_( _child->depth() + 1 ),
+          indices_( 0 ),
+          indices_current_( 0 ),
+          impl_( AggregationImpl(
+              _child.get(), &eta1_, &eta2_, &indices_, &indices_current_ ) )
+    {
     }
 
     ~Sum() = default;
@@ -246,11 +256,11 @@ class Sum : public lossfunctions::LossFunction
     /// Keeps track of the samples that have been altered since the last split.
     containers::IntSet indices_current_;
 
-    /// The input data.
-    const containers::DataFrame input_;
+    /// The join keys of the input table.
+    std::vector<containers::Matrix<RELBOOST_INT>> input_join_keys_;
 
-    /// The output data.
-    const containers::DataFrame output_;
+    /// The indices of the output table.
+    std::vector<std::shared_ptr<RELBOOST_INDEX>> output_indices_;
 
     /// Implementation class. Because impl_ depends on some other variables, it
     /// is the last member variable.

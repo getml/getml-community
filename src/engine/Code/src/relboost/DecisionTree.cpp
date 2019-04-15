@@ -6,6 +6,48 @@ namespace decisiontrees
 {
 // ----------------------------------------------------------------------------
 
+DecisionTree::DecisionTree(
+    const std::shared_ptr<const std::vector<std::string>>& _encoding,
+    const std::shared_ptr<const Hyperparameters>& _hyperparameters,
+    const std::shared_ptr<lossfunctions::LossFunction>& _loss_function,
+    const size_t _peripheral_used )
+    : encoding_( _encoding ),
+      hyperparameters_( _hyperparameters ),
+      intercept_( 0.0 ),
+      loss_function_( _loss_function ),
+      peripheral_used_( _peripheral_used ),
+      update_rate_( 0.0 )
+{
+}
+
+// ----------------------------------------------------------------------------
+
+DecisionTree::DecisionTree(
+    const std::shared_ptr<const std::vector<std::string>>& _encoding,
+    const std::shared_ptr<const Hyperparameters>& _hyperparameters,
+    const std::shared_ptr<lossfunctions::LossFunction>& _loss_function,
+    const Poco::JSON::Object& _obj )
+    : encoding_( _encoding ),
+      hyperparameters_( _hyperparameters ),
+      loss_function_( aggregations::AggregationParser::parse(
+          JSON::get_value<std::string>( _obj, "loss_" ), _loss_function ) )
+{
+    intercept_ = JSON::get_value<RELBOOST_FLOAT>( _obj, "intercept_" );
+
+    peripheral_used_ = JSON::get_value<size_t>( _obj, "peripheral_used_" );
+
+    update_rate_ = JSON::get_value<RELBOOST_FLOAT>( _obj, "update_rate_" );
+
+    root_.reset( new DecisionTreeNode(
+        utils::ConditionMaker( encoding_ ),
+        0,  // _depth
+        hyperparameters_,
+        loss_function_,
+        *JSON::get_object( _obj, "root_" ) ) );
+}
+
+// ----------------------------------------------------------------------------
+
 void DecisionTree::fit(
     const containers::DataFrame& _output,
     const containers::DataFrame& _input,
@@ -54,6 +96,8 @@ Poco::JSON::Object DecisionTree::to_json() const
     obj.set( "intercept_", intercept_ );
 
     obj.set( "loss_", loss_function().type() );
+
+    obj.set( "peripheral_used_", peripheral_used_ );
 
     obj.set( "root_", root_->to_json() );
 

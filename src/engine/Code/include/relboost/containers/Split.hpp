@@ -103,7 +103,7 @@ struct Split
             _data_used == enums::DataUsed::same_units_numerical_is_nan );
     }
 
-    /// Constructor for deep copies.
+    /// Constructor for deep copies and reconstruction from JSON.
     Split(
         const std::shared_ptr<const std::vector<RELBOOST_INT>>&
             _categories_used,

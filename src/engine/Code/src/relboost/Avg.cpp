@@ -365,10 +365,13 @@ std::array<RELBOOST_FLOAT, 3> Avg::calc_weights(
             assert( eta1_.size() == count_committed_.size() );
             assert( eta2_.size() == count_committed_.size() );
 
-            auto it =
-                output_.indices_[0]->find( input_.join_keys_[0][ix_input] );
+            assert( output_indices_.size() > 0 );
+            assert( input_join_keys_.size() > 0 );
+            assert( input_join_keys_[0].nrows_ > ix_input );
 
-            if ( it == output_.indices_[0]->end() )
+            auto it = output_indices_[0]->find( input_join_keys_[0][ix_input] );
+
+            if ( it == output_indices_[0]->end() )
                 {
                     continue;
                 }

@@ -70,8 +70,8 @@ class ProjectManager
         const std::string& _name, Poco::Net::StreamSocket* _socket );
 
     /// Loads a model
-    /*void load_relboost_model(
-        const std::string& _name, Poco::Net::StreamSocket* _socket );*/
+    void load_relboost_model(
+        const std::string& _name, Poco::Net::StreamSocket* _socket );
 
     /// Updates the encodings in the client
     void refresh( Poco::Net::StreamSocket* _socket );
@@ -100,6 +100,9 @@ class ProjectManager
     /// Deletes all models and data frames (from memory only) and clears all
     /// encodings.
     void clear();
+
+    /// Loads a JSON object from a file.
+    Poco::JSON::Object load_json_obj( const std::string& _fname ) const;
 
     // ------------------------------------------------------------------------
 

@@ -6,6 +6,75 @@ namespace ensemble
 {
 // ----------------------------------------------------------------------------
 
+DecisionTreeEnsemble::DecisionTreeEnsemble(
+    const std::shared_ptr<const std::vector<std::string>> &_encoding,
+    const std::shared_ptr<const Hyperparameters> &_hyperparameters,
+    const std::shared_ptr<const std::vector<std::string>> &_peripheral,
+    const std::shared_ptr<const Placeholder> &_placeholder )
+    : impl_( DecisionTreeEnsembleImpl(
+          _encoding, _hyperparameters, _peripheral, _placeholder ) ),
+      targets_( std::make_shared<std::vector<RELBOOST_FLOAT>>( 0 ) )
+{
+    loss_function_ = lossfunctions::LossFunctionParser::parse(
+        _hyperparameters->objective_, impl().hyperparameters_, targets_ );
+}
+
+// ----------------------------------------------------------------------------
+
+DecisionTreeEnsemble::DecisionTreeEnsemble(
+    const std::shared_ptr<const std::vector<std::string>> &_encoding,
+    const Poco::JSON::Object &_obj )
+    : impl_( DecisionTreeEnsembleImpl(
+          _encoding,
+          std::make_shared<const Hyperparameters>(
+              *JSON::get_object( _obj, "hyperparameters_" ) ),
+          std::make_shared<const std::vector<std::string>>(
+              JSON::array_to_vector<std::string>(
+                  JSON::get_array( _obj, "peripheral_names_" ) ) ),
+          std::make_shared<const Placeholder>(
+              *JSON::get_object( _obj, "placeholder_" ) ) ) ),
+      targets_( std::make_shared<std::vector<RELBOOST_FLOAT>>( 0 ) )
+{
+    initial_prediction() =
+        JSON::get_value<RELBOOST_FLOAT>( _obj, "initial_prediction_" );
+
+    loss_function_ = lossfunctions::LossFunctionParser::parse(
+        hyperparameters().objective_, impl().hyperparameters_, targets_ );
+
+    const auto trees_objects = *JSON::get_array( _obj, "trees_" );
+
+    for ( size_t i = 0; i < trees_objects.size(); ++i )
+        {
+            trees().push_back( decisiontrees::DecisionTree(
+                _encoding,
+                impl().hyperparameters_,
+                loss_function_,
+                *trees_objects.getObject( i ) ) );
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+DecisionTreeEnsemble::DecisionTreeEnsemble( const DecisionTreeEnsemble &_other )
+    : impl_( _other.impl() ),
+      targets_( std::make_shared<std::vector<RELBOOST_FLOAT>>( 0 ) )
+{
+    loss_function_ = lossfunctions::LossFunctionParser::parse(
+        _other.loss_function().type(), impl().hyperparameters_, targets_ );
+}
+
+// ----------------------------------------------------------------------------
+
+DecisionTreeEnsemble::DecisionTreeEnsemble(
+    DecisionTreeEnsemble &&_other ) noexcept
+    : impl_( std::move( _other.impl() ) ), targets_( _other.targets_ )
+{
+    loss_function_ = lossfunctions::LossFunctionParser::parse(
+        _other.loss_function().type(), impl().hyperparameters_, targets_ );
+}
+
+// ----------------------------------------------------------------------------
+
 RELBOOST_FLOAT DecisionTreeEnsemble::calc_loss_reduction(
     const decisiontrees::DecisionTree &_decision_tree,
     const std::vector<RELBOOST_FLOAT> &_yhat_old,
@@ -435,6 +504,10 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json() const
     obj.set( "hyperparameters_", hyperparameters().to_json_obj() );
 
     obj.set( "initial_prediction_", initial_prediction() );
+
+    obj.set( "peripheral_names_", JSON::vector_to_array( peripheral_names() ) );
+
+    obj.set( "placeholder_", placeholder().to_json_obj() );
 
     // ------------------------------------------------------------------------
 

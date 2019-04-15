@@ -1,5 +1,6 @@
 set(
     RELBOOST_OBJ 
+    ${RELBOOST_SOURCE_DIRECTORY}/AggregationParser.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/Avg.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/AggregationImpl.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/ConditionMaker.cpp

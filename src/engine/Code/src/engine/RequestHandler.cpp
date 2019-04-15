@@ -116,7 +116,7 @@ void RequestHandler::run()
                 }
             else if ( type == "RelboostModel.load" )
                 {
-                    //  project_manager().load_model( name, socket() );
+                    project_manager().load_relboost_model( name, &socket() );
                 }
             else if ( type == "RelboostModel.save" )
                 {
