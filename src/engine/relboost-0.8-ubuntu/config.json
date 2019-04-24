@@ -1,0 +1,22 @@
+{
+    "engine": {
+        "allowRemote": false,
+        "port": 1708
+    },
+    "monitor": {
+        "allowPushNotifications": true,
+        "allowRemote": false,
+        "licenseServerURL": "https://api.autosql.ai/alpha/license/",
+        "port": 1709
+    },
+    "projectDirectory": "../projects/",
+    "registrationEmail": "urbanke.patrick@web.de",
+    "token": {
+        "currently_active_": true,
+        "expiry_date_": "2019-03-22T14:45:55Z",
+        "mem_size_": 0,
+        "message_": "INFO: Please note that this is an alpha release that will be deprecated in the future!",
+        "request_date_": "2019-03-15T14:45:55Z",
+        "verification_": "8d81a289fd69a101c37b85a93d64be719bad8fbea3036d3edc5c2aaffeb37e99"
+    }
+}

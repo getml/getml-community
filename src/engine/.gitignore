@@ -1,0 +1,5 @@
+*.ipch
+*.bin
+*.o
+projects/*
+.vscode/*

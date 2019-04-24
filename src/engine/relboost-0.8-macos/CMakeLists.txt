@@ -34,7 +34,6 @@ link_directories(${OPENSSL_DIR}/lib)
 
 set(CMAKE_CXX_COMPILER g++-8)
 
-# Defines ${OBJ}
 set(ENGINE_SOURCE_DIRECTORY "${PROJECT_SOURCE_DIR}/../Code/src/engine")
 set(RELBOOST_SOURCE_DIRECTORY "${PROJECT_SOURCE_DIR}/../Code/src/relboost")
 

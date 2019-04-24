@@ -156,10 +156,9 @@ void DecisionTreeEnsemble::fit_new_feature()
     const auto sample_weights =
         sampler().make_sample_weights( table_holder().main_tables_[0].nrows() );
 
-    // ------------------------------------------------------------------------
-    // Recalculate the sums.
+    loss_function().calc_sample_index( sample_weights );
 
-    loss_function().calc_sums( sample_weights );
+    loss_function().calc_sums();
 
     loss_function().commit();
 

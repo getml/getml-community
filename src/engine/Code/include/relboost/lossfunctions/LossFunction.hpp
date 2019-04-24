@@ -28,10 +28,13 @@ class LossFunction
         const std::shared_ptr<const std::vector<RELBOOST_FLOAT>>&
             _yhat_old ) = 0;
 
-    /// Calculates sum_g_ and sum_h_.
-    virtual void calc_sums(
+    /// Calculates an index that contains all non-zero samples.
+    virtual void calc_sample_index(
         const std::shared_ptr<const std::vector<RELBOOST_FLOAT>>&
             _sample_weights ) = 0;
+
+    /// Calculates sum_g_ and sum_h_.
+    virtual void calc_sums() = 0;
 
     /// Calculates the update rate.
     virtual RELBOOST_FLOAT calc_update_rate(

@@ -49,11 +49,19 @@ class LossFunctionImpl
         const RELBOOST_FLOAT _old_weight,
         const std::array<RELBOOST_FLOAT, 3>& _weights ) const;
 
+    /// Calculates the sample index (which contains the indices of all samples
+    /// with non-zero sample weight).
+    std::vector<size_t> calc_sample_index(
+        const std::shared_ptr<const std::vector<RELBOOST_FLOAT>>&
+            _sample_weights ) const;
+
     /// Calculates _sum_g and _sum_h.
     void calc_sums(
+        const std::vector<size_t>& _sample_index,
         const std::vector<RELBOOST_FLOAT>& _sample_weights,
         RELBOOST_FLOAT* _sum_g,
-        RELBOOST_FLOAT* _sum_h ) const;
+        RELBOOST_FLOAT* _sum_h,
+        RELBOOST_FLOAT* _sum_sample_weights ) const;
 
     /// Calculates the update rate.
     RELBOOST_FLOAT calc_update_rate(

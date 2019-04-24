@@ -60,19 +60,24 @@ RELBOOST_FLOAT SquareLoss::calc_loss(
 
     assert( !std::isnan( std::get<0>( _weights ) ) );
 
-    const auto num_targets = static_cast<RELBOOST_FLOAT>( targets().size() );
-
     RELBOOST_FLOAT loss = 0.0;
 
-    for ( size_t i = 0; i < yhat_.size(); ++i )
+    for ( size_t ix : sample_index_ )
         {
-            auto diff = yhat_old()[i] + yhat_[i] + std::get<0>( _weights ) -
-                        targets()[i];
+            assert( ix < yhat_.size() );
 
-            loss += diff * diff * ( *sample_weights_ )[i];
+            auto diff = yhat_old()[ix] + yhat_[ix] + std::get<0>( _weights ) -
+                        targets()[ix];
+
+            loss += diff * diff * ( *sample_weights_ )[ix];
         }
 
-    loss /= num_targets;
+    assert( sum_sample_weights_ > 0.0 || sample_index_.size() == 0.0 );
+
+    if ( sum_sample_weights_ > 0.0 )
+        {
+            loss /= sum_sample_weights_;
+        }
 
     // ------------------------------------------------------------------------
 

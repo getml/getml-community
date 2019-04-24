@@ -6,6 +6,27 @@ namespace lossfunctions
 {
 // ----------------------------------------------------------------------------
 
+std::vector<size_t> LossFunctionImpl::calc_sample_index(
+    const std::shared_ptr<const std::vector<RELBOOST_FLOAT>>& _sample_weights )
+    const
+{
+    assert( _sample_weights );
+
+    auto sample_index = std::vector<size_t>( 0 );
+
+    for ( size_t i = 0; i < _sample_weights->size(); ++i )
+        {
+            if ( ( *_sample_weights )[i] > 0.0 )
+                {
+                    sample_index.push_back( i );
+                }
+        }
+
+    return sample_index;
+}
+
+// ----------------------------------------------------------------------------
+
 RELBOOST_FLOAT LossFunctionImpl::calc_regularization_reduction(
     const std::vector<RELBOOST_FLOAT>& _eta1,
     const std::vector<RELBOOST_FLOAT>& _eta2,
@@ -114,18 +135,48 @@ RELBOOST_FLOAT LossFunctionImpl::calc_regularization_reduction(
 // ----------------------------------------------------------------------------
 
 void LossFunctionImpl::calc_sums(
+    const std::vector<size_t>& _sample_index,
     const std::vector<RELBOOST_FLOAT>& _sample_weights,
     RELBOOST_FLOAT* _sum_g,
-    RELBOOST_FLOAT* _sum_h ) const
+    RELBOOST_FLOAT* _sum_h,
+    RELBOOST_FLOAT* _sum_sample_weights ) const
 {
+    // ------------------------------------------------------------------------
+
     assert( g_.size() == _sample_weights.size() );
     assert( h_.size() == _sample_weights.size() );
 
-    *_sum_g = std::inner_product(
-        g_.begin(), g_.end(), _sample_weights.begin(), 0.0 );
+    // ------------------------------------------------------------------------
 
-    *_sum_h = std::inner_product(
-        h_.begin(), h_.end(), _sample_weights.begin(), 0.0 );
+    *_sum_g = 0.0;
+
+    for ( auto ix : _sample_index )
+        {
+            assert( ix < _sample_weights.size() );
+            *_sum_g += g_[ix] * _sample_weights[ix];
+        }
+
+    // ------------------------------------------------------------------------
+
+    *_sum_h = 0.0;
+
+    for ( auto ix : _sample_index )
+        {
+            assert( ix < _sample_weights.size() );
+            *_sum_h += h_[ix] * _sample_weights[ix];
+        }
+
+    // ------------------------------------------------------------------------
+
+    *_sum_sample_weights = 0.0;
+
+    for ( auto ix : _sample_index )
+        {
+            assert( ix < _sample_weights.size() );
+            *_sum_sample_weights += _sample_weights[ix];
+        }
+
+    // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------

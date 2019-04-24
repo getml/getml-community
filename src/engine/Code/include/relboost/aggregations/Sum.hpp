@@ -126,12 +126,16 @@ class Sum : public lossfunctions::LossFunction
         child_->calc_gradients( _yhat_old );
     }
 
-    /// Calculates sum_g_ and sum_h_.
-    void calc_sums( const std::shared_ptr<const std::vector<RELBOOST_FLOAT>>&
-                        _sample_weights )
+    /// Calculates an index that contains all non-zero samples.
+    void calc_sample_index(
+        const std::shared_ptr<const std::vector<RELBOOST_FLOAT>>&
+            _sample_weights )
     {
-        child_->calc_sums( _sample_weights );
+        child_->calc_sample_index( _sample_weights );
     }
+
+    /// Calculates sum_g_ and sum_h_.
+    void calc_sums() { child_->calc_sums(); }
 
     /// Calculates the update rate.
     RELBOOST_FLOAT calc_update_rate(

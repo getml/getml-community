@@ -20,6 +20,7 @@ class CrossEntropyLoss : public LossFunction
         : hyperparameters_( _hyperparameters ),
           loss_committed_( 0.0 ),
           sum_h_yhat_committed_( 0.0 ),
+          sum_sample_weights_( 0.0 ),
           targets_( _targets ),
           yhat_( std::vector<RELBOOST_FLOAT>( _targets->size() ) ),
           yhat_committed_( std::vector<RELBOOST_FLOAT>( _targets->size() ) ),
@@ -122,12 +123,24 @@ class CrossEntropyLoss : public LossFunction
             } );
     }
 
-    /// Calculates sum_g_ and sum_h_.
-    void calc_sums( const std::shared_ptr<const std::vector<RELBOOST_FLOAT>>&
-                        _sample_weights )
+    /// Calculates an index that contains all non-zero samples.
+    void calc_sample_index(
+        const std::shared_ptr<const std::vector<RELBOOST_FLOAT>>&
+            _sample_weights )
     {
         sample_weights_ = _sample_weights;
-        impl_.calc_sums( *_sample_weights, &sum_g_, &sum_h_ );
+        sample_index_ = impl_.calc_sample_index( _sample_weights );
+    }
+
+    /// Calculates sum_g_ and sum_h_.
+    void calc_sums()
+    {
+        impl_.calc_sums(
+            sample_index_,
+            *sample_weights_,
+            &sum_g_,
+            &sum_h_,
+            &sum_sample_weights_ );
     }
 
     /// Calculates the update rate.
@@ -193,7 +206,11 @@ class CrossEntropyLoss : public LossFunction
     };
 
     /// Deletes all resources.
-    void clear() final { resize( 0 ); }
+    void clear() final
+    {
+        resize( 0 );
+        sample_index_.clear();
+    }
 
     /// Commits _yhat_old.
     void commit() final
@@ -405,6 +422,9 @@ class CrossEntropyLoss : public LossFunction
     /// The committed loss, needed for calculating the loss reduction.
     RELBOOST_FLOAT loss_committed_;
 
+    /// Indices of all non-zero sample weights.
+    std::vector<size_t> sample_index_;
+
     /// The weights used for the samples.
     std::shared_ptr<const std::vector<RELBOOST_FLOAT>> sample_weights_;
 
@@ -416,6 +436,9 @@ class CrossEntropyLoss : public LossFunction
 
     /// Dot product of h_ and yhat_, needed for the intercept.
     RELBOOST_FLOAT sum_h_yhat_committed_;
+
+    /// The sum of the sample weights, which is needed for calculating the loss.
+    RELBOOST_FLOAT sum_sample_weights_;
 
     /// The target variables.
     const std::shared_ptr<const std::vector<RELBOOST_FLOAT>> targets_;
