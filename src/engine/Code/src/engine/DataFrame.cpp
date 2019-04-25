@@ -14,7 +14,7 @@ void DataFrame::append( DataFrame &_other )
                 "Append: Number of join keys does not match!" );
         }
 
-    if ( time_stamps_all().size() != _other.time_stamps_all().size() )
+    if ( time_stamps().size() != _other.time_stamps().size() )
         {
             throw std::invalid_argument(
                 "Append: Number of time stamp does not match!" );
@@ -33,9 +33,9 @@ void DataFrame::append( DataFrame &_other )
 
     targets().append( _other.targets() );
 
-    for ( size_t i = 0; i < time_stamps_all().size(); ++i )
+    for ( size_t i = 0; i < time_stamps().size(); ++i )
         {
-            time_stamps( i ).append( _other.time_stamps( i ) );
+            time_stamp( i ).append( _other.time_stamp( i ) );
         }
 }
 
@@ -57,8 +57,8 @@ void DataFrame::clear()
     targets().clear();
 
     std::for_each(
-        time_stamps_all().begin(),
-        time_stamps_all().end(),
+        time_stamps().begin(),
+        time_stamps().end(),
         []( Matrix<ENGINE_FLOAT> &mat ) { mat.clear(); } );
 
     indices().clear();
@@ -75,7 +75,7 @@ void DataFrame::check_plausibility() const
                 name() + "!" );
         }
 
-    if ( time_stamps_all().size() == 0 )
+    if ( time_stamps().size() == 0 )
         {
             throw std::invalid_argument(
                 "You need to provide at least one column of time stamps in " +
@@ -92,8 +92,8 @@ void DataFrame::check_plausibility() const
         } );
 
     const bool any_time_stamp_does_not_match = std::any_of(
-        time_stamps_all().begin(),
-        time_stamps_all().end(),
+        time_stamps().begin(),
+        time_stamps().end(),
         [expected_nrows]( const Matrix<ENGINE_FLOAT> &mat ) {
             return mat.nrows() != expected_nrows;
         } );
@@ -267,8 +267,8 @@ Poco::JSON::Object DataFrame::get_colnames()
         std::vector<std::string> time_stamps_names;
 
         std::for_each(
-            time_stamps_all().begin(),
-            time_stamps_all().end(),
+            time_stamps().begin(),
+            time_stamps().end(),
             [&time_stamps_names]( Matrix<ENGINE_FLOAT> &mat ) {
                 time_stamps_names.push_back( mat.colname( 0 ) );
             } );
@@ -338,7 +338,7 @@ Poco::JSON::Object DataFrame::get_content(
 
             for ( size_t j = 0; j < num_time_stamps(); ++j )
                 {
-                    row.add( to_time_stamp( time_stamps( j )( i, 0 ) ) );
+                    row.add( to_time_stamp( time_stamp( j )( i, 0 ) ) );
                 }
 
             for ( size_t j = 0; j < num_join_keys(); ++j )
@@ -521,7 +521,7 @@ void DataFrame::load_join_keys( const std::string &_path )
 
 void DataFrame::load_time_stamps( const std::string &_path )
 {
-    time_stamps_all().clear();
+    time_stamps().clear();
 
     for ( size_t i = 0; true; ++i )
         {
@@ -533,13 +533,13 @@ void DataFrame::load_time_stamps( const std::string &_path )
                     break;
                 }
 
-            Matrix<ENGINE_FLOAT> time_stamps;
+            Matrix<ENGINE_FLOAT> time_stamps_mat;
 
-            time_stamps.load( time_stamps_name );
+            time_stamps_mat.load( time_stamps_name );
 
-            time_stamps.name() = name();
+            time_stamps_mat.name() = name();
 
-            time_stamps_all().push_back( time_stamps );
+            time_stamps().push_back( time_stamps_mat );
         }
 }
 
@@ -559,8 +559,8 @@ ENGINE_UNSIGNED_LONG DataFrame::nbytes()
         } );
 
     nbytes = std::accumulate(
-        time_stamps_all().begin(),
-        time_stamps_all().end(),
+        time_stamps().begin(),
+        time_stamps().end(),
         nbytes,
         []( ENGINE_UNSIGNED_LONG &init, Matrix<ENGINE_FLOAT> &mat ) {
             return init + mat.nbytes();

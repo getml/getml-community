@@ -235,7 +235,7 @@ class DataFrame
 
     /// Returns the time stamps signified by index _i
     template <class T>
-    Matrix<ENGINE_FLOAT> &time_stamps( const T _i )
+    Matrix<ENGINE_FLOAT> &time_stamp( const T _i )
     {
         assert( time_stamps_.size() > 0 );
 
@@ -248,7 +248,7 @@ class DataFrame
 
     /// Returns the time stamps signified by index _i
     template <class T>
-    Matrix<ENGINE_FLOAT> const &time_stamps( const T _i ) const
+    Matrix<ENGINE_FLOAT> const &time_stamp( const T _i ) const
     {
         assert( time_stamps_.size() > 0 );
 
@@ -260,13 +260,13 @@ class DataFrame
     }
 
     /// Trivial accessor
-    std::vector<Matrix<ENGINE_FLOAT>> &time_stamps_all()
+    std::vector<Matrix<ENGINE_FLOAT>> &time_stamps()
     {
         return time_stamps_;
     }
 
     /// Trivial accessor
-    std::vector<Matrix<ENGINE_FLOAT>> const &time_stamps_all() const
+    std::vector<Matrix<ENGINE_FLOAT>> const &time_stamps() const
     {
         return time_stamps_;
     }

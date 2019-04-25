@@ -115,7 +115,7 @@ DataFrameType Models::extract_df(
 
     std::vector<typename DataFrameType::FloatMatrixType> time_stamps;
 
-    for ( auto& ts : it->second.time_stamps_all() )
+    for ( auto& ts : it->second.time_stamps() )
         {
             time_stamps.push_back( typename DataFrameType::FloatMatrixType(
                 *ts.colnames(), ts.data(), ts.nrows(), *ts.units() ) );
