@@ -140,24 +140,6 @@ class DataFrame
         return indices_[_i];
     }
 
-    /// Returns the index signified by index join_key_used_
-    std::shared_ptr<ENGINE_INDEX> &index()
-    {
-        assert( join_key_used_ >= 0 );
-        assert( static_cast<size_t>( join_key_used_ ) < indices_.size() );
-
-        return index( join_key_used_ );
-    }
-
-    /// Returns the index signified by index join_key_used_
-    const std::shared_ptr<const ENGINE_INDEX> index() const
-    {
-        assert( join_key_used_ >= 0 );
-        assert( static_cast<size_t>( join_key_used_ ) < indices_.size() );
-
-        return index( join_key_used_ );
-    }
-
     /// Trivial accessor
     std::vector<std::shared_ptr<ENGINE_INDEX>> &indices() { return indices_; }
 
@@ -187,24 +169,6 @@ class DataFrame
         assert( _i < static_cast<T>( join_keys_.size() ) );
 
         return join_keys_[_i];
-    }
-
-    /// Returns the join key signified by index join_key_used_
-    Matrix<ENGINE_INT> &join_key()
-    {
-        assert( join_keys_.size() > 0 );
-        assert( join_key_used_ < join_keys_.size() );
-
-        return join_key( join_key_used_ );
-    }
-
-    /// Returns the join key signified by index join_key_used_
-    Matrix<ENGINE_INT> const &join_key() const
-    {
-        assert( join_keys_.size() > 0 );
-        assert( join_key_used_ < static_cast<size_t>( join_keys_.size() ) );
-
-        return join_key( join_key_used_ );
     }
 
     /// Trivial accessor
@@ -295,32 +259,6 @@ class DataFrame
         return time_stamps_[_i];
     }
 
-    /// Returns the time stamps signified by index time_stamps_used_
-    Matrix<ENGINE_FLOAT> &time_stamps()
-    {
-        assert( time_stamps_.size() > 0 );
-
-        assert( time_stamps_used_ >= 0 );
-
-        assert(
-            time_stamps_used_ < static_cast<size_t>( time_stamps_.size() ) );
-
-        return time_stamps( time_stamps_used_ );
-    }
-
-    /// Returns the time stamps signified by index time_stamps_used_
-    const Matrix<ENGINE_FLOAT> &time_stamps() const
-    {
-        assert( time_stamps_.size() > 0 );
-
-        assert( time_stamps_used_ >= 0 );
-
-        assert(
-            time_stamps_used_ < static_cast<size_t>( time_stamps_.size() ) );
-
-        return time_stamps( time_stamps_used_ );
-    }
-
     /// Trivial accessor
     std::vector<Matrix<ENGINE_FLOAT>> &time_stamps_all()
     {
@@ -366,10 +304,6 @@ class DataFrame
     /// Maps integers to names of join keys
     std::shared_ptr<Encoding> join_keys_encoding_;
 
-    /// Peripheral tables use only one particular join key -
-    /// which one is signified by join_key_used_
-    size_t join_key_used_;
-
     /// Name of the data frame
     std::string name_;
 
@@ -381,14 +315,6 @@ class DataFrame
 
     /// Time stamps
     std::vector<Matrix<ENGINE_FLOAT>> time_stamps_;
-
-    /// Peripheral tables use only one particular set of time stamps -
-    /// which one is signified by time_stamps_used_
-    size_t time_stamps_used_;
-
-    /// Peripheral tables use only one particular set of upper time stamps -
-    /// which one is signified by upper_time_stamps_
-    size_t upper_time_stamps_;
 };
 
 // -------------------------------------------------------------------------
