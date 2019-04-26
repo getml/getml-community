@@ -6,102 +6,359 @@ namespace containers
 {
 // ----------------------------------------------------------------------------
 
-void DataFrame::append( DataFrame &_other )
+void DataFrame::add_categorical(
+    const Matrix<ENGINE_INT> &_mat, const std::string _name, const size_t _num )
 {
-    if ( join_keys().size() != _other.join_keys().size() )
+    if ( _num < num_categoricals() )
+        {
+            categoricals_[_num] = _mat;
+
+            categoricals_[_num].name() = _name;
+        }
+    else if ( _num == num_categoricals() )
+        {
+            categoricals_.push_back( _mat );
+
+            categoricals_.back().name() = _name;
+        }
+    else
         {
             throw std::invalid_argument(
-                "Append: Number of join keys does not match!" );
-        }
-
-    if ( time_stamps().size() != _other.time_stamps().size() )
-        {
-            throw std::invalid_argument(
-                "Append: Number of time stamp does not match!" );
-        }
-
-    categorical().append( _other.categorical() );
-
-    discrete().append( _other.discrete() );
-
-    for ( size_t i = 0; i < join_keys().size(); ++i )
-        {
-            join_key( i ).append( _other.join_key( i ) );
-        }
-
-    numerical().append( _other.numerical() );
-
-    targets().append( _other.targets() );
-
-    for ( size_t i = 0; i < time_stamps().size(); ++i )
-        {
-            time_stamp( i ).append( _other.time_stamp( i ) );
+                "Index " + std::to_string( _num ) + " out of range!" );
         }
 }
 
 // ----------------------------------------------------------------------------
 
-void DataFrame::clear()
+void DataFrame::add_discrete(
+    const Matrix<ENGINE_FLOAT> &_mat,
+    const std::string _name,
+    const size_t _num )
 {
-    categorical().clear();
+    if ( _num < num_discretes() )
+        {
+            discretes_[_num] = _mat;
 
-    discrete().clear();
+            discretes_[_num].name() = _name;
+        }
+    else if ( _num == num_discretes() )
+        {
+            discretes_.push_back( _mat );
 
-    std::for_each(
-        join_keys().begin(), join_keys().end(), []( Matrix<ENGINE_INT> &mat ) {
-            mat.clear();
-        } );
+            discretes_.back().name() = _name;
+        }
+    else
+        {
+            throw std::runtime_error(
+                "Index " + std::to_string( _num ) + " out of range!" );
+        }
+}
 
-    numerical().clear();
+// ----------------------------------------------------------------------------
 
-    targets().clear();
+void DataFrame::add_float_matrix(
+    const Matrix<ENGINE_FLOAT> &_mat,
+    const std::string &_role,
+    const std::string _name,
+    const size_t _num )
+{
+    if ( _role == "discrete" )
+        {
+            add_discrete( _mat, _name, _num );
+        }
+    else if ( _role == "numerical" )
+        {
+            add_numerical( _mat, _name, _num );
+        }
+    else if ( _role == "targets" )
+        {
+            add_target( _mat, _name, _num );
+        }
+    else if ( _role == "time_stamps" )
+        {
+            add_time_stamp( _mat, _name, _num );
+        }
+    else
+        {
+            throw std::invalid_argument( "Role for float matrix not known!" );
+        }
+}
 
-    std::for_each(
-        time_stamps().begin(),
-        time_stamps().end(),
-        []( Matrix<ENGINE_FLOAT> &mat ) { mat.clear(); } );
+// ----------------------------------------------------------------------------
 
-    indices().clear();
+void DataFrame::add_int_matrix(
+    const Matrix<ENGINE_INT> &_mat,
+    const std::string _role,
+    const std::string _name,
+    const size_t _num )
+{
+    if ( _role == "categorical" )
+        {
+            add_categorical( _mat, _name, _num );
+        }
+    else if ( _role == "join_key" )
+        {
+            add_join_key( _mat, _name, _num );
+        }
+    else
+        {
+            throw std::invalid_argument( "Role for int matrix not known!" );
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+void DataFrame::add_join_key(
+    const Matrix<ENGINE_INT> &_mat, const std::string _name, const size_t _num )
+{
+    if ( _num < num_join_keys() )
+        {
+            join_keys_[_num] = _mat;
+
+            join_keys_[_num].name() = _name;
+        }
+    else if ( _num == num_join_keys() )
+        {
+            join_keys_.push_back( _mat );
+
+            join_keys_.back().name() = _name;
+        }
+    else
+        {
+            throw std::invalid_argument(
+                "Index " + std::to_string( _num ) + " out of range!" );
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+void DataFrame::add_numerical(
+    const Matrix<ENGINE_FLOAT> &_mat,
+    const std::string _name,
+    const size_t _num )
+{
+    if ( _num < num_numericals() )
+        {
+            numericals_[_num] = _mat;
+
+            numericals_[_num].name() = _name;
+        }
+    else if ( _num == num_numericals() )
+        {
+            numericals_.push_back( _mat );
+
+            numericals_.back().name() = _name;
+        }
+    else
+        {
+            throw std::runtime_error(
+                "Index " + std::to_string( _num ) + " out of range!" );
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+void DataFrame::add_target(
+    const Matrix<ENGINE_FLOAT> &_mat,
+    const std::string _name,
+    const size_t _num )
+{
+    if ( _num < num_targets() )
+        {
+            targets_[_num] = _mat;
+
+            targets_[_num].name() = _name;
+        }
+    else if ( _num == num_targets() )
+        {
+            targets_.push_back( _mat );
+
+            targets_.back().name() = _name;
+        }
+    else
+        {
+            throw std::runtime_error(
+                "Index " + std::to_string( _num ) + " out of range!" );
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+void DataFrame::add_time_stamp(
+    const Matrix<ENGINE_FLOAT> &_mat,
+    const std::string _name,
+    const size_t _num )
+{
+    if ( _num < num_time_stamps() )
+        {
+            time_stamps_[_num] = _mat;
+
+            time_stamps_[_num].name() = _name;
+        }
+    else if ( _num == num_time_stamps() )
+        {
+            time_stamps_.push_back( _mat );
+
+            time_stamps_.back().name() = _name;
+        }
+    else
+        {
+            throw std::runtime_error(
+                "Index " + std::to_string( _num ) + " out of range!" );
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+void DataFrame::append( const DataFrame &_other )
+{
+    // -------------------------------------------------------------------------
+
+    if ( categoricals_.size() != _other.categoricals_.size() )
+        {
+            throw std::invalid_argument(
+                "Append: Number of categorical columns does not match!" );
+        }
+
+    if ( discretes_.size() != _other.discretes_.size() )
+        {
+            throw std::invalid_argument(
+                "Append: Number of discrete columns does not match!" );
+        }
+
+    if ( join_keys_.size() != _other.join_keys_.size() )
+        {
+            throw std::invalid_argument(
+                "Append: Number of join keys does not match!" );
+        }
+
+    if ( numericals_.size() != _other.numericals_.size() )
+        {
+            throw std::invalid_argument(
+                "Append: Number of numerical columns does not match!" );
+        }
+
+    if ( targets_.size() != _other.targets_.size() )
+        {
+            throw std::invalid_argument(
+                "Append: Number of targets does not match!" );
+        }
+
+    if ( time_stamps_.size() != _other.time_stamps_.size() )
+        {
+            throw std::invalid_argument(
+                "Append: Number of time stamps does not match!" );
+        }
+
+    // -------------------------------------------------------------------------
+
+    for ( size_t i = 0; i < categoricals_.size(); ++i )
+        {
+            categoricals_[i].append( _other.categorical( i ) );
+        }
+
+    for ( size_t i = 0; i < discretes_.size(); ++i )
+        {
+            discretes_[i].append( _other.discrete( i ) );
+        }
+
+    for ( size_t i = 0; i < join_keys_.size(); ++i )
+        {
+            join_keys_[i].append( _other.join_key( i ) );
+        }
+
+    for ( size_t i = 0; i < numericals_.size(); ++i )
+        {
+            numericals_[i].append( _other.numerical( i ) );
+        }
+
+    for ( size_t i = 0; i < targets_.size(); ++i )
+        {
+            targets_[i].append( _other.target( i, 0 ) );
+        }
+
+    for ( size_t i = 0; i < time_stamps_.size(); ++i )
+        {
+            time_stamps_[i].append( _other.time_stamp( i ) );
+        }
+
+    // -------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
 
 void DataFrame::check_plausibility() const
 {
-    if ( join_keys().size() == 0 )
+    // -------------------------------------------------------------------------
+
+    if ( join_keys_.size() == 0 )
         {
             throw std::invalid_argument(
-                "You need to provide at least one column of join keys in " +
+                "You need to provide at least one join key column in " +
                 name() + "!" );
         }
 
-    if ( time_stamps().size() == 0 )
+    if ( time_stamps_.size() == 0 )
         {
             throw std::invalid_argument(
-                "You need to provide at least one column of time stamps in " +
+                "You need to provide at least one time stamp column in " +
                 name() + "!" );
         }
+
+    // -------------------------------------------------------------------------
 
     auto expected_nrows = join_key( 0 ).nrows();
 
-    const bool any_join_key_does_not_match = std::any_of(
-        join_keys().begin(),
-        join_keys().end(),
+    const bool any_categorical_does_not_match = std::any_of(
+        categoricals_.begin(),
+        categoricals_.end(),
         [expected_nrows]( const Matrix<ENGINE_INT> &mat ) {
             return mat.nrows() != expected_nrows;
         } );
 
-    const bool any_time_stamp_does_not_match = std::any_of(
-        time_stamps().begin(),
-        time_stamps().end(),
+    const bool any_discrete_does_not_match = std::any_of(
+        discretes_.begin(),
+        discretes_.end(),
         [expected_nrows]( const Matrix<ENGINE_FLOAT> &mat ) {
             return mat.nrows() != expected_nrows;
         } );
 
-    if ( categorical().nrows() != expected_nrows ||
-         discrete().nrows() != expected_nrows ||
-         targets().nrows() != expected_nrows || any_join_key_does_not_match ||
-         any_time_stamp_does_not_match )
+    const bool any_join_key_does_not_match = std::any_of(
+        join_keys_.begin(),
+        join_keys_.end(),
+        [expected_nrows]( const Matrix<ENGINE_INT> &mat ) {
+            return mat.nrows() != expected_nrows;
+        } );
+
+    const bool any_numerical_does_not_match = std::any_of(
+        numericals_.begin(),
+        numericals_.end(),
+        [expected_nrows]( const Matrix<ENGINE_FLOAT> &mat ) {
+            return mat.nrows() != expected_nrows;
+        } );
+
+    const bool any_target_does_not_match = std::any_of(
+        targets_.begin(),
+        targets_.end(),
+        [expected_nrows]( const Matrix<ENGINE_FLOAT> &mat ) {
+            return mat.nrows() != expected_nrows;
+        } );
+
+    const bool any_time_stamp_does_not_match = std::any_of(
+        time_stamps_.begin(),
+        time_stamps_.end(),
+        [expected_nrows]( const Matrix<ENGINE_FLOAT> &mat ) {
+            return mat.nrows() != expected_nrows;
+        } );
+
+    // -------------------------------------------------------------------------
+
+    const bool any_mismatch =
+        any_categorical_does_not_match || any_discrete_does_not_match ||
+        any_join_key_does_not_match || any_numerical_does_not_match ||
+        any_target_does_not_match || any_time_stamp_does_not_match;
+
+    if ( any_mismatch )
         {
             throw std::runtime_error(
                 "Something went very wrong during data loading: The number of "
@@ -110,6 +367,8 @@ void DataFrame::check_plausibility() const
                 " do not "
                 "match!" );
         }
+
+    // -------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -162,71 +421,24 @@ void DataFrame::create_indices()
 
 // ----------------------------------------------------------------------------
 
-void DataFrame::float_matrix(
-    Matrix<ENGINE_FLOAT> &_mat,
-    const std::string &_role,
-    const std::string _name,
-    const size_t _num )
+const Matrix<ENGINE_FLOAT> &DataFrame::float_matrix(
+    const std::string &_role, const size_t _num ) const
 {
     if ( _role == "discrete" )
         {
-            discrete_ = _mat;
+            return discrete( _num );
         }
     else if ( _role == "numerical" )
         {
-            numerical_ = _mat;
+            return numerical( _num );
         }
-    else if ( _role == "targets" )
+    else if ( _role == "target" )
         {
-            targets_ = _mat;
+            return target( _num );
         }
-    else if ( _role == "time_stamps" )
+    else if ( _role == "time_stamp" )
         {
-            if ( _num < num_time_stamps() )
-                {
-                    time_stamps_[_num] = _mat;
-
-                    time_stamps_[_num].name() = _name;
-                }
-            else if ( _num == num_time_stamps() )
-                {
-                    time_stamps_.push_back( _mat );
-
-                    time_stamps_.back().name() = _name;
-                }
-            else
-                {
-                    throw std::runtime_error(
-                        "Time stamps index " + std::to_string( _num ) +
-                        " out of range!" );
-                }
-        }
-    else
-        {
-            throw std::invalid_argument( "Role for float matrix not known!" );
-        }
-}
-
-// ----------------------------------------------------------------------------
-
-Matrix<ENGINE_FLOAT> &DataFrame::float_matrix(
-    const std::string &_role, const size_t _num )
-{
-    if ( _role == "discrete" )
-        {
-            return discrete_;
-        }
-    else if ( _role == "numerical" )
-        {
-            return numerical_;
-        }
-    else if ( _role == "targets" )
-        {
-            return targets_;
-        }
-    else if ( _role == "time_stamps" )
-        {
-            return time_stamps_[_num];
+            return time_stamp( _num );
         }
 
     throw std::invalid_argument( "Role for float matrix not known!" );
@@ -242,43 +454,23 @@ Poco::JSON::Object DataFrame::get_colnames()
 
     // ----------------------------------------
 
-    obj.set( "categorical_", categorical().colnames().get()[0] );
+    obj.set( "categorical_", get_colnames( categoricals_ ) );
 
-    obj.set( "discrete_", discrete().colnames().get()[0] );
+    obj.set( "discrete_", get_colnames( discretes_ ) );
 
-    {
-        std::vector<std::string> join_keys_names;
+    obj.set( "join_keys_", get_colnames( join_keys_ ) );
 
-        std::for_each(
-            join_keys().begin(),
-            join_keys().end(),
-            [&join_keys_names]( Matrix<ENGINE_INT> &mat ) {
-                join_keys_names.push_back( mat.colname( 0 ) );
-            } );
+    obj.set( "numerical_", get_colnames( numericals_ ) );
 
-        obj.set( "join_keys_", join_keys_names );
-    }
+    obj.set( "targets_", get_colnames( targets_ ) );
 
-    obj.set( "numerical_", numerical().colnames().get()[0] );
-
-    obj.set( "targets_", targets().colnames().get()[0] );
-
-    {
-        std::vector<std::string> time_stamps_names;
-
-        std::for_each(
-            time_stamps().begin(),
-            time_stamps().end(),
-            [&time_stamps_names]( Matrix<ENGINE_FLOAT> &mat ) {
-                time_stamps_names.push_back( mat.colname( 0 ) );
-            } );
-
-        obj.set( "time_stamps_", time_stamps_names );
-    }
+    obj.set( "time_stamps_", get_colnames( time_stamps_ ) );
 
     // ----------------------------------------
 
     return obj;
+
+    // ----------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -338,32 +530,32 @@ Poco::JSON::Object DataFrame::get_content(
 
             for ( size_t j = 0; j < num_time_stamps(); ++j )
                 {
-                    row.add( to_time_stamp( time_stamp( j )( i, 0 ) ) );
+                    row.add( to_time_stamp( time_stamp( j )[i] ) );
                 }
 
             for ( size_t j = 0; j < num_join_keys(); ++j )
                 {
-                    row.add( join_keys_encoding()[join_key( j )( i, 0 )] );
+                    row.add( join_keys_encoding()[join_key( j )[i]] );
                 }
 
-            for ( std::int32_t j = 0; j < targets().ncols(); ++j )
+            for ( size_t j = 0; j < num_targets(); ++j )
                 {
-                    row.add( std::to_string( targets()( i, j ) ) );
+                    row.add( std::to_string( target( j )[i] ) );
                 }
 
-            for ( std::int32_t j = 0; j < categorical().ncols(); ++j )
+            for ( size_t j = 0; j < num_categoricals(); ++j )
                 {
-                    row.add( categories()[categorical()( i, j )] );
+                    row.add( categories()[categorical( j )[i]] );
                 }
 
-            for ( std::int32_t j = 0; j < discrete().ncols(); ++j )
+            for ( size_t j = 0; j < num_discretes(); ++j )
                 {
-                    row.add( std::to_string( discrete()( i, j ) ) );
+                    row.add( std::to_string( discrete( j )[i] ) );
                 }
 
-            for ( std::int32_t j = 0; j < numerical().ncols(); ++j )
+            for ( size_t j = 0; j < num_numericals(); ++j )
                 {
-                    row.add( std::to_string( numerical()( i, j ) ) );
+                    row.add( std::to_string( numerical( j )[i] ) );
                 }
 
             data.add( row );
@@ -374,60 +566,22 @@ Poco::JSON::Object DataFrame::get_content(
     // ----------------------------------------
 
     return obj;
+
+    // ----------------------------------------
 }
 
 // ----------------------------------------------------------------------------
 
-void DataFrame::int_matrix(
-    Matrix<ENGINE_INT> &_mat,
-    const std::string _role,
-    const std::string _name,
-    const size_t _num )
+const Matrix<ENGINE_INT> &DataFrame::int_matrix(
+    const std::string &_role, const size_t _num ) const
 {
     if ( _role == "categorical" )
         {
-            categorical_ = _mat;
+            return categorical( _num );
         }
     else if ( _role == "join_key" )
         {
-            if ( _num < num_join_keys() )
-                {
-                    join_keys_[_num] = _mat;
-
-                    join_keys_[_num].name() = _name;
-                }
-            else if ( _num == num_join_keys() )
-                {
-                    join_keys_.push_back( _mat );
-
-                    join_keys_.back().name() = _name;
-                }
-            else
-                {
-                    throw std::invalid_argument(
-                        "Join key index " + std::to_string( _num ) +
-                        " out of range!" );
-                }
-        }
-    else
-        {
-            throw std::invalid_argument( "Role for int matrix not known!" );
-        }
-}
-
-// ----------------------------------------------------------------------------
-
-Matrix<ENGINE_INT> &DataFrame::int_matrix(
-    const std::string &_role, const size_t _num )
-{
-    if ( _role == "categorical" )
-        {
-            return categorical_;
-        }
-    else if ( _role == "join_key" )
-        {
-            assert( _num < num_join_keys() );
-            return join_keys_[_num];
+            return join_key( _num );
         }
 
     throw std::invalid_argument( "Role for int matrix not known!" );
@@ -437,49 +591,39 @@ Matrix<ENGINE_INT> &DataFrame::int_matrix(
 
 void DataFrame::load( const std::string &_path )
 {
-    // ---------------------------------------------------------------------
+    //---------------------------------------------------------------------
     // Make sure that the _path exists and is directory
 
-    {
-        Poco::File file( _path );
+    Poco::File file( _path );
 
-        if ( !file.exists() )
-            {
-                throw std::invalid_argument(
-                    "No file or directory named '" +
-                    Poco::Path( _path ).makeAbsolute().toString() + "'!" );
-            }
+    if ( !file.exists() )
+        {
+            throw std::invalid_argument(
+                "No file or directory named '" +
+                Poco::Path( _path ).makeAbsolute().toString() + "'!" );
+        }
 
-        if ( !file.isDirectory() )
-            {
-                throw std::invalid_argument(
-                    "'" + Poco::Path( _path ).makeAbsolute().toString() +
-                    "' is not a directory!" );
-            }
-    }
+    if ( !file.isDirectory() )
+        {
+            throw std::invalid_argument(
+                "'" + Poco::Path( _path ).makeAbsolute().toString() +
+                "' is not a directory!" );
+        }
 
     // ---------------------------------------------------------------------
-    // Load contents
+    // Load contents.
 
-    categorical().load( _path + "categorical" );
+    categoricals_ = load_matrices<ENGINE_INT>( _path, "categorical_" );
 
-    categorical().name() = name();
+    discretes_ = load_matrices<ENGINE_FLOAT>( _path, "discrete_" );
 
-    discrete().load( _path + "discrete" );
+    join_keys_ = load_matrices<ENGINE_INT>( _path, "join_key_" );
 
-    discrete().name() = name();
+    numericals_ = load_matrices<ENGINE_FLOAT>( _path, "numerical_" );
 
-    load_join_keys( _path );
+    targets_ = load_matrices<ENGINE_FLOAT>( _path, "target_" );
 
-    numerical().load( _path + "numerical" );
-
-    numerical().name() = name();
-
-    targets().load( _path + "targets" );
-
-    targets().name() = name();
-
-    load_time_stamps( _path );
+    time_stamps_ = load_matrices<ENGINE_FLOAT>( _path, "time_stamp_" );
 
     // ---------------------------------------------------------------------
     // Create index
@@ -493,78 +637,21 @@ void DataFrame::load( const std::string &_path )
 
 // ----------------------------------------------------------------------------
 
-void DataFrame::load_join_keys( const std::string &_path )
+ENGINE_UNSIGNED_LONG DataFrame::nbytes() const
 {
-    join_keys().clear();
+    ENGINE_UNSIGNED_LONG nbytes = 0;
 
-    for ( size_t i = 0; true; ++i )
-        {
-            std::string join_key_name =
-                _path + "join_key_" + std::to_string( i );
+    nbytes += calc_nbytes( categoricals_ );
 
-            if ( !Poco::File( join_key_name ).exists() )
-                {
-                    break;
-                }
+    nbytes += calc_nbytes( discretes_ );
 
-            Matrix<ENGINE_INT> join_key;
+    nbytes += calc_nbytes( join_keys_ );
 
-            join_key.load( join_key_name );
+    nbytes += calc_nbytes( numericals_ );
 
-            join_key.name() = name();
+    nbytes += calc_nbytes( targets_ );
 
-            join_keys().push_back( join_key );
-        }
-}
-
-// ----------------------------------------------------------------------------
-
-void DataFrame::load_time_stamps( const std::string &_path )
-{
-    time_stamps().clear();
-
-    for ( size_t i = 0; true; ++i )
-        {
-            std::string time_stamps_name =
-                _path + "time_stamps_" + std::to_string( i );
-
-            if ( !Poco::File( time_stamps_name ).exists() )
-                {
-                    break;
-                }
-
-            Matrix<ENGINE_FLOAT> time_stamps_mat;
-
-            time_stamps_mat.load( time_stamps_name );
-
-            time_stamps_mat.name() = name();
-
-            time_stamps().push_back( time_stamps_mat );
-        }
-}
-
-// ----------------------------------------------------------------------------
-
-ENGINE_UNSIGNED_LONG DataFrame::nbytes()
-{
-    ENGINE_UNSIGNED_LONG nbytes = categorical().nbytes() + discrete().nbytes() +
-                                  numerical().nbytes() + targets().nbytes();
-
-    nbytes = std::accumulate(
-        join_keys().begin(),
-        join_keys().end(),
-        nbytes,
-        []( ENGINE_UNSIGNED_LONG &init, Matrix<ENGINE_INT> &mat ) {
-            return init + mat.nbytes();
-        } );
-
-    nbytes = std::accumulate(
-        time_stamps().begin(),
-        time_stamps().end(),
-        nbytes,
-        []( ENGINE_UNSIGNED_LONG &init, Matrix<ENGINE_FLOAT> &mat ) {
-            return init + mat.nbytes();
-        } );
+    nbytes += calc_nbytes( time_stamps_ );
 
     return nbytes;
 }
@@ -573,8 +660,10 @@ ENGINE_UNSIGNED_LONG DataFrame::nbytes()
 
 void DataFrame::save( const std::string &_path )
 {
+    // ---------------------------------------------------------------------
     // If the path already exists, delete it to avoid
     // conflicts with already existing files.
+
     if ( Poco::File( _path ).exists() )
         {
             Poco::File( _path ).remove( true );
@@ -582,96 +671,74 @@ void DataFrame::save( const std::string &_path )
 
     Poco::File( _path ).createDirectories();
 
-    categorical().save( _path + "categorical" );
+    // ---------------------------------------------------------------------
 
-    discrete().save( _path + "discrete" );
+    save_matrices( categoricals_, _path, "categorical_" );
 
-    for ( size_t i = 0; i < join_keys_.size(); ++i )
-        {
-            join_keys_[i].save( _path + "join_key_" + std::to_string( i ) );
-        }
+    save_matrices( discretes_, _path, "discrete_" );
 
-    numerical().save( _path + "numerical" );
+    save_matrices( join_keys_, _path, "join_key_" );
 
-    targets().save( _path + "targets" );
+    save_matrices( numericals_, _path, "numerical_" );
 
-    for ( size_t i = 0; i < time_stamps_.size(); ++i )
-        {
-            time_stamps_[i].save(
-                _path + "time_stamps_" + std::to_string( i ) );
-        }
+    save_matrices( targets_, _path, "target_" );
+
+    save_matrices( time_stamps_, _path, "time_stamp_" );
+
+    // ---------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
 
 Poco::JSON::Object DataFrame::to_monitor( const std::string _name )
 {
+    // ---------------------------------------------------------------------
+
     Poco::JSON::Object obj;
 
     // ---------------------------------------------------------------------
 
-    obj.set(
-        "categorical_", JSON::vector_to_array( *categorical().colnames() ) );
+    obj.set( "categorical_", get_colnames( categoricals_ ) );
 
-    obj.set(
-        "categorical_units_", JSON::vector_to_array( *categorical().units() ) );
+    obj.set( "categorical_units_", get_units( categoricals_ ) );
 
-    obj.set( "discrete_", JSON::vector_to_array( *discrete().colnames() ) );
+    obj.set( "discrete_", get_colnames( discretes_ ) );
 
-    obj.set( "discrete_units_", JSON::vector_to_array( *discrete().units() ) );
+    obj.set( "discrete_units_", get_units( discretes_ ) );
 
-    {
-        Poco::JSON::Array join_keys;
-
-        for ( auto &jk : join_keys_ )
-            {
-                join_keys.add( jk.colname( 0 ) );
-            }
-
-        obj.set( "join_keys_", join_keys );
-    }
+    obj.set( "join_keys_", get_colnames( join_keys_ ) );
 
     obj.set( "name_", _name );
 
-    obj.set( "num_categorical_", categorical().ncols() );
+    obj.set( "num_categorical_", num_categoricals() );
 
-    obj.set( "num_discrete_", discrete().ncols() );
+    obj.set( "num_discrete_", num_discretes() );
 
     obj.set( "num_join_keys_", num_join_keys() );
 
-    obj.set( "num_numerical_", numerical().ncols() );
+    obj.set( "num_numerical_", num_numericals() );
 
-    obj.set( "num_rows_", categorical().nrows() );
+    obj.set( "num_rows_", nrows() );
 
-    obj.set( "num_targets_", targets().ncols() );
+    obj.set( "num_targets_", num_targets() );
 
     obj.set( "num_time_stamps_", num_time_stamps() );
 
-    obj.set( "numerical_", JSON::vector_to_array( *numerical().colnames() ) );
+    obj.set( "numerical_", get_colnames( numericals_ ) );
 
-    obj.set(
-        "numerical_units_", JSON::vector_to_array( *numerical().units() ) );
+    obj.set( "numerical_units_", get_units( numericals_ ) );
 
     obj.set( "size_", static_cast<ENGINE_FLOAT>( nbytes() ) / 1000000.0 );
 
-    obj.set( "targets_", JSON::vector_to_array( *targets().colnames() ) );
+    obj.set( "targets_", get_colnames( targets_ ) );
 
-    {
-        Poco::JSON::Array time_stamps;
-
-        for ( auto &ts : time_stamps_ )
-            {
-                time_stamps.add( ts.colname( 0 ) );
-            }
-
-        obj.set( "time_stamps_", time_stamps );
-    }
+    obj.set( "time_stamps_", get_colnames( time_stamps_ ) );
 
     // ---------------------------------------------------------------------
 
     return obj;
 
-    // ---------------------------------------------------------------------
+    // ---------------------------------------------------------------------*/
 }
 
 // ----------------------------------------------------------------------------

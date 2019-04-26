@@ -17,52 +17,38 @@ void test13_numerical_output()
     // ------------------------------------------------------------------------
     // Build peripheral table.
 
-    const auto categorical_peripheral_mat =
-        relboost::containers::Matrix<std::int32_t>( 250000 );
-
-    const auto discrete_peripheral_mat =
-        relboost::containers::Matrix<double>( 250000 );
-
     const auto join_keys_peripheral = make_column<std::int32_t>( 250000, rng );
 
     const auto join_keys_peripheral_mat =
         relboost::containers::Matrix<std::int32_t>(
-            {"join_key"},
             join_keys_peripheral.data(),
+            "join_key",
             join_keys_peripheral.size() );
 
     auto numerical_peripheral = make_column<double>( 250000, rng );
 
     const auto numerical_peripheral_mat = relboost::containers::Matrix<double>(
-        {"column_01"},
-        numerical_peripheral.data(),
-        numerical_peripheral.size() );
+        numerical_peripheral.data(), "column_01", numerical_peripheral.size() );
 
     const auto time_stamps_peripheral = make_column<double>( 250000, rng );
 
     const auto time_stamps_peripheral_mat =
         relboost::containers::Matrix<double>(
-            {"time_stamp"},
             time_stamps_peripheral.data(),
+            "time_stamp",
             time_stamps_peripheral.size() );
 
     const auto peripheral_df = relboost::containers::DataFrame(
-        categorical_peripheral_mat,
-        discrete_peripheral_mat,
+        {},
+        {},
         {join_keys_peripheral_mat},
         "PERIPHERAL",
-        numerical_peripheral_mat,
-        relboost::containers::Matrix<double>( 250000 ),
+        {numerical_peripheral_mat},
+        {},
         {time_stamps_peripheral_mat} );
 
     // ------------------------------------------------------------------------
     // Build population table.
-
-    const auto categorical_population_mat =
-        relboost::containers::Matrix<std::int32_t>( 500 );
-
-    const auto discrete_population_mat =
-        relboost::containers::Matrix<double>( 500 );
 
     auto join_keys_population = std::vector<std::int32_t>( 500 );
 
@@ -73,52 +59,53 @@ void test13_numerical_output()
 
     const auto join_keys_population_mat =
         relboost::containers::Matrix<std::int32_t>(
-            {"join_key"},
             join_keys_population.data(),
+            "join_key",
             join_keys_population.size() );
 
     auto numerical_population = make_column<double>( 500, rng );
 
     const auto numerical_population_mat = relboost::containers::Matrix<double>(
-        {"column_01"},
-        numerical_population.data(),
-        numerical_population.size() );
+        numerical_population.data(), "column_01", numerical_population.size() );
 
     const auto time_stamps_population = make_column<double>( 500, rng );
 
     const auto time_stamps_population_mat =
         relboost::containers::Matrix<double>(
-            {"time_stamp"},
             time_stamps_population.data(),
+            "time_stamp",
             time_stamps_population.size() );
 
     auto targets_population = std::vector<double>( 500 );
 
+    const auto target_population_mat = relboost::containers::Matrix<double>(
+        targets_population.data(), "target", targets_population.size() );
+
+    const auto population_df = relboost::containers::DataFrame(
+        {},
+        {},
+        {join_keys_population_mat},
+        "POPULATION",
+        {numerical_population_mat},
+        {target_population_mat},
+        {time_stamps_population_mat} );
+
+    // ---------------------------------------------
+    // Define targets.
+
     for ( size_t i = 0; i < peripheral_df.nrows(); ++i )
         {
-            const auto jk = peripheral_df.join_keys_[0]( i, 0 );
+            const auto jk = peripheral_df.join_key( i );
 
             assert( jk < 500 );
 
-            if ( peripheral_df.time_stamps( i ) <=
-                     time_stamps_population_mat( jk, 0 ) &&
+            if ( peripheral_df.time_stamp( i ) <=
+                     time_stamps_population_mat[jk] &&
                  numerical_population[jk] < 250.0 )
                 {
                     targets_population[jk]++;
                 }
         }
-
-    const auto target_population_mat = relboost::containers::Matrix<double>(
-        {"target"}, targets_population.data(), targets_population.size() );
-
-    const auto population_df = relboost::containers::DataFrame(
-        categorical_population_mat,
-        discrete_population_mat,
-        {join_keys_population_mat},
-        "POPULATION",
-        numerical_population_mat,
-        target_population_mat,
-        {time_stamps_population_mat} );
 
     // ---------------------------------------------
     // Build data model.
@@ -182,7 +169,8 @@ void test13_numerical_output()
             //         << ", prediction: " << predictions[i] << std::endl;
 
             assert(
-                std::abs( population_df.target_[i] - predictions[i] ) < 5.0 );
+                std::abs( population_df.target( i, 0 ) - predictions[i] ) <
+                5.0 );
         }
     std::cout << std::endl << std::endl;
 

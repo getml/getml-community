@@ -21,8 +21,8 @@ class Sum : public lossfunctions::LossFunction
           depth_( _child->depth() + 1 ),
           indices_( _output.nrows() ),
           indices_current_( _output.nrows() ),
-          input_join_keys_( _input.join_keys_ ),
-          output_indices_( _output.indices_ ),
+          input_join_keys_( _input.join_keys() ),
+          output_indices_( _output.indices() ),
           impl_( AggregationImpl(
               _child.get(), &eta1_, &eta2_, &indices_, &indices_current_ ) )
     {

@@ -7,38 +7,114 @@ namespace containers
 {
 // -------------------------------------------------------------------------
 
-struct DataFrame
+class DataFrame
 {
     // ---------------------------------------------------------------------
 
+   public:
     typedef relboost::containers::Matrix<RELBOOST_FLOAT> FloatMatrixType;
 
     typedef relboost::containers::Matrix<RELBOOST_INT> IntMatrixType;
 
     // ---------------------------------------------------------------------
 
+   public:
     DataFrame(
-        const Matrix<RELBOOST_INT>& _categorical,
-        const Matrix<RELBOOST_FLOAT>& _discrete,
-        const std::vector<Matrix<RELBOOST_INT>>& _join_keys,
-        const std::string& _name,
-        const Matrix<RELBOOST_FLOAT>& _numerical,
-        const Matrix<RELBOOST_FLOAT>& _target,
-        const std::vector<Matrix<RELBOOST_FLOAT>>& _time_stamps );
-
-    DataFrame(
-        const Matrix<RELBOOST_INT>& _categorical,
-        const Matrix<RELBOOST_FLOAT>& _discrete,
+        const std::vector<Matrix<RELBOOST_INT>>& _categoricals,
+        const std::vector<Matrix<RELBOOST_FLOAT>>& _discretes,
         const std::vector<std::shared_ptr<RELBOOST_INDEX>>& _indices,
         const std::vector<Matrix<RELBOOST_INT>>& _join_keys,
         const std::string& _name,
-        const Matrix<RELBOOST_FLOAT>& _numerical,
-        const Matrix<RELBOOST_FLOAT>& _target,
+        const std::vector<Matrix<RELBOOST_FLOAT>>& _numericals,
+        const std::vector<Matrix<RELBOOST_FLOAT>>& _targets,
+        const std::vector<Matrix<RELBOOST_FLOAT>>& _time_stamps );
+
+    DataFrame(
+        const std::vector<Matrix<RELBOOST_INT>>& _categoricals,
+        const std::vector<Matrix<RELBOOST_FLOAT>>& _discretes,
+        const std::vector<Matrix<RELBOOST_INT>>& _join_keys,
+        const std::string& _name,
+        const std::vector<Matrix<RELBOOST_FLOAT>>& _numericals,
+        const std::vector<Matrix<RELBOOST_FLOAT>>& _targets,
         const std::vector<Matrix<RELBOOST_FLOAT>>& _time_stamps );
 
     ~DataFrame() = default;
 
     // ---------------------------------------------------------------------
+
+   public:
+    /// Getter for a categorical value.
+    RELBOOST_INT categorical( size_t _i, size_t _j ) const
+    {
+        assert( _j < categoricals_.size() );
+        return categoricals_[_j][_i];
+    }
+
+    /// Getter for a categorical name.
+    const std::string& categorical_name( size_t _j ) const
+    {
+        assert( _j < categoricals_.size() );
+        return categoricals_[_j].name_;
+    }
+
+    /// Getter for a categorical name.
+    const std::string& categorical_unit( size_t _j ) const
+    {
+        assert( _j < categoricals_.size() );
+        return categoricals_[_j].unit_;
+    }
+
+    /// Getter for a discrete value.
+    RELBOOST_FLOAT discrete( size_t _i, size_t _j ) const
+    {
+        assert( _j < discretes_.size() );
+        return discretes_[_j][_i];
+    }
+
+    /// Getter for a discrete name.
+    const std::string& discrete_name( size_t _j ) const
+    {
+        assert( _j < discretes_.size() );
+        return discretes_[_j].name_;
+    }
+
+    /// Getter for a discrete name.
+    const std::string& discrete_unit( size_t _j ) const
+    {
+        assert( _j < discretes_.size() );
+        return discretes_[_j].unit_;
+    }
+
+    /// Getter for the indices.
+    const std::vector<std::shared_ptr<RELBOOST_INDEX>>& indices() const
+    {
+        return indices_;
+    }
+
+    /// Getter for a join key.
+    RELBOOST_INT join_key( size_t _i ) const
+    {
+        assert( join_keys_.size() == 1 );
+
+        return join_keys_[0][_i];
+    }
+
+    /// Getter for a join keys.
+    const std::vector<Matrix<RELBOOST_INT>>& join_keys() const
+    {
+        return join_keys_;
+    }
+
+    /// Getter for the join key name.
+    const std::string& join_keys_name() const
+    {
+        assert( join_keys_.size() == 1 );
+
+        return join_keys_[0].name_;
+    }
+
+    /// Return the name of the data frame.
+    const std::string& name() const { return name_; }
 
     /// Trivial getter
     size_t nrows() const
@@ -48,16 +124,84 @@ struct DataFrame
     }
 
     /// Trivial getter
-    RELBOOST_FLOAT time_stamps( size_t _nrow ) const
-    {
-        assert( time_stamps_.size() == 1 || time_stamps_.size() == 2 );
-        assert( _nrow < time_stamps_[0].nrows_ );
+    size_t num_categoricals() const { return categoricals_.size(); }
 
-        return time_stamps_[0][_nrow];
+    /// Trivial getter
+    size_t num_discretes() const { return discretes_.size(); }
+
+    /// Trivial getter
+    size_t num_join_keys() const { return join_keys_.size(); }
+
+    /// Trivial getter
+    size_t num_numericals() const { return numericals_.size(); }
+
+    /// Trivial getter
+    size_t num_targets() const { return targets_.size(); }
+
+    /// Trivial getter
+    size_t num_time_stamps() const { return time_stamps_.size(); }
+
+    /// Getter for a numerical value.
+    RELBOOST_FLOAT numerical( size_t _i, size_t _j ) const
+    {
+        assert( _j < numericals_.size() );
+        return numericals_[_j][_i];
+    }
+
+    /// Getter for a numerical name.
+    const std::string& numerical_name( size_t _j ) const
+    {
+        assert( _j < numericals_.size() );
+        return numericals_[_j].name_;
+    }
+
+    /// Getter for a numerical name.
+    const std::string& numerical_unit( size_t _j ) const
+    {
+        assert( _j < numericals_.size() );
+        return numericals_[_j].unit_;
+    }
+
+    /// Getter for a target value.
+    RELBOOST_FLOAT target( size_t _i, size_t _j ) const
+    {
+        assert( _j < targets_.size() );
+        return targets_[_j][_i];
+    }
+
+    /// Getter for a target name.
+    const std::string& target_name( size_t _j ) const
+    {
+        assert( _j < targets_.size() );
+        return targets_[_j].name_;
+    }
+
+    /// Getter for a target name.
+    const std::string& target_unit( size_t _j ) const
+    {
+        assert( _j < targets_.size() );
+        return targets_[_j].unit_;
     }
 
     /// Trivial getter
-    RELBOOST_FLOAT upper_time_stamps( size_t _nrow ) const
+    RELBOOST_FLOAT time_stamp( size_t _i ) const
+    {
+        assert( time_stamps_.size() == 1 || time_stamps_.size() == 2 );
+        assert( _i < time_stamps_[0].nrows_ );
+
+        return time_stamps_[0][_i];
+    }
+
+    /// Getter for the time stamps name.
+    const std::string& time_stamps_name() const
+    {
+        assert( time_stamps_.size() == 1 || time_stamps_.size() == 2 );
+
+        return time_stamps_[0].name_;
+    }
+
+    /// Trivial getter
+    RELBOOST_FLOAT upper_time_stamp( size_t _i ) const
     {
         assert( time_stamps_.size() == 1 || time_stamps_.size() == 2 );
 
@@ -66,9 +210,17 @@ struct DataFrame
                 return NAN;
             }
 
-        assert( _nrow < time_stamps_[1].nrows_ );
+        assert( _i < time_stamps_[1].nrows_ );
 
-        return time_stamps_[1][_nrow];
+        return time_stamps_[1][_i];
+    }
+
+    /// Getter for the time stamps name.
+    const std::string& upper_time_stamps_name() const
+    {
+        assert( time_stamps_.size() == 2 );
+
+        return time_stamps_[1].name_;
     }
 
     // ---------------------------------------------------------------------
@@ -86,11 +238,12 @@ struct DataFrame
 
     // ---------------------------------------------------------------------
 
+   private:
     /// Pointer to categorical columns.
-    const Matrix<RELBOOST_INT> categorical_;
+    const std::vector<Matrix<RELBOOST_INT>> categoricals_;
 
     /// Pointer to discrete columns.
-    const Matrix<RELBOOST_FLOAT> discrete_;
+    const std::vector<Matrix<RELBOOST_FLOAT>> discretes_;
 
     /// Indices assiciated with join keys.
     const std::vector<std::shared_ptr<RELBOOST_INDEX>> indices_;
@@ -102,10 +255,10 @@ struct DataFrame
     const std::string name_;
 
     /// Pointer to numerical columns.
-    const Matrix<RELBOOST_FLOAT> numerical_;
+    const std::vector<Matrix<RELBOOST_FLOAT>> numericals_;
 
     /// Pointer to target column.
-    const Matrix<RELBOOST_FLOAT> target_;
+    const std::vector<Matrix<RELBOOST_FLOAT>> targets_;
 
     /// Time stamps of this data frame.
     const std::vector<Matrix<RELBOOST_FLOAT>> time_stamps_;

@@ -30,11 +30,22 @@ class DataFrame
 
     // -------------------------------
 
-    /// Appends another data frame to this data frame.
-    void append( DataFrame &_other );
+    /// Setter for a float_matrix
+    void add_float_matrix(
+        const Matrix<ENGINE_FLOAT> &_mat,
+        const std::string &_role,
+        const std::string _name,
+        const size_t _num );
 
-    /// Deletes all data in the DataFrame object
-    void clear();
+    /// Setter for an int_matrix
+    void add_int_matrix(
+        const Matrix<ENGINE_INT> &_mat,
+        const std::string _role,
+        const std::string _name,
+        const size_t _num );
+
+    /// Appends another data frame to this data frame.
+    void append( const DataFrame &_other );
 
     /// Makes sure that the data contained in the DataFrame is plausible
     /// and consistent.
@@ -44,16 +55,9 @@ class DataFrame
     /// an "index" over the join keys
     void create_indices();
 
-    /// Setter for a float_matrix
-    void float_matrix(
-        Matrix<ENGINE_FLOAT> &_mat,
-        const std::string &_role,
-        const std::string _name,
-        const size_t _num );
-
     /// Getter for a float_matrix
-    Matrix<ENGINE_FLOAT> &float_matrix(
-        const std::string &_role, const size_t _num );
+    const Matrix<ENGINE_FLOAT> &float_matrix(
+        const std::string &_role, const size_t _num ) const;
 
     /// Returns the encodings as a property tree
     Poco::JSON::Object get_colnames();
@@ -65,22 +69,15 @@ class DataFrame
         const std::int32_t _start,
         const std::int32_t _length ) const;
 
-    /// Setter for an int_matrix (either join keys or categorical)
-    void int_matrix(
-        Matrix<ENGINE_INT> &_mat,
-        const std::string _role,
-        const std::string _name,
-        const size_t _num );
-
     /// Getter for an int_matrix (either join keys or categorical)
-    Matrix<ENGINE_INT> &int_matrix(
-        const std::string &_role, const size_t _num );
+    const Matrix<ENGINE_INT> &int_matrix(
+        const std::string &_role, const size_t _num ) const;
 
     /// Loads the data from the hard-disk into the engine
     void load( const std::string &_path );
 
     /// Returns number of bytes occupied by the data
-    ENGINE_UNSIGNED_LONG nbytes();
+    ENGINE_UNSIGNED_LONG nbytes() const;
 
     /// Saves the data on the engine
     void save( const std::string &_path );
@@ -92,10 +89,15 @@ class DataFrame
     // -------------------------------
 
     /// Trivial accessor
-    Matrix<ENGINE_INT> &categorical() { return categorical_; }
+    template <class T>
+    const Matrix<ENGINE_INT> &categorical( const T _i ) const
+    {
+        assert( categoricals_.size() > 0 );
+        assert( _i >= 0 );
+        assert( _i < static_cast<T>( categoricals_.size() ) );
 
-    /// Trivial accessor
-    Matrix<ENGINE_INT> const &categorical() const { return categorical_; }
+        return categoricals_[_i];
+    }
 
     /// Trivial accessor
     const Encoding &categories() const { return *categories_.get(); }
@@ -109,10 +111,15 @@ class DataFrame
     }
 
     /// Trivial accessor
-    Matrix<ENGINE_FLOAT> &discrete() { return discrete_; }
+    template <class T>
+    const Matrix<ENGINE_FLOAT> &discrete( const T _i ) const
+    {
+        assert(  > 0 );
+        assert( _i >= 0 );
+        assert( _i < static_cast<T>(  ) );
 
-    /// Trivial accessor
-    Matrix<ENGINE_FLOAT> const &discrete() const { return discrete_; }
+        return discretes_[_i];
+    }
 
     /// Returns the index signified by index _i
     template <class T>
@@ -151,18 +158,7 @@ class DataFrame
 
     /// Returns the join key signified by index _i
     template <class T>
-    Matrix<ENGINE_INT> &join_key( const T _i )
-    {
-        assert( join_keys_.size() > 0 );
-        assert( _i >= 0 );
-        assert( _i < static_cast<T>( join_keys_.size() ) );
-
-        return join_keys_[_i];
-    }
-
-    /// Returns the join key signified by index _i
-    template <class T>
-    Matrix<ENGINE_INT> const &join_key( const T _i ) const
+    const Matrix<ENGINE_INT> &join_key( const T _i ) const
     {
         assert( join_keys_.size() > 0 );
         assert( _i >= 0 );
@@ -172,10 +168,7 @@ class DataFrame
     }
 
     /// Trivial accessor
-    std::vector<Matrix<ENGINE_INT>> &join_keys() { return join_keys_; }
-
-    /// Trivial accessor
-    std::vector<Matrix<ENGINE_INT>> const &join_keys() const
+    const std::vector<Matrix<ENGINE_INT>> &join_keys() const
     {
         return join_keys_;
     }
@@ -195,24 +188,39 @@ class DataFrame
     /// Get the number of rows
     const size_t nrows() const
     {
-        assert( categorical().nrows() == discrete().nrows() );
-        assert( categorical().nrows() == numerical().nrows() );
-        assert( categorical().nrows() == targets().nrows() );
+        assert( num_join_keys() > 0 );
 
-        return categorical().nrows();
+        return join_keys_[0].nrows();
     }
 
-    /// Returns number of join keys
+    /// Returns number of categorical columns.
+    size_t const num_categoricals() const { return categoricals_.size(); }
+
+    /// Returns number of discrete columns.
+    size_t const num_discretes() const { return ; }
+
+    /// Returns number of join keys.
     size_t const num_join_keys() const { return join_keys_.size(); }
 
-    /// Returns number of the time stamps
+    /// Returns number of numerical columns.
+    size_t const num_numericals() const { return numericals_.size(); }
+
+    /// Returns number of target columns.
+    size_t const num_targets() const { return targets_.size(); }
+
+    /// Returns number of the time stamps.
     size_t const num_time_stamps() const { return time_stamps_.size(); }
 
-    /// Primitive abstraction for member numerical_
-    Matrix<ENGINE_FLOAT> &numerical() { return numerical_; }
+    /// Trivial accessor
+    template <class T>
+    const Matrix<ENGINE_FLOAT> &numerical( const T _i ) const
+    {
+        assert( numericals_.size() > 0 );
+        assert( _i >= 0 );
+        assert( _i < static_cast<T>( numericals_.size() ) );
 
-    /// Primitive abstraction for member numerical_
-    Matrix<ENGINE_FLOAT> const &numerical() const { return numerical_; }
+        return numericals_[_i];
+    }
 
     /// Primitive setter
     void set_categories( const std::shared_ptr<Encoding> &_categories )
@@ -228,22 +236,14 @@ class DataFrame
     }
 
     /// Trivial accessor
-    Matrix<ENGINE_FLOAT> &targets() { return targets_; }
-
-    /// Trivial accessor
-    Matrix<ENGINE_FLOAT> const &targets() const { return targets_; }
-
-    /// Returns the time stamps signified by index _i
     template <class T>
-    Matrix<ENGINE_FLOAT> &time_stamp( const T _i )
+    const Matrix<ENGINE_FLOAT> &target( const T _i ) const
     {
-        assert( time_stamps_.size() > 0 );
-
+        assert( targets_.size() > 0 );
         assert( _i >= 0 );
+        assert( _i < static_cast<T>( targets_.size() ) );
 
-        assert( _i < static_cast<T>( time_stamps_.size() ) );
-
-        return time_stamps_[_i];
+        return targets_[_i];
     }
 
     /// Returns the time stamps signified by index _i
@@ -251,22 +251,14 @@ class DataFrame
     Matrix<ENGINE_FLOAT> const &time_stamp( const T _i ) const
     {
         assert( time_stamps_.size() > 0 );
-
         assert( _i >= 0 );
-
         assert( _i < static_cast<T>( time_stamps_.size() ) );
 
         return time_stamps_[_i];
     }
 
     /// Trivial accessor
-    std::vector<Matrix<ENGINE_FLOAT>> &time_stamps()
-    {
-        return time_stamps_;
-    }
-
-    /// Trivial accessor
-    std::vector<Matrix<ENGINE_FLOAT>> const &time_stamps() const
+    const std::vector<Matrix<ENGINE_FLOAT>> &time_stamps() const
     {
         return time_stamps_;
     }
@@ -274,11 +266,66 @@ class DataFrame
     // -------------------------------
 
    private:
-    /// Loads the join keys
-    void load_join_keys( const std::string &_path );
+    /// Adds a categorical column.
+    void add_categorical(
+        const Matrix<ENGINE_INT> &_mat,
+        const std::string _name,
+        const size_t _num );
 
-    /// Loads the time stamps
-    void load_time_stamps( const std::string &_path );
+    /// Adds a discrete column.
+    void add_discrete(
+        const Matrix<ENGINE_FLOAT> &_mat,
+        const std::string _name,
+        const size_t _num );
+
+    /// Adds a join key column.
+    void add_join_key(
+        const Matrix<ENGINE_INT> &_mat,
+        const std::string _name,
+        const size_t _num );
+
+    /// Adds a numerical column.
+    void add_numerical(
+        const Matrix<ENGINE_FLOAT> &_mat,
+        const std::string _name,
+        const size_t _num );
+
+    /// Adds a target column.
+    void add_target(
+        const Matrix<ENGINE_FLOAT> &_mat,
+        const std::string _name,
+        const size_t _num );
+
+    /// Adds a time stamp column.
+    void add_time_stamp(
+        const Matrix<ENGINE_FLOAT> &_mat,
+        const std::string _name,
+        const size_t _num );
+
+    /// Calculate the number of bytes.
+    template <class T>
+    ENGINE_UNSIGNED_LONG calc_nbytes(
+        const std::vector<Matrix<T>> &_columns ) const;
+
+    /// Returns the colnames of a vector of columns
+    template <class T>
+    Poco::JSON::Array get_colnames(
+        const std::vector<Matrix<T>> &_columns ) const;
+
+    /// Returns the units of a vector of columns
+    template <class T>
+    Poco::JSON::Array get_units( const std::vector<Matrix<T>> &_columns ) const;
+
+    /// Loads columns.
+    template <class T>
+    std::vector<Matrix<T>> load_matrices(
+        const std::string &_path, const std::string &_prefix ) const;
+
+    template <class T>
+    void save_matrices(
+        const std::vector<Matrix<T>> &_matrices,
+        const std::string &_path,
+        const std::string &_prefix ) const;
 
     /// Transforms a float to a time stamp
     std::string to_time_stamp( const ENGINE_FLOAT &_time_stamp_float ) const;
@@ -287,13 +334,13 @@ class DataFrame
 
    private:
     /// Categorical data
-    Matrix<ENGINE_INT> categorical_;
+    std::vector<Matrix<ENGINE_INT>> categoricals_;
 
     /// Maps integers to names of categories
     std::shared_ptr<Encoding> categories_;
 
     /// Discrete data
-    Matrix<ENGINE_FLOAT> discrete_;
+    std::vector<Matrix<ENGINE_FLOAT>> discretes_;
 
     /// Performs the role of an "index" over the join keys
     std::vector<std::shared_ptr<ENGINE_INDEX>> indices_;
@@ -308,10 +355,10 @@ class DataFrame
     std::string name_;
 
     /// Numerical data
-    Matrix<ENGINE_FLOAT> numerical_;
+    std::vector<Matrix<ENGINE_FLOAT>> numericals_;
 
     /// Targets - only exists for population tables
-    Matrix<ENGINE_FLOAT> targets_;
+    std::vector<Matrix<ENGINE_FLOAT>> targets_;
 
     /// Time stamps
     std::vector<Matrix<ENGINE_FLOAT>> time_stamps_;
@@ -320,5 +367,108 @@ class DataFrame
 // -------------------------------------------------------------------------
 }  // namespace containers
 }  // namespace engine
+
+// -------------------------------------------------------------------------
+// -------------------------------------------------------------------------
+
+namespace engine
+{
+namespace containers
+{
+// -------------------------------------------------------------------------
+
+template <class T>
+ENGINE_UNSIGNED_LONG DataFrame::calc_nbytes(
+    const std::vector<Matrix<T>> &_columns ) const
+{
+    return std::accumulate(
+        _columns.begin(),
+        _columns.end(),
+        static_cast<ENGINE_UNSIGNED_LONG>( 0 ),
+        []( ENGINE_UNSIGNED_LONG &init, const Matrix<T> &mat ) {
+            return init + mat.nbytes();
+        } );
+}
+
+// -------------------------------------------------------------------------
+
+template <class T>
+Poco::JSON::Array DataFrame::get_colnames(
+    const std::vector<Matrix<T>> &_columns ) const
+{
+    std::vector<std::string> colnames;
+
+    std::for_each(
+        _columns.begin(), _columns.end(), [&colnames]( const Matrix<T> &mat ) {
+            colnames.push_back( mat.colname( 0 ) );
+        } );
+
+    return JSON::vector_to_array( colnames );
+}
+
+// -------------------------------------------------------------------------
+
+template <class T>
+Poco::JSON::Array DataFrame::get_units(
+    const std::vector<Matrix<T>> &_columns ) const
+{
+    std::vector<std::string> units;
+
+    std::for_each(
+        _columns.begin(), _columns.end(), [&units]( const Matrix<T> &mat ) {
+            units.push_back( mat.unit( 0 ) );
+        } );
+
+    return JSON::vector_to_array( units );
+}
+
+// ----------------------------------------------------------------------------
+
+template <class T>
+std::vector<Matrix<T>> DataFrame::load_matrices(
+    const std::string &_path, const std::string &_prefix ) const
+{
+    std::vector<Matrix<T>> matrices;
+
+    for ( size_t i = 0; true; ++i )
+        {
+            std::string fname = _path + _prefix + std::to_string( i );
+
+            if ( !Poco::File( fname ).exists() )
+                {
+                    break;
+                }
+
+            Matrix<T> mat;
+
+            mat.load( fname );
+
+            mat.name() = name();
+
+            matrices.push_back( mat );
+        }
+
+    return matrices;
+}
+
+// ----------------------------------------------------------------------------
+
+template <class T>
+void DataFrame::save_matrices(
+    const std::vector<Matrix<T>> &_matrices,
+    const std::string &_path,
+    const std::string &_prefix ) const
+{
+    for ( size_t i = 0; i < _matrices.size(); ++i )
+        {
+            _matrices[i].save( _path + _prefix + std::to_string( i ) );
+        }
+}
+
+// -------------------------------------------------------------------------
+}  // namespace containers
+}  // namespace engine
+
+// -------------------------------------------------------------------------
 
 #endif  // ENGINE_CONTAINERS_DATAFRAME_HPP_

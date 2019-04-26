@@ -45,20 +45,20 @@ void Matchmaker::make_matches(
     const size_t _ix_output,
     std::vector<containers::Match>* _matches )
 {
-    const auto join_key = _population.join_keys_[0][_ix_output];
+    const auto join_key = _population.join_key( _ix_output );
 
-    const auto time_stamp_out = _population.time_stamps( _ix_output );
+    const auto time_stamp_out = _population.time_stamp( _ix_output );
 
-    auto it = _peripheral.indices_[0]->find( join_key );
+    auto it = _peripheral.indices()[0]->find( join_key );
 
-    if ( it != _peripheral.indices_[0]->end() )
+    if ( it != _peripheral.indices()[0]->end() )
         {
             for ( size_t ix_input : it->second )
                 {
-                    const auto lower = _peripheral.time_stamps( ix_input );
+                    const auto lower = _peripheral.time_stamp( ix_input );
 
                     const auto upper =
-                        _peripheral.upper_time_stamps( ix_input );
+                        _peripheral.upper_time_stamp( ix_input );
 
                     const bool match_in_range =
                         lower <= time_stamp_out &&

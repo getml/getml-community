@@ -7,82 +7,78 @@ namespace containers
 // ----------------------------------------------------------------------------
 
 DataFrame::DataFrame(
-    const Matrix<RELBOOST_INT>& _categorical,
-    const Matrix<RELBOOST_FLOAT>& _discrete,
+    const std::vector<Matrix<RELBOOST_INT>>& _categoricals,
+    const std::vector<Matrix<RELBOOST_FLOAT>>& _discretes,
+    const std::vector<std::shared_ptr<RELBOOST_INDEX>>& _indices,
     const std::vector<Matrix<RELBOOST_INT>>& _join_keys,
     const std::string& _name,
-    const Matrix<RELBOOST_FLOAT>& _numerical,
-    const Matrix<RELBOOST_FLOAT>& _target,
+    const std::vector<Matrix<RELBOOST_FLOAT>>& _numericals,
+    const std::vector<Matrix<RELBOOST_FLOAT>>& _targets,
     const std::vector<Matrix<RELBOOST_FLOAT>>& _time_stamps )
-    : categorical_( _categorical ),
-      discrete_( _discrete ),
-      indices_( DataFrame::create_indices( _join_keys ) ),
+    : categoricals_( _categoricals ),
+      discretes_( _discretes ),
+      indices_( _indices ),
       join_keys_( _join_keys ),
       name_( _name ),
-      numerical_( _numerical ),
-      target_( _target ),
+      numericals_( _numericals ),
+      targets_( _targets ),
       time_stamps_( _time_stamps )
 {
     assert( _join_keys.size() > 0 );
     assert( _time_stamps.size() > 0 );
+    assert( _indices.size() == _join_keys.size() );
 
-    assert( categorical_.nrows_ == nrows() );
-    assert( discrete_.nrows_ == nrows() );
-    assert( numerical_.nrows_ == nrows() );
-
-    for ( auto& jk : _join_keys )
+    for ( auto& col : _categoricals )
         {
-            assert( jk.nrows_ == nrows() );
+            assert( col.nrows_ == nrows() );
         }
 
-    assert( target_.nrows_ == nrows() );
-    assert( target_.colnames_.size() < 2 );
-
-    for ( auto& ts : _time_stamps )
+    for ( auto& col : _discretes )
         {
-            assert( ts.nrows_ == nrows() );
+            assert( col.nrows_ == nrows() );
+        }
+
+    for ( auto& col : _join_keys )
+        {
+            assert( col.nrows_ == nrows() );
+        }
+
+    for ( auto& col : _numericals )
+        {
+            assert( col.nrows_ == nrows() );
+        }
+
+    for ( auto& col : _targets )
+        {
+            assert( col.nrows_ == nrows() );
+        }
+
+    for ( auto& col : _time_stamps )
+        {
+            assert( col.nrows_ == nrows() );
         }
 }
 
 // ----------------------------------------------------------------------------
 
 DataFrame::DataFrame(
-    const Matrix<RELBOOST_INT>& _categorical,
-    const Matrix<RELBOOST_FLOAT>& _discrete,
-    const std::vector<std::shared_ptr<RELBOOST_INDEX>>& _indices,
+    const std::vector<Matrix<RELBOOST_INT>>& _categorical,
+    const std::vector<Matrix<RELBOOST_FLOAT>>& _discrete,
     const std::vector<Matrix<RELBOOST_INT>>& _join_keys,
     const std::string& _name,
-    const Matrix<RELBOOST_FLOAT>& _numerical,
-    const Matrix<RELBOOST_FLOAT>& _target,
+    const std::vector<Matrix<RELBOOST_FLOAT>>& _numerical,
+    const std::vector<Matrix<RELBOOST_FLOAT>>& _target,
     const std::vector<Matrix<RELBOOST_FLOAT>>& _time_stamps )
-    : categorical_( _categorical ),
-      discrete_( _discrete ),
-      indices_( _indices ),
-      join_keys_( _join_keys ),
-      name_( _name ),
-      numerical_( _numerical ),
-      target_( _target ),
-      time_stamps_( _time_stamps )
+    : DataFrame(
+          _categorical,
+          _discrete,
+          DataFrame::create_indices( _join_keys ),
+          _join_keys,
+          _name,
+          _numerical,
+          _target,
+          _time_stamps )
 {
-    assert( _join_keys.size() > 0 );
-    assert( _time_stamps.size() > 0 );
-
-    assert( categorical_.nrows_ == nrows() );
-    assert( discrete_.nrows_ == nrows() );
-    assert( numerical_.nrows_ == nrows() );
-
-    for ( auto& jk : _join_keys )
-        {
-            assert( jk.nrows_ == nrows() );
-        }
-
-    assert( target_.nrows_ == nrows() );
-    assert( target_.colnames_.size() < 2 );
-
-    for ( auto& ts : _time_stamps )
-        {
-            assert( ts.nrows_ == nrows() );
-        }
 }
 
 // ----------------------------------------------------------------------------
@@ -138,7 +134,7 @@ DataFrame DataFrame::create_subview(
 
     for ( ; ix_join_key < join_keys_.size(); ++ix_join_key )
         {
-            if ( join_keys_[ix_join_key].colnames_[0] == _join_key )
+            if ( join_keys_[ix_join_key].name_ == _join_key )
                 {
                     break;
                 }
@@ -157,7 +153,7 @@ DataFrame DataFrame::create_subview(
 
     for ( ; ix_time_stamp < time_stamps_.size(); ++ix_time_stamp )
         {
-            if ( time_stamps_[ix_time_stamp].colnames_[0] == _time_stamp )
+            if ( time_stamps_[ix_time_stamp].name_ == _time_stamp )
                 {
                     break;
                 }
@@ -175,13 +171,13 @@ DataFrame DataFrame::create_subview(
     if ( _upper_time_stamp == "" )
         {
             return DataFrame(
-                categorical_,
-                discrete_,
+                categoricals_,
+                discretes_,
                 {indices_[ix_join_key]},
                 {join_keys_[ix_join_key]},
                 _name,
-                numerical_,
-                target_,
+                numericals_,
+                targets_,
                 {time_stamps_[ix_time_stamp]} );
         }
 
@@ -191,7 +187,7 @@ DataFrame DataFrame::create_subview(
 
     for ( ; ix_upper_time_stamp < time_stamps_.size(); ++ix_upper_time_stamp )
         {
-            if ( time_stamps_[ix_upper_time_stamp].colnames_[0] ==
+            if ( time_stamps_[ix_upper_time_stamp].name_ ==
                  _upper_time_stamp )
                 {
                     break;
@@ -208,13 +204,13 @@ DataFrame DataFrame::create_subview(
     // ---------------------------------------------------------------------------
 
     return DataFrame(
-        categorical_,
-        discrete_,
+        categoricals_,
+        discretes_,
         {indices_[ix_join_key]},
         {join_keys_[ix_join_key]},
         _name,
-        numerical_,
-        target_,
+        numericals_,
+        targets_,
         {time_stamps_[ix_time_stamp], time_stamps_[ix_upper_time_stamp]} );
 
     // ---------------------------------------------------------------------------

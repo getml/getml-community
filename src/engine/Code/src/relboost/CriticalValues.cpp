@@ -51,12 +51,12 @@ CriticalValues::calc_categorical(
             switch ( _data_used )
                 {
                     case enums::DataUsed::categorical_input:
-                        cat = _input.categorical_(
+                        cat = _input.categorical(
                             ( *it )->ix_input, _num_column );
                         break;
 
                     case enums::DataUsed::categorical_output:
-                        cat = _output.categorical_(
+                        cat = _output.categorical(
                             ( *it )->ix_output, _num_column );
                         break;
 
@@ -275,20 +275,20 @@ void CriticalValues::find_min_max(
             switch ( _data_used )
                 {
                     case enums::DataUsed::categorical_input:
-                        *_min = _input.categorical_(
+                        *_min = _input.categorical(
                             ( *_begin )->ix_input, _num_column );
 
-                        *_max = _input.categorical_(
+                        *_max = _input.categorical(
                                     ( *( _end - 1 ) )->ix_input, _num_column ) +
                                 1;
                         break;
 
                     case enums::DataUsed::categorical_output:
-                        *_min = _output.categorical_(
+                        *_min = _output.categorical(
                             ( *_begin )->ix_output, _num_column );
 
                         *_max =
-                            _output.categorical_(
+                            _output.categorical(
                                 ( *( _end - 1 ) )->ix_output, _num_column ) +
                             1;
                         break;
@@ -337,30 +337,30 @@ void CriticalValues::find_min_max(
                 {
                     case enums::DataUsed::same_units_discrete:
 
-                        *_max = _output.discrete_(
+                        *_max = _output.discrete(
                                     ( *_begin )->ix_output, _output_col ) -
-                                _input.discrete_(
+                                _input.discrete(
                                     ( *_begin )->ix_input, _input_col );
 
                         *_min =
-                            _output.discrete_(
+                            _output.discrete(
                                 ( *( _end - 1 ) )->ix_output, _output_col ) -
-                            _input.discrete_(
+                            _input.discrete(
                                 ( *( _end - 1 ) )->ix_input, _input_col );
 
                         break;
 
                     case enums::DataUsed::same_units_numerical:
 
-                        *_max = _output.numerical_(
+                        *_max = _output.numerical(
                                     ( *_begin )->ix_output, _output_col ) -
-                                _input.numerical_(
+                                _input.numerical(
                                     ( *_begin )->ix_input, _input_col );
 
                         *_min =
-                            _output.numerical_(
+                            _output.numerical(
                                 ( *( _end - 1 ) )->ix_output, _output_col ) -
-                            _input.numerical_(
+                            _input.numerical(
                                 ( *( _end - 1 ) )->ix_input, _input_col );
 
                         break;
@@ -398,53 +398,52 @@ void CriticalValues::find_min_max(
                 {
                     case enums::DataUsed::discrete_output:
 
-                        *_max = _output.discrete_(
+                        *_max = _output.discrete(
                             ( *_begin )->ix_output, _num_column );
 
-                        *_min = _output.discrete_(
+                        *_min = _output.discrete(
                             ( *( _end - 1 ) )->ix_output, _num_column );
 
                         break;
 
                     case enums::DataUsed::discrete_input:
 
-                        *_max = _input.discrete_(
+                        *_max = _input.discrete(
                             ( *_begin )->ix_input, _num_column );
 
-                        *_min = _input.discrete_(
+                        *_min = _input.discrete(
                             ( *( _end - 1 ) )->ix_input, _num_column );
 
                         break;
 
                     case enums::DataUsed::numerical_output:
 
-                        *_max = _output.numerical_(
+                        *_max = _output.numerical(
                             ( *_begin )->ix_output, _num_column );
 
-                        *_min = _output.numerical_(
+                        *_min = _output.numerical(
                             ( *( _end - 1 ) )->ix_output, _num_column );
 
                         break;
 
                     case enums::DataUsed::numerical_input:
 
-                        *_max = _input.numerical_(
+                        *_max = _input.numerical(
                             ( *_begin )->ix_input, _num_column );
 
-                        *_min = _input.numerical_(
+                        *_min = _input.numerical(
                             ( *( _end - 1 ) )->ix_input, _num_column );
 
                         break;
 
                     case enums::DataUsed::time_stamps_diff:
 
-                        *_max = _output.time_stamps( ( *_begin )->ix_output ) -
-                                _input.time_stamps( ( *_begin )->ix_input );
+                        *_max = _output.time_stamp( ( *_begin )->ix_output ) -
+                                _input.time_stamp( ( *_begin )->ix_input );
 
                         *_min =
-                            _output.time_stamps(
-                                ( *( _end - 1 ) )->ix_output ) -
-                            _input.time_stamps( ( *( _end - 1 ) )->ix_input );
+                            _output.time_stamp( ( *( _end - 1 ) )->ix_output ) -
+                            _input.time_stamp( ( *( _end - 1 ) )->ix_input );
 
                         break;
 

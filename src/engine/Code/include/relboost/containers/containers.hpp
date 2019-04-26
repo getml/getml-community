@@ -26,9 +26,9 @@
 #include "relboost/containers/Optional.hpp"
 #include "relboost/containers/Split.hpp"
 
-#include "relboost/containers/CategoryIndex.hpp"
-
 #include "relboost/containers/DataFrame.hpp"
+
+#include "relboost/containers/CategoryIndex.hpp"
 
 #include "relboost/containers/CandidateSplit.hpp"
 

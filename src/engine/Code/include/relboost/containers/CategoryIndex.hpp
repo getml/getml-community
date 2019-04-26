@@ -27,7 +27,7 @@ class CategoryIndex
     /// Builds the indptr during construction of the CategoryIndex.
     template <enums::DataUsed _data_used>
     void build_indptr(
-        const Matrix<RELBOOST_INT>& _categorical,
+        const DataFrame& _df,
         const size_t _num_column,
         const std::vector<RELBOOST_INT>& _critical_values );
 
@@ -121,7 +121,7 @@ namespace containers
 
 template <enums::DataUsed _data_used>
 void CategoryIndex::build_indptr(
-    const Matrix<RELBOOST_INT>& _categorical,
+    const DataFrame& _df,
     const size_t _num_column,
     const std::vector<RELBOOST_INT>& _critical_values )
 {
@@ -159,7 +159,7 @@ void CategoryIndex::build_indptr(
                 {
                     const auto num_row = get_num_row<_data_used>( begin_[i] );
 
-                    if ( _categorical( num_row, _num_column ) < cat )
+                    if ( _df.categorical( num_row, _num_column ) < cat )
                         {
                             ++i;
                         }
@@ -203,7 +203,8 @@ void CategoryIndex::build_indptr(
                             const auto num_row = get_num_row<_data_used>( *it );
 
                             assert(
-                                _categorical( num_row, _num_column ) == cat );
+                                _df.categorical( num_row, _num_column ) ==
+                                cat );
                         }
                 }
         }

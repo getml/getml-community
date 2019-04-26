@@ -29,7 +29,7 @@ struct Sorter<enums::DataUsed::categorical_input>
     {
         assert( _end >= _begin );
 
-        assert( _num_column < _df.categorical_.colnames_.size() );
+        assert( _num_column < _df.num_categoricals() );
 
         // Note that we are sorting in ASCENDING order!
 
@@ -41,8 +41,8 @@ struct Sorter<enums::DataUsed::categorical_input>
                 assert( m1->ix_input < _df.nrows() );
                 assert( m2->ix_input < _df.nrows() );
 
-                return _df.categorical_( m1->ix_input, _num_column ) <
-                       _df.categorical_( m2->ix_input, _num_column );
+                return _df.categorical( m1->ix_input, _num_column ) <
+                       _df.categorical( m2->ix_input, _num_column );
             } );
     }
 };
@@ -60,7 +60,7 @@ struct Sorter<enums::DataUsed::categorical_output>
     {
         assert( _end >= _begin );
 
-        assert( _num_column < _df.categorical_.colnames_.size() );
+        assert( _num_column < _df.num_categoricals() );
 
         // Note that we are sorting in ASCENDING order!
 
@@ -72,8 +72,8 @@ struct Sorter<enums::DataUsed::categorical_output>
                 assert( m1->ix_output < _df.nrows() );
                 assert( m2->ix_output < _df.nrows() );
 
-                return _df.categorical_( m1->ix_output, _num_column ) <
-                       _df.categorical_( m2->ix_output, _num_column );
+                return _df.categorical( m1->ix_output, _num_column ) <
+                       _df.categorical( m2->ix_output, _num_column );
             } );
     }
 };
@@ -91,7 +91,7 @@ struct Sorter<enums::DataUsed::discrete_input>
     {
         assert( _end >= _begin );
 
-        assert( _num_column < _df.discrete_.colnames_.size() );
+        assert( _num_column < _df.num_discretes() );
 
         // Note that we are sorting in DESCENDING order!
 
@@ -103,8 +103,8 @@ struct Sorter<enums::DataUsed::discrete_input>
                 assert( m1->ix_input < _df.nrows() );
                 assert( m2->ix_input < _df.nrows() );
 
-                return _df.discrete_( m1->ix_input, _num_column ) >
-                       _df.discrete_( m2->ix_input, _num_column );
+                return _df.discrete( m1->ix_input, _num_column ) >
+                       _df.discrete( m2->ix_input, _num_column );
             } );
     }
 };
@@ -122,7 +122,7 @@ struct Sorter<enums::DataUsed::discrete_output>
     {
         assert( _end >= _begin );
 
-        assert( _num_column < _df.discrete_.colnames_.size() );
+        assert( _num_column < _df.num_discretes() );
 
         // Note that we are sorting in DESCENDING order!
 
@@ -134,8 +134,8 @@ struct Sorter<enums::DataUsed::discrete_output>
                 assert( m1->ix_output < _df.nrows() );
                 assert( m2->ix_output < _df.nrows() );
 
-                return _df.discrete_( m1->ix_output, _num_column ) >
-                       _df.discrete_( m2->ix_output, _num_column );
+                return _df.discrete( m1->ix_output, _num_column ) >
+                       _df.discrete( m2->ix_output, _num_column );
             } );
     }
 };
@@ -153,7 +153,7 @@ struct Sorter<enums::DataUsed::numerical_input>
     {
         assert( _end >= _begin );
 
-        assert( _num_column < _df.numerical_.colnames_.size() );
+        assert( _num_column < _df.num_numericals() );
 
         // Note that we are sorting in DESCENDING order!
 
@@ -165,8 +165,8 @@ struct Sorter<enums::DataUsed::numerical_input>
                 assert( m1->ix_input < _df.nrows() );
                 assert( m2->ix_input < _df.nrows() );
 
-                return _df.numerical_( m1->ix_input, _num_column ) >
-                       _df.numerical_( m2->ix_input, _num_column );
+                return _df.numerical( m1->ix_input, _num_column ) >
+                       _df.numerical( m2->ix_input, _num_column );
             } );
     }
 };
@@ -184,7 +184,7 @@ struct Sorter<enums::DataUsed::numerical_output>
     {
         assert( _end >= _begin );
 
-        assert( _num_column < _df.numerical_.colnames_.size() );
+        assert( _num_column < _df.num_numericals() );
 
         // Note that we are sorting in DESCENDING order!
 
@@ -196,8 +196,8 @@ struct Sorter<enums::DataUsed::numerical_output>
                 assert( m1->ix_output < _df.nrows() );
                 assert( m2->ix_output < _df.nrows() );
 
-                return _df.numerical_( m1->ix_output, _num_column ) >
-                       _df.numerical_( m2->ix_output, _num_column );
+                return _df.numerical( m1->ix_output, _num_column ) >
+                       _df.numerical( m2->ix_output, _num_column );
             } );
     }
 };
@@ -219,8 +219,8 @@ struct Sorter<enums::DataUsed::same_units_discrete>
 
         assert( _end >= _begin );
 
-        assert( _input_col < _input.discrete_.colnames_.size() );
-        assert( _output_col < _output.discrete_.colnames_.size() );
+        assert( _input_col < _input.num_discretes() );
+        assert( _output_col < _output.num_discretes() );
 
         std::sort(
             _begin,
@@ -234,12 +234,12 @@ struct Sorter<enums::DataUsed::same_units_discrete>
                 assert( m2->ix_output < _output.nrows() );
 
                 const auto diff1 =
-                    _output.discrete_( m1->ix_output, _output_col ) -
-                    _input.discrete_( m1->ix_input, _input_col );
+                    _output.discrete( m1->ix_output, _output_col ) -
+                    _input.discrete( m1->ix_input, _input_col );
 
                 const auto diff2 =
-                    _output.discrete_( m2->ix_output, _output_col ) -
-                    _input.discrete_( m2->ix_input, _input_col );
+                    _output.discrete( m2->ix_output, _output_col ) -
+                    _input.discrete( m2->ix_input, _input_col );
 
                 return diff1 > diff2;
             } );
@@ -261,8 +261,8 @@ struct Sorter<enums::DataUsed::same_units_numerical>
     {
         assert( _end >= _begin );
 
-        assert( _input_col < _input.numerical_.colnames_.size() );
-        assert( _output_col < _output.numerical_.colnames_.size() );
+        assert( _input_col < _input.num_numericals() );
+        assert( _output_col < _output.num_numericals() );
 
         // Note that we are sorting in DESCENDING order!
 
@@ -278,12 +278,12 @@ struct Sorter<enums::DataUsed::same_units_numerical>
                 assert( m2->ix_output < _output.nrows() );
 
                 const auto diff1 =
-                    _output.numerical_( m1->ix_output, _output_col ) -
-                    _input.numerical_( m1->ix_input, _input_col );
+                    _output.numerical( m1->ix_output, _output_col ) -
+                    _input.numerical( m1->ix_input, _input_col );
 
                 const auto diff2 =
-                    _output.numerical_( m2->ix_output, _output_col ) -
-                    _input.numerical_( m2->ix_input, _input_col );
+                    _output.numerical( m2->ix_output, _output_col ) -
+                    _input.numerical( m2->ix_input, _input_col );
 
                 return diff1 > diff2;
             } );
@@ -316,10 +316,10 @@ struct Sorter<enums::DataUsed::time_stamps_diff>
                 assert( m1->ix_output < _output.nrows() );
                 assert( m2->ix_output < _output.nrows() );
 
-                return ( _output.time_stamps( m1->ix_output ) -
-                         _input.time_stamps( m1->ix_input ) ) >
-                       ( _output.time_stamps( m2->ix_output ) -
-                         _input.time_stamps( m2->ix_input ) );
+                return ( _output.time_stamp( m1->ix_output ) -
+                         _input.time_stamp( m1->ix_input ) ) >
+                       ( _output.time_stamp( m2->ix_output ) -
+                         _input.time_stamp( m2->ix_input ) );
             } );
     }
 };

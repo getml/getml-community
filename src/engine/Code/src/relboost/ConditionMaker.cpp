@@ -15,8 +15,7 @@ std::string ConditionMaker::condition_greater(
         {
             case enums::DataUsed::categorical_input:
                 {
-                    assert(
-                        _split.column_ < _input.categorical_.colnames_.size() );
+                    assert( _split.column_ < _input.num_categoricals() );
 
                     std::string condition = "( ";
 
@@ -35,7 +34,7 @@ std::string ConditionMaker::condition_greater(
 
                             condition +=
                                 "t2." +
-                                _input.categorical_.colnames_[_split.column_] +
+                                _input.categorical_name( _split.column_ ) +
                                 " = '" + encoding( *it ) + "'";
                         }
 
@@ -46,9 +45,7 @@ std::string ConditionMaker::condition_greater(
 
             case enums::DataUsed::categorical_output:
                 {
-                    assert(
-                        _split.column_ <
-                        _output.categorical_.colnames_.size() );
+                    assert( _split.column_ < _output.num_categoricals() );
 
                     std::string condition = "( ";
 
@@ -67,7 +64,7 @@ std::string ConditionMaker::condition_greater(
 
                             condition +=
                                 "t1." +
-                                _output.categorical_.colnames_[_split.column_] +
+                                _output.categorical_name( _split.column_ ) +
                                 " = '" + encoding( *it ) + "'";
                         }
 
@@ -77,96 +74,86 @@ std::string ConditionMaker::condition_greater(
                 }
 
             case enums::DataUsed::discrete_input:
-                assert( _split.column_ < _input.discrete_.colnames_.size() );
-                return "( t2." + _input.discrete_.colnames_[_split.column_] +
+                assert( _split.column_ < _input.num_discretes() );
+                return "( t2." + _input.discrete_name( _split.column_ ) +
                        " > " + std::to_string( _split.critical_value_ ) + " )";
 
             case enums::DataUsed::discrete_input_is_nan:
-                assert( _split.column_ < _input.discrete_.colnames_.size() );
-                return "( t2." + _input.discrete_.colnames_[_split.column_] +
+                assert( _split.column_ < _input.num_discretes() );
+                return "( t2." + _input.discrete_name( _split.column_ ) +
                        " IS NOT NULL )";
 
             case enums::DataUsed::discrete_output:
-                assert( _split.column_ < _output.discrete_.colnames_.size() );
-                return "( t1." + _output.discrete_.colnames_[_split.column_] +
+                assert( _split.column_ < _output.num_discretes() );
+                return "( t1." + _output.discrete_name( _split.column_ ) +
                        " > " + std::to_string( _split.critical_value_ ) + " )";
 
             case enums::DataUsed::discrete_output_is_nan:
-                assert( _split.column_ < _output.discrete_.colnames_.size() );
-                return "( t1." + _output.discrete_.colnames_[_split.column_] +
+                assert( _split.column_ < _output.num_discretes() );
+                return "( t1." + _output.discrete_name( _split.column_ ) +
                        " IS NOT NULL )";
 
             case enums::DataUsed::numerical_input:
-                assert( _split.column_ < _input.numerical_.colnames_.size() );
-                return "( t2." + _input.numerical_.colnames_[_split.column_] +
+                assert( _split.column_ < _input.num_numericals() );
+                return "( t2." + _input.numerical_name( _split.column_ ) +
                        " > " + std::to_string( _split.critical_value_ ) + " )";
 
             case enums::DataUsed::numerical_input_is_nan:
-                assert( _split.column_ < _input.numerical_.colnames_.size() );
-                return "( t2." + _input.numerical_.colnames_[_split.column_] +
+                assert( _split.column_ < _input.num_numericals() );
+                return "( t2." + _input.numerical_name( _split.column_ ) +
                        " IS NOT NULL )";
 
             case enums::DataUsed::numerical_output:
-                assert( _split.column_ < _output.numerical_.colnames_.size() );
-                return "( t1." + _output.numerical_.colnames_[_split.column_] +
+                assert( _split.column_ < _output.num_numericals() );
+                return "( t1." + _output.numerical_name( _split.column_ ) +
                        " > " + std::to_string( _split.critical_value_ ) + " )";
 
             case enums::DataUsed::numerical_output_is_nan:
-                assert( _split.column_ < _output.numerical_.colnames_.size() );
-                return "( t1." + _output.numerical_.colnames_[_split.column_] +
+                assert( _split.column_ < _output.num_numericals() );
+                return "( t1." + _output.numerical_name( _split.column_ ) +
                        " IS NOT NULL )";
 
             case enums::DataUsed::same_units_categorical:
-                assert(
-                    _split.column_ < _output.categorical_.colnames_.size() );
-                assert(
-                    _split.column_input_ <
-                    _input.categorical_.colnames_.size() );
-                return "( t1." +
-                       _output.categorical_.colnames_[_split.column_] +
+                assert( _split.column_ < _output.num_categoricals() );
+                assert( _split.column_input_ < _input.num_categoricals() );
+                return "( t1." + _output.categorical_name( _split.column_ ) +
                        " = t2." +
-                       _input.categorical_.colnames_[_split.column_input_] +
-                       " )";
+                       _input.categorical_name( _split.column_input_ ) + " )";
 
             case enums::DataUsed::same_units_discrete:
-                assert( _split.column_ < _output.discrete_.colnames_.size() );
-                assert(
-                    _split.column_input_ < _input.discrete_.colnames_.size() );
-                return "( t1." + _output.discrete_.colnames_[_split.column_] +
-                       " - t2." +
-                       _input.discrete_.colnames_[_split.column_input_] +
+                assert( _split.column_ < _output.num_discretes() );
+                assert( _split.column_input_ < _input.num_discretes() );
+                return "( t1." + _output.discrete_name( _split.column_ ) +
+                       " - t2." + _input.discrete_name( _split.column_input_ ) +
                        " > " + std::to_string( _split.critical_value_ ) + " )";
 
             case enums::DataUsed::same_units_discrete_is_nan:
-                assert( _split.column_ < _output.discrete_.colnames_.size() );
-                assert(
-                    _split.column_input_ < _input.discrete_.colnames_.size() );
-                return "( t1." + _output.discrete_.colnames_[_split.column_] +
+                assert( _split.column_ < _output.num_discretes() );
+                assert( _split.column_input_ < _input.num_discretes() );
+                return "( t1." + _output.discrete_name( _split.column_ ) +
                        " IS NOT NULL AND t2." +
-                       _input.discrete_.colnames_[_split.column_input_] +
+                       _input.discrete_name( _split.column_input_ ) +
                        " IS NOT NULL )";
 
             case enums::DataUsed::same_units_numerical:
-                assert( _split.column_ < _output.numerical_.colnames_.size() );
-                assert(
-                    _split.column_input_ < _input.numerical_.colnames_.size() );
-                return "( t1." + _output.numerical_.colnames_[_split.column_] +
+                assert( _split.column_ < _output.num_numericals() );
+                assert( _split.column_input_ < _input.num_numericals() );
+                return "( t1." + _output.numerical_name( _split.column_ ) +
                        " - t2." +
-                       _input.numerical_.colnames_[_split.column_input_] +
-                       " > " + std::to_string( _split.critical_value_ ) + " )";
+                       _input.numerical_name( _split.column_input_ ) + " > " +
+                       std::to_string( _split.critical_value_ ) + " )";
 
             case enums::DataUsed::same_units_numerical_is_nan:
-                assert( _split.column_ < _output.numerical_.colnames_.size() );
-                assert(
-                    _split.column_input_ < _input.numerical_.colnames_.size() );
-                return "( t1." + _output.numerical_.colnames_[_split.column_] +
+                assert( _split.column_ < _output.num_numericals() );
+                assert( _split.column_input_ < _input.num_numericals() );
+                return "( t1." + _output.numerical_name( _split.column_ ) +
                        " IS NOT NULL AND t2." +
-                       _input.numerical_.colnames_[_split.column_input_] +
+                       _input.numerical_name( _split.column_input_ ) +
                        " IS NOT NULL )";
 
             case enums::DataUsed::time_stamps_diff:
-                return "( t1." + _output.time_stamps_[0].colnames_[0] +
-                       " - t2." + _input.time_stamps_[0].colnames_[0] + " > " +
+                return "( t1." + _output.time_stamps_name() + " - t2." +
+                       _input.time_stamps_name() + " > " +
                        std::to_string( _split.critical_value_ ) + " )";
 
             default:
@@ -186,8 +173,7 @@ std::string ConditionMaker::condition_smaller(
         {
             case enums::DataUsed::categorical_input:
                 {
-                    assert(
-                        _split.column_ < _input.categorical_.colnames_.size() );
+                    assert( _split.column_ < _input.num_categoricals() );
 
                     std::string condition = "( ";
 
@@ -206,7 +192,7 @@ std::string ConditionMaker::condition_smaller(
 
                             condition +=
                                 "t2." +
-                                _input.categorical_.colnames_[_split.column_] +
+                                _input.categorical_name( _split.column_ ) +
                                 " != '" + encoding( *it ) + "'";
                         }
 
@@ -217,9 +203,7 @@ std::string ConditionMaker::condition_smaller(
 
             case enums::DataUsed::categorical_output:
                 {
-                    assert(
-                        _split.column_ <
-                        _output.categorical_.colnames_.size() );
+                    assert( _split.column_ < _output.num_categoricals() );
 
                     std::string condition = "( ";
 
@@ -238,7 +222,7 @@ std::string ConditionMaker::condition_smaller(
 
                             condition +=
                                 "t1." +
-                                _output.categorical_.colnames_[_split.column_] +
+                                _output.categorical_name( _split.column_ ) +
                                 " != '" + encoding( *it ) + "'";
                         }
 
@@ -248,117 +232,105 @@ std::string ConditionMaker::condition_smaller(
                 }
 
             case enums::DataUsed::discrete_input:
-                assert( _split.column_ < _input.discrete_.colnames_.size() );
-                return "( t2." + _input.discrete_.colnames_[_split.column_] +
+                assert( _split.column_ < _input.num_discretes() );
+                return "( t2." + _input.discrete_name( _split.column_ ) +
                        " <= " + std::to_string( _split.critical_value_ ) +
-                       " OR t2." + _input.discrete_.colnames_[_split.column_] +
+                       " OR t2." + _input.discrete_name( _split.column_ ) +
                        " IS NULL )";
 
             case enums::DataUsed::discrete_input_is_nan:
-                assert( _split.column_ < _input.discrete_.colnames_.size() );
-                return "( t2." + _input.discrete_.colnames_[_split.column_] +
+                assert( _split.column_ < _input.num_discretes() );
+                return "( t2." + _input.discrete_name( _split.column_ ) +
                        " IS NULL )";
 
             case enums::DataUsed::discrete_output:
-                assert( _split.column_ < _output.discrete_.colnames_.size() );
-                return "( t1." + _output.discrete_.colnames_[_split.column_] +
+                assert( _split.column_ < _output.num_discretes() );
+                return "( t1." + _output.discrete_name( _split.column_ ) +
                        " <= " + std::to_string( _split.critical_value_ ) +
-                       " OR t1." + _output.discrete_.colnames_[_split.column_] +
+                       " OR t1." + _output.discrete_name( _split.column_ ) +
                        " IS NULL )";
 
             case enums::DataUsed::discrete_output_is_nan:
-                assert( _split.column_ < _output.discrete_.colnames_.size() );
-                return "( t1." + _output.discrete_.colnames_[_split.column_] +
+                assert( _split.column_ < _output.num_discretes() );
+                return "( t1." + _output.discrete_name( _split.column_ ) +
                        " IS NULL )";
 
             case enums::DataUsed::numerical_input:
-                assert( _split.column_ < _input.numerical_.colnames_.size() );
-                return "( t2." + _input.numerical_.colnames_[_split.column_] +
+                assert( _split.column_ < _input.num_numericals() );
+                return "( t2." + _input.numerical_name( _split.column_ ) +
                        " <= " + std::to_string( _split.critical_value_ ) +
-                       " OR t2." + _input.numerical_.colnames_[_split.column_] +
+                       " OR t2." + _input.numerical_name( _split.column_ ) +
                        " IS NULL )";
 
             case enums::DataUsed::numerical_input_is_nan:
-                assert( _split.column_ < _input.numerical_.colnames_.size() );
-                return "( t2." + _input.numerical_.colnames_[_split.column_] +
+                assert( _split.column_ < _input.num_numericals() );
+                return "( t2." + _input.numerical_name( _split.column_ ) +
                        " IS NULL )";
 
             case enums::DataUsed::numerical_output:
-                assert( _split.column_ < _output.numerical_.colnames_.size() );
-                return "( t1." + _output.numerical_.colnames_[_split.column_] +
+                assert( _split.column_ < _output.num_numericals() );
+                return "( t1." + _output.numerical_name( _split.column_ ) +
                        " <= " + std::to_string( _split.critical_value_ ) +
-                       " OR t1." +
-                       _output.numerical_.colnames_[_split.column_] +
+                       " OR t1." + _output.numerical_name( _split.column_ ) +
                        " IS NULL )";
 
             case enums::DataUsed::numerical_output_is_nan:
-                assert( _split.column_ < _output.numerical_.colnames_.size() );
-                return "( t1." + _output.numerical_.colnames_[_split.column_] +
+                assert( _split.column_ < _output.num_numericals() );
+                return "( t1." + _output.numerical_name( _split.column_ ) +
                        " IS NULL )";
 
             case enums::DataUsed::same_units_categorical:
-                assert(
-                    _split.column_ < _output.categorical_.colnames_.size() );
-                assert(
-                    _split.column_input_ <
-                    _input.categorical_.colnames_.size() );
-                return "( t1." +
-                       _output.categorical_.colnames_[_split.column_] +
+                assert( _split.column_ < _output.num_categoricals() );
+                assert( _split.column_input_ < _input.num_categoricals() );
+                return "( t1." + _output.categorical_name( _split.column_ ) +
                        " != t2." +
-                       _input.categorical_.colnames_[_split.column_input_] +
-                       " )";
+                       _input.categorical_name( _split.column_input_ ) + " )";
 
             case enums::DataUsed::same_units_discrete:
-                assert( _split.column_ < _output.discrete_.colnames_.size() );
-                assert(
-                    _split.column_input_ < _input.discrete_.colnames_.size() );
-                return "( t1." + _output.discrete_.colnames_[_split.column_] +
-                       " - t2." +
-                       _input.discrete_.colnames_[_split.column_input_] +
+                assert( _split.column_ < _output.num_discretes() );
+                assert( _split.column_input_ < _input.num_discretes() );
+                return "( t1." + _output.discrete_name( _split.column_ ) +
+                       " - t2." + _input.discrete_name( _split.column_input_ ) +
                        " <= " + std::to_string( _split.critical_value_ ) +
-                       " OR t1." + _output.discrete_.colnames_[_split.column_] +
+                       " OR t1." + _output.discrete_name( _split.column_ ) +
                        " IS NULL OR t2." +
-                       _input.discrete_.colnames_[_split.column_input_] +
+                       _input.discrete_name( _split.column_input_ ) +
                        " IS NULL )";
 
             case enums::DataUsed::same_units_discrete_is_nan:
-                assert( _split.column_ < _output.discrete_.colnames_.size() );
-                assert(
-                    _split.column_input_ < _input.discrete_.colnames_.size() );
-                return "( t1." + _output.discrete_.colnames_[_split.column_] +
+                assert( _split.column_ < _output.num_discretes() );
+                assert( _split.column_input_ < _input.num_discretes() );
+                return "( t1." + _output.discrete_name( _split.column_ ) +
                        " IS NULL OR t2." +
-                       _input.discrete_.colnames_[_split.column_input_] +
+                       _input.discrete_name( _split.column_input_ ) +
                        " IS NULL )";
 
             case enums::DataUsed::same_units_numerical:
-                assert( _split.column_ < _output.numerical_.colnames_.size() );
-                assert(
-                    _split.column_input_ < _input.numerical_.colnames_.size() );
-                return "( t1." + _output.numerical_.colnames_[_split.column_] +
+                assert( _split.column_ < _output.num_numericals() );
+                assert( _split.column_input_ < _input.num_numericals() );
+                return "( t1." + _output.numerical_name( _split.column_ ) +
                        " - t2." +
-                       _input.numerical_.colnames_[_split.column_input_] +
+                       _input.numerical_name( _split.column_input_ ) +
                        " <= " + std::to_string( _split.critical_value_ ) +
-                       " OR t1." +
-                       _output.numerical_.colnames_[_split.column_] +
+                       " OR t1." + _output.numerical_name( _split.column_ ) +
                        " IS NULL OR t2." +
-                       _input.numerical_.colnames_[_split.column_input_] +
+                       _input.numerical_name( _split.column_input_ ) +
                        " IS NULL )";
 
             case enums::DataUsed::same_units_numerical_is_nan:
-                assert( _split.column_ < _output.numerical_.colnames_.size() );
-                assert(
-                    _split.column_input_ < _input.numerical_.colnames_.size() );
-                return "( t1." + _output.numerical_.colnames_[_split.column_] +
+                assert( _split.column_ < _output.num_numericals() );
+                assert( _split.column_input_ < _input.num_numericals() );
+                return "( t1." + _output.numerical_name( _split.column_ ) +
                        " IS NULL OR t2." +
-                       _input.numerical_.colnames_[_split.column_input_] +
+                       _input.numerical_name( _split.column_input_ ) +
                        " IS NULL )";
 
             case enums::DataUsed::time_stamps_diff:
-                return "( t1." + _output.time_stamps_[0].colnames_[0] +
-                       " - t2." + _input.time_stamps_[0].colnames_[0] +
+                return "( t1." + _output.time_stamps_name() + " - t2." +
+                       _input.time_stamps_name() +
                        " <= " + std::to_string( _split.critical_value_ ) +
-                       " OR t1." + _output.time_stamps_[0].colnames_[0] +
-                       " IS NULL OR t2." + _input.time_stamps_[0].colnames_[0] +
+                       " OR t1." + _output.time_stamps_name() +
+                       " IS NULL OR t2." + _input.time_stamps_name() +
                        " IS NULL )";
 
             default:

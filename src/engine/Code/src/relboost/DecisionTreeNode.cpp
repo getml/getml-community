@@ -654,7 +654,7 @@ void DecisionTreeNode::try_categorical_input(
     const std::vector<const containers::Match*>::iterator _end,
     std::vector<containers::CandidateSplit>* _candidates )
 {
-    for ( size_t j = 0; j < _input.categorical_.colnames_.size(); ++j )
+    for ( size_t j = 0; j < _input.num_categoricals(); ++j )
         {
             // ----------------------------------------------------------------
             // Record the current size of _candidates - we will need it later.
@@ -690,7 +690,7 @@ void DecisionTreeNode::try_categorical_input(
             auto category_index = containers::CategoryIndex( _begin, _end );
 
             category_index.build_indptr<enums::DataUsed::categorical_input>(
-                _input.categorical_, j, *critical_values.get() );
+                _input, j, *critical_values.get() );
 
             // ----------------------------------------------------------------
             // Try individual categorical values.
@@ -743,7 +743,7 @@ void DecisionTreeNode::try_categorical_output(
     const std::vector<const containers::Match*>::iterator _end,
     std::vector<containers::CandidateSplit>* _candidates )
 {
-    for ( size_t j = 0; j < _output.categorical_.colnames_.size(); ++j )
+    for ( size_t j = 0; j < _output.num_categoricals(); ++j )
         {
             // ----------------------------------------------------------------
             // Record the current size of _candidates - we will need it later.
@@ -779,7 +779,7 @@ void DecisionTreeNode::try_categorical_output(
             auto category_index = containers::CategoryIndex( _begin, _end );
 
             category_index.build_indptr<enums::DataUsed::categorical_output>(
-                _output.categorical_, j, *critical_values.get() );
+                _output, j, *critical_values.get() );
 
             // ----------------------------------------------------------------
             // Try individual categorical values.
@@ -832,7 +832,7 @@ void DecisionTreeNode::try_discrete_input(
     const std::vector<const containers::Match*>::iterator _end,
     std::vector<containers::CandidateSplit>* _candidates )
 {
-    for ( size_t j = 0; j < _input.discrete_.colnames_.size(); ++j )
+    for ( size_t j = 0; j < _input.num_discretes(); ++j )
         {
             // Moves all matches for which the critical value is NAN to the
             // very end.
@@ -911,7 +911,7 @@ void DecisionTreeNode::try_discrete_output(
     const std::vector<const containers::Match*>::iterator _end,
     std::vector<containers::CandidateSplit>* _candidates )
 {
-    for ( size_t j = 0; j < _output.discrete_.colnames_.size(); ++j )
+    for ( size_t j = 0; j < _output.num_discretes(); ++j )
         {
             // Moves all matches for which the critical value is NAN to the
             // very end.
@@ -990,7 +990,7 @@ void DecisionTreeNode::try_numerical_input(
     const std::vector<const containers::Match*>::iterator _end,
     std::vector<containers::CandidateSplit>* _candidates )
 {
-    for ( size_t j = 0; j < _input.numerical_.colnames_.size(); ++j )
+    for ( size_t j = 0; j < _input.num_numericals(); ++j )
         {
             // Moves all matches for which the critical value is NAN to the
             // very end.
@@ -1069,7 +1069,7 @@ void DecisionTreeNode::try_numerical_output(
     const std::vector<const containers::Match*>::iterator _end,
     std::vector<containers::CandidateSplit>* _candidates )
 {
-    for ( size_t j = 0; j < _output.numerical_.colnames_.size(); ++j )
+    for ( size_t j = 0; j < _output.num_numericals(); ++j )
         {
             // Moves all matches for which the critical value is NAN to the
             // very end.
@@ -1155,25 +1155,15 @@ void DecisionTreeNode::try_same_units_categorical(
     const std::vector<const containers::Match*>::iterator _end,
     std::vector<containers::CandidateSplit>* _candidates )
 {
-    assert(
-        _input.categorical_.units_.size() ==
-        _input.categorical_.colnames_.size() );
-
-    assert(
-        _output.categorical_.units_.size() ==
-        _output.categorical_.colnames_.size() );
-
-    for ( size_t output_col = 0;
-          output_col < _output.categorical_.units_.size();
+    for ( size_t output_col = 0; output_col < _output.num_categoricals();
           ++output_col )
         {
-            for ( size_t input_col = 0;
-                  input_col < _input.categorical_.units_.size();
+            for ( size_t input_col = 0; input_col < _input.num_categoricals();
                   ++input_col )
                 {
-                    if ( _output.categorical_.units_[output_col] == "" ||
-                         _output.categorical_.units_[output_col] !=
-                             _output.categorical_.units_[input_col] )
+                    if ( _output.categorical_unit( output_col ) == "" ||
+                         _output.categorical_unit( output_col ) !=
+                             _output.categorical_unit( input_col ) )
                         {
                             continue;
                         }
@@ -1185,9 +1175,9 @@ void DecisionTreeNode::try_same_units_categorical(
                             assert( m->ix_output < _output.nrows() );
 
                             const bool is_same =
-                                ( _input.categorical_(
+                                ( _input.categorical(
                                       m->ix_input, input_col ) ==
-                                  _output.categorical_(
+                                  _output.categorical(
                                       m->ix_output, output_col ) );
 
                             return is_same;
@@ -1222,22 +1212,15 @@ void DecisionTreeNode::try_same_units_discrete(
     const std::vector<const containers::Match*>::iterator _end,
     std::vector<containers::CandidateSplit>* _candidates )
 {
-    assert(
-        _input.discrete_.units_.size() == _input.discrete_.colnames_.size() );
-
-    assert(
-        _output.discrete_.units_.size() == _output.discrete_.colnames_.size() );
-
-    for ( size_t output_col = 0; output_col < _output.discrete_.units_.size();
+    for ( size_t output_col = 0; output_col < _output.num_discretes();
           ++output_col )
         {
-            for ( size_t input_col = 0;
-                  input_col < _input.discrete_.units_.size();
+            for ( size_t input_col = 0; input_col < _input.num_discretes();
                   ++input_col )
                 {
-                    if ( _output.discrete_.units_[output_col] == "" ||
-                         _output.discrete_.units_[output_col] !=
-                             _output.discrete_.units_[input_col] )
+                    if ( _output.discrete_unit( output_col ) == "" ||
+                         _output.discrete_unit( output_col ) !=
+                             _output.discrete_unit( input_col ) )
                         {
                             continue;
                         }
@@ -1351,23 +1334,15 @@ void DecisionTreeNode::try_same_units_numerical(
     const std::vector<const containers::Match*>::iterator _end,
     std::vector<containers::CandidateSplit>* _candidates )
 {
-    assert(
-        _input.numerical_.units_.size() == _input.numerical_.colnames_.size() );
-
-    assert(
-        _output.numerical_.units_.size() ==
-        _output.numerical_.colnames_.size() );
-
-    for ( size_t output_col = 0; output_col < _output.numerical_.units_.size();
+    for ( size_t output_col = 0; output_col < _output.num_numericals();
           ++output_col )
         {
-            for ( size_t input_col = 0;
-                  input_col < _input.numerical_.units_.size();
+            for ( size_t input_col = 0; input_col < _input.num_numericals();
                   ++input_col )
                 {
-                    if ( _output.numerical_.units_[output_col] == "" ||
-                         _output.numerical_.units_[output_col] !=
-                             _output.numerical_.units_[input_col] )
+                    if ( _output.numerical_unit( output_col ) == "" ||
+                         _output.numerical_unit( output_col ) !=
+                             _output.numerical_unit( input_col ) )
                         {
                             continue;
                         }
@@ -1482,8 +1457,7 @@ void DecisionTreeNode::try_time_stamps_diff(
     std::vector<containers::CandidateSplit>* _candidates )
 {
     debug_log(
-        "Numerical population, column '" + _output.numerical_.colnames_[j] +
-        "'." );
+        "Numerical population, column '" + _output.numerical_name( j ) + "'." );
 
     // Note that this sorts in DESCENDING order.
     utils::Sorter<enums::DataUsed::time_stamps_diff>::sort(

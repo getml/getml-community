@@ -303,7 +303,7 @@ void DecisionTreeEnsemble::init(
     // ------------------------------------------------------------------------
     // Prepare targets.
 
-    if ( _population.target_.colnames_.size() != 1 )
+    if ( _population.num_targets() != 1 )
         {
             throw std::runtime_error(
                 "The population table needs to define exactly one target!" );
@@ -311,10 +311,10 @@ void DecisionTreeEnsemble::init(
 
     targets().resize( _population.nrows() );
 
-    std::copy(
-        _population.target_.data_,
-        _population.target_.data_ + _population.nrows(),
-        targets().begin() );
+    for ( size_t i = 0; i < _population.nrows(); ++i )
+        {
+            targets()[i] = _population.target( i, 0 );
+        }
 
     // ------------------------------------------------------------------------
     // Calculate initial prediction.

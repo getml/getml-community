@@ -10,6 +10,7 @@ int main( int argc, char* argv[] )
     test4_time_stamps_diff();
 
     test5_categorical();
+
     test6_categorical();
     test7_categorical();
 
