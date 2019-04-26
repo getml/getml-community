@@ -261,7 +261,7 @@ class Sum : public lossfunctions::LossFunction
     containers::IntSet indices_current_;
 
     /// The join keys of the input table.
-    std::vector<containers::Matrix<RELBOOST_INT>> input_join_keys_;
+    std::vector<containers::Column<RELBOOST_INT>> input_join_keys_;
 
     /// The indices of the output table.
     std::vector<std::shared_ptr<RELBOOST_INDEX>> output_indices_;

@@ -6,7 +6,7 @@ namespace communication
 {
 // ------------------------------------------------------------------------
 
-containers::Matrix<ENGINE_INT> Receiver::recv_categorical_matrix(
+containers::Column<ENGINE_INT> Receiver::recv_categorical_matrix(
     containers::Encoding *_encoding, Poco::Net::StreamSocket *_socket )
 {
     // ------------------------------------------------
@@ -31,7 +31,7 @@ containers::Matrix<ENGINE_INT> Receiver::recv_categorical_matrix(
                 "Number of columns can not be negative!" );
         }
 
-    containers::Matrix<ENGINE_INT> matrix(
+    containers::Column<ENGINE_INT> matrix(
         static_cast<size_t>( std::get<0>( shape ) ),
         static_cast<size_t>( std::get<1>( shape ) ) );
 
@@ -94,7 +94,7 @@ Poco::JSON::Object Receiver::recv_cmd(
 
 // ------------------------------------------------------------------------
 
-containers::Matrix<ENGINE_FLOAT> Receiver::recv_matrix(
+containers::Column<ENGINE_FLOAT> Receiver::recv_matrix(
     Poco::Net::StreamSocket *_socket )
 {
     // ------------------------------------------------
@@ -119,7 +119,7 @@ containers::Matrix<ENGINE_FLOAT> Receiver::recv_matrix(
                 "Number of columns can not be negative!" );
         }
 
-    containers::Matrix<ENGINE_FLOAT> matrix(
+    containers::Column<ENGINE_FLOAT> matrix(
         static_cast<size_t>( std::get<0>( shape ) ),
         static_cast<size_t>( std::get<1>( shape ) ) );
 

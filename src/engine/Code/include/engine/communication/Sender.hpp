@@ -19,7 +19,7 @@ struct Sender
     /// Sends matrix to the client
     template <class T>
     static void send_matrix(
-        const containers::Matrix<T>& _matrix,
+        const containers::Column<T>& _matrix,
         Poco::Net::StreamSocket* _socket );
 
     /// Sends a string to the client
@@ -120,7 +120,7 @@ void Sender::send(
 
 template <class T>
 void Sender::send_matrix(
-    const containers::Matrix<T>& _matrix, Poco::Net::StreamSocket* _socket )
+    const containers::Column<T>& _matrix, Poco::Net::StreamSocket* _socket )
 {
     // ------------------------------------------------
     // Send dimensions of matrix

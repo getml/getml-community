@@ -23,7 +23,7 @@ class Models
 
     /// Generate features.
     template <typename ModelType>
-    static containers::Matrix<ENGINE_FLOAT> transform(
+    static containers::Column<ENGINE_FLOAT> transform(
         const Poco::JSON::Object& _cmd,
         const std::shared_ptr<const logging::Logger>& _logger,
         const std::map<std::string, containers::DataFrame>& _data_frames,
@@ -79,7 +79,7 @@ DataFrameType Models::extract_df(
 
     // ------------------------------------------------------------------------
 
-    const auto discrete = typename DataFrameType::FloatMatrixType(
+    const auto discrete = typename DataFrameType::FloatColumnType(
         *it->second.discrete().colnames(),
         it->second.discrete().data(),
         it->second.discrete().nrows(),
@@ -97,7 +97,7 @@ DataFrameType Models::extract_df(
 
     // ------------------------------------------------------------------------
 
-    const auto numerical = typename DataFrameType::FloatMatrixType(
+    const auto numerical = typename DataFrameType::FloatColumnType(
         *it->second.numerical().colnames(),
         it->second.numerical().data(),
         it->second.numerical().nrows(),
@@ -105,7 +105,7 @@ DataFrameType Models::extract_df(
 
     // ------------------------------------------------------------------------
 
-    const auto target = typename DataFrameType::FloatMatrixType(
+    const auto target = typename DataFrameType::FloatColumnType(
         *it->second.targets().colnames(),
         it->second.targets().data(),
         it->second.targets().nrows(),
@@ -113,11 +113,11 @@ DataFrameType Models::extract_df(
 
     // ------------------------------------------------------------------------
 
-    std::vector<typename DataFrameType::FloatMatrixType> time_stamps;
+    std::vector<typename DataFrameType::FloatColumnType> time_stamps;
 
     for ( auto& ts : it->second.time_stamps() )
         {
-            time_stamps.push_back( typename DataFrameType::FloatMatrixType(
+            time_stamps.push_back( typename DataFrameType::FloatColumnType(
                 *ts.colnames(), ts.data(), ts.nrows(), *ts.units() ) );
         }
 
@@ -234,7 +234,7 @@ void Models::fit(
 // ----------------------------------------------------------------------------
 
 template <typename ModelType>
-containers::Matrix<ENGINE_FLOAT> Models::transform(
+containers::Column<ENGINE_FLOAT> Models::transform(
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<const logging::Logger>& _logger,
     const std::map<std::string, containers::DataFrame>& _data_frames,
@@ -284,7 +284,7 @@ containers::Matrix<ENGINE_FLOAT> Models::transform(
 
     const auto ncols = _model.num_features();
 
-    const auto mat = containers::Matrix<ENGINE_FLOAT>( nrows, ncols, data );
+    const auto mat = containers::Column<ENGINE_FLOAT>( nrows, ncols, data );
 
     // ------------------------------------------------
 

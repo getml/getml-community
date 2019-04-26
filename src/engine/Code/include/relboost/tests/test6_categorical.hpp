@@ -21,36 +21,36 @@ void test6_categorical()
     const auto categorical_peripheral =
         make_categorical_column<std::int32_t>( 250000, rng );
 
-    const auto categorical_peripheral_mat =
-        relboost::containers::Matrix<std::int32_t>(
+    const auto categorical_peripheral_col =
+        relboost::containers::Column<std::int32_t>(
             categorical_peripheral.data(),
             "column_01",
             categorical_peripheral.size() );
 
     const auto join_keys_peripheral = make_column<std::int32_t>( 250000, rng );
 
-    const auto join_keys_peripheral_mat =
-        relboost::containers::Matrix<std::int32_t>(
+    const auto join_keys_peripheral_col =
+        relboost::containers::Column<std::int32_t>(
             join_keys_peripheral.data(),
             "join_key",
             join_keys_peripheral.size() );
 
     const auto time_stamps_peripheral = make_column<double>( 250000, rng );
 
-    const auto time_stamps_peripheral_mat =
-        relboost::containers::Matrix<double>(
+    const auto time_stamps_peripheral_col =
+        relboost::containers::Column<double>(
             time_stamps_peripheral.data(),
             "time_stamp",
             time_stamps_peripheral.size() );
 
     const auto peripheral_df = relboost::containers::DataFrame(
-        {categorical_peripheral_mat},
+        {categorical_peripheral_col},
         {},
-        {join_keys_peripheral_mat},
+        {join_keys_peripheral_col},
         "PERIPHERAL",
         {},
         {},
-        {time_stamps_peripheral_mat} );
+        {time_stamps_peripheral_col} );
 
     // ------------------------------------------------------------------------
     // Build population table.
@@ -58,8 +58,8 @@ void test6_categorical()
     const auto categorical_population =
         make_categorical_column<std::int32_t>( 500, rng );
 
-    const auto categorical_population_mat =
-        relboost::containers::Matrix<std::int32_t>(
+    const auto categorical_population_col =
+        relboost::containers::Column<std::int32_t>(
             categorical_population.data(), "column_01", 500 );
 
     auto join_keys_population = std::vector<std::int32_t>( 500 );
@@ -69,33 +69,33 @@ void test6_categorical()
             join_keys_population[i] = i;
         }
 
-    const auto join_keys_population_mat =
-        relboost::containers::Matrix<std::int32_t>(
+    const auto join_keys_population_col =
+        relboost::containers::Column<std::int32_t>(
             join_keys_population.data(),
             "join_key",
             join_keys_population.size() );
 
     const auto time_stamps_population = make_column<double>( 500, rng );
 
-    const auto time_stamps_population_mat =
-        relboost::containers::Matrix<double>(
+    const auto time_stamps_population_col =
+        relboost::containers::Column<double>(
             time_stamps_population.data(),
             "time_stamp",
             time_stamps_population.size() );
 
     auto targets_population = std::vector<double>( 500 );
 
-    const auto target_population_mat = relboost::containers::Matrix<double>(
+    const auto target_population_col = relboost::containers::Column<double>(
         targets_population.data(), "target", targets_population.size() );
 
     const auto population_df = relboost::containers::DataFrame(
-        {categorical_population_mat},
+        {categorical_population_col},
         {},
-        {join_keys_population_mat},
+        {join_keys_population_col},
         "POPULATION",
         {},
-        {target_population_mat},
-        {time_stamps_population_mat} );
+        {target_population_col},
+        {time_stamps_population_col} );
 
     // ---------------------------------------------
     // Define targets.
@@ -109,7 +109,7 @@ void test6_categorical()
             assert( jk < 500 );
 
             if ( peripheral_df.time_stamp( i ) <=
-                 time_stamps_population_mat[jk] )
+                 time_stamps_population_col[jk] )
                 {
                     counts[jk]++;
                 }
@@ -122,7 +122,7 @@ void test6_categorical()
             assert( jk < 500 );
 
             if ( peripheral_df.time_stamp( i ) <=
-                 time_stamps_population_mat[jk] )
+                 time_stamps_population_col[jk] )
                 {
                     if ( peripheral_df.categorical( i, 0 ) == 3 )
                         {

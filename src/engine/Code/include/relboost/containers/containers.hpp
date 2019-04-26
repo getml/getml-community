@@ -22,7 +22,7 @@
 
 #include "relboost/containers/IntSet.hpp"
 #include "relboost/containers/Match.hpp"
-#include "relboost/containers/Matrix.hpp"
+#include "relboost/containers/Column.hpp"
 #include "relboost/containers/Optional.hpp"
 #include "relboost/containers/Split.hpp"
 

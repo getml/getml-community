@@ -1,5 +1,5 @@
-#ifndef RELBOOST_CONTAINERS_MATRIX_HPP_
-#define RELBOOST_CONTAINERS_MATRIX_HPP_
+#ifndef RELBOOST_CONTAINERS_COLUMN_HPP_
+#define RELBOOST_CONTAINERS_COLUMN_HPP_
 
 namespace relboost
 {
@@ -8,11 +8,11 @@ namespace containers
 // -------------------------------------------------------------------------
 
 template <typename T>
-struct Matrix
+struct Column
 {
     // ---------------------------------------------------------------------
 
-    Matrix(
+    Column(
         const T* const _data,
         const std::string& _name,
         const size_t _nrows,
@@ -21,13 +21,13 @@ struct Matrix
     {
     }
 
-    Matrix(
+    Column(
         const T* const _data, const std::string& _name, const size_t _nrows )
         : data_( _data ), name_( _name ), nrows_( _nrows ), unit_( "" )
     {
     }
 
-    ~Matrix() = default;
+    ~Column() = default;
 
     // ---------------------------------------------------------------------
 
@@ -58,4 +58,4 @@ struct Matrix
 }  // namespace containers
 }  // namespace relboost
 
-#endif  // RELBOOST_CONTAINERS_MATRIX_HPP_
+#endif  // RELBOOST_CONTAINERS_COLUMN_HPP_

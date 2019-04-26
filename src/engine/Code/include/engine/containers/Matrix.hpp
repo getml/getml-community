@@ -525,7 +525,7 @@ void Matrix<T>::load( const std::string &_fname )
 
     for ( size_t i = 0; i < batches.size() - 1; ++i )
         {
-            containers::Matrix<T> mat( batches[i + 1] - batches[i], ncols );
+            containers::Column<T> mat( batches[i + 1] - batches[i], ncols );
 
             input.read(
                 reinterpret_cast<char *>( mat.data() ),

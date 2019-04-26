@@ -12,31 +12,31 @@ class DataFrame
     // ---------------------------------------------------------------------
 
    public:
-    typedef relboost::containers::Matrix<RELBOOST_FLOAT> FloatMatrixType;
+    typedef relboost::containers::Column<RELBOOST_FLOAT> FloatColumnType;
 
-    typedef relboost::containers::Matrix<RELBOOST_INT> IntMatrixType;
+    typedef relboost::containers::Column<RELBOOST_INT> IntColumnType;
 
     // ---------------------------------------------------------------------
 
    public:
     DataFrame(
-        const std::vector<Matrix<RELBOOST_INT>>& _categoricals,
-        const std::vector<Matrix<RELBOOST_FLOAT>>& _discretes,
+        const std::vector<Column<RELBOOST_INT>>& _categoricals,
+        const std::vector<Column<RELBOOST_FLOAT>>& _discretes,
         const std::vector<std::shared_ptr<RELBOOST_INDEX>>& _indices,
-        const std::vector<Matrix<RELBOOST_INT>>& _join_keys,
+        const std::vector<Column<RELBOOST_INT>>& _join_keys,
         const std::string& _name,
-        const std::vector<Matrix<RELBOOST_FLOAT>>& _numericals,
-        const std::vector<Matrix<RELBOOST_FLOAT>>& _targets,
-        const std::vector<Matrix<RELBOOST_FLOAT>>& _time_stamps );
+        const std::vector<Column<RELBOOST_FLOAT>>& _numericals,
+        const std::vector<Column<RELBOOST_FLOAT>>& _targets,
+        const std::vector<Column<RELBOOST_FLOAT>>& _time_stamps );
 
     DataFrame(
-        const std::vector<Matrix<RELBOOST_INT>>& _categoricals,
-        const std::vector<Matrix<RELBOOST_FLOAT>>& _discretes,
-        const std::vector<Matrix<RELBOOST_INT>>& _join_keys,
+        const std::vector<Column<RELBOOST_INT>>& _categoricals,
+        const std::vector<Column<RELBOOST_FLOAT>>& _discretes,
+        const std::vector<Column<RELBOOST_INT>>& _join_keys,
         const std::string& _name,
-        const std::vector<Matrix<RELBOOST_FLOAT>>& _numericals,
-        const std::vector<Matrix<RELBOOST_FLOAT>>& _targets,
-        const std::vector<Matrix<RELBOOST_FLOAT>>& _time_stamps );
+        const std::vector<Column<RELBOOST_FLOAT>>& _numericals,
+        const std::vector<Column<RELBOOST_FLOAT>>& _targets,
+        const std::vector<Column<RELBOOST_FLOAT>>& _time_stamps );
 
     ~DataFrame() = default;
 
@@ -100,7 +100,7 @@ class DataFrame
     }
 
     /// Getter for a join keys.
-    const std::vector<Matrix<RELBOOST_INT>>& join_keys() const
+    const std::vector<Column<RELBOOST_INT>>& join_keys() const
     {
         return join_keys_;
     }
@@ -227,7 +227,7 @@ class DataFrame
 
     /// Creates the indices for this data frame
     static std::vector<std::shared_ptr<RELBOOST_INDEX>> create_indices(
-        const std::vector<Matrix<RELBOOST_INT>>& _join_keys );
+        const std::vector<Column<RELBOOST_INT>>& _join_keys );
 
     /// Creates a subview
     DataFrame create_subview(
@@ -240,28 +240,28 @@ class DataFrame
 
    private:
     /// Pointer to categorical columns.
-    const std::vector<Matrix<RELBOOST_INT>> categoricals_;
+    const std::vector<Column<RELBOOST_INT>> categoricals_;
 
     /// Pointer to discrete columns.
-    const std::vector<Matrix<RELBOOST_FLOAT>> discretes_;
+    const std::vector<Column<RELBOOST_FLOAT>> discretes_;
 
     /// Indices assiciated with join keys.
     const std::vector<std::shared_ptr<RELBOOST_INDEX>> indices_;
 
     /// Join keys of this data frame.
-    const std::vector<Matrix<RELBOOST_INT>> join_keys_;
+    const std::vector<Column<RELBOOST_INT>> join_keys_;
 
     /// Name of the data frame.
     const std::string name_;
 
     /// Pointer to numerical columns.
-    const std::vector<Matrix<RELBOOST_FLOAT>> numericals_;
+    const std::vector<Column<RELBOOST_FLOAT>> numericals_;
 
     /// Pointer to target column.
-    const std::vector<Matrix<RELBOOST_FLOAT>> targets_;
+    const std::vector<Column<RELBOOST_FLOAT>> targets_;
 
     /// Time stamps of this data frame.
-    const std::vector<Matrix<RELBOOST_FLOAT>> time_stamps_;
+    const std::vector<Column<RELBOOST_FLOAT>> time_stamps_;
 };
 
 // -------------------------------------------------------------------------
