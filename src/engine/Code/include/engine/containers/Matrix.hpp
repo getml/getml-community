@@ -127,7 +127,9 @@ class Matrix
     /// Trivial getter
     const std::string &colname( const size_t _i ) const
     {
-        return colnames_.get()[0][_i];
+        assert( colnames_ );
+        assert( _i < colnames_->size() );
+        return ( *colnames_ )[_i];
     }
 
     /// Trivial getter
@@ -308,17 +310,11 @@ class Matrix
     const std::string type() const { return type_; }
 
     /// Trivial getter
-    std::string &unit( size_t _i )
+    const std::string &unit( const size_t _i ) const
     {
-        assert( static_cast<size_t>( units_->size() ) > _i && _i >= 0 );
-        return units_.get()[0][_i];
-    }
-
-    /// Trivial getter
-    const std::string &unit( size_t _i ) const
-    {
-        assert( static_cast<size_t>( units_->size() ) > _i && _i >= 0 );
-        return units_.get()[0][_i];
+        assert( units_ );
+        assert( _i < units_->size() );
+        return ( *units_ )[_i];
     }
 
     /// Trivial getter
@@ -525,7 +521,7 @@ void Matrix<T>::load( const std::string &_fname )
 
     for ( size_t i = 0; i < batches.size() - 1; ++i )
         {
-            containers::Column<T> mat( batches[i + 1] - batches[i], ncols );
+            Matrix<T> mat( batches[i + 1] - batches[i], ncols );
 
             input.read(
                 reinterpret_cast<char *>( mat.data() ),

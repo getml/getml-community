@@ -23,7 +23,7 @@ class Models
 
     /// Generate features.
     template <typename ModelType>
-    static containers::Column<ENGINE_FLOAT> transform(
+    static containers::Matrix<ENGINE_FLOAT> transform(
         const Poco::JSON::Object& _cmd,
         const std::shared_ptr<const logging::Logger>& _logger,
         const std::map<std::string, containers::DataFrame>& _data_frames,
@@ -69,68 +69,90 @@ DataFrameType Models::extract_df(
                 "' is currently loaded in memory!" );
         }
 
-    // ------------------------------------------------------------------------
-
-    const auto categorical = typename DataFrameType::IntMatrixType(
-        *it->second.categorical().colnames(),
-        it->second.categorical().data(),
-        it->second.categorical().nrows(),
-        *it->second.categorical().units() );
+    const auto& df = it->second;
 
     // ------------------------------------------------------------------------
 
-    const auto discrete = typename DataFrameType::FloatColumnType(
-        *it->second.discrete().colnames(),
-        it->second.discrete().data(),
-        it->second.discrete().nrows(),
-        *it->second.discrete().units() );
+    std::vector<typename DataFrameType::IntColumnType> categoricals;
 
-    // ------------------------------------------------------------------------
-
-    std::vector<typename DataFrameType::IntMatrixType> join_keys;
-
-    for ( auto& jk : it->second.join_keys() )
+    for ( size_t i = 0; i < df.num_categoricals(); ++i )
         {
-            join_keys.push_back( typename DataFrameType::IntMatrixType(
-                *jk.colnames(), jk.data(), jk.nrows(), *jk.units() ) );
+            const auto& mat = it->second.categorical( i );
+
+            categoricals.push_back( typename DataFrameType::IntColumnType(
+                mat.data(), mat.colname( 0 ), mat.nrows(), mat.unit( 0 ) ) );
         }
 
     // ------------------------------------------------------------------------
 
-    const auto numerical = typename DataFrameType::FloatColumnType(
-        *it->second.numerical().colnames(),
-        it->second.numerical().data(),
-        it->second.numerical().nrows(),
-        *it->second.numerical().units() );
+    std::vector<typename DataFrameType::FloatColumnType> discretes;
+
+    for ( size_t i = 0; i < df.num_discretes(); ++i )
+        {
+            const auto& mat = it->second.discrete( i );
+
+            discretes.push_back( typename DataFrameType::FloatColumnType(
+                mat.data(), mat.colname( 0 ), mat.nrows(), mat.unit( 0 ) ) );
+        }
 
     // ------------------------------------------------------------------------
 
-    const auto target = typename DataFrameType::FloatColumnType(
-        *it->second.targets().colnames(),
-        it->second.targets().data(),
-        it->second.targets().nrows(),
-        *it->second.targets().units() );
+    std::vector<typename DataFrameType::IntColumnType> join_keys;
+
+    for ( size_t i = 0; i < df.num_join_keys(); ++i )
+        {
+            const auto& mat = it->second.join_key( i );
+
+            join_keys.push_back( typename DataFrameType::IntColumnType(
+                mat.data(), mat.colname( 0 ), mat.nrows(), mat.unit( 0 ) ) );
+        }
+
+    // ------------------------------------------------------------------------
+
+    std::vector<typename DataFrameType::FloatColumnType> numericals;
+
+    for ( size_t i = 0; i < df.num_numericals(); ++i )
+        {
+            const auto& mat = it->second.numerical( i );
+
+            numericals.push_back( typename DataFrameType::FloatColumnType(
+                mat.data(), mat.colname( 0 ), mat.nrows(), mat.unit( 0 ) ) );
+        }
+
+    // ------------------------------------------------------------------------
+
+    std::vector<typename DataFrameType::FloatColumnType> targets;
+
+    for ( size_t i = 0; i < df.num_targets(); ++i )
+        {
+            const auto& mat = it->second.target( i );
+
+            targets.push_back( typename DataFrameType::FloatColumnType(
+                mat.data(), mat.colname( 0 ), mat.nrows(), mat.unit( 0 ) ) );
+        }
 
     // ------------------------------------------------------------------------
 
     std::vector<typename DataFrameType::FloatColumnType> time_stamps;
 
-    for ( auto& ts : it->second.time_stamps() )
+    for ( size_t i = 0; i < df.num_time_stamps(); ++i )
         {
+            const auto& mat = it->second.time_stamp( i );
+
             time_stamps.push_back( typename DataFrameType::FloatColumnType(
-                *ts.colnames(), ts.data(), ts.nrows(), *ts.units() ) );
+                mat.data(), mat.colname( 0 ), mat.nrows(), mat.unit( 0 ) ) );
         }
 
     // ------------------------------------------------------------------------
 
     return DataFrameType(
-        categorical,
-        discrete,
+        categoricals,
+        discretes,
         it->second.indices(),
         join_keys,
         _name,
-        numerical,
-        target,
+        numericals,
+        targets,
         time_stamps );
 
     // ------------------------------------------------------------------------
@@ -234,7 +256,7 @@ void Models::fit(
 // ----------------------------------------------------------------------------
 
 template <typename ModelType>
-containers::Column<ENGINE_FLOAT> Models::transform(
+containers::Matrix<ENGINE_FLOAT> Models::transform(
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<const logging::Logger>& _logger,
     const std::map<std::string, containers::DataFrame>& _data_frames,
@@ -284,7 +306,7 @@ containers::Column<ENGINE_FLOAT> Models::transform(
 
     const auto ncols = _model.num_features();
 
-    const auto mat = containers::Column<ENGINE_FLOAT>( nrows, ncols, data );
+    const auto mat = containers::Matrix<ENGINE_FLOAT>( nrows, ncols, data );
 
     // ------------------------------------------------
 

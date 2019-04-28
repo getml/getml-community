@@ -274,7 +274,7 @@ void DataFrame::append( const DataFrame &_other )
 
     for ( size_t i = 0; i < targets_.size(); ++i )
         {
-            targets_[i].append( _other.target( i, 0 ) );
+            targets_[i].append( _other.target( i ) );
         }
 
     for ( size_t i = 0; i < time_stamps_.size(); ++i )

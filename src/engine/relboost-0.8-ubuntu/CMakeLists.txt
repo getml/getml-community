@@ -35,7 +35,7 @@ include(${RELBOOST_SOURCE_DIRECTORY}/obj.txt)
 
 add_executable(${RELBOOST_VERSION}-64bit-test ${RELBOOST_OBJ} ${RELBOOST_SOURCE_DIRECTORY}/main.cpp)
 
-#add_executable(${RELBOOST_VERSION}-64bit ${RELBOOST_OBJ} ${ENGINE_OBJ} ${ENGINE_SOURCE_DIRECTORY}/main.cpp)
+add_executable(${RELBOOST_VERSION}-64bit ${RELBOOST_OBJ} ${ENGINE_OBJ} ${ENGINE_SOURCE_DIRECTORY}/main.cpp)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11 -Wall -Wno-sign-compare -Wno-missing-braces -pthread -fno-strict-aliasing -fwrapv -O2 -D NDEBUGLOG")
     
@@ -47,16 +47,16 @@ target_link_libraries(
     "${POCO_DIR}/lib/Linux/x86_64/libPocoFoundation.a"
 )
 
-#target_link_libraries(
-#    ${RELBOOST_VERSION}-64bit
-#    "${POCO_DIR}/lib/Linux/x86_64/libPocoNetSSL.a"
-#    "${POCO_DIR}/lib/Linux/x86_64/libPocoCrypto.a"
-#    "${POCO_DIR}/lib/Linux/x86_64/libPocoNet.a"
-#    "${POCO_DIR}/lib/Linux/x86_64/libPocoUtil.a"
-#    "${POCO_DIR}/lib/Linux/x86_64/libPocoJSON.a"
-#    "${POCO_DIR}/lib/Linux/x86_64/libPocoXML.a"
-#    "${POCO_DIR}/lib/Linux/x86_64/libPocoFoundation.a"
-#    crypto
-#    ssl
-#)
+target_link_libraries(
+    ${RELBOOST_VERSION}-64bit
+    "${POCO_DIR}/lib/Linux/x86_64/libPocoNetSSL.a"
+    "${POCO_DIR}/lib/Linux/x86_64/libPocoCrypto.a"
+    "${POCO_DIR}/lib/Linux/x86_64/libPocoNet.a"
+    "${POCO_DIR}/lib/Linux/x86_64/libPocoUtil.a"
+    "${POCO_DIR}/lib/Linux/x86_64/libPocoJSON.a"
+    "${POCO_DIR}/lib/Linux/x86_64/libPocoXML.a"
+    "${POCO_DIR}/lib/Linux/x86_64/libPocoFoundation.a"
+    crypto
+    ssl
+)
 

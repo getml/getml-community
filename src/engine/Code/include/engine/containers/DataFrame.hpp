@@ -114,9 +114,8 @@ class DataFrame
     template <class T>
     const Matrix<ENGINE_FLOAT> &discrete( const T _i ) const
     {
-        assert(  > 0 );
         assert( _i >= 0 );
-        assert( _i < static_cast<T>(  ) );
+        assert( _i < static_cast<T>( discretes_.size() ) );
 
         return discretes_[_i];
     }
@@ -197,7 +196,7 @@ class DataFrame
     size_t const num_categoricals() const { return categoricals_.size(); }
 
     /// Returns number of discrete columns.
-    size_t const num_discretes() const { return ; }
+    size_t const num_discretes() const { return discretes_.size(); }
 
     /// Returns number of join keys.
     size_t const num_join_keys() const { return join_keys_.size(); }

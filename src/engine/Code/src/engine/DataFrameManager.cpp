@@ -19,7 +19,7 @@ void DataFrameManager::add_categorical_matrix(
     const size_t num_join_key =
         JSON::get_value<size_t>( _cmd, "num_join_key_" );
 
-    containers::Column<ENGINE_INT> mat;
+    containers::Matrix<ENGINE_INT> mat;
 
     if ( role == "categorical" )
         {
@@ -38,7 +38,7 @@ void DataFrameManager::add_categorical_matrix(
 
     mat.name() = join_key_name;
 
-    _df->int_matrix( mat, role, join_key_name, num_join_key );
+    _df->add_int_matrix( mat, role, join_key_name, num_join_key );
 
     communication::Sender::send_string( "Success!", _socket );
 }
@@ -118,7 +118,7 @@ void DataFrameManager::add_matrix(
 
     mat.name() = _df->name();
 
-    _df->float_matrix( mat, role, time_stamps_name, num_time_stamps );
+    _df->add_float_matrix( mat, role, time_stamps_name, num_time_stamps );
 
     communication::Sender::send_string( "Success!", _socket );
 }
@@ -185,15 +185,16 @@ void DataFrameManager::categorical_matrix_set_colnames(
 {
     const std::string role = JSON::get_value<std::string>( _cmd, "role_" );
 
-    const size_t num_join_key =
-        JSON::get_value<size_t>( _cmd, "num_join_key_" );
+    const size_t num = JSON::get_value<size_t>( _cmd, "num_join_key_" );
 
-    auto& mat = _df->int_matrix( role, num_join_key );
+    auto mat = _df->int_matrix( role, num );
 
     auto colnames = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "colnames_" ) );
 
     mat.set_colnames( colnames );
+
+    _df->add_int_matrix( mat, role, mat.name(), num );
 
     communication::Sender::send_string( "Success!", _socket );
 }
@@ -207,15 +208,16 @@ void DataFrameManager::categorical_matrix_set_units(
 {
     const std::string role = JSON::get_value<std::string>( _cmd, "role_" );
 
-    const size_t num_join_key =
-        JSON::get_value<size_t>( _cmd, "num_join_key_" );
+    const size_t num = JSON::get_value<size_t>( _cmd, "num_join_key_" );
 
-    auto& mat = _df->int_matrix( role, num_join_key );
+    auto mat = _df->int_matrix( role, num );
 
     auto units =
         JSON::array_to_vector<std::string>( JSON::get_array( _cmd, "units_" ) );
 
     mat.set_units( units );
+
+    _df->add_int_matrix( mat, role, mat.name(), num );
 
     communication::Sender::send_string( "Success!", _socket );
 }
@@ -322,15 +324,16 @@ void DataFrameManager::matrix_set_colnames(
 {
     const std::string role = JSON::get_value<std::string>( _cmd, "role_" );
 
-    const size_t num_time_stamps =
-        JSON::get_value<size_t>( _cmd, "num_time_stamps_" );
+    const size_t num = JSON::get_value<size_t>( _cmd, "num_time_stamps_" );
 
-    auto& mat = _df->float_matrix( role, num_time_stamps );
+    auto mat = _df->float_matrix( role, num );
 
     auto colnames = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "colnames_" ) );
 
     mat.set_colnames( colnames );
+
+    _df->add_float_matrix( mat, role, mat.name(), num );
 
     communication::Sender::send_string( "Success!", _socket );
 }
@@ -344,15 +347,16 @@ void DataFrameManager::matrix_set_units(
 {
     const std::string role = JSON::get_value<std::string>( _cmd, "role_" );
 
-    const size_t num_time_stamps =
-        JSON::get_value<size_t>( _cmd, "num_time_stamps_" );
+    const size_t num = JSON::get_value<size_t>( _cmd, "num_time_stamps_" );
 
-    auto& mat = _df->float_matrix( role, num_time_stamps );
+    auto mat = _df->float_matrix( role, num );
 
     auto units =
         JSON::array_to_vector<std::string>( JSON::get_array( _cmd, "units_" ) );
 
     mat.set_units( units );
+
+    _df->add_float_matrix( mat, role, mat.name(), num );
 
     communication::Sender::send_string( "Success!", _socket );
 }
