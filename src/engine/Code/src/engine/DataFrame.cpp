@@ -61,11 +61,11 @@ void DataFrame::add_float_column(
         {
             add_numerical( _mat, _num );
         }
-    else if ( _role == "targets" )
+    else if ( _role == "target" )
         {
             add_target( _mat, _num );
         }
-    else if ( _role == "time_stamps" )
+    else if ( _role == "time_stamp" )
         {
             add_time_stamp( _mat, _num );
         }
