@@ -273,7 +273,7 @@ class Matrix
     }
 
     /// Trivial setter
-    void set_colnames( std::vector<std::string> &_colnames )
+    void set_colnames( const std::vector<std::string> &_colnames )
     {
         if ( static_cast<size_t>( _colnames.size() ) != ncols_ )
             {
@@ -284,11 +284,13 @@ class Matrix
                     std::to_string( _colnames.size() ) + "!" );
             }
 
-        colnames_.get()[0] = _colnames;
+        assert( colnames_ );
+
+        ( *colnames_ ) = _colnames;
     }
 
     /// Trivial setter
-    void set_units( std::vector<std::string> &_units )
+    void set_units( const std::vector<std::string> &_units )
     {
         if ( static_cast<size_t>( _units.size() ) != ncols_ )
             {
@@ -297,7 +299,9 @@ class Matrix
                     "columns!" );
             }
 
-        units_.get()[0] = _units;
+        assert( units_ );
+
+        ( *units_ ) = _units;
     }
 
     /// Returns size of data

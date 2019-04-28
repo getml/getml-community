@@ -11,13 +11,13 @@ void DataFrameManager::add_categorical_matrix(
     containers::DataFrame* _df,
     Poco::Net::StreamSocket* _socket )
 {
-    const std::string role = JSON::get_value<std::string>( _cmd, "role_" );
+    const auto role = JSON::get_value<std::string>( _cmd, "role_" );
 
-    const std::string join_key_name =
-        JSON::get_value<std::string>( _cmd, "join_key_name_" );
+    const auto name = JSON::get_value<std::string>( _cmd, "name_" );
 
-    const size_t num_join_key =
-        JSON::get_value<size_t>( _cmd, "num_join_key_" );
+    const auto num = JSON::get_value<size_t>( _cmd, "num_" );
+
+    const auto unit = JSON::get_value<std::string>( _cmd, "unit_" );
 
     containers::Matrix<ENGINE_INT> mat;
 
@@ -36,9 +36,13 @@ void DataFrameManager::add_categorical_matrix(
             assert( false );
         }
 
-    mat.name() = join_key_name;
+    mat.name() = name;
 
-    _df->add_int_matrix( mat, role, join_key_name, num_join_key );
+    mat.set_colnames( {name} );
+
+    mat.set_units( {unit} );
+
+    _df->add_int_matrix( mat, role, name, num );
 
     communication::Sender::send_string( "Success!", _socket );
 }
@@ -106,19 +110,23 @@ void DataFrameManager::add_matrix(
     containers::DataFrame* _df,
     Poco::Net::StreamSocket* _socket )
 {
-    const std::string role = JSON::get_value<std::string>( _cmd, "role_" );
+    const auto role = JSON::get_value<std::string>( _cmd, "role_" );
 
-    const std::string time_stamps_name =
-        JSON::get_value<std::string>( _cmd, "time_stamps_name_" );
+    const auto name = JSON::get_value<std::string>( _cmd, "name_" );
 
-    const size_t num_time_stamps =
-        JSON::get_value<size_t>( _cmd, "num_time_stamps_" );
+    const auto num = JSON::get_value<size_t>( _cmd, "num_" );
+
+    const auto unit = JSON::get_value<std::string>( _cmd, "unit_" );
 
     auto mat = communication::Receiver::recv_matrix( _socket );
 
     mat.name() = _df->name();
 
-    _df->add_float_matrix( mat, role, time_stamps_name, num_time_stamps );
+    mat.set_colnames( {name} );
+
+    mat.set_units( {unit} );
+
+    _df->add_float_matrix( mat, role, name, num );
 
     communication::Sender::send_string( "Success!", _socket );
 }
@@ -174,52 +182,6 @@ void DataFrameManager::append_to_data_frame(
     // );
 
     // --------------------------------------------------------------------
-}
-
-// ------------------------------------------------------------------------
-
-void DataFrameManager::categorical_matrix_set_colnames(
-    const Poco::JSON::Object& _cmd,
-    containers::DataFrame* _df,
-    Poco::Net::StreamSocket* _socket )
-{
-    const std::string role = JSON::get_value<std::string>( _cmd, "role_" );
-
-    const size_t num = JSON::get_value<size_t>( _cmd, "num_join_key_" );
-
-    auto mat = _df->int_matrix( role, num );
-
-    auto colnames = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "colnames_" ) );
-
-    mat.set_colnames( colnames );
-
-    _df->add_int_matrix( mat, role, mat.name(), num );
-
-    communication::Sender::send_string( "Success!", _socket );
-}
-
-// ------------------------------------------------------------------------
-
-void DataFrameManager::categorical_matrix_set_units(
-    const Poco::JSON::Object& _cmd,
-    containers::DataFrame* _df,
-    Poco::Net::StreamSocket* _socket )
-{
-    const std::string role = JSON::get_value<std::string>( _cmd, "role_" );
-
-    const size_t num = JSON::get_value<size_t>( _cmd, "num_join_key_" );
-
-    auto mat = _df->int_matrix( role, num );
-
-    auto units =
-        JSON::array_to_vector<std::string>( JSON::get_array( _cmd, "units_" ) );
-
-    mat.set_units( units );
-
-    _df->add_int_matrix( mat, role, mat.name(), num );
-
-    communication::Sender::send_string( "Success!", _socket );
 }
 
 // ------------------------------------------------------------------------
@@ -317,52 +279,6 @@ void DataFrameManager::get_nbytes(
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::matrix_set_colnames(
-    const Poco::JSON::Object& _cmd,
-    containers::DataFrame* _df,
-    Poco::Net::StreamSocket* _socket )
-{
-    const std::string role = JSON::get_value<std::string>( _cmd, "role_" );
-
-    const size_t num = JSON::get_value<size_t>( _cmd, "num_time_stamps_" );
-
-    auto mat = _df->float_matrix( role, num );
-
-    auto colnames = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "colnames_" ) );
-
-    mat.set_colnames( colnames );
-
-    _df->add_float_matrix( mat, role, mat.name(), num );
-
-    communication::Sender::send_string( "Success!", _socket );
-}
-
-// ------------------------------------------------------------------------
-
-void DataFrameManager::matrix_set_units(
-    const Poco::JSON::Object& _cmd,
-    containers::DataFrame* _df,
-    Poco::Net::StreamSocket* _socket )
-{
-    const std::string role = JSON::get_value<std::string>( _cmd, "role_" );
-
-    const size_t num = JSON::get_value<size_t>( _cmd, "num_time_stamps_" );
-
-    auto mat = _df->float_matrix( role, num );
-
-    auto units =
-        JSON::array_to_vector<std::string>( JSON::get_array( _cmd, "units_" ) );
-
-    mat.set_units( units );
-
-    _df->add_float_matrix( mat, role, mat.name(), num );
-
-    communication::Sender::send_string( "Success!", _socket );
-}
-
-// ------------------------------------------------------------------------
-
 void DataFrameManager::receive_data(
     containers::DataFrame* _df, Poco::Net::StreamSocket* _socket )
 {
@@ -375,42 +291,18 @@ void DataFrameManager::receive_data(
 
             const auto name = JSON::get_value<std::string>( cmd, "name_" );
 
-            if ( name != _df->name() )
-                {
-                    throw std::invalid_argument(
-                        "Something unexpected occurred. The DataFrame names do "
-                        "not match: Got '" +
-                        name + "' , expected '" + _df->name() + "' !" );
-                }
-
-            if ( type == "CategoricalMatrix" )
+            if ( type == "CategoricalColumn" )
                 {
                     add_categorical_matrix( cmd, _df, _socket );
                 }
-            else if ( type == "CategoricalMatrix.set_colnames" )
+            else if ( type == "Column" )
                 {
-                    categorical_matrix_set_colnames( cmd, _df, _socket );
-                }
-            else if ( type == "CategoricalMatrix.set_units" )
-                {
-                    categorical_matrix_set_units( cmd, _df, _socket );
+                    add_matrix( cmd, _df, _socket );
                 }
             else if ( type == "DataFrame.close" )
                 {
                     close( *_df, _socket );
                     break;
-                }
-            else if ( type == "Matrix" )
-                {
-                    add_matrix( cmd, _df, _socket );
-                }
-            else if ( type == "Matrix.set_colnames" )
-                {
-                    matrix_set_colnames( cmd, _df, _socket );
-                }
-            else if ( type == "Matrix.set_units" )
-                {
-                    matrix_set_units( cmd, _df, _socket );
                 }
             else
                 {

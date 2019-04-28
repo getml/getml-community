@@ -88,34 +88,10 @@ class DataFrameManager
         containers::DataFrame* _df,
         Poco::Net::StreamSocket* _socket );
 
-    /// Sets the colnames of a categorical matrix
-    void categorical_matrix_set_colnames(
-        const Poco::JSON::Object& _cmd,
-        containers::DataFrame* _df,
-        Poco::Net::StreamSocket* _socket );
-
-    /// Sets the units of a categorical matrix
-    void categorical_matrix_set_units(
-        const Poco::JSON::Object& _cmd,
-        containers::DataFrame* _df,
-        Poco::Net::StreamSocket* _socket );
-
     /// Tells the receive_data(...) method to no longer receive data and checks
     /// the memory size.
     void close(
         const containers::DataFrame& _df, Poco::Net::StreamSocket* _socket );
-
-    /// Sets the colnames of a matrix
-    void matrix_set_colnames(
-        const Poco::JSON::Object& _cmd,
-        containers::DataFrame* _df,
-        Poco::Net::StreamSocket* _socket );
-
-    /// Sets the units of a matrix
-    void matrix_set_units(
-        const Poco::JSON::Object& _cmd,
-        containers::DataFrame* _df,
-        Poco::Net::StreamSocket* _socket );
 
     /// Receives the actual data contained in a DataFrame
     void receive_data(

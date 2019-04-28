@@ -33,7 +33,7 @@ void RequestHandler::run()
 
             const auto name = JSON::get_value<std::string>( cmd, "name_" );
 
-            if ( type == "CategoricalMatrix.get" )
+            if ( type == "CategoricalColumn.get" )
                 {
                     data_frame_manager().get_categorical_matrix(
                         name, cmd, &socket() );
