@@ -6,7 +6,7 @@ namespace handlers
 {
 // ------------------------------------------------------------------------
 
-void DataFrameManager::add_categorical_matrix(
+void DataFrameManager::add_categorical_column(
     const Poco::JSON::Object& _cmd,
     containers::DataFrame* _df,
     Poco::Net::StreamSocket* _socket )
@@ -36,13 +36,20 @@ void DataFrameManager::add_categorical_matrix(
             assert( false );
         }
 
+    if ( mat.ncols() != 1 )
+        {
+            throw std::runtime_error(
+                "A matrix used as a data frame column must contains exactly "
+                "one column!" );
+        }
+
     mat.name() = name;
 
     mat.set_colnames( {name} );
 
     mat.set_units( {unit} );
 
-    _df->add_int_matrix( mat, role, name, num );
+    _df->add_int_column( mat, role, num );
 
     communication::Sender::send_string( "Success!", _socket );
 }
@@ -105,7 +112,7 @@ void DataFrameManager::add_data_frame(
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::add_matrix(
+void DataFrameManager::add_column(
     const Poco::JSON::Object& _cmd,
     containers::DataFrame* _df,
     Poco::Net::StreamSocket* _socket )
@@ -120,13 +127,20 @@ void DataFrameManager::add_matrix(
 
     auto mat = communication::Receiver::recv_matrix( _socket );
 
+    if ( mat.ncols() != 1 )
+        {
+            throw std::runtime_error(
+                "A matrix used as a data frame column must contains exactly "
+                "one column!" );
+        }
+
     mat.name() = _df->name();
 
     mat.set_colnames( {name} );
 
     mat.set_units( {unit} );
 
-    _df->add_float_matrix( mat, role, name, num );
+    _df->add_float_column( mat, role, num );
 
     communication::Sender::send_string( "Success!", _socket );
 }
@@ -293,11 +307,11 @@ void DataFrameManager::receive_data(
 
             if ( type == "CategoricalColumn" )
                 {
-                    add_categorical_matrix( cmd, _df, _socket );
+                    add_categorical_column( cmd, _df, _socket );
                 }
             else if ( type == "Column" )
                 {
-                    add_matrix( cmd, _df, _socket );
+                    add_column( cmd, _df, _socket );
                 }
             else if ( type == "DataFrame.close" )
                 {

@@ -31,17 +31,15 @@ class DataFrame
     // -------------------------------
 
     /// Setter for a float_matrix
-    void add_float_matrix(
+    void add_float_column(
         const Matrix<ENGINE_FLOAT> &_mat,
         const std::string &_role,
-        const std::string _name,
         const size_t _num );
 
     /// Setter for an int_matrix
-    void add_int_matrix(
+    void add_int_column(
         const Matrix<ENGINE_INT> &_mat,
         const std::string _role,
-        const std::string _name,
         const size_t _num );
 
     /// Appends another data frame to this data frame.
@@ -268,37 +266,31 @@ class DataFrame
     /// Adds a categorical column.
     void add_categorical(
         const Matrix<ENGINE_INT> &_mat,
-        const std::string _name,
         const size_t _num );
 
     /// Adds a discrete column.
     void add_discrete(
         const Matrix<ENGINE_FLOAT> &_mat,
-        const std::string _name,
         const size_t _num );
 
     /// Adds a join key column.
     void add_join_key(
         const Matrix<ENGINE_INT> &_mat,
-        const std::string _name,
         const size_t _num );
 
     /// Adds a numerical column.
     void add_numerical(
         const Matrix<ENGINE_FLOAT> &_mat,
-        const std::string _name,
         const size_t _num );
 
     /// Adds a target column.
     void add_target(
         const Matrix<ENGINE_FLOAT> &_mat,
-        const std::string _name,
         const size_t _num );
 
     /// Adds a time stamp column.
     void add_time_stamp(
         const Matrix<ENGINE_FLOAT> &_mat,
-        const std::string _name,
         const size_t _num );
 
     /// Calculate the number of bytes.

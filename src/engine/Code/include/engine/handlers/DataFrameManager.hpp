@@ -77,13 +77,13 @@ class DataFrameManager
 
    private:
     /// Adds a categorical matrix to a data frame.
-    void add_categorical_matrix(
+    void add_categorical_column(
         const Poco::JSON::Object& _cmd,
         containers::DataFrame* _df,
         Poco::Net::StreamSocket* _socket );
 
     /// Adds a matrix to a data frame.
-    void add_matrix(
+    void add_column(
         const Poco::JSON::Object& _cmd,
         containers::DataFrame* _df,
         Poco::Net::StreamSocket* _socket );

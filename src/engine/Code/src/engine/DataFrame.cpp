@@ -7,19 +7,15 @@ namespace containers
 // ----------------------------------------------------------------------------
 
 void DataFrame::add_categorical(
-    const Matrix<ENGINE_INT> &_mat, const std::string _name, const size_t _num )
+    const Matrix<ENGINE_INT> &_mat, const size_t _num )
 {
     if ( _num < num_categoricals() )
         {
             categoricals_[_num] = _mat;
-
-            categoricals_[_num].name() = _name;
         }
     else if ( _num == num_categoricals() )
         {
             categoricals_.push_back( _mat );
-
-            categoricals_.back().name() = _name;
         }
     else
         {
@@ -31,21 +27,15 @@ void DataFrame::add_categorical(
 // ----------------------------------------------------------------------------
 
 void DataFrame::add_discrete(
-    const Matrix<ENGINE_FLOAT> &_mat,
-    const std::string _name,
-    const size_t _num )
+    const Matrix<ENGINE_FLOAT> &_mat, const size_t _num )
 {
     if ( _num < num_discretes() )
         {
             discretes_[_num] = _mat;
-
-            discretes_[_num].name() = _name;
         }
     else if ( _num == num_discretes() )
         {
             discretes_.push_back( _mat );
-
-            discretes_.back().name() = _name;
         }
     else
         {
@@ -56,27 +46,28 @@ void DataFrame::add_discrete(
 
 // ----------------------------------------------------------------------------
 
-void DataFrame::add_float_matrix(
+void DataFrame::add_float_column(
     const Matrix<ENGINE_FLOAT> &_mat,
     const std::string &_role,
-    const std::string _name,
     const size_t _num )
 {
+    assert( _mat.ncols() == 1 );
+
     if ( _role == "discrete" )
         {
-            add_discrete( _mat, _name, _num );
+            add_discrete( _mat, _num );
         }
     else if ( _role == "numerical" )
         {
-            add_numerical( _mat, _name, _num );
+            add_numerical( _mat, _num );
         }
     else if ( _role == "targets" )
         {
-            add_target( _mat, _name, _num );
+            add_target( _mat, _num );
         }
     else if ( _role == "time_stamps" )
         {
-            add_time_stamp( _mat, _name, _num );
+            add_time_stamp( _mat, _num );
         }
     else
         {
@@ -86,19 +77,18 @@ void DataFrame::add_float_matrix(
 
 // ----------------------------------------------------------------------------
 
-void DataFrame::add_int_matrix(
-    const Matrix<ENGINE_INT> &_mat,
-    const std::string _role,
-    const std::string _name,
-    const size_t _num )
+void DataFrame::add_int_column(
+    const Matrix<ENGINE_INT> &_mat, const std::string _role, const size_t _num )
 {
+    assert( _mat.ncols() == 1 );
+
     if ( _role == "categorical" )
         {
-            add_categorical( _mat, _name, _num );
+            add_categorical( _mat, _num );
         }
     else if ( _role == "join_key" )
         {
-            add_join_key( _mat, _name, _num );
+            add_join_key( _mat, _num );
         }
     else
         {
@@ -109,19 +99,15 @@ void DataFrame::add_int_matrix(
 // ----------------------------------------------------------------------------
 
 void DataFrame::add_join_key(
-    const Matrix<ENGINE_INT> &_mat, const std::string _name, const size_t _num )
+    const Matrix<ENGINE_INT> &_mat, const size_t _num )
 {
     if ( _num < num_join_keys() )
         {
             join_keys_[_num] = _mat;
-
-            join_keys_[_num].name() = _name;
         }
     else if ( _num == num_join_keys() )
         {
             join_keys_.push_back( _mat );
-
-            join_keys_.back().name() = _name;
         }
     else
         {
@@ -133,21 +119,15 @@ void DataFrame::add_join_key(
 // ----------------------------------------------------------------------------
 
 void DataFrame::add_numerical(
-    const Matrix<ENGINE_FLOAT> &_mat,
-    const std::string _name,
-    const size_t _num )
+    const Matrix<ENGINE_FLOAT> &_mat, const size_t _num )
 {
     if ( _num < num_numericals() )
         {
             numericals_[_num] = _mat;
-
-            numericals_[_num].name() = _name;
         }
     else if ( _num == num_numericals() )
         {
             numericals_.push_back( _mat );
-
-            numericals_.back().name() = _name;
         }
     else
         {
@@ -159,21 +139,15 @@ void DataFrame::add_numerical(
 // ----------------------------------------------------------------------------
 
 void DataFrame::add_target(
-    const Matrix<ENGINE_FLOAT> &_mat,
-    const std::string _name,
-    const size_t _num )
+    const Matrix<ENGINE_FLOAT> &_mat, const size_t _num )
 {
     if ( _num < num_targets() )
         {
             targets_[_num] = _mat;
-
-            targets_[_num].name() = _name;
         }
     else if ( _num == num_targets() )
         {
             targets_.push_back( _mat );
-
-            targets_.back().name() = _name;
         }
     else
         {
@@ -185,21 +159,15 @@ void DataFrame::add_target(
 // ----------------------------------------------------------------------------
 
 void DataFrame::add_time_stamp(
-    const Matrix<ENGINE_FLOAT> &_mat,
-    const std::string _name,
-    const size_t _num )
+    const Matrix<ENGINE_FLOAT> &_mat, const size_t _num )
 {
     if ( _num < num_time_stamps() )
         {
             time_stamps_[_num] = _mat;
-
-            time_stamps_[_num].name() = _name;
         }
     else if ( _num == num_time_stamps() )
         {
             time_stamps_.push_back( _mat );
-
-            time_stamps_.back().name() = _name;
         }
     else
         {
