@@ -442,6 +442,80 @@ void DecisionTreeEnsemble::save( const std::string &_fname ) const
 
 // ----------------------------------------------------------------------------
 
+Poco::JSON::Object DecisionTreeEnsemble::score(
+    const RELBOOST_FLOAT *const _yhat,
+    const size_t _yhat_nrows,
+    const size_t _yhat_ncols,
+    const RELBOOST_FLOAT *const _y,
+    const size_t _y_nrows,
+    const size_t _y_ncols ) const
+{
+    // ------------------------------------------------------------------------
+    // Build up names.
+
+    std::vector<std::string> names;
+
+    if ( loss_function().type() == "CrossEntropyLoss" )
+        {
+            names.push_back( "accuracy_" );
+            names.push_back( "auc_" );
+            names.push_back( "cross_entropy_" );
+        }
+    else if ( loss_function().type() == "SquareLoss" )
+        {
+            names.push_back( "mae_" );
+            names.push_back( "rmse_" );
+            names.push_back( "rsquared_" );
+        }
+    else
+        {
+            assert( false && "loss function type not recognized" );
+        }
+
+    // ------------------------------------------------------------------------
+    // Do the actual scoring.
+
+    Poco::JSON::Object obj;
+
+    for ( const auto &name : names )
+        {
+            const auto metric = metrics::MetricParser::parse( name );
+
+            // metric->set_comm( comm() );
+
+            const auto scores = metric->score(
+                _yhat, _yhat_nrows, _yhat_ncols, _y, _y_nrows, _y_ncols );
+
+            for ( auto it = scores.begin(); it != scores.end(); ++it )
+                {
+                    obj.set( it->first, it->second );
+                }
+        }
+
+    // ------------------------------------------------------------------------
+    // Store scores.
+
+    // scores().from_json_obj( obj );
+
+    // ------------------------------------------------------------------------
+    // Extract values that can be send back to the client.
+
+    Poco::JSON::Object client_obj;
+
+    for ( const auto &name : names )
+        {
+            client_obj.set( name, obj.getArray( name ) );
+        }
+
+    // ------------------------------------------------------------------------
+
+    return client_obj;
+
+    // ------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
 std::shared_ptr<std::vector<RELBOOST_FLOAT>> DecisionTreeEnsemble::transform(
     const containers::DataFrame &_population,
     const std::vector<containers::DataFrame> &_peripheral ) const

@@ -28,14 +28,16 @@ include_directories(
 )
 
 set(ENGINE_SOURCE_DIRECTORY "${PROJECT_SOURCE_DIR}/../Code/src/engine")
+set(METRICS_SOURCE_DIRECTORY "${PROJECT_SOURCE_DIR}/../Code/src/metrics")
 set(RELBOOST_SOURCE_DIRECTORY "${PROJECT_SOURCE_DIR}/../Code/src/relboost")
 
 include(${ENGINE_SOURCE_DIRECTORY}/obj.txt)
+include(${METRICS_SOURCE_DIRECTORY}/obj.txt)
 include(${RELBOOST_SOURCE_DIRECTORY}/obj.txt)
 
-add_executable(${RELBOOST_VERSION}-64bit-test ${RELBOOST_OBJ} ${RELBOOST_SOURCE_DIRECTORY}/main.cpp)
+add_executable(${RELBOOST_VERSION}-64bit-test ${RELBOOST_OBJ} ${METRICS_OBJ} ${RELBOOST_SOURCE_DIRECTORY}/main.cpp)
 
-add_executable(${RELBOOST_VERSION}-64bit ${RELBOOST_OBJ} ${ENGINE_OBJ} ${ENGINE_SOURCE_DIRECTORY}/main.cpp)
+add_executable(${RELBOOST_VERSION}-64bit ${RELBOOST_OBJ} ${METRICS_OBJ} ${ENGINE_OBJ} ${ENGINE_SOURCE_DIRECTORY}/main.cpp)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11 -Wall -Wno-sign-compare -Wno-missing-braces -pthread -fno-strict-aliasing -fwrapv -O2 -D NDEBUGLOG")
     

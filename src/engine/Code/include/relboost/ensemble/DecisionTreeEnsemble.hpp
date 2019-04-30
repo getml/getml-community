@@ -68,6 +68,15 @@ class DecisionTreeEnsemble
     /// Saves the DecisionTreeEnsemble into a JSON file.
     void save( const std::string& _fname ) const;
 
+    /// Calculates scores.
+    Poco::JSON::Object score(
+        const RELBOOST_FLOAT* const _yhat,
+        const size_t _yhat_nrows,
+        const size_t _yhat_ncols,
+        const RELBOOST_FLOAT* const _y,
+        const size_t _y_nrows,
+        const size_t _y_ncols ) const;
+
     /// Returns the features underlying the model (the predictions of the
     /// individual trees as opposed to the entire prediction)
     std::shared_ptr<std::vector<RELBOOST_FLOAT>> transform(

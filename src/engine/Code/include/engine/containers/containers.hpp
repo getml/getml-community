@@ -24,7 +24,7 @@
 #include <utility>
 #include <vector>
 
-#include "Poco/JSON/Object.h"
+#include <Poco/JSON/Object.h>
 
 #include <Poco/File.h>
 #include <Poco/JSON/Parser.h>
