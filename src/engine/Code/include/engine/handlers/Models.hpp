@@ -21,6 +21,13 @@ class Models
         ModelType* _model,
         Poco::Net::StreamSocket* _socket );
 
+    /// Score predictions.
+    template <typename ModelType>
+    static Poco::JSON::Object score(
+        const Poco::JSON::Object& _cmd,
+        ModelType* _model,
+        Poco::Net::StreamSocket* _socket );
+
     /// Generate features.
     template <typename ModelType>
     static containers::Matrix<ENGINE_FLOAT> transform(
@@ -256,6 +263,71 @@ void Models::fit(
 // ----------------------------------------------------------------------------
 
 template <typename ModelType>
+Poco::JSON::Object Models::score(
+    const Poco::JSON::Object& _cmd,
+    ModelType* _model,
+    Poco::Net::StreamSocket* _socket )
+{
+    // ------------------------------------------------
+    // Get predictions
+
+    debug_log( "Getting predictions..." );
+
+    auto yhat = communication::Receiver::recv_matrix( _socket );
+
+    // ------------------------------------------------
+    // Get the target data
+
+    debug_log( "Getting targets..." );
+
+    auto y = communication::Receiver::recv_matrix( _socket );
+
+    // ------------------------------------------------
+    // Make sure input is plausible
+
+    if ( yhat.nrows() != y.nrows() )
+        {
+            throw std::invalid_argument(
+                "Number of rows in predictions and targets do not match! "
+                "Number of rows in predictions: " +
+                std::to_string( yhat.nrows() ) +
+                ". Number of rows in targets: " + std::to_string( y.nrows() ) +
+                "." );
+        }
+
+    if ( yhat.ncols() != y.ncols() )
+        {
+            throw std::invalid_argument(
+                "Number of columns in predictions and targets do not match! "
+                "Number of columns in predictions: " +
+                std::to_string( yhat.ncols() ) +
+                ". Number of columns in targets: " +
+                std::to_string( y.ncols() ) + "." );
+        }
+
+    // ------------------------------------------------
+    // Calculate the score
+
+    debug_log( "Calculating score..." );
+
+    auto result = _model->score(
+        yhat.data(),
+        yhat.nrows(),
+        yhat.ncols(),
+        y.data(),
+        y.nrows(),
+        y.ncols() );
+
+    // ------------------------------------------------
+
+    return result;
+
+    // ------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+template <typename ModelType>
 containers::Matrix<ENGINE_FLOAT> Models::transform(
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<const logging::Logger>& _logger,
@@ -289,30 +361,40 @@ containers::Matrix<ENGINE_FLOAT> Models::transform(
         population_name, _data_frames );
 
     // ------------------------------------------------
-    // Do the actual transformation.
 
-    /*const bool score = JSON::get_value<bool>( _cmd, "score_" );
+    const bool predict = JSON::get_value<bool>( _cmd, "predict_" );
 
-    const bool predict = JSON::get_value<bool>( _cmd, "predict_" );*/
+    // ------------------------------------------------------------------------
+    // This is a temporary solution - the idea is for a DecisionTreeEnsemble
+    // to have its own predictors.
 
-    const auto data = _model.transform( population_table, peripheral_tables );
+    const auto data = std::make_shared<std::vector<RELBOOST_FLOAT>>( 0 );
 
-    // ------------------------------------------------
+    if ( predict )
+        {
+            *data = _model.predict( population_table, peripheral_tables );
+        }
+    else
+        {
+            *data = *_model.transform( population_table, peripheral_tables );
+        }
+
+    // ------------------------------------------------------------------------
     // Build matrix.
 
-    assert( data->size() % _model.num_features() == 0 );
+    assert( data->size() % population_table.nrows() == 0 );
 
-    const auto nrows = data->size() / _model.num_features();
+    const auto nrows = population_table.nrows();
 
-    const auto ncols = _model.num_features();
+    const auto ncols = data->size() / population_table.nrows();
 
     const auto mat = containers::Matrix<ENGINE_FLOAT>( nrows, ncols, data );
 
-    // ------------------------------------------------
+    // ------------------------------------------------------------------------
 
     return mat;
 
-    // ------------------------------------------------
+    // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------

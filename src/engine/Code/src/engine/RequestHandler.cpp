@@ -8,12 +8,6 @@ namespace srv
 
 void RequestHandler::run()
 {
-    /*  if ( !license_checker->token().currently_active )
-          {
-              monitor().shutdown();
-              return;
-          };*/
-
     try
         {
             if ( options_.engine_.allow_remote_ &&
@@ -35,8 +29,12 @@ void RequestHandler::run()
 
             if ( type == "CategoricalColumn.get" )
                 {
-                    data_frame_manager().get_categorical_matrix(
-                        name, cmd, &socket() );
+                    data_frame_manager().get_categorical_column(
+                        cmd, &socket() );
+                }
+            else if ( type == "Column.get" )
+                {
+                    data_frame_manager().get_column( cmd, &socket() );
                 }
             else if ( type == "DataFrame" )
                 {
@@ -91,10 +89,6 @@ void RequestHandler::run()
             else if ( type == "is_alive" )
                 {
                     return;
-                }
-            else if ( type == "Matrix.get" )
-                {
-                    data_frame_manager().get_matrix( name, cmd, &socket() );
                 }
             else if ( type == "RelboostModel" )
                 {

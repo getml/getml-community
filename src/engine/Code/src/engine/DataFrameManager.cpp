@@ -210,24 +210,46 @@ void DataFrameManager::close(
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::get_categorical_matrix(
-    const std::string& _name,
+void DataFrameManager::get_categorical_column(
     const Poco::JSON::Object& _cmd,
     Poco::Net::StreamSocket* _socket )
 {
-    const std::string role = JSON::get_value<std::string>( _cmd, "role_" );
+    const auto role = JSON::get_value<std::string>( _cmd, "role_" );
 
-    const size_t num_join_key =
-        JSON::get_value<size_t>( _cmd, "num_join_key_" );
+    const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
+
+    const auto num = JSON::get_value<size_t>( _cmd, "num_" );
 
     multithreading::ReadLock read_lock( read_write_lock_ );
 
-    auto mat = utils::Getter::get( _name, &data_frames() )
-                   .int_matrix( role, num_join_key );
+    auto mat =
+        utils::Getter::get( df_name, &data_frames() ).int_matrix( role, num );
 
     communication::Sender::send_string( "Found!", _socket );
 
     communication::Sender::send_matrix( mat, _socket );
+}
+
+// ------------------------------------------------------------------------
+
+void DataFrameManager::get_column(
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    const auto role = JSON::get_value<std::string>( _cmd, "role_" );
+
+    const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
+
+    const auto num = JSON::get_value<size_t>( _cmd, "num_" );
+
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    auto mat =
+        utils::Getter::get( df_name, &data_frames() ).float_matrix( role, num );
+
+    communication::Sender::send_string( "Found!", _socket );
+
+    communication::Sender::send_matrix<ENGINE_FLOAT>( mat, _socket );
 }
 
 // ------------------------------------------------------------------------
@@ -252,28 +274,6 @@ void DataFrameManager::get_data_frame_content(
     read_lock.unlock();
 
     communication::Sender::send_string( JSON::stringify( obj ), _socket );
-}
-
-// ------------------------------------------------------------------------
-
-void DataFrameManager::get_matrix(
-    const std::string& _name,
-    const Poco::JSON::Object& _cmd,
-    Poco::Net::StreamSocket* _socket )
-{
-    const std::string role = JSON::get_value<std::string>( _cmd, "role_" );
-
-    const size_t num_time_stamps =
-        JSON::get_value<size_t>( _cmd, "num_time_stamps_" );
-
-    multithreading::ReadLock read_lock( read_write_lock_ );
-
-    auto mat = utils::Getter::get( _name, &data_frames() )
-                   .float_matrix( role, num_time_stamps );
-
-    communication::Sender::send_string( "Found!", _socket );
-
-    communication::Sender::send_matrix<ENGINE_FLOAT>( mat, _socket );
 }
 
 // ------------------------------------------------------------------------

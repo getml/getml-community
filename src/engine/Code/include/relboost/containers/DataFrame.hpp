@@ -50,6 +50,13 @@ class DataFrame
         return categoricals_[_j][_i];
     }
 
+    /// Getter for a categorical column.
+    const Column<RELBOOST_INT> categorical_col( size_t _j ) const
+    {
+        assert( _j < categoricals_.size() );
+        return categoricals_[_j];
+    }
+
     /// Getter for a categorical name.
     const std::string& categorical_name( size_t _j ) const
     {
@@ -69,6 +76,13 @@ class DataFrame
     {
         assert( _j < discretes_.size() );
         return discretes_[_j][_i];
+    }
+
+    /// Getter for a discrete column.
+    const Column<RELBOOST_FLOAT> discrete_col( size_t _j ) const
+    {
+        assert( _j < discretes_.size() );
+        return discretes_[_j];
     }
 
     /// Getter for a discrete name.
@@ -148,6 +162,13 @@ class DataFrame
         return numericals_[_j][_i];
     }
 
+    /// Getter for a numerical column.
+    const Column<RELBOOST_FLOAT> numerical_col( size_t _j ) const
+    {
+        assert( _j < numericals_.size() );
+        return numericals_[_j];
+    }
+
     /// Getter for a numerical name.
     const std::string& numerical_name( size_t _j ) const
     {
@@ -167,6 +188,13 @@ class DataFrame
     {
         assert( _j < targets_.size() );
         return targets_[_j][_i];
+    }
+
+    /// Getter for a target column.
+    const Column<RELBOOST_FLOAT> target_col( size_t _j ) const
+    {
+        assert( _j < targets_.size() );
+        return targets_[_j];
     }
 
     /// Getter for a target name.

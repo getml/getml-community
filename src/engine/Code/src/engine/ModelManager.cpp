@@ -210,9 +210,9 @@ void ModelManager::send_data(
 
             const auto type = JSON::get_value<std::string>( cmd, "type_" );
 
-            if ( type == "Matrix.get" )
+            if ( type == "Column.get" )
                 {
-                    local_data_frame_manager.get_matrix( name, cmd, _socket );
+                    local_data_frame_manager.get_column( cmd, _socket );
                 }
             else if ( type == "transform" )
                 {
@@ -245,8 +245,7 @@ void ModelManager::score(
     // -------------------------------------------------------
     // Do the actual scoring.
 
-    Poco::JSON::Object scores;
-    // auto scores = engine::Models::score( _cmd, _socket, &model );
+    auto scores = Models::score( _cmd, &model, _socket );
 
     communication::Sender::send_string( "Success!", _socket );
 

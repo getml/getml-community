@@ -43,21 +43,17 @@ class DataFrameManager
     void append_to_data_frame(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
 
-    /// Sends a categorical matrix to the client
-    void get_categorical_matrix(
-        const std::string& _name,
-        const Poco::JSON::Object& _cmd,
-        Poco::Net::StreamSocket* _socket );
+    /// Sends a categorical columm to the client
+    void get_categorical_column(
+        const Poco::JSON::Object& _cmd, Poco::Net::StreamSocket* _socket );
+
+    /// Sends a column to the client
+    void get_column(
+        const Poco::JSON::Object& _cmd, Poco::Net::StreamSocket* _socket );
 
     /// Sends the content of a data frame in a format that is compatible with
     /// DataTables.js server-side processing.
     void get_data_frame_content(
-        const std::string& _name,
-        const Poco::JSON::Object& _cmd,
-        Poco::Net::StreamSocket* _socket );
-
-    /// Sends a categorical matrix to the client
-    void get_matrix(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );

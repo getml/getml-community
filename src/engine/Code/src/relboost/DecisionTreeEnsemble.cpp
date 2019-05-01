@@ -443,10 +443,10 @@ void DecisionTreeEnsemble::save( const std::string &_fname ) const
 // ----------------------------------------------------------------------------
 
 Poco::JSON::Object DecisionTreeEnsemble::score(
-    const RELBOOST_FLOAT *const _yhat,
+    const METRICS_FLOAT *const _yhat,
     const size_t _yhat_nrows,
     const size_t _yhat_ncols,
-    const RELBOOST_FLOAT *const _y,
+    const METRICS_FLOAT *const _y,
     const size_t _y_nrows,
     const size_t _y_ncols )
 {
@@ -521,6 +521,7 @@ std::shared_ptr<std::vector<RELBOOST_FLOAT>> DecisionTreeEnsemble::transform(
     const std::vector<containers::DataFrame> &_peripheral ) const
 {
     // ------------------------------------------------------------------------
+    // Check the validity of the input.
 
     if ( trees().size() == 0 )
         {
