@@ -14,24 +14,18 @@ Poco::JSON::Object CrossEntropy::score(
 {
     // -----------------------------------------
 
-    assert( _yhat_nrows == _y_nrows );
-    assert( _yhat_ncols == _y_ncols );
-
-    nrows_ = _yhat_nrows;
-    ncols_ = _yhat_ncols;
-    yhat_ = _yhat;
-    y_ = _y;
+    impl_.set_data( _yhat, _yhat_nrows, _yhat_ncols, _y, _y_nrows, _y_ncols );
 
     // -----------------------------------------
 
-    std::vector<METRICS_FLOAT> cross_entropy( ncols_ );
+    std::vector<METRICS_FLOAT> cross_entropy( ncols() );
 
     // -----------------------------------------------------
     // Calculate cross entropy
 
-    for ( size_t i = 0; i < nrows_; ++i )
+    for ( size_t i = 0; i < nrows(); ++i )
         {
-            for ( size_t j = 0; j < ncols_; ++j )
+            for ( size_t j = 0; j < ncols(); ++j )
                 {
                     if ( y( i, j ) == 0.0 )
                         {
@@ -53,57 +47,30 @@ Poco::JSON::Object CrossEntropy::score(
     // -----------------------------------------------------
     // Get nrows
 
-    METRICS_FLOAT nrows = static_cast<METRICS_FLOAT>( nrows_ );
+    METRICS_FLOAT nrows_float = static_cast<METRICS_FLOAT>( nrows() );
 
     // -----------------------------------------------------
     // Reduce, if necessary
 
-    if ( comm_ != nullptr )
+    if ( impl_.has_comm() )
         {
-            std::vector<METRICS_FLOAT> global_cross_entropy( ncols_ );
+            impl_.reduce( std::plus<METRICS_FLOAT>(), &cross_entropy );
 
-            multithreading::all_reduce(
-                *( comm_ ),                   // comm
-                cross_entropy.data(),         // in_values
-                ncols_,                       // count,
-                global_cross_entropy.data(),  // out_values
-                std::plus<METRICS_FLOAT>()    // op
-            );
-
-            comm().barrier();
-
-            cross_entropy = std::move( global_cross_entropy );
-        }
-
-    if ( comm_ != nullptr )
-        {
-            METRICS_FLOAT global_nrows;
-
-            multithreading::all_reduce(
-                *( comm_ ),                 // comm
-                &nrows,                     // in_values
-                1,                          // count,
-                &global_nrows,              // out_values
-                std::plus<METRICS_FLOAT>()  // op
-            );
-
-            comm().barrier();
-
-            nrows = global_nrows;
+            impl_.reduce( std::plus<METRICS_FLOAT>(), &nrows_float );
         }
 
     // -----------------------------------------------------
     // Divide by nrows
 
-    for ( size_t j = 0; j < ncols_; ++j )
+    for ( size_t j = 0; j < ncols(); ++j )
         {
-            cross_entropy[j] /= nrows;
+            cross_entropy[j] /= nrows_float;
         }
 
     // -----------------------------------------------------
     // If is infinite or nan, replace with -1.0.
 
-    for ( size_t j = 0; j < ncols_; ++j )
+    for ( size_t j = 0; j < ncols(); ++j )
         {
             if ( std::isinf( cross_entropy[j] ) ||
                  std::isnan( cross_entropy[j] ) )

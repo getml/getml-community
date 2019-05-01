@@ -14,17 +14,11 @@ Poco::JSON::Object AUC::score(
 {
     // -----------------------------------------------------
 
-    assert( _yhat_nrows == _y_nrows );
-    assert( _yhat_ncols == _y_ncols );
-
-    nrows_ = _yhat_nrows;
-    ncols_ = _yhat_ncols;
-    yhat_ = _yhat;
-    y_ = _y;
+    impl_.set_data( _yhat, _yhat_nrows, _yhat_ncols, _y, _y_nrows, _y_ncols );
 
     // -----------------------------------------------------
 
-    if ( nrows_ < 1 )
+    if ( nrows() < 1 )
         {
             std::invalid_argument(
                 "There needs to be at least one row for the AUC score to "
@@ -33,7 +27,7 @@ Poco::JSON::Object AUC::score(
 
     // -----------------------------------------------------
 
-    std::vector<METRICS_FLOAT> auc( ncols_ );
+    std::vector<METRICS_FLOAT> auc( ncols() );
 
     auto true_positive_arr = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
 
@@ -41,7 +35,7 @@ Poco::JSON::Object AUC::score(
 
     // -----------------------------------------------------
 
-    for ( size_t j = 0; j < ncols_; ++j )
+    for ( size_t j = 0; j < ncols(); ++j )
         {
             // ---------------------------------------------
             // Find minimum and maximum
@@ -50,7 +44,7 @@ Poco::JSON::Object AUC::score(
 
             METRICS_FLOAT yhat_max = yhat( 0, j );
 
-            for ( size_t i = 0; i < nrows_; ++i )
+            for ( size_t i = 0; i < nrows(); ++i )
                 {
                     if ( yhat( i, j ) < yhat_min )
                         yhat_min = yhat( i, j );
@@ -62,38 +56,13 @@ Poco::JSON::Object AUC::score(
             // ---------------------------------------------
             // Reduce, if applicable.
 
-            if ( comm_ != nullptr )
+            if ( impl_.has_comm() )
                 {
-                    METRICS_FLOAT global;
+                    impl_.reduce(
+                        multithreading::minimum<METRICS_FLOAT>(), &yhat_min );
 
-                    multithreading::all_reduce(
-                        comm(),                                   // comm
-                        &yhat_min,                                // in_values
-                        1,                                        // count,
-                        &global,                                  // out_values
-                        multithreading::minimum<METRICS_FLOAT>()  // op
-                    );
-
-                    comm_->barrier();
-
-                    yhat_min = global;
-                }
-
-            if ( comm_ != nullptr )
-                {
-                    METRICS_FLOAT global;
-
-                    multithreading::all_reduce(
-                        comm(),                                   // comm
-                        &yhat_max,                                // in_values
-                        1,                                        // count,
-                        &global,                                  // out_values
-                        multithreading::maximum<METRICS_FLOAT>()  // op
-                    );
-
-                    comm_->barrier();
-
-                    yhat_max = global;
+                    impl_.reduce(
+                        multithreading::maximum<METRICS_FLOAT>(), &yhat_max );
                 }
 
             // ---------------------------------------------
@@ -125,7 +94,7 @@ Poco::JSON::Object AUC::score(
             std::vector<METRICS_FLOAT> predicted_negative(
                 num_critical_values );
 
-            for ( size_t i = 0; i < nrows_; ++i )
+            for ( size_t i = 0; i < nrows(); ++i )
                 {
                     // Note that this operation will always round down.
                     const size_t crv = static_cast<size_t>(
@@ -136,38 +105,12 @@ Poco::JSON::Object AUC::score(
                     predicted_negative[crv] += 1.0;
                 }
 
-            if ( comm_ != nullptr )
+            if ( impl_.has_comm() )
                 {
-                    std::vector<METRICS_FLOAT> global( num_critical_values );
+                    impl_.reduce( std::plus<METRICS_FLOAT>(), &true_positives );
 
-                    multithreading::all_reduce(
-                        comm(),                     // comm
-                        true_positives.data(),      // in_values
-                        num_critical_values,        // count,
-                        global.data(),              // out_values
-                        std::plus<METRICS_FLOAT>()  // op
-                    );
-
-                    comm_->barrier();
-
-                    true_positives = std::move( global );
-                }
-
-            if ( comm_ != nullptr )
-                {
-                    std::vector<METRICS_FLOAT> global( num_critical_values );
-
-                    multithreading::all_reduce(
-                        comm(),                     // comm
-                        predicted_negative.data(),  // in_values
-                        num_critical_values,        // count,
-                        global.data(),              // out_values
-                        std::plus<METRICS_FLOAT>()  // op
-                    );
-
-                    comm_->barrier();
-
-                    predicted_negative = std::move( global );
+                    impl_.reduce(
+                        std::plus<METRICS_FLOAT>(), &predicted_negative );
                 }
 
             std::partial_sum(
@@ -193,23 +136,11 @@ Poco::JSON::Object AUC::score(
             // ---------------------------------------------
             // Calculate false positives
 
-            METRICS_FLOAT nrow_float = static_cast<METRICS_FLOAT>( nrows_ );
+            METRICS_FLOAT nrow_float = static_cast<METRICS_FLOAT>( nrows() );
 
-            if ( comm_ != nullptr )
+            if ( impl_.has_comm() )
                 {
-                    METRICS_FLOAT global = 0.0;
-
-                    multithreading::all_reduce(
-                        comm(),                     // comm
-                        &nrow_float,                // in_values
-                        1,                          // count,
-                        &global,                    // out_values
-                        std::plus<METRICS_FLOAT>()  // op
-                    );
-
-                    comm_->barrier();
-
-                    nrow_float = global;
+                    impl_.reduce( std::plus<METRICS_FLOAT>(), &nrow_float );
                 }
 
             std::vector<METRICS_FLOAT> false_positives( num_critical_values );

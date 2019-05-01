@@ -12,75 +12,57 @@ Poco::JSON::Object RSquared::score(
     const size_t _y_nrows,
     const size_t _y_ncols )
 {
-    // -----------------------------------------
+    // -----------------------------------------------------
 
-    assert( _yhat_nrows == _y_nrows );
-    assert( _yhat_ncols == _y_ncols );
+    impl_.set_data( _yhat, _yhat_nrows, _yhat_ncols, _y, _y_nrows, _y_ncols );
 
-    nrows_ = _yhat_nrows;
-    ncols_ = _yhat_ncols;
-    yhat_ = _yhat;
-    y_ = _y;
-
-    sufficient_statistics_ = std::vector<METRICS_FLOAT>( 6 * ncols_ );
+    sufficient_statistics_ = std::vector<METRICS_FLOAT>( 6 * ncols() );
 
     // -----------------------------------------------------
     // Calculate sufficient statistics
 
     // Calculate sum yhat
-    for ( size_t i = 0; i < nrows_; ++i )
-        for ( size_t j = 0; j < ncols_; ++j )
+    for ( size_t i = 0; i < nrows(); ++i )
+        for ( size_t j = 0; j < ncols(); ++j )
             sufficient_statistics( 0, j ) += yhat( i, j );
 
     // Calculate sum yhat squared
-    for ( size_t i = 0; i < nrows_; ++i )
-        for ( size_t j = 0; j < ncols_; ++j )
+    for ( size_t i = 0; i < nrows(); ++i )
+        for ( size_t j = 0; j < ncols(); ++j )
             sufficient_statistics( 1, j ) += yhat( i, j ) * yhat( i, j );
 
-    // Calculate sum yhat
-    for ( size_t i = 0; i < nrows_; ++i )
-        for ( size_t j = 0; j < ncols_; ++j )
+    // Calculate sum y
+    for ( size_t i = 0; i < nrows(); ++i )
+        for ( size_t j = 0; j < ncols(); ++j )
             sufficient_statistics( 2, j ) += y( i, j );
 
-    // Calculate sum yhat squared
-    for ( size_t i = 0; i < nrows_; ++i )
-        for ( size_t j = 0; j < ncols_; ++j )
+    // Calculate sum y squared
+    for ( size_t i = 0; i < nrows(); ++i )
+        for ( size_t j = 0; j < ncols(); ++j )
             sufficient_statistics( 3, j ) += y( i, j ) * y( i, j );
 
     // Calculate sum yhat*y
-    for ( size_t i = 0; i < nrows_; ++i )
-        for ( size_t j = 0; j < ncols_; ++j )
+    for ( size_t i = 0; i < nrows(); ++i )
+        for ( size_t j = 0; j < ncols(); ++j )
             sufficient_statistics( 4, j ) += yhat( i, j ) * y( i, j );
 
     // Store n
-    sufficient_statistics( 5, 0 ) = static_cast<METRICS_FLOAT>( nrows_ );
+    sufficient_statistics( 5, 0 ) = static_cast<METRICS_FLOAT>( nrows() );
 
     // -----------------------------------------------------
     // Reduce, if necessary
 
-    if ( comm_ != nullptr )
+    if ( impl_.has_comm() )
         {
-            std::vector<METRICS_FLOAT> global( sufficient_statistics_.size() );
-
-            multithreading::all_reduce(
-                *comm_,                         // comm
-                sufficient_statistics_.data(),  // in_values
-                sufficient_statistics_.size(),  // count,
-                global.data(),                  // out_values
-                std::plus<METRICS_FLOAT>()      // op
-            );
-
-            comm().barrier();
-
-            sufficient_statistics_ = std::move( global );
+            impl_.reduce( std::plus<METRICS_FLOAT>(), &sufficient_statistics_ );
         }
 
     // -----------------------------------------------------
     // Calculate rsquared
 
-    std::vector<METRICS_FLOAT> rsquared( ncols_ );
+    std::vector<METRICS_FLOAT> rsquared( ncols() );
 
-    for ( size_t j = 0; j < ncols_; ++j )
+    for ( size_t j = 0; j < ncols(); ++j )
         {
             const METRICS_FLOAT sum_yhat = sufficient_statistics( 0, j );
 
@@ -110,7 +92,7 @@ Poco::JSON::Object RSquared::score(
     // -----------------------------------------------------
     // If is infinite or nan, replace with -1.0.
 
-    for ( size_t j = 0; j < ncols_; ++j )
+    for ( size_t j = 0; j < ncols(); ++j )
         {
             if ( std::isinf( rsquared[j] ) || std::isnan( rsquared[j] ) )
                 {

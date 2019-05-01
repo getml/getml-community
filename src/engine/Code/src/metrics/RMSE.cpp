@@ -14,24 +14,18 @@ Poco::JSON::Object RMSE::score(
 {
     // -----------------------------------------
 
-    assert( _yhat_nrows == _y_nrows );
-    assert( _yhat_ncols == _y_ncols );
-
-    nrows_ = _yhat_nrows;
-    ncols_ = _yhat_ncols;
-    yhat_ = _yhat;
-    y_ = _y;
+    impl_.set_data( _yhat, _yhat_nrows, _yhat_ncols, _y, _y_nrows, _y_ncols );
 
     // -----------------------------------------
 
-    std::vector<METRICS_FLOAT> rmse( ncols_ );
+    std::vector<METRICS_FLOAT> rmse( ncols() );
 
     // -----------------------------------------------------
     // Get sum of squared errors
 
-    for ( size_t i = 0; i < nrows_; ++i )
+    for ( size_t i = 0; i < nrows(); ++i )
         {
-            for ( size_t j = 0; j < ncols_; ++j )
+            for ( size_t j = 0; j < ncols(); ++j )
                 {
                     rmse[j] += ( y( i, j ) - yhat( i, j ) ) *
                                ( y( i, j ) - yhat( i, j ) );
@@ -41,51 +35,24 @@ Poco::JSON::Object RMSE::score(
     // -----------------------------------------------------
     // Get nrows
 
-    METRICS_FLOAT nrows = static_cast<METRICS_FLOAT>( nrows_ );
+    METRICS_FLOAT nrows_float = static_cast<METRICS_FLOAT>( nrows() );
 
     // -----------------------------------------------------
     // Reduce, if necessary
 
-    if ( comm_ != nullptr )
+    if ( impl_.has_comm() )
         {
-            std::vector<METRICS_FLOAT> global_rmse( ncols_ );
+            impl_.reduce( std::plus<METRICS_FLOAT>(), &rmse );
 
-            multithreading::all_reduce(
-                *( comm_ ),                 // comm
-                rmse.data(),                // in_values
-                ncols_,                     // count,
-                global_rmse.data(),         // out_values
-                std::plus<METRICS_FLOAT>()  // op
-            );
-
-            comm().barrier();
-
-            rmse = std::move( global_rmse );
-        }
-
-    if ( comm_ != nullptr )
-        {
-            METRICS_FLOAT global_nrows;
-
-            multithreading::all_reduce(
-                *( comm_ ),                 // comm
-                &nrows,                     // in_values
-                1,                          // count,
-                &global_nrows,              // out_values
-                std::plus<METRICS_FLOAT>()  // op
-            );
-
-            comm().barrier();
-
-            nrows = global_nrows;
+            impl_.reduce( std::plus<METRICS_FLOAT>(), &nrows_float );
         }
 
     // -----------------------------------------------------
     // Divide by nrows and get square root
 
-    for ( size_t j = 0; j < ncols_; ++j )
+    for ( size_t j = 0; j < ncols(); ++j )
         {
-            rmse[j] /= nrows;
+            rmse[j] /= nrows_float;
 
             rmse[j] = std::sqrt( rmse[j] );
         }

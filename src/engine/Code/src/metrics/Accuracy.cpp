@@ -14,26 +14,20 @@ Poco::JSON::Object Accuracy::score(
 {
     // -----------------------------------------------------
 
-    assert( _yhat_nrows == _y_nrows );
-    assert( _yhat_ncols == _y_ncols );
-
-    nrows_ = _yhat_nrows;
-    ncols_ = _yhat_ncols;
-    yhat_ = _yhat;
-    y_ = _y;
+    impl_.set_data( _yhat, _yhat_nrows, _yhat_ncols, _y, _y_nrows, _y_ncols );
 
     // -----------------------------------------------------
 
-    std::vector<METRICS_FLOAT> accuracy( ncols_ );
+    std::vector<METRICS_FLOAT> accuracy( ncols() );
 
     auto accuracy_curves = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
 
-    std::vector<METRICS_FLOAT> prediction_min( ncols_ );
-    std::vector<METRICS_FLOAT> prediction_step_size( ncols_ );
+    std::vector<METRICS_FLOAT> prediction_min( ncols() );
+    std::vector<METRICS_FLOAT> prediction_step_size( ncols() );
 
     // -----------------------------------------------------
 
-    for ( size_t j = 0; j < ncols_; ++j )
+    for ( size_t j = 0; j < ncols(); ++j )
         {
             // ---------------------------------------------
             // Find minimum and maximum
@@ -42,7 +36,7 @@ Poco::JSON::Object Accuracy::score(
 
             METRICS_FLOAT yhat_max = yhat( 0, j );
 
-            for ( size_t i = 0; i < nrows_; ++i )
+            for ( size_t i = 0; i < nrows(); ++i )
                 {
                     if ( yhat( i, j ) < yhat_min )
                         yhat_min = yhat( i, j );
@@ -54,38 +48,13 @@ Poco::JSON::Object Accuracy::score(
             // ---------------------------------------------
             // Reduce, if applicable.
 
-            if ( comm_ != nullptr )
+            if ( impl_.has_comm() )
                 {
-                    METRICS_FLOAT global;
+                    impl_.reduce(
+                        multithreading::minimum<METRICS_FLOAT>(), &yhat_min );
 
-                    multithreading::all_reduce(
-                        comm(),                                   // comm
-                        &yhat_min,                                // in_values
-                        1,                                        // count,
-                        &global,                                  // out_values
-                        multithreading::minimum<METRICS_FLOAT>()  // op
-                    );
-
-                    comm_->barrier();
-
-                    yhat_min = global;
-                }
-
-            if ( comm_ != nullptr )
-                {
-                    METRICS_FLOAT global;
-
-                    multithreading::all_reduce(
-                        comm(),                                   // comm
-                        &yhat_max,                                // in_values
-                        1,                                        // count,
-                        &global,                                  // out_values
-                        multithreading::maximum<METRICS_FLOAT>()  // op
-                    );
-
-                    comm_->barrier();
-
-                    yhat_max = global;
+                    impl_.reduce(
+                        multithreading::maximum<METRICS_FLOAT>(), &yhat_max );
                 }
 
             // ---------------------------------------------
@@ -107,7 +76,7 @@ Poco::JSON::Object Accuracy::score(
 
             std::vector<METRICS_FLOAT> false_positives( num_critical_values );
 
-            for ( size_t i = 0; i < nrows_; ++i )
+            for ( size_t i = 0; i < nrows(); ++i )
                 {
                     if ( y( i, j ) != 0.0 && y( i, j ) != 1.0 )
                         {
@@ -130,38 +99,12 @@ Poco::JSON::Object Accuracy::score(
             // ---------------------------------------------
             // Reduce, if applicable.
 
-            if ( comm_ != nullptr )
+            if ( impl_.has_comm() )
                 {
-                    std::vector<METRICS_FLOAT> global( num_critical_values );
+                    impl_.reduce( std::plus<METRICS_FLOAT>(), &negatives );
 
-                    multithreading::all_reduce(
-                        comm(),                                   // comm
-                        negatives.data(),                         // in_values
-                        num_critical_values,                      // count,
-                        global.data(),                            // out_values
-                        multithreading::minimum<METRICS_FLOAT>()  // op
-                    );
-
-                    comm_->barrier();
-
-                    negatives = std::move( global );
-                }
-
-            if ( comm_ != nullptr )
-                {
-                    std::vector<METRICS_FLOAT> global( num_critical_values );
-
-                    multithreading::all_reduce(
-                        comm(),                                   // comm
-                        false_positives.data(),                   // in_values
-                        num_critical_values,                      // count,
-                        global.data(),                            // out_values
-                        multithreading::minimum<METRICS_FLOAT>()  // op
-                    );
-
-                    comm_->barrier();
-
-                    false_positives = std::move( global );
+                    impl_.reduce(
+                        std::plus<METRICS_FLOAT>(), &false_positives );
                 }
 
             // ---------------------------------------------
@@ -181,8 +124,7 @@ Poco::JSON::Object Accuracy::score(
             const auto all_positives = false_positives.back();
 
             // ---------------------------------------------
-            // Calculate partial sums (now negatives and false_positives are
-            // true to their name).
+            // Calculate accuracies.
 
             std::vector<METRICS_FLOAT> accuracies( num_critical_values );
 

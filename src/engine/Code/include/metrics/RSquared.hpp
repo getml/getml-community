@@ -8,16 +8,9 @@ namespace metrics
 class RSquared : public Metric
 {
    public:
-    RSquared( multithreading::Communicator* _comm )
-        : comm_( _comm ),
-          ncols_( 0 ),
-          nrows_( 0 ),
-          y_( nullptr ),
-          yhat_( nullptr )
-    {
-    }
+    RSquared() {}
 
-    RSquared() : RSquared( nullptr ) {}
+    RSquared( multithreading::Communicator* _comm ) : impl_( _comm ) {}
 
     ~RSquared() = default;
 
@@ -33,56 +26,43 @@ class RSquared : public Metric
         const size_t _y_nrows,
         const size_t _y_ncols ) final;
 
-    // -----------------------------------------
+    // ------------------------------------------------------------------------
 
    private:
     /// Trivial getter
-    multithreading::Communicator& comm()
-    {
-        assert( comm_ != nullptr );
-        return *( comm_ );
-    }
+    multithreading::Communicator& comm() { return impl_.comm(); }
+
+    /// Trivial getter
+    size_t ncols() const { return impl_.ncols(); }
+
+    /// Trivial getter
+    size_t nrows() const { return impl_.nrows(); }
 
     /// Trivial getter
     METRICS_FLOAT& sufficient_statistics( size_t _i, size_t _j )
     {
-        return sufficient_statistics_[_i * ncols_ + _j];
+        return sufficient_statistics_[_i * ncols() + _j];
     }
 
     /// Trivial getter
     METRICS_FLOAT yhat( size_t _i, size_t _j ) const
     {
-        return yhat_[_i * ncols_ + _j];
+        return impl_.yhat( _i, _j );
     }
 
     /// Trivial getter
-    METRICS_FLOAT y( size_t _i, size_t _j ) const
-    {
-        return y_[_i * ncols_ + _j];
-    }
+    METRICS_FLOAT y( size_t _i, size_t _j ) const { return impl_.y( _i, _j ); }
 
-    // -----------------------------------------
+    // ------------------------------------------------------------------------
 
    private:
-    /// Communicator object - for parallel versions only.
-    multithreading::Communicator* comm_;
+    /// Contains all the relevant data.
+    MetricImpl impl_;
 
-    /// Number of columns.
-    size_t ncols_;
-
-    /// Number of rows.
-    size_t nrows_;
-
-    /// Store for sufficient statistics
+    /// Sufficient statistics for calculating RSquared
     std::vector<METRICS_FLOAT> sufficient_statistics_;
 
-    /// Pointer to ground truth.
-    const METRICS_FLOAT* y_;
-
-    /// Pointer to predictions.
-    const METRICS_FLOAT* yhat_;
-
-    // -----------------------------------------
+    // ------------------------------------------------------------------------
 };
 
 // ----------------------------------------------------------------------------

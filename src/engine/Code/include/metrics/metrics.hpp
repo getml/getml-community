@@ -21,6 +21,7 @@
 #include "metrics/JSON.hpp"
 
 #include "metrics/Metric.hpp"
+#include "metrics/MetricImpl.hpp"
 
 #include "metrics/AUC.hpp"
 #include "metrics/Accuracy.hpp"

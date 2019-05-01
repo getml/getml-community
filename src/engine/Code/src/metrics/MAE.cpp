@@ -14,24 +14,18 @@ Poco::JSON::Object MAE::score(
 {
     // -----------------------------------------
 
-    assert( _yhat_nrows == _y_nrows );
-    assert( _yhat_ncols == _y_ncols );
-
-    nrows_ = _yhat_nrows;
-    ncols_ = _yhat_ncols;
-    yhat_ = _yhat;
-    y_ = _y;
+    impl_.set_data( _yhat, _yhat_nrows, _yhat_ncols, _y, _y_nrows, _y_ncols );
 
     // -----------------------------------------
 
-    std::vector<METRICS_FLOAT> mae( ncols_ );
+    std::vector<METRICS_FLOAT> mae( ncols() );
 
     // -----------------------------------------------------
     // Get sum of absolute errors
 
-    for ( size_t i = 0; i < nrows_; ++i )
+    for ( size_t i = 0; i < nrows(); ++i )
         {
-            for ( size_t j = 0; j < ncols_; ++j )
+            for ( size_t j = 0; j < ncols(); ++j )
                 {
                     mae[j] += std::abs( y( i, j ) - yhat( i, j ) );
                 }
@@ -40,51 +34,24 @@ Poco::JSON::Object MAE::score(
     // -----------------------------------------------------
     // Get size
 
-    METRICS_FLOAT nrows = static_cast<METRICS_FLOAT>( nrows_ );
+    METRICS_FLOAT nrows_float = static_cast<METRICS_FLOAT>( nrows() );
 
     // -----------------------------------------------------
     // Reduce, if necessary
 
-    if ( comm_ != nullptr )
+    if ( impl_.has_comm() )
         {
-            std::vector<METRICS_FLOAT> global_mae( ncols_ );
+            impl_.reduce( std::plus<METRICS_FLOAT>(), &mae );
 
-            multithreading::all_reduce(
-                *( comm_ ),                 // comm
-                mae.data(),                 // in_values
-                ncols_,                     // count,
-                global_mae.data(),          // out_values
-                std::plus<METRICS_FLOAT>()  // op
-            );
-
-            comm().barrier();
-
-            mae = std::move( global_mae );
-        }
-
-    if ( comm_ != nullptr )
-        {
-            METRICS_FLOAT global_nrows;
-
-            multithreading::all_reduce(
-                *( comm_ ),                 // comm
-                &nrows,                     // in_values
-                1,                          // count,
-                &global_nrows,              // out_values
-                std::plus<METRICS_FLOAT>()  // op
-            );
-
-            comm().barrier();
-
-            nrows = global_nrows;
+            impl_.reduce( std::plus<METRICS_FLOAT>(), &nrows_float );
         }
 
     // -----------------------------------------------------
     // Divide by nrows
 
-    for ( size_t j = 0; j < ncols_; ++j )
+    for ( size_t j = 0; j < ncols(); ++j )
         {
-            mae[j] /= nrows;
+            mae[j] /= nrows_float;
         }
 
     // -----------------------------------------------------
