@@ -8,7 +8,16 @@ namespace metrics
 class Accuracy : public Metric
 {
    public:
-    Accuracy() {}
+    Accuracy( multithreading::Communicator* _comm )
+        : comm_( _comm ),
+          ncols_( 0 ),
+          nrows_( 0 ),
+          y_( nullptr ),
+          yhat_( nullptr )
+    {
+    }
+
+    Accuracy() : Accuracy( nullptr ) {}
 
     ~Accuracy() = default;
 
@@ -28,7 +37,11 @@ class Accuracy : public Metric
 
    private:
     /// Trivial getter
-    multithreading::Communicator& comm() { return *( comm_ ); }
+    multithreading::Communicator& comm()
+    {
+        assert( comm_ != nullptr );
+        return *( comm_ );
+    }
 
     /// Trivial getter
     METRICS_FLOAT yhat( size_t _i, size_t _j ) const

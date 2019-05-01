@@ -58,21 +58,22 @@ Poco::JSON::Object RSquared::score(
     // -----------------------------------------------------
     // Reduce, if necessary
 
-    {
-        std::vector<METRICS_FLOAT> global( sufficient_statistics_.size() );
+    if ( comm_ != nullptr )
+        {
+            std::vector<METRICS_FLOAT> global( sufficient_statistics_.size() );
 
-        multithreading::all_reduce(
-            *comm_,                         // comm
-            sufficient_statistics_.data(),  // in_values
-            sufficient_statistics_.size(),  // count,
-            global.data(),                  // out_values
-            std::plus<METRICS_FLOAT>()      // op
-        );
+            multithreading::all_reduce(
+                *comm_,                         // comm
+                sufficient_statistics_.data(),  // in_values
+                sufficient_statistics_.size(),  // count,
+                global.data(),                  // out_values
+                std::plus<METRICS_FLOAT>()      // op
+            );
 
-        comm().barrier();
+            comm().barrier();
 
-        sufficient_statistics_ = std::move( global );
-    }
+            sufficient_statistics_ = std::move( global );
+        }
 
     // -----------------------------------------------------
     // Calculate rsquared

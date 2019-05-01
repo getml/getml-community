@@ -45,37 +45,39 @@ Poco::JSON::Object MAE::score(
     // -----------------------------------------------------
     // Reduce, if necessary
 
-    {
-        std::vector<METRICS_FLOAT> global_mae( ncols_ );
+    if ( comm_ != nullptr )
+        {
+            std::vector<METRICS_FLOAT> global_mae( ncols_ );
 
-        multithreading::all_reduce(
-            *( comm_ ),                 // comm
-            mae.data(),                 // in_values
-            ncols_,                     // count,
-            global_mae.data(),          // out_values
-            std::plus<METRICS_FLOAT>()  // op
-        );
+            multithreading::all_reduce(
+                *( comm_ ),                 // comm
+                mae.data(),                 // in_values
+                ncols_,                     // count,
+                global_mae.data(),          // out_values
+                std::plus<METRICS_FLOAT>()  // op
+            );
 
-        comm().barrier();
+            comm().barrier();
 
-        mae = std::move( global_mae );
-    }
+            mae = std::move( global_mae );
+        }
 
-    {
-        METRICS_FLOAT global_nrows;
+    if ( comm_ != nullptr )
+        {
+            METRICS_FLOAT global_nrows;
 
-        multithreading::all_reduce(
-            *( comm_ ),                 // comm
-            &nrows,                     // in_values
-            1,                          // count,
-            &global_nrows,              // out_values
-            std::plus<METRICS_FLOAT>()  // op
-        );
+            multithreading::all_reduce(
+                *( comm_ ),                 // comm
+                &nrows,                     // in_values
+                1,                          // count,
+                &global_nrows,              // out_values
+                std::plus<METRICS_FLOAT>()  // op
+            );
 
-        comm().barrier();
+            comm().barrier();
 
-        nrows = global_nrows;
-    }
+            nrows = global_nrows;
+        }
 
     // -----------------------------------------------------
     // Divide by nrows

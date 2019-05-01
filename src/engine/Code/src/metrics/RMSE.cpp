@@ -46,37 +46,39 @@ Poco::JSON::Object RMSE::score(
     // -----------------------------------------------------
     // Reduce, if necessary
 
-    {
-        std::vector<METRICS_FLOAT> global_rmse( ncols_ );
+    if ( comm_ != nullptr )
+        {
+            std::vector<METRICS_FLOAT> global_rmse( ncols_ );
 
-        multithreading::all_reduce(
-            *( comm_ ),                  // comm
-            rmse.data(),                 // in_values
-            ncols_,                      // count,
-            global_rmse.data(),          // out_values
-            std::plus<METRICS_FLOAT>()  // op
-        );
+            multithreading::all_reduce(
+                *( comm_ ),                 // comm
+                rmse.data(),                // in_values
+                ncols_,                     // count,
+                global_rmse.data(),         // out_values
+                std::plus<METRICS_FLOAT>()  // op
+            );
 
-        comm().barrier();
+            comm().barrier();
 
-        rmse = std::move( global_rmse );
-    }
+            rmse = std::move( global_rmse );
+        }
 
-    {
-        METRICS_FLOAT global_nrows;
+    if ( comm_ != nullptr )
+        {
+            METRICS_FLOAT global_nrows;
 
-        multithreading::all_reduce(
-            *( comm_ ),                  // comm
-            &nrows,                      // in_values
-            1,                           // count,
-            &global_nrows,               // out_values
-            std::plus<METRICS_FLOAT>()  // op
-        );
+            multithreading::all_reduce(
+                *( comm_ ),                 // comm
+                &nrows,                     // in_values
+                1,                          // count,
+                &global_nrows,              // out_values
+                std::plus<METRICS_FLOAT>()  // op
+            );
 
-        comm().barrier();
+            comm().barrier();
 
-        nrows = global_nrows;
-    }
+            nrows = global_nrows;
+        }
 
     // -----------------------------------------------------
     // Divide by nrows and get square root

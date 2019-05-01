@@ -8,7 +8,16 @@ namespace metrics
 class AUC : public Metric
 {
    public:
-    AUC() {}
+    AUC( multithreading::Communicator* _comm )
+        : comm_( _comm ),
+          ncols_( 0 ),
+          nrows_( 0 ),
+          y_( nullptr ),
+          yhat_( nullptr )
+    {
+    }
+
+    AUC() : AUC( nullptr ) {}
 
     ~AUC() = default;
 
@@ -28,7 +37,11 @@ class AUC : public Metric
 
    private:
     /// Trivial getter
-    multithreading::Communicator& comm() { return *( comm_ ); }
+    multithreading::Communicator& comm()
+    {
+        assert( comm_ != nullptr );
+        return *( comm_ );
+    }
 
     /// Trivial getter
     METRICS_FLOAT yhat( size_t _i, size_t _j ) const

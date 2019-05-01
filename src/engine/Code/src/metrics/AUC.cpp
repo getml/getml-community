@@ -62,37 +62,39 @@ Poco::JSON::Object AUC::score(
             // ---------------------------------------------
             // Reduce, if applicable.
 
-            {
-                METRICS_FLOAT global;
+            if ( comm_ != nullptr )
+                {
+                    METRICS_FLOAT global;
 
-                multithreading::all_reduce(
-                    comm(),                                   // comm
-                    &yhat_min,                                // in_values
-                    1,                                        // count,
-                    &global,                                  // out_values
-                    multithreading::minimum<METRICS_FLOAT>()  // op
-                );
+                    multithreading::all_reduce(
+                        comm(),                                   // comm
+                        &yhat_min,                                // in_values
+                        1,                                        // count,
+                        &global,                                  // out_values
+                        multithreading::minimum<METRICS_FLOAT>()  // op
+                    );
 
-                comm_->barrier();
+                    comm_->barrier();
 
-                yhat_min = global;
-            }
+                    yhat_min = global;
+                }
 
-            {
-                METRICS_FLOAT global;
+            if ( comm_ != nullptr )
+                {
+                    METRICS_FLOAT global;
 
-                multithreading::all_reduce(
-                    comm(),                                   // comm
-                    &yhat_max,                                // in_values
-                    1,                                        // count,
-                    &global,                                  // out_values
-                    multithreading::maximum<METRICS_FLOAT>()  // op
-                );
+                    multithreading::all_reduce(
+                        comm(),                                   // comm
+                        &yhat_max,                                // in_values
+                        1,                                        // count,
+                        &global,                                  // out_values
+                        multithreading::maximum<METRICS_FLOAT>()  // op
+                    );
 
-                comm_->barrier();
+                    comm_->barrier();
 
-                yhat_max = global;
-            }
+                    yhat_max = global;
+                }
 
             // ---------------------------------------------
             // If there is no variation in _yhat, then auc is 0.5;
@@ -134,37 +136,39 @@ Poco::JSON::Object AUC::score(
                     predicted_negative[crv] += 1.0;
                 }
 
-            {
-                std::vector<METRICS_FLOAT> global( num_critical_values );
+            if ( comm_ != nullptr )
+                {
+                    std::vector<METRICS_FLOAT> global( num_critical_values );
 
-                multithreading::all_reduce(
-                    comm(),                     // comm
-                    true_positives.data(),      // in_values
-                    num_critical_values,        // count,
-                    global.data(),              // out_values
-                    std::plus<METRICS_FLOAT>()  // op
-                );
+                    multithreading::all_reduce(
+                        comm(),                     // comm
+                        true_positives.data(),      // in_values
+                        num_critical_values,        // count,
+                        global.data(),              // out_values
+                        std::plus<METRICS_FLOAT>()  // op
+                    );
 
-                comm_->barrier();
+                    comm_->barrier();
 
-                true_positives = std::move( global );
-            }
+                    true_positives = std::move( global );
+                }
 
-            {
-                std::vector<METRICS_FLOAT> global( num_critical_values );
+            if ( comm_ != nullptr )
+                {
+                    std::vector<METRICS_FLOAT> global( num_critical_values );
 
-                multithreading::all_reduce(
-                    comm(),                     // comm
-                    predicted_negative.data(),  // in_values
-                    num_critical_values,        // count,
-                    global.data(),              // out_values
-                    std::plus<METRICS_FLOAT>()  // op
-                );
+                    multithreading::all_reduce(
+                        comm(),                     // comm
+                        predicted_negative.data(),  // in_values
+                        num_critical_values,        // count,
+                        global.data(),              // out_values
+                        std::plus<METRICS_FLOAT>()  // op
+                    );
 
-                comm_->barrier();
+                    comm_->barrier();
 
-                predicted_negative = std::move( global );
-            }
+                    predicted_negative = std::move( global );
+                }
 
             std::partial_sum(
                 predicted_negative.begin(),
@@ -191,21 +195,22 @@ Poco::JSON::Object AUC::score(
 
             METRICS_FLOAT nrow_float = static_cast<METRICS_FLOAT>( nrows_ );
 
-            {
-                METRICS_FLOAT global = 0.0;
+            if ( comm_ != nullptr )
+                {
+                    METRICS_FLOAT global = 0.0;
 
-                multithreading::all_reduce(
-                    comm(),                     // comm
-                    &nrow_float,                // in_values
-                    1,                          // count,
-                    &global,                    // out_values
-                    std::plus<METRICS_FLOAT>()  // op
-                );
+                    multithreading::all_reduce(
+                        comm(),                     // comm
+                        &nrow_float,                // in_values
+                        1,                          // count,
+                        &global,                    // out_values
+                        std::plus<METRICS_FLOAT>()  // op
+                    );
 
-                comm_->barrier();
+                    comm_->barrier();
 
-                nrow_float = global;
-            }
+                    nrow_float = global;
+                }
 
             std::vector<METRICS_FLOAT> false_positives( num_critical_values );
 

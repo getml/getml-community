@@ -54,37 +54,39 @@ Poco::JSON::Object Accuracy::score(
             // ---------------------------------------------
             // Reduce, if applicable.
 
-            {
-                METRICS_FLOAT global;
+            if ( comm_ != nullptr )
+                {
+                    METRICS_FLOAT global;
 
-                multithreading::all_reduce(
-                    comm(),                                   // comm
-                    &yhat_min,                                // in_values
-                    1,                                        // count,
-                    &global,                                  // out_values
-                    multithreading::minimum<METRICS_FLOAT>()  // op
-                );
+                    multithreading::all_reduce(
+                        comm(),                                   // comm
+                        &yhat_min,                                // in_values
+                        1,                                        // count,
+                        &global,                                  // out_values
+                        multithreading::minimum<METRICS_FLOAT>()  // op
+                    );
 
-                comm_->barrier();
+                    comm_->barrier();
 
-                yhat_min = global;
-            }
+                    yhat_min = global;
+                }
 
-            {
-                METRICS_FLOAT global;
+            if ( comm_ != nullptr )
+                {
+                    METRICS_FLOAT global;
 
-                multithreading::all_reduce(
-                    comm(),                                   // comm
-                    &yhat_max,                                // in_values
-                    1,                                        // count,
-                    &global,                                  // out_values
-                    multithreading::maximum<METRICS_FLOAT>()  // op
-                );
+                    multithreading::all_reduce(
+                        comm(),                                   // comm
+                        &yhat_max,                                // in_values
+                        1,                                        // count,
+                        &global,                                  // out_values
+                        multithreading::maximum<METRICS_FLOAT>()  // op
+                    );
 
-                comm_->barrier();
+                    comm_->barrier();
 
-                yhat_max = global;
-            }
+                    yhat_max = global;
+                }
 
             // ---------------------------------------------
             // Calculate step_size
@@ -128,37 +130,39 @@ Poco::JSON::Object Accuracy::score(
             // ---------------------------------------------
             // Reduce, if applicable.
 
-            {
-                std::vector<METRICS_FLOAT> global( num_critical_values );
+            if ( comm_ != nullptr )
+                {
+                    std::vector<METRICS_FLOAT> global( num_critical_values );
 
-                multithreading::all_reduce(
-                    comm(),                                   // comm
-                    negatives.data(),                         // in_values
-                    num_critical_values,                      // count,
-                    global.data(),                            // out_values
-                    multithreading::minimum<METRICS_FLOAT>()  // op
-                );
+                    multithreading::all_reduce(
+                        comm(),                                   // comm
+                        negatives.data(),                         // in_values
+                        num_critical_values,                      // count,
+                        global.data(),                            // out_values
+                        multithreading::minimum<METRICS_FLOAT>()  // op
+                    );
 
-                comm_->barrier();
+                    comm_->barrier();
 
-                negatives = std::move( global );
-            }
+                    negatives = std::move( global );
+                }
 
-            {
-                std::vector<METRICS_FLOAT> global( num_critical_values );
+            if ( comm_ != nullptr )
+                {
+                    std::vector<METRICS_FLOAT> global( num_critical_values );
 
-                multithreading::all_reduce(
-                    comm(),                                   // comm
-                    false_positives.data(),                   // in_values
-                    num_critical_values,                      // count,
-                    global.data(),                            // out_values
-                    multithreading::minimum<METRICS_FLOAT>()  // op
-                );
+                    multithreading::all_reduce(
+                        comm(),                                   // comm
+                        false_positives.data(),                   // in_values
+                        num_critical_values,                      // count,
+                        global.data(),                            // out_values
+                        multithreading::minimum<METRICS_FLOAT>()  // op
+                    );
 
-                comm_->barrier();
+                    comm_->barrier();
 
-                false_positives = std::move( global );
-            }
+                    false_positives = std::move( global );
+                }
 
             // ---------------------------------------------
             // Calculate partial sums (now negatives and false_positives are

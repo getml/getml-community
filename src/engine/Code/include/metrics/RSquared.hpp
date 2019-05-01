@@ -8,7 +8,16 @@ namespace metrics
 class RSquared : public Metric
 {
    public:
-    RSquared() {}
+    RSquared( multithreading::Communicator* _comm )
+        : comm_( _comm ),
+          ncols_( 0 ),
+          nrows_( 0 ),
+          y_( nullptr ),
+          yhat_( nullptr )
+    {
+    }
+
+    RSquared() : RSquared( nullptr ) {}
 
     ~RSquared() = default;
 
@@ -28,7 +37,11 @@ class RSquared : public Metric
 
    private:
     /// Trivial getter
-    multithreading::Communicator& comm() { return *( comm_ ); }
+    multithreading::Communicator& comm()
+    {
+        assert( comm_ != nullptr );
+        return *( comm_ );
+    }
 
     /// Trivial getter
     METRICS_FLOAT& sufficient_statistics( size_t _i, size_t _j )

@@ -8,7 +8,16 @@ namespace metrics
 class MAE : public Metric
 {
    public:
-    MAE() {}
+    MAE( multithreading::Communicator* _comm )
+        : comm_( _comm ),
+          ncols_( 0 ),
+          nrows_( 0 ),
+          y_( nullptr ),
+          yhat_( nullptr )
+    {
+    }
+
+    MAE() : MAE( nullptr ) {}
 
     ~MAE() = default;
 
@@ -28,7 +37,11 @@ class MAE : public Metric
 
    private:
     /// Trivial getter
-    multithreading::Communicator& comm() { return *( comm_ ); }
+    multithreading::Communicator& comm()
+    {
+        assert( comm_ != nullptr );
+        return *( comm_ );
+    }
 
     /// Trivial getter
     METRICS_FLOAT yhat( size_t _i, size_t _j ) const
