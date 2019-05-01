@@ -13,17 +13,22 @@
 #include <type_traits>
 #include <vector>
 
+#include <Poco/JSON/Object.h>
+
 #include "debug/debug.hpp"
 #include "relboost/types.hpp"
 
 #include "relboost/enums/enums.hpp"
 
+#include "relboost/JSON.hpp"
+
 // ----------------------------------------------------------------------------
 
+#include "relboost/containers/Column.hpp"
 #include "relboost/containers/IntSet.hpp"
 #include "relboost/containers/Match.hpp"
-#include "relboost/containers/Column.hpp"
 #include "relboost/containers/Optional.hpp"
+#include "relboost/containers/Scores.hpp"
 #include "relboost/containers/Split.hpp"
 
 #include "relboost/containers/DataFrame.hpp"

@@ -19,6 +19,7 @@ set(
     ${RELBOOST_SOURCE_DIRECTORY}/Matchmaker.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/Placeholder.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/Sampler.cpp
+    ${RELBOOST_SOURCE_DIRECTORY}/Scores.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/SquareLoss.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/Sum.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/TableHolder.cpp

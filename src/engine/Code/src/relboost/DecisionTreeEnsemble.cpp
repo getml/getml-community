@@ -448,7 +448,7 @@ Poco::JSON::Object DecisionTreeEnsemble::score(
     const size_t _yhat_ncols,
     const RELBOOST_FLOAT *const _y,
     const size_t _y_nrows,
-    const size_t _y_ncols ) const
+    const size_t _y_ncols )
 {
     // ------------------------------------------------------------------------
     // Build up names.
@@ -479,9 +479,9 @@ Poco::JSON::Object DecisionTreeEnsemble::score(
 
     for ( const auto &name : names )
         {
-            const auto metric = metrics::MetricParser::parse( name );
-
-            // metric->set_comm( comm() );
+            // TODO: Replace nullptr with &comm() after multithreading is
+            // implemented.
+            const auto metric = metrics::MetricParser::parse( name, nullptr );
 
             const auto scores = metric->score(
                 _yhat, _yhat_nrows, _yhat_ncols, _y, _y_nrows, _y_ncols );
@@ -495,7 +495,7 @@ Poco::JSON::Object DecisionTreeEnsemble::score(
     // ------------------------------------------------------------------------
     // Store scores.
 
-    // scores().from_json_obj( obj );
+    scores().from_json_obj( obj );
 
     // ------------------------------------------------------------------------
     // Extract values that can be send back to the client.

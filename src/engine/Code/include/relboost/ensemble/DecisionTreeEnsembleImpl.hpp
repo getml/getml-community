@@ -55,6 +55,9 @@ struct DecisionTreeEnsembleImpl
     /// The sampler used for making the sample weights.
     utils::Sampler sampler_;
 
+    /// Contains information on how this ensemble has been scored
+    containers::Scores scores_;
+
     /// Trees underlying the model.
     std::vector<decisiontrees::DecisionTree> trees_;
 

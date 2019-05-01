@@ -75,7 +75,7 @@ class DecisionTreeEnsemble
         const size_t _yhat_ncols,
         const RELBOOST_FLOAT* const _y,
         const size_t _y_nrows,
-        const size_t _y_ncols ) const;
+        const size_t _y_ncols );
 
     /// Returns the features underlying the model (the predictions of the
     /// individual trees as opposed to the entire prediction)
@@ -170,6 +170,9 @@ class DecisionTreeEnsemble
 
     /// Trivial (private) accessor
     utils::Sampler& sampler() { return impl().sampler_; }
+
+    /// Trivial (private) accessor
+    inline containers::Scores& scores() { return impl().scores_; }
 
     /// Trivial (private) accessor
     const TableHolder& table_holder() const
