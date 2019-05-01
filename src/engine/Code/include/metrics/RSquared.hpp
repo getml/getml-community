@@ -41,6 +41,10 @@ class RSquared : public Metric
     /// Trivial getter
     METRICS_FLOAT& sufficient_statistics( size_t _i, size_t _j )
     {
+        assert( sufficient_statistics_.size() % ncols() == 0 );
+        assert( _i < sufficient_statistics_.size() % ncols() );
+        assert( _j < ncols() );
+        
         return sufficient_statistics_[_i * ncols() + _j];
     }
 

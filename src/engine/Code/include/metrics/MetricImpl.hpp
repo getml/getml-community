@@ -68,8 +68,8 @@ class MetricImpl
 
         multithreading::all_reduce(
             comm(),         // comm
-            _vec->data(),    // in_values
-            _vec->size(),    // count,
+            _vec->data(),   // in_values
+            _vec->size(),   // count,
             global.data(),  // out_values
             _operator       // op
         );
@@ -98,15 +98,23 @@ class MetricImpl
     }
 
     /// Trivial getter
-    METRICS_FLOAT yhat( size_t _i, size_t _j ) const
+    METRICS_FLOAT y( size_t _i, size_t _j ) const
     {
-        return yhat_[_i * ncols_ + _j];
+        assert( y_ != nullptr );
+        assert( _i < nrows_ );
+        assert( _j < ncols_ );
+
+        return y_[_i * ncols_ + _j];
     }
 
     /// Trivial getter
-    METRICS_FLOAT y( size_t _i, size_t _j ) const
+    METRICS_FLOAT yhat( size_t _i, size_t _j ) const
     {
-        return y_[_i * ncols_ + _j];
+        assert( yhat_ != nullptr );
+        assert( _i < nrows_ );
+        assert( _j < ncols_ );
+
+        return yhat_[_i * ncols_ + _j];
     }
 
     // -----------------------------------------
