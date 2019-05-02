@@ -16,10 +16,15 @@ struct Sender
         const T* _data,
         Poco::Net::StreamSocket* _socket );
 
+    /// Sends categorical matrix to the client
+    static void send_categorical_matrix(
+        const containers::Matrix<ENGINE_INT>& _matrix,
+        const containers::Encoding& _encoding,
+        Poco::Net::StreamSocket* _socket );
+
     /// Sends matrix to the client
-    template <class T>
     static void send_matrix(
-        const containers::Matrix<T>& _matrix,
+        const containers::Matrix<ENGINE_FLOAT>& _matrix,
         Poco::Net::StreamSocket* _socket );
 
     /// Sends a string to the client
@@ -114,30 +119,6 @@ void Sender::send(
         }
 
     assert( j == _size );
-}
-
-// ------------------------------------------------------------------------
-
-template <class T>
-void Sender::send_matrix(
-    const containers::Matrix<T>& _matrix, Poco::Net::StreamSocket* _socket )
-{
-    // ------------------------------------------------
-    // Send dimensions of matrix
-
-    std::array<ENGINE_INT, 2> shape;
-
-    std::get<0>( shape ) = static_cast<ENGINE_INT>( _matrix.nrows() );
-    std::get<1>( shape ) = static_cast<ENGINE_INT>( _matrix.ncols() );
-
-    Sender::send<ENGINE_INT>( 2 * sizeof( ENGINE_INT ), shape.data(), _socket );
-
-    // ------------------------------------------------
-    // Send actual data
-
-    Sender::send<T>( _matrix.size() * sizeof( T ), _matrix.data(), _socket );
-
-    // ------------------------------------------------
 }
 
 // ------------------------------------------------------------------------

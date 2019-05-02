@@ -333,7 +333,7 @@ void ModelManager::transform(
     // -------------------------------------------------------
     // Send data
 
-    communication::Sender::send_matrix<ENGINE_FLOAT>( yhat, _socket );
+    communication::Sender::send_matrix( yhat, _socket );
 
     send_data( categories_, local_data_frames, _socket );
 

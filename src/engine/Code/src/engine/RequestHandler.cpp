@@ -53,6 +53,10 @@ void RequestHandler::run()
                 {
                     project_manager().load_data_frame( name, &socket() );
                 }
+            else if ( type == "DataFrame.get" )
+                {
+                    data_frame_manager().get_data_frame( &socket() );
+                }
             else if ( type == "DataFrame.get_content" )
                 {
                     data_frame_manager().get_data_frame_content(

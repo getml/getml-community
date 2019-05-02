@@ -33,7 +33,9 @@ void DataFrameManager::add_categorical_column(
         }
     else
         {
-            assert( false );
+            throw std::runtime_error(
+                "A categorical column must either have the role categorical or "
+                "join key" );
         }
 
     if ( mat.ncols() != 1 )
@@ -211,14 +213,20 @@ void DataFrameManager::close(
 // ------------------------------------------------------------------------
 
 void DataFrameManager::get_categorical_column(
-    const Poco::JSON::Object& _cmd,
-    Poco::Net::StreamSocket* _socket )
+    const Poco::JSON::Object& _cmd, Poco::Net::StreamSocket* _socket )
 {
     const auto role = JSON::get_value<std::string>( _cmd, "role_" );
 
     const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
 
     const auto num = JSON::get_value<size_t>( _cmd, "num_" );
+
+    if ( role != "categorical" && role != "join_key" )
+        {
+            throw std::runtime_error(
+                "Role for a categorical column must be categorical or "
+                "join_key!" );
+        }
 
     multithreading::ReadLock read_lock( read_write_lock_ );
 
@@ -227,14 +235,22 @@ void DataFrameManager::get_categorical_column(
 
     communication::Sender::send_string( "Found!", _socket );
 
-    communication::Sender::send_matrix( mat, _socket );
+    if ( role == "categorical" )
+        {
+            communication::Sender::send_categorical_matrix(
+                mat, *categories_, _socket );
+        }
+    else
+        {
+            communication::Sender::send_categorical_matrix(
+                mat, *join_keys_encoding_, _socket );
+        }
 }
 
 // ------------------------------------------------------------------------
 
 void DataFrameManager::get_column(
-    const Poco::JSON::Object& _cmd,
-    Poco::Net::StreamSocket* _socket )
+    const Poco::JSON::Object& _cmd, Poco::Net::StreamSocket* _socket )
 {
     const auto role = JSON::get_value<std::string>( _cmd, "role_" );
 
@@ -249,7 +265,7 @@ void DataFrameManager::get_column(
 
     communication::Sender::send_string( "Found!", _socket );
 
-    communication::Sender::send_matrix<ENGINE_FLOAT>( mat, _socket );
+    communication::Sender::send_matrix( mat, _socket );
 }
 
 // ------------------------------------------------------------------------
@@ -274,6 +290,39 @@ void DataFrameManager::get_data_frame_content(
     read_lock.unlock();
 
     communication::Sender::send_string( JSON::stringify( obj ), _socket );
+}
+
+// ------------------------------------------------------------------------
+
+void DataFrameManager::get_data_frame( Poco::Net::StreamSocket* _socket )
+{
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    while ( true )
+        {
+            Poco::JSON::Object cmd =
+                communication::Receiver::recv_cmd( logger_, _socket );
+
+            const auto type = JSON::get_value<std::string>( cmd, "type_" );
+
+            if ( type == "CategoricalColumn.get" )
+                {
+                    get_categorical_column( cmd, _socket );
+                }
+            else if ( type == "Column.get" )
+                {
+                    get_column( cmd, _socket );
+                }
+            else if ( type == "DataFrame.close" )
+                {
+                    communication::Sender::send_string( "Success!", _socket );
+                    break;
+                }
+            else
+                {
+                    break;
+                }
+        }
 }
 
 // ------------------------------------------------------------------------

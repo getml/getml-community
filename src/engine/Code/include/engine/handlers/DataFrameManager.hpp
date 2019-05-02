@@ -51,6 +51,9 @@ class DataFrameManager
     void get_column(
         const Poco::JSON::Object& _cmd, Poco::Net::StreamSocket* _socket );
 
+    /// Sends a data frame back to the client, column-by-column.
+    void get_data_frame( Poco::Net::StreamSocket* _socket );
+
     /// Sends the content of a data frame in a format that is compatible with
     /// DataTables.js server-side processing.
     void get_data_frame_content(
