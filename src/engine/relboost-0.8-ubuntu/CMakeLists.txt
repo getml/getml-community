@@ -8,9 +8,14 @@
 set(RELBOOST_VERSION relboost-0.8-ubuntu)
 
 cmake_minimum_required(VERSION 2.8)
+
 # Set the path containing poco. 
 # Should contain the folder "Net", among others.
 set(POCO_DIR $ENV{HOME}/poco-1.9.0-all)
+
+# Set the path containing xgboost
+# Should include folders "include", "lib" and "rabit"
+set(XGBOOST_DIR $ENV{HOME}/xgboost)
 
 project(${RELBOOST_VERSION}-64bit)
 
@@ -25,6 +30,8 @@ include_directories(
     "${POCO_DIR}/Net/include" 
     "${POCO_DIR}/NetSSL_OpenSSL/include" 
     "${POCO_DIR}/Foundation/include" 
+    "${XGBOOST_DIR}/include" 
+    "${XGBOOST_DIR}/rabit/include"
 )
 
 set(ENGINE_SOURCE_DIRECTORY "${PROJECT_SOURCE_DIR}/../Code/src/engine")
@@ -41,7 +48,7 @@ add_executable(${RELBOOST_VERSION}-64bit ${RELBOOST_OBJ} ${METRICS_OBJ} ${ENGINE
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11 -Wall -Wno-sign-compare -Wno-missing-braces -pthread -fno-strict-aliasing -fwrapv -O2 -D NDEBUGLOG")
     
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -O2")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s -O2 -fopenmp")
 
 target_link_libraries(
     ${RELBOOST_VERSION}-64bit-test
@@ -58,6 +65,9 @@ target_link_libraries(
     "${POCO_DIR}/lib/Linux/x86_64/libPocoJSON.a"
     "${POCO_DIR}/lib/Linux/x86_64/libPocoXML.a"
     "${POCO_DIR}/lib/Linux/x86_64/libPocoFoundation.a"
+    "${XGBOOST_DIR}/lib/libxgboost.a"
+    "${XGBOOST_DIR}/rabit/lib/librabit.a"    
+    "${XGBOOST_DIR}/dmlc-core/libdmlc.a"
     crypto
     ssl
 )
