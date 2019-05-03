@@ -33,11 +33,8 @@ std::shared_ptr<Metric> MetricParser::parse(
         }
     else
         {
-            std::string msg = "Metric of type '";
-            msg.append( _type );
-            msg.append( "' not known!" );
-
-            throw std::invalid_argument( msg );
+            throw std::invalid_argument(
+                "Metric of type '" + _type + "' not known!" );
         }
 }
 

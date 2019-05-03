@@ -34,19 +34,23 @@ void ProjectManager::add_relboost_model(
             throw std::invalid_argument( "You have not set a project!" );
         }
 
-    auto hyperparameters = std::make_shared<relboost::Hyperparameters>(
-        JSON::get_object( _cmd, "hyperparameters_" ) );
+    const auto hyperparameters_obj =
+        JSON::get_object( _cmd, "hyperparameters_" );
 
-    auto peripheral = std::make_shared<std::vector<std::string>>(
+    const auto hyperparameters =
+        std::make_shared<relboost::Hyperparameters>( hyperparameters_obj );
+
+    const auto peripheral = std::make_shared<std::vector<std::string>>(
         JSON::array_to_vector<std::string>(
             JSON::get_array( _cmd, "peripheral_" ) ) );
 
-    auto placeholder = std::make_shared<relboost::ensemble::Placeholder>(
+    const auto placeholder = std::make_shared<relboost::ensemble::Placeholder>(
         JSON::get_object( _cmd, "population_" ) );
 
-    auto model =
-        models::RelboostModel( relboost::ensemble::DecisionTreeEnsemble(
-            categories_->vector(), hyperparameters, peripheral, placeholder ) );
+    const auto model = models::RelboostModel(
+        relboost::ensemble::DecisionTreeEnsemble(
+            categories_->vector(), hyperparameters, peripheral, placeholder ),
+        *hyperparameters_obj );
 
     set_relboost_model( _name, model );
 
@@ -228,9 +232,11 @@ void ProjectManager::load_relboost_model(
     const auto obj =
         load_json_obj( project_directory_ + "models/" + _name + "/Model.json" );
 
-    auto model =
-        models::RelboostModel( relboost::ensemble::DecisionTreeEnsemble(
-            categories_->vector(), obj ) );
+    const auto hyperparameters = *JSON::get_object( obj, "hyperparameters_" );
+
+    auto model = models::RelboostModel(
+        relboost::ensemble::DecisionTreeEnsemble( categories_->vector(), obj ),
+        hyperparameters );
 
     set_relboost_model( _name, model );
 

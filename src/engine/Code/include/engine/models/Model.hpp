@@ -15,8 +15,11 @@ class Model : public ModelBase
     // --------------------------------------------------------
 
    public:
-    Model( const FeatureEngineererType& _feature_engineerer )
-        : feature_engineerer_( _feature_engineerer )
+    Model(
+        const FeatureEngineererType& _feature_engineerer,
+        const Poco::JSON::Object& _hyperparameters )
+        : feature_engineerer_( _feature_engineerer ),
+          hyperparameters_( _hyperparameters )
     {
     }
 
@@ -68,17 +71,43 @@ class Model : public ModelBase
     /// Extract a data frame of type FeatureEngineererType::DataFrameType from
     /// an engine::containers::DataFrame.
     template <typename DataFrameType>
-    static DataFrameType extract_df(
+    DataFrameType extract_df(
         const std::string& _name,
         const std::map<std::string, containers::DataFrame>& _data_frames );
 
-    /// Trivial (private getter)
+    /// Initialize predictors before fitting.
+    void init_predictors( const size_t _num_targets );
+
+    // --------------------------------------------------------
+
+   private:
+    /// Trivial (private) getter
     FeatureEngineererType& feature_engineerer() { return feature_engineerer_; }
 
-    /// Trivial (private getter)
+    /// Trivial (private) getter
     const FeatureEngineererType& feature_engineerer() const
     {
         return feature_engineerer_;
+    }
+
+    /// Trivial (private) getter
+    size_t num_predictors() const { return predictors_.size(); }
+
+    /// Trivial (private) getter
+    std::shared_ptr<predictors::Predictor>& predictor( const size_t _i )
+    {
+        assert( _i < predictors_.size() );
+        assert( predictors_[_i] );
+        return predictors_[_i];
+    }
+
+    /// Trivial (private) getter
+    const std::shared_ptr<const predictors::Predictor> predictor(
+        const size_t _i ) const
+    {
+        assert( _i < predictors_.size() );
+        assert( predictors_[_i] );
+        return predictors_[_i];
     }
 
     // --------------------------------------------------------
@@ -86,6 +115,12 @@ class Model : public ModelBase
    private:
     /// The underlying feature engineering algorithm.
     FeatureEngineererType feature_engineerer_;
+
+    /// The hyperparameters used for fitting.
+    Poco::JSON::Object hyperparameters_;
+
+    /// The algorithm used for prediction (one for every target)
+    std::vector<std::shared_ptr<predictors::Predictor>> predictors_;
 
     // --------------------------------------------------------
 };
@@ -112,16 +147,7 @@ DataFrameType Model<FeatureEngineererType>::extract_df(
 {
     // ------------------------------------------------------------------------
 
-    auto it = _data_frames.find( _name );
-
-    if ( it == _data_frames.end() )
-        {
-            throw std::runtime_error(
-                "No data frame called '" + _name +
-                "' is currently loaded in memory!" );
-        }
-
-    const auto& df = it->second;
+    const auto df = utils::Getter::get( _name, _data_frames );
 
     // ------------------------------------------------------------------------
 
@@ -129,7 +155,7 @@ DataFrameType Model<FeatureEngineererType>::extract_df(
 
     for ( size_t i = 0; i < df.num_categoricals(); ++i )
         {
-            const auto& mat = it->second.categorical( i );
+            const auto& mat = df.categorical( i );
 
             categoricals.push_back( typename DataFrameType::IntColumnType(
                 mat.data(), mat.colname( 0 ), mat.nrows(), mat.unit( 0 ) ) );
@@ -141,7 +167,7 @@ DataFrameType Model<FeatureEngineererType>::extract_df(
 
     for ( size_t i = 0; i < df.num_discretes(); ++i )
         {
-            const auto& mat = it->second.discrete( i );
+            const auto& mat = df.discrete( i );
 
             discretes.push_back( typename DataFrameType::FloatColumnType(
                 mat.data(), mat.colname( 0 ), mat.nrows(), mat.unit( 0 ) ) );
@@ -153,7 +179,7 @@ DataFrameType Model<FeatureEngineererType>::extract_df(
 
     for ( size_t i = 0; i < df.num_join_keys(); ++i )
         {
-            const auto& mat = it->second.join_key( i );
+            const auto& mat = df.join_key( i );
 
             join_keys.push_back( typename DataFrameType::IntColumnType(
                 mat.data(), mat.colname( 0 ), mat.nrows(), mat.unit( 0 ) ) );
@@ -165,7 +191,7 @@ DataFrameType Model<FeatureEngineererType>::extract_df(
 
     for ( size_t i = 0; i < df.num_numericals(); ++i )
         {
-            const auto& mat = it->second.numerical( i );
+            const auto& mat = df.numerical( i );
 
             numericals.push_back( typename DataFrameType::FloatColumnType(
                 mat.data(), mat.colname( 0 ), mat.nrows(), mat.unit( 0 ) ) );
@@ -177,7 +203,7 @@ DataFrameType Model<FeatureEngineererType>::extract_df(
 
     for ( size_t i = 0; i < df.num_targets(); ++i )
         {
-            const auto& mat = it->second.target( i );
+            const auto& mat = df.target( i );
 
             targets.push_back( typename DataFrameType::FloatColumnType(
                 mat.data(), mat.colname( 0 ), mat.nrows(), mat.unit( 0 ) ) );
@@ -189,7 +215,7 @@ DataFrameType Model<FeatureEngineererType>::extract_df(
 
     for ( size_t i = 0; i < df.num_time_stamps(); ++i )
         {
-            const auto& mat = it->second.time_stamp( i );
+            const auto& mat = df.time_stamp( i );
 
             time_stamps.push_back( typename DataFrameType::FloatColumnType(
                 mat.data(), mat.colname( 0 ), mat.nrows(), mat.unit( 0 ) ) );
@@ -200,7 +226,7 @@ DataFrameType Model<FeatureEngineererType>::extract_df(
     return DataFrameType(
         categoricals,
         discretes,
-        it->second.indices(),
+        df.indices(),
         join_keys,
         _name,
         numericals,
@@ -248,7 +274,7 @@ void Model<FeatureEngineererType>::fit(
             population_name, _data_frames );
 
     // ------------------------------------------------
-    // Do the actual fitting.
+    // Fit the feature engineerer.
 
     feature_engineerer().init( population_table, peripheral_tables );
 
@@ -288,25 +314,48 @@ void Model<FeatureEngineererType>::fit(
         }*/
 
     // ------------------------------------------------
-    // Fit predictors, if applicable
+    // Fit the predictors, if applicable.
 
-    /* if ( _model.has_predictors() )
-         {
-             auto features = Models::transform(
-                 _socket,
-                 _cmd,
-                 _logger,
-                 _data_frames,
-                 _model,
-                 false,  // _score,
-                 false   ///_predict
-             );
+    const auto population_df =
+        utils::Getter::get( population_name, _data_frames );
 
-             msg += _model.fit_predictors(
-                 _logger, features, population_table.targets() );
-         }*/
+    init_predictors( population_df.num_targets() );
+
+    if ( num_predictors() > 0 )
+        {
+            assert( num_predictors() == population_df.num_targets() );
+
+            auto features = transform( _cmd, _logger, _data_frames, _socket );
+
+            for ( size_t i = 0; i < num_predictors(); ++i )
+                {
+                    predictor( i )->fit(
+                        _logger, features, population_df.target( i ) );
+                }
+        }
 
     // ------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+template <typename FeatureEngineererType>
+void Model<FeatureEngineererType>::init_predictors( const size_t _num_targets )
+{
+    predictors_.clear();
+
+    if ( !hyperparameters_.has( "predictor_" ) ||
+         hyperparameters_.isNull( "predictor_" ) )
+        {
+            return;
+        }
+
+    const auto obj = *JSON::get_object( hyperparameters_, "predictor_" );
+
+    for ( size_t i = 0; i < _num_targets; ++i )
+        {
+            predictors_.push_back( predictors::PredictorParser::parse( obj ) );
+        }
 }
 
 // ----------------------------------------------------------------------------
@@ -409,41 +458,37 @@ containers::Matrix<ENGINE_FLOAT> Model<FeatureEngineererType>::transform(
         extract_df<typename FeatureEngineererType::DataFrameType>(
             population_name, _data_frames );
 
-    // ------------------------------------------------
-
-    const bool predict = JSON::get_value<bool>( _cmd, "predict_" );
-
     // ------------------------------------------------------------------------
-    // This is a temporary solution - the idea is for a DecisionTreeEnsemble
-    // to have its own predictors.
+    // Generate the features
 
-    const auto data = std::make_shared<std::vector<RELBOOST_FLOAT>>( 0 );
-
-    if ( predict )
-        {
-            *data = feature_engineerer().predict(
-                population_table, peripheral_tables );
-        }
-    else
-        {
-            *data = *feature_engineerer().transform(
-                population_table, peripheral_tables );
-        }
+    const auto features =
+        feature_engineerer().transform( population_table, peripheral_tables );
 
     // ------------------------------------------------------------------------
     // Build matrix.
 
-    assert( data->size() % population_table.nrows() == 0 );
+    assert( features->size() % population_table.nrows() == 0 );
 
     const auto nrows = population_table.nrows();
 
-    const auto ncols = data->size() / population_table.nrows();
+    const auto ncols = features->size() / population_table.nrows();
 
-    const auto mat = containers::Matrix<ENGINE_FLOAT>( nrows, ncols, data );
+    const auto mat = containers::Matrix<ENGINE_FLOAT>( nrows, ncols, features );
 
     // ------------------------------------------------------------------------
+    // Generate predictions, if applicable.
 
-    return mat;
+    const bool predict =
+        _cmd.has( "predict_" ) && JSON::get_value<bool>( _cmd, "predict_" );
+
+    if ( predict && num_predictors() > 0 )
+        {
+            return predictor( 0 )->predict( mat );
+        }
+    else
+        {
+            return mat;
+        }
 
     // ------------------------------------------------------------------------
 }

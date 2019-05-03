@@ -26,6 +26,8 @@
 #include "engine/predictors/XGBoostHyperparams.hpp"
 #include "engine/predictors/XGBoostPredictor.hpp"
 
+#include "engine/predictors/PredictorParser.hpp"
+
 // ----------------------------------------------------
 
 #endif  // ENGINE_PREDICTORS_PREDICTORS_HPP_

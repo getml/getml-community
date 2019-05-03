@@ -1,1 +1,1162 @@
-{"hyperparameters_":{"eta_":0.3,"gamma_":1,"lambda_":0,"max_depth_":3,"num_features_":20,"objective_":"CrossEntropyLoss","seed_":5843,"silent_":false,"subsample_":0.01,"use_timestamps_":true},"initial_prediction_":-3.9558163893783362,"peripheral_names_":["EXPD"],"placeholder_":{"categorical_":[  ],"discrete_":[  ],"join_keys_":[  ],"join_keys_used_":[ "NEWID", "BASKETID" ],"joined_tables_":[{"categorical_":[  ],"discrete_":[  ],"join_keys_":[  ],"join_keys_used_":[  ],"joined_tables_":[],"name_":"EXPD","numerical_":[  ],"other_join_keys_used_":[  ],"other_time_stamps_used_":[  ],"targets_":[  ],"time_stamps_":[  ],"time_stamps_used_":[  ],"upper_time_stamps_used_":[  ]},{"categorical_":[  ],"discrete_":[  ],"join_keys_":[  ],"join_keys_used_":[  ],"joined_tables_":[],"name_":"EXPD","numerical_":[  ],"other_join_keys_used_":[  ],"other_time_stamps_used_":[  ],"targets_":[  ],"time_stamps_":[  ],"time_stamps_used_":[  ],"upper_time_stamps_used_":[  ]}],"name_":"EXPD","numerical_":[  ],"other_join_keys_used_":[ "NEWID", "BASKETID" ],"other_time_stamps_used_":[ "TIME_STAMP_SHIFTED", "TIME_STAMP" ],"targets_":[  ],"time_stamps_":[  ],"time_stamps_used_":[ "TIME_STAMP", "TIME_STAMP" ],"upper_time_stamps_used_":[ "", "" ]},"trees_":[{"intercept_":-0.10981486397130784,"loss_":"AVG","peripheral_used_":0,"root_":{"categories_used_":[509,1062],"child_greater_":{"weight_":53.347627482638416},"child_smaller_":{"categories_used_":[872],"child_greater_":{"weight_":1133.5424462017156},"child_smaller_":{"weight_":-0.661577181957808},"column_":0,"column_input_":0,"critical_value_":0,"data_used_":"categorical_input","weight_":-0.4165892102240558},"column_":0,"column_input_":0,"critical_value_":0,"data_used_":"categorical_output","weight_":0},"update_rate_":0.0014936678752505322},{"intercept_":0.06473143701713222,"loss_":"AVG","peripheral_used_":0,"root_":{"categories_used_":[101,390,739],"child_greater_":{"weight_":42.33654786207265},"child_smaller_":{"weight_":-0.8242579183003134},"column_":0,"column_input_":0,"critical_value_":0,"data_used_":"categorical_output","weight_":0},"update_rate_":0.179887971217215},{"intercept_":-0.32808752938630265,"loss_":"AVG","peripheral_used_":1,"root_":{"categories_used_":[509,666,791,796,802,917,957,1144],"child_greater_":{"weight_":45.13629828946282},"child_smaller_":{"weight_":0},"column_":0,"column_input_":0,"critical_value_":0,"data_used_":"categorical_output","weight_":0},"update_rate_":0.2184517069589657},{"intercept_":-4.230168302691117,"loss_":"AVG","peripheral_used_":1,"root_":{"categories_used_":[579,788,793,829],"child_greater_":{"weight_":51.88063282733779},"child_smaller_":{"categories_used_":[494,711,756,797,1023,1028,1051,1085,1195],"child_greater_":{"categories_used_":[177,561,1057],"child_greater_":{"categories_used_":[796,927,1022,1084],"child_greater_":{"weight_":3293.616927915053},"child_smaller_":{"weight_":2010.3024264554733},"column_":0,"column_input_":0,"critical_value_":0,"data_used_":"categorical_input","weight_":2685.0112088472542},"child_smaller_":{"categories_used_":[227,288,345],"child_greater_":{"weight_":1143.4895871603012},"child_smaller_":{},"column_":0,"column_input_":0,"critical_value_":0,"data_used_":"categorical_output","weight_":68.58802712044272},"column_":0,"column_input_":0,"critical_value_":0,"data_used_":"categorical_output","weight_":77.06375350190616},"child_smaller_":{"categories_used_":[1,6,93,169,236],"child_greater_":{},"child_smaller_":{"weight_":3.4550340860711026},"column_":1,"column_input_":0,"critical_value_":0,"data_used_":"categorical_input","weight_":-3.5972026216943815},"column_":4,"column_input_":0,"critical_value_":0,"data_used_":"categorical_input","weight_":6.8075880758807585},"column_":0,"column_input_":0,"critical_value_":0,"data_used_":"categorical_output","weight_":0},"update_rate_":0.025804957636188505},{"intercept_":-0.5638090316530927,"loss_":"SUM","peripheral_used_":1,"root_":{"categories_used_":[582,594,668,690,829,831,1128],"child_greater_":{"categories_used_":[64,100,124,135,145,153,165,179,206,217,220,223,277,300,312,318,379,394,407,423,443,450,501,555,598,624,626,667,672,686,691,781,863,868,886,888,918,1020,1039,1058,1063,1068,1119],"child_greater_":{"categories_used_":[162,604],"child_greater_":{"weight_":13.507887033774235},"child_smaller_":{"categories_used_":[312],"child_greater_":{"weight_":8.701043913162279},"child_smaller_":{"weight_":2.381448721743743},"column_":0,"column_input_":0,"critical_value_":0,"data_used_":"categorical_input","weight_":2.5358236574470037},"column_":2,"column_input_":0,"critical_value_":0,"data_used_":"categorical_input","weight_":2.7017138809238515},"child_smaller_":{"weight_":-0.0023952668713355914},"column_":5,"column_input_":0,"critical_value_":0,"data_used_":"categorical_input","weight_":0.21733190056662896},"child_smaller_":{"weight_":0.001911644561400277},"column_":0,"column_input_":0,"critical_value_":0,"data_used_":"categorical_output","weight_":0},"update_rate_":0.18914880568229578},{"intercept_":0.42360504435394675,"loss_":"AVG","peripheral_used_":1,"root_":{"categories_used_":[436,684,892,1004],"child_greater_":{"weight_":43.8707431907276},"child_smaller_":{"weight_":-0.7051588657328323},"column_":0,"column_input_":0,"critical_value_":0,"data_used_":"categorical_output","weight_":0},"update_rate_":0.1576888884289632},{"intercept_":-0.34053014532391923,"loss_":"AVG","peripheral_used_":0,"root_":{"categories_used_":[192,221,451],"child_greater_":{"weight_":44.30601661136094},"child_smaller_":{"categories_used_":[747],"child_greater_":{"weight_":959.406917602346},"child_smaller_":{"weight_":-0.4502174094401616},"column_":0,"column_input_":0,"critical_value_":0,"data_used_":"categorical_input","weight_":-0.20610273001544901},"column_":0,"column_input_":0,"critical_value_":0,"data_used_":"categorical_output","weight_":0},"update_rate_":0.04934829600357754},{"intercept_":0.1340779846083969,"loss_":"AVG","peripheral_used_":1,"root_":{"categories_used_":[469,581,609,663,722],"child_greater_":{"weight_":56.65810232138833},"child_smaller_":{"weight_":-0.25669162471725876},"column_":0,"column_input_":0,"critical_value_":0,"data_used_":"categorical_output","weight_":0},"update_rate_":0.14930689449123494},{"intercept_":45.46041089541844,"loss_":"AVG","peripheral_used_":1,"root_":{"categories_used_":[318,616,925,969],"child_greater_":{"weight_":0},"child_smaller_":{"weight_":-45.64183286074379},"column_":5,"column_input_":0,"critical_value_":0,"data_used_":"categorical_output","weight_":0},"update_rate_":0.03048324997158204},{"intercept_":-0.7225260409974522,"loss_":"SUM","peripheral_used_":1,"root_":{"categories_used_":[206,325,413,430,648,969],"child_greater_":{"categories_used_":[13,55,60,98,135,161,168,177,186,197,213,227,230,231,232,246,263,275,283,288,309,314,328,338,344,353,356,390,404,453,475,482,499,509,522,543,545,547,581,582,594,603,625,639,656,666,668,698,722,729,768,785,821,838,843,847,848,854,862,929,939,941,943,968,1099],"child_greater_":{"weight_":0.937696276485535},"child_smaller_":{"weight_":-0.024237487814278084},"column_":0,"column_input_":0,"critical_value_":0,"data_used_":"categorical_input","weight_":0.1802439949364335},"child_smaller_":{"categories_used_":[1030],"child_greater_":{"weight_":28.642797757632557},"child_smaller_":{"categories_used_":[278],"child_greater_":{"weight_":0.32954255513022573},"child_smaller_":{"weight_":0.0047337014553244395},"column_":0,"column_input_":0,"critical_value_":0,"data_used_":"categorical_output","weight_":0.005047418795211859},"column_":0,"column_input_":0,"critical_value_":0,"data_used_":"categorical_input","weight_":0.004997910903026326},"column_":5,"column_input_":0,"critical_value_":0,"data_used_":"categorical_output","weight_":0},"update_rate_":0.06126586419635806},{"intercept_":-0.4412612199989605,"loss_":"AVG","peripheral_used_":1,"root_":{"categories_used_":[349,575,578,691,728,974,1061,1129],"child_greater_":{"weight_":42.461866666666666},"child_smaller_":{"weight_":0.29353595542841054},"column_":5,"column_input_":0,"critical_value_":0,"data_used_":"categorical_output","weight_":0},"update_rate_":0.07198422862890416},{"intercept_":-0.22863512796093793,"loss_":"SUM","peripheral_used_":1,"root_":{"categories_used_":[579,592,630,752,793,851,857,1080],"child_greater_":{"categories_used_":[9,35,53,63,123,133,152,158,187,198,208,222,299,304,320,334,339,382,406,467,515,540,623,657,696,706,717,783,822,827,893,899,906,930,947,1006],"child_greater_":{"categories_used_":[94],"child_greater_":{"weight_":9.038271079907037},"child_smaller_":{"weight_":1.9208011335484194},"column_":2,"column_input_":0,"critical_value_":0,"data_used_":"categorical_input","weight_":2.2048592164354117},"child_smaller_":{"categories_used_":[12,112,233,262,397,400,439,973],"child_greater_":{"weight_":1.759852868336819},"child_smaller_":{"weight_":-0.004395549071828475},"column_":4,"column_input_":0,"critical_value_":0,"data_used_":"categorical_input","weight_":0.04314205215758062},"column_":4,"column_input_":0,"critical_value_":0,"data_used_":"categorical_input","weight_":0.2573332441151132},"child_smaller_":{"weight_":0.0012271390954838072},"column_":0,"column_input_":0,"critical_value_":0,"data_used_":"categorical_output","weight_":0},"update_rate_":0.1740999280372648},{"intercept_":-0.40975421785495525,"loss_":"SUM","peripheral_used_":1,"root_":{"categories_used_":[151,431,579,682,704,744,946,968,1104],"child_greater_":{"categories_used_":[45,231,303,309,356,390,421,506,522,562,566,592,602,625,645,663,682,716,744,777,787,829,884,889,934,936,946,965,968,981,1008,1016],"child_greater_":{"categories_used_":[716,965],"child_greater_":{"weight_":25.3724247121019},"child_smaller_":{"weight_":4.338498184306601},"column_":0,"column_input_":0,"critical_value_":0,"data_used_":"categorical_input","weight_":4.560147973246858},"child_smaller_":{"weight_":-0.008040365149705209},"column_":0,"column_input_":0,"critical_value_":0,"data_used_":"categorical_input","weight_":0.1673541297096221},"child_smaller_":{"weight_":0.000526964584635061},"column_":0,"column_input_":0,"critical_value_":0,"data_used_":"categorical_output","weight_":0},"update_rate_":0.045253975103239925},{"intercept_":-0.26320273709757575,"loss_":"AVG","peripheral_used_":1,"root_":{"categories_used_":[788,874],"child_greater_":{"weight_":50.80232449910864},"child_smaller_":{"categories_used_":[908],"child_greater_":{"weight_":57.81059284590997},"child_smaller_":{},"column_":0,"column_input_":0,"critical_value_":0,"data_used_":"categorical_input","weight_":0},"column_":0,"column_input_":0,"critical_value_":0,"data_used_":"categorical_output","weight_":0},"update_rate_":0.18461076349134556},{"intercept_":-0.15952216175794154,"loss_":"AVG","peripheral_used_":0,"root_":{"categories_used_":[388,486,742,829,855],"child_greater_":{"weight_":45.405948345068765},"child_smaller_":{"weight_":-0.8644164602354255},"column_":4,"column_input_":0,"critical_value_":0,"data_used_":"categorical_output","weight_":0},"update_rate_":0.16951284950479611},{"intercept_":-0.0461143435893345,"loss_":"AVG","peripheral_used_":0,"root_":{"categories_used_":[34,884],"child_greater_":{"weight_":43.17070631117765},"child_smaller_":{"categories_used_":[302,622],"child_greater_":{"weight_":66.48593171750163},"child_smaller_":{"weight_":-0.48653700771257496},"column_":0,"column_input_":0,"critical_value_":0,"data_used_":"categorical_input","weight_":-0.003918926813374327},"column_":0,"column_input_":0,"critical_value_":0,"data_used_":"categorical_output","weight_":0},"update_rate_":0.0014750636479200353},{"intercept_":-0.054612905550592075,"loss_":"AVG","peripheral_used_":1,"root_":{"categories_used_":[635,679,785,1112,1118],"child_greater_":{"weight_":42.58309393227126},"child_smaller_":{"weight_":-0.18788774873739325},"column_":0,"column_input_":0,"critical_value_":0,"data_used_":"categorical_output","weight_":0},"update_rate_":0.051348787392551054},{"intercept_":-17741.29666588056,"loss_":"AVG","peripheral_used_":1,"root_":{"categories_used_":[1230],"child_greater_":{"weight_":1412.6340203159145},"child_smaller_":{"categories_used_":[86,270,701,934,949],"child_greater_":{"categories_used_":[34,335],"child_greater_":{"weight_":5995.035208654081},"child_smaller_":{"weight_":135.49140449964284},"column_":0,"column_input_":0,"critical_value_":0,"data_used_":"categorical_output","weight_":135.13546512664638},"child_smaller_":{"categories_used_":[5,10,34,37,75,83,98,101,114,130,135,145,161,173,183,192,202,210,221,230,235,241,268,288,303,309,319,335,338,398,418,421,431,482,514,536,543,551,562,566,645,670,679,687,716,722,788,793,796,805,812,852,854,892,912,934,1050],"child_greater_":{"categories_used_":[79],"child_greater_":{},"child_smaller_":{"weight_":17784.65107997811},"column_":2,"column_input_":0,"critical_value_":0,"data_used_":"categorical_output","weight_":19167.800022870757},"child_smaller_":{"weight_":19126.818135702975},"column_":0,"column_input_":0,"critical_value_":0,"data_used_":"categorical_output","weight_":-177.45919297648925},"column_":0,"column_input_":0,"critical_value_":0,"data_used_":"categorical_input","weight_":0.02958691857542777},"column_":0,"column_input_":0,"critical_value_":0,"data_used_":"categorical_input","weight_":0},"update_rate_":0.000039566594691277},{"intercept_":-0.8335060600993199,"loss_":"AVG","peripheral_used_":1,"root_":{"categories_used_":[358,428,444,559,744,770,1057],"child_greater_":{"weight_":42.798328448969094},"child_smaller_":{"weight_":0.4887459807073955},"column_":0,"column_input_":0,"critical_value_":0,"data_used_":"categorical_output","weight_":0},"update_rate_":0.11032418586411848},{"intercept_":-0.1926057732946567,"loss_":"AVG","peripheral_used_":0,"root_":{"categories_used_":[180,561],"child_greater_":{"weight_":42.95861047784799},"child_smaller_":{"weight_":-0.3552820746234301},"column_":0,"column_input_":0,"critical_value_":0,"data_used_":"categorical_output","weight_":0},"update_rate_":0.045371904834424825}]}
+{
+    "hyperparameters_": {
+        "eta_": 0.3,
+        "gamma_": 1,
+        "lambda_": 0,
+        "max_depth_": 3,
+        "num_features_": 20,
+        "objective_": "CrossEntropyLoss",
+        "seed_": 5843,
+        "silent_": false,
+        "subsample_": 0.01,
+        "use_timestamps_": true
+    },
+    "initial_prediction_": -3.9558163893783362,
+    "peripheral_names_": [
+        "EXPD"
+    ],
+    "placeholder_": {
+        "categorical_": [],
+        "discrete_": [],
+        "join_keys_": [],
+        "join_keys_used_": [
+            "NEWID",
+            "BASKETID"
+        ],
+        "joined_tables_": [
+            {
+                "categorical_": [],
+                "discrete_": [],
+                "join_keys_": [],
+                "join_keys_used_": [],
+                "joined_tables_": [],
+                "name_": "EXPD",
+                "numerical_": [],
+                "other_join_keys_used_": [],
+                "other_time_stamps_used_": [],
+                "targets_": [],
+                "time_stamps_": [],
+                "time_stamps_used_": [],
+                "upper_time_stamps_used_": []
+            },
+            {
+                "categorical_": [],
+                "discrete_": [],
+                "join_keys_": [],
+                "join_keys_used_": [],
+                "joined_tables_": [],
+                "name_": "EXPD",
+                "numerical_": [],
+                "other_join_keys_used_": [],
+                "other_time_stamps_used_": [],
+                "targets_": [],
+                "time_stamps_": [],
+                "time_stamps_used_": [],
+                "upper_time_stamps_used_": []
+            }
+        ],
+        "name_": "EXPD",
+        "numerical_": [],
+        "other_join_keys_used_": [
+            "NEWID",
+            "BASKETID"
+        ],
+        "other_time_stamps_used_": [
+            "TIME_STAMP_SHIFTED",
+            "TIME_STAMP"
+        ],
+        "targets_": [],
+        "time_stamps_": [],
+        "time_stamps_used_": [
+            "TIME_STAMP",
+            "TIME_STAMP"
+        ],
+        "upper_time_stamps_used_": [
+            "",
+            ""
+        ]
+    },
+    "trees_": [
+        {
+            "intercept_": -0.10981486397130784,
+            "loss_": "AVG",
+            "peripheral_used_": 0,
+            "root_": {
+                "categories_used_": [
+                    509,
+                    1062
+                ],
+                "child_greater_": {
+                    "weight_": 53.347627482638416
+                },
+                "child_smaller_": {
+                    "categories_used_": [
+                        872
+                    ],
+                    "child_greater_": {
+                        "weight_": 1133.5424462017156
+                    },
+                    "child_smaller_": {
+                        "weight_": -0.661577181957808
+                    },
+                    "column_": 0,
+                    "column_input_": 0,
+                    "critical_value_": 0,
+                    "data_used_": "categorical_input",
+                    "weight_": -0.4165892102240558
+                },
+                "column_": 0,
+                "column_input_": 0,
+                "critical_value_": 0,
+                "data_used_": "categorical_output",
+                "weight_": 0
+            },
+            "update_rate_": 0.0014936678752505322
+        },
+        {
+            "intercept_": 0.06473143701713222,
+            "loss_": "AVG",
+            "peripheral_used_": 0,
+            "root_": {
+                "categories_used_": [
+                    101,
+                    390,
+                    739
+                ],
+                "child_greater_": {
+                    "weight_": 42.33654786207265
+                },
+                "child_smaller_": {
+                    "weight_": -0.8242579183003134
+                },
+                "column_": 0,
+                "column_input_": 0,
+                "critical_value_": 0,
+                "data_used_": "categorical_output",
+                "weight_": 0
+            },
+            "update_rate_": 0.179887971217215
+        },
+        {
+            "intercept_": -0.32808752938630265,
+            "loss_": "AVG",
+            "peripheral_used_": 1,
+            "root_": {
+                "categories_used_": [
+                    509,
+                    666,
+                    791,
+                    796,
+                    802,
+                    917,
+                    957,
+                    1144
+                ],
+                "child_greater_": {
+                    "weight_": 45.13629828946282
+                },
+                "child_smaller_": {
+                    "weight_": 0
+                },
+                "column_": 0,
+                "column_input_": 0,
+                "critical_value_": 0,
+                "data_used_": "categorical_output",
+                "weight_": 0
+            },
+            "update_rate_": 0.2184517069589657
+        },
+        {
+            "intercept_": -4.230168302691117,
+            "loss_": "AVG",
+            "peripheral_used_": 1,
+            "root_": {
+                "categories_used_": [
+                    579,
+                    788,
+                    793,
+                    829
+                ],
+                "child_greater_": {
+                    "weight_": 51.88063282733779
+                },
+                "child_smaller_": {
+                    "categories_used_": [
+                        494,
+                        711,
+                        756,
+                        797,
+                        1023,
+                        1028,
+                        1051,
+                        1085,
+                        1195
+                    ],
+                    "child_greater_": {
+                        "categories_used_": [
+                            177,
+                            561,
+                            1057
+                        ],
+                        "child_greater_": {
+                            "categories_used_": [
+                                796,
+                                927,
+                                1022,
+                                1084
+                            ],
+                            "child_greater_": {
+                                "weight_": 3293.616927915053
+                            },
+                            "child_smaller_": {
+                                "weight_": 2010.3024264554733
+                            },
+                            "column_": 0,
+                            "column_input_": 0,
+                            "critical_value_": 0,
+                            "data_used_": "categorical_input",
+                            "weight_": 2685.0112088472542
+                        },
+                        "child_smaller_": {
+                            "categories_used_": [
+                                227,
+                                288,
+                                345
+                            ],
+                            "child_greater_": {
+                                "weight_": 1143.4895871603012
+                            },
+                            "child_smaller_": {},
+                            "column_": 0,
+                            "column_input_": 0,
+                            "critical_value_": 0,
+                            "data_used_": "categorical_output",
+                            "weight_": 68.58802712044272
+                        },
+                        "column_": 0,
+                        "column_input_": 0,
+                        "critical_value_": 0,
+                        "data_used_": "categorical_output",
+                        "weight_": 77.06375350190616
+                    },
+                    "child_smaller_": {
+                        "categories_used_": [
+                            1,
+                            6,
+                            93,
+                            169,
+                            236
+                        ],
+                        "child_greater_": {},
+                        "child_smaller_": {
+                            "weight_": 3.4550340860711026
+                        },
+                        "column_": 1,
+                        "column_input_": 0,
+                        "critical_value_": 0,
+                        "data_used_": "categorical_input",
+                        "weight_": -3.5972026216943815
+                    },
+                    "column_": 4,
+                    "column_input_": 0,
+                    "critical_value_": 0,
+                    "data_used_": "categorical_input",
+                    "weight_": 6.8075880758807585
+                },
+                "column_": 0,
+                "column_input_": 0,
+                "critical_value_": 0,
+                "data_used_": "categorical_output",
+                "weight_": 0
+            },
+            "update_rate_": 0.025804957636188505
+        },
+        {
+            "intercept_": -0.5638090316530927,
+            "loss_": "SUM",
+            "peripheral_used_": 1,
+            "root_": {
+                "categories_used_": [
+                    582,
+                    594,
+                    668,
+                    690,
+                    829,
+                    831,
+                    1128
+                ],
+                "child_greater_": {
+                    "categories_used_": [
+                        64,
+                        100,
+                        124,
+                        135,
+                        145,
+                        153,
+                        165,
+                        179,
+                        206,
+                        217,
+                        220,
+                        223,
+                        277,
+                        300,
+                        312,
+                        318,
+                        379,
+                        394,
+                        407,
+                        423,
+                        443,
+                        450,
+                        501,
+                        555,
+                        598,
+                        624,
+                        626,
+                        667,
+                        672,
+                        686,
+                        691,
+                        781,
+                        863,
+                        868,
+                        886,
+                        888,
+                        918,
+                        1020,
+                        1039,
+                        1058,
+                        1063,
+                        1068,
+                        1119
+                    ],
+                    "child_greater_": {
+                        "categories_used_": [
+                            162,
+                            604
+                        ],
+                        "child_greater_": {
+                            "weight_": 13.507887033774235
+                        },
+                        "child_smaller_": {
+                            "categories_used_": [
+                                312
+                            ],
+                            "child_greater_": {
+                                "weight_": 8.701043913162279
+                            },
+                            "child_smaller_": {
+                                "weight_": 2.381448721743743
+                            },
+                            "column_": 0,
+                            "column_input_": 0,
+                            "critical_value_": 0,
+                            "data_used_": "categorical_input",
+                            "weight_": 2.5358236574470037
+                        },
+                        "column_": 2,
+                        "column_input_": 0,
+                        "critical_value_": 0,
+                        "data_used_": "categorical_input",
+                        "weight_": 2.7017138809238515
+                    },
+                    "child_smaller_": {
+                        "weight_": -0.0023952668713355914
+                    },
+                    "column_": 5,
+                    "column_input_": 0,
+                    "critical_value_": 0,
+                    "data_used_": "categorical_input",
+                    "weight_": 0.21733190056662896
+                },
+                "child_smaller_": {
+                    "weight_": 0.001911644561400277
+                },
+                "column_": 0,
+                "column_input_": 0,
+                "critical_value_": 0,
+                "data_used_": "categorical_output",
+                "weight_": 0
+            },
+            "update_rate_": 0.18914880568229578
+        },
+        {
+            "intercept_": 0.42360504435394675,
+            "loss_": "AVG",
+            "peripheral_used_": 1,
+            "root_": {
+                "categories_used_": [
+                    436,
+                    684,
+                    892,
+                    1004
+                ],
+                "child_greater_": {
+                    "weight_": 43.8707431907276
+                },
+                "child_smaller_": {
+                    "weight_": -0.7051588657328323
+                },
+                "column_": 0,
+                "column_input_": 0,
+                "critical_value_": 0,
+                "data_used_": "categorical_output",
+                "weight_": 0
+            },
+            "update_rate_": 0.1576888884289632
+        },
+        {
+            "intercept_": -0.34053014532391923,
+            "loss_": "AVG",
+            "peripheral_used_": 0,
+            "root_": {
+                "categories_used_": [
+                    192,
+                    221,
+                    451
+                ],
+                "child_greater_": {
+                    "weight_": 44.30601661136094
+                },
+                "child_smaller_": {
+                    "categories_used_": [
+                        747
+                    ],
+                    "child_greater_": {
+                        "weight_": 959.406917602346
+                    },
+                    "child_smaller_": {
+                        "weight_": -0.4502174094401616
+                    },
+                    "column_": 0,
+                    "column_input_": 0,
+                    "critical_value_": 0,
+                    "data_used_": "categorical_input",
+                    "weight_": -0.20610273001544901
+                },
+                "column_": 0,
+                "column_input_": 0,
+                "critical_value_": 0,
+                "data_used_": "categorical_output",
+                "weight_": 0
+            },
+            "update_rate_": 0.04934829600357754
+        },
+        {
+            "intercept_": 0.1340779846083969,
+            "loss_": "AVG",
+            "peripheral_used_": 1,
+            "root_": {
+                "categories_used_": [
+                    469,
+                    581,
+                    609,
+                    663,
+                    722
+                ],
+                "child_greater_": {
+                    "weight_": 56.65810232138833
+                },
+                "child_smaller_": {
+                    "weight_": -0.25669162471725876
+                },
+                "column_": 0,
+                "column_input_": 0,
+                "critical_value_": 0,
+                "data_used_": "categorical_output",
+                "weight_": 0
+            },
+            "update_rate_": 0.14930689449123494
+        },
+        {
+            "intercept_": 45.46041089541844,
+            "loss_": "AVG",
+            "peripheral_used_": 1,
+            "root_": {
+                "categories_used_": [
+                    318,
+                    616,
+                    925,
+                    969
+                ],
+                "child_greater_": {
+                    "weight_": 0
+                },
+                "child_smaller_": {
+                    "weight_": -45.64183286074379
+                },
+                "column_": 5,
+                "column_input_": 0,
+                "critical_value_": 0,
+                "data_used_": "categorical_output",
+                "weight_": 0
+            },
+            "update_rate_": 0.03048324997158204
+        },
+        {
+            "intercept_": -0.7225260409974522,
+            "loss_": "SUM",
+            "peripheral_used_": 1,
+            "root_": {
+                "categories_used_": [
+                    206,
+                    325,
+                    413,
+                    430,
+                    648,
+                    969
+                ],
+                "child_greater_": {
+                    "categories_used_": [
+                        13,
+                        55,
+                        60,
+                        98,
+                        135,
+                        161,
+                        168,
+                        177,
+                        186,
+                        197,
+                        213,
+                        227,
+                        230,
+                        231,
+                        232,
+                        246,
+                        263,
+                        275,
+                        283,
+                        288,
+                        309,
+                        314,
+                        328,
+                        338,
+                        344,
+                        353,
+                        356,
+                        390,
+                        404,
+                        453,
+                        475,
+                        482,
+                        499,
+                        509,
+                        522,
+                        543,
+                        545,
+                        547,
+                        581,
+                        582,
+                        594,
+                        603,
+                        625,
+                        639,
+                        656,
+                        666,
+                        668,
+                        698,
+                        722,
+                        729,
+                        768,
+                        785,
+                        821,
+                        838,
+                        843,
+                        847,
+                        848,
+                        854,
+                        862,
+                        929,
+                        939,
+                        941,
+                        943,
+                        968,
+                        1099
+                    ],
+                    "child_greater_": {
+                        "weight_": 0.937696276485535
+                    },
+                    "child_smaller_": {
+                        "weight_": -0.024237487814278084
+                    },
+                    "column_": 0,
+                    "column_input_": 0,
+                    "critical_value_": 0,
+                    "data_used_": "categorical_input",
+                    "weight_": 0.1802439949364335
+                },
+                "child_smaller_": {
+                    "categories_used_": [
+                        1030
+                    ],
+                    "child_greater_": {
+                        "weight_": 28.642797757632557
+                    },
+                    "child_smaller_": {
+                        "categories_used_": [
+                            278
+                        ],
+                        "child_greater_": {
+                            "weight_": 0.32954255513022573
+                        },
+                        "child_smaller_": {
+                            "weight_": 0.0047337014553244395
+                        },
+                        "column_": 0,
+                        "column_input_": 0,
+                        "critical_value_": 0,
+                        "data_used_": "categorical_output",
+                        "weight_": 0.005047418795211859
+                    },
+                    "column_": 0,
+                    "column_input_": 0,
+                    "critical_value_": 0,
+                    "data_used_": "categorical_input",
+                    "weight_": 0.004997910903026326
+                },
+                "column_": 5,
+                "column_input_": 0,
+                "critical_value_": 0,
+                "data_used_": "categorical_output",
+                "weight_": 0
+            },
+            "update_rate_": 0.06126586419635806
+        },
+        {
+            "intercept_": -0.4412612199989605,
+            "loss_": "AVG",
+            "peripheral_used_": 1,
+            "root_": {
+                "categories_used_": [
+                    349,
+                    575,
+                    578,
+                    691,
+                    728,
+                    974,
+                    1061,
+                    1129
+                ],
+                "child_greater_": {
+                    "weight_": 42.461866666666666
+                },
+                "child_smaller_": {
+                    "weight_": 0.29353595542841054
+                },
+                "column_": 5,
+                "column_input_": 0,
+                "critical_value_": 0,
+                "data_used_": "categorical_output",
+                "weight_": 0
+            },
+            "update_rate_": 0.07198422862890416
+        },
+        {
+            "intercept_": -0.22863512796093793,
+            "loss_": "SUM",
+            "peripheral_used_": 1,
+            "root_": {
+                "categories_used_": [
+                    579,
+                    592,
+                    630,
+                    752,
+                    793,
+                    851,
+                    857,
+                    1080
+                ],
+                "child_greater_": {
+                    "categories_used_": [
+                        9,
+                        35,
+                        53,
+                        63,
+                        123,
+                        133,
+                        152,
+                        158,
+                        187,
+                        198,
+                        208,
+                        222,
+                        299,
+                        304,
+                        320,
+                        334,
+                        339,
+                        382,
+                        406,
+                        467,
+                        515,
+                        540,
+                        623,
+                        657,
+                        696,
+                        706,
+                        717,
+                        783,
+                        822,
+                        827,
+                        893,
+                        899,
+                        906,
+                        930,
+                        947,
+                        1006
+                    ],
+                    "child_greater_": {
+                        "categories_used_": [
+                            94
+                        ],
+                        "child_greater_": {
+                            "weight_": 9.038271079907037
+                        },
+                        "child_smaller_": {
+                            "weight_": 1.9208011335484194
+                        },
+                        "column_": 2,
+                        "column_input_": 0,
+                        "critical_value_": 0,
+                        "data_used_": "categorical_input",
+                        "weight_": 2.2048592164354117
+                    },
+                    "child_smaller_": {
+                        "categories_used_": [
+                            12,
+                            112,
+                            233,
+                            262,
+                            397,
+                            400,
+                            439,
+                            973
+                        ],
+                        "child_greater_": {
+                            "weight_": 1.759852868336819
+                        },
+                        "child_smaller_": {
+                            "weight_": -0.004395549071828475
+                        },
+                        "column_": 4,
+                        "column_input_": 0,
+                        "critical_value_": 0,
+                        "data_used_": "categorical_input",
+                        "weight_": 0.04314205215758062
+                    },
+                    "column_": 4,
+                    "column_input_": 0,
+                    "critical_value_": 0,
+                    "data_used_": "categorical_input",
+                    "weight_": 0.2573332441151132
+                },
+                "child_smaller_": {
+                    "weight_": 0.0012271390954838072
+                },
+                "column_": 0,
+                "column_input_": 0,
+                "critical_value_": 0,
+                "data_used_": "categorical_output",
+                "weight_": 0
+            },
+            "update_rate_": 0.1740999280372648
+        },
+        {
+            "intercept_": -0.40975421785495525,
+            "loss_": "SUM",
+            "peripheral_used_": 1,
+            "root_": {
+                "categories_used_": [
+                    151,
+                    431,
+                    579,
+                    682,
+                    704,
+                    744,
+                    946,
+                    968,
+                    1104
+                ],
+                "child_greater_": {
+                    "categories_used_": [
+                        45,
+                        231,
+                        303,
+                        309,
+                        356,
+                        390,
+                        421,
+                        506,
+                        522,
+                        562,
+                        566,
+                        592,
+                        602,
+                        625,
+                        645,
+                        663,
+                        682,
+                        716,
+                        744,
+                        777,
+                        787,
+                        829,
+                        884,
+                        889,
+                        934,
+                        936,
+                        946,
+                        965,
+                        968,
+                        981,
+                        1008,
+                        1016
+                    ],
+                    "child_greater_": {
+                        "categories_used_": [
+                            716,
+                            965
+                        ],
+                        "child_greater_": {
+                            "weight_": 25.3724247121019
+                        },
+                        "child_smaller_": {
+                            "weight_": 4.338498184306601
+                        },
+                        "column_": 0,
+                        "column_input_": 0,
+                        "critical_value_": 0,
+                        "data_used_": "categorical_input",
+                        "weight_": 4.560147973246858
+                    },
+                    "child_smaller_": {
+                        "weight_": -0.008040365149705209
+                    },
+                    "column_": 0,
+                    "column_input_": 0,
+                    "critical_value_": 0,
+                    "data_used_": "categorical_input",
+                    "weight_": 0.1673541297096221
+                },
+                "child_smaller_": {
+                    "weight_": 0.000526964584635061
+                },
+                "column_": 0,
+                "column_input_": 0,
+                "critical_value_": 0,
+                "data_used_": "categorical_output",
+                "weight_": 0
+            },
+            "update_rate_": 0.045253975103239925
+        },
+        {
+            "intercept_": -0.26320273709757575,
+            "loss_": "AVG",
+            "peripheral_used_": 1,
+            "root_": {
+                "categories_used_": [
+                    788,
+                    874
+                ],
+                "child_greater_": {
+                    "weight_": 50.80232449910864
+                },
+                "child_smaller_": {
+                    "categories_used_": [
+                        908
+                    ],
+                    "child_greater_": {
+                        "weight_": 57.81059284590997
+                    },
+                    "child_smaller_": {},
+                    "column_": 0,
+                    "column_input_": 0,
+                    "critical_value_": 0,
+                    "data_used_": "categorical_input",
+                    "weight_": 0
+                },
+                "column_": 0,
+                "column_input_": 0,
+                "critical_value_": 0,
+                "data_used_": "categorical_output",
+                "weight_": 0
+            },
+            "update_rate_": 0.18461076349134556
+        },
+        {
+            "intercept_": -0.15952216175794154,
+            "loss_": "AVG",
+            "peripheral_used_": 0,
+            "root_": {
+                "categories_used_": [
+                    388,
+                    486,
+                    742,
+                    829,
+                    855
+                ],
+                "child_greater_": {
+                    "weight_": 45.405948345068765
+                },
+                "child_smaller_": {
+                    "weight_": -0.8644164602354255
+                },
+                "column_": 4,
+                "column_input_": 0,
+                "critical_value_": 0,
+                "data_used_": "categorical_output",
+                "weight_": 0
+            },
+            "update_rate_": 0.16951284950479611
+        },
+        {
+            "intercept_": -0.0461143435893345,
+            "loss_": "AVG",
+            "peripheral_used_": 0,
+            "root_": {
+                "categories_used_": [
+                    34,
+                    884
+                ],
+                "child_greater_": {
+                    "weight_": 43.17070631117765
+                },
+                "child_smaller_": {
+                    "categories_used_": [
+                        302,
+                        622
+                    ],
+                    "child_greater_": {
+                        "weight_": 66.48593171750163
+                    },
+                    "child_smaller_": {
+                        "weight_": -0.48653700771257496
+                    },
+                    "column_": 0,
+                    "column_input_": 0,
+                    "critical_value_": 0,
+                    "data_used_": "categorical_input",
+                    "weight_": -0.003918926813374327
+                },
+                "column_": 0,
+                "column_input_": 0,
+                "critical_value_": 0,
+                "data_used_": "categorical_output",
+                "weight_": 0
+            },
+            "update_rate_": 0.0014750636479200353
+        },
+        {
+            "intercept_": -0.054612905550592075,
+            "loss_": "AVG",
+            "peripheral_used_": 1,
+            "root_": {
+                "categories_used_": [
+                    635,
+                    679,
+                    785,
+                    1112,
+                    1118
+                ],
+                "child_greater_": {
+                    "weight_": 42.58309393227126
+                },
+                "child_smaller_": {
+                    "weight_": -0.18788774873739325
+                },
+                "column_": 0,
+                "column_input_": 0,
+                "critical_value_": 0,
+                "data_used_": "categorical_output",
+                "weight_": 0
+            },
+            "update_rate_": 0.051348787392551054
+        },
+        {
+            "intercept_": -17741.29666588056,
+            "loss_": "AVG",
+            "peripheral_used_": 1,
+            "root_": {
+                "categories_used_": [
+                    1230
+                ],
+                "child_greater_": {
+                    "weight_": 1412.6340203159145
+                },
+                "child_smaller_": {
+                    "categories_used_": [
+                        86,
+                        270,
+                        701,
+                        934,
+                        949
+                    ],
+                    "child_greater_": {
+                        "categories_used_": [
+                            34,
+                            335
+                        ],
+                        "child_greater_": {
+                            "weight_": 5995.035208654081
+                        },
+                        "child_smaller_": {
+                            "weight_": 135.49140449964284
+                        },
+                        "column_": 0,
+                        "column_input_": 0,
+                        "critical_value_": 0,
+                        "data_used_": "categorical_output",
+                        "weight_": 135.13546512664638
+                    },
+                    "child_smaller_": {
+                        "categories_used_": [
+                            5,
+                            10,
+                            34,
+                            37,
+                            75,
+                            83,
+                            98,
+                            101,
+                            114,
+                            130,
+                            135,
+                            145,
+                            161,
+                            173,
+                            183,
+                            192,
+                            202,
+                            210,
+                            221,
+                            230,
+                            235,
+                            241,
+                            268,
+                            288,
+                            303,
+                            309,
+                            319,
+                            335,
+                            338,
+                            398,
+                            418,
+                            421,
+                            431,
+                            482,
+                            514,
+                            536,
+                            543,
+                            551,
+                            562,
+                            566,
+                            645,
+                            670,
+                            679,
+                            687,
+                            716,
+                            722,
+                            788,
+                            793,
+                            796,
+                            805,
+                            812,
+                            852,
+                            854,
+                            892,
+                            912,
+                            934,
+                            1050
+                        ],
+                        "child_greater_": {
+                            "categories_used_": [
+                                79
+                            ],
+                            "child_greater_": {},
+                            "child_smaller_": {
+                                "weight_": 17784.65107997811
+                            },
+                            "column_": 2,
+                            "column_input_": 0,
+                            "critical_value_": 0,
+                            "data_used_": "categorical_output",
+                            "weight_": 19167.800022870757
+                        },
+                        "child_smaller_": {
+                            "weight_": 19126.818135702975
+                        },
+                        "column_": 0,
+                        "column_input_": 0,
+                        "critical_value_": 0,
+                        "data_used_": "categorical_output",
+                        "weight_": -177.45919297648925
+                    },
+                    "column_": 0,
+                    "column_input_": 0,
+                    "critical_value_": 0,
+                    "data_used_": "categorical_input",
+                    "weight_": 0.02958691857542777
+                },
+                "column_": 0,
+                "column_input_": 0,
+                "critical_value_": 0,
+                "data_used_": "categorical_input",
+                "weight_": 0
+            },
+            "update_rate_": 0.000039566594691277
+        },
+        {
+            "intercept_": -0.8335060600993199,
+            "loss_": "AVG",
+            "peripheral_used_": 1,
+            "root_": {
+                "categories_used_": [
+                    358,
+                    428,
+                    444,
+                    559,
+                    744,
+                    770,
+                    1057
+                ],
+                "child_greater_": {
+                    "weight_": 42.798328448969094
+                },
+                "child_smaller_": {
+                    "weight_": 0.4887459807073955
+                },
+                "column_": 0,
+                "column_input_": 0,
+                "critical_value_": 0,
+                "data_used_": "categorical_output",
+                "weight_": 0
+            },
+            "update_rate_": 0.11032418586411848
+        },
+        {
+            "intercept_": -0.1926057732946567,
+            "loss_": "AVG",
+            "peripheral_used_": 0,
+            "root_": {
+                "categories_used_": [
+                    180,
+                    561
+                ],
+                "child_greater_": {
+                    "weight_": 42.95861047784799
+                },
+                "child_smaller_": {
+                    "weight_": -0.3552820746234301
+                },
+                "column_": 0,
+                "column_input_": 0,
+                "critical_value_": 0,
+                "data_used_": "categorical_output",
+                "weight_": 0
+            },
+            "update_rate_": 0.045371904834424825
+        }
+    ]
+}

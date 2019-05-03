@@ -22,6 +22,8 @@
 
 #include "engine/communication/communication.hpp"
 
+#include "engine/predictors/predictors.hpp"
+
 // ----------------------------------------------------
 // Module files
 
