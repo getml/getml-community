@@ -50,6 +50,8 @@
 #include "engine/handlers/DataFrameManager.hpp"
 #include "engine/handlers/ModelManager.hpp"
 
+#include "engine/handlers/RelboostModelManager.hpp"
+
 #include "engine/handlers/ProjectManager.hpp"
 
 // ----------------------------------------------------

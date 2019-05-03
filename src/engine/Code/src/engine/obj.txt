@@ -5,7 +5,6 @@ set(
     ${ENGINE_SOURCE_DIRECTORY}/FileHandler.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Encoding.cpp
     ${ENGINE_SOURCE_DIRECTORY}/JSON.cpp
-    ${ENGINE_SOURCE_DIRECTORY}/ModelManager.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Options.cpp
     ${ENGINE_SOURCE_DIRECTORY}/ProjectManager.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Receiver.cpp

@@ -29,6 +29,8 @@
 
 #include "engine/models/Model.hpp"
 
+#include "engine/models/RelboostModel.hpp"
+
 // ----------------------------------------------------
 
 #endif  // ENGINE_MODELS_MODELS_HPP_

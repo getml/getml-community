@@ -9,6 +9,14 @@ namespace handlers
 
 class ProjectManager
 {
+    // ------------------------------------------------------------------------
+
+   public:
+
+    typedef RelboostModelManager::ModelMapType RelboostModelMapType;
+
+    // ------------------------------------------------------------------------
+
    public:
     ProjectManager(
         const std::shared_ptr<containers::Encoding>& _categories,
@@ -18,7 +26,7 @@ class ProjectManager
         const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
         /*const std::shared_ptr<engine::licensing::LicenseChecker>&
             _license_checker,*/
-        const std::shared_ptr<ModelManager::RelboostModelMapType>& _relboost_models,
+        const std::shared_ptr<RelboostModelMapType>& _relboost_models,
         // const std::shared_ptr<const logging::Monitor>& _monitor,
         const config::Options& _options,
         const std::shared_ptr<multithreading::ReadWriteLock>& _read_write_lock )
@@ -135,13 +143,10 @@ class ProjectManager
     }*/
 
     /// Trivial (private) accessor
-    ModelManager::RelboostModelMapType& relboost_models()
-    {
-        return *relboost_models_;
-    }
+    RelboostModelMapType& relboost_models() { return *relboost_models_; }
 
     /// Trivial (private) accessor
-    const ModelManager::RelboostModelMapType& relboost_models() const
+    const RelboostModelMapType& relboost_models() const
     {
         return *relboost_models_;
     }
@@ -204,7 +209,7 @@ class ProjectManager
     const std::shared_ptr<multithreading::ReadWriteLock>& read_write_lock_;
 
     /// The relboost models currently held in memory
-    const std::shared_ptr<ModelManager::RelboostModelMapType> relboost_models_;
+    const std::shared_ptr<RelboostModelMapType> relboost_models_;
 
     // ------------------------------------------------------------------------
 };

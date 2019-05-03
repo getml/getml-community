@@ -44,8 +44,8 @@ void ProjectManager::add_relboost_model(
     auto placeholder = std::make_shared<relboost::ensemble::Placeholder>(
         JSON::get_object( _cmd, "population_" ) );
 
-    auto model = ModelManager::RelboostModelType(
-        relboost::ensemble::DecisionTreeEnsemble(
+    auto model =
+        models::RelboostModel( relboost::ensemble::DecisionTreeEnsemble(
             categories_->vector(), hyperparameters, peripheral, placeholder ) );
 
     set_relboost_model( _name, model );
@@ -228,8 +228,8 @@ void ProjectManager::load_relboost_model(
     const auto obj =
         load_json_obj( project_directory_ + "models/" + _name + "/Model.json" );
 
-    auto model = ModelManager::RelboostModelType(
-        relboost::ensemble::DecisionTreeEnsemble(
+    auto model =
+        models::RelboostModel( relboost::ensemble::DecisionTreeEnsemble(
             categories_->vector(), obj ) );
 
     set_relboost_model( _name, model );
