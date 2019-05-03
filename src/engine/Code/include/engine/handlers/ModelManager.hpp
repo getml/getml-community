@@ -12,10 +12,11 @@ class ModelManager
     // ------------------------------------------------------------------------
 
    public:
-    typedef std::map<
-        std::string,
-        std::shared_ptr<relboost::ensemble::DecisionTreeEnsemble>>
-        ModelMapType;
+    typedef models::Model<relboost::ensemble::DecisionTreeEnsemble>
+        RelboostModelType;
+
+    typedef std::map<std::string, std::shared_ptr<RelboostModelType>>
+        RelboostModelMapType;
 
     // ------------------------------------------------------------------------
 
@@ -28,7 +29,7 @@ class ModelManager
         /*const std::shared_ptr<engine::licensing::LicenseChecker>&
             _license_checker,*/
         const std::shared_ptr<const logging::Logger>& _logger,
-        const std::shared_ptr<ModelMapType> _models,
+        const std::shared_ptr<RelboostModelMapType>& _relboost_models,
         // const std::shared_ptr<const logging::Monitor>& _monitor,
         const std::shared_ptr<multithreading::ReadWriteLock>& _read_write_lock )
         : categories_( _categories ),
@@ -36,7 +37,7 @@ class ModelManager
           join_keys_encoding_( _join_keys_encoding ),
           // license_checker_( _license_checker ),
           logger_( _logger ),
-          models_( _models ),
+          relboost_models_( _relboost_models ),
           // monitor_( _monitor ),
           read_write_lock_( _read_write_lock )
 
@@ -113,39 +114,51 @@ class ModelManager
     }
 
     /// Returns a deep copy of a model.
-    relboost::ensemble::DecisionTreeEnsemble get_model(
+    models::Model<relboost::ensemble::DecisionTreeEnsemble> get_relboost_model(
         const std::string& _name )
     {
         multithreading::ReadLock read_lock( read_write_lock_ );
-        auto ptr = utils::Getter::get( _name, models_.get() );
+        auto ptr = utils::Getter::get( _name, &relboost_models() );
         return *ptr;
     }
 
-    /// Trivial accessor
+    /// Trivial (private) accessor
     const logging::Logger& logger() { return *logger_; }
 
+    /// Trivial (private) accessor
+    ModelManager::RelboostModelMapType& relboost_models()
+    {
+        return *relboost_models_;
+    }
+
+    /// Trivial (private) accessor
+    const ModelManager::RelboostModelMapType& relboost_models() const
+    {
+        return *relboost_models_;
+    }
+
     /// Sets a model.
-    void set_model(
+    void set_relboost_model(
         const std::string& _name,
-        const relboost::ensemble::DecisionTreeEnsemble& _model )
+        const models::Model<relboost::ensemble::DecisionTreeEnsemble>& _model )
     {
         multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
 
-        auto it = models_->find( _name );
+        auto it = relboost_models().find( _name );
 
         weak_write_lock.upgrade();
 
-        if ( it == models_->end() )
+        if ( it == relboost_models().end() )
             {
-                ( *models_ )[_name] =
-                    std::make_shared<relboost::ensemble::DecisionTreeEnsemble>(
-                        _model );
+                relboost_models()[_name] = std::make_shared<
+                    models::Model<relboost::ensemble::DecisionTreeEnsemble>>(
+                    _model );
             }
         else
             {
-                it->second =
-                    std::make_shared<relboost::ensemble::DecisionTreeEnsemble>(
-                        _model );
+                it->second = std::make_shared<
+                    models::Model<relboost::ensemble::DecisionTreeEnsemble>>(
+                    _model );
             }
     }
 
@@ -169,8 +182,8 @@ class ModelManager
     /// For logging
     const std::shared_ptr<const logging::Logger> logger_;
 
-    /// The models currently held in memory
-    const std::shared_ptr<ModelManager::ModelMapType> models_;
+    /// The relboost models currently held in memory
+    const std::shared_ptr<RelboostModelMapType> relboost_models_;
 
     /// For communication with the monitor
     // const std::shared_ptr<const logging::Monitor> monitor_;

@@ -38,10 +38,12 @@
 
 #include "engine/communication/communication.hpp"
 
+#include "engine/models/models.hpp"
+
 // ----------------------------------------------------
 // Module files
 
-#include "engine/handlers/Models.hpp"
+// #include "engine/handlers/Models.hpp"
 
 #include "engine/handlers/FileHandler.hpp"
 

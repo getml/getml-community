@@ -44,10 +44,11 @@ void ProjectManager::add_relboost_model(
     auto placeholder = std::make_shared<relboost::ensemble::Placeholder>(
         JSON::get_object( _cmd, "population_" ) );
 
-    auto model = relboost::ensemble::DecisionTreeEnsemble(
-        categories_->vector(), hyperparameters, peripheral, placeholder );
+    auto model = ModelManager::RelboostModelType(
+        relboost::ensemble::DecisionTreeEnsemble(
+            categories_->vector(), hyperparameters, peripheral, placeholder ) );
 
-    set_model( _name, model );
+    set_relboost_model( _name, model );
 
     // monitor_->send( "postmodel", model.to_monitor( _name ) );
 
@@ -227,10 +228,11 @@ void ProjectManager::load_relboost_model(
     const auto obj =
         load_json_obj( project_directory_ + "models/" + _name + "/Model.json" );
 
-    auto model =
-        relboost::ensemble::DecisionTreeEnsemble( categories_->vector(), obj );
+    auto model = ModelManager::RelboostModelType(
+        relboost::ensemble::DecisionTreeEnsemble(
+            categories_->vector(), obj ) );
 
-    set_model( _name, model );
+    set_relboost_model( _name, model );
 
     // monitor_->send( "postmodel", model.to_monitor( _name ) );
 
@@ -287,7 +289,7 @@ void ProjectManager::save_relboost_model(
             throw std::invalid_argument( "You have not set a project!" );
         }
 
-    auto model = get_model( _name );
+    auto model = get_relboost_model( _name );
 
     const auto path = project_directory_ + "models/" + _name + "/";
 

@@ -18,7 +18,7 @@ class ProjectManager
         const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
         /*const std::shared_ptr<engine::licensing::LicenseChecker>&
             _license_checker,*/
-        const std::shared_ptr<ModelManager::ModelMapType>& _relboost_models,
+        const std::shared_ptr<ModelManager::RelboostModelMapType>& _relboost_models,
         // const std::shared_ptr<const logging::Monitor>& _monitor,
         const config::Options& _options,
         const std::shared_ptr<multithreading::ReadWriteLock>& _read_write_lock )
@@ -117,11 +117,11 @@ class ProjectManager
     }
 
     /// Returns a deep copy of a model.
-    relboost::ensemble::DecisionTreeEnsemble get_model(
+    models::Model<relboost::ensemble::DecisionTreeEnsemble> get_relboost_model(
         const std::string& _name )
     {
         multithreading::ReadLock read_lock( read_write_lock_ );
-        auto ptr = utils::Getter::get( _name, relboost_models_.get() );
+        auto ptr = utils::Getter::get( _name, &relboost_models() );
         return *ptr;
     }
 
@@ -134,31 +134,40 @@ class ProjectManager
         return *license_checker_;
     }*/
 
-    /// Trivial accessor
-    ModelManager::ModelMapType& relboost_models() { return *relboost_models_; }
+    /// Trivial (private) accessor
+    ModelManager::RelboostModelMapType& relboost_models()
+    {
+        return *relboost_models_;
+    }
+
+    /// Trivial (private) accessor
+    const ModelManager::RelboostModelMapType& relboost_models() const
+    {
+        return *relboost_models_;
+    }
 
     /// Sets a model.
-    void set_model(
+    void set_relboost_model(
         const std::string& _name,
-        const relboost::ensemble::DecisionTreeEnsemble& _model )
+        const models::Model<relboost::ensemble::DecisionTreeEnsemble>& _model )
     {
         multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
 
-        auto it = relboost_models_->find( _name );
+        auto it = relboost_models().find( _name );
 
         weak_write_lock.upgrade();
 
-        if ( it == relboost_models_->end() )
+        if ( it == relboost_models().end() )
             {
-                ( *relboost_models_ )[_name] =
-                    std::make_shared<relboost::ensemble::DecisionTreeEnsemble>(
-                        _model );
+                relboost_models()[_name] = std::make_shared<
+                    models::Model<relboost::ensemble::DecisionTreeEnsemble>>(
+                    _model );
             }
         else
             {
-                it->second =
-                    std::make_shared<relboost::ensemble::DecisionTreeEnsemble>(
-                        _model );
+                it->second = std::make_shared<
+                    models::Model<relboost::ensemble::DecisionTreeEnsemble>>(
+                    _model );
             }
     }
 
@@ -195,7 +204,7 @@ class ProjectManager
     const std::shared_ptr<multithreading::ReadWriteLock>& read_write_lock_;
 
     /// The relboost models currently held in memory
-    const std::shared_ptr<ModelManager::ModelMapType> relboost_models_;
+    const std::shared_ptr<ModelManager::RelboostModelMapType> relboost_models_;
 
     // ------------------------------------------------------------------------
 };

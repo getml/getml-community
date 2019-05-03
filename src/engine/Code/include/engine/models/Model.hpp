@@ -1,54 +1,98 @@
-#ifndef ENGINE_HANDLERS_MODELS_HPP_
-#define ENGINE_HANDLERS_MODELS_HPP_
+#ifndef ENGINE_MODELS_MODEL_HPP_
+#define ENGINE_MODELS_MODEL_HPP_
 
 // ----------------------------------------------------------------------------
 
 namespace engine
 {
-namespace handlers
+namespace models
 {
 // ----------------------------------------------------------------------------
 
-class Models
+template <typename FeatureEngineererType>
+class Model : public ModelBase
 {
+    // --------------------------------------------------------
+
+   public:
+    Model( const FeatureEngineererType& _feature_engineerer )
+        : feature_engineerer_( _feature_engineerer )
+    {
+    }
+
+    ~Model() = default;
+
+    // --------------------------------------------------------
+
    public:
     /// Fits the model.
-    template <typename ModelType>
-    static void fit(
+    void fit(
         const Poco::JSON::Object& _cmd,
         const std::shared_ptr<const logging::Logger>& _logger,
         const std::map<std::string, containers::DataFrame>& _data_frames,
-        ModelType* _model,
-        Poco::Net::StreamSocket* _socket );
+        Poco::Net::StreamSocket* _socket ) final;
 
     /// Score predictions.
-    template <typename ModelType>
-    static Poco::JSON::Object score(
+    Poco::JSON::Object score(
         const Poco::JSON::Object& _cmd,
-        ModelType* _model,
-        Poco::Net::StreamSocket* _socket );
+        Poco::Net::StreamSocket* _socket ) final;
 
     /// Generate features.
-    template <typename ModelType>
-    static containers::Matrix<ENGINE_FLOAT> transform(
+    containers::Matrix<ENGINE_FLOAT> transform(
         const Poco::JSON::Object& _cmd,
         const std::shared_ptr<const logging::Logger>& _logger,
         const std::map<std::string, containers::DataFrame>& _data_frames,
-        const ModelType& _model,
-        Poco::Net::StreamSocket* _socket );
+        Poco::Net::StreamSocket* _socket ) final;
+
+    // --------------------------------------------------------
+
+   public:
+    /// Save the model.
+    void save( const std::string& _fname ) const final
+    {
+        return feature_engineerer().save( _fname );
+    }
+
+    /// Return model as JSON Object.
+    Poco::JSON::Object to_json_obj() const final
+    {
+        return feature_engineerer().to_json_obj();
+    }
+
+    /// Return feature engineerer as SQL code.
+    std::string to_sql() const final { return feature_engineerer().to_sql(); }
+
+    // --------------------------------------------------------
 
    private:
-    /// Extract a data frame of type ModelType::DataFrameType from an
-    /// engine::containers::DataFrame.
+    /// Extract a data frame of type FeatureEngineererType::DataFrameType from
+    /// an engine::containers::DataFrame.
     template <typename DataFrameType>
     static DataFrameType extract_df(
         const std::string& _name,
         const std::map<std::string, containers::DataFrame>& _data_frames );
+
+    /// Trivial (private getter)
+    FeatureEngineererType& feature_engineerer() { return feature_engineerer_; }
+
+    /// Trivial (private getter)
+    const FeatureEngineererType& feature_engineerer() const
+    {
+        return feature_engineerer_;
+    }
+
+    // --------------------------------------------------------
+
+   private:
+    /// The underlying feature engineering algorithm.
+    FeatureEngineererType feature_engineerer_;
+
+    // --------------------------------------------------------
 };
 
 // ----------------------------------------------------------------------------
 
-}  // namespace handlers
+}  // namespace models
 }  // namespace engine
 
 // ----------------------------------------------------------------------------
@@ -56,12 +100,13 @@ class Models
 
 namespace engine
 {
-namespace handlers
+namespace models
 {
 // ----------------------------------------------------------------------------
 
+template <typename FeatureEngineererType>
 template <typename DataFrameType>
-DataFrameType Models::extract_df(
+DataFrameType Model<FeatureEngineererType>::extract_df(
     const std::string& _name,
     const std::map<std::string, containers::DataFrame>& _data_frames )
 {
@@ -167,12 +212,11 @@ DataFrameType Models::extract_df(
 
 // ----------------------------------------------------------------------------
 
-template <typename ModelType>
-void Models::fit(
+template <typename FeatureEngineererType>
+void Model<FeatureEngineererType>::fit(
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<const logging::Logger>& _logger,
     const std::map<std::string, containers::DataFrame>& _data_frames,
-    ModelType* _model,
     Poco::Net::StreamSocket* _socket )
 {
     // ------------------------------------------------
@@ -181,12 +225,14 @@ void Models::fit(
     auto peripheral_names = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "peripheral_names_" ) );
 
-    std::vector<typename ModelType::DataFrameType> peripheral_tables = {};
+    std::vector<typename FeatureEngineererType::DataFrameType>
+        peripheral_tables = {};
 
     for ( auto& name : peripheral_names )
         {
-            const auto df = extract_df<typename ModelType::DataFrameType>(
-                name, _data_frames );
+            const auto df =
+                extract_df<typename FeatureEngineererType::DataFrameType>(
+                    name, _data_frames );
 
             peripheral_tables.push_back( df );
         }
@@ -197,27 +243,30 @@ void Models::fit(
     const auto population_name =
         JSON::get_value<std::string>( _cmd, "population_name_" );
 
-    const auto population_table = extract_df<typename ModelType::DataFrameType>(
-        population_name, _data_frames );
+    const auto population_table =
+        extract_df<typename FeatureEngineererType::DataFrameType>(
+            population_name, _data_frames );
 
     // ------------------------------------------------
     // Do the actual fitting.
 
-    _model->init( population_table, peripheral_tables );
+    feature_engineerer().init( population_table, peripheral_tables );
 
-    for ( size_t i = 0; i < _model->hyperparameters().num_features_; ++i )
+    for ( size_t i = 0;
+          i < feature_engineerer().hyperparameters().num_features_;
+          ++i )
         {
-            _model->fit_new_feature();
+            feature_engineerer().fit_new_feature();
 
-            if ( !_model->hyperparameters().silent_ )
+            if ( !feature_engineerer().hyperparameters().silent_ )
                 {
                     _logger->log(
                         "Trained FEATURE_" +
-                        std::to_string( _model->num_features() ) );
+                        std::to_string( feature_engineerer().num_features() ) );
                 }
         }
 
-    _model->clean_up();
+    feature_engineerer().clean_up();
 
     // ------------------------------------------------
     // Do feature selection, if applicable
@@ -262,11 +311,9 @@ void Models::fit(
 
 // ----------------------------------------------------------------------------
 
-template <typename ModelType>
-Poco::JSON::Object Models::score(
-    const Poco::JSON::Object& _cmd,
-    ModelType* _model,
-    Poco::Net::StreamSocket* _socket )
+template <typename FeatureEngineererType>
+Poco::JSON::Object Model<FeatureEngineererType>::score(
+    const Poco::JSON::Object& _cmd, Poco::Net::StreamSocket* _socket )
 {
     // ------------------------------------------------
     // Get predictions
@@ -310,7 +357,7 @@ Poco::JSON::Object Models::score(
 
     debug_log( "Calculating score..." );
 
-    auto result = _model->score(
+    auto result = feature_engineerer().score(
         yhat.data(),
         yhat.nrows(),
         yhat.ncols(),
@@ -327,12 +374,11 @@ Poco::JSON::Object Models::score(
 
 // ----------------------------------------------------------------------------
 
-template <typename ModelType>
-containers::Matrix<ENGINE_FLOAT> Models::transform(
+template <typename FeatureEngineererType>
+containers::Matrix<ENGINE_FLOAT> Model<FeatureEngineererType>::transform(
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<const logging::Logger>& _logger,
     const std::map<std::string, containers::DataFrame>& _data_frames,
-    const ModelType& _model,
     Poco::Net::StreamSocket* _socket )
 {
     // ------------------------------------------------
@@ -341,12 +387,14 @@ containers::Matrix<ENGINE_FLOAT> Models::transform(
     auto peripheral_names = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "peripheral_names_" ) );
 
-    std::vector<typename ModelType::DataFrameType> peripheral_tables = {};
+    std::vector<typename FeatureEngineererType::DataFrameType>
+        peripheral_tables = {};
 
     for ( auto& name : peripheral_names )
         {
-            const auto df = extract_df<typename ModelType::DataFrameType>(
-                name, _data_frames );
+            const auto df =
+                extract_df<typename FeatureEngineererType::DataFrameType>(
+                    name, _data_frames );
 
             peripheral_tables.push_back( df );
         }
@@ -357,8 +405,9 @@ containers::Matrix<ENGINE_FLOAT> Models::transform(
     const auto population_name =
         JSON::get_value<std::string>( _cmd, "population_name_" );
 
-    const auto population_table = extract_df<typename ModelType::DataFrameType>(
-        population_name, _data_frames );
+    const auto population_table =
+        extract_df<typename FeatureEngineererType::DataFrameType>(
+            population_name, _data_frames );
 
     // ------------------------------------------------
 
@@ -372,11 +421,13 @@ containers::Matrix<ENGINE_FLOAT> Models::transform(
 
     if ( predict )
         {
-            *data = _model.predict( population_table, peripheral_tables );
+            *data = feature_engineerer().predict(
+                population_table, peripheral_tables );
         }
     else
         {
-            *data = *_model.transform( population_table, peripheral_tables );
+            *data = *feature_engineerer().transform(
+                population_table, peripheral_tables );
         }
 
     // ------------------------------------------------------------------------
@@ -398,7 +449,7 @@ containers::Matrix<ENGINE_FLOAT> Models::transform(
 }
 
 // ----------------------------------------------------------------------------
-}  // namespace handlers
+}  // namespace models
 }  // namespace engine
 
-#endif  // ENGINE_HANDLERS_MODELMANAGER_HPP_
+#endif  // ENGINE_MODELS_MODEL_HPP_

@@ -13,11 +13,11 @@ void ModelManager::copy_model(
 {
     const std::string other = JSON::get_value<std::string>( _cmd, "other_" );
 
-    auto other_model = get_model( other );
+    auto other_model = get_relboost_model( other );
 
     // monitor_->send( "postmodel", other_model.to_monitor( _name ) );
 
-    set_model( _name, other_model );
+    set_relboost_model( _name, other_model );
 
     communication::Sender::send_string( "Success!", _socket );
 }
@@ -32,7 +32,7 @@ void ModelManager::fit_model(
     // -------------------------------------------------------
     // Find the model.
 
-    auto model = get_model( _name );
+    auto model = get_relboost_model( _name );
 
     communication::Sender::send_string( "Found!", _socket );
 
@@ -58,7 +58,7 @@ void ModelManager::fit_model(
     // -------------------------------------------------------
     // Do the actual fitting
 
-    Models::fit( cmd, logger_, *local_data_frames, &model, _socket );
+    model.fit( cmd, logger_, *local_data_frames, _socket );
 
     // -------------------------------------------------------
     // Upgrade to a strong write lock - we are about to write something.
@@ -67,19 +67,16 @@ void ModelManager::fit_model(
 
     // -------------------------------------------------------
 
-    auto it = models_->find( _name );
+    auto it = relboost_models().find( _name );
 
-    if ( it == models_->end() )
+    if ( it == relboost_models().end() )
         {
-            ( *models_ )[_name] =
-                std::make_shared<relboost::ensemble::DecisionTreeEnsemble>(
-                    model );
+            relboost_models()[_name] =
+                std::make_shared<RelboostModelType>( model );
         }
     else
         {
-            it->second =
-                std::make_shared<relboost::ensemble::DecisionTreeEnsemble>(
-                    model );
+            it->second = std::make_shared<RelboostModelType>( model );
         }
 
     categories_->append( *local_categories );
@@ -194,7 +191,7 @@ void ModelManager::send_data(
         local_join_keys_encoding,
         // license_checker_,
         logger_,
-        models_,
+        relboost_models_,
         // monitor_,
         local_read_write_lock );
 
@@ -238,20 +235,20 @@ void ModelManager::score(
     // -------------------------------------------------------
     // Find the model.
 
-    auto model = get_model( _name );
+    auto model = get_relboost_model( _name );
 
     communication::Sender::send_string( "Found!", _socket );
 
     // -------------------------------------------------------
     // Do the actual scoring.
 
-    auto scores = Models::score( _cmd, &model, _socket );
+    auto scores = model.score( _cmd, _socket );
 
     communication::Sender::send_string( "Success!", _socket );
 
     // -------------------------------------------------------
 
-    set_model( _name, model );
+    set_relboost_model( _name, model );
 
     // monitor_->send( "postmodel", model.to_monitor( _name ) );
 
@@ -265,7 +262,7 @@ void ModelManager::score(
 void ModelManager::to_json(
     const std::string& _name, Poco::Net::StreamSocket* _socket )
 {
-    auto model = get_model( _name );
+    auto model = get_relboost_model( _name );
 
     communication::Sender::send_string( "Found!", _socket );
 
@@ -280,7 +277,7 @@ void ModelManager::to_sql(
 {
     multithreading::ReadLock read_lock( read_write_lock_ );
 
-    auto model = get_model( _name );
+    auto model = get_relboost_model( _name );
 
     communication::Sender::send_string( "Found!", _socket );
 
@@ -297,7 +294,7 @@ void ModelManager::transform(
     // -------------------------------------------------------
     // Find the model.
 
-    auto model = get_model( _name );
+    auto model = get_relboost_model( _name );
 
     communication::Sender::send_string( "Found!", _socket );
 
@@ -320,12 +317,11 @@ void ModelManager::transform(
     // -------------------------------------------------------
     // Do the actual transformation
 
-    auto yhat =
-        Models::transform( cmd, logger_, *local_data_frames, model, _socket );
+    auto yhat = model.transform( cmd, logger_, *local_data_frames, _socket );
 
     if ( JSON::get_value<bool>( cmd, "score_" ) )
         {
-            set_model( _name, model );
+            set_relboost_model( _name, model );
         }
 
     communication::Sender::send_string( "Success!", _socket );

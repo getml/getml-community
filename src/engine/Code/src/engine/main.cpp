@@ -33,8 +33,8 @@ int main( int argc, char *argv[] )
     const auto data_frames = std::make_shared<
         std::map<std::string, engine::containers::DataFrame>>();
 
-    const auto models =
-        std::make_shared<engine::handlers::ModelManager::ModelMapType>();
+    const auto relboost_models = std::make_shared<
+        engine::handlers::ModelManager::RelboostModelMapType>();
 
     // -------------------------------------------
 
@@ -58,7 +58,7 @@ int main( int argc, char *argv[] )
             join_keys_encoding,
             // license_checker,
             logger,
-            models,
+            relboost_models,
             // monitor,
             read_write_lock );
 
@@ -69,7 +69,7 @@ int main( int argc, char *argv[] )
             data_frames,
             join_keys_encoding,
             // license_checker,
-            models,
+            relboost_models,
             // monitor,
             options,
             read_write_lock );
