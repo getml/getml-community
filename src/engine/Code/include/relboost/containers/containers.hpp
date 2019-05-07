@@ -33,6 +33,8 @@
 
 #include "relboost/containers/DataFrame.hpp"
 
+#include "relboost/containers/DataFrameView.hpp"
+
 #include "relboost/containers/CategoryIndex.hpp"
 
 #include "relboost/containers/CandidateSplit.hpp"
