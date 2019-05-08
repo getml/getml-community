@@ -35,6 +35,8 @@
 
 #include "relboost/ensemble/DecisionTreeEnsemble.hpp"
 
+#include "relboost/ensemble/Threadutils.hpp"
+
 // ----------------------------------------------------------------------------
 
 #endif  // RELBOOST_ENSEMBLE_ENSEMBLE_HPP_

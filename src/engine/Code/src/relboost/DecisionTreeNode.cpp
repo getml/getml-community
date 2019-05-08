@@ -136,7 +136,7 @@ void DecisionTreeNode::add_candidates(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::fit(
-    const containers::DataFrame& _output,
+    const containers::DataFrameView& _output,
     const containers::DataFrame& _input,
     const std::vector<const containers::Match*>::iterator _begin,
     const std::vector<const containers::Match*>::iterator _end,
@@ -147,7 +147,7 @@ void DecisionTreeNode::fit(
 
     input_.reset( new containers::DataFrame( _input ) );
 
-    output_.reset( new containers::DataFrame( _output ) );
+    output_.reset( new containers::DataFrame( _output.df() ) );
 
     // ------------------------------------------------------------------------
     // If the maximum depth is reached or there are no samples to fit, don't
@@ -239,7 +239,7 @@ void DecisionTreeNode::fit(
 // ----------------------------------------------------------------------------
 
 std::vector<const containers::Match*>::iterator DecisionTreeNode::partition(
-    const containers::DataFrame& _output,
+    const containers::DataFrameView& _output,
     const containers::DataFrame& _input,
     const std::vector<const containers::Match*>::iterator _begin,
     const std::vector<const containers::Match*>::iterator _end )
@@ -411,7 +411,7 @@ void DecisionTreeNode::to_sql(
 // ----------------------------------------------------------------------------
 
 RELBOOST_FLOAT DecisionTreeNode::transform(
-    const containers::DataFrame& _output,
+    const containers::DataFrameView& _output,
     const containers::DataFrame& _input,
     const containers::Match& _match ) const
 {
@@ -561,7 +561,7 @@ RELBOOST_FLOAT DecisionTreeNode::transform(
 
 std::vector<containers::CandidateSplit> DecisionTreeNode::try_all(
     const RELBOOST_FLOAT _old_intercept,
-    const containers::DataFrame& _output,
+    const containers::DataFrameView& _output,
     const containers::DataFrame& _input,
     const std::vector<const containers::Match*>::iterator _begin,
     const std::vector<const containers::Match*>::iterator _end )
@@ -605,7 +605,6 @@ void DecisionTreeNode::try_categorical(
     const RELBOOST_FLOAT _old_intercept,
     const enums::DataUsed _data_used,
     const containers::CategoryIndex& _category_index,
-    const containers::DataFrame& _input,
     const std::vector<const containers::Match*>::iterator _begin,
     const std::vector<const containers::Match*>::iterator _end,
     std::vector<containers::CandidateSplit>* _candidates )
@@ -670,12 +669,16 @@ void DecisionTreeNode::try_categorical_input(
             // ----------------------------------------------------------------
             // Identify all unique categorical values.
 
+            // Used as placeholder.
+            const auto output = containers::DataFrameView(
+                _input, std::shared_ptr<const std::vector<size_t>>() );
+
             const auto critical_values =
                 utils::CriticalValues::calc_categorical(
                     enums::DataUsed::categorical_input,
                     j,
                     _input,
-                    _input,  // just as a placeholder
+                    output,
                     _begin,
                     _end );
 
@@ -702,7 +705,6 @@ void DecisionTreeNode::try_categorical_input(
                 _old_intercept,
                 enums::DataUsed::categorical_input,
                 category_index,
-                _input,
                 _begin,
                 _end,
                 _candidates );
@@ -725,7 +727,6 @@ void DecisionTreeNode::try_categorical_input(
                 _old_intercept,
                 enums::DataUsed::categorical_input,
                 category_index,
-                _input,
                 _begin,
                 _end,
                 _candidates );
@@ -738,7 +739,7 @@ void DecisionTreeNode::try_categorical_input(
 
 void DecisionTreeNode::try_categorical_output(
     const RELBOOST_FLOAT _old_intercept,
-    const containers::DataFrame& _output,
+    const containers::DataFrameView& _output,
     const std::vector<const containers::Match*>::iterator _begin,
     const std::vector<const containers::Match*>::iterator _end,
     std::vector<containers::CandidateSplit>* _candidates )
@@ -763,7 +764,7 @@ void DecisionTreeNode::try_categorical_output(
                 utils::CriticalValues::calc_categorical(
                     enums::DataUsed::categorical_output,
                     j,
-                    _output,  // just as a placeholder
+                    _output.df(),  // just as a placeholder
                     _output,
                     _begin,
                     _end );
@@ -791,7 +792,6 @@ void DecisionTreeNode::try_categorical_output(
                 _old_intercept,
                 enums::DataUsed::categorical_output,
                 category_index,
-                _output,
                 _begin,
                 _end,
                 _candidates );
@@ -814,7 +814,6 @@ void DecisionTreeNode::try_categorical_output(
                 _old_intercept,
                 enums::DataUsed::categorical_output,
                 category_index,
-                _output,
                 _begin,
                 _end,
                 _candidates );
@@ -844,11 +843,15 @@ void DecisionTreeNode::try_discrete_input(
             utils::Sorter<enums::DataUsed::discrete_input>::sort(
                 j, _input, _begin, nan_begin );
 
+            // Used as placeholder.
+            const auto output = containers::DataFrameView(
+                _input, std::shared_ptr<const std::vector<size_t>>() );
+
             const auto critical_values = utils::CriticalValues::calc_discrete(
                 enums::DataUsed::discrete_input,
                 j,
                 _input,
-                _input,  // just as a placeholder
+                output,
                 _begin,
                 nan_begin );
 
@@ -906,7 +909,7 @@ void DecisionTreeNode::try_discrete_input(
 
 void DecisionTreeNode::try_discrete_output(
     const RELBOOST_FLOAT _old_intercept,
-    const containers::DataFrame& _output,
+    const containers::DataFrameView& _output,
     const std::vector<const containers::Match*>::iterator _begin,
     const std::vector<const containers::Match*>::iterator _end,
     std::vector<containers::CandidateSplit>* _candidates )
@@ -926,8 +929,8 @@ void DecisionTreeNode::try_discrete_output(
             const auto critical_values = utils::CriticalValues::calc_discrete(
                 enums::DataUsed::discrete_output,
                 j,
+                _output.df(),  // just as a placeholder
                 _output,
-                _output,  // just as a placeholder
                 _begin,
                 nan_begin );
 
@@ -1002,11 +1005,15 @@ void DecisionTreeNode::try_numerical_input(
             utils::Sorter<enums::DataUsed::numerical_input>::sort(
                 j, _input, _begin, nan_begin );
 
+            // Used as placeholder.
+            const auto output = containers::DataFrameView(
+                _input, std::shared_ptr<const std::vector<size_t>>() );
+
             const auto critical_values = utils::CriticalValues::calc_numerical(
                 enums::DataUsed::numerical_input,
                 j,
                 _input,
-                _input,  // just as a placeholder
+                output,
                 _begin,
                 nan_begin );
 
@@ -1064,7 +1071,7 @@ void DecisionTreeNode::try_numerical_input(
 
 void DecisionTreeNode::try_numerical_output(
     const RELBOOST_FLOAT _old_intercept,
-    const containers::DataFrame& _output,
+    const containers::DataFrameView& _output,
     const std::vector<const containers::Match*>::iterator _begin,
     const std::vector<const containers::Match*>::iterator _end,
     std::vector<containers::CandidateSplit>* _candidates )
@@ -1084,7 +1091,7 @@ void DecisionTreeNode::try_numerical_output(
             const auto critical_values = utils::CriticalValues::calc_numerical(
                 enums::DataUsed::numerical_output,
                 j,
-                _output,  // just as a placeholder
+                _output.df(),  // just as a placeholder
                 _output,
                 _begin,
                 nan_begin );
@@ -1150,7 +1157,7 @@ void DecisionTreeNode::try_numerical_output(
 void DecisionTreeNode::try_same_units_categorical(
     const RELBOOST_FLOAT _old_intercept,
     const containers::DataFrame& _input,
-    const containers::DataFrame& _output,
+    const containers::DataFrameView& _output,
     const std::vector<const containers::Match*>::iterator _begin,
     const std::vector<const containers::Match*>::iterator _end,
     std::vector<containers::CandidateSplit>* _candidates )
@@ -1207,7 +1214,7 @@ void DecisionTreeNode::try_same_units_categorical(
 void DecisionTreeNode::try_same_units_discrete(
     const RELBOOST_FLOAT _old_intercept,
     const containers::DataFrame& _input,
-    const containers::DataFrame& _output,
+    const containers::DataFrameView& _output,
     const std::vector<const containers::Match*>::iterator _begin,
     const std::vector<const containers::Match*>::iterator _end,
     std::vector<containers::CandidateSplit>* _candidates )
@@ -1329,7 +1336,7 @@ void DecisionTreeNode::try_same_units_discrete(
 void DecisionTreeNode::try_same_units_numerical(
     const RELBOOST_FLOAT _old_intercept,
     const containers::DataFrame& _input,
-    const containers::DataFrame& _output,
+    const containers::DataFrameView& _output,
     const std::vector<const containers::Match*>::iterator _begin,
     const std::vector<const containers::Match*>::iterator _end,
     std::vector<containers::CandidateSplit>* _candidates )
@@ -1451,7 +1458,7 @@ void DecisionTreeNode::try_same_units_numerical(
 void DecisionTreeNode::try_time_stamps_diff(
     const RELBOOST_FLOAT _old_intercept,
     const containers::DataFrame& _input,
-    const containers::DataFrame& _output,
+    const containers::DataFrameView& _output,
     const std::vector<const containers::Match*>::iterator _begin,
     const std::vector<const containers::Match*>::iterator _end,
     std::vector<containers::CandidateSplit>* _candidates )

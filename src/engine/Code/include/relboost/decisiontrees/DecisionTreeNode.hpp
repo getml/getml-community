@@ -33,8 +33,8 @@ class DecisionTreeNode
    public:
     /// Fits the decision tree node.
     void fit(
-        const containers::DataFrame& _population,
-        const containers::DataFrame& _peripheral,
+        const containers::DataFrameView& _output,
+        const containers::DataFrame& _input,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end,
         RELBOOST_FLOAT* _intercept );
@@ -50,8 +50,8 @@ class DecisionTreeNode
 
     /// Transforms the data to form a prediction.
     RELBOOST_FLOAT transform(
-        const containers::DataFrame& _population,
-        const containers::DataFrame& _peripheral,
+        const containers::DataFrameView& _output,
+        const containers::DataFrame& _input,
         const containers::Match& _match ) const;
 
     /// Multiplies all weights on the nodes with _update_rate. This is how
@@ -81,16 +81,16 @@ class DecisionTreeNode
 
     /// Partitions a set of matches according to the split.
     std::vector<const containers::Match*>::iterator partition(
-        const containers::DataFrame& _population,
-        const containers::DataFrame& _peripheral,
+        const containers::DataFrameView& _output,
+        const containers::DataFrame& _input,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end );
 
     /// Try all possible splits.
     std::vector<containers::CandidateSplit> try_all(
         const RELBOOST_FLOAT _old_intercept,
-        const containers::DataFrame& _population,
-        const containers::DataFrame& _peripheral,
+        const containers::DataFrameView& _output,
+        const containers::DataFrame& _input,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end );
 
@@ -102,7 +102,6 @@ class DecisionTreeNode
         const RELBOOST_FLOAT _old_intercept,
         const enums::DataUsed _data_used,
         const containers::CategoryIndex& _category_index,
-        const containers::DataFrame& _input,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end,
         std::vector<containers::CandidateSplit>* _candidates );
@@ -118,7 +117,7 @@ class DecisionTreeNode
     /// Try categorical output columns as splits.
     void try_categorical_output(
         const RELBOOST_FLOAT _old_intercept,
-        const containers::DataFrame& _input,
+        const containers::DataFrameView& _output,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end,
         std::vector<containers::CandidateSplit>* _candidates );
@@ -134,7 +133,7 @@ class DecisionTreeNode
     /// Try discrete output columns as splits.
     void try_discrete_output(
         const RELBOOST_FLOAT _old_intercept,
-        const containers::DataFrame& _output,
+        const containers::DataFrameView& _output,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end,
         std::vector<containers::CandidateSplit>* _candidates );
@@ -150,7 +149,7 @@ class DecisionTreeNode
     /// Try numerical output columns as splits.
     void try_numerical_output(
         const RELBOOST_FLOAT _old_intercept,
-        const containers::DataFrame& _population,
+        const containers::DataFrameView& _output,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end,
         std::vector<containers::CandidateSplit>* _candidates );
@@ -159,7 +158,7 @@ class DecisionTreeNode
     void try_same_units_categorical(
         const RELBOOST_FLOAT _old_intercept,
         const containers::DataFrame& _input,
-        const containers::DataFrame& _output,
+        const containers::DataFrameView& _output,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end,
         std::vector<containers::CandidateSplit>* _candidates );
@@ -168,7 +167,7 @@ class DecisionTreeNode
     void try_same_units_discrete(
         const RELBOOST_FLOAT _old_intercept,
         const containers::DataFrame& _input,
-        const containers::DataFrame& _output,
+        const containers::DataFrameView& _output,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end,
         std::vector<containers::CandidateSplit>* _candidates );
@@ -177,7 +176,7 @@ class DecisionTreeNode
     void try_same_units_numerical(
         const RELBOOST_FLOAT _old_intercept,
         const containers::DataFrame& _input,
-        const containers::DataFrame& _output,
+        const containers::DataFrameView& _output,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end,
         std::vector<containers::CandidateSplit>* _candidates );
@@ -186,7 +185,7 @@ class DecisionTreeNode
     void try_time_stamps_diff(
         const RELBOOST_FLOAT _old_intercept,
         const containers::DataFrame& _input,
-        const containers::DataFrame& _output,
+        const containers::DataFrameView& _output,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end,
         std::vector<containers::CandidateSplit>* _candidates );

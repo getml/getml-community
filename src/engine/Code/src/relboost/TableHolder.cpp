@@ -6,8 +6,9 @@ namespace ensemble
 {
 // ----------------------------------------------------------------------------
 
-std::vector<containers::DataFrame> TableHolder::parse_main_tables(
-    const Placeholder& _placeholder, const containers::DataFrame& _population )
+std::vector<containers::DataFrameView> TableHolder::parse_main_tables(
+    const Placeholder& _placeholder,
+    const containers::DataFrameView& _population )
 {
     assert(
         _placeholder.joined_tables_.size() ==
@@ -16,7 +17,7 @@ std::vector<containers::DataFrame> TableHolder::parse_main_tables(
         _placeholder.joined_tables_.size() ==
         _placeholder.time_stamps_used_.size() );
 
-    std::vector<containers::DataFrame> result;
+    std::vector<containers::DataFrameView> result;
 
     for ( size_t i = 0; i < _placeholder.joined_tables_.size(); ++i )
         {
@@ -94,10 +95,15 @@ std::vector<containers::Optional<TableHolder>> TableHolder::parse_subtables(
 
                     assert( j < _peripheral_names.size() );
 
+                    // TODO: Replace with popular parsing of indices.
+                    const auto output = containers::DataFrameView(
+                        _peripheral[j],
+                        std::shared_ptr<const std::vector<size_t>>() );
+
                     result.push_back(
                         containers::Optional<TableHolder>( new TableHolder(
                             _placeholder,
-                            _peripheral[j],
+                            output,
                             _peripheral,
                             _peripheral_names ) ) );
                 }

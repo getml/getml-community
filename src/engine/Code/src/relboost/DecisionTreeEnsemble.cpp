@@ -117,25 +117,72 @@ void DecisionTreeEnsemble::fit(
     const containers::DataFrame &_population,
     const std::vector<containers::DataFrame> &_peripheral )
 {
-    // ------------------------------------------------------------------------
-    // Initialize fitting.
+    // ------------------------------------------------------
 
-    init( _population, _peripheral );
+    // multithreading::Communicator comm( _num_threads );
 
-    // ------------------------------------------------------------------------
-    // Do the actual fitting.
+    // ------------------------------------------------------
+    // Build thread_nums
 
-    for ( size_t i = 0; i < hyperparameters().num_features_; ++i )
+    const auto num_threads = 1;
+    // get_num_threads( _ensemble->hyperparameters().num_threads_ );
+
+    const auto thread_nums = utils::DataFrameScatterer::build_thread_nums(
+        _population.join_keys(), num_threads );
+
+    // ------------------------------------------------------
+    // Create deep copies of this ensemble.
+
+    std::vector<ensemble::DecisionTreeEnsemble> ensembles;
+
+    for ( size_t i = 0; i < num_threads - 1; ++i )
         {
-            fit_new_feature();
+            ensembles.push_back( *this );
         }
 
-    // ------------------------------------------------------------------------
-    // Delete ressources that are no longer needed.
+    // ------------------------------------------------------
+    // Spawn threads.
 
-    clean_up();
+    std::vector<std::thread> threads;
 
-    // ------------------------------------------------------------------------
+    for ( size_t i = 0; i < num_threads - 1; ++i )
+        {
+            threads.push_back( std::thread(
+                Threadutils::fit_ensemble,
+                i + 1,
+                thread_nums,
+                _population,
+                _peripheral,
+                this ) );
+        }
+
+    // ------------------------------------------------------
+    // Train ensemble in main thread.
+
+    try
+        {
+            Threadutils::fit_ensemble(
+                0, thread_nums, _population, _peripheral, this );
+        }
+    catch ( std::exception &e )
+        {
+            for ( auto &thr : threads )
+                {
+                    thr.join();
+                }
+
+            throw std::invalid_argument( e.what() );
+        }
+
+    // ------------------------------------------------------
+    // Join all other threads
+
+    for ( auto &thr : threads )
+        {
+            thr.join();
+        }
+
+    // ------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -297,7 +344,7 @@ std::vector<RELBOOST_FLOAT> DecisionTreeEnsemble::generate_predictions(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeEnsemble::init(
-    const containers::DataFrame &_population,
+    const containers::DataFrameView &_population,
     const std::vector<containers::DataFrame> &_peripheral )
 {
     // ------------------------------------------------------------------------
@@ -385,48 +432,24 @@ std::vector<RELBOOST_FLOAT> DecisionTreeEnsemble::predict(
     const containers::DataFrame &_population,
     const std::vector<containers::DataFrame> &_peripheral ) const
 {
-    // ------------------------------------------------------------------------
+    const auto features = transform( _population, _peripheral );
 
-    if ( trees().size() == 0 )
+    assert( features->size() == _population.nrows() * num_features() );
+
+    auto predictions = std::vector<RELBOOST_FLOAT>(
+        _population.nrows(), initial_prediction() );
+
+    for ( size_t i = 0; i < _population.nrows(); ++i )
         {
-            throw std::runtime_error( "Relboost model has not been fitted!" );
+            for ( size_t j = 0; j < num_features(); ++j )
+                {
+                    predictions[i] += ( *features )[i * num_features() + j] *
+                                      hyperparameters().eta_ *
+                                      trees()[j].update_rate();
+                }
         }
 
-    // ------------------------------------------------------------------------
-    // Build table holder.
-
-    const auto table_holder = TableHolder(
-        placeholder(), _population, _peripheral, peripheral_names() );
-
-    // ------------------------------------------------------------------------
-    // Init yhat.
-
-    std::vector<RELBOOST_FLOAT> yhat( _population.nrows() );
-
-    std::fill( yhat.begin(), yhat.end(), initial_prediction() );
-
-    // ------------------------------------------------------------------------
-    // Generate prediction.
-
-    for ( const auto &decision_tree : trees() )
-        {
-            const auto predictions =
-                generate_predictions( decision_tree, table_holder );
-
-            update_predictions(
-                decision_tree.update_rate(), predictions, &yhat );
-        }
-
-    // ------------------------------------------------------------------------
-    // Apply transformation function. Some loss functions (such as
-    // CrossEntropyLoss) require this. For others, this won't do anything at
-    // all.
-
-    loss_function().apply_transformation( &yhat );
-
-    // ------------------------------------------------------------------------
-
-    return yhat;
+    return predictions;
 }
 
 // ----------------------------------------------------------------------------
@@ -520,49 +543,99 @@ std::shared_ptr<std::vector<RELBOOST_FLOAT>> DecisionTreeEnsemble::transform(
     const containers::DataFrame &_population,
     const std::vector<containers::DataFrame> &_peripheral ) const
 {
-    // ------------------------------------------------------------------------
-    // Check the validity of the input.
+    // ------------------------------------------------------
+    // Check plausibility.
 
-    if ( trees().size() == 0 )
+    if ( num_features() == 0 )
         {
             throw std::runtime_error( "Relboost model has not been fitted!" );
         }
 
-    // ------------------------------------------------------------------------
-    // Build table holder.
+    // ------------------------------------------------------
+    // thread_nums signify the thread number that a particular row belongs to.
+    // The idea is to separate the join keys as clearly as possible.
 
-    const auto table_holder = TableHolder(
-        placeholder(), _population, _peripheral, peripheral_names() );
+    const auto num_threads =
+        Threadutils::get_num_threads( hyperparameters().num_threads_ );
 
-    // ------------------------------------------------------------------------
-    // Init features.
+    const auto thread_nums = utils::DataFrameScatterer::build_thread_nums(
+        _population.join_keys(), num_threads );
 
-    const auto nrows = static_cast<uint64_t>( _population.nrows() );
+    // ------------------------------------------------------
+    // Build deep copies of this ensemble.
 
-    const auto ncols = static_cast<uint64_t>( trees().size() );
+    std::vector<DecisionTreeEnsemble> ensembles;
 
-    auto features =
-        std::make_shared<std::vector<RELBOOST_FLOAT>>( nrows * ncols );
-
-    // ------------------------------------------------------------------------
-    // Generate new features.
-
-    for ( uint64_t j = 0; j < ncols; ++j )
+    for ( size_t i = 0; i < num_threads - 1; ++i )
         {
-            const auto predictions =
-                generate_predictions( trees()[j], table_holder );
-
-            assert( predictions.size() == _population.nrows() );
-
-            for ( uint64_t i = 0; i < nrows; ++i )
-                {
-                    ( *features )[i * ncols + j] = predictions[i];
-                }
+            ensembles.push_back( *this );
         }
 
-    // ------------------------------------------------------------------------
+    // -------------------------------------------------------
+    // Launch threads and generate predictions on the subviews.
+
+    auto features = std::make_shared<std::vector<RELBOOST_FLOAT>>(
+        _population.nrows() * num_features() );
+
+    std::vector<std::thread> threads;
+
+    for ( size_t i = 0; i < num_threads - 1; ++i )
+        {
+            threads.push_back( std::thread(
+                Threadutils::transform_ensemble,
+                i + 1,
+                thread_nums,
+                _population,
+                _peripheral,
+                *this,
+                features.get() ) );
+        }
+
+    // ------------------------------------------------------
+    // Transform in main thread.
+
+    try
+        {
+            Threadutils::transform_ensemble(
+                0,
+                thread_nums,
+                _population,
+                _peripheral,
+                *this,
+                features.get() );
+        }
+    catch ( std::exception &e )
+        {
+            for ( auto &thr : threads )
+                {
+                    thr.join();
+                }
+
+            throw std::invalid_argument( e.what() );
+        }
+
+    // ------------------------------------------------------
+
+    for ( auto &thr : threads )
+        {
+            thr.join();
+        }
+
+    // ------------------------------------------------------
 
     return features;
+
+    // ------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<RELBOOST_FLOAT> DecisionTreeEnsemble::transform(
+    const TableHolder &_table_holder, size_t _n_feature ) const
+{
+    assert( _n_feature < num_features() );
+
+    return generate_predictions( trees()[_n_feature], _table_holder );
 }
 
 // ----------------------------------------------------------------------------

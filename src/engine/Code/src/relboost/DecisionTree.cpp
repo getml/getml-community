@@ -49,7 +49,7 @@ DecisionTree::DecisionTree(
 // ----------------------------------------------------------------------------
 
 void DecisionTree::fit(
-    const containers::DataFrame& _output,
+    const containers::DataFrameView& _output,
     const containers::DataFrame& _input,
     const std::vector<const containers::Match*>::iterator _begin,
     const std::vector<const containers::Match*>::iterator _end )
@@ -59,7 +59,7 @@ void DecisionTree::fit(
 
     input_.reset( new containers::DataFrame( _input ) );
 
-    output_.reset( new containers::DataFrame( _output ) );
+    output_.reset( new containers::DataFrame( _output.df() ) );
 
     // ------------------------------------------------------------------------
     // Set up and fit root node
@@ -222,7 +222,7 @@ std::string DecisionTree::to_sql(
 // ----------------------------------------------------------------------------
 
 std::vector<RELBOOST_FLOAT> DecisionTree::transform(
-    const containers::DataFrame& _output,
+    const containers::DataFrameView& _output,
     const containers::DataFrame& _input ) const
 {
     // ------------------------------------------------------------------------

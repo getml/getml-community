@@ -20,7 +20,7 @@ class CriticalValues
         const enums::DataUsed _data_used,
         const size_t _num_column,
         const containers::DataFrame& _input,
-        const containers::DataFrame& _output,
+        const containers::DataFrameView& _output,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end );
 
@@ -30,7 +30,7 @@ class CriticalValues
         const size_t _input_col,
         const size_t _output_col,
         const containers::DataFrame& _input,
-        const containers::DataFrame& _output,
+        const containers::DataFrameView& _output,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end );
 
@@ -40,7 +40,7 @@ class CriticalValues
         const size_t _input_col,
         const size_t _output_col,
         const containers::DataFrame& _input,
-        const containers::DataFrame& _output,
+        const containers::DataFrameView& _output,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end );
 
@@ -52,7 +52,7 @@ class CriticalValues
         const enums::DataUsed _data_used,
         const size_t _num_column,
         const containers::DataFrame& _input,
-        const containers::DataFrame& _output,
+        const containers::DataFrameView& _output,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end )
     {
@@ -74,7 +74,7 @@ class CriticalValues
         const enums::DataUsed _data_used,
         const size_t _num_column,
         const containers::DataFrame& _input,
-        const containers::DataFrame& _output,
+        const containers::DataFrameView& _output,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end )
     {
@@ -100,7 +100,7 @@ class CriticalValues
         const enums::DataUsed _data_used,
         const size_t _num_column,
         const containers::DataFrame& _input,
-        const containers::DataFrame& _output,
+        const containers::DataFrameView& _output,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end,
         RELBOOST_INT* _min,
@@ -112,7 +112,7 @@ class CriticalValues
         const enums::DataUsed _data_used,
         const size_t _num_column,
         const containers::DataFrame& _input,
-        const containers::DataFrame& _output,
+        const containers::DataFrameView& _output,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end,
         RELBOOST_FLOAT* _min,
@@ -125,7 +125,7 @@ class CriticalValues
         const size_t _input_col,
         const size_t _output_col,
         const containers::DataFrame& _input,
-        const containers::DataFrame& _output,
+        const containers::DataFrameView& _output,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end,
         RELBOOST_FLOAT* _min,

@@ -17,7 +17,7 @@ class Avg : public lossfunctions::LossFunction
     Avg( const std::shared_ptr<lossfunctions::LossFunction>& _child,
          const std::vector<const containers::Match*>& _matches_ptr,
          const containers::DataFrame& _input,
-         const containers::DataFrame& _output )
+         const containers::DataFrameView& _output )
         : child_( _child ),
           depth_( _child->depth() + 1 ),
           indices_( _output.nrows() ),

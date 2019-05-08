@@ -276,23 +276,7 @@ void Model<FeatureEngineererType>::fit(
     // ------------------------------------------------
     // Fit the feature engineerer.
 
-    feature_engineerer().init( population_table, peripheral_tables );
-
-    for ( size_t i = 0;
-          i < feature_engineerer().hyperparameters().num_features_;
-          ++i )
-        {
-            feature_engineerer().fit_new_feature();
-
-            if ( !feature_engineerer().hyperparameters().silent_ )
-                {
-                    _logger->log(
-                        "Trained FEATURE_" +
-                        std::to_string( feature_engineerer().num_features() ) );
-                }
-        }
-
-    feature_engineerer().clean_up();
+    feature_engineerer().fit( population_table, peripheral_tables );
 
     // ------------------------------------------------
     // Do feature selection, if applicable

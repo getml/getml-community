@@ -23,6 +23,7 @@
 #include "relboost/utils/ConditionMaker.hpp"
 #include "relboost/utils/CriticalValueSorter.hpp"
 #include "relboost/utils/CriticalValues.hpp"
+#include "relboost/utils/DataFrameScatterer.hpp"
 #include "relboost/utils/Finder.hpp"
 #include "relboost/utils/Matchmaker.hpp"
 #include "relboost/utils/Partitioner.hpp"

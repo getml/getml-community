@@ -70,7 +70,7 @@ struct Partitioner<enums::DataUsed::categorical_output>
 
     static std::vector<const containers::Match*>::iterator partition(
         const containers::Split& _split,
-        const containers::DataFrame& _output,
+        const containers::DataFrameView& _output,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end )
     {
@@ -86,7 +86,7 @@ struct Partitioner<enums::DataUsed::categorical_output>
 
     static bool is_greater(
         const containers::Split& _split,
-        const containers::DataFrame& _output,
+        const containers::DataFrameView& _output,
         const containers::Match& _match )
     {
         const auto i = _match.ix_output;
@@ -194,7 +194,7 @@ struct Partitioner<enums::DataUsed::discrete_output>
 
     static std::vector<const containers::Match*>::iterator partition(
         const containers::Split& _split,
-        const containers::DataFrame& _output,
+        const containers::DataFrameView& _output,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end )
     {
@@ -210,7 +210,7 @@ struct Partitioner<enums::DataUsed::discrete_output>
 
     static bool is_greater(
         const containers::Split& _split,
-        const containers::DataFrame& _output,
+        const containers::DataFrameView& _output,
         const containers::Match& _match )
     {
         const auto i = _match.ix_output;
@@ -232,7 +232,7 @@ struct Partitioner<enums::DataUsed::discrete_output_is_nan>
 {
     static std::vector<const containers::Match*>::iterator partition(
         const size_t _num_column,
-        const containers::DataFrame& _output,
+        const containers::DataFrameView& _output,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end )
     {
@@ -250,7 +250,7 @@ struct Partitioner<enums::DataUsed::discrete_output_is_nan>
 
     static bool is_greater(
         const size_t _num_column,
-        const containers::DataFrame& _output,
+        const containers::DataFrameView& _output,
         const containers::Match& _match )
     {
         const auto i = _match.ix_output;
@@ -353,7 +353,7 @@ struct Partitioner<enums::DataUsed::numerical_output>
 
     static std::vector<const containers::Match*>::iterator partition(
         const containers::Split& _split,
-        const containers::DataFrame& _output,
+        const containers::DataFrameView& _output,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end )
     {
@@ -369,7 +369,7 @@ struct Partitioner<enums::DataUsed::numerical_output>
 
     static bool is_greater(
         const containers::Split& _split,
-        const containers::DataFrame& _output,
+        const containers::DataFrameView& _output,
         const containers::Match& _match )
     {
         const auto i = _match.ix_output;
@@ -391,7 +391,7 @@ struct Partitioner<enums::DataUsed::numerical_output_is_nan>
 {
     static std::vector<const containers::Match*>::iterator partition(
         const size_t _num_column,
-        const containers::DataFrame& _output,
+        const containers::DataFrameView& _output,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end )
     {
@@ -409,7 +409,7 @@ struct Partitioner<enums::DataUsed::numerical_output_is_nan>
 
     static bool is_greater(
         const size_t _num_column,
-        const containers::DataFrame& _output,
+        const containers::DataFrameView& _output,
         const containers::Match& _match )
     {
         const auto i = _match.ix_output;
@@ -434,7 +434,7 @@ struct Partitioner<enums::DataUsed::same_units_categorical>
     static std::vector<const containers::Match*>::iterator partition(
         const containers::Split& _split,
         const containers::DataFrame& _input,
-        const containers::DataFrame& _output,
+        const containers::DataFrameView& _output,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end )
     {
@@ -451,7 +451,7 @@ struct Partitioner<enums::DataUsed::same_units_categorical>
     static bool is_greater(
         const containers::Split& _split,
         const containers::DataFrame& _input,
-        const containers::DataFrame& _output,
+        const containers::DataFrameView& _output,
         const containers::Match& _match )
     {
         assert( _match.ix_input < _input.nrows() );
@@ -480,7 +480,7 @@ struct Partitioner<enums::DataUsed::same_units_discrete>
     static std::vector<const containers::Match*>::iterator partition(
         const containers::Split& _split,
         const containers::DataFrame& _input,
-        const containers::DataFrame& _output,
+        const containers::DataFrameView& _output,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end )
     {
@@ -497,7 +497,7 @@ struct Partitioner<enums::DataUsed::same_units_discrete>
     static bool is_greater(
         const containers::Split& _split,
         const containers::DataFrame& _input,
-        const containers::DataFrame& _output,
+        const containers::DataFrameView& _output,
         const containers::Match& _match )
     {
         assert( _match.ix_input < _input.nrows() );
@@ -527,7 +527,7 @@ struct Partitioner<enums::DataUsed::same_units_discrete_is_nan>
         const size_t _input_col,
         const size_t _output_col,
         const containers::DataFrame& _input,
-        const containers::DataFrame& _output,
+        const containers::DataFrameView& _output,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end )
     {
@@ -547,7 +547,7 @@ struct Partitioner<enums::DataUsed::same_units_discrete_is_nan>
         const size_t _input_col,
         const size_t _output_col,
         const containers::DataFrame& _input,
-        const containers::DataFrame& _output,
+        const containers::DataFrameView& _output,
         const containers::Match& _match )
     {
         assert( _match.ix_input < _input.nrows() );
@@ -575,7 +575,7 @@ struct Partitioner<enums::DataUsed::same_units_numerical>
     static std::vector<const containers::Match*>::iterator partition(
         const containers::Split& _split,
         const containers::DataFrame& _input,
-        const containers::DataFrame& _output,
+        const containers::DataFrameView& _output,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end )
     {
@@ -592,7 +592,7 @@ struct Partitioner<enums::DataUsed::same_units_numerical>
     static bool is_greater(
         const containers::Split& _split,
         const containers::DataFrame& _input,
-        const containers::DataFrame& _output,
+        const containers::DataFrameView& _output,
         const containers::Match& _match )
     {
         assert( _match.ix_input < _input.nrows() );
@@ -622,7 +622,7 @@ struct Partitioner<enums::DataUsed::same_units_numerical_is_nan>
         const size_t _input_col,
         const size_t _output_col,
         const containers::DataFrame& _input,
-        const containers::DataFrame& _output,
+        const containers::DataFrameView& _output,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end )
     {
@@ -642,7 +642,7 @@ struct Partitioner<enums::DataUsed::same_units_numerical_is_nan>
         const size_t _input_col,
         const size_t _output_col,
         const containers::DataFrame& _input,
-        const containers::DataFrame& _output,
+        const containers::DataFrameView& _output,
         const containers::Match& _match )
     {
         assert( _match.ix_input < _input.nrows() );
@@ -670,7 +670,7 @@ struct Partitioner<enums::DataUsed::time_stamps_diff>
     static std::vector<const containers::Match*>::iterator partition(
         const containers::Split& _split,
         const containers::DataFrame& _input,
-        const containers::DataFrame& _output,
+        const containers::DataFrameView& _output,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end )
     {
@@ -687,7 +687,7 @@ struct Partitioner<enums::DataUsed::time_stamps_diff>
     static bool is_greater(
         const containers::Split& _split,
         const containers::DataFrame& _input,
-        const containers::DataFrame& _output,
+        const containers::DataFrameView& _output,
         const containers::Match& _match )
     {
         const auto in = _match.ix_input;

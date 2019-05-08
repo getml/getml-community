@@ -83,7 +83,7 @@ struct Hyperparameters
     // const RELBOOST_INT num_parallel_tree;
 
     /// Number of parallel threads used to run xgboost
-    // const RELBOOST_INT nthread;
+    const RELBOOST_INT num_threads_;
 
     /// The objective for the learning function.
     const std::string objective_;

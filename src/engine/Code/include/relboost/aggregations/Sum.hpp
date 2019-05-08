@@ -16,7 +16,7 @@ class Sum : public lossfunctions::LossFunction
    public:
     Sum( const std::shared_ptr<lossfunctions::LossFunction>& _child,
          const containers::DataFrame& _input,
-         const containers::DataFrame& _output )
+         const containers::DataFrameView& _output )
         : child_( _child ),
           depth_( _child->depth() + 1 ),
           indices_( _output.nrows() ),

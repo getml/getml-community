@@ -99,7 +99,21 @@ class DataFrame
         return discretes_[_j].unit_;
     }
 
-    /// Getter for the indices.
+    /// Find the indices associated with this join key.
+    RELBOOST_INDEX::const_iterator find( const RELBOOST_INT _join_key ) const
+    {
+        assert( indices().size() > 0 );
+        return indices_[0]->find( _join_key );
+    }
+
+    /// Whether a certain join key is included in the indices.
+    bool has( const RELBOOST_INT _join_key ) const
+    {
+        assert( indices().size() > 0 );
+        return indices_[0]->find( _join_key ) != indices_[0]->end();
+    }
+
+    /// Getter for the indices (TODO: make this private).
     const std::vector<std::shared_ptr<RELBOOST_INDEX>>& indices() const
     {
         return indices_;
@@ -257,7 +271,7 @@ class DataFrame
     static std::vector<std::shared_ptr<RELBOOST_INDEX>> create_indices(
         const std::vector<Column<RELBOOST_INT>>& _join_keys );
 
-    /// Creates a subview
+    /// Creates a subview.
     DataFrame create_subview(
         const std::string& _name,
         const std::string& _join_key,

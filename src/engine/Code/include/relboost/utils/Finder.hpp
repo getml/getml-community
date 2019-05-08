@@ -47,7 +47,7 @@ struct Finder<enums::DataUsed::discrete_output>
     static std::vector<const containers::Match*>::iterator next_split(
         const RELBOOST_FLOAT _cv,
         const size_t _num_column,
-        const containers::DataFrame& _output,
+        const containers::DataFrameView& _output,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end )
     {
@@ -91,7 +91,7 @@ struct Finder<enums::DataUsed::numerical_output>
     static std::vector<const containers::Match*>::iterator next_split(
         const RELBOOST_FLOAT _cv,
         const size_t _num_column,
-        const containers::DataFrame& _output,
+        const containers::DataFrameView& _output,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end )
     {
@@ -115,7 +115,7 @@ struct Finder<enums::DataUsed::same_units_discrete>
         const size_t _input_col,
         const size_t _output_col,
         const containers::DataFrame& _input,
-        const containers::DataFrame& _output,
+        const containers::DataFrameView& _output,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end )
     {
@@ -147,7 +147,7 @@ struct Finder<enums::DataUsed::same_units_numerical>
         const size_t _input_col,
         const size_t _output_col,
         const containers::DataFrame& _input,
-        const containers::DataFrame& _output,
+        const containers::DataFrameView& _output,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end )
     {
@@ -177,7 +177,7 @@ struct Finder<enums::DataUsed::time_stamps_diff>
     static std::vector<const containers::Match*>::iterator next_split(
         const RELBOOST_FLOAT _cv,
         const containers::DataFrame& _input,
-        const containers::DataFrame& _output,
+        const containers::DataFrameView& _output,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end )
     {

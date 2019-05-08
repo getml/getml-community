@@ -25,9 +25,9 @@ class CategoryIndex
 
    public:
     /// Builds the indptr during construction of the CategoryIndex.
-    template <enums::DataUsed _data_used>
+    template <enums::DataUsed _data_used, typename DataFrameType>
     void build_indptr(
-        const DataFrame& _df,
+        const DataFrameType& _df,
         const size_t _num_column,
         const std::vector<RELBOOST_INT>& _critical_values );
 
@@ -119,9 +119,9 @@ namespace containers
 {
 // ----------------------------------------------------------------------------
 
-template <enums::DataUsed _data_used>
+template <enums::DataUsed _data_used, typename DataFrameType>
 void CategoryIndex::build_indptr(
-    const DataFrame& _df,
+    const DataFrameType& _df,
     const size_t _num_column,
     const std::vector<RELBOOST_INT>& _critical_values )
 {

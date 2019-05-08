@@ -55,6 +55,22 @@ class DataFrameView
         return df_.categorical_unit( _j );
     }
 
+    /// Creates a subview.
+    DataFrameView create_subview(
+        const std::string& _name,
+        const std::string& _join_key,
+        const std::string& _time_stamp,
+        const std::string& _upper_time_stamp ) const
+    {
+        return DataFrameView(
+            df_.create_subview(
+                _name, _join_key, _time_stamp, _upper_time_stamp ),
+            rows_ );
+    }
+
+    /// Getter for underlying data frame.
+    const DataFrame df() const { return df_; }
+
     /// Getter for a discrete value.
     RELBOOST_FLOAT discrete( size_t _i, size_t _j ) const
     {
@@ -79,7 +95,7 @@ class DataFrameView
         return df_.discrete_unit( _j );
     }
 
-    /// Getter for the indices.
+    /// Getter for the indices (TODO: remove this).
     const std::vector<std::shared_ptr<RELBOOST_INDEX>>& indices() const
     {
         return df_.indices();
@@ -151,6 +167,9 @@ class DataFrameView
     {
         return df_.numerical_unit( _j );
     }
+
+    /// Returns the indices of the rows that this view points to.
+    const std::vector<size_t>& rows() const { return *rows_; }
 
     /// Getter for a target value.
     RELBOOST_FLOAT target( size_t _i, size_t _j ) const

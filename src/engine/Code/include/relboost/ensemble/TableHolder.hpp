@@ -11,7 +11,7 @@ struct TableHolder
 {
     TableHolder(
         const Placeholder& _placeholder,
-        const containers::DataFrame& _population,
+        const containers::DataFrameView& _population,
         const std::vector<containers::DataFrame>& _peripheral,
         const std::vector<std::string>& _peripheral_names )
         : main_tables_(
@@ -31,9 +31,9 @@ struct TableHolder
     // ------------------------------
 
     /// Creates the main tables during construction.
-    static std::vector<containers::DataFrame> parse_main_tables(
+    static std::vector<containers::DataFrameView> parse_main_tables(
         const Placeholder& _placeholder,
-        const containers::DataFrame& _population );
+        const containers::DataFrameView& _population );
 
     /// Creates the peripheral tables during construction.
     static std::vector<containers::DataFrame> parse_peripheral_tables(
@@ -51,7 +51,7 @@ struct TableHolder
 
     /// The TableHolder has a population table, which may or may not be
     /// identical with the actual population table.
-    const std::vector<containers::DataFrame> main_tables_;
+    const std::vector<containers::DataFrameView> main_tables_;
 
     /// The TableHolder can have peripheral tables.
     const std::vector<containers::DataFrame> peripheral_tables_;

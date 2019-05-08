@@ -15,6 +15,7 @@ class DecisionTreeEnsemble
 
    public:
     typedef relboost::containers::DataFrame DataFrameType;
+    typedef relboost::containers::DataFrameView DataFrameViewType;
 
     // ------------------------------------------------------------------------
 
@@ -51,7 +52,7 @@ class DecisionTreeEnsemble
 
     /// Initializes the fitting process.
     void init(
-        const containers::DataFrame& _population,
+        const containers::DataFrameView& _population,
         const std::vector<containers::DataFrame>& _peripheral );
 
     /// Copy constructor
@@ -83,6 +84,10 @@ class DecisionTreeEnsemble
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral ) const;
 
+    /// Returns one feature.
+    std::vector<RELBOOST_FLOAT> transform(
+        const TableHolder& _table_holder, size_t _n_feature ) const;
+
     /// Expresses DecisionTreeEnsemble as Poco::JSON::Object.
     Poco::JSON::Object to_json_obj() const;
 
@@ -101,6 +106,20 @@ class DecisionTreeEnsemble
 
     /// Trivial accessor.
     size_t num_features() const { return trees().size(); }
+
+    /// Trivial  accessor.
+    const std::vector<std::string>& peripheral_names() const
+    {
+        assert( impl().peripheral_names_ );
+        return *impl().peripheral_names_;
+    }
+
+    /// Trivial accessor.
+    const Placeholder& placeholder() const
+    {
+        assert( impl().placeholder_ );
+        return *impl().placeholder_;
+    }
 
     // -----------------------------------------------------------------
 
@@ -152,20 +171,6 @@ class DecisionTreeEnsemble
     {
         assert( loss_function_ );
         return *loss_function_;
-    }
-
-    /// Trivial (private) accessor
-    const std::vector<std::string>& peripheral_names() const
-    {
-        assert( impl().peripheral_names_ );
-        return *impl().peripheral_names_;
-    }
-
-    /// Trivial (private) accessor
-    const Placeholder& placeholder() const
-    {
-        assert( impl().placeholder_ );
-        return *impl().placeholder_;
     }
 
     /// Trivial (private) accessor

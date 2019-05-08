@@ -8,6 +8,7 @@ set(
     ${RELBOOST_SOURCE_DIRECTORY}/CriticalValueSorter.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/CrossEntropyLoss.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/DataFrame.cpp
+    ${RELBOOST_SOURCE_DIRECTORY}/DataFrameScatterer.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/DecisionTree.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/DecisionTreeEnsemble.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/DecisionTreeEnsembleImpl.cpp
@@ -23,5 +24,6 @@ set(
     ${RELBOOST_SOURCE_DIRECTORY}/SquareLoss.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/Sum.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/TableHolder.cpp
+    ${RELBOOST_SOURCE_DIRECTORY}/Threadutils.cpp
 )
 

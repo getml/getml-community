@@ -54,7 +54,7 @@ struct Sorter<enums::DataUsed::categorical_output>
 {
     static void sort(
         const size_t _num_column,
-        const containers::DataFrame& _df,
+        const containers::DataFrameView& _df,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end )
     {
@@ -116,7 +116,7 @@ struct Sorter<enums::DataUsed::discrete_output>
 {
     static void sort(
         const size_t _num_column,
-        const containers::DataFrame& _df,
+        const containers::DataFrameView& _df,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end )
     {
@@ -178,7 +178,7 @@ struct Sorter<enums::DataUsed::numerical_output>
 {
     static void sort(
         const size_t _num_column,
-        const containers::DataFrame& _df,
+        const containers::DataFrameView& _df,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end )
     {
@@ -211,7 +211,7 @@ struct Sorter<enums::DataUsed::same_units_discrete>
         const size_t _input_col,
         const size_t _output_col,
         const containers::DataFrame& _input,
-        const containers::DataFrame& _output,
+        const containers::DataFrameView& _output,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end )
     {
@@ -255,7 +255,7 @@ struct Sorter<enums::DataUsed::same_units_numerical>
         const size_t _input_col,
         const size_t _output_col,
         const containers::DataFrame& _input,
-        const containers::DataFrame& _output,
+        const containers::DataFrameView& _output,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end )
     {
@@ -297,7 +297,7 @@ struct Sorter<enums::DataUsed::time_stamps_diff>
 {
     static void sort(
         const containers::DataFrame& _input,
-        const containers::DataFrame& _output,
+        const containers::DataFrameView& _output,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end )
     {

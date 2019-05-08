@@ -12,6 +12,10 @@ struct Column
 {
     // ---------------------------------------------------------------------
 
+    typedef const T* iterator;
+
+    // ---------------------------------------------------------------------
+
     Column(
         const T* const _data,
         const std::string& _name,
@@ -31,7 +35,13 @@ struct Column
 
     // ---------------------------------------------------------------------
 
-   public:
+    /// Iterator begin
+    iterator begin() const { return data_; }
+
+    /// Iterator end
+    iterator end() const { return data_ + nrows_; }
+
+    /// Access operator
     const T& operator[]( size_t _i ) const
     {
         assert( _i < nrows_ );
@@ -52,6 +62,8 @@ struct Column
 
     /// Unit of the column
     const std::string unit_;
+
+    // ---------------------------------------------------------------------
 };
 
 // -------------------------------------------------------------------------

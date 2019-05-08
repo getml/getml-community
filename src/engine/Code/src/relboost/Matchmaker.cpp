@@ -7,7 +7,7 @@ namespace utils
 // ----------------------------------------------------------------------------
 
 std::vector<containers::Match> Matchmaker::make_matches(
-    const containers::DataFrame& _population,
+    const containers::DataFrameView& _population,
     const containers::DataFrame& _peripheral,
     const std::shared_ptr<const std::vector<RELBOOST_FLOAT>>& _sample_weights,
     const bool _use_timestamps )
@@ -39,7 +39,7 @@ std::vector<containers::Match> Matchmaker::make_matches(
 // ----------------------------------------------------------------------------
 
 void Matchmaker::make_matches(
-    const containers::DataFrame& _population,
+    const containers::DataFrameView& _population,
     const containers::DataFrame& _peripheral,
     const bool _use_timestamps,
     const size_t _ix_output,
@@ -49,16 +49,15 @@ void Matchmaker::make_matches(
 
     const auto time_stamp_out = _population.time_stamp( _ix_output );
 
-    auto it = _peripheral.indices()[0]->find( join_key );
-
-    if ( it != _peripheral.indices()[0]->end() )
+    if ( _peripheral.has( join_key ) )
         {
+            auto it = _peripheral.find( join_key );
+
             for ( size_t ix_input : it->second )
                 {
                     const auto lower = _peripheral.time_stamp( ix_input );
 
-                    const auto upper =
-                        _peripheral.upper_time_stamp( ix_input );
+                    const auto upper = _peripheral.upper_time_stamp( ix_input );
 
                     const bool match_in_range =
                         lower <= time_stamp_out &&
