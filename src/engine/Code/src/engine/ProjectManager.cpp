@@ -268,12 +268,12 @@ void ProjectManager::refresh( Poco::Net::StreamSocket* _socket )
 void ProjectManager::save_data_frame(
     const std::string& _name, Poco::Net::StreamSocket* _socket )
 {
-    multithreading::ReadLock read_lock( read_write_lock_ );
-
     if ( project_directory_ == "" )
         {
             throw std::invalid_argument( "You have not set a project!" );
         }
+
+    multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
 
     auto& df = utils::Getter::get( _name, &data_frames() );
 
@@ -294,6 +294,8 @@ void ProjectManager::save_relboost_model(
         {
             throw std::invalid_argument( "You have not set a project!" );
         }
+
+    multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
 
     auto model = get_relboost_model( _name );
 
