@@ -27,7 +27,7 @@
 // ----------------------------------------------------
 // Module files
 
-#include "engine/models/ModelBase.hpp"
+#include "engine/models/AbstractModel.hpp"
 
 #include "engine/models/Model.hpp"
 

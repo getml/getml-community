@@ -10,7 +10,7 @@ namespace models
 // ----------------------------------------------------------------------------
 
 template <typename FeatureEngineererType>
-class Model : public ModelBase
+class Model : public AbstractModel
 {
     // --------------------------------------------------------
 

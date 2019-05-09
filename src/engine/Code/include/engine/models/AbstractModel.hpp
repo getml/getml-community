@@ -1,5 +1,5 @@
-#ifndef ENGINE_MODELS_MODELBASE_HPP_
-#define ENGINE_MODELS_MODELBASE_HPP_
+#ifndef ENGINE_MODELS_ABSTRACTMODEL_HPP_
+#define ENGINE_MODELS_ABSTRACTMODEL_HPP_
 
 // ----------------------------------------------------------------------------
 
@@ -9,14 +9,14 @@ namespace models
 {
 // ----------------------------------------------------------------------------
 
-class ModelBase
+class AbstractModel
 {
     // --------------------------------------------------------
 
    public:
-    ModelBase() {}
+    AbstractModel() {}
 
-    ~ModelBase() = default;
+    ~AbstractModel() = default;
 
     // --------------------------------------------------------
 
@@ -58,4 +58,4 @@ class ModelBase
 
 // ----------------------------------------------------------------------------
 
-#endif  // ENGINE_MODELS_MODELBASE_HPP_
+#endif  // ENGINE_MODELS_ABSTRACTMODEL_HPP_
