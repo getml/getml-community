@@ -16,7 +16,8 @@ class DecisionTree
         const std::shared_ptr<const std::vector<std::string>>& _encoding,
         const std::shared_ptr<const Hyperparameters>& _hyperparameters,
         const std::shared_ptr<lossfunctions::LossFunction>& _loss_function,
-        const size_t _peripheral_used );
+        const size_t _peripheral_used,
+        multithreading::Communicator* _comm );
 
     DecisionTree(
         const std::shared_ptr<const std::vector<std::string>>& _encoding,
@@ -64,12 +65,29 @@ class DecisionTree
     /// Trivial getter
     const size_t peripheral_used() const { return peripheral_used_; }
 
+    /// Trivial setter.
+    void set_comm( multithreading::Communicator* _comm )
+    {
+        comm_ = _comm;
+        if ( root_ )
+            {
+                root_->set_comm( _comm );
+            }
+    }
+
     /// Trivial getter
     const RELBOOST_FLOAT update_rate() const { return update_rate_; }
 
     // -----------------------------------------------------------------
 
    private:
+    /// Trivial (private) accessor.
+    multithreading::Communicator& comm()
+    {
+        assert( comm_ != nullptr );
+        return *comm_;
+    }
+
     /// Trivial (private) accessor
     const Hyperparameters& hyperparameters()
     {
@@ -107,6 +125,9 @@ class DecisionTree
     // -----------------------------------------------------------------
 
    private:
+    /// raw pointer to the communicator.
+    multithreading::Communicator* comm_;
+
     /// Encoding for the categorical data, maps integers to underlying category.
     std::shared_ptr<const std::vector<std::string>> encoding_;
 

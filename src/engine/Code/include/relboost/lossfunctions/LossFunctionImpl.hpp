@@ -61,12 +61,14 @@ class LossFunctionImpl
         const std::vector<RELBOOST_FLOAT>& _sample_weights,
         RELBOOST_FLOAT* _sum_g,
         RELBOOST_FLOAT* _sum_h,
-        RELBOOST_FLOAT* _sum_sample_weights ) const;
+        RELBOOST_FLOAT* _sum_sample_weights,
+        multithreading::Communicator* _comm ) const;
 
     /// Calculates the update rate.
     RELBOOST_FLOAT calc_update_rate(
         const std::vector<RELBOOST_FLOAT>& _yhat_old,
-        const std::vector<RELBOOST_FLOAT>& _predictions ) const;
+        const std::vector<RELBOOST_FLOAT>& _predictions,
+        multithreading::Communicator* _comm ) const;
 
     /// Calculates two new weights given matches. This just reduces to the
     /// normal XGBoost approach.
@@ -76,7 +78,8 @@ class LossFunctionImpl
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _split_begin,
         const std::vector<const containers::Match*>::iterator _split_end,
-        const std::vector<const containers::Match*>::iterator _end ) const;
+        const std::vector<const containers::Match*>::iterator _end,
+        multithreading::Communicator* _comm ) const;
 
     /// Commits yhat.
     RELBOOST_FLOAT commit(
@@ -107,13 +110,19 @@ class LossFunctionImpl
         const std::vector<size_t>& _indices,
         const std::vector<RELBOOST_FLOAT>& _eta1,
         const std::vector<RELBOOST_FLOAT>& _eta2,
-        const std::vector<RELBOOST_FLOAT>& _yhat_committed ) const
+        const std::vector<RELBOOST_FLOAT>& _yhat_committed,
+        multithreading::Communicator* _comm ) const
     {
         if ( _agg == enums::Aggregation::avg ||
              _agg == enums::Aggregation::sum )
             {
                 return calc_weights(
-                    _old_weight, _indices, _eta1, _eta2, _yhat_committed );
+                    _old_weight,
+                    _indices,
+                    _eta1,
+                    _eta2,
+                    _yhat_committed,
+                    _comm );
             }
         else if (
             _agg == enums::Aggregation::avg_first_null ||
@@ -125,7 +134,8 @@ class LossFunctionImpl
                     _indices,
                     _eta1,
                     _eta2,
-                    _yhat_committed );
+                    _yhat_committed,
+                    _comm );
             }
         else
             {
@@ -189,7 +199,8 @@ class LossFunctionImpl
         const std::vector<size_t>& _indices,
         const std::vector<RELBOOST_FLOAT>& _eta1,
         const std::vector<RELBOOST_FLOAT>& _eta2,
-        const std::vector<RELBOOST_FLOAT>& _yhat_committed ) const;
+        const std::vector<RELBOOST_FLOAT>& _yhat_committed,
+        multithreading::Communicator* _comm ) const;
 
     /// Calculates a new weight given eta and indices when the aggregation at
     /// the lowest level is AVG and the other weight is NULL.
@@ -199,7 +210,8 @@ class LossFunctionImpl
         const std::vector<size_t>& _indices,
         const std::vector<RELBOOST_FLOAT>& _eta,
         const std::vector<RELBOOST_FLOAT>& _w_fixed,
-        const std::vector<RELBOOST_FLOAT>& _yhat_committed ) const;
+        const std::vector<RELBOOST_FLOAT>& _yhat_committed,
+        multithreading::Communicator* _comm ) const;
 
     /// Calculates new yhat given the new_weights, eta and indices when
     /// the aggregation at the lowest level is AVG or SUM and there are no NULL

@@ -15,6 +15,8 @@
 
 #include <Eigen/Dense>
 
+#include "multithreading/multithreading.hpp"
+
 #include "relboost/types.hpp"
 
 #include "relboost/Hyperparameters.hpp"
@@ -22,6 +24,8 @@
 #include "relboost/containers/containers.hpp"
 
 #include "relboost/enums/enums.hpp"
+
+#include "relboost/utils/utils.hpp"
 
 // ----------------------------------------------------------------------------
 

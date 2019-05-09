@@ -17,7 +17,8 @@ struct DecisionTreeEnsembleImpl
         const std::shared_ptr<const std::vector<std::string>>&
             _peripheral_names,
         const std::shared_ptr<const Placeholder>& _placeholder )
-        : encoding_( _encoding ),
+        : comm_( nullptr ),
+          encoding_( _encoding ),
           hyperparameters_( _hyperparameters ),
           initial_prediction_( 0.0 ),
           peripheral_names_( _peripheral_names ),
@@ -36,7 +37,11 @@ struct DecisionTreeEnsembleImpl
 
     // ------------------------------------------------------------------------
 
-    /// Encoding for the categorical data, maps integers to underlying category.
+    /// raw pointer to the communicator.
+    multithreading::Communicator* comm_;
+
+    /// Encoding for the categorical data, maps integers to underlying
+    /// category.
     std::shared_ptr<const std::vector<std::string>> encoding_;
 
     /// Hyperparameters used to train the relboost model.

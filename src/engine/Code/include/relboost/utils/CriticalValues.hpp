@@ -22,7 +22,8 @@ class CriticalValues
         const containers::DataFrame& _input,
         const containers::DataFrameView& _output,
         const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _end );
+        const std::vector<const containers::Match*>::iterator _end,
+        multithreading::Communicator* _comm );
 
     /// Calculates the critical values for discrete columns.
     static std::vector<RELBOOST_FLOAT> calc_discrete(
@@ -32,7 +33,8 @@ class CriticalValues
         const containers::DataFrame& _input,
         const containers::DataFrameView& _output,
         const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _end );
+        const std::vector<const containers::Match*>::iterator _end,
+        multithreading::Communicator* _comm );
 
     /// Calculates the critical values for numerical columns.
     static std::vector<RELBOOST_FLOAT> calc_numerical(
@@ -42,7 +44,8 @@ class CriticalValues
         const containers::DataFrame& _input,
         const containers::DataFrameView& _output,
         const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _end );
+        const std::vector<const containers::Match*>::iterator _end,
+        multithreading::Communicator* _comm );
 
     // --------------------------------------------------------------------
 
@@ -54,7 +57,8 @@ class CriticalValues
         const containers::DataFrame& _input,
         const containers::DataFrameView& _output,
         const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _end )
+        const std::vector<const containers::Match*>::iterator _end,
+        multithreading::Communicator* _comm )
     {
         assert( !is_same_units( _data_used ) );
         assert( _data_used != enums::DataUsed::same_units_categorical );
@@ -66,7 +70,8 @@ class CriticalValues
             _input,
             _output,
             _begin,
-            _end );
+            _end,
+            _comm );
     }
 
     /// Wrapper around calc_numerical.
@@ -76,7 +81,8 @@ class CriticalValues
         const containers::DataFrame& _input,
         const containers::DataFrameView& _output,
         const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _end )
+        const std::vector<const containers::Match*>::iterator _end,
+        multithreading::Communicator* _comm )
     {
         assert( !is_same_units( _data_used ) );
         assert( _data_used != enums::DataUsed::same_units_categorical );
@@ -88,7 +94,8 @@ class CriticalValues
             _input,
             _output,
             _begin,
-            _end );
+            _end,
+            _comm );
     }
 
     // --------------------------------------------------------------------
@@ -104,7 +111,8 @@ class CriticalValues
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end,
         RELBOOST_INT* _min,
-        RELBOOST_INT* _max );
+        RELBOOST_INT* _max,
+        multithreading::Communicator* _comm );
 
     /// Finds the minimum and the maximum needed for calculating the
     /// critical values (discrete and numerical).
@@ -116,7 +124,8 @@ class CriticalValues
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end,
         RELBOOST_FLOAT* _min,
-        RELBOOST_FLOAT* _max );
+        RELBOOST_FLOAT* _max,
+        multithreading::Communicator* _comm );
 
     /// Finds the minimum and the maximum needed for calculating the
     /// critical values (same units discrete and numerical).
@@ -129,7 +138,8 @@ class CriticalValues
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end,
         RELBOOST_FLOAT* _min,
-        RELBOOST_FLOAT* _max );
+        RELBOOST_FLOAT* _max,
+        multithreading::Communicator* _comm );
 
     // --------------------------------------------------------------------
 

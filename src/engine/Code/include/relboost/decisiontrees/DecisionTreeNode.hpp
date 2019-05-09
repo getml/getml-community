@@ -17,7 +17,8 @@ class DecisionTreeNode
         const RELBOOST_INT _depth,
         const std::shared_ptr<const Hyperparameters>& _hyperparameters,
         const std::shared_ptr<lossfunctions::LossFunction>& _loss_function,
-        const RELBOOST_FLOAT _weight );
+        const RELBOOST_FLOAT _weight,
+        multithreading::Communicator* _comm );
 
     DecisionTreeNode(
         const utils::ConditionMaker& _condition_maker,
@@ -60,6 +61,21 @@ class DecisionTreeNode
 
     // -----------------------------------------------------------------
 
+   public:
+    /// Trivial setter.
+    void set_comm( multithreading::Communicator* _comm )
+    {
+        comm_ = _comm;
+        if ( child_greater_ )
+            {
+                assert( child_smaller_ );
+                child_greater_->set_comm( _comm );
+                child_smaller_->set_comm( _comm );
+            }
+    }
+
+    // -----------------------------------------------------------------
+
    private:
     /// Add to the candidate splits.
     void add_candidates(
@@ -72,6 +88,13 @@ class DecisionTreeNode
         const std::vector<const containers::Match*>::iterator _it,
         const std::vector<const containers::Match*>::iterator _end,
         std::vector<containers::CandidateSplit>* _candidates );
+
+    /// DEBUG ONLY:Makes sure that the candidates and the max element are
+    /// aligned over all threads.
+    void assert_aligned(
+        const std::vector<containers::CandidateSplit>::iterator _begin,
+        const std::vector<containers::CandidateSplit>::iterator _end,
+        const std::vector<containers::CandidateSplit>::iterator _it );
 
     /// Expresses the split in SQL as passed on to the greater node.
     std::string condition_greater() const;
@@ -193,7 +216,14 @@ class DecisionTreeNode
     // -----------------------------------------------------------------
 
    private:
-    /// Trivial accessor.
+    /// Trivial (private) accessor.
+    multithreading::Communicator& comm()
+    {
+        assert( comm_ != nullptr );
+        return *comm_;
+    }
+
+    /// Trivial (private) accessor.
     const Hyperparameters& hyperparameters() const
     {
         assert( hyperparameters_ );
@@ -224,6 +254,9 @@ class DecisionTreeNode
     // -----------------------------------------------------------------
 
    private:
+    /// raw pointer to the communicator.
+    multithreading::Communicator* comm_;
+
     /// Branch when value is greater than critical_value
     containers::Optional<DecisionTreeNode> child_greater_;
 

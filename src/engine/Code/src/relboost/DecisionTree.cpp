@@ -10,8 +10,10 @@ DecisionTree::DecisionTree(
     const std::shared_ptr<const std::vector<std::string>>& _encoding,
     const std::shared_ptr<const Hyperparameters>& _hyperparameters,
     const std::shared_ptr<lossfunctions::LossFunction>& _loss_function,
-    const size_t _peripheral_used )
-    : encoding_( _encoding ),
+    const size_t _peripheral_used,
+    multithreading::Communicator* _comm )
+    : comm_( _comm ),
+      encoding_( _encoding ),
       hyperparameters_( _hyperparameters ),
       intercept_( 0.0 ),
       loss_function_( _loss_function ),
@@ -27,7 +29,8 @@ DecisionTree::DecisionTree(
     const std::shared_ptr<const Hyperparameters>& _hyperparameters,
     const std::shared_ptr<lossfunctions::LossFunction>& _loss_function,
     const Poco::JSON::Object& _obj )
-    : encoding_( _encoding ),
+    : comm_( nullptr ),
+      encoding_( _encoding ),
       hyperparameters_( _hyperparameters ),
       loss_function_( aggregations::AggregationParser::parse(
           JSON::get_value<std::string>( _obj, "loss_" ), _loss_function ) )
@@ -73,7 +76,8 @@ void DecisionTree::fit(
         0,
         hyperparameters_,
         loss_function_,
-        0.0 ) );
+        0.0,
+        &comm() ) );
 
     root_->fit( _output, _input, _begin, _end, &intercept_ );
 

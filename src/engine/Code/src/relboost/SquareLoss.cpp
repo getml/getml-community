@@ -72,6 +72,12 @@ RELBOOST_FLOAT SquareLoss::calc_loss(
             loss += diff * diff * ( *sample_weights_ )[ix];
         }
 
+    // ------------------------------------------------------------------------
+
+    utils::Reducer::reduce( std::plus<RELBOOST_FLOAT>(), &loss, &comm() );
+
+    // ------------------------------------------------------------------------
+
     assert( sum_sample_weights_ > 0.0 || sample_index_.size() == 0.0 );
 
     if ( sum_sample_weights_ > 0.0 )
@@ -144,12 +150,14 @@ RELBOOST_FLOAT SquareLoss::evaluate_tree(
 
     RELBOOST_FLOAT loss = 0.0;
 
-    for ( size_t i = 0; i < _yhat_new.size(); ++i )
+    for ( size_t ix : sample_index_ )
         {
-            const auto diff = _yhat_new[i] - targets()[i];
+            const auto diff = _yhat_new[ix] - targets()[ix];
 
-            loss += diff * diff * ( *sample_weights_ )[i];
+            loss += diff * diff * ( *sample_weights_ )[ix];
         }
+
+    utils::Reducer::reduce( std::plus<RELBOOST_FLOAT>(), &loss, &comm() );
 
     return loss;
 }

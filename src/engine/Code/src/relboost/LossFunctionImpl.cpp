@@ -139,7 +139,8 @@ void LossFunctionImpl::calc_sums(
     const std::vector<RELBOOST_FLOAT>& _sample_weights,
     RELBOOST_FLOAT* _sum_g,
     RELBOOST_FLOAT* _sum_h,
-    RELBOOST_FLOAT* _sum_sample_weights ) const
+    RELBOOST_FLOAT* _sum_sample_weights,
+    multithreading::Communicator* _comm ) const
 {
     // ------------------------------------------------------------------------
 
@@ -177,13 +178,19 @@ void LossFunctionImpl::calc_sums(
         }
 
     // ------------------------------------------------------------------------
+
+    utils::Reducer::reduce(
+        std::plus<RELBOOST_FLOAT>(), _sum_sample_weights, _comm );
+
+    // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
 
 RELBOOST_FLOAT LossFunctionImpl::calc_update_rate(
     const std::vector<RELBOOST_FLOAT>& _yhat_old,
-    const std::vector<RELBOOST_FLOAT>& _predictions ) const
+    const std::vector<RELBOOST_FLOAT>& _predictions,
+    multithreading::Communicator* _comm ) const
 {
     // ------------------------------------------------------------------------
 
@@ -213,6 +220,14 @@ RELBOOST_FLOAT LossFunctionImpl::calc_update_rate(
 
     // ------------------------------------------------------------------------
 
+    utils::Reducer::reduce(
+        std::plus<RELBOOST_FLOAT>(), &sum_g_predictions, _comm );
+
+    utils::Reducer::reduce(
+        std::plus<RELBOOST_FLOAT>(), &sum_h_predictions, _comm );
+
+    // ------------------------------------------------------------------------
+
     if ( sum_h_predictions == 0.0 )
         {
             return 0.0;
@@ -233,7 +248,8 @@ std::vector<std::array<RELBOOST_FLOAT, 3>> LossFunctionImpl::calc_weights(
     const std::vector<const containers::Match*>::iterator _begin,
     const std::vector<const containers::Match*>::iterator _split_begin,
     const std::vector<const containers::Match*>::iterator _split_end,
-    const std::vector<const containers::Match*>::iterator _end ) const
+    const std::vector<const containers::Match*>::iterator _end,
+    multithreading::Communicator* _comm ) const
 {
     // ------------------------------------------------------------------------
     // Note the minus!
@@ -281,7 +297,8 @@ std::array<RELBOOST_FLOAT, 3> LossFunctionImpl::calc_weights_avg_null(
     const std::vector<size_t>& _indices,
     const std::vector<RELBOOST_FLOAT>& _eta,
     const std::vector<RELBOOST_FLOAT>& _w_fixed,
-    const std::vector<RELBOOST_FLOAT>& _yhat_committed ) const
+    const std::vector<RELBOOST_FLOAT>& _yhat_committed,
+    multithreading::Communicator* _comm ) const
 {
     // ------------------------------------------------------------------------
 
@@ -296,59 +313,81 @@ std::array<RELBOOST_FLOAT, 3> LossFunctionImpl::calc_weights_avg_null(
     // ------------------------------------------------------------------------
     // Calculate g_eta.
 
-    Eigen::Matrix<RELBOOST_FLOAT, 2, 1> g_eta =
-        Eigen::Matrix<RELBOOST_FLOAT, 2, 1>::Zero();
+    std::array<RELBOOST_FLOAT, 2> g_eta_arr = {0.0, 0.0};
 
     // The intercept term.
-    g_eta[0] = -sum_g_;
+    g_eta_arr[0] = -sum_g_;
 
     for ( const auto ix : _indices )
         {
             assert( ix < targets().size() );
-            g_eta[1] -= g_[ix] * _eta[ix] * sample_weights( ix );
+            g_eta_arr[1] -= g_[ix] * _eta[ix] * sample_weights( ix );
         }
 
     // ------------------------------------------------------------------------
     // Calculate h_w_const.
 
-    Eigen::Matrix<RELBOOST_FLOAT, 2, 1> h_w_const =
-        Eigen::Matrix<RELBOOST_FLOAT, 2, 1>::Zero();
+    std::array<RELBOOST_FLOAT, 2> h_w_const_arr = {0.0, 0.0};
 
-    h_w_const[0] = -sum_h_yhat_committed_;
+    h_w_const_arr[0] = -sum_h_yhat_committed_;
 
     for ( const auto ix : _indices )
         {
             assert( !std::isnan( _w_fixed[ix] ) );
             assert( ix < targets().size() );
 
-            h_w_const[0] -= h_[ix] * ( _w_fixed[ix] - _yhat_committed[ix] ) *
-                            sample_weights( ix );
-            h_w_const[1] -=
+            h_w_const_arr[0] -= h_[ix] *
+                                ( _w_fixed[ix] - _yhat_committed[ix] ) *
+                                sample_weights( ix );
+            h_w_const_arr[1] -=
                 h_[ix] * _w_fixed[ix] * _eta[ix] * sample_weights( ix );
         }
 
     // ------------------------------------------------------------------------
     // Calculate A.
 
-    Eigen::Matrix<RELBOOST_FLOAT, 2, 2> A =
-        Eigen::Matrix<RELBOOST_FLOAT, 2, 2>::Zero();
+    std::array<RELBOOST_FLOAT, 3> A_arr = {0.0, 0.0, 0.0};
 
     // The intercept term.
-    A( 0, 0 ) = sum_h_ + hyperparameters().lambda_ *
-                             static_cast<RELBOOST_FLOAT>( targets().size() );
+    A_arr[0] = sum_h_ +
+               hyperparameters().lambda_ * static_cast<RELBOOST_FLOAT>(
+                                               targets().size() );  // A( 0, 0 )
 
     for ( const auto ix : _indices )
         {
             assert( ix < targets().size() );
 
-            A( 0, 1 ) += h_[ix] * _eta[ix] * sample_weights( ix );
+            A_arr[1] += h_[ix] * _eta[ix] * sample_weights( ix );  // A( 0, 1 )
 
-            A( 1, 1 ) += ( h_[ix] * _eta[ix] + hyperparameters().lambda_ ) *
-                         _eta[ix] * sample_weights( ix );
+            A_arr[2] += ( h_[ix] * _eta[ix] + hyperparameters().lambda_ ) *
+                        _eta[ix] * sample_weights( ix );  // A( 1, 1 )
         }
 
-    // Note that A is symmetric.
-    A( 1, 0 ) = A( 0, 1 );
+    // ------------------------------------------------------------------------
+    // Reduce.
+
+    utils::Reducer::reduce<2>( std::plus<RELBOOST_FLOAT>(), &g_eta_arr, _comm );
+
+    utils::Reducer::reduce<2>(
+        std::plus<RELBOOST_FLOAT>(), &h_w_const_arr, _comm );
+
+    utils::Reducer::reduce<3>( std::plus<RELBOOST_FLOAT>(), &A_arr, _comm );
+
+    // ------------------------------------------------------------------------
+    // Transfer data to Eigen::Matrix.
+
+    Eigen::Matrix<RELBOOST_FLOAT, 2, 1> g_eta;
+    g_eta[0] = g_eta_arr[0];
+    g_eta[1] = g_eta_arr[1];
+
+    Eigen::Matrix<RELBOOST_FLOAT, 2, 1> h_w_const;
+    h_w_const[0] = h_w_const_arr[0];
+    h_w_const[1] = h_w_const_arr[1];
+
+    Eigen::Matrix<RELBOOST_FLOAT, 2, 2> A;
+    A( 0, 0 ) = A_arr[0];
+    A( 1, 1 ) = A_arr[2];
+    A( 1, 0 ) = A( 0, 1 ) = A_arr[1];
 
     // ------------------------------------------------------------------------
     // Calculate b.
@@ -399,7 +438,8 @@ std::array<RELBOOST_FLOAT, 3> LossFunctionImpl::calc_weights(
     const std::vector<size_t>& _indices,
     const std::vector<RELBOOST_FLOAT>& _eta1,
     const std::vector<RELBOOST_FLOAT>& _eta2,
-    const std::vector<RELBOOST_FLOAT>& _yhat_committed ) const
+    const std::vector<RELBOOST_FLOAT>& _yhat_committed,
+    multithreading::Communicator* _comm ) const
 {
     // ------------------------------------------------------------------------
 
@@ -412,28 +452,26 @@ std::array<RELBOOST_FLOAT, 3> LossFunctionImpl::calc_weights(
     assert( sample_weights_->size() == targets().size() );
 
     // ------------------------------------------------------------------------
-    // Calculate g_eta.
+    // Calculate g_eta_arr.
 
-    Eigen::Matrix<RELBOOST_FLOAT, 3, 1> g_eta =
-        Eigen::Matrix<RELBOOST_FLOAT, 3, 1>::Zero();
+    std::array<RELBOOST_FLOAT, 3> g_eta_arr = {0.0, 0.0, 0.0};
 
     // The intercept term.
-    g_eta[0] = -sum_g_;
+    g_eta_arr[0] = -sum_g_;
 
     for ( const auto ix : _indices )
         {
             assert( ix < targets().size() );
-            g_eta[1] -= g_[ix] * _eta1[ix] * sample_weights( ix );
-            g_eta[2] -= g_[ix] * _eta2[ix] * sample_weights( ix );
+            g_eta_arr[1] -= g_[ix] * _eta1[ix] * sample_weights( ix );
+            g_eta_arr[2] -= g_[ix] * _eta2[ix] * sample_weights( ix );
         }
 
     // ------------------------------------------------------------------------
-    // Calculate h_w_const.
+    // Calculate h_w_const_arr.
 
-    Eigen::Matrix<RELBOOST_FLOAT, 3, 1> h_w_const =
-        Eigen::Matrix<RELBOOST_FLOAT, 3, 1>::Zero();
+    std::array<RELBOOST_FLOAT, 3> h_w_const_arr = {0.0, 0.0, 0.0};
 
-    h_w_const[0] = -sum_h_yhat_committed_;
+    h_w_const_arr[0] = -sum_h_yhat_committed_;
 
     for ( const auto ix : _indices )
         {
@@ -441,42 +479,72 @@ std::array<RELBOOST_FLOAT, 3> LossFunctionImpl::calc_weights(
             const auto w_fixed = _yhat_committed[ix] - w_old;
 
             assert( ix < targets().size() );
-            h_w_const[0] += h_[ix] * w_old * sample_weights( ix );
-            h_w_const[1] -= h_[ix] * w_fixed * _eta1[ix] * sample_weights( ix );
-            h_w_const[2] -= h_[ix] * w_fixed * _eta2[ix] * sample_weights( ix );
+            h_w_const_arr[0] += h_[ix] * w_old * sample_weights( ix );
+            h_w_const_arr[1] -=
+                h_[ix] * w_fixed * _eta1[ix] * sample_weights( ix );
+            h_w_const_arr[2] -=
+                h_[ix] * w_fixed * _eta2[ix] * sample_weights( ix );
         }
 
     // ------------------------------------------------------------------------
-    // Calculate A.
+    // Calculate A_arr.
 
-    Eigen::Matrix<RELBOOST_FLOAT, 3, 3> A =
-        Eigen::Matrix<RELBOOST_FLOAT, 3, 3>::Zero();
+    std::array<RELBOOST_FLOAT, 6> A_arr = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
     // The intercept term.
-    A( 0, 0 ) = sum_h_ + hyperparameters().lambda_ *
-                             static_cast<RELBOOST_FLOAT>( targets().size() );
+    A_arr[0] = sum_h_ +
+               hyperparameters().lambda_ * static_cast<RELBOOST_FLOAT>(
+                                               targets().size() );  // A( 0, 0 )
 
     for ( const auto ix : _indices )
         {
             assert( ix < targets().size() );
 
-            A( 0, 1 ) += h_[ix] * _eta1[ix] * sample_weights( ix );
+            A_arr[1] += h_[ix] * _eta1[ix] * sample_weights( ix );  // A( 0, 1 )
 
-            A( 0, 2 ) += h_[ix] * _eta2[ix] * sample_weights( ix );
+            A_arr[2] +=
+                h_[ix] * _eta2[ix] * sample_weights( ix );  //  A( 0, 2 )
 
-            A( 1, 1 ) += ( h_[ix] * _eta1[ix] + hyperparameters().lambda_ ) *
-                         _eta1[ix] * sample_weights( ix );
+            A_arr[3] += ( h_[ix] * _eta1[ix] + hyperparameters().lambda_ ) *
+                        _eta1[ix] * sample_weights( ix );  // A( 1, 1 )
 
-            A( 1, 2 ) += h_[ix] * _eta1[ix] * _eta2[ix] * sample_weights( ix );
+            A_arr[4] += h_[ix] * _eta1[ix] * _eta2[ix] *
+                        sample_weights( ix );  // A( 1, 2 )
 
-            A( 2, 2 ) += ( h_[ix] * _eta2[ix] + hyperparameters().lambda_ ) *
-                         _eta2[ix] * sample_weights( ix );
+            A_arr[5] += ( h_[ix] * _eta2[ix] + hyperparameters().lambda_ ) *
+                        _eta2[ix] * sample_weights( ix );  // A( 2, 2 )
         }
 
-    // Note that A is symmetric.
-    A( 1, 0 ) = A( 0, 1 );
-    A( 2, 0 ) = A( 0, 2 );
-    A( 2, 1 ) = A( 1, 2 );
+    // ------------------------------------------------------------------------
+    // Reduce.
+
+    utils::Reducer::reduce<3>( std::plus<RELBOOST_FLOAT>(), &g_eta_arr, _comm );
+
+    utils::Reducer::reduce<3>(
+        std::plus<RELBOOST_FLOAT>(), &h_w_const_arr, _comm );
+
+    utils::Reducer::reduce<6>( std::plus<RELBOOST_FLOAT>(), &A_arr, _comm );
+
+    // ------------------------------------------------------------------------
+    // Transfer data to Eigen::Matrix.
+
+    Eigen::Matrix<RELBOOST_FLOAT, 3, 1> g_eta;
+    g_eta[0] = g_eta_arr[0];
+    g_eta[1] = g_eta_arr[1];
+    g_eta[2] = g_eta_arr[2];
+
+    Eigen::Matrix<RELBOOST_FLOAT, 3, 1> h_w_const;
+    h_w_const[0] = h_w_const_arr[0];
+    h_w_const[1] = h_w_const_arr[1];
+    h_w_const[2] = h_w_const_arr[2];
+
+    Eigen::Matrix<RELBOOST_FLOAT, 3, 3> A;
+    A( 0, 0 ) = A_arr[0];
+    A( 1, 1 ) = A_arr[3];
+    A( 2, 2 ) = A_arr[5];
+    A( 1, 0 ) = A( 0, 1 ) = A_arr[1];
+    A( 2, 0 ) = A( 0, 2 ) = A_arr[2];
+    A( 2, 1 ) = A( 1, 2 ) = A_arr[4];
 
     // ------------------------------------------------------------------------
     // Calculate b.

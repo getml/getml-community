@@ -194,6 +194,12 @@ class Avg : public lossfunctions::LossFunction
         revert_to_commit();
     };
 
+    /// Trivial setter.
+    void set_comm( multithreading::Communicator* _comm ) final
+    {
+        child_->set_comm( _comm );
+    }
+
     /// Describes the type of the aggregation.
     std::string type() const final { return "AVG"; }
 

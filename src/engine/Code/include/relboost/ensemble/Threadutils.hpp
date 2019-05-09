@@ -52,4 +52,6 @@ class Threadutils
 }  // namespace ensemble
 }  // namespace relboost
 
+// ----------------------------------------------------------------------------
+
 #endif  // RELBOOST_ENSEMBLE_THREADUTILS_HPP_

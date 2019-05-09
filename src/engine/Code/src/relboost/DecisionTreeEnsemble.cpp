@@ -75,6 +75,24 @@ DecisionTreeEnsemble::DecisionTreeEnsemble(
 
 // ----------------------------------------------------------------------------
 
+void DecisionTreeEnsemble::calc_initial_prediction()
+{
+    auto sum = std::accumulate(
+        targets().begin(), targets().end(), 0.0, std::plus<RELBOOST_FLOAT>() );
+
+    auto count = static_cast<RELBOOST_FLOAT>( targets().size() );
+
+    utils::Reducer::reduce( std::plus<RELBOOST_FLOAT>(), &sum, &comm() );
+
+    utils::Reducer::reduce( std::plus<RELBOOST_FLOAT>(), &count, &comm() );
+
+    initial_prediction() = sum / count;
+
+    loss_function().apply_inverse( &initial_prediction() );
+}
+
+// ----------------------------------------------------------------------------
+
 RELBOOST_FLOAT DecisionTreeEnsemble::calc_loss_reduction(
     const decisiontrees::DecisionTree &_decision_tree,
     const std::vector<RELBOOST_FLOAT> &_yhat_old,
@@ -109,6 +127,7 @@ void DecisionTreeEnsemble::clean_up()
 {
     table_holder_.reset();
     yhat_old_.reset();
+    set_comm( nullptr );
 }
 
 // ----------------------------------------------------------------------------
@@ -120,13 +139,15 @@ void DecisionTreeEnsemble::fit(
 {
     // ------------------------------------------------------
 
-    // multithreading::Communicator comm( _num_threads );
+    const auto num_threads =
+        Threadutils::get_num_threads( hyperparameters().num_threads_ );
+
+    multithreading::Communicator comm( num_threads );
+
+    set_comm( &comm );
 
     // ------------------------------------------------------
     // Build thread_nums
-
-    const auto num_threads = 1;
-    // get_num_threads( _ensemble->hyperparameters().num_threads_ );
 
     const auto thread_nums = utils::DataFrameScatterer::build_thread_nums(
         _population.join_keys(), num_threads );
@@ -273,7 +294,8 @@ void DecisionTreeEnsemble::fit_new_feature()
                         impl().encoding_,
                         impl().hyperparameters_,
                         agg,
-                        ix_table_used ) );
+                        ix_table_used,
+                        &comm() ) );
 
                     candidates.back().fit(
                         output_table,
@@ -366,14 +388,8 @@ void DecisionTreeEnsemble::init(
         }
 
     // ------------------------------------------------------------------------
-    // Calculate initial prediction.
 
-    initial_prediction() = std::accumulate(
-        targets().begin(), targets().end(), 0.0, std::plus<RELBOOST_FLOAT>() );
-
-    initial_prediction() /= static_cast<RELBOOST_FLOAT>( targets().size() );
-
-    loss_function().apply_inverse( &initial_prediction() );
+    calc_initial_prediction();
 
     // ------------------------------------------------------------------------
     // Calculate gradient.

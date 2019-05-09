@@ -135,6 +135,9 @@ class LossFunction
     /// Reverts the weights to the last time commit has been called.
     virtual void revert_to_commit( const std::vector<size_t>& _indices ) = 0;
 
+    /// Trivial setter.
+    virtual void set_comm( multithreading::Communicator* _comm ) = 0;
+
     /// Generates the predictions.
     virtual RELBOOST_FLOAT transform(
         const std::vector<RELBOOST_FLOAT>& _weights ) const = 0;

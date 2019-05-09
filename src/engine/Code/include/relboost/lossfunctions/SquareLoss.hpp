@@ -17,7 +17,8 @@ class SquareLoss : public LossFunction
     SquareLoss(
         const std::shared_ptr<const Hyperparameters>& _hyperparameters,
         const std::shared_ptr<std::vector<RELBOOST_FLOAT>>& _targets )
-        : hyperparameters_( _hyperparameters ),
+        : comm_( nullptr ),
+          hyperparameters_( _hyperparameters ),
           loss_committed_( 0.0 ),
           sum_h_yhat_committed_( 0.0 ),
           sum_sample_weights_( 0.0 ),
@@ -89,7 +90,8 @@ class SquareLoss : public LossFunction
             *sample_weights_,
             &sum_g_,
             &sum_h_,
-            &sum_sample_weights_ );
+            &sum_sample_weights_,
+            &comm() );
     }
 
     /// Calculates the update rate.
@@ -97,7 +99,7 @@ class SquareLoss : public LossFunction
         const std::vector<RELBOOST_FLOAT>& _yhat_old,
         const std::vector<RELBOOST_FLOAT>& _predictions ) final
     {
-        return impl_.calc_update_rate( _yhat_old, _predictions );
+        return impl_.calc_update_rate( _yhat_old, _predictions, &comm() );
     }
 
     /// Calculates two new weights given matches. This just reduces to the
@@ -112,7 +114,13 @@ class SquareLoss : public LossFunction
         const std::vector<const containers::Match*>::iterator _end ) final
     {
         return impl_.calc_weights(
-            _update, _old_weight, _begin, _split_begin, _split_end, _end );
+            _update,
+            _old_weight,
+            _begin,
+            _split_begin,
+            _split_end,
+            _end,
+            &comm() );
     }
 
     /// Calculates two new weights given eta and indices.
@@ -124,7 +132,13 @@ class SquareLoss : public LossFunction
         const std::vector<RELBOOST_FLOAT>& _eta2 ) final
     {
         return impl_.calc_weights(
-            _agg, _old_weight, _indices, _eta1, _eta2, yhat_committed_ );
+            _agg,
+            _old_weight,
+            _indices,
+            _eta1,
+            _eta2,
+            yhat_committed_,
+            &comm() );
     }
 
     /// Calculates the new yhat given eta, indices and the new weights.
@@ -252,6 +266,12 @@ class SquareLoss : public LossFunction
         impl_.revert_to_commit( _indices, yhat_committed_, &yhat_ );
     };
 
+    /// Trivial setter.
+    void set_comm( multithreading::Communicator* _comm ) final
+    {
+        comm_ = _comm;
+    }
+
     /// Generates the predictions.
     RELBOOST_FLOAT transform(
         const std::vector<RELBOOST_FLOAT>& _weights ) const final
@@ -273,6 +293,13 @@ class SquareLoss : public LossFunction
     // -----------------------------------------------------------------
 
    private:
+    /// Trivial (private) accessor
+    multithreading::Communicator& comm() const
+    {
+        assert( comm_ != nullptr );
+        return *comm_;
+    }
+
     /// Trivial accessor
     const Hyperparameters& hyperparameters() const
     {
@@ -297,6 +324,9 @@ class SquareLoss : public LossFunction
     // -----------------------------------------------------------------
 
    private:
+    /// Communicator
+    multithreading::Communicator* comm_;
+
     /// First derivative
     std::vector<RELBOOST_FLOAT> g_;
 

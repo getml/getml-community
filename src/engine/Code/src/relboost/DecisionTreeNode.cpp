@@ -11,8 +11,10 @@ DecisionTreeNode::DecisionTreeNode(
     const RELBOOST_INT _depth,
     const std::shared_ptr<const Hyperparameters>& _hyperparameters,
     const std::shared_ptr<lossfunctions::LossFunction>& _loss_function,
-    const RELBOOST_FLOAT _weight )
-    : condition_maker_( _condition_maker ),
+    const RELBOOST_FLOAT _weight,
+    multithreading::Communicator* _comm )
+    : comm_( _comm ),
+      condition_maker_( _condition_maker ),
       depth_( _depth ),
       hyperparameters_( _hyperparameters ),
       loss_function_( _loss_function ),
@@ -28,7 +30,8 @@ DecisionTreeNode::DecisionTreeNode(
     const std::shared_ptr<const Hyperparameters>& _hyperparameters,
     const std::shared_ptr<lossfunctions::LossFunction>& _loss_function,
     const Poco::JSON::Object& _obj )
-    : condition_maker_( _condition_maker ),
+    : comm_( nullptr ),
+      condition_maker_( _condition_maker ),
       depth_( _depth ),
       hyperparameters_( _hyperparameters ),
       loss_function_( _loss_function ),
@@ -135,6 +138,45 @@ void DecisionTreeNode::add_candidates(
 
 // ----------------------------------------------------------------------------
 
+void DecisionTreeNode::assert_aligned(
+    const std::vector<containers::CandidateSplit>::iterator _begin,
+    const std::vector<containers::CandidateSplit>::iterator _end,
+    const std::vector<containers::CandidateSplit>::iterator _it )
+{
+#ifndef NDEBUG
+
+    const auto num_candidates = std::distance( _begin, _end );
+    const auto ix_best = std::distance( _begin, _it );
+    const auto loss_reduction = _it->loss_reduction_;
+
+    auto global_num_candidates = num_candidates;
+    auto global_ix_best = ix_best;
+    auto global_loss_reduction = loss_reduction;
+
+    utils::Reducer::reduce(
+        multithreading::maximum<decltype( global_num_candidates )>(),
+        &global_num_candidates,
+        &comm() );
+
+    utils::Reducer::reduce(
+        multithreading::maximum<decltype( global_ix_best )>(),
+        &global_ix_best,
+        &comm() );
+
+    utils::Reducer::reduce(
+        multithreading::maximum<decltype( global_loss_reduction )>(),
+        &global_loss_reduction,
+        &comm() );
+
+    assert( global_num_candidates == num_candidates );
+    assert( global_ix_best == ix_best );
+    assert( global_loss_reduction == loss_reduction );
+
+#endif  /// NDEBUG
+}
+
+// ----------------------------------------------------------------------------
+
 void DecisionTreeNode::fit(
     const containers::DataFrameView& _output,
     const containers::DataFrame& _input,
@@ -169,8 +211,7 @@ void DecisionTreeNode::fit(
     // ------------------------------------------------------------------------
     // Try all possible splits.
 
-    const auto candidates =
-        try_all( *_intercept, _output, _input, _begin, _end );
+    auto candidates = try_all( *_intercept, _output, _input, _begin, _end );
 
     debug_log( "candidates.size(): " + std::to_string( candidates.size() ) );
 
@@ -188,8 +229,16 @@ void DecisionTreeNode::fit(
         return c1.loss_reduction_ < c2.loss_reduction_;
     };
 
-    const auto best_split =
-        *std::max_element( candidates.begin(), candidates.end(), cmp );
+    const auto it =
+        std::max_element( candidates.begin(), candidates.end(), cmp );
+
+    // DEBUG ONLY: Makes sure that the candidates and max element are aligned
+    // over all threads.
+    assert_aligned( candidates.begin(), candidates.end(), it );
+
+    const auto best_split = *it;
+
+    candidates.clear();
 
     // ------------------------------------------------------------------------
     // If the loss reduction is sufficient, then take this split.
@@ -220,14 +269,16 @@ void DecisionTreeNode::fit(
         depth_ + 1,
         hyperparameters_,
         loss_function_,
-        std::get<1>( best_split.weights_ ) ) );
+        std::get<1>( best_split.weights_ ),
+        &comm() ) );
 
     child_smaller_.reset( new DecisionTreeNode(
         condition_maker_,
         depth_ + 1,
         hyperparameters_,
         loss_function_,
-        std::get<2>( best_split.weights_ ) ) );
+        std::get<2>( best_split.weights_ ),
+        &comm() ) );
 
     child_greater_->fit( _output, _input, _begin, it_split, _intercept );
 
@@ -680,7 +731,8 @@ void DecisionTreeNode::try_categorical_input(
                     _input,
                     output,
                     _begin,
-                    _end );
+                    _end,
+                    &comm() );
 
             if ( critical_values->size() <= 1 )
                 {
@@ -767,7 +819,8 @@ void DecisionTreeNode::try_categorical_output(
                     _output.df(),  // just as a placeholder
                     _output,
                     _begin,
-                    _end );
+                    _end,
+                    &comm() );
 
             if ( critical_values->size() <= 1 )
                 {
@@ -853,7 +906,8 @@ void DecisionTreeNode::try_discrete_input(
                 _input,
                 output,
                 _begin,
-                nan_begin );
+                nan_begin,
+                &comm() );
 
             if ( critical_values.size() == 0 ||
                  critical_values.front() == critical_values.back() )
@@ -932,7 +986,8 @@ void DecisionTreeNode::try_discrete_output(
                 _output.df(),  // just as a placeholder
                 _output,
                 _begin,
-                nan_begin );
+                nan_begin,
+                &comm() );
 
             if ( critical_values.size() == 0 ||
                  critical_values.front() == critical_values.back() )
@@ -1015,7 +1070,8 @@ void DecisionTreeNode::try_numerical_input(
                 _input,
                 output,
                 _begin,
-                nan_begin );
+                nan_begin,
+                &comm() );
 
             if ( critical_values.size() == 0 ||
                  critical_values.front() == critical_values.back() )
@@ -1094,7 +1150,8 @@ void DecisionTreeNode::try_numerical_output(
                 _output.df(),  // just as a placeholder
                 _output,
                 _begin,
-                nan_begin );
+                nan_begin,
+                &comm() );
 
             if ( critical_values.size() == 0 ||
                  critical_values.front() == critical_values.back() )
@@ -1261,7 +1318,8 @@ void DecisionTreeNode::try_same_units_discrete(
                             _input,
                             _output,
                             _begin,
-                            nan_begin );
+                            nan_begin,
+                            &comm() );
 
                     if ( critical_values.size() == 0 ||
                          critical_values.front() == critical_values.back() )
@@ -1383,7 +1441,8 @@ void DecisionTreeNode::try_same_units_numerical(
                             _input,
                             _output,
                             _begin,
-                            nan_begin );
+                            nan_begin,
+                            &comm() );
 
                     if ( critical_values.size() == 0 ||
                          critical_values.front() == critical_values.back() )
@@ -1471,7 +1530,13 @@ void DecisionTreeNode::try_time_stamps_diff(
         _input, _output, _begin, _end );
 
     const auto critical_values = utils::CriticalValues::calc_numerical(
-        enums::DataUsed::time_stamps_diff, 0, _input, _output, _begin, _end );
+        enums::DataUsed::time_stamps_diff,
+        0,
+        _input,
+        _output,
+        _begin,
+        _end,
+        &comm() );
 
     if ( critical_values.size() == 0 ||
          critical_values.front() == critical_values.back() )

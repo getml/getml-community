@@ -13,6 +13,8 @@
 #include <Poco/JSON/Object.h>
 #include <Poco/JSON/Stringifier.h>
 
+#include "multithreading/multithreading.hpp"
+
 #include "logging/logging.hpp"
 
 #include "metrics/metrics.hpp"

@@ -80,6 +80,12 @@ RELBOOST_FLOAT CrossEntropyLoss::calc_loss(
                     ( *sample_weights_ )[ix];
         }
 
+    // ------------------------------------------------------------------------
+
+    utils::Reducer::reduce( std::plus<RELBOOST_FLOAT>(), &loss, &comm() );
+
+    // ------------------------------------------------------------------------
+
     assert( sum_sample_weights_ > 0.0 || sample_index_.size() == 0.0 );
 
     if ( sum_sample_weights_ > 0.0 )
@@ -152,13 +158,15 @@ RELBOOST_FLOAT CrossEntropyLoss::evaluate_tree(
 
     RELBOOST_FLOAT loss = 0.0;
 
-    for ( size_t i = 0; i < _yhat_new.size(); ++i )
+    for ( size_t ix : sample_index_ )
         {
-            const auto sigma_yhat = logistic_function( _yhat_new[i] );
+            const auto sigma_yhat = logistic_function( _yhat_new[ix] );
 
-            loss +=
-                log_loss( sigma_yhat, targets()[i] ) * ( *sample_weights_ )[i];
+            loss += log_loss( sigma_yhat, targets()[ix] ) *
+                    ( *sample_weights_ )[ix];
         }
+
+    utils::Reducer::reduce( std::plus<RELBOOST_FLOAT>(), &loss, &comm() );
 
     return loss;
 }

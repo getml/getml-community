@@ -13,7 +13,8 @@ CriticalValues::calc_categorical(
     const containers::DataFrame& _input,
     const containers::DataFrameView& _output,
     const std::vector<const containers::Match*>::iterator _begin,
-    const std::vector<const containers::Match*>::iterator _end )
+    const std::vector<const containers::Match*>::iterator _end,
+    multithreading::Communicator* _comm )
 {
     // ---------------------------------------------------------------------------
     // In parallel versions, it is possible that there are no sample sizes
@@ -26,7 +27,15 @@ CriticalValues::calc_categorical(
     RELBOOST_INT max = std::numeric_limits<RELBOOST_INT>::min();
 
     find_min_max(
-        _data_used, _num_column, _input, _output, _begin, _end, &min, &max );
+        _data_used,
+        _num_column,
+        _input,
+        _output,
+        _begin,
+        _end,
+        &min,
+        &max,
+        _comm );
 
     // ---------------------------------------------------------------------------
     // There is a possibility that all critical values are NAN in all processes.
@@ -76,9 +85,10 @@ CriticalValues::calc_categorical(
         }
 
     // ------------------------------------------------------------------------
-    // Reduce included, if necessary.
+    // Reduce included.
 
-    // TODO
+    utils::Reducer::reduce(
+        multithreading::maximum<std::int8_t>(), &included, _comm );
 
     // ------------------------------------------------------------------------
     // Build vector.
@@ -109,7 +119,8 @@ std::vector<RELBOOST_FLOAT> CriticalValues::calc_discrete(
     const containers::DataFrame& _input,
     const containers::DataFrameView& _output,
     const std::vector<const containers::Match*>::iterator _begin,
-    const std::vector<const containers::Match*>::iterator _end )
+    const std::vector<const containers::Match*>::iterator _end,
+    multithreading::Communicator* _comm )
 {
     // ---------------------------------------------------------------------------
     // In parallel versions, it is possible that there are no sample sizes
@@ -132,7 +143,8 @@ std::vector<RELBOOST_FLOAT> CriticalValues::calc_discrete(
                 _begin,
                 _end,
                 &min,
-                &max );
+                &max,
+                _comm );
         }
     else
         {
@@ -146,7 +158,8 @@ std::vector<RELBOOST_FLOAT> CriticalValues::calc_discrete(
                 _begin,
                 _end,
                 &min,
-                &max );
+                &max,
+                _comm );
         }
 
     // ---------------------------------------------------------------------------
@@ -188,7 +201,8 @@ std::vector<RELBOOST_FLOAT> CriticalValues::calc_numerical(
     const containers::DataFrame& _input,
     const containers::DataFrameView& _output,
     const std::vector<const containers::Match*>::iterator _begin,
-    const std::vector<const containers::Match*>::iterator _end )
+    const std::vector<const containers::Match*>::iterator _end,
+    multithreading::Communicator* _comm )
 {
     // ---------------------------------------------------------------------------
     // In parallel versions, it is possible that there are no sample sizes
@@ -211,7 +225,8 @@ std::vector<RELBOOST_FLOAT> CriticalValues::calc_numerical(
                 _begin,
                 _end,
                 &min,
-                &max );
+                &max,
+                _comm );
         }
     else
         {
@@ -225,7 +240,8 @@ std::vector<RELBOOST_FLOAT> CriticalValues::calc_numerical(
                 _begin,
                 _end,
                 &min,
-                &max );
+                &max,
+                _comm );
         }
 
     // ---------------------------------------------------------------------------
@@ -268,7 +284,8 @@ void CriticalValues::find_min_max(
     const std::vector<const containers::Match*>::iterator _begin,
     const std::vector<const containers::Match*>::iterator _end,
     RELBOOST_INT* _min,
-    RELBOOST_INT* _max )
+    RELBOOST_INT* _max,
+    multithreading::Communicator* _comm )
 {
     if ( std::distance( _begin, _end ) > 0 )
         {
@@ -308,11 +325,11 @@ void CriticalValues::find_min_max(
                 }
         }
 
-#ifdef RELBOOST_PARALLEL
+    utils::Reducer::reduce(
+        multithreading::minimum<RELBOOST_INT>(), _min, _comm );
 
-    reduce_min_max( _min, _max );
-
-#endif  // RELBOOST_PARALLEL
+    utils::Reducer::reduce(
+        multithreading::maximum<RELBOOST_INT>(), _max, _comm );
 
     debug_log( "find_min_max, min: " + std::to_string( *_min ) );
     debug_log( "find_min_max, max: " + std::to_string( *_max ) );
@@ -329,7 +346,8 @@ void CriticalValues::find_min_max(
     const std::vector<const containers::Match*>::iterator _begin,
     const std::vector<const containers::Match*>::iterator _end,
     RELBOOST_FLOAT* _min,
-    RELBOOST_FLOAT* _max )
+    RELBOOST_FLOAT* _max,
+    multithreading::Communicator* _comm )
 {
     if ( std::distance( _begin, _end ) > 0 )
         {
@@ -370,11 +388,11 @@ void CriticalValues::find_min_max(
                 }
         }
 
-#ifdef RELBOOST_PARALLEL
+    utils::Reducer::reduce(
+        multithreading::minimum<RELBOOST_FLOAT>(), _min, _comm );
 
-    reduce_min_max( _min, _max );
-
-#endif  // RELBOOST_PARALLEL
+    utils::Reducer::reduce(
+        multithreading::maximum<RELBOOST_FLOAT>(), _max, _comm );
 
     debug_log( "find_min_max, min: " + std::to_string( *_min ) );
     debug_log( "find_min_max, max: " + std::to_string( *_max ) );
@@ -390,7 +408,8 @@ void CriticalValues::find_min_max(
     const std::vector<const containers::Match*>::iterator _begin,
     const std::vector<const containers::Match*>::iterator _end,
     RELBOOST_FLOAT* _min,
-    RELBOOST_FLOAT* _max )
+    RELBOOST_FLOAT* _max,
+    multithreading::Communicator* _comm )
 {
     if ( std::distance( _begin, _end ) > 0 )
         {
@@ -452,11 +471,11 @@ void CriticalValues::find_min_max(
                 }
         }
 
-#ifdef RELBOOST_PARALLEL
+    utils::Reducer::reduce(
+        multithreading::minimum<RELBOOST_FLOAT>(), _min, _comm );
 
-    reduce_min_max( _min, _max );
-
-#endif  // RELBOOST_PARALLEL
+    utils::Reducer::reduce(
+        multithreading::maximum<RELBOOST_FLOAT>(), _max, _comm );
 
     debug_log( "find_min_max, min: " + std::to_string( *_min ) );
     debug_log( "find_min_max, max: " + std::to_string( *_max ) );
