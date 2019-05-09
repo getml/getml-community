@@ -115,7 +115,8 @@ void DecisionTreeEnsemble::clean_up()
 
 void DecisionTreeEnsemble::fit(
     const containers::DataFrame &_population,
-    const std::vector<containers::DataFrame> &_peripheral )
+    const std::vector<containers::DataFrame> &_peripheral,
+    const std::shared_ptr<const logging::AbstractLogger> _logger )
 {
     // ------------------------------------------------------
 
@@ -153,6 +154,7 @@ void DecisionTreeEnsemble::fit(
                 thread_nums,
                 _population,
                 _peripheral,
+                std::shared_ptr<const logging::AbstractLogger>(),
                 this ) );
         }
 
@@ -162,7 +164,7 @@ void DecisionTreeEnsemble::fit(
     try
         {
             Threadutils::fit_ensemble(
-                0, thread_nums, _population, _peripheral, this );
+                0, thread_nums, _population, _peripheral, _logger, this );
         }
     catch ( std::exception &e )
         {
@@ -541,7 +543,8 @@ Poco::JSON::Object DecisionTreeEnsemble::score(
 
 std::shared_ptr<std::vector<RELBOOST_FLOAT>> DecisionTreeEnsemble::transform(
     const containers::DataFrame &_population,
-    const std::vector<containers::DataFrame> &_peripheral ) const
+    const std::vector<containers::DataFrame> &_peripheral,
+    const std::shared_ptr<const logging::AbstractLogger> _logger ) const
 {
     // ------------------------------------------------------
     // Check plausibility.
@@ -587,6 +590,7 @@ std::shared_ptr<std::vector<RELBOOST_FLOAT>> DecisionTreeEnsemble::transform(
                 thread_nums,
                 _population,
                 _peripheral,
+                std::shared_ptr<const logging::AbstractLogger>(),
                 *this,
                 features.get() ) );
         }
@@ -601,6 +605,7 @@ std::shared_ptr<std::vector<RELBOOST_FLOAT>> DecisionTreeEnsemble::transform(
                 thread_nums,
                 _population,
                 _peripheral,
+                _logger,
                 *this,
                 features.get() );
         }

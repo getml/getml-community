@@ -15,7 +15,7 @@ int main( int argc, char *argv[] )
     // const auto monitor = std::make_shared<const logging::Monitor>( options );
 
     const auto logger =
-        std::make_shared<const engine::logging::Logger>( /*monitor*/ );
+        std::make_shared<const logging::Logger>( /*monitor*/ );
 
     /*  const auto license_checker =
           std::make_shared<engine::licensing::LicenseChecker>(

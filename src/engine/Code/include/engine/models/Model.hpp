@@ -276,7 +276,7 @@ void Model<FeatureEngineererType>::fit(
     // ------------------------------------------------
     // Fit the feature engineerer.
 
-    feature_engineerer().fit( population_table, peripheral_tables );
+    feature_engineerer().fit( population_table, peripheral_tables, _logger );
 
     // ------------------------------------------------
     // Do feature selection, if applicable
@@ -445,8 +445,8 @@ containers::Matrix<ENGINE_FLOAT> Model<FeatureEngineererType>::transform(
     // ------------------------------------------------------------------------
     // Generate the features
 
-    const auto features =
-        feature_engineerer().transform( population_table, peripheral_tables );
+    const auto features = feature_engineerer().transform(
+        population_table, peripheral_tables, _logger );
 
     // ------------------------------------------------------------------------
     // Build matrix.

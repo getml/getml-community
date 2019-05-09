@@ -28,6 +28,7 @@ void Threadutils::fit_ensemble(
     const std::vector<size_t> _thread_nums,
     const containers::DataFrame& _population,
     const std::vector<containers::DataFrame>& _peripheral,
+    const std::shared_ptr<const logging::AbstractLogger> _logger,
     ensemble::DecisionTreeEnsemble* _ensemble )
 {
     try
@@ -41,9 +42,18 @@ void Threadutils::fit_ensemble(
             const auto num_features =
                 _ensemble->hyperparameters().num_features_;
 
+            const auto silent = _ensemble->hyperparameters().silent_;
+
             for ( size_t i = 0; i < num_features; ++i )
                 {
                     _ensemble->fit_new_feature();
+
+                    if ( !silent && _logger )
+                        {
+                            _logger->log(
+                                "Trained FEATURE_" + std::to_string( i + 1 ) +
+                                "." );
+                        }
                 }
 
             _ensemble->clean_up();
@@ -80,6 +90,7 @@ void Threadutils::transform_ensemble(
     const std::vector<size_t> _thread_nums,
     const containers::DataFrame& _population,
     const std::vector<containers::DataFrame>& _peripheral,
+    const std::shared_ptr<const logging::AbstractLogger> _logger,
     const ensemble::DecisionTreeEnsemble& _ensemble,
     std::vector<RELBOOST_FLOAT>* _features )
 {
@@ -93,6 +104,8 @@ void Threadutils::transform_ensemble(
         _peripheral,
         _ensemble.peripheral_names() );
 
+    const auto silent = _ensemble.hyperparameters().silent_;
+
     for ( size_t i = 0; i < _ensemble.num_features(); ++i )
         {
             const auto new_feature = _ensemble.transform( table_holder, i );
@@ -103,6 +116,12 @@ void Threadutils::transform_ensemble(
                 _ensemble.num_features(),
                 new_feature,
                 _features );
+
+            if ( !silent && _logger )
+                {
+                    _logger->log(
+                        "Built FEATURE_" + std::to_string( i + 1 ) + "." );
+                }
         }
 }
 

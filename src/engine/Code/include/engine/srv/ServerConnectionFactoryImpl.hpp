@@ -14,9 +14,9 @@ class ServerConnectionFactoryImpl : public Poco::Net::TCPServerConnectionFactory
    public:
     ServerConnectionFactoryImpl(
         const std::shared_ptr<handlers::DataFrameManager>& _data_frame_manager,
-        const std::shared_ptr<const engine::logging::Logger>& _logger,
+        const std::shared_ptr<const logging::Logger>& _logger,
         const std::shared_ptr<handlers::RelboostModelManager>& _relboost_model_manager,
-        // const std::shared_ptr<const engine::logging::Monitor>& _monitor,*/
+        // const std::shared_ptr<const logging::Monitor>& _monitor,*/
         const config::Options& _options,
         const std::shared_ptr<handlers::ProjectManager>& _project_manager,
         const std::shared_ptr<std::atomic<bool>>& _shutdown )
@@ -53,13 +53,13 @@ class ServerConnectionFactoryImpl : public Poco::Net::TCPServerConnectionFactory
     const std::shared_ptr<handlers::DataFrameManager> data_frame_manager_;
 
     /// Logs commands.
-    const std::shared_ptr<const engine::logging::Logger> logger_;
+    const std::shared_ptr<const logging::Logger> logger_;
 
     /// Handles requests related to the models such as fit or transform.
     const std::shared_ptr<handlers::RelboostModelManager> relboost_model_manager_;
 
     /// Handles the communication with the monitor
-    // const std::shared_ptr<const engine::logging::Monitor> monitor_;
+    // const std::shared_ptr<const logging::Monitor> monitor_;
 
     /// Contains information on the port of the monitor process
     const config::Options options_;

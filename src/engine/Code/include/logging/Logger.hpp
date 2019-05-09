@@ -1,15 +1,13 @@
-#ifndef ENGINE_LOGGING_LOGGER_HPP_
-#define ENGINE_LOGGING_LOGGER_HPP_
+#ifndef LOGGING_LOGGER_HPP_
+#define LOGGING_LOGGER_HPP_
 
 // ----------------------------------------------------------------------------
 
-namespace engine
-{
 namespace logging
 {
 // ------------------------------------------------------------------------
 
-class Logger
+class Logger : public AbstractLogger
 {
     // --------------------------------------------------------
 
@@ -22,7 +20,7 @@ class Logger
     // --------------------------------------------------------
 
     /// Logs current events.
-    void log( const std::string& _msg ) const
+    void log( const std::string& _msg ) const final
     {
         auto now = std::chrono::system_clock::now();
 
@@ -45,6 +43,5 @@ class Logger
 
 // ------------------------------------------------------------------------
 }  // namespace logging
-}  // namespace engine
 
-#endif  // ENGINE_LOGGING_LOGGER_HPP_
+#endif  // LOGGING_LOGGER_HPP_

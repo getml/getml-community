@@ -45,7 +45,9 @@ class DecisionTreeEnsemble
     /// Fits the DecisionTreeEnsemble.
     void fit(
         const containers::DataFrame& _population,
-        const std::vector<containers::DataFrame>& _peripheral );
+        const std::vector<containers::DataFrame>& _peripheral,
+        const std::shared_ptr<const logging::AbstractLogger> _logger =
+            std::shared_ptr<const logging::AbstractLogger>() );
 
     /// Fits one more feature.
     void fit_new_feature();
@@ -82,7 +84,9 @@ class DecisionTreeEnsemble
     /// individual trees as opposed to the entire prediction)
     std::shared_ptr<std::vector<RELBOOST_FLOAT>> transform(
         const containers::DataFrame& _population,
-        const std::vector<containers::DataFrame>& _peripheral ) const;
+        const std::vector<containers::DataFrame>& _peripheral,
+        const std::shared_ptr<const logging::AbstractLogger> _logger =
+            std::shared_ptr<const logging::AbstractLogger>() ) const;
 
     /// Returns one feature.
     std::vector<RELBOOST_FLOAT> transform(

@@ -16,10 +16,10 @@ class RequestHandler : public Poco::Net::TCPServerConnection
     RequestHandler(
         const Poco::Net::StreamSocket& _socket,
         const std::shared_ptr<handlers::DataFrameManager>& _data_frame_manager,
-        const std::shared_ptr<const engine::logging::Logger>& _logger,
+        const std::shared_ptr<const logging::Logger>& _logger,
         const std::shared_ptr<handlers::RelboostModelManager>&
             _relboost_model_manager,
-        // const std::shared_ptr<const engine::logging::Monitor>& _monitor,
+        // const std::shared_ptr<const logging::Monitor>& _monitor,
         const config::Options& _options,
         const std::shared_ptr<handlers::ProjectManager>& _project_manager,
         const std::shared_ptr<std::atomic<bool>>& _shutdown )
@@ -49,7 +49,7 @@ class RequestHandler : public Poco::Net::TCPServerConnection
     }
 
     /// Trivial accessor
-    const engine::logging::Logger& logger() { return *logger_; }
+    const logging::Logger& logger() { return *logger_; }
 
     /// Trivial accessor
     handlers::RelboostModelManager& relboost_model_manager()
@@ -58,7 +58,7 @@ class RequestHandler : public Poco::Net::TCPServerConnection
     }
 
     /// Trivial accessor
-    // const engine::logging::Monitor& monitor() { return *monitor_; }
+    // const logging::Monitor& monitor() { return *monitor_; }
 
     /// Trivial accessor
     handlers::ProjectManager& project_manager() { return *project_manager_; }

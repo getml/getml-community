@@ -18,6 +18,7 @@ class Threadutils
         const std::vector<size_t> _thread_nums,
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral,
+        const std::shared_ptr<const logging::AbstractLogger> _logger,
         ensemble::DecisionTreeEnsemble* _ensemble );
 
     /// Number of threads.
@@ -29,6 +30,7 @@ class Threadutils
         const std::vector<size_t> _thread_nums,
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral,
+        const std::shared_ptr<const logging::AbstractLogger> _logger,
         const ensemble::DecisionTreeEnsemble& _ensemble,
         std::vector<RELBOOST_FLOAT>* features );
 
