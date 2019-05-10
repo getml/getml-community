@@ -1,5 +1,5 @@
 {
-    "eta_": 0.4,
+    "eta_": 0.5,
     "gamma_": 1.0,
     "lambda_": 1e-20,
     "max_depth_": 1,

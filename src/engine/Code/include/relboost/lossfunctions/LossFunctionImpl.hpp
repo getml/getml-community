@@ -47,7 +47,9 @@ class LossFunctionImpl
         const std::vector<size_t>& _indices,
         const RELBOOST_FLOAT _old_intercept,
         const RELBOOST_FLOAT _old_weight,
-        const std::array<RELBOOST_FLOAT, 3>& _weights ) const;
+        const std::array<RELBOOST_FLOAT, 3>& _weights,
+        const RELBOOST_FLOAT _sum_sample_weights,
+        multithreading::Communicator* _comm ) const;
 
     /// Calculates the sample index (which contains the indices of all samples
     /// with non-zero sample weight).

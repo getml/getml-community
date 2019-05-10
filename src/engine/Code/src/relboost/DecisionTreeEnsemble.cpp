@@ -58,19 +58,25 @@ DecisionTreeEnsemble::DecisionTreeEnsemble(
 DecisionTreeEnsemble::DecisionTreeEnsemble( const DecisionTreeEnsemble &_other )
     : impl_( _other.impl() ),
       targets_( std::make_shared<std::vector<RELBOOST_FLOAT>>( 0 ) )
+
 {
     loss_function_ = lossfunctions::LossFunctionParser::parse(
         _other.loss_function().type(), impl().hyperparameters_, targets_ );
+
+    set_comm( impl_.comm_ );
 }
 
 // ----------------------------------------------------------------------------
 
 DecisionTreeEnsemble::DecisionTreeEnsemble(
     DecisionTreeEnsemble &&_other ) noexcept
-    : impl_( std::move( _other.impl() ) ), targets_( _other.targets_ )
+    : impl_( std::move( _other.impl() ) ),
+      targets_( std::make_shared<std::vector<RELBOOST_FLOAT>>( 0 ) )
 {
     loss_function_ = lossfunctions::LossFunctionParser::parse(
         _other.loss_function().type(), impl().hyperparameters_, targets_ );
+
+    set_comm( impl_.comm_ );
 }
 
 // ----------------------------------------------------------------------------
@@ -176,7 +182,7 @@ void DecisionTreeEnsemble::fit(
                 _population,
                 _peripheral,
                 std::shared_ptr<const logging::AbstractLogger>(),
-                this ) );
+                &ensembles[i] ) );
         }
 
     // ------------------------------------------------------
@@ -419,6 +425,8 @@ DecisionTreeEnsemble &DecisionTreeEnsemble::operator=(
 
     *this = std::move( temp );
 
+    set_comm( impl_.comm_ );
+
     return *this;
 }
 
@@ -436,10 +444,12 @@ DecisionTreeEnsemble &DecisionTreeEnsemble::operator=(
 
     impl_ = std::move( _other.impl_ );
 
-    targets_ = _other.targets_;
+    targets_ = std::make_shared<std::vector<RELBOOST_FLOAT>>( 0 );
 
     loss_function_ = lossfunctions::LossFunctionParser::parse(
         _other.loss_function().type(), impl().hyperparameters_, targets_ );
+
+    set_comm( impl_.comm_ );
 
     return *this;
 }
@@ -579,16 +589,6 @@ std::shared_ptr<std::vector<RELBOOST_FLOAT>> DecisionTreeEnsemble::transform(
 
     const auto thread_nums = utils::DataFrameScatterer::build_thread_nums(
         _population.join_keys(), num_threads );
-
-    // ------------------------------------------------------
-    // Build deep copies of this ensemble.
-
-    std::vector<DecisionTreeEnsemble> ensembles;
-
-    for ( size_t i = 0; i < num_threads - 1; ++i )
-        {
-            ensembles.push_back( *this );
-        }
 
     // -------------------------------------------------------
     // Launch threads and generate predictions on the subviews.

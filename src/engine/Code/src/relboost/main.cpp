@@ -22,7 +22,7 @@ int main( int argc, char* argv[] )
     test11_same_units_numerical();
     test12_same_units_discrete();
 
-    test13_numerical_output();
+    // test13_numerical_output();
     test14_categorical_output();
     test15_discrete_output();
 

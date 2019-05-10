@@ -33,8 +33,12 @@ RELBOOST_FLOAT LossFunctionImpl::calc_regularization_reduction(
     const std::vector<size_t>& _indices,
     const RELBOOST_FLOAT _old_intercept,
     const RELBOOST_FLOAT _old_weight,
-    const std::array<RELBOOST_FLOAT, 3>& _weights ) const
+    const std::array<RELBOOST_FLOAT, 3>& _weights,
+    const RELBOOST_FLOAT _sum_sample_weights,
+    multithreading::Communicator* _comm ) const
 {
+    // ------------------------------------------------------------------------
+
     assert( !std::isnan( std::get<0>( _weights ) ) );
     assert( !std::isnan( _old_intercept ) );
 
@@ -44,16 +48,16 @@ RELBOOST_FLOAT LossFunctionImpl::calc_regularization_reduction(
     assert( sample_weights_ );
     assert( _eta1.size() == sample_weights_->size() );
 
+    // ------------------------------------------------------------------------
+
     if ( hyperparameters().lambda_ == 0.0 )
         {
             return 0.0;
         }
 
-    const auto num_targets = static_cast<RELBOOST_FLOAT>( targets().size() );
+    // ------------------------------------------------------------------------
 
-    RELBOOST_FLOAT regularization =
-        num_targets * ( _old_intercept * _old_intercept -
-                        std::get<0>( _weights ) * std::get<0>( _weights ) );
+    RELBOOST_FLOAT regularization = 0.0;
 
     if ( std::isnan( std::get<1>( _weights ) ) )
         {
@@ -86,6 +90,21 @@ RELBOOST_FLOAT LossFunctionImpl::calc_regularization_reduction(
                               _eta2[ix] );
                 }
         }
+
+    // ------------------------------------------------------------------------
+
+    utils::Reducer::reduce(
+        std::plus<RELBOOST_FLOAT>(), &regularization, _comm );
+
+    // ------------------------------------------------------------------------
+
+    regularization /= _sum_sample_weights;
+
+    regularization +=
+        ( _old_intercept * _old_intercept -
+          std::get<0>( _weights ) * std::get<0>( _weights ) );
+
+    // ------------------------------------------------------------------------
 
     return 0.5 * hyperparameters().lambda_ * regularization;
 }

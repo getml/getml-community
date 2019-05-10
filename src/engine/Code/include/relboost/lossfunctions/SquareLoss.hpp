@@ -225,7 +225,9 @@ class SquareLoss : public LossFunction
                    _indices,
                    _old_intercept,
                    _old_weight,
-                   _weights );
+                   _weights,
+                   sum_sample_weights_,
+                   &comm() );
     }
 
     /// Resets critical resources to zero.

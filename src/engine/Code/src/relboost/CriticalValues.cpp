@@ -255,8 +255,11 @@ std::vector<RELBOOST_FLOAT> CriticalValues::calc_numerical(
 
     // ---------------------------------------------------------------------------
 
-    size_t num_critical_values = calc_num_critical_values(
-        static_cast<RELBOOST_INT>( std::distance( _begin, _end ) ) );
+    auto dist = static_cast<RELBOOST_INT>( std::distance( _begin, _end ) );
+
+    utils::Reducer::reduce( std::plus<RELBOOST_INT>(), &dist, _comm );
+
+    size_t num_critical_values = calc_num_critical_values( dist );
 
     RELBOOST_FLOAT step_size =
         ( max - min ) / static_cast<RELBOOST_FLOAT>( num_critical_values + 1 );

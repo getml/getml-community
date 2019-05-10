@@ -86,6 +86,21 @@ RELBOOST_FLOAT CrossEntropyLoss::calc_loss(
 
     // ------------------------------------------------------------------------
 
+#ifndef NDEBUG
+
+    auto global_sum_sample_weights = sum_sample_weights_;
+
+    utils::Reducer::reduce(
+        multithreading::maximum<RELBOOST_FLOAT>(),
+        &global_sum_sample_weights,
+        &comm() );
+
+    assert( global_sum_sample_weights == sum_sample_weights_ );
+
+#endif  // NDEBUG
+
+    // ------------------------------------------------------------------------
+
     assert( sum_sample_weights_ > 0.0 || sample_index_.size() == 0.0 );
 
     if ( sum_sample_weights_ > 0.0 )
