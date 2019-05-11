@@ -31,8 +31,9 @@
 #include "relboost/utils/Matchmaker.hpp"
 #include "relboost/utils/Partitioner.hpp"
 #include "relboost/utils/Reducer.hpp"
-#include "relboost/utils/Sampler.hpp"
 #include "relboost/utils/Sorter.hpp"
+
+#include "relboost/utils/Sampler.hpp"
 
 // ----------------------------------------------------------------------------
 

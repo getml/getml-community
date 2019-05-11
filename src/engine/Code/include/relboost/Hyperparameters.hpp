@@ -88,14 +88,14 @@ struct Hyperparameters
     /// The objective for the learning function.
     const std::string objective_;
 
+    /// Proportional to the subsample ratio.
+    const RELBOOST_FLOAT sampling_factor_;
+
     /// The seed used for initializing the random number generator.
     const size_t seed_;
 
     /// Whether to print messages while running boosting
     const bool silent_;
-
-    /// Subsample ratio of the training instance.
-    const RELBOOST_FLOAT subsample_;
 
     /// Whether to use timestamps,
     const bool use_timestamps_;

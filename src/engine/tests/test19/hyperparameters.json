@@ -8,6 +8,6 @@
     "objective_": "CrossEntropyLoss",
     "seed_": 5849,
     "silent_": true,
-    "subsample_": 1.0,
+    "sampling_factor_": 1.0,
     "use_timestamps_": true
 }

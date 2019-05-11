@@ -12,9 +12,9 @@ Hyperparameters::Hyperparameters()
       num_features_( 10 ),
       num_threads_( 0 ),
       objective_( "SquareLoss" ),
+      sampling_factor_( 1.0 ),
       seed_( 5843 ),
       silent_( true ),
-      subsample_( 1.0 ),
       use_timestamps_( true )
 {
 }
@@ -29,9 +29,10 @@ Hyperparameters::Hyperparameters( const Poco::JSON::Object& _obj )
       num_features_( JSON::get_value<RELBOOST_INT>( _obj, "num_features_" ) ),
       num_threads_( JSON::get_value<RELBOOST_INT>( _obj, "num_threads_" ) ),
       objective_( JSON::get_value<std::string>( _obj, "objective_" ) ),
+      sampling_factor_(
+          JSON::get_value<RELBOOST_FLOAT>( _obj, "sampling_factor_" ) ),
       seed_( JSON::get_value<size_t>( _obj, "seed_" ) ),
       silent_( JSON::get_value<bool>( _obj, "silent_" ) ),
-      subsample_( JSON::get_value<RELBOOST_FLOAT>( _obj, "subsample_" ) ),
       use_timestamps_( JSON::get_value<bool>( _obj, "use_timestamps_" ) )
 {
 }
@@ -40,6 +41,8 @@ Hyperparameters::Hyperparameters( const Poco::JSON::Object& _obj )
 
 Poco::JSON::Object Hyperparameters::to_json_obj() const
 {
+    // ---------------------------------------------------------
+
     Poco::JSON::Object obj;
 
     // ---------------------------------------------------------
@@ -58,17 +61,19 @@ Poco::JSON::Object Hyperparameters::to_json_obj() const
 
     obj.set( "objective_", objective_ );
 
+    obj.set( "sampling_factor_", sampling_factor_ );
+
     obj.set( "seed_", seed_ );
 
     obj.set( "silent_", silent_ );
-
-    obj.set( "subsample_", subsample_ );
 
     obj.set( "use_timestamps_", use_timestamps_ );
 
     // ---------------------------------------------------------
 
     return obj;
+
+    // ---------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------

@@ -229,8 +229,9 @@ void DecisionTreeEnsemble::fit_new_feature()
     // ------------------------------------------------------------------------
     // Create new sample weights.
 
-    const auto sample_weights =
-        sampler().make_sample_weights( table_holder().main_tables_[0].nrows() );
+    const auto nrows = table_holder().main_tables_[0].nrows();
+
+    const auto sample_weights = sampler().make_sample_weights( nrows );
 
     loss_function().calc_sample_index( sample_weights );
 
@@ -410,6 +411,15 @@ void DecisionTreeEnsemble::init(
 
     table_holder_ = std::make_shared<const TableHolder>(
         placeholder(), _population, _peripheral, peripheral_names() );
+
+    // ------------------------------------------------------------------------
+    // The sampling rate is used to determine the share of subsamples from the
+    // population table.
+
+    const auto nrows = table_holder().main_tables_[0].nrows();
+
+    sampler().calc_sampling_rate(
+        nrows, hyperparameters().sampling_factor_, &comm() );
 
     // ------------------------------------------------------------------------
 }

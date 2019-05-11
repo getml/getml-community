@@ -23,7 +23,7 @@ struct DecisionTreeEnsembleImpl
           initial_prediction_( 0.0 ),
           peripheral_names_( _peripheral_names ),
           placeholder_( _placeholder ),
-          sampler_( utils::Sampler( _hyperparameters ) )
+          sampler_( utils::Sampler( _hyperparameters->seed_ ) )
     {
         check_placeholder( *placeholder_ );
     }
