@@ -44,10 +44,16 @@ class CategoryIndex
     std::vector<const containers::Match*>::iterator begin(
         const RELBOOST_INT _category ) const
     {
+        if ( indptr_.size() == 0 )
+            {
+                return begin_;
+            }
+
         assert( _category - minimum_ >= 0 );
         assert(
             _category - minimum_ + 1 <
             static_cast<RELBOOST_INT>( indptr_.size() ) );
+
         return begin_ + indptr_[_category - minimum_];
     }
 
@@ -58,10 +64,16 @@ class CategoryIndex
     std::vector<const containers::Match*>::iterator end(
         const RELBOOST_INT _category ) const
     {
+        if ( indptr_.size() == 0 )
+            {
+                return begin_;
+            }
+
         assert( _category - minimum_ >= 0 );
         assert(
             _category - minimum_ + 1 <
             static_cast<RELBOOST_INT>( indptr_.size() ) );
+
         return begin_ + indptr_[_category - minimum_ + 1];
     }
 

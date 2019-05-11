@@ -24,7 +24,7 @@ CriticalValues::calc_categorical(
 
     RELBOOST_INT min = std::numeric_limits<RELBOOST_INT>::max();
 
-    RELBOOST_INT max = std::numeric_limits<RELBOOST_INT>::min();
+    RELBOOST_INT max = 0;
 
     find_min_max(
         _data_used,
@@ -76,6 +76,13 @@ CriticalValues::calc_categorical(
             if ( cat < 0 )
                 {
                     continue;
+                }
+
+            if ( cat >= max )
+                {
+                    std::cout << "min: " << max << std::endl;
+                    std::cout << "max: " << max << std::endl;
+                    std::cout << "cat: " << cat << std::endl;
                 }
 
             assert( cat >= min );

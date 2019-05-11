@@ -202,12 +202,6 @@ void DecisionTreeNode::fit(
             return;
         }
 
-    if ( std::distance( _begin, _end ) <= 0 )
-        {
-            debug_log( "No samples left." );
-            return;
-        }
-
     // ------------------------------------------------------------------------
     // Try all possible splits.
 
