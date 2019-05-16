@@ -6,7 +6,6 @@
 
 #include <cassert>
 #include <cstdint>
-#include <numeric>
 
 #include <algorithm>
 #include <chrono>
@@ -17,6 +16,7 @@
 #include <list>
 #include <map>
 #include <memory>
+#include <numeric>
 #include <random>
 #include <sstream>
 #include <string>
@@ -32,17 +32,15 @@
 
 #include "debug/debug.hpp"
 
+#include "database/database.hpp"
+
+#include "multithreading/multithreading.hpp"
+
 #include "engine/types.hpp"
 
 #include "engine/JSON.hpp"
 
 #include "engine/utils/utils.hpp"
-
-//#include "config.hpp"
-
-//#include "multithreading/multithreading.hpp"
-
-//#include "Sample.hpp"
 
 // ----------------------------------------------------
 // Module files

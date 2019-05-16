@@ -65,14 +65,19 @@ add_executable(
 
 add_executable(
 	${RELBOOST_VERSION}-64bit-relboost-test 
-	${RELBOOST_OBJ} ${METRICS_OBJ} 
+	${RELBOOST_OBJ} 
+	${METRICS_OBJ} 
 	${RELBOOST_SOURCE_DIRECTORY}/main.cpp
 )
 
 add_executable(
 	${RELBOOST_VERSION}-64bit 
-	${RELBOOST_OBJ} ${METRICS_OBJ} 
+	${CSV_OBJ} 
+	${DATABASE_OBJ} 
 	${ENGINE_OBJ} 
+	${METRICS_OBJ} 
+	${RELBOOST_OBJ} 
+	${SQLITE3_OBJ} 
 	${ENGINE_SOURCE_DIRECTORY}/main.cpp
 )
 

@@ -1,3 +1,4 @@
+
 #include "engine/containers/containers.hpp"
 
 namespace engine
@@ -77,6 +78,30 @@ void DataFrame::add_float_column(
 
 // ----------------------------------------------------------------------------
 
+void DataFrame::add_float_vectors(
+    const std::vector<std::string> &_names,
+    const std::vector<std::shared_ptr<std::vector<ENGINE_FLOAT>>> &_vectors,
+    const std::string &_role )
+{
+    assert( _names.size() == _vectors.size() );
+
+    for ( size_t i = 0; i < _vectors.size(); ++i )
+        {
+            assert( _vectors[i] );
+
+            auto mat =
+                Matrix<ENGINE_FLOAT>( _vectors[i]->size(), 1, _vectors[i] );
+
+            mat.name() = _names[i];
+
+            mat.set_colnames( {_names[i]} );
+
+            add_float_column( mat, _role, i );
+        }
+}
+
+// ----------------------------------------------------------------------------
+
 void DataFrame::add_int_column(
     const Matrix<ENGINE_INT> &_mat, const std::string _role, const size_t _num )
 {
@@ -93,6 +118,30 @@ void DataFrame::add_int_column(
     else
         {
             throw std::invalid_argument( "Role for int matrix not known!" );
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+void DataFrame::add_int_vectors(
+    const std::vector<std::string> &_names,
+    const std::vector<std::shared_ptr<std::vector<ENGINE_INT>>> &_vectors,
+    const std::string &_role )
+{
+    assert( _names.size() == _vectors.size() );
+
+    for ( size_t i = 0; i < _vectors.size(); ++i )
+        {
+            assert( _vectors[i] );
+
+            auto mat =
+                Matrix<ENGINE_INT>( _vectors[i]->size(), 1, _vectors[i] );
+
+            mat.name() = _names[i];
+
+            mat.set_colnames( {_names[i]} );
+
+            add_int_column( mat, _role, i );
         }
 }
 
@@ -341,6 +390,43 @@ void DataFrame::check_plausibility() const
 
 // ----------------------------------------------------------------------------
 
+std::vector<std::string> DataFrame::concat_colnames(
+    const std::vector<std::string> &_categorical_names,
+    const std::vector<std::string> &_discrete_names,
+    const std::vector<std::string> &_join_key_names,
+    const std::vector<std::string> &_numerical_names,
+    const std::vector<std::string> &_target_names,
+    const std::vector<std::string> &_time_stamp_names ) const
+{
+    auto all_colnames = std::vector<std::string>( 0 );
+
+    all_colnames.insert(
+        all_colnames.end(),
+        _categorical_names.begin(),
+        _categorical_names.end() );
+
+    all_colnames.insert(
+        all_colnames.end(), _discrete_names.begin(), _discrete_names.end() );
+
+    all_colnames.insert(
+        all_colnames.end(), _join_key_names.begin(), _join_key_names.end() );
+
+    all_colnames.insert(
+        all_colnames.end(), _numerical_names.begin(), _numerical_names.end() );
+
+    all_colnames.insert(
+        all_colnames.end(), _target_names.begin(), _target_names.end() );
+
+    all_colnames.insert(
+        all_colnames.end(),
+        _time_stamp_names.begin(),
+        _time_stamp_names.end() );
+
+    return all_colnames;
+}
+
+// ----------------------------------------------------------------------------
+
 void DataFrame::create_indices()
 {
     if ( indices().size() != join_keys().size() )
@@ -410,6 +496,99 @@ const Matrix<ENGINE_FLOAT> &DataFrame::float_matrix(
         }
 
     throw std::invalid_argument( "Role for float matrix not known!" );
+}
+
+// ----------------------------------------------------------------------------
+
+void DataFrame::from_db(
+    const std::shared_ptr<database::Connector> _connector,
+    const std::string &_tname,
+    const std::vector<std::string> &_categorical_names,
+    const std::vector<std::string> &_discrete_names,
+    const std::vector<std::string> &_join_key_names,
+    const std::vector<std::string> &_numerical_names,
+    const std::vector<std::string> &_target_names,
+    const std::vector<std::string> &_time_stamp_names )
+{
+    // ----------------------------------------
+
+    auto categoricals = make_vectors<ENGINE_INT>( _categorical_names.size() );
+
+    auto discretes = make_vectors<ENGINE_FLOAT>( _discrete_names.size() );
+
+    auto join_keys = make_vectors<ENGINE_INT>( _join_key_names.size() );
+
+    auto numericals = make_vectors<ENGINE_FLOAT>( _numerical_names.size() );
+
+    auto targets = make_vectors<ENGINE_FLOAT>( _target_names.size() );
+
+    auto time_stamps = make_vectors<ENGINE_FLOAT>( _time_stamp_names.size() );
+
+    // ----------------------------------------
+
+    const auto all_colnames = concat_colnames(
+        _categorical_names,
+        _discrete_names,
+        _join_key_names,
+        _numerical_names,
+        _target_names,
+        _time_stamp_names );
+
+    // ----------------------------------------
+
+    auto iterator = _connector->select( all_colnames, _tname );
+
+    while ( !iterator->end() )
+        {
+            for ( auto &vec : categoricals )
+                vec->push_back( ( *categories_ )[iterator->get_string()] );
+
+            for ( auto &vec : discretes )
+                vec->push_back( iterator->get_double() );
+
+            for ( auto &vec : join_keys )
+                vec->push_back(
+                    ( *join_keys_encoding_ )[iterator->get_string()] );
+
+            for ( auto &vec : numericals )
+                vec->push_back( iterator->get_double() );
+
+            for ( auto &vec : targets )
+                vec->push_back( iterator->get_double() );
+
+            for ( auto &vec : time_stamps )
+                vec->push_back( iterator->get_time_stamp() );
+        }
+
+    // ----------------------------------------
+
+    auto df = DataFrame( categories_, join_keys_encoding_ );
+
+    df.add_int_vectors( _categorical_names, categoricals, "categorical" );
+
+    df.add_float_vectors( _discrete_names, discretes, "discrete" );
+
+    df.add_int_vectors( _join_key_names, join_keys, "join_key" );
+
+    df.add_float_vectors( _numerical_names, numericals, "numerical" );
+
+    df.add_float_vectors( _target_names, targets, "target" );
+
+    df.add_float_vectors( _time_stamp_names, time_stamps, "time_stamp" );
+
+    // ----------------------------------------
+
+    df.check_plausibility();
+
+    // ----------------------------------------
+
+    df.create_indices();
+
+    // ----------------------------------------
+
+    *this = std::move( df );
+
+    // ----------------------------------------
 }
 
 // ----------------------------------------------------------------------------

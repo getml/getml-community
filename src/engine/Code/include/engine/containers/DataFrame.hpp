@@ -57,6 +57,17 @@ class DataFrame
     const Matrix<ENGINE_FLOAT> &float_matrix(
         const std::string &_role, const size_t _num ) const;
 
+    /// Builds a dataframe from a database connector.
+    void from_db(
+        const std::shared_ptr<database::Connector> _connector,
+        const std::string &_tname,
+        const std::vector<std::string> &_categoricals,
+        const std::vector<std::string> &_discretes,
+        const std::vector<std::string> &_join_keys,
+        const std::vector<std::string> &_numericals,
+        const std::vector<std::string> &_targets,
+        const std::vector<std::string> &_time_stamps );
+
     /// Returns the encodings as a property tree
     Poco::JSON::Object get_colnames();
 
@@ -264,39 +275,48 @@ class DataFrame
 
    private:
     /// Adds a categorical column.
-    void add_categorical(
-        const Matrix<ENGINE_INT> &_mat,
-        const size_t _num );
+    void add_categorical( const Matrix<ENGINE_INT> &_mat, const size_t _num );
 
     /// Adds a discrete column.
-    void add_discrete(
-        const Matrix<ENGINE_FLOAT> &_mat,
-        const size_t _num );
+    void add_discrete( const Matrix<ENGINE_FLOAT> &_mat, const size_t _num );
+
+    /// Adds a vector of float vectors.
+    void add_float_vectors(
+        const std::vector<std::string> &_names,
+        const std::vector<std::shared_ptr<std::vector<ENGINE_FLOAT>>> &_vectors,
+        const std::string &_role );
+
+    /// Adds a vector of integer vectors.
+    void add_int_vectors(
+        const std::vector<std::string> &_names,
+        const std::vector<std::shared_ptr<std::vector<ENGINE_INT>>> &_vectors,
+        const std::string &_role );
 
     /// Adds a join key column.
-    void add_join_key(
-        const Matrix<ENGINE_INT> &_mat,
-        const size_t _num );
+    void add_join_key( const Matrix<ENGINE_INT> &_mat, const size_t _num );
 
     /// Adds a numerical column.
-    void add_numerical(
-        const Matrix<ENGINE_FLOAT> &_mat,
-        const size_t _num );
+    void add_numerical( const Matrix<ENGINE_FLOAT> &_mat, const size_t _num );
 
     /// Adds a target column.
-    void add_target(
-        const Matrix<ENGINE_FLOAT> &_mat,
-        const size_t _num );
+    void add_target( const Matrix<ENGINE_FLOAT> &_mat, const size_t _num );
 
     /// Adds a time stamp column.
-    void add_time_stamp(
-        const Matrix<ENGINE_FLOAT> &_mat,
-        const size_t _num );
+    void add_time_stamp( const Matrix<ENGINE_FLOAT> &_mat, const size_t _num );
 
     /// Calculate the number of bytes.
     template <class T>
     ENGINE_UNSIGNED_LONG calc_nbytes(
         const std::vector<Matrix<T>> &_columns ) const;
+
+    /// Concatenate a set of colnames.
+    std::vector<std::string> concat_colnames(
+        const std::vector<std::string> &_categorical_names,
+        const std::vector<std::string> &_discrete_names,
+        const std::vector<std::string> &_join_key_names,
+        const std::vector<std::string> &_numerical_names,
+        const std::vector<std::string> &_target_names,
+        const std::vector<std::string> &_time_stamp_names ) const;
 
     /// Returns the colnames of a vector of columns
     template <class T>
@@ -312,6 +332,12 @@ class DataFrame
     std::vector<Matrix<T>> load_matrices(
         const std::string &_path, const std::string &_prefix ) const;
 
+    /// Creates a vector of vectors of type T.
+    template <class T>
+    std::vector<std::shared_ptr<std::vector<T>>> make_vectors(
+        const size_t _size ) const;
+
+    /// Saves all matrices.
     template <class T>
     void save_matrices(
         const std::vector<Matrix<T>> &_matrices,
@@ -440,6 +466,19 @@ std::vector<Matrix<T>> DataFrame::load_matrices(
         }
 
     return matrices;
+}
+
+// ----------------------------------------------------------------------------
+
+template <class T>
+std::vector<std::shared_ptr<std::vector<T>>> DataFrame::make_vectors(
+    const size_t _size ) const
+{
+    auto vectors = std::vector<std::shared_ptr<std::vector<T>>>( _size );
+
+    for ( auto &vec : vectors ) vec = std::make_shared<std::vector<T>>( 0 );
+
+    return vectors;
 }
 
 // ----------------------------------------------------------------------------

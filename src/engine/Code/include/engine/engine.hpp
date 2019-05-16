@@ -8,7 +8,7 @@
 #include <thread>
 #include <vector>
 
-#include <multithreading/multithreading.hpp>
+#include "multithreading/multithreading.hpp"
 
 // ----------------------------------------------------------------------------
 
