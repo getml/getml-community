@@ -1,0 +1,45 @@
+#ifndef DATABASE_TESTS_TEST1_HPP_
+#define DATABASE_TESTS_TEST1_HPP_
+
+void test1()
+{
+    std::cout << "Test 1: Parsing and inserting a CSV file." << std::endl
+              << std::endl;
+
+    auto sqlite_db = database::Sqlite3( ":memory:", {"%Y-%m-%d %H:%M:%S"} );
+
+    auto population_sniffer = csv::Sniffer(
+        "sqlite",
+        {"POPULATION.CSV", "POPULATION.CSV"},
+        true,
+        100,
+        '\"',
+        ',',
+        "POPULATION",
+        {"%Y-%b-%d %H:%M:%S"} );
+
+    const auto population_statement = population_sniffer.sniff();
+
+    std::cout << population_statement << std::endl;
+
+    sqlite_db.exec( population_statement );
+
+    auto reader = csv::Reader( "POPULATION.CSV", '\"', ',' );
+
+    sqlite_db.read_csv( "POPULATION", true, &reader );
+
+    auto it = sqlite_db.select(
+        {"column_01", "join_key", "time_stamp", "targets"}, "POPULATION" );
+
+    // First line:
+    // 0.09902457667435494, 0, 0.7386545235592108, 113.0
+    assert( std::abs( it->get_double() - 0.099024 ) < 1e-4 );
+    assert( it->get_string() == "0" );
+    assert( std::abs( it->get_time_stamp() - 0.738654 ) < 1e-4 );
+    assert( it->get_int() == 113 );
+
+    std::cout << std::endl << std::endl;
+    std::cout << "OK." << std::endl << std::endl;
+}
+
+#endif  // DATABASE_TESTS_TEST1_HPP_

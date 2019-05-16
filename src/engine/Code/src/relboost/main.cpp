@@ -2,6 +2,12 @@
 
 int main( int argc, char* argv[] )
 {
+    std::cout << std::endl
+              << "-------------------------------------------------------------"
+                 "------------------"
+              << std::endl;
+    std::cout << "TEST FOR MODULE 'RELBOOST':" << std::endl << std::endl;
+
     test1_sum();
 
     test2_avg();

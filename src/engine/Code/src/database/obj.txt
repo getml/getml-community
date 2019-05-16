@@ -1,0 +1,6 @@
+set(
+    DATABASE_OBJ 
+    ${DATABASE_SOURCE_DIRECTORY}/Sqlite3.cpp
+    ${DATABASE_SOURCE_DIRECTORY}/Sqlite3Iterator.cpp
+)
+
