@@ -21,6 +21,9 @@ class Receiver
     static containers::Matrix<ENGINE_INT> recv_categorical_matrix(
         containers::Encoding *_encoding, Poco::Net::StreamSocket *_socket );
 
+    /// Receives a string from the client
+    static std::string recv_string( Poco::Net::StreamSocket *_socket );
+
     /// Receives a command from the client
     static Poco::JSON::Object recv_cmd(
         const std::shared_ptr<const logging::Logger> &_logger,
@@ -29,10 +32,6 @@ class Receiver
     /// Receives a matrix from the client
     static containers::Matrix<ENGINE_FLOAT> recv_matrix(
         Poco::Net::StreamSocket *_socket );
-
-   private:
-    /// Receives a string - useful for commands and categorical matrices
-    static std::string recv_string( Poco::Net::StreamSocket *_socket );
 };
 
 // ------------------------------------------------------------------------

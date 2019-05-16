@@ -45,6 +45,9 @@ class DataFrameManager
     void append_to_data_frame(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
 
+    /// Runs a query on the database.
+    void exec_query( Poco::Net::StreamSocket* _socket );
+
     /// Sends a categorical columm to the client
     void get_categorical_column(
         const Poco::JSON::Object& _cmd, Poco::Net::StreamSocket* _socket );

@@ -212,6 +212,17 @@ void DataFrameManager::close(
 
 // ------------------------------------------------------------------------
 
+void DataFrameManager::exec_query( Poco::Net::StreamSocket* _socket )
+{
+    const auto sql = communication::Receiver::recv_string( _socket );
+
+    connector()->exec( sql );
+
+    communication::Sender::send_string( "Success!", _socket );
+}
+
+// ------------------------------------------------------------------------
+
 void DataFrameManager::get_categorical_column(
     const Poco::JSON::Object& _cmd, Poco::Net::StreamSocket* _socket )
 {
