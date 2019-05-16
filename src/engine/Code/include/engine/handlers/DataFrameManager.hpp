@@ -67,6 +67,12 @@ class DataFrameManager
     void get_nbytes(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
 
+    /// Reads a CSV file into the database.
+    void read_csv(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
     /// Refreshes a data frame.
     void refresh( const std::string& _name, Poco::Net::StreamSocket* _socket );
 
@@ -105,6 +111,13 @@ class DataFrameManager
     std::map<std::string, containers::DataFrame>& data_frames()
     {
         return *data_frames_;
+    }
+
+    /// Trivial accessor
+    std::shared_ptr<database::Connector> connector()
+    {
+        assert( connector_ );
+        return connector_;
     }
 
     /// Trivial accessor
