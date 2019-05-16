@@ -12,6 +12,7 @@ class DataFrameManager
    public:
     DataFrameManager(
         const std::shared_ptr<containers::Encoding>& _categories,
+        const std::shared_ptr<database::Connector> _connector,
         const std::shared_ptr<std::map<std::string, containers::DataFrame>>
             _data_frames,
         const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
@@ -21,6 +22,7 @@ class DataFrameManager
         // const std::shared_ptr<const logging::Monitor>& _monitor,
         const std::shared_ptr<multithreading::ReadWriteLock>& _read_write_lock )
         : categories_( _categories ),
+          connector_( _connector ),
           data_frames_( _data_frames ),
           join_keys_encoding_( _join_keys_encoding ),
           // license_checker_( _license_checker ),
@@ -113,6 +115,9 @@ class DataFrameManager
    private:
     /// Maps integeres to category names
     const std::shared_ptr<containers::Encoding> categories_;
+
+    /// Connector to the underlying database.
+    const std::shared_ptr<database::Connector> connector_;
 
     /// The data frames currently held in memory
     const std::shared_ptr<std::map<std::string, containers::DataFrame>>

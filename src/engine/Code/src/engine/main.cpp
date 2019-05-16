@@ -14,8 +14,11 @@ int main( int argc, char *argv[] )
 
     // const auto monitor = std::make_shared<const logging::Monitor>( options );
 
-    const auto logger =
-        std::make_shared<const logging::Logger>( /*monitor*/ );
+    const auto connector =
+        std::make_shared<database::Sqlite3>( database::Sqlite3(
+            ":memory:", {"%Y/%m/%d %H:%M:%S", "%Y-%m-%d %H:%M:%S"} ) );
+
+    const auto logger = std::make_shared<const logging::Logger>( /*monitor*/ );
 
     /*  const auto license_checker =
           std::make_shared<engine::licensing::LicenseChecker>(
@@ -44,6 +47,7 @@ int main( int argc, char *argv[] )
     const auto data_frame_manager =
         std::make_shared<engine::handlers::DataFrameManager>(
             categories,
+            connector,
             data_frames,
             join_keys_encoding,
             // license_checker,
