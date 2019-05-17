@@ -22,7 +22,8 @@ class ServerConnectionFactoryImpl : public Poco::Net::TCPServerConnectionFactory
         const config::Options& _options,
         const std::shared_ptr<handlers::ProjectManager>& _project_manager,
         const std::shared_ptr<std::atomic<bool>>& _shutdown )
-        : data_frame_manager_( _data_frame_manager ),
+        : database_manager_( _database_manager ),
+          data_frame_manager_( _data_frame_manager ),
           logger_( _logger ),
           relboost_model_manager_( _relboost_model_manager ),
           // monitor_( _monitor ),

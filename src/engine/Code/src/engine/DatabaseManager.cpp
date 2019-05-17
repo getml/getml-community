@@ -24,7 +24,8 @@ void DatabaseManager::read_csv(
 {
     // --------------------------------------------------------------------
 
-    const auto fname = JSON::get_value<std::string>( _cmd, "fname_" );
+    const auto fnames = JSON::array_to_vector<std::string>(
+        JSON::get_array( _cmd, "fnames_" ) );
 
     const auto header = JSON::get_value<bool>( _cmd, "header_" );
 
@@ -48,11 +49,14 @@ void DatabaseManager::read_csv(
 
     // --------------------------------------------------------------------
 
-    auto reader = csv::Reader( fname, quotechar[0], sep[0] );
+    for ( const auto& fname : fnames )
+        {
+            auto reader = csv::Reader( fname, quotechar[0], sep[0] );
 
-    // --------------------------------------------------------------------
+            connector()->read_csv( _name, header, &reader );
 
-    connector()->read_csv( _name, header, &reader );
+            logger().log( "Read '" + fname + "'." );
+        }
 
     // --------------------------------------------------------------------
 

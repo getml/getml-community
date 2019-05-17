@@ -55,7 +55,7 @@ std::vector<std::string> Reader::next_line()
                 }
         }
 
-    result.push_back( field );
+    result.push_back( Parser::trim( field ) );
 
     // ------------------------------------------------------------------------
 

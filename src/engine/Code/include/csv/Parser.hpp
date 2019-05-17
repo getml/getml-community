@@ -19,7 +19,7 @@ class Parser
              std::string::npos )
             {
                 throw std::runtime_error(
-                    "'" + _str + "' cold not be converted to double!" );
+                    "'" + _str + "' could not be converted to double!" );
             }
 
         return std::stod( trimmed );
@@ -37,7 +37,7 @@ class Parser
         if ( std::to_string( val ) != trimmed )
             {
                 throw std::runtime_error(
-                    "'" + _str + "' cold not be converted to integer!" );
+                    "'" + _str + "' could not be converted to integer!" );
             }
 
         return val;
@@ -77,7 +77,6 @@ class Parser
 
     // -------------------------------
 
-   private:
     /// Removes all whitespaces at the beginning and end of the string.
     static std::string trim( const std::string& _str )
     {
@@ -85,6 +84,8 @@ class Parser
         const auto len = _str.find_last_not_of( "\t\v\f\r " ) - pos + 1;
         return _str.substr( pos, len );
     }
+
+    // -------------------------------
 };
 
 // ----------------------------------------------------------------------------
