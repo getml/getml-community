@@ -20,7 +20,7 @@ void RequestHandler::run()
                         "(127.0.0.1) are allowed!" );
                 }
 
-            Poco::JSON::Object cmd =
+            const Poco::JSON::Object cmd =
                 communication::Receiver::recv_cmd( logger_, &socket() );
 
             const auto type = JSON::get_value<std::string>( cmd, "type_" );
@@ -35,6 +35,18 @@ void RequestHandler::run()
             else if ( type == "Column.get" )
                 {
                     data_frame_manager().get_column( cmd, &socket() );
+                }
+            else if ( type == "Database.exec_query" )
+                {
+                    database_manager().exec_query( &socket() );
+                }
+            else if ( type == "Database.read_csv" )
+                {
+                    database_manager().read_csv( name, cmd, &socket() );
+                }
+            else if ( type == "Database.sniff_csv" )
+                {
+                    database_manager().sniff_csv( name, cmd, &socket() );
                 }
             else if ( type == "DataFrame" )
                 {

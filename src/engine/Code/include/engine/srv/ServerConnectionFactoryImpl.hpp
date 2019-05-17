@@ -13,9 +13,11 @@ class ServerConnectionFactoryImpl : public Poco::Net::TCPServerConnectionFactory
 
    public:
     ServerConnectionFactoryImpl(
+        const std::shared_ptr<handlers::DatabaseManager>& _database_manager,
         const std::shared_ptr<handlers::DataFrameManager>& _data_frame_manager,
         const std::shared_ptr<const logging::Logger>& _logger,
-        const std::shared_ptr<handlers::RelboostModelManager>& _relboost_model_manager,
+        const std::shared_ptr<handlers::RelboostModelManager>&
+            _relboost_model_manager,
         // const std::shared_ptr<const logging::Monitor>& _monitor,*/
         const config::Options& _options,
         const std::shared_ptr<handlers::ProjectManager>& _project_manager,
@@ -37,6 +39,7 @@ class ServerConnectionFactoryImpl : public Poco::Net::TCPServerConnectionFactory
     {
         return new RequestHandler(
             _socket,
+            database_manager_,
             data_frame_manager_,
             logger_,
             relboost_model_manager_,
@@ -49,6 +52,9 @@ class ServerConnectionFactoryImpl : public Poco::Net::TCPServerConnectionFactory
     // -------------------------------------------------------------
 
    private:
+    /// Handles requests related to the database.
+    const std::shared_ptr<handlers::DatabaseManager> database_manager_;
+
     /// Handles requests related to the data frames.
     const std::shared_ptr<handlers::DataFrameManager> data_frame_manager_;
 
@@ -56,7 +62,8 @@ class ServerConnectionFactoryImpl : public Poco::Net::TCPServerConnectionFactory
     const std::shared_ptr<const logging::Logger> logger_;
 
     /// Handles requests related to the models such as fit or transform.
-    const std::shared_ptr<handlers::RelboostModelManager> relboost_model_manager_;
+    const std::shared_ptr<handlers::RelboostModelManager>
+        relboost_model_manager_;
 
     /// Handles the communication with the monitor
     // const std::shared_ptr<const logging::Monitor> monitor_;

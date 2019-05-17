@@ -15,6 +15,7 @@ class RequestHandler : public Poco::Net::TCPServerConnection
    public:
     RequestHandler(
         const Poco::Net::StreamSocket& _socket,
+        const std::shared_ptr<handlers::DatabaseManager>& _database_manager,
         const std::shared_ptr<handlers::DataFrameManager>& _data_frame_manager,
         const std::shared_ptr<const logging::Logger>& _logger,
         const std::shared_ptr<handlers::RelboostModelManager>&
@@ -24,6 +25,7 @@ class RequestHandler : public Poco::Net::TCPServerConnection
         const std::shared_ptr<handlers::ProjectManager>& _project_manager,
         const std::shared_ptr<std::atomic<bool>>& _shutdown )
         : Poco::Net::TCPServerConnection( _socket ),
+          database_manager_( _database_manager ),
           data_frame_manager_( _data_frame_manager ),
           logger_( _logger ),
           relboost_model_manager_( _relboost_model_manager ),
@@ -43,8 +45,16 @@ class RequestHandler : public Poco::Net::TCPServerConnection
 
    private:
     /// Trivial accessor
+    handlers::DatabaseManager& database_manager()
+    {
+        assert( database_manager_ );
+        return *database_manager_;
+    }
+
+    /// Trivial accessor
     handlers::DataFrameManager& data_frame_manager()
     {
+        assert( data_frame_manager_ );
         return *data_frame_manager_;
     }
 
@@ -54,6 +64,7 @@ class RequestHandler : public Poco::Net::TCPServerConnection
     /// Trivial accessor
     handlers::RelboostModelManager& relboost_model_manager()
     {
+        assert( relboost_model_manager_ );
         return *relboost_model_manager_;
     }
 
@@ -61,11 +72,18 @@ class RequestHandler : public Poco::Net::TCPServerConnection
     // const logging::Monitor& monitor() { return *monitor_; }
 
     /// Trivial accessor
-    handlers::ProjectManager& project_manager() { return *project_manager_; }
+    handlers::ProjectManager& project_manager()
+    {
+        assert( project_manager_ );
+        return *project_manager_;
+    }
 
     // -------------------------------------------------------------
 
    private:
+    /// Handles requests related to the database.
+    const std::shared_ptr<handlers::DatabaseManager> database_manager_;
+
     /// Handles requests related to the data frames.
     const std::shared_ptr<handlers::DataFrameManager> data_frame_manager_;
 

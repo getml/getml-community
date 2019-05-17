@@ -44,6 +44,10 @@ int main( int argc, char *argv[] )
     const auto read_write_lock =
         std::make_shared<multithreading::ReadWriteLock>();
 
+    const auto database_manager =
+        std::make_shared<engine::handlers::DatabaseManager>(
+            connector, logger );
+
     const auto data_frame_manager =
         std::make_shared<engine::handlers::DataFrameManager>(
             categories,
@@ -111,6 +115,7 @@ int main( int argc, char *argv[] )
 
     Poco::Net::TCPServer srv(
         new engine::srv::ServerConnectionFactoryImpl(
+            database_manager,
             data_frame_manager,
             logger,
             relboost_model_manager,
