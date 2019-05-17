@@ -13,6 +13,7 @@ void DatabaseManager::drop_table(
 
     communication::Sender::send_string( "Success!", _socket );
 }
+
 // ----------------------------------------------------------------------------
 
 void DatabaseManager::execute( Poco::Net::StreamSocket* _socket )

@@ -13,7 +13,10 @@ class Sqlite3 : public Connector
     Sqlite3(
         const std::string& _name,
         const std::vector<std::string>& _time_formats )
-        : db_( make_db( _name ) ), time_formats_( _time_formats )
+        : db_( make_db( _name ) ),
+          name_( _name ),
+          read_write_lock_( std::make_shared<multithreading::ReadWriteLock>() ),
+          time_formats_( _time_formats )
     {
     }
 
@@ -56,7 +59,7 @@ class Sqlite3 : public Connector
         const std::vector<std::string>& _colnames,
         const std::string& _tname ) final
     {
-        assert( time_formats_.size() > 0 );
+        multithreading::ReadLock read_lock( read_write_lock_ );
         return std::make_shared<Sqlite3Iterator>(
             db_, _colnames, time_formats_, _tname );
     }
@@ -128,8 +131,14 @@ class Sqlite3 : public Connector
     // -------------------------------
 
    private:
-    // Shared ptr containing the database object.
+    /// Shared ptr containing the database object.
     const std::shared_ptr<sqlite3> db_;
+
+    /// Name of the database object.
+    const std::string name_;
+
+    /// For coordination.
+    const std::shared_ptr<multithreading::ReadWriteLock> read_write_lock_;
 
     /// Vector containing the time formats.
     const std::vector<std::string> time_formats_;

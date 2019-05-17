@@ -34,6 +34,8 @@ void Sqlite3::check_colnames(
 
 void Sqlite3::execute( const std::string& _sql )
 {
+    multithreading::WriteLock write_lock( read_write_lock_ );
+
     char* error_message = nullptr;
 
     int rc = sqlite3_exec(
@@ -55,6 +57,8 @@ void Sqlite3::execute( const std::string& _sql )
 std::vector<csv::Datatype> Sqlite3::get_coltypes(
     const std::string& _table, const std::vector<std::string>& _colnames ) const
 {
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
     std::vector<csv::Datatype> datatypes;
 
     for ( size_t i = 0; i < _colnames.size(); ++i )
@@ -108,6 +112,10 @@ std::vector<csv::Datatype> Sqlite3::get_coltypes(
 std::vector<std::string> Sqlite3::get_colnames(
     const std::string& _table ) const
 {
+    // ------------------------------------------------------------------------
+
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
     // ------------------------------------------------------------------------
     // Prepare statement.
 
@@ -292,6 +300,10 @@ Sqlite3::make_insert_statement(
     const std::string& _table, const std::vector<std::string>& _colnames ) const
 {
     // ------------------------------------------------------------------------
+
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    // ------------------------------------------------------------------------
     // Prepare statement as string
 
     std::string sql = "INSERT INTO '";
@@ -393,6 +405,8 @@ void Sqlite3::read_csv(
             // ----------------------------------------------------------------
             // Insert line by line.
 
+            multithreading::WriteLock write_lock( read_write_lock_ );
+
             while ( !_reader->eof() )
                 {
                     std::vector<std::string> line = _reader->next_line();
@@ -414,6 +428,8 @@ void Sqlite3::read_csv(
 
                     insert_line( line, coltypes, stmt.get() );
                 }
+
+            write_lock.unlock();
 
             // ----------------------------------------------------------------
 

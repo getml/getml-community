@@ -18,6 +18,8 @@ extern "C"
 
 #include "csv/csv.hpp"
 
+#include "multithreading/multithreading.hpp"
+
 // ----------------------------------------------------------------------------
 
 #include "database/types.hpp"
