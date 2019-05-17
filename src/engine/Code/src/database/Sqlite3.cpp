@@ -36,11 +36,17 @@ void Sqlite3::execute( const std::string& _sql )
 {
     char* error_message = nullptr;
 
-    sqlite3_exec( db(), _sql.c_str(), Sqlite3::do_nothing, 0, &error_message );
+    int rc = sqlite3_exec(
+        db(), _sql.c_str(), Sqlite3::do_nothing, 0, &error_message );
 
     if ( error_message != nullptr )
         {
             throw_exception( error_message );
+        }
+
+    if ( rc != SQLITE_OK )
+        {
+            throw std::runtime_error( "Query could not be executed!" );
         }
 }
 
@@ -364,30 +370,6 @@ void Sqlite3::read_csv(
     const auto stmt = make_insert_statement( _table, colnames );
 
     // ------------------------------------------------------------------------
-    // Execute BEGIN.
-
-    char* error_message = nullptr;
-
-    int rc = sqlite3_exec(
-        db(),                 // Database handle.
-        "BEGIN",              // SQL to be evaluated
-        Sqlite3::do_nothing,  // Callback function
-        0,                    // 1st argument to callback
-        &error_message        // Error msg written here
-    );
-
-    if ( error_message != nullptr )
-        {
-            throw_exception( error_message );
-        }
-
-    if ( rc != SQLITE_OK )
-        {
-            throw std::runtime_error(
-                "BEGIN statement could not be executed!" );
-        }
-
-    // ------------------------------------------------------------------------
     // Check headers, if necessary.
 
     size_t line_count = 0;
@@ -399,50 +381,51 @@ void Sqlite3::read_csv(
         }
 
     // ------------------------------------------------------------------------
-    // Insert line by line.
 
-    while ( !_reader->eof() )
+    execute( "BEGIN;" );
+
+    // ----------------------------------------------------------------
+    // Insert line by line, then COMMIT.
+    // If something goes wrong, call ROLLBACK.
+
+    try
         {
-            std::vector<std::string> line = _reader->next_line();
+            // ----------------------------------------------------------------
+            // Insert line by line.
 
-            ++line_count;
-
-            if ( line.size() == 0 )
+            while ( !_reader->eof() )
                 {
-                    continue;
+                    std::vector<std::string> line = _reader->next_line();
+
+                    ++line_count;
+
+                    if ( line.size() == 0 )
+                        {
+                            continue;
+                        }
+                    else if ( line.size() != colnames.size() )
+                        {
+                            std::cout << "Corrupted line: " << line_count
+                                      << ". Expected " << colnames.size()
+                                      << " fields, saw " << line.size() << "."
+                                      << std::endl;
+                            continue;
+                        }
+
+                    insert_line( line, coltypes, stmt.get() );
                 }
-            else if ( line.size() != colnames.size() )
-                {
-                    std::cout << "Corrupted line: " << line_count
-                              << ". Expected " << colnames.size()
-                              << " fields, saw " << line.size() << "."
-                              << std::endl;
-                    continue;
-                }
 
-            insert_line( line, coltypes, stmt.get() );
+            // ----------------------------------------------------------------
+
+            execute( "COMMIT;" );
+
+            // ----------------------------------------------------------------
         }
-
-    // ------------------------------------------------------------------------
-    // COMMIT results.
-
-    rc = sqlite3_exec(
-        db(),                 // Database handle.
-        "COMMIT",             // SQL to be evaluated
-        Sqlite3::do_nothing,  // Callback function
-        0,                    // 1st argument to callback
-        &error_message        // Error msg written here
-    );
-
-    if ( error_message != nullptr )
+    catch ( std::exception& e )
         {
-            throw_exception( error_message );
-        }
+            execute( "ROLLBACK;" );
 
-    if ( rc != SQLITE_OK )
-        {
-            throw std::runtime_error(
-                "COMMIT statement could not be executed!" );
+            throw std::runtime_error( e.what() );
         }
 
     // ------------------------------------------------------------------------
