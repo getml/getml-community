@@ -22,7 +22,7 @@ void test4()
 
     std::cout << population_statement << std::endl;
 
-    sqlite_db.exec( population_statement );
+    sqlite_db.execute( population_statement );
 
     auto reader = csv::Reader( "POPULATION2.CSV", '\"', ',' );
 

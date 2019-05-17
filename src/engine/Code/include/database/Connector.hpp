@@ -21,7 +21,7 @@ class Connector
     virtual std::string dialect() const = 0;
 
     /// Executes an SQL query.
-    virtual void exec( const std::string& _sql ) = 0;
+    virtual void execute( const std::string& _sql ) = 0;
 
     /// Reads a CSV file into a table.
     virtual void read_csv(

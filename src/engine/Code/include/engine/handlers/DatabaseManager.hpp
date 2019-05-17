@@ -24,7 +24,7 @@ class DatabaseManager
 
    public:
     /// Runs a query on the database.
-    void exec_query( Poco::Net::StreamSocket* _socket );
+    void execute( Poco::Net::StreamSocket* _socket );
 
     /// Reads a CSV file into the database.
     void read_csv(

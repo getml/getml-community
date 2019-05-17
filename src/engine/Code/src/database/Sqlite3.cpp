@@ -32,7 +32,7 @@ void Sqlite3::check_colnames(
 
 // ----------------------------------------------------------------------------
 
-void Sqlite3::exec( const std::string& _sql )
+void Sqlite3::execute( const std::string& _sql )
 {
     char* error_message = nullptr;
 

@@ -36,9 +36,9 @@ void RequestHandler::run()
                 {
                     data_frame_manager().get_column( cmd, &socket() );
                 }
-            else if ( type == "Database.exec_query" )
+            else if ( type == "Database.execute" )
                 {
-                    database_manager().exec_query( &socket() );
+                    database_manager().execute( &socket() );
                 }
             else if ( type == "Database.read_csv" )
                 {

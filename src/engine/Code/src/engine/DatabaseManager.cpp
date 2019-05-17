@@ -6,11 +6,11 @@ namespace handlers
 {
 // ----------------------------------------------------------------------------
 
-void DatabaseManager::exec_query( Poco::Net::StreamSocket* _socket )
+void DatabaseManager::execute( Poco::Net::StreamSocket* _socket )
 {
-    const auto sql = communication::Receiver::recv_string( _socket );
+    const auto query = communication::Receiver::recv_string( _socket );
 
-    connector()->exec( sql );
+    connector()->execute( query );
 
     communication::Sender::send_string( "Success!", _socket );
 }

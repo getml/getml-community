@@ -23,7 +23,7 @@ class Sqlite3 : public Connector
 
    public:
     /// Executes an SQL query.
-    void exec( const std::string& _sql ) final;
+    void execute( const std::string& _sql ) final;
 
     /// Reads a CSV file into a table.
     void read_csv(
