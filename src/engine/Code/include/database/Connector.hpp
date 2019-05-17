@@ -20,6 +20,9 @@ class Connector
     /// Describes the dialect used by the connector.
     virtual std::string dialect() const = 0;
 
+    /// Drops a table and cleans up, if necessary.
+    virtual void drop_table( const std::string& _tname ) = 0;
+
     /// Executes an SQL query.
     virtual void execute( const std::string& _sql ) = 0;
 

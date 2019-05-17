@@ -8,5 +8,6 @@
 #include "database/tests/test3.hpp"
 #include "database/tests/test4.hpp"
 #include "database/tests/test5.hpp"
+#include "database/tests/test6.hpp"
 
 #endif  // DATABASE_TESTS_TESTS_HPP_

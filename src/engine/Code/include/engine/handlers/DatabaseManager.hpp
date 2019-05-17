@@ -23,6 +23,10 @@ class DatabaseManager
     // ------------------------------------------------------------------------
 
    public:
+    /// Drops the table signified by _name.
+    void drop_table(
+        const std::string& _name, Poco::Net::StreamSocket* _socket );
+
     /// Runs a query on the database.
     void execute( Poco::Net::StreamSocket* _socket );
 

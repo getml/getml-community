@@ -36,6 +36,10 @@ void RequestHandler::run()
                 {
                     data_frame_manager().get_column( cmd, &socket() );
                 }
+            else if ( type == "Database.drop_table" )
+                {
+                    database_manager().drop_table( name, &socket() );
+                }
             else if ( type == "Database.execute" )
                 {
                     database_manager().execute( &socket() );

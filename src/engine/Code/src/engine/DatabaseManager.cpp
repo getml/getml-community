@@ -6,6 +6,15 @@ namespace handlers
 {
 // ----------------------------------------------------------------------------
 
+void DatabaseManager::drop_table(
+    const std::string& _name, Poco::Net::StreamSocket* _socket )
+{
+    connector()->drop_table( _name );
+
+    communication::Sender::send_string( "Success!", _socket );
+}
+// ----------------------------------------------------------------------------
+
 void DatabaseManager::execute( Poco::Net::StreamSocket* _socket )
 {
     const auto query = communication::Receiver::recv_string( _socket );

@@ -45,6 +45,12 @@ class Sqlite3 : public Connector
     /// Returns the dialect of the connector.
     std::string dialect() const final { return "sqlite"; }
 
+    /// Drops a table and cleans up, if necessary.
+    void drop_table( const std::string& _tname ) final
+    {
+        execute( "DROP TABLE " + _tname + "; VACUUM;" );
+    }
+
     /// Returns a shared_ptr containing a Sqlite3Iterator.
     std::shared_ptr<Iterator> select(
         const std::vector<std::string>& _colnames,
