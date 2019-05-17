@@ -110,11 +110,14 @@ std::string Sniffer::make_statement_sqlite(
 
     std::stringstream statement;
 
+    statement << "DROP TABLE IF EXISTS " << table_name_ << ";" << std::endl
+              << std::endl;
+
     statement << "CREATE TABLE " << table_name_ << "(" << std::endl;
 
     for ( size_t i = 0; i < _colnames.size(); ++i )
         {
-            statement << _colnames[i] << " "
+            statement << "    " << _colnames[i] << " "
                       << to_string_sqlite( _datatypes[i] );
 
             if ( i < _colnames.size() - 1 )
