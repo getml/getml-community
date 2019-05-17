@@ -42,6 +42,9 @@ class Sqlite3 : public Connector
     // -------------------------------
 
    public:
+    /// Returns the dialect of the connector.
+    std::string dialect() const final { return "sqlite"; }
+
     /// Returns a shared_ptr containing a Sqlite3Iterator.
     std::shared_ptr<Iterator> select(
         const std::vector<std::string>& _colnames,

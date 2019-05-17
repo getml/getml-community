@@ -32,11 +32,25 @@ class DatabaseManager
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
+    /// Sniffs one or several CSV files and returns the CREATE TABLE statement
+    /// to the client.
+    void sniff_csv(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket ) const;
+
     // ------------------------------------------------------------------------
 
    private:
     /// Trivial accessor
     const std::shared_ptr<database::Connector>& connector()
+    {
+        assert( connector_ );
+        return connector_;
+    }
+
+    /// Trivial accessor
+    const std::shared_ptr<const database::Connector> connector() const
     {
         assert( connector_ );
         return connector_;

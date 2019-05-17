@@ -17,6 +17,9 @@ class Connector
     // -------------------------------
 
    public:
+    /// Describes the dialect used by the connector.
+    virtual std::string dialect() const = 0;
+
     /// Executes an SQL query.
     virtual void exec( const std::string& _sql ) = 0;
 
