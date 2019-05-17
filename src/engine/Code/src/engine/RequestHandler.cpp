@@ -65,6 +65,10 @@ void RequestHandler::run()
                 {
                     project_manager().delete_data_frame( name, cmd, &socket() );
                 }
+            else if ( type == "DataFrame.from_db" )
+                {
+                    data_frame_manager().from_db( name, cmd, &socket() );
+                }
             else if ( type == "DataFrame.load" )
                 {
                     project_manager().load_data_frame( name, &socket() );

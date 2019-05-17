@@ -45,6 +45,12 @@ class DataFrameManager
     void append_to_data_frame(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
 
+    /// Creates a new data frame from a table in the database.
+    void from_db(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
     /// Sends a categorical columm to the client
     void get_categorical_column(
         const Poco::JSON::Object& _cmd, Poco::Net::StreamSocket* _socket );
