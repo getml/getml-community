@@ -45,9 +45,6 @@ class DataFrameManager
     void append_to_data_frame(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
 
-    /// Runs a query on the database.
-    void exec_query( Poco::Net::StreamSocket* _socket );
-
     /// Sends a categorical columm to the client
     void get_categorical_column(
         const Poco::JSON::Object& _cmd, Poco::Net::StreamSocket* _socket );
@@ -69,12 +66,6 @@ class DataFrameManager
     /// Get the size of a data frame
     void get_nbytes(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
-
-    /// Reads a CSV file into the database.
-    void read_csv(
-        const std::string& _name,
-        const Poco::JSON::Object& _cmd,
-        Poco::Net::StreamSocket* _socket );
 
     /// Refreshes a data frame.
     void refresh( const std::string& _name, Poco::Net::StreamSocket* _socket );

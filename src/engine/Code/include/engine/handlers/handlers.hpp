@@ -48,6 +48,7 @@
 #include "engine/handlers/FileHandler.hpp"
 
 #include "engine/handlers/DataFrameManager.hpp"
+#include "engine/handlers/DatabaseManager.hpp"
 #include "engine/handlers/ModelManager.hpp"
 
 #include "engine/handlers/RelboostModelManager.hpp"

@@ -1,0 +1,67 @@
+#ifndef ENGINE_HANDLERS_DATABASEMANAGER_HPP_
+#define ENGINE_HANDLERS_DATABASEMANAGER_HPP_
+
+namespace engine
+{
+namespace handlers
+{
+// ------------------------------------------------------------------------
+
+class DatabaseManager
+{
+   public:
+    DatabaseManager(
+        const std::shared_ptr<database::Connector> _connector,
+        const std::shared_ptr<const logging::Logger>& _logger )
+        : connector_( _connector ), logger_( _logger )
+    // monitor_( _monitor ),
+    {
+    }
+
+    ~DatabaseManager() = default;
+
+    // ------------------------------------------------------------------------
+
+   public:
+    /// Runs a query on the database.
+    void exec_query( Poco::Net::StreamSocket* _socket );
+
+    /// Reads a CSV file into the database.
+    void read_csv(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
+    // ------------------------------------------------------------------------
+
+   private:
+    /// Trivial accessor
+    const std::shared_ptr<database::Connector>& connector()
+    {
+        assert( connector_ );
+        return connector_;
+    }
+
+    /// Trivial accessor
+    const logging::Logger& logger() { return *logger_; }
+
+    // ------------------------------------------------------------------------
+
+   private:
+    /// Connector to the underlying database.
+    const std::shared_ptr<database::Connector> connector_;
+
+    /// For logging
+    const std::shared_ptr<const logging::Logger> logger_;
+
+    /// For communication with the monitor
+    /// const std::shared_ptr<const logging::Monitor> monitor_;
+
+    // ------------------------------------------------------------------------
+};
+
+// ------------------------------------------------------------------------
+}  // namespace handlers
+}  // namespace engine
+
+#endif  // ENGINE_HANDLERS_DATABASEMANAGER_HPP_
