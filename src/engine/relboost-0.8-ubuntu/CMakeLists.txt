@@ -3,6 +3,9 @@
 # cd build
 # make -j8
 
+# To check for memory leaks:
+# valgrind --leak-check=full --show-leak-kinds=all -v ./relboost-0.8-ubuntu-64bit
+
 set(RELBOOST_VERSION relboost-0.8-ubuntu)
 
 cmake_minimum_required(VERSION 2.8)
@@ -71,6 +74,8 @@ add_executable(
 	${SQLITE3_OBJ} 
 	${ENGINE_SOURCE_DIRECTORY}/main.cpp
 )
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -O2")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11 -Wall -Wno-sign-compare -Wno-missing-braces -pthread -fno-strict-aliasing -fwrapv -O2 -D NDEBUGLOG")
     
