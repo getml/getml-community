@@ -28,6 +28,14 @@ class Sqlite3 : public Connector
     /// Executes an SQL query.
     void execute( const std::string& _sql ) final;
 
+    /// Returns the content of a table in a format that is compatible
+    /// with the DataTables.js server-side processing API.
+    Poco::JSON::Object get_content(
+        const std::string& _tname,
+        const std::int32_t _draw,
+        const std::int32_t _start,
+        const std::int32_t _length ) final;
+
     /// Reads a CSV file into a table.
     void read_csv(
         const std::string& _table,
@@ -54,14 +62,20 @@ class Sqlite3 : public Connector
         execute( "DROP TABLE " + _tname + "; VACUUM;" );
     }
 
+    /// Returns the number of rows in the table signified by _tname.
+    std::int32_t get_nrows( const std::string& _tname ) final
+    {
+        return select( {"COUNT(*)"}, _tname, "" )->get_int();
+    }
+
     /// Returns a shared_ptr containing a Sqlite3Iterator.
     std::shared_ptr<Iterator> select(
         const std::vector<std::string>& _colnames,
-        const std::string& _tname ) final
+        const std::string& _tname,
+        const std::string& _where ) final
     {
-        multithreading::ReadLock read_lock( read_write_lock_ );
         return std::make_shared<Sqlite3Iterator>(
-            db_, _colnames, time_formats_, _tname );
+            db_, _colnames, read_write_lock_, time_formats_, _tname, _where );
     }
 
     // -------------------------------

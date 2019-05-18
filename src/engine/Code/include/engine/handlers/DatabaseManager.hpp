@@ -30,6 +30,13 @@ class DatabaseManager
     /// Runs a query on the database.
     void execute( Poco::Net::StreamSocket* _socket );
 
+    /// Sends the content of a table in a format that is compatible with
+    /// DataTables.js server-side processing.
+    void get_content(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
     /// Reads a CSV file into the database.
     void read_csv(
         const std::string& _name,

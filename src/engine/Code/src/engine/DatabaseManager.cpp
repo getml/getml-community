@@ -25,6 +25,24 @@ void DatabaseManager::execute( Poco::Net::StreamSocket* _socket )
     communication::Sender::send_string( "Success!", _socket );
 }
 
+// ------------------------------------------------------------------------
+
+void DatabaseManager::get_content(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    const auto draw = JSON::get_value<ENGINE_INT>( _cmd, "draw_" );
+
+    const auto length = JSON::get_value<ENGINE_INT>( _cmd, "length_" );
+
+    const auto start = JSON::get_value<ENGINE_INT>( _cmd, "start_" );
+
+    auto obj = connector()->get_content( _name, draw, start, length );
+
+    communication::Sender::send_string( JSON::stringify( obj ), _socket );
+}
+
 // ----------------------------------------------------------------------------
 
 void DatabaseManager::read_csv(

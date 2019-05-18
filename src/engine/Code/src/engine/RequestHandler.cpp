@@ -44,6 +44,11 @@ void RequestHandler::run()
                 {
                     database_manager().execute( &socket() );
                 }
+            else if ( type == "Database.get_content" )
+                {
+                    database_manager().get_content( name, cmd, &socket() );
+                }
+
             else if ( type == "Database.read_csv" )
                 {
                     database_manager().read_csv( name, cmd, &socket() );

@@ -29,7 +29,7 @@ void test3()
     sqlite_db.read_csv( "POPULATION", false, &reader );
 
     auto it = sqlite_db.select(
-        {"COLUMN_1", "COLUMN_2", "COLUMN_3", "COLUMN_4"}, "POPULATION" );
+        {"COLUMN_1", "COLUMN_2", "COLUMN_3", "COLUMN_4"}, "POPULATION", "" );
 
     // Header line (read in and formatted):
     assert( std::isnan( it->get_double() ) );

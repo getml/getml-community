@@ -167,6 +167,92 @@ std::vector<std::string> Sqlite3::get_colnames(
 
 // ----------------------------------------------------------------------------
 
+Poco::JSON::Object Sqlite3::get_content(
+    const std::string& _tname,
+    const std::int32_t _draw,
+    const std::int32_t _start,
+    const std::int32_t _length )
+{
+    // ----------------------------------------
+
+    const auto nrows = get_nrows( _tname );
+
+    const auto colnames = get_colnames( _tname );
+
+    const auto ncols = colnames.size();
+
+    // ----------------------------------------
+
+    if ( _length < 0 )
+        {
+            throw std::invalid_argument( "length must be positive!" );
+        }
+
+    if ( _start < 0 )
+        {
+            throw std::invalid_argument( "start must be positive!" );
+        }
+
+    if ( _start >= nrows )
+        {
+            throw std::invalid_argument(
+                "start must be smaller than number of rows!" );
+        }
+
+    // ----------------------------------------
+
+    Poco::JSON::Object obj;
+
+    // ----------------------------------------
+
+    obj.set( "draw", _draw );
+
+    obj.set( "recordsTotal", nrows );
+
+    obj.set( "recordsFiltered", nrows );
+
+    // ----------------------------------------
+
+    const auto begin = _start;
+
+    const auto end = ( _start + _length > nrows ) ? nrows : _start + _length;
+
+    // ----------------------------------------
+
+    const auto where = std::string( "rowid > " ) + std::to_string( begin ) +
+                       std::string( " AND rowid <= " ) + std::to_string( end );
+
+    auto iterator = select( colnames, _tname, where );
+
+    // ----------------------------------------
+
+    Poco::JSON::Array data;
+
+    while ( !iterator->end() )
+        {
+            Poco::JSON::Array row;
+
+            for ( size_t i = 0; i < ncols; ++i )
+                {
+                    row.add( iterator->get_string() );
+                }
+
+            data.add( row );
+        }
+
+    // ----------------------------------------
+
+    obj.set( "data", data );
+
+    // ----------------------------------------
+
+    return obj;
+
+    // ----------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
 void Sqlite3::insert_line(
     const std::vector<std::string>& _line,
     const std::vector<csv::Datatype>& _coltypes,

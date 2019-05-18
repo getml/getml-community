@@ -26,6 +26,17 @@ class Connector
     /// Executes an SQL query.
     virtual void execute( const std::string& _sql ) = 0;
 
+    /// Returns the content of a table in a format that is compatible
+    /// with the DataTables.js server-side processing API.
+    virtual Poco::JSON::Object get_content(
+        const std::string& _tname,
+        const std::int32_t _draw,
+        const std::int32_t _start,
+        const std::int32_t _length ) = 0;
+
+    /// Returns the number of rows in the table signified by _tname.
+    virtual std::int32_t get_nrows( const std::string& _tname ) = 0;
+
     /// Reads a CSV file into a table.
     virtual void read_csv(
         const std::string& _table,
@@ -35,7 +46,8 @@ class Connector
     /// Returns a shared_ptr containing the corresponding iterator.
     virtual std::shared_ptr<Iterator> select(
         const std::vector<std::string>& _colnames,
-        const std::string& _tname ) = 0;
+        const std::string& _tname,
+        const std::string& _where ) = 0;
 
     // -------------------------------
 };

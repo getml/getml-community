@@ -11,6 +11,8 @@
 #include <stdexcept>
 #include <string>
 
+#include "Poco/JSON/Object.h"
+
 extern "C"
 {
 #include "sqlite3/sqlite3.h"

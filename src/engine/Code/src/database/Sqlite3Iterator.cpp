@@ -8,12 +8,15 @@ namespace database
 Sqlite3Iterator::Sqlite3Iterator(
     const std::shared_ptr<sqlite3>& _db,
     const std::vector<std::string>& _colnames,
+    const std::shared_ptr<multithreading::ReadWriteLock>& _read_write_lock,
     const std::vector<std::string>& _time_formats,
-    const std::string& _tname )
+    const std::string& _tname,
+    const std::string& _where )
     : colnum_( 0 ),
       db_( _db ),
       end_( false ),
       num_cols_( static_cast<int>( _colnames.size() ) ),
+      read_lock_( multithreading::ReadLock( _read_write_lock ) ),
       stmt_( std::unique_ptr<sqlite3_stmt, int ( * )( sqlite3_stmt* )>(
           nullptr, sqlite3_finalize ) ),
       time_formats_( _time_formats )
@@ -32,7 +35,14 @@ Sqlite3Iterator::Sqlite3Iterator(
                 }
         }
 
-    sql += " FROM " + _tname + ";";
+    sql += " FROM " + _tname;
+
+    if ( _where != "" )
+        {
+            sql += " WHERE " + _where;
+        }
+
+    sql += ";";
 
     // ------------------------------------------------------------------------
     // Prepare statement.
@@ -134,22 +144,25 @@ std::string Sqlite3Iterator::get_string()
 
     const auto ptr = sqlite3_column_text( stmt(), colnum_++ );
 
+    std::string val;
+
+    // sqlite3_column_text(...) returns NULL when the value is NULL.
+    if ( ptr )
+        {
+            val = reinterpret_cast<const char*>( ptr );
+        }
+    else
+        {
+            val = "NULL";
+        }
+
     if ( colnum_ == num_cols_ )
         {
             next_row();
             colnum_ = 0;
         }
 
-    // sqlite3_column_text(...) returns NULL when the value is NULL.
-    if ( ptr )
-        {
-            std::string val = reinterpret_cast<const char*>( ptr );
-            return val;
-        }
-    else
-        {
-            return "NULL";
-        }
+    return val;
 }
 
 // ----------------------------------------------------------------------------

@@ -90,8 +90,8 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -O2 -fopenmp")
 target_link_libraries(
     ${RELBOOST_VERSION}-64bit-database-test
 	${CMAKE_DL_LIBS}
-	"${POCO_DIR}/lib/Darwin/x86_64/libPocoDataSQLite.a"
-	"${POCO_DIR}/lib/Darwin/x86_64/libPocoData.a"
+    "${POCO_DIR}/lib/Darwin/x86_64/libPocoJSON.a"
+    "${POCO_DIR}/lib/Darwin/x86_64/libPocoFoundation.a"
 	pthread
 )
 

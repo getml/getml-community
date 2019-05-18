@@ -13,8 +13,10 @@ class Sqlite3Iterator : public Iterator
     Sqlite3Iterator(
         const std::shared_ptr<sqlite3>& _db,
         const std::vector<std::string>& _colnames,
+        const std::shared_ptr<multithreading::ReadWriteLock>& _read_write_lock,
         const std::vector<std::string>& _time_formats,
-        const std::string& _tname );
+        const std::string& _tname,
+        const std::string& _where );
 
     ~Sqlite3Iterator() = default;
 
@@ -69,6 +71,9 @@ class Sqlite3Iterator : public Iterator
 
     /// The total number of columns.
     const int num_cols_;
+
+    /// For coordination.
+    multithreading::ReadLock read_lock_;
 
     /// Unique ptr to the statement we are iterating through.
     std::unique_ptr<sqlite3_stmt, int ( * )( sqlite3_stmt* )> stmt_;

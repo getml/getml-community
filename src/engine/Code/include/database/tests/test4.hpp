@@ -29,7 +29,7 @@ void test4()
     sqlite_db.read_csv( "POPULATION", true, &reader );
 
     auto it = sqlite_db.select(
-        {"column_01", "join_key", "time_stamp", "targets"}, "POPULATION" );
+        {"column_01", "join_key", "time_stamp", "targets"}, "POPULATION", "" );
 
     // First line:
     // 0.09902457667435494, 0, 0.7386545235592108, 113.0

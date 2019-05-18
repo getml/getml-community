@@ -28,7 +28,7 @@ void test2()
     sqlite_db.read_csv( "POPULATION", false, &reader );
 
     auto it = sqlite_db.select(
-        {"column_01", "join_key", "time_stamp", "targets"}, "POPULATION" );
+        {"column_01", "join_key", "time_stamp", "targets"}, "POPULATION", "" );
 
     // Header line (read in and formatted):
     assert( std::isnan( it->get_double() ) );

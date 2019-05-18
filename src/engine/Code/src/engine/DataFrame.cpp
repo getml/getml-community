@@ -536,7 +536,7 @@ void DataFrame::from_db(
 
     // ----------------------------------------
 
-    auto iterator = _connector->select( all_colnames, _tname );
+    auto iterator = _connector->select( all_colnames, _tname, "" );
 
     while ( !iterator->end() )
         {

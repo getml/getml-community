@@ -1,10 +1,9 @@
-#ifndef DATABASE_TESTS_TEST1_HPP_
-#define DATABASE_TESTS_TEST1_HPP_
+#ifndef DATABASE_TESTS_TEST7_HPP_
+#define DATABASE_TESTS_TEST7_HPP_
 
-void test1()
+void test7()
 {
-    std::cout << "Test 1: Parsing and inserting a CSV file." << std::endl
-              << std::endl;
+    std::cout << "Test 7: Getting the content." << std::endl << std::endl;
 
     auto sqlite_db = database::Sqlite3( ":memory:", {"%Y-%m-%d %H:%M:%S"} );
 
@@ -28,18 +27,12 @@ void test1()
 
     sqlite_db.read_csv( "POPULATION", true, &reader );
 
-    auto it = sqlite_db.select(
-        {"column_01", "join_key", "time_stamp", "targets"}, "POPULATION", "" );
+    const auto obj = sqlite_db.get_content( "POPULATION", 0, 99, 20 );
 
-    // First line:
-    // 0.09902457667435494, 0, 0.7386545235592108, 113.0
-    assert( std::abs( it->get_double() - 0.099024 ) < 1e-4 );
-    assert( it->get_string() == "0" );
-    assert( std::abs( it->get_time_stamp() - 0.738654 ) < 1e-4 );
-    assert( it->get_int() == 113 );
+    Poco::JSON::Stringifier::stringify( obj, std::cout );
 
     std::cout << std::endl << std::endl;
     std::cout << "OK." << std::endl << std::endl;
 }
 
-#endif  // DATABASE_TESTS_TEST1_HPP_
+#endif  // DATABASE_TESTS_TEST7_HPP_
