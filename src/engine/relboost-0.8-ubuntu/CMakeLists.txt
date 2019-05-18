@@ -32,26 +32,64 @@ include_directories(
     "${XGBOOST_DIR}/rabit/include"
 )
 
+set(CSV_SOURCE_DIRECTORY ${PROJECT_SOURCE_DIR}/../Code/src/csv)
+set(DATABASE_SOURCE_DIRECTORY ${PROJECT_SOURCE_DIR}/../Code/src/database)
 set(ENGINE_SOURCE_DIRECTORY "${PROJECT_SOURCE_DIR}/../Code/src/engine")
 set(METRICS_SOURCE_DIRECTORY "${PROJECT_SOURCE_DIR}/../Code/src/metrics")
 set(RELBOOST_SOURCE_DIRECTORY "${PROJECT_SOURCE_DIR}/../Code/src/relboost")
+set(SQLITE3_SOURCE_DIRECTORY ${PROJECT_SOURCE_DIR}/../Code/src/sqlite3)
 
+include(${CSV_SOURCE_DIRECTORY}/obj.txt)
+include(${DATABASE_SOURCE_DIRECTORY}/obj.txt)
 include(${ENGINE_SOURCE_DIRECTORY}/obj.txt)
 include(${METRICS_SOURCE_DIRECTORY}/obj.txt)
 include(${RELBOOST_SOURCE_DIRECTORY}/obj.txt)
+include(${SQLITE3_SOURCE_DIRECTORY}/obj.txt)
 
-add_executable(${RELBOOST_VERSION}-64bit-test ${RELBOOST_OBJ} ${METRICS_OBJ} ${RELBOOST_SOURCE_DIRECTORY}/main.cpp)
+add_executable(
+	${RELBOOST_VERSION}-64bit-database-test 
+	${CSV_OBJ} 
+	${DATABASE_OBJ} 
+	${SQLITE3_OBJ} 
+	${PROJECT_SOURCE_DIR}/../Code/src/database/main.cpp
+)
 
-add_executable(${RELBOOST_VERSION}-64bit ${RELBOOST_OBJ} ${METRICS_OBJ} ${ENGINE_OBJ} ${ENGINE_SOURCE_DIRECTORY}/main.cpp)
+add_executable(
+	${RELBOOST_VERSION}-64bit-relboost-test 
+	${RELBOOST_OBJ} 
+	${METRICS_OBJ} 
+	${RELBOOST_SOURCE_DIRECTORY}/main.cpp
+)
+
+add_executable(
+	${RELBOOST_VERSION}-64bit 
+	${CSV_OBJ} 
+	${DATABASE_OBJ} 
+	${ENGINE_OBJ} 
+	${METRICS_OBJ} 
+	${RELBOOST_OBJ} 
+	${SQLITE3_OBJ} 
+	${ENGINE_SOURCE_DIRECTORY}/main.cpp
+)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11 -Wall -Wno-sign-compare -Wno-missing-braces -pthread -fno-strict-aliasing -fwrapv -O2 -D NDEBUGLOG")
     
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s -O2 -fopenmp")
 
 target_link_libraries(
-    ${RELBOOST_VERSION}-64bit-test
+    ${RELBOOST_VERSION}-64bit-database-test
+	${CMAKE_DL_LIBS}
+	"${POCO_DIR}/lib/Linux/x86_64/libPocoDataSQLite.a"
+	"${POCO_DIR}/lib/Linux/x86_64/libPocoData.a"
+	dl
+	pthread
+)
+
+target_link_libraries(
+    ${RELBOOST_VERSION}-64bit-relboost-test
     "${POCO_DIR}/lib/Linux/x86_64/libPocoJSON.a"
     "${POCO_DIR}/lib/Linux/x86_64/libPocoFoundation.a"
+    dl
 )
 
 target_link_libraries(
@@ -68,5 +106,7 @@ target_link_libraries(
     "${XGBOOST_DIR}/dmlc-core/libdmlc.a"
     crypto
     ssl
+    dl
 )
+
 

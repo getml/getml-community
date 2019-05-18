@@ -7,4 +7,5 @@ sh build.sh
 cd bin
 
 # Run tests
-./relboost-0.8-ubuntu-64bit-test
+./relboost-0.8-ubuntu-64bit-database-test
+./relboost-0.8-ubuntu-64bit-relboost-test
