@@ -20,7 +20,7 @@ class RequestHandler : public Poco::Net::TCPServerConnection
         const std::shared_ptr<const monitoring::Logger>& _logger,
         const std::shared_ptr<handlers::RelboostModelManager>&
             _relboost_model_manager,
-        // const std::shared_ptr<const logging::Monitor>& _monitor,
+        // const std::shared_ptr<const monitoring::Monitor>& _monitor,
         const config::Options& _options,
         const std::shared_ptr<handlers::ProjectManager>& _project_manager,
         const std::shared_ptr<std::atomic<bool>>& _shutdown )
@@ -69,7 +69,7 @@ class RequestHandler : public Poco::Net::TCPServerConnection
     }
 
     /// Trivial accessor
-    // const logging::Monitor& monitor() { return *monitor_; }
+    // const monitoring::Monitor& monitor() { return *monitor_; }
 
     /// Trivial accessor
     handlers::ProjectManager& project_manager()
@@ -95,7 +95,7 @@ class RequestHandler : public Poco::Net::TCPServerConnection
         relboost_model_manager_;
 
     /// Handles the communication with the monitor
-    // const std::shared_ptr<const logging::Monitor> monitor_;
+    // const std::shared_ptr<const monitoring::Monitor> monitor_;
 
     /// Contains information on the port of the monitor process
     const config::Options options_;

@@ -12,7 +12,6 @@ class ProjectManager
     // ------------------------------------------------------------------------
 
    public:
-
     typedef RelboostModelManager::ModelMapType RelboostModelMapType;
 
     // ------------------------------------------------------------------------
@@ -27,7 +26,7 @@ class ProjectManager
         /*const std::shared_ptr<engine::licensing::LicenseChecker>&
             _license_checker,*/
         const std::shared_ptr<RelboostModelMapType>& _relboost_models,
-        // const std::shared_ptr<const logging::Monitor>& _monitor,
+        const std::shared_ptr<const monitoring::Monitor>& _monitor,
         const config::Options& _options,
         const std::shared_ptr<multithreading::ReadWriteLock>& _read_write_lock )
         : categories_( _categories ),
@@ -35,7 +34,7 @@ class ProjectManager
           data_frames_( _data_frames ),
           join_keys_encoding_( _join_keys_encoding ),
           // license_checker_( _license_checker ),
-          // monitor_( _monitor ),
+          monitor_( _monitor ),
           options_( _options ),
           read_write_lock_( _read_write_lock ),
           relboost_models_( _relboost_models )
@@ -197,7 +196,7 @@ class ProjectManager
     // license_checker_;
 
     /// For communication with the monitor
-    // const std::shared_ptr<const logging::Monitor> monitor_;
+    const std::shared_ptr<const monitoring::Monitor> monitor_;
 
     /// Settings for the engine
     const config::Options options_;

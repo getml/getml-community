@@ -18,7 +18,7 @@ class ServerConnectionFactoryImpl : public Poco::Net::TCPServerConnectionFactory
         const std::shared_ptr<const monitoring::Logger>& _logger,
         const std::shared_ptr<handlers::RelboostModelManager>&
             _relboost_model_manager,
-        // const std::shared_ptr<const logging::Monitor>& _monitor,*/
+        // const std::shared_ptr<const monitoring::Monitor>& _monitor,*/
         const config::Options& _options,
         const std::shared_ptr<handlers::ProjectManager>& _project_manager,
         const std::shared_ptr<std::atomic<bool>>& _shutdown )
@@ -67,7 +67,7 @@ class ServerConnectionFactoryImpl : public Poco::Net::TCPServerConnectionFactory
         relboost_model_manager_;
 
     /// Handles the communication with the monitor
-    // const std::shared_ptr<const logging::Monitor> monitor_;
+    // const std::shared_ptr<const monitoring::Monitor> monitor_;
 
     /// Contains information on the port of the monitor process
     const config::Options options_;

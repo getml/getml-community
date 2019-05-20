@@ -58,7 +58,7 @@ int main( int argc, char *argv[] )
             join_keys_encoding,
             // license_checker,
             logger,
-            // monitor,
+            monitor,
             read_write_lock );
 
     const auto relboost_model_manager =
@@ -69,7 +69,7 @@ int main( int argc, char *argv[] )
             // license_checker,
             logger,
             relboost_models,
-            // monitor,
+            monitor,
             read_write_lock );
 
     const auto project_manager =
@@ -80,7 +80,7 @@ int main( int argc, char *argv[] )
             join_keys_encoding,
             // license_checker,
             relboost_models,
-            // monitor,
+            monitor,
             options,
             read_write_lock );
 

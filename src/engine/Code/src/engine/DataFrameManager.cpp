@@ -193,8 +193,7 @@ void DataFrameManager::append_to_data_frame(
 
     data_frames()[_name].create_indices();
 
-    // monitor_->send( "postdataframe", data_frames()[_name].to_monitor( _name )
-    // );
+    monitor_->send( "postdataframe", data_frames()[_name].to_monitor( _name ) );
 
     // --------------------------------------------------------------------
 }

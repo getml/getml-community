@@ -80,7 +80,7 @@ class DatabaseManager
     const std::shared_ptr<const monitoring::Logger> logger_;
 
     /// For communication with the monitor
-    /// const std::shared_ptr<const logging::Monitor> monitor_;
+    /// const std::shared_ptr<const monitoring::Monitor> monitor_;
 
     // ------------------------------------------------------------------------
 };

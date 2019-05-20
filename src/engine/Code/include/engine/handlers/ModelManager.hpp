@@ -27,7 +27,7 @@ class ModelManager
             _license_checker,*/
         const std::shared_ptr<const monitoring::Logger>& _logger,
         const std::shared_ptr<ModelMapType>& _models,
-        // const std::shared_ptr<const logging::Monitor>& _monitor,
+        const std::shared_ptr<const monitoring::Monitor>& _monitor,
         const std::shared_ptr<multithreading::ReadWriteLock>& _read_write_lock )
         : categories_( _categories ),
           data_frames_( _data_frames ),
@@ -35,7 +35,7 @@ class ModelManager
           // license_checker_( _license_checker ),
           logger_( _logger ),
           models_( _models ),
-          // monitor_( _monitor ),
+          monitor_( _monitor ),
           read_write_lock_( _read_write_lock )
 
     {
@@ -170,7 +170,7 @@ class ModelManager
     const std::shared_ptr<ModelMapType> models_;
 
     /// For communication with the monitor
-    // const std::shared_ptr<const logging::Monitor> monitor_;
+    const std::shared_ptr<const monitoring::Monitor> monitor_;
 
     /// For coordinating the read and write process of the data
     const std::shared_ptr<multithreading::ReadWriteLock> read_write_lock_;
@@ -312,7 +312,7 @@ Poco::JSON::Object ModelManager<ModelType>::receive_data(
         local_join_keys_encoding,
         // license_checker_,
         logger_,
-        // monitor_,
+        monitor_,
         local_read_write_lock );
 
     // -------------------------------------------------------
@@ -372,7 +372,7 @@ void ModelManager<ModelType>::send_data(
         local_join_keys_encoding,
         // license_checker_,
         logger_,
-        // monitor_,
+        monitor_,
         local_read_write_lock );
 
     auto local_model_manager = ModelManager(
@@ -382,7 +382,7 @@ void ModelManager<ModelType>::send_data(
         // license_checker_,
         logger_,
         models_,
-        // monitor_,
+        monitor_,
         local_read_write_lock );
 
     // -------------------------------------------------------

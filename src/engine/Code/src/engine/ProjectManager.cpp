@@ -18,8 +18,7 @@ void ProjectManager::add_data_frame(
 
     multithreading::ReadLock read_lock( read_write_lock_ );
 
-    // monitor_->send( "postdataframe", data_frames()[_name].to_monitor( _name )
-    // );
+    monitor_->send( "postdataframe", data_frames()[_name].to_monitor( _name ) );
 }
 
 // ------------------------------------------------------------------------
@@ -70,13 +69,13 @@ void ProjectManager::clear()
     // --------------------------------
     // Remove from monitor
 
-    /*for ( auto& pair : data_frames() )
+    for ( auto& pair : data_frames() )
         {
             monitor_->send(
                 "removedataframe", "{\"name\":\"" + pair.first + "\"}" );
         }
 
-    for ( auto& pair : models() )
+    /*for ( auto& pair : models() )
         {
             monitor_->send(
                 "removemodel", "{\"name\":\"" + pair.first + "\"}" );
@@ -107,7 +106,7 @@ void ProjectManager::delete_data_frame(
 
     FileHandler::remove( _name, project_directory_, _cmd, &data_frames() );
 
-    // monitor_->send( "removedataframe", "{\"name\":\"" + _name + "\"}" );
+    monitor_->send( "removedataframe", "{\"name\":\"" + _name + "\"}" );
 
     engine::communication::Sender::send_string( "Success!", _socket );
 }
@@ -183,8 +182,7 @@ void ProjectManager::load_data_frame(
 
     data_frames()[_name].create_indices();
 
-    // monitor_->send( "postdataframe", data_frames()[_name].to_monitor( _name )
-    // );
+    monitor_->send( "postdataframe", data_frames()[_name].to_monitor( _name ) );
 
     engine::communication::Sender::send_string( "Success!", _socket );
 }
@@ -338,7 +336,7 @@ void ProjectManager::set_project(
 
     project_directory_ = absolute_path;
 
-    // monitor_->send( "postproject", "{\"name\":\"" + _name + "\"}" );
+    monitor_->send( "postproject", "{\"name\":\"" + _name + "\"}" );
 
     write_lock.unlock();
 
