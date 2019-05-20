@@ -14,6 +14,8 @@
 
 // ----------------------------------------------------------------------------
 
+#include "engine/monitoring/monitoring.hpp"
+
 #include "engine/containers/containers.hpp"
 
 #include "engine/handlers/handlers.hpp"

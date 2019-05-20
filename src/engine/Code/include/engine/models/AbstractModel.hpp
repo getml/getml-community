@@ -24,7 +24,7 @@ class AbstractModel
     /// Fits the model.
     virtual void fit(
         const Poco::JSON::Object& _cmd,
-        const std::shared_ptr<const logging::Logger>& _logger,
+        const std::shared_ptr<const monitoring::Logger>& _logger,
         const std::map<std::string, containers::DataFrame>& _data_frames,
         Poco::Net::StreamSocket* _socket ) = 0;
 
@@ -44,7 +44,7 @@ class AbstractModel
     /// Generate features.
     virtual containers::Matrix<ENGINE_FLOAT> transform(
         const Poco::JSON::Object& _cmd,
-        const std::shared_ptr<const logging::Logger>& _logger,
+        const std::shared_ptr<const monitoring::Logger>& _logger,
         const std::map<std::string, containers::DataFrame>& _data_frames,
         Poco::Net::StreamSocket* _socket ) = 0;
 

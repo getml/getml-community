@@ -15,7 +15,7 @@ class ServerConnectionFactoryImpl : public Poco::Net::TCPServerConnectionFactory
     ServerConnectionFactoryImpl(
         const std::shared_ptr<handlers::DatabaseManager>& _database_manager,
         const std::shared_ptr<handlers::DataFrameManager>& _data_frame_manager,
-        const std::shared_ptr<const logging::Logger>& _logger,
+        const std::shared_ptr<const monitoring::Logger>& _logger,
         const std::shared_ptr<handlers::RelboostModelManager>&
             _relboost_model_manager,
         // const std::shared_ptr<const logging::Monitor>& _monitor,*/
@@ -60,7 +60,7 @@ class ServerConnectionFactoryImpl : public Poco::Net::TCPServerConnectionFactory
     const std::shared_ptr<handlers::DataFrameManager> data_frame_manager_;
 
     /// Logs commands.
-    const std::shared_ptr<const logging::Logger> logger_;
+    const std::shared_ptr<const monitoring::Logger> logger_;
 
     /// Handles requests related to the models such as fit or transform.
     const std::shared_ptr<handlers::RelboostModelManager>

@@ -41,7 +41,7 @@ class XGBoostPredictor : public Predictor
 
     /// Implements the fit(...) method in scikit-learn style
     std::string fit(
-        const std::shared_ptr<const logging::Logger> _logger,
+        const std::shared_ptr<const monitoring::Logger> _logger,
         const containers::Matrix<ENGINE_FLOAT>& _X,
         const containers::Matrix<ENGINE_FLOAT>& _y ) final;
 
@@ -109,6 +109,6 @@ class XGBoostPredictor : public Predictor
 
 // ------------------------------------------------------------------------
 }  // namespace predictors
-}  // namespace autosql
+}  // namespace engine
 
 #endif  // ENGINE_PREDICTORS_XGBOOSTPREDICTOR_HPP_

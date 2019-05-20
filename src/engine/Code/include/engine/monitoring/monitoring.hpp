@@ -1,18 +1,16 @@
-#ifndef LOGGING_LOGGING_HPP_
-#define LOGGING_LOGGING_HPP_
+#ifndef ENGINE_MONITORING_MONITORING_HPP_
+#define ENGINE_MONITORING_MONITORING_HPP_
 
 // ----------------------------------------------------
 // Dependencies
 
-#include <chrono>
-#include <thread>
-#include <vector>
+#include "logging/logging.hpp"
 
 // ----------------------------------------------------
 // Module files
 
-#include "logging/AbstractLogger.hpp"
+#include "engine/monitoring/Logger.hpp"
 
 // ----------------------------------------------------
 
-#endif  // LOGGING_LOGGING_HPP_
+#endif  // ENGINE_MONITORING_MONITORING_HPP_

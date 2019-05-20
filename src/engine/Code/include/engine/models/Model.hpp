@@ -31,7 +31,7 @@ class Model : public AbstractModel
     /// Fits the model.
     void fit(
         const Poco::JSON::Object& _cmd,
-        const std::shared_ptr<const logging::Logger>& _logger,
+        const std::shared_ptr<const monitoring::Logger>& _logger,
         const std::map<std::string, containers::DataFrame>& _data_frames,
         Poco::Net::StreamSocket* _socket ) final;
 
@@ -43,7 +43,7 @@ class Model : public AbstractModel
     /// Generate features.
     containers::Matrix<ENGINE_FLOAT> transform(
         const Poco::JSON::Object& _cmd,
-        const std::shared_ptr<const logging::Logger>& _logger,
+        const std::shared_ptr<const monitoring::Logger>& _logger,
         const std::map<std::string, containers::DataFrame>& _data_frames,
         Poco::Net::StreamSocket* _socket ) final;
 
@@ -241,7 +241,7 @@ DataFrameType Model<FeatureEngineererType>::extract_df(
 template <typename FeatureEngineererType>
 void Model<FeatureEngineererType>::fit(
     const Poco::JSON::Object& _cmd,
-    const std::shared_ptr<const logging::Logger>& _logger,
+    const std::shared_ptr<const monitoring::Logger>& _logger,
     const std::map<std::string, containers::DataFrame>& _data_frames,
     Poco::Net::StreamSocket* _socket )
 {
@@ -410,7 +410,7 @@ Poco::JSON::Object Model<FeatureEngineererType>::score(
 template <typename FeatureEngineererType>
 containers::Matrix<ENGINE_FLOAT> Model<FeatureEngineererType>::transform(
     const Poco::JSON::Object& _cmd,
-    const std::shared_ptr<const logging::Logger>& _logger,
+    const std::shared_ptr<const monitoring::Logger>& _logger,
     const std::map<std::string, containers::DataFrame>& _data_frames,
     Poco::Net::StreamSocket* _socket )
 {

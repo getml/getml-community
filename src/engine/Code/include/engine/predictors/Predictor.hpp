@@ -25,7 +25,7 @@ class Predictor
 
     /// Implements the fit(...) method in scikit-learn style
     virtual std::string fit(
-        const std::shared_ptr<const logging::Logger> _logger,
+        const std::shared_ptr<const monitoring::Logger> _logger,
         const containers::Matrix<ENGINE_FLOAT>& _X,
         const containers::Matrix<ENGINE_FLOAT>& _y ) = 0;
 

@@ -57,7 +57,7 @@ containers::Matrix<ENGINE_INT> Receiver::recv_categorical_matrix(
 // ------------------------------------------------------------------------
 
 Poco::JSON::Object Receiver::recv_cmd(
-    const std::shared_ptr<const logging::Logger> &_logger,
+    const std::shared_ptr<const monitoring::Logger> &_logger,
     Poco::Net::StreamSocket *_socket )
 {
     // ------------------------------------------------

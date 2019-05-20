@@ -18,7 +18,8 @@ int main( int argc, char *argv[] )
         std::make_shared<database::Sqlite3>( database::Sqlite3(
             ":memory:", {"%Y/%m/%d %H:%M:%S", "%Y-%m-%d %H:%M:%S"} ) );
 
-    const auto logger = std::make_shared<const logging::Logger>( /*monitor*/ );
+    const auto logger =
+        std::make_shared<const engine::monitoring::Logger>( /*monitor*/ );
 
     /*  const auto license_checker =
           std::make_shared<engine::licensing::LicenseChecker>(

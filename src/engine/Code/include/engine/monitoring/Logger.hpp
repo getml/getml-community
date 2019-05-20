@@ -1,13 +1,15 @@
-#ifndef LOGGING_LOGGER_HPP_
-#define LOGGING_LOGGER_HPP_
+#ifndef ENGINE_MONITORING_LOGGER_HPP_
+#define ENGINE_MONITORING_LOGGER_HPP_
 
 // ----------------------------------------------------------------------------
 
-namespace logging
+namespace engine
+{
+namespace monitoring
 {
 // ------------------------------------------------------------------------
 
-class Logger : public AbstractLogger
+class Logger : public logging::AbstractLogger
 {
     // --------------------------------------------------------
 
@@ -42,6 +44,7 @@ class Logger : public AbstractLogger
 };
 
 // ------------------------------------------------------------------------
-}  // namespace logging
+}  // namespace monitoring
+}  // namespace engine
 
-#endif  // LOGGING_LOGGER_HPP_
+#endif  // ENGINE_MONITORING_LOGGER_HPP_

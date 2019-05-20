@@ -15,7 +15,7 @@
 
 #include "multithreading/multithreading.hpp"
 
-#include "logging/logging.hpp"
+#include "engine/monitoring/monitoring.hpp"
 
 #include "metrics/metrics.hpp"
 

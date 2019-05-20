@@ -116,7 +116,7 @@ std::vector<ENGINE_FLOAT> XGBoostPredictor::feature_importances(
 // ------------------------------------------------------------------------
 
 std::string XGBoostPredictor::fit(
-    const std::shared_ptr<const logging::Logger> _logger,
+    const std::shared_ptr<const monitoring::Logger> _logger,
     const containers::Matrix<ENGINE_FLOAT> &_X,
     const containers::Matrix<ENGINE_FLOAT> &_y )
 {

@@ -20,7 +20,7 @@
 
 #include "engine/config/config.hpp"
 
-#include "logging/logging.hpp"
+#include "engine/monitoring/monitoring.hpp"
 
 #include "engine/communication/communication.hpp"
 

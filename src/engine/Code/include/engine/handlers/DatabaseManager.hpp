@@ -12,7 +12,7 @@ class DatabaseManager
    public:
     DatabaseManager(
         const std::shared_ptr<database::Connector> _connector,
-        const std::shared_ptr<const logging::Logger>& _logger )
+        const std::shared_ptr<const monitoring::Logger>& _logger )
         : connector_( _connector ), logger_( _logger )
     // monitor_( _monitor ),
     {
@@ -68,7 +68,7 @@ class DatabaseManager
     }
 
     /// Trivial accessor
-    const logging::Logger& logger() { return *logger_; }
+    const monitoring::Logger& logger() { return *logger_; }
 
     // ------------------------------------------------------------------------
 
@@ -77,7 +77,7 @@ class DatabaseManager
     const std::shared_ptr<database::Connector> connector_;
 
     /// For logging
-    const std::shared_ptr<const logging::Logger> logger_;
+    const std::shared_ptr<const monitoring::Logger> logger_;
 
     /// For communication with the monitor
     /// const std::shared_ptr<const logging::Monitor> monitor_;

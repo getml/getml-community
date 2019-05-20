@@ -17,7 +17,7 @@ class RequestHandler : public Poco::Net::TCPServerConnection
         const Poco::Net::StreamSocket& _socket,
         const std::shared_ptr<handlers::DatabaseManager>& _database_manager,
         const std::shared_ptr<handlers::DataFrameManager>& _data_frame_manager,
-        const std::shared_ptr<const logging::Logger>& _logger,
+        const std::shared_ptr<const monitoring::Logger>& _logger,
         const std::shared_ptr<handlers::RelboostModelManager>&
             _relboost_model_manager,
         // const std::shared_ptr<const logging::Monitor>& _monitor,
@@ -59,7 +59,7 @@ class RequestHandler : public Poco::Net::TCPServerConnection
     }
 
     /// Trivial accessor
-    const logging::Logger& logger() { return *logger_; }
+    const monitoring::Logger& logger() { return *logger_; }
 
     /// Trivial accessor
     handlers::RelboostModelManager& relboost_model_manager()
@@ -88,7 +88,7 @@ class RequestHandler : public Poco::Net::TCPServerConnection
     const std::shared_ptr<handlers::DataFrameManager> data_frame_manager_;
 
     /// Logs commands.
-    const std::shared_ptr<const logging::Logger> logger_;
+    const std::shared_ptr<const monitoring::Logger> logger_;
 
     /// Handles requests related to the models such as fit or transform.
     const std::shared_ptr<handlers::RelboostModelManager>

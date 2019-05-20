@@ -16,7 +16,7 @@
 
 #include "engine/containers/containers.hpp"
 
-#include "logging/logging.hpp"
+#include "engine/monitoring/monitoring.hpp"
 
 // ----------------------------------------------------
 // Module files

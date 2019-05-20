@@ -18,7 +18,7 @@ class DataFrameManager
         const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
         /*const std::shared_ptr<engine::licensing::LicenseChecker>&
             _license_checker,*/
-        const std::shared_ptr<const logging::Logger>& _logger,
+        const std::shared_ptr<const monitoring::Logger>& _logger,
         // const std::shared_ptr<const logging::Monitor>& _monitor,
         const std::shared_ptr<multithreading::ReadWriteLock>& _read_write_lock )
         : categories_( _categories ),
@@ -121,7 +121,7 @@ class DataFrameManager
     }
 
     /// Trivial accessor
-    const logging::Logger& logger() { return *logger_; }
+    const monitoring::Logger& logger() { return *logger_; }
 
     // ------------------------------------------------------------------------
 
@@ -144,7 +144,7 @@ class DataFrameManager
     // license_checker_;
 
     /// For logging
-    const std::shared_ptr<const logging::Logger> logger_;
+    const std::shared_ptr<const monitoring::Logger> logger_;
 
     /// For communication with the monitor
     /// const std::shared_ptr<const logging::Monitor> monitor_;

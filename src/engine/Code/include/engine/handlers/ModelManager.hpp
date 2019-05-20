@@ -25,7 +25,7 @@ class ModelManager
         const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
         /*const std::shared_ptr<engine::licensing::LicenseChecker>&
             _license_checker,*/
-        const std::shared_ptr<const logging::Logger>& _logger,
+        const std::shared_ptr<const monitoring::Logger>& _logger,
         const std::shared_ptr<ModelMapType>& _models,
         // const std::shared_ptr<const logging::Monitor>& _monitor,
         const std::shared_ptr<multithreading::ReadWriteLock>& _read_write_lock )
@@ -119,7 +119,7 @@ class ModelManager
     }
 
     /// Trivial (private) accessor
-    const logging::Logger& logger() { return *logger_; }
+    const monitoring::Logger& logger() { return *logger_; }
 
     /// Trivial (private) accessor
     ModelMapType& models() { return *models_; }
@@ -164,7 +164,7 @@ class ModelManager
     // license_checker_;
 
     /// For logging
-    const std::shared_ptr<const logging::Logger> logger_;
+    const std::shared_ptr<const monitoring::Logger> logger_;
 
     /// The models currently held in memory
     const std::shared_ptr<ModelMapType> models_;
