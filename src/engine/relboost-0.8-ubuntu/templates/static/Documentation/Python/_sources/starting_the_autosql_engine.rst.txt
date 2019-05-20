@@ -1,0 +1,30 @@
+Starting the AutoSQL engine
+===============================================
+
+The AutoSQL engine is a standalone program that does the actual work of fitting your features. It makes installation of AutoSQL a lot easier. Because we have outsourced the calculation-intensive part to a standalone program written in C++, the AutoSQL Python library is written in pure Python.
+
+Use the *cd* command to get into the folder from which you have installed AutoSQL.
+
+On **Linux** and **macOS**:
+
+::
+
+    cd /path/to/your/folder
+    ./run
+
+on **Windows**:
+
+::
+
+    cd C:\path\to\your\folder
+    run.batch
+
+Alternatively, you can just click on *run.batch* on **Windows**.
+
+.. image:: screenshot_engine1.png
+
+If the console prints out a copyright notice, the licensing terms and some basic instructions for running the engine (as pictured above), everything is fine.
+
+.. image:: screenshot_engine2.png
+
+You can then start Python in a different console (of course, you could use Pycharm, Spyder, Jupyter or another tool of your choice). 

@@ -1,0 +1,271 @@
+Example 9: Hyperparameter optimization using scikit-learn
+-----------------------------------------------------------
+
+For a full working example, please refer to :ref:`example09_random_search_2.py`.
+
+The Python version of AutoSQL can be integrated into a scikit-learn pipeline. This enables us to do hyperparameter optimization using the scikit-learn API. 
+
+When setting up your model there is one thing you have to keep in mind: You have to set the parameter *send* to True, so the model will be automatically sent to the AutoSQL engine without you having to explicitly call *.send()*.
+
+Here is how it works:
+
+::
+
+    population_placeholder = models.Placeholder(
+        name="POPULATION",
+        join_keys=["join_key"],
+        time_stamps=["time_stamp"],
+        targets=["targets"]
+    )
+
+    peripheral_placeholder = models.Placeholder(
+        name="PERIPHERAL",
+        join_keys=["join_key"],
+        time_stamps=["time_stamp"]
+    )
+
+    population_placeholder.join(peripheral_placeholder, "join_key", "time_stamp")
+
+    # Set up the autosql model
+    model = models.Model(
+        population=population_placeholder,
+        peripheral=[peripheral_placeholder],
+        loss_function=loss_functions.SquareLoss(),
+        aggregation=[aggregations.Max(),
+                 aggregations.Avg(),
+                 aggregations.Sum(),
+                 aggregations.Count()],
+        use_timestamps=True,
+        fast_training=False,
+        send=True # Needs to be set to True when using the scikit-learn pipeline
+    )
+
+    # The scikit-learn API does not have a concept
+    # of peripheral tables. So we set it using this
+    # method.
+    model.set_peripheral_tables([peripheral_table])
+
+    # Set up the scikit-learn pipeline.
+    # We are using a simple linear regression in this
+    # example, but any predictor that fits in the
+    # scikit-learn pipeline will do the trick.
+    pipe = pipeline.Pipeline([
+        ('autosql', model),
+        ('predictor', linear_model.LinearRegression())
+    ])
+
+    # Set up the search space for the hyperparameters.
+    # Hyperparameters for autosql are predeced by
+    # "autosql__" and hyperparameters for the predictor
+    # are preceded by "predictor__" (because these are the
+    # names defined in the pipeline). 
+    param_dist = {
+        "autosql__num_features": [5, 10, 20],
+        "autosql__max_length": [2, 4, 8, 16],
+        "autosql__grid_factor": [1.0, 2.0, 4.0, 8.0, 16.0, 32.0],
+        "autosql__shrinkage": [0.1, 0.3],
+        "autosql__min_num_samples": [100, 200, 400],
+        "autosql__regularization": [0.0, 0.01, 0.1],
+        "autosql__share_aggregations": [0.25, 0.5, 0.75, 1.0],
+        "autosql__fast_training": [True, False],
+        "predictor__fit_intercept": [True, False]
+    }
+
+    # Set up a random search over the pipeline.
+    # This will randomly sample from the hyperparameters
+    # ten times.
+    random_search = model_selection.RandomizedSearchCV(
+        pipe,
+        param_distributions=param_dist,
+        n_iter=3,
+        scoring="neg_mean_squared_error"
+    )
+
+    # Do the actual fitting. Note that y will
+    # also be passed to the autosql model,
+    # but the autosql model will ignore it.
+    # y is only relevant for the predictor.
+    random_search.fit(
+        X=population_table_training,
+        y=population_table_training[["targets"]].as_matrix()
+    )
+
+You can look at the results by using the following command:
+
+::
+
+    pprint.pprint(random_search.cv_results_)
+
+It has learned some pretty interesting features:
+
+::
+
+    print(
+        random_search.best_estimator_.named_steps['autosql'].to_sql()
+    )
+
+
+.. code-block:: sql
+
+    CREATE TABLE FEATURE_1 AS
+    SELECT t1.*,
+    COALESCE( SUM( t1.time_stamp - t2.time_stamp ), 0 ) AS feature_1
+    FROM POPULATION_TABLE t1
+    LEFT JOIN PERIPHERAL_TABLE_1 t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.255372 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t2.join_key;
+
+
+    CREATE TABLE FEATURE_2 AS
+    SELECT t1.*,
+    COALESCE( SUM( t1.time_stamp - t2.time_stamp ), 0 ) AS feature_2
+    FROM POPULATION_TABLE t1
+    LEFT JOIN PERIPHERAL_TABLE_1 t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.173368 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t2.join_key;
+
+
+    CREATE TABLE FEATURE_3 AS
+    SELECT t1.*,
+    COALESCE( MAX( t1.time_stamp - t2.time_stamp ), 0 ) AS feature_3
+    FROM POPULATION_TABLE t1
+    LEFT JOIN PERIPHERAL_TABLE_1 t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.203937 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t2.join_key;
+
+
+    CREATE TABLE FEATURE_4 AS
+    SELECT t1.*,
+    COALESCE( AVG( t2.column_01 ), 0 ) AS feature_4
+    FROM POPULATION_TABLE t1
+    LEFT JOIN PERIPHERAL_TABLE_1 t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t2.column_01 > 0.509252 AND t1.time_stamp - t2.time_stamp <= 0.669060 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t2.join_key;
+
+
+    CREATE TABLE FEATURE_5 AS
+    SELECT t1.*,
+    COALESCE( MAX( t2.column_01 ), 0 ) AS feature_5
+    FROM POPULATION_TABLE t1
+    LEFT JOIN PERIPHERAL_TABLE_1 t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.504527 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t2.join_key;
+
+
+    CREATE TABLE FEATURE_6 AS
+    SELECT t1.*,
+    COALESCE( SUM( t1.time_stamp - t2.time_stamp ), 0 ) AS feature_6
+    FROM POPULATION_TABLE t1
+    LEFT JOIN PERIPHERAL_TABLE_1 t2
+    ON t1.join_key = t2.join_key
+    WHERE t2.time_stamp <= t1.time_stamp
+    GROUP BY t2.join_key;
+
+
+    CREATE TABLE FEATURE_7 AS
+    SELECT t1.*,
+    COALESCE( COUNT( * ), 0 ) AS feature_7
+    FROM POPULATION_TABLE t1
+    LEFT JOIN PERIPHERAL_TABLE_1 t2
+    ON t1.join_key = t2.join_key
+    WHERE t2.time_stamp <= t1.time_stamp
+    GROUP BY t2.join_key;
+
+
+    CREATE TABLE FEATURE_8 AS
+    SELECT t1.*,
+    COALESCE( AVG( t2.column_01 ), 0 ) AS feature_8
+    FROM POPULATION_TABLE t1
+    LEFT JOIN PERIPHERAL_TABLE_1 t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t2.column_01 > 0.470528 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t2.join_key;
+
+
+    CREATE TABLE FEATURE_9 AS
+    SELECT t1.*,
+    COALESCE( AVG( t2.column_01 ), 0 ) AS feature_9
+    FROM POPULATION_TABLE t1
+    LEFT JOIN PERIPHERAL_TABLE_1 t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t2.column_01 > 0.468820 AND t1.time_stamp - t2.time_stamp <= 0.506224 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t2.join_key;
+
+
+    CREATE TABLE FEATURE_10 AS
+    SELECT t1.*,
+    COALESCE( AVG( t1.time_stamp - t2.time_stamp ), 0 ) AS feature_10
+    FROM POPULATION_TABLE t1
+    LEFT JOIN PERIPHERAL_TABLE_1 t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.356281 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t2.join_key;
+
+Here is how we can use the pipeline to generate predictions:
+
+::
+
+    # To generate new predictions, it might be necessary to define
+    # new peripheral tables. Here is how this can be done.
+    random_search.best_estimator_.named_steps[
+        'autosql'
+    ].set_peripheral_tables([peripheral_table])
+
+    # Now we can generate features
+    features = random_search.best_estimator_.named_steps[
+        'autosql'
+    ].transform(
+        population_table
+    )
+
+    # Now we can generate predictions
+    yhat = random_search.best_estimator_.predict(
+        X=population_table
+    )
+
+
+This is one of these cases where simply averaging your features will not do you much good:
+
+::
+
+    plt.grid(True)
+    plt.xlabel("targets")
+    plt.ylabel("predictions")
+    plt.scatter(targets.ravel(), features.mean(axis=1)
+    plt.show()
+
+.. image:: Example_8_ensemble.png
+
+But luckily, we have also fitted a proper predictor:
+
+::
+
+    plt.grid(True)
+    plt.xlabel("targets")
+    plt.ylabel("predictions")
+    plt.scatter(targets.ravel(), yhat.ravel())
+    plt.show()
+
+.. image:: Example_8_predictor.png
+

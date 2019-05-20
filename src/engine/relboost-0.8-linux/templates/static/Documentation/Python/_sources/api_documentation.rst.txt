@@ -1,0 +1,51 @@
+API Documentation
+=================
+
+autosql\.aggregations
+----------------------------
+
+.. automodule:: autosql.aggregations
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+autosql\.engine
+----------------------
+
+.. automodule:: autosql.engine
+    :members: DataFrame, delete_all_users, delete_project, load, set_project, shutdown
+    :undoc-members:
+    :show-inheritance:
+
+autosql\.loss\_functions
+-------------------------------
+
+.. automodule:: autosql.loss_functions
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+autosql\.metrics
+-----------------------
+
+.. automodule:: autosql.metrics
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+autosql\.models
+----------------------
+
+.. automodule:: autosql.models
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+autosql\.predictors
+----------------------
+
+.. automodule:: autosql.predictors
+    :members: XGBoostClassifier, XGBoostRegressor
+    :undoc-members:
+    :show-inheritance:
+

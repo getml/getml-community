@@ -1,0 +1,288 @@
+Example 5: Units (part 1)
+==========================
+
+For a full working example, please refer to :ref:`example_05_same_units_1.R`.
+
+In some cases, we would like to do something like this:
+
+.. code-block:: sql
+
+    SELECT COUNT( * )
+    FROM POPULATION t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE t1.column_01 - t2.column_01 <= 0.5
+    AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t2.join_key;
+
+
+The difference here is that we are directly comparing two different columns ( *t1.column_01 - t2.column_01 <= 0.5* ), instead of comparing one column to a fixed value. This is tricky for two reasons: First, from a standpoint of computational complexity theory, pairwise comparisons of columns have quadratic time complexity, which is undesirable. Second, many of these comparisons make no sense. Imagine that one column contains the size of the product at sale, the other one contains the height of the salesman. Under no conceivable circumstances would it ever make sense to compare the two. 
+
+So what can we do? A better solution is to only compare columns which have the same *units*. But AutoSQL does not know on its own what units certain columns have. So we have to tell it.
+
+Building the model
+^^^^^^^^^^^^^^^^^^
+
+If we are using the high-level API, a dictionary mapping column names to units will do the trick. That means all columns having a particular column name will be assigned that unit and will then be directly compared. If you have columns in different table that have the same name, you can not assign them differing units (but why would you want to anyway? - in our view that would be bad coding style).
+
+.. code-block:: r
+
+    units = list()
+
+    units[["column_01"]] = "unit_01"
+
+In some cases, you want columns to be *for comparison only*. This might be the case when they contain time-related data. Such data only makes sense in comparison to other fields. If this is the case, you can just add "comparison only" to the unit, like this:
+
+::
+
+    units = list()
+
+    units[["column_01"]] = "unit_01, comparison only"
+
+When you are fitting your model, you have to pass the units. Note that this is only for the high-level API. For the low-level API, you have to pass the units to your *autosql.data.frame* objects.
+
+.. code-block:: r
+
+    population.placeholder <- create.autosql.placeholder(
+        "POPULATION",
+        join.keys=c( "join_key" ),
+        time.stamps=c( "time_stamp" ),
+        targets=c( "targets" )
+    )
+
+    peripheral.placeholder <- create.autosql.placeholder(
+        "PERIPHERAL",
+        join.keys=c( "join_key" ),
+        time.stamps=c( "time_stamp" )
+    )
+
+    population.placeholder <- join.autosql.placeholder(
+        population.placeholder,
+        peripheral.placeholder,
+        "join_key",
+        "time_stamp"
+    )
+
+    model = create.autosql.model(
+        population=population.placeholder,
+        peripheral=list(peripheral.placeholder),
+        aggregation=list(        
+        autosql.count, 
+        autosql.sum,
+        autosql.min
+        ),
+        units=units, # passing the units to the model
+        use.timestamps=TRUE,
+        num.features=10,
+        max.length=2,
+        fast.training=FALSE,
+        min.num.samples=200,
+        shrinkage=0.0,
+        grid.factor=1.0,
+        share.aggregations=1.0,
+        num.threads=6,
+        regularization=0.01,
+        predictor=autosql.create.xgboost.regressor()
+    )
+
+    send.autosql.model(model)
+
+
+
+Generating SQL code
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Here is the SQL code we get:
+
+.. code-block:: sql
+
+    CREATE TABLE FEATURE_1 AS
+    SELECT COUNT( * ) AS feature_1,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.column_01 - t2.column_01 <= 0.50091776577397096 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_2 AS
+    SELECT COUNT( * ) AS feature_2,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.column_01 - t2.column_01 <= 0.50114653758222394 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_3 AS
+    SELECT COUNT( * ) AS feature_3,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.column_01 - t2.column_01 <= 0.50052117449112954 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_4 AS
+    SELECT COUNT( * ) AS feature_4,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.column_01 - t2.column_01 <= 0.49979404187997178 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_5 AS
+    SELECT COUNT( * ) AS feature_5,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.column_01 - t2.column_01 <= 0.5000655420167881 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_6 AS
+    SELECT COUNT( * ) AS feature_6,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.column_01 - t2.column_01 <= 0.50098902319564842 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_7 AS
+    SELECT COUNT( * ) AS feature_7,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.column_01 - t2.column_01 <= 0.4996181756723781 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_8 AS
+    SELECT COUNT( * ) AS feature_8,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.column_01 - t2.column_01 <= 0.50095847773428281 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_9 AS
+    SELECT COUNT( * ) AS feature_9,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.column_01 - t2.column_01 <= 0.49977327645686809 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_10 AS
+    SELECT COUNT( * ) AS feature_10,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.column_01 - t2.column_01 <= 0.50124886911132349 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+

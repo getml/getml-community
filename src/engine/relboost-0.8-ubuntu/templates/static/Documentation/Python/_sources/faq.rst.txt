@@ -1,0 +1,103 @@
+FAQ
+===
+
+What would you consider to be the best-practice approach to using AutoSQL?
+----------------------------------------------------------------------------
+
+We recommend to first use the normal *.fit(...)* to get an idea what sort of hyperparameters might work. Then, do an extensive random search. Do not optimize the features and the predictor at the same time. Instead, use a simple and fast predictor like a linear function or the scikit-learn random forest with some 50 trees. Once you have your features, you can try more complex predictors and optimize their hyperparameters.
+
+The best idea is to use the scripts we have prepared for the Consumer Expenditure Data as a template.
+
+....
+
+Which hyperparameters have the most impact?
+----------------------------------------------------------------------------
+
+There are a few lessons we have learned so far:
+
+1) The ideal **num_features** is often more than you think. 
+
+From our experience with hand-crafted features we are used to having some 30-50 features. But many problems, particularly for business-related datasets, often contain millions of samples of labeled data. That means if we create some 1000 features, the relationship of features to samples will still be below 0.1%. So the only thing that should stop us from generating 1000 features are memory limitations. But if you have sufficient memory - do try to generate 1000 features and see what happens.
+
+2) Playing with **share_aggregations** can really make a difference.
+
+Every time a new feature is generated, the aggregation will be taken from a random subsample of possible aggregations and values to be aggregated. *share_aggregations* determines the size of that subsample.
+
+We view share aggregations as the parameter to control the accuracy vs. variance trade-off: A higher *share_aggregations* means more accurate features, whereas a lower *share_aggregations* means greater variance. 
+
+The ideal value for *share_aggregations* can vary greatly with the dataset. We have seen datasets (such as our example dataset) where 0.25 is appropriate, but we have also had a value of 0.05.
+
+The most extreme way to get great variance at the expense of accuracy is **round_robin**: When *round_robin=True*, you will be guaranteed to have a great variety of features (but many of them might be meaningless).
+
+3) Put some effort into regularization.
+
+You can regularize your features using **regularization**, **min_num_samples** or **max_length**. Putting some effort into this can improve your results.
+
+4) A good data model trumps everything else.
+
+But the most important thing is to think about your data model. We have tried to make the API as easy and flexible as possible by introducing our Placeholder API. Thinking about your data model (don't forget about the units) is often a better use of your time than microtuning your hyperparameters. After all, you have got random search for your hyperparameters, but random search cannot design your data model.
+
+....
+
+Would you recommend many simple features or few complex features?
+----------------------------------------------------------------------------
+
+We would certainly recommend many simple rather than few very complex features. We think it important, to keep the features readable, and we had also better experience with it. When we say *simple*, we mean up to 3-4 subconditions, which is probably far more complex than most hand-crafted you have ever written.
+
+....
+
+What can I do to keep my features simple and avoid overfitting?
+----------------------------------------------------------------------------
+
+AutoSQL offers numerous parameters to regularize your features to keep them readable and avoid overfitting. Here are some:
+
+1. **regularization**: A higher *regularization* factor is probably the most elegant way to regularize your features and based on solid statistical theory.
+
+2. **min_num_samples**: We also got some pretty good results by playing with *min_num_samples*. There is also a very good theoretical explanation, why increasing *min_num_samples* will lead to good regularization.
+
+3. **max_length**: This parameter imposes a hard upper limit on the length of your subconditions.
+
+....
+
+The features AutoSQL churns out are too similar to each other. What can I do?
+----------------------------------------------------------------------------------
+
+You should think AutoSQL as an ensemble learner with support for relational databases. So the concept of the accuracy-variance-tradeoff in ensemble learning theory can be applied to AutoSQL, In order to control the variance of your features, two parameters come to mind:
+
+1. **share_aggregations**: Every time a new feature is generated, the aggregation will be taken from a random subsample of possible aggregations and values to be aggregated. *share_aggregations* determines the size of that subsample. A lower value for *share_aggregations* will therefore increase the variance of your features.
+
+2. **round_robin**: When you set *round_robin=True*, you force AutoSQL to use a different aggregation every time a new feature is generated. This is guaranteed to get you maximum variance.
+
+....
+
+What can I do to reduce training time?
+----------------------------------------------------------------------------
+
+The following parameters can be used to reduce your training time:
+
+1. **fast_training**: Obviously, setting *fast_training* to True, will reduce your training time, but this would probably come at the expense of feature quality. So you should use *fast_training* in combination with *num_candidates*.
+
+2. **share_aggregations**: Every time a new feature is generated, the aggregation will be taken from a random subsample of possible aggregations and values to be aggregated. *share_aggregations* determines the size of that subsample. A lower value for *share_aggregations* will therefore increase training time significantly.
+
+3. **round_robin**: Setting *round_robin=True* will almost certainly reduce your training time.
+
+4. **regularization**, **min_num_samples**,  **max_length**: These parameters are used to regularize your features and keep them simple. Simpler features take less time to train. So anything you do to regularize your features will also impact training time.
+
+5. **aggregations**: Keep in mind that some aggregations, such as MIN and MAX, are far more expensive than others.
+
+6. **grid_factor**: A higher *grid_factor* will cause AutoSQL to try more critical values for your numeric features, which obviously takes time. But the time penalty is quite low compared to the increased accuracy you get.
+
+There is another thing you can do: You could invest in **AutoSQL Professional**, which parallelizes the AutoSQL engine without you having to change a single line of your Python code. This will obviously speed up training time.
+
+....
+
+How does the data set influence training time?
+----------------------------------------------------------------------------
+
+It may sound very counterintuitive, but **size does not matter much**! AutoSQL uses a bootstrapping approach and uses a subsample of your population table. A new subsample is generated for each feature. So whether your population table consists of 500 lines, as in our examples or 50,000,000 lines does not matter all that much.
+
+What does matter, is the number of unique join keys is small relative to the size of your dataset. If there are a lot of entries to aggregate in your peripheral table for every entry in your population table (as you might get in a time series problem), that will take a while.
+
+By contrast, if you are doing a churn use case with many customers and few activities per customer, that will be fast.
+
+You should know that, categorical features tend to take a bit longer than numeric features.

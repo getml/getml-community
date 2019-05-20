@@ -1,0 +1,24 @@
+Listings
+=========
+
+.. toctree::
+
+    example01_high_level_api_py.rst    
+    example01_high_level_api_multiple_targets_py.rst
+    example02_low_level_api_py.rst
+    example03_categorical_variables_high_level_py.rst 
+    example03_categorical_variables_low_level_py.rst
+    example04_discrete_values_py.rst
+    example05_same_units_numerical_py.rst
+    example06_same_units_categorical_high_level_py.rst
+    example06_same_units_categorical_low_level_py.rst
+    example07_null_values_py.rst
+    example08_hyperparameter_optimization_using_random_search_py.rst
+    example09_loading_and_saving_models_py.rst
+    example10_loading_and_saving_data_frames_py.rst
+    example11_snowflake_schema_py.rst
+   
+    
+    
+    
+

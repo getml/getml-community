@@ -1,0 +1,178 @@
+.. _example09_saving_models.R:
+
+=============
+example09_saving_models.R
+=============
+
+.. code-block:: r
+
+    # Copyright 2018 The SQLNet Company GmbH
+
+    # Permission is hereby granted, free of charge, to any person obtaining a copy
+    # of this software and associated documentation files (the "Software"), to
+    # deal in the Software without restriction, including without limitation the
+    # rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+    # sell copies of the Software, and to permit persons to whom the Software is
+    # furnished to do so, subject to the following conditions:
+
+    # The above copyright notice and this permission notice shall be included in
+    # all copies or substantial portions of the Software.
+
+    # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    # AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+    # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+    # DEALINGS IN THE SOFTWARE.
+
+    library(data.table)
+
+    library(autosql)
+
+    # -------------------------------------------------
+
+    set.autosql.project("examples")
+
+    # -------------------------------------------------
+    # Create artificial data set - don't worry. You
+    # do not have to understand this part.
+
+    peripheral.table = data.table(
+        column_01=runif(250000),
+        join_key=floor(runif(250000, 0, 500)),
+        time_stamp=runif(250000)
+    )
+
+    temp.table = data.table(
+        column_01=runif(500),
+        join_key=(0:499),
+        time_stamp=runif(500)
+    )
+
+    temp.table = merge(
+        peripheral.table,
+        temp.table,
+        by="join_key"
+    )
+
+    temp.table = temp.table[time_stamp.x < time_stamp.y & time_stamp.x > time_stamp.y - 0.5,]
+
+    population.table = temp.table[, .(
+        targets=.N, 
+        column_01=mean(column_01.y),
+        time_stamp=mean(time_stamp.y)
+        ), 
+        by=join_key
+    ]
+
+    rm(temp.table)
+
+    # -------------------------------------------------
+    # Build data model
+
+    population.placeholder <- create.autosql.placeholder(
+        "POPULATION",
+        join.keys=c( "join_key" ),
+        time.stamps=c( "time_stamp" ),
+        targets=c( "targets" )
+    )
+
+    peripheral.placeholder <- create.autosql.placeholder(
+        "PERIPHERAL",
+        join.keys=c( "join_key" ),
+        time.stamps=c( "time_stamp" )
+    )
+
+    population.placeholder <- join.autosql.placeholder(
+        population.placeholder,
+        peripheral.placeholder,
+        "join_key",
+        "time_stamp"
+    )
+
+    model.1 = create.autosql.model(
+        name="MyModel",
+        population=population.placeholder,
+        peripheral=list(peripheral.placeholder),
+        aggregation=list(        
+        autosql.count, 
+        autosql.sum 
+        ),
+        use.timestamps=TRUE,
+        num.features=10,
+        max.length=1,
+        fast.training=FALSE,
+        min.num.samples=200,
+        shrinkage=0.0,
+        grid.factor=1.0,
+        share.aggregations=1.0,
+        num.threads=6,
+        predictor=autosql.create.xgboost.regressor()
+    )
+
+    send.autosql.model(model.1)
+
+    # ----------------
+    # Fit model
+
+    model.1 = fit.autosql.model(
+        model.1,
+        population.table,
+        peripheral.table
+    )
+
+    scores = score.autosql.model(
+        model.1,
+        population.table,
+        peripheral.table
+    )
+
+    features.1 = autosql.model.transform(
+        model.1,
+        population.table,
+        peripheral.table
+    )
+
+    sql.1 = autosql.model.to.sql(model.1)
+
+    # ----------------
+    # Save model
+
+    set.autosql.project("examples")
+
+    save.autosql.model(model.1)
+
+    # ----------------
+    # Reload model
+
+    set.autosql.project("examples")
+
+    model.2 = create.autosql.model(
+        name="MyModel"
+    )
+
+    model.2 = load.autosql.model(model.2)
+
+    # ----------------
+    # The generated features must be the same
+
+    features.2 = autosql.model.transform(
+        model.2,
+        population.table,
+        peripheral.table
+    )
+
+    if( sum( features.1 != features.2 ) != 0 ){
+        stop( "Features are not the same!" )
+    }
+
+    # ----------------
+    # The generated SQL code must be the same
+
+    sql.2 = autosql.model.to.sql(model.2)
+
+    if(  sql.1 != sql.2 ){
+        stop( "SQL code is not the same!" )
+    }
+

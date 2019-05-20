@@ -1,0 +1,214 @@
+.. _example11_snowflake_schema.R:
+
+=============
+example11_snowflake_schema.R
+=============
+
+.. code-block:: r
+
+    # Copyright 2018 The SQLNet Company GmbH
+
+    # Permission is hereby granted, free of charge, to any person obtaining a copy
+    # of this software and associated documentation files (the "Software"), to
+    # deal in the Software without restriction, including without limitation the
+    # rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+    # sell copies of the Software, and to permit persons to whom the Software is
+    # furnished to do so, subject to the following conditions:
+
+    # The above copyright notice and this permission notice shall be included in
+    # all copies or substantial portions of the Software.
+
+    # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    # AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+    # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+    # DEALINGS IN THE SOFTWARE.
+
+    library(data.table)
+
+    library(autosql)
+
+    # -------------------------------------------------
+
+    set.autosql.project("examples")
+
+    # -------------------------------------------------
+    # Create artificial data set - don't worry. You
+    # do not have to understand this part.
+
+    peripheral.table.2 = data.table(
+        column_01=runif(125000)*2.0 - 1.0,
+        join_key2=floor(runif(125000, 0, 5000)),
+        time_stamp=runif(125000)
+    )
+
+    temp.table = data.table(
+        column_01=runif(5000)*2.0 - 1.0,
+        join_key=floor(runif(5000, 0, 500)),
+        join_key2=(0:4999),
+        time_stamp=runif(5000)
+    )
+
+    temp.table = data.table(
+        join_key2=(0:4999),
+        time_stamp=runif(5000)
+    )
+
+    temp.table = merge(
+        peripheral.table.2,
+        temp.table,
+        by="join_key2"
+    )
+
+    temp.table = temp.table[time_stamp.x < time_stamp.y & time_stamp.x > time_stamp.y - 0.5,]
+
+    peripheral.table = temp.table[, .(
+        column_01=.N,
+        time_stamp=mean(time_stamp.y)
+        ), 
+        by=join_key2
+    ]
+
+    peripheral.table$join_key = floor(runif(nrow(peripheral.table), 0, 500))
+
+    temp.table = data.table(
+        column_01=runif(500),
+        join_key=(0:499),
+        time_stamp=runif(500)
+    )
+
+    temp.table = merge(
+        peripheral.table,
+        temp.table,
+        by="join_key"
+    )
+
+    temp.table = temp.table[time_stamp.x < time_stamp.y,]
+
+    population.table = temp.table[, .(
+        targets=mean(column_01.x),
+        column_01=mean(column_01.y),
+        time_stamp=mean(time_stamp.y)
+        ), 
+        by=join_key
+    ]
+
+    rm(temp.table)
+
+    peripheral.table = peripheral.table[,column_01:=NULL]
+
+    # -------------------------------------------------
+    # Build data model
+
+    population.placeholder <- create.autosql.placeholder(
+        "POPULATION",
+        join.keys=c( "join_key" ),
+        time.stamps=c( "time_stamp" ),
+        targets=c( "targets" )
+    )
+
+    peripheral.placeholder <- create.autosql.placeholder(
+        "PERIPHERAL",
+        join.keys=c( "join_key", "join_key2" ),
+        time.stamps=c( "time_stamp" )
+    )
+
+    peripheral.2.placeholder <- create.autosql.placeholder(
+        "PERIPHERAL2",
+        numerical=c( "column_01" ),
+        join.keys=c( "join_key2" ),
+        time.stamps=c( "time_stamp" )
+    )
+
+    peripheral.placeholder <- join.autosql.placeholder(
+        peripheral.placeholder,
+        peripheral.2.placeholder,
+        "join_key2",
+        "time_stamp"
+    )
+
+    population.placeholder <- join.autosql.placeholder(
+        population.placeholder,
+        peripheral.placeholder,
+        "join_key",
+        "time_stamp"
+    )
+
+    model = create.autosql.model(
+        population=population.placeholder,
+        peripheral=list(peripheral.placeholder, peripheral.2.placeholder),
+        aggregation=list(        
+        autosql.count, 
+        autosql.sum,
+        autosql.avg
+        ),
+        use.timestamps=TRUE,
+        num.features=10,
+        num.subfeatures=1,
+        max.length=1,
+        fast.training=FALSE,
+        min.num.samples=200,
+        shrinkage=0.1,
+        grid.factor=1.0,
+        share.aggregations=1.0,
+        predictor=autosql.create.xgboost.regressor()
+    )
+
+    send.autosql.model(model)
+
+    # ----------------
+    # Fit model
+
+    model = fit.autosql.model(
+        model,
+        population.table,
+        peripheral.table,
+        peripheral.table.2
+    )
+
+    scores = score.autosql.model(
+        model,
+        population.table,
+        peripheral.table,
+        peripheral.table.2
+    )
+
+    features = autosql.model.transform(
+        model,
+        population.table,
+        peripheral.table,
+        peripheral.table.2
+    )
+
+    predictions = autosql.model.predict(
+        model,
+        population.table,
+        peripheral.table,
+        peripheral.table.2
+    )
+
+    cat( autosql.model.to.sql(model) )
+
+    # ----------------
+    # Plot results
+
+    plot( 
+        features[,1], 
+        features[,"targets"], 
+        type="p",
+        col="blue",
+        xlab="predictions",
+        ylab="targets"
+    )
+
+    plot( 
+        predictions, 
+        features[,"targets"], 
+        type="p",
+        col="blue",
+        xlab="predictions",
+        ylab="targets"
+    )
+

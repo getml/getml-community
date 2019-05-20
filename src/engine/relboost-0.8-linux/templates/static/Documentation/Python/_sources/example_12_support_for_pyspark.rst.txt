@@ -1,0 +1,69 @@
+Example 12: Support for pyspark
+----------------------------------
+
+For a full working example, please refer to :ref:`example12_pyspark_1.py` and :ref:`example12_pyspark_2.py`.
+
+The Python API features optional support for pyspark. That means you can use pyspark, if you want to, but it is not a dependency and you can still use AutoSQL if you do not have pyspark.
+
+Please keep in mind that the AutoSQL Python API returns predictions as a numpy array. This implies that tables with the number of rows of our population table does fit into memory of a single instance. (If your population table is too big for a single instance, then using Python would probably not do you much good and you should seriously consider using Scala and the AutoSQL Scala API.) However, it might be possible that the peripheral tables are much bigger than that and need to be uploaded in a batchwise fashion. The AutoSQL Python API supports this.
+
+For the high-level API, you can simply pass Spark SQL DataFrames instead of pandas DataFrames. The population table will be uploaded in one piece. The peripheral tables will be uploaded in batches of about 100,000 rows each.
+
+::
+
+    model = model.fit(
+        population_table=population_table,
+        peripheral_tables=[peripheral_table]
+    )
+
+    features = model.transform(
+        population_table=population_table,
+        peripheral_tables=[peripheral_table]
+    )
+
+    yhat = model.predict(
+        population_table=population_table,
+        peripheral_tables=[peripheral_table]
+    )
+
+If you want to use the low-level API, we have prepared the method *DataFrame.append_spark_df(...)* for you. This method relies on pyspark and will throw an exception if pyspark cannot be found:
+
+::
+
+    # Upload data to the AutoSQL engine
+
+    peripheral_on_engine = engine.DataFrame(
+        name="PERIPHERAL",
+        numerical=["column_01"],
+        join_keys=["join_key"],
+        time_stamps=["time_stamp"]
+    )
+
+    # Creates a new, empty data frame on the engine
+    peripheral_on_engine.send()
+
+    # This will automatically upload the
+    # Spark DataFrame in a batch-wise fashion.
+    # If you want to upload the Spark DataFrame
+    # in one batch, just use .send(...) instead.
+    peripheral_on_engine.append_spark_df(
+        peripheral_table
+    )
+
+    population_on_engine = engine.DataFrame(
+        name="POPULATION",
+        join_keys=["join_key"],
+        time_stamps=["time_stamp"],
+        targets=["targets"]
+    )
+
+    # You should NOT use the 
+    # DataFrame.append_spark_df(...)
+    # method for the population table.
+    # Instead, upload the population table
+    # in one batch.
+    population_on_engine.send(
+        population_table.toPandas()
+    )
+
+That's it. This is all you need to know for using AutoSQL with pyspark.

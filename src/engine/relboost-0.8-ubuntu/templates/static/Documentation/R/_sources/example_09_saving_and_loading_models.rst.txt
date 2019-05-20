@@ -1,0 +1,29 @@
+Example 9: Saving and loading models
+--------------------------------------
+
+For a full working example, please refer to :ref:`example09_saving_models.R`.
+
+When you have put in a lot of effort into training your models and optimizing your hyperparameters, you probably want to save them for later use. This is very easy. You just have to define a project and then use *Model.save()* and *Model.load()*.
+
+Here is how you save your model:
+
+.. code-block:: r
+
+    set.autosql.project("examples")
+
+    save.autosql.model(model.1)
+
+Here is how you reload it:
+
+.. code-block:: r
+
+    set.autosql.project("examples")
+
+    model.2 = create.autosql.model(
+        name="MyModel"
+    )
+
+    model.2 = load.autosql.model(model.2)
+
+
+This also enables you to train your models in one programming language and the calling them from another programming language.
