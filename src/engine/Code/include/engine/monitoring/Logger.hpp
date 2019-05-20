@@ -14,8 +14,10 @@ class Logger : public logging::AbstractLogger
     // --------------------------------------------------------
 
    public:
-    Logger( /*const std::shared_ptr<const Monitor>& _monitor*/ )
-    /*: monitor_( _monitor )*/ {}
+    Logger( const std::shared_ptr<const Monitor>& _monitor )
+        : monitor_( _monitor )
+    {
+    }
 
     ~Logger() = default;
 
@@ -31,14 +33,14 @@ class Logger : public logging::AbstractLogger
         std::cout << std::ctime( &current_time ) << _msg << std::endl
                   << std::endl;
 
-        // monitor_->send( "log", std::ctime( &current_time ) + _msg );
+        monitor_->send( "log", std::ctime( &current_time ) + _msg );
     }
 
     // ----------------------------------------------------
 
     // private:
     /// The Monitor is supposed to monitor all of the logs as well.
-    // const std::shared_ptr<const Monitor> monitor_;
+    const std::shared_ptr<const Monitor> monitor_;
 
     // ----------------------------------------------------
 };
