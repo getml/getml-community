@@ -97,6 +97,7 @@ target_link_libraries(
 
 target_link_libraries(
     ${RELBOOST_VERSION}-64bit-relboost-test
+    "${POCO_DIR}/lib/Darwin/x86_64/libPocoNet.a"
     "${POCO_DIR}/lib/Darwin/x86_64/libPocoJSON.a"
     "${POCO_DIR}/lib/Darwin/x86_64/libPocoFoundation.a"
 )
