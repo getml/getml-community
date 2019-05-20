@@ -12,7 +12,8 @@ int main( int argc, char *argv[] )
 
     // -------------------------------------------
 
-    // const auto monitor = std::make_shared<const logging::Monitor>( options );
+    const auto monitor =
+        std::make_shared<const engine::monitoring::Monitor>( options );
 
     const auto connector =
         std::make_shared<database::Sqlite3>( database::Sqlite3(
@@ -101,7 +102,10 @@ int main( int argc, char *argv[] )
     // Tell the AutoSQL Monitor the process ID of the engine.
     // This is necessary for some system statistics.
 
-    // monitor->send( "postpid", engine::Process::get_process_id() );
+    // Temporary fix - to be removed once the licensing process is in place.
+    std::this_thread::sleep_for( std::chrono::seconds( 1 ) );
+
+    monitor->send( "postpid", engine::Process::get_process_id() );
 
     // -------------------------------------------
     // This is where the actual communication begins

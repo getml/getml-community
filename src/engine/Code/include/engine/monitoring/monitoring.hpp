@@ -4,6 +4,12 @@
 // ----------------------------------------------------
 // Dependencies
 
+#if ( defined( _WIN32 ) || defined( _WIN64 ) )
+// ...
+#else
+#include <unistd.h>
+#endif
+
 #include <Poco/Crypto/DigestEngine.h>
 #include <Poco/File.h>
 #include <Poco/HMACEngine.h>
@@ -19,6 +25,8 @@
 #include <Poco/Net/HTTPSClientSession.h>
 
 #include "engine/config/config.hpp"
+
+#include "engine/Process.hpp"
 
 #include "logging/logging.hpp"
 
