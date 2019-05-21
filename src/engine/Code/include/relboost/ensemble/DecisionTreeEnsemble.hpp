@@ -80,6 +80,9 @@ class DecisionTreeEnsemble
         const size_t _y_nrows,
         const size_t _y_ncols );
 
+    /// Expresses the model in a format that the monitor can understand.
+    Poco::JSON::Object to_monitor( const std::string _name ) const;
+
     /// Returns the features underlying the model (the predictions of the
     /// individual trees as opposed to the entire prediction)
     std::shared_ptr<std::vector<RELBOOST_FLOAT>> transform(
@@ -192,6 +195,9 @@ class DecisionTreeEnsemble
 
     /// Trivial (private) accessor
     inline containers::Scores& scores() { return impl().scores_; }
+
+    /// Trivial (private) accessor
+    inline const containers::Scores& scores() const { return impl().scores_; }
 
     /// Trivial (private) setter.
     void set_comm( multithreading::Communicator* _comm )

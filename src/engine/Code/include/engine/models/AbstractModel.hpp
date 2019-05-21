@@ -38,6 +38,9 @@ class AbstractModel
     /// Return model as JSON Object.
     virtual Poco::JSON::Object to_json_obj() const = 0;
 
+    /// Returns model as JSON Object in a form that the monitor can understand.
+    virtual Poco::JSON::Object to_monitor( const std::string& _name ) const = 0;
+
     /// Return feature engineerer as SQL code.
     virtual std::string to_sql() const = 0;
 

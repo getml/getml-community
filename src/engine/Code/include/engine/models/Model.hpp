@@ -56,10 +56,16 @@ class Model : public AbstractModel
         return feature_engineerer().save( _fname );
     }
 
-    /// Return model as JSON Object.
+    /// Returns model as JSON Object.
     Poco::JSON::Object to_json_obj() const final
     {
         return feature_engineerer().to_json_obj();
+    }
+
+    /// Returns model as JSON Object in a form that the monitor can understand.
+    Poco::JSON::Object to_monitor( const std::string& _name ) const final
+    {
+        return feature_engineerer().to_monitor( _name );
     }
 
     /// Return feature engineerer as SQL code.

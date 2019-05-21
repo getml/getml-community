@@ -53,7 +53,7 @@ void ProjectManager::add_relboost_model(
 
     set_relboost_model( _name, model );
 
-    // monitor_->send( "postmodel", model.to_monitor( _name ) );
+    monitor_->send( "postrelboostmodel", model.to_monitor( _name ) );
 
     engine::communication::Sender::send_string( "Success!", _socket );
 }
@@ -238,7 +238,7 @@ void ProjectManager::load_relboost_model(
 
     set_relboost_model( _name, model );
 
-    // monitor_->send( "postmodel", model.to_monitor( _name ) );
+    monitor_->send( "postrelboostmodel", model.to_monitor( _name ) );
 
     engine::communication::Sender::send_string( "Success!", _socket );
 }

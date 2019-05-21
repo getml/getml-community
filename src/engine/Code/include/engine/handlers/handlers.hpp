@@ -6,6 +6,7 @@
 
 #include <chrono>
 #include <thread>
+#include <type_traits>
 #include <vector>
 
 #include <Poco/Crypto/DigestEngine.h>

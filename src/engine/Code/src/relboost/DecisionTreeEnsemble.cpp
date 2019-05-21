@@ -577,6 +577,68 @@ Poco::JSON::Object DecisionTreeEnsemble::score(
 
 // ----------------------------------------------------------------------------
 
+Poco::JSON::Object DecisionTreeEnsemble::to_monitor(
+    const std::string _name ) const
+{
+    // ----------------------------------------
+
+    Poco::JSON::Object obj;
+
+    obj.set( "name_", _name );
+
+    // ----------------------------------------
+
+    if ( trees().size() > 0 )
+        {
+            // ----------------------------------------
+            // Insert placeholders
+
+            obj.set(
+                "peripheral_", JSON::vector_to_array( peripheral_names() ) );
+
+            obj.set( "population_", placeholder().to_json_obj() );
+
+            // ----------------------------------------
+            // Insert hyperparameters
+
+            obj.set( "hyperparameters_", hyperparameters().to_json_obj() );
+
+            // ----------------------------------------
+            // Insert scores
+
+            obj.set( "scores_", scores().to_json_obj() );
+
+            // ----------------------------------------
+            // Insert sql
+
+            std::vector<std::string> sql;
+
+            for ( size_t i = 0; i < trees().size(); ++i )
+                {
+                    sql.push_back( trees()[i].to_sql(
+                        std::to_string( i + 1 ),
+                        hyperparameters().use_timestamps_ ) );
+                }
+
+            obj.set( "sql_", sql );
+
+            // ----------------------------------------
+            // Insert other pieces of information
+
+            obj.set( "nfeatures_", trees().size() );
+
+            obj.set(
+                "targets_",
+                JSON::vector_to_array<std::string>( placeholder().targets_ ) );
+
+            // ----------------------------------------
+        }
+
+    return obj;
+}
+
+// ----------------------------------------------------------------------------
+
 std::shared_ptr<std::vector<RELBOOST_FLOAT>> DecisionTreeEnsemble::transform(
     const containers::DataFrame &_population,
     const std::vector<containers::DataFrame> &_peripheral,

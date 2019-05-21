@@ -127,6 +127,17 @@ class ModelManager
     /// Trivial (private) accessor
     const ModelMapType& models() const { return *models_; }
 
+    /// Posts a relboost model
+    template <
+        typename MType = ModelType,
+        typename std::enable_if<
+            std::is_same<MType, models::RelboostModel>::value,
+            int>::type = 0>
+    void post_model( const Poco::JSON::Object& _obj )
+    {
+        monitor_->send( "postrelboostmodel", _obj );
+    }
+
     /// Sets a model.
     void set_model( const std::string& _name, const ModelType& _model )
     {
@@ -201,7 +212,7 @@ void ModelManager<ModelType>::copy_model(
 
     auto other_model = get_model( other );
 
-    // monitor_->send( "postmodel", other_model.to_monitor( _name ) );
+    post_model( other_model.to_monitor( _name ) );
 
     set_model( _name, other_model );
 
@@ -273,7 +284,7 @@ void ModelManager<ModelType>::fit_model(
 
     // -------------------------------------------------------
 
-    // monitor_->send( "postmodel", model.to_monitor( _name ) );
+    post_model( model.to_monitor( _name ) );
 
     communication::Sender::send_string( "Trained model.", _socket );
 
@@ -441,7 +452,7 @@ void ModelManager<ModelType>::score(
 
     set_model( _name, model );
 
-    // monitor_->send( "postmodel", model.to_monitor( _name ) );
+    post_model( model.to_monitor( _name ) );
 
     communication::Sender::send_string( JSON::stringify( scores ), _socket );
 
