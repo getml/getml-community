@@ -290,6 +290,8 @@ void DataFrameManager::from_db(
 
     data_frames()[_name].create_indices();
 
+    monitor_->send( "postdataframe", data_frames()[_name].to_monitor( _name ) );
+
     // --------------------------------------------------------------------
 
     communication::Sender::send_string( "Success!", _socket );
