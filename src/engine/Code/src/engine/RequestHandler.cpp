@@ -44,6 +44,10 @@ void RequestHandler::run()
                 {
                     database_manager().execute( &socket() );
                 }
+            else if ( type == "Database.get_colnames" )
+                {
+                    database_manager().get_colnames( name, &socket() );
+                }
             else if ( type == "Database.get_content" )
                 {
                     database_manager().get_content( name, cmd, &socket() );

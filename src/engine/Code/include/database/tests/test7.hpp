@@ -27,6 +27,14 @@ void test7()
 
     sqlite_db.read_csv( "POPULATION", true, &reader );
 
+    const auto colnames = sqlite_db.get_colnames( "POPULATION" );
+
+    for ( auto cname : colnames )
+        {
+            std::cout << cname << " ";
+        }
+    std::cout << std::endl;
+
     const auto obj = sqlite_db.get_content( "POPULATION", 0, 99, 20 );
 
     Poco::JSON::Stringifier::stringify( obj, std::cout );

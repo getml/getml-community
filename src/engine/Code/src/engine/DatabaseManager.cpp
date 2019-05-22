@@ -31,6 +31,34 @@ void DatabaseManager::execute( Poco::Net::StreamSocket* _socket )
 
 // ------------------------------------------------------------------------
 
+void DatabaseManager::get_colnames(
+    const std::string& _name, Poco::Net::StreamSocket* _socket )
+{
+    const auto colnames = connector()->get_colnames( _name );
+
+    std::string array = "[";
+
+    for ( auto& col : colnames )
+        {
+            array += std::string( "\"" ) + col + "\",";
+        }
+
+    if ( array.size() > 1 )
+        {
+            array.back() = ']';
+        }
+    else
+        {
+            array += ']';
+        }
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    communication::Sender::send_string( array, _socket );
+}
+
+// ------------------------------------------------------------------------
+
 void DatabaseManager::get_content(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,
@@ -43,6 +71,8 @@ void DatabaseManager::get_content(
     const auto start = JSON::get_value<ENGINE_INT>( _cmd, "start_" );
 
     auto obj = connector()->get_content( _name, draw, start, length );
+
+    communication::Sender::send_string( "Success!", _socket );
 
     communication::Sender::send_string( JSON::stringify( obj ), _socket );
 }
@@ -71,7 +101,14 @@ std::string DatabaseManager::post_tables()
             array += std::string( "\"" ) + table + "\",";
         }
 
-    array.back() = ']';
+    if ( array.size() > 1 )
+        {
+            array.back() = ']';
+        }
+    else
+        {
+            array += ']';
+        }
 
     monitor_->send( "postdatabasetables", array );
 
