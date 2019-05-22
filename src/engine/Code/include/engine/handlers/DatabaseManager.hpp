@@ -11,10 +11,10 @@ class DatabaseManager
 {
    public:
     DatabaseManager(
-        const std::shared_ptr<database::Connector> _connector,
-        const std::shared_ptr<const monitoring::Logger>& _logger )
-        : connector_( _connector ), logger_( _logger )
-    // monitor_( _monitor ),
+        const std::shared_ptr<database::Connector>& _connector,
+        const std::shared_ptr<const monitoring::Logger>& _logger,
+        const std::shared_ptr<const monitoring::Monitor>& _monitor )
+        : connector_( _connector ), logger_( _logger ), monitor_( _monitor )
     {
     }
 
@@ -56,6 +56,13 @@ class DatabaseManager
     // ------------------------------------------------------------------------
 
    private:
+    /// Sends the name of all tables currently held in the database to the
+    /// monitor.
+    std::string post_tables();
+
+    // ------------------------------------------------------------------------
+
+   private:
     /// Trivial accessor
     const std::shared_ptr<database::Connector>& connector()
     {
@@ -83,7 +90,7 @@ class DatabaseManager
     const std::shared_ptr<const monitoring::Logger> logger_;
 
     /// For communication with the monitor
-    /// const std::shared_ptr<const monitoring::Monitor> monitor_;
+    const std::shared_ptr<const monitoring::Monitor> monitor_;
 
     // ------------------------------------------------------------------------
 };

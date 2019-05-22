@@ -11,6 +11,8 @@ void DatabaseManager::drop_table(
 {
     connector()->drop_table( _name );
 
+    post_tables();
+
     communication::Sender::send_string( "Success!", _socket );
 }
 
@@ -21,6 +23,8 @@ void DatabaseManager::execute( Poco::Net::StreamSocket* _socket )
     const auto query = communication::Receiver::recv_string( _socket );
 
     connector()->execute( query );
+
+    post_tables();
 
     communication::Sender::send_string( "Success!", _socket );
 }
@@ -47,6 +51,17 @@ void DatabaseManager::get_content(
 
 void DatabaseManager::list_tables( Poco::Net::StreamSocket* _socket )
 {
+    const auto array = post_tables();
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    communication::Sender::send_string( array, _socket );
+}
+
+// ----------------------------------------------------------------------------
+
+std::string DatabaseManager::post_tables()
+{
     const auto tables = connector()->list_tables();
 
     std::string array = "[";
@@ -58,9 +73,9 @@ void DatabaseManager::list_tables( Poco::Net::StreamSocket* _socket )
 
     array.back() = ']';
 
-    communication::Sender::send_string( "Success!", _socket );
+    monitor_->send( "postdatabasetables", array );
 
-    communication::Sender::send_string( array, _socket );
+    return array;
 }
 
 // ----------------------------------------------------------------------------

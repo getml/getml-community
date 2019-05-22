@@ -48,7 +48,7 @@ int main( int argc, char *argv[] )
 
     const auto database_manager =
         std::make_shared<engine::handlers::DatabaseManager>(
-            connector, logger );
+            connector, logger, monitor );
 
     const auto data_frame_manager =
         std::make_shared<engine::handlers::DataFrameManager>(
