@@ -367,7 +367,8 @@ void Sqlite3::insert_text(
 
 std::vector<std::string> Sqlite3::list_tables()
 {
-    auto iterator = select( {"name"}, "sqlite_master", "type='table'" );
+    auto iterator =
+        select( {"name"}, "sqlite_master", "type='table' OR type='view'" );
 
     std::vector<std::string> tables;
 
