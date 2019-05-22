@@ -34,8 +34,15 @@ class Connector
         const std::int32_t _start,
         const std::int32_t _length ) = 0;
 
+    /// Returns the names of the table columns.
+    virtual std::vector<std::string> get_colnames(
+        const std::string& _table ) const = 0;
+
     /// Returns the number of rows in the table signified by _tname.
     virtual std::int32_t get_nrows( const std::string& _tname ) = 0;
+
+    /// Lists the name of the tables held in the database.
+    virtual std::vector<std::string> list_tables() = 0;
 
     /// Reads a CSV file into a table.
     virtual void read_csv(

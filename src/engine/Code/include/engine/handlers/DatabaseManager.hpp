@@ -37,6 +37,9 @@ class DatabaseManager
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
+    /// Lists all tables contained in the database.
+    void list_tables( Poco::Net::StreamSocket* _socket );
+
     /// Reads a CSV file into the database.
     void read_csv(
         const std::string& _name,

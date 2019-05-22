@@ -43,12 +43,16 @@ class Sqlite3 : public Connector
         csv::Reader* _reader ) final;
 
     /// Returns the names of the table columns.
-    std::vector<std::string> get_colnames( const std::string& _table ) const;
+    std::vector<std::string> get_colnames(
+        const std::string& _table ) const final;
 
     /// Returns the types of the table columns.
     std::vector<csv::Datatype> get_coltypes(
         const std::string& _table,
         const std::vector<std::string>& _colnames ) const;
+
+    /// Lists the name of the tables held in the database.
+    std::vector<std::string> list_tables() final;
 
     // -------------------------------
 

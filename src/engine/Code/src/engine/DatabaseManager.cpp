@@ -43,6 +43,26 @@ void DatabaseManager::get_content(
     communication::Sender::send_string( JSON::stringify( obj ), _socket );
 }
 
+// ------------------------------------------------------------------------
+
+void DatabaseManager::list_tables( Poco::Net::StreamSocket* _socket )
+{
+    const auto tables = connector()->list_tables();
+
+    std::string array = "[";
+
+    for ( auto& table : tables )
+        {
+            array += std::string( "\"" ) + table + "\",";
+        }
+
+    array.back() = ']';
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    communication::Sender::send_string( array, _socket );
+}
+
 // ----------------------------------------------------------------------------
 
 void DatabaseManager::read_csv(

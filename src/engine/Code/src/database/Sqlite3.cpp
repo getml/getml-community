@@ -365,6 +365,24 @@ void Sqlite3::insert_text(
 
 // ----------------------------------------------------------------------------
 
+std::vector<std::string> Sqlite3::list_tables()
+{
+    auto iterator = select( {"name"}, "sqlite_master", "type='table'" );
+
+    std::vector<std::string> tables;
+
+    while ( !iterator->end() )
+        {
+            tables.push_back( iterator->get_string() );
+        }
+
+    std::sort( tables.begin(), tables.end() );
+
+    return tables;
+}
+
+// ----------------------------------------------------------------------------
+
 std::shared_ptr<sqlite3> Sqlite3::make_db( const std::string& _name )
 {
     sqlite3* raw_ptr = nullptr;
