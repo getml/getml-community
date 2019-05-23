@@ -135,9 +135,9 @@ DATABASE_INT Sqlite3Iterator::get_int()
     assert( !end_ );
 
     const auto val =
-        static_cast<DATABASE_INT>( sqlite3_column_int( stmt(), colnum_++ ) );
+        static_cast<DATABASE_INT>( sqlite3_column_int( stmt(), colnum_ ) );
 
-    if ( colnum_ == num_cols_ )
+    if ( ++colnum_ == num_cols_ )
         {
             next_row();
             colnum_ = 0;
@@ -152,7 +152,7 @@ std::string Sqlite3Iterator::get_string()
 {
     assert( !end_ );
 
-    const auto ptr = sqlite3_column_text( stmt(), colnum_++ );
+    const auto ptr = sqlite3_column_text( stmt(), colnum_ );
 
     std::string val;
 
@@ -166,7 +166,7 @@ std::string Sqlite3Iterator::get_string()
             val = "NULL";
         }
 
-    if ( colnum_ == num_cols_ )
+    if ( ++colnum_ == num_cols_ )
         {
             next_row();
             colnum_ = 0;
@@ -204,7 +204,7 @@ DATABASE_FLOAT Sqlite3Iterator::get_time_stamp()
             val = NAN;
         }
 
-    if ( colnum_++ == num_cols_ )
+    if ( ++colnum_ == num_cols_ )
         {
             next_row();
             colnum_ = 0;
