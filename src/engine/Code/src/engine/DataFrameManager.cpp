@@ -286,7 +286,14 @@ void DataFrameManager::from_db(
 
     df.set_join_keys_encoding( join_keys_encoding_ );
 
-    data_frames()[_name] = df;
+    if ( data_frames().find( _name ) == data_frames().end() )
+        {
+            data_frames()[_name] = df;
+        }
+    else
+        {
+            data_frames()[_name].append( df );
+        }
 
     data_frames()[_name].create_indices();
 
