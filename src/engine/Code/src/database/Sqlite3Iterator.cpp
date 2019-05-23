@@ -28,7 +28,17 @@ Sqlite3Iterator::Sqlite3Iterator(
 
     for ( size_t i = 0; i < _colnames.size(); ++i )
         {
-            sql += _colnames[i];
+            if ( _colnames[i] == "COUNT(*)" )
+                {
+                    sql += _colnames[i];
+                }
+            else
+                {
+                    sql += "\"";
+                    sql += _colnames[i];
+                    sql += "\"";
+                }
+
             if ( i + 1 < _colnames.size() )
                 {
                     sql += ", ";
