@@ -524,11 +524,6 @@ void ModelManager<ModelType>::transform(
 
     auto yhat = model.transform( cmd, logger_, *local_data_frames, _socket );
 
-    if ( JSON::get_value<bool>( cmd, "score_" ) )
-        {
-            set_model( _name, model );
-        }
-
     communication::Sender::send_string( "Success!", _socket );
 
     // -------------------------------------------------------
@@ -537,6 +532,16 @@ void ModelManager<ModelType>::transform(
     communication::Sender::send_matrix( yhat, _socket );
 
     send_data( categories_, local_data_frames, _socket );
+
+    // -------------------------------------------------------
+    // Store model, if necessary.
+
+    read_lock.unlock();
+
+    if ( JSON::get_value<bool>( cmd, "score_" ) )
+        {
+            set_model( _name, model );
+        }
 
     // -------------------------------------------------------
 }
