@@ -81,8 +81,32 @@ class Model : public AbstractModel
         const std::string& _name,
         const std::map<std::string, containers::DataFrame>& _data_frames );
 
+    /// Fit the predictors.
+    void fit(
+        const Poco::JSON::Object& _cmd,
+        const std::shared_ptr<const monitoring::Logger>& _logger,
+        const std::map<std::string, containers::DataFrame>& _data_frames,
+        std::vector<std::shared_ptr<predictors::Predictor>>* _predictors,
+        Poco::Net::StreamSocket* _socket );
+
+    /// Initialize feature_selectors before fitting.
+    void init_feature_selectors(
+        const size_t _num_targets,
+        std::vector<std::shared_ptr<predictors::Predictor>>*
+            _feature_selectors ) const;
+
     /// Initialize predictors before fitting.
-    void init_predictors( const size_t _num_targets );
+    void init_predictors(
+        const size_t _num_targets,
+        std::vector<std::shared_ptr<predictors::Predictor>>* _predictors )
+        const;
+
+    /// Undertakes the feature selection, if applicable.
+    void select_features(
+        const Poco::JSON::Object& _cmd,
+        const std::shared_ptr<const monitoring::Logger>& _logger,
+        const std::map<std::string, containers::DataFrame>& _data_frames,
+        Poco::Net::StreamSocket* _socket );
 
     // --------------------------------------------------------
 
@@ -125,7 +149,7 @@ class Model : public AbstractModel
     /// The hyperparameters used for fitting.
     Poco::JSON::Object hyperparameters_;
 
-    /// The algorithm used for prediction (one for every target)
+    /// The algorithm used for prediction (one for every target).
     std::vector<std::shared_ptr<predictors::Predictor>> predictors_;
 
     // --------------------------------------------------------
@@ -252,7 +276,7 @@ void Model<FeatureEngineererType>::fit(
     Poco::Net::StreamSocket* _socket )
 {
     // ------------------------------------------------
-    // Extract the peripheral tables
+    // Extract the peripheral tables.
 
     auto peripheral_names = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "peripheral_names_" ) );
@@ -270,7 +294,7 @@ void Model<FeatureEngineererType>::fit(
         }
 
     // ------------------------------------------------
-    // Extract the population table
+    // Extract the population table.
 
     const auto population_name =
         JSON::get_value<std::string>( _cmd, "population_name_" );
@@ -279,50 +303,25 @@ void Model<FeatureEngineererType>::fit(
         extract_df<typename FeatureEngineererType::DataFrameType>(
             population_name, _data_frames );
 
+    const auto population_df =
+        utils::Getter::get( population_name, _data_frames );
+
     // ------------------------------------------------
     // Fit the feature engineerer.
 
     feature_engineerer().fit( population_table, peripheral_tables, _logger );
 
     // ------------------------------------------------
-    // Do feature selection, if applicable
+    // Do feature selection, if applicable.
 
-    /*if ( _model.has_feature_selectors() )
-        {
-            auto features = Models::transform(
-                _socket,
-                _cmd,
-                _logger,
-                _data_frames,
-                _model,
-                false,  // _score,
-                false   ///_predict
-            );
-
-            msg += _model.select_features(
-                _logger, features, population_table.targets() );
-        }*/
+    select_features( _cmd, _logger, _data_frames, _socket );
 
     // ------------------------------------------------
     // Fit the predictors, if applicable.
 
-    const auto population_df =
-        utils::Getter::get( population_name, _data_frames );
+    init_predictors( population_df.num_targets(), &predictors_ );
 
-    init_predictors( population_df.num_targets() );
-
-    if ( num_predictors() > 0 )
-        {
-            assert( num_predictors() == population_df.num_targets() );
-
-            auto features = transform( _cmd, _logger, _data_frames, _socket );
-
-            for ( size_t i = 0; i < num_predictors(); ++i )
-                {
-                    predictor( i )->fit(
-                        _logger, features, population_df.target( i ) );
-                }
-        }
+    fit( _cmd, _logger, _data_frames, &predictors_, _socket );
 
     // ------------------------------------------------
 }
@@ -330,9 +329,66 @@ void Model<FeatureEngineererType>::fit(
 // ----------------------------------------------------------------------------
 
 template <typename FeatureEngineererType>
-void Model<FeatureEngineererType>::init_predictors( const size_t _num_targets )
+void Model<FeatureEngineererType>::fit(
+    const Poco::JSON::Object& _cmd,
+    const std::shared_ptr<const monitoring::Logger>& _logger,
+    const std::map<std::string, containers::DataFrame>& _data_frames,
+    std::vector<std::shared_ptr<predictors::Predictor>>* _predictors,
+    Poco::Net::StreamSocket* _socket )
 {
-    predictors_.clear();
+    const auto population_name =
+        JSON::get_value<std::string>( _cmd, "population_name_" );
+
+    const auto population_df =
+        utils::Getter::get( population_name, _data_frames );
+
+    if ( _predictors->size() > 0 )
+        {
+            assert( _predictors->size() == population_df.num_targets() );
+
+            auto features = transform( _cmd, _logger, _data_frames, _socket );
+
+            for ( size_t i = 0; i < _predictors->size(); ++i )
+                {
+                    ( *_predictors )[i]->fit(
+                        _logger, features, population_df.target( i ) );
+                }
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+template <typename FeatureEngineererType>
+void Model<FeatureEngineererType>::init_feature_selectors(
+    const size_t _num_targets,
+    std::vector<std::shared_ptr<predictors::Predictor>>* _feature_selectors )
+    const
+{
+    _feature_selectors->clear();
+
+    if ( !hyperparameters_.has( "feature_selector_" ) ||
+         hyperparameters_.isNull( "feature_selector_" ) )
+        {
+            return;
+        }
+
+    const auto obj = *JSON::get_object( hyperparameters_, "feature_selector_" );
+
+    for ( size_t i = 0; i < _num_targets; ++i )
+        {
+            _feature_selectors->push_back(
+                predictors::PredictorParser::parse( obj ) );
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+template <typename FeatureEngineererType>
+void Model<FeatureEngineererType>::init_predictors(
+    const size_t _num_targets,
+    std::vector<std::shared_ptr<predictors::Predictor>>* _predictors ) const
+{
+    _predictors->clear();
 
     if ( !hyperparameters_.has( "predictor_" ) ||
          hyperparameters_.isNull( "predictor_" ) )
@@ -344,7 +400,7 @@ void Model<FeatureEngineererType>::init_predictors( const size_t _num_targets )
 
     for ( size_t i = 0; i < _num_targets; ++i )
         {
-            predictors_.push_back( predictors::PredictorParser::parse( obj ) );
+            _predictors->push_back( predictors::PredictorParser::parse( obj ) );
         }
 }
 
@@ -409,6 +465,92 @@ Poco::JSON::Object Model<FeatureEngineererType>::score(
     return result;
 
     // ------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+template <typename FeatureEngineererType>
+void Model<FeatureEngineererType>::select_features(
+    const Poco::JSON::Object& _cmd,
+    const std::shared_ptr<const monitoring::Logger>& _logger,
+    const std::map<std::string, containers::DataFrame>& _data_frames,
+    Poco::Net::StreamSocket* _socket )
+{
+    // ------------------------------------------------------------------------
+    // Plausibility checks
+
+    if ( !hyperparameters_.has( "feature_selector_" ) ||
+         hyperparameters_.isNull( "feature_selector_" ) )
+        {
+            return;
+        }
+
+    if ( feature_engineerer().hyperparameters().num_selected_features_ <= 0 )
+        {
+            throw std::invalid_argument(
+                "Number of features must be positive!" );
+        }
+
+    // ------------------------------------------------------------------------
+    // Initialize feature selectors.
+
+    const auto population_name =
+        JSON::get_value<std::string>( _cmd, "population_name_" );
+
+    const auto population_df =
+        utils::Getter::get( population_name, _data_frames );
+
+    std::vector<std::shared_ptr<predictors::Predictor>> feature_selectors;
+
+    init_feature_selectors( population_df.num_targets(), &feature_selectors );
+
+    // ------------------------------------------------------------------------
+    // Fit feature selectors.
+
+    fit( _cmd, _logger, _data_frames, &feature_selectors, _socket );
+
+    // ------------------------------------------------------------------------
+    // Calculate sum of feature importances.
+
+    std::vector<RELBOOST_FLOAT> feature_importances(
+        feature_engineerer().num_features() );
+
+    for ( auto& fs : feature_selectors )
+        {
+            auto temp =
+                fs->feature_importances( feature_engineerer().num_features() );
+
+            std::transform(
+                temp.begin(),
+                temp.end(),
+                feature_importances.begin(),
+                feature_importances.begin(),
+                std::plus<RELBOOST_FLOAT>() );
+        }
+
+    // ------------------------------------------------------------------------
+    // Build index and sort by sum of feature importances, in descending order.
+
+    std::vector<size_t> index( feature_engineerer().num_features() );
+
+    for ( size_t ix = 0; ix < index.size(); ++ix )
+        {
+            index[ix] = ix;
+        }
+
+    std::sort(
+        index.begin(),
+        index.end(),
+        [feature_importances]( const size_t& ix1, const size_t& ix2 ) {
+            return feature_importances[ix1] > feature_importances[ix2];
+        } );
+
+    // ------------------------------------------------------------------------
+    // Tell the feature engineerer to select these features.
+
+    feature_engineerer().select_features( index );
+
+    // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------

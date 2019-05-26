@@ -80,6 +80,9 @@ class DecisionTreeEnsemble
         const size_t _y_nrows,
         const size_t _y_ncols );
 
+    /// Selects the features according to the index given.
+    void select_features( const std::vector<size_t>& _index );
+
     /// Expresses the model in a format that the monitor can understand.
     Poco::JSON::Object to_monitor( const std::string _name ) const;
 

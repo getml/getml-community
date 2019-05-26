@@ -4,6 +4,7 @@
     "lambda_": 1e-20,
     "max_depth_": 1,
     "num_features_": 10,
+    "num_selected_features_": 10,
     "num_threads_": 0,
     "objective_": "CrossEntropyLoss",
     "seed_": 5849,

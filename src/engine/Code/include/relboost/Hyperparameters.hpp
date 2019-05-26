@@ -79,6 +79,9 @@ struct Hyperparameters
     /// Number of features (number of trees in boosted ensemble)
     const RELBOOST_INT num_features_;
 
+    /// Number of features to be selected.
+    const RELBOOST_INT num_selected_features_;
+
     /// ...
     // const RELBOOST_INT num_parallel_tree;
 
