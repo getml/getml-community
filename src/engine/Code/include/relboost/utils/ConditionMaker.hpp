@@ -23,13 +23,13 @@ class ConditionMaker
 
     /// Identifies matches between population table and peripheral tables.
     std::string condition_greater(
-        const containers::DataFrame& _input,
-        const containers::DataFrame& _output,
+        const containers::Schema& _input,
+        const containers::Schema& _output,
         const containers::Split& _split ) const;
 
     std::string condition_smaller(
-        const containers::DataFrame& _input,
-        const containers::DataFrame& _output,
+        const containers::Schema& _input,
+        const containers::Schema& _output,
         const containers::Split& _split ) const;
 
    private:

@@ -40,6 +40,12 @@ DecisionTreeNode::DecisionTreeNode(
               ? JSON::get_value<RELBOOST_FLOAT>( _obj, "weight_" )
               : NAN )
 {
+    input_.reset(
+        new containers::Schema( *JSON::get_object( _obj, "input_" ) ) );
+
+    output_.reset(
+        new containers::Schema( *JSON::get_object( _obj, "output_" ) ) );
+
     if ( _obj.has( "child_greater_" ) )
         {
             const auto categories_used =
@@ -144,7 +150,6 @@ void DecisionTreeNode::assert_aligned(
     const std::vector<containers::CandidateSplit>::iterator _it )
 {
 #ifndef NDEBUG
-
     const auto num_candidates = std::distance( _begin, _end );
     const auto ix_best = std::distance( _begin, _it );
     const auto loss_reduction = _it->loss_reduction_;
@@ -187,9 +192,9 @@ void DecisionTreeNode::fit(
     // ------------------------------------------------------------------------
     // Store input and output (we need the column names).
 
-    input_.reset( new containers::DataFrame( _input ) );
+    input_.reset( new containers::Schema( _input.to_schema() ) );
 
-    output_.reset( new containers::DataFrame( _output.df() ) );
+    output_.reset( new containers::Schema( _output.df().to_schema() ) );
 
     // ------------------------------------------------------------------------
     // If the maximum depth is reached or there are no samples to fit, don't
@@ -387,6 +392,10 @@ std::vector<const containers::Match*>::iterator DecisionTreeNode::partition(
 Poco::JSON::Object DecisionTreeNode::to_json_obj() const
 {
     Poco::JSON::Object obj;
+
+    obj.set( "input_", input().to_json_obj() );
+
+    obj.set( "output_", output().to_json_obj() );
 
     if ( !std::isnan( weight_ ) )
         {

@@ -231,7 +231,7 @@ class DecisionTreeNode
     }
 
     /// Trivial (private) accessor
-    const containers::DataFrame& input() const
+    const containers::Schema& input() const
     {
         assert( input_ );
         return *input_;
@@ -245,7 +245,7 @@ class DecisionTreeNode
     }
 
     /// Trivial (private) accessor
-    const containers::DataFrame& output() const
+    const containers::Schema& output() const
     {
         assert( output_ );
         return *output_;
@@ -273,13 +273,13 @@ class DecisionTreeNode
     const std::shared_ptr<const Hyperparameters> hyperparameters_;
 
     /// The input table used (we keep it, because we need the colnames)
-    containers::Optional<containers::DataFrame> input_;
+    containers::Optional<containers::Schema> input_;
 
     /// Reference to the loss function used.
     const std::shared_ptr<lossfunctions::LossFunction> loss_function_;
 
     /// The output table used (we keep it, because we need the colnames)
-    containers::Optional<containers::DataFrame> output_;
+    containers::Optional<containers::Schema> output_;
 
     /// Describes the split that this node uses.
     containers::Split split_;

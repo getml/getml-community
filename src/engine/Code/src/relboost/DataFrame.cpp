@@ -187,8 +187,7 @@ DataFrame DataFrame::create_subview(
 
     for ( ; ix_upper_time_stamp < time_stamps_.size(); ++ix_upper_time_stamp )
         {
-            if ( time_stamps_[ix_upper_time_stamp].name_ ==
-                 _upper_time_stamp )
+            if ( time_stamps_[ix_upper_time_stamp].name_ == _upper_time_stamp )
                 {
                     break;
                 }

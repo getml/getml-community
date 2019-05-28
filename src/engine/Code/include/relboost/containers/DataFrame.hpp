@@ -43,6 +43,16 @@ class DataFrame
     // ---------------------------------------------------------------------
 
    public:
+    /// Creates a subview.
+    DataFrame create_subview(
+        const std::string& _name,
+        const std::string& _join_key,
+        const std::string& _time_stamp,
+        const std::string& _upper_time_stamp ) const;
+
+    // ---------------------------------------------------------------------
+
+   public:
     /// Getter for a categorical value.
     RELBOOST_INT categorical( size_t _i, size_t _j ) const
     {
@@ -242,6 +252,19 @@ class DataFrame
         return time_stamps_[0].name_;
     }
 
+    /// Returns the schema.
+    Schema to_schema() const
+    {
+        return Schema(
+            get_colnames( categoricals_ ),
+            get_colnames( discretes_ ),
+            get_colnames( join_keys_ ),
+            name_,
+            get_colnames( numericals_ ),
+            get_colnames( targets_ ),
+            get_colnames( time_stamps_ ) );
+    }
+
     /// Trivial getter
     RELBOOST_FLOAT upper_time_stamp( size_t _i ) const
     {
@@ -267,16 +290,15 @@ class DataFrame
 
     // ---------------------------------------------------------------------
 
+   private:
     /// Creates the indices for this data frame
     static std::vector<std::shared_ptr<RELBOOST_INDEX>> create_indices(
         const std::vector<Column<RELBOOST_INT>>& _join_keys );
 
-    /// Creates a subview.
-    DataFrame create_subview(
-        const std::string& _name,
-        const std::string& _join_key,
-        const std::string& _time_stamp,
-        const std::string& _upper_time_stamp ) const;
+    /// Helper class that extracts the column names.
+    template <typename T>
+    std::vector<std::string> get_colnames(
+        const std::vector<Column<T>> _columns ) const;
 
     // ---------------------------------------------------------------------
 
@@ -309,5 +331,35 @@ class DataFrame
 // -------------------------------------------------------------------------
 }  // namespace containers
 }  // namespace relboost
+
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+
+namespace relboost
+{
+namespace containers
+{
+// ----------------------------------------------------------------------------
+
+template <typename T>
+std::vector<std::string> DataFrame::get_colnames(
+    const std::vector<Column<T>> _columns ) const
+{
+    std::vector<std::string> colnames;
+
+    for ( auto& col : _columns )
+        {
+            colnames.push_back( col.name_ );
+        }
+
+    return colnames;
+}
+
+// ----------------------------------------------------------------------------
+
+}  // namespace containers
+}  // namespace relboost
+
+// ----------------------------------------------------------------------------
 
 #endif  // RELBOOST_CONTAINERS_DATAFRAME_HPP_

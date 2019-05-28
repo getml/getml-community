@@ -35,7 +35,13 @@ DecisionTree::DecisionTree(
       loss_function_( aggregations::AggregationParser::parse(
           JSON::get_value<std::string>( _obj, "loss_" ), _loss_function ) )
 {
+    input_.reset(
+        new containers::Schema( *JSON::get_object( _obj, "input_" ) ) );
+
     intercept_ = JSON::get_value<RELBOOST_FLOAT>( _obj, "intercept_" );
+
+    output_.reset(
+        new containers::Schema( *JSON::get_object( _obj, "output_" ) ) );
 
     peripheral_used_ = JSON::get_value<size_t>( _obj, "peripheral_used_" );
 
@@ -60,9 +66,9 @@ void DecisionTree::fit(
     // ------------------------------------------------------------------------
     // Store input and output (we need the column names).
 
-    input_.reset( new containers::DataFrame( _input ) );
+    input_.reset( new containers::Schema( _input.to_schema() ) );
 
-    output_.reset( new containers::DataFrame( _output.df() ) );
+    output_.reset( new containers::Schema( _output.df().to_schema() ) );
 
     // ------------------------------------------------------------------------
     // Set up and fit root node
@@ -97,9 +103,13 @@ Poco::JSON::Object DecisionTree::to_json_obj() const
 
     assert( root_ );
 
+    obj.set( "input_", input().to_json_obj() );
+
     obj.set( "intercept_", intercept_ );
 
     obj.set( "loss_", loss_function().type() );
+
+    obj.set( "output_", output().to_json_obj() );
 
     obj.set( "peripheral_used_", peripheral_used_ );
 

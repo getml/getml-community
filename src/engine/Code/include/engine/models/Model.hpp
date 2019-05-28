@@ -17,11 +17,11 @@ class Model : public AbstractModel
    public:
     Model(
         const FeatureEngineererType& _feature_engineerer,
-        const Poco::JSON::Object& _hyperparameters )
-        : feature_engineerer_( _feature_engineerer ),
-          hyperparameters_( _hyperparameters )
-    {
-    }
+        const Poco::JSON::Object& _hyperparameters );
+
+    Model(
+        const std::shared_ptr<const std::vector<std::string>>& _encoding,
+        const std::string& _path );
 
     ~Model() = default;
 
@@ -100,6 +100,13 @@ class Model : public AbstractModel
         std::vector<std::shared_ptr<predictors::Predictor>>* _predictors )
         const;
 
+    /// Helper function for loading a json object.
+    static Poco::JSON::Object load_json_obj( const std::string& _fname );
+
+    /// Helper function for saving a json object.
+    void save_json_obj(
+        const Poco::JSON::Object& _obj, const std::string& _fname ) const;
+
     /// Undertakes the feature selection, if applicable.
     void select_features(
         const Poco::JSON::Object& _cmd,
@@ -152,7 +159,7 @@ class Model : public AbstractModel
     FeatureEngineererType feature_engineerer_;
 
     /// The hyperparameters used for fitting.
-    Poco::JSON::Object hyperparameters_;
+    Poco::JSON::Object predictor_hyperparameters_;
 
     /// The algorithm used for prediction (one for every target).
     std::vector<std::shared_ptr<predictors::Predictor>> predictors_;
@@ -161,7 +168,7 @@ class Model : public AbstractModel
     metrics::Scores scores_;
 
     // --------------------------------------------------------
-};
+};  // namespace models
 
 // ----------------------------------------------------------------------------
 
@@ -175,6 +182,74 @@ namespace engine
 {
 namespace models
 {
+// ----------------------------------------------------------------------------
+
+template <typename FeatureEngineererType>
+Model<FeatureEngineererType>::Model(
+    const FeatureEngineererType& _feature_engineerer,
+    const Poco::JSON::Object& _hyperparameters )
+    : feature_engineerer_( _feature_engineerer )
+{
+    if ( _hyperparameters.has( "feature_selector_" ) )
+        {
+            predictor_hyperparameters_.set(
+                "feature_selector_",
+                JSON::get_object( _hyperparameters, "feature_selector_" ) );
+        }
+
+    if ( _hyperparameters.has( "predictor_" ) )
+        {
+            predictor_hyperparameters_.set(
+                "predictor_",
+                JSON::get_object( _hyperparameters, "predictor_" ) );
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+template <typename FeatureEngineererType>
+Model<FeatureEngineererType>::Model(
+    const std::shared_ptr<const std::vector<std::string>>& _encoding,
+    const std::string& _path )
+    : feature_engineerer_(
+          _encoding, load_json_obj( _path + "feature_engineerer.json" ) ),
+      predictor_hyperparameters_(
+          load_json_obj( _path + "predictor_hyperparameters.json" ) ),
+      scores_( load_json_obj( _path + "scores.json" ) )
+
+{
+    // ------------------------------------------------------------
+    // Initialize predictors
+
+    size_t num_predictors = 0;
+
+    while ( true )
+        {
+            auto name = _path + "predictor-" + std::to_string( num_predictors );
+
+            if ( !Poco::File( name ).exists() )
+                {
+                    break;
+                }
+
+            ++num_predictors;
+        }
+
+    init_predictors( num_predictors, &predictors_ );
+
+    // ------------------------------------------------------------
+    // Load predictors
+
+    for ( size_t i = 0; i < num_predictors; ++i )
+        {
+            auto name = _path + "predictor-" + std::to_string( i );
+
+            predictor( i )->load( name );
+        }
+
+    // ------------------------------------------------------------
+}
+
 // ----------------------------------------------------------------------------
 
 template <typename FeatureEngineererType>
@@ -374,13 +449,14 @@ void Model<FeatureEngineererType>::init_feature_selectors(
 {
     _feature_selectors->clear();
 
-    if ( !hyperparameters_.has( "feature_selector_" ) ||
-         hyperparameters_.isNull( "feature_selector_" ) )
+    if ( !predictor_hyperparameters_.has( "feature_selector_" ) ||
+         predictor_hyperparameters_.isNull( "feature_selector_" ) )
         {
             return;
         }
 
-    const auto obj = *JSON::get_object( hyperparameters_, "feature_selector_" );
+    const auto obj =
+        *JSON::get_object( predictor_hyperparameters_, "feature_selector_" );
 
     for ( size_t i = 0; i < _num_targets; ++i )
         {
@@ -398,18 +474,50 @@ void Model<FeatureEngineererType>::init_predictors(
 {
     _predictors->clear();
 
-    if ( !hyperparameters_.has( "predictor_" ) ||
-         hyperparameters_.isNull( "predictor_" ) )
+    if ( !predictor_hyperparameters_.has( "predictor_" ) ||
+         predictor_hyperparameters_.isNull( "predictor_" ) )
         {
             return;
         }
 
-    const auto obj = *JSON::get_object( hyperparameters_, "predictor_" );
+    const auto obj =
+        *JSON::get_object( predictor_hyperparameters_, "predictor_" );
 
     for ( size_t i = 0; i < _num_targets; ++i )
         {
             _predictors->push_back( predictors::PredictorParser::parse( obj ) );
         }
+}
+
+// ------------------------------------------------------------------------
+
+template <typename FeatureEngineererType>
+Poco::JSON::Object Model<FeatureEngineererType>::load_json_obj(
+    const std::string& _fname )
+{
+    std::ifstream input( _fname );
+
+    std::stringstream json;
+
+    std::string line;
+
+    if ( input.is_open() )
+        {
+            while ( std::getline( input, line ) )
+                {
+                    json << line;
+                }
+
+            input.close();
+        }
+    else
+        {
+            throw std::invalid_argument( "File '" + _fname + "' not found!" );
+        }
+
+    return *Poco::JSON::Parser()
+                .parse( json.str() )
+                .extract<Poco::JSON::Object::Ptr>();
 }
 
 // ----------------------------------------------------------------------------
@@ -426,14 +534,30 @@ void Model<FeatureEngineererType>::save( const std::string& _path ) const
 
     file.createDirectories();
 
-    feature_engineerer().save( _path + "Model.json" );
+    feature_engineerer().save( _path + "feature_engineerer.json" );
 
-    scores().save( _path + "Scores.json" );
+    scores().save( _path + "scores.json" );
+
+    save_json_obj(
+        predictor_hyperparameters_, _path + "predictor_hyperparameters.json" );
 
     for ( size_t i = 0; i < num_predictors(); ++i )
         {
             predictor( i )->save( _path + "predictor-" + std::to_string( i ) );
         }
+}
+
+// ----------------------------------------------------------------------------
+
+template <typename FeatureEngineererType>
+void Model<FeatureEngineererType>::save_json_obj(
+    const Poco::JSON::Object& _obj, const std::string& _fname ) const
+{
+    std::ofstream fs( _fname, std::ofstream::out );
+
+    Poco::JSON::Stringifier::stringify( _obj, fs );
+
+    fs.close();
 }
 
 // ----------------------------------------------------------------------------
@@ -514,8 +638,8 @@ void Model<FeatureEngineererType>::select_features(
     // ------------------------------------------------------------------------
     // Plausibility checks
 
-    if ( !hyperparameters_.has( "feature_selector_" ) ||
-         hyperparameters_.isNull( "feature_selector_" ) )
+    if ( !predictor_hyperparameters_.has( "feature_selector_" ) ||
+         predictor_hyperparameters_.isNull( "feature_selector_" ) )
         {
             return;
         }
@@ -597,7 +721,7 @@ containers::Matrix<ENGINE_FLOAT> Model<FeatureEngineererType>::transform(
     const std::map<std::string, containers::DataFrame>& _data_frames,
     Poco::Net::StreamSocket* _socket )
 {
-    // ------------------------------------------------
+    // ------------------------------------------------------------------------
     // Extract the peripheral tables
 
     auto peripheral_names = JSON::array_to_vector<std::string>(
@@ -615,7 +739,7 @@ containers::Matrix<ENGINE_FLOAT> Model<FeatureEngineererType>::transform(
             peripheral_tables.push_back( df );
         }
 
-    // ------------------------------------------------
+    // ------------------------------------------------------------------------
     // Extract the population table
 
     const auto population_name =

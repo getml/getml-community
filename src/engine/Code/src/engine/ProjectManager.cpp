@@ -189,36 +189,6 @@ void ProjectManager::load_data_frame(
 
 // ------------------------------------------------------------------------
 
-Poco::JSON::Object ProjectManager::load_json_obj(
-    const std::string& _fname ) const
-{
-    std::ifstream input( _fname );
-
-    std::stringstream json;
-
-    std::string line;
-
-    if ( input.is_open() )
-        {
-            while ( std::getline( input, line ) )
-                {
-                    json << line;
-                }
-
-            input.close();
-        }
-    else
-        {
-            throw std::invalid_argument( "File '" + _fname + "' not found!" );
-        }
-
-    return *Poco::JSON::Parser()
-                .parse( json.str() )
-                .extract<Poco::JSON::Object::Ptr>();
-}
-
-// ------------------------------------------------------------------------
-
 void ProjectManager::load_relboost_model(
     const std::string& _name, Poco::Net::StreamSocket* _socket )
 {
@@ -227,14 +197,9 @@ void ProjectManager::load_relboost_model(
             throw std::invalid_argument( "You have not set a project!" );
         }
 
-    const auto obj =
-        load_json_obj( project_directory_ + "models/" + _name + "/Model.json" );
+    const auto path = project_directory_ + "models/" + _name + "/";
 
-    const auto hyperparameters = *JSON::get_object( obj, "hyperparameters_" );
-
-    auto model = models::RelboostModel(
-        relboost::ensemble::DecisionTreeEnsemble( categories_->vector(), obj ),
-        hyperparameters );
+    auto model = models::RelboostModel( categories().vector(), path );
 
     set_relboost_model( _name, model );
 
