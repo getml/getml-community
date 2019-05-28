@@ -8,6 +8,7 @@
 #include <thread>
 #include <vector>
 
+#include <Poco/File.h>
 #include <Poco/JSON/Object.h>
 
 #include <multithreading/multithreading.hpp>

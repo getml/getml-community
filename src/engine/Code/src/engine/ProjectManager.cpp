@@ -299,15 +299,6 @@ void ProjectManager::save_relboost_model(
 
     const auto path = project_directory_ + "models/" + _name + "/";
 
-    auto file = Poco::File( path );
-
-    if ( file.exists() )
-        {
-            file.remove( true );
-        }
-
-    file.createDirectories();
-
     model.save( path );
 
     // Note that the join keys encoding will be unaffected by models,

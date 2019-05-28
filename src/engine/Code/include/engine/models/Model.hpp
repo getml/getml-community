@@ -35,6 +35,9 @@ class Model : public AbstractModel
         const std::map<std::string, containers::DataFrame>& _data_frames,
         Poco::Net::StreamSocket* _socket ) final;
 
+    /// Save the model.
+    void save( const std::string& _path ) const final;
+
     /// Score predictions.
     Poco::JSON::Object score(
         const Poco::JSON::Object& _cmd,
@@ -50,13 +53,6 @@ class Model : public AbstractModel
     // --------------------------------------------------------
 
    public:
-    /// Save the model.
-    void save( const std::string& _path ) const final
-    {
-        feature_engineerer().save( _path + "Model.json" );
-        scores().save( _path + "Scores.json" );
-    }
-
     /// Returns model as JSON Object.
     Poco::JSON::Object to_json_obj() const final
     {
@@ -413,6 +409,30 @@ void Model<FeatureEngineererType>::init_predictors(
     for ( size_t i = 0; i < _num_targets; ++i )
         {
             _predictors->push_back( predictors::PredictorParser::parse( obj ) );
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+template <typename FeatureEngineererType>
+void Model<FeatureEngineererType>::save( const std::string& _path ) const
+{
+    auto file = Poco::File( _path );
+
+    if ( file.exists() )
+        {
+            file.remove( true );
+        }
+
+    file.createDirectories();
+
+    feature_engineerer().save( _path + "Model.json" );
+
+    scores().save( _path + "Scores.json" );
+
+    for ( size_t i = 0; i < num_predictors(); ++i )
+        {
+            predictor( i )->save( _path + "predictor-" + std::to_string( i ) );
         }
 }
 
