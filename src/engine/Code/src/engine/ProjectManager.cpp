@@ -308,7 +308,7 @@ void ProjectManager::save_relboost_model(
 
     file.createDirectories();
 
-    model.save( path + "Model.json" );
+    model.save( path );
 
     // Note that the join keys encoding will be unaffected by models,
     // passing a zero-length-encoding means that it will not be saved.

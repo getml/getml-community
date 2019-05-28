@@ -7,5 +7,7 @@ set(
     ${METRICS_SOURCE_DIRECTORY}/MetricParser.cpp
     ${METRICS_SOURCE_DIRECTORY}/RMSE.cpp
     ${METRICS_SOURCE_DIRECTORY}/RSquared.cpp
+    ${METRICS_SOURCE_DIRECTORY}/Scorer.cpp
+    ${METRICS_SOURCE_DIRECTORY}/Scores.cpp
 )
 

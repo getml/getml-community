@@ -42,8 +42,9 @@ XGBoostHyperparams::XGBoostHyperparams( const Poco::JSON::Object &_json_obj )
                 "' not known! Please use 'gbtree', 'gblinear' or 'dart'!" );
         }
 
-    if ( objective_ != "reg:linear" && objective_ != "reg:logistic" &&
-         objective_ != "binary:logistic" && objective_ != "binary:logitraw" )
+    if ( objective_ != "reg:linear" && objective_ != "reg:squarederror" &&
+         objective_ != "reg:logistic" && objective_ != "binary:logistic" &&
+         objective_ != "binary:logitraw" )
         {
             throw std::invalid_argument(
                 "Objective of type '" + objective_ +

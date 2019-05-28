@@ -51,9 +51,10 @@ class Model : public AbstractModel
 
    public:
     /// Save the model.
-    void save( const std::string& _fname ) const final
+    void save( const std::string& _path ) const final
     {
-        return feature_engineerer().save( _fname );
+        feature_engineerer().save( _path + "Model.json" );
+        scores().save( _path + "Scores.json" );
     }
 
     /// Returns model as JSON Object.
@@ -65,7 +66,9 @@ class Model : public AbstractModel
     /// Returns model as JSON Object in a form that the monitor can understand.
     Poco::JSON::Object to_monitor( const std::string& _name ) const final
     {
-        return feature_engineerer().to_monitor( _name );
+        auto obj = feature_engineerer().to_monitor( _name );
+        obj.set( "scores_", scores_.to_json_obj() );
+        return obj;
     }
 
     /// Return feature engineerer as SQL code.
@@ -140,6 +143,12 @@ class Model : public AbstractModel
         return predictors_[_i];
     }
 
+    /// Trivial (private) getter
+    metrics::Scores& scores() { return scores_; }
+
+    /// Trivial (private) getter
+    const metrics::Scores& scores() const { return scores_; }
+
     // --------------------------------------------------------
 
    private:
@@ -151,6 +160,9 @@ class Model : public AbstractModel
 
     /// The algorithm used for prediction (one for every target).
     std::vector<std::shared_ptr<predictors::Predictor>> predictors_;
+
+    /// The scores used to evaluate this model.
+    metrics::Scores scores_;
 
     // --------------------------------------------------------
 };
@@ -452,7 +464,8 @@ Poco::JSON::Object Model<FeatureEngineererType>::score(
 
     debug_log( "Calculating score..." );
 
-    auto result = feature_engineerer().score(
+    auto obj = metrics::Scorer::score(
+        feature_engineerer().is_classification(),
         yhat.data(),
         yhat.nrows(),
         yhat.ncols(),
@@ -460,9 +473,11 @@ Poco::JSON::Object Model<FeatureEngineererType>::score(
         y.nrows(),
         y.ncols() );
 
+    scores_.from_json_obj( obj );
+
     // ------------------------------------------------
 
-    return result;
+    return obj;
 
     // ------------------------------------------------
 }

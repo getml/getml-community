@@ -5,11 +5,13 @@
 // Dependencies
 
 #include <array>
+#include <fstream>
 #include <memory>
 #include <numeric>
 
 #include <Poco/JSON/Array.h>
 #include <Poco/JSON/Object.h>
+#include <Poco/JSON/Stringifier.h>
 
 #include "metrics/types.hpp"
 
@@ -31,6 +33,9 @@
 #include "metrics/RSquared.hpp"
 
 #include "metrics/MetricParser.hpp"
+
+#include "metrics/Scorer.hpp"
+#include "metrics/Scores.hpp"
 
 // ----------------------------------------------------
 

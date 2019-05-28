@@ -188,7 +188,7 @@ void test19_classification()
 
     std::cout << " accuracy: " << accuracy << std::endl;
 
-    assert( accuracy > 0.96 );
+    assert( accuracy > 0.95 );
 
     std::cout << std::endl << std::endl;
 

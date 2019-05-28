@@ -28,7 +28,6 @@
 #include "relboost/containers/IntSet.hpp"
 #include "relboost/containers/Match.hpp"
 #include "relboost/containers/Optional.hpp"
-#include "relboost/containers/Scores.hpp"
 #include "relboost/containers/Split.hpp"
 
 #include "relboost/containers/DataFrame.hpp"

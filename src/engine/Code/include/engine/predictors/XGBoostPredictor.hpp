@@ -28,10 +28,11 @@ class XGBoostPredictor : public Predictor
     {
     }
 
-    ~XGBoostPredictor(){};
+    ~XGBoostPredictor() = default;
 
     // -----------------------------------------
 
+   public:
     /// Returns an importance measure for the individual features
     std::vector<ENGINE_FLOAT> feature_importances(
         const size_t _num_features ) const final;

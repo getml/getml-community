@@ -503,80 +503,6 @@ void DecisionTreeEnsemble::save( const std::string &_fname ) const
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object DecisionTreeEnsemble::score(
-    const METRICS_FLOAT *const _yhat,
-    const size_t _yhat_nrows,
-    const size_t _yhat_ncols,
-    const METRICS_FLOAT *const _y,
-    const size_t _y_nrows,
-    const size_t _y_ncols )
-{
-    // ------------------------------------------------------------------------
-    // Build up names.
-
-    std::vector<std::string> names;
-
-    if ( loss_function().type() == "CrossEntropyLoss" )
-        {
-            names.push_back( "accuracy_" );
-            names.push_back( "auc_" );
-            names.push_back( "cross_entropy_" );
-        }
-    else if ( loss_function().type() == "SquareLoss" )
-        {
-            names.push_back( "mae_" );
-            names.push_back( "rmse_" );
-            names.push_back( "rsquared_" );
-        }
-    else
-        {
-            assert( false && "loss function type not recognized" );
-        }
-
-    // ------------------------------------------------------------------------
-    // Do the actual scoring.
-
-    Poco::JSON::Object obj;
-
-    for ( const auto &name : names )
-        {
-            // TODO: Replace nullptr with &comm() after multithreading is
-            // implemented.
-            const auto metric = metrics::MetricParser::parse( name, nullptr );
-
-            const auto scores = metric->score(
-                _yhat, _yhat_nrows, _yhat_ncols, _y, _y_nrows, _y_ncols );
-
-            for ( auto it = scores.begin(); it != scores.end(); ++it )
-                {
-                    obj.set( it->first, it->second );
-                }
-        }
-
-    // ------------------------------------------------------------------------
-    // Store scores.
-
-    scores().from_json_obj( obj );
-
-    // ------------------------------------------------------------------------
-    // Extract values that can be send back to the client.
-
-    Poco::JSON::Object client_obj;
-
-    for ( const auto &name : names )
-        {
-            client_obj.set( name, obj.getArray( name ) );
-        }
-
-    // ------------------------------------------------------------------------
-
-    return client_obj;
-
-    // ------------------------------------------------------------------------
-}
-
-// ----------------------------------------------------------------------------
-
 void DecisionTreeEnsemble::select_features( const std::vector<size_t> &_index )
 {
     assert( _index.size() == trees().size() );
@@ -628,11 +554,6 @@ Poco::JSON::Object DecisionTreeEnsemble::to_monitor(
             // Insert hyperparameters
 
             obj.set( "hyperparameters_", hyperparameters().to_json_obj() );
-
-            // ----------------------------------------
-            // Insert scores
-
-            obj.set( "scores_", scores().to_json_obj() );
 
             // ----------------------------------------
             // Insert sql

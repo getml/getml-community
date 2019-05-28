@@ -71,15 +71,6 @@ class DecisionTreeEnsemble
     /// Saves the DecisionTreeEnsemble into a JSON file.
     void save( const std::string& _fname ) const;
 
-    /// Calculates scores.
-    Poco::JSON::Object score(
-        const METRICS_FLOAT* const _yhat,
-        const size_t _yhat_nrows,
-        const size_t _yhat_ncols,
-        const METRICS_FLOAT* const _y,
-        const size_t _y_nrows,
-        const size_t _y_ncols );
-
     /// Selects the features according to the index given.
     void select_features( const std::vector<size_t>& _index );
 
@@ -112,6 +103,12 @@ class DecisionTreeEnsemble
     {
         assert( impl().hyperparameters_ );
         return *impl().hyperparameters_;
+    }
+
+    /// Whether this is a classification problem
+    const bool is_classification() const
+    {
+        return loss_function().type() != "SquareLoss";
     }
 
     /// Trivial accessor.
@@ -195,12 +192,6 @@ class DecisionTreeEnsemble
 
     /// Trivial (private) accessor
     utils::Sampler& sampler() { return impl().sampler_; }
-
-    /// Trivial (private) accessor
-    inline containers::Scores& scores() { return impl().scores_; }
-
-    /// Trivial (private) accessor
-    inline const containers::Scores& scores() const { return impl().scores_; }
 
     /// Trivial (private) setter.
     void set_comm( multithreading::Communicator* _comm )

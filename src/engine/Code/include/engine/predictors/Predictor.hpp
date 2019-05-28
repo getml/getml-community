@@ -15,7 +15,7 @@ class Predictor
    public:
     Predictor(){};
 
-    ~Predictor() = default;
+    virtual ~Predictor() = default;
 
     // -----------------------------------------
 

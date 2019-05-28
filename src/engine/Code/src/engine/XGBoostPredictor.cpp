@@ -204,7 +204,16 @@ std::string XGBoostPredictor::fit(
     XGBoosterSetParam(
         *handle, "nthread", std::to_string( hyperparams_.nthread_ ).c_str() );
 
-    XGBoosterSetParam( *handle, "objective", hyperparams_.objective_.c_str() );
+    /// XGBoost has deprecated reg::linear, but we will continue to support it.
+    if ( hyperparams_.objective_ == "reg::linear" )
+        {
+            XGBoosterSetParam( *handle, "objective", "reg::squarederror" );
+        }
+    else
+        {
+            XGBoosterSetParam(
+                *handle, "objective", hyperparams_.objective_.c_str() );
+        }
 
     if ( hyperparams_.one_drop_ )
         {
