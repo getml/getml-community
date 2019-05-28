@@ -108,6 +108,9 @@ class ProjectManager
     /// encodings.
     void clear();
 
+    /// Loads all models.
+    void load_all_models();
+
     /// Loads a JSON object from a file.
     Poco::JSON::Object load_json_obj( const std::string& _fname ) const;
 

@@ -153,6 +153,36 @@ void ProjectManager::delete_project(
 
 // ------------------------------------------------------------------------
 
+void ProjectManager::load_all_models()
+{
+    if ( project_directory_ == "" )
+        {
+            throw std::invalid_argument( "You have not set a project!" );
+        }
+
+    Poco::DirectoryIterator end;
+
+    for ( Poco::DirectoryIterator it( project_directory_ + "models/" );
+          it != end;
+          ++it )
+        {
+            if ( !it->isDirectory() )
+                {
+                    continue;
+                }
+
+            auto model = models::RelboostModel(
+                categories().vector(), it->path() + "/" );
+
+            set_relboost_model( it.name(), model );
+
+            monitor_->send(
+                "postrelboostmodel", model.to_monitor( it.name() ) );
+        }
+}
+
+// ------------------------------------------------------------------------
+
 void ProjectManager::load_data_frame(
     const std::string& _name, Poco::Net::StreamSocket* _socket )
 {
@@ -300,6 +330,8 @@ void ProjectManager::set_project(
 
     FileHandler::load_encodings(
         project_directory_, &categories(), &join_keys_encoding() );
+
+    load_all_models();
 
     engine::communication::Sender::send_string( "Success!", _socket );
 }

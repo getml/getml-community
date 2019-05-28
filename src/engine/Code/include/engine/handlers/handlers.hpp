@@ -10,6 +10,7 @@
 #include <vector>
 
 #include <Poco/Crypto/DigestEngine.h>
+#include <Poco/DirectoryIterator.h>
 #include <Poco/File.h>
 #include <Poco/HMACEngine.h>
 #include <Poco/MD5Engine.h>
