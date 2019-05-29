@@ -75,11 +75,11 @@ void ProjectManager::clear()
                 "removedataframe", "{\"name\":\"" + pair.first + "\"}" );
         }
 
-    /*for ( auto& pair : models() )
+    for ( auto& pair : relboost_models() )
         {
             monitor_->send(
-                "removemodel", "{\"name\":\"" + pair.first + "\"}" );
-        }*/
+                "removerelboostmodel", "{\"name\":\"" + pair.first + "\"}" );
+        }
 
     // --------------------------------
     // Clear encodings
