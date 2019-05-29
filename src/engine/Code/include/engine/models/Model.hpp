@@ -73,6 +73,13 @@ class Model : public AbstractModel
     // --------------------------------------------------------
 
    private:
+    /// Calculates the correlations of each feature with the targets.
+    Poco::JSON::Object calculate_feature_correlations(
+        const std::vector<ENGINE_FLOAT>& _features,
+        const size_t _nrows,
+        const size_t _ncols,
+        const typename FeatureEngineererType::DataFrameType& _df );
+
     /// Extract a data frame of type FeatureEngineererType::DataFrameType from
     /// an engine::containers::DataFrame.
     template <typename DataFrameType>
@@ -251,6 +258,26 @@ Model<FeatureEngineererType>::Model(
         }
 
     // ------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+template <typename FeatureEngineererType>
+Poco::JSON::Object Model<FeatureEngineererType>::calculate_feature_correlations(
+    const std::vector<ENGINE_FLOAT>& _features,
+    const size_t _nrows,
+    const size_t _ncols,
+    const typename FeatureEngineererType::DataFrameType& _df )
+{
+    std::vector<const ENGINE_FLOAT*> targets;
+
+    for ( size_t j = 0; j < _df.num_targets(); ++j )
+        {
+            targets.push_back( _df.target_col( j ).begin() );
+        }
+
+    return metrics::Summarizer::calculate_feature_correlations(
+        _features, _nrows, _ncols, targets );
 }
 
 // ----------------------------------------------------------------------------
@@ -826,6 +853,18 @@ containers::Matrix<ENGINE_FLOAT> Model<FeatureEngineererType>::transform(
     const auto ncols = features->size() / population_table.nrows();
 
     const auto mat = containers::Matrix<ENGINE_FLOAT>( nrows, ncols, features );
+
+    // ------------------------------------------------
+    // Get the feature importances, if applicable.
+
+    const bool score =
+        _cmd.has( "score_" ) && JSON::get_value<bool>( _cmd, "score_" );
+
+    if ( score )
+        {
+            scores_.from_json_obj( calculate_feature_correlations(
+                *features, nrows, ncols, population_table ) );
+        }
 
     // ------------------------------------------------------------------------
     // Generate predictions, if applicable.

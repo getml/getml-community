@@ -36,6 +36,7 @@
 
 #include "metrics/Scorer.hpp"
 #include "metrics/Scores.hpp"
+#include "metrics/Summarizer.hpp"
 
 // ----------------------------------------------------
 

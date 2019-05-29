@@ -9,5 +9,6 @@ set(
     ${METRICS_SOURCE_DIRECTORY}/RSquared.cpp
     ${METRICS_SOURCE_DIRECTORY}/Scorer.cpp
     ${METRICS_SOURCE_DIRECTORY}/Scores.cpp
+    ${METRICS_SOURCE_DIRECTORY}/Summarizer.cpp
 )
 

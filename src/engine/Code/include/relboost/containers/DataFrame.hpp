@@ -298,7 +298,7 @@ class DataFrame
     /// Helper class that extracts the column names.
     template <typename T>
     std::vector<std::string> get_colnames(
-        const std::vector<Column<T>> _columns ) const;
+        const std::vector<Column<T>>& _columns ) const;
 
     // ---------------------------------------------------------------------
 
@@ -343,7 +343,7 @@ namespace containers
 
 template <typename T>
 std::vector<std::string> DataFrame::get_colnames(
-    const std::vector<Column<T>> _columns ) const
+    const std::vector<Column<T>>& _columns ) const
 {
     std::vector<std::string> colnames;
 
