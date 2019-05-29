@@ -19,14 +19,8 @@ struct Placeholder
     // --------------------------------------------------------
 
     Placeholder( const Poco::JSON::Object& _json_obj )
-        : categorical_( JSON::array_to_vector<std::string>(
-              JSON::get_array( _json_obj, "categorical_" ) ) ),
-          discrete_( JSON::array_to_vector<std::string>(
-              JSON::get_array( _json_obj, "discrete_" ) ) ),
-          joined_tables_( Placeholder::parse_joined_tables(
+        : joined_tables_( Placeholder::parse_joined_tables(
               JSON::get_array( _json_obj, "joined_tables_" ) ) ),
-          join_keys_( JSON::array_to_vector<std::string>(
-              JSON::get_array( _json_obj, "join_keys_" ) ) ),
           join_keys_used_( JSON::array_to_vector<std::string>(
               JSON::get_array( _json_obj, "join_keys_used_" ) ) ),
           other_join_keys_used_( JSON::array_to_vector<std::string>(
@@ -34,12 +28,6 @@ struct Placeholder
           other_time_stamps_used_( JSON::array_to_vector<std::string>(
               JSON::get_array( _json_obj, "other_time_stamps_used_" ) ) ),
           name_( _json_obj.getValue<std::string>( "name_" ) ),
-          numerical_( JSON::array_to_vector<std::string>(
-              JSON::get_array( _json_obj, "numerical_" ) ) ),
-          targets_( JSON::array_to_vector<std::string>(
-              JSON::get_array( _json_obj, "targets_" ) ) ),
-          time_stamps_( JSON::array_to_vector<std::string>(
-              JSON::get_array( _json_obj, "time_stamps_" ) ) ),
           time_stamps_used_( JSON::array_to_vector<std::string>(
               JSON::get_array( _json_obj, "time_stamps_used_" ) ) ),
           upper_time_stamps_used_( JSON::array_to_vector<std::string>(
@@ -78,18 +66,9 @@ struct Placeholder
 
     // --------------------------------------------------------
 
-    /// Names of the categorical columns (needed for high-level API only)
-    const std::vector<std::string> categorical_;
-
-    /// Names of the discrete columns (needed for high-level API only)
-    const std::vector<std::string> discrete_;
-
     /// Placeholders that are LEFT JOINED
     /// to this placeholder
     const std::vector<Placeholder> joined_tables_;
-
-    /// Names of the join keys (needed for high-level API only)
-    const std::vector<std::string> join_keys_;
 
     /// Names of the join keys used (LEFT) - should have
     /// same length as joined_tables_
@@ -105,15 +84,6 @@ struct Placeholder
 
     /// Name of the Placeholder object
     const std::string name_;
-
-    /// Names of the numerical columns (needed for high-level API only)
-    const std::vector<std::string> numerical_;
-
-    /// Names of the target columns (needed for high-level API only)
-    const std::vector<std::string> targets_;
-
-    /// Names of the time stamp columns (needed for high-level API only)
-    const std::vector<std::string> time_stamps_;
 
     /// Names of the time stamps used (LEFT) - should have
     /// same length as joined_tables_

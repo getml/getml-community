@@ -80,6 +80,9 @@ class Model : public AbstractModel
         const std::string& _name,
         const std::map<std::string, containers::DataFrame>& _data_frames );
 
+    /// Calculates the feature importances.
+    Poco::JSON::Object feature_importances();
+
     /// Fit the predictors.
     void fit(
         const Poco::JSON::Object& _cmd,
@@ -352,6 +355,59 @@ DataFrameType Model<FeatureEngineererType>::extract_df(
 // ----------------------------------------------------------------------------
 
 template <typename FeatureEngineererType>
+Poco::JSON::Object Model<FeatureEngineererType>::feature_importances()
+{
+    // ----------------------------------------------------------------
+    // Extract feature importances
+
+    std::vector<std::vector<ENGINE_FLOAT>> feature_importances_transposed;
+
+    for ( size_t i = 0; i < num_predictors(); ++i )
+        {
+            feature_importances_transposed.push_back(
+                predictor( i )->feature_importances(
+                    feature_engineerer().num_features() ) );
+        }
+
+    // ----------------------------------------------------------------
+    // Transpose feature importances and transform to arrays.
+
+    Poco::JSON::Array::Ptr feature_importances( new Poco::JSON::Array() );
+
+    if ( feature_importances_transposed.size() == 0 )
+        {
+            return Poco::JSON::Object();
+        }
+
+    for ( std::size_t i = 0; i < feature_engineerer().num_features(); ++i )
+        {
+            Poco::JSON::Array::Ptr temp( new Poco::JSON::Array() );
+
+            for ( auto& feat : feature_importances_transposed )
+                {
+                    assert(
+                        feat.size() == feature_engineerer().num_features() );
+                    temp->add( feat[i] );
+                }
+
+            feature_importances->add( temp );
+        }
+
+    // ----------------------------------------------------------------
+    // Insert array into object and return.
+
+    Poco::JSON::Object obj;
+
+    obj.set( "feature_importances_", feature_importances );
+
+    return obj;
+
+    // ----------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+template <typename FeatureEngineererType>
 void Model<FeatureEngineererType>::fit(
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<const monitoring::Logger>& _logger,
@@ -405,6 +461,11 @@ void Model<FeatureEngineererType>::fit(
     init_predictors( population_df.num_targets(), &predictors_ );
 
     fit( _cmd, _logger, _data_frames, &predictors_, _socket );
+
+    // ------------------------------------------------
+    // Get the feature importances, if applicable.
+
+    scores_.from_json_obj( feature_importances() );
 
     // ------------------------------------------------
 }

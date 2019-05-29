@@ -54,8 +54,14 @@ struct DecisionTreeEnsembleImpl
     /// Names of the peripheral tables, as they are referred in placeholder
     std::shared_ptr<const std::vector<std::string>> peripheral_names_;
 
+    /// Schema of the peripheral tables.
+    std::shared_ptr<const std::vector<containers::Schema>> peripheral_schema_;
+
     /// Placeholder object used to define the data schema.
     std::shared_ptr<const Placeholder> placeholder_;
+
+    /// Schema of the population table.
+    std::shared_ptr<const containers::Schema> population_schema_;
 
     /// The sampler used for making the sample weights.
     utils::Sampler sampler_;

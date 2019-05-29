@@ -114,20 +114,6 @@ Poco::JSON::Object Placeholder::to_json_obj() const
 
     // ---------------------------------------------------------
 
-    obj.set( "categorical_", categorical_ );
-
-    obj.set( "discrete_", discrete_ );
-
-    obj.set( "join_keys_", join_keys_ );
-
-    obj.set( "numerical_", numerical_ );
-
-    obj.set( "targets_", targets_ );
-
-    obj.set( "time_stamps_", time_stamps_ );
-
-    // ---------------------------------------------------------
-
     return obj;
 }
 

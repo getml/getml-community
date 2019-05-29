@@ -102,6 +102,9 @@ class Schema
         return numericals_[_j];
     }
 
+    /// Getter for a targets.
+    const std::vector<std::string>& targets() const { return targets_; }
+
     /// Getter for a target name.
     const std::string& target_name( size_t _j ) const
     {

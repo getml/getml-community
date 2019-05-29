@@ -35,11 +35,35 @@ DecisionTreeEnsemble::DecisionTreeEnsemble(
               *JSON::get_object( _obj, "placeholder_" ) ) ) ),
       targets_( std::make_shared<std::vector<RELBOOST_FLOAT>>( 0 ) )
 {
+    // ------------------------------------------------------------------------
+
     initial_prediction() =
         JSON::get_value<RELBOOST_FLOAT>( _obj, "initial_prediction_" );
 
     loss_function_ = lossfunctions::LossFunctionParser::parse(
         hyperparameters().objective_, impl().hyperparameters_, targets_ );
+
+    // ------------------------------------------------------------------------
+
+    impl().population_schema_.reset( new containers::Schema(
+        *JSON::get_object( _obj, "population_schema_" ) ) );
+
+    // ------------------------------------------------------------------------
+
+    std::vector<containers::Schema> peripheral;
+
+    const auto peripheral_arr = *JSON::get_array( _obj, "peripheral_schema_" );
+
+    for ( size_t i = 0; i < peripheral_arr.size(); ++i )
+        {
+            peripheral.push_back(
+                containers::Schema( *peripheral_arr.getObject( i ) ) );
+        }
+
+    impl().peripheral_schema_.reset(
+        new std::vector<containers::Schema>( peripheral ) );
+
+    // ------------------------------------------------------------------------
 
     const auto trees_objects = *JSON::get_array( _obj, "trees_" );
 
@@ -51,6 +75,8 @@ DecisionTreeEnsemble::DecisionTreeEnsemble(
                 loss_function_,
                 *trees_objects.getObject( i ) ) );
         }
+
+    // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -135,6 +161,25 @@ void DecisionTreeEnsemble::clean_up()
     yhat_old_.reset();
     set_comm( nullptr );
 }
+// ----------------------------------------------------------------------------
+
+void DecisionTreeEnsemble::extract_schemas(
+    const containers::DataFrame &_population,
+    const std::vector<containers::DataFrame> &_peripheral )
+{
+    impl().population_schema_.reset(
+        new containers::Schema( _population.to_schema() ) );
+
+    std::vector<containers::Schema> peripheral;
+
+    for ( auto &df : _peripheral )
+        {
+            peripheral.push_back( df.to_schema() );
+        }
+
+    impl().peripheral_schema_.reset(
+        new std::vector<containers::Schema>( peripheral ) );
+}
 
 // ----------------------------------------------------------------------------
 
@@ -143,6 +188,11 @@ void DecisionTreeEnsemble::fit(
     const std::vector<containers::DataFrame> &_peripheral,
     const std::shared_ptr<const logging::AbstractLogger> _logger )
 {
+    // ------------------------------------------------------
+    // We need to store the schemas for future reference.
+
+    extract_schemas( _population, _peripheral );
+
     // ------------------------------------------------------
 
     const auto num_threads =
@@ -576,7 +626,8 @@ Poco::JSON::Object DecisionTreeEnsemble::to_monitor(
 
             obj.set(
                 "targets_",
-                JSON::vector_to_array<std::string>( placeholder().targets_ ) );
+                JSON::vector_to_array<std::string>(
+                    population_schema().targets() ) );
 
             // ----------------------------------------
         }
@@ -698,14 +749,27 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json_obj() const
 
     // ------------------------------------------------------------------------
 
-    Poco::JSON::Array arr;
+    Poco::JSON::Array peripheral_schema_arr;
+
+    for ( auto &p : peripheral_schema() )
+        {
+            peripheral_schema_arr.add( p.to_json_obj() );
+        }
+
+    obj.set( "peripheral_schema_", peripheral_schema_arr );
+
+    obj.set( "population_schema_", population_schema().to_json_obj() );
+
+    // ------------------------------------------------------------------------
+
+    Poco::JSON::Array trees_arr;
 
     for ( auto &tree : trees() )
         {
-            arr.add( tree.to_json_obj() );
+            trees_arr.add( tree.to_json_obj() );
         }
 
-    obj.set( "trees_", arr );
+    obj.set( "trees_", trees_arr );
 
     // ------------------------------------------------------------------------
 

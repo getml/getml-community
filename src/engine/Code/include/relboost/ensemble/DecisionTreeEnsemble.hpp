@@ -143,6 +143,11 @@ class DecisionTreeEnsemble
         const std::vector<RELBOOST_FLOAT>& _yhat_old,
         const std::vector<RELBOOST_FLOAT>& _predictions ) const;
 
+    /// Extracts the schemas of the population table and the peripheral tables.
+    void extract_schemas(
+        const containers::DataFrame& _population,
+        const std::vector<containers::DataFrame>& _peripheral );
+
     /// Generates a new slate of predictions.
     std::vector<RELBOOST_FLOAT> generate_predictions(
         const decisiontrees::DecisionTree& _decision_tree,
@@ -190,6 +195,20 @@ class DecisionTreeEnsemble
     {
         assert( loss_function_ );
         return *loss_function_;
+    }
+
+    /// Trivial (private) accessor
+    const std::vector<containers::Schema>& peripheral_schema() const
+    {
+        assert( impl().peripheral_schema_ );
+        return *impl().peripheral_schema_;
+    }
+
+    /// Trivial (private) accessor
+    const containers::Schema& population_schema() const
+    {
+        assert( impl().population_schema_ );
+        return *impl().population_schema_;
     }
 
     /// Trivial (private) accessor
