@@ -73,8 +73,8 @@ struct Hyperparameters
     /// Maximum tree depth for base learners
     const RELBOOST_INT max_depth_;
 
-    /// Minimum sum of instance weight needed in a child
-    // const RELBOOST_FLOAT min_child_weights;
+    /// Minimum number of samples.
+    const RELBOOST_INT min_num_samples_;
 
     /// Number of features (number of trees in boosted ensemble)
     const RELBOOST_INT num_features_;

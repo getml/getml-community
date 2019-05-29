@@ -9,6 +9,7 @@ Hyperparameters::Hyperparameters()
       gamma_( 1.0 ),
       lambda_( 0.0 ),
       max_depth_( 1 ),
+      min_num_samples_( 200 ),
       num_features_( 10 ),
       num_selected_features_( 10 ),
       num_threads_( 0 ),
@@ -27,6 +28,8 @@ Hyperparameters::Hyperparameters( const Poco::JSON::Object& _obj )
       gamma_( JSON::get_value<RELBOOST_FLOAT>( _obj, "gamma_" ) ),
       lambda_( JSON::get_value<RELBOOST_FLOAT>( _obj, "lambda_" ) ),
       max_depth_( JSON::get_value<RELBOOST_INT>( _obj, "max_depth_" ) ),
+      min_num_samples_(
+          JSON::get_value<RELBOOST_INT>( _obj, "min_num_samples_" ) ),
       num_features_( JSON::get_value<RELBOOST_INT>( _obj, "num_features_" ) ),
       num_selected_features_(
           JSON::get_value<RELBOOST_INT>( _obj, "num_selected_features_" ) ),
@@ -57,6 +60,8 @@ Poco::JSON::Object Hyperparameters::to_json_obj() const
     obj.set( "lambda_", lambda_ );
 
     obj.set( "max_depth_", max_depth_ );
+
+    obj.set( "min_num_samples_", min_num_samples_ );
 
     obj.set( "num_features_", num_features_ );
 

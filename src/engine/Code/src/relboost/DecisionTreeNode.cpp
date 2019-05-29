@@ -107,6 +107,24 @@ void DecisionTreeNode::add_candidates(
         _revert, _update, weight_, _begin, _last_it, _it, _end );
 
     // -----------------------------------------------------------------
+    // Check whether split would be balanced enough.
+
+    RELBOOST_INT num_samples_smaller = std::distance( _last_it, _it );
+
+    RELBOOST_INT num_samples_greater =
+        std::distance( _begin, _end ) - num_samples_smaller;
+
+    utils::Reducer::reduce(
+        std::plus<RELBOOST_INT>(), &num_samples_smaller, &comm() );
+
+    utils::Reducer::reduce(
+        std::plus<RELBOOST_INT>(), &num_samples_greater, &comm() );
+
+    const bool is_balanced =
+        num_samples_smaller > hyperparameters().min_num_samples_ &&
+        num_samples_greater > hyperparameters().min_num_samples_;
+
+    // -----------------------------------------------------------------
     // Calculate and store loss reduction.
 
     for ( const auto& new_weights : all_new_weights )
@@ -127,8 +145,11 @@ void DecisionTreeNode::add_candidates(
             auto loss_reduction = loss_function().evaluate_split(
                 _old_intercept, weight_, new_weights );
 
-            _candidates->push_back( containers::CandidateSplit(
-                loss_reduction, _split, new_weights ) );
+            if ( is_balanced )
+                {
+                    _candidates->push_back( containers::CandidateSplit(
+                        loss_reduction, _split, new_weights ) );
+                }
         }
 
     // -----------------------------------------------------------------
