@@ -281,8 +281,8 @@ void Model<FeatureEngineererType>::calculate_feature_stats(
     scores_.from_json_obj( metrics::Summarizer::calculate_feature_correlations(
         _features, _nrows, _ncols, targets ) );
 
-    scores_.from_json_obj( metrics::Summarizer::calculate_feature_densities(
-        _features, _nrows, _ncols, num_bins ) );
+    scores_.from_json_obj( metrics::Summarizer::calculate_feature_plots(
+        _features, _nrows, _ncols, num_bins, targets ) );
 }
 
 // ----------------------------------------------------------------------------

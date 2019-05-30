@@ -4,11 +4,126 @@ namespace metrics
 {
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object Summarizer::calculate_feature_densities(
+Poco::JSON::Array::Ptr Summarizer::calculate_average_targets(
+    const std::vector<METRICS_FLOAT>& _minima,
+    const std::vector<METRICS_FLOAT>& _step_sizes,
+    const std::vector<size_t>& _actual_num_bins,
+    const std::vector<std::vector<METRICS_INT>>& _feature_densities,
     const std::vector<METRICS_FLOAT>& _features,
     const size_t _nrows,
     const size_t _ncols,
-    const size_t _num_bins )
+    const std::vector<const METRICS_FLOAT*>& _targets )
+{
+    // ------------------------------------------------------------------------
+    // Init average_targets.
+
+    assert( _actual_num_bins.size() == _step_sizes.size() );
+
+    assert( _actual_num_bins.size() == _ncols );
+
+    const auto num_targets = _targets.size();
+
+    auto average_targets =
+        std::vector<std::vector<std::vector<METRICS_FLOAT>>>( _ncols );
+
+    std::for_each(
+        average_targets.begin(),
+        average_targets.end(),
+        [num_targets]( std::vector<std::vector<METRICS_FLOAT>>& vec ) {
+            vec.resize( num_targets );
+        } );
+
+    for ( size_t j = 0; j < _feature_densities.size(); ++j )
+        {
+            for ( size_t k = 0; k < num_targets; ++k )
+                {
+                    average_targets[j][k].resize( _actual_num_bins[j] );
+                }
+        }
+
+    // ------------------------------------------------------------------------
+    // Calculate sums.
+
+    assert( _feature_densities.size() == _ncols );
+
+    for ( size_t i = 0; i < _nrows; ++i )
+        {
+            for ( size_t j = 0; j < _ncols; ++j )
+                {
+                    const auto val = get( i, j, _ncols, _features );
+
+                    if ( _actual_num_bins[j] == 0 || std::isinf( val ) ||
+                         std::isnan( val ) )
+                        {
+                            continue;
+                        }
+
+                    const auto bin = identify_bin(
+                        _actual_num_bins[j], _step_sizes[j], val, _minima[j] );
+
+                    assert( bin < _feature_densities[j].size() );
+
+                    for ( size_t k = 0; k < average_targets[j].size(); ++k )
+                        {
+                            assert( bin < average_targets[j][k].size() );
+
+                            average_targets[j][k][bin] += _targets[k][i];
+                        }
+                }
+        }
+
+    // ------------------------------------------------------------------------
+    // Divide targets by column densities .
+
+    for ( size_t j = 0; j < _ncols; ++j )
+        {
+            for ( size_t bin = 0; bin < _feature_densities[j].size(); ++bin )
+                {
+                    if ( _feature_densities[j][bin] > 0 )
+                        {
+                            for ( size_t k = 0; k < average_targets[j].size();
+                                  ++k )
+                                {
+                                    average_targets[j][k][bin] /=
+                                        static_cast<METRICS_FLOAT>(
+                                            _feature_densities[j][bin] );
+                                }
+                        }
+                }
+        }
+
+    // ------------------------------------------------------------------------
+    // Transform to JSON Array.
+
+    Poco::JSON::Array::Ptr arr( new Poco::JSON::Array() );
+
+    for ( const auto& vec : average_targets )
+        {
+            Poco::JSON::Array::Ptr subarr( new Poco::JSON::Array() );
+
+            for ( const auto& v : vec )
+                {
+                    subarr->add( JSON::vector_to_array_ptr( v ) );
+                }
+
+            arr->add( subarr );
+        }
+
+    // ------------------------------------------------------------------------
+
+    return arr;
+
+    // ------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+Poco::JSON::Object Summarizer::calculate_feature_plots(
+    const std::vector<METRICS_FLOAT>& _features,
+    const size_t _nrows,
+    const size_t _ncols,
+    const size_t _num_bins,
+    const std::vector<const METRICS_FLOAT*>& _targets )
 {
     // ------------------------------------------------------------------------
     // Find minima and maxima
@@ -91,9 +206,23 @@ Poco::JSON::Object Summarizer::calculate_feature_densities(
         _ncols );
 
     // ------------------------------------------------------------------------
+
+    auto average_targets_arr = calculate_average_targets(
+        minima,
+        step_sizes,
+        actual_num_bins,
+        feature_densities,
+        _features,
+        _nrows,
+        _ncols,
+        _targets );
+
+    // ------------------------------------------------------------------------
     // Add to JSON object.
 
     Poco::JSON::Object obj;
+
+    obj.set( "average_targets_", average_targets_arr );
 
     obj.set( "feature_densities_", densities_arr );
 

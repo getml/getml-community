@@ -18,16 +18,28 @@ class Summarizer
         const size_t _ncols,
         const std::vector<const METRICS_FLOAT*>& _targets );
 
-    /// Calculates the distribution of a feature.
-    static Poco::JSON::Object calculate_feature_densities(
+    /// Calculates the plots needed to analyze the feature.
+    static Poco::JSON::Object calculate_feature_plots(
         const std::vector<METRICS_FLOAT>& _features,
         const size_t _nrows,
         const size_t _ncols,
-        const size_t _num_bins );
+        const size_t _num_bins,
+        const std::vector<const METRICS_FLOAT*>& _targets );
 
     // ---------------------------------------------------------------------
 
    private:
+    /// Calculates the average targets, which are displayed in the feature view.
+    static Poco::JSON::Array::Ptr calculate_average_targets(
+        const std::vector<METRICS_FLOAT>& _minima,
+        const std::vector<METRICS_FLOAT>& _step_sizes,
+        const std::vector<size_t>& _actual_num_bins,
+        const std::vector<std::vector<METRICS_INT>>& _feature_densities,
+        const std::vector<METRICS_FLOAT>& _features,
+        const size_t _nrows,
+        const size_t _ncols,
+        const std::vector<const METRICS_FLOAT*>& _targets );
+
     /// Helper function for calculating labels, which
     /// are needed for column densities and average targets.
     static Poco::JSON::Array::Ptr calculate_labels(
