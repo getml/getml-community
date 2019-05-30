@@ -7,6 +7,9 @@ namespace metrics
 
 struct Scorer
 {
+    /// Returns the metrics in the object.
+    static Poco::JSON::Object get_metrics( const Poco::JSON::Object& _obj );
+
     /// Calculates scores.
     static Poco::JSON::Object score(
         const bool _is_classification,

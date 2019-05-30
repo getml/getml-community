@@ -714,7 +714,7 @@ Poco::JSON::Object Model<FeatureEngineererType>::score(
 
     // ------------------------------------------------
 
-    return obj;
+    return metrics::Scorer::get_metrics( obj );
 
     // ------------------------------------------------
 }

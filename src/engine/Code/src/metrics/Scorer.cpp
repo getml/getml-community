@@ -4,6 +4,46 @@ namespace metrics
 {
 // ----------------------------------------------------------------------------
 
+Poco::JSON::Object Scorer::get_metrics( const Poco::JSON::Object& _obj )
+{
+    Poco::JSON::Object result;
+
+    if ( _obj.has( "accuracy_" ) )
+        {
+            result.set( "accuracy_", JSON::get_array( _obj, "accuracy_" ) );
+        }
+
+    if ( _obj.has( "auc_" ) )
+        {
+            result.set( "auc_", JSON::get_array( _obj, "auc_" ) );
+        }
+
+    if ( _obj.has( "cross_entropy_" ) )
+        {
+            result.set(
+                "cross_entropy_", JSON::get_array( _obj, "cross_entropy_" ) );
+        }
+
+    if ( _obj.has( "mae_" ) )
+        {
+            result.set( "mae_", JSON::get_array( _obj, "mae_" ) );
+        }
+
+    if ( _obj.has( "rmse_" ) )
+        {
+            result.set( "rmse_", JSON::get_array( _obj, "rmse_" ) );
+        }
+
+    if ( _obj.has( "rsquared_" ) )
+        {
+            result.set( "rsquared_", JSON::get_array( _obj, "rsquared_" ) );
+        }
+
+    return result;
+}
+
+// ----------------------------------------------------------------------------
+
 Poco::JSON::Object Scorer::score(
     const bool _is_classification,
     const METRICS_FLOAT* const _yhat,
