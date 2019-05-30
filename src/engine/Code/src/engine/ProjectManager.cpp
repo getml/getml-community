@@ -67,7 +67,7 @@ void ProjectManager::clear()
     multithreading::WriteLock write_lock( read_write_lock_ );
 
     // --------------------------------
-    // Remove from monitor
+    // Remove from monitor.
 
     for ( auto& pair : data_frames() )
         {
@@ -82,11 +82,11 @@ void ProjectManager::clear()
         }
 
     // --------------------------------
-    // Clear encodings
+    // Remove from engine.
 
     data_frames().clear();
 
-    // models().clear();
+    relboost_models().clear();
 
     categories().clear();
 
@@ -122,7 +122,7 @@ void ProjectManager::delete_relboost_model(
 
     FileHandler::remove( _name, project_directory_, _cmd, &relboost_models() );
 
-    // monitor_->send( "removemodel", "{\"name\":\"" + _name + "\"}" );
+    monitor_->send( "removerelboostmodel", "{\"name\":\"" + _name + "\"}" );
 
     communication::Sender::send_string( "Success!", _socket );
 }

@@ -74,7 +74,7 @@ class Model : public AbstractModel
 
    private:
     /// Calculates the correlations of each feature with the targets.
-    Poco::JSON::Object calculate_feature_correlations(
+    void calculate_feature_stats(
         const std::vector<ENGINE_FLOAT>& _features,
         const size_t _nrows,
         const size_t _ncols,
@@ -263,12 +263,14 @@ Model<FeatureEngineererType>::Model(
 // ----------------------------------------------------------------------------
 
 template <typename FeatureEngineererType>
-Poco::JSON::Object Model<FeatureEngineererType>::calculate_feature_correlations(
+void Model<FeatureEngineererType>::calculate_feature_stats(
     const std::vector<ENGINE_FLOAT>& _features,
     const size_t _nrows,
     const size_t _ncols,
     const typename FeatureEngineererType::DataFrameType& _df )
 {
+    const size_t num_bins = 50;
+
     std::vector<const ENGINE_FLOAT*> targets;
 
     for ( size_t j = 0; j < _df.num_targets(); ++j )
@@ -276,8 +278,11 @@ Poco::JSON::Object Model<FeatureEngineererType>::calculate_feature_correlations(
             targets.push_back( _df.target_col( j ).begin() );
         }
 
-    return metrics::Summarizer::calculate_feature_correlations(
-        _features, _nrows, _ncols, targets );
+    scores_.from_json_obj( metrics::Summarizer::calculate_feature_correlations(
+        _features, _nrows, _ncols, targets ) );
+
+    scores_.from_json_obj( metrics::Summarizer::calculate_feature_densities(
+        _features, _nrows, _ncols, num_bins ) );
 }
 
 // ----------------------------------------------------------------------------
@@ -862,8 +867,8 @@ containers::Matrix<ENGINE_FLOAT> Model<FeatureEngineererType>::transform(
 
     if ( score )
         {
-            scores_.from_json_obj( calculate_feature_correlations(
-                *features, nrows, ncols, population_table ) );
+            calculate_feature_stats(
+                *features, nrows, ncols, population_table );
         }
 
     // ------------------------------------------------------------------------
