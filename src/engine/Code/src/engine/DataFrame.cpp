@@ -464,7 +464,9 @@ void DataFrame::create_indices()
                                     map[current_join_key[ix_x_perip]] = {
                                         ix_x_perip};
                                 }
-                            else
+                            else if (
+                                it->second.size() > 0 &&
+                                it->second.back() < ix_x_perip )
                                 {
                                     it->second.push_back( ix_x_perip );
                                 }
@@ -579,10 +581,6 @@ void DataFrame::from_db(
     // ----------------------------------------
 
     df.check_plausibility();
-
-    // ----------------------------------------
-
-    df.create_indices();
 
     // ----------------------------------------
 
@@ -776,8 +774,6 @@ void DataFrame::load( const std::string &_path )
     // Create index
 
     check_plausibility();
-
-    create_indices();
 
     // ---------------------------------------------------------------------
 }

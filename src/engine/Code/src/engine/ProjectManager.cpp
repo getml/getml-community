@@ -215,6 +215,8 @@ void ProjectManager::load_data_frame(
     monitor_->send( "postdataframe", data_frames()[_name].to_monitor( _name ) );
 
     engine::communication::Sender::send_string( "Success!", _socket );
+
+    // --------------------------------------------------------------------
 }
 
 // ------------------------------------------------------------------------
