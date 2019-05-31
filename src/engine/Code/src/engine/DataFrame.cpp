@@ -445,13 +445,7 @@ void DataFrame::create_indices()
 
             const auto &current_join_key = join_key( i );
 
-            const size_t batch_begin =
-                ( map.size() == 0
-                      ? 0
-                      : current_join_key
-                            .batches()[current_join_key.num_batches() - 1] );
-
-            for ( size_t ix_x_perip = batch_begin;
+            for ( size_t ix_x_perip = indices_begin_;
                   ix_x_perip < current_join_key.nrows();
                   ++ix_x_perip )
                 {
@@ -464,14 +458,17 @@ void DataFrame::create_indices()
                                     map[current_join_key[ix_x_perip]] = {
                                         ix_x_perip};
                                 }
-                            else if (
-                                it->second.size() > 0 &&
-                                it->second.back() < ix_x_perip )
+                            else
                                 {
                                     it->second.push_back( ix_x_perip );
                                 }
                         }
                 }
+        }
+
+    if ( join_keys().size() > 0 )
+        {
+            indices_begin_ = join_key( 0 ).size();
         }
 }
 
@@ -587,6 +584,130 @@ void DataFrame::from_db(
     *this = std::move( df );
 
     // ----------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+void DataFrame::from_json(
+    const Poco::JSON::Object &_obj,
+    const std::vector<std::string> &_categorical_names,
+    const std::vector<std::string> &_discrete_names,
+    const std::vector<std::string> &_join_key_names,
+    const std::vector<std::string> &_numerical_names,
+    const std::vector<std::string> &_target_names,
+    const std::vector<std::string> &_time_stamp_names )
+{
+    // ----------------------------------------
+
+    std::vector<std::string> time_formats;
+
+    if ( _obj.has( "time_formats" ) )
+        {
+            time_formats = JSON::array_to_vector<std::string>(
+                JSON::get_array( _obj, "time_formats" ) );
+        }
+
+    // ----------------------------------------
+
+    auto df = DataFrame( categories_, join_keys_encoding_ );
+
+    df.from_json( _obj, _categorical_names, "categorical", categories_.get() );
+
+    df.from_json( _obj, _discrete_names, "discrete" );
+
+    df.from_json(
+        _obj, _join_key_names, "join_key", join_keys_encoding_.get() );
+
+    df.from_json( _obj, _numerical_names, "numerical" );
+
+    df.from_json( _obj, _target_names, "target" );
+
+    df.from_json( _obj, _time_stamp_names, time_formats );
+
+    // ----------------------------------------
+
+    df.check_plausibility();
+
+    // ----------------------------------------
+
+    *this = std::move( df );
+
+    // ----------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+void DataFrame::from_json(
+    const Poco::JSON::Object &_obj,
+    const std::vector<std::string> &_names,
+    const std::string &_type,
+    Encoding *_encoding )
+{
+    for ( size_t i = 0; i < _names.size(); ++i )
+        {
+            const auto &name = _names[i];
+
+            const auto arr = JSON::get_array( _obj, name );
+
+            auto column = Matrix<ENGINE_INT>( arr->size(), 1 );
+
+            for ( size_t j = 0; j < arr->size(); ++j )
+                {
+                    column[j] =
+                        ( *_encoding )[arr->getElement<std::string>( j )];
+                }
+
+            add_int_column( column, _type, i );
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+void DataFrame::from_json(
+    const Poco::JSON::Object &_obj,
+    const std::vector<std::string> &_names,
+    const std::string &_type )
+{
+    for ( size_t i = 0; i < _names.size(); ++i )
+        {
+            const auto &name = _names[i];
+
+            const auto arr = JSON::get_array( _obj, name );
+
+            auto column = Matrix<ENGINE_FLOAT>( arr->size(), 1 );
+
+            for ( size_t j = 0; j < arr->size(); ++j )
+                {
+                    column[j] = arr->getElement<ENGINE_FLOAT>( j );
+                }
+
+            add_float_column( column, _type, i );
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+void DataFrame::from_json(
+    const Poco::JSON::Object &_obj,
+    const std::vector<std::string> &_names,
+    const std::vector<std::string> &_time_formats )
+{
+    for ( size_t i = 0; i < _names.size(); ++i )
+        {
+            const auto &name = _names[i];
+
+            const auto arr = JSON::get_array( _obj, name );
+
+            auto column = Matrix<ENGINE_FLOAT>( arr->size(), 1 );
+
+            for ( size_t j = 0; j < arr->size(); ++j )
+                {
+                    column[j] = csv::Parser::to_time_stamp(
+                        arr->getElement<std::string>( j ), _time_formats );
+                }
+
+            add_float_column( column, "time_stamp", i );
+        }
 }
 
 // ----------------------------------------------------------------------------

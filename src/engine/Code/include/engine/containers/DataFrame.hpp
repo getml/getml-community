@@ -13,6 +13,7 @@ class DataFrame
     DataFrame()
         : categories_( std::make_shared<Encoding>() ),
           indices_( std::vector<std::shared_ptr<ENGINE_INDEX>>( 0 ) ),
+          indices_begin_( 0 ),
           join_keys_encoding_( std::make_shared<Encoding>() )
     {
     }
@@ -22,6 +23,7 @@ class DataFrame
         const std::shared_ptr<Encoding> &_join_keys_encoding )
         : categories_( _categories ),
           indices_( std::vector<std::shared_ptr<ENGINE_INDEX>>( 0 ) ),
+          indices_begin_( 0 ),
           join_keys_encoding_( _join_keys_encoding )
     {
     }
@@ -61,6 +63,16 @@ class DataFrame
     void from_db(
         const std::shared_ptr<database::Connector> _connector,
         const std::string &_tname,
+        const std::vector<std::string> &_categoricals,
+        const std::vector<std::string> &_discretes,
+        const std::vector<std::string> &_join_keys,
+        const std::vector<std::string> &_numericals,
+        const std::vector<std::string> &_targets,
+        const std::vector<std::string> &_time_stamps );
+
+    /// Builds a dataframe from a JSON Object.
+    void from_json(
+        const Poco::JSON::Object &_obj,
         const std::vector<std::string> &_categoricals,
         const std::vector<std::string> &_discretes,
         const std::vector<std::string> &_join_keys,
@@ -318,6 +330,25 @@ class DataFrame
         const std::vector<std::string> &_target_names,
         const std::vector<std::string> &_time_stamp_names ) const;
 
+    /// Parses int columns.
+    void from_json(
+        const Poco::JSON::Object &_obj,
+        const std::vector<std::string> &_names,
+        const std::string &_type,
+        Encoding *_encoding );
+
+    /// Parses float columns.
+    void from_json(
+        const Poco::JSON::Object &_obj,
+        const std::vector<std::string> &_names,
+        const std::string &_type );
+
+    /// Parses time stamp columns.
+    void from_json(
+        const Poco::JSON::Object &_obj,
+        const std::vector<std::string> &_names,
+        const std::vector<std::string> &_time_formats );
+
     /// Returns the colnames of a vector of columns
     template <class T>
     Poco::JSON::Array get_colnames(
@@ -361,6 +392,9 @@ class DataFrame
 
     /// Performs the role of an "index" over the join keys
     std::vector<std::shared_ptr<ENGINE_INDEX>> indices_;
+
+    /// Stores the first row number for which we do not have an index.
+    size_t indices_begin_;
 
     /// Join keys - note that their might be several
     std::vector<Matrix<ENGINE_INT>> join_keys_;
