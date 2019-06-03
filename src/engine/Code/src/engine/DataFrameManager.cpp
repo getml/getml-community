@@ -213,6 +213,7 @@ void DataFrameManager::close(
 void DataFrameManager::from_db(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,
+    const bool _append,
     Poco::Net::StreamSocket* _socket )
 {
     // --------------------------------------------------------------------
@@ -286,7 +287,7 @@ void DataFrameManager::from_db(
 
     df.set_join_keys_encoding( join_keys_encoding_ );
 
-    if ( data_frames().find( _name ) == data_frames().end() )
+    if ( !_append || data_frames().find( _name ) == data_frames().end() )
         {
             data_frames()[_name] = df;
         }
@@ -309,6 +310,7 @@ void DataFrameManager::from_db(
 void DataFrameManager::from_json(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,
+    const bool _append,
     Poco::Net::StreamSocket* _socket )
 {
     // --------------------------------------------------------------------
@@ -392,7 +394,7 @@ void DataFrameManager::from_json(
 
     df.set_join_keys_encoding( join_keys_encoding_ );
 
-    if ( data_frames().find( _name ) == data_frames().end() )
+    if ( !_append || data_frames().find( _name ) == data_frames().end() )
         {
             data_frames()[_name] = df;
         }

@@ -49,12 +49,14 @@ class DataFrameManager
     void from_db(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
+        const bool _append,
         Poco::Net::StreamSocket* _socket );
 
     /// Creates a new data frame from a JSON string.
     void from_json(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
+        const bool _append,
         Poco::Net::StreamSocket* _socket );
 
     /// Sends a categorical columm to the client

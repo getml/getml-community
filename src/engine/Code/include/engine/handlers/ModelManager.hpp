@@ -337,12 +337,22 @@ Poco::JSON::Object ModelManager<ModelType>::receive_data(
 
             const auto type = JSON::get_value<std::string>( cmd, "type_" );
 
-            if ( type != "DataFrame" )
+            if ( type == "DataFrame" )
+                {
+                    local_data_frame_manager.add_data_frame( name, _socket );
+                }
+            else if ( type == "DataFrame.from_db" )
+                {
+                    local_data_frame_manager.from_db( name, cmd, false, _socket );
+                }
+            else if ( type == "DataFrame.from_json" )
+                {
+                    local_data_frame_manager.from_json( name, cmd, false, _socket );
+                }
+            else
                 {
                     break;
                 }
-
-            local_data_frame_manager.add_data_frame( name, _socket );
 
             cmd = communication::Receiver::recv_cmd( logger_, _socket );
         }
