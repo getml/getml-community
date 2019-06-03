@@ -73,6 +73,7 @@ class DataFrame
     /// Builds a dataframe from a JSON Object.
     void from_json(
         const Poco::JSON::Object &_obj,
+        const std::vector<std::string> _time_formats,
         const std::vector<std::string> &_categoricals,
         const std::vector<std::string> &_discretes,
         const std::vector<std::string> &_join_keys,

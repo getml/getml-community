@@ -308,6 +308,114 @@ void DataFrameManager::from_db(
 
 // ------------------------------------------------------------------------
 
+void DataFrameManager::from_json(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    // --------------------------------------------------------------------
+    // Create the data frame as an object.
+
+    const auto json_str = communication::Receiver::recv_string( _socket );
+
+    const auto obj = *Poco::JSON::Parser()
+                          .parse( json_str )
+                          .extract<Poco::JSON::Object::Ptr>();
+
+    // --------------------------------------------------------------------
+    // Parse the command.
+
+    const auto categoricals = JSON::array_to_vector<std::string>(
+        JSON::get_array( _cmd, "categoricals_" ) );
+
+    const auto discretes = JSON::array_to_vector<std::string>(
+        JSON::get_array( _cmd, "discretes_" ) );
+
+    const auto join_keys = JSON::array_to_vector<std::string>(
+        JSON::get_array( _cmd, "join_keys_" ) );
+
+    const auto numericals = JSON::array_to_vector<std::string>(
+        JSON::get_array( _cmd, "numericals_" ) );
+
+    const auto targets = JSON::array_to_vector<std::string>(
+        JSON::get_array( _cmd, "targets_" ) );
+
+    const auto time_stamps = JSON::array_to_vector<std::string>(
+        JSON::get_array( _cmd, "time_stamps_" ) );
+
+    const auto time_formats = JSON::array_to_vector<std::string>(
+        JSON::get_array( _cmd, "time_formats_" ) );
+
+    // --------------------------------------------------------------------
+    // We need the weak write lock for the categories and join keys encoding.
+
+    multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
+
+    // --------------------------------------------------------------------
+    // Create the data frame itself.
+
+    auto local_categories =
+        std::make_shared<containers::Encoding>( categories_ );
+
+    auto local_join_keys_encoding =
+        std::make_shared<containers::Encoding>( join_keys_encoding_ );
+
+    auto df =
+        containers::DataFrame( local_categories, local_join_keys_encoding );
+
+    df.name() = _name;
+
+    // --------------------------------------------------------------------
+    // Parse the data from the JSON string.
+
+    df.from_json(
+        obj,
+        time_formats,
+        categoricals,
+        discretes,
+        join_keys,
+        numericals,
+        targets,
+        time_stamps );
+
+    // --------------------------------------------------------------------
+    // Now we upgrade the weak write lock to a strong write lock to commit
+    // the changes.
+
+    weak_write_lock.upgrade();
+
+    // --------------------------------------------------------------------
+
+    categories_->append( *local_categories );
+
+    join_keys_encoding_->append( *local_join_keys_encoding );
+
+    df.set_categories( categories_ );
+
+    df.set_join_keys_encoding( join_keys_encoding_ );
+
+    if ( data_frames().find( _name ) == data_frames().end() )
+        {
+            data_frames()[_name] = df;
+        }
+    else
+        {
+            data_frames()[_name].append( df );
+        }
+
+    data_frames()[_name].create_indices();
+
+    monitor_->send( "postdataframe", data_frames()[_name].to_monitor( _name ) );
+
+    // --------------------------------------------------------------------
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    // --------------------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
 void DataFrameManager::get_categorical_column(
     const Poco::JSON::Object& _cmd, Poco::Net::StreamSocket* _socket )
 {

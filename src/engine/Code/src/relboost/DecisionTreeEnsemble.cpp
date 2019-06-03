@@ -161,6 +161,7 @@ void DecisionTreeEnsemble::clean_up()
     yhat_old_.reset();
     set_comm( nullptr );
 }
+
 // ----------------------------------------------------------------------------
 
 void DecisionTreeEnsemble::extract_schemas(

@@ -81,6 +81,10 @@ void RequestHandler::run()
                 {
                     data_frame_manager().from_db( name, cmd, &socket() );
                 }
+            else if ( type == "DataFrame.from_json" )
+                {
+                    data_frame_manager().from_json( name, cmd, &socket() );
+                }
             else if ( type == "DataFrame.load" )
                 {
                     project_manager().load_data_frame( name, &socket() );

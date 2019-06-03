@@ -590,6 +590,7 @@ void DataFrame::from_db(
 
 void DataFrame::from_json(
     const Poco::JSON::Object &_obj,
+    const std::vector<std::string> _time_formats,
     const std::vector<std::string> &_categorical_names,
     const std::vector<std::string> &_discrete_names,
     const std::vector<std::string> &_join_key_names,
@@ -597,16 +598,6 @@ void DataFrame::from_json(
     const std::vector<std::string> &_target_names,
     const std::vector<std::string> &_time_stamp_names )
 {
-    // ----------------------------------------
-
-    std::vector<std::string> time_formats;
-
-    if ( _obj.has( "time_formats" ) )
-        {
-            time_formats = JSON::array_to_vector<std::string>(
-                JSON::get_array( _obj, "time_formats" ) );
-        }
-
     // ----------------------------------------
 
     auto df = DataFrame( categories_, join_keys_encoding_ );
@@ -622,7 +613,7 @@ void DataFrame::from_json(
 
     df.from_json( _obj, _target_names, "target" );
 
-    df.from_json( _obj, _time_stamp_names, time_formats );
+    df.from_json( _obj, _time_stamp_names, _time_formats );
 
     // ----------------------------------------
 
@@ -702,8 +693,16 @@ void DataFrame::from_json(
 
             for ( size_t j = 0; j < arr->size(); ++j )
                 {
-                    column[j] = csv::Parser::to_time_stamp(
-                        arr->getElement<std::string>( j ), _time_formats );
+                    try
+                        {
+                            column[j] = csv::Parser::to_time_stamp(
+                                arr->getElement<std::string>( j ),
+                                _time_formats );
+                        }
+                    catch ( std::exception &e )
+                        {
+                            column[j] = arr->getElement<ENGINE_FLOAT>( j );
+                        }
                 }
 
             add_float_column( column, "time_stamp", i );
