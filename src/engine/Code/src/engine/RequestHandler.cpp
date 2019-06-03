@@ -79,11 +79,13 @@ void RequestHandler::run()
                 }
             else if ( type == "DataFrame.from_db" )
                 {
-                    data_frame_manager().from_db( name, cmd, &socket() );
+                    project_manager().add_data_frame_from_db(
+                        name, cmd, &socket() );
                 }
             else if ( type == "DataFrame.from_json" )
                 {
-                    data_frame_manager().from_json( name, cmd, &socket() );
+                    project_manager().add_data_frame_from_json(
+                        name, cmd, &socket() );
                 }
             else if ( type == "DataFrame.load" )
                 {

@@ -50,6 +50,18 @@ class ProjectManager
     void add_data_frame(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
 
+    /// Adds a new data frame taken from the database.
+    void add_data_frame_from_db(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
+    /// Adds a new data frame taken parsed from a JSON.
+    void add_data_frame_from_json(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
     /// Adds a new model
     void add_relboost_model(
         const std::string& _name,

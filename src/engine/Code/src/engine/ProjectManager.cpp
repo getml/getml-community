@@ -23,6 +23,44 @@ void ProjectManager::add_data_frame(
 
 // ------------------------------------------------------------------------
 
+void ProjectManager::add_data_frame_from_db(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    if ( project_directory_ == "" )
+        {
+            throw std::invalid_argument( "You have not set a project!" );
+        }
+
+    data_frame_manager_->from_db( _name, _cmd, _socket );
+
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    monitor_->send( "postdataframe", data_frames()[_name].to_monitor( _name ) );
+}
+
+// ------------------------------------------------------------------------
+
+void ProjectManager::add_data_frame_from_json(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    if ( project_directory_ == "" )
+        {
+            throw std::invalid_argument( "You have not set a project!" );
+        }
+
+    data_frame_manager_->from_json( _name, _cmd, _socket );
+
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    monitor_->send( "postdataframe", data_frames()[_name].to_monitor( _name ) );
+}
+
+// ------------------------------------------------------------------------
+
 void ProjectManager::add_relboost_model(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,

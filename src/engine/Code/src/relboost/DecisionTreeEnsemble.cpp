@@ -602,6 +602,21 @@ Poco::JSON::Object DecisionTreeEnsemble::to_monitor(
             obj.set( "population_", placeholder().to_json_obj() );
 
             // ----------------------------------------
+            // Insert schema
+
+            Poco::JSON::Array peripheral_schema_arr;
+
+            for ( size_t i = 0; i < peripheral_schema().size(); ++i )
+                {
+                    peripheral_schema_arr.add(
+                        peripheral_schema()[i].to_json_obj() );
+                }
+
+            obj.set( "peripheral_schema_", peripheral_schema_arr );
+
+            obj.set( "population_schema_", population_schema().to_json_obj() );
+
+            // ----------------------------------------
             // Insert hyperparameters
 
             obj.set( "hyperparameters_", hyperparameters().to_json_obj() );
