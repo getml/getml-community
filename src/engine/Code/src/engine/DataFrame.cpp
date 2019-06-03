@@ -648,6 +648,10 @@ void DataFrame::from_json(
                         ( *_encoding )[arr->getElement<std::string>( j )];
                 }
 
+            column.name() = _names[i];
+
+            column.set_colnames( {_names[i]} );
+
             add_int_column( column, _type, i );
         }
 }
@@ -671,6 +675,10 @@ void DataFrame::from_json(
                 {
                     column[j] = arr->getElement<ENGINE_FLOAT>( j );
                 }
+
+            column.name() = _names[i];
+
+            column.set_colnames( {_names[i]} );
 
             add_float_column( column, _type, i );
         }
@@ -704,6 +712,10 @@ void DataFrame::from_json(
                             column[j] = arr->getElement<ENGINE_FLOAT>( j );
                         }
                 }
+
+            column.name() = _names[i];
+
+            column.set_colnames( {_names[i]} );
 
             add_float_column( column, "time_stamp", i );
         }
