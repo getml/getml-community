@@ -663,9 +663,16 @@ void DataFrame::from_json(
     const std::vector<std::string> &_names,
     const std::string &_type )
 {
+    size_t count = 0;
+
     for ( size_t i = 0; i < _names.size(); ++i )
         {
             const auto &name = _names[i];
+
+            if ( _type == "target" && !_obj.has( name ) )
+                {
+                    continue;
+                }
 
             const auto arr = JSON::get_array( _obj, name );
 
@@ -680,7 +687,7 @@ void DataFrame::from_json(
 
             column.set_colnames( {_names[i]} );
 
-            add_float_column( column, _type, i );
+            add_float_column( column, _type, count++ );
         }
 }
 
