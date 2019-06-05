@@ -54,6 +54,14 @@ class Sqlite3 : public Connector
     /// Lists the name of the tables held in the database.
     std::vector<std::string> list_tables() final;
 
+    /// Returns a shared_ptr containing a Sqlite3Iterator where
+    /// _join_key is any one of _values.
+    std::shared_ptr<Iterator> select(
+        const std::vector<std::string>& _colnames,
+        const std::string& _tname,
+        const std::string& _join_key,
+        const std::vector<std::string>& _values ) final;
+
     // -------------------------------
 
    public:

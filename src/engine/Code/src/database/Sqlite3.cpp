@@ -553,4 +553,36 @@ void Sqlite3::read_csv(
 }
 
 // ----------------------------------------------------------------------------
+
+std::shared_ptr<Iterator> Sqlite3::select(
+    const std::vector<std::string>& _colnames,
+    const std::string& _tname,
+    const std::string& _join_key,
+    const std::vector<std::string>& _values )
+{
+    if ( _values.size() == 0 )
+        {
+            throw std::invalid_argument(
+                std::string( "No values provided for column " ) + _join_key +
+                std::string( " in " ) + _tname + "!" );
+        }
+
+    const auto colname = std::string( "\"" ) + _join_key + "\"";
+
+    std::string where;
+
+    for ( size_t i = 0; i < _values.size(); ++i )
+        {
+            where += colname + " = '" + _values[i] + "'";
+
+            if ( i < _values.size() - 1 )
+                {
+                    where += " OR ";
+                }
+        }
+
+    return select( _colnames, _tname, where );
+}
+
+// ----------------------------------------------------------------------------
 }  // namespace database
