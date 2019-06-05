@@ -5,69 +5,29 @@
 // Dependencies
 
 #include <cassert>
-#include <cstdint>
-#include <numeric>
+#include <cmath>
 
 #include <algorithm>
-#include <chrono>
-#include <fstream>
-#include <functional>
-#include <iostream>
-#include <limits>
-#include <list>
-#include <map>
+#include <array>
 #include <memory>
-#include <random>
-#include <sstream>
-#include <string>
-#include <unordered_map>
-#include <utility>
+#include <type_traits>
 #include <vector>
 
-#include "Poco/JSON/Object.h"
+#include <Poco/JSON/Object.h>
 
-#include <Poco/File.h>
-#include <Poco/JSON/Parser.h>
-#include <Poco/Path.h>
+#include "debug/debug.hpp"
 
-#include "types.hpp"
+#include "autosql/types.hpp"
 
-#include "config.hpp"
-
-#ifdef AUTOSQL_MULTITHREADING
-#include "multithreading/multithreading.hpp"
-#endif  // AUTOSQL_MULTITHREADING
-
-#include "debug.hpp"
-
-#include "Endianness.hpp"
-
-#include "JSON.hpp"
-
-#include "Sample.hpp"
+#include "autosql/JSON.hpp"
 
 // ----------------------------------------------------
 // Module files
 
-#include "containers/CategoryIndex.hpp"
+#include "autosql/containers/Column.hpp"
+#include "autosql/containers/Schema.hpp"
 
-#include "containers/Encoding.hpp"
-
-#include "containers/Matrix.hpp"
-
-#include "containers/ColumnView.hpp"
-
-#include "containers/MatrixView.hpp"
-
-#include "containers/DataFrame.hpp"
-
-#include "containers/DataFrameView.hpp"
-
-#include "containers/Summarizer.hpp"
-
-#include "containers/IntSet.hpp"
-
-#include "containers/Optional.hpp"
+#include "autosql/containers/DataFrame.hpp"
 
 // ----------------------------------------------------
 

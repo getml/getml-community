@@ -1,4 +1,4 @@
-#include "containers/containers.hpp"
+#include "autosql/containers/containers.hpp"
 
 namespace autosql
 {
@@ -6,854 +6,213 @@ namespace containers
 {
 // ----------------------------------------------------------------------------
 
-void DataFrame::append( DataFrame &_other )
+DataFrame::DataFrame(
+    const std::vector<Column<AUTOSQL_INT>>& _categoricals,
+    const std::vector<Column<AUTOSQL_FLOAT>>& _discretes,
+    const std::vector<std::shared_ptr<AUTOSQL_INDEX>>& _indices,
+    const std::vector<Column<AUTOSQL_INT>>& _join_keys,
+    const std::string& _name,
+    const std::vector<Column<AUTOSQL_FLOAT>>& _numericals,
+    const std::vector<Column<AUTOSQL_FLOAT>>& _targets,
+    const std::vector<Column<AUTOSQL_FLOAT>>& _time_stamps )
+    : categoricals_( _categoricals ),
+      discretes_( _discretes ),
+      indices_( _indices ),
+      join_keys_( _join_keys ),
+      name_( _name ),
+      numericals_( _numericals ),
+      targets_( _targets ),
+      time_stamps_( _time_stamps )
 {
-    if ( join_keys().size() != _other.join_keys().size() )
+    assert( _join_keys.size() > 0 );
+    assert( _time_stamps.size() > 0 );
+    assert( _indices.size() == _join_keys.size() );
+
+    for ( auto& col : _categoricals )
         {
-            throw std::invalid_argument(
-                "Append: Number of join keys does not match!" );
+            assert( col.nrows_ == nrows() );
         }
 
-    if ( time_stamps_all().size() != _other.time_stamps_all().size() )
+    for ( auto& col : _discretes )
         {
-            throw std::invalid_argument(
-                "Append: Number of time stamp does not match!" );
+            assert( col.nrows_ == nrows() );
         }
 
-    categorical().append( _other.categorical() );
-
-    discrete().append( _other.discrete() );
-
-    for ( size_t i = 0; i < join_keys().size(); ++i )
+    for ( auto& col : _join_keys )
         {
-            join_key( i ).append( _other.join_key( i ) );
+            assert( col.nrows_ == nrows() );
         }
 
-    numerical().append( _other.numerical() );
-
-    targets().append( _other.targets() );
-
-    for ( size_t i = 0; i < time_stamps_all().size(); ++i )
+    for ( auto& col : _numericals )
         {
-            time_stamps( i ).append( _other.time_stamps( i ) );
+            assert( col.nrows_ == nrows() );
+        }
+
+    for ( auto& col : _targets )
+        {
+            assert( col.nrows_ == nrows() );
+        }
+
+    for ( auto& col : _time_stamps )
+        {
+            assert( col.nrows_ == nrows() );
         }
 }
 
 // ----------------------------------------------------------------------------
 
-void DataFrame::clear()
+DataFrame::DataFrame(
+    const std::vector<Column<AUTOSQL_INT>>& _categorical,
+    const std::vector<Column<AUTOSQL_FLOAT>>& _discrete,
+    const std::vector<Column<AUTOSQL_INT>>& _join_keys,
+    const std::string& _name,
+    const std::vector<Column<AUTOSQL_FLOAT>>& _numerical,
+    const std::vector<Column<AUTOSQL_FLOAT>>& _target,
+    const std::vector<Column<AUTOSQL_FLOAT>>& _time_stamps )
+    : DataFrame(
+          _categorical,
+          _discrete,
+          DataFrame::create_indices( _join_keys ),
+          _join_keys,
+          _name,
+          _numerical,
+          _target,
+          _time_stamps )
 {
-    categorical().clear();
-
-    discrete().clear();
-
-    std::for_each(
-        join_keys().begin(), join_keys().end(), []( Matrix<AUTOSQL_INT> &mat ) {
-            mat.clear();
-        } );
-
-    numerical().clear();
-
-    targets().clear();
-
-    std::for_each(
-        time_stamps_all().begin(),
-        time_stamps_all().end(),
-        []( Matrix<AUTOSQL_FLOAT> &mat ) { mat.clear(); } );
-
-    indices().clear();
 }
 
 // ----------------------------------------------------------------------------
 
-void DataFrame::check_plausibility() const
+std::vector<std::shared_ptr<AUTOSQL_INDEX>> DataFrame::create_indices(
+    const std::vector<Column<AUTOSQL_INT>>& _join_keys )
 {
-    if ( join_keys().size() == 0 )
+    std::vector<std::shared_ptr<AUTOSQL_INDEX>> indices;
+
+    for ( size_t i = 0; i < _join_keys.size(); ++i )
         {
-            throw std::invalid_argument(
-                "You need to provide at least one column of join keys in " +
-                name() + "!" );
-        }
+            AUTOSQL_INDEX new_index;
 
-    if ( time_stamps_all().size() == 0 )
-        {
-            throw std::invalid_argument(
-                "You need to provide at least one column of time stamps in " +
-                name() + "!" );
-        }
+            const auto& current_join_key = _join_keys[i];
 
-    auto expected_nrows = join_key( 0 ).nrows();
-
-    const bool any_join_key_does_not_match = std::any_of(
-        join_keys().begin(),
-        join_keys().end(),
-        [expected_nrows]( const containers::Matrix<AUTOSQL_INT> &mat ) {
-            return mat.nrows() != expected_nrows;
-        } );
-
-    const bool any_time_stamp_does_not_match = std::any_of(
-        time_stamps_all().begin(),
-        time_stamps_all().end(),
-        [expected_nrows]( const containers::Matrix<AUTOSQL_FLOAT> &mat ) {
-            return mat.nrows() != expected_nrows;
-        } );
-
-    if ( categorical().nrows() != expected_nrows ||
-         discrete().nrows() != expected_nrows ||
-         targets().nrows() != expected_nrows || any_join_key_does_not_match ||
-         any_time_stamp_does_not_match )
-        {
-            throw std::runtime_error(
-                "Something went very wrong during data loading: The number of "
-                "rows in different elements of " +
-                name() +
-                " do not "
-                "match!" );
-        }
-}
-
-// ----------------------------------------------------------------------------
-
-void DataFrame::create_indices()
-{
-    if ( indices().size() != join_keys().size() )
-        {
-            indices().resize( join_keys().size() );
-        }
-
-    for ( AUTOSQL_SIZE i = 0; i < join_keys().size(); ++i )
-        {
-            if ( !indices()[i] )
-                {
-                    indices()[i] = std::make_shared<AUTOSQL_INDEX>();
-                }
-
-            AUTOSQL_INDEX &map = *indices()[i];
-
-            const auto &current_join_key = join_key( i );
-
-            const AUTOSQL_INT batch_begin =
-                ( map.size() == 0
-                      ? 0
-                      : current_join_key
-                            .batches()[current_join_key.num_batches() - 1] );
-
-            for ( AUTOSQL_INT ix_x_perip = batch_begin;
-                  ix_x_perip < current_join_key.nrows();
+            for ( size_t ix_x_perip = 0; ix_x_perip < current_join_key.nrows_;
                   ++ix_x_perip )
                 {
                     if ( current_join_key[ix_x_perip] >= 0 )
                         {
-                            auto it = map.find( current_join_key[ix_x_perip] );
+                            auto it =
+                                new_index.find( current_join_key[ix_x_perip] );
 
-                            if ( it == map.end() )
+                            if ( it == new_index.end() )
                                 {
-                                    map[current_join_key[ix_x_perip]] = {
+                                    new_index[current_join_key[ix_x_perip]] = {
                                         ix_x_perip};
                                 }
-                            else if (
-                                it->second.size() > 0 &&
-                                it->second.back() < ix_x_perip )
+                            else
                                 {
                                     it->second.push_back( ix_x_perip );
                                 }
                         }
                 }
+
+            indices.push_back( std::make_shared<AUTOSQL_INDEX>( new_index ) );
         }
+
+    return indices;
 }
 
 // ----------------------------------------------------------------------------
 
-void DataFrame::float_matrix(
-    containers::Matrix<AUTOSQL_FLOAT> &_mat,
-    const std::string &_role,
-    const std::string _name,
-    const AUTOSQL_SIZE _num )
+DataFrame DataFrame::create_subview(
+    const std::string& _name,
+    const std::string& _join_key,
+    const std::string& _time_stamp,
+    const std::string& _upper_time_stamp ) const
 {
-    if ( _role == "discrete" )
+    // ---------------------------------------------------------------------------
+
+    size_t ix_join_key = 0;
+
+    for ( ; ix_join_key < join_keys_.size(); ++ix_join_key )
         {
-            discrete_ = _mat;
-        }
-    else if ( _role == "numerical" )
-        {
-            numerical_ = _mat;
-        }
-    else if ( _role == "targets" )
-        {
-            targets_ = _mat;
-        }
-    else if ( _role == "time_stamps" )
-        {
-            if ( _num < num_time_stamps() )
-                {
-                    time_stamps_[_num] = _mat;
-
-                    time_stamps_[_num].name() = _name;
-                }
-            else if ( _num == num_time_stamps() )
-                {
-                    time_stamps_.push_back( _mat );
-
-                    time_stamps_.back().name() = _name;
-                }
-            else
-                {
-                    throw std::runtime_error(
-                        "Time stamps index " + std::to_string( _num ) +
-                        " out of range!" );
-                }
-        }
-    else
-        {
-            throw std::invalid_argument( "Role for float matrix not known!" );
-        }
-}
-
-// ----------------------------------------------------------------------------
-
-containers::Matrix<AUTOSQL_FLOAT> &DataFrame::float_matrix(
-    const std::string &_role, const AUTOSQL_SIZE _num )
-{
-    if ( _role == "discrete" )
-        {
-            return discrete_;
-        }
-    else if ( _role == "numerical" )
-        {
-            return numerical_;
-        }
-    else if ( _role == "targets" )
-        {
-            return targets_;
-        }
-    else if ( _role == "time_stamps" )
-        {
-            return time_stamps_[_num];
-        }
-
-    throw std::invalid_argument( "Role for float matrix not known!" );
-}
-
-// ----------------------------------------------------------------------------
-
-Poco::JSON::Object DataFrame::get_colnames()
-{
-    // ----------------------------------------
-
-    Poco::JSON::Object obj;
-
-    // ----------------------------------------
-
-    obj.set( "categorical_", categorical().colnames().get()[0] );
-
-    obj.set( "discrete_", discrete().colnames().get()[0] );
-
-    {
-        std::vector<std::string> join_keys_names;
-
-        std::for_each(
-            join_keys().begin(),
-            join_keys().end(),
-            [&join_keys_names]( containers::Matrix<AUTOSQL_INT> &mat ) {
-                join_keys_names.push_back( mat.colname( 0 ) );
-            } );
-
-        obj.set( "join_keys_", join_keys_names );
-    }
-
-    obj.set( "numerical_", numerical().colnames().get()[0] );
-
-    obj.set( "targets_", targets().colnames().get()[0] );
-
-    {
-        std::vector<std::string> time_stamps_names;
-
-        std::for_each(
-            time_stamps_all().begin(),
-            time_stamps_all().end(),
-            [&time_stamps_names]( containers::Matrix<AUTOSQL_FLOAT> &mat ) {
-                time_stamps_names.push_back( mat.colname( 0 ) );
-            } );
-
-        obj.set( "time_stamps_", time_stamps_names );
-    }
-
-    // ----------------------------------------
-
-    return obj;
-}
-
-// ----------------------------------------------------------------------------
-
-Poco::JSON::Object DataFrame::get_content(
-    const std::int32_t _draw,
-    const std::int32_t _start,
-    const std::int32_t _length ) const
-{
-    // ----------------------------------------
-
-    check_plausibility();
-
-    // ----------------------------------------
-
-    if ( _length < 0 )
-        {
-            throw std::invalid_argument( "length must be positive!" );
-        }
-
-    if ( _start < 0 )
-        {
-            throw std::invalid_argument( "start must be positive!" );
-        }
-
-    if ( _start >= nrows() )
-        {
-            throw std::invalid_argument(
-                "start must be smaller than number of rows!" );
-        }
-
-    // ----------------------------------------
-
-    Poco::JSON::Object obj;
-
-    // ----------------------------------------
-
-    obj.set( "draw", _draw );
-
-    obj.set( "recordsTotal", nrows() );
-
-    obj.set( "recordsFiltered", nrows() );
-
-    // ----------------------------------------
-
-    Poco::JSON::Array data;
-
-    const auto begin = static_cast<unsigned int>( _start );
-
-    const auto end = ( _start + _length > nrows() )
-                         ? nrows()
-                         : static_cast<unsigned int>( _start + _length );
-
-    for ( auto i = begin; i < end; ++i )
-        {
-            Poco::JSON::Array row;
-
-            for ( size_t j = 0; j < num_time_stamps(); ++j )
-                {
-                    row.add( to_time_stamp( time_stamps( j )( i, 0 ) ) );
-                }
-
-            for ( size_t j = 0; j < num_join_keys(); ++j )
-                {
-                    row.add( join_keys_encoding()[join_key( j )( i, 0 )] );
-                }
-
-            for ( std::int32_t j = 0; j < targets().ncols(); ++j )
-                {
-                    row.add( std::to_string( targets()( i, j ) ) );
-                }
-
-            for ( std::int32_t j = 0; j < categorical().ncols(); ++j )
-                {
-                    row.add( categories()[categorical()( i, j )] );
-                }
-
-            for ( std::int32_t j = 0; j < discrete().ncols(); ++j )
-                {
-                    row.add( std::to_string( discrete()( i, j ) ) );
-                }
-
-            for ( std::int32_t j = 0; j < numerical().ncols(); ++j )
-                {
-                    row.add( std::to_string( numerical()( i, j ) ) );
-                }
-
-            data.add( row );
-        }
-
-    obj.set( "data", data );
-
-    // ----------------------------------------
-
-    return obj;
-}
-
-// ----------------------------------------------------------------------------
-
-void DataFrame::int_matrix(
-    containers::Matrix<AUTOSQL_INT> &_mat,
-    const std::string _role,
-    const std::string _name,
-    const AUTOSQL_SIZE _num )
-{
-    if ( _role == "categorical" )
-        {
-            categorical_ = _mat;
-        }
-    else if ( _role == "join_key" )
-        {
-            if ( _num < num_join_keys() )
-                {
-                    join_keys_[_num] = _mat;
-
-                    join_keys_[_num].name() = _name;
-                }
-            else if ( _num == num_join_keys() )
-                {
-                    join_keys_.push_back( _mat );
-
-                    join_keys_.back().name() = _name;
-                }
-            else
-                {
-                    throw std::invalid_argument(
-                        "Join key index " + std::to_string( _num ) +
-                        " out of range!" );
-                }
-        }
-    else
-        {
-            throw std::invalid_argument( "Role for int matrix not known!" );
-        }
-}
-
-// ----------------------------------------------------------------------------
-
-containers::Matrix<AUTOSQL_INT> &DataFrame::int_matrix(
-    const std::string &_role, const AUTOSQL_SIZE _num )
-{
-    if ( _role == "categorical" )
-        {
-            return categorical_;
-        }
-    else if ( _role == "join_key" )
-        {
-            assert( _num < num_join_keys() );
-            return join_keys_[_num];
-        }
-
-    throw std::invalid_argument( "Role for int matrix not known!" );
-}
-
-// ----------------------------------------------------------------------------
-
-void DataFrame::load( const std::string &_path )
-{
-    // ---------------------------------------------------------------------
-    // Make sure that the _path exists and is directory
-
-    {
-        Poco::File file( _path );
-
-        if ( !file.exists() )
-            {
-                throw std::invalid_argument(
-                    "No file or directory named '" +
-                    Poco::Path( _path ).makeAbsolute().toString() + "'!" );
-            }
-
-        if ( !file.isDirectory() )
-            {
-                throw std::invalid_argument(
-                    "'" + Poco::Path( _path ).makeAbsolute().toString() +
-                    "' is not a directory!" );
-            }
-    }
-
-    // ---------------------------------------------------------------------
-    // Load contents
-
-    categorical().load( _path + "categorical" );
-
-    categorical().name() = name();
-
-    discrete().load( _path + "discrete" );
-
-    discrete().name() = name();
-
-    load_join_keys( _path );
-
-    numerical().load( _path + "numerical" );
-
-    numerical().name() = name();
-
-    targets().load( _path + "targets" );
-
-    targets().name() = name();
-
-    load_time_stamps( _path );
-
-    // ---------------------------------------------------------------------
-    // Create index
-
-    check_plausibility();
-
-    create_indices();
-
-    // ---------------------------------------------------------------------
-}
-
-// ----------------------------------------------------------------------------
-
-void DataFrame::load_join_keys( const std::string &_path )
-{
-    join_keys().clear();
-
-    for ( AUTOSQL_SIZE i = 0; true; ++i )
-        {
-            std::string join_key_name =
-                _path + "join_key_" + std::to_string( i );
-
-            if ( !Poco::File( join_key_name ).exists() )
-                {
-#ifdef AUTOSQL_MULTINODE_MPI
-
-                    boost::mpi::communicator comm_world;
-
-                    AUTOSQL_INT one_more_join_key = 0;
-
-                    boost::mpi::broadcast( comm_world, one_more_join_key, 0 );
-
-                    comm_world.barrier();
-
-#endif  // AUTOSQL_MULTINODE_MPI
-
-                    break;
-                }
-            else
-                {
-#ifdef AUTOSQL_MULTINODE_MPI
-
-                    boost::mpi::communicator comm_world;
-
-                    AUTOSQL_INT one_more_join_key = 1;
-
-                    boost::mpi::broadcast( comm_world, one_more_join_key, 0 );
-
-                    comm_world.barrier();
-
-#endif  // AUTOSQL_MULTINODE_MPI
-                }
-
-            containers::Matrix<AUTOSQL_INT> join_key;
-
-            join_key.load( join_key_name );
-
-            join_key.name() = name();
-
-            join_keys().push_back( join_key );
-        }
-}
-
-// ----------------------------------------------------------------------------
-
-void DataFrame::load_time_stamps( const std::string &_path )
-{
-    time_stamps_all().clear();
-
-    for ( AUTOSQL_SIZE i = 0; true; ++i )
-        {
-            std::string time_stamps_name =
-                _path + "time_stamps_" + std::to_string( i );
-
-            if ( !Poco::File( time_stamps_name ).exists() )
-                {
-#ifdef AUTOSQL_MULTINODE_MPI
-
-                    boost::mpi::communicator comm_world;
-
-                    AUTOSQL_INT one_more_time_stamp = 0;
-
-                    boost::mpi::broadcast( comm_world, one_more_time_stamp, 0 );
-
-                    comm_world.barrier();
-
-#endif  // AUTOSQL_MULTINODE_MPI
-
-                    break;
-                }
-            else
-                {
-#ifdef AUTOSQL_MULTINODE_MPI
-
-                    boost::mpi::communicator comm_world;
-
-                    AUTOSQL_INT one_more_time_stamp = 1;
-
-                    boost::mpi::broadcast( comm_world, one_more_time_stamp, 0 );
-
-                    comm_world.barrier();
-
-#endif  // AUTOSQL_MULTINODE_MPI
-                }
-
-            containers::Matrix<AUTOSQL_FLOAT> time_stamps;
-
-            time_stamps.load( time_stamps_name );
-
-            time_stamps.name() = name();
-
-            time_stamps_all().push_back( time_stamps );
-        }
-}
-
-// ----------------------------------------------------------------------------
-
-#ifdef AUTOSQL_MULTINODE_MPI
-
-void DataFrame::load_non_root()
-{
-    categorical().load();
-
-    categorical().name() = name();
-
-    discrete().load();
-
-    discrete().name() = name();
-
-    join_keys_.clear();
-
-    for ( AUTOSQL_SIZE i = 0; true; ++i )
-        {
-            boost::mpi::communicator comm_world;
-
-            AUTOSQL_INT one_more_join_key = 0;
-
-            boost::mpi::broadcast( comm_world, one_more_join_key, 0 );
-
-            comm_world.barrier();
-
-            if ( one_more_join_key == 0 )
+            if ( join_keys_[ix_join_key].name_ == _join_key )
                 {
                     break;
                 }
-
-            containers::Matrix<AUTOSQL_INT> join_key;
-
-            join_key.load();
-
-            join_key.name() = name();
-
-            join_keys_.push_back( join_key );
         }
 
-    numerical().load();
-
-    numerical().name() = name();
-
-    targets().load();
-
-    targets().name() = name();
-
-    for ( AUTOSQL_SIZE i = 0; true; ++i )
+    if ( ix_join_key == join_keys_.size() )
         {
-            boost::mpi::communicator comm_world;
+            throw std::runtime_error(
+                "Join key named '" + _join_key + "' not found in table '" +
+                name_ + "'!" );
+        }
 
-            AUTOSQL_INT one_more_time_stamp = 0;
+    // ---------------------------------------------------------------------------
 
-            boost::mpi::broadcast( comm_world, one_more_time_stamp, 0 );
+    size_t ix_time_stamp = 0;
 
-            comm_world.barrier();
-
-            if ( one_more_time_stamp == 0 )
+    for ( ; ix_time_stamp < time_stamps_.size(); ++ix_time_stamp )
+        {
+            if ( time_stamps_[ix_time_stamp].name_ == _time_stamp )
                 {
                     break;
                 }
-
-            containers::Matrix<AUTOSQL_FLOAT> time_stamps;
-
-            time_stamps.load();
-
-            time_stamps.name() = name();
-
-            time_stamps_.push_back( time_stamps );
         }
 
-    create_indices();
-}
-
-#endif  // AUTOSQL_MULTINODE_MPI
-
-// ----------------------------------------------------------------------------
-
-AUTOSQL_UNSIGNED_LONG DataFrame::nbytes()
-{
-    AUTOSQL_UNSIGNED_LONG nbytes = categorical().nbytes() + discrete().nbytes() +
-                                  numerical().nbytes() + targets().nbytes();
-
-    nbytes = std::accumulate(
-        join_keys().begin(),
-        join_keys().end(),
-        nbytes,
-        []( AUTOSQL_UNSIGNED_LONG &init, containers::Matrix<AUTOSQL_INT> &mat ) {
-            return init + mat.nbytes();
-        } );
-
-    nbytes = std::accumulate(
-        time_stamps_all().begin(),
-        time_stamps_all().end(),
-        nbytes,
-        []( AUTOSQL_UNSIGNED_LONG &init,
-            containers::Matrix<AUTOSQL_FLOAT> &mat ) {
-            return init + mat.nbytes();
-        } );
-
-    return nbytes;
-}
-
-// ----------------------------------------------------------------------------
-
-void DataFrame::save( const std::string &_path )
-{
-    // If the path already exists, delete it to avoid
-    // conflicts with already existing files.
-    if ( Poco::File( _path ).exists() )
+    if ( ix_time_stamp == time_stamps_.size() )
         {
-            Poco::File( _path ).remove( true );
+            throw std::runtime_error(
+                "Time stamp named '" + _time_stamp + "' not found in table '" +
+                name_ + "'!" );
         }
 
-    Poco::File( _path ).createDirectories();
+    // ---------------------------------------------------------------------------
 
-    categorical().save( _path + "categorical" );
-
-    discrete().save( _path + "discrete" );
-
-    for ( AUTOSQL_SIZE i = 0; i < join_keys_.size(); ++i )
+    if ( _upper_time_stamp == "" )
         {
-            join_keys_[i].save( _path + "join_key_" + std::to_string( i ) );
+            return DataFrame(
+                categoricals_,
+                discretes_,
+                {indices_[ix_join_key]},
+                {join_keys_[ix_join_key]},
+                _name,
+                numericals_,
+                targets_,
+                {time_stamps_[ix_time_stamp]} );
         }
 
-    numerical().save( _path + "numerical" );
+    // ---------------------------------------------------------------------------
 
-    targets().save( _path + "targets" );
+    size_t ix_upper_time_stamp = 0;
 
-    for ( AUTOSQL_SIZE i = 0; i < time_stamps_.size(); ++i )
+    for ( ; ix_upper_time_stamp < time_stamps_.size(); ++ix_upper_time_stamp )
         {
-            time_stamps_[i].save(
-                _path + "time_stamps_" + std::to_string( i ) );
+            if ( time_stamps_[ix_upper_time_stamp].name_ == _upper_time_stamp )
+                {
+                    break;
+                }
         }
-}
 
-// ----------------------------------------------------------------------------
-
-#ifdef AUTOSQL_MULTINODE_MPI
-
-void DataFrame::save_non_root()
-{
-    categorical().save();
-
-    discrete().save();
-
-    for ( auto &jk : join_keys_ )
+    if ( ix_upper_time_stamp == time_stamps_.size() )
         {
-            jk.save();
+            throw std::runtime_error(
+                "Time stamp named '" + _upper_time_stamp +
+                "' not found in table '" + name_ + "'!" );
         }
 
-    numerical().save();
+    // ---------------------------------------------------------------------------
 
-    targets().save();
+    return DataFrame(
+        categoricals_,
+        discretes_,
+        {indices_[ix_join_key]},
+        {join_keys_[ix_join_key]},
+        _name,
+        numericals_,
+        targets_,
+        {time_stamps_[ix_time_stamp], time_stamps_[ix_upper_time_stamp]} );
 
-    for ( auto &ts : time_stamps_ )
-        {
-            ts.save();
-        }
-}
-
-#endif  // AUTOSQL_MULTINODE_MPI
-
-// ----------------------------------------------------------------------------
-
-Poco::JSON::Object DataFrame::to_monitor( const std::string _name )
-{
-    Poco::JSON::Object obj;
-
-    // ---------------------------------------------------------------------
-
-    obj.set(
-        "categorical_", JSON::vector_to_array( *categorical().colnames() ) );
-
-    obj.set(
-        "categorical_units_", JSON::vector_to_array( *categorical().units() ) );
-
-    obj.set( "discrete_", JSON::vector_to_array( *discrete().colnames() ) );
-
-    obj.set( "discrete_units_", JSON::vector_to_array( *discrete().units() ) );
-
-    {
-        Poco::JSON::Array join_keys;
-
-        for ( auto &jk : join_keys_ )
-            {
-                join_keys.add( jk.colname( 0 ) );
-            }
-
-        obj.set( "join_keys_", join_keys );
-    }
-
-    obj.set( "name_", _name );
-
-    obj.set( "num_categorical_", categorical().ncols() );
-
-    obj.set( "num_discrete_", discrete().ncols() );
-
-    obj.set( "num_join_keys_", num_join_keys() );
-
-    obj.set( "num_numerical_", numerical().ncols() );
-
-    obj.set( "num_rows_", categorical().nrows() );
-
-    obj.set( "num_targets_", targets().ncols() );
-
-    obj.set( "num_time_stamps_", num_time_stamps() );
-
-    obj.set( "numerical_", JSON::vector_to_array( *numerical().colnames() ) );
-
-    obj.set(
-        "numerical_units_", JSON::vector_to_array( *numerical().units() ) );
-
-    obj.set( "size_", static_cast<AUTOSQL_FLOAT>( nbytes() ) / 1000000.0 );
-
-    obj.set( "targets_", JSON::vector_to_array( *targets().colnames() ) );
-
-    {
-        Poco::JSON::Array time_stamps;
-
-        for ( auto &ts : time_stamps_ )
-            {
-                time_stamps.add( ts.colname( 0 ) );
-            }
-
-        obj.set( "time_stamps_", time_stamps );
-    }
-
-    // ---------------------------------------------------------------------
-
-    obj.set( "summary_", Summarizer::summarize( *this ) );
-
-    // ---------------------------------------------------------------------
-
-    return obj;
-}
-
-// ----------------------------------------------------------------------------
-
-std::string DataFrame::to_time_stamp(
-    const AUTOSQL_FLOAT &_time_stamp_float ) const
-{
-    if ( std::isnan( _time_stamp_float ) )
-        {
-            return "NULL";
-        }
-
-    const std::chrono::time_point<std::chrono::system_clock> epoch_point;
-
-    const auto seconds_since_epoch =
-        static_cast<std::time_t>( 86400.0 * _time_stamp_float );
-
-    const auto time_stamp = std::chrono::system_clock::to_time_t(
-        epoch_point + std::chrono::seconds( seconds_since_epoch ) );
-
-    return std::ctime( &time_stamp );
+    // ---------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------

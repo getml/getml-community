@@ -35,6 +35,8 @@ include_directories(
     "${XGBOOST_DIR}/rabit/include"
 )
 
+
+set(AUTOSQL_SOURCE_DIRECTORY ${PROJECT_SOURCE_DIR}/../Code/src/autosql)
 set(CSV_SOURCE_DIRECTORY ${PROJECT_SOURCE_DIR}/../Code/src/csv)
 set(DATABASE_SOURCE_DIRECTORY ${PROJECT_SOURCE_DIR}/../Code/src/database)
 set(ENGINE_SOURCE_DIRECTORY "${PROJECT_SOURCE_DIR}/../Code/src/engine")
@@ -42,6 +44,7 @@ set(METRICS_SOURCE_DIRECTORY "${PROJECT_SOURCE_DIR}/../Code/src/metrics")
 set(RELBOOST_SOURCE_DIRECTORY "${PROJECT_SOURCE_DIR}/../Code/src/relboost")
 set(SQLITE3_SOURCE_DIRECTORY ${PROJECT_SOURCE_DIR}/../Code/src/sqlite3)
 
+include(${AUTOSQL_SOURCE_DIRECTORY}/obj.txt)
 include(${CSV_SOURCE_DIRECTORY}/obj.txt)
 include(${DATABASE_SOURCE_DIRECTORY}/obj.txt)
 include(${ENGINE_SOURCE_DIRECTORY}/obj.txt)
@@ -66,6 +69,7 @@ add_executable(
 
 add_executable(
 	${RELBOOST_VERSION}-64bit 
+	${AUTOSQL_OBJ}
 	${CSV_OBJ} 
 	${DATABASE_OBJ} 
 	${ENGINE_OBJ} 

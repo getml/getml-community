@@ -1,5 +1,5 @@
-#ifndef AUTOSQL_CONTAINER_DATAFRAME_HPP_
-#define AUTOSQL_CONTAINER_DATAFRAME_HPP_
+#ifndef AUTOSQL_CONTAINERS_DATAFRAME_HPP_
+#define AUTOSQL_CONTAINERS_DATAFRAME_HPP_
 
 namespace autosql
 {
@@ -9,489 +9,357 @@ namespace containers
 
 class DataFrame
 {
+    // ---------------------------------------------------------------------
+
    public:
-    DataFrame()
-        : categories_( std::make_shared<containers::Encoding>() ),
-          indices_( std::vector<std::shared_ptr<AUTOSQL_INDEX>>( 0 ) ),
-          join_keys_encoding_( std::make_shared<containers::Encoding>() ),
-          join_key_used_( -1 ),
-          time_stamps_used_( -1 ),
-          upper_time_stamps_( -1 )
-    {
-    }
+    typedef autosql::containers::Column<AUTOSQL_FLOAT> FloatColumnType;
+
+    typedef autosql::containers::Column<AUTOSQL_INT> IntColumnType;
+
+    // ---------------------------------------------------------------------
+
+   public:
+    DataFrame(
+        const std::vector<Column<AUTOSQL_INT>>& _categoricals,
+        const std::vector<Column<AUTOSQL_FLOAT>>& _discretes,
+        const std::vector<std::shared_ptr<AUTOSQL_INDEX>>& _indices,
+        const std::vector<Column<AUTOSQL_INT>>& _join_keys,
+        const std::string& _name,
+        const std::vector<Column<AUTOSQL_FLOAT>>& _numericals,
+        const std::vector<Column<AUTOSQL_FLOAT>>& _targets,
+        const std::vector<Column<AUTOSQL_FLOAT>>& _time_stamps );
 
     DataFrame(
-        const std::shared_ptr<containers::Encoding> &_categories,
-        const std::shared_ptr<containers::Encoding> &_join_keys_encoding )
-        : categories_( _categories ),
-          indices_( std::vector<std::shared_ptr<AUTOSQL_INDEX>>( 0 ) ),
-          join_keys_encoding_( _join_keys_encoding ),
-          join_key_used_( -1 ),
-          time_stamps_used_( -1 ),
-          upper_time_stamps_( -1 )
-    {
-    }
+        const std::vector<Column<AUTOSQL_INT>>& _categoricals,
+        const std::vector<Column<AUTOSQL_FLOAT>>& _discretes,
+        const std::vector<Column<AUTOSQL_INT>>& _join_keys,
+        const std::string& _name,
+        const std::vector<Column<AUTOSQL_FLOAT>>& _numericals,
+        const std::vector<Column<AUTOSQL_FLOAT>>& _targets,
+        const std::vector<Column<AUTOSQL_FLOAT>>& _time_stamps );
 
     ~DataFrame() = default;
 
-    // -------------------------------
+    // ---------------------------------------------------------------------
 
-    /// Appends another data frame to this data frame.
-    void append( DataFrame &_other );
+   public:
+    /// Creates a subview.
+    DataFrame create_subview(
+        const std::string& _name,
+        const std::string& _join_key,
+        const std::string& _time_stamp,
+        const std::string& _upper_time_stamp ) const;
 
-    /// Deletes all data in the DataFrame object
-    void clear();
+    // ---------------------------------------------------------------------
 
-    /// Makes sure that the data contained in the DataFrame is plausible
-    /// and consistent.
-    void check_plausibility() const;
-
-    /// Builds indices_, which serve the role of
-    /// an "index" over the join keys
-    void create_indices();
-
-    /// Setter for a float_matrix
-    void float_matrix(
-        containers::Matrix<AUTOSQL_FLOAT> &_mat,
-        const std::string &_role,
-        const std::string _name,
-        const AUTOSQL_SIZE _num );
-
-    /// Getter for a float_matrix
-    containers::Matrix<AUTOSQL_FLOAT> &float_matrix(
-        const std::string &_role, const AUTOSQL_SIZE _num );
-
-    /// Returns the encodings as a property tree
-    Poco::JSON::Object get_colnames();
-
-    /// Returns the content of the data frame in a format that is compatible
-    /// with the DataTables.js server-side processing API.
-    Poco::JSON::Object get_content(
-        const std::int32_t _draw,
-        const std::int32_t _start,
-        const std::int32_t _length ) const;
-
-    /// Setter for an int_matrix (either join keys or categorical)
-    void int_matrix(
-        containers::Matrix<AUTOSQL_INT> &_mat,
-        const std::string _role,
-        const std::string _name,
-        const AUTOSQL_SIZE _num );
-
-    /// Getter for an int_matrix (either join keys or categorical)
-    containers::Matrix<AUTOSQL_INT> &int_matrix(
-        const std::string &_role, const AUTOSQL_SIZE _num );
-
-    /// Loads the data from the hard-disk into the engine
-    void load( const std::string &_path );
-
-#ifdef AUTOSQL_MULTINODE_MPI
-
-    /// MPI version only: Non-root companion to load()
-    void load_non_root();
-
-#endif  // AUTOSQL_MULTINODE_MPI
-
-    /// Returns number of bytes occupied by the data
-    AUTOSQL_UNSIGNED_LONG nbytes();
-
-    /// Saves the data on the engine
-    void save( const std::string &_path );
-
-#ifdef AUTOSQL_MULTINODE_MPI
-
-    /// MPI version only: Non-root companion to save()
-    void save_non_root();
-
-#endif  // AUTOSQL_MULTINODE_MPI
-
-    /// Extracts the data frame as a Poco::JSON::Object the monitor process can
-    /// understand
-    Poco::JSON::Object to_monitor( const std::string _name );
-
-    // -------------------------------
-
-    /// Trivial accessor
-    inline containers::Matrix<AUTOSQL_INT> &categorical()
+   public:
+    /// Getter for a categorical value.
+    AUTOSQL_INT categorical( size_t _i, size_t _j ) const
     {
-        return categorical_;
+        assert( _j < categoricals_.size() );
+        return categoricals_[_j][_i];
     }
 
-    /// Trivial accessor
-    inline containers::Matrix<AUTOSQL_INT> const &categorical() const
+    /// Getter for a categorical column.
+    const Column<AUTOSQL_INT> categorical_col( size_t _j ) const
     {
-        return categorical_;
+        assert( _j < categoricals_.size() );
+        return categoricals_[_j];
     }
 
-    /// Trivial accessor
-    inline const containers::Encoding &categories() const
+    /// Getter for a categorical name.
+    const std::string& categorical_name( size_t _j ) const
     {
-        return *categories_.get();
+        assert( _j < categoricals_.size() );
+        return categoricals_[_j].name_;
     }
 
-    /// Trivial accessor
-    inline std::string const &category( const AUTOSQL_INT _i ) const
+    /// Getter for a categorical name.
+    const std::string& categorical_unit( size_t _j ) const
     {
-        assert( _i >= 0 );
-        assert( static_cast<AUTOSQL_SIZE>( _i ) < categories().size() );
-
-        return categories()[_i];
+        assert( _j < categoricals_.size() );
+        return categoricals_[_j].unit_;
     }
 
-    /// Trivial accessor
-    inline containers::Matrix<AUTOSQL_FLOAT> &discrete() { return discrete_; }
-
-    /// Trivial accessor
-    inline containers::Matrix<AUTOSQL_FLOAT> const &discrete() const
+    /// Getter for a discrete value.
+    AUTOSQL_FLOAT discrete( size_t _i, size_t _j ) const
     {
-        return discrete_;
+        assert( _j < discretes_.size() );
+        return discretes_[_j][_i];
     }
 
-    /// Returns the index signified by index _i
-    template <class T>
-    std::shared_ptr<AUTOSQL_INDEX> &index( T _i )
+    /// Getter for a discrete column.
+    const Column<AUTOSQL_FLOAT> discrete_col( size_t _j ) const
     {
-        assert( indices_.size() == join_keys_.size() );
-        assert( join_keys_.size() > 0 );
-        assert( _i >= 0 );
-        assert( static_cast<AUTOSQL_SIZE>( _i ) < indices_.size() );
-        assert( indices_[_i] );
-
-        return indices_[_i];
+        assert( _j < discretes_.size() );
+        return discretes_[_j];
     }
 
-    /// Returns the index signified by index _i
-    template <class T>
-    const std::shared_ptr<const AUTOSQL_INDEX> index( T _i ) const
+    /// Getter for a discrete name.
+    const std::string& discrete_name( size_t _j ) const
     {
-        assert( indices_.size() == join_keys_.size() );
-        assert( join_keys_.size() > 0 );
-        assert( _i >= 0 );
-        assert( static_cast<AUTOSQL_SIZE>( _i ) < indices_.size() );
-        assert( indices_[_i] );
-
-        return indices_[_i];
+        assert( _j < discretes_.size() );
+        return discretes_[_j].name_;
     }
 
-    /// Returns the index signified by index join_key_used_
-    std::shared_ptr<AUTOSQL_INDEX> &index()
+    /// Getter for a discrete name.
+    const std::string& discrete_unit( size_t _j ) const
     {
-        assert( join_key_used_ >= 0 );
-        assert( static_cast<AUTOSQL_SIZE>( join_key_used_ ) < indices_.size() );
-
-        return index( join_key_used_ );
+        assert( _j < discretes_.size() );
+        return discretes_[_j].unit_;
     }
 
-    /// Returns the index signified by index join_key_used_
-    const std::shared_ptr<const AUTOSQL_INDEX> index() const
+    /// Find the indices associated with this join key.
+    AUTOSQL_INDEX::const_iterator find( const AUTOSQL_INT _join_key ) const
     {
-        assert( join_key_used_ >= 0 );
-        assert( static_cast<AUTOSQL_SIZE>( join_key_used_ ) < indices_.size() );
-
-        return index( join_key_used_ );
+        assert( indices().size() > 0 );
+        return indices_[0]->find( _join_key );
     }
 
-    /// Trivial accessor
-    std::vector<std::shared_ptr<AUTOSQL_INDEX>> &indices() { return indices_; }
+    /// Whether a certain join key is included in the indices.
+    bool has( const AUTOSQL_INT _join_key ) const
+    {
+        assert( indices().size() > 0 );
+        return indices_[0]->find( _join_key ) != indices_[0]->end();
+    }
 
-    /// Trivial accessor
-    const std::vector<std::shared_ptr<AUTOSQL_INDEX>> &indices() const
+    /// Getter for the indices (TODO: make this private).
+    const std::vector<std::shared_ptr<AUTOSQL_INDEX>>& indices() const
     {
         return indices_;
     }
 
-    /// Returns the join key signified by index _i
-    template <class T>
-    containers::Matrix<AUTOSQL_INT> &join_key( const T _i )
+    /// Getter for a join key.
+    AUTOSQL_INT join_key( size_t _i ) const
     {
-        assert( join_keys_.size() > 0 );
-        assert( _i >= 0 );
-        assert( _i < static_cast<T>( join_keys_.size() ) );
+        assert( join_keys_.size() == 1 );
 
-        return join_keys_[_i];
+        return join_keys_[0][_i];
     }
 
-    /// Returns the join key signified by index _i
-    template <class T>
-    containers::Matrix<AUTOSQL_INT> const &join_key( const T _i ) const
-    {
-        assert( join_keys_.size() > 0 );
-        assert( _i >= 0 );
-        assert( _i < static_cast<T>( join_keys_.size() ) );
-
-        return join_keys_[_i];
-    }
-
-    /// Returns the join key signified by index join_key_used_
-    containers::Matrix<AUTOSQL_INT> &join_key()
-    {
-        assert( join_keys_.size() > 0 );
-        assert( join_key_used_ >= 0 );
-        assert( join_key_used_ < static_cast<AUTOSQL_INT>( join_keys_.size() ) );
-
-        return join_key( join_key_used_ );
-    }
-
-    /// Returns the join key signified by index join_key_used_
-    containers::Matrix<AUTOSQL_INT> const &join_key() const
-    {
-        assert( join_keys_.size() > 0 );
-        assert( join_key_used_ >= 0 );
-        assert( join_key_used_ < static_cast<AUTOSQL_INT>( join_keys_.size() ) );
-
-        return join_key( join_key_used_ );
-    }
-
-    /// Trivial accessor
-    std::vector<containers::Matrix<AUTOSQL_INT>> &join_keys()
+    /// Getter for a join keys.
+    const std::vector<Column<AUTOSQL_INT>>& join_keys() const
     {
         return join_keys_;
     }
 
-    /// Trivial accessor
-    std::vector<containers::Matrix<AUTOSQL_INT>> const &join_keys() const
+    /// Getter for the join key name.
+    const std::string& join_keys_name() const
     {
-        return join_keys_;
+        assert( join_keys_.size() == 1 );
+
+        return join_keys_[0].name_;
     }
 
-    /// Primitive abstraction for member join_keys_encoding_
-    inline const containers::Encoding &join_keys_encoding() const
+    /// Return the name of the data frame.
+    const std::string& name() const { return name_; }
+
+    /// Trivial getter
+    size_t nrows() const
     {
-        return *join_keys_encoding_.get();
+        assert( join_keys_.size() > 0 );
+        return join_keys_[0].nrows_;
     }
 
-    /// Primitive abstraction for member name_
-    std::string &name() { return name_; }
+    /// Trivial getter
+    size_t num_categoricals() const { return categoricals_.size(); }
 
-    /// Primitive abstraction for member name_
-    const std::string &name() const { return name_; }
+    /// Trivial getter
+    size_t num_discretes() const { return discretes_.size(); }
 
-    /// Get the number of rows
-    const AUTOSQL_INT nrows() const
+    /// Trivial getter
+    size_t num_join_keys() const { return join_keys_.size(); }
+
+    /// Trivial getter
+    size_t num_numericals() const { return numericals_.size(); }
+
+    /// Trivial getter
+    size_t num_targets() const { return targets_.size(); }
+
+    /// Trivial getter
+    size_t num_time_stamps() const { return time_stamps_.size(); }
+
+    /// Getter for a numerical value.
+    AUTOSQL_FLOAT numerical( size_t _i, size_t _j ) const
     {
-        assert( categorical().nrows() == discrete().nrows() );
-        assert( categorical().nrows() == numerical().nrows() );
-        assert( categorical().nrows() == targets().nrows() );
-
-        return categorical().nrows();
+        assert( _j < numericals_.size() );
+        return numericals_[_j][_i];
     }
 
-    /// Returns number of join keys
-    size_t const num_join_keys() const { return join_keys_.size(); }
-
-    /// Returns number of the time stamps
-    size_t const num_time_stamps() const { return time_stamps_.size(); }
-
-    /// Primitive abstraction for member numerical_
-    containers::Matrix<AUTOSQL_FLOAT> &numerical() { return numerical_; }
-
-    /// Primitive abstraction for member numerical_
-    containers::Matrix<AUTOSQL_FLOAT> const &numerical() const
+    /// Getter for a numerical column.
+    const Column<AUTOSQL_FLOAT> numerical_col( size_t _j ) const
     {
-        return numerical_;
+        assert( _j < numericals_.size() );
+        return numericals_[_j];
     }
 
-    /// Primitive setter
-    void set_categories(
-        const std::shared_ptr<containers::Encoding> &_categories )
+    /// Getter for a numerical name.
+    const std::string& numerical_name( size_t _j ) const
     {
-        categories_ = _categories;
+        assert( _j < numericals_.size() );
+        return numericals_[_j].name_;
     }
 
-    /// Primitive setter
-    void set_join_keys_encoding(
-        const std::shared_ptr<containers::Encoding> &_join_keys_encoding )
+    /// Getter for a numerical name.
+    const std::string& numerical_unit( size_t _j ) const
     {
-        join_keys_encoding_ = _join_keys_encoding;
+        assert( _j < numericals_.size() );
+        return numericals_[_j].unit_;
     }
 
-    /// Setter for member join_key_used_
-    template <class T>
-    void set_join_key_used( T _join_key_used )
+    /// Getter for a target value.
+    AUTOSQL_FLOAT target( size_t _i, size_t _j ) const
     {
-        join_key_used_ = static_cast<AUTOSQL_INT>( _join_key_used );
+        assert( _j < targets_.size() );
+        return targets_[_j][_i];
     }
 
-    /// Setter for member time_stamps_used_
-    template <class T>
-    void set_time_stamps_used( T _time_stamps_used )
+    /// Getter for a target column.
+    const Column<AUTOSQL_FLOAT> target_col( size_t _j ) const
     {
-        time_stamps_used_ = static_cast<AUTOSQL_INT>( _time_stamps_used );
+        assert( _j < targets_.size() );
+        return targets_[_j];
     }
 
-    /// Setter for member upper_time_stamps_
-    template <class T>
-    void set_upper_time_stamps( T _upper_time_stamps )
+    /// Getter for a target name.
+    const std::string& target_name( size_t _j ) const
     {
-        upper_time_stamps_ = static_cast<AUTOSQL_INT>( _upper_time_stamps );
+        assert( _j < targets_.size() );
+        return targets_[_j].name_;
     }
 
-    /// Trivial accessor
-    containers::Matrix<AUTOSQL_FLOAT> &targets() { return targets_; }
-
-    /// Trivial accessor
-    containers::Matrix<AUTOSQL_FLOAT> const &targets() const { return targets_; }
-
-    /// Returns the time stamps signified by index _i
-    template <class T>
-    containers::Matrix<AUTOSQL_FLOAT> &time_stamps( const T _i )
+    /// Getter for a target name.
+    const std::string& target_unit( size_t _j ) const
     {
-        assert( time_stamps_.size() > 0 );
-
-        assert( _i >= 0 );
-
-        assert( _i < static_cast<T>( time_stamps_.size() ) );
-
-        return time_stamps_[_i];
+        assert( _j < targets_.size() );
+        return targets_[_j].unit_;
     }
 
-    /// Returns the time stamps signified by index _i
-    template <class T>
-    containers::Matrix<AUTOSQL_FLOAT> const &time_stamps( const T _i ) const
+    /// Trivial getter
+    AUTOSQL_FLOAT time_stamp( size_t _i ) const
     {
-        assert( time_stamps_.size() > 0 );
+        assert( time_stamps_.size() == 1 || time_stamps_.size() == 2 );
+        assert( _i < time_stamps_[0].nrows_ );
 
-        assert( _i >= 0 );
-
-        assert( _i < static_cast<T>( time_stamps_.size() ) );
-
-        return time_stamps_[_i];
+        return time_stamps_[0][_i];
     }
 
-    /// Returns the time stamps signified by index time_stamps_used_
-    containers::Matrix<AUTOSQL_FLOAT> &time_stamps()
+    /// Getter for the time stamps name.
+    const std::string& time_stamps_name() const
     {
-        assert( time_stamps_.size() > 0 );
+        assert( time_stamps_.size() == 1 || time_stamps_.size() == 2 );
 
-        assert( time_stamps_used_ >= 0 );
-
-        assert(
-            time_stamps_used_ <
-            static_cast<AUTOSQL_INT>( time_stamps_.size() ) );
-
-        return time_stamps( time_stamps_used_ );
+        return time_stamps_[0].name_;
     }
 
-    /// Returns the time stamps signified by index time_stamps_used_
-    const containers::Matrix<AUTOSQL_FLOAT> &time_stamps() const
+    /// Returns the schema.
+    Schema to_schema() const
     {
-        assert( time_stamps_.size() > 0 );
-
-        assert( time_stamps_used_ >= 0 );
-
-        assert(
-            time_stamps_used_ <
-            static_cast<AUTOSQL_INT>( time_stamps_.size() ) );
-
-        return time_stamps( time_stamps_used_ );
+        return Schema(
+            get_colnames( categoricals_ ),
+            get_colnames( discretes_ ),
+            get_colnames( join_keys_ ),
+            name_,
+            get_colnames( numericals_ ),
+            get_colnames( targets_ ),
+            get_colnames( time_stamps_ ) );
     }
 
-    /// Trivial accessor
-    std::vector<containers::Matrix<AUTOSQL_FLOAT>> &time_stamps_all()
+    /// Trivial getter
+    AUTOSQL_FLOAT upper_time_stamp( size_t _i ) const
     {
-        return time_stamps_;
-    }
+        assert( time_stamps_.size() == 1 || time_stamps_.size() == 2 );
 
-    /// Trivial accessor
-    std::vector<containers::Matrix<AUTOSQL_FLOAT>> const &time_stamps_all() const
-    {
-        return time_stamps_;
-    }
-
-    /// Returns the time stamps signified by index upper_time_stamps_
-    containers::Matrix<AUTOSQL_FLOAT> *const upper_time_stamps()
-    {
-        if ( upper_time_stamps_ < 0 )
+        if ( time_stamps_.size() == 1 )
             {
-                return nullptr;
+                return NAN;
             }
 
-        assert( time_stamps_.size() > 0 );
+        assert( _i < time_stamps_[1].nrows_ );
 
-        assert(
-            upper_time_stamps_ <
-            static_cast<AUTOSQL_INT>( time_stamps_.size() ) );
-
-        return &time_stamps( upper_time_stamps_ );
+        return time_stamps_[1][_i];
     }
 
-    /// Returns the time stamps signified by index time_stamps_used_
-    const containers::Matrix<AUTOSQL_FLOAT> *const upper_time_stamps() const
+    /// Getter for the time stamps name.
+    const std::string& upper_time_stamps_name() const
     {
-        if ( upper_time_stamps_ < 0 )
-            {
-                return nullptr;
-            }
+        assert( time_stamps_.size() == 2 );
 
-        assert( time_stamps_.size() > 0 );
-
-        assert(
-            upper_time_stamps_ <
-            static_cast<AUTOSQL_INT>( time_stamps_.size() ) );
-
-        return &time_stamps( upper_time_stamps_ );
+        return time_stamps_[1].name_;
     }
 
-    // -------------------------------
+    // ---------------------------------------------------------------------
 
    private:
-    /// Loads the join keys
-    void load_join_keys( const std::string &_path );
+    /// Creates the indices for this data frame
+    static std::vector<std::shared_ptr<AUTOSQL_INDEX>> create_indices(
+        const std::vector<Column<AUTOSQL_INT>>& _join_keys );
 
-    /// Loads the time stamps
-    void load_time_stamps( const std::string &_path );
+    /// Helper class that extracts the column names.
+    template <typename T>
+    std::vector<std::string> get_colnames(
+        const std::vector<Column<T>>& _columns ) const;
 
-    /// Transforms a float to a time stamp
-    std::string to_time_stamp( const AUTOSQL_FLOAT &_time_stamp_float ) const;
-
-    // -------------------------------
+    // ---------------------------------------------------------------------
 
    private:
-    /// Categorical data
-    containers::Matrix<AUTOSQL_INT> categorical_;
+    /// Pointer to categorical columns.
+    const std::vector<Column<AUTOSQL_INT>> categoricals_;
 
-    /// Maps integers to names of categories
-    std::shared_ptr<containers::Encoding> categories_;
+    /// Pointer to discrete columns.
+    const std::vector<Column<AUTOSQL_FLOAT>> discretes_;
 
-    /// Discrete data
-    containers::Matrix<AUTOSQL_FLOAT> discrete_;
+    /// Indices assiciated with join keys.
+    const std::vector<std::shared_ptr<AUTOSQL_INDEX>> indices_;
 
-    /// Performs the role of an "index" over the join keys
-    std::vector<std::shared_ptr<AUTOSQL_INDEX>> indices_;
+    /// Join keys of this data frame.
+    const std::vector<Column<AUTOSQL_INT>> join_keys_;
 
-    /// Join keys - note that their might be several
-    std::vector<containers::Matrix<AUTOSQL_INT>> join_keys_;
+    /// Name of the data frame.
+    const std::string name_;
 
-    /// Maps integers to names of join keys
-    std::shared_ptr<containers::Encoding> join_keys_encoding_;
+    /// Pointer to numerical columns.
+    const std::vector<Column<AUTOSQL_FLOAT>> numericals_;
 
-    /// Peripheral tables use only one particular join key -
-    /// which one is signified by join_key_used_
-    AUTOSQL_INT join_key_used_;
+    /// Pointer to target column.
+    const std::vector<Column<AUTOSQL_FLOAT>> targets_;
 
-    /// Name of the data frame
-    std::string name_;
-
-    /// Numerical data
-    containers::Matrix<AUTOSQL_FLOAT> numerical_;
-
-    /// Targets - only exists for population tables
-    containers::Matrix<AUTOSQL_FLOAT> targets_;
-
-    /// Time stamps
-    std::vector<containers::Matrix<AUTOSQL_FLOAT>> time_stamps_;
-
-    /// Peripheral tables use only one particular set of time stamps -
-    /// which one is signified by time_stamps_used_
-    AUTOSQL_INT time_stamps_used_;
-
-    /// Peripheral tables use only one particular set of upper time stamps -
-    /// which one is signified by upper_time_stamps_
-    AUTOSQL_INT upper_time_stamps_;
+    /// Time stamps of this data frame.
+    const std::vector<Column<AUTOSQL_FLOAT>> time_stamps_;
 };
 
 // -------------------------------------------------------------------------
 }  // namespace containers
 }  // namespace autosql
 
-#endif  // AUTOSQL_CONTAINER_DATAFRAME_HPP_
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+
+namespace autosql
+{
+namespace containers
+{
+// ----------------------------------------------------------------------------
+
+template <typename T>
+std::vector<std::string> DataFrame::get_colnames(
+    const std::vector<Column<T>>& _columns ) const
+{
+    std::vector<std::string> colnames;
+
+    for ( auto& col : _columns )
+        {
+            colnames.push_back( col.name_ );
+        }
+
+    return colnames;
+}
+
+// ----------------------------------------------------------------------------
+
+}  // namespace containers
+}  // namespace autosql
+
+// ----------------------------------------------------------------------------
+
+#endif  // AUTOSQL_CONTAINERS_DATAFRAME_HPP_
