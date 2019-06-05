@@ -48,7 +48,7 @@ void DataFrame::clear()
     discrete().clear();
 
     std::for_each(
-        join_keys().begin(), join_keys().end(), []( Matrix<SQLNET_INT> &mat ) {
+        join_keys().begin(), join_keys().end(), []( Matrix<AUTOSQL_INT> &mat ) {
             mat.clear();
         } );
 
@@ -59,7 +59,7 @@ void DataFrame::clear()
     std::for_each(
         time_stamps_all().begin(),
         time_stamps_all().end(),
-        []( Matrix<SQLNET_FLOAT> &mat ) { mat.clear(); } );
+        []( Matrix<AUTOSQL_FLOAT> &mat ) { mat.clear(); } );
 
     indices().clear();
 }
@@ -87,14 +87,14 @@ void DataFrame::check_plausibility() const
     const bool any_join_key_does_not_match = std::any_of(
         join_keys().begin(),
         join_keys().end(),
-        [expected_nrows]( const containers::Matrix<SQLNET_INT> &mat ) {
+        [expected_nrows]( const containers::Matrix<AUTOSQL_INT> &mat ) {
             return mat.nrows() != expected_nrows;
         } );
 
     const bool any_time_stamp_does_not_match = std::any_of(
         time_stamps_all().begin(),
         time_stamps_all().end(),
-        [expected_nrows]( const containers::Matrix<SQLNET_FLOAT> &mat ) {
+        [expected_nrows]( const containers::Matrix<AUTOSQL_FLOAT> &mat ) {
             return mat.nrows() != expected_nrows;
         } );
 
@@ -121,24 +121,24 @@ void DataFrame::create_indices()
             indices().resize( join_keys().size() );
         }
 
-    for ( SQLNET_SIZE i = 0; i < join_keys().size(); ++i )
+    for ( AUTOSQL_SIZE i = 0; i < join_keys().size(); ++i )
         {
             if ( !indices()[i] )
                 {
-                    indices()[i] = std::make_shared<SQLNET_INDEX>();
+                    indices()[i] = std::make_shared<AUTOSQL_INDEX>();
                 }
 
-            SQLNET_INDEX &map = *indices()[i];
+            AUTOSQL_INDEX &map = *indices()[i];
 
             const auto &current_join_key = join_key( i );
 
-            const SQLNET_INT batch_begin =
+            const AUTOSQL_INT batch_begin =
                 ( map.size() == 0
                       ? 0
                       : current_join_key
                             .batches()[current_join_key.num_batches() - 1] );
 
-            for ( SQLNET_INT ix_x_perip = batch_begin;
+            for ( AUTOSQL_INT ix_x_perip = batch_begin;
                   ix_x_perip < current_join_key.nrows();
                   ++ix_x_perip )
                 {
@@ -165,10 +165,10 @@ void DataFrame::create_indices()
 // ----------------------------------------------------------------------------
 
 void DataFrame::float_matrix(
-    containers::Matrix<SQLNET_FLOAT> &_mat,
+    containers::Matrix<AUTOSQL_FLOAT> &_mat,
     const std::string &_role,
     const std::string _name,
-    const SQLNET_SIZE _num )
+    const AUTOSQL_SIZE _num )
 {
     if ( _role == "discrete" )
         {
@@ -211,8 +211,8 @@ void DataFrame::float_matrix(
 
 // ----------------------------------------------------------------------------
 
-containers::Matrix<SQLNET_FLOAT> &DataFrame::float_matrix(
-    const std::string &_role, const SQLNET_SIZE _num )
+containers::Matrix<AUTOSQL_FLOAT> &DataFrame::float_matrix(
+    const std::string &_role, const AUTOSQL_SIZE _num )
 {
     if ( _role == "discrete" )
         {
@@ -254,7 +254,7 @@ Poco::JSON::Object DataFrame::get_colnames()
         std::for_each(
             join_keys().begin(),
             join_keys().end(),
-            [&join_keys_names]( containers::Matrix<SQLNET_INT> &mat ) {
+            [&join_keys_names]( containers::Matrix<AUTOSQL_INT> &mat ) {
                 join_keys_names.push_back( mat.colname( 0 ) );
             } );
 
@@ -271,7 +271,7 @@ Poco::JSON::Object DataFrame::get_colnames()
         std::for_each(
             time_stamps_all().begin(),
             time_stamps_all().end(),
-            [&time_stamps_names]( containers::Matrix<SQLNET_FLOAT> &mat ) {
+            [&time_stamps_names]( containers::Matrix<AUTOSQL_FLOAT> &mat ) {
                 time_stamps_names.push_back( mat.colname( 0 ) );
             } );
 
@@ -381,10 +381,10 @@ Poco::JSON::Object DataFrame::get_content(
 // ----------------------------------------------------------------------------
 
 void DataFrame::int_matrix(
-    containers::Matrix<SQLNET_INT> &_mat,
+    containers::Matrix<AUTOSQL_INT> &_mat,
     const std::string _role,
     const std::string _name,
-    const SQLNET_SIZE _num )
+    const AUTOSQL_SIZE _num )
 {
     if ( _role == "categorical" )
         {
@@ -419,8 +419,8 @@ void DataFrame::int_matrix(
 
 // ----------------------------------------------------------------------------
 
-containers::Matrix<SQLNET_INT> &DataFrame::int_matrix(
-    const std::string &_role, const SQLNET_SIZE _num )
+containers::Matrix<AUTOSQL_INT> &DataFrame::int_matrix(
+    const std::string &_role, const AUTOSQL_SIZE _num )
 {
     if ( _role == "categorical" )
         {
@@ -499,43 +499,43 @@ void DataFrame::load_join_keys( const std::string &_path )
 {
     join_keys().clear();
 
-    for ( SQLNET_SIZE i = 0; true; ++i )
+    for ( AUTOSQL_SIZE i = 0; true; ++i )
         {
             std::string join_key_name =
                 _path + "join_key_" + std::to_string( i );
 
             if ( !Poco::File( join_key_name ).exists() )
                 {
-#ifdef SQLNET_MULTINODE_MPI
+#ifdef AUTOSQL_MULTINODE_MPI
 
                     boost::mpi::communicator comm_world;
 
-                    SQLNET_INT one_more_join_key = 0;
+                    AUTOSQL_INT one_more_join_key = 0;
 
                     boost::mpi::broadcast( comm_world, one_more_join_key, 0 );
 
                     comm_world.barrier();
 
-#endif  // SQLNET_MULTINODE_MPI
+#endif  // AUTOSQL_MULTINODE_MPI
 
                     break;
                 }
             else
                 {
-#ifdef SQLNET_MULTINODE_MPI
+#ifdef AUTOSQL_MULTINODE_MPI
 
                     boost::mpi::communicator comm_world;
 
-                    SQLNET_INT one_more_join_key = 1;
+                    AUTOSQL_INT one_more_join_key = 1;
 
                     boost::mpi::broadcast( comm_world, one_more_join_key, 0 );
 
                     comm_world.barrier();
 
-#endif  // SQLNET_MULTINODE_MPI
+#endif  // AUTOSQL_MULTINODE_MPI
                 }
 
-            containers::Matrix<SQLNET_INT> join_key;
+            containers::Matrix<AUTOSQL_INT> join_key;
 
             join_key.load( join_key_name );
 
@@ -551,43 +551,43 @@ void DataFrame::load_time_stamps( const std::string &_path )
 {
     time_stamps_all().clear();
 
-    for ( SQLNET_SIZE i = 0; true; ++i )
+    for ( AUTOSQL_SIZE i = 0; true; ++i )
         {
             std::string time_stamps_name =
                 _path + "time_stamps_" + std::to_string( i );
 
             if ( !Poco::File( time_stamps_name ).exists() )
                 {
-#ifdef SQLNET_MULTINODE_MPI
+#ifdef AUTOSQL_MULTINODE_MPI
 
                     boost::mpi::communicator comm_world;
 
-                    SQLNET_INT one_more_time_stamp = 0;
+                    AUTOSQL_INT one_more_time_stamp = 0;
 
                     boost::mpi::broadcast( comm_world, one_more_time_stamp, 0 );
 
                     comm_world.barrier();
 
-#endif  // SQLNET_MULTINODE_MPI
+#endif  // AUTOSQL_MULTINODE_MPI
 
                     break;
                 }
             else
                 {
-#ifdef SQLNET_MULTINODE_MPI
+#ifdef AUTOSQL_MULTINODE_MPI
 
                     boost::mpi::communicator comm_world;
 
-                    SQLNET_INT one_more_time_stamp = 1;
+                    AUTOSQL_INT one_more_time_stamp = 1;
 
                     boost::mpi::broadcast( comm_world, one_more_time_stamp, 0 );
 
                     comm_world.barrier();
 
-#endif  // SQLNET_MULTINODE_MPI
+#endif  // AUTOSQL_MULTINODE_MPI
                 }
 
-            containers::Matrix<SQLNET_FLOAT> time_stamps;
+            containers::Matrix<AUTOSQL_FLOAT> time_stamps;
 
             time_stamps.load( time_stamps_name );
 
@@ -599,7 +599,7 @@ void DataFrame::load_time_stamps( const std::string &_path )
 
 // ----------------------------------------------------------------------------
 
-#ifdef SQLNET_MULTINODE_MPI
+#ifdef AUTOSQL_MULTINODE_MPI
 
 void DataFrame::load_non_root()
 {
@@ -613,11 +613,11 @@ void DataFrame::load_non_root()
 
     join_keys_.clear();
 
-    for ( SQLNET_SIZE i = 0; true; ++i )
+    for ( AUTOSQL_SIZE i = 0; true; ++i )
         {
             boost::mpi::communicator comm_world;
 
-            SQLNET_INT one_more_join_key = 0;
+            AUTOSQL_INT one_more_join_key = 0;
 
             boost::mpi::broadcast( comm_world, one_more_join_key, 0 );
 
@@ -628,7 +628,7 @@ void DataFrame::load_non_root()
                     break;
                 }
 
-            containers::Matrix<SQLNET_INT> join_key;
+            containers::Matrix<AUTOSQL_INT> join_key;
 
             join_key.load();
 
@@ -645,11 +645,11 @@ void DataFrame::load_non_root()
 
     targets().name() = name();
 
-    for ( SQLNET_SIZE i = 0; true; ++i )
+    for ( AUTOSQL_SIZE i = 0; true; ++i )
         {
             boost::mpi::communicator comm_world;
 
-            SQLNET_INT one_more_time_stamp = 0;
+            AUTOSQL_INT one_more_time_stamp = 0;
 
             boost::mpi::broadcast( comm_world, one_more_time_stamp, 0 );
 
@@ -660,7 +660,7 @@ void DataFrame::load_non_root()
                     break;
                 }
 
-            containers::Matrix<SQLNET_FLOAT> time_stamps;
+            containers::Matrix<AUTOSQL_FLOAT> time_stamps;
 
             time_stamps.load();
 
@@ -672,20 +672,20 @@ void DataFrame::load_non_root()
     create_indices();
 }
 
-#endif  // SQLNET_MULTINODE_MPI
+#endif  // AUTOSQL_MULTINODE_MPI
 
 // ----------------------------------------------------------------------------
 
-SQLNET_UNSIGNED_LONG DataFrame::nbytes()
+AUTOSQL_UNSIGNED_LONG DataFrame::nbytes()
 {
-    SQLNET_UNSIGNED_LONG nbytes = categorical().nbytes() + discrete().nbytes() +
+    AUTOSQL_UNSIGNED_LONG nbytes = categorical().nbytes() + discrete().nbytes() +
                                   numerical().nbytes() + targets().nbytes();
 
     nbytes = std::accumulate(
         join_keys().begin(),
         join_keys().end(),
         nbytes,
-        []( SQLNET_UNSIGNED_LONG &init, containers::Matrix<SQLNET_INT> &mat ) {
+        []( AUTOSQL_UNSIGNED_LONG &init, containers::Matrix<AUTOSQL_INT> &mat ) {
             return init + mat.nbytes();
         } );
 
@@ -693,8 +693,8 @@ SQLNET_UNSIGNED_LONG DataFrame::nbytes()
         time_stamps_all().begin(),
         time_stamps_all().end(),
         nbytes,
-        []( SQLNET_UNSIGNED_LONG &init,
-            containers::Matrix<SQLNET_FLOAT> &mat ) {
+        []( AUTOSQL_UNSIGNED_LONG &init,
+            containers::Matrix<AUTOSQL_FLOAT> &mat ) {
             return init + mat.nbytes();
         } );
 
@@ -718,7 +718,7 @@ void DataFrame::save( const std::string &_path )
 
     discrete().save( _path + "discrete" );
 
-    for ( SQLNET_SIZE i = 0; i < join_keys_.size(); ++i )
+    for ( AUTOSQL_SIZE i = 0; i < join_keys_.size(); ++i )
         {
             join_keys_[i].save( _path + "join_key_" + std::to_string( i ) );
         }
@@ -727,7 +727,7 @@ void DataFrame::save( const std::string &_path )
 
     targets().save( _path + "targets" );
 
-    for ( SQLNET_SIZE i = 0; i < time_stamps_.size(); ++i )
+    for ( AUTOSQL_SIZE i = 0; i < time_stamps_.size(); ++i )
         {
             time_stamps_[i].save(
                 _path + "time_stamps_" + std::to_string( i ) );
@@ -736,7 +736,7 @@ void DataFrame::save( const std::string &_path )
 
 // ----------------------------------------------------------------------------
 
-#ifdef SQLNET_MULTINODE_MPI
+#ifdef AUTOSQL_MULTINODE_MPI
 
 void DataFrame::save_non_root()
 {
@@ -759,7 +759,7 @@ void DataFrame::save_non_root()
         }
 }
 
-#endif  // SQLNET_MULTINODE_MPI
+#endif  // AUTOSQL_MULTINODE_MPI
 
 // ----------------------------------------------------------------------------
 
@@ -811,7 +811,7 @@ Poco::JSON::Object DataFrame::to_monitor( const std::string _name )
     obj.set(
         "numerical_units_", JSON::vector_to_array( *numerical().units() ) );
 
-    obj.set( "size_", static_cast<SQLNET_FLOAT>( nbytes() ) / 1000000.0 );
+    obj.set( "size_", static_cast<AUTOSQL_FLOAT>( nbytes() ) / 1000000.0 );
 
     obj.set( "targets_", JSON::vector_to_array( *targets().colnames() ) );
 
@@ -838,7 +838,7 @@ Poco::JSON::Object DataFrame::to_monitor( const std::string _name )
 // ----------------------------------------------------------------------------
 
 std::string DataFrame::to_time_stamp(
-    const SQLNET_FLOAT &_time_stamp_float ) const
+    const AUTOSQL_FLOAT &_time_stamp_float ) const
 {
     if ( std::isnan( _time_stamp_float ) )
         {

@@ -19,7 +19,7 @@ struct Hyperparameters
     // ------------------------------------------------------
 
     /// Calculates the number of selected features.
-    static SQLNET_INT calc_num_selected_features(
+    static AUTOSQL_INT calc_num_selected_features(
         const Poco::JSON::Object& _json_obj );
 
     /// Determines whether the _json_obj contains a features selector and
@@ -56,18 +56,18 @@ struct Hyperparameters
     const std::string loss_function;
 
     /// The number of features to be extracted
-    const SQLNET_INT num_features;
+    const AUTOSQL_INT num_features;
 
     /// The number of features to be selected. Must be smaller than
     /// num_features. When set to 0, then there is no feature selection.
-    const SQLNET_INT num_selected_features;
+    const AUTOSQL_INT num_selected_features;
 
     /// The number of subfeatures to be extracted. Only relevant for
     /// "snowflake" data model.
-    const SQLNET_INT num_subfeatures;
+    const AUTOSQL_INT num_subfeatures;
 
     /// The number of threads to be used, 0 for automatic determination
-    const SQLNET_INT num_threads;
+    const AUTOSQL_INT num_threads;
 
     /// Hyperparameters for the predictor (optional)
     const containers::Optional<const Poco::JSON::Object> predictor_hyperparams;
@@ -76,21 +76,21 @@ struct Hyperparameters
     const bool round_robin;
 
     /// Determines the sampling rate - parameter passed by the user
-    const SQLNET_FLOAT sampling_factor;
+    const AUTOSQL_FLOAT sampling_factor;
 
     /// The share of sample from the population table included
     /// in the training process. This is the only non-const variable
     /// as it depends on the size of the training set.
-    SQLNET_FLOAT sampling_rate;
+    AUTOSQL_FLOAT sampling_rate;
 
     /// The seed used for the hyperparameter optimization
-    const SQLNET_INT seed;
+    const AUTOSQL_INT seed;
 
     /// The share of aggregations randomly selected
-    const SQLNET_FLOAT share_aggregations;
+    const AUTOSQL_FLOAT share_aggregations;
 
     /// Shrinkage of learning rate
-    const SQLNET_FLOAT shrinkage;
+    const AUTOSQL_FLOAT shrinkage;
 
     /// Hyperparameters necessary for training the tree
     const TreeHyperparameters tree_hyperparameters;

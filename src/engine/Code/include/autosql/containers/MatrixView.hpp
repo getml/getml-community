@@ -29,7 +29,7 @@ class MatrixView
 
     /// Returns a column view on this MatrixView
     inline ColumnView<T, ContainerType> column_view(
-        const SQLNET_INT _column_used )
+        const AUTOSQL_INT _column_used )
     {
         assert( _column_used >= 0 );
         assert( _column_used < mat_.ncols() );
@@ -41,51 +41,51 @@ class MatrixView
 
     /// Returns the number of rows of the view (as opposed to the underlying
     /// matrix)
-    inline SQLNET_INT ncols() const { return mat_.ncols(); }
+    inline AUTOSQL_INT ncols() const { return mat_.ncols(); }
 
     /// Returns the number of rows of the view (as opposed to the underlying
     /// matrix)
-    inline SQLNET_INT nrows() const
+    inline AUTOSQL_INT nrows() const
     {
-        return static_cast<SQLNET_INT>( indices_->size() );
+        return static_cast<AUTOSQL_INT>( indices_->size() );
     }
 
     /// Whether or not the matrix view is empty.
     operator bool() const { return mat_.nrows() > 0; }
 
-    /// Accessor to data (when indices are std::vector<SQLNET_INT>)
+    /// Accessor to data (when indices are std::vector<AUTOSQL_INT>)
     template <
         typename CType = ContainerType,
         typename std::enable_if<
-            std::is_same<CType, std::vector<SQLNET_INT>>::value,
+            std::is_same<CType, std::vector<AUTOSQL_INT>>::value,
             int>::type = 0>
-    inline T& operator()( const SQLNET_INT _i, const SQLNET_INT _j )
+    inline T& operator()( const AUTOSQL_INT _i, const AUTOSQL_INT _j )
     {
         assert( _i >= 0 );
-        assert( _i < static_cast<SQLNET_INT>( indices_->size() ) );
+        assert( _i < static_cast<AUTOSQL_INT>( indices_->size() ) );
         return mat_( ( *indices_ )[_i], _j );
     }
 
-    /// Accessor to data (when indices are std::vector<SQLNET_INT>)
+    /// Accessor to data (when indices are std::vector<AUTOSQL_INT>)
     template <
         typename CType = ContainerType,
         typename std::enable_if<
-            std::is_same<CType, std::vector<SQLNET_INT>>::value,
+            std::is_same<CType, std::vector<AUTOSQL_INT>>::value,
             int>::type = 0>
-    inline T operator()( const SQLNET_INT _i, const SQLNET_INT _j ) const
+    inline T operator()( const AUTOSQL_INT _i, const AUTOSQL_INT _j ) const
     {
         assert( _i >= 0 );
-        assert( _i < static_cast<SQLNET_INT>( indices_->size() ) );
+        assert( _i < static_cast<AUTOSQL_INT>( indices_->size() ) );
         return mat_( ( *indices_ )[_i], _j );
     }
 
-    /// Accessor to data (when indices are std::map<SQLNET_INT, SQLNET_INT>)
+    /// Accessor to data (when indices are std::map<AUTOSQL_INT, AUTOSQL_INT>)
     template <
         typename CType = ContainerType,
         typename std::enable_if<
-            std::is_same<CType, std::map<SQLNET_INT, SQLNET_INT>>::value,
+            std::is_same<CType, std::map<AUTOSQL_INT, AUTOSQL_INT>>::value,
             int>::type = 0>
-    inline T& operator()( const SQLNET_INT _i, const SQLNET_INT _j )
+    inline T& operator()( const AUTOSQL_INT _i, const AUTOSQL_INT _j )
     {
         assert( _i >= 0 );
         auto it = indices_->find( _i );
@@ -93,13 +93,13 @@ class MatrixView
         return mat_( it->second, _j );
     }
 
-    /// Accessor to data (when indices are std::map<SQLNET_INT, SQLNET_INT>)
+    /// Accessor to data (when indices are std::map<AUTOSQL_INT, AUTOSQL_INT>)
     template <
         typename CType = ContainerType,
         typename std::enable_if<
-            std::is_same<CType, std::map<SQLNET_INT, SQLNET_INT>>::value,
+            std::is_same<CType, std::map<AUTOSQL_INT, AUTOSQL_INT>>::value,
             int>::type = 0>
-    inline T operator()( const SQLNET_INT _i, const SQLNET_INT _j ) const
+    inline T operator()( const AUTOSQL_INT _i, const AUTOSQL_INT _j ) const
     {
         assert( _i >= 0 );
         auto it = indices_->find( _i );

@@ -11,13 +11,13 @@ void DataFrameManager::add_categorical_matrix(
     containers::DataFrame& _df,
     Poco::Net::StreamSocket& _socket )
 {
-    const std::string role = _cmd.SQLNET_GET( "role_" );
+    const std::string role = _cmd.AUTOSQL_GET( "role_" );
 
-    const std::string join_key_name = _cmd.SQLNET_GET( "join_key_name_" );
+    const std::string join_key_name = _cmd.AUTOSQL_GET( "join_key_name_" );
 
-    const SQLNET_INT num_join_key = _cmd.SQLNET_GET( "num_join_key_" );
+    const AUTOSQL_INT num_join_key = _cmd.AUTOSQL_GET( "num_join_key_" );
 
-    containers::Matrix<SQLNET_INT> mat;
+    containers::Matrix<AUTOSQL_INT> mat;
 
     if ( role == "categorical" )
         {
@@ -104,11 +104,11 @@ void DataFrameManager::add_matrix(
     containers::DataFrame& _df,
     Poco::Net::StreamSocket& _socket )
 {
-    const std::string role = _cmd.SQLNET_GET( "role_" );
+    const std::string role = _cmd.AUTOSQL_GET( "role_" );
 
-    const std::string time_stamps_name = _cmd.SQLNET_GET( "time_stamps_name_" );
+    const std::string time_stamps_name = _cmd.AUTOSQL_GET( "time_stamps_name_" );
 
-    const SQLNET_SIZE num_time_stamps = _cmd.SQLNET_GET( "num_time_stamps_" );
+    const AUTOSQL_SIZE num_time_stamps = _cmd.AUTOSQL_GET( "num_time_stamps_" );
 
     auto mat = engine::Receiver::recv_matrix( _socket, true );
 
@@ -178,14 +178,14 @@ void DataFrameManager::categorical_matrix_set_colnames(
     containers::DataFrame& _df,
     Poco::Net::StreamSocket& _socket )
 {
-    const std::string role = _cmd.SQLNET_GET( "role_" );
+    const std::string role = _cmd.AUTOSQL_GET( "role_" );
 
-    const SQLNET_SIZE num_join_key = _cmd.SQLNET_GET( "num_join_key_" );
+    const AUTOSQL_SIZE num_join_key = _cmd.AUTOSQL_GET( "num_join_key_" );
 
     auto& mat = _df.int_matrix( role, num_join_key );
 
     auto colnames = JSON::array_to_vector<std::string>(
-        _cmd.SQLNET_GET_ARRAY( "colnames_" ) );
+        _cmd.AUTOSQL_GET_ARRAY( "colnames_" ) );
 
     mat.set_colnames( colnames );
 
@@ -199,14 +199,14 @@ void DataFrameManager::categorical_matrix_set_units(
     containers::DataFrame& _df,
     Poco::Net::StreamSocket& _socket )
 {
-    const std::string role = _cmd.SQLNET_GET( "role_" );
+    const std::string role = _cmd.AUTOSQL_GET( "role_" );
 
-    const SQLNET_SIZE num_join_key = _cmd.SQLNET_GET( "num_join_key_" );
+    const AUTOSQL_SIZE num_join_key = _cmd.AUTOSQL_GET( "num_join_key_" );
 
     auto& mat = _df.int_matrix( role, num_join_key );
 
     auto units =
-        JSON::array_to_vector<std::string>( _cmd.SQLNET_GET_ARRAY( "units_" ) );
+        JSON::array_to_vector<std::string>( _cmd.AUTOSQL_GET_ARRAY( "units_" ) );
 
     mat.set_units( units );
 
@@ -230,9 +230,9 @@ void DataFrameManager::get_categorical_matrix(
     const Poco::JSON::Object& _cmd,
     Poco::Net::StreamSocket& _socket )
 {
-    const std::string role = _cmd.SQLNET_GET( "role_" );
+    const std::string role = _cmd.AUTOSQL_GET( "role_" );
 
-    const SQLNET_SIZE num_join_key = _cmd.SQLNET_GET( "num_join_key_" );
+    const AUTOSQL_SIZE num_join_key = _cmd.AUTOSQL_GET( "num_join_key_" );
 
     // Will auto-unlock when destroyed.
     autosql::multithreading::ReadLock read_lock( read_write_lock_ );
@@ -242,7 +242,7 @@ void DataFrameManager::get_categorical_matrix(
 
     engine::Sender::send_string( _socket, "Found!" );
 
-    engine::Sender::send_matrix<SQLNET_INT>( _socket, true, mat );
+    engine::Sender::send_matrix<AUTOSQL_INT>( _socket, true, mat );
 }
 
 // ------------------------------------------------------------------------
@@ -252,11 +252,11 @@ void DataFrameManager::get_data_frame_content(
     const Poco::JSON::Object& _cmd,
     Poco::Net::StreamSocket& _socket )
 {
-    const std::int32_t draw = _cmd.SQLNET_GET( "draw_" );
+    const std::int32_t draw = _cmd.AUTOSQL_GET( "draw_" );
 
-    const std::int32_t length = _cmd.SQLNET_GET( "length_" );
+    const std::int32_t length = _cmd.AUTOSQL_GET( "length_" );
 
-    const std::int32_t start = _cmd.SQLNET_GET( "start_" );
+    const std::int32_t start = _cmd.AUTOSQL_GET( "start_" );
 
     autosql::multithreading::ReadLock read_lock( read_write_lock_ );
 
@@ -276,9 +276,9 @@ void DataFrameManager::get_matrix(
     const Poco::JSON::Object& _cmd,
     Poco::Net::StreamSocket& _socket )
 {
-    const std::string role = _cmd.SQLNET_GET( "role_" );
+    const std::string role = _cmd.AUTOSQL_GET( "role_" );
 
-    const SQLNET_SIZE num_time_stamps = _cmd.SQLNET_GET( "num_time_stamps_" );
+    const AUTOSQL_SIZE num_time_stamps = _cmd.AUTOSQL_GET( "num_time_stamps_" );
 
     // Will auto-unlock when destroyed.
     autosql::multithreading::ReadLock read_lock( read_write_lock_ );
@@ -288,7 +288,7 @@ void DataFrameManager::get_matrix(
 
     engine::Sender::send_string( _socket, "Found!" );
 
-    engine::Sender::send_matrix<SQLNET_FLOAT>( _socket, true, mat );
+    engine::Sender::send_matrix<AUTOSQL_FLOAT>( _socket, true, mat );
 }
 
 // ------------------------------------------------------------------------
@@ -313,14 +313,14 @@ void DataFrameManager::matrix_set_colnames(
     containers::DataFrame& _df,
     Poco::Net::StreamSocket& _socket )
 {
-    const std::string role = _cmd.SQLNET_GET( "role_" );
+    const std::string role = _cmd.AUTOSQL_GET( "role_" );
 
-    const SQLNET_SIZE num_time_stamps = _cmd.SQLNET_GET( "num_time_stamps_" );
+    const AUTOSQL_SIZE num_time_stamps = _cmd.AUTOSQL_GET( "num_time_stamps_" );
 
     auto& mat = _df.float_matrix( role, num_time_stamps );
 
     auto colnames = JSON::array_to_vector<std::string>(
-        _cmd.SQLNET_GET_ARRAY( "colnames_" ) );
+        _cmd.AUTOSQL_GET_ARRAY( "colnames_" ) );
 
     mat.set_colnames( colnames );
 
@@ -334,14 +334,14 @@ void DataFrameManager::matrix_set_units(
     containers::DataFrame& _df,
     Poco::Net::StreamSocket& _socket )
 {
-    const std::string role = _cmd.SQLNET_GET( "role_" );
+    const std::string role = _cmd.AUTOSQL_GET( "role_" );
 
-    const SQLNET_SIZE num_time_stamps = _cmd.SQLNET_GET( "num_time_stamps_" );
+    const AUTOSQL_SIZE num_time_stamps = _cmd.AUTOSQL_GET( "num_time_stamps_" );
 
     auto& mat = _df.float_matrix( role, num_time_stamps );
 
     auto units =
-        JSON::array_to_vector<std::string>( _cmd.SQLNET_GET_ARRAY( "units_" ) );
+        JSON::array_to_vector<std::string>( _cmd.AUTOSQL_GET_ARRAY( "units_" ) );
 
     mat.set_units( units );
 
@@ -358,9 +358,9 @@ void DataFrameManager::receive_data(
             Poco::JSON::Object cmd =
                 engine::Receiver::recv_cmd( _socket, logger_ );
 
-            std::string type = cmd.SQLNET_GET( "type_" );
+            std::string type = cmd.AUTOSQL_GET( "type_" );
 
-            std::string name = cmd.SQLNET_GET( "name_" );
+            std::string name = cmd.AUTOSQL_GET( "name_" );
 
             if ( name != _df.name() )
                 {

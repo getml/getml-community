@@ -6,17 +6,17 @@ namespace containers
 {
 // ----------------------------------------------------------------------------
 
-std::vector<std::vector<SQLNET_INT>> Summarizer::calculate_column_densities(
-    const SQLNET_INT _num_bins,
-    const containers::Matrix<SQLNET_FLOAT>& _mat,
-    SQLNET_COMMUNICATOR* _comm )
+std::vector<std::vector<AUTOSQL_INT>> Summarizer::calculate_column_densities(
+    const AUTOSQL_INT _num_bins,
+    const containers::Matrix<AUTOSQL_FLOAT>& _mat,
+    AUTOSQL_COMMUNICATOR* _comm )
 {
     // ------------------------------------------------------------------------
     // Find minima and maxima
 
-    auto minima = std::vector<SQLNET_FLOAT>( 0 );
+    auto minima = std::vector<AUTOSQL_FLOAT>( 0 );
 
-    auto maxima = std::vector<SQLNET_FLOAT>( 0 );
+    auto maxima = std::vector<AUTOSQL_FLOAT>( 0 );
 
     min_and_max( _mat, _comm, minima, maxima );
 
@@ -24,14 +24,14 @@ std::vector<std::vector<SQLNET_INT>> Summarizer::calculate_column_densities(
     // Calculate step_sizes and actual_num_bins. Note that actual_num_bins
     // can be smaller than num_bins.
 
-    auto step_sizes = std::vector<SQLNET_FLOAT>( 0 );
+    auto step_sizes = std::vector<AUTOSQL_FLOAT>( 0 );
 
-    auto actual_num_bins = std::vector<SQLNET_INT>( 0 );
+    auto actual_num_bins = std::vector<AUTOSQL_INT>( 0 );
 
     calculate_step_sizes_and_num_bins(
         minima,
         maxima,
-        static_cast<SQLNET_FLOAT>( _num_bins ),
+        static_cast<AUTOSQL_FLOAT>( _num_bins ),
         step_sizes,
         actual_num_bins );
 
@@ -43,7 +43,7 @@ std::vector<std::vector<SQLNET_INT>> Summarizer::calculate_column_densities(
     assert( actual_num_bins.size() == static_cast<size_t>( _mat.ncols() ) );
 
     auto column_densities =
-        std::vector<std::vector<SQLNET_INT>>( _mat.ncols() );
+        std::vector<std::vector<AUTOSQL_INT>>( _mat.ncols() );
 
     for ( size_t j = 0; j < column_densities.size(); ++j )
         {
@@ -51,9 +51,9 @@ std::vector<std::vector<SQLNET_INT>> Summarizer::calculate_column_densities(
             column_densities[j].resize( actual_num_bins[j] );
         }
 
-    for ( SQLNET_INT i = 0; i < _mat.nrows(); ++i )
+    for ( AUTOSQL_INT i = 0; i < _mat.nrows(); ++i )
         {
-            for ( SQLNET_INT j = 0; j < _mat.ncols(); ++j )
+            for ( AUTOSQL_INT j = 0; j < _mat.ncols(); ++j )
                 {
                     const auto val = _mat( i, j );
 
@@ -70,18 +70,18 @@ std::vector<std::vector<SQLNET_INT>> Summarizer::calculate_column_densities(
                 }
         }
 
-#ifdef SQLNET_PARALLEL
+#ifdef AUTOSQL_PARALLEL
 
     for ( size_t j = 0; j < column_densities.size(); ++j )
         {
-            auto global = std::vector<SQLNET_INT>( column_densities[j].size() );
+            auto global = std::vector<AUTOSQL_INT>( column_densities[j].size() );
 
-            SQLNET_PARALLEL_LIB::all_reduce(
+            AUTOSQL_PARALLEL_LIB::all_reduce(
                 *_comm,                                    // comm
                 column_densities[j].data(),                // in_values
-                static_cast<SQLNET_INT>( global.size() ),  // count,
+                static_cast<AUTOSQL_INT>( global.size() ),  // count,
                 global.data(),                             // out_values
-                std::plus<SQLNET_INT>()                    // op
+                std::plus<AUTOSQL_INT>()                    // op
             );
 
             _comm->barrier();
@@ -89,7 +89,7 @@ std::vector<std::vector<SQLNET_INT>> Summarizer::calculate_column_densities(
             column_densities[j] = std::move( global );
         }
 
-#endif  // SQLNET_PARALLEL
+#endif  // AUTOSQL_PARALLEL
 
     // ------------------------------------------------------------------------
 
@@ -98,11 +98,11 @@ std::vector<std::vector<SQLNET_INT>> Summarizer::calculate_column_densities(
 
 // ----------------------------------------------------------------------------
 
-std::vector<std::vector<SQLNET_FLOAT>>
+std::vector<std::vector<AUTOSQL_FLOAT>>
 Summarizer::calculate_feature_correlations(
-    const containers::Matrix<SQLNET_FLOAT>& _features,
+    const containers::Matrix<AUTOSQL_FLOAT>& _features,
     const containers::DataFrameView& _targets,
-    SQLNET_COMMUNICATOR* _comm )
+    AUTOSQL_COMMUNICATOR* _comm )
 {
     // -----------------------------------------------------------
 
@@ -111,209 +111,209 @@ Summarizer::calculate_feature_correlations(
     // -----------------------------------------------------------
     // Prepare datasets
 
-    containers::Matrix<SQLNET_FLOAT> sum_yhat( _features.ncols(), 1 );
+    containers::Matrix<AUTOSQL_FLOAT> sum_yhat( _features.ncols(), 1 );
 
-    containers::Matrix<SQLNET_FLOAT> sum_yhat_yhat( _features.ncols(), 1 );
+    containers::Matrix<AUTOSQL_FLOAT> sum_yhat_yhat( _features.ncols(), 1 );
 
-    containers::Matrix<SQLNET_FLOAT> sum_y(
+    containers::Matrix<AUTOSQL_FLOAT> sum_y(
         _targets.df().targets().ncols(), 1 );
 
-    containers::Matrix<SQLNET_FLOAT> sum_y_y(
+    containers::Matrix<AUTOSQL_FLOAT> sum_y_y(
         _targets.df().targets().ncols(), 1 );
 
-    containers::Matrix<SQLNET_FLOAT> sum_yhat_y(
+    containers::Matrix<AUTOSQL_FLOAT> sum_yhat_y(
         _features.ncols(), _targets.df().targets().ncols() );
 
     // -----------------------------------------------------------
     // Calculate sufficient statistics
 
     // Calculate sum yhat
-    for ( SQLNET_INT i = 0; i < _features.nrows(); ++i )
-        for ( SQLNET_INT j = 0; j < _features.ncols(); ++j )
+    for ( AUTOSQL_INT i = 0; i < _features.nrows(); ++i )
+        for ( AUTOSQL_INT j = 0; j < _features.ncols(); ++j )
             sum_yhat[j] += _features( i, j );
 
     // Calculate sum yhat_yhat
-    for ( SQLNET_INT i = 0; i < _features.nrows(); ++i )
-        for ( SQLNET_INT j = 0; j < _features.ncols(); ++j )
+    for ( AUTOSQL_INT i = 0; i < _features.nrows(); ++i )
+        for ( AUTOSQL_INT j = 0; j < _features.ncols(); ++j )
             sum_yhat_yhat[j] += _features( i, j ) * _features( i, j );
 
     // Calculate sum y
-    for ( SQLNET_INT i = 0; i < _targets.nrows(); ++i )
-        for ( SQLNET_INT k = 0; k < _targets.df().targets().ncols(); ++k )
+    for ( AUTOSQL_INT i = 0; i < _targets.nrows(); ++i )
+        for ( AUTOSQL_INT k = 0; k < _targets.df().targets().ncols(); ++k )
             sum_y[k] += _targets.targets( i, k );
 
     // Calculate sum y_y
-    for ( SQLNET_INT i = 0; i < _targets.nrows(); ++i )
-        for ( SQLNET_INT k = 0; k < _targets.df().targets().ncols(); ++k )
+    for ( AUTOSQL_INT i = 0; i < _targets.nrows(); ++i )
+        for ( AUTOSQL_INT k = 0; k < _targets.df().targets().ncols(); ++k )
             sum_y_y[k] += _targets.targets( i, k ) * _targets.targets( i, k );
 
     // Calculate sum_yhat_y
-    for ( SQLNET_INT i = 0; i < _features.nrows(); ++i )
-        for ( SQLNET_INT j = 0; j < _features.ncols(); ++j )
-            for ( SQLNET_INT k = 0; k < _targets.df().targets().ncols(); ++k )
+    for ( AUTOSQL_INT i = 0; i < _features.nrows(); ++i )
+        for ( AUTOSQL_INT j = 0; j < _features.ncols(); ++j )
+            for ( AUTOSQL_INT k = 0; k < _targets.df().targets().ncols(); ++k )
                 sum_yhat_y( j, k ) +=
                     _features( i, j ) * _targets.targets( i, k );
 
-    SQLNET_FLOAT n = static_cast<SQLNET_FLOAT>( _features.nrows() );
+    AUTOSQL_FLOAT n = static_cast<AUTOSQL_FLOAT>( _features.nrows() );
 
     // -----------------------------------------------------
     // Reduce sufficient statistics, if necessary
 
     // sum_yhat
     {
-#ifdef SQLNET_PARALLEL
+#ifdef AUTOSQL_PARALLEL
 
-        containers::Matrix<SQLNET_FLOAT> global(
+        containers::Matrix<AUTOSQL_FLOAT> global(
             sum_yhat.nrows(), sum_yhat.ncols() );
 
-        SQLNET_PARALLEL_LIB::all_reduce(
+        AUTOSQL_PARALLEL_LIB::all_reduce(
             *( _comm ),                       // comm
             sum_yhat.data(),                  // in_values
             global.nrows() * global.ncols(),  // count,
             global.data(),                    // out_values
-            std::plus<SQLNET_FLOAT>()         // op
+            std::plus<AUTOSQL_FLOAT>()         // op
         );
 
         _comm->barrier();
 
         sum_yhat = std::move( global );
 
-#endif  // SQLNET_PARALLEL
+#endif  // AUTOSQL_PARALLEL
     }
 
     // sum_yhat_yhat
     {
-#ifdef SQLNET_PARALLEL
+#ifdef AUTOSQL_PARALLEL
 
-        containers::Matrix<SQLNET_FLOAT> global(
+        containers::Matrix<AUTOSQL_FLOAT> global(
             sum_yhat_yhat.nrows(), sum_yhat_yhat.ncols() );
 
-        SQLNET_PARALLEL_LIB::all_reduce(
+        AUTOSQL_PARALLEL_LIB::all_reduce(
             *( _comm ),                       // comm
             sum_yhat_yhat.data(),             // in_values
             global.nrows() * global.ncols(),  // count,
             global.data(),                    // out_values
-            std::plus<SQLNET_FLOAT>()         // op
+            std::plus<AUTOSQL_FLOAT>()         // op
         );
 
         _comm->barrier();
 
         sum_yhat_yhat = std::move( global );
 
-#endif  // SQLNET_PARALLEL
+#endif  // AUTOSQL_PARALLEL
     }
 
     // sum_y
     {
-#ifdef SQLNET_PARALLEL
+#ifdef AUTOSQL_PARALLEL
 
-        containers::Matrix<SQLNET_FLOAT> global( sum_y.nrows(), sum_y.ncols() );
+        containers::Matrix<AUTOSQL_FLOAT> global( sum_y.nrows(), sum_y.ncols() );
 
-        SQLNET_PARALLEL_LIB::all_reduce(
+        AUTOSQL_PARALLEL_LIB::all_reduce(
             *( _comm ),                       // comm
             sum_y.data(),                     // in_values
             global.nrows() * global.ncols(),  // count,
             global.data(),                    // out_values
-            std::plus<SQLNET_FLOAT>()         // op
+            std::plus<AUTOSQL_FLOAT>()         // op
         );
 
         _comm->barrier();
 
         sum_y = std::move( global );
 
-#endif  // SQLNET_PARALLEL
+#endif  // AUTOSQL_PARALLEL
     }
 
     // sum_y_y
     {
-#ifdef SQLNET_PARALLEL
+#ifdef AUTOSQL_PARALLEL
 
-        containers::Matrix<SQLNET_FLOAT> global(
+        containers::Matrix<AUTOSQL_FLOAT> global(
             sum_y_y.nrows(), sum_y_y.ncols() );
 
-        SQLNET_PARALLEL_LIB::all_reduce(
+        AUTOSQL_PARALLEL_LIB::all_reduce(
             *( _comm ),                       // comm
             sum_y_y.data(),                   // in_values
             global.nrows() * global.ncols(),  // count,
             global.data(),                    // out_values
-            std::plus<SQLNET_FLOAT>()         // op
+            std::plus<AUTOSQL_FLOAT>()         // op
         );
 
         _comm->barrier();
 
         sum_y_y = std::move( global );
 
-#endif  // SQLNET_PARALLEL
+#endif  // AUTOSQL_PARALLEL
     }
 
     // sum_yhat_y
     {
-#ifdef SQLNET_PARALLEL
+#ifdef AUTOSQL_PARALLEL
 
-        containers::Matrix<SQLNET_FLOAT> global(
+        containers::Matrix<AUTOSQL_FLOAT> global(
             sum_yhat_y.nrows(), sum_yhat_y.ncols() );
 
-        SQLNET_PARALLEL_LIB::all_reduce(
+        AUTOSQL_PARALLEL_LIB::all_reduce(
             *( _comm ),                       // comm
             sum_yhat_y.data(),                // in_values
             global.nrows() * global.ncols(),  // count,
             global.data(),                    // out_values
-            std::plus<SQLNET_FLOAT>()         // op
+            std::plus<AUTOSQL_FLOAT>()         // op
         );
 
         _comm->barrier();
 
         sum_yhat_y = std::move( global );
 
-#endif  // SQLNET_PARALLEL
+#endif  // AUTOSQL_PARALLEL
     }
 
     // n
     {
-#ifdef SQLNET_PARALLEL
+#ifdef AUTOSQL_PARALLEL
 
-        SQLNET_FLOAT global = 0.0;
+        AUTOSQL_FLOAT global = 0.0;
 
-        SQLNET_PARALLEL_LIB::all_reduce(
+        AUTOSQL_PARALLEL_LIB::all_reduce(
             *( _comm ),                // comm
             &n,                        // in_value
             1,                         // count
             &global,                   // out_value
-            std::plus<SQLNET_FLOAT>()  // op
+            std::plus<AUTOSQL_FLOAT>()  // op
         );
 
         _comm->barrier();
 
         n = global;
 
-#endif  // SQLNET_PARALLEL
+#endif  // AUTOSQL_PARALLEL
     }
 
     // -----------------------------------------------------------
     // Calculate correlations from sufficient statistics
 
-    auto feature_correlations = std::vector<std::vector<SQLNET_FLOAT>>(
+    auto feature_correlations = std::vector<std::vector<AUTOSQL_FLOAT>>(
         _features.ncols(),
-        std::vector<SQLNET_FLOAT>( _targets.df().targets().ncols() ) );
+        std::vector<AUTOSQL_FLOAT>( _targets.df().targets().ncols() ) );
 
-#ifdef SQLNET_MULTITHREADING
+#ifdef AUTOSQL_MULTITHREADING
     if ( _comm->rank() == 0 )
         {
-#endif  // SQLNET_MULTITHREADING
+#endif  // AUTOSQL_MULTITHREADING
 
-            for ( SQLNET_INT j = 0; j < _features.ncols(); ++j )
-                for ( SQLNET_INT k = 0; k < _targets.df().targets().ncols();
+            for ( AUTOSQL_INT j = 0; j < _features.ncols(); ++j )
+                for ( AUTOSQL_INT k = 0; k < _targets.df().targets().ncols();
                       ++k )
                     {
-                        const SQLNET_FLOAT var_yhat =
+                        const AUTOSQL_FLOAT var_yhat =
                             sum_yhat_yhat[j] / n -
                             ( sum_yhat[j] / n ) * ( sum_yhat[j] / n );
 
-                        const SQLNET_FLOAT var_y =
+                        const AUTOSQL_FLOAT var_y =
                             sum_y_y[k] / n -
                             ( sum_y[k] / n ) * ( sum_y[k] / n );
 
-                        const SQLNET_FLOAT cov_y_yhat =
+                        const AUTOSQL_FLOAT cov_y_yhat =
                             sum_yhat_y( j, k ) / n -
                             ( sum_yhat[j] / n ) * ( sum_y[k] / n );
 
@@ -327,9 +327,9 @@ Summarizer::calculate_feature_correlations(
                             }
                     }
 
-#ifdef SQLNET_MULTITHREADING
+#ifdef AUTOSQL_MULTITHREADING
         }
-#endif  // SQLNET_MULTITHREADING
+#endif  // AUTOSQL_MULTITHREADING
 
     // -----------------------------------------------------------
 
@@ -339,20 +339,20 @@ Summarizer::calculate_feature_correlations(
 // ----------------------------------------------------------------------------
 
 void Summarizer::calculate_feature_plots(
-    const SQLNET_INT _num_bins,
-    const containers::Matrix<SQLNET_FLOAT>& _mat,
+    const AUTOSQL_INT _num_bins,
+    const containers::Matrix<AUTOSQL_FLOAT>& _mat,
     const containers::DataFrameView& _targets,
-    SQLNET_COMMUNICATOR* _comm,
-    std::vector<std::vector<SQLNET_FLOAT>>& _labels,
-    std::vector<std::vector<SQLNET_INT>>& _feature_densities,
-    std::vector<std::vector<std::vector<SQLNET_FLOAT>>>& _average_targets )
+    AUTOSQL_COMMUNICATOR* _comm,
+    std::vector<std::vector<AUTOSQL_FLOAT>>& _labels,
+    std::vector<std::vector<AUTOSQL_INT>>& _feature_densities,
+    std::vector<std::vector<std::vector<AUTOSQL_FLOAT>>>& _average_targets )
 {
     // ------------------------------------------------------------------------
     // Find minima and maxima
 
-    auto minima = std::vector<SQLNET_FLOAT>( 0 );
+    auto minima = std::vector<AUTOSQL_FLOAT>( 0 );
 
-    auto maxima = std::vector<SQLNET_FLOAT>( 0 );
+    auto maxima = std::vector<AUTOSQL_FLOAT>( 0 );
 
     min_and_max( _mat, _comm, minima, maxima );
 
@@ -360,14 +360,14 @@ void Summarizer::calculate_feature_plots(
     // Calculate step_sizes and actual_num_bins. Note that actual_num_bins
     // can be smaller than num_bins.
 
-    auto step_sizes = std::vector<SQLNET_FLOAT>( 0 );
+    auto step_sizes = std::vector<AUTOSQL_FLOAT>( 0 );
 
-    auto actual_num_bins = std::vector<SQLNET_INT>( 0 );
+    auto actual_num_bins = std::vector<AUTOSQL_INT>( 0 );
 
     calculate_step_sizes_and_num_bins(
         minima,
         maxima,
-        static_cast<SQLNET_FLOAT>( _num_bins ),
+        static_cast<AUTOSQL_FLOAT>( _num_bins ),
         step_sizes,
         actual_num_bins );
 
@@ -375,7 +375,7 @@ void Summarizer::calculate_feature_plots(
     // Init labels
 
     auto labels =
-        std::vector<std::vector<SQLNET_FLOAT>>( actual_num_bins.size() );
+        std::vector<std::vector<AUTOSQL_FLOAT>>( actual_num_bins.size() );
 
     for ( size_t i = 0; i < labels.size(); ++i )
         {
@@ -394,15 +394,15 @@ void Summarizer::calculate_feature_plots(
     const auto num_targets = _targets.df().targets().ncols();
 
     auto feature_densities =
-        std::vector<std::vector<SQLNET_INT>>( _mat.ncols() );
+        std::vector<std::vector<AUTOSQL_INT>>( _mat.ncols() );
 
     auto average_targets =
-        std::vector<std::vector<std::vector<SQLNET_FLOAT>>>( _mat.ncols() );
+        std::vector<std::vector<std::vector<AUTOSQL_FLOAT>>>( _mat.ncols() );
 
     std::for_each(
         average_targets.begin(),
         average_targets.end(),
-        [num_targets]( std::vector<std::vector<SQLNET_FLOAT>>& vec ) {
+        [num_targets]( std::vector<std::vector<AUTOSQL_FLOAT>>& vec ) {
             vec.resize( num_targets );
         } );
 
@@ -412,7 +412,7 @@ void Summarizer::calculate_feature_plots(
 
             feature_densities[j].resize( actual_num_bins[j] );
 
-            for ( SQLNET_INT k = 0; k < num_targets; ++k )
+            for ( AUTOSQL_INT k = 0; k < num_targets; ++k )
                 {
                     average_targets[j][k].resize( actual_num_bins[j] );
                 }
@@ -427,9 +427,9 @@ void Summarizer::calculate_feature_plots(
 
     assert( average_targets.size() == static_cast<size_t>( _mat.ncols() ) );
 
-    for ( SQLNET_INT i = 0; i < _mat.nrows(); ++i )
+    for ( AUTOSQL_INT i = 0; i < _mat.nrows(); ++i )
         {
-            for ( SQLNET_INT j = 0; j < _mat.ncols(); ++j )
+            for ( AUTOSQL_INT j = 0; j < _mat.ncols(); ++j )
                 {
                     const auto val = _mat( i, j );
 
@@ -448,7 +448,7 @@ void Summarizer::calculate_feature_plots(
                     assert( bin >= 0 );
 
                     assert(
-                        bin < static_cast<SQLNET_INT>(
+                        bin < static_cast<AUTOSQL_INT>(
                                   feature_densities[j].size() ) );
 
                     ++feature_densities[j][bin];
@@ -458,7 +458,7 @@ void Summarizer::calculate_feature_plots(
                     for ( size_t k = 0; k < average_targets[j].size(); ++k )
                         {
                             assert(
-                                bin < static_cast<SQLNET_INT>(
+                                bin < static_cast<AUTOSQL_INT>(
                                           average_targets[j][k].size() ) );
 
                             average_targets[j][k][bin] +=
@@ -470,18 +470,18 @@ void Summarizer::calculate_feature_plots(
         // ------------------------------------------------------------------------
         // Reduce, if necessary
 
-#ifdef SQLNET_PARALLEL
+#ifdef AUTOSQL_PARALLEL
 
     for ( size_t j = 0; j < labels.size(); ++j )
         {
-            auto global = std::vector<SQLNET_FLOAT>( labels[j].size() );
+            auto global = std::vector<AUTOSQL_FLOAT>( labels[j].size() );
 
-            SQLNET_PARALLEL_LIB::all_reduce(
+            AUTOSQL_PARALLEL_LIB::all_reduce(
                 *_comm,                                      // comm
                 labels[j].data(),                            // in_values
-                static_cast<SQLNET_FLOAT>( global.size() ),  // count,
+                static_cast<AUTOSQL_FLOAT>( global.size() ),  // count,
                 global.data(),                               // out_values
-                std::plus<SQLNET_FLOAT>()                    // op
+                std::plus<AUTOSQL_FLOAT>()                    // op
             );
 
             _comm->barrier();
@@ -492,14 +492,14 @@ void Summarizer::calculate_feature_plots(
     for ( size_t j = 0; j < feature_densities.size(); ++j )
         {
             auto global =
-                std::vector<SQLNET_INT>( feature_densities[j].size() );
+                std::vector<AUTOSQL_INT>( feature_densities[j].size() );
 
-            SQLNET_PARALLEL_LIB::all_reduce(
+            AUTOSQL_PARALLEL_LIB::all_reduce(
                 *_comm,                                    // comm
                 feature_densities[j].data(),               // in_values
-                static_cast<SQLNET_INT>( global.size() ),  // count,
+                static_cast<AUTOSQL_INT>( global.size() ),  // count,
                 global.data(),                             // out_values
-                std::plus<SQLNET_INT>()                    // op
+                std::plus<AUTOSQL_INT>()                    // op
             );
 
             _comm->barrier();
@@ -511,15 +511,15 @@ void Summarizer::calculate_feature_plots(
         {
             for ( size_t k = 0; k < average_targets[j].size(); ++k )
                 {
-                    auto global = std::vector<SQLNET_FLOAT>(
+                    auto global = std::vector<AUTOSQL_FLOAT>(
                         average_targets[j][k].size() );
 
-                    SQLNET_PARALLEL_LIB::all_reduce(
+                    AUTOSQL_PARALLEL_LIB::all_reduce(
                         *_comm,                                    // comm
                         average_targets[j][k].data(),              // in_values
-                        static_cast<SQLNET_INT>( global.size() ),  // count,
+                        static_cast<AUTOSQL_INT>( global.size() ),  // count,
                         global.data(),                             // out_values
-                        std::plus<SQLNET_FLOAT>()                  // op
+                        std::plus<AUTOSQL_FLOAT>()                  // op
                     );
 
                     _comm->barrier();
@@ -528,7 +528,7 @@ void Summarizer::calculate_feature_plots(
                 }
         }
 
-#endif  // SQLNET_PARALLEL
+#endif  // AUTOSQL_PARALLEL
 
     // ------------------------------------------------------------------------
     // Divide sums of targets by frequencies to get average_targets.
@@ -549,7 +549,7 @@ void Summarizer::calculate_feature_plots(
                         }
 
                     const auto freq =
-                        static_cast<SQLNET_FLOAT>( feature_densities[j][bin] );
+                        static_cast<AUTOSQL_FLOAT>( feature_densities[j][bin] );
 
                     labels[j][bin] /= freq;
 
@@ -572,14 +572,14 @@ void Summarizer::calculate_feature_plots(
     assert( feature_densities.size() == labels.size() );
 
     _labels =
-        std::vector<std::vector<SQLNET_FLOAT>>( feature_densities.size() );
+        std::vector<std::vector<AUTOSQL_FLOAT>>( feature_densities.size() );
 
     _feature_densities =
-        std::vector<std::vector<SQLNET_INT>>( feature_densities.size() );
+        std::vector<std::vector<AUTOSQL_INT>>( feature_densities.size() );
 
-    _average_targets = std::vector<std::vector<std::vector<SQLNET_FLOAT>>>(
+    _average_targets = std::vector<std::vector<std::vector<AUTOSQL_FLOAT>>>(
         feature_densities.size(),
-        std::vector<std::vector<SQLNET_FLOAT>>( num_targets ) );
+        std::vector<std::vector<AUTOSQL_FLOAT>>( num_targets ) );
 
     for ( size_t j = 0; j < feature_densities.size(); ++j )
         {
@@ -611,11 +611,11 @@ void Summarizer::calculate_feature_plots(
 // ----------------------------------------------------------------------------
 
 void Summarizer::calculate_step_sizes_and_num_bins(
-    const std::vector<SQLNET_FLOAT>& _minima,
-    const std::vector<SQLNET_FLOAT>& _maxima,
-    const SQLNET_FLOAT _num_bins,
-    std::vector<SQLNET_FLOAT>& _step_sizes,
-    std::vector<SQLNET_INT>& _actual_num_bins )
+    const std::vector<AUTOSQL_FLOAT>& _minima,
+    const std::vector<AUTOSQL_FLOAT>& _maxima,
+    const AUTOSQL_FLOAT _num_bins,
+    std::vector<AUTOSQL_FLOAT>& _step_sizes,
+    std::vector<AUTOSQL_INT>& _actual_num_bins )
 {
     assert( _minima.size() == _maxima.size() );
 
@@ -637,35 +637,35 @@ void Summarizer::calculate_step_sizes_and_num_bins(
             _step_sizes[j] = ( max - min ) / _num_bins;
 
             _actual_num_bins[j] =
-                static_cast<SQLNET_INT>( ( max - min ) / _step_sizes[j] );
+                static_cast<AUTOSQL_INT>( ( max - min ) / _step_sizes[j] );
         }
 }
 
 // ----------------------------------------------------------------------------
 
 void Summarizer::divide_by_nrows(
-    const SQLNET_INT _nrows, std::vector<SQLNET_FLOAT>& _results )
+    const AUTOSQL_INT _nrows, std::vector<AUTOSQL_FLOAT>& _results )
 {
-    const auto nrows = static_cast<SQLNET_FLOAT>( _nrows );
+    const auto nrows = static_cast<AUTOSQL_FLOAT>( _nrows );
 
     std::for_each(
-        _results.begin(), _results.end(), [nrows]( SQLNET_FLOAT& val ) {
+        _results.begin(), _results.end(), [nrows]( AUTOSQL_FLOAT& val ) {
             val /= nrows;
         } );
 }
 
 // ----------------------------------------------------------------------------
 
-SQLNET_INT Summarizer::identify_bin(
-    const SQLNET_INT _num_bins,
-    const SQLNET_FLOAT _step_size,
-    const SQLNET_FLOAT _val,
-    const SQLNET_FLOAT _min )
+AUTOSQL_INT Summarizer::identify_bin(
+    const AUTOSQL_INT _num_bins,
+    const AUTOSQL_FLOAT _step_size,
+    const AUTOSQL_FLOAT _val,
+    const AUTOSQL_FLOAT _min )
 {
     assert( _step_size > 0.0 );
 
     // Note that this always rounds down.
-    auto bin = static_cast<SQLNET_INT>( ( _val - _min ) / _step_size );
+    auto bin = static_cast<AUTOSQL_INT>( ( _val - _min ) / _step_size );
 
     assert( bin >= 0 );
 
@@ -681,14 +681,14 @@ SQLNET_INT Summarizer::identify_bin(
 
 // ----------------------------------------------------------------------------
 
-std::vector<SQLNET_FLOAT> Summarizer::max( const Matrix<SQLNET_FLOAT>& _mat )
+std::vector<AUTOSQL_FLOAT> Summarizer::max( const Matrix<AUTOSQL_FLOAT>& _mat )
 {
-    std::vector<SQLNET_FLOAT> results(
-        _mat.ncols(), std::numeric_limits<SQLNET_FLOAT>::lowest() );
+    std::vector<AUTOSQL_FLOAT> results(
+        _mat.ncols(), std::numeric_limits<AUTOSQL_FLOAT>::lowest() );
 
-    for ( SQLNET_INT i = 0; i < _mat.nrows(); ++i )
+    for ( AUTOSQL_INT i = 0; i < _mat.nrows(); ++i )
         {
-            for ( SQLNET_INT j = 0; j < _mat.ncols(); ++j )
+            for ( AUTOSQL_INT j = 0; j < _mat.ncols(); ++j )
                 {
                     if ( _mat( i, j ) > results[j] )
                         {
@@ -702,15 +702,15 @@ std::vector<SQLNET_FLOAT> Summarizer::max( const Matrix<SQLNET_FLOAT>& _mat )
 
 // ----------------------------------------------------------------------------
 
-std::vector<SQLNET_FLOAT> Summarizer::mean( const Matrix<SQLNET_FLOAT>& _mat )
+std::vector<AUTOSQL_FLOAT> Summarizer::mean( const Matrix<AUTOSQL_FLOAT>& _mat )
 {
-    std::vector<SQLNET_FLOAT> results( _mat.ncols() );
+    std::vector<AUTOSQL_FLOAT> results( _mat.ncols() );
 
-    std::vector<SQLNET_FLOAT> nrows( _mat.ncols() );
+    std::vector<AUTOSQL_FLOAT> nrows( _mat.ncols() );
 
-    for ( SQLNET_INT i = 0; i < _mat.nrows(); ++i )
+    for ( AUTOSQL_INT i = 0; i < _mat.nrows(); ++i )
         {
-            for ( SQLNET_INT j = 0; j < _mat.ncols(); ++j )
+            for ( AUTOSQL_INT j = 0; j < _mat.ncols(); ++j )
                 {
                     if ( _mat( i, j ) == _mat( i, j ) )
                         {
@@ -725,7 +725,7 @@ std::vector<SQLNET_FLOAT> Summarizer::mean( const Matrix<SQLNET_FLOAT>& _mat )
         results.end(),
         nrows.begin(),
         results.begin(),
-        []( const SQLNET_FLOAT val, const SQLNET_FLOAT nrows ) {
+        []( const AUTOSQL_FLOAT val, const AUTOSQL_FLOAT nrows ) {
             if ( nrows != 0.0 )
                 {
                     return val / nrows;
@@ -741,14 +741,14 @@ std::vector<SQLNET_FLOAT> Summarizer::mean( const Matrix<SQLNET_FLOAT>& _mat )
 
 // ----------------------------------------------------------------------------
 
-std::vector<SQLNET_FLOAT> Summarizer::min( const Matrix<SQLNET_FLOAT>& _mat )
+std::vector<AUTOSQL_FLOAT> Summarizer::min( const Matrix<AUTOSQL_FLOAT>& _mat )
 {
-    std::vector<SQLNET_FLOAT> results(
-        _mat.ncols(), std::numeric_limits<SQLNET_FLOAT>::max() );
+    std::vector<AUTOSQL_FLOAT> results(
+        _mat.ncols(), std::numeric_limits<AUTOSQL_FLOAT>::max() );
 
-    for ( SQLNET_INT i = 0; i < _mat.nrows(); ++i )
+    for ( AUTOSQL_INT i = 0; i < _mat.nrows(); ++i )
         {
-            for ( SQLNET_INT j = 0; j < _mat.ncols(); ++j )
+            for ( AUTOSQL_INT j = 0; j < _mat.ncols(); ++j )
                 {
                     if ( _mat( i, j ) < results[j] )
                         {
@@ -763,20 +763,20 @@ std::vector<SQLNET_FLOAT> Summarizer::min( const Matrix<SQLNET_FLOAT>& _mat )
 // ----------------------------------------------------------------------------
 
 void Summarizer::min_and_max(
-    const containers::Matrix<SQLNET_FLOAT>& _mat,
-    SQLNET_COMMUNICATOR* _comm,
-    std::vector<SQLNET_FLOAT>& _minima,
-    std::vector<SQLNET_FLOAT>& _maxima )
+    const containers::Matrix<AUTOSQL_FLOAT>& _mat,
+    AUTOSQL_COMMUNICATOR* _comm,
+    std::vector<AUTOSQL_FLOAT>& _minima,
+    std::vector<AUTOSQL_FLOAT>& _maxima )
 {
-    _minima = std::vector<SQLNET_FLOAT>(
-        _mat.ncols(), std::numeric_limits<SQLNET_FLOAT>::max() );
+    _minima = std::vector<AUTOSQL_FLOAT>(
+        _mat.ncols(), std::numeric_limits<AUTOSQL_FLOAT>::max() );
 
-    _maxima = std::vector<SQLNET_FLOAT>(
-        _mat.ncols(), std::numeric_limits<SQLNET_FLOAT>::lowest() );
+    _maxima = std::vector<AUTOSQL_FLOAT>(
+        _mat.ncols(), std::numeric_limits<AUTOSQL_FLOAT>::lowest() );
 
-    for ( SQLNET_INT i = 0; i < _mat.nrows(); ++i )
+    for ( AUTOSQL_INT i = 0; i < _mat.nrows(); ++i )
         {
-            for ( SQLNET_INT j = 0; j < _mat.ncols(); ++j )
+            for ( AUTOSQL_INT j = 0; j < _mat.ncols(); ++j )
                 {
                     if ( _mat( i, j ) < _minima[j] )
                         {
@@ -789,7 +789,7 @@ void Summarizer::min_and_max(
                 }
         }
 
-#ifdef SQLNET_PARALLEL
+#ifdef AUTOSQL_PARALLEL
 
     assert( _minima.size() == _maxima.size() );
 
@@ -798,19 +798,19 @@ void Summarizer::min_and_max(
             reduce_min_max( *_comm, _minima[j], _maxima[j] );
         }
 
-#endif  // SQLNET_PARALLEL
+#endif  // AUTOSQL_PARALLEL
 }
 
 // ----------------------------------------------------------------------------
 
-std::vector<SQLNET_FLOAT> Summarizer::share_nan(
-    const Matrix<SQLNET_FLOAT>& _mat )
+std::vector<AUTOSQL_FLOAT> Summarizer::share_nan(
+    const Matrix<AUTOSQL_FLOAT>& _mat )
 {
-    std::vector<SQLNET_FLOAT> results( _mat.ncols() );
+    std::vector<AUTOSQL_FLOAT> results( _mat.ncols() );
 
-    for ( SQLNET_INT i = 0; i < _mat.nrows(); ++i )
+    for ( AUTOSQL_INT i = 0; i < _mat.nrows(); ++i )
         {
-            for ( SQLNET_INT j = 0; j < _mat.ncols(); ++j )
+            for ( AUTOSQL_INT j = 0; j < _mat.ncols(); ++j )
                 {
                     if ( _mat( i, j ) != _mat( i, j ) )
                         {
@@ -826,14 +826,14 @@ std::vector<SQLNET_FLOAT> Summarizer::share_nan(
 
 // ----------------------------------------------------------------------------
 
-std::vector<SQLNET_FLOAT> Summarizer::share_nan(
-    const Matrix<SQLNET_INT>& _mat )
+std::vector<AUTOSQL_FLOAT> Summarizer::share_nan(
+    const Matrix<AUTOSQL_INT>& _mat )
 {
-    std::vector<SQLNET_FLOAT> results( _mat.ncols() );
+    std::vector<AUTOSQL_FLOAT> results( _mat.ncols() );
 
-    for ( SQLNET_INT i = 0; i < _mat.nrows(); ++i )
+    for ( AUTOSQL_INT i = 0; i < _mat.nrows(); ++i )
         {
-            for ( SQLNET_INT j = 0; j < _mat.ncols(); ++j )
+            for ( AUTOSQL_INT j = 0; j < _mat.ncols(); ++j )
                 {
                     if ( _mat( i, j ) == -1 )
                         {
@@ -849,7 +849,7 @@ std::vector<SQLNET_FLOAT> Summarizer::share_nan(
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object Summarizer::summarize( const Matrix<SQLNET_FLOAT>& _mat )
+Poco::JSON::Object Summarizer::summarize( const Matrix<AUTOSQL_FLOAT>& _mat )
 {
     Poco::JSON::Object summary;
 
@@ -866,7 +866,7 @@ Poco::JSON::Object Summarizer::summarize( const Matrix<SQLNET_FLOAT>& _mat )
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object Summarizer::summarize( const Matrix<SQLNET_INT>& _mat )
+Poco::JSON::Object Summarizer::summarize( const Matrix<AUTOSQL_INT>& _mat )
 {
     Poco::JSON::Object summary;
 

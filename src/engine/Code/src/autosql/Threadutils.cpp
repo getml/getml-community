@@ -1,6 +1,6 @@
 #include "engine/engine.hpp"
 
-#ifdef SQLNET_MULTITHREADING
+#ifdef AUTOSQL_MULTITHREADING
 
 namespace autosql
 {
@@ -11,9 +11,9 @@ namespace multithreading
 // ----------------------------------------------------------------------------
 
 void Threadutils::calculate_displs(
-    const SQLNET_INT _nrows, std::vector<SQLNET_INT>& _displs )
+    const AUTOSQL_INT _nrows, std::vector<AUTOSQL_INT>& _displs )
 {
-    SQLNET_INT num_threads = static_cast<SQLNET_INT>( _displs.size() - 1 );
+    AUTOSQL_INT num_threads = static_cast<AUTOSQL_INT>( _displs.size() - 1 );
 
     _displs[0] = 0;
 
@@ -28,7 +28,7 @@ void Threadutils::calculate_displs(
 // ----------------------------------------------------------------------------
 
 std::string Threadutils::fit(
-    SQLNET_INT _num_threads,
+    AUTOSQL_INT _num_threads,
     decisiontrees::DecisionTreeEnsemble& _model,
     const std::shared_ptr<const logging::Logger>& _logger,
     std::vector<containers::DataFrame>& _peripheral_tables,
@@ -54,7 +54,7 @@ std::string Threadutils::fit(
     // ------------------------------------------------------
     // Create copies of the model and spawn threads
 
-    for ( SQLNET_INT i = 0; i < static_cast<SQLNET_INT>( models.size() ); ++i )
+    for ( AUTOSQL_INT i = 0; i < static_cast<AUTOSQL_INT>( models.size() ); ++i )
         {
             models[i] = _model;
 
@@ -110,7 +110,7 @@ std::string Threadutils::fit(
 
 // ----------------------------------------------------------------------------
 
-SQLNET_INT Threadutils::get_num_threads( const SQLNET_INT _num_threads )
+AUTOSQL_INT Threadutils::get_num_threads( const AUTOSQL_INT _num_threads )
 {
     auto num_threads = _num_threads;
 
@@ -118,7 +118,7 @@ SQLNET_INT Threadutils::get_num_threads( const SQLNET_INT _num_threads )
         {
             num_threads = std::max(
                 2,
-                static_cast<SQLNET_INT>( std::thread::hardware_concurrency() ) -
+                static_cast<AUTOSQL_INT>( std::thread::hardware_concurrency() ) -
                     2 );
         }
 
@@ -128,9 +128,9 @@ SQLNET_INT Threadutils::get_num_threads( const SQLNET_INT _num_threads )
 // ----------------------------------------------------------------------------
 
 Poco::JSON::Object Threadutils::score(
-    const SQLNET_INT _num_threads,
-    const containers::Matrix<SQLNET_FLOAT>& _yhat,
-    const containers::Matrix<SQLNET_FLOAT>& _y,
+    const AUTOSQL_INT _num_threads,
+    const containers::Matrix<AUTOSQL_FLOAT>& _yhat,
+    const containers::Matrix<AUTOSQL_FLOAT>& _y,
     decisiontrees::DecisionTreeEnsemble* _model )
 {
     // ------------------------------------------------------
@@ -151,14 +151,14 @@ Poco::JSON::Object Threadutils::score(
     // ------------------------------------------------------
     // Calculate displs
 
-    std::vector<SQLNET_INT> displs( _num_threads + 1 );
+    std::vector<AUTOSQL_INT> displs( _num_threads + 1 );
 
     calculate_displs( _yhat.nrows(), displs );
 
     // ------------------------------------------------------
     // Create copies of the metric and spawn threads
 
-    for ( SQLNET_SIZE i = 0; i < models.size(); ++i )
+    for ( AUTOSQL_SIZE i = 0; i < models.size(); ++i )
         {
             models[i] = *_model;
 
@@ -209,8 +209,8 @@ Poco::JSON::Object Threadutils::score(
 
 // ----------------------------------------------------------------------------
 
-containers::Matrix<SQLNET_FLOAT> Threadutils::transform(
-    SQLNET_INT _num_threads,
+containers::Matrix<AUTOSQL_FLOAT> Threadutils::transform(
+    AUTOSQL_INT _num_threads,
     decisiontrees::DecisionTreeEnsemble& _model,
     const std::shared_ptr<const logging::Logger>& _logger,
     std::vector<containers::DataFrame>& _peripheral_tables,
@@ -219,9 +219,9 @@ containers::Matrix<SQLNET_FLOAT> Threadutils::transform(
 {
     std::vector<decisiontrees::DecisionTreeEnsemble> models( _num_threads - 1 );
 
-    std::vector<std::future<containers::Matrix<SQLNET_FLOAT>>> futures;
+    std::vector<std::future<containers::Matrix<AUTOSQL_FLOAT>>> futures;
 
-    std::vector<std::shared_ptr<const std::vector<SQLNET_INT>>> indices;
+    std::vector<std::shared_ptr<const std::vector<AUTOSQL_INT>>> indices;
 
     autosql::multithreading::Communicator comm( _num_threads );
 
@@ -236,7 +236,7 @@ containers::Matrix<SQLNET_FLOAT> Threadutils::transform(
     // ------------------------------------------------------
     // Create copies of the model and spawn threads
 
-    for ( SQLNET_INT i = 0; i < static_cast<SQLNET_INT>( models.size() ); ++i )
+    for ( AUTOSQL_INT i = 0; i < static_cast<AUTOSQL_INT>( models.size() ); ++i )
         {
             models[i] = _model;
 
@@ -260,7 +260,7 @@ containers::Matrix<SQLNET_FLOAT> Threadutils::transform(
     // ------------------------------------------------------
     // Transform in main thread
 
-    containers::Matrix<SQLNET_FLOAT> yhat;
+    containers::Matrix<AUTOSQL_FLOAT> yhat;
 
     try
         {
@@ -274,7 +274,7 @@ containers::Matrix<SQLNET_FLOAT> Threadutils::transform(
                 true,  // _transpose
                 _score );
 
-            yhat = containers::Matrix<SQLNET_FLOAT>(
+            yhat = containers::Matrix<AUTOSQL_FLOAT>(
                 _population_table.nrows(), temp.ncols() );
 
             copy( subview.get_indices(), temp, yhat );
@@ -311,4 +311,4 @@ containers::Matrix<SQLNET_FLOAT> Threadutils::transform(
 }  // namespace engine
 }  // namespace autosql
 
-#endif  // SQLNET_MULTITHREADING
+#endif  // AUTOSQL_MULTITHREADING

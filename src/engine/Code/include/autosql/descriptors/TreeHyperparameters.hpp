@@ -12,35 +12,35 @@ namespace descriptors
 struct TreeHyperparameters
 {
     TreeHyperparameters( const Poco::JSON::Object& _json_obj )
-        : allow_sets( _json_obj.SQLNET_GET_VALUE<bool>( "allow_sets_" ) ),
+        : allow_sets( _json_obj.AUTOSQL_GET_VALUE<bool>( "allow_sets_" ) ),
           grid_factor(
-              _json_obj.SQLNET_GET_VALUE<SQLNET_FLOAT>( "grid_factor_" ) ),
-          max_length( _json_obj.SQLNET_GET_VALUE<SQLNET_INT>( "max_length_" ) ),
+              _json_obj.AUTOSQL_GET_VALUE<AUTOSQL_FLOAT>( "grid_factor_" ) ),
+          max_length( _json_obj.AUTOSQL_GET_VALUE<AUTOSQL_INT>( "max_length_" ) ),
           max_length_probe(
               TreeHyperparameters::calc_max_length_probe( _json_obj ) ),
           min_num_samples(
-              _json_obj.SQLNET_GET_VALUE<SQLNET_INT>( "min_num_samples_" ) ),
+              _json_obj.AUTOSQL_GET_VALUE<AUTOSQL_INT>( "min_num_samples_" ) ),
           regularization(
-              _json_obj.SQLNET_GET_VALUE<SQLNET_FLOAT>( "regularization_" ) ),
+              _json_obj.AUTOSQL_GET_VALUE<AUTOSQL_FLOAT>( "regularization_" ) ),
           share_conditions(
-              _json_obj.SQLNET_GET_VALUE<SQLNET_FLOAT>( "share_conditions_" ) )
+              _json_obj.AUTOSQL_GET_VALUE<AUTOSQL_FLOAT>( "share_conditions_" ) )
     {
     }
 
     // ------------------------------------------------------
 
     /// Calculates max_length_probe
-    static SQLNET_INT calc_max_length_probe(
+    static AUTOSQL_INT calc_max_length_probe(
         const Poco::JSON::Object& _json_obj )
     {
-        if ( _json_obj.SQLNET_GET_VALUE<bool>( "fast_training_" ) &&
-             !_json_obj.SQLNET_GET_VALUE<bool>( "round_robin_" ) )
+        if ( _json_obj.AUTOSQL_GET_VALUE<bool>( "fast_training_" ) &&
+             !_json_obj.AUTOSQL_GET_VALUE<bool>( "round_robin_" ) )
             {
                 return 0;
             }
         else
             {
-                return _json_obj.SQLNET_GET_VALUE<SQLNET_INT>( "max_length_" );
+                return _json_obj.AUTOSQL_GET_VALUE<AUTOSQL_INT>( "max_length_" );
             }
     }
 
@@ -51,22 +51,22 @@ struct TreeHyperparameters
     const bool allow_sets;
 
     /// Proportional to the frequency of critical values
-    const SQLNET_FLOAT grid_factor;
+    const AUTOSQL_FLOAT grid_factor;
 
     /// The maximum depth of a decision tree
-    const SQLNET_INT max_length;
+    const AUTOSQL_INT max_length;
 
     /// The maximum depth during the "probing" phase
-    const SQLNET_INT max_length_probe;
+    const AUTOSQL_INT max_length_probe;
 
     /// The minimum number of samples needed for a split
-    const SQLNET_INT min_num_samples;
+    const AUTOSQL_INT min_num_samples;
 
     /// Minimum improvement in R2 necessary for a split
-    const SQLNET_FLOAT regularization;
+    const AUTOSQL_FLOAT regularization;
 
     /// The share of conditions randomly selected
-    const SQLNET_FLOAT share_conditions;
+    const AUTOSQL_FLOAT share_conditions;
 };
 
 // ----------------------------------------------------------------------------

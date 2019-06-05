@@ -7,14 +7,14 @@ namespace decisiontrees
 // ----------------------------------------------------------------------------
 
 DecisionTreeNode::DecisionTreeNode(
-    bool _is_activated, SQLNET_INT _depth, const DecisionTreeImpl *_tree )
+    bool _is_activated, AUTOSQL_INT _depth, const DecisionTreeImpl *_tree )
     : depth_( _depth ), is_activated_( _is_activated ), tree_( _tree ){};
 
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::apply_by_categories_used(
-    SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-    SQLNET_SAMPLE_ITERATOR _sample_container_end )
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
 {
     if ( std::distance( _sample_container_begin, _sample_container_end ) == 0 )
         {
@@ -64,8 +64,8 @@ void DecisionTreeNode::apply_by_categories_used(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::apply_by_categories_used_and_commit(
-    SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-    SQLNET_SAMPLE_ITERATOR _sample_container_end )
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
 {
     if ( std::distance( _sample_container_begin, _sample_container_end ) > 0 )
         {
@@ -121,16 +121,16 @@ void DecisionTreeNode::apply_by_categories_used_and_commit(
 
 // ----------------------------------------------------------------------------
 
-std::shared_ptr<const std::vector<SQLNET_INT>>
+std::shared_ptr<const std::vector<AUTOSQL_INT>>
 DecisionTreeNode::calculate_categories(
-    const SQLNET_SIZE _sample_size,
-    SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-    SQLNET_SAMPLE_ITERATOR _sample_container_end )
+    const AUTOSQL_SIZE _sample_size,
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
 {
     // ------------------------------------------------------------------------
 
-    SQLNET_INT categories_begin = 0;
-    SQLNET_INT categories_end = 0;
+    AUTOSQL_INT categories_begin = 0;
+    AUTOSQL_INT categories_end = 0;
 
     // ------------------------------------------------------------------------
     // In distributed versions, it is possible that there are no sample sizes
@@ -147,15 +147,15 @@ DecisionTreeNode::calculate_categories(
         }
     else
         {
-            categories_begin = std::numeric_limits<SQLNET_INT>::max();
+            categories_begin = std::numeric_limits<AUTOSQL_INT>::max();
             categories_end = 0;
         }
 
-#ifdef SQLNET_PARALLEL
+#ifdef AUTOSQL_PARALLEL
 
     reduce_min_max( categories_begin, categories_end );
 
-#endif  // SQLNET_PARALLEL
+#endif  // AUTOSQL_PARALLEL
 
     // ------------------------------------------------------------------------
     // There is a possibility that all critical values are NULL (signified by
@@ -163,7 +163,7 @@ DecisionTreeNode::calculate_categories(
 
     if ( categories_begin >= categories_end )
         {
-            return std::make_shared<std::vector<SQLNET_INT>>( 0 );
+            return std::make_shared<std::vector<AUTOSQL_INT>>( 0 );
         }
 
     // ------------------------------------------------------------------------
@@ -187,30 +187,30 @@ DecisionTreeNode::calculate_categories(
             included[( *it )->categorical_value - categories_begin] = 1;
         }
 
-#ifdef SQLNET_PARALLEL
+#ifdef AUTOSQL_PARALLEL
     {
         auto global = std::vector<std::int8_t>( included.size() );
 
-        SQLNET_PARALLEL_LIB::all_reduce(
+        AUTOSQL_PARALLEL_LIB::all_reduce(
             *comm(),                            // comm
             included.data(),                    // in_values
             categories_end - categories_begin,  // count
             global.data(),                      // out_values
-            SQLNET_MAX_OP<std::int8_t>()        // op
+            AUTOSQL_MAX_OP<std::int8_t>()        // op
         );
 
         comm()->barrier();
 
         included = std::move( global );
     }
-#endif  // SQLNET_PARALLEL
+#endif  // AUTOSQL_PARALLEL
 
     // ------------------------------------------------------------------------
     // Build vector.
 
-    auto categories = std::make_shared<std::vector<SQLNET_INT>>( 0 );
+    auto categories = std::make_shared<std::vector<AUTOSQL_INT>>( 0 );
 
-    for ( SQLNET_INT i = 0; i < categories_end - categories_begin; ++i )
+    for ( AUTOSQL_INT i = 0; i < categories_end - categories_begin; ++i )
         {
             if ( included[i] == 1 )
                 {
@@ -227,17 +227,17 @@ DecisionTreeNode::calculate_categories(
 
 // ----------------------------------------------------------------------------
 
-containers::Matrix<SQLNET_FLOAT>
+containers::Matrix<AUTOSQL_FLOAT>
 DecisionTreeNode::calculate_critical_values_discrete(
-    SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-    SQLNET_SAMPLE_ITERATOR _sample_container_end,
-    const SQLNET_SIZE _sample_size )
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+    const AUTOSQL_SIZE _sample_size )
 {
     // ---------------------------------------------------------------------------
 
     debug_message( "calculate_critical_values_discrete..." );
 
-    SQLNET_FLOAT min = 0.0, max = 0.0;
+    AUTOSQL_FLOAT min = 0.0, max = 0.0;
 
     // ---------------------------------------------------------------------------
     // In distributed versions, it is possible that there are no sample sizes
@@ -258,15 +258,15 @@ DecisionTreeNode::calculate_critical_values_discrete(
         }
     else
         {
-            min = std::numeric_limits<SQLNET_FLOAT>::max();
-            max = std::numeric_limits<SQLNET_FLOAT>::lowest();
+            min = std::numeric_limits<AUTOSQL_FLOAT>::max();
+            max = std::numeric_limits<AUTOSQL_FLOAT>::lowest();
         }
 
-#ifdef SQLNET_PARALLEL
+#ifdef AUTOSQL_PARALLEL
 
     reduce_min_max( min, max );
 
-#endif /* SQLNET_PARALLEL */
+#endif /* AUTOSQL_PARALLEL */
 
     // ---------------------------------------------------------------------------
     // There is a possibility that all critical values are NAN in all processes.
@@ -274,21 +274,21 @@ DecisionTreeNode::calculate_critical_values_discrete(
 
     if ( min > max )
         {
-            return containers::Matrix<SQLNET_FLOAT>( 0, 1 );
+            return containers::Matrix<AUTOSQL_FLOAT>( 0, 1 );
         }
 
     // ---------------------------------------------------------------------------
 
-    SQLNET_INT num_critical_values = static_cast<SQLNET_INT>( max - min + 1 );
+    AUTOSQL_INT num_critical_values = static_cast<AUTOSQL_INT>( max - min + 1 );
 
     debug_message(
         "num_critical_values: " + std::to_string( num_critical_values ) );
 
-    containers::Matrix<SQLNET_FLOAT> critical_values( num_critical_values, 1 );
+    containers::Matrix<AUTOSQL_FLOAT> critical_values( num_critical_values, 1 );
 
-    for ( SQLNET_INT i = 0; i < num_critical_values; ++i )
+    for ( AUTOSQL_INT i = 0; i < num_critical_values; ++i )
         {
-            critical_values[i] = min + static_cast<SQLNET_FLOAT>( i );
+            critical_values[i] = min + static_cast<AUTOSQL_FLOAT>( i );
         }
 
     // ---------------------------------------------------------------------------
@@ -302,17 +302,17 @@ DecisionTreeNode::calculate_critical_values_discrete(
 
 // ----------------------------------------------------------------------------
 
-containers::Matrix<SQLNET_FLOAT>
+containers::Matrix<AUTOSQL_FLOAT>
 DecisionTreeNode::calculate_critical_values_numerical(
-    SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-    SQLNET_SAMPLE_ITERATOR _sample_container_end,
-    const SQLNET_SIZE _sample_size )
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+    const AUTOSQL_SIZE _sample_size )
 {
     // ---------------------------------------------------------------------------
 
     debug_message( "calculate_critical_values_numerical..." );
 
-    SQLNET_FLOAT min = 0.0, max = 0.0;
+    AUTOSQL_FLOAT min = 0.0, max = 0.0;
 
     // ---------------------------------------------------------------------------
     // In distributed versions, it is possible that there are no sample sizes
@@ -327,15 +327,15 @@ DecisionTreeNode::calculate_critical_values_numerical(
         }
     else
         {
-            min = std::numeric_limits<SQLNET_FLOAT>::max();
-            max = std::numeric_limits<SQLNET_FLOAT>::lowest();
+            min = std::numeric_limits<AUTOSQL_FLOAT>::max();
+            max = std::numeric_limits<AUTOSQL_FLOAT>::lowest();
         }
 
-#ifdef SQLNET_PARALLEL
+#ifdef AUTOSQL_PARALLEL
 
     reduce_min_max( min, max );
 
-#endif /* SQLNET_PARALLEL */
+#endif /* AUTOSQL_PARALLEL */
 
     // ---------------------------------------------------------------------------
     // There is a possibility that all critical values are NAN in all processes.
@@ -346,23 +346,23 @@ DecisionTreeNode::calculate_critical_values_numerical(
             debug_message(
                 "calculate_critical_values_discrete...done (edge case)." );
 
-            return containers::Matrix<SQLNET_FLOAT>( 0, 1 );
+            return containers::Matrix<AUTOSQL_FLOAT>( 0, 1 );
         }
 
     // ---------------------------------------------------------------------------
 
-    SQLNET_INT num_critical_values =
+    AUTOSQL_INT num_critical_values =
         calculate_num_critical_values( _sample_size );
 
-    SQLNET_FLOAT step_size =
-        ( max - min ) / static_cast<SQLNET_FLOAT>( num_critical_values + 1 );
+    AUTOSQL_FLOAT step_size =
+        ( max - min ) / static_cast<AUTOSQL_FLOAT>( num_critical_values + 1 );
 
-    containers::Matrix<SQLNET_FLOAT> critical_values( num_critical_values, 1 );
+    containers::Matrix<AUTOSQL_FLOAT> critical_values( num_critical_values, 1 );
 
-    for ( SQLNET_INT i = 0; i < num_critical_values; ++i )
+    for ( AUTOSQL_INT i = 0; i < num_critical_values; ++i )
         {
             critical_values[i] =
-                min + static_cast<SQLNET_FLOAT>( i + 1 ) * step_size;
+                min + static_cast<AUTOSQL_FLOAT>( i + 1 ) * step_size;
         }
 
     debug_message( "calculate_critical_values_discrete...done." );
@@ -376,8 +376,8 @@ DecisionTreeNode::calculate_critical_values_numerical(
 
 void DecisionTreeNode::commit(
     const descriptors::Split &_split,
-    SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-    SQLNET_SAMPLE_ITERATOR _sample_container_end )
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
 {
     debug_message( "fit: Improvement possible..." );
 
@@ -404,25 +404,25 @@ void DecisionTreeNode::commit(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::fit(
-    SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-    SQLNET_SAMPLE_ITERATOR _sample_container_end )
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
 {
     debug_message( "fit: Calculating sample size..." );
 
-#ifdef SQLNET_PARALLEL
+#ifdef AUTOSQL_PARALLEL
 
-    const SQLNET_SIZE sample_size = reduce_sample_size(
+    const AUTOSQL_SIZE sample_size = reduce_sample_size(
         std::distance( _sample_container_begin, _sample_container_end ) );
 
-#else  // SQLNET_PARALLEL
+#else  // AUTOSQL_PARALLEL
 
-    const SQLNET_SIZE sample_size = static_cast<SQLNET_SIZE>(
+    const AUTOSQL_SIZE sample_size = static_cast<AUTOSQL_SIZE>(
         std::distance( _sample_container_begin, _sample_container_end ) );
 
-#endif  // SQLNET_PARALLEL
+#endif  // AUTOSQL_PARALLEL
 
     if ( sample_size == 0 ||
-         static_cast<SQLNET_INT>( sample_size ) < tree_->min_num_samples_ * 2 )
+         static_cast<AUTOSQL_INT>( sample_size ) < tree_->min_num_samples_ * 2 )
         {
             return;
         }
@@ -452,9 +452,9 @@ void DecisionTreeNode::fit(
     debug_message( "fit: Find maximum..." );
 
     // Find maximum
-    SQLNET_INT ix_max = optimization_criterion()->find_maximum();
+    AUTOSQL_INT ix_max = optimization_criterion()->find_maximum();
 
-    const SQLNET_FLOAT max_value =
+    const AUTOSQL_FLOAT max_value =
         optimization_criterion()->values_stored( ix_max );
 
     // ------------------------------------------------------------------------
@@ -463,23 +463,23 @@ void DecisionTreeNode::fit(
 
 #ifndef NDEBUG
 
-#ifdef SQLNET_PARALLEL
+#ifdef AUTOSQL_PARALLEL
 
-    std::array<SQLNET_FLOAT, 2> values = {max_value,
+    std::array<AUTOSQL_FLOAT, 2> values = {max_value,
                                           optimization_criterion()->value()};
 
     assert( std::get<0>( values ) == std::get<0>( values ) );
 
     assert( std::get<1>( values ) == std::get<1>( values ) );
 
-    std::array<SQLNET_FLOAT, 2> global_values;
+    std::array<AUTOSQL_FLOAT, 2> global_values;
 
-    SQLNET_PARALLEL_LIB::all_reduce(
+    AUTOSQL_PARALLEL_LIB::all_reduce(
         *comm(),                       // comm
         values.data(),                 // in_value
         2,                             // count
         global_values.data(),          // out_value
-        SQLNET_MAX_OP<SQLNET_FLOAT>()  // op
+        AUTOSQL_MAX_OP<AUTOSQL_FLOAT>()  // op
     );
 
     comm()->barrier();
@@ -488,7 +488,7 @@ void DecisionTreeNode::fit(
 
     assert( std::get<1>( values ) == std::get<1>( global_values ) );
 
-#endif  // SQLNET_PARALLEL
+#endif  // AUTOSQL_PARALLEL
 
 #endif  // NDEBUG
 
@@ -513,8 +513,8 @@ void DecisionTreeNode::fit(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::fit_as_root(
-    SQLNET_SAMPLE_CONTAINER::iterator _sample_container_begin,
-    SQLNET_SAMPLE_CONTAINER::iterator _sample_container_end )
+    AUTOSQL_SAMPLE_CONTAINER::iterator _sample_container_begin,
+    AUTOSQL_SAMPLE_CONTAINER::iterator _sample_container_end )
 {
     debug_message( "fit_as_root..." );
 
@@ -535,9 +535,9 @@ void DecisionTreeNode::fit_as_root(
 
 void DecisionTreeNode::from_json_obj( const Poco::JSON::Object &_json_obj )
 {
-    is_activated_ = _json_obj.SQLNET_GET( "act_" );
+    is_activated_ = _json_obj.AUTOSQL_GET( "act_" );
 
-    const bool imposes_condition = _json_obj.SQLNET_GET( "imp_" );
+    const bool imposes_condition = _json_obj.AUTOSQL_GET( "imp_" );
 
     if ( imposes_condition )
         {
@@ -556,13 +556,13 @@ void DecisionTreeNode::from_json_obj( const Poco::JSON::Object &_json_obj )
                         new DecisionTreeNode( false, depth_ + 1, tree_ ) );
 
                     child_node_greater_->from_json_obj(
-                        *_json_obj.SQLNET_GET_OBJECT( "sub1_" ) );
+                        *_json_obj.AUTOSQL_GET_OBJECT( "sub1_" ) );
 
                     child_node_smaller_.reset(
                         new DecisionTreeNode( false, depth_ + 1, tree_ ) );
 
                     child_node_smaller_->from_json_obj(
-                        *_json_obj.SQLNET_GET_OBJECT( "sub2_" ) );
+                        *_json_obj.AUTOSQL_GET_OBJECT( "sub2_" ) );
                 }
         }
 }
@@ -591,7 +591,7 @@ std::string DecisionTreeNode::greater_or_not_equal_to(
                     assert( category_used >= 0 );
                     assert(
                         category_used <
-                        static_cast<SQLNET_INT>( tree_->categories().size() ) );
+                        static_cast<AUTOSQL_INT>( tree_->categories().size() ) );
 
                     if ( it != categories_used_begin() )
                         {
@@ -623,10 +623,10 @@ std::string DecisionTreeNode::greater_or_not_equal_to(
 
 // ----------------------------------------------------------------------------
 
-SQLNET_SAMPLE_ITERATOR DecisionTreeNode::identify_parameters(
+AUTOSQL_SAMPLE_ITERATOR DecisionTreeNode::identify_parameters(
     const descriptors::Split &_split,
-    SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-    SQLNET_SAMPLE_ITERATOR _sample_container_end )
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
 {
     // --------------------------------------------------------------
     // Transfer parameters from split descriptor
@@ -663,7 +663,7 @@ SQLNET_SAMPLE_ITERATOR DecisionTreeNode::identify_parameters(
         {
             // --------------------------------------------------------------
 
-            containers::Matrix<SQLNET_FLOAT> critical_values( 1, 1 );
+            containers::Matrix<AUTOSQL_FLOAT> critical_values( 1, 1 );
 
             critical_values[0] = critical_value();
 
@@ -729,17 +729,17 @@ SQLNET_SAMPLE_ITERATOR DecisionTreeNode::identify_parameters(
 
 // ----------------------------------------------------------------------------
 
-#ifdef SQLNET_PARALLEL
+#ifdef AUTOSQL_PARALLEL
 
-SQLNET_SIZE DecisionTreeNode::reduce_sample_size( SQLNET_SIZE _sample_size )
+AUTOSQL_SIZE DecisionTreeNode::reduce_sample_size( AUTOSQL_SIZE _sample_size )
 {
-    SQLNET_SIZE global_sample_size = 0;
+    AUTOSQL_SIZE global_sample_size = 0;
 
-    SQLNET_PARALLEL_LIB::all_reduce(
+    AUTOSQL_PARALLEL_LIB::all_reduce(
         *comm(),                   // comm
         _sample_size,              // in_value
         global_sample_size,        // out_value
-        std::plus<SQLNET_FLOAT>()  // op
+        std::plus<AUTOSQL_FLOAT>()  // op
     );
 
     comm()->barrier();
@@ -747,13 +747,13 @@ SQLNET_SIZE DecisionTreeNode::reduce_sample_size( SQLNET_SIZE _sample_size )
     return global_sample_size;
 }
 
-#endif  // SQLNET_PARALLEL
+#endif  // AUTOSQL_PARALLEL
 
 // ----------------------------------------------------------------------------
 
-SQLNET_SAMPLE_ITERATOR DecisionTreeNode::separate_null_values(
-    SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-    SQLNET_SAMPLE_ITERATOR _sample_container_end,
+AUTOSQL_SAMPLE_ITERATOR DecisionTreeNode::separate_null_values(
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
     bool _null_values_to_beginning )
 {
     auto is_null = []( Sample *sample ) {
@@ -809,8 +809,8 @@ SQLNET_SAMPLE_ITERATOR DecisionTreeNode::separate_null_values(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::set_samples(
-    SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-    SQLNET_SAMPLE_ITERATOR _sample_container_end )
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
 {
     switch ( data_used() )
         {
@@ -954,8 +954,8 @@ void DecisionTreeNode::set_samples(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::sort_by_categorical_value(
-    SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-    SQLNET_SAMPLE_ITERATOR _sample_container_end )
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
 {
     auto compare_op = []( const Sample *sample1, const Sample *sample2 ) {
         return sample1->categorical_value < sample2->categorical_value;
@@ -967,8 +967,8 @@ void DecisionTreeNode::sort_by_categorical_value(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::sort_by_numerical_value(
-    SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-    SQLNET_SAMPLE_ITERATOR _sample_container_end )
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
 {
     auto compare_op = []( const Sample *sample1, const Sample *sample2 ) {
         return sample1->numerical_value < sample2->numerical_value;
@@ -980,7 +980,7 @@ void DecisionTreeNode::sort_by_numerical_value(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::source_importances(
-    const SQLNET_FLOAT _factor, descriptors::SourceImportances &_importances )
+    const AUTOSQL_FLOAT _factor, descriptors::SourceImportances &_importances )
 {
     if ( split_ )
         {
@@ -1025,7 +1025,7 @@ std::string DecisionTreeNode::smaller_or_equal_to(
                     assert( category_used >= 0 );
                     assert(
                         category_used <
-                        static_cast<SQLNET_INT>( tree_->categories().size() ) );
+                        static_cast<AUTOSQL_INT>( tree_->categories().size() ) );
 
                     if ( it != categories_used_begin() )
                         {
@@ -1058,9 +1058,9 @@ std::string DecisionTreeNode::smaller_or_equal_to(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::spawn_child_nodes(
-    SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-    SQLNET_SAMPLE_ITERATOR _null_values_separator,
-    SQLNET_SAMPLE_ITERATOR _sample_container_end )
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+    AUTOSQL_SAMPLE_ITERATOR _null_values_separator,
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
 {
     // -------------------------------------------------------------------------
 
@@ -1090,7 +1090,7 @@ void DecisionTreeNode::spawn_child_nodes(
                 return std::any_of(
                     categories_used_begin(),
                     categories_used_end(),
-                    [_sample]( SQLNET_INT cat ) {
+                    [_sample]( AUTOSQL_INT cat ) {
                         return cat == _sample->categorical_value;
                     } );
             };
@@ -1102,7 +1102,7 @@ void DecisionTreeNode::spawn_child_nodes(
         {
             while ( it < _sample_container_end )
                 {
-                    const SQLNET_FLOAT val = ( *it )->numerical_value;
+                    const AUTOSQL_FLOAT val = ( *it )->numerical_value;
 
                     // If val != val, then all samples but the NULL samples
                     // are activated. This is a corner case that can only
@@ -1330,8 +1330,8 @@ void DecisionTreeNode::to_monitor(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::transform(
-    SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-    SQLNET_SAMPLE_ITERATOR _sample_container_end )
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
 {
     // -----------------------------------------------------------
 
@@ -1386,7 +1386,7 @@ void DecisionTreeNode::transform(
                         return std::any_of(
                             categories_used_begin(),
                             categories_used_end(),
-                            [_sample]( SQLNET_INT cat ) {
+                            [_sample]( AUTOSQL_INT cat ) {
                                 return cat == _sample->categorical_value;
                             } );
                     };
@@ -1452,14 +1452,14 @@ void DecisionTreeNode::transform(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_categorical_peripheral(
-    const SQLNET_SIZE _sample_size,
-    SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-    SQLNET_SAMPLE_ITERATOR _sample_container_end,
+    const AUTOSQL_SIZE _sample_size,
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
     std::vector<descriptors::Split> &_candidate_splits )
 {
     debug_message( "try_categorical_peripheral..." );
 
-    for ( SQLNET_INT col = 0; col < tree_->peripheral_.categorical().ncols();
+    for ( AUTOSQL_INT col = 0; col < tree_->peripheral_.categorical().ncols();
           ++col )
         {
             if ( tree_->peripheral_.categorical().unit( col ).find(
@@ -1496,14 +1496,14 @@ void DecisionTreeNode::try_categorical_peripheral(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_categorical_population(
-    const SQLNET_SIZE _sample_size,
-    SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-    SQLNET_SAMPLE_ITERATOR _sample_container_end,
+    const AUTOSQL_SIZE _sample_size,
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
     std::vector<descriptors::Split> &_candidate_splits )
 {
     debug_message( "try_categorical_population..." );
 
-    for ( SQLNET_INT col = 0;
+    for ( AUTOSQL_INT col = 0;
           col < tree_->population_.df().categorical().ncols();
           ++col )
         {
@@ -1541,14 +1541,14 @@ void DecisionTreeNode::try_categorical_population(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_discrete_peripheral(
-    const SQLNET_SIZE _sample_size,
-    SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-    SQLNET_SAMPLE_ITERATOR _sample_container_end,
+    const AUTOSQL_SIZE _sample_size,
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
     std::vector<descriptors::Split> &_candidate_splits )
 {
     debug_message( "try_discrete_peripheral..." );
 
-    for ( SQLNET_INT col = 0; col < tree_->peripheral_.discrete().ncols();
+    for ( AUTOSQL_INT col = 0; col < tree_->peripheral_.discrete().ncols();
           ++col )
         {
             if ( tree_->peripheral_.discrete().unit( col ).find(
@@ -1584,14 +1584,14 @@ void DecisionTreeNode::try_discrete_peripheral(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_discrete_population(
-    const SQLNET_SIZE _sample_size,
-    SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-    SQLNET_SAMPLE_ITERATOR _sample_container_end,
+    const AUTOSQL_SIZE _sample_size,
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
     std::vector<descriptors::Split> &_candidate_splits )
 {
     debug_message( "try_discrete_population..." );
 
-    for ( SQLNET_INT col = 0; col < tree_->population_.df().discrete().ncols();
+    for ( AUTOSQL_INT col = 0; col < tree_->population_.df().discrete().ncols();
           ++col )
         {
             if ( tree_->population_.df().discrete().unit( col ).find(
@@ -1627,14 +1627,14 @@ void DecisionTreeNode::try_discrete_population(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_numerical_peripheral(
-    const SQLNET_SIZE _sample_size,
-    SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-    SQLNET_SAMPLE_ITERATOR _sample_container_end,
+    const AUTOSQL_SIZE _sample_size,
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
     std::vector<descriptors::Split> &_candidate_splits )
 {
     debug_message( "try_numerical_peripheral..." );
 
-    for ( SQLNET_INT col = 0; col < tree_->peripheral_.numerical().ncols();
+    for ( AUTOSQL_INT col = 0; col < tree_->peripheral_.numerical().ncols();
           ++col )
         {
             if ( tree_->peripheral_.numerical().unit( col ).find(
@@ -1671,14 +1671,14 @@ void DecisionTreeNode::try_numerical_peripheral(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_numerical_population(
-    const SQLNET_SIZE _sample_size,
-    SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-    SQLNET_SAMPLE_ITERATOR _sample_container_end,
+    const AUTOSQL_SIZE _sample_size,
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
     std::vector<descriptors::Split> &_candidate_splits )
 {
     debug_message( "try_numerical_population..." );
 
-    for ( SQLNET_INT col = 0; col < tree_->population_.df().numerical().ncols();
+    for ( AUTOSQL_INT col = 0; col < tree_->population_.df().numerical().ncols();
           ++col )
         {
             if ( tree_->population_.df().numerical().unit( col ).find(
@@ -1715,11 +1715,11 @@ void DecisionTreeNode::try_numerical_population(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_categorical_values(
-    const SQLNET_INT _column_used,
+    const AUTOSQL_INT _column_used,
     const DataUsed _data_used,
-    SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-    SQLNET_SAMPLE_ITERATOR _sample_container_end,
-    const SQLNET_SIZE _sample_size,
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+    const AUTOSQL_SIZE _sample_size,
     std::vector<descriptors::Split> &_candidate_splits )
 {
     // -----------------------------------------------------------------------
@@ -1732,7 +1732,7 @@ void DecisionTreeNode::try_categorical_values(
     const auto index = containers::CategoryIndex(
         *categories, _sample_container_begin, _sample_container_end );
 
-    const auto num_categories = static_cast<SQLNET_INT>( categories->size() );
+    const auto num_categories = static_cast<AUTOSQL_INT>( categories->size() );
 
     // -----------------------------------------------------------------------
     // Add new splits to the candidate splits
@@ -1849,7 +1849,7 @@ void DecisionTreeNode::try_categorical_values(
     const auto storage_ix = optimization_criterion()->storage_ix();
 
     auto sorted_by_containing =
-        std::make_shared<std::vector<SQLNET_INT>>( num_categories );
+        std::make_shared<std::vector<AUTOSQL_INT>>( num_categories );
 
     {
         const auto indices = optimization_criterion()->argsort(
@@ -1870,7 +1870,7 @@ void DecisionTreeNode::try_categorical_values(
     // Produce sorted_by_not_containing.
 
     auto sorted_by_not_containing =
-        std::make_shared<std::vector<SQLNET_INT>>( num_categories );
+        std::make_shared<std::vector<AUTOSQL_INT>>( num_categories );
 
     {
         const auto indices = optimization_criterion()->argsort(
@@ -2012,9 +2012,9 @@ void DecisionTreeNode::try_categorical_values(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_conditions(
-    const SQLNET_SIZE _sample_size,
-    SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-    SQLNET_SAMPLE_ITERATOR _sample_container_end,
+    const AUTOSQL_SIZE _sample_size,
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
     std::vector<descriptors::Split> &_candidate_splits )
 {
     try_same_units_categorical(
@@ -2087,11 +2087,11 @@ void DecisionTreeNode::try_conditions(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_discrete_values(
-    const SQLNET_INT _column_used,
+    const AUTOSQL_INT _column_used,
     const DataUsed _data_used,
-    SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-    SQLNET_SAMPLE_ITERATOR _sample_container_end,
-    const SQLNET_SIZE _sample_size,
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+    const AUTOSQL_SIZE _sample_size,
     std::vector<descriptors::Split> &_candidate_splits )
 {
     // -----------------------------------------------------------------------
@@ -2100,7 +2100,7 @@ void DecisionTreeNode::try_discrete_values(
 
     // -----------------------------------------------------------------------
 
-    SQLNET_SAMPLE_ITERATOR null_values_separator =
+    AUTOSQL_SAMPLE_ITERATOR null_values_separator =
         separate_null_values( _sample_container_begin, _sample_container_end );
 
     sort_by_numerical_value( null_values_separator, _sample_container_end );
@@ -2128,13 +2128,13 @@ void DecisionTreeNode::try_discrete_values(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_non_categorical_values(
-    const SQLNET_INT _column_used,
+    const AUTOSQL_INT _column_used,
     const DataUsed _data_used,
-    SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-    SQLNET_SAMPLE_ITERATOR _null_values_separator,
-    SQLNET_SAMPLE_ITERATOR _sample_container_end,
-    const SQLNET_SIZE _sample_size,
-    containers::Matrix<SQLNET_FLOAT> &_critical_values,
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+    AUTOSQL_SAMPLE_ITERATOR _null_values_separator,
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+    const AUTOSQL_SIZE _sample_size,
+    containers::Matrix<AUTOSQL_FLOAT> &_critical_values,
     std::vector<descriptors::Split> &_candidate_splits )
 {
     // -----------------------------------------------------------------------
@@ -2154,7 +2154,7 @@ void DecisionTreeNode::try_non_categorical_values(
 
     debug_message( "try_non_categorical_values: Add new splits." );
 
-    for ( SQLNET_INT i = 0; i < _critical_values.nrows(); ++i )
+    for ( AUTOSQL_INT i = 0; i < _critical_values.nrows(); ++i )
         {
             _candidate_splits.push_back( descriptors::Split(
                 true,
@@ -2191,7 +2191,7 @@ void DecisionTreeNode::try_non_categorical_values(
 
     if ( std::distance( _null_values_separator, _sample_container_end ) == 0 )
         {
-            for ( SQLNET_INT i = 0; i < _critical_values.nrows() * 2; ++i )
+            for ( AUTOSQL_INT i = 0; i < _critical_values.nrows() * 2; ++i )
                 {
                     aggregation()
                         ->update_optimization_criterion_and_clear_updates_current(
@@ -2284,16 +2284,16 @@ void DecisionTreeNode::try_non_categorical_values(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_numerical_values(
-    const SQLNET_INT _column_used,
+    const AUTOSQL_INT _column_used,
     const DataUsed _data_used,
-    SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-    SQLNET_SAMPLE_ITERATOR _sample_container_end,
-    const SQLNET_SIZE _sample_size,
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+    const AUTOSQL_SIZE _sample_size,
     std::vector<descriptors::Split> &_candidate_splits )
 {
     // -----------------------------------------------------------------------
 
-    SQLNET_SAMPLE_ITERATOR null_values_separator =
+    AUTOSQL_SAMPLE_ITERATOR null_values_separator =
         separate_null_values( _sample_container_begin, _sample_container_end );
 
     sort_by_numerical_value( null_values_separator, _sample_container_end );
@@ -2319,14 +2319,14 @@ void DecisionTreeNode::try_numerical_values(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_same_units_categorical(
-    const SQLNET_SIZE _sample_size,
-    SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-    SQLNET_SAMPLE_ITERATOR _sample_container_end,
+    const AUTOSQL_SIZE _sample_size,
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
     std::vector<descriptors::Split> &_candidate_splits )
 {
     debug_message( "try_same_units_categorical..." );
 
-    for ( SQLNET_INT col = 0; col < same_units_categorical().size(); ++col )
+    for ( AUTOSQL_INT col = 0; col < same_units_categorical().size(); ++col )
         {
             if ( skip_condition() )
                 {
@@ -2356,14 +2356,14 @@ void DecisionTreeNode::try_same_units_categorical(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_same_units_discrete(
-    const SQLNET_SIZE _sample_size,
-    SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-    SQLNET_SAMPLE_ITERATOR _sample_container_end,
+    const AUTOSQL_SIZE _sample_size,
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
     std::vector<descriptors::Split> &_candidate_splits )
 {
     debug_message( "try_same_units_discrete..." );
 
-    for ( SQLNET_INT col = 0; col < same_units_discrete().size(); ++col )
+    for ( AUTOSQL_INT col = 0; col < same_units_discrete().size(); ++col )
         {
             if ( skip_condition() )
                 {
@@ -2393,14 +2393,14 @@ void DecisionTreeNode::try_same_units_discrete(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_same_units_numerical(
-    const SQLNET_SIZE _sample_size,
-    SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-    SQLNET_SAMPLE_ITERATOR _sample_container_end,
+    const AUTOSQL_SIZE _sample_size,
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
     std::vector<descriptors::Split> &_candidate_splits )
 {
     debug_message( "try_same_units_numerical..." );
 
-    for ( SQLNET_INT col = 0; col < same_units_numerical().size(); ++col )
+    for ( AUTOSQL_INT col = 0; col < same_units_numerical().size(); ++col )
         {
             if ( skip_condition() )
                 {
@@ -2430,9 +2430,9 @@ void DecisionTreeNode::try_same_units_numerical(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_subfeatures(
-    const SQLNET_SIZE _sample_size,
-    SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-    SQLNET_SAMPLE_ITERATOR _sample_container_end,
+    const AUTOSQL_SIZE _sample_size,
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
     std::vector<descriptors::Split> &_candidate_splits )
 {
     if ( !tree_->subfeatures() )
@@ -2442,7 +2442,7 @@ void DecisionTreeNode::try_subfeatures(
 
     debug_message( "try_subfeatures..." );
 
-    for ( SQLNET_INT col = 0; col < tree_->subfeatures().ncols(); ++col )
+    for ( AUTOSQL_INT col = 0; col < tree_->subfeatures().ncols(); ++col )
         {
             if ( skip_condition() )
                 {
@@ -2471,9 +2471,9 @@ void DecisionTreeNode::try_subfeatures(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_time_stamps_diff(
-    const SQLNET_SIZE _sample_size,
-    SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-    SQLNET_SAMPLE_ITERATOR _sample_container_end,
+    const AUTOSQL_SIZE _sample_size,
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
     std::vector<descriptors::Split> &_candidate_splits )
 {
     debug_message( "try_time_stamps_diff..." );

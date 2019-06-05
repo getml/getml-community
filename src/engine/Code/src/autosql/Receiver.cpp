@@ -6,15 +6,15 @@ namespace engine
 {
 // ------------------------------------------------------------------------
 
-containers::Matrix<SQLNET_INT> Receiver::recv_categorical_matrix(
+containers::Matrix<AUTOSQL_INT> Receiver::recv_categorical_matrix(
     Poco::Net::StreamSocket& _socket, containers::Encoding& _encoding )
 {
     // ------------------------------------------------
     // Receive shape
 
-    std::array<SQLNET_INT, 2> shape;
+    std::array<AUTOSQL_INT, 2> shape;
 
-    recv<SQLNET_INT>( _socket, sizeof( SQLNET_INT ) * 2, shape.data() );
+    recv<AUTOSQL_INT>( _socket, sizeof( AUTOSQL_INT ) * 2, shape.data() );
 
     // ------------------------------------------------
     // Init matrix
@@ -25,15 +25,15 @@ containers::Matrix<SQLNET_INT> Receiver::recv_categorical_matrix(
                 "Your data frame must contain at least one row!" );
         }
 
-    containers::Matrix<SQLNET_INT> matrix(
+    containers::Matrix<AUTOSQL_INT> matrix(
         std::get<0>( shape ), std::get<1>( shape ) );
 
     // ------------------------------------------------
     // Receive strings and map to int matrix
 
-    for ( SQLNET_INT i = 0; i < matrix.nrows(); ++i )
+    for ( AUTOSQL_INT i = 0; i < matrix.nrows(); ++i )
         {
-            for ( SQLNET_INT j = 0; j < matrix.ncols(); ++j )
+            for ( AUTOSQL_INT j = 0; j < matrix.ncols(); ++j )
                 {
                     matrix( i, j ) =
                         _encoding[Receiver::recv_string( _socket )];
@@ -73,7 +73,7 @@ Poco::JSON::Object Receiver::recv_cmd(
             _logger->log( cmd_log.str() );
         }
 
-#ifdef SQLNET_MULTINODE_MPI
+#ifdef AUTOSQL_MULTINODE_MPI
 
     // ------------------------------------------------
     // If there are other processes, broadcast the command
@@ -97,7 +97,7 @@ Poco::JSON::Object Receiver::recv_cmd(
 
     MPI_Barrier( MPI_COMM_WORLD );
 
-#endif /* SQLNET_MULTINODE_MPI */
+#endif /* AUTOSQL_MULTINODE_MPI */
 
     // ------------------------------------------------
     // Interpret command string - note that all
@@ -114,7 +114,7 @@ Poco::JSON::Object Receiver::recv_cmd(
 
 // ------------------------------------------------------------------------
 
-#ifdef SQLNET_MULTINODE_MPI
+#ifdef AUTOSQL_MULTINODE_MPI
 
 Poco::JSON::Object Receiver::recv_cmd()
 {
@@ -181,19 +181,19 @@ Poco::JSON::Object Receiver::recv_cmd()
     return *obj;
 }
 
-#endif /* SQLNET_MULTINODE_MPI */
+#endif /* AUTOSQL_MULTINODE_MPI */
 
 // ------------------------------------------------------------------------
 
-containers::Matrix<SQLNET_FLOAT> Receiver::recv_matrix(
+containers::Matrix<AUTOSQL_FLOAT> Receiver::recv_matrix(
     Poco::Net::StreamSocket& _socket, bool _scatter )
 {
     // ------------------------------------------------
     // Receive shape
 
-    std::array<SQLNET_INT, 2> shape;
+    std::array<AUTOSQL_INT, 2> shape;
 
-    recv<SQLNET_INT>( _socket, sizeof( SQLNET_INT ) * 2, shape.data() );
+    recv<AUTOSQL_INT>( _socket, sizeof( AUTOSQL_INT ) * 2, shape.data() );
 
     // ------------------------------------------------
     // Init matrix
@@ -204,20 +204,20 @@ containers::Matrix<SQLNET_FLOAT> Receiver::recv_matrix(
                 "Your data frame must contain at least one row!" );
         }
 
-    containers::Matrix<SQLNET_FLOAT> matrix(
+    containers::Matrix<AUTOSQL_FLOAT> matrix(
         std::get<0>( shape ), std::get<1>( shape ) );
 
     // ------------------------------------------------
     // Fill with data
 
-    recv<SQLNET_FLOAT>(
+    recv<AUTOSQL_FLOAT>(
         _socket,
-        sizeof( SQLNET_FLOAT ) *
-            static_cast<SQLNET_UNSIGNED_LONG>( std::get<0>( shape ) ) *
-            static_cast<SQLNET_UNSIGNED_LONG>( std::get<1>( shape ) ),
+        sizeof( AUTOSQL_FLOAT ) *
+            static_cast<AUTOSQL_UNSIGNED_LONG>( std::get<0>( shape ) ) *
+            static_cast<AUTOSQL_UNSIGNED_LONG>( std::get<1>( shape ) ),
         matrix.data() );
 
-#ifdef SQLNET_MULTINODE_MPI
+#ifdef AUTOSQL_MULTINODE_MPI
 
     // ------------------------------------------------
     // Scatter matrix, if applicable
@@ -227,7 +227,7 @@ containers::Matrix<SQLNET_FLOAT> Receiver::recv_matrix(
             matrix = matrix.scatter();
         }
 
-#endif /* SQLNET_MULTINODE_MPI */
+#endif /* AUTOSQL_MULTINODE_MPI */
 
     // ------------------------------------------------
 
@@ -241,15 +241,15 @@ std::string Receiver::recv_string( Poco::Net::StreamSocket& _socket )
     // ------------------------------------------------
     // Init string
 
-    std::vector<SQLNET_INT> str_length( 1 );
+    std::vector<AUTOSQL_INT> str_length( 1 );
 
-    Receiver::recv<SQLNET_INT>(
-        _socket, sizeof( SQLNET_INT ), str_length.data() );
+    Receiver::recv<AUTOSQL_INT>(
+        _socket, sizeof( AUTOSQL_INT ), str_length.data() );
 
     std::string str( str_length[0], '0' );
 
     const auto str_length_long =
-        static_cast<SQLNET_UNSIGNED_LONG>( str_length[0] );
+        static_cast<AUTOSQL_UNSIGNED_LONG>( str_length[0] );
 
     // ------------------------------------------------
     // Receive string content from the client

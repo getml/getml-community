@@ -26,18 +26,18 @@ class SameUnitIdentifier
     template <class MatrixType>
     static void add_to_unit_map(
         const DataUsed _data_used,
-        const SQLNET_INT _ix_perip_used,
+        const AUTOSQL_INT _ix_perip_used,
         const MatrixType _data,
         std::map<std::string, std::vector<ColumnToBeAggregated>>&
             _unit_map );
 
     /// Once the unit maps have been fitted, this transforms it to a vector of
-    /// SQLNET_SAME_UNITS_CONTAINER objects.
+    /// AUTOSQL_SAME_UNITS_CONTAINER objects.
     static void unit_map_to_same_unit_container(
         const std::map<
             std::string,
             std::vector<ColumnToBeAggregated>>& _unit_map,
-        std::vector<SQLNET_SAME_UNITS_CONTAINER>& _same_units );
+        std::vector<AUTOSQL_SAME_UNITS_CONTAINER>& _same_units );
 
     // -------------------------------------------------------------------------
 };
@@ -48,12 +48,12 @@ class SameUnitIdentifier
 template <class MatrixType>
 void SameUnitIdentifier::add_to_unit_map(
     const DataUsed _data_used,
-    const SQLNET_INT _ix_perip_used,
+    const AUTOSQL_INT _ix_perip_used,
     const MatrixType _data,
     std::map<std::string, std::vector<ColumnToBeAggregated>>&
         _unit_map )
 {
-    for ( SQLNET_INT col = 0; col < _data.ncols(); ++col )
+    for ( AUTOSQL_INT col = 0; col < _data.ncols(); ++col )
         {
             const auto& unit = _data.unit( col );
 

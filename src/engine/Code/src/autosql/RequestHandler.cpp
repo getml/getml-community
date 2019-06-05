@@ -26,9 +26,9 @@ void RequestHandler::run()
             Poco::JSON::Object cmd =
                 engine::Receiver::recv_cmd( socket(), logger_ );
 
-            std::string type = cmd.SQLNET_GET( "type_" );
+            std::string type = cmd.AUTOSQL_GET( "type_" );
 
-            std::string name = cmd.SQLNET_GET( "name_" );
+            std::string name = cmd.AUTOSQL_GET( "name_" );
 
             // ---------------------------------------------------------------
             // Commands that do not need licensing.

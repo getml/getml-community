@@ -10,20 +10,20 @@ CrossEntropyLoss::CrossEntropyLoss() : LossFunction(){};
 
 // ----------------------------------------------------------------------------
 
-containers::Matrix<SQLNET_FLOAT> CrossEntropyLoss::calculate_residuals(
-    const containers::Matrix<SQLNET_FLOAT>& _yhat_old,
+containers::Matrix<AUTOSQL_FLOAT> CrossEntropyLoss::calculate_residuals(
+    const containers::Matrix<AUTOSQL_FLOAT>& _yhat_old,
     const containers::DataFrameView& _y )
 {
     assert( _yhat_old.nrows() == _y.nrows() );
 
     assert( _yhat_old.ncols() == _y.df().targets().ncols() );
 
-    containers::Matrix<SQLNET_FLOAT> residuals(
+    containers::Matrix<AUTOSQL_FLOAT> residuals(
         _y.nrows(), _y.df().targets().ncols() );
 
-    for ( SQLNET_INT i = 0; i < _y.nrows(); ++i )
+    for ( AUTOSQL_INT i = 0; i < _y.nrows(); ++i )
         {
-            for ( SQLNET_INT j = 0; j < _y.df().targets().ncols(); ++j )
+            for ( AUTOSQL_INT j = 0; j < _y.df().targets().ncols(); ++j )
                 {
                     assert( _y.targets( i, j ) == _y.targets( i, j ) );
                     assert( _yhat_old( i, j ) == _yhat_old( i, j ) );
@@ -38,11 +38,11 @@ containers::Matrix<SQLNET_FLOAT> CrossEntropyLoss::calculate_residuals(
 
 // ----------------------------------------------------------------------------
 
-containers::Matrix<SQLNET_FLOAT> CrossEntropyLoss::calculate_update_rates(
-    const containers::Matrix<SQLNET_FLOAT>& _yhat_old,
-    const containers::Matrix<SQLNET_FLOAT>& _f_t,
+containers::Matrix<AUTOSQL_FLOAT> CrossEntropyLoss::calculate_update_rates(
+    const containers::Matrix<AUTOSQL_FLOAT>& _yhat_old,
+    const containers::Matrix<AUTOSQL_FLOAT>& _f_t,
     const containers::DataFrameView& _y,
-    const containers::Matrix<SQLNET_FLOAT>& _sample_weights )
+    const containers::Matrix<AUTOSQL_FLOAT>& _sample_weights )
 {
     // ---------------------------------------------------
 
@@ -57,15 +57,15 @@ containers::Matrix<SQLNET_FLOAT> CrossEntropyLoss::calculate_update_rates(
     // ---------------------------------------------------
     // Calculate g_times_f and h_times_f_squared
 
-    containers::Matrix<SQLNET_FLOAT> stats( 1, _y.df().targets().ncols() * 2 );
+    containers::Matrix<AUTOSQL_FLOAT> stats( 1, _y.df().targets().ncols() * 2 );
 
-    SQLNET_FLOAT* g_times_f = stats.data();
+    AUTOSQL_FLOAT* g_times_f = stats.data();
 
-    SQLNET_FLOAT* h_times_f_squared = stats.data() + _y.df().targets().ncols();
+    AUTOSQL_FLOAT* h_times_f_squared = stats.data() + _y.df().targets().ncols();
 
-    for ( SQLNET_INT i = 0; i < _y.nrows(); ++i )
+    for ( AUTOSQL_INT i = 0; i < _y.nrows(); ++i )
         {
-            for ( SQLNET_INT j = 0; j < _y.df().targets().ncols(); ++j )
+            for ( AUTOSQL_INT j = 0; j < _y.df().targets().ncols(); ++j )
                 {
                     const auto logistic =
                         logistic_function( _yhat_old( i, j ) );
@@ -85,31 +85,31 @@ containers::Matrix<SQLNET_FLOAT> CrossEntropyLoss::calculate_update_rates(
         // ---------------------------------------------------
         // Get global sums, if necessary
 
-#ifdef SQLNET_PARALLEL
+#ifdef AUTOSQL_PARALLEL
 
-    containers::Matrix<SQLNET_FLOAT> global_stats(
+    containers::Matrix<AUTOSQL_FLOAT> global_stats(
         1, _y.df().targets().ncols() * 2 );
 
-    SQLNET_PARALLEL_LIB::all_reduce(
+    AUTOSQL_PARALLEL_LIB::all_reduce(
         comm(),
         stats.data(),
         stats.ncols(),
         global_stats.data(),
-        std::plus<SQLNET_FLOAT>() );
+        std::plus<AUTOSQL_FLOAT>() );
 
     comm().barrier();
 
     stats = global_stats;
 
-#endif  // SQLNET_PARALLEL
+#endif  // AUTOSQL_PARALLEL
 
     // ---------------------------------------------------
     // Calculate update_rates
 
-    containers::Matrix<SQLNET_FLOAT> update_rates(
+    containers::Matrix<AUTOSQL_FLOAT> update_rates(
         1, _y.df().targets().ncols() );
 
-    for ( SQLNET_INT j = 0; j < _y.df().targets().ncols(); ++j )
+    for ( AUTOSQL_INT j = 0; j < _y.df().targets().ncols(); ++j )
         {
             update_rates[j] = ( -1.0 ) * g_times_f[j] / h_times_f_squared[j];
         }
@@ -117,7 +117,7 @@ containers::Matrix<SQLNET_FLOAT> CrossEntropyLoss::calculate_update_rates(
     // ---------------------------------------------------
     // Make sure that update_rates are in range
 
-    auto in_range = []( SQLNET_FLOAT& val ) {
+    auto in_range = []( AUTOSQL_FLOAT& val ) {
         val = ( ( std::isnan( val ) || std::isinf( val ) ) ? 0.0 : val );
     };
 

@@ -8,28 +8,28 @@ namespace descriptors
 
 Hyperparameters::Hyperparameters( const Poco::JSON::Object& _json_obj )
     : aggregations( JSON::array_to_vector<std::string>(
-          _json_obj.SQLNET_GET_ARRAY( "aggregation_" ) ) ),
-      fast_training( _json_obj.SQLNET_GET_VALUE<bool>( "fast_training_" ) ),
+          _json_obj.AUTOSQL_GET_ARRAY( "aggregation_" ) ) ),
+      fast_training( _json_obj.AUTOSQL_GET_VALUE<bool>( "fast_training_" ) ),
       feature_selector_hyperparams(
           Hyperparameters::parse_feature_selector( _json_obj ) ),
       loss_function(
-          _json_obj.SQLNET_GET_VALUE<std::string>( "loss_function_" ) ),
-      num_features( _json_obj.SQLNET_GET_VALUE<SQLNET_INT>( "num_features_" ) ),
+          _json_obj.AUTOSQL_GET_VALUE<std::string>( "loss_function_" ) ),
+      num_features( _json_obj.AUTOSQL_GET_VALUE<AUTOSQL_INT>( "num_features_" ) ),
       num_selected_features(
           Hyperparameters::calc_num_selected_features( _json_obj ) ),
       num_subfeatures(
-          _json_obj.SQLNET_GET_VALUE<SQLNET_INT>( "num_subfeatures_" ) ),
-      num_threads( _json_obj.SQLNET_GET_VALUE<SQLNET_INT>( "num_threads_" ) ),
+          _json_obj.AUTOSQL_GET_VALUE<AUTOSQL_INT>( "num_subfeatures_" ) ),
+      num_threads( _json_obj.AUTOSQL_GET_VALUE<AUTOSQL_INT>( "num_threads_" ) ),
       predictor_hyperparams( Hyperparameters::parse_predictor( _json_obj ) ),
-      round_robin( _json_obj.SQLNET_GET_VALUE<bool>( "round_robin_" ) ),
+      round_robin( _json_obj.AUTOSQL_GET_VALUE<bool>( "round_robin_" ) ),
       sampling_factor(
-          _json_obj.SQLNET_GET_VALUE<SQLNET_INT>( "sampling_factor_" ) ),
-      seed( _json_obj.SQLNET_GET_VALUE<SQLNET_INT>( "seed_" ) ),
+          _json_obj.AUTOSQL_GET_VALUE<AUTOSQL_INT>( "sampling_factor_" ) ),
+      seed( _json_obj.AUTOSQL_GET_VALUE<AUTOSQL_INT>( "seed_" ) ),
       share_aggregations(
-          _json_obj.SQLNET_GET_VALUE<SQLNET_FLOAT>( "share_aggregations_" ) ),
-      shrinkage( _json_obj.SQLNET_GET_VALUE<SQLNET_FLOAT>( "shrinkage_" ) ),
+          _json_obj.AUTOSQL_GET_VALUE<AUTOSQL_FLOAT>( "share_aggregations_" ) ),
+      shrinkage( _json_obj.AUTOSQL_GET_VALUE<AUTOSQL_FLOAT>( "shrinkage_" ) ),
       tree_hyperparameters( TreeHyperparameters( _json_obj ) ),
-      use_timestamps( _json_obj.SQLNET_GET_VALUE<bool>( "use_timestamps_" ) )
+      use_timestamps( _json_obj.AUTOSQL_GET_VALUE<bool>( "use_timestamps_" ) )
 {
     if ( !feature_selector_hyperparams && num_selected_features > 0 )
         {
@@ -42,15 +42,15 @@ Hyperparameters::Hyperparameters( const Poco::JSON::Object& _json_obj )
 
 // ----------------------------------------------------------------------------
 
-SQLNET_INT Hyperparameters::calc_num_selected_features(
+AUTOSQL_INT Hyperparameters::calc_num_selected_features(
     const Poco::JSON::Object& _json_obj )
 {
     const auto nsf =
-        _json_obj.SQLNET_GET_VALUE<SQLNET_INT>( "num_selected_features_" );
+        _json_obj.AUTOSQL_GET_VALUE<AUTOSQL_INT>( "num_selected_features_" );
 
     if ( _json_obj.has( "feature_selector_" ) && nsf <= 0 )
         {
-            return _json_obj.SQLNET_GET_VALUE<SQLNET_INT>( "num_features_" );
+            return _json_obj.AUTOSQL_GET_VALUE<AUTOSQL_INT>( "num_features_" );
         }
     else
         {
@@ -68,7 +68,7 @@ Hyperparameters::parse_feature_selector( const Poco::JSON::Object& _json_obj )
     if ( _json_obj.has( "feature_selector_" ) )
         {
             optional.reset( new Poco::JSON::Object(
-                *_json_obj.SQLNET_GET_OBJECT( "feature_selector_" ) ) );
+                *_json_obj.AUTOSQL_GET_OBJECT( "feature_selector_" ) ) );
         }
 
     return optional;
@@ -84,7 +84,7 @@ containers::Optional<const Poco::JSON::Object> Hyperparameters::parse_predictor(
     if ( _json_obj.has( "predictor_" ) )
         {
             optional.reset( new Poco::JSON::Object(
-                *_json_obj.SQLNET_GET_OBJECT( "predictor_" ) ) );
+                *_json_obj.AUTOSQL_GET_OBJECT( "predictor_" ) ) );
         }
 
     return optional;

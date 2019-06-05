@@ -34,9 +34,9 @@
 
 #include "config.hpp"
 
-#ifdef SQLNET_MULTITHREADING
+#ifdef AUTOSQL_MULTITHREADING
 #include "multithreading/multithreading.hpp"
-#endif  // SQLNET_MULTITHREADING
+#endif  // AUTOSQL_MULTITHREADING
 
 #include "debug.hpp"
 

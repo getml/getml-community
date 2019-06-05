@@ -55,11 +55,11 @@ DecisionTreeEnsemble::DecisionTreeEnsemble(
 // ----------------------------------------------------------------------------
 
 std::list<DecisionTree> DecisionTreeEnsemble::build_candidates(
-    const SQLNET_INT _ix_feature,
+    const AUTOSQL_INT _ix_feature,
     const std::vector<descriptors::SameUnits> &_same_units,
     TableHolder &_table_holder )
 {
-#ifdef SQLNET_PARALLEL
+#ifdef AUTOSQL_PARALLEL
 
     return CandidateTreeBuilder::build_candidates(
         _table_holder,
@@ -70,7 +70,7 @@ std::list<DecisionTree> DecisionTreeEnsemble::build_candidates(
         *random_number_generator(),
         comm() );
 
-#else  // SQLNET_PARALLEL
+#else  // AUTOSQL_PARALLEL
 
     return CandidateTreeBuilder::build_candidates(
         _table_holder,
@@ -80,13 +80,13 @@ std::list<DecisionTree> DecisionTreeEnsemble::build_candidates(
         aggregation_impl(),
         *random_number_generator() );
 
-#endif  // SQLNET_PARALLEL
+#endif  // AUTOSQL_PARALLEL
 }
 
 // ----------------------------------------------------------------------------
 
 void DecisionTreeEnsemble::calculate_feature_stats(
-    const containers::Matrix<SQLNET_FLOAT> &_predictions,
+    const containers::Matrix<AUTOSQL_FLOAT> &_predictions,
     const containers::DataFrameView &_targets )
 {
     scores().feature_correlations() =
@@ -106,26 +106,26 @@ void DecisionTreeEnsemble::calculate_feature_stats(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeEnsemble::calculate_sampling_rate(
-    const SQLNET_INT _population_nrows )
+    const AUTOSQL_INT _population_nrows )
 {
-    SQLNET_FLOAT nrows = static_cast<SQLNET_FLOAT>( _population_nrows );
+    AUTOSQL_FLOAT nrows = static_cast<AUTOSQL_FLOAT>( _population_nrows );
 
-#ifdef SQLNET_PARALLEL
+#ifdef AUTOSQL_PARALLEL
 
-    SQLNET_FLOAT nrows_global = 0.0;
+    AUTOSQL_FLOAT nrows_global = 0.0;
 
-    SQLNET_PARALLEL_LIB::all_reduce(
+    AUTOSQL_PARALLEL_LIB::all_reduce(
         *comm(),                   // comm
         nrows,                     // in_values
         nrows_global,              // out_values
-        std::plus<SQLNET_FLOAT>()  // op
+        std::plus<AUTOSQL_FLOAT>()  // op
     );
 
     comm()->barrier();
 
     nrows = nrows_global;
 
-#endif  // SQLNET_PARALLEL
+#endif  // AUTOSQL_PARALLEL
 
     if ( nrows <= 0.0 )
         {
@@ -161,7 +161,7 @@ void DecisionTreeEnsemble::check_plausibility(
     // -----------------------------------------------------
     // Number of rows must match
 
-    for ( SQLNET_SIZE i = 0; i < expected_size; ++i )
+    for ( AUTOSQL_SIZE i = 0; i < expected_size; ++i )
         {
             _peripheral_tables[i].check_plausibility();
         }
@@ -204,7 +204,7 @@ void DecisionTreeEnsemble::check_plausibility(
                 std::to_string( _population_table.numerical().ncols() ) + "!" );
         }
 
-    for ( SQLNET_SIZE i = 0; i < _peripheral_tables.size(); ++i )
+    for ( AUTOSQL_SIZE i = 0; i < _peripheral_tables.size(); ++i )
         {
             if ( _peripheral_tables[i].categorical().ncols() !=
                  num_columns_peripheral_categorical()[i] )
@@ -222,7 +222,7 @@ void DecisionTreeEnsemble::check_plausibility(
                 }
         }
 
-    for ( SQLNET_SIZE i = 0; i < _peripheral_tables.size(); ++i )
+    for ( AUTOSQL_SIZE i = 0; i < _peripheral_tables.size(); ++i )
         {
             if ( _peripheral_tables[i].discrete().ncols() !=
                  num_columns_peripheral_discrete()[i] )
@@ -239,7 +239,7 @@ void DecisionTreeEnsemble::check_plausibility(
                 }
         }
 
-    for ( SQLNET_SIZE i = 0; i < _peripheral_tables.size(); ++i )
+    for ( AUTOSQL_SIZE i = 0; i < _peripheral_tables.size(); ++i )
         {
             if ( _peripheral_tables[i].numerical().ncols() !=
                  num_columns_peripheral_numerical()[i] )
@@ -273,9 +273,9 @@ void DecisionTreeEnsemble::check_plausibility_of_targets(
                 "Targets must have at least one column!" );
         }
 
-    for ( SQLNET_INT i = 0; i < _population_table.nrows(); ++i )
+    for ( AUTOSQL_INT i = 0; i < _population_table.nrows(); ++i )
         {
-            for ( SQLNET_INT j = 0;
+            for ( AUTOSQL_INT j = 0;
                   j < _population_table.df().targets().ncols();
                   ++j )
                 {
@@ -320,7 +320,7 @@ void DecisionTreeEnsemble::feature_importances()
     // ----------------------------------------------------------------
     // Extract feature importances
 
-    std::vector<std::vector<SQLNET_FLOAT>> feature_importances_transposed;
+    std::vector<std::vector<AUTOSQL_FLOAT>> feature_importances_transposed;
 
     for ( auto &predictor : predictors() )
         {
@@ -340,7 +340,7 @@ void DecisionTreeEnsemble::feature_importances()
 
     for ( std::size_t i = 0; i < feature_importances_transposed[0].size(); ++i )
         {
-            std::vector<SQLNET_FLOAT> temp;
+            std::vector<AUTOSQL_FLOAT> temp;
 
             for ( auto &feat : feature_importances_transposed )
                 {
@@ -376,7 +376,7 @@ std::string DecisionTreeEnsemble::fit(
     // Create abstractions over the peripheral_tables and the population
     // table - for convenience
 
-#ifdef SQLNET_MULTINODE_MPI
+#ifdef AUTOSQL_MULTINODE_MPI
 
     // Prepare tables is already called by rearrange_tables
     // - no need to do it again!
@@ -385,7 +385,7 @@ std::string DecisionTreeEnsemble::fit(
 
     auto population_table = _population_table_raw;
 
-#else  // SQLNET_MULTINODE_MPI
+#else  // AUTOSQL_MULTINODE_MPI
 
     TableHolder table_holder = TablePreparer::prepare_tables(
         *placeholder_population(),
@@ -393,7 +393,7 @@ std::string DecisionTreeEnsemble::fit(
         _peripheral_tables_raw,
         _population_table_raw );
 
-#endif  // SQLNET_MULTINODE_MPI
+#endif  // AUTOSQL_MULTINODE_MPI
 
     // ----------------------------------------------------------------
     // Store the column numbers, so we can make sure that the user
@@ -453,11 +453,11 @@ std::string DecisionTreeEnsemble::fit(
 
     loss_function( parse_loss_function( hyperparameters()->loss_function ) );
 
-#ifdef SQLNET_PARALLEL
+#ifdef AUTOSQL_PARALLEL
     loss_function()->set_comm( comm() );
-#endif  // SQLNET_PARALLEL
+#endif  // AUTOSQL_PARALLEL
 
-    optimizationcriteria::RSquaredCriterion opt( static_cast<SQLNET_FLOAT>(
+    optimizationcriteria::RSquaredCriterion opt( static_cast<AUTOSQL_FLOAT>(
         hyperparameters()->tree_hyperparameters.min_num_samples ) );
 
     // ----------------------------------------------------------------
@@ -470,7 +470,7 @@ std::string DecisionTreeEnsemble::fit(
             throw std::invalid_argument( "Seed must be positive!" );
         }
 
-    containers::Matrix<SQLNET_FLOAT> sample_weights(
+    containers::Matrix<AUTOSQL_FLOAT> sample_weights(
         table_holder.main_table.nrows(), 1 );
 
     if ( !random_number_generator() )
@@ -489,7 +489,7 @@ std::string DecisionTreeEnsemble::fit(
     // yhat_old at 0.0. If this has already been fitted, we obviously
     // use the previous features.
 
-    containers::Matrix<SQLNET_FLOAT> yhat_old(
+    containers::Matrix<AUTOSQL_FLOAT> yhat_old(
         table_holder.main_table.nrows(),
         table_holder.main_table.df().targets().ncols() );
 
@@ -505,7 +505,7 @@ std::string DecisionTreeEnsemble::fit(
     // Calculate the pseudo-residuals - on which the tree will be
     // predicted
 
-    containers::Matrix<SQLNET_FLOAT> residuals =
+    containers::Matrix<AUTOSQL_FLOAT> residuals =
         loss_function()->calculate_residuals(
             yhat_old, table_holder.main_table );
 
@@ -517,13 +517,13 @@ std::string DecisionTreeEnsemble::fit(
 
     const auto num_peripheral = table_holder.peripheral_tables.size();
 
-    std::vector<SQLNET_SAMPLES> samples( num_peripheral );
+    std::vector<AUTOSQL_SAMPLES> samples( num_peripheral );
 
-    std::vector<SQLNET_SAMPLE_CONTAINER> sample_containers( num_peripheral );
+    std::vector<AUTOSQL_SAMPLE_CONTAINER> sample_containers( num_peripheral );
 
     if ( hyperparameters()->sampling_rate <= 0.0 )
         {
-            for ( SQLNET_SIZE i = 0; i < num_peripheral; ++i )
+            for ( AUTOSQL_SIZE i = 0; i < num_peripheral; ++i )
                 {
                     SampleContainer::create_samples_and_sample_containers(
                         *hyperparameters(),
@@ -536,7 +536,7 @@ std::string DecisionTreeEnsemble::fit(
 
     // ----------------------------------------------------------------
 
-    for ( SQLNET_INT ix_feature = 0;
+    for ( AUTOSQL_INT ix_feature = 0;
           ix_feature < hyperparameters()->num_features;
           ++ix_feature )
         {
@@ -565,11 +565,11 @@ std::string DecisionTreeEnsemble::fit(
 
             debug_message( "fit: Preparing optimization criterion..." );
 
-#ifdef SQLNET_PARALLEL
+#ifdef AUTOSQL_PARALLEL
 
             opt.set_comm( comm() );
 
-#endif  // SQLNET_PARALLEL
+#endif  // AUTOSQL_PARALLEL
 
             opt.init( residuals, sample_weights );
 
@@ -649,15 +649,15 @@ std::string DecisionTreeEnsemble::fit(
 
 void DecisionTreeEnsemble::fit_linear_regressions_and_recalculate_residuals(
     TableHolder &_table_holder,
-    const SQLNET_FLOAT _shrinkage,
-    containers::Matrix<SQLNET_FLOAT> &_sample_weights,
-    containers::Matrix<SQLNET_FLOAT> &_yhat_old,
-    containers::Matrix<SQLNET_FLOAT> &_residuals )
+    const AUTOSQL_FLOAT _shrinkage,
+    containers::Matrix<AUTOSQL_FLOAT> &_sample_weights,
+    containers::Matrix<AUTOSQL_FLOAT> &_yhat_old,
+    containers::Matrix<AUTOSQL_FLOAT> &_residuals )
 {
     // ----------------------------------------------------------------
     // Generate new feature
 
-    containers::Matrix<SQLNET_FLOAT> new_feature = last_tree()->transform(
+    containers::Matrix<AUTOSQL_FLOAT> new_feature = last_tree()->transform(
         _table_holder, hyperparameters()->use_timestamps );
 
     // ----------------------------------------------------------------
@@ -666,9 +666,9 @@ void DecisionTreeEnsemble::fit_linear_regressions_and_recalculate_residuals(
 
     linear_regressions().push_back( LinearRegression() );
 
-#ifdef SQLNET_PARALLEL
+#ifdef AUTOSQL_PARALLEL
     last_linear_regression()->set_comm( comm() );
-#endif  // SQLNET_PARALLEL
+#endif  // AUTOSQL_PARALLEL
 
     last_linear_regression()->fit( new_feature, _residuals, _sample_weights );
 
@@ -678,18 +678,18 @@ void DecisionTreeEnsemble::fit_linear_regressions_and_recalculate_residuals(
     // Find the optimal update_rates and update parameters of linear
     // regression accordingly
 
-    containers::Matrix<SQLNET_FLOAT> update_rates =
+    containers::Matrix<AUTOSQL_FLOAT> update_rates =
         loss_function()->calculate_update_rates(
             _yhat_old, f_t, _table_holder.main_table, _sample_weights );
 
-    for ( SQLNET_INT i = 0; i < _table_holder.main_table.df().targets().ncols();
+    for ( AUTOSQL_INT i = 0; i < _table_holder.main_table.df().targets().ncols();
           ++i )
         {
             last_linear_regression()->intercepts( i ) *=
                 update_rates( 0, i ) * _shrinkage;
         }
 
-    for ( SQLNET_INT i = 0; i < _table_holder.main_table.df().targets().ncols();
+    for ( AUTOSQL_INT i = 0; i < _table_holder.main_table.df().targets().ncols();
           ++i )
         {
             last_linear_regression()->slopes( i ) *=
@@ -699,7 +699,7 @@ void DecisionTreeEnsemble::fit_linear_regressions_and_recalculate_residuals(
     // ----------------------------------------------------------------
     // Get rid of out-of-range-values
 
-    auto in_range = []( SQLNET_FLOAT &val ) {
+    auto in_range = []( AUTOSQL_FLOAT &val ) {
         val = ( ( std::isnan( val ) || std::isinf( val ) ) ? 0.0 : val );
     };
 
@@ -716,11 +716,11 @@ void DecisionTreeEnsemble::fit_linear_regressions_and_recalculate_residuals(
     // ----------------------------------------------------------------
     // Do the actual updates
 
-    for ( SQLNET_INT i = 0; i < _yhat_old.nrows(); ++i )
+    for ( AUTOSQL_INT i = 0; i < _yhat_old.nrows(); ++i )
         {
-            for ( SQLNET_INT j = 0; j < _yhat_old.ncols(); ++j )
+            for ( AUTOSQL_INT j = 0; j < _yhat_old.ncols(); ++j )
                 {
-                    const SQLNET_FLOAT update =
+                    const AUTOSQL_FLOAT update =
                         f_t( i, j ) * update_rates( 0, j ) * _shrinkage;
 
                     _yhat_old( i, j ) +=
@@ -742,8 +742,8 @@ void DecisionTreeEnsemble::fit_linear_regressions_and_recalculate_residuals(
 
 std::string DecisionTreeEnsemble::fit_predictors(
     const std::shared_ptr<const logging::Logger> _logger,
-    containers::Matrix<SQLNET_FLOAT> _features,
-    containers::Matrix<SQLNET_FLOAT> _targets )
+    containers::Matrix<AUTOSQL_FLOAT> _features,
+    containers::Matrix<AUTOSQL_FLOAT> _targets )
 {
     // ----------------------------------------------------------------
 
@@ -752,7 +752,7 @@ std::string DecisionTreeEnsemble::fit_predictors(
             std::invalid_argument( "This Model has no predictors!" );
         }
 
-    if ( _features.ncols() != static_cast<SQLNET_INT>( trees().size() ) )
+    if ( _features.ncols() != static_cast<AUTOSQL_INT>( trees().size() ) )
         {
             std::invalid_argument(
                 "Wrong number of features! Expected: " +
@@ -769,9 +769,9 @@ std::string DecisionTreeEnsemble::fit_predictors(
 
     std::string msg = "";
 
-    for ( SQLNET_INT col = 0; col < _targets.ncols(); ++col )
+    for ( AUTOSQL_INT col = 0; col < _targets.ncols(); ++col )
         {
-            containers::Matrix<SQLNET_FLOAT> y = _targets.column( col );
+            containers::Matrix<AUTOSQL_FLOAT> y = _targets.column( col );
 
             msg += predictors()[col]->fit( _logger, _features, y );
         }
@@ -801,22 +801,22 @@ void DecisionTreeEnsemble::from_json_obj( const Poco::JSON::Object &_json_obj )
     // ----------------------------------------
     // Plausibility checks
 
-    if ( _json_obj.SQLNET_GET_ARRAY( "features_" )->size() == 0 )
+    if ( _json_obj.AUTOSQL_GET_ARRAY( "features_" )->size() == 0 )
         {
             std::invalid_argument(
                 "JSON object does not contain any features!" );
         }
 
-    if ( ( _json_obj.SQLNET_GET_ARRAY( "update_rates1_" )->size() %
-           _json_obj.SQLNET_GET_ARRAY( "features_" )->size() ) != 0 )
+    if ( ( _json_obj.AUTOSQL_GET_ARRAY( "update_rates1_" )->size() %
+           _json_obj.AUTOSQL_GET_ARRAY( "features_" )->size() ) != 0 )
         {
             std::invalid_argument(
                 "Error in JSON: Number of elements in update_rates must be "
                 "divisible by number of features!" );
         }
 
-    if ( _json_obj.SQLNET_GET_ARRAY( "update_rates1_" )->size() !=
-         _json_obj.SQLNET_GET_ARRAY( "update_rates2_" )->size() )
+    if ( _json_obj.AUTOSQL_GET_ARRAY( "update_rates1_" )->size() !=
+         _json_obj.AUTOSQL_GET_ARRAY( "update_rates2_" )->size() )
         {
             std::invalid_argument(
                 "Error in JSON: Number of elements update_rates1_ must be "
@@ -826,7 +826,7 @@ void DecisionTreeEnsemble::from_json_obj( const Poco::JSON::Object &_json_obj )
     // -------------------------------------------
     // Parse trees
 
-    auto features = _json_obj.SQLNET_GET_ARRAY( "features_" );
+    auto features = _json_obj.AUTOSQL_GET_ARRAY( "features_" );
 
     for ( size_t i = 0; i < features->size(); ++i )
         {
@@ -847,7 +847,7 @@ void DecisionTreeEnsemble::from_json_obj( const Poco::JSON::Object &_json_obj )
     // Parse targets
 
     model.targets() = JSON::array_to_vector<std::string>(
-        _json_obj.SQLNET_GET_ARRAY( "targets_" ) );
+        _json_obj.AUTOSQL_GET_ARRAY( "targets_" ) );
 
     // ----------------------------------------
     // Parse parameters for linear regressions.
@@ -858,45 +858,45 @@ void DecisionTreeEnsemble::from_json_obj( const Poco::JSON::Object &_json_obj )
     // Parse placeholders
 
     model.placeholder_peripheral() = JSON::array_to_vector<std::string>(
-        _json_obj.SQLNET_GET_ARRAY( "peripheral_" ) );
+        _json_obj.AUTOSQL_GET_ARRAY( "peripheral_" ) );
 
     model.placeholder_population().reset(
-        new Placeholder( *_json_obj.SQLNET_GET_OBJECT( "population_" ) ) );
+        new Placeholder( *_json_obj.AUTOSQL_GET_OBJECT( "population_" ) ) );
 
     // ------------------------------------------
     // Parse num_columns
 
     model.num_columns_peripheral_categorical() =
-        JSON::array_to_vector<SQLNET_INT>( _json_obj.SQLNET_GET_ARRAY(
+        JSON::array_to_vector<AUTOSQL_INT>( _json_obj.AUTOSQL_GET_ARRAY(
             "num_columns_peripheral_categorical_" ) );
 
     model.num_columns_peripheral_numerical() =
-        JSON::array_to_vector<SQLNET_INT>(
-            _json_obj.SQLNET_GET_ARRAY( "num_columns_peripheral_numerical_" ) );
+        JSON::array_to_vector<AUTOSQL_INT>(
+            _json_obj.AUTOSQL_GET_ARRAY( "num_columns_peripheral_numerical_" ) );
 
-    model.num_columns_peripheral_discrete() = JSON::array_to_vector<SQLNET_INT>(
-        _json_obj.SQLNET_GET_ARRAY( "num_columns_peripheral_discrete_" ) );
+    model.num_columns_peripheral_discrete() = JSON::array_to_vector<AUTOSQL_INT>(
+        _json_obj.AUTOSQL_GET_ARRAY( "num_columns_peripheral_discrete_" ) );
 
     model.num_columns_population_categorical() =
-        _json_obj.SQLNET_GET( "num_columns_population_categorical_" );
+        _json_obj.AUTOSQL_GET( "num_columns_population_categorical_" );
 
     model.num_columns_population_numerical() =
-        _json_obj.SQLNET_GET( "num_columns_population_numerical_" );
+        _json_obj.AUTOSQL_GET( "num_columns_population_numerical_" );
 
     model.num_columns_population_discrete() =
-        _json_obj.SQLNET_GET( "num_columns_population_discrete_" );
+        _json_obj.AUTOSQL_GET( "num_columns_population_discrete_" );
 
     // -------------------------------------------
     // Parse hyperparameters
 
     model.hyperparameters().reset( new descriptors::Hyperparameters(
-        *_json_obj.SQLNET_GET_OBJECT( "hyperparameters_" ) ) );
+        *_json_obj.AUTOSQL_GET_OBJECT( "hyperparameters_" ) ) );
 
     // -------------------------------------------
     // Parse scores
 
     model.scores() =
-        descriptors::Scores( *_json_obj.SQLNET_GET_OBJECT( "scores_" ) );
+        descriptors::Scores( *_json_obj.AUTOSQL_GET_OBJECT( "scores_" ) );
 
     // -------------------------------------------
 
@@ -914,7 +914,7 @@ void DecisionTreeEnsemble::init_predictors(
     predictors().clear();
 
     auto type =
-        _predictor_hyperparameters.SQLNET_GET_VALUE<std::string>( "type_" );
+        _predictor_hyperparameters.AUTOSQL_GET_VALUE<std::string>( "type_" );
 
     if ( type == "XGBoostPredictor" )
         {
@@ -1017,7 +1017,7 @@ void DecisionTreeEnsemble::log(
     const std::shared_ptr<const logging::Logger> &_logger,
     const std::string &_msg )
 {
-#ifdef SQLNET_MULTITHREADING
+#ifdef AUTOSQL_MULTITHREADING
 
     // Only the main thread is allowed to print status messages
     if ( comm()->main_thread_id() != std::this_thread::get_id() )
@@ -1025,9 +1025,9 @@ void DecisionTreeEnsemble::log(
             return;
         }
 
-#endif  // SQLNET_MULTITHREADING
+#endif  // AUTOSQL_MULTITHREADING
 
-#ifdef SQLNET_MULTINODE_MPI
+#ifdef AUTOSQL_MULTINODE_MPI
 
     // Only the root process is allowed to print status messages
     if ( comm()->rank() != 0 )
@@ -1035,7 +1035,7 @@ void DecisionTreeEnsemble::log(
             return;
         }
 
-#endif  // SQLNET_MULTINODE_MPI
+#endif  // AUTOSQL_MULTINODE_MPI
 
     _logger->log( _msg );
 }
@@ -1081,30 +1081,30 @@ void DecisionTreeEnsemble::parse_linear_regressions(
     // -------------------------------------------------------------
     // Check input
 
-    if ( _json_obj.SQLNET_GET_ARRAY( "update_rates1_" )->size() !=
-         _json_obj.SQLNET_GET_ARRAY( "update_rates2_" )->size() )
+    if ( _json_obj.AUTOSQL_GET_ARRAY( "update_rates1_" )->size() !=
+         _json_obj.AUTOSQL_GET_ARRAY( "update_rates2_" )->size() )
         {
             throw std::runtime_error(
                 "'update_rates1_' and 'update_rates2_' must have same "
                 "length!" );
         }
 
-    if ( _json_obj.SQLNET_GET_ARRAY( "update_rates1_" )->size() == 0 )
+    if ( _json_obj.AUTOSQL_GET_ARRAY( "update_rates1_" )->size() == 0 )
         {
             throw std::runtime_error(
                 "The must be at least some update rates!" );
         }
 
     const auto num_targets =
-        _json_obj.SQLNET_GET_ARRAY( "update_rates1_" )->getArray( 0 )->size();
+        _json_obj.AUTOSQL_GET_ARRAY( "update_rates1_" )->getArray( 0 )->size();
 
     // -------------------------------------------------------------
     // Get slopes
 
-    std::vector<std::vector<SQLNET_FLOAT>> slopes;
+    std::vector<std::vector<AUTOSQL_FLOAT>> slopes;
 
     {
-        auto arr = _json_obj.SQLNET_GET_ARRAY( "update_rates1_" );
+        auto arr = _json_obj.AUTOSQL_GET_ARRAY( "update_rates1_" );
 
         for ( size_t i = 0; i < arr->size(); ++i )
             {
@@ -1116,7 +1116,7 @@ void DecisionTreeEnsemble::parse_linear_regressions(
                             "same length!" );
                     }
 
-                slopes.push_back( JSON::array_to_vector<SQLNET_FLOAT>(
+                slopes.push_back( JSON::array_to_vector<AUTOSQL_FLOAT>(
                     arr->getArray( static_cast<unsigned int>( i ) ) ) );
             }
     }
@@ -1124,10 +1124,10 @@ void DecisionTreeEnsemble::parse_linear_regressions(
     // -------------------------------------------------------------
     // Get intercepts
 
-    std::vector<std::vector<SQLNET_FLOAT>> intercepts;
+    std::vector<std::vector<AUTOSQL_FLOAT>> intercepts;
 
     {
-        auto arr = _json_obj.SQLNET_GET_ARRAY( "update_rates2_" );
+        auto arr = _json_obj.AUTOSQL_GET_ARRAY( "update_rates2_" );
 
         for ( size_t i = 0; i < arr->size(); ++i )
             {
@@ -1139,7 +1139,7 @@ void DecisionTreeEnsemble::parse_linear_regressions(
                             "same length!" );
                     }
 
-                intercepts.push_back( JSON::array_to_vector<SQLNET_FLOAT>(
+                intercepts.push_back( JSON::array_to_vector<AUTOSQL_FLOAT>(
                     arr->getArray( static_cast<unsigned int>( i ) ) ) );
             }
     }
@@ -1149,17 +1149,17 @@ void DecisionTreeEnsemble::parse_linear_regressions(
 
     linear_regressions().clear();
 
-    for ( SQLNET_SIZE i = 0; i < slopes.size(); ++i )
+    for ( AUTOSQL_SIZE i = 0; i < slopes.size(); ++i )
         {
-            containers::Matrix<SQLNET_FLOAT> slopes_mat(
-                static_cast<SQLNET_INT>( 1 ),
-                static_cast<SQLNET_INT>( num_targets ) );
+            containers::Matrix<AUTOSQL_FLOAT> slopes_mat(
+                static_cast<AUTOSQL_INT>( 1 ),
+                static_cast<AUTOSQL_INT>( num_targets ) );
 
             std::copy( slopes[i].begin(), slopes[i].end(), slopes_mat.begin() );
 
-            containers::Matrix<SQLNET_FLOAT> intercepts_mat(
-                static_cast<SQLNET_INT>( 1 ),
-                static_cast<SQLNET_INT>( num_targets ) );
+            containers::Matrix<AUTOSQL_FLOAT> intercepts_mat(
+                static_cast<AUTOSQL_INT>( 1 ),
+                static_cast<AUTOSQL_INT>( num_targets ) );
 
             std::copy(
                 intercepts[i].begin(),
@@ -1200,7 +1200,7 @@ lossfunctions::LossFunction *DecisionTreeEnsemble::parse_loss_function(
 
 // ----------------------------------------------------------------------------
 
-containers::Matrix<SQLNET_FLOAT> DecisionTreeEnsemble::predict(
+containers::Matrix<AUTOSQL_FLOAT> DecisionTreeEnsemble::predict(
     const std::shared_ptr<const logging::Logger> _logger,
     std::vector<containers::DataFrame> _peripheral_tables,
     containers::DataFrameView _population_table )
@@ -1221,17 +1221,17 @@ containers::Matrix<SQLNET_FLOAT> DecisionTreeEnsemble::predict(
     // rates and the shrinkage have already been calculated into the
     // linear regressions
 
-    const SQLNET_INT ncols = linear_regressions()[0].ncols();
+    const AUTOSQL_INT ncols = linear_regressions()[0].ncols();
 
-    containers::Matrix<SQLNET_FLOAT> yhat( _population_table.nrows(), ncols );
+    containers::Matrix<AUTOSQL_FLOAT> yhat( _population_table.nrows(), ncols );
 
-    for ( SQLNET_INT feat = 0; feat < features.nrows(); ++feat )
+    for ( AUTOSQL_INT feat = 0; feat < features.nrows(); ++feat )
         {
             auto feature = features.subview( feat, feat + 1 ).transpose();
 
             auto yhat_temp = linear_regressions()[feat].predict( feature );
 
-            for ( SQLNET_SIZE i = 0; i < yhat.size(); ++i )
+            for ( AUTOSQL_SIZE i = 0; i < yhat.size(); ++i )
                 {
                     yhat[i] +=
                         ( ( yhat_temp[i] == yhat_temp[i] ) ? ( yhat_temp[i] )
@@ -1246,12 +1246,12 @@ containers::Matrix<SQLNET_FLOAT> DecisionTreeEnsemble::predict(
 
 // --------------------------------------------------------------------------
 
-containers::Matrix<SQLNET_FLOAT> DecisionTreeEnsemble::predict(
-    containers::Matrix<SQLNET_FLOAT> _features )
+containers::Matrix<AUTOSQL_FLOAT> DecisionTreeEnsemble::predict(
+    containers::Matrix<AUTOSQL_FLOAT> _features )
 {
     // ----------------------------------------------------------------
 
-    if ( _features.ncols() != static_cast<SQLNET_INT>( trees().size() ) )
+    if ( _features.ncols() != static_cast<AUTOSQL_INT>( trees().size() ) )
         {
             std::invalid_argument(
                 "Wrong number of features! Expected: " +
@@ -1261,7 +1261,7 @@ containers::Matrix<SQLNET_FLOAT> DecisionTreeEnsemble::predict(
 
     // ----------------------------------------------------------------
 
-    containers::Matrix<SQLNET_FLOAT> yhat( 0, _features.nrows() );
+    containers::Matrix<AUTOSQL_FLOAT> yhat( 0, _features.nrows() );
 
     for ( auto &predictor : predictors() )
         {
@@ -1310,8 +1310,8 @@ void DecisionTreeEnsemble::save( const std::string &_path )
 // ----------------------------------------------------------------------------
 
 Poco::JSON::Object DecisionTreeEnsemble::score(
-    const containers::Matrix<SQLNET_FLOAT> &_yhat,
-    const containers::Matrix<SQLNET_FLOAT> &_y )
+    const containers::Matrix<AUTOSQL_FLOAT> &_yhat,
+    const containers::Matrix<AUTOSQL_FLOAT> &_y )
 {
     // ------------------------------------------------------------------------
     // Make sure that the loss function exists.
@@ -1352,9 +1352,9 @@ Poco::JSON::Object DecisionTreeEnsemble::score(
         {
             const auto metric = metrics::MetricParser::parse( name );
 
-#ifdef SQLNET_PARALLEL
+#ifdef AUTOSQL_PARALLEL
             metric->set_comm( comm() );
-#endif  // SQLNET_PARALLEL
+#endif  // AUTOSQL_PARALLEL
 
             const auto scores = metric->score( _yhat, _y );
 
@@ -1390,8 +1390,8 @@ Poco::JSON::Object DecisionTreeEnsemble::score(
 
 std::string DecisionTreeEnsemble::select_features(
     const std::shared_ptr<const logging::Logger> _logger,
-    containers::Matrix<SQLNET_FLOAT> _features,
-    containers::Matrix<SQLNET_FLOAT> _targets )
+    containers::Matrix<AUTOSQL_FLOAT> _features,
+    containers::Matrix<AUTOSQL_FLOAT> _targets )
 {
     // -----------------------------------------------------------
     // Plausibility checks
@@ -1407,7 +1407,7 @@ std::string DecisionTreeEnsemble::select_features(
             std::invalid_argument( "This Model has no feature selectors!" );
         }
 
-    if ( _features.ncols() != static_cast<SQLNET_INT>( trees().size() ) )
+    if ( _features.ncols() != static_cast<AUTOSQL_INT>( trees().size() ) )
         {
             std::invalid_argument(
                 "Wrong number of features! Expected: " +
@@ -1424,9 +1424,9 @@ std::string DecisionTreeEnsemble::select_features(
 
     std::stringstream msg;
 
-    for ( SQLNET_INT col = 0; col < _targets.ncols(); ++col )
+    for ( AUTOSQL_INT col = 0; col < _targets.ncols(); ++col )
         {
-            containers::Matrix<SQLNET_FLOAT> y = _targets.column( col );
+            containers::Matrix<AUTOSQL_FLOAT> y = _targets.column( col );
 
             msg << predictors()[col]->fit( _logger, _features, y );
         }
@@ -1434,7 +1434,7 @@ std::string DecisionTreeEnsemble::select_features(
     // -----------------------------------------------------------
     // Calculate sum of feature importances
 
-    std::vector<SQLNET_FLOAT> feature_importances( trees().size() );
+    std::vector<AUTOSQL_FLOAT> feature_importances( trees().size() );
 
     for ( auto &predictor : predictors() )
         {
@@ -1445,15 +1445,15 @@ std::string DecisionTreeEnsemble::select_features(
                 temp.end(),
                 feature_importances.begin(),
                 feature_importances.begin(),
-                std::plus<SQLNET_FLOAT>() );
+                std::plus<AUTOSQL_FLOAT>() );
         }
 
     // -----------------------------------------------------------
     // Build index and sort by sum of feature importances
 
-    std::vector<SQLNET_SIZE> index( trees().size() );
+    std::vector<AUTOSQL_SIZE> index( trees().size() );
 
-    for ( SQLNET_SIZE ix = 0; ix < index.size(); ++ix )
+    for ( AUTOSQL_SIZE ix = 0; ix < index.size(); ++ix )
         {
             index[ix] = ix;
         }
@@ -1462,7 +1462,7 @@ std::string DecisionTreeEnsemble::select_features(
         index.begin(),
         index.end(),
         [feature_importances](
-            const SQLNET_SIZE &ix1, const SQLNET_SIZE &ix2 ) {
+            const AUTOSQL_SIZE &ix1, const AUTOSQL_SIZE &ix2 ) {
             return feature_importances[ix1] > feature_importances[ix2];
         } );
 
@@ -1473,11 +1473,11 @@ std::string DecisionTreeEnsemble::select_features(
 
     std::vector<LinearRegression> selected_linear_regressions;
 
-    const SQLNET_INT nselect = std::min(
+    const AUTOSQL_INT nselect = std::min(
         hyperparameters()->num_selected_features,
-        static_cast<SQLNET_INT>( index.size() ) );
+        static_cast<AUTOSQL_INT>( index.size() ) );
 
-    for ( SQLNET_INT i = 0; i < nselect; ++i )
+    for ( AUTOSQL_INT i = 0; i < nselect; ++i )
         {
             auto ix = index[i];
 
@@ -1570,14 +1570,14 @@ descriptors::SourceImportances DecisionTreeEnsemble::source_importances()
     // Normalize to 1.0
 
     {
-        SQLNET_FLOAT total = std::accumulate(
+        AUTOSQL_FLOAT total = std::accumulate(
             importances.aggregation_imp_.begin(),
             importances.aggregation_imp_.end(),
             0.0,
-            []( const SQLNET_FLOAT &init,
+            []( const AUTOSQL_FLOAT &init,
                 const std::pair<
                     descriptors::SourceImportancesColumn,
-                    SQLNET_FLOAT> &elem ) { return init + elem.second; } );
+                    AUTOSQL_FLOAT> &elem ) { return init + elem.second; } );
 
         for ( auto it = importances.aggregation_imp_.begin();
               it != importances.aggregation_imp_.end();
@@ -1588,14 +1588,14 @@ descriptors::SourceImportances DecisionTreeEnsemble::source_importances()
     }
 
     {
-        SQLNET_FLOAT total = std::accumulate(
+        AUTOSQL_FLOAT total = std::accumulate(
             importances.condition_imp_.begin(),
             importances.condition_imp_.end(),
             0.0,
-            []( const SQLNET_FLOAT &init,
+            []( const AUTOSQL_FLOAT &init,
                 const std::pair<
                     descriptors::SourceImportancesColumn,
-                    SQLNET_FLOAT> &elem ) { return init + elem.second; } );
+                    AUTOSQL_FLOAT> &elem ) { return init + elem.second; } );
 
         for ( auto it = importances.condition_imp_.begin();
               it != importances.condition_imp_.end();
@@ -1694,8 +1694,8 @@ Poco::JSON::Object DecisionTreeEnsemble::to_monitor(
             {
                 std::vector<std::string> sql;
 
-                for ( SQLNET_INT i = 0;
-                      i < static_cast<SQLNET_INT>( trees().size() );
+                for ( AUTOSQL_INT i = 0;
+                      i < static_cast<AUTOSQL_INT>( trees().size() );
                       ++i )
                     {
                         sql.push_back( trees()[i].to_sql(
@@ -1793,7 +1793,7 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json_obj()
                     {
                         Poco::JSON::Array elem;
 
-                        for ( SQLNET_FLOAT &val : linear_regression.slopes() )
+                        for ( AUTOSQL_FLOAT &val : linear_regression.slopes() )
                             {
                                 elem.add( val );
                             }
@@ -1814,7 +1814,7 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json_obj()
                     {
                         Poco::JSON::Array elem;
 
-                        for ( SQLNET_FLOAT &val :
+                        for ( AUTOSQL_FLOAT &val :
                               linear_regression.intercepts() )
                             {
                                 elem.add( val );
@@ -1848,7 +1848,7 @@ std::string DecisionTreeEnsemble::to_sql() const
 {
     std::stringstream sql;
 
-    for ( SQLNET_SIZE i = 0; i < trees().size(); ++i )
+    for ( AUTOSQL_SIZE i = 0; i < trees().size(); ++i )
         {
             sql << trees()[i].to_sql(
                 std::to_string( i + 1 ), hyperparameters().use_timestamps );
@@ -1859,7 +1859,7 @@ std::string DecisionTreeEnsemble::to_sql() const
 
 // ----------------------------------------------------------------------------
 
-containers::Matrix<SQLNET_FLOAT> DecisionTreeEnsemble::transform(
+containers::Matrix<AUTOSQL_FLOAT> DecisionTreeEnsemble::transform(
     const std::shared_ptr<const logging::Logger> _logger,
     std::vector<containers::DataFrame> _peripheral_tables_raw,
     containers::DataFrameView _population_table_raw,
@@ -1877,7 +1877,7 @@ containers::Matrix<SQLNET_FLOAT> DecisionTreeEnsemble::transform(
         // Create abstractions over the peripheral_tables and the population
         // table - for convenience
 
-#ifdef SQLNET_MULTINODE_MPI
+#ifdef AUTOSQL_MULTINODE_MPI
 
     // Prepare tables is already called by rearrange_tables
     // - no need to do it again!
@@ -1886,7 +1886,7 @@ containers::Matrix<SQLNET_FLOAT> DecisionTreeEnsemble::transform(
 
     auto population_table = _population_table_raw;
 
-#else  // SQLNET_MULTINODE_MPI
+#else  // AUTOSQL_MULTINODE_MPI
 
     TableHolder table_holder = TablePreparer::prepare_tables(
         *placeholder_population(),
@@ -1894,7 +1894,7 @@ containers::Matrix<SQLNET_FLOAT> DecisionTreeEnsemble::transform(
         _peripheral_tables_raw,
         _population_table_raw );
 
-#endif  // SQLNET_MULTINODE_MPI
+#endif  // AUTOSQL_MULTINODE_MPI
 
     // ----------------------------------------------------------------
     // Make sure that the data passed by the user is plausible
@@ -1925,10 +1925,10 @@ containers::Matrix<SQLNET_FLOAT> DecisionTreeEnsemble::transform(
     // Every tree in the ensemble stands for one feature - extract
     // the feature and append
 
-    containers::Matrix<SQLNET_FLOAT> features(
+    containers::Matrix<AUTOSQL_FLOAT> features(
         0, table_holder.main_table.nrows() );
 
-    for ( SQLNET_SIZE ix_feature = 0; ix_feature < trees().size();
+    for ( AUTOSQL_SIZE ix_feature = 0; ix_feature < trees().size();
           ++ix_feature )
         {
             auto &tree = trees()[ix_feature];

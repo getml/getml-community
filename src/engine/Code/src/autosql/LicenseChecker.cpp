@@ -24,8 +24,8 @@ void LicenseChecker::check_memory_size(
         std::accumulate(
             _data_frames.begin(),
             _data_frames.end(),
-            static_cast<SQLNET_UNSIGNED_LONG>( 0 ),
-            []( const SQLNET_UNSIGNED_LONG& init,
+            static_cast<AUTOSQL_UNSIGNED_LONG>( 0 ),
+            []( const AUTOSQL_UNSIGNED_LONG& init,
                 std::pair<std::string, containers::DataFrame> df ) {
                 return init + df.second.nbytes();
             } );

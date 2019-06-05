@@ -7,9 +7,9 @@ namespace containers
 // ----------------------------------------------------------------------------
 
 CategoryIndex::CategoryIndex(
-    const std::vector<SQLNET_INT>& _categories,
-    const SQLNET_SAMPLE_ITERATOR _begin,
-    const SQLNET_SAMPLE_ITERATOR _end )
+    const std::vector<AUTOSQL_INT>& _categories,
+    const AUTOSQL_SAMPLE_ITERATOR _begin,
+    const AUTOSQL_SAMPLE_ITERATOR _end )
     : begin_( _begin ),
       end_( _end ),
       indptr_( CategoryIndex::build_indptr( _categories, _begin, _end ) ),
@@ -34,10 +34,10 @@ CategoryIndex::CategoryIndex(
 
 // ----------------------------------------------------------------------------
 
-std::vector<SQLNET_INT> CategoryIndex::build_indptr(
-    const std::vector<SQLNET_INT>& _categories,
-    const SQLNET_SAMPLE_ITERATOR _begin,
-    const SQLNET_SAMPLE_ITERATOR _end )
+std::vector<AUTOSQL_INT> CategoryIndex::build_indptr(
+    const std::vector<AUTOSQL_INT>& _categories,
+    const AUTOSQL_SAMPLE_ITERATOR _begin,
+    const AUTOSQL_SAMPLE_ITERATOR _end )
 {
     // ------------------------------------------------------------------------
 
@@ -45,7 +45,7 @@ std::vector<SQLNET_INT> CategoryIndex::build_indptr(
 
     if ( std::distance( _begin, _end ) == 0 || _categories.size() == 0 )
         {
-            return std::vector<SQLNET_INT>( 0 );
+            return std::vector<AUTOSQL_INT>( 0 );
         }
 
     // ------------------------------------------------------------------------
@@ -55,13 +55,13 @@ std::vector<SQLNET_INT> CategoryIndex::build_indptr(
 
     assert( maximum >= minimum );
 
-    const auto dist = static_cast<SQLNET_INT>( std::distance( _begin, _end ) );
+    const auto dist = static_cast<AUTOSQL_INT>( std::distance( _begin, _end ) );
 
-    auto indptr = std::vector<SQLNET_INT>( maximum - minimum + 2 );
+    auto indptr = std::vector<AUTOSQL_INT>( maximum - minimum + 2 );
 
     // ------------------------------------------------------------------------
 
-    SQLNET_INT i = 0;
+    AUTOSQL_INT i = 0;
 
     for ( auto cat = minimum; cat <= maximum + 1; ++cat )
         {

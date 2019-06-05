@@ -25,16 +25,16 @@
 #include <utility>
 #include <vector>
 
-#ifdef SQLNET_MULTITHREADING
+#ifdef AUTOSQL_MULTITHREADING
 #include <atomic>
 #include <future>
 #include <thread>
-#endif  // SQLNET_MULTITHREADING
+#endif  // AUTOSQL_MULTITHREADING
 
-#ifdef SQLNET_MULTINODE_MPI
+#ifdef AUTOSQL_MULTINODE_MPI
 #include <boost/mpi.hpp>
 #include <boost/mpi/collectives.hpp>
-#endif  // SQLNET_MULTINODE_MPI
+#endif  // AUTOSQL_MULTINODE_MPI
 
 #include "Poco/JSON/Object.h"
 
@@ -54,13 +54,13 @@
 
 #include "descriptors/descriptors.hpp"
 
-#ifdef SQLNET_MULTITHREADING
+#ifdef AUTOSQL_MULTITHREADING
 #include "multithreading/multithreading.hpp"
-#endif  // SQLNET_MULTITHREADING
+#endif  // AUTOSQL_MULTITHREADING
 
-#ifdef SQLNET_MULTINODE_MPI
+#ifdef AUTOSQL_MULTINODE_MPI
 #include "MPI/Sendcounts.hpp"
-#endif  // SQLNET_MULTINODE_MPI
+#endif  // AUTOSQL_MULTINODE_MPI
 
 #include "Endianness.hpp"
 

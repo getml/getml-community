@@ -20,13 +20,13 @@ struct SameUnits
     // ------------------------------------------------------
 
     /// List of all pairs of categorical columns of the same unit
-    std::shared_ptr<const SQLNET_SAME_UNITS_CONTAINER> same_units_categorical;
+    std::shared_ptr<const AUTOSQL_SAME_UNITS_CONTAINER> same_units_categorical;
 
     /// List of all pairs of discrete columns of the same unit
-    std::shared_ptr<const SQLNET_SAME_UNITS_CONTAINER> same_units_discrete;
+    std::shared_ptr<const AUTOSQL_SAME_UNITS_CONTAINER> same_units_discrete;
 
     /// List of all pairs of numerical columns of the same unit
-    std::shared_ptr<const SQLNET_SAME_UNITS_CONTAINER> same_units_numerical;
+    std::shared_ptr<const AUTOSQL_SAME_UNITS_CONTAINER> same_units_numerical;
 
     // ------------------------------------------------------
 };

@@ -33,7 +33,7 @@ int main( int argc, char *argv[] )
     const auto data_frames =
         std::make_shared<std::map<std::string, containers::DataFrame>>();
 
-    const auto models = std::make_shared<SQLNET_MODEL_MAP>();
+    const auto models = std::make_shared<AUTOSQL_MODEL_MAP>();
 
     // -------------------------------------------
 

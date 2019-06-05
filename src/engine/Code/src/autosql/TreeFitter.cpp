@@ -8,9 +8,9 @@ namespace decisiontrees
 
 void TreeFitter::find_best_trees(
     const size_t _num_trees,
-    const std::vector<SQLNET_FLOAT> &_values,
-    std::vector<SQLNET_SAMPLES> &_samples,
-    std::vector<SQLNET_SAMPLE_CONTAINER> &_sample_containers,
+    const std::vector<AUTOSQL_FLOAT> &_values,
+    std::vector<AUTOSQL_SAMPLES> &_samples,
+    std::vector<AUTOSQL_SAMPLE_CONTAINER> &_sample_containers,
     TableHolder &_table_holder,
     optimizationcriteria::OptimizationCriterion *_optimization_criterion,
     std::list<DecisionTree> &_candidate_trees,
@@ -25,7 +25,7 @@ void TreeFitter::find_best_trees(
 
     const auto ix_begin = _trees.size();
 
-    std::vector<std::tuple<size_t, SQLNET_FLOAT>> tuples;
+    std::vector<std::tuple<size_t, AUTOSQL_FLOAT>> tuples;
 
     for ( size_t ix = 0; ix < _candidate_trees.size(); ++ix )
         {
@@ -35,8 +35,8 @@ void TreeFitter::find_best_trees(
     std::sort(
         tuples.begin(),
         tuples.end(),
-        []( const std::tuple<size_t, SQLNET_FLOAT> &t1,
-            const std::tuple<size_t, SQLNET_FLOAT> &t2 ) {
+        []( const std::tuple<size_t, AUTOSQL_FLOAT> &t1,
+            const std::tuple<size_t, AUTOSQL_FLOAT> &t2 ) {
             return std::get<1>( t1 ) > std::get<1>( t2 );
         } );
 
@@ -88,8 +88,8 @@ void TreeFitter::find_best_trees(
 
 void TreeFitter::fit(
     TableHolder &_table_holder,
-    std::vector<SQLNET_SAMPLES> &_samples,
-    std::vector<SQLNET_SAMPLE_CONTAINER> &_sample_containers,
+    std::vector<AUTOSQL_SAMPLES> &_samples,
+    std::vector<AUTOSQL_SAMPLE_CONTAINER> &_sample_containers,
     optimizationcriteria::OptimizationCriterion *_optimization_criterion,
     std::list<DecisionTree> &_candidate_trees,
     std::vector<DecisionTree> &_trees )
@@ -110,7 +110,7 @@ void TreeFitter::fit(
     // grow to its full depth,  instead we just get an idea of what
     // might work best.
 
-    std::vector<SQLNET_FLOAT> values;
+    std::vector<AUTOSQL_FLOAT> values;
 
     debug_message( "Fitter: Probing..." );
 
@@ -145,7 +145,7 @@ void TreeFitter::fit(
 
 void TreeFitter::fit_subtrees(
     TableHolder &_table_holder,
-    const std::vector<SQLNET_SAMPLE_CONTAINER> &_sample_containers,
+    const std::vector<AUTOSQL_SAMPLE_CONTAINER> &_sample_containers,
     optimizationcriteria::OptimizationCriterion *_opt,
     std::list<DecisionTree> &_candidate_trees )
 {
@@ -197,9 +197,9 @@ void TreeFitter::fit_subtrees(
                     // ---------------------------------------------------------------
                     // Create the new samples and sample containers
 
-                    std::vector<SQLNET_SAMPLES> samples( num_peripheral );
+                    std::vector<AUTOSQL_SAMPLES> samples( num_peripheral );
 
-                    std::vector<SQLNET_SAMPLE_CONTAINER> sample_containers(
+                    std::vector<AUTOSQL_SAMPLE_CONTAINER> sample_containers(
                         num_peripheral );
 
                     SampleContainer::create_samples_and_sample_containers(
@@ -246,7 +246,7 @@ void TreeFitter::fit_subtrees(
                     // Fit appropriate subtrees for each of the candidates.
 
                     fit_subtrees_for_candidates(
-                        static_cast<SQLNET_INT>( ix_subtable ),
+                        static_cast<AUTOSQL_INT>( ix_subtable ),
                         subtable,
                         samples,
                         sample_containers,
@@ -269,10 +269,10 @@ void TreeFitter::fit_subtrees(
 // ------------------------------------------------------------------------
 
 void TreeFitter::fit_subtrees_for_candidates(
-    const SQLNET_INT _ix_subtable,
+    const AUTOSQL_INT _ix_subtable,
     TableHolder &_subtable,
-    std::vector<SQLNET_SAMPLES> &_samples,
-    std::vector<SQLNET_SAMPLE_CONTAINER> &_sample_containers,
+    std::vector<AUTOSQL_SAMPLES> &_samples,
+    std::vector<AUTOSQL_SAMPLE_CONTAINER> &_sample_containers,
     const std::vector<descriptors::SameUnits> &_same_units,
     std::shared_ptr<aggregations::IntermediateAggregationImpl> &_opt_impl,
     containers::Optional<aggregations::AggregationImpl> &_aggregation_impl,
@@ -353,7 +353,7 @@ void TreeFitter::fit_subtrees_for_candidates(
                     // to grow to its full depth,  instead we just get an idea
                     // of what might work best.
 
-                    std::vector<SQLNET_FLOAT> values;
+                    std::vector<AUTOSQL_FLOAT> values;
 
                     debug_message( "Subfitter: Probing..." );
 
@@ -413,19 +413,19 @@ void TreeFitter::fit_subtrees_for_candidates(
 // ------------------------------------------------------------------------
 
 void TreeFitter::fit_tree(
-    const SQLNET_INT _max_length,
-    std::vector<SQLNET_SAMPLES> &_samples,
-    std::vector<SQLNET_SAMPLE_CONTAINER> &_sample_containers,
+    const AUTOSQL_INT _max_length,
+    std::vector<AUTOSQL_SAMPLES> &_samples,
+    std::vector<AUTOSQL_SAMPLE_CONTAINER> &_sample_containers,
     TableHolder &_table_holder,
     optimizationcriteria::OptimizationCriterion *_optimization_criterion,
     DecisionTree &_tree )
 {
     assert( _sample_containers.size() == _samples.size() );
 
-    SQLNET_INT ix_perip_used = _tree.column_to_be_aggregated().ix_perip_used;
+    AUTOSQL_INT ix_perip_used = _tree.column_to_be_aggregated().ix_perip_used;
 
     assert(
-        ix_perip_used < static_cast<SQLNET_INT>( _sample_containers.size() ) );
+        ix_perip_used < static_cast<AUTOSQL_INT>( _sample_containers.size() ) );
 
     auto null_values_dist = std::distance(
         _samples[ix_perip_used].begin(), _samples[ix_perip_used].begin() );
@@ -497,11 +497,11 @@ void TreeFitter::fit_tree(
 // ------------------------------------------------------------------------
 
 void TreeFitter::probe(
-    std::vector<SQLNET_SAMPLES> &_samples,
-    std::vector<SQLNET_SAMPLE_CONTAINER> &_sample_containers,
+    std::vector<AUTOSQL_SAMPLES> &_samples,
+    std::vector<AUTOSQL_SAMPLE_CONTAINER> &_sample_containers,
     TableHolder &_table_holder,
     optimizationcriteria::OptimizationCriterion *_optimization_criterion,
-    std::vector<SQLNET_FLOAT> &_values,
+    std::vector<AUTOSQL_FLOAT> &_values,
     std::list<DecisionTree> &_candidate_trees )
 {
     for ( auto &tree : _candidate_trees )

@@ -34,10 +34,10 @@ void ProjectManager::add_model(
         }
 
     auto placeholders_peripheral = JSON::array_to_vector<std::string>(
-        _cmd.SQLNET_GET_ARRAY( "peripheral_" ) );
+        _cmd.AUTOSQL_GET_ARRAY( "peripheral_" ) );
 
     auto placeholder_population =
-        Placeholder( *_cmd.SQLNET_GET_OBJECT( "population_" ) );
+        Placeholder( *_cmd.AUTOSQL_GET_OBJECT( "population_" ) );
 
     auto model = decisiontrees::DecisionTreeEnsemble(
         categories_, placeholders_peripheral, placeholder_population );

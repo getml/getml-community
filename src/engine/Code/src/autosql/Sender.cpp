@@ -15,16 +15,16 @@ void Sender::send_string(
     // ------------------------------------------------
     // Send size of string
 
-    SQLNET_INT str_size = static_cast<SQLNET_INT>( _string.size() );
+    AUTOSQL_INT str_size = static_cast<AUTOSQL_INT>( _string.size() );
 
-    Sender::send<SQLNET_INT>( _socket, sizeof( SQLNET_INT ), &str_size );
+    Sender::send<AUTOSQL_INT>( _socket, sizeof( AUTOSQL_INT ), &str_size );
 
     // ------------------------------------------------
     // Send string itself
 
     Sender::send<char>(
         _socket,
-        static_cast<SQLNET_UNSIGNED_LONG>( _string.length() ),
+        static_cast<AUTOSQL_UNSIGNED_LONG>( _string.length() ),
         &( _string[0] ) );
 }
 

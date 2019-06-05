@@ -14,10 +14,10 @@ struct SourceImportances
     // ------------------------------------------------------
 
     /// Importances for aggregations
-    std::map<SourceImportancesColumn, SQLNET_FLOAT> aggregation_imp_;
+    std::map<SourceImportancesColumn, AUTOSQL_FLOAT> aggregation_imp_;
 
     /// Importances for conditions
-    std::map<SourceImportancesColumn, SQLNET_FLOAT> condition_imp_;
+    std::map<SourceImportancesColumn, AUTOSQL_FLOAT> condition_imp_;
 
     // ------------------------------------------------------------------------
 

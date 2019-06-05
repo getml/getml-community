@@ -32,7 +32,7 @@ class IntermediateAggregation
 
     /// Initializes yhat
     void init_yhat(
-        const containers::Matrix<SQLNET_FLOAT>& _yhat,
+        const containers::Matrix<AUTOSQL_FLOAT>& _yhat,
         const containers::IntSet& _indices ) final;
 
     /// Resets sufficient statistics to zero
@@ -45,31 +45,31 @@ class IntermediateAggregation
     /// Updates all samples designated by _indices
     void update_samples(
         const containers::IntSet& _indices,
-        const containers::Matrix<SQLNET_FLOAT>& _new_values,
-        const std::vector<SQLNET_FLOAT>& _old_values ) final;
+        const containers::Matrix<AUTOSQL_FLOAT>& _new_values,
+        const std::vector<AUTOSQL_FLOAT>& _old_values ) final;
 
     // --------------------------------------
 
     /// Sorts a specific subsection of the values defined by _begin and _end.
     /// Returns the indices from greatest to smallest. This is useful for
     /// combining categories.
-    std::vector<SQLNET_INT> argsort(
-        const SQLNET_INT _begin, const SQLNET_INT _end ) const final
+    std::vector<AUTOSQL_INT> argsort(
+        const AUTOSQL_INT _begin, const AUTOSQL_INT _end ) const final
     {
         return parent().argsort( _begin, _end );
     }
 
     /// Because we do not know the number of categories a priori,
     /// we have to extend it, when necessary
-    void extend_storage_size( SQLNET_INT _storage_size_extension ) final
+    void extend_storage_size( AUTOSQL_INT _storage_size_extension ) final
     {
         parent().extend_storage_size( _storage_size_extension );
     }
 
     /// Calculates statistics that have to be calculated only once
     void init(
-        containers::Matrix<SQLNET_FLOAT>& _y,
-        containers::Matrix<SQLNET_FLOAT>& _sample_weights ) final
+        containers::Matrix<AUTOSQL_FLOAT>& _y,
+        containers::Matrix<AUTOSQL_FLOAT>& _sample_weights ) final
     {
         assert(
             false &&
@@ -78,43 +78,43 @@ class IntermediateAggregation
 
     /// Finds the index associated with the maximum of the optimization
     /// criterion
-    SQLNET_INT find_maximum() final { return parent().find_maximum(); }
+    AUTOSQL_INT find_maximum() final { return parent().find_maximum(); }
 
-#ifdef SQLNET_PARALLEL
+#ifdef AUTOSQL_PARALLEL
 
     /// Trivial setter
-    void set_comm( SQLNET_COMMUNICATOR* _comm ) final
+    void set_comm( AUTOSQL_COMMUNICATOR* _comm ) final
     {
         parent().set_comm( _comm );
     }
 
-#endif  // SQLNET_PARALLEL
+#endif  // AUTOSQL_PARALLEL
 
     /// An intermediate aggregation has no storage, so it
     /// is redelegated to the parent.
-    void set_storage_size( const SQLNET_INT _storage_size ) final
+    void set_storage_size( const AUTOSQL_INT _storage_size ) final
     {
         parent().set_storage_size( _storage_size );
     }
 
     /// An intermediate aggregation has no storage, so it
     /// is redelegated to the parent.
-    const SQLNET_INT storage_ix() const final { return parent().storage_ix(); }
+    const AUTOSQL_INT storage_ix() const final { return parent().storage_ix(); }
 
     /// Stores the current stage
     void store_current_stage(
-        const SQLNET_FLOAT _num_samples_smaller,
-        const SQLNET_FLOAT _num_samples_greater )
+        const AUTOSQL_FLOAT _num_samples_smaller,
+        const AUTOSQL_FLOAT _num_samples_greater )
     {
         parent().store_current_stage(
             _num_samples_smaller, _num_samples_greater );
     }
 
     /// Trivial getter
-    SQLNET_FLOAT value() final { return parent().value(); }
+    AUTOSQL_FLOAT value() final { return parent().value(); }
 
     /// Trivial getter
-    SQLNET_FLOAT values_stored( const SQLNET_INT _i ) final
+    AUTOSQL_FLOAT values_stored( const AUTOSQL_INT _i ) final
     {
         return parent().values_stored( _i );
     }
@@ -124,13 +124,13 @@ class IntermediateAggregation
    private:
     /// Calculates the counts designated by _indices_agg, if necessary.
     /// Remember - counts don't change.
-    void calculate_counts( const std::vector<SQLNET_INT>& _indices_agg );
+    void calculate_counts( const std::vector<AUTOSQL_INT>& _indices_agg );
 
     // --------------------------------------
 
    private:
     /// Trivial accessor
-    inline std::vector<SQLNET_FLOAT>& count() { return impl().count_; }
+    inline std::vector<AUTOSQL_FLOAT>& count() { return impl().count_; }
 
     /// Trivial accessor
     inline const AggregationIndex& index() const { return impl().index(); }
@@ -168,9 +168,9 @@ class IntermediateAggregation
             std::is_same<Agg, AggregationType::Avg>::value,
             int>::type = 0>
     inline void update_sample(
-        const SQLNET_INT _ix_agg,
-        const SQLNET_FLOAT& _new_value,
-        const SQLNET_FLOAT& _old_value )
+        const AUTOSQL_INT _ix_agg,
+        const AUTOSQL_FLOAT& _new_value,
+        const AUTOSQL_FLOAT& _old_value )
     {
         assert( _ix_agg >= 0 );
         assert( static_cast<size_t>( _ix_agg ) < yhat().size() );
@@ -190,9 +190,9 @@ class IntermediateAggregation
             std::is_same<Agg, AggregationType::Sum>::value,
             int>::type = 0>
     inline void update_sample(
-        const SQLNET_INT _ix_agg,
-        const SQLNET_FLOAT& _new_value,
-        const SQLNET_FLOAT& _old_value )
+        const AUTOSQL_INT _ix_agg,
+        const AUTOSQL_FLOAT& _new_value,
+        const AUTOSQL_FLOAT& _old_value )
     {
         assert( _ix_agg >= 0 );
         assert( static_cast<size_t>( _ix_agg ) < yhat().size() );
@@ -207,9 +207,9 @@ class IntermediateAggregation
             std::is_same<Agg, AggregationType::Skewness>::value,
             int>::type = 0>
     inline void update_sample(
-        const SQLNET_INT _ix_agg,
-        const SQLNET_FLOAT& _new_value,
-        const SQLNET_FLOAT& _old_value )
+        const AUTOSQL_INT _ix_agg,
+        const AUTOSQL_FLOAT& _new_value,
+        const AUTOSQL_FLOAT& _old_value )
     {
         assert( _ix_agg >= 0 );
         assert( static_cast<size_t>( _ix_agg ) < yhat().size() );
@@ -232,9 +232,9 @@ class IntermediateAggregation
         sum_cubed()[_ix_agg] += _new_value * _new_value * _new_value -
                                 _old_value * _old_value * _old_value;
 
-        const SQLNET_FLOAT mean = sum()[_ix_agg] / count()[_ix_agg];
+        const AUTOSQL_FLOAT mean = sum()[_ix_agg] / count()[_ix_agg];
 
-        const SQLNET_FLOAT stddev = std::sqrt(
+        const AUTOSQL_FLOAT stddev = std::sqrt(
             sum_squared()[_ix_agg] / count()[_ix_agg] - mean * mean );
 
         yhat()[_ix_agg] =
@@ -250,9 +250,9 @@ class IntermediateAggregation
             std::is_same<Agg, AggregationType::Var>::value,
             int>::type = 0>
     inline void update_sample(
-        const SQLNET_INT _ix_agg,
-        const SQLNET_FLOAT& _new_value,
-        const SQLNET_FLOAT& _old_value )
+        const AUTOSQL_INT _ix_agg,
+        const AUTOSQL_FLOAT& _new_value,
+        const AUTOSQL_FLOAT& _old_value )
     {
         assert( _ix_agg >= 0 );
         assert( static_cast<size_t>( _ix_agg ) < yhat().size() );
@@ -270,7 +270,7 @@ class IntermediateAggregation
         sum_squared()[_ix_agg] +=
             _new_value * _new_value - _old_value * _old_value;
 
-        const SQLNET_FLOAT mean = sum()[_ix_agg] / count()[_ix_agg];
+        const AUTOSQL_FLOAT mean = sum()[_ix_agg] / count()[_ix_agg];
 
         yhat()[_ix_agg] =
             sum_squared()[_ix_agg] / count()[_ix_agg] - mean * mean;
@@ -283,9 +283,9 @@ class IntermediateAggregation
             std::is_same<Agg, AggregationType::Stddev>::value,
             int>::type = 0>
     inline void update_sample(
-        const SQLNET_INT _ix_agg,
-        const SQLNET_FLOAT& _new_value,
-        const SQLNET_FLOAT& _old_value )
+        const AUTOSQL_INT _ix_agg,
+        const AUTOSQL_FLOAT& _new_value,
+        const AUTOSQL_FLOAT& _old_value )
     {
         update_sample<AggregationType::Var, 0>(
             _ix_agg, _new_value, _old_value );
@@ -306,46 +306,46 @@ class IntermediateAggregation
     }
 
     /// Trivial accessor
-    inline std::vector<SQLNET_FLOAT>& sum() { return impl().sum_; }
+    inline std::vector<AUTOSQL_FLOAT>& sum() { return impl().sum_; }
 
     /// Trivial accessor
-    inline std::vector<SQLNET_FLOAT>& sum_committed()
+    inline std::vector<AUTOSQL_FLOAT>& sum_committed()
     {
         return impl().sum_committed_;
     }
 
     /// Trivial accessor
-    inline std::vector<SQLNET_FLOAT>& sum_cubed() { return impl().sum_cubed_; }
+    inline std::vector<AUTOSQL_FLOAT>& sum_cubed() { return impl().sum_cubed_; }
 
     /// Trivial accessor
-    inline std::vector<SQLNET_FLOAT>& sum_cubed_committed()
+    inline std::vector<AUTOSQL_FLOAT>& sum_cubed_committed()
     {
         return impl().sum_cubed_committed_;
     }
 
     /// Trivial accessor
-    inline std::vector<SQLNET_FLOAT>& sum_squared()
+    inline std::vector<AUTOSQL_FLOAT>& sum_squared()
     {
         return impl().sum_squared_;
     }
 
     /// Trivial accessor
-    inline std::vector<SQLNET_FLOAT>& sum_squared_committed()
+    inline std::vector<AUTOSQL_FLOAT>& sum_squared_committed()
     {
         return impl().sum_squared_committed_;
     }
 
     /// Trivial accessor
-    inline containers::Matrix<SQLNET_FLOAT>& yhat() { return impl().yhat_; }
+    inline containers::Matrix<AUTOSQL_FLOAT>& yhat() { return impl().yhat_; }
 
     /// Trivial accessor
-    inline std::vector<SQLNET_FLOAT>& yhat_committed()
+    inline std::vector<AUTOSQL_FLOAT>& yhat_committed()
     {
         return impl().yhat_committed_;
     }
 
     /// Trivial accessor
-    inline std::vector<SQLNET_FLOAT>& yhat_stored()
+    inline std::vector<AUTOSQL_FLOAT>& yhat_stored()
     {
         return impl().yhat_stored_;
     }
@@ -385,7 +385,7 @@ class IntermediateAggregation
 
 template <typename AggType>
 void IntermediateAggregation<AggType>::calculate_counts(
-    const std::vector<SQLNET_INT>& _indices_agg )
+    const std::vector<AUTOSQL_INT>& _indices_agg )
 {
     for ( auto ix_agg : _indices_agg )
         {
@@ -456,7 +456,7 @@ void IntermediateAggregation<AggType>::commit()
 
 template <typename AggType>
 void IntermediateAggregation<AggType>::init_yhat(
-    const containers::Matrix<SQLNET_FLOAT>& _yhat,
+    const containers::Matrix<AUTOSQL_FLOAT>& _yhat,
     const containers::IntSet& _indices )
 {
     debug_message( "IntermediateAgg: init_yhat..." );
@@ -465,7 +465,7 @@ void IntermediateAggregation<AggType>::init_yhat(
 
     for ( auto ix_input : _indices )
         {
-            const std::vector<SQLNET_INT> indices_agg =
+            const std::vector<AUTOSQL_INT> indices_agg =
                 index().transform( ix_input );
 
             if ( needs_count_ )
@@ -486,7 +486,7 @@ void IntermediateAggregation<AggType>::init_yhat(
 
     parent().init_yhat( yhat(), updates_stored() );
 
-    for ( SQLNET_INT ix_agg : updates_stored() )
+    for ( AUTOSQL_INT ix_agg : updates_stored() )
         {
             yhat_stored()[ix_agg] = yhat()[ix_agg];
         }
@@ -616,12 +616,12 @@ void IntermediateAggregation<AggType>::revert_to_commit()
 template <typename AggType>
 void IntermediateAggregation<AggType>::update_samples(
     const containers::IntSet& _indices,
-    const containers::Matrix<SQLNET_FLOAT>& _new_values,
-    const std::vector<SQLNET_FLOAT>& _old_values )
+    const containers::Matrix<AUTOSQL_FLOAT>& _new_values,
+    const std::vector<AUTOSQL_FLOAT>& _old_values )
 {
     for ( auto ix_input : _indices )
         {
-            const std::vector<SQLNET_INT> indices_agg =
+            const std::vector<AUTOSQL_INT> indices_agg =
                 index().transform( ix_input );
 
             for ( auto ix_agg : indices_agg )
@@ -639,7 +639,7 @@ void IntermediateAggregation<AggType>::update_samples(
 
     parent().update_samples( updates_current(), yhat(), yhat_stored() );
 
-    for ( SQLNET_INT ix_agg : updates_current() )
+    for ( AUTOSQL_INT ix_agg : updates_current() )
         {
             yhat_stored()[ix_agg] = yhat()[ix_agg];
         }
@@ -651,4 +651,4 @@ void IntermediateAggregation<AggType>::update_samples(
 }  // namespace aggregations
 }  // namespace autosql
 
-#endif  // SQLNET_INTERMEDIATEAGGREGATION_HPP_
+#endif  // AUTOSQL_INTERMEDIATEAGGREGATION_HPP_

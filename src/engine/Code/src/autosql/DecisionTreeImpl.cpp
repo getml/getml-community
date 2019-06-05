@@ -9,7 +9,7 @@ namespace decisiontrees
 std::string DecisionTreeImpl::get_colname(
     const std::string& _feature_num,
     const DataUsed _data_used,
-    const SQLNET_INT _ix_column_used,
+    const AUTOSQL_INT _ix_column_used,
     const bool _equals ) const
 {
     std::string colname;
@@ -151,9 +151,9 @@ std::string DecisionTreeImpl::get_colname(
 
 void DecisionTreeImpl::source_importances(
     const DataUsed _data_used,
-    const SQLNET_INT _ix_column_used,
-    const SQLNET_FLOAT _factor,
-    std::map<descriptors::SourceImportancesColumn, SQLNET_FLOAT>& _map ) const
+    const AUTOSQL_INT _ix_column_used,
+    const AUTOSQL_FLOAT _factor,
+    std::map<descriptors::SourceImportancesColumn, AUTOSQL_FLOAT>& _map ) const
 {
     descriptors::SourceImportancesColumn col;
 

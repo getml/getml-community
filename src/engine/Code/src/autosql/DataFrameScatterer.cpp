@@ -6,13 +6,13 @@ namespace engine
 {
 // ----------------------------------------------------------------------------
 
-const std::vector<SQLNET_INT> DataFrameScatterer::build_thread_nums(
-    const std::map<SQLNET_INT, SQLNET_INT>& _min_keys_map,
-    const containers::Matrix<SQLNET_INT>& _min_join_key )
+const std::vector<AUTOSQL_INT> DataFrameScatterer::build_thread_nums(
+    const std::map<AUTOSQL_INT, AUTOSQL_INT>& _min_keys_map,
+    const containers::Matrix<AUTOSQL_INT>& _min_join_key )
 {
-    std::vector<SQLNET_INT> thread_nums( _min_join_key.nrows() );
+    std::vector<AUTOSQL_INT> thread_nums( _min_join_key.nrows() );
 
-    for ( SQLNET_INT i = 0; i < _min_join_key.nrows(); ++i )
+    for ( AUTOSQL_INT i = 0; i < _min_join_key.nrows(); ++i )
         {
             auto it = _min_keys_map.find( _min_join_key[i] );
 
@@ -26,15 +26,15 @@ const std::vector<SQLNET_INT> DataFrameScatterer::build_thread_nums(
 
 // ----------------------------------------------------------------------------
 
-const std::vector<SQLNET_INT> DataFrameScatterer::build_thread_nums(
-    const std::vector<containers::Matrix<SQLNET_INT> >& _keys,
-    const SQLNET_INT _num_threads )
+const std::vector<AUTOSQL_INT> DataFrameScatterer::build_thread_nums(
+    const std::vector<containers::Matrix<AUTOSQL_INT> >& _keys,
+    const AUTOSQL_INT _num_threads )
 {
     check_plausibility( _keys, _num_threads );
 
-    SQLNET_INT ix_min_keys;
+    AUTOSQL_INT ix_min_keys;
 
-    std::map<SQLNET_INT, SQLNET_INT> min_keys_map;
+    std::map<AUTOSQL_INT, AUTOSQL_INT> min_keys_map;
 
     scatter_keys( _keys, _num_threads, ix_min_keys, min_keys_map );
 
@@ -44,8 +44,8 @@ const std::vector<SQLNET_INT> DataFrameScatterer::build_thread_nums(
 // ----------------------------------------------------------------------------
 
 void DataFrameScatterer::check_plausibility(
-    const std::vector<containers::Matrix<SQLNET_INT> >& _keys,
-    const SQLNET_INT _num_threads )
+    const std::vector<containers::Matrix<AUTOSQL_INT> >& _keys,
+    const AUTOSQL_INT _num_threads )
 {
     if ( _keys.size() == 0 )
         {
@@ -72,14 +72,14 @@ void DataFrameScatterer::check_plausibility(
 
 containers::DataFrameView DataFrameScatterer::scatter_data_frame(
     const containers::DataFrame& _df,
-    const std::vector<SQLNET_INT>& _thread_nums,
-    const SQLNET_INT _thread_num )
+    const std::vector<AUTOSQL_INT>& _thread_nums,
+    const AUTOSQL_INT _thread_num )
 {
     assert( static_cast<size_t>( _df.nrows() ) == _thread_nums.size() );
 
-    std::vector<SQLNET_INT> indices;
+    std::vector<AUTOSQL_INT> indices;
 
-    for ( SQLNET_INT i = 0; i < _df.nrows(); ++i )
+    for ( AUTOSQL_INT i = 0; i < _df.nrows(); ++i )
         {
             if ( _thread_nums[i] == _thread_num )
                 {
@@ -93,15 +93,15 @@ containers::DataFrameView DataFrameScatterer::scatter_data_frame(
 // ----------------------------------------------------------------------------
 
 void DataFrameScatterer::scatter_keys(
-    const std::vector<containers::Matrix<SQLNET_INT> >& _keys,
-    const SQLNET_INT _num_threads,
-    SQLNET_INT& _ix_min_keys_map,
-    std::map<SQLNET_INT, SQLNET_INT>& _min_keys_map )
+    const std::vector<containers::Matrix<AUTOSQL_INT> >& _keys,
+    const AUTOSQL_INT _num_threads,
+    AUTOSQL_INT& _ix_min_keys_map,
+    std::map<AUTOSQL_INT, AUTOSQL_INT>& _min_keys_map )
 {
     // ---------------------------------------------------------------------------
     // Map a process id for each individual key
 
-    std::vector<std::map<SQLNET_INT, SQLNET_INT> > keys_maps_temp(
+    std::vector<std::map<AUTOSQL_INT, AUTOSQL_INT> > keys_maps_temp(
         _keys.size() );
 
     for ( size_t ix_key = 0; ix_key < _keys.size(); ++ix_key )
@@ -110,14 +110,14 @@ void DataFrameScatterer::scatter_keys(
 
             auto& key_map = keys_maps_temp[ix_key];
 
-            for ( SQLNET_INT i = 0; i < key.nrows(); ++i )
+            for ( AUTOSQL_INT i = 0; i < key.nrows(); ++i )
                 {
                     auto it = key_map.find( key[i] );
 
                     if ( it == key_map.end() )
                         {
-                            SQLNET_INT rank =
-                                static_cast<SQLNET_INT>( key_map.size() ) %
+                            AUTOSQL_INT rank =
+                                static_cast<AUTOSQL_INT>( key_map.size() ) %
                                 _num_threads;
 
                             key_map[key[i]] = rank;
@@ -139,7 +139,7 @@ void DataFrameScatterer::scatter_keys(
             if ( keys_maps_temp[i].size() <
                  keys_maps_temp[_ix_min_keys_map].size() )
                 {
-                    _ix_min_keys_map = static_cast<SQLNET_INT>( i );
+                    _ix_min_keys_map = static_cast<AUTOSQL_INT>( i );
                 }
         }
 

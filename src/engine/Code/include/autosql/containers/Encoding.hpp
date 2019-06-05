@@ -31,10 +31,10 @@ class Encoding
     const std::string& operator[]( const T _i ) const;
 
     /// Returns the integer mapped to a string.
-    SQLNET_INT operator[]( const std::string& _val );
+    AUTOSQL_INT operator[]( const std::string& _val );
 
     /// Returns the integer mapped to a string (const version).
-    SQLNET_INT operator[]( const std::string& _val ) const;
+    AUTOSQL_INT operator[]( const std::string& _val ) const;
 
     /// Copies a vector
     Encoding& operator=( std::vector<std::string>&& _vector ) noexcept;
@@ -70,13 +70,13 @@ class Encoding
 
    private:
     /// Adds an integer to map_ and vector_, assuming it is not already included
-    SQLNET_INT insert( const std::string& _val );
+    AUTOSQL_INT insert( const std::string& _val );
 
     // -------------------------------
 
    private:
     /// For fast lookup
-    std::unordered_map<std::string, SQLNET_INT> map_;
+    std::unordered_map<std::string, AUTOSQL_INT> map_;
 
     /// The null value (needed because strings are returned by reference).
     const std::string null_value_;

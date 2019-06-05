@@ -1,5 +1,5 @@
-#ifndef SQLNET_OPTIMIZATION_CRITERIA_HPP_
-#define SQLNET_OPTIMIZATION_CRITERIA_HPP_
+#ifndef AUTOSQL_OPTIMIZATION_CRITERIA_HPP_
+#define AUTOSQL_OPTIMIZATION_CRITERIA_HPP_
 
 // ----------------------------------------------------
 // Dependencies
@@ -17,4 +17,4 @@
 
 #include "optimizationcriteria/RSquaredCriterion.hpp"
 
-#endif  // SQLNET_OPTIMIZATION_CRITERIA_HPP_
+#endif  // AUTOSQL_OPTIMIZATION_CRITERIA_HPP_

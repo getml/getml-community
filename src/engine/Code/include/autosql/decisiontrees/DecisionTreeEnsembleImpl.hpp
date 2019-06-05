@@ -43,7 +43,7 @@ struct DecisionTreeEnsembleImpl
 
     /// MPI Communicator or self-defined communicator object (for
     /// multithreading)
-    SQLNET_COMMUNICATOR *comm_;
+    AUTOSQL_COMMUNICATOR *comm_;
 
     /// The linear regressions that are being used to map the features
     /// onto the targets for the gradient-boosting-like functionality
@@ -53,22 +53,22 @@ struct DecisionTreeEnsembleImpl
     containers::Optional<descriptors::Hyperparameters> hyperparameters_;
 
     /// Number of categorical colimns in peripheral table
-    std::vector<SQLNET_INT> num_columns_peripheral_categorical_;
+    std::vector<AUTOSQL_INT> num_columns_peripheral_categorical_;
 
     /// Number of discrete colimns in peripheral table
-    std::vector<SQLNET_INT> num_columns_peripheral_discrete_;
+    std::vector<AUTOSQL_INT> num_columns_peripheral_discrete_;
 
     /// Number of numerical colimns in peripheral table
-    std::vector<SQLNET_INT> num_columns_peripheral_numerical_;
+    std::vector<AUTOSQL_INT> num_columns_peripheral_numerical_;
 
     /// Number of categorical colimns in population table
-    SQLNET_INT num_columns_population_categorical_;
+    AUTOSQL_INT num_columns_population_categorical_;
 
     /// Number of discrete colimns in population table
-    SQLNET_INT num_columns_population_discrete_;
+    AUTOSQL_INT num_columns_population_discrete_;
 
     /// Number of numerical colimns in population table
-    SQLNET_INT num_columns_population_numerical_;
+    AUTOSQL_INT num_columns_population_numerical_;
 
     /// Placeholder for the peripheral tables
     std::vector<std::string> placeholder_peripheral_;

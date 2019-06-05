@@ -14,7 +14,7 @@ class TreeFitter
    public:
     TreeFitter(
         std::shared_ptr<containers::Encoding> &_categories,
-        SQLNET_COMMUNICATOR *_comm,
+        AUTOSQL_COMMUNICATOR *_comm,
         descriptors::Hyperparameters &_hyperparameters,
         std::mt19937 &_random_number_generator )
         : categories_( _categories ),
@@ -32,8 +32,8 @@ class TreeFitter
     /// Fits the trees in a recursive manner, starting with any subtrees.
     void fit(
         TableHolder &_table_holder,
-        std::vector<SQLNET_SAMPLES> &_samples,
-        std::vector<SQLNET_SAMPLE_CONTAINER> &_sample_containers,
+        std::vector<AUTOSQL_SAMPLES> &_samples,
+        std::vector<AUTOSQL_SAMPLE_CONTAINER> &_sample_containers,
         optimizationcriteria::OptimizationCriterion *_optimization_criterion,
         std::list<DecisionTree> &_candidate_trees,
         std::vector<DecisionTree> &_trees );
@@ -44,9 +44,9 @@ class TreeFitter
     /// Finds the best of the candidate trees - and refits, if required.
     void find_best_trees(
         const size_t _num_trees,
-        const std::vector<SQLNET_FLOAT> &_values,
-        std::vector<SQLNET_SAMPLES> &_samples,
-        std::vector<SQLNET_SAMPLE_CONTAINER> &_sample_containers,
+        const std::vector<AUTOSQL_FLOAT> &_values,
+        std::vector<AUTOSQL_SAMPLES> &_samples,
+        std::vector<AUTOSQL_SAMPLE_CONTAINER> &_sample_containers,
         TableHolder &_table_holder,
         optimizationcriteria::OptimizationCriterion *_optimization_criterion,
         std::list<DecisionTree> &_candidate_trees,
@@ -55,16 +55,16 @@ class TreeFitter
     /// Fits the subtrees.
     void fit_subtrees(
         TableHolder &_table_holder,
-        const std::vector<SQLNET_SAMPLE_CONTAINER> &_sample_containers,
+        const std::vector<AUTOSQL_SAMPLE_CONTAINER> &_sample_containers,
         optimizationcriteria::OptimizationCriterion *_opt,
         std::list<DecisionTree> &_candidate_trees );
 
     /// Fits the subtrees for each of the candidates.
     void fit_subtrees_for_candidates(
-        const SQLNET_INT _ix_subtable,
+        const AUTOSQL_INT _ix_subtable,
         TableHolder &_subtable,
-        std::vector<SQLNET_SAMPLES> &_samples,
-        std::vector<SQLNET_SAMPLE_CONTAINER> &_sample_containers,
+        std::vector<AUTOSQL_SAMPLES> &_samples,
+        std::vector<AUTOSQL_SAMPLE_CONTAINER> &_sample_containers,
         const std::vector<descriptors::SameUnits> &_same_units,
         std::shared_ptr<aggregations::IntermediateAggregationImpl> &_opt_impl,
         containers::Optional<aggregations::AggregationImpl> &_aggregation_impl,
@@ -72,20 +72,20 @@ class TreeFitter
 
     /// Fits an individual tree.
     void fit_tree(
-        const SQLNET_INT _max_length,
-        std::vector<SQLNET_SAMPLES> &_samples,
-        std::vector<SQLNET_SAMPLE_CONTAINER> &_sample_containers,
+        const AUTOSQL_INT _max_length,
+        std::vector<AUTOSQL_SAMPLES> &_samples,
+        std::vector<AUTOSQL_SAMPLE_CONTAINER> &_sample_containers,
         TableHolder &_table_holder,
         optimizationcriteria::OptimizationCriterion *_optimization_criterion,
         DecisionTree &_tree );
 
     /// Fits all candidate trees at max_depth = _max_length_probe.
     void probe(
-        std::vector<SQLNET_SAMPLES> &_samples,
-        std::vector<SQLNET_SAMPLE_CONTAINER> &_sample_containers,
+        std::vector<AUTOSQL_SAMPLES> &_samples,
+        std::vector<AUTOSQL_SAMPLE_CONTAINER> &_sample_containers,
         TableHolder &_table_holder,
         optimizationcriteria::OptimizationCriterion *_opt,
-        std::vector<SQLNET_FLOAT> &_values,
+        std::vector<AUTOSQL_FLOAT> &_values,
         std::list<DecisionTree> &_candidate_trees );
 
     // -------------------------------------------------------------------------
@@ -98,7 +98,7 @@ class TreeFitter
     }
 
     /// Trivial accessor
-    SQLNET_COMMUNICATOR *comm() { return comm_; }
+    AUTOSQL_COMMUNICATOR *comm() { return comm_; }
 
     /// Trivial accessor
     descriptors::Hyperparameters &hyperparameters() { return hyperparameters_; }
@@ -122,7 +122,7 @@ class TreeFitter
     std::shared_ptr<containers::Encoding> &categories_;
 
     /// Communicator
-    SQLNET_COMMUNICATOR *comm_;
+    AUTOSQL_COMMUNICATOR *comm_;
 
     /// The hyperparameters for training
     descriptors::Hyperparameters &hyperparameters_;

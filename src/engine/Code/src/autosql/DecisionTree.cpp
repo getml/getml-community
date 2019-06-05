@@ -12,18 +12,18 @@ DecisionTree::DecisionTree( const Poco::JSON::Object &_json_obj )
 
     from_json_obj( _json_obj );
 
-#ifdef SQLNET_PARALLEL
+#ifdef AUTOSQL_PARALLEL
     impl_.comm_ = nullptr;
-#endif  // SQLNET_PARALLEL
+#endif  // AUTOSQL_PARALLEL
 };
 
 // ----------------------------------------------------------------------------
 
 DecisionTree::DecisionTree(
     const std::string &_agg,
-    const SQLNET_INT _ix_column_used,
+    const AUTOSQL_INT _ix_column_used,
     const DataUsed _data_used,
-    const SQLNET_INT _ix_perip_used,
+    const AUTOSQL_INT _ix_perip_used,
     const descriptors::SameUnits &_same_units,
     std::mt19937 &_random_number_generator,
     containers::Optional<aggregations::AggregationImpl> &_aggregation_impl )
@@ -42,9 +42,9 @@ DecisionTree::DecisionTree(
 
     impl_.aggregation_type_ = _agg;
 
-#ifdef SQLNET_PARALLEL
+#ifdef AUTOSQL_PARALLEL
     impl_.comm_ = nullptr;
-#endif  // SQLNET_PARALLEL
+#endif  // AUTOSQL_PARALLEL
 
     impl()->random_number_generator_ = &_random_number_generator;
 
@@ -88,7 +88,7 @@ DecisionTree::DecisionTree( DecisionTree &&_other ) noexcept
 // ----------------------------------------------------------------------------
 
 void DecisionTree::create_value_to_be_aggregated(
-    TableHolder &_table_holder, SQLNET_SAMPLE_CONTAINER &_sample_container )
+    TableHolder &_table_holder, AUTOSQL_SAMPLE_CONTAINER &_sample_container )
 {
     // ------------------------------------------------------------
 
@@ -131,7 +131,7 @@ void DecisionTree::create_value_to_be_aggregated(
 
     // ------------------------------------------------------------------------
 
-    const SQLNET_INT ix_column_used = column_to_be_aggregated().ix_column_used;
+    const AUTOSQL_INT ix_column_used = column_to_be_aggregated().ix_column_used;
 
     switch ( column_to_be_aggregated().data_used )
         {
@@ -162,7 +162,7 @@ void DecisionTree::create_value_to_be_aggregated(
             case DataUsed::same_unit_numerical:
 
                 assert(
-                    static_cast<SQLNET_INT>(
+                    static_cast<AUTOSQL_INT>(
                         impl()->same_units_numerical().size() ) >
                     ix_column_used );
 
@@ -177,12 +177,12 @@ void DecisionTree::create_value_to_be_aggregated(
                             impl()->same_units_numerical()[ix_column_used] )
                             .data_used;
 
-                    const SQLNET_INT ix_column_used1 =
+                    const AUTOSQL_INT ix_column_used1 =
                         std::get<0>(
                             impl()->same_units_numerical()[ix_column_used] )
                             .ix_column_used;
 
-                    const SQLNET_INT ix_column_used2 =
+                    const AUTOSQL_INT ix_column_used2 =
                         std::get<1>(
                             impl()->same_units_numerical()[ix_column_used] )
                             .ix_column_used;
@@ -218,8 +218,8 @@ void DecisionTree::create_value_to_be_aggregated(
                                 ix_column_used2 );
 
                             auto view = containers::ColumnView<
-                                SQLNET_FLOAT,
-                                std::vector<SQLNET_INT>>(
+                                AUTOSQL_FLOAT,
+                                std::vector<AUTOSQL_INT>>(
                                 peripheral_table.numerical(), ix_column_used2 );
 
                             aggregation()->set_value_to_be_compared( view );
@@ -235,7 +235,7 @@ void DecisionTree::create_value_to_be_aggregated(
             case DataUsed::same_unit_discrete:
 
                 assert(
-                    static_cast<SQLNET_INT>(
+                    static_cast<AUTOSQL_INT>(
                         impl()->same_units_discrete().size() ) >
                     ix_column_used );
 
@@ -250,12 +250,12 @@ void DecisionTree::create_value_to_be_aggregated(
                             impl()->same_units_discrete()[ix_column_used] )
                             .data_used;
 
-                    const SQLNET_INT ix_column_used1 =
+                    const AUTOSQL_INT ix_column_used1 =
                         std::get<0>(
                             impl()->same_units_discrete()[ix_column_used] )
                             .ix_column_used;
 
-                    const SQLNET_INT ix_column_used2 =
+                    const AUTOSQL_INT ix_column_used2 =
                         std::get<1>(
                             impl()->same_units_discrete()[ix_column_used] )
                             .ix_column_used;
@@ -291,8 +291,8 @@ void DecisionTree::create_value_to_be_aggregated(
                                 ix_column_used2 );
 
                             auto view = containers::ColumnView<
-                                SQLNET_FLOAT,
-                                std::vector<SQLNET_INT>>(
+                                AUTOSQL_FLOAT,
+                                std::vector<AUTOSQL_INT>>(
                                 peripheral_table.discrete(), ix_column_used2 );
 
                             aggregation()->set_value_to_be_compared( view );
@@ -358,16 +358,16 @@ void DecisionTree::source_importances(
 // ----------------------------------------------------------------------------
 
 void DecisionTree::fit(
-    SQLNET_SAMPLE_CONTAINER::iterator _sample_container_begin,
-    SQLNET_SAMPLE_CONTAINER::iterator _sample_container_end,
+    AUTOSQL_SAMPLE_CONTAINER::iterator _sample_container_begin,
+    AUTOSQL_SAMPLE_CONTAINER::iterator _sample_container_end,
     TableHolder &_table_holder,
     optimizationcriteria::OptimizationCriterion *_optimization_criterion,
     bool _allow_sets,
-    SQLNET_INT _max_length,
-    SQLNET_INT _min_num_samples,
-    SQLNET_FLOAT _grid_factor,
-    SQLNET_FLOAT _regularization,
-    SQLNET_FLOAT _share_conditions,
+    AUTOSQL_INT _max_length,
+    AUTOSQL_INT _min_num_samples,
+    AUTOSQL_FLOAT _grid_factor,
+    AUTOSQL_FLOAT _regularization,
+    AUTOSQL_FLOAT _share_conditions,
     bool _use_timestamps )
 {
     // ------------------------------------------------------------
@@ -492,27 +492,27 @@ void DecisionTree::from_json_obj( const Poco::JSON::Object &_json_obj )
     // -----------------------------------
 
     peripheral_name() =
-        _json_obj.SQLNET_GET_VALUE<std::string>( "peripheral_name_" );
+        _json_obj.AUTOSQL_GET_VALUE<std::string>( "peripheral_name_" );
 
     population_name() =
-        _json_obj.SQLNET_GET_VALUE<std::string>( "population_name_" );
+        _json_obj.AUTOSQL_GET_VALUE<std::string>( "population_name_" );
 
     join_keys_perip_name() =
-        _json_obj.SQLNET_GET_VALUE<std::string>( "join_keys_perip_name_" );
+        _json_obj.AUTOSQL_GET_VALUE<std::string>( "join_keys_perip_name_" );
 
     join_keys_popul_name() =
-        _json_obj.SQLNET_GET_VALUE<std::string>( "join_keys_popul_name_" );
+        _json_obj.AUTOSQL_GET_VALUE<std::string>( "join_keys_popul_name_" );
 
     time_stamps_perip_name() =
-        _json_obj.SQLNET_GET_VALUE<std::string>( "time_stamps_perip_name_" );
+        _json_obj.AUTOSQL_GET_VALUE<std::string>( "time_stamps_perip_name_" );
 
     time_stamps_popul_name() =
-        _json_obj.SQLNET_GET_VALUE<std::string>( "time_stamps_popul_name_" );
+        _json_obj.AUTOSQL_GET_VALUE<std::string>( "time_stamps_popul_name_" );
 
     if ( _json_obj.has( "upper_time_stamps_" ) )
         {
             upper_time_stamps_name() =
-                _json_obj.SQLNET_GET_VALUE<std::string>( "upper_time_stamps_" );
+                _json_obj.AUTOSQL_GET_VALUE<std::string>( "upper_time_stamps_" );
         }
     else
         {
@@ -524,51 +524,51 @@ void DecisionTree::from_json_obj( const Poco::JSON::Object &_json_obj )
     impl_.x_perip_categorical_colnames_.reset( new std::vector<std::string>() );
 
     x_perip_categorical_colnames() = JSON::array_to_vector<std::string>(
-        _json_obj.SQLNET_GET_ARRAY( "x_perip_categorical_colnames_" ) );
+        _json_obj.AUTOSQL_GET_ARRAY( "x_perip_categorical_colnames_" ) );
 
     // --
 
     impl_.x_perip_numerical_colnames_.reset( new std::vector<std::string>() );
 
     x_perip_numerical_colnames() = JSON::array_to_vector<std::string>(
-        _json_obj.SQLNET_GET_ARRAY( "x_perip_numerical_colnames_" ) );
+        _json_obj.AUTOSQL_GET_ARRAY( "x_perip_numerical_colnames_" ) );
 
     // --
 
     impl_.x_perip_discrete_colnames_.reset( new std::vector<std::string>() );
 
     x_perip_discrete_colnames() = JSON::array_to_vector<std::string>(
-        _json_obj.SQLNET_GET_ARRAY( "x_perip_discrete_colnames_" ) );
+        _json_obj.AUTOSQL_GET_ARRAY( "x_perip_discrete_colnames_" ) );
     // --
 
     impl_.x_popul_categorical_colnames_.reset( new std::vector<std::string>() );
 
     x_popul_categorical_colnames() = JSON::array_to_vector<std::string>(
-        _json_obj.SQLNET_GET_ARRAY( "x_popul_categorical_colnames_" ) );
+        _json_obj.AUTOSQL_GET_ARRAY( "x_popul_categorical_colnames_" ) );
 
     // --
 
     impl_.x_popul_numerical_colnames_.reset( new std::vector<std::string>() );
 
     x_popul_numerical_colnames() = JSON::array_to_vector<std::string>(
-        _json_obj.SQLNET_GET_ARRAY( "x_popul_numerical_colnames_" ) );
+        _json_obj.AUTOSQL_GET_ARRAY( "x_popul_numerical_colnames_" ) );
 
     // --
 
     impl_.x_popul_discrete_colnames_.reset( new std::vector<std::string>() );
 
     x_popul_discrete_colnames() = JSON::array_to_vector<std::string>(
-        _json_obj.SQLNET_GET_ARRAY( "x_popul_discrete_colnames_" ) );
+        _json_obj.AUTOSQL_GET_ARRAY( "x_popul_discrete_colnames_" ) );
 
     // -----------------------------------
 
     column_to_be_aggregated().ix_column_used =
-        _json_obj.SQLNET_GET( "column_" );
+        _json_obj.AUTOSQL_GET( "column_" );
 
     column_to_be_aggregated().data_used =
-        JSON::int_to_data_used( _json_obj.SQLNET_GET( "data_" ) );
+        JSON::int_to_data_used( _json_obj.AUTOSQL_GET( "data_" ) );
 
-    column_to_be_aggregated().ix_perip_used = _json_obj.SQLNET_GET( "input_" );
+    column_to_be_aggregated().ix_perip_used = _json_obj.AUTOSQL_GET( "input_" );
 
     root().reset( new DecisionTreeNode(
         true,   // _is_activated
@@ -576,28 +576,28 @@ void DecisionTree::from_json_obj( const Poco::JSON::Object &_json_obj )
         impl()  // _tree
         ) );
 
-    root()->from_json_obj( *_json_obj.SQLNET_GET_OBJECT( "conditions_" ) );
+    root()->from_json_obj( *_json_obj.AUTOSQL_GET_OBJECT( "conditions_" ) );
 
     // -----------------------------------
 
     impl()->same_units_.same_units_categorical =
-        std::make_shared<SQLNET_SAME_UNITS_CONTAINER>(
+        std::make_shared<AUTOSQL_SAME_UNITS_CONTAINER>(
             JSON::json_arr_to_same_units(
-                *_json_obj.SQLNET_GET_ARRAY( "same_units_categorical_" ) ) );
+                *_json_obj.AUTOSQL_GET_ARRAY( "same_units_categorical_" ) ) );
 
     impl()->same_units_.same_units_discrete =
-        std::make_shared<SQLNET_SAME_UNITS_CONTAINER>(
+        std::make_shared<AUTOSQL_SAME_UNITS_CONTAINER>(
             JSON::json_arr_to_same_units(
-                *_json_obj.SQLNET_GET_ARRAY( "same_units_discrete_" ) ) );
+                *_json_obj.AUTOSQL_GET_ARRAY( "same_units_discrete_" ) ) );
 
     impl()->same_units_.same_units_numerical =
-        std::make_shared<SQLNET_SAME_UNITS_CONTAINER>(
+        std::make_shared<AUTOSQL_SAME_UNITS_CONTAINER>(
             JSON::json_arr_to_same_units(
-                *_json_obj.SQLNET_GET_ARRAY( "same_units_numerical_" ) ) );
+                *_json_obj.AUTOSQL_GET_ARRAY( "same_units_numerical_" ) ) );
 
     // -----------------------------------
 
-    std::string agg = _json_obj.SQLNET_GET( "aggregation_" );
+    std::string agg = _json_obj.AUTOSQL_GET( "aggregation_" );
 
     assert( agg != "" );
 
@@ -607,7 +607,7 @@ void DecisionTree::from_json_obj( const Poco::JSON::Object &_json_obj )
 
     // -----------------------------------
 
-    const auto subtrees_arr = _json_obj.SQLNET_GET_ARRAY( "subfeatures_" );
+    const auto subtrees_arr = _json_obj.AUTOSQL_GET_ARRAY( "subfeatures_" );
 
     subtrees().clear();
 
@@ -949,7 +949,7 @@ std::string DecisionTree::to_sql(
 
     root()->to_sql( _feature_num, conditions, "" );
 
-    for ( SQLNET_SIZE i = 0; i < conditions.size(); ++i )
+    for ( AUTOSQL_SIZE i = 0; i < conditions.size(); ++i )
         {
             if ( i == 0 )
                 {
@@ -1009,7 +1009,7 @@ std::string DecisionTree::to_sql(
 
 // ----------------------------------------------------------------------------
 
-containers::Matrix<SQLNET_FLOAT> DecisionTree::transform(
+containers::Matrix<AUTOSQL_FLOAT> DecisionTree::transform(
     TableHolder &_table_holder, bool _use_timestamps )
 {
     // ------------------------------------------------------------
@@ -1065,7 +1065,7 @@ containers::Matrix<SQLNET_FLOAT> DecisionTree::transform(
     // This is put in a loop to avoid the sample containers
     // taking up too much memory
 
-    for ( SQLNET_INT ix_x_popul = 0; ix_x_popul < population().nrows();
+    for ( AUTOSQL_INT ix_x_popul = 0; ix_x_popul < population().nrows();
           ++ix_x_popul )
         {
             // ------------------------------------------------------
@@ -1073,9 +1073,9 @@ containers::Matrix<SQLNET_FLOAT> DecisionTree::transform(
 
             debug_message( "transform: Create sample containers..." );
 
-            SQLNET_SAMPLES samples;
+            AUTOSQL_SAMPLES samples;
 
-            SQLNET_SAMPLE_CONTAINER sample_container;
+            AUTOSQL_SAMPLE_CONTAINER sample_container;
 
             SampleContainer::create_samples(
                 ix_x_popul,
@@ -1181,7 +1181,7 @@ void DecisionTree::transform_subtrees(
         }
 
     auto subfeatures =
-        containers::Matrix<SQLNET_FLOAT>( 0, _table_holder.main_table.nrows() );
+        containers::Matrix<AUTOSQL_FLOAT>( 0, _table_holder.main_table.nrows() );
 
     for ( auto &tree : subtrees() )
         {
@@ -1195,7 +1195,7 @@ void DecisionTree::transform_subtrees(
         _table_holder.main_table.get_indices() );
 
     impl()->subfeatures() =
-        containers::MatrixView<SQLNET_FLOAT, std::map<SQLNET_INT, SQLNET_INT>>(
+        containers::MatrixView<AUTOSQL_FLOAT, std::map<AUTOSQL_INT, AUTOSQL_INT>>(
             subfeatures.transpose(), output_map );
 }
 

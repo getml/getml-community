@@ -47,7 +47,7 @@ class TablePreparer
         const containers::DataFrameView &_population_table_raw );
 
     /// Identify the correct peripheral table to use.
-    static SQLNET_INT identify_peripheral(
+    static AUTOSQL_INT identify_peripheral(
         const size_t _i,
         const Placeholder &_placeholder_population,
         const std::vector<std::string> &_placeholder_peripheral );
@@ -64,7 +64,7 @@ class TablePreparer
     /// key to use.
     static void set_join_key_used(
         const size_t _i,
-        const SQLNET_INT _dist,
+        const AUTOSQL_INT _dist,
         const Placeholder &_placeholder_population,
         const std::vector<containers::DataFrame> &_peripheral_tables_raw,
         TableHolder &_table_holder );
@@ -73,7 +73,7 @@ class TablePreparer
     /// time stamps to use.
     static void set_time_stamps_used(
         const size_t _i,
-        const SQLNET_INT _dist,
+        const AUTOSQL_INT _dist,
         const Placeholder &_placeholder_population,
         const std::vector<containers::DataFrame> &_peripheral_tables_raw,
         TableHolder &_table_holder );
@@ -81,7 +81,7 @@ class TablePreparer
     /// Sets the correct upper time stamps in the peripheral table, if any.
     static void set_upper_time_stamps(
         const size_t _i,
-        const SQLNET_INT _dist,
+        const AUTOSQL_INT _dist,
         const Placeholder &_placeholder_population,
         const std::vector<containers::DataFrame> &_peripheral_tables_raw,
         TableHolder &_table_holder );

@@ -18,7 +18,7 @@ void TablePreparer::append_join_key_and_index(
     const auto it = std::find_if(
         _population_table_raw.df().join_keys().begin(),
         _population_table_raw.df().join_keys().end(),
-        [join_key_name]( const containers::Matrix<SQLNET_INT> &jk ) {
+        [join_key_name]( const containers::Matrix<AUTOSQL_INT> &jk ) {
             return jk.colname( 0 ) == join_key_name;
         } );
 
@@ -59,7 +59,7 @@ void TablePreparer::append_time_stamps(
     const auto it = std::find_if(
         _population_table_raw.df().time_stamps_all().begin(),
         _population_table_raw.df().time_stamps_all().end(),
-        [time_stamps_name]( const containers::Matrix<SQLNET_FLOAT> &ts ) {
+        [time_stamps_name]( const containers::Matrix<AUTOSQL_FLOAT> &ts ) {
             return ts.colname( 0 ) == time_stamps_name;
         } );
 
@@ -147,7 +147,7 @@ void TablePreparer::check_plausibility(
 
 // ------------------------------------------------------------------------
 
-SQLNET_INT TablePreparer::identify_peripheral(
+AUTOSQL_INT TablePreparer::identify_peripheral(
     const size_t _i,
     const Placeholder &_placeholder_population,
     const std::vector<std::string> &_placeholder_peripheral )
@@ -168,7 +168,7 @@ SQLNET_INT TablePreparer::identify_peripheral(
                 "'" + table_name + "' not among placeholder tables!" );
         }
 
-    return static_cast<SQLNET_INT>(
+    return static_cast<AUTOSQL_INT>(
         std::distance( _placeholder_peripheral.begin(), it ) );
 }
 
@@ -345,8 +345,8 @@ TableHolder TablePreparer::prepare_tables(
 // ------------------------------------------------------------------------
 
 void TablePreparer::set_join_key_used(
-    const SQLNET_SIZE _i,
-    const SQLNET_INT _dist,
+    const AUTOSQL_SIZE _i,
+    const AUTOSQL_INT _dist,
     const Placeholder &_placeholder_population,
     const std::vector<containers::DataFrame> &_peripheral_tables_raw,
     TableHolder &_table_holder )
@@ -357,7 +357,7 @@ void TablePreparer::set_join_key_used(
     const auto it = std::find_if(
         _table_holder.peripheral_tables[_i].join_keys().begin(),
         _table_holder.peripheral_tables[_i].join_keys().end(),
-        [other_join_key_name]( containers::Matrix<SQLNET_INT> &jk ) {
+        [other_join_key_name]( containers::Matrix<AUTOSQL_INT> &jk ) {
             return jk.colname( 0 ) == other_join_key_name;
         } );
 
@@ -378,7 +378,7 @@ void TablePreparer::set_join_key_used(
 
 void TablePreparer::set_time_stamps_used(
     const size_t _i,
-    const SQLNET_INT _dist,
+    const AUTOSQL_INT _dist,
     const Placeholder &_placeholder_population,
     const std::vector<containers::DataFrame> &_peripheral_tables_raw,
     TableHolder &_table_holder )
@@ -389,7 +389,7 @@ void TablePreparer::set_time_stamps_used(
     const auto it = std::find_if(
         _table_holder.peripheral_tables[_i].time_stamps_all().begin(),
         _table_holder.peripheral_tables[_i].time_stamps_all().end(),
-        [other_time_stamps_name]( containers::Matrix<SQLNET_FLOAT> &ts ) {
+        [other_time_stamps_name]( containers::Matrix<AUTOSQL_FLOAT> &ts ) {
             return ts.colname( 0 ) == other_time_stamps_name;
         } );
 
@@ -411,7 +411,7 @@ void TablePreparer::set_time_stamps_used(
 
 void TablePreparer::set_upper_time_stamps(
     const size_t _i,
-    const SQLNET_INT _dist,
+    const AUTOSQL_INT _dist,
     const Placeholder &_placeholder_population,
     const std::vector<containers::DataFrame> &_peripheral_tables_raw,
     TableHolder &_table_holder )
@@ -428,7 +428,7 @@ void TablePreparer::set_upper_time_stamps(
     const auto it = std::find_if(
         _table_holder.peripheral_tables[_i].time_stamps_all().begin(),
         _table_holder.peripheral_tables[_i].time_stamps_all().end(),
-        [upper_time_stamps_name]( containers::Matrix<SQLNET_FLOAT> &ts ) {
+        [upper_time_stamps_name]( containers::Matrix<AUTOSQL_FLOAT> &ts ) {
             return ts.colname( 0 ) == upper_time_stamps_name;
         } );
 

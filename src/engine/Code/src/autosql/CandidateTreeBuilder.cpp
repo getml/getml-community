@@ -10,10 +10,10 @@ void CandidateTreeBuilder::add_counts(
     const TableHolder &_table_holder,
     const std::vector<descriptors::SameUnits> &_same_units,
     const descriptors::Hyperparameters &_hyperparameters,
-    const SQLNET_INT _ix_perip_used,
+    const AUTOSQL_INT _ix_perip_used,
     std::mt19937 &_random_number_generator,
     containers::Optional<aggregations::AggregationImpl> &_aggregation_impl,
-    SQLNET_COMMUNICATOR *_comm,
+    AUTOSQL_COMMUNICATOR *_comm,
     std::list<DecisionTree> &_candidate_trees )
 {
     for ( auto &agg : _hyperparameters.aggregations )
@@ -32,9 +32,9 @@ void CandidateTreeBuilder::add_counts(
                 _random_number_generator,
                 _aggregation_impl ) );
 
-#ifdef SQLNET_PARALLEL
+#ifdef AUTOSQL_PARALLEL
             _candidate_trees.back().set_comm( _comm );
-#endif  // SQLNET_PARALLEL
+#endif  // AUTOSQL_PARALLEL
         }
 }
 
@@ -44,10 +44,10 @@ void CandidateTreeBuilder::add_count_distincts(
     const TableHolder &_table_holder,
     const std::vector<descriptors::SameUnits> &_same_units,
     const descriptors::Hyperparameters &_hyperparameters,
-    const SQLNET_INT _ix_perip_used,
+    const AUTOSQL_INT _ix_perip_used,
     std::mt19937 &_random_number_generator,
     containers::Optional<aggregations::AggregationImpl> &_aggregation_impl,
-    SQLNET_COMMUNICATOR *_comm,
+    AUTOSQL_COMMUNICATOR *_comm,
     std::list<DecisionTree> &_candidate_trees )
 {
     for ( auto &agg : _hyperparameters.aggregations )
@@ -62,13 +62,13 @@ void CandidateTreeBuilder::add_count_distincts(
                                     DataUsed::x_perip_discrete,
                                     DataUsed::time_stamps_diff} )
                 {
-                    SQLNET_INT ncols = get_ncols(
+                    AUTOSQL_INT ncols = get_ncols(
                         _table_holder.peripheral_tables,
                         _same_units,
                         _ix_perip_used,
                         data_used );
 
-                    for ( SQLNET_INT ix_column_used = 0; ix_column_used < ncols;
+                    for ( AUTOSQL_INT ix_column_used = 0; ix_column_used < ncols;
                           ++ix_column_used )
                         {
                             _candidate_trees.push_back( DecisionTree(
@@ -80,9 +80,9 @@ void CandidateTreeBuilder::add_count_distincts(
                                 _random_number_generator,
                                 _aggregation_impl ) );
 
-#ifdef SQLNET_PARALLEL
+#ifdef AUTOSQL_PARALLEL
                             _candidate_trees.back().set_comm( _comm );
-#endif  // SQLNET_PARALLEL
+#endif  // AUTOSQL_PARALLEL
                         }
                 }
         }
@@ -94,10 +94,10 @@ void CandidateTreeBuilder::add_other_aggs(
     const TableHolder &_table_holder,
     const std::vector<descriptors::SameUnits> &_same_units,
     const descriptors::Hyperparameters &_hyperparameters,
-    const SQLNET_INT _ix_perip_used,
+    const AUTOSQL_INT _ix_perip_used,
     std::mt19937 &_random_number_generator,
     containers::Optional<aggregations::AggregationImpl> &_aggregation_impl,
-    SQLNET_COMMUNICATOR *_comm,
+    AUTOSQL_COMMUNICATOR *_comm,
     std::list<DecisionTree> &_candidate_trees )
 {
     for ( auto &agg : _hyperparameters.aggregations )
@@ -114,13 +114,13 @@ void CandidateTreeBuilder::add_other_aggs(
                                     DataUsed::same_unit_numerical,
                                     DataUsed::same_unit_discrete} )
                 {
-                    SQLNET_INT ncols = get_ncols(
+                    AUTOSQL_INT ncols = get_ncols(
                         _table_holder.peripheral_tables,
                         _same_units,
                         _ix_perip_used,
                         data_used );
 
-                    for ( SQLNET_INT ix_column_used = 0; ix_column_used < ncols;
+                    for ( AUTOSQL_INT ix_column_used = 0; ix_column_used < ncols;
                           ++ix_column_used )
                         {
                             // -----------------------------------------------------
@@ -147,9 +147,9 @@ void CandidateTreeBuilder::add_other_aggs(
                                 _random_number_generator,
                                 _aggregation_impl ) );
 
-#ifdef SQLNET_PARALLEL
+#ifdef AUTOSQL_PARALLEL
                             _candidate_trees.back().set_comm( _comm );
-#endif  // SQLNET_PARALLEL
+#endif  // AUTOSQL_PARALLEL
                         }
                 }
         }
@@ -161,10 +161,10 @@ void CandidateTreeBuilder::add_subfeature_aggs(
     const TableHolder &_table_holder,
     const std::vector<descriptors::SameUnits> &_same_units,
     const descriptors::Hyperparameters &_hyperparameters,
-    const SQLNET_INT _ix_perip_used,
+    const AUTOSQL_INT _ix_perip_used,
     std::mt19937 &_random_number_generator,
     containers::Optional<aggregations::AggregationImpl> &_aggregation_impl,
-    SQLNET_COMMUNICATOR *_comm,
+    AUTOSQL_COMMUNICATOR *_comm,
     std::list<DecisionTree> &_candidate_trees )
 {
     assert( _table_holder.subtables[_ix_perip_used] );
@@ -177,7 +177,7 @@ void CandidateTreeBuilder::add_subfeature_aggs(
                     continue;
                 }
 
-            for ( SQLNET_INT ix_column_used = 0;
+            for ( AUTOSQL_INT ix_column_used = 0;
                   ix_column_used < _hyperparameters.num_subfeatures;
                   ++ix_column_used )
                 {
@@ -190,9 +190,9 @@ void CandidateTreeBuilder::add_subfeature_aggs(
                         _random_number_generator,
                         _aggregation_impl ) );
 
-#ifdef SQLNET_PARALLEL
+#ifdef AUTOSQL_PARALLEL
                     _candidate_trees.back().set_comm( _comm );
-#endif  // SQLNET_PARALLEL
+#endif  // AUTOSQL_PARALLEL
                 }
         }
 }
@@ -202,11 +202,11 @@ void CandidateTreeBuilder::add_subfeature_aggs(
 std::list<DecisionTree> CandidateTreeBuilder::build_candidates(
     const TableHolder &_table_holder,
     const std::vector<descriptors::SameUnits> &_same_units,
-    const SQLNET_INT _ix_feature,
+    const AUTOSQL_INT _ix_feature,
     descriptors::Hyperparameters _hyperparameters,
     containers::Optional<aggregations::AggregationImpl> &_aggregation_impl,
     std::mt19937 &_random_number_generator,
-    SQLNET_COMMUNICATOR *_comm )
+    AUTOSQL_COMMUNICATOR *_comm )
 {
     // ----------------------------------------------------------------
 
@@ -214,7 +214,7 @@ std::list<DecisionTree> CandidateTreeBuilder::build_candidates(
 
     // ----------------------------------------------------------------
 
-#ifdef SQLNET_PARALLEL
+#ifdef AUTOSQL_PARALLEL
 
     auto candidate_trees = build_candidate_trees(
         _table_holder,
@@ -224,7 +224,7 @@ std::list<DecisionTree> CandidateTreeBuilder::build_candidates(
         _aggregation_impl,
         _comm );
 
-#else  // SQLNET_PARALLEL
+#else  // AUTOSQL_PARALLEL
 
     auto candidate_trees = build_candidate_trees(
         _table_holder,
@@ -233,7 +233,7 @@ std::list<DecisionTree> CandidateTreeBuilder::build_candidates(
         _random_number_generator,
         _aggregation_impl );
 
-#endif  // SQLNET_PARALLEL
+#endif  // AUTOSQL_PARALLEL
 
     // ----------------------------------------------------------------
 
@@ -249,7 +249,7 @@ std::list<DecisionTree> CandidateTreeBuilder::build_candidates(
         {
             debug_message( "fit: Removing candidates..." );
 
-#ifdef SQLNET_PARALLEL
+#ifdef AUTOSQL_PARALLEL
 
             // This will remove all but share_aggregations of trees
             randomly_remove_candidate_trees(
@@ -258,7 +258,7 @@ std::list<DecisionTree> CandidateTreeBuilder::build_candidates(
                 candidate_trees,
                 _comm );
 
-#else  // SQLNET_PARALLEL
+#else  // AUTOSQL_PARALLEL
 
             // This will remove all but share_aggregations of trees
             randomly_remove_candidate_trees(
@@ -266,7 +266,7 @@ std::list<DecisionTree> CandidateTreeBuilder::build_candidates(
                 _random_number_generator,
                 candidate_trees );
 
-#endif  // SQLNET_PARALLEL
+#endif  // AUTOSQL_PARALLEL
         }
 
     // ----------------------------------------------------------------
@@ -288,14 +288,14 @@ std::list<DecisionTree> CandidateTreeBuilder::build_candidate_trees(
     const descriptors::Hyperparameters _hyperparameters,
     std::mt19937 &_random_number_generator,
     containers::Optional<aggregations::AggregationImpl> &_aggregation_impl,
-    SQLNET_COMMUNICATOR *_comm )
+    AUTOSQL_COMMUNICATOR *_comm )
 {
-    const SQLNET_INT num_perips =
-        static_cast<SQLNET_INT>( _table_holder.peripheral_tables.size() );
+    const AUTOSQL_INT num_perips =
+        static_cast<AUTOSQL_INT>( _table_holder.peripheral_tables.size() );
 
     std::list<DecisionTree> candidate_trees;
 
-    for ( SQLNET_INT ix_perip_used = 0; ix_perip_used < num_perips;
+    for ( AUTOSQL_INT ix_perip_used = 0; ix_perip_used < num_perips;
           ++ix_perip_used )
         {
             // -----------------------------------------------------
@@ -367,17 +367,17 @@ std::list<DecisionTree> CandidateTreeBuilder::build_candidate_trees(
 
 // ----------------------------------------------------------------------------
 
-SQLNET_INT CandidateTreeBuilder::get_ncols(
+AUTOSQL_INT CandidateTreeBuilder::get_ncols(
     const std::vector<containers::DataFrame> &_peripheral_tables,
     const std::vector<descriptors::SameUnits> &_same_units,
-    const SQLNET_INT _ix_perip_used,
+    const AUTOSQL_INT _ix_perip_used,
     const DataUsed _data_used )
 {
     assert( _peripheral_tables.size() == _same_units.size() );
 
     assert( _ix_perip_used >= 0 );
 
-    assert( _ix_perip_used < static_cast<SQLNET_INT>( _same_units.size() ) );
+    assert( _ix_perip_used < static_cast<AUTOSQL_INT>( _same_units.size() ) );
 
     switch ( _data_used )
         {
@@ -395,12 +395,12 @@ SQLNET_INT CandidateTreeBuilder::get_ncols(
 
             case DataUsed::same_unit_discrete:
                 assert( _same_units[_ix_perip_used].same_units_discrete );
-                return static_cast<SQLNET_INT>(
+                return static_cast<AUTOSQL_INT>(
                     _same_units[_ix_perip_used].same_units_discrete->size() );
 
             case DataUsed::same_unit_numerical:
                 assert( _same_units[_ix_perip_used].same_units_numerical );
-                return static_cast<SQLNET_INT>(
+                return static_cast<AUTOSQL_INT>(
                     _same_units[_ix_perip_used].same_units_numerical->size() );
 
             default:
@@ -414,8 +414,8 @@ SQLNET_INT CandidateTreeBuilder::get_ncols(
 bool CandidateTreeBuilder::is_comparison_only(
     const TableHolder &_table_holder,
     const DataUsed _data_used,
-    const SQLNET_INT _ix_perip_used,
-    const SQLNET_INT _ix_column_used )
+    const AUTOSQL_INT _ix_perip_used,
+    const AUTOSQL_INT _ix_column_used )
 {
     if ( _data_used == DataUsed::x_perip_numerical )
         {
@@ -446,17 +446,17 @@ bool CandidateTreeBuilder::is_comparison_only(
 // ----------------------------------------------------------------------------
 
 void CandidateTreeBuilder::randomly_remove_candidate_trees(
-    const SQLNET_FLOAT _share_aggregations,
+    const AUTOSQL_FLOAT _share_aggregations,
     std::mt19937 &_random_number_generator,
     std::list<DecisionTree> &_candidate_trees,
-    SQLNET_COMMUNICATOR *_comm )
+    AUTOSQL_COMMUNICATOR *_comm )
 {
     // ------------------------------------------------
 
-    const SQLNET_SIZE num_candidates = std::max(
-        static_cast<SQLNET_SIZE>(
+    const AUTOSQL_SIZE num_candidates = std::max(
+        static_cast<AUTOSQL_SIZE>(
             _candidate_trees.size() * _share_aggregations ),
-        static_cast<SQLNET_SIZE>( 1 ) );
+        static_cast<AUTOSQL_SIZE>( 1 ) );
 
     RandomNumberGenerator rng( &_random_number_generator, _comm );
 
@@ -465,7 +465,7 @@ void CandidateTreeBuilder::randomly_remove_candidate_trees(
     while ( _candidate_trees.size() > num_candidates )
         {
             const auto max =
-                static_cast<SQLNET_INT>( _candidate_trees.size() ) - 1;
+                static_cast<AUTOSQL_INT>( _candidate_trees.size() ) - 1;
 
             auto ix_remove = rng.random_int( 0, max );
 
@@ -484,9 +484,9 @@ void CandidateTreeBuilder::randomly_remove_candidate_trees(
 /// For the round_robin approach, we remove all features but
 /// one - the remaining one is a different one every time.
 void CandidateTreeBuilder::round_robin(
-    const SQLNET_INT _ix_feature, std::list<DecisionTree> &_candidate_trees )
+    const AUTOSQL_INT _ix_feature, std::list<DecisionTree> &_candidate_trees )
 {
-    const SQLNET_SIZE ix_feature_size = static_cast<SQLNET_SIZE>( _ix_feature );
+    const AUTOSQL_SIZE ix_feature_size = static_cast<AUTOSQL_SIZE>( _ix_feature );
 
     auto it = _candidate_trees.begin();
 

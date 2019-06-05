@@ -14,9 +14,9 @@ class DecisionTree
 
     DecisionTree(
         const std::string &_agg,
-        const SQLNET_INT _ix_column_used,
+        const AUTOSQL_INT _ix_column_used,
         const DataUsed _data_used,
-        const SQLNET_INT _ix_perip_used,
+        const AUTOSQL_INT _ix_perip_used,
         const descriptors::SameUnits &_same_units,
         std::mt19937 &_random_number_generator,
         containers::Optional<aggregations::AggregationImpl>
@@ -34,20 +34,20 @@ class DecisionTree
     /// this function.
     void create_value_to_be_aggregated(
         TableHolder &_table_holder,
-        SQLNET_SAMPLE_CONTAINER &_sample_container );
+        AUTOSQL_SAMPLE_CONTAINER &_sample_container );
 
     /// Fits the decision tree
     void fit(
-        SQLNET_SAMPLE_CONTAINER::iterator _sample_container_begin,
-        SQLNET_SAMPLE_CONTAINER::iterator _sample_container_end,
+        AUTOSQL_SAMPLE_CONTAINER::iterator _sample_container_begin,
+        AUTOSQL_SAMPLE_CONTAINER::iterator _sample_container_end,
         TableHolder &_table_holder,
         optimizationcriteria::OptimizationCriterion *_optimization_criterion,
         bool _allow_sets,
-        SQLNET_INT _max_length,
-        SQLNET_INT _min_num_samples,
-        SQLNET_FLOAT _grid_factor,
-        SQLNET_FLOAT _regularization,
-        SQLNET_FLOAT _share_conditions,
+        AUTOSQL_INT _max_length,
+        AUTOSQL_INT _min_num_samples,
+        AUTOSQL_FLOAT _grid_factor,
+        AUTOSQL_FLOAT _regularization,
+        AUTOSQL_FLOAT _share_conditions,
         bool _use_timestamps );
 
     /// Rebuilds the tree from a Poco::JSON::Object
@@ -82,7 +82,7 @@ class DecisionTree
         const std::string _feature_num, const bool _use_timestamps ) const;
 
     /// Transforms a set of raw data into extracted features
-    containers::Matrix<SQLNET_FLOAT> transform(
+    containers::Matrix<AUTOSQL_FLOAT> transform(
         TableHolder &_table_holder, bool _use_timestamps );
 
     // --------------------------------------
@@ -145,16 +145,16 @@ class DecisionTree
     }
 
     /// Separates all null values in the samples
-    inline SQLNET_SAMPLES::iterator separate_null_values(
-        SQLNET_SAMPLES &_samples )
+    inline AUTOSQL_SAMPLES::iterator separate_null_values(
+        AUTOSQL_SAMPLES &_samples )
     {
         return aggregation()->separate_null_values( _samples );
     }
 
     /// Separates all null values in the sample containers (recall
     /// that a sample containers contains pointers to samples)
-    inline SQLNET_SAMPLE_CONTAINER::iterator separate_null_values(
-        SQLNET_SAMPLE_CONTAINER &_samples )
+    inline AUTOSQL_SAMPLE_CONTAINER::iterator separate_null_values(
+        AUTOSQL_SAMPLE_CONTAINER &_samples )
     {
         return aggregation()->separate_null_values( _samples );
     }
@@ -173,12 +173,12 @@ class DecisionTree
         impl_.categories_ = _categories;
     }
 
-#ifdef SQLNET_PARALLEL
+#ifdef AUTOSQL_PARALLEL
 
     /// Parallel version only: Set the pointer to the communicator
-    inline void set_comm( SQLNET_COMMUNICATOR *_comm ) { impl_.comm_ = _comm; }
+    inline void set_comm( AUTOSQL_COMMUNICATOR *_comm ) { impl_.comm_ = _comm; }
 
-#endif  // SQLNET_PARALLEL
+#endif  // AUTOSQL_PARALLEL
 
     /// Trivial setter
     inline void set_same_units( const descriptors::SameUnits &_same_units )
@@ -204,8 +204,8 @@ class DecisionTree
     /// Some aggregations, such as MIN and MAX require the samples
     /// (not the pointers to the samples) to be sorted.
     inline void sort_samples(
-        SQLNET_SAMPLES::iterator _samples_begin,
-        SQLNET_SAMPLES::iterator _samples_end )
+        AUTOSQL_SAMPLES::iterator _samples_begin,
+        AUTOSQL_SAMPLES::iterator _samples_end )
     {
         aggregation()->sort_samples( _samples_begin, _samples_end );
     }
@@ -213,8 +213,8 @@ class DecisionTree
     /// Stores the current stage (storing means that it is a candidate for
     /// a commit)
     inline void store_current_stage(
-        const SQLNET_FLOAT _num_samples_smaller,
-        const SQLNET_FLOAT _num_samples_greater )
+        const AUTOSQL_FLOAT _num_samples_smaller,
+        const AUTOSQL_FLOAT _num_samples_greater )
     {
         optimization_criterion()->store_current_stage(
             _num_samples_smaller, _num_samples_greater );
@@ -256,16 +256,16 @@ class DecisionTree
     /// Trivial accessor
     inline bool &allow_sets() { return impl_.allow_sets_; }
 
-#ifdef SQLNET_PARALLEL
+#ifdef AUTOSQL_PARALLEL
 
     /// Trivial accessor
-    inline SQLNET_COMMUNICATOR *comm()
+    inline AUTOSQL_COMMUNICATOR *comm()
     {
         assert( impl_.comm_ != nullptr );
         return impl_.comm_;
     }
 
-#endif  // SQLNET_PARALLEL
+#endif  // AUTOSQL_PARALLEL
 
     /// Trivial accessor
     inline DecisionTreeImpl *impl() { return &impl_; }
@@ -274,7 +274,7 @@ class DecisionTree
     inline const DecisionTreeImpl *impl() const { return &impl_; }
 
     /// Trivial getter
-    inline SQLNET_INT ix_perip_used() const { return impl()->ix_perip_used(); }
+    inline AUTOSQL_INT ix_perip_used() const { return impl()->ix_perip_used(); }
 
     /// Trivial accessor
     inline std::string &join_keys_perip_name()
@@ -301,13 +301,13 @@ class DecisionTree
     }
 
     /// Trivial accessor
-    inline SQLNET_FLOAT &grid_factor() { return impl_.grid_factor_; }
+    inline AUTOSQL_FLOAT &grid_factor() { return impl_.grid_factor_; }
 
     /// Trivial accessor
-    inline SQLNET_INT &max_length() { return impl_.max_length_; }
+    inline AUTOSQL_INT &max_length() { return impl_.max_length_; }
 
     /// Trivial accessor
-    inline SQLNET_INT &min_num_samples() { return impl_.min_num_samples_; }
+    inline AUTOSQL_INT &min_num_samples() { return impl_.min_num_samples_; }
 
     /// Trivial accessor
     inline optimizationcriteria::OptimizationCriterion *&
@@ -341,7 +341,7 @@ class DecisionTree
     }
 
     /// Trivial accessor
-    inline SQLNET_FLOAT &regularization() { return impl_.regularization_; }
+    inline AUTOSQL_FLOAT &regularization() { return impl_.regularization_; }
 
     /// Trivial accessor
     inline containers::Optional<DecisionTreeNode> &root() { return root_; }
@@ -353,7 +353,7 @@ class DecisionTree
     }
 
     /// Trivial accessor
-    inline SQLNET_FLOAT &share_conditions() { return impl_.share_conditions_; }
+    inline AUTOSQL_FLOAT &share_conditions() { return impl_.share_conditions_; }
 
     /// Subtrees
     inline std::vector<DecisionTree> &subtrees() { return subtrees_; }
@@ -401,7 +401,7 @@ class DecisionTree
     }
 
     /// Trivial accessor
-    inline std::string &x_perip_categorical_colname( SQLNET_INT _i )
+    inline std::string &x_perip_categorical_colname( AUTOSQL_INT _i )
     {
         return x_perip_categorical_colnames()[_i];
     }
@@ -481,7 +481,7 @@ std::shared_ptr<aggregations::AggregationBase> DecisionTree::make_aggregation()
 
     const auto data_used = column_to_be_aggregated().data_used;
 
-    const SQLNET_INT ix_column_used = column_to_be_aggregated().ix_column_used;
+    const AUTOSQL_INT ix_column_used = column_to_be_aggregated().ix_column_used;
 
     // ------------------------------------------------------------------------
 

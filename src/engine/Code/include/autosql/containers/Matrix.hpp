@@ -11,15 +11,15 @@ template <class T>
 class Matrix
 {
    public:
-    Matrix( SQLNET_INT _nrows, SQLNET_INT _ncols, T *_data_ptr )
-        : batches_( std::make_shared<std::vector<SQLNET_INT>>( 0 ) ),
+    Matrix( AUTOSQL_INT _nrows, AUTOSQL_INT _ncols, T *_data_ptr )
+        : batches_( std::make_shared<std::vector<AUTOSQL_INT>>( 0 ) ),
           colnames_( std::make_shared<std::vector<std::string>>( _ncols, "" ) ),
           data_ptr_( _data_ptr ),
           name_( std::make_shared<std::string>( "" ) ),
           ncols_( _ncols ),
-          ncols_long_( static_cast<SQLNET_UNSIGNED_LONG>( _ncols ) ),
+          ncols_long_( static_cast<AUTOSQL_UNSIGNED_LONG>( _ncols ) ),
           nrows_( _nrows ),
-          nrows_long_( static_cast<SQLNET_UNSIGNED_LONG>( _nrows ) ),
+          nrows_long_( static_cast<AUTOSQL_UNSIGNED_LONG>( _nrows ) ),
           units_( std::make_shared<std::vector<std::string>>( _ncols, "" ) ),
           type_( "Matrix" )
     {
@@ -30,7 +30,7 @@ class Matrix
         batches() = {0, nrows_};
     }
 
-    Matrix( SQLNET_INT _nrows = 0, SQLNET_INT _ncols = 0 )
+    Matrix( AUTOSQL_INT _nrows = 0, AUTOSQL_INT _ncols = 0 )
         : Matrix( _nrows, _ncols, nullptr )
     {
         data_ = std::make_shared<std::vector<T>>( nrows_long_ * ncols_long_ );
@@ -53,7 +53,7 @@ class Matrix
     template <class T2>
     inline Matrix<T> column( T2 _j ) const;
 
-#ifdef SQLNET_MULTINODE_MPI
+#ifdef AUTOSQL_MULTINODE_MPI
 
     /// MPI version only: Gathers matrix at this point
     containers::Matrix<T> gather_root();
@@ -61,17 +61,17 @@ class Matrix
     /// MPI version only: Non-root equivalent to gather_root()
     void gather();
 
-#endif  // SQLNET_MULTINODE_MPI
+#endif  // AUTOSQL_MULTINODE_MPI
 
     /// Loads the matrix from binary format
     void load( std::string _fname );
 
-#ifdef SQLNET_MULTINODE_MPI
+#ifdef AUTOSQL_MULTINODE_MPI
 
     /// MPI version only: Non-root equivalent to load()
     void load();
 
-#endif  // SQLNET_MULTINODE_MPI
+#endif  // AUTOSQL_MULTINODE_MPI
 
     /// Returns a matrix where all rows for which _key is true
     /// are removed
@@ -80,7 +80,7 @@ class Matrix
     /// Saves the matrix in binary format
     void save( std::string _fname ) const;
 
-#ifdef SQLNET_MULTINODE_MPI
+#ifdef AUTOSQL_MULTINODE_MPI
 
     /// MPI version only: Non-root equivalent to save()
     void save();
@@ -88,13 +88,13 @@ class Matrix
     /// MPI version only: Scatters the matrix across several processes
     Matrix<T> scatter();
 
-#endif  // SQLNET_MULTINODE_MPI
+#endif  // AUTOSQL_MULTINODE_MPI
 
     /// Sorts the rows of the matrix by the key provided
-    Matrix<T> sort_by_key( Matrix<SQLNET_INT> &_key );
+    Matrix<T> sort_by_key( Matrix<AUTOSQL_INT> &_key );
 
     /// Sorts the rows of the matrix by the key provided
-    Matrix<T> sort_by_key( std::vector<SQLNET_INT> &_key );
+    Matrix<T> sort_by_key( std::vector<AUTOSQL_INT> &_key );
 
     /// Returns a shallow copy of a subselection of rows
     template <class T2>
@@ -113,10 +113,10 @@ class Matrix
     // -------------------------------
 
     /// Trivial getter
-    inline std::vector<SQLNET_INT> &batches() { return batches_.get()[0]; }
+    inline std::vector<AUTOSQL_INT> &batches() { return batches_.get()[0]; }
 
     /// Trivial getter
-    inline const std::vector<SQLNET_INT> &batches() const
+    inline const std::vector<AUTOSQL_INT> &batches() const
     {
         return batches_.get()[0];
     }
@@ -146,7 +146,7 @@ class Matrix
     inline T *begin() const { return data_ptr_; }
 
     /// Trivial getter
-    inline const std::string &colname( const SQLNET_INT _i ) const
+    inline const std::string &colname( const AUTOSQL_INT _i ) const
     {
         return colnames_.get()[0][_i];
     }
@@ -176,7 +176,7 @@ class Matrix
     inline T *end() const { return data_ptr_ + size(); }
 
     /// Returns number of bytes occupied by the data
-    inline const SQLNET_UNSIGNED_LONG nbytes() const
+    inline const AUTOSQL_UNSIGNED_LONG nbytes() const
     {
         return size() * sizeof( T );
     }
@@ -190,7 +190,7 @@ class Matrix
             "It is dangerous to call the operator[] on matrices with more than "
             "one column or row!" );
         assert( _i >= 0 );
-        assert( static_cast<SQLNET_INT>( _i ) < nrows() * ncols() );
+        assert( static_cast<AUTOSQL_INT>( _i ) < nrows() * ncols() );
 
         return data_ptr_[_i];
     }
@@ -204,7 +204,7 @@ class Matrix
             "It is dangerous to call the operator[] on matrices with more than "
             "one column or row!" );
         assert( _i >= 0 );
-        assert( static_cast<SQLNET_INT>( _i ) < nrows() * ncols() );
+        assert( static_cast<AUTOSQL_INT>( _i ) < nrows() * ncols() );
 
         return data_ptr_[_i];
     }
@@ -213,42 +213,42 @@ class Matrix
     template <
         typename T2,
         typename std::enable_if<
-            std::is_same<T2, SQLNET_UNSIGNED_LONG>::value == false,
+            std::is_same<T2, AUTOSQL_UNSIGNED_LONG>::value == false,
             int>::type = 0>
     inline T &operator()( const T2 _i, const T2 _j )
     {
         assert( _i >= 0 );
-        assert( static_cast<SQLNET_INT>( _i ) < nrows() );
+        assert( static_cast<AUTOSQL_INT>( _i ) < nrows() );
         assert( _j >= 0 );
-        assert( static_cast<SQLNET_INT>( _j ) < ncols() );
+        assert( static_cast<AUTOSQL_INT>( _j ) < ncols() );
 
         return data_ptr_
-            [ncols_long_ * static_cast<SQLNET_UNSIGNED_LONG>( _i ) +
-             static_cast<SQLNET_UNSIGNED_LONG>( _j )];
+            [ncols_long_ * static_cast<AUTOSQL_UNSIGNED_LONG>( _i ) +
+             static_cast<AUTOSQL_UNSIGNED_LONG>( _j )];
     }
 
     /// Accessor to data
     template <
         typename T2,
         typename std::enable_if<
-            std::is_same<T2, SQLNET_UNSIGNED_LONG>::value == false,
+            std::is_same<T2, AUTOSQL_UNSIGNED_LONG>::value == false,
             int>::type = 0>
     inline T operator()( const T2 _i, const T2 _j ) const
     {
         assert( _i >= 0 );
-        assert( static_cast<SQLNET_INT>( _i ) < nrows() );
+        assert( static_cast<AUTOSQL_INT>( _i ) < nrows() );
         assert( _j >= 0 );
-        assert( static_cast<SQLNET_INT>( _j ) < ncols() );
+        assert( static_cast<AUTOSQL_INT>( _j ) < ncols() );
 
         return data_ptr_
-            [ncols_long_ * static_cast<SQLNET_UNSIGNED_LONG>( _i ) +
-             static_cast<SQLNET_UNSIGNED_LONG>( _j )];
+            [ncols_long_ * static_cast<AUTOSQL_UNSIGNED_LONG>( _i ) +
+             static_cast<AUTOSQL_UNSIGNED_LONG>( _j )];
     }
 
     /// Accessor to data - specialization for when _i and _j are
-    /// already of type SQLNET_UNSIGNED_LONG
+    /// already of type AUTOSQL_UNSIGNED_LONG
     inline T &operator()(
-        const SQLNET_UNSIGNED_LONG _i, const SQLNET_UNSIGNED_LONG _j )
+        const AUTOSQL_UNSIGNED_LONG _i, const AUTOSQL_UNSIGNED_LONG _j )
     {
         assert( _i < nrows_long_ );
         assert( _j < ncols_long_ );
@@ -257,9 +257,9 @@ class Matrix
     }
 
     /// Accessor to data - specialization for when _i and _j are
-    /// already of type SQLNET_UNSIGNED_LONG
+    /// already of type AUTOSQL_UNSIGNED_LONG
     inline T operator()(
-        const SQLNET_UNSIGNED_LONG _i, const SQLNET_UNSIGNED_LONG _j ) const
+        const AUTOSQL_UNSIGNED_LONG _i, const AUTOSQL_UNSIGNED_LONG _j ) const
     {
         assert( _i < nrows_long_ );
         assert( _j < ncols_long_ );
@@ -271,13 +271,13 @@ class Matrix
     inline std::string &name() const { return *( name_ ); }
 
     /// Trivial getter
-    inline SQLNET_INT ncols() const { return ncols_; }
+    inline AUTOSQL_INT ncols() const { return ncols_; }
 
     /// Trivial getter
-    inline SQLNET_INT nrows() const { return nrows_; }
+    inline AUTOSQL_INT nrows() const { return nrows_; }
 
     /// Trivial getter
-    inline const SQLNET_SIZE num_batches() const
+    inline const AUTOSQL_SIZE num_batches() const
     {
         return batches().size() - 1;
     }
@@ -299,7 +299,7 @@ class Matrix
     /// Trivial setter
     inline void set_colnames( std::vector<std::string> &_colnames )
     {
-        if ( static_cast<SQLNET_INT>( _colnames.size() ) != ncols_ )
+        if ( static_cast<AUTOSQL_INT>( _colnames.size() ) != ncols_ )
             {
                 throw std::invalid_argument(
                     "Number of colnames provided does not match number of "
@@ -314,7 +314,7 @@ class Matrix
     /// Trivial setter
     inline void set_units( std::vector<std::string> &_units )
     {
-        if ( static_cast<SQLNET_INT>( _units.size() ) != ncols_ )
+        if ( static_cast<AUTOSQL_INT>( _units.size() ) != ncols_ )
             {
                 throw std::invalid_argument(
                     "Number of units provided does not match number of "
@@ -325,7 +325,7 @@ class Matrix
     }
 
     /// Returns size of data
-    inline const SQLNET_UNSIGNED_LONG size() const
+    inline const AUTOSQL_UNSIGNED_LONG size() const
     {
         return nrows_long_ * ncols_long_;
     }
@@ -334,16 +334,16 @@ class Matrix
     inline const std::string type() const { return type_; }
 
     /// Trivial getter
-    inline std::string &unit( SQLNET_INT _i )
+    inline std::string &unit( AUTOSQL_INT _i )
     {
-        assert( static_cast<SQLNET_INT>( units_->size() ) > _i && _i >= 0 );
+        assert( static_cast<AUTOSQL_INT>( units_->size() ) > _i && _i >= 0 );
         return units_.get()[0][_i];
     }
 
     /// Trivial getter
-    inline const std::string &unit( SQLNET_INT _i ) const
+    inline const std::string &unit( AUTOSQL_INT _i ) const
     {
-        assert( static_cast<SQLNET_INT>( units_->size() ) > _i && _i >= 0 );
+        assert( static_cast<AUTOSQL_INT>( units_->size() ) > _i && _i >= 0 );
         return units_.get()[0][_i];
     }
 
@@ -361,7 +361,7 @@ class Matrix
    private:
     /// Batches contain information on how data was loaded
     /// into the containers, so the original order can be reconstructed
-    std::shared_ptr<std::vector<SQLNET_INT>> batches_;
+    std::shared_ptr<std::vector<AUTOSQL_INT>> batches_;
 
     /// Names of the columns
     std::shared_ptr<std::vector<std::string>> colnames_;
@@ -377,16 +377,16 @@ class Matrix
     std::shared_ptr<std::string> name_;
 
     /// Number of columns
-    SQLNET_INT ncols_;
+    AUTOSQL_INT ncols_;
 
     /// Number of columns - unsigned long version
-    SQLNET_UNSIGNED_LONG ncols_long_;
+    AUTOSQL_UNSIGNED_LONG ncols_long_;
 
     /// Number of rows
-    SQLNET_INT nrows_;
+    AUTOSQL_INT nrows_;
 
     /// Number of rows - unsigned long version
-    SQLNET_UNSIGNED_LONG nrows_long_;
+    AUTOSQL_UNSIGNED_LONG nrows_long_;
 
     /// Units of the columns
     std::shared_ptr<std::vector<std::string>> units_;
@@ -422,7 +422,7 @@ void Matrix<T>::append( Matrix<T> _other )
 
     nrows_ += _other.nrows();
 
-    nrows_long_ = static_cast<SQLNET_UNSIGNED_LONG>( nrows_ );
+    nrows_long_ = static_cast<AUTOSQL_UNSIGNED_LONG>( nrows_ );
 
     batches().push_back( nrows_ );
 }
@@ -451,7 +451,7 @@ inline Matrix<T> Matrix<T>::column( T2 _j ) const
         {
             auto mat = Matrix<T>( nrows_, 1 );
 
-            for ( SQLNET_INT i = 0; i < nrows_; ++i )
+            for ( AUTOSQL_INT i = 0; i < nrows_; ++i )
                 {
                     mat[i] = ( *this )( i, _j );
                 }
@@ -462,7 +462,7 @@ inline Matrix<T> Matrix<T>::column( T2 _j ) const
 
     // -----------------------------------------------------------------
 
-#ifdef SQLNET_MULTINODE_MPI
+#ifdef AUTOSQL_MULTINODE_MPI
 
 template <class T>
 containers::Matrix<T> containers::Matrix<T>::gather_root()
@@ -484,13 +484,13 @@ containers::Matrix<T> containers::Matrix<T>::gather_root()
 
             if ( ncols() == 0 )
                 {
-                    SQLNET_INT global_nrows = 0;
+                    AUTOSQL_INT global_nrows = 0;
 
                     boost::mpi::reduce(
                         comm_world,               // comm
                         nrows(),                  // in_values
                         global_nrows,             // out_values
-                        std::plus<SQLNET_INT>(),  // op
+                        std::plus<AUTOSQL_INT>(),  // op
                         0                         // root
                     );
 
@@ -502,7 +502,7 @@ containers::Matrix<T> containers::Matrix<T>::gather_root()
             // ---------------------------------------------------------------------
             // Calculate sendcounts
 
-            std::vector<SQLNET_INT> sendcounts( num_processes );
+            std::vector<AUTOSQL_INT> sendcounts( num_processes );
 
             boost::mpi::all_gather(
                 comm_world, nrows() * ncols(), sendcounts.data() );
@@ -512,9 +512,9 @@ containers::Matrix<T> containers::Matrix<T>::gather_root()
             // ---------------------------------------------------------------------
             // Calculate displs
 
-            std::vector<SQLNET_INT> displs( num_processes + 1 );
+            std::vector<AUTOSQL_INT> displs( num_processes + 1 );
 
-            for ( SQLNET_SIZE i = 0; i < sendcounts.size(); ++i )
+            for ( AUTOSQL_SIZE i = 0; i < sendcounts.size(); ++i )
                 {
                     displs[i + 1] = displs[i] + sendcounts[i];
                 }
@@ -555,7 +555,7 @@ containers::Matrix<T> containers::Matrix<T>::gather_root()
                 ncols()  // ncols
             );
 
-            for ( SQLNET_SIZE i = 0; i < num_batches(); ++i )
+            for ( AUTOSQL_SIZE i = 0; i < num_batches(); ++i )
                 {
                     containers::Matrix<T> mat = batch( i );
 
@@ -572,11 +572,11 @@ containers::Matrix<T> containers::Matrix<T>::gather_root()
         }
 }
 
-#endif  // SQLNET_MULTINODE_MPI
+#endif  // AUTOSQL_MULTINODE_MPI
 
     // -------------------------------------------------------------------------
 
-#ifdef SQLNET_MULTINODE_MPI
+#ifdef AUTOSQL_MULTINODE_MPI
 
 template <class T>
 void containers::Matrix<T>::gather()
@@ -598,13 +598,13 @@ void containers::Matrix<T>::gather()
 
             if ( ncols() == 0 )
                 {
-                    SQLNET_INT global_nrows = 0;
+                    AUTOSQL_INT global_nrows = 0;
 
                     boost::mpi::reduce(
                         comm_world,               // comm
                         nrows(),                  // in_values
                         global_nrows,             // out_values
-                        std::plus<SQLNET_INT>(),  // op
+                        std::plus<AUTOSQL_INT>(),  // op
                         0                         // root
                     );
 
@@ -616,7 +616,7 @@ void containers::Matrix<T>::gather()
             // ---------------------------------------------------------------------
             // Calculate sendcounts
 
-            std::vector<SQLNET_INT> sendcounts( num_processes );
+            std::vector<AUTOSQL_INT> sendcounts( num_processes );
 
             boost::mpi::all_gather(
                 comm_world, nrows() * ncols(), sendcounts.data() );
@@ -626,9 +626,9 @@ void containers::Matrix<T>::gather()
             // ---------------------------------------------------------------------
             // Calculate displs
 
-            std::vector<SQLNET_INT> displs( num_processes + 1 );
+            std::vector<AUTOSQL_INT> displs( num_processes + 1 );
 
-            for ( SQLNET_SIZE i = 0; i < sendcounts.size(); ++i )
+            for ( AUTOSQL_SIZE i = 0; i < sendcounts.size(); ++i )
                 {
                     displs[i + 1] = displs[i] + sendcounts[i];
                 }
@@ -654,7 +654,7 @@ void containers::Matrix<T>::gather()
             // This recursive definition of gather(...) works, because
             // the subview created by batch( i ) has one single
             // batch by definition.
-            for ( SQLNET_SIZE i = 0; i < num_batches(); ++i )
+            for ( AUTOSQL_SIZE i = 0; i < num_batches(); ++i )
                 {
                     containers::Matrix<T> mat = batch( i );
 
@@ -663,7 +663,7 @@ void containers::Matrix<T>::gather()
         }
 }
 
-#endif  // SQLNET_MULTINODE_MPI
+#endif  // AUTOSQL_MULTINODE_MPI
 
 // -------------------------------------------------------------------------
 
@@ -677,28 +677,28 @@ void Matrix<T>::load( std::string _fname )
 
     debug_message( "Matrix.load: Read nrows..." );
 
-    SQLNET_INT nrows = 0;
+    AUTOSQL_INT nrows = 0;
 
-    input.read( reinterpret_cast<char *>( &nrows ), sizeof( SQLNET_INT ) );
+    input.read( reinterpret_cast<char *>( &nrows ), sizeof( AUTOSQL_INT ) );
 
     // -------------------------------------------------------------------------
     // Read ncols
 
     debug_message( "Matrix.load: Read ncols..." );
 
-    SQLNET_INT ncols = 0;
+    AUTOSQL_INT ncols = 0;
 
-    input.read( reinterpret_cast<char *>( &ncols ), sizeof( SQLNET_INT ) );
+    input.read( reinterpret_cast<char *>( &ncols ), sizeof( AUTOSQL_INT ) );
 
     // -------------------------------------------------------------------------
     // Read num_batches
 
     debug_message( "Matrix.load: Read num_batches..." );
 
-    SQLNET_SIZE num_batches = 0;
+    AUTOSQL_SIZE num_batches = 0;
 
     input.read(
-        reinterpret_cast<char *>( &num_batches ), sizeof( SQLNET_SIZE ) );
+        reinterpret_cast<char *>( &num_batches ), sizeof( AUTOSQL_SIZE ) );
 
     // -------------------------------------------------------------------------
     // Reverse byte order, if necessary
@@ -719,7 +719,7 @@ void Matrix<T>::load( std::string _fname )
     // Broadcast, ncols_ and num_batches if necessary
 
     {
-#ifdef SQLNET_MULTINODE_MPI
+#ifdef AUTOSQL_MULTINODE_MPI
 
         boost::mpi::communicator comm_world;
 
@@ -731,7 +731,7 @@ void Matrix<T>::load( std::string _fname )
 
         comm_world.barrier();
 
-#endif  // SQLNET_MULTINODE_MPI
+#endif  // AUTOSQL_MULTINODE_MPI
     }
 
     // -------------------------------------------------------------------------
@@ -739,11 +739,11 @@ void Matrix<T>::load( std::string _fname )
 
     debug_message( "Matrix.load: Reading batches..." );
 
-    std::vector<SQLNET_INT> batches( num_batches );
+    std::vector<AUTOSQL_INT> batches( num_batches );
 
     input.read(
         reinterpret_cast<char *>( batches.data() ),
-        num_batches * sizeof( SQLNET_INT ) );
+        num_batches * sizeof( AUTOSQL_INT ) );
 
     // -------------------------------------------------------------------------
     // Reverse byte order, if necessary
@@ -753,7 +753,7 @@ void Matrix<T>::load( std::string _fname )
         {
             debug_message( "Matrix.load: Reverse byte order of batches..." );
 
-            auto reverse_batches = []( SQLNET_INT &_val ) {
+            auto reverse_batches = []( AUTOSQL_INT &_val ) {
                 autosql::Endianness::reverse_byte_order( _val );
             };
 
@@ -774,7 +774,7 @@ void Matrix<T>::load( std::string _fname )
 
     assert( batches.size() > 1 );
 
-    for ( SQLNET_SIZE i = 0; i < batches.size() - 1; ++i )
+    for ( AUTOSQL_SIZE i = 0; i < batches.size() - 1; ++i )
         {
             containers::Matrix<T> mat( batches[i + 1] - batches[i], ncols );
 
@@ -782,11 +782,11 @@ void Matrix<T>::load( std::string _fname )
                 reinterpret_cast<char *>( mat.data() ),
                 mat.nrows() * mat.ncols() * sizeof( T ) );
 
-#ifdef SQLNET_MULTINODE_MPI
+#ifdef AUTOSQL_MULTINODE_MPI
 
             mat = mat.scatter();
 
-#endif  // SQLNET_MULTINODE_MPI
+#endif  // AUTOSQL_MULTINODE_MPI
 
             append( mat );
         }
@@ -823,11 +823,11 @@ void Matrix<T>::load( std::string _fname )
 
                 auto read_string = [&input]( std::string &_str ) {
 
-                    SQLNET_SIZE str_size = 0;
+                    AUTOSQL_SIZE str_size = 0;
 
                     input.read(
                         reinterpret_cast<char *>( &str_size ),
-                        sizeof( SQLNET_SIZE ) );
+                        sizeof( AUTOSQL_SIZE ) );
 
                     autosql::Endianness::reverse_byte_order( str_size );
 
@@ -842,7 +842,7 @@ void Matrix<T>::load( std::string _fname )
                 debug_message( "Matrix.load: Read colnames..." );
 
                 assert(
-                    static_cast<SQLNET_INT>( colnames()->size() ) ==
+                    static_cast<AUTOSQL_INT>( colnames()->size() ) ==
                     this->ncols() );
 
                 std::for_each(
@@ -853,7 +853,7 @@ void Matrix<T>::load( std::string _fname )
                 debug_message( "Matrix.load: Read units..." );
 
                 assert(
-                    static_cast<SQLNET_INT>( units()->size() ) ==
+                    static_cast<AUTOSQL_INT>( units()->size() ) ==
                     this->ncols() );
 
                 std::for_each( units()->begin(), units()->end(), read_string );
@@ -877,11 +877,11 @@ void Matrix<T>::load( std::string _fname )
 
                 auto read_string = [&input]( std::string &_str ) {
 
-                    SQLNET_SIZE str_size = 0;
+                    AUTOSQL_SIZE str_size = 0;
 
                     input.read(
                         reinterpret_cast<char *>( &str_size ),
-                        sizeof( SQLNET_SIZE ) );
+                        sizeof( AUTOSQL_SIZE ) );
 
                     _str.resize( str_size );
 
@@ -894,7 +894,7 @@ void Matrix<T>::load( std::string _fname )
                 debug_message( "Matrix.load: Read colnames..." );
 
                 assert(
-                    static_cast<SQLNET_INT>( colnames()->size() ) ==
+                    static_cast<AUTOSQL_INT>( colnames()->size() ) ==
                     this->ncols() );
 
                 std::for_each(
@@ -905,7 +905,7 @@ void Matrix<T>::load( std::string _fname )
                 debug_message( "Matrix.load: Read units..." );
 
                 assert(
-                    static_cast<SQLNET_INT>( colnames()->size() ) ==
+                    static_cast<AUTOSQL_INT>( colnames()->size() ) ==
                     this->ncols() );
 
                 std::for_each( units()->begin(), units()->end(), read_string );
@@ -923,7 +923,7 @@ void Matrix<T>::load( std::string _fname )
     // Broadcast, colnames_ and units_, if necessary
 
     {
-#ifdef SQLNET_MULTINODE_MPI
+#ifdef AUTOSQL_MULTINODE_MPI
 
         boost::mpi::communicator comm_world;
 
@@ -939,13 +939,13 @@ void Matrix<T>::load( std::string _fname )
 
         comm_world.barrier();
 
-#endif  // SQLNET_MULTINODE_MPI
+#endif  // AUTOSQL_MULTINODE_MPI
     }
 }
 
     // -------------------------------------------------------------------------
 
-#ifdef SQLNET_MULTINODE_MPI
+#ifdef AUTOSQL_MULTINODE_MPI
 
 template <class T>
 void Matrix<T>::load()
@@ -957,7 +957,7 @@ void Matrix<T>::load()
     // -------------------------------------------------------------
     // Receive ncols_
 
-    SQLNET_INT ncols = 0;
+    AUTOSQL_INT ncols = 0;
 
     boost::mpi::broadcast( comm_world, ncols, 0 );
 
@@ -966,7 +966,7 @@ void Matrix<T>::load()
     // -------------------------------------------------------------
     // Receive num_batches
 
-    SQLNET_SIZE num_batches = 0;
+    AUTOSQL_SIZE num_batches = 0;
 
     boost::mpi::broadcast( comm_world, num_batches, 0 );
 
@@ -980,7 +980,7 @@ void Matrix<T>::load()
     // -------------------------------------------------------------
     // Receive actual data
 
-    for ( SQLNET_SIZE i = 0; i < num_batches - 1; ++i )
+    for ( AUTOSQL_SIZE i = 0; i < num_batches - 1; ++i )
         {
             auto mat = scatter();
 
@@ -1027,7 +1027,7 @@ void Matrix<T>::load()
     // -------------------------------------------------------------
 }
 
-#endif  // SQLNET_MULTINODE_MPI
+#endif  // AUTOSQL_MULTINODE_MPI
 
 // -------------------------------------------------------------------------
 
@@ -1035,24 +1035,24 @@ template <class T>
 Matrix<T> Matrix<T>::remove_by_key( std::vector<bool> &_key )
 {
     assert(
-        static_cast<SQLNET_INT>( _key.size() ) == nrows() &&
+        static_cast<AUTOSQL_INT>( _key.size() ) == nrows() &&
         "Matrix: Size of keys must be identical to nrows!" );
 
-    auto op = []( SQLNET_INT init, bool elem ) {
+    auto op = []( AUTOSQL_INT init, bool elem ) {
         return ( ( elem ) ? ( init ) : ( init + 1 ) );
     };
 
-    SQLNET_INT nrows_new = std::accumulate( _key.begin(), _key.end(), 0, op );
+    AUTOSQL_INT nrows_new = std::accumulate( _key.begin(), _key.end(), 0, op );
 
     Matrix<T> trimmed( nrows_new, this->ncols() );
 
-    SQLNET_INT k = 0;
+    AUTOSQL_INT k = 0;
 
-    for ( SQLNET_INT i = 0; i < nrows(); ++i )
+    for ( AUTOSQL_INT i = 0; i < nrows(); ++i )
         {
             if ( _key[i] == false )
                 {
-                    for ( SQLNET_INT j = 0; j < this->ncols(); ++j )
+                    for ( AUTOSQL_INT j = 0; j < this->ncols(); ++j )
                         {
                             trimmed.data()[this->ncols() * k + j] =
                                 data()[this->ncols() * i + j];
@@ -1083,31 +1083,31 @@ void Matrix<T>::save( std::string _fname ) const
             debug_message( "Matrix.save: Write nrows..." );
 
             {
-                SQLNET_INT nrows = nrows_;
+                AUTOSQL_INT nrows = nrows_;
 
-#ifdef SQLNET_MULTINODE_MPI
+#ifdef AUTOSQL_MULTINODE_MPI
 
                 {
                     boost::mpi::communicator comm_world;
 
-                    SQLNET_PARALLEL_LIB::reduce(
+                    AUTOSQL_PARALLEL_LIB::reduce(
                         comm_world,               // comm
                         nrows_,                   // in_value
                         nrows,                    // out_value
-                        std::plus<SQLNET_INT>(),  // op
+                        std::plus<AUTOSQL_INT>(),  // op
                         0                         // root
                     );
 
                     comm_world.barrier();
                 }
 
-#endif  // SQLNET_MULTINODE_MPI
+#endif  // AUTOSQL_MULTINODE_MPI
 
                 autosql::Endianness::reverse_byte_order( nrows );
 
                 output.write(
                     reinterpret_cast<const char *>( &nrows ),
-                    sizeof( SQLNET_INT ) );
+                    sizeof( AUTOSQL_INT ) );
             }
 
             // -------------------------------------------------------------------------
@@ -1116,13 +1116,13 @@ void Matrix<T>::save( std::string _fname ) const
             debug_message( "Matrix.save: Write ncols..." );
 
             {
-                SQLNET_INT ncols = ncols_;
+                AUTOSQL_INT ncols = ncols_;
 
                 autosql::Endianness::reverse_byte_order( ncols );
 
                 output.write(
                     reinterpret_cast<const char *>( &ncols ),
-                    sizeof( SQLNET_INT ) );
+                    sizeof( AUTOSQL_INT ) );
             }
 
             // -------------------------------------------------------------------------
@@ -1133,13 +1133,13 @@ void Matrix<T>::save( std::string _fname ) const
             assert( batches_ );
 
             {
-                SQLNET_SIZE num_batches = batches_->size();
+                AUTOSQL_SIZE num_batches = batches_->size();
 
                 autosql::Endianness::reverse_byte_order( num_batches );
 
                 output.write(
                     reinterpret_cast<const char *>( &num_batches ),
-                    sizeof( SQLNET_SIZE ) );
+                    sizeof( AUTOSQL_SIZE ) );
             }
 
             // -------------------------------------------------------------------------
@@ -1154,34 +1154,34 @@ void Matrix<T>::save( std::string _fname ) const
             {
             // ---------------------------------------------------------------------
 
-#ifdef SQLNET_MULTINODE_MPI
+#ifdef AUTOSQL_MULTINODE_MPI
 
                 {
                     boost::mpi::communicator comm_world;
 
-                    SQLNET_PARALLEL_LIB::reduce(
+                    AUTOSQL_PARALLEL_LIB::reduce(
                         comm_world,        // comm
                         batches().data(),  // in_values
-                        static_cast<SQLNET_INT>( batches().size() ),  // count,
+                        static_cast<AUTOSQL_INT>( batches().size() ),  // count,
                         batches.data(),           // out_values
-                        std::plus<SQLNET_INT>(),  // op
+                        std::plus<AUTOSQL_INT>(),  // op
                         0                         // root
                     );
 
                     comm_world.barrier();
                 }
 
-#endif  // SQLNET_MULTINODE_MPI
+#endif  // AUTOSQL_MULTINODE_MPI
 
-                auto write_inverted_batches = [&output]( SQLNET_INT &_val ) {
+                auto write_inverted_batches = [&output]( AUTOSQL_INT &_val ) {
 
-                    SQLNET_INT val_reversed = _val;
+                    AUTOSQL_INT val_reversed = _val;
 
                     autosql::Endianness::reverse_byte_order( val_reversed );
 
                     output.write(
                         reinterpret_cast<const char *>( &val_reversed ),
-                        sizeof( SQLNET_INT ) );
+                        sizeof( AUTOSQL_INT ) );
                 };
 
                 std::for_each(
@@ -1213,17 +1213,17 @@ void Matrix<T>::save( std::string _fname ) const
 
                 // ---------------------------------------------------------------------
 
-                for ( SQLNET_SIZE i = 0; i < batches.size() - 1; ++i )
+                for ( AUTOSQL_SIZE i = 0; i < batches.size() - 1; ++i )
                     {
                         auto mat = batch( i );
 
                         assert( mat.ncols() == this->ncols() );
 
-#ifdef SQLNET_MULTINODE_MPI
+#ifdef AUTOSQL_MULTINODE_MPI
 
                         mat = mat.gather_root();
 
-#endif  // SQLNET_MULTINODE_MPI
+#endif  // AUTOSQL_MULTINODE_MPI
 
                         std::for_each(
                             mat.begin(), mat.end(), write_reversed_data );
@@ -1242,13 +1242,13 @@ void Matrix<T>::save( std::string _fname ) const
 
                 auto write_string = [&output]( std::string &_str ) {
 
-                    SQLNET_SIZE str_size = _str.size();
+                    AUTOSQL_SIZE str_size = _str.size();
 
                     autosql::Endianness::reverse_byte_order( str_size );
 
                     output.write(
                         reinterpret_cast<const char *>( &str_size ),
-                        sizeof( SQLNET_SIZE ) );
+                        sizeof( AUTOSQL_SIZE ) );
 
                     output.write( &( _str[0] ), _str.size() );
                 };
@@ -1281,29 +1281,29 @@ void Matrix<T>::save( std::string _fname ) const
             {
                 debug_message( "Matrix.save: Write nrows..." );
 
-                SQLNET_INT nrows = nrows_;
+                AUTOSQL_INT nrows = nrows_;
 
-#ifdef SQLNET_MULTINODE_MPI
+#ifdef AUTOSQL_MULTINODE_MPI
 
                 {
                     boost::mpi::communicator comm_world;
 
-                    SQLNET_PARALLEL_LIB::reduce(
+                    AUTOSQL_PARALLEL_LIB::reduce(
                         comm_world,               // comm
                         nrows_,                   // in_value
                         nrows,                    // out_value
-                        std::plus<SQLNET_INT>(),  // op
+                        std::plus<AUTOSQL_INT>(),  // op
                         0                         // root
                     );
 
                     comm_world.barrier();
                 }
 
-#endif  // SQLNET_MULTINODE_MPI
+#endif  // AUTOSQL_MULTINODE_MPI
 
                 output.write(
                     reinterpret_cast<const char *>( &nrows ),
-                    sizeof( SQLNET_INT ) );
+                    sizeof( AUTOSQL_INT ) );
             }
 
             // -------------------------------------------------------------------------
@@ -1313,7 +1313,7 @@ void Matrix<T>::save( std::string _fname ) const
 
             output.write(
                 reinterpret_cast<const char *>( &( ncols_ ) ),
-                sizeof( SQLNET_INT ) );
+                sizeof( AUTOSQL_INT ) );
 
             // -------------------------------------------------------------------------
             // Write num_batches
@@ -1321,11 +1321,11 @@ void Matrix<T>::save( std::string _fname ) const
             debug_message( "Matrix.save: Write num_batches..." );
 
             {
-                SQLNET_SIZE num_batches = batches_->size();
+                AUTOSQL_SIZE num_batches = batches_->size();
 
                 output.write(
                     reinterpret_cast<const char *>( &num_batches ),
-                    sizeof( SQLNET_SIZE ) );
+                    sizeof( AUTOSQL_SIZE ) );
             }
 
             // -------------------------------------------------------------------------
@@ -1336,28 +1336,28 @@ void Matrix<T>::save( std::string _fname ) const
             {
                 debug_message( "Matrix.save: Write batches..." );
 
-#ifdef SQLNET_MULTINODE_MPI
+#ifdef AUTOSQL_MULTINODE_MPI
 
                 {
                     boost::mpi::communicator comm_world;
 
-                    SQLNET_PARALLEL_LIB::reduce(
+                    AUTOSQL_PARALLEL_LIB::reduce(
                         comm_world,        // comm
                         batches().data(),  // in_values
-                        static_cast<SQLNET_INT>( batches().size() ),  // count,
+                        static_cast<AUTOSQL_INT>( batches().size() ),  // count,
                         batches.data(),           // out_values
-                        std::plus<SQLNET_INT>(),  // op
+                        std::plus<AUTOSQL_INT>(),  // op
                         0                         // root
                     );
 
                     comm_world.barrier();
                 }
 
-#endif  // SQLNET_MULTINODE_MPI
+#endif  // AUTOSQL_MULTINODE_MPI
 
                 output.write(
                     reinterpret_cast<const char *>( batches.data() ),
-                    batches.size() * sizeof( SQLNET_INT ) );
+                    batches.size() * sizeof( AUTOSQL_INT ) );
             }
 
             // -------------------------------------------------------------------------
@@ -1365,15 +1365,15 @@ void Matrix<T>::save( std::string _fname ) const
 
             debug_message( "Matrix.save: Write data..." );
 
-            for ( SQLNET_SIZE i = 0; i < batches.size() - 1; ++i )
+            for ( AUTOSQL_SIZE i = 0; i < batches.size() - 1; ++i )
                 {
                     auto mat = batch( i );
 
-#ifdef SQLNET_MULTINODE_MPI
+#ifdef AUTOSQL_MULTINODE_MPI
 
                     mat = mat.gather_root();
 
-#endif  // SQLNET_MULTINODE_MPI
+#endif  // AUTOSQL_MULTINODE_MPI
 
                     output.write(
                         reinterpret_cast<const char *>( mat.data() ),
@@ -1390,11 +1390,11 @@ void Matrix<T>::save( std::string _fname ) const
 
                 auto write_string = [&output]( std::string &_str ) {
 
-                    SQLNET_SIZE str_size = _str.size();
+                    AUTOSQL_SIZE str_size = _str.size();
 
                     output.write(
                         reinterpret_cast<const char *>( &str_size ),
-                        sizeof( SQLNET_SIZE ) );
+                        sizeof( AUTOSQL_SIZE ) );
 
                     output.write( &( _str[0] ), _str.size() );
                 };
@@ -1421,7 +1421,7 @@ void Matrix<T>::save( std::string _fname ) const
 
     // -------------------------------------------------------------------------
 
-#ifdef SQLNET_MULTINODE_MPI
+#ifdef AUTOSQL_MULTINODE_MPI
 
 template <class T>
 void Matrix<T>::save()
@@ -1431,10 +1431,10 @@ void Matrix<T>::save()
     // -------------------------------------------------------------------------
     // Send nrows
 
-    SQLNET_PARALLEL_LIB::reduce(
+    AUTOSQL_PARALLEL_LIB::reduce(
         comm_world,               // comm
         nrows_,                   // in_value
-        std::plus<SQLNET_INT>(),  // op
+        std::plus<AUTOSQL_INT>(),  // op
         0                         // root
     );
 
@@ -1443,11 +1443,11 @@ void Matrix<T>::save()
     // -------------------------------------------------------------------------
     // Send batches
 
-    SQLNET_PARALLEL_LIB::reduce(
+    AUTOSQL_PARALLEL_LIB::reduce(
         comm_world,                                   // comm
         batches().data(),                             // in_values
-        static_cast<SQLNET_INT>( batches().size() ),  // count,
-        std::plus<SQLNET_INT>(),                      // op
+        static_cast<AUTOSQL_INT>( batches().size() ),  // count,
+        std::plus<AUTOSQL_INT>(),                      // op
         0                                             // root
     );
 
@@ -1456,7 +1456,7 @@ void Matrix<T>::save()
     // -------------------------------------------------------------------------
     // Send data in batchwise fashion
 
-    for ( SQLNET_SIZE i = 0; i < batches().size() - 1; ++i )
+    for ( AUTOSQL_SIZE i = 0; i < batches().size() - 1; ++i )
         {
             auto mat = batch( i );
 
@@ -1466,11 +1466,11 @@ void Matrix<T>::save()
 
     // -------------------------------------------------------------------------
 
-#endif  // SQLNET_MULTINODE_MPI
+#endif  // AUTOSQL_MULTINODE_MPI
 
     // -------------------------------------------------------------------------
 
-#ifdef SQLNET_MULTINODE_MPI
+#ifdef AUTOSQL_MULTINODE_MPI
 
 template <class T>
 Matrix<T> Matrix<T>::scatter()
@@ -1487,7 +1487,7 @@ Matrix<T> Matrix<T>::scatter()
     // ---------------------------------------------------------------------
     // Set up shape
 
-    std::vector<SQLNET_INT> shape( 2 );
+    std::vector<AUTOSQL_INT> shape( 2 );
 
     shape[0] = nrows();
 
@@ -1507,9 +1507,9 @@ Matrix<T> Matrix<T>::scatter()
 
     debug_message( "Calculate sendcounts and displs... " );
 
-    std::vector<SQLNET_INT> sendcounts( num_processes );
+    std::vector<AUTOSQL_INT> sendcounts( num_processes );
 
-    std::vector<SQLNET_INT> displs( num_processes + 1 );
+    std::vector<AUTOSQL_INT> displs( num_processes + 1 );
 
     Sendcounts::calculate_sendcounts_and_displs(
         shape[0],    // nrows
@@ -1563,15 +1563,15 @@ Matrix<T> Matrix<T>::scatter()
     // ---------------------------------------------------------------------
 }
 
-#endif  // SQLNET_MULTINODE_MPI
+#endif  // AUTOSQL_MULTINODE_MPI
 
 // -------------------------------------------------------------------------
 
 template <class T>
-Matrix<T> Matrix<T>::sort_by_key( std::vector<SQLNET_INT> &_key )
+Matrix<T> Matrix<T>::sort_by_key( std::vector<AUTOSQL_INT> &_key )
 {
-    Matrix<SQLNET_INT> key(
-        static_cast<SQLNET_INT>( _key.size() ), 1, _key.data() );
+    Matrix<AUTOSQL_INT> key(
+        static_cast<AUTOSQL_INT>( _key.size() ), 1, _key.data() );
 
     return sort_by_key( key );
 }
@@ -1579,7 +1579,7 @@ Matrix<T> Matrix<T>::sort_by_key( std::vector<SQLNET_INT> &_key )
 // -------------------------------------------------------------------------
 
 template <class T>
-Matrix<T> Matrix<T>::sort_by_key( Matrix<SQLNET_INT> &_key )
+Matrix<T> Matrix<T>::sort_by_key( Matrix<AUTOSQL_INT> &_key )
 {
     assert(
         _key.nrows() == nrows() &&
@@ -1587,13 +1587,13 @@ Matrix<T> Matrix<T>::sort_by_key( Matrix<SQLNET_INT> &_key )
 
     Matrix<T> sorted( nrows(), ncols() );
 
-    for ( SQLNET_INT i = 0; i < nrows(); ++i )
+    for ( AUTOSQL_INT i = 0; i < nrows(); ++i )
         {
             assert(
                 _key[i] >= 0 && _key[i] < nrows() &&
                 "Matrix: Key out of bounds!" );
 
-            for ( SQLNET_INT j = 0; j < ncols(); ++j )
+            for ( AUTOSQL_INT j = 0; j < ncols(); ++j )
                 {
                     sorted.data()[ncols() * i + j] =
                         data()[ncols() * _key[i] + j];
@@ -1620,10 +1620,10 @@ inline Matrix<T> Matrix<T>::subview( T2 _row_begin, T2 _row_end )
     assert( ( _row_end >= _row_begin ) && "Matrix::subview!" );
 
     auto mat = Matrix<T>(
-        static_cast<SQLNET_INT>( _row_end - _row_begin ),
+        static_cast<AUTOSQL_INT>( _row_end - _row_begin ),
         ncols_,
         data_ptr_ +
-            static_cast<SQLNET_UNSIGNED_LONG>( _row_begin ) * ncols_long_ );
+            static_cast<AUTOSQL_UNSIGNED_LONG>( _row_begin ) * ncols_long_ );
 
     mat.set_colnames( *( colnames_.get() ) );
 
@@ -1651,10 +1651,10 @@ inline const Matrix<T> Matrix<T>::subview( T2 _row_begin, T2 _row_end ) const
     assert( ( _row_end >= _row_begin ) && "Matrix::subview!" );
 
     auto mat = Matrix<T>(
-        static_cast<SQLNET_INT>( _row_end - _row_begin ),
+        static_cast<AUTOSQL_INT>( _row_end - _row_begin ),
         ncols_,
         data_ptr_ +
-            static_cast<SQLNET_UNSIGNED_LONG>( _row_begin ) * ncols_long_ );
+            static_cast<AUTOSQL_UNSIGNED_LONG>( _row_begin ) * ncols_long_ );
 
     mat.set_colnames( *( colnames_.get() ) );
 
@@ -1684,9 +1684,9 @@ Matrix<T> Matrix<T>::transpose()
 {
     Matrix<T> transposed( ncols_, nrows_ );
 
-    for ( SQLNET_UNSIGNED_LONG i = 0; i < nrows_long_; ++i )
+    for ( AUTOSQL_UNSIGNED_LONG i = 0; i < nrows_long_; ++i )
         {
-            for ( SQLNET_UNSIGNED_LONG j = 0; j < ncols_long_; ++j )
+            for ( AUTOSQL_UNSIGNED_LONG j = 0; j < ncols_long_; ++j )
                 {
                     transposed( j, i ) = ( *this )( i, j );
                 }

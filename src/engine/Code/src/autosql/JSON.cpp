@@ -4,7 +4,7 @@ namespace autosql
 {
 // ----------------------------------------------------------------------------
 
-SQLNET_INT JSON::data_used_to_int( const DataUsed& _data_used )
+AUTOSQL_INT JSON::data_used_to_int( const DataUsed& _data_used )
 {
     switch ( _data_used )
         {
@@ -52,7 +52,7 @@ SQLNET_INT JSON::data_used_to_int( const DataUsed& _data_used )
 
 // ----------------------------------------------------------------------------
 
-DataUsed JSON::int_to_data_used( const SQLNET_INT& _dint )
+DataUsed JSON::int_to_data_used( const AUTOSQL_INT& _dint )
 {
     switch ( _dint )
         {
@@ -100,10 +100,10 @@ DataUsed JSON::int_to_data_used( const SQLNET_INT& _dint )
 
 // ------------------------------------------------------------------------
 
-SQLNET_SAME_UNITS_CONTAINER JSON::json_arr_to_same_units(
+AUTOSQL_SAME_UNITS_CONTAINER JSON::json_arr_to_same_units(
     const Poco::JSON::Array& _json_arr )
 {
-    SQLNET_SAME_UNITS_CONTAINER same_units;
+    AUTOSQL_SAME_UNITS_CONTAINER same_units;
 
     for ( size_t j = 0; j < _json_arr.size(); ++j )
         {
@@ -113,33 +113,33 @@ SQLNET_SAME_UNITS_CONTAINER JSON::json_arr_to_same_units(
 
             // -------------------------
 
-            auto& child1 = *obj.SQLNET_GET_OBJECT( "first" );
+            auto& child1 = *obj.AUTOSQL_GET_OBJECT( "first" );
 
             ColumnToBeAggregated column_to_be_aggregated1;
 
             column_to_be_aggregated1.ix_column_used =
-                child1.SQLNET_GET( "ix_column_used" );
+                child1.AUTOSQL_GET( "ix_column_used" );
 
             column_to_be_aggregated1.data_used =
-                JSON::int_to_data_used( child1.SQLNET_GET( "data_used" ) );
+                JSON::int_to_data_used( child1.AUTOSQL_GET( "data_used" ) );
 
             column_to_be_aggregated1.ix_perip_used =
-                child1.SQLNET_GET( "ix_perip_used" );
+                child1.AUTOSQL_GET( "ix_perip_used" );
 
             // -------------------------
 
-            auto& child2 = *obj.SQLNET_GET_OBJECT( "second" );
+            auto& child2 = *obj.AUTOSQL_GET_OBJECT( "second" );
 
             ColumnToBeAggregated column_to_be_aggregated2;
 
             column_to_be_aggregated2.ix_column_used =
-                child2.SQLNET_GET( "ix_column_used" );
+                child2.AUTOSQL_GET( "ix_column_used" );
 
             column_to_be_aggregated2.data_used =
-                JSON::int_to_data_used( child2.SQLNET_GET( "data_used" ) );
+                JSON::int_to_data_used( child2.AUTOSQL_GET( "data_used" ) );
 
             column_to_be_aggregated2.ix_perip_used =
-                child2.SQLNET_GET( "ix_perip_used" );
+                child2.AUTOSQL_GET( "ix_perip_used" );
 
             // -------------------------
 
@@ -155,7 +155,7 @@ SQLNET_SAME_UNITS_CONTAINER JSON::json_arr_to_same_units(
 // ------------------------------------------------------------------------
 
 Poco::JSON::Array JSON::same_units_to_json_arr(
-    const SQLNET_SAME_UNITS_CONTAINER& _same_units )
+    const AUTOSQL_SAME_UNITS_CONTAINER& _same_units )
 {
     Poco::JSON::Array arr;
 

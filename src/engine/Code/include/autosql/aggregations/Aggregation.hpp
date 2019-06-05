@@ -20,70 +20,70 @@ class Aggregation : public AggregationBase
     /// Activates all samples
     void activate_all(
         const bool _init_opt,
-        SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-        SQLNET_SAMPLE_ITERATOR _sample_container_end ) final;
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) final;
 
     /// Activates all samples that contain any category between
     /// _categories_begin and _categories_end. Used for prediction.
     void activate_samples_containing_categories(
-        const std::vector<SQLNET_INT>::const_iterator _categories_begin,
-        const std::vector<SQLNET_INT>::const_iterator _categories_end,
-        SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-        SQLNET_SAMPLE_ITERATOR _sample_container_end ) final;
+        const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
+        const std::vector<AUTOSQL_INT>::const_iterator _categories_end,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) final;
 
     /// Iterates through the categories and selectively
     /// activates samples.
     /// Used for training.
     void activate_samples_containing_categories(
-        const std::vector<SQLNET_INT>::const_iterator _categories_begin,
-        const std::vector<SQLNET_INT>::const_iterator _categories_end,
+        const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
+        const std::vector<AUTOSQL_INT>::const_iterator _categories_end,
         const Revert _revert,
         const containers::CategoryIndex &_index ) final;
 
     /// Activates all samples that do not contain any category between
     /// _categories_begin and _categories_end. Used for prediction.
     void activate_samples_not_containing_categories(
-        const std::vector<SQLNET_INT>::const_iterator _categories_begin,
-        const std::vector<SQLNET_INT>::const_iterator _categories_end,
-        SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-        SQLNET_SAMPLE_ITERATOR _sample_container_end ) final;
+        const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
+        const std::vector<AUTOSQL_INT>::const_iterator _categories_end,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) final;
 
     /// Iterates through the categories and selectively
     /// activates samples.
     /// Used for training.
     void activate_samples_not_containing_categories(
-        const std::vector<SQLNET_INT>::const_iterator _categories_begin,
-        const std::vector<SQLNET_INT>::const_iterator _categories_end,
+        const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
+        const std::vector<AUTOSQL_INT>::const_iterator _categories_end,
         const Revert _revert,
         const containers::CategoryIndex &_index ) final;
 
     /// Iterates through the samples and activates those.
     /// samples that are greater than the critical value.
     void activate_samples_from_above(
-        const SQLNET_FLOAT _critical_value,
-        SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-        SQLNET_SAMPLE_ITERATOR _sample_container_end ) final;
+        const AUTOSQL_FLOAT _critical_value,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) final;
 
     /// Iterates through the samples and activates them
     /// starting with the greatest.
     void activate_samples_from_above(
-        const containers::Matrix<SQLNET_FLOAT> &_critical_values,
-        SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-        SQLNET_SAMPLE_ITERATOR _sample_container_end ) final;
+        const containers::Matrix<AUTOSQL_FLOAT> &_critical_values,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) final;
 
     /// Iterates through the samples and activates those
     /// samples that smaller than or equal to the critical value.
     void activate_samples_from_below(
-        const SQLNET_FLOAT _critical_value,
-        SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-        SQLNET_SAMPLE_ITERATOR _sample_container_end ) final;
+        const AUTOSQL_FLOAT _critical_value,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) final;
 
     /// Iterates through the samples and activates them
     /// starting with the smallest.
     void activate_samples_from_below(
-        const containers::Matrix<SQLNET_FLOAT> &_critical_values,
-        SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-        SQLNET_SAMPLE_ITERATOR _sample_container_end ) final;
+        const containers::Matrix<AUTOSQL_FLOAT> &_critical_values,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) final;
 
     /// Gets rid of data that is no longer needed.
     void clear() final;
@@ -95,76 +95,76 @@ class Aggregation : public AggregationBase
     /// Deactivates all samples that contain any category between
     /// _categories_begin and _categories_end. Used for prediction.
     void deactivate_samples_containing_categories(
-        const std::vector<SQLNET_INT>::const_iterator _categories_begin,
-        const std::vector<SQLNET_INT>::const_iterator _categories_end,
-        SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-        SQLNET_SAMPLE_ITERATOR _sample_container_end ) final;
+        const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
+        const std::vector<AUTOSQL_INT>::const_iterator _categories_end,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) final;
 
     /// Iteratres through the categories and selectively
     /// deactivates samples.
     /// Used for training.
     void deactivate_samples_containing_categories(
-        const std::vector<SQLNET_INT>::const_iterator _categories_begin,
-        const std::vector<SQLNET_INT>::const_iterator _categories_end,
+        const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
+        const std::vector<AUTOSQL_INT>::const_iterator _categories_end,
         const Revert _revert,
         const containers::CategoryIndex &_index ) final;
 
     /// Iterates through the samples and deactivates those
     /// samples that are greater than the critical value.
     void deactivate_samples_from_above(
-        const SQLNET_FLOAT _critical_value,
-        SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-        SQLNET_SAMPLE_ITERATOR _sample_container_end ) final;
+        const AUTOSQL_FLOAT _critical_value,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) final;
 
     /// Iterates through the samples and deactivates them
     /// starting with the greatest.
     void deactivate_samples_from_above(
-        const containers::Matrix<SQLNET_FLOAT> &_critical_values,
-        SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-        SQLNET_SAMPLE_ITERATOR _sample_container_end ) final;
+        const containers::Matrix<AUTOSQL_FLOAT> &_critical_values,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) final;
 
     /// Iterates through the samples and deactivates those
     /// samples that smaller than or equal to the critical value.
     void deactivate_samples_from_below(
-        const SQLNET_FLOAT _critical_value,
-        SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-        SQLNET_SAMPLE_ITERATOR _sample_container_end ) final;
+        const AUTOSQL_FLOAT _critical_value,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) final;
 
     /// Iterates through the samples and deactivates them
     /// starting with the smallest.
     void deactivate_samples_from_below(
-        const containers::Matrix<SQLNET_FLOAT> &_critical_values,
-        SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-        SQLNET_SAMPLE_ITERATOR _sample_container_end ) final;
+        const containers::Matrix<AUTOSQL_FLOAT> &_critical_values,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) final;
 
     /// Deactivates all samples that do not contain any category between
     /// _categories_begin and _categories_end. Used for prediction.
     void deactivate_samples_not_containing_categories(
-        const std::vector<SQLNET_INT>::const_iterator _categories_begin,
-        const std::vector<SQLNET_INT>::const_iterator _categories_end,
-        SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-        SQLNET_SAMPLE_ITERATOR _sample_container_end ) final;
+        const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
+        const std::vector<AUTOSQL_INT>::const_iterator _categories_end,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) final;
 
     /// Iterates through the categories and selectively
     /// deactivates samples.
     /// Used for training.
     void deactivate_samples_not_containing_categories(
-        const std::vector<SQLNET_INT>::const_iterator _categories_begin,
-        const std::vector<SQLNET_INT>::const_iterator _categories_end,
+        const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
+        const std::vector<AUTOSQL_INT>::const_iterator _categories_end,
         const Revert _revert,
         const containers::CategoryIndex &_index ) final;
 
     /// Deactivates all samples where the numerical_value contains null values.
     /// Such samples must always be deactivated.
     void deactivate_samples_with_null_values(
-        SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-        SQLNET_SAMPLE_ITERATOR _null_values_separator ) final;
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+        AUTOSQL_SAMPLE_ITERATOR _null_values_separator ) final;
 
     /// Initializes optimization criterion after all samples have been
     /// activated.
     void init_optimization_criterion(
-        SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-        SQLNET_SAMPLE_ITERATOR _sample_container_end );
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_end );
 
     /// Returns a string describing the type of the intermediate aggregation
     /// needed
@@ -184,24 +184,24 @@ class Aggregation : public AggregationBase
     void revert_to_commit() final;
 
     /// Separates the samples for which the value to be aggregated is NULL
-    SQLNET_SAMPLES::iterator separate_null_values( SQLNET_SAMPLES &_samples );
+    AUTOSQL_SAMPLES::iterator separate_null_values( AUTOSQL_SAMPLES &_samples );
 
     /// Separates the pointers to samples for which the value to be aggregated
     /// is NULL
-    SQLNET_SAMPLE_CONTAINER::iterator separate_null_values(
-        SQLNET_SAMPLE_CONTAINER &_samples );
+    AUTOSQL_SAMPLE_CONTAINER::iterator separate_null_values(
+        AUTOSQL_SAMPLE_CONTAINER &_samples );
 
     /// Sorts the samples by value to be aggregated (within the element in
     /// population table)
     void sort_samples(
-        SQLNET_SAMPLES::iterator _samples_begin,
-        SQLNET_SAMPLES::iterator _samples_end );
+        AUTOSQL_SAMPLES::iterator _samples_begin,
+        AUTOSQL_SAMPLES::iterator _samples_end );
 
     /// Updates the optimization criterion, makes it store its
     /// current stage and clears updates_current()
     void update_optimization_criterion_and_clear_updates_current(
-        const SQLNET_FLOAT _num_samples_smaller,
-        const SQLNET_FLOAT _num_samples_greater ) final;
+        const AUTOSQL_FLOAT _num_samples_smaller,
+        const AUTOSQL_FLOAT _num_samples_greater ) final;
 
     // --------------------------------------
     // Here we break with our usual convention
@@ -225,9 +225,9 @@ class Aggregation : public AggregationBase
         assert( _sample->ix_x_popul >= 0 );
         assert( _sample->ix_x_popul < yhat_inline().nrows() );
 
-        assert( _sample->ix_x_popul < static_cast<SQLNET_INT>( sum().size() ) );
+        assert( _sample->ix_x_popul < static_cast<AUTOSQL_INT>( sum().size() ) );
         assert(
-            _sample->ix_x_popul < static_cast<SQLNET_INT>( count().size() ) );
+            _sample->ix_x_popul < static_cast<AUTOSQL_INT>( count().size() ) );
 
         assert(
             value_to_be_aggregated( _sample ) ==
@@ -260,9 +260,9 @@ class Aggregation : public AggregationBase
         assert( _sample->ix_x_popul >= 0 );
         assert( _sample->ix_x_popul < yhat_inline().nrows() );
 
-        assert( _sample->ix_x_popul < static_cast<SQLNET_INT>( sum().size() ) );
+        assert( _sample->ix_x_popul < static_cast<AUTOSQL_INT>( sum().size() ) );
         assert(
-            _sample->ix_x_popul < static_cast<SQLNET_INT>( count().size() ) );
+            _sample->ix_x_popul < static_cast<AUTOSQL_INT>( count().size() ) );
 
         assert( count()[_sample->ix_x_popul] > 0.0 );
 
@@ -342,7 +342,7 @@ class Aggregation : public AggregationBase
 
         // Note that the samples are already ordered.
 
-        const SQLNET_FLOAT val = value_to_be_aggregated( _sample );
+        const AUTOSQL_FLOAT val = value_to_be_aggregated( _sample );
 
         for ( auto it = _sample - 1; it >= samples_begin_; --it )
             {
@@ -401,7 +401,7 @@ class Aggregation : public AggregationBase
 
         // Note that the samples are already ordered.
 
-        const SQLNET_FLOAT val = value_to_be_aggregated( _sample );
+        const AUTOSQL_FLOAT val = value_to_be_aggregated( _sample );
 
         for ( auto it = _sample - 1; it >= samples_begin_; --it )
             {
@@ -465,7 +465,7 @@ class Aggregation : public AggregationBase
 
         // Note that the samples are already ordered.
 
-        const SQLNET_FLOAT val = value_to_be_aggregated( _sample );
+        const AUTOSQL_FLOAT val = value_to_be_aggregated( _sample );
 
         for ( auto it = _sample - 1; it >= samples_begin_; --it )
             {
@@ -523,7 +523,7 @@ class Aggregation : public AggregationBase
 
         // Note that the samples are already ordered.
 
-        const SQLNET_FLOAT val = value_to_be_aggregated( _sample );
+        const AUTOSQL_FLOAT val = value_to_be_aggregated( _sample );
 
         for ( auto it = _sample - 1; it >= samples_begin_; --it )
             {
@@ -681,7 +681,7 @@ class Aggregation : public AggregationBase
             }
 
         const auto count =
-            static_cast<SQLNET_INT>( this->count()[_sample->ix_x_popul] );
+            static_cast<AUTOSQL_INT>( this->count()[_sample->ix_x_popul] );
 
         if ( count % 2 == 0 )
             {
@@ -775,7 +775,7 @@ class Aggregation : public AggregationBase
             }
 
         const auto count =
-            static_cast<SQLNET_INT>( this->count()[_sample->ix_x_popul] );
+            static_cast<AUTOSQL_INT>( this->count()[_sample->ix_x_popul] );
 
         if ( count % 2 == 0 )
             {
@@ -931,7 +931,7 @@ class Aggregation : public AggregationBase
             int>::type = 0>
     inline void activate_sample( Sample *_sample )
     {
-        const SQLNET_FLOAT val = value_to_be_aggregated( _sample );
+        const AUTOSQL_FLOAT val = value_to_be_aggregated( _sample );
 
         static_assert( needs_sum_, "sum needed" );
         static_assert( needs_sum_squared_, "sum_squared needed" );
@@ -966,15 +966,15 @@ class Aggregation : public AggregationBase
             }
         else
             {
-                const SQLNET_FLOAT mean =
+                const AUTOSQL_FLOAT mean =
                     sum()[_sample->ix_x_popul] / count()[_sample->ix_x_popul];
 
-                const SQLNET_FLOAT stddev = std::sqrt(
+                const AUTOSQL_FLOAT stddev = std::sqrt(
                     sum_squared()[_sample->ix_x_popul] /
                         count()[_sample->ix_x_popul] -
                     mean * mean );
 
-                const SQLNET_FLOAT skewness =
+                const AUTOSQL_FLOAT skewness =
                     ( ( sum_cubed()[_sample->ix_x_popul] /
                         count()[_sample->ix_x_popul] ) -
                       ( 3.0 * mean * stddev * stddev ) -
@@ -997,7 +997,7 @@ class Aggregation : public AggregationBase
             int>::type = 0>
     inline void deactivate_sample( Sample *_sample )
     {
-        const SQLNET_FLOAT val = value_to_be_aggregated( _sample );
+        const AUTOSQL_FLOAT val = value_to_be_aggregated( _sample );
 
         sum()[_sample->ix_x_popul] -= val;
 
@@ -1026,7 +1026,7 @@ class Aggregation : public AggregationBase
             int>::type = 0>
     inline void activate_sample( Sample *_sample )
     {
-        const SQLNET_FLOAT val = value_to_be_aggregated( _sample );
+        const AUTOSQL_FLOAT val = value_to_be_aggregated( _sample );
 
         static_assert( needs_sum_, "sum needed" );
         static_assert( needs_sum_squared_, "sum_squared needed" );
@@ -1040,7 +1040,7 @@ class Aggregation : public AggregationBase
 
         assert( count()[_sample->ix_x_popul] > 0.0 );
 
-        const SQLNET_FLOAT mean =
+        const AUTOSQL_FLOAT mean =
             sum()[_sample->ix_x_popul] / count()[_sample->ix_x_popul];
 
         yhat_inline()[_sample->ix_x_popul] = std::sqrt(
@@ -1065,7 +1065,7 @@ class Aggregation : public AggregationBase
             int>::type = 0>
     inline void deactivate_sample( Sample *_sample )
     {
-        const SQLNET_FLOAT val = value_to_be_aggregated( _sample );
+        const AUTOSQL_FLOAT val = value_to_be_aggregated( _sample );
 
         sum()[_sample->ix_x_popul] -= val;
 
@@ -1081,7 +1081,7 @@ class Aggregation : public AggregationBase
             }
         else
             {
-                const SQLNET_FLOAT mean =
+                const AUTOSQL_FLOAT mean =
                     sum()[_sample->ix_x_popul] / count()[_sample->ix_x_popul];
 
                 yhat_inline()[_sample->ix_x_popul] = std::sqrt(
@@ -1142,7 +1142,7 @@ class Aggregation : public AggregationBase
             int>::type = 0>
     inline void activate_sample( Sample *_sample )
     {
-        const SQLNET_FLOAT val = value_to_be_aggregated( _sample );
+        const AUTOSQL_FLOAT val = value_to_be_aggregated( _sample );
 
         static_assert( needs_sum_, "sum needed" );
         static_assert( needs_sum_squared_, "sum_squared needed" );
@@ -1156,7 +1156,7 @@ class Aggregation : public AggregationBase
 
         assert( count()[_sample->ix_x_popul] > 0.0 );
 
-        const SQLNET_FLOAT mean =
+        const AUTOSQL_FLOAT mean =
             sum()[_sample->ix_x_popul] / count()[_sample->ix_x_popul];
 
         yhat_inline()[_sample->ix_x_popul] =
@@ -1175,7 +1175,7 @@ class Aggregation : public AggregationBase
             int>::type = 0>
     inline void deactivate_sample( Sample *_sample )
     {
-        const SQLNET_FLOAT val = value_to_be_aggregated( _sample );
+        const AUTOSQL_FLOAT val = value_to_be_aggregated( _sample );
 
         sum()[_sample->ix_x_popul] -= val;
 
@@ -1191,7 +1191,7 @@ class Aggregation : public AggregationBase
             }
         else
             {
-                const SQLNET_FLOAT mean =
+                const AUTOSQL_FLOAT mean =
                     sum()[_sample->ix_x_popul] / count()[_sample->ix_x_popul];
 
                 yhat_inline()[_sample->ix_x_popul] =
@@ -1233,36 +1233,36 @@ class Aggregation : public AggregationBase
 
     /// Trivial setter
     void set_value_to_be_aggregated(
-        const containers::Matrix<SQLNET_FLOAT> &_value_to_be_aggregated,
-        const SQLNET_INT _ix_column_used ) final
+        const containers::Matrix<AUTOSQL_FLOAT> &_value_to_be_aggregated,
+        const AUTOSQL_INT _ix_column_used ) final
     {
         value_to_be_aggregated() = containers::
-            ColumnView<SQLNET_FLOAT, std::map<SQLNET_INT, SQLNET_INT>>(
+            ColumnView<AUTOSQL_FLOAT, std::map<AUTOSQL_INT, AUTOSQL_INT>>(
                 _value_to_be_aggregated, _ix_column_used );
     }
 
     /// Trivial setter
     void set_value_to_be_aggregated(
-        const containers::Matrix<SQLNET_INT> &_value_to_be_aggregated,
-        const SQLNET_INT _ix_column_used ) final
+        const containers::Matrix<AUTOSQL_INT> &_value_to_be_aggregated,
+        const AUTOSQL_INT _ix_column_used ) final
     {
         value_to_be_aggregated_categorical() = containers::
-            ColumnView<SQLNET_INT, std::map<SQLNET_INT, SQLNET_INT>>(
+            ColumnView<AUTOSQL_INT, std::map<AUTOSQL_INT, AUTOSQL_INT>>(
                 _value_to_be_aggregated, _ix_column_used );
     }
 
     /// Trivial setter
     void set_value_to_be_aggregated(
         const containers::ColumnView<
-            SQLNET_FLOAT,
-            std::map<SQLNET_INT, SQLNET_INT>> &_value_to_be_aggregated ) final
+            AUTOSQL_FLOAT,
+            std::map<AUTOSQL_INT, AUTOSQL_INT>> &_value_to_be_aggregated ) final
     {
         value_to_be_aggregated() = _value_to_be_aggregated;
     }
 
     /// Trivial setter
     void set_value_to_be_compared(
-        const containers::ColumnView<SQLNET_FLOAT, std::vector<SQLNET_INT>>
+        const containers::ColumnView<AUTOSQL_FLOAT, std::vector<AUTOSQL_INT>>
             &_value_to_be_compared ) final
     {
         value_to_be_compared() = _value_to_be_compared;
@@ -1272,7 +1272,7 @@ class Aggregation : public AggregationBase
     std::string type() const final { return AggType::type(); }
 
     /// Returns a reference to the predictions stored by the aggregation
-    containers::Matrix<SQLNET_FLOAT> &yhat() final
+    containers::Matrix<AUTOSQL_FLOAT> &yhat() final
     {
         assert( aggregation_impl_ != nullptr );
         return aggregation_impl_->yhat_;
@@ -1285,14 +1285,14 @@ class Aggregation : public AggregationBase
     std::vector<Sample *> &altered_samples() { return altered_samples_; }
 
     /// Trivial accessor
-    inline std::vector<SQLNET_FLOAT> &count()
+    inline std::vector<AUTOSQL_FLOAT> &count()
     {
         assert( aggregation_impl_ != nullptr );
         return aggregation_impl_->count_;
     }
 
     /// Trivial accessor
-    inline std::vector<SQLNET_FLOAT> &count_committed()
+    inline std::vector<AUTOSQL_FLOAT> &count_committed()
     {
         assert( aggregation_impl_ != nullptr );
         return aggregation_impl_->count_committed_;
@@ -1353,42 +1353,42 @@ class Aggregation : public AggregationBase
     }
 
     /// Trivial accessor
-    inline std::vector<SQLNET_FLOAT> &sum()
+    inline std::vector<AUTOSQL_FLOAT> &sum()
     {
         assert( aggregation_impl_ != nullptr );
         return aggregation_impl_->sum_;
     }
 
     /// Trivial accessor
-    inline std::vector<SQLNET_FLOAT> &sum_committed()
+    inline std::vector<AUTOSQL_FLOAT> &sum_committed()
     {
         assert( aggregation_impl_ != nullptr );
         return aggregation_impl_->sum_committed_;
     }
 
     /// Trivial accessor
-    inline std::vector<SQLNET_FLOAT> &sum_cubed()
+    inline std::vector<AUTOSQL_FLOAT> &sum_cubed()
     {
         assert( aggregation_impl_ != nullptr );
         return aggregation_impl_->sum_cubed_;
     }
 
     /// Trivial accessor
-    inline std::vector<SQLNET_FLOAT> &sum_cubed_committed()
+    inline std::vector<AUTOSQL_FLOAT> &sum_cubed_committed()
     {
         assert( aggregation_impl_ != nullptr );
         return aggregation_impl_->sum_cubed_committed_;
     }
 
     /// Trivial accessor
-    inline std::vector<SQLNET_FLOAT> &sum_squared()
+    inline std::vector<AUTOSQL_FLOAT> &sum_squared()
     {
         assert( aggregation_impl_ != nullptr );
         return aggregation_impl_->sum_squared_;
     }
 
     /// Trivial accessor
-    inline std::vector<SQLNET_FLOAT> &sum_squared_committed()
+    inline std::vector<AUTOSQL_FLOAT> &sum_squared_committed()
     {
         assert( aggregation_impl_ != nullptr );
         return aggregation_impl_->sum_squared_committed_;
@@ -1410,7 +1410,7 @@ class Aggregation : public AggregationBase
 
     /// Trivial accessor
     inline containers::
-        ColumnView<SQLNET_FLOAT, std::map<SQLNET_INT, SQLNET_INT>>
+        ColumnView<AUTOSQL_FLOAT, std::map<AUTOSQL_INT, AUTOSQL_INT>>
             &value_to_be_aggregated()
     {
         assert( aggregation_impl_ != nullptr );
@@ -1418,7 +1418,7 @@ class Aggregation : public AggregationBase
     }
 
     /// Trivial accessor
-    inline containers::ColumnView<SQLNET_INT, std::map<SQLNET_INT, SQLNET_INT>>
+    inline containers::ColumnView<AUTOSQL_INT, std::map<AUTOSQL_INT, AUTOSQL_INT>>
         &value_to_be_aggregated_categorical()
     {
         assert( aggregation_impl_ != nullptr );
@@ -1438,7 +1438,7 @@ class Aggregation : public AggregationBase
                 AggregationType::IsComparison<data_used>::value &&
                 is_population,
             int>::type = 0>
-    inline const SQLNET_FLOAT value_to_be_aggregated( const Sample *_sample )
+    inline const AUTOSQL_FLOAT value_to_be_aggregated( const Sample *_sample )
     {
         return value_to_be_compared()( _sample->ix_x_popul ) -
                value_to_be_aggregated()[_sample->ix_x_perip];
@@ -1457,7 +1457,7 @@ class Aggregation : public AggregationBase
                 AggregationType::IsComparison<data_used>::value &&
                 !is_population,
             int>::type = 0>
-    inline const SQLNET_FLOAT value_to_be_aggregated( const Sample *_sample )
+    inline const AUTOSQL_FLOAT value_to_be_aggregated( const Sample *_sample )
     {
         return value_to_be_compared()[_sample->ix_x_perip] -
                value_to_be_aggregated()[_sample->ix_x_perip];
@@ -1475,7 +1475,7 @@ class Aggregation : public AggregationBase
                 !AggregationType::IsComparison<data_used>::value &&
                 data_used != DataUsed::x_subfeature,
             int>::type = 0>
-    inline const SQLNET_FLOAT value_to_be_aggregated( const Sample *_sample )
+    inline const AUTOSQL_FLOAT value_to_be_aggregated( const Sample *_sample )
     {
         return value_to_be_aggregated()[_sample->ix_x_perip];
     }
@@ -1492,7 +1492,7 @@ class Aggregation : public AggregationBase
                 !AggregationType::IsComparison<data_used>::value &&
                 data_used == DataUsed::x_subfeature,
             int>::type = 0>
-    inline const SQLNET_FLOAT value_to_be_aggregated( const Sample *_sample )
+    inline const AUTOSQL_FLOAT value_to_be_aggregated( const Sample *_sample )
     {
         return value_to_be_aggregated()( _sample->ix_x_perip );
     }
@@ -1505,15 +1505,15 @@ class Aggregation : public AggregationBase
         typename std::enable_if<
             AggregationType::IsCategorical<data_used>::value,
             int>::type = 0>
-    inline const SQLNET_FLOAT value_to_be_aggregated( const Sample *_sample )
+    inline const AUTOSQL_FLOAT value_to_be_aggregated( const Sample *_sample )
     {
-        return static_cast<SQLNET_FLOAT>(
+        return static_cast<AUTOSQL_FLOAT>(
             value_to_be_aggregated_categorical()[_sample->ix_x_perip] );
     }
 
     /// Accessor for the value to be compared - this is needed for the
     /// time_stamps and the same_units.
-    inline containers::ColumnView<SQLNET_FLOAT, std::vector<SQLNET_INT>>
+    inline containers::ColumnView<AUTOSQL_FLOAT, std::vector<AUTOSQL_INT>>
         &value_to_be_compared()
     {
         assert( aggregation_impl_ != nullptr );
@@ -1522,21 +1522,21 @@ class Aggregation : public AggregationBase
 
     /// Accessor for the value to be compared - this is needed for the
     /// time_stamps and the same_units.
-    inline std::vector<SQLNET_FLOAT> &yhat_committed()
+    inline std::vector<AUTOSQL_FLOAT> &yhat_committed()
     {
         assert( aggregation_impl_ != nullptr );
         return aggregation_impl_->yhat_committed_;
     }
 
     /// Trivial accessor
-    inline containers::Matrix<SQLNET_FLOAT> &yhat_inline()
+    inline containers::Matrix<AUTOSQL_FLOAT> &yhat_inline()
     {
         assert( aggregation_impl_ != nullptr );
         return aggregation_impl_->yhat_;
     }
 
     /// Trivial accessor
-    inline std::vector<SQLNET_FLOAT> &yhat_stored()
+    inline std::vector<AUTOSQL_FLOAT> &yhat_stored()
     {
         assert( aggregation_impl_ != nullptr );
         return aggregation_impl_->yhat_stored_;
@@ -1638,8 +1638,8 @@ class Aggregation : public AggregationBase
 template <typename AggType, DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::activate_all(
     const bool _init_opt,
-    SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-    SQLNET_SAMPLE_ITERATOR _sample_container_end )
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
 {
     debug_message( "activate_all..." );
 
@@ -1676,10 +1676,10 @@ void Aggregation<AggType, data_used_, is_population_>::activate_all(
 template <typename AggType, DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     activate_samples_containing_categories(
-        const std::vector<SQLNET_INT>::const_iterator _categories_begin,
-        const std::vector<SQLNET_INT>::const_iterator _categories_end,
-        SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-        SQLNET_SAMPLE_ITERATOR _sample_container_end )
+        const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
+        const std::vector<AUTOSQL_INT>::const_iterator _categories_end,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
 {
     for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
         {
@@ -1705,16 +1705,16 @@ void Aggregation<AggType, data_used_, is_population_>::
 template <typename AggType, DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     activate_samples_containing_categories(
-        const std::vector<SQLNET_INT>::const_iterator _categories_begin,
-        const std::vector<SQLNET_INT>::const_iterator _categories_end,
+        const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
+        const std::vector<AUTOSQL_INT>::const_iterator _categories_end,
         const Revert _revert,
         const containers::CategoryIndex &_index )
 {
     // ------------------------------------------------------------------
 
-    SQLNET_FLOAT num_samples_smaller = 0.0;
+    AUTOSQL_FLOAT num_samples_smaller = 0.0;
 
-    auto sample_size = static_cast<SQLNET_FLOAT>(
+    auto sample_size = static_cast<AUTOSQL_FLOAT>(
         std::distance( _index.begin(), _index.end() ) );
 
     // ------------------------------------------------------------------
@@ -1769,9 +1769,9 @@ void Aggregation<AggType, data_used_, is_population_>::
 template <typename AggType, DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     activate_samples_from_above(
-        const SQLNET_FLOAT _critical_value,
-        SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-        SQLNET_SAMPLE_ITERATOR _sample_container_end )
+        const AUTOSQL_FLOAT _critical_value,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
 {
     for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
         {
@@ -1787,16 +1787,16 @@ void Aggregation<AggType, data_used_, is_population_>::
 template <typename AggType, DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     activate_samples_from_above(
-        const containers::Matrix<SQLNET_FLOAT> &_critical_values,
-        SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-        SQLNET_SAMPLE_ITERATOR _sample_container_end )
+        const containers::Matrix<AUTOSQL_FLOAT> &_critical_values,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
 {
     assert( _sample_container_end > _sample_container_begin );
     assert( _critical_values.nrows() > 0 );
 
     auto it = _sample_container_end - 1;
 
-    for ( SQLNET_INT i = _critical_values.nrows() - 1; i >= 0; --i )
+    for ( AUTOSQL_INT i = _critical_values.nrows() - 1; i >= 0; --i )
         {
             while ( it >= _sample_container_begin )
                 {
@@ -1813,10 +1813,10 @@ void Aggregation<AggType, data_used_, is_population_>::
                     --it;
                 }
 
-            auto num_samples_smaller = static_cast<SQLNET_FLOAT>(
+            auto num_samples_smaller = static_cast<AUTOSQL_FLOAT>(
                 std::distance( _sample_container_begin, it ) );
 
-            auto num_samples_greater = static_cast<SQLNET_FLOAT>(
+            auto num_samples_greater = static_cast<AUTOSQL_FLOAT>(
                 std::distance( it, _sample_container_end ) );
 
             update_optimization_criterion_and_clear_updates_current(
@@ -1829,9 +1829,9 @@ void Aggregation<AggType, data_used_, is_population_>::
 template <typename AggType, DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     activate_samples_from_below(
-        const SQLNET_FLOAT _critical_value,
-        SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-        SQLNET_SAMPLE_ITERATOR _sample_container_end )
+        const AUTOSQL_FLOAT _critical_value,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
 {
     for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
         {
@@ -1847,13 +1847,13 @@ void Aggregation<AggType, data_used_, is_population_>::
 template <typename AggType, DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     activate_samples_from_below(
-        const containers::Matrix<SQLNET_FLOAT> &_critical_values,
-        SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-        SQLNET_SAMPLE_ITERATOR _sample_container_end )
+        const containers::Matrix<AUTOSQL_FLOAT> &_critical_values,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
 {
     auto it = _sample_container_begin;
 
-    for ( SQLNET_INT i = 0; i < _critical_values.nrows(); ++i )
+    for ( AUTOSQL_INT i = 0; i < _critical_values.nrows(); ++i )
         {
             while ( it != _sample_container_end )
                 {
@@ -1870,10 +1870,10 @@ void Aggregation<AggType, data_used_, is_population_>::
                     ++it;
                 }
 
-            auto num_samples_smaller = static_cast<SQLNET_FLOAT>(
+            auto num_samples_smaller = static_cast<AUTOSQL_FLOAT>(
                 std::distance( _sample_container_begin, it ) );
 
-            auto num_samples_greater = static_cast<SQLNET_FLOAT>(
+            auto num_samples_greater = static_cast<AUTOSQL_FLOAT>(
                 std::distance( it, _sample_container_end ) );
 
             update_optimization_criterion_and_clear_updates_current(
@@ -1886,10 +1886,10 @@ void Aggregation<AggType, data_used_, is_population_>::
 template <typename AggType, DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     activate_samples_not_containing_categories(
-        const std::vector<SQLNET_INT>::const_iterator _categories_begin,
-        const std::vector<SQLNET_INT>::const_iterator _categories_end,
-        SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-        SQLNET_SAMPLE_ITERATOR _sample_container_end )
+        const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
+        const std::vector<AUTOSQL_INT>::const_iterator _categories_end,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
 {
     for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
         {
@@ -1922,8 +1922,8 @@ void Aggregation<AggType, data_used_, is_population_>::
 template <typename AggType, DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     activate_samples_not_containing_categories(
-        const std::vector<SQLNET_INT>::const_iterator _categories_begin,
-        const std::vector<SQLNET_INT>::const_iterator _categories_end,
+        const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
+        const std::vector<AUTOSQL_INT>::const_iterator _categories_end,
         const Revert _revert,
         const containers::CategoryIndex &_index )
 {
@@ -1941,9 +1941,9 @@ void Aggregation<AggType, data_used_, is_population_>::
     // Selectively deactivate those samples that are not of the
     // particular category
 
-    SQLNET_FLOAT num_samples_smaller = 0.0;
+    AUTOSQL_FLOAT num_samples_smaller = 0.0;
 
-    auto sample_size = static_cast<SQLNET_FLOAT>(
+    auto sample_size = static_cast<AUTOSQL_FLOAT>(
         std::distance( _index.begin(), _index.end() ) );
 
     for ( auto cat = _categories_begin; cat < _categories_end; ++cat )
@@ -2096,10 +2096,10 @@ void Aggregation<AggType, data_used_, is_population_>::commit()
 template <typename AggType, DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     deactivate_samples_containing_categories(
-        const std::vector<SQLNET_INT>::const_iterator _categories_begin,
-        const std::vector<SQLNET_INT>::const_iterator _categories_end,
-        SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-        SQLNET_SAMPLE_ITERATOR _sample_container_end )
+        const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
+        const std::vector<AUTOSQL_INT>::const_iterator _categories_end,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
 {
     for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
         {
@@ -2126,16 +2126,16 @@ void Aggregation<AggType, data_used_, is_population_>::
 template <typename AggType, DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     deactivate_samples_containing_categories(
-        const std::vector<SQLNET_INT>::const_iterator _categories_begin,
-        const std::vector<SQLNET_INT>::const_iterator _categories_end,
+        const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
+        const std::vector<AUTOSQL_INT>::const_iterator _categories_end,
         const Revert _revert,
         const containers::CategoryIndex &_index )
 {
     // ------------------------------------------------------------------
 
-    SQLNET_FLOAT num_samples_smaller = 0.0;
+    AUTOSQL_FLOAT num_samples_smaller = 0.0;
 
-    auto sample_size = static_cast<SQLNET_FLOAT>(
+    auto sample_size = static_cast<AUTOSQL_FLOAT>(
         std::distance( _index.begin(), _index.end() ) );
 
     // ------------------------------------------------------------------
@@ -2190,13 +2190,13 @@ void Aggregation<AggType, data_used_, is_population_>::
 template <typename AggType, DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     deactivate_samples_from_above(
-        const SQLNET_FLOAT _critical_value,
-        SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-        SQLNET_SAMPLE_ITERATOR _sample_container_end )
+        const AUTOSQL_FLOAT _critical_value,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
 {
     for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
         {
-            const SQLNET_FLOAT val = ( *it )->numerical_value;
+            const AUTOSQL_FLOAT val = ( *it )->numerical_value;
 
             if ( val > _critical_value || val != val )
                 {
@@ -2210,16 +2210,16 @@ void Aggregation<AggType, data_used_, is_population_>::
 template <typename AggType, DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     deactivate_samples_from_above(
-        const containers::Matrix<SQLNET_FLOAT> &_critical_values,
-        SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-        SQLNET_SAMPLE_ITERATOR _sample_container_end )
+        const containers::Matrix<AUTOSQL_FLOAT> &_critical_values,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
 {
     assert( _sample_container_end > _sample_container_begin );
     assert( _critical_values.nrows() > 0 );
 
     auto it = _sample_container_end - 1;
 
-    for ( SQLNET_INT i = _critical_values.nrows() - 1; i >= 0; --i )
+    for ( AUTOSQL_INT i = _critical_values.nrows() - 1; i >= 0; --i )
         {
             while ( it >= _sample_container_begin )
                 {
@@ -2236,10 +2236,10 @@ void Aggregation<AggType, data_used_, is_population_>::
                     --it;
                 }
 
-            auto num_samples_smaller = static_cast<SQLNET_FLOAT>(
+            auto num_samples_smaller = static_cast<AUTOSQL_FLOAT>(
                 std::distance( _sample_container_begin, it ) );
 
-            auto num_samples_greater = static_cast<SQLNET_FLOAT>(
+            auto num_samples_greater = static_cast<AUTOSQL_FLOAT>(
                 std::distance( it, _sample_container_end ) );
 
             update_optimization_criterion_and_clear_updates_current(
@@ -2252,13 +2252,13 @@ void Aggregation<AggType, data_used_, is_population_>::
 template <typename AggType, DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     deactivate_samples_from_below(
-        const SQLNET_FLOAT _critical_value,
-        SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-        SQLNET_SAMPLE_ITERATOR _sample_container_end )
+        const AUTOSQL_FLOAT _critical_value,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
 {
     for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
         {
-            const SQLNET_FLOAT val = ( *it )->numerical_value;
+            const AUTOSQL_FLOAT val = ( *it )->numerical_value;
 
             if ( val <= _critical_value || val != val )
                 {
@@ -2272,13 +2272,13 @@ void Aggregation<AggType, data_used_, is_population_>::
 template <typename AggType, DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     deactivate_samples_from_below(
-        const containers::Matrix<SQLNET_FLOAT> &_critical_values,
-        SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-        SQLNET_SAMPLE_ITERATOR _sample_container_end )
+        const containers::Matrix<AUTOSQL_FLOAT> &_critical_values,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
 {
     auto it = _sample_container_begin;
 
-    for ( SQLNET_INT i = 0; i < _critical_values.nrows(); ++i )
+    for ( AUTOSQL_INT i = 0; i < _critical_values.nrows(); ++i )
         {
             while ( it != _sample_container_end )
                 {
@@ -2295,10 +2295,10 @@ void Aggregation<AggType, data_used_, is_population_>::
                     ++it;
                 }
 
-            auto num_samples_smaller = static_cast<SQLNET_FLOAT>(
+            auto num_samples_smaller = static_cast<AUTOSQL_FLOAT>(
                 std::distance( _sample_container_begin, it ) );
 
-            auto num_samples_greater = static_cast<SQLNET_FLOAT>(
+            auto num_samples_greater = static_cast<AUTOSQL_FLOAT>(
                 std::distance( it, _sample_container_end ) );
 
             update_optimization_criterion_and_clear_updates_current(
@@ -2311,10 +2311,10 @@ void Aggregation<AggType, data_used_, is_population_>::
 template <typename AggType, DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     deactivate_samples_not_containing_categories(
-        const std::vector<SQLNET_INT>::const_iterator _categories_begin,
-        const std::vector<SQLNET_INT>::const_iterator _categories_end,
-        SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-        SQLNET_SAMPLE_ITERATOR _sample_container_end )
+        const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
+        const std::vector<AUTOSQL_INT>::const_iterator _categories_end,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
 {
     for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
         {
@@ -2347,8 +2347,8 @@ void Aggregation<AggType, data_used_, is_population_>::
 template <typename AggType, DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     deactivate_samples_not_containing_categories(
-        const std::vector<SQLNET_INT>::const_iterator _categories_begin,
-        const std::vector<SQLNET_INT>::const_iterator _categories_end,
+        const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
+        const std::vector<AUTOSQL_INT>::const_iterator _categories_end,
         const Revert _revert,
         const containers::CategoryIndex &_index )
 {
@@ -2367,10 +2367,10 @@ void Aggregation<AggType, data_used_, is_population_>::
     // Selectively activate those samples that are not of the
     // particular category
 
-    auto sample_size = static_cast<SQLNET_FLOAT>(
+    auto sample_size = static_cast<AUTOSQL_FLOAT>(
         std::distance( _index.begin(), _index.end() ) );
 
-    SQLNET_FLOAT num_samples_smaller = 0.0;
+    AUTOSQL_FLOAT num_samples_smaller = 0.0;
 
     for ( auto cat = _categories_begin; cat < _categories_end; ++cat )
         {
@@ -2426,8 +2426,8 @@ void Aggregation<AggType, data_used_, is_population_>::
 template <typename AggType, DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     deactivate_samples_with_null_values(
-        SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-        SQLNET_SAMPLE_ITERATOR _null_values_separator )
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+        AUTOSQL_SAMPLE_ITERATOR _null_values_separator )
 {
     assert( _null_values_separator >= _sample_container_begin );
 
@@ -2446,8 +2446,8 @@ void Aggregation<AggType, data_used_, is_population_>::
 template <typename AggType, DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     init_optimization_criterion(
-        SQLNET_SAMPLE_ITERATOR _sample_container_begin,
-        SQLNET_SAMPLE_ITERATOR _sample_container_end )
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
 {
     debug_message( "init_optimization_criterion..." );
 
@@ -2455,7 +2455,7 @@ void Aggregation<AggType, data_used_, is_population_>::
 
     optimization_criterion()->init_yhat( yhat_inline(), updates_stored() );
 
-    auto num_samples = static_cast<SQLNET_FLOAT>(
+    auto num_samples = static_cast<AUTOSQL_FLOAT>(
         std::distance( _sample_container_begin, _sample_container_end ) );
 
     optimization_criterion()->store_current_stage( num_samples, num_samples );
@@ -2653,12 +2653,12 @@ void Aggregation<AggType, data_used_, is_population_>::revert_to_commit()
 // ----------------------------------------------------------------------------
 
 template <typename AggType, DataUsed data_used_, bool is_population_>
-SQLNET_SAMPLES::iterator
+AUTOSQL_SAMPLES::iterator
 Aggregation<AggType, data_used_, is_population_>::separate_null_values(
-    SQLNET_SAMPLES &_samples )
+    AUTOSQL_SAMPLES &_samples )
 {
     auto is_null = [this]( Sample &sample ) {
-        SQLNET_FLOAT val = value_to_be_aggregated( &sample );
+        AUTOSQL_FLOAT val = value_to_be_aggregated( &sample );
         return val != val;
     };
 
@@ -2677,12 +2677,12 @@ Aggregation<AggType, data_used_, is_population_>::separate_null_values(
 // ----------------------------------------------------------------------------
 
 template <typename AggType, DataUsed data_used_, bool is_population_>
-SQLNET_SAMPLE_CONTAINER::iterator
+AUTOSQL_SAMPLE_CONTAINER::iterator
 Aggregation<AggType, data_used_, is_population_>::separate_null_values(
-    SQLNET_SAMPLE_CONTAINER &_samples )
+    AUTOSQL_SAMPLE_CONTAINER &_samples )
 {
     auto is_null = [this]( Sample *sample ) {
-        SQLNET_FLOAT val = value_to_be_aggregated( sample );
+        AUTOSQL_FLOAT val = value_to_be_aggregated( sample );
         return val != val;
     };
 
@@ -2702,8 +2702,8 @@ Aggregation<AggType, data_used_, is_population_>::separate_null_values(
 
 template <typename AggType, DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::sort_samples(
-    SQLNET_SAMPLES::iterator _samples_begin,
-    SQLNET_SAMPLES::iterator _samples_end )
+    AUTOSQL_SAMPLES::iterator _samples_begin,
+    AUTOSQL_SAMPLES::iterator _samples_end )
 {
     // -----------------------------------
 
@@ -2744,8 +2744,8 @@ void Aggregation<AggType, data_used_, is_population_>::sort_samples(
 template <typename AggType, DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     update_optimization_criterion_and_clear_updates_current(
-        const SQLNET_FLOAT _num_samples_smaller,
-        const SQLNET_FLOAT _num_samples_greater )
+        const AUTOSQL_FLOAT _num_samples_smaller,
+        const AUTOSQL_FLOAT _num_samples_greater )
 {
     optimization_criterion()->update_samples(
         updates_current(),  // _indices
@@ -2753,7 +2753,7 @@ void Aggregation<AggType, data_used_, is_population_>::
         yhat_stored()       // _old_values
     );
 
-    for ( SQLNET_INT ix : updates_current() )
+    for ( AUTOSQL_INT ix : updates_current() )
         {
             yhat_stored()[ix] = yhat_inline()[ix];
         }

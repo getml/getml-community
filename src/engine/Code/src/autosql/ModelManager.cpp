@@ -11,7 +11,7 @@ void ModelManager::copy_model(
     const Poco::JSON::Object& _cmd,
     Poco::Net::StreamSocket& _socket )
 {
-    const std::string other = _cmd.SQLNET_GET( "other_" );
+    const std::string other = _cmd.AUTOSQL_GET( "other_" );
 
     auto other_model = get_model( other );
 
@@ -135,9 +135,9 @@ void ModelManager::receive_data(
 
     while ( true )
         {
-            std::string name = _cmd.SQLNET_GET( "name_" );
+            std::string name = _cmd.AUTOSQL_GET( "name_" );
 
-            std::string type = _cmd.SQLNET_GET( "type_" );
+            std::string type = _cmd.AUTOSQL_GET( "type_" );
 
             if ( type != "DataFrame" )
                 {
@@ -211,9 +211,9 @@ void ModelManager::send_data(
         {
             auto cmd = engine::Receiver::recv_cmd( _socket, logger_ );
 
-            std::string name = cmd.SQLNET_GET( "name_" );
+            std::string name = cmd.AUTOSQL_GET( "name_" );
 
-            std::string type = cmd.SQLNET_GET( "type_" );
+            std::string type = cmd.AUTOSQL_GET( "type_" );
 
             if ( type == "Matrix.get" )
                 {
@@ -324,9 +324,9 @@ void ModelManager::transform(
     // -------------------------------------------------------
     // Do the actual transformation
 
-    const bool score = cmd.SQLNET_GET( "score_" );
+    const bool score = cmd.AUTOSQL_GET( "score_" );
 
-    const bool predict = cmd.SQLNET_GET( "predict_" );
+    const bool predict = cmd.AUTOSQL_GET( "predict_" );
 
     auto yhat = engine::Models::transform(
         _socket, cmd, logger_, *local_data_frames, model, score, predict );
@@ -336,7 +336,7 @@ void ModelManager::transform(
     // -------------------------------------------------------
     // Send data
 
-    engine::Sender::send_matrix<SQLNET_FLOAT>( _socket, false, yhat );
+    engine::Sender::send_matrix<AUTOSQL_FLOAT>( _socket, false, yhat );
 
     // -------------------------------------------------------
 

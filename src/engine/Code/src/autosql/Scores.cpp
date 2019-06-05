@@ -26,52 +26,52 @@ void Scores::from_json_obj( const Poco::JSON::Object& _json_obj )
 
     if ( _json_obj.has( "prediction_min_" ) )
         {
-            prediction_min_ = JSON::array_to_vector<SQLNET_FLOAT>(
-                _json_obj.SQLNET_GET_ARRAY( "prediction_min_" ) );
+            prediction_min_ = JSON::array_to_vector<AUTOSQL_FLOAT>(
+                _json_obj.AUTOSQL_GET_ARRAY( "prediction_min_" ) );
         }
 
     if ( _json_obj.has( "prediction_step_size_" ) )
         {
-            prediction_step_size_ = JSON::array_to_vector<SQLNET_FLOAT>(
-                _json_obj.SQLNET_GET_ARRAY( "prediction_step_size_" ) );
+            prediction_step_size_ = JSON::array_to_vector<AUTOSQL_FLOAT>(
+                _json_obj.AUTOSQL_GET_ARRAY( "prediction_step_size_" ) );
         }
 
     // -------------------------
 
     if ( _json_obj.has( "accuracy_" ) )
         {
-            accuracy_ = JSON::array_to_vector<SQLNET_FLOAT>(
-                _json_obj.SQLNET_GET_ARRAY( "accuracy_" ) );
+            accuracy_ = JSON::array_to_vector<AUTOSQL_FLOAT>(
+                _json_obj.AUTOSQL_GET_ARRAY( "accuracy_" ) );
         }
 
     if ( _json_obj.has( "auc_" ) )
         {
-            auc_ = JSON::array_to_vector<SQLNET_FLOAT>(
-                _json_obj.SQLNET_GET_ARRAY( "auc_" ) );
+            auc_ = JSON::array_to_vector<AUTOSQL_FLOAT>(
+                _json_obj.AUTOSQL_GET_ARRAY( "auc_" ) );
         }
 
     if ( _json_obj.has( "cross_entropy_" ) )
         {
-            cross_entropy_ = JSON::array_to_vector<SQLNET_FLOAT>(
-                _json_obj.SQLNET_GET_ARRAY( "cross_entropy_" ) );
+            cross_entropy_ = JSON::array_to_vector<AUTOSQL_FLOAT>(
+                _json_obj.AUTOSQL_GET_ARRAY( "cross_entropy_" ) );
         }
 
     if ( _json_obj.has( "mae_" ) )
         {
-            mae_ = JSON::array_to_vector<SQLNET_FLOAT>(
-                _json_obj.SQLNET_GET_ARRAY( "mae_" ) );
+            mae_ = JSON::array_to_vector<AUTOSQL_FLOAT>(
+                _json_obj.AUTOSQL_GET_ARRAY( "mae_" ) );
         }
 
     if ( _json_obj.has( "rmse_" ) )
         {
-            rmse_ = JSON::array_to_vector<SQLNET_FLOAT>(
-                _json_obj.SQLNET_GET_ARRAY( "rmse_" ) );
+            rmse_ = JSON::array_to_vector<AUTOSQL_FLOAT>(
+                _json_obj.AUTOSQL_GET_ARRAY( "rmse_" ) );
         }
 
     if ( _json_obj.has( "rsquared_" ) )
         {
-            rsquared_ = JSON::array_to_vector<SQLNET_FLOAT>(
-                _json_obj.SQLNET_GET_ARRAY( "rsquared_" ) );
+            rsquared_ = JSON::array_to_vector<AUTOSQL_FLOAT>(
+                _json_obj.AUTOSQL_GET_ARRAY( "rsquared_" ) );
         }
 
     // -------------------------
@@ -80,12 +80,12 @@ void Scores::from_json_obj( const Poco::JSON::Object& _json_obj )
         {
             accuracy_curves().clear();
 
-            auto arr = _json_obj.SQLNET_GET_ARRAY( "accuracy_curves_" );
+            auto arr = _json_obj.AUTOSQL_GET_ARRAY( "accuracy_curves_" );
 
             for ( size_t i = 0; i < arr->size(); ++i )
                 {
                     accuracy_curves().push_back(
-                        JSON::array_to_vector<SQLNET_FLOAT>(
+                        JSON::array_to_vector<AUTOSQL_FLOAT>(
                             arr->getArray( static_cast<unsigned int>( i ) ) ) );
                 }
         }
@@ -96,17 +96,17 @@ void Scores::from_json_obj( const Poco::JSON::Object& _json_obj )
         {
             average_targets_.clear();
 
-            auto arr = _json_obj.SQLNET_GET_ARRAY( "average_targets_" );
+            auto arr = _json_obj.AUTOSQL_GET_ARRAY( "average_targets_" );
 
             for ( size_t i = 0; i < arr->size(); ++i )
                 {
-                    auto vec = std::vector<std::vector<SQLNET_FLOAT>>( 0 );
+                    auto vec = std::vector<std::vector<AUTOSQL_FLOAT>>( 0 );
 
                     auto arr2 = arr->getArray( static_cast<unsigned int>( i ) );
 
                     for ( size_t j = 0; j < arr2->size(); ++j )
                         {
-                            vec.push_back( JSON::array_to_vector<SQLNET_FLOAT>(
+                            vec.push_back( JSON::array_to_vector<AUTOSQL_FLOAT>(
                                 arr2->getArray(
                                     static_cast<unsigned int>( j ) ) ) );
                         }
@@ -121,12 +121,12 @@ void Scores::from_json_obj( const Poco::JSON::Object& _json_obj )
         {
             feature_correlations_.clear();
 
-            auto arr = _json_obj.SQLNET_GET_ARRAY( "feature_correlations_" );
+            auto arr = _json_obj.AUTOSQL_GET_ARRAY( "feature_correlations_" );
 
             for ( size_t i = 0; i < arr->size(); ++i )
                 {
                     feature_correlations_.push_back(
-                        JSON::array_to_vector<SQLNET_FLOAT>(
+                        JSON::array_to_vector<AUTOSQL_FLOAT>(
                             arr->getArray( static_cast<unsigned int>( i ) ) ) );
                 }
         }
@@ -137,12 +137,12 @@ void Scores::from_json_obj( const Poco::JSON::Object& _json_obj )
         {
             feature_densities_.clear();
 
-            auto arr = _json_obj.SQLNET_GET_ARRAY( "feature_densities_" );
+            auto arr = _json_obj.AUTOSQL_GET_ARRAY( "feature_densities_" );
 
             for ( size_t i = 0; i < arr->size(); ++i )
                 {
                     feature_densities_.push_back(
-                        JSON::array_to_vector<SQLNET_INT>(
+                        JSON::array_to_vector<AUTOSQL_INT>(
                             arr->getArray( static_cast<unsigned int>( i ) ) ) );
                 }
         }
@@ -153,12 +153,12 @@ void Scores::from_json_obj( const Poco::JSON::Object& _json_obj )
         {
             feature_importances_.clear();
 
-            auto arr = _json_obj.SQLNET_GET_ARRAY( "feature_importances_" );
+            auto arr = _json_obj.AUTOSQL_GET_ARRAY( "feature_importances_" );
 
             for ( size_t i = 0; i < arr->size(); ++i )
                 {
                     feature_importances_.push_back(
-                        JSON::array_to_vector<SQLNET_FLOAT>(
+                        JSON::array_to_vector<AUTOSQL_FLOAT>(
                             arr->getArray( static_cast<unsigned int>( i ) ) ) );
                 }
         }
@@ -169,11 +169,11 @@ void Scores::from_json_obj( const Poco::JSON::Object& _json_obj )
         {
             fpr().clear();
 
-            auto arr = _json_obj.SQLNET_GET_ARRAY( "fpr_" );
+            auto arr = _json_obj.AUTOSQL_GET_ARRAY( "fpr_" );
 
             for ( size_t i = 0; i < arr->size(); ++i )
                 {
-                    fpr().push_back( JSON::array_to_vector<SQLNET_FLOAT>(
+                    fpr().push_back( JSON::array_to_vector<AUTOSQL_FLOAT>(
                         arr->getArray( static_cast<unsigned int>( i ) ) ) );
                 }
         }
@@ -184,11 +184,11 @@ void Scores::from_json_obj( const Poco::JSON::Object& _json_obj )
         {
             labels_.clear();
 
-            auto arr = _json_obj.SQLNET_GET_ARRAY( "labels_" );
+            auto arr = _json_obj.AUTOSQL_GET_ARRAY( "labels_" );
 
             for ( size_t i = 0; i < arr->size(); ++i )
                 {
-                    labels_.push_back( JSON::array_to_vector<SQLNET_FLOAT>(
+                    labels_.push_back( JSON::array_to_vector<AUTOSQL_FLOAT>(
                         arr->getArray( static_cast<unsigned int>( i ) ) ) );
                 }
         }
@@ -199,11 +199,11 @@ void Scores::from_json_obj( const Poco::JSON::Object& _json_obj )
         {
             tpr().clear();
 
-            auto arr = _json_obj.SQLNET_GET_ARRAY( "tpr_" );
+            auto arr = _json_obj.AUTOSQL_GET_ARRAY( "tpr_" );
 
             for ( size_t i = 0; i < arr->size(); ++i )
                 {
-                    tpr().push_back( JSON::array_to_vector<SQLNET_FLOAT>(
+                    tpr().push_back( JSON::array_to_vector<AUTOSQL_FLOAT>(
                         arr->getArray( static_cast<unsigned int>( i ) ) ) );
                 }
         }

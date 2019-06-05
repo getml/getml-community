@@ -1,4 +1,4 @@
-#ifdef SQLNET_MULTINODE_MPI
+#ifdef AUTOSQL_MULTINODE_MPI
 
 #include "engine/engine.hpp"
 
@@ -8,11 +8,11 @@ namespace engine
 {
 // ----------------------------------------------------------------------------
 
-SQLNET_INT
+AUTOSQL_INT
 MPIutils::calculate_join_key_used_popul(
-    std::vector<std::map<SQLNET_INT, std::vector<SQLNET_INT>>>& _keys_maps )
+    std::vector<std::map<AUTOSQL_INT, std::vector<AUTOSQL_INT>>>& _keys_maps )
 {
-    SQLNET_INT join_key_used_popul = 0;
+    AUTOSQL_INT join_key_used_popul = 0;
 
     for ( size_t i = 0; i < _keys_maps.size(); ++i )
         {
@@ -27,12 +27,12 @@ MPIutils::calculate_join_key_used_popul(
 
 // ------------------------------------------------------------------------
 
-containers::Matrix<SQLNET_INT> MPIutils::create_original_order(
-    SQLNET_INT _nrows )
+containers::Matrix<AUTOSQL_INT> MPIutils::create_original_order(
+    AUTOSQL_INT _nrows )
 {
-    auto original_order = containers::Matrix<SQLNET_INT>( _nrows, 1 );
+    auto original_order = containers::Matrix<AUTOSQL_INT>( _nrows, 1 );
 
-    for ( SQLNET_INT i = 0; i < original_order.nrows(); ++i )
+    for ( AUTOSQL_INT i = 0; i < original_order.nrows(); ++i )
         {
             original_order[i] = i;
         }
@@ -42,10 +42,10 @@ containers::Matrix<SQLNET_INT> MPIutils::create_original_order(
 
 // ----------------------------------------------------------------------------
 
-std::vector<containers::Matrix<SQLNET_INT>> MPIutils::rearrange_join_keys_root(
-    std::vector<containers::Matrix<SQLNET_INT>>& _join_keys )
+std::vector<containers::Matrix<AUTOSQL_INT>> MPIutils::rearrange_join_keys_root(
+    std::vector<containers::Matrix<AUTOSQL_INT>>& _join_keys )
 {
-    std::vector<containers::Matrix<SQLNET_INT>> join_keys_output;
+    std::vector<containers::Matrix<AUTOSQL_INT>> join_keys_output;
 
     for ( auto& join_key : _join_keys )
         {
@@ -89,12 +89,12 @@ Rearranged MPIutils::rearrange_tables_root(
 
     debug_message( "rearrange: Gather join keys" );
 
-    std::vector<containers::Matrix<SQLNET_INT>> join_keys_popul =
+    std::vector<containers::Matrix<AUTOSQL_INT>> join_keys_popul =
         population_table.join_keys();
 
     join_keys_popul = MPIutils::rearrange_join_keys_root( join_keys_popul );
 
-    std::vector<containers::Matrix<SQLNET_INT>> join_keys_perip(
+    std::vector<containers::Matrix<AUTOSQL_INT>> join_keys_perip(
         peripheral_tables.size() );
 
     std::transform(
@@ -110,7 +110,7 @@ Rearranged MPIutils::rearrange_tables_root(
 
     debug_message( "rearrange: Assign process id" );
 
-    std::vector<std::map<SQLNET_INT, std::vector<SQLNET_INT>>> keys_maps =
+    std::vector<std::map<AUTOSQL_INT, std::vector<AUTOSQL_INT>>> keys_maps =
         scatter_keys( join_keys_popul );
 
     // ------------------------------------------------
@@ -118,7 +118,7 @@ Rearranged MPIutils::rearrange_tables_root(
 
     debug_message( "Rearrange x_perip_categorical" );
 
-    std::vector<containers::Matrix<SQLNET_INT>> x_perip_categorical(
+    std::vector<containers::Matrix<AUTOSQL_INT>> x_perip_categorical(
         peripheral_tables.size() );
 
     std::transform(
@@ -127,7 +127,7 @@ Rearranged MPIutils::rearrange_tables_root(
         x_perip_categorical.begin(),
         []( containers::DataFrame& df ) { return df.categorical(); } );
 
-    for ( SQLNET_SIZE i = 0; i < peripheral_tables.size(); ++i )
+    for ( AUTOSQL_SIZE i = 0; i < peripheral_tables.size(); ++i )
         {
             x_perip_categorical[i] = rearrange(
                 x_perip_categorical[i], join_keys_perip[i], keys_maps[i] );
@@ -138,7 +138,7 @@ Rearranged MPIutils::rearrange_tables_root(
 
     debug_message( "Rearrange x_perip_numerical" );
 
-    std::vector<containers::Matrix<SQLNET_FLOAT>> x_perip_numerical(
+    std::vector<containers::Matrix<AUTOSQL_FLOAT>> x_perip_numerical(
         peripheral_tables.size() );
 
     std::transform(
@@ -147,7 +147,7 @@ Rearranged MPIutils::rearrange_tables_root(
         x_perip_numerical.begin(),
         []( containers::DataFrame& df ) { return df.numerical(); } );
 
-    for ( SQLNET_SIZE i = 0; i < peripheral_tables.size(); ++i )
+    for ( AUTOSQL_SIZE i = 0; i < peripheral_tables.size(); ++i )
         {
             x_perip_numerical[i] = rearrange(
                 x_perip_numerical[i], join_keys_perip[i], keys_maps[i] );
@@ -158,7 +158,7 @@ Rearranged MPIutils::rearrange_tables_root(
 
     debug_message( "Rearrange x_perip_discrete" );
 
-    std::vector<containers::Matrix<SQLNET_FLOAT>> x_perip_discrete(
+    std::vector<containers::Matrix<AUTOSQL_FLOAT>> x_perip_discrete(
         peripheral_tables.size() );
 
     std::transform(
@@ -167,7 +167,7 @@ Rearranged MPIutils::rearrange_tables_root(
         x_perip_discrete.begin(),
         []( containers::DataFrame& df ) { return df.discrete(); } );
 
-    for ( SQLNET_SIZE i = 0; i < peripheral_tables.size(); ++i )
+    for ( AUTOSQL_SIZE i = 0; i < peripheral_tables.size(); ++i )
         {
             x_perip_discrete[i] = rearrange(
                 x_perip_discrete[i], join_keys_perip[i], keys_maps[i] );
@@ -178,7 +178,7 @@ Rearranged MPIutils::rearrange_tables_root(
 
     debug_message( "Rearrange time_stamps_perip" );
 
-    std::vector<containers::Matrix<SQLNET_FLOAT>> time_stamps_perip(
+    std::vector<containers::Matrix<AUTOSQL_FLOAT>> time_stamps_perip(
         peripheral_tables.size() );
 
     std::transform(
@@ -187,7 +187,7 @@ Rearranged MPIutils::rearrange_tables_root(
         time_stamps_perip.begin(),
         []( containers::DataFrame& df ) { return df.time_stamps(); } );
 
-    for ( SQLNET_SIZE i = 0; i < peripheral_tables.size(); ++i )
+    for ( AUTOSQL_SIZE i = 0; i < peripheral_tables.size(); ++i )
         {
             time_stamps_perip[i] = rearrange(
                 time_stamps_perip[i], join_keys_perip[i], keys_maps[i] );
@@ -199,7 +199,7 @@ Rearranged MPIutils::rearrange_tables_root(
 
     debug_message( "Find join_key_used_popul" );
 
-    SQLNET_INT join_key_used_popul =
+    AUTOSQL_INT join_key_used_popul =
         MPIutils::calculate_join_key_used_popul( keys_maps );
 
     auto join_key_used_popul_copy = join_keys_popul[join_key_used_popul];
@@ -239,7 +239,7 @@ Rearranged MPIutils::rearrange_tables_root(
 
     debug_message( "Rearrange time_stamps_popul" );
 
-    std::vector<containers::Matrix<SQLNET_FLOAT>> time_stamps_popul(
+    std::vector<containers::Matrix<AUTOSQL_FLOAT>> time_stamps_popul(
         population_table.time_stamps_all().size() );
 
     std::transform(
@@ -247,7 +247,7 @@ Rearranged MPIutils::rearrange_tables_root(
         population_table.time_stamps_all().end(),
         time_stamps_popul.begin(),
         [&join_key_used_popul, &join_keys_popul, &keys_maps](
-            containers::Matrix<SQLNET_FLOAT>& ts ) {
+            containers::Matrix<AUTOSQL_FLOAT>& ts ) {
 
             return rearrange(
                 ts,
@@ -274,7 +274,7 @@ Rearranged MPIutils::rearrange_tables_root(
 
     auto original_order = create_original_order( join_keys_popul[0].nrows() );
 
-    original_order = scatter_by_key<containers::Matrix<SQLNET_INT>>(
+    original_order = scatter_by_key<containers::Matrix<AUTOSQL_INT>>(
         original_order,
         join_key_used_popul_copy,
         keys_maps[join_key_used_popul] );
@@ -290,7 +290,7 @@ Rearranged MPIutils::rearrange_tables_root(
 
             auto jk_colnames = join_keys_perip[i].colnames();
 
-            join_keys_perip[i] = scatter_by_key<containers::Matrix<SQLNET_INT>>(
+            join_keys_perip[i] = scatter_by_key<containers::Matrix<AUTOSQL_INT>>(
                 join_keys_perip[i], join_keys_perip[i], keys_maps[i] );
 
             join_keys_perip[i].name() = jk_name;
@@ -309,7 +309,7 @@ Rearranged MPIutils::rearrange_tables_root(
 
             auto jk_colnames = join_keys_popul[i].colnames();
 
-            join_keys_popul[i] = scatter_by_key<containers::Matrix<SQLNET_INT>>(
+            join_keys_popul[i] = scatter_by_key<containers::Matrix<AUTOSQL_INT>>(
                 join_keys_popul[i],
                 join_key_used_popul_copy,
                 keys_maps[join_key_used_popul] );
@@ -348,7 +348,7 @@ Rearranged MPIutils::rearrange_tables_root(
 
     // -------
 
-    for ( SQLNET_SIZE i = 0; i < peripheral_tables.size(); ++i )
+    for ( AUTOSQL_SIZE i = 0; i < peripheral_tables.size(); ++i )
         {
             rearranged.peripheral_tables[i].join_keys().resize( 1 );
 
@@ -364,7 +364,7 @@ Rearranged MPIutils::rearrange_tables_root(
             rearranged.peripheral_tables[i].numerical() = x_perip_numerical[i];
 
             rearranged.peripheral_tables[i].targets() =
-                containers::Matrix<SQLNET_FLOAT>(
+                containers::Matrix<AUTOSQL_FLOAT>(
                     x_perip_categorical[i].nrows(), 0 );
 
             rearranged.peripheral_tables[i].time_stamps_all().resize( 1 );
@@ -420,12 +420,12 @@ Rearranged MPIutils::rearrange_tables(
     // ------------------------------------------------
     // Gather join keys at the root process
 
-    std::vector<containers::Matrix<SQLNET_INT>> join_keys_popul =
+    std::vector<containers::Matrix<AUTOSQL_INT>> join_keys_popul =
         population_table.join_keys();
 
     rearrange_join_keys( join_keys_popul );
 
-    std::vector<containers::Matrix<SQLNET_INT>> join_keys_perip(
+    std::vector<containers::Matrix<AUTOSQL_INT>> join_keys_perip(
         peripheral_tables.size() );
 
     std::transform(
@@ -439,7 +439,7 @@ Rearranged MPIutils::rearrange_tables(
     // ------------------------------------------------
     // Rearrange x_perip_categorical
 
-    std::vector<containers::Matrix<SQLNET_INT>> x_perip_categorical(
+    std::vector<containers::Matrix<AUTOSQL_INT>> x_perip_categorical(
         peripheral_tables.size() );
 
     std::transform(
@@ -452,12 +452,12 @@ Rearranged MPIutils::rearrange_tables(
         x_perip_categorical.begin(),
         x_perip_categorical.end(),
         x_perip_categorical.begin(),
-        []( containers::Matrix<SQLNET_INT>& mat ) { return rearrange( mat ); } );
+        []( containers::Matrix<AUTOSQL_INT>& mat ) { return rearrange( mat ); } );
 
     // ------------------------------------------------
     // Rearrange x_perip_categorical
 
-    std::vector<containers::Matrix<SQLNET_FLOAT>> x_perip_numerical(
+    std::vector<containers::Matrix<AUTOSQL_FLOAT>> x_perip_numerical(
         peripheral_tables.size() );
 
     std::transform(
@@ -470,14 +470,14 @@ Rearranged MPIutils::rearrange_tables(
         x_perip_numerical.begin(),
         x_perip_numerical.end(),
         x_perip_numerical.begin(),
-        []( containers::Matrix<SQLNET_FLOAT>& mat ) {
+        []( containers::Matrix<AUTOSQL_FLOAT>& mat ) {
             return rearrange( mat );
         } );
 
     // ------------------------------------------------
     // Rearrange x_perip_discrete
 
-    std::vector<containers::Matrix<SQLNET_FLOAT>> x_perip_discrete(
+    std::vector<containers::Matrix<AUTOSQL_FLOAT>> x_perip_discrete(
         peripheral_tables.size() );
 
     std::transform(
@@ -490,14 +490,14 @@ Rearranged MPIutils::rearrange_tables(
         x_perip_discrete.begin(),
         x_perip_discrete.end(),
         x_perip_discrete.begin(),
-        []( containers::Matrix<SQLNET_FLOAT>& mat ) {
+        []( containers::Matrix<AUTOSQL_FLOAT>& mat ) {
             return rearrange( mat );
         } );
 
     // ------------------------------------------------
     // Rearrange time_stamps_perip
 
-    std::vector<containers::Matrix<SQLNET_FLOAT>> time_stamps_perip(
+    std::vector<containers::Matrix<AUTOSQL_FLOAT>> time_stamps_perip(
         peripheral_tables.size() );
 
     std::transform(
@@ -510,7 +510,7 @@ Rearranged MPIutils::rearrange_tables(
         time_stamps_perip.begin(),
         time_stamps_perip.end(),
         time_stamps_perip.begin(),
-        []( containers::Matrix<SQLNET_FLOAT>& mat ) {
+        []( containers::Matrix<AUTOSQL_FLOAT>& mat ) {
             return rearrange( mat );
         } );
 
@@ -532,14 +532,14 @@ Rearranged MPIutils::rearrange_tables(
     // ------------------------------------------------
     // Rearrange time_stamps_popul
 
-    std::vector<containers::Matrix<SQLNET_FLOAT>> time_stamps_popul(
+    std::vector<containers::Matrix<AUTOSQL_FLOAT>> time_stamps_popul(
         population_table.time_stamps_all().size() );
 
     std::transform(
         population_table.time_stamps_all().begin(),
         population_table.time_stamps_all().end(),
         time_stamps_popul.begin(),
-        []( containers::Matrix<SQLNET_FLOAT>& ts ) { return rearrange( ts ); } );
+        []( containers::Matrix<AUTOSQL_FLOAT>& ts ) { return rearrange( ts ); } );
 
     // ------------------------------------------------
     // Get the targets
@@ -550,7 +550,7 @@ Rearranged MPIutils::rearrange_tables(
     // Create and scatter original_order -  we need it to
     // recreate the prediction
 
-    auto original_order = scatter_by_key<containers::Matrix<SQLNET_INT>>();
+    auto original_order = scatter_by_key<containers::Matrix<AUTOSQL_INT>>();
 
     // ------------------------------------------------
     // Scatter join_keys_perip
@@ -558,8 +558,8 @@ Rearranged MPIutils::rearrange_tables(
     std::for_each(
         join_keys_perip.begin(),
         join_keys_perip.end(),
-        []( containers::Matrix<SQLNET_INT>& jk ) {
-            jk = scatter_by_key<containers::Matrix<SQLNET_INT>>();
+        []( containers::Matrix<AUTOSQL_INT>& jk ) {
+            jk = scatter_by_key<containers::Matrix<AUTOSQL_INT>>();
         } );
 
     // ------------------------------------------------
@@ -568,8 +568,8 @@ Rearranged MPIutils::rearrange_tables(
     std::for_each(
         join_keys_popul.begin(),
         join_keys_popul.end(),
-        []( containers::Matrix<SQLNET_INT>& jk ) {
-            jk = scatter_by_key<containers::Matrix<SQLNET_INT>>();
+        []( containers::Matrix<AUTOSQL_INT>& jk ) {
+            jk = scatter_by_key<containers::Matrix<AUTOSQL_INT>>();
         } );
 
     // ------------------------------------------------
@@ -599,7 +599,7 @@ Rearranged MPIutils::rearrange_tables(
 
     // -------
 
-    for ( SQLNET_SIZE i = 0; i < peripheral_tables.size(); ++i )
+    for ( AUTOSQL_SIZE i = 0; i < peripheral_tables.size(); ++i )
         {
             rearranged.peripheral_tables[i].join_keys().resize( 1 );
 
@@ -615,7 +615,7 @@ Rearranged MPIutils::rearrange_tables(
             rearranged.peripheral_tables[i].numerical() = x_perip_numerical[i];
 
             rearranged.peripheral_tables[i].targets() =
-                containers::Matrix<SQLNET_FLOAT>(
+                containers::Matrix<AUTOSQL_FLOAT>(
                     x_perip_categorical[i].nrows(), 0 );
 
             rearranged.peripheral_tables[i].time_stamps_all().resize( 1 );
@@ -645,8 +645,8 @@ Rearranged MPIutils::rearrange_tables(
 
 // ----------------------------------------------------------------------------
 
-std::vector<std::map<SQLNET_INT, std::vector<SQLNET_INT>>>
-MPIutils::scatter_keys( std::vector<containers::Matrix<SQLNET_INT>> _keys )
+std::vector<std::map<AUTOSQL_INT, std::vector<AUTOSQL_INT>>>
+MPIutils::scatter_keys( std::vector<containers::Matrix<AUTOSQL_INT>> _keys )
 {
     // ---------------------------------------------------------------------
 
@@ -671,7 +671,7 @@ MPIutils::scatter_keys( std::vector<containers::Matrix<SQLNET_INT>> _keys )
     // ---------------------------------------------------------------------
     // Map a process id for each individual key
 
-    std::vector<std::map<SQLNET_INT, SQLNET_INT>> keys_maps_temp(
+    std::vector<std::map<AUTOSQL_INT, AUTOSQL_INT>> keys_maps_temp(
         _keys.size() );
 
     for ( size_t ix_key = 0; ix_key < _keys.size(); ++ix_key )
@@ -680,14 +680,14 @@ MPIutils::scatter_keys( std::vector<containers::Matrix<SQLNET_INT>> _keys )
 
             auto& key_map = keys_maps_temp[ix_key];
 
-            for ( SQLNET_INT i = 0; i < key.nrows(); ++i )
+            for ( AUTOSQL_INT i = 0; i < key.nrows(); ++i )
                 {
                     auto it = key_map.find( key[i] );
 
                     if ( it == key_map.end() )
                         {
-                            SQLNET_INT process_rank =
-                                static_cast<SQLNET_INT>( key_map.size() ) %
+                            AUTOSQL_INT process_rank =
+                                static_cast<AUTOSQL_INT>( key_map.size() ) %
                                 num_processes;
 
                             key_map[key[i]] = process_rank;
@@ -718,21 +718,21 @@ MPIutils::scatter_keys( std::vector<containers::Matrix<SQLNET_INT>> _keys )
     // Now build the actual keys_maps, mapping the process id of the
     // min_keys_map to each sample
 
-    std::vector<std::map<SQLNET_INT, std::vector<SQLNET_INT>>> keys_maps(
+    std::vector<std::map<AUTOSQL_INT, std::vector<AUTOSQL_INT>>> keys_maps(
         _keys.size() );
 
-    std::map<SQLNET_INT, SQLNET_INT>& min_key_map =
+    std::map<AUTOSQL_INT, AUTOSQL_INT>& min_key_map =
         keys_maps_temp[ix_min_keys_map];
 
-    containers::Matrix<SQLNET_INT>& min_key = _keys[ix_min_keys_map];
+    containers::Matrix<AUTOSQL_INT>& min_key = _keys[ix_min_keys_map];
 
-    for ( SQLNET_INT i = 0; i < _keys[0].nrows(); ++i )
+    for ( AUTOSQL_INT i = 0; i < _keys[0].nrows(); ++i )
         {
-            SQLNET_INT process_rank = min_key_map[min_key[i]];
+            AUTOSQL_INT process_rank = min_key_map[min_key[i]];
 
             for ( size_t ix_key = 0; ix_key < _keys.size(); ++ix_key )
                 {
-                    std::vector<SQLNET_INT>& p_ranks =
+                    std::vector<AUTOSQL_INT>& p_ranks =
                         keys_maps[ix_key][_keys[ix_key][i]];
 
                     // Insert process_ranks into p_ranks, if not already
@@ -756,4 +756,4 @@ MPIutils::scatter_keys( std::vector<containers::Matrix<SQLNET_INT>> _keys )
 }
 }
 
-#endif  // SQLNET_MULTINODE_MPI
+#endif  // AUTOSQL_MULTINODE_MPI

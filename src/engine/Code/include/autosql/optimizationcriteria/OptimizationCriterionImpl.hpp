@@ -1,5 +1,5 @@
-#ifndef SQLNET_OPTIMIZATIONCRITERIONIMPL_HPP_
-#define SQLNET_OPTIMIZATIONCRITERIONIMPL_HPP_
+#ifndef AUTOSQL_OPTIMIZATIONCRITERIONIMPL_HPP_
+#define AUTOSQL_OPTIMIZATIONCRITERIONIMPL_HPP_
 
 namespace autosql
 {
@@ -19,22 +19,22 @@ class OptimizationCriterionImpl
     /// Commits the current stage, accepting it as the new state of the
     /// tree
     void commit(
-        containers::Matrix<SQLNET_FLOAT>& _sufficient_statistics_committed );
+        containers::Matrix<AUTOSQL_FLOAT>& _sufficient_statistics_committed );
 
     /// Because we do not know the number of categories a priori,
     /// we have to extend it, when necessary
     void extend_storage_size(
-        SQLNET_INT _storage_size_extension,
-        SQLNET_INT _sufficient_statistics_ncols );
+        AUTOSQL_INT _storage_size_extension,
+        AUTOSQL_INT _sufficient_statistics_ncols );
 
     /// Resets sufficient statistics to zero
     void reset(
-        containers::Matrix<SQLNET_FLOAT>& _sufficient_statistics_current,
-        containers::Matrix<SQLNET_FLOAT>& _sufficient_statistics_committed );
+        containers::Matrix<AUTOSQL_FLOAT>& _sufficient_statistics_current,
+        containers::Matrix<AUTOSQL_FLOAT>& _sufficient_statistics_committed );
 
     /// Returns the sum of all sufficient statistics stored in the individual
     /// processes
-    containers::Matrix<SQLNET_FLOAT> reduce_sufficient_statistics_stored()
+    containers::Matrix<AUTOSQL_FLOAT> reduce_sufficient_statistics_stored()
         const;
 
     /// Reverts to the committed version
@@ -45,38 +45,38 @@ class OptimizationCriterionImpl
     /// sufficient_statistics_committed_.
     /// Also resets storage_ix_ to zero.
     void set_storage_size(
-        SQLNET_INT _storage_size, SQLNET_INT _sufficient_statistics_ncols );
+        AUTOSQL_INT _storage_size, AUTOSQL_INT _sufficient_statistics_ncols );
 
     /// Stores the current stage of the sufficient statistics
     void store_current_stage(
-        const SQLNET_FLOAT _num_samples_smaller,
-        const SQLNET_FLOAT _num_samples_greater,
-        containers::Matrix<SQLNET_FLOAT> _sufficient_statistics_current );
+        const AUTOSQL_FLOAT _num_samples_smaller,
+        const AUTOSQL_FLOAT _num_samples_greater,
+        containers::Matrix<AUTOSQL_FLOAT> _sufficient_statistics_current );
 
     // --------------------------------------
 
-#ifdef SQLNET_PARALLEL
+#ifdef AUTOSQL_PARALLEL
 
     /// Trivial setter
-    inline void set_comm( SQLNET_COMMUNICATOR* _comm ) { comm_ = _comm; }
+    inline void set_comm( AUTOSQL_COMMUNICATOR* _comm ) { comm_ = _comm; }
 
-#endif  // SQLNET_PARALLEL
+#endif  // AUTOSQL_PARALLEL
 
     /// Sets the indicator of the best split
-    inline void set_max_ix( const SQLNET_INT _max_ix ) { max_ix_ = _max_ix; }
+    inline void set_max_ix( const AUTOSQL_INT _max_ix ) { max_ix_ = _max_ix; }
 
     /// Returns the current storage_ix
-    inline const SQLNET_INT storage_ix() const { return storage_ix_; }
+    inline const AUTOSQL_INT storage_ix() const { return storage_ix_; }
 
     /// Trivial getter
-    inline SQLNET_FLOAT value() { return value_; }
+    inline AUTOSQL_FLOAT value() { return value_; }
 
     /// Trivial getter
-    inline SQLNET_FLOAT values_stored( const SQLNET_INT _i )
+    inline AUTOSQL_FLOAT values_stored( const AUTOSQL_INT _i )
     {
         assert( _i >= 0 );
         assert(
-            storage_ix_ <= static_cast<SQLNET_INT>( values_stored().size() ) );
+            storage_ix_ <= static_cast<AUTOSQL_INT>( values_stored().size() ) );
 
         if ( _i < storage_ix_ )
             {
@@ -89,7 +89,7 @@ class OptimizationCriterionImpl
     }
 
     /// Trivial getter
-    inline containers::Matrix<SQLNET_FLOAT>& values_stored()
+    inline containers::Matrix<AUTOSQL_FLOAT>& values_stored()
     {
         return values_stored_;
     }
@@ -98,13 +98,13 @@ class OptimizationCriterionImpl
 
    private:
     /// Trivial accessor
-    inline containers::Matrix<SQLNET_FLOAT>& sufficient_statistics_stored()
+    inline containers::Matrix<AUTOSQL_FLOAT>& sufficient_statistics_stored()
     {
         return sufficient_statistics_stored_;
     }
 
     /// Trivial accessor
-    inline const containers::Matrix<SQLNET_FLOAT>&
+    inline const containers::Matrix<AUTOSQL_FLOAT>&
     sufficient_statistics_stored() const
     {
         return sufficient_statistics_stored_;
@@ -113,36 +113,36 @@ class OptimizationCriterionImpl
     // --------------------------------------
 
    private:
-#ifdef SQLNET_PARALLEL
+#ifdef AUTOSQL_PARALLEL
 
     /// MPI communicator
-    SQLNET_COMMUNICATOR* comm_;
+    AUTOSQL_COMMUNICATOR* comm_;
 
-#endif  // SQLNET_PARALLEL
+#endif  // AUTOSQL_PARALLEL
 
     /// Indicates the best split.
-    SQLNET_INT max_ix_;
+    AUTOSQL_INT max_ix_;
 
     /// Stores the sufficient statistics when store_current_stage(...)
     /// is called
-    containers::Matrix<SQLNET_FLOAT> sufficient_statistics_stored_;
+    containers::Matrix<AUTOSQL_FLOAT> sufficient_statistics_stored_;
 
     /// Indicates how many times something has already been written
     /// into the the storage after the last time set_storage_size(...)
     /// has been called
-    SQLNET_INT storage_ix_;
+    AUTOSQL_INT storage_ix_;
 
     /// Value of the optimization criterion of the currently
     /// committed stage
-    SQLNET_FLOAT value_;
+    AUTOSQL_FLOAT value_;
 
     /// Stores the values calculated by find maximum. Can be resized
     /// by set_storage_size
-    containers::Matrix<SQLNET_FLOAT> values_stored_;
+    containers::Matrix<AUTOSQL_FLOAT> values_stored_;
 };
 
 // ----------------------------------------------------------------------------
 }  // namespace optimizationcriteria
 }  // namespace autosql
 
-#endif  // SQLNET_OPTIMIZATIONCRITERIONIMPL_HPP_
+#endif  // AUTOSQL_OPTIMIZATIONCRITERIONIMPL_HPP_

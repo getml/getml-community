@@ -22,7 +22,7 @@ std::string Models::fit(
     // Extract the peripheral tables
 
     auto peripheral_names = JSON::array_to_vector<std::string>(
-        _cmd.SQLNET_GET_ARRAY( "peripheral_names_" ) );
+        _cmd.AUTOSQL_GET_ARRAY( "peripheral_names_" ) );
 
     std::vector<containers::DataFrame> peripheral_tables =
         Getter::get( _data_frames, peripheral_names );
@@ -30,7 +30,7 @@ std::string Models::fit(
     // ------------------------------------------------
     // Extract the population table
 
-    std::string population_name = _cmd.SQLNET_GET( "population_name_" );
+    std::string population_name = _cmd.AUTOSQL_GET( "population_name_" );
 
     containers::DataFrame population_table =
         Getter::get( _data_frames, population_name );
@@ -38,7 +38,7 @@ std::string Models::fit(
     // ------------------------------------------------
     // Rearrange tables - this is only necessary for the MPI version
 
-#ifdef SQLNET_MULTINODE_MPI
+#ifdef AUTOSQL_MULTINODE_MPI
 
     {
         auto rearranged = MPIutils::rearrange_tables_root(
@@ -49,12 +49,12 @@ std::string Models::fit(
         population_table = rearranged.population_table;
     }
 
-#endif  // SQLNET_MULTINODE_MPI
+#endif  // AUTOSQL_MULTINODE_MPI
 
     // ------------------------------------------------
     // Do the actual fitting
 
-#ifdef SQLNET_MULTITHREADING
+#ifdef AUTOSQL_MULTITHREADING
 
     auto num_threads = multithreading::Threadutils::get_num_threads(
         hyperparameters.num_threads );
@@ -67,7 +67,7 @@ std::string Models::fit(
         population_table,
         hyperparameters );
 
-#else  // SQLNET_MULTITHREADING
+#else  // AUTOSQL_MULTITHREADING
 
     std::string msg = _model.fit(
         _logger,
@@ -75,7 +75,7 @@ std::string Models::fit(
         containers::DataFrameView( population_table ),
         hyperparameters );
 
-#endif  // SQLNET_MULTITHREADING
+#endif  // AUTOSQL_MULTITHREADING
 
     // ------------------------------------------------
     // Do feature selection, if applicable
@@ -122,7 +122,7 @@ std::string Models::fit(
 
 // ------------------------------------------------------------------------
 
-#ifdef SQLNET_MULTINODE_MPI
+#ifdef AUTOSQL_MULTINODE_MPI
 
 void Models::fit(
     Poco::JSON::Object& _cmd,
@@ -169,7 +169,7 @@ void Models::fit(
     _model.fit( peripheral_tables, population_table, hyperparameters );
 }
 
-#endif  // SQLNET_MULTINODE_MPI
+#endif  // AUTOSQL_MULTINODE_MPI
 
 // ------------------------------------------------------------------------
 
@@ -220,19 +220,19 @@ Poco::JSON::Object Models::score(
 
     debug_message( "Calculating score..." );
 
-#ifdef SQLNET_MULTITHREADING
+#ifdef AUTOSQL_MULTITHREADING
 
     auto num_threads = multithreading::Threadutils::get_num_threads(
-        _cmd.SQLNET_GET( "num_threads_" ) );
+        _cmd.AUTOSQL_GET( "num_threads_" ) );
 
     auto result =
         multithreading::Threadutils::score( num_threads, yhat, y, _model );
 
-#else  // SQLNET_MULTITHREADING
+#else  // AUTOSQL_MULTITHREADING
 
     auto result = _model->score( yhat, y );
 
-#endif  // SQLNET_MULTITHREADING
+#endif  // AUTOSQL_MULTITHREADING
 
     // ------------------------------------------------
 
@@ -243,7 +243,7 @@ Poco::JSON::Object Models::score(
 
 // ------------------------------------------------------------------------
 
-containers::Matrix<SQLNET_FLOAT> Models::transform(
+containers::Matrix<AUTOSQL_FLOAT> Models::transform(
     Poco::Net::StreamSocket& _socket,
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<const logging::Logger> _logger,
@@ -256,7 +256,7 @@ containers::Matrix<SQLNET_FLOAT> Models::transform(
     // Extract the peripheral tables
 
     auto peripheral_names = JSON::array_to_vector<std::string>(
-        _cmd.SQLNET_GET_ARRAY( "peripheral_names_" ) );
+        _cmd.AUTOSQL_GET_ARRAY( "peripheral_names_" ) );
 
     std::vector<containers::DataFrame> peripheral_tables =
         Getter::get( _data_frames, peripheral_names );
@@ -264,7 +264,7 @@ containers::Matrix<SQLNET_FLOAT> Models::transform(
     // ------------------------------------------------
     // Extract the population table
 
-    std::string population_name = _cmd.SQLNET_GET( "population_name_" );
+    std::string population_name = _cmd.AUTOSQL_GET( "population_name_" );
 
     containers::DataFrame population_table =
         Getter::get( _data_frames, population_name );
@@ -272,7 +272,7 @@ containers::Matrix<SQLNET_FLOAT> Models::transform(
     // ------------------------------------------------
     // Rearrange tables - this is only necessary for the MPI version
 
-#ifdef SQLNET_MULTINODE_MPI
+#ifdef AUTOSQL_MULTINODE_MPI
 
     auto rearranged = MPIutils::rearrange_tables_root(
         peripheral_tables, population_table, _model );
@@ -281,15 +281,15 @@ containers::Matrix<SQLNET_FLOAT> Models::transform(
 
     population_table = rearranged.population_table;
 
-#endif  // SQLNET_MULTINODE_MPI
+#endif  // AUTOSQL_MULTINODE_MPI
 
     // ------------------------------------------------
     // Do the actual transformation
 
-#ifdef SQLNET_MULTITHREADING
+#ifdef AUTOSQL_MULTITHREADING
 
     auto num_threads = multithreading::Threadutils::get_num_threads(
-        _cmd.SQLNET_GET( "num_threads_" ) );
+        _cmd.AUTOSQL_GET( "num_threads_" ) );
 
     auto yhat = multithreading::Threadutils::transform(
         num_threads,
@@ -299,7 +299,7 @@ containers::Matrix<SQLNET_FLOAT> Models::transform(
         population_table,
         _score );
 
-#else  // SQLNET_MULTITHREADING
+#else  // AUTOSQL_MULTITHREADING
 
     auto yhat = _model.transform(
         _logger,
@@ -308,18 +308,18 @@ containers::Matrix<SQLNET_FLOAT> Models::transform(
         true,  // _transpose,
         _score );
 
-#endif  // SQLNET_MULTITHREADING
+#endif  // AUTOSQL_MULTITHREADING
 
     // ------------------------------------------------
     // Gather prediction at the root process
 
     {
-#ifdef SQLNET_MULTINODE_MPI
+#ifdef AUTOSQL_MULTINODE_MPI
 
         yhat = MPIutils::gather_matrix_by_key_root(
             yhat, rearranged.original_order );
 
-#endif  // SQLNET_MULTINODE_MPI
+#endif  // AUTOSQL_MULTINODE_MPI
     }
 
     // ------------------------------------------------
@@ -338,7 +338,7 @@ containers::Matrix<SQLNET_FLOAT> Models::transform(
 
 // ------------------------------------------------------------------------
 
-#ifdef SQLNET_MULTINODE_MPI
+#ifdef AUTOSQL_MULTINODE_MPI
 
 void Models::transform(
     pt::ptree& _cmd,
@@ -388,7 +388,7 @@ void Models::transform(
     MPIutils::gather_matrix_by_key( yhat, rearranged.original_order );
 }
 
-#endif  // SQLNET_MULTINODE_MPI
+#endif  // AUTOSQL_MULTINODE_MPI
 
 // ------------------------------------------------------------------------
 }  // namespace engine

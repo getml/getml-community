@@ -14,7 +14,7 @@ class AggregationIndex
     AggregationIndex(
         const containers::DataFrameView& _input_table,
         const containers::DataFrameView& _output_table,
-        const std::shared_ptr<const std::map<SQLNET_INT, SQLNET_INT>>&
+        const std::shared_ptr<const std::map<AUTOSQL_INT, AUTOSQL_INT>>&
             _output_map,
         const bool _use_timestamps )
         : input_table_( _input_table ),
@@ -33,13 +33,13 @@ class AggregationIndex
     /// Returns the number of elements in input_table_ that are
     /// linked to the element of the output_table_ designated by
     /// _ix_agg
-    const SQLNET_FLOAT get_count( const SQLNET_INT _ix_agg ) const;
+    const AUTOSQL_FLOAT get_count( const AUTOSQL_INT _ix_agg ) const;
 
     /// Maps _ix_input to all indices
-    const std::vector<SQLNET_INT> transform( const SQLNET_INT _ix_input ) const;
+    const std::vector<AUTOSQL_INT> transform( const AUTOSQL_INT _ix_input ) const;
 
     /// Transform ix_agg using the output map
-    SQLNET_INT transform_ix_agg( const SQLNET_INT _ix_agg ) const;
+    AUTOSQL_INT transform_ix_agg( const AUTOSQL_INT _ix_agg ) const;
 
     // ------------------------------------------------------------
 
@@ -47,9 +47,9 @@ class AggregationIndex
     /// Checks whether _time_stamp_output is within the range defined by
     /// _time_stamp_input and _upper_time_stamp.
     bool time_stamp_output_in_range(
-        const SQLNET_FLOAT _time_stamp_input,
-        const SQLNET_FLOAT _upper_time_stamp,
-        const SQLNET_FLOAT _time_stamp_output ) const
+        const AUTOSQL_FLOAT _time_stamp_input,
+        const AUTOSQL_FLOAT _upper_time_stamp,
+        const AUTOSQL_FLOAT _time_stamp_output ) const
     {
         return (
             ( _time_stamp_input <= _time_stamp_output ) &&
@@ -66,7 +66,7 @@ class AggregationIndex
     /// Maps the indices of the underlying DataFrame to the indices of the
     /// DataFrameView (in effect reversing the indices in the DataFrameView)
     /// for the output table.
-    const std::shared_ptr<const std::map<SQLNET_INT, SQLNET_INT>> output_map_;
+    const std::shared_ptr<const std::map<AUTOSQL_INT, AUTOSQL_INT>> output_map_;
 
     /// Data frame on which the input table is joined (the left table)
     const containers::DataFrameView output_table_;

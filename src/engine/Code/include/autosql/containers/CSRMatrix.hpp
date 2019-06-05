@@ -12,20 +12,20 @@ class CSRMatrix : public Container<T>
 {
    public:
     CSRMatrix(
-        SQLNET_INT _nrows = 0,
-        SQLNET_INT _ncols = 0,
-        SQLNET_INT _num_non_zero = 0 )
+        AUTOSQL_INT _nrows = 0,
+        AUTOSQL_INT _ncols = 0,
+        AUTOSQL_INT _num_non_zero = 0 )
         : Container<T>( _nrows, _ncols )
     {
         init( _nrows, _ncols, _num_non_zero );
     }
 
     CSRMatrix(
-        SQLNET_INT _nrows,
-        SQLNET_INT _ncols,
-        SQLNET_INT _num_non_zero,
+        AUTOSQL_INT _nrows,
+        AUTOSQL_INT _ncols,
+        AUTOSQL_INT _num_non_zero,
         T* _data_ptr,
-        SQLNET_INT* _indices_ptr )
+        AUTOSQL_INT* _indices_ptr )
         : Container<T>( _nrows, _ncols )
     {
         Container<T>::init( _nrows, _ncols );
@@ -36,8 +36,8 @@ class CSRMatrix : public Container<T>
 
         indices_ptr_ = _indices_ptr;
 
-        indptr_ = std::shared_ptr<std::vector<SQLNET_INT> >(
-            new std::vector<SQLNET_INT>( nrows_ + 1 ) );
+        indptr_ = std::shared_ptr<std::vector<AUTOSQL_INT> >(
+            new std::vector<AUTOSQL_INT>( nrows_ + 1 ) );
 
         indptr_ptr_ = indptr_.get()->data();
 
@@ -67,8 +67,8 @@ class CSRMatrix : public Container<T>
     void save( std::string _fname );
 
     // Sorts the rows of the CSR-matrix by the key provided
-    CSRMatrix<T> sort_by_key( Matrix<SQLNET_INT>& _key );
-    CSRMatrix<T> sort_by_key( std::vector<SQLNET_INT>& _key );
+    CSRMatrix<T> sort_by_key( Matrix<AUTOSQL_INT>& _key );
+    CSRMatrix<T> sort_by_key( std::vector<AUTOSQL_INT>& _key );
 
     // Sort the indices of the CSRMatrix
     CSRMatrix<T> sort_indices();
@@ -91,33 +91,33 @@ class CSRMatrix : public Container<T>
 
     inline T* end() { return data_ptr_ + num_non_zero_; }
 
-    inline SQLNET_INT* indices() { return indices_ptr_; }
+    inline AUTOSQL_INT* indices() { return indices_ptr_; }
 
-    inline SQLNET_INT* indptr() { return indptr_ptr_; }
+    inline AUTOSQL_INT* indptr() { return indptr_ptr_; }
 
-    inline SQLNET_INT num_non_zero() const { return num_non_zero_; }
+    inline AUTOSQL_INT num_non_zero() const { return num_non_zero_; }
 
-    inline SQLNET_SIZE size() const
+    inline AUTOSQL_SIZE size() const
     {
-        return static_cast<SQLNET_SIZE>( num_non_zero_ );
+        return static_cast<AUTOSQL_SIZE>( num_non_zero_ );
     }
 
     // -------------------------------
 
    private:
-    void init( SQLNET_INT _nrows, SQLNET_INT _ncols, SQLNET_INT _num_non_zero );
+    void init( AUTOSQL_INT _nrows, AUTOSQL_INT _ncols, AUTOSQL_INT _num_non_zero );
 
     // -------------------------------
 
-    std::shared_ptr<std::vector<SQLNET_INT> > indices_;
+    std::shared_ptr<std::vector<AUTOSQL_INT> > indices_;
 
-    SQLNET_INT* indices_ptr_;
+    AUTOSQL_INT* indices_ptr_;
 
-    std::shared_ptr<std::vector<SQLNET_INT> > indptr_;
+    std::shared_ptr<std::vector<AUTOSQL_INT> > indptr_;
 
-    SQLNET_INT* indptr_ptr_;
+    AUTOSQL_INT* indptr_ptr_;
 
-    SQLNET_INT num_non_zero_;
+    AUTOSQL_INT num_non_zero_;
 };
 
 // -------------------------------------------------------------------------
@@ -153,12 +153,12 @@ void CSRMatrix<T>::append( CSRMatrix<T>& _other )
     // Insert indptr - this is a bit more complicated, because of the nature of
     // inptr.
 
-    std::vector<SQLNET_INT> indptr( _other.nrows() + 1 );
+    std::vector<AUTOSQL_INT> indptr( _other.nrows() + 1 );
 
     std::copy(
         _other.indptr(), _other.indptr() + _other.nrows() + 1, indptr.begin() );
 
-    std::for_each( indptr.begin(), indptr.end(), [this]( SQLNET_INT& i ) {
+    std::for_each( indptr.begin(), indptr.end(), [this]( AUTOSQL_INT& i ) {
         i += indptr()[nrows()];  // indptr()[nrows()] =
                                              // last element
     } );
@@ -204,7 +204,7 @@ void CSRMatrix<T>::clear()
 
 template <class T>
 void CSRMatrix<T>::init(
-    SQLNET_INT _nrows, SQLNET_INT _ncols, SQLNET_INT _num_non_zero )
+    AUTOSQL_INT _nrows, AUTOSQL_INT _ncols, AUTOSQL_INT _num_non_zero )
 {
     Container<T>::init( _nrows, _ncols );
 
@@ -215,13 +215,13 @@ void CSRMatrix<T>::init(
 
     data_ptr_ = data_.get()->data();
 
-    indices_ = std::shared_ptr<std::vector<SQLNET_INT> >(
-        new std::vector<SQLNET_INT>( num_non_zero_ ) );
+    indices_ = std::shared_ptr<std::vector<AUTOSQL_INT> >(
+        new std::vector<AUTOSQL_INT>( num_non_zero_ ) );
 
     indices_ptr_ = indices_.get()->data();
 
-    indptr_ = std::shared_ptr<std::vector<SQLNET_INT> >(
-        new std::vector<SQLNET_INT>( nrows_ + 1 ) );
+    indptr_ = std::shared_ptr<std::vector<AUTOSQL_INT> >(
+        new std::vector<AUTOSQL_INT>( nrows_ + 1 ) );
 
     indptr_ptr_ = indptr_.get()->data();
 
@@ -236,14 +236,14 @@ void CSRMatrix<T>::load( std::string _fname )
     std::ifstream input( _fname, std::ios::binary );
 
     input.read(
-        reinterpret_cast<char*>( &( nrows_ ) ), sizeof( SQLNET_INT ) );
+        reinterpret_cast<char*>( &( nrows_ ) ), sizeof( AUTOSQL_INT ) );
 
     input.read(
-        reinterpret_cast<char*>( &( ncols_ ) ), sizeof( SQLNET_INT ) );
+        reinterpret_cast<char*>( &( ncols_ ) ), sizeof( AUTOSQL_INT ) );
 
     input.read(
         reinterpret_cast<char*>( &( num_non_zero_ ) ),
-        sizeof( SQLNET_INT ) );
+        sizeof( AUTOSQL_INT ) );
 
     init( nrows_, ncols_, num_non_zero_ );
 
@@ -253,11 +253,11 @@ void CSRMatrix<T>::load( std::string _fname )
 
     input.read(
         reinterpret_cast<char*>( indices() ),
-        num_non_zero_ * sizeof( SQLNET_INT ) );
+        num_non_zero_ * sizeof( AUTOSQL_INT ) );
 
     input.read(
         reinterpret_cast<char*>( indptr() ),
-        ( nrows_ + 1 ) * sizeof( SQLNET_INT ) );
+        ( nrows_ + 1 ) * sizeof( AUTOSQL_INT ) );
 }
 
 // -------------------------------------------------------------------------
@@ -266,10 +266,10 @@ template <class T>
 template <class T2>
 const T CSRMatrix<T>::operator()( T2 _i, T2 _j )
 {
-    assert( _i >= 0 && static_cast<SQLNET_INT>( _i ) < nrows() );
-    assert( _j >= 0 && static_cast<SQLNET_INT>( _j ) < ncols() );
+    assert( _i >= 0 && static_cast<AUTOSQL_INT>( _i ) < nrows() );
+    assert( _j >= 0 && static_cast<AUTOSQL_INT>( _j ) < ncols() );
 
-    for ( SQLNET_INT k = indptr()[_i]; k < indptr()[_i + 1]; ++k )
+    for ( AUTOSQL_INT k = indptr()[_i]; k < indptr()[_i + 1]; ++k )
         {
             if ( indices()[k] == _j )
                 {
@@ -290,21 +290,21 @@ const T CSRMatrix<T>::operator()( T2 _i, T2 _j )
 template <class T>
 CSRMatrix<T> CSRMatrix<T>::remove_by_key( std::vector<bool>& _key )
 {
-    if ( static_cast<SQLNET_INT>( _key.size() ) != nrows() )
+    if ( static_cast<AUTOSQL_INT>( _key.size() ) != nrows() )
         {
             throw std::invalid_argument(
                 "CSRMatrix: Size of keys must be identical to nrows!" );
         }
 
-    auto op = []( SQLNET_INT init, bool elem ) {
+    auto op = []( AUTOSQL_INT init, bool elem ) {
         return ( ( elem ) ? ( init ) : ( init + 1 ) );
     };
 
-    SQLNET_INT nrows_new = std::accumulate( _key.begin(), _key.end(), 0, op );
+    AUTOSQL_INT nrows_new = std::accumulate( _key.begin(), _key.end(), 0, op );
 
-    SQLNET_INT num_non_zero_new = 0;
+    AUTOSQL_INT num_non_zero_new = 0;
 
-    for ( SQLNET_INT i = 0; i < nrows(); ++i )
+    for ( AUTOSQL_INT i = 0; i < nrows(); ++i )
         {
             if ( _key[i] == false )
                 {
@@ -315,9 +315,9 @@ CSRMatrix<T> CSRMatrix<T>::remove_by_key( std::vector<bool>& _key )
 
     CSRMatrix<T> trimmed( nrows_new, ncols(), num_non_zero_new );
 
-    SQLNET_INT k = 0;
+    AUTOSQL_INT k = 0;
 
-    for ( SQLNET_INT i = 0; i < nrows(); ++i )
+    for ( AUTOSQL_INT i = 0; i < nrows(); ++i )
         {
             if ( _key[i] == false )
                 {
@@ -327,7 +327,7 @@ CSRMatrix<T> CSRMatrix<T>::remove_by_key( std::vector<bool>& _key )
                                               indptr()[i];
 
                     // Transfer data
-                    for ( SQLNET_INT j = 0;
+                    for ( AUTOSQL_INT j = 0;
                           j < indptr()[i + 1] - indptr()[i];
                           ++j )
                         {
@@ -336,7 +336,7 @@ CSRMatrix<T> CSRMatrix<T>::remove_by_key( std::vector<bool>& _key )
                         }
 
                     // Transfer indices
-                    for ( SQLNET_INT j = 0;
+                    for ( AUTOSQL_INT j = 0;
                           j < indptr()[i + 1] - indptr()[i];
                           ++j )
                         {
@@ -360,15 +360,15 @@ void CSRMatrix<T>::save( std::string _fname )
 
     output.write(
         reinterpret_cast<const char*>( &( nrows_ ) ),
-        sizeof( SQLNET_INT ) );
+        sizeof( AUTOSQL_INT ) );
 
     output.write(
         reinterpret_cast<const char*>( &( ncols_ ) ),
-        sizeof( SQLNET_INT ) );
+        sizeof( AUTOSQL_INT ) );
 
     output.write(
         reinterpret_cast<const char*>( &( num_non_zero_ ) ),
-        sizeof( SQLNET_INT ) );
+        sizeof( AUTOSQL_INT ) );
 
     output.write(
         reinterpret_cast<const char*>( data() ),
@@ -376,20 +376,20 @@ void CSRMatrix<T>::save( std::string _fname )
 
     output.write(
         reinterpret_cast<const char*>( indices() ),
-        num_non_zero_ * sizeof( SQLNET_INT ) );
+        num_non_zero_ * sizeof( AUTOSQL_INT ) );
 
     output.write(
         reinterpret_cast<const char*>( indptr() ),
-        ( nrows_ + 1 ) * sizeof( SQLNET_INT ) );
+        ( nrows_ + 1 ) * sizeof( AUTOSQL_INT ) );
 }
 
 // -------------------------------------------------------------------------
 
 template <class T>
-CSRMatrix<T> CSRMatrix<T>::sort_by_key( std::vector<SQLNET_INT>& _key )
+CSRMatrix<T> CSRMatrix<T>::sort_by_key( std::vector<AUTOSQL_INT>& _key )
 {
-    Matrix<SQLNET_INT> key(
-        static_cast<SQLNET_INT>( _key.size() ), 1, _key.data() );
+    Matrix<AUTOSQL_INT> key(
+        static_cast<AUTOSQL_INT>( _key.size() ), 1, _key.data() );
 
     return sort_by_key( key );
 }
@@ -397,7 +397,7 @@ CSRMatrix<T> CSRMatrix<T>::sort_by_key( std::vector<SQLNET_INT>& _key )
 // -------------------------------------------------------------------------
 
 template <class T>
-CSRMatrix<T> CSRMatrix<T>::sort_by_key( Matrix<SQLNET_INT>& _key )
+CSRMatrix<T> CSRMatrix<T>::sort_by_key( Matrix<AUTOSQL_INT>& _key )
 {
     if ( _key.nrows() != nrows() )
         {
@@ -409,9 +409,9 @@ CSRMatrix<T> CSRMatrix<T>::sort_by_key( Matrix<SQLNET_INT>& _key )
     // Since it is not impossible that some keys are duplicates, we first
     // calculate num_non_zero_new.
 
-    SQLNET_INT num_non_zero_new = 0;
+    AUTOSQL_INT num_non_zero_new = 0;
 
-    for ( SQLNET_INT i = 0; i < nrows(); ++i )
+    for ( AUTOSQL_INT i = 0; i < nrows(); ++i )
         {
             num_non_zero_new +=
                 indptr()[_key[i] + 1] - indptr()[_key[i]];
@@ -422,7 +422,7 @@ CSRMatrix<T> CSRMatrix<T>::sort_by_key( Matrix<SQLNET_INT>& _key )
     // ------------------------------------------------------------------
     // Calculate number of elements in each row
 
-    for ( SQLNET_INT i = 0; i < nrows(); ++i )
+    for ( AUTOSQL_INT i = 0; i < nrows(); ++i )
         {
             if ( _key[i] < 0 || _key[i] >= nrows() )
                 {
@@ -442,10 +442,10 @@ CSRMatrix<T> CSRMatrix<T>::sort_by_key( Matrix<SQLNET_INT>& _key )
     // --------------------------------------------------------------------
     // Now that we have a proper indptr we can transfer data() and indices()!
 
-    for ( SQLNET_INT i = 0; i < nrows(); ++i )
+    for ( AUTOSQL_INT i = 0; i < nrows(); ++i )
         {
             // Transfer data
-            for ( SQLNET_INT j = 0;
+            for ( AUTOSQL_INT j = 0;
                   j < sorted.indptr()[i + 1] - sorted.indptr()[i];
                   ++j )
                 {
@@ -454,7 +454,7 @@ CSRMatrix<T> CSRMatrix<T>::sort_by_key( Matrix<SQLNET_INT>& _key )
                 }
 
             // Transfer indices
-            for ( SQLNET_INT j = 0;
+            for ( AUTOSQL_INT j = 0;
                   j < indptr()[i + 1] - indptr()[i];
                   ++j )
                 {
@@ -473,19 +473,19 @@ CSRMatrix<T> CSRMatrix<T>::sort_by_key( Matrix<SQLNET_INT>& _key )
 template <class T>
 CSRMatrix<T> CSRMatrix<T>::sort_indices()
 {
-    std::vector<SQLNET_INT> indptr( 1 );
-    std::vector<SQLNET_INT> indices;
+    std::vector<AUTOSQL_INT> indptr( 1 );
+    std::vector<AUTOSQL_INT> indices;
     std::vector<T> data;
 
     // --------------------------------------------------------------------
     // We sort the indices by copying and the associated value into tuples
     // and sorting the tuples.
 
-    for ( SQLNET_INT i = 0; i < nrows(); ++i )
+    for ( AUTOSQL_INT i = 0; i < nrows(); ++i )
         {
-            std::vector<std::tuple<SQLNET_INT, T> > tuples;
+            std::vector<std::tuple<AUTOSQL_INT, T> > tuples;
 
-            for ( SQLNET_INT j = indptr()[i]; j < indptr()[i + 1];
+            for ( AUTOSQL_INT j = indptr()[i]; j < indptr()[i + 1];
                   ++j )
                 {
                     tuples.push_back( std::make_tuple(
@@ -493,8 +493,8 @@ CSRMatrix<T> CSRMatrix<T>::sort_indices()
                 }
 
             auto compare_op =
-                []( const std::tuple<SQLNET_INT, T>& elem1,
-                    const std::tuple<SQLNET_INT, T>& elem2 ) -> bool {
+                []( const std::tuple<AUTOSQL_INT, T>& elem1,
+                    const std::tuple<AUTOSQL_INT, T>& elem2 ) -> bool {
                 return ( std::get<0>( elem1 ) < std::get<0>( elem2 ) );
             };
 
@@ -522,7 +522,7 @@ CSRMatrix<T> CSRMatrix<T>::sort_indices()
                         }
                 }
 
-            indptr.push_back( static_cast<SQLNET_INT>( data.size() ) );
+            indptr.push_back( static_cast<AUTOSQL_INT>( data.size() ) );
         }
 
     // --------------------------------------------------------------------
@@ -576,12 +576,12 @@ CSRMatrix<T> CSRMatrix<T>::subview( T2 _row_begin, T2 _row_end )
         indptr() + _row_end + 1,
         mat.indptr() );
 
-    SQLNET_INT begin = mat.indptr()[0];
+    AUTOSQL_INT begin = mat.indptr()[0];
 
     std::for_each(
         mat.indptr(),
         mat.indptr() + mat.nrows() + 1,
-        [begin]( SQLNET_INT& _i ) { _i -= begin; } );
+        [begin]( AUTOSQL_INT& _i ) { _i -= begin; } );
 
     // --------------------------------------------------------------------
     // Don't forget colnames and units!

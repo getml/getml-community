@@ -12,13 +12,13 @@ std::vector<descriptors::SameUnits> SameUnitIdentifier::identify_same_units(
 {
     // --------------------------------------------------------------
 
-    std::vector<SQLNET_SAME_UNITS_CONTAINER> same_units_categorical(
+    std::vector<AUTOSQL_SAME_UNITS_CONTAINER> same_units_categorical(
         _peripheral_tables.size() );
 
-    std::vector<SQLNET_SAME_UNITS_CONTAINER> same_units_discrete(
+    std::vector<AUTOSQL_SAME_UNITS_CONTAINER> same_units_discrete(
         _peripheral_tables.size() );
 
-    std::vector<SQLNET_SAME_UNITS_CONTAINER> same_units_numerical(
+    std::vector<AUTOSQL_SAME_UNITS_CONTAINER> same_units_numerical(
         _peripheral_tables.size() );
 
     // --------------------------------------------------------------
@@ -37,7 +37,7 @@ std::vector<descriptors::SameUnits> SameUnitIdentifier::identify_same_units(
             unit_map );
 
         // Categorical peripheral
-        for ( SQLNET_SIZE ix_perip_used = 0;
+        for ( AUTOSQL_SIZE ix_perip_used = 0;
               ix_perip_used < _peripheral_tables.size();
               ++ix_perip_used )
             {
@@ -46,7 +46,7 @@ std::vector<descriptors::SameUnits> SameUnitIdentifier::identify_same_units(
 
                 add_to_unit_map(
                     DataUsed::x_perip_categorical,
-					static_cast<SQLNET_INT>(ix_perip_used),
+					static_cast<AUTOSQL_INT>(ix_perip_used),
                     _peripheral_tables[ix_perip_used].categorical(),
                     unit_map );
             }
@@ -72,7 +72,7 @@ std::vector<descriptors::SameUnits> SameUnitIdentifier::identify_same_units(
             unit_map );
 
         // numerical peripheral
-        for ( SQLNET_SIZE ix_perip_used = 0;
+        for ( AUTOSQL_SIZE ix_perip_used = 0;
               ix_perip_used < _peripheral_tables.size();
               ++ix_perip_used )
             {
@@ -81,7 +81,7 @@ std::vector<descriptors::SameUnits> SameUnitIdentifier::identify_same_units(
 
                 add_to_unit_map(
                     DataUsed::x_perip_numerical,
-					static_cast<SQLNET_INT>(ix_perip_used),
+					static_cast<AUTOSQL_INT>(ix_perip_used),
                     _peripheral_tables[ix_perip_used].numerical(),
                     unit_map );
             }
@@ -107,7 +107,7 @@ std::vector<descriptors::SameUnits> SameUnitIdentifier::identify_same_units(
             unit_map );
 
         // discrete peripheral
-        for ( SQLNET_SIZE ix_perip_used = 0;
+        for ( AUTOSQL_SIZE ix_perip_used = 0;
               ix_perip_used < _peripheral_tables.size();
               ++ix_perip_used )
             {
@@ -116,7 +116,7 @@ std::vector<descriptors::SameUnits> SameUnitIdentifier::identify_same_units(
 
                 add_to_unit_map(
                     DataUsed::x_perip_discrete,
-					static_cast<SQLNET_INT>(ix_perip_used),
+					static_cast<AUTOSQL_INT>(ix_perip_used),
                     _peripheral_tables[ix_perip_used].discrete(),
                     unit_map );
             }
@@ -134,15 +134,15 @@ std::vector<descriptors::SameUnits> SameUnitIdentifier::identify_same_units(
     for ( size_t i = 0; i < same_units.size(); ++i )
         {
             same_units[i].same_units_categorical =
-                std::make_shared<SQLNET_SAME_UNITS_CONTAINER>(
+                std::make_shared<AUTOSQL_SAME_UNITS_CONTAINER>(
                     same_units_categorical[i] );
 
             same_units[i].same_units_discrete =
-                std::make_shared<SQLNET_SAME_UNITS_CONTAINER>(
+                std::make_shared<AUTOSQL_SAME_UNITS_CONTAINER>(
                     same_units_discrete[i] );
 
             same_units[i].same_units_numerical =
-                std::make_shared<SQLNET_SAME_UNITS_CONTAINER>(
+                std::make_shared<AUTOSQL_SAME_UNITS_CONTAINER>(
                     same_units_numerical[i] );
         }
 
@@ -156,15 +156,15 @@ std::vector<descriptors::SameUnits> SameUnitIdentifier::identify_same_units(
 void SameUnitIdentifier::unit_map_to_same_unit_container(
     const std::map<std::string, std::vector<ColumnToBeAggregated>>
         &_unit_map,
-    std::vector<SQLNET_SAME_UNITS_CONTAINER> &_same_units )
+    std::vector<AUTOSQL_SAME_UNITS_CONTAINER> &_same_units )
 {
     for ( auto &unit_pair : _unit_map )
         {
             const auto &unit_vector = unit_pair.second;
 
-            for ( SQLNET_SIZE ix1 = 0; ix1 < unit_vector.size(); ++ix1 )
+            for ( AUTOSQL_SIZE ix1 = 0; ix1 < unit_vector.size(); ++ix1 )
                 {
-                    for ( SQLNET_SIZE ix2 = 0; ix2 < ix1; ++ix2 )
+                    for ( AUTOSQL_SIZE ix2 = 0; ix2 < ix1; ++ix2 )
                         {
                             // Combinations between two different peripheral
                             // tables make to sense

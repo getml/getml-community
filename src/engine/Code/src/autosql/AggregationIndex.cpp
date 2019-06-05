@@ -6,7 +6,7 @@ namespace aggregations
 {
 // ----------------------------------------------------------------------------
 
-const SQLNET_FLOAT AggregationIndex::get_count( const SQLNET_INT _ix_agg ) const
+const AUTOSQL_FLOAT AggregationIndex::get_count( const AUTOSQL_INT _ix_agg ) const
 {
     assert( _ix_agg >= 0 );
     assert( _ix_agg < output_table_.nrows() );
@@ -16,15 +16,15 @@ const SQLNET_FLOAT AggregationIndex::get_count( const SQLNET_INT _ix_agg ) const
 
     assert( it != input_table_.df().index()->end() );
 
-    SQLNET_FLOAT count = 0.0;
+    AUTOSQL_FLOAT count = 0.0;
 
-    const SQLNET_FLOAT time_stamp_output = output_table_.time_stamp( _ix_agg );
+    const AUTOSQL_FLOAT time_stamp_output = output_table_.time_stamp( _ix_agg );
 
     const auto ptr = input_table_.df().upper_time_stamps();
 
     for ( auto ix_input : it->second )
         {
-            SQLNET_FLOAT upper_time_stamp = NAN;
+            AUTOSQL_FLOAT upper_time_stamp = NAN;
 
             if ( ptr != nullptr )
                 {
@@ -49,8 +49,8 @@ const SQLNET_FLOAT AggregationIndex::get_count( const SQLNET_INT _ix_agg ) const
 
 // ----------------------------------------------------------------------------
 
-const std::vector<SQLNET_INT> AggregationIndex::transform(
-    const SQLNET_INT _ix_input ) const
+const std::vector<AUTOSQL_INT> AggregationIndex::transform(
+    const AUTOSQL_INT _ix_input ) const
 {
     assert( _ix_input >= 0 );
     assert( _ix_input < input_table_.nrows() );
@@ -60,15 +60,15 @@ const std::vector<SQLNET_INT> AggregationIndex::transform(
 
     if ( it == output_table_.df().index()->end() )
         {
-            return std::vector<SQLNET_INT>();
+            return std::vector<AUTOSQL_INT>();
         }
 
-    const SQLNET_FLOAT time_stamp_input = input_table_.time_stamp( _ix_input );
+    const AUTOSQL_FLOAT time_stamp_input = input_table_.time_stamp( _ix_input );
 
-    const SQLNET_FLOAT upper_time_stamp =
+    const AUTOSQL_FLOAT upper_time_stamp =
         input_table_.upper_time_stamp( _ix_input );
 
-    std::vector<SQLNET_INT> indices;
+    std::vector<AUTOSQL_INT> indices;
 
     for ( auto ix_agg : it->second )
         {
@@ -102,7 +102,7 @@ const std::vector<SQLNET_INT> AggregationIndex::transform(
 
 // ----------------------------------------------------------------------------
 
-SQLNET_INT AggregationIndex::transform_ix_agg( const SQLNET_INT _ix_agg ) const
+AUTOSQL_INT AggregationIndex::transform_ix_agg( const AUTOSQL_INT _ix_agg ) const
 {
     assert( output_map_->size() > 0 );
 

@@ -18,23 +18,23 @@ class LossFunction
 
     // This calculates the gradient of the loss function w.r.t.
     // the current prediction
-    virtual containers::Matrix<SQLNET_FLOAT> calculate_residuals(
-        const containers::Matrix<SQLNET_FLOAT>& _yhat_old,
+    virtual containers::Matrix<AUTOSQL_FLOAT> calculate_residuals(
+        const containers::Matrix<AUTOSQL_FLOAT>& _yhat_old,
         const containers::DataFrameView& _y ) = 0;
 
     // This calculates the optimal update rate at which we need
     // to add _yhat to _yhat_old
-    virtual containers::Matrix<SQLNET_FLOAT> calculate_update_rates(
-        const containers::Matrix<SQLNET_FLOAT>& _yhat_old,
-        const containers::Matrix<SQLNET_FLOAT>& _f_t,
+    virtual containers::Matrix<AUTOSQL_FLOAT> calculate_update_rates(
+        const containers::Matrix<AUTOSQL_FLOAT>& _yhat_old,
+        const containers::Matrix<AUTOSQL_FLOAT>& _f_t,
         const containers::DataFrameView& _y,
-        const containers::Matrix<SQLNET_FLOAT>& _sample_weights ) = 0;
+        const containers::Matrix<AUTOSQL_FLOAT>& _sample_weights ) = 0;
 
     // This calculates the loss based on the predictions _yhat
     // and the targets _y. Since scores are supposed to be maximized,
     // this multiplies the loss with -1.
-   /* virtual SQLNET_FLOAT score(
-        const containers::Matrix<SQLNET_FLOAT>& _yhat,
+   /* virtual AUTOSQL_FLOAT score(
+        const containers::Matrix<AUTOSQL_FLOAT>& _yhat,
         const containers::DataFrameView& _y ) = 0;*/
 
     // Returns a string describing this loss functioni
@@ -42,23 +42,23 @@ class LossFunction
 
     // -----------------------------------------
 
-#ifdef SQLNET_PARALLEL
+#ifdef AUTOSQL_PARALLEL
 
-    inline SQLNET_COMMUNICATOR& comm() { return *( comm_ ); }
+    inline AUTOSQL_COMMUNICATOR& comm() { return *( comm_ ); }
 
-    inline void set_comm( SQLNET_COMMUNICATOR* _comm ) { comm_ = _comm; }
+    inline void set_comm( AUTOSQL_COMMUNICATOR* _comm ) { comm_ = _comm; }
 
-#endif  // SQLNET_PARALLEL
+#endif  // AUTOSQL_PARALLEL
 
         // -----------------------------------------
 
-#ifdef SQLNET_PARALLEL
+#ifdef AUTOSQL_PARALLEL
 
    protected:
     // Communicator object
-    SQLNET_COMMUNICATOR* comm_;
+    AUTOSQL_COMMUNICATOR* comm_;
 
-#endif  // SQLNET_PARALLEL
+#endif  // AUTOSQL_PARALLEL
 };
 
 // ----------------------------------------------------------------------------

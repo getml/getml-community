@@ -128,10 +128,10 @@ std::vector<std::string> FileHandler::read_strings_big_endian(
     auto read_string = []( std::ifstream& _input ) {
         std::string str;
 
-        SQLNET_SIZE str_size = 0;
+        AUTOSQL_SIZE str_size = 0;
 
         _input.read(
-            reinterpret_cast<char*>( &str_size ), sizeof( SQLNET_SIZE ) );
+            reinterpret_cast<char*>( &str_size ), sizeof( AUTOSQL_SIZE ) );
 
         str.resize( str_size );
 
@@ -176,10 +176,10 @@ std::vector<std::string> FileHandler::read_strings_little_endian(
     auto read_string = []( std::ifstream& _input ) {
         std::string str;
 
-        SQLNET_SIZE str_size = 0;
+        AUTOSQL_SIZE str_size = 0;
 
         _input.read(
-            reinterpret_cast<char*>( &str_size ), sizeof( SQLNET_SIZE ) );
+            reinterpret_cast<char*>( &str_size ), sizeof( AUTOSQL_SIZE ) );
 
         autosql::Endianness::reverse_byte_order( str_size );
 
@@ -259,10 +259,10 @@ void FileHandler::write_string_big_endian(
     std::ofstream output( _fname, std::ios::binary );
 
     auto write_string = [&output]( const std::string& _str ) {
-        SQLNET_SIZE str_size = _str.size();
+        AUTOSQL_SIZE str_size = _str.size();
 
         output.write(
-            reinterpret_cast<const char*>( &str_size ), sizeof( SQLNET_SIZE ) );
+            reinterpret_cast<const char*>( &str_size ), sizeof( AUTOSQL_SIZE ) );
 
         output.write( &( _str[0] ), _str.size() );
     };
@@ -278,12 +278,12 @@ void FileHandler::write_string_little_endian(
     std::ofstream output( _fname, std::ios::binary );
 
     auto write_string = [&output]( const std::string& _str ) {
-        SQLNET_SIZE str_size = _str.size();
+        AUTOSQL_SIZE str_size = _str.size();
 
         autosql::Endianness::reverse_byte_order( str_size );
 
         output.write(
-            reinterpret_cast<const char*>( &str_size ), sizeof( SQLNET_SIZE ) );
+            reinterpret_cast<const char*>( &str_size ), sizeof( AUTOSQL_SIZE ) );
 
         output.write( &( _str[0] ), _str.size() );
     };

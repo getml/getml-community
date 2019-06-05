@@ -13,7 +13,7 @@ class ColumnView
    public:
     ColumnView() : column_used_( -1 ) {}
 
-    ColumnView( const Matrix<T>& _mat, const SQLNET_INT _column_used )
+    ColumnView( const Matrix<T>& _mat, const AUTOSQL_INT _column_used )
         : column_used_( _column_used ), mat_( _mat )
     {
         assert( column_used_ >= 0 );
@@ -23,7 +23,7 @@ class ColumnView
     ColumnView(
         const Matrix<T>& _mat,
         const std::shared_ptr<const ContainerType>& _indices,
-        const SQLNET_INT _column_used )
+        const AUTOSQL_INT _column_used )
         : column_used_( _column_used ), indices_( _indices ), mat_( _mat )
     {
         assert( column_used_ >= 0 );
@@ -40,39 +40,39 @@ class ColumnView
     /// Whether or not the column view is empty.
     operator bool() const { return mat_.nrows() > 0; }
 
-    /// Accessor to data (when indices are std::vector<SQLNET_INT>)
+    /// Accessor to data (when indices are std::vector<AUTOSQL_INT>)
     template <
         typename CType = ContainerType,
         typename std::enable_if<
-            std::is_same<CType, std::vector<SQLNET_INT>>::value,
+            std::is_same<CType, std::vector<AUTOSQL_INT>>::value,
             int>::type = 0>
-    inline T& operator()( const SQLNET_INT _i )
+    inline T& operator()( const AUTOSQL_INT _i )
     {
         assert( _i >= 0 );
-        assert( _i < static_cast<SQLNET_INT>( indices_->size() ) );
+        assert( _i < static_cast<AUTOSQL_INT>( indices_->size() ) );
         return mat_( ( *indices_ )[_i], column_used_ );
     }
 
-    /// Accessor to data (when indices are std::vector<SQLNET_INT>)
+    /// Accessor to data (when indices are std::vector<AUTOSQL_INT>)
     template <
         typename CType = ContainerType,
         typename std::enable_if<
-            std::is_same<CType, std::vector<SQLNET_INT>>::value,
+            std::is_same<CType, std::vector<AUTOSQL_INT>>::value,
             int>::type = 0>
-    inline T operator()( const SQLNET_INT _i ) const
+    inline T operator()( const AUTOSQL_INT _i ) const
     {
         assert( _i >= 0 );
-        assert( _i < static_cast<SQLNET_INT>( indices_->size() ) );
+        assert( _i < static_cast<AUTOSQL_INT>( indices_->size() ) );
         return mat_( ( *indices_ )[_i], column_used_ );
     }
 
-    /// Accessor to data (when indices are std::map<SQLNET_INT, SQLNET_INT>)
+    /// Accessor to data (when indices are std::map<AUTOSQL_INT, AUTOSQL_INT>)
     template <
         typename CType = ContainerType,
         typename std::enable_if<
-            std::is_same<CType, std::map<SQLNET_INT, SQLNET_INT>>::value,
+            std::is_same<CType, std::map<AUTOSQL_INT, AUTOSQL_INT>>::value,
             int>::type = 0>
-    inline T& operator()( const SQLNET_INT _i )
+    inline T& operator()( const AUTOSQL_INT _i )
     {
         assert( _i >= 0 );
         auto it = indices_->find( _i );
@@ -80,13 +80,13 @@ class ColumnView
         return mat_( it->second, column_used_ );
     }
 
-    /// Accessor to data (when indices are std::map<SQLNET_INT, SQLNET_INT>)
+    /// Accessor to data (when indices are std::map<AUTOSQL_INT, AUTOSQL_INT>)
     template <
         typename CType = ContainerType,
         typename std::enable_if<
-            std::is_same<CType, std::map<SQLNET_INT, SQLNET_INT>>::value,
+            std::is_same<CType, std::map<AUTOSQL_INT, AUTOSQL_INT>>::value,
             int>::type = 0>
-    inline T operator()( const SQLNET_INT _i ) const
+    inline T operator()( const AUTOSQL_INT _i ) const
     {
         assert( _i >= 0 );
         auto it = indices_->find( _i );
@@ -95,7 +95,7 @@ class ColumnView
     }
 
     /// Accessor to data
-    inline T& operator[]( const SQLNET_INT _i )
+    inline T& operator[]( const AUTOSQL_INT _i )
     {
         assert( column_used_ >= 0 );
         assert( !indices_ );
@@ -103,7 +103,7 @@ class ColumnView
     }
 
     /// Accessor to data
-    inline T operator[]( const SQLNET_INT _i ) const
+    inline T operator[]( const AUTOSQL_INT _i ) const
     {
         assert( column_used_ >= 0 );
         assert( !indices_ );
@@ -114,7 +114,7 @@ class ColumnView
 
    private:
     /// Indicates which column we want to use
-    SQLNET_INT column_used_;
+    AUTOSQL_INT column_used_;
 
     /// Indices indicating all of the rows that are part of this view
     std::shared_ptr<const ContainerType> indices_;

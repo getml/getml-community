@@ -37,7 +37,7 @@ struct DecisionTreeImpl
     }
 
     /// Trivial getter
-    inline SQLNET_INT ix_perip_used() const
+    inline AUTOSQL_INT ix_perip_used() const
     {
         return column_to_be_aggregated_.ix_perip_used;
     }
@@ -50,21 +50,21 @@ struct DecisionTreeImpl
     }
 
     /// Trivial accessor
-    inline const SQLNET_SAME_UNITS_CONTAINER& same_units_categorical() const
+    inline const AUTOSQL_SAME_UNITS_CONTAINER& same_units_categorical() const
     {
         assert( same_units_.same_units_categorical );
         return *same_units_.same_units_categorical;
     }
 
     /// Trivial accessor
-    inline const SQLNET_SAME_UNITS_CONTAINER& same_units_discrete() const
+    inline const AUTOSQL_SAME_UNITS_CONTAINER& same_units_discrete() const
     {
         assert( same_units_.same_units_discrete );
         return *same_units_.same_units_discrete;
     }
 
     /// Trivial accessor
-    inline const SQLNET_SAME_UNITS_CONTAINER& same_units_numerical() const
+    inline const AUTOSQL_SAME_UNITS_CONTAINER& same_units_numerical() const
     {
         assert( same_units_.same_units_numerical );
         return *same_units_.same_units_numerical;
@@ -78,7 +78,7 @@ struct DecisionTreeImpl
 
     /// Trivial accessor
     inline containers::
-        MatrixView<SQLNET_FLOAT, std::map<SQLNET_INT, SQLNET_INT>>&
+        MatrixView<AUTOSQL_FLOAT, std::map<AUTOSQL_INT, AUTOSQL_INT>>&
         subfeatures()
     {
         return subfeatures_;
@@ -86,49 +86,49 @@ struct DecisionTreeImpl
 
     /// Trivial accessor
     inline const containers::
-        MatrixView<SQLNET_FLOAT, std::map<SQLNET_INT, SQLNET_INT>>&
+        MatrixView<AUTOSQL_FLOAT, std::map<AUTOSQL_INT, AUTOSQL_INT>>&
         subfeatures() const
     {
         return subfeatures_;
     }
 
     /// Trivial accessor
-    inline const std::string& x_perip_categorical_colname( SQLNET_INT _i ) const
+    inline const std::string& x_perip_categorical_colname( AUTOSQL_INT _i ) const
     {
         assert( x_perip_categorical_colnames_ );
         return x_perip_categorical_colnames_.get()[0][_i];
     }
 
     /// Trivial accessor
-    inline const std::string& x_perip_numerical_colname( SQLNET_INT _i ) const
+    inline const std::string& x_perip_numerical_colname( AUTOSQL_INT _i ) const
     {
         assert( x_perip_numerical_colnames_ );
         return x_perip_numerical_colnames_.get()[0][_i];
     }
 
     /// Trivial accessor
-    inline const std::string& x_perip_discrete_colname( SQLNET_INT _i ) const
+    inline const std::string& x_perip_discrete_colname( AUTOSQL_INT _i ) const
     {
         assert( x_perip_discrete_colnames_ );
         return x_perip_discrete_colnames_.get()[0][_i];
     }
 
     /// Trivial accessor
-    inline const std::string& x_popul_categorical_colname( SQLNET_INT _i ) const
+    inline const std::string& x_popul_categorical_colname( AUTOSQL_INT _i ) const
     {
         assert( x_popul_categorical_colnames_ );
         return x_popul_categorical_colnames_.get()[0][_i];
     }
 
     /// Trivial accessor
-    inline const std::string& x_popul_numerical_colname( SQLNET_INT _i ) const
+    inline const std::string& x_popul_numerical_colname( AUTOSQL_INT _i ) const
     {
         assert( x_popul_numerical_colnames_ );
         return x_popul_numerical_colnames_.get()[0][_i];
     }
 
     /// Trivial accessor
-    inline const std::string& x_popul_discrete_colname( SQLNET_INT _i ) const
+    inline const std::string& x_popul_discrete_colname( AUTOSQL_INT _i ) const
     {
         assert( x_popul_discrete_colnames_ );
         return x_popul_discrete_colnames_.get()[0][_i];
@@ -141,15 +141,15 @@ struct DecisionTreeImpl
     std::string get_colname(
         const std::string& _feature_num,
         const DataUsed _data_used,
-        const SQLNET_INT _ix_column_used,
+        const AUTOSQL_INT _ix_column_used,
         const bool _equals = true ) const;
 
     /// Updates the map for the importance ranking
     void source_importances(
         const DataUsed _data_used,
-        const SQLNET_INT _ix_column_used,
-        const SQLNET_FLOAT _factor,
-        std::map<descriptors::SourceImportancesColumn, SQLNET_FLOAT>& _map )
+        const AUTOSQL_INT _ix_column_used,
+        const AUTOSQL_FLOAT _factor,
+        std::map<descriptors::SourceImportancesColumn, AUTOSQL_FLOAT>& _map )
         const;
 
     // ------------------------------------------------------------
@@ -172,7 +172,7 @@ struct DecisionTreeImpl
     ColumnToBeAggregated column_to_be_aggregated_;
 
     /// Communicator (either MPI or self-defined communicator)
-    SQLNET_COMMUNICATOR* comm_;
+    AUTOSQL_COMMUNICATOR* comm_;
 
     /// Name of the join key in the peripheral table
     std::string join_keys_perip_name_;
@@ -182,14 +182,14 @@ struct DecisionTreeImpl
 
     /// Factor that is proportional to the number of splits
     /// can be set by the user
-    SQLNET_FLOAT grid_factor_;
+    AUTOSQL_FLOAT grid_factor_;
 
     /// Maximum depth allowed
-    SQLNET_INT max_length_;
+    AUTOSQL_INT max_length_;
 
     /// Minimum number of samples required in each part of
     /// a split
-    SQLNET_INT min_num_samples_;
+    AUTOSQL_INT min_num_samples_;
 
     /// The optimization criterion is what we want to maximize -
     /// using it we can determine the optimal splits
@@ -215,17 +215,17 @@ struct DecisionTreeImpl
     /// complex the trees. This is implemented by requiring
     /// that the new optimization_criterion.value() must be at least
     /// old optimization_criterion.value() + regularization_.
-    SQLNET_FLOAT regularization_;
+    AUTOSQL_FLOAT regularization_;
 
     /// Contains information on which of the columns contain the same units
     descriptors::SameUnits same_units_;
 
     /// Contains the subfeatures, which may or may not exist.
-    containers::MatrixView<SQLNET_FLOAT, std::map<SQLNET_INT, SQLNET_INT>>
+    containers::MatrixView<AUTOSQL_FLOAT, std::map<AUTOSQL_INT, AUTOSQL_INT>>
         subfeatures_;
 
     /// The share of conditions randomly selected
-    SQLNET_FLOAT share_conditions_;
+    AUTOSQL_FLOAT share_conditions_;
 
     /// Name of the time stamps in the peripheral table
     std::string time_stamps_perip_name_;

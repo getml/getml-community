@@ -21,11 +21,11 @@ void Encoding::append( const Encoding& _other, bool _include_subencoding )
 
 // ----------------------------------------------------------------------------
 
-SQLNET_INT Encoding::insert( const std::string& _val )
+AUTOSQL_INT Encoding::insert( const std::string& _val )
 {
     assert( map_.find( _val ) == map_.end() );
 
-    const auto ix = static_cast<SQLNET_INT>( vector_.size() + subsize_ );
+    const auto ix = static_cast<AUTOSQL_INT>( vector_.size() + subsize_ );
 
     map_[_val] = ix;
 
@@ -36,7 +36,7 @@ SQLNET_INT Encoding::insert( const std::string& _val )
 
 // ----------------------------------------------------------------------------
 
-SQLNET_INT Encoding::operator[]( const std::string& _val )
+AUTOSQL_INT Encoding::operator[]( const std::string& _val )
 {
     // -----------------------------------
     // If this is a NULL value, return -1.
@@ -79,7 +79,7 @@ SQLNET_INT Encoding::operator[]( const std::string& _val )
 
 // ----------------------------------------------------------------------------
 
-SQLNET_INT Encoding::operator[]( const std::string& _val ) const
+AUTOSQL_INT Encoding::operator[]( const std::string& _val ) const
 {
     // -----------------------------------
     // If this is a NULL value, return -1.
@@ -130,7 +130,7 @@ Encoding& Encoding::operator=( std::vector<std::string>&& _vector ) noexcept
 
     map_.clear();
 
-    for ( SQLNET_INT ix = 0; ix < static_cast<SQLNET_INT>( vector_.size() );
+    for ( AUTOSQL_INT ix = 0; ix < static_cast<AUTOSQL_INT>( vector_.size() );
           ++ix )
         {
             auto& val = vector_[ix];

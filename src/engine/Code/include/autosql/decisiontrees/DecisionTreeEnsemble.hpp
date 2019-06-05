@@ -41,8 +41,8 @@ class DecisionTreeEnsemble
     /// Fits the predictors
     std::string fit_predictors(
         const std::shared_ptr<const logging::Logger> _logger,
-        containers::Matrix<SQLNET_FLOAT> _features,
-        containers::Matrix<SQLNET_FLOAT> _targets );
+        containers::Matrix<AUTOSQL_FLOAT> _features,
+        containers::Matrix<AUTOSQL_FLOAT> _targets );
 
     /// Builds the decision tree ensemble from a Poco::JSON::Object
     void from_json_obj( const Poco::JSON::Object &_json_obj );
@@ -58,30 +58,30 @@ class DecisionTreeEnsemble
 
     /// Generates a prediction on the basis of the features and the gradient
     /// boosting algorithm
-    containers::Matrix<SQLNET_FLOAT> predict(
+    containers::Matrix<AUTOSQL_FLOAT> predict(
         const std::shared_ptr<const logging::Logger> _logger,
         std::vector<containers::DataFrame> _peripheral_tables,
         containers::DataFrameView _population_table );
 
     /// Generates predictions on the features using the internal predictors
-    containers::Matrix<SQLNET_FLOAT> predict(
-        containers::Matrix<SQLNET_FLOAT> _features );
+    containers::Matrix<AUTOSQL_FLOAT> predict(
+        containers::Matrix<AUTOSQL_FLOAT> _features );
 
     /// Saves the Model in JSON format and predictors, if applicable
     void save( const std::string &_path );
 
     /// Calculates scores.
     Poco::JSON::Object score(
-        const containers::Matrix<SQLNET_FLOAT> &_yhat,
-        const containers::Matrix<SQLNET_FLOAT> &_y );
+        const containers::Matrix<AUTOSQL_FLOAT> &_yhat,
+        const containers::Matrix<AUTOSQL_FLOAT> &_y );
 
     /// Selects features based on the feature importances of
     /// the built-in predictor. The remaining features are sorted
     /// by importance.
     std::string select_features(
         const std::shared_ptr<const logging::Logger> _logger,
-        containers::Matrix<SQLNET_FLOAT> _features,
-        containers::Matrix<SQLNET_FLOAT> _targets );
+        containers::Matrix<AUTOSQL_FLOAT> _features,
+        containers::Matrix<AUTOSQL_FLOAT> _targets );
 
     /// Extracts the ensemble as a Poco::JSON object
     Poco::JSON::Object to_json_obj();
@@ -97,7 +97,7 @@ class DecisionTreeEnsemble
     descriptors::SourceImportances source_importances();
 
     /// Transforms a set of raw data into extracted features
-    containers::Matrix<SQLNET_FLOAT> transform(
+    containers::Matrix<AUTOSQL_FLOAT> transform(
         const std::shared_ptr<const logging::Logger> _logger,
         std::vector<containers::DataFrame> _peripheral_tables_raw,
         containers::DataFrameView _population_table_raw,
@@ -106,12 +106,12 @@ class DecisionTreeEnsemble
 
     // --------------------------------------
 
-#ifdef SQLNET_PARALLEL
+#ifdef AUTOSQL_PARALLEL
 
     /// Trivial getter
-    inline SQLNET_COMMUNICATOR *comm() { return impl().comm_; }
+    inline AUTOSQL_COMMUNICATOR *comm() { return impl().comm_; }
 
-#endif  // SQLNET_PARALLEL
+#endif  // AUTOSQL_PARALLEL
 
     /// Returns true if there are predictors, false otherwise.
     inline bool has_feature_selectors()
@@ -138,12 +138,12 @@ class DecisionTreeEnsemble
         return *impl().hyperparameters_;
     }
 
-#ifdef SQLNET_PARALLEL
+#ifdef AUTOSQL_PARALLEL
 
     /// Trivial setter
-    inline void set_comm( SQLNET_COMMUNICATOR *_comm ) { impl().comm_ = _comm; }
+    inline void set_comm( AUTOSQL_COMMUNICATOR *_comm ) { impl().comm_ = _comm; }
 
-#endif  // SQLNET_PARALLEL
+#endif  // AUTOSQL_PARALLEL
 
     /// Extracts the ensemble as a JSON
     inline std::string to_json() { return JSON::stringify( to_json_obj() ); }
@@ -153,18 +153,18 @@ class DecisionTreeEnsemble
    private:
     /// Builds the candidates during fit(...)
     std::list<DecisionTree> build_candidates(
-        const SQLNET_INT _ix_feature,
+        const AUTOSQL_INT _ix_feature,
         const std::vector<descriptors::SameUnits> &_same_units,
         TableHolder &_table_holder );
 
     /// Calculates statistics for the individual features.
     void calculate_feature_stats(
-        const containers::Matrix<SQLNET_FLOAT> &_predictions,
+        const containers::Matrix<AUTOSQL_FLOAT> &_predictions,
         const containers::DataFrameView &_targets );
 
     /// Calculates the sampling rate based on the number of rows
     /// in the population table and the sampling_factor
-    void calculate_sampling_rate( const SQLNET_INT _population_nrows );
+    void calculate_sampling_rate( const AUTOSQL_INT _population_nrows );
 
     /// Makes sure that the input provided by the user is plausible
     /// and throws an exception if it isn't
@@ -182,10 +182,10 @@ class DecisionTreeEnsemble
     /// This is not needed when the shrinkage is 0.0.
     void fit_linear_regressions_and_recalculate_residuals(
         TableHolder &_table_holder,
-        const SQLNET_FLOAT _shrinkage,
-        containers::Matrix<SQLNET_FLOAT> &_sample_weights,
-        containers::Matrix<SQLNET_FLOAT> &_yhat_old,
-        containers::Matrix<SQLNET_FLOAT> &_residuals );
+        const AUTOSQL_FLOAT _shrinkage,
+        containers::Matrix<AUTOSQL_FLOAT> &_sample_weights,
+        containers::Matrix<AUTOSQL_FLOAT> &_yhat_old,
+        containers::Matrix<AUTOSQL_FLOAT> &_residuals );
 
     /// Initializes the predictors for fitting or loading
     void init_predictors(
@@ -276,37 +276,37 @@ class DecisionTreeEnsemble
     }
 
     /// Trivial accessor
-    inline std::vector<SQLNET_INT> &num_columns_peripheral_categorical()
+    inline std::vector<AUTOSQL_INT> &num_columns_peripheral_categorical()
     {
         return impl().num_columns_peripheral_categorical_;
     }
 
     /// Trivial accessor
-    inline std::vector<SQLNET_INT> &num_columns_peripheral_discrete()
+    inline std::vector<AUTOSQL_INT> &num_columns_peripheral_discrete()
     {
         return impl().num_columns_peripheral_discrete_;
     }
 
     /// Trivial accessor
-    inline std::vector<SQLNET_INT> &num_columns_peripheral_numerical()
+    inline std::vector<AUTOSQL_INT> &num_columns_peripheral_numerical()
     {
         return impl().num_columns_peripheral_numerical_;
     }
 
     /// Trivial accessor
-    inline SQLNET_INT &num_columns_population_categorical()
+    inline AUTOSQL_INT &num_columns_population_categorical()
     {
         return impl().num_columns_population_categorical_;
     }
 
     /// Trivial accessor
-    inline SQLNET_INT &num_columns_population_discrete()
+    inline AUTOSQL_INT &num_columns_population_discrete()
     {
         return impl().num_columns_population_discrete_;
     }
 
     /// Trivial accessor
-    inline SQLNET_INT &num_columns_population_numerical()
+    inline AUTOSQL_INT &num_columns_population_numerical()
     {
         return impl().num_columns_population_numerical_;
     }
@@ -356,10 +356,10 @@ class DecisionTreeEnsemble
     inline const descriptors::Scores &scores() const { return impl().scores_; }
 
     /// Trivial accessor
-    inline DecisionTree *tree( const SQLNET_INT _i )
+    inline DecisionTree *tree( const AUTOSQL_INT _i )
     {
         assert( trees().size() > 0 );
-        assert( static_cast<SQLNET_INT>( trees().size() ) > _i );
+        assert( static_cast<AUTOSQL_INT>( trees().size() ) > _i );
 
         return trees().data() + _i;
     }
