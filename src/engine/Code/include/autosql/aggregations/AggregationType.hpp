@@ -63,7 +63,7 @@ struct Var
 {
     static const std::string type() { return "VAR"; }
 };
-}
+}  // namespace AggregationType
 
 // ----------------------------------------------------------------------------
 
@@ -76,7 +76,7 @@ struct ApplicableToCategoricalData
         std::is_same<AggType, AggregationType::CountDistinct>::value ||
         std::is_same<AggType, AggregationType::CountMinusCountDistinct>::value;
 };
-}
+}  // namespace AggregationType
 
 // ----------------------------------------------------------------------------
 
@@ -90,7 +90,7 @@ struct IsCategorical
           data_used_ == DataUsed::x_perip_categorical ||
           data_used_ == DataUsed::x_popul_categorical );
 };
-}
+}  // namespace AggregationType
 
 // ----------------------------------------------------------------------------
 
@@ -104,10 +104,10 @@ struct IsComparison
           data_used_ == DataUsed::same_unit_numerical ||
           data_used_ == DataUsed::same_unit_discrete );
 };
-}
+}  // namespace AggregationType
 
 // ----------------------------------------------------------------------------
-}
-}
+}  // namespace aggregations
+}  // namespace autosql
 
 #endif  // AUTOSQL_AGGREGATIONS_AGGREGATIONTYPE_HPP_

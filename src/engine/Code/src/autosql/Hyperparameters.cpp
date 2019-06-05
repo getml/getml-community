@@ -1,4 +1,4 @@
-#include "descriptors/descriptors.hpp"
+#include "autosql/descriptors/descriptors.hpp"
 
 namespace autosql
 {
@@ -7,50 +7,41 @@ namespace descriptors
 // ----------------------------------------------------------------------------
 
 Hyperparameters::Hyperparameters( const Poco::JSON::Object& _json_obj )
-    : aggregations( JSON::array_to_vector<std::string>(
-          _json_obj.AUTOSQL_GET_ARRAY( "aggregation_" ) ) ),
-      fast_training( _json_obj.AUTOSQL_GET_VALUE<bool>( "fast_training_" ) ),
-      feature_selector_hyperparams(
-          Hyperparameters::parse_feature_selector( _json_obj ) ),
-      loss_function(
-          _json_obj.AUTOSQL_GET_VALUE<std::string>( "loss_function_" ) ),
-      num_features( _json_obj.AUTOSQL_GET_VALUE<AUTOSQL_INT>( "num_features_" ) ),
-      num_selected_features(
+    : aggregations_( JSON::array_to_vector<std::string>(
+          JSON::get_array( _json_obj, "aggregation_" ) ) ),
+      fast_training_( JSON::get_value<bool>( _json_obj, "fast_training_" ) ),
+      loss_function_(
+          JSON::get_value<std::string>( _json_obj, "loss_function_" ) ),
+      num_features_( JSON::get_value<size_t>( _json_obj, "num_features_" ) ),
+      num_selected_features_(
           Hyperparameters::calc_num_selected_features( _json_obj ) ),
-      num_subfeatures(
-          _json_obj.AUTOSQL_GET_VALUE<AUTOSQL_INT>( "num_subfeatures_" ) ),
-      num_threads( _json_obj.AUTOSQL_GET_VALUE<AUTOSQL_INT>( "num_threads_" ) ),
-      predictor_hyperparams( Hyperparameters::parse_predictor( _json_obj ) ),
-      round_robin( _json_obj.AUTOSQL_GET_VALUE<bool>( "round_robin_" ) ),
-      sampling_factor(
-          _json_obj.AUTOSQL_GET_VALUE<AUTOSQL_INT>( "sampling_factor_" ) ),
-      seed( _json_obj.AUTOSQL_GET_VALUE<AUTOSQL_INT>( "seed_" ) ),
-      share_aggregations(
-          _json_obj.AUTOSQL_GET_VALUE<AUTOSQL_FLOAT>( "share_aggregations_" ) ),
-      shrinkage( _json_obj.AUTOSQL_GET_VALUE<AUTOSQL_FLOAT>( "shrinkage_" ) ),
-      tree_hyperparameters( TreeHyperparameters( _json_obj ) ),
-      use_timestamps( _json_obj.AUTOSQL_GET_VALUE<bool>( "use_timestamps_" ) )
+      num_subfeatures_(
+          JSON::get_value<size_t>( _json_obj, "num_subfeatures_" ) ),
+      num_threads_( JSON::get_value<size_t>( _json_obj, "num_threads_" ) ),
+      round_robin_( JSON::get_value<bool>( _json_obj, "round_robin_" ) ),
+      sampling_factor_(
+          JSON::get_value<size_t>( _json_obj, "sampling_factor_" ) ),
+      seed_( JSON::get_value<size_t>( _json_obj, "seed_" ) ),
+      share_aggregations_(
+          JSON::get_value<AUTOSQL_FLOAT>( _json_obj, "share_aggregations_" ) ),
+      shrinkage_( JSON::get_value<AUTOSQL_FLOAT>( _json_obj, "shrinkage_" ) ),
+      tree_hyperparameters_(
+          std::make_shared<const TreeHyperparameters>( _json_obj ) ),
+      use_timestamps_( JSON::get_value<bool>( _json_obj, "use_timestamps_" ) )
 {
-    if ( !feature_selector_hyperparams && num_selected_features > 0 )
-        {
-            throw std::invalid_argument(
-                "If you want feature selection, you need to pass a feature "
-                "selector. Please pass a feature selector or set the "
-                "number of selected features to zero." );
-        }
 }
 
 // ----------------------------------------------------------------------------
 
-AUTOSQL_INT Hyperparameters::calc_num_selected_features(
+size_t Hyperparameters::calc_num_selected_features(
     const Poco::JSON::Object& _json_obj )
 {
     const auto nsf =
-        _json_obj.AUTOSQL_GET_VALUE<AUTOSQL_INT>( "num_selected_features_" );
+        JSON::get_value<size_t>( _json_obj, "num_selected_features_" );
 
     if ( _json_obj.has( "feature_selector_" ) && nsf <= 0 )
         {
-            return _json_obj.AUTOSQL_GET_VALUE<AUTOSQL_INT>( "num_features_" );
+            return JSON::get_value<size_t>( _json_obj, "num_features_" );
         }
     else
         {
@@ -60,39 +51,6 @@ AUTOSQL_INT Hyperparameters::calc_num_selected_features(
 
 // ----------------------------------------------------------------------------
 
-containers::Optional<const Poco::JSON::Object>
-Hyperparameters::parse_feature_selector( const Poco::JSON::Object& _json_obj )
-{
-    containers::Optional<const Poco::JSON::Object> optional;
-
-    if ( _json_obj.has( "feature_selector_" ) )
-        {
-            optional.reset( new Poco::JSON::Object(
-                *_json_obj.AUTOSQL_GET_OBJECT( "feature_selector_" ) ) );
-        }
-
-    return optional;
-}
-
-// ----------------------------------------------------------------------------
-
-containers::Optional<const Poco::JSON::Object> Hyperparameters::parse_predictor(
-    const Poco::JSON::Object& _json_obj )
-{
-    containers::Optional<const Poco::JSON::Object> optional;
-
-    if ( _json_obj.has( "predictor_" ) )
-        {
-            optional.reset( new Poco::JSON::Object(
-                *_json_obj.AUTOSQL_GET_OBJECT( "predictor_" ) ) );
-        }
-
-    return optional;
-}
-
-// ----------------------------------------------------------------------------
-
-/// Transforms the hyperparameters into a JSON object
 Poco::JSON::Object Hyperparameters::to_json_obj() const
 {
     // -------------------------
@@ -101,61 +59,49 @@ Poco::JSON::Object Hyperparameters::to_json_obj() const
 
     // -------------------------
 
-    obj.set( "aggregation_", aggregations );
+    obj.set( "aggregation_", aggregations_ );
 
-    obj.set( "allow_sets_", tree_hyperparameters.allow_sets );
+    obj.set( "allow_sets_", tree_hyperparameters_->allow_sets_ );
 
-    obj.set( "loss_function_", loss_function );
+    obj.set( "loss_function_", loss_function_ );
 
-    obj.set( "use_timestamps_", use_timestamps );
+    obj.set( "use_timestamps_", use_timestamps_ );
 
-    obj.set( "num_features_", num_features );
+    obj.set( "num_features_", num_features_ );
 
-    obj.set( "num_selected_features_", num_selected_features );
+    obj.set( "num_selected_features_", num_selected_features_ );
 
-    obj.set( "num_subfeatures_", num_subfeatures );
+    obj.set( "num_subfeatures_", num_subfeatures_ );
 
-    obj.set( "max_length_", tree_hyperparameters.max_length );
+    obj.set( "max_length_", tree_hyperparameters_->max_length_ );
 
-    obj.set( "fast_training_", fast_training );
+    obj.set( "fast_training_", fast_training_ );
 
-    obj.set( "min_num_samples_", tree_hyperparameters.min_num_samples );
+    obj.set( "min_num_samples_", tree_hyperparameters_->min_num_samples_ );
 
-    obj.set( "shrinkage_", shrinkage );
+    obj.set( "shrinkage_", shrinkage_ );
 
-    obj.set( "sampling_factor_", sampling_factor );
+    obj.set( "sampling_factor_", sampling_factor_ );
 
-    obj.set( "round_robin_", round_robin );
+    obj.set( "round_robin_", round_robin_ );
 
-    obj.set( "share_aggregations_", share_aggregations );
+    obj.set( "share_aggregations_", share_aggregations_ );
 
-    obj.set( "share_conditions_", tree_hyperparameters.share_conditions );
+    obj.set( "share_conditions_", tree_hyperparameters_->share_conditions_ );
 
-    obj.set( "grid_factor_", tree_hyperparameters.grid_factor );
+    obj.set( "grid_factor_", tree_hyperparameters_->grid_factor_ );
 
-    obj.set( "regularization_", tree_hyperparameters.regularization );
+    obj.set( "regularization_", tree_hyperparameters_->regularization_ );
 
-    obj.set( "seed_", seed );
+    obj.set( "seed_", seed_ );
 
-    obj.set( "num_threads_", num_threads );
-
-    // -------------------------
-
-    if ( feature_selector_hyperparams )
-        {
-            obj.set( "feature_selector_", *feature_selector_hyperparams );
-        }
-
-    // -------------------------
-
-    if ( predictor_hyperparams )
-        {
-            obj.set( "predictor_", *predictor_hyperparams );
-        }
+    obj.set( "num_threads_", num_threads_ );
 
     // -------------------------
 
     return obj;
+
+    // -------------------------
 }
 
 // ----------------------------------------------------------------------------

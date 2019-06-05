@@ -4,34 +4,24 @@
 // ----------------------------------------------------------------------------
 // Dependencies
 
-#include "Poco/JSON/Object.h"
+#include "autosql/types.hpp"
 
-#include "config.hpp"
+#include "autosql/JSON.hpp"
 
-#include "types.hpp"
+#include "autosql/enums/enums.hpp"
 
-#include "JSON.hpp"
-
-#include "containers/containers.hpp"
+#include "autosql/containers/containers.hpp"
 
 // ----------------------------------------------------------------------------
 // Module files
 
-#include "descriptors/XGBoostHyperparams.hpp"
+#include "autosql/descriptors/TreeHyperparameters.hpp"
 
-#include "descriptors/TreeHyperparameters.hpp"
+#include "autosql/descriptors/Hyperparameters.hpp"
 
-#include "descriptors/Hyperparameters.hpp"
+#include "autosql/descriptors/SameUnits.hpp"
 
-#include "descriptors/SourceImportancesColumn.hpp"
-
-#include "descriptors/SourceImportances.hpp"
-
-#include "descriptors/Scores.hpp"
-
-#include "descriptors/SameUnits.hpp"
-
-#include "descriptors/Split.hpp"
+//#include "descriptors/Split.hpp"
 
 // ----------------------------------------------------------------------------
 

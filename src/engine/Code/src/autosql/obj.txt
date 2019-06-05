@@ -1,6 +1,7 @@
 set(
     AUTOSQL_OBJ 
     ${AUTOSQL_SOURCE_DIRECTORY}/DataFrame.cpp 
+    ${AUTOSQL_SOURCE_DIRECTORY}/Hyperparameters.cpp 
     ${AUTOSQL_SOURCE_DIRECTORY}/JSON.cpp 
 )
 

@@ -25,16 +25,9 @@
 #include <utility>
 #include <vector>
 
-#ifdef AUTOSQL_MULTITHREADING
 #include <atomic>
 #include <future>
 #include <thread>
-#endif  // AUTOSQL_MULTITHREADING
-
-#ifdef AUTOSQL_MULTINODE_MPI
-#include <boost/mpi.hpp>
-#include <boost/mpi/collectives.hpp>
-#endif  // AUTOSQL_MULTINODE_MPI
 
 #include "Poco/JSON/Object.h"
 

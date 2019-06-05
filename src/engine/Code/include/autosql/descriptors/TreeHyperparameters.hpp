@@ -12,35 +12,35 @@ namespace descriptors
 struct TreeHyperparameters
 {
     TreeHyperparameters( const Poco::JSON::Object& _json_obj )
-        : allow_sets( _json_obj.AUTOSQL_GET_VALUE<bool>( "allow_sets_" ) ),
-          grid_factor(
-              _json_obj.AUTOSQL_GET_VALUE<AUTOSQL_FLOAT>( "grid_factor_" ) ),
-          max_length( _json_obj.AUTOSQL_GET_VALUE<AUTOSQL_INT>( "max_length_" ) ),
-          max_length_probe(
+        : allow_sets_( JSON::get_value<bool>( _json_obj, "allow_sets_" ) ),
+          grid_factor_(
+              JSON::get_value<AUTOSQL_FLOAT>( _json_obj, "grid_factor_" ) ),
+          max_length_(
+              JSON::get_value<AUTOSQL_INT>( _json_obj, "max_length_" ) ),
+          max_length_probe_(
               TreeHyperparameters::calc_max_length_probe( _json_obj ) ),
-          min_num_samples(
-              _json_obj.AUTOSQL_GET_VALUE<AUTOSQL_INT>( "min_num_samples_" ) ),
-          regularization(
-              _json_obj.AUTOSQL_GET_VALUE<AUTOSQL_FLOAT>( "regularization_" ) ),
-          share_conditions(
-              _json_obj.AUTOSQL_GET_VALUE<AUTOSQL_FLOAT>( "share_conditions_" ) )
+          min_num_samples_(
+              JSON::get_value<AUTOSQL_INT>( _json_obj, "min_num_samples_" ) ),
+          regularization_(
+              JSON::get_value<AUTOSQL_FLOAT>( _json_obj, "regularization_" ) ),
+          share_conditions_(
+              JSON::get_value<AUTOSQL_FLOAT>( _json_obj, "share_conditions_" ) )
     {
     }
 
     // ------------------------------------------------------
 
     /// Calculates max_length_probe
-    static AUTOSQL_INT calc_max_length_probe(
-        const Poco::JSON::Object& _json_obj )
+    static size_t calc_max_length_probe( const Poco::JSON::Object& _json_obj )
     {
-        if ( _json_obj.AUTOSQL_GET_VALUE<bool>( "fast_training_" ) &&
-             !_json_obj.AUTOSQL_GET_VALUE<bool>( "round_robin_" ) )
+        if ( JSON::get_value<bool>( _json_obj, "fast_training_" ) &&
+             !JSON::get_value<bool>( _json_obj, "round_robin_" ) )
             {
                 return 0;
             }
         else
             {
-                return _json_obj.AUTOSQL_GET_VALUE<AUTOSQL_INT>( "max_length_" );
+                return JSON::get_value<size_t>( _json_obj, "max_length_" );
             }
     }
 
@@ -48,28 +48,29 @@ struct TreeHyperparameters
 
     /// Whether we want to allow the algorithm to summarize categorical features
     /// in sets.
-    const bool allow_sets;
+    const bool allow_sets_;
 
     /// Proportional to the frequency of critical values
-    const AUTOSQL_FLOAT grid_factor;
+    const AUTOSQL_FLOAT grid_factor_;
 
     /// The maximum depth of a decision tree
-    const AUTOSQL_INT max_length;
+    const size_t max_length_;
 
     /// The maximum depth during the "probing" phase
-    const AUTOSQL_INT max_length_probe;
+    const size_t max_length_probe_;
 
     /// The minimum number of samples needed for a split
-    const AUTOSQL_INT min_num_samples;
+    const size_t min_num_samples_;
 
     /// Minimum improvement in R2 necessary for a split
-    const AUTOSQL_FLOAT regularization;
+    const AUTOSQL_FLOAT regularization_;
 
     /// The share of conditions randomly selected
-    const AUTOSQL_FLOAT share_conditions;
+    const AUTOSQL_FLOAT share_conditions_;
 };
 
 // ----------------------------------------------------------------------------
 }  // namespace descriptors
 }  // namespace autosql
+
 #endif  // AUTOSQL_DESCRIPTORS_TREEHYPERPARAMETERS_HPP_

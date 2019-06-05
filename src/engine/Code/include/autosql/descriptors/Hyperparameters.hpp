@@ -19,17 +19,7 @@ struct Hyperparameters
     // ------------------------------------------------------
 
     /// Calculates the number of selected features.
-    static AUTOSQL_INT calc_num_selected_features(
-        const Poco::JSON::Object& _json_obj );
-
-    /// Determines whether the _json_obj contains a features selector and
-    /// returns it, if applicable.
-    static containers::Optional<const Poco::JSON::Object>
-    parse_feature_selector( const Poco::JSON::Object& _json_obj );
-
-    /// Determines whether the _json_obj contains a predictor and
-    /// returns it, if applicable.
-    static containers::Optional<const Poco::JSON::Object> parse_predictor(
+    static size_t calc_num_selected_features(
         const Poco::JSON::Object& _json_obj );
 
     /// Transforms the hyperparameters into a JSON object
@@ -43,65 +33,59 @@ struct Hyperparameters
     // ------------------------------------------------------
 
     /// Describes the aggregations that may be used
-    const std::vector<std::string> aggregations;
+    const std::vector<std::string> aggregations_;
 
     /// Determines whether max_length_probe == max_length
-    const bool fast_training;
-
-    /// Hyperparameters for the feature selector (optional)
-    const containers::Optional<const Poco::JSON::Object>
-        feature_selector_hyperparams;
+    const bool fast_training_;
 
     /// The loss function to be used
-    const std::string loss_function;
+    const std::string loss_function_;
 
     /// The number of features to be extracted
-    const AUTOSQL_INT num_features;
+    const size_t num_features_;
 
     /// The number of features to be selected. Must be smaller than
     /// num_features. When set to 0, then there is no feature selection.
-    const AUTOSQL_INT num_selected_features;
+    const size_t num_selected_features_;
 
     /// The number of subfeatures to be extracted. Only relevant for
     /// "snowflake" data model.
-    const AUTOSQL_INT num_subfeatures;
+    const size_t num_subfeatures_;
 
     /// The number of threads to be used, 0 for automatic determination
-    const AUTOSQL_INT num_threads;
-
-    /// Hyperparameters for the predictor (optional)
-    const containers::Optional<const Poco::JSON::Object> predictor_hyperparams;
+    const size_t num_threads_;
 
     /// Whether you just want to select the features one by one
-    const bool round_robin;
+    const bool round_robin_;
 
     /// Determines the sampling rate - parameter passed by the user
-    const AUTOSQL_FLOAT sampling_factor;
+    const AUTOSQL_FLOAT sampling_factor_;
 
     /// The share of sample from the population table included
     /// in the training process. This is the only non-const variable
     /// as it depends on the size of the training set.
-    AUTOSQL_FLOAT sampling_rate;
+    AUTOSQL_FLOAT sampling_rate_;
 
     /// The seed used for the hyperparameter optimization
-    const AUTOSQL_INT seed;
+    const size_t seed_;
 
     /// The share of aggregations randomly selected
-    const AUTOSQL_FLOAT share_aggregations;
+    const AUTOSQL_FLOAT share_aggregations_;
 
     /// Shrinkage of learning rate
-    const AUTOSQL_FLOAT shrinkage;
+    const AUTOSQL_FLOAT shrinkage_;
 
     /// Hyperparameters necessary for training the tree
-    const TreeHyperparameters tree_hyperparameters;
+    const std::shared_ptr<const TreeHyperparameters> tree_hyperparameters_;
 
     /// Whether time stamps are to be used (should be set to true
     /// for all but idiosyncratic cases - it is the golden rule of
     /// predictive analytics)!
-    const bool use_timestamps;
+    const bool use_timestamps_;
 };
 
 // ----------------------------------------------------------------------------
 }  // namespace descriptors
 }  // namespace autosql
+
 #endif  // AUTOSQL_DESCRIPTORS_HYPERPARAMETERS_HPP_
