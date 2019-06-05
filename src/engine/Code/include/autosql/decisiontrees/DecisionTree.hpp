@@ -60,7 +60,7 @@ class DecisionTree
     DecisionTree &operator=( DecisionTree &&_other ) noexcept;
 
     /// Transforms a string into a proper aggregation
-    std::shared_ptr<aggregations::AggregationBase> parse_aggregation(
+    std::shared_ptr<aggregations::AbstractAggregation> parse_aggregation(
         const std::string &_aggregation );
 
     /// Generates the select statement
@@ -225,7 +225,7 @@ class DecisionTree
    private:
     /// Returns the right aggregation based on _data_used
     template <typename AggType>
-    std::shared_ptr<aggregations::AggregationBase> make_aggregation();
+    std::shared_ptr<aggregations::AbstractAggregation> make_aggregation();
 
     /// Generates the features from the subtrees
     void transform_subtrees( TableHolder &_table_holder, bool _use_timestamps );
@@ -234,21 +234,21 @@ class DecisionTree
 
    private:
     /// Trivial accessor
-    inline aggregations::AggregationBase *aggregation()
+    inline aggregations::AbstractAggregation *aggregation()
     {
         assert( impl_.aggregation_ && "aggregation()" );
         return impl_.aggregation_.get();
     }
 
     /// Trivial accessor
-    inline const aggregations::AggregationBase *aggregation() const
+    inline const aggregations::AbstractAggregation *aggregation() const
     {
         assert( impl_.aggregation_ && "aggregation()" );
         return impl_.aggregation_.get();
     }
 
     /// Trivial accessor
-    inline std::shared_ptr<aggregations::AggregationBase> &aggregation_ptr()
+    inline std::shared_ptr<aggregations::AbstractAggregation> &aggregation_ptr()
     {
         return impl_.aggregation_;
     }
@@ -475,7 +475,7 @@ class DecisionTree
 // ----------------------------------------------------------------------------
 
 template <typename AggType>
-std::shared_ptr<aggregations::AggregationBase> DecisionTree::make_aggregation()
+std::shared_ptr<aggregations::AbstractAggregation> DecisionTree::make_aggregation()
 {
     // ------------------------------------------------------------------------
 
@@ -541,7 +541,7 @@ std::shared_ptr<aggregations::AggregationBase> DecisionTree::make_aggregation()
                             assert( !"Unknown data_used2 in make_aggregation(...)!" );
 
                             return std::shared_ptr<
-                                aggregations::AggregationBase>();
+                                aggregations::AbstractAggregation>();
                         }
                 }
 
@@ -574,7 +574,7 @@ std::shared_ptr<aggregations::AggregationBase> DecisionTree::make_aggregation()
                             assert( !"Unknown data_used2 in make_aggregation(...)!" );
 
                             return std::shared_ptr<
-                                aggregations::AggregationBase>();
+                                aggregations::AbstractAggregation>();
                         }
                 }
 
@@ -610,7 +610,7 @@ std::shared_ptr<aggregations::AggregationBase> DecisionTree::make_aggregation()
 
                 assert( !"Unknown DataUsed in make_aggregation(...)!" );
 
-                return std::shared_ptr<aggregations::AggregationBase>();
+                return std::shared_ptr<aggregations::AbstractAggregation>();
         }
 }
 

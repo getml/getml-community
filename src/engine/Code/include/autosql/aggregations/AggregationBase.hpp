@@ -1,5 +1,5 @@
-#ifndef AUTOSQL_AGGREGATIONS_AGGREGATIONBASE_HPP_
-#define AUTOSQL_AGGREGATIONS_AGGREGATIONBASE_HPP_
+#ifndef AUTOSQL_AGGREGATIONS_ABSTRACTAGGREGATION_HPP_
+#define AUTOSQL_AGGREGATIONS_ABSTRACTAGGREGATION_HPP_
 
 namespace autosql
 {
@@ -7,12 +7,12 @@ namespace aggregations
 {
 // ----------------------------------------------------------------------------
 
-class AggregationBase
+class AbstractAggregation
 {
    public:
-    AggregationBase(){};
+    AbstractAggregation(){};
 
-    virtual ~AggregationBase() = default;
+    virtual ~AbstractAggregation() = default;
 
     // --------------------------------------
 
@@ -37,7 +37,7 @@ class AggregationBase
         const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
         const std::vector<AUTOSQL_INT>::const_iterator _categories_end,
         const Revert _revert,
-        const containers::CategoryIndex& _index ) = 0;
+        const containers::CategoryIndex &_index ) = 0;
 
     /// Activates all samples that do not contain _category
     /// Used for prediction
@@ -54,7 +54,7 @@ class AggregationBase
         const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
         const std::vector<AUTOSQL_INT>::const_iterator _categories_end,
         const Revert _revert,
-        const containers::CategoryIndex& _index ) = 0;
+        const containers::CategoryIndex &_index ) = 0;
 
     /// Iterates through the samples and activates those
     /// samples that are greater than the critical value
@@ -111,7 +111,7 @@ class AggregationBase
         const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
         const std::vector<AUTOSQL_INT>::const_iterator _categories_end,
         const Revert _revert,
-        const containers::CategoryIndex& _index ) = 0;
+        const containers::CategoryIndex &_index ) = 0;
 
     /// Iterates through the samples and deactivates those
     /// samples that are greater than the critical value
@@ -156,7 +156,7 @@ class AggregationBase
         const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
         const std::vector<AUTOSQL_INT>::const_iterator _categories_end,
         const Revert _revert,
-        const containers::CategoryIndex& _index ) = 0;
+        const containers::CategoryIndex &_index ) = 0;
 
     /// Deactivates all samples where the numerical_value contains null values.
     /// Such samples must always be deactivated.
@@ -251,4 +251,5 @@ class AggregationBase
 // ----------------------------------------------------------------------------
 }  // namespace aggregations
 }  // namespace autosql
-#endif  // AUTOSQL_AGGREGATIONS_AGGREGATIONBASE_HPP_
+
+#endif  // AUTOSQL_AGGREGATIONS_ABSTRACTAGGREGATION_HPP_

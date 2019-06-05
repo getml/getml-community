@@ -78,7 +78,7 @@ class DecisionTreeNode
 
    private:
     /// Trivial accessor
-    inline aggregations::AggregationBase *aggregation()
+    inline aggregations::AbstractAggregation *aggregation()
     {
         return tree_->aggregation_.get();
     }

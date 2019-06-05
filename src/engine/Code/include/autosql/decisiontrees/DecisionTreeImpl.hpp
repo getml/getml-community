@@ -156,7 +156,7 @@ struct DecisionTreeImpl
 
     /// The aggregation is what connects the peripheral table
     /// to the population table and thus the targets.
-    std::shared_ptr<aggregations::AggregationBase> aggregation_;
+    std::shared_ptr<aggregations::AbstractAggregation> aggregation_;
 
     /// Whether we want to summarize our categorical features in sets.
     bool allow_sets_;

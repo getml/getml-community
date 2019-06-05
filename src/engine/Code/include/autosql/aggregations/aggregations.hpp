@@ -25,7 +25,7 @@
 
 #include "aggregations/AggregationImpl.hpp"
 
-#include "aggregations/AggregationBase.hpp"
+#include "aggregations/AbstractAggregation.hpp"
 
 #include "aggregations/Aggregation.hpp"
 

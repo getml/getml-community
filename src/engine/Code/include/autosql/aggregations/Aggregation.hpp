@@ -8,10 +8,10 @@ namespace aggregations
 // ----------------------------------------------------------------------------
 
 template <typename AggType, DataUsed data_used_, bool is_population_>
-class Aggregation : public AggregationBase
+class Aggregation : public AbstractAggregation
 {
    public:
-    Aggregation() : AggregationBase(), aggregation_impl_( nullptr ){};
+    Aggregation() : AbstractAggregation(), aggregation_impl_( nullptr ){};
 
     ~Aggregation() = default;
 
