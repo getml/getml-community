@@ -3,79 +3,52 @@
 namespace autosql
 {
 // ------------------------------------------------------------------------
-/*
-enums::DataUsed JSON::destringify( const std::string& _data_used )
+
+size_t JSON::data_used_to_int( const enums::DataUsed& _data_used )
 {
-    if ( _data_used == "categorical_input" )
+    switch ( _data_used )
         {
-            return enums::DataUsed::categorical_input;
+            case enums::DataUsed::not_applicable:
+                return 0;
+
+            case enums::DataUsed::same_unit_categorical:
+                return 1;
+
+            case enums::DataUsed::same_unit_discrete:
+                return 2;
+
+            case enums::DataUsed::same_unit_numerical:
+                return 3;
+
+            case enums::DataUsed::x_perip_categorical:
+                return 4;
+
+            case enums::DataUsed::x_perip_numerical:
+                return 5;
+
+            case enums::DataUsed::x_perip_discrete:
+                return 6;
+
+            case enums::DataUsed::x_popul_categorical:
+                return 7;
+
+            case enums::DataUsed::x_popul_numerical:
+                return 8;
+
+            case enums::DataUsed::x_popul_discrete:
+                return 9;
+
+            case enums::DataUsed::x_subfeature:
+                return 10;
+
+            case enums::DataUsed::time_stamps_diff:
+                return 11;
+
+            default:
+                assert( !"Unknown enums::DataUsed!" );
+                return 0;
         }
-    else if ( _data_used == "categorical_output" )
-        {
-            return enums::DataUsed::categorical_output;
-        }
-    else if ( _data_used == "discrete_input" )
-        {
-            return enums::DataUsed::discrete_input;
-        }
-    else if ( _data_used == "discrete_input_is_nan" )
-        {
-            return enums::DataUsed::discrete_input_is_nan;
-        }
-    else if ( _data_used == "discrete_output" )
-        {
-            return enums::DataUsed::discrete_output;
-        }
-    else if ( _data_used == "discrete_output_is_nan" )
-        {
-            return enums::DataUsed::discrete_output_is_nan;
-        }
-    else if ( _data_used == "numerical_input" )
-        {
-            return enums::DataUsed::numerical_input;
-        }
-    else if ( _data_used == "numerical_input_is_nan" )
-        {
-            return enums::DataUsed::numerical_input_is_nan;
-        }
-    else if ( _data_used == "numerical_output" )
-        {
-            return enums::DataUsed::numerical_output;
-        }
-    else if ( _data_used == "numerical_output_is_nan" )
-        {
-            return enums::DataUsed::numerical_output_is_nan;
-        }
-    else if ( _data_used == "same_units_categorical" )
-        {
-            return enums::DataUsed::same_units_categorical;
-        }
-    else if ( _data_used == "same_units_discrete" )
-        {
-            return enums::DataUsed::same_units_discrete;
-        }
-    else if ( _data_used == "same_units_discrete_is_nan" )
-        {
-            return enums::DataUsed::same_units_discrete_is_nan;
-        }
-    else if ( _data_used == "same_units_numerical" )
-        {
-            return enums::DataUsed::same_units_numerical;
-        }
-    else if ( _data_used == "same_units_numerical_is_nan" )
-        {
-            return enums::DataUsed::same_units_numerical_is_nan;
-        }
-    else if ( _data_used == "time_stamps_diff" )
-        {
-            return enums::DataUsed::time_stamps_diff;
-        }
-    else
-        {
-            throw std::runtime_error(
-                "Unknown data used: '" + _data_used + "'!" );
-        }
-}*/
+}
 
 // ------------------------------------------------------------------------
 
@@ -120,65 +93,53 @@ std::string JSON::stringify( const Poco::JSON::Object& _obj )
     return json.str();
 }
 
-// ------------------------------------------------------------------------
-/*
-std::string JSON::stringify( const enums::DataUsed& _data_used )
+// ----------------------------------------------------------------------------
+
+enums::DataUsed JSON::int_to_data_used( const size_t& _val )
 {
-    switch ( _data_used )
+    switch ( _val )
         {
-            case enums::DataUsed::categorical_input:
-                return "categorical_input";
+            case 0:
+                return enums::DataUsed::not_applicable;
 
-            case enums::DataUsed::categorical_output:
-                return "categorical_output";
+            case 1:
+                return enums::DataUsed::same_unit_categorical;
 
-            case enums::DataUsed::discrete_input:
-                return "discrete_input";
+            case 2:
+                return enums::DataUsed::same_unit_discrete;
 
-            case enums::DataUsed::discrete_input_is_nan:
-                return "discrete_input_is_nan";
+            case 3:
+                return enums::DataUsed::same_unit_numerical;
 
-            case enums::DataUsed::discrete_output:
-                return "discrete_output";
+            case 4:
+                return enums::DataUsed::x_perip_categorical;
 
-            case enums::DataUsed::discrete_output_is_nan:
-                return "discrete_output_is_nan";
+            case 5:
+                return enums::DataUsed::x_perip_numerical;
 
-            case enums::DataUsed::numerical_input:
-                return "numerical_input";
+            case 6:
+                return enums::DataUsed::x_perip_discrete;
 
-            case enums::DataUsed::numerical_input_is_nan:
-                return "numerical_input_is_nan";
+            case 7:
+                return enums::DataUsed::x_popul_categorical;
 
-            case enums::DataUsed::numerical_output:
-                return "numerical_output";
+            case 8:
+                return enums::DataUsed::x_popul_numerical;
 
-            case enums::DataUsed::numerical_output_is_nan:
-                return "numerical_output_is_nan";
+            case 9:
+                return enums::DataUsed::x_popul_discrete;
 
-            case enums::DataUsed::same_units_categorical:
-                return "same_units_categorical";
+            case 10:
+                return enums::DataUsed::x_subfeature;
 
-            case enums::DataUsed::same_units_discrete:
-                return "same_units_discrete";
-
-            case enums::DataUsed::same_units_discrete_is_nan:
-                return "same_units_discrete_is_nan";
-
-            case enums::DataUsed::same_units_numerical:
-                return "same_units_numerical";
-
-            case enums::DataUsed::same_units_numerical_is_nan:
-                return "same_units_numerical_is_nan";
-
-            case enums::DataUsed::time_stamps_diff:
-                return "time_stamps_diff";
+            case 11:
+                return enums::DataUsed::time_stamps_diff;
 
             default:
-                assert( false && "Unknown data_used_" );
-                return "";
+                assert( !"Unknown enums::DataUsed!" );
+                return enums::DataUsed::not_applicable;
         }
-}*/
+}
 
 // ------------------------------------------------------------------------
 }  // namespace autosql

@@ -10,7 +10,7 @@
 
 #include <Poco/JSON/Parser.h>
 
-// #include "autosql/enums/enums.hpp"
+#include "autosql/enums/enums.hpp"
 
 // ------------------------------------------------------------------------
 
@@ -22,8 +22,8 @@ struct JSON
 {
     // ------------------------------------------------------------------------
 
-    /// Parses the correct DataUsed from a string.
-    // static enums::DataUsed destringify( const std::string& _data_used );
+    /// Transforms data used to an integer.
+    static size_t data_used_to_int( const enums::DataUsed& _data_used );
 
     /// Gets an array from a JSON object or throws.
     static Poco::JSON::Array::Ptr get_array(
@@ -37,7 +37,7 @@ struct JSON
     static std::string stringify( const Poco::JSON::Object& _obj );
 
     /// Expresses DataUsed  as JSON string
-    // static std::string stringify( const enums::DataUsed& _data_used );
+    static enums::DataUsed int_to_data_used( const size_t& _val );
 
     // ------------------------------------------------------------------------
 
