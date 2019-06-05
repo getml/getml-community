@@ -1,0 +1,399 @@
+#ifndef AUTOSQL_DECISIONTREES_DECISIONTREEENSEMBLE_HPP_
+#define AUTOSQL_DECISIONTREES_DECISIONTREEENSEMBLE_HPP_
+
+namespace autosql
+{
+namespace decisiontrees
+{
+// ----------------------------------------------------------------------------
+
+class DecisionTreeEnsemble
+{
+   public:
+    DecisionTreeEnsemble();
+
+    DecisionTreeEnsemble(
+        const std::shared_ptr<containers::Encoding> &_categories );
+
+    DecisionTreeEnsemble(
+        const std::shared_ptr<containers::Encoding> &_categories,
+        const std::vector<std::string> &_placeholder_peripheral,
+        const Placeholder &_placeholder_population );
+
+    DecisionTreeEnsemble( const DecisionTreeEnsemble &_other );
+
+    DecisionTreeEnsemble( DecisionTreeEnsemble &&_other ) noexcept;
+
+    ~DecisionTreeEnsemble() = default;
+
+    // --------------------------------------
+
+    /// Calculates feature importances
+    void feature_importances();
+
+    /// Fits the decision tree ensemble
+    std::string fit(
+        const std::shared_ptr<const logging::Logger> _logger,
+        std::vector<containers::DataFrame> _peripheral_tables_raw,
+        containers::DataFrameView _population_table_raw,
+        descriptors::Hyperparameters _hyperparameters );
+
+    /// Fits the predictors
+    std::string fit_predictors(
+        const std::shared_ptr<const logging::Logger> _logger,
+        containers::Matrix<SQLNET_FLOAT> _features,
+        containers::Matrix<SQLNET_FLOAT> _targets );
+
+    /// Builds the decision tree ensemble from a Poco::JSON::Object
+    void from_json_obj( const Poco::JSON::Object &_json_obj );
+
+    /// Loads the Model in JSON format and predictors, if applicable
+    void load( const std::string &_path );
+
+    /// Copy constructor
+    DecisionTreeEnsemble &operator=( const DecisionTreeEnsemble &_other );
+
+    /// Copy assignment constructor
+    DecisionTreeEnsemble &operator=( DecisionTreeEnsemble &&_other ) noexcept;
+
+    /// Generates a prediction on the basis of the features and the gradient
+    /// boosting algorithm
+    containers::Matrix<SQLNET_FLOAT> predict(
+        const std::shared_ptr<const logging::Logger> _logger,
+        std::vector<containers::DataFrame> _peripheral_tables,
+        containers::DataFrameView _population_table );
+
+    /// Generates predictions on the features using the internal predictors
+    containers::Matrix<SQLNET_FLOAT> predict(
+        containers::Matrix<SQLNET_FLOAT> _features );
+
+    /// Saves the Model in JSON format and predictors, if applicable
+    void save( const std::string &_path );
+
+    /// Calculates scores.
+    Poco::JSON::Object score(
+        const containers::Matrix<SQLNET_FLOAT> &_yhat,
+        const containers::Matrix<SQLNET_FLOAT> &_y );
+
+    /// Selects features based on the feature importances of
+    /// the built-in predictor. The remaining features are sorted
+    /// by importance.
+    std::string select_features(
+        const std::shared_ptr<const logging::Logger> _logger,
+        containers::Matrix<SQLNET_FLOAT> _features,
+        containers::Matrix<SQLNET_FLOAT> _targets );
+
+    /// Extracts the ensemble as a Poco::JSON object
+    Poco::JSON::Object to_json_obj();
+
+    /// Extracts the ensemble as a Boost property tree the monitor process can
+    /// understand
+    Poco::JSON::Object to_monitor( const std::string _name ) const;
+
+    /// Extracts the SQL statements underlying these features as a string
+    std::string to_sql() const;
+
+    /// Calculates the feature importances
+    descriptors::SourceImportances source_importances();
+
+    /// Transforms a set of raw data into extracted features
+    containers::Matrix<SQLNET_FLOAT> transform(
+        const std::shared_ptr<const logging::Logger> _logger,
+        std::vector<containers::DataFrame> _peripheral_tables_raw,
+        containers::DataFrameView _population_table_raw,
+        const bool _transpose = true,
+        const bool _score = false );
+
+    // --------------------------------------
+
+#ifdef SQLNET_PARALLEL
+
+    /// Trivial getter
+    inline SQLNET_COMMUNICATOR *comm() { return impl().comm_; }
+
+#endif  // SQLNET_PARALLEL
+
+    /// Returns true if there are predictors, false otherwise.
+    inline bool has_feature_selectors()
+    {
+        assert( impl().hyperparameters_ );
+        return (
+            impl().hyperparameters_->feature_selector_hyperparams &&
+            impl().hyperparameters_->num_selected_features > 0 );
+    }
+
+    /// Returns true if there are fitted predictors, false otherwise.
+    inline bool has_fitted_predictors() { return predictors().size() > 0; }
+
+    /// Returns true if there are predictors, false otherwise.
+    inline bool has_predictors()
+    {
+        assert( impl().hyperparameters_ );
+        return ( impl().hyperparameters_->predictor_hyperparams && true );
+    }
+
+    /// Trivial accessor
+    const descriptors::Hyperparameters &hyperparameters() const
+    {
+        return *impl().hyperparameters_;
+    }
+
+#ifdef SQLNET_PARALLEL
+
+    /// Trivial setter
+    inline void set_comm( SQLNET_COMMUNICATOR *_comm ) { impl().comm_ = _comm; }
+
+#endif  // SQLNET_PARALLEL
+
+    /// Extracts the ensemble as a JSON
+    inline std::string to_json() { return JSON::stringify( to_json_obj() ); }
+
+    // --------------------------------------
+
+   private:
+    /// Builds the candidates during fit(...)
+    std::list<DecisionTree> build_candidates(
+        const SQLNET_INT _ix_feature,
+        const std::vector<descriptors::SameUnits> &_same_units,
+        TableHolder &_table_holder );
+
+    /// Calculates statistics for the individual features.
+    void calculate_feature_stats(
+        const containers::Matrix<SQLNET_FLOAT> &_predictions,
+        const containers::DataFrameView &_targets );
+
+    /// Calculates the sampling rate based on the number of rows
+    /// in the population table and the sampling_factor
+    void calculate_sampling_rate( const SQLNET_INT _population_nrows );
+
+    /// Makes sure that the input provided by the user is plausible
+    /// and throws an exception if it isn't
+    void check_plausibility(
+        const std::vector<containers::DataFrame> &_peripheral_tables,
+        const containers::DataFrame &_population_table );
+
+    /// Makes sure that the input provided by the user is plausible
+    /// and throws an exception if it isn't. Only the fit(...) member
+    /// function needs to call this, not transform(...).
+    void check_plausibility_of_targets(
+        const containers::DataFrameView &_population_table );
+
+    /// Fits the linear regression and then recalculates the residuals.
+    /// This is not needed when the shrinkage is 0.0.
+    void fit_linear_regressions_and_recalculate_residuals(
+        TableHolder &_table_holder,
+        const SQLNET_FLOAT _shrinkage,
+        containers::Matrix<SQLNET_FLOAT> &_sample_weights,
+        containers::Matrix<SQLNET_FLOAT> &_yhat_old,
+        containers::Matrix<SQLNET_FLOAT> &_residuals );
+
+    /// Initializes the predictors for fitting or loading
+    void init_predictors(
+        const size_t &_num_predictors,
+        const Poco::JSON::Object &_predictor_hyperparameters );
+
+    /// Logs current events.
+    void log(
+        const std::shared_ptr<const logging::Logger> &_logger,
+        const std::string &_msg );
+
+    /// Parses the linear regression from a Poco::JSON::Object
+    void parse_linear_regressions( const Poco::JSON::Object &_json_obj );
+
+    /// Turns a string describing the loss function into a proper loss function
+    lossfunctions::LossFunction *parse_loss_function(
+        std::string _loss_function );
+
+    /// This member functions stores the number of columns
+    /// so we can compare them later on.
+    void set_num_columns(
+        std::vector<containers::DataFrame> &_peripheral_tables,
+        containers::DataFrame &_population_table );
+
+    // --------------------------------------
+
+   private:
+    /// Trivial accessor
+    inline containers::Optional<aggregations::AggregationImpl>
+        &aggregation_impl()
+    {
+        return impl().aggregation_impl_;
+    }
+
+    /// Trivial accessor
+    inline std::shared_ptr<containers::Encoding> &categories()
+    {
+        return impl().categories_;
+    }
+
+    /// Whether the ensemble has been fitted
+    inline bool has_been_fitted() const { return trees().size() > 0; }
+
+    /// Trivial accessor
+    inline containers::Optional<descriptors::Hyperparameters> &hyperparameters()
+    {
+        return impl().hyperparameters_;
+    }
+
+    /// Trivial accessor
+    inline DecisionTreeEnsembleImpl &impl() { return impl_; }
+
+    /// Trivial accessor
+    inline const DecisionTreeEnsembleImpl &impl() const { return impl_; }
+
+    /// Abstraction that returns the last tree that has actually been added to
+    /// the ensemble
+    inline DecisionTree *last_tree()
+    {
+        assert( trees().size() > 0 );
+        return &( trees().back() );
+    }
+
+    /// Abstraction that returns the last linear regression in the ensemble
+    inline LinearRegression *last_linear_regression()
+    {
+        assert( linear_regressions().size() > 0 );
+        return &( linear_regressions().back() );
+    }
+
+    /// Abstraction that returns the last linear regression in the ensemble
+    inline std::vector<LinearRegression> &linear_regressions()
+    {
+        return impl().linear_regressions_;
+    }
+
+    /// Trivial accessor
+    inline lossfunctions::LossFunction *loss_function()
+    {
+        assert( loss_function_ );
+        return loss_function_.get();
+    }
+
+    /// Trivial setter
+    inline void loss_function( lossfunctions::LossFunction *_loss_function )
+    {
+        loss_function_.reset( _loss_function );
+    }
+
+    /// Trivial accessor
+    inline std::vector<SQLNET_INT> &num_columns_peripheral_categorical()
+    {
+        return impl().num_columns_peripheral_categorical_;
+    }
+
+    /// Trivial accessor
+    inline std::vector<SQLNET_INT> &num_columns_peripheral_discrete()
+    {
+        return impl().num_columns_peripheral_discrete_;
+    }
+
+    /// Trivial accessor
+    inline std::vector<SQLNET_INT> &num_columns_peripheral_numerical()
+    {
+        return impl().num_columns_peripheral_numerical_;
+    }
+
+    /// Trivial accessor
+    inline SQLNET_INT &num_columns_population_categorical()
+    {
+        return impl().num_columns_population_categorical_;
+    }
+
+    /// Trivial accessor
+    inline SQLNET_INT &num_columns_population_discrete()
+    {
+        return impl().num_columns_population_discrete_;
+    }
+
+    /// Trivial accessor
+    inline SQLNET_INT &num_columns_population_numerical()
+    {
+        return impl().num_columns_population_numerical_;
+    }
+
+    /// Trivial accessor
+    inline std::vector<std::string> &placeholder_peripheral()
+    {
+        return impl().placeholder_peripheral_;
+    }
+
+    /// Trivial accessor
+    inline const std::vector<std::string> &placeholder_peripheral() const
+    {
+        return impl().placeholder_peripheral_;
+    }
+
+    /// Trivial accessor
+    inline containers::Optional<Placeholder> &placeholder_population()
+    {
+        return impl().placeholder_population_;
+    }
+
+    /// Trivial accessor
+    inline const containers::Optional<Placeholder> &placeholder_population()
+        const
+    {
+        assert( impl().placeholder_population_ );
+        return impl().placeholder_population_;
+    }
+
+    /// Trivial accessor
+    inline std::vector<std::shared_ptr<predictors::Predictor>> &predictors()
+    {
+        return impl().predictors_;
+    }
+
+    /// Trivial accessor
+    inline containers::Optional<std::mt19937> &random_number_generator()
+    {
+        return impl().random_number_generator_;
+    }
+
+    /// Trivial accessor
+    inline descriptors::Scores &scores() { return impl().scores_; }
+
+    /// Trivial accessor
+    inline const descriptors::Scores &scores() const { return impl().scores_; }
+
+    /// Trivial accessor
+    inline DecisionTree *tree( const SQLNET_INT _i )
+    {
+        assert( trees().size() > 0 );
+        assert( static_cast<SQLNET_INT>( trees().size() ) > _i );
+
+        return trees().data() + _i;
+    }
+
+    /// Trivial accessor
+    inline std::vector<std::string> &targets() { return impl().targets_; }
+
+    /// Trivial accessor
+    inline const std::vector<std::string> &targets() const
+    {
+        return impl().targets_;
+    }
+
+    /// Trivial accessor
+    inline std::vector<DecisionTree> &trees() { return impl().trees_; }
+
+    /// Trivial accessor
+    inline const std::vector<DecisionTree> &trees() const
+    {
+        return impl().trees_;
+    }
+
+    // --------------------------------------
+
+   private:
+    /// All variables other than loss_function_
+    DecisionTreeEnsembleImpl impl_;
+
+    /// The loss function for this ensemble.
+    std::unique_ptr<lossfunctions::LossFunction> loss_function_;
+};
+
+// ----------------------------------------------------------------------------
+}  // namespace decisiontrees
+}  // namespace autosql
+
+#endif  // AUTOSQL_DECISIONTREES_DECISIONTREEENSEMBLE_HPP_

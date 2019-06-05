@@ -1,0 +1,43 @@
+set(
+    OBJ 
+    ${SOURCE_DIRECTORY}/AggregationIndex.cpp 
+    ${SOURCE_DIRECTORY}/CandidateTreeBuilder.cpp 
+    ${SOURCE_DIRECTORY}/CategoryIndex.cpp 
+    ${SOURCE_DIRECTORY}/CrossEntropyLoss.cpp 
+    ${SOURCE_DIRECTORY}/DataFrame.cpp 
+    ${SOURCE_DIRECTORY}/DataFrameManager.cpp 
+    ${SOURCE_DIRECTORY}/DataFrameScatterer.cpp 
+    ${SOURCE_DIRECTORY}/DecisionTree.cpp 
+    ${SOURCE_DIRECTORY}/DecisionTreeEnsemble.cpp 
+    ${SOURCE_DIRECTORY}/DecisionTreeImpl.cpp 
+    ${SOURCE_DIRECTORY}/DecisionTreeNode.cpp
+    ${SOURCE_DIRECTORY}/Encoding.cpp
+    ${SOURCE_DIRECTORY}/FileHandler.cpp 
+    ${SOURCE_DIRECTORY}/Hyperparameters.cpp 
+    ${SOURCE_DIRECTORY}/LicenseChecker.cpp 
+    ${SOURCE_DIRECTORY}/LinearRegression.cpp 
+    ${SOURCE_DIRECTORY}/JSON.cpp 
+    ${SOURCE_DIRECTORY}/MetricParser.cpp 
+    ${SOURCE_DIRECTORY}/ModelManager.cpp 
+    ${SOURCE_DIRECTORY}/Models.cpp 
+    ${SOURCE_DIRECTORY}/Monitor.cpp 
+    ${SOURCE_DIRECTORY}/OptimizationCriterionImpl.cpp 
+    ${SOURCE_DIRECTORY}/Options.cpp 
+    ${SOURCE_DIRECTORY}/ProjectManager.cpp 
+    ${SOURCE_DIRECTORY}/Receiver.cpp 
+    ${SOURCE_DIRECTORY}/RequestHandler.cpp 
+    ${SOURCE_DIRECTORY}/RSquaredCriterion.cpp 
+    ${SOURCE_DIRECTORY}/SameUnitIdentifier.cpp 
+    ${SOURCE_DIRECTORY}/SampleContainer.cpp 
+    ${SOURCE_DIRECTORY}/Scores.cpp 
+    ${SOURCE_DIRECTORY}/Sender.cpp 
+    ${SOURCE_DIRECTORY}/SourceImportances.cpp 
+    ${SOURCE_DIRECTORY}/Summarizer.cpp 
+    ${SOURCE_DIRECTORY}/SquareLoss.cpp 
+    ${SOURCE_DIRECTORY}/TablePreparer.cpp 
+    ${SOURCE_DIRECTORY}/Threadutils.cpp 
+    ${SOURCE_DIRECTORY}/TreeFitter.cpp 
+    ${SOURCE_DIRECTORY}/debug.cpp
+    ${SOURCE_DIRECTORY}/main.cpp
+)
+
