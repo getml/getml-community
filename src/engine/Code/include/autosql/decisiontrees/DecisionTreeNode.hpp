@@ -19,6 +19,11 @@ class DecisionTreeNode
 
     /// Fits the decision tree node
     void fit(
+        const containers::DataFrameView &_population,
+        const containers::DataFrame &_peripheral,
+        const std::vector<containers::ColumnView<
+            AUTOSQL_FLOAT,
+            std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end );
 
@@ -27,6 +32,11 @@ class DecisionTreeNode
     /// for which the sample weight is 0, activates all remaining samples
     /// and commits this is in the aggregation and the optimization criterion
     void fit_as_root(
+        const containers::DataFrameView &_population,
+        const containers::DataFrame &_peripheral,
+        const std::vector<containers::ColumnView<
+            AUTOSQL_FLOAT,
+            std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
         AUTOSQL_SAMPLE_CONTAINER::iterator _sample_container_begin,
         AUTOSQL_SAMPLE_CONTAINER::iterator _sample_container_end );
 
@@ -51,6 +61,11 @@ class DecisionTreeNode
 
     /// Transforms the inserted samples
     void transform(
+        const containers::DataFrameView &_population,
+        const containers::DataFrame &_peripheral,
+        const std::vector<containers::ColumnView<
+            AUTOSQL_FLOAT,
+            std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end );
 
@@ -174,7 +189,10 @@ class DecisionTreeNode
 
     /// Non-trivial getter
     const AUTOSQL_INT get_same_unit_categorical(
-        const Sample *_sample, const AUTOSQL_INT _col )
+        const containers::DataFrameView &_population,
+        const containers::DataFrame &_peripheral,
+        const Sample *_sample,
+        const AUTOSQL_INT _col )
     {
         const AUTOSQL_INT col1 =
             std::get<0>( tree_->same_units_categorical()[_col] ).ix_column_used;
@@ -185,14 +203,14 @@ class DecisionTreeNode
         const AUTOSQL_INT val1 =
             ( std::get<0>( tree_->same_units_categorical()[_col] ).data_used ==
               enums::DataUsed::x_perip_categorical )
-                ? ( get_x_perip_categorical( _sample, col1 ) )
-                : ( get_x_popul_categorical( _sample, col1 ) );
+                ? ( get_x_perip_categorical( _peripheral, _sample, col1 ) )
+                : ( get_x_popul_categorical( _population, _sample, col1 ) );
 
         const AUTOSQL_INT val2 =
             ( std::get<1>( tree_->same_units_categorical()[_col] ).data_used ==
               enums::DataUsed::x_perip_categorical )
-                ? ( get_x_perip_categorical( _sample, col2 ) )
-                : ( get_x_popul_categorical( _sample, col2 ) );
+                ? ( get_x_perip_categorical( _peripheral, _sample, col2 ) )
+                : ( get_x_popul_categorical( _population, _sample, col2 ) );
 
         // Feature -1 will be ignored during training - because it is equivalent
         // to != 0
@@ -201,7 +219,10 @@ class DecisionTreeNode
 
     /// Non-trivial getter
     const AUTOSQL_FLOAT get_same_unit_discrete(
-        const Sample *_sample, const AUTOSQL_INT _col )
+        const containers::DataFrameView &_population,
+        const containers::DataFrame &_peripheral,
+        const Sample *_sample,
+        const AUTOSQL_INT _col )
     {
         const AUTOSQL_INT col1 =
             std::get<0>( tree_->same_units_discrete()[_col] ).ix_column_used;
@@ -214,11 +235,11 @@ class DecisionTreeNode
         switch ( std::get<0>( tree_->same_units_discrete()[_col] ).data_used )
             {
                 case enums::DataUsed::x_perip_discrete:
-                    val1 = get_x_perip_discrete( _sample, col1 );
+                    val1 = get_x_perip_discrete( _peripheral, _sample, col1 );
                     break;
 
                 case enums::DataUsed::x_popul_discrete:
-                    val1 = get_x_popul_discrete( _sample, col1 );
+                    val1 = get_x_popul_discrete( _population, _sample, col1 );
                     break;
 
                 default:
@@ -232,11 +253,11 @@ class DecisionTreeNode
         switch ( std::get<1>( tree_->same_units_discrete()[_col] ).data_used )
             {
                 case enums::DataUsed::x_perip_discrete:
-                    val2 = get_x_perip_discrete( _sample, col2 );
+                    val2 = get_x_perip_discrete( _peripheral, _sample, col2 );
                     break;
 
                 case enums::DataUsed::x_popul_discrete:
-                    val2 = get_x_popul_discrete( _sample, col2 );
+                    val2 = get_x_popul_discrete( _population, _sample, col2 );
                     break;
 
                 default:
@@ -250,7 +271,10 @@ class DecisionTreeNode
 
     /// Non-trivial getter
     const AUTOSQL_FLOAT get_same_unit_numerical(
-        const Sample *_sample, const AUTOSQL_INT _col )
+        const containers::DataFrameView &_population,
+        const containers::DataFrame &_peripheral,
+        const Sample *_sample,
+        const AUTOSQL_INT _col )
     {
         const AUTOSQL_INT col1 =
             std::get<0>( tree_->same_units_numerical()[_col] ).ix_column_used;
@@ -263,11 +287,11 @@ class DecisionTreeNode
         switch ( std::get<0>( tree_->same_units_numerical()[_col] ).data_used )
             {
                 case enums::DataUsed::x_perip_numerical:
-                    val1 = get_x_perip_numerical( _sample, col1 );
+                    val1 = get_x_perip_numerical( _peripheral, _sample, col1 );
                     break;
 
                 case enums::DataUsed::x_popul_numerical:
-                    val1 = get_x_popul_numerical( _sample, col1 );
+                    val1 = get_x_popul_numerical( _population, _sample, col1 );
                     break;
 
                 default:
@@ -280,11 +304,11 @@ class DecisionTreeNode
         switch ( std::get<1>( tree_->same_units_numerical()[_col] ).data_used )
             {
                 case enums::DataUsed::x_perip_numerical:
-                    val2 = get_x_perip_numerical( _sample, col2 );
+                    val2 = get_x_perip_numerical( _peripheral, _sample, col2 );
                     break;
 
                 case enums::DataUsed::x_popul_numerical:
-                    val2 = get_x_popul_numerical( _sample, col2 );
+                    val2 = get_x_popul_numerical( _population, _sample, col2 );
                     break;
 
                 default:
@@ -297,61 +321,78 @@ class DecisionTreeNode
 
     /// Trivial getter
     inline const AUTOSQL_FLOAT get_time_stamps_diff(
+        const containers::DataFrameView &_population,
+        const containers::DataFrame &_peripheral,
         const Sample *_sample ) const
     {
-        return tree_->population_.time_stamp(
-                   _sample->ix_x_popul, ix_perip_used() ) -
-               tree_->peripheral_.time_stamps()[_sample->ix_x_perip];
+        return _population.time_stamp( _sample->ix_x_popul ) -
+               _peripheral.time_stamp( _sample->ix_x_perip );
     }
 
     /// Trivial getter
     inline const AUTOSQL_INT get_x_perip_categorical(
-        const Sample *_sample, const AUTOSQL_INT _col ) const
+        const containers::DataFrame &_peripheral,
+        const Sample *_sample,
+        const size_t _col ) const
     {
-        return tree_->peripheral_.categorical()( _sample->ix_x_perip, _col );
+        return _peripheral.categorical( _sample->ix_x_perip, _col );
     }
 
     /// Trivial getter
     inline const AUTOSQL_FLOAT get_x_perip_numerical(
-        const Sample *_sample, const AUTOSQL_INT _col ) const
+        const containers::DataFrame &_peripheral,
+        const Sample *_sample,
+        const size_t _col ) const
     {
-        return tree_->peripheral_.numerical()( _sample->ix_x_perip, _col );
+        return _peripheral.numerical( _sample->ix_x_perip, _col );
     }
 
     /// Trivial getter
     inline const AUTOSQL_FLOAT get_x_perip_discrete(
-        const Sample *_sample, const AUTOSQL_INT _col ) const
+        const containers::DataFrame &_peripheral,
+        const Sample *_sample,
+        const size_t _col ) const
     {
-        return tree_->peripheral_.discrete()( _sample->ix_x_perip, _col );
+        return _peripheral.discrete( _sample->ix_x_perip, _col );
     }
 
     /// Trivial getter
     inline const AUTOSQL_INT get_x_popul_categorical(
-        const Sample *_sample, const AUTOSQL_INT _col ) const
+        const containers::DataFrameView &_population,
+        const Sample *_sample,
+        const size_t _col ) const
     {
-        return tree_->population_.categorical( _sample->ix_x_popul, _col );
+        return _population.categorical( _sample->ix_x_popul, _col );
     }
 
     /// Trivial getter
     inline const AUTOSQL_FLOAT get_x_popul_numerical(
-        const Sample *_sample, const AUTOSQL_INT _col ) const
+        const containers::DataFrameView &_population,
+        const Sample *_sample,
+        const size_t _col ) const
     {
-        return tree_->population_.numerical( _sample->ix_x_popul, _col );
+        return _population.numerical( _sample->ix_x_popul, _col );
     }
 
     /// Trivial getter
     inline const AUTOSQL_FLOAT get_x_popul_discrete(
-        const Sample *_sample, const AUTOSQL_INT _col ) const
+        const containers::DataFrameView &_population,
+        const Sample *_sample,
+        const size_t _col ) const
     {
-        return tree_->population_.discrete( _sample->ix_x_popul, _col );
+        return _population.discrete( _sample->ix_x_popul, _col );
     }
 
     /// Trivial getter
     inline const AUTOSQL_FLOAT get_x_subfeature(
-        const Sample *_sample, const AUTOSQL_INT _col ) const
+        const std::vector<containers::ColumnView<
+            AUTOSQL_FLOAT,
+            std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
+        const Sample *_sample,
+        const size_t _col ) const
     {
-        assert( tree_->subfeatures() );
-        return tree_->subfeatures()( _sample->ix_x_perip, _col );
+        assert( _col < _subfeatures.size() );
+        return _subfeatures[_col]( _sample->ix_x_perip );
     }
 
     /// Trivial getter
@@ -361,13 +402,6 @@ class DecisionTreeNode
     inline optimizationcriteria::OptimizationCriterion *optimization_criterion()
     {
         return tree_->optimization_criterion_;
-    }
-
-    /// Identifies the global minimum and the global maximum
-    template <typename T>
-    void reduce_min_max( T &_min, T &_max )
-    {
-        containers::Summarizer::reduce_min_max( *comm(), _min, _max );
     }
 
     /// Trivial getter
@@ -448,6 +482,11 @@ class DecisionTreeNode
 
     /// Commits the split and spawns child nodes
     void commit(
+        const containers::DataFrameView &_population,
+        const containers::DataFrame &_peripheral,
+        const std::vector<containers::ColumnView<
+            AUTOSQL_FLOAT,
+            std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
         const descriptors::Split &_split,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end );
@@ -458,9 +497,18 @@ class DecisionTreeNode
 
     /// Copies the split give ix_max.
     AUTOSQL_SAMPLE_ITERATOR identify_parameters(
+        const containers::DataFrameView &_population,
+        const containers::DataFrame &_peripheral,
+        const std::vector<containers::ColumnView<
+            AUTOSQL_FLOAT,
+            std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
         const descriptors::Split &_column,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end );
+
+    /// Identifies the global minimum and the global maximum
+    template <typename T>
+    void reduce_min_max( T *_min, T *_max );
 
     /// Returns the sum of the sample sizes of all processes
     size_t reduce_sample_size( size_t _sample_size );
@@ -477,6 +525,11 @@ class DecisionTreeNode
 
     /// Assigns a the right values to the samples for faster lookup.
     void set_samples(
+        const containers::DataFrameView &_population,
+        const containers::DataFrame &_peripheral,
+        const std::vector<containers::ColumnView<
+            AUTOSQL_FLOAT,
+            std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end );
 
@@ -496,132 +549,159 @@ class DecisionTreeNode
 
     /// Spawns two new child nodes in the fit(...) function
     void spawn_child_nodes(
+        const containers::DataFrameView &_population,
+        const containers::DataFrame &_peripheral,
+        const std::vector<containers::ColumnView<
+            AUTOSQL_FLOAT,
+            std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _null_values_separator,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end );
 
     /// Tries to impose the peripheral categorical columns as a condition
     void try_categorical_peripheral(
+        const containers::DataFrame &_peripheral,
         const size_t _sample_size,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
-        std::vector<descriptors::Split> &_candidate_splits );
+        std::vector<descriptors::Split> *_candidate_splits );
 
     /// Tries to impose the population categorical columns as a condition
     void try_categorical_population(
+        const containers::DataFrameView &_population,
         const size_t _sample_size,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
-        std::vector<descriptors::Split> &_candidate_splits );
+        std::vector<descriptors::Split> *_candidate_splits );
 
     /// Tries whether the categorical values might constitute a good split
     void try_categorical_values(
         const AUTOSQL_INT _column_used,
         const enums::DataUsed _data_used,
+        const size_t _sample_size,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
-        const size_t _sample_size,
-        std::vector<descriptors::Split> &_candidate_splits );
+        std::vector<descriptors::Split> *_candidate_splits );
 
     /// Tries to impose different conditions
     void try_conditions(
+        const containers::DataFrameView &_population,
+        const containers::DataFrame &_peripheral,
+        const std::vector<containers::ColumnView<
+            AUTOSQL_FLOAT,
+            std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
         const size_t _sample_size,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
-        std::vector<descriptors::Split> &_candidate_splits );
+        std::vector<descriptors::Split> *_candidate_splits );
 
     /// Tries to impose the peripheral discrete columns as a condition
     void try_discrete_peripheral(
+        const containers::DataFrame &_peripheral,
         const size_t _sample_size,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
-        std::vector<descriptors::Split> &_candidate_splits );
+        std::vector<descriptors::Split> *_candidate_splits );
 
     /// Tries to impose the population discrete columns as a condition
     void try_discrete_population(
+        const containers::DataFrameView &_population,
         const size_t _sample_size,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
-        std::vector<descriptors::Split> &_candidate_splits );
+        std::vector<descriptors::Split> *_candidate_splits );
 
     /// Tries to impose the peripheral numerical columns as a condition
     void try_numerical_peripheral(
+        const containers::DataFrame &_peripheral,
         const size_t _sample_size,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
-        std::vector<descriptors::Split> &_candidate_splits );
+        std::vector<descriptors::Split> *_candidate_splits );
 
     /// Tries to impose the population numerical columns as a condition
     void try_numerical_population(
+        const containers::DataFrameView &_population,
         const size_t _sample_size,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
-        std::vector<descriptors::Split> &_candidate_splits );
+        std::vector<descriptors::Split> *_candidate_splits );
 
     /// Tries whether the discrete values might constitute a good split
     void try_discrete_values(
         const AUTOSQL_INT _column_used,
         const enums::DataUsed _data_used,
+        const size_t _sample_size,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
-        const size_t _sample_size,
-        std::vector<descriptors::Split> &_candidate_splits );
+        std::vector<descriptors::Split> *_candidate_splits );
 
     /// Called by try_discrete_values(...) and try_numerical_values(...)
     void try_non_categorical_values(
         const AUTOSQL_INT _column_used,
         const enums::DataUsed _data_used,
+        const size_t _sample_size,
+        const std::vector<AUTOSQL_FLOAT> _critical_values,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _null_values_separator,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
-        const size_t _sample_size,
-        std::vector<AUTOSQL_FLOAT> &_critical_values,
-        std::vector<descriptors::Split> &_candidate_splits );
+        std::vector<descriptors::Split> *_candidate_splits );
 
     /// Tries whether the numerical values might constitute a good split
     void try_numerical_values(
         const AUTOSQL_INT _column_used,
         const enums::DataUsed _data_used,
+        const size_t _sample_size,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
-        const size_t _sample_size,
-        std::vector<descriptors::Split> &_candidate_splits );
+        std::vector<descriptors::Split> *_candidate_splits );
 
     /// Tries to impose the same units categorical as a condition
     void try_same_units_categorical(
+        const containers::DataFrameView &_population,
+        const containers::DataFrame &_peripheral,
         const size_t _sample_size,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
-        std::vector<descriptors::Split> &_candidate_splits );
+        std::vector<descriptors::Split> *_candidate_splits );
 
     /// Tries to impose the same units discrete as a condition
     void try_same_units_discrete(
+        const containers::DataFrameView &_population,
+        const containers::DataFrame &_peripheral,
         const size_t _sample_size,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
-        std::vector<descriptors::Split> &_candidate_splits );
+        std::vector<descriptors::Split> *_candidate_splits );
 
     /// Tries to impose the same units numerical as a condition
     void try_same_units_numerical(
+        const containers::DataFrameView &_population,
+        const containers::DataFrame &_peripheral,
         const size_t _sample_size,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
-        std::vector<descriptors::Split> &_candidate_splits );
+        std::vector<descriptors::Split> *_candidate_splits );
 
     /// Tries to impose the subfeatures as a condition
     void try_subfeatures(
+        const std::vector<containers::ColumnView<
+            AUTOSQL_FLOAT,
+            std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
         const size_t _sample_size,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
-        std::vector<descriptors::Split> &_candidate_splits );
+        std::vector<descriptors::Split> *_candidate_splits );
 
     /// Tries to impose the difference between the time stamps as a
     /// condition
     void try_time_stamps_diff(
+        const containers::DataFrameView &_population,
+        const containers::DataFrame &_peripheral,
         const size_t _sample_size,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
-        std::vector<descriptors::Split> &_candidate_splits );
+        std::vector<descriptors::Split> *_candidate_splits );
 
     // --------------------------------------
 
@@ -715,6 +795,39 @@ void DecisionTreeNode::apply_by_critical_value(
 }
 
 // ----------------------------------------------------------------------------
+
+template <typename T>
+void DecisionTreeNode::reduce_min_max( T *_min, T *_max )
+{
+    T global_min = 0;
+
+    T global_max = 0;
+
+    multithreading::all_reduce(
+        *comm(),                      // comm
+        *_min,                        // in_value
+        global_min,                   // out_value
+        multithreading::minimum<T>()  // op
+    );
+
+    comm()->barrier();
+
+    *_min = global_min;
+
+    multithreading::all_reduce(
+        *comm(),                      // comm
+        &_max,                        // in_value
+        global_max,                   // out_value
+        multithreading::maximum<T>()  // op
+    );
+
+    comm()->barrier();
+
+    *_max = global_max;
+}
+
+// ----------------------------------------------------------------------------
+
 }  // namespace decisiontrees
 }  // namespace autosql
 

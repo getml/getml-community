@@ -22,7 +22,7 @@ struct AggregationImpl
           sum_squared_committed_( std::vector<AUTOSQL_FLOAT>( _sample_size ) ),
           updates_current_( containers::IntSet( _sample_size ) ),
           updates_stored_( containers::IntSet( _sample_size ) ),
-          yhat_( containers::Matrix<AUTOSQL_FLOAT>( _sample_size, 1 ) ),
+          yhat_( std::vector<AUTOSQL_FLOAT>( _sample_size ) ),
           yhat_committed_( std::vector<AUTOSQL_FLOAT>( _sample_size ) ),
           yhat_stored_( std::vector<AUTOSQL_FLOAT>( _sample_size ) )
     {
@@ -96,7 +96,7 @@ struct AggregationImpl
         value_to_be_compared_;
 
     /// Vector containing predictions
-    containers::Matrix<AUTOSQL_FLOAT> yhat_;
+    std::vector<AUTOSQL_FLOAT> yhat_;
 
     /// Vector containing predictions that have been
     /// committed
@@ -108,7 +108,7 @@ struct AggregationImpl
 };
 
 // ----------------------------------------------------------------------------
-}
-}
+}  // namespace aggregations
+}  // namespace autosql
 
 #endif  // AUTOSQL_AGGREGATIONS_AGGREGATIONIMPL_HPP_

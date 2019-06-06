@@ -68,8 +68,8 @@ class IntermediateAggregation
 
     /// Calculates statistics that have to be calculated only once
     void init(
-        std::vector<AUTOSQL_FLOAT>& _y,
-        std::vector<AUTOSQL_FLOAT>& _sample_weights ) final
+        const containers::Matrix<AUTOSQL_FLOAT>& _y,
+        const std::vector<AUTOSQL_FLOAT>& _sample_weights ) final
     {
         assert(
             false &&
@@ -455,7 +455,7 @@ void IntermediateAggregation<AggType>::init_yhat(
     const std::vector<AUTOSQL_FLOAT>& _yhat,
     const containers::IntSet& _indices )
 {
-    debug_message( "IntermediateAgg: init_yhat..." );
+    debug_log( "IntermediateAgg: init_yhat..." );
 
     assert( updates_current().size() == 0 );
 
@@ -487,7 +487,7 @@ void IntermediateAggregation<AggType>::init_yhat(
             yhat_stored()[ix_agg] = yhat()[ix_agg];
         }
 
-    debug_message( "IntermediateAgg: init_yhat...done" );
+    debug_log( "IntermediateAgg: init_yhat...done" );
 }
 
 // ----------------------------------------------------------------------------

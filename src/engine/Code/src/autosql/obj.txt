@@ -1,7 +1,9 @@
 set(
     AUTOSQL_OBJ 
+    ${AUTOSQL_SOURCE_DIRECTORY}/CategoryIndex.cpp 
     ${AUTOSQL_SOURCE_DIRECTORY}/DataFrame.cpp 
-    #${AUTOSQL_SOURCE_DIRECTORY}/DecisionTreeNode.cpp 
+    ${AUTOSQL_SOURCE_DIRECTORY}/DecisionTreeImpl.cpp 
+    ${AUTOSQL_SOURCE_DIRECTORY}/DecisionTreeNode.cpp 
     ${AUTOSQL_SOURCE_DIRECTORY}/Hyperparameters.cpp 
     ${AUTOSQL_SOURCE_DIRECTORY}/JSON.cpp 
     ${AUTOSQL_SOURCE_DIRECTORY}/OptimizationCriterionImpl.cpp 

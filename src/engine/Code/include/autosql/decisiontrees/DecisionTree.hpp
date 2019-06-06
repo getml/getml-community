@@ -173,12 +173,11 @@ class DecisionTree
         impl_.categories_ = _categories;
     }
 
-#ifdef AUTOSQL_PARALLEL
-
     /// Parallel version only: Set the pointer to the communicator
-    inline void set_comm( multithreading::Communicator *_comm ) { impl_.comm_ = _comm; }
-
-#endif  // AUTOSQL_PARALLEL
+    inline void set_comm( multithreading::Communicator *_comm )
+    {
+        impl_.comm_ = _comm;
+    }
 
     /// Trivial setter
     inline void set_same_units( const descriptors::SameUnits &_same_units )
@@ -475,7 +474,8 @@ class DecisionTree
 // ----------------------------------------------------------------------------
 
 template <typename AggType>
-std::shared_ptr<aggregations::AbstractAggregation> DecisionTree::make_aggregation()
+std::shared_ptr<aggregations::AbstractAggregation>
+DecisionTree::make_aggregation()
 {
     // ------------------------------------------------------------------------
 

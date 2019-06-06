@@ -1646,7 +1646,7 @@ void Aggregation<AggType, data_used_, is_population_>::activate_all(
     AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
 {
-    debug_message( "activate_all..." );
+    debug_log( "activate_all..." );
 
     for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
         {
@@ -1673,7 +1673,7 @@ void Aggregation<AggType, data_used_, is_population_>::activate_all(
                 _sample_container_begin, _sample_container_end );
         }
 
-    debug_message( "activate_all...done" );
+    debug_log( "activate_all...done" );
 }
 
 // ----------------------------------------------------------------------------
@@ -2454,7 +2454,7 @@ void Aggregation<AggType, data_used_, is_population_>::
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
 {
-    debug_message( "init_optimization_criterion..." );
+    debug_log( "init_optimization_criterion..." );
 
     optimization_criterion()->set_storage_size( 1 );
 
@@ -2467,7 +2467,7 @@ void Aggregation<AggType, data_used_, is_population_>::
 
     optimization_criterion()->find_maximum();
 
-    debug_message( "init_optimization_criterion...done" );
+    debug_log( "init_optimization_criterion...done" );
 }
 
 // ----------------------------------------------------------------------------
@@ -2510,7 +2510,7 @@ Aggregation<AggType, data_used_, is_population_>::make_intermediate(
 {
     // --------------------------------------------------
 
-    debug_message( "make_intermediate..." );
+    debug_log( "make_intermediate..." );
 
     assert( !no_intermediate_ );
 

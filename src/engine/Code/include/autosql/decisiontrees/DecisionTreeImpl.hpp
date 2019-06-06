@@ -31,9 +31,6 @@ struct DecisionTreeImpl
     {
         aggregation_->clear();
         aggregation_->clear_extras();
-        peripheral_.clear();
-        population_.clear();
-        subfeatures_.clear();
     }
 
     /// Trivial getter
@@ -74,22 +71,6 @@ struct DecisionTreeImpl
     inline void set_same_units( const descriptors::SameUnits& _same_units )
     {
         same_units_ = _same_units;
-    }
-
-    /// Trivial accessor
-    inline containers::
-        ColumnView<AUTOSQL_FLOAT, std::map<AUTOSQL_INT, AUTOSQL_INT>>&
-        subfeatures()
-    {
-        return subfeatures_;
-    }
-
-    /// Trivial accessor
-    inline const containers::
-        ColumnView<AUTOSQL_FLOAT, std::map<AUTOSQL_INT, AUTOSQL_INT>>&
-        subfeatures() const
-    {
-        return subfeatures_;
     }
 
     /// Trivial accessor
@@ -189,15 +170,8 @@ struct DecisionTreeImpl
     /// using it we can determine the optimal splits
     optimizationcriteria::OptimizationCriterion* optimization_criterion_;
 
-    /// The peripheral table used for fitting/transformation - note
-    /// that a DecisionTree can only have one peripheral table!
-    containers::DataFrame peripheral_;
-
     /// Name of the peripheral table
     std::string peripheral_name_;
-
-    /// The population table used for fitting/transformation
-    containers::DataFrameView population_;
 
     /// Name of the population table
     std::string population_name_;
@@ -213,10 +187,6 @@ struct DecisionTreeImpl
 
     /// Contains information on which of the columns contain the same units
     descriptors::SameUnits same_units_;
-
-    /// Contains the subfeatures, which may or may not exist.
-    containers::ColumnView<AUTOSQL_FLOAT, std::map<AUTOSQL_INT, AUTOSQL_INT>>
-        subfeatures_;
 
     /// The share of conditions randomly selected
     AUTOSQL_FLOAT share_conditions_;
