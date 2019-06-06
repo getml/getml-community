@@ -14,7 +14,7 @@ struct Split
         const bool _apply_from_above,
         const AUTOSQL_FLOAT _critical_value,
         const AUTOSQL_INT _column_used,
-        const DataUsed _data_used )
+        const enums::DataUsed _data_used )
         : apply_from_above( _apply_from_above ),
           categories_used( std::make_shared<std::vector<AUTOSQL_INT>>( 0 ) ),
           categories_used_begin( categories_used->cbegin() ),
@@ -32,7 +32,7 @@ struct Split
         const std::vector<AUTOSQL_INT>::const_iterator _categories_used_begin,
         const std::vector<AUTOSQL_INT>::const_iterator _categories_used_end,
         const AUTOSQL_INT _column_used,
-        const DataUsed _data_used )
+        const enums::DataUsed _data_used )
         : apply_from_above( _apply_from_above ),
           categories_used( _categories_used ),
           categories_used_begin( _categories_used_begin ),
@@ -49,7 +49,7 @@ struct Split
         const AUTOSQL_FLOAT _critical_value,
         const std::shared_ptr<const std::vector<AUTOSQL_INT>> _categories_used,
         const AUTOSQL_INT _column_used,
-        const DataUsed _data_used )
+        const enums::DataUsed _data_used )
         : apply_from_above( _apply_from_above ),
           categories_used( _categories_used ),
           categories_used_begin( _categories_used->begin() ),
@@ -62,16 +62,18 @@ struct Split
 
     /// Constructor for from Poco::JSON::Object.
     Split( const Poco::JSON::Object &_json_obj )
-        : apply_from_above( _json_obj.AUTOSQL_GET( "app_" ) ),
+        : apply_from_above( JSON::get_value<bool>( _json_obj, "app_" ) ),
           categories_used( std::make_shared<std::vector<AUTOSQL_INT>>(
               JSON::array_to_vector<AUTOSQL_INT>(
-                  _json_obj.AUTOSQL_GET_ARRAY( "categories_used_" ) ) ) ),
+                  JSON::get_array( _json_obj, "categories_used_" ) ) ) ),
           categories_used_begin( categories_used->cbegin() ),
           categories_used_end( categories_used->cend() ),
-          column_used( _json_obj.AUTOSQL_GET( "column_used_" ) ),
-          critical_value( _json_obj.AUTOSQL_GET( "critical_value_" ) ),
-          data_used(
-              JSON::int_to_data_used( _json_obj.AUTOSQL_GET( "data_used_" ) ) )
+          column_used(
+              JSON::get_value<AUTOSQL_INT>( _json_obj, "column_used_" ) ),
+          critical_value(
+              JSON::get_value<AUTOSQL_INT>( _json_obj, "critical_value_" ) ),
+          data_used( JSON::int_to_data_used(
+              JSON::get_value<AUTOSQL_INT>( _json_obj, "data_used_" ) ) )
     {
     }
 
@@ -116,8 +118,7 @@ struct Split
 
     // Signifies whether we use x_popul_numerical, x_popul_discrete,
     // x_perip_numerical, x_perip_discrete or time_stamps_diff
-    // The class DataUsed is defined in ColumnToBeAggregated.hpp
-    const DataUsed data_used;
+    const enums::DataUsed data_used;
 };
 
 // ----------------------------------------------------------------------------

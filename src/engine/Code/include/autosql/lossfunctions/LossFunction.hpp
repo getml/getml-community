@@ -44,9 +44,9 @@ class LossFunction
 
 #ifdef AUTOSQL_PARALLEL
 
-    inline AUTOSQL_COMMUNICATOR& comm() { return *( comm_ ); }
+    inline multithreading::Communicator& comm() { return *( comm_ ); }
 
-    inline void set_comm( AUTOSQL_COMMUNICATOR* _comm ) { comm_ = _comm; }
+    inline void set_comm( multithreading::Communicator* _comm ) { comm_ = _comm; }
 
 #endif  // AUTOSQL_PARALLEL
 
@@ -56,7 +56,7 @@ class LossFunction
 
    protected:
     // Communicator object
-    AUTOSQL_COMMUNICATOR* comm_;
+    multithreading::Communicator* comm_;
 
 #endif  // AUTOSQL_PARALLEL
 };

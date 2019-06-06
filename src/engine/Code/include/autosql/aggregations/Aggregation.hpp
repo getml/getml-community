@@ -7,7 +7,7 @@ namespace aggregations
 {
 // ----------------------------------------------------------------------------
 
-template <typename AggType, DataUsed data_used_, bool is_population_>
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 class Aggregation : public AbstractAggregation
 {
    public:
@@ -67,7 +67,7 @@ class Aggregation : public AbstractAggregation
     /// Iterates through the samples and activates them
     /// starting with the greatest.
     void activate_samples_from_above(
-        const containers::Matrix<AUTOSQL_FLOAT> &_critical_values,
+        const std::vector<AUTOSQL_FLOAT> &_critical_values,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) final;
 
@@ -81,7 +81,7 @@ class Aggregation : public AbstractAggregation
     /// Iterates through the samples and activates them
     /// starting with the smallest.
     void activate_samples_from_below(
-        const containers::Matrix<AUTOSQL_FLOAT> &_critical_values,
+        const std::vector<AUTOSQL_FLOAT> &_critical_values,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) final;
 
@@ -119,7 +119,7 @@ class Aggregation : public AbstractAggregation
     /// Iterates through the samples and deactivates them
     /// starting with the greatest.
     void deactivate_samples_from_above(
-        const containers::Matrix<AUTOSQL_FLOAT> &_critical_values,
+        const std::vector<AUTOSQL_FLOAT> &_critical_values,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) final;
 
@@ -133,7 +133,7 @@ class Aggregation : public AbstractAggregation
     /// Iterates through the samples and deactivates them
     /// starting with the smallest.
     void deactivate_samples_from_below(
-        const containers::Matrix<AUTOSQL_FLOAT> &_critical_values,
+        const std::vector<AUTOSQL_FLOAT> &_critical_values,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) final;
 
@@ -223,9 +223,11 @@ class Aggregation : public AbstractAggregation
     inline void activate_sample( Sample *_sample )
     {
         assert( _sample->ix_x_popul >= 0 );
-        assert( _sample->ix_x_popul < yhat_inline().nrows() );
+        assert(
+            static_cast<size_t>( _sample->ix_x_popul ) < yhat_inline().size() );
 
-        assert( _sample->ix_x_popul < static_cast<AUTOSQL_INT>( sum().size() ) );
+        assert(
+            _sample->ix_x_popul < static_cast<AUTOSQL_INT>( sum().size() ) );
         assert(
             _sample->ix_x_popul < static_cast<AUTOSQL_INT>( count().size() ) );
 
@@ -258,9 +260,11 @@ class Aggregation : public AbstractAggregation
     inline void deactivate_sample( Sample *_sample )
     {
         assert( _sample->ix_x_popul >= 0 );
-        assert( _sample->ix_x_popul < yhat_inline().nrows() );
+        assert(
+            static_cast<size_t>( _sample->ix_x_popul ) < yhat_inline().size() );
 
-        assert( _sample->ix_x_popul < static_cast<AUTOSQL_INT>( sum().size() ) );
+        assert(
+            _sample->ix_x_popul < static_cast<AUTOSQL_INT>( sum().size() ) );
         assert(
             _sample->ix_x_popul < static_cast<AUTOSQL_INT>( count().size() ) );
 
@@ -1233,7 +1237,7 @@ class Aggregation : public AbstractAggregation
 
     /// Trivial setter
     void set_value_to_be_aggregated(
-        const containers::Matrix<AUTOSQL_FLOAT> &_value_to_be_aggregated,
+        const std::vector<AUTOSQL_FLOAT> &_value_to_be_aggregated,
         const AUTOSQL_INT _ix_column_used ) final
     {
         value_to_be_aggregated() = containers::
@@ -1243,7 +1247,7 @@ class Aggregation : public AbstractAggregation
 
     /// Trivial setter
     void set_value_to_be_aggregated(
-        const containers::Matrix<AUTOSQL_INT> &_value_to_be_aggregated,
+        const std::vector<AUTOSQL_INT> &_value_to_be_aggregated,
         const AUTOSQL_INT _ix_column_used ) final
     {
         value_to_be_aggregated_categorical() = containers::
@@ -1272,7 +1276,7 @@ class Aggregation : public AbstractAggregation
     std::string type() const final { return AggType::type(); }
 
     /// Returns a reference to the predictions stored by the aggregation
-    containers::Matrix<AUTOSQL_FLOAT> &yhat() final
+    std::vector<AUTOSQL_FLOAT> &yhat() final
     {
         assert( aggregation_impl_ != nullptr );
         return aggregation_impl_->yhat_;
@@ -1418,8 +1422,9 @@ class Aggregation : public AbstractAggregation
     }
 
     /// Trivial accessor
-    inline containers::ColumnView<AUTOSQL_INT, std::map<AUTOSQL_INT, AUTOSQL_INT>>
-        &value_to_be_aggregated_categorical()
+    inline containers::
+        ColumnView<AUTOSQL_INT, std::map<AUTOSQL_INT, AUTOSQL_INT>>
+            &value_to_be_aggregated_categorical()
     {
         assert( aggregation_impl_ != nullptr );
         return aggregation_impl_->value_to_be_aggregated_categorical_;
@@ -1431,7 +1436,7 @@ class Aggregation : public AbstractAggregation
     /// 2. ...ARE a comparison
     /// 3. ...the value to be compared IS in the population table
     template <
-        DataUsed data_used = data_used_,
+        enums::DataUsed data_used = data_used_,
         bool is_population = is_population_,
         typename std::enable_if<
             !AggregationType::IsCategorical<data_used>::value &&
@@ -1450,7 +1455,7 @@ class Aggregation : public AbstractAggregation
     /// 2. ...ARE a comparison
     /// 3. ...the value to be compared is NOT in the population table
     template <
-        DataUsed data_used = data_used_,
+        enums::DataUsed data_used = data_used_,
         bool is_population = is_population_,
         typename std::enable_if<
             !AggregationType::IsCategorical<data_used>::value &&
@@ -1469,11 +1474,11 @@ class Aggregation : public AbstractAggregation
     /// 2. ...are NOT a comparison
     /// 3. ...are NOT applied to to subfeatures
     template <
-        DataUsed data_used = data_used_,
+        enums::DataUsed data_used = data_used_,
         typename std::enable_if<
             !AggregationType::IsCategorical<data_used>::value &&
                 !AggregationType::IsComparison<data_used>::value &&
-                data_used != DataUsed::x_subfeature,
+                data_used != enums::DataUsed::x_subfeature,
             int>::type = 0>
     inline const AUTOSQL_FLOAT value_to_be_aggregated( const Sample *_sample )
     {
@@ -1486,11 +1491,11 @@ class Aggregation : public AbstractAggregation
     /// 2. ...are NOT a comparison
     /// 3. ...ARE applied to to subfeatures
     template <
-        DataUsed data_used = data_used_,
+        enums::DataUsed data_used = data_used_,
         typename std::enable_if<
             !AggregationType::IsCategorical<data_used>::value &&
                 !AggregationType::IsComparison<data_used>::value &&
-                data_used == DataUsed::x_subfeature,
+                data_used == enums::DataUsed::x_subfeature,
             int>::type = 0>
     inline const AUTOSQL_FLOAT value_to_be_aggregated( const Sample *_sample )
     {
@@ -1501,7 +1506,7 @@ class Aggregation : public AbstractAggregation
     /// aggregations that ...
     /// 1. ...ARE applied to categorical data
     template <
-        DataUsed data_used = data_used_,
+        enums::DataUsed data_used = data_used_,
         typename std::enable_if<
             AggregationType::IsCategorical<data_used>::value,
             int>::type = 0>
@@ -1529,7 +1534,7 @@ class Aggregation : public AbstractAggregation
     }
 
     /// Trivial accessor
-    inline containers::Matrix<AUTOSQL_FLOAT> &yhat_inline()
+    inline std::vector<AUTOSQL_FLOAT> &yhat_inline()
     {
         assert( aggregation_impl_ != nullptr );
         return aggregation_impl_->yhat_;
@@ -1635,7 +1640,7 @@ class Aggregation : public AbstractAggregation
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
 
-template <typename AggType, DataUsed data_used_, bool is_population_>
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::activate_all(
     const bool _init_opt,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
@@ -1673,7 +1678,7 @@ void Aggregation<AggType, data_used_, is_population_>::activate_all(
 
 // ----------------------------------------------------------------------------
 
-template <typename AggType, DataUsed data_used_, bool is_population_>
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     activate_samples_containing_categories(
         const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
@@ -1702,7 +1707,7 @@ void Aggregation<AggType, data_used_, is_population_>::
 
 // ----------------------------------------------------------------------------
 
-template <typename AggType, DataUsed data_used_, bool is_population_>
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     activate_samples_containing_categories(
         const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
@@ -1766,7 +1771,7 @@ void Aggregation<AggType, data_used_, is_population_>::
 
 // ----------------------------------------------------------------------------
 
-template <typename AggType, DataUsed data_used_, bool is_population_>
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     activate_samples_from_above(
         const AUTOSQL_FLOAT _critical_value,
@@ -1784,19 +1789,19 @@ void Aggregation<AggType, data_used_, is_population_>::
 
 // ----------------------------------------------------------------------------
 
-template <typename AggType, DataUsed data_used_, bool is_population_>
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     activate_samples_from_above(
-        const containers::Matrix<AUTOSQL_FLOAT> &_critical_values,
+        const std::vector<AUTOSQL_FLOAT> &_critical_values,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
 {
     assert( _sample_container_end > _sample_container_begin );
-    assert( _critical_values.nrows() > 0 );
+    assert( _critical_values.size() > 0 );
 
     auto it = _sample_container_end - 1;
 
-    for ( AUTOSQL_INT i = _critical_values.nrows() - 1; i >= 0; --i )
+    for ( size_t i = _critical_values.size() - 1; i >= 0; --i )
         {
             while ( it >= _sample_container_begin )
                 {
@@ -1826,7 +1831,7 @@ void Aggregation<AggType, data_used_, is_population_>::
 
 // ----------------------------------------------------------------------------
 
-template <typename AggType, DataUsed data_used_, bool is_population_>
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     activate_samples_from_below(
         const AUTOSQL_FLOAT _critical_value,
@@ -1844,16 +1849,16 @@ void Aggregation<AggType, data_used_, is_population_>::
 
 // ----------------------------------------------------------------------------
 
-template <typename AggType, DataUsed data_used_, bool is_population_>
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     activate_samples_from_below(
-        const containers::Matrix<AUTOSQL_FLOAT> &_critical_values,
+        const std::vector<AUTOSQL_FLOAT> &_critical_values,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
 {
     auto it = _sample_container_begin;
 
-    for ( AUTOSQL_INT i = 0; i < _critical_values.nrows(); ++i )
+    for ( size_t i = 0; i < _critical_values.size(); ++i )
         {
             while ( it != _sample_container_end )
                 {
@@ -1883,7 +1888,7 @@ void Aggregation<AggType, data_used_, is_population_>::
 
 // ----------------------------------------------------------------------------
 
-template <typename AggType, DataUsed data_used_, bool is_population_>
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     activate_samples_not_containing_categories(
         const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
@@ -1919,7 +1924,7 @@ void Aggregation<AggType, data_used_, is_population_>::
 
 // ----------------------------------------------------------------------------
 
-template <typename AggType, DataUsed data_used_, bool is_population_>
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     activate_samples_not_containing_categories(
         const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
@@ -1997,7 +2002,7 @@ void Aggregation<AggType, data_used_, is_population_>::
 
 // ----------------------------------------------------------------------------
 
-template <typename AggType, DataUsed data_used_, bool is_population_>
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::clear()
 {
     altered_samples().clear();
@@ -2015,7 +2020,7 @@ void Aggregation<AggType, data_used_, is_population_>::clear()
 
 // ----------------------------------------------------------------------------
 
-template <typename AggType, DataUsed data_used_, bool is_population_>
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::commit()
 {
     // --------------------------------------------------
@@ -2093,7 +2098,7 @@ void Aggregation<AggType, data_used_, is_population_>::commit()
 
 // ----------------------------------------------------------------------------
 
-template <typename AggType, DataUsed data_used_, bool is_population_>
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     deactivate_samples_containing_categories(
         const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
@@ -2123,7 +2128,7 @@ void Aggregation<AggType, data_used_, is_population_>::
 
 // ----------------------------------------------------------------------------
 
-template <typename AggType, DataUsed data_used_, bool is_population_>
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     deactivate_samples_containing_categories(
         const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
@@ -2187,7 +2192,7 @@ void Aggregation<AggType, data_used_, is_population_>::
 
 // ----------------------------------------------------------------------------
 
-template <typename AggType, DataUsed data_used_, bool is_population_>
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     deactivate_samples_from_above(
         const AUTOSQL_FLOAT _critical_value,
@@ -2207,19 +2212,19 @@ void Aggregation<AggType, data_used_, is_population_>::
 
 // ----------------------------------------------------------------------------
 
-template <typename AggType, DataUsed data_used_, bool is_population_>
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     deactivate_samples_from_above(
-        const containers::Matrix<AUTOSQL_FLOAT> &_critical_values,
+        const std::vector<AUTOSQL_FLOAT> &_critical_values,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
 {
     assert( _sample_container_end > _sample_container_begin );
-    assert( _critical_values.nrows() > 0 );
+    assert( _critical_values.size() > 0 );
 
     auto it = _sample_container_end - 1;
 
-    for ( AUTOSQL_INT i = _critical_values.nrows() - 1; i >= 0; --i )
+    for ( size_t i = _critical_values.size() - 1; i >= 0; --i )
         {
             while ( it >= _sample_container_begin )
                 {
@@ -2249,7 +2254,7 @@ void Aggregation<AggType, data_used_, is_population_>::
 
 // ----------------------------------------------------------------------------
 
-template <typename AggType, DataUsed data_used_, bool is_population_>
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     deactivate_samples_from_below(
         const AUTOSQL_FLOAT _critical_value,
@@ -2269,16 +2274,16 @@ void Aggregation<AggType, data_used_, is_population_>::
 
 // ----------------------------------------------------------------------------
 
-template <typename AggType, DataUsed data_used_, bool is_population_>
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     deactivate_samples_from_below(
-        const containers::Matrix<AUTOSQL_FLOAT> &_critical_values,
+        const std::vector<AUTOSQL_FLOAT> &_critical_values,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
 {
     auto it = _sample_container_begin;
 
-    for ( AUTOSQL_INT i = 0; i < _critical_values.nrows(); ++i )
+    for ( size_t i = 0; i < _critical_values.size(); ++i )
         {
             while ( it != _sample_container_end )
                 {
@@ -2308,7 +2313,7 @@ void Aggregation<AggType, data_used_, is_population_>::
 
 // ----------------------------------------------------------------------------
 
-template <typename AggType, DataUsed data_used_, bool is_population_>
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     deactivate_samples_not_containing_categories(
         const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
@@ -2344,7 +2349,7 @@ void Aggregation<AggType, data_used_, is_population_>::
 
 // ----------------------------------------------------------------------------
 
-template <typename AggType, DataUsed data_used_, bool is_population_>
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     deactivate_samples_not_containing_categories(
         const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
@@ -2423,7 +2428,7 @@ void Aggregation<AggType, data_used_, is_population_>::
 
 // ----------------------------------------------------------------------------
 
-template <typename AggType, DataUsed data_used_, bool is_population_>
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     deactivate_samples_with_null_values(
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
@@ -2443,7 +2448,7 @@ void Aggregation<AggType, data_used_, is_population_>::
 
 // ----------------------------------------------------------------------------
 
-template <typename AggType, DataUsed data_used_, bool is_population_>
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     init_optimization_criterion(
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
@@ -2467,7 +2472,7 @@ void Aggregation<AggType, data_used_, is_population_>::
 
 // ----------------------------------------------------------------------------
 
-template <typename AggType, DataUsed data_used_, bool is_population_>
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 std::string
 Aggregation<AggType, data_used_, is_population_>::intermediate_type() const
 {
@@ -2498,7 +2503,7 @@ Aggregation<AggType, data_used_, is_population_>::intermediate_type() const
 
 // ----------------------------------------------------------------------------
 
-template <typename AggType, DataUsed data_used_, bool is_population_>
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 std::shared_ptr<optimizationcriteria::OptimizationCriterion>
 Aggregation<AggType, data_used_, is_population_>::make_intermediate(
     std::shared_ptr<IntermediateAggregationImpl> _impl ) const
@@ -2569,7 +2574,7 @@ Aggregation<AggType, data_used_, is_population_>::make_intermediate(
 
 // ----------------------------------------------------------------------------
 
-template <typename AggType, DataUsed data_used_, bool is_population_>
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::revert_to_commit()
 {
     // --------------------------------------------------
@@ -2652,7 +2657,7 @@ void Aggregation<AggType, data_used_, is_population_>::revert_to_commit()
 
 // ----------------------------------------------------------------------------
 
-template <typename AggType, DataUsed data_used_, bool is_population_>
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 AUTOSQL_SAMPLES::iterator
 Aggregation<AggType, data_used_, is_population_>::separate_null_values(
     AUTOSQL_SAMPLES &_samples )
@@ -2676,7 +2681,7 @@ Aggregation<AggType, data_used_, is_population_>::separate_null_values(
 
 // ----------------------------------------------------------------------------
 
-template <typename AggType, DataUsed data_used_, bool is_population_>
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 AUTOSQL_SAMPLE_CONTAINER::iterator
 Aggregation<AggType, data_used_, is_population_>::separate_null_values(
     AUTOSQL_SAMPLE_CONTAINER &_samples )
@@ -2700,7 +2705,7 @@ Aggregation<AggType, data_used_, is_population_>::separate_null_values(
 
 // ----------------------------------------------------------------------------
 
-template <typename AggType, DataUsed data_used_, bool is_population_>
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::sort_samples(
     AUTOSQL_SAMPLES::iterator _samples_begin,
     AUTOSQL_SAMPLES::iterator _samples_end )
@@ -2741,7 +2746,7 @@ void Aggregation<AggType, data_used_, is_population_>::sort_samples(
 
 // ----------------------------------------------------------------------------
 
-template <typename AggType, DataUsed data_used_, bool is_population_>
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     update_optimization_criterion_and_clear_updates_current(
         const AUTOSQL_FLOAT _num_samples_smaller,
@@ -2766,7 +2771,7 @@ void Aggregation<AggType, data_used_, is_population_>::
 
 // ----------------------------------------------------------------------------
 
-template <typename AggType, DataUsed data_used_, bool is_population_>
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::reset()
 {
     // --------------------------------------------------

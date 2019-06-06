@@ -19,18 +19,18 @@ class OptimizationCriterionImpl
     /// Commits the current stage, accepting it as the new state of the
     /// tree
     void commit(
-        containers::Matrix<AUTOSQL_FLOAT>& _sufficient_statistics_committed );
+        containers::Matrix<AUTOSQL_FLOAT>* _sufficient_statistics_committed );
 
     /// Because we do not know the number of categories a priori,
     /// we have to extend it, when necessary
     void extend_storage_size(
-        AUTOSQL_INT _storage_size_extension,
-        AUTOSQL_INT _sufficient_statistics_ncols );
+        const AUTOSQL_INT _storage_size_extension,
+        const AUTOSQL_INT _sufficient_statistics_ncols );
 
     /// Resets sufficient statistics to zero
     void reset(
-        containers::Matrix<AUTOSQL_FLOAT>& _sufficient_statistics_current,
-        containers::Matrix<AUTOSQL_FLOAT>& _sufficient_statistics_committed );
+        containers::Matrix<AUTOSQL_FLOAT>* _sufficient_statistics_current,
+        containers::Matrix<AUTOSQL_FLOAT>* _sufficient_statistics_committed );
 
     /// Returns the sum of all sufficient statistics stored in the individual
     /// processes
@@ -45,22 +45,23 @@ class OptimizationCriterionImpl
     /// sufficient_statistics_committed_.
     /// Also resets storage_ix_ to zero.
     void set_storage_size(
-        AUTOSQL_INT _storage_size, AUTOSQL_INT _sufficient_statistics_ncols );
+        const AUTOSQL_INT _storage_size,
+        const AUTOSQL_INT _sufficient_statistics_ncols );
 
     /// Stores the current stage of the sufficient statistics
     void store_current_stage(
         const AUTOSQL_FLOAT _num_samples_smaller,
         const AUTOSQL_FLOAT _num_samples_greater,
-        containers::Matrix<AUTOSQL_FLOAT> _sufficient_statistics_current );
+        const containers::Matrix<AUTOSQL_FLOAT>&
+            _sufficient_statistics_current );
 
     // --------------------------------------
 
-#ifdef AUTOSQL_PARALLEL
-
     /// Trivial setter
-    inline void set_comm( AUTOSQL_COMMUNICATOR* _comm ) { comm_ = _comm; }
-
-#endif  // AUTOSQL_PARALLEL
+    inline void set_comm( multithreading::Communicator* _comm )
+    {
+        comm_ = _comm;
+    }
 
     /// Sets the indicator of the best split
     inline void set_max_ix( const AUTOSQL_INT _max_ix ) { max_ix_ = _max_ix; }
@@ -89,7 +90,7 @@ class OptimizationCriterionImpl
     }
 
     /// Trivial getter
-    inline containers::Matrix<AUTOSQL_FLOAT>& values_stored()
+    inline std::vector<AUTOSQL_FLOAT>& values_stored()
     {
         return values_stored_;
     }
@@ -113,12 +114,8 @@ class OptimizationCriterionImpl
     // --------------------------------------
 
    private:
-#ifdef AUTOSQL_PARALLEL
-
     /// MPI communicator
-    AUTOSQL_COMMUNICATOR* comm_;
-
-#endif  // AUTOSQL_PARALLEL
+    multithreading::Communicator* comm_;
 
     /// Indicates the best split.
     AUTOSQL_INT max_ix_;
@@ -138,7 +135,7 @@ class OptimizationCriterionImpl
 
     /// Stores the values calculated by find maximum. Can be resized
     /// by set_storage_size
-    containers::Matrix<AUTOSQL_FLOAT> values_stored_;
+    std::vector<AUTOSQL_FLOAT> values_stored_;
 };
 
 // ----------------------------------------------------------------------------

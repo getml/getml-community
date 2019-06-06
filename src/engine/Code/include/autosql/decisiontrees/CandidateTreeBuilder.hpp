@@ -24,7 +24,7 @@ class CandidateTreeBuilder
         const descriptors::Hyperparameters _hyperparameters,
         containers::Optional<aggregations::AggregationImpl> &_aggregation_impl,
         std::mt19937 &_random_number_generator,
-        AUTOSQL_COMMUNICATOR *_comm = nullptr );
+        multithreading::Communicator *_comm = nullptr );
 
     // -------------------------------------------------------------------------
 
@@ -37,7 +37,7 @@ class CandidateTreeBuilder
         const AUTOSQL_INT _ix_perip_used,
         std::mt19937 &_random_number_generator,
         containers::Optional<aggregations::AggregationImpl> &_aggregation_impl,
-        AUTOSQL_COMMUNICATOR *_comm,
+        multithreading::Communicator *_comm,
         std::list<DecisionTree> &_candidate_trees );
 
     /// Adds trees with COUNT DISTIINCT and COUNT MINUS COUNT DISTINCT
@@ -49,7 +49,7 @@ class CandidateTreeBuilder
         const AUTOSQL_INT _ix_perip_used,
         std::mt19937 &_random_number_generator,
         containers::Optional<aggregations::AggregationImpl> &_aggregation_impl,
-        AUTOSQL_COMMUNICATOR *_comm,
+        multithreading::Communicator *_comm,
         std::list<DecisionTree> &_candidate_trees );
 
     /// Adds trees with all other aggregations
@@ -60,7 +60,7 @@ class CandidateTreeBuilder
         const AUTOSQL_INT _ix_perip_used,
         std::mt19937 &_random_number_generator,
         containers::Optional<aggregations::AggregationImpl> &_aggregation_impl,
-        AUTOSQL_COMMUNICATOR *_comm,
+        multithreading::Communicator *_comm,
         std::list<DecisionTree> &_candidate_trees );
 
     /// Adds aggregations over the subfeatures
@@ -71,7 +71,7 @@ class CandidateTreeBuilder
         const AUTOSQL_INT _ix_perip_used,
         std::mt19937 &_random_number_generator,
         containers::Optional<aggregations::AggregationImpl> &_aggregation_impl,
-        AUTOSQL_COMMUNICATOR *_comm,
+        multithreading::Communicator *_comm,
         std::list<DecisionTree> &_candidate_trees );
 
     /// Builds all candidate trees based on the available
@@ -82,7 +82,7 @@ class CandidateTreeBuilder
         const descriptors::Hyperparameters _hyperparameters,
         std::mt19937 &_random_number_generator,
         containers::Optional<aggregations::AggregationImpl> &_aggregation_impl,
-        AUTOSQL_COMMUNICATOR *_comm = nullptr );
+        multithreading::Communicator *_comm = nullptr );
 
     /// Determines whether a particular column may be used to comparison only.
     static bool is_comparison_only(
@@ -99,7 +99,7 @@ class CandidateTreeBuilder
         const AUTOSQL_FLOAT _share_aggregations,
         std::mt19937 &_random_number_generator,
         std::list<DecisionTree> &_candidate_trees,
-        AUTOSQL_COMMUNICATOR *_comm = nullptr );
+        multithreading::Communicator *_comm = nullptr );
 
     /// For the round_robin approach, we remove all features but
     /// one - the remaining one is a different one every time.

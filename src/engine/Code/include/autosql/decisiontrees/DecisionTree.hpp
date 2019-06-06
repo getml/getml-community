@@ -176,7 +176,7 @@ class DecisionTree
 #ifdef AUTOSQL_PARALLEL
 
     /// Parallel version only: Set the pointer to the communicator
-    inline void set_comm( AUTOSQL_COMMUNICATOR *_comm ) { impl_.comm_ = _comm; }
+    inline void set_comm( multithreading::Communicator *_comm ) { impl_.comm_ = _comm; }
 
 #endif  // AUTOSQL_PARALLEL
 
@@ -259,7 +259,7 @@ class DecisionTree
 #ifdef AUTOSQL_PARALLEL
 
     /// Trivial accessor
-    inline AUTOSQL_COMMUNICATOR *comm()
+    inline multithreading::Communicator *comm()
     {
         assert( impl_.comm_ != nullptr );
         return impl_.comm_;

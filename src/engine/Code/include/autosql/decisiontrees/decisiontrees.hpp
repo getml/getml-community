@@ -35,62 +35,39 @@
 #include <Poco/JSON/Parser.h>
 #include <Poco/Path.h>
 
-#include <xgboost/c_api.h>
+#include "debug/debug.hpp"
 
-#include "config.hpp"
-
-#include "types.hpp"
-
-#include "debug.hpp"
-
-#include "predictors/predictors.hpp"
-
-#include "descriptors/descriptors.hpp"
-
-#ifdef AUTOSQL_MULTITHREADING
 #include "multithreading/multithreading.hpp"
-#endif  // AUTOSQL_MULTITHREADING
 
-#ifdef AUTOSQL_MULTINODE_MPI
-#include "MPI/Sendcounts.hpp"
-#endif  // AUTOSQL_MULTINODE_MPI
+#include "autosql/types.hpp"
 
-#include "Endianness.hpp"
+#include "autosql/descriptors/descriptors.hpp"
 
-#include "Placeholder.hpp"
+#include "autosql/JSON.hpp"
 
-#include "JSON.hpp"
+#include "autosql/Sample.hpp"
 
-#include "containers/containers.hpp"
+#include "autosql/containers/containers.hpp"
 
-#include "Sample.hpp"
+#include "autosql/aggregations/aggregations.hpp"
 
-#include "optimizationcriteria/optimizationcriteria.hpp"
-
-#include "aggregations/aggregations.hpp"
-
-#include "SampleContainer.hpp"
-
-#include "lossfunctions/lossfunctions.hpp"
-
-#include "LinearRegression.hpp"
-
-#include "logging/logging.hpp"
-
-#include "metrics/metrics.hpp"
+#include "autosql/lossfunctions/lossfunctions.hpp"
 
 // ----------------------------------------------------
 // Module files
 
-#include "decisiontrees/RandomNumberGenerator.hpp"
+#include "autosql/decisiontrees/RandomNumberGenerator.hpp"
 
-#include "decisiontrees/TableHolder.hpp"
+#include "autosql/decisiontrees/TableHolder.hpp"
 
-#include "decisiontrees/DecisionTreeImpl.hpp"
+#include "autosql/decisiontrees/DecisionTreeImpl.hpp"
 
-#include "decisiontrees/DecisionTreeNode.hpp"
+#include "autosql/decisiontrees/DecisionTreeNode.hpp"
 
-#include "decisiontrees/DecisionTree.hpp"
+// ----------------------------------------------------
+
+
+/*#include "decisiontrees/DecisionTree.hpp"
 
 #include "decisiontrees/TablePreparer.hpp"
 
@@ -102,6 +79,6 @@
 
 #include "decisiontrees/DecisionTreeEnsembleImpl.hpp"
 
-#include "decisiontrees/DecisionTreeEnsemble.hpp"
+#include "decisiontrees/DecisionTreeEnsemble.hpp"*/
 
 #endif  // AUTOSQL_DECISIONTREES_DECISIONTREES_HPP_

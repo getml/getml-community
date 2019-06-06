@@ -109,7 +109,7 @@ class DecisionTreeEnsemble
 #ifdef AUTOSQL_PARALLEL
 
     /// Trivial getter
-    inline AUTOSQL_COMMUNICATOR *comm() { return impl().comm_; }
+    inline multithreading::Communicator *comm() { return impl().comm_; }
 
 #endif  // AUTOSQL_PARALLEL
 
@@ -141,7 +141,7 @@ class DecisionTreeEnsemble
 #ifdef AUTOSQL_PARALLEL
 
     /// Trivial setter
-    inline void set_comm( AUTOSQL_COMMUNICATOR *_comm ) { impl().comm_ = _comm; }
+    inline void set_comm( multithreading::Communicator *_comm ) { impl().comm_ = _comm; }
 
 #endif  // AUTOSQL_PARALLEL
 

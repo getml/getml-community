@@ -33,11 +33,6 @@ class DecisionTreeNode
     /// Builds the node from a Poco::JSON::Object.
     void from_json_obj( const Poco::JSON::Object &_json_obj );
 
-    /// Calculates the condition importances
-    void source_importances(
-        const AUTOSQL_FLOAT _factor,
-        descriptors::SourceImportances &_importances );
-
     /// Expresses the conditions in a form that can be understood
     /// by the monitor application (professional only)
     void to_monitor(
@@ -92,7 +87,7 @@ class DecisionTreeNode
 
     /// Calculates the appropriate number of critical values
     inline AUTOSQL_INT calculate_num_critical_values(
-        AUTOSQL_SIZE _num_samples_on_node )
+        size_t _num_samples_on_node )
     {
         return std::max(
             static_cast<AUTOSQL_INT>(
@@ -106,9 +101,9 @@ class DecisionTreeNode
     {
         assert( split_ );
         return (
-            split_->data_used == DataUsed::same_unit_categorical ||
-            split_->data_used == DataUsed::x_perip_categorical ||
-            split_->data_used == DataUsed::x_popul_categorical );
+            split_->data_used == enums::DataUsed::same_unit_categorical ||
+            split_->data_used == enums::DataUsed::x_perip_categorical ||
+            split_->data_used == enums::DataUsed::x_popul_categorical );
     }
 
     /// Trivial accessor
@@ -125,7 +120,8 @@ class DecisionTreeNode
     }
 
     /// Trivial accessor
-    inline std::vector<AUTOSQL_INT>::const_iterator categories_used_begin() const
+    inline std::vector<AUTOSQL_INT>::const_iterator categories_used_begin()
+        const
     {
         assert( split_ );
         return split_->categories_used_begin;
@@ -138,16 +134,12 @@ class DecisionTreeNode
         return split_->categories_used_end;
     }
 
-#ifdef AUTOSQL_PARALLEL
-
     /// Trivial accessor
-    inline AUTOSQL_COMMUNICATOR *comm()
+    inline multithreading::Communicator *comm()
     {
         assert( tree_->comm_ != nullptr );
         return tree_->comm_;
     }
-
-#endif  // AUTOSQL_PARALLEL
 
     /// Trivial accessor
     inline AUTOSQL_INT column_used() const
@@ -164,7 +156,7 @@ class DecisionTreeNode
     }
 
     /// Trivial accessor
-    inline DataUsed data_used() const
+    inline enums::DataUsed data_used() const
     {
         assert( split_ );
         return split_->data_used;
@@ -175,9 +167,9 @@ class DecisionTreeNode
     {
         assert( split_ );
         return (
-            split_->data_used == DataUsed::same_unit_discrete ||
-            split_->data_used == DataUsed::x_perip_discrete ||
-            split_->data_used == DataUsed::x_popul_discrete );
+            split_->data_used == enums::DataUsed::same_unit_discrete ||
+            split_->data_used == enums::DataUsed::x_perip_discrete ||
+            split_->data_used == enums::DataUsed::x_popul_discrete );
     }
 
     /// Non-trivial getter
@@ -192,13 +184,13 @@ class DecisionTreeNode
 
         const AUTOSQL_INT val1 =
             ( std::get<0>( tree_->same_units_categorical()[_col] ).data_used ==
-              DataUsed::x_perip_categorical )
+              enums::DataUsed::x_perip_categorical )
                 ? ( get_x_perip_categorical( _sample, col1 ) )
                 : ( get_x_popul_categorical( _sample, col1 ) );
 
         const AUTOSQL_INT val2 =
             ( std::get<1>( tree_->same_units_categorical()[_col] ).data_used ==
-              DataUsed::x_perip_categorical )
+              enums::DataUsed::x_perip_categorical )
                 ? ( get_x_perip_categorical( _sample, col2 ) )
                 : ( get_x_popul_categorical( _sample, col2 ) );
 
@@ -221,16 +213,17 @@ class DecisionTreeNode
 
         switch ( std::get<0>( tree_->same_units_discrete()[_col] ).data_used )
             {
-                case DataUsed::x_perip_discrete:
+                case enums::DataUsed::x_perip_discrete:
                     val1 = get_x_perip_discrete( _sample, col1 );
                     break;
 
-                case DataUsed::x_popul_discrete:
+                case enums::DataUsed::x_popul_discrete:
                     val1 = get_x_popul_discrete( _sample, col1 );
                     break;
 
                 default:
-                    assert( !"get_same_unit_discrete: DataUsed not known!" );
+                    assert(
+                        !"get_same_unit_discrete: enums::DataUsed not known!" );
                     break;
             }
 
@@ -238,16 +231,17 @@ class DecisionTreeNode
 
         switch ( std::get<1>( tree_->same_units_discrete()[_col] ).data_used )
             {
-                case DataUsed::x_perip_discrete:
+                case enums::DataUsed::x_perip_discrete:
                     val2 = get_x_perip_discrete( _sample, col2 );
                     break;
 
-                case DataUsed::x_popul_discrete:
+                case enums::DataUsed::x_popul_discrete:
                     val2 = get_x_popul_discrete( _sample, col2 );
                     break;
 
                 default:
-                    assert( !"get_same_unit_discrete: DataUsed not known!" );
+                    assert(
+                        !"get_same_unit_discrete: enums::DataUsed not known!" );
                     break;
             }
 
@@ -268,16 +262,16 @@ class DecisionTreeNode
 
         switch ( std::get<0>( tree_->same_units_numerical()[_col] ).data_used )
             {
-                case DataUsed::x_perip_numerical:
+                case enums::DataUsed::x_perip_numerical:
                     val1 = get_x_perip_numerical( _sample, col1 );
                     break;
 
-                case DataUsed::x_popul_numerical:
+                case enums::DataUsed::x_popul_numerical:
                     val1 = get_x_popul_numerical( _sample, col1 );
                     break;
 
                 default:
-                    assert( !"get_same_unit_numerical: DataUsed not known!" );
+                    assert( !"get_same_unit_numerical: enums::DataUsed not known!" );
                     break;
             }
 
@@ -285,16 +279,16 @@ class DecisionTreeNode
 
         switch ( std::get<1>( tree_->same_units_numerical()[_col] ).data_used )
             {
-                case DataUsed::x_perip_numerical:
+                case enums::DataUsed::x_perip_numerical:
                     val2 = get_x_perip_numerical( _sample, col2 );
                     break;
 
-                case DataUsed::x_popul_numerical:
+                case enums::DataUsed::x_popul_numerical:
                     val2 = get_x_popul_numerical( _sample, col2 );
                     break;
 
                 default:
-                    assert( !"get_same_unit_numerical: DataUsed not known!" );
+                    assert( !"get_same_unit_numerical: enums::DataUsed not known!" );
                     break;
             }
 
@@ -369,8 +363,6 @@ class DecisionTreeNode
         return tree_->optimization_criterion_;
     }
 
-#ifdef AUTOSQL_PARALLEL
-
     /// Identifies the global minimum and the global maximum
     template <typename T>
     void reduce_min_max( T &_min, T &_max )
@@ -378,27 +370,25 @@ class DecisionTreeNode
         containers::Summarizer::reduce_min_max( *comm(), _min, _max );
     }
 
-#endif  // AUTOSQL_PARALLEL
-
     /// Trivial getter
     inline const AUTOSQL_SAME_UNITS_CONTAINER &same_units_categorical() const
     {
-        assert( tree_->same_units_.same_units_categorical );
-        return *tree_->same_units_.same_units_categorical;
+        assert( tree_->same_units_.same_units_categorical_ );
+        return *tree_->same_units_.same_units_categorical_;
     }
 
     /// Trivial getter
     inline const AUTOSQL_SAME_UNITS_CONTAINER &same_units_discrete() const
     {
-        assert( tree_->same_units_.same_units_discrete );
-        return *tree_->same_units_.same_units_discrete;
+        assert( tree_->same_units_.same_units_discrete_ );
+        return *tree_->same_units_.same_units_discrete_;
     }
 
     /// Trivial getter
     inline const AUTOSQL_SAME_UNITS_CONTAINER &same_units_numerical() const
     {
-        assert( tree_->same_units_.same_units_numerical );
-        return *tree_->same_units_.same_units_numerical;
+        assert( tree_->same_units_.same_units_numerical_ );
+        return *tree_->same_units_.same_units_numerical_;
     }
 
     /// Determines whether we should skip a condition
@@ -438,23 +428,23 @@ class DecisionTreeNode
     /// Calculates the beginning and end of the categorical
     /// values considered
     std::shared_ptr<const std::vector<AUTOSQL_INT>> calculate_categories(
-        const AUTOSQL_SIZE _sample_size,
+        const size_t _sample_size,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end );
 
     /// Given the sorted sample containers, this returns the critical_values
     /// for discrete values
-    containers::Matrix<AUTOSQL_FLOAT> calculate_critical_values_discrete(
+    std::vector<AUTOSQL_FLOAT> calculate_critical_values_discrete(
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
-        const AUTOSQL_SIZE _sample_size );
+        const size_t _sample_size );
 
     /// Given the sorted sample containers, this returns the critical_values
     /// for numerical values
-    containers::Matrix<AUTOSQL_FLOAT> calculate_critical_values_numerical(
+    std::vector<AUTOSQL_FLOAT> calculate_critical_values_numerical(
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
-        const AUTOSQL_SIZE _sample_size );
+        const size_t _sample_size );
 
     /// Commits the split and spawns child nodes
     void commit(
@@ -472,12 +462,8 @@ class DecisionTreeNode
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end );
 
-#ifdef AUTOSQL_PARALLEL
-
     /// Returns the sum of the sample sizes of all processes
-    AUTOSQL_SIZE reduce_sample_size( AUTOSQL_SIZE _sample_size );
-
-#endif  // AUTOSQL_PARALLEL
+    size_t reduce_sample_size( size_t _sample_size );
 
     /// Separates the sample containers for which the numerical_value is NULL
     /// - note the important difference to separate_null_values in
@@ -516,14 +502,14 @@ class DecisionTreeNode
 
     /// Tries to impose the peripheral categorical columns as a condition
     void try_categorical_peripheral(
-        const AUTOSQL_SIZE _sample_size,
+        const size_t _sample_size,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
         std::vector<descriptors::Split> &_candidate_splits );
 
     /// Tries to impose the population categorical columns as a condition
     void try_categorical_population(
-        const AUTOSQL_SIZE _sample_size,
+        const size_t _sample_size,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
         std::vector<descriptors::Split> &_candidate_splits );
@@ -531,43 +517,43 @@ class DecisionTreeNode
     /// Tries whether the categorical values might constitute a good split
     void try_categorical_values(
         const AUTOSQL_INT _column_used,
-        const DataUsed _data_used,
+        const enums::DataUsed _data_used,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
-        const AUTOSQL_SIZE _sample_size,
+        const size_t _sample_size,
         std::vector<descriptors::Split> &_candidate_splits );
 
     /// Tries to impose different conditions
     void try_conditions(
-        const AUTOSQL_SIZE _sample_size,
+        const size_t _sample_size,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
         std::vector<descriptors::Split> &_candidate_splits );
 
     /// Tries to impose the peripheral discrete columns as a condition
     void try_discrete_peripheral(
-        const AUTOSQL_SIZE _sample_size,
+        const size_t _sample_size,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
         std::vector<descriptors::Split> &_candidate_splits );
 
     /// Tries to impose the population discrete columns as a condition
     void try_discrete_population(
-        const AUTOSQL_SIZE _sample_size,
+        const size_t _sample_size,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
         std::vector<descriptors::Split> &_candidate_splits );
 
     /// Tries to impose the peripheral numerical columns as a condition
     void try_numerical_peripheral(
-        const AUTOSQL_SIZE _sample_size,
+        const size_t _sample_size,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
         std::vector<descriptors::Split> &_candidate_splits );
 
     /// Tries to impose the population numerical columns as a condition
     void try_numerical_population(
-        const AUTOSQL_SIZE _sample_size,
+        const size_t _sample_size,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
         std::vector<descriptors::Split> &_candidate_splits );
@@ -575,56 +561,56 @@ class DecisionTreeNode
     /// Tries whether the discrete values might constitute a good split
     void try_discrete_values(
         const AUTOSQL_INT _column_used,
-        const DataUsed _data_used,
+        const enums::DataUsed _data_used,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
-        const AUTOSQL_SIZE _sample_size,
+        const size_t _sample_size,
         std::vector<descriptors::Split> &_candidate_splits );
 
     /// Called by try_discrete_values(...) and try_numerical_values(...)
     void try_non_categorical_values(
         const AUTOSQL_INT _column_used,
-        const DataUsed _data_used,
+        const enums::DataUsed _data_used,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _null_values_separator,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
-        const AUTOSQL_SIZE _sample_size,
-        containers::Matrix<AUTOSQL_FLOAT> &_critical_values,
+        const size_t _sample_size,
+        std::vector<AUTOSQL_FLOAT> &_critical_values,
         std::vector<descriptors::Split> &_candidate_splits );
 
     /// Tries whether the numerical values might constitute a good split
     void try_numerical_values(
         const AUTOSQL_INT _column_used,
-        const DataUsed _data_used,
+        const enums::DataUsed _data_used,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
-        const AUTOSQL_SIZE _sample_size,
+        const size_t _sample_size,
         std::vector<descriptors::Split> &_candidate_splits );
 
     /// Tries to impose the same units categorical as a condition
     void try_same_units_categorical(
-        const AUTOSQL_SIZE _sample_size,
+        const size_t _sample_size,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
         std::vector<descriptors::Split> &_candidate_splits );
 
     /// Tries to impose the same units discrete as a condition
     void try_same_units_discrete(
-        const AUTOSQL_SIZE _sample_size,
+        const size_t _sample_size,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
         std::vector<descriptors::Split> &_candidate_splits );
 
     /// Tries to impose the same units numerical as a condition
     void try_same_units_numerical(
-        const AUTOSQL_SIZE _sample_size,
+        const size_t _sample_size,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
         std::vector<descriptors::Split> &_candidate_splits );
 
     /// Tries to impose the subfeatures as a condition
     void try_subfeatures(
-        const AUTOSQL_SIZE _sample_size,
+        const size_t _sample_size,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
         std::vector<descriptors::Split> &_candidate_splits );
@@ -632,7 +618,7 @@ class DecisionTreeNode
     /// Tries to impose the difference between the time stamps as a
     /// condition
     void try_time_stamps_diff(
-        const AUTOSQL_SIZE _sample_size,
+        const size_t _sample_size,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
         std::vector<descriptors::Split> &_candidate_splits );
@@ -669,7 +655,7 @@ class DecisionTreeNode
 // ----------------------------------------------------------------------------
 
 // This is templated, because it makes a difference whether _critical_value
-// is of type AUTOSQL_FLOAT or or type containers::Matrix<AUTOSQL_FLOAT>
+// is of type AUTOSQL_FLOAT or or type std::vector<AUTOSQL_FLOAT>
 
 template <typename T>
 void DecisionTreeNode::apply_by_critical_value(
@@ -682,13 +668,13 @@ void DecisionTreeNode::apply_by_critical_value(
             return;
         }
 
-    debug_message( "Apply by critical value..." );
+    debug_log( "Apply by critical value..." );
 
     if ( apply_from_above() )
         {
             if ( is_activated_ )
                 {
-                    debug_message( "deactivate_samples_from_above..." );
+                    debug_log( "deactivate_samples_from_above..." );
 
                     aggregation()->deactivate_samples_from_above(
                         _critical_value,
@@ -697,7 +683,7 @@ void DecisionTreeNode::apply_by_critical_value(
                 }
             else
                 {
-                    debug_message( "activate_samples_from_above..." );
+                    debug_log( "activate_samples_from_above..." );
 
                     aggregation()->activate_samples_from_above(
                         _critical_value,
@@ -709,7 +695,7 @@ void DecisionTreeNode::apply_by_critical_value(
         {
             if ( is_activated_ )
                 {
-                    debug_message( "deactivate_samples_from_below..." );
+                    debug_log( "deactivate_samples_from_below..." );
 
                     aggregation()->deactivate_samples_from_below(
                         _critical_value,
@@ -718,7 +704,7 @@ void DecisionTreeNode::apply_by_critical_value(
                 }
             else
                 {
-                    debug_message( "activate_samples_from_below..." );
+                    debug_log( "activate_samples_from_below..." );
 
                     aggregation()->activate_samples_from_below(
                         _critical_value,

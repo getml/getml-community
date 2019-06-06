@@ -4,29 +4,29 @@
 // ----------------------------------------------------------------------------
 // Dependencies
 
-#include "config.hpp"
+#include "autosql/enums/enums.hpp"
 
-#include "containers/containers.hpp"
+#include "autosql/containers/containers.hpp"
 
-#include "optimizationcriteria/optimizationcriteria.hpp"
+#include "autosql/optimizationcriteria/optimizationcriteria.hpp"
 
 // ----------------------------------------------------------------------------
 // Module files
 
-#include "aggregations/Revert.hpp"
+#include "autosql/aggregations/Revert.hpp"
 
-#include "aggregations/AggregationIndex.hpp"
+#include "autosql/aggregations/AggregationIndex.hpp"
 
-#include "aggregations/IntermediateAggregationImpl.hpp"
+#include "autosql/aggregations/IntermediateAggregationImpl.hpp"
 
-#include "aggregations/AggregationType.hpp"
+#include "autosql/aggregations/AggregationType.hpp"
 
-#include "aggregations/IntermediateAggregation.hpp"
+#include "autosql/aggregations/IntermediateAggregation.hpp"
 
-#include "aggregations/AggregationImpl.hpp"
+#include "autosql/aggregations/AggregationImpl.hpp"
 
-#include "aggregations/AbstractAggregation.hpp"
+#include "autosql/aggregations/AbstractAggregation.hpp"
 
-#include "aggregations/Aggregation.hpp"
+#include "autosql/aggregations/Aggregation.hpp"
 
 #endif  // AUTOSQL_AGGREGATIONS_AGGREGATIONS_HPP_

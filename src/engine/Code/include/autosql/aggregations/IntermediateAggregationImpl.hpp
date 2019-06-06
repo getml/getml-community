@@ -20,8 +20,9 @@ struct IntermediateAggregationImpl
           parent_( _parent ),
           updates_current_( containers::IntSet( _output_table.nrows() ) ),
           updates_stored_( containers::IntSet( _output_table.nrows() ) ),
-          yhat_( containers::Matrix<AUTOSQL_FLOAT>( _output_table.nrows(), 1 ) ),
-          yhat_committed_( std::vector<AUTOSQL_FLOAT>( _output_table.nrows() ) ),
+          yhat_( std::vector<AUTOSQL_FLOAT>( _output_table.nrows() ) ),
+          yhat_committed_(
+              std::vector<AUTOSQL_FLOAT>( _output_table.nrows() ) ),
           yhat_stored_( std::vector<AUTOSQL_FLOAT>( _output_table.nrows() ) )
     {
     }
@@ -80,7 +81,7 @@ struct IntermediateAggregationImpl
     containers::IntSet updates_stored_;
 
     /// Vector containing predictions
-    containers::Matrix<AUTOSQL_FLOAT> yhat_;
+    std::vector<AUTOSQL_FLOAT> yhat_;
 
     /// Vector containing predictions that have been
     /// committed
@@ -92,7 +93,7 @@ struct IntermediateAggregationImpl
 };
 
 // ----------------------------------------------------------------------------
-}
-}
+}  // namespace aggregations
+}  // namespace autosql
 
 #endif  // AUTOSQL_AGGREGATIONS_INTERMEDIATEAGGREGATIONIMPL_HPP_

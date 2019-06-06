@@ -22,7 +22,7 @@ class Optional
 
     Optional( const Optional& _other )
     {
-        debug_message( "Optional: Copy constructor..." );
+        debug_log( "Optional: Copy constructor..." );
 
         if ( _other.thisptr_ )
             {
@@ -33,7 +33,7 @@ class Optional
     Optional( Optional&& _other ) noexcept
         : thisptr_( std::move( _other.thisptr_ ) )
     {
-        debug_message( "Optional: Move constructor..." );
+        debug_log( "Optional: Move constructor..." );
     }
 
     ~Optional() = default;
@@ -58,7 +58,7 @@ class Optional
 
     Optional& operator=( const Optional& _other )
     {
-        debug_message( "Optional: Copy assignment constructor..." );
+        debug_log( "Optional: Copy assignment constructor..." );
 
         Optional temp( _other );
         *this = std::move( temp );
@@ -67,7 +67,7 @@ class Optional
 
     Optional& operator=( Optional&& _other ) noexcept
     {
-        debug_message( "Optional: Move assignment constructor..." );
+        debug_log( "Optional: Move assignment constructor..." );
 
         if ( this == &_other )
             {

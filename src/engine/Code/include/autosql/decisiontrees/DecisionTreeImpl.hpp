@@ -20,10 +20,10 @@ struct DecisionTreeImpl
     // ----------------------------------------
 
     /// Trivial accessor
-    inline const containers::Encoding& categories() const
+    inline const std::vector<std::string>& categories() const
     {
         assert( categories_ );
-        return *categories_.get();
+        return *categories_;
     }
 
     /// Clears up the memory
@@ -52,22 +52,22 @@ struct DecisionTreeImpl
     /// Trivial accessor
     inline const AUTOSQL_SAME_UNITS_CONTAINER& same_units_categorical() const
     {
-        assert( same_units_.same_units_categorical );
-        return *same_units_.same_units_categorical;
+        assert( same_units_.same_units_categorical_ );
+        return *same_units_.same_units_categorical_;
     }
 
     /// Trivial accessor
     inline const AUTOSQL_SAME_UNITS_CONTAINER& same_units_discrete() const
     {
-        assert( same_units_.same_units_discrete );
-        return *same_units_.same_units_discrete;
+        assert( same_units_.same_units_discrete_ );
+        return *same_units_.same_units_discrete_;
     }
 
     /// Trivial accessor
     inline const AUTOSQL_SAME_UNITS_CONTAINER& same_units_numerical() const
     {
-        assert( same_units_.same_units_numerical );
-        return *same_units_.same_units_numerical;
+        assert( same_units_.same_units_numerical_ );
+        return *same_units_.same_units_numerical_;
     }
 
     /// Trivial setter
@@ -78,7 +78,7 @@ struct DecisionTreeImpl
 
     /// Trivial accessor
     inline containers::
-        MatrixView<AUTOSQL_FLOAT, std::map<AUTOSQL_INT, AUTOSQL_INT>>&
+        ColumnView<AUTOSQL_FLOAT, std::map<AUTOSQL_INT, AUTOSQL_INT>>&
         subfeatures()
     {
         return subfeatures_;
@@ -86,14 +86,15 @@ struct DecisionTreeImpl
 
     /// Trivial accessor
     inline const containers::
-        MatrixView<AUTOSQL_FLOAT, std::map<AUTOSQL_INT, AUTOSQL_INT>>&
+        ColumnView<AUTOSQL_FLOAT, std::map<AUTOSQL_INT, AUTOSQL_INT>>&
         subfeatures() const
     {
         return subfeatures_;
     }
 
     /// Trivial accessor
-    inline const std::string& x_perip_categorical_colname( AUTOSQL_INT _i ) const
+    inline const std::string& x_perip_categorical_colname(
+        AUTOSQL_INT _i ) const
     {
         assert( x_perip_categorical_colnames_ );
         return x_perip_categorical_colnames_.get()[0][_i];
@@ -114,7 +115,8 @@ struct DecisionTreeImpl
     }
 
     /// Trivial accessor
-    inline const std::string& x_popul_categorical_colname( AUTOSQL_INT _i ) const
+    inline const std::string& x_popul_categorical_colname(
+        AUTOSQL_INT _i ) const
     {
         assert( x_popul_categorical_colnames_ );
         return x_popul_categorical_colnames_.get()[0][_i];
@@ -140,17 +142,9 @@ struct DecisionTreeImpl
     /// _ix_column_used
     std::string get_colname(
         const std::string& _feature_num,
-        const DataUsed _data_used,
+        const enums::DataUsed _data_used,
         const AUTOSQL_INT _ix_column_used,
         const bool _equals = true ) const;
-
-    /// Updates the map for the importance ranking
-    void source_importances(
-        const DataUsed _data_used,
-        const AUTOSQL_INT _ix_column_used,
-        const AUTOSQL_FLOAT _factor,
-        std::map<descriptors::SourceImportancesColumn, AUTOSQL_FLOAT>& _map )
-        const;
 
     // ------------------------------------------------------------
 
@@ -165,14 +159,14 @@ struct DecisionTreeImpl
     std::string aggregation_type_;
 
     /// Pointer to the vector that maps the integers to categories
-    std::shared_ptr<containers::Encoding> categories_;
+    std::shared_ptr<const std::vector<std::string>> categories_;
 
     /// Pointer to the structure that contains information
     /// about the column aggregated by this tree
-    ColumnToBeAggregated column_to_be_aggregated_;
+    enums::ColumnToBeAggregated column_to_be_aggregated_;
 
-    /// Communicator (either MPI or self-defined communicator)
-    AUTOSQL_COMMUNICATOR* comm_;
+    /// Communicator
+    multithreading::Communicator* comm_;
 
     /// Name of the join key in the peripheral table
     std::string join_keys_perip_name_;
@@ -221,7 +215,7 @@ struct DecisionTreeImpl
     descriptors::SameUnits same_units_;
 
     /// Contains the subfeatures, which may or may not exist.
-    containers::MatrixView<AUTOSQL_FLOAT, std::map<AUTOSQL_INT, AUTOSQL_INT>>
+    containers::ColumnView<AUTOSQL_FLOAT, std::map<AUTOSQL_INT, AUTOSQL_INT>>
         subfeatures_;
 
     /// The share of conditions randomly selected
@@ -259,4 +253,5 @@ struct DecisionTreeImpl
 // ----------------------------------------------------------------------------
 }  // namespace decisiontrees
 }  // namespace autosql
+
 #endif  // AUTOSQL_DECISIONTREES_DECISIONTREEIMPL_HPP_

@@ -9,7 +9,7 @@ namespace containers
 std::vector<std::vector<AUTOSQL_INT>> Summarizer::calculate_column_densities(
     const AUTOSQL_INT _num_bins,
     const containers::Matrix<AUTOSQL_FLOAT>& _mat,
-    AUTOSQL_COMMUNICATOR* _comm )
+    multithreading::Communicator* _comm )
 {
     // ------------------------------------------------------------------------
     // Find minima and maxima
@@ -102,7 +102,7 @@ std::vector<std::vector<AUTOSQL_FLOAT>>
 Summarizer::calculate_feature_correlations(
     const containers::Matrix<AUTOSQL_FLOAT>& _features,
     const containers::DataFrameView& _targets,
-    AUTOSQL_COMMUNICATOR* _comm )
+    multithreading::Communicator* _comm )
 {
     // -----------------------------------------------------------
 
@@ -342,7 +342,7 @@ void Summarizer::calculate_feature_plots(
     const AUTOSQL_INT _num_bins,
     const containers::Matrix<AUTOSQL_FLOAT>& _mat,
     const containers::DataFrameView& _targets,
-    AUTOSQL_COMMUNICATOR* _comm,
+    multithreading::Communicator* _comm,
     std::vector<std::vector<AUTOSQL_FLOAT>>& _labels,
     std::vector<std::vector<AUTOSQL_INT>>& _feature_densities,
     std::vector<std::vector<std::vector<AUTOSQL_FLOAT>>>& _average_targets )
@@ -764,7 +764,7 @@ std::vector<AUTOSQL_FLOAT> Summarizer::min( const Matrix<AUTOSQL_FLOAT>& _mat )
 
 void Summarizer::min_and_max(
     const containers::Matrix<AUTOSQL_FLOAT>& _mat,
-    AUTOSQL_COMMUNICATOR* _comm,
+    multithreading::Communicator* _comm,
     std::vector<AUTOSQL_FLOAT>& _minima,
     std::vector<AUTOSQL_FLOAT>& _maxima )
 {

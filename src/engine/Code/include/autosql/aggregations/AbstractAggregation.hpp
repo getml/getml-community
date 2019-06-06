@@ -66,7 +66,7 @@ class AbstractAggregation
     /// Iterates through the samples and activates them
     /// starting with the greatest
     virtual void activate_samples_from_above(
-        const containers::Matrix<AUTOSQL_FLOAT> &_critical_values,
+        const std::vector<AUTOSQL_FLOAT> &_critical_values,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) = 0;
 
@@ -80,7 +80,7 @@ class AbstractAggregation
     /// Iterates through the samples and activates them
     /// starting with the smallest
     virtual void activate_samples_from_below(
-        const containers::Matrix<AUTOSQL_FLOAT> &_critical_values,
+        const std::vector<AUTOSQL_FLOAT> &_critical_values,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) = 0;
 
@@ -123,7 +123,7 @@ class AbstractAggregation
     /// Iterates through the samples and deactivates them
     /// starting with the greatest
     virtual void deactivate_samples_from_above(
-        const containers::Matrix<AUTOSQL_FLOAT> &_critical_values,
+        const std::vector<AUTOSQL_FLOAT> &_critical_values,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) = 0;
 
@@ -137,7 +137,7 @@ class AbstractAggregation
     /// Iterates through the samples and deactivates them
     /// starting with the smallest
     virtual void deactivate_samples_from_below(
-        const containers::Matrix<AUTOSQL_FLOAT> &_critical_values,
+        const std::vector<AUTOSQL_FLOAT> &_critical_values,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) = 0;
 
@@ -210,7 +210,7 @@ class AbstractAggregation
 
     /// Trivial setter
     virtual void set_value_to_be_aggregated(
-        const containers::Matrix<AUTOSQL_FLOAT> &_value_to_be_aggregated,
+        const std::vector<AUTOSQL_FLOAT> &_value_to_be_aggregated,
         const AUTOSQL_INT _ix_column_used ) = 0;
 
     /// Trivial setter
@@ -221,7 +221,7 @@ class AbstractAggregation
 
     /// Trivial setter
     virtual void set_value_to_be_aggregated(
-        const containers::Matrix<AUTOSQL_INT> &_value_to_be_aggregated,
+        const std::vector<AUTOSQL_INT> &_value_to_be_aggregated,
         const AUTOSQL_INT _ix_column_used ) = 0;
 
     /// Trivial setter
@@ -245,7 +245,7 @@ class AbstractAggregation
         const AUTOSQL_FLOAT _num_samples_greater ) = 0;
 
     /// Returns a reference to the predictions stored by the aggregation
-    virtual containers::Matrix<AUTOSQL_FLOAT> &yhat() = 0;
+    virtual std::vector<AUTOSQL_FLOAT> &yhat() = 0;
 };
 
 // ----------------------------------------------------------------------------

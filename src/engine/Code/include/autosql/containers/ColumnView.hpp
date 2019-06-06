@@ -10,24 +10,19 @@ namespace containers
 template <class T, class ContainerType>
 class ColumnView
 {
-   public:
-    ColumnView() : column_used_( -1 ) {}
+    // -------------------------------
 
-    ColumnView( const Matrix<T>& _mat, const AUTOSQL_INT _column_used )
-        : column_used_( _column_used ), mat_( _mat )
-    {
-        assert( column_used_ >= 0 );
-        assert( column_used_ < mat_.ncols() );
-    }
+   public:
+    ColumnView() {}
+
+    ColumnView( const Column<T>& _col ) { col_.reset( new Column<T>( _col ) ); }
 
     ColumnView(
-        const Matrix<T>& _mat,
-        const std::shared_ptr<const ContainerType>& _indices,
-        const AUTOSQL_INT _column_used )
-        : column_used_( _column_used ), indices_( _indices ), mat_( _mat )
+        const Column<T>& _col,
+        const std::shared_ptr<const ContainerType>& _indices )
+        : indices_( _indices )
     {
-        assert( column_used_ >= 0 );
-        assert( column_used_ < mat_.ncols() );
+        col_.reset( new Column<T>( _col ) );
     }
 
     ~ColumnView() = default;
@@ -38,7 +33,7 @@ class ColumnView
     void clear() { *this = ColumnView(); }
 
     /// Whether or not the column view is empty.
-    operator bool() const { return mat_.nrows() > 0; }
+    operator bool() const { return ( col_ && true ); }
 
     /// Accessor to data (when indices are std::vector<AUTOSQL_INT>)
     template <
@@ -50,7 +45,7 @@ class ColumnView
     {
         assert( _i >= 0 );
         assert( _i < static_cast<AUTOSQL_INT>( indices_->size() ) );
-        return mat_( ( *indices_ )[_i], column_used_ );
+        return ( *col_ )[( *indices_ )[_i]];
     }
 
     /// Accessor to data (when indices are std::vector<AUTOSQL_INT>)
@@ -63,7 +58,7 @@ class ColumnView
     {
         assert( _i >= 0 );
         assert( _i < static_cast<AUTOSQL_INT>( indices_->size() ) );
-        return mat_( ( *indices_ )[_i], column_used_ );
+        return ( *col_ )[( *indices_ )[_i]];
     }
 
     /// Accessor to data (when indices are std::map<AUTOSQL_INT, AUTOSQL_INT>)
@@ -77,7 +72,7 @@ class ColumnView
         assert( _i >= 0 );
         auto it = indices_->find( _i );
         assert( it != indices_->end() );
-        return mat_( it->second, column_used_ );
+        return ( *col_ )[it->second];
     }
 
     /// Accessor to data (when indices are std::map<AUTOSQL_INT, AUTOSQL_INT>)
@@ -91,40 +86,37 @@ class ColumnView
         assert( _i >= 0 );
         auto it = indices_->find( _i );
         assert( it != indices_->end() );
-        return mat_( it->second, column_used_ );
+        return ( *col_ )[it->second];
     }
 
     /// Accessor to data
     inline T& operator[]( const AUTOSQL_INT _i )
     {
-        assert( column_used_ >= 0 );
         assert( !indices_ );
-        return mat_( _i, column_used_ );
+        return ( *col_ )[_i];
     }
 
     /// Accessor to data
     inline T operator[]( const AUTOSQL_INT _i ) const
     {
-        assert( column_used_ >= 0 );
         assert( !indices_ );
-        return mat_( _i, column_used_ );
+        return ( *col_ )[_i];
     }
 
     // -------------------------------
 
    private:
-    /// Indicates which column we want to use
-    AUTOSQL_INT column_used_;
-
     /// Indices indicating all of the rows that are part of this view
     std::shared_ptr<const ContainerType> indices_;
 
     /// Shallow copy of the matrix in which we are interested
-    Matrix<T> mat_;
+    Optional<Column<T>> col_;
+
+    // -------------------------------
 };
 
 // -------------------------------------------------------------------------
-}
-}
+}  // namespace containers
+}  // namespace autosql
 
 #endif  // AUTOSQL_CONTAINER_COLUMNVIEW_HPP_

@@ -1,20 +1,22 @@
-#ifndef AUTOSQL_OPTIMIZATION_CRITERIA_HPP_
-#define AUTOSQL_OPTIMIZATION_CRITERIA_HPP_
+#ifndef AUTOSQL_OPTIMIZATIONCRITERIA_HPP_
+#define AUTOSQL_OPTIMIZATIONCRITERIA_HPP_
 
 // ----------------------------------------------------
 // Dependencies
 
 #include <numeric>
 
-#include "containers/containers.hpp"
+#include "multithreading/multithreading.hpp"
+
+#include "autosql/containers/containers.hpp"
 
 // ----------------------------------------------------
 // Module files
 
-#include "optimizationcriteria/OptimizationCriterion.hpp"
+#include "autosql/optimizationcriteria/OptimizationCriterion.hpp"
 
-#include "optimizationcriteria/OptimizationCriterionImpl.hpp"
+#include "autosql/optimizationcriteria/OptimizationCriterionImpl.hpp"
 
-#include "optimizationcriteria/RSquaredCriterion.hpp"
+#include "autosql/optimizationcriteria/RSquaredCriterion.hpp"
 
-#endif  // AUTOSQL_OPTIMIZATION_CRITERIA_HPP_
+#endif  // AUTOSQL_OPTIMIZATIONCRITERIA_HPP_

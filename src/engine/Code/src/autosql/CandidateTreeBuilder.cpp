@@ -13,7 +13,7 @@ void CandidateTreeBuilder::add_counts(
     const AUTOSQL_INT _ix_perip_used,
     std::mt19937 &_random_number_generator,
     containers::Optional<aggregations::AggregationImpl> &_aggregation_impl,
-    AUTOSQL_COMMUNICATOR *_comm,
+    multithreading::Communicator *_comm,
     std::list<DecisionTree> &_candidate_trees )
 {
     for ( auto &agg : _hyperparameters.aggregations )
@@ -47,7 +47,7 @@ void CandidateTreeBuilder::add_count_distincts(
     const AUTOSQL_INT _ix_perip_used,
     std::mt19937 &_random_number_generator,
     containers::Optional<aggregations::AggregationImpl> &_aggregation_impl,
-    AUTOSQL_COMMUNICATOR *_comm,
+    multithreading::Communicator *_comm,
     std::list<DecisionTree> &_candidate_trees )
 {
     for ( auto &agg : _hyperparameters.aggregations )
@@ -97,7 +97,7 @@ void CandidateTreeBuilder::add_other_aggs(
     const AUTOSQL_INT _ix_perip_used,
     std::mt19937 &_random_number_generator,
     containers::Optional<aggregations::AggregationImpl> &_aggregation_impl,
-    AUTOSQL_COMMUNICATOR *_comm,
+    multithreading::Communicator *_comm,
     std::list<DecisionTree> &_candidate_trees )
 {
     for ( auto &agg : _hyperparameters.aggregations )
@@ -164,7 +164,7 @@ void CandidateTreeBuilder::add_subfeature_aggs(
     const AUTOSQL_INT _ix_perip_used,
     std::mt19937 &_random_number_generator,
     containers::Optional<aggregations::AggregationImpl> &_aggregation_impl,
-    AUTOSQL_COMMUNICATOR *_comm,
+    multithreading::Communicator *_comm,
     std::list<DecisionTree> &_candidate_trees )
 {
     assert( _table_holder.subtables[_ix_perip_used] );
@@ -206,7 +206,7 @@ std::list<DecisionTree> CandidateTreeBuilder::build_candidates(
     descriptors::Hyperparameters _hyperparameters,
     containers::Optional<aggregations::AggregationImpl> &_aggregation_impl,
     std::mt19937 &_random_number_generator,
-    AUTOSQL_COMMUNICATOR *_comm )
+    multithreading::Communicator *_comm )
 {
     // ----------------------------------------------------------------
 
@@ -288,7 +288,7 @@ std::list<DecisionTree> CandidateTreeBuilder::build_candidate_trees(
     const descriptors::Hyperparameters _hyperparameters,
     std::mt19937 &_random_number_generator,
     containers::Optional<aggregations::AggregationImpl> &_aggregation_impl,
-    AUTOSQL_COMMUNICATOR *_comm )
+    multithreading::Communicator *_comm )
 {
     const AUTOSQL_INT num_perips =
         static_cast<AUTOSQL_INT>( _table_holder.peripheral_tables.size() );
@@ -449,7 +449,7 @@ void CandidateTreeBuilder::randomly_remove_candidate_trees(
     const AUTOSQL_FLOAT _share_aggregations,
     std::mt19937 &_random_number_generator,
     std::list<DecisionTree> &_candidate_trees,
-    AUTOSQL_COMMUNICATOR *_comm )
+    multithreading::Communicator *_comm )
 {
     // ------------------------------------------------
 

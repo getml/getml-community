@@ -43,7 +43,7 @@ struct DecisionTreeEnsembleImpl
 
     /// MPI Communicator or self-defined communicator object (for
     /// multithreading)
-    AUTOSQL_COMMUNICATOR *comm_;
+    multithreading::Communicator *comm_;
 
     /// The linear regressions that are being used to map the features
     /// onto the targets for the gradient-boosting-like functionality

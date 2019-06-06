@@ -4,16 +4,14 @@
 // ----------------------------------------------------
 // Dependencies
 
-#include "config.hpp"
-
-#include "containers/containers.hpp"
+#include "autosql/containers/containers.hpp"
 
 // ----------------------------------------------------
 // Module files
 
-#include "lossfunctions/LossFunction.hpp"
+#include "autosql/lossfunctions/LossFunction.hpp"
 
-#include "lossfunctions/CrossEntropyLoss.hpp"
-#include "lossfunctions/SquareLoss.hpp"
+#include "autosql/lossfunctions/CrossEntropyLoss.hpp"
+#include "autosql/lossfunctions/SquareLoss.hpp"
 
 #endif  // AUTOSQL_LOSSFUNCTIONS_LOSSFUNCTIONS_HPP_

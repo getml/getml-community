@@ -21,7 +21,7 @@
 
 #include "autosql/descriptors/SameUnits.hpp"
 
-//#include "descriptors/Split.hpp"
+#include "autosql/descriptors/Split.hpp"
 
 // ----------------------------------------------------------------------------
 

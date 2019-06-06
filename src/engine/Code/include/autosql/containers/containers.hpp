@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <array>
+#include <deque>
 #include <memory>
 #include <type_traits>
 #include <vector>
@@ -21,13 +22,24 @@
 
 #include "autosql/JSON.hpp"
 
+#include "autosql/Sample.hpp"
+
 // ----------------------------------------------------
 // Module files
+
+#include "autosql/containers/CategoryIndex.hpp"
+#include "autosql/containers/IntSet.hpp"
+#include "autosql/containers/Matrix.hpp"
+#include "autosql/containers/Optional.hpp"
 
 #include "autosql/containers/Column.hpp"
 #include "autosql/containers/Schema.hpp"
 
+#include "autosql/containers/ColumnView.hpp"
+
 #include "autosql/containers/DataFrame.hpp"
+
+#include "autosql/containers/DataFrameView.hpp"
 
 // ----------------------------------------------------
 

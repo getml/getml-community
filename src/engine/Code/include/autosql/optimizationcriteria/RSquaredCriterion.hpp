@@ -28,25 +28,25 @@ class RSquaredCriterion : public OptimizationCriterion
 
     /// Calculates statistics that have to be calculated only once
     void init(
-        containers::Matrix<AUTOSQL_FLOAT>& _y,
-        containers::Matrix<AUTOSQL_FLOAT>& _sample_weights ) final;
+        const containers::Matrix<AUTOSQL_FLOAT>& _y,
+        const std::vector<AUTOSQL_FLOAT>& _sample_weights ) final;
 
     /// Needed for numeric stability
     void init_yhat(
-        const containers::Matrix<AUTOSQL_FLOAT>& _yhat,
+        const std::vector<AUTOSQL_FLOAT>& _yhat,
         const containers::IntSet& _indices ) final;
 
     /// Updates all samples designated by _indices
     void update_samples(
         const containers::IntSet& _indices,
-        const containers::Matrix<AUTOSQL_FLOAT>& _new_values,
+        const std::vector<AUTOSQL_FLOAT>& _new_values,
         const std::vector<AUTOSQL_FLOAT>& _old_values ) final;
 
     // --------------------------------------
 
     /// Commits the current stage, accepting it as the new state of the
     /// optimization criterion
-    void commit() final { impl().commit( sufficient_statistics_committed_ ); }
+    void commit() final { impl().commit( &sufficient_statistics_committed_ ); }
 
     /// Because we do not know the number of categories a priori,
     /// we have to extend it, when necessary
@@ -60,7 +60,8 @@ class RSquaredCriterion : public OptimizationCriterion
     void reset() final
     {
         impl().reset(
-            sufficient_statistics_current_, sufficient_statistics_committed_ );
+            &sufficient_statistics_current_,
+            &sufficient_statistics_committed_ );
     }
 
     /// Reverts to the committed version
@@ -72,16 +73,12 @@ class RSquaredCriterion : public OptimizationCriterion
             sufficient_statistics_current_.begin() );
     }
 
-#ifdef AUTOSQL_PARALLEL
-
     /// Trivial setter
-    void set_comm( AUTOSQL_COMMUNICATOR* _comm ) final
+    void set_comm( multithreading::Communicator* _comm ) final
     {
         comm_ = _comm;
         impl().set_comm( _comm );
     }
-
-#endif  // AUTOSQL_PARALLEL
 
     /// Resizes the sufficient_statistics_stored_ and values_stored_.
     /// The size is inferred from the number of columns in
@@ -121,7 +118,7 @@ class RSquaredCriterion : public OptimizationCriterion
    private:
     /// Implements the formula for calculating R squared.
     AUTOSQL_FLOAT calculate_r_squared(
-        const AUTOSQL_INT _i,
+        const size_t _i,
         const containers::Matrix<AUTOSQL_FLOAT>& _sufficient_statistics ) const;
 
     // --------------------------------------
@@ -134,12 +131,8 @@ class RSquaredCriterion : public OptimizationCriterion
     // --------------------------------------
 
    private:
-#ifdef AUTOSQL_PARALLEL
-
-    /// MPI communicator
-    AUTOSQL_COMMUNICATOR* comm_;
-
-#endif  // AUTOSQL_PARALLEL
+    /// Communicator
+    multithreading::Communicator* comm_;
 
     /// Implementation class for common methods
     /// among optimization criteria.
@@ -151,7 +144,7 @@ class RSquaredCriterion : public OptimizationCriterion
 
     /// Stores the weights associated which each sample (which is needed
     /// for a random-forest- or boosting-like approach)
-    containers::Matrix<AUTOSQL_FLOAT> sample_weights_;
+    std::vector<AUTOSQL_FLOAT> sample_weights_;
 
     /// Stores the sufficient statistics after commit(...)
     /// is called

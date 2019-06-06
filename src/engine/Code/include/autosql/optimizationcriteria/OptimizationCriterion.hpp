@@ -32,12 +32,12 @@ class OptimizationCriterion
 
     /// Calculates statistics that have to be calculated only once
     virtual void init(
-        containers::Matrix<AUTOSQL_FLOAT>& _y,
-        containers::Matrix<AUTOSQL_FLOAT>& _sample_weights ) = 0;
+        const containers::Matrix<AUTOSQL_FLOAT>& _y,
+        const std::vector<AUTOSQL_FLOAT>& _sample_weights ) = 0;
 
     /// Some optimization criteria need this for numeric stability
     virtual void init_yhat(
-        const containers::Matrix<AUTOSQL_FLOAT>& _yhat,
+        const std::vector<AUTOSQL_FLOAT>& _yhat,
         const containers::IntSet& _indices ) = 0;
 
     /// Finds the index associated with the maximum of the optimization
@@ -50,12 +50,8 @@ class OptimizationCriterion
     /// Reverts to the committed version
     virtual void revert_to_commit() = 0;
 
-#ifdef AUTOSQL_PARALLEL
-
     /// Trivial setter
-    virtual void set_comm( AUTOSQL_COMMUNICATOR* _comm ) = 0;
-
-#endif  // AUTOSQL_PARALLEL
+    virtual void set_comm( multithreading::Communicator* _comm ) = 0;
 
     /// Resizes the sufficient_statistics_stored_ and values_stored_.
     /// The size is inferred from the number of columns in
@@ -75,7 +71,7 @@ class OptimizationCriterion
     /// Updates all samples designated by _indices
     virtual void update_samples(
         const containers::IntSet& _indices,
-        const containers::Matrix<AUTOSQL_FLOAT>& _new_values,
+        const std::vector<AUTOSQL_FLOAT>& _new_values,
         const std::vector<AUTOSQL_FLOAT>& _old_values ) = 0;
 
     /// Trivial getter

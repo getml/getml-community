@@ -32,7 +32,7 @@ class IntermediateAggregation
 
     /// Initializes yhat
     void init_yhat(
-        const containers::Matrix<AUTOSQL_FLOAT>& _yhat,
+        const std::vector<AUTOSQL_FLOAT>& _yhat,
         const containers::IntSet& _indices ) final;
 
     /// Resets sufficient statistics to zero
@@ -45,7 +45,7 @@ class IntermediateAggregation
     /// Updates all samples designated by _indices
     void update_samples(
         const containers::IntSet& _indices,
-        const containers::Matrix<AUTOSQL_FLOAT>& _new_values,
+        const std::vector<AUTOSQL_FLOAT>& _new_values,
         const std::vector<AUTOSQL_FLOAT>& _old_values ) final;
 
     // --------------------------------------
@@ -68,8 +68,8 @@ class IntermediateAggregation
 
     /// Calculates statistics that have to be calculated only once
     void init(
-        containers::Matrix<AUTOSQL_FLOAT>& _y,
-        containers::Matrix<AUTOSQL_FLOAT>& _sample_weights ) final
+        std::vector<AUTOSQL_FLOAT>& _y,
+        std::vector<AUTOSQL_FLOAT>& _sample_weights ) final
     {
         assert(
             false &&
@@ -80,15 +80,11 @@ class IntermediateAggregation
     /// criterion
     AUTOSQL_INT find_maximum() final { return parent().find_maximum(); }
 
-#ifdef AUTOSQL_PARALLEL
-
     /// Trivial setter
-    void set_comm( AUTOSQL_COMMUNICATOR* _comm ) final
+    void set_comm( multithreading::Communicator* _comm ) final
     {
         parent().set_comm( _comm );
     }
-
-#endif  // AUTOSQL_PARALLEL
 
     /// An intermediate aggregation has no storage, so it
     /// is redelegated to the parent.
@@ -336,7 +332,7 @@ class IntermediateAggregation
     }
 
     /// Trivial accessor
-    inline containers::Matrix<AUTOSQL_FLOAT>& yhat() { return impl().yhat_; }
+    inline std::vector<AUTOSQL_FLOAT>& yhat() { return impl().yhat_; }
 
     /// Trivial accessor
     inline std::vector<AUTOSQL_FLOAT>& yhat_committed()
@@ -456,7 +452,7 @@ void IntermediateAggregation<AggType>::commit()
 
 template <typename AggType>
 void IntermediateAggregation<AggType>::init_yhat(
-    const containers::Matrix<AUTOSQL_FLOAT>& _yhat,
+    const std::vector<AUTOSQL_FLOAT>& _yhat,
     const containers::IntSet& _indices )
 {
     debug_message( "IntermediateAgg: init_yhat..." );
@@ -616,7 +612,7 @@ void IntermediateAggregation<AggType>::revert_to_commit()
 template <typename AggType>
 void IntermediateAggregation<AggType>::update_samples(
     const containers::IntSet& _indices,
-    const containers::Matrix<AUTOSQL_FLOAT>& _new_values,
+    const std::vector<AUTOSQL_FLOAT>& _new_values,
     const std::vector<AUTOSQL_FLOAT>& _old_values )
 {
     for ( auto ix_input : _indices )

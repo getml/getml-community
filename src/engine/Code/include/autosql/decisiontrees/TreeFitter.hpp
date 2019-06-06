@@ -14,7 +14,7 @@ class TreeFitter
    public:
     TreeFitter(
         std::shared_ptr<containers::Encoding> &_categories,
-        AUTOSQL_COMMUNICATOR *_comm,
+        multithreading::Communicator *_comm,
         descriptors::Hyperparameters &_hyperparameters,
         std::mt19937 &_random_number_generator )
         : categories_( _categories ),
@@ -98,7 +98,7 @@ class TreeFitter
     }
 
     /// Trivial accessor
-    AUTOSQL_COMMUNICATOR *comm() { return comm_; }
+    multithreading::Communicator *comm() { return comm_; }
 
     /// Trivial accessor
     descriptors::Hyperparameters &hyperparameters() { return hyperparameters_; }
@@ -122,7 +122,7 @@ class TreeFitter
     std::shared_ptr<containers::Encoding> &categories_;
 
     /// Communicator
-    AUTOSQL_COMMUNICATOR *comm_;
+    multithreading::Communicator *comm_;
 
     /// The hyperparameters for training
     descriptors::Hyperparameters &hyperparameters_;

@@ -11,8 +11,8 @@ class RandomNumberGenerator
 {
    public:
     RandomNumberGenerator(
-        std::mt19937* const _random_number_generator,
-        AUTOSQL_COMMUNICATOR* const _comm )
+        std::mt19937* _random_number_generator,
+        multithreading::Communicator* _comm )
         : comm_( _comm ), random_number_generator_( _random_number_generator )
     {
     }
@@ -30,15 +30,11 @@ class RandomNumberGenerator
 
         auto random = uniform_distribution( *random_number_generator_ );
 
-#ifdef AUTOSQL_PARALLEL
-
         assert( comm_ != nullptr );
 
-        AUTOSQL_PARALLEL_LIB::broadcast( *comm_, random, 0 );
+        multithreading::broadcast( *comm_, random, 0 );
 
         comm_->barrier();
-
-#endif  // AUTOSQL_PARALLEL
 
         return random;
     }
@@ -50,15 +46,11 @@ class RandomNumberGenerator
 
         auto random = uniform_distribution( *random_number_generator_ );
 
-#ifdef AUTOSQL_PARALLEL
-
         assert( comm_ != nullptr );
 
-        AUTOSQL_PARALLEL_LIB::broadcast( *comm_, random, 0 );
+        multithreading::broadcast( *comm_, random, 0 );
 
         comm_->barrier();
-
-#endif  // AUTOSQL_PARALLEL
 
         return random;
     }
@@ -67,7 +59,7 @@ class RandomNumberGenerator
 
    private:
     /// Communicator
-    AUTOSQL_COMMUNICATOR* const comm_;
+    multithreading::Communicator* const comm_;
 
     /// Random number generator
     std::mt19937* const random_number_generator_;
@@ -76,6 +68,6 @@ class RandomNumberGenerator
 };
 
 // ----------------------------------------------------------------------------
-}
-}
+}  // namespace decisiontrees
+}  // namespace autosql
 #endif  // AUTOSQL_DECISIONTREES_RANDOMNUMBERGENERATOR_HPP_

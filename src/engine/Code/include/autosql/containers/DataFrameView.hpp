@@ -1,5 +1,5 @@
-#ifndef AUTOSQL_CONTAINER_DATAFRAMEVIEW_HPP_
-#define AUTOSQL_CONTAINER_DATAFRAMEVIEW_HPP_
+#ifndef AUTOSQL_CONTAINERS_DATAFRAMEVIEW_HPP_
+#define AUTOSQL_CONTAINERS_DATAFRAMEVIEW_HPP_
 
 namespace autosql
 {
@@ -9,218 +9,239 @@ namespace containers
 
 class DataFrameView
 {
+    // ---------------------------------------------------------------------
+
    public:
-    DataFrameView()
-        : df_( DataFrame(
-              std::make_shared<containers::Encoding>(),
-              std::make_shared<containers::Encoding>() ) ),
-          indices_( std::make_shared<const std::vector<AUTOSQL_INT>>( 0 ) )
-    {
-    }
+    typedef autosql::containers::Column<AUTOSQL_FLOAT> FloatColumnType;
 
-    explicit DataFrameView( const DataFrame &_df )
-        : df_( _df ),
-          indices_( std::make_shared<const std::vector<AUTOSQL_INT>>( 0 ) )
-    {
-    }
+    typedef autosql::containers::Column<AUTOSQL_INT> IntColumnType;
 
+    // ---------------------------------------------------------------------
+
+   public:
     DataFrameView(
-        const DataFrame &_df,
-        const std::shared_ptr<const std::vector<AUTOSQL_INT>> &_indices )
-        : df_( _df ), indices_( _indices )
-    {
-    }
-
-    template <class ContainerType>
-    DataFrameView( const DataFrame &_df, const ContainerType &_indices )
-        : df_( _df ),
-          indices_( std::make_shared<const std::vector<AUTOSQL_INT>>(
-              _indices.begin(), _indices.end() ) )
+        const DataFrame& _df,
+        const std::shared_ptr<const std::vector<size_t>>& _rows )
+        : df_( _df ), rows_( _rows )
     {
     }
 
     ~DataFrameView() = default;
 
-    // -------------------------------
+    // ---------------------------------------------------------------------
 
-    /// Clean up all the data
-    void clear()
+   public:
+    /// Getter for a categorical value.
+    AUTOSQL_INT categorical( size_t _i, size_t _j ) const
     {
-        df_.clear();
-        indices_ = std::make_shared<const std::vector<AUTOSQL_INT>>( 0 );
+        return df_.categorical( row( _i ), _j );
     }
 
-    /// Trivial accessor
-    DataFrame &df() { return df_; }
+    /// Getter for a categorical column.
+    const Column<AUTOSQL_INT> categorical_col( size_t _j ) const
+    {
+        return df_.categorical_col( _j );
+    }
 
-    /// Trivial accessor
-    const DataFrame &df() const { return df_; }
+    /// Getter for a categorical name.
+    const std::string& categorical_name( size_t _j ) const
+    {
+        return df_.categorical_name( _j );
+    }
+
+    /// Getter for a categorical name.
+    const std::string& categorical_unit( size_t _j ) const
+    {
+        return df_.categorical_unit( _j );
+    }
+
+    /// Creates a subview.
+    DataFrameView create_subview(
+        const std::string& _name,
+        const std::string& _join_key,
+        const std::string& _time_stamp,
+        const std::string& _upper_time_stamp ) const
+    {
+        return DataFrameView(
+            df_.create_subview(
+                _name, _join_key, _time_stamp, _upper_time_stamp ),
+            rows_ );
+    }
+
+    /// Getter for underlying data frame.
+    const DataFrame df() const { return df_; }
+
+    /// Getter for a discrete value.
+    AUTOSQL_FLOAT discrete( size_t _i, size_t _j ) const
+    {
+        return df_.discrete( row( _i ), _j );
+    }
+
+    /// Getter for a discrete column.
+    const Column<AUTOSQL_FLOAT> discrete_col( size_t _j ) const
+    {
+        return df_.discrete_col( _j );
+    }
+
+    /// Getter for a discrete name.
+    const std::string& discrete_name( size_t _j ) const
+    {
+        return df_.discrete_name( _j );
+    }
+
+    /// Getter for a discrete name.
+    const std::string& discrete_unit( size_t _j ) const
+    {
+        return df_.discrete_unit( _j );
+    }
+
+    /// Getter for the indices (TODO: remove this).
+    const std::vector<std::shared_ptr<AUTOSQL_INDEX>>& indices() const
+    {
+        return df_.indices();
+    }
+
+    /// Getter for a join key.
+    AUTOSQL_INT join_key( size_t _i ) const
+    {
+        return df_.join_key( row( _i ) );
+    }
+
+    /// Getter for a join keys.
+    const std::vector<Column<AUTOSQL_INT>>& join_keys() const
+    {
+        return df_.join_keys();
+    }
+
+    /// Getter for the join key name.
+    const std::string& join_keys_name() const { return df_.join_keys_name(); }
+
+    /// Return the name of the data frame.
+    const std::string& name() const { return df_.name(); }
 
     /// Trivial getter
-    inline AUTOSQL_INT categorical(
-        const AUTOSQL_INT _i, const AUTOSQL_INT _j ) const
+    size_t nrows() const
     {
-        assert( _i >= 0 );
-        assert( static_cast<size_t>( _i ) < indices().size() );
-
-        return df_.categorical()( indices()[_i], _j );
-    }
-
-    /// Creates a view on categorical
-    inline ColumnView<AUTOSQL_INT, std::vector<AUTOSQL_INT>> categorical_column(
-        const AUTOSQL_INT _column_used ) const
-    {
-        return ColumnView<AUTOSQL_INT, std::vector<AUTOSQL_INT>>(
-            df_.categorical(), indices_, _column_used );
-    }
-
-    /// Trivial getter
-    inline AUTOSQL_FLOAT discrete(
-        const AUTOSQL_INT _i, const AUTOSQL_INT _j ) const
-    {
-        assert( _i >= 0 );
-        assert( static_cast<size_t>( _i ) < indices().size() );
-
-        return df_.discrete()( indices()[_i], _j );
-    }
-
-    /// Creates a view on discrete
-    inline ColumnView<AUTOSQL_FLOAT, std::vector<AUTOSQL_INT>> discrete_column(
-        const AUTOSQL_INT _column_used ) const
-    {
-        return ColumnView<AUTOSQL_FLOAT, std::vector<AUTOSQL_INT>>(
-            df_.discrete(), indices_, _column_used );
-    }
-
-    /// Trivial getter
-    inline const std::shared_ptr<const std::vector<AUTOSQL_INT>> &get_indices()
-        const
-    {
-        return indices_;
-    }
-
-    /// Trivial getter
-    inline AUTOSQL_INT join_key( const AUTOSQL_INT _i, const AUTOSQL_INT _j ) const
-    {
-        assert( _i >= 0 );
-        assert( static_cast<size_t>( _i ) < indices().size() );
-
-        return df_.join_key( _j )[indices()[_i]];
-    }
-
-    /// Trivial getter
-    inline AUTOSQL_INT join_key( const AUTOSQL_INT _i ) const
-    {
-        assert( _i >= 0 );
-        assert( static_cast<size_t>( _i ) < indices().size() );
-
-        return df_.join_key()[indices()[_i]];
-    }
-
-    /// Trivial getter
-    inline AUTOSQL_FLOAT numerical(
-        const AUTOSQL_INT _i, const AUTOSQL_INT _j ) const
-    {
-        assert( _i >= 0 );
-        assert( static_cast<size_t>( _i ) < indices().size() );
-
-        return df_.numerical()( indices()[_i], _j );
-    }
-
-    /// Creates a view on numerical
-    inline ColumnView<AUTOSQL_FLOAT, std::vector<AUTOSQL_INT>> numerical_column(
-        const AUTOSQL_INT _column_used ) const
-    {
-        return ColumnView<AUTOSQL_FLOAT, std::vector<AUTOSQL_INT>>(
-            df_.numerical(), indices_, _column_used );
-    }
-
-    /// Returns the number of rows of the view (as opposed to the underlying
-    /// matrix)
-    inline AUTOSQL_INT nrows() const
-    {
-        return static_cast<AUTOSQL_INT>( indices().size() );
-    }
-
-    /// Trivial setter
-    void set_indices(
-        const std::shared_ptr<const std::vector<AUTOSQL_INT>> &_indices )
-    {
-        indices_ = _indices;
+        assert( rows_ );
+        return rows_->size();
     }
 
     /// Trivial getter
-    inline AUTOSQL_FLOAT targets(
-        const AUTOSQL_INT _i, const AUTOSQL_INT _j ) const
-    {
-        assert( _i >= 0 );
-        assert( static_cast<size_t>( _i ) < indices().size() );
+    size_t num_categoricals() const { return df_.num_categoricals(); }
 
-        return df_.targets()( indices()[_i], _j );
+    /// Trivial getter
+    size_t num_discretes() const { return df_.num_discretes(); }
+
+    /// Trivial getter
+    size_t num_join_keys() const { return df_.num_join_keys(); }
+
+    /// Trivial getter
+    size_t num_numericals() const { return df_.num_numericals(); }
+
+    /// Trivial getter
+    size_t num_targets() const { return df_.num_targets(); }
+
+    /// Trivial getter
+    size_t num_time_stamps() const { return df_.num_time_stamps(); }
+
+    /// Getter for a numerical value.
+    AUTOSQL_FLOAT numerical( size_t _i, size_t _j ) const
+    {
+        return df_.numerical( row( _i ), _j );
+    }
+
+    /// Getter for a numerical column.
+    const Column<AUTOSQL_FLOAT> numerical_col( size_t _j ) const
+    {
+        return df_.numerical_col( _j );
+    }
+
+    /// Getter for a numerical name.
+    const std::string& numerical_name( size_t _j ) const
+    {
+        return df_.numerical_name( _j );
+    }
+
+    /// Getter for a numerical name.
+    const std::string& numerical_unit( size_t _j ) const
+    {
+        return df_.numerical_unit( _j );
+    }
+
+    /// Returns the indices of the rows that this view points to.
+    const std::vector<size_t>& rows() const { return *rows_; }
+
+    /// Getter for a target value.
+    AUTOSQL_FLOAT target( size_t _i, size_t _j ) const
+    {
+        return df_.target( row( _i ), _j );
+    }
+
+    /// Getter for a target column.
+    const Column<AUTOSQL_FLOAT> target_col( size_t _j ) const
+    {
+        return df_.target_col( _j );
+    }
+
+    /// Getter for a target name.
+    const std::string& target_name( size_t _j ) const
+    {
+        return df_.target_name( _j );
+    }
+
+    /// Getter for a target name.
+    const std::string& target_unit( size_t _j ) const
+    {
+        return df_.target_unit( _j );
     }
 
     /// Trivial getter
-    inline AUTOSQL_FLOAT time_stamp(
-        const AUTOSQL_INT _i, const AUTOSQL_INT _j ) const
+    AUTOSQL_FLOAT time_stamp( size_t _i ) const
     {
-        assert( _i >= 0 );
-        assert( static_cast<size_t>( _i ) < indices().size() );
+        return df_.time_stamp( row( _i ) );
+    }
 
-        return df_.time_stamps( _j )[indices()[_i]];
+    /// Getter for the time stamps name.
+    const std::string& time_stamps_name() const
+    {
+        return df_.time_stamps_name();
     }
 
     /// Trivial getter
-    inline AUTOSQL_FLOAT time_stamp( const AUTOSQL_INT _i ) const
+    AUTOSQL_FLOAT upper_time_stamp( size_t _i ) const
     {
-        assert( _i >= 0 );
-        assert( static_cast<size_t>( _i ) < indices().size() );
-
-        return df_.time_stamps()[indices()[_i]];
+        return df_.upper_time_stamp( row( _i ) );
     }
 
-    /// Creates a view on time stamps
-    template <typename T>
-    inline ColumnView<AUTOSQL_FLOAT, std::vector<AUTOSQL_INT>> time_stamps_column(
-        const T _column_used ) const
+    /// Getter for the time stamps name.
+    const std::string& upper_time_stamps_name() const
     {
-        return ColumnView<AUTOSQL_FLOAT, std::vector<AUTOSQL_INT>>(
-            df_.time_stamps( _column_used ), indices_, 0 );
+        return df_.upper_time_stamps_name();
     }
 
-    /// Trivial getter
-    inline AUTOSQL_FLOAT upper_time_stamp( const AUTOSQL_INT _i ) const
-    {
-        const auto ptr = df_.upper_time_stamps();
-
-        if ( ptr == nullptr )
-            {
-                return NAN;
-            }
-
-        assert( _i >= 0 );
-        assert( static_cast<size_t>( _i ) < indices().size() );
-
-        return ( *ptr )[indices()[_i]];
-    }
-
-    // -------------------------------
+    // ---------------------------------------------------------------------
 
    private:
-    /// Trivial accessor
-    const std::vector<AUTOSQL_INT> &indices() const { return *indices_; }
+    /// Transforms the index.
+    const size_t row( size_t _i ) const
+    {
+        assert( rows_ );
+        assert( _i < rows_->size() );
+        return ( *rows_ )[_i];
+    }
 
-    // -------------------------------
+    // ---------------------------------------------------------------------
 
    private:
-    /// Shallow copy of the data frame pointed to
-    DataFrame df_;
+    /// The underlying data frame.
+    const DataFrame df_;
 
-    /// Indices indicating all of the rows that are part of this view
-    std::shared_ptr<const std::vector<AUTOSQL_INT>> indices_;
+    /// The rows that become part of this view.
+    const std::shared_ptr<const std::vector<size_t>> rows_;
 };
 
 // -------------------------------------------------------------------------
 }  // namespace containers
 }  // namespace autosql
 
-#endif  // AUTOSQL_CONTAINER_DATAFRAME_HPP_
+#endif  // AUTOSQL_CONTAINERS_DATAFRAMEVIEW_HPP_

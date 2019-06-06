@@ -82,13 +82,13 @@ struct ApplicableToCategoricalData
 
 namespace AggregationType
 {
-template <DataUsed data_used_>
+template <enums::DataUsed data_used_>
 struct IsCategorical
 {
     static constexpr bool value =
-        ( data_used_ == DataUsed::same_unit_categorical ||
-          data_used_ == DataUsed::x_perip_categorical ||
-          data_used_ == DataUsed::x_popul_categorical );
+        ( data_used_ == enums::DataUsed::same_unit_categorical ||
+          data_used_ == enums::DataUsed::x_perip_categorical ||
+          data_used_ == enums::DataUsed::x_popul_categorical );
 };
 }  // namespace AggregationType
 
@@ -96,13 +96,13 @@ struct IsCategorical
 
 namespace AggregationType
 {
-template <DataUsed data_used_>
+template <enums::DataUsed data_used_>
 struct IsComparison
 {
     static constexpr bool value =
-        ( data_used_ == DataUsed::time_stamps_diff ||
-          data_used_ == DataUsed::same_unit_numerical ||
-          data_used_ == DataUsed::same_unit_discrete );
+        ( data_used_ == enums::DataUsed::time_stamps_diff ||
+          data_used_ == enums::DataUsed::same_unit_numerical ||
+          data_used_ == enums::DataUsed::same_unit_discrete );
 };
 }  // namespace AggregationType
 

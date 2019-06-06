@@ -14,7 +14,7 @@ class Summarizer
     static std::vector<std::vector<AUTOSQL_INT>> calculate_column_densities(
         const AUTOSQL_INT _num_bins,
         const containers::Matrix<AUTOSQL_FLOAT>& _mat,
-        AUTOSQL_COMMUNICATOR* _comm );
+        multithreading::Communicator* _comm );
 
     /// Calculates the pearson r between features and
     /// a set of targets.
@@ -22,14 +22,14 @@ class Summarizer
     calculate_feature_correlations(
         const containers::Matrix<AUTOSQL_FLOAT>& _features,
         const containers::DataFrameView& _targets,
-        AUTOSQL_COMMUNICATOR* _comm );
+        multithreading::Communicator* _comm );
 
     /// Calculates the data needed for the plots in the feature view.
     static void calculate_feature_plots(
         const AUTOSQL_INT _num_bins,
         const containers::Matrix<AUTOSQL_FLOAT>& _mat,
         const containers::DataFrameView& _targets,
-        AUTOSQL_COMMUNICATOR* _comm,
+        multithreading::Communicator* _comm,
         std::vector<std::vector<AUTOSQL_FLOAT>>& _labels,
         std::vector<std::vector<AUTOSQL_INT>>& _feature_densities,
         std::vector<std::vector<std::vector<AUTOSQL_FLOAT>>>& _average_targets );
@@ -38,7 +38,7 @@ class Summarizer
 
     /// Identifies the global minimum and the global maximum
     template <typename T>
-    static void reduce_min_max( AUTOSQL_COMMUNICATOR& _comm, T& _min, T& _max );
+    static void reduce_min_max( multithreading::Communicator& _comm, T& _min, T& _max );
 
 #endif  // AUTOSQL_PARALLEL
 
@@ -79,7 +79,7 @@ class Summarizer
     /// Finds the minimum and maximum, in parallel.
     static void min_and_max(
         const containers::Matrix<AUTOSQL_FLOAT>& _mat,
-        AUTOSQL_COMMUNICATOR* _comm,
+        multithreading::Communicator* _comm,
         std::vector<AUTOSQL_FLOAT>& _minima,
         std::vector<AUTOSQL_FLOAT>& _maxima );
 
@@ -114,7 +114,7 @@ namespace containers
 #ifdef AUTOSQL_PARALLEL
 
 template <typename T>
-void Summarizer::reduce_min_max( AUTOSQL_COMMUNICATOR& _comm, T& _min, T& _max )
+void Summarizer::reduce_min_max( multithreading::Communicator& _comm, T& _min, T& _max )
 {
     T global_min = 0;
 

@@ -1,4 +1,4 @@
-#include "optimizationcriteria/optimizationcriteria.hpp"
+#include "autosql/optimizationcriteria/optimizationcriteria.hpp"
 
 namespace autosql
 {
@@ -16,21 +16,21 @@ std::vector<AUTOSQL_INT> RSquaredCriterion::argsort(
 {
     // ---------------------------------------------------------------------
 
-    debug_message( "argsort..." );
+    debug_log( "argsort..." );
 
     assert( _begin <= _end );
 
     assert( _begin >= 0 );
     assert( _end <= impl().storage_ix() );
 
-    debug_message( "Preparing sufficient statistics..." );
+    debug_log( "Preparing sufficient statistics..." );
 
     const auto sufficient_statistics =
         impl().reduce_sufficient_statistics_stored();
 
     // ---------------------------------------------------------------------
 
-    debug_message( "Calculating values..." );
+    debug_log( "Calculating values..." );
 
     std::vector<AUTOSQL_FLOAT> values( _end - _begin );
 
@@ -42,7 +42,7 @@ std::vector<AUTOSQL_INT> RSquaredCriterion::argsort(
 
     // ---------------------------------------------------------------------
 
-    debug_message( "Calculating indices..." );
+    debug_log( "Calculating indices..." );
 
     std::vector<AUTOSQL_INT> indices( _end - _begin );
 
@@ -68,7 +68,7 @@ std::vector<AUTOSQL_INT> RSquaredCriterion::argsort(
 // ----------------------------------------------------------------------------
 
 AUTOSQL_FLOAT RSquaredCriterion::calculate_r_squared(
-    const AUTOSQL_INT _i,
+    const size_t _i,
     const containers::Matrix<AUTOSQL_FLOAT>& _sufficient_statistics ) const
 {
     assert( _i < impl().storage_ix() );
@@ -83,7 +83,7 @@ AUTOSQL_FLOAT RSquaredCriterion::calculate_r_squared(
 
     AUTOSQL_FLOAT r_squared = 0.0;
 
-    for ( AUTOSQL_INT j = 0; j < y_.ncols(); ++j )
+    for ( size_t j = 0; j < y_.ncols(); ++j )
         {
             const AUTOSQL_FLOAT sum_y_centered_yhat =
                 _sufficient_statistics( _i, 2 + j );
@@ -112,12 +112,12 @@ AUTOSQL_INT RSquaredCriterion::find_maximum()
 {
     AUTOSQL_INT max_ix = 0;
 
-    debug_message( "Preparing sufficient statistics..." );
+    debug_log( "Preparing sufficient statistics..." );
 
     const auto sufficient_statistics =
         impl().reduce_sufficient_statistics_stored();
 
-    debug_message( "Finding maximum..." );
+    debug_log( "Finding maximum..." );
 
     for ( AUTOSQL_INT i = 0; i < impl().storage_ix(); ++i )
         {
@@ -160,8 +160,8 @@ AUTOSQL_INT RSquaredCriterion::find_maximum()
 // ----------------------------------------------------------------------------
 
 void RSquaredCriterion::init(
-    containers::Matrix<AUTOSQL_FLOAT>& _y,
-    containers::Matrix<AUTOSQL_FLOAT>& _sample_weights )
+    const containers::Matrix<AUTOSQL_FLOAT>& _y,
+    const std::vector<AUTOSQL_FLOAT>& _sample_weights )
 {
     y_ = _y;
 
@@ -169,6 +169,7 @@ void RSquaredCriterion::init(
 
     sufficient_statistics_committed_ =
         containers::Matrix<AUTOSQL_FLOAT>( 1, y_.ncols() + 2 );
+
     sufficient_statistics_current_ =
         containers::Matrix<AUTOSQL_FLOAT>( 1, y_.ncols() + 2 );
 
@@ -180,6 +181,7 @@ void RSquaredCriterion::init(
 
     sum_y_centered_yhat_committed_ =
         sufficient_statistics_committed_.data() + 2;
+
     sum_y_centered_yhat_current_ = sufficient_statistics_current_.data() + 2;
 
     sum_y_centered_y_centered_ =
@@ -193,28 +195,25 @@ void RSquaredCriterion::init(
     sum_sample_weights_ =
         std::accumulate( sample_weights_.begin(), sample_weights_.end(), 0.0 );
 
-// Calculate global sum over all processes
-#ifdef AUTOSQL_PARALLEL
+    // Calculate global sum over all processes
 
     AUTOSQL_FLOAT sum_sample_weights_global;
 
-    AUTOSQL_PARALLEL_LIB::all_reduce(
+    multithreading::all_reduce(
         *comm_,                     // comm
         sum_sample_weights_,        // in_value
         sum_sample_weights_global,  // out_value
-        std::plus<AUTOSQL_FLOAT>()   // op
+        std::plus<AUTOSQL_FLOAT>()  // op
     );
 
     comm_->barrier();
 
     sum_sample_weights_ = sum_sample_weights_global;
 
-#endif  // AUTOSQL_PARALLEL
-
     // ---------------------------------------------------------------------
     // Calculate y_mean
 
-    containers::Matrix<AUTOSQL_FLOAT> y_mean( 1, y_.ncols() );
+    std::vector<AUTOSQL_FLOAT> y_mean( y_.ncols() );
 
     for ( AUTOSQL_INT i = 0; i < y_.nrows(); ++i )
         {
@@ -222,28 +221,25 @@ void RSquaredCriterion::init(
                 {
                     assert( y_( i, j ) == y_( i, j ) );
                     assert( sample_weights_[i] == sample_weights_[i] );
-                    y_mean( 0, j ) += y_( i, j ) * sample_weights_[i];
+                    y_mean[j] += y_( i, j ) * sample_weights_[i];
                 }
         }
 
-// Calculate global sum over all processes
-#ifdef AUTOSQL_PARALLEL
+    // Calculate global sum over all processes
 
-    containers::Matrix<AUTOSQL_FLOAT> y_mean_global( 1, y_.ncols() );
+    std::vector<AUTOSQL_FLOAT> y_mean_global( y_.ncols() );
 
-    AUTOSQL_PARALLEL_LIB::all_reduce(
-        *comm_,                    // comm
-        y_mean.data(),             // in_values
-        y_.ncols(),                // count,
-        y_mean_global.data(),      // out_values
+    multithreading::all_reduce(
+        *comm_,                     // comm
+        y_mean.data(),              // in_values
+        y_.ncols(),                 // count,
+        y_mean_global.data(),       // out_values
         std::plus<AUTOSQL_FLOAT>()  // op
     );
 
     comm_->barrier();
 
     y_mean = y_mean_global;
-
-#endif  // AUTOSQL_PARALLEL
 
     for ( auto& ym : y_mean )
         {
@@ -257,16 +253,16 @@ void RSquaredCriterion::init(
         {
             for ( AUTOSQL_INT j = 0; j < y_.ncols(); ++j )
                 {
-                    y_centered_( i, j ) = y_( i, j ) - y_mean( 0, j );
+                    y_centered_( i, j ) = y_( i, j ) - y_mean[j];
                 }
         }
 
     // ---------------------------------------------------------------------
     // Calculate sum_y_centered_y_centered_
 
-    for ( AUTOSQL_INT i = 0; i < y_.nrows(); ++i )
+    for ( size_t i = 0; i < y_.nrows(); ++i )
         {
-            for ( AUTOSQL_INT j = 0; j < y_.ncols(); ++j )
+            for ( size_t j = 0; j < y_.ncols(); ++j )
                 {
                     sum_y_centered_y_centered_( 0, j ) += y_centered_( i, j ) *
                                                           y_centered_( i, j ) *
@@ -278,27 +274,24 @@ void RSquaredCriterion::init(
                 }
         }
 
-// Calculate global sum over all processes
-#ifdef AUTOSQL_PARALLEL
+    // Calculate global sum over all processes
 
     containers::Matrix<AUTOSQL_FLOAT> sum_y_centered_y_centered_global(
         1, sum_y_centered_y_centered_.ncols() );
 
-    AUTOSQL_PARALLEL_LIB::all_reduce(
+    multithreading::all_reduce(
         *comm_,                                   // comm
         sum_y_centered_y_centered_.data(),        // in_values
         y_.ncols(),                               // count,
         sum_y_centered_y_centered_global.data(),  // out_values
-        std::plus<AUTOSQL_FLOAT>()                 // op
+        std::plus<AUTOSQL_FLOAT>()                // op
     );
 
     comm_->barrier();
 
     sum_y_centered_y_centered_ = sum_y_centered_y_centered_global;
 
-#endif  // AUTOSQL_PARALLEL
-
-    for ( AUTOSQL_INT j = 0; j < sum_y_centered_y_centered_.ncols(); ++j )
+    for ( size_t j = 0; j < sum_y_centered_y_centered_.ncols(); ++j )
         {
             assert(
                 sum_y_centered_y_centered_( 0, j ) ==
@@ -309,40 +302,37 @@ void RSquaredCriterion::init(
 // ----------------------------------------------------------------------------
 
 void RSquaredCriterion::init_yhat(
-    const containers::Matrix<AUTOSQL_FLOAT>& _yhat,
+    const std::vector<AUTOSQL_FLOAT>& _yhat,
     const containers::IntSet& _indices )
 {
     // ---------------------------------------------------------------------
 
-    debug_message( "init_yhat..." );
+    debug_log( "init_yhat..." );
 
     // ---------------------------------------------------------------------
     // Calculate y_hat_mean_
 
     y_hat_mean_ = 0.0;
 
-    for ( AUTOSQL_INT i = 0; i < _yhat.nrows(); ++i )
+    for ( size_t i = 0; i < _yhat.size(); ++i )
         {
             y_hat_mean_ += _yhat[i] * sample_weights_[i];
         }
 
-// Calculate global sum over all processes
-#ifdef AUTOSQL_PARALLEL
+    // Calculate global sum over all processes
 
     AUTOSQL_FLOAT y_hat_mean_global;
 
-    AUTOSQL_PARALLEL_LIB::all_reduce(
-        *comm_,                    // comm
-        y_hat_mean_,               // in_value
-        y_hat_mean_global,         // out_value
+    multithreading::all_reduce(
+        *comm_,                     // comm
+        y_hat_mean_,                // in_value
+        y_hat_mean_global,          // out_value
         std::plus<AUTOSQL_FLOAT>()  // op
     );
 
     comm_->barrier();
 
     y_hat_mean_ = y_hat_mean_global;
-
-#endif  // AUTOSQL_PARALLEL
 
     y_hat_mean_ /= sum_sample_weights_;
 
@@ -358,18 +348,18 @@ void RSquaredCriterion::init_yhat(
 
     *sum_yhat_yhat_current_ = 0.0;
 
-    for ( AUTOSQL_INT j = 0; j < y_.ncols(); ++j )
+    for ( size_t j = 0; j < y_.ncols(); ++j )
         {
             sum_y_centered_yhat_current_[j] = 0.0;
         }
 
-    for ( AUTOSQL_INT i = 0; i < _yhat.nrows(); ++i )
+    for ( size_t i = 0; i < _yhat.size(); ++i )
         {
             *sum_yhat_yhat_current_ += ( _yhat[i] - y_hat_mean_ ) *
                                        ( _yhat[i] - y_hat_mean_ ) *
                                        sample_weights_[i];
 
-            for ( AUTOSQL_INT j = 0; j < y_.ncols(); ++j )
+            for ( size_t j = 0; j < y_.ncols(); ++j )
                 {
                     sum_y_centered_yhat_current_[j] +=
                         ( _yhat[i] - y_hat_mean_ ) * y_centered_( i, j ) *
@@ -377,14 +367,16 @@ void RSquaredCriterion::init_yhat(
                 }
         }
 
-    debug_message( "init_yhat...done" );
+    debug_log( "init_yhat...done" );
+
+    // ---------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
 
 void RSquaredCriterion::update_samples(
     const containers::IntSet& _indices,
-    const containers::Matrix<AUTOSQL_FLOAT>& _new_values,
+    const std::vector<AUTOSQL_FLOAT>& _new_values,
     const std::vector<AUTOSQL_FLOAT>& _old_values )
 {
     for ( auto ix : _indices )

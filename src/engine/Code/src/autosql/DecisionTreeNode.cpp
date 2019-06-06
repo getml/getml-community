@@ -1,4 +1,4 @@
-#include "decisiontrees/decisiontrees.hpp"
+#include "autosql/decisiontrees/decisiontrees.hpp"
 
 namespace autosql
 {
@@ -123,7 +123,7 @@ void DecisionTreeNode::apply_by_categories_used_and_commit(
 
 std::shared_ptr<const std::vector<AUTOSQL_INT>>
 DecisionTreeNode::calculate_categories(
-    const AUTOSQL_SIZE _sample_size,
+    const size_t _sample_size,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
 {
@@ -196,7 +196,7 @@ DecisionTreeNode::calculate_categories(
             included.data(),                    // in_values
             categories_end - categories_begin,  // count
             global.data(),                      // out_values
-            AUTOSQL_MAX_OP<std::int8_t>()        // op
+            AUTOSQL_MAX_OP<std::int8_t>()       // op
         );
 
         comm()->barrier();
@@ -227,15 +227,14 @@ DecisionTreeNode::calculate_categories(
 
 // ----------------------------------------------------------------------------
 
-containers::Matrix<AUTOSQL_FLOAT>
-DecisionTreeNode::calculate_critical_values_discrete(
+std::vector<AUTOSQL_FLOAT> DecisionTreeNode::calculate_critical_values_discrete(
     AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
-    const AUTOSQL_SIZE _sample_size )
+    const size_t _sample_size )
 {
     // ---------------------------------------------------------------------------
 
-    debug_message( "calculate_critical_values_discrete..." );
+    debug_log( "calculate_critical_values_discrete..." );
 
     AUTOSQL_FLOAT min = 0.0, max = 0.0;
 
@@ -245,7 +244,7 @@ DecisionTreeNode::calculate_critical_values_discrete(
     // to min and minus infinity to max, ensuring that they not will be the
     // chosen minimum or maximum.
 
-    debug_message(
+    debug_log(
         "std::distance( ... ): " +
         std::to_string(
             std::distance( _sample_container_begin, _sample_container_end ) ) );
@@ -274,17 +273,17 @@ DecisionTreeNode::calculate_critical_values_discrete(
 
     if ( min > max )
         {
-            return containers::Matrix<AUTOSQL_FLOAT>( 0, 1 );
+            return std::vector<AUTOSQL_FLOAT>( 0, 1 );
         }
 
     // ---------------------------------------------------------------------------
 
     AUTOSQL_INT num_critical_values = static_cast<AUTOSQL_INT>( max - min + 1 );
 
-    debug_message(
+    debug_log(
         "num_critical_values: " + std::to_string( num_critical_values ) );
 
-    containers::Matrix<AUTOSQL_FLOAT> critical_values( num_critical_values, 1 );
+    std::vector<AUTOSQL_FLOAT> critical_values( num_critical_values, 1 );
 
     for ( AUTOSQL_INT i = 0; i < num_critical_values; ++i )
         {
@@ -293,7 +292,7 @@ DecisionTreeNode::calculate_critical_values_discrete(
 
     // ---------------------------------------------------------------------------
 
-    debug_message( "calculate_critical_values_discrete...done" );
+    debug_log( "calculate_critical_values_discrete...done" );
 
     return critical_values;
 
@@ -302,15 +301,15 @@ DecisionTreeNode::calculate_critical_values_discrete(
 
 // ----------------------------------------------------------------------------
 
-containers::Matrix<AUTOSQL_FLOAT>
+std::vector<AUTOSQL_FLOAT>
 DecisionTreeNode::calculate_critical_values_numerical(
     AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
-    const AUTOSQL_SIZE _sample_size )
+    const size_t _sample_size )
 {
     // ---------------------------------------------------------------------------
 
-    debug_message( "calculate_critical_values_numerical..." );
+    debug_log( "calculate_critical_values_numerical..." );
 
     AUTOSQL_FLOAT min = 0.0, max = 0.0;
 
@@ -343,10 +342,10 @@ DecisionTreeNode::calculate_critical_values_numerical(
 
     if ( min > max )
         {
-            debug_message(
+            debug_log(
                 "calculate_critical_values_discrete...done (edge case)." );
 
-            return containers::Matrix<AUTOSQL_FLOAT>( 0, 1 );
+            return std::vector<AUTOSQL_FLOAT>( 0, 1 );
         }
 
     // ---------------------------------------------------------------------------
@@ -357,7 +356,7 @@ DecisionTreeNode::calculate_critical_values_numerical(
     AUTOSQL_FLOAT step_size =
         ( max - min ) / static_cast<AUTOSQL_FLOAT>( num_critical_values + 1 );
 
-    containers::Matrix<AUTOSQL_FLOAT> critical_values( num_critical_values, 1 );
+    std::vector<AUTOSQL_FLOAT> critical_values( num_critical_values, 1 );
 
     for ( AUTOSQL_INT i = 0; i < num_critical_values; ++i )
         {
@@ -365,7 +364,7 @@ DecisionTreeNode::calculate_critical_values_numerical(
                 min + static_cast<AUTOSQL_FLOAT>( i + 1 ) * step_size;
         }
 
-    debug_message( "calculate_critical_values_discrete...done." );
+    debug_log( "calculate_critical_values_discrete...done." );
 
     return critical_values;
 
@@ -379,12 +378,12 @@ void DecisionTreeNode::commit(
     AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
 {
-    debug_message( "fit: Improvement possible..." );
+    debug_log( "fit: Improvement possible..." );
 
     auto null_values_separator = identify_parameters(
         _split, _sample_container_begin, _sample_container_end );
 
-    debug_message( "fit: Commit..." );
+    debug_log( "fit: Commit..." );
 
     aggregation()->commit();
 
@@ -392,7 +391,7 @@ void DecisionTreeNode::commit(
 
     if ( depth_ < tree_->max_length_ )
         {
-            debug_message( "fit: Max length not reached..." );
+            debug_log( "fit: Max length not reached..." );
 
             spawn_child_nodes(
                 _sample_container_begin,
@@ -407,16 +406,16 @@ void DecisionTreeNode::fit(
     AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
 {
-    debug_message( "fit: Calculating sample size..." );
+    debug_log( "fit: Calculating sample size..." );
 
 #ifdef AUTOSQL_PARALLEL
 
-    const AUTOSQL_SIZE sample_size = reduce_sample_size(
+    const size_t sample_size = reduce_sample_size(
         std::distance( _sample_container_begin, _sample_container_end ) );
 
 #else  // AUTOSQL_PARALLEL
 
-    const AUTOSQL_SIZE sample_size = static_cast<AUTOSQL_SIZE>(
+    const size_t sample_size = static_cast<size_t>(
         std::distance( _sample_container_begin, _sample_container_end ) );
 
 #endif  // AUTOSQL_PARALLEL
@@ -431,7 +430,7 @@ void DecisionTreeNode::fit(
     // will add another line to the storage of the optimization_criterion,
     // because they reproduce all the steps undertaken by the maximum split. But
     // the split used in the end is ix_max.
-    debug_message( "fit: Setting storage size..." );
+    debug_log( "fit: Setting storage size..." );
 
     optimization_criterion()->set_storage_size( 1 );
 
@@ -449,7 +448,7 @@ void DecisionTreeNode::fit(
     // ------------------------------------------------------------------------
     // Find maximum
 
-    debug_message( "fit: Find maximum..." );
+    debug_log( "fit: Find maximum..." );
 
     // Find maximum
     AUTOSQL_INT ix_max = optimization_criterion()->find_maximum();
@@ -466,7 +465,7 @@ void DecisionTreeNode::fit(
 #ifdef AUTOSQL_PARALLEL
 
     std::array<AUTOSQL_FLOAT, 2> values = {max_value,
-                                          optimization_criterion()->value()};
+                                           optimization_criterion()->value()};
 
     assert( std::get<0>( values ) == std::get<0>( values ) );
 
@@ -475,10 +474,10 @@ void DecisionTreeNode::fit(
     std::array<AUTOSQL_FLOAT, 2> global_values;
 
     AUTOSQL_PARALLEL_LIB::all_reduce(
-        *comm(),                       // comm
-        values.data(),                 // in_value
-        2,                             // count
-        global_values.data(),          // out_value
+        *comm(),                         // comm
+        values.data(),                   // in_value
+        2,                               // count
+        global_values.data(),            // out_value
         AUTOSQL_MAX_OP<AUTOSQL_FLOAT>()  // op
     );
 
@@ -506,7 +505,7 @@ void DecisionTreeNode::fit(
         }
     else
         {
-            debug_message( "fit: No improvement possible..." );
+            debug_log( "fit: No improvement possible..." );
         }
 }
 
@@ -516,7 +515,7 @@ void DecisionTreeNode::fit_as_root(
     AUTOSQL_SAMPLE_CONTAINER::iterator _sample_container_begin,
     AUTOSQL_SAMPLE_CONTAINER::iterator _sample_container_end )
 {
-    debug_message( "fit_as_root..." );
+    debug_log( "fit_as_root..." );
 
     aggregation()->activate_all(
         true, _sample_container_begin, _sample_container_end );
@@ -572,7 +571,7 @@ void DecisionTreeNode::from_json_obj( const Poco::JSON::Object &_json_obj )
 std::string DecisionTreeNode::greater_or_not_equal_to(
     const std::string &_colname ) const
 {
-    if ( data_used() == DataUsed::same_unit_categorical )
+    if ( data_used() == enums::DataUsed::same_unit_categorical )
         {
             return _colname;
         }
@@ -590,8 +589,8 @@ std::string DecisionTreeNode::greater_or_not_equal_to(
 
                     assert( category_used >= 0 );
                     assert(
-                        category_used <
-                        static_cast<AUTOSQL_INT>( tree_->categories().size() ) );
+                        category_used < static_cast<AUTOSQL_INT>(
+                                            tree_->categories().size() ) );
 
                     if ( it != categories_used_begin() )
                         {
@@ -635,7 +634,7 @@ AUTOSQL_SAMPLE_ITERATOR DecisionTreeNode::identify_parameters(
 
     // --------------------------------------------------------------
 
-    debug_message( "Identify parameters..." );
+    debug_log( "Identify parameters..." );
 
     // --------------------------------------------------------------
     // Restore the optimal split
@@ -649,12 +648,12 @@ AUTOSQL_SAMPLE_ITERATOR DecisionTreeNode::identify_parameters(
 
     if ( categorical_data_used() )
         {
-            debug_message( "Identify_parameters: Sort.." );
+            debug_log( "Identify_parameters: Sort.." );
 
             sort_by_categorical_value(
                 _sample_container_begin, _sample_container_end );
 
-            debug_message( "Identify_parameters: apply..." );
+            debug_log( "Identify_parameters: apply..." );
 
             apply_by_categories_used_and_commit(
                 _sample_container_begin, _sample_container_end );
@@ -663,7 +662,7 @@ AUTOSQL_SAMPLE_ITERATOR DecisionTreeNode::identify_parameters(
         {
             // --------------------------------------------------------------
 
-            containers::Matrix<AUTOSQL_FLOAT> critical_values( 1, 1 );
+            std::vector<AUTOSQL_FLOAT> critical_values( 1, 1 );
 
             critical_values[0] = critical_value();
 
@@ -672,7 +671,7 @@ AUTOSQL_SAMPLE_ITERATOR DecisionTreeNode::identify_parameters(
 
             // --------------------------------------------------------------
 
-            debug_message( "Identify_parameters: Sort.." );
+            debug_log( "Identify_parameters: Sort.." );
 
             null_values_separator = separate_null_values(
                 _sample_container_begin,
@@ -686,7 +685,7 @@ AUTOSQL_SAMPLE_ITERATOR DecisionTreeNode::identify_parameters(
                     sort_by_numerical_value(
                         null_values_separator, _sample_container_end );
 
-                    debug_message( "Identify_parameters: apply..." );
+                    debug_log( "Identify_parameters: apply..." );
 
                     if ( is_activated_ )
                         {
@@ -705,7 +704,7 @@ AUTOSQL_SAMPLE_ITERATOR DecisionTreeNode::identify_parameters(
                     sort_by_numerical_value(
                         _sample_container_begin, null_values_separator );
 
-                    debug_message( "Identify_parameters: apply..." );
+                    debug_log( "Identify_parameters: apply..." );
 
                     if ( is_activated_ )
                         {
@@ -731,14 +730,14 @@ AUTOSQL_SAMPLE_ITERATOR DecisionTreeNode::identify_parameters(
 
 #ifdef AUTOSQL_PARALLEL
 
-AUTOSQL_SIZE DecisionTreeNode::reduce_sample_size( AUTOSQL_SIZE _sample_size )
+size_t DecisionTreeNode::reduce_sample_size( size_t _sample_size )
 {
-    AUTOSQL_SIZE global_sample_size = 0;
+    size_t global_sample_size = 0;
 
     AUTOSQL_PARALLEL_LIB::all_reduce(
-        *comm(),                   // comm
-        _sample_size,              // in_value
-        global_sample_size,        // out_value
+        *comm(),                    // comm
+        _sample_size,               // in_value
+        global_sample_size,         // out_value
         std::plus<AUTOSQL_FLOAT>()  // op
     );
 
@@ -814,7 +813,7 @@ void DecisionTreeNode::set_samples(
 {
     switch ( data_used() )
         {
-            case DataUsed::same_unit_categorical:
+            case enums::DataUsed::same_unit_categorical:
 
                 for ( auto it = _sample_container_begin;
                       it != _sample_container_end;
@@ -826,7 +825,7 @@ void DecisionTreeNode::set_samples(
 
                 break;
 
-            case DataUsed::same_unit_discrete:
+            case enums::DataUsed::same_unit_discrete:
 
                 for ( auto it = _sample_container_begin;
                       it != _sample_container_end;
@@ -838,7 +837,7 @@ void DecisionTreeNode::set_samples(
 
                 break;
 
-            case DataUsed::same_unit_numerical:
+            case enums::DataUsed::same_unit_numerical:
 
                 for ( auto it = _sample_container_begin;
                       it != _sample_container_end;
@@ -850,7 +849,7 @@ void DecisionTreeNode::set_samples(
 
                 break;
 
-            case DataUsed::x_perip_categorical:
+            case enums::DataUsed::x_perip_categorical:
 
                 for ( auto it = _sample_container_begin;
                       it != _sample_container_end;
@@ -862,7 +861,7 @@ void DecisionTreeNode::set_samples(
 
                 break;
 
-            case DataUsed::x_perip_numerical:
+            case enums::DataUsed::x_perip_numerical:
 
                 for ( auto it = _sample_container_begin;
                       it != _sample_container_end;
@@ -874,7 +873,7 @@ void DecisionTreeNode::set_samples(
 
                 break;
 
-            case DataUsed::x_perip_discrete:
+            case enums::DataUsed::x_perip_discrete:
 
                 for ( auto it = _sample_container_begin;
                       it != _sample_container_end;
@@ -886,7 +885,7 @@ void DecisionTreeNode::set_samples(
 
                 break;
 
-            case DataUsed::x_popul_categorical:
+            case enums::DataUsed::x_popul_categorical:
 
                 for ( auto it = _sample_container_begin;
                       it != _sample_container_end;
@@ -898,7 +897,7 @@ void DecisionTreeNode::set_samples(
 
                 break;
 
-            case DataUsed::x_popul_numerical:
+            case enums::DataUsed::x_popul_numerical:
 
                 for ( auto it = _sample_container_begin;
                       it != _sample_container_end;
@@ -910,7 +909,7 @@ void DecisionTreeNode::set_samples(
 
                 break;
 
-            case DataUsed::x_popul_discrete:
+            case enums::DataUsed::x_popul_discrete:
 
                 for ( auto it = _sample_container_begin;
                       it != _sample_container_end;
@@ -922,7 +921,7 @@ void DecisionTreeNode::set_samples(
 
                 break;
 
-            case DataUsed::x_subfeature:
+            case enums::DataUsed::x_subfeature:
 
                 for ( auto it = _sample_container_begin;
                       it != _sample_container_end;
@@ -934,7 +933,7 @@ void DecisionTreeNode::set_samples(
 
                 break;
 
-            case DataUsed::time_stamps_diff:
+            case enums::DataUsed::time_stamps_diff:
 
                 for ( auto it = _sample_container_begin;
                       it != _sample_container_end;
@@ -947,7 +946,7 @@ void DecisionTreeNode::set_samples(
 
             default:
 
-                assert( false && "Unknown DataUsed!" );
+                assert( false && "Unknown enums::DataUsed!" );
         }
 }
 
@@ -979,34 +978,10 @@ void DecisionTreeNode::sort_by_numerical_value(
 
 // ----------------------------------------------------------------------------
 
-void DecisionTreeNode::source_importances(
-    const AUTOSQL_FLOAT _factor, descriptors::SourceImportances &_importances )
-{
-    if ( split_ )
-        {
-            tree_->source_importances(
-                data_used(),
-                column_used(),
-                _factor,
-                _importances.condition_imp_ );
-        }
-
-    if ( child_node_greater_ )
-        {
-            child_node_greater_->source_importances(
-                _factor * 0.5, _importances );
-
-            child_node_smaller_->source_importances(
-                _factor * 0.5, _importances );
-        }
-}
-
-// ----------------------------------------------------------------------------
-
 std::string DecisionTreeNode::smaller_or_equal_to(
     const std::string &_colname ) const
 {
-    if ( data_used() == DataUsed::same_unit_categorical )
+    if ( data_used() == enums::DataUsed::same_unit_categorical )
         {
             return _colname;
         }
@@ -1024,8 +999,8 @@ std::string DecisionTreeNode::smaller_or_equal_to(
 
                     assert( category_used >= 0 );
                     assert(
-                        category_used <
-                        static_cast<AUTOSQL_INT>( tree_->categories().size() ) );
+                        category_used < static_cast<AUTOSQL_INT>(
+                                            tree_->categories().size() ) );
 
                     if ( it != categories_used_begin() )
                         {
@@ -1339,20 +1314,20 @@ void DecisionTreeNode::transform(
     // cannot have any children either and there is nothing left to do.
     if ( !split_ )
         {
-            debug_message( "transform: Does not impose condition..." );
+            debug_log( "transform: Does not impose condition..." );
 
             return;
         }
 
     // -----------------------------------------------------------
 
-    debug_message( "transform: Setting samples..." );
+    debug_log( "transform: Setting samples..." );
 
     set_samples( _sample_container_begin, _sample_container_end );
 
     // -----------------------------------------------------------
 
-    debug_message( "transform: Applying condition..." );
+    debug_log( "transform: Applying condition..." );
 
     if ( categorical_data_used() )
         {
@@ -1374,11 +1349,11 @@ void DecisionTreeNode::transform(
 
     if ( child_node_greater_ )
         {
-            debug_message( "transform: Has child..." );
+            debug_log( "transform: Has child..." );
 
             // ---------------------------------------------------------
 
-            debug_message( "transform: Partitioning by value.." );
+            debug_log( "transform: Partitioning by value.." );
 
             if ( categorical_data_used() )
                 {
@@ -1400,7 +1375,7 @@ void DecisionTreeNode::transform(
                 {
                     // ---------------------------------------------------------
 
-                    debug_message( "transform: Separating null values..." );
+                    debug_log( "transform: Separating null values..." );
 
                     const bool null_values_to_beginning =
                         ( apply_from_above() != is_activated_ );
@@ -1412,8 +1387,7 @@ void DecisionTreeNode::transform(
 
                     // ---------------------------------------------------------
 
-                    debug_message(
-                        "transform: Separating by critical values..." );
+                    debug_log( "transform: Separating by critical values..." );
 
                     if ( null_values_to_beginning )
                         {
@@ -1452,12 +1426,12 @@ void DecisionTreeNode::transform(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_categorical_peripheral(
-    const AUTOSQL_SIZE _sample_size,
+    const size_t _sample_size,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
     std::vector<descriptors::Split> &_candidate_splits )
 {
-    debug_message( "try_categorical_peripheral..." );
+    debug_log( "try_categorical_peripheral..." );
 
     for ( AUTOSQL_INT col = 0; col < tree_->peripheral_.categorical().ncols();
           ++col )
@@ -1483,25 +1457,25 @@ void DecisionTreeNode::try_categorical_peripheral(
 
             try_categorical_values(
                 col,
-                DataUsed::x_perip_categorical,
+                enums::DataUsed::x_perip_categorical,
                 _sample_container_begin,
                 _sample_container_end,
                 _sample_size,
                 _candidate_splits );
         }
 
-    debug_message( "try_categorical_peripheral...done" );
+    debug_log( "try_categorical_peripheral...done" );
 }
 
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_categorical_population(
-    const AUTOSQL_SIZE _sample_size,
+    const size_t _sample_size,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
     std::vector<descriptors::Split> &_candidate_splits )
 {
-    debug_message( "try_categorical_population..." );
+    debug_log( "try_categorical_population..." );
 
     for ( AUTOSQL_INT col = 0;
           col < tree_->population_.df().categorical().ncols();
@@ -1528,25 +1502,25 @@ void DecisionTreeNode::try_categorical_population(
 
             try_categorical_values(
                 col,
-                DataUsed::x_popul_categorical,
+                enums::DataUsed::x_popul_categorical,
                 _sample_container_begin,
                 _sample_container_end,
                 _sample_size,
                 _candidate_splits );
         }
 
-    debug_message( "try_categorical_population...done" );
+    debug_log( "try_categorical_population...done" );
 }
 
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_discrete_peripheral(
-    const AUTOSQL_SIZE _sample_size,
+    const size_t _sample_size,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
     std::vector<descriptors::Split> &_candidate_splits )
 {
-    debug_message( "try_discrete_peripheral..." );
+    debug_log( "try_discrete_peripheral..." );
 
     for ( AUTOSQL_INT col = 0; col < tree_->peripheral_.discrete().ncols();
           ++col )
@@ -1571,25 +1545,25 @@ void DecisionTreeNode::try_discrete_peripheral(
 
             try_discrete_values(
                 col,
-                DataUsed::x_perip_discrete,
+                enums::DataUsed::x_perip_discrete,
                 _sample_container_begin,
                 _sample_container_end,
                 _sample_size,
                 _candidate_splits );
         }
 
-    debug_message( "try_discrete_peripheral...done" );
+    debug_log( "try_discrete_peripheral...done" );
 }
 
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_discrete_population(
-    const AUTOSQL_SIZE _sample_size,
+    const size_t _sample_size,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
     std::vector<descriptors::Split> &_candidate_splits )
 {
-    debug_message( "try_discrete_population..." );
+    debug_log( "try_discrete_population..." );
 
     for ( AUTOSQL_INT col = 0; col < tree_->population_.df().discrete().ncols();
           ++col )
@@ -1614,25 +1588,25 @@ void DecisionTreeNode::try_discrete_population(
 
             try_discrete_values(
                 col,
-                DataUsed::x_popul_discrete,
+                enums::DataUsed::x_popul_discrete,
                 _sample_container_begin,
                 _sample_container_end,
                 _sample_size,
                 _candidate_splits );
         }
 
-    debug_message( "try_discrete_population...done" );
+    debug_log( "try_discrete_population...done" );
 }
 
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_numerical_peripheral(
-    const AUTOSQL_SIZE _sample_size,
+    const size_t _sample_size,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
     std::vector<descriptors::Split> &_candidate_splits )
 {
-    debug_message( "try_numerical_peripheral..." );
+    debug_log( "try_numerical_peripheral..." );
 
     for ( AUTOSQL_INT col = 0; col < tree_->peripheral_.numerical().ncols();
           ++col )
@@ -1658,27 +1632,28 @@ void DecisionTreeNode::try_numerical_peripheral(
 
             try_numerical_values(
                 col,
-                DataUsed::x_perip_numerical,
+                enums::DataUsed::x_perip_numerical,
                 _sample_container_begin,
                 _sample_container_end,
                 _sample_size,
                 _candidate_splits );
         }
 
-    debug_message( "try_numerical_peripheral...done" );
+    debug_log( "try_numerical_peripheral...done" );
 }
 
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_numerical_population(
-    const AUTOSQL_SIZE _sample_size,
+    const size_t _sample_size,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
     std::vector<descriptors::Split> &_candidate_splits )
 {
-    debug_message( "try_numerical_population..." );
+    debug_log( "try_numerical_population..." );
 
-    for ( AUTOSQL_INT col = 0; col < tree_->population_.df().numerical().ncols();
+    for ( AUTOSQL_INT col = 0;
+          col < tree_->population_.df().numerical().ncols();
           ++col )
         {
             if ( tree_->population_.df().numerical().unit( col ).find(
@@ -1702,24 +1677,24 @@ void DecisionTreeNode::try_numerical_population(
 
             try_numerical_values(
                 col,
-                DataUsed::x_popul_numerical,
+                enums::DataUsed::x_popul_numerical,
                 _sample_container_begin,
                 _sample_container_end,
                 _sample_size,
                 _candidate_splits );
         }
 
-    debug_message( "try_numerical_population...done" );
+    debug_log( "try_numerical_population...done" );
 }
 
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_categorical_values(
     const AUTOSQL_INT _column_used,
-    const DataUsed _data_used,
+    const enums::DataUsed _data_used,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
-    const AUTOSQL_SIZE _sample_size,
+    const size_t _sample_size,
     std::vector<descriptors::Split> &_candidate_splits )
 {
     // -----------------------------------------------------------------------
@@ -2012,7 +1987,7 @@ void DecisionTreeNode::try_categorical_values(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_conditions(
-    const AUTOSQL_SIZE _sample_size,
+    const size_t _sample_size,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
     std::vector<descriptors::Split> &_candidate_splits )
@@ -2088,15 +2063,15 @@ void DecisionTreeNode::try_conditions(
 
 void DecisionTreeNode::try_discrete_values(
     const AUTOSQL_INT _column_used,
-    const DataUsed _data_used,
+    const enums::DataUsed _data_used,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
-    const AUTOSQL_SIZE _sample_size,
+    const size_t _sample_size,
     std::vector<descriptors::Split> &_candidate_splits )
 {
     // -----------------------------------------------------------------------
 
-    debug_message( "try_discrete_values..." );
+    debug_log( "try_discrete_values..." );
 
     // -----------------------------------------------------------------------
 
@@ -2122,29 +2097,29 @@ void DecisionTreeNode::try_discrete_values(
 
     // -----------------------------------------------------------------------
 
-    debug_message( "try_discrete_values...done." );
+    debug_log( "try_discrete_values...done." );
 }
 
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_non_categorical_values(
     const AUTOSQL_INT _column_used,
-    const DataUsed _data_used,
+    const enums::DataUsed _data_used,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
     AUTOSQL_SAMPLE_ITERATOR _null_values_separator,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
-    const AUTOSQL_SIZE _sample_size,
-    containers::Matrix<AUTOSQL_FLOAT> &_critical_values,
+    const size_t _sample_size,
+    std::vector<AUTOSQL_FLOAT> &_critical_values,
     std::vector<descriptors::Split> &_candidate_splits )
 {
     // -----------------------------------------------------------------------
 
-    debug_message( "try_non_categorical_values..." );
+    debug_log( "try_non_categorical_values..." );
 
     // -----------------------------------------------------------------------
     // Extend the storage size
 
-    debug_message( "try_non_categorical_values: Extend storage." );
+    debug_log( "try_non_categorical_values: Extend storage." );
 
     optimization_criterion()->extend_storage_size(
         _critical_values.nrows() * 2 );
@@ -2152,7 +2127,7 @@ void DecisionTreeNode::try_non_categorical_values(
     // -----------------------------------------------------------------------
     // Add new splits to the candidate splits
 
-    debug_message( "try_non_categorical_values: Add new splits." );
+    debug_log( "try_non_categorical_values: Add new splits." );
 
     for ( AUTOSQL_INT i = 0; i < _critical_values.nrows(); ++i )
         {
@@ -2173,7 +2148,7 @@ void DecisionTreeNode::try_non_categorical_values(
     // If this is an activated node, we need to deactivate all samples for
     // which the numerical value is NULL
 
-    debug_message( "try_non_categorical_values: Handle NULL." );
+    debug_log( "try_non_categorical_values: Handle NULL." );
 
     if ( is_activated_ )
         {
@@ -2210,7 +2185,7 @@ void DecisionTreeNode::try_non_categorical_values(
     // -----------------------------------------------------------------------
     // Try applying from above
 
-    debug_message( "try_non_categorical_values: Apply from above..." );
+    debug_log( "try_non_categorical_values: Apply from above..." );
 
     // Apply changes and store resulting value of optimization criterion
     if ( is_activated_ )
@@ -2247,7 +2222,7 @@ void DecisionTreeNode::try_non_categorical_values(
     // -----------------------------------------------------------------------
     // Try applying from below
 
-    debug_message( "try_non_categorical_values: Apply from below..." );
+    debug_log( "try_non_categorical_values: Apply from below..." );
 
     // Apply changes and store resulting value of optimization criterion
     if ( is_activated_ )
@@ -2268,7 +2243,7 @@ void DecisionTreeNode::try_non_categorical_values(
     // -----------------------------------------------------------------------
     // Revert to original situation
 
-    debug_message( "try_non_categorical_values: Revert..." );
+    debug_log( "try_non_categorical_values: Revert..." );
 
     aggregation()->revert_to_commit();
 
@@ -2276,7 +2251,7 @@ void DecisionTreeNode::try_non_categorical_values(
 
     // -----------------------------------------------------------------------
 
-    debug_message( "try_non_categorical_values...done." );
+    debug_log( "try_non_categorical_values...done." );
 
     // -----------------------------------------------------------------------
 }
@@ -2285,10 +2260,10 @@ void DecisionTreeNode::try_non_categorical_values(
 
 void DecisionTreeNode::try_numerical_values(
     const AUTOSQL_INT _column_used,
-    const DataUsed _data_used,
+    const enums::DataUsed _data_used,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
-    const AUTOSQL_SIZE _sample_size,
+    const size_t _sample_size,
     std::vector<descriptors::Split> &_candidate_splits )
 {
     // -----------------------------------------------------------------------
@@ -2319,12 +2294,12 @@ void DecisionTreeNode::try_numerical_values(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_same_units_categorical(
-    const AUTOSQL_SIZE _sample_size,
+    const size_t _sample_size,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
     std::vector<descriptors::Split> &_candidate_splits )
 {
-    debug_message( "try_same_units_categorical..." );
+    debug_log( "try_same_units_categorical..." );
 
     for ( AUTOSQL_INT col = 0; col < same_units_categorical().size(); ++col )
         {
@@ -2343,25 +2318,25 @@ void DecisionTreeNode::try_same_units_categorical(
 
             try_categorical_values(
                 col,
-                DataUsed::same_unit_categorical,
+                enums::DataUsed::same_unit_categorical,
                 _sample_container_begin,
                 _sample_container_end,
                 _sample_size,
                 _candidate_splits );
         }
 
-    debug_message( "try_same_units_categorical...done" );
+    debug_log( "try_same_units_categorical...done" );
 }
 
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_same_units_discrete(
-    const AUTOSQL_SIZE _sample_size,
+    const size_t _sample_size,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
     std::vector<descriptors::Split> &_candidate_splits )
 {
-    debug_message( "try_same_units_discrete..." );
+    debug_log( "try_same_units_discrete..." );
 
     for ( AUTOSQL_INT col = 0; col < same_units_discrete().size(); ++col )
         {
@@ -2380,25 +2355,25 @@ void DecisionTreeNode::try_same_units_discrete(
 
             try_discrete_values(
                 col,
-                DataUsed::same_unit_discrete,
+                enums::DataUsed::same_unit_discrete,
                 _sample_container_begin,
                 _sample_container_end,
                 _sample_size,
                 _candidate_splits );
         }
 
-    debug_message( "try_same_units_discrete...done" );
+    debug_log( "try_same_units_discrete...done" );
 }
 
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_same_units_numerical(
-    const AUTOSQL_SIZE _sample_size,
+    const size_t _sample_size,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
     std::vector<descriptors::Split> &_candidate_splits )
 {
-    debug_message( "try_same_units_numerical..." );
+    debug_log( "try_same_units_numerical..." );
 
     for ( AUTOSQL_INT col = 0; col < same_units_numerical().size(); ++col )
         {
@@ -2417,20 +2392,20 @@ void DecisionTreeNode::try_same_units_numerical(
 
             try_numerical_values(
                 col,
-                DataUsed::same_unit_numerical,
+                enums::DataUsed::same_unit_numerical,
                 _sample_container_begin,
                 _sample_container_end,
                 _sample_size,
                 _candidate_splits );
         }
 
-    debug_message( "try_same_units_numerical...done" );
+    debug_log( "try_same_units_numerical...done" );
 }
 
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_subfeatures(
-    const AUTOSQL_SIZE _sample_size,
+    const size_t _sample_size,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
     std::vector<descriptors::Split> &_candidate_splits )
@@ -2440,7 +2415,7 @@ void DecisionTreeNode::try_subfeatures(
             return;
         }
 
-    debug_message( "try_subfeatures..." );
+    debug_log( "try_subfeatures..." );
 
     for ( AUTOSQL_INT col = 0; col < tree_->subfeatures().ncols(); ++col )
         {
@@ -2458,25 +2433,25 @@ void DecisionTreeNode::try_subfeatures(
 
             try_numerical_values(
                 col,
-                DataUsed::x_subfeature,
+                enums::DataUsed::x_subfeature,
                 _sample_container_begin,
                 _sample_container_end,
                 _sample_size,
                 _candidate_splits );
         }
 
-    debug_message( "try_subfeatures...done" );
+    debug_log( "try_subfeatures...done" );
 }
 
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_time_stamps_diff(
-    const AUTOSQL_SIZE _sample_size,
+    const size_t _sample_size,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
     std::vector<descriptors::Split> &_candidate_splits )
 {
-    debug_message( "try_time_stamps_diff..." );
+    debug_log( "try_time_stamps_diff..." );
 
     if ( skip_condition() )
         {
@@ -2490,13 +2465,13 @@ void DecisionTreeNode::try_time_stamps_diff(
 
     try_numerical_values(
         0,
-        DataUsed::time_stamps_diff,
+        enums::DataUsed::time_stamps_diff,
         _sample_container_begin,
         _sample_container_end,
         _sample_size,
         _candidate_splits );
 
-    debug_message( "try_time_stamps_diff...done" );
+    debug_log( "try_time_stamps_diff...done" );
 }
 
 // ----------------------------------------------------------------------------
