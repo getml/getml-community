@@ -14,7 +14,8 @@ DecisionTreeNode::DecisionTreeNode(
 
 void DecisionTreeNode::apply_by_categories_used(
     AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) const
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+    aggregations::AbstractAggregation *_aggregation ) const
 {
     if ( std::distance( _sample_container_begin, _sample_container_end ) == 0 )
         {
@@ -25,7 +26,7 @@ void DecisionTreeNode::apply_by_categories_used(
         {
             if ( is_activated_ )
                 {
-                    aggregation()->deactivate_samples_not_containing_categories(
+                    _aggregation->deactivate_samples_not_containing_categories(
                         categories_used_begin(),
                         categories_used_end(),
                         _sample_container_begin,
@@ -33,7 +34,7 @@ void DecisionTreeNode::apply_by_categories_used(
                 }
             else
                 {
-                    aggregation()->activate_samples_not_containing_categories(
+                    _aggregation->activate_samples_not_containing_categories(
                         categories_used_begin(),
                         categories_used_end(),
                         _sample_container_begin,
@@ -44,7 +45,7 @@ void DecisionTreeNode::apply_by_categories_used(
         {
             if ( is_activated_ )
                 {
-                    aggregation()->deactivate_samples_containing_categories(
+                    _aggregation->deactivate_samples_containing_categories(
                         categories_used_begin(),
                         categories_used_end(),
                         _sample_container_begin,
@@ -52,7 +53,7 @@ void DecisionTreeNode::apply_by_categories_used(
                 }
             else
                 {
-                    aggregation()->activate_samples_containing_categories(
+                    _aggregation->activate_samples_containing_categories(
                         categories_used_begin(),
                         categories_used_end(),
                         _sample_container_begin,
@@ -736,7 +737,8 @@ AUTOSQL_SAMPLE_ITERATOR DecisionTreeNode::identify_parameters(
                     apply_by_critical_value(
                         critical_values,
                         null_values_separator,
-                        _sample_container_end );
+                        _sample_container_end,
+                        aggregation() );
                 }
             else
                 {
@@ -754,7 +756,8 @@ AUTOSQL_SAMPLE_ITERATOR DecisionTreeNode::identify_parameters(
                     apply_by_critical_value(
                         critical_values,
                         _sample_container_begin,
-                        null_values_separator );
+                        null_values_separator,
+                        aggregation() );
                 }
 
             // --------------------------------------------------------------
@@ -1363,7 +1366,8 @@ void DecisionTreeNode::transform(
         AUTOSQL_FLOAT,
         std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) const
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+    aggregations::AbstractAggregation *_aggregation ) const
 {
     // -----------------------------------------------------------
 
@@ -1394,14 +1398,15 @@ void DecisionTreeNode::transform(
     if ( categorical_data_used() )
         {
             apply_by_categories_used(
-                _sample_container_begin, _sample_container_end );
+                _sample_container_begin, _sample_container_end, _aggregation );
         }
     else
         {
             apply_by_critical_value(
                 critical_value(),
                 _sample_container_begin,
-                _sample_container_end );
+                _sample_container_end,
+                _aggregation );
         }
 
     // -----------------------------------------------------------
@@ -1482,14 +1487,16 @@ void DecisionTreeNode::transform(
                 _peripheral,
                 _subfeatures,
                 _sample_container_begin,
-                it );
+                it,
+                _aggregation );
 
             child_node_greater_->transform(
                 _population,
                 _peripheral,
                 _subfeatures,
                 it,
-                _sample_container_end );
+                _sample_container_end,
+                _aggregation );
 
             // ---------------------------------------------------------
         }

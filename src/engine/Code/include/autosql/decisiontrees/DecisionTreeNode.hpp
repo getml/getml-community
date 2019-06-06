@@ -67,7 +67,8 @@ class DecisionTreeNode
             AUTOSQL_FLOAT,
             std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) const;
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+        aggregations::AbstractAggregation *_aggregation ) const;
 
     // --------------------------------------
 
@@ -88,7 +89,7 @@ class DecisionTreeNode
 
    private:
     /// Trivial accessor
-    inline aggregations::AbstractAggregation *aggregation() const
+    inline aggregations::AbstractAggregation *aggregation()
     {
         return tree_->aggregation_.get();
     }
@@ -445,7 +446,8 @@ class DecisionTreeNode
     /// Apply changes based on the category used - used for prediction
     void apply_by_categories_used(
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) const;
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+        aggregations::AbstractAggregation *_aggregation ) const;
 
     /// Apply changes based on the category used - used for training
     void apply_by_categories_used_and_commit(
@@ -457,7 +459,8 @@ class DecisionTreeNode
     void apply_by_critical_value(
         const T &_critical_value,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) const;
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+        aggregations::AbstractAggregation *_aggregation ) const;
 
     /// Calculates the beginning and end of the categorical
     /// values considered
@@ -741,7 +744,8 @@ template <typename T>
 void DecisionTreeNode::apply_by_critical_value(
     const T &_critical_value,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) const
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+    aggregations::AbstractAggregation *_aggregation ) const
 {
     if ( std::distance( _sample_container_begin, _sample_container_end ) == 0 )
         {
@@ -756,7 +760,7 @@ void DecisionTreeNode::apply_by_critical_value(
                 {
                     debug_log( "deactivate_samples_from_above..." );
 
-                    aggregation()->deactivate_samples_from_above(
+                    _aggregation->deactivate_samples_from_above(
                         _critical_value,
                         _sample_container_begin,
                         _sample_container_end );
@@ -765,7 +769,7 @@ void DecisionTreeNode::apply_by_critical_value(
                 {
                     debug_log( "activate_samples_from_above..." );
 
-                    aggregation()->activate_samples_from_above(
+                    _aggregation->activate_samples_from_above(
                         _critical_value,
                         _sample_container_begin,
                         _sample_container_end );
@@ -777,7 +781,7 @@ void DecisionTreeNode::apply_by_critical_value(
                 {
                     debug_log( "deactivate_samples_from_below..." );
 
-                    aggregation()->deactivate_samples_from_below(
+                    _aggregation->deactivate_samples_from_below(
                         _critical_value,
                         _sample_container_begin,
                         _sample_container_end );
@@ -786,7 +790,7 @@ void DecisionTreeNode::apply_by_critical_value(
                 {
                     debug_log( "activate_samples_from_below..." );
 
-                    aggregation()->activate_samples_from_below(
+                    _aggregation->activate_samples_from_below(
                         _critical_value,
                         _sample_container_begin,
                         _sample_container_end );
