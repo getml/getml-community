@@ -14,7 +14,7 @@ DecisionTreeNode::DecisionTreeNode(
 
 void DecisionTreeNode::apply_by_categories_used(
     AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) const
 {
     if ( std::distance( _sample_container_begin, _sample_container_end ) == 0 )
         {
@@ -792,7 +792,7 @@ size_t DecisionTreeNode::reduce_sample_size( size_t _sample_size )
 AUTOSQL_SAMPLE_ITERATOR DecisionTreeNode::separate_null_values(
     AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
-    bool _null_values_to_beginning )
+    bool _null_values_to_beginning ) const
 {
     auto is_null = []( Sample *sample ) {
         return sample->numerical_value != sample->numerical_value;
@@ -853,7 +853,7 @@ void DecisionTreeNode::set_samples(
         AUTOSQL_FLOAT,
         std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) const
 {
     switch ( data_used() )
         {
@@ -1363,7 +1363,7 @@ void DecisionTreeNode::transform(
         AUTOSQL_FLOAT,
         std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) const
 {
     // -----------------------------------------------------------
 

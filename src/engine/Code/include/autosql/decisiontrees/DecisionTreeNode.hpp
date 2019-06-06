@@ -67,7 +67,7 @@ class DecisionTreeNode
             AUTOSQL_FLOAT,
             std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end );
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) const;
 
     // --------------------------------------
 
@@ -88,7 +88,7 @@ class DecisionTreeNode
 
    private:
     /// Trivial accessor
-    inline aggregations::AbstractAggregation *aggregation()
+    inline aggregations::AbstractAggregation *aggregation() const
     {
         return tree_->aggregation_.get();
     }
@@ -192,7 +192,7 @@ class DecisionTreeNode
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
         const Sample *_sample,
-        const AUTOSQL_INT _col )
+        const AUTOSQL_INT _col ) const
     {
         const AUTOSQL_INT col1 =
             std::get<0>( tree_->same_units_categorical()[_col] ).ix_column_used;
@@ -222,7 +222,7 @@ class DecisionTreeNode
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
         const Sample *_sample,
-        const AUTOSQL_INT _col )
+        const AUTOSQL_INT _col ) const
     {
         const AUTOSQL_INT col1 =
             std::get<0>( tree_->same_units_discrete()[_col] ).ix_column_used;
@@ -274,7 +274,7 @@ class DecisionTreeNode
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
         const Sample *_sample,
-        const AUTOSQL_INT _col )
+        const AUTOSQL_INT _col ) const
     {
         const AUTOSQL_INT col1 =
             std::get<0>( tree_->same_units_numerical()[_col] ).ix_column_used;
@@ -445,7 +445,7 @@ class DecisionTreeNode
     /// Apply changes based on the category used - used for prediction
     void apply_by_categories_used(
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end );
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) const;
 
     /// Apply changes based on the category used - used for training
     void apply_by_categories_used_and_commit(
@@ -457,7 +457,7 @@ class DecisionTreeNode
     void apply_by_critical_value(
         const T &_critical_value,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end );
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) const;
 
     /// Calculates the beginning and end of the categorical
     /// values considered
@@ -521,7 +521,7 @@ class DecisionTreeNode
     AUTOSQL_SAMPLE_ITERATOR separate_null_values(
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
-        bool _null_values_to_beginning = true );
+        bool _null_values_to_beginning = true ) const;
 
     /// Assigns a the right values to the samples for faster lookup.
     void set_samples(
@@ -531,7 +531,7 @@ class DecisionTreeNode
             AUTOSQL_FLOAT,
             std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end );
+        AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) const;
 
     /// Appends the <= condition (for numerical variables)
     /// or the == condition (for categorical variables)
@@ -741,7 +741,7 @@ template <typename T>
 void DecisionTreeNode::apply_by_critical_value(
     const T &_critical_value,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
+    AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) const
 {
     if ( std::distance( _sample_container_begin, _sample_container_end ) == 0 )
         {
