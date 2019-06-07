@@ -1,5 +1,6 @@
 *.ipch
 *.bin
 *.o
+*.db
 projects/*
 .vscode/*
