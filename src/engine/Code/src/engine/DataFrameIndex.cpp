@@ -30,6 +30,8 @@ void DataFrameIndex::calculate( const Matrix<ENGINE_INT> &_join_key )
                         }
                 }
         }
+
+    begin_ = _join_key.nrows();
 }
 
 // ----------------------------------------------------------------------------
