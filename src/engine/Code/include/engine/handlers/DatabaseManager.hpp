@@ -16,6 +16,7 @@ class DatabaseManager
         const std::shared_ptr<const monitoring::Monitor>& _monitor )
         : connector_( _connector ), logger_( _logger ), monitor_( _monitor )
     {
+        post_tables();
     }
 
     ~DatabaseManager() = default;

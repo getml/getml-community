@@ -90,7 +90,10 @@ Sqlite3Iterator::Sqlite3Iterator(
 
 DATABASE_FLOAT Sqlite3Iterator::get_double()
 {
-    assert( !end_ );
+    if ( end_ )
+        {
+            throw std::runtime_error( "End of table!" );
+        }
 
     auto val =
         static_cast<DATABASE_FLOAT>( sqlite3_column_double( stmt(), colnum_ ) );
@@ -132,7 +135,10 @@ DATABASE_FLOAT Sqlite3Iterator::get_double()
 
 DATABASE_INT Sqlite3Iterator::get_int()
 {
-    assert( !end_ );
+    if ( end_ )
+        {
+            throw std::runtime_error( "End of table!" );
+        }
 
     const auto val =
         static_cast<DATABASE_INT>( sqlite3_column_int( stmt(), colnum_ ) );
@@ -150,7 +156,10 @@ DATABASE_INT Sqlite3Iterator::get_int()
 
 std::string Sqlite3Iterator::get_string()
 {
-    assert( !end_ );
+    if ( end_ )
+        {
+            throw std::runtime_error( "End of table!" );
+        }
 
     const auto ptr = sqlite3_column_text( stmt(), colnum_ );
 
@@ -179,7 +188,10 @@ std::string Sqlite3Iterator::get_string()
 
 DATABASE_FLOAT Sqlite3Iterator::get_time_stamp()
 {
-    assert( !end_ );
+    if ( end_ )
+        {
+            throw std::runtime_error( "End of table!" );
+        }
 
     const auto ptr = sqlite3_column_text( stmt(), colnum_ );
 
