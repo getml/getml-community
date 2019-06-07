@@ -14,13 +14,15 @@ class DecisionTree
 
     DecisionTree(
         const std::string &_agg,
-        const AUTOSQL_INT _ix_column_used,
-        const DataUsed _data_used,
-        const AUTOSQL_INT _ix_perip_used,
+        const std::shared_ptr<const descriptors::TreeHyperparameters>
+            &_tree_hyperparameters,
+        const size_t _ix_perip_used,
+        const enums::DataUsed _data_used,
+        const size_t _ix_column_used,
         const descriptors::SameUnits &_same_units,
-        std::mt19937 &_random_number_generator,
-        containers::Optional<aggregations::AggregationImpl>
-            &_aggregation_impl );
+        std::mt19937 *_random_number_generator,
+        containers::Optional<aggregations::AggregationImpl> *_aggregation_impl,
+        multithreading::Communicator *_comm );
 
     DecisionTree( const DecisionTree &_other );
 
@@ -33,22 +35,23 @@ class DecisionTree
     /// A sample containers contains a value to be aggregated. This is set by
     /// this function.
     void create_value_to_be_aggregated(
-        TableHolder &_table_holder,
-        AUTOSQL_SAMPLE_CONTAINER &_sample_container );
+        const containers::DataFrameView &_population,
+        const containers::DataFrame &_peripheral,
+        const std::vector<containers::ColumnView<
+            AUTOSQL_FLOAT,
+            std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
+        const AUTOSQL_SAMPLE_CONTAINER &_sample_container );
 
     /// Fits the decision tree
     void fit(
+        const containers::DataFrameView &_population,
+        const containers::DataFrame &_peripheral,
+        const std::vector<containers::ColumnView<
+            AUTOSQL_FLOAT,
+            std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
         AUTOSQL_SAMPLE_CONTAINER::iterator _sample_container_begin,
         AUTOSQL_SAMPLE_CONTAINER::iterator _sample_container_end,
-        TableHolder &_table_holder,
-        optimizationcriteria::OptimizationCriterion *_optimization_criterion,
-        bool _allow_sets,
-        AUTOSQL_INT _max_length,
-        AUTOSQL_INT _min_num_samples,
-        AUTOSQL_FLOAT _grid_factor,
-        AUTOSQL_FLOAT _regularization,
-        AUTOSQL_FLOAT _share_conditions,
-        bool _use_timestamps );
+        optimizationcriteria::OptimizationCriterion *_optimization_criterion );
 
     /// Rebuilds the tree from a Poco::JSON::Object
     void from_json_obj( const Poco::JSON::Object &_json_obj );
@@ -66,9 +69,6 @@ class DecisionTree
     /// Generates the select statement
     std::string select_statement( const std::string &_feature_num ) const;
 
-    /// Calculates the feature importances
-    void source_importances( descriptors::SourceImportances &_importances );
-
     /// Extracts the tree as a JSON object
     Poco::JSON::Object to_json_obj();
 
@@ -82,8 +82,12 @@ class DecisionTree
         const std::string _feature_num, const bool _use_timestamps ) const;
 
     /// Transforms a set of raw data into extracted features
-    containers::Matrix<AUTOSQL_FLOAT> transform(
-        TableHolder &_table_holder, bool _use_timestamps );
+    std::vector<AUTOSQL_FLOAT> transform(
+        const containers::DataFrameView &_population,
+        const containers::DataFrame &_peripheral,
+        const containers::Optional<TableHolder> &_subtables,
+        const bool _use_timestamps,
+        aggregations::AbstractAggregation *_aggregation );
 
     // --------------------------------------
 
@@ -103,14 +107,14 @@ class DecisionTree
 
     /// Returns the information required for identifying the
     /// columns to be aggregated by this tree.
-    inline ColumnToBeAggregated &column_to_be_aggregated()
+    inline enums::ColumnToBeAggregated &column_to_be_aggregated()
     {
         return impl()->column_to_be_aggregated_;
     }
 
     /// Returns the information required for identifying the
     /// columns to be aggregated by this tree.
-    inline const ColumnToBeAggregated &column_to_be_aggregated() const
+    inline const enums::ColumnToBeAggregated &column_to_be_aggregated() const
     {
         return impl()->column_to_be_aggregated_;
     }
@@ -161,14 +165,14 @@ class DecisionTree
 
     /// Passes the impl of the aggregation to the aggregation
     inline void set_aggregation_impl(
-        containers::Optional<aggregations::AggregationImpl> &_aggregation_impl )
+        containers::Optional<aggregations::AggregationImpl> *_aggregation_impl )
     {
         impl_.aggregation_->set_aggregation_impl( _aggregation_impl );
     }
 
     /// Trivial setter
     inline void set_categories(
-        const std::shared_ptr<containers::Encoding> &_categories )
+        const std::shared_ptr<const std::vector<std::string>> &_categories )
     {
         impl_.categories_ = _categories;
     }
@@ -226,8 +230,19 @@ class DecisionTree
     template <typename AggType>
     std::shared_ptr<aggregations::AbstractAggregation> make_aggregation();
 
-    /// Generates the features from the subtrees
-    void transform_subtrees( TableHolder &_table_holder, bool _use_timestamps );
+    /// Builds appropriate views on the features. The purpose of the ColumnView
+    /// is to reverse the effect of the row indices in the DataFrameView.
+    std::vector<containers::ColumnView<
+        AUTOSQL_FLOAT,
+        std::map<AUTOSQL_INT, AUTOSQL_INT>>>
+    make_subfeatures(
+        const containers::Optional<TableHolder> &_subtable,
+        const std::vector<std::vector<AUTOSQL_FLOAT>> &_predictions ) const;
+
+    /// Generates the features from the subtrees.
+    std::vector<std::vector<AUTOSQL_FLOAT>> make_predictions(
+        const containers::Optional<TableHolder> &_subtable,
+        const bool _use_timestamps );
 
     // --------------------------------------
 
@@ -253,9 +268,7 @@ class DecisionTree
     }
 
     /// Trivial accessor
-    inline bool &allow_sets() { return impl_.allow_sets_; }
-
-#ifdef AUTOSQL_PARALLEL
+    inline bool allow_sets() const { return impl_.allow_sets(); }
 
     /// Trivial accessor
     inline multithreading::Communicator *comm()
@@ -263,8 +276,6 @@ class DecisionTree
         assert( impl_.comm_ != nullptr );
         return impl_.comm_;
     }
-
-#endif  // AUTOSQL_PARALLEL
 
     /// Trivial accessor
     inline DecisionTreeImpl *impl() { return &impl_; }
@@ -300,13 +311,16 @@ class DecisionTree
     }
 
     /// Trivial accessor
-    inline AUTOSQL_FLOAT &grid_factor() { return impl_.grid_factor_; }
+    inline AUTOSQL_FLOAT grid_factor() const { return impl_.grid_factor(); }
 
     /// Trivial accessor
-    inline AUTOSQL_INT &max_length() { return impl_.max_length_; }
+    inline AUTOSQL_INT max_length() const { return impl_.max_length(); }
 
     /// Trivial accessor
-    inline AUTOSQL_INT &min_num_samples() { return impl_.min_num_samples_; }
+    inline AUTOSQL_INT min_num_samples() const
+    {
+        return impl_.min_num_samples();
+    }
 
     /// Trivial accessor
     inline optimizationcriteria::OptimizationCriterion *&
@@ -314,9 +328,6 @@ class DecisionTree
     {
         return impl_.optimization_criterion_;
     }
-
-    /// Trivial accessor
-    inline containers::DataFrame &peripheral() { return impl_.peripheral_; }
 
     /// Trivial accessor
     inline std::string &peripheral_name() { return impl_.peripheral_name_; }
@@ -328,9 +339,6 @@ class DecisionTree
     }
 
     /// Trivial accessor
-    inline containers::DataFrameView &population() { return impl_.population_; }
-
-    /// Trivial accessor
     inline std::string &population_name() { return impl_.population_name_; }
 
     /// Trivial accessor
@@ -340,7 +348,10 @@ class DecisionTree
     }
 
     /// Trivial accessor
-    inline AUTOSQL_FLOAT &regularization() { return impl_.regularization_; }
+    inline AUTOSQL_FLOAT regularization() const
+    {
+        return impl_.regularization();
+    }
 
     /// Trivial accessor
     inline containers::Optional<DecisionTreeNode> &root() { return root_; }
@@ -352,7 +363,10 @@ class DecisionTree
     }
 
     /// Trivial accessor
-    inline AUTOSQL_FLOAT &share_conditions() { return impl_.share_conditions_; }
+    inline AUTOSQL_FLOAT share_conditions() const
+    {
+        return impl_.share_conditions();
+    }
 
     /// Subtrees
     inline std::vector<DecisionTree> &subtrees() { return subtrees_; }
@@ -487,53 +501,53 @@ DecisionTree::make_aggregation()
 
     switch ( data_used )
         {
-            case DataUsed::x_perip_numerical:
+            case enums::DataUsed::x_perip_numerical:
 
                 return std::make_shared<aggregations::Aggregation<
                     AggType,
-                    DataUsed::x_perip_numerical,
+                    enums::DataUsed::x_perip_numerical,
                     false>>();
 
                 break;
 
-            case DataUsed::x_perip_discrete:
+            case enums::DataUsed::x_perip_discrete:
 
                 return std::make_shared<aggregations::Aggregation<
                     AggType,
-                    DataUsed::x_perip_discrete,
+                    enums::DataUsed::x_perip_discrete,
                     false>>();
 
                 break;
 
-            case DataUsed::time_stamps_diff:
+            case enums::DataUsed::time_stamps_diff:
 
                 return std::make_shared<aggregations::Aggregation<
                     AggType,
-                    DataUsed::time_stamps_diff,
+                    enums::DataUsed::time_stamps_diff,
                     true>>();
 
                 break;
 
-            case DataUsed::same_unit_numerical:
+            case enums::DataUsed::same_unit_numerical:
 
                 {
-                    const DataUsed data_used2 =
+                    const enums::DataUsed data_used2 =
                         std::get<1>(
                             impl()->same_units_numerical()[ix_column_used] )
                             .data_used;
 
-                    if ( data_used2 == DataUsed::x_popul_numerical )
+                    if ( data_used2 == enums::DataUsed::x_popul_numerical )
                         {
                             return std::make_shared<aggregations::Aggregation<
                                 AggType,
-                                DataUsed::same_unit_numerical,
+                                enums::DataUsed::same_unit_numerical,
                                 true>>();
                         }
-                    else if ( data_used2 == DataUsed::x_perip_numerical )
+                    else if ( data_used2 == enums::DataUsed::x_perip_numerical )
                         {
                             return std::make_shared<aggregations::Aggregation<
                                 AggType,
-                                DataUsed::same_unit_numerical,
+                                enums::DataUsed::same_unit_numerical,
                                 false>>();
                         }
                     else
@@ -547,26 +561,26 @@ DecisionTree::make_aggregation()
 
                 break;
 
-            case DataUsed::same_unit_discrete:
+            case enums::DataUsed::same_unit_discrete:
 
                 {
-                    const DataUsed data_used2 =
+                    const enums::DataUsed data_used2 =
                         std::get<1>(
                             impl()->same_units_discrete()[ix_column_used] )
                             .data_used;
 
-                    if ( data_used2 == DataUsed::x_popul_discrete )
+                    if ( data_used2 == enums::DataUsed::x_popul_discrete )
                         {
                             return std::make_shared<aggregations::Aggregation<
                                 AggType,
-                                DataUsed::same_unit_discrete,
+                                enums::DataUsed::same_unit_discrete,
                                 true>>();
                         }
-                    else if ( data_used2 == DataUsed::x_perip_discrete )
+                    else if ( data_used2 == enums::DataUsed::x_perip_discrete )
                         {
                             return std::make_shared<aggregations::Aggregation<
                                 AggType,
-                                DataUsed::same_unit_discrete,
+                                enums::DataUsed::same_unit_discrete,
                                 false>>();
                         }
                     else
@@ -580,35 +594,36 @@ DecisionTree::make_aggregation()
 
                 break;
 
-            case DataUsed::x_perip_categorical:
+            case enums::DataUsed::x_perip_categorical:
 
                 return std::make_shared<aggregations::Aggregation<
                     AggType,
-                    DataUsed::x_perip_categorical,
+                    enums::DataUsed::x_perip_categorical,
                     false>>();
 
                 break;
 
-            case DataUsed::x_subfeature:
-
-                return std::make_shared<
-                    aggregations::
-                        Aggregation<AggType, DataUsed::x_subfeature, false>>();
-
-                break;
-
-            case DataUsed::not_applicable:
+            case enums::DataUsed::x_subfeature:
 
                 return std::make_shared<aggregations::Aggregation<
                     AggType,
-                    DataUsed::not_applicable,
+                    enums::DataUsed::x_subfeature,
+                    false>>();
+
+                break;
+
+            case enums::DataUsed::not_applicable:
+
+                return std::make_shared<aggregations::Aggregation<
+                    AggType,
+                    enums::DataUsed::not_applicable,
                     false>>();
 
                 break;
 
             default:
 
-                assert( !"Unknown DataUsed in make_aggregation(...)!" );
+                assert( !"Unknown enums::DataUsed in make_aggregation(...)!" );
 
                 return std::shared_ptr<aggregations::AbstractAggregation>();
         }

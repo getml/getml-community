@@ -1,4 +1,4 @@
-#include "decisiontrees/decisiontrees.hpp"
+#include "autosql/decisiontrees/decisiontrees.hpp"
 
 namespace autosql
 {
@@ -8,33 +8,34 @@ namespace decisiontrees
 
 DecisionTree::DecisionTree( const Poco::JSON::Object &_json_obj )
 {
-    debug_message( "Feature: Normal constructor..." );
+    debug_log( "Feature: Normal constructor..." );
 
     from_json_obj( _json_obj );
 
-#ifdef AUTOSQL_PARALLEL
     impl_.comm_ = nullptr;
-#endif  // AUTOSQL_PARALLEL
 };
 
 // ----------------------------------------------------------------------------
 
 DecisionTree::DecisionTree(
     const std::string &_agg,
-    const AUTOSQL_INT _ix_column_used,
-    const DataUsed _data_used,
-    const AUTOSQL_INT _ix_perip_used,
+    const std::shared_ptr<const descriptors::TreeHyperparameters>
+        &_tree_hyperparameters,
+    const size_t _ix_perip_used,
+    const enums::DataUsed _data_used,
+    const size_t _ix_column_used,
     const descriptors::SameUnits &_same_units,
-    std::mt19937 &_random_number_generator,
-    containers::Optional<aggregations::AggregationImpl> &_aggregation_impl )
+    std::mt19937 *_random_number_generator,
+    containers::Optional<aggregations::AggregationImpl> *_aggregation_impl,
+    multithreading::Communicator *_comm )
 {
     set_same_units( _same_units );
 
-    column_to_be_aggregated().ix_column_used = _ix_column_used;
+    column_to_be_aggregated().ix_perip_used = _ix_perip_used;
 
     column_to_be_aggregated().data_used = _data_used;
 
-    column_to_be_aggregated().ix_perip_used = _ix_perip_used;
+    column_to_be_aggregated().ix_column_used = _ix_column_used;
 
     assert( _agg != "" );
 
@@ -42,11 +43,11 @@ DecisionTree::DecisionTree(
 
     impl_.aggregation_type_ = _agg;
 
-#ifdef AUTOSQL_PARALLEL
-    impl_.comm_ = nullptr;
-#endif  // AUTOSQL_PARALLEL
+    impl_.tree_hyperparameters_ = _tree_hyperparameters;
 
-    impl()->random_number_generator_ = &_random_number_generator;
+    impl_.comm_ = _comm;
+
+    impl()->random_number_generator_ = _random_number_generator;
 
     set_aggregation_impl( _aggregation_impl );
 }
@@ -58,7 +59,7 @@ DecisionTree::DecisionTree( const DecisionTree &_other )
       root_( _other.root_ ),
       subtrees_( _other.subtrees() )
 {
-    debug_message( "Feature: Copy constructor..." );
+    debug_log( "Feature: Copy constructor..." );
 
     assert( _other.impl_.aggregation_type_ != "" );
 
@@ -77,7 +78,7 @@ DecisionTree::DecisionTree( DecisionTree &&_other ) noexcept
       root_( std::move( _other.root_ ) ),
       subtrees_( std::move( _other.subtrees() ) )
 {
-    debug_message( "Feature: Move constructor..." );
+    debug_log( "Feature: Move constructor..." );
 
     if ( root() )
         {
@@ -88,78 +89,44 @@ DecisionTree::DecisionTree( DecisionTree &&_other ) noexcept
 // ----------------------------------------------------------------------------
 
 void DecisionTree::create_value_to_be_aggregated(
-    TableHolder &_table_holder, AUTOSQL_SAMPLE_CONTAINER &_sample_container )
+    const containers::DataFrameView &_population,
+    const containers::DataFrame &_peripheral,
+    const std::vector<containers::ColumnView<
+        AUTOSQL_FLOAT,
+        std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
+    const AUTOSQL_SAMPLE_CONTAINER &_sample_container )
 {
-    // ------------------------------------------------------------
-
-    auto &peripheral_table = _table_holder.peripheral_tables[ix_perip_used()];
-
-    auto &population_table = _table_holder.main_table;
-
-    // ------------------------------------------------------------------------
-
-    assert(
-        peripheral_table.time_stamps().nrows() ==
-        peripheral_table.categorical().nrows() );
-
-    assert(
-        peripheral_table.time_stamps().nrows() ==
-        peripheral_table.discrete().nrows() );
-
-    assert(
-        peripheral_table.time_stamps().nrows() ==
-        peripheral_table.numerical().nrows() );
-
-    // ------------------------------------------------------------
-    // Create subfeatures, if necessary
-
-    if ( subtrees().size() > 0 )
-        {
-            assert( _table_holder.subtables[ix_perip_used()] );
-
-            auto &subtable = *_table_holder.subtables[ix_perip_used()];
-
-            auto population_indices =
-                SampleContainer::create_population_indices(
-                    subtable.main_table.df().nrows(), _sample_container );
-
-            subtable.main_table.set_indices( population_indices );
-
-            transform_subtrees(
-                *_table_holder.subtables[ix_perip_used()], true );
-        }
-
     // ------------------------------------------------------------------------
 
     const AUTOSQL_INT ix_column_used = column_to_be_aggregated().ix_column_used;
 
     switch ( column_to_be_aggregated().data_used )
         {
-            case DataUsed::x_perip_numerical:
+            case enums::DataUsed::x_perip_numerical:
 
                 aggregation()->set_value_to_be_aggregated(
-                    peripheral_table.numerical(), ix_column_used );
+                    _peripheral.numerical_col( ix_column_used ) );
 
                 break;
 
-            case DataUsed::x_perip_discrete:
+            case enums::DataUsed::x_perip_discrete:
 
                 aggregation()->set_value_to_be_aggregated(
-                    peripheral_table.discrete(), ix_column_used );
+                    _peripheral.discrete_col( ix_column_used ) );
 
                 break;
 
-            case DataUsed::time_stamps_diff:
+            case enums::DataUsed::time_stamps_diff:
 
                 aggregation()->set_value_to_be_aggregated(
-                    peripheral_table.time_stamps(), 0 );
+                    _peripheral.time_stamp_col() );
 
                 aggregation()->set_value_to_be_compared(
-                    population_table.time_stamps_column( ix_perip_used() ) );
+                    _population.time_stamp_col() );
 
                 break;
 
-            case DataUsed::same_unit_numerical:
+            case enums::DataUsed::same_unit_numerical:
 
                 assert(
                     static_cast<AUTOSQL_INT>(
@@ -167,12 +134,12 @@ void DecisionTree::create_value_to_be_aggregated(
                     ix_column_used );
 
                 {
-                    const DataUsed data_used1 =
+                    const enums::DataUsed data_used1 =
                         std::get<0>(
                             impl()->same_units_numerical()[ix_column_used] )
                             .data_used;
 
-                    const DataUsed data_used2 =
+                    const enums::DataUsed data_used2 =
                         std::get<1>(
                             impl()->same_units_numerical()[ix_column_used] )
                             .data_used;
@@ -187,42 +154,37 @@ void DecisionTree::create_value_to_be_aggregated(
                             impl()->same_units_numerical()[ix_column_used] )
                             .ix_column_used;
 
-                    if ( data_used1 == DataUsed::x_perip_numerical )
+                    if ( data_used1 == enums::DataUsed::x_perip_numerical )
                         {
                             assert(
-                                peripheral_table.numerical().ncols() >
+                                _peripheral.num_numericals() >
                                 ix_column_used1 );
 
                             aggregation()->set_value_to_be_aggregated(
-                                peripheral_table.numerical(), ix_column_used1 );
+                                _peripheral.numerical_col( ix_column_used1 ) );
                         }
                     else
                         {
                             assert( !"Unknown data_used1 in set_value_to_be_aggregated(...)!" );
                         }
 
-                    if ( data_used2 == DataUsed::x_popul_numerical )
+                    if ( data_used2 == enums::DataUsed::x_popul_numerical )
                         {
                             assert(
-                                population_table.df().numerical().ncols() >
+                                _population.num_numericals() >
                                 ix_column_used2 );
 
                             aggregation()->set_value_to_be_compared(
-                                population_table.numerical_column(
-                                    ix_column_used2 ) );
+                                _population.numerical_col( ix_column_used2 ) );
                         }
-                    else if ( data_used2 == DataUsed::x_perip_numerical )
+                    else if ( data_used2 == enums::DataUsed::x_perip_numerical )
                         {
                             assert(
-                                peripheral_table.numerical().ncols() >
+                                _peripheral.num_numericals() >
                                 ix_column_used2 );
 
-                            auto view = containers::ColumnView<
-                                AUTOSQL_FLOAT,
-                                std::vector<AUTOSQL_INT>>(
-                                peripheral_table.numerical(), ix_column_used2 );
-
-                            aggregation()->set_value_to_be_compared( view );
+                            aggregation()->set_value_to_be_compared(
+                                _peripheral.numerical_col( ix_column_used2 ) );
                         }
                     else
                         {
@@ -232,7 +194,7 @@ void DecisionTree::create_value_to_be_aggregated(
 
                 break;
 
-            case DataUsed::same_unit_discrete:
+            case enums::DataUsed::same_unit_discrete:
 
                 assert(
                     static_cast<AUTOSQL_INT>(
@@ -240,12 +202,12 @@ void DecisionTree::create_value_to_be_aggregated(
                     ix_column_used );
 
                 {
-                    const DataUsed data_used1 =
+                    const enums::DataUsed data_used1 =
                         std::get<0>(
                             impl()->same_units_discrete()[ix_column_used] )
                             .data_used;
 
-                    const DataUsed data_used2 =
+                    const enums::DataUsed data_used2 =
                         std::get<1>(
                             impl()->same_units_discrete()[ix_column_used] )
                             .data_used;
@@ -260,42 +222,34 @@ void DecisionTree::create_value_to_be_aggregated(
                             impl()->same_units_discrete()[ix_column_used] )
                             .ix_column_used;
 
-                    if ( data_used1 == DataUsed::x_perip_discrete )
+                    if ( data_used1 == enums::DataUsed::x_perip_discrete )
                         {
                             assert(
-                                peripheral_table.discrete().ncols() >
-                                ix_column_used1 );
+                                _peripheral.num_discretes() > ix_column_used1 );
 
                             aggregation()->set_value_to_be_aggregated(
-                                peripheral_table.discrete(), ix_column_used1 );
+                                _peripheral.discrete_col( ix_column_used1 ) );
                         }
                     else
                         {
                             assert( !"Unknown data_used1 in set_value_to_be_aggregated(...)!" );
                         }
 
-                    if ( data_used2 == DataUsed::x_popul_discrete )
+                    if ( data_used2 == enums::DataUsed::x_popul_discrete )
                         {
                             assert(
-                                population_table.df().discrete().ncols() >
-                                ix_column_used2 );
+                                _population.num_discretes() > ix_column_used2 );
 
                             aggregation()->set_value_to_be_compared(
-                                population_table.discrete_column(
-                                    ix_column_used2 ) );
+                                _population.discrete_col( ix_column_used2 ) );
                         }
-                    else if ( data_used2 == DataUsed::x_perip_discrete )
+                    else if ( data_used2 == enums::DataUsed::x_perip_discrete )
                         {
                             assert(
-                                peripheral_table.discrete().ncols() >
-                                ix_column_used2 );
+                                _peripheral.num_discretes() > ix_column_used2 );
 
-                            auto view = containers::ColumnView<
-                                AUTOSQL_FLOAT,
-                                std::vector<AUTOSQL_INT>>(
-                                peripheral_table.discrete(), ix_column_used2 );
-
-                            aggregation()->set_value_to_be_compared( view );
+                            aggregation()->set_value_to_be_compared(
+                                _peripheral.discrete_col( ix_column_used2 ) );
                         }
                     else
                         {
@@ -305,29 +259,29 @@ void DecisionTree::create_value_to_be_aggregated(
 
                 break;
 
-            case DataUsed::x_perip_categorical:
+            case enums::DataUsed::x_perip_categorical:
 
                 aggregation()->set_value_to_be_aggregated(
-                    peripheral_table.categorical(), ix_column_used );
+                    _peripheral.categorical_col( ix_column_used ) );
 
                 break;
 
-            case DataUsed::x_subfeature:
+            case enums::DataUsed::x_subfeature:
 
-                assert( subtrees().size() > 0 );
+                assert( ix_column_used < _subfeatures.size() );
 
                 aggregation()->set_value_to_be_aggregated(
-                    impl()->subfeatures().column_view( ix_column_used ) );
+                    _subfeatures[ix_column_used] );
 
                 break;
 
-            case DataUsed::not_applicable:
+            case enums::DataUsed::not_applicable:
 
                 break;
 
             default:
 
-                assert( !"Unknown DataUsed in column_to_be_aggregated(...)!" );
+                assert( !"Unknown enums::DataUsed in column_to_be_aggregated(...)!" );
         }
 
     // ---------------------------------------------------------------------
@@ -335,128 +289,56 @@ void DecisionTree::create_value_to_be_aggregated(
 
 // ----------------------------------------------------------------------------
 
-void DecisionTree::source_importances(
-    descriptors::SourceImportances &_importances )
-{
-    // ----------------------------------------------------------------
-    // Calculate aggregation importances
-
-    impl_.source_importances(
-        column_to_be_aggregated().data_used,
-        column_to_be_aggregated().ix_column_used,
-        1.0,
-        _importances.aggregation_imp_ );
-
-    // ----------------------------------------------------------------
-    // Calculate the condition importances
-
-    root()->source_importances( 1.0, _importances );
-
-    // ----------------------------------------------------------------
-}
-
-// ----------------------------------------------------------------------------
-
 void DecisionTree::fit(
+    const containers::DataFrameView &_population,
+    const containers::DataFrame &_peripheral,
+    const std::vector<containers::ColumnView<
+        AUTOSQL_FLOAT,
+        std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
     AUTOSQL_SAMPLE_CONTAINER::iterator _sample_container_begin,
     AUTOSQL_SAMPLE_CONTAINER::iterator _sample_container_end,
-    TableHolder &_table_holder,
-    optimizationcriteria::OptimizationCriterion *_optimization_criterion,
-    bool _allow_sets,
-    AUTOSQL_INT _max_length,
-    AUTOSQL_INT _min_num_samples,
-    AUTOSQL_FLOAT _grid_factor,
-    AUTOSQL_FLOAT _regularization,
-    AUTOSQL_FLOAT _share_conditions,
-    bool _use_timestamps )
+    optimizationcriteria::OptimizationCriterion *_optimization_criterion )
 {
     // ------------------------------------------------------------
 
-    auto &peripheral_table = _table_holder.peripheral_tables[ix_perip_used()];
+    /*population_name() = _population.name();
 
-    auto &population_table = _table_holder.main_table;
-
-    // ------------------------------------------------------------
-
-    assert(
-        peripheral_table.categorical().nrows() ==
-        peripheral_table.numerical().nrows() );
-
-    assert(
-        peripheral_table.categorical().nrows() ==
-        peripheral_table.discrete().nrows() );
-
-    assert(
-        peripheral_table.categorical().nrows() ==
-        peripheral_table.time_stamps().nrows() );
-
-    assert( peripheral_table.time_stamps().ncols() == 1 );
+    peripheral_name() = _peripheral.name();*/
 
     // ------------------------------------------------------------
 
-    assert(
-        population_table.df().categorical().nrows() ==
-        population_table.df().numerical().nrows() );
+    /* join_keys_perip_name() = peripheral().join_key().colname( 0 );
 
-    assert(
-        population_table.df().categorical().nrows() ==
-        population_table.df().discrete().nrows() );
+     join_keys_popul_name() =
+         population().df().join_key( ix_perip_used() ).colname( 0 );
 
-    assert(
-        population_table.df().categorical().nrows() ==
-        population_table.df().time_stamps( ix_perip_used() ).nrows() );
+     time_stamps_perip_name() = peripheral().time_stamps().colname( 0 );
 
-    assert( population_table.df().time_stamps( ix_perip_used() ).ncols() == 1 );
+     time_stamps_popul_name() =
+         population().df().time_stamps( ix_perip_used() ).colname( 0 );
 
-    // ------------------------------------------------------------
+     if ( peripheral().upper_time_stamps() != nullptr )
+         {
+             upper_time_stamps_name() =
+                 peripheral().upper_time_stamps()->colname( 0 );
+         }
 
-    peripheral() = peripheral_table;
-    population() = population_table;
+     impl_.x_perip_categorical_colnames_ =
+     peripheral().categorical().colnames(); impl_.x_perip_numerical_colnames_ =
+     peripheral().numerical().colnames(); impl_.x_perip_discrete_colnames_ =
+     peripheral().discrete().colnames();
 
-    // ------------------------------------------------------------
-
-    peripheral_name() = peripheral_table.name();
-    population_name() = population_table.df().name();
-
-    // ------------------------------------------------------------
-
-    join_keys_perip_name() = peripheral().join_key().colname( 0 );
-
-    join_keys_popul_name() =
-        population().df().join_key( ix_perip_used() ).colname( 0 );
-
-    time_stamps_perip_name() = peripheral().time_stamps().colname( 0 );
-
-    time_stamps_popul_name() =
-        population().df().time_stamps( ix_perip_used() ).colname( 0 );
-
-    if ( peripheral().upper_time_stamps() != nullptr )
-        {
-            upper_time_stamps_name() =
-                peripheral().upper_time_stamps()->colname( 0 );
-        }
-
-    impl_.x_perip_categorical_colnames_ = peripheral().categorical().colnames();
-    impl_.x_perip_numerical_colnames_ = peripheral().numerical().colnames();
-    impl_.x_perip_discrete_colnames_ = peripheral().discrete().colnames();
-
-    impl_.x_popul_categorical_colnames_ =
-        population().df().categorical().colnames();
-    impl_.x_popul_numerical_colnames_ =
-        population().df().numerical().colnames();
-    impl_.x_popul_discrete_colnames_ = population().df().discrete().colnames();
-
-    allow_sets() = _allow_sets;
-    max_length() = _max_length;
-    min_num_samples() = _min_num_samples;
-    grid_factor() = _grid_factor;
-    regularization() = _regularization;
-    share_conditions() = _share_conditions;
+     impl_.x_popul_categorical_colnames_ =
+         population().df().categorical().colnames();
+     impl_.x_popul_numerical_colnames_ =
+         population().df().numerical().colnames();
+     impl_.x_popul_discrete_colnames_ =
+     population().df().discrete().colnames();*/
 
     // ------------------------------------------------------------
     // Prepare the root, the aggregation and the optimization criterion
 
-    debug_message( "fit: Preparing new candidate..." );
+    debug_log( "fit: Preparing new candidate..." );
 
     root().reset( new DecisionTreeNode(
         true,   // _is_activated
@@ -473,9 +355,14 @@ void DecisionTree::fit(
     // ------------------------------------------------------------
     // Do the actual fitting (most of the time will be spent here)
 
-    debug_message( "fit: Trying conditions..." );
+    debug_log( "fit: Trying conditions..." );
 
-    root()->fit_as_root( _sample_container_begin, _sample_container_end );
+    root()->fit_as_root(
+        _population,
+        _peripheral,
+        _subfeatures,
+        _sample_container_begin,
+        _sample_container_end );
 
     // ------------------------------------------------------------
     // Clean up
@@ -492,27 +379,27 @@ void DecisionTree::from_json_obj( const Poco::JSON::Object &_json_obj )
     // -----------------------------------
 
     peripheral_name() =
-        _json_obj.AUTOSQL_GET_VALUE<std::string>( "peripheral_name_" );
+        JSON::get_value<std::string>( _json_obj, "peripheral_name_" );
 
     population_name() =
-        _json_obj.AUTOSQL_GET_VALUE<std::string>( "population_name_" );
+        JSON::get_value<std::string>( _json_obj, "population_name_" );
 
     join_keys_perip_name() =
-        _json_obj.AUTOSQL_GET_VALUE<std::string>( "join_keys_perip_name_" );
+        JSON::get_value<std::string>( _json_obj, "join_keys_perip_name_" );
 
     join_keys_popul_name() =
-        _json_obj.AUTOSQL_GET_VALUE<std::string>( "join_keys_popul_name_" );
+        JSON::get_value<std::string>( _json_obj, "join_keys_popul_name_" );
 
     time_stamps_perip_name() =
-        _json_obj.AUTOSQL_GET_VALUE<std::string>( "time_stamps_perip_name_" );
+        JSON::get_value<std::string>( _json_obj, "time_stamps_perip_name_" );
 
     time_stamps_popul_name() =
-        _json_obj.AUTOSQL_GET_VALUE<std::string>( "time_stamps_popul_name_" );
+        JSON::get_value<std::string>( _json_obj, "time_stamps_popul_name_" );
 
     if ( _json_obj.has( "upper_time_stamps_" ) )
         {
             upper_time_stamps_name() =
-                _json_obj.AUTOSQL_GET_VALUE<std::string>( "upper_time_stamps_" );
+                JSON::get_value<std::string>( _json_obj, "upper_time_stamps_" );
         }
     else
         {
@@ -524,51 +411,52 @@ void DecisionTree::from_json_obj( const Poco::JSON::Object &_json_obj )
     impl_.x_perip_categorical_colnames_.reset( new std::vector<std::string>() );
 
     x_perip_categorical_colnames() = JSON::array_to_vector<std::string>(
-        _json_obj.AUTOSQL_GET_ARRAY( "x_perip_categorical_colnames_" ) );
+        JSON::get_array( _json_obj, "x_perip_categorical_colnames_" ) );
 
     // --
 
     impl_.x_perip_numerical_colnames_.reset( new std::vector<std::string>() );
 
     x_perip_numerical_colnames() = JSON::array_to_vector<std::string>(
-        _json_obj.AUTOSQL_GET_ARRAY( "x_perip_numerical_colnames_" ) );
+        JSON::get_array( _json_obj, "x_perip_numerical_colnames_" ) );
 
     // --
 
     impl_.x_perip_discrete_colnames_.reset( new std::vector<std::string>() );
 
     x_perip_discrete_colnames() = JSON::array_to_vector<std::string>(
-        _json_obj.AUTOSQL_GET_ARRAY( "x_perip_discrete_colnames_" ) );
+        JSON::get_array( _json_obj, "x_perip_discrete_colnames_" ) );
     // --
 
     impl_.x_popul_categorical_colnames_.reset( new std::vector<std::string>() );
 
     x_popul_categorical_colnames() = JSON::array_to_vector<std::string>(
-        _json_obj.AUTOSQL_GET_ARRAY( "x_popul_categorical_colnames_" ) );
+        JSON::get_array( _json_obj, "x_popul_categorical_colnames_" ) );
 
     // --
 
     impl_.x_popul_numerical_colnames_.reset( new std::vector<std::string>() );
 
     x_popul_numerical_colnames() = JSON::array_to_vector<std::string>(
-        _json_obj.AUTOSQL_GET_ARRAY( "x_popul_numerical_colnames_" ) );
+        JSON::get_array( _json_obj, "x_popul_numerical_colnames_" ) );
 
     // --
 
     impl_.x_popul_discrete_colnames_.reset( new std::vector<std::string>() );
 
     x_popul_discrete_colnames() = JSON::array_to_vector<std::string>(
-        _json_obj.AUTOSQL_GET_ARRAY( "x_popul_discrete_colnames_" ) );
+        JSON::get_array( _json_obj, "x_popul_discrete_colnames_" ) );
 
     // -----------------------------------
 
     column_to_be_aggregated().ix_column_used =
-        _json_obj.AUTOSQL_GET( "column_" );
+        JSON::get_value<size_t>( _json_obj, "column_" );
 
     column_to_be_aggregated().data_used =
-        JSON::int_to_data_used( _json_obj.AUTOSQL_GET( "data_" ) );
+        JSON::int_to_data_used( JSON::get_value<int>( _json_obj, "data_" ) );
 
-    column_to_be_aggregated().ix_perip_used = _json_obj.AUTOSQL_GET( "input_" );
+    column_to_be_aggregated().ix_perip_used =
+        JSON::get_value<size_t>( _json_obj, "input_" );
 
     root().reset( new DecisionTreeNode(
         true,   // _is_activated
@@ -576,28 +464,28 @@ void DecisionTree::from_json_obj( const Poco::JSON::Object &_json_obj )
         impl()  // _tree
         ) );
 
-    root()->from_json_obj( *_json_obj.AUTOSQL_GET_OBJECT( "conditions_" ) );
+    root()->from_json_obj( *JSON::get_object( _json_obj, "conditions_" ) );
 
     // -----------------------------------
 
-    impl()->same_units_.same_units_categorical =
+    impl()->same_units_.same_units_categorical_ =
         std::make_shared<AUTOSQL_SAME_UNITS_CONTAINER>(
             JSON::json_arr_to_same_units(
-                *_json_obj.AUTOSQL_GET_ARRAY( "same_units_categorical_" ) ) );
+                *JSON::get_array( _json_obj, "same_units_categorical_" ) ) );
 
-    impl()->same_units_.same_units_discrete =
+    impl()->same_units_.same_units_discrete_ =
         std::make_shared<AUTOSQL_SAME_UNITS_CONTAINER>(
             JSON::json_arr_to_same_units(
-                *_json_obj.AUTOSQL_GET_ARRAY( "same_units_discrete_" ) ) );
+                *JSON::get_array( _json_obj, "same_units_discrete_" ) ) );
 
-    impl()->same_units_.same_units_numerical =
+    impl()->same_units_.same_units_numerical_ =
         std::make_shared<AUTOSQL_SAME_UNITS_CONTAINER>(
             JSON::json_arr_to_same_units(
-                *_json_obj.AUTOSQL_GET_ARRAY( "same_units_numerical_" ) ) );
+                *JSON::get_array( _json_obj, "same_units_numerical_" ) ) );
 
     // -----------------------------------
 
-    std::string agg = _json_obj.AUTOSQL_GET( "aggregation_" );
+    const auto agg = JSON::get_value<std::string>( _json_obj, "aggregation_" );
 
     assert( agg != "" );
 
@@ -607,7 +495,7 @@ void DecisionTree::from_json_obj( const Poco::JSON::Object &_json_obj )
 
     // -----------------------------------
 
-    const auto subtrees_arr = _json_obj.AUTOSQL_GET_ARRAY( "subfeatures_" );
+    const auto subtrees_arr = JSON::get_array( _json_obj, "subfeatures_" );
 
     subtrees().clear();
 
@@ -620,11 +508,102 @@ void DecisionTree::from_json_obj( const Poco::JSON::Object &_json_obj )
     // -----------------------------------
 }
 
+// ----------------------------------------------------------------------------
+
+std::vector<std::vector<AUTOSQL_FLOAT>> DecisionTree::make_predictions(
+    const containers::Optional<TableHolder> &_subtable,
+    const bool _use_timestamps )
+{
+    std::vector<std::vector<AUTOSQL_FLOAT>> predictions;
+
+    if ( !_subtable )
+        {
+            return predictions;
+        }
+
+    assert( _subtable->main_tables_.size() > 0 );
+
+    assert(
+        _subtable->main_tables_.size() > _subtable->peripheral_tables_.size() );
+
+    assert( _subtable->main_tables_.size() > _subtable->subtables_.size() );
+
+    containers::Optional<aggregations::AggregationImpl> aggregation_impl(
+        new aggregations::AggregationImpl(
+            _subtable->main_tables_[0].nrows() ) );
+
+    for ( auto &tree : subtrees() )
+        {
+            assert( false && "ToDO" );
+
+            // agg.set_aggregation_impl( &aggregation_impl );
+
+            assert( tree.ix_perip_used() < _subtable->main_tables_.size() );
+
+            const auto ix = tree.ix_perip_used();
+
+            assert( false && "ToDO" );
+
+            auto new_prediction = tree.transform(
+                _subtable->main_tables_[ix],
+                _subtable->peripheral_tables_[ix],
+                _subtable->subtables_[ix],
+                _use_timestamps,
+                nullptr );
+
+            predictions.push_back( new_prediction );
+        }
+
+    return predictions;
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<
+    containers::ColumnView<AUTOSQL_FLOAT, std::map<AUTOSQL_INT, AUTOSQL_INT>>>
+DecisionTree::make_subfeatures(
+    const containers::Optional<TableHolder> &_subtable,
+    const std::vector<std::vector<AUTOSQL_FLOAT>> &_predictions ) const
+{
+    std::vector<containers::ColumnView<
+        AUTOSQL_FLOAT,
+        std::map<AUTOSQL_INT, AUTOSQL_INT>>>
+        subfeatures;
+
+    if ( _predictions.size() == 0 )
+        {
+            return subfeatures;
+        }
+
+    assert( _subtable );
+
+    assert( _subtable->main_tables_.size() > 0 );
+
+    const auto output_map = utils::SubtreeHelper::create_output_map(
+        _subtable->main_tables_[0].rows() );
+
+    for ( size_t i = 0; _predictions.size(); ++i )
+        {
+            const auto column = containers::Column<AUTOSQL_FLOAT>(
+                _predictions[i].data(),
+                "FEATURE_" + std::to_string( i + 1 ),
+                _predictions[i].size() );
+
+            const auto view = containers::
+                ColumnView<AUTOSQL_FLOAT, std::map<AUTOSQL_INT, AUTOSQL_INT>>(
+                    column, output_map );
+
+            subfeatures.push_back( view );
+        }
+
+    return subfeatures;
+}
+
 // ---------------------------------------------------------------------------
 
 DecisionTree &DecisionTree::operator=( const DecisionTree &_other )
 {
-    debug_message( "Feature: Copy assignment constructor..." );
+    debug_log( "Feature: Copy assignment constructor..." );
 
     DecisionTree temp( _other );
 
@@ -642,7 +621,7 @@ DecisionTree &DecisionTree::operator=( const DecisionTree &_other )
 
 DecisionTree &DecisionTree::operator=( DecisionTree &&_other ) noexcept
 {
-    debug_message( "Feature: Move assignment constructor..." );
+    debug_log( "Feature: Move assignment constructor..." );
 
     if ( this == &_other )
         {
@@ -665,8 +644,8 @@ DecisionTree &DecisionTree::operator=( DecisionTree &&_other ) noexcept
 
 // ----------------------------------------------------------------------------
 
-std::shared_ptr<aggregations::AbstractAggregation> DecisionTree::parse_aggregation(
-    const std::string &_aggregation )
+std::shared_ptr<aggregations::AbstractAggregation>
+DecisionTree::parse_aggregation( const std::string &_aggregation )
 {
     if ( _aggregation == "AVG" )
         {
@@ -949,7 +928,7 @@ std::string DecisionTree::to_sql(
 
     root()->to_sql( _feature_num, conditions, "" );
 
-    for ( AUTOSQL_SIZE i = 0; i < conditions.size(); ++i )
+    for ( size_t i = 0; i < conditions.size(); ++i )
         {
             if ( i == 0 )
                 {
@@ -1009,95 +988,58 @@ std::string DecisionTree::to_sql(
 
 // ----------------------------------------------------------------------------
 
-containers::Matrix<AUTOSQL_FLOAT> DecisionTree::transform(
-    TableHolder &_table_holder, bool _use_timestamps )
+std::vector<AUTOSQL_FLOAT> DecisionTree::transform(
+    const containers::DataFrameView &_population,
+    const containers::DataFrame &_peripheral,
+    const containers::Optional<TableHolder> &_subtable,
+    const bool _use_timestamps,
+    aggregations::AbstractAggregation *_aggregation )
 {
-    // ------------------------------------------------------------
-
-    auto &peripheral_table = _table_holder.peripheral_tables[ix_perip_used()];
-
-    auto &population_table = _table_holder.main_table;
-
-    // ------------------------------------------------------------
-
-    assert(
-        peripheral_table.categorical().nrows() ==
-        peripheral_table.numerical().nrows() );
-
-    assert(
-        peripheral_table.categorical().nrows() ==
-        peripheral_table.discrete().nrows() );
-
-    assert(
-        peripheral_table.categorical().nrows() ==
-        peripheral_table.time_stamps().nrows() );
-
-    assert( peripheral_table.time_stamps().ncols() == 1 );
-
-    // ------------------------------------------------------------
-
-    assert(
-        population_table.df().categorical().nrows() ==
-        population_table.df().numerical().nrows() );
-
-    assert(
-        population_table.df().categorical().nrows() ==
-        population_table.df().discrete().nrows() );
-
-    assert(
-        population_table.df().categorical().nrows() ==
-        population_table.df().time_stamps( ix_perip_used() ).nrows() );
-
-    assert( population_table.df().time_stamps( ix_perip_used() ).ncols() == 1 );
-
-    // ------------------------------------------------------------
-
-    peripheral() = peripheral_table;
-
-    population() = population_table;
-
     // ------------------------------------------------------
     // Prepare the aggregation
 
-    aggregation()->reset();
+    _aggregation->reset();
+
+    // ------------------------------------------------------
+    // Build predictions for subfeatures, if applicable.
+
+    const auto predictions = make_predictions( _subtable, _use_timestamps );
+
+    const auto subfeatures = make_subfeatures( _subtable, predictions );
 
     // ------------------------------------------------------
     // This is put in a loop to avoid the sample containers
     // taking up too much memory
 
-    for ( AUTOSQL_INT ix_x_popul = 0; ix_x_popul < population().nrows();
+    for ( size_t ix_x_popul = 0; ix_x_popul < _population.nrows();
           ++ix_x_popul )
         {
             // ------------------------------------------------------
-            // Create samples and sample containers
+            // Create matches and match pointers.
 
-            debug_message( "transform: Create sample containers..." );
+            debug_log( "transform: Create sample containers..." );
 
             AUTOSQL_SAMPLES samples;
 
-            AUTOSQL_SAMPLE_CONTAINER sample_container;
-
-            SampleContainer::create_samples(
-                ix_x_popul,
+            utils::Matchmaker::make_matches(
+                _population,
+                _peripheral,
                 _use_timestamps,
-                *peripheral().index(),
-                peripheral().join_key(),
-                population().join_key( ix_x_popul, ix_perip_used() ),
-                peripheral().time_stamps(),
-                peripheral().upper_time_stamps(),
-                population().time_stamp( ix_x_popul, ix_perip_used() ),
-                samples );
+                ix_x_popul,
+                &samples );
 
-            SampleContainer::create_sample_container(
-                samples, sample_container );
+            auto match_ptrs = utils::Matchmaker::make_pointers( &samples );
 
-            create_value_to_be_aggregated( _table_holder, sample_container );
+            // ------------------------------------------------------
+
+            create_value_to_be_aggregated(
+                _population, _peripheral, subfeatures, match_ptrs );
 
             // ------------------------------------------------------
             // Separate null values, tell the aggregation where the samples
             // begin and end and sort the samples, if necessary
 
-            debug_message( "transform: Set begin, end..." );
+            debug_log( "transform: Set begin, end..." );
 
             auto null_values_dist =
                 std::distance( samples.begin(), samples.begin() );
@@ -1132,28 +1074,35 @@ containers::Matrix<AUTOSQL_FLOAT> DecisionTree::transform(
             // ------------------------------------------------------
             // Do the actual transformation
 
-            debug_message( "transform: Activate..." );
+            debug_log( "transform: Activate..." );
 
             aggregation()->activate_all(
                 false,
-                sample_container.begin() + null_values_dist,
-                sample_container.end() );
+                match_ptrs.begin() + null_values_dist,
+                match_ptrs.end() );
 
-            debug_message( "transform: Do actual transformation..." );
+            debug_log( "transform: Do actual transformation..." );
 
             root()->transform(
-                sample_container.begin() + null_values_dist,
-                sample_container.end() );
+                _population,
+                _peripheral,
+                subfeatures,
+                match_ptrs.begin() + null_values_dist,
+                match_ptrs.end(),
+                _aggregation );
 
             // ------------------------------------------------------
             // Some aggregations, such as min and max contain additional
-            // containers. If we do not clear them, they will use up too much
-            // memory. For other aggregations, this does nothing at all.
+            // containers. If we do not clear them, they will use up too
+            // much memory. For other aggregations, this does nothing at
+            // all.
 
-            debug_message( "transform: Clear extras..." );
+            debug_log( "transform: Clear extras..." );
 
             aggregation()->clear_extras();
         }
+
+    // ------------------------------------------------------
 
     auto yhat = aggregation()->yhat();
 
@@ -1165,38 +1114,8 @@ containers::Matrix<AUTOSQL_FLOAT> DecisionTree::transform(
     // ------------------------------------------------------
 
     return yhat;
-}
 
-// ----------------------------------------------------------------------------
-
-void DecisionTree::transform_subtrees(
-    TableHolder &_table_holder, bool _use_timestamps )
-{
-    containers::Optional<aggregations::AggregationImpl> aggregation_impl(
-        new aggregations::AggregationImpl( _table_holder.main_table.nrows() ) );
-
-    for ( auto &tree : subtrees() )
-        {
-            tree.set_aggregation_impl( aggregation_impl );
-        }
-
-    auto subfeatures =
-        containers::Matrix<AUTOSQL_FLOAT>( 0, _table_holder.main_table.nrows() );
-
-    for ( auto &tree : subtrees() )
-        {
-            auto new_feature =
-                tree.transform( _table_holder, _use_timestamps ).transpose();
-
-            subfeatures.append( new_feature );
-        }
-
-    auto output_map = SampleContainer::create_output_map(
-        _table_holder.main_table.get_indices() );
-
-    impl()->subfeatures() =
-        containers::MatrixView<AUTOSQL_FLOAT, std::map<AUTOSQL_INT, AUTOSQL_INT>>(
-            subfeatures.transpose(), output_map );
+    // ------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------

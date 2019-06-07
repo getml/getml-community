@@ -11,9 +11,9 @@ struct Sample
 
     AUTOSQL_INT categorical_value;
 
-    AUTOSQL_INT ix_x_perip;
+    size_t ix_x_perip;
 
-    AUTOSQL_INT ix_x_popul;
+    size_t ix_x_popul;
 
     AUTOSQL_FLOAT numerical_value;
 };

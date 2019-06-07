@@ -400,7 +400,7 @@ void DecisionTreeNode::commit(
 
     optimization_criterion()->commit();
 
-    if ( depth_ < tree_->max_length_ )
+    if ( depth_ < tree_->max_length() )
         {
             debug_log( "fit: Max length not reached..." );
 
@@ -427,20 +427,11 @@ void DecisionTreeNode::fit(
 {
     debug_log( "fit: Calculating sample size..." );
 
-#ifdef AUTOSQL_PARALLEL
-
     const size_t sample_size = reduce_sample_size(
         std::distance( _sample_container_begin, _sample_container_end ) );
 
-#else  // AUTOSQL_PARALLEL
-
-    const size_t sample_size = static_cast<size_t>(
-        std::distance( _sample_container_begin, _sample_container_end ) );
-
-#endif  // AUTOSQL_PARALLEL
-
-    if ( sample_size == 0 ||
-         static_cast<AUTOSQL_INT>( sample_size ) < tree_->min_num_samples_ * 2 )
+    if ( sample_size == 0 || static_cast<AUTOSQL_INT>( sample_size ) <
+                                 tree_->min_num_samples() * 2 )
         {
             return;
         }
@@ -514,7 +505,7 @@ void DecisionTreeNode::fit(
     // optimization criterion
 
     if ( max_value >
-         optimization_criterion()->value() + tree_->regularization_ + 1e-07 )
+         optimization_criterion()->value() + tree_->regularization() + 1e-07 )
         {
             commit(
                 _population,
@@ -550,7 +541,7 @@ void DecisionTreeNode::fit_as_root(
 
     optimization_criterion()->commit();
 
-    if ( tree_->max_length_ > 0 )
+    if ( tree_->max_length() > 0 )
         {
             fit( _population,
                  _peripheral,
@@ -770,13 +761,11 @@ AUTOSQL_SAMPLE_ITERATOR DecisionTreeNode::identify_parameters(
 
 // ----------------------------------------------------------------------------
 
-#ifdef AUTOSQL_PARALLEL
-
-size_t DecisionTreeNode::reduce_sample_size( size_t _sample_size )
+size_t DecisionTreeNode::reduce_sample_size( const size_t _sample_size )
 {
     size_t global_sample_size = 0;
 
-    AUTOSQL_PARALLEL_LIB::all_reduce(
+    multithreading::all_reduce(
         *comm(),                    // comm
         _sample_size,               // in_value
         global_sample_size,         // out_value
@@ -787,8 +776,6 @@ size_t DecisionTreeNode::reduce_sample_size( size_t _sample_size )
 
     return global_sample_size;
 }
-
-#endif  // AUTOSQL_PARALLEL
 
 // ----------------------------------------------------------------------------
 
@@ -1892,7 +1879,7 @@ void DecisionTreeNode::try_categorical_values(
     // If there are only two categories, trying combined categories does not
     // make any sense.
 
-    if ( categories->size() < 3 || !tree_->allow_sets_ )
+    if ( categories->size() < 3 || !tree_->allow_sets() )
         {
             return;
         }

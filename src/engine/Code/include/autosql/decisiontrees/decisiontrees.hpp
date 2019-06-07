@@ -53,23 +53,24 @@
 
 #include "autosql/lossfunctions/lossfunctions.hpp"
 
+#include "autosql/utils/utils.hpp"
+
 // ----------------------------------------------------
 // Module files
 
 #include "autosql/decisiontrees/RandomNumberGenerator.hpp"
 
-// #include "autosql/decisiontrees/TableHolder.hpp"
+#include "autosql/decisiontrees/Placeholder.hpp"
+
+#include "autosql/decisiontrees/TableHolder.hpp"
 
 #include "autosql/decisiontrees/DecisionTreeImpl.hpp"
 
 #include "autosql/decisiontrees/DecisionTreeNode.hpp"
 
-// ----------------------------------------------------
+#include "autosql/decisiontrees/DecisionTree.hpp"
 
-
-/*#include "decisiontrees/DecisionTree.hpp"
-
-#include "decisiontrees/TablePreparer.hpp"
+/*#include "decisiontrees/TablePreparer.hpp"
 
 #include "decisiontrees/SameUnitIdentifier.hpp"
 

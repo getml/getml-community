@@ -39,6 +39,14 @@ struct JSON
     /// Expresses DataUsed  as JSON string
     static enums::DataUsed int_to_data_used( const size_t& _val );
 
+    /// Transforms Poco::JSON::Array to same units
+    static AUTOSQL_SAME_UNITS_CONTAINER json_arr_to_same_units(
+        const Poco::JSON::Array& _json_arr );
+
+    /// Helper function that turns a same units into a Poco::JSON::Array
+    static Poco::JSON::Array same_units_to_json_arr(
+        const AUTOSQL_SAME_UNITS_CONTAINER& _same_units );
+
     // ------------------------------------------------------------------------
 
     /// Transforms a Poco array to a vector

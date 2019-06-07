@@ -19,8 +19,8 @@ class ColumnView
 
     ColumnView(
         const Column<T>& _col,
-        const std::shared_ptr<const ContainerType>& _indices )
-        : indices_( _indices )
+        const std::shared_ptr<const ContainerType>& _rows )
+        : rows_( _rows )
     {
         col_.reset( new Column<T>( _col ) );
     }
@@ -35,20 +35,7 @@ class ColumnView
     /// Whether or not the column view is empty.
     operator bool() const { return ( col_ && true ); }
 
-    /// Accessor to data (when indices are std::vector<AUTOSQL_INT>)
-    template <
-        typename CType = ContainerType,
-        typename std::enable_if<
-            std::is_same<CType, std::vector<AUTOSQL_INT>>::value,
-            int>::type = 0>
-    inline T& operator()( const AUTOSQL_INT _i )
-    {
-        assert( _i >= 0 );
-        assert( _i < static_cast<AUTOSQL_INT>( indices_->size() ) );
-        return ( *col_ )[( *indices_ )[_i]];
-    }
-
-    /// Accessor to data (when indices are std::vector<AUTOSQL_INT>)
+    /// Accessor to data (when rows are std::vector<AUTOSQL_INT>)
     template <
         typename CType = ContainerType,
         typename std::enable_if<
@@ -57,25 +44,11 @@ class ColumnView
     inline T operator()( const AUTOSQL_INT _i ) const
     {
         assert( _i >= 0 );
-        assert( _i < static_cast<AUTOSQL_INT>( indices_->size() ) );
-        return ( *col_ )[( *indices_ )[_i]];
+        assert( _i < static_cast<AUTOSQL_INT>( rows_->size() ) );
+        return ( *col_ )[( *rows_ )[_i]];
     }
 
-    /// Accessor to data (when indices are std::map<AUTOSQL_INT, AUTOSQL_INT>)
-    template <
-        typename CType = ContainerType,
-        typename std::enable_if<
-            std::is_same<CType, std::map<AUTOSQL_INT, AUTOSQL_INT>>::value,
-            int>::type = 0>
-    inline T& operator()( const AUTOSQL_INT _i )
-    {
-        assert( _i >= 0 );
-        auto it = indices_->find( _i );
-        assert( it != indices_->end() );
-        return ( *col_ )[it->second];
-    }
-
-    /// Accessor to data (when indices are std::map<AUTOSQL_INT, AUTOSQL_INT>)
+    /// Accessor to data (when rows are std::map<AUTOSQL_INT, AUTOSQL_INT>)
     template <
         typename CType = ContainerType,
         typename std::enable_if<
@@ -84,22 +57,15 @@ class ColumnView
     inline T operator()( const AUTOSQL_INT _i ) const
     {
         assert( _i >= 0 );
-        auto it = indices_->find( _i );
-        assert( it != indices_->end() );
+        auto it = rows_->find( _i );
+        assert( it != rows_->end() );
         return ( *col_ )[it->second];
-    }
-
-    /// Accessor to data
-    inline T& operator[]( const AUTOSQL_INT _i )
-    {
-        assert( !indices_ );
-        return ( *col_ )[_i];
     }
 
     /// Accessor to data
     inline T operator[]( const AUTOSQL_INT _i ) const
     {
-        assert( !indices_ );
+        assert( !rows_ );
         return ( *col_ )[_i];
     }
 
@@ -107,7 +73,7 @@ class ColumnView
 
    private:
     /// Indices indicating all of the rows that are part of this view
-    std::shared_ptr<const ContainerType> indices_;
+    std::shared_ptr<const ContainerType> rows_;
 
     /// Shallow copy of the matrix in which we are interested
     Optional<Column<T>> col_;

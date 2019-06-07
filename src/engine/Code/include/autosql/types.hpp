@@ -19,7 +19,8 @@
     std::map<std::string, std::shared_ptr<decisiontrees::DecisionTreeEnsemble>>
 
 #define AUTOSQL_SAME_UNITS_CONTAINER \
-    std::vector<std::tuple<enums::ColumnToBeAggregated, enums::ColumnToBeAggregated>>
+    std::vector<                     \
+        std::tuple<enums::ColumnToBeAggregated, enums::ColumnToBeAggregated>>
 
 #define AUTOSQL_SAMPLES std::vector<Sample>
 

@@ -63,8 +63,8 @@ class AggregationIndex
     /// Data frame that is aggregated (the right table)
     const containers::DataFrameView input_table_;
 
-    /// Maps the indices of the underlying DataFrame to the indices of the
-    /// DataFrameView (in effect reversing the indices in the DataFrameView)
+    /// Maps the indices of the underlying DataFrame to the row indices of the
+    /// DataFrameView (in effect reversing the row indices in the DataFrameView)
     /// for the output table.
     const std::shared_ptr<const std::map<AUTOSQL_INT, AUTOSQL_INT>> output_map_;
 

@@ -107,8 +107,8 @@ class DecisionTreeNode
     {
         return std::max(
             static_cast<AUTOSQL_INT>(
-                tree_->grid_factor_ * std::sqrt( static_cast<AUTOSQL_FLOAT>(
-                                          _num_samples_on_node ) ) ),
+                tree_->grid_factor() * std::sqrt( static_cast<AUTOSQL_FLOAT>(
+                                           _num_samples_on_node ) ) ),
             1 );
     }
 
@@ -429,14 +429,14 @@ class DecisionTreeNode
     /// Determines whether we should skip a condition
     inline const bool skip_condition() const
     {
-        if ( tree_->share_conditions_ >= 1.0 )
+        if ( tree_->share_conditions() >= 1.0 )
             {
                 return false;
             }
         else
             {
                 return tree_->rng().random_float( 0.0, 1.0 ) >
-                       tree_->share_conditions_;
+                       tree_->share_conditions();
             }
     }
 
@@ -514,7 +514,7 @@ class DecisionTreeNode
     void reduce_min_max( T *_min, T *_max );
 
     /// Returns the sum of the sample sizes of all processes
-    size_t reduce_sample_size( size_t _sample_size );
+    size_t reduce_sample_size( const size_t _sample_size );
 
     /// Separates the sample containers for which the numerical_value is NULL
     /// - note the important difference to separate_null_values in

@@ -1215,9 +1215,9 @@ class Aggregation : public AbstractAggregation
 
     /// Trivial setter
     void set_aggregation_impl(
-        containers::Optional<AggregationImpl> &_aggregation_impl )
+        containers::Optional<AggregationImpl> *_aggregation_impl )
     {
-        aggregation_impl_ = _aggregation_impl.get();
+        aggregation_impl_ = _aggregation_impl->get();
     }
 
     /// Trivial setter
@@ -1237,22 +1237,16 @@ class Aggregation : public AbstractAggregation
 
     /// Trivial setter
     void set_value_to_be_aggregated(
-        const std::vector<AUTOSQL_FLOAT> &_value_to_be_aggregated,
-        const AUTOSQL_INT _ix_column_used ) final
+        const containers::Column<AUTOSQL_FLOAT> &_value_to_be_aggregated ) final
     {
-        value_to_be_aggregated() = containers::
-            ColumnView<AUTOSQL_FLOAT, std::map<AUTOSQL_INT, AUTOSQL_INT>>(
-                _value_to_be_aggregated, _ix_column_used );
+        assert( false && "ToDO" );
     }
 
     /// Trivial setter
     void set_value_to_be_aggregated(
-        const std::vector<AUTOSQL_INT> &_value_to_be_aggregated,
-        const AUTOSQL_INT _ix_column_used ) final
+        const containers::Column<AUTOSQL_INT> &_value_to_be_aggregated ) final
     {
-        value_to_be_aggregated_categorical() = containers::
-            ColumnView<AUTOSQL_INT, std::map<AUTOSQL_INT, AUTOSQL_INT>>(
-                _value_to_be_aggregated, _ix_column_used );
+        assert( false && "ToDO" );
     }
 
     /// Trivial setter
@@ -1261,15 +1255,22 @@ class Aggregation : public AbstractAggregation
             AUTOSQL_FLOAT,
             std::map<AUTOSQL_INT, AUTOSQL_INT>> &_value_to_be_aggregated ) final
     {
-        value_to_be_aggregated() = _value_to_be_aggregated;
+        assert( false && "ToDO" );
     }
 
     /// Trivial setter
     void set_value_to_be_compared(
-        const containers::ColumnView<AUTOSQL_FLOAT, std::vector<AUTOSQL_INT>>
+        const containers::Column<AUTOSQL_FLOAT> &_value_to_be_compared ) final
+    {
+        assert( false && "ToDO" );
+    }
+
+    /// Trivial setter
+    void set_value_to_be_compared(
+        const containers::ColumnView<AUTOSQL_FLOAT, std::vector<size_t>>
             &_value_to_be_compared ) final
     {
-        value_to_be_compared() = _value_to_be_compared;
+        assert( false && "ToDO" );
     }
 
     /// Returns a string describing the type of the aggregation

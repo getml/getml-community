@@ -196,7 +196,7 @@ class AbstractAggregation
 
     /// Trivial setter
     virtual void set_aggregation_impl(
-        containers::Optional<AggregationImpl> &_aggregation_impl ) = 0;
+        containers::Optional<AggregationImpl> *_aggregation_impl ) = 0;
 
     /// Trivial setter
     virtual void set_optimization_criterion(
@@ -210,8 +210,7 @@ class AbstractAggregation
 
     /// Trivial setter
     virtual void set_value_to_be_aggregated(
-        const std::vector<AUTOSQL_FLOAT> &_value_to_be_aggregated,
-        const AUTOSQL_INT _ix_column_used ) = 0;
+        const containers::Column<AUTOSQL_FLOAT> &_value_to_be_aggregated ) = 0;
 
     /// Trivial setter
     virtual void set_value_to_be_aggregated(
@@ -221,12 +220,15 @@ class AbstractAggregation
 
     /// Trivial setter
     virtual void set_value_to_be_aggregated(
-        const std::vector<AUTOSQL_INT> &_value_to_be_aggregated,
-        const AUTOSQL_INT _ix_column_used ) = 0;
+        const containers::Column<AUTOSQL_INT> &_value_to_be_aggregated ) = 0;
 
     /// Trivial setter
     virtual void set_value_to_be_compared(
-        const containers::ColumnView<AUTOSQL_FLOAT, std::vector<AUTOSQL_INT>>
+        const containers::Column<AUTOSQL_FLOAT> &_value_to_be_compared ) = 0;
+
+    /// Trivial setter
+    virtual void set_value_to_be_compared(
+        const containers::ColumnView<AUTOSQL_FLOAT, std::vector<size_t>>
             &_value_to_be_compared ) = 0;
 
     /// Sorts the samples by value to be aggregated (within the element in

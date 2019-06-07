@@ -38,9 +38,11 @@ class DataFrameView
     }
 
     /// Getter for a categorical column.
-    const Column<AUTOSQL_INT> categorical_col( size_t _j ) const
+    const ColumnView<AUTOSQL_INT, std::vector<size_t>> categorical_col(
+        size_t _j ) const
     {
-        return df_.categorical_col( _j );
+        return ColumnView<AUTOSQL_INT, std::vector<size_t>>(
+            df_.categorical_col( _j ), rows_ );
     }
 
     /// Getter for a categorical name.
@@ -78,9 +80,11 @@ class DataFrameView
     }
 
     /// Getter for a discrete column.
-    const Column<AUTOSQL_FLOAT> discrete_col( size_t _j ) const
+    const ColumnView<AUTOSQL_FLOAT, std::vector<size_t>> discrete_col(
+        size_t _j ) const
     {
-        return df_.discrete_col( _j );
+        return ColumnView<AUTOSQL_FLOAT, std::vector<size_t>>(
+            df_.discrete_col( _j ), rows_ );
     }
 
     /// Getter for a discrete name.
@@ -151,9 +155,11 @@ class DataFrameView
     }
 
     /// Getter for a numerical column.
-    const Column<AUTOSQL_FLOAT> numerical_col( size_t _j ) const
+    const ColumnView<AUTOSQL_FLOAT, std::vector<size_t>> numerical_col(
+        size_t _j ) const
     {
-        return df_.numerical_col( _j );
+        return ColumnView<AUTOSQL_FLOAT, std::vector<size_t>>(
+            df_.numerical_col( _j ), rows_ );
     }
 
     /// Getter for a numerical name.
@@ -178,9 +184,11 @@ class DataFrameView
     }
 
     /// Getter for a target column.
-    const Column<AUTOSQL_FLOAT> target_col( size_t _j ) const
+    const ColumnView<AUTOSQL_FLOAT, std::vector<size_t>> target_col(
+        size_t _j ) const
     {
-        return df_.target_col( _j );
+        return ColumnView<AUTOSQL_FLOAT, std::vector<size_t>>(
+            df_.target_col( _j ), rows_ );
     }
 
     /// Getter for a target name.
@@ -199,6 +207,13 @@ class DataFrameView
     AUTOSQL_FLOAT time_stamp( size_t _i ) const
     {
         return df_.time_stamp( row( _i ) );
+    }
+
+    /// Getter for the time stamps col.
+    const ColumnView<AUTOSQL_FLOAT, std::vector<size_t>> time_stamp_col() const
+    {
+        return ColumnView<AUTOSQL_FLOAT, std::vector<size_t>>(
+            df_.time_stamp_col(), rows_ );
     }
 
     /// Getter for the time stamps name.

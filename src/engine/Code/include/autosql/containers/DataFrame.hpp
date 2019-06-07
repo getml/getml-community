@@ -244,6 +244,13 @@ class DataFrame
         return time_stamps_[0][_i];
     }
 
+    /// Getter for the time stamps column.
+    const Column<AUTOSQL_FLOAT> time_stamp_col() const
+    {
+        assert( time_stamps_.size() == 1 || time_stamps_.size() == 2 );
+        return time_stamps_[0];
+    }
+
     /// Getter for the time stamps name.
     const std::string& time_stamps_name() const
     {

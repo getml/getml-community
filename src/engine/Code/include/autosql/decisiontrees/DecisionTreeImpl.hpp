@@ -19,6 +19,13 @@ struct DecisionTreeImpl
 
     // ----------------------------------------
 
+    /// Trivial getter
+    inline bool allow_sets() const
+    {
+        assert( tree_hyperparameters_ );
+        return tree_hyperparameters_->allow_sets_;
+    }
+
     /// Trivial accessor
     inline const std::vector<std::string>& categories() const
     {
@@ -34,9 +41,30 @@ struct DecisionTreeImpl
     }
 
     /// Trivial getter
+    inline AUTOSQL_FLOAT grid_factor() const
+    {
+        assert( tree_hyperparameters_ );
+        return tree_hyperparameters_->grid_factor_;
+    }
+
+    /// Trivial getter
     inline AUTOSQL_INT ix_perip_used() const
     {
         return column_to_be_aggregated_.ix_perip_used;
+    }
+
+    /// Trivial getter
+    inline AUTOSQL_INT max_length() const
+    {
+        assert( tree_hyperparameters_ );
+        return tree_hyperparameters_->max_length_;
+    }
+
+    /// Trivial getter
+    inline AUTOSQL_INT min_num_samples() const
+    {
+        assert( tree_hyperparameters_ );
+        return tree_hyperparameters_->min_num_samples_;
     }
 
     /// Returns a custom random number generator
@@ -71,6 +99,20 @@ struct DecisionTreeImpl
     inline void set_same_units( const descriptors::SameUnits& _same_units )
     {
         same_units_ = _same_units;
+    }
+
+    /// Trivial getter
+    inline AUTOSQL_FLOAT regularization() const
+    {
+        assert( tree_hyperparameters_ );
+        return tree_hyperparameters_->regularization_;
+    }
+
+    /// Trivial getter
+    inline AUTOSQL_FLOAT share_conditions() const
+    {
+        assert( tree_hyperparameters_ );
+        return tree_hyperparameters_->share_conditions_;
     }
 
     /// Trivial accessor
@@ -133,9 +175,6 @@ struct DecisionTreeImpl
     /// to the population table and thus the targets.
     std::shared_ptr<aggregations::AbstractAggregation> aggregation_;
 
-    /// Whether we want to summarize our categorical features in sets.
-    bool allow_sets_;
-
     /// Type of the aggregation used (needed for copy constructor)
     std::string aggregation_type_;
 
@@ -155,17 +194,6 @@ struct DecisionTreeImpl
     /// Name of the join key in the population table
     std::string join_keys_popul_name_;
 
-    /// Factor that is proportional to the number of splits
-    /// can be set by the user
-    AUTOSQL_FLOAT grid_factor_;
-
-    /// Maximum depth allowed
-    AUTOSQL_INT max_length_;
-
-    /// Minimum number of samples required in each part of
-    /// a split
-    AUTOSQL_INT min_num_samples_;
-
     /// The optimization criterion is what we want to maximize -
     /// using it we can determine the optimal splits
     optimizationcriteria::OptimizationCriterion* optimization_criterion_;
@@ -179,23 +207,18 @@ struct DecisionTreeImpl
     /// Random number generator
     std::mt19937* random_number_generator_;
 
-    /// Regularization - the higher the factor the less
-    /// complex the trees. This is implemented by requiring
-    /// that the new optimization_criterion.value() must be at least
-    /// old optimization_criterion.value() + regularization_.
-    AUTOSQL_FLOAT regularization_;
-
     /// Contains information on which of the columns contain the same units
     descriptors::SameUnits same_units_;
-
-    /// The share of conditions randomly selected
-    AUTOSQL_FLOAT share_conditions_;
 
     /// Name of the time stamps in the peripheral table
     std::string time_stamps_perip_name_;
 
     /// Name of the time stamps in the population table
     std::string time_stamps_popul_name_;
+
+    /// Hyperparameters needed to fit this tree.
+    std::shared_ptr<const descriptors::TreeHyperparameters>
+        tree_hyperparameters_;
 
     /// Name of the time stamps in the peripheral table
     /// used for defining the upper limit.
