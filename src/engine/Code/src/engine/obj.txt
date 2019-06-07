@@ -2,6 +2,7 @@ set(
     ENGINE_OBJ 
     ${ENGINE_SOURCE_DIRECTORY}/DatabaseManager.cpp
     ${ENGINE_SOURCE_DIRECTORY}/DataFrame.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/DataFrameIndex.cpp
     ${ENGINE_SOURCE_DIRECTORY}/DataFrameManager.cpp
     ${ENGINE_SOURCE_DIRECTORY}/FileHandler.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Encoding.cpp

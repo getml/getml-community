@@ -48,6 +48,8 @@
 #include "engine/containers/Encoding.hpp"
 #include "engine/containers/Matrix.hpp"
 
+#include "engine/containers/DataFrameIndex.hpp"
+
 #include "engine/containers/DataFrame.hpp"
 
 // ----------------------------------------------------

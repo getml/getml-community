@@ -374,7 +374,7 @@ DataFrameType Model<FeatureEngineererType>::extract_df(
     return DataFrameType(
         categoricals,
         discretes,
-        df.indices(),
+        df.maps(),
         join_keys,
         _name,
         numericals,

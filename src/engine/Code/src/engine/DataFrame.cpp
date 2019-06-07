@@ -436,39 +436,7 @@ void DataFrame::create_indices()
 
     for ( size_t i = 0; i < join_keys().size(); ++i )
         {
-            if ( !indices()[i] )
-                {
-                    indices()[i] = std::make_shared<ENGINE_INDEX>();
-                }
-
-            ENGINE_INDEX &map = *indices()[i];
-
-            const auto &current_join_key = join_key( i );
-
-            for ( size_t ix_x_perip = indices_begin_;
-                  ix_x_perip < current_join_key.nrows();
-                  ++ix_x_perip )
-                {
-                    if ( current_join_key[ix_x_perip] >= 0 )
-                        {
-                            auto it = map.find( current_join_key[ix_x_perip] );
-
-                            if ( it == map.end() )
-                                {
-                                    map[current_join_key[ix_x_perip]] = {
-                                        ix_x_perip};
-                                }
-                            else
-                                {
-                                    it->second.push_back( ix_x_perip );
-                                }
-                        }
-                }
-        }
-
-    if ( join_keys().size() > 0 )
-        {
-            indices_begin_ = join_key( 0 ).size();
+            index( i ).calculate( join_key( i ) );
         }
 }
 

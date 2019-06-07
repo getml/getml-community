@@ -12,8 +12,6 @@ class DataFrame
    public:
     DataFrame()
         : categories_( std::make_shared<Encoding>() ),
-          indices_( std::vector<std::shared_ptr<ENGINE_INDEX>>( 0 ) ),
-          indices_begin_( 0 ),
           join_keys_encoding_( std::make_shared<Encoding>() )
     {
     }
@@ -21,10 +19,7 @@ class DataFrame
     DataFrame(
         const std::shared_ptr<Encoding> &_categories,
         const std::shared_ptr<Encoding> &_join_keys_encoding )
-        : categories_( _categories ),
-          indices_( std::vector<std::shared_ptr<ENGINE_INDEX>>( 0 ) ),
-          indices_begin_( 0 ),
-          join_keys_encoding_( _join_keys_encoding )
+        : categories_( _categories ), join_keys_encoding_( _join_keys_encoding )
     {
     }
 
@@ -144,38 +139,33 @@ class DataFrame
 
     /// Returns the index signified by index _i
     template <class T>
-    std::shared_ptr<ENGINE_INDEX> &index( T _i )
+    DataFrameIndex &index( T _i )
     {
         assert( indices_.size() == join_keys_.size() );
         assert( join_keys_.size() > 0 );
         assert( _i >= 0 );
         assert( static_cast<size_t>( _i ) < indices_.size() );
-        assert( indices_[_i] );
 
         return indices_[_i];
     }
 
     /// Returns the index signified by index _i
     template <class T>
-    const std::shared_ptr<const ENGINE_INDEX> index( T _i ) const
+    const DataFrameIndex index( T _i ) const
     {
         assert( indices_.size() == join_keys_.size() );
         assert( join_keys_.size() > 0 );
         assert( _i >= 0 );
         assert( static_cast<size_t>( _i ) < indices_.size() );
-        assert( indices_[_i] );
 
         return indices_[_i];
     }
 
     /// Trivial accessor
-    std::vector<std::shared_ptr<ENGINE_INDEX>> &indices() { return indices_; }
+    std::vector<DataFrameIndex> &indices() { return indices_; }
 
     /// Trivial accessor
-    const std::vector<std::shared_ptr<ENGINE_INDEX>> &indices() const
-    {
-        return indices_;
-    }
+    const std::vector<DataFrameIndex> &indices() const { return indices_; }
 
     /// Returns the join key signified by index _i
     template <class T>
@@ -198,6 +188,14 @@ class DataFrame
     const Encoding &join_keys_encoding() const
     {
         return *join_keys_encoding_.get();
+    }
+
+    /// Returns the maps underlying the indices.
+    const std::vector<std::shared_ptr<ENGINE_INDEX>> maps() const
+    {
+        std::vector<std::shared_ptr<ENGINE_INDEX>> maps;
+        for ( const auto &ix : indices_ ) maps.push_back( ix.map() );
+        return maps;
     }
 
     /// Primitive abstraction for member name_
@@ -392,10 +390,7 @@ class DataFrame
     std::vector<Matrix<ENGINE_FLOAT>> discretes_;
 
     /// Performs the role of an "index" over the join keys
-    std::vector<std::shared_ptr<ENGINE_INDEX>> indices_;
-
-    /// Stores the first row number for which we do not have an index.
-    size_t indices_begin_;
+    std::vector<DataFrameIndex> indices_;
 
     /// Join keys - note that their might be several
     std::vector<Matrix<ENGINE_INT>> join_keys_;
