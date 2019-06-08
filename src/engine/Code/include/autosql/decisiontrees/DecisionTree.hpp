@@ -65,7 +65,7 @@ class DecisionTree
 
     /// Transforms a string into a proper aggregation
     std::shared_ptr<aggregations::AbstractAggregation> parse_aggregation(
-        const std::string &_aggregation );
+        const std::string &_aggregation ) const;
 
     /// Generates the select statement
     std::string select_statement( const std::string &_feature_num ) const;
@@ -232,7 +232,7 @@ class DecisionTree
    private:
     /// Returns the right aggregation based on _data_used
     template <typename AggType>
-    std::shared_ptr<aggregations::AbstractAggregation> make_aggregation();
+    std::shared_ptr<aggregations::AbstractAggregation> make_aggregation() const;
 
     // --------------------------------------
 
@@ -476,7 +476,7 @@ class DecisionTree
 
 template <typename AggType>
 std::shared_ptr<aggregations::AbstractAggregation>
-DecisionTree::make_aggregation()
+DecisionTree::make_aggregation() const
 {
     // ------------------------------------------------------------------------
 

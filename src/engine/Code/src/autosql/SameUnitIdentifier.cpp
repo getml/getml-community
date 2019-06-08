@@ -1,10 +1,148 @@
-#include "decisiontrees/decisiontrees.hpp"
+#include "autosql/ensemble/ensemble.hpp"
 
 namespace autosql
 {
-namespace decisiontrees
+namespace ensemble
 {
-// ------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+
+std::vector<AUTOSQL_SAME_UNITS_CONTAINER>
+SameUnitIdentifier::get_same_units_categorical(
+    const std::vector<containers::DataFrame> &_peripheral_tables,
+    const containers::DataFrame &_population_table )
+{
+    std::map<std::string, std::vector<enums::ColumnToBeAggregated>> unit_map;
+
+    debug_log( "identify_same_units: Adding outputs (categorical)..." );
+
+    for ( size_t j = 0; j < _population_table.num_categoricals(); ++j )
+        {
+            add_to_unit_map(
+                enums::DataUsed::x_popul_categorical,
+                -1,  // -1 signifies that this is the population table
+                j,
+                _population_table.categorical_col( j ),
+                &unit_map );
+        }
+
+    for ( size_t i = 0; i < _peripheral_tables.size(); ++i )
+        {
+            debug_log( "identify_same_units: Adding inputs (categorical)..." );
+
+            for ( size_t j = 0; j < _population_table.num_categoricals(); ++j )
+                {
+                    add_to_unit_map(
+                        enums::DataUsed::x_perip_categorical,
+                        static_cast<AUTOSQL_INT>( i ),
+                        static_cast<AUTOSQL_INT>( j ),
+                        _peripheral_tables[i].categorical_col( j ),
+                        &unit_map );
+                }
+        }
+
+    debug_log( "identify_same_units: To containers (categorical)..." );
+
+    std::vector<AUTOSQL_SAME_UNITS_CONTAINER> same_units_categorical(
+        _peripheral_tables.size() );
+
+    unit_map_to_same_unit_container( unit_map, &same_units_categorical );
+
+    return same_units_categorical;
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<AUTOSQL_SAME_UNITS_CONTAINER>
+SameUnitIdentifier::get_same_units_discrete(
+    const std::vector<containers::DataFrame> &_peripheral_tables,
+    const containers::DataFrame &_population_table )
+{
+    std::map<std::string, std::vector<enums::ColumnToBeAggregated>> unit_map;
+
+    debug_log( "identify_same_units: Adding outputs (discrete)..." );
+
+    for ( size_t j = 0; j < _population_table.num_discretes(); ++j )
+        {
+            add_to_unit_map(
+                enums::DataUsed::x_popul_discrete,
+                -1,  // -1 signifies that this is the population table
+                j,
+                _population_table.discrete_col( j ),
+                &unit_map );
+        }
+
+    for ( size_t i = 0; i < _peripheral_tables.size(); ++i )
+        {
+            debug_log( "identify_same_units: Adding inputs (discrete)..." );
+
+            for ( size_t j = 0; j < _population_table.num_discretes(); ++j )
+                {
+                    add_to_unit_map(
+                        enums::DataUsed::x_perip_discrete,
+                        static_cast<AUTOSQL_INT>( i ),
+                        static_cast<AUTOSQL_INT>( j ),
+                        _peripheral_tables[i].discrete_col( j ),
+                        &unit_map );
+                }
+        }
+
+    debug_log( "identify_same_units: To containers (discrete)..." );
+
+    std::vector<AUTOSQL_SAME_UNITS_CONTAINER> same_units_discrete(
+        _peripheral_tables.size() );
+
+    unit_map_to_same_unit_container( unit_map, &same_units_discrete );
+
+    return same_units_discrete;
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<AUTOSQL_SAME_UNITS_CONTAINER>
+SameUnitIdentifier::get_same_units_numerical(
+    const std::vector<containers::DataFrame> &_peripheral_tables,
+    const containers::DataFrame &_population_table )
+{
+    std::map<std::string, std::vector<enums::ColumnToBeAggregated>> unit_map;
+
+    debug_log( "identify_same_units: Adding outputs (numerical)..." );
+
+    for ( size_t j = 0; j < _population_table.num_numericals(); ++j )
+        {
+            add_to_unit_map(
+                enums::DataUsed::x_popul_numerical,
+                -1,  // -1 signifies that this is the population table
+                j,
+                _population_table.numerical_col( j ),
+                &unit_map );
+        }
+
+    for ( size_t i = 0; i < _peripheral_tables.size(); ++i )
+        {
+            debug_log( "identify_same_units: Adding inputs (numerical)..." );
+
+            for ( size_t j = 0; j < _population_table.num_numericals(); ++j )
+                {
+                    add_to_unit_map(
+                        enums::DataUsed::x_perip_numerical,
+                        static_cast<AUTOSQL_INT>( i ),
+                        static_cast<AUTOSQL_INT>( j ),
+                        _peripheral_tables[i].numerical_col( j ),
+                        &unit_map );
+                }
+        }
+
+    debug_log( "identify_same_units: To containers (numerical)..." );
+
+    std::vector<AUTOSQL_SAME_UNITS_CONTAINER> same_units_numerical(
+        _peripheral_tables.size() );
+
+    unit_map_to_same_unit_container( unit_map, &same_units_numerical );
+
+    return same_units_numerical;
+}
+
+// ----------------------------------------------------------------------------
 
 std::vector<descriptors::SameUnits> SameUnitIdentifier::identify_same_units(
     const std::vector<containers::DataFrame> &_peripheral_tables,
@@ -12,119 +150,14 @@ std::vector<descriptors::SameUnits> SameUnitIdentifier::identify_same_units(
 {
     // --------------------------------------------------------------
 
-    std::vector<AUTOSQL_SAME_UNITS_CONTAINER> same_units_categorical(
-        _peripheral_tables.size() );
+    const auto same_units_categorical =
+        get_same_units_categorical( _peripheral_tables, _population_table );
 
-    std::vector<AUTOSQL_SAME_UNITS_CONTAINER> same_units_discrete(
-        _peripheral_tables.size() );
+    const auto same_units_discrete =
+        get_same_units_discrete( _peripheral_tables, _population_table );
 
-    std::vector<AUTOSQL_SAME_UNITS_CONTAINER> same_units_numerical(
-        _peripheral_tables.size() );
-
-    // --------------------------------------------------------------
-    // Let's begin with same_units_categorical
-    {
-        std::map<std::string, std::vector<ColumnToBeAggregated>>
-            unit_map;
-
-        debug_message( "identify_same_units: Adding outputs (categorical)..." );
-
-        // Categorical population
-        add_to_unit_map(
-            DataUsed::x_popul_categorical,
-            -1,  // -1 signifies that this is the population table
-            _population_table.categorical(),
-            unit_map );
-
-        // Categorical peripheral
-        for ( AUTOSQL_SIZE ix_perip_used = 0;
-              ix_perip_used < _peripheral_tables.size();
-              ++ix_perip_used )
-            {
-                debug_message(
-                    "identify_same_units: Adding inputs (categorical)..." );
-
-                add_to_unit_map(
-                    DataUsed::x_perip_categorical,
-					static_cast<AUTOSQL_INT>(ix_perip_used),
-                    _peripheral_tables[ix_perip_used].categorical(),
-                    unit_map );
-            }
-
-        debug_message( "identify_same_units: To containers (categorical)..." );
-
-        unit_map_to_same_unit_container( unit_map, same_units_categorical );
-    }
-
-    // --------------------------------------------------------------
-    // Same thing for numerical
-    {
-        std::map<std::string, std::vector<ColumnToBeAggregated>>
-            unit_map;
-
-        debug_message( "identify_same_units: Adding outputs (numerical)..." );
-
-        // numerical population
-        add_to_unit_map(
-            DataUsed::x_popul_numerical,
-            -1,  // -1 signifies that this is the population table
-            _population_table.numerical(),
-            unit_map );
-
-        // numerical peripheral
-        for ( AUTOSQL_SIZE ix_perip_used = 0;
-              ix_perip_used < _peripheral_tables.size();
-              ++ix_perip_used )
-            {
-                debug_message(
-                    "identify_same_units: Adding inputs (numerical)..." );
-
-                add_to_unit_map(
-                    DataUsed::x_perip_numerical,
-					static_cast<AUTOSQL_INT>(ix_perip_used),
-                    _peripheral_tables[ix_perip_used].numerical(),
-                    unit_map );
-            }
-
-        debug_message( "identify_same_units: To containers (numerical)..." );
-
-        unit_map_to_same_unit_container( unit_map, same_units_numerical );
-    }
-
-    // --------------------------------------------------------------
-    // Same thing for discrete
-    {
-        std::map<std::string, std::vector<ColumnToBeAggregated>>
-            unit_map;
-
-        debug_message( "identify_same_units: Adding outputs (discrete)..." );
-
-        // discrete population
-        add_to_unit_map(
-            DataUsed::x_popul_discrete,
-            -1,  // -1 signifies that this is the population table
-            _population_table.discrete(),
-            unit_map );
-
-        // discrete peripheral
-        for ( AUTOSQL_SIZE ix_perip_used = 0;
-              ix_perip_used < _peripheral_tables.size();
-              ++ix_perip_used )
-            {
-                debug_message(
-                    "identify_same_units: Adding inputs (discrete)..." );
-
-                add_to_unit_map(
-                    DataUsed::x_perip_discrete,
-					static_cast<AUTOSQL_INT>(ix_perip_used),
-                    _peripheral_tables[ix_perip_used].discrete(),
-                    unit_map );
-            }
-
-        debug_message( "identify_same_units: To containers (discrete)..." );
-
-        unit_map_to_same_unit_container( unit_map, same_units_discrete );
-    }
+    const auto same_units_numerical =
+        get_same_units_numerical( _peripheral_tables, _population_table );
 
     // --------------------------------------------------------------
     // Turn this into a SameUnit object
@@ -133,18 +166,20 @@ std::vector<descriptors::SameUnits> SameUnitIdentifier::identify_same_units(
 
     for ( size_t i = 0; i < same_units.size(); ++i )
         {
-            same_units[i].same_units_categorical =
+            same_units[i].same_units_categorical_ =
                 std::make_shared<AUTOSQL_SAME_UNITS_CONTAINER>(
                     same_units_categorical[i] );
 
-            same_units[i].same_units_discrete =
+            same_units[i].same_units_discrete_ =
                 std::make_shared<AUTOSQL_SAME_UNITS_CONTAINER>(
                     same_units_discrete[i] );
 
-            same_units[i].same_units_numerical =
+            same_units[i].same_units_numerical_ =
                 std::make_shared<AUTOSQL_SAME_UNITS_CONTAINER>(
                     same_units_numerical[i] );
         }
+
+    // --------------------------------------------------------------
 
     return same_units;
 
@@ -154,20 +189,20 @@ std::vector<descriptors::SameUnits> SameUnitIdentifier::identify_same_units(
 // ----------------------------------------------------------------------------
 
 void SameUnitIdentifier::unit_map_to_same_unit_container(
-    const std::map<std::string, std::vector<ColumnToBeAggregated>>
+    const std::map<std::string, std::vector<enums::ColumnToBeAggregated>>
         &_unit_map,
-    std::vector<AUTOSQL_SAME_UNITS_CONTAINER> &_same_units )
+    std::vector<AUTOSQL_SAME_UNITS_CONTAINER> *_same_units )
 {
     for ( auto &unit_pair : _unit_map )
         {
             const auto &unit_vector = unit_pair.second;
 
-            for ( AUTOSQL_SIZE ix1 = 0; ix1 < unit_vector.size(); ++ix1 )
+            for ( size_t ix1 = 0; ix1 < unit_vector.size(); ++ix1 )
                 {
-                    for ( AUTOSQL_SIZE ix2 = 0; ix2 < ix1; ++ix2 )
+                    for ( size_t ix2 = 0; ix2 < ix1; ++ix2 )
                         {
                             // Combinations between two different peripheral
-                            // tables make to sense
+                            // tables make to sense.
                             bool combination_makes_no_sense =
                                 ( ( unit_vector[ix1].ix_perip_used !=
                                     unit_vector[ix2].ix_perip_used ) &&
@@ -175,7 +210,7 @@ void SameUnitIdentifier::unit_map_to_same_unit_container(
                                   ( unit_vector[ix2].ix_perip_used != -1 ) );
 
                             // Combinations where both columns are in the
-                            // population table make no sense
+                            // population table make no sense.
                             combination_makes_no_sense =
                                 combination_makes_no_sense ||
                                 ( ( unit_vector[ix1].ix_perip_used ==
@@ -195,13 +230,14 @@ void SameUnitIdentifier::unit_map_to_same_unit_container(
                             // never be the population table.
                             assert( unit_vector[ix1].ix_perip_used != -1 );
 
-                            _same_units[unit_vector[ix1].ix_perip_used]
+                            ( *_same_units )[unit_vector[ix1].ix_perip_used]
                                 .push_back( new_tuple );
                         }
                 }
         }
 }
 
-// ------------------------------------------------------------------------
-}
-}
+// ----------------------------------------------------------------------------
+
+}  // namespace ensemble
+}  // namespace autosql

@@ -1,0 +1,16 @@
+#ifndef AUTOSQL_ENSEMBLE_ENSEMBLE_HPP_
+#define AUTOSQL_ENSEMBLE_ENSEMBLE_HPP_
+
+// ----------------------------------------------------
+// Dependencies
+
+#include "autosql/decisiontrees/decisiontrees.hpp"
+
+// ----------------------------------------------------
+// Module files
+
+#include "autosql/ensemble/SameUnitIdentifier.hpp"
+
+// ----------------------------------------------------
+
+#endif  // AUTOSQL_ENSEMBLE_ENSEMBLE_HPP_

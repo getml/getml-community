@@ -555,7 +555,7 @@ DecisionTree &DecisionTree::operator=( DecisionTree &&_other ) noexcept
 // ----------------------------------------------------------------------------
 
 std::shared_ptr<aggregations::AbstractAggregation>
-DecisionTree::parse_aggregation( const std::string &_aggregation )
+DecisionTree::parse_aggregation( const std::string &_aggregation ) const
 {
     if ( _aggregation == "AVG" )
         {
