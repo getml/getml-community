@@ -13,6 +13,8 @@
 
 #include "autosql/ensemble/CandidateTreeBuilder.hpp"
 
+#include "autosql/ensemble/TreeFitter.hpp"
+
 // ----------------------------------------------------
 
 #endif  // AUTOSQL_ENSEMBLE_ENSEMBLE_HPP_

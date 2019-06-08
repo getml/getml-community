@@ -1016,6 +1016,8 @@ std::vector<AUTOSQL_FLOAT> DecisionTree::transform(
             debug_log( "transform: Clear extras..." );
 
             _aggregation->clear_extras();
+
+            // ------------------------------------------------------
         }
 
     // ------------------------------------------------------

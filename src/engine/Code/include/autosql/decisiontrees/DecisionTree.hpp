@@ -120,6 +120,23 @@ class DecisionTree
         return impl()->column_to_be_aggregated_;
     }
 
+    /// Calls create_value_to_be_aggregated on the tree's own aggregation.
+    void create_value_to_be_aggregated(
+        const containers::DataFrameView &_population,
+        const containers::DataFrame &_peripheral,
+        const std::vector<containers::ColumnView<
+            AUTOSQL_FLOAT,
+            std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
+        const AUTOSQL_SAMPLE_CONTAINER &_sample_container )
+    {
+        create_value_to_be_aggregated(
+            _population,
+            _peripheral,
+            _subfeatures,
+            _sample_container,
+            aggregation() );
+    }
+
     /// Whether the decision tree has subtrees.
     inline const bool has_subtrees() const { return subtrees_.size() > 0; }
 
@@ -469,6 +486,8 @@ class DecisionTree
 
     /// Needed for the snowflake data model
     std::vector<DecisionTree> subtrees_;
+
+    // --------------------------------------
 };
 
 // ----------------------------------------------------------------------------

@@ -1,0 +1,162 @@
+#ifndef AUTOSQL_ENSEMBLE_TREEFITTER_HPP_
+#define AUTOSQL_ENSEMBLE_TREEFITTER_HPP_
+
+namespace autosql
+{
+namespace ensemble
+{
+// ----------------------------------------------------------------------------
+
+class TreeFitter
+{
+    // -------------------------------------------------------------------------
+
+   public:
+    TreeFitter(
+        const std::shared_ptr<const std::vector<std::string>> &_categories,
+        const std::shared_ptr<descriptors::Hyperparameters> &_hyperparameters,
+        std::mt19937 *_random_number_generator,
+        multithreading::Communicator *_comm )
+        : categories_( _categories ),
+          comm_( _comm ),
+          hyperparameters_( _hyperparameters ),
+          random_number_generator_( _random_number_generator )
+    {
+    }
+
+    ~TreeFitter() = default;
+
+    // -------------------------------------------------------------------------
+
+   public:
+    /// Fits the trees in a recursive manner, starting with any subtrees.
+    void fit(
+        const decisiontrees::TableHolder &_table_holder,
+        std::vector<AUTOSQL_SAMPLES> *_samples,
+        std::vector<AUTOSQL_SAMPLE_CONTAINER> *_sample_containers,
+        optimizationcriteria::OptimizationCriterion *_optimization_criterion,
+        std::list<decisiontrees::DecisionTree> *_candidate_trees,
+        std::vector<decisiontrees::DecisionTree> *_trees );
+
+    // -------------------------------------------------------------------------
+
+   private:
+    /// Finds the best of the candidate trees - and refits, if required.
+    void find_best_trees(
+        const size_t _num_trees,
+        const decisiontrees::TableHolder &_table_holder,
+        const std::vector<containers::ColumnView<
+            AUTOSQL_FLOAT,
+            std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
+        const std::vector<AUTOSQL_FLOAT> &_values,
+        std::vector<AUTOSQL_SAMPLES> *_samples,
+        std::vector<AUTOSQL_SAMPLE_CONTAINER> *_sample_containers,
+        optimizationcriteria::OptimizationCriterion *_optimization_criterion,
+        std::list<decisiontrees::DecisionTree> *_candidate_trees,
+        std::vector<decisiontrees::DecisionTree> *_trees );
+
+    /// Fits the subtrees.
+    void fit_subtrees(
+        decisiontrees::TableHolder &_table_holder,
+        const std::vector<AUTOSQL_SAMPLE_CONTAINER> &_sample_containers,
+        optimizationcriteria::OptimizationCriterion *_opt,
+        std::list<decisiontrees::DecisionTree> &_candidate_trees );
+
+    /// Fits the subtrees for each of the candidates.
+    void fit_subtrees_for_candidates(
+        const AUTOSQL_INT _ix_subtable,
+        decisiontrees::TableHolder &_subtable,
+        std::vector<AUTOSQL_SAMPLES> &_samples,
+        std::vector<AUTOSQL_SAMPLE_CONTAINER> &_sample_containers,
+        const std::vector<descriptors::SameUnits> &_same_units,
+        std::shared_ptr<aggregations::IntermediateAggregationImpl> &_opt_impl,
+        containers::Optional<aggregations::AggregationImpl> &_aggregation_impl,
+        std::list<decisiontrees::DecisionTree> &_candidate_trees );
+
+    /// Fits an individual tree.
+    void fit_tree(
+        const containers::DataFrameView &_population,
+        const containers::DataFrame &_peripheral,
+        const std::vector<containers::ColumnView<
+            AUTOSQL_FLOAT,
+            std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
+        std::vector<AUTOSQL_SAMPLES> *_samples,
+        std::vector<AUTOSQL_SAMPLE_CONTAINER> *_sample_containers,
+        optimizationcriteria::OptimizationCriterion *_optimization_criterion,
+        decisiontrees::DecisionTree *_tree );
+
+    /// Fits all candidate trees at max_depth = _max_length_probe.
+    void probe(
+        const decisiontrees::TableHolder &_table_holder,
+        const std::vector<containers::ColumnView<
+            AUTOSQL_FLOAT,
+            std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
+        std::vector<AUTOSQL_SAMPLES> *_samples,
+        std::vector<AUTOSQL_SAMPLE_CONTAINER> *_sample_containers,
+        optimizationcriteria::OptimizationCriterion *_optimization_criterion,
+        std::list<decisiontrees::DecisionTree> *_candidate_trees,
+        std::vector<AUTOSQL_FLOAT> *_values );
+
+    // -------------------------------------------------------------------------
+
+   private:
+    /// Trivial accessor
+    std::shared_ptr<const std::vector<std::string>> &categories()
+    {
+        assert( categories_ );
+        return categories_;
+    }
+
+    /// Trivial accessor
+    multithreading::Communicator *comm() { return comm_; }
+
+    /// Trivial accessor
+    const descriptors::Hyperparameters &hyperparameters() const
+    {
+        assert( hyperparameters_ );
+        return *hyperparameters_;
+    }
+
+    /// Trivial accessor
+    std::mt19937 &random_number_generator()
+    {
+        return *random_number_generator_;
+    }
+
+    /// Trivial accessor
+    const descriptors::TreeHyperparameters &tree_hyperparameters() const
+    {
+        assert( hyperparameters_ );
+        assert( hyperparameters_->tree_hyperparameters_ );
+        return *hyperparameters_->tree_hyperparameters_;
+    }
+
+    /// Trivial accessor
+    bool use_timestamps() const
+    {
+        assert( hyperparameters_ );
+        return hyperparameters_->use_timestamps_;
+    }
+
+    // -------------------------------------------------------------------------
+
+   private:
+    /// List of categories mapping category names to integers
+    std::shared_ptr<const std::vector<std::string>> categories_;
+
+    /// Communicator
+    multithreading::Communicator *comm_;
+
+    /// The hyperparameters for training
+    std::shared_ptr<const descriptors::Hyperparameters> hyperparameters_;
+
+    /// Random number generator used for the candidate trees.
+    std::mt19937 *random_number_generator_;
+
+    // -------------------------------------------------------------------------
+};
+
+// ----------------------------------------------------------------------------
+}  // namespace ensemble
+}  // namespace autosql
+#endif  // AUTOSQL_ENSEMBLE_TREEFITTER_HPP_

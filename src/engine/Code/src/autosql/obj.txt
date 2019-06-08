@@ -16,5 +16,6 @@ set(
     ${AUTOSQL_SOURCE_DIRECTORY}/SameUnitIdentifier.cpp 
     ${AUTOSQL_SOURCE_DIRECTORY}/SubtreeHelper.cpp 
     ${AUTOSQL_SOURCE_DIRECTORY}/TableHolder.cpp 
+    ${AUTOSQL_SOURCE_DIRECTORY}/TreeFitter.cpp 
 )
 
