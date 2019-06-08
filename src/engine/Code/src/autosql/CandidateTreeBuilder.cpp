@@ -1,56 +1,54 @@
-#include "decisiontrees/decisiontrees.hpp"
+#include "autosql/ensemble/ensemble.hpp"
 
 namespace autosql
 {
-namespace decisiontrees
+namespace ensemble
 {
 // ----------------------------------------------------------------------------
 
 void CandidateTreeBuilder::add_counts(
-    const TableHolder &_table_holder,
+    const decisiontrees::TableHolder &_table_holder,
     const std::vector<descriptors::SameUnits> &_same_units,
     const descriptors::Hyperparameters &_hyperparameters,
     const AUTOSQL_INT _ix_perip_used,
-    std::mt19937 &_random_number_generator,
-    containers::Optional<aggregations::AggregationImpl> &_aggregation_impl,
+    std::mt19937 *_random_number_generator,
+    containers::Optional<aggregations::AggregationImpl> *_aggregation_impl,
     multithreading::Communicator *_comm,
-    std::list<DecisionTree> &_candidate_trees )
+    std::list<decisiontrees::DecisionTree> *_candidate_trees )
 {
-    for ( auto &agg : _hyperparameters.aggregations )
+    for ( auto &agg : _hyperparameters.aggregations_ )
         {
             if ( agg != "COUNT" )
                 {
                     continue;
                 }
 
-            _candidate_trees.push_back( DecisionTree(
+            _candidate_trees->push_back( decisiontrees::DecisionTree(
                 agg,
-                -1,  // ix_column_used - not important
-                DataUsed::not_applicable,  // data_used
+                _hyperparameters.tree_hyperparameters_,
                 _ix_perip_used,
+                enums::DataUsed::not_applicable,  // data_used
+                -1,  // _ix_column_used - not important
                 _same_units[_ix_perip_used],
                 _random_number_generator,
-                _aggregation_impl ) );
-
-#ifdef AUTOSQL_PARALLEL
-            _candidate_trees.back().set_comm( _comm );
-#endif  // AUTOSQL_PARALLEL
+                _aggregation_impl,
+                _comm ) );
         }
 }
 
 // ----------------------------------------------------------------------------
 
 void CandidateTreeBuilder::add_count_distincts(
-    const TableHolder &_table_holder,
+    const decisiontrees::TableHolder &_table_holder,
     const std::vector<descriptors::SameUnits> &_same_units,
     const descriptors::Hyperparameters &_hyperparameters,
     const AUTOSQL_INT _ix_perip_used,
-    std::mt19937 &_random_number_generator,
-    containers::Optional<aggregations::AggregationImpl> &_aggregation_impl,
+    std::mt19937 *_random_number_generator,
+    containers::Optional<aggregations::AggregationImpl> *_aggregation_impl,
     multithreading::Communicator *_comm,
-    std::list<DecisionTree> &_candidate_trees )
+    std::list<decisiontrees::DecisionTree> *_candidate_trees )
 {
-    for ( auto &agg : _hyperparameters.aggregations )
+    for ( auto &agg : _hyperparameters.aggregations_ )
         {
             if ( agg != "COUNT DISTINCT" &&
                  agg != "COUNT MINUS COUNT DISTINCT" )
@@ -58,31 +56,31 @@ void CandidateTreeBuilder::add_count_distincts(
                     continue;
                 }
 
-            for ( auto data_used : {DataUsed::x_perip_categorical,
-                                    DataUsed::x_perip_discrete,
-                                    DataUsed::time_stamps_diff} )
+            for ( auto data_used : {enums::DataUsed::x_perip_categorical,
+                                    enums::DataUsed::x_perip_discrete,
+                                    enums::DataUsed::time_stamps_diff} )
                 {
                     AUTOSQL_INT ncols = get_ncols(
-                        _table_holder.peripheral_tables,
+                        _table_holder.peripheral_tables_,
                         _same_units,
                         _ix_perip_used,
                         data_used );
 
-                    for ( AUTOSQL_INT ix_column_used = 0; ix_column_used < ncols;
+                    for ( AUTOSQL_INT ix_column_used = 0;
+                          ix_column_used < ncols;
                           ++ix_column_used )
                         {
-                            _candidate_trees.push_back( DecisionTree(
-                                agg,
-                                ix_column_used,
-                                data_used,
-                                _ix_perip_used,
-                                _same_units[_ix_perip_used],
-                                _random_number_generator,
-                                _aggregation_impl ) );
-
-#ifdef AUTOSQL_PARALLEL
-                            _candidate_trees.back().set_comm( _comm );
-#endif  // AUTOSQL_PARALLEL
+                            _candidate_trees->push_back(
+                                decisiontrees::DecisionTree(
+                                    agg,
+                                    _hyperparameters.tree_hyperparameters_,
+                                    _ix_perip_used,
+                                    data_used,
+                                    ix_column_used,
+                                    _same_units[_ix_perip_used],
+                                    _random_number_generator,
+                                    _aggregation_impl,
+                                    _comm ) );
                         }
                 }
         }
@@ -91,16 +89,16 @@ void CandidateTreeBuilder::add_count_distincts(
 // ----------------------------------------------------------------------------
 
 void CandidateTreeBuilder::add_other_aggs(
-    const TableHolder &_table_holder,
+    const decisiontrees::TableHolder &_table_holder,
     const std::vector<descriptors::SameUnits> &_same_units,
     const descriptors::Hyperparameters &_hyperparameters,
     const AUTOSQL_INT _ix_perip_used,
-    std::mt19937 &_random_number_generator,
-    containers::Optional<aggregations::AggregationImpl> &_aggregation_impl,
+    std::mt19937 *_random_number_generator,
+    containers::Optional<aggregations::AggregationImpl> *_aggregation_impl,
     multithreading::Communicator *_comm,
-    std::list<DecisionTree> &_candidate_trees )
+    std::list<decisiontrees::DecisionTree> *_candidate_trees )
 {
-    for ( auto &agg : _hyperparameters.aggregations )
+    for ( auto &agg : _hyperparameters.aggregations_ )
         {
             if ( agg == "COUNT" || agg == "COUNT DISTINCT" ||
                  agg == "COUNT MINUS COUNT DISTINCT" )
@@ -108,19 +106,20 @@ void CandidateTreeBuilder::add_other_aggs(
                     continue;
                 }
 
-            for ( auto data_used : {DataUsed::x_perip_numerical,
-                                    DataUsed::x_perip_discrete,
-                                    DataUsed::time_stamps_diff,
-                                    DataUsed::same_unit_numerical,
-                                    DataUsed::same_unit_discrete} )
+            for ( auto data_used : {enums::DataUsed::x_perip_numerical,
+                                    enums::DataUsed::x_perip_discrete,
+                                    enums::DataUsed::time_stamps_diff,
+                                    enums::DataUsed::same_unit_numerical,
+                                    enums::DataUsed::same_unit_discrete} )
                 {
                     AUTOSQL_INT ncols = get_ncols(
-                        _table_holder.peripheral_tables,
+                        _table_holder.peripheral_tables_,
                         _same_units,
                         _ix_perip_used,
                         data_used );
 
-                    for ( AUTOSQL_INT ix_column_used = 0; ix_column_used < ncols;
+                    for ( AUTOSQL_INT ix_column_used = 0;
+                          ix_column_used < ncols;
                           ++ix_column_used )
                         {
                             // -----------------------------------------------------
@@ -138,18 +137,19 @@ void CandidateTreeBuilder::add_other_aggs(
 
                             // -----------------------------------------------------
 
-                            _candidate_trees.push_back( DecisionTree(
-                                agg,
-                                ix_column_used,
-                                data_used,
-                                _ix_perip_used,
-                                _same_units[_ix_perip_used],
-                                _random_number_generator,
-                                _aggregation_impl ) );
+                            _candidate_trees->push_back(
+                                decisiontrees::DecisionTree(
+                                    agg,
+                                    _hyperparameters.tree_hyperparameters_,
+                                    _ix_perip_used,
+                                    data_used,
+                                    ix_column_used,
+                                    _same_units[_ix_perip_used],
+                                    _random_number_generator,
+                                    _aggregation_impl,
+                                    _comm ) );
 
-#ifdef AUTOSQL_PARALLEL
-                            _candidate_trees.back().set_comm( _comm );
-#endif  // AUTOSQL_PARALLEL
+                            // -----------------------------------------------------
                         }
                 }
         }
@@ -158,18 +158,18 @@ void CandidateTreeBuilder::add_other_aggs(
 // ----------------------------------------------------------------------------
 
 void CandidateTreeBuilder::add_subfeature_aggs(
-    const TableHolder &_table_holder,
+    const decisiontrees::TableHolder &_table_holder,
     const std::vector<descriptors::SameUnits> &_same_units,
     const descriptors::Hyperparameters &_hyperparameters,
     const AUTOSQL_INT _ix_perip_used,
-    std::mt19937 &_random_number_generator,
-    containers::Optional<aggregations::AggregationImpl> &_aggregation_impl,
+    std::mt19937 *_random_number_generator,
+    containers::Optional<aggregations::AggregationImpl> *_aggregation_impl,
     multithreading::Communicator *_comm,
-    std::list<DecisionTree> &_candidate_trees )
+    std::list<decisiontrees::DecisionTree> *_candidate_trees )
 {
-    assert( _table_holder.subtables[_ix_perip_used] );
+    assert( _table_holder.subtables_[_ix_perip_used] );
 
-    for ( auto &agg : _hyperparameters.aggregations )
+    for ( auto &agg : _hyperparameters.aggregations_ )
         {
             if ( agg == "COUNT" || agg == "COUNT DISTINCT" ||
                  agg == "COUNT MINUS COUNT DISTINCT" )
@@ -178,43 +178,39 @@ void CandidateTreeBuilder::add_subfeature_aggs(
                 }
 
             for ( AUTOSQL_INT ix_column_used = 0;
-                  ix_column_used < _hyperparameters.num_subfeatures;
+                  ix_column_used < _hyperparameters.num_subfeatures_;
                   ++ix_column_used )
                 {
-                    _candidate_trees.push_back( DecisionTree(
+                    _candidate_trees->push_back( decisiontrees::DecisionTree(
                         agg,
-                        ix_column_used,
-                        DataUsed::x_subfeature,
+                        _hyperparameters.tree_hyperparameters_,
                         _ix_perip_used,
+                        enums::DataUsed::x_subfeature,
+                        ix_column_used,
                         _same_units[_ix_perip_used],
                         _random_number_generator,
-                        _aggregation_impl ) );
-
-#ifdef AUTOSQL_PARALLEL
-                    _candidate_trees.back().set_comm( _comm );
-#endif  // AUTOSQL_PARALLEL
+                        _aggregation_impl,
+                        _comm ) );
                 }
         }
 }
 
 // ----------------------------------------------------------------------------
 
-std::list<DecisionTree> CandidateTreeBuilder::build_candidates(
-    const TableHolder &_table_holder,
+std::list<decisiontrees::DecisionTree> CandidateTreeBuilder::build_candidates(
+    const decisiontrees::TableHolder &_table_holder,
     const std::vector<descriptors::SameUnits> &_same_units,
     const AUTOSQL_INT _ix_feature,
-    descriptors::Hyperparameters _hyperparameters,
-    containers::Optional<aggregations::AggregationImpl> &_aggregation_impl,
-    std::mt19937 &_random_number_generator,
+    const descriptors::Hyperparameters &_hyperparameters,
+    containers::Optional<aggregations::AggregationImpl> *_aggregation_impl,
+    std::mt19937 *_random_number_generator,
     multithreading::Communicator *_comm )
 {
     // ----------------------------------------------------------------
 
-    debug_message( "build_candidates..." );
+    debug_log( "build_candidates..." );
 
     // ----------------------------------------------------------------
-
-#ifdef AUTOSQL_PARALLEL
 
     auto candidate_trees = build_candidate_trees(
         _table_holder,
@@ -224,54 +220,31 @@ std::list<DecisionTree> CandidateTreeBuilder::build_candidates(
         _aggregation_impl,
         _comm );
 
-#else  // AUTOSQL_PARALLEL
-
-    auto candidate_trees = build_candidate_trees(
-        _table_holder,
-        _same_units,
-        _hyperparameters,
-        _random_number_generator,
-        _aggregation_impl );
-
-#endif  // AUTOSQL_PARALLEL
-
     // ----------------------------------------------------------------
 
     // If _ix_feature is -1, then these are subtrees for which round_robin does
     // not make sense.
-    if ( _hyperparameters.round_robin && _ix_feature != -1 )
+    if ( _hyperparameters.round_robin_ && _ix_feature != -1 )
         {
-            debug_message( "fit: Applying round robin..." );
+            debug_log( "fit: Applying round robin..." );
 
-            CandidateTreeBuilder::round_robin( _ix_feature, candidate_trees );
+            CandidateTreeBuilder::round_robin( _ix_feature, &candidate_trees );
         }
-    else if ( _hyperparameters.share_aggregations >= 0.0 )
+    else if ( _hyperparameters.share_aggregations_ >= 0.0 )
         {
-            debug_message( "fit: Removing candidates..." );
-
-#ifdef AUTOSQL_PARALLEL
+            debug_log( "fit: Removing candidates..." );
 
             // This will remove all but share_aggregations of trees
             randomly_remove_candidate_trees(
-                _hyperparameters.share_aggregations,
+                _hyperparameters.share_aggregations_,
                 _random_number_generator,
-                candidate_trees,
-                _comm );
-
-#else  // AUTOSQL_PARALLEL
-
-            // This will remove all but share_aggregations of trees
-            randomly_remove_candidate_trees(
-                _hyperparameters.share_aggregations,
-                _random_number_generator,
-                candidate_trees );
-
-#endif  // AUTOSQL_PARALLEL
+                _comm,
+                &candidate_trees );
         }
 
     // ----------------------------------------------------------------
 
-    debug_message( "build_candidates...done." );
+    debug_log( "build_candidates...done." );
 
     // ----------------------------------------------------------------
 
@@ -282,20 +255,20 @@ std::list<DecisionTree> CandidateTreeBuilder::build_candidates(
 
 // ----------------------------------------------------------------------------
 
-std::list<DecisionTree> CandidateTreeBuilder::build_candidate_trees(
-    const TableHolder &_table_holder,
+std::list<decisiontrees::DecisionTree>
+CandidateTreeBuilder::build_candidate_trees(
+    const decisiontrees::TableHolder &_table_holder,
     const std::vector<descriptors::SameUnits> &_same_units,
     const descriptors::Hyperparameters _hyperparameters,
-    std::mt19937 &_random_number_generator,
-    containers::Optional<aggregations::AggregationImpl> &_aggregation_impl,
+    std::mt19937 *_random_number_generator,
+    containers::Optional<aggregations::AggregationImpl> *_aggregation_impl,
     multithreading::Communicator *_comm )
 {
-    const AUTOSQL_INT num_perips =
-        static_cast<AUTOSQL_INT>( _table_holder.peripheral_tables.size() );
+    const auto num_perips = _table_holder.peripheral_tables_.size();
 
-    std::list<DecisionTree> candidate_trees;
+    std::list<decisiontrees::DecisionTree> candidate_trees;
 
-    for ( AUTOSQL_INT ix_perip_used = 0; ix_perip_used < num_perips;
+    for ( size_t ix_perip_used = 0; ix_perip_used < num_perips;
           ++ix_perip_used )
         {
             // -----------------------------------------------------
@@ -311,13 +284,13 @@ std::list<DecisionTree> CandidateTreeBuilder::build_candidate_trees(
                 _random_number_generator,
                 _aggregation_impl,
                 _comm,
-                candidate_trees );
+                &candidate_trees );
 
             // ------------------------------------------------------------------
             // COUNT DISTINCT and COUNT MINUS COUNT DISTINCT are special,
             // because they are applied to
-            // DataUsed::x_perip_categorical instead of
-            // DataUsed::x_perip_numerical.
+            // enums::DataUsed::x_perip_categorical instead of
+            // enums::DataUsed::x_perip_numerical.
 
             add_count_distincts(
                 _table_holder,
@@ -327,7 +300,7 @@ std::list<DecisionTree> CandidateTreeBuilder::build_candidate_trees(
                 _random_number_generator,
                 _aggregation_impl,
                 _comm,
-                candidate_trees );
+                &candidate_trees );
 
             // ------------------------------------------------------------------
             // Now we apply all of the aggregations that are not COUNT or COUNT
@@ -341,12 +314,12 @@ std::list<DecisionTree> CandidateTreeBuilder::build_candidate_trees(
                 _random_number_generator,
                 _aggregation_impl,
                 _comm,
-                candidate_trees );
+                &candidate_trees );
 
             // ------------------------------------------------------------------
             // If applicable, add aggregations over the subfeatures
 
-            if ( _table_holder.subtables[ix_perip_used] )
+            if ( _table_holder.subtables_[ix_perip_used] )
                 {
                     add_subfeature_aggs(
                         _table_holder,
@@ -356,7 +329,7 @@ std::list<DecisionTree> CandidateTreeBuilder::build_candidate_trees(
                         _random_number_generator,
                         _aggregation_impl,
                         _comm,
-                        candidate_trees );
+                        &candidate_trees );
                 }
 
             // ------------------------------------------------------------------
@@ -371,7 +344,7 @@ AUTOSQL_INT CandidateTreeBuilder::get_ncols(
     const std::vector<containers::DataFrame> &_peripheral_tables,
     const std::vector<descriptors::SameUnits> &_same_units,
     const AUTOSQL_INT _ix_perip_used,
-    const DataUsed _data_used )
+    const enums::DataUsed _data_used )
 {
     assert( _peripheral_tables.size() == _same_units.size() );
 
@@ -381,30 +354,30 @@ AUTOSQL_INT CandidateTreeBuilder::get_ncols(
 
     switch ( _data_used )
         {
-            case DataUsed::x_perip_numerical:
-                return _peripheral_tables[_ix_perip_used].numerical().ncols();
+            case enums::DataUsed::x_perip_numerical:
+                return _peripheral_tables[_ix_perip_used].num_numericals();
 
-            case DataUsed::x_perip_discrete:
-                return _peripheral_tables[_ix_perip_used].discrete().ncols();
+            case enums::DataUsed::x_perip_discrete:
+                return _peripheral_tables[_ix_perip_used].num_discretes();
 
-            case DataUsed::x_perip_categorical:
-                return _peripheral_tables[_ix_perip_used].categorical().ncols();
+            case enums::DataUsed::x_perip_categorical:
+                return _peripheral_tables[_ix_perip_used].num_categoricals();
 
-            case DataUsed::time_stamps_diff:
+            case enums::DataUsed::time_stamps_diff:
                 return 1;
 
-            case DataUsed::same_unit_discrete:
-                assert( _same_units[_ix_perip_used].same_units_discrete );
+            case enums::DataUsed::same_unit_discrete:
+                assert( _same_units[_ix_perip_used].same_units_discrete_ );
                 return static_cast<AUTOSQL_INT>(
-                    _same_units[_ix_perip_used].same_units_discrete->size() );
+                    _same_units[_ix_perip_used].same_units_discrete_->size() );
 
-            case DataUsed::same_unit_numerical:
-                assert( _same_units[_ix_perip_used].same_units_numerical );
+            case enums::DataUsed::same_unit_numerical:
+                assert( _same_units[_ix_perip_used].same_units_numerical_ );
                 return static_cast<AUTOSQL_INT>(
-                    _same_units[_ix_perip_used].same_units_numerical->size() );
+                    _same_units[_ix_perip_used].same_units_numerical_->size() );
 
             default:
-                assert( !"Unknown DataUsed in get_ncols!" );
+                assert( !"Unknown enums::DataUsed in get_ncols!" );
                 return 0;
         }
 }
@@ -412,27 +385,25 @@ AUTOSQL_INT CandidateTreeBuilder::get_ncols(
 // ----------------------------------------------------------------------------
 
 bool CandidateTreeBuilder::is_comparison_only(
-    const TableHolder &_table_holder,
-    const DataUsed _data_used,
+    const decisiontrees::TableHolder &_table_holder,
+    const enums::DataUsed _data_used,
     const AUTOSQL_INT _ix_perip_used,
     const AUTOSQL_INT _ix_column_used )
 {
-    if ( _data_used == DataUsed::x_perip_numerical )
+    if ( _data_used == enums::DataUsed::x_perip_numerical )
         {
-            if ( _table_holder.peripheral_tables[_ix_perip_used]
-                     .numerical()
-                     .unit( _ix_column_used )
+            if ( _table_holder.peripheral_tables_[_ix_perip_used]
+                     .numerical_unit( _ix_column_used )
                      .find( "comparison "
                             "only" ) != std::string::npos )
                 {
                     return true;
                 }
         }
-    else if ( _data_used == DataUsed::x_perip_discrete )
+    else if ( _data_used == enums::DataUsed::x_perip_discrete )
         {
-            if ( _table_holder.peripheral_tables[_ix_perip_used]
-                     .discrete()
-                     .unit( _ix_column_used )
+            if ( _table_holder.peripheral_tables_[_ix_perip_used]
+                     .discrete_unit( _ix_column_used )
                      .find( "comparison "
                             "only" ) != std::string::npos )
                 {
@@ -447,33 +418,32 @@ bool CandidateTreeBuilder::is_comparison_only(
 
 void CandidateTreeBuilder::randomly_remove_candidate_trees(
     const AUTOSQL_FLOAT _share_aggregations,
-    std::mt19937 &_random_number_generator,
-    std::list<DecisionTree> &_candidate_trees,
-    multithreading::Communicator *_comm )
+    std::mt19937 *_random_number_generator,
+    multithreading::Communicator *_comm,
+    std::list<decisiontrees::DecisionTree> *_candidate_trees )
 {
     // ------------------------------------------------
 
-    const AUTOSQL_SIZE num_candidates = std::max(
-        static_cast<AUTOSQL_SIZE>(
-            _candidate_trees.size() * _share_aggregations ),
-        static_cast<AUTOSQL_SIZE>( 1 ) );
+    const size_t num_candidates = std::max(
+        static_cast<size_t>( _candidate_trees->size() * _share_aggregations ),
+        static_cast<size_t>( 1 ) );
 
-    RandomNumberGenerator rng( &_random_number_generator, _comm );
+    utils::RandomNumberGenerator rng( _random_number_generator, _comm );
 
     // ------------------------------------------------
 
-    while ( _candidate_trees.size() > num_candidates )
+    while ( _candidate_trees->size() > num_candidates )
         {
             const auto max =
-                static_cast<AUTOSQL_INT>( _candidate_trees.size() ) - 1;
+                static_cast<AUTOSQL_INT>( _candidate_trees->size() ) - 1;
 
             auto ix_remove = rng.random_int( 0, max );
 
-            auto tree_to_be_removed = _candidate_trees.begin();
+            auto tree_to_be_removed = _candidate_trees->begin();
 
             std::advance( tree_to_be_removed, ix_remove );
 
-            _candidate_trees.erase( tree_to_be_removed );
+            _candidate_trees->erase( tree_to_be_removed );
         }
 
     // ------------------------------------------------
@@ -484,21 +454,22 @@ void CandidateTreeBuilder::randomly_remove_candidate_trees(
 /// For the round_robin approach, we remove all features but
 /// one - the remaining one is a different one every time.
 void CandidateTreeBuilder::round_robin(
-    const AUTOSQL_INT _ix_feature, std::list<DecisionTree> &_candidate_trees )
+    const AUTOSQL_INT _ix_feature,
+    std::list<decisiontrees::DecisionTree> *_candidate_trees )
 {
-    const AUTOSQL_SIZE ix_feature_size = static_cast<AUTOSQL_SIZE>( _ix_feature );
+    const size_t ix_feature_size = static_cast<size_t>( _ix_feature );
 
-    auto it = _candidate_trees.begin();
+    auto it = _candidate_trees->begin();
 
-    std::advance( it, ix_feature_size % _candidate_trees.size() );
+    std::advance( it, ix_feature_size % _candidate_trees->size() );
 
-    std::list<DecisionTree> candidate_trees;
+    std::list<decisiontrees::DecisionTree> candidate_trees;
 
     candidate_trees.emplace_back( std::move( *it ) );
 
-    _candidate_trees = std::move( candidate_trees );
+    *_candidate_trees = std::move( candidate_trees );
 }
 
 // ----------------------------------------------------------------------------
-}
-}
+}  // namespace ensemble
+}  // namespace autosql

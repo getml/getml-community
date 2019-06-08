@@ -27,6 +27,8 @@
 
 #include "autosql/utils/Matchmaker.hpp"
 
+#include "autosql/utils/RandomNumberGenerator.hpp"
+
 // ----------------------------------------------------------------------------
 
 #endif  // AUTOSQL_UTILS_UTILS_HPP_

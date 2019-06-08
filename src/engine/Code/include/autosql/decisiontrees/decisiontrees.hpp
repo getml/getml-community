@@ -58,8 +58,6 @@
 // ----------------------------------------------------
 // Module files
 
-#include "autosql/decisiontrees/RandomNumberGenerator.hpp"
-
 #include "autosql/decisiontrees/Placeholder.hpp"
 
 #include "autosql/decisiontrees/TableHolder.hpp"
@@ -73,8 +71,6 @@
 #include "autosql/decisiontrees/SubtreeHelper.hpp"
 
 /*#include "decisiontrees/TablePreparer.hpp"
-
-#include "decisiontrees/SameUnitIdentifier.hpp"
 
 #include "decisiontrees/CandidateTreeBuilder.hpp"
 

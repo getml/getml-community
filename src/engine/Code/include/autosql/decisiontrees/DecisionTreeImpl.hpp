@@ -68,10 +68,10 @@ struct DecisionTreeImpl
     }
 
     /// Returns a custom random number generator
-    inline RandomNumberGenerator rng() const
+    inline utils::RandomNumberGenerator rng() const
     {
         assert( random_number_generator_ != nullptr );
-        return RandomNumberGenerator( random_number_generator_, comm_ );
+        return utils::RandomNumberGenerator( random_number_generator_, comm_ );
     }
 
     /// Trivial accessor

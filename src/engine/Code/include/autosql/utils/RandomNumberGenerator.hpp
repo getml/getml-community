@@ -1,9 +1,9 @@
-#ifndef AUTOSQL_DECISIONTREES_RANDOMNUMBERGENERATOR_HPP_
-#define AUTOSQL_DECISIONTREES_RANDOMNUMBERGENERATOR_HPP_
+#ifndef AUTOSQL_UTILS_RANDOMNUMBERGENERATOR_HPP_
+#define AUTOSQL_UTILS_RANDOMNUMBERGENERATOR_HPP_
 
 namespace autosql
 {
-namespace decisiontrees
+namespace utils
 {
 // ----------------------------------------------------------------------------
 
@@ -70,4 +70,5 @@ class RandomNumberGenerator
 // ----------------------------------------------------------------------------
 }  // namespace decisiontrees
 }  // namespace autosql
-#endif  // AUTOSQL_DECISIONTREES_RANDOMNUMBERGENERATOR_HPP_
+
+#endif  // AUTOSQL_UTILS_RANDOMNUMBERGENERATOR_HPP_

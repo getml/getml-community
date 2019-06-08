@@ -11,6 +11,8 @@
 
 #include "autosql/ensemble/SameUnitIdentifier.hpp"
 
+#include "autosql/ensemble/CandidateTreeBuilder.hpp"
+
 // ----------------------------------------------------
 
 #endif  // AUTOSQL_ENSEMBLE_ENSEMBLE_HPP_
