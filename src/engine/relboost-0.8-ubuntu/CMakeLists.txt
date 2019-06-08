@@ -35,7 +35,6 @@ include_directories(
     "${XGBOOST_DIR}/rabit/include"
 )
 
-
 set(AUTOSQL_SOURCE_DIRECTORY ${PROJECT_SOURCE_DIR}/../Code/src/autosql)
 set(CSV_SOURCE_DIRECTORY ${PROJECT_SOURCE_DIR}/../Code/src/csv)
 set(DATABASE_SOURCE_DIRECTORY ${PROJECT_SOURCE_DIR}/../Code/src/database)

@@ -40,7 +40,8 @@ class DecisionTree
         const std::vector<containers::ColumnView<
             AUTOSQL_FLOAT,
             std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
-        const AUTOSQL_SAMPLE_CONTAINER &_sample_container );
+        const AUTOSQL_SAMPLE_CONTAINER &_sample_container,
+        aggregations::AbstractAggregation *_aggregation ) const;
 
     /// Fits the decision tree
     void fit(
@@ -87,7 +88,7 @@ class DecisionTree
         const containers::DataFrame &_peripheral,
         const containers::Optional<TableHolder> &_subtables,
         const bool _use_timestamps,
-        aggregations::AbstractAggregation *_aggregation );
+        aggregations::AbstractAggregation *_aggregation ) const;
 
     // --------------------------------------
 
@@ -129,6 +130,9 @@ class DecisionTree
         assert( impl()->aggregation_ );
         return impl()->aggregation_->intermediate_type();
     }
+
+    /// Trivial getter
+    inline AUTOSQL_INT ix_perip_used() const { return impl()->ix_perip_used(); }
 
     /// Returns an intermediate aggregation representing the aggregation
     /// of this DecisionTree.
@@ -230,20 +234,6 @@ class DecisionTree
     template <typename AggType>
     std::shared_ptr<aggregations::AbstractAggregation> make_aggregation();
 
-    /// Builds appropriate views on the features. The purpose of the ColumnView
-    /// is to reverse the effect of the row indices in the DataFrameView.
-    std::vector<containers::ColumnView<
-        AUTOSQL_FLOAT,
-        std::map<AUTOSQL_INT, AUTOSQL_INT>>>
-    make_subfeatures(
-        const containers::Optional<TableHolder> &_subtable,
-        const std::vector<std::vector<AUTOSQL_FLOAT>> &_predictions ) const;
-
-    /// Generates the features from the subtrees.
-    std::vector<std::vector<AUTOSQL_FLOAT>> make_predictions(
-        const containers::Optional<TableHolder> &_subtable,
-        const bool _use_timestamps );
-
     // --------------------------------------
 
    private:
@@ -282,9 +272,6 @@ class DecisionTree
 
     /// Trivial accessor
     inline const DecisionTreeImpl *impl() const { return &impl_; }
-
-    /// Trivial getter
-    inline AUTOSQL_INT ix_perip_used() const { return impl()->ix_perip_used(); }
 
     /// Trivial accessor
     inline std::string &join_keys_perip_name()

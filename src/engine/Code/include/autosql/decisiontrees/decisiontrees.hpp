@@ -70,6 +70,8 @@
 
 #include "autosql/decisiontrees/DecisionTree.hpp"
 
+#include "autosql/decisiontrees/SubtreeHelper.hpp"
+
 /*#include "decisiontrees/TablePreparer.hpp"
 
 #include "decisiontrees/SameUnitIdentifier.hpp"
