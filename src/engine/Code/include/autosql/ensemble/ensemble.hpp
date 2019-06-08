@@ -15,6 +15,8 @@
 
 #include "autosql/ensemble/TreeFitter.hpp"
 
+// #include "autosql/ensemble/DecisionTreeEnsembleImpl.hpp"
+
 // ----------------------------------------------------
 
 #endif  // AUTOSQL_ENSEMBLE_ENSEMBLE_HPP_

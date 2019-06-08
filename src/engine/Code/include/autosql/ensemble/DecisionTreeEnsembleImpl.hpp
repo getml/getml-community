@@ -1,9 +1,9 @@
-#ifndef AUTOSQL_DECISIONTREES_DECISIONTREEENSEMBLEIMPL_HPP_
-#define AUTOSQL_DECISIONTREES_DECISIONTREEENSEMBLEIMPL_HPP_
+#ifndef AUTOSQL_ENSEMBLE_DECISIONTREEENSEMBLEIMPL_HPP_
+#define AUTOSQL_ENSEMBLE_DECISIONTREEENSEMBLEIMPL_HPP_
 
 namespace autosql
 {
-namespace decisiontrees
+namespace ensemble
 {
 // ----------------------------------------------------------------------------
 // The purpose of this impl struct is to reduce maintenance cost
@@ -12,21 +12,21 @@ namespace decisiontrees
 struct DecisionTreeEnsembleImpl
 {
     DecisionTreeEnsembleImpl()
-        : categories_( std::make_shared<containers::Encoding>() ),
+        : categories_( std::make_shared<std::vector<std::string>>() ),
           comm_( nullptr ){};
 
     DecisionTreeEnsembleImpl(
-        const std::shared_ptr<containers::Encoding> &_categories )
+        const std::shared_ptr<std::vector<std::string>> &_categories )
         : categories_( _categories ), comm_( nullptr ){};
 
     DecisionTreeEnsembleImpl(
-        const std::shared_ptr<containers::Encoding> &_categories,
+        const std::shared_ptr<std::vector<std::string>> &_categories,
         const std::vector<std::string> &_placeholder_peripheral,
-        const Placeholder &_placeholder_population )
+        const decisiontrees::Placeholder &_placeholder_population )
         : categories_( _categories ),
           placeholder_peripheral_( _placeholder_peripheral ),
           placeholder_population_(
-              new Placeholder( _placeholder_population ) ){};
+              new decisiontrees::Placeholder( _placeholder_population ) ){};
 
     ~DecisionTreeEnsembleImpl() = default;
 
@@ -39,7 +39,7 @@ struct DecisionTreeEnsembleImpl
     /// for generating the SQL code, because categorical data is
     /// stored in the form of integers, whereas we want actual categories
     /// in our code.
-    std::shared_ptr<containers::Encoding> categories_;
+    std::shared_ptr<std::vector<std::string>> categories_;
 
     /// MPI Communicator or self-defined communicator object (for
     /// multithreading)
@@ -70,31 +70,26 @@ struct DecisionTreeEnsembleImpl
     /// Number of numerical colimns in population table
     AUTOSQL_INT num_columns_population_numerical_;
 
-    /// Placeholder for the peripheral tables
+    /// decisiontrees::Placeholder for the peripheral tables
     std::vector<std::string> placeholder_peripheral_;
 
-    /// Placeholder for the population table
-    containers::Optional<Placeholder> placeholder_population_;
-
-    /// Predictors to be trained on the features (one for every target)
-    std::vector<std::shared_ptr<predictors::Predictor>> predictors_;
+    /// decisiontrees::Placeholder for the population table
+    containers::Optional<decisiontrees::Placeholder> placeholder_population_;
 
     /// Random number generator for creating sample weights and
     /// the like.
     containers::Optional<std::mt19937> random_number_generator_;
-
-    /// Contains information on how this ensemble has been scored
-    descriptors::Scores scores_;
 
     /// Names of the target variables
     std::vector<std::string> targets_;
 
     /// The decision trees that are part of this ensemble -
     /// each represents one feature
-    std::vector<DecisionTree> trees_;
+    std::vector<decisiontrees::DecisionTree> trees_;
 };
 
 // ----------------------------------------------------------------------------
-}
-}
-#endif  // AUTOSQL_DECISIONTREES_DECISIONTREEENSEMBLEIMPL_HPP_
+}  // namespace ensemble
+}  // namespace autosql
+
+#endif  // AUTOSQL_ENSEMBLE_DECISIONTREEENSEMBLEIMPL_HPP_

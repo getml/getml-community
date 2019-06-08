@@ -25,8 +25,10 @@
 
 // ------------------------------------------------------------------------
 
-#include "autosql/utils/Matchmaker.hpp"
+#include "autosql/utils/Reducer.hpp"
 
+#include "autosql/utils/LinearRegression.hpp"
+#include "autosql/utils/Matchmaker.hpp"
 #include "autosql/utils/RandomNumberGenerator.hpp"
 
 // ----------------------------------------------------------------------------

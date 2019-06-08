@@ -9,6 +9,7 @@ set(
     ${AUTOSQL_SOURCE_DIRECTORY}/DecisionTreeNode.cpp 
     ${AUTOSQL_SOURCE_DIRECTORY}/Hyperparameters.cpp 
     ${AUTOSQL_SOURCE_DIRECTORY}/JSON.cpp 
+    ${AUTOSQL_SOURCE_DIRECTORY}/LinearRegression.cpp 
     ${AUTOSQL_SOURCE_DIRECTORY}/Matchmaker.cpp 
     ${AUTOSQL_SOURCE_DIRECTORY}/OptimizationCriterionImpl.cpp 
     ${AUTOSQL_SOURCE_DIRECTORY}/Placeholder.cpp 

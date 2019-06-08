@@ -1,6 +1,8 @@
-#include "LinearRegression.hpp"
+#include "autosql/utils/utils.hpp"
 
 namespace autosql
+{
+namespace utils
 {
 // ----------------------------------------------------------------------------
 
@@ -8,161 +10,113 @@ LinearRegression::LinearRegression(){};
 
 // ----------------------------------------------------------------------------
 
-LinearRegression::LinearRegression( AUTOSQL_INT _ncols )
-{
-    assert( _ncols > 0 );
-
-    slopes_ = containers::Matrix<AUTOSQL_FLOAT>( 1, _ncols );
-
-    intercepts_ = containers::Matrix<AUTOSQL_FLOAT>( 1, _ncols );
-};
+LinearRegression::LinearRegression( size_t _ncols )
+    : intercepts_( std::vector<AUTOSQL_FLOAT>( _ncols ) ),
+      slopes_( std::vector<AUTOSQL_FLOAT>( _ncols ) ){};
 
 // ----------------------------------------------------------------------------
 
 void LinearRegression::fit(
-    const containers::Matrix<AUTOSQL_FLOAT>& _new_feature,
-    const containers::Matrix<AUTOSQL_FLOAT>& _residuals,
-    const containers::Matrix<AUTOSQL_FLOAT>& _sample_weights )
+    const std::vector<AUTOSQL_FLOAT>& _new_feature,
+    const std::vector<std::vector<AUTOSQL_FLOAT>>& _residuals,
+    const std::vector<AUTOSQL_FLOAT>& _sample_weights )
 {
     // ----------------------------------------------------
+    // Calculate sum_sample weights
 
-    assert( _new_feature.nrows() == _residuals.nrows() && "UpdateRates::fit" );
-    assert(
-        _new_feature.nrows() == _sample_weights.nrows() && "UpdateRates::fit" );
+    AUTOSQL_FLOAT sum_sample_weights =
+        std::accumulate( _sample_weights.begin(), _sample_weights.end(), 0.0 );
 
-    assert( _new_feature.ncols() == 1 && "UpdateRates::fit" );
-    assert( _residuals.ncols() > 0 && "UpdateRates::fit" );
-
-    assert( _sample_weights.ncols() == 1 && "UpdateRates::fit" );
+    utils::Reducer::reduce(
+        std::plus<AUTOSQL_FLOAT>(), &sum_sample_weights, comm_ );
 
     // ----------------------------------------------------
+    // Calculate mean_new_feature
 
-    containers::Matrix<AUTOSQL_FLOAT> means( 1, _residuals.ncols() + 1 );
+    assert( _new_feature.size() == _sample_weights.size() );
 
-    AUTOSQL_FLOAT& mean_new_feature = *means.data();
+    AUTOSQL_FLOAT mean_new_feature = 0.0;
 
-    AUTOSQL_FLOAT* const mean_residuals = means.data() + 1;
-
-    // ----------------------------------------------------
-    // Calculate mean_yhat and mean_residuals
-    // (both stored in means)
-
-    for ( AUTOSQL_INT i = 0; i < _new_feature.nrows(); ++i )
+    for ( size_t i = 0; i < _new_feature.size(); ++i )
         {
             mean_new_feature += _new_feature[i] * _sample_weights[i];
         }
 
-    for ( AUTOSQL_INT i = 0; i < _residuals.nrows(); ++i )
+    utils::Reducer::reduce(
+        std::plus<AUTOSQL_FLOAT>(), &mean_new_feature, comm_ );
+
+    mean_new_feature /= sum_sample_weights;
+
+    // ----------------------------------------------------
+    // Calculate mean_new_feature
+
+    auto mean_residuals = std::vector<AUTOSQL_FLOAT>( _residuals.size() );
+
+    for ( size_t i = 0; i < _residuals.size(); ++i )
         {
-            for ( AUTOSQL_INT j = 0; j < _residuals.ncols(); ++j )
+            assert( _residuals[i].size() == _sample_weights.size() );
+
+            for ( size_t j = 0; j < _residuals[i].size(); ++j )
                 {
-                    mean_residuals[j] +=
-                        _residuals( i, j ) * _sample_weights[i];
+                    mean_residuals[i] += _residuals[i][j] * _sample_weights[j];
                 }
         }
 
-#ifdef AUTOSQL_PARALLEL
+    utils::Reducer::reduce(
+        std::plus<AUTOSQL_FLOAT>(), &mean_residuals, comm_ );
 
-    containers::Matrix<AUTOSQL_FLOAT> global_means( 1, means.ncols() );
-
-    AUTOSQL_PARALLEL_LIB::all_reduce(
-        comm(),
-        means.data(),
-        means.ncols(),
-        global_means.data(),
-        std::plus<AUTOSQL_FLOAT>() );
-
-    comm().barrier();
-
-    std::copy( global_means.begin(), global_means.end(), means.begin() );
-
-#endif  // AUTOSQL_PARALLEL
-
-    {
-        AUTOSQL_FLOAT sum_sample_weights = std::accumulate(
-            _sample_weights.begin(), _sample_weights.end(), 0.0 );
-
-#ifdef AUTOSQL_PARALLEL
-
-        AUTOSQL_FLOAT global_sum_sample_weights;
-
-        AUTOSQL_PARALLEL_LIB::all_reduce(
-            comm(),
-            sum_sample_weights,
-            global_sum_sample_weights,
-            std::plus<AUTOSQL_FLOAT>() );
-
-        comm().barrier();
-
-        sum_sample_weights = global_sum_sample_weights;
-
-#endif  // AUTOSQL_PARALLEL
-
-        std::for_each(
-            means.begin(),
-            means.end(),
-            [sum_sample_weights]( AUTOSQL_FLOAT& m ) {
-                m /= sum_sample_weights;
-            } );
-    }
+    std::for_each(
+        mean_residuals.begin(),
+        mean_residuals.end(),
+        [sum_sample_weights]( AUTOSQL_FLOAT& m ) { m /= sum_sample_weights; } );
 
     // ----------------------------------------------------
-    // Calculate var_yhat and cov_yhat
-    // (both stored in covars)
+    // Calculate var_new_feature
 
-    containers::Matrix<AUTOSQL_FLOAT> covars( 1, _residuals.ncols() + 1 );
+    AUTOSQL_FLOAT var_new_feature = 0.0;
 
-    AUTOSQL_FLOAT& var_new_feature = *covars.data();
-
-    AUTOSQL_FLOAT* const cov_new_feature = covars.data() + 1;
-
-    // -----
-
-    for ( AUTOSQL_INT i = 0; i < _new_feature.nrows(); ++i )
+    for ( size_t i = 0; i < _new_feature.size(); ++i )
         {
             var_new_feature += ( _new_feature[i] - mean_new_feature ) *
                                ( _new_feature[i] - mean_new_feature ) *
                                _sample_weights[i];
         }
 
-    // -----
+    utils::Reducer::reduce(
+        std::plus<AUTOSQL_FLOAT>(), &var_new_feature, comm_ );
 
-    for ( AUTOSQL_INT i = 0; i < _residuals.nrows(); ++i )
+    var_new_feature /= sum_sample_weights;
+
+    // ----------------------------------------------------
+    // Calculate cov_new_feature
+
+    auto cov_new_feature = std::vector<AUTOSQL_FLOAT>( _residuals.size() );
+
+    for ( size_t i = 0; i < _residuals.size(); ++i )
         {
-            for ( AUTOSQL_INT j = 0; j < _residuals.ncols(); ++j )
+            for ( size_t j = 0; j < _residuals[i].size(); ++j )
                 {
-                    cov_new_feature[j] +=
-                        ( _residuals( i, j ) - mean_residuals[j] ) *
-                        ( _new_feature[i] - mean_new_feature ) *
-                        _sample_weights[i];
+                    cov_new_feature[i] +=
+                        ( _residuals[i][j] - mean_residuals[j] ) *
+                        ( _new_feature[j] - mean_new_feature ) *
+                        _sample_weights[j];
                 }
         }
 
-            // -----
+    utils::Reducer::reduce(
+        std::plus<AUTOSQL_FLOAT>(), &cov_new_feature, comm_ );
 
-#ifdef AUTOSQL_PARALLEL
-
-    containers::Matrix<AUTOSQL_FLOAT> global_covars( 1, covars.ncols() );
-
-    AUTOSQL_PARALLEL_LIB::all_reduce(
-        comm(),
-        covars.data(),
-        covars.ncols(),
-        global_covars.data(),
-        std::plus<AUTOSQL_FLOAT>() );
-
-    comm().barrier();
-
-    std::copy( global_covars.begin(), global_covars.end(), covars.begin() );
-
-#endif  // AUTOSQL_PARALLEL
+    std::for_each(
+        cov_new_feature.begin(),
+        cov_new_feature.end(),
+        [sum_sample_weights]( AUTOSQL_FLOAT& m ) { m /= sum_sample_weights; } );
 
     // ------------------
     // Calculate slopes_
 
-    slopes_ = containers::Matrix<AUTOSQL_FLOAT>( 1, _residuals.ncols() );
+    slopes_ = std::vector<AUTOSQL_FLOAT>( _residuals.size() );
 
-    for ( AUTOSQL_INT j = 0; j < _residuals.ncols(); ++j )
+    for ( size_t j = 0; j < _residuals.size(); ++j )
         {
             slopes_[j] = cov_new_feature[j] / var_new_feature;
         }
@@ -170,9 +124,9 @@ void LinearRegression::fit(
     // ---------------------
     // Calculate intercepts_
 
-    intercepts_ = containers::Matrix<AUTOSQL_FLOAT>( 1, _residuals.ncols() );
+    intercepts_ = std::vector<AUTOSQL_FLOAT>( _residuals.size() );
 
-    for ( AUTOSQL_INT j = 0; j < _residuals.ncols(); ++j )
+    for ( size_t j = 0; j < _residuals.size(); ++j )
         {
             intercepts_[j] = mean_residuals[j] - slopes_[j] * mean_new_feature;
         }
@@ -193,21 +147,26 @@ void LinearRegression::fit(
 
 // ----------------------------------------------------------------------------
 
-containers::Matrix<AUTOSQL_FLOAT> LinearRegression::predict(
-    const containers::Matrix<AUTOSQL_FLOAT>& _yhat ) const
+std::vector<std::vector<AUTOSQL_FLOAT>> LinearRegression::predict(
+    const std::vector<AUTOSQL_FLOAT>& _yhat ) const
 {
-    containers::Matrix<AUTOSQL_FLOAT> f_t( _yhat.nrows(), intercepts_.ncols() );
+    std::vector<std::vector<AUTOSQL_FLOAT>> predictions( intercepts_.size() );
 
-    for ( AUTOSQL_INT i = 0; i < f_t.nrows(); ++i )
+    for ( AUTOSQL_INT i = 0; i < predictions.size(); ++i )
         {
-            for ( AUTOSQL_INT j = 0; j < f_t.ncols(); ++j )
+            std::vector<AUTOSQL_FLOAT> new_prediction( _yhat.size() );
+
+            for ( size_t j = 0; j < _yhat.size(); ++j )
                 {
-                    f_t( i, j ) = slopes_[j] * _yhat[i] + intercepts_[j];
+                    new_prediction[j] = slopes_[i] * _yhat[j] + intercepts_[i];
                 }
+
+            predictions.emplace_back( std::move( new_prediction ) );
         }
 
-    return f_t;
+    return predictions;
 }
 
 // ----------------------------------------------------------------------------
-}
+}  // namespace utils
+}  // namespace autosql
