@@ -4,6 +4,10 @@
 // ----------------------------------------------------
 // Dependencies
 
+#include "multithreading/multithreading.hpp"
+
+#include "autosql/utils/utils.hpp"
+
 #include "autosql/containers/containers.hpp"
 
 // ----------------------------------------------------
@@ -13,5 +17,7 @@
 
 #include "autosql/lossfunctions/CrossEntropyLoss.hpp"
 #include "autosql/lossfunctions/SquareLoss.hpp"
+
+// ----------------------------------------------------
 
 #endif  // AUTOSQL_LOSSFUNCTIONS_LOSSFUNCTIONS_HPP_

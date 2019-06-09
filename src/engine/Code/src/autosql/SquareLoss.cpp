@@ -1,4 +1,4 @@
-#include "lossfunctions/lossfunctions.hpp"
+#include "autosql/lossfunctions/lossfunctions.hpp"
 
 namespace autosql
 {
@@ -10,22 +10,22 @@ SquareLoss::SquareLoss() : LossFunction(){};
 
 // ----------------------------------------------------------------------------
 
-containers::Matrix<AUTOSQL_FLOAT> SquareLoss::calculate_residuals(
-    const containers::Matrix<AUTOSQL_FLOAT>& _yhat_old,
+std::vector<std::vector<AUTOSQL_FLOAT>> SquareLoss::calculate_residuals(
+    const std::vector<std::vector<AUTOSQL_FLOAT>>& _yhat_old,
     const containers::DataFrameView& _y )
 {
-    assert( _yhat_old.nrows() == _y.nrows() );
+    assert( _yhat_old.size() == _y.num_targets() );
 
-    assert( _yhat_old.ncols() == _y.df().targets().ncols() );
+    auto residuals = std::vector<std::vector<AUTOSQL_FLOAT>>(
+        _y.num_targets(), std::vector<AUTOSQL_FLOAT>( _y.nrows() ) );
 
-    containers::Matrix<AUTOSQL_FLOAT> residuals(
-        _y.nrows(), _y.df().targets().ncols() );
-
-    for ( AUTOSQL_INT i = 0; i < _y.nrows(); ++i )
+    for ( size_t j = 0; j < _y.num_targets(); ++j )
         {
-            for ( AUTOSQL_INT j = 0; j < _y.df().targets().ncols(); ++j )
+            assert( _yhat_old[j].size() == _y.nrows() );
+
+            for ( size_t i = 0; i < _y.nrows(); ++i )
                 {
-                    residuals( i, j ) = _y.targets( i, j ) - _yhat_old( i, j );
+                    residuals[j][i] = _y.target( i, j ) - _yhat_old[j][i];
                 }
         }
 
@@ -34,21 +34,16 @@ containers::Matrix<AUTOSQL_FLOAT> SquareLoss::calculate_residuals(
 
 // ----------------------------------------------------------------------------
 
-containers::Matrix<AUTOSQL_FLOAT> SquareLoss::calculate_update_rates(
-    const containers::Matrix<AUTOSQL_FLOAT>& _yhat_old,
-    const containers::Matrix<AUTOSQL_FLOAT>& _f_t,
+std::vector<AUTOSQL_FLOAT> SquareLoss::calculate_update_rates(
+    const std::vector<std::vector<AUTOSQL_FLOAT>>& _yhat_old,
+    const std::vector<std::vector<AUTOSQL_FLOAT>>& _predictions,
     const containers::DataFrameView& _y,
-    const containers::Matrix<AUTOSQL_FLOAT>& _sample_weights )
+    const std::vector<AUTOSQL_FLOAT>& _sample_weights )
 {
-    assert( _yhat_old.nrows() == _y.nrows() );
-    assert( _f_t.nrows() == _y.nrows() );
-    assert( _sample_weights.nrows() == _y.nrows() );
+    assert( _yhat_old.size() == _predictions.size() );
+    assert( _yhat_old.size() == _y.num_targets() );
 
-    assert( _yhat_old.ncols() == _y.df().targets().ncols() );
-    assert( _f_t.ncols() == _y.df().targets().ncols() );
-    assert( _sample_weights.ncols() == 1 );
-
-    containers::Matrix<AUTOSQL_FLOAT> update_rates( 1, _f_t.ncols() );
+    std::vector<AUTOSQL_FLOAT> update_rates( _yhat_old.size() );
 
     std::fill( update_rates.begin(), update_rates.end(), 1.0 );
 
@@ -56,5 +51,5 @@ containers::Matrix<AUTOSQL_FLOAT> SquareLoss::calculate_update_rates(
 }
 
 // ----------------------------------------------------------------------------
-}
-}
+}  // namespace lossfunctions
+}  // namespace autosql

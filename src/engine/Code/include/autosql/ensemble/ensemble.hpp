@@ -4,6 +4,8 @@
 // ----------------------------------------------------
 // Dependencies
 
+#include "logging/logging.hpp"
+
 #include "autosql/decisiontrees/decisiontrees.hpp"
 
 // ----------------------------------------------------
@@ -15,7 +17,9 @@
 
 #include "autosql/ensemble/TreeFitter.hpp"
 
-// #include "autosql/ensemble/DecisionTreeEnsembleImpl.hpp"
+#include "autosql/ensemble/DecisionTreeEnsembleImpl.hpp"
+
+#include "autosql/ensemble/DecisionTreeEnsemble.hpp"
 
 // ----------------------------------------------------
 

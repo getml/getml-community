@@ -47,10 +47,10 @@ struct DecisionTreeEnsembleImpl
 
     /// The linear regressions that are being used to map the features
     /// onto the targets for the gradient-boosting-like functionality
-    std::vector<LinearRegression> linear_regressions_;
+    std::vector<utils::LinearRegression> linear_regressions_;
 
     /// The hyperparameters used in this ensemble
-    containers::Optional<descriptors::Hyperparameters> hyperparameters_;
+    std::shared_ptr<descriptors::Hyperparameters> hyperparameters_;
 
     /// Number of categorical colimns in peripheral table
     std::vector<AUTOSQL_INT> num_columns_peripheral_categorical_;

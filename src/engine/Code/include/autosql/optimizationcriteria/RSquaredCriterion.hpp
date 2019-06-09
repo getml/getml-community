@@ -28,7 +28,7 @@ class RSquaredCriterion : public OptimizationCriterion
 
     /// Calculates statistics that have to be calculated only once
     void init(
-        const containers::Matrix<AUTOSQL_FLOAT>& _y,
+        const std::vector<std::vector<AUTOSQL_FLOAT>>& _y,
         const std::vector<AUTOSQL_FLOAT>& _sample_weights ) final;
 
     /// Needed for numeric stability
@@ -47,14 +47,6 @@ class RSquaredCriterion : public OptimizationCriterion
     /// Commits the current stage, accepting it as the new state of the
     /// optimization criterion
     void commit() final { impl().commit( &sufficient_statistics_committed_ ); }
-
-    /// Because we do not know the number of categories a priori,
-    /// we have to extend it, when necessary
-    void extend_storage_size( AUTOSQL_INT _storage_size_extension ) final
-    {
-        impl().extend_storage_size(
-            _storage_size_extension, sufficient_statistics_current_.ncols() );
-    }
 
     /// Resets sufficient statistics to zero
     void reset() final
@@ -80,16 +72,6 @@ class RSquaredCriterion : public OptimizationCriterion
         impl().set_comm( _comm );
     }
 
-    /// Resizes the sufficient_statistics_stored_ and values_stored_.
-    /// The size is inferred from the number of columns in
-    /// sufficient_statistics_committed_.
-    /// Also resets storage_ix_ to zero.
-    void set_storage_size( const AUTOSQL_INT _storage_size ) final
-    {
-        impl().set_storage_size(
-            _storage_size, sufficient_statistics_current_.ncols() );
-    }
-
     /// Trivial accessor.
     const AUTOSQL_INT storage_ix() const final { return impl().storage_ix(); }
 
@@ -108,7 +90,7 @@ class RSquaredCriterion : public OptimizationCriterion
     AUTOSQL_FLOAT value() final { return impl().value(); }
 
     /// Trivial getter
-    AUTOSQL_FLOAT values_stored( const AUTOSQL_INT _i ) final
+    AUTOSQL_FLOAT values_stored( const size_t _i ) final
     {
         return impl().values_stored( _i );
     }
@@ -119,7 +101,8 @@ class RSquaredCriterion : public OptimizationCriterion
     /// Implements the formula for calculating R squared.
     AUTOSQL_FLOAT calculate_r_squared(
         const size_t _i,
-        const containers::Matrix<AUTOSQL_FLOAT>& _sufficient_statistics ) const;
+        const std::deque<std::vector<AUTOSQL_FLOAT>>& _sufficient_statistics )
+        const;
 
     // --------------------------------------
 
@@ -148,18 +131,18 @@ class RSquaredCriterion : public OptimizationCriterion
 
     /// Stores the sufficient statistics after commit(...)
     /// is called
-    containers::Matrix<AUTOSQL_FLOAT> sufficient_statistics_committed_;
+    std::vector<AUTOSQL_FLOAT> sufficient_statistics_committed_;
 
     /// The current sufficient statistics, which can be changed by
     /// update_sample(...) or revert_to_commit()
-    containers::Matrix<AUTOSQL_FLOAT> sufficient_statistics_current_;
+    std::vector<AUTOSQL_FLOAT> sufficient_statistics_current_;
 
     /// Total sum of the weighted samples
     AUTOSQL_FLOAT sum_sample_weights_;
 
     /// Cross-correlations of all the centered target values y - length is
     /// y.ncols() * (y.ncols() + 1) / 2
-    containers::Matrix<AUTOSQL_FLOAT> sum_y_centered_y_centered_;
+    std::vector<AUTOSQL_FLOAT> sum_y_centered_y_centered_;
 
     /// Correlations of centered target values y and yhat - length is
     /// the number of columns in y  ( = y.ncols() )
@@ -186,11 +169,11 @@ class RSquaredCriterion : public OptimizationCriterion
     AUTOSQL_FLOAT* sum_yhat_yhat_current_;
 
     /// Targets of our predicton task
-    containers::Matrix<AUTOSQL_FLOAT> y_;
+    std::vector<std::vector<AUTOSQL_FLOAT>> y_;
 
     // Target values substracted by their mean (for numerical
     // stability)
-    containers::Matrix<AUTOSQL_FLOAT> y_centered_;
+    std::vector<std::vector<AUTOSQL_FLOAT>> y_centered_;
 
     // Mean of all yhats - for numeric stability. Calculated in
     // init_yhat(...)

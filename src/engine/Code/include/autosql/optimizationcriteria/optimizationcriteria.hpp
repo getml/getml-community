@@ -4,9 +4,12 @@
 // ----------------------------------------------------
 // Dependencies
 
+#include <deque>
 #include <numeric>
 
 #include "multithreading/multithreading.hpp"
+
+#include "autosql/utils/utils.hpp"
 
 #include "autosql/containers/containers.hpp"
 

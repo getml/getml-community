@@ -1,9 +1,9 @@
-#ifndef AUTOSQL_DECISIONTREES_DECISIONTREEENSEMBLE_HPP_
-#define AUTOSQL_DECISIONTREES_DECISIONTREEENSEMBLE_HPP_
+#ifndef AUTOSQL_ENSEMBLE_DECISIONTREEENSEMBLE_HPP_
+#define AUTOSQL_ENSEMBLE_DECISIONTREEENSEMBLE_HPP_
 
 namespace autosql
 {
-namespace decisiontrees
+namespace ensemble
 {
 // ----------------------------------------------------------------------------
 
@@ -13,12 +13,12 @@ class DecisionTreeEnsemble
     DecisionTreeEnsemble();
 
     DecisionTreeEnsemble(
-        const std::shared_ptr<containers::Encoding> &_categories );
+        const std::shared_ptr<std::vector<std::string>> &_categories );
 
     DecisionTreeEnsemble(
-        const std::shared_ptr<containers::Encoding> &_categories,
+        const std::shared_ptr<std::vector<std::string>> &_categories,
         const std::vector<std::string> &_placeholder_peripheral,
-        const Placeholder &_placeholder_population );
+        const decisiontrees::Placeholder &_placeholder_population );
 
     DecisionTreeEnsemble( const DecisionTreeEnsemble &_other );
 
@@ -33,21 +33,14 @@ class DecisionTreeEnsemble
 
     /// Fits the decision tree ensemble
     std::string fit(
-        const std::shared_ptr<const logging::Logger> _logger,
-        std::vector<containers::DataFrame> _peripheral_tables_raw,
-        containers::DataFrameView _population_table_raw,
-        descriptors::Hyperparameters _hyperparameters );
-
-    /// Fits the predictors
-    std::string fit_predictors(
-        const std::shared_ptr<const logging::Logger> _logger,
-        containers::Matrix<AUTOSQL_FLOAT> _features,
-        containers::Matrix<AUTOSQL_FLOAT> _targets );
+        const containers::DataFrameView &_population,
+        const std::vector<containers::DataFrame> &_peripheral,
+        const std::shared_ptr<const logging::AbstractLogger> _logger );
 
     /// Builds the decision tree ensemble from a Poco::JSON::Object
     void from_json_obj( const Poco::JSON::Object &_json_obj );
 
-    /// Loads the Model in JSON format and predictors, if applicable
+    /// Loads the Model in JSON format, if applicable
     void load( const std::string &_path );
 
     /// Copy constructor
@@ -56,18 +49,7 @@ class DecisionTreeEnsemble
     /// Copy assignment constructor
     DecisionTreeEnsemble &operator=( DecisionTreeEnsemble &&_other ) noexcept;
 
-    /// Generates a prediction on the basis of the features and the gradient
-    /// boosting algorithm
-    containers::Matrix<AUTOSQL_FLOAT> predict(
-        const std::shared_ptr<const logging::Logger> _logger,
-        std::vector<containers::DataFrame> _peripheral_tables,
-        containers::DataFrameView _population_table );
-
-    /// Generates predictions on the features using the internal predictors
-    containers::Matrix<AUTOSQL_FLOAT> predict(
-        containers::Matrix<AUTOSQL_FLOAT> _features );
-
-    /// Saves the Model in JSON format and predictors, if applicable
+    /// Saves the Model in JSON format, if applicable
     void save( const std::string &_path );
 
     /// Calculates scores.
@@ -79,7 +61,6 @@ class DecisionTreeEnsemble
     /// the built-in predictor. The remaining features are sorted
     /// by importance.
     std::string select_features(
-        const std::shared_ptr<const logging::Logger> _logger,
         containers::Matrix<AUTOSQL_FLOAT> _features,
         containers::Matrix<AUTOSQL_FLOAT> _targets );
 
@@ -93,44 +74,16 @@ class DecisionTreeEnsemble
     /// Extracts the SQL statements underlying these features as a string
     std::string to_sql() const;
 
-    /// Calculates the feature importances
-    descriptors::SourceImportances source_importances();
-
     /// Transforms a set of raw data into extracted features
-    containers::Matrix<AUTOSQL_FLOAT> transform(
-        const std::shared_ptr<const logging::Logger> _logger,
-        std::vector<containers::DataFrame> _peripheral_tables_raw,
-        containers::DataFrameView _population_table_raw,
-        const bool _transpose = true,
-        const bool _score = false );
+    std::shared_ptr<std::vector<AUTOSQL_FLOAT>> transform(
+        const containers::DataFrameView &_population,
+        const std::vector<containers::DataFrame> &_peripheral,
+        const std::shared_ptr<const logging::AbstractLogger> _logger );
 
     // --------------------------------------
 
-#ifdef AUTOSQL_PARALLEL
-
     /// Trivial getter
     inline multithreading::Communicator *comm() { return impl().comm_; }
-
-#endif  // AUTOSQL_PARALLEL
-
-    /// Returns true if there are predictors, false otherwise.
-    inline bool has_feature_selectors()
-    {
-        assert( impl().hyperparameters_ );
-        return (
-            impl().hyperparameters_->feature_selector_hyperparams &&
-            impl().hyperparameters_->num_selected_features > 0 );
-    }
-
-    /// Returns true if there are fitted predictors, false otherwise.
-    inline bool has_fitted_predictors() { return predictors().size() > 0; }
-
-    /// Returns true if there are predictors, false otherwise.
-    inline bool has_predictors()
-    {
-        assert( impl().hyperparameters_ );
-        return ( impl().hyperparameters_->predictor_hyperparams && true );
-    }
 
     /// Trivial accessor
     const descriptors::Hyperparameters &hyperparameters() const
@@ -138,12 +91,11 @@ class DecisionTreeEnsemble
         return *impl().hyperparameters_;
     }
 
-#ifdef AUTOSQL_PARALLEL
-
     /// Trivial setter
-    inline void set_comm( multithreading::Communicator *_comm ) { impl().comm_ = _comm; }
-
-#endif  // AUTOSQL_PARALLEL
+    inline void set_comm( multithreading::Communicator *_comm )
+    {
+        impl().comm_ = _comm;
+    }
 
     /// Extracts the ensemble as a JSON
     inline std::string to_json() { return JSON::stringify( to_json_obj() ); }
@@ -152,10 +104,10 @@ class DecisionTreeEnsemble
 
    private:
     /// Builds the candidates during fit(...)
-    std::list<DecisionTree> build_candidates(
+    std::list<decisiontrees::DecisionTree> build_candidates(
         const AUTOSQL_INT _ix_feature,
         const std::vector<descriptors::SameUnits> &_same_units,
-        TableHolder &_table_holder );
+        const decisiontrees::TableHolder &_table_holder );
 
     /// Calculates statistics for the individual features.
     void calculate_feature_stats(
@@ -170,7 +122,7 @@ class DecisionTreeEnsemble
     /// and throws an exception if it isn't
     void check_plausibility(
         const std::vector<containers::DataFrame> &_peripheral_tables,
-        const containers::DataFrame &_population_table );
+        const containers::DataFrameView &_population_table );
 
     /// Makes sure that the input provided by the user is plausible
     /// and throws an exception if it isn't. Only the fit(...) member
@@ -181,21 +133,11 @@ class DecisionTreeEnsemble
     /// Fits the linear regression and then recalculates the residuals.
     /// This is not needed when the shrinkage is 0.0.
     void fit_linear_regressions_and_recalculate_residuals(
-        TableHolder &_table_holder,
+        const decisiontrees::TableHolder &_table_holder,
         const AUTOSQL_FLOAT _shrinkage,
-        containers::Matrix<AUTOSQL_FLOAT> &_sample_weights,
-        containers::Matrix<AUTOSQL_FLOAT> &_yhat_old,
-        containers::Matrix<AUTOSQL_FLOAT> &_residuals );
-
-    /// Initializes the predictors for fitting or loading
-    void init_predictors(
-        const size_t &_num_predictors,
-        const Poco::JSON::Object &_predictor_hyperparameters );
-
-    /// Logs current events.
-    void log(
-        const std::shared_ptr<const logging::Logger> &_logger,
-        const std::string &_msg );
+        const std::vector<AUTOSQL_FLOAT> &_sample_weights,
+        const std::vector<std::vector<AUTOSQL_FLOAT>> &_yhat_old,
+        std::vector<std::vector<AUTOSQL_FLOAT>> *_residuals );
 
     /// Parses the linear regression from a Poco::JSON::Object
     void parse_linear_regressions( const Poco::JSON::Object &_json_obj );
@@ -207,8 +149,8 @@ class DecisionTreeEnsemble
     /// This member functions stores the number of columns
     /// so we can compare them later on.
     void set_num_columns(
-        std::vector<containers::DataFrame> &_peripheral_tables,
-        containers::DataFrame &_population_table );
+        const std::vector<containers::DataFrame> &_peripheral_tables,
+        const containers::DataFrameView &_population_table );
 
     // --------------------------------------
 
@@ -221,7 +163,7 @@ class DecisionTreeEnsemble
     }
 
     /// Trivial accessor
-    inline std::shared_ptr<containers::Encoding> &categories()
+    inline std::shared_ptr<std::vector<std::string>> &categories()
     {
         return impl().categories_;
     }
@@ -230,9 +172,9 @@ class DecisionTreeEnsemble
     inline bool has_been_fitted() const { return trees().size() > 0; }
 
     /// Trivial accessor
-    inline containers::Optional<descriptors::Hyperparameters> &hyperparameters()
+    inline descriptors::Hyperparameters &hyperparameters()
     {
-        return impl().hyperparameters_;
+        return *impl().hyperparameters_;
     }
 
     /// Trivial accessor
@@ -243,21 +185,21 @@ class DecisionTreeEnsemble
 
     /// Abstraction that returns the last tree that has actually been added to
     /// the ensemble
-    inline DecisionTree *last_tree()
+    inline decisiontrees::DecisionTree *last_tree()
     {
         assert( trees().size() > 0 );
         return &( trees().back() );
     }
 
     /// Abstraction that returns the last linear regression in the ensemble
-    inline LinearRegression *last_linear_regression()
+    inline utils::LinearRegression *last_linear_regression()
     {
         assert( linear_regressions().size() > 0 );
         return &( linear_regressions().back() );
     }
 
     /// Abstraction that returns the last linear regression in the ensemble
-    inline std::vector<LinearRegression> &linear_regressions()
+    inline std::vector<utils::LinearRegression> &linear_regressions()
     {
         return impl().linear_regressions_;
     }
@@ -312,35 +254,29 @@ class DecisionTreeEnsemble
     }
 
     /// Trivial accessor
-    inline std::vector<std::string> &placeholder_peripheral()
+    inline std::vector<std::string> &peripheral_names()
     {
         return impl().placeholder_peripheral_;
     }
 
     /// Trivial accessor
-    inline const std::vector<std::string> &placeholder_peripheral() const
+    inline const std::vector<std::string> &peripheral_names() const
     {
         return impl().placeholder_peripheral_;
     }
 
     /// Trivial accessor
-    inline containers::Optional<Placeholder> &placeholder_population()
-    {
-        return impl().placeholder_population_;
-    }
-
-    /// Trivial accessor
-    inline const containers::Optional<Placeholder> &placeholder_population()
-        const
+    inline decisiontrees::Placeholder &placeholder()
     {
         assert( impl().placeholder_population_ );
-        return impl().placeholder_population_;
+        return *impl().placeholder_population_;
     }
 
     /// Trivial accessor
-    inline std::vector<std::shared_ptr<predictors::Predictor>> &predictors()
+    inline const decisiontrees::Placeholder &placeholder() const
     {
-        return impl().predictors_;
+        assert( impl().placeholder_population_ );
+        return *impl().placeholder_population_;
     }
 
     /// Trivial accessor
@@ -350,13 +286,7 @@ class DecisionTreeEnsemble
     }
 
     /// Trivial accessor
-    inline descriptors::Scores &scores() { return impl().scores_; }
-
-    /// Trivial accessor
-    inline const descriptors::Scores &scores() const { return impl().scores_; }
-
-    /// Trivial accessor
-    inline DecisionTree *tree( const AUTOSQL_INT _i )
+    inline decisiontrees::DecisionTree *tree( const AUTOSQL_INT _i )
     {
         assert( trees().size() > 0 );
         assert( static_cast<AUTOSQL_INT>( trees().size() ) > _i );
@@ -374,10 +304,13 @@ class DecisionTreeEnsemble
     }
 
     /// Trivial accessor
-    inline std::vector<DecisionTree> &trees() { return impl().trees_; }
+    inline std::vector<decisiontrees::DecisionTree> &trees()
+    {
+        return impl().trees_;
+    }
 
     /// Trivial accessor
-    inline const std::vector<DecisionTree> &trees() const
+    inline const std::vector<decisiontrees::DecisionTree> &trees() const
     {
         return impl().trees_;
     }
@@ -393,7 +326,7 @@ class DecisionTreeEnsemble
 };
 
 // ----------------------------------------------------------------------------
-}  // namespace decisiontrees
+}  // namespace ensemble
 }  // namespace autosql
 
-#endif  // AUTOSQL_DECISIONTREES_DECISIONTREEENSEMBLE_HPP_
+#endif  // AUTOSQL_ENSEMBLE_DECISIONTREEENSEMBLE_HPP_

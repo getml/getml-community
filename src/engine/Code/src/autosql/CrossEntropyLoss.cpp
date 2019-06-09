@@ -1,4 +1,4 @@
-#include "lossfunctions/lossfunctions.hpp"
+#include "autosql/lossfunctions/lossfunctions.hpp"
 
 namespace autosql
 {
@@ -10,26 +10,26 @@ CrossEntropyLoss::CrossEntropyLoss() : LossFunction(){};
 
 // ----------------------------------------------------------------------------
 
-containers::Matrix<AUTOSQL_FLOAT> CrossEntropyLoss::calculate_residuals(
-    const containers::Matrix<AUTOSQL_FLOAT>& _yhat_old,
+std::vector<std::vector<AUTOSQL_FLOAT>> CrossEntropyLoss::calculate_residuals(
+    const std::vector<std::vector<AUTOSQL_FLOAT>>& _yhat_old,
     const containers::DataFrameView& _y )
 {
-    assert( _yhat_old.nrows() == _y.nrows() );
+    assert( _yhat_old.size() == _y.num_targets() );
 
-    assert( _yhat_old.ncols() == _y.df().targets().ncols() );
+    auto residuals = std::vector<std::vector<AUTOSQL_FLOAT>>(
+        _y.num_targets(), std::vector<AUTOSQL_FLOAT>( _y.nrows() ) );
 
-    containers::Matrix<AUTOSQL_FLOAT> residuals(
-        _y.nrows(), _y.df().targets().ncols() );
-
-    for ( AUTOSQL_INT i = 0; i < _y.nrows(); ++i )
+    for ( size_t j = 0; j < _y.num_targets(); ++j )
         {
-            for ( AUTOSQL_INT j = 0; j < _y.df().targets().ncols(); ++j )
-                {
-                    assert( _y.targets( i, j ) == _y.targets( i, j ) );
-                    assert( _yhat_old( i, j ) == _yhat_old( i, j ) );
+            assert( _yhat_old[j].size() == _y.nrows() );
 
-                    residuals( i, j ) = _y.targets( i, j ) -
-                                        logistic_function( _yhat_old( i, j ) );
+            for ( size_t i = 0; i < _y.nrows(); ++i )
+                {
+                    assert( !std::isnan( _y.target( i, j ) ) );
+                    assert( !std::isnan( _yhat_old[j][i] ) );
+
+                    residuals[j][i] = _y.target( i, j ) -
+                                      logistic_function( _yhat_old[j][i] );
                 }
         }
 
@@ -38,80 +38,54 @@ containers::Matrix<AUTOSQL_FLOAT> CrossEntropyLoss::calculate_residuals(
 
 // ----------------------------------------------------------------------------
 
-containers::Matrix<AUTOSQL_FLOAT> CrossEntropyLoss::calculate_update_rates(
-    const containers::Matrix<AUTOSQL_FLOAT>& _yhat_old,
-    const containers::Matrix<AUTOSQL_FLOAT>& _f_t,
+std::vector<AUTOSQL_FLOAT> CrossEntropyLoss::calculate_update_rates(
+    const std::vector<std::vector<AUTOSQL_FLOAT>>& _yhat_old,
+    const std::vector<std::vector<AUTOSQL_FLOAT>>& _predictions,
     const containers::DataFrameView& _y,
-    const containers::Matrix<AUTOSQL_FLOAT>& _sample_weights )
+    const std::vector<AUTOSQL_FLOAT>& _sample_weights )
 {
     // ---------------------------------------------------
 
-    assert( _yhat_old.nrows() == _y.nrows() );
-    assert( _f_t.nrows() == _y.nrows() );
-    assert( _sample_weights.nrows() == _y.nrows() );
-
-    assert( _yhat_old.ncols() == _y.df().targets().ncols() );
-    assert( _f_t.ncols() == _y.df().targets().ncols() );
-    assert( _sample_weights.ncols() == 1 );
+    assert( _yhat_old.size() == _predictions.size() );
+    assert( _yhat_old.size() == _y.num_targets() );
 
     // ---------------------------------------------------
     // Calculate g_times_f and h_times_f_squared
 
-    containers::Matrix<AUTOSQL_FLOAT> stats( 1, _y.df().targets().ncols() * 2 );
+    auto stats = std::vector<AUTOSQL_FLOAT>( _y.num_targets() * 2 );
 
-    AUTOSQL_FLOAT* g_times_f = stats.data();
+    AUTOSQL_FLOAT* g_times_p = stats.data();
 
-    AUTOSQL_FLOAT* h_times_f_squared = stats.data() + _y.df().targets().ncols();
+    AUTOSQL_FLOAT* h_times_p_squared = stats.data() + _y.num_targets();
 
-    for ( AUTOSQL_INT i = 0; i < _y.nrows(); ++i )
+    for ( size_t j = 0; j < _y.num_targets(); ++j )
         {
-            for ( AUTOSQL_INT j = 0; j < _y.df().targets().ncols(); ++j )
+            assert( _yhat_old[j].size() == _y.nrows() );
+            assert( _predictions[j].size() == _y.nrows() );
+
+            for ( size_t i = 0; i < _y.nrows(); ++i )
                 {
-                    const auto logistic =
-                        logistic_function( _yhat_old( i, j ) );
+                    const auto logistic = logistic_function( _yhat_old[j][i] );
 
-                    //  ( 1.0 / ( exp( -yhat ) + 1.0 ) - y ) * f_t
-                    g_times_f[j] +=
-                        ( logistic - _y.targets( i, j ) ) * _f_t( i, j );
+                    g_times_p[j] +=
+                        ( logistic - _y.target( i, j ) ) * _predictions[j][i];
 
-                    //  logistic * (1.0 - logistic) * f_t * f_t
-                    // The derivative of the logistic function =
-                    // logistic * (1.0 - logistic)
-                    h_times_f_squared[j] += logistic * ( 1.0 - logistic ) *
-                                            _f_t( i, j ) * _f_t( i, j );
+                    h_times_p_squared[j] += logistic * ( 1.0 - logistic ) *
+                                            _predictions[j][i] *
+                                            _predictions[j][i];
                 }
         }
 
-        // ---------------------------------------------------
-        // Get global sums, if necessary
-
-#ifdef AUTOSQL_PARALLEL
-
-    containers::Matrix<AUTOSQL_FLOAT> global_stats(
-        1, _y.df().targets().ncols() * 2 );
-
-    AUTOSQL_PARALLEL_LIB::all_reduce(
-        comm(),
-        stats.data(),
-        stats.ncols(),
-        global_stats.data(),
-        std::plus<AUTOSQL_FLOAT>() );
-
-    comm().barrier();
-
-    stats = global_stats;
-
-#endif  // AUTOSQL_PARALLEL
+    utils::Reducer::reduce( std::plus<AUTOSQL_FLOAT>(), &stats, comm_ );
 
     // ---------------------------------------------------
     // Calculate update_rates
 
-    containers::Matrix<AUTOSQL_FLOAT> update_rates(
-        1, _y.df().targets().ncols() );
+    std::vector<AUTOSQL_FLOAT> update_rates( _y.num_targets() );
 
-    for ( AUTOSQL_INT j = 0; j < _y.df().targets().ncols(); ++j )
+    for ( size_t j = 0; j < _y.num_targets(); ++j )
         {
-            update_rates[j] = ( -1.0 ) * g_times_f[j] / h_times_f_squared[j];
+            update_rates[j] = ( -1.0 ) * g_times_p[j] / h_times_p_squared[j];
         }
 
     // ---------------------------------------------------
@@ -126,6 +100,8 @@ containers::Matrix<AUTOSQL_FLOAT> CrossEntropyLoss::calculate_update_rates(
     // ---------------------------------------------------
 
     return update_rates;
+
+    // ---------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------

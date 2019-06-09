@@ -59,16 +59,9 @@ class IntermediateAggregation
         return parent().argsort( _begin, _end );
     }
 
-    /// Because we do not know the number of categories a priori,
-    /// we have to extend it, when necessary
-    void extend_storage_size( AUTOSQL_INT _storage_size_extension ) final
-    {
-        parent().extend_storage_size( _storage_size_extension );
-    }
-
     /// Calculates statistics that have to be calculated only once
     void init(
-        const containers::Matrix<AUTOSQL_FLOAT>& _y,
+        const std::vector<std::vector<AUTOSQL_FLOAT>>& _y,
         const std::vector<AUTOSQL_FLOAT>& _sample_weights ) final
     {
         assert(
@@ -88,13 +81,6 @@ class IntermediateAggregation
 
     /// An intermediate aggregation has no storage, so it
     /// is redelegated to the parent.
-    void set_storage_size( const AUTOSQL_INT _storage_size ) final
-    {
-        parent().set_storage_size( _storage_size );
-    }
-
-    /// An intermediate aggregation has no storage, so it
-    /// is redelegated to the parent.
     const AUTOSQL_INT storage_ix() const final { return parent().storage_ix(); }
 
     /// Stores the current stage
@@ -110,7 +96,7 @@ class IntermediateAggregation
     AUTOSQL_FLOAT value() final { return parent().value(); }
 
     /// Trivial getter
-    AUTOSQL_FLOAT values_stored( const AUTOSQL_INT _i ) final
+    AUTOSQL_FLOAT values_stored( const size_t _i ) final
     {
         return parent().values_stored( _i );
     }

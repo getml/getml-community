@@ -2457,8 +2457,6 @@ void Aggregation<AggType, data_used_, is_population_>::
 {
     debug_log( "init_optimization_criterion..." );
 
-    optimization_criterion()->set_storage_size( 1 );
-
     optimization_criterion()->init_yhat( yhat_inline(), updates_stored() );
 
     auto num_samples = static_cast<AUTOSQL_FLOAT>(

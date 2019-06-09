@@ -48,7 +48,7 @@ void LinearRegression::fit(
     mean_new_feature /= sum_sample_weights;
 
     // ----------------------------------------------------
-    // Calculate mean_new_feature
+    // Calculate mean_residuals
 
     auto mean_residuals = std::vector<AUTOSQL_FLOAT>( _residuals.size() );
 
@@ -109,16 +109,16 @@ void LinearRegression::fit(
     std::for_each(
         cov_new_feature.begin(),
         cov_new_feature.end(),
-        [sum_sample_weights]( AUTOSQL_FLOAT& m ) { m /= sum_sample_weights; } );
+        [sum_sample_weights]( AUTOSQL_FLOAT& c ) { c /= sum_sample_weights; } );
 
     // ------------------
     // Calculate slopes_
 
     slopes_ = std::vector<AUTOSQL_FLOAT>( _residuals.size() );
 
-    for ( size_t j = 0; j < _residuals.size(); ++j )
+    for ( size_t i = 0; i < _residuals.size(); ++i )
         {
-            slopes_[j] = cov_new_feature[j] / var_new_feature;
+            slopes_[i] = cov_new_feature[i] / var_new_feature;
         }
 
     // ---------------------
@@ -126,9 +126,9 @@ void LinearRegression::fit(
 
     intercepts_ = std::vector<AUTOSQL_FLOAT>( _residuals.size() );
 
-    for ( size_t j = 0; j < _residuals.size(); ++j )
+    for ( size_t i = 0; i < _residuals.size(); ++i )
         {
-            intercepts_[j] = mean_residuals[j] - slopes_[j] * mean_new_feature;
+            intercepts_[i] = mean_residuals[i] - slopes_[i] * mean_new_feature;
         }
 
     // ---------------------

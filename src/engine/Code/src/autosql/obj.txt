@@ -3,8 +3,10 @@ set(
     ${AUTOSQL_SOURCE_DIRECTORY}/AggregationIndex.cpp 
     ${AUTOSQL_SOURCE_DIRECTORY}/CandidateTreeBuilder.cpp 
     ${AUTOSQL_SOURCE_DIRECTORY}/CategoryIndex.cpp 
+    ${AUTOSQL_SOURCE_DIRECTORY}/CrossEntropyLoss.cpp 
     ${AUTOSQL_SOURCE_DIRECTORY}/DataFrame.cpp 
     ${AUTOSQL_SOURCE_DIRECTORY}/DecisionTree.cpp 
+    ${AUTOSQL_SOURCE_DIRECTORY}/DecisionTreeEnsemble.cpp 
     ${AUTOSQL_SOURCE_DIRECTORY}/DecisionTreeImpl.cpp 
     ${AUTOSQL_SOURCE_DIRECTORY}/DecisionTreeNode.cpp 
     ${AUTOSQL_SOURCE_DIRECTORY}/Hyperparameters.cpp 
@@ -16,6 +18,7 @@ set(
     ${AUTOSQL_SOURCE_DIRECTORY}/RSquaredCriterion.cpp 
     ${AUTOSQL_SOURCE_DIRECTORY}/SameUnitIdentifier.cpp 
     ${AUTOSQL_SOURCE_DIRECTORY}/SubtreeHelper.cpp 
+    ${AUTOSQL_SOURCE_DIRECTORY}/SquareLoss.cpp 
     ${AUTOSQL_SOURCE_DIRECTORY}/TableHolder.cpp 
     ${AUTOSQL_SOURCE_DIRECTORY}/TreeFitter.cpp 
 )

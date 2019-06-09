@@ -26,13 +26,9 @@ class OptimizationCriterion
     /// optimization criterion
     virtual void commit() = 0;
 
-    /// Because we do not know the number of categories a priori,
-    /// we have to extend it, when necessary
-    virtual void extend_storage_size( AUTOSQL_INT _storage_size_extension ) = 0;
-
     /// Calculates statistics that have to be calculated only once
     virtual void init(
-        const containers::Matrix<AUTOSQL_FLOAT>& _y,
+        const std::vector<std::vector<AUTOSQL_FLOAT>>& _y,
         const std::vector<AUTOSQL_FLOAT>& _sample_weights ) = 0;
 
     /// Some optimization criteria need this for numeric stability
@@ -53,12 +49,6 @@ class OptimizationCriterion
     /// Trivial setter
     virtual void set_comm( multithreading::Communicator* _comm ) = 0;
 
-    /// Resizes the sufficient_statistics_stored_ and values_stored_.
-    /// The size is inferred from the number of columns in
-    /// sufficient_statistics_committed_.
-    /// Also resets storage_ix_ to zero.
-    virtual void set_storage_size( const AUTOSQL_INT _storage_size ) = 0;
-
     /// An intermediate aggregation has no storage, so it
     /// is redelegated to the parent.
     virtual const AUTOSQL_INT storage_ix() const = 0;
@@ -78,7 +68,7 @@ class OptimizationCriterion
     virtual AUTOSQL_FLOAT value() = 0;
 
     /// Trivial getter
-    virtual AUTOSQL_FLOAT values_stored( const AUTOSQL_INT _i ) = 0;
+    virtual AUTOSQL_FLOAT values_stored( const size_t _i ) = 0;
 };
 
 // ----------------------------------------------------------------------------

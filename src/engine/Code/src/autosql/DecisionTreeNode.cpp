@@ -442,8 +442,6 @@ void DecisionTreeNode::fit(
     // the split used in the end is ix_max.
     debug_log( "fit: Setting storage size..." );
 
-    optimization_criterion()->set_storage_size( 1 );
-
     // ------------------------------------------------------------------------
     // Try imposing different conditions and measure the performance.
 
@@ -1810,11 +1808,6 @@ void DecisionTreeNode::try_categorical_values(
         }
 
     // -----------------------------------------------------------------------
-    // Extend the storage size.
-
-    optimization_criterion()->extend_storage_size( num_categories * 2 );
-
-    // -----------------------------------------------------------------------
     // Try individual categories.
     //
     // It is possible that std::distance( _sample_container_begin,
@@ -1986,11 +1979,6 @@ void DecisionTreeNode::try_categorical_values(
                 _data_used                         // _data_used
                 ) );
         }
-
-    // -----------------------------------------------------------------------
-    // Extend the storage size.
-
-    optimization_criterion()->extend_storage_size( categories->size() * 2 );
 
     // -----------------------------------------------------------------------
     // Try combined categories.
@@ -2201,14 +2189,6 @@ void DecisionTreeNode::try_non_categorical_values(
     // -----------------------------------------------------------------------
 
     debug_log( "try_non_categorical_values..." );
-
-    // -----------------------------------------------------------------------
-    // Extend the storage size
-
-    debug_log( "try_non_categorical_values: Extend storage." );
-
-    optimization_criterion()->extend_storage_size(
-        _critical_values.size() * 2 );
 
     // -----------------------------------------------------------------------
     // Add new splits to the candidate splits
