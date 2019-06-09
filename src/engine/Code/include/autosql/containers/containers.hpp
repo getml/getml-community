@@ -29,7 +29,6 @@
 
 #include "autosql/containers/CategoryIndex.hpp"
 #include "autosql/containers/IntSet.hpp"
-#include "autosql/containers/Matrix.hpp"
 #include "autosql/containers/Optional.hpp"
 
 #include "autosql/containers/Column.hpp"

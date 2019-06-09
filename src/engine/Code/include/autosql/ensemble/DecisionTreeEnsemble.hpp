@@ -52,18 +52,6 @@ class DecisionTreeEnsemble
     /// Saves the Model in JSON format, if applicable
     void save( const std::string &_path );
 
-    /// Calculates scores.
-    Poco::JSON::Object score(
-        const containers::Matrix<AUTOSQL_FLOAT> &_yhat,
-        const containers::Matrix<AUTOSQL_FLOAT> &_y );
-
-    /// Selects features based on the feature importances of
-    /// the built-in predictor. The remaining features are sorted
-    /// by importance.
-    std::string select_features(
-        containers::Matrix<AUTOSQL_FLOAT> _features,
-        containers::Matrix<AUTOSQL_FLOAT> _targets );
-
     /// Extracts the ensemble as a Poco::JSON object
     Poco::JSON::Object to_json_obj();
 
@@ -108,11 +96,6 @@ class DecisionTreeEnsemble
         const AUTOSQL_INT _ix_feature,
         const std::vector<descriptors::SameUnits> &_same_units,
         const decisiontrees::TableHolder &_table_holder );
-
-    /// Calculates statistics for the individual features.
-    void calculate_feature_stats(
-        const containers::Matrix<AUTOSQL_FLOAT> &_predictions,
-        const containers::DataFrameView &_targets );
 
     /// Calculates the sampling rate based on the number of rows
     /// in the population table and the sampling_factor
