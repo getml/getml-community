@@ -37,10 +37,15 @@ class DecisionTreeEnsemble
     /// Calculates feature importances
     void feature_importances();
 
-    /// Fits the decision tree ensemble
-    std::string fit(
-        const containers::DataFrameView &_population,
+    /// Fits the decision tree ensemble - spawns the threads.
+    void fit(
+        const containers::DataFrame &_population,
         const std::vector<containers::DataFrame> &_peripheral,
+        const std::shared_ptr<const logging::AbstractLogger> _logger );
+
+    /// Fits the decision tree ensemble - called by the spawned threads.
+    void fit(
+        const std::shared_ptr<const decisiontrees::TableHolder> &_table_holder,
         const std::shared_ptr<const logging::AbstractLogger> _logger );
 
     /// Builds the decision tree ensemble from a Poco::JSON::Object

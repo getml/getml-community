@@ -18,8 +18,10 @@ class Threadutils
         const std::vector<size_t> _thread_nums,
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral,
+        const decisiontrees::Placeholder& _placeholder,
+        const std::vector<std::string>& _peripheral_names,
         const std::shared_ptr<const logging::AbstractLogger> _logger,
-        DecisionTreeEnsemble* _ensemble );
+        ensemble::DecisionTreeEnsemble* _ensemble );
 
     /// Number of threads.
     static AUTOSQL_INT get_num_threads( const AUTOSQL_INT _num_threads );

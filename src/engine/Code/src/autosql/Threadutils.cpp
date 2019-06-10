@@ -22,48 +22,46 @@ void Threadutils::copy(
 }
 
 // ----------------------------------------------------------------------------
-/*
+
 void Threadutils::fit_ensemble(
     const size_t _this_thread_num,
     const std::vector<size_t> _thread_nums,
     const containers::DataFrame& _population,
     const std::vector<containers::DataFrame>& _peripheral,
+    const decisiontrees::Placeholder& _placeholder,
+    const std::vector<std::string>& _peripheral_names,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
     ensemble::DecisionTreeEnsemble* _ensemble )
 {
     try
         {
-            const auto population_subview =
-                autosql::utils::DataFrameScatterer::scatter_data_frame(
+            // ----------------------------------------------------------------
+            // Build the subview on the population table
+
+            const auto population_subview = utils::DataFrameScatterer::
+                DataFrameScatterer::scatter_data_frame(
                     _population, _thread_nums, _this_thread_num );
 
-            _ensemble->init( population_subview, _peripheral );
+            // ----------------------------------------------------------------
+            // Create abstractions over the peripheral_tables and the population
+            // table - for convenience.
 
-            const auto num_features =
-                _ensemble->hyperparameters().num_features_;
+            const auto table_holder = decisiontrees::TableHolder(
+                _placeholder,
+                population_subview,
+                _peripheral,
+                _peripheral_names );
 
-            const auto silent = _ensemble->hyperparameters().silent_;
-
-            for ( size_t i = 0; i < num_features; ++i )
-                {
-                    _ensemble->fit_new_feature();
-
-                    if ( !silent && _logger )
-                        {
-                            _logger->log(
-                                "Trained FEATURE_" + std::to_string( i + 1 ) +
-                                "." );
-                        }
-                }
-
-            _ensemble->clean_up();
+            // ----------------------------------------------------------------
         }
     catch ( std::exception& e )
         {
-            // std::cout << "Error in non-main thread: " << e.what() <<
-            // std::endl;
+            if ( _logger )
+                {
+                    throw std::runtime_error( e.what() );
+                }
         }
-}*/
+}
 
 // ----------------------------------------------------------------------------
 

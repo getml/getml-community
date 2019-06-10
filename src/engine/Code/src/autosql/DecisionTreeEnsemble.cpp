@@ -250,9 +250,95 @@ void DecisionTreeEnsemble::check_plausibility_of_targets(
 
 // ----------------------------------------------------------------------------
 
-std::string DecisionTreeEnsemble::fit(
-    const containers::DataFrameView &_population,
+void DecisionTreeEnsemble::fit(
+    const containers::DataFrame &_population,
     const std::vector<containers::DataFrame> &_peripheral,
+    const std::shared_ptr<const logging::AbstractLogger> _logger )
+{
+    // ------------------------------------------------------
+
+    const auto num_threads =
+        Threadutils::get_num_threads( hyperparameters().num_threads_ );
+
+    multithreading::Communicator comm( num_threads );
+
+    set_comm( &comm );
+
+    // ------------------------------------------------------
+    // Build thread_nums
+
+    const auto thread_nums = utils::DataFrameScatterer::build_thread_nums(
+        _population.join_keys(), num_threads );
+
+    // ------------------------------------------------------
+    // Create deep copies of this ensemble.
+
+    std::vector<ensemble::DecisionTreeEnsemble> ensembles;
+
+    for ( size_t i = 0; i < num_threads - 1; ++i )
+        {
+            ensembles.push_back( *this );
+        }
+
+    // ------------------------------------------------------
+    // Spawn threads.
+
+    std::vector<std::thread> threads;
+
+    for ( size_t i = 0; i < num_threads - 1; ++i )
+        {
+            threads.push_back( std::thread(
+                Threadutils::fit_ensemble,
+                i + 1,
+                thread_nums,
+                _population,
+                _peripheral,
+                placeholder(),
+                peripheral_names(),
+                std::shared_ptr<const logging::AbstractLogger>(),
+                &ensembles[i] ) );
+        }
+
+    // ------------------------------------------------------
+    // Train ensemble in main thread.
+
+    try
+        {
+            Threadutils::fit_ensemble(
+                0,
+                thread_nums,
+                _population,
+                _peripheral,
+                placeholder(),
+                peripheral_names(),
+                _logger,
+                this );
+        }
+    catch ( std::exception &e )
+        {
+            for ( auto &thr : threads )
+                {
+                    thr.join();
+                }
+
+            throw std::runtime_error( e.what() );
+        }
+
+    // ------------------------------------------------------
+    // Join all other threads
+
+    for ( auto &thr : threads )
+        {
+            thr.join();
+        }
+
+    // ------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+void DecisionTreeEnsemble::fit(
+    const std::shared_ptr<const decisiontrees::TableHolder> &_table_holder,
     const std::shared_ptr<const logging::AbstractLogger> _logger )
 {
     // ----------------------------------------------------------------
@@ -261,15 +347,9 @@ std::string DecisionTreeEnsemble::fit(
 
     // ----------------------------------------------------------------
 
-    calculate_sampling_rate( _population.nrows() );
+    assert( _table_holder->main_tables_.size() > 0 );
 
-    // ----------------------------------------------------------------
-    // Create abstractions over the peripheral_tables and the population
-    // table - for convenience
-
-    const auto table_holder =
-        std::make_shared<const decisiontrees::TableHolder>(
-            placeholder(), _population, _peripheral, peripheral_names() );
+    calculate_sampling_rate( _table_holder->main_tables_[0].nrows() );
 
     // ----------------------------------------------------------------
     // Store the column numbers, so we can make sure that the user
@@ -279,11 +359,11 @@ std::string DecisionTreeEnsemble::fit(
         {
             debug_log( "fit: Storing column numbers..." );
 
-            assert( table_holder->main_tables_.size() > 0 );
+            assert( _table_holder->main_tables_.size() > 0 );
 
             set_num_columns(
-                table_holder->peripheral_tables_,
-                table_holder->main_tables_[0] );
+                _table_holder->peripheral_tables_,
+                _table_holder->main_tables_[0] );
         }
 
     // ----------------------------------------------------------------
@@ -291,26 +371,26 @@ std::string DecisionTreeEnsemble::fit(
 
     debug_log( "fit: Checking plausibility of input..." );
 
-    assert( table_holder->main_tables_.size() > 0 );
+    assert( _table_holder->main_tables_.size() > 0 );
 
     check_plausibility(
-        table_holder->peripheral_tables_, table_holder->main_tables_[0] );
+        _table_holder->peripheral_tables_, _table_holder->main_tables_[0] );
 
-    check_plausibility_of_targets( table_holder->main_tables_[0] );
+    check_plausibility_of_targets( _table_holder->main_tables_[0] );
 
     // ----------------------------------------------------------------
     // Store names of the targets
 
-    // targets() = table_holder->main_tables_[0].targets().colnames();
+    // targets() = _table_holder->main_tables_[0].targets().colnames();
 
     // ----------------------------------------------------------------
     // aggregations::AggregationImpl stores most of the data for the
     // aggregations. We do not want to reallocate the data all the time.
 
-    assert( table_holder->main_tables_.size() > 0 );
+    assert( _table_holder->main_tables_.size() > 0 );
 
     aggregation_impl().reset( new aggregations::AggregationImpl(
-        table_holder->main_tables_[0].nrows() ) );
+        _table_holder->main_tables_[0].nrows() ) );
 
     if ( has_been_fitted() )
         {
@@ -326,13 +406,14 @@ std::string DecisionTreeEnsemble::fit(
 
     debug_log( "fit: Identifying same units..." );
 
-    assert( table_holder->main_tables_.size() > 0 );
+    assert( _table_holder->main_tables_.size() > 0 );
     assert(
-        table_holder->main_tables_.size() ==
-        table_holder->peripheral_tables_.size() );
+        _table_holder->main_tables_.size() ==
+        _table_holder->peripheral_tables_.size() );
 
     auto same_units = SameUnitIdentifier::identify_same_units(
-        table_holder->peripheral_tables_, table_holder->main_tables_[0].df() );
+        _table_holder->peripheral_tables_,
+        _table_holder->main_tables_[0].df() );
 
     // ----------------------------------------------------------------
     // Initialize the other objects we need
@@ -354,10 +435,10 @@ std::string DecisionTreeEnsemble::fit(
             throw std::invalid_argument( "Seed must be positive!" );
         }
 
-    assert( table_holder->main_tables_.size() > 0 );
+    assert( _table_holder->main_tables_.size() > 0 );
 
     const auto sample_weights = std::make_shared<std::vector<AUTOSQL_FLOAT>>(
-        table_holder->main_tables_[0].nrows() );
+        _table_holder->main_tables_[0].nrows() );
 
     if ( !random_number_generator() )
         {
@@ -375,11 +456,11 @@ std::string DecisionTreeEnsemble::fit(
     // yhat_old at 0.0. If this has already been fitted, we obviously
     // use the previous features.
 
-    assert( table_holder->main_tables_.size() > 0 );
+    assert( _table_holder->main_tables_.size() > 0 );
 
     auto yhat_old = std::vector<std::vector<AUTOSQL_FLOAT>>(
-        table_holder->main_tables_[0].num_targets(),
-        std::vector<AUTOSQL_FLOAT>( table_holder->main_tables_[0].nrows() ) );
+        _table_holder->main_tables_[0].num_targets(),
+        std::vector<AUTOSQL_FLOAT>( _table_holder->main_tables_[0].nrows() ) );
 
     /*if ( has_been_fitted() )
         {
@@ -392,10 +473,10 @@ std::string DecisionTreeEnsemble::fit(
     // Calculate the pseudo-residuals - on which the tree will be
     // predicted
 
-    assert( table_holder->main_tables_.size() > 0 );
+    assert( _table_holder->main_tables_.size() > 0 );
 
     auto residuals = loss_function()->calculate_residuals(
-        yhat_old, table_holder->main_tables_[0] );
+        yhat_old, _table_holder->main_tables_[0] );
 
     // ----------------------------------------------------------------
     // Sample containers are pointers to simple structs, which represent a match
@@ -403,9 +484,9 @@ std::string DecisionTreeEnsemble::fit(
 
     debug_log( "fit: Creating samples..." );
 
-    const auto num_peripheral = table_holder->peripheral_tables_.size();
+    const auto num_peripheral = _table_holder->peripheral_tables_.size();
 
-    assert( table_holder->main_tables_.size() == num_peripheral );
+    assert( _table_holder->main_tables_.size() == num_peripheral );
 
     std::vector<AUTOSQL_SAMPLES> samples( num_peripheral );
 
@@ -416,8 +497,8 @@ std::string DecisionTreeEnsemble::fit(
             for ( size_t i = 0; i < num_peripheral; ++i )
                 {
                     samples.push_back( utils::Matchmaker::make_matches(
-                        table_holder->main_tables_[i],
-                        table_holder->peripheral_tables_[i],
+                        _table_holder->main_tables_[i],
+                        _table_holder->peripheral_tables_[i],
                         sample_weights,
                         hyperparameters().use_timestamps_ ) );
 
@@ -442,8 +523,8 @@ std::string DecisionTreeEnsemble::fit(
                     for ( size_t i = 0; i < num_peripheral; ++i )
                         {
                             samples.push_back( utils::Matchmaker::make_matches(
-                                table_holder->main_tables_[i],
-                                table_holder->peripheral_tables_[i],
+                                _table_holder->main_tables_[i],
+                                _table_holder->peripheral_tables_[i],
                                 sample_weights,
                                 hyperparameters().use_timestamps_ ) );
 
@@ -469,7 +550,7 @@ std::string DecisionTreeEnsemble::fit(
             debug_log( "fit: Building candidates..." );
 
             auto candidate_trees =
-                build_candidates( ix_feature, same_units, *table_holder );
+                build_candidates( ix_feature, same_units, *_table_holder );
 
             // ----------------------------------------------------------------
             // Fit the trees
@@ -483,7 +564,7 @@ std::string DecisionTreeEnsemble::fit(
                 comm() );
 
             tree_fitter.fit(
-                *table_holder,
+                *_table_holder,
                 &samples,
                 &sample_containers,
                 &opt,
@@ -501,7 +582,7 @@ std::string DecisionTreeEnsemble::fit(
             if ( hyperparameters().shrinkage_ != 0.0 )
                 {
                     fit_linear_regressions_and_recalculate_residuals(
-                        *table_holder,
+                        *_table_holder,
                         hyperparameters().shrinkage_,
                         *sample_weights,
                         &yhat_old,
@@ -509,11 +590,22 @@ std::string DecisionTreeEnsemble::fit(
                 }
             else
                 {
-                    assert( table_holder->main_tables_.size() > 0 );
+                    assert( _table_holder->main_tables_.size() > 0 );
 
                     linear_regressions().push_back( utils::LinearRegression(
-                        table_holder->main_tables_[0].num_targets() ) );
+                        _table_holder->main_tables_[0].num_targets() ) );
                 }
+
+            // -------------------------------------------------------------
+
+            if ( _logger )
+                {
+                    _logger->log(
+                        "Trained FEATURE_" + std::to_string( ix_feature + 1 ) +
+                        "." );
+                }
+
+            // -------------------------------------------------------------
         }
 
     // ----------------------------------------------------------------
@@ -526,11 +618,7 @@ std::string DecisionTreeEnsemble::fit(
 
     debug_log( "fit: Done..." );
 
-    std::stringstream msg;
-
-    msg << std::endl << "Trained " << trees().size() << " features.";
-
-    return msg.str();
+    // ----------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -1242,7 +1330,7 @@ std::shared_ptr<std::vector<AUTOSQL_FLOAT>> DecisionTreeEnsemble::transform(
                     thr.join();
                 }
 
-            throw std::invalid_argument( e.what() );
+            throw std::runtime_error( e.what() );
         }
 
     // ------------------------------------------------------
