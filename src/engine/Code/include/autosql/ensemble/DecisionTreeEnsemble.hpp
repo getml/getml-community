@@ -28,6 +28,12 @@ class DecisionTreeEnsemble
 
     // --------------------------------------
 
+    /// Makes sure that the input provided by the user is plausible
+    /// and throws an exception if it isn't
+    void check_plausibility(
+        const std::vector<containers::DataFrame> &_peripheral_tables,
+        const containers::DataFrameView &_population_table );
+
     /// Calculates feature importances
     void feature_importances();
 
@@ -64,19 +70,46 @@ class DecisionTreeEnsemble
 
     /// Transforms a set of raw data into extracted features
     std::shared_ptr<std::vector<AUTOSQL_FLOAT>> transform(
-        const containers::DataFrameView &_population,
+        const containers::DataFrame &_population,
         const std::vector<containers::DataFrame> &_peripheral,
-        const std::shared_ptr<const logging::AbstractLogger> _logger );
+        const std::shared_ptr<const logging::AbstractLogger> _logger =
+            std::shared_ptr<const logging::AbstractLogger>() ) const;
+
+    /// Transforms a specific feature.
+    std::vector<AUTOSQL_FLOAT> transform(
+        const decisiontrees::TableHolder &_table_holder,
+        const size_t _num_feature,
+        const std::shared_ptr<const logging::AbstractLogger> _logger,
+        containers::Optional<aggregations::AggregationImpl> *_impl ) const;
 
     // --------------------------------------
 
     /// Trivial getter
     inline multithreading::Communicator *comm() { return impl().comm_; }
 
+    /// Whether the ensemble has been fitted
+    inline bool has_been_fitted() const { return trees().size() > 0; }
+
     /// Trivial accessor
     const descriptors::Hyperparameters &hyperparameters() const
     {
         return *impl().hyperparameters_;
+    }
+
+    /// Trivial accessor
+    const size_t num_features() const { return trees().size(); }
+
+    /// Trivial accessor
+    inline const std::vector<std::string> &peripheral_names() const
+    {
+        return impl().placeholder_peripheral_;
+    }
+
+    /// Trivial accessor
+    inline const decisiontrees::Placeholder &placeholder() const
+    {
+        assert( impl().placeholder_population_ );
+        return *impl().placeholder_population_;
     }
 
     /// Trivial setter
@@ -87,6 +120,12 @@ class DecisionTreeEnsemble
 
     /// Extracts the ensemble as a JSON
     inline std::string to_json() { return JSON::stringify( to_json_obj() ); }
+
+    /// Trivial accessor
+    inline const std::vector<decisiontrees::DecisionTree> &trees() const
+    {
+        return impl().trees_;
+    }
 
     // --------------------------------------
 
@@ -100,12 +139,6 @@ class DecisionTreeEnsemble
     /// Calculates the sampling rate based on the number of rows
     /// in the population table and the sampling_factor
     void calculate_sampling_rate( const AUTOSQL_INT _population_nrows );
-
-    /// Makes sure that the input provided by the user is plausible
-    /// and throws an exception if it isn't
-    void check_plausibility(
-        const std::vector<containers::DataFrame> &_peripheral_tables,
-        const containers::DataFrameView &_population_table );
 
     /// Makes sure that the input provided by the user is plausible
     /// and throws an exception if it isn't. Only the fit(...) member
@@ -150,9 +183,6 @@ class DecisionTreeEnsemble
     {
         return impl().categories_;
     }
-
-    /// Whether the ensemble has been fitted
-    inline bool has_been_fitted() const { return trees().size() > 0; }
 
     /// Trivial accessor
     inline descriptors::Hyperparameters &hyperparameters()
@@ -243,20 +273,7 @@ class DecisionTreeEnsemble
     }
 
     /// Trivial accessor
-    inline const std::vector<std::string> &peripheral_names() const
-    {
-        return impl().placeholder_peripheral_;
-    }
-
-    /// Trivial accessor
     inline decisiontrees::Placeholder &placeholder()
-    {
-        assert( impl().placeholder_population_ );
-        return *impl().placeholder_population_;
-    }
-
-    /// Trivial accessor
-    inline const decisiontrees::Placeholder &placeholder() const
     {
         assert( impl().placeholder_population_ );
         return *impl().placeholder_population_;
@@ -288,12 +305,6 @@ class DecisionTreeEnsemble
 
     /// Trivial accessor
     inline std::vector<decisiontrees::DecisionTree> &trees()
-    {
-        return impl().trees_;
-    }
-
-    /// Trivial accessor
-    inline const std::vector<decisiontrees::DecisionTree> &trees() const
     {
         return impl().trees_;
     }

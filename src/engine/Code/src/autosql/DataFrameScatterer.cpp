@@ -1,18 +1,18 @@
-#include "engine/engine.hpp"
+#include "autosql/utils/utils.hpp"
 
 namespace autosql
 {
-namespace engine
+namespace utils
 {
 // ----------------------------------------------------------------------------
 
-const std::vector<AUTOSQL_INT> DataFrameScatterer::build_thread_nums(
-    const std::map<AUTOSQL_INT, AUTOSQL_INT>& _min_keys_map,
-    const containers::Matrix<AUTOSQL_INT>& _min_join_key )
+const std::vector<size_t> DataFrameScatterer::build_thread_nums(
+    const std::map<AUTOSQL_INT, size_t>& _min_keys_map,
+    const containers::Column<AUTOSQL_INT>& _min_join_key )
 {
-    std::vector<AUTOSQL_INT> thread_nums( _min_join_key.nrows() );
+    std::vector<size_t> thread_nums( _min_join_key.nrows_ );
 
-    for ( AUTOSQL_INT i = 0; i < _min_join_key.nrows(); ++i )
+    for ( size_t i = 0; i < _min_join_key.nrows_; ++i )
         {
             auto it = _min_keys_map.find( _min_join_key[i] );
 
@@ -26,17 +26,17 @@ const std::vector<AUTOSQL_INT> DataFrameScatterer::build_thread_nums(
 
 // ----------------------------------------------------------------------------
 
-const std::vector<AUTOSQL_INT> DataFrameScatterer::build_thread_nums(
-    const std::vector<containers::Matrix<AUTOSQL_INT> >& _keys,
-    const AUTOSQL_INT _num_threads )
+const std::vector<size_t> DataFrameScatterer::build_thread_nums(
+    const std::vector<containers::Column<AUTOSQL_INT>>& _keys,
+    const size_t _num_threads )
 {
     check_plausibility( _keys, _num_threads );
 
-    AUTOSQL_INT ix_min_keys;
+    size_t ix_min_keys = 0;
 
-    std::map<AUTOSQL_INT, AUTOSQL_INT> min_keys_map;
+    std::map<AUTOSQL_INT, size_t> min_keys_map;
 
-    scatter_keys( _keys, _num_threads, ix_min_keys, min_keys_map );
+    scatter_keys( _keys, _num_threads, &ix_min_keys, &min_keys_map );
 
     return build_thread_nums( min_keys_map, _keys[ix_min_keys] );
 }
@@ -44,17 +44,18 @@ const std::vector<AUTOSQL_INT> DataFrameScatterer::build_thread_nums(
 // ----------------------------------------------------------------------------
 
 void DataFrameScatterer::check_plausibility(
-    const std::vector<containers::Matrix<AUTOSQL_INT> >& _keys,
-    const AUTOSQL_INT _num_threads )
+    const std::vector<containers::Column<AUTOSQL_INT>>& _keys,
+    const size_t _num_threads )
 {
     if ( _keys.size() == 0 )
         {
-            throw std::invalid_argument( "You must provide at least one key!" );
+            throw std::invalid_argument(
+                "You must provide at least one join key!" );
         }
 
     for ( auto& key : _keys )
         {
-            if ( key.nrows() != _keys[0].nrows() )
+            if ( key.nrows_ != _keys[0].nrows_ )
                 {
                     throw std::invalid_argument(
                         "All keys must have the same number of rows!" );
@@ -72,18 +73,18 @@ void DataFrameScatterer::check_plausibility(
 
 containers::DataFrameView DataFrameScatterer::scatter_data_frame(
     const containers::DataFrame& _df,
-    const std::vector<AUTOSQL_INT>& _thread_nums,
-    const AUTOSQL_INT _thread_num )
+    const std::vector<size_t>& _thread_nums,
+    const size_t _thread_num )
 {
-    assert( static_cast<size_t>( _df.nrows() ) == _thread_nums.size() );
+    assert( _df.nrows() == _thread_nums.size() );
 
-    std::vector<AUTOSQL_INT> indices;
+    auto indices = std::make_shared<std::vector<size_t>>( 0 );
 
-    for ( AUTOSQL_INT i = 0; i < _df.nrows(); ++i )
+    for ( size_t i = 0; i < _thread_nums.size(); ++i )
         {
             if ( _thread_nums[i] == _thread_num )
                 {
-                    indices.push_back( i );
+                    indices->push_back( i );
                 }
         }
 
@@ -93,16 +94,15 @@ containers::DataFrameView DataFrameScatterer::scatter_data_frame(
 // ----------------------------------------------------------------------------
 
 void DataFrameScatterer::scatter_keys(
-    const std::vector<containers::Matrix<AUTOSQL_INT> >& _keys,
-    const AUTOSQL_INT _num_threads,
-    AUTOSQL_INT& _ix_min_keys_map,
-    std::map<AUTOSQL_INT, AUTOSQL_INT>& _min_keys_map )
+    const std::vector<containers::Column<AUTOSQL_INT>>& _keys,
+    const size_t _num_threads,
+    size_t* _ix_min_keys_map,
+    std::map<AUTOSQL_INT, size_t>* _min_keys_map )
 {
     // ---------------------------------------------------------------------------
-    // Map a process id for each individual key
+    // Map a thread id for each individual key.
 
-    std::vector<std::map<AUTOSQL_INT, AUTOSQL_INT> > keys_maps_temp(
-        _keys.size() );
+    std::vector<std::map<AUTOSQL_INT, size_t>> keys_maps_temp( _keys.size() );
 
     for ( size_t ix_key = 0; ix_key < _keys.size(); ++ix_key )
         {
@@ -110,46 +110,43 @@ void DataFrameScatterer::scatter_keys(
 
             auto& key_map = keys_maps_temp[ix_key];
 
-            for ( AUTOSQL_INT i = 0; i < key.nrows(); ++i )
+            for ( auto k : key )
                 {
-                    auto it = key_map.find( key[i] );
+                    auto it = key_map.find( k );
 
                     if ( it == key_map.end() )
                         {
-                            AUTOSQL_INT rank =
-                                static_cast<AUTOSQL_INT>( key_map.size() ) %
-                                _num_threads;
+                            auto rank = key_map.size() % _num_threads;
 
-                            key_map[key[i]] = rank;
+                            key_map[k] = rank;
                         }
                 }
         }
 
     // ---------------------------------------------------------------------------
     // Identify the map in keys_maps_temp with the least amount of entries
-    // The idea is that most of the time, keys are hierarchical: A customer_id
-    // can be associated
-    // with several transaction_ids, but any transaction_id can only be
-    // associated with one customer_id
+    // The idea is that more often than not, keys are hierarchical: A
+    // customer_id can be associatedwith several transaction_ids, but any
+    // transaction_id can only be associated with one customer_id
 
-    _ix_min_keys_map = 0;
+    *_ix_min_keys_map = 0;
 
     for ( size_t i = 0; i < keys_maps_temp.size(); ++i )
         {
             if ( keys_maps_temp[i].size() <
-                 keys_maps_temp[_ix_min_keys_map].size() )
+                 keys_maps_temp[*_ix_min_keys_map].size() )
                 {
-                    _ix_min_keys_map = static_cast<AUTOSQL_INT>( i );
+                    *_ix_min_keys_map = i;
                 }
         }
 
     // ---------------------------------------------------------------------------
 
-    _min_keys_map = keys_maps_temp[_ix_min_keys_map];
+    *_min_keys_map = keys_maps_temp[*_ix_min_keys_map];
 
     // ---------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
-}
-}
+}  // namespace utils
+}  // namespace autosql

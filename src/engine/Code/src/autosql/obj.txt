@@ -6,6 +6,7 @@ set(
     ${AUTOSQL_SOURCE_DIRECTORY}/CategoryIndex.cpp 
     ${AUTOSQL_SOURCE_DIRECTORY}/CrossEntropyLoss.cpp 
     ${AUTOSQL_SOURCE_DIRECTORY}/DataFrame.cpp 
+    ${AUTOSQL_SOURCE_DIRECTORY}/DataFrameScatterer.cpp 
     ${AUTOSQL_SOURCE_DIRECTORY}/DecisionTree.cpp 
     ${AUTOSQL_SOURCE_DIRECTORY}/DecisionTreeEnsemble.cpp 
     ${AUTOSQL_SOURCE_DIRECTORY}/DecisionTreeImpl.cpp 
@@ -21,6 +22,7 @@ set(
     ${AUTOSQL_SOURCE_DIRECTORY}/SubtreeHelper.cpp 
     ${AUTOSQL_SOURCE_DIRECTORY}/SquareLoss.cpp 
     ${AUTOSQL_SOURCE_DIRECTORY}/TableHolder.cpp 
+    ${AUTOSQL_SOURCE_DIRECTORY}/Threadutils.cpp 
     ${AUTOSQL_SOURCE_DIRECTORY}/TreeFitter.cpp 
 )
 

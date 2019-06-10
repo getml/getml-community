@@ -21,6 +21,8 @@
 
 #include "autosql/ensemble/DecisionTreeEnsemble.hpp"
 
+#include "autosql/ensemble/Threadutils.hpp"
+
 // ----------------------------------------------------
 
 #endif  // AUTOSQL_ENSEMBLE_ENSEMBLE_HPP_

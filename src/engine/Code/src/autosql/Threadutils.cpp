@@ -1,112 +1,69 @@
-#include "engine/engine.hpp"
-
-#ifdef AUTOSQL_MULTITHREADING
+#include "autosql/ensemble/ensemble.hpp"
 
 namespace autosql
 {
-namespace engine
-{
-namespace multithreading
+namespace ensemble
 {
 // ----------------------------------------------------------------------------
 
-void Threadutils::calculate_displs(
-    const AUTOSQL_INT _nrows, std::vector<AUTOSQL_INT>& _displs )
+void Threadutils::copy(
+    const std::vector<size_t> _rows,
+    const size_t _col,
+    const size_t _num_features,
+    const std::vector<AUTOSQL_FLOAT>& _new_feature,
+    std::vector<AUTOSQL_FLOAT>* _features )
 {
-    AUTOSQL_INT num_threads = static_cast<AUTOSQL_INT>( _displs.size() - 1 );
-
-    _displs[0] = 0;
-
-    for ( size_t i = 0; i < _displs.size() - 1; ++i )
+    for ( size_t i = 0; i < _rows.size(); ++i )
         {
-            _displs[i + 1] = _displs[i] + _nrows / num_threads;
-        }
+            assert( _rows[i] * _num_features + _col < _features->size() );
 
-    _displs.back() = _nrows;
+            ( *_features )[_rows[i] * _num_features + _col] = _new_feature[i];
+        }
 }
 
 // ----------------------------------------------------------------------------
-
-std::string Threadutils::fit(
-    AUTOSQL_INT _num_threads,
-    decisiontrees::DecisionTreeEnsemble& _model,
-    const std::shared_ptr<const logging::Logger>& _logger,
-    std::vector<containers::DataFrame>& _peripheral_tables,
-    containers::DataFrame& _population_table,
-    descriptors::Hyperparameters& _hyperparameters )
+/*
+void Threadutils::fit_ensemble(
+    const size_t _this_thread_num,
+    const std::vector<size_t> _thread_nums,
+    const containers::DataFrame& _population,
+    const std::vector<containers::DataFrame>& _peripheral,
+    const std::shared_ptr<const logging::AbstractLogger> _logger,
+    ensemble::DecisionTreeEnsemble* _ensemble )
 {
-    // ------------------------------------------------------
-
-    std::vector<decisiontrees::DecisionTreeEnsemble> models( _num_threads - 1 );
-
-    std::vector<std::thread> threads = {};
-
-    autosql::multithreading::Communicator comm( _num_threads );
-
-    _model.set_comm( &comm );
-
-    // ------------------------------------------------------
-    // Build thread_nums
-
-    const auto thread_nums = DataFrameScatterer::build_thread_nums(
-        _population_table.join_keys(), _num_threads );
-
-    // ------------------------------------------------------
-    // Create copies of the model and spawn threads
-
-    for ( AUTOSQL_INT i = 0; i < static_cast<AUTOSQL_INT>( models.size() ); ++i )
-        {
-            models[i] = _model;
-
-            models[i].set_comm( &comm );
-
-            auto subview = DataFrameScatterer::scatter_data_frame(
-                _population_table, thread_nums, i + 1 );
-
-            threads.push_back( std::thread(
-                fit_model,
-                models[i],
-                _logger,
-                _peripheral_tables,
-                subview,
-                _hyperparameters ) );
-        }
-
-    // ------------------------------------------------------
-    // Train model in main thread
-
-    std::string msg;
-
     try
         {
-            auto subview = DataFrameScatterer::scatter_data_frame(
-                _population_table, thread_nums, 0 );
+            const auto population_subview =
+                autosql::utils::DataFrameScatterer::scatter_data_frame(
+                    _population, _thread_nums, _this_thread_num );
 
-            msg = _model.fit(
-                _logger, _peripheral_tables, subview, _hyperparameters );
+            _ensemble->init( population_subview, _peripheral );
+
+            const auto num_features =
+                _ensemble->hyperparameters().num_features_;
+
+            const auto silent = _ensemble->hyperparameters().silent_;
+
+            for ( size_t i = 0; i < num_features; ++i )
+                {
+                    _ensemble->fit_new_feature();
+
+                    if ( !silent && _logger )
+                        {
+                            _logger->log(
+                                "Trained FEATURE_" + std::to_string( i + 1 ) +
+                                "." );
+                        }
+                }
+
+            _ensemble->clean_up();
         }
     catch ( std::exception& e )
         {
-            for ( auto& thr : threads )
-                {
-                    thr.join();
-                }
-
-            throw std::invalid_argument( e.what() );
+            // std::cout << "Error in non-main thread: " << e.what() <<
+            // std::endl;
         }
-
-    // ------------------------------------------------------
-    // Join all other threads
-
-    for ( auto& thr : threads )
-        {
-            thr.join();
-        }
-
-    // ------------------------------------------------------
-
-    return msg;
-}
+}*/
 
 // ----------------------------------------------------------------------------
 
@@ -118,7 +75,8 @@ AUTOSQL_INT Threadutils::get_num_threads( const AUTOSQL_INT _num_threads )
         {
             num_threads = std::max(
                 2,
-                static_cast<AUTOSQL_INT>( std::thread::hardware_concurrency() ) -
+                static_cast<AUTOSQL_INT>(
+                    std::thread::hardware_concurrency() ) -
                     2 );
         }
 
@@ -127,188 +85,74 @@ AUTOSQL_INT Threadutils::get_num_threads( const AUTOSQL_INT _num_threads )
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object Threadutils::score(
-    const AUTOSQL_INT _num_threads,
-    const containers::Matrix<AUTOSQL_FLOAT>& _yhat,
-    const containers::Matrix<AUTOSQL_FLOAT>& _y,
-    decisiontrees::DecisionTreeEnsemble* _model )
+void Threadutils::transform_ensemble(
+    const size_t _this_thread_num,
+    const std::vector<size_t> _thread_nums,
+    const containers::DataFrame& _population,
+    const std::vector<containers::DataFrame>& _peripheral,
+    const std::shared_ptr<const logging::AbstractLogger> _logger,
+    const ensemble::DecisionTreeEnsemble& _ensemble,
+    std::vector<AUTOSQL_FLOAT>* _features )
 {
-    // ------------------------------------------------------
-
-    assert( _yhat.nrows() == _y.nrows() );
-    assert( _yhat.ncols() == _y.ncols() );
-
-    // ------------------------------------------------------
-
-    std::vector<decisiontrees::DecisionTreeEnsemble> models( _num_threads - 1 );
-
-    std::vector<std::thread> threads = {};
-
-    autosql::multithreading::Communicator comm( _num_threads );
-
-    _model->set_comm( &comm );
-
-    // ------------------------------------------------------
-    // Calculate displs
-
-    std::vector<AUTOSQL_INT> displs( _num_threads + 1 );
-
-    calculate_displs( _yhat.nrows(), displs );
-
-    // ------------------------------------------------------
-    // Create copies of the metric and spawn threads
-
-    for ( AUTOSQL_SIZE i = 0; i < models.size(); ++i )
-        {
-            models[i] = *_model;
-
-            models[i].set_comm( &comm );
-
-            threads.push_back( std::thread(
-                score_model,
-                _yhat.subview( displs[i + 1], displs[i + 2] ),
-                _y.subview( displs[i + 1], displs[i + 2] ),
-                &models[i] ) );
-        }
-
-    // ------------------------------------------------------
-    // Get metric in main thread
-
-    Poco::JSON::Object result;
-
     try
         {
-            result = _model->score(
-                _yhat.subview( displs[0], displs[1] ),
-                _y.subview( displs[0], displs[1] ) );
+            // ----------------------------------------------------------------
+            // Build the subview on the population table
+
+            const auto population_subview = utils::DataFrameScatterer::
+                DataFrameScatterer::scatter_data_frame(
+                    _population, _thread_nums, _this_thread_num );
+
+            // ----------------------------------------------------------------
+            // Create abstractions over the peripheral_tables and the population
+            // table - for convenience
+
+            const auto table_holder = decisiontrees::TableHolder(
+                _ensemble.placeholder(),
+                population_subview,
+                _peripheral,
+                _ensemble.peripheral_names() );
+
+            // ----------------------------------------------------------------
+            // aggregations::AggregationImpl stores most of the data for the
+            // aggregations. We do not want to reallocate the data all the time.
+
+            auto impl = containers::Optional<aggregations::AggregationImpl>(
+                new aggregations::AggregationImpl(
+                    population_subview.nrows() ) );
+
+            // ----------------------------------------------------------------
+            // Builc the actual features.
+
+            for ( size_t i = 0; i < _ensemble.trees().size(); ++i )
+                {
+                    const auto new_feature =
+                        _ensemble.transform( table_holder, i, _logger, &impl );
+
+                    copy(
+                        population_subview.rows(),
+                        i,
+                        _ensemble.num_features(),
+                        new_feature,
+                        _features );
+
+                    if ( _logger /*&& !silent */ )
+                        {
+                            _logger->log(
+                                "Built FEATURE_" + std::to_string( i + 1 ) +
+                                "." );
+                        }
+                }
+
+            // ----------------------------------------------------------------
         }
     catch ( std::exception& e )
         {
-            for ( auto& thr : threads )
-                {
-                    thr.join();
-                }
-
-            throw std::invalid_argument( e.what() );
+            // std::cout << "Error in non-main thread: " << e.what() <<
+            // std::endl;
         }
-
-    // ------------------------------------------------------
-    // Join all other threads
-
-    for ( auto& thr : threads )
-        {
-            thr.join();
-        }
-
-    // ------------------------------------------------------
-
-    return result;
-
-    // ------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
-
-containers::Matrix<AUTOSQL_FLOAT> Threadutils::transform(
-    AUTOSQL_INT _num_threads,
-    decisiontrees::DecisionTreeEnsemble& _model,
-    const std::shared_ptr<const logging::Logger>& _logger,
-    std::vector<containers::DataFrame>& _peripheral_tables,
-    containers::DataFrame& _population_table,
-    bool _score )
-{
-    std::vector<decisiontrees::DecisionTreeEnsemble> models( _num_threads - 1 );
-
-    std::vector<std::future<containers::Matrix<AUTOSQL_FLOAT>>> futures;
-
-    std::vector<std::shared_ptr<const std::vector<AUTOSQL_INT>>> indices;
-
-    autosql::multithreading::Communicator comm( _num_threads );
-
-    _model.set_comm( &comm );
-
-    // ------------------------------------------------------
-    // Build thread_nums
-
-    const auto thread_nums = DataFrameScatterer::build_thread_nums(
-        _population_table.join_keys(), _num_threads );
-
-    // ------------------------------------------------------
-    // Create copies of the model and spawn threads
-
-    for ( AUTOSQL_INT i = 0; i < static_cast<AUTOSQL_INT>( models.size() ); ++i )
-        {
-            models[i] = _model;
-
-            models[i].set_comm( &comm );
-
-            auto subview = DataFrameScatterer::scatter_data_frame(
-                _population_table, thread_nums, i + 1 );
-
-            indices.push_back( subview.get_indices() );
-
-            futures.push_back( std::async(
-                std::launch::async,
-                transform_model,
-                models[i],
-                _logger,
-                _peripheral_tables,
-                subview,
-                _score ) );
-        }
-
-    // ------------------------------------------------------
-    // Transform in main thread
-
-    containers::Matrix<AUTOSQL_FLOAT> yhat;
-
-    try
-        {
-            auto subview = DataFrameScatterer::scatter_data_frame(
-                _population_table, thread_nums, 0 );
-
-            auto temp = _model.transform(
-                _logger,
-                _peripheral_tables,
-                subview,
-                true,  // _transpose
-                _score );
-
-            yhat = containers::Matrix<AUTOSQL_FLOAT>(
-                _population_table.nrows(), temp.ncols() );
-
-            copy( subview.get_indices(), temp, yhat );
-        }
-    catch ( std::exception& e )
-        {
-            for ( auto& f : futures )
-                {
-                    f.get();
-                }
-
-            throw std::invalid_argument( e.what() );
-        }
-
-    // ------------------------------------------------------
-    // Join all other threads
-
-    assert( futures.size() == indices.size() );
-
-    for ( size_t i = 0; i < futures.size(); ++i )
-        {
-            auto temp = futures[i].get();
-
-            copy( indices[i], temp, yhat );
-        }
-
-    // ------------------------------------------------------
-
-    return yhat;
-}
-
-// ----------------------------------------------------------------------------
-}  // namespace multithreading
-}  // namespace engine
+}  // namespace ensemble
 }  // namespace autosql
-
-#endif  // AUTOSQL_MULTITHREADING

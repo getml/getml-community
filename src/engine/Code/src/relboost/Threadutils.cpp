@@ -94,34 +94,44 @@ void Threadutils::transform_ensemble(
     const ensemble::DecisionTreeEnsemble& _ensemble,
     std::vector<RELBOOST_FLOAT>* _features )
 {
-    auto population_subview =
-        utils::DataFrameScatterer::DataFrameScatterer::scatter_data_frame(
-            _population, _thread_nums, _this_thread_num );
-
-    const auto table_holder = TableHolder(
-        _ensemble.placeholder(),
-        population_subview,
-        _peripheral,
-        _ensemble.peripheral_names() );
-
-    const auto silent = _ensemble.hyperparameters().silent_;
-
-    for ( size_t i = 0; i < _ensemble.num_features(); ++i )
+    try
         {
-            const auto new_feature = _ensemble.transform( table_holder, i );
+            auto population_subview = utils::DataFrameScatterer::
+                DataFrameScatterer::scatter_data_frame(
+                    _population, _thread_nums, _this_thread_num );
 
-            copy(
-                population_subview.rows(),
-                i,
-                _ensemble.num_features(),
-                new_feature,
-                _features );
+            const auto table_holder = TableHolder(
+                _ensemble.placeholder(),
+                population_subview,
+                _peripheral,
+                _ensemble.peripheral_names() );
 
-            if ( !silent && _logger )
+            const auto silent = _ensemble.hyperparameters().silent_;
+
+            for ( size_t i = 0; i < _ensemble.num_features(); ++i )
                 {
-                    _logger->log(
-                        "Built FEATURE_" + std::to_string( i + 1 ) + "." );
+                    const auto new_feature =
+                        _ensemble.transform( table_holder, i );
+
+                    copy(
+                        population_subview.rows(),
+                        i,
+                        _ensemble.num_features(),
+                        new_feature,
+                        _features );
+
+                    if ( !silent && _logger )
+                        {
+                            _logger->log(
+                                "Built FEATURE_" + std::to_string( i + 1 ) +
+                                "." );
+                        }
                 }
+        }
+    catch ( std::exception& e )
+        {
+            // std::cout << "Error in non-main thread: " << e.what() <<
+            // std::endl;
         }
 }
 

@@ -1178,84 +1178,122 @@ std::string DecisionTreeEnsemble::to_sql() const
 // ----------------------------------------------------------------------------
 
 std::shared_ptr<std::vector<AUTOSQL_FLOAT>> DecisionTreeEnsemble::transform(
-    const containers::DataFrameView &_population,
+    const containers::DataFrame &_population,
     const std::vector<containers::DataFrame> &_peripheral,
-    const std::shared_ptr<const logging::AbstractLogger> _logger )
+    const std::shared_ptr<const logging::AbstractLogger> _logger ) const
 {
-    // ----------------------------------------------------------------
+    // ------------------------------------------------------
+    // Check plausibility.
 
-    if ( has_been_fitted() == false )
+    if ( num_features() == 0 )
         {
-            throw std::invalid_argument( "Model has not been fitted!" );
+            throw std::runtime_error( "AutoSQL model has not been fitted!" );
         }
 
-    // ----------------------------------------------------------------
-    // Create abstractions over the peripheral_tables and the population
-    // table - for convenience
+    // ------------------------------------------------------
+    // thread_nums signify the thread number that a particular row belongs to.
+    // The idea is to separate the join keys as clearly as possible.
 
-    const auto table_holder =
-        std::make_shared<const decisiontrees::TableHolder>(
-            placeholder(), _population, _peripheral, peripheral_names() );
+    const auto num_threads =
+        Threadutils::get_num_threads( hyperparameters().num_threads_ );
 
-    // ----------------------------------------------------------------
-    // Make sure that the data passed by the user is plausible
+    const auto thread_nums = utils::DataFrameScatterer::build_thread_nums(
+        _population.join_keys(), num_threads );
 
-    assert( table_holder->main_tables_.size() > 0 );
+    // -------------------------------------------------------
+    // Launch threads and generate predictions on the subviews.
 
-    check_plausibility(
-        table_holder->peripheral_tables_, table_holder->main_tables_[0] );
+    auto features = std::make_shared<std::vector<AUTOSQL_FLOAT>>(
+        _population.nrows() * num_features() );
 
-    // ----------------------------------------------------------------
-    // aggregations::AggregationImpl stores most of the data for the
-    // aggregations. We do not want to reallocate the data all the time.
+    std::vector<std::thread> threads;
 
-    if ( !aggregation_impl() )
+    for ( size_t i = 0; i < num_threads - 1; ++i )
         {
-            assert( table_holder->main_tables_.size() > 0 );
-
-            aggregation_impl().reset( new aggregations::AggregationImpl(
-                table_holder->main_tables_[0].nrows() ) );
+            threads.push_back( std::thread(
+                Threadutils::transform_ensemble,
+                i + 1,
+                thread_nums,
+                _population,
+                _peripheral,
+                std::shared_ptr<const logging::AbstractLogger>(),
+                *this,
+                features.get() ) );
         }
 
-    for ( auto &tree : trees() )
+    // ------------------------------------------------------
+    // Transform in main thread.
+
+    try
         {
-            tree.set_aggregation_impl( &aggregation_impl() );
+            Threadutils::transform_ensemble(
+                0,
+                thread_nums,
+                _population,
+                _peripheral,
+                _logger,
+                *this,
+                features.get() );
+        }
+    catch ( std::exception &e )
+        {
+            for ( auto &thr : threads )
+                {
+                    thr.join();
+                }
+
+            throw std::invalid_argument( e.what() );
         }
 
-    // ----------------------------------------------------------------
-    // Every tree in the ensemble stands for one feature - extract
-    // the feature and append
+    // ------------------------------------------------------
 
-    assert( table_holder->main_tables_.size() > 0 );
+    for ( auto &thr : threads )
+        {
+            thr.join();
+        }
 
-    auto features = std::make_shared<std::vector<AUTOSQL_FLOAT>>( 0 );
-
-    assert( false && "ToDo" );
-
-    /* for ( size_t ix_feature = 0; ix_feature < trees().size(); ++ix_feature )
-         {
-             auto &tree = trees()[ix_feature];
-
-             auto new_feature = tree.transform(
-                 table_holder, hyperparameters().use_timestamps_ );
-
-             debug_log(
-                 "transform: Adding new feature to existing features..." );
-
-             features->insert(
-                 features->end(), new_feature.begin(), new_feature.end() );
-
-             log( _logger,
-                  "Built FEATURE_" + std::to_string( ix_feature + 1 ) + "." );
-         }*/
-
-    debug_log( "transform: Built all features." );
-
-    // ----------------------------------------------------------------
+    // ------------------------------------------------------
 
     return features;
 
-    // ----------------------------------------------------------------
+    // ------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<AUTOSQL_FLOAT> DecisionTreeEnsemble::transform(
+    const decisiontrees::TableHolder &_table_holder,
+    const size_t _num_feature,
+    const std::shared_ptr<const logging::AbstractLogger> _logger,
+    containers::Optional<aggregations::AggregationImpl> *_impl ) const
+{
+    assert( _num_feature < trees().size() );
+
+    assert(
+        _table_holder.main_tables_.size() ==
+        _table_holder.peripheral_tables_.size() );
+
+    assert(
+        _table_holder.main_tables_.size() == _table_holder.subtables_.size() );
+
+    const auto ix = trees()[_num_feature].ix_perip_used();
+
+    assert( ix < _table_holder.main_tables_.size() );
+
+    auto aggregation = trees()[_num_feature].make_aggregation();
+
+    aggregation->set_aggregation_impl( _impl );
+
+    auto new_feature = trees()[_num_feature].transform(
+        _table_holder.main_tables_[ix],
+        _table_holder.peripheral_tables_[ix],
+        _table_holder.subtables_[ix],
+        hyperparameters().use_timestamps_,
+        aggregation.get() );
+
+    aggregation->reset();
+
+    return new_feature;
 }
 
 // ----------------------------------------------------------------------------

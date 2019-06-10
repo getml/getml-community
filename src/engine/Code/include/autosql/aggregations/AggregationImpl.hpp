@@ -9,7 +9,7 @@ namespace aggregations
 
 struct AggregationImpl
 {
-    AggregationImpl( AUTOSQL_INT _sample_size )
+    AggregationImpl( size_t _sample_size )
         : count_( std::vector<AUTOSQL_FLOAT>( _sample_size ) ),
           count_committed_( std::vector<AUTOSQL_FLOAT>( _sample_size ) ),
           sample_ptr_( std::vector<Sample*>( _sample_size ) ),
