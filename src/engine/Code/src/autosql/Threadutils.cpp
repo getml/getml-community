@@ -46,11 +46,16 @@ void Threadutils::fit_ensemble(
             // Create abstractions over the peripheral_tables and the population
             // table - for convenience.
 
-            const auto table_holder = decisiontrees::TableHolder(
+            const auto table_holder = std::make_shared<const decisiontrees::TableHolder>(
                 _placeholder,
                 population_subview,
                 _peripheral,
                 _peripheral_names );
+
+            // ----------------------------------------------------------------
+            // Start fitting
+
+            _ensemble->fit( table_holder, _logger );
 
             // ----------------------------------------------------------------
         }
