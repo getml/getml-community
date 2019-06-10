@@ -1239,14 +1239,18 @@ class Aggregation : public AbstractAggregation
     void set_value_to_be_aggregated(
         const containers::Column<AUTOSQL_FLOAT> &_value_to_be_aggregated ) final
     {
-        assert( false && "ToDO" );
+        value_to_be_aggregated() = containers::
+            ColumnView<AUTOSQL_FLOAT, std::map<AUTOSQL_INT, AUTOSQL_INT>>(
+                _value_to_be_aggregated );
     }
 
     /// Trivial setter
     void set_value_to_be_aggregated(
         const containers::Column<AUTOSQL_INT> &_value_to_be_aggregated ) final
     {
-        assert( false && "ToDO" );
+        value_to_be_aggregated_categorical() = containers::
+            ColumnView<AUTOSQL_INT, std::map<AUTOSQL_INT, AUTOSQL_INT>>(
+                _value_to_be_aggregated );
     }
 
     /// Trivial setter
@@ -1255,14 +1259,16 @@ class Aggregation : public AbstractAggregation
             AUTOSQL_FLOAT,
             std::map<AUTOSQL_INT, AUTOSQL_INT>> &_value_to_be_aggregated ) final
     {
-        assert( false && "ToDO" );
+        value_to_be_aggregated() = _value_to_be_aggregated;
     }
 
     /// Trivial setter
     void set_value_to_be_compared(
         const containers::Column<AUTOSQL_FLOAT> &_value_to_be_compared ) final
     {
-        assert( false && "ToDO" );
+        value_to_be_compared() =
+            containers::ColumnView<AUTOSQL_FLOAT, std::vector<size_t>>(
+                _value_to_be_compared );
     }
 
     /// Trivial setter
@@ -1270,7 +1276,7 @@ class Aggregation : public AbstractAggregation
         const containers::ColumnView<AUTOSQL_FLOAT, std::vector<size_t>>
             &_value_to_be_compared ) final
     {
-        assert( false && "ToDO" );
+        value_to_be_compared() = _value_to_be_compared;
     }
 
     /// Returns a string describing the type of the aggregation
@@ -1446,8 +1452,8 @@ class Aggregation : public AbstractAggregation
             int>::type = 0>
     inline const AUTOSQL_FLOAT value_to_be_aggregated( const Sample *_sample )
     {
-        return value_to_be_compared()( _sample->ix_x_popul ) -
-               value_to_be_aggregated()[_sample->ix_x_perip];
+        return value_to_be_compared()[_sample->ix_x_popul] -
+               value_to_be_aggregated().col()[_sample->ix_x_perip];
     }
 
     /// Accessor for the value to be aggregated to be used for all
@@ -1465,8 +1471,8 @@ class Aggregation : public AbstractAggregation
             int>::type = 0>
     inline const AUTOSQL_FLOAT value_to_be_aggregated( const Sample *_sample )
     {
-        return value_to_be_compared()[_sample->ix_x_perip] -
-               value_to_be_aggregated()[_sample->ix_x_perip];
+        return value_to_be_compared().col()[_sample->ix_x_perip] -
+               value_to_be_aggregated().col()[_sample->ix_x_perip];
     }
 
     /// Accessor for the value to be aggregated to be used for all
@@ -1483,7 +1489,7 @@ class Aggregation : public AbstractAggregation
             int>::type = 0>
     inline const AUTOSQL_FLOAT value_to_be_aggregated( const Sample *_sample )
     {
-        return value_to_be_aggregated()[_sample->ix_x_perip];
+        return value_to_be_aggregated().col()[_sample->ix_x_perip];
     }
 
     /// Accessor for the value to be aggregated to be used for all
@@ -1500,7 +1506,7 @@ class Aggregation : public AbstractAggregation
             int>::type = 0>
     inline const AUTOSQL_FLOAT value_to_be_aggregated( const Sample *_sample )
     {
-        return value_to_be_aggregated()( _sample->ix_x_perip );
+        return value_to_be_aggregated()[_sample->ix_x_perip];
     }
 
     /// Accessor for the value to be aggregated to be used for all
@@ -1514,12 +1520,12 @@ class Aggregation : public AbstractAggregation
     inline const AUTOSQL_FLOAT value_to_be_aggregated( const Sample *_sample )
     {
         return static_cast<AUTOSQL_FLOAT>(
-            value_to_be_aggregated_categorical()[_sample->ix_x_perip] );
+            value_to_be_aggregated_categorical().col()[_sample->ix_x_perip] );
     }
 
     /// Accessor for the value to be compared - this is needed for the
     /// time_stamps and the same_units.
-    inline containers::ColumnView<AUTOSQL_FLOAT, std::vector<AUTOSQL_INT>>
+    inline containers::ColumnView<AUTOSQL_FLOAT, std::vector<size_t>>
         &value_to_be_compared()
     {
         assert( aggregation_impl_ != nullptr );

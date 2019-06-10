@@ -92,7 +92,7 @@ struct AggregationImpl
     /// is a timestamp difference or same unit numerical
     /// Note the the length is usually different from value_to_be_aggregated_,
     /// but always equal to the length of yhat_.
-    containers::ColumnView<AUTOSQL_FLOAT, std::vector<AUTOSQL_INT>>
+    containers::ColumnView<AUTOSQL_FLOAT, std::vector<size_t>>
         value_to_be_compared_;
 
     /// Vector containing predictions

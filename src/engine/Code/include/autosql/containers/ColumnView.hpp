@@ -15,7 +15,11 @@ class ColumnView
    public:
     ColumnView() {}
 
-    ColumnView( const Column<T>& _col ) { col_.reset( new Column<T>( _col ) ); }
+    ColumnView( const Column<T>& _col )
+        : rows_( std::shared_ptr<const ContainerType>() )
+    {
+        col_.reset( new Column<T>( _col ) );
+    }
 
     ColumnView(
         const Column<T>& _col,
@@ -32,6 +36,14 @@ class ColumnView
     /// Deletes all data in the view
     void clear() { *this = ColumnView(); }
 
+    /// Returns the underlying column.
+    const Column<T>& col() const
+    {
+        assert( col_ );
+        assert( !rows_ );
+        return *col_;
+    }
+
     /// Whether or not the column view is empty.
     operator bool() const { return ( col_ && true ); }
 
@@ -39,12 +51,11 @@ class ColumnView
     template <
         typename CType = ContainerType,
         typename std::enable_if<
-            std::is_same<CType, std::vector<AUTOSQL_INT>>::value,
+            std::is_same<CType, std::vector<size_t>>::value,
             int>::type = 0>
-    inline T operator()( const AUTOSQL_INT _i ) const
+    inline T operator[]( const size_t _i ) const
     {
-        assert( _i >= 0 );
-        assert( _i < static_cast<AUTOSQL_INT>( rows_->size() ) );
+        assert( _i < rows_->size() );
         return ( *col_ )[( *rows_ )[_i]];
     }
 
@@ -54,19 +65,12 @@ class ColumnView
         typename std::enable_if<
             std::is_same<CType, std::map<AUTOSQL_INT, AUTOSQL_INT>>::value,
             int>::type = 0>
-    inline T operator()( const AUTOSQL_INT _i ) const
+    inline T operator[]( const AUTOSQL_INT _i ) const
     {
         assert( _i >= 0 );
         auto it = rows_->find( _i );
         assert( it != rows_->end() );
         return ( *col_ )[it->second];
-    }
-
-    /// Accessor to data
-    inline T operator[]( const AUTOSQL_INT _i ) const
-    {
-        assert( !rows_ );
-        return ( *col_ )[_i];
     }
 
     // -------------------------------
@@ -75,7 +79,7 @@ class ColumnView
     /// Indices indicating all of the rows that are part of this view
     std::shared_ptr<const ContainerType> rows_;
 
-    /// Shallow copy of the matrix in which we are interested
+    /// Shallow copy of the column in which we are interested.
     Optional<Column<T>> col_;
 
     // -------------------------------

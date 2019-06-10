@@ -152,11 +152,11 @@ DecisionTreeNode::calculate_categories(
             categories_end = 0;
         }
 
-#ifdef AUTOSQL_PARALLEL
+    utils::Reducer::reduce(
+        multithreading::minimum<AUTOSQL_INT>(), &categories_begin, comm() );
 
-    reduce_min_max( categories_begin, categories_end );
-
-#endif  // AUTOSQL_PARALLEL
+    utils::Reducer::reduce(
+        multithreading::maximum<AUTOSQL_INT>(), &categories_end, comm() );
 
     // ------------------------------------------------------------------------
     // There is a possibility that all critical values are NULL (signified by
@@ -188,23 +188,8 @@ DecisionTreeNode::calculate_categories(
             included[( *it )->categorical_value - categories_begin] = 1;
         }
 
-#ifdef AUTOSQL_PARALLEL
-    {
-        auto global = std::vector<std::int8_t>( included.size() );
-
-        AUTOSQL_PARALLEL_LIB::all_reduce(
-            *comm(),                            // comm
-            included.data(),                    // in_values
-            categories_end - categories_begin,  // count
-            global.data(),                      // out_values
-            AUTOSQL_MAX_OP<std::int8_t>()       // op
-        );
-
-        comm()->barrier();
-
-        included = std::move( global );
-    }
-#endif  // AUTOSQL_PARALLEL
+    utils::Reducer::reduce(
+        multithreading::maximum<std::int8_t>(), &included, comm() );
 
     // ------------------------------------------------------------------------
     // Build vector.
@@ -262,11 +247,11 @@ std::vector<AUTOSQL_FLOAT> DecisionTreeNode::calculate_critical_values_discrete(
             max = std::numeric_limits<AUTOSQL_FLOAT>::lowest();
         }
 
-#ifdef AUTOSQL_PARALLEL
+    utils::Reducer::reduce(
+        multithreading::minimum<AUTOSQL_INT>(), &min, comm() );
 
-    reduce_min_max( min, max );
-
-#endif /* AUTOSQL_PARALLEL */
+    utils::Reducer::reduce(
+        multithreading::maximum<AUTOSQL_INT>(), &max, comm() );
 
     // ---------------------------------------------------------------------------
     // There is a possibility that all critical values are NAN in all processes.
@@ -331,11 +316,11 @@ DecisionTreeNode::calculate_critical_values_numerical(
             max = std::numeric_limits<AUTOSQL_FLOAT>::lowest();
         }
 
-#ifdef AUTOSQL_PARALLEL
+    utils::Reducer::reduce(
+        multithreading::minimum<AUTOSQL_INT>(), &min, comm() );
 
-    reduce_min_max( min, max );
-
-#endif /* AUTOSQL_PARALLEL */
+    utils::Reducer::reduce(
+        multithreading::maximum<AUTOSQL_INT>(), &max, comm() );
 
     // ---------------------------------------------------------------------------
     // There is a possibility that all critical values are NAN in all processes.

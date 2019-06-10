@@ -393,7 +393,7 @@ class DecisionTreeNode
         const size_t _col ) const
     {
         assert( _col < _subfeatures.size() );
-        return _subfeatures[_col]( _sample->ix_x_perip );
+        return _subfeatures[_col][_sample->ix_x_perip];
     }
 
     /// Trivial getter
@@ -508,10 +508,6 @@ class DecisionTreeNode
         const descriptors::Split &_column,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end );
-
-    /// Identifies the global minimum and the global maximum
-    template <typename T>
-    void reduce_min_max( T *_min, T *_max );
 
     /// Returns the sum of the sample sizes of all processes
     size_t reduce_sample_size( const size_t _sample_size );
@@ -796,38 +792,6 @@ void DecisionTreeNode::apply_by_critical_value(
                         _sample_container_end );
                 }
         }
-}
-
-// ----------------------------------------------------------------------------
-
-template <typename T>
-void DecisionTreeNode::reduce_min_max( T *_min, T *_max )
-{
-    T global_min = 0;
-
-    T global_max = 0;
-
-    multithreading::all_reduce(
-        *comm(),                      // comm
-        *_min,                        // in_value
-        global_min,                   // out_value
-        multithreading::minimum<T>()  // op
-    );
-
-    comm()->barrier();
-
-    *_min = global_min;
-
-    multithreading::all_reduce(
-        *comm(),                      // comm
-        &_max,                        // in_value
-        global_max,                   // out_value
-        multithreading::maximum<T>()  // op
-    );
-
-    comm()->barrier();
-
-    *_max = global_max;
 }
 
 // ----------------------------------------------------------------------------
