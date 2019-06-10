@@ -252,6 +252,21 @@ class DecisionTree
             _num_samples_smaller, _num_samples_greater );
     }
 
+    /// Calls transform(...) using the tree's own aggregation.
+    std::vector<AUTOSQL_FLOAT> transform(
+        const containers::DataFrameView &_population,
+        const containers::DataFrame &_peripheral,
+        const containers::Optional<TableHolder> &_subtable,
+        const bool _use_timestamps )
+    {
+        return transform(
+            _population,
+            _peripheral,
+            _subtable,
+            _use_timestamps,
+            aggregation() );
+    }
+
     // --------------------------------------
 
    private:

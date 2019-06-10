@@ -555,14 +555,11 @@ void DecisionTreeEnsemble::fit_linear_regressions_and_recalculate_residuals(
     assert(
         _table_holder.main_tables_.size() == _table_holder.subtables_.size() );
 
-    assert( false && "ToDo" );
-
     std::vector<AUTOSQL_FLOAT> new_feature = last_tree()->transform(
         _table_holder.main_tables_[ix],
         _table_holder.peripheral_tables_[ix],
         _table_holder.subtables_[ix],
-        hyperparameters().use_timestamps_,
-        nullptr );
+        hyperparameters().use_timestamps_ );
 
     // ----------------------------------------------------------------
     // Train a linear regression from the prediction of the last
