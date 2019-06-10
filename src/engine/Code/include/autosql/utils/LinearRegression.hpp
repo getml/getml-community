@@ -18,6 +18,9 @@ class LinearRegression
 
     // -----------------------------------------
 
+    // Multiples the slopes and intercepts by the shrinkage factor.
+    void apply_shrinkage( const AUTOSQL_FLOAT _shrinkage );
+
     // Fits a simple linear regression on each column
     // of _residuals w.r.t. _yhat, which has only one column
     void fit(
@@ -33,8 +36,6 @@ class LinearRegression
 
     multithreading::Communicator& comm() const { return *( comm_ ); }
 
-    std::vector<AUTOSQL_FLOAT>& intercepts() { return intercepts_; }
-
     void set_comm( multithreading::Communicator* _comm ) { comm_ = _comm; }
 
     size_t size() const
@@ -42,8 +43,6 @@ class LinearRegression
         assert( intercepts_.size() == slopes_.size() );
         return intercepts_.size();
     }
-
-    std::vector<AUTOSQL_FLOAT>& slopes() { return slopes_; }
 
     // -----------------------------------------
 

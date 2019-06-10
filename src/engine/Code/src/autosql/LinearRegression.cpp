@@ -16,6 +16,36 @@ LinearRegression::LinearRegression( size_t _ncols )
 
 // ----------------------------------------------------------------------------
 
+void LinearRegression::apply_shrinkage( const AUTOSQL_FLOAT _shrinkage )
+{
+    // ----------------------------------------------------------------
+    // Multiply by the shrinkage
+
+    auto multiply_by_shrinkage = [_shrinkage]( AUTOSQL_FLOAT& val ) {
+        val *= _shrinkage;
+    };
+
+    std::for_each( slopes_.begin(), slopes_.end(), multiply_by_shrinkage );
+
+    std::for_each(
+        intercepts_.begin(), intercepts_.end(), multiply_by_shrinkage );
+
+    // ----------------------------------------------------------------
+    // Get rid of out-of-range-values
+
+    auto in_range = []( AUTOSQL_FLOAT& val ) {
+        val = ( ( std::isnan( val ) || std::isinf( val ) ) ? 0.0 : val );
+    };
+
+    std::for_each( slopes_.begin(), slopes_.end(), in_range );
+
+    std::for_each( intercepts_.begin(), intercepts_.end(), in_range );
+
+    // ----------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
 void LinearRegression::fit(
     const std::vector<AUTOSQL_FLOAT>& _new_feature,
     const std::vector<std::vector<AUTOSQL_FLOAT>>& _residuals,

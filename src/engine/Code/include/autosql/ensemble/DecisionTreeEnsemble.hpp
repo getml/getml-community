@@ -119,7 +119,7 @@ class DecisionTreeEnsemble
         const decisiontrees::TableHolder &_table_holder,
         const AUTOSQL_FLOAT _shrinkage,
         const std::vector<AUTOSQL_FLOAT> &_sample_weights,
-        const std::vector<std::vector<AUTOSQL_FLOAT>> &_yhat_old,
+        std::vector<std::vector<AUTOSQL_FLOAT>> *_yhat_old,
         std::vector<std::vector<AUTOSQL_FLOAT>> *_residuals );
 
     /// Parses the linear regression from a Poco::JSON::Object

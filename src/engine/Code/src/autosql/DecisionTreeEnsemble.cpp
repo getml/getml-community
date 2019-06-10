@@ -504,7 +504,7 @@ std::string DecisionTreeEnsemble::fit(
                         *table_holder,
                         hyperparameters().shrinkage_,
                         *sample_weights,
-                        yhat_old,
+                        &yhat_old,
                         &residuals );
                 }
             else
@@ -539,11 +539,10 @@ void DecisionTreeEnsemble::fit_linear_regressions_and_recalculate_residuals(
     const decisiontrees::TableHolder &_table_holder,
     const AUTOSQL_FLOAT _shrinkage,
     const std::vector<AUTOSQL_FLOAT> &_sample_weights,
-    const std::vector<std::vector<AUTOSQL_FLOAT>> &_yhat_old,
+    std::vector<std::vector<AUTOSQL_FLOAT>> *_yhat_old,
     std::vector<std::vector<AUTOSQL_FLOAT>> *_residuals )
 {
     // ----------------------------------------------------------------
-    // Generate new feature
 
     const auto ix = last_tree()->ix_perip_used();
 
@@ -554,6 +553,9 @@ void DecisionTreeEnsemble::fit_linear_regressions_and_recalculate_residuals(
         _table_holder.peripheral_tables_.size() );
     assert(
         _table_holder.main_tables_.size() == _table_holder.subtables_.size() );
+
+    // ----------------------------------------------------------------
+    // Generate new feature
 
     std::vector<AUTOSQL_FLOAT> new_feature = last_tree()->transform(
         _table_holder.main_tables_[ix],
@@ -573,76 +575,45 @@ void DecisionTreeEnsemble::fit_linear_regressions_and_recalculate_residuals(
 
     const auto predictions = last_linear_regression()->predict( new_feature );
 
+    last_linear_regression()->apply_shrinkage( _shrinkage );
+
     // ----------------------------------------------------------------
     // Find the optimal update_rates and update parameters of linear
     // regression accordingly
 
     auto update_rates = loss_function()->calculate_update_rates(
-        _yhat_old,
+        *_yhat_old,
         predictions,
         _table_holder.main_tables_[ix],
         _sample_weights );
 
-    auto multiply_by_shrinkage = [_shrinkage]( AUTOSQL_FLOAT &val ) {
-        val *= _shrinkage;
-    };
-
-    std::for_each(
-        last_linear_regression()->slopes().begin(),
-        last_linear_regression()->slopes().end(),
-        multiply_by_shrinkage );
-
-    std::for_each(
-        last_linear_regression()->intercepts().begin(),
-        last_linear_regression()->intercepts().end(),
-        multiply_by_shrinkage );
-
-    // ----------------------------------------------------------------
-    // Get rid of out-of-range-values
-
-    auto in_range = []( AUTOSQL_FLOAT val ) {
-        val = ( ( std::isnan( val ) || std::isinf( val ) ) ? 0.0 : val );
-    };
-
-    std::for_each(
-        last_linear_regression()->slopes().cbegin(),
-        last_linear_regression()->slopes().cend(),
-        in_range );
-
-    std::for_each(
-        last_linear_regression()->intercepts().cbegin(),
-        last_linear_regression()->intercepts().cend(),
-        in_range );
-
     // ----------------------------------------------------------------
     // Do the actual updates
 
-    assert( false && "ToDo" );
+    assert( update_rates.size() == predictions.size() );
 
-    /*for ( size_t j = 0; j < predictions.size(); ++j )
+    for ( size_t j = 0; j < predictions.size(); ++j )
         {
-            for ( size_t i = 0; i < predictions[i].size(); ++i )
+            for ( size_t i = 0; i < predictions[j].size(); ++i )
                 {
-
-
                     const AUTOSQL_FLOAT update =
-                        f_t( i, j ) * update_rates( 0, j ) * _shrinkage;
+                        predictions[j][i] * update_rates[j] * _shrinkage;
 
-                    _yhat_old( i, j ) +=
+                    ( *_yhat_old )[j][i] +=
                         ( ( std::isnan( update ) || std::isinf( update ) )
                               ? 0.0
                               : update );
                 }
-        }*/
+        }
 
     // ----------------------------------------------------------------
     // Recalculate the pseudo-residuals - on which the tree will
     // be predicted
 
-    assert( false && "ToDo" );
+    *_residuals = loss_function()->calculate_residuals(
+        *_yhat_old, _table_holder.main_tables_[ix] );
 
-    /* _residuals = loss_function()->calculate_residuals(
-         _yhat_old, _table_holder.main_tables_[0] );*/
+    // ----------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -1174,46 +1145,9 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json_obj()
                 "targets_", JSON::vector_to_array<std::string>( targets() ) );
 
             // ----------------------------------------
-            // Extract slopes from linear regressions.
+            // Extract linear regression
 
-            {
-                Poco::JSON::Array slopes;
-
-                for ( auto &linear_regression : linear_regressions() )
-                    {
-                        Poco::JSON::Array elem;
-
-                        for ( auto val : linear_regression.slopes() )
-                            {
-                                elem.add( val );
-                            }
-
-                        slopes.add( elem );
-                    }
-
-                obj.set( "update_rates1_", slopes );
-            }
-
-            // ----------------------------------------
-            // Extract intercepts from linear regressions.
-
-            {
-                Poco::JSON::Array intercepts;
-
-                for ( auto &linear_regression : linear_regressions() )
-                    {
-                        Poco::JSON::Array elem;
-
-                        for ( auto val : linear_regression.intercepts() )
-                            {
-                                elem.add( val );
-                            }
-
-                        intercepts.add( elem );
-                    }
-
-                obj.set( "update_rates2_", intercepts );
-            }
+            assert( false && "ToDo" );
 
             // ----------------------------------------
             // Extract hyperparameters
