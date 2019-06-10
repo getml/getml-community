@@ -29,4 +29,8 @@
 
 #include "autosql/aggregations/Aggregation.hpp"
 
+#include "autosql/aggregations/AggregationParser.hpp"
+
+// ----------------------------------------------------------------------------
+
 #endif  // AUTOSQL_AGGREGATIONS_AGGREGATIONS_HPP_

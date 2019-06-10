@@ -63,10 +63,6 @@ class DecisionTree
     /// Copy assignment constructor
     DecisionTree &operator=( DecisionTree &&_other ) noexcept;
 
-    /// Transforms a string into a proper aggregation
-    std::shared_ptr<aggregations::AbstractAggregation> parse_aggregation(
-        const std::string &_aggregation ) const;
-
     /// Generates the select statement
     std::string select_statement( const std::string &_feature_num ) const;
 
@@ -247,13 +243,6 @@ class DecisionTree
     // --------------------------------------
 
    private:
-    /// Returns the right aggregation based on _data_used
-    template <typename AggType>
-    std::shared_ptr<aggregations::AbstractAggregation> make_aggregation() const;
-
-    // --------------------------------------
-
-   private:
     /// Trivial accessor
     inline aggregations::AbstractAggregation *aggregation()
     {
@@ -364,6 +353,24 @@ class DecisionTree
     inline const containers::Optional<DecisionTreeNode> &root() const
     {
         return root_;
+    }
+
+    /// Trivial accessor
+    inline const AUTOSQL_SAME_UNITS_CONTAINER &same_units_categorical() const
+    {
+        return impl()->same_units_categorical();
+    }
+
+    /// Trivial accessor
+    inline const AUTOSQL_SAME_UNITS_CONTAINER &same_units_discrete() const
+    {
+        return impl()->same_units_discrete();
+    }
+
+    /// Trivial accessor
+    inline const AUTOSQL_SAME_UNITS_CONTAINER &same_units_numerical() const
+    {
+        return impl()->same_units_numerical();
     }
 
     /// Trivial accessor
@@ -491,151 +498,7 @@ class DecisionTree
 };
 
 // ----------------------------------------------------------------------------
-// ----------------------------------------------------------------------------
-
-template <typename AggType>
-std::shared_ptr<aggregations::AbstractAggregation>
-DecisionTree::make_aggregation() const
-{
-    // ------------------------------------------------------------------------
-
-    const auto data_used = column_to_be_aggregated().data_used;
-
-    const AUTOSQL_INT ix_column_used = column_to_be_aggregated().ix_column_used;
-
-    // ------------------------------------------------------------------------
-
-    switch ( data_used )
-        {
-            case enums::DataUsed::x_perip_numerical:
-
-                return std::make_shared<aggregations::Aggregation<
-                    AggType,
-                    enums::DataUsed::x_perip_numerical,
-                    false>>();
-
-                break;
-
-            case enums::DataUsed::x_perip_discrete:
-
-                return std::make_shared<aggregations::Aggregation<
-                    AggType,
-                    enums::DataUsed::x_perip_discrete,
-                    false>>();
-
-                break;
-
-            case enums::DataUsed::time_stamps_diff:
-
-                return std::make_shared<aggregations::Aggregation<
-                    AggType,
-                    enums::DataUsed::time_stamps_diff,
-                    true>>();
-
-                break;
-
-            case enums::DataUsed::same_unit_numerical:
-
-                {
-                    const enums::DataUsed data_used2 =
-                        std::get<1>(
-                            impl()->same_units_numerical()[ix_column_used] )
-                            .data_used;
-
-                    if ( data_used2 == enums::DataUsed::x_popul_numerical )
-                        {
-                            return std::make_shared<aggregations::Aggregation<
-                                AggType,
-                                enums::DataUsed::same_unit_numerical,
-                                true>>();
-                        }
-                    else if ( data_used2 == enums::DataUsed::x_perip_numerical )
-                        {
-                            return std::make_shared<aggregations::Aggregation<
-                                AggType,
-                                enums::DataUsed::same_unit_numerical,
-                                false>>();
-                        }
-                    else
-                        {
-                            assert( !"Unknown data_used2 in make_aggregation(...)!" );
-
-                            return std::shared_ptr<
-                                aggregations::AbstractAggregation>();
-                        }
-                }
-
-                break;
-
-            case enums::DataUsed::same_unit_discrete:
-
-                {
-                    const enums::DataUsed data_used2 =
-                        std::get<1>(
-                            impl()->same_units_discrete()[ix_column_used] )
-                            .data_used;
-
-                    if ( data_used2 == enums::DataUsed::x_popul_discrete )
-                        {
-                            return std::make_shared<aggregations::Aggregation<
-                                AggType,
-                                enums::DataUsed::same_unit_discrete,
-                                true>>();
-                        }
-                    else if ( data_used2 == enums::DataUsed::x_perip_discrete )
-                        {
-                            return std::make_shared<aggregations::Aggregation<
-                                AggType,
-                                enums::DataUsed::same_unit_discrete,
-                                false>>();
-                        }
-                    else
-                        {
-                            assert( !"Unknown data_used2 in make_aggregation(...)!" );
-
-                            return std::shared_ptr<
-                                aggregations::AbstractAggregation>();
-                        }
-                }
-
-                break;
-
-            case enums::DataUsed::x_perip_categorical:
-
-                return std::make_shared<aggregations::Aggregation<
-                    AggType,
-                    enums::DataUsed::x_perip_categorical,
-                    false>>();
-
-                break;
-
-            case enums::DataUsed::x_subfeature:
-
-                return std::make_shared<aggregations::Aggregation<
-                    AggType,
-                    enums::DataUsed::x_subfeature,
-                    false>>();
-
-                break;
-
-            case enums::DataUsed::not_applicable:
-
-                return std::make_shared<aggregations::Aggregation<
-                    AggType,
-                    enums::DataUsed::not_applicable,
-                    false>>();
-
-                break;
-
-            default:
-
-                assert( !"Unknown enums::DataUsed in make_aggregation(...)!" );
-
-                return std::shared_ptr<aggregations::AbstractAggregation>();
-        }
-}
-
-// ----------------------------------------------------------------------------
 }  // namespace decisiontrees
 }  // namespace autosql
+
 #endif  // AUTOSQL_DECISIONTREES_DECISIONTREE_HPP_

@@ -27,7 +27,7 @@ class SameUnitIdentifier
     static void add_to_unit_map(
         const enums::DataUsed _data_used,
         const AUTOSQL_INT _ix_perip_used,
-        const AUTOSQL_INT _ix_column_used,
+        const size_t _ix_column_used,
         const containers::Column<T>& _data,
         std::map<std::string, std::vector<enums::ColumnToBeAggregated>>*
             _unit_map );
@@ -64,7 +64,7 @@ template <class T>
 void SameUnitIdentifier::add_to_unit_map(
     const enums::DataUsed _data_used,
     const AUTOSQL_INT _ix_perip_used,
-    const AUTOSQL_INT _ix_column_used,
+    const size_t _ix_column_used,
     const containers::Column<T>& _data,
     std::map<std::string, std::vector<enums::ColumnToBeAggregated>>* _unit_map )
 {

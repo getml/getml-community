@@ -1,6 +1,7 @@
 set(
     AUTOSQL_OBJ 
     ${AUTOSQL_SOURCE_DIRECTORY}/AggregationIndex.cpp 
+    ${AUTOSQL_SOURCE_DIRECTORY}/AggregationParser.cpp 
     ${AUTOSQL_SOURCE_DIRECTORY}/CandidateTreeBuilder.cpp 
     ${AUTOSQL_SOURCE_DIRECTORY}/CategoryIndex.cpp 
     ${AUTOSQL_SOURCE_DIRECTORY}/CrossEntropyLoss.cpp 

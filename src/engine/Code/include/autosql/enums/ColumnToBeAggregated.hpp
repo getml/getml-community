@@ -11,7 +11,7 @@ namespace enums
 
 struct ColumnToBeAggregated
 {
-    AUTOSQL_INT ix_column_used;
+    size_t ix_column_used;
 
     DataUsed data_used;
 

@@ -39,7 +39,12 @@ DecisionTree::DecisionTree(
 
     assert( _agg != "" );
 
-    aggregation_ptr() = parse_aggregation( _agg );
+    aggregation_ptr() = aggregations::AggregationParser::parse_aggregation(
+        _agg,
+        _data_used,
+        _ix_column_used,
+        same_units_numerical(),
+        same_units_discrete() );
 
     impl_.aggregation_type_ = _agg;
 
@@ -63,7 +68,12 @@ DecisionTree::DecisionTree( const DecisionTree &_other )
 
     assert( _other.impl_.aggregation_type_ != "" );
 
-    aggregation_ptr() = parse_aggregation( _other.impl_.aggregation_type_ );
+    aggregation_ptr() = aggregations::AggregationParser::parse_aggregation(
+        _other.impl_.aggregation_type_,
+        _other.column_to_be_aggregated().data_used,
+        _other.column_to_be_aggregated().ix_column_used,
+        _other.same_units_numerical(),
+        _other.same_units_discrete() );
 
     if ( root() )
         {
@@ -490,7 +500,12 @@ void DecisionTree::from_json_obj( const Poco::JSON::Object &_json_obj )
 
     assert( agg != "" );
 
-    aggregation_ptr() = parse_aggregation( agg );
+    aggregation_ptr() = aggregations::AggregationParser::parse_aggregation(
+        agg,
+        column_to_be_aggregated().data_used,
+        column_to_be_aggregated().ix_column_used,
+        same_units_numerical(),
+        same_units_discrete() );
 
     impl_.aggregation_type_ = agg;
 
@@ -550,78 +565,6 @@ DecisionTree &DecisionTree::operator=( DecisionTree &&_other ) noexcept
         }
 
     return *this;
-}
-
-// ----------------------------------------------------------------------------
-
-std::shared_ptr<aggregations::AbstractAggregation>
-DecisionTree::parse_aggregation( const std::string &_aggregation ) const
-{
-    if ( _aggregation == "AVG" )
-        {
-            return make_aggregation<aggregations::AggregationType::Avg>();
-        }
-
-    else if ( _aggregation == "COUNT" )
-        {
-            return make_aggregation<aggregations::AggregationType::Count>();
-        }
-
-    else if ( _aggregation == "COUNT DISTINCT" )
-        {
-            return make_aggregation<
-                aggregations::AggregationType::CountDistinct>();
-        }
-
-    else if ( _aggregation == "COUNT MINUS COUNT DISTINCT" )
-        {
-            return make_aggregation<
-                aggregations::AggregationType::CountMinusCountDistinct>();
-        }
-
-    else if ( _aggregation == "MAX" )
-        {
-            return make_aggregation<aggregations::AggregationType::Max>();
-        }
-
-    else if ( _aggregation == "MEDIAN" )
-        {
-            return make_aggregation<aggregations::AggregationType::Median>();
-        }
-
-    else if ( _aggregation == "MIN" )
-        {
-            return make_aggregation<aggregations::AggregationType::Min>();
-        }
-
-    else if ( _aggregation == "SKEWNESS" )
-        {
-            return make_aggregation<aggregations::AggregationType::Skewness>();
-        }
-
-    else if ( _aggregation == "STDDEV" )
-        {
-            return make_aggregation<aggregations::AggregationType::Stddev>();
-        }
-
-    else if ( _aggregation == "SUM" )
-        {
-            return make_aggregation<aggregations::AggregationType::Sum>();
-        }
-
-    else if ( _aggregation == "VAR" )
-        {
-            return make_aggregation<aggregations::AggregationType::Var>();
-        }
-
-    else
-        {
-            std::string warning_message = "Aggregation of type '";
-            warning_message.append( _aggregation );
-            warning_message.append( "' not known!" );
-
-            throw std::invalid_argument( warning_message );
-        }
 }
 
 // ----------------------------------------------------------------------------
