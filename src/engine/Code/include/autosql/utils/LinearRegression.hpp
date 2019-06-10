@@ -31,44 +31,19 @@ class LinearRegression
 
     // -----------------------------------------
 
-    inline multithreading::Communicator& comm() { return *( comm_ ); }
+    multithreading::Communicator& comm() const { return *( comm_ ); }
 
-    const std::vector<AUTOSQL_FLOAT>& intercepts() { return intercepts_; }
+    std::vector<AUTOSQL_FLOAT>& intercepts() { return intercepts_; }
 
-    inline AUTOSQL_FLOAT& intercepts( AUTOSQL_INT _i )
-    {
-        assert( _i < intercepts_.size() );
-        return intercepts_[_i];
-    }
+    void set_comm( multithreading::Communicator* _comm ) { comm_ = _comm; }
 
-    inline void set_comm( multithreading::Communicator* _comm )
-    {
-        comm_ = _comm;
-    }
-
-    inline void set_slopes_and_intercepts(
-        const std::vector<AUTOSQL_FLOAT>& _update_rates1,
-        const std::vector<AUTOSQL_FLOAT>& _update_rates2 )
-    {
-        assert( _update_rates1.size() == _update_rates2.size() );
-
-        slopes_ = _update_rates1;
-        intercepts_ = _update_rates2;
-    }
-
-    inline size_t size()
+    size_t size() const
     {
         assert( intercepts_.size() == slopes_.size() );
         return intercepts_.size();
     }
 
-    const std::vector<AUTOSQL_FLOAT>& slopes() const { return slopes_; }
-
-    inline AUTOSQL_FLOAT& slopes( size_t _i )
-    {
-        assert( _i < slopes_.size() );
-        return slopes_[_i];
-    }
+    std::vector<AUTOSQL_FLOAT>& slopes() { return slopes_; }
 
     // -----------------------------------------
 

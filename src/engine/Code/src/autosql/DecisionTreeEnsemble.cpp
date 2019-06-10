@@ -577,28 +577,25 @@ void DecisionTreeEnsemble::fit_linear_regressions_and_recalculate_residuals(
     // Find the optimal update_rates and update parameters of linear
     // regression accordingly
 
-    assert( false && "ToDo" );
+    auto update_rates = loss_function()->calculate_update_rates(
+        _yhat_old,
+        predictions,
+        _table_holder.main_tables_[ix],
+        _sample_weights );
 
-    /* std::vector<AUTOSQL_FLOAT> update_rates =
-         loss_function()->calculate_update_rates(
-             _yhat_old, f_t, _table_holder.main_tables_[ix], _sample_weights
-       );
+    auto multiply_by_shrinkage = [_shrinkage]( AUTOSQL_FLOAT &val ) {
+        val *= _shrinkage;
+    };
 
-    for ( size_t i = 0;
-          i < _table_holder.main_table.df().targets().ncols();
-          ++i )
-        {
-            last_linear_regression()->intercepts( i ) *=
-                update_rates( 0, i ) * _shrinkage;
-        }
+    std::for_each(
+        last_linear_regression()->slopes().begin(),
+        last_linear_regression()->slopes().end(),
+        multiply_by_shrinkage );
 
-    for ( AUTOSQL_INT i = 0;
-          i < _table_holder.main_table.df().targets().ncols();
-          ++i )
-        {
-            last_linear_regression()->slopes( i ) *=
-                update_rates( 0, i ) * _shrinkage;
-        }*/
+    std::for_each(
+        last_linear_regression()->intercepts().begin(),
+        last_linear_regression()->intercepts().end(),
+        multiply_by_shrinkage );
 
     // ----------------------------------------------------------------
     // Get rid of out-of-range-values
@@ -902,28 +899,31 @@ void DecisionTreeEnsemble::parse_linear_regressions(
 
     linear_regressions().clear();
 
-    for ( size_t i = 0; i < slopes.size(); ++i )
-        {
-            std::vector<AUTOSQL_FLOAT> slopes_mat(
-                static_cast<AUTOSQL_INT>( 1 ),
-                static_cast<AUTOSQL_INT>( num_targets ) );
+    assert( false && "ToDo" );
 
-            std::copy( slopes[i].begin(), slopes[i].end(), slopes_mat.begin() );
+    /* for ( size_t i = 0; i < slopes.size(); ++i )
+         {
+             std::vector<AUTOSQL_FLOAT> slopes_mat(
+                 static_cast<AUTOSQL_INT>( 1 ),
+                 static_cast<AUTOSQL_INT>( num_targets ) );
 
-            std::vector<AUTOSQL_FLOAT> intercepts_mat(
-                static_cast<AUTOSQL_INT>( 1 ),
-                static_cast<AUTOSQL_INT>( num_targets ) );
+             std::copy( slopes[i].begin(), slopes[i].end(), slopes_mat.begin()
+       );
 
-            std::copy(
-                intercepts[i].begin(),
-                intercepts[i].end(),
-                intercepts_mat.begin() );
+             std::vector<AUTOSQL_FLOAT> intercepts_mat(
+                 static_cast<AUTOSQL_INT>( 1 ),
+                 static_cast<AUTOSQL_INT>( num_targets ) );
 
-            linear_regressions().push_back( utils::LinearRegression() );
+             std::copy(
+                 intercepts[i].begin(),
+                 intercepts[i].end(),
+                 intercepts_mat.begin() );
 
-            last_linear_regression()->set_slopes_and_intercepts(
-                slopes_mat, intercepts_mat );
-        }
+             linear_regressions().push_back( utils::LinearRegression() );
+
+             last_linear_regression()->set_slopes_and_intercepts(
+                 slopes_mat, intercepts_mat );
+         }*/
 
     // -------------------------------------------------------------
 }
