@@ -148,8 +148,10 @@ void Threadutils::transform_ensemble(
         }
     catch ( std::exception& e )
         {
-            // std::cout << "Error in non-main thread: " << e.what() <<
-            // std::endl;
+            if ( _logger )
+                {
+                    throw std::runtime_error( e.what() );
+                }
         }
 }
 
