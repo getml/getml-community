@@ -39,14 +39,9 @@ DecisionTree::DecisionTree(
 
     assert( _agg != "" );
 
-    aggregation_ptr() = aggregations::AggregationParser::parse_aggregation(
-        _agg,
-        _data_used,
-        _ix_column_used,
-        same_units_numerical(),
-        same_units_discrete() );
-
     impl_.aggregation_type_ = _agg;
+
+    aggregation_ptr() = make_aggregation();
 
     impl_.tree_hyperparameters_ = _tree_hyperparameters;
 
@@ -68,12 +63,7 @@ DecisionTree::DecisionTree( const DecisionTree &_other )
 
     assert( _other.impl_.aggregation_type_ != "" );
 
-    aggregation_ptr() = aggregations::AggregationParser::parse_aggregation(
-        _other.impl_.aggregation_type_,
-        _other.column_to_be_aggregated().data_used,
-        _other.column_to_be_aggregated().ix_column_used,
-        _other.same_units_numerical(),
-        _other.same_units_discrete() );
+    aggregation_ptr() = _other.make_aggregation();
 
     if ( root() )
         {
@@ -500,14 +490,9 @@ void DecisionTree::from_json_obj( const Poco::JSON::Object &_json_obj )
 
     assert( agg != "" );
 
-    aggregation_ptr() = aggregations::AggregationParser::parse_aggregation(
-        agg,
-        column_to_be_aggregated().data_used,
-        column_to_be_aggregated().ix_column_used,
-        same_units_numerical(),
-        same_units_discrete() );
-
     impl_.aggregation_type_ = agg;
+
+    aggregation_ptr() = make_aggregation();
 
     // -----------------------------------
 

@@ -97,7 +97,7 @@ class DecisionTree
     }
 
     /// Type of the aggregation used by this tree.
-    inline std::string const aggregation_type() const
+    inline const std::string aggregation_type() const
     {
         return aggregation()->type();
     }
@@ -146,6 +146,18 @@ class DecisionTree
 
     /// Trivial getter
     inline AUTOSQL_INT ix_perip_used() const { return impl()->ix_perip_used(); }
+
+    /// Creates the aggregation used by this tree or a clone thereof.
+    inline std::shared_ptr<aggregations::AbstractAggregation> const
+    make_aggregation() const
+    {
+        return aggregations::AggregationParser::parse_aggregation(
+            impl()->aggregation_type_,
+            column_to_be_aggregated().data_used,
+            column_to_be_aggregated().ix_column_used,
+            same_units_numerical(),
+            same_units_discrete() );
+    }
 
     /// Returns an intermediate aggregation representing the aggregation
     /// of this DecisionTree.
