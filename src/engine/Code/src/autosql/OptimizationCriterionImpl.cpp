@@ -38,10 +38,10 @@ void OptimizationCriterionImpl::commit(
 
 // ----------------------------------------------------------------------------
 
-std::vector<std::vector<AUTOSQL_FLOAT>>
+std::deque<std::vector<AUTOSQL_FLOAT>>
 OptimizationCriterionImpl::reduce_sufficient_statistics_stored() const
 {
-    std::vector<std::vector<AUTOSQL_FLOAT>> sufficient_statistics_global;
+    std::deque<std::vector<AUTOSQL_FLOAT>> sufficient_statistics_global;
 
     for ( const auto& local : sufficient_statistics_stored() )
         {

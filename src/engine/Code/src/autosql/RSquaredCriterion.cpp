@@ -69,7 +69,7 @@ std::vector<AUTOSQL_INT> RSquaredCriterion::argsort(
 
 AUTOSQL_FLOAT RSquaredCriterion::calculate_r_squared(
     const size_t _i,
-    const std::vector<std::vector<AUTOSQL_FLOAT>>& _sufficient_statistics )
+    const std::deque<std::vector<AUTOSQL_FLOAT>>& _sufficient_statistics )
     const
 {
     assert( sample_weights_.size() == y_centered_[0].size() );
