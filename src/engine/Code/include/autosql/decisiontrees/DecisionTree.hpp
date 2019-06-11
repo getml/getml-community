@@ -10,10 +10,15 @@ namespace decisiontrees
 class DecisionTree
 {
    public:
-    DecisionTree( const Poco::JSON::Object &_json_obj );
+    DecisionTree(
+        const std::shared_ptr<const std::vector<std::string>> &_categories,
+        const std::shared_ptr<const descriptors::TreeHyperparameters>
+            &_tree_hyperparameters,
+        const Poco::JSON::Object &_json_obj );
 
     DecisionTree(
         const std::string &_agg,
+        const std::shared_ptr<const std::vector<std::string>> &_categories,
         const std::shared_ptr<const descriptors::TreeHyperparameters>
             &_tree_hyperparameters,
         const size_t _ix_perip_used,
@@ -197,13 +202,6 @@ class DecisionTree
         containers::Optional<aggregations::AggregationImpl> *_aggregation_impl )
     {
         impl_.aggregation_->set_aggregation_impl( _aggregation_impl );
-    }
-
-    /// Trivial setter
-    inline void set_categories(
-        const std::shared_ptr<const std::vector<std::string>> &_categories )
-    {
-        impl_.categories_ = _categories;
     }
 
     /// Parallel version only: Set the pointer to the communicator

@@ -70,6 +70,9 @@
         "optional": "cpp",
         "core": "cpp",
         "__errc": "cpp",
-        "__node_handle": "cpp"
+        "__node_handle": "cpp",
+        "list": "cpp",
+        "future": "cpp",
+        "iomanip": "cpp"
     }
 }

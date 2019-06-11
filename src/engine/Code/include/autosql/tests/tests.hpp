@@ -20,8 +20,8 @@
 #include "autosql/tests/load_json.hpp"
 
 #include "autosql/tests/test1_sum.hpp"
-/*#include "autosql/tests/test2_avg.hpp"
-#include "autosql/tests/test3_avg.hpp"
+#include "autosql/tests/test2_avg.hpp"
+/*#include "autosql/tests/test3_avg.hpp"
 #include "autosql/tests/test4_time_stamps_diff.hpp"
 #include "autosql/tests/test5_categorical.hpp"
 #include "autosql/tests/test6_categorical.hpp"

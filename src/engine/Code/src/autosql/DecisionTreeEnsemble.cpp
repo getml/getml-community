@@ -52,6 +52,7 @@ std::list<decisiontrees::DecisionTree> DecisionTreeEnsemble::build_candidates(
 
     return CandidateTreeBuilder::build_candidates(
         _table_holder,
+        categories(),
         _same_units,
         _ix_feature,
         hyperparameters(),

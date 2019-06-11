@@ -8,6 +8,7 @@ namespace ensemble
 
 void CandidateTreeBuilder::add_counts(
     const decisiontrees::TableHolder &_table_holder,
+    const std::shared_ptr<const std::vector<std::string>> &_categories,
     const std::vector<descriptors::SameUnits> &_same_units,
     const descriptors::Hyperparameters &_hyperparameters,
     const AUTOSQL_INT _ix_perip_used,
@@ -25,6 +26,7 @@ void CandidateTreeBuilder::add_counts(
 
             _candidate_trees->push_back( decisiontrees::DecisionTree(
                 agg,
+                _categories,
                 _hyperparameters.tree_hyperparameters_,
                 _ix_perip_used,
                 enums::DataUsed::not_applicable,  // data_used
@@ -40,6 +42,7 @@ void CandidateTreeBuilder::add_counts(
 
 void CandidateTreeBuilder::add_count_distincts(
     const decisiontrees::TableHolder &_table_holder,
+    const std::shared_ptr<const std::vector<std::string>> &_categories,
     const std::vector<descriptors::SameUnits> &_same_units,
     const descriptors::Hyperparameters &_hyperparameters,
     const AUTOSQL_INT _ix_perip_used,
@@ -73,6 +76,7 @@ void CandidateTreeBuilder::add_count_distincts(
                             _candidate_trees->push_back(
                                 decisiontrees::DecisionTree(
                                     agg,
+                                    _categories,
                                     _hyperparameters.tree_hyperparameters_,
                                     _ix_perip_used,
                                     data_used,
@@ -90,6 +94,7 @@ void CandidateTreeBuilder::add_count_distincts(
 
 void CandidateTreeBuilder::add_other_aggs(
     const decisiontrees::TableHolder &_table_holder,
+    const std::shared_ptr<const std::vector<std::string>> &_categories,
     const std::vector<descriptors::SameUnits> &_same_units,
     const descriptors::Hyperparameters &_hyperparameters,
     const AUTOSQL_INT _ix_perip_used,
@@ -140,6 +145,7 @@ void CandidateTreeBuilder::add_other_aggs(
                             _candidate_trees->push_back(
                                 decisiontrees::DecisionTree(
                                     agg,
+                                    _categories,
                                     _hyperparameters.tree_hyperparameters_,
                                     _ix_perip_used,
                                     data_used,
@@ -159,6 +165,7 @@ void CandidateTreeBuilder::add_other_aggs(
 
 void CandidateTreeBuilder::add_subfeature_aggs(
     const decisiontrees::TableHolder &_table_holder,
+    const std::shared_ptr<const std::vector<std::string>> &_categories,
     const std::vector<descriptors::SameUnits> &_same_units,
     const descriptors::Hyperparameters &_hyperparameters,
     const AUTOSQL_INT _ix_perip_used,
@@ -183,6 +190,7 @@ void CandidateTreeBuilder::add_subfeature_aggs(
                 {
                     _candidate_trees->push_back( decisiontrees::DecisionTree(
                         agg,
+                        _categories,
                         _hyperparameters.tree_hyperparameters_,
                         _ix_perip_used,
                         enums::DataUsed::x_subfeature,
@@ -199,6 +207,7 @@ void CandidateTreeBuilder::add_subfeature_aggs(
 
 std::list<decisiontrees::DecisionTree> CandidateTreeBuilder::build_candidates(
     const decisiontrees::TableHolder &_table_holder,
+    const std::shared_ptr<const std::vector<std::string>> &_categories,
     const std::vector<descriptors::SameUnits> &_same_units,
     const AUTOSQL_INT _ix_feature,
     const descriptors::Hyperparameters &_hyperparameters,
@@ -214,6 +223,7 @@ std::list<decisiontrees::DecisionTree> CandidateTreeBuilder::build_candidates(
 
     auto candidate_trees = build_candidate_trees(
         _table_holder,
+        _categories,
         _same_units,
         _hyperparameters,
         _random_number_generator,
@@ -258,6 +268,7 @@ std::list<decisiontrees::DecisionTree> CandidateTreeBuilder::build_candidates(
 std::list<decisiontrees::DecisionTree>
 CandidateTreeBuilder::build_candidate_trees(
     const decisiontrees::TableHolder &_table_holder,
+    const std::shared_ptr<const std::vector<std::string>> &_categories,
     const std::vector<descriptors::SameUnits> &_same_units,
     const descriptors::Hyperparameters _hyperparameters,
     std::mt19937 *_random_number_generator,
@@ -278,6 +289,7 @@ CandidateTreeBuilder::build_candidate_trees(
 
             add_counts(
                 _table_holder,
+                _categories,
                 _same_units,
                 _hyperparameters,
                 ix_perip_used,
@@ -294,6 +306,7 @@ CandidateTreeBuilder::build_candidate_trees(
 
             add_count_distincts(
                 _table_holder,
+                _categories,
                 _same_units,
                 _hyperparameters,
                 ix_perip_used,
@@ -308,6 +321,7 @@ CandidateTreeBuilder::build_candidate_trees(
 
             add_other_aggs(
                 _table_holder,
+                _categories,
                 _same_units,
                 _hyperparameters,
                 ix_perip_used,
@@ -323,6 +337,7 @@ CandidateTreeBuilder::build_candidate_trees(
                 {
                     add_subfeature_aggs(
                         _table_holder,
+                        _categories,
                         _same_units,
                         _hyperparameters,
                         ix_perip_used,

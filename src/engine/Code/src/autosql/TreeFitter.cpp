@@ -26,8 +26,6 @@ void TreeFitter::find_best_trees(
 
     debug_log( "Identifying best feature..." );
 
-    const auto ix_begin = _trees->size();
-
     std::vector<std::tuple<size_t, AUTOSQL_FLOAT>> tuples;
 
     for ( size_t ix = 0; ix < _candidate_trees->size(); ++ix )
@@ -59,11 +57,6 @@ void TreeFitter::find_best_trees(
         }
 
     _candidate_trees->clear();
-
-    for ( auto it = _trees->begin() + ix_begin; it != _trees->end(); ++it )
-        {
-            it->set_categories( categories() );
-        }
 
     // ---------------î----------------------------------------------------
     // Refit best tree, if necessary
@@ -273,132 +266,138 @@ void TreeFitter::fit_subtrees_for_candidates(
 {
     // ---------------------------------------------------------------
 
-    debug_log( "fit_subtrees_for_candidates.." );
+    /* debug_log( "fit_subtrees_for_candidates.." );
 
-    // ---------------------------------------------------------------
+     // ---------------------------------------------------------------
 
-    for ( auto it = _candidate_trees.begin(); it != _candidate_trees.end();
-          ++it )
-        {
-            // ---------------------------------------------------------------
+     for ( auto it = _candidate_trees.begin(); it != _candidate_trees.end();
+           ++it )
+         {
+             // ---------------------------------------------------------------
 
-            if ( it->has_subtrees() )
-                {
-                    continue;
-                }
+             if ( it->has_subtrees() )
+                 {
+                     continue;
+                 }
 
-            // ---------------------------------------------------------------
+             // ---------------------------------------------------------------
 
-            if ( it->column_to_be_aggregated().ix_perip_used != _ix_subtable )
-                {
-                    continue;
-                }
+             if ( it->column_to_be_aggregated().ix_perip_used != _ix_subtable )
+                 {
+                     continue;
+                 }
 
-            // ---------------------------------------------------------------
+             // ---------------------------------------------------------------
 
-            if ( it->intermediate_type() == "none" )
-                {
-                    continue;
-                }
+             if ( it->intermediate_type() == "none" )
+                 {
+                     continue;
+                 }
 
-            // ---------------------------------------------------------------
+             // ---------------------------------------------------------------
 
-            std::shared_ptr<optimizationcriteria::OptimizationCriterion>
-                optimization_criterion = it->make_intermediate( _opt_impl );
+             std::shared_ptr<optimizationcriteria::OptimizationCriterion>
+                 optimization_criterion = it->make_intermediate( _opt_impl );
 
-            // ---------------------------------------------------------------
+             // ---------------------------------------------------------------
 
-            std::vector<decisiontrees::DecisionTree> subtrees;
+             std::vector<decisiontrees::DecisionTree> subtrees;
 
-            // ---------------------------------------------------------------
+             // ---------------------------------------------------------------
 
-            while ( subtrees.size() <
-                    static_cast<size_t>( hyperparameters().num_subfeatures_ ) )
-                {
-                    // ---------------------------------------------------------------
-                    // Build candidates.
+             while ( subtrees.size() <
+                     static_cast<size_t>( hyperparameters().num_subfeatures_ ) )
+                 {
+                     //
+     ---------------------------------------------------------------
+                     // Build candidates.
 
-                    auto candidate_subtrees =
-                        CandidateTreeBuilder::build_candidates(
-                            _subtable,
-                            _same_units,
-                            -1,  // ix_features = -1 signals we do not want
-                                 // round_robin
-                            hyperparameters(),
-                            &_aggregation_impl,
-                            &random_number_generator(),
-                            comm() );
+                     auto candidate_subtrees =
+                         CandidateTreeBuilder::build_candidates(
+                             _subtable,
+                             _same_units,
+                             -1,  // ix_features = -1 signals we do not want
+                                  // round_robin
+                             hyperparameters(),
+                             &_aggregation_impl,
+                             &random_number_generator(),
+                             comm() );
 
-                    // ----------------------------------------------------------------
-                    // Before can fit this tree, we must fit any existing
-                    // subtrees.
+                     //
+     ----------------------------------------------------------------
+                     // Before can fit this tree, we must fit any existing
+                     // subtrees.
 
-                    debug_log( "Subfitter: Fitting subfeatures.." );
+                     debug_log( "Subfitter: Fitting subfeatures.." );
 
-                    fit_subtrees(
-                        _subtable,
-                        _sample_containers,
-                        optimization_criterion.get(),
-                        candidate_subtrees );
+                     fit_subtrees(
+                         _subtable,
+                         _sample_containers,
+                         optimization_criterion.get(),
+                         candidate_subtrees );
 
-                    // ----------------------------------------------------------------
-                    // In this section we just "probe" - we don't allow the tree
-                    // to grow to its full depth,  instead we just get an idea
-                    // of what might work best.
+                     //
+     ----------------------------------------------------------------
+                     // In this section we just "probe" - we don't allow the
+     tree
+                     // to grow to its full depth,  instead we just get an idea
+                     // of what might work best.
 
-                    std::vector<AUTOSQL_FLOAT> values;
+                     std::vector<AUTOSQL_FLOAT> values;
 
-                    debug_log( "Subfitter: Probing.." );
+                     debug_log( "Subfitter: Probing.." );
 
-                    /*probe(
-                        _samples,
-                        _sample_containers,
-                        _subtable,
-                        optimization_criterion.get(),
-                        values,
-                        candidate_subtrees );*/
-
-                    // ----------------------------------------------------------------
-                    // Now, we identify the best trees
-
-                    /* find_best_trees(
-                         static_cast<size_t>(
-                             hyperparameters().num_subfeatures_ ) -
-                             subtrees.size(),
-                         values,
+                     probe(
                          _samples,
                          _sample_containers,
                          _subtable,
                          optimization_criterion.get(),
-                         candidate_subtrees,
-                         subtrees );*/
+                         values,
+                         candidate_subtrees );
 
-                    // ---------------------------------------------------------------
-                }
+                     //
+     ----------------------------------------------------------------
+                     // Now, we identify the best trees
 
-            // ---------------------------------------------------------------
-            // Under some circumstances, we can simply copy existing subtrees.
+                      find_best_trees(
+                          static_cast<size_t>(
+                              hyperparameters().num_subfeatures_ ) -
+                              subtrees.size(),
+                          values,
+                          _samples,
+                          _sample_containers,
+                          _subtable,
+                          optimization_criterion.get(),
+                          candidate_subtrees,
+                          subtrees );
 
-            for ( auto it2 = it; it2 != _candidate_trees.end(); ++it2 )
-                {
-                    const bool same_subtrees =
-                        it2->column_to_be_aggregated().ix_perip_used ==
-                            it->column_to_be_aggregated().ix_perip_used &&
-                        it2->intermediate_type() == it->intermediate_type();
+                     //
+     ---------------------------------------------------------------
+                 }
 
-                    if ( same_subtrees )
-                        {
-                            assert( it2->has_subtrees() == false );
-                            it2->set_subtrees( subtrees );
-                        }
-                }
+             // ---------------------------------------------------------------
+             // Under some circumstances, we can simply copy existing subtrees.
 
-            // ---------------------------------------------------------------
-        }
+             for ( auto it2 = it; it2 != _candidate_trees.end(); ++it2 )
+                 {
+                     const bool same_subtrees =
+                         it2->column_to_be_aggregated().ix_perip_used ==
+                             it->column_to_be_aggregated().ix_perip_used &&
+                         it2->intermediate_type() == it->intermediate_type();
 
-    // ---------------------------------------------------------------
+                     if ( same_subtrees )
+                         {
+                             assert( it2->has_subtrees() == false );
+                             it2->set_subtrees( subtrees );
+                         }
+                 }
 
-    debug_log( "fit_subtrees_for_candidates..done." );
+             // ---------------------------------------------------------------
+         }
+
+     // ---------------------------------------------------------------
+
+     debug_log( "fit_subtrees_for_candidates..done." );*/
 
     // ---------------------------------------------------------------
 }

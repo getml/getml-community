@@ -11,7 +11,14 @@ struct DecisionTreeImpl
 {
     // ----------------------------------------
 
-    DecisionTreeImpl() : comm_( nullptr ), random_number_generator_( nullptr )
+    DecisionTreeImpl(
+        const std::shared_ptr<const std::vector<std::string>>& _categories,
+        const std::shared_ptr<const descriptors::TreeHyperparameters>&
+            _tree_hyperparameters )
+        : categories_( _categories ),
+          comm_( nullptr ),
+          random_number_generator_( nullptr ),
+          tree_hyperparameters_( _tree_hyperparameters )
     {
     }
 

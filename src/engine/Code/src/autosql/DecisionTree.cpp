@@ -6,7 +6,12 @@ namespace decisiontrees
 {
 // ----------------------------------------------------------------------------
 
-DecisionTree::DecisionTree( const Poco::JSON::Object &_json_obj )
+DecisionTree::DecisionTree(
+    const std::shared_ptr<const std::vector<std::string>> &_categories,
+    const std::shared_ptr<const descriptors::TreeHyperparameters>
+        &_tree_hyperparameters,
+    const Poco::JSON::Object &_json_obj )
+    : impl_( _categories, _tree_hyperparameters )
 {
     debug_log( "Feature: Normal constructor..." );
 
@@ -19,6 +24,7 @@ DecisionTree::DecisionTree( const Poco::JSON::Object &_json_obj )
 
 DecisionTree::DecisionTree(
     const std::string &_agg,
+    const std::shared_ptr<const std::vector<std::string>> &_categories,
     const std::shared_ptr<const descriptors::TreeHyperparameters>
         &_tree_hyperparameters,
     const size_t _ix_perip_used,
@@ -28,6 +34,7 @@ DecisionTree::DecisionTree(
     std::mt19937 *_random_number_generator,
     containers::Optional<aggregations::AggregationImpl> *_aggregation_impl,
     multithreading::Communicator *_comm )
+    : impl_( _categories, _tree_hyperparameters )
 {
     set_same_units( _same_units );
 
@@ -348,81 +355,13 @@ void DecisionTree::fit(
 
 void DecisionTree::from_json_obj( const Poco::JSON::Object &_json_obj )
 {
-    assert( false && "ToDo" );
-
     // -----------------------------------
 
-    /*  peripheral_name() =
-          JSON::get_value<std::string>( _json_obj, "peripheral_name_" );
+    impl()->input_.reset(
+        new containers::Schema( *JSON::get_object( _json_obj, "input_" ) ) );
 
-      population_name() =
-          JSON::get_value<std::string>( _json_obj, "population_name_" );
-
-      join_keys_perip_name() =
-          JSON::get_value<std::string>( _json_obj, "join_keys_perip_name_" );
-
-      join_keys_popul_name() =
-          JSON::get_value<std::string>( _json_obj, "join_keys_popul_name_" );
-
-      time_stamps_perip_name() =
-          JSON::get_value<std::string>( _json_obj, "time_stamps_perip_name_" );
-
-      time_stamps_popul_name() =
-          JSON::get_value<std::string>( _json_obj, "time_stamps_popul_name_" );
-
-      if ( _json_obj.has( "upper_time_stamps_" ) )
-          {
-              upper_time_stamps_name() =
-                  JSON::get_value<std::string>( _json_obj, "upper_time_stamps_"
-      );
-          }
-      else
-          {
-              upper_time_stamps_name() = "";
-          }
-
-      // -----------------------------------
-
-      impl_.x_perip_categorical_colnames_.reset( new std::vector<std::string>()
-      );
-
-      x_perip_categorical_colnames() = JSON::array_to_vector<std::string>(
-          JSON::get_array( _json_obj, "x_perip_categorical_colnames_" ) );
-
-      // --
-
-      impl_.x_perip_numerical_colnames_.reset( new std::vector<std::string>() );
-
-      x_perip_numerical_colnames() = JSON::array_to_vector<std::string>(
-          JSON::get_array( _json_obj, "x_perip_numerical_colnames_" ) );
-
-      // --
-
-      impl_.x_perip_discrete_colnames_.reset( new std::vector<std::string>() );
-
-      x_perip_discrete_colnames() = JSON::array_to_vector<std::string>(
-          JSON::get_array( _json_obj, "x_perip_discrete_colnames_" ) );
-      // --
-
-      impl_.x_popul_categorical_colnames_.reset( new std::vector<std::string>()
-      );
-
-      x_popul_categorical_colnames() = JSON::array_to_vector<std::string>(
-          JSON::get_array( _json_obj, "x_popul_categorical_colnames_" ) );
-
-      // --
-
-      impl_.x_popul_numerical_colnames_.reset( new std::vector<std::string>() );
-
-      x_popul_numerical_colnames() = JSON::array_to_vector<std::string>(
-          JSON::get_array( _json_obj, "x_popul_numerical_colnames_" ) );
-
-      // --
-
-      impl_.x_popul_discrete_colnames_.reset( new std::vector<std::string>() );
-
-      x_popul_discrete_colnames() = JSON::array_to_vector<std::string>(
-          JSON::get_array( _json_obj, "x_popul_discrete_colnames_" ) );*/
+    impl()->output_.reset(
+        new containers::Schema( *JSON::get_object( _json_obj, "output_" ) ) );
 
     // -----------------------------------
 
@@ -434,14 +373,6 @@ void DecisionTree::from_json_obj( const Poco::JSON::Object &_json_obj )
 
     column_to_be_aggregated().ix_perip_used =
         JSON::get_value<size_t>( _json_obj, "input_" );
-
-    root().reset( new DecisionTreeNode(
-        true,   // _is_activated
-        1,      // _depth
-        impl()  // _tree
-        ) );
-
-    root()->from_json_obj( *JSON::get_object( _json_obj, "conditions_" ) );
 
     // -----------------------------------
 
@@ -472,6 +403,16 @@ void DecisionTree::from_json_obj( const Poco::JSON::Object &_json_obj )
 
     // -----------------------------------
 
+    root().reset( new DecisionTreeNode(
+        true,   // _is_activated
+        1,      // _depth
+        impl()  // _tree
+        ) );
+
+    root()->from_json_obj( *JSON::get_object( _json_obj, "conditions_" ) );
+
+    // -----------------------------------
+
     const auto subtrees_arr = JSON::get_array( _json_obj, "subfeatures_" );
 
     subtrees().clear();
@@ -479,6 +420,8 @@ void DecisionTree::from_json_obj( const Poco::JSON::Object &_json_obj )
     for ( size_t i = 0; i < subtrees_arr->size(); ++i )
         {
             subtrees().push_back( DecisionTree(
+                impl()->categories_,
+                impl()->tree_hyperparameters_,
                 *subtrees_arr->getObject( static_cast<unsigned int>( i ) ) ) );
         }
 
