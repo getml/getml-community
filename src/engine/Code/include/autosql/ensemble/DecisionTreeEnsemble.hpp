@@ -10,19 +10,22 @@ namespace ensemble
 class DecisionTreeEnsemble
 {
    public:
-    DecisionTreeEnsemble();
+    DecisionTreeEnsemble(
+        const std::shared_ptr<const std::vector<std::string>> &_categories,
+        const std::shared_ptr<const descriptors::Hyperparameters>
+            &_hyperparameters,
+        const std::shared_ptr<const std::vector<std::string>> &_peripheral,
+        const std::shared_ptr<const decisiontrees::Placeholder> &_placeholder );
 
     DecisionTreeEnsemble(
-        const std::shared_ptr<std::vector<std::string>> &_categories );
-
-    DecisionTreeEnsemble(
-        const std::shared_ptr<std::vector<std::string>> &_categories,
-        const std::vector<std::string> &_placeholder_peripheral,
-        const decisiontrees::Placeholder &_placeholder_population );
+        const std::shared_ptr<const std::vector<std::string>> &_categories,
+        const Poco::JSON::Object &_obj );
 
     DecisionTreeEnsemble( const DecisionTreeEnsemble &_other );
 
     DecisionTreeEnsemble( DecisionTreeEnsemble &&_other ) noexcept;
+
+    DecisionTreeEnsemble( const std::string &_fname );
 
     ~DecisionTreeEnsemble() = default;
 
@@ -41,7 +44,8 @@ class DecisionTreeEnsemble
     void fit(
         const containers::DataFrame &_population,
         const std::vector<containers::DataFrame> &_peripheral,
-        const std::shared_ptr<const logging::AbstractLogger> _logger );
+        const std::shared_ptr<const logging::AbstractLogger> _logger =
+            std::shared_ptr<const logging::AbstractLogger>() );
 
     /// Fits the decision tree ensemble - called by the spawned threads.
     void fit(
@@ -184,7 +188,7 @@ class DecisionTreeEnsemble
     }
 
     /// Trivial accessor
-    inline std::shared_ptr<std::vector<std::string>> &categories()
+    inline std::shared_ptr<const std::vector<std::string>> &categories()
     {
         return impl().categories_;
     }

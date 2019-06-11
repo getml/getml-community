@@ -6,23 +6,12 @@ namespace ensemble
 {
 // ----------------------------------------------------------------------------
 
-DecisionTreeEnsemble::DecisionTreeEnsemble() {}
-
-// ----------------------------------------------------------------------------
-
 DecisionTreeEnsemble::DecisionTreeEnsemble(
-    const std::shared_ptr<std::vector<std::string>> &_categories )
-    : impl_( _categories )
-{
-}
-
-// ----------------------------------------------------------------------------
-
-DecisionTreeEnsemble::DecisionTreeEnsemble(
-    const std::shared_ptr<std::vector<std::string>> &_categories,
-    const std::vector<std::string> &_placeholder_peripheral,
-    const decisiontrees::Placeholder &_placeholder_population )
-    : impl_( _categories, _placeholder_peripheral, _placeholder_population )
+    const std::shared_ptr<const std::vector<std::string>> &_categories,
+    const std::shared_ptr<const descriptors::Hyperparameters> &_hyperparameters,
+    const std::shared_ptr<const std::vector<std::string>> &_peripheral,
+    const std::shared_ptr<const decisiontrees::Placeholder> &_placeholder )
+    : impl_( _categories, *_peripheral, *_placeholder )
 {
 }
 
@@ -50,6 +39,13 @@ DecisionTreeEnsemble::DecisionTreeEnsemble(
       loss_function_( std::move( _other.loss_function_ ) )
 {
     debug_log( "Model: Move constructor..." );
+}
+
+// ----------------------------------------------------------------------------
+
+DecisionTreeEnsemble::DecisionTreeEnsemble( const std::string &_fname )
+{
+    assert( false && "ToDo" );
 }
 
 // ----------------------------------------------------------------------------
@@ -708,110 +704,115 @@ void DecisionTreeEnsemble::fit_linear_regressions_and_recalculate_residuals(
 
 void DecisionTreeEnsemble::from_json_obj( const Poco::JSON::Object &_json_obj )
 {
-    // ----------------------------------------
-
-    assert( categories() );
-
-    DecisionTreeEnsemble model( categories() );
+    assert( false && "ToDo" );
 
     // ----------------------------------------
-    // Plausibility checks
 
-    if ( JSON::get_array( _json_obj, "features_" )->size() == 0 )
-        {
-            std::invalid_argument(
-                "JSON object does not contain any features!" );
-        }
+    /*   assert( categories() );
 
-    if ( ( JSON::get_array( _json_obj, "update_rates1_" )->size() %
-           JSON::get_array( _json_obj, "features_" )->size() ) != 0 )
-        {
-            std::invalid_argument(
-                "Error in JSON: Number of elements in update_rates must be "
-                "divisible by number of features!" );
-        }
+       DecisionTreeEnsemble model( categories() );
 
-    if ( JSON::get_array( _json_obj, "update_rates1_" )->size() !=
-         JSON::get_array( _json_obj, "update_rates2_" )->size() )
-        {
-            std::invalid_argument(
-                "Error in JSON: Number of elements update_rates1_ must be "
-                "equal to number of elements in update_rates2_!" );
-        }
+       // ----------------------------------------
+       // Plausibility checks
 
-    // -------------------------------------------
-    // Parse trees
+       if ( JSON::get_array( _json_obj, "features_" )->size() == 0 )
+           {
+               std::invalid_argument(
+                   "JSON object does not contain any features!" );
+           }
 
-    auto features = JSON::get_array( _json_obj, "features_" );
+       if ( ( JSON::get_array( _json_obj, "update_rates1_" )->size() %
+              JSON::get_array( _json_obj, "features_" )->size() ) != 0 )
+           {
+               std::invalid_argument(
+                   "Error in JSON: Number of elements in update_rates must be "
+                   "divisible by number of features!" );
+           }
 
-    for ( size_t i = 0; i < features->size(); ++i )
-        {
-            auto obj = features->getObject( static_cast<unsigned int>( i ) );
+       if ( JSON::get_array( _json_obj, "update_rates1_" )->size() !=
+            JSON::get_array( _json_obj, "update_rates2_" )->size() )
+           {
+               std::invalid_argument(
+                   "Error in JSON: Number of elements update_rates1_ must be "
+                   "equal to number of elements in update_rates2_!" );
+           }
 
-            model.trees().push_back( decisiontrees::DecisionTree( *obj ) );
-        }
+       // -------------------------------------------
+       // Parse trees
 
-    // ----------------------------------------
-    // Set categories for trees
+       auto features = JSON::get_array( _json_obj, "features_" );
 
-    for ( auto &tree : model.trees() )
-        {
-            tree.set_categories( model.categories() );
-        }
+       for ( size_t i = 0; i < features->size(); ++i )
+           {
+               auto obj = features->getObject( static_cast<unsigned int>( i ) );
 
-    // ----------------------------------------
-    // Parse targets
+               model.trees().push_back( decisiontrees::DecisionTree( *obj ) );
+           }
 
-    model.targets() = JSON::array_to_vector<std::string>(
-        JSON::get_array( _json_obj, "targets_" ) );
+       // ----------------------------------------
+       // Set categories for trees
 
-    // ----------------------------------------
-    // Parse parameters for linear regressions.
+       for ( auto &tree : model.trees() )
+           {
+               tree.set_categories( model.categories() );
+           }
 
-    model.parse_linear_regressions( _json_obj );
+       // ----------------------------------------
+       // Parse targets
 
-    // -------------------------------------------
-    // Parse placeholders
+       model.targets() = JSON::array_to_vector<std::string>(
+           JSON::get_array( _json_obj, "targets_" ) );
 
-    model.peripheral_names() = JSON::array_to_vector<std::string>(
-        JSON::get_array( _json_obj, "peripheral_" ) );
+       // ----------------------------------------
+       // Parse parameters for linear regressions.
 
-    model.impl().placeholder_population_.reset( new decisiontrees::Placeholder(
-        *JSON::get_object( _json_obj, "population_" ) ) );
+       model.parse_linear_regressions( _json_obj );
 
-    // ------------------------------------------
-    // Parse num_columns
+       // -------------------------------------------
+       // Parse placeholders
 
-    model.num_columns_peripheral_categorical() =
-        JSON::array_to_vector<AUTOSQL_INT>( JSON::get_array(
-            _json_obj, "num_columns_peripheral_categorical_" ) );
+       model.peripheral_names() = JSON::array_to_vector<std::string>(
+           JSON::get_array( _json_obj, "peripheral_" ) );
 
-    model.num_columns_peripheral_numerical() =
-        JSON::array_to_vector<AUTOSQL_INT>(
-            JSON::get_array( _json_obj, "num_columns_peripheral_numerical_" ) );
+       model.impl().placeholder_population_.reset( new
+       decisiontrees::Placeholder( *JSON::get_object( _json_obj, "population_" )
+       ) );
 
-    model.num_columns_peripheral_discrete() =
-        JSON::array_to_vector<AUTOSQL_INT>(
-            JSON::get_array( _json_obj, "num_columns_peripheral_discrete_" ) );
+       // ------------------------------------------
+       // Parse num_columns
 
-    model.num_columns_population_categorical() = JSON::get_value<size_t>(
-        _json_obj, "num_columns_population_categorical_" );
+       model.num_columns_peripheral_categorical() =
+           JSON::array_to_vector<AUTOSQL_INT>( JSON::get_array(
+               _json_obj, "num_columns_peripheral_categorical_" ) );
 
-    model.num_columns_population_numerical() = JSON::get_value<size_t>(
-        _json_obj, "num_columns_population_numerical_" );
+       model.num_columns_peripheral_numerical() =
+           JSON::array_to_vector<AUTOSQL_INT>(
+               JSON::get_array( _json_obj, "num_columns_peripheral_numerical_" )
+       );
 
-    model.num_columns_population_discrete() = JSON::get_value<size_t>(
-        _json_obj, "num_columns_population_discrete_" );
+       model.num_columns_peripheral_discrete() =
+           JSON::array_to_vector<AUTOSQL_INT>(
+               JSON::get_array( _json_obj, "num_columns_peripheral_discrete_" )
+       );
 
-    // -------------------------------------------
-    // Parse hyperparameters
+       model.num_columns_population_categorical() = JSON::get_value<size_t>(
+           _json_obj, "num_columns_population_categorical_" );
 
-    model.impl().hyperparameters_.reset( new descriptors::Hyperparameters(
-        *JSON::get_object( _json_obj, "hyperparameters_" ) ) );
+       model.num_columns_population_numerical() = JSON::get_value<size_t>(
+           _json_obj, "num_columns_population_numerical_" );
 
-    // -------------------------------------------
+       model.num_columns_population_discrete() = JSON::get_value<size_t>(
+           _json_obj, "num_columns_population_discrete_" );
 
-    *this = std::move( model );
+       // -------------------------------------------
+       // Parse hyperparameters
+
+       model.impl().hyperparameters_.reset( new descriptors::Hyperparameters(
+           *JSON::get_object( _json_obj, "hyperparameters_" ) ) );
+
+       // -------------------------------------------
+
+       *this = std::move( model );*/
 
     // -------------------------------------------
 }
