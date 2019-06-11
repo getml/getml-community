@@ -302,39 +302,10 @@ void DecisionTree::fit(
 {
     // ------------------------------------------------------------
 
-    /*population_name() = _population.name();
+    impl()->input_.reset( new containers::Schema( _peripheral.to_schema() ) );
 
-    peripheral_name() = _peripheral.name();*/
-
-    // ------------------------------------------------------------
-
-    /* join_keys_perip_name() = peripheral().join_key().colname( 0 );
-
-     join_keys_popul_name() =
-         population().df().join_key( ix_perip_used() ).colname( 0 );
-
-     time_stamps_perip_name() = peripheral().time_stamps().colname( 0 );
-
-     time_stamps_popul_name() =
-         population().df().time_stamps( ix_perip_used() ).colname( 0 );
-
-     if ( peripheral().upper_time_stamps() != nullptr )
-         {
-             upper_time_stamps_name() =
-                 peripheral().upper_time_stamps()->colname( 0 );
-         }
-
-     impl_.x_perip_categorical_colnames_ =
-     peripheral().categorical().colnames(); impl_.x_perip_numerical_colnames_ =
-     peripheral().numerical().colnames(); impl_.x_perip_discrete_colnames_ =
-     peripheral().discrete().colnames();
-
-     impl_.x_popul_categorical_colnames_ =
-         population().df().categorical().colnames();
-     impl_.x_popul_numerical_colnames_ =
-         population().df().numerical().colnames();
-     impl_.x_popul_discrete_colnames_ =
-     population().df().discrete().colnames();*/
+    impl()->output_.reset(
+        new containers::Schema( _population.df().to_schema() ) );
 
     // ------------------------------------------------------------
     // Prepare the root, the aggregation and the optimization criterion
@@ -377,76 +348,81 @@ void DecisionTree::fit(
 
 void DecisionTree::from_json_obj( const Poco::JSON::Object &_json_obj )
 {
-    // -----------------------------------
-
-    peripheral_name() =
-        JSON::get_value<std::string>( _json_obj, "peripheral_name_" );
-
-    population_name() =
-        JSON::get_value<std::string>( _json_obj, "population_name_" );
-
-    join_keys_perip_name() =
-        JSON::get_value<std::string>( _json_obj, "join_keys_perip_name_" );
-
-    join_keys_popul_name() =
-        JSON::get_value<std::string>( _json_obj, "join_keys_popul_name_" );
-
-    time_stamps_perip_name() =
-        JSON::get_value<std::string>( _json_obj, "time_stamps_perip_name_" );
-
-    time_stamps_popul_name() =
-        JSON::get_value<std::string>( _json_obj, "time_stamps_popul_name_" );
-
-    if ( _json_obj.has( "upper_time_stamps_" ) )
-        {
-            upper_time_stamps_name() =
-                JSON::get_value<std::string>( _json_obj, "upper_time_stamps_" );
-        }
-    else
-        {
-            upper_time_stamps_name() = "";
-        }
+    assert( false && "ToDo" );
 
     // -----------------------------------
 
-    impl_.x_perip_categorical_colnames_.reset( new std::vector<std::string>() );
+    /*  peripheral_name() =
+          JSON::get_value<std::string>( _json_obj, "peripheral_name_" );
 
-    x_perip_categorical_colnames() = JSON::array_to_vector<std::string>(
-        JSON::get_array( _json_obj, "x_perip_categorical_colnames_" ) );
+      population_name() =
+          JSON::get_value<std::string>( _json_obj, "population_name_" );
 
-    // --
+      join_keys_perip_name() =
+          JSON::get_value<std::string>( _json_obj, "join_keys_perip_name_" );
 
-    impl_.x_perip_numerical_colnames_.reset( new std::vector<std::string>() );
+      join_keys_popul_name() =
+          JSON::get_value<std::string>( _json_obj, "join_keys_popul_name_" );
 
-    x_perip_numerical_colnames() = JSON::array_to_vector<std::string>(
-        JSON::get_array( _json_obj, "x_perip_numerical_colnames_" ) );
+      time_stamps_perip_name() =
+          JSON::get_value<std::string>( _json_obj, "time_stamps_perip_name_" );
 
-    // --
+      time_stamps_popul_name() =
+          JSON::get_value<std::string>( _json_obj, "time_stamps_popul_name_" );
 
-    impl_.x_perip_discrete_colnames_.reset( new std::vector<std::string>() );
+      if ( _json_obj.has( "upper_time_stamps_" ) )
+          {
+              upper_time_stamps_name() =
+                  JSON::get_value<std::string>( _json_obj, "upper_time_stamps_"
+      );
+          }
+      else
+          {
+              upper_time_stamps_name() = "";
+          }
 
-    x_perip_discrete_colnames() = JSON::array_to_vector<std::string>(
-        JSON::get_array( _json_obj, "x_perip_discrete_colnames_" ) );
-    // --
+      // -----------------------------------
 
-    impl_.x_popul_categorical_colnames_.reset( new std::vector<std::string>() );
+      impl_.x_perip_categorical_colnames_.reset( new std::vector<std::string>()
+      );
 
-    x_popul_categorical_colnames() = JSON::array_to_vector<std::string>(
-        JSON::get_array( _json_obj, "x_popul_categorical_colnames_" ) );
+      x_perip_categorical_colnames() = JSON::array_to_vector<std::string>(
+          JSON::get_array( _json_obj, "x_perip_categorical_colnames_" ) );
 
-    // --
+      // --
 
-    impl_.x_popul_numerical_colnames_.reset( new std::vector<std::string>() );
+      impl_.x_perip_numerical_colnames_.reset( new std::vector<std::string>() );
 
-    x_popul_numerical_colnames() = JSON::array_to_vector<std::string>(
-        JSON::get_array( _json_obj, "x_popul_numerical_colnames_" ) );
+      x_perip_numerical_colnames() = JSON::array_to_vector<std::string>(
+          JSON::get_array( _json_obj, "x_perip_numerical_colnames_" ) );
 
-    // --
+      // --
 
-    impl_.x_popul_discrete_colnames_.reset( new std::vector<std::string>() );
+      impl_.x_perip_discrete_colnames_.reset( new std::vector<std::string>() );
 
-    x_popul_discrete_colnames() = JSON::array_to_vector<std::string>(
-        JSON::get_array( _json_obj, "x_popul_discrete_colnames_" ) );
+      x_perip_discrete_colnames() = JSON::array_to_vector<std::string>(
+          JSON::get_array( _json_obj, "x_perip_discrete_colnames_" ) );
+      // --
+
+      impl_.x_popul_categorical_colnames_.reset( new std::vector<std::string>()
+      );
+
+      x_popul_categorical_colnames() = JSON::array_to_vector<std::string>(
+          JSON::get_array( _json_obj, "x_popul_categorical_colnames_" ) );
+
+      // --
+
+      impl_.x_popul_numerical_colnames_.reset( new std::vector<std::string>() );
+
+      x_popul_numerical_colnames() = JSON::array_to_vector<std::string>(
+          JSON::get_array( _json_obj, "x_popul_numerical_colnames_" ) );
+
+      // --
+
+      impl_.x_popul_discrete_colnames_.reset( new std::vector<std::string>() );
+
+      x_popul_discrete_colnames() = JSON::array_to_vector<std::string>(
+          JSON::get_array( _json_obj, "x_popul_discrete_colnames_" ) );*/
 
     // -----------------------------------
 
@@ -594,7 +570,9 @@ Poco::JSON::Object DecisionTree::to_json_obj()
 
     // -----------------------------------
 
-    obj.set( "peripheral_name_", peripheral_name() );
+    assert( false && "ToDo" );
+
+    /*obj.set( "peripheral_name_", peripheral_name() );
     obj.set( "population_name_", population_name() );
 
     obj.set( "join_keys_perip_name_", join_keys_perip_name() );
@@ -620,7 +598,7 @@ Poco::JSON::Object DecisionTree::to_json_obj()
 
     obj.set( "x_popul_numerical_colnames_", x_popul_numerical_colnames() );
 
-    obj.set( "x_popul_discrete_colnames_", x_popul_discrete_colnames() );
+    obj.set( "x_popul_discrete_colnames_", x_popul_discrete_colnames() );*/
 
     // -----------------------------------
 
@@ -679,22 +657,22 @@ Poco::JSON::Object DecisionTree::to_monitor(
 
     obj.set( "aggregation_", select_statement( _feature_num ) );
 
-    obj.set( "join_keys_popul_", join_keys_popul_name() );
+    obj.set( "join_keys_popul_", output().join_keys_name() );
 
-    obj.set( "time_stamps_popul_", time_stamps_popul_name() );
+    obj.set( "time_stamps_popul_", output().time_stamps_name() );
 
-    obj.set( "join_keys_perip_", join_keys_perip_name() );
+    obj.set( "join_keys_perip_", input().join_keys_name() );
 
-    obj.set( "time_stamps_perip_", time_stamps_perip_name() );
+    obj.set( "time_stamps_perip_", input().time_stamps_name() );
 
-    if ( upper_time_stamps_name() != "" )
+    if ( input().num_time_stamps() == 2 )
         {
-            obj.set( "upper_time_stamps_", upper_time_stamps_name() );
+            obj.set( "upper_time_stamps_", input().upper_time_stamps_name() );
         }
 
-    obj.set( "population_", population_name() );
+    obj.set( "population_", output().name() );
 
-    obj.set( "peripheral_", peripheral_name() );
+    obj.set( "peripheral_", input().name() );
 
     // -------------------------------------------------------------------
 
@@ -738,9 +716,9 @@ std::string DecisionTree::to_sql(
 
     sql << " AS feature_" << _feature_num << "," << std::endl;
 
-    sql << "       t1." << join_keys_popul_name() << "," << std::endl;
+    sql << "       t1." << output().join_keys_name() << "," << std::endl;
 
-    sql << "       t1." << time_stamps_popul_name() << std::endl;
+    sql << "       t1." << output().time_stamps_name() << std::endl;
 
     // -------------------------------------------------------------------
 
@@ -748,17 +726,18 @@ std::string DecisionTree::to_sql(
 
     sql << "     SELECT *," << std::endl;
 
-    sql << "            ROW_NUMBER() OVER ( ORDER BY " << join_keys_popul_name()
-        << ", " << time_stamps_popul_name() << " ASC ) AS rownum" << std::endl;
+    sql << "            ROW_NUMBER() OVER ( ORDER BY "
+        << output().join_keys_name() << ", " << output().time_stamps_name()
+        << " ASC ) AS rownum" << std::endl;
 
-    sql << "     FROM " << population_name() << std::endl;
+    sql << "     FROM " << output().name() << std::endl;
 
     sql << ") t1" << std::endl;
 
-    sql << "LEFT JOIN " << peripheral_name() << " t2" << std::endl;
+    sql << "LEFT JOIN " << input().name() << " t2" << std::endl;
 
-    sql << "ON t1." << join_keys_popul_name() << " = t2."
-        << join_keys_perip_name() << std::endl;
+    sql << "ON t1." << output().join_keys_name() << " = t2."
+        << input().join_keys_name() << std::endl;
 
     // -------------------------------------------------------------------
 
@@ -792,14 +771,14 @@ std::string DecisionTree::to_sql(
                     sql << "WHERE ";
                 }
 
-            sql << "t2." << time_stamps_perip_name() << " <= t1."
-                << time_stamps_popul_name() << std::endl;
+            sql << "t2." << input().time_stamps_name() << " <= t1."
+                << output().time_stamps_name() << std::endl;
 
-            if ( upper_time_stamps_name() != "" )
+            if ( input().num_time_stamps() == 2 )
                 {
-                    sql << "AND ( t2." << upper_time_stamps_name() << " > t1."
-                        << time_stamps_popul_name() << " OR t2."
-                        << upper_time_stamps_name() << " IS NULL )"
+                    sql << "AND ( t2." << input().upper_time_stamps_name()
+                        << " > t1." << output().time_stamps_name() << " OR t2."
+                        << input().upper_time_stamps_name() << " IS NULL )"
                         << std::endl;
                 }
         }
@@ -813,9 +792,9 @@ std::string DecisionTree::to_sql(
 
     sql << "GROUP BY t1.rownum," << std::endl;
 
-    sql << "         t1." << join_keys_popul_name() << "," << std::endl;
+    sql << "         t1." << output().join_keys_name() << "," << std::endl;
 
-    sql << "         t1." << time_stamps_popul_name() << ";" << std::endl
+    sql << "         t1." << output().time_stamps_name() << ";" << std::endl
         << std::endl
         << std::endl;
 

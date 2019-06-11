@@ -48,6 +48,13 @@ struct DecisionTreeImpl
     }
 
     /// Trivial getter
+    inline const containers::Schema& input() const
+    {
+        assert( input_ );
+        return *input_;
+    }
+
+    /// Trivial getter
     inline AUTOSQL_INT ix_perip_used() const
     {
         return column_to_be_aggregated_.ix_perip_used;
@@ -65,6 +72,13 @@ struct DecisionTreeImpl
     {
         assert( tree_hyperparameters_ );
         return tree_hyperparameters_->min_num_samples_;
+    }
+
+    /// Trivial getter
+    inline const containers::Schema& output() const
+    {
+        assert( output_ );
+        return *output_;
     }
 
     /// Returns a custom random number generator
@@ -115,50 +129,6 @@ struct DecisionTreeImpl
         return tree_hyperparameters_->share_conditions_;
     }
 
-    /// Trivial accessor
-    inline const std::string& x_perip_categorical_colname(
-        AUTOSQL_INT _i ) const
-    {
-        assert( x_perip_categorical_colnames_ );
-        return x_perip_categorical_colnames_.get()[0][_i];
-    }
-
-    /// Trivial accessor
-    inline const std::string& x_perip_numerical_colname( AUTOSQL_INT _i ) const
-    {
-        assert( x_perip_numerical_colnames_ );
-        return x_perip_numerical_colnames_.get()[0][_i];
-    }
-
-    /// Trivial accessor
-    inline const std::string& x_perip_discrete_colname( AUTOSQL_INT _i ) const
-    {
-        assert( x_perip_discrete_colnames_ );
-        return x_perip_discrete_colnames_.get()[0][_i];
-    }
-
-    /// Trivial accessor
-    inline const std::string& x_popul_categorical_colname(
-        AUTOSQL_INT _i ) const
-    {
-        assert( x_popul_categorical_colnames_ );
-        return x_popul_categorical_colnames_.get()[0][_i];
-    }
-
-    /// Trivial accessor
-    inline const std::string& x_popul_numerical_colname( AUTOSQL_INT _i ) const
-    {
-        assert( x_popul_numerical_colnames_ );
-        return x_popul_numerical_colnames_.get()[0][_i];
-    }
-
-    /// Trivial accessor
-    inline const std::string& x_popul_discrete_colname( AUTOSQL_INT _i ) const
-    {
-        assert( x_popul_discrete_colnames_ );
-        return x_popul_discrete_colnames_.get()[0][_i];
-    }
-
     // ------------------------------------------------------------
 
     /// Returns the colname corresponding to _data used and
@@ -188,21 +158,15 @@ struct DecisionTreeImpl
     /// Communicator
     multithreading::Communicator* comm_;
 
-    /// Name of the join key in the peripheral table
-    std::string join_keys_perip_name_;
-
-    /// Name of the join key in the population table
-    std::string join_keys_popul_name_;
+    /// The input table used (we keep it, because we need the colnames)
+    containers::Optional<containers::Schema> input_;
 
     /// The optimization criterion is what we want to maximize -
     /// using it we can determine the optimal splits
     optimizationcriteria::OptimizationCriterion* optimization_criterion_;
 
-    /// Name of the peripheral table
-    std::string peripheral_name_;
-
-    /// Name of the population table
-    std::string population_name_;
+    /// The output table used (we keep it, because we need the colnames)
+    containers::Optional<containers::Schema> output_;
 
     /// Random number generator
     std::mt19937* random_number_generator_;
@@ -210,37 +174,9 @@ struct DecisionTreeImpl
     /// Contains information on which of the columns contain the same units
     descriptors::SameUnits same_units_;
 
-    /// Name of the time stamps in the peripheral table
-    std::string time_stamps_perip_name_;
-
-    /// Name of the time stamps in the population table
-    std::string time_stamps_popul_name_;
-
     /// Hyperparameters needed to fit this tree.
     std::shared_ptr<const descriptors::TreeHyperparameters>
         tree_hyperparameters_;
-
-    /// Name of the time stamps in the peripheral table
-    /// used for defining the upper limit.
-    std::string upper_time_stamps_name_;
-
-    /// Associated column names
-    std::shared_ptr<std::vector<std::string>> x_perip_categorical_colnames_;
-
-    /// Associated column names
-    std::shared_ptr<std::vector<std::string>> x_perip_discrete_colnames_;
-
-    /// Associated column names
-    std::shared_ptr<std::vector<std::string>> x_perip_numerical_colnames_;
-
-    /// Associated column names
-    std::shared_ptr<std::vector<std::string>> x_popul_categorical_colnames_;
-
-    /// Associated column names
-    std::shared_ptr<std::vector<std::string>> x_popul_numerical_colnames_;
-
-    /// Associated column names
-    std::shared_ptr<std::vector<std::string>> x_popul_discrete_colnames_;
 };
 
 // ----------------------------------------------------------------------------

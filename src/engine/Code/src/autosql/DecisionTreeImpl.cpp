@@ -89,39 +89,37 @@ std::string DecisionTreeImpl::get_colname(
 
             case enums::DataUsed::x_perip_categorical:
 
-                colname =
-                    "t2." + x_perip_categorical_colname( _ix_column_used );
+                colname = "t2." + input().categorical_name( _ix_column_used );
 
                 break;
 
             case enums::DataUsed::x_perip_numerical:
 
-                colname = "t2." + x_perip_numerical_colname( _ix_column_used );
+                colname = "t2." + input().numerical_name( _ix_column_used );
 
                 break;
 
             case enums::DataUsed::x_perip_discrete:
 
-                colname = "t2." + x_perip_discrete_colname( _ix_column_used );
+                colname = "t2." + input().discrete_name( _ix_column_used );
 
                 break;
 
             case enums::DataUsed::x_popul_categorical:
 
-                colname =
-                    "t1." + x_popul_categorical_colname( _ix_column_used );
+                colname = "t1." + output().categorical_name( _ix_column_used );
 
                 break;
 
             case enums::DataUsed::x_popul_numerical:
 
-                colname = "t1." + x_popul_numerical_colname( _ix_column_used );
+                colname = "t1." + output().numerical_name( _ix_column_used );
 
                 break;
 
             case enums::DataUsed::x_popul_discrete:
 
-                colname = "t1." + x_popul_discrete_colname( _ix_column_used );
+                colname = "t1." + output().discrete_name( _ix_column_used );
 
                 break;
 
@@ -134,14 +132,15 @@ std::string DecisionTreeImpl::get_colname(
 
             case enums::DataUsed::time_stamps_diff:
 
-                colname = "t1." + time_stamps_popul_name_ + " - t2." +
-                          time_stamps_perip_name_;
+                colname = "t1." + output().time_stamps_name() + " - t2." +
+                          input().time_stamps_name();
 
                 break;
 
             default:
 
-                assert( false && "Unknown enums::DataUsed in get_colname(...)!" );
+                assert(
+                    false && "Unknown enums::DataUsed in get_colname(...)!" );
         }
 
     return colname;

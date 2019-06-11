@@ -307,27 +307,10 @@ class DecisionTree
     inline const DecisionTreeImpl *impl() const { return &impl_; }
 
     /// Trivial accessor
-    inline std::string &join_keys_perip_name()
+    inline const containers::Schema &input() const
     {
-        return impl()->join_keys_perip_name_;
-    }
-
-    /// Trivial accessor
-    inline const std::string &join_keys_perip_name() const
-    {
-        return impl()->join_keys_perip_name_;
-    }
-
-    /// Trivial accessor
-    inline std::string &join_keys_popul_name()
-    {
-        return impl()->join_keys_popul_name_;
-    }
-
-    /// Trivial accessor
-    inline const std::string &join_keys_popul_name() const
-    {
-        return impl()->join_keys_popul_name_;
+        assert( impl()->input_ );
+        return *impl()->input_;
     }
 
     /// Trivial accessor
@@ -350,21 +333,10 @@ class DecisionTree
     }
 
     /// Trivial accessor
-    inline std::string &peripheral_name() { return impl_.peripheral_name_; }
-
-    /// Trivial accessor
-    inline const std::string &peripheral_name() const
+    inline const containers::Schema &output() const
     {
-        return impl_.peripheral_name_;
-    }
-
-    /// Trivial accessor
-    inline std::string &population_name() { return impl_.population_name_; }
-
-    /// Trivial accessor
-    inline const std::string &population_name() const
-    {
-        return impl_.population_name_;
+        assert( impl()->output_ );
+        return *impl()->output_;
     }
 
     /// Trivial accessor
@@ -413,100 +385,6 @@ class DecisionTree
     inline const std::vector<DecisionTree> &subtrees() const
     {
         return subtrees_;
-    }
-
-    /// Trivial accessor
-    inline std::string &time_stamps_perip_name()
-    {
-        return impl()->time_stamps_perip_name_;
-    }
-
-    /// Trivial accessor
-    inline const std::string &time_stamps_perip_name() const
-    {
-        return impl()->time_stamps_perip_name_;
-    }
-
-    /// Trivial accessor
-    inline std::string &time_stamps_popul_name()
-    {
-        return impl()->time_stamps_popul_name_;
-    }
-
-    /// Trivial accessor
-    inline const std::string &time_stamps_popul_name() const
-    {
-        return impl()->time_stamps_popul_name_;
-    }
-
-    /// Trivial accessor
-    inline std::string &upper_time_stamps_name()
-    {
-        return impl()->upper_time_stamps_name_;
-    }
-
-    /// Trivial accessor
-    inline const std::string &upper_time_stamps_name() const
-    {
-        return impl()->upper_time_stamps_name_;
-    }
-
-    /// Trivial accessor
-    inline std::string &x_perip_categorical_colname( AUTOSQL_INT _i )
-    {
-        return x_perip_categorical_colnames()[_i];
-    }
-
-    /// Trivial accessor
-    inline std::vector<std::string> &x_perip_categorical_colnames()
-    {
-        assert(
-            impl_.x_perip_categorical_colnames_ &&
-            "x_perip_categorical_colnames()" );
-        return *( impl_.x_perip_categorical_colnames_.get() );
-    }
-
-    /// Trivial accessor
-    inline std::vector<std::string> &x_perip_numerical_colnames()
-    {
-        assert(
-            impl_.x_perip_numerical_colnames_ &&
-            "x_perip_numerical_colnames()" );
-        return *( impl_.x_perip_numerical_colnames_.get() );
-    }
-
-    /// Trivial accessor
-    inline std::vector<std::string> &x_perip_discrete_colnames()
-    {
-        assert(
-            impl_.x_perip_discrete_colnames_ && "x_perip_discrete_colnames()" );
-        return *( impl_.x_perip_discrete_colnames_.get() );
-    }
-
-    /// Trivial accessor
-    inline std::vector<std::string> &x_popul_categorical_colnames()
-    {
-        assert(
-            impl_.x_popul_categorical_colnames_ &&
-            "x_popul_categorical_colnames()" );
-        return *( impl_.x_popul_categorical_colnames_.get() );
-    }
-
-    /// Trivial accessor
-    inline std::vector<std::string> &x_popul_numerical_colnames()
-    {
-        assert(
-            impl_.x_popul_numerical_colnames_ &&
-            "x_popul_numerical_colnames()" );
-        return *( impl_.x_popul_numerical_colnames_.get() );
-    }
-
-    /// Trivial accessor
-    inline std::vector<std::string> &x_popul_discrete_colnames()
-    {
-        assert(
-            impl_.x_popul_discrete_colnames_ && "x_popul_discrete_colnames()" );
-        return *( impl_.x_popul_discrete_colnames_.get() );
     }
 
     // --------------------------------------
