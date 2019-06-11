@@ -27,6 +27,7 @@
 
 #include "autosql/utils/DataFrameScatterer.hpp"
 #include "autosql/utils/Reducer.hpp"
+#include "autosql/utils/Sampler.hpp"
 
 #include "autosql/utils/LinearRegression.hpp"
 #include "autosql/utils/Matchmaker.hpp"

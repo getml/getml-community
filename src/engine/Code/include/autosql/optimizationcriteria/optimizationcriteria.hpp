@@ -4,7 +4,6 @@
 // ----------------------------------------------------
 // Dependencies
 
-#include <deque>
 #include <numeric>
 
 #include "multithreading/multithreading.hpp"

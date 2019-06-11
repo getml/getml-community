@@ -490,6 +490,8 @@ void DecisionTreeNode::fit(
     if ( max_value >
          optimization_criterion()->value() + tree_->regularization() + 1e-07 )
         {
+            debug_log( "fit: Committing..." );
+
             commit(
                 _population,
                 _peripheral,

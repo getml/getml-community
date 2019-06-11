@@ -18,6 +18,7 @@ set(
     ${AUTOSQL_SOURCE_DIRECTORY}/OptimizationCriterionImpl.cpp 
     ${AUTOSQL_SOURCE_DIRECTORY}/Placeholder.cpp 
     ${AUTOSQL_SOURCE_DIRECTORY}/RSquaredCriterion.cpp 
+    ${AUTOSQL_SOURCE_DIRECTORY}/Sampler.cpp 
     ${AUTOSQL_SOURCE_DIRECTORY}/SameUnitIdentifier.cpp 
     ${AUTOSQL_SOURCE_DIRECTORY}/SubtreeHelper.cpp 
     ${AUTOSQL_SOURCE_DIRECTORY}/SquareLoss.cpp 

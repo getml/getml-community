@@ -12,8 +12,7 @@ class DecisionTreeEnsemble
    public:
     DecisionTreeEnsemble(
         const std::shared_ptr<const std::vector<std::string>> &_categories,
-        const std::shared_ptr<const descriptors::Hyperparameters>
-            &_hyperparameters,
+        const std::shared_ptr<descriptors::Hyperparameters> &_hyperparameters,
         const std::shared_ptr<const std::vector<std::string>> &_peripheral,
         const std::shared_ptr<const decisiontrees::Placeholder> &_placeholder );
 
@@ -24,8 +23,6 @@ class DecisionTreeEnsemble
     DecisionTreeEnsemble( const DecisionTreeEnsemble &_other );
 
     DecisionTreeEnsemble( DecisionTreeEnsemble &&_other ) noexcept;
-
-    DecisionTreeEnsemble( const std::string &_fname );
 
     ~DecisionTreeEnsemble() = default;
 
@@ -196,6 +193,7 @@ class DecisionTreeEnsemble
     /// Trivial accessor
     inline descriptors::Hyperparameters &hyperparameters()
     {
+        assert( impl().hyperparameters_ );
         return *impl().hyperparameters_;
     }
 
@@ -293,6 +291,9 @@ class DecisionTreeEnsemble
     {
         return impl().random_number_generator_;
     }
+
+    /// Trivial (private) accessor
+    utils::Sampler &sampler() { return impl().sampler_; }
 
     /// Trivial accessor
     inline decisiontrees::DecisionTree *tree( const AUTOSQL_INT _i )

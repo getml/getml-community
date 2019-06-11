@@ -11,22 +11,18 @@ namespace ensemble
 
 struct DecisionTreeEnsembleImpl
 {
-    DecisionTreeEnsembleImpl()
-        : categories_( std::make_shared<const std::vector<std::string>>() ),
-          comm_( nullptr ){};
-
-    DecisionTreeEnsembleImpl(
-        const std::shared_ptr<const std::vector<std::string>> &_categories )
-        : categories_( _categories ), comm_( nullptr ){};
-
     DecisionTreeEnsembleImpl(
         const std::shared_ptr<const std::vector<std::string>> &_categories,
+        const std::shared_ptr<descriptors::Hyperparameters> &_hyperparameters,
         const std::vector<std::string> &_placeholder_peripheral,
         const decisiontrees::Placeholder &_placeholder_population )
         : categories_( _categories ),
+          comm_( nullptr ),
+          hyperparameters_( _hyperparameters ),
           placeholder_peripheral_( _placeholder_peripheral ),
           placeholder_population_(
-              new decisiontrees::Placeholder( _placeholder_population ) ){};
+              new decisiontrees::Placeholder( _placeholder_population ) ),
+          sampler_( utils::Sampler( _hyperparameters->seed_ ) ){};
 
     ~DecisionTreeEnsembleImpl() = default;
 
@@ -79,6 +75,9 @@ struct DecisionTreeEnsembleImpl
     /// Random number generator for creating sample weights and
     /// the like.
     containers::Optional<std::mt19937> random_number_generator_;
+
+    /// For sampling from the population table.
+    utils::Sampler sampler_;
 
     /// Names of the target variables
     std::vector<std::string> targets_;

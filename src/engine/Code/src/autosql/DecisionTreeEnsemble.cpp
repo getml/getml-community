@@ -8,10 +8,10 @@ namespace ensemble
 
 DecisionTreeEnsemble::DecisionTreeEnsemble(
     const std::shared_ptr<const std::vector<std::string>> &_categories,
-    const std::shared_ptr<const descriptors::Hyperparameters> &_hyperparameters,
+    const std::shared_ptr<descriptors::Hyperparameters> &_hyperparameters,
     const std::shared_ptr<const std::vector<std::string>> &_peripheral,
     const std::shared_ptr<const decisiontrees::Placeholder> &_placeholder )
-    : impl_( _categories, *_peripheral, *_placeholder )
+    : impl_( _categories, _hyperparameters, *_peripheral, *_placeholder )
 {
 }
 
@@ -39,13 +39,6 @@ DecisionTreeEnsemble::DecisionTreeEnsemble(
       loss_function_( std::move( _other.loss_function_ ) )
 {
     debug_log( "Model: Move constructor..." );
-}
-
-// ----------------------------------------------------------------------------
-
-DecisionTreeEnsemble::DecisionTreeEnsemble( const std::string &_fname )
-{
-    assert( false && "ToDo" );
 }
 
 // ----------------------------------------------------------------------------
@@ -253,6 +246,8 @@ void DecisionTreeEnsemble::fit(
 {
     // ------------------------------------------------------
 
+    debug_log( "Building communicator..." );
+
     const auto num_threads =
         Threadutils::get_num_threads( hyperparameters().num_threads_ );
 
@@ -263,11 +258,15 @@ void DecisionTreeEnsemble::fit(
     // ------------------------------------------------------
     // Build thread_nums
 
+    debug_log( "Building the thread nums..." );
+
     const auto thread_nums = utils::DataFrameScatterer::build_thread_nums(
         _population.join_keys(), num_threads );
 
     // ------------------------------------------------------
     // Create deep copies of this ensemble.
+
+    debug_log( "Building deep copies..." );
 
     std::vector<ensemble::DecisionTreeEnsemble> ensembles;
 
@@ -278,6 +277,8 @@ void DecisionTreeEnsemble::fit(
 
     // ------------------------------------------------------
     // Spawn threads.
+
+    debug_log( "Spawning threads..." );
 
     std::vector<std::thread> threads;
 
@@ -297,6 +298,8 @@ void DecisionTreeEnsemble::fit(
 
     // ------------------------------------------------------
     // Train ensemble in main thread.
+
+    debug_log( "Training in main thread..." );
 
     try
         {
@@ -322,6 +325,8 @@ void DecisionTreeEnsemble::fit(
 
     // ------------------------------------------------------
     // Join all other threads
+
+    debug_log( "Joining threads..." );
 
     for ( auto &thr : threads )
         {
@@ -377,7 +382,7 @@ void DecisionTreeEnsemble::fit(
     // ----------------------------------------------------------------
     // Store names of the targets
 
-    // targets() = _table_holder->main_tables_[0].targets().colnames();
+    targets() = {_table_holder->main_tables_[0].target_name( 0 )};
 
     // ----------------------------------------------------------------
     // aggregations::AggregationImpl stores most of the data for the
@@ -433,8 +438,9 @@ void DecisionTreeEnsemble::fit(
 
     assert( _table_holder->main_tables_.size() > 0 );
 
-    const auto sample_weights = std::make_shared<std::vector<AUTOSQL_FLOAT>>(
-        _table_holder->main_tables_[0].nrows() );
+    const auto nrows = _table_holder->main_tables_[0].nrows();
+
+    auto sample_weights = std::make_shared<std::vector<AUTOSQL_FLOAT>>( nrows );
 
     if ( !random_number_generator() )
         {
@@ -516,6 +522,8 @@ void DecisionTreeEnsemble::fit(
 
             if ( hyperparameters().sampling_rate_ > 0.0 )
                 {
+                    sample_weights = sampler().make_sample_weights( nrows );
+
                     for ( size_t i = 0; i < num_peripheral; ++i )
                         {
                             samples.push_back( utils::Matchmaker::make_matches(
@@ -593,6 +601,9 @@ void DecisionTreeEnsemble::fit(
                 }
 
             // -------------------------------------------------------------
+
+            debug_log(
+                "Trained FEATURE_" + std::to_string( ix_feature + 1 ) + "." );
 
             if ( _logger )
                 {

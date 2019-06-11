@@ -30,7 +30,7 @@ void OptimizationCriterionImpl::commit(
 
     std::copy(
         sufficient_statistics_stored_[max_ix_].begin(),
-        sufficient_statistics_stored_[max_ix_].end(),
+        sufficient_statistics_stored_[max_ix_].begin() + ncols,
         _sufficient_statistics_committed->begin() );
 
     value_ = values_stored_[max_ix_];
@@ -38,10 +38,10 @@ void OptimizationCriterionImpl::commit(
 
 // ----------------------------------------------------------------------------
 
-std::deque<std::vector<AUTOSQL_FLOAT>>
+std::vector<std::vector<AUTOSQL_FLOAT>>
 OptimizationCriterionImpl::reduce_sufficient_statistics_stored() const
 {
-    std::deque<std::vector<AUTOSQL_FLOAT>> sufficient_statistics_global;
+    std::vector<std::vector<AUTOSQL_FLOAT>> sufficient_statistics_global;
 
     for ( const auto& local : sufficient_statistics_stored() )
         {
@@ -95,8 +95,8 @@ void OptimizationCriterionImpl::store_current_stage(
         _sufficient_statistics_current.size() + 2 ) );
 
     std::copy(
-        _sufficient_statistics_current.cbegin(),
-        _sufficient_statistics_current.cend(),
+        _sufficient_statistics_current.begin(),
+        _sufficient_statistics_current.end(),
         sufficient_statistics_stored_.back().begin() );
 
     sufficient_statistics_stored_

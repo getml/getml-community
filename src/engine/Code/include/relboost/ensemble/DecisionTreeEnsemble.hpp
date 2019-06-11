@@ -34,8 +34,6 @@ class DecisionTreeEnsemble
 
     DecisionTreeEnsemble( DecisionTreeEnsemble&& _other ) noexcept;
 
-    DecisionTreeEnsemble( const std::string& _fname );
-
     ~DecisionTreeEnsemble() = default;
 
     // -----------------------------------------------------------------

@@ -9,7 +9,6 @@
 
 #include <algorithm>
 #include <array>
-#include <deque>
 #include <memory>
 #include <type_traits>
 #include <vector>

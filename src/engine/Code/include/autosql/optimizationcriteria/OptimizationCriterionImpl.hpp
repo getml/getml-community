@@ -27,7 +27,7 @@ class OptimizationCriterionImpl
 
     /// Returns the sum of all sufficient statistics stored in the individual
     /// processes
-    std::deque<std::vector<AUTOSQL_FLOAT>> reduce_sufficient_statistics_stored()
+    std::vector<std::vector<AUTOSQL_FLOAT>> reduce_sufficient_statistics_stored()
         const;
 
     /// Reverts to the committed version
@@ -84,14 +84,14 @@ class OptimizationCriterionImpl
 
    private:
     /// Trivial accessor
-    inline std::deque<std::vector<AUTOSQL_FLOAT>>&
+    inline std::vector<std::vector<AUTOSQL_FLOAT>>&
     sufficient_statistics_stored()
     {
         return sufficient_statistics_stored_;
     }
 
     /// Trivial accessor
-    inline const std::deque<std::vector<AUTOSQL_FLOAT>>&
+    inline const std::vector<std::vector<AUTOSQL_FLOAT>>&
     sufficient_statistics_stored() const
     {
         return sufficient_statistics_stored_;
@@ -108,7 +108,7 @@ class OptimizationCriterionImpl
 
     /// Stores the sufficient statistics when store_current_stage(...)
     /// is called
-    std::deque<std::vector<AUTOSQL_FLOAT>> sufficient_statistics_stored_;
+    std::vector<std::vector<AUTOSQL_FLOAT>> sufficient_statistics_stored_;
 
     /// Value of the optimization criterion of the currently
     /// committed stage

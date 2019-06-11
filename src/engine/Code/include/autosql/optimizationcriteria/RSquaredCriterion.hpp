@@ -101,7 +101,7 @@ class RSquaredCriterion : public OptimizationCriterion
     /// Implements the formula for calculating R squared.
     AUTOSQL_FLOAT calculate_r_squared(
         const size_t _i,
-        const std::deque<std::vector<AUTOSQL_FLOAT>>& _sufficient_statistics )
+        const std::vector<std::vector<AUTOSQL_FLOAT>>& _sufficient_statistics )
         const;
 
     // --------------------------------------

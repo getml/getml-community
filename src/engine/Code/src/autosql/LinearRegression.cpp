@@ -51,6 +51,8 @@ void LinearRegression::fit(
     const std::vector<std::vector<AUTOSQL_FLOAT>>& _residuals,
     const std::vector<AUTOSQL_FLOAT>& _sample_weights )
 {
+    debug_log( "Fitting linear regression..." );
+
     // ----------------------------------------------------
     // Calculate sum_sample weights
 
@@ -103,6 +105,8 @@ void LinearRegression::fit(
     // ----------------------------------------------------
     // Calculate var_new_feature
 
+    assert( _new_feature.size() == _sample_weights.size() );
+
     AUTOSQL_FLOAT var_new_feature = 0.0;
 
     for ( size_t i = 0; i < _new_feature.size(); ++i )
@@ -127,7 +131,7 @@ void LinearRegression::fit(
             for ( size_t j = 0; j < _residuals[i].size(); ++j )
                 {
                     cov_new_feature[i] +=
-                        ( _residuals[i][j] - mean_residuals[j] ) *
+                        ( _residuals[i][j] - mean_residuals[i] ) *
                         ( _new_feature[j] - mean_new_feature ) *
                         _sample_weights[j];
                 }
@@ -180,6 +184,8 @@ void LinearRegression::fit(
 std::vector<std::vector<AUTOSQL_FLOAT>> LinearRegression::predict(
     const std::vector<AUTOSQL_FLOAT>& _yhat ) const
 {
+    debug_log( "Predicting using linear regression..." );
+
     std::vector<std::vector<AUTOSQL_FLOAT>> predictions( intercepts_.size() );
 
     for ( AUTOSQL_INT i = 0; i < predictions.size(); ++i )
@@ -191,7 +197,7 @@ std::vector<std::vector<AUTOSQL_FLOAT>> LinearRegression::predict(
                     new_prediction[j] = slopes_[i] * _yhat[j] + intercepts_[i];
                 }
 
-            predictions.emplace_back( std::move( new_prediction ) );
+            predictions[i] = std::move( new_prediction );
         }
 
     return predictions;

@@ -69,11 +69,16 @@ std::vector<AUTOSQL_INT> RSquaredCriterion::argsort(
 
 AUTOSQL_FLOAT RSquaredCriterion::calculate_r_squared(
     const size_t _i,
-    const std::deque<std::vector<AUTOSQL_FLOAT>>& _sufficient_statistics ) const
+    const std::vector<std::vector<AUTOSQL_FLOAT>>& _sufficient_statistics )
+    const
 {
-    assert( _i < impl().storage_ix() );
+    assert( sample_weights_.size() == y_centered_[0].size() );
+
+    assert( _i < _sufficient_statistics.size() );
 
     assert( _sufficient_statistics[_i].size() == y_.size() + 2 );
+
+    assert( sum_y_centered_y_centered_.size() == y_.size() );
 
     const AUTOSQL_FLOAT sum_yhat = _sufficient_statistics[_i][0];
 
@@ -105,6 +110,8 @@ AUTOSQL_FLOAT RSquaredCriterion::calculate_r_squared(
                 ( sum_y_centered_yhat / sum_y_centered_y_centered_[j] );
         }
 
+    assert( sample_weights_.size() == y_centered_[0].size() );
+
     return r_squared;
 }
 
@@ -112,6 +119,8 @@ AUTOSQL_FLOAT RSquaredCriterion::calculate_r_squared(
 
 AUTOSQL_INT RSquaredCriterion::find_maximum()
 {
+    assert( sample_weights_.size() == y_centered_[0].size() );
+
     AUTOSQL_INT max_ix = 0;
 
     debug_log( "Preparing sufficient statistics..." );
@@ -121,10 +130,16 @@ AUTOSQL_INT RSquaredCriterion::find_maximum()
 
     debug_log( "Finding maximum..." );
 
+    assert( sample_weights_.size() == y_centered_[0].size() );
+
+    assert( impl().storage_ix() == sufficient_statistics.size() );
+
     impl().values_stored().resize( impl().storage_ix() );
 
-    for ( size_t i = 0; i < impl().storage_ix(); ++i )
+    for ( size_t i = 0; i < sufficient_statistics.size(); ++i )
         {
+            assert( i < impl().values_stored().size() );
+
             impl().values_stored()[i] = 0.0;
 
             // num_samples_smaller and num_samples_greater are always the
@@ -133,11 +148,13 @@ AUTOSQL_INT RSquaredCriterion::find_maximum()
             // sufficient_statistics_stored_ has two extra columns over
             // ..._current and ..._committed.
 
+            assert( sufficient_statistics[i].size() >= 2 );
+
             const AUTOSQL_FLOAT num_samples_smaller =
-                sufficient_statistics[i][sufficient_statistics.size() - 2];
+                sufficient_statistics[i][sufficient_statistics[i].size() - 2];
 
             const AUTOSQL_FLOAT num_samples_greater =
-                sufficient_statistics[i][sufficient_statistics.size() - 1];
+                sufficient_statistics[i][sufficient_statistics[i].size() - 1];
 
             // If the split would result in an insufficient number
             // of samples on any node, it will not be considered.
@@ -158,6 +175,10 @@ AUTOSQL_INT RSquaredCriterion::find_maximum()
 
     impl().set_max_ix( max_ix );
 
+    debug_log( "Done finding maximum..." );
+
+    assert( sample_weights_.size() == y_centered_[0].size() );
+
     return max_ix;
 }
 
@@ -167,6 +188,13 @@ void RSquaredCriterion::init(
     const std::vector<std::vector<AUTOSQL_FLOAT>>& _y,
     const std::vector<AUTOSQL_FLOAT>& _sample_weights )
 {
+    // ---------------------------------------------------------------------
+
+    debug_log( "Optimization init " );
+
+    debug_log(
+        "_sample_weights.size(): " + std::to_string( _sample_weights.size() ) );
+
     // ---------------------------------------------------------------------
 
     y_ = _y;
@@ -237,8 +265,13 @@ void RSquaredCriterion::init(
 
     for ( size_t j = 0; j < y_.size(); ++j )
         {
+            assert( y_centered_[j].size() == y_[j].size() );
+
             for ( size_t i = 0; i < y_[j].size(); ++i )
                 {
+                    assert( !std::isnan( y_[j][i] ) );
+                    assert( !std::isnan( y_mean[j] ) );
+
                     y_centered_[j][i] = y_[j][i] - y_mean[j];
                 }
         }
@@ -246,10 +279,18 @@ void RSquaredCriterion::init(
     // ---------------------------------------------------------------------
     // Calculate sum_y_centered_y_centered_
 
+    assert( sum_y_centered_y_centered_.size() == y_.size() );
+
     for ( size_t j = 0; j < y_.size(); ++j )
         {
+            assert( y_centered_[j].size() == y_[j].size() );
+            assert( y_centered_[j].size() == sample_weights_.size() );
+
             for ( size_t i = 0; i < y_[j].size(); ++i )
                 {
+                    assert( !std::isnan( y_centered_[j][i] ) );
+                    assert( !std::isnan( sample_weights_[i] ) );
+
                     sum_y_centered_y_centered_[j] += y_centered_[j][i] *
                                                      y_centered_[j][i] *
                                                      sample_weights_[i];
@@ -266,6 +307,15 @@ void RSquaredCriterion::init(
             assert( !std::isnan( sum_y_centered_y_centered_[j] ) );
         }
 
+    debug_log(
+        "y_centered_[0].size(): " + std::to_string( y_centered_[0].size() ) );
+
+    // ---------------------------------------------------------------------
+
+    debug_log( "Optimization done." );
+
+    assert( sample_weights_.size() == y_centered_[0].size() );
+
     // ---------------------------------------------------------------------
 }
 
@@ -275,9 +325,14 @@ void RSquaredCriterion::init_yhat(
     const std::vector<AUTOSQL_FLOAT>& _yhat,
     const containers::IntSet& _indices )
 {
+    assert( sample_weights_.size() == y_centered_[0].size() );
+
     // ---------------------------------------------------------------------
 
     debug_log( "init_yhat..." );
+
+    debug_log(
+        "y_centered_[0].size(): " + std::to_string( y_centered_[0].size() ) );
 
     // ---------------------------------------------------------------------
     // Calculate y_hat_mean_
@@ -320,6 +375,8 @@ void RSquaredCriterion::init_yhat(
 
     // ---------------------------------------------------------------------
     // Calculate sum_y_centered_yhat_current_
+
+    assert( y_.size() == y_centered_.size() );
 
     for ( size_t j = 0; j < y_.size(); ++j )
         {
@@ -368,6 +425,8 @@ void RSquaredCriterion::update_samples(
                         sample_weights_[ix];
                 }
         }
+
+    assert( sample_weights_.size() == y_centered_[0].size() );
 }
 
 // ----------------------------------------------------------------------------

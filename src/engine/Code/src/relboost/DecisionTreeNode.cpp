@@ -1546,8 +1546,7 @@ void DecisionTreeNode::try_time_stamps_diff(
     const std::vector<const containers::Match*>::iterator _end,
     std::vector<containers::CandidateSplit>* _candidates )
 {
-    debug_log(
-        "Numerical population, column '" + _output.numerical_name( j ) + "'." );
+    debug_log( "Numerical population." );
 
     // Note that this sorts in DESCENDING order.
     utils::Sorter<enums::DataUsed::time_stamps_diff>::sort(

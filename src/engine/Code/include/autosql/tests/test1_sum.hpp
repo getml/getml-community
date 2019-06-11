@@ -32,11 +32,10 @@ void test1_sum()
 
     const auto time_stamps_peripheral = make_column<double>( 250000, rng );
 
-    const auto time_stamps_peripheral_col =
-        autosql::containers::Column<double>(
-            time_stamps_peripheral.data(),
-            "time_stamp",
-            time_stamps_peripheral.size() );
+    const auto time_stamps_peripheral_col = autosql::containers::Column<double>(
+        time_stamps_peripheral.data(),
+        "time_stamp",
+        time_stamps_peripheral.size() );
 
     const auto peripheral_df = autosql::containers::DataFrame(
         {},
@@ -70,11 +69,10 @@ void test1_sum()
 
     const auto time_stamps_population = make_column<double>( 500, rng );
 
-    const auto time_stamps_population_col =
-        autosql::containers::Column<double>(
-            time_stamps_population.data(),
-            "time_stamp",
-            time_stamps_population.size() );
+    const auto time_stamps_population_col = autosql::containers::Column<double>(
+        time_stamps_population.data(),
+        "time_stamp",
+        time_stamps_population.size() );
 
     auto targets_population = std::vector<double>( 500 );
 
@@ -110,7 +108,8 @@ void test1_sum()
     // ---------------------------------------------
     // Build data model.
 
-    const auto population_json = load_json( "../../tests/autosql/test1/schema.json" );
+    const auto population_json =
+        load_json( "../../tests/autosql/test1/schema.json" );
 
     const auto population =
         std::make_shared<const autosql::decisiontrees::Placeholder>(
@@ -129,7 +128,7 @@ void test1_sum()
               << std::endl;
 
     const auto hyperparameters =
-        std::make_shared<const autosql::descriptors::Hyperparameters>(
+        std::make_shared<autosql::descriptors::Hyperparameters>(
             *hyperparameters_json );
 
     // ------------------------------------------------------------------------
@@ -159,9 +158,9 @@ void test1_sum()
     // ------------------------------------------------------------------------
     // Generate predictions.
 
-    /*const auto predictions = model.predict( population_df, {peripheral_df} );
+    const auto predictions = model.transform( population_df, {peripheral_df} );
 
-    assert( predictions.size() == population_df.nrows() );
+   /* assert( predictions.size() == population_df.nrows() );
 
     for ( size_t i = 0; i < predictions.size(); ++i )
         {

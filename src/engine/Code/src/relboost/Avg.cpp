@@ -286,12 +286,16 @@ std::vector<std::array<RELBOOST_FLOAT, 3>> Avg::calc_weights(
     assert( eta1_.size() == count_committed_.size() );
 
     debug_log(
-        "std::distance(_begin, _split): " +
-        std::to_string( std::distance( _begin, _split ) ) );
+        "std::distance(_begin, _split_begin): " +
+        std::to_string( std::distance( _begin, _split_begin ) ) );
 
     debug_log(
-        "std::distance(_split, _end): " +
-        std::to_string( std::distance( _split, _end ) ) );
+        "std::distance(_split_begin, _split_end): " +
+        std::to_string( std::distance( _split_begin, _split_end ) ) );
+
+    debug_log(
+        "std::distance(_split_begin, _split_end): " +
+        std::to_string( std::distance( _split_end, _end ) ) );
 
     // -------------------------------------------------------------
 
