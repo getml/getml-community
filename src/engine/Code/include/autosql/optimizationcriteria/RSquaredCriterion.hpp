@@ -56,6 +56,9 @@ class RSquaredCriterion : public OptimizationCriterion
             &sufficient_statistics_committed_ );
     }
 
+    /// Resets the storage size to zero.
+    void reset_storage_size() final { impl().reset_storage_size(); }
+
     /// Reverts to the committed version
     void revert_to_commit() final
     {

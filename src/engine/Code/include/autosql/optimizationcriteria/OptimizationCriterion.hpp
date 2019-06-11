@@ -43,6 +43,9 @@ class OptimizationCriterion
     /// Resets sufficient statistics to zero
     virtual void reset() = 0;
 
+    /// Resets the storage size to zero.
+    virtual void reset_storage_size() = 0;
+
     /// Reverts to the committed version
     virtual void revert_to_commit() = 0;
 

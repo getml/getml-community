@@ -526,15 +526,15 @@ void DecisionTreeEnsemble::fit(
 
                     for ( size_t i = 0; i < num_peripheral; ++i )
                         {
-                            samples.push_back( utils::Matchmaker::make_matches(
+                            samples[i] = utils::Matchmaker::make_matches(
                                 _table_holder->main_tables_[i],
                                 _table_holder->peripheral_tables_[i],
                                 sample_weights,
-                                hyperparameters().use_timestamps_ ) );
+                                hyperparameters().use_timestamps_ );
 
-                            sample_containers.push_back(
+                            sample_containers[i] =
                                 utils::Matchmaker::make_pointers(
-                                    &samples.back() ) );
+                                    &samples.back() );
                         }
                 }
 

@@ -73,6 +73,9 @@ class IntermediateAggregation
     /// criterion
     AUTOSQL_INT find_maximum() final { return parent().find_maximum(); }
 
+    /// Resets the storage size.
+    void reset_storage_size() final { return parent().reset_storage_size(); }
+
     /// Trivial setter
     void set_comm( multithreading::Communicator* _comm ) final
     {

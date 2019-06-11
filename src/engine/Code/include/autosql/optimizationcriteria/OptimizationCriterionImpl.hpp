@@ -27,8 +27,8 @@ class OptimizationCriterionImpl
 
     /// Returns the sum of all sufficient statistics stored in the individual
     /// processes
-    std::vector<std::vector<AUTOSQL_FLOAT>> reduce_sufficient_statistics_stored()
-        const;
+    std::vector<std::vector<AUTOSQL_FLOAT>>
+    reduce_sufficient_statistics_stored() const;
 
     /// Reverts to the committed version
     void revert_to_commit();
@@ -40,6 +40,14 @@ class OptimizationCriterionImpl
         const std::vector<AUTOSQL_FLOAT>& _sufficient_statistics_current );
 
     // --------------------------------------
+
+    /// Resets the storage size to zero.
+    void reset_storage_size()
+    {
+        max_ix_ = -1;
+        sufficient_statistics_stored_.clear();
+        values_stored_.clear();
+    }
 
     /// Trivial setter
     inline void set_comm( multithreading::Communicator* _comm )

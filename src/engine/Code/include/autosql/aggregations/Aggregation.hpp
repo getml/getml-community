@@ -1808,11 +1808,12 @@ void Aggregation<AggType, data_used_, is_population_>::
 
     auto it = _sample_container_end - 1;
 
-    for ( size_t i = _critical_values.size() - 1; i >= 0; --i )
+    for ( auto c = _critical_values.rbegin(); c != _critical_values.rend();
+          ++c )
         {
             while ( it >= _sample_container_begin )
                 {
-                    if ( ( *it )->numerical_value <= _critical_values[i] )
+                    if ( ( *it )->numerical_value <= *c )
                         {
                             break;
                         }
@@ -2231,11 +2232,12 @@ void Aggregation<AggType, data_used_, is_population_>::
 
     auto it = _sample_container_end - 1;
 
-    for ( size_t i = _critical_values.size() - 1; i >= 0; --i )
+    for ( auto c = _critical_values.rbegin(); c != _critical_values.rend();
+          ++c )
         {
             while ( it >= _sample_container_begin )
                 {
-                    if ( ( *it )->numerical_value <= _critical_values[i] )
+                    if ( ( *it )->numerical_value <= *c )
                         {
                             break;
                         }

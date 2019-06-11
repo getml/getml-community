@@ -421,11 +421,7 @@ void DecisionTreeNode::fit(
             return;
         }
 
-    // The reason we add an additional 1 is that the apply_by_... functions
-    // will add another line to the storage of the optimization_criterion,
-    // because they reproduce all the steps undertaken by the maximum split. But
-    // the split used in the end is ix_max.
-    debug_log( "fit: Setting storage size..." );
+    optimization_criterion()->reset_storage_size();
 
     // ------------------------------------------------------------------------
     // Try imposing different conditions and measure the performance.
@@ -491,6 +487,8 @@ void DecisionTreeNode::fit(
          optimization_criterion()->value() + tree_->regularization() + 1e-07 )
         {
             debug_log( "fit: Committing..." );
+
+            assert( ix_max < candidate_splits.size() );
 
             commit(
                 _population,
@@ -748,16 +746,10 @@ AUTOSQL_SAMPLE_ITERATOR DecisionTreeNode::identify_parameters(
 
 size_t DecisionTreeNode::reduce_sample_size( const size_t _sample_size )
 {
-    size_t global_sample_size = 0;
+    size_t global_sample_size = _sample_size;
 
-    multithreading::all_reduce(
-        *comm(),                    // comm
-        _sample_size,               // in_value
-        global_sample_size,         // out_value
-        std::plus<AUTOSQL_FLOAT>()  // op
-    );
-
-    comm()->barrier();
+    utils::Reducer::reduce(
+        std::plus<AUTOSQL_FLOAT>(), &global_sample_size, comm() );
 
     return global_sample_size;
 }
@@ -2243,6 +2235,8 @@ void DecisionTreeNode::try_non_categorical_values(
     // Apply changes and store resulting value of optimization criterion
     if ( is_activated_ )
         {
+            debug_log( "Deactivate..." );
+
             aggregation()->deactivate_samples_from_above(
                 _critical_values,
                 _null_values_separator,
@@ -2250,11 +2244,15 @@ void DecisionTreeNode::try_non_categorical_values(
         }
     else
         {
+            debug_log( "Activate..." );
+
             aggregation()->activate_samples_from_above(
                 _critical_values,
                 _null_values_separator,
                 _sample_container_end );
         }
+
+    debug_log( "Revert to commit..." );
 
     // Revert to original situation
     aggregation()->revert_to_commit();

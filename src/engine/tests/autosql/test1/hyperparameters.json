@@ -15,7 +15,7 @@
     "allow_sets_": true,
     "grid_factor_": 1.0,
     "max_length_": 1,
-    "min_num_samples_": 200,
+    "min_num_samples_": 20,
     "regularization_": 0.0,
     "share_conditions_": 1.0
 }

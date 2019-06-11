@@ -77,6 +77,8 @@ void OptimizationCriterionImpl::reset(
         _sufficient_statistics_current->begin(),
         _sufficient_statistics_current->end(),
         0.0 );
+
+    reset_storage_size();
 }
 
 // ----------------------------------------------------------------------------

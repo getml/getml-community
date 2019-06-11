@@ -76,7 +76,7 @@ AUTOSQL_FLOAT RSquaredCriterion::calculate_r_squared(
 
     assert( _i < _sufficient_statistics.size() );
 
-    assert( _sufficient_statistics[_i].size() == y_.size() + 2 );
+    assert( _sufficient_statistics[_i].size() == y_.size() + 4 );
 
     assert( sum_y_centered_y_centered_.size() == y_.size() );
 
