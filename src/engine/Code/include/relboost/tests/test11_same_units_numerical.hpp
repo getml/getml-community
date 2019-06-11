@@ -117,7 +117,7 @@ void test11_same_units_numerical()
     // ---------------------------------------------
     // Build data model.
 
-    const auto population_json = load_json( "../../tests/test11/schema.json" );
+    const auto population_json = load_json( "../../tests/relboost/test11/schema.json" );
 
     const auto population =
         std::make_shared<const relboost::ensemble::Placeholder>(
@@ -130,7 +130,7 @@ void test11_same_units_numerical()
     // Load hyperparameters.
 
     const auto hyperparameters_json =
-        load_json( "../../tests/test11/hyperparameters.json" );
+        load_json( "../../tests/relboost/test11/hyperparameters.json" );
 
     std::cout << relboost::JSON::stringify( *hyperparameters_json ) << std::endl
               << std::endl;
@@ -154,12 +154,12 @@ void test11_same_units_numerical()
 
     model.fit( population_df, {peripheral_df} );
 
-    model.save( "../../tests/test11/Model.json" );
+    model.save( "../../tests/relboost/test11/Model.json" );
 
     // ------------------------------------------------------------------------
     // Express as SQL code.
 
-    std::ofstream sql( "../../tests/test11/Model.sql" );
+    std::ofstream sql( "../../tests/relboost/test11/Model.sql" );
     sql << model.to_sql();
     sql.close();
 

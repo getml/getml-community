@@ -131,7 +131,7 @@ void test2_avg()
     // ---------------------------------------------
     // Build data model.
 
-    const auto population_json = load_json( "../../tests/test2/schema.json" );
+    const auto population_json = load_json( "../../tests/relboost/test2/schema.json" );
 
     const auto population =
         std::make_shared<const relboost::ensemble::Placeholder>(
@@ -144,7 +144,7 @@ void test2_avg()
     // Load hyperparameters.
 
     const auto hyperparameters_json =
-        load_json( "../../tests/test2/hyperparameters.json" );
+        load_json( "../../tests/relboost/test2/hyperparameters.json" );
 
     std::cout << relboost::JSON::stringify( *hyperparameters_json ) << std::endl
               << std::endl;
@@ -168,12 +168,12 @@ void test2_avg()
 
     model.fit( population_df, {peripheral_df} );
 
-    model.save( "../../tests/test2/Model.json" );
+    model.save( "../../tests/relboost/test2/Model.json" );
 
     // ------------------------------------------------------------------------
     // Express as SQL code.
 
-    std::ofstream sql( "../../tests/test2/Model.sql" );
+    std::ofstream sql( "../../tests/relboost/test2/Model.sql" );
     sql << model.to_sql();
     sql.close();
 

@@ -116,7 +116,7 @@ void test14_categorical_output()
     // ---------------------------------------------
     // Build data model.
 
-    const auto population_json = load_json( "../../tests/test14/schema.json" );
+    const auto population_json = load_json( "../../tests/relboost/test14/schema.json" );
 
     const auto population =
         std::make_shared<const relboost::ensemble::Placeholder>(
@@ -129,7 +129,7 @@ void test14_categorical_output()
     // Load hyperparameters.
 
     const auto hyperparameters_json =
-        load_json( "../../tests/test14/hyperparameters.json" );
+        load_json( "../../tests/relboost/test14/hyperparameters.json" );
 
     std::cout << relboost::JSON::stringify( *hyperparameters_json ) << std::endl
               << std::endl;
@@ -153,12 +153,12 @@ void test14_categorical_output()
 
     model.fit( population_df, {peripheral_df} );
 
-    model.save( "../../tests/test14/Model.json" );
+    model.save( "../../tests/relboost/test14/Model.json" );
 
     // ------------------------------------------------------------------------
     // Express as SQL code.
 
-    std::ofstream sql( "../../tests/test14/Model.sql" );
+    std::ofstream sql( "../../tests/relboost/test14/Model.sql" );
     sql << model.to_sql();
     sql.close();
 

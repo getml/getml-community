@@ -134,7 +134,7 @@ void test8_multiple_categorical()
     // ---------------------------------------------
     // Build data model.
 
-    const auto population_json = load_json( "../../tests/test8/schema.json" );
+    const auto population_json = load_json( "../../tests/relboost/test8/schema.json" );
 
     const auto population =
         std::make_shared<const relboost::ensemble::Placeholder>(
@@ -147,7 +147,7 @@ void test8_multiple_categorical()
     // Load hyperparameters.
 
     const auto hyperparameters_json =
-        load_json( "../../tests/test8/hyperparameters.json" );
+        load_json( "../../tests/relboost/test8/hyperparameters.json" );
 
     std::cout << relboost::JSON::stringify( *hyperparameters_json ) << std::endl
               << std::endl;
@@ -171,12 +171,12 @@ void test8_multiple_categorical()
 
     model.fit( population_df, {peripheral_df} );
 
-    model.save( "../../tests/test8/Model.json" );
+    model.save( "../../tests/relboost/test8/Model.json" );
 
     // ------------------------------------------------------------------------
     // Express as SQL code.
 
-    std::ofstream sql( "../../tests/test8/Model.sql" );
+    std::ofstream sql( "../../tests/relboost/test8/Model.sql" );
     sql << model.to_sql();
     sql.close();
 

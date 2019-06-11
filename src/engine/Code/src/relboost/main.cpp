@@ -6,7 +6,7 @@ int main( int argc, char* argv[] )
               << "-------------------------------------------------------------"
                  "------------------"
               << std::endl;
-    std::cout << "TEST FOR MODULE 'RELBOOST':" << std::endl << std::endl;
+    std::cout << "TESTS FOR MODULE 'RELBOOST':" << std::endl << std::endl;
 
     test1_sum();
 
@@ -40,4 +40,6 @@ int main( int argc, char* argv[] )
     test19_classification();
 
     test20_saving_and_loading();
+
+    return 0;
 }

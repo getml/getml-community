@@ -110,7 +110,7 @@ void test20_saving_and_loading()
     // ---------------------------------------------
     // Build data model.
 
-    const auto population_json = load_json( "../../tests/test20/schema.json" );
+    const auto population_json = load_json( "../../tests/relboost/test20/schema.json" );
 
     const auto population =
         std::make_shared<const relboost::ensemble::Placeholder>(
@@ -123,7 +123,7 @@ void test20_saving_and_loading()
     // Load hyperparameters.
 
     const auto hyperparameters_json =
-        load_json( "../../tests/test20/hyperparameters.json" );
+        load_json( "../../tests/relboost/test20/hyperparameters.json" );
 
     std::cout << relboost::JSON::stringify( *hyperparameters_json ) << std::endl
               << std::endl;
@@ -150,16 +150,16 @@ void test20_saving_and_loading()
     // ------------------------------------------------------------------------
     // Reload model.
 
-    model.save( "../../tests/test20/Model.json" );
+    model.save( "../../tests/relboost/test20/Model.json" );
 
-    const auto model_json = load_json( "../../tests/test20/Model.json" );
+    const auto model_json = load_json( "../../tests/relboost/test20/Model.json" );
 
     auto model2 =
         relboost::ensemble::DecisionTreeEnsemble( encoding, *model_json );
 
-    model2.save( "../../tests/test20/Model2.json" );
+    model2.save( "../../tests/relboost/test20/Model2.json" );
 
-    const auto model2_json = load_json( "../../tests/test20/Model.json" );
+    const auto model2_json = load_json( "../../tests/relboost/test20/Model.json" );
 
     auto model3 =
         relboost::ensemble::DecisionTreeEnsemble( encoding, *model2_json );
@@ -167,7 +167,7 @@ void test20_saving_and_loading()
     // ------------------------------------------------------------------------
     // Express as SQL code.
 
-    std::ofstream sql( "../../tests/test20/Model.sql" );
+    std::ofstream sql( "../../tests/relboost/test20/Model.sql" );
     sql << model.to_sql();
     sql.close();
 

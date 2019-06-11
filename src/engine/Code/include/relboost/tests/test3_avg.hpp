@@ -127,7 +127,7 @@ void test3_avg()
     // ---------------------------------------------
     // Build data model.
 
-    const auto population_json = load_json( "../../tests/test3/schema.json" );
+    const auto population_json = load_json( "../../tests/relboost/test3/schema.json" );
 
     const auto population =
         std::make_shared<const relboost::ensemble::Placeholder>(
@@ -140,7 +140,7 @@ void test3_avg()
     // Load hyperparameters.
 
     const auto hyperparameters_json =
-        load_json( "../../tests/test3/hyperparameters.json" );
+        load_json( "../../tests/relboost/test3/hyperparameters.json" );
 
     std::cout << relboost::JSON::stringify( *hyperparameters_json ) << std::endl
               << std::endl;
@@ -164,12 +164,12 @@ void test3_avg()
 
     model.fit( population_df, {peripheral_df} );
 
-    model.save( "../../tests/test3/Model.json" );
+    model.save( "../../tests/relboost/test3/Model.json" );
 
     // ------------------------------------------------------------------------
     // Express as SQL code.
 
-    std::ofstream sql( "../../tests/test3/Model.sql" );
+    std::ofstream sql( "../../tests/relboost/test3/Model.sql" );
     sql << model.to_sql();
     sql.close();
 

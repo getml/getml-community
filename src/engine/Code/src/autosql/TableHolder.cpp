@@ -117,5 +117,5 @@ std::vector<containers::Optional<TableHolder>> TableHolder::parse_subtables(
 }
 
 // ----------------------------------------------------------------------------
-}  // namespace ensemble
-}  // namespace relboost
+}  // namespace decisiontrees
+}  // namespace autosql

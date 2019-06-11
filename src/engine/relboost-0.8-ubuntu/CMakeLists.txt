@@ -52,6 +52,12 @@ include(${RELBOOST_SOURCE_DIRECTORY}/obj.txt)
 include(${SQLITE3_SOURCE_DIRECTORY}/obj.txt)
 
 add_executable(
+	${RELBOOST_VERSION}-64bit-autosql-test 
+	${AUTOSQL_OBJ} 
+	${AUTOSQL_SOURCE_DIRECTORY}/main.cpp
+)
+
+add_executable(
 	${RELBOOST_VERSION}-64bit-database-test 
 	${CSV_OBJ} 
 	${DATABASE_OBJ} 
@@ -83,6 +89,13 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -O2")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11 -Wall -Wno-sign-compare -Wno-missing-braces -pthread -fno-strict-aliasing -fwrapv -O2 -D NDEBUGLOG")
     
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s -O2 -fopenmp '-Wl,-rpath,$ORIGIN/../lib'")
+
+target_link_libraries(
+    ${RELBOOST_VERSION}-64bit-autosql-test
+    "${POCO_DIR}/lib/Linux/x86_64/libPocoNet.a"
+    "${POCO_DIR}/lib/Linux/x86_64/libPocoJSON.a"
+    "${POCO_DIR}/lib/Linux/x86_64/libPocoFoundation.a"
+)
 
 target_link_libraries(
     ${RELBOOST_VERSION}-64bit-database-test
