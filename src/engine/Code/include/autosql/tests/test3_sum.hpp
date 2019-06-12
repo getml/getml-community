@@ -1,12 +1,12 @@
 
 // ---------------------------------------------------------------------------
 
-void test18_upper_time_stamps()
+void test3_sum()
 {
     // ------------------------------------------------------------------------
 
     std::cout << std::endl
-              << "Test 18 (upper time stamps): " << std::endl
+              << "Test 3 (SUM aggregation): " << std::endl
               << std::endl;
 
     // ------------------------------------------------------------------------
@@ -32,19 +32,10 @@ void test18_upper_time_stamps()
 
     const auto time_stamps_peripheral = make_column<double>( 250000, rng );
 
-    const auto time_stamps_peripheral_col =
-        autosql::containers::Column<double>(
-            time_stamps_peripheral.data(),
-            "time_stamp",
-            time_stamps_peripheral.size() );
-
-    auto upper_time_stamps_peripheral = make_column<double>( 250000, rng );
-
-    const auto upper_time_stamps_peripheral_col =
-        autosql::containers::Column<double>(
-            time_stamps_peripheral.data(),
-            "upper_time_stamp",
-            time_stamps_peripheral.size() );
+    const auto time_stamps_peripheral_col = autosql::containers::Column<double>(
+        time_stamps_peripheral.data(),
+        "time_stamp",
+        time_stamps_peripheral.size() );
 
     const auto peripheral_df = autosql::containers::DataFrame(
         {},
@@ -53,7 +44,7 @@ void test18_upper_time_stamps()
         "PERIPHERAL",
         {numerical_peripheral_col},
         {},
-        {time_stamps_peripheral_col, upper_time_stamps_peripheral_col} );
+        {time_stamps_peripheral_col} );
 
     // ------------------------------------------------------------------------
     // Build population table.
@@ -78,11 +69,10 @@ void test18_upper_time_stamps()
 
     const auto time_stamps_population = make_column<double>( 500, rng );
 
-    const auto time_stamps_population_col =
-        autosql::containers::Column<double>(
-            time_stamps_population.data(),
-            "time_stamp",
-            time_stamps_population.size() );
+    const auto time_stamps_population_col = autosql::containers::Column<double>(
+        time_stamps_population.data(),
+        "time_stamp",
+        time_stamps_population.size() );
 
     auto targets_population = std::vector<double>( 500 );
 
@@ -109,18 +99,17 @@ void test18_upper_time_stamps()
 
             if ( peripheral_df.time_stamp( i ) <=
                      time_stamps_population_col[jk] &&
-                 peripheral_df.upper_time_stamp( i ) >
-                     time_stamps_population_col[jk] &&
                  peripheral_df.numerical( i, 0 ) < 250.0 )
                 {
-                    targets_population[jk]++;
+                    targets_population[jk] += peripheral_df.numerical( i, 0 );
                 }
         }
 
     // ---------------------------------------------
     // Build data model.
 
-    const auto population_json = load_json( "../../tests/autosql/test18/schema.json" );
+    const auto population_json =
+        load_json( "../../tests/autosql/test3/schema.json" );
 
     const auto population =
         std::make_shared<const autosql::decisiontrees::Placeholder>(
@@ -133,13 +122,13 @@ void test18_upper_time_stamps()
     // Load hyperparameters.
 
     const auto hyperparameters_json =
-        load_json( "../../tests/autosql/test18/hyperparameters.json" );
+        load_json( "../../tests/autosql/test3/hyperparameters.json" );
 
     std::cout << autosql::JSON::stringify( *hyperparameters_json ) << std::endl
               << std::endl;
 
     const auto hyperparameters =
-        std::make_shared<const autosql::descriptors::Hyperparameters>(
+        std::make_shared<autosql::descriptors::Hyperparameters>(
             *hyperparameters_json );
 
     // ------------------------------------------------------------------------
@@ -157,30 +146,32 @@ void test18_upper_time_stamps()
 
     model.fit( population_df, {peripheral_df} );
 
-    model.save( "../../tests/autosql/test18/Model.json" );
+    model.save( "../../tests/autosql/test3/Model.json" );
 
     // ------------------------------------------------------------------------
     // Express as SQL code.
 
-    std::ofstream sql( "../../tests/autosql/test18/Model.sql" );
+    std::ofstream sql( "../../tests/autosql/test3/Model.sql" );
     sql << model.to_sql();
     sql.close();
 
     // ------------------------------------------------------------------------
     // Generate predictions.
 
-    const auto predictions = model.predict( population_df, {peripheral_df} );
+    const auto predictions = *model.transform( population_df, {peripheral_df} );
 
-    assert( predictions.size() == population_df.nrows() );
+    const auto num_features = hyperparameters->num_features_;
 
     for ( size_t i = 0; i < predictions.size(); ++i )
         {
-            // std::cout << "target: " << population_df.target_[i]
-            //       << ", prediction: " << predictions[i] << std::endl;
+          /*  std::cout << "target: "
+                       << population_df.target( i / num_features, 0 )
+                       << ", prediction: " << predictions[i] << std::endl;*/
 
             assert(
-                std::abs( population_df.target( i, 0 ) - predictions[i] ) <
-                10.0 );
+                std::abs(
+                    population_df.target( i / num_features, 0 ) -
+                    predictions[i] ) < 2000.0 );
         }
     std::cout << std::endl << std::endl;
 

@@ -100,7 +100,8 @@ void test2_avg()
             assert( jk < 500 );
 
             if ( peripheral_df.time_stamp( i ) <=
-                 time_stamps_population_col[jk] )
+                     time_stamps_population_col[jk] &&
+                 peripheral_df.numerical( i, 0 ) < 250.0 )
                 {
                     counts[jk]++;
                 }
@@ -113,16 +114,11 @@ void test2_avg()
             assert( jk < 500 );
 
             if ( peripheral_df.time_stamp( i ) <=
-                 time_stamps_population_col[jk] )
+                     time_stamps_population_col[jk] &&
+                 peripheral_df.numerical( i, 0 ) < 250.0 )
                 {
-                    if ( peripheral_df.numerical( i, 0 ) < 250.0 )
-                        {
-                            targets_population[jk] += 300.0 / counts[jk];
-                        }
-                    else
-                        {
-                            targets_population[jk] += 1000.0 / counts[jk];
-                        }
+                    targets_population[jk] +=
+                        peripheral_df.numerical( i, 0 ) / counts[jk];
                 }
         }
 
@@ -178,22 +174,22 @@ void test2_avg()
 
     // ------------------------------------------------------------------------
     // Generate predictions.
-    /*
-       // const auto predictions = model.predict( population_df, {peripheral_df}
-       );
 
-        // assert( predictions.size() == population_df.nrows() );
+    const auto predictions = *model.transform( population_df, {peripheral_df} );
 
-        for ( size_t i = 0; i < predictions.size(); ++i )
-            {
-                //   std::cout << "target: " << population_df.target( i, 0 )
-                //            << ", prediction: " << predictions[i] <<
-       std::endl;
+    const auto num_features = hyperparameters->num_features_;
 
-                assert(
-                    std::abs( population_df.target( i, 0 ) - predictions[i] ) <
-                    15.0 );
-            }*/
+    for ( size_t i = 0; i < predictions.size(); ++i )
+        {
+            /*std::cout << "target: "
+                       << population_df.target( i / num_features, 0 )
+                       << ", prediction: " << predictions[i] << std::endl;*/
+
+            assert(
+                std::abs(
+                    population_df.target( i / num_features, 0 ) -
+                    predictions[i] ) < 20.0 );
+        }
     std::cout << std::endl << std::endl;
 
     // ------------------------------------------------------------------------

@@ -1,13 +1,12 @@
 
 // ---------------------------------------------------------------------------
 
-void test7_categorical()
+void test1_count()
 {
     // ------------------------------------------------------------------------
 
     std::cout << std::endl
-              << "Test 7 (AVG aggregation with NULL value, categorical): "
-              << std::endl
+              << "Test 1 (COUNT aggregation): " << std::endl
               << std::endl;
 
     // ------------------------------------------------------------------------
@@ -18,15 +17,6 @@ void test7_categorical()
     // ------------------------------------------------------------------------
     // Build peripheral table.
 
-    const auto categorical_peripheral =
-        make_categorical_column<std::int32_t>( 250000, rng );
-
-    const auto categorical_peripheral_col =
-        autosql::containers::Column<std::int32_t>(
-            categorical_peripheral.data(),
-            "column_01",
-            categorical_peripheral.size() );
-
     const auto join_keys_peripheral = make_column<std::int32_t>( 250000, rng );
 
     const auto join_keys_peripheral_col =
@@ -35,32 +25,29 @@ void test7_categorical()
             "join_key",
             join_keys_peripheral.size() );
 
+    auto numerical_peripheral = make_column<double>( 250000, rng );
+
+    const auto numerical_peripheral_col = autosql::containers::Column<double>(
+        numerical_peripheral.data(), "column_01", numerical_peripheral.size() );
+
     const auto time_stamps_peripheral = make_column<double>( 250000, rng );
 
-    const auto time_stamps_peripheral_col =
-        autosql::containers::Column<double>(
-            time_stamps_peripheral.data(),
-            "time_stamp",
-            time_stamps_peripheral.size() );
+    const auto time_stamps_peripheral_col = autosql::containers::Column<double>(
+        time_stamps_peripheral.data(),
+        "time_stamp",
+        time_stamps_peripheral.size() );
 
     const auto peripheral_df = autosql::containers::DataFrame(
-        {categorical_peripheral_col},
+        {},
         {},
         {join_keys_peripheral_col},
         "PERIPHERAL",
-        {},
+        {numerical_peripheral_col},
         {},
         {time_stamps_peripheral_col} );
 
     // ------------------------------------------------------------------------
     // Build population table.
-
-    const auto categorical_population =
-        make_categorical_column<std::int32_t>( 500, rng );
-
-    const auto categorical_population_col =
-        autosql::containers::Column<std::int32_t>(
-            categorical_population.data(), "column_01", 500 );
 
     auto join_keys_population = std::vector<std::int32_t>( 500 );
 
@@ -75,13 +62,17 @@ void test7_categorical()
             "join_key",
             join_keys_population.size() );
 
+    auto numerical_population = make_column<double>( 500, rng );
+
+    const auto numerical_population_col = autosql::containers::Column<double>(
+        numerical_population.data(), "column_01", numerical_population.size() );
+
     const auto time_stamps_population = make_column<double>( 500, rng );
 
-    const auto time_stamps_population_col =
-        autosql::containers::Column<double>(
-            time_stamps_population.data(),
-            "time_stamp",
-            time_stamps_population.size() );
+    const auto time_stamps_population_col = autosql::containers::Column<double>(
+        time_stamps_population.data(),
+        "time_stamp",
+        time_stamps_population.size() );
 
     auto targets_population = std::vector<double>( 500 );
 
@@ -89,19 +80,17 @@ void test7_categorical()
         targets_population.data(), "target", targets_population.size() );
 
     const auto population_df = autosql::containers::DataFrame(
-        {categorical_population_col},
+        {},
         {},
         {join_keys_population_col},
         "POPULATION",
-        {},
+        {numerical_population_col},
         {target_population_col},
         {time_stamps_population_col} );
 
     // ---------------------------------------------
     // Define targets.
 
-    auto counts = std::vector<double>( 500 );
-
     for ( size_t i = 0; i < peripheral_df.nrows(); ++i )
         {
             const auto jk = peripheral_df.join_key( i );
@@ -109,32 +98,18 @@ void test7_categorical()
             assert( jk < 500 );
 
             if ( peripheral_df.time_stamp( i ) <=
-                 time_stamps_population_col[jk] )
+                     time_stamps_population_col[jk] &&
+                 peripheral_df.numerical( i, 0 ) < 250.0 )
                 {
-                    counts[jk]++;
-                }
-        }
-
-    for ( size_t i = 0; i < peripheral_df.nrows(); ++i )
-        {
-            const auto jk = peripheral_df.join_key( i );
-
-            assert( jk < 500 );
-
-            if ( peripheral_df.time_stamp( i ) <=
-                 time_stamps_population_col[jk] )
-                {
-                    if ( peripheral_df.categorical( i, 0 ) == 3 )
-                        {
-                            targets_population[jk] += 300.0 / counts[jk];
-                        }
+                    targets_population[jk]++;
                 }
         }
 
     // ---------------------------------------------
     // Build data model.
 
-    const auto population_json = load_json( "../../tests/autosql/test7/schema.json" );
+    const auto population_json =
+        load_json( "../../tests/autosql/test1/schema.json" );
 
     const auto population =
         std::make_shared<const autosql::decisiontrees::Placeholder>(
@@ -147,13 +122,13 @@ void test7_categorical()
     // Load hyperparameters.
 
     const auto hyperparameters_json =
-        load_json( "../../tests/autosql/test7/hyperparameters.json" );
+        load_json( "../../tests/autosql/test1/hyperparameters.json" );
 
     std::cout << autosql::JSON::stringify( *hyperparameters_json ) << std::endl
               << std::endl;
 
     const auto hyperparameters =
-        std::make_shared<const autosql::descriptors::Hyperparameters>(
+        std::make_shared<autosql::descriptors::Hyperparameters>(
             *hyperparameters_json );
 
     // ------------------------------------------------------------------------
@@ -171,30 +146,32 @@ void test7_categorical()
 
     model.fit( population_df, {peripheral_df} );
 
-    model.save( "../../tests/autosql/test7/Model.json" );
+    model.save( "../../tests/autosql/test1/Model.json" );
 
     // ------------------------------------------------------------------------
     // Express as SQL code.
 
-    std::ofstream sql( "../../tests/autosql/test7/Model.sql" );
+    std::ofstream sql( "../../tests/autosql/test1/Model.sql" );
     sql << model.to_sql();
     sql.close();
 
     // ------------------------------------------------------------------------
     // Generate predictions.
 
-    const auto predictions = model.predict( population_df, {peripheral_df} );
+    const auto predictions = *model.transform( population_df, {peripheral_df} );
 
-    assert( predictions.size() == population_df.nrows() );
+    const auto num_features = hyperparameters->num_features_;
 
     for ( size_t i = 0; i < predictions.size(); ++i )
         {
-            // std::cout << "target: " << population_df.target_[i]
-            //         << ", prediction: " << predictions[i] << std::endl;
+            /*std::cout << "target: "
+                       << population_df.target( i / num_features, 0 )
+                       << ", prediction: " << predictions[i] << std::endl;*/
 
             assert(
-                std::abs( population_df.target( i, 0 ) - predictions[i] ) <
-                10.0 );
+                std::abs(
+                    population_df.target( i / num_features, 0 ) -
+                    predictions[i] ) < 5.0 );
         }
     std::cout << std::endl << std::endl;
 

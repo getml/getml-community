@@ -9,8 +9,9 @@ int main( int argc, char* argv[] )
               << std::endl;
     std::cout << "TESTS FOR MODULE 'AUTOSQL':" << std::endl << std::endl;
 
-    test1_sum();
+    test1_count();
     test2_avg();
+    test3_sum();
 
     return 0;
 }
