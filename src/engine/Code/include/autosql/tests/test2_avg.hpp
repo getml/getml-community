@@ -129,7 +129,8 @@ void test2_avg()
     // ---------------------------------------------
     // Build data model.
 
-    const auto population_json = load_json( "../../tests/autosql/test2/schema.json" );
+    const auto population_json =
+        load_json( "../../tests/autosql/test2/schema.json" );
 
     const auto population =
         std::make_shared<const autosql::decisiontrees::Placeholder>(
@@ -166,7 +167,7 @@ void test2_avg()
 
     model.fit( population_df, {peripheral_df} );
 
-    // model.save( "../../tests/autosql/test2/Model.json" );
+    model.save( "../../tests/autosql/test2/Model.json" );
 
     // ------------------------------------------------------------------------
     // Express as SQL code.
@@ -177,20 +178,22 @@ void test2_avg()
 
     // ------------------------------------------------------------------------
     // Generate predictions.
-/*
-   // const auto predictions = model.predict( population_df, {peripheral_df} );
+    /*
+       // const auto predictions = model.predict( population_df, {peripheral_df}
+       );
 
-    // assert( predictions.size() == population_df.nrows() );
+        // assert( predictions.size() == population_df.nrows() );
 
-    for ( size_t i = 0; i < predictions.size(); ++i )
-        {
-            //   std::cout << "target: " << population_df.target( i, 0 )
-            //            << ", prediction: " << predictions[i] << std::endl;
+        for ( size_t i = 0; i < predictions.size(); ++i )
+            {
+                //   std::cout << "target: " << population_df.target( i, 0 )
+                //            << ", prediction: " << predictions[i] <<
+       std::endl;
 
-            assert(
-                std::abs( population_df.target( i, 0 ) - predictions[i] ) <
-                15.0 );
-        }*/
+                assert(
+                    std::abs( population_df.target( i, 0 ) - predictions[i] ) <
+                    15.0 );
+            }*/
     std::cout << std::endl << std::endl;
 
     // ------------------------------------------------------------------------

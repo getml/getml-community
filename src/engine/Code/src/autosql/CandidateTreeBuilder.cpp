@@ -30,7 +30,7 @@ void CandidateTreeBuilder::add_counts(
                 _hyperparameters.tree_hyperparameters_,
                 _ix_perip_used,
                 enums::DataUsed::not_applicable,  // data_used
-                -1,  // _ix_column_used - not important
+                0,  // _ix_column_used - not important
                 _same_units[_ix_perip_used],
                 _random_number_generator,
                 _aggregation_impl,

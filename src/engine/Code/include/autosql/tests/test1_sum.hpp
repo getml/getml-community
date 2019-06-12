@@ -146,7 +146,7 @@ void test1_sum()
 
     model.fit( population_df, {peripheral_df} );
 
-    // model.save( "../../tests/autosql/test1/Model.json" );
+    model.save( "../../tests/autosql/test1/Model.json" );
 
     // ------------------------------------------------------------------------
     // Express as SQL code.
@@ -160,18 +160,18 @@ void test1_sum()
 
     const auto predictions = model.transform( population_df, {peripheral_df} );
 
-   /* assert( predictions.size() == population_df.nrows() );
+    /* assert( predictions.size() == population_df.nrows() );
 
-    for ( size_t i = 0; i < predictions.size(); ++i )
-        {
-            // std::cout << "target: " << population_df.target( i, 0 )
-            //           << ", prediction: " << predictions[i] << std::endl;
+     for ( size_t i = 0; i < predictions.size(); ++i )
+         {
+             // std::cout << "target: " << population_df.target( i, 0 )
+             //           << ", prediction: " << predictions[i] << std::endl;
 
-            assert(
-                std::abs( population_df.target( i, 0 ) - predictions[i] ) <
-                5.0 );
-        }
-    std::cout << std::endl << std::endl;*/
+             assert(
+                 std::abs( population_df.target( i, 0 ) - predictions[i] ) <
+                 5.0 );
+         }
+     std::cout << std::endl << std::endl;*/
 
     // ------------------------------------------------------------------------
 

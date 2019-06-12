@@ -17,6 +17,23 @@ DecisionTreeEnsemble::DecisionTreeEnsemble(
 
 // ----------------------------------------------------------------------------
 
+DecisionTreeEnsemble::DecisionTreeEnsemble(
+    const std::shared_ptr<const std::vector<std::string>> &_categories,
+    const Poco::JSON::Object &_json_obj )
+    : impl_(
+          _categories,
+          std::make_shared<descriptors::Hyperparameters>(
+              *JSON::get_object( _json_obj, "hyperparameters_" ) ),
+          JSON::array_to_vector<std::string>(
+              JSON::get_array( _json_obj, "peripheral_" ) ),
+          decisiontrees::Placeholder(
+              *JSON::get_object( _json_obj, "population_" ) ) )
+{
+    *this = from_json_obj( _json_obj );
+}
+
+// ----------------------------------------------------------------------------
+
 DecisionTreeEnsemble::DecisionTreeEnsemble( const DecisionTreeEnsemble &_other )
     : impl_( _other.impl() )
 {
@@ -714,118 +731,84 @@ void DecisionTreeEnsemble::fit_linear_regressions_and_recalculate_residuals(
 
 // ----------------------------------------------------------------------------
 
-void DecisionTreeEnsemble::from_json_obj( const Poco::JSON::Object &_json_obj )
+DecisionTreeEnsemble DecisionTreeEnsemble::from_json_obj(
+    const Poco::JSON::Object &_json_obj ) const
 {
-    assert( false && "ToDo" );
+    // ----------------------------------------
+
+    DecisionTreeEnsemble model( *this );
+
+    // ----------------------------------------
+    // Extract hyperparameters
+
+    model.impl().hyperparameters_.reset( new descriptors::Hyperparameters(
+        *JSON::get_object( _json_obj, "hyperparameters_" ) ) );
+
+    // ----------------------------------------
+    // Extract placeholders.
+
+    model.peripheral_names() = JSON::array_to_vector<std::string>(
+        JSON::get_array( _json_obj, "peripheral_" ) );
+
+    model.impl().placeholder_population_.reset( new decisiontrees::Placeholder(
+        *JSON::get_object( _json_obj, "population_" ) ) );
 
     // ----------------------------------------
 
-    /*   assert( categories() );
-
-       DecisionTreeEnsemble model( categories() );
-
-       // ----------------------------------------
-       // Plausibility checks
-
-       if ( JSON::get_array( _json_obj, "features_" )->size() == 0 )
-           {
-               std::invalid_argument(
-                   "JSON object does not contain any features!" );
-           }
-
-       if ( ( JSON::get_array( _json_obj, "update_rates1_" )->size() %
-              JSON::get_array( _json_obj, "features_" )->size() ) != 0 )
-           {
-               std::invalid_argument(
-                   "Error in JSON: Number of elements in update_rates must be "
-                   "divisible by number of features!" );
-           }
-
-       if ( JSON::get_array( _json_obj, "update_rates1_" )->size() !=
-            JSON::get_array( _json_obj, "update_rates2_" )->size() )
-           {
-               std::invalid_argument(
-                   "Error in JSON: Number of elements update_rates1_ must be "
-                   "equal to number of elements in update_rates2_!" );
-           }
-
-       // -------------------------------------------
-       // Parse trees
-
-       auto features = JSON::get_array( _json_obj, "features_" );
-
-       for ( size_t i = 0; i < features->size(); ++i )
-           {
-               auto obj = features->getObject( static_cast<unsigned int>( i ) );
-
-               model.trees().push_back( decisiontrees::DecisionTree( *obj ) );
-           }
-
-       // ----------------------------------------
-       // Parse targets
-
-       model.targets() = JSON::array_to_vector<std::string>(
-           JSON::get_array( _json_obj, "targets_" ) );
-
-       // ----------------------------------------
-       // Parse parameters for linear regressions.
-
-       model.parse_linear_regressions( _json_obj );
-
-       // -------------------------------------------
-       // Parse placeholders
-
-       model.peripheral_names() = JSON::array_to_vector<std::string>(
-           JSON::get_array( _json_obj, "peripheral_" ) );
-
-       model.impl().placeholder_population_.reset( new
-       decisiontrees::Placeholder( *JSON::get_object( _json_obj, "population_" )
-       ) );
-
-       // -------------------------------------------
-       // Parse hyperparameters
-
-       model.impl().hyperparameters_.reset( new descriptors::Hyperparameters(
-           *JSON::get_object( _json_obj, "hyperparameters_" ) ) );
-
-       // -------------------------------------------
-
-       *this = std::move( model );*/
-
-    // -------------------------------------------
-}
-
-// -------------------------------------------------------------------------
-
-void DecisionTreeEnsemble::load( const std::string &_path )
-{
-    std::stringstream json_stringstream;
-
-    std::ifstream input( _path + "Model.json" );
-
-    std::string line;
-
-    if ( input.is_open() )
+    if ( _json_obj.has( "features_" ) )
         {
-            while ( std::getline( input, line ) )
+            // ----------------------------------------
+            // Extract features.
+
+            auto features = JSON::get_array( _json_obj, "features_" );
+
+            for ( size_t i = 0; i < features->size(); ++i )
                 {
-                    json_stringstream << line;
+                    auto obj =
+                        features->getObject( static_cast<unsigned int>( i ) );
+
+                    model.trees().push_back( decisiontrees::DecisionTree(
+                        model.categories(),
+                        model.hyperparameters().tree_hyperparameters_,
+                        *obj ) );
                 }
 
-            input.close();
+            // ----------------------------------------
+            // Extract targets
+
+            model.targets() = JSON::array_to_vector<std::string>(
+                JSON::get_array( _json_obj, "targets_" ) );
+
+            // ----------------------------------------
+            // Extract linear regressions.
+
+            auto update_rates = JSON::get_array( _json_obj, "update_rates_" );
+
+            for ( size_t i = 0; i < update_rates->size(); ++i )
+                {
+                    auto obj = update_rates->getObject(
+                        static_cast<unsigned int>( i ) );
+
+                    model.linear_regressions().push_back(
+                        utils::LinearRegression( *obj ) );
+                }
+
+            // ----------------------------------------
         }
-    else
+
+    // ----------------------------------------
+
+    if ( model.linear_regressions().size() != model.trees().size() )
         {
-            throw std::invalid_argument(
-                "File '" + _path + "Model.json' not found!" );
+            throw std::runtime_error(
+                "Number of update rates does not match number of features!" );
         }
 
-    Poco::JSON::Parser parser;
+    // ----------------------------------------
 
-    auto obj = parser.parse( json_stringstream.str() )
-                   .extract<Poco::JSON::Object::Ptr>();
+    return model;
 
-    from_json_obj( *obj );
+    // -------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -863,111 +846,6 @@ DecisionTreeEnsemble &DecisionTreeEnsemble::operator=(
 
 // ----------------------------------------------------------------------------
 
-void DecisionTreeEnsemble::parse_linear_regressions(
-    const Poco::JSON::Object &_json_obj )
-{
-    // -------------------------------------------------------------
-    // Check input
-
-    if ( JSON::get_array( _json_obj, "update_rates1_" )->size() !=
-         JSON::get_array( _json_obj, "update_rates2_" )->size() )
-        {
-            throw std::runtime_error(
-                "'update_rates1_' and 'update_rates2_' must have same "
-                "length!" );
-        }
-
-    if ( JSON::get_array( _json_obj, "update_rates1_" )->size() == 0 )
-        {
-            throw std::runtime_error(
-                "The must be at least some update rates!" );
-        }
-
-    const auto num_targets =
-        JSON::get_array( _json_obj, "update_rates1_" )->getArray( 0 )->size();
-
-    // -------------------------------------------------------------
-    // Get slopes
-
-    std::vector<std::vector<AUTOSQL_FLOAT>> slopes;
-
-    {
-        auto arr = JSON::get_array( _json_obj, "update_rates1_" );
-
-        for ( size_t i = 0; i < arr->size(); ++i )
-            {
-                if ( arr->getArray( static_cast<unsigned int>( i ) )->size() !=
-                     num_targets )
-                    {
-                        throw std::runtime_error(
-                            "All elements in 'update_rates1_' must have the "
-                            "same length!" );
-                    }
-
-                slopes.push_back( JSON::array_to_vector<AUTOSQL_FLOAT>(
-                    arr->getArray( static_cast<unsigned int>( i ) ) ) );
-            }
-    }
-
-    // -------------------------------------------------------------
-    // Get intercepts
-
-    std::vector<std::vector<AUTOSQL_FLOAT>> intercepts;
-
-    {
-        auto arr = JSON::get_array( _json_obj, "update_rates2_" );
-
-        for ( size_t i = 0; i < arr->size(); ++i )
-            {
-                if ( arr->getArray( static_cast<unsigned int>( i ) )->size() !=
-                     num_targets )
-                    {
-                        throw std::runtime_error(
-                            "All elements in 'update_rates2_' must have the "
-                            "same length!" );
-                    }
-
-                intercepts.push_back( JSON::array_to_vector<AUTOSQL_FLOAT>(
-                    arr->getArray( static_cast<unsigned int>( i ) ) ) );
-            }
-    }
-
-    // -------------------------------------------------------------
-    // Create linear regressions
-
-    linear_regressions().clear();
-
-    assert( false && "ToDo" );
-
-    /* for ( size_t i = 0; i < slopes.size(); ++i )
-         {
-             std::vector<AUTOSQL_FLOAT> slopes_mat(
-                 static_cast<AUTOSQL_INT>( 1 ),
-                 static_cast<AUTOSQL_INT>( num_targets ) );
-
-             std::copy( slopes[i].begin(), slopes[i].end(), slopes_mat.begin()
-       );
-
-             std::vector<AUTOSQL_FLOAT> intercepts_mat(
-                 static_cast<AUTOSQL_INT>( 1 ),
-                 static_cast<AUTOSQL_INT>( num_targets ) );
-
-             std::copy(
-                 intercepts[i].begin(),
-                 intercepts[i].end(),
-                 intercepts_mat.begin() );
-
-             linear_regressions().push_back( utils::LinearRegression() );
-
-             last_linear_regression()->set_slopes_and_intercepts(
-                 slopes_mat, intercepts_mat );
-         }*/
-
-    // -------------------------------------------------------------
-}
-
-// ----------------------------------------------------------------------------
-
 lossfunctions::LossFunction *DecisionTreeEnsemble::parse_loss_function(
     std::string _loss_function )
 {
@@ -991,23 +869,9 @@ lossfunctions::LossFunction *DecisionTreeEnsemble::parse_loss_function(
 
 // -------------------------------------------------------------------------
 
-void DecisionTreeEnsemble::save( const std::string &_path )
+void DecisionTreeEnsemble::save( const std::string &_fname )
 {
-    // If the path already exists, delete it to avoid
-    // conflicts with already existing files.
-    if ( Poco::File( _path ).exists() )
-        {
-            Poco::File( _path ).remove( true );
-        }
-
-    Poco::File( _path ).createDirectories();
-
-    if ( trees().size() == 0 )
-        {
-            throw std::runtime_error( "Unfitted models cannot be saved!" );
-        }
-
-    std::ofstream output( _path + "Model.json", std::ofstream::out );
+    std::ofstream output( _fname );
 
     output << to_json();
 
@@ -1156,6 +1020,8 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json_obj()
     // ----------------------------------------
     // Extract placeholders
 
+    obj.set( "hyperparameters_", hyperparameters().to_json_obj() );
+
     obj.set( "peripheral_", JSON::vector_to_array( peripheral_names() ) );
 
     obj.set( "population_", placeholder().to_json_obj() );
@@ -1183,19 +1049,25 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json_obj()
                 "targets_", JSON::vector_to_array<std::string>( targets() ) );
 
             // ----------------------------------------
-            // Extract linear regression
+            // Extract linear regressions.
 
-            assert( false && "ToDo" );
+            Poco::JSON::Array update_rates;
 
-            // ----------------------------------------
-            // Extract hyperparameters
+            for ( auto &linreg : linear_regressions() )
+                {
+                    update_rates.add( linreg.to_json_obj() );
+                }
 
-            obj.set( "hyperparameters_", hyperparameters().to_json_obj() );
+            obj.set( "update_rates_", update_rates );
 
             // ----------------------------------------
         }
 
+    // ----------------------------------------
+
     return obj;
+
+    // ----------------------------------------
 }
 
 // ----------------------------------------------------------------------------

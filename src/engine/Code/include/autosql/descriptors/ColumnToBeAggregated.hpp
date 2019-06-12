@@ -13,7 +13,10 @@ struct ColumnToBeAggregated
 {
     // ------------------------------------------------------
 
-    ColumnToBeAggregated() = default;
+    ColumnToBeAggregated()
+        : ix_column_used( 0 ),
+          data_used( enums::DataUsed::not_applicable ),
+          ix_perip_used( 0 ){};
 
     ColumnToBeAggregated(
         size_t _ix_column_used,
@@ -46,6 +49,8 @@ struct ColumnToBeAggregated
 
         return col;
     }
+
+    // ------------------------------------------------------
 
     /// Transforms the SameUnits into a JSON object.
     Poco::JSON::Object to_json_obj() const

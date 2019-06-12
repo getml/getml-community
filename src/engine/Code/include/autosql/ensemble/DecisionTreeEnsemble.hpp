@@ -49,12 +49,6 @@ class DecisionTreeEnsemble
         const std::shared_ptr<const decisiontrees::TableHolder> &_table_holder,
         const std::shared_ptr<const logging::AbstractLogger> _logger );
 
-    /// Builds the decision tree ensemble from a Poco::JSON::Object
-    void from_json_obj( const Poco::JSON::Object &_json_obj );
-
-    /// Loads the Model in JSON format, if applicable
-    void load( const std::string &_path );
-
     /// Copy constructor
     DecisionTreeEnsemble &operator=( const DecisionTreeEnsemble &_other );
 
@@ -62,7 +56,7 @@ class DecisionTreeEnsemble
     DecisionTreeEnsemble &operator=( DecisionTreeEnsemble &&_other ) noexcept;
 
     /// Saves the Model in JSON format, if applicable
-    void save( const std::string &_path );
+    void save( const std::string &_fname );
 
     /// Extracts the ensemble as a Poco::JSON object
     Poco::JSON::Object to_json_obj();
@@ -161,8 +155,9 @@ class DecisionTreeEnsemble
         std::vector<std::vector<AUTOSQL_FLOAT>> *_yhat_old,
         std::vector<std::vector<AUTOSQL_FLOAT>> *_residuals );
 
-    /// Parses the linear regression from a Poco::JSON::Object
-    void parse_linear_regressions( const Poco::JSON::Object &_json_obj );
+    /// Extracts a DecisionTreeEnsemble from a JSON object.
+    DecisionTreeEnsemble from_json_obj(
+        const Poco::JSON::Object &_json_obj ) const;
 
     /// Turns a string describing the loss function into a proper loss function
     lossfunctions::LossFunction *parse_loss_function(
