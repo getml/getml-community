@@ -363,33 +363,11 @@ void DecisionTree::from_json_obj( const Poco::JSON::Object &_json_obj )
     impl()->output_.reset(
         new containers::Schema( *JSON::get_object( _json_obj, "output_" ) ) );
 
-    // -----------------------------------
+    column_to_be_aggregated() = descriptors::ColumnToBeAggregated(
+        *JSON::get_object( _json_obj, "column_" ) );
 
-    column_to_be_aggregated().ix_column_used =
-        JSON::get_value<size_t>( _json_obj, "column_" );
-
-    column_to_be_aggregated().data_used =
-        JSON::int_to_data_used( JSON::get_value<int>( _json_obj, "data_" ) );
-
-    column_to_be_aggregated().ix_perip_used =
-        JSON::get_value<size_t>( _json_obj, "input_" );
-
-    // -----------------------------------
-
-    /*impl()->same_units_.same_units_categorical_ =
-        std::make_shared<AUTOSQL_SAME_UNITS_CONTAINER>(
-            JSON::json_arr_to_same_units(
-                *JSON::get_array( _json_obj, "same_units_categorical_" ) ) );
-
-    impl()->same_units_.same_units_discrete_ =
-        std::make_shared<AUTOSQL_SAME_UNITS_CONTAINER>(
-            JSON::json_arr_to_same_units(
-                *JSON::get_array( _json_obj, "same_units_discrete_" ) ) );
-
-    impl()->same_units_.same_units_numerical_ =
-        std::make_shared<AUTOSQL_SAME_UNITS_CONTAINER>(
-            JSON::json_arr_to_same_units(
-                *JSON::get_array( _json_obj, "same_units_numerical_" ) ) );*/
+    impl()->same_units_ =
+        descriptors::SameUnits( *JSON::get_object( _json_obj, "same_units_" ) );
 
     // -----------------------------------
 
@@ -413,7 +391,7 @@ void DecisionTree::from_json_obj( const Poco::JSON::Object &_json_obj )
 
     // -----------------------------------
 
-    const auto subtrees_arr = JSON::get_array( _json_obj, "subfeatures_" );
+    /*const auto subtrees_arr = JSON::get_array( _json_obj, "subfeatures_" );
 
     subtrees().clear();
 
@@ -423,7 +401,7 @@ void DecisionTree::from_json_obj( const Poco::JSON::Object &_json_obj )
                 impl()->categories_,
                 impl()->tree_hyperparameters_,
                 *subtrees_arr->getObject( static_cast<unsigned int>( i ) ) ) );
-        }
+        }*/
 
     // -----------------------------------
 }
@@ -509,69 +487,45 @@ Poco::JSON::Object DecisionTree::to_json_obj()
 {
     // -----------------------------------
 
-    Poco::JSON::Object obj;
-
-    // -----------------------------------
-
-    assert( false && "ToDo" );
-
-    /*obj.set( "peripheral_name_", peripheral_name() );
-    obj.set( "population_name_", population_name() );
-
-    obj.set( "join_keys_perip_name_", join_keys_perip_name() );
-    obj.set( "join_keys_popul_name_", join_keys_popul_name() );
-
-    obj.set( "time_stamps_perip_name_", time_stamps_perip_name() );
-    obj.set( "time_stamps_popul_name_", time_stamps_popul_name() );
-
-    if ( upper_time_stamps_name() != "" )
+    if ( !impl()->input_ || !impl()->output_ || !root() )
         {
-            obj.set( "upper_time_stamps_", upper_time_stamps_name() );
+            throw std::runtime_error( "Feature has not been trained!" );
         }
 
     // -----------------------------------
 
-    obj.set( "x_perip_categorical_colnames_", x_perip_categorical_colnames() );
-
-    obj.set( "x_perip_numerical_colnames_", x_perip_numerical_colnames() );
-
-    obj.set( "x_perip_discrete_colnames_", x_perip_discrete_colnames() );
-
-    obj.set( "x_popul_categorical_colnames_", x_popul_categorical_colnames() );
-
-    obj.set( "x_popul_numerical_colnames_", x_popul_numerical_colnames() );
-
-    obj.set( "x_popul_discrete_colnames_", x_popul_discrete_colnames() );*/
+    Poco::JSON::Object obj;
 
     // -----------------------------------
 
     obj.set( "aggregation_", aggregation()->type() );
 
-    obj.set( "column_", column_to_be_aggregated().ix_column_used );
+    obj.set( "column_", column_to_be_aggregated().to_json_obj() );
 
     obj.set( "conditions_", root()->to_json_obj() );
 
-    obj.set(
-        "data_",
-        JSON::data_used_to_int( column_to_be_aggregated().data_used ) );
+    obj.set( "input_", impl()->input().to_json_obj() );
 
-    obj.set( "input_", ix_perip_used() );
+    obj.set( "output_", impl()->output().to_json_obj() );
 
+    obj.set( "same_units_", impl()->same_units_.to_json_obj() );
 
     // -----------------------------------
 
-    Poco::JSON::Array subtrees_arr;
+    /*Poco::JSON::Array subtrees_arr;
 
     for ( auto &subtree : subtrees() )
         {
             subtrees_arr.add( subtree.to_json_obj() );
         }
 
-    obj.set( "subfeatures_", subtrees_arr );
+    obj.set( "subfeatures_", subtrees_arr );*/
 
     // -----------------------------------
 
     return obj;
+
+    // -----------------------------------
 }
 
 // ----------------------------------------------------------------------------
