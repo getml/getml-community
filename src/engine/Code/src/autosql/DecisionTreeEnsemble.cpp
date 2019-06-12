@@ -782,32 +782,6 @@ void DecisionTreeEnsemble::from_json_obj( const Poco::JSON::Object &_json_obj )
        decisiontrees::Placeholder( *JSON::get_object( _json_obj, "population_" )
        ) );
 
-       // ------------------------------------------
-       // Parse num_columns
-
-       model.num_columns_peripheral_categorical() =
-           JSON::array_to_vector<AUTOSQL_INT>( JSON::get_array(
-               _json_obj, "num_columns_peripheral_categorical_" ) );
-
-       model.num_columns_peripheral_numerical() =
-           JSON::array_to_vector<AUTOSQL_INT>(
-               JSON::get_array( _json_obj, "num_columns_peripheral_numerical_" )
-       );
-
-       model.num_columns_peripheral_discrete() =
-           JSON::array_to_vector<AUTOSQL_INT>(
-               JSON::get_array( _json_obj, "num_columns_peripheral_discrete_" )
-       );
-
-       model.num_columns_population_categorical() = JSON::get_value<size_t>(
-           _json_obj, "num_columns_population_categorical_" );
-
-       model.num_columns_population_numerical() = JSON::get_value<size_t>(
-           _json_obj, "num_columns_population_numerical_" );
-
-       model.num_columns_population_discrete() = JSON::get_value<size_t>(
-           _json_obj, "num_columns_population_discrete_" );
-
        // -------------------------------------------
        // Parse hyperparameters
 
@@ -1191,45 +1165,16 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json_obj()
     if ( has_been_fitted() )
         {
             // ----------------------------------------
-            // Extract expected number of columns
-
-            obj.set(
-                "num_columns_peripheral_categorical_",
-                num_columns_peripheral_categorical() );
-
-            obj.set(
-                "num_columns_peripheral_numerical_",
-                num_columns_peripheral_numerical() );
-
-            obj.set(
-                "num_columns_peripheral_discrete_",
-                num_columns_peripheral_discrete() );
-
-            obj.set(
-                "num_columns_population_categorical_",
-                num_columns_population_categorical() );
-
-            obj.set(
-                "num_columns_population_numerical_",
-                num_columns_population_numerical() );
-
-            obj.set(
-                "num_columns_population_discrete_",
-                num_columns_population_discrete() );
-
-            // ----------------------------------------
             // Extract features
 
-            {
-                Poco::JSON::Array features;
+            Poco::JSON::Array features;
 
-                for ( auto &tree : trees() )
-                    {
-                        features.add( tree.to_json_obj() );
-                    }
+            for ( auto &tree : trees() )
+                {
+                    features.add( tree.to_json_obj() );
+                }
 
-                obj.set( "features_", features );
-            }
+            obj.set( "features_", features );
 
             // ----------------------------------------
             // Extract targets

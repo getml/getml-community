@@ -181,6 +181,30 @@ void LinearRegression::fit(
 
 // ----------------------------------------------------------------------------
 
+LinearRegression LinearRegression::from_json_obj(
+    const Poco::JSON::Object& _obj ) const
+{
+    // ----------------------------------------
+
+    LinearRegression linear_regression;
+
+    // ----------------------------------------
+
+    linear_regression.slopes_ = JSON::array_to_vector<AUTOSQL_FLOAT>(
+        JSON::get_array( _obj, "update_rates_1_" ) );
+
+    linear_regression.intercepts_ = JSON::array_to_vector<AUTOSQL_FLOAT>(
+        JSON::get_array( _obj, "update_rates_2_" ) );
+
+    // ----------------------------------------
+
+    return linear_regression;
+
+    // ----------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
 std::vector<std::vector<AUTOSQL_FLOAT>> LinearRegression::predict(
     const std::vector<AUTOSQL_FLOAT>& _yhat ) const
 {
@@ -201,6 +225,27 @@ std::vector<std::vector<AUTOSQL_FLOAT>> LinearRegression::predict(
         }
 
     return predictions;
+}
+
+// ----------------------------------------------------------------------------
+
+Poco::JSON::Object LinearRegression::to_json_obj() const
+{
+    // ----------------------------------------
+
+    Poco::JSON::Object obj;
+
+    // ----------------------------------------
+
+    obj.set( "update_rates_1_", JSON::vector_to_array( slopes_ ) );
+
+    obj.set( "update_rates_2_", JSON::vector_to_array( intercepts_ ) );
+
+    // ----------------------------------------
+
+    return obj;
+
+    // ----------------------------------------
 }
 
 // ----------------------------------------------------------------------------

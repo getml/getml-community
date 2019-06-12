@@ -12,6 +12,11 @@ class LinearRegression
    public:
     LinearRegression();
 
+    LinearRegression( const Poco::JSON::Object& _obj )
+    {
+        *this = from_json_obj( _obj );
+    }
+
     LinearRegression( size_t _ncols );
 
     ~LinearRegression() = default;
@@ -32,6 +37,9 @@ class LinearRegression
     std::vector<std::vector<AUTOSQL_FLOAT>> predict(
         const std::vector<AUTOSQL_FLOAT>& _yhat ) const;
 
+    /// Transforms the LinearRegression into a JSON object.
+    Poco::JSON::Object to_json_obj() const;
+
     // -----------------------------------------
 
     multithreading::Communicator& comm() const { return *( comm_ ); }
@@ -43,6 +51,12 @@ class LinearRegression
         assert( intercepts_.size() == slopes_.size() );
         return intercepts_.size();
     }
+
+    // -----------------------------------------
+
+   private:
+    /// Reconstructs a LinearRegression from a JSON object.
+    LinearRegression from_json_obj( const Poco::JSON::Object& _obj ) const;
 
     // -----------------------------------------
 
