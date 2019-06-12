@@ -12,6 +12,8 @@ int main( int argc, char* argv[] )
     test1_count();
     test2_avg();
     test3_sum();
+    test4_max();
+    test5_min();
 
     return 0;
 }

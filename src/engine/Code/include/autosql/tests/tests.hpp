@@ -22,5 +22,7 @@
 #include "autosql/tests/test1_count.hpp"
 #include "autosql/tests/test2_avg.hpp"
 #include "autosql/tests/test3_sum.hpp"
+#include "autosql/tests/test4_max.hpp"
+#include "autosql/tests/test5_min.hpp"
 
 // ---------------------------------------------------------------------------
