@@ -11,7 +11,7 @@ SameUnitIdentifier::get_same_units_categorical(
     const std::vector<containers::DataFrame> &_peripheral_tables,
     const containers::DataFrame &_population_table )
 {
-    std::map<std::string, std::vector<enums::ColumnToBeAggregated>> unit_map;
+    std::map<std::string, std::vector<descriptors::ColumnToBeAggregated>> unit_map;
 
     debug_log( "identify_same_units: Adding outputs (categorical)..." );
 
@@ -57,7 +57,7 @@ SameUnitIdentifier::get_same_units_discrete(
     const std::vector<containers::DataFrame> &_peripheral_tables,
     const containers::DataFrame &_population_table )
 {
-    std::map<std::string, std::vector<enums::ColumnToBeAggregated>> unit_map;
+    std::map<std::string, std::vector<descriptors::ColumnToBeAggregated>> unit_map;
 
     debug_log( "identify_same_units: Adding outputs (discrete)..." );
 
@@ -103,7 +103,7 @@ SameUnitIdentifier::get_same_units_numerical(
     const std::vector<containers::DataFrame> &_peripheral_tables,
     const containers::DataFrame &_population_table )
 {
-    std::map<std::string, std::vector<enums::ColumnToBeAggregated>> unit_map;
+    std::map<std::string, std::vector<descriptors::ColumnToBeAggregated>> unit_map;
 
     debug_log( "identify_same_units: Adding outputs (numerical)..." );
 
@@ -189,7 +189,7 @@ std::vector<descriptors::SameUnits> SameUnitIdentifier::identify_same_units(
 // ----------------------------------------------------------------------------
 
 void SameUnitIdentifier::unit_map_to_same_unit_container(
-    const std::map<std::string, std::vector<enums::ColumnToBeAggregated>>
+    const std::map<std::string, std::vector<descriptors::ColumnToBeAggregated>>
         &_unit_map,
     std::vector<AUTOSQL_SAME_UNITS_CONTAINER> *_same_units )
 {

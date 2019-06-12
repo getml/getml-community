@@ -109,14 +109,14 @@ class DecisionTree
 
     /// Returns the information required for identifying the
     /// columns to be aggregated by this tree.
-    inline enums::ColumnToBeAggregated &column_to_be_aggregated()
+    inline descriptors::ColumnToBeAggregated &column_to_be_aggregated()
     {
         return impl()->column_to_be_aggregated_;
     }
 
     /// Returns the information required for identifying the
     /// columns to be aggregated by this tree.
-    inline const enums::ColumnToBeAggregated &column_to_be_aggregated() const
+    inline const descriptors::ColumnToBeAggregated &column_to_be_aggregated() const
     {
         return impl()->column_to_be_aggregated_;
     }

@@ -20,7 +20,7 @@
 
 #define AUTOSQL_SAME_UNITS_CONTAINER \
     std::vector<                     \
-        std::tuple<enums::ColumnToBeAggregated, enums::ColumnToBeAggregated>>
+        std::tuple<descriptors::ColumnToBeAggregated, descriptors::ColumnToBeAggregated>>
 
 #define AUTOSQL_SAMPLES std::vector<Sample>
 

@@ -762,14 +762,6 @@ void DecisionTreeEnsemble::from_json_obj( const Poco::JSON::Object &_json_obj )
            }
 
        // ----------------------------------------
-       // Set categories for trees
-
-       for ( auto &tree : model.trees() )
-           {
-               tree.set_categories( model.categories() );
-           }
-
-       // ----------------------------------------
        // Parse targets
 
        model.targets() = JSON::array_to_vector<std::string>(

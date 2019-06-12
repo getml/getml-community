@@ -4,7 +4,7 @@
 // ----------------------------------------------------------------------------
 // Dependencies
 
-#include "autosql/enums/enums.hpp"
+#include "autosql/descriptors/descriptors.hpp"
 
 #include "autosql/containers/containers.hpp"
 

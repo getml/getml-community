@@ -29,7 +29,7 @@ class SameUnitIdentifier
         const AUTOSQL_INT _ix_perip_used,
         const size_t _ix_column_used,
         const containers::Column<T>& _data,
-        std::map<std::string, std::vector<enums::ColumnToBeAggregated>>*
+        std::map<std::string, std::vector<descriptors::ColumnToBeAggregated>>*
             _unit_map );
 
     /// Finds the same units for categorical columns.
@@ -50,7 +50,7 @@ class SameUnitIdentifier
     /// Once the unit maps have been fitted, this transforms it to a vector of
     /// AUTOSQL_SAME_UNITS_CONTAINER objects.
     static void unit_map_to_same_unit_container(
-        const std::map<std::string, std::vector<enums::ColumnToBeAggregated>>&
+        const std::map<std::string, std::vector<descriptors::ColumnToBeAggregated>>&
             _unit_map,
         std::vector<AUTOSQL_SAME_UNITS_CONTAINER>* _same_units );
 
@@ -66,7 +66,7 @@ void SameUnitIdentifier::add_to_unit_map(
     const AUTOSQL_INT _ix_perip_used,
     const size_t _ix_column_used,
     const containers::Column<T>& _data,
-    std::map<std::string, std::vector<enums::ColumnToBeAggregated>>* _unit_map )
+    std::map<std::string, std::vector<descriptors::ColumnToBeAggregated>>* _unit_map )
 {
     const auto& unit = _data.unit_;
 
@@ -74,7 +74,7 @@ void SameUnitIdentifier::add_to_unit_map(
         {
             auto it = _unit_map->find( unit );
 
-            enums::ColumnToBeAggregated new_column = {
+            descriptors::ColumnToBeAggregated new_column = {
                 _ix_column_used,  // ix_column_used
                 _data_used,       // data_used
                 _ix_perip_used    // ix_perip_used
@@ -85,7 +85,7 @@ void SameUnitIdentifier::add_to_unit_map(
                     _unit_map->insert(
                         std::pair<
                             std::string,
-                            std::vector<enums::ColumnToBeAggregated>>(
+                            std::vector<descriptors::ColumnToBeAggregated>>(
                             unit, {new_column} ) );
                 }
             else

@@ -4,6 +4,9 @@
 // ----------------------------------------------------------------------------
 // Dependencies
 
+#include <Poco/JSON/Array.h>
+#include <Poco/JSON/Object.h>
+
 #include "autosql/types.hpp"
 
 #include "autosql/JSON.hpp"
@@ -14,6 +17,8 @@
 
 // ----------------------------------------------------------------------------
 // Module files
+
+#include "autosql/descriptors/ColumnToBeAggregated.hpp"
 
 #include "autosql/descriptors/TreeHyperparameters.hpp"
 

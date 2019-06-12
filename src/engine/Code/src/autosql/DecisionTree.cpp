@@ -376,7 +376,7 @@ void DecisionTree::from_json_obj( const Poco::JSON::Object &_json_obj )
 
     // -----------------------------------
 
-    impl()->same_units_.same_units_categorical_ =
+    /*impl()->same_units_.same_units_categorical_ =
         std::make_shared<AUTOSQL_SAME_UNITS_CONTAINER>(
             JSON::json_arr_to_same_units(
                 *JSON::get_array( _json_obj, "same_units_categorical_" ) ) );
@@ -389,7 +389,7 @@ void DecisionTree::from_json_obj( const Poco::JSON::Object &_json_obj )
     impl()->same_units_.same_units_numerical_ =
         std::make_shared<AUTOSQL_SAME_UNITS_CONTAINER>(
             JSON::json_arr_to_same_units(
-                *JSON::get_array( _json_obj, "same_units_numerical_" ) ) );
+                *JSON::get_array( _json_obj, "same_units_numerical_" ) ) );*/
 
     // -----------------------------------
 
@@ -557,19 +557,6 @@ Poco::JSON::Object DecisionTree::to_json_obj()
 
     obj.set( "input_", ix_perip_used() );
 
-    // -----------------------------------
-
-    obj.set(
-        "same_units_categorical_",
-        JSON::same_units_to_json_arr( impl()->same_units_categorical() ) );
-
-    obj.set(
-        "same_units_discrete_",
-        JSON::same_units_to_json_arr( impl()->same_units_discrete() ) );
-
-    obj.set(
-        "same_units_numerical_",
-        JSON::same_units_to_json_arr( impl()->same_units_numerical() ) );
 
     // -----------------------------------
 

@@ -9,8 +9,6 @@
 
 #include "autosql/enums/DataUsed.hpp"
 
-#include "autosql/enums/ColumnToBeAggregated.hpp"
-
 // ----------------------------------------------------------------------------
 
 #endif  // AUTOSQL_ENUMS_ENUMS_HPP_

@@ -160,7 +160,7 @@ struct DecisionTreeImpl
 
     /// Pointer to the structure that contains information
     /// about the column aggregated by this tree
-    enums::ColumnToBeAggregated column_to_be_aggregated_;
+    descriptors::ColumnToBeAggregated column_to_be_aggregated_;
 
     /// Communicator
     multithreading::Communicator* comm_;
