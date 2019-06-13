@@ -40,10 +40,10 @@ void RequestHandler::run()
                 {
                     project_manager().load_autosql_model( name, &socket() );
                 }
-            /*else if ( type == "AutoSQLModel.save" )
+            else if ( type == "AutoSQLModel.save" )
                 {
                     project_manager().save_autosql_model( name, &socket() );
-                }*/
+                }
             else if ( type == "CategoricalColumn.get" )
                 {
                     data_frame_manager().get_categorical_column(

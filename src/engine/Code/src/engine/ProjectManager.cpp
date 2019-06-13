@@ -391,6 +391,32 @@ void ProjectManager::refresh( Poco::Net::StreamSocket* _socket )
 
 // ------------------------------------------------------------------------
 
+void ProjectManager::save_autosql_model(
+    const std::string& _name, Poco::Net::StreamSocket* _socket )
+{
+    if ( project_directory_ == "" )
+        {
+            throw std::invalid_argument( "You have not set a project!" );
+        }
+
+    multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
+
+    auto model = get_autosql_model( _name );
+
+    const auto path = project_directory_ + "autosql-models/" + _name + "/";
+
+    model.save( path );
+
+    // Note that the join keys encoding will be unaffected by models,
+    // passing a zero-length-encoding means that it will not be saved.
+    FileHandler::save_encodings(
+        project_directory_, categories(), containers::Encoding() );
+
+    engine::communication::Sender::send_string( "Success!", _socket );
+}
+
+// ------------------------------------------------------------------------
+
 void ProjectManager::save_data_frame(
     const std::string& _name, Poco::Net::StreamSocket* _socket )
 {
