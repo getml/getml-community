@@ -1,12 +1,12 @@
 
 // ---------------------------------------------------------------------------
 
-void test5_min()
+void test6_time_stamps_diff()
 {
     // ------------------------------------------------------------------------
 
     std::cout << std::endl
-              << "Test 5 (MIN aggregation): " << std::endl
+              << "Test 6 (time stamps diff): " << std::endl
               << std::endl;
 
     // ------------------------------------------------------------------------
@@ -91,8 +91,6 @@ void test5_min()
     // ---------------------------------------------
     // Define targets.
 
-    auto counts = std::vector<double>( 500 );
-
     for ( size_t i = 0; i < peripheral_df.nrows(); ++i )
         {
             const auto jk = peripheral_df.join_key( i );
@@ -101,15 +99,11 @@ void test5_min()
 
             if ( peripheral_df.time_stamp( i ) <=
                      time_stamps_population_col[jk] &&
-                 peripheral_df.numerical( i, 0 ) > 250.0 )
+                 time_stamps_population_col[jk] -
+                         peripheral_df.time_stamp( i ) <
+                     50.0 )
                 {
-                    if ( targets_population[jk] == 0.0 ||
-                         peripheral_df.numerical( i, 0 ) <
-                             targets_population[jk] )
-                        {
-                            targets_population[jk] =
-                                peripheral_df.numerical( i, 0 );
-                        }
+                    targets_population[jk]++;
                 }
         }
 
@@ -117,7 +111,7 @@ void test5_min()
     // Build data model.
 
     const auto population_json =
-        load_json( "../../tests/autosql/test5/schema.json" );
+        load_json( "../../tests/autosql/test6/schema.json" );
 
     const auto population =
         std::make_shared<const autosql::decisiontrees::Placeholder>(
@@ -130,7 +124,7 @@ void test5_min()
     // Load hyperparameters.
 
     const auto hyperparameters_json =
-        load_json( "../../tests/autosql/test5/hyperparameters.json" );
+        load_json( "../../tests/autosql/test6/hyperparameters.json" );
 
     std::cout << autosql::JSON::stringify( *hyperparameters_json ) << std::endl
               << std::endl;
@@ -154,12 +148,12 @@ void test5_min()
 
     model.fit( population_df, {peripheral_df} );
 
-    model.save( "../../tests/autosql/test5/Model.json" );
+    model.save( "../../tests/autosql/test6/Model.json" );
 
     // ------------------------------------------------------------------------
     // Express as SQL code.
 
-    std::ofstream sql( "../../tests/autosql/test5/Model.sql" );
+    std::ofstream sql( "../../tests/autosql/test6/Model.sql" );
     sql << model.to_sql();
     sql.close();
 
@@ -172,14 +166,14 @@ void test5_min()
 
     for ( size_t i = 0; i < predictions.size(); ++i )
         {
-          /*  std::cout << "target: "
+            /*std::cout << "target: "
                        << population_df.target( i / num_features, 0 )
                        << ", prediction: " << predictions[i] << std::endl;*/
 
             assert(
                 std::abs(
                     population_df.target( i / num_features, 0 ) -
-                    predictions[i] ) < 50.0 );
+                    predictions[i] ) < 5.0 );
         }
     std::cout << std::endl << std::endl;
 

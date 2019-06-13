@@ -24,5 +24,6 @@
 #include "autosql/tests/test3_sum.hpp"
 #include "autosql/tests/test4_max.hpp"
 #include "autosql/tests/test5_min.hpp"
+#include "autosql/tests/test6_time_stamps_diff.hpp"
 
 // ---------------------------------------------------------------------------
