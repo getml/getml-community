@@ -8,7 +8,7 @@ namespace ensemble
 
 DecisionTreeEnsemble::DecisionTreeEnsemble(
     const std::shared_ptr<const std::vector<std::string>> &_categories,
-    const std::shared_ptr<descriptors::Hyperparameters> &_hyperparameters,
+    const std::shared_ptr<const descriptors::Hyperparameters> &_hyperparameters,
     const std::shared_ptr<const std::vector<std::string>> &_peripheral,
     const std::shared_ptr<const decisiontrees::Placeholder> &_placeholder )
     : impl_( _categories, _hyperparameters, *_peripheral, *_placeholder )
@@ -22,7 +22,7 @@ DecisionTreeEnsemble::DecisionTreeEnsemble(
     const Poco::JSON::Object &_json_obj )
     : impl_(
           _categories,
-          std::make_shared<descriptors::Hyperparameters>(
+          std::make_shared<const descriptors::Hyperparameters>(
               *JSON::get_object( _json_obj, "hyperparameters_" ) ),
           JSON::array_to_vector<std::string>(
               JSON::get_array( _json_obj, "peripheral_" ) ),
@@ -76,25 +76,6 @@ std::list<decisiontrees::DecisionTree> DecisionTreeEnsemble::build_candidates(
         &aggregation_impl(),
         random_number_generator().get(),
         comm() );
-}
-
-// ----------------------------------------------------------------------------
-
-void DecisionTreeEnsemble::calculate_sampling_rate(
-    const AUTOSQL_INT _population_nrows )
-{
-    AUTOSQL_FLOAT nrows = static_cast<AUTOSQL_FLOAT>( _population_nrows );
-
-    utils::Reducer::reduce( std::plus<AUTOSQL_FLOAT>(), &nrows, comm() );
-
-    if ( nrows <= 0.0 )
-        {
-            throw std::invalid_argument(
-                "The population table needs to contain at least some data!" );
-        }
-
-    impl().hyperparameters_->sampling_rate_ = std::min(
-        impl().hyperparameters_->sampling_factor_ * ( 2000.0 / nrows ), 1.0 );
 }
 
 // ----------------------------------------------------------------------------
@@ -366,9 +347,16 @@ void DecisionTreeEnsemble::fit(
 
     // ----------------------------------------------------------------
 
-    assert( _table_holder->main_tables_.size() > 0 );
+    if ( _table_holder->main_tables_.size() == 0 )
+        {
+            throw std::invalid_argument(
+                "Your population table needs to contain at least one row!" );
+        }
 
-    calculate_sampling_rate( _table_holder->main_tables_[0].nrows() );
+    sampler().calc_sampling_rate(
+        _table_holder->main_tables_[0].nrows(),
+        hyperparameters().sampling_factor_,
+        comm() );
 
     // ----------------------------------------------------------------
     // Store the column numbers, so we can make sure that the user
@@ -466,7 +454,7 @@ void DecisionTreeEnsemble::fit(
                 static_cast<size_t>( hyperparameters().seed_ ) ) );
         }
 
-    if ( hyperparameters().sampling_rate_ <= 0.0 )
+    if ( sampler().sampling_rate() <= 0.0 )
         {
             std::fill( sample_weights->begin(), sample_weights->end(), 1.0 );
         }
@@ -512,7 +500,7 @@ void DecisionTreeEnsemble::fit(
 
     std::vector<AUTOSQL_SAMPLE_CONTAINER> sample_containers( num_peripheral );
 
-    if ( hyperparameters().sampling_rate_ <= 0.0 )
+    if ( sampler().sampling_rate() <= 0.0 )
         {
             for ( size_t i = 0; i < num_peripheral; ++i )
                 {
@@ -538,7 +526,7 @@ void DecisionTreeEnsemble::fit(
 
             debug_log( "fit: Sampling from population..." );
 
-            if ( hyperparameters().sampling_rate_ > 0.0 )
+            if ( sampler().sampling_rate() > 0.0 )
                 {
                     sample_weights = sampler().make_sample_weights( nrows );
 
@@ -1015,7 +1003,7 @@ Poco::JSON::Object DecisionTreeEnsemble::to_monitor(
 
             std::vector<std::string> sql;
 
-            for ( size_t i = 0; trees().size(); ++i )
+            for ( size_t i = 0; i < trees().size(); ++i )
                 {
                     sql.push_back( trees()[i].to_sql(
                         std::to_string( i + 1 ),

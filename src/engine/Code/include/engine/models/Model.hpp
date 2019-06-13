@@ -200,14 +200,16 @@ Model<FeatureEngineererType>::Model(
     const Poco::JSON::Object& _hyperparameters )
     : feature_engineerer_( _feature_engineerer )
 {
-    if ( _hyperparameters.has( "feature_selector_" ) )
+    if ( _hyperparameters.has( "feature_selector_" ) &&
+         !_hyperparameters.isNull( "feature_selector_" ) )
         {
             predictor_hyperparameters_.set(
                 "feature_selector_",
                 JSON::get_object( _hyperparameters, "feature_selector_" ) );
         }
 
-    if ( _hyperparameters.has( "predictor_" ) )
+    if ( _hyperparameters.has( "predictor_" ) &&
+         !_hyperparameters.isNull( "predictor_" ) )
         {
             predictor_hyperparameters_.set(
                 "predictor_",

@@ -14,7 +14,7 @@ class TreeFitter
    public:
     TreeFitter(
         const std::shared_ptr<const std::vector<std::string>> &_categories,
-        const std::shared_ptr<descriptors::Hyperparameters> &_hyperparameters,
+        const std::shared_ptr<const descriptors::Hyperparameters> &_hyperparameters,
         std::mt19937 *_random_number_generator,
         multithreading::Communicator *_comm )
         : categories_( _categories ),

@@ -20,7 +20,7 @@ class DecisionTreeEnsemble
    public:
     DecisionTreeEnsemble(
         const std::shared_ptr<const std::vector<std::string>> &_categories,
-        const std::shared_ptr<descriptors::Hyperparameters> &_hyperparameters,
+        const std::shared_ptr<const descriptors::Hyperparameters> &_hyperparameters,
         const std::shared_ptr<const std::vector<std::string>> &_peripheral,
         const std::shared_ptr<const decisiontrees::Placeholder> &_placeholder );
 
@@ -155,10 +155,6 @@ class DecisionTreeEnsemble
         const AUTOSQL_INT _ix_feature,
         const std::vector<descriptors::SameUnits> &_same_units,
         const decisiontrees::TableHolder &_table_holder );
-
-    /// Calculates the sampling rate based on the number of rows
-    /// in the population table and the sampling_factor
-    void calculate_sampling_rate( const AUTOSQL_INT _population_nrows );
 
     /// Makes sure that the input provided by the user is plausible
     /// and throws an exception if it isn't. Only the fit(...) member

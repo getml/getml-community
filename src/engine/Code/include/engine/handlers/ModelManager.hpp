@@ -122,10 +122,18 @@ class ModelManager
     const monitoring::Logger& logger() { return *logger_; }
 
     /// Trivial (private) accessor
-    ModelMapType& models() { return *models_; }
+    ModelMapType& models()
+    {
+        assert( models_ );
+        return *models_;
+    }
 
     /// Trivial (private) accessor
-    const ModelMapType& models() const { return *models_; }
+    const ModelMapType& models() const
+    {
+        assert( models_ );
+        return *models_;
+    }
 
     /// Posts an AutoSQL model.
     template <
@@ -286,6 +294,10 @@ void ModelManager<ModelType>::fit_model(
         {
             it->second = std::make_shared<ModelType>( model );
         }
+
+    assert( categories_ );
+
+    assert( local_categories );
 
     categories_->append( *local_categories );
 

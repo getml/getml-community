@@ -31,7 +31,8 @@ class ProjectManager
         const std::shared_ptr<const monitoring::Monitor>& _monitor,
         const config::Options& _options,
         const std::shared_ptr<multithreading::ReadWriteLock>& _read_write_lock )
-        : categories_( _categories ),
+        : autosql_models_( _autosql_models ),
+          categories_( _categories ),
           data_frame_manager_( _data_frame_manager ),
           data_frames_( _data_frames ),
           join_keys_encoding_( _join_keys_encoding ),
@@ -152,11 +153,16 @@ class ProjectManager
 
    private:
     /// Trivial (private) accessor
-    AutoSQLModelMapType& autosql_models() { return *autosql_models_; }
+    AutoSQLModelMapType& autosql_models()
+    {
+        assert( autosql_models_ );
+        return *autosql_models_;
+    }
 
     /// Trivial (private) accessor
     const AutoSQLModelMapType& autosql_models() const
     {
+        assert( autosql_models_ );
         return *autosql_models_;
     }
 
@@ -195,11 +201,16 @@ class ProjectManager
     }*/
 
     /// Trivial (private) accessor
-    RelboostModelMapType& relboost_models() { return *relboost_models_; }
+    RelboostModelMapType& relboost_models()
+    {
+        assert( relboost_models_ );
+        return *relboost_models_;
+    }
 
     /// Trivial (private) accessor
     const RelboostModelMapType& relboost_models() const
     {
+        assert( relboost_models_ );
         return *relboost_models_;
     }
 

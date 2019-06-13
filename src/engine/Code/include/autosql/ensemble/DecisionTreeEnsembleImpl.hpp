@@ -13,7 +13,8 @@ struct DecisionTreeEnsembleImpl
 {
     DecisionTreeEnsembleImpl(
         const std::shared_ptr<const std::vector<std::string>> &_categories,
-        const std::shared_ptr<descriptors::Hyperparameters> &_hyperparameters,
+        const std::shared_ptr<const descriptors::Hyperparameters>
+            &_hyperparameters,
         const std::vector<std::string> &_placeholder_peripheral,
         const decisiontrees::Placeholder &_placeholder_population )
         : categories_( _categories ),
@@ -46,7 +47,7 @@ struct DecisionTreeEnsembleImpl
     std::vector<utils::LinearRegression> linear_regressions_;
 
     /// The hyperparameters used in this ensemble
-    std::shared_ptr<descriptors::Hyperparameters> hyperparameters_;
+    std::shared_ptr<const descriptors::Hyperparameters> hyperparameters_;
 
     /// Number of categorical colimns in peripheral table
     std::vector<AUTOSQL_INT> num_columns_peripheral_categorical_;

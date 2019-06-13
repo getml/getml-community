@@ -61,11 +61,6 @@ struct Hyperparameters
     /// Determines the sampling rate - parameter passed by the user
     const AUTOSQL_FLOAT sampling_factor_;
 
-    /// The share of sample from the population table included
-    /// in the training process. This is the only non-const variable
-    /// as it depends on the size of the training set.
-    AUTOSQL_FLOAT sampling_rate_;
-
     /// The seed used for the hyperparameter optimization
     const size_t seed_;
 
