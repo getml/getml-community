@@ -74,6 +74,46 @@ struct FileHandler
     /// Writes categories or join keys encoding to file
     static void write_string_little_endian(
         const std::string& _fname, const containers::Encoding& _strings );
+
+    // ------------------------------------------------------------------------
+
+    /// Makes the filename for an AutoSQL model.
+    template <
+        typename RType,
+        typename std::enable_if<
+            std::is_same<RType, std::shared_ptr<models::AutoSQLModel>>::value,
+            int>::type = 0>
+    static std::string make_fname(
+        const std::string& _project_directory, const std::string& _name )
+    {
+        return _project_directory + "autosql-models/" + _name;
+    }
+
+    /// Makes the filename for a data frame.
+    template <
+        typename RType,
+        typename std::enable_if<
+            std::is_same<RType, containers::DataFrame>::value,
+            int>::type = 0>
+    static std::string make_fname(
+        const std::string& _project_directory, const std::string& _name )
+    {
+        return _project_directory + "data/" + _name;
+    }
+
+    /// Makes the filename for a relboost model.
+    template <
+        typename RType,
+        typename std::enable_if<
+            std::is_same<RType, std::shared_ptr<models::RelboostModel>>::value,
+            int>::type = 0>
+    static std::string make_fname(
+        const std::string& _project_directory, const std::string& _name )
+    {
+        return _project_directory + "relboost-models/" + _name;
+    }
+
+    // ------------------------------------------------------------------------
 };
 
 // ------------------------------------------------------------------------
@@ -151,12 +191,9 @@ void FileHandler::remove(
 
     if ( !mem_only && _project_directory != "" )
         {
-            auto file = Poco::File( _project_directory + "models/" + _name );
+            const auto fname = make_fname<Type>( _project_directory, _name );
 
-            if ( std::is_same<Type, containers::DataFrame>() )
-                {
-                    file = Poco::File( _project_directory + "data/" + _name );
-                }
+            auto file = Poco::File( fname );
 
             if ( file.exists() )
                 {
