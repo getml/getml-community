@@ -127,7 +127,18 @@ class ModelManager
     /// Trivial (private) accessor
     const ModelMapType& models() const { return *models_; }
 
-    /// Posts a relboost model
+    /// Posts an AutoSQL model.
+    template <
+        typename MType = ModelType,
+        typename std::enable_if<
+            std::is_same<MType, models::AutoSQLModel>::value,
+            int>::type = 0>
+    void post_model( const Poco::JSON::Object& _obj )
+    {
+        monitor_->send( "postautosqlmodel", _obj );
+    }
+
+    /// Posts a relboost model.
     template <
         typename MType = ModelType,
         typename std::enable_if<
@@ -343,11 +354,13 @@ Poco::JSON::Object ModelManager<ModelType>::receive_data(
                 }
             else if ( type == "DataFrame.from_db" )
                 {
-                    local_data_frame_manager.from_db( name, cmd, false, _socket );
+                    local_data_frame_manager.from_db(
+                        name, cmd, false, _socket );
                 }
             else if ( type == "DataFrame.from_json" )
                 {
-                    local_data_frame_manager.from_json( name, cmd, false, _socket );
+                    local_data_frame_manager.from_json(
+                        name, cmd, false, _socket );
                 }
             else
                 {

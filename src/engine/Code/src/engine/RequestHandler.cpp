@@ -36,6 +36,10 @@ void RequestHandler::run()
                     project_manager().delete_autosql_model(
                         name, cmd, &socket() );
                 }
+            else if ( type == "AutoSQLModel.fit" )
+                {
+                    autosql_model_manager().fit_model( name, cmd, &socket() );
+                }
             else if ( type == "AutoSQLModel.load" )
                 {
                     project_manager().load_autosql_model( name, &socket() );
@@ -43,6 +47,22 @@ void RequestHandler::run()
             else if ( type == "AutoSQLModel.save" )
                 {
                     project_manager().save_autosql_model( name, &socket() );
+                }
+            else if ( type == "AutoSQLModel.score" )
+                {
+                    autosql_model_manager().score( name, cmd, &socket() );
+                }
+            else if ( type == "AutoSQLModel.to_json" )
+                {
+                    autosql_model_manager().to_json( name, &socket() );
+                }
+            else if ( type == "AutoSQLModel.to_sql" )
+                {
+                    autosql_model_manager().to_sql( name, &socket() );
+                }
+            else if ( type == "AutoSQLModel.transform" )
+                {
+                    autosql_model_manager().transform( name, cmd, &socket() );
                 }
             else if ( type == "CategoricalColumn.get" )
                 {
