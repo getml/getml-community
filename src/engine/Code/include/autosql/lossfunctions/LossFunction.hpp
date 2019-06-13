@@ -31,7 +31,7 @@ class LossFunction
         const std::vector<AUTOSQL_FLOAT>& _sample_weights ) = 0;
 
     // Returns a string describing this loss functioni
-    virtual std::string type() = 0;
+    virtual std::string type() const = 0;
 
     // -----------------------------------------
 

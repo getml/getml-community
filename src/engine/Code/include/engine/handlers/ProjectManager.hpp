@@ -19,6 +19,7 @@ class ProjectManager
 
    public:
     ProjectManager(
+        const std::shared_ptr<AutoSQLModelMapType>& _autosql_models,
         const std::shared_ptr<containers::Encoding>& _categories,
         const std::shared_ptr<DataFrameManager>& _data_frame_manager,
         const std::shared_ptr<std::map<std::string, containers::DataFrame>>
@@ -130,6 +131,15 @@ class ProjectManager
     // ------------------------------------------------------------------------
 
    private:
+    /// Trivial (private) accessor
+    AutoSQLModelMapType& autosql_models() { return *autosql_models_; }
+
+    /// Trivial (private) accessor
+    const AutoSQLModelMapType& autosql_models() const
+    {
+        return *autosql_models_;
+    }
+
     /// Trivial accessor
     containers::Encoding& categories() { return *categories_; }
 
@@ -140,8 +150,15 @@ class ProjectManager
     }
 
     /// Returns a deep copy of a model.
-    models::Model<relboost::ensemble::DecisionTreeEnsemble> get_relboost_model(
-        const std::string& _name )
+    models::AutoSQLModel get_autosql_model( const std::string& _name )
+    {
+        multithreading::ReadLock read_lock( read_write_lock_ );
+        auto ptr = utils::Getter::get( _name, &autosql_models() );
+        return *ptr;
+    }
+
+    /// Returns a deep copy of a model.
+    models::RelboostModel get_relboost_model( const std::string& _name )
     {
         multithreading::ReadLock read_lock( read_write_lock_ );
         auto ptr = utils::Getter::get( _name, &relboost_models() );
@@ -167,6 +184,27 @@ class ProjectManager
     }
 
     /// Sets a model.
+    void set_autosql_model(
+        const std::string& _name, const models::AutoSQLModel& _model )
+    {
+        multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
+
+        auto it = autosql_models().find( _name );
+
+        weak_write_lock.upgrade();
+
+        if ( it == autosql_models().end() )
+            {
+                autosql_models()[_name] =
+                    std::make_shared<models::AutoSQLModel>( _model );
+            }
+        else
+            {
+                it->second = std::make_shared<models::AutoSQLModel>( _model );
+            }
+    }
+
+    /// Sets a model.
     void set_relboost_model(
         const std::string& _name,
         const models::Model<relboost::ensemble::DecisionTreeEnsemble>& _model )
@@ -179,21 +217,21 @@ class ProjectManager
 
         if ( it == relboost_models().end() )
             {
-                relboost_models()[_name] = std::make_shared<
-                    models::Model<relboost::ensemble::DecisionTreeEnsemble>>(
-                    _model );
+                relboost_models()[_name] =
+                    std::make_shared<models::RelboostModel>( _model );
             }
         else
             {
-                it->second = std::make_shared<
-                    models::Model<relboost::ensemble::DecisionTreeEnsemble>>(
-                    _model );
+                it->second = std::make_shared<models::RelboostModel>( _model );
             }
     }
 
     // ------------------------------------------------------------------------
 
    private:
+    /// The AutoSQL models currently held in memory
+    const std::shared_ptr<AutoSQLModelMapType> autosql_models_;
+
     /// Maps integeres to category names
     const std::shared_ptr<containers::Encoding> categories_;
 

@@ -483,7 +483,7 @@ std::string DecisionTree::select_statement(
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object DecisionTree::to_json_obj()
+Poco::JSON::Object DecisionTree::to_json_obj() const
 {
     // -----------------------------------
 

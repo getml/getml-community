@@ -93,8 +93,8 @@ void DecisionTreeEnsemble::calculate_sampling_rate(
                 "The population table needs to contain at least some data!" );
         }
 
-    hyperparameters().sampling_rate_ = std::min(
-        hyperparameters().sampling_factor_ * ( 2000.0 / nrows ), 1.0 );
+    impl().hyperparameters_->sampling_rate_ = std::min(
+        impl().hyperparameters_->sampling_factor_ * ( 2000.0 / nrows ), 1.0 );
 }
 
 // ----------------------------------------------------------------------------
@@ -869,13 +869,39 @@ lossfunctions::LossFunction *DecisionTreeEnsemble::parse_loss_function(
 
 // -------------------------------------------------------------------------
 
-void DecisionTreeEnsemble::save( const std::string &_fname )
+void DecisionTreeEnsemble::save( const std::string &_fname ) const
 {
     std::ofstream output( _fname );
 
     output << to_json();
 
     output.close();
+}
+
+// ----------------------------------------------------------------------------
+
+void DecisionTreeEnsemble::select_features( const std::vector<size_t> &_index )
+{
+    assert( _index.size() == trees().size() );
+
+    const auto num_selected_features =
+        ( hyperparameters().num_selected_features_ > 0 &&
+          hyperparameters().num_selected_features_ < _index.size() )
+            ? ( hyperparameters().num_selected_features_ )
+            : ( _index.size() );
+
+    std::vector<decisiontrees::DecisionTree> selected_trees;
+
+    for ( size_t i = 0; i < num_selected_features; ++i )
+        {
+            const auto ix = _index[i];
+
+            assert( ix < trees().size() );
+
+            selected_trees.push_back( trees()[ix] );
+        }
+
+    trees() = selected_trees;
 }
 
 // ----------------------------------------------------------------------------
@@ -1011,7 +1037,7 @@ Poco::JSON::Object DecisionTreeEnsemble::to_monitor(
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object DecisionTreeEnsemble::to_json_obj()
+Poco::JSON::Object DecisionTreeEnsemble::to_json_obj() const
 {
     // ----------------------------------------
 

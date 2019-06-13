@@ -33,7 +33,7 @@ class CrossEntropyLoss : public LossFunction
     // -----------------------------------------
 
    public:
-    std::string type() final { return "CrossEntropyLoss"; }
+    std::string type() const final { return "CrossEntropyLoss"; }
 
     // -----------------------------------------
 

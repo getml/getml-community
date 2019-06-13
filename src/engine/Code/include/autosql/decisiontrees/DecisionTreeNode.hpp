@@ -51,7 +51,7 @@ class DecisionTreeNode
         Poco::JSON::Array &_conditions ) const;
 
     /// Extracts the node (and its children) as a Poco::JSON::Object
-    Poco::JSON::Object to_json_obj();
+    Poco::JSON::Object to_json_obj() const;
 
     /// Returns the SQL condition associated with this node
     void to_sql(

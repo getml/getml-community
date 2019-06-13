@@ -1138,7 +1138,7 @@ void DecisionTreeNode::spawn_child_nodes(
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object DecisionTreeNode::to_json_obj()
+Poco::JSON::Object DecisionTreeNode::to_json_obj() const
 {
     Poco::JSON::Object obj;
 

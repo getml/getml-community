@@ -64,10 +64,13 @@ class DecisionTreeEnsemble
     DecisionTreeEnsemble &operator=( DecisionTreeEnsemble &&_other ) noexcept;
 
     /// Saves the Model in JSON format, if applicable
-    void save( const std::string &_fname );
+    void save( const std::string &_fname ) const;
+
+    /// Selects the features according to the index given.
+    void select_features( const std::vector<size_t> &_index );
 
     /// Extracts the ensemble as a Poco::JSON object
-    Poco::JSON::Object to_json_obj();
+    Poco::JSON::Object to_json_obj() const;
 
     /// Extracts the ensemble as a Boost property tree the monitor process can
     /// understand
@@ -104,6 +107,12 @@ class DecisionTreeEnsemble
         return *impl().hyperparameters_;
     }
 
+    /// Whether this is a classification problem
+    const bool is_classification() const
+    {
+        return loss_function()->type() != "SquareLoss";
+    }
+
     /// Trivial accessor
     const size_t num_features() const { return trees().size(); }
 
@@ -127,7 +136,10 @@ class DecisionTreeEnsemble
     }
 
     /// Extracts the ensemble as a JSON
-    inline std::string to_json() { return JSON::stringify( to_json_obj() ); }
+    inline std::string to_json() const
+    {
+        return JSON::stringify( to_json_obj() );
+    }
 
     /// Trivial accessor
     inline const std::vector<decisiontrees::DecisionTree> &trees() const
@@ -194,13 +206,6 @@ class DecisionTreeEnsemble
     }
 
     /// Trivial accessor
-    inline descriptors::Hyperparameters &hyperparameters()
-    {
-        assert( impl().hyperparameters_ );
-        return *impl().hyperparameters_;
-    }
-
-    /// Trivial accessor
     inline DecisionTreeEnsembleImpl &impl() { return impl_; }
 
     /// Trivial accessor
@@ -227,8 +232,22 @@ class DecisionTreeEnsemble
         return impl().linear_regressions_;
     }
 
+    /// Abstraction that returns the last linear regression in the ensemble
+    inline const std::vector<utils::LinearRegression> &linear_regressions()
+        const
+    {
+        return impl().linear_regressions_;
+    }
+
     /// Trivial accessor
     inline lossfunctions::LossFunction *loss_function()
+    {
+        assert( loss_function_ );
+        return loss_function_.get();
+    }
+
+    /// Trivial accessor
+    inline const lossfunctions::LossFunction *loss_function() const
     {
         assert( loss_function_ );
         return loss_function_.get();

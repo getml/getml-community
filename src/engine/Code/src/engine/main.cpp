@@ -97,6 +97,7 @@ int main( int argc, char *argv[] )
 
     const auto project_manager =
         std::make_shared<engine::handlers::ProjectManager>(
+            autosql_models,
             categories,
             data_frame_manager,
             data_frames,

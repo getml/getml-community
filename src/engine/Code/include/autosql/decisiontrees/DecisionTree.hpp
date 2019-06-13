@@ -72,7 +72,7 @@ class DecisionTree
     std::string select_statement( const std::string &_feature_num ) const;
 
     /// Extracts the tree as a JSON object
-    Poco::JSON::Object to_json_obj();
+    Poco::JSON::Object to_json_obj() const;
 
     /// Extracts the tree in a format the monitor can understand
     Poco::JSON::Object to_monitor(
