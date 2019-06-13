@@ -26,6 +26,12 @@
 
 #include <multithreading/multithreading.hpp>
 
+#include "autosql/descriptors/descriptors.hpp"
+
+#include "autosql/decisiontrees/decisiontrees.hpp"
+
+#include "autosql/ensemble/ensemble.hpp"
+
 #include "relboost/Hyperparameters.hpp"
 
 #include "relboost/ensemble/ensemble.hpp"
@@ -44,8 +50,6 @@
 
 // ----------------------------------------------------
 // Module files
-
-// #include "engine/handlers/Models.hpp"
 
 #include "engine/handlers/FileHandler.hpp"
 

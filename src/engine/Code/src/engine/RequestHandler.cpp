@@ -27,7 +27,24 @@ void RequestHandler::run()
 
             const auto name = JSON::get_value<std::string>( cmd, "name_" );
 
-            if ( type == "CategoricalColumn.get" )
+            if ( type == "AutoSQLModel" )
+                {
+                    project_manager().add_autosql_model( name, cmd, &socket() );
+                }
+            else if ( type == "AutoSQLModel.delete" )
+                {
+                    project_manager().delete_autosql_model(
+                        name, cmd, &socket() );
+                }
+            else if ( type == "AutoSQLModel.load" )
+                {
+                    project_manager().load_autosql_model( name, &socket() );
+                }
+            /*else if ( type == "AutoSQLModel.save" )
+                {
+                    project_manager().save_autosql_model( name, &socket() );
+                }*/
+            else if ( type == "CategoricalColumn.get" )
                 {
                     data_frame_manager().get_categorical_column(
                         cmd, &socket() );

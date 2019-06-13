@@ -6,6 +6,45 @@ namespace handlers
 {
 // ------------------------------------------------------------------------
 
+void ProjectManager::add_autosql_model(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    if ( project_directory_ == "" )
+        {
+            throw std::invalid_argument( "You have not set a project!" );
+        }
+
+    const auto hyperparameters_obj =
+        JSON::get_object( _cmd, "hyperparameters_" );
+
+    const auto hyperparameters =
+        std::make_shared<autosql::descriptors::Hyperparameters>(
+            *hyperparameters_obj );
+
+    const auto peripheral = std::make_shared<std::vector<std::string>>(
+        JSON::array_to_vector<std::string>(
+            JSON::get_array( _cmd, "peripheral_" ) ) );
+
+    const auto placeholder =
+        std::make_shared<autosql::decisiontrees::Placeholder>(
+            JSON::get_object( _cmd, "population_" ) );
+
+    const auto model = models::AutoSQLModel(
+        autosql::ensemble::DecisionTreeEnsemble(
+            categories_->vector(), hyperparameters, peripheral, placeholder ),
+        *hyperparameters_obj );
+
+    set_autosql_model( _name, model );
+
+    monitor_->send( "postautosqlmodel", model.to_monitor( _name ) );
+
+    engine::communication::Sender::send_string( "Success!", _socket );
+}
+
+// ------------------------------------------------------------------------
+
 void ProjectManager::add_data_frame(
     const std::string& _name, Poco::Net::StreamSocket* _socket )
 {
@@ -135,6 +174,22 @@ void ProjectManager::clear()
 
 // ------------------------------------------------------------------------
 
+void ProjectManager::delete_autosql_model(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    multithreading::WriteLock write_lock( read_write_lock_ );
+
+    FileHandler::remove( _name, project_directory_, _cmd, &autosql_models() );
+
+    monitor_->send( "removeautosqlmodel", "{\"name\":\"" + _name + "\"}" );
+
+    communication::Sender::send_string( "Success!", _socket );
+}
+
+// ------------------------------------------------------------------------
+
 void ProjectManager::delete_data_frame(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,
@@ -200,6 +255,23 @@ void ProjectManager::load_all_models()
 
     Poco::DirectoryIterator end;
 
+    for ( Poco::DirectoryIterator it( project_directory_ + "autosql-models/" );
+          it != end;
+          ++it )
+        {
+            if ( !it->isDirectory() )
+                {
+                    continue;
+                }
+
+            auto model =
+                models::AutoSQLModel( categories().vector(), it->path() + "/" );
+
+            set_autosql_model( it.name(), model );
+
+            monitor_->send( "postautosqlmodel", model.to_monitor( it.name() ) );
+        }
+
     for ( Poco::DirectoryIterator it( project_directory_ + "relboost-models/" );
           it != end;
           ++it )
@@ -217,6 +289,27 @@ void ProjectManager::load_all_models()
             monitor_->send(
                 "postrelboostmodel", model.to_monitor( it.name() ) );
         }
+}
+
+// ------------------------------------------------------------------------
+
+void ProjectManager::load_autosql_model(
+    const std::string& _name, Poco::Net::StreamSocket* _socket )
+{
+    if ( project_directory_ == "" )
+        {
+            throw std::invalid_argument( "You have not set a project!" );
+        }
+
+    const auto path = project_directory_ + "autosql-models/" + _name + "/";
+
+    auto model = models::AutoSQLModel( categories().vector(), path );
+
+    set_autosql_model( _name, model );
+
+    monitor_->send( "postautosqlmodel", model.to_monitor( _name ) );
+
+    engine::communication::Sender::send_string( "Success!", _socket );
 }
 
 // ------------------------------------------------------------------------

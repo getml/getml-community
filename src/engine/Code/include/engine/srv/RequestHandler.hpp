@@ -15,6 +15,8 @@ class RequestHandler : public Poco::Net::TCPServerConnection
    public:
     RequestHandler(
         const Poco::Net::StreamSocket& _socket,
+        const std::shared_ptr<handlers::AutoSQLModelManager>&
+            _autosql_model_manager,
         const std::shared_ptr<handlers::DatabaseManager>& _database_manager,
         const std::shared_ptr<handlers::DataFrameManager>& _data_frame_manager,
         const std::shared_ptr<const monitoring::Logger>& _logger,
@@ -25,6 +27,7 @@ class RequestHandler : public Poco::Net::TCPServerConnection
         const std::shared_ptr<handlers::ProjectManager>& _project_manager,
         const std::shared_ptr<std::atomic<bool>>& _shutdown )
         : Poco::Net::TCPServerConnection( _socket ),
+          autosql_model_manager_( _autosql_model_manager ),
           database_manager_( _database_manager ),
           data_frame_manager_( _data_frame_manager ),
           logger_( _logger ),
@@ -44,6 +47,13 @@ class RequestHandler : public Poco::Net::TCPServerConnection
     // -------------------------------------------------------------
 
    private:
+    /// Trivial accessor
+    handlers::AutoSQLModelManager& autosql_model_manager()
+    {
+        assert( autosql_model_manager_ );
+        return *autosql_model_manager_;
+    }
+
     /// Trivial accessor
     handlers::DatabaseManager& database_manager()
     {
@@ -81,6 +91,9 @@ class RequestHandler : public Poco::Net::TCPServerConnection
     // -------------------------------------------------------------
 
    private:
+    /// Handles requests related to the autosql models such as fit or transform.
+    const std::shared_ptr<handlers::AutoSQLModelManager> autosql_model_manager_;
+
     /// Handles requests related to the database.
     const std::shared_ptr<handlers::DatabaseManager> database_manager_;
 
@@ -90,7 +103,8 @@ class RequestHandler : public Poco::Net::TCPServerConnection
     /// Logs commands.
     const std::shared_ptr<const monitoring::Logger> logger_;
 
-    /// Handles requests related to the models such as fit or transform.
+    /// Handles requests related to the relboost models such as fit or
+    /// transform.
     const std::shared_ptr<handlers::RelboostModelManager>
         relboost_model_manager_;
 

@@ -48,6 +48,12 @@ class ProjectManager
     // ------------------------------------------------------------------------
 
    public:
+    /// Adds a new AutoSQL model to the project.
+    void add_autosql_model(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
     /// Adds a new data frame
     void add_data_frame(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
@@ -64,8 +70,14 @@ class ProjectManager
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
-    /// Adds a new model
+    /// Adds a new relboost model to the project.
     void add_relboost_model(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
+    /// Deletes an AutoSQL model
+    void delete_autosql_model(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
@@ -76,7 +88,7 @@ class ProjectManager
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
-    /// Deletes a model
+    /// Deletes a relboost model
     void delete_relboost_model(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
@@ -86,22 +98,30 @@ class ProjectManager
     void delete_project(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
 
+    /// Loads an AutoSQL model
+    void load_autosql_model(
+        const std::string& _name, Poco::Net::StreamSocket* _socket );
+
     /// Loads a data frame
     void load_data_frame(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
 
-    /// Loads a model
+    /// Loads a relboost model
     void load_relboost_model(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
 
     /// Updates the encodings in the client
     void refresh( Poco::Net::StreamSocket* _socket );
 
+    /// Saves an AutoSQL model to disc.
+    void save_autosql_model(
+        const std::string& _name, Poco::Net::StreamSocket* _socket );
+
     /// Saves a data frame
     void save_data_frame(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
 
-    /// Loads a model
+    /// Saves a relboost model to disc.
     void save_relboost_model(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
 

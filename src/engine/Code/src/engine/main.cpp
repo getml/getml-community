@@ -135,6 +135,7 @@ int main( int argc, char *argv[] )
 
     Poco::Net::TCPServer srv(
         new engine::srv::ServerConnectionFactoryImpl(
+            autosql_model_manager,
             database_manager,
             data_frame_manager,
             logger,
