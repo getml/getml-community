@@ -19,11 +19,13 @@ std::string FileHandler::create_project_directory(
     auto project_directory =
         _options.all_projects_directory_ + _project_name + "/";
 
-    Poco::File( project_directory ).createDirectory();
+    Poco::File( project_directory ).createDirectories();
 
-    Poco::File( project_directory + "data/" ).createDirectory();
+    Poco::File( project_directory + "autosql-models/" ).createDirectories();
 
-    Poco::File( project_directory + "models/" ).createDirectory();
+    Poco::File( project_directory + "data/" ).createDirectories();
+
+    Poco::File( project_directory + "relboost-models/" ).createDirectories();
 
     return project_directory;
 }

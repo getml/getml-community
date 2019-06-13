@@ -200,7 +200,7 @@ void ProjectManager::load_all_models()
 
     Poco::DirectoryIterator end;
 
-    for ( Poco::DirectoryIterator it( project_directory_ + "models/" );
+    for ( Poco::DirectoryIterator it( project_directory_ + "relboost-models/" );
           it != end;
           ++it )
         {
@@ -267,7 +267,7 @@ void ProjectManager::load_relboost_model(
             throw std::invalid_argument( "You have not set a project!" );
         }
 
-    const auto path = project_directory_ + "models/" + _name + "/";
+    const auto path = project_directory_ + "relboost-models/" + _name + "/";
 
     auto model = models::RelboostModel( categories().vector(), path );
 
@@ -332,7 +332,7 @@ void ProjectManager::save_relboost_model(
 
     auto model = get_relboost_model( _name );
 
-    const auto path = project_directory_ + "models/" + _name + "/";
+    const auto path = project_directory_ + "relboost-models/" + _name + "/";
 
     model.save( path );
 

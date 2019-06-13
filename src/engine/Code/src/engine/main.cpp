@@ -44,11 +44,14 @@ int main( int argc, char *argv[] )
 
     // -------------------------------------------
 
+    const auto autosql_models =
+        std::make_shared<engine::handlers::AutoSQLModelManager::ModelMapType>();
+
     const auto data_frames = std::make_shared<
         std::map<std::string, engine::containers::DataFrame>>();
 
     const auto relboost_models = std::make_shared<
-        engine::handlers::ProjectManager::RelboostModelMapType>();
+        engine::handlers::RelboostModelManager::ModelMapType>();
 
     // -------------------------------------------
 
@@ -58,6 +61,17 @@ int main( int argc, char *argv[] )
     const auto database_manager =
         std::make_shared<engine::handlers::DatabaseManager>(
             connector, logger, monitor );
+
+    const auto autosql_model_manager =
+        std::make_shared<engine::handlers::AutoSQLModelManager>(
+            categories,
+            data_frames,
+            join_keys_encoding,
+            // license_checker,
+            logger,
+            autosql_models,
+            monitor,
+            read_write_lock );
 
     const auto data_frame_manager =
         std::make_shared<engine::handlers::DataFrameManager>(

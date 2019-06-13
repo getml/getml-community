@@ -19,11 +19,13 @@ std::string FileHandler::create_project_directory(
     auto project_directory =
         _options.all_projects_directory + _project_name + "/";
 
-    Poco::File( project_directory ).createDirectory();
+    Poco::File( project_directory ).createDirectories();
 
-    Poco::File( project_directory + "data/" ).createDirectory();
+    Poco::File( project_directory + "autosql-models/" ).createDirectories();
 
-    Poco::File( project_directory + "models/" ).createDirectory();
+    Poco::File( project_directory + "data/" ).createDirectories();
+
+    Poco::File( project_directory + "relboost-models/" ).createDirectories();
 
     return project_directory;
 }
@@ -262,7 +264,8 @@ void FileHandler::write_string_big_endian(
         AUTOSQL_SIZE str_size = _str.size();
 
         output.write(
-            reinterpret_cast<const char*>( &str_size ), sizeof( AUTOSQL_SIZE ) );
+            reinterpret_cast<const char*>( &str_size ),
+            sizeof( AUTOSQL_SIZE ) );
 
         output.write( &( _str[0] ), _str.size() );
     };
@@ -283,7 +286,8 @@ void FileHandler::write_string_little_endian(
         autosql::Endianness::reverse_byte_order( str_size );
 
         output.write(
-            reinterpret_cast<const char*>( &str_size ), sizeof( AUTOSQL_SIZE ) );
+            reinterpret_cast<const char*>( &str_size ),
+            sizeof( AUTOSQL_SIZE ) );
 
         output.write( &( _str[0] ), _str.size() );
     };

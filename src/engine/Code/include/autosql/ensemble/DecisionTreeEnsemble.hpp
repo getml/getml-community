@@ -9,6 +9,14 @@ namespace ensemble
 
 class DecisionTreeEnsemble
 {
+    // -----------------------------------------------------------------
+
+   public:
+    typedef autosql::containers::DataFrame DataFrameType;
+    typedef autosql::containers::DataFrameView DataFrameViewType;
+
+    // -----------------------------------------------------------------
+
    public:
     DecisionTreeEnsemble(
         const std::shared_ptr<const std::vector<std::string>> &_categories,
@@ -26,7 +34,7 @@ class DecisionTreeEnsemble
 
     ~DecisionTreeEnsemble() = default;
 
-    // --------------------------------------
+    // -----------------------------------------------------------------
 
     /// Makes sure that the input provided by the user is plausible
     /// and throws an exception if it isn't
@@ -82,7 +90,7 @@ class DecisionTreeEnsemble
         const std::shared_ptr<const logging::AbstractLogger> _logger,
         containers::Optional<aggregations::AggregationImpl> *_impl ) const;
 
-    // --------------------------------------
+    // -----------------------------------------------------------------
 
     /// Trivial getter
     inline multithreading::Communicator *comm() { return impl().comm_; }
@@ -127,7 +135,7 @@ class DecisionTreeEnsemble
         return impl().trees_;
     }
 
-    // --------------------------------------
+    // -----------------------------------------------------------------
 
    private:
     /// Builds the candidates during fit(...)
@@ -169,7 +177,7 @@ class DecisionTreeEnsemble
         const std::vector<containers::DataFrame> &_peripheral_tables,
         const containers::DataFrameView &_population_table );
 
-    // --------------------------------------
+    // -----------------------------------------------------------------
 
    private:
     /// Trivial accessor
@@ -314,7 +322,7 @@ class DecisionTreeEnsemble
         return impl().trees_;
     }
 
-    // --------------------------------------
+    // -----------------------------------------------------------------
 
    private:
     /// All variables other than loss_function_
@@ -322,6 +330,8 @@ class DecisionTreeEnsemble
 
     /// The loss function for this ensemble.
     std::unique_ptr<lossfunctions::LossFunction> loss_function_;
+
+    // -----------------------------------------------------------------
 };
 
 // ----------------------------------------------------------------------------

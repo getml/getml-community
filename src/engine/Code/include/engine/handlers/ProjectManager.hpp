@@ -12,6 +12,7 @@ class ProjectManager
     // ------------------------------------------------------------------------
 
    public:
+    typedef AutoSQLModelManager::ModelMapType AutoSQLModelMapType;
     typedef RelboostModelManager::ModelMapType RelboostModelMapType;
 
     // ------------------------------------------------------------------------

@@ -53,6 +53,7 @@
 #include "engine/handlers/DatabaseManager.hpp"
 #include "engine/handlers/ModelManager.hpp"
 
+#include "engine/handlers/AutoSQLModelManager.hpp"
 #include "engine/handlers/RelboostModelManager.hpp"
 
 #include "engine/handlers/ProjectManager.hpp"

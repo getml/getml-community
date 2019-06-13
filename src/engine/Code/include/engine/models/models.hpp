@@ -25,6 +25,10 @@
 
 #include "engine/predictors/predictors.hpp"
 
+#include "autosql/ensemble/ensemble.hpp"
+
+#include "relboost/ensemble/ensemble.hpp"
+
 // ----------------------------------------------------
 // Module files
 
@@ -32,6 +36,7 @@
 
 #include "engine/models/Model.hpp"
 
+#include "engine/models/AutoSQLModel.hpp"
 #include "engine/models/RelboostModel.hpp"
 
 // ----------------------------------------------------
