@@ -326,6 +326,8 @@ void RSquaredCriterion::init_yhat(
     const std::vector<AUTOSQL_FLOAT>& _yhat,
     const containers::IntSet& _indices )
 {
+    // ---------------------------------------------------------------------
+
     assert( sample_weights_.size() == y_centered_[0].size() );
 
     // ---------------------------------------------------------------------
@@ -360,11 +362,6 @@ void RSquaredCriterion::init_yhat(
 
     *sum_yhat_yhat_current_ = 0.0;
 
-    for ( size_t j = 0; j < y_.size(); ++j )
-        {
-            sum_y_centered_yhat_current_[j] = 0.0;
-        }
-
     assert( _yhat.size() == sample_weights_.size() );
 
     for ( size_t i = 0; i < _yhat.size(); ++i )
@@ -378,6 +375,11 @@ void RSquaredCriterion::init_yhat(
     // Calculate sum_y_centered_yhat_current_
 
     assert( y_.size() == y_centered_.size() );
+
+    std::fill(
+        sum_y_centered_yhat_current_,
+        sum_y_centered_yhat_current_ + y_.size(),
+        0.0 );
 
     for ( size_t j = 0; j < y_.size(); ++j )
         {

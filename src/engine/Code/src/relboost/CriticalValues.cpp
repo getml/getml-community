@@ -78,13 +78,6 @@ CriticalValues::calc_categorical(
                     continue;
                 }
 
-            if ( cat >= max )
-                {
-                    std::cout << "min: " << max << std::endl;
-                    std::cout << "max: " << max << std::endl;
-                    std::cout << "cat: " << cat << std::endl;
-                }
-
             assert( cat >= min );
             assert( cat < max );
 

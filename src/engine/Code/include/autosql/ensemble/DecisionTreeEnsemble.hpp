@@ -20,7 +20,8 @@ class DecisionTreeEnsemble
    public:
     DecisionTreeEnsemble(
         const std::shared_ptr<const std::vector<std::string>> &_categories,
-        const std::shared_ptr<const descriptors::Hyperparameters> &_hyperparameters,
+        const std::shared_ptr<const descriptors::Hyperparameters>
+            &_hyperparameters,
         const std::shared_ptr<const std::vector<std::string>> &_peripheral,
         const std::shared_ptr<const decisiontrees::Placeholder> &_placeholder );
 
@@ -179,12 +180,6 @@ class DecisionTreeEnsemble
     lossfunctions::LossFunction *parse_loss_function(
         std::string _loss_function );
 
-    /// This member functions stores the number of columns
-    /// so we can compare them later on.
-    void set_num_columns(
-        const std::vector<containers::DataFrame> &_peripheral_tables,
-        const containers::DataFrameView &_population_table );
-
     // -----------------------------------------------------------------
 
    private:
@@ -253,42 +248,6 @@ class DecisionTreeEnsemble
     inline void loss_function( lossfunctions::LossFunction *_loss_function )
     {
         loss_function_.reset( _loss_function );
-    }
-
-    /// Trivial accessor
-    inline std::vector<AUTOSQL_INT> &num_columns_peripheral_categorical()
-    {
-        return impl().num_columns_peripheral_categorical_;
-    }
-
-    /// Trivial accessor
-    inline std::vector<AUTOSQL_INT> &num_columns_peripheral_discrete()
-    {
-        return impl().num_columns_peripheral_discrete_;
-    }
-
-    /// Trivial accessor
-    inline std::vector<AUTOSQL_INT> &num_columns_peripheral_numerical()
-    {
-        return impl().num_columns_peripheral_numerical_;
-    }
-
-    /// Trivial accessor
-    inline AUTOSQL_INT &num_columns_population_categorical()
-    {
-        return impl().num_columns_population_categorical_;
-    }
-
-    /// Trivial accessor
-    inline AUTOSQL_INT &num_columns_population_discrete()
-    {
-        return impl().num_columns_population_discrete_;
-    }
-
-    /// Trivial accessor
-    inline AUTOSQL_INT &num_columns_population_numerical()
-    {
-        return impl().num_columns_population_numerical_;
     }
 
     /// Trivial accessor

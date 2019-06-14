@@ -49,24 +49,6 @@ struct DecisionTreeEnsembleImpl
     /// The hyperparameters used in this ensemble
     std::shared_ptr<const descriptors::Hyperparameters> hyperparameters_;
 
-    /// Number of categorical colimns in peripheral table
-    std::vector<AUTOSQL_INT> num_columns_peripheral_categorical_;
-
-    /// Number of discrete colimns in peripheral table
-    std::vector<AUTOSQL_INT> num_columns_peripheral_discrete_;
-
-    /// Number of numerical colimns in peripheral table
-    std::vector<AUTOSQL_INT> num_columns_peripheral_numerical_;
-
-    /// Number of categorical colimns in population table
-    AUTOSQL_INT num_columns_population_categorical_;
-
-    /// Number of discrete colimns in population table
-    AUTOSQL_INT num_columns_population_discrete_;
-
-    /// Number of numerical colimns in population table
-    AUTOSQL_INT num_columns_population_numerical_;
-
     /// decisiontrees::Placeholder for the peripheral tables
     std::vector<std::string> placeholder_peripheral_;
 

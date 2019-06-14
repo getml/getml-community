@@ -248,10 +248,10 @@ std::vector<AUTOSQL_FLOAT> DecisionTreeNode::calculate_critical_values_discrete(
         }
 
     utils::Reducer::reduce(
-        multithreading::minimum<AUTOSQL_INT>(), &min, comm() );
+        multithreading::minimum<AUTOSQL_FLOAT>(), &min, comm() );
 
     utils::Reducer::reduce(
-        multithreading::maximum<AUTOSQL_INT>(), &max, comm() );
+        multithreading::maximum<AUTOSQL_FLOAT>(), &max, comm() );
 
     // ---------------------------------------------------------------------------
     // There is a possibility that all critical values are NAN in all processes.
@@ -317,10 +317,10 @@ DecisionTreeNode::calculate_critical_values_numerical(
         }
 
     utils::Reducer::reduce(
-        multithreading::minimum<AUTOSQL_INT>(), &min, comm() );
+        multithreading::minimum<AUTOSQL_FLOAT>(), &min, comm() );
 
     utils::Reducer::reduce(
-        multithreading::maximum<AUTOSQL_INT>(), &max, comm() );
+        multithreading::maximum<AUTOSQL_FLOAT>(), &max, comm() );
 
     // ---------------------------------------------------------------------------
     // There is a possibility that all critical values are NAN in all processes.
@@ -454,28 +454,26 @@ void DecisionTreeNode::fit(
 
 #ifndef NDEBUG
 
-    std::array<AUTOSQL_FLOAT, 2> values = {max_value,
-                                           optimization_criterion()->value()};
+    auto global_storage_ix = optimization_criterion()->storage_ix();
 
-    assert( std::get<0>( values ) == std::get<0>( values ) );
+    utils::Reducer::reduce<AUTOSQL_INT>(
+        multithreading::maximum<AUTOSQL_INT>(), &global_storage_ix, comm() );
 
-    assert( std::get<1>( values ) == std::get<1>( values ) );
+    assert( global_storage_ix == optimization_criterion()->storage_ix() );
 
-    std::array<AUTOSQL_FLOAT, 2> global_values;
+    auto global_value = optimization_criterion()->value();
 
-    multithreading::all_reduce(
-        *comm(),                                  // comm
-        values.data(),                            // in_value
-        2,                                        // count
-        global_values.data(),                     // out_value
-        multithreading::maximum<AUTOSQL_FLOAT>()  // op
-    );
+    utils::Reducer::reduce<AUTOSQL_FLOAT>(
+        multithreading::maximum<AUTOSQL_FLOAT>(), &global_value, comm() );
 
-    comm()->barrier();
+    assert( global_value == optimization_criterion()->value() );
 
-    assert( std::get<0>( values ) == std::get<0>( global_values ) );
+    auto global_max_value = max_value;
 
-    assert( std::get<1>( values ) == std::get<1>( global_values ) );
+    utils::Reducer::reduce<AUTOSQL_FLOAT>(
+        multithreading::maximum<AUTOSQL_FLOAT>(), &global_max_value, comm() );
+
+    assert( global_max_value == max_value );
 
 #endif  // NDEBUG
 

@@ -87,105 +87,107 @@ void DecisionTreeEnsemble::check_plausibility(
     // -----------------------------------------------------
     // Sizes of arrays must match
 
-    auto expected_size = _population_table.num_join_keys();
+    /*   auto expected_size = _population_table.num_join_keys();
 
-    if ( expected_size == 0 )
-        {
-            throw std::invalid_argument(
-                "You must provide join keys for the population table!" );
-        }
+       if ( expected_size == 0 )
+           {
+               throw std::invalid_argument(
+                   "You must provide join keys for the population table!" );
+           }
 
-    assert( expected_size == _peripheral_tables.size() );
+       assert( expected_size == _peripheral_tables.size() );
 
-    assert( expected_size == num_columns_peripheral_categorical().size() );
+       assert( expected_size == num_columns_peripheral_categorical().size() );
 
-    // -----------------------------------------------------
-    // Number of columns must match
+       // -----------------------------------------------------
+       // Number of columns must match
 
-    if ( _population_table.num_categoricals() !=
-         num_columns_population_categorical() )
-        {
-            throw std::invalid_argument(
-                "Wrong number of categorical columns in population table! "
-                "Expected " +
-                std::to_string( num_columns_population_categorical() ) +
-                ", got " +
-                std::to_string( _population_table.num_categoricals() ) + "!" );
-        }
+       if ( _population_table.num_categoricals() !=
+            num_columns_population_categorical() )
+           {
+               throw std::invalid_argument(
+                   "Wrong number of categorical columns in population table! "
+                   "Expected " +
+                   std::to_string( num_columns_population_categorical() ) +
+                   ", got " +
+                   std::to_string( _population_table.num_categoricals() ) + "!"
+       );
+           }
 
-    if ( _population_table.num_discretes() !=
-         num_columns_population_discrete() )
-        {
-            throw std::invalid_argument(
-                "Wrong number of discrete columns in population table! "
-                "Expected " +
-                std::to_string( num_columns_population_discrete() ) + ", got " +
-                std::to_string( _population_table.num_discretes() ) + "!" );
-        }
+       if ( _population_table.num_discretes() !=
+            num_columns_population_discrete() )
+           {
+               throw std::invalid_argument(
+                   "Wrong number of discrete columns in population table! "
+                   "Expected " +
+                   std::to_string( num_columns_population_discrete() ) + ", got
+       " + std::to_string( _population_table.num_discretes() ) + "!" );
+           }
 
-    if ( _population_table.num_numericals() !=
-         num_columns_population_numerical() )
-        {
-            throw std::invalid_argument(
-                "Wrong number of numerical columns in population table! "
-                "Expected " +
-                std::to_string( num_columns_population_numerical() ) +
-                ", got " +
-                std::to_string( _population_table.num_numericals() ) + "!" );
-        }
+       if ( _population_table.num_numericals() !=
+            num_columns_population_numerical() )
+           {
+               throw std::invalid_argument(
+                   "Wrong number of numerical columns in population table! "
+                   "Expected " +
+                   std::to_string( num_columns_population_numerical() ) +
+                   ", got " +
+                   std::to_string( _population_table.num_numericals() ) + "!" );
+           }
 
-    for ( size_t i = 0; i < _peripheral_tables.size(); ++i )
-        {
-            if ( _peripheral_tables[i].num_categoricals() !=
-                 num_columns_peripheral_categorical()[i] )
-                {
-                    throw std::invalid_argument(
-                        "Wrong number of categorical columns in peripheral "
-                        "table " +
-                        std::to_string( i ) + "! Expected " +
-                        std::to_string(
-                            num_columns_peripheral_categorical()[i] ) +
-                        ", got " +
-                        std::to_string(
-                            _peripheral_tables[i].num_categoricals() ) +
-                        "!" );
-                }
-        }
+       for ( size_t i = 0; i < _peripheral_tables.size(); ++i )
+           {
+               if ( _peripheral_tables[i].num_categoricals() !=
+                    num_columns_peripheral_categorical()[i] )
+                   {
+                       throw std::invalid_argument(
+                           "Wrong number of categorical columns in peripheral "
+                           "table " +
+                           std::to_string( i ) + "! Expected " +
+                           std::to_string(
+                               num_columns_peripheral_categorical()[i] ) +
+                           ", got " +
+                           std::to_string(
+                               _peripheral_tables[i].num_categoricals() ) +
+                           "!" );
+                   }
+           }
 
-    for ( size_t i = 0; i < _peripheral_tables.size(); ++i )
-        {
-            if ( _peripheral_tables[i].num_discretes() !=
-                 num_columns_peripheral_discrete()[i] )
-                {
-                    throw std::invalid_argument(
-                        "Wrong number of discrete columns in peripheral "
-                        "table " +
-                        std::to_string( i ) + "! Expected " +
-                        std::to_string( num_columns_peripheral_discrete()[i] ) +
-                        ", got " +
-                        std::to_string(
-                            _peripheral_tables[i].num_discretes() ) +
-                        "!" );
-                }
-        }
+       for ( size_t i = 0; i < _peripheral_tables.size(); ++i )
+           {
+               if ( _peripheral_tables[i].num_discretes() !=
+                    num_columns_peripheral_discrete()[i] )
+                   {
+                       throw std::invalid_argument(
+                           "Wrong number of discrete columns in peripheral "
+                           "table " +
+                           std::to_string( i ) + "! Expected " +
+                           std::to_string( num_columns_peripheral_discrete()[i]
+       ) +
+                           ", got " +
+                           std::to_string(
+                               _peripheral_tables[i].num_discretes() ) +
+                           "!" );
+                   }
+           }
 
-    for ( size_t i = 0; i < _peripheral_tables.size(); ++i )
-        {
-            if ( _peripheral_tables[i].num_numericals() !=
-                 num_columns_peripheral_numerical()[i] )
-                {
-                    throw std::invalid_argument(
-                        "Wrong number of numerical columns in peripheral "
-                        "table " +
-                        std::to_string( i ) + "! Expected " +
-                        std::to_string(
-                            num_columns_peripheral_numerical()[i] ) +
-                        ", got " +
-                        std::to_string(
-                            _peripheral_tables[i].num_numericals() ) +
-                        "!" );
-                }
-        }
+       for ( size_t i = 0; i < _peripheral_tables.size(); ++i )
+           {
+               if ( _peripheral_tables[i].num_numericals() !=
+                    num_columns_peripheral_numerical()[i] )
+                   {
+                       throw std::invalid_argument(
+                           "Wrong number of numerical columns in peripheral "
+                           "table " +
+                           std::to_string( i ) + "! Expected " +
+                           std::to_string(
+                               num_columns_peripheral_numerical()[i] ) +
+                           ", got " +
+                           std::to_string(
+                               _peripheral_tables[i].num_numericals() ) +
+                           "!" );
+                   }
+           }*/
 
     // -----------------------------------------------------
 }
@@ -367,10 +369,6 @@ void DecisionTreeEnsemble::fit(
             debug_log( "fit: Storing column numbers..." );
 
             assert( _table_holder->main_tables_.size() > 0 );
-
-            set_num_columns(
-                _table_holder->peripheral_tables_,
-                _table_holder->main_tables_[0] );
         }
 
     // ----------------------------------------------------------------
@@ -890,41 +888,6 @@ void DecisionTreeEnsemble::select_features( const std::vector<size_t> &_index )
         }
 
     trees() = selected_trees;
-}
-
-// ----------------------------------------------------------------------------
-
-void DecisionTreeEnsemble::set_num_columns(
-    const std::vector<containers::DataFrame> &_peripheral_tables,
-    const containers::DataFrameView &_population_table )
-{
-    num_columns_peripheral_categorical().clear();
-
-    for ( const auto &df : _peripheral_tables )
-        {
-            num_columns_peripheral_categorical().push_back(
-                df.num_categoricals() );
-        }
-
-    num_columns_peripheral_discrete().clear();
-
-    for ( const auto &df : _peripheral_tables )
-        {
-            num_columns_peripheral_discrete().push_back( df.num_discretes() );
-        }
-
-    num_columns_peripheral_numerical().clear();
-
-    for ( const auto &df : _peripheral_tables )
-        {
-            num_columns_peripheral_numerical().push_back( df.num_numericals() );
-        }
-
-    num_columns_population_categorical() = _population_table.num_categoricals();
-
-    num_columns_population_discrete() = _population_table.num_discretes();
-
-    num_columns_population_numerical() = _population_table.num_numericals();
 }
 
 // ----------------------------------------------------------------------------

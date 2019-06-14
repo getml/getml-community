@@ -125,7 +125,7 @@ void Threadutils::transform_ensemble(
                     population_subview.nrows() ) );
 
             // ----------------------------------------------------------------
-            // Builc the actual features.
+            // Build the actual features.
 
             for ( size_t i = 0; i < _ensemble.trees().size(); ++i )
                 {

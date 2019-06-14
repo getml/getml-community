@@ -179,7 +179,7 @@ void test4_max()
             assert(
                 std::abs(
                     population_df.target( i / num_features, 0 ) -
-                    predictions[i] ) < 20.0 );
+                    predictions[i] ) < 50.0 );
         }
     std::cout << std::endl << std::endl;
 
