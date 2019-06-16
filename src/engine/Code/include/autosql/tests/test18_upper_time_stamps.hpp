@@ -20,33 +20,32 @@ void test18_upper_time_stamps()
     const auto join_keys_peripheral = make_column<std::int32_t>( 250000, rng );
 
     const auto join_keys_peripheral_col =
-        relboost::containers::Column<std::int32_t>(
+        autosql::containers::Column<std::int32_t>(
             join_keys_peripheral.data(),
             "join_key",
             join_keys_peripheral.size() );
 
     auto numerical_peripheral = make_column<double>( 250000, rng );
 
-    const auto numerical_peripheral_col = relboost::containers::Column<double>(
+    const auto numerical_peripheral_col = autosql::containers::Column<double>(
         numerical_peripheral.data(), "column_01", numerical_peripheral.size() );
 
     const auto time_stamps_peripheral = make_column<double>( 250000, rng );
 
-    const auto time_stamps_peripheral_col =
-        relboost::containers::Column<double>(
-            time_stamps_peripheral.data(),
-            "time_stamp",
-            time_stamps_peripheral.size() );
+    const auto time_stamps_peripheral_col = autosql::containers::Column<double>(
+        time_stamps_peripheral.data(),
+        "time_stamp",
+        time_stamps_peripheral.size() );
 
     auto upper_time_stamps_peripheral = make_column<double>( 250000, rng );
 
     const auto upper_time_stamps_peripheral_col =
-        relboost::containers::Column<double>(
+        autosql::containers::Column<double>(
             upper_time_stamps_peripheral.data(),
             "upper_time_stamp",
             upper_time_stamps_peripheral.size() );
 
-    const auto peripheral_df = relboost::containers::DataFrame(
+    const auto peripheral_df = autosql::containers::DataFrame(
         {},
         {},
         {join_keys_peripheral_col},
@@ -66,30 +65,29 @@ void test18_upper_time_stamps()
         }
 
     const auto join_keys_population_col =
-        relboost::containers::Column<std::int32_t>(
+        autosql::containers::Column<std::int32_t>(
             join_keys_population.data(),
             "join_key",
             join_keys_population.size() );
 
     auto numerical_population = make_column<double>( 500, rng );
 
-    const auto numerical_population_col = relboost::containers::Column<double>(
+    const auto numerical_population_col = autosql::containers::Column<double>(
         numerical_population.data(), "column_01", numerical_population.size() );
 
     const auto time_stamps_population = make_column<double>( 500, rng );
 
-    const auto time_stamps_population_col =
-        relboost::containers::Column<double>(
-            time_stamps_population.data(),
-            "time_stamp",
-            time_stamps_population.size() );
+    const auto time_stamps_population_col = autosql::containers::Column<double>(
+        time_stamps_population.data(),
+        "time_stamp",
+        time_stamps_population.size() );
 
     auto targets_population = std::vector<double>( 500 );
 
-    const auto target_population_col = relboost::containers::Column<double>(
+    const auto target_population_col = autosql::containers::Column<double>(
         targets_population.data(), "target", targets_population.size() );
 
-    const auto population_df = relboost::containers::DataFrame(
+    const auto population_df = autosql::containers::DataFrame(
         {},
         {},
         {join_keys_population_col},
@@ -120,10 +118,11 @@ void test18_upper_time_stamps()
     // ---------------------------------------------
     // Build data model.
 
-    const auto population_json = load_json( "../../tests/relboost/test18/schema.json" );
+    const auto population_json =
+        load_json( "../../tests/autosql/test18/schema.json" );
 
     const auto population =
-        std::make_shared<const relboost::ensemble::Placeholder>(
+        std::make_shared<const autosql::decisiontrees::Placeholder>(
             *population_json );
 
     const auto peripheral = std::make_shared<std::vector<std::string>>(
@@ -133,13 +132,13 @@ void test18_upper_time_stamps()
     // Load hyperparameters.
 
     const auto hyperparameters_json =
-        load_json( "../../tests/relboost/test18/hyperparameters.json" );
+        load_json( "../../tests/autosql/test18/hyperparameters.json" );
 
-    std::cout << relboost::JSON::stringify( *hyperparameters_json ) << std::endl
+    std::cout << autosql::JSON::stringify( *hyperparameters_json ) << std::endl
               << std::endl;
 
     const auto hyperparameters =
-        std::make_shared<const relboost::Hyperparameters>(
+        std::make_shared<autosql::descriptors::Hyperparameters>(
             *hyperparameters_json );
 
     // ------------------------------------------------------------------------
@@ -149,7 +148,7 @@ void test18_upper_time_stamps()
         std::vector<std::string>(
             {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"} ) );
 
-    auto model = relboost::ensemble::DecisionTreeEnsemble(
+    auto model = autosql::ensemble::DecisionTreeEnsemble(
         encoding, hyperparameters, peripheral, population );
 
     // ------------------------------------------------------------------------
@@ -157,30 +156,32 @@ void test18_upper_time_stamps()
 
     model.fit( population_df, {peripheral_df} );
 
-    model.save( "../../tests/relboost/test18/Model.json" );
+    model.save( "../../tests/autosql/test18/Model.json" );
 
     // ------------------------------------------------------------------------
     // Express as SQL code.
 
-    std::ofstream sql( "../../tests/relboost/test18/Model.sql" );
+    std::ofstream sql( "../../tests/autosql/test18/Model.sql" );
     sql << model.to_sql();
     sql.close();
 
     // ------------------------------------------------------------------------
     // Generate predictions.
 
-    const auto predictions = model.predict( population_df, {peripheral_df} );
+    const auto predictions = *model.transform( population_df, {peripheral_df} );
 
-    assert( predictions.size() == population_df.nrows() );
+    const auto num_features = hyperparameters->num_features_;
 
     for ( size_t i = 0; i < predictions.size(); ++i )
         {
-            // std::cout << "target: " << population_df.target_[i]
-            //       << ", prediction: " << predictions[i] << std::endl;
+            /*std::cout << "target: "
+                       << population_df.target( i / num_features, 0 )
+                       << ", prediction: " << predictions[i] << std::endl;*/
 
             assert(
-                std::abs( population_df.target( i, 0 ) - predictions[i] ) <
-                10.0 );
+                std::abs(
+                    population_df.target( i / num_features, 0 ) -
+                    predictions[i] ) < 5.0 );
         }
     std::cout << std::endl << std::endl;
 

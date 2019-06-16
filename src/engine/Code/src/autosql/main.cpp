@@ -31,5 +31,7 @@ int main( int argc, char* argv[] )
     test16_nan_values_numerical();
     test17_nan_values_discrete();
 
+    test18_upper_time_stamps();
+
     return 0;
 }

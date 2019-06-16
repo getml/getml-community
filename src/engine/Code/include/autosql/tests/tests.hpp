@@ -40,4 +40,6 @@
 #include "autosql/tests/test16_nan_values_numerical.hpp"
 #include "autosql/tests/test17_nan_values_discrete.hpp"
 
+#include "autosql/tests/test18_upper_time_stamps.hpp"
+
 // ---------------------------------------------------------------------------
