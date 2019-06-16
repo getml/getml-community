@@ -10,7 +10,7 @@
     "sampling_factor_": 1.0,
     "seed_": 5849,
     "share_aggregations_": 1.0,
-    "shrinkage_": 0.5,
+    "shrinkage_": 0.05,
     "use_timestamps_": true,
     "allow_sets_": true,
     "grid_factor_": 1.0,

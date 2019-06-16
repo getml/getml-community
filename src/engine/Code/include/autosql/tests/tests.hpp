@@ -37,4 +37,7 @@
 #include "autosql/tests/test14_numerical_output.hpp"
 #include "autosql/tests/test15_discrete_output.hpp"
 
+#include "autosql/tests/test16_nan_values_numerical.hpp"
+#include "autosql/tests/test17_nan_values_discrete.hpp"
+
 // ---------------------------------------------------------------------------

@@ -28,5 +28,8 @@ int main( int argc, char* argv[] )
     test14_numerical_output();
     test15_discrete_output();
 
+    test16_nan_values_numerical();
+    test17_nan_values_discrete();
+
     return 0;
 }
