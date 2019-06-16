@@ -15,6 +15,7 @@ int main( int argc, char* argv[] )
     test4_max();
     test5_min();
     test6_time_stamps_diff();
+    test7_categorical();
 
     return 0;
 }
