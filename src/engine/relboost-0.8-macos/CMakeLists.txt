@@ -41,7 +41,7 @@ link_directories(${OPENSSL_DIR}/lib)
 set(CMAKE_C_COMPILER gcc-8)
 set(CMAKE_CXX_COMPILER g++-8)
 
-set(AUTOSQL_SOURCE_DIR ${AUTOSQL_SOURCE_DIR}/../Code/src/autosql)
+set(AUTOSQL_SOURCE_DIRECTORY ${PROJECT_SOURCE_DIR}/../Code/src/autosql)
 set(CSV_SOURCE_DIRECTORY ${PROJECT_SOURCE_DIR}/../Code/src/csv)
 set(DATABASE_SOURCE_DIRECTORY ${PROJECT_SOURCE_DIR}/../Code/src/database)
 set(ENGINE_SOURCE_DIRECTORY "${PROJECT_SOURCE_DIR}/../Code/src/engine")
@@ -56,6 +56,12 @@ include(${ENGINE_SOURCE_DIRECTORY}/obj.txt)
 include(${METRICS_SOURCE_DIRECTORY}/obj.txt)
 include(${RELBOOST_SOURCE_DIRECTORY}/obj.txt)
 include(${SQLITE3_SOURCE_DIRECTORY}/obj.txt)
+
+add_executable(
+	${RELBOOST_VERSION}-64bit-autosql-test 
+	${AUTOSQL_OBJ} 
+	${AUTOSQL_SOURCE_DIRECTORY}/main.cpp
+)
 
 add_executable(
 	${RELBOOST_VERSION}-64bit-database-test 
@@ -74,6 +80,7 @@ add_executable(
 
 add_executable(
 	${RELBOOST_VERSION}-64bit 
+	${AUTOSQL_OBJ} 
 	${CSV_OBJ} 
 	${DATABASE_OBJ} 
 	${ENGINE_OBJ} 
@@ -88,6 +95,13 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -O2")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11 -Wall -Wno-sign-compare -Wno-missing-braces -pthread -fno-strict-aliasing -fwrapv -O2 -D NDEBUGLOG")
     
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -O2 -fopenmp")
+
+target_link_libraries(
+    ${RELBOOST_VERSION}-64bit-autosql-test
+    "${POCO_DIR}/lib/Darwin/x86_64/libPocoNet.a"
+    "${POCO_DIR}/lib/Darwin/x86_64/libPocoJSON.a"
+    "${POCO_DIR}/lib/Darwin/x86_64/libPocoFoundation.a"
+)
 
 target_link_libraries(
     ${RELBOOST_VERSION}-64bit-database-test
