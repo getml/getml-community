@@ -27,5 +27,6 @@
 #include "autosql/tests/test6_time_stamps_diff.hpp"
 #include "autosql/tests/test7_categorical.hpp"
 #include "autosql/tests/test8_multiple_categorical.hpp"
+#include "autosql/tests/test9_discrete.hpp"
 
 // ---------------------------------------------------------------------------
