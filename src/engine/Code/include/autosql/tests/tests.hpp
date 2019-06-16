@@ -33,4 +33,8 @@
 #include "autosql/tests/test11_same_units_numerical.hpp"
 #include "autosql/tests/test12_same_units_discrete.hpp"
 
+#include "autosql/tests/test13_categorical_output.hpp"
+#include "autosql/tests/test14_numerical_output.hpp"
+#include "autosql/tests/test15_discrete_output.hpp"
+
 // ---------------------------------------------------------------------------

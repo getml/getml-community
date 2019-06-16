@@ -14,14 +14,19 @@ int main( int argc, char* argv[] )
     test3_sum();
     test4_max();
     test5_min();
+
     test6_time_stamps_diff();
     test7_categorical();
     test8_multiple_categorical();
     test9_discrete();
-    
+
     test10_same_units_categorical();
     test11_same_units_numerical();
     test12_same_units_discrete();
+
+    test13_categorical_output();
+    test14_numerical_output();
+    test15_discrete_output();
 
     return 0;
 }
