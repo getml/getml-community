@@ -18,6 +18,10 @@ int main( int argc, char* argv[] )
     test7_categorical();
     test8_multiple_categorical();
     test9_discrete();
+    
+    test10_same_units_categorical();
+    test11_same_units_numerical();
+    test12_same_units_discrete();
 
     return 0;
 }

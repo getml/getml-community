@@ -7,9 +7,9 @@
 
 #include <Poco/JSON/Parser.h>
 
-#include "autosql/descriptors/descriptors.hpp"
 #include "autosql/JSON.hpp"
 #include "autosql/containers/containers.hpp"
+#include "autosql/descriptors/descriptors.hpp"
 #include "autosql/ensemble/ensemble.hpp"
 
 // ---------------------------------------------------------------------------
@@ -28,5 +28,9 @@
 #include "autosql/tests/test7_categorical.hpp"
 #include "autosql/tests/test8_multiple_categorical.hpp"
 #include "autosql/tests/test9_discrete.hpp"
+
+#include "autosql/tests/test10_same_units_categorical.hpp"
+#include "autosql/tests/test11_same_units_numerical.hpp"
+#include "autosql/tests/test12_same_units_discrete.hpp"
 
 // ---------------------------------------------------------------------------
