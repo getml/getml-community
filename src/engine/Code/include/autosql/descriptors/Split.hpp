@@ -71,7 +71,7 @@ struct Split
           column_used(
               JSON::get_value<AUTOSQL_INT>( _json_obj, "column_used_" ) ),
           critical_value(
-              JSON::get_value<AUTOSQL_INT>( _json_obj, "critical_value_" ) ),
+              JSON::get_value<AUTOSQL_FLOAT>( _json_obj, "critical_value_" ) ),
           data_used( JSON::int_to_data_used(
               JSON::get_value<AUTOSQL_INT>( _json_obj, "data_used_" ) ) )
     {

@@ -33,5 +33,7 @@ int main( int argc, char* argv[] )
 
     test18_upper_time_stamps();
 
+    test20_saving_and_loading_models();
+
     return 0;
 }

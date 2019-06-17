@@ -42,4 +42,6 @@
 
 #include "autosql/tests/test18_upper_time_stamps.hpp"
 
+#include "autosql/tests/test20_saving_and_loading_models.hpp"
+
 // ---------------------------------------------------------------------------
