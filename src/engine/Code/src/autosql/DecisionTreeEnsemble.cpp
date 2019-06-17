@@ -398,8 +398,6 @@ void DecisionTreeEnsemble::fit(
         lossfunctions::LossFunctionParser::parse_loss_function(
             hyperparameters().loss_function_, comm() );
 
-    loss_function->set_comm( comm() );
-
     assert( _table_holder->main_tables_.size() > 0 );
 
     optimizationcriteria::RSquaredCriterion opt(

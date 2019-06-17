@@ -10,7 +10,7 @@ namespace lossfunctions
 class SquareLoss : public LossFunction
 {
    public:
-    SquareLoss();
+    SquareLoss( multithreading::Communicator* _comm );
 
     ~SquareLoss() = default;
 
@@ -33,6 +33,12 @@ class SquareLoss : public LossFunction
     // -----------------------------------------
 
     std::string type() const final { return "SquareLoss"; }
+
+    // -----------------------------------------
+
+   private:
+    // Communicator object
+    multithreading::Communicator* comm_;
 
     // -----------------------------------------
 };

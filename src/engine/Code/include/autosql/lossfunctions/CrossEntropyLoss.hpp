@@ -10,7 +10,7 @@ namespace lossfunctions
 class CrossEntropyLoss : public LossFunction
 {
    public:
-    CrossEntropyLoss();
+    CrossEntropyLoss( multithreading::Communicator* _comm );
 
     ~CrossEntropyLoss() = default;
 
@@ -57,6 +57,14 @@ class CrossEntropyLoss : public LossFunction
 
         return result;
     }
+
+    // -----------------------------------------
+
+   private:
+    // Communicator object
+    multithreading::Communicator* comm_;
+
+    // -----------------------------------------
 };
 
 // ----------------------------------------------------------------------------

@@ -12,7 +12,7 @@ struct LossFunctionParser
     /// Turns a string describing the loss function into a proper loss function
     static std::shared_ptr<LossFunction> parse_loss_function(
         const std::string &_loss_function,
-        multithreading::Communicator *comm_ );
+        multithreading::Communicator *_comm );
 };
 
 // ----------------------------------------------------------------------------

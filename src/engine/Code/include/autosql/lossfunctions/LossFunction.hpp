@@ -34,21 +34,6 @@ class LossFunction
     virtual std::string type() const = 0;
 
     // -----------------------------------------
-
-    inline multithreading::Communicator& comm() { return *( comm_ ); }
-
-    inline void set_comm( multithreading::Communicator* _comm )
-    {
-        comm_ = _comm;
-    }
-
-    // -----------------------------------------
-
-   protected:
-    // Communicator object
-    multithreading::Communicator* comm_;
-
-    // -----------------------------------------
 };
 
 // ----------------------------------------------------------------------------

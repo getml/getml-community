@@ -7,15 +7,15 @@ namespace lossfunctions
 // ----------------------------------------------------------------------------
 
 std::shared_ptr<LossFunction> LossFunctionParser::parse_loss_function(
-    const std::string &_loss_function, multithreading::Communicator *comm_ )
+    const std::string &_loss_function, multithreading::Communicator *_comm )
 {
     if ( _loss_function == "CrossEntropyLoss" )
         {
-            return std::make_shared<CrossEntropyLoss>();
+            return std::make_shared<CrossEntropyLoss>( _comm );
         }
     else if ( _loss_function == "SquareLoss" )
         {
-            return std::make_shared<SquareLoss>();
+            return std::make_shared<SquareLoss>( _comm );
         }
     else
         {
