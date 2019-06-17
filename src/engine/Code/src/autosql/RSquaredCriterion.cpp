@@ -6,8 +6,11 @@ namespace optimizationcriteria
 {
 // ----------------------------------------------------------------------------
 
-RSquaredCriterion::RSquaredCriterion( const AUTOSQL_FLOAT _min_num_samples )
-    : OptimizationCriterion(), min_num_samples_( _min_num_samples ){};
+RSquaredCriterion::RSquaredCriterion(
+    const AUTOSQL_FLOAT _min_num_samples, const size_t _num_rows )
+    : OptimizationCriterion(),
+      impl_( OptimizationCriterionImpl( _num_rows ) ),
+      min_num_samples_( _min_num_samples ){};
 
 // ----------------------------------------------------------------------------
 

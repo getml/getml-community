@@ -10,7 +10,8 @@ namespace optimizationcriteria
 class RSquaredCriterion : public OptimizationCriterion
 {
    public:
-    RSquaredCriterion( const AUTOSQL_FLOAT _min_num_samples );
+    RSquaredCriterion(
+        const AUTOSQL_FLOAT _min_num_samples, const size_t _num_rows );
 
     ~RSquaredCriterion() = default;
 

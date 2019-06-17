@@ -29,10 +29,6 @@ class DecisionTreeEnsemble
         const std::shared_ptr<const std::vector<std::string>> &_categories,
         const Poco::JSON::Object &_obj );
 
-    DecisionTreeEnsemble( const DecisionTreeEnsemble &_other );
-
-    DecisionTreeEnsemble( DecisionTreeEnsemble &&_other ) noexcept;
-
     ~DecisionTreeEnsemble() = default;
 
     // -----------------------------------------------------------------
@@ -57,12 +53,6 @@ class DecisionTreeEnsemble
     void fit(
         const std::shared_ptr<const decisiontrees::TableHolder> &_table_holder,
         const std::shared_ptr<const logging::AbstractLogger> _logger );
-
-    /// Copy constructor
-    DecisionTreeEnsemble &operator=( const DecisionTreeEnsemble &_other );
-
-    /// Copy assignment constructor
-    DecisionTreeEnsemble &operator=( DecisionTreeEnsemble &&_other ) noexcept;
 
     /// Saves the Model in JSON format, if applicable
     void save( const std::string &_fname ) const;
@@ -111,7 +101,7 @@ class DecisionTreeEnsemble
     /// Whether this is a classification problem
     const bool is_classification() const
     {
-        return loss_function()->type() != "SquareLoss";
+        return hyperparameters().loss_function_ != "SquareLoss";
     }
 
     /// Trivial accessor
@@ -170,15 +160,12 @@ class DecisionTreeEnsemble
         const AUTOSQL_FLOAT _shrinkage,
         const std::vector<AUTOSQL_FLOAT> &_sample_weights,
         std::vector<std::vector<AUTOSQL_FLOAT>> *_yhat_old,
-        std::vector<std::vector<AUTOSQL_FLOAT>> *_residuals );
+        std::vector<std::vector<AUTOSQL_FLOAT>> *_residuals,
+        lossfunctions::LossFunction *_loss_function );
 
     /// Extracts a DecisionTreeEnsemble from a JSON object.
     DecisionTreeEnsemble from_json_obj(
         const Poco::JSON::Object &_json_obj ) const;
-
-    /// Turns a string describing the loss function into a proper loss function
-    lossfunctions::LossFunction *parse_loss_function(
-        std::string _loss_function );
 
     // -----------------------------------------------------------------
 
@@ -231,26 +218,6 @@ class DecisionTreeEnsemble
     }
 
     /// Trivial accessor
-    inline lossfunctions::LossFunction *loss_function()
-    {
-        assert( loss_function_ );
-        return loss_function_.get();
-    }
-
-    /// Trivial accessor
-    inline const lossfunctions::LossFunction *loss_function() const
-    {
-        assert( loss_function_ );
-        return loss_function_.get();
-    }
-
-    /// Trivial setter
-    inline void loss_function( lossfunctions::LossFunction *_loss_function )
-    {
-        loss_function_.reset( _loss_function );
-    }
-
-    /// Trivial accessor
     inline std::vector<std::string> &peripheral_names()
     {
         return impl().placeholder_peripheral_;
@@ -299,11 +266,8 @@ class DecisionTreeEnsemble
     // -----------------------------------------------------------------
 
    private:
-    /// All variables other than loss_function_
+    /// Contains the variables
     DecisionTreeEnsembleImpl impl_;
-
-    /// The loss function for this ensemble.
-    std::unique_ptr<lossfunctions::LossFunction> loss_function_;
 
     // -----------------------------------------------------------------
 };

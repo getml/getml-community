@@ -129,7 +129,7 @@ class Optional
 };
 
 // -------------------------------------------------------------------------
-}
-}
+}  // namespace containers
+}  // namespace autosql
 
-#endif // AUTOSQL_CONTAINERS_OPTIONAL_HPP_
+#endif  // AUTOSQL_CONTAINERS_OPTIONAL_HPP_

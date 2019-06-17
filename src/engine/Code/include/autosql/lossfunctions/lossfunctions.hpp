@@ -18,6 +18,8 @@
 #include "autosql/lossfunctions/CrossEntropyLoss.hpp"
 #include "autosql/lossfunctions/SquareLoss.hpp"
 
+#include "autosql/lossfunctions/LossFunctionParser.hpp"
+
 // ----------------------------------------------------
 
 #endif  // AUTOSQL_LOSSFUNCTIONS_LOSSFUNCTIONS_HPP_

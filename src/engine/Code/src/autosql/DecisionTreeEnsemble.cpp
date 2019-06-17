@@ -34,32 +34,6 @@ DecisionTreeEnsemble::DecisionTreeEnsemble(
 
 // ----------------------------------------------------------------------------
 
-DecisionTreeEnsemble::DecisionTreeEnsemble( const DecisionTreeEnsemble &_other )
-    : impl_( _other.impl() )
-{
-    debug_log( "Model: Copy constructor..." );
-
-    if ( _other.loss_function_ )
-        {
-            assert( _other.loss_function_->type() != "" );
-
-            loss_function(
-                parse_loss_function( _other.loss_function_->type() ) );
-        }
-}
-
-// ----------------------------------------------------------------------------
-
-DecisionTreeEnsemble::DecisionTreeEnsemble(
-    DecisionTreeEnsemble &&_other ) noexcept
-    : impl_( std::move( _other.impl() ) ),
-      loss_function_( std::move( _other.loss_function_ ) )
-{
-    debug_log( "Model: Move constructor..." );
-}
-
-// ----------------------------------------------------------------------------
-
 std::list<decisiontrees::DecisionTree> DecisionTreeEnsemble::build_candidates(
     const AUTOSQL_INT _ix_feature,
     const std::vector<descriptors::SameUnits> &_same_units,
@@ -364,12 +338,9 @@ void DecisionTreeEnsemble::fit(
     // Store the column numbers, so we can make sure that the user
     // passes properly formatted data to predict(...)
 
-    if ( has_been_fitted() == false )
-        {
-            debug_log( "fit: Storing column numbers..." );
+    debug_log( "fit: Storing column numbers..." );
 
-            assert( _table_holder->main_tables_.size() > 0 );
-        }
+    assert( _table_holder->main_tables_.size() > 0 );
 
     // ----------------------------------------------------------------
     // Make sure that the data passed by the user is plausible
@@ -423,12 +394,18 @@ void DecisionTreeEnsemble::fit(
     // ----------------------------------------------------------------
     // Initialize the other objects we need
 
-    loss_function( parse_loss_function( hyperparameters().loss_function_ ) );
+    const auto loss_function =
+        lossfunctions::LossFunctionParser::parse_loss_function(
+            hyperparameters().loss_function_, comm() );
 
-    loss_function()->set_comm( comm() );
+    loss_function->set_comm( comm() );
 
-    optimizationcriteria::RSquaredCriterion opt( static_cast<AUTOSQL_FLOAT>(
-        hyperparameters().tree_hyperparameters_->min_num_samples_ ) );
+    assert( _table_holder->main_tables_.size() > 0 );
+
+    optimizationcriteria::RSquaredCriterion opt(
+        static_cast<AUTOSQL_FLOAT>(
+            hyperparameters().tree_hyperparameters_->min_num_samples_ ),
+        _table_holder->main_tables_[0].nrows() );
 
     // ----------------------------------------------------------------
     // Sample weights are needed for the random-forest-like functionality
@@ -459,8 +436,7 @@ void DecisionTreeEnsemble::fit(
 
     // ----------------------------------------------------------------
     // For the gradient-tree-boosting-like functionality, we intialize
-    // yhat_old at 0.0. If this has already been fitted, we obviously
-    // use the previous features.
+    // yhat_old at 0.0.
 
     assert( _table_holder->main_tables_.size() > 0 );
 
@@ -468,20 +444,13 @@ void DecisionTreeEnsemble::fit(
         _table_holder->main_tables_[0].num_targets(),
         std::vector<AUTOSQL_FLOAT>( _table_holder->main_tables_[0].nrows() ) );
 
-    /*if ( has_been_fitted() )
-        {
-            yhat_old = predict(
-                table_holder->peripheral_tables_,
-                table_holder->main_tables_[0] );
-        }*/
-
     // ----------------------------------------------------------------
     // Calculate the pseudo-residuals - on which the tree will be
     // predicted
 
     assert( _table_holder->main_tables_.size() > 0 );
 
-    auto residuals = loss_function()->calculate_residuals(
+    auto residuals = loss_function->calculate_residuals(
         yhat_old, _table_holder->main_tables_[0] );
 
     // ----------------------------------------------------------------
@@ -594,7 +563,8 @@ void DecisionTreeEnsemble::fit(
                         hyperparameters().shrinkage_,
                         *sample_weights,
                         &yhat_old,
-                        &residuals );
+                        &residuals,
+                        loss_function.get() );
                 }
             else
                 {
@@ -639,7 +609,8 @@ void DecisionTreeEnsemble::fit_linear_regressions_and_recalculate_residuals(
     const AUTOSQL_FLOAT _shrinkage,
     const std::vector<AUTOSQL_FLOAT> &_sample_weights,
     std::vector<std::vector<AUTOSQL_FLOAT>> *_yhat_old,
-    std::vector<std::vector<AUTOSQL_FLOAT>> *_residuals )
+    std::vector<std::vector<AUTOSQL_FLOAT>> *_residuals,
+    lossfunctions::LossFunction *_loss_function )
 {
     // ----------------------------------------------------------------
 
@@ -680,7 +651,7 @@ void DecisionTreeEnsemble::fit_linear_regressions_and_recalculate_residuals(
     // Find the optimal update_rates and update parameters of linear
     // regression accordingly
 
-    auto update_rates = loss_function()->calculate_update_rates(
+    auto update_rates = _loss_function->calculate_update_rates(
         *_yhat_old,
         predictions,
         _table_holder.main_tables_[ix],
@@ -709,7 +680,7 @@ void DecisionTreeEnsemble::fit_linear_regressions_and_recalculate_residuals(
     // Recalculate the pseudo-residuals - on which the tree will
     // be predicted
 
-    *_residuals = loss_function()->calculate_residuals(
+    *_residuals = _loss_function->calculate_residuals(
         *_yhat_old, _table_holder.main_tables_[ix] );
 
     // ----------------------------------------------------------------
@@ -795,62 +766,6 @@ DecisionTreeEnsemble DecisionTreeEnsemble::from_json_obj(
     return model;
 
     // -------------------------------------------
-}
-
-// ----------------------------------------------------------------------------
-
-DecisionTreeEnsemble &DecisionTreeEnsemble::operator=(
-    const DecisionTreeEnsemble &_other )
-{
-    debug_log( "Model: Copy assignment constructor..." );
-
-    DecisionTreeEnsemble temp( _other );
-
-    *this = std::move( temp );
-
-    return *this;
-}
-
-// ----------------------------------------------------------------------------
-
-DecisionTreeEnsemble &DecisionTreeEnsemble::operator=(
-    DecisionTreeEnsemble &&_other ) noexcept
-{
-    debug_log( "Model: Move assignment constructor..." );
-
-    if ( this == &_other )
-        {
-            return *this;
-        }
-
-    loss_function_ = std::move( _other.loss_function_ );
-
-    impl_ = std::move( _other.impl_ );
-
-    return *this;
-}
-
-// ----------------------------------------------------------------------------
-
-lossfunctions::LossFunction *DecisionTreeEnsemble::parse_loss_function(
-    std::string _loss_function )
-{
-    if ( _loss_function == "CrossEntropyLoss" )
-        {
-            return new lossfunctions::CrossEntropyLoss();
-        }
-    else if ( _loss_function == "SquareLoss" )
-        {
-            return new lossfunctions::SquareLoss();
-        }
-    else
-        {
-            std::string warning_message = "Loss Function of type '";
-            warning_message.append( _loss_function );
-            warning_message.append( "' not known!" );
-
-            throw std::invalid_argument( warning_message );
-        }
 }
 
 // -------------------------------------------------------------------------
