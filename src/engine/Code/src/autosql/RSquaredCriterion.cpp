@@ -7,10 +7,11 @@ namespace optimizationcriteria
 // ----------------------------------------------------------------------------
 
 RSquaredCriterion::RSquaredCriterion(
-    const AUTOSQL_FLOAT _min_num_samples, const size_t _num_rows )
+    const std::shared_ptr<const descriptors::Hyperparameters>& _hyperparameters,
+    const size_t _num_rows )
     : OptimizationCriterion(),
-      impl_( OptimizationCriterionImpl( _num_rows ) ),
-      min_num_samples_( _min_num_samples ){};
+      hyperparameters_( _hyperparameters ),
+      impl_( OptimizationCriterionImpl( _hyperparameters, _num_rows ) ){};
 
 // ----------------------------------------------------------------------------
 
@@ -158,10 +159,17 @@ AUTOSQL_INT RSquaredCriterion::find_maximum()
             const AUTOSQL_FLOAT num_samples_greater =
                 sufficient_statistics[i][sufficient_statistics[i].size() - 1];
 
+            assert( hyperparameters_ );
+
+            assert( hyperparameters_->tree_hyperparameters_ );
+
+            const auto min_num_samples = static_cast<AUTOSQL_FLOAT>(
+                hyperparameters_->tree_hyperparameters_->min_num_samples_ );
+
             // If the split would result in an insufficient number
             // of samples on any node, it will not be considered.
-            if ( num_samples_smaller < min_num_samples_ ||
-                 num_samples_greater < min_num_samples_ )
+            if ( num_samples_smaller < min_num_samples ||
+                 num_samples_greater < min_num_samples )
                 {
                     continue;
                 }

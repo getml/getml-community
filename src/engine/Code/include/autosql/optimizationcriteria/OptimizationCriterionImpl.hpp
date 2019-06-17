@@ -10,7 +10,10 @@ namespace optimizationcriteria
 class OptimizationCriterionImpl
 {
    public:
-    OptimizationCriterionImpl( const size_t _num_rows );
+    OptimizationCriterionImpl(
+        const std::shared_ptr<const descriptors::Hyperparameters>&
+            _hyperparameters,
+        const size_t _num_rows );
 
     ~OptimizationCriterionImpl() = default;
 
@@ -108,8 +111,11 @@ class OptimizationCriterionImpl
     // --------------------------------------
 
    private:
-    /// MPI communicator
+    /// Multithreading communicator
     multithreading::Communicator* comm_;
+
+    /// The hyperparameters used to train the model.
+    std::shared_ptr<const descriptors::Hyperparameters> hyperparameters_;
 
     /// Indicates the best split.
     AUTOSQL_INT max_ix_;

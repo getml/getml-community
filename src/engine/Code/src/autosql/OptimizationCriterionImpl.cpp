@@ -6,8 +6,11 @@ namespace optimizationcriteria
 {
 // ----------------------------------------------------------------------------
 
-OptimizationCriterionImpl::OptimizationCriterionImpl( const size_t _num_rows )
-    : max_ix_( -1 ),
+OptimizationCriterionImpl::OptimizationCriterionImpl(
+    const std::shared_ptr<const descriptors::Hyperparameters>& _hyperparameters,
+    const size_t _num_rows )
+    : hyperparameters_( _hyperparameters ),
+      max_ix_( -1 ),
       value_( 0.0 ),
       yhat_( std::vector<AUTOSQL_FLOAT>( _num_rows ) ){};
 

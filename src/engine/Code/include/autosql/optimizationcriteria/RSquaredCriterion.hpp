@@ -11,7 +11,9 @@ class RSquaredCriterion : public OptimizationCriterion
 {
    public:
     RSquaredCriterion(
-        const AUTOSQL_FLOAT _min_num_samples, const size_t _num_rows );
+        const std::shared_ptr<const descriptors::Hyperparameters>&
+            _hyperparameters,
+        const size_t _num_rows );
 
     ~RSquaredCriterion() = default;
 
@@ -121,13 +123,12 @@ class RSquaredCriterion : public OptimizationCriterion
     /// Communicator
     multithreading::Communicator* comm_;
 
+    /// Shared ptr to the hyperparameters.
+    std::shared_ptr<const descriptors::Hyperparameters> hyperparameters_;
+
     /// Implementation class for common methods
     /// among optimization criteria.
     OptimizationCriterionImpl impl_;
-
-    /// Minimum number of samples required to be left
-    /// on the resulting leaves for a split to occur
-    const AUTOSQL_FLOAT min_num_samples_;
 
     /// Stores the weights associated which each sample (which is needed
     /// for a random-forest- or boosting-like approach)

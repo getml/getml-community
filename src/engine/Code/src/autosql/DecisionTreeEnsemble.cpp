@@ -401,9 +401,7 @@ void DecisionTreeEnsemble::fit(
     assert( _table_holder->main_tables_.size() > 0 );
 
     optimizationcriteria::RSquaredCriterion opt(
-        static_cast<AUTOSQL_FLOAT>(
-            hyperparameters().tree_hyperparameters_->min_num_samples_ ),
-        _table_holder->main_tables_[0].nrows() );
+        impl().hyperparameters_, _table_holder->main_tables_[0].nrows() );
 
     // ----------------------------------------------------------------
     // Sample weights are needed for the random-forest-like functionality
