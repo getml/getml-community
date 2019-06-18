@@ -46,15 +46,16 @@ class OptimizationCriterionImpl
 
     /// Updates yhat_old based on _yhat_new.
     void update_yhat_old(
+        const std::vector<std::vector<AUTOSQL_FLOAT>>& _residuals,
         const std::vector<AUTOSQL_FLOAT>& _sample_weights,
         const std::vector<AUTOSQL_FLOAT>& _yhat_new );
 
     // --------------------------------------
 
     /// Calculates the residuals.
-    void calc_residuals()
+    void calc_residuals( std::vector<std::vector<AUTOSQL_FLOAT>>* _residuals )
     {
-        residuals_ =
+        *_residuals =
             loss_function()->calculate_residuals( yhat_old_, main_table_ );
     }
 
@@ -71,12 +72,6 @@ class OptimizationCriterionImpl
     std::shared_ptr<std::vector<AUTOSQL_FLOAT>> make_sample_weights()
     {
         return sampler_.make_sample_weights( main_table_.nrows() );
-    }
-
-    /// Returns a const reference to the residuals.
-    const std::vector<std::vector<AUTOSQL_FLOAT>>& residuals() const
-    {
-        return residuals_;
     }
 
     /// Resets the storage size to zero.
@@ -161,9 +156,6 @@ class OptimizationCriterionImpl
 
     /// Indicates the best split.
     AUTOSQL_INT max_ix_;
-
-    /// The derivatives of the loss function for the current prediction.
-    std::vector<std::vector<AUTOSQL_FLOAT>> residuals_;
 
     /// For creating the sample weights
     utils::Sampler sampler_;

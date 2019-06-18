@@ -48,7 +48,7 @@ class RSquaredCriterion : public OptimizationCriterion
     // --------------------------------------
 
     /// Calculates the residuals
-    void calc_residuals() final { impl().calc_residuals(); }
+    void calc_residuals() final { impl().calc_residuals( &y_ ); }
 
     /// Calculates the sampling rate.
     void calc_sampling_rate() final { impl().calc_sampling_rate(); }
@@ -102,7 +102,7 @@ class RSquaredCriterion : public OptimizationCriterion
         const std::vector<AUTOSQL_FLOAT>& _sample_weights,
         const std::vector<AUTOSQL_FLOAT>& _yhat_new ) final
     {
-        impl().update_yhat_old( _sample_weights, _yhat_new );
+        impl().update_yhat_old( y_, _sample_weights, _yhat_new );
     }
 
     /// Trivial getter

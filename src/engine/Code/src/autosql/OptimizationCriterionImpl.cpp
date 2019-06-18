@@ -128,6 +128,7 @@ void OptimizationCriterionImpl::store_current_stage(
 // ----------------------------------------------------------------------------
 
 void OptimizationCriterionImpl::update_yhat_old(
+    const std::vector<std::vector<AUTOSQL_FLOAT>>& _residuals,
     const std::vector<AUTOSQL_FLOAT>& _sample_weights,
     const std::vector<AUTOSQL_FLOAT>& _yhat_new )
 {
@@ -150,7 +151,7 @@ void OptimizationCriterionImpl::update_yhat_old(
 
     linear_regression.set_comm( comm_ );
 
-    linear_regression.fit( _yhat_new, residuals_, _sample_weights );
+    linear_regression.fit( _yhat_new, _residuals, _sample_weights );
 
     const auto predictions = linear_regression.predict( _yhat_new );
 

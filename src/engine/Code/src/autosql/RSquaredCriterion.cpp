@@ -212,8 +212,6 @@ void RSquaredCriterion::init(
 
     // ---------------------------------------------------------------------
 
-    y_ = impl().residuals();
-
     sample_weights_ = _sample_weights;
 
     sufficient_statistics_committed_ =
