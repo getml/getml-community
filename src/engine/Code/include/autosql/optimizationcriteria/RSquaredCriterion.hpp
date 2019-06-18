@@ -13,7 +13,8 @@ class RSquaredCriterion : public OptimizationCriterion
     RSquaredCriterion(
         const std::shared_ptr<const descriptors::Hyperparameters>&
             _hyperparameters,
-        const size_t _num_rows,
+        const std::string& _loss_function_type,
+        const containers::DataFrameView& _main_table,
         multithreading::Communicator* _comm );
 
     ~RSquaredCriterion() = default;
@@ -31,9 +32,7 @@ class RSquaredCriterion : public OptimizationCriterion
     AUTOSQL_INT find_maximum() final;
 
     /// Calculates statistics that have to be calculated only once
-    void init(
-        const std::vector<std::vector<AUTOSQL_FLOAT>>& _y,
-        const std::vector<AUTOSQL_FLOAT>& _sample_weights ) final;
+    void init( const std::vector<AUTOSQL_FLOAT>& _sample_weights ) final;
 
     /// Needed for numeric stability
     void init_yhat(
@@ -47,6 +46,9 @@ class RSquaredCriterion : public OptimizationCriterion
         const std::vector<AUTOSQL_FLOAT>& _old_values ) final;
 
     // --------------------------------------
+
+    /// Calculates the residuals
+    void calc_residuals() final { impl().calc_residuals(); }
 
     /// Calculates the sampling rate.
     void calc_sampling_rate() final { impl().calc_sampling_rate(); }
@@ -93,6 +95,14 @@ class RSquaredCriterion : public OptimizationCriterion
             _num_samples_smaller,
             _num_samples_greater,
             sufficient_statistics_current_ );
+    }
+
+    /// Updates yhat_old based on _yhat_new.
+    void update_yhat_old(
+        const std::vector<AUTOSQL_FLOAT>& _sample_weights,
+        const std::vector<AUTOSQL_FLOAT>& _yhat_new ) final
+    {
+        impl().update_yhat_old( _sample_weights, _yhat_new );
     }
 
     /// Trivial getter

@@ -41,10 +41,6 @@ struct DecisionTreeEnsembleImpl
     /// multithreading)
     multithreading::Communicator *comm_;
 
-    /// The linear regressions that are being used to map the features
-    /// onto the targets for the gradient-boosting-like functionality
-    std::vector<utils::LinearRegression> linear_regressions_;
-
     /// The hyperparameters used in this ensemble
     std::shared_ptr<const descriptors::Hyperparameters> hyperparameters_;
 

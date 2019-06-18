@@ -153,16 +153,6 @@ class DecisionTreeEnsemble
     void check_plausibility_of_targets(
         const containers::DataFrameView &_population_table );
 
-    /// Fits the linear regression and then recalculates the residuals.
-    /// This is not needed when the shrinkage is 0.0.
-    void fit_linear_regressions_and_recalculate_residuals(
-        const decisiontrees::TableHolder &_table_holder,
-        const AUTOSQL_FLOAT _shrinkage,
-        const std::vector<AUTOSQL_FLOAT> &_sample_weights,
-        std::vector<std::vector<AUTOSQL_FLOAT>> *_yhat_old,
-        std::vector<std::vector<AUTOSQL_FLOAT>> *_residuals,
-        lossfunctions::LossFunction *_loss_function );
-
     /// Extracts a DecisionTreeEnsemble from a JSON object.
     DecisionTreeEnsemble from_json_obj(
         const Poco::JSON::Object &_json_obj ) const;
@@ -195,26 +185,6 @@ class DecisionTreeEnsemble
     {
         assert( trees().size() > 0 );
         return &( trees().back() );
-    }
-
-    /// Abstraction that returns the last linear regression in the ensemble
-    inline utils::LinearRegression *last_linear_regression()
-    {
-        assert( linear_regressions().size() > 0 );
-        return &( linear_regressions().back() );
-    }
-
-    /// Abstraction that returns the last linear regression in the ensemble
-    inline std::vector<utils::LinearRegression> &linear_regressions()
-    {
-        return impl().linear_regressions_;
-    }
-
-    /// Abstraction that returns the last linear regression in the ensemble
-    inline const std::vector<utils::LinearRegression> &linear_regressions()
-        const
-    {
-        return impl().linear_regressions_;
     }
 
     /// Trivial accessor

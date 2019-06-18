@@ -59,17 +59,16 @@ class IntermediateAggregation
         return parent().argsort( _begin, _end );
     }
 
+    /// Calculates the residuals
+    void calc_residuals() final { parent().calc_residuals(); }
+
     /// Calculates the sampling rate.
-    void calc_sampling_rate() final { assert( false && "ToDo" ); }
+    void calc_sampling_rate() final { parent().calc_sampling_rate(); }
 
     /// Calculates statistics that have to be calculated only once
-    void init(
-        const std::vector<std::vector<AUTOSQL_FLOAT>>& _y,
-        const std::vector<AUTOSQL_FLOAT>& _sample_weights ) final
+    void init( const std::vector<AUTOSQL_FLOAT>& _sample_weights ) final
     {
-        assert(
-            false &&
-            "IntermediateAggregation::init(...) should never be called!" );
+        assert( false && "ToDo" );
     }
 
     /// Finds the index associated with the maximum of the optimization
@@ -97,6 +96,14 @@ class IntermediateAggregation
     {
         parent().store_current_stage(
             _num_samples_smaller, _num_samples_greater );
+    }
+
+    /// Updates yhat_old based on _yhat_new.
+    void update_yhat_old(
+        const std::vector<AUTOSQL_FLOAT>& _sample_weights,
+        const std::vector<AUTOSQL_FLOAT>& _yhat_new ) final
+    {
+        assert( false && "ToDo" );
     }
 
     /// Trivial getter

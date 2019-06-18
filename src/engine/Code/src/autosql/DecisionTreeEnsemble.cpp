@@ -196,20 +196,6 @@ void DecisionTreeEnsemble::check_plausibility_of_targets(
             throw std::invalid_argument(
                 "share_aggregations must be between 0.0 and 1.0!" );
         }
-
-    if ( has_been_fitted() )
-        {
-            assert( linear_regressions().size() > 0 );
-            assert( linear_regressions().size() == trees().size() );
-
-            if ( linear_regressions()[0].size() !=
-                 _population_table.num_targets() )
-                {
-                    throw std::invalid_argument(
-                        "Number of targets cannot change throughout "
-                        "different training episodes!" );
-                }
-        }
 }
 
 // ----------------------------------------------------------------------------
@@ -387,7 +373,7 @@ void DecisionTreeEnsemble::fit(
         _table_holder->main_tables_[0].df() );
 
     // ----------------------------------------------------------------
-    // Initialize the other objects we need
+    // Create and initialize the optimization criterion
 
     const auto loss_function =
         lossfunctions::LossFunctionParser::parse_loss_function(
@@ -399,10 +385,13 @@ void DecisionTreeEnsemble::fit(
         std::unique_ptr<optimizationcriteria::OptimizationCriterion>(
             new optimizationcriteria::RSquaredCriterion(
                 impl().hyperparameters_,
-                _table_holder->main_tables_[0].nrows(),
+                hyperparameters().loss_function_,
+                _table_holder->main_tables_[0],
                 comm() ) );
 
     opt->calc_sampling_rate();
+
+    opt->calc_residuals();
 
     // ----------------------------------------------------------------
     // Sample weights are needed for the random-forest-like functionality
@@ -423,25 +412,6 @@ void DecisionTreeEnsemble::fit(
 
     random_number_generator().reset(
         new std::mt19937( static_cast<size_t>( hyperparameters().seed_ ) ) );
-
-    // ----------------------------------------------------------------
-    // For the gradient-tree-boosting-like functionality, we intialize
-    // yhat_old at 0.0.
-
-    assert( _table_holder->main_tables_.size() > 0 );
-
-    auto yhat_old = std::vector<std::vector<AUTOSQL_FLOAT>>(
-        _table_holder->main_tables_[0].num_targets(),
-        std::vector<AUTOSQL_FLOAT>( _table_holder->main_tables_[0].nrows() ) );
-
-    // ----------------------------------------------------------------
-    // Calculate the pseudo-residuals - on which the tree will be
-    // predicted
-
-    assert( _table_holder->main_tables_.size() > 0 );
-
-    auto residuals = loss_function->calculate_residuals(
-        yhat_old, _table_holder->main_tables_[0] );
 
     // ----------------------------------------------------------------
     // Sample containers are pointers to simple structs, which represent a match
@@ -514,7 +484,7 @@ void DecisionTreeEnsemble::fit(
 
             debug_log( "fit: Preparing optimization criterion..." );
 
-            opt->init( residuals, *sample_weights );
+            opt->init( *sample_weights );
 
             // ----------------------------------------------------------------
 
@@ -544,28 +514,24 @@ void DecisionTreeEnsemble::fit(
 
             // -------------------------------------------------------------
             // Recalculate residuals, which is needed for the gradient boosting
-            // algorithm. If the shrinkage_ is 0.0, we still need a proper
-            // utils::LinearRegression, which is why we use one with parameters
-            // 0.0 to save time.
+            // algorithm.
 
             debug_log( "fit: Recalculating residuals..." );
 
-            if ( hyperparameters().shrinkage_ != 0.0 )
+            if ( hyperparameters().shrinkage_ > 0.0 )
                 {
-                    fit_linear_regressions_and_recalculate_residuals(
-                        *_table_holder,
-                        hyperparameters().shrinkage_,
-                        *sample_weights,
-                        &yhat_old,
-                        &residuals,
-                        loss_function.get() );
-                }
-            else
-                {
-                    assert( _table_holder->main_tables_.size() > 0 );
+                    const auto ix = last_tree()->ix_perip_used();
 
-                    linear_regressions().push_back( utils::LinearRegression(
-                        _table_holder->main_tables_[0].num_targets() ) );
+                    std::vector<AUTOSQL_FLOAT> new_feature =
+                        last_tree()->transform(
+                            _table_holder->main_tables_[ix],
+                            _table_holder->peripheral_tables_[ix],
+                            _table_holder->subtables_[ix],
+                            hyperparameters().use_timestamps_ );
+
+                    opt->update_yhat_old( *sample_weights, new_feature );
+
+                    opt->calc_residuals();
                 }
 
             // -------------------------------------------------------------
@@ -592,90 +558,6 @@ void DecisionTreeEnsemble::fit(
     // Return message
 
     debug_log( "fit: Done..." );
-
-    // ----------------------------------------------------------------
-}
-
-// ----------------------------------------------------------------------------
-
-void DecisionTreeEnsemble::fit_linear_regressions_and_recalculate_residuals(
-    const decisiontrees::TableHolder &_table_holder,
-    const AUTOSQL_FLOAT _shrinkage,
-    const std::vector<AUTOSQL_FLOAT> &_sample_weights,
-    std::vector<std::vector<AUTOSQL_FLOAT>> *_yhat_old,
-    std::vector<std::vector<AUTOSQL_FLOAT>> *_residuals,
-    lossfunctions::LossFunction *_loss_function )
-{
-    // ----------------------------------------------------------------
-
-    const auto ix = last_tree()->ix_perip_used();
-
-    assert( ix < _table_holder.main_tables_.size() );
-
-    assert(
-        _table_holder.main_tables_.size() ==
-        _table_holder.peripheral_tables_.size() );
-    assert(
-        _table_holder.main_tables_.size() == _table_holder.subtables_.size() );
-
-    // ----------------------------------------------------------------
-    // Generate new feature
-
-    std::vector<AUTOSQL_FLOAT> new_feature = last_tree()->transform(
-        _table_holder.main_tables_[ix],
-        _table_holder.peripheral_tables_[ix],
-        _table_holder.subtables_[ix],
-        hyperparameters().use_timestamps_ );
-
-    // ----------------------------------------------------------------
-    // Train a linear regression from the prediction of the last
-    // tree on the residuals and generate predictions f_t on that basis
-
-    linear_regressions().push_back( utils::LinearRegression() );
-
-    last_linear_regression()->set_comm( comm() );
-
-    last_linear_regression()->fit( new_feature, *_residuals, _sample_weights );
-
-    const auto predictions = last_linear_regression()->predict( new_feature );
-
-    last_linear_regression()->apply_shrinkage( _shrinkage );
-
-    // ----------------------------------------------------------------
-    // Find the optimal update_rates and update parameters of linear
-    // regression accordingly
-
-    auto update_rates = _loss_function->calculate_update_rates(
-        *_yhat_old,
-        predictions,
-        _table_holder.main_tables_[ix],
-        _sample_weights );
-
-    // ----------------------------------------------------------------
-    // Do the actual updates
-
-    assert( update_rates.size() == predictions.size() );
-
-    for ( size_t j = 0; j < predictions.size(); ++j )
-        {
-            for ( size_t i = 0; i < predictions[j].size(); ++i )
-                {
-                    const AUTOSQL_FLOAT update =
-                        predictions[j][i] * update_rates[j] * _shrinkage;
-
-                    ( *_yhat_old )[j][i] +=
-                        ( ( std::isnan( update ) || std::isinf( update ) )
-                              ? 0.0
-                              : update );
-                }
-        }
-
-    // ----------------------------------------------------------------
-    // Recalculate the pseudo-residuals - on which the tree will
-    // be predicted
-
-    *_residuals = _loss_function->calculate_residuals(
-        *_yhat_old, _table_holder.main_tables_[ix] );
 
     // ----------------------------------------------------------------
 }
@@ -731,28 +613,6 @@ DecisionTreeEnsemble DecisionTreeEnsemble::from_json_obj(
                 JSON::get_array( _json_obj, "targets_" ) );
 
             // ----------------------------------------
-            // Extract linear regressions.
-
-            auto update_rates = JSON::get_array( _json_obj, "update_rates_" );
-
-            for ( size_t i = 0; i < update_rates->size(); ++i )
-                {
-                    auto obj = update_rates->getObject(
-                        static_cast<unsigned int>( i ) );
-
-                    model.linear_regressions().push_back(
-                        utils::LinearRegression( *obj ) );
-                }
-
-            // ----------------------------------------
-        }
-
-    // ----------------------------------------
-
-    if ( model.linear_regressions().size() != model.trees().size() )
-        {
-            throw std::runtime_error(
-                "Number of update rates does not match number of features!" );
         }
 
     // ----------------------------------------
@@ -933,18 +793,6 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json_obj() const
 
             obj.set(
                 "targets_", JSON::vector_to_array<std::string>( targets() ) );
-
-            // ----------------------------------------
-            // Extract linear regressions.
-
-            Poco::JSON::Array update_rates;
-
-            for ( auto &linreg : linear_regressions() )
-                {
-                    update_rates.add( linreg.to_json_obj() );
-                }
-
-            obj.set( "update_rates_", update_rates );
 
             // ----------------------------------------
         }

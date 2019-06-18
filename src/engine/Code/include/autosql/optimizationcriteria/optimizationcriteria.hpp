@@ -13,6 +13,8 @@
 
 #include "autosql/containers/containers.hpp"
 
+#include "autosql/lossfunctions/lossfunctions.hpp"
+
 // ----------------------------------------------------
 // Module files
 

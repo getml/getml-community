@@ -22,6 +22,9 @@ class OptimizationCriterion
     virtual std::vector<AUTOSQL_INT> argsort(
         const AUTOSQL_INT _begin, const AUTOSQL_INT _end ) const = 0;
 
+    /// Calculates the residuals
+    virtual void calc_residuals() = 0;
+
     /// Calculates the sampling rate.
     virtual void calc_sampling_rate() = 0;
 
@@ -30,9 +33,7 @@ class OptimizationCriterion
     virtual void commit() = 0;
 
     /// Calculates statistics that have to be calculated only once
-    virtual void init(
-        const std::vector<std::vector<AUTOSQL_FLOAT>>& _y,
-        const std::vector<AUTOSQL_FLOAT>& _sample_weights ) = 0;
+    virtual void init( const std::vector<AUTOSQL_FLOAT>& _sample_weights ) = 0;
 
     /// Some optimization criteria need this for numeric stability
     virtual void init_yhat(
@@ -70,6 +71,11 @@ class OptimizationCriterion
         const containers::IntSet& _indices,
         const std::vector<AUTOSQL_FLOAT>& _new_values,
         const std::vector<AUTOSQL_FLOAT>& _old_values ) = 0;
+
+    /// Updates yhat_old based on _yhat_new.
+    virtual void update_yhat_old(
+        const std::vector<AUTOSQL_FLOAT>& _sample_weights,
+        const std::vector<AUTOSQL_FLOAT>& _yhat_new ) = 0;
 
     /// Trivial getter
     virtual AUTOSQL_FLOAT value() = 0;

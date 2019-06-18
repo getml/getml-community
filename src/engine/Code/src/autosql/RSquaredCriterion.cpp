@@ -8,13 +8,14 @@ namespace optimizationcriteria
 
 RSquaredCriterion::RSquaredCriterion(
     const std::shared_ptr<const descriptors::Hyperparameters>& _hyperparameters,
-    const size_t _num_rows,
+    const std::string& _loss_function_type,
+    const containers::DataFrameView& _main_table,
     multithreading::Communicator* _comm )
     : OptimizationCriterion(),
       comm_( _comm ),
       hyperparameters_( _hyperparameters ),
-      impl_(
-          OptimizationCriterionImpl( _hyperparameters, _num_rows, _comm ) ){};
+      impl_( OptimizationCriterionImpl(
+          _hyperparameters, _loss_function_type, _main_table, _comm ) ){};
 
 // ----------------------------------------------------------------------------
 
@@ -198,7 +199,6 @@ AUTOSQL_INT RSquaredCriterion::find_maximum()
 // ----------------------------------------------------------------------------
 
 void RSquaredCriterion::init(
-    const std::vector<std::vector<AUTOSQL_FLOAT>>& _y,
     const std::vector<AUTOSQL_FLOAT>& _sample_weights )
 {
     // ---------------------------------------------------------------------
@@ -212,7 +212,7 @@ void RSquaredCriterion::init(
 
     // ---------------------------------------------------------------------
 
-    y_ = _y;
+    y_ = impl().residuals();
 
     sample_weights_ = _sample_weights;
 

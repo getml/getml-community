@@ -8,15 +8,22 @@ namespace optimizationcriteria
 
 OptimizationCriterionImpl::OptimizationCriterionImpl(
     const std::shared_ptr<const descriptors::Hyperparameters>& _hyperparameters,
-    const size_t _num_rows,
+    const std::string& _loss_function_type,
+    const containers::DataFrameView& _main_table,
     multithreading::Communicator* _comm )
     : comm_( _comm ),
       hyperparameters_( _hyperparameters ),
+      main_table_( _main_table ),
       max_ix_( -1 ),
-      num_rows_( _num_rows ),
       sampler_( utils::Sampler( _hyperparameters->seed_ ) ),
       value_( 0.0 ),
-      yhat_( std::vector<AUTOSQL_FLOAT>( _num_rows ) ){};
+      yhat_old_( std::vector<std::vector<AUTOSQL_FLOAT>>(
+          main_table_.num_targets(),
+          std::vector<AUTOSQL_FLOAT>( main_table_.nrows() ) ) )
+{
+    loss_function_ = lossfunctions::LossFunctionParser::parse_loss_function(
+        _loss_function_type, comm_ );
+};
 
 // ----------------------------------------------------------------------------
 
@@ -116,6 +123,67 @@ void OptimizationCriterionImpl::store_current_stage(
     sufficient_statistics_stored_
         .back()[_sufficient_statistics_current.size() + 1] =
         _num_samples_greater;
+}
+
+// ----------------------------------------------------------------------------
+
+void OptimizationCriterionImpl::update_yhat_old(
+    const std::vector<AUTOSQL_FLOAT>& _sample_weights,
+    const std::vector<AUTOSQL_FLOAT>& _yhat_new )
+{
+    // ----------------------------------------------------------------
+
+    assert( hyperparameters_ );
+
+    const auto shrinkage = hyperparameters_->shrinkage_;
+
+    if ( shrinkage <= 0.0 )
+        {
+            return;
+        }
+
+    // ----------------------------------------------------------------
+    // Train a linear regression from the prediction of the last
+    // tree on the residuals and generate predictions f_t on that basis
+
+    auto linear_regression = utils::LinearRegression();
+
+    linear_regression.set_comm( comm_ );
+
+    linear_regression.fit( _yhat_new, residuals_, _sample_weights );
+
+    const auto predictions = linear_regression.predict( _yhat_new );
+
+    // ----------------------------------------------------------------
+    // Find the optimal update_rates and update parameters of linear
+    // regression accordingly.
+
+    auto update_rates = loss_function()->calculate_update_rates(
+        yhat_old_, predictions, main_table_, _sample_weights );
+
+    // ----------------------------------------------------------------
+    // Do the actual updates
+
+    assert( update_rates.size() == predictions.size() );
+    assert( update_rates.size() == yhat_old_.size() );
+
+    for ( size_t j = 0; j < predictions.size(); ++j )
+        {
+            assert( yhat_old_[j].size() == predictions[j].size() );
+
+            for ( size_t i = 0; i < predictions[j].size(); ++i )
+                {
+                    const AUTOSQL_FLOAT update =
+                        predictions[j][i] * update_rates[j] * shrinkage;
+
+                    yhat_old_[j][i] +=
+                        ( ( std::isnan( update ) || std::isinf( update ) )
+                              ? 0.0
+                              : update );
+                }
+        }
+
+    // ----------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
