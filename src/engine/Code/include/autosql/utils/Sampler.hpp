@@ -37,11 +37,6 @@ class Sampler
 
     // --------------------------------------------------------------------
 
-    /// Trivial getter.
-    AUTOSQL_FLOAT sampling_rate() const { return sampling_rate_; }
-
-    // --------------------------------------------------------------------
-
    private:
     /// The random number generator used for sampling.
     std::mt19937 random_number_generator_;

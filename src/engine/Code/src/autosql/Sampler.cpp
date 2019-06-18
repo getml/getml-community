@@ -26,6 +26,12 @@ void Sampler::calc_sampling_rate(
 std::shared_ptr<std::vector<AUTOSQL_FLOAT>> Sampler::make_sample_weights(
     const size_t _num_rows )
 {
+    if ( sampling_rate_ <= 0.0 )
+        {
+            return std::make_shared<std::vector<AUTOSQL_FLOAT>>(
+                _num_rows, 1.0 );
+        }
+
     auto sample_weights =
         std::make_shared<std::vector<AUTOSQL_FLOAT>>( _num_rows );
 

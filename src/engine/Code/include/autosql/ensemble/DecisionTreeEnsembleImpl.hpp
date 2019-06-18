@@ -22,8 +22,7 @@ struct DecisionTreeEnsembleImpl
           hyperparameters_( _hyperparameters ),
           placeholder_peripheral_( _placeholder_peripheral ),
           placeholder_population_(
-              new decisiontrees::Placeholder( _placeholder_population ) ),
-          sampler_( utils::Sampler( _hyperparameters->seed_ ) ){};
+              new decisiontrees::Placeholder( _placeholder_population ) ){};
 
     ~DecisionTreeEnsembleImpl() = default;
 
@@ -58,9 +57,6 @@ struct DecisionTreeEnsembleImpl
     /// Random number generator for creating sample weights and
     /// the like.
     containers::Optional<std::mt19937> random_number_generator_;
-
-    /// For sampling from the population table.
-    utils::Sampler sampler_;
 
     /// Names of the target variables
     std::vector<std::string> targets_;

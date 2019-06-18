@@ -329,11 +329,6 @@ void DecisionTreeEnsemble::fit(
                 "Your population table needs to contain at least one row!" );
         }
 
-    sampler().calc_sampling_rate(
-        _table_holder->main_tables_[0].nrows(),
-        hyperparameters().sampling_factor_,
-        comm() );
-
     // ----------------------------------------------------------------
     // Store the column numbers, so we can make sure that the user
     // passes properly formatted data to predict(...)
@@ -400,8 +395,14 @@ void DecisionTreeEnsemble::fit(
 
     assert( _table_holder->main_tables_.size() > 0 );
 
-    optimizationcriteria::RSquaredCriterion opt(
-        impl().hyperparameters_, _table_holder->main_tables_[0].nrows() );
+    const auto opt =
+        std::unique_ptr<optimizationcriteria::OptimizationCriterion>(
+            new optimizationcriteria::RSquaredCriterion(
+                impl().hyperparameters_,
+                _table_holder->main_tables_[0].nrows(),
+                comm() ) );
+
+    opt->calc_sampling_rate();
 
     // ----------------------------------------------------------------
     // Sample weights are needed for the random-forest-like functionality
@@ -417,18 +418,11 @@ void DecisionTreeEnsemble::fit(
 
     const auto nrows = _table_holder->main_tables_[0].nrows();
 
-    auto sample_weights = std::make_shared<std::vector<AUTOSQL_FLOAT>>( nrows );
+    auto sample_weights =
+        std::make_shared<std::vector<AUTOSQL_FLOAT>>( nrows, 1.0 );
 
-    if ( !random_number_generator() )
-        {
-            random_number_generator().reset( new std::mt19937(
-                static_cast<size_t>( hyperparameters().seed_ ) ) );
-        }
-
-    if ( sampler().sampling_rate() <= 0.0 )
-        {
-            std::fill( sample_weights->begin(), sample_weights->end(), 1.0 );
-        }
+    random_number_generator().reset(
+        new std::mt19937( static_cast<size_t>( hyperparameters().seed_ ) ) );
 
     // ----------------------------------------------------------------
     // For the gradient-tree-boosting-like functionality, we intialize
@@ -463,7 +457,7 @@ void DecisionTreeEnsemble::fit(
 
     std::vector<AUTOSQL_SAMPLE_CONTAINER> sample_containers( num_peripheral );
 
-    if ( sampler().sampling_rate() <= 0.0 )
+    if ( hyperparameters().sampling_factor_ <= 0.0 )
         {
             for ( size_t i = 0; i < num_peripheral; ++i )
                 {
@@ -489,9 +483,15 @@ void DecisionTreeEnsemble::fit(
 
             debug_log( "fit: Sampling from population..." );
 
-            if ( sampler().sampling_rate() > 0.0 )
+            if ( hyperparameters().sampling_factor_ > 0.0 )
                 {
-                    sample_weights = sampler().make_sample_weights( nrows );
+                    sample_weights = opt->make_sample_weights();
+
+                    assert( _table_holder->main_tables_.size() > 0 );
+
+                    assert(
+                        sample_weights->size() ==
+                        _table_holder->main_tables_[0].nrows() );
 
                     for ( size_t i = 0; i < num_peripheral; ++i )
                         {
@@ -514,9 +514,7 @@ void DecisionTreeEnsemble::fit(
 
             debug_log( "fit: Preparing optimization criterion..." );
 
-            opt.set_comm( comm() );
-
-            opt.init( residuals, *sample_weights );
+            opt->init( residuals, *sample_weights );
 
             // ----------------------------------------------------------------
 
@@ -540,7 +538,7 @@ void DecisionTreeEnsemble::fit(
                 *_table_holder,
                 &samples,
                 &sample_containers,
-                &opt,
+                opt.get(),
                 &candidate_trees,
                 &trees() );
 

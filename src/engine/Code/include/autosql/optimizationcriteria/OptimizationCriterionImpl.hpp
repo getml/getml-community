@@ -13,7 +13,8 @@ class OptimizationCriterionImpl
     OptimizationCriterionImpl(
         const std::shared_ptr<const descriptors::Hyperparameters>&
             _hyperparameters,
-        const size_t _num_rows );
+        const size_t _num_rows,
+        multithreading::Communicator* _comm );
 
     ~OptimizationCriterionImpl() = default;
 
@@ -44,18 +45,27 @@ class OptimizationCriterionImpl
 
     // --------------------------------------
 
+    /// Calculates the sampling rate.
+    void calc_sampling_rate()
+    {
+        assert( comm_ != nullptr );
+        assert( hyperparameters_ );
+        sampler_.calc_sampling_rate(
+            num_rows_, hyperparameters_->sampling_factor_, comm_ );
+    }
+
+    /// Generates a new set of sample weights.
+    std::shared_ptr<std::vector<AUTOSQL_FLOAT>> make_sample_weights()
+    {
+        return sampler_.make_sample_weights( num_rows_ );
+    }
+
     /// Resets the storage size to zero.
     void reset_storage_size()
     {
         max_ix_ = -1;
         sufficient_statistics_stored_.clear();
         values_stored_.clear();
-    }
-
-    /// Trivial setter
-    inline void set_comm( multithreading::Communicator* _comm )
-    {
-        comm_ = _comm;
     }
 
     /// Sets the indicator of the best split
@@ -119,6 +129,12 @@ class OptimizationCriterionImpl
 
     /// Indicates the best split.
     AUTOSQL_INT max_ix_;
+
+    /// The number of rows in the population table.
+    size_t num_rows_;
+
+    /// For creating the sample weights
+    utils::Sampler sampler_;
 
     /// Stores the sufficient statistics when store_current_stage(...)
     /// is called

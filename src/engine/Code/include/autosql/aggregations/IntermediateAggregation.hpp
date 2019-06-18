@@ -59,6 +59,9 @@ class IntermediateAggregation
         return parent().argsort( _begin, _end );
     }
 
+    /// Calculates the sampling rate.
+    void calc_sampling_rate() final { assert( false && "ToDo" ); }
+
     /// Calculates statistics that have to be calculated only once
     void init(
         const std::vector<std::vector<AUTOSQL_FLOAT>>& _y,
@@ -73,14 +76,15 @@ class IntermediateAggregation
     /// criterion
     AUTOSQL_INT find_maximum() final { return parent().find_maximum(); }
 
+    /// Generates a new set of sample weights.
+    std::shared_ptr<std::vector<AUTOSQL_FLOAT>> make_sample_weights() final
+    {
+        assert( false && "ToDo" );
+        return std::make_shared<std::vector<AUTOSQL_FLOAT>>( 0 );
+    }
+
     /// Resets the storage size.
     void reset_storage_size() final { return parent().reset_storage_size(); }
-
-    /// Trivial setter
-    void set_comm( multithreading::Communicator* _comm ) final
-    {
-        parent().set_comm( _comm );
-    }
 
     /// An intermediate aggregation has no storage, so it
     /// is redelegated to the parent.

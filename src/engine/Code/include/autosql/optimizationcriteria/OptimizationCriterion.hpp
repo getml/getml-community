@@ -22,6 +22,9 @@ class OptimizationCriterion
     virtual std::vector<AUTOSQL_INT> argsort(
         const AUTOSQL_INT _begin, const AUTOSQL_INT _end ) const = 0;
 
+    /// Calculates the sampling rate.
+    virtual void calc_sampling_rate() = 0;
+
     /// Commits the current stage, accepting it as the new state of the
     /// optimization criterion
     virtual void commit() = 0;
@@ -40,6 +43,10 @@ class OptimizationCriterion
     /// criterion
     virtual AUTOSQL_INT find_maximum() = 0;
 
+    /// Generates a new set of sample weights.
+    virtual std::shared_ptr<std::vector<AUTOSQL_FLOAT>>
+    make_sample_weights() = 0;
+
     /// Resets sufficient statistics to zero
     virtual void reset() = 0;
 
@@ -48,9 +55,6 @@ class OptimizationCriterion
 
     /// Reverts to the committed version
     virtual void revert_to_commit() = 0;
-
-    /// Trivial setter
-    virtual void set_comm( multithreading::Communicator* _comm ) = 0;
 
     /// An intermediate aggregation has no storage, so it
     /// is redelegated to the parent.

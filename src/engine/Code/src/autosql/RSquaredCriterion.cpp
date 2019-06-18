@@ -8,10 +8,13 @@ namespace optimizationcriteria
 
 RSquaredCriterion::RSquaredCriterion(
     const std::shared_ptr<const descriptors::Hyperparameters>& _hyperparameters,
-    const size_t _num_rows )
+    const size_t _num_rows,
+    multithreading::Communicator* _comm )
     : OptimizationCriterion(),
+      comm_( _comm ),
       hyperparameters_( _hyperparameters ),
-      impl_( OptimizationCriterionImpl( _hyperparameters, _num_rows ) ){};
+      impl_(
+          OptimizationCriterionImpl( _hyperparameters, _num_rows, _comm ) ){};
 
 // ----------------------------------------------------------------------------
 

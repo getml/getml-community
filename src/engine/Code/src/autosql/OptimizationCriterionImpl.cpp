@@ -8,9 +8,13 @@ namespace optimizationcriteria
 
 OptimizationCriterionImpl::OptimizationCriterionImpl(
     const std::shared_ptr<const descriptors::Hyperparameters>& _hyperparameters,
-    const size_t _num_rows )
-    : hyperparameters_( _hyperparameters ),
+    const size_t _num_rows,
+    multithreading::Communicator* _comm )
+    : comm_( _comm ),
+      hyperparameters_( _hyperparameters ),
       max_ix_( -1 ),
+      num_rows_( _num_rows ),
+      sampler_( utils::Sampler( _hyperparameters->seed_ ) ),
       value_( 0.0 ),
       yhat_( std::vector<AUTOSQL_FLOAT>( _num_rows ) ){};
 

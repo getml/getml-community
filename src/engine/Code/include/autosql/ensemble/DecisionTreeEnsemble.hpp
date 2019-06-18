@@ -236,9 +236,6 @@ class DecisionTreeEnsemble
         return impl().random_number_generator_;
     }
 
-    /// Trivial (private) accessor
-    utils::Sampler &sampler() { return impl().sampler_; }
-
     /// Trivial accessor
     inline decisiontrees::DecisionTree *tree( const AUTOSQL_INT _i )
     {

@@ -13,7 +13,8 @@ class RSquaredCriterion : public OptimizationCriterion
     RSquaredCriterion(
         const std::shared_ptr<const descriptors::Hyperparameters>&
             _hyperparameters,
-        const size_t _num_rows );
+        const size_t _num_rows,
+        multithreading::Communicator* _comm );
 
     ~RSquaredCriterion() = default;
 
@@ -47,9 +48,18 @@ class RSquaredCriterion : public OptimizationCriterion
 
     // --------------------------------------
 
+    /// Calculates the sampling rate.
+    void calc_sampling_rate() final { impl().calc_sampling_rate(); }
+
     /// Commits the current stage, accepting it as the new state of the
     /// optimization criterion
     void commit() final { impl().commit( &sufficient_statistics_committed_ ); }
+
+    /// Generates a new set of sample weights.
+    std::shared_ptr<std::vector<AUTOSQL_FLOAT>> make_sample_weights() final
+    {
+        return impl().make_sample_weights();
+    }
 
     /// Resets sufficient statistics to zero
     void reset() final
@@ -69,13 +79,6 @@ class RSquaredCriterion : public OptimizationCriterion
             sufficient_statistics_committed_.begin(),
             sufficient_statistics_committed_.end(),
             sufficient_statistics_current_.begin() );
-    }
-
-    /// Trivial setter
-    void set_comm( multithreading::Communicator* _comm ) final
-    {
-        comm_ = _comm;
-        impl().set_comm( _comm );
     }
 
     /// Trivial accessor.
