@@ -52,7 +52,8 @@ class DecisionTreeEnsemble
     /// Fits the decision tree ensemble - called by the spawned threads.
     void fit(
         const std::shared_ptr<const decisiontrees::TableHolder> &_table_holder,
-        const std::shared_ptr<const logging::AbstractLogger> _logger );
+        const std::shared_ptr<const logging::AbstractLogger> _logger,
+        optimizationcriteria::OptimizationCriterion *_opt );
 
     /// Saves the Model in JSON format, if applicable
     void save( const std::string &_fname ) const;

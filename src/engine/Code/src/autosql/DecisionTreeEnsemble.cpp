@@ -239,6 +239,8 @@ void DecisionTreeEnsemble::fit(
     // ------------------------------------------------------
     // Spawn threads.
 
+    assert( impl().hyperparameters_ );
+
     debug_log( "Spawning threads..." );
 
     std::vector<std::thread> threads;
@@ -249,11 +251,13 @@ void DecisionTreeEnsemble::fit(
                 Threadutils::fit_ensemble,
                 i + 1,
                 thread_nums,
+                impl().hyperparameters_,
                 _population,
                 _peripheral,
                 placeholder(),
                 peripheral_names(),
                 std::shared_ptr<const logging::AbstractLogger>(),
+                &comm,
                 &ensembles[i] ) );
         }
 
@@ -267,11 +271,13 @@ void DecisionTreeEnsemble::fit(
             Threadutils::fit_ensemble(
                 0,
                 thread_nums,
+                impl().hyperparameters_,
                 _population,
                 _peripheral,
                 placeholder(),
                 peripheral_names(),
                 _logger,
+                &comm,
                 this );
         }
     catch ( std::exception &e )
@@ -301,7 +307,8 @@ void DecisionTreeEnsemble::fit(
 
 void DecisionTreeEnsemble::fit(
     const std::shared_ptr<const decisiontrees::TableHolder> &_table_holder,
-    const std::shared_ptr<const logging::AbstractLogger> _logger )
+    const std::shared_ptr<const logging::AbstractLogger> _logger,
+    optimizationcriteria::OptimizationCriterion *_opt )
 {
     // ----------------------------------------------------------------
 
@@ -373,27 +380,6 @@ void DecisionTreeEnsemble::fit(
         _table_holder->main_tables_[0].df() );
 
     // ----------------------------------------------------------------
-    // Create and initialize the optimization criterion
-
-    const auto loss_function =
-        lossfunctions::LossFunctionParser::parse_loss_function(
-            hyperparameters().loss_function_, comm() );
-
-    assert( _table_holder->main_tables_.size() > 0 );
-
-    const auto opt =
-        std::unique_ptr<optimizationcriteria::OptimizationCriterion>(
-            new optimizationcriteria::RSquaredCriterion(
-                impl().hyperparameters_,
-                hyperparameters().loss_function_,
-                _table_holder->main_tables_[0],
-                comm() ) );
-
-    opt->calc_sampling_rate();
-
-    opt->calc_residuals();
-
-    // ----------------------------------------------------------------
     // Sample weights are needed for the random-forest-like functionality
 
     debug_log( "fit: Setting up sampling..." );
@@ -455,7 +441,7 @@ void DecisionTreeEnsemble::fit(
 
             if ( hyperparameters().sampling_factor_ > 0.0 )
                 {
-                    sample_weights = opt->make_sample_weights();
+                    sample_weights = _opt->make_sample_weights();
 
                     assert( _table_holder->main_tables_.size() > 0 );
 
@@ -484,7 +470,7 @@ void DecisionTreeEnsemble::fit(
 
             debug_log( "fit: Preparing optimization criterion..." );
 
-            opt->init( *sample_weights );
+            _opt->init( *sample_weights );
 
             // ----------------------------------------------------------------
 
@@ -508,7 +494,7 @@ void DecisionTreeEnsemble::fit(
                 *_table_holder,
                 &samples,
                 &sample_containers,
-                opt.get(),
+                _opt,
                 &candidate_trees,
                 &trees() );
 
@@ -529,9 +515,9 @@ void DecisionTreeEnsemble::fit(
                             _table_holder->subtables_[ix],
                             hyperparameters().use_timestamps_ );
 
-                    opt->update_yhat_old( *sample_weights, new_feature );
+                    _opt->update_yhat_old( *sample_weights, new_feature );
 
-                    opt->calc_residuals();
+                    _opt->calc_residuals();
                 }
 
             // -------------------------------------------------------------

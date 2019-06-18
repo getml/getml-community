@@ -16,11 +16,14 @@ class Threadutils
     static void fit_ensemble(
         const size_t _this_thread_num,
         const std::vector<size_t> _thread_nums,
+        const std::shared_ptr<const descriptors::Hyperparameters>&
+            _hyperparameters,
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral,
         const decisiontrees::Placeholder& _placeholder,
         const std::vector<std::string>& _peripheral_names,
         const std::shared_ptr<const logging::AbstractLogger> _logger,
+        multithreading::Communicator* _comm,
         ensemble::DecisionTreeEnsemble* _ensemble );
 
     /// Number of threads.

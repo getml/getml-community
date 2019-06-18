@@ -8,7 +8,7 @@
     "num_features_": 10,
     "num_selected_features_": 10,
     "num_subfeatures_": 10,
-    "num_threads_": 1,
+    "num_threads_": 6,
     "round_robin_": false,
     "sampling_factor_": 1.0,
     "seed_": 5849,

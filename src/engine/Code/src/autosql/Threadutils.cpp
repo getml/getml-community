@@ -26,11 +26,13 @@ void Threadutils::copy(
 void Threadutils::fit_ensemble(
     const size_t _this_thread_num,
     const std::vector<size_t> _thread_nums,
+    const std::shared_ptr<const descriptors::Hyperparameters>& _hyperparameters,
     const containers::DataFrame& _population,
     const std::vector<containers::DataFrame>& _peripheral,
     const decisiontrees::Placeholder& _placeholder,
     const std::vector<std::string>& _peripheral_names,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
+    multithreading::Communicator* _comm,
     ensemble::DecisionTreeEnsemble* _ensemble )
 {
     try
@@ -46,16 +48,36 @@ void Threadutils::fit_ensemble(
             // Create abstractions over the peripheral_tables and the population
             // table - for convenience.
 
-            const auto table_holder = std::make_shared<const decisiontrees::TableHolder>(
-                _placeholder,
-                population_subview,
-                _peripheral,
-                _peripheral_names );
+            const auto table_holder =
+                std::make_shared<const decisiontrees::TableHolder>(
+                    _placeholder,
+                    population_subview,
+                    _peripheral,
+                    _peripheral_names );
+
+            // ----------------------------------------------------------------
+            // Create and initialize the optimization criterion.
+
+            assert( table_holder->main_tables_.size() > 0 );
+
+            assert( _hyperparameters );
+
+            const auto opt =
+                std::unique_ptr<optimizationcriteria::OptimizationCriterion>(
+                    new optimizationcriteria::RSquaredCriterion(
+                        _hyperparameters,
+                        _hyperparameters->loss_function_,
+                        table_holder->main_tables_[0],
+                        _comm ) );
+
+            opt->calc_sampling_rate();
+
+            opt->calc_residuals();
 
             // ----------------------------------------------------------------
             // Start fitting
 
-            _ensemble->fit( table_holder, _logger );
+            _ensemble->fit( table_holder, _logger, opt.get() );
 
             // ----------------------------------------------------------------
         }
