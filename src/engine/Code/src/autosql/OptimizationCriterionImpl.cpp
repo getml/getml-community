@@ -147,9 +147,7 @@ void OptimizationCriterionImpl::update_yhat_old(
     // Train a linear regression from the prediction of the last
     // tree on the residuals and generate predictions f_t on that basis
 
-    auto linear_regression = utils::LinearRegression();
-
-    linear_regression.set_comm( comm_ );
+    auto linear_regression = utils::LinearRegression( comm_ );
 
     linear_regression.fit( _yhat_new, _residuals, _sample_weights );
 

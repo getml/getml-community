@@ -10,21 +10,18 @@ namespace utils
 class LinearRegression
 {
    public:
-    LinearRegression();
+    LinearRegression( multithreading::Communicator* _comm ) : comm_( _comm ) {}
 
-    LinearRegression( const Poco::JSON::Object& _obj )
+    LinearRegression(
+        const Poco::JSON::Object& _obj, multithreading::Communicator* _comm )
+        : comm_( _comm )
     {
-        *this = from_json_obj( _obj );
+        *this = from_json_obj( _obj, comm_ );
     }
-
-    LinearRegression( size_t _ncols );
 
     ~LinearRegression() = default;
 
     // -----------------------------------------
-
-    // Multiples the slopes and intercepts by the shrinkage factor.
-    void apply_shrinkage( const AUTOSQL_FLOAT _shrinkage );
 
     // Fits a simple linear regression on each column
     // of _residuals w.r.t. _yhat, which has only one column
@@ -42,21 +39,11 @@ class LinearRegression
 
     // -----------------------------------------
 
-    multithreading::Communicator& comm() const { return *( comm_ ); }
-
-    void set_comm( multithreading::Communicator* _comm ) { comm_ = _comm; }
-
-    size_t size() const
-    {
-        assert( intercepts_.size() == slopes_.size() );
-        return intercepts_.size();
-    }
-
-    // -----------------------------------------
-
    private:
     /// Reconstructs a LinearRegression from a JSON object.
-    LinearRegression from_json_obj( const Poco::JSON::Object& _obj ) const;
+    LinearRegression from_json_obj(
+        const Poco::JSON::Object& _obj,
+        multithreading::Communicator* _comm ) const;
 
     // -----------------------------------------
 
