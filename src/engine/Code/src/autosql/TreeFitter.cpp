@@ -70,7 +70,9 @@ void TreeFitter::find_best_trees(
                  _sample_containers,
                  _table_holder,
                  _optimization_criterion,
-                 *_trees->last() );*/
+                 *_trees->last() );
+
+                 */
         }
 
     // -------------------------------------------------------------------

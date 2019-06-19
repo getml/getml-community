@@ -48,6 +48,10 @@ class IntermediateAggregation
         const std::vector<AUTOSQL_FLOAT>& _new_values,
         const std::vector<AUTOSQL_FLOAT>& _old_values ) final;
 
+    /// Updates yhat_old based on _yhat_new.
+    void update_yhat_old(
+        const std::vector<AUTOSQL_FLOAT>& _sample_weights,
+        const std::vector<AUTOSQL_FLOAT>& _yhat_new ) final;
     // --------------------------------------
 
     /// Sorts a specific subsection of the values defined by _begin and _end.
@@ -68,7 +72,8 @@ class IntermediateAggregation
     /// Calculates statistics that have to be calculated only once
     void init( const std::vector<AUTOSQL_FLOAT>& _sample_weights ) final
     {
-        assert( false && "ToDo" );
+        reset();
+        parent().init( *sample_weights_parent() );
     }
 
     /// Finds the index associated with the maximum of the optimization
@@ -99,14 +104,6 @@ class IntermediateAggregation
     {
         parent().store_current_stage(
             _num_samples_smaller, _num_samples_greater );
-    }
-
-    /// Updates yhat_old based on _yhat_new.
-    void update_yhat_old(
-        const std::vector<AUTOSQL_FLOAT>& _sample_weights,
-        const std::vector<AUTOSQL_FLOAT>& _yhat_new ) final
-    {
-        assert( false && "ToDo" );
     }
 
     /// Trivial getter
@@ -652,6 +649,40 @@ void IntermediateAggregation<AggType>::update_samples(
         }
 
     updates_current().clear();
+}
+
+// ----------------------------------------------------------------------------
+
+template <typename AggType>
+void IntermediateAggregation<AggType>::update_yhat_old(
+    const std::vector<AUTOSQL_FLOAT>& _sample_weights,
+    const std::vector<AUTOSQL_FLOAT>& _yhat_new )
+{
+    assert( _sample_weights.size() == _yhat_new.size() );
+
+    reset();
+
+    for ( size_t i = 0; i < _yhat_new.size(); ++i )
+        {
+            if ( _sample_weights[i] != 1.0 )
+                {
+                    continue;
+                }
+
+            const std::vector<AUTOSQL_INT> indices_agg = index().transform( i );
+
+            if ( needs_count_ )
+                {
+                    calculate_counts( indices_agg );
+                }
+
+            for ( auto ix_agg : indices_agg )
+                {
+                    update_sample( ix_agg, _yhat_new[i], 0.0 );
+                }
+        }
+
+    parent().update_yhat_old( *sample_weights_parent(), yhat() );
 }
 
 // ----------------------------------------------------------------------------
