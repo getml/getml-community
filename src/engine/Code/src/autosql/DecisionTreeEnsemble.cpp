@@ -611,7 +611,7 @@ void DecisionTreeEnsemble::fit_subfeatures(
     // ----------------------------------------------------------------
     // Create the output map (it says the same over all aggregations).
 
-    const auto output_map = utils::Mapper::create_output_map(
+    const auto output_map = utils::Mapper::create_rows_map(
         _table_holder->main_tables_[0].rows_ptr() );
 
     // ----------------------------------------------------------------

@@ -11,11 +11,10 @@ namespace utils
 
 struct Mapper
 {
-    /// The output map reverses the effects of rows_ in
+    /// The rows map reverses the effects of rows_ in
     /// containers::DataFrameView.
     static std::shared_ptr<const std::map<AUTOSQL_INT, AUTOSQL_INT>>
-    create_output_map(
-        const std::shared_ptr<const std::vector<size_t>>& _rows );
+    create_rows_map( const std::shared_ptr<const std::vector<size_t>>& _rows );
 };
 
 // ------------------------------------------------------------------------

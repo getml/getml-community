@@ -377,6 +377,8 @@ class IntermediateAggregation
         std::is_same<AggType, AggregationType::Skewness>() ||
         std::is_same<AggType, AggregationType::Stddev>() ||
         std::is_same<AggType, AggregationType::Var>();
+
+    // --------------------------------------
 };
 
 // ----------------------------------------------------------------------------
