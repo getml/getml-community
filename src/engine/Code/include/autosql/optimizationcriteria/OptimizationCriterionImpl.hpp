@@ -82,6 +82,15 @@ class OptimizationCriterionImpl
         values_stored_.clear();
     }
 
+    /// Resets yhat_old to the initial value.
+    void reset_yhat_old()
+    {
+        for ( auto& y : yhat_old_ )
+            {
+                std::fill( y.begin(), y.end(), 0.0 );
+            }
+    }
+
     /// Sets the indicator of the best split
     inline void set_max_ix( const AUTOSQL_INT _max_ix ) { max_ix_ = _max_ix; }
 

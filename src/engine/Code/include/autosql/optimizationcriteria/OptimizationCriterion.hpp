@@ -54,6 +54,9 @@ class OptimizationCriterion
     /// Resets the storage size to zero.
     virtual void reset_storage_size() = 0;
 
+    /// Resets yhat_old to the initial value.
+    virtual void reset_yhat_old() = 0;
+
     /// Reverts to the committed version
     virtual void revert_to_commit() = 0;
 

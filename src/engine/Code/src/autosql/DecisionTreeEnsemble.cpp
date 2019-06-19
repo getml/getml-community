@@ -351,6 +351,11 @@ void DecisionTreeEnsemble::fit(
     targets() = {_table_holder->main_tables_[0].target_name( 0 )};
 
     // ----------------------------------------------------------------
+    // If there are any subfeatures, train them.
+
+    // ...
+
+    // ----------------------------------------------------------------
     // aggregations::AggregationImpl stores most of the data for the
     // aggregations. We do not want to reallocate the data all the time.
 
@@ -358,14 +363,6 @@ void DecisionTreeEnsemble::fit(
 
     aggregation_impl().reset( new aggregations::AggregationImpl(
         _table_holder->main_tables_[0].nrows() ) );
-
-    if ( has_been_fitted() )
-        {
-            for ( auto &tree : trees() )
-                {
-                    tree.set_aggregation_impl( &aggregation_impl() );
-                }
-        }
 
     // ----------------------------------------------------------------
     // Columns that share the same units are candidates for direct

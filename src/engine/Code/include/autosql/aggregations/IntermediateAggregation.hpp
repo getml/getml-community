@@ -83,7 +83,10 @@ class IntermediateAggregation
     }
 
     /// Resets the storage size.
-    void reset_storage_size() final { return parent().reset_storage_size(); }
+    void reset_storage_size() final { parent().reset_storage_size(); }
+
+    /// Resets yhat_old to the initial value.
+    void reset_yhat_old() final { parent().reset_yhat_old(); }
 
     /// An intermediate aggregation has no storage, so it
     /// is redelegated to the parent.

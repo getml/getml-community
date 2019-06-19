@@ -74,6 +74,9 @@ class RSquaredCriterion : public OptimizationCriterion
     /// Resets the storage size to zero.
     void reset_storage_size() final { impl().reset_storage_size(); }
 
+    /// Resets yhat_old to the initial value.
+    void reset_yhat_old() final { impl().reset_yhat_old(); }
+
     /// Reverts to the committed version
     void revert_to_commit() final
     {
