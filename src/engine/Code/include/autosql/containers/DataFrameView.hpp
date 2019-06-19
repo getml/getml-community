@@ -177,6 +177,12 @@ class DataFrameView
     /// Returns the indices of the rows that this view points to.
     const std::vector<size_t>& rows() const { return *rows_; }
 
+    /// Returns the indices of the rows that this view points to.
+    const std::shared_ptr<const std::vector<size_t>>& rows_ptr() const
+    {
+        return rows_;
+    }
+
     /// Getter for a target value.
     AUTOSQL_FLOAT target( size_t _i, size_t _j ) const
     {

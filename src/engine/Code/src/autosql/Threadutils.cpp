@@ -77,7 +77,12 @@ void Threadutils::fit_ensemble(
             // ----------------------------------------------------------------
             // Start fitting
 
-            _ensemble->fit( table_holder, _logger, opt.get(), _comm );
+            _ensemble->fit(
+                table_holder,
+                _logger,
+                _hyperparameters->num_features_,
+                opt.get(),
+                _comm );
 
             // ----------------------------------------------------------------
         }

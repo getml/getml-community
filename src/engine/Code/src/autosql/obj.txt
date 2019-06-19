@@ -15,6 +15,7 @@ set(
     ${AUTOSQL_SOURCE_DIRECTORY}/JSON.cpp 
     ${AUTOSQL_SOURCE_DIRECTORY}/LinearRegression.cpp 
     ${AUTOSQL_SOURCE_DIRECTORY}/LossFunctionParser.cpp 
+    ${AUTOSQL_SOURCE_DIRECTORY}/Mapper.cpp 
     ${AUTOSQL_SOURCE_DIRECTORY}/Matchmaker.cpp 
     ${AUTOSQL_SOURCE_DIRECTORY}/OptimizationCriterionImpl.cpp 
     ${AUTOSQL_SOURCE_DIRECTORY}/Placeholder.cpp 

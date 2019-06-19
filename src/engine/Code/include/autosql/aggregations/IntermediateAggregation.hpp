@@ -17,7 +17,7 @@ class IntermediateAggregation
 
    public:
     IntermediateAggregation(
-        std::shared_ptr<IntermediateAggregationImpl> _impl )
+        const std::shared_ptr<IntermediateAggregationImpl>& _impl )
         : impl_( _impl )
     {
     }

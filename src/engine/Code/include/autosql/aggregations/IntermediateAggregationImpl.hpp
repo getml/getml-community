@@ -12,18 +12,17 @@ struct IntermediateAggregationImpl
     // --------------------------------------
 
     IntermediateAggregationImpl(
-        const containers::DataFrameView& _output_table,
+        const size_t _nrows,
         const AggregationIndex& _index,
-        optimizationcriteria::OptimizationCriterion* const _parent )
-        : count_( std::vector<AUTOSQL_FLOAT>( _output_table.nrows() ) ),
+        optimizationcriteria::OptimizationCriterion* _parent )
+        : count_( std::vector<AUTOSQL_FLOAT>( _nrows ) ),
           index_( _index ),
           parent_( _parent ),
-          updates_current_( containers::IntSet( _output_table.nrows() ) ),
-          updates_stored_( containers::IntSet( _output_table.nrows() ) ),
-          yhat_( std::vector<AUTOSQL_FLOAT>( _output_table.nrows() ) ),
-          yhat_committed_(
-              std::vector<AUTOSQL_FLOAT>( _output_table.nrows() ) ),
-          yhat_stored_( std::vector<AUTOSQL_FLOAT>( _output_table.nrows() ) )
+          updates_current_( containers::IntSet( _nrows ) ),
+          updates_stored_( containers::IntSet( _nrows ) ),
+          yhat_( std::vector<AUTOSQL_FLOAT>( _nrows ) ),
+          yhat_committed_( std::vector<AUTOSQL_FLOAT>( _nrows ) ),
+          yhat_stored_( std::vector<AUTOSQL_FLOAT>( _nrows ) )
     {
     }
 

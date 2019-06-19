@@ -30,6 +30,7 @@
 #include "autosql/utils/Sampler.hpp"
 
 #include "autosql/utils/LinearRegression.hpp"
+#include "autosql/utils/Mapper.hpp"
 #include "autosql/utils/Matchmaker.hpp"
 #include "autosql/utils/RandomNumberGenerator.hpp"
 

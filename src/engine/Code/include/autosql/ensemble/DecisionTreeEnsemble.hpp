@@ -53,6 +53,7 @@ class DecisionTreeEnsemble
     void fit(
         const std::shared_ptr<const decisiontrees::TableHolder> &_table_holder,
         const std::shared_ptr<const logging::AbstractLogger> _logger,
+        const size_t _num_features,
         optimizationcriteria::OptimizationCriterion *_opt,
         multithreading::Communicator *_comm );
 
@@ -159,6 +160,26 @@ class DecisionTreeEnsemble
     DecisionTreeEnsemble from_json_obj(
         const Poco::JSON::Object &_json_obj ) const;
 
+    /// Fits subfeatures for a single peripheral table, for a single
+    /// IntermediateAggregation.
+    template <typename AggType>
+    void fit_subfeatures(
+        const std::shared_ptr<const decisiontrees::TableHolder> &_table_holder,
+        const std::shared_ptr<const logging::AbstractLogger> _logger,
+        const std::shared_ptr<const std::map<AUTOSQL_INT, AUTOSQL_INT>>
+            &_output_map,
+        const size_t _ix_perip_used,
+        optimizationcriteria::OptimizationCriterion *_opt,
+        multithreading::Communicator *_comm,
+        DecisionTreeEnsemble *_subfeature ) const;
+
+    /// Fits all of the subfeatures.
+    void fit_subfeatures(
+        const std::shared_ptr<const decisiontrees::TableHolder> &_table_holder,
+        const std::shared_ptr<const logging::AbstractLogger> _logger,
+        optimizationcriteria::OptimizationCriterion *_opt,
+        multithreading::Communicator *_comm );
+
     // -----------------------------------------------------------------
 
    private:
@@ -235,11 +256,78 @@ class DecisionTreeEnsemble
     // -----------------------------------------------------------------
 
    private:
-    /// Contains the variables
+    /// Contains all variables other than the DecisionTreeEnsemble.
     DecisionTreeEnsembleImpl impl_;
+
+    /// Contains the ensemble for the subfeatures trained with the intermediate
+    /// aggregation AVG.
+    std::vector<containers::Optional<DecisionTreeEnsemble>> subfeatures_avg_;
+
+    /// Contains the ensemble for the subfeatures trained with the intermediate
+    /// aggregation SUM.
+    std::vector<containers::Optional<DecisionTreeEnsemble>> subfeatures_sum_;
 
     // -----------------------------------------------------------------
 };
+
+// ----------------------------------------------------------------------------
+
+}  // namespace ensemble
+}  // namespace autosql
+
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+
+namespace autosql
+{
+namespace ensemble
+{
+// ----------------------------------------------------------------------------
+
+template <typename AggType>
+void DecisionTreeEnsemble::fit_subfeatures(
+    const std::shared_ptr<const decisiontrees::TableHolder> &_table_holder,
+    const std::shared_ptr<const logging::AbstractLogger> _logger,
+    const std::shared_ptr<const std::map<AUTOSQL_INT, AUTOSQL_INT>>
+        &_output_map,
+    const size_t _ix_perip_used,
+    optimizationcriteria::OptimizationCriterion *_opt,
+    multithreading::Communicator *_comm,
+    DecisionTreeEnsemble *_subfeature ) const
+{
+    const auto subtable_holder =
+        std::make_shared<const decisiontrees::TableHolder>(
+            *_table_holder->subtables_[_ix_perip_used] );
+
+    assert( subtable_holder->main_tables_.size() > 0 );
+
+    const auto input_table = containers::DataFrameView(
+        _table_holder->peripheral_tables_[_ix_perip_used],
+        subtable_holder->main_tables_[0].rows_ptr() );
+
+    const auto aggregation_index = aggregations::AggregationIndex(
+        input_table,
+        _table_holder->main_tables_[_ix_perip_used],
+        _output_map,
+        hyperparameters().use_timestamps_ );
+
+    const auto opt_impl =
+        std::make_shared<aggregations::IntermediateAggregationImpl>(
+            _table_holder->main_tables_[0].nrows(), aggregation_index, _opt );
+
+    const auto intermediate_agg =
+        std::unique_ptr<optimizationcriteria::OptimizationCriterion>(
+            new aggregations::IntermediateAggregation<AggType>( opt_impl ) );
+
+    _subfeature->fit(
+        subtable_holder,
+        _logger,
+        hyperparameters().num_subfeatures_,
+        intermediate_agg.get(),
+        _comm );
+
+    _opt->reset_yhat_old();
+}
 
 // ----------------------------------------------------------------------------
 }  // namespace ensemble

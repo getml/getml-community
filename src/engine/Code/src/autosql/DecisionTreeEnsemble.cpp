@@ -306,6 +306,7 @@ void DecisionTreeEnsemble::fit(
 void DecisionTreeEnsemble::fit(
     const std::shared_ptr<const decisiontrees::TableHolder> &_table_holder,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
+    const size_t _num_features,
     optimizationcriteria::OptimizationCriterion *_opt,
     multithreading::Communicator *_comm )
 {
@@ -351,9 +352,9 @@ void DecisionTreeEnsemble::fit(
     targets() = {_table_holder->main_tables_[0].target_name( 0 )};
 
     // ----------------------------------------------------------------
-    // If there are any subfeatures, train them.
+    // If there are any subfeatures, fit them.
 
-    // ...
+    fit_subfeatures( _table_holder, _logger, _opt, _comm );
 
     // ----------------------------------------------------------------
     // aggregations::AggregationImpl stores most of the data for the
@@ -430,8 +431,7 @@ void DecisionTreeEnsemble::fit(
 
     // ----------------------------------------------------------------
 
-    for ( size_t ix_feature = 0; ix_feature < hyperparameters().num_features_;
-          ++ix_feature )
+    for ( size_t ix_feature = 0; ix_feature < _num_features; ++ix_feature )
         {
             // ----------------------------------------------------------------
             // Sample for a random-forest-like algorithm - can be turned off
@@ -544,6 +544,118 @@ void DecisionTreeEnsemble::fit(
     // Return message
 
     debug_log( "fit: Done..." );
+
+    // ----------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+void DecisionTreeEnsemble::fit_subfeatures(
+    const std::shared_ptr<const decisiontrees::TableHolder> &_table_holder,
+    const std::shared_ptr<const logging::AbstractLogger> _logger,
+    optimizationcriteria::OptimizationCriterion *_opt,
+    multithreading::Communicator *_comm )
+{
+    // ----------------------------------------------------------------
+
+    assert( _table_holder );
+
+    assert(
+        _table_holder->subtables_.size() ==
+        _table_holder->main_tables_.size() );
+    assert(
+        _table_holder->subtables_.size() ==
+        _table_holder->peripheral_tables_.size() );
+
+    // ----------------------------------------------------------------
+    // Set up the subfeatures.
+
+    const auto num_tables = _table_holder->subtables_.size();
+
+    auto subfeatures_avg =
+        std::vector<containers::Optional<DecisionTreeEnsemble>>( num_tables );
+
+    auto subfeatures_sum =
+        std::vector<containers::Optional<DecisionTreeEnsemble>>( num_tables );
+
+    for ( size_t i = 0; i < num_tables; ++i )
+        {
+            if ( _table_holder->subtables_[i] )
+                {
+                    subfeatures_avg[i].reset(
+                        new DecisionTreeEnsemble( *this ) );
+
+                    subfeatures_sum[i].reset(
+                        new DecisionTreeEnsemble( *this ) );
+                }
+        }
+
+    // ----------------------------------------------------------------
+    // If there are no subfeatures, we can stop here.
+
+    const bool no_subfeatures = std::none_of(
+        subfeatures_avg.cbegin(),
+        subfeatures_avg.cend(),
+        []( const containers::Optional<DecisionTreeEnsemble> &val ) {
+            return val && true;
+        } );
+
+    if ( no_subfeatures )
+        {
+            subfeatures_avg_ = std::move( subfeatures_avg );
+            subfeatures_sum_ = std::move( subfeatures_sum );
+
+            return;
+        }
+
+    // ----------------------------------------------------------------
+    // Create the output map (it says the same over all aggregations).
+
+    const auto output_map = utils::Mapper::create_output_map(
+        _table_holder->main_tables_[0].rows_ptr() );
+
+    // ----------------------------------------------------------------
+    // Fit the subfeatures_avg.
+
+    for ( size_t i = 0; i < num_tables; ++i )
+        {
+            if ( subfeatures_avg[i] )
+                {
+                    fit_subfeatures<aggregations::AggregationType::Avg>(
+                        _table_holder,
+                        _logger,
+                        output_map,
+                        i,
+                        _opt,
+                        _comm,
+                        subfeatures_avg[i].get() );
+                }
+        }
+
+    // ----------------------------------------------------------------
+    // Fit the subfeatures_sum.
+
+    for ( size_t i = 0; i < num_tables; ++i )
+        {
+            if ( subfeatures_sum[i] )
+                {
+                    fit_subfeatures<aggregations::AggregationType::Sum>(
+                        _table_holder,
+                        _logger,
+                        output_map,
+                        i,
+                        _opt,
+                        _comm,
+                        subfeatures_sum[i].get() );
+                }
+        }
+
+    // ----------------------------------------------------------------
+    // Store the subfeatures.
+
+    subfeatures_avg_ = std::move( subfeatures_avg );
+
+    subfeatures_sum_ = std::move( subfeatures_sum );
 
     // ----------------------------------------------------------------
 }
