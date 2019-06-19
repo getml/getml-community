@@ -53,7 +53,8 @@ class DecisionTreeEnsemble
     void fit(
         const std::shared_ptr<const decisiontrees::TableHolder> &_table_holder,
         const std::shared_ptr<const logging::AbstractLogger> _logger,
-        optimizationcriteria::OptimizationCriterion *_opt );
+        optimizationcriteria::OptimizationCriterion *_opt,
+        multithreading::Communicator *_comm );
 
     /// Saves the Model in JSON format, if applicable
     void save( const std::string &_fname ) const;

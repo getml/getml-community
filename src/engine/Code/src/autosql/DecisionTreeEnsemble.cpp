@@ -214,8 +214,6 @@ void DecisionTreeEnsemble::fit(
 
     multithreading::Communicator comm( num_threads );
 
-    set_comm( &comm );
-
     // ------------------------------------------------------
     // Build thread_nums
 
@@ -308,8 +306,13 @@ void DecisionTreeEnsemble::fit(
 void DecisionTreeEnsemble::fit(
     const std::shared_ptr<const decisiontrees::TableHolder> &_table_holder,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
-    optimizationcriteria::OptimizationCriterion *_opt )
+    optimizationcriteria::OptimizationCriterion *_opt,
+    multithreading::Communicator *_comm )
 {
+    // ----------------------------------------------------------------
+
+    set_comm( _comm );
+
     // ----------------------------------------------------------------
 
     debug_log( "fit: Beginning to fit features..." );
