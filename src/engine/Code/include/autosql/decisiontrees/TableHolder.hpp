@@ -19,7 +19,7 @@ struct TableHolder
           peripheral_tables_( TableHolder::parse_peripheral_tables(
               _placeholder, _peripheral, _peripheral_names ) ),
           subtables_( TableHolder::parse_subtables(
-              _placeholder, _peripheral, _peripheral_names ) )
+              _placeholder, _population, _peripheral, _peripheral_names ) )
 
     {
         assert( main_tables_.size() == peripheral_tables_.size() );
@@ -29,6 +29,11 @@ struct TableHolder
     ~TableHolder() = default;
 
     // ------------------------------
+
+    /// Creates the row indices for the subtables.
+    static std::shared_ptr<const std::vector<size_t>> make_subrows(
+        const containers::DataFrameView& _population_subview,
+        const containers::DataFrame& _peripheral_subview );
 
     /// Creates the main tables during construction.
     static std::vector<containers::DataFrameView> parse_main_tables(
@@ -44,6 +49,7 @@ struct TableHolder
     /// Creates the subtables during construction.
     static std::vector<containers::Optional<TableHolder>> parse_subtables(
         const Placeholder& _placeholder,
+        const containers::DataFrameView& _population,
         const std::vector<containers::DataFrame>& _peripheral,
         const std::vector<std::string>& _peripheral_names );
 
@@ -61,7 +67,7 @@ struct TableHolder
 };
 
 // ----------------------------------------------------------------------------
-}  // namespace ensemble
+}  // namespace decisiontrees
 }  // namespace autosql
 
 #endif  // AUTOSQL_DECISIONTREES_TABLEHOLDER_HPP_

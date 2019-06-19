@@ -112,14 +112,14 @@ class DataFrame
     /// Find the indices associated with this join key.
     AUTOSQL_INDEX::const_iterator find( const AUTOSQL_INT _join_key ) const
     {
-        assert( indices().size() > 0 );
+        assert( indices().size() == 1 );
         return indices_[0]->find( _join_key );
     }
 
     /// Whether a certain join key is included in the indices.
     bool has( const AUTOSQL_INT _join_key ) const
     {
-        assert( indices().size() > 0 );
+        assert( indices().size() == 1 );
         return indices_[0]->find( _join_key ) != indices_[0]->end();
     }
 
