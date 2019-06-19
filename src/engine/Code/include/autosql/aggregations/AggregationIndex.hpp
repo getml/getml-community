@@ -15,9 +15,12 @@ class AggregationIndex
         const containers::DataFrameView& _input_table,
         const containers::DataFrameView& _output_table,
         const std::shared_ptr<const std::map<AUTOSQL_INT, AUTOSQL_INT>>&
+            _input_map,
+        const std::shared_ptr<const std::map<AUTOSQL_INT, AUTOSQL_INT>>&
             _output_map,
         const bool _use_timestamps )
-        : input_table_( _input_table ),
+        : input_map_( _input_map ),
+          input_table_( _input_table ),
           output_map_( _output_map ),
           output_table_( _output_table ),
           use_timestamps_( _use_timestamps )
@@ -35,11 +38,20 @@ class AggregationIndex
     /// _ix_agg
     const AUTOSQL_FLOAT get_count( const AUTOSQL_INT _ix_agg ) const;
 
+    /// Matches the sample weights returned by the parent to make "sample
+    /// weights" for the subfeatures.
+    std::shared_ptr<std::vector<AUTOSQL_FLOAT>> make_sample_weights(
+        const std::shared_ptr<const std::vector<AUTOSQL_FLOAT>>
+            _sample_weights_parent ) const;
+
     /// Maps _ix_input to all indices
-    const std::vector<AUTOSQL_INT> transform( const AUTOSQL_INT _ix_input ) const;
+    const std::vector<AUTOSQL_INT> transform(
+        const AUTOSQL_INT _ix_input ) const;
 
     /// Transform ix_agg using the output map
-    AUTOSQL_INT transform_ix_agg( const AUTOSQL_INT _ix_agg ) const;
+    AUTOSQL_INT transform_ix_agg(
+        const AUTOSQL_INT _ix_agg,
+        const std::map<AUTOSQL_INT, AUTOSQL_INT>& _rows_map ) const;
 
     // ------------------------------------------------------------
 
@@ -60,12 +72,17 @@ class AggregationIndex
     // ------------------------------------------------------------
 
    private:
+    /// Maps the indices of the underlying DataFrame to the row indices of the
+    /// DataFrameView (in effect reversing the row indices in the DataFrameView)
+    /// for the INPUT table.
+    const std::shared_ptr<const std::map<AUTOSQL_INT, AUTOSQL_INT>> input_map_;
+
     /// Data frame that is aggregated (the right table)
     const containers::DataFrameView input_table_;
 
     /// Maps the indices of the underlying DataFrame to the row indices of the
     /// DataFrameView (in effect reversing the row indices in the DataFrameView)
-    /// for the output table.
+    /// for the OUTPUT table.
     const std::shared_ptr<const std::map<AUTOSQL_INT, AUTOSQL_INT>> output_map_;
 
     /// Data frame on which the input table is joined (the left table)

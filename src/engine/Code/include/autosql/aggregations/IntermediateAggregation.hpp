@@ -78,8 +78,8 @@ class IntermediateAggregation
     /// Generates a new set of sample weights.
     std::shared_ptr<std::vector<AUTOSQL_FLOAT>> make_sample_weights() final
     {
-        assert( false && "ToDo" );
-        return std::make_shared<std::vector<AUTOSQL_FLOAT>>( 0 );
+        sample_weights_parent() = parent().make_sample_weights();
+        return index().make_sample_weights( sample_weights_parent() );
     }
 
     /// Resets the storage size.
@@ -302,6 +302,12 @@ class IntermediateAggregation
     inline containers::IntSet& updates_stored()
     {
         return impl().updates_stored_;
+    }
+
+    /// Trivial accessor
+    inline std::shared_ptr<std::vector<AUTOSQL_FLOAT>>& sample_weights_parent()
+    {
+        return impl().sample_weights_parent_;
     }
 
     /// Trivial accessor

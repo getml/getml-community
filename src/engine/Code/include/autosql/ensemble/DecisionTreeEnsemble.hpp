@@ -305,9 +305,14 @@ void DecisionTreeEnsemble::fit_subfeatures(
         _table_holder->peripheral_tables_[_ix_perip_used],
         subtable_holder->main_tables_[0].rows_ptr() );
 
+    // The input map is needed for propagating sampling.
+    const auto input_map =
+        utils::Mapper::create_rows_map( input_table.rows_ptr() );
+
     const auto aggregation_index = aggregations::AggregationIndex(
         input_table,
         _table_holder->main_tables_[_ix_perip_used],
+        input_map,
         _output_map,
         hyperparameters().use_timestamps_ );
 
