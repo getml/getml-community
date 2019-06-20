@@ -372,11 +372,11 @@ void DecisionTreeEnsemble::fit(
     // ----------------------------------------------------------------
     // If there are any subfeatures, create them.
 
-    const auto predictions = SubtreeHelper::make_predictions(
+    const auto subpredictions = SubtreeHelper::make_predictions(
         *_table_holder, subensembles_avg_, subensembles_sum_ );
 
     const auto subfeatures =
-        SubtreeHelper::make_subfeatures( *_table_holder, predictions );
+        SubtreeHelper::make_subfeatures( *_table_holder, subpredictions );
 
     // ----------------------------------------------------------------
     // aggregations::AggregationImpl stores most of the data for the
