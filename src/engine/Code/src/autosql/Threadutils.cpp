@@ -144,9 +144,16 @@ void Threadutils::transform_ensemble(
                 _ensemble.peripheral_names() );
 
             // ----------------------------------------------------------------
-            // Build the subfeatures.
+            // If there are any subfeatures, create them.
 
-            
+            const auto subpredictions = SubtreeHelper::make_predictions(
+                table_holder,
+                _ensemble.subensembles_avg(),
+                _ensemble.subensembles_sum() );
+
+            const auto subfeatures =
+                SubtreeHelper::make_subfeatures( table_holder, subpredictions );
+
             // ----------------------------------------------------------------
             // aggregations::AggregationImpl stores most of the data for the
             // aggregations. We do not want to reallocate the data all the time.
@@ -160,8 +167,8 @@ void Threadutils::transform_ensemble(
 
             for ( size_t i = 0; i < _ensemble.trees().size(); ++i )
                 {
-                    const auto new_feature =
-                        _ensemble.transform( table_holder, i, &impl );
+                    const auto new_feature = _ensemble.transform(
+                        table_holder, subfeatures, i, &impl );
 
                     copy(
                         population_subview.rows(),

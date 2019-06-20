@@ -917,24 +917,44 @@ containers::Predictions DecisionTreeEnsemble::transform(
     const decisiontrees::TableHolder &_table_holder,
     containers::Optional<aggregations::AggregationImpl> *_impl ) const
 {
-    containers::Predictions predictions;
+    // ----------------------------------------------------------------
 
     assert( _table_holder.main_tables_.size() > 0 );
 
+    // ----------------------------------------------------------------
+    // If there are any subfeatures, create them.
+
+    const auto subpredictions = SubtreeHelper::make_predictions(
+        _table_holder, subensembles_avg_, subensembles_sum_ );
+
+    const auto subfeatures =
+        SubtreeHelper::make_subfeatures( _table_holder, subpredictions );
+
+    // ----------------------------------------------------------------
+    // Generate the actual predictions.
+
+    containers::Predictions predictions;
+
     for ( size_t i = 0; i < trees().size(); ++i )
         {
-            const auto new_prediction = transform( _table_holder, i, _impl );
+            const auto new_prediction =
+                transform( _table_holder, subfeatures, i, _impl );
 
             predictions.emplace_back( std::move( new_prediction ) );
         }
 
+    // ----------------------------------------------------------------
+
     return predictions;
+
+    // ----------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
 
 std::vector<AUTOSQL_FLOAT> DecisionTreeEnsemble::transform(
     const decisiontrees::TableHolder &_table_holder,
+    const std::vector<containers::Subfeatures> &_subfeatures,
     const size_t _num_feature,
     containers::Optional<aggregations::AggregationImpl> *_impl ) const
 {
@@ -947,12 +967,11 @@ std::vector<AUTOSQL_FLOAT> DecisionTreeEnsemble::transform(
     assert(
         _table_holder.main_tables_.size() == _table_holder.subtables_.size() );
 
+    assert( _table_holder.main_tables_.size() == _subfeatures.size() );
+
     const auto ix = trees()[_num_feature].ix_perip_used();
 
     assert( ix < _table_holder.main_tables_.size() );
-
-    // ToDo: Real implementation for generating subfeatures.
-    containers::Subfeatures subfeatures;
 
     auto aggregation = trees()[_num_feature].make_aggregation();
 
@@ -961,7 +980,7 @@ std::vector<AUTOSQL_FLOAT> DecisionTreeEnsemble::transform(
     auto new_feature = trees()[_num_feature].transform(
         _table_holder.main_tables_[ix],
         _table_holder.peripheral_tables_[ix],
-        subfeatures,
+        _subfeatures[ix],
         hyperparameters().use_timestamps_,
         aggregation.get() );
 

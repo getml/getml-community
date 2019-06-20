@@ -90,6 +90,7 @@ class DecisionTreeEnsemble
     /// Transforms a specific feature.
     std::vector<AUTOSQL_FLOAT> transform(
         const decisiontrees::TableHolder &_table_holder,
+        const std::vector<containers::Subfeatures> &_subfeatures,
         const size_t _num_feature,
         containers::Optional<aggregations::AggregationImpl> *_impl ) const;
 
@@ -133,6 +134,20 @@ class DecisionTreeEnsemble
     inline void set_comm( multithreading::Communicator *_comm )
     {
         impl().comm_ = _comm;
+    }
+
+    /// Trivial getter.
+    const std::vector<containers::Optional<DecisionTreeEnsemble>>
+        &subensembles_avg() const
+    {
+        return subensembles_avg_;
+    }
+
+    /// Trivial getter.
+    const std::vector<containers::Optional<DecisionTreeEnsemble>>
+        &subensembles_sum() const
+    {
+        return subensembles_sum_;
     }
 
     /// Extracts the ensemble as a JSON
