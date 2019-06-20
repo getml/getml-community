@@ -1,98 +1,64 @@
-#include "autosql/decisiontrees/decisiontrees.hpp"
+#include "autosql/ensemble/ensemble.hpp"
 
 namespace autosql
 {
-namespace decisiontrees
+namespace ensemble
 {
 // ----------------------------------------------------------------------------
 
-std::shared_ptr<const std::vector<AUTOSQL_INT>>
-SubtreeHelper::create_population_indices(
-    const size_t _nrows, const AUTOSQL_SAMPLE_CONTAINER& _sample_container )
+std::vector<containers::Predictions> SubtreeHelper::make_predictions(
+    const decisiontrees::TableHolder& _table_holder,
+    const std::vector<containers::Optional<DecisionTreeEnsemble>>&
+        _subfeatures_avg,
+    const std::vector<containers::Optional<DecisionTreeEnsemble>>&
+        _subfeatures_sum )
 {
-    std::set<AUTOSQL_INT> population_indices;
+    const auto size = _table_holder.subtables_.size();
 
-    for ( auto& sample : _sample_container )
+    assert( size == _subfeatures_avg.size() );
+    assert( size == _subfeatures_sum.size() );
+
+    std::vector<containers::Predictions> predictions( size );
+
+    for ( size_t i = 0; i < size; ++i )
         {
-            assert( sample->ix_x_perip >= 0 );
+            if ( !_table_holder.subtables_[i] )
+                {
+                    continue;
+                }
 
-            assert( sample->ix_x_perip < _nrows );
+            assert( _table_holder.subtables_[i]->main_tables_.size() > 0 );
 
-            population_indices.insert( sample->ix_x_perip );
-        }
+            auto impl = containers::Optional<aggregations::AggregationImpl>(
+                new aggregations::AggregationImpl(
+                    _table_holder.subtables_[i]->main_tables_[0].nrows() ) );
 
-    return std::make_shared<const std::vector<AUTOSQL_INT>>(
-        population_indices.begin(), population_indices.end() );
-}
+            assert( _subfeatures_avg[i] );
 
-// ----------------------------------------------------------------------------
+            assert( _subfeatures_sum[i] );
 
-std::shared_ptr<const std::map<AUTOSQL_INT, AUTOSQL_INT>>
-SubtreeHelper::create_output_map( const std::vector<size_t>& _rows )
-{
-    auto output_map = std::make_shared<std::map<AUTOSQL_INT, AUTOSQL_INT>>();
+            auto predictions_avg = _subfeatures_avg[i]->transform(
+                *_table_holder.subtables_[i], &impl );
 
-    for ( size_t i = 0; i < _rows.size(); ++i )
-        {
-            ( *output_map )[static_cast<AUTOSQL_INT>( _rows[i] )] =
-                static_cast<AUTOSQL_INT>( i );
-        }
+            auto predictions_sum = _subfeatures_sum[i]->transform(
+                *_table_holder.subtables_[i], &impl );
 
-    return output_map;
-}
+            for ( auto& p : predictions_avg )
+                {
+                    predictions[i].emplace_back( std::move( p ) );
+                }
 
-// ----------------------------------------------------------------------------
-
-std::vector<std::vector<AUTOSQL_FLOAT>> SubtreeHelper::make_predictions(
-    const containers::Optional<TableHolder>& _subtable,
-    const bool _use_timestamps,
-    const std::vector<DecisionTree>& _subtrees )
-{
-    std::vector<std::vector<AUTOSQL_FLOAT>> predictions;
-
-    if ( !_subtable )
-        {
-            return predictions;
-        }
-
-    assert( _subtable->main_tables_.size() > 0 );
-
-    assert(
-        _subtable->main_tables_.size() > _subtable->peripheral_tables_.size() );
-
-    assert( _subtable->main_tables_.size() > _subtable->subtables_.size() );
-
-    containers::Optional<aggregations::AggregationImpl> aggregation_impl(
-        new aggregations::AggregationImpl(
-            _subtable->main_tables_[0].nrows() ) );
-
-    for ( auto& tree : _subtrees )
-        {
-            assert( false && "ToDO" );
-
-            // agg.set_aggregation_impl( &aggregation_impl );
-
-            assert( tree.ix_perip_used() < _subtable->main_tables_.size() );
-
-            const auto ix = tree.ix_perip_used();
-
-            assert( false && "ToDO" );
-
-            auto new_prediction = tree.transform(
-                _subtable->main_tables_[ix],
-                _subtable->peripheral_tables_[ix],
-                _subtable->subtables_[ix],
-                _use_timestamps,
-                nullptr );
-
-            predictions.push_back( new_prediction );
+            for ( auto& p : predictions_sum )
+                {
+                    predictions[i].emplace_back( std::move( p ) );
+                }
         }
 
     return predictions;
 }
 
 // ----------------------------------------------------------------------------
-
+/*
 containers::Subfeatures SubtreeHelper::make_subfeatures(
     const containers::Optional<TableHolder>& _subtable,
     const std::vector<std::vector<AUTOSQL_FLOAT>>& _predictions )
@@ -126,8 +92,8 @@ containers::Subfeatures SubtreeHelper::make_subfeatures(
         }
 
     return subfeatures;
-}
+}*/
 
 // ----------------------------------------------------------------------------
-}  // namespace decisiontrees
+}  // namespace ensemble
 }  // namespace autosql

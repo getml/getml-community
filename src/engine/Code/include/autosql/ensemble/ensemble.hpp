@@ -21,6 +21,8 @@
 
 #include "autosql/ensemble/DecisionTreeEnsemble.hpp"
 
+#include "autosql/ensemble/SubtreeHelper.hpp"
+
 #include "autosql/ensemble/Threadutils.hpp"
 
 // ----------------------------------------------------

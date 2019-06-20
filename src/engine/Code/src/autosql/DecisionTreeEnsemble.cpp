@@ -1026,6 +1026,8 @@ containers::Predictions DecisionTreeEnsemble::transform(
 {
     containers::Predictions predictions;
 
+    assert( _table_holder.main_tables_.size() > 0 );
+
     for ( size_t i = 0; i < trees().size(); ++i )
         {
             const auto new_prediction = transform( _table_holder, i, _impl );
