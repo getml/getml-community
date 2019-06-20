@@ -621,7 +621,55 @@ DecisionTreeEnsemble DecisionTreeEnsemble::from_json_obj(
                 JSON::get_array( _json_obj, "targets_" ) );
 
             // ----------------------------------------
+            // Extract subensembles_avg_
+
+            auto features_avg = JSON::get_array( _json_obj, "subfeatures1_" );
+
+            model.subensembles_avg_ =
+                std::vector<containers::Optional<DecisionTreeEnsemble>>(
+                    features_avg->size() );
+
+            for ( size_t i = 0; i < features_avg->size(); ++i )
+                {
+                    auto obj = features_avg->getObject(
+                        static_cast<unsigned int>( i ) );
+
+                    if ( obj )
+                        {
+                            model.subensembles_avg_[i].reset(
+                                new DecisionTreeEnsemble(
+                                    model.categories(), *obj ) );
+                        }
+                }
+
+            // ----------------------------------------
+            // Extract subensembles_sum_
+
+            auto features_sum = JSON::get_array( _json_obj, "subfeatures2_" );
+
+            model.subensembles_sum_ =
+                std::vector<containers::Optional<DecisionTreeEnsemble>>(
+                    features_sum->size() );
+
+            for ( size_t i = 0; i < features_sum->size(); ++i )
+                {
+                    auto obj = features_sum->getObject(
+                        static_cast<unsigned int>( i ) );
+
+                    if ( obj )
+                        {
+                            model.subensembles_sum_[i].reset(
+                                new DecisionTreeEnsemble(
+                                    model.categories(), *obj ) );
+                        }
+                }
+
+            // ----------------------------------------
         }
+
+    // ----------------------------------------
+
+    // ToDo: Plausibility checks.
 
     // ----------------------------------------
 
@@ -801,6 +849,44 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json_obj() const
 
             obj.set(
                 "targets_", JSON::vector_to_array<std::string>( targets() ) );
+
+            // ----------------------------------------
+            // Extract subensembles_avg_
+
+            Poco::JSON::Array features_avg;
+
+            for ( const auto &sub : subensembles_avg_ )
+                {
+                    if ( sub )
+                        {
+                            features_avg.add( sub->to_json() );
+                        }
+                    else
+                        {
+                            features_avg.add( Poco::Dynamic::Var() );
+                        }
+                }
+
+            obj.set( "subfeatures1_", features_avg );
+
+            // ----------------------------------------
+            // Extract subensembles_sum_
+
+            Poco::JSON::Array features_sum;
+
+            for ( const auto &sub : subensembles_sum_ )
+                {
+                    if ( sub )
+                        {
+                            features_sum.add( sub->to_json() );
+                        }
+                    else
+                        {
+                            features_sum.add( Poco::Dynamic::Var() );
+                        }
+                }
+
+            obj.set( "subfeatures2_", features_sum );
 
             // ----------------------------------------
         }

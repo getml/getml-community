@@ -4,6 +4,8 @@
 // ----------------------------------------------------
 // Dependencies
 
+#include <Poco/Dynamic/Var.h>
+
 #include "logging/logging.hpp"
 
 #include "autosql/decisiontrees/decisiontrees.hpp"
