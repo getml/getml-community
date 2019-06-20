@@ -83,7 +83,7 @@ class DecisionTree
     std::vector<AUTOSQL_FLOAT> transform(
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
-        const containers::Optional<TableHolder> &_subtables,
+        const containers::Subfeatures &_subfeatures,
         const bool _use_timestamps,
         aggregations::AbstractAggregation *_aggregation ) const;
 
@@ -249,13 +249,13 @@ class DecisionTree
     std::vector<AUTOSQL_FLOAT> transform(
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
-        const containers::Optional<TableHolder> &_subtable,
+        const containers::Subfeatures &_subfeatures,
         const bool _use_timestamps )
     {
         return transform(
             _population,
             _peripheral,
-            _subtable,
+            _subfeatures,
             _use_timestamps,
             aggregation() );
     }

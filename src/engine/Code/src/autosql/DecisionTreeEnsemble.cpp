@@ -323,6 +323,12 @@ void DecisionTreeEnsemble::fit(
     if ( _table_holder->main_tables_.size() == 0 )
         {
             throw std::invalid_argument(
+                "You need to provide a population table!" );
+        }
+
+    if ( _table_holder->main_tables_[0].nrows() == 0 )
+        {
+            throw std::invalid_argument(
                 "Your population table needs to contain at least one row!" );
         }
 
@@ -355,6 +361,17 @@ void DecisionTreeEnsemble::fit(
     // If there are any subfeatures, fit them.
 
     fit_subfeatures( _table_holder, _logger, _opt, _comm );
+
+    // ----------------------------------------------------------------
+    // If there are any subfeatures, create them.
+    // ToDo: Proper implementation needed
+
+    assert(
+        _table_holder->main_tables_.size() ==
+        _table_holder->subtables_.size() );
+
+    const auto subfeatures = std::vector<containers::Subfeatures>(
+        _table_holder->main_tables_.size() );
 
     // ----------------------------------------------------------------
     // aggregations::AggregationImpl stores most of the data for the
@@ -512,7 +529,7 @@ void DecisionTreeEnsemble::fit(
                         last_tree()->transform(
                             _table_holder->main_tables_[ix],
                             _table_holder->peripheral_tables_[ix],
-                            _table_holder->subtables_[ix],
+                            subfeatures[ix],
                             hyperparameters().use_timestamps_ );
 
                     _opt->update_yhat_old( *sample_weights, new_feature );
@@ -1022,6 +1039,9 @@ std::vector<AUTOSQL_FLOAT> DecisionTreeEnsemble::transform(
 
     assert( ix < _table_holder.main_tables_.size() );
 
+    // ToDo: Real implementation for generating subfeatures.
+    containers::Subfeatures subfeatures;
+
     auto aggregation = trees()[_num_feature].make_aggregation();
 
     aggregation->set_aggregation_impl( _impl );
@@ -1029,7 +1049,7 @@ std::vector<AUTOSQL_FLOAT> DecisionTreeEnsemble::transform(
     auto new_feature = trees()[_num_feature].transform(
         _table_holder.main_tables_[ix],
         _table_holder.peripheral_tables_[ix],
-        _table_holder.subtables_[ix],
+        subfeatures,
         hyperparameters().use_timestamps_,
         aggregation.get() );
 

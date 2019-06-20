@@ -87,7 +87,7 @@ void TreeFitter::fit(
     std::vector<decisiontrees::DecisionTree> *_trees )
 {
     // ----------------------------------------------------------------
-    // Build subfeatures - temporary fix ToDo: Remove this!
+    // Build subfeatures - temporary fix!
 
     const containers::Subfeatures subfeatures;
 

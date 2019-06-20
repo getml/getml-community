@@ -688,7 +688,7 @@ std::string DecisionTree::to_sql(
 std::vector<AUTOSQL_FLOAT> DecisionTree::transform(
     const containers::DataFrameView &_population,
     const containers::DataFrame &_peripheral,
-    const containers::Optional<TableHolder> &_subtable,
+    const containers::Subfeatures &_subfeatures,
     const bool _use_timestamps,
     aggregations::AbstractAggregation *_aggregation ) const
 {
@@ -698,17 +698,8 @@ std::vector<AUTOSQL_FLOAT> DecisionTree::transform(
     _aggregation->reset();
 
     // ------------------------------------------------------
-    // Build predictions for subfeatures, if applicable.
-
-    const auto predictions = SubtreeHelper::make_predictions(
-        _subtable, _use_timestamps, subtrees() );
-
-    const auto subfeatures =
-        SubtreeHelper::make_subfeatures( _subtable, predictions );
-
-    // ------------------------------------------------------
     // This is put in a loop to avoid the sample containers
-    // taking up too much memory
+    // taking up too much memory.
 
     for ( size_t ix_x_popul = 0; ix_x_popul < _population.nrows();
           ++ix_x_popul )
@@ -734,7 +725,7 @@ std::vector<AUTOSQL_FLOAT> DecisionTree::transform(
             create_value_to_be_aggregated(
                 _population,
                 _peripheral,
-                subfeatures,
+                _subfeatures,
                 match_ptrs,
                 _aggregation );
 
@@ -789,7 +780,7 @@ std::vector<AUTOSQL_FLOAT> DecisionTree::transform(
             root()->transform(
                 _population,
                 _peripheral,
-                subfeatures,
+                _subfeatures,
                 match_ptrs.begin() + null_values_dist,
                 match_ptrs.end(),
                 _aggregation );

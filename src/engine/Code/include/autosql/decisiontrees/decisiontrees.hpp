@@ -69,8 +69,6 @@
 
 #include "autosql/decisiontrees/DecisionTree.hpp"
 
-#include "autosql/decisiontrees/SubtreeHelper.hpp"
-
 // ----------------------------------------------------
 
 #endif  // AUTOSQL_DECISIONTREES_DECISIONTREES_HPP_
