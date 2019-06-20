@@ -362,9 +362,7 @@ DecisionTreeNode::calculate_critical_values_numerical(
 void DecisionTreeNode::commit(
     const containers::DataFrameView &_population,
     const containers::DataFrame &_peripheral,
-    const std::vector<containers::ColumnView<
-        AUTOSQL_FLOAT,
-        std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
+    const containers::Subfeatures &_subfeatures,
     const descriptors::Split &_split,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
@@ -505,9 +503,7 @@ void DecisionTreeNode::fit(
 void DecisionTreeNode::fit_as_root(
     const containers::DataFrameView &_population,
     const containers::DataFrame &_peripheral,
-    const std::vector<containers::ColumnView<
-        AUTOSQL_FLOAT,
-        std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
+    const containers::Subfeatures &_subfeatures,
     AUTOSQL_SAMPLE_CONTAINER::iterator _sample_container_begin,
     AUTOSQL_SAMPLE_CONTAINER::iterator _sample_container_end )
 {
@@ -625,9 +621,7 @@ std::string DecisionTreeNode::greater_or_not_equal_to(
 AUTOSQL_SAMPLE_ITERATOR DecisionTreeNode::identify_parameters(
     const containers::DataFrameView &_population,
     const containers::DataFrame &_peripheral,
-    const std::vector<containers::ColumnView<
-        AUTOSQL_FLOAT,
-        std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
+    const containers::Subfeatures &_subfeatures,
     const descriptors::Split &_split,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
@@ -812,9 +806,7 @@ AUTOSQL_SAMPLE_ITERATOR DecisionTreeNode::separate_null_values(
 void DecisionTreeNode::set_samples(
     const containers::DataFrameView &_population,
     const containers::DataFrame &_peripheral,
-    const std::vector<containers::ColumnView<
-        AUTOSQL_FLOAT,
-        std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
+    const containers::Subfeatures &_subfeatures,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) const
 {
@@ -1043,9 +1035,7 @@ std::string DecisionTreeNode::smaller_or_equal_to(
 void DecisionTreeNode::spawn_child_nodes(
     const containers::DataFrameView &_population,
     const containers::DataFrame &_peripheral,
-    const std::vector<containers::ColumnView<
-        AUTOSQL_FLOAT,
-        std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
+    const containers::Subfeatures &_subfeatures,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
     AUTOSQL_SAMPLE_ITERATOR _null_values_separator,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
@@ -1322,9 +1312,7 @@ void DecisionTreeNode::to_monitor(
 void DecisionTreeNode::transform(
     const containers::DataFrameView &_population,
     const containers::DataFrame &_peripheral,
-    const std::vector<containers::ColumnView<
-        AUTOSQL_FLOAT,
-        std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
+    const containers::Subfeatures &_subfeatures,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
     aggregations::AbstractAggregation *_aggregation ) const
@@ -2018,9 +2006,7 @@ void DecisionTreeNode::try_categorical_values(
 void DecisionTreeNode::try_conditions(
     const containers::DataFrameView &_population,
     const containers::DataFrame &_peripheral,
-    const std::vector<containers::ColumnView<
-        AUTOSQL_FLOAT,
-        std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
+    const containers::Subfeatures &_subfeatures,
     const size_t _sample_size,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
@@ -2458,9 +2444,7 @@ void DecisionTreeNode::try_same_units_numerical(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_subfeatures(
-    const std::vector<containers::ColumnView<
-        AUTOSQL_FLOAT,
-        std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
+    const containers::Subfeatures &_subfeatures,
     const size_t _sample_size,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_end,

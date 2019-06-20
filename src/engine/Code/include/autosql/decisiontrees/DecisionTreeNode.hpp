@@ -500,9 +500,7 @@ class DecisionTreeNode
     AUTOSQL_SAMPLE_ITERATOR identify_parameters(
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
-        const std::vector<containers::ColumnView<
-            AUTOSQL_FLOAT,
-            std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
+        const containers::Subfeatures &_subfeatures,
         const descriptors::Split &_column,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end );
@@ -682,9 +680,7 @@ class DecisionTreeNode
 
     /// Tries to impose the subfeatures as a condition
     void try_subfeatures(
-        const std::vector<containers::ColumnView<
-            AUTOSQL_FLOAT,
-            std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
+        const containers::Subfeatures &_subfeatures,
         const size_t _sample_size,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end,

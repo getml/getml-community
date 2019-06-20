@@ -22,9 +22,9 @@ class SubtreeHelper
 
     /// Builds appropriate views on the features. The purpose of the ColumnView
     /// is to reverse the effect of the row indices in the DataFrameView.
-    /*static containers::Subfeatures make_subfeatures(
-        const containers::Optional<TableHolder>& _subtable,
-        const std::vector<std::vector<AUTOSQL_FLOAT>>& _predictions );*/
+    static std::vector<containers::Subfeatures> make_subfeatures(
+        const decisiontrees::TableHolder& _table_holder,
+        const std::vector<containers::Predictions>& _predictions );
 };
 
 // ------------------------------------------------------------------------

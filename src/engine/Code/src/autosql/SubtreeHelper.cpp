@@ -58,41 +58,48 @@ std::vector<containers::Predictions> SubtreeHelper::make_predictions(
 }
 
 // ----------------------------------------------------------------------------
-/*
-containers::Subfeatures SubtreeHelper::make_subfeatures(
-    const containers::Optional<TableHolder>& _subtable,
-    const std::vector<std::vector<AUTOSQL_FLOAT>>& _predictions )
+
+std::vector<containers::Subfeatures> SubtreeHelper::make_subfeatures(
+    const decisiontrees::TableHolder& _table_holder,
+    const std::vector<containers::Predictions>& _predictions )
 {
-    containers::Subfeatures subfeatures;
+    const auto size = _table_holder.subtables_.size();
 
-    if ( _predictions.size() == 0 )
+    assert( size == _predictions.size() );
+
+    auto subfeatures = std::vector<containers::Subfeatures>( size );
+
+    for ( size_t i = 0; i < size; ++i )
         {
-            return subfeatures;
-        }
+            if ( !_table_holder.subtables_[i] )
+                {
+                    continue;
+                }
 
-    assert( _subtable );
+            assert( _table_holder.subtables_[i]->main_tables_.size() > 0 );
 
-    assert( _subtable->main_tables_.size() > 0 );
+            const auto rows_map = utils::Mapper::create_rows_map(
+                _table_holder.subtables_[i]->main_tables_[0].rows_ptr() );
 
-    const auto output_map =
-        create_output_map( _subtable->main_tables_[0].rows() );
+            const auto& p = _predictions[i];
 
-    for ( size_t i = 0; _predictions.size(); ++i )
-        {
-            const auto column = containers::Column<AUTOSQL_FLOAT>(
-                _predictions[i].data(),
-                "FEATURE_" + std::to_string( i + 1 ),
-                _predictions[i].size() );
+            for ( size_t j = 0; p.size(); ++j )
+                {
+                    const auto column = containers::Column<AUTOSQL_FLOAT>(
+                        p[j].data(),
+                        "FEATURE_" + std::to_string( j + 1 ),
+                        p[j].size() );
 
-            const auto view = containers::
-                ColumnView<AUTOSQL_FLOAT, std::map<AUTOSQL_INT, AUTOSQL_INT>>(
-                    column, output_map );
+                    const auto view = containers::ColumnView<
+                        AUTOSQL_FLOAT,
+                        std::map<AUTOSQL_INT, AUTOSQL_INT>>( column, rows_map );
 
-            subfeatures.push_back( view );
+                    subfeatures[i].push_back( view );
+                }
         }
 
     return subfeatures;
-}*/
+}
 
 // ----------------------------------------------------------------------------
 }  // namespace ensemble
