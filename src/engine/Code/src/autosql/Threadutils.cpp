@@ -157,7 +157,7 @@ void Threadutils::transform_ensemble(
             for ( size_t i = 0; i < _ensemble.trees().size(); ++i )
                 {
                     const auto new_feature =
-                        _ensemble.transform( table_holder, i, _logger, &impl );
+                        _ensemble.transform( table_holder, i, &impl );
 
                     copy(
                         population_subview.rows(),

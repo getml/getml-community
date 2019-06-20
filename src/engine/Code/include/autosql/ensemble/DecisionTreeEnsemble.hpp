@@ -73,18 +73,24 @@ class DecisionTreeEnsemble
     /// Extracts the SQL statements underlying these features as a string
     std::string to_sql() const;
 
-    /// Transforms a set of raw data into extracted features
+    /// Transforms a set of raw data into extracted features. This is called by
+    /// Threadutils.
     std::shared_ptr<std::vector<AUTOSQL_FLOAT>> transform(
         const containers::DataFrame &_population,
         const std::vector<containers::DataFrame> &_peripheral,
         const std::shared_ptr<const logging::AbstractLogger> _logger =
             std::shared_ptr<const logging::AbstractLogger>() ) const;
 
+    /// Transforms table holders into a predictions. This is used for
+    /// subfeatures, so no logging.
+    containers::Predictions transform(
+        const decisiontrees::TableHolder &_table_holder,
+        containers::Optional<aggregations::AggregationImpl> *_impl ) const;
+
     /// Transforms a specific feature.
     std::vector<AUTOSQL_FLOAT> transform(
         const decisiontrees::TableHolder &_table_holder,
         const size_t _num_feature,
-        const std::shared_ptr<const logging::AbstractLogger> _logger,
         containers::Optional<aggregations::AggregationImpl> *_impl ) const;
 
     // -----------------------------------------------------------------

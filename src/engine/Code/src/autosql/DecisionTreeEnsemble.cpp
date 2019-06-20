@@ -1020,10 +1020,27 @@ std::shared_ptr<std::vector<AUTOSQL_FLOAT>> DecisionTreeEnsemble::transform(
 
 // ----------------------------------------------------------------------------
 
+containers::Predictions DecisionTreeEnsemble::transform(
+    const decisiontrees::TableHolder &_table_holder,
+    containers::Optional<aggregations::AggregationImpl> *_impl ) const
+{
+    containers::Predictions predictions;
+
+    for ( size_t i = 0; i < trees().size(); ++i )
+        {
+            const auto new_prediction = transform( _table_holder, i, _impl );
+
+            predictions.emplace_back( std::move( new_prediction ) );
+        }
+
+    return predictions;
+}
+
+// ----------------------------------------------------------------------------
+
 std::vector<AUTOSQL_FLOAT> DecisionTreeEnsemble::transform(
     const decisiontrees::TableHolder &_table_holder,
     const size_t _num_feature,
-    const std::shared_ptr<const logging::AbstractLogger> _logger,
     containers::Optional<aggregations::AggregationImpl> *_impl ) const
 {
     assert( _num_feature < trees().size() );
