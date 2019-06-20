@@ -6,17 +6,134 @@ namespace ensemble
 {
 // ----------------------------------------------------------------------------
 
+void SubtreeHelper::fit_subensembles(
+    const std::shared_ptr<const decisiontrees::TableHolder>& _table_holder,
+    const std::shared_ptr<const logging::AbstractLogger> _logger,
+    const DecisionTreeEnsemble& _ensemble,
+    optimizationcriteria::OptimizationCriterion* _opt,
+    multithreading::Communicator* _comm,
+    std::vector<containers::Optional<DecisionTreeEnsemble>>* _subensembles_avg,
+    std::vector<containers::Optional<DecisionTreeEnsemble>>* _subensembles_sum )
+{
+    // ----------------------------------------------------------------
+
+    assert( _table_holder );
+
+    assert(
+        _table_holder->subtables_.size() ==
+        _table_holder->main_tables_.size() );
+    assert(
+        _table_holder->subtables_.size() ==
+        _table_holder->peripheral_tables_.size() );
+
+    // ----------------------------------------------------------------
+    // Set up the subfeatures.
+
+    const auto num_tables = _table_holder->subtables_.size();
+
+    auto subensembles_avg =
+        std::vector<containers::Optional<DecisionTreeEnsemble>>( num_tables );
+
+    auto subensembles_sum =
+        std::vector<containers::Optional<DecisionTreeEnsemble>>( num_tables );
+
+    for ( size_t i = 0; i < num_tables; ++i )
+        {
+            if ( _table_holder->subtables_[i] )
+                {
+                    subensembles_avg[i].reset(
+                        new DecisionTreeEnsemble( _ensemble ) );
+
+                    subensembles_sum[i].reset(
+                        new DecisionTreeEnsemble( _ensemble ) );
+                }
+        }
+
+    // ----------------------------------------------------------------
+    // If there are no subfeatures, we can stop here.
+
+    const bool no_subfeatures = std::none_of(
+        subensembles_avg.cbegin(),
+        subensembles_avg.cend(),
+        []( const containers::Optional<DecisionTreeEnsemble>& val ) {
+            return val && true;
+        } );
+
+    if ( no_subfeatures )
+        {
+            *_subensembles_avg = std::move( subensembles_avg );
+            *_subensembles_sum = std::move( subensembles_sum );
+
+            return;
+        }
+
+    // ----------------------------------------------------------------
+    // Create the rows map (it stays the same over all aggregations).
+
+    const auto rows_map = utils::Mapper::create_rows_map(
+        _table_holder->main_tables_[0].rows_ptr() );
+
+    // ----------------------------------------------------------------
+    // Fit the subensembles_avg.
+
+    for ( size_t i = 0; i < num_tables; ++i )
+        {
+            if ( subensembles_avg[i] )
+                {
+                    fit_subensemble<aggregations::AggregationType::Avg>(
+                        _table_holder,
+                        _logger,
+                        rows_map,
+                        _ensemble.hyperparameters(),
+                        i,
+                        _opt,
+                        _comm,
+                        subensembles_avg[i].get() );
+                }
+        }
+
+    // ----------------------------------------------------------------
+    // Fit the subensembles_sum.
+
+    for ( size_t i = 0; i < num_tables; ++i )
+        {
+            if ( subensembles_sum[i] )
+                {
+                    fit_subensemble<aggregations::AggregationType::Sum>(
+                        _table_holder,
+                        _logger,
+                        rows_map,
+                        _ensemble.hyperparameters(),
+                        i,
+                        _opt,
+                        _comm,
+                        subensembles_sum[i].get() );
+                }
+        }
+
+    // ----------------------------------------------------------------
+    // Store the subfeatures.
+
+    *_subensembles_avg = std::move( subensembles_avg );
+
+    *_subensembles_sum = std::move( subensembles_sum );
+
+    // ----------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
 std::vector<containers::Predictions> SubtreeHelper::make_predictions(
     const decisiontrees::TableHolder& _table_holder,
     const std::vector<containers::Optional<DecisionTreeEnsemble>>&
-        _subfeatures_avg,
+        _subensembles_avg,
     const std::vector<containers::Optional<DecisionTreeEnsemble>>&
-        _subfeatures_sum )
+        _subensembles_sum )
 {
     const auto size = _table_holder.subtables_.size();
 
-    assert( size == _subfeatures_avg.size() );
-    assert( size == _subfeatures_sum.size() );
+    assert( size == _subensembles_avg.size() );
+    assert( size == _subensembles_sum.size() );
 
     std::vector<containers::Predictions> predictions( size );
 
@@ -33,14 +150,14 @@ std::vector<containers::Predictions> SubtreeHelper::make_predictions(
                 new aggregations::AggregationImpl(
                     _table_holder.subtables_[i]->main_tables_[0].nrows() ) );
 
-            assert( _subfeatures_avg[i] );
+            assert( _subensembles_avg[i] );
 
-            assert( _subfeatures_sum[i] );
+            assert( _subensembles_sum[i] );
 
-            auto predictions_avg = _subfeatures_avg[i]->transform(
+            auto predictions_avg = _subensembles_avg[i]->transform(
                 *_table_holder.subtables_[i], &impl );
 
-            auto predictions_sum = _subfeatures_sum[i]->transform(
+            auto predictions_sum = _subensembles_sum[i]->transform(
                 *_table_holder.subtables_[i], &impl );
 
             for ( auto& p : predictions_avg )

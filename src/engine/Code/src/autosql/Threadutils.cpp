@@ -144,6 +144,10 @@ void Threadutils::transform_ensemble(
                 _ensemble.peripheral_names() );
 
             // ----------------------------------------------------------------
+            // Build the subfeatures.
+
+            
+            // ----------------------------------------------------------------
             // aggregations::AggregationImpl stores most of the data for the
             // aggregations. We do not want to reallocate the data all the time.
 
