@@ -17,14 +17,29 @@ void SubtreeHelper::fit_subensembles(
 {
     // ----------------------------------------------------------------
 
+    const auto hyperparameters =
+        std::make_shared<const descriptors::Hyperparameters>(
+            _ensemble.hyperparameters() );
+
+    const auto peripheral = std::make_shared<const std::vector<std::string>>(
+        _ensemble.peripheral_names() );
+
+    const auto placeholder = _ensemble.placeholder();
+
+    // ----------------------------------------------------------------
+
     assert( _table_holder );
 
     assert(
         _table_holder->subtables_.size() ==
         _table_holder->main_tables_.size() );
+
     assert(
         _table_holder->subtables_.size() ==
         _table_holder->peripheral_tables_.size() );
+
+    assert(
+        _table_holder->subtables_.size() == placeholder.joined_tables_.size() );
 
     // ----------------------------------------------------------------
     // Set up the subfeatures.
@@ -41,11 +56,29 @@ void SubtreeHelper::fit_subensembles(
         {
             if ( _table_holder->subtables_[i] )
                 {
-                    subensembles_avg[i].reset(
-                        new DecisionTreeEnsemble( _ensemble ) );
+                    const auto joined_table =
+                        std::make_shared<const decisiontrees::Placeholder>(
+                            placeholder.joined_tables_[i] );
 
-                    subensembles_sum[i].reset(
-                        new DecisionTreeEnsemble( _ensemble ) );
+                    assert( joined_table->joined_tables_.size() > 0 );
+
+                    subensembles_avg[i].reset( new DecisionTreeEnsemble(
+                        _ensemble.categories(),
+                        hyperparameters,
+                        peripheral,
+                        joined_table ) );
+
+                    subensembles_sum[i].reset( new DecisionTreeEnsemble(
+                        _ensemble.categories(),
+                        hyperparameters,
+                        peripheral,
+                        joined_table ) );
+                }
+            else
+                {
+                    assert(
+                        placeholder.joined_tables_[i].joined_tables_.size() ==
+                        0 );
                 }
         }
 

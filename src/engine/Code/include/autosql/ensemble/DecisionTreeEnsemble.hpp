@@ -96,6 +96,13 @@ class DecisionTreeEnsemble
 
     // -----------------------------------------------------------------
 
+    /// Trivial accessor
+    inline const std::shared_ptr<const std::vector<std::string>> &categories()
+        const
+    {
+        return impl().categories_;
+    }
+
     /// Trivial getter
     inline multithreading::Communicator *comm() { return impl().comm_; }
 
@@ -189,12 +196,6 @@ class DecisionTreeEnsemble
         &aggregation_impl()
     {
         return impl().aggregation_impl_;
-    }
-
-    /// Trivial accessor
-    inline std::shared_ptr<const std::vector<std::string>> &categories()
-    {
-        return impl().categories_;
     }
 
     /// Trivial accessor
