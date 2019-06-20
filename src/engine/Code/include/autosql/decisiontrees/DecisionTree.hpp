@@ -42,9 +42,7 @@ class DecisionTree
     void create_value_to_be_aggregated(
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
-        const std::vector<containers::ColumnView<
-            AUTOSQL_FLOAT,
-            std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
+        const containers::Subfeatures &_subfeatures,
         const AUTOSQL_SAMPLE_CONTAINER &_sample_container,
         aggregations::AbstractAggregation *_aggregation ) const;
 
@@ -52,9 +50,7 @@ class DecisionTree
     void fit(
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
-        const std::vector<containers::ColumnView<
-            AUTOSQL_FLOAT,
-            std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
+        const containers::Subfeatures &_subfeatures,
         AUTOSQL_SAMPLE_CONTAINER::iterator _sample_container_begin,
         AUTOSQL_SAMPLE_CONTAINER::iterator _sample_container_end,
         optimizationcriteria::OptimizationCriterion *_optimization_criterion );
@@ -116,7 +112,8 @@ class DecisionTree
 
     /// Returns the information required for identifying the
     /// columns to be aggregated by this tree.
-    inline const descriptors::ColumnToBeAggregated &column_to_be_aggregated() const
+    inline const descriptors::ColumnToBeAggregated &column_to_be_aggregated()
+        const
     {
         return impl()->column_to_be_aggregated_;
     }
@@ -125,9 +122,7 @@ class DecisionTree
     void create_value_to_be_aggregated(
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
-        const std::vector<containers::ColumnView<
-            AUTOSQL_FLOAT,
-            std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
+        const containers::Subfeatures &_subfeatures,
         const AUTOSQL_SAMPLE_CONTAINER &_sample_container )
     {
         create_value_to_be_aggregated(

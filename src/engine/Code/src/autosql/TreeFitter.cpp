@@ -9,9 +9,7 @@ namespace ensemble
 void TreeFitter::find_best_trees(
     const size_t _num_trees,
     const decisiontrees::TableHolder &_table_holder,
-    const std::vector<containers::ColumnView<
-        AUTOSQL_FLOAT,
-        std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
+    const containers::Subfeatures &_subfeatures,
     const std::vector<AUTOSQL_FLOAT> &_values,
     std::vector<AUTOSQL_SAMPLES> *_samples,
     std::vector<AUTOSQL_SAMPLE_CONTAINER> *_sample_containers,
@@ -89,23 +87,9 @@ void TreeFitter::fit(
     std::vector<decisiontrees::DecisionTree> *_trees )
 {
     // ----------------------------------------------------------------
-    // Before can fit this tree, we must fit any existing subtrees.
+    // Build subfeatures - temporary fix ToDo: Remove this!
 
-    debug_log( "Fitter: Fitting subfeatures.." );
-
-    /*fit_subtrees(
-        _table_holder,
-        _sample_containers,
-        _optimization_criterion,
-        _candidate_trees );*/
-
-    // ----------------------------------------------------------------
-    // Build subfeatures
-
-    const std::vector<containers::ColumnView<
-        AUTOSQL_FLOAT,
-        std::map<AUTOSQL_INT, AUTOSQL_INT>>>
-        subfeatures;
+    const containers::Subfeatures subfeatures;
 
     // ----------------------------------------------------------------
     // In this section we just "probe" - we don't allow the tree to
@@ -409,9 +393,7 @@ void TreeFitter::fit_subtrees_for_candidates(
 void TreeFitter::fit_tree(
     const containers::DataFrameView &_population,
     const containers::DataFrame &_peripheral,
-    const std::vector<containers::ColumnView<
-        AUTOSQL_FLOAT,
-        std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
+    const containers::Subfeatures &_subfeatures,
     std::vector<AUTOSQL_SAMPLES> *_samples,
     std::vector<AUTOSQL_SAMPLE_CONTAINER> *_sample_containers,
     optimizationcriteria::OptimizationCriterion *_optimization_criterion,
@@ -492,9 +474,7 @@ void TreeFitter::fit_tree(
 
 void TreeFitter::probe(
     const decisiontrees::TableHolder &_table_holder,
-    const std::vector<containers::ColumnView<
-        AUTOSQL_FLOAT,
-        std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
+    const containers::Subfeatures &_subfeatures,
     std::vector<AUTOSQL_SAMPLES> *_samples,
     std::vector<AUTOSQL_SAMPLE_CONTAINER> *_sample_containers,
     optimizationcriteria::OptimizationCriterion *_optimization_criterion,

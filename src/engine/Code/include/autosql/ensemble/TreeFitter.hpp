@@ -14,7 +14,8 @@ class TreeFitter
    public:
     TreeFitter(
         const std::shared_ptr<const std::vector<std::string>> &_categories,
-        const std::shared_ptr<const descriptors::Hyperparameters> &_hyperparameters,
+        const std::shared_ptr<const descriptors::Hyperparameters>
+            &_hyperparameters,
         std::mt19937 *_random_number_generator,
         multithreading::Communicator *_comm )
         : categories_( _categories ),
@@ -45,9 +46,7 @@ class TreeFitter
     void find_best_trees(
         const size_t _num_trees,
         const decisiontrees::TableHolder &_table_holder,
-        const std::vector<containers::ColumnView<
-            AUTOSQL_FLOAT,
-            std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
+        const containers::Subfeatures &_subfeatures,
         const std::vector<AUTOSQL_FLOAT> &_values,
         std::vector<AUTOSQL_SAMPLES> *_samples,
         std::vector<AUTOSQL_SAMPLE_CONTAINER> *_sample_containers,
@@ -77,9 +76,7 @@ class TreeFitter
     void fit_tree(
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
-        const std::vector<containers::ColumnView<
-            AUTOSQL_FLOAT,
-            std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
+        const containers::Subfeatures &_subfeatures,
         std::vector<AUTOSQL_SAMPLES> *_samples,
         std::vector<AUTOSQL_SAMPLE_CONTAINER> *_sample_containers,
         optimizationcriteria::OptimizationCriterion *_optimization_criterion,
@@ -88,9 +85,7 @@ class TreeFitter
     /// Fits all candidate trees at max_depth = _max_length_probe.
     void probe(
         const decisiontrees::TableHolder &_table_holder,
-        const std::vector<containers::ColumnView<
-            AUTOSQL_FLOAT,
-            std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
+        const containers::Subfeatures &_subfeatures,
         std::vector<AUTOSQL_SAMPLES> *_samples,
         std::vector<AUTOSQL_SAMPLE_CONTAINER> *_sample_containers,
         optimizationcriteria::OptimizationCriterion *_optimization_criterion,

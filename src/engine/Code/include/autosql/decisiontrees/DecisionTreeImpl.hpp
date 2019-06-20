@@ -11,6 +11,13 @@ struct DecisionTreeImpl
 {
     // ----------------------------------------
 
+    typedef std::vector<containers::ColumnView<
+        AUTOSQL_FLOAT,
+        std::map<AUTOSQL_INT, AUTOSQL_INT>>>
+        SubfeatureType;
+
+    // ----------------------------------------
+
     DecisionTreeImpl(
         const std::shared_ptr<const std::vector<std::string>>& _categories,
         const std::shared_ptr<const descriptors::TreeHyperparameters>&

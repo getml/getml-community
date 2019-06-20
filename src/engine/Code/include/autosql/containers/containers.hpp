@@ -35,6 +35,8 @@
 
 #include "autosql/containers/ColumnView.hpp"
 
+#include "autosql/containers/Subfeatures.hpp"
+
 #include "autosql/containers/DataFrame.hpp"
 
 #include "autosql/containers/DataFrameView.hpp"

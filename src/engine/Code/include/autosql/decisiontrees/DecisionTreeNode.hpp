@@ -21,9 +21,7 @@ class DecisionTreeNode
     void fit(
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
-        const std::vector<containers::ColumnView<
-            AUTOSQL_FLOAT,
-            std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
+        const containers::Subfeatures &_subfeatures,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
         AUTOSQL_SAMPLE_ITERATOR _sample_container_end );
 

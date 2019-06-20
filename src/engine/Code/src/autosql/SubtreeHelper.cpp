@@ -93,16 +93,11 @@ std::vector<std::vector<AUTOSQL_FLOAT>> SubtreeHelper::make_predictions(
 
 // ----------------------------------------------------------------------------
 
-std::vector<
-    containers::ColumnView<AUTOSQL_FLOAT, std::map<AUTOSQL_INT, AUTOSQL_INT>>>
-SubtreeHelper::make_subfeatures(
+containers::Subfeatures SubtreeHelper::make_subfeatures(
     const containers::Optional<TableHolder>& _subtable,
     const std::vector<std::vector<AUTOSQL_FLOAT>>& _predictions )
 {
-    std::vector<containers::ColumnView<
-        AUTOSQL_FLOAT,
-        std::map<AUTOSQL_INT, AUTOSQL_INT>>>
-        subfeatures;
+    containers::Subfeatures subfeatures;
 
     if ( _predictions.size() == 0 )
         {
