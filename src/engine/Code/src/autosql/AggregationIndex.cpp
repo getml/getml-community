@@ -69,7 +69,7 @@ AggregationIndex::make_sample_weights(
             for ( auto ix_input : it->second )
                 {
                     assert( ix_input >= 0 );
-                    assert( ix_input < output_table_.df().nrows() );
+                    assert( ix_input < input_table_.df().nrows() );
 
                     const AUTOSQL_FLOAT time_stamp_input =
                         input_table_.df().time_stamp( ix_input );
@@ -92,8 +92,7 @@ AggregationIndex::make_sample_weights(
                             if ( ix_input_tr >= 0 )
                                 {
                                     assert(
-                                        ix_input_tr <
-                                        _sample_weights_parent->size() );
+                                        ix_input_tr < input_table_.nrows() );
 
                                     assert(
                                         ix_input ==

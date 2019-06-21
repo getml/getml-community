@@ -44,4 +44,6 @@
 
 #include "autosql/tests/test20_saving_and_loading_models.hpp"
 
+#include "autosql/tests/test21_snowflake_model.hpp"
+
 // ---------------------------------------------------------------------------

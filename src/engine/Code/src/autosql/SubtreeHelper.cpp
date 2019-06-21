@@ -233,7 +233,7 @@ std::vector<containers::Subfeatures> SubtreeHelper::make_subfeatures(
 
             const auto& p = _predictions[i];
 
-            for ( size_t j = 0; p.size(); ++j )
+            for ( size_t j = 0; j < p.size(); ++j )
                 {
                     const auto column = containers::Column<AUTOSQL_FLOAT>(
                         p[j].data(),

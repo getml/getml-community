@@ -350,12 +350,18 @@ void DecisionTreeEnsemble::fit(
     check_plausibility(
         _table_holder->peripheral_tables_, _table_holder->main_tables_[0] );
 
-    check_plausibility_of_targets( _table_holder->main_tables_[0] );
+    if ( _table_holder->main_tables_[0].num_targets() > 0 )
+        {
+            check_plausibility_of_targets( _table_holder->main_tables_[0] );
+        }
 
     // ----------------------------------------------------------------
     // Store names of the targets
 
-    targets() = {_table_holder->main_tables_[0].target_name( 0 )};
+    if ( _table_holder->main_tables_[0].num_targets() > 0 )
+        {
+            targets() = {_table_holder->main_tables_[0].target_name( 0 )};
+        }
 
     // ----------------------------------------------------------------
     // If there are any subfeatures, fit them.
@@ -514,6 +520,7 @@ void DecisionTreeEnsemble::fit(
 
             tree_fitter.fit(
                 *_table_holder,
+                subfeatures,
                 &samples,
                 &sample_containers,
                 _opt,
@@ -859,7 +866,7 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json_obj() const
                 {
                     if ( sub )
                         {
-                            features_avg.add( sub->to_json() );
+                            features_avg.add( sub->to_json_obj() );
                         }
                     else
                         {
@@ -878,7 +885,7 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json_obj() const
                 {
                     if ( sub )
                         {
-                            features_sum.add( sub->to_json() );
+                            features_sum.add( sub->to_json_obj() );
                         }
                     else
                         {

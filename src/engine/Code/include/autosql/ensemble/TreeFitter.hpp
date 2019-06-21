@@ -33,6 +33,7 @@ class TreeFitter
     /// Fits the trees in a recursive manner, starting with any subtrees.
     void fit(
         const decisiontrees::TableHolder &_table_holder,
+        const std::vector<containers::Subfeatures> &_subfeatures,
         std::vector<AUTOSQL_SAMPLES> *_samples,
         std::vector<AUTOSQL_SAMPLE_CONTAINER> *_sample_containers,
         optimizationcriteria::OptimizationCriterion *_optimization_criterion,
@@ -46,31 +47,13 @@ class TreeFitter
     void find_best_trees(
         const size_t _num_trees,
         const decisiontrees::TableHolder &_table_holder,
-        const containers::Subfeatures &_subfeatures,
+        const std::vector<containers::Subfeatures> &_subfeatures,
         const std::vector<AUTOSQL_FLOAT> &_values,
         std::vector<AUTOSQL_SAMPLES> *_samples,
         std::vector<AUTOSQL_SAMPLE_CONTAINER> *_sample_containers,
         optimizationcriteria::OptimizationCriterion *_optimization_criterion,
         std::list<decisiontrees::DecisionTree> *_candidate_trees,
         std::vector<decisiontrees::DecisionTree> *_trees );
-
-    /// Fits the subtrees.
-    void fit_subtrees(
-        decisiontrees::TableHolder &_table_holder,
-        const std::vector<AUTOSQL_SAMPLE_CONTAINER> &_sample_containers,
-        optimizationcriteria::OptimizationCriterion *_opt,
-        std::list<decisiontrees::DecisionTree> &_candidate_trees );
-
-    /// Fits the subtrees for each of the candidates.
-    void fit_subtrees_for_candidates(
-        const AUTOSQL_INT _ix_subtable,
-        decisiontrees::TableHolder &_subtable,
-        std::vector<AUTOSQL_SAMPLES> &_samples,
-        std::vector<AUTOSQL_SAMPLE_CONTAINER> &_sample_containers,
-        const std::vector<descriptors::SameUnits> &_same_units,
-        std::shared_ptr<aggregations::IntermediateAggregationImpl> &_opt_impl,
-        containers::Optional<aggregations::AggregationImpl> &_aggregation_impl,
-        std::list<decisiontrees::DecisionTree> &_candidate_trees );
 
     /// Fits an individual tree.
     void fit_tree(
@@ -85,7 +68,7 @@ class TreeFitter
     /// Fits all candidate trees at max_depth = _max_length_probe.
     void probe(
         const decisiontrees::TableHolder &_table_holder,
-        const containers::Subfeatures &_subfeatures,
+        const std::vector<containers::Subfeatures> &_subfeatures,
         std::vector<AUTOSQL_SAMPLES> *_samples,
         std::vector<AUTOSQL_SAMPLE_CONTAINER> *_sample_containers,
         optimizationcriteria::OptimizationCriterion *_optimization_criterion,
