@@ -24,6 +24,8 @@
 
 // ----------------------------------------------------------------------------
 
+#include "relboost/containers/Index.hpp"
+
 #include "relboost/containers/Column.hpp"
 #include "relboost/containers/IntSet.hpp"
 #include "relboost/containers/Match.hpp"

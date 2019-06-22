@@ -293,7 +293,7 @@ class Avg : public lossfunctions::LossFunction
     std::vector<containers::Column<RELBOOST_INT>> input_join_keys_;
 
     /// The indices of the output table.
-    std::vector<std::shared_ptr<RELBOOST_INDEX>> output_indices_;
+    std::vector<std::shared_ptr<containers::Index>> output_indices_;
 
     /// The fixed weights when weight 2 is NULL.
     std::vector<RELBOOST_FLOAT> w_fixed_1_;

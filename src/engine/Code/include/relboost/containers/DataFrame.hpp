@@ -22,7 +22,7 @@ class DataFrame
     DataFrame(
         const std::vector<Column<RELBOOST_INT>>& _categoricals,
         const std::vector<Column<RELBOOST_FLOAT>>& _discretes,
-        const std::vector<std::shared_ptr<RELBOOST_INDEX>>& _indices,
+        const std::vector<std::shared_ptr<containers::Index>>& _indices,
         const std::vector<Column<RELBOOST_INT>>& _join_keys,
         const std::string& _name,
         const std::vector<Column<RELBOOST_FLOAT>>& _numericals,
@@ -110,7 +110,7 @@ class DataFrame
     }
 
     /// Find the indices associated with this join key.
-    RELBOOST_INDEX::const_iterator find( const RELBOOST_INT _join_key ) const
+    containers::Index::const_iterator find( const RELBOOST_INT _join_key ) const
     {
         assert( indices().size() > 0 );
         return indices_[0]->find( _join_key );
@@ -124,7 +124,7 @@ class DataFrame
     }
 
     /// Getter for the indices (TODO: make this private).
-    const std::vector<std::shared_ptr<RELBOOST_INDEX>>& indices() const
+    const std::vector<std::shared_ptr<containers::Index>>& indices() const
     {
         return indices_;
     }
@@ -292,7 +292,7 @@ class DataFrame
 
    private:
     /// Creates the indices for this data frame
-    static std::vector<std::shared_ptr<RELBOOST_INDEX>> create_indices(
+    static std::vector<std::shared_ptr<containers::Index>> create_indices(
         const std::vector<Column<RELBOOST_INT>>& _join_keys );
 
     /// Helper class that extracts the column names.
@@ -310,7 +310,7 @@ class DataFrame
     const std::vector<Column<RELBOOST_FLOAT>> discretes_;
 
     /// Indices assiciated with join keys.
-    const std::vector<std::shared_ptr<RELBOOST_INDEX>> indices_;
+    const std::vector<std::shared_ptr<containers::Index>> indices_;
 
     /// Join keys of this data frame.
     const std::vector<Column<RELBOOST_INT>> join_keys_;

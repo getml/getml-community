@@ -96,7 +96,7 @@ class DataFrameView
     }
 
     /// Getter for the indices (TODO: remove this).
-    const std::vector<std::shared_ptr<RELBOOST_INDEX>>& indices() const
+    const std::vector<std::shared_ptr<containers::Index>>& indices() const
     {
         return df_.indices();
     }
