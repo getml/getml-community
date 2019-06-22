@@ -18,15 +18,10 @@
 #define AUTOSQL_MODEL_MAP \
     std::map<std::string, std::shared_ptr<decisiontrees::DecisionTreeEnsemble>>
 
-#define AUTOSQL_SAME_UNITS_CONTAINER \
-    std::vector<                     \
-        std::tuple<descriptors::ColumnToBeAggregated, descriptors::ColumnToBeAggregated>>
-
-#define AUTOSQL_SAMPLES std::vector<containers::Match>
-
-#define AUTOSQL_SAMPLE_CONTAINER std::vector<containers::Match*>
-
-#define AUTOSQL_SAMPLE_ITERATOR AUTOSQL_SAMPLE_CONTAINER::iterator
+#define AUTOSQL_SAME_UNITS_CONTAINER       \
+    std::vector<std::tuple<                \
+        descriptors::ColumnToBeAggregated, \
+        descriptors::ColumnToBeAggregated>>
 
 #define AUTOSQL_INDEX std::unordered_map<size_t, std::vector<size_t>>
 

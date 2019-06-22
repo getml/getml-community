@@ -79,10 +79,10 @@ void Matchmaker::make_matches(
 
 // ----------------------------------------------------------------------------
 
-AUTOSQL_SAMPLE_CONTAINER Matchmaker::make_pointers(
+containers::MatchPtrs Matchmaker::make_pointers(
     std::vector<containers::Match>* _matches )
 {
-    auto pointers = AUTOSQL_SAMPLE_CONTAINER( _matches->size() );
+    auto pointers = containers::MatchPtrs( _matches->size() );
 
     for ( size_t i = 0; i < _matches->size(); ++i )
         {

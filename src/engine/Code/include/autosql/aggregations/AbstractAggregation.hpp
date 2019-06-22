@@ -19,16 +19,16 @@ class AbstractAggregation
     /// Activates all samples
     virtual void activate_all(
         const bool _init_opt,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) = 0;
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end ) = 0;
 
     /// Activates all samples that contain _category
     /// Used for prediction
     virtual void activate_samples_containing_categories(
         const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
         const std::vector<AUTOSQL_INT>::const_iterator _categories_end,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) = 0;
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end ) = 0;
 
     /// Iterates through the categories and selectively
     /// activates samples
@@ -44,8 +44,8 @@ class AbstractAggregation
     virtual void activate_samples_not_containing_categories(
         const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
         const std::vector<AUTOSQL_INT>::const_iterator _categories_end,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) = 0;
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end ) = 0;
 
     /// Iterates through the categories and selectively
     /// activates samples
@@ -60,29 +60,29 @@ class AbstractAggregation
     /// samples that are greater than the critical value
     virtual void activate_samples_from_above(
         const AUTOSQL_FLOAT _critical_value,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) = 0;
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end ) = 0;
 
     /// Iterates through the samples and activates them
     /// starting with the greatest
     virtual void activate_samples_from_above(
         const std::vector<AUTOSQL_FLOAT> &_critical_values,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) = 0;
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end ) = 0;
 
     /// Iterates through the samples and activates those
     /// samples that smaller than or equal to the critical value
     virtual void activate_samples_from_below(
         const AUTOSQL_FLOAT _critical_value,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) = 0;
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end ) = 0;
 
     /// Iterates through the samples and activates them
     /// starting with the smallest
     virtual void activate_samples_from_below(
         const std::vector<AUTOSQL_FLOAT> &_critical_values,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) = 0;
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end ) = 0;
 
     /// Gets rid of data that is no longer needed.
     virtual void clear() = 0;
@@ -101,8 +101,8 @@ class AbstractAggregation
     virtual void deactivate_samples_containing_categories(
         const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
         const std::vector<AUTOSQL_INT>::const_iterator _categories_end,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) = 0;
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end ) = 0;
 
     /// Iteratres through the categories and selectively
     /// deactivates samples
@@ -117,37 +117,37 @@ class AbstractAggregation
     /// samples that are greater than the critical value
     virtual void deactivate_samples_from_above(
         const AUTOSQL_FLOAT _critical_value,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) = 0;
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end ) = 0;
 
     /// Iterates through the samples and deactivates them
     /// starting with the greatest
     virtual void deactivate_samples_from_above(
         const std::vector<AUTOSQL_FLOAT> &_critical_values,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) = 0;
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end ) = 0;
 
     /// Iterates through the samples and deactivates those
     /// samples that smaller than or equal to the critical value
     virtual void deactivate_samples_from_below(
         const AUTOSQL_FLOAT _critical_value,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) = 0;
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end ) = 0;
 
     /// Iterates through the samples and deactivates them
     /// starting with the smallest
     virtual void deactivate_samples_from_below(
         const std::vector<AUTOSQL_FLOAT> &_critical_values,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) = 0;
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end ) = 0;
 
     /// Dectivates all samples that do not contain _category
     /// Used for prediction
     virtual void deactivate_samples_not_containing_categories(
         const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
         const std::vector<AUTOSQL_INT>::const_iterator _categories_end,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) = 0;
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end ) = 0;
 
     /// Iterates through the categories and selectively
     /// deactivates samples
@@ -161,8 +161,8 @@ class AbstractAggregation
     /// Deactivates all samples where the numerical_value contains null values.
     /// Such samples must always be deactivated.
     virtual void deactivate_samples_with_null_values(
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _null_values_separator ) = 0;
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _null_values_separator ) = 0;
 
     /// Returns a string describing the type of the intermediate aggregation
     /// needed
@@ -186,13 +186,13 @@ class AbstractAggregation
     virtual void revert_to_commit() = 0;
 
     /// Separates the samples for which the value to be aggregated is NULL
-    virtual AUTOSQL_SAMPLES::iterator separate_null_values(
-        AUTOSQL_SAMPLES &_samples ) = 0;
+    virtual containers::Matches::iterator separate_null_values(
+        containers::Matches &_samples ) = 0;
 
     /// Separates the pointers to samples for which the value to be aggregated
     /// is NULL
-    virtual AUTOSQL_SAMPLE_CONTAINER::iterator separate_null_values(
-        AUTOSQL_SAMPLE_CONTAINER &_samples ) = 0;
+    virtual containers::MatchPtrs::iterator separate_null_values(
+        containers::MatchPtrs &_samples ) = 0;
 
     /// Trivial setter
     virtual void set_aggregation_impl(
@@ -234,8 +234,8 @@ class AbstractAggregation
     /// Sorts the samples by value to be aggregated (within the element in
     /// population table)
     virtual void sort_samples(
-        AUTOSQL_SAMPLES::iterator _samples_begin,
-        AUTOSQL_SAMPLES::iterator _samples_end ) = 0;
+        containers::Matches::iterator _samples_begin,
+        containers::Matches::iterator _samples_end ) = 0;
 
     /// Returns a string describing the type of the aggregation
     virtual std::string type() const = 0;

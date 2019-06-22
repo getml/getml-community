@@ -11,8 +11,8 @@ void TreeFitter::find_best_trees(
     const decisiontrees::TableHolder &_table_holder,
     const std::vector<containers::Subfeatures> &_subfeatures,
     const std::vector<AUTOSQL_FLOAT> &_values,
-    std::vector<AUTOSQL_SAMPLES> *_samples,
-    std::vector<AUTOSQL_SAMPLE_CONTAINER> *_sample_containers,
+    std::vector<containers::Matches> *_samples,
+    std::vector<containers::MatchPtrs> *_sample_containers,
     optimizationcriteria::OptimizationCriterion *_optimization_criterion,
     std::list<decisiontrees::DecisionTree> *_candidate_trees,
     std::vector<decisiontrees::DecisionTree> *_trees )
@@ -81,8 +81,8 @@ void TreeFitter::find_best_trees(
 void TreeFitter::fit(
     const decisiontrees::TableHolder &_table_holder,
     const std::vector<containers::Subfeatures> &_subfeatures,
-    std::vector<AUTOSQL_SAMPLES> *_samples,
-    std::vector<AUTOSQL_SAMPLE_CONTAINER> *_sample_containers,
+    std::vector<containers::Matches> *_samples,
+    std::vector<containers::MatchPtrs> *_sample_containers,
     optimizationcriteria::OptimizationCriterion *_optimization_criterion,
     std::list<decisiontrees::DecisionTree> *_candidate_trees,
     std::vector<decisiontrees::DecisionTree> *_trees )
@@ -131,8 +131,8 @@ void TreeFitter::fit_tree(
     const containers::DataFrameView &_population,
     const containers::DataFrame &_peripheral,
     const containers::Subfeatures &_subfeatures,
-    std::vector<AUTOSQL_SAMPLES> *_samples,
-    std::vector<AUTOSQL_SAMPLE_CONTAINER> *_sample_containers,
+    std::vector<containers::Matches> *_samples,
+    std::vector<containers::MatchPtrs> *_sample_containers,
     optimizationcriteria::OptimizationCriterion *_optimization_criterion,
     decisiontrees::DecisionTree *_tree )
 {
@@ -212,8 +212,8 @@ void TreeFitter::fit_tree(
 void TreeFitter::probe(
     const decisiontrees::TableHolder &_table_holder,
     const std::vector<containers::Subfeatures> &_subfeatures,
-    std::vector<AUTOSQL_SAMPLES> *_samples,
-    std::vector<AUTOSQL_SAMPLE_CONTAINER> *_sample_containers,
+    std::vector<containers::Matches> *_samples,
+    std::vector<containers::MatchPtrs> *_sample_containers,
     optimizationcriteria::OptimizationCriterion *_optimization_criterion,
     std::list<decisiontrees::DecisionTree> *_candidate_trees,
     std::vector<AUTOSQL_FLOAT> *_values )

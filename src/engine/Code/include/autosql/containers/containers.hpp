@@ -25,6 +25,8 @@
 // Module files
 
 #include "autosql/containers/Match.hpp"
+#include "autosql/containers/Matches.hpp"
+#include "autosql/containers/MatchPtrs.hpp"
 
 #include "autosql/containers/CategoryIndex.hpp"
 #include "autosql/containers/IntSet.hpp"

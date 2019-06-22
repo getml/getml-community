@@ -22,8 +22,8 @@ class DecisionTreeNode
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
         const containers::Subfeatures &_subfeatures,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end );
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end );
 
     /// Calling this member functions means that this node is a root
     /// and must undertake the necessary steps: It removes all samples
@@ -35,8 +35,8 @@ class DecisionTreeNode
         const std::vector<containers::ColumnView<
             AUTOSQL_FLOAT,
             std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
-        AUTOSQL_SAMPLE_CONTAINER::iterator _sample_container_begin,
-        AUTOSQL_SAMPLE_CONTAINER::iterator _sample_container_end );
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end );
 
     /// Builds the node from a Poco::JSON::Object.
     void from_json_obj( const Poco::JSON::Object &_json_obj );
@@ -64,8 +64,8 @@ class DecisionTreeNode
         const std::vector<containers::ColumnView<
             AUTOSQL_FLOAT,
             std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end,
         aggregations::AbstractAggregation *_aggregation ) const;
 
     // --------------------------------------
@@ -443,42 +443,42 @@ class DecisionTreeNode
    private:
     /// Apply changes based on the category used - used for prediction
     void apply_by_categories_used(
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end,
         aggregations::AbstractAggregation *_aggregation ) const;
 
     /// Apply changes based on the category used - used for training
     void apply_by_categories_used_and_commit(
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end );
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end );
 
     /// Apply changes based on the critical value
     template <typename T>
     void apply_by_critical_value(
         const T &_critical_value,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end,
         aggregations::AbstractAggregation *_aggregation ) const;
 
     /// Calculates the beginning and end of the categorical
     /// values considered
     std::shared_ptr<const std::vector<AUTOSQL_INT>> calculate_categories(
         const size_t _sample_size,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end );
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end );
 
     /// Given the sorted sample containers, this returns the critical_values
     /// for discrete values
     std::vector<AUTOSQL_FLOAT> calculate_critical_values_discrete(
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end,
         const size_t _sample_size );
 
     /// Given the sorted sample containers, this returns the critical_values
     /// for numerical values
     std::vector<AUTOSQL_FLOAT> calculate_critical_values_numerical(
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end,
         const size_t _sample_size );
 
     /// Commits the split and spawns child nodes
@@ -489,21 +489,21 @@ class DecisionTreeNode
             AUTOSQL_FLOAT,
             std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
         const descriptors::Split &_split,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end );
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end );
 
     /// Returns the > condition (for numerical variables)
     /// or the != condition (for categorical variables)
     std::string greater_or_not_equal_to( const std::string &_colname ) const;
 
     /// Copies the split give ix_max.
-    AUTOSQL_SAMPLE_ITERATOR identify_parameters(
+    containers::MatchPtrs::iterator identify_parameters(
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
         const containers::Subfeatures &_subfeatures,
         const descriptors::Split &_column,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end );
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end );
 
     /// Returns the sum of the sample sizes of all processes
     size_t reduce_sample_size( const size_t _sample_size );
@@ -513,9 +513,9 @@ class DecisionTreeNode
     /// DecisionTree/Aggregation: This separates by the numerical_value,
     /// whereas DecisionTree/Aggregation separates by the value to be
     /// aggregated!
-    AUTOSQL_SAMPLE_ITERATOR separate_null_values(
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+    containers::MatchPtrs::iterator separate_null_values(
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end,
         bool _null_values_to_beginning = true ) const;
 
     /// Assigns a the right values to the samples for faster lookup.
@@ -525,8 +525,8 @@ class DecisionTreeNode
         const std::vector<containers::ColumnView<
             AUTOSQL_FLOAT,
             std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) const;
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end ) const;
 
     /// Appends the <= condition (for numerical variables)
     /// or the == condition (for categorical variables)
@@ -534,13 +534,13 @@ class DecisionTreeNode
 
     /// Sorts the sample by the previously set categorical_value
     void sort_by_categorical_value(
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end );
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end );
 
     /// Sorts the sample by the previously set numerical_value
     void sort_by_numerical_value(
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end );
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end );
 
     /// Spawns two new child nodes in the fit(...) function
     void spawn_child_nodes(
@@ -549,24 +549,24 @@ class DecisionTreeNode
         const std::vector<containers::ColumnView<
             AUTOSQL_FLOAT,
             std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _null_values_separator,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end );
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _null_values_separator,
+        containers::MatchPtrs::iterator _sample_container_end );
 
     /// Tries to impose the peripheral categorical columns as a condition
     void try_categorical_peripheral(
         const containers::DataFrame &_peripheral,
         const size_t _sample_size,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end,
         std::vector<descriptors::Split> *_candidate_splits );
 
     /// Tries to impose the population categorical columns as a condition
     void try_categorical_population(
         const containers::DataFrameView &_population,
         const size_t _sample_size,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end,
         std::vector<descriptors::Split> *_candidate_splits );
 
     /// Tries whether the categorical values might constitute a good split
@@ -574,8 +574,8 @@ class DecisionTreeNode
         const AUTOSQL_INT _column_used,
         const enums::DataUsed _data_used,
         const size_t _sample_size,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end,
         std::vector<descriptors::Split> *_candidate_splits );
 
     /// Tries to impose different conditions
@@ -586,40 +586,40 @@ class DecisionTreeNode
             AUTOSQL_FLOAT,
             std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
         const size_t _sample_size,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end,
         std::vector<descriptors::Split> *_candidate_splits );
 
     /// Tries to impose the peripheral discrete columns as a condition
     void try_discrete_peripheral(
         const containers::DataFrame &_peripheral,
         const size_t _sample_size,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end,
         std::vector<descriptors::Split> *_candidate_splits );
 
     /// Tries to impose the population discrete columns as a condition
     void try_discrete_population(
         const containers::DataFrameView &_population,
         const size_t _sample_size,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end,
         std::vector<descriptors::Split> *_candidate_splits );
 
     /// Tries to impose the peripheral numerical columns as a condition
     void try_numerical_peripheral(
         const containers::DataFrame &_peripheral,
         const size_t _sample_size,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end,
         std::vector<descriptors::Split> *_candidate_splits );
 
     /// Tries to impose the population numerical columns as a condition
     void try_numerical_population(
         const containers::DataFrameView &_population,
         const size_t _sample_size,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end,
         std::vector<descriptors::Split> *_candidate_splits );
 
     /// Tries whether the discrete values might constitute a good split
@@ -627,8 +627,8 @@ class DecisionTreeNode
         const AUTOSQL_INT _column_used,
         const enums::DataUsed _data_used,
         const size_t _sample_size,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end,
         std::vector<descriptors::Split> *_candidate_splits );
 
     /// Called by try_discrete_values(...) and try_numerical_values(...)
@@ -637,9 +637,9 @@ class DecisionTreeNode
         const enums::DataUsed _data_used,
         const size_t _sample_size,
         const std::vector<AUTOSQL_FLOAT> _critical_values,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _null_values_separator,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _null_values_separator,
+        containers::MatchPtrs::iterator _sample_container_end,
         std::vector<descriptors::Split> *_candidate_splits );
 
     /// Tries whether the numerical values might constitute a good split
@@ -647,8 +647,8 @@ class DecisionTreeNode
         const AUTOSQL_INT _column_used,
         const enums::DataUsed _data_used,
         const size_t _sample_size,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end,
         std::vector<descriptors::Split> *_candidate_splits );
 
     /// Tries to impose the same units categorical as a condition
@@ -656,8 +656,8 @@ class DecisionTreeNode
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
         const size_t _sample_size,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end,
         std::vector<descriptors::Split> *_candidate_splits );
 
     /// Tries to impose the same units discrete as a condition
@@ -665,8 +665,8 @@ class DecisionTreeNode
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
         const size_t _sample_size,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end,
         std::vector<descriptors::Split> *_candidate_splits );
 
     /// Tries to impose the same units numerical as a condition
@@ -674,16 +674,16 @@ class DecisionTreeNode
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
         const size_t _sample_size,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end,
         std::vector<descriptors::Split> *_candidate_splits );
 
     /// Tries to impose the subfeatures as a condition
     void try_subfeatures(
         const containers::Subfeatures &_subfeatures,
         const size_t _sample_size,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end,
         std::vector<descriptors::Split> *_candidate_splits );
 
     /// Tries to impose the difference between the time stamps as a
@@ -692,8 +692,8 @@ class DecisionTreeNode
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
         const size_t _sample_size,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-        AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end,
         std::vector<descriptors::Split> *_candidate_splits );
 
     // --------------------------------------
@@ -733,8 +733,8 @@ class DecisionTreeNode
 template <typename T>
 void DecisionTreeNode::apply_by_critical_value(
     const T &_critical_value,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+    containers::MatchPtrs::iterator _sample_container_begin,
+    containers::MatchPtrs::iterator _sample_container_end,
     aggregations::AbstractAggregation *_aggregation ) const
 {
     if ( std::distance( _sample_container_begin, _sample_container_end ) == 0 )

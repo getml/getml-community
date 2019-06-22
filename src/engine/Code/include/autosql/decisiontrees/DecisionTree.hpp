@@ -43,7 +43,7 @@ class DecisionTree
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
         const containers::Subfeatures &_subfeatures,
-        const AUTOSQL_SAMPLE_CONTAINER &_sample_container,
+        const containers::MatchPtrs &_sample_container,
         aggregations::AbstractAggregation *_aggregation ) const;
 
     /// Fits the decision tree
@@ -51,8 +51,8 @@ class DecisionTree
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
         const containers::Subfeatures &_subfeatures,
-        AUTOSQL_SAMPLE_CONTAINER::iterator _sample_container_begin,
-        AUTOSQL_SAMPLE_CONTAINER::iterator _sample_container_end,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end,
         optimizationcriteria::OptimizationCriterion *_optimization_criterion );
 
     /// Rebuilds the tree from a Poco::JSON::Object
@@ -123,7 +123,7 @@ class DecisionTree
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
         const containers::Subfeatures &_subfeatures,
-        const AUTOSQL_SAMPLE_CONTAINER &_sample_container )
+        const containers::MatchPtrs &_sample_container )
     {
         create_value_to_be_aggregated(
             _population,
@@ -178,16 +178,16 @@ class DecisionTree
     }
 
     /// Separates all null values in the samples
-    inline AUTOSQL_SAMPLES::iterator separate_null_values(
-        AUTOSQL_SAMPLES &_samples )
+    inline containers::Matches::iterator separate_null_values(
+        containers::Matches &_samples )
     {
         return aggregation()->separate_null_values( _samples );
     }
 
     /// Separates all null values in the sample containers (recall
     /// that a sample containers contains pointers to samples)
-    inline AUTOSQL_SAMPLE_CONTAINER::iterator separate_null_values(
-        AUTOSQL_SAMPLE_CONTAINER &_samples )
+    inline containers::MatchPtrs::iterator separate_null_values(
+        containers::MatchPtrs &_samples )
     {
         return aggregation()->separate_null_values( _samples );
     }
@@ -229,8 +229,8 @@ class DecisionTree
     /// Some aggregations, such as MIN and MAX require the samples
     /// (not the pointers to the samples) to be sorted.
     inline void sort_samples(
-        AUTOSQL_SAMPLES::iterator _samples_begin,
-        AUTOSQL_SAMPLES::iterator _samples_end )
+        containers::Matches::iterator _samples_begin,
+        containers::Matches::iterator _samples_end )
     {
         aggregation()->sort_samples( _samples_begin, _samples_end );
     }

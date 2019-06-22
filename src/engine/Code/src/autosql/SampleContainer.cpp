@@ -6,7 +6,7 @@ namespace autosql
 
 std::shared_ptr<const std::vector<AUTOSQL_INT>>
 SampleContainer::create_population_indices(
-    const AUTOSQL_INT _nrows, const AUTOSQL_SAMPLE_CONTAINER& _sample_container )
+    const AUTOSQL_INT _nrows, const containers::MatchPtrs& _sample_container )
 {
     std::set<AUTOSQL_INT> population_indices;
 
@@ -52,7 +52,7 @@ void SampleContainer::create_samples(
     const containers::Matrix<AUTOSQL_FLOAT>& _time_stamps_perip,
     const containers::Matrix<AUTOSQL_FLOAT>* _upper_time_stamps,
     const AUTOSQL_FLOAT _time_stamp_popul,
-    AUTOSQL_SAMPLES& _samples )
+    containers::Matches& _samples )
 {
     debug_message( "SampleContainer::create_samples: Finding join key..." );
 
@@ -92,7 +92,7 @@ void SampleContainer::create_samples(
 // ----------------------------------------------------------------------------
 
 void SampleContainer::create_sample_container(
-    AUTOSQL_SAMPLES& _samples, AUTOSQL_SAMPLE_CONTAINER& _sample_container )
+    containers::Matches& _samples, containers::MatchPtrs& _sample_container )
 {
     _sample_container.resize( _samples.size() );
 
@@ -110,8 +110,8 @@ void SampleContainer::create_samples_and_sample_containers(
     const containers::DataFrameView& _population_table,
     std::mt19937& _random_number_generator,
     containers::Matrix<AUTOSQL_FLOAT>& _sample_weights,
-    std::vector<AUTOSQL_SAMPLES>& _samples,
-    std::vector<AUTOSQL_SAMPLE_CONTAINER>& _sample_containers )
+    std::vector<containers::Matches>& _samples,
+    std::vector<containers::MatchPtrs>& _sample_containers )
 {
     debug_message( "create_samples_and_sample_containers ( 1 )..." );
 
@@ -136,10 +136,10 @@ void SampleContainer::create_samples_and_sample_containers(
     // ----------------------------------------------------------------------
     // Create sample containers for all non-zero samples
 
-    _samples = std::vector<AUTOSQL_SAMPLES>( _peripheral_tables.size() );
+    _samples = std::vector<containers::Matches>( _peripheral_tables.size() );
 
     _sample_containers =
-        std::vector<AUTOSQL_SAMPLE_CONTAINER>( _peripheral_tables.size() );
+        std::vector<containers::MatchPtrs>( _peripheral_tables.size() );
 
     // ----------------------------------------------------------------------
 
@@ -186,8 +186,8 @@ void SampleContainer::create_samples_and_sample_containers(
     const descriptors::Hyperparameters& _hyperparameters,
     const std::vector<containers::DataFrame>& _peripheral_tables,
     const containers::DataFrameView& _population_table,
-    std::vector<AUTOSQL_SAMPLES>& _samples,
-    std::vector<AUTOSQL_SAMPLE_CONTAINER>& _sample_containers )
+    std::vector<containers::Matches>& _samples,
+    std::vector<containers::MatchPtrs>& _sample_containers )
 {
     debug_message( "create_samples_and_sample_containers ( 2 )..." );
 

@@ -34,8 +34,8 @@ class TreeFitter
     void fit(
         const decisiontrees::TableHolder &_table_holder,
         const std::vector<containers::Subfeatures> &_subfeatures,
-        std::vector<AUTOSQL_SAMPLES> *_samples,
-        std::vector<AUTOSQL_SAMPLE_CONTAINER> *_sample_containers,
+        std::vector<containers::Matches> *_samples,
+        std::vector<containers::MatchPtrs> *_sample_containers,
         optimizationcriteria::OptimizationCriterion *_optimization_criterion,
         std::list<decisiontrees::DecisionTree> *_candidate_trees,
         std::vector<decisiontrees::DecisionTree> *_trees );
@@ -49,8 +49,8 @@ class TreeFitter
         const decisiontrees::TableHolder &_table_holder,
         const std::vector<containers::Subfeatures> &_subfeatures,
         const std::vector<AUTOSQL_FLOAT> &_values,
-        std::vector<AUTOSQL_SAMPLES> *_samples,
-        std::vector<AUTOSQL_SAMPLE_CONTAINER> *_sample_containers,
+        std::vector<containers::Matches> *_samples,
+        std::vector<containers::MatchPtrs> *_sample_containers,
         optimizationcriteria::OptimizationCriterion *_optimization_criterion,
         std::list<decisiontrees::DecisionTree> *_candidate_trees,
         std::vector<decisiontrees::DecisionTree> *_trees );
@@ -60,8 +60,8 @@ class TreeFitter
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
         const containers::Subfeatures &_subfeatures,
-        std::vector<AUTOSQL_SAMPLES> *_samples,
-        std::vector<AUTOSQL_SAMPLE_CONTAINER> *_sample_containers,
+        std::vector<containers::Matches> *_samples,
+        std::vector<containers::MatchPtrs> *_sample_containers,
         optimizationcriteria::OptimizationCriterion *_optimization_criterion,
         decisiontrees::DecisionTree *_tree );
 
@@ -69,8 +69,8 @@ class TreeFitter
     void probe(
         const decisiontrees::TableHolder &_table_holder,
         const std::vector<containers::Subfeatures> &_subfeatures,
-        std::vector<AUTOSQL_SAMPLES> *_samples,
-        std::vector<AUTOSQL_SAMPLE_CONTAINER> *_sample_containers,
+        std::vector<containers::Matches> *_samples,
+        std::vector<containers::MatchPtrs> *_sample_containers,
         optimizationcriteria::OptimizationCriterion *_optimization_criterion,
         std::list<decisiontrees::DecisionTree> *_candidate_trees,
         std::vector<AUTOSQL_FLOAT> *_values );

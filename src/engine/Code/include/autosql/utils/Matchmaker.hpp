@@ -29,7 +29,7 @@ struct Matchmaker
         std::vector<containers::Match>* _matches );
 
     /// Creates pointers to the matches.
-    static AUTOSQL_SAMPLE_CONTAINER make_pointers(
+    static containers::MatchPtrs make_pointers(
         std::vector<containers::Match>* _matches );
 };
 

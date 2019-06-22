@@ -8,8 +8,8 @@ namespace containers
 
 CategoryIndex::CategoryIndex(
     const std::vector<AUTOSQL_INT>& _categories,
-    const AUTOSQL_SAMPLE_ITERATOR _begin,
-    const AUTOSQL_SAMPLE_ITERATOR _end )
+    const containers::MatchPtrs::iterator _begin,
+    const containers::MatchPtrs::iterator _end )
     : begin_( _begin ),
       end_( _end ),
       indptr_( CategoryIndex::build_indptr( _categories, _begin, _end ) ),
@@ -36,8 +36,8 @@ CategoryIndex::CategoryIndex(
 
 std::vector<AUTOSQL_INT> CategoryIndex::build_indptr(
     const std::vector<AUTOSQL_INT>& _categories,
-    const AUTOSQL_SAMPLE_ITERATOR _begin,
-    const AUTOSQL_SAMPLE_ITERATOR _end )
+    const containers::MatchPtrs::iterator _begin,
+    const containers::MatchPtrs::iterator _end )
 {
     // ------------------------------------------------------------------------
 

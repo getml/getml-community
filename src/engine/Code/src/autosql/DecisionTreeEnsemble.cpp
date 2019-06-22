@@ -438,9 +438,9 @@ void DecisionTreeEnsemble::fit(
 
     assert( _table_holder->main_tables_.size() == num_peripheral );
 
-    std::vector<AUTOSQL_SAMPLES> samples( num_peripheral );
+    std::vector<containers::Matches> samples( num_peripheral );
 
-    std::vector<AUTOSQL_SAMPLE_CONTAINER> sample_containers( num_peripheral );
+    std::vector<containers::MatchPtrs> sample_containers( num_peripheral );
 
     if ( hyperparameters().sampling_factor_ <= 0.0 )
         {

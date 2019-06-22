@@ -99,7 +99,7 @@ void DecisionTree::create_value_to_be_aggregated(
     const containers::DataFrameView &_population,
     const containers::DataFrame &_peripheral,
     const containers::Subfeatures &_subfeatures,
-    const AUTOSQL_SAMPLE_CONTAINER &_sample_container,
+    const containers::MatchPtrs &_sample_container,
     aggregations::AbstractAggregation *_aggregation ) const
 {
     // ------------------------------------------------------------------------
@@ -308,8 +308,8 @@ void DecisionTree::fit(
     const containers::DataFrameView &_population,
     const containers::DataFrame &_peripheral,
     const containers::Subfeatures &_subfeatures,
-    AUTOSQL_SAMPLE_CONTAINER::iterator _sample_container_begin,
-    AUTOSQL_SAMPLE_CONTAINER::iterator _sample_container_end,
+    containers::MatchPtrs::iterator _sample_container_begin,
+    containers::MatchPtrs::iterator _sample_container_end,
     optimizationcriteria::OptimizationCriterion *_optimization_criterion )
 {
     // ------------------------------------------------------------
@@ -718,7 +718,7 @@ std::vector<AUTOSQL_FLOAT> DecisionTree::transform(
 
             debug_log( "transform: Create sample containers..." );
 
-            AUTOSQL_SAMPLES samples;
+            containers::Matches samples;
 
             utils::Matchmaker::make_matches(
                 _population,

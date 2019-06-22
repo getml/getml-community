@@ -13,8 +13,8 @@ class CategoryIndex
    public:
     CategoryIndex(
         const std::vector<AUTOSQL_INT>& _categories,
-        const AUTOSQL_SAMPLE_ITERATOR _begin,
-        const AUTOSQL_SAMPLE_ITERATOR _end );
+        const containers::MatchPtrs::iterator _begin,
+        const containers::MatchPtrs::iterator _end );
 
     ~CategoryIndex() = default;
 
@@ -22,10 +22,10 @@ class CategoryIndex
 
    public:
     /// Trivial accessor.
-    AUTOSQL_SAMPLE_ITERATOR begin() const { return begin_; }
+    containers::MatchPtrs::iterator begin() const { return begin_; }
 
     /// Returns iterator to the beginning of a set of categories.
-    AUTOSQL_SAMPLE_ITERATOR begin( const AUTOSQL_INT _category ) const
+    containers::MatchPtrs::iterator begin( const AUTOSQL_INT _category ) const
     {
         assert( _category - minimum_ >= 0 );
         assert(
@@ -35,10 +35,10 @@ class CategoryIndex
     }
 
     /// Trivial accessor.
-    AUTOSQL_SAMPLE_ITERATOR end() const { return end_; }
+    containers::MatchPtrs::iterator end() const { return end_; }
 
     /// Returns iterator to the end of a set of categories.
-    AUTOSQL_SAMPLE_ITERATOR end( const AUTOSQL_INT _category ) const
+    containers::MatchPtrs::iterator end( const AUTOSQL_INT _category ) const
     {
         assert( _category - minimum_ >= 0 );
         assert(
@@ -53,17 +53,17 @@ class CategoryIndex
     /// Builds the indptr during construction of the CategoryIndex.
     static std::vector<AUTOSQL_INT> build_indptr(
         const std::vector<AUTOSQL_INT>& _categories,
-        const AUTOSQL_SAMPLE_ITERATOR _begin,
-        const AUTOSQL_SAMPLE_ITERATOR _end );
+        const containers::MatchPtrs::iterator _begin,
+        const containers::MatchPtrs::iterator _end );
 
     // -------------------------------
 
    private:
     /// Points to the first sample.
-    const AUTOSQL_SAMPLE_ITERATOR begin_;
+    const containers::MatchPtrs::iterator begin_;
 
     /// Points to the first sample.
-    const AUTOSQL_SAMPLE_ITERATOR end_;
+    const containers::MatchPtrs::iterator end_;
 
     /// Contains all categories that have been included.
     const std::vector<AUTOSQL_INT> indptr_;

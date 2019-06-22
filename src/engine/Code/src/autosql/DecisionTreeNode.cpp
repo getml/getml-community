@@ -13,8 +13,8 @@ DecisionTreeNode::DecisionTreeNode(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::apply_by_categories_used(
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+    containers::MatchPtrs::iterator _sample_container_begin,
+    containers::MatchPtrs::iterator _sample_container_end,
     aggregations::AbstractAggregation *_aggregation ) const
 {
     if ( std::distance( _sample_container_begin, _sample_container_end ) == 0 )
@@ -65,8 +65,8 @@ void DecisionTreeNode::apply_by_categories_used(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::apply_by_categories_used_and_commit(
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
+    containers::MatchPtrs::iterator _sample_container_begin,
+    containers::MatchPtrs::iterator _sample_container_end )
 {
     if ( std::distance( _sample_container_begin, _sample_container_end ) > 0 )
         {
@@ -125,8 +125,8 @@ void DecisionTreeNode::apply_by_categories_used_and_commit(
 std::shared_ptr<const std::vector<AUTOSQL_INT>>
 DecisionTreeNode::calculate_categories(
     const size_t _sample_size,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
+    containers::MatchPtrs::iterator _sample_container_begin,
+    containers::MatchPtrs::iterator _sample_container_end )
 {
     // ------------------------------------------------------------------------
 
@@ -214,8 +214,8 @@ DecisionTreeNode::calculate_categories(
 // ----------------------------------------------------------------------------
 
 std::vector<AUTOSQL_FLOAT> DecisionTreeNode::calculate_critical_values_discrete(
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+    containers::MatchPtrs::iterator _sample_container_begin,
+    containers::MatchPtrs::iterator _sample_container_end,
     const size_t _sample_size )
 {
     // ---------------------------------------------------------------------------
@@ -289,8 +289,8 @@ std::vector<AUTOSQL_FLOAT> DecisionTreeNode::calculate_critical_values_discrete(
 
 std::vector<AUTOSQL_FLOAT>
 DecisionTreeNode::calculate_critical_values_numerical(
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+    containers::MatchPtrs::iterator _sample_container_begin,
+    containers::MatchPtrs::iterator _sample_container_end,
     const size_t _sample_size )
 {
     // ---------------------------------------------------------------------------
@@ -364,8 +364,8 @@ void DecisionTreeNode::commit(
     const containers::DataFrame &_peripheral,
     const containers::Subfeatures &_subfeatures,
     const descriptors::Split &_split,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
+    containers::MatchPtrs::iterator _sample_container_begin,
+    containers::MatchPtrs::iterator _sample_container_end )
 {
     debug_log( "fit: Improvement possible..." );
 
@@ -403,8 +403,8 @@ void DecisionTreeNode::fit(
     const containers::DataFrameView &_population,
     const containers::DataFrame &_peripheral,
     const containers::Subfeatures &_subfeatures,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
+    containers::MatchPtrs::iterator _sample_container_begin,
+    containers::MatchPtrs::iterator _sample_container_end )
 {
     debug_log( "fit: Calculating sample size..." );
 
@@ -504,8 +504,8 @@ void DecisionTreeNode::fit_as_root(
     const containers::DataFrameView &_population,
     const containers::DataFrame &_peripheral,
     const containers::Subfeatures &_subfeatures,
-    AUTOSQL_SAMPLE_CONTAINER::iterator _sample_container_begin,
-    AUTOSQL_SAMPLE_CONTAINER::iterator _sample_container_end )
+    containers::MatchPtrs::iterator _sample_container_begin,
+    containers::MatchPtrs::iterator _sample_container_end )
 {
     debug_log( "fit_as_root..." );
 
@@ -618,13 +618,13 @@ std::string DecisionTreeNode::greater_or_not_equal_to(
 
 // ----------------------------------------------------------------------------
 
-AUTOSQL_SAMPLE_ITERATOR DecisionTreeNode::identify_parameters(
+containers::MatchPtrs::iterator DecisionTreeNode::identify_parameters(
     const containers::DataFrameView &_population,
     const containers::DataFrame &_peripheral,
     const containers::Subfeatures &_subfeatures,
     const descriptors::Split &_split,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
+    containers::MatchPtrs::iterator _sample_container_begin,
+    containers::MatchPtrs::iterator _sample_container_end )
 {
     // --------------------------------------------------------------
     // Transfer parameters from split descriptor
@@ -746,9 +746,9 @@ size_t DecisionTreeNode::reduce_sample_size( const size_t _sample_size )
 
 // ----------------------------------------------------------------------------
 
-AUTOSQL_SAMPLE_ITERATOR DecisionTreeNode::separate_null_values(
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+containers::MatchPtrs::iterator DecisionTreeNode::separate_null_values(
+    containers::MatchPtrs::iterator _sample_container_begin,
+    containers::MatchPtrs::iterator _sample_container_end,
     bool _null_values_to_beginning ) const
 {
     auto is_null = []( containers::Match *sample ) {
@@ -807,8 +807,8 @@ void DecisionTreeNode::set_samples(
     const containers::DataFrameView &_population,
     const containers::DataFrame &_peripheral,
     const containers::Subfeatures &_subfeatures,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_end ) const
+    containers::MatchPtrs::iterator _sample_container_begin,
+    containers::MatchPtrs::iterator _sample_container_end ) const
 {
     switch ( data_used() )
         {
@@ -953,8 +953,8 @@ void DecisionTreeNode::set_samples(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::sort_by_categorical_value(
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
+    containers::MatchPtrs::iterator _sample_container_begin,
+    containers::MatchPtrs::iterator _sample_container_end )
 {
     auto compare_op = []( const containers::Match *sample1, const containers::Match *sample2 ) {
         return sample1->categorical_value < sample2->categorical_value;
@@ -966,8 +966,8 @@ void DecisionTreeNode::sort_by_categorical_value(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::sort_by_numerical_value(
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
+    containers::MatchPtrs::iterator _sample_container_begin,
+    containers::MatchPtrs::iterator _sample_container_end )
 {
     auto compare_op = []( const containers::Match *sample1, const containers::Match *sample2 ) {
         return sample1->numerical_value < sample2->numerical_value;
@@ -1036,9 +1036,9 @@ void DecisionTreeNode::spawn_child_nodes(
     const containers::DataFrameView &_population,
     const containers::DataFrame &_peripheral,
     const containers::Subfeatures &_subfeatures,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-    AUTOSQL_SAMPLE_ITERATOR _null_values_separator,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
+    containers::MatchPtrs::iterator _sample_container_begin,
+    containers::MatchPtrs::iterator _null_values_separator,
+    containers::MatchPtrs::iterator _sample_container_end )
 {
     // -------------------------------------------------------------------------
 
@@ -1313,8 +1313,8 @@ void DecisionTreeNode::transform(
     const containers::DataFrameView &_population,
     const containers::DataFrame &_peripheral,
     const containers::Subfeatures &_subfeatures,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+    containers::MatchPtrs::iterator _sample_container_begin,
+    containers::MatchPtrs::iterator _sample_container_end,
     aggregations::AbstractAggregation *_aggregation ) const
 {
     // -----------------------------------------------------------
@@ -1455,8 +1455,8 @@ void DecisionTreeNode::transform(
 void DecisionTreeNode::try_categorical_peripheral(
     const containers::DataFrame &_peripheral,
     const size_t _sample_size,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+    containers::MatchPtrs::iterator _sample_container_begin,
+    containers::MatchPtrs::iterator _sample_container_end,
     std::vector<descriptors::Split> *_candidate_splits )
 {
     debug_log( "try_categorical_peripheral..." );
@@ -1499,8 +1499,8 @@ void DecisionTreeNode::try_categorical_peripheral(
 void DecisionTreeNode::try_categorical_population(
     const containers::DataFrameView &_population,
     const size_t _sample_size,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+    containers::MatchPtrs::iterator _sample_container_begin,
+    containers::MatchPtrs::iterator _sample_container_end,
     std::vector<descriptors::Split> *_candidate_splits )
 {
     debug_log( "try_categorical_population..." );
@@ -1543,8 +1543,8 @@ void DecisionTreeNode::try_categorical_population(
 void DecisionTreeNode::try_discrete_peripheral(
     const containers::DataFrame &_peripheral,
     const size_t _sample_size,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+    containers::MatchPtrs::iterator _sample_container_begin,
+    containers::MatchPtrs::iterator _sample_container_end,
     std::vector<descriptors::Split> *_candidate_splits )
 {
     debug_log( "try_discrete_peripheral..." );
@@ -1587,8 +1587,8 @@ void DecisionTreeNode::try_discrete_peripheral(
 void DecisionTreeNode::try_discrete_population(
     const containers::DataFrameView &_population,
     const size_t _sample_size,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+    containers::MatchPtrs::iterator _sample_container_begin,
+    containers::MatchPtrs::iterator _sample_container_end,
     std::vector<descriptors::Split> *_candidate_splits )
 {
     debug_log( "try_discrete_population..." );
@@ -1631,8 +1631,8 @@ void DecisionTreeNode::try_discrete_population(
 void DecisionTreeNode::try_numerical_peripheral(
     const containers::DataFrame &_peripheral,
     const size_t _sample_size,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+    containers::MatchPtrs::iterator _sample_container_begin,
+    containers::MatchPtrs::iterator _sample_container_end,
     std::vector<descriptors::Split> *_candidate_splits )
 {
     debug_log( "try_numerical_peripheral..." );
@@ -1675,8 +1675,8 @@ void DecisionTreeNode::try_numerical_peripheral(
 void DecisionTreeNode::try_numerical_population(
     const containers::DataFrameView &_population,
     const size_t _sample_size,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+    containers::MatchPtrs::iterator _sample_container_begin,
+    containers::MatchPtrs::iterator _sample_container_end,
     std::vector<descriptors::Split> *_candidate_splits )
 {
     debug_log( "try_numerical_population..." );
@@ -1720,8 +1720,8 @@ void DecisionTreeNode::try_categorical_values(
     const AUTOSQL_INT _column_used,
     const enums::DataUsed _data_used,
     const size_t _sample_size,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+    containers::MatchPtrs::iterator _sample_container_begin,
+    containers::MatchPtrs::iterator _sample_container_end,
     std::vector<descriptors::Split> *_candidate_splits )
 {
     // -----------------------------------------------------------------------
@@ -2008,8 +2008,8 @@ void DecisionTreeNode::try_conditions(
     const containers::DataFrame &_peripheral,
     const containers::Subfeatures &_subfeatures,
     const size_t _sample_size,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+    containers::MatchPtrs::iterator _sample_container_begin,
+    containers::MatchPtrs::iterator _sample_container_end,
     std::vector<descriptors::Split> *_candidate_splits )
 {
     try_same_units_categorical(
@@ -2100,8 +2100,8 @@ void DecisionTreeNode::try_discrete_values(
     const AUTOSQL_INT _column_used,
     const enums::DataUsed _data_used,
     const size_t _sample_size,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+    containers::MatchPtrs::iterator _sample_container_begin,
+    containers::MatchPtrs::iterator _sample_container_end,
     std::vector<descriptors::Split> *_candidate_splits )
 {
     // -----------------------------------------------------------------------
@@ -2110,7 +2110,7 @@ void DecisionTreeNode::try_discrete_values(
 
     // -----------------------------------------------------------------------
 
-    AUTOSQL_SAMPLE_ITERATOR null_values_separator =
+    containers::MatchPtrs::iterator null_values_separator =
         separate_null_values( _sample_container_begin, _sample_container_end );
 
     sort_by_numerical_value( null_values_separator, _sample_container_end );
@@ -2142,9 +2142,9 @@ void DecisionTreeNode::try_non_categorical_values(
     const enums::DataUsed _data_used,
     const size_t _sample_size,
     const std::vector<AUTOSQL_FLOAT> _critical_values,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-    AUTOSQL_SAMPLE_ITERATOR _null_values_separator,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+    containers::MatchPtrs::iterator _sample_container_begin,
+    containers::MatchPtrs::iterator _null_values_separator,
+    containers::MatchPtrs::iterator _sample_container_end,
     std::vector<descriptors::Split> *_candidate_splits )
 {
     // -----------------------------------------------------------------------
@@ -2295,13 +2295,13 @@ void DecisionTreeNode::try_numerical_values(
     const AUTOSQL_INT _column_used,
     const enums::DataUsed _data_used,
     const size_t _sample_size,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+    containers::MatchPtrs::iterator _sample_container_begin,
+    containers::MatchPtrs::iterator _sample_container_end,
     std::vector<descriptors::Split> *_candidate_splits )
 {
     // -----------------------------------------------------------------------
 
-    AUTOSQL_SAMPLE_ITERATOR null_values_separator =
+    containers::MatchPtrs::iterator null_values_separator =
         separate_null_values( _sample_container_begin, _sample_container_end );
 
     sort_by_numerical_value( null_values_separator, _sample_container_end );
@@ -2330,8 +2330,8 @@ void DecisionTreeNode::try_same_units_categorical(
     const containers::DataFrameView &_population,
     const containers::DataFrame &_peripheral,
     const size_t _sample_size,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+    containers::MatchPtrs::iterator _sample_container_begin,
+    containers::MatchPtrs::iterator _sample_container_end,
     std::vector<descriptors::Split> *_candidate_splits )
 {
     debug_log( "try_same_units_categorical..." );
@@ -2369,8 +2369,8 @@ void DecisionTreeNode::try_same_units_discrete(
     const containers::DataFrameView &_population,
     const containers::DataFrame &_peripheral,
     const size_t _sample_size,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+    containers::MatchPtrs::iterator _sample_container_begin,
+    containers::MatchPtrs::iterator _sample_container_end,
     std::vector<descriptors::Split> *_candidate_splits )
 {
     debug_log( "try_same_units_discrete..." );
@@ -2408,8 +2408,8 @@ void DecisionTreeNode::try_same_units_numerical(
     const containers::DataFrameView &_population,
     const containers::DataFrame &_peripheral,
     const size_t _sample_size,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+    containers::MatchPtrs::iterator _sample_container_begin,
+    containers::MatchPtrs::iterator _sample_container_end,
     std::vector<descriptors::Split> *_candidate_splits )
 {
     debug_log( "try_same_units_numerical..." );
@@ -2446,8 +2446,8 @@ void DecisionTreeNode::try_same_units_numerical(
 void DecisionTreeNode::try_subfeatures(
     const containers::Subfeatures &_subfeatures,
     const size_t _sample_size,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+    containers::MatchPtrs::iterator _sample_container_begin,
+    containers::MatchPtrs::iterator _sample_container_end,
     std::vector<descriptors::Split> *_candidate_splits )
 {
     debug_log( "try_subfeatures..." );
@@ -2485,8 +2485,8 @@ void DecisionTreeNode::try_time_stamps_diff(
     const containers::DataFrameView &_population,
     const containers::DataFrame &_peripheral,
     const size_t _sample_size,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
-    AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
+    containers::MatchPtrs::iterator _sample_container_begin,
+    containers::MatchPtrs::iterator _sample_container_end,
     std::vector<descriptors::Split> *_candidate_splits )
 {
     debug_log( "try_time_stamps_diff..." );
