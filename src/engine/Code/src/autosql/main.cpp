@@ -9,7 +9,7 @@ int main( int argc, char* argv[] )
               << std::endl;
     std::cout << "TESTS FOR MODULE 'AUTOSQL':" << std::endl << std::endl;
 
-    /*test1_count();
+    test1_count();
     test2_avg();
     test3_sum();
     test4_max();
@@ -33,7 +33,7 @@ int main( int argc, char* argv[] )
 
     test18_upper_time_stamps();
 
-    test20_saving_and_loading_models();*/
+    test20_saving_and_loading_models();
 
     test21_snowflake_model();
 

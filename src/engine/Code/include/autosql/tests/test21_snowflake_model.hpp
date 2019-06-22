@@ -144,6 +144,28 @@ void test21_snowflake_model()
         {time_stamps_population_col} );
 
     // ---------------------------------------------
+    // Define subtargets.
+
+    auto subtargets = std::vector<double>( peripheral1_df.nrows() );
+
+    for ( size_t i = 0; i < peripheral2_df.nrows(); ++i )
+        {
+            if ( numerical_peripheral2[i] < 250.0 )
+                {
+                    for ( size_t j = 0; j < peripheral1_df.nrows(); ++j )
+                        {
+                            if ( join_key2_peripheral2[i] ==
+                                     join_key2_peripheral1[j] &&
+                                 time_stamp2_peripheral2[i] <=
+                                     time_stamp2_peripheral1[j] )
+                                {
+                                    subtargets[j]++;
+                                }
+                        }
+                }
+        }
+
+    // ---------------------------------------------
     // Define targets.
 
     for ( size_t i = 0; i < peripheral1_df.nrows(); ++i )
@@ -152,10 +174,9 @@ void test21_snowflake_model()
 
             assert( jk < 500 );
 
-            if ( time_stamp1_peripheral1[i] <= time_stamps_population[jk] &&
-                 peripheral1_df.numerical( i, 0 ) < 250.0 )
+            if ( time_stamp1_peripheral1[i] <= time_stamps_population[jk] )
                 {
-                    targets_population[jk]++;
+                    targets_population[jk] += subtargets[i];
                 }
         }
 
@@ -219,14 +240,14 @@ void test21_snowflake_model()
 
     for ( size_t i = 0; i < predictions.size(); ++i )
         {
-            /*std::cout << "target: "
+            /* std::cout << "target: "
                        << population_df.target( i / num_features, 0 )
                        << ", prediction: " << predictions[i] << std::endl;*/
 
             assert(
                 std::abs(
                     population_df.target( i / num_features, 0 ) -
-                    predictions[i] ) < 5.0 );
+                    predictions[i] ) < 10.0 );
         }
     std::cout << std::endl << std::endl;
 
