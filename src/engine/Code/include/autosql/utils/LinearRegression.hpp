@@ -26,13 +26,13 @@ class LinearRegression
     // Fits a simple linear regression on each column
     // of _residuals w.r.t. _yhat, which has only one column
     void fit(
-        const std::vector<AUTOSQL_FLOAT>& _yhat,
-        const std::vector<std::vector<AUTOSQL_FLOAT>>& _residuals,
-        const std::vector<AUTOSQL_FLOAT>& _sample_weights );
+        const std::vector<Float>& _yhat,
+        const std::vector<std::vector<Float>>& _residuals,
+        const std::vector<Float>& _sample_weights );
 
     // Generates predictions based on _yhat
-    std::vector<std::vector<AUTOSQL_FLOAT>> predict(
-        const std::vector<AUTOSQL_FLOAT>& _yhat ) const;
+    std::vector<std::vector<Float>> predict(
+        const std::vector<Float>& _yhat ) const;
 
     /// Transforms the LinearRegression into a JSON object.
     Poco::JSON::Object to_json_obj() const;
@@ -52,10 +52,10 @@ class LinearRegression
     multithreading::Communicator* comm_;
 
     // Zero intercepts or biases of the linear regression
-    std::vector<AUTOSQL_FLOAT> intercepts_;
+    std::vector<Float> intercepts_;
 
     // Slope parameters of the linear regression
-    std::vector<AUTOSQL_FLOAT> slopes_;
+    std::vector<Float> slopes_;
 
     // -----------------------------------------
 };

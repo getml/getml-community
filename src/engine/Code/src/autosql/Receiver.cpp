@@ -6,15 +6,15 @@ namespace engine
 {
 // ------------------------------------------------------------------------
 
-containers::Matrix<AUTOSQL_INT> Receiver::recv_categorical_matrix(
+containers::Matrix<Int> Receiver::recv_categorical_matrix(
     Poco::Net::StreamSocket& _socket, containers::Encoding& _encoding )
 {
     // ------------------------------------------------
     // Receive shape
 
-    std::array<AUTOSQL_INT, 2> shape;
+    std::array<Int, 2> shape;
 
-    recv<AUTOSQL_INT>( _socket, sizeof( AUTOSQL_INT ) * 2, shape.data() );
+    recv<Int>( _socket, sizeof( Int ) * 2, shape.data() );
 
     // ------------------------------------------------
     // Init matrix
@@ -25,15 +25,15 @@ containers::Matrix<AUTOSQL_INT> Receiver::recv_categorical_matrix(
                 "Your data frame must contain at least one row!" );
         }
 
-    containers::Matrix<AUTOSQL_INT> matrix(
+    containers::Matrix<Int> matrix(
         std::get<0>( shape ), std::get<1>( shape ) );
 
     // ------------------------------------------------
     // Receive strings and map to int matrix
 
-    for ( AUTOSQL_INT i = 0; i < matrix.nrows(); ++i )
+    for ( Int i = 0; i < matrix.nrows(); ++i )
         {
-            for ( AUTOSQL_INT j = 0; j < matrix.ncols(); ++j )
+            for ( Int j = 0; j < matrix.ncols(); ++j )
                 {
                     matrix( i, j ) =
                         _encoding[Receiver::recv_string( _socket )];
@@ -185,15 +185,15 @@ Poco::JSON::Object Receiver::recv_cmd()
 
 // ------------------------------------------------------------------------
 
-containers::Matrix<AUTOSQL_FLOAT> Receiver::recv_matrix(
+containers::Matrix<Float> Receiver::recv_matrix(
     Poco::Net::StreamSocket& _socket, bool _scatter )
 {
     // ------------------------------------------------
     // Receive shape
 
-    std::array<AUTOSQL_INT, 2> shape;
+    std::array<Int, 2> shape;
 
-    recv<AUTOSQL_INT>( _socket, sizeof( AUTOSQL_INT ) * 2, shape.data() );
+    recv<Int>( _socket, sizeof( Int ) * 2, shape.data() );
 
     // ------------------------------------------------
     // Init matrix
@@ -204,15 +204,15 @@ containers::Matrix<AUTOSQL_FLOAT> Receiver::recv_matrix(
                 "Your data frame must contain at least one row!" );
         }
 
-    containers::Matrix<AUTOSQL_FLOAT> matrix(
+    containers::Matrix<Float> matrix(
         std::get<0>( shape ), std::get<1>( shape ) );
 
     // ------------------------------------------------
     // Fill with data
 
-    recv<AUTOSQL_FLOAT>(
+    recv<Float>(
         _socket,
-        sizeof( AUTOSQL_FLOAT ) *
+        sizeof( Float ) *
             static_cast<AUTOSQL_UNSIGNED_LONG>( std::get<0>( shape ) ) *
             static_cast<AUTOSQL_UNSIGNED_LONG>( std::get<1>( shape ) ),
         matrix.data() );
@@ -241,10 +241,10 @@ std::string Receiver::recv_string( Poco::Net::StreamSocket& _socket )
     // ------------------------------------------------
     // Init string
 
-    std::vector<AUTOSQL_INT> str_length( 1 );
+    std::vector<Int> str_length( 1 );
 
-    Receiver::recv<AUTOSQL_INT>(
-        _socket, sizeof( AUTOSQL_INT ), str_length.data() );
+    Receiver::recv<Int>(
+        _socket, sizeof( Int ), str_length.data() );
 
     std::string str( str_length[0], '0' );
 

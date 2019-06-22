@@ -11,9 +11,7 @@ struct DecisionTreeImpl
 {
     // ----------------------------------------
 
-    typedef std::vector<containers::ColumnView<
-        AUTOSQL_FLOAT,
-        std::map<AUTOSQL_INT, AUTOSQL_INT>>>
+    typedef std::vector<containers::ColumnView<Float, std::map<Int, Int>>>
         SubfeatureType;
 
     // ----------------------------------------
@@ -55,7 +53,7 @@ struct DecisionTreeImpl
     }
 
     /// Trivial getter
-    inline AUTOSQL_FLOAT grid_factor() const
+    inline Float grid_factor() const
     {
         assert( tree_hyperparameters_ );
         return tree_hyperparameters_->grid_factor_;
@@ -69,20 +67,20 @@ struct DecisionTreeImpl
     }
 
     /// Trivial getter
-    inline AUTOSQL_INT ix_perip_used() const
+    inline Int ix_perip_used() const
     {
         return column_to_be_aggregated_.ix_perip_used;
     }
 
     /// Trivial getter
-    inline AUTOSQL_INT max_length() const
+    inline Int max_length() const
     {
         assert( tree_hyperparameters_ );
         return tree_hyperparameters_->max_length_;
     }
 
     /// Trivial getter
-    inline AUTOSQL_INT min_num_samples() const
+    inline Int min_num_samples() const
     {
         assert( tree_hyperparameters_ );
         return tree_hyperparameters_->min_num_samples_;
@@ -130,14 +128,14 @@ struct DecisionTreeImpl
     }
 
     /// Trivial getter
-    inline AUTOSQL_FLOAT regularization() const
+    inline Float regularization() const
     {
         assert( tree_hyperparameters_ );
         return tree_hyperparameters_->regularization_;
     }
 
     /// Trivial getter
-    inline AUTOSQL_FLOAT share_conditions() const
+    inline Float share_conditions() const
     {
         assert( tree_hyperparameters_ );
         return tree_hyperparameters_->share_conditions_;
@@ -150,7 +148,7 @@ struct DecisionTreeImpl
     std::string get_colname(
         const std::string& _feature_num,
         const enums::DataUsed _data_used,
-        const AUTOSQL_INT _ix_column_used,
+        const Int _ix_column_used,
         const bool _equals = true ) const;
 
     // ------------------------------------------------------------

@@ -13,12 +13,12 @@ class Receiver
     /// Receives data of any type from the client
     template <class T>
     static void recv(
-        const ENGINE_UNSIGNED_LONG _size,
+        const ULong _size,
         Poco::Net::StreamSocket *_socket,
         T *_data );
 
     /// Receives a categorical matrix from the client
-    static containers::Matrix<ENGINE_INT> recv_categorical_matrix(
+    static containers::Matrix<Int> recv_categorical_matrix(
         containers::Encoding *_encoding, Poco::Net::StreamSocket *_socket );
 
     /// Receives a string from the client
@@ -30,7 +30,7 @@ class Receiver
         Poco::Net::StreamSocket *_socket );
 
     /// Receives a matrix from the client
-    static containers::Matrix<ENGINE_FLOAT> recv_matrix(
+    static containers::Matrix<Float> recv_matrix(
         Poco::Net::StreamSocket *_socket );
 };
 
@@ -39,13 +39,13 @@ class Receiver
 
 template <class T>
 void Receiver::recv(
-    const ENGINE_UNSIGNED_LONG _size,
+    const ULong _size,
     Poco::Net::StreamSocket *_socket,
     T *_data )
 {
-    const ENGINE_UNSIGNED_LONG len = 4096;
+    const ULong len = 4096;
 
-    ENGINE_UNSIGNED_LONG j = 0;
+    ULong j = 0;
 
     // -------------------------------------------------------------------
     // Receive len bytes at most, write them into the buffer and then
@@ -59,7 +59,7 @@ void Receiver::recv(
 
     while ( true )
         {
-            const ENGINE_UNSIGNED_LONG current_len = std::min( len, _size - j );
+            const ULong current_len = std::min( len, _size - j );
 
             if ( current_len == 0 )
                 {

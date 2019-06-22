@@ -13,7 +13,7 @@ DecisionTreeEnsemble::DecisionTreeEnsemble(
     const std::shared_ptr<const Placeholder> &_placeholder )
     : impl_( DecisionTreeEnsembleImpl(
           _encoding, _hyperparameters, _peripheral, _placeholder ) ),
-      targets_( std::make_shared<std::vector<RELBOOST_FLOAT>>( 0 ) )
+      targets_( std::make_shared<std::vector<Float>>( 0 ) )
 {
     loss_function_ = lossfunctions::LossFunctionParser::parse(
         _hyperparameters->objective_, impl().hyperparameters_, targets_ );
@@ -33,12 +33,12 @@ DecisionTreeEnsemble::DecisionTreeEnsemble(
                   JSON::get_array( _obj, "peripheral_names_" ) ) ),
           std::make_shared<const Placeholder>(
               *JSON::get_object( _obj, "placeholder_" ) ) ) ),
-      targets_( std::make_shared<std::vector<RELBOOST_FLOAT>>( 0 ) )
+      targets_( std::make_shared<std::vector<Float>>( 0 ) )
 {
     // ------------------------------------------------------------------------
 
     initial_prediction() =
-        JSON::get_value<RELBOOST_FLOAT>( _obj, "initial_prediction_" );
+        JSON::get_value<Float>( _obj, "initial_prediction_" );
 
     loss_function_ = lossfunctions::LossFunctionParser::parse(
         hyperparameters().objective_, impl().hyperparameters_, targets_ );
@@ -83,7 +83,7 @@ DecisionTreeEnsemble::DecisionTreeEnsemble(
 
 DecisionTreeEnsemble::DecisionTreeEnsemble( const DecisionTreeEnsemble &_other )
     : impl_( _other.impl() ),
-      targets_( std::make_shared<std::vector<RELBOOST_FLOAT>>( 0 ) )
+      targets_( std::make_shared<std::vector<Float>>( 0 ) )
 
 {
     loss_function_ = lossfunctions::LossFunctionParser::parse(
@@ -97,7 +97,7 @@ DecisionTreeEnsemble::DecisionTreeEnsemble( const DecisionTreeEnsemble &_other )
 DecisionTreeEnsemble::DecisionTreeEnsemble(
     DecisionTreeEnsemble &&_other ) noexcept
     : impl_( std::move( _other.impl() ) ),
-      targets_( std::make_shared<std::vector<RELBOOST_FLOAT>>( 0 ) )
+      targets_( std::make_shared<std::vector<Float>>( 0 ) )
 {
     loss_function_ = lossfunctions::LossFunctionParser::parse(
         _other.loss_function().type(), impl().hyperparameters_, targets_ );
@@ -110,13 +110,13 @@ DecisionTreeEnsemble::DecisionTreeEnsemble(
 void DecisionTreeEnsemble::calc_initial_prediction()
 {
     auto sum = std::accumulate(
-        targets().begin(), targets().end(), 0.0, std::plus<RELBOOST_FLOAT>() );
+        targets().begin(), targets().end(), 0.0, std::plus<Float>() );
 
-    auto count = static_cast<RELBOOST_FLOAT>( targets().size() );
+    auto count = static_cast<Float>( targets().size() );
 
-    utils::Reducer::reduce( std::plus<RELBOOST_FLOAT>(), &sum, &comm() );
+    utils::Reducer::reduce( std::plus<Float>(), &sum, &comm() );
 
-    utils::Reducer::reduce( std::plus<RELBOOST_FLOAT>(), &count, &comm() );
+    utils::Reducer::reduce( std::plus<Float>(), &count, &comm() );
 
     initial_prediction() = sum / count;
 
@@ -125,21 +125,21 @@ void DecisionTreeEnsemble::calc_initial_prediction()
 
 // ----------------------------------------------------------------------------
 
-RELBOOST_FLOAT DecisionTreeEnsemble::calc_loss_reduction(
+Float DecisionTreeEnsemble::calc_loss_reduction(
     const decisiontrees::DecisionTree &_decision_tree,
-    const std::vector<RELBOOST_FLOAT> &_yhat_old,
-    const std::vector<RELBOOST_FLOAT> &_predictions ) const
+    const std::vector<Float> &_yhat_old,
+    const std::vector<Float> &_predictions ) const
 {
     assert( _yhat_old.size() == targets().size() );
     assert( _predictions.size() == targets().size() );
 
-    std::vector<RELBOOST_FLOAT> yhat_new( _yhat_old.size() );
+    std::vector<Float> yhat_new( _yhat_old.size() );
 
     const auto update_rate = _decision_tree.update_rate();
 
     const auto update_function = [update_rate](
-                                     const RELBOOST_FLOAT y_old,
-                                     const RELBOOST_FLOAT y_new ) {
+                                     const Float y_old,
+                                     const Float y_new ) {
         return y_old + y_new * update_rate;
     };
 
@@ -294,9 +294,9 @@ void DecisionTreeEnsemble::fit_new_feature()
 
     std::vector<decisiontrees::DecisionTree> candidates;
 
-    std::vector<RELBOOST_FLOAT> loss;
+    std::vector<Float> loss;
 
-    std::vector<std::vector<RELBOOST_FLOAT>> predictions;
+    std::vector<std::vector<Float>> predictions;
 
     for ( size_t ix_table_used = 0;
           ix_table_used < table_holder().main_tables_.size();
@@ -412,7 +412,7 @@ void DecisionTreeEnsemble::fit_new_feature()
 
 // ----------------------------------------------------------------------------
 
-std::vector<RELBOOST_FLOAT> DecisionTreeEnsemble::generate_predictions(
+std::vector<Float> DecisionTreeEnsemble::generate_predictions(
     const decisiontrees::DecisionTree &_decision_tree,
     const TableHolder &_table_holder ) const
 {
@@ -452,7 +452,7 @@ void DecisionTreeEnsemble::init(
     // ------------------------------------------------------------------------
     // Calculate gradient.
 
-    yhat_old_ = std::make_shared<std::vector<RELBOOST_FLOAT>>(
+    yhat_old_ = std::make_shared<std::vector<Float>>(
         _population.nrows(), initial_prediction() );
 
     loss_function().calc_gradients( yhat_old_ );
@@ -505,7 +505,7 @@ DecisionTreeEnsemble &DecisionTreeEnsemble::operator=(
 
     impl_ = std::move( _other.impl_ );
 
-    targets_ = std::make_shared<std::vector<RELBOOST_FLOAT>>( 0 );
+    targets_ = std::make_shared<std::vector<Float>>( 0 );
 
     loss_function_ = lossfunctions::LossFunctionParser::parse(
         _other.loss_function().type(), impl().hyperparameters_, targets_ );
@@ -517,7 +517,7 @@ DecisionTreeEnsemble &DecisionTreeEnsemble::operator=(
 
 // ----------------------------------------------------------------------------
 
-std::vector<RELBOOST_FLOAT> DecisionTreeEnsemble::predict(
+std::vector<Float> DecisionTreeEnsemble::predict(
     const containers::DataFrame &_population,
     const std::vector<containers::DataFrame> &_peripheral ) const
 {
@@ -525,7 +525,7 @@ std::vector<RELBOOST_FLOAT> DecisionTreeEnsemble::predict(
 
     assert( features->size() == _population.nrows() * num_features() );
 
-    auto predictions = std::vector<RELBOOST_FLOAT>(
+    auto predictions = std::vector<Float>(
         _population.nrows(), initial_prediction() );
 
     for ( size_t i = 0; i < _population.nrows(); ++i )
@@ -653,7 +653,7 @@ Poco::JSON::Object DecisionTreeEnsemble::to_monitor(
 
 // ----------------------------------------------------------------------------
 
-std::shared_ptr<std::vector<RELBOOST_FLOAT>> DecisionTreeEnsemble::transform(
+std::shared_ptr<std::vector<Float>> DecisionTreeEnsemble::transform(
     const containers::DataFrame &_population,
     const std::vector<containers::DataFrame> &_peripheral,
     const std::shared_ptr<const logging::AbstractLogger> _logger ) const
@@ -679,7 +679,7 @@ std::shared_ptr<std::vector<RELBOOST_FLOAT>> DecisionTreeEnsemble::transform(
     // -------------------------------------------------------
     // Launch threads and generate predictions on the subviews.
 
-    auto features = std::make_shared<std::vector<RELBOOST_FLOAT>>(
+    auto features = std::make_shared<std::vector<Float>>(
         _population.nrows() * num_features() );
 
     std::vector<std::thread> threads;
@@ -737,7 +737,7 @@ std::shared_ptr<std::vector<RELBOOST_FLOAT>> DecisionTreeEnsemble::transform(
 
 // ----------------------------------------------------------------------------
 
-std::vector<RELBOOST_FLOAT> DecisionTreeEnsemble::transform(
+std::vector<Float> DecisionTreeEnsemble::transform(
     const TableHolder &_table_holder, size_t _n_feature ) const
 {
     assert( _n_feature < num_features() );

@@ -105,10 +105,10 @@ void Sum::calc_diff(
 
 // ----------------------------------------------------------------------------
 
-std::vector<std::array<RELBOOST_FLOAT, 3>> Sum::calc_weights(
+std::vector<std::array<Float, 3>> Sum::calc_weights(
     const enums::Revert _revert,
     const enums::Update _update,
-    const RELBOOST_FLOAT _old_weight,
+    const Float _old_weight,
     const std::vector<const containers::Match*>::iterator _begin,
     const std::vector<const containers::Match*>::iterator _split_begin,
     const std::vector<const containers::Match*>::iterator _split_end,
@@ -145,7 +145,7 @@ std::vector<std::array<RELBOOST_FLOAT, 3>> Sum::calc_weights(
 
     // -------------------------------------------------------------
 
-    std::vector<std::array<RELBOOST_FLOAT, 3>> results = {child_->calc_weights(
+    std::vector<std::array<Float, 3>> results = {child_->calc_weights(
         enums::Aggregation::sum,
         _old_weight,
         indices_.unique_integers(),
@@ -161,12 +161,12 @@ std::vector<std::array<RELBOOST_FLOAT, 3>> Sum::calc_weights(
 
 // ----------------------------------------------------------------------------
 
-std::array<RELBOOST_FLOAT, 3> Sum::calc_weights(
+std::array<Float, 3> Sum::calc_weights(
     const enums::Aggregation _agg,
-    const RELBOOST_FLOAT _old_weight,
+    const Float _old_weight,
     const std::vector<size_t>& _indices,
-    const std::vector<RELBOOST_FLOAT>& _eta1,
-    const std::vector<RELBOOST_FLOAT>& _eta2 )
+    const std::vector<Float>& _eta1,
+    const std::vector<Float>& _eta2 )
 {
     for ( auto ix_input : _indices )
         {
@@ -210,10 +210,10 @@ std::array<RELBOOST_FLOAT, 3> Sum::calc_weights(
 // ----------------------------------------------------------------------------
 
 void Sum::commit(
-    const std::vector<RELBOOST_FLOAT>& _eta1,
-    const std::vector<RELBOOST_FLOAT>& _eta2,
+    const std::vector<Float>& _eta1,
+    const std::vector<Float>& _eta2,
     const std::vector<size_t>& _indices,
-    const std::array<RELBOOST_FLOAT, 3>& _weights )
+    const std::array<Float, 3>& _weights )
 {
     // TODO
 }
@@ -221,9 +221,9 @@ void Sum::commit(
 // ----------------------------------------------------------------------------
 
 void Sum::commit(
-    const RELBOOST_FLOAT _old_intercept,
-    const RELBOOST_FLOAT _old_weight,
-    const std::array<RELBOOST_FLOAT, 3>& _weights,
+    const Float _old_intercept,
+    const Float _old_weight,
+    const std::array<Float, 3>& _weights,
     const std::vector<const containers::Match*>::iterator _begin,
     const std::vector<const containers::Match*>::iterator _split,
     const std::vector<const containers::Match*>::iterator _end )
@@ -241,10 +241,10 @@ void Sum::commit(
 
 // ----------------------------------------------------------------------------
 
-RELBOOST_FLOAT Sum::evaluate_split(
-    const RELBOOST_FLOAT _old_intercept,
-    const RELBOOST_FLOAT _old_weight,
-    const std::array<RELBOOST_FLOAT, 3>& _weights )
+Float Sum::evaluate_split(
+    const Float _old_intercept,
+    const Float _old_weight,
+    const std::array<Float, 3>& _weights )
 {
     // -----------------------------------------------------------------
     // Calculate yhat.
@@ -267,13 +267,13 @@ RELBOOST_FLOAT Sum::evaluate_split(
 
 // ----------------------------------------------------------------------------
 
-RELBOOST_FLOAT Sum::evaluate_split(
-    const RELBOOST_FLOAT _old_intercept,
-    const RELBOOST_FLOAT _old_weight,
-    const std::array<RELBOOST_FLOAT, 3>& _weights,
+Float Sum::evaluate_split(
+    const Float _old_intercept,
+    const Float _old_weight,
+    const std::array<Float, 3>& _weights,
     const std::vector<size_t>& _indices,
-    const std::vector<RELBOOST_FLOAT>& _eta1,
-    const std::vector<RELBOOST_FLOAT>& _eta2 )
+    const std::vector<Float>& _eta1,
+    const std::vector<Float>& _eta2 )
 {
     return child_->evaluate_split(
         _old_intercept,
@@ -286,7 +286,7 @@ RELBOOST_FLOAT Sum::evaluate_split(
 
 // ----------------------------------------------------------------------------
 
-void Sum::revert( const RELBOOST_FLOAT _old_weight )
+void Sum::revert( const Float _old_weight )
 {
     for ( auto ix : indices_current_ )
         {
@@ -300,8 +300,8 @@ void Sum::revert( const RELBOOST_FLOAT _old_weight )
 
 // ----------------------------------------------------------------------------
 
-RELBOOST_FLOAT Sum::transform(
-    const std::vector<RELBOOST_FLOAT>& _weights ) const
+Float Sum::transform(
+    const std::vector<Float>& _weights ) const
 {
     return std::accumulate( _weights.begin(), _weights.end(), 0.0 );
 }

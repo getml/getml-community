@@ -38,14 +38,14 @@ DecisionTree::DecisionTree(
     input_.reset(
         new containers::Schema( *JSON::get_object( _obj, "input_" ) ) );
 
-    intercept_ = JSON::get_value<RELBOOST_FLOAT>( _obj, "intercept_" );
+    intercept_ = JSON::get_value<Float>( _obj, "intercept_" );
 
     output_.reset(
         new containers::Schema( *JSON::get_object( _obj, "output_" ) ) );
 
     peripheral_used_ = JSON::get_value<size_t>( _obj, "peripheral_used_" );
 
-    update_rate_ = JSON::get_value<RELBOOST_FLOAT>( _obj, "update_rate_" );
+    update_rate_ = JSON::get_value<Float>( _obj, "update_rate_" );
 
     root_.reset( new DecisionTreeNode(
         utils::ConditionMaker( encoding_ ),
@@ -235,7 +235,7 @@ std::string DecisionTree::to_sql(
 
 // ----------------------------------------------------------------------------
 
-std::vector<RELBOOST_FLOAT> DecisionTree::transform(
+std::vector<Float> DecisionTree::transform(
     const containers::DataFrameView& _output,
     const containers::DataFrame& _input ) const
 {
@@ -245,7 +245,7 @@ std::vector<RELBOOST_FLOAT> DecisionTree::transform(
 
     // ------------------------------------------------------------------------
 
-    auto predictions = std::vector<RELBOOST_FLOAT>( _output.nrows() );
+    auto predictions = std::vector<Float>( _output.nrows() );
 
     // ------------------------------------------------------------------------
 
@@ -266,7 +266,7 @@ std::vector<RELBOOST_FLOAT> DecisionTree::transform(
             // ------------------------------------------------------------------------
             // Calculate weights for each match.
 
-            std::vector<RELBOOST_FLOAT> weights( matches.size() );
+            std::vector<Float> weights( matches.size() );
 
             for ( size_t i = 0; i < matches.size(); ++i )
                 {

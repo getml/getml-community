@@ -7,7 +7,8 @@
 #include <Poco/JSON/Array.h>
 #include <Poco/JSON/Object.h>
 
-#include "autosql/types.hpp"
+#include "autosql/Float.hpp"
+#include "autosql/Int.hpp"
 
 #include "autosql/JSON.hpp"
 

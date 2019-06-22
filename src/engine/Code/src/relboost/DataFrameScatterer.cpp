@@ -7,8 +7,8 @@ namespace utils
 // ----------------------------------------------------------------------------
 
 const std::vector<size_t> DataFrameScatterer::build_thread_nums(
-    const std::map<RELBOOST_INT, size_t>& _min_keys_map,
-    const containers::Column<RELBOOST_INT>& _min_join_key )
+    const std::map<Int, size_t>& _min_keys_map,
+    const containers::Column<Int>& _min_join_key )
 {
     std::vector<size_t> thread_nums( _min_join_key.nrows_ );
 
@@ -27,14 +27,14 @@ const std::vector<size_t> DataFrameScatterer::build_thread_nums(
 // ----------------------------------------------------------------------------
 
 const std::vector<size_t> DataFrameScatterer::build_thread_nums(
-    const std::vector<containers::Column<RELBOOST_INT>>& _keys,
+    const std::vector<containers::Column<Int>>& _keys,
     const size_t _num_threads )
 {
     check_plausibility( _keys, _num_threads );
 
     size_t ix_min_keys = 0;
 
-    std::map<RELBOOST_INT, size_t> min_keys_map;
+    std::map<Int, size_t> min_keys_map;
 
     scatter_keys( _keys, _num_threads, &ix_min_keys, &min_keys_map );
 
@@ -44,7 +44,7 @@ const std::vector<size_t> DataFrameScatterer::build_thread_nums(
 // ----------------------------------------------------------------------------
 
 void DataFrameScatterer::check_plausibility(
-    const std::vector<containers::Column<RELBOOST_INT>>& _keys,
+    const std::vector<containers::Column<Int>>& _keys,
     const size_t _num_threads )
 {
     if ( _keys.size() == 0 )
@@ -94,15 +94,15 @@ containers::DataFrameView DataFrameScatterer::scatter_data_frame(
 // ----------------------------------------------------------------------------
 
 void DataFrameScatterer::scatter_keys(
-    const std::vector<containers::Column<RELBOOST_INT>>& _keys,
+    const std::vector<containers::Column<Int>>& _keys,
     const size_t _num_threads,
     size_t* _ix_min_keys_map,
-    std::map<RELBOOST_INT, size_t>* _min_keys_map )
+    std::map<Int, size_t>* _min_keys_map )
 {
     // ---------------------------------------------------------------------------
     // Map a thread id for each individual key.
 
-    std::vector<std::map<RELBOOST_INT, size_t>> keys_maps_temp( _keys.size() );
+    std::vector<std::map<Int, size_t>> keys_maps_temp( _keys.size() );
 
     for ( size_t ix_key = 0; ix_key < _keys.size(); ++ix_key )
         {

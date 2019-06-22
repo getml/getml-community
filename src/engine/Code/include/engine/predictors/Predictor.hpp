@@ -20,21 +20,21 @@ class Predictor
     // -----------------------------------------
 
     /// Returns an importance measure for the individual features
-    virtual std::vector<ENGINE_FLOAT> feature_importances(
+    virtual std::vector<Float> feature_importances(
         const size_t _num_features ) const = 0;
 
     /// Implements the fit(...) method in scikit-learn style
     virtual std::string fit(
         const std::shared_ptr<const monitoring::Logger> _logger,
-        const containers::Matrix<ENGINE_FLOAT>& _X,
-        const containers::Matrix<ENGINE_FLOAT>& _y ) = 0;
+        const containers::Matrix<Float>& _X,
+        const containers::Matrix<Float>& _y ) = 0;
 
     /// Loads the predictor
     virtual void load( const std::string& _fname ) = 0;
 
     /// Implements the predict(...) method in scikit-learn style
-    virtual containers::Matrix<ENGINE_FLOAT> predict(
-        const containers::Matrix<ENGINE_FLOAT>& _X ) const = 0;
+    virtual containers::Matrix<Float> predict(
+        const containers::Matrix<Float>& _X ) const = 0;
 
     /// Stores the predictor
     virtual void save( const std::string& _fname ) const = 0;

@@ -235,14 +235,14 @@ std::vector<containers::Subfeatures> SubtreeHelper::make_subfeatures(
 
             for ( size_t j = 0; j < p.size(); ++j )
                 {
-                    const auto column = containers::Column<AUTOSQL_FLOAT>(
+                    const auto column = containers::Column<Float>(
                         p[j].data(),
                         "FEATURE_" + std::to_string( j + 1 ),
                         p[j].size() );
 
                     const auto view = containers::ColumnView<
-                        AUTOSQL_FLOAT,
-                        std::map<AUTOSQL_INT, AUTOSQL_INT>>( column, rows_map );
+                        Float,
+                        std::map<Int, Int>>( column, rows_map );
 
                     subfeatures[i].push_back( view );
                 }

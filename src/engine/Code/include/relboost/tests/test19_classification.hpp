@@ -168,7 +168,7 @@ void test19_classification()
 
     assert( predictions.size() == population_df.nrows() );
 
-    RELBOOST_FLOAT accuracy = 0.0;
+    relboost::Float accuracy = 0.0;
 
     for ( size_t i = 0; i < predictions.size(); ++i )
         {

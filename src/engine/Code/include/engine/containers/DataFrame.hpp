@@ -29,13 +29,13 @@ class DataFrame
 
     /// Setter for a float_matrix
     void add_float_column(
-        const Matrix<ENGINE_FLOAT> &_mat,
+        const Matrix<Float> &_mat,
         const std::string &_role,
         const size_t _num );
 
     /// Setter for an int_matrix
     void add_int_column(
-        const Matrix<ENGINE_INT> &_mat,
+        const Matrix<Int> &_mat,
         const std::string _role,
         const size_t _num );
 
@@ -51,7 +51,7 @@ class DataFrame
     void create_indices();
 
     /// Getter for a float_matrix
-    const Matrix<ENGINE_FLOAT> &float_matrix(
+    const Matrix<Float> &float_matrix(
         const std::string &_role, const size_t _num ) const;
 
     /// Builds a dataframe from a database connector.
@@ -87,14 +87,14 @@ class DataFrame
         const std::int32_t _length ) const;
 
     /// Getter for an int_matrix (either join keys or categorical)
-    const Matrix<ENGINE_INT> &int_matrix(
+    const Matrix<Int> &int_matrix(
         const std::string &_role, const size_t _num ) const;
 
     /// Loads the data from the hard-disk into the engine
     void load( const std::string &_path );
 
     /// Returns number of bytes occupied by the data
-    ENGINE_UNSIGNED_LONG nbytes() const;
+    ULong nbytes() const;
 
     /// Saves the data on the engine
     void save( const std::string &_path );
@@ -107,7 +107,7 @@ class DataFrame
 
     /// Trivial accessor
     template <class T>
-    const Matrix<ENGINE_INT> &categorical( const T _i ) const
+    const Matrix<Int> &categorical( const T _i ) const
     {
         assert( categoricals_.size() > 0 );
         assert( _i >= 0 );
@@ -129,7 +129,7 @@ class DataFrame
 
     /// Trivial accessor
     template <class T>
-    const Matrix<ENGINE_FLOAT> &discrete( const T _i ) const
+    const Matrix<Float> &discrete( const T _i ) const
     {
         assert( _i >= 0 );
         assert( _i < static_cast<T>( discretes_.size() ) );
@@ -169,7 +169,7 @@ class DataFrame
 
     /// Returns the join key signified by index _i
     template <class T>
-    const Matrix<ENGINE_INT> &join_key( const T _i ) const
+    const Matrix<Int> &join_key( const T _i ) const
     {
         assert( join_keys_.size() > 0 );
         assert( _i >= 0 );
@@ -179,7 +179,7 @@ class DataFrame
     }
 
     /// Trivial accessor
-    const std::vector<Matrix<ENGINE_INT>> &join_keys() const
+    const std::vector<Matrix<Int>> &join_keys() const
     {
         return join_keys_;
     }
@@ -232,7 +232,7 @@ class DataFrame
 
     /// Trivial accessor
     template <class T>
-    const Matrix<ENGINE_FLOAT> &numerical( const T _i ) const
+    const Matrix<Float> &numerical( const T _i ) const
     {
         assert( numericals_.size() > 0 );
         assert( _i >= 0 );
@@ -256,7 +256,7 @@ class DataFrame
 
     /// Trivial accessor
     template <class T>
-    const Matrix<ENGINE_FLOAT> &target( const T _i ) const
+    const Matrix<Float> &target( const T _i ) const
     {
         assert( targets_.size() > 0 );
         assert( _i >= 0 );
@@ -267,7 +267,7 @@ class DataFrame
 
     /// Returns the time stamps signified by index _i
     template <class T>
-    Matrix<ENGINE_FLOAT> const &time_stamp( const T _i ) const
+    Matrix<Float> const &time_stamp( const T _i ) const
     {
         assert( time_stamps_.size() > 0 );
         assert( _i >= 0 );
@@ -277,7 +277,7 @@ class DataFrame
     }
 
     /// Trivial accessor
-    const std::vector<Matrix<ENGINE_FLOAT>> &time_stamps() const
+    const std::vector<Matrix<Float>> &time_stamps() const
     {
         return time_stamps_;
     }
@@ -286,38 +286,38 @@ class DataFrame
 
    private:
     /// Adds a categorical column.
-    void add_categorical( const Matrix<ENGINE_INT> &_mat, const size_t _num );
+    void add_categorical( const Matrix<Int> &_mat, const size_t _num );
 
     /// Adds a discrete column.
-    void add_discrete( const Matrix<ENGINE_FLOAT> &_mat, const size_t _num );
+    void add_discrete( const Matrix<Float> &_mat, const size_t _num );
 
     /// Adds a vector of float vectors.
     void add_float_vectors(
         const std::vector<std::string> &_names,
-        const std::vector<std::shared_ptr<std::vector<ENGINE_FLOAT>>> &_vectors,
+        const std::vector<std::shared_ptr<std::vector<Float>>> &_vectors,
         const std::string &_role );
 
     /// Adds a vector of integer vectors.
     void add_int_vectors(
         const std::vector<std::string> &_names,
-        const std::vector<std::shared_ptr<std::vector<ENGINE_INT>>> &_vectors,
+        const std::vector<std::shared_ptr<std::vector<Int>>> &_vectors,
         const std::string &_role );
 
     /// Adds a join key column.
-    void add_join_key( const Matrix<ENGINE_INT> &_mat, const size_t _num );
+    void add_join_key( const Matrix<Int> &_mat, const size_t _num );
 
     /// Adds a numerical column.
-    void add_numerical( const Matrix<ENGINE_FLOAT> &_mat, const size_t _num );
+    void add_numerical( const Matrix<Float> &_mat, const size_t _num );
 
     /// Adds a target column.
-    void add_target( const Matrix<ENGINE_FLOAT> &_mat, const size_t _num );
+    void add_target( const Matrix<Float> &_mat, const size_t _num );
 
     /// Adds a time stamp column.
-    void add_time_stamp( const Matrix<ENGINE_FLOAT> &_mat, const size_t _num );
+    void add_time_stamp( const Matrix<Float> &_mat, const size_t _num );
 
     /// Calculate the number of bytes.
     template <class T>
-    ENGINE_UNSIGNED_LONG calc_nbytes(
+    ULong calc_nbytes(
         const std::vector<Matrix<T>> &_columns ) const;
 
     /// Concatenate a set of colnames.
@@ -375,25 +375,25 @@ class DataFrame
         const std::string &_prefix ) const;
 
     /// Transforms a float to a time stamp
-    std::string to_time_stamp( const ENGINE_FLOAT &_time_stamp_float ) const;
+    std::string to_time_stamp( const Float &_time_stamp_float ) const;
 
     // -------------------------------
 
    private:
     /// Categorical data
-    std::vector<Matrix<ENGINE_INT>> categoricals_;
+    std::vector<Matrix<Int>> categoricals_;
 
     /// Maps integers to names of categories
     std::shared_ptr<Encoding> categories_;
 
     /// Discrete data
-    std::vector<Matrix<ENGINE_FLOAT>> discretes_;
+    std::vector<Matrix<Float>> discretes_;
 
     /// Performs the role of an "index" over the join keys
     std::vector<DataFrameIndex> indices_;
 
     /// Join keys - note that their might be several
-    std::vector<Matrix<ENGINE_INT>> join_keys_;
+    std::vector<Matrix<Int>> join_keys_;
 
     /// Maps integers to names of join keys
     std::shared_ptr<Encoding> join_keys_encoding_;
@@ -402,13 +402,13 @@ class DataFrame
     std::string name_;
 
     /// Numerical data
-    std::vector<Matrix<ENGINE_FLOAT>> numericals_;
+    std::vector<Matrix<Float>> numericals_;
 
     /// Targets - only exists for population tables
-    std::vector<Matrix<ENGINE_FLOAT>> targets_;
+    std::vector<Matrix<Float>> targets_;
 
     /// Time stamps
-    std::vector<Matrix<ENGINE_FLOAT>> time_stamps_;
+    std::vector<Matrix<Float>> time_stamps_;
 };
 
 // -------------------------------------------------------------------------
@@ -425,14 +425,14 @@ namespace containers
 // -------------------------------------------------------------------------
 
 template <class T>
-ENGINE_UNSIGNED_LONG DataFrame::calc_nbytes(
+ULong DataFrame::calc_nbytes(
     const std::vector<Matrix<T>> &_columns ) const
 {
     return std::accumulate(
         _columns.begin(),
         _columns.end(),
-        static_cast<ENGINE_UNSIGNED_LONG>( 0 ),
-        []( ENGINE_UNSIGNED_LONG &init, const Matrix<T> &mat ) {
+        static_cast<ULong>( 0 ),
+        []( ULong &init, const Matrix<T> &mat ) {
             return init + mat.nbytes();
         } );
 }

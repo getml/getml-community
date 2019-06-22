@@ -29,7 +29,7 @@ class CategoryIndex
     void build_indptr(
         const DataFrameType& _df,
         const size_t _num_column,
-        const std::vector<RELBOOST_INT>& _critical_values );
+        const std::vector<Int>& _critical_values );
 
     // -------------------------------
 
@@ -42,7 +42,7 @@ class CategoryIndex
 
     /// Returns iterator to the beginning of a set of categories.
     std::vector<const containers::Match*>::iterator begin(
-        const RELBOOST_INT _category ) const
+        const Int _category ) const
     {
         if ( indptr_.size() == 0 )
             {
@@ -52,7 +52,7 @@ class CategoryIndex
         assert( _category - minimum_ >= 0 );
         assert(
             _category - minimum_ + 1 <
-            static_cast<RELBOOST_INT>( indptr_.size() ) );
+            static_cast<Int>( indptr_.size() ) );
 
         return begin_ + indptr_[_category - minimum_];
     }
@@ -62,7 +62,7 @@ class CategoryIndex
 
     /// Returns iterator to the end of a set of categories.
     std::vector<const containers::Match*>::iterator end(
-        const RELBOOST_INT _category ) const
+        const Int _category ) const
     {
         if ( indptr_.size() == 0 )
             {
@@ -72,7 +72,7 @@ class CategoryIndex
         assert( _category - minimum_ >= 0 );
         assert(
             _category - minimum_ + 1 <
-            static_cast<RELBOOST_INT>( indptr_.size() ) );
+            static_cast<Int>( indptr_.size() ) );
 
         return begin_ + indptr_[_category - minimum_ + 1];
     }
@@ -112,10 +112,10 @@ class CategoryIndex
     const std::vector<const containers::Match*>::iterator end_;
 
     /// Contains all categories that have been included.
-    std::vector<RELBOOST_INT> indptr_;
+    std::vector<Int> indptr_;
 
     /// Minimum values of the samples.
-    RELBOOST_INT minimum_;
+    Int minimum_;
 };
 
 // -------------------------------------------------------------------------
@@ -135,7 +135,7 @@ template <enums::DataUsed _data_used, typename DataFrameType>
 void CategoryIndex::build_indptr(
     const DataFrameType& _df,
     const size_t _num_column,
-    const std::vector<RELBOOST_INT>& _critical_values )
+    const std::vector<Int>& _critical_values )
 {
     // ------------------------------------------------------------------------
 
@@ -143,7 +143,7 @@ void CategoryIndex::build_indptr(
 
     if ( std::distance( begin_, end_ ) == 0 || _critical_values.size() == 0 )
         {
-            indptr_ = std::vector<RELBOOST_INT>( 0 );
+            indptr_ = std::vector<Int>( 0 );
             return;
         }
 
@@ -155,15 +155,15 @@ void CategoryIndex::build_indptr(
     assert( maximum >= minimum );
 
     const auto dist =
-        static_cast<RELBOOST_INT>( std::distance( begin_, end_ ) );
+        static_cast<Int>( std::distance( begin_, end_ ) );
 
-    indptr_ = std::vector<RELBOOST_INT>( maximum - minimum + 2 );
+    indptr_ = std::vector<Int>( maximum - minimum + 2 );
 
     minimum_ = minimum;
 
     // ------------------------------------------------------------------------
 
-    RELBOOST_INT i = 0;
+    Int i = 0;
 
     for ( auto cat = minimum; cat <= maximum + 1; ++cat )
         {

@@ -21,7 +21,7 @@ struct ColumnToBeAggregated
     ColumnToBeAggregated(
         size_t _ix_column_used,
         enums::DataUsed _data_used,
-        AUTOSQL_INT _ix_perip_used )
+        Int _ix_perip_used )
         : ix_column_used( _ix_column_used ),
           data_used( _data_used ),
           ix_perip_used( _ix_perip_used ){};
@@ -72,7 +72,7 @@ struct ColumnToBeAggregated
 
     enums::DataUsed data_used;
 
-    AUTOSQL_INT ix_perip_used;
+    Int ix_perip_used;
 
     // ------------------------------------------------------
 };

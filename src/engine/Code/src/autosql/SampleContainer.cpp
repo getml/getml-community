@@ -4,11 +4,11 @@ namespace autosql
 {
 // ----------------------------------------------------------------------------
 
-std::shared_ptr<const std::vector<AUTOSQL_INT>>
+std::shared_ptr<const std::vector<Int>>
 SampleContainer::create_population_indices(
-    const AUTOSQL_INT _nrows, const containers::MatchPtrs& _sample_container )
+    const Int _nrows, const containers::MatchPtrs& _sample_container )
 {
-    std::set<AUTOSQL_INT> population_indices;
+    std::set<Int> population_indices;
 
     for ( auto& sample : _sample_container )
         {
@@ -19,21 +19,21 @@ SampleContainer::create_population_indices(
             population_indices.insert( sample->ix_x_perip );
         }
 
-    return std::make_shared<const std::vector<AUTOSQL_INT>>(
+    return std::make_shared<const std::vector<Int>>(
         population_indices.begin(), population_indices.end() );
 }
 
 // ----------------------------------------------------------------------------
 
-std::shared_ptr<const std::map<AUTOSQL_INT, AUTOSQL_INT>>
+std::shared_ptr<const std::map<Int, Int>>
 SampleContainer::create_output_map(
-    const std::shared_ptr<const std::vector<AUTOSQL_INT>>& _indices )
+    const std::shared_ptr<const std::vector<Int>>& _indices )
 {
-    auto output_map = std::make_shared<std::map<AUTOSQL_INT, AUTOSQL_INT>>();
+    auto output_map = std::make_shared<std::map<Int, Int>>();
 
-    auto size = static_cast<AUTOSQL_INT>( _indices->size() );
+    auto size = static_cast<Int>( _indices->size() );
 
-    for ( AUTOSQL_INT i = 0; i < size; ++i )
+    for ( Int i = 0; i < size; ++i )
         {
             ( *output_map )[( *_indices )[i]] = i;
         }
@@ -44,14 +44,14 @@ SampleContainer::create_output_map(
 // ----------------------------------------------------------------------------
 
 void SampleContainer::create_samples(
-    const AUTOSQL_INT _ix_x_popul,
+    const Int _ix_x_popul,
     const bool _use_timestamps,
     const Index& _index,
-    const containers::Matrix<AUTOSQL_INT>& _join_keys_perip,
-    const AUTOSQL_INT _join_key_popul,
-    const containers::Matrix<AUTOSQL_FLOAT>& _time_stamps_perip,
-    const containers::Matrix<AUTOSQL_FLOAT>* _upper_time_stamps,
-    const AUTOSQL_FLOAT _time_stamp_popul,
+    const containers::Matrix<Int>& _join_keys_perip,
+    const Int _join_key_popul,
+    const containers::Matrix<Float>& _time_stamps_perip,
+    const containers::Matrix<Float>* _upper_time_stamps,
+    const Float _time_stamp_popul,
     containers::Matches& _samples )
 {
     debug_message( "SampleContainer::create_samples: Finding join key..." );
@@ -64,7 +64,7 @@ void SampleContainer::create_samples(
 
     if ( it != _index.end() )
         {
-            for ( AUTOSQL_INT ix_x_perip : it->second )
+            for ( Int ix_x_perip : it->second )
                 {
                     const bool use_this_sample =
                         ( !_use_timestamps || time_stamp_popul_in_range(
@@ -109,7 +109,7 @@ void SampleContainer::create_samples_and_sample_containers(
     const std::vector<containers::DataFrame>& _peripheral_tables,
     const containers::DataFrameView& _population_table,
     std::mt19937& _random_number_generator,
-    containers::Matrix<AUTOSQL_FLOAT>& _sample_weights,
+    containers::Matrix<Float>& _sample_weights,
     std::vector<containers::Matches>& _samples,
     std::vector<containers::MatchPtrs>& _sample_containers )
 {
@@ -123,11 +123,11 @@ void SampleContainer::create_samples_and_sample_containers(
 
     std::fill( _sample_weights.begin(), _sample_weights.end(), 0.0 );
 
-    AUTOSQL_INT num_samples = static_cast<AUTOSQL_INT>(
-        static_cast<AUTOSQL_FLOAT>( _sample_weights.nrows() ) *
+    Int num_samples = static_cast<Int>(
+        static_cast<Float>( _sample_weights.nrows() ) *
         _hyperparameters.sampling_rate );
 
-    for ( AUTOSQL_INT i = 0; i < num_samples; ++i )
+    for ( Int i = 0; i < num_samples; ++i )
         {
             _sample_weights[uniform_distribution( _random_number_generator )] +=
                 1.0;
@@ -145,13 +145,13 @@ void SampleContainer::create_samples_and_sample_containers(
 
     assert( _samples.size() == _peripheral_tables.size() );
 
-    for ( AUTOSQL_INT j = 0;
-          j < static_cast<AUTOSQL_INT>( _peripheral_tables.size() );
+    for ( Int j = 0;
+          j < static_cast<Int>( _peripheral_tables.size() );
           ++j )
         {
             // --------------------------------------------------------------
 
-            for ( AUTOSQL_INT ix_x_popul = 0;
+            for ( Int ix_x_popul = 0;
                   ix_x_popul < _population_table.nrows();
                   ++ix_x_popul )
                 {
@@ -191,13 +191,13 @@ void SampleContainer::create_samples_and_sample_containers(
 {
     debug_message( "create_samples_and_sample_containers ( 2 )..." );
 
-    for ( AUTOSQL_INT j = 0;
-          j < static_cast<AUTOSQL_INT>( _peripheral_tables.size() );
+    for ( Int j = 0;
+          j < static_cast<Int>( _peripheral_tables.size() );
           ++j )
         {
             // --------------------------------------------------------------
 
-            for ( AUTOSQL_INT ix_x_popul = 0;
+            for ( Int ix_x_popul = 0;
                   ix_x_popul < _population_table.nrows();
                   ++ix_x_popul )
                 {
@@ -227,12 +227,12 @@ void SampleContainer::create_samples_and_sample_containers(
 // ----------------------------------------------------------------------------
 
 bool SampleContainer::time_stamp_popul_in_range(
-    const AUTOSQL_INT _ix_x_perip,
-    const containers::Matrix<AUTOSQL_FLOAT>& _time_stamps_perip,
-    const containers::Matrix<AUTOSQL_FLOAT>* _upper_time_stamps,
-    const AUTOSQL_FLOAT _time_stamp_popul )
+    const Int _ix_x_perip,
+    const containers::Matrix<Float>& _time_stamps_perip,
+    const containers::Matrix<Float>* _upper_time_stamps,
+    const Float _time_stamp_popul )
 {
-    const AUTOSQL_FLOAT lower_time_stamps_diff =
+    const Float lower_time_stamps_diff =
         _time_stamp_popul - _time_stamps_perip[_ix_x_perip];
 
     if ( _upper_time_stamps == nullptr )
@@ -240,7 +240,7 @@ bool SampleContainer::time_stamp_popul_in_range(
             return lower_time_stamps_diff >= 0.0;
         }
 
-    const AUTOSQL_FLOAT upper_time_stamps_diff =
+    const Float upper_time_stamps_diff =
         _time_stamp_popul - ( *_upper_time_stamps )[_ix_x_perip];
 
     return (

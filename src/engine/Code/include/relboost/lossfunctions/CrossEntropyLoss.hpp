@@ -16,15 +16,15 @@ class CrossEntropyLoss : public LossFunction
    public:
     CrossEntropyLoss(
         const std::shared_ptr<const Hyperparameters>& _hyperparameters,
-        const std::shared_ptr<std::vector<RELBOOST_FLOAT>>& _targets )
+        const std::shared_ptr<std::vector<Float>>& _targets )
         : comm_( nullptr ),
           hyperparameters_( _hyperparameters ),
           loss_committed_( 0.0 ),
           sum_h_yhat_committed_( 0.0 ),
           sum_sample_weights_( 0.0 ),
           targets_( _targets ),
-          yhat_( std::vector<RELBOOST_FLOAT>( _targets->size() ) ),
-          yhat_committed_( std::vector<RELBOOST_FLOAT>( _targets->size() ) ),
+          yhat_( std::vector<Float>( _targets->size() ) ),
+          yhat_committed_( std::vector<Float>( _targets->size() ) ),
           impl_( LossFunctionImpl(
               g_,
               h_,
@@ -88,19 +88,19 @@ class CrossEntropyLoss : public LossFunction
    public:
     /// Calculates first and second derivatives.
     void calc_gradients(
-        const std::shared_ptr<const std::vector<RELBOOST_FLOAT>>& _yhat_old )
+        const std::shared_ptr<const std::vector<Float>>& _yhat_old )
         final;
 
     /// Evaluates split given matches. In this case, the loss function effective
     /// turns into XGBoost.
-    RELBOOST_FLOAT evaluate_split(
-        const RELBOOST_FLOAT _old_intercept,
-        const RELBOOST_FLOAT _old_weight,
-        const std::array<RELBOOST_FLOAT, 3>& _weights ) final;
+    Float evaluate_split(
+        const Float _old_intercept,
+        const Float _old_weight,
+        const std::array<Float, 3>& _weights ) final;
 
     /// Evaluates and entire tree.
-    RELBOOST_FLOAT evaluate_tree(
-        const std::vector<RELBOOST_FLOAT>& _yhat_new ) final;
+    Float evaluate_tree(
+        const std::vector<Float>& _yhat_new ) final;
 
     // -----------------------------------------------------------------
 
@@ -108,7 +108,7 @@ class CrossEntropyLoss : public LossFunction
     // Applies the inverse of the transformation function below. Some loss
     // functions (such as CrossEntropyLoss) require this. For others, this won't
     // do anything at all.
-    void apply_inverse( RELBOOST_FLOAT* yhat_ ) const final
+    void apply_inverse( Float* yhat_ ) const final
     {
         *yhat_ = inverse_logistic_function( *yhat_ );
     }
@@ -116,17 +116,17 @@ class CrossEntropyLoss : public LossFunction
     // Applies a transformation function. Some loss functions (such as
     // CrossEntropyLoss) require this. For others, this won't do anything at
     // all.
-    void apply_transformation( std::vector<RELBOOST_FLOAT>* yhat_ ) const final
+    void apply_transformation( std::vector<Float>* yhat_ ) const final
     {
         std::for_each(
-            yhat_->begin(), yhat_->end(), [this]( RELBOOST_FLOAT& _val ) {
+            yhat_->begin(), yhat_->end(), [this]( Float& _val ) {
                 _val = logistic_function( _val );
             } );
     }
 
     /// Calculates an index that contains all non-zero samples.
     void calc_sample_index(
-        const std::shared_ptr<const std::vector<RELBOOST_FLOAT>>&
+        const std::shared_ptr<const std::vector<Float>>&
             _sample_weights )
     {
         sample_weights_ = _sample_weights;
@@ -146,19 +146,19 @@ class CrossEntropyLoss : public LossFunction
     }
 
     /// Calculates the update rate.
-    RELBOOST_FLOAT calc_update_rate(
-        const std::vector<RELBOOST_FLOAT>& _yhat_old,
-        const std::vector<RELBOOST_FLOAT>& _predictions ) final
+    Float calc_update_rate(
+        const std::vector<Float>& _yhat_old,
+        const std::vector<Float>& _predictions ) final
     {
         return impl_.calc_update_rate( _yhat_old, _predictions, &comm() );
     }
 
     /// Calculates two new weights given matches. This just reduces to the
     /// normal XGBoost approach.
-    std::vector<std::array<RELBOOST_FLOAT, 3>> calc_weights(
+    std::vector<std::array<Float, 3>> calc_weights(
         const enums::Revert _revert,
         const enums::Update _update,
-        const RELBOOST_FLOAT _old_weight,
+        const Float _old_weight,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _split_begin,
         const std::vector<const containers::Match*>::iterator _split_end,
@@ -175,12 +175,12 @@ class CrossEntropyLoss : public LossFunction
     }
 
     /// Calculates two new weights given eta and indices.
-    std::array<RELBOOST_FLOAT, 3> calc_weights(
+    std::array<Float, 3> calc_weights(
         const enums::Aggregation _agg,
-        const RELBOOST_FLOAT _old_weight,
+        const Float _old_weight,
         const std::vector<size_t>& _indices,
-        const std::vector<RELBOOST_FLOAT>& _eta1,
-        const std::vector<RELBOOST_FLOAT>& _eta2 ) final
+        const std::vector<Float>& _eta1,
+        const std::vector<Float>& _eta2 ) final
     {
         return impl_.calc_weights(
             _agg,
@@ -195,11 +195,11 @@ class CrossEntropyLoss : public LossFunction
     /// Calculates the new yhat given eta, indices and the new weights.
     void calc_yhat(
         const enums::Aggregation _agg,
-        const RELBOOST_FLOAT _old_weight,
-        const std::array<RELBOOST_FLOAT, 3>& _new_weights,
+        const Float _old_weight,
+        const std::array<Float, 3>& _new_weights,
         const std::vector<size_t>& _indices,
-        const std::vector<RELBOOST_FLOAT>& _eta1,
-        const std::vector<RELBOOST_FLOAT>& _eta2 ) final
+        const std::vector<Float>& _eta1,
+        const std::vector<Float>& _eta2 ) final
     {
         impl_.calc_yhat(
             _agg,
@@ -230,18 +230,18 @@ class CrossEntropyLoss : public LossFunction
     void commit() final
     {
         assert( yhat_old().size() == targets().size() );
-        auto zeros = std::vector<RELBOOST_FLOAT>( targets().size() );
-        auto weights = std::array<RELBOOST_FLOAT, 3>( {0.0, 0.0, 0.0} );
+        auto zeros = std::vector<Float>( targets().size() );
+        auto weights = std::array<Float, 3>( {0.0, 0.0, 0.0} );
         auto indices = std::vector<size_t>( 0 );
         commit( zeros, zeros, indices, weights );
     }
 
     /// Recalculates sum_h_yhat_committed_ and loss_committed_.
     void commit(
-        const std::vector<RELBOOST_FLOAT>& _eta1,
-        const std::vector<RELBOOST_FLOAT>& _eta2,
+        const std::vector<Float>& _eta1,
+        const std::vector<Float>& _eta2,
         const std::vector<size_t>& _indices,
-        const std::array<RELBOOST_FLOAT, 3>& _weights ) final
+        const std::array<Float, 3>& _weights ) final
     {
         loss_committed_ = calc_loss( _weights );
         sum_h_yhat_committed_ =
@@ -250,9 +250,9 @@ class CrossEntropyLoss : public LossFunction
 
     /// Keeps the current weights.
     void commit(
-        const RELBOOST_FLOAT _old_intercept,
-        const RELBOOST_FLOAT _old_weight,
-        const std::array<RELBOOST_FLOAT, 3>& _weights,
+        const Float _old_intercept,
+        const Float _old_weight,
+        const std::array<Float, 3>& _weights,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _split,
         const std::vector<const containers::Match*>::iterator _end ) final{};
@@ -261,13 +261,13 @@ class CrossEntropyLoss : public LossFunction
     size_t depth() const final { return 0; }
 
     /// Returns the loss reduction achieved by a split.
-    RELBOOST_FLOAT evaluate_split(
-        const RELBOOST_FLOAT _old_intercept,
-        const RELBOOST_FLOAT _old_weight,
-        const std::array<RELBOOST_FLOAT, 3>& _weights,
+    Float evaluate_split(
+        const Float _old_intercept,
+        const Float _old_weight,
+        const std::array<Float, 3>& _weights,
         const std::vector<size_t>& _indices,
-        const std::vector<RELBOOST_FLOAT>& _eta1,
-        const std::vector<RELBOOST_FLOAT>& _eta2 )
+        const std::vector<Float>& _eta1,
+        const std::vector<Float>& _eta2 )
     {
         return loss_committed_ - calc_loss( _weights ) +
                impl_.calc_regularization_reduction(
@@ -304,7 +304,7 @@ class CrossEntropyLoss : public LossFunction
     /// Reverts the effects of calc_diff (or the part in calc_all the
     /// corresponds to calc_diff). This is needed for supporting categorical
     /// columns.
-    void revert( const RELBOOST_FLOAT _old_weight ) final{};
+    void revert( const Float _old_weight ) final{};
 
     /// Keeps the current weights.
     void revert_to_commit() final
@@ -326,8 +326,8 @@ class CrossEntropyLoss : public LossFunction
     }
 
     /// Generates the predictions.
-    RELBOOST_FLOAT transform(
-        const std::vector<RELBOOST_FLOAT>& _weights ) const final
+    Float transform(
+        const std::vector<Float>& _weights ) const final
     {
         assert( false && "ToDO" );
         return 0.0;
@@ -341,7 +341,7 @@ class CrossEntropyLoss : public LossFunction
 
    private:
     /// Calculates the loss given a set of predictions.
-    RELBOOST_FLOAT calc_loss( const std::array<RELBOOST_FLOAT, 3>& _weights );
+    Float calc_loss( const std::array<Float, 3>& _weights );
 
     // -----------------------------------------------------------------
 
@@ -361,9 +361,9 @@ class CrossEntropyLoss : public LossFunction
     }
 
     /// Applies the inverse logistic function.
-    RELBOOST_FLOAT inverse_logistic_function( const RELBOOST_FLOAT _val ) const
+    Float inverse_logistic_function( const Float _val ) const
     {
-        const RELBOOST_FLOAT result = std::log( _val ) - std::log( 1.0 - _val );
+        const Float result = std::log( _val ) - std::log( 1.0 - _val );
 
         if ( std::isnan( result ) || std::isinf( result ) )
             {
@@ -381,9 +381,9 @@ class CrossEntropyLoss : public LossFunction
     }
 
     /// Applies the logistic function.
-    RELBOOST_FLOAT logistic_function( const RELBOOST_FLOAT _val ) const
+    Float logistic_function( const Float _val ) const
     {
-        const RELBOOST_FLOAT result = 1.0 / ( 1.0 + std::exp( -_val ) );
+        const Float result = 1.0 / ( 1.0 + std::exp( -_val ) );
 
         if ( std::isnan( result ) || std::isinf( result ) )
             {
@@ -401,17 +401,17 @@ class CrossEntropyLoss : public LossFunction
     }
 
     /// Applies the log loss function.
-    RELBOOST_FLOAT log_loss(
-        const RELBOOST_FLOAT _sigma_yhat, const RELBOOST_FLOAT _target ) const
+    Float log_loss(
+        const Float _sigma_yhat, const Float _target ) const
     {
-        RELBOOST_FLOAT part1 = -_target * std::log( _sigma_yhat );
+        Float part1 = -_target * std::log( _sigma_yhat );
 
         if ( std::isnan( part1 ) || std::isinf( part1 ) )
             {
                 part1 = _target * 1e10;
             }
 
-        RELBOOST_FLOAT part2 =
+        Float part2 =
             -( 1.0 - _target ) * std::log( 1.0 - _sigma_yhat );
 
         if ( std::isnan( part2 ) || std::isinf( part2 ) )
@@ -423,14 +423,14 @@ class CrossEntropyLoss : public LossFunction
     }
 
     /// Trivial accessor
-    const std::vector<RELBOOST_FLOAT>& targets() const
+    const std::vector<Float>& targets() const
     {
         assert( targets_ );
         return *targets_;
     }
 
     /// Trivial accessor
-    const std::vector<RELBOOST_FLOAT>& yhat_old() const
+    const std::vector<Float>& yhat_old() const
     {
         assert( yhat_old_ );
         return *yhat_old_;
@@ -443,46 +443,46 @@ class CrossEntropyLoss : public LossFunction
     multithreading::Communicator* comm_;
 
     /// First derivative
-    std::vector<RELBOOST_FLOAT> g_;
+    std::vector<Float> g_;
 
     /// Second derivative
-    std::vector<RELBOOST_FLOAT> h_;
+    std::vector<Float> h_;
 
     /// Shared pointer to hyperparameters
     const std::shared_ptr<const Hyperparameters> hyperparameters_;
 
     /// The committed loss, needed for calculating the loss reduction.
-    RELBOOST_FLOAT loss_committed_;
+    Float loss_committed_;
 
     /// Indices of all non-zero sample weights.
     std::vector<size_t> sample_index_;
 
     /// The weights used for the samples.
-    std::shared_ptr<const std::vector<RELBOOST_FLOAT>> sample_weights_;
+    std::shared_ptr<const std::vector<Float>> sample_weights_;
 
     /// Sum of g_, needed for the intercept.
-    RELBOOST_FLOAT sum_g_;
+    Float sum_g_;
 
     /// Sum of h_, needed for the intercept.
-    RELBOOST_FLOAT sum_h_;
+    Float sum_h_;
 
     /// Dot product of h_ and yhat_, needed for the intercept.
-    RELBOOST_FLOAT sum_h_yhat_committed_;
+    Float sum_h_yhat_committed_;
 
     /// The sum of the sample weights, which is needed for calculating the loss.
-    RELBOOST_FLOAT sum_sample_weights_;
+    Float sum_sample_weights_;
 
     /// The target variables.
-    const std::shared_ptr<const std::vector<RELBOOST_FLOAT>> targets_;
+    const std::shared_ptr<const std::vector<Float>> targets_;
 
     /// The output.
-    std::vector<RELBOOST_FLOAT> yhat_;
+    std::vector<Float> yhat_;
 
     /// The output that has been committed.
-    std::vector<RELBOOST_FLOAT> yhat_committed_;
+    std::vector<Float> yhat_committed_;
 
     /// Sum of all previous trees.
-    std::shared_ptr<const std::vector<RELBOOST_FLOAT>> yhat_old_;
+    std::shared_ptr<const std::vector<Float>> yhat_old_;
 
     /// Implementation class. Because impl_ depends on some other variables, it
     /// is the last member variable.

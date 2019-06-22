@@ -23,8 +23,8 @@ Hyperparameters::Hyperparameters( const Poco::JSON::Object& _json_obj )
           JSON::get_value<size_t>( _json_obj, "sampling_factor_" ) ),
       seed_( JSON::get_value<size_t>( _json_obj, "seed_" ) ),
       share_aggregations_(
-          JSON::get_value<AUTOSQL_FLOAT>( _json_obj, "share_aggregations_" ) ),
-      shrinkage_( JSON::get_value<AUTOSQL_FLOAT>( _json_obj, "shrinkage_" ) ),
+          JSON::get_value<Float>( _json_obj, "share_aggregations_" ) ),
+      shrinkage_( JSON::get_value<Float>( _json_obj, "shrinkage_" ) ),
       tree_hyperparameters_(
           std::make_shared<const TreeHyperparameters>( _json_obj ) ),
       use_timestamps_( JSON::get_value<bool>( _json_obj, "use_timestamps_" ) )

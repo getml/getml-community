@@ -12,31 +12,31 @@ class DataFrame
     // ---------------------------------------------------------------------
 
    public:
-    typedef relboost::containers::Column<RELBOOST_FLOAT> FloatColumnType;
+    typedef relboost::containers::Column<Float> FloatColumnType;
 
-    typedef relboost::containers::Column<RELBOOST_INT> IntColumnType;
+    typedef relboost::containers::Column<Int> IntColumnType;
 
     // ---------------------------------------------------------------------
 
    public:
     DataFrame(
-        const std::vector<Column<RELBOOST_INT>>& _categoricals,
-        const std::vector<Column<RELBOOST_FLOAT>>& _discretes,
+        const std::vector<Column<Int>>& _categoricals,
+        const std::vector<Column<Float>>& _discretes,
         const std::vector<std::shared_ptr<containers::Index>>& _indices,
-        const std::vector<Column<RELBOOST_INT>>& _join_keys,
+        const std::vector<Column<Int>>& _join_keys,
         const std::string& _name,
-        const std::vector<Column<RELBOOST_FLOAT>>& _numericals,
-        const std::vector<Column<RELBOOST_FLOAT>>& _targets,
-        const std::vector<Column<RELBOOST_FLOAT>>& _time_stamps );
+        const std::vector<Column<Float>>& _numericals,
+        const std::vector<Column<Float>>& _targets,
+        const std::vector<Column<Float>>& _time_stamps );
 
     DataFrame(
-        const std::vector<Column<RELBOOST_INT>>& _categoricals,
-        const std::vector<Column<RELBOOST_FLOAT>>& _discretes,
-        const std::vector<Column<RELBOOST_INT>>& _join_keys,
+        const std::vector<Column<Int>>& _categoricals,
+        const std::vector<Column<Float>>& _discretes,
+        const std::vector<Column<Int>>& _join_keys,
         const std::string& _name,
-        const std::vector<Column<RELBOOST_FLOAT>>& _numericals,
-        const std::vector<Column<RELBOOST_FLOAT>>& _targets,
-        const std::vector<Column<RELBOOST_FLOAT>>& _time_stamps );
+        const std::vector<Column<Float>>& _numericals,
+        const std::vector<Column<Float>>& _targets,
+        const std::vector<Column<Float>>& _time_stamps );
 
     ~DataFrame() = default;
 
@@ -54,14 +54,14 @@ class DataFrame
 
    public:
     /// Getter for a categorical value.
-    RELBOOST_INT categorical( size_t _i, size_t _j ) const
+    Int categorical( size_t _i, size_t _j ) const
     {
         assert( _j < categoricals_.size() );
         return categoricals_[_j][_i];
     }
 
     /// Getter for a categorical column.
-    const Column<RELBOOST_INT> categorical_col( size_t _j ) const
+    const Column<Int> categorical_col( size_t _j ) const
     {
         assert( _j < categoricals_.size() );
         return categoricals_[_j];
@@ -82,14 +82,14 @@ class DataFrame
     }
 
     /// Getter for a discrete value.
-    RELBOOST_FLOAT discrete( size_t _i, size_t _j ) const
+    Float discrete( size_t _i, size_t _j ) const
     {
         assert( _j < discretes_.size() );
         return discretes_[_j][_i];
     }
 
     /// Getter for a discrete column.
-    const Column<RELBOOST_FLOAT> discrete_col( size_t _j ) const
+    const Column<Float> discrete_col( size_t _j ) const
     {
         assert( _j < discretes_.size() );
         return discretes_[_j];
@@ -110,14 +110,14 @@ class DataFrame
     }
 
     /// Find the indices associated with this join key.
-    containers::Index::const_iterator find( const RELBOOST_INT _join_key ) const
+    containers::Index::const_iterator find( const Int _join_key ) const
     {
         assert( indices().size() > 0 );
         return indices_[0]->find( _join_key );
     }
 
     /// Whether a certain join key is included in the indices.
-    bool has( const RELBOOST_INT _join_key ) const
+    bool has( const Int _join_key ) const
     {
         assert( indices().size() > 0 );
         return indices_[0]->find( _join_key ) != indices_[0]->end();
@@ -130,7 +130,7 @@ class DataFrame
     }
 
     /// Getter for a join key.
-    RELBOOST_INT join_key( size_t _i ) const
+    Int join_key( size_t _i ) const
     {
         assert( join_keys_.size() == 1 );
 
@@ -138,7 +138,7 @@ class DataFrame
     }
 
     /// Getter for a join keys.
-    const std::vector<Column<RELBOOST_INT>>& join_keys() const
+    const std::vector<Column<Int>>& join_keys() const
     {
         return join_keys_;
     }
@@ -180,14 +180,14 @@ class DataFrame
     size_t num_time_stamps() const { return time_stamps_.size(); }
 
     /// Getter for a numerical value.
-    RELBOOST_FLOAT numerical( size_t _i, size_t _j ) const
+    Float numerical( size_t _i, size_t _j ) const
     {
         assert( _j < numericals_.size() );
         return numericals_[_j][_i];
     }
 
     /// Getter for a numerical column.
-    const Column<RELBOOST_FLOAT> numerical_col( size_t _j ) const
+    const Column<Float> numerical_col( size_t _j ) const
     {
         assert( _j < numericals_.size() );
         return numericals_[_j];
@@ -208,14 +208,14 @@ class DataFrame
     }
 
     /// Getter for a target value.
-    RELBOOST_FLOAT target( size_t _i, size_t _j ) const
+    Float target( size_t _i, size_t _j ) const
     {
         assert( _j < targets_.size() );
         return targets_[_j][_i];
     }
 
     /// Getter for a target column.
-    const Column<RELBOOST_FLOAT> target_col( size_t _j ) const
+    const Column<Float> target_col( size_t _j ) const
     {
         assert( _j < targets_.size() );
         return targets_[_j];
@@ -236,7 +236,7 @@ class DataFrame
     }
 
     /// Trivial getter
-    RELBOOST_FLOAT time_stamp( size_t _i ) const
+    Float time_stamp( size_t _i ) const
     {
         assert( time_stamps_.size() == 1 || time_stamps_.size() == 2 );
         assert( _i < time_stamps_[0].nrows_ );
@@ -266,7 +266,7 @@ class DataFrame
     }
 
     /// Trivial getter
-    RELBOOST_FLOAT upper_time_stamp( size_t _i ) const
+    Float upper_time_stamp( size_t _i ) const
     {
         assert( time_stamps_.size() == 1 || time_stamps_.size() == 2 );
 
@@ -293,7 +293,7 @@ class DataFrame
    private:
     /// Creates the indices for this data frame
     static std::vector<std::shared_ptr<containers::Index>> create_indices(
-        const std::vector<Column<RELBOOST_INT>>& _join_keys );
+        const std::vector<Column<Int>>& _join_keys );
 
     /// Helper class that extracts the column names.
     template <typename T>
@@ -304,28 +304,28 @@ class DataFrame
 
    private:
     /// Pointer to categorical columns.
-    const std::vector<Column<RELBOOST_INT>> categoricals_;
+    const std::vector<Column<Int>> categoricals_;
 
     /// Pointer to discrete columns.
-    const std::vector<Column<RELBOOST_FLOAT>> discretes_;
+    const std::vector<Column<Float>> discretes_;
 
     /// Indices assiciated with join keys.
     const std::vector<std::shared_ptr<containers::Index>> indices_;
 
     /// Join keys of this data frame.
-    const std::vector<Column<RELBOOST_INT>> join_keys_;
+    const std::vector<Column<Int>> join_keys_;
 
     /// Name of the data frame.
     const std::string name_;
 
     /// Pointer to numerical columns.
-    const std::vector<Column<RELBOOST_FLOAT>> numericals_;
+    const std::vector<Column<Float>> numericals_;
 
     /// Pointer to target column.
-    const std::vector<Column<RELBOOST_FLOAT>> targets_;
+    const std::vector<Column<Float>> targets_;
 
     /// Time stamps of this data frame.
-    const std::vector<Column<RELBOOST_FLOAT>> time_stamps_;
+    const std::vector<Column<Float>> time_stamps_;
 };
 
 // -------------------------------------------------------------------------

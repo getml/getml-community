@@ -9,7 +9,7 @@ namespace decisiontrees
 std::string DecisionTreeImpl::get_colname(
     const std::string& _feature_num,
     const enums::DataUsed _data_used,
-    const AUTOSQL_INT _ix_column_used,
+    const Int _ix_column_used,
     const bool _equals ) const
 {
     std::string colname;

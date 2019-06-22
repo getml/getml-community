@@ -12,9 +12,9 @@ class DataFrameView
     // ---------------------------------------------------------------------
 
    public:
-    typedef relboost::containers::Column<RELBOOST_FLOAT> FloatColumnType;
+    typedef relboost::containers::Column<Float> FloatColumnType;
 
-    typedef relboost::containers::Column<RELBOOST_INT> IntColumnType;
+    typedef relboost::containers::Column<Int> IntColumnType;
 
     // ---------------------------------------------------------------------
 
@@ -32,13 +32,13 @@ class DataFrameView
 
    public:
     /// Getter for a categorical value.
-    RELBOOST_INT categorical( size_t _i, size_t _j ) const
+    Int categorical( size_t _i, size_t _j ) const
     {
         return df_.categorical( row( _i ), _j );
     }
 
     /// Getter for a categorical column.
-    const Column<RELBOOST_INT> categorical_col( size_t _j ) const
+    const Column<Int> categorical_col( size_t _j ) const
     {
         return df_.categorical_col( _j );
     }
@@ -72,13 +72,13 @@ class DataFrameView
     const DataFrame df() const { return df_; }
 
     /// Getter for a discrete value.
-    RELBOOST_FLOAT discrete( size_t _i, size_t _j ) const
+    Float discrete( size_t _i, size_t _j ) const
     {
         return df_.discrete( row( _i ), _j );
     }
 
     /// Getter for a discrete column.
-    const Column<RELBOOST_FLOAT> discrete_col( size_t _j ) const
+    const Column<Float> discrete_col( size_t _j ) const
     {
         return df_.discrete_col( _j );
     }
@@ -102,13 +102,13 @@ class DataFrameView
     }
 
     /// Getter for a join key.
-    RELBOOST_INT join_key( size_t _i ) const
+    Int join_key( size_t _i ) const
     {
         return df_.join_key( row( _i ) );
     }
 
     /// Getter for a join keys.
-    const std::vector<Column<RELBOOST_INT>>& join_keys() const
+    const std::vector<Column<Int>>& join_keys() const
     {
         return df_.join_keys();
     }
@@ -145,13 +145,13 @@ class DataFrameView
     size_t num_time_stamps() const { return df_.num_time_stamps(); }
 
     /// Getter for a numerical value.
-    RELBOOST_FLOAT numerical( size_t _i, size_t _j ) const
+    Float numerical( size_t _i, size_t _j ) const
     {
         return df_.numerical( row( _i ), _j );
     }
 
     /// Getter for a numerical column.
-    const Column<RELBOOST_FLOAT> numerical_col( size_t _j ) const
+    const Column<Float> numerical_col( size_t _j ) const
     {
         return df_.numerical_col( _j );
     }
@@ -172,13 +172,13 @@ class DataFrameView
     const std::vector<size_t>& rows() const { return *rows_; }
 
     /// Getter for a target value.
-    RELBOOST_FLOAT target( size_t _i, size_t _j ) const
+    Float target( size_t _i, size_t _j ) const
     {
         return df_.target( row( _i ), _j );
     }
 
     /// Getter for a target column.
-    const Column<RELBOOST_FLOAT> target_col( size_t _j ) const
+    const Column<Float> target_col( size_t _j ) const
     {
         return df_.target_col( _j );
     }
@@ -196,7 +196,7 @@ class DataFrameView
     }
 
     /// Trivial getter
-    RELBOOST_FLOAT time_stamp( size_t _i ) const
+    Float time_stamp( size_t _i ) const
     {
         return df_.time_stamp( row( _i ) );
     }
@@ -208,7 +208,7 @@ class DataFrameView
     }
 
     /// Trivial getter
-    RELBOOST_FLOAT upper_time_stamp( size_t _i ) const
+    Float upper_time_stamp( size_t _i ) const
     {
         return df_.upper_time_stamp( row( _i ) );
     }

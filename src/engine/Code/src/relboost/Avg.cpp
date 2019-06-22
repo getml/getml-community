@@ -62,7 +62,7 @@ void Avg::activate(
 
 void Avg::calc_all(
     const enums::Revert _revert,
-    const RELBOOST_FLOAT _old_weight,
+    const Float _old_weight,
     const std::vector<const containers::Match*>::iterator _begin,
     const std::vector<const containers::Match*>::iterator _split_begin,
     const std::vector<const containers::Match*>::iterator _split_end,
@@ -212,7 +212,7 @@ void Avg::calc_all(
 // ----------------------------------------------------------------------------
 
 void Avg::calc_diff(
-    const RELBOOST_FLOAT _old_weight,
+    const Float _old_weight,
     const std::vector<const containers::Match*>::iterator _split_begin,
     const std::vector<const containers::Match*>::iterator _split_end )
 {
@@ -271,10 +271,10 @@ void Avg::calc_diff(
 
 // ----------------------------------------------------------------------------
 
-std::vector<std::array<RELBOOST_FLOAT, 3>> Avg::calc_weights(
+std::vector<std::array<Float, 3>> Avg::calc_weights(
     const enums::Revert _revert,
     const enums::Update _update,
-    const RELBOOST_FLOAT _old_weight,
+    const Float _old_weight,
     const std::vector<const containers::Match*>::iterator _begin,
     const std::vector<const containers::Match*>::iterator _split_begin,
     const std::vector<const containers::Match*>::iterator _split_end,
@@ -315,7 +315,7 @@ std::vector<std::array<RELBOOST_FLOAT, 3>> Avg::calc_weights(
 
     // -------------------------------------------------------------
 
-    std::vector<std::array<RELBOOST_FLOAT, 3>> results;
+    std::vector<std::array<Float, 3>> results;
 
     if ( !std::isnan( _old_weight ) )
         {
@@ -350,12 +350,12 @@ std::vector<std::array<RELBOOST_FLOAT, 3>> Avg::calc_weights(
 
 // ----------------------------------------------------------------------------
 
-std::array<RELBOOST_FLOAT, 3> Avg::calc_weights(
+std::array<Float, 3> Avg::calc_weights(
     const enums::Aggregation _agg,
-    const RELBOOST_FLOAT _old_weight,
+    const Float _old_weight,
     const std::vector<size_t>& _indices,
-    const std::vector<RELBOOST_FLOAT>& _eta1,
-    const std::vector<RELBOOST_FLOAT>& _eta2 )
+    const std::vector<Float>& _eta1,
+    const std::vector<Float>& _eta2 )
 {
     indices_.clear();
 
@@ -409,8 +409,8 @@ std::array<RELBOOST_FLOAT, 3> Avg::calc_weights(
 // ----------------------------------------------------------------------------
 
 void Avg::calc_yhat(
-    const RELBOOST_FLOAT _old_weight,
-    const std::array<RELBOOST_FLOAT, 3>& _new_weights )
+    const Float _old_weight,
+    const std::array<Float, 3>& _new_weights )
 {
     assert( !std::isnan( std::get<0>( _new_weights ) ) );
 
@@ -454,11 +454,11 @@ void Avg::calc_yhat(
 
 void Avg::calc_yhat(
     const enums::Aggregation _agg,
-    const RELBOOST_FLOAT _old_weight,
-    const std::array<RELBOOST_FLOAT, 3>& _new_weights,
+    const Float _old_weight,
+    const std::array<Float, 3>& _new_weights,
     const std::vector<size_t>& _indices,
-    const std::vector<RELBOOST_FLOAT>& _eta1,
-    const std::vector<RELBOOST_FLOAT>& _eta2 )
+    const std::vector<Float>& _eta1,
+    const std::vector<Float>& _eta2 )
 {
     assert( !std::isnan( std::get<0>( _new_weights ) ) );
 
@@ -504,10 +504,10 @@ void Avg::calc_yhat(
 // ----------------------------------------------------------------------------
 
 void Avg::commit(
-    const std::vector<RELBOOST_FLOAT>& _eta1,
-    const std::vector<RELBOOST_FLOAT>& _eta2,
+    const std::vector<Float>& _eta1,
+    const std::vector<Float>& _eta2,
     const std::vector<size_t>& _indices,
-    const std::array<RELBOOST_FLOAT, 3>& _weights )
+    const std::array<Float, 3>& _weights )
 {
     // TODO
 }
@@ -515,9 +515,9 @@ void Avg::commit(
 // ----------------------------------------------------------------------------
 
 void Avg::commit(
-    const RELBOOST_FLOAT _old_intercept,
-    const RELBOOST_FLOAT _old_weight,
-    const std::array<RELBOOST_FLOAT, 3>& _weights,
+    const Float _old_intercept,
+    const Float _old_weight,
+    const std::array<Float, 3>& _weights,
     const std::vector<const containers::Match*>::iterator _begin,
     const std::vector<const containers::Match*>::iterator _split,
     const std::vector<const containers::Match*>::iterator _end )
@@ -654,7 +654,7 @@ void Avg::commit(
 // ----------------------------------------------------------------------------
 
 void Avg::deactivate(
-    const RELBOOST_FLOAT _old_weight,
+    const Float _old_weight,
     const containers::IntSet::Iterator _begin,
     const containers::IntSet::Iterator _end )
 {
@@ -716,14 +716,14 @@ void Avg::deactivate(
 
 // ----------------------------------------------------------------------------
 
-RELBOOST_FLOAT Avg::evaluate_split(
-    const RELBOOST_FLOAT _old_intercept,
-    const RELBOOST_FLOAT _old_weight,
-    const std::array<RELBOOST_FLOAT, 3>& _weights )
+Float Avg::evaluate_split(
+    const Float _old_intercept,
+    const Float _old_weight,
+    const std::array<Float, 3>& _weights )
 {
     // -----------------------------------------------------------------
 
-    RELBOOST_FLOAT loss_reduction = 0.0;
+    Float loss_reduction = 0.0;
 
     // -----------------------------------------------------------------
 
@@ -773,13 +773,13 @@ RELBOOST_FLOAT Avg::evaluate_split(
 
 // ----------------------------------------------------------------------------
 
-RELBOOST_FLOAT Avg::evaluate_split(
-    const RELBOOST_FLOAT _old_intercept,
-    const RELBOOST_FLOAT _old_weight,
-    const std::array<RELBOOST_FLOAT, 3>& _weights,
+Float Avg::evaluate_split(
+    const Float _old_intercept,
+    const Float _old_weight,
+    const std::array<Float, 3>& _weights,
     const std::vector<size_t>& _indices,
-    const std::vector<RELBOOST_FLOAT>& _eta1,
-    const std::vector<RELBOOST_FLOAT>& _eta2 )
+    const std::vector<Float>& _eta1,
+    const std::vector<Float>& _eta2 )
 {
     return child_->evaluate_split(
         _old_intercept,
@@ -827,7 +827,7 @@ void Avg::resize( size_t _size )
 
 // ----------------------------------------------------------------------------
 
-void Avg::revert( const RELBOOST_FLOAT _old_weight )
+void Avg::revert( const Float _old_weight )
 {
     if ( !std::isnan( _old_weight ) )
         {
@@ -901,10 +901,10 @@ void Avg::revert_to_commit()
 
 // ----------------------------------------------------------------------------
 
-RELBOOST_FLOAT Avg::transform(
-    const std::vector<RELBOOST_FLOAT>& _weights ) const
+Float Avg::transform(
+    const std::vector<Float>& _weights ) const
 {
-    RELBOOST_FLOAT count = 0.0;
+    Float count = 0.0;
 
     for ( auto weight : _weights )
         {
@@ -914,7 +914,7 @@ RELBOOST_FLOAT Avg::transform(
                 }
         }
 
-    RELBOOST_FLOAT result = 0.0;
+    Float result = 0.0;
 
     for ( auto weight : _weights )
         {

@@ -8,7 +8,7 @@ namespace utils
 
 void Sampler::calc_sampling_rate(
     const size_t _num_rows,
-    const RELBOOST_FLOAT _sampling_factor,
+    const Float _sampling_factor,
     multithreading::Communicator* _comm )
 {
     auto global_num_rows = _num_rows;
@@ -18,16 +18,16 @@ void Sampler::calc_sampling_rate(
     sampling_rate_ = std::min(
         1.0,
         _sampling_factor * 2000.0 /
-            static_cast<RELBOOST_FLOAT>( global_num_rows ) );
+            static_cast<Float>( global_num_rows ) );
 }
 
 // ----------------------------------------------------------------------------
 
-std::shared_ptr<const std::vector<RELBOOST_FLOAT>> Sampler::make_sample_weights(
+std::shared_ptr<const std::vector<Float>> Sampler::make_sample_weights(
     const size_t _num_rows )
 {
     auto sample_weights =
-        std::make_shared<std::vector<RELBOOST_FLOAT>>( _num_rows );
+        std::make_shared<std::vector<Float>>( _num_rows );
 
     if ( sampling_rate_ <= 0.0 )
         {
@@ -39,7 +39,7 @@ std::shared_ptr<const std::vector<RELBOOST_FLOAT>> Sampler::make_sample_weights(
     std::uniform_int_distribution<> dist( 0, _num_rows - 1 );
 
     const auto num_samples = static_cast<size_t>(
-        static_cast<RELBOOST_FLOAT>( _num_rows ) * sampling_rate_ );
+        static_cast<Float>( _num_rows ) * sampling_rate_ );
 
     for ( size_t i = 0; i < num_samples; ++i )
         {

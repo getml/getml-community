@@ -36,7 +36,9 @@
 
 #include "multithreading/multithreading.hpp"
 
-#include "engine/types.hpp"
+#include "engine/Float.hpp"
+#include "engine/Int.hpp"
+#include "engine/ULong.hpp"
 
 #include "engine/JSON.hpp"
 

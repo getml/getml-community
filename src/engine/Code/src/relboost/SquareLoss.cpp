@@ -7,7 +7,7 @@ namespace lossfunctions
 // ----------------------------------------------------------------------------
 
 void SquareLoss::calc_gradients(
-    const std::shared_ptr<const std::vector<RELBOOST_FLOAT>>& _yhat_old )
+    const std::shared_ptr<const std::vector<Float>>& _yhat_old )
 {
     // ------------------------------------------------------------------------
 
@@ -32,7 +32,7 @@ void SquareLoss::calc_gradients(
         yhat_old().end(),
         targets().begin(),
         g_.begin(),
-        []( const RELBOOST_FLOAT& yhat, const RELBOOST_FLOAT& y ) {
+        []( const Float& yhat, const Float& y ) {
             return yhat - y;
         } );
 
@@ -46,8 +46,8 @@ void SquareLoss::calc_gradients(
 
 // ----------------------------------------------------------------------------
 
-RELBOOST_FLOAT SquareLoss::calc_loss(
-    const std::array<RELBOOST_FLOAT, 3>& _weights )
+Float SquareLoss::calc_loss(
+    const std::array<Float, 3>& _weights )
 {
     // ------------------------------------------------------------------------
 
@@ -60,7 +60,7 @@ RELBOOST_FLOAT SquareLoss::calc_loss(
 
     assert( !std::isnan( std::get<0>( _weights ) ) );
 
-    RELBOOST_FLOAT loss = 0.0;
+    Float loss = 0.0;
 
     for ( size_t ix : sample_index_ )
         {
@@ -74,7 +74,7 @@ RELBOOST_FLOAT SquareLoss::calc_loss(
 
     // ------------------------------------------------------------------------
 
-    utils::Reducer::reduce( std::plus<RELBOOST_FLOAT>(), &loss, &comm() );
+    utils::Reducer::reduce( std::plus<Float>(), &loss, &comm() );
 
     // ------------------------------------------------------------------------
 
@@ -83,7 +83,7 @@ RELBOOST_FLOAT SquareLoss::calc_loss(
     auto global_sum_sample_weights = sum_sample_weights_;
 
     utils::Reducer::reduce(
-        multithreading::maximum<RELBOOST_FLOAT>(),
+        multithreading::maximum<Float>(),
         &global_sum_sample_weights,
         &comm() );
 
@@ -107,7 +107,7 @@ RELBOOST_FLOAT SquareLoss::calc_loss(
     auto global_loss = loss;
 
     utils::Reducer::reduce(
-        multithreading::maximum<RELBOOST_FLOAT>(), &global_loss, &comm() );
+        multithreading::maximum<Float>(), &global_loss, &comm() );
 
     assert( global_loss == loss );
 
@@ -122,10 +122,10 @@ RELBOOST_FLOAT SquareLoss::calc_loss(
 
 // ----------------------------------------------------------------------------
 
-RELBOOST_FLOAT SquareLoss::evaluate_split(
-    const RELBOOST_FLOAT _old_intercept,
-    const RELBOOST_FLOAT _old_weight,
-    const std::array<RELBOOST_FLOAT, 3>& _weights )
+Float SquareLoss::evaluate_split(
+    const Float _old_intercept,
+    const Float _old_weight,
+    const std::array<Float, 3>& _weights )
 {
     /*  //
       ------------------------------------------------------------------------
@@ -136,7 +136,7 @@ RELBOOST_FLOAT SquareLoss::evaluate_split(
       ------------------------------------------------------------------------
 
       const auto loss_function = [this, &new_weight, _old_weight](
-                                     RELBOOST_FLOAT init,
+                                     Float init,
                                      const containers::Match* ptr ) {
           const auto ix = ptr->ix_output;
 
@@ -171,12 +171,12 @@ RELBOOST_FLOAT SquareLoss::evaluate_split(
 
 // ----------------------------------------------------------------------------
 
-RELBOOST_FLOAT SquareLoss::evaluate_tree(
-    const std::vector<RELBOOST_FLOAT>& _yhat_new )
+Float SquareLoss::evaluate_tree(
+    const std::vector<Float>& _yhat_new )
 {
     assert( _yhat_new.size() == targets().size() );
 
-    RELBOOST_FLOAT loss = 0.0;
+    Float loss = 0.0;
 
     for ( size_t ix : sample_index_ )
         {
@@ -185,7 +185,7 @@ RELBOOST_FLOAT SquareLoss::evaluate_tree(
             loss += diff * diff * ( *sample_weights_ )[ix];
         }
 
-    utils::Reducer::reduce( std::plus<RELBOOST_FLOAT>(), &loss, &comm() );
+    utils::Reducer::reduce( std::plus<Float>(), &loss, &comm() );
 
     return loss;
 }

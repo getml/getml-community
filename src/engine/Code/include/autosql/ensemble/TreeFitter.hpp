@@ -48,7 +48,7 @@ class TreeFitter
         const size_t _num_trees,
         const decisiontrees::TableHolder &_table_holder,
         const std::vector<containers::Subfeatures> &_subfeatures,
-        const std::vector<AUTOSQL_FLOAT> &_values,
+        const std::vector<Float> &_values,
         std::vector<containers::Matches> *_samples,
         std::vector<containers::MatchPtrs> *_sample_containers,
         optimizationcriteria::OptimizationCriterion *_optimization_criterion,
@@ -73,7 +73,7 @@ class TreeFitter
         std::vector<containers::MatchPtrs> *_sample_containers,
         optimizationcriteria::OptimizationCriterion *_optimization_criterion,
         std::list<decisiontrees::DecisionTree> *_candidate_trees,
-        std::vector<AUTOSQL_FLOAT> *_values );
+        std::vector<Float> *_values );
 
     // -------------------------------------------------------------------------
 

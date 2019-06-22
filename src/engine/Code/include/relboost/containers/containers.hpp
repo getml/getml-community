@@ -11,12 +11,15 @@
 #include <array>
 #include <memory>
 #include <type_traits>
+#include <unordered_map>
 #include <vector>
 
 #include <Poco/JSON/Object.h>
 
 #include "debug/debug.hpp"
-#include "relboost/types.hpp"
+
+#include "relboost/Float.hpp"
+#include "relboost/Int.hpp"
 
 #include "relboost/enums/enums.hpp"
 

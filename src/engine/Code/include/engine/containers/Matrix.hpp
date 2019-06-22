@@ -17,9 +17,9 @@ class Matrix
           data_ptr_( _data_ptr ),
           name_( std::make_shared<std::string>( "" ) ),
           ncols_( _ncols ),
-          ncols_long_( static_cast<ENGINE_UNSIGNED_LONG>( _ncols ) ),
+          ncols_long_( static_cast<ULong>( _ncols ) ),
           nrows_( _nrows ),
-          nrows_long_( static_cast<ENGINE_UNSIGNED_LONG>( _nrows ) ),
+          nrows_long_( static_cast<ULong>( _nrows ) ),
           units_( std::make_shared<std::vector<std::string>>( _ncols, "" ) ),
           type_( "Matrix" )
     {
@@ -77,10 +77,10 @@ class Matrix
     void save( const std::string &_fname ) const;
 
     /// Sorts the rows of the matrix by the key provided
-    Matrix<T> sort_by_key( const Matrix<ENGINE_INT> &_key ) const;
+    Matrix<T> sort_by_key( const Matrix<Int> &_key ) const;
 
     /// Sorts the rows of the matrix by the key provided
-    Matrix<T> sort_by_key( const std::vector<ENGINE_INT> &_key ) const;
+    Matrix<T> sort_by_key( const std::vector<Int> &_key ) const;
 
     /// Returns a shallow copy of a subselection of rows
     template <class T2>
@@ -154,7 +154,7 @@ class Matrix
     T *end() const { return data_ptr_ + size(); }
 
     /// Returns number of bytes occupied by the data
-    const ENGINE_UNSIGNED_LONG nbytes() const { return size() * sizeof( T ); }
+    const ULong nbytes() const { return size() * sizeof( T ); }
 
     /// Accessor to data
     template <class T2>
@@ -188,7 +188,7 @@ class Matrix
     template <
         typename T2,
         typename std::enable_if<
-            std::is_same<T2, ENGINE_UNSIGNED_LONG>::value == false,
+            std::is_same<T2, ULong>::value == false,
             int>::type = 0>
     T &operator()( const T2 _i, const T2 _j )
     {
@@ -198,15 +198,15 @@ class Matrix
         assert( static_cast<size_t>( _j ) < ncols() );
 
         return data_ptr_
-            [ncols_long_ * static_cast<ENGINE_UNSIGNED_LONG>( _i ) +
-             static_cast<ENGINE_UNSIGNED_LONG>( _j )];
+            [ncols_long_ * static_cast<ULong>( _i ) +
+             static_cast<ULong>( _j )];
     }
 
     /// Accessor to data
     template <
         typename T2,
         typename std::enable_if<
-            std::is_same<T2, ENGINE_UNSIGNED_LONG>::value == false,
+            std::is_same<T2, ULong>::value == false,
             int>::type = 0>
     T operator()( const T2 _i, const T2 _j ) const
     {
@@ -216,14 +216,14 @@ class Matrix
         assert( static_cast<size_t>( _j ) < ncols() );
 
         return data_ptr_
-            [ncols_long_ * static_cast<ENGINE_UNSIGNED_LONG>( _i ) +
-             static_cast<ENGINE_UNSIGNED_LONG>( _j )];
+            [ncols_long_ * static_cast<ULong>( _i ) +
+             static_cast<ULong>( _j )];
     }
 
     /// Accessor to data - specialization for when _i and _j are
-    /// already of type ENGINE_UNSIGNED_LONG
+    /// already of type ULong
     T &operator()(
-        const ENGINE_UNSIGNED_LONG _i, const ENGINE_UNSIGNED_LONG _j )
+        const ULong _i, const ULong _j )
     {
         assert( _i < nrows_long_ );
         assert( _j < ncols_long_ );
@@ -232,9 +232,9 @@ class Matrix
     }
 
     /// Accessor to data - specialization for when _i and _j are
-    /// already of type ENGINE_UNSIGNED_LONG
+    /// already of type ULong
     T operator()(
-        const ENGINE_UNSIGNED_LONG _i, const ENGINE_UNSIGNED_LONG _j ) const
+        const ULong _i, const ULong _j ) const
     {
         assert( _i < nrows_long_ );
         assert( _j < ncols_long_ );
@@ -305,7 +305,7 @@ class Matrix
     }
 
     /// Returns size of data
-    const ENGINE_UNSIGNED_LONG size() const
+    const ULong size() const
     {
         return nrows_long_ * ncols_long_;
     }
@@ -354,13 +354,13 @@ class Matrix
     size_t ncols_;
 
     /// Number of columns - unsigned long version
-    ENGINE_UNSIGNED_LONG ncols_long_;
+    ULong ncols_long_;
 
     /// Number of rows
     size_t nrows_;
 
     /// Number of rows - unsigned long version
-    ENGINE_UNSIGNED_LONG nrows_long_;
+    ULong nrows_long_;
 
     /// Units of the columns
     std::shared_ptr<std::vector<std::string>> units_;
@@ -396,7 +396,7 @@ void Matrix<T>::append( const Matrix<T> &_other )
 
     nrows_ += _other.nrows();
 
-    nrows_long_ = static_cast<ENGINE_UNSIGNED_LONG>( nrows_ );
+    nrows_long_ = static_cast<ULong>( nrows_ );
 
     batches().push_back( nrows_ );
 }
@@ -962,10 +962,10 @@ void Matrix<T>::save( const std::string &_fname ) const
 // -------------------------------------------------------------------------
 
 template <class T>
-Matrix<T> Matrix<T>::sort_by_key( const std::vector<ENGINE_INT> &_key ) const
+Matrix<T> Matrix<T>::sort_by_key( const std::vector<Int> &_key ) const
 {
-    Matrix<ENGINE_INT> key(
-        _key.size(), static_cast<ENGINE_INT>( 1 ), _key.data() );
+    Matrix<Int> key(
+        _key.size(), static_cast<Int>( 1 ), _key.data() );
 
     return sort_by_key( key );
 }
@@ -973,7 +973,7 @@ Matrix<T> Matrix<T>::sort_by_key( const std::vector<ENGINE_INT> &_key ) const
 // -------------------------------------------------------------------------
 
 template <class T>
-Matrix<T> Matrix<T>::sort_by_key( const Matrix<ENGINE_INT> &_key ) const
+Matrix<T> Matrix<T>::sort_by_key( const Matrix<Int> &_key ) const
 {
     assert(
         _key.nrows() == nrows() &&
@@ -1017,7 +1017,7 @@ const Matrix<T> Matrix<T>::subview( T2 _row_begin, T2 _row_end ) const
         static_cast<size_t>( _row_end - _row_begin ),
         ncols_,
         data_ptr_ +
-            static_cast<ENGINE_UNSIGNED_LONG>( _row_begin ) * ncols_long_ );
+            static_cast<ULong>( _row_begin ) * ncols_long_ );
 
     mat.set_colnames( *( colnames_.get() ) );
 
@@ -1047,9 +1047,9 @@ Matrix<T> Matrix<T>::transpose() const
 {
     Matrix<T> transposed( ncols_, nrows_ );
 
-    for ( ENGINE_UNSIGNED_LONG i = 0; i < nrows_long_; ++i )
+    for ( ULong i = 0; i < nrows_long_; ++i )
         {
-            for ( ENGINE_UNSIGNED_LONG j = 0; j < ncols_long_; ++j )
+            for ( ULong j = 0; j < ncols_long_; ++j )
                 {
                     transposed( j, i ) = ( *this )( i, j );
                 }

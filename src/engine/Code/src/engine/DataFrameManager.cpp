@@ -19,7 +19,7 @@ void DataFrameManager::add_categorical_column(
 
     const auto unit = JSON::get_value<std::string>( _cmd, "unit_" );
 
-    containers::Matrix<ENGINE_INT> mat;
+    containers::Matrix<Int> mat;
 
     if ( role == "categorical" )
         {
@@ -477,11 +477,11 @@ void DataFrameManager::get_data_frame_content(
     const Poco::JSON::Object& _cmd,
     Poco::Net::StreamSocket* _socket )
 {
-    const auto draw = JSON::get_value<ENGINE_INT>( _cmd, "draw_" );
+    const auto draw = JSON::get_value<Int>( _cmd, "draw_" );
 
-    const auto length = JSON::get_value<ENGINE_INT>( _cmd, "length_" );
+    const auto length = JSON::get_value<Int>( _cmd, "length_" );
 
-    const auto start = JSON::get_value<ENGINE_INT>( _cmd, "start_" );
+    const auto start = JSON::get_value<Int>( _cmd, "start_" );
 
     multithreading::ReadLock read_lock( read_write_lock_ );
 

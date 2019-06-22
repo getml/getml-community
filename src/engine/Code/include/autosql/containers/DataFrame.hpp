@@ -12,31 +12,31 @@ class DataFrame
     // ---------------------------------------------------------------------
 
    public:
-    typedef autosql::containers::Column<AUTOSQL_FLOAT> FloatColumnType;
+    typedef autosql::containers::Column<Float> FloatColumnType;
 
-    typedef autosql::containers::Column<AUTOSQL_INT> IntColumnType;
+    typedef autosql::containers::Column<Int> IntColumnType;
 
     // ---------------------------------------------------------------------
 
    public:
     DataFrame(
-        const std::vector<Column<AUTOSQL_INT>>& _categoricals,
-        const std::vector<Column<AUTOSQL_FLOAT>>& _discretes,
+        const std::vector<Column<Int>>& _categoricals,
+        const std::vector<Column<Float>>& _discretes,
         const std::vector<std::shared_ptr<Index>>& _indices,
-        const std::vector<Column<AUTOSQL_INT>>& _join_keys,
+        const std::vector<Column<Int>>& _join_keys,
         const std::string& _name,
-        const std::vector<Column<AUTOSQL_FLOAT>>& _numericals,
-        const std::vector<Column<AUTOSQL_FLOAT>>& _targets,
-        const std::vector<Column<AUTOSQL_FLOAT>>& _time_stamps );
+        const std::vector<Column<Float>>& _numericals,
+        const std::vector<Column<Float>>& _targets,
+        const std::vector<Column<Float>>& _time_stamps );
 
     DataFrame(
-        const std::vector<Column<AUTOSQL_INT>>& _categoricals,
-        const std::vector<Column<AUTOSQL_FLOAT>>& _discretes,
-        const std::vector<Column<AUTOSQL_INT>>& _join_keys,
+        const std::vector<Column<Int>>& _categoricals,
+        const std::vector<Column<Float>>& _discretes,
+        const std::vector<Column<Int>>& _join_keys,
         const std::string& _name,
-        const std::vector<Column<AUTOSQL_FLOAT>>& _numericals,
-        const std::vector<Column<AUTOSQL_FLOAT>>& _targets,
-        const std::vector<Column<AUTOSQL_FLOAT>>& _time_stamps );
+        const std::vector<Column<Float>>& _numericals,
+        const std::vector<Column<Float>>& _targets,
+        const std::vector<Column<Float>>& _time_stamps );
 
     ~DataFrame() = default;
 
@@ -54,14 +54,14 @@ class DataFrame
 
    public:
     /// Getter for a categorical value.
-    AUTOSQL_INT categorical( size_t _i, size_t _j ) const
+    Int categorical( size_t _i, size_t _j ) const
     {
         assert( _j < categoricals_.size() );
         return categoricals_[_j][_i];
     }
 
     /// Getter for a categorical column.
-    const Column<AUTOSQL_INT> categorical_col( size_t _j ) const
+    const Column<Int> categorical_col( size_t _j ) const
     {
         assert( _j < categoricals_.size() );
         return categoricals_[_j];
@@ -82,14 +82,14 @@ class DataFrame
     }
 
     /// Getter for a discrete value.
-    AUTOSQL_FLOAT discrete( size_t _i, size_t _j ) const
+    Float discrete( size_t _i, size_t _j ) const
     {
         assert( _j < discretes_.size() );
         return discretes_[_j][_i];
     }
 
     /// Getter for a discrete column.
-    const Column<AUTOSQL_FLOAT> discrete_col( size_t _j ) const
+    const Column<Float> discrete_col( size_t _j ) const
     {
         assert( _j < discretes_.size() );
         return discretes_[_j];
@@ -110,14 +110,14 @@ class DataFrame
     }
 
     /// Find the indices associated with this join key.
-    Index::const_iterator find( const AUTOSQL_INT _join_key ) const
+    Index::const_iterator find( const Int _join_key ) const
     {
         assert( indices().size() == 1 );
         return indices_[0]->find( _join_key );
     }
 
     /// Whether a certain join key is included in the indices.
-    bool has( const AUTOSQL_INT _join_key ) const
+    bool has( const Int _join_key ) const
     {
         assert( indices().size() == 1 );
         return indices_[0]->find( _join_key ) != indices_[0]->end();
@@ -130,7 +130,7 @@ class DataFrame
     }
 
     /// Getter for a join key.
-    AUTOSQL_INT join_key( size_t _i ) const
+    Int join_key( size_t _i ) const
     {
         assert( join_keys_.size() == 1 );
 
@@ -138,7 +138,7 @@ class DataFrame
     }
 
     /// Getter for a join keys.
-    const std::vector<Column<AUTOSQL_INT>>& join_keys() const
+    const std::vector<Column<Int>>& join_keys() const
     {
         return join_keys_;
     }
@@ -180,14 +180,14 @@ class DataFrame
     size_t num_time_stamps() const { return time_stamps_.size(); }
 
     /// Getter for a numerical value.
-    AUTOSQL_FLOAT numerical( size_t _i, size_t _j ) const
+    Float numerical( size_t _i, size_t _j ) const
     {
         assert( _j < numericals_.size() );
         return numericals_[_j][_i];
     }
 
     /// Getter for a numerical column.
-    const Column<AUTOSQL_FLOAT> numerical_col( size_t _j ) const
+    const Column<Float> numerical_col( size_t _j ) const
     {
         assert( _j < numericals_.size() );
         return numericals_[_j];
@@ -208,14 +208,14 @@ class DataFrame
     }
 
     /// Getter for a target value.
-    AUTOSQL_FLOAT target( size_t _i, size_t _j ) const
+    Float target( size_t _i, size_t _j ) const
     {
         assert( _j < targets_.size() );
         return targets_[_j][_i];
     }
 
     /// Getter for a target column.
-    const Column<AUTOSQL_FLOAT> target_col( size_t _j ) const
+    const Column<Float> target_col( size_t _j ) const
     {
         assert( _j < targets_.size() );
         return targets_[_j];
@@ -236,7 +236,7 @@ class DataFrame
     }
 
     /// Trivial getter
-    AUTOSQL_FLOAT time_stamp( size_t _i ) const
+    Float time_stamp( size_t _i ) const
     {
         assert( time_stamps_.size() == 1 || time_stamps_.size() == 2 );
         assert( _i < time_stamps_[0].nrows_ );
@@ -245,7 +245,7 @@ class DataFrame
     }
 
     /// Getter for the time stamps column.
-    const Column<AUTOSQL_FLOAT> time_stamp_col() const
+    const Column<Float> time_stamp_col() const
     {
         assert( time_stamps_.size() == 1 || time_stamps_.size() == 2 );
         return time_stamps_[0];
@@ -273,7 +273,7 @@ class DataFrame
     }
 
     /// Trivial getter
-    AUTOSQL_FLOAT upper_time_stamp( size_t _i ) const
+    Float upper_time_stamp( size_t _i ) const
     {
         assert( time_stamps_.size() == 1 || time_stamps_.size() == 2 );
 
@@ -300,7 +300,7 @@ class DataFrame
    private:
     /// Creates the indices for this data frame
     static std::vector<std::shared_ptr<Index>> create_indices(
-        const std::vector<Column<AUTOSQL_INT>>& _join_keys );
+        const std::vector<Column<Int>>& _join_keys );
 
     /// Helper class that extracts the column names.
     template <typename T>
@@ -311,28 +311,28 @@ class DataFrame
 
    private:
     /// Pointer to categorical columns.
-    const std::vector<Column<AUTOSQL_INT>> categoricals_;
+    const std::vector<Column<Int>> categoricals_;
 
     /// Pointer to discrete columns.
-    const std::vector<Column<AUTOSQL_FLOAT>> discretes_;
+    const std::vector<Column<Float>> discretes_;
 
     /// Indices assiciated with join keys.
     const std::vector<std::shared_ptr<Index>> indices_;
 
     /// Join keys of this data frame.
-    const std::vector<Column<AUTOSQL_INT>> join_keys_;
+    const std::vector<Column<Int>> join_keys_;
 
     /// Name of the data frame.
     const std::string name_;
 
     /// Pointer to numerical columns.
-    const std::vector<Column<AUTOSQL_FLOAT>> numericals_;
+    const std::vector<Column<Float>> numericals_;
 
     /// Pointer to target column.
-    const std::vector<Column<AUTOSQL_FLOAT>> targets_;
+    const std::vector<Column<Float>> targets_;
 
     /// Time stamps of this data frame.
-    const std::vector<Column<AUTOSQL_FLOAT>> time_stamps_;
+    const std::vector<Column<Float>> time_stamps_;
 };
 
 // -------------------------------------------------------------------------

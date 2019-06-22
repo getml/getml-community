@@ -6,7 +6,7 @@ namespace utils
 {
 // ----------------------------------------------------------------------------
 
-const std::shared_ptr<const std::vector<RELBOOST_INT>>
+const std::shared_ptr<const std::vector<Int>>
 CriticalValues::calc_categorical(
     const enums::DataUsed _data_used,
     const size_t _num_column,
@@ -22,9 +22,9 @@ CriticalValues::calc_categorical(
     // to min and minus infinity to max, ensuring that they not will be the
     // chosen minimum or maximum.
 
-    RELBOOST_INT min = std::numeric_limits<RELBOOST_INT>::max();
+    Int min = std::numeric_limits<Int>::max();
 
-    RELBOOST_INT max = 0;
+    Int max = 0;
 
     find_min_max(
         _data_used,
@@ -43,7 +43,7 @@ CriticalValues::calc_categorical(
 
     if ( min >= max )
         {
-            return std::make_shared<std::vector<RELBOOST_INT>>( 0 );
+            return std::make_shared<std::vector<Int>>( 0 );
         }
 
     // ------------------------------------------------------------------------
@@ -55,7 +55,7 @@ CriticalValues::calc_categorical(
 
     for ( auto it = _begin; it != _end; ++it )
         {
-            RELBOOST_INT cat = 0;
+            Int cat = 0;
 
             switch ( _data_used )
                 {
@@ -93,9 +93,9 @@ CriticalValues::calc_categorical(
     // ------------------------------------------------------------------------
     // Build vector.
 
-    auto categories = std::make_shared<std::vector<RELBOOST_INT>>( 0 );
+    auto categories = std::make_shared<std::vector<Int>>( 0 );
 
-    for ( RELBOOST_INT i = 0; i < max - min; ++i )
+    for ( Int i = 0; i < max - min; ++i )
         {
             if ( included[i] == 1 )
                 {
@@ -112,7 +112,7 @@ CriticalValues::calc_categorical(
 
 // ----------------------------------------------------------------------------
 
-std::vector<RELBOOST_FLOAT> CriticalValues::calc_discrete(
+std::vector<Float> CriticalValues::calc_discrete(
     const enums::DataUsed _data_used,
     const size_t _input_col,
     const size_t _output_col,
@@ -128,9 +128,9 @@ std::vector<RELBOOST_FLOAT> CriticalValues::calc_discrete(
     // to min and minus infinity to max, ensuring that they not will be the
     // chosen minimum or maximum.
 
-    RELBOOST_FLOAT min = std::numeric_limits<RELBOOST_FLOAT>::max();
+    Float min = std::numeric_limits<Float>::max();
 
-    RELBOOST_FLOAT max = std::numeric_limits<RELBOOST_FLOAT>::lowest();
+    Float max = std::numeric_limits<Float>::lowest();
 
     if ( is_same_units( _data_used ) )
         {
@@ -174,17 +174,17 @@ std::vector<RELBOOST_FLOAT> CriticalValues::calc_discrete(
 
     if ( min > max )
         {
-            return std::vector<RELBOOST_FLOAT>( 0 );
+            return std::vector<Float>( 0 );
         }
 
     // ---------------------------------------------------------------------------
 
-    std::vector<RELBOOST_FLOAT> critical_values(
+    std::vector<Float> critical_values(
         static_cast<int>( max - min ) );
 
     for ( size_t i = 0; i < critical_values.size(); ++i )
         {
-            critical_values[i] = max - static_cast<RELBOOST_FLOAT>( i + 1 );
+            critical_values[i] = max - static_cast<Float>( i + 1 );
         }
 
     return critical_values;
@@ -194,7 +194,7 @@ std::vector<RELBOOST_FLOAT> CriticalValues::calc_discrete(
 
 // ----------------------------------------------------------------------------
 
-std::vector<RELBOOST_FLOAT> CriticalValues::calc_numerical(
+std::vector<Float> CriticalValues::calc_numerical(
     const enums::DataUsed _data_used,
     const size_t _input_col,
     const size_t _output_col,
@@ -210,9 +210,9 @@ std::vector<RELBOOST_FLOAT> CriticalValues::calc_numerical(
     // to min and minus infinity to max, ensuring that they not will be the
     // chosen minimum or maximum.
 
-    RELBOOST_FLOAT min = std::numeric_limits<RELBOOST_FLOAT>::max();
+    Float min = std::numeric_limits<Float>::max();
 
-    RELBOOST_FLOAT max = std::numeric_limits<RELBOOST_FLOAT>::lowest();
+    Float max = std::numeric_limits<Float>::lowest();
 
     if ( is_same_units( _data_used ) )
         {
@@ -250,26 +250,26 @@ std::vector<RELBOOST_FLOAT> CriticalValues::calc_numerical(
 
     if ( min > max )
         {
-            return std::vector<RELBOOST_FLOAT>( 0 );
+            return std::vector<Float>( 0 );
         }
 
     // ---------------------------------------------------------------------------
 
-    auto dist = static_cast<RELBOOST_INT>( std::distance( _begin, _end ) );
+    auto dist = static_cast<Int>( std::distance( _begin, _end ) );
 
-    utils::Reducer::reduce( std::plus<RELBOOST_INT>(), &dist, _comm );
+    utils::Reducer::reduce( std::plus<Int>(), &dist, _comm );
 
     size_t num_critical_values = calc_num_critical_values( dist );
 
-    RELBOOST_FLOAT step_size =
-        ( max - min ) / static_cast<RELBOOST_FLOAT>( num_critical_values + 1 );
+    Float step_size =
+        ( max - min ) / static_cast<Float>( num_critical_values + 1 );
 
-    std::vector<RELBOOST_FLOAT> critical_values( num_critical_values );
+    std::vector<Float> critical_values( num_critical_values );
 
     for ( size_t i = 0; i < num_critical_values; ++i )
         {
             critical_values[i] =
-                max - static_cast<RELBOOST_FLOAT>( i + 1 ) * step_size;
+                max - static_cast<Float>( i + 1 ) * step_size;
         }
 
     return critical_values;
@@ -286,8 +286,8 @@ void CriticalValues::find_min_max(
     const containers::DataFrameView& _output,
     const std::vector<const containers::Match*>::iterator _begin,
     const std::vector<const containers::Match*>::iterator _end,
-    RELBOOST_INT* _min,
-    RELBOOST_INT* _max,
+    Int* _min,
+    Int* _max,
     multithreading::Communicator* _comm )
 {
     if ( std::distance( _begin, _end ) > 0 )
@@ -329,10 +329,10 @@ void CriticalValues::find_min_max(
         }
 
     utils::Reducer::reduce(
-        multithreading::minimum<RELBOOST_INT>(), _min, _comm );
+        multithreading::minimum<Int>(), _min, _comm );
 
     utils::Reducer::reduce(
-        multithreading::maximum<RELBOOST_INT>(), _max, _comm );
+        multithreading::maximum<Int>(), _max, _comm );
 
     debug_log( "find_min_max, min: " + std::to_string( *_min ) );
     debug_log( "find_min_max, max: " + std::to_string( *_max ) );
@@ -348,8 +348,8 @@ void CriticalValues::find_min_max(
     const containers::DataFrameView& _output,
     const std::vector<const containers::Match*>::iterator _begin,
     const std::vector<const containers::Match*>::iterator _end,
-    RELBOOST_FLOAT* _min,
-    RELBOOST_FLOAT* _max,
+    Float* _min,
+    Float* _max,
     multithreading::Communicator* _comm )
 {
     if ( std::distance( _begin, _end ) > 0 )
@@ -392,10 +392,10 @@ void CriticalValues::find_min_max(
         }
 
     utils::Reducer::reduce(
-        multithreading::minimum<RELBOOST_FLOAT>(), _min, _comm );
+        multithreading::minimum<Float>(), _min, _comm );
 
     utils::Reducer::reduce(
-        multithreading::maximum<RELBOOST_FLOAT>(), _max, _comm );
+        multithreading::maximum<Float>(), _max, _comm );
 
     debug_log( "find_min_max, min: " + std::to_string( *_min ) );
     debug_log( "find_min_max, max: " + std::to_string( *_max ) );
@@ -410,8 +410,8 @@ void CriticalValues::find_min_max(
     const containers::DataFrameView& _output,
     const std::vector<const containers::Match*>::iterator _begin,
     const std::vector<const containers::Match*>::iterator _end,
-    RELBOOST_FLOAT* _min,
-    RELBOOST_FLOAT* _max,
+    Float* _min,
+    Float* _max,
     multithreading::Communicator* _comm )
 {
     if ( std::distance( _begin, _end ) > 0 )
@@ -475,10 +475,10 @@ void CriticalValues::find_min_max(
         }
 
     utils::Reducer::reduce(
-        multithreading::minimum<RELBOOST_FLOAT>(), _min, _comm );
+        multithreading::minimum<Float>(), _min, _comm );
 
     utils::Reducer::reduce(
-        multithreading::maximum<RELBOOST_FLOAT>(), _max, _comm );
+        multithreading::maximum<Float>(), _max, _comm );
 
     debug_log( "find_min_max, min: " + std::to_string( *_min ) );
     debug_log( "find_min_max, max: " + std::to_string( *_max ) );

@@ -15,7 +15,7 @@ struct Matchmaker
     static std::vector<containers::Match> make_matches(
         const containers::DataFrameView& _population,
         const containers::DataFrame& _peripheral,
-        const std::shared_ptr<const std::vector<RELBOOST_FLOAT>>&
+        const std::shared_ptr<const std::vector<Float>>&
             _sample_weights,
         const bool _use_timestamps );
 

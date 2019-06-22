@@ -14,17 +14,17 @@ struct TreeHyperparameters
     TreeHyperparameters( const Poco::JSON::Object& _json_obj )
         : allow_sets_( JSON::get_value<bool>( _json_obj, "allow_sets_" ) ),
           grid_factor_(
-              JSON::get_value<AUTOSQL_FLOAT>( _json_obj, "grid_factor_" ) ),
+              JSON::get_value<Float>( _json_obj, "grid_factor_" ) ),
           max_length_(
-              JSON::get_value<AUTOSQL_INT>( _json_obj, "max_length_" ) ),
+              JSON::get_value<Int>( _json_obj, "max_length_" ) ),
           max_length_probe_(
               TreeHyperparameters::calc_max_length_probe( _json_obj ) ),
           min_num_samples_(
-              JSON::get_value<AUTOSQL_INT>( _json_obj, "min_num_samples_" ) ),
+              JSON::get_value<Int>( _json_obj, "min_num_samples_" ) ),
           regularization_(
-              JSON::get_value<AUTOSQL_FLOAT>( _json_obj, "regularization_" ) ),
+              JSON::get_value<Float>( _json_obj, "regularization_" ) ),
           share_conditions_(
-              JSON::get_value<AUTOSQL_FLOAT>( _json_obj, "share_conditions_" ) )
+              JSON::get_value<Float>( _json_obj, "share_conditions_" ) )
     {
     }
 
@@ -51,7 +51,7 @@ struct TreeHyperparameters
     const bool allow_sets_;
 
     /// Proportional to the frequency of critical values
-    const AUTOSQL_FLOAT grid_factor_;
+    const Float grid_factor_;
 
     /// The maximum depth of a decision tree
     const size_t max_length_;
@@ -63,10 +63,10 @@ struct TreeHyperparameters
     const size_t min_num_samples_;
 
     /// Minimum improvement in R2 necessary for a split
-    const AUTOSQL_FLOAT regularization_;
+    const Float regularization_;
 
     /// The share of conditions randomly selected
-    const AUTOSQL_FLOAT share_conditions_;
+    const Float share_conditions_;
 };
 
 // ----------------------------------------------------------------------------

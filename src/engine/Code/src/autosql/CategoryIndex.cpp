@@ -7,7 +7,7 @@ namespace containers
 // ----------------------------------------------------------------------------
 
 CategoryIndex::CategoryIndex(
-    const std::vector<AUTOSQL_INT>& _categories,
+    const std::vector<Int>& _categories,
     const containers::MatchPtrs::iterator _begin,
     const containers::MatchPtrs::iterator _end )
     : begin_( _begin ),
@@ -34,8 +34,8 @@ CategoryIndex::CategoryIndex(
 
 // ----------------------------------------------------------------------------
 
-std::vector<AUTOSQL_INT> CategoryIndex::build_indptr(
-    const std::vector<AUTOSQL_INT>& _categories,
+std::vector<Int> CategoryIndex::build_indptr(
+    const std::vector<Int>& _categories,
     const containers::MatchPtrs::iterator _begin,
     const containers::MatchPtrs::iterator _end )
 {
@@ -45,7 +45,7 @@ std::vector<AUTOSQL_INT> CategoryIndex::build_indptr(
 
     if ( std::distance( _begin, _end ) == 0 || _categories.size() == 0 )
         {
-            return std::vector<AUTOSQL_INT>( 0 );
+            return std::vector<Int>( 0 );
         }
 
     // ------------------------------------------------------------------------
@@ -55,13 +55,13 @@ std::vector<AUTOSQL_INT> CategoryIndex::build_indptr(
 
     assert( maximum >= minimum );
 
-    const auto dist = static_cast<AUTOSQL_INT>( std::distance( _begin, _end ) );
+    const auto dist = static_cast<Int>( std::distance( _begin, _end ) );
 
-    auto indptr = std::vector<AUTOSQL_INT>( maximum - minimum + 2 );
+    auto indptr = std::vector<Int>( maximum - minimum + 2 );
 
     // ------------------------------------------------------------------------
 
-    AUTOSQL_INT i = 0;
+    Int i = 0;
 
     for ( auto cat = minimum; cat <= maximum + 1; ++cat )
         {

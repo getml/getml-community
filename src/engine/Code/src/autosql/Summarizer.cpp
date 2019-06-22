@@ -6,17 +6,17 @@ namespace containers
 {
 // ----------------------------------------------------------------------------
 
-std::vector<std::vector<AUTOSQL_INT>> Summarizer::calculate_column_densities(
-    const AUTOSQL_INT _num_bins,
-    const containers::Matrix<AUTOSQL_FLOAT>& _mat,
+std::vector<std::vector<Int>> Summarizer::calculate_column_densities(
+    const Int _num_bins,
+    const containers::Matrix<Float>& _mat,
     multithreading::Communicator* _comm )
 {
     // ------------------------------------------------------------------------
     // Find minima and maxima
 
-    auto minima = std::vector<AUTOSQL_FLOAT>( 0 );
+    auto minima = std::vector<Float>( 0 );
 
-    auto maxima = std::vector<AUTOSQL_FLOAT>( 0 );
+    auto maxima = std::vector<Float>( 0 );
 
     min_and_max( _mat, _comm, minima, maxima );
 
@@ -24,14 +24,14 @@ std::vector<std::vector<AUTOSQL_INT>> Summarizer::calculate_column_densities(
     // Calculate step_sizes and actual_num_bins. Note that actual_num_bins
     // can be smaller than num_bins.
 
-    auto step_sizes = std::vector<AUTOSQL_FLOAT>( 0 );
+    auto step_sizes = std::vector<Float>( 0 );
 
-    auto actual_num_bins = std::vector<AUTOSQL_INT>( 0 );
+    auto actual_num_bins = std::vector<Int>( 0 );
 
     calculate_step_sizes_and_num_bins(
         minima,
         maxima,
-        static_cast<AUTOSQL_FLOAT>( _num_bins ),
+        static_cast<Float>( _num_bins ),
         step_sizes,
         actual_num_bins );
 
@@ -43,7 +43,7 @@ std::vector<std::vector<AUTOSQL_INT>> Summarizer::calculate_column_densities(
     assert( actual_num_bins.size() == static_cast<size_t>( _mat.ncols() ) );
 
     auto column_densities =
-        std::vector<std::vector<AUTOSQL_INT>>( _mat.ncols() );
+        std::vector<std::vector<Int>>( _mat.ncols() );
 
     for ( size_t j = 0; j < column_densities.size(); ++j )
         {
@@ -51,9 +51,9 @@ std::vector<std::vector<AUTOSQL_INT>> Summarizer::calculate_column_densities(
             column_densities[j].resize( actual_num_bins[j] );
         }
 
-    for ( AUTOSQL_INT i = 0; i < _mat.nrows(); ++i )
+    for ( Int i = 0; i < _mat.nrows(); ++i )
         {
-            for ( AUTOSQL_INT j = 0; j < _mat.ncols(); ++j )
+            for ( Int j = 0; j < _mat.ncols(); ++j )
                 {
                     const auto val = _mat( i, j );
 
@@ -74,14 +74,14 @@ std::vector<std::vector<AUTOSQL_INT>> Summarizer::calculate_column_densities(
 
     for ( size_t j = 0; j < column_densities.size(); ++j )
         {
-            auto global = std::vector<AUTOSQL_INT>( column_densities[j].size() );
+            auto global = std::vector<Int>( column_densities[j].size() );
 
             AUTOSQL_PARALLEL_LIB::all_reduce(
                 *_comm,                                    // comm
                 column_densities[j].data(),                // in_values
-                static_cast<AUTOSQL_INT>( global.size() ),  // count,
+                static_cast<Int>( global.size() ),  // count,
                 global.data(),                             // out_values
-                std::plus<AUTOSQL_INT>()                    // op
+                std::plus<Int>()                    // op
             );
 
             _comm->barrier();
@@ -98,9 +98,9 @@ std::vector<std::vector<AUTOSQL_INT>> Summarizer::calculate_column_densities(
 
 // ----------------------------------------------------------------------------
 
-std::vector<std::vector<AUTOSQL_FLOAT>>
+std::vector<std::vector<Float>>
 Summarizer::calculate_feature_correlations(
-    const containers::Matrix<AUTOSQL_FLOAT>& _features,
+    const containers::Matrix<Float>& _features,
     const containers::DataFrameView& _targets,
     multithreading::Communicator* _comm )
 {
@@ -111,50 +111,50 @@ Summarizer::calculate_feature_correlations(
     // -----------------------------------------------------------
     // Prepare datasets
 
-    containers::Matrix<AUTOSQL_FLOAT> sum_yhat( _features.ncols(), 1 );
+    containers::Matrix<Float> sum_yhat( _features.ncols(), 1 );
 
-    containers::Matrix<AUTOSQL_FLOAT> sum_yhat_yhat( _features.ncols(), 1 );
+    containers::Matrix<Float> sum_yhat_yhat( _features.ncols(), 1 );
 
-    containers::Matrix<AUTOSQL_FLOAT> sum_y(
+    containers::Matrix<Float> sum_y(
         _targets.df().targets().ncols(), 1 );
 
-    containers::Matrix<AUTOSQL_FLOAT> sum_y_y(
+    containers::Matrix<Float> sum_y_y(
         _targets.df().targets().ncols(), 1 );
 
-    containers::Matrix<AUTOSQL_FLOAT> sum_yhat_y(
+    containers::Matrix<Float> sum_yhat_y(
         _features.ncols(), _targets.df().targets().ncols() );
 
     // -----------------------------------------------------------
     // Calculate sufficient statistics
 
     // Calculate sum yhat
-    for ( AUTOSQL_INT i = 0; i < _features.nrows(); ++i )
-        for ( AUTOSQL_INT j = 0; j < _features.ncols(); ++j )
+    for ( Int i = 0; i < _features.nrows(); ++i )
+        for ( Int j = 0; j < _features.ncols(); ++j )
             sum_yhat[j] += _features( i, j );
 
     // Calculate sum yhat_yhat
-    for ( AUTOSQL_INT i = 0; i < _features.nrows(); ++i )
-        for ( AUTOSQL_INT j = 0; j < _features.ncols(); ++j )
+    for ( Int i = 0; i < _features.nrows(); ++i )
+        for ( Int j = 0; j < _features.ncols(); ++j )
             sum_yhat_yhat[j] += _features( i, j ) * _features( i, j );
 
     // Calculate sum y
-    for ( AUTOSQL_INT i = 0; i < _targets.nrows(); ++i )
-        for ( AUTOSQL_INT k = 0; k < _targets.df().targets().ncols(); ++k )
+    for ( Int i = 0; i < _targets.nrows(); ++i )
+        for ( Int k = 0; k < _targets.df().targets().ncols(); ++k )
             sum_y[k] += _targets.targets( i, k );
 
     // Calculate sum y_y
-    for ( AUTOSQL_INT i = 0; i < _targets.nrows(); ++i )
-        for ( AUTOSQL_INT k = 0; k < _targets.df().targets().ncols(); ++k )
+    for ( Int i = 0; i < _targets.nrows(); ++i )
+        for ( Int k = 0; k < _targets.df().targets().ncols(); ++k )
             sum_y_y[k] += _targets.targets( i, k ) * _targets.targets( i, k );
 
     // Calculate sum_yhat_y
-    for ( AUTOSQL_INT i = 0; i < _features.nrows(); ++i )
-        for ( AUTOSQL_INT j = 0; j < _features.ncols(); ++j )
-            for ( AUTOSQL_INT k = 0; k < _targets.df().targets().ncols(); ++k )
+    for ( Int i = 0; i < _features.nrows(); ++i )
+        for ( Int j = 0; j < _features.ncols(); ++j )
+            for ( Int k = 0; k < _targets.df().targets().ncols(); ++k )
                 sum_yhat_y( j, k ) +=
                     _features( i, j ) * _targets.targets( i, k );
 
-    AUTOSQL_FLOAT n = static_cast<AUTOSQL_FLOAT>( _features.nrows() );
+    Float n = static_cast<Float>( _features.nrows() );
 
     // -----------------------------------------------------
     // Reduce sufficient statistics, if necessary
@@ -163,7 +163,7 @@ Summarizer::calculate_feature_correlations(
     {
 #ifdef AUTOSQL_PARALLEL
 
-        containers::Matrix<AUTOSQL_FLOAT> global(
+        containers::Matrix<Float> global(
             sum_yhat.nrows(), sum_yhat.ncols() );
 
         AUTOSQL_PARALLEL_LIB::all_reduce(
@@ -171,7 +171,7 @@ Summarizer::calculate_feature_correlations(
             sum_yhat.data(),                  // in_values
             global.nrows() * global.ncols(),  // count,
             global.data(),                    // out_values
-            std::plus<AUTOSQL_FLOAT>()         // op
+            std::plus<Float>()         // op
         );
 
         _comm->barrier();
@@ -185,7 +185,7 @@ Summarizer::calculate_feature_correlations(
     {
 #ifdef AUTOSQL_PARALLEL
 
-        containers::Matrix<AUTOSQL_FLOAT> global(
+        containers::Matrix<Float> global(
             sum_yhat_yhat.nrows(), sum_yhat_yhat.ncols() );
 
         AUTOSQL_PARALLEL_LIB::all_reduce(
@@ -193,7 +193,7 @@ Summarizer::calculate_feature_correlations(
             sum_yhat_yhat.data(),             // in_values
             global.nrows() * global.ncols(),  // count,
             global.data(),                    // out_values
-            std::plus<AUTOSQL_FLOAT>()         // op
+            std::plus<Float>()         // op
         );
 
         _comm->barrier();
@@ -207,14 +207,14 @@ Summarizer::calculate_feature_correlations(
     {
 #ifdef AUTOSQL_PARALLEL
 
-        containers::Matrix<AUTOSQL_FLOAT> global( sum_y.nrows(), sum_y.ncols() );
+        containers::Matrix<Float> global( sum_y.nrows(), sum_y.ncols() );
 
         AUTOSQL_PARALLEL_LIB::all_reduce(
             *( _comm ),                       // comm
             sum_y.data(),                     // in_values
             global.nrows() * global.ncols(),  // count,
             global.data(),                    // out_values
-            std::plus<AUTOSQL_FLOAT>()         // op
+            std::plus<Float>()         // op
         );
 
         _comm->barrier();
@@ -228,7 +228,7 @@ Summarizer::calculate_feature_correlations(
     {
 #ifdef AUTOSQL_PARALLEL
 
-        containers::Matrix<AUTOSQL_FLOAT> global(
+        containers::Matrix<Float> global(
             sum_y_y.nrows(), sum_y_y.ncols() );
 
         AUTOSQL_PARALLEL_LIB::all_reduce(
@@ -236,7 +236,7 @@ Summarizer::calculate_feature_correlations(
             sum_y_y.data(),                   // in_values
             global.nrows() * global.ncols(),  // count,
             global.data(),                    // out_values
-            std::plus<AUTOSQL_FLOAT>()         // op
+            std::plus<Float>()         // op
         );
 
         _comm->barrier();
@@ -250,7 +250,7 @@ Summarizer::calculate_feature_correlations(
     {
 #ifdef AUTOSQL_PARALLEL
 
-        containers::Matrix<AUTOSQL_FLOAT> global(
+        containers::Matrix<Float> global(
             sum_yhat_y.nrows(), sum_yhat_y.ncols() );
 
         AUTOSQL_PARALLEL_LIB::all_reduce(
@@ -258,7 +258,7 @@ Summarizer::calculate_feature_correlations(
             sum_yhat_y.data(),                // in_values
             global.nrows() * global.ncols(),  // count,
             global.data(),                    // out_values
-            std::plus<AUTOSQL_FLOAT>()         // op
+            std::plus<Float>()         // op
         );
 
         _comm->barrier();
@@ -272,14 +272,14 @@ Summarizer::calculate_feature_correlations(
     {
 #ifdef AUTOSQL_PARALLEL
 
-        AUTOSQL_FLOAT global = 0.0;
+        Float global = 0.0;
 
         AUTOSQL_PARALLEL_LIB::all_reduce(
             *( _comm ),                // comm
             &n,                        // in_value
             1,                         // count
             &global,                   // out_value
-            std::plus<AUTOSQL_FLOAT>()  // op
+            std::plus<Float>()  // op
         );
 
         _comm->barrier();
@@ -292,28 +292,28 @@ Summarizer::calculate_feature_correlations(
     // -----------------------------------------------------------
     // Calculate correlations from sufficient statistics
 
-    auto feature_correlations = std::vector<std::vector<AUTOSQL_FLOAT>>(
+    auto feature_correlations = std::vector<std::vector<Float>>(
         _features.ncols(),
-        std::vector<AUTOSQL_FLOAT>( _targets.df().targets().ncols() ) );
+        std::vector<Float>( _targets.df().targets().ncols() ) );
 
 #ifdef AUTOSQL_MULTITHREADING
     if ( _comm->rank() == 0 )
         {
 #endif  // AUTOSQL_MULTITHREADING
 
-            for ( AUTOSQL_INT j = 0; j < _features.ncols(); ++j )
-                for ( AUTOSQL_INT k = 0; k < _targets.df().targets().ncols();
+            for ( Int j = 0; j < _features.ncols(); ++j )
+                for ( Int k = 0; k < _targets.df().targets().ncols();
                       ++k )
                     {
-                        const AUTOSQL_FLOAT var_yhat =
+                        const Float var_yhat =
                             sum_yhat_yhat[j] / n -
                             ( sum_yhat[j] / n ) * ( sum_yhat[j] / n );
 
-                        const AUTOSQL_FLOAT var_y =
+                        const Float var_y =
                             sum_y_y[k] / n -
                             ( sum_y[k] / n ) * ( sum_y[k] / n );
 
-                        const AUTOSQL_FLOAT cov_y_yhat =
+                        const Float cov_y_yhat =
                             sum_yhat_y( j, k ) / n -
                             ( sum_yhat[j] / n ) * ( sum_y[k] / n );
 
@@ -339,20 +339,20 @@ Summarizer::calculate_feature_correlations(
 // ----------------------------------------------------------------------------
 
 void Summarizer::calculate_feature_plots(
-    const AUTOSQL_INT _num_bins,
-    const containers::Matrix<AUTOSQL_FLOAT>& _mat,
+    const Int _num_bins,
+    const containers::Matrix<Float>& _mat,
     const containers::DataFrameView& _targets,
     multithreading::Communicator* _comm,
-    std::vector<std::vector<AUTOSQL_FLOAT>>& _labels,
-    std::vector<std::vector<AUTOSQL_INT>>& _feature_densities,
-    std::vector<std::vector<std::vector<AUTOSQL_FLOAT>>>& _average_targets )
+    std::vector<std::vector<Float>>& _labels,
+    std::vector<std::vector<Int>>& _feature_densities,
+    std::vector<std::vector<std::vector<Float>>>& _average_targets )
 {
     // ------------------------------------------------------------------------
     // Find minima and maxima
 
-    auto minima = std::vector<AUTOSQL_FLOAT>( 0 );
+    auto minima = std::vector<Float>( 0 );
 
-    auto maxima = std::vector<AUTOSQL_FLOAT>( 0 );
+    auto maxima = std::vector<Float>( 0 );
 
     min_and_max( _mat, _comm, minima, maxima );
 
@@ -360,14 +360,14 @@ void Summarizer::calculate_feature_plots(
     // Calculate step_sizes and actual_num_bins. Note that actual_num_bins
     // can be smaller than num_bins.
 
-    auto step_sizes = std::vector<AUTOSQL_FLOAT>( 0 );
+    auto step_sizes = std::vector<Float>( 0 );
 
-    auto actual_num_bins = std::vector<AUTOSQL_INT>( 0 );
+    auto actual_num_bins = std::vector<Int>( 0 );
 
     calculate_step_sizes_and_num_bins(
         minima,
         maxima,
-        static_cast<AUTOSQL_FLOAT>( _num_bins ),
+        static_cast<Float>( _num_bins ),
         step_sizes,
         actual_num_bins );
 
@@ -375,7 +375,7 @@ void Summarizer::calculate_feature_plots(
     // Init labels
 
     auto labels =
-        std::vector<std::vector<AUTOSQL_FLOAT>>( actual_num_bins.size() );
+        std::vector<std::vector<Float>>( actual_num_bins.size() );
 
     for ( size_t i = 0; i < labels.size(); ++i )
         {
@@ -394,15 +394,15 @@ void Summarizer::calculate_feature_plots(
     const auto num_targets = _targets.df().targets().ncols();
 
     auto feature_densities =
-        std::vector<std::vector<AUTOSQL_INT>>( _mat.ncols() );
+        std::vector<std::vector<Int>>( _mat.ncols() );
 
     auto average_targets =
-        std::vector<std::vector<std::vector<AUTOSQL_FLOAT>>>( _mat.ncols() );
+        std::vector<std::vector<std::vector<Float>>>( _mat.ncols() );
 
     std::for_each(
         average_targets.begin(),
         average_targets.end(),
-        [num_targets]( std::vector<std::vector<AUTOSQL_FLOAT>>& vec ) {
+        [num_targets]( std::vector<std::vector<Float>>& vec ) {
             vec.resize( num_targets );
         } );
 
@@ -412,7 +412,7 @@ void Summarizer::calculate_feature_plots(
 
             feature_densities[j].resize( actual_num_bins[j] );
 
-            for ( AUTOSQL_INT k = 0; k < num_targets; ++k )
+            for ( Int k = 0; k < num_targets; ++k )
                 {
                     average_targets[j][k].resize( actual_num_bins[j] );
                 }
@@ -427,9 +427,9 @@ void Summarizer::calculate_feature_plots(
 
     assert( average_targets.size() == static_cast<size_t>( _mat.ncols() ) );
 
-    for ( AUTOSQL_INT i = 0; i < _mat.nrows(); ++i )
+    for ( Int i = 0; i < _mat.nrows(); ++i )
         {
-            for ( AUTOSQL_INT j = 0; j < _mat.ncols(); ++j )
+            for ( Int j = 0; j < _mat.ncols(); ++j )
                 {
                     const auto val = _mat( i, j );
 
@@ -448,7 +448,7 @@ void Summarizer::calculate_feature_plots(
                     assert( bin >= 0 );
 
                     assert(
-                        bin < static_cast<AUTOSQL_INT>(
+                        bin < static_cast<Int>(
                                   feature_densities[j].size() ) );
 
                     ++feature_densities[j][bin];
@@ -458,7 +458,7 @@ void Summarizer::calculate_feature_plots(
                     for ( size_t k = 0; k < average_targets[j].size(); ++k )
                         {
                             assert(
-                                bin < static_cast<AUTOSQL_INT>(
+                                bin < static_cast<Int>(
                                           average_targets[j][k].size() ) );
 
                             average_targets[j][k][bin] +=
@@ -474,14 +474,14 @@ void Summarizer::calculate_feature_plots(
 
     for ( size_t j = 0; j < labels.size(); ++j )
         {
-            auto global = std::vector<AUTOSQL_FLOAT>( labels[j].size() );
+            auto global = std::vector<Float>( labels[j].size() );
 
             AUTOSQL_PARALLEL_LIB::all_reduce(
                 *_comm,                                      // comm
                 labels[j].data(),                            // in_values
-                static_cast<AUTOSQL_FLOAT>( global.size() ),  // count,
+                static_cast<Float>( global.size() ),  // count,
                 global.data(),                               // out_values
-                std::plus<AUTOSQL_FLOAT>()                    // op
+                std::plus<Float>()                    // op
             );
 
             _comm->barrier();
@@ -492,14 +492,14 @@ void Summarizer::calculate_feature_plots(
     for ( size_t j = 0; j < feature_densities.size(); ++j )
         {
             auto global =
-                std::vector<AUTOSQL_INT>( feature_densities[j].size() );
+                std::vector<Int>( feature_densities[j].size() );
 
             AUTOSQL_PARALLEL_LIB::all_reduce(
                 *_comm,                                    // comm
                 feature_densities[j].data(),               // in_values
-                static_cast<AUTOSQL_INT>( global.size() ),  // count,
+                static_cast<Int>( global.size() ),  // count,
                 global.data(),                             // out_values
-                std::plus<AUTOSQL_INT>()                    // op
+                std::plus<Int>()                    // op
             );
 
             _comm->barrier();
@@ -511,15 +511,15 @@ void Summarizer::calculate_feature_plots(
         {
             for ( size_t k = 0; k < average_targets[j].size(); ++k )
                 {
-                    auto global = std::vector<AUTOSQL_FLOAT>(
+                    auto global = std::vector<Float>(
                         average_targets[j][k].size() );
 
                     AUTOSQL_PARALLEL_LIB::all_reduce(
                         *_comm,                                    // comm
                         average_targets[j][k].data(),              // in_values
-                        static_cast<AUTOSQL_INT>( global.size() ),  // count,
+                        static_cast<Int>( global.size() ),  // count,
                         global.data(),                             // out_values
-                        std::plus<AUTOSQL_FLOAT>()                  // op
+                        std::plus<Float>()                  // op
                     );
 
                     _comm->barrier();
@@ -549,7 +549,7 @@ void Summarizer::calculate_feature_plots(
                         }
 
                     const auto freq =
-                        static_cast<AUTOSQL_FLOAT>( feature_densities[j][bin] );
+                        static_cast<Float>( feature_densities[j][bin] );
 
                     labels[j][bin] /= freq;
 
@@ -572,14 +572,14 @@ void Summarizer::calculate_feature_plots(
     assert( feature_densities.size() == labels.size() );
 
     _labels =
-        std::vector<std::vector<AUTOSQL_FLOAT>>( feature_densities.size() );
+        std::vector<std::vector<Float>>( feature_densities.size() );
 
     _feature_densities =
-        std::vector<std::vector<AUTOSQL_INT>>( feature_densities.size() );
+        std::vector<std::vector<Int>>( feature_densities.size() );
 
-    _average_targets = std::vector<std::vector<std::vector<AUTOSQL_FLOAT>>>(
+    _average_targets = std::vector<std::vector<std::vector<Float>>>(
         feature_densities.size(),
-        std::vector<std::vector<AUTOSQL_FLOAT>>( num_targets ) );
+        std::vector<std::vector<Float>>( num_targets ) );
 
     for ( size_t j = 0; j < feature_densities.size(); ++j )
         {
@@ -611,11 +611,11 @@ void Summarizer::calculate_feature_plots(
 // ----------------------------------------------------------------------------
 
 void Summarizer::calculate_step_sizes_and_num_bins(
-    const std::vector<AUTOSQL_FLOAT>& _minima,
-    const std::vector<AUTOSQL_FLOAT>& _maxima,
-    const AUTOSQL_FLOAT _num_bins,
-    std::vector<AUTOSQL_FLOAT>& _step_sizes,
-    std::vector<AUTOSQL_INT>& _actual_num_bins )
+    const std::vector<Float>& _minima,
+    const std::vector<Float>& _maxima,
+    const Float _num_bins,
+    std::vector<Float>& _step_sizes,
+    std::vector<Int>& _actual_num_bins )
 {
     assert( _minima.size() == _maxima.size() );
 
@@ -637,35 +637,35 @@ void Summarizer::calculate_step_sizes_and_num_bins(
             _step_sizes[j] = ( max - min ) / _num_bins;
 
             _actual_num_bins[j] =
-                static_cast<AUTOSQL_INT>( ( max - min ) / _step_sizes[j] );
+                static_cast<Int>( ( max - min ) / _step_sizes[j] );
         }
 }
 
 // ----------------------------------------------------------------------------
 
 void Summarizer::divide_by_nrows(
-    const AUTOSQL_INT _nrows, std::vector<AUTOSQL_FLOAT>& _results )
+    const Int _nrows, std::vector<Float>& _results )
 {
-    const auto nrows = static_cast<AUTOSQL_FLOAT>( _nrows );
+    const auto nrows = static_cast<Float>( _nrows );
 
     std::for_each(
-        _results.begin(), _results.end(), [nrows]( AUTOSQL_FLOAT& val ) {
+        _results.begin(), _results.end(), [nrows]( Float& val ) {
             val /= nrows;
         } );
 }
 
 // ----------------------------------------------------------------------------
 
-AUTOSQL_INT Summarizer::identify_bin(
-    const AUTOSQL_INT _num_bins,
-    const AUTOSQL_FLOAT _step_size,
-    const AUTOSQL_FLOAT _val,
-    const AUTOSQL_FLOAT _min )
+Int Summarizer::identify_bin(
+    const Int _num_bins,
+    const Float _step_size,
+    const Float _val,
+    const Float _min )
 {
     assert( _step_size > 0.0 );
 
     // Note that this always rounds down.
-    auto bin = static_cast<AUTOSQL_INT>( ( _val - _min ) / _step_size );
+    auto bin = static_cast<Int>( ( _val - _min ) / _step_size );
 
     assert( bin >= 0 );
 
@@ -681,14 +681,14 @@ AUTOSQL_INT Summarizer::identify_bin(
 
 // ----------------------------------------------------------------------------
 
-std::vector<AUTOSQL_FLOAT> Summarizer::max( const Matrix<AUTOSQL_FLOAT>& _mat )
+std::vector<Float> Summarizer::max( const Matrix<Float>& _mat )
 {
-    std::vector<AUTOSQL_FLOAT> results(
-        _mat.ncols(), std::numeric_limits<AUTOSQL_FLOAT>::lowest() );
+    std::vector<Float> results(
+        _mat.ncols(), std::numeric_limits<Float>::lowest() );
 
-    for ( AUTOSQL_INT i = 0; i < _mat.nrows(); ++i )
+    for ( Int i = 0; i < _mat.nrows(); ++i )
         {
-            for ( AUTOSQL_INT j = 0; j < _mat.ncols(); ++j )
+            for ( Int j = 0; j < _mat.ncols(); ++j )
                 {
                     if ( _mat( i, j ) > results[j] )
                         {
@@ -702,15 +702,15 @@ std::vector<AUTOSQL_FLOAT> Summarizer::max( const Matrix<AUTOSQL_FLOAT>& _mat )
 
 // ----------------------------------------------------------------------------
 
-std::vector<AUTOSQL_FLOAT> Summarizer::mean( const Matrix<AUTOSQL_FLOAT>& _mat )
+std::vector<Float> Summarizer::mean( const Matrix<Float>& _mat )
 {
-    std::vector<AUTOSQL_FLOAT> results( _mat.ncols() );
+    std::vector<Float> results( _mat.ncols() );
 
-    std::vector<AUTOSQL_FLOAT> nrows( _mat.ncols() );
+    std::vector<Float> nrows( _mat.ncols() );
 
-    for ( AUTOSQL_INT i = 0; i < _mat.nrows(); ++i )
+    for ( Int i = 0; i < _mat.nrows(); ++i )
         {
-            for ( AUTOSQL_INT j = 0; j < _mat.ncols(); ++j )
+            for ( Int j = 0; j < _mat.ncols(); ++j )
                 {
                     if ( _mat( i, j ) == _mat( i, j ) )
                         {
@@ -725,7 +725,7 @@ std::vector<AUTOSQL_FLOAT> Summarizer::mean( const Matrix<AUTOSQL_FLOAT>& _mat )
         results.end(),
         nrows.begin(),
         results.begin(),
-        []( const AUTOSQL_FLOAT val, const AUTOSQL_FLOAT nrows ) {
+        []( const Float val, const Float nrows ) {
             if ( nrows != 0.0 )
                 {
                     return val / nrows;
@@ -741,14 +741,14 @@ std::vector<AUTOSQL_FLOAT> Summarizer::mean( const Matrix<AUTOSQL_FLOAT>& _mat )
 
 // ----------------------------------------------------------------------------
 
-std::vector<AUTOSQL_FLOAT> Summarizer::min( const Matrix<AUTOSQL_FLOAT>& _mat )
+std::vector<Float> Summarizer::min( const Matrix<Float>& _mat )
 {
-    std::vector<AUTOSQL_FLOAT> results(
-        _mat.ncols(), std::numeric_limits<AUTOSQL_FLOAT>::max() );
+    std::vector<Float> results(
+        _mat.ncols(), std::numeric_limits<Float>::max() );
 
-    for ( AUTOSQL_INT i = 0; i < _mat.nrows(); ++i )
+    for ( Int i = 0; i < _mat.nrows(); ++i )
         {
-            for ( AUTOSQL_INT j = 0; j < _mat.ncols(); ++j )
+            for ( Int j = 0; j < _mat.ncols(); ++j )
                 {
                     if ( _mat( i, j ) < results[j] )
                         {
@@ -763,20 +763,20 @@ std::vector<AUTOSQL_FLOAT> Summarizer::min( const Matrix<AUTOSQL_FLOAT>& _mat )
 // ----------------------------------------------------------------------------
 
 void Summarizer::min_and_max(
-    const containers::Matrix<AUTOSQL_FLOAT>& _mat,
+    const containers::Matrix<Float>& _mat,
     multithreading::Communicator* _comm,
-    std::vector<AUTOSQL_FLOAT>& _minima,
-    std::vector<AUTOSQL_FLOAT>& _maxima )
+    std::vector<Float>& _minima,
+    std::vector<Float>& _maxima )
 {
-    _minima = std::vector<AUTOSQL_FLOAT>(
-        _mat.ncols(), std::numeric_limits<AUTOSQL_FLOAT>::max() );
+    _minima = std::vector<Float>(
+        _mat.ncols(), std::numeric_limits<Float>::max() );
 
-    _maxima = std::vector<AUTOSQL_FLOAT>(
-        _mat.ncols(), std::numeric_limits<AUTOSQL_FLOAT>::lowest() );
+    _maxima = std::vector<Float>(
+        _mat.ncols(), std::numeric_limits<Float>::lowest() );
 
-    for ( AUTOSQL_INT i = 0; i < _mat.nrows(); ++i )
+    for ( Int i = 0; i < _mat.nrows(); ++i )
         {
-            for ( AUTOSQL_INT j = 0; j < _mat.ncols(); ++j )
+            for ( Int j = 0; j < _mat.ncols(); ++j )
                 {
                     if ( _mat( i, j ) < _minima[j] )
                         {
@@ -803,14 +803,14 @@ void Summarizer::min_and_max(
 
 // ----------------------------------------------------------------------------
 
-std::vector<AUTOSQL_FLOAT> Summarizer::share_nan(
-    const Matrix<AUTOSQL_FLOAT>& _mat )
+std::vector<Float> Summarizer::share_nan(
+    const Matrix<Float>& _mat )
 {
-    std::vector<AUTOSQL_FLOAT> results( _mat.ncols() );
+    std::vector<Float> results( _mat.ncols() );
 
-    for ( AUTOSQL_INT i = 0; i < _mat.nrows(); ++i )
+    for ( Int i = 0; i < _mat.nrows(); ++i )
         {
-            for ( AUTOSQL_INT j = 0; j < _mat.ncols(); ++j )
+            for ( Int j = 0; j < _mat.ncols(); ++j )
                 {
                     if ( _mat( i, j ) != _mat( i, j ) )
                         {
@@ -826,14 +826,14 @@ std::vector<AUTOSQL_FLOAT> Summarizer::share_nan(
 
 // ----------------------------------------------------------------------------
 
-std::vector<AUTOSQL_FLOAT> Summarizer::share_nan(
-    const Matrix<AUTOSQL_INT>& _mat )
+std::vector<Float> Summarizer::share_nan(
+    const Matrix<Int>& _mat )
 {
-    std::vector<AUTOSQL_FLOAT> results( _mat.ncols() );
+    std::vector<Float> results( _mat.ncols() );
 
-    for ( AUTOSQL_INT i = 0; i < _mat.nrows(); ++i )
+    for ( Int i = 0; i < _mat.nrows(); ++i )
         {
-            for ( AUTOSQL_INT j = 0; j < _mat.ncols(); ++j )
+            for ( Int j = 0; j < _mat.ncols(); ++j )
                 {
                     if ( _mat( i, j ) == -1 )
                         {
@@ -849,7 +849,7 @@ std::vector<AUTOSQL_FLOAT> Summarizer::share_nan(
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object Summarizer::summarize( const Matrix<AUTOSQL_FLOAT>& _mat )
+Poco::JSON::Object Summarizer::summarize( const Matrix<Float>& _mat )
 {
     Poco::JSON::Object summary;
 
@@ -866,7 +866,7 @@ Poco::JSON::Object Summarizer::summarize( const Matrix<AUTOSQL_FLOAT>& _mat )
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object Summarizer::summarize( const Matrix<AUTOSQL_INT>& _mat )
+Poco::JSON::Object Summarizer::summarize( const Matrix<Int>& _mat )
 {
     Poco::JSON::Object summary;
 

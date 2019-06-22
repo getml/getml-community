@@ -7,27 +7,27 @@ namespace utils
 // ----------------------------------------------------------------------------
 
 void LinearRegression::fit(
-    const std::vector<AUTOSQL_FLOAT>& _new_feature,
-    const std::vector<std::vector<AUTOSQL_FLOAT>>& _residuals,
-    const std::vector<AUTOSQL_FLOAT>& _sample_weights )
+    const std::vector<Float>& _new_feature,
+    const std::vector<std::vector<Float>>& _residuals,
+    const std::vector<Float>& _sample_weights )
 {
     debug_log( "Fitting linear regression..." );
 
     // ----------------------------------------------------
     // Calculate sum_sample weights
 
-    AUTOSQL_FLOAT sum_sample_weights =
+    Float sum_sample_weights =
         std::accumulate( _sample_weights.begin(), _sample_weights.end(), 0.0 );
 
     utils::Reducer::reduce(
-        std::plus<AUTOSQL_FLOAT>(), &sum_sample_weights, comm_ );
+        std::plus<Float>(), &sum_sample_weights, comm_ );
 
     // ----------------------------------------------------
     // Calculate mean_new_feature
 
     assert( _new_feature.size() == _sample_weights.size() );
 
-    AUTOSQL_FLOAT mean_new_feature = 0.0;
+    Float mean_new_feature = 0.0;
 
     for ( size_t i = 0; i < _new_feature.size(); ++i )
         {
@@ -35,14 +35,14 @@ void LinearRegression::fit(
         }
 
     utils::Reducer::reduce(
-        std::plus<AUTOSQL_FLOAT>(), &mean_new_feature, comm_ );
+        std::plus<Float>(), &mean_new_feature, comm_ );
 
     mean_new_feature /= sum_sample_weights;
 
     // ----------------------------------------------------
     // Calculate mean_residuals
 
-    auto mean_residuals = std::vector<AUTOSQL_FLOAT>( _residuals.size() );
+    auto mean_residuals = std::vector<Float>( _residuals.size() );
 
     for ( size_t i = 0; i < _residuals.size(); ++i )
         {
@@ -55,19 +55,19 @@ void LinearRegression::fit(
         }
 
     utils::Reducer::reduce(
-        std::plus<AUTOSQL_FLOAT>(), &mean_residuals, comm_ );
+        std::plus<Float>(), &mean_residuals, comm_ );
 
     std::for_each(
         mean_residuals.begin(),
         mean_residuals.end(),
-        [sum_sample_weights]( AUTOSQL_FLOAT& m ) { m /= sum_sample_weights; } );
+        [sum_sample_weights]( Float& m ) { m /= sum_sample_weights; } );
 
     // ----------------------------------------------------
     // Calculate var_new_feature
 
     assert( _new_feature.size() == _sample_weights.size() );
 
-    AUTOSQL_FLOAT var_new_feature = 0.0;
+    Float var_new_feature = 0.0;
 
     for ( size_t i = 0; i < _new_feature.size(); ++i )
         {
@@ -77,14 +77,14 @@ void LinearRegression::fit(
         }
 
     utils::Reducer::reduce(
-        std::plus<AUTOSQL_FLOAT>(), &var_new_feature, comm_ );
+        std::plus<Float>(), &var_new_feature, comm_ );
 
     var_new_feature /= sum_sample_weights;
 
     // ----------------------------------------------------
     // Calculate cov_new_feature
 
-    auto cov_new_feature = std::vector<AUTOSQL_FLOAT>( _residuals.size() );
+    auto cov_new_feature = std::vector<Float>( _residuals.size() );
 
     for ( size_t i = 0; i < _residuals.size(); ++i )
         {
@@ -98,17 +98,17 @@ void LinearRegression::fit(
         }
 
     utils::Reducer::reduce(
-        std::plus<AUTOSQL_FLOAT>(), &cov_new_feature, comm_ );
+        std::plus<Float>(), &cov_new_feature, comm_ );
 
     std::for_each(
         cov_new_feature.begin(),
         cov_new_feature.end(),
-        [sum_sample_weights]( AUTOSQL_FLOAT& c ) { c /= sum_sample_weights; } );
+        [sum_sample_weights]( Float& c ) { c /= sum_sample_weights; } );
 
     // ------------------
     // Calculate slopes_
 
-    slopes_ = std::vector<AUTOSQL_FLOAT>( _residuals.size() );
+    slopes_ = std::vector<Float>( _residuals.size() );
 
     for ( size_t i = 0; i < _residuals.size(); ++i )
         {
@@ -118,7 +118,7 @@ void LinearRegression::fit(
     // ---------------------
     // Calculate intercepts_
 
-    intercepts_ = std::vector<AUTOSQL_FLOAT>( _residuals.size() );
+    intercepts_ = std::vector<Float>( _residuals.size() );
 
     for ( size_t i = 0; i < _residuals.size(); ++i )
         {
@@ -128,7 +128,7 @@ void LinearRegression::fit(
     // ---------------------
     // Make sure that slopes_ and intercepts_ are in range
 
-    auto in_range = []( AUTOSQL_FLOAT& val ) {
+    auto in_range = []( Float& val ) {
         val = ( ( std::isnan( val ) || std::isinf( val ) ) ? 0.0 : val );
     };
 
@@ -150,10 +150,10 @@ LinearRegression LinearRegression::from_json_obj(
 
     // ----------------------------------------
 
-    linear_regression.slopes_ = JSON::array_to_vector<AUTOSQL_FLOAT>(
+    linear_regression.slopes_ = JSON::array_to_vector<Float>(
         JSON::get_array( _obj, "update_rates_1_" ) );
 
-    linear_regression.intercepts_ = JSON::array_to_vector<AUTOSQL_FLOAT>(
+    linear_regression.intercepts_ = JSON::array_to_vector<Float>(
         JSON::get_array( _obj, "update_rates_2_" ) );
 
     // ----------------------------------------
@@ -165,16 +165,16 @@ LinearRegression LinearRegression::from_json_obj(
 
 // ----------------------------------------------------------------------------
 
-std::vector<std::vector<AUTOSQL_FLOAT>> LinearRegression::predict(
-    const std::vector<AUTOSQL_FLOAT>& _yhat ) const
+std::vector<std::vector<Float>> LinearRegression::predict(
+    const std::vector<Float>& _yhat ) const
 {
     debug_log( "Predicting using linear regression..." );
 
-    std::vector<std::vector<AUTOSQL_FLOAT>> predictions( intercepts_.size() );
+    std::vector<std::vector<Float>> predictions( intercepts_.size() );
 
-    for ( AUTOSQL_INT i = 0; i < predictions.size(); ++i )
+    for ( Int i = 0; i < predictions.size(); ++i )
         {
-            std::vector<AUTOSQL_FLOAT> new_prediction( _yhat.size() );
+            std::vector<Float> new_prediction( _yhat.size() );
 
             for ( size_t j = 0; j < _yhat.size(); ++j )
                 {

@@ -22,7 +22,7 @@ class Threadutils
         ensemble::DecisionTreeEnsemble* _ensemble );
 
     /// Number of threads.
-    static RELBOOST_INT get_num_threads( const RELBOOST_INT _num_threads );
+    static Int get_num_threads( const Int _num_threads );
 
     /// Generates features.
     static void transform_ensemble(
@@ -32,7 +32,7 @@ class Threadutils
         const std::vector<containers::DataFrame>& _peripheral,
         const std::shared_ptr<const logging::AbstractLogger> _logger,
         const ensemble::DecisionTreeEnsemble& _ensemble,
-        std::vector<RELBOOST_FLOAT>* features );
+        std::vector<Float>* features );
 
     // ------------------------------------------------------------------------
 
@@ -42,8 +42,8 @@ class Threadutils
         const std::vector<size_t> _rows,
         const size_t _col,
         const size_t _num_features,
-        const std::vector<RELBOOST_FLOAT>& _new_feature,
-        std::vector<RELBOOST_FLOAT>* _features );
+        const std::vector<Float>& _new_feature,
+        std::vector<Float>* _features );
 
     // ------------------------------------------------------------------------
 };

@@ -15,15 +15,15 @@ class LossFunctionImpl
 
    public:
     LossFunctionImpl(
-        const std::vector<RELBOOST_FLOAT>& _g,
-        const std::vector<RELBOOST_FLOAT>& _h,
+        const std::vector<Float>& _g,
+        const std::vector<Float>& _h,
         const std::shared_ptr<const Hyperparameters>& _hyperparameters,
-        const std::shared_ptr<const std::vector<RELBOOST_FLOAT>>&
+        const std::shared_ptr<const std::vector<Float>>&
             _sample_weights,
-        const RELBOOST_FLOAT& _sum_g,
-        const RELBOOST_FLOAT& _sum_h,
-        const RELBOOST_FLOAT& _sum_h_yhat,
-        const std::shared_ptr<const std::vector<RELBOOST_FLOAT>>& _targets )
+        const Float& _sum_g,
+        const Float& _sum_h,
+        const Float& _sum_h_yhat,
+        const std::shared_ptr<const std::vector<Float>>& _targets )
         : g_( _g ),
           h_( _h ),
           hyperparameters_( _hyperparameters ),
@@ -41,42 +41,42 @@ class LossFunctionImpl
 
    public:
     /// Calculates the regularization of the weights.
-    RELBOOST_FLOAT calc_regularization_reduction(
-        const std::vector<RELBOOST_FLOAT>& _eta1,
-        const std::vector<RELBOOST_FLOAT>& _eta2,
+    Float calc_regularization_reduction(
+        const std::vector<Float>& _eta1,
+        const std::vector<Float>& _eta2,
         const std::vector<size_t>& _indices,
-        const RELBOOST_FLOAT _old_intercept,
-        const RELBOOST_FLOAT _old_weight,
-        const std::array<RELBOOST_FLOAT, 3>& _weights,
-        const RELBOOST_FLOAT _sum_sample_weights,
+        const Float _old_intercept,
+        const Float _old_weight,
+        const std::array<Float, 3>& _weights,
+        const Float _sum_sample_weights,
         multithreading::Communicator* _comm ) const;
 
     /// Calculates the sample index (which contains the indices of all samples
     /// with non-zero sample weight).
     std::vector<size_t> calc_sample_index(
-        const std::shared_ptr<const std::vector<RELBOOST_FLOAT>>&
+        const std::shared_ptr<const std::vector<Float>>&
             _sample_weights ) const;
 
     /// Calculates _sum_g and _sum_h.
     void calc_sums(
         const std::vector<size_t>& _sample_index,
-        const std::vector<RELBOOST_FLOAT>& _sample_weights,
-        RELBOOST_FLOAT* _sum_g,
-        RELBOOST_FLOAT* _sum_h,
-        RELBOOST_FLOAT* _sum_sample_weights,
+        const std::vector<Float>& _sample_weights,
+        Float* _sum_g,
+        Float* _sum_h,
+        Float* _sum_sample_weights,
         multithreading::Communicator* _comm ) const;
 
     /// Calculates the update rate.
-    RELBOOST_FLOAT calc_update_rate(
-        const std::vector<RELBOOST_FLOAT>& _yhat_old,
-        const std::vector<RELBOOST_FLOAT>& _predictions,
+    Float calc_update_rate(
+        const std::vector<Float>& _yhat_old,
+        const std::vector<Float>& _predictions,
         multithreading::Communicator* _comm ) const;
 
     /// Calculates two new weights given matches. This just reduces to the
     /// normal XGBoost approach.
-    std::vector<std::array<RELBOOST_FLOAT, 3>> calc_weights(
+    std::vector<std::array<Float, 3>> calc_weights(
         const enums::Update _update,
-        const RELBOOST_FLOAT _old_weight,
+        const Float _old_weight,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _split_begin,
         const std::vector<const containers::Match*>::iterator _split_end,
@@ -84,35 +84,35 @@ class LossFunctionImpl
         multithreading::Communicator* _comm ) const;
 
     /// Commits yhat.
-    RELBOOST_FLOAT commit(
+    Float commit(
         const std::vector<size_t>& _indices,
-        const std::vector<RELBOOST_FLOAT>& _yhat,
-        std::vector<RELBOOST_FLOAT>* _yhat_committed ) const;
+        const std::vector<Float>& _yhat,
+        std::vector<Float>* _yhat_committed ) const;
 
     /// Resets _yhat to _yhat_committed.
     void revert_to_commit(
         const std::vector<size_t>& _indices,
-        const std::vector<RELBOOST_FLOAT>& _yhat_committed,
-        std::vector<RELBOOST_FLOAT>* _yhat ) const;
+        const std::vector<Float>& _yhat_committed,
+        std::vector<Float>* _yhat ) const;
 
     /// Generates the predictions.
     void transform(
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end,
-        const std::vector<RELBOOST_FLOAT>& _weights,
-        std::vector<RELBOOST_FLOAT>* _predictions ) const;
+        const std::vector<Float>& _weights,
+        std::vector<Float>* _predictions ) const;
 
     // -----------------------------------------------------------------
 
    public:
     /// Calculates two new weights given eta and indices.
-    std::array<RELBOOST_FLOAT, 3> calc_weights(
+    std::array<Float, 3> calc_weights(
         const enums::Aggregation _agg,
-        const RELBOOST_FLOAT _old_weight,
+        const Float _old_weight,
         const std::vector<size_t>& _indices,
-        const std::vector<RELBOOST_FLOAT>& _eta1,
-        const std::vector<RELBOOST_FLOAT>& _eta2,
-        const std::vector<RELBOOST_FLOAT>& _yhat_committed,
+        const std::vector<Float>& _eta1,
+        const std::vector<Float>& _eta2,
+        const std::vector<Float>& _yhat_committed,
         multithreading::Communicator* _comm ) const
     {
         if ( _agg == enums::Aggregation::avg ||
@@ -149,13 +149,13 @@ class LossFunctionImpl
     /// Calculates the new yhat given eta, indices and the new weights.
     void calc_yhat(
         const enums::Aggregation _agg,
-        const RELBOOST_FLOAT _old_weight,
-        const std::array<RELBOOST_FLOAT, 3>& _new_weights,
+        const Float _old_weight,
+        const std::array<Float, 3>& _new_weights,
         const std::vector<size_t>& _indices,
-        const std::vector<RELBOOST_FLOAT>& _eta1,
-        const std::vector<RELBOOST_FLOAT>& _eta2,
-        const std::vector<RELBOOST_FLOAT>& _yhat_committed,
-        std::vector<RELBOOST_FLOAT>* _yhat ) const
+        const std::vector<Float>& _eta1,
+        const std::vector<Float>& _eta2,
+        const std::vector<Float>& _yhat_committed,
+        std::vector<Float>* _yhat ) const
     {
         if ( _agg == enums::Aggregation::avg ||
              _agg == enums::Aggregation::sum )
@@ -187,55 +187,55 @@ class LossFunctionImpl
 
    private:
     /// Calculate the regularization reduction when one of the weights is nan.
-    RELBOOST_FLOAT calc_regularization_reduction(
-        const std::vector<RELBOOST_FLOAT>& _eta_old,
-        const std::vector<RELBOOST_FLOAT>& _eta_new,
+    Float calc_regularization_reduction(
+        const std::vector<Float>& _eta_old,
+        const std::vector<Float>& _eta_new,
         const std::vector<size_t>& _indices,
-        const RELBOOST_FLOAT _old_weight,
-        const RELBOOST_FLOAT _new_weight ) const;
+        const Float _old_weight,
+        const Float _new_weight ) const;
 
     /// Calculates two new weights given eta and indices when the aggregation at
     /// the lowest level is AVG or SUM and there are no NULL values.
-    std::array<RELBOOST_FLOAT, 3> calc_weights(
-        const RELBOOST_FLOAT _old_weight,
+    std::array<Float, 3> calc_weights(
+        const Float _old_weight,
         const std::vector<size_t>& _indices,
-        const std::vector<RELBOOST_FLOAT>& _eta1,
-        const std::vector<RELBOOST_FLOAT>& _eta2,
-        const std::vector<RELBOOST_FLOAT>& _yhat_committed,
+        const std::vector<Float>& _eta1,
+        const std::vector<Float>& _eta2,
+        const std::vector<Float>& _yhat_committed,
         multithreading::Communicator* _comm ) const;
 
     /// Calculates a new weight given eta and indices when the aggregation at
     /// the lowest level is AVG and the other weight is NULL.
-    std::array<RELBOOST_FLOAT, 3> calc_weights_avg_null(
+    std::array<Float, 3> calc_weights_avg_null(
         const enums::Aggregation _agg,
-        const RELBOOST_FLOAT _old_weight,
+        const Float _old_weight,
         const std::vector<size_t>& _indices,
-        const std::vector<RELBOOST_FLOAT>& _eta,
-        const std::vector<RELBOOST_FLOAT>& _w_fixed,
-        const std::vector<RELBOOST_FLOAT>& _yhat_committed,
+        const std::vector<Float>& _eta,
+        const std::vector<Float>& _w_fixed,
+        const std::vector<Float>& _yhat_committed,
         multithreading::Communicator* _comm ) const;
 
     /// Calculates new yhat given the new_weights, eta and indices when
     /// the aggregation at the lowest level is AVG or SUM and there are no NULL
     /// values.
     void calc_yhat(
-        const RELBOOST_FLOAT _old_weight,
-        const std::array<RELBOOST_FLOAT, 3>& _new_weights,
+        const Float _old_weight,
+        const std::array<Float, 3>& _new_weights,
         const std::vector<size_t>& _indices,
-        const std::vector<RELBOOST_FLOAT>& _eta1,
-        const std::vector<RELBOOST_FLOAT>& _eta2,
-        const std::vector<RELBOOST_FLOAT>& _yhat_committed,
-        std::vector<RELBOOST_FLOAT>* _yhat ) const;
+        const std::vector<Float>& _eta1,
+        const std::vector<Float>& _eta2,
+        const std::vector<Float>& _yhat_committed,
+        std::vector<Float>* _yhat ) const;
 
     /// Calculates a new yhat given the new_weights, eta and indices when the
     /// aggregation at the lowest level is AVG and the other weight is NULL.
     void calc_yhat_avg_null(
-        const RELBOOST_FLOAT _old_weight,
-        const std::array<RELBOOST_FLOAT, 3>& _new_weights,
+        const Float _old_weight,
+        const std::array<Float, 3>& _new_weights,
         const std::vector<size_t>& _indices,
-        const std::vector<RELBOOST_FLOAT>& _eta,
-        const std::vector<RELBOOST_FLOAT>& _w_fixed,
-        std::vector<RELBOOST_FLOAT>* _yhat ) const;
+        const std::vector<Float>& _eta,
+        const std::vector<Float>& _w_fixed,
+        std::vector<Float>* _yhat ) const;
 
     // -----------------------------------------------------------------
 
@@ -243,7 +243,7 @@ class LossFunctionImpl
     /// Trivial accessor
     const Hyperparameters& hyperparameters() const { return *hyperparameters_; }
 
-    const RELBOOST_FLOAT sample_weights( size_t _i ) const
+    const Float sample_weights( size_t _i ) const
     {
         assert( sample_weights_ );
         assert( _i < sample_weights_->size() );
@@ -251,34 +251,34 @@ class LossFunctionImpl
     }
 
     /// Trivial accessor
-    const std::vector<RELBOOST_FLOAT>& targets() const { return *targets_; }
+    const std::vector<Float>& targets() const { return *targets_; }
 
     // -----------------------------------------------------------------
 
    private:
     /// First derivative
-    const std::vector<RELBOOST_FLOAT>& g_;
+    const std::vector<Float>& g_;
 
     /// Second derivative
-    const std::vector<RELBOOST_FLOAT>& h_;
+    const std::vector<Float>& h_;
 
     /// Shared pointer to hyperparameters
     const std::shared_ptr<const Hyperparameters> hyperparameters_;
 
     /// The sample weights, which are used for the sampling procedure.
-    const std::shared_ptr<const std::vector<RELBOOST_FLOAT>>& sample_weights_;
+    const std::shared_ptr<const std::vector<Float>>& sample_weights_;
 
     /// Sum of g_, needed for the intercept.
-    const RELBOOST_FLOAT& sum_g_;
+    const Float& sum_g_;
 
     /// Sum of h_, needed for the intercept.
-    const RELBOOST_FLOAT& sum_h_;
+    const Float& sum_h_;
 
     /// Dot product of h_ and yhat_, needed for the intercept.
-    const RELBOOST_FLOAT& sum_h_yhat_committed_;
+    const Float& sum_h_yhat_committed_;
 
     /// The target variables (previous trees already substracted).
-    const std::shared_ptr<const std::vector<RELBOOST_FLOAT>> targets_;
+    const std::shared_ptr<const std::vector<Float>> targets_;
 
     // -----------------------------------------------------------------
 };

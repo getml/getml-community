@@ -15,9 +15,9 @@ void Sender::send_string(
     // ------------------------------------------------
     // Send size of string
 
-    AUTOSQL_INT str_size = static_cast<AUTOSQL_INT>( _string.size() );
+    Int str_size = static_cast<Int>( _string.size() );
 
-    Sender::send<AUTOSQL_INT>( _socket, sizeof( AUTOSQL_INT ), &str_size );
+    Sender::send<Int>( _socket, sizeof( Int ), &str_size );
 
     // ------------------------------------------------
     // Send string itself

@@ -40,7 +40,7 @@ class DecisionTree
     Poco::JSON::Object to_json_obj() const;
 
     /// Transforms the data to form a prediction.
-    std::vector<RELBOOST_FLOAT> transform(
+    std::vector<Float> transform(
         const containers::DataFrameView& _output,
         const containers::DataFrame& _input ) const;
 
@@ -52,15 +52,15 @@ class DecisionTree
 
     /// Calculates the update rate.
     void calc_update_rate(
-        const std::vector<RELBOOST_FLOAT>& _yhat_old,
-        const std::vector<RELBOOST_FLOAT>& _predictions )
+        const std::vector<Float>& _yhat_old,
+        const std::vector<Float>& _predictions )
     {
         update_rate_ =
             loss_function().calc_update_rate( _yhat_old, _predictions );
     }
 
     /// Trivial getter
-    const RELBOOST_FLOAT intercept() const { return intercept_; }
+    const Float intercept() const { return intercept_; }
 
     /// Trivial getter
     const size_t peripheral_used() const { return peripheral_used_; }
@@ -76,7 +76,7 @@ class DecisionTree
     }
 
     /// Trivial getter
-    const RELBOOST_FLOAT update_rate() const { return update_rate_; }
+    const Float update_rate() const { return update_rate_; }
 
     // -----------------------------------------------------------------
 
@@ -138,7 +138,7 @@ class DecisionTree
     containers::Optional<containers::Schema> input_;
 
     /// The intercept term that is added after aggregation.
-    RELBOOST_FLOAT intercept_;
+    Float intercept_;
 
     /// Hyperparameters used to train the relboost model
     std::shared_ptr<lossfunctions::LossFunction> loss_function_;
@@ -153,7 +153,7 @@ class DecisionTree
     containers::Optional<DecisionTreeNode> root_;
 
     /// The update rate that is used when this tree is added to the prediction.
-    RELBOOST_FLOAT update_rate_;
+    Float update_rate_;
 
     // -----------------------------------------------------------------
 };

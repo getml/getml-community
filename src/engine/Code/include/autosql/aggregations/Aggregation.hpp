@@ -26,8 +26,8 @@ class Aggregation : public AbstractAggregation
     /// Activates all samples that contain any category between
     /// _categories_begin and _categories_end. Used for prediction.
     void activate_samples_containing_categories(
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_end,
+        const std::vector<Int>::const_iterator _categories_begin,
+        const std::vector<Int>::const_iterator _categories_end,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) final;
 
@@ -35,16 +35,16 @@ class Aggregation : public AbstractAggregation
     /// activates samples.
     /// Used for training.
     void activate_samples_containing_categories(
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_end,
+        const std::vector<Int>::const_iterator _categories_begin,
+        const std::vector<Int>::const_iterator _categories_end,
         const Revert _revert,
         const containers::CategoryIndex &_index ) final;
 
     /// Activates all samples that do not contain any category between
     /// _categories_begin and _categories_end. Used for prediction.
     void activate_samples_not_containing_categories(
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_end,
+        const std::vector<Int>::const_iterator _categories_begin,
+        const std::vector<Int>::const_iterator _categories_end,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) final;
 
@@ -52,36 +52,36 @@ class Aggregation : public AbstractAggregation
     /// activates samples.
     /// Used for training.
     void activate_samples_not_containing_categories(
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_end,
+        const std::vector<Int>::const_iterator _categories_begin,
+        const std::vector<Int>::const_iterator _categories_end,
         const Revert _revert,
         const containers::CategoryIndex &_index ) final;
 
     /// Iterates through the samples and activates those.
     /// samples that are greater than the critical value.
     void activate_samples_from_above(
-        const AUTOSQL_FLOAT _critical_value,
+        const Float _critical_value,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) final;
 
     /// Iterates through the samples and activates them
     /// starting with the greatest.
     void activate_samples_from_above(
-        const std::vector<AUTOSQL_FLOAT> &_critical_values,
+        const std::vector<Float> &_critical_values,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) final;
 
     /// Iterates through the samples and activates those
     /// samples that smaller than or equal to the critical value.
     void activate_samples_from_below(
-        const AUTOSQL_FLOAT _critical_value,
+        const Float _critical_value,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) final;
 
     /// Iterates through the samples and activates them
     /// starting with the smallest.
     void activate_samples_from_below(
-        const std::vector<AUTOSQL_FLOAT> &_critical_values,
+        const std::vector<Float> &_critical_values,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) final;
 
@@ -95,8 +95,8 @@ class Aggregation : public AbstractAggregation
     /// Deactivates all samples that contain any category between
     /// _categories_begin and _categories_end. Used for prediction.
     void deactivate_samples_containing_categories(
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_end,
+        const std::vector<Int>::const_iterator _categories_begin,
+        const std::vector<Int>::const_iterator _categories_end,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) final;
 
@@ -104,44 +104,44 @@ class Aggregation : public AbstractAggregation
     /// deactivates samples.
     /// Used for training.
     void deactivate_samples_containing_categories(
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_end,
+        const std::vector<Int>::const_iterator _categories_begin,
+        const std::vector<Int>::const_iterator _categories_end,
         const Revert _revert,
         const containers::CategoryIndex &_index ) final;
 
     /// Iterates through the samples and deactivates those
     /// samples that are greater than the critical value.
     void deactivate_samples_from_above(
-        const AUTOSQL_FLOAT _critical_value,
+        const Float _critical_value,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) final;
 
     /// Iterates through the samples and deactivates them
     /// starting with the greatest.
     void deactivate_samples_from_above(
-        const std::vector<AUTOSQL_FLOAT> &_critical_values,
+        const std::vector<Float> &_critical_values,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) final;
 
     /// Iterates through the samples and deactivates those
     /// samples that smaller than or equal to the critical value.
     void deactivate_samples_from_below(
-        const AUTOSQL_FLOAT _critical_value,
+        const Float _critical_value,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) final;
 
     /// Iterates through the samples and deactivates them
     /// starting with the smallest.
     void deactivate_samples_from_below(
-        const std::vector<AUTOSQL_FLOAT> &_critical_values,
+        const std::vector<Float> &_critical_values,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) final;
 
     /// Deactivates all samples that do not contain any category between
     /// _categories_begin and _categories_end. Used for prediction.
     void deactivate_samples_not_containing_categories(
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_end,
+        const std::vector<Int>::const_iterator _categories_begin,
+        const std::vector<Int>::const_iterator _categories_end,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) final;
 
@@ -149,8 +149,8 @@ class Aggregation : public AbstractAggregation
     /// deactivates samples.
     /// Used for training.
     void deactivate_samples_not_containing_categories(
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_end,
+        const std::vector<Int>::const_iterator _categories_begin,
+        const std::vector<Int>::const_iterator _categories_end,
         const Revert _revert,
         const containers::CategoryIndex &_index ) final;
 
@@ -200,8 +200,8 @@ class Aggregation : public AbstractAggregation
     /// Updates the optimization criterion, makes it store its
     /// current stage and clears updates_current()
     void update_optimization_criterion_and_clear_updates_current(
-        const AUTOSQL_FLOAT _num_samples_smaller,
-        const AUTOSQL_FLOAT _num_samples_greater ) final;
+        const Float _num_samples_smaller,
+        const Float _num_samples_greater ) final;
 
     // --------------------------------------
     // Here we break with our usual convention
@@ -227,9 +227,9 @@ class Aggregation : public AbstractAggregation
             static_cast<size_t>( _sample->ix_x_popul ) < yhat_inline().size() );
 
         assert(
-            _sample->ix_x_popul < static_cast<AUTOSQL_INT>( sum().size() ) );
+            _sample->ix_x_popul < static_cast<Int>( sum().size() ) );
         assert(
-            _sample->ix_x_popul < static_cast<AUTOSQL_INT>( count().size() ) );
+            _sample->ix_x_popul < static_cast<Int>( count().size() ) );
 
         assert(
             value_to_be_aggregated( _sample ) ==
@@ -264,9 +264,9 @@ class Aggregation : public AbstractAggregation
             static_cast<size_t>( _sample->ix_x_popul ) < yhat_inline().size() );
 
         assert(
-            _sample->ix_x_popul < static_cast<AUTOSQL_INT>( sum().size() ) );
+            _sample->ix_x_popul < static_cast<Int>( sum().size() ) );
         assert(
-            _sample->ix_x_popul < static_cast<AUTOSQL_INT>( count().size() ) );
+            _sample->ix_x_popul < static_cast<Int>( count().size() ) );
 
         assert( count()[_sample->ix_x_popul] > 0.0 );
 
@@ -346,7 +346,7 @@ class Aggregation : public AbstractAggregation
 
         // Note that the samples are already ordered.
 
-        const AUTOSQL_FLOAT val = value_to_be_aggregated( _sample );
+        const Float val = value_to_be_aggregated( _sample );
 
         for ( auto it = _sample - 1; it >= samples_begin_; --it )
             {
@@ -405,7 +405,7 @@ class Aggregation : public AbstractAggregation
 
         // Note that the samples are already ordered.
 
-        const AUTOSQL_FLOAT val = value_to_be_aggregated( _sample );
+        const Float val = value_to_be_aggregated( _sample );
 
         for ( auto it = _sample - 1; it >= samples_begin_; --it )
             {
@@ -469,7 +469,7 @@ class Aggregation : public AbstractAggregation
 
         // Note that the samples are already ordered.
 
-        const AUTOSQL_FLOAT val = value_to_be_aggregated( _sample );
+        const Float val = value_to_be_aggregated( _sample );
 
         for ( auto it = _sample - 1; it >= samples_begin_; --it )
             {
@@ -527,7 +527,7 @@ class Aggregation : public AbstractAggregation
 
         // Note that the samples are already ordered.
 
-        const AUTOSQL_FLOAT val = value_to_be_aggregated( _sample );
+        const Float val = value_to_be_aggregated( _sample );
 
         for ( auto it = _sample - 1; it >= samples_begin_; --it )
             {
@@ -685,7 +685,7 @@ class Aggregation : public AbstractAggregation
             }
 
         const auto count =
-            static_cast<AUTOSQL_INT>( this->count()[_sample->ix_x_popul] );
+            static_cast<Int>( this->count()[_sample->ix_x_popul] );
 
         if ( count % 2 == 0 )
             {
@@ -779,7 +779,7 @@ class Aggregation : public AbstractAggregation
             }
 
         const auto count =
-            static_cast<AUTOSQL_INT>( this->count()[_sample->ix_x_popul] );
+            static_cast<Int>( this->count()[_sample->ix_x_popul] );
 
         if ( count % 2 == 0 )
             {
@@ -935,7 +935,7 @@ class Aggregation : public AbstractAggregation
             int>::type = 0>
     inline void activate_sample( containers::Match *_sample )
     {
-        const AUTOSQL_FLOAT val = value_to_be_aggregated( _sample );
+        const Float val = value_to_be_aggregated( _sample );
 
         static_assert( needs_sum_, "sum needed" );
         static_assert( needs_sum_squared_, "sum_squared needed" );
@@ -970,15 +970,15 @@ class Aggregation : public AbstractAggregation
             }
         else
             {
-                const AUTOSQL_FLOAT mean =
+                const Float mean =
                     sum()[_sample->ix_x_popul] / count()[_sample->ix_x_popul];
 
-                const AUTOSQL_FLOAT stddev = std::sqrt(
+                const Float stddev = std::sqrt(
                     sum_squared()[_sample->ix_x_popul] /
                         count()[_sample->ix_x_popul] -
                     mean * mean );
 
-                const AUTOSQL_FLOAT skewness =
+                const Float skewness =
                     ( ( sum_cubed()[_sample->ix_x_popul] /
                         count()[_sample->ix_x_popul] ) -
                       ( 3.0 * mean * stddev * stddev ) -
@@ -1001,7 +1001,7 @@ class Aggregation : public AbstractAggregation
             int>::type = 0>
     inline void deactivate_sample( containers::Match *_sample )
     {
-        const AUTOSQL_FLOAT val = value_to_be_aggregated( _sample );
+        const Float val = value_to_be_aggregated( _sample );
 
         sum()[_sample->ix_x_popul] -= val;
 
@@ -1030,7 +1030,7 @@ class Aggregation : public AbstractAggregation
             int>::type = 0>
     inline void activate_sample( containers::Match *_sample )
     {
-        const AUTOSQL_FLOAT val = value_to_be_aggregated( _sample );
+        const Float val = value_to_be_aggregated( _sample );
 
         static_assert( needs_sum_, "sum needed" );
         static_assert( needs_sum_squared_, "sum_squared needed" );
@@ -1044,7 +1044,7 @@ class Aggregation : public AbstractAggregation
 
         assert( count()[_sample->ix_x_popul] > 0.0 );
 
-        const AUTOSQL_FLOAT mean =
+        const Float mean =
             sum()[_sample->ix_x_popul] / count()[_sample->ix_x_popul];
 
         yhat_inline()[_sample->ix_x_popul] = std::sqrt(
@@ -1069,7 +1069,7 @@ class Aggregation : public AbstractAggregation
             int>::type = 0>
     inline void deactivate_sample( containers::Match *_sample )
     {
-        const AUTOSQL_FLOAT val = value_to_be_aggregated( _sample );
+        const Float val = value_to_be_aggregated( _sample );
 
         sum()[_sample->ix_x_popul] -= val;
 
@@ -1085,7 +1085,7 @@ class Aggregation : public AbstractAggregation
             }
         else
             {
-                const AUTOSQL_FLOAT mean =
+                const Float mean =
                     sum()[_sample->ix_x_popul] / count()[_sample->ix_x_popul];
 
                 yhat_inline()[_sample->ix_x_popul] = std::sqrt(
@@ -1146,7 +1146,7 @@ class Aggregation : public AbstractAggregation
             int>::type = 0>
     inline void activate_sample( containers::Match *_sample )
     {
-        const AUTOSQL_FLOAT val = value_to_be_aggregated( _sample );
+        const Float val = value_to_be_aggregated( _sample );
 
         static_assert( needs_sum_, "sum needed" );
         static_assert( needs_sum_squared_, "sum_squared needed" );
@@ -1160,7 +1160,7 @@ class Aggregation : public AbstractAggregation
 
         assert( count()[_sample->ix_x_popul] > 0.0 );
 
-        const AUTOSQL_FLOAT mean =
+        const Float mean =
             sum()[_sample->ix_x_popul] / count()[_sample->ix_x_popul];
 
         yhat_inline()[_sample->ix_x_popul] =
@@ -1179,7 +1179,7 @@ class Aggregation : public AbstractAggregation
             int>::type = 0>
     inline void deactivate_sample( containers::Match *_sample )
     {
-        const AUTOSQL_FLOAT val = value_to_be_aggregated( _sample );
+        const Float val = value_to_be_aggregated( _sample );
 
         sum()[_sample->ix_x_popul] -= val;
 
@@ -1195,7 +1195,7 @@ class Aggregation : public AbstractAggregation
             }
         else
             {
-                const AUTOSQL_FLOAT mean =
+                const Float mean =
                     sum()[_sample->ix_x_popul] / count()[_sample->ix_x_popul];
 
                 yhat_inline()[_sample->ix_x_popul] =
@@ -1237,43 +1237,43 @@ class Aggregation : public AbstractAggregation
 
     /// Trivial setter
     void set_value_to_be_aggregated(
-        const containers::Column<AUTOSQL_FLOAT> &_value_to_be_aggregated ) final
+        const containers::Column<Float> &_value_to_be_aggregated ) final
     {
         value_to_be_aggregated() = containers::
-            ColumnView<AUTOSQL_FLOAT, std::map<AUTOSQL_INT, AUTOSQL_INT>>(
+            ColumnView<Float, std::map<Int, Int>>(
                 _value_to_be_aggregated );
     }
 
     /// Trivial setter
     void set_value_to_be_aggregated(
-        const containers::Column<AUTOSQL_INT> &_value_to_be_aggregated ) final
+        const containers::Column<Int> &_value_to_be_aggregated ) final
     {
         value_to_be_aggregated_categorical() = containers::
-            ColumnView<AUTOSQL_INT, std::map<AUTOSQL_INT, AUTOSQL_INT>>(
+            ColumnView<Int, std::map<Int, Int>>(
                 _value_to_be_aggregated );
     }
 
     /// Trivial setter
     void set_value_to_be_aggregated(
         const containers::ColumnView<
-            AUTOSQL_FLOAT,
-            std::map<AUTOSQL_INT, AUTOSQL_INT>> &_value_to_be_aggregated ) final
+            Float,
+            std::map<Int, Int>> &_value_to_be_aggregated ) final
     {
         value_to_be_aggregated() = _value_to_be_aggregated;
     }
 
     /// Trivial setter
     void set_value_to_be_compared(
-        const containers::Column<AUTOSQL_FLOAT> &_value_to_be_compared ) final
+        const containers::Column<Float> &_value_to_be_compared ) final
     {
         value_to_be_compared() =
-            containers::ColumnView<AUTOSQL_FLOAT, std::vector<size_t>>(
+            containers::ColumnView<Float, std::vector<size_t>>(
                 _value_to_be_compared );
     }
 
     /// Trivial setter
     void set_value_to_be_compared(
-        const containers::ColumnView<AUTOSQL_FLOAT, std::vector<size_t>>
+        const containers::ColumnView<Float, std::vector<size_t>>
             &_value_to_be_compared ) final
     {
         value_to_be_compared() = _value_to_be_compared;
@@ -1283,7 +1283,7 @@ class Aggregation : public AbstractAggregation
     std::string type() const final { return AggType::type(); }
 
     /// Returns a reference to the predictions stored by the aggregation
-    std::vector<AUTOSQL_FLOAT> &yhat() final
+    std::vector<Float> &yhat() final
     {
         assert( aggregation_impl_ != nullptr );
         return aggregation_impl_->yhat_;
@@ -1296,14 +1296,14 @@ class Aggregation : public AbstractAggregation
     std::vector<containers::Match *> &altered_samples() { return altered_samples_; }
 
     /// Trivial accessor
-    inline std::vector<AUTOSQL_FLOAT> &count()
+    inline std::vector<Float> &count()
     {
         assert( aggregation_impl_ != nullptr );
         return aggregation_impl_->count_;
     }
 
     /// Trivial accessor
-    inline std::vector<AUTOSQL_FLOAT> &count_committed()
+    inline std::vector<Float> &count_committed()
     {
         assert( aggregation_impl_ != nullptr );
         return aggregation_impl_->count_committed_;
@@ -1364,42 +1364,42 @@ class Aggregation : public AbstractAggregation
     }
 
     /// Trivial accessor
-    inline std::vector<AUTOSQL_FLOAT> &sum()
+    inline std::vector<Float> &sum()
     {
         assert( aggregation_impl_ != nullptr );
         return aggregation_impl_->sum_;
     }
 
     /// Trivial accessor
-    inline std::vector<AUTOSQL_FLOAT> &sum_committed()
+    inline std::vector<Float> &sum_committed()
     {
         assert( aggregation_impl_ != nullptr );
         return aggregation_impl_->sum_committed_;
     }
 
     /// Trivial accessor
-    inline std::vector<AUTOSQL_FLOAT> &sum_cubed()
+    inline std::vector<Float> &sum_cubed()
     {
         assert( aggregation_impl_ != nullptr );
         return aggregation_impl_->sum_cubed_;
     }
 
     /// Trivial accessor
-    inline std::vector<AUTOSQL_FLOAT> &sum_cubed_committed()
+    inline std::vector<Float> &sum_cubed_committed()
     {
         assert( aggregation_impl_ != nullptr );
         return aggregation_impl_->sum_cubed_committed_;
     }
 
     /// Trivial accessor
-    inline std::vector<AUTOSQL_FLOAT> &sum_squared()
+    inline std::vector<Float> &sum_squared()
     {
         assert( aggregation_impl_ != nullptr );
         return aggregation_impl_->sum_squared_;
     }
 
     /// Trivial accessor
-    inline std::vector<AUTOSQL_FLOAT> &sum_squared_committed()
+    inline std::vector<Float> &sum_squared_committed()
     {
         assert( aggregation_impl_ != nullptr );
         return aggregation_impl_->sum_squared_committed_;
@@ -1421,7 +1421,7 @@ class Aggregation : public AbstractAggregation
 
     /// Trivial accessor
     inline containers::
-        ColumnView<AUTOSQL_FLOAT, std::map<AUTOSQL_INT, AUTOSQL_INT>>
+        ColumnView<Float, std::map<Int, Int>>
             &value_to_be_aggregated()
     {
         assert( aggregation_impl_ != nullptr );
@@ -1430,7 +1430,7 @@ class Aggregation : public AbstractAggregation
 
     /// Trivial accessor
     inline containers::
-        ColumnView<AUTOSQL_INT, std::map<AUTOSQL_INT, AUTOSQL_INT>>
+        ColumnView<Int, std::map<Int, Int>>
             &value_to_be_aggregated_categorical()
     {
         assert( aggregation_impl_ != nullptr );
@@ -1450,7 +1450,7 @@ class Aggregation : public AbstractAggregation
                 AggregationType::IsComparison<data_used>::value &&
                 is_population,
             int>::type = 0>
-    inline const AUTOSQL_FLOAT value_to_be_aggregated( const containers::Match *_sample )
+    inline const Float value_to_be_aggregated( const containers::Match *_sample )
     {
         return value_to_be_compared()[_sample->ix_x_popul] -
                value_to_be_aggregated().col()[_sample->ix_x_perip];
@@ -1469,7 +1469,7 @@ class Aggregation : public AbstractAggregation
                 AggregationType::IsComparison<data_used>::value &&
                 !is_population,
             int>::type = 0>
-    inline const AUTOSQL_FLOAT value_to_be_aggregated( const containers::Match *_sample )
+    inline const Float value_to_be_aggregated( const containers::Match *_sample )
     {
         return value_to_be_compared().col()[_sample->ix_x_perip] -
                value_to_be_aggregated().col()[_sample->ix_x_perip];
@@ -1487,7 +1487,7 @@ class Aggregation : public AbstractAggregation
                 !AggregationType::IsComparison<data_used>::value &&
                 data_used != enums::DataUsed::x_subfeature,
             int>::type = 0>
-    inline const AUTOSQL_FLOAT value_to_be_aggregated( const containers::Match *_sample )
+    inline const Float value_to_be_aggregated( const containers::Match *_sample )
     {
         return value_to_be_aggregated().col()[_sample->ix_x_perip];
     }
@@ -1504,7 +1504,7 @@ class Aggregation : public AbstractAggregation
                 !AggregationType::IsComparison<data_used>::value &&
                 data_used == enums::DataUsed::x_subfeature,
             int>::type = 0>
-    inline const AUTOSQL_FLOAT value_to_be_aggregated( const containers::Match *_sample )
+    inline const Float value_to_be_aggregated( const containers::Match *_sample )
     {
         return value_to_be_aggregated()[_sample->ix_x_perip];
     }
@@ -1517,15 +1517,15 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             AggregationType::IsCategorical<data_used>::value,
             int>::type = 0>
-    inline const AUTOSQL_FLOAT value_to_be_aggregated( const containers::Match *_sample )
+    inline const Float value_to_be_aggregated( const containers::Match *_sample )
     {
-        return static_cast<AUTOSQL_FLOAT>(
+        return static_cast<Float>(
             value_to_be_aggregated_categorical().col()[_sample->ix_x_perip] );
     }
 
     /// Accessor for the value to be compared - this is needed for the
     /// time_stamps and the same_units.
-    inline containers::ColumnView<AUTOSQL_FLOAT, std::vector<size_t>>
+    inline containers::ColumnView<Float, std::vector<size_t>>
         &value_to_be_compared()
     {
         assert( aggregation_impl_ != nullptr );
@@ -1534,21 +1534,21 @@ class Aggregation : public AbstractAggregation
 
     /// Accessor for the value to be compared - this is needed for the
     /// time_stamps and the same_units.
-    inline std::vector<AUTOSQL_FLOAT> &yhat_committed()
+    inline std::vector<Float> &yhat_committed()
     {
         assert( aggregation_impl_ != nullptr );
         return aggregation_impl_->yhat_committed_;
     }
 
     /// Trivial accessor
-    inline std::vector<AUTOSQL_FLOAT> &yhat_inline()
+    inline std::vector<Float> &yhat_inline()
     {
         assert( aggregation_impl_ != nullptr );
         return aggregation_impl_->yhat_;
     }
 
     /// Trivial accessor
-    inline std::vector<AUTOSQL_FLOAT> &yhat_stored()
+    inline std::vector<Float> &yhat_stored()
     {
         assert( aggregation_impl_ != nullptr );
         return aggregation_impl_->yhat_stored_;
@@ -1688,8 +1688,8 @@ void Aggregation<AggType, data_used_, is_population_>::activate_all(
 template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     activate_samples_containing_categories(
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_end,
+        const std::vector<Int>::const_iterator _categories_begin,
+        const std::vector<Int>::const_iterator _categories_end,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end )
 {
@@ -1717,16 +1717,16 @@ void Aggregation<AggType, data_used_, is_population_>::
 template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     activate_samples_containing_categories(
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_end,
+        const std::vector<Int>::const_iterator _categories_begin,
+        const std::vector<Int>::const_iterator _categories_end,
         const Revert _revert,
         const containers::CategoryIndex &_index )
 {
     // ------------------------------------------------------------------
 
-    AUTOSQL_FLOAT num_samples_smaller = 0.0;
+    Float num_samples_smaller = 0.0;
 
-    auto sample_size = static_cast<AUTOSQL_FLOAT>(
+    auto sample_size = static_cast<Float>(
         std::distance( _index.begin(), _index.end() ) );
 
     // ------------------------------------------------------------------
@@ -1781,7 +1781,7 @@ void Aggregation<AggType, data_used_, is_population_>::
 template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     activate_samples_from_above(
-        const AUTOSQL_FLOAT _critical_value,
+        const Float _critical_value,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end )
 {
@@ -1799,7 +1799,7 @@ void Aggregation<AggType, data_used_, is_population_>::
 template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     activate_samples_from_above(
-        const std::vector<AUTOSQL_FLOAT> &_critical_values,
+        const std::vector<Float> &_critical_values,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end )
 {
@@ -1826,10 +1826,10 @@ void Aggregation<AggType, data_used_, is_population_>::
                     --it;
                 }
 
-            auto num_samples_smaller = static_cast<AUTOSQL_FLOAT>(
+            auto num_samples_smaller = static_cast<Float>(
                 std::distance( _sample_container_begin, it ) );
 
-            auto num_samples_greater = static_cast<AUTOSQL_FLOAT>(
+            auto num_samples_greater = static_cast<Float>(
                 std::distance( it, _sample_container_end ) );
 
             update_optimization_criterion_and_clear_updates_current(
@@ -1842,7 +1842,7 @@ void Aggregation<AggType, data_used_, is_population_>::
 template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     activate_samples_from_below(
-        const AUTOSQL_FLOAT _critical_value,
+        const Float _critical_value,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end )
 {
@@ -1860,7 +1860,7 @@ void Aggregation<AggType, data_used_, is_population_>::
 template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     activate_samples_from_below(
-        const std::vector<AUTOSQL_FLOAT> &_critical_values,
+        const std::vector<Float> &_critical_values,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end )
 {
@@ -1883,10 +1883,10 @@ void Aggregation<AggType, data_used_, is_population_>::
                     ++it;
                 }
 
-            auto num_samples_smaller = static_cast<AUTOSQL_FLOAT>(
+            auto num_samples_smaller = static_cast<Float>(
                 std::distance( _sample_container_begin, it ) );
 
-            auto num_samples_greater = static_cast<AUTOSQL_FLOAT>(
+            auto num_samples_greater = static_cast<Float>(
                 std::distance( it, _sample_container_end ) );
 
             update_optimization_criterion_and_clear_updates_current(
@@ -1899,8 +1899,8 @@ void Aggregation<AggType, data_used_, is_population_>::
 template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     activate_samples_not_containing_categories(
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_end,
+        const std::vector<Int>::const_iterator _categories_begin,
+        const std::vector<Int>::const_iterator _categories_end,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end )
 {
@@ -1935,8 +1935,8 @@ void Aggregation<AggType, data_used_, is_population_>::
 template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     activate_samples_not_containing_categories(
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_end,
+        const std::vector<Int>::const_iterator _categories_begin,
+        const std::vector<Int>::const_iterator _categories_end,
         const Revert _revert,
         const containers::CategoryIndex &_index )
 {
@@ -1954,9 +1954,9 @@ void Aggregation<AggType, data_used_, is_population_>::
     // Selectively deactivate those samples that are not of the
     // particular category
 
-    AUTOSQL_FLOAT num_samples_smaller = 0.0;
+    Float num_samples_smaller = 0.0;
 
-    auto sample_size = static_cast<AUTOSQL_FLOAT>(
+    auto sample_size = static_cast<Float>(
         std::distance( _index.begin(), _index.end() ) );
 
     for ( auto cat = _categories_begin; cat < _categories_end; ++cat )
@@ -2109,8 +2109,8 @@ void Aggregation<AggType, data_used_, is_population_>::commit()
 template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     deactivate_samples_containing_categories(
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_end,
+        const std::vector<Int>::const_iterator _categories_begin,
+        const std::vector<Int>::const_iterator _categories_end,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end )
 {
@@ -2139,16 +2139,16 @@ void Aggregation<AggType, data_used_, is_population_>::
 template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     deactivate_samples_containing_categories(
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_end,
+        const std::vector<Int>::const_iterator _categories_begin,
+        const std::vector<Int>::const_iterator _categories_end,
         const Revert _revert,
         const containers::CategoryIndex &_index )
 {
     // ------------------------------------------------------------------
 
-    AUTOSQL_FLOAT num_samples_smaller = 0.0;
+    Float num_samples_smaller = 0.0;
 
-    auto sample_size = static_cast<AUTOSQL_FLOAT>(
+    auto sample_size = static_cast<Float>(
         std::distance( _index.begin(), _index.end() ) );
 
     // ------------------------------------------------------------------
@@ -2203,13 +2203,13 @@ void Aggregation<AggType, data_used_, is_population_>::
 template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     deactivate_samples_from_above(
-        const AUTOSQL_FLOAT _critical_value,
+        const Float _critical_value,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end )
 {
     for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
         {
-            const AUTOSQL_FLOAT val = ( *it )->numerical_value;
+            const Float val = ( *it )->numerical_value;
 
             if ( val > _critical_value || val != val )
                 {
@@ -2223,7 +2223,7 @@ void Aggregation<AggType, data_used_, is_population_>::
 template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     deactivate_samples_from_above(
-        const std::vector<AUTOSQL_FLOAT> &_critical_values,
+        const std::vector<Float> &_critical_values,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end )
 {
@@ -2250,10 +2250,10 @@ void Aggregation<AggType, data_used_, is_population_>::
                     --it;
                 }
 
-            auto num_samples_smaller = static_cast<AUTOSQL_FLOAT>(
+            auto num_samples_smaller = static_cast<Float>(
                 std::distance( _sample_container_begin, it ) );
 
-            auto num_samples_greater = static_cast<AUTOSQL_FLOAT>(
+            auto num_samples_greater = static_cast<Float>(
                 std::distance( it, _sample_container_end ) );
 
             update_optimization_criterion_and_clear_updates_current(
@@ -2266,13 +2266,13 @@ void Aggregation<AggType, data_used_, is_population_>::
 template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     deactivate_samples_from_below(
-        const AUTOSQL_FLOAT _critical_value,
+        const Float _critical_value,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end )
 {
     for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
         {
-            const AUTOSQL_FLOAT val = ( *it )->numerical_value;
+            const Float val = ( *it )->numerical_value;
 
             if ( val <= _critical_value || val != val )
                 {
@@ -2286,7 +2286,7 @@ void Aggregation<AggType, data_used_, is_population_>::
 template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     deactivate_samples_from_below(
-        const std::vector<AUTOSQL_FLOAT> &_critical_values,
+        const std::vector<Float> &_critical_values,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end )
 {
@@ -2309,10 +2309,10 @@ void Aggregation<AggType, data_used_, is_population_>::
                     ++it;
                 }
 
-            auto num_samples_smaller = static_cast<AUTOSQL_FLOAT>(
+            auto num_samples_smaller = static_cast<Float>(
                 std::distance( _sample_container_begin, it ) );
 
-            auto num_samples_greater = static_cast<AUTOSQL_FLOAT>(
+            auto num_samples_greater = static_cast<Float>(
                 std::distance( it, _sample_container_end ) );
 
             update_optimization_criterion_and_clear_updates_current(
@@ -2325,8 +2325,8 @@ void Aggregation<AggType, data_used_, is_population_>::
 template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     deactivate_samples_not_containing_categories(
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_end,
+        const std::vector<Int>::const_iterator _categories_begin,
+        const std::vector<Int>::const_iterator _categories_end,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end )
 {
@@ -2361,8 +2361,8 @@ void Aggregation<AggType, data_used_, is_population_>::
 template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     deactivate_samples_not_containing_categories(
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_end,
+        const std::vector<Int>::const_iterator _categories_begin,
+        const std::vector<Int>::const_iterator _categories_end,
         const Revert _revert,
         const containers::CategoryIndex &_index )
 {
@@ -2381,10 +2381,10 @@ void Aggregation<AggType, data_used_, is_population_>::
     // Selectively activate those samples that are not of the
     // particular category
 
-    auto sample_size = static_cast<AUTOSQL_FLOAT>(
+    auto sample_size = static_cast<Float>(
         std::distance( _index.begin(), _index.end() ) );
 
-    AUTOSQL_FLOAT num_samples_smaller = 0.0;
+    Float num_samples_smaller = 0.0;
 
     for ( auto cat = _categories_begin; cat < _categories_end; ++cat )
         {
@@ -2467,7 +2467,7 @@ void Aggregation<AggType, data_used_, is_population_>::
 
     optimization_criterion()->init_yhat( yhat_inline(), updates_stored() );
 
-    auto num_samples = static_cast<AUTOSQL_FLOAT>(
+    auto num_samples = static_cast<Float>(
         std::distance( _sample_container_begin, _sample_container_end ) );
 
     optimization_criterion()->store_current_stage( num_samples, num_samples );
@@ -2670,7 +2670,7 @@ Aggregation<AggType, data_used_, is_population_>::separate_null_values(
     containers::Matches &_samples )
 {
     auto is_null = [this]( containers::Match &sample ) {
-        AUTOSQL_FLOAT val = value_to_be_aggregated( &sample );
+        Float val = value_to_be_aggregated( &sample );
         return val != val;
     };
 
@@ -2694,7 +2694,7 @@ Aggregation<AggType, data_used_, is_population_>::separate_null_values(
     containers::MatchPtrs &_samples )
 {
     auto is_null = [this]( containers::Match *sample ) {
-        AUTOSQL_FLOAT val = value_to_be_aggregated( sample );
+        Float val = value_to_be_aggregated( sample );
         return val != val;
     };
 
@@ -2756,8 +2756,8 @@ void Aggregation<AggType, data_used_, is_population_>::sort_samples(
 template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     update_optimization_criterion_and_clear_updates_current(
-        const AUTOSQL_FLOAT _num_samples_smaller,
-        const AUTOSQL_FLOAT _num_samples_greater )
+        const Float _num_samples_smaller,
+        const Float _num_samples_greater )
 {
     optimization_criterion()->update_samples(
         updates_current(),  // _indices
@@ -2765,7 +2765,7 @@ void Aggregation<AggType, data_used_, is_population_>::
         yhat_stored()       // _old_values
     );
 
-    for ( AUTOSQL_INT ix : updates_current() )
+    for ( Int ix : updates_current() )
         {
             yhat_stored()[ix] = yhat_inline()[ix];
         }

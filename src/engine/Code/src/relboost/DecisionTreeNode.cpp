@@ -8,10 +8,10 @@ namespace decisiontrees
 
 DecisionTreeNode::DecisionTreeNode(
     const utils::ConditionMaker& _condition_maker,
-    const RELBOOST_INT _depth,
+    const Int _depth,
     const std::shared_ptr<const Hyperparameters>& _hyperparameters,
     const std::shared_ptr<lossfunctions::LossFunction>& _loss_function,
-    const RELBOOST_FLOAT _weight,
+    const Float _weight,
     multithreading::Communicator* _comm )
     : comm_( _comm ),
       condition_maker_( _condition_maker ),
@@ -26,7 +26,7 @@ DecisionTreeNode::DecisionTreeNode(
 
 DecisionTreeNode::DecisionTreeNode(
     const utils::ConditionMaker& _condition_maker,
-    const RELBOOST_INT _depth,
+    const Int _depth,
     const std::shared_ptr<const Hyperparameters>& _hyperparameters,
     const std::shared_ptr<lossfunctions::LossFunction>& _loss_function,
     const Poco::JSON::Object& _obj )
@@ -37,7 +37,7 @@ DecisionTreeNode::DecisionTreeNode(
       loss_function_( _loss_function ),
       weight_(
           _obj.has( "weight_" )
-              ? JSON::get_value<RELBOOST_FLOAT>( _obj, "weight_" )
+              ? JSON::get_value<Float>( _obj, "weight_" )
               : NAN )
 {
     input_.reset(
@@ -49,8 +49,8 @@ DecisionTreeNode::DecisionTreeNode(
     if ( _obj.has( "child_greater_" ) )
         {
             const auto categories_used =
-                std::make_shared<const std::vector<RELBOOST_INT>>(
-                    JSON::array_to_vector<RELBOOST_INT>(
+                std::make_shared<const std::vector<Int>>(
+                    JSON::array_to_vector<Int>(
                         JSON::get_array( _obj, "categories_used_" ) ) );
 
             const auto column = JSON::get_value<size_t>( _obj, "column_" );
@@ -59,7 +59,7 @@ DecisionTreeNode::DecisionTreeNode(
                 JSON::get_value<size_t>( _obj, "column_input_" );
 
             const auto critical_value =
-                JSON::get_value<RELBOOST_FLOAT>( _obj, "critical_value_" );
+                JSON::get_value<Float>( _obj, "critical_value_" );
 
             const auto data_used = JSON::destringify(
                 JSON::get_value<std::string>( _obj, "data_used_" ) );
@@ -92,7 +92,7 @@ DecisionTreeNode::DecisionTreeNode(
 void DecisionTreeNode::add_candidates(
     const enums::Revert _revert,
     const enums::Update _update,
-    const RELBOOST_FLOAT _old_intercept,
+    const Float _old_intercept,
     const containers::Split& _split,
     const std::vector<const containers::Match*>::iterator _begin,
     const std::vector<const containers::Match*>::iterator _last_it,
@@ -109,16 +109,16 @@ void DecisionTreeNode::add_candidates(
     // -----------------------------------------------------------------
     // Check whether split would be balanced enough.
 
-    RELBOOST_INT num_samples_smaller = std::distance( _last_it, _it );
+    Int num_samples_smaller = std::distance( _last_it, _it );
 
-    RELBOOST_INT num_samples_greater =
+    Int num_samples_greater =
         std::distance( _begin, _end ) - num_samples_smaller;
 
     utils::Reducer::reduce(
-        std::plus<RELBOOST_INT>(), &num_samples_smaller, &comm() );
+        std::plus<Int>(), &num_samples_smaller, &comm() );
 
     utils::Reducer::reduce(
-        std::plus<RELBOOST_INT>(), &num_samples_greater, &comm() );
+        std::plus<Int>(), &num_samples_greater, &comm() );
 
     const bool is_balanced =
         num_samples_smaller > hyperparameters().min_num_samples_ &&
@@ -208,7 +208,7 @@ void DecisionTreeNode::fit(
     const containers::DataFrame& _input,
     const std::vector<const containers::Match*>::iterator _begin,
     const std::vector<const containers::Match*>::iterator _end,
-    RELBOOST_FLOAT* _intercept )
+    Float* _intercept )
 {
     // ------------------------------------------------------------------------
     // Store input and output (we need the column names).
@@ -485,7 +485,7 @@ void DecisionTreeNode::to_sql(
 
 // ----------------------------------------------------------------------------
 
-RELBOOST_FLOAT DecisionTreeNode::transform(
+Float DecisionTreeNode::transform(
     const containers::DataFrameView& _output,
     const containers::DataFrame& _input,
     const containers::Match& _match ) const
@@ -635,7 +635,7 @@ RELBOOST_FLOAT DecisionTreeNode::transform(
 // ----------------------------------------------------------------------------
 
 std::vector<containers::CandidateSplit> DecisionTreeNode::try_all(
-    const RELBOOST_FLOAT _old_intercept,
+    const Float _old_intercept,
     const containers::DataFrameView& _output,
     const containers::DataFrame& _input,
     const std::vector<const containers::Match*>::iterator _begin,
@@ -675,9 +675,9 @@ std::vector<containers::CandidateSplit> DecisionTreeNode::try_all(
 
 void DecisionTreeNode::try_categorical(
     const enums::Revert _revert,
-    const std::shared_ptr<const std::vector<RELBOOST_INT>> _critical_values,
+    const std::shared_ptr<const std::vector<Int>> _critical_values,
     const size_t num_column,
-    const RELBOOST_FLOAT _old_intercept,
+    const Float _old_intercept,
     const enums::DataUsed _data_used,
     const containers::CategoryIndex& _category_index,
     const std::vector<const containers::Match*>::iterator _begin,
@@ -722,7 +722,7 @@ void DecisionTreeNode::try_categorical(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_categorical_input(
-    const RELBOOST_FLOAT _old_intercept,
+    const Float _old_intercept,
     const containers::DataFrame& _input,
     const std::vector<const containers::Match*>::iterator _begin,
     const std::vector<const containers::Match*>::iterator _end,
@@ -814,7 +814,7 @@ void DecisionTreeNode::try_categorical_input(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_categorical_output(
-    const RELBOOST_FLOAT _old_intercept,
+    const Float _old_intercept,
     const containers::DataFrameView& _output,
     const std::vector<const containers::Match*>::iterator _begin,
     const std::vector<const containers::Match*>::iterator _end,
@@ -902,7 +902,7 @@ void DecisionTreeNode::try_categorical_output(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_discrete_input(
-    const RELBOOST_FLOAT _old_intercept,
+    const Float _old_intercept,
     const containers::DataFrame& _input,
     const std::vector<const containers::Match*>::iterator _begin,
     const std::vector<const containers::Match*>::iterator _end,
@@ -986,7 +986,7 @@ void DecisionTreeNode::try_discrete_input(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_discrete_output(
-    const RELBOOST_FLOAT _old_intercept,
+    const Float _old_intercept,
     const containers::DataFrameView& _output,
     const std::vector<const containers::Match*>::iterator _begin,
     const std::vector<const containers::Match*>::iterator _end,
@@ -1066,7 +1066,7 @@ void DecisionTreeNode::try_discrete_output(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_numerical_input(
-    const RELBOOST_FLOAT _old_intercept,
+    const Float _old_intercept,
     const containers::DataFrame& _input,
     const std::vector<const containers::Match*>::iterator _begin,
     const std::vector<const containers::Match*>::iterator _end,
@@ -1150,7 +1150,7 @@ void DecisionTreeNode::try_numerical_input(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_numerical_output(
-    const RELBOOST_FLOAT _old_intercept,
+    const Float _old_intercept,
     const containers::DataFrameView& _output,
     const std::vector<const containers::Match*>::iterator _begin,
     const std::vector<const containers::Match*>::iterator _end,
@@ -1236,7 +1236,7 @@ void DecisionTreeNode::try_numerical_output(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_same_units_categorical(
-    const RELBOOST_FLOAT _old_intercept,
+    const Float _old_intercept,
     const containers::DataFrame& _input,
     const containers::DataFrameView& _output,
     const std::vector<const containers::Match*>::iterator _begin,
@@ -1293,7 +1293,7 @@ void DecisionTreeNode::try_same_units_categorical(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_same_units_discrete(
-    const RELBOOST_FLOAT _old_intercept,
+    const Float _old_intercept,
     const containers::DataFrame& _input,
     const containers::DataFrameView& _output,
     const std::vector<const containers::Match*>::iterator _begin,
@@ -1416,7 +1416,7 @@ void DecisionTreeNode::try_same_units_discrete(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_same_units_numerical(
-    const RELBOOST_FLOAT _old_intercept,
+    const Float _old_intercept,
     const containers::DataFrame& _input,
     const containers::DataFrameView& _output,
     const std::vector<const containers::Match*>::iterator _begin,
@@ -1539,7 +1539,7 @@ void DecisionTreeNode::try_same_units_numerical(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_time_stamps_diff(
-    const RELBOOST_FLOAT _old_intercept,
+    const Float _old_intercept,
     const containers::DataFrame& _input,
     const containers::DataFrameView& _output,
     const std::vector<const containers::Match*>::iterator _begin,

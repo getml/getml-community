@@ -104,7 +104,7 @@ void DecisionTree::create_value_to_be_aggregated(
 {
     // ------------------------------------------------------------------------
 
-    const AUTOSQL_INT ix_column_used = column_to_be_aggregated().ix_column_used;
+    const Int ix_column_used = column_to_be_aggregated().ix_column_used;
 
     switch ( column_to_be_aggregated().data_used )
         {
@@ -135,7 +135,7 @@ void DecisionTree::create_value_to_be_aggregated(
             case enums::DataUsed::same_unit_numerical:
 
                 assert(
-                    static_cast<AUTOSQL_INT>(
+                    static_cast<Int>(
                         impl()->same_units_numerical().size() ) >
                     ix_column_used );
 
@@ -150,12 +150,12 @@ void DecisionTree::create_value_to_be_aggregated(
                             impl()->same_units_numerical()[ix_column_used] )
                             .data_used;
 
-                    const AUTOSQL_INT ix_column_used1 =
+                    const Int ix_column_used1 =
                         std::get<0>(
                             impl()->same_units_numerical()[ix_column_used] )
                             .ix_column_used;
 
-                    const AUTOSQL_INT ix_column_used2 =
+                    const Int ix_column_used2 =
                         std::get<1>(
                             impl()->same_units_numerical()[ix_column_used] )
                             .ix_column_used;
@@ -203,7 +203,7 @@ void DecisionTree::create_value_to_be_aggregated(
             case enums::DataUsed::same_unit_discrete:
 
                 assert(
-                    static_cast<AUTOSQL_INT>(
+                    static_cast<Int>(
                         impl()->same_units_discrete().size() ) >
                     ix_column_used );
 
@@ -218,12 +218,12 @@ void DecisionTree::create_value_to_be_aggregated(
                             impl()->same_units_discrete()[ix_column_used] )
                             .data_used;
 
-                    const AUTOSQL_INT ix_column_used1 =
+                    const Int ix_column_used1 =
                         std::get<0>(
                             impl()->same_units_discrete()[ix_column_used] )
                             .ix_column_used;
 
-                    const AUTOSQL_INT ix_column_used2 =
+                    const Int ix_column_used2 =
                         std::get<1>(
                             impl()->same_units_discrete()[ix_column_used] )
                             .ix_column_used;
@@ -694,7 +694,7 @@ std::string DecisionTree::to_sql(
 
 // ----------------------------------------------------------------------------
 
-std::vector<AUTOSQL_FLOAT> DecisionTree::transform(
+std::vector<Float> DecisionTree::transform(
     const containers::DataFrameView &_population,
     const containers::DataFrame &_peripheral,
     const containers::Subfeatures &_subfeatures,

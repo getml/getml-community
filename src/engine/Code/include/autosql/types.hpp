@@ -11,8 +11,8 @@
 
 // ----------------------------------------------------------------------------
 
-#define AUTOSQL_INT std::int32_t
-#define AUTOSQL_FLOAT double
+#define Int std::int32_t
+#define Float double
 #define AUTOSQL_UNSIGNED_LONG std::uint_least64_t
 
 // ----------------------------------------------------------------------------

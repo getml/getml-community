@@ -10,7 +10,7 @@ void TreeFitter::find_best_trees(
     const size_t _num_trees,
     const decisiontrees::TableHolder &_table_holder,
     const std::vector<containers::Subfeatures> &_subfeatures,
-    const std::vector<AUTOSQL_FLOAT> &_values,
+    const std::vector<Float> &_values,
     std::vector<containers::Matches> *_samples,
     std::vector<containers::MatchPtrs> *_sample_containers,
     optimizationcriteria::OptimizationCriterion *_optimization_criterion,
@@ -24,7 +24,7 @@ void TreeFitter::find_best_trees(
 
     debug_log( "Identifying best feature..." );
 
-    std::vector<std::tuple<size_t, AUTOSQL_FLOAT>> tuples;
+    std::vector<std::tuple<size_t, Float>> tuples;
 
     for ( size_t ix = 0; ix < _candidate_trees->size(); ++ix )
         {
@@ -34,8 +34,8 @@ void TreeFitter::find_best_trees(
     std::sort(
         tuples.begin(),
         tuples.end(),
-        []( const std::tuple<size_t, AUTOSQL_FLOAT> &t1,
-            const std::tuple<size_t, AUTOSQL_FLOAT> &t2 ) {
+        []( const std::tuple<size_t, Float> &t1,
+            const std::tuple<size_t, Float> &t2 ) {
             return std::get<1>( t1 ) > std::get<1>( t2 );
         } );
 
@@ -92,7 +92,7 @@ void TreeFitter::fit(
     // grow to its full depth,  instead we just get an idea of what
     // might work best.
 
-    std::vector<AUTOSQL_FLOAT> values;
+    std::vector<Float> values;
 
     debug_log( "Fitter: Probing.." );
 
@@ -146,7 +146,7 @@ void TreeFitter::fit_tree(
 
     assert(
         ix_perip_used <
-        static_cast<AUTOSQL_INT>( _sample_containers->size() ) );
+        static_cast<Int>( _sample_containers->size() ) );
 
     auto null_values_dist = std::distance( samples.begin(), samples.begin() );
 
@@ -216,7 +216,7 @@ void TreeFitter::probe(
     std::vector<containers::MatchPtrs> *_sample_containers,
     optimizationcriteria::OptimizationCriterion *_optimization_criterion,
     std::list<decisiontrees::DecisionTree> *_candidate_trees,
-    std::vector<AUTOSQL_FLOAT> *_values )
+    std::vector<Float> *_values )
 {
     for ( auto &tree : *_candidate_trees )
         {

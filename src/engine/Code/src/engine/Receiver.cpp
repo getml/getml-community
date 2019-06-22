@@ -6,15 +6,15 @@ namespace communication
 {
 // ------------------------------------------------------------------------
 
-containers::Matrix<ENGINE_INT> Receiver::recv_categorical_matrix(
+containers::Matrix<Int> Receiver::recv_categorical_matrix(
     containers::Encoding *_encoding, Poco::Net::StreamSocket *_socket )
 {
     // ------------------------------------------------
     // Receive shape
 
-    std::array<ENGINE_INT, 2> shape;
+    std::array<Int, 2> shape;
 
-    recv<ENGINE_INT>( sizeof( ENGINE_INT ) * 2, _socket, shape.data() );
+    recv<Int>( sizeof( Int ) * 2, _socket, shape.data() );
 
     // ------------------------------------------------
     // Init matrix
@@ -31,7 +31,7 @@ containers::Matrix<ENGINE_INT> Receiver::recv_categorical_matrix(
                 "Number of columns can not be negative!" );
         }
 
-    containers::Matrix<ENGINE_INT> matrix(
+    containers::Matrix<Int> matrix(
         static_cast<size_t>( std::get<0>( shape ) ),
         static_cast<size_t>( std::get<1>( shape ) ) );
 
@@ -94,15 +94,15 @@ Poco::JSON::Object Receiver::recv_cmd(
 
 // ------------------------------------------------------------------------
 
-containers::Matrix<ENGINE_FLOAT> Receiver::recv_matrix(
+containers::Matrix<Float> Receiver::recv_matrix(
     Poco::Net::StreamSocket *_socket )
 {
     // ------------------------------------------------
     // Receive shape
 
-    std::array<ENGINE_INT, 2> shape;
+    std::array<Int, 2> shape;
 
-    recv<ENGINE_INT>( sizeof( ENGINE_INT ) * 2, _socket, shape.data() );
+    recv<Int>( sizeof( Int ) * 2, _socket, shape.data() );
 
     // ------------------------------------------------
     // Init matrix
@@ -119,17 +119,17 @@ containers::Matrix<ENGINE_FLOAT> Receiver::recv_matrix(
                 "Number of columns can not be negative!" );
         }
 
-    containers::Matrix<ENGINE_FLOAT> matrix(
+    containers::Matrix<Float> matrix(
         static_cast<size_t>( std::get<0>( shape ) ),
         static_cast<size_t>( std::get<1>( shape ) ) );
 
     // ------------------------------------------------
     // Fill with data
 
-    recv<ENGINE_FLOAT>(
-        sizeof( ENGINE_FLOAT ) *
-            static_cast<ENGINE_UNSIGNED_LONG>( std::get<0>( shape ) ) *
-            static_cast<ENGINE_UNSIGNED_LONG>( std::get<1>( shape ) ),
+    recv<Float>(
+        sizeof( Float ) *
+            static_cast<ULong>( std::get<0>( shape ) ) *
+            static_cast<ULong>( std::get<1>( shape ) ),
         _socket,
         matrix.data() );
 
@@ -147,15 +147,15 @@ std::string Receiver::recv_string( Poco::Net::StreamSocket *_socket )
     // ------------------------------------------------
     // Init string
 
-    std::vector<ENGINE_INT> str_length( 1 );
+    std::vector<Int> str_length( 1 );
 
-    Receiver::recv<ENGINE_INT>(
-        sizeof( ENGINE_INT ), _socket, str_length.data() );
+    Receiver::recv<Int>(
+        sizeof( Int ), _socket, str_length.data() );
 
     std::string str( str_length[0], '0' );
 
     const auto str_length_long =
-        static_cast<ENGINE_UNSIGNED_LONG>( str_length[0] );
+        static_cast<ULong>( str_length[0] );
 
     // ------------------------------------------------
     // Receive string content from the client

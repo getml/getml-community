@@ -17,9 +17,9 @@ OptimizationCriterionImpl::OptimizationCriterionImpl(
       max_ix_( -1 ),
       sampler_( utils::Sampler( _hyperparameters->seed_ ) ),
       value_( 0.0 ),
-      yhat_old_( std::vector<std::vector<AUTOSQL_FLOAT>>(
+      yhat_old_( std::vector<std::vector<Float>>(
           main_table_.num_targets(),
-          std::vector<AUTOSQL_FLOAT>( main_table_.nrows() ) ) )
+          std::vector<Float>( main_table_.nrows() ) ) )
 {
     loss_function_ = lossfunctions::LossFunctionParser::parse_loss_function(
         _loss_function_type, comm_ );
@@ -28,7 +28,7 @@ OptimizationCriterionImpl::OptimizationCriterionImpl(
 // ----------------------------------------------------------------------------
 
 void OptimizationCriterionImpl::commit(
-    std::vector<AUTOSQL_FLOAT>* _sufficient_statistics_committed )
+    std::vector<Float>* _sufficient_statistics_committed )
 {
     assert( max_ix_ >= 0 );
 
@@ -54,22 +54,22 @@ void OptimizationCriterionImpl::commit(
 
 // ----------------------------------------------------------------------------
 
-std::deque<std::vector<AUTOSQL_FLOAT>>
+std::deque<std::vector<Float>>
 OptimizationCriterionImpl::reduce_sufficient_statistics_stored() const
 {
-    std::deque<std::vector<AUTOSQL_FLOAT>> sufficient_statistics_global;
+    std::deque<std::vector<Float>> sufficient_statistics_global;
 
     for ( const auto& local : sufficient_statistics_stored() )
         {
             sufficient_statistics_global.push_back(
-                std::vector<AUTOSQL_FLOAT>( local.size() ) );
+                std::vector<Float>( local.size() ) );
 
             multithreading::all_reduce(
                 *comm_,                                      // comm
                 local.data(),                                // in_values
                 local.size(),                                // n
                 sufficient_statistics_global.back().data(),  // out_values
-                std::plus<AUTOSQL_FLOAT>()                   // op
+                std::plus<Float>()                   // op
             );
 
             comm_->barrier();
@@ -81,8 +81,8 @@ OptimizationCriterionImpl::reduce_sufficient_statistics_stored() const
 // ----------------------------------------------------------------------------
 
 void OptimizationCriterionImpl::reset(
-    std::vector<AUTOSQL_FLOAT>* _sufficient_statistics_current,
-    std::vector<AUTOSQL_FLOAT>* _sufficient_statistics_committed )
+    std::vector<Float>* _sufficient_statistics_current,
+    std::vector<Float>* _sufficient_statistics_committed )
 {
     std::fill(
         _sufficient_statistics_committed->begin(),
@@ -100,16 +100,16 @@ void OptimizationCriterionImpl::reset(
 // ----------------------------------------------------------------------------
 
 void OptimizationCriterionImpl::store_current_stage(
-    const AUTOSQL_FLOAT _num_samples_smaller,
-    const AUTOSQL_FLOAT _num_samples_greater,
-    const std::vector<AUTOSQL_FLOAT>& _sufficient_statistics_current )
+    const Float _num_samples_smaller,
+    const Float _num_samples_greater,
+    const std::vector<Float>& _sufficient_statistics_current )
 {
     // num_samples_smaller and num_samples_greater are always the elements
     // in the last two columns of sufficient_statistics_stored_, which is
     // why sufficient_statistics_stored_ has two extra columns over ..._current
     // and ..._committed.
 
-    sufficient_statistics_stored_.push_back( std::vector<AUTOSQL_FLOAT>(
+    sufficient_statistics_stored_.push_back( std::vector<Float>(
         _sufficient_statistics_current.size() + 2 ) );
 
     std::copy(
@@ -128,9 +128,9 @@ void OptimizationCriterionImpl::store_current_stage(
 // ----------------------------------------------------------------------------
 
 void OptimizationCriterionImpl::update_yhat_old(
-    const std::vector<std::vector<AUTOSQL_FLOAT>>& _residuals,
-    const std::vector<AUTOSQL_FLOAT>& _sample_weights,
-    const std::vector<AUTOSQL_FLOAT>& _yhat_new )
+    const std::vector<std::vector<Float>>& _residuals,
+    const std::vector<Float>& _sample_weights,
+    const std::vector<Float>& _yhat_new )
 {
     // ----------------------------------------------------------------
 
@@ -172,7 +172,7 @@ void OptimizationCriterionImpl::update_yhat_old(
 
             for ( size_t i = 0; i < predictions[j].size(); ++i )
                 {
-                    const AUTOSQL_FLOAT update =
+                    const Float update =
                         predictions[j][i] * update_rates[j] * shrinkage;
 
                     yhat_old_[j][i] +=

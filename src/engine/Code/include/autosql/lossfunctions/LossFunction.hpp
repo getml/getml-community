@@ -18,17 +18,17 @@ class LossFunction
 
     // This calculates the gradient of the loss function w.r.t.
     // the current prediction
-    virtual std::vector<std::vector<AUTOSQL_FLOAT>> calculate_residuals(
-        const std::vector<std::vector<AUTOSQL_FLOAT>>& _yhat_old,
+    virtual std::vector<std::vector<Float>> calculate_residuals(
+        const std::vector<std::vector<Float>>& _yhat_old,
         const containers::DataFrameView& _y ) = 0;
 
     // This calculates the optimal update rate at which we need
     // to add _yhat to _yhat_old
-    virtual std::vector<AUTOSQL_FLOAT> calculate_update_rates(
-        const std::vector<std::vector<AUTOSQL_FLOAT>>& _yhat_old,
-        const std::vector<std::vector<AUTOSQL_FLOAT>>& _predictions,
+    virtual std::vector<Float> calculate_update_rates(
+        const std::vector<std::vector<Float>>& _yhat_old,
+        const std::vector<std::vector<Float>>& _predictions,
         const containers::DataFrameView& _y,
-        const std::vector<AUTOSQL_FLOAT>& _sample_weights ) = 0;
+        const std::vector<Float>& _sample_weights ) = 0;
 
     // Returns a string describing this loss functioni
     virtual std::string type() const = 0;

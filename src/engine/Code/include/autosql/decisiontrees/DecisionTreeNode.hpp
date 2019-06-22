@@ -11,7 +11,7 @@ class DecisionTreeNode
 {
    public:
     DecisionTreeNode(
-        bool _is_activated, AUTOSQL_INT _depth, const DecisionTreeImpl *_tree );
+        bool _is_activated, Int _depth, const DecisionTreeImpl *_tree );
 
     ~DecisionTreeNode() = default;
 
@@ -33,8 +33,8 @@ class DecisionTreeNode
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
         const std::vector<containers::ColumnView<
-            AUTOSQL_FLOAT,
-            std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
+            Float,
+            std::map<Int, Int>>> &_subfeatures,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end );
 
@@ -62,8 +62,8 @@ class DecisionTreeNode
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
         const std::vector<containers::ColumnView<
-            AUTOSQL_FLOAT,
-            std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
+            Float,
+            std::map<Int, Int>>> &_subfeatures,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end,
         aggregations::AbstractAggregation *_aggregation ) const;
@@ -100,12 +100,12 @@ class DecisionTreeNode
     }
 
     /// Calculates the appropriate number of critical values
-    inline AUTOSQL_INT calculate_num_critical_values(
+    inline Int calculate_num_critical_values(
         size_t _num_samples_on_node )
     {
         return std::max(
-            static_cast<AUTOSQL_INT>(
-                tree_->grid_factor() * std::sqrt( static_cast<AUTOSQL_FLOAT>(
+            static_cast<Int>(
+                tree_->grid_factor() * std::sqrt( static_cast<Float>(
                                            _num_samples_on_node ) ) ),
             1 );
     }
@@ -121,7 +121,7 @@ class DecisionTreeNode
     }
 
     /// Trivial accessor
-    inline const std::vector<AUTOSQL_INT> &categories_used() const
+    inline const std::vector<Int> &categories_used() const
     {
         assert( split_ );
         assert(
@@ -134,7 +134,7 @@ class DecisionTreeNode
     }
 
     /// Trivial accessor
-    inline std::vector<AUTOSQL_INT>::const_iterator categories_used_begin()
+    inline std::vector<Int>::const_iterator categories_used_begin()
         const
     {
         assert( split_ );
@@ -142,7 +142,7 @@ class DecisionTreeNode
     }
 
     /// Trivial accessor
-    inline std::vector<AUTOSQL_INT>::const_iterator categories_used_end() const
+    inline std::vector<Int>::const_iterator categories_used_end() const
     {
         assert( split_ );
         return split_->categories_used_end;
@@ -156,14 +156,14 @@ class DecisionTreeNode
     }
 
     /// Trivial accessor
-    inline AUTOSQL_INT column_used() const
+    inline Int column_used() const
     {
         assert( split_ );
         return split_->column_used;
     }
 
     /// Trivial accessor
-    inline AUTOSQL_FLOAT critical_value() const
+    inline Float critical_value() const
     {
         assert( split_ );
         return split_->critical_value;
@@ -187,25 +187,25 @@ class DecisionTreeNode
     }
 
     /// Non-trivial getter
-    const AUTOSQL_INT get_same_unit_categorical(
+    const Int get_same_unit_categorical(
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
         const containers::Match *_sample,
-        const AUTOSQL_INT _col ) const
+        const Int _col ) const
     {
-        const AUTOSQL_INT col1 =
+        const Int col1 =
             std::get<0>( tree_->same_units_categorical()[_col] ).ix_column_used;
 
-        const AUTOSQL_INT col2 =
+        const Int col2 =
             std::get<1>( tree_->same_units_categorical()[_col] ).ix_column_used;
 
-        const AUTOSQL_INT val1 =
+        const Int val1 =
             ( std::get<0>( tree_->same_units_categorical()[_col] ).data_used ==
               enums::DataUsed::x_perip_categorical )
                 ? ( get_x_perip_categorical( _peripheral, _sample, col1 ) )
                 : ( get_x_popul_categorical( _population, _sample, col1 ) );
 
-        const AUTOSQL_INT val2 =
+        const Int val2 =
             ( std::get<1>( tree_->same_units_categorical()[_col] ).data_used ==
               enums::DataUsed::x_perip_categorical )
                 ? ( get_x_perip_categorical( _peripheral, _sample, col2 ) )
@@ -217,19 +217,19 @@ class DecisionTreeNode
     }
 
     /// Non-trivial getter
-    const AUTOSQL_FLOAT get_same_unit_discrete(
+    const Float get_same_unit_discrete(
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
         const containers::Match *_sample,
-        const AUTOSQL_INT _col ) const
+        const Int _col ) const
     {
-        const AUTOSQL_INT col1 =
+        const Int col1 =
             std::get<0>( tree_->same_units_discrete()[_col] ).ix_column_used;
 
-        const AUTOSQL_INT col2 =
+        const Int col2 =
             std::get<1>( tree_->same_units_discrete()[_col] ).ix_column_used;
 
-        AUTOSQL_FLOAT val1 = 0.0;
+        Float val1 = 0.0;
 
         switch ( std::get<0>( tree_->same_units_discrete()[_col] ).data_used )
             {
@@ -247,7 +247,7 @@ class DecisionTreeNode
                     break;
             }
 
-        AUTOSQL_FLOAT val2 = 0.0;
+        Float val2 = 0.0;
 
         switch ( std::get<1>( tree_->same_units_discrete()[_col] ).data_used )
             {
@@ -269,19 +269,19 @@ class DecisionTreeNode
     }
 
     /// Non-trivial getter
-    const AUTOSQL_FLOAT get_same_unit_numerical(
+    const Float get_same_unit_numerical(
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
         const containers::Match *_sample,
-        const AUTOSQL_INT _col ) const
+        const Int _col ) const
     {
-        const AUTOSQL_INT col1 =
+        const Int col1 =
             std::get<0>( tree_->same_units_numerical()[_col] ).ix_column_used;
 
-        const AUTOSQL_INT col2 =
+        const Int col2 =
             std::get<1>( tree_->same_units_numerical()[_col] ).ix_column_used;
 
-        AUTOSQL_FLOAT val1 = 0.0;
+        Float val1 = 0.0;
 
         switch ( std::get<0>( tree_->same_units_numerical()[_col] ).data_used )
             {
@@ -298,7 +298,7 @@ class DecisionTreeNode
                     break;
             }
 
-        AUTOSQL_FLOAT val2 = 0.0;
+        Float val2 = 0.0;
 
         switch ( std::get<1>( tree_->same_units_numerical()[_col] ).data_used )
             {
@@ -319,7 +319,7 @@ class DecisionTreeNode
     }
 
     /// Trivial getter
-    inline const AUTOSQL_FLOAT get_time_stamps_diff(
+    inline const Float get_time_stamps_diff(
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
         const containers::Match *_sample ) const
@@ -329,7 +329,7 @@ class DecisionTreeNode
     }
 
     /// Trivial getter
-    inline const AUTOSQL_INT get_x_perip_categorical(
+    inline const Int get_x_perip_categorical(
         const containers::DataFrame &_peripheral,
         const containers::Match *_sample,
         const size_t _col ) const
@@ -338,7 +338,7 @@ class DecisionTreeNode
     }
 
     /// Trivial getter
-    inline const AUTOSQL_FLOAT get_x_perip_numerical(
+    inline const Float get_x_perip_numerical(
         const containers::DataFrame &_peripheral,
         const containers::Match *_sample,
         const size_t _col ) const
@@ -347,7 +347,7 @@ class DecisionTreeNode
     }
 
     /// Trivial getter
-    inline const AUTOSQL_FLOAT get_x_perip_discrete(
+    inline const Float get_x_perip_discrete(
         const containers::DataFrame &_peripheral,
         const containers::Match *_sample,
         const size_t _col ) const
@@ -356,7 +356,7 @@ class DecisionTreeNode
     }
 
     /// Trivial getter
-    inline const AUTOSQL_INT get_x_popul_categorical(
+    inline const Int get_x_popul_categorical(
         const containers::DataFrameView &_population,
         const containers::Match *_sample,
         const size_t _col ) const
@@ -365,7 +365,7 @@ class DecisionTreeNode
     }
 
     /// Trivial getter
-    inline const AUTOSQL_FLOAT get_x_popul_numerical(
+    inline const Float get_x_popul_numerical(
         const containers::DataFrameView &_population,
         const containers::Match *_sample,
         const size_t _col ) const
@@ -374,7 +374,7 @@ class DecisionTreeNode
     }
 
     /// Trivial getter
-    inline const AUTOSQL_FLOAT get_x_popul_discrete(
+    inline const Float get_x_popul_discrete(
         const containers::DataFrameView &_population,
         const containers::Match *_sample,
         const size_t _col ) const
@@ -383,10 +383,10 @@ class DecisionTreeNode
     }
 
     /// Trivial getter
-    inline const AUTOSQL_FLOAT get_x_subfeature(
+    inline const Float get_x_subfeature(
         const std::vector<containers::ColumnView<
-            AUTOSQL_FLOAT,
-            std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
+            Float,
+            std::map<Int, Int>>> &_subfeatures,
         const containers::Match *_sample,
         const size_t _col ) const
     {
@@ -395,7 +395,7 @@ class DecisionTreeNode
     }
 
     /// Trivial getter
-    const AUTOSQL_INT ix_perip_used() const { return tree_->ix_perip_used(); }
+    const Int ix_perip_used() const { return tree_->ix_perip_used(); }
 
     /// Trivial accessor
     inline optimizationcriteria::OptimizationCriterion *optimization_criterion()
@@ -462,21 +462,21 @@ class DecisionTreeNode
 
     /// Calculates the beginning and end of the categorical
     /// values considered
-    std::shared_ptr<const std::vector<AUTOSQL_INT>> calculate_categories(
+    std::shared_ptr<const std::vector<Int>> calculate_categories(
         const size_t _sample_size,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end );
 
     /// Given the sorted sample containers, this returns the critical_values
     /// for discrete values
-    std::vector<AUTOSQL_FLOAT> calculate_critical_values_discrete(
+    std::vector<Float> calculate_critical_values_discrete(
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end,
         const size_t _sample_size );
 
     /// Given the sorted sample containers, this returns the critical_values
     /// for numerical values
-    std::vector<AUTOSQL_FLOAT> calculate_critical_values_numerical(
+    std::vector<Float> calculate_critical_values_numerical(
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end,
         const size_t _sample_size );
@@ -486,8 +486,8 @@ class DecisionTreeNode
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
         const std::vector<containers::ColumnView<
-            AUTOSQL_FLOAT,
-            std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
+            Float,
+            std::map<Int, Int>>> &_subfeatures,
         const descriptors::Split &_split,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end );
@@ -523,8 +523,8 @@ class DecisionTreeNode
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
         const std::vector<containers::ColumnView<
-            AUTOSQL_FLOAT,
-            std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
+            Float,
+            std::map<Int, Int>>> &_subfeatures,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) const;
 
@@ -547,8 +547,8 @@ class DecisionTreeNode
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
         const std::vector<containers::ColumnView<
-            AUTOSQL_FLOAT,
-            std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
+            Float,
+            std::map<Int, Int>>> &_subfeatures,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _null_values_separator,
         containers::MatchPtrs::iterator _sample_container_end );
@@ -571,7 +571,7 @@ class DecisionTreeNode
 
     /// Tries whether the categorical values might constitute a good split
     void try_categorical_values(
-        const AUTOSQL_INT _column_used,
+        const Int _column_used,
         const enums::DataUsed _data_used,
         const size_t _sample_size,
         containers::MatchPtrs::iterator _sample_container_begin,
@@ -583,8 +583,8 @@ class DecisionTreeNode
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
         const std::vector<containers::ColumnView<
-            AUTOSQL_FLOAT,
-            std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
+            Float,
+            std::map<Int, Int>>> &_subfeatures,
         const size_t _sample_size,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end,
@@ -624,7 +624,7 @@ class DecisionTreeNode
 
     /// Tries whether the discrete values might constitute a good split
     void try_discrete_values(
-        const AUTOSQL_INT _column_used,
+        const Int _column_used,
         const enums::DataUsed _data_used,
         const size_t _sample_size,
         containers::MatchPtrs::iterator _sample_container_begin,
@@ -633,10 +633,10 @@ class DecisionTreeNode
 
     /// Called by try_discrete_values(...) and try_numerical_values(...)
     void try_non_categorical_values(
-        const AUTOSQL_INT _column_used,
+        const Int _column_used,
         const enums::DataUsed _data_used,
         const size_t _sample_size,
-        const std::vector<AUTOSQL_FLOAT> _critical_values,
+        const std::vector<Float> _critical_values,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _null_values_separator,
         containers::MatchPtrs::iterator _sample_container_end,
@@ -644,7 +644,7 @@ class DecisionTreeNode
 
     /// Tries whether the numerical values might constitute a good split
     void try_numerical_values(
-        const AUTOSQL_INT _column_used,
+        const Int _column_used,
         const enums::DataUsed _data_used,
         const size_t _sample_size,
         containers::MatchPtrs::iterator _sample_container_begin,
@@ -707,7 +707,7 @@ class DecisionTreeNode
     containers::Optional<DecisionTreeNode> child_node_smaller_;
 
     /// Depth at this node
-    AUTOSQL_INT depth_;
+    Int depth_;
 
     /// Denotes whether this is an activated
     /// or a deactivated node. If this is an activated node,
@@ -728,7 +728,7 @@ class DecisionTreeNode
 // ----------------------------------------------------------------------------
 
 // This is templated, because it makes a difference whether _critical_value
-// is of type AUTOSQL_FLOAT or or type std::vector<AUTOSQL_FLOAT>
+// is of type Float or or type std::vector<Float>
 
 template <typename T>
 void DecisionTreeNode::apply_by_critical_value(

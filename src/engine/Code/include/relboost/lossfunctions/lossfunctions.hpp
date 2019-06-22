@@ -17,7 +17,8 @@
 
 #include "multithreading/multithreading.hpp"
 
-#include "relboost/types.hpp"
+#include "relboost/Float.hpp"
+#include "relboost/Int.hpp"
 
 #include "relboost/Hyperparameters.hpp"
 

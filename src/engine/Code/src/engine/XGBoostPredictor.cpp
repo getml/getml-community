@@ -27,7 +27,7 @@ XGBoostPredictor::allocate_booster(
 
 std::unique_ptr<DMatrixHandle, XGBoostPredictor::DMatrixDestructor>
 XGBoostPredictor::convert_to_dmatrix(
-    const containers::Matrix<ENGINE_FLOAT> &_mat ) const
+    const containers::Matrix<Float> &_mat ) const
 {
     containers::Matrix<float> mat_float( _mat.nrows(), _mat.ncols() );
 
@@ -35,7 +35,7 @@ XGBoostPredictor::convert_to_dmatrix(
         _mat.begin(),
         _mat.end(),
         mat_float.begin(),
-        []( const ENGINE_FLOAT val ) { return static_cast<float>( val ); } );
+        []( const Float val ) { return static_cast<float>( val ); } );
 
     DMatrixHandle *d_matrix = new DMatrixHandle;
 
@@ -57,7 +57,7 @@ XGBoostPredictor::convert_to_dmatrix(
 
 // ------------------------------------------------------------------------
 
-std::vector<ENGINE_FLOAT> XGBoostPredictor::feature_importances(
+std::vector<Float> XGBoostPredictor::feature_importances(
     const size_t _num_features ) const
 {
     // --------------------------------------------------------------------
@@ -85,7 +85,7 @@ std::vector<ENGINE_FLOAT> XGBoostPredictor::feature_importances(
     // --------------------------------------------------------------------
     // Parse dump
 
-    std::vector<ENGINE_FLOAT> feature_importances( _num_features );
+    std::vector<Float> feature_importances( _num_features );
 
     for ( bst_ulong i = 0; i < out_len; ++i )
         {
@@ -95,7 +95,7 @@ std::vector<ENGINE_FLOAT> XGBoostPredictor::feature_importances(
     // --------------------------------------------------------------------
     // Normalize feature importances
 
-    ENGINE_FLOAT sum_importances = std::accumulate(
+    Float sum_importances = std::accumulate(
         feature_importances.begin(), feature_importances.end(), 0.0 );
 
     for ( auto &val : feature_importances )
@@ -117,8 +117,8 @@ std::vector<ENGINE_FLOAT> XGBoostPredictor::feature_importances(
 
 std::string XGBoostPredictor::fit(
     const std::shared_ptr<const monitoring::Logger> _logger,
-    const containers::Matrix<ENGINE_FLOAT> &_X,
-    const containers::Matrix<ENGINE_FLOAT> &_y )
+    const containers::Matrix<Float> &_X,
+    const containers::Matrix<Float> &_y )
 {
     // --------------------------------------------------------------------
 
@@ -136,7 +136,7 @@ std::string XGBoostPredictor::fit(
     containers::Matrix<float> y_float( _y.nrows(), 1 );
 
     std::transform(
-        _y.begin(), _y.end(), y_float.begin(), []( const ENGINE_FLOAT val ) {
+        _y.begin(), _y.end(), y_float.begin(), []( const Float val ) {
             return static_cast<float>( val );
         } );
 
@@ -349,7 +349,7 @@ void XGBoostPredictor::load( const std::string &_fname )
 
 void XGBoostPredictor::parse_dump(
     const std::string &_dump,
-    std::vector<ENGINE_FLOAT> *_feature_importances ) const
+    std::vector<Float> *_feature_importances ) const
 {
     // ----------------------------------------------------------------
     // Split _dump
@@ -419,7 +419,7 @@ void XGBoostPredictor::parse_dump(
 
                             assert( end != std::string::npos );
 
-                            ENGINE_FLOAT gain =
+                            Float gain =
                                 std::stod( line.substr( begin, end - begin ) );
 
                             // -----------------------
@@ -435,8 +435,8 @@ void XGBoostPredictor::parse_dump(
 
 // ------------------------------------------------------------------------
 
-containers::Matrix<ENGINE_FLOAT> XGBoostPredictor::predict(
-    const containers::Matrix<ENGINE_FLOAT> &_X ) const
+containers::Matrix<Float> XGBoostPredictor::predict(
+    const containers::Matrix<Float> &_X ) const
 {
     // --------------------------------------------------------------------
 
@@ -463,7 +463,7 @@ containers::Matrix<ENGINE_FLOAT> XGBoostPredictor::predict(
     // --------------------------------------------------------------------
     // Generate predictions
 
-    containers::Matrix<ENGINE_FLOAT> yhat( _X.nrows(), 1 );
+    containers::Matrix<Float> yhat( _X.nrows(), 1 );
 
     bst_ulong nrows = 0;
 
@@ -479,7 +479,7 @@ containers::Matrix<ENGINE_FLOAT> XGBoostPredictor::predict(
 
     std::transform(
         yhat_float, yhat_float + nrows, yhat.begin(), []( const float val ) {
-            return static_cast<ENGINE_FLOAT>( val );
+            return static_cast<Float>( val );
         } );
 
     // --------------------------------------------------------------------

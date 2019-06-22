@@ -23,7 +23,7 @@ template <>
 struct Finder<enums::DataUsed::discrete_input>
 {
     static std::vector<const containers::Match*>::iterator next_split(
-        const RELBOOST_FLOAT _cv,
+        const Float _cv,
         const size_t _num_column,
         const containers::DataFrame& _input,
         const std::vector<const containers::Match*>::iterator _begin,
@@ -45,7 +45,7 @@ template <>
 struct Finder<enums::DataUsed::discrete_output>
 {
     static std::vector<const containers::Match*>::iterator next_split(
-        const RELBOOST_FLOAT _cv,
+        const Float _cv,
         const size_t _num_column,
         const containers::DataFrameView& _output,
         const std::vector<const containers::Match*>::iterator _begin,
@@ -67,7 +67,7 @@ template <>
 struct Finder<enums::DataUsed::numerical_input>
 {
     static std::vector<const containers::Match*>::iterator next_split(
-        const RELBOOST_FLOAT _cv,
+        const Float _cv,
         const size_t _num_column,
         const containers::DataFrame& _input,
         const std::vector<const containers::Match*>::iterator _begin,
@@ -89,7 +89,7 @@ template <>
 struct Finder<enums::DataUsed::numerical_output>
 {
     static std::vector<const containers::Match*>::iterator next_split(
-        const RELBOOST_FLOAT _cv,
+        const Float _cv,
         const size_t _num_column,
         const containers::DataFrameView& _output,
         const std::vector<const containers::Match*>::iterator _begin,
@@ -111,7 +111,7 @@ template <>
 struct Finder<enums::DataUsed::same_units_discrete>
 {
     static std::vector<const containers::Match*>::iterator next_split(
-        const RELBOOST_FLOAT _cv,
+        const Float _cv,
         const size_t _input_col,
         const size_t _output_col,
         const containers::DataFrame& _input,
@@ -143,7 +143,7 @@ template <>
 struct Finder<enums::DataUsed::same_units_numerical>
 {
     static std::vector<const containers::Match*>::iterator next_split(
-        const RELBOOST_FLOAT _cv,
+        const Float _cv,
         const size_t _input_col,
         const size_t _output_col,
         const containers::DataFrame& _input,
@@ -175,7 +175,7 @@ template <>
 struct Finder<enums::DataUsed::time_stamps_diff>
 {
     static std::vector<const containers::Match*>::iterator next_split(
-        const RELBOOST_FLOAT _cv,
+        const Float _cv,
         const containers::DataFrame& _input,
         const containers::DataFrameView& _output,
         const std::vector<const containers::Match*>::iterator _begin,

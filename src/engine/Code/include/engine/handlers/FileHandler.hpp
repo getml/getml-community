@@ -122,11 +122,11 @@ struct FileHandler
 template <class MatrixType>
 std::string FileHandler::file_ending()
 {
-    if ( std::is_same<MatrixType, containers::Matrix<ENGINE_FLOAT>>::value )
+    if ( std::is_same<MatrixType, containers::Matrix<Float>>::value )
         {
             return ".mat";
         }
-    else if ( std::is_same<MatrixType, containers::Matrix<ENGINE_INT>>::value )
+    else if ( std::is_same<MatrixType, containers::Matrix<Int>>::value )
         {
             return ".key";
         }

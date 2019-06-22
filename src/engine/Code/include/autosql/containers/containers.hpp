@@ -13,12 +13,14 @@
 #include <memory>
 #include <type_traits>
 #include <vector>
+#include <unordered_map>
 
 #include <Poco/JSON/Object.h>
 
 #include "debug/debug.hpp"
 
-#include "autosql/types.hpp"
+#include "autosql/Float.hpp"
+#include "autosql/Int.hpp"
 
 #include "autosql/JSON.hpp"
 

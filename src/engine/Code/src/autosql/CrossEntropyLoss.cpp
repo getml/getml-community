@@ -11,14 +11,14 @@ CrossEntropyLoss::CrossEntropyLoss( multithreading::Communicator* _comm )
 
 // ----------------------------------------------------------------------------
 
-std::vector<std::vector<AUTOSQL_FLOAT>> CrossEntropyLoss::calculate_residuals(
-    const std::vector<std::vector<AUTOSQL_FLOAT>>& _yhat_old,
+std::vector<std::vector<Float>> CrossEntropyLoss::calculate_residuals(
+    const std::vector<std::vector<Float>>& _yhat_old,
     const containers::DataFrameView& _y )
 {
     assert( _yhat_old.size() == _y.num_targets() );
 
-    auto residuals = std::vector<std::vector<AUTOSQL_FLOAT>>(
-        _y.num_targets(), std::vector<AUTOSQL_FLOAT>( _y.nrows() ) );
+    auto residuals = std::vector<std::vector<Float>>(
+        _y.num_targets(), std::vector<Float>( _y.nrows() ) );
 
     for ( size_t j = 0; j < _y.num_targets(); ++j )
         {
@@ -39,11 +39,11 @@ std::vector<std::vector<AUTOSQL_FLOAT>> CrossEntropyLoss::calculate_residuals(
 
 // ----------------------------------------------------------------------------
 
-std::vector<AUTOSQL_FLOAT> CrossEntropyLoss::calculate_update_rates(
-    const std::vector<std::vector<AUTOSQL_FLOAT>>& _yhat_old,
-    const std::vector<std::vector<AUTOSQL_FLOAT>>& _predictions,
+std::vector<Float> CrossEntropyLoss::calculate_update_rates(
+    const std::vector<std::vector<Float>>& _yhat_old,
+    const std::vector<std::vector<Float>>& _predictions,
     const containers::DataFrameView& _y,
-    const std::vector<AUTOSQL_FLOAT>& _sample_weights )
+    const std::vector<Float>& _sample_weights )
 {
     // ---------------------------------------------------
 
@@ -53,11 +53,11 @@ std::vector<AUTOSQL_FLOAT> CrossEntropyLoss::calculate_update_rates(
     // ---------------------------------------------------
     // Calculate g_times_f and h_times_f_squared
 
-    auto stats = std::vector<AUTOSQL_FLOAT>( _y.num_targets() * 2 );
+    auto stats = std::vector<Float>( _y.num_targets() * 2 );
 
-    AUTOSQL_FLOAT* g_times_p = stats.data();
+    Float* g_times_p = stats.data();
 
-    AUTOSQL_FLOAT* h_times_p_squared = stats.data() + _y.num_targets();
+    Float* h_times_p_squared = stats.data() + _y.num_targets();
 
     for ( size_t j = 0; j < _y.num_targets(); ++j )
         {
@@ -77,12 +77,12 @@ std::vector<AUTOSQL_FLOAT> CrossEntropyLoss::calculate_update_rates(
                 }
         }
 
-    utils::Reducer::reduce( std::plus<AUTOSQL_FLOAT>(), &stats, comm_ );
+    utils::Reducer::reduce( std::plus<Float>(), &stats, comm_ );
 
     // ---------------------------------------------------
     // Calculate update_rates
 
-    std::vector<AUTOSQL_FLOAT> update_rates( _y.num_targets() );
+    std::vector<Float> update_rates( _y.num_targets() );
 
     for ( size_t j = 0; j < _y.num_targets(); ++j )
         {
@@ -92,7 +92,7 @@ std::vector<AUTOSQL_FLOAT> CrossEntropyLoss::calculate_update_rates(
     // ---------------------------------------------------
     // Make sure that update_rates are in range
 
-    auto in_range = []( AUTOSQL_FLOAT& val ) {
+    auto in_range = []( Float& val ) {
         val = ( ( std::isnan( val ) || std::isinf( val ) ) ? 0.0 : val );
     };
 

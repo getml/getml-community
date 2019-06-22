@@ -21,7 +21,7 @@ class CandidateTreeBuilder
         const decisiontrees::TableHolder &_table_holder,
         const std::shared_ptr<const std::vector<std::string>> &_categories,
         const std::vector<descriptors::SameUnits> &_same_units,
-        const AUTOSQL_INT _ix_feature,
+        const Int _ix_feature,
         const descriptors::Hyperparameters &_hyperparameters,
         containers::Optional<aggregations::AggregationImpl> *_aggregation_impl,
         std::mt19937 *_random_number_generator,
@@ -36,7 +36,7 @@ class CandidateTreeBuilder
         const std::shared_ptr<const std::vector<std::string>> &_categories,
         const std::vector<descriptors::SameUnits> &_same_units,
         const descriptors::Hyperparameters &_hyperparameters,
-        const AUTOSQL_INT _ix_perip_used,
+        const Int _ix_perip_used,
         std::mt19937 *_random_number_generator,
         containers::Optional<aggregations::AggregationImpl> *_aggregation_impl,
         multithreading::Communicator *_comm,
@@ -49,7 +49,7 @@ class CandidateTreeBuilder
         const std::shared_ptr<const std::vector<std::string>> &_categories,
         const std::vector<descriptors::SameUnits> &_same_units,
         const descriptors::Hyperparameters &_hyperparameters,
-        const AUTOSQL_INT _ix_perip_used,
+        const Int _ix_perip_used,
         std::mt19937 *_random_number_generator,
         containers::Optional<aggregations::AggregationImpl> *_aggregation_impl,
         multithreading::Communicator *_comm,
@@ -61,7 +61,7 @@ class CandidateTreeBuilder
         const std::shared_ptr<const std::vector<std::string>> &_categories,
         const std::vector<descriptors::SameUnits> &_same_units,
         const descriptors::Hyperparameters &_hyperparameters,
-        const AUTOSQL_INT _ix_perip_used,
+        const Int _ix_perip_used,
         std::mt19937 *_random_number_generator,
         containers::Optional<aggregations::AggregationImpl> *_aggregation_impl,
         multithreading::Communicator *_comm,
@@ -73,7 +73,7 @@ class CandidateTreeBuilder
         const std::shared_ptr<const std::vector<std::string>> &_categories,
         const std::vector<descriptors::SameUnits> &_same_units,
         const descriptors::Hyperparameters &_hyperparameters,
-        const AUTOSQL_INT _ix_perip_used,
+        const Int _ix_perip_used,
         std::mt19937 *_random_number_generator,
         containers::Optional<aggregations::AggregationImpl> *_aggregation_impl,
         multithreading::Communicator *_comm,
@@ -94,15 +94,15 @@ class CandidateTreeBuilder
     static bool is_comparison_only(
         const decisiontrees::TableHolder &_table_holder,
         const enums::DataUsed _data_used,
-        const AUTOSQL_INT _ix_perip_used,
-        const AUTOSQL_INT _ix_column_used );
+        const Int _ix_perip_used,
+        const Int _ix_column_used );
 
     /// When the user provides a _share_aggregations that is not 1.0,
     /// the decisiontrees::DecisionTreeEnsemble actually initializes all trees,
     /// and then removes all but _share_aggregations of trees. This is performed
     /// by this member function.
     static void randomly_remove_candidate_trees(
-        const AUTOSQL_FLOAT _share_aggregations,
+        const Float _share_aggregations,
         std::mt19937 *_random_number_generator,
         multithreading::Communicator *_comm,
         std::list<decisiontrees::DecisionTree> *_candidate_trees );
@@ -110,14 +110,14 @@ class CandidateTreeBuilder
     /// For the round_robin approach, we remove all features but
     /// one - the remaining one is a different one every time.
     static void round_robin(
-        const AUTOSQL_INT _ix_feature,
+        const Int _ix_feature,
         std::list<decisiontrees::DecisionTree> *_candidate_trees );
 
     /// Returns the number of columns
-    static AUTOSQL_INT get_ncols(
+    static Int get_ncols(
         const std::vector<containers::DataFrame> &_peripheral_tables,
         const std::vector<descriptors::SameUnits> &_same_units,
-        const AUTOSQL_INT _ix_perip_used,
+        const Int _ix_perip_used,
         const enums::DataUsed _data_used );
 
     // -------------------------------------------------------------------------

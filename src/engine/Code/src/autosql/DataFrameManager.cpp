@@ -15,9 +15,9 @@ void DataFrameManager::add_categorical_matrix(
 
     const std::string join_key_name = _cmd.AUTOSQL_GET( "join_key_name_" );
 
-    const AUTOSQL_INT num_join_key = _cmd.AUTOSQL_GET( "num_join_key_" );
+    const Int num_join_key = _cmd.AUTOSQL_GET( "num_join_key_" );
 
-    containers::Matrix<AUTOSQL_INT> mat;
+    containers::Matrix<Int> mat;
 
     if ( role == "categorical" )
         {
@@ -242,7 +242,7 @@ void DataFrameManager::get_categorical_matrix(
 
     engine::Sender::send_string( _socket, "Found!" );
 
-    engine::Sender::send_matrix<AUTOSQL_INT>( _socket, true, mat );
+    engine::Sender::send_matrix<Int>( _socket, true, mat );
 }
 
 // ------------------------------------------------------------------------
@@ -288,7 +288,7 @@ void DataFrameManager::get_matrix(
 
     engine::Sender::send_string( _socket, "Found!" );
 
-    engine::Sender::send_matrix<AUTOSQL_FLOAT>( _socket, true, mat );
+    engine::Sender::send_matrix<Float>( _socket, true, mat );
 }
 
 // ------------------------------------------------------------------------

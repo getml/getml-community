@@ -19,7 +19,8 @@
 
 #include "metrics/metrics.hpp"
 
-#include "relboost/types.hpp"
+#include "relboost/Float.hpp"
+#include "relboost/Int.hpp"
 
 #include "debug/debug.hpp"
 

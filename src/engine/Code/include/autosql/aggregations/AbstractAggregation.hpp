@@ -25,8 +25,8 @@ class AbstractAggregation
     /// Activates all samples that contain _category
     /// Used for prediction
     virtual void activate_samples_containing_categories(
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_end,
+        const std::vector<Int>::const_iterator _categories_begin,
+        const std::vector<Int>::const_iterator _categories_end,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) = 0;
 
@@ -34,16 +34,16 @@ class AbstractAggregation
     /// activates samples
     /// Used for training
     virtual void activate_samples_containing_categories(
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_end,
+        const std::vector<Int>::const_iterator _categories_begin,
+        const std::vector<Int>::const_iterator _categories_end,
         const Revert _revert,
         const containers::CategoryIndex &_index ) = 0;
 
     /// Activates all samples that do not contain _category
     /// Used for prediction
     virtual void activate_samples_not_containing_categories(
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_end,
+        const std::vector<Int>::const_iterator _categories_begin,
+        const std::vector<Int>::const_iterator _categories_end,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) = 0;
 
@@ -51,36 +51,36 @@ class AbstractAggregation
     /// activates samples
     /// Used for training
     virtual void activate_samples_not_containing_categories(
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_end,
+        const std::vector<Int>::const_iterator _categories_begin,
+        const std::vector<Int>::const_iterator _categories_end,
         const Revert _revert,
         const containers::CategoryIndex &_index ) = 0;
 
     /// Iterates through the samples and activates those
     /// samples that are greater than the critical value
     virtual void activate_samples_from_above(
-        const AUTOSQL_FLOAT _critical_value,
+        const Float _critical_value,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) = 0;
 
     /// Iterates through the samples and activates them
     /// starting with the greatest
     virtual void activate_samples_from_above(
-        const std::vector<AUTOSQL_FLOAT> &_critical_values,
+        const std::vector<Float> &_critical_values,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) = 0;
 
     /// Iterates through the samples and activates those
     /// samples that smaller than or equal to the critical value
     virtual void activate_samples_from_below(
-        const AUTOSQL_FLOAT _critical_value,
+        const Float _critical_value,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) = 0;
 
     /// Iterates through the samples and activates them
     /// starting with the smallest
     virtual void activate_samples_from_below(
-        const std::vector<AUTOSQL_FLOAT> &_critical_values,
+        const std::vector<Float> &_critical_values,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) = 0;
 
@@ -99,8 +99,8 @@ class AbstractAggregation
     /// Deactivates all samples that contains _category
     /// Used for prediction
     virtual void deactivate_samples_containing_categories(
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_end,
+        const std::vector<Int>::const_iterator _categories_begin,
+        const std::vector<Int>::const_iterator _categories_end,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) = 0;
 
@@ -108,44 +108,44 @@ class AbstractAggregation
     /// deactivates samples
     /// Used for training
     virtual void deactivate_samples_containing_categories(
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_end,
+        const std::vector<Int>::const_iterator _categories_begin,
+        const std::vector<Int>::const_iterator _categories_end,
         const Revert _revert,
         const containers::CategoryIndex &_index ) = 0;
 
     /// Iterates through the samples and deactivates those
     /// samples that are greater than the critical value
     virtual void deactivate_samples_from_above(
-        const AUTOSQL_FLOAT _critical_value,
+        const Float _critical_value,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) = 0;
 
     /// Iterates through the samples and deactivates them
     /// starting with the greatest
     virtual void deactivate_samples_from_above(
-        const std::vector<AUTOSQL_FLOAT> &_critical_values,
+        const std::vector<Float> &_critical_values,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) = 0;
 
     /// Iterates through the samples and deactivates those
     /// samples that smaller than or equal to the critical value
     virtual void deactivate_samples_from_below(
-        const AUTOSQL_FLOAT _critical_value,
+        const Float _critical_value,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) = 0;
 
     /// Iterates through the samples and deactivates them
     /// starting with the smallest
     virtual void deactivate_samples_from_below(
-        const std::vector<AUTOSQL_FLOAT> &_critical_values,
+        const std::vector<Float> &_critical_values,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) = 0;
 
     /// Dectivates all samples that do not contain _category
     /// Used for prediction
     virtual void deactivate_samples_not_containing_categories(
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_end,
+        const std::vector<Int>::const_iterator _categories_begin,
+        const std::vector<Int>::const_iterator _categories_end,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) = 0;
 
@@ -153,8 +153,8 @@ class AbstractAggregation
     /// deactivates samples
     /// Used for training
     virtual void deactivate_samples_not_containing_categories(
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_begin,
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_end,
+        const std::vector<Int>::const_iterator _categories_begin,
+        const std::vector<Int>::const_iterator _categories_end,
         const Revert _revert,
         const containers::CategoryIndex &_index ) = 0;
 
@@ -210,25 +210,25 @@ class AbstractAggregation
 
     /// Trivial setter
     virtual void set_value_to_be_aggregated(
-        const containers::Column<AUTOSQL_FLOAT> &_value_to_be_aggregated ) = 0;
+        const containers::Column<Float> &_value_to_be_aggregated ) = 0;
 
     /// Trivial setter
     virtual void set_value_to_be_aggregated(
         const containers::ColumnView<
-            AUTOSQL_FLOAT,
-            std::map<AUTOSQL_INT, AUTOSQL_INT>> &_value_to_be_aggregated ) = 0;
+            Float,
+            std::map<Int, Int>> &_value_to_be_aggregated ) = 0;
 
     /// Trivial setter
     virtual void set_value_to_be_aggregated(
-        const containers::Column<AUTOSQL_INT> &_value_to_be_aggregated ) = 0;
+        const containers::Column<Int> &_value_to_be_aggregated ) = 0;
 
     /// Trivial setter
     virtual void set_value_to_be_compared(
-        const containers::Column<AUTOSQL_FLOAT> &_value_to_be_compared ) = 0;
+        const containers::Column<Float> &_value_to_be_compared ) = 0;
 
     /// Trivial setter
     virtual void set_value_to_be_compared(
-        const containers::ColumnView<AUTOSQL_FLOAT, std::vector<size_t>>
+        const containers::ColumnView<Float, std::vector<size_t>>
             &_value_to_be_compared ) = 0;
 
     /// Sorts the samples by value to be aggregated (within the element in
@@ -243,11 +243,11 @@ class AbstractAggregation
     /// Updates the optimization criterion, makes it store its
     /// current stage and clears updates_current_
     virtual void update_optimization_criterion_and_clear_updates_current(
-        const AUTOSQL_FLOAT _num_samples_smaller,
-        const AUTOSQL_FLOAT _num_samples_greater ) = 0;
+        const Float _num_samples_smaller,
+        const Float _num_samples_greater ) = 0;
 
     /// Returns a reference to the predictions stored by the aggregation
-    virtual std::vector<AUTOSQL_FLOAT> &yhat() = 0;
+    virtual std::vector<Float> &yhat() = 0;
 };
 
 // ----------------------------------------------------------------------------

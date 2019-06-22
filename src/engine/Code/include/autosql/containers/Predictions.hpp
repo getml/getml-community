@@ -7,7 +7,7 @@ namespace containers
 {
 // ----------------------------------------------------------------------------
 
-typedef std::vector<std::vector<AUTOSQL_FLOAT>> Predictions;
+typedef std::vector<std::vector<Float>> Predictions;
 
 // ----------------------------------------------------------------------------
 }  // namespace containers

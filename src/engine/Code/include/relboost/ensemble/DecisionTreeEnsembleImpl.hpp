@@ -49,7 +49,7 @@ struct DecisionTreeEnsembleImpl
 
     /// The prediction that we start with before there are any trees (identical
     /// to the average of the targets in the training set).
-    RELBOOST_FLOAT initial_prediction_;
+    Float initial_prediction_;
 
     /// Names of the peripheral tables, as they are referred in placeholder
     std::shared_ptr<const std::vector<std::string>> peripheral_names_;
@@ -70,7 +70,7 @@ struct DecisionTreeEnsembleImpl
     std::vector<decisiontrees::DecisionTree> trees_;
 
     /// Prediction of all previous tress in the ensemble
-    std::vector<RELBOOST_FLOAT> yhat_old_;
+    std::vector<Float> yhat_old_;
 };
 
 // ------------------------------------------------------------------------

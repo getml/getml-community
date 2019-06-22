@@ -75,7 +75,7 @@ class DecisionTreeEnsemble
 
     /// Transforms a set of raw data into extracted features. This is called by
     /// Threadutils.
-    std::shared_ptr<std::vector<AUTOSQL_FLOAT>> transform(
+    std::shared_ptr<std::vector<Float>> transform(
         const containers::DataFrame &_population,
         const std::vector<containers::DataFrame> &_peripheral,
         const std::shared_ptr<const logging::AbstractLogger> _logger =
@@ -88,7 +88,7 @@ class DecisionTreeEnsemble
         containers::Optional<aggregations::AggregationImpl> *_impl ) const;
 
     /// Transforms a specific feature.
-    std::vector<AUTOSQL_FLOAT> transform(
+    std::vector<Float> transform(
         const decisiontrees::TableHolder &_table_holder,
         const std::vector<containers::Subfeatures> &_subfeatures,
         const size_t _num_feature,
@@ -174,7 +174,7 @@ class DecisionTreeEnsemble
    private:
     /// Builds the candidates during fit(...)
     std::list<decisiontrees::DecisionTree> build_candidates(
-        const AUTOSQL_INT _ix_feature,
+        const Int _ix_feature,
         const std::vector<descriptors::SameUnits> &_same_units,
         const decisiontrees::TableHolder &_table_holder );
 
@@ -232,10 +232,10 @@ class DecisionTreeEnsemble
     }
 
     /// Trivial accessor
-    inline decisiontrees::DecisionTree *tree( const AUTOSQL_INT _i )
+    inline decisiontrees::DecisionTree *tree( const Int _i )
     {
         assert( trees().size() > 0 );
-        assert( static_cast<AUTOSQL_INT>( trees().size() ) > _i );
+        assert( static_cast<Int>( trees().size() ) > _i );
 
         return trees().data() + _i;
     }

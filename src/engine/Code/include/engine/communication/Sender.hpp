@@ -12,19 +12,19 @@ struct Sender
     /// Sends data of any kind to the client
     template <class T>
     static void send(
-        const ENGINE_UNSIGNED_LONG _size,
+        const ULong _size,
         const T* _data,
         Poco::Net::StreamSocket* _socket );
 
     /// Sends categorical matrix to the client
     static void send_categorical_matrix(
-        const containers::Matrix<ENGINE_INT>& _matrix,
+        const containers::Matrix<Int>& _matrix,
         const containers::Encoding& _encoding,
         Poco::Net::StreamSocket* _socket );
 
     /// Sends matrix to the client
     static void send_matrix(
-        const containers::Matrix<ENGINE_FLOAT>& _matrix,
+        const containers::Matrix<Float>& _matrix,
         Poco::Net::StreamSocket* _socket );
 
     /// Sends a string to the client
@@ -37,15 +37,15 @@ struct Sender
 
 template <class T>
 void Sender::send(
-    const ENGINE_UNSIGNED_LONG _size,
+    const ULong _size,
     const T* _data,
     Poco::Net::StreamSocket* _socket )
 {
-    const ENGINE_UNSIGNED_LONG len = 4096;
+    const ULong len = 4096;
 
     const bool is_little_endian = utils::Endianness::is_little_endian();
 
-    ENGINE_UNSIGNED_LONG j = 0;
+    ULong j = 0;
 
     std::vector<char> buf( len );
 
@@ -57,7 +57,7 @@ void Sender::send(
             // ---------------------------------------------------------------
             // Copy to buffer
 
-            const ENGINE_UNSIGNED_LONG current_len = std::min( len, _size - j );
+            const ULong current_len = std::min( len, _size - j );
 
             if ( current_len == 0 )
                 {
@@ -69,7 +69,7 @@ void Sender::send(
                     buf.resize( current_len );
                 }
 
-            for ( ENGINE_UNSIGNED_LONG i = 0; i < current_len; ++i, ++j )
+            for ( ULong i = 0; i < current_len; ++i, ++j )
                 {
                     buf.data()[i] = reinterpret_cast<const char*>( _data )[j];
                 }

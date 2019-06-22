@@ -9,7 +9,7 @@ namespace utils
 std::vector<containers::Match> Matchmaker::make_matches(
     const containers::DataFrameView& _population,
     const containers::DataFrame& _peripheral,
-    const std::shared_ptr<const std::vector<AUTOSQL_FLOAT>>& _sample_weights,
+    const std::shared_ptr<const std::vector<Float>>& _sample_weights,
     const bool _use_timestamps )
 {
     std::vector<containers::Match> matches;

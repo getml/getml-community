@@ -7,7 +7,7 @@ namespace lossfunctions
 // ----------------------------------------------------------------------------
 
 void CrossEntropyLoss::calc_gradients(
-    const std::shared_ptr<const std::vector<RELBOOST_FLOAT>>& _yhat_old )
+    const std::shared_ptr<const std::vector<Float>>& _yhat_old )
 {
     // ------------------------------------------------------------------------
 
@@ -32,7 +32,7 @@ void CrossEntropyLoss::calc_gradients(
         yhat_old().end(),
         targets().begin(),
         g_.begin(),
-        [this]( const RELBOOST_FLOAT& yhat, const RELBOOST_FLOAT& y ) {
+        [this]( const Float& yhat, const Float& y ) {
             return logistic_function( yhat ) - y;
         } );
 
@@ -43,7 +43,7 @@ void CrossEntropyLoss::calc_gradients(
         yhat_old().begin(),
         yhat_old().end(),
         h_.begin(),
-        [this]( const RELBOOST_FLOAT& yhat ) {
+        [this]( const Float& yhat ) {
             const auto sigma_yhat = logistic_function( yhat );
             return sigma_yhat * ( 1.0 - sigma_yhat );
         } );
@@ -53,8 +53,8 @@ void CrossEntropyLoss::calc_gradients(
 
 // ----------------------------------------------------------------------------
 
-RELBOOST_FLOAT CrossEntropyLoss::calc_loss(
-    const std::array<RELBOOST_FLOAT, 3>& _weights )
+Float CrossEntropyLoss::calc_loss(
+    const std::array<Float, 3>& _weights )
 {
     // ------------------------------------------------------------------------
 
@@ -67,7 +67,7 @@ RELBOOST_FLOAT CrossEntropyLoss::calc_loss(
 
     assert( !std::isnan( std::get<0>( _weights ) ) );
 
-    RELBOOST_FLOAT loss = 0.0;
+    Float loss = 0.0;
 
     for ( size_t ix : sample_index_ )
         {
@@ -82,7 +82,7 @@ RELBOOST_FLOAT CrossEntropyLoss::calc_loss(
 
     // ------------------------------------------------------------------------
 
-    utils::Reducer::reduce( std::plus<RELBOOST_FLOAT>(), &loss, &comm() );
+    utils::Reducer::reduce( std::plus<Float>(), &loss, &comm() );
 
     // ------------------------------------------------------------------------
 
@@ -91,7 +91,7 @@ RELBOOST_FLOAT CrossEntropyLoss::calc_loss(
     auto global_sum_sample_weights = sum_sample_weights_;
 
     utils::Reducer::reduce(
-        multithreading::maximum<RELBOOST_FLOAT>(),
+        multithreading::maximum<Float>(),
         &global_sum_sample_weights,
         &comm() );
 
@@ -117,10 +117,10 @@ RELBOOST_FLOAT CrossEntropyLoss::calc_loss(
 
 // ----------------------------------------------------------------------------
 
-RELBOOST_FLOAT CrossEntropyLoss::evaluate_split(
-    const RELBOOST_FLOAT _old_intercept,
-    const RELBOOST_FLOAT _old_weight,
-    const std::array<RELBOOST_FLOAT, 3>& _weights )
+Float CrossEntropyLoss::evaluate_split(
+    const Float _old_intercept,
+    const Float _old_weight,
+    const std::array<Float, 3>& _weights )
 {
     /*  //
       ------------------------------------------------------------------------
@@ -131,7 +131,7 @@ RELBOOST_FLOAT CrossEntropyLoss::evaluate_split(
       ------------------------------------------------------------------------
 
       const auto loss_function = [this, &new_weight, _old_weight](
-                                     RELBOOST_FLOAT init,
+                                     Float init,
                                      const containers::Match* ptr ) {
           const auto ix = ptr->ix_output;
 
@@ -166,12 +166,12 @@ RELBOOST_FLOAT CrossEntropyLoss::evaluate_split(
 
 // ----------------------------------------------------------------------------
 
-RELBOOST_FLOAT CrossEntropyLoss::evaluate_tree(
-    const std::vector<RELBOOST_FLOAT>& _yhat_new )
+Float CrossEntropyLoss::evaluate_tree(
+    const std::vector<Float>& _yhat_new )
 {
     assert( _yhat_new.size() == targets().size() );
 
-    RELBOOST_FLOAT loss = 0.0;
+    Float loss = 0.0;
 
     for ( size_t ix : sample_index_ )
         {
@@ -181,7 +181,7 @@ RELBOOST_FLOAT CrossEntropyLoss::evaluate_tree(
                     ( *sample_weights_ )[ix];
         }
 
-    utils::Reducer::reduce( std::plus<RELBOOST_FLOAT>(), &loss, &comm() );
+    utils::Reducer::reduce( std::plus<Float>(), &loss, &comm() );
 
     return loss;
 }

@@ -80,7 +80,7 @@ class DecisionTree
         const std::string _feature_num, const bool _use_timestamps ) const;
 
     /// Transforms a set of raw data into extracted features
-    std::vector<AUTOSQL_FLOAT> transform(
+    std::vector<Float> transform(
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
         const containers::Subfeatures &_subfeatures,
@@ -145,7 +145,7 @@ class DecisionTree
     }
 
     /// Trivial getter
-    inline AUTOSQL_INT ix_perip_used() const { return impl()->ix_perip_used(); }
+    inline Int ix_perip_used() const { return impl()->ix_perip_used(); }
 
     /// Creates the aggregation used by this tree or a clone thereof.
     inline std::shared_ptr<aggregations::AbstractAggregation> const
@@ -238,15 +238,15 @@ class DecisionTree
     /// Stores the current stage (storing means that it is a candidate for
     /// a commit)
     inline void store_current_stage(
-        const AUTOSQL_FLOAT _num_samples_smaller,
-        const AUTOSQL_FLOAT _num_samples_greater )
+        const Float _num_samples_smaller,
+        const Float _num_samples_greater )
     {
         optimization_criterion()->store_current_stage(
             _num_samples_smaller, _num_samples_greater );
     }
 
     /// Calls transform(...) using the tree's own aggregation.
-    std::vector<AUTOSQL_FLOAT> transform(
+    std::vector<Float> transform(
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
         const containers::Subfeatures &_subfeatures,
@@ -307,13 +307,13 @@ class DecisionTree
     }
 
     /// Trivial accessor
-    inline AUTOSQL_FLOAT grid_factor() const { return impl_.grid_factor(); }
+    inline Float grid_factor() const { return impl_.grid_factor(); }
 
     /// Trivial accessor
-    inline AUTOSQL_INT max_length() const { return impl_.max_length(); }
+    inline Int max_length() const { return impl_.max_length(); }
 
     /// Trivial accessor
-    inline AUTOSQL_INT min_num_samples() const
+    inline Int min_num_samples() const
     {
         return impl_.min_num_samples();
     }
@@ -333,7 +333,7 @@ class DecisionTree
     }
 
     /// Trivial accessor
-    inline AUTOSQL_FLOAT regularization() const
+    inline Float regularization() const
     {
         return impl_.regularization();
     }
@@ -366,7 +366,7 @@ class DecisionTree
     }
 
     /// Trivial accessor
-    inline AUTOSQL_FLOAT share_conditions() const
+    inline Float share_conditions() const
     {
         return impl_.share_conditions();
     }

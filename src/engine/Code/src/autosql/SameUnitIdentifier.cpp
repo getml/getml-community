@@ -33,8 +33,8 @@ SameUnitIdentifier::get_same_units_categorical(
                 {
                     add_to_unit_map(
                         enums::DataUsed::x_perip_categorical,
-                        static_cast<AUTOSQL_INT>( i ),
-                        static_cast<AUTOSQL_INT>( j ),
+                        static_cast<Int>( i ),
+                        static_cast<Int>( j ),
                         _peripheral_tables[i].categorical_col( j ),
                         &unit_map );
                 }
@@ -79,8 +79,8 @@ SameUnitIdentifier::get_same_units_discrete(
                 {
                     add_to_unit_map(
                         enums::DataUsed::x_perip_discrete,
-                        static_cast<AUTOSQL_INT>( i ),
-                        static_cast<AUTOSQL_INT>( j ),
+                        static_cast<Int>( i ),
+                        static_cast<Int>( j ),
                         _peripheral_tables[i].discrete_col( j ),
                         &unit_map );
                 }
@@ -125,8 +125,8 @@ SameUnitIdentifier::get_same_units_numerical(
                 {
                     add_to_unit_map(
                         enums::DataUsed::x_perip_numerical,
-                        static_cast<AUTOSQL_INT>( i ),
-                        static_cast<AUTOSQL_INT>( j ),
+                        static_cast<Int>( i ),
+                        static_cast<Int>( j ),
                         _peripheral_tables[i].numerical_col( j ),
                         &unit_map );
                 }

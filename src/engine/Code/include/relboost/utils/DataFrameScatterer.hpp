@@ -15,7 +15,7 @@ class DataFrameScatterer
     /// Returns a vector of the same length as the keys that signifies
     /// the thread to which each row belongs.
     static const std::vector<size_t> build_thread_nums(
-        const std::vector<containers::Column<RELBOOST_INT> >& _keys,
+        const std::vector<containers::Column<Int> >& _keys,
         const size_t _num_threads );
 
     /// Returns a subview on the data frame.
@@ -30,21 +30,21 @@ class DataFrameScatterer
     /// Returns a vector of the same length as the keys that signifies
     /// the thread to which each row belongs.
     static const std::vector<size_t> build_thread_nums(
-        const std::map<RELBOOST_INT, size_t>& _min_keys_map,
-        const containers::Column<RELBOOST_INT>& min_join_key );
+        const std::map<Int, size_t>& _min_keys_map,
+        const containers::Column<Int>& min_join_key );
 
     /// Checks the plausibility of the input.
     static void check_plausibility(
-        const std::vector<containers::Column<RELBOOST_INT> >& _keys,
+        const std::vector<containers::Column<Int> >& _keys,
         const size_t _num_threads );
 
     /// Identifies the key with the minimal number of keys and maps
     /// a thread id to each of them
     static void scatter_keys(
-        const std::vector<containers::Column<RELBOOST_INT> >& _keys,
+        const std::vector<containers::Column<Int> >& _keys,
         const size_t _num_threads,
         size_t* _ix_min_keys_map,
-        std::map<RELBOOST_INT, size_t>* _min_keys_map );
+        std::map<Int, size_t>* _min_keys_map );
 
     // ------------------------------------------------------------------------
 };

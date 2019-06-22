@@ -11,13 +11,13 @@ struct Match
 {
     bool activated;
 
-    AUTOSQL_INT categorical_value;
+    Int categorical_value;
 
     size_t ix_x_perip;
 
     size_t ix_x_popul;
 
-    AUTOSQL_FLOAT numerical_value;
+    Float numerical_value;
 };
 
 // ----------------------------------------------------------------------------

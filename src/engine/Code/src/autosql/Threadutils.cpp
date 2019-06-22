@@ -10,8 +10,8 @@ void Threadutils::copy(
     const std::vector<size_t> _rows,
     const size_t _col,
     const size_t _num_features,
-    const std::vector<AUTOSQL_FLOAT>& _new_feature,
-    std::vector<AUTOSQL_FLOAT>* _features )
+    const std::vector<Float>& _new_feature,
+    std::vector<Float>* _features )
 {
     for ( size_t i = 0; i < _rows.size(); ++i )
         {
@@ -97,7 +97,7 @@ void Threadutils::fit_ensemble(
 
 // ----------------------------------------------------------------------------
 
-AUTOSQL_INT Threadutils::get_num_threads( const AUTOSQL_INT _num_threads )
+Int Threadutils::get_num_threads( const Int _num_threads )
 {
     auto num_threads = _num_threads;
 
@@ -105,7 +105,7 @@ AUTOSQL_INT Threadutils::get_num_threads( const AUTOSQL_INT _num_threads )
         {
             num_threads = std::max(
                 2,
-                static_cast<AUTOSQL_INT>(
+                static_cast<Int>(
                     std::thread::hardware_concurrency() ) -
                     2 );
         }
@@ -122,7 +122,7 @@ void Threadutils::transform_ensemble(
     const std::vector<containers::DataFrame>& _peripheral,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
     const ensemble::DecisionTreeEnsemble& _ensemble,
-    std::vector<AUTOSQL_FLOAT>* _features )
+    std::vector<Float>* _features )
 {
     try
         {

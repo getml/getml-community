@@ -8,7 +8,7 @@ namespace containers
 // ----------------------------------------------------------------------------
 
 typedef std::vector<
-    ColumnView<AUTOSQL_FLOAT, std::map<AUTOSQL_INT, AUTOSQL_INT>>>
+    ColumnView<Float, std::map<Int, Int>>>
     Subfeatures;
 
 // ----------------------------------------------------------------------------

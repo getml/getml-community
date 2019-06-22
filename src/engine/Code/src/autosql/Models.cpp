@@ -243,7 +243,7 @@ Poco::JSON::Object Models::score(
 
 // ------------------------------------------------------------------------
 
-containers::Matrix<AUTOSQL_FLOAT> Models::transform(
+containers::Matrix<Float> Models::transform(
     Poco::Net::StreamSocket& _socket,
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<const logging::Logger> _logger,

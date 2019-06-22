@@ -7,19 +7,19 @@ namespace communication
 // ------------------------------------------------------------------------
 
 void Sender::send_categorical_matrix(
-    const containers::Matrix<ENGINE_INT>& _matrix,
+    const containers::Matrix<Int>& _matrix,
     const containers::Encoding& _encoding,
     Poco::Net::StreamSocket* _socket )
 {
     // ------------------------------------------------
     // Send dimensions of matrix
 
-    std::array<ENGINE_INT, 2> shape;
+    std::array<Int, 2> shape;
 
-    std::get<0>( shape ) = static_cast<ENGINE_INT>( _matrix.nrows() );
-    std::get<1>( shape ) = static_cast<ENGINE_INT>( _matrix.ncols() );
+    std::get<0>( shape ) = static_cast<Int>( _matrix.nrows() );
+    std::get<1>( shape ) = static_cast<Int>( _matrix.ncols() );
 
-    Sender::send<ENGINE_INT>( 2 * sizeof( ENGINE_INT ), shape.data(), _socket );
+    Sender::send<Int>( 2 * sizeof( Int ), shape.data(), _socket );
 
     // ------------------------------------------------
     // Map to string and send.
@@ -40,24 +40,24 @@ void Sender::send_categorical_matrix(
 // ------------------------------------------------------------------------
 
 void Sender::send_matrix(
-    const containers::Matrix<ENGINE_FLOAT>& _matrix,
+    const containers::Matrix<Float>& _matrix,
     Poco::Net::StreamSocket* _socket )
 {
     // ------------------------------------------------
     // Send dimensions of matrix
 
-    std::array<ENGINE_INT, 2> shape;
+    std::array<Int, 2> shape;
 
-    std::get<0>( shape ) = static_cast<ENGINE_INT>( _matrix.nrows() );
-    std::get<1>( shape ) = static_cast<ENGINE_INT>( _matrix.ncols() );
+    std::get<0>( shape ) = static_cast<Int>( _matrix.nrows() );
+    std::get<1>( shape ) = static_cast<Int>( _matrix.ncols() );
 
-    Sender::send<ENGINE_INT>( 2 * sizeof( ENGINE_INT ), shape.data(), _socket );
+    Sender::send<Int>( 2 * sizeof( Int ), shape.data(), _socket );
 
     // ------------------------------------------------
     // Send actual data
 
-    Sender::send<ENGINE_FLOAT>(
-        _matrix.size() * sizeof( ENGINE_FLOAT ), _matrix.data(), _socket );
+    Sender::send<Float>(
+        _matrix.size() * sizeof( Float ), _matrix.data(), _socket );
 
     // ------------------------------------------------
 }
@@ -72,15 +72,15 @@ void Sender::send_string(
     // ------------------------------------------------
     // Send size of string
 
-    const ENGINE_INT str_size = static_cast<ENGINE_INT>( _string.size() );
+    const Int str_size = static_cast<Int>( _string.size() );
 
-    Sender::send<ENGINE_INT>( sizeof( ENGINE_INT ), &str_size, _socket );
+    Sender::send<Int>( sizeof( Int ), &str_size, _socket );
 
     // ------------------------------------------------
     // Send string itself
 
     Sender::send<char>(
-        static_cast<ENGINE_UNSIGNED_LONG>( _string.length() ),
+        static_cast<ULong>( _string.length() ),
         &( _string[0] ),
         _socket );
 

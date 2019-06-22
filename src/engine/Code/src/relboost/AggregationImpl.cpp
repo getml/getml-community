@@ -6,7 +6,7 @@ namespace aggregations
 {
 // ----------------------------------------------------------------------------
 
-void AggregationImpl::commit( const std::array<RELBOOST_FLOAT, 3>& _weights )
+void AggregationImpl::commit( const std::array<Float, 3>& _weights )
 {
     assert( eta1_.size() == eta2_.size() );
 

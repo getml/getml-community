@@ -34,7 +34,7 @@ class XGBoostPredictor : public Predictor
 
    public:
     /// Returns an importance measure for the individual features
-    std::vector<ENGINE_FLOAT> feature_importances(
+    std::vector<Float> feature_importances(
         const size_t _num_features ) const final;
 
     /// Loads the predictor
@@ -43,12 +43,12 @@ class XGBoostPredictor : public Predictor
     /// Implements the fit(...) method in scikit-learn style
     std::string fit(
         const std::shared_ptr<const monitoring::Logger> _logger,
-        const containers::Matrix<ENGINE_FLOAT>& _X,
-        const containers::Matrix<ENGINE_FLOAT>& _y ) final;
+        const containers::Matrix<Float>& _X,
+        const containers::Matrix<Float>& _y ) final;
 
     /// Implements the predict(...) method in scikit-learn style
-    containers::Matrix<ENGINE_FLOAT> predict(
-        const containers::Matrix<ENGINE_FLOAT>& _X ) const final;
+    containers::Matrix<Float> predict(
+        const containers::Matrix<Float>& _X ) const final;
 
     /// Saves the predictor
     void save( const std::string& _fname ) const final;
@@ -91,12 +91,12 @@ class XGBoostPredictor : public Predictor
 
     /// Convert matrix _mat to a DMatrixHandle
     std::unique_ptr<DMatrixHandle, DMatrixDestructor> convert_to_dmatrix(
-        const containers::Matrix<ENGINE_FLOAT>& _mat ) const;
+        const containers::Matrix<Float>& _mat ) const;
 
     /// Extracts feature importances from XGBoost dump
     void parse_dump(
         const std::string& _dump,
-        std::vector<ENGINE_FLOAT>* _feature_importances ) const;
+        std::vector<Float>* _feature_importances ) const;
 
     // -----------------------------------------
 

@@ -19,8 +19,8 @@ RSquaredCriterion::RSquaredCriterion(
 
 // ----------------------------------------------------------------------------
 
-std::vector<AUTOSQL_INT> RSquaredCriterion::argsort(
-    const AUTOSQL_INT _begin, const AUTOSQL_INT _end ) const
+std::vector<Int> RSquaredCriterion::argsort(
+    const Int _begin, const Int _end ) const
 {
     // ---------------------------------------------------------------------
 
@@ -40,9 +40,9 @@ std::vector<AUTOSQL_INT> RSquaredCriterion::argsort(
 
     debug_log( "Calculating values..." );
 
-    std::vector<AUTOSQL_FLOAT> values( _end - _begin );
+    std::vector<Float> values( _end - _begin );
 
-    for ( AUTOSQL_INT i = _begin; i < _end; ++i )
+    for ( Int i = _begin; i < _end; ++i )
         {
             values[i - _begin] =
                 calculate_r_squared( i, sufficient_statistics );
@@ -52,9 +52,9 @@ std::vector<AUTOSQL_INT> RSquaredCriterion::argsort(
 
     debug_log( "Calculating indices..." );
 
-    std::vector<AUTOSQL_INT> indices( _end - _begin );
+    std::vector<Int> indices( _end - _begin );
 
-    for ( AUTOSQL_INT i = 0; i < _end - _begin; ++i )
+    for ( Int i = 0; i < _end - _begin; ++i )
         {
             indices[i] = i;
         }
@@ -62,7 +62,7 @@ std::vector<AUTOSQL_INT> RSquaredCriterion::argsort(
     std::sort(
         indices.begin(),
         indices.end(),
-        [&values]( const AUTOSQL_INT ix1, const AUTOSQL_INT ix2 ) {
+        [&values]( const Int ix1, const Int ix2 ) {
             return values[ix1] > values[ix2];
         } );
 
@@ -75,9 +75,9 @@ std::vector<AUTOSQL_INT> RSquaredCriterion::argsort(
 
 // ----------------------------------------------------------------------------
 
-AUTOSQL_FLOAT RSquaredCriterion::calculate_r_squared(
+Float RSquaredCriterion::calculate_r_squared(
     const size_t _i,
-    const std::deque<std::vector<AUTOSQL_FLOAT>>& _sufficient_statistics ) const
+    const std::deque<std::vector<Float>>& _sufficient_statistics ) const
 {
     assert( sample_weights_.size() == y_centered_[0].size() );
 
@@ -87,24 +87,24 @@ AUTOSQL_FLOAT RSquaredCriterion::calculate_r_squared(
 
     assert( sum_y_centered_y_centered_.size() == y_.size() );
 
-    const AUTOSQL_FLOAT sum_yhat = _sufficient_statistics[_i][0];
+    const Float sum_yhat = _sufficient_statistics[_i][0];
 
     assert( sum_yhat == sum_yhat );
 
-    const AUTOSQL_FLOAT sum_yhat_yhat = _sufficient_statistics[_i][1];
+    const Float sum_yhat_yhat = _sufficient_statistics[_i][1];
 
     assert( sum_yhat_yhat == sum_yhat_yhat );
 
-    AUTOSQL_FLOAT r_squared = 0.0;
+    Float r_squared = 0.0;
 
     for ( size_t j = 0; j < y_.size(); ++j )
         {
-            const AUTOSQL_FLOAT sum_y_centered_yhat =
+            const Float sum_y_centered_yhat =
                 _sufficient_statistics[_i][2 + j];
 
             assert( !std::isnan( sum_y_centered_yhat ) );
 
-            const AUTOSQL_FLOAT var_yhat =
+            const Float var_yhat =
                 sum_sample_weights_ * sum_yhat_yhat - sum_yhat * sum_yhat;
 
             if ( var_yhat == 0.0 || sum_y_centered_y_centered_[j] == 0.0 )
@@ -124,11 +124,11 @@ AUTOSQL_FLOAT RSquaredCriterion::calculate_r_squared(
 
 // ----------------------------------------------------------------------------
 
-AUTOSQL_INT RSquaredCriterion::find_maximum()
+Int RSquaredCriterion::find_maximum()
 {
     assert( sample_weights_.size() == y_centered_[0].size() );
 
-    AUTOSQL_INT max_ix = 0;
+    Int max_ix = 0;
 
     debug_log( "Preparing sufficient statistics..." );
 
@@ -157,17 +157,17 @@ AUTOSQL_INT RSquaredCriterion::find_maximum()
 
             assert( sufficient_statistics[i].size() >= 2 );
 
-            const AUTOSQL_FLOAT num_samples_smaller =
+            const Float num_samples_smaller =
                 sufficient_statistics[i][sufficient_statistics[i].size() - 2];
 
-            const AUTOSQL_FLOAT num_samples_greater =
+            const Float num_samples_greater =
                 sufficient_statistics[i][sufficient_statistics[i].size() - 1];
 
             assert( hyperparameters_ );
 
             assert( hyperparameters_->tree_hyperparameters_ );
 
-            const auto min_num_samples = static_cast<AUTOSQL_FLOAT>(
+            const auto min_num_samples = static_cast<Float>(
                 hyperparameters_->tree_hyperparameters_->min_num_samples_ );
 
             // If the split would result in an insufficient number
@@ -183,7 +183,7 @@ AUTOSQL_INT RSquaredCriterion::find_maximum()
 
             if ( impl().values_stored()[i] > impl().values_stored()[max_ix] )
                 {
-                    max_ix = static_cast<AUTOSQL_INT>( i );
+                    max_ix = static_cast<Int>( i );
                 }
         }
 
@@ -199,7 +199,7 @@ AUTOSQL_INT RSquaredCriterion::find_maximum()
 // ----------------------------------------------------------------------------
 
 void RSquaredCriterion::init(
-    const std::vector<AUTOSQL_FLOAT>& _sample_weights )
+    const std::vector<Float>& _sample_weights )
 {
     // ---------------------------------------------------------------------
 
@@ -215,10 +215,10 @@ void RSquaredCriterion::init(
     sample_weights_ = _sample_weights;
 
     sufficient_statistics_committed_ =
-        std::vector<AUTOSQL_FLOAT>( y_.size() + 2 );
+        std::vector<Float>( y_.size() + 2 );
 
     sufficient_statistics_current_ =
-        std::vector<AUTOSQL_FLOAT>( y_.size() + 2 );
+        std::vector<Float>( y_.size() + 2 );
 
     sum_yhat_committed_ = sufficient_statistics_committed_.data();
     sum_yhat_current_ = sufficient_statistics_current_.data();
@@ -231,10 +231,10 @@ void RSquaredCriterion::init(
 
     sum_y_centered_yhat_current_ = sufficient_statistics_current_.data() + 2;
 
-    sum_y_centered_y_centered_ = std::vector<AUTOSQL_FLOAT>( y_.size() );
+    sum_y_centered_y_centered_ = std::vector<Float>( y_.size() );
 
-    y_centered_ = std::vector<std::vector<AUTOSQL_FLOAT>>(
-        y_.size(), std::vector<AUTOSQL_FLOAT>( _sample_weights.size() ) );
+    y_centered_ = std::vector<std::vector<Float>>(
+        y_.size(), std::vector<Float>( _sample_weights.size() ) );
 
     // ---------------------------------------------------------------------
     // Calculate sum_sample_weights_
@@ -243,12 +243,12 @@ void RSquaredCriterion::init(
         std::accumulate( sample_weights_.begin(), sample_weights_.end(), 0.0 );
 
     utils::Reducer::reduce(
-        std::plus<AUTOSQL_FLOAT>(), &sum_sample_weights_, comm_ );
+        std::plus<Float>(), &sum_sample_weights_, comm_ );
 
     // ---------------------------------------------------------------------
     // Calculate y_mean
 
-    auto y_mean = std::vector<AUTOSQL_FLOAT>( y_.size() );
+    auto y_mean = std::vector<Float>( y_.size() );
 
     for ( size_t j = 0; j < y_.size(); ++j )
         {
@@ -266,7 +266,7 @@ void RSquaredCriterion::init(
                 }
         }
 
-    utils::Reducer::reduce( std::plus<AUTOSQL_FLOAT>(), &y_mean, comm_ );
+    utils::Reducer::reduce( std::plus<Float>(), &y_mean, comm_ );
 
     for ( auto& ym : y_mean )
         {
@@ -313,7 +313,7 @@ void RSquaredCriterion::init(
         }
 
     utils::Reducer::reduce(
-        std::plus<AUTOSQL_FLOAT>(), &sum_y_centered_y_centered_, comm_ );
+        std::plus<Float>(), &sum_y_centered_y_centered_, comm_ );
 
     for ( size_t j = 0; j < sum_y_centered_y_centered_.size(); ++j )
         {
@@ -335,7 +335,7 @@ void RSquaredCriterion::init(
 // ----------------------------------------------------------------------------
 
 void RSquaredCriterion::init_yhat(
-    const std::vector<AUTOSQL_FLOAT>& _yhat,
+    const std::vector<Float>& _yhat,
     const containers::IntSet& _indices )
 {
     // ---------------------------------------------------------------------
@@ -359,7 +359,7 @@ void RSquaredCriterion::init_yhat(
             y_hat_mean_ += _yhat[i] * sample_weights_[i];
         }
 
-    utils::Reducer::reduce( std::plus<AUTOSQL_FLOAT>(), &y_hat_mean_, comm_ );
+    utils::Reducer::reduce( std::plus<Float>(), &y_hat_mean_, comm_ );
 
     y_hat_mean_ /= sum_sample_weights_;
 
@@ -416,13 +416,13 @@ void RSquaredCriterion::init_yhat(
 
 void RSquaredCriterion::update_samples(
     const containers::IntSet& _indices,
-    const std::vector<AUTOSQL_FLOAT>& _new_values,
-    const std::vector<AUTOSQL_FLOAT>& _old_values )
+    const std::vector<Float>& _new_values,
+    const std::vector<Float>& _old_values )
 {
     for ( auto ix : _indices )
         {
-            const AUTOSQL_FLOAT new_value = _new_values[ix] - y_hat_mean_;
-            const AUTOSQL_FLOAT old_value = _old_values[ix] - y_hat_mean_;
+            const Float new_value = _new_values[ix] - y_hat_mean_;
+            const Float old_value = _old_values[ix] - y_hat_mean_;
 
             sum_yhat_current_[0] +=
                 ( new_value - old_value ) * sample_weights_[ix];

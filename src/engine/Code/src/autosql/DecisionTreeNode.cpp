@@ -7,7 +7,7 @@ namespace decisiontrees
 // ----------------------------------------------------------------------------
 
 DecisionTreeNode::DecisionTreeNode(
-    bool _is_activated, AUTOSQL_INT _depth, const DecisionTreeImpl *_tree )
+    bool _is_activated, Int _depth, const DecisionTreeImpl *_tree )
     : depth_( _depth ), is_activated_( _is_activated ), tree_( _tree ){};
 
 // ----------------------------------------------------------------------------
@@ -122,7 +122,7 @@ void DecisionTreeNode::apply_by_categories_used_and_commit(
 
 // ----------------------------------------------------------------------------
 
-std::shared_ptr<const std::vector<AUTOSQL_INT>>
+std::shared_ptr<const std::vector<Int>>
 DecisionTreeNode::calculate_categories(
     const size_t _sample_size,
     containers::MatchPtrs::iterator _sample_container_begin,
@@ -130,8 +130,8 @@ DecisionTreeNode::calculate_categories(
 {
     // ------------------------------------------------------------------------
 
-    AUTOSQL_INT categories_begin = 0;
-    AUTOSQL_INT categories_end = 0;
+    Int categories_begin = 0;
+    Int categories_end = 0;
 
     // ------------------------------------------------------------------------
     // In distributed versions, it is possible that there are no sample sizes
@@ -148,15 +148,15 @@ DecisionTreeNode::calculate_categories(
         }
     else
         {
-            categories_begin = std::numeric_limits<AUTOSQL_INT>::max();
+            categories_begin = std::numeric_limits<Int>::max();
             categories_end = 0;
         }
 
     utils::Reducer::reduce(
-        multithreading::minimum<AUTOSQL_INT>(), &categories_begin, comm() );
+        multithreading::minimum<Int>(), &categories_begin, comm() );
 
     utils::Reducer::reduce(
-        multithreading::maximum<AUTOSQL_INT>(), &categories_end, comm() );
+        multithreading::maximum<Int>(), &categories_end, comm() );
 
     // ------------------------------------------------------------------------
     // There is a possibility that all critical values are NULL (signified by
@@ -164,7 +164,7 @@ DecisionTreeNode::calculate_categories(
 
     if ( categories_begin >= categories_end )
         {
-            return std::make_shared<std::vector<AUTOSQL_INT>>( 0 );
+            return std::make_shared<std::vector<Int>>( 0 );
         }
 
     // ------------------------------------------------------------------------
@@ -194,9 +194,9 @@ DecisionTreeNode::calculate_categories(
     // ------------------------------------------------------------------------
     // Build vector.
 
-    auto categories = std::make_shared<std::vector<AUTOSQL_INT>>( 0 );
+    auto categories = std::make_shared<std::vector<Int>>( 0 );
 
-    for ( AUTOSQL_INT i = 0; i < categories_end - categories_begin; ++i )
+    for ( Int i = 0; i < categories_end - categories_begin; ++i )
         {
             if ( included[i] == 1 )
                 {
@@ -213,7 +213,7 @@ DecisionTreeNode::calculate_categories(
 
 // ----------------------------------------------------------------------------
 
-std::vector<AUTOSQL_FLOAT> DecisionTreeNode::calculate_critical_values_discrete(
+std::vector<Float> DecisionTreeNode::calculate_critical_values_discrete(
     containers::MatchPtrs::iterator _sample_container_begin,
     containers::MatchPtrs::iterator _sample_container_end,
     const size_t _sample_size )
@@ -222,7 +222,7 @@ std::vector<AUTOSQL_FLOAT> DecisionTreeNode::calculate_critical_values_discrete(
 
     debug_log( "calculate_critical_values_discrete..." );
 
-    AUTOSQL_FLOAT min = 0.0, max = 0.0;
+    Float min = 0.0, max = 0.0;
 
     // ---------------------------------------------------------------------------
     // In distributed versions, it is possible that there are no sample sizes
@@ -243,15 +243,15 @@ std::vector<AUTOSQL_FLOAT> DecisionTreeNode::calculate_critical_values_discrete(
         }
     else
         {
-            min = std::numeric_limits<AUTOSQL_FLOAT>::max();
-            max = std::numeric_limits<AUTOSQL_FLOAT>::lowest();
+            min = std::numeric_limits<Float>::max();
+            max = std::numeric_limits<Float>::lowest();
         }
 
     utils::Reducer::reduce(
-        multithreading::minimum<AUTOSQL_FLOAT>(), &min, comm() );
+        multithreading::minimum<Float>(), &min, comm() );
 
     utils::Reducer::reduce(
-        multithreading::maximum<AUTOSQL_FLOAT>(), &max, comm() );
+        multithreading::maximum<Float>(), &max, comm() );
 
     // ---------------------------------------------------------------------------
     // There is a possibility that all critical values are NAN in all processes.
@@ -259,21 +259,21 @@ std::vector<AUTOSQL_FLOAT> DecisionTreeNode::calculate_critical_values_discrete(
 
     if ( min > max )
         {
-            return std::vector<AUTOSQL_FLOAT>( 0, 1 );
+            return std::vector<Float>( 0, 1 );
         }
 
     // ---------------------------------------------------------------------------
 
-    AUTOSQL_INT num_critical_values = static_cast<AUTOSQL_INT>( max - min + 1 );
+    Int num_critical_values = static_cast<Int>( max - min + 1 );
 
     debug_log(
         "num_critical_values: " + std::to_string( num_critical_values ) );
 
-    std::vector<AUTOSQL_FLOAT> critical_values( num_critical_values, 1 );
+    std::vector<Float> critical_values( num_critical_values, 1 );
 
-    for ( AUTOSQL_INT i = 0; i < num_critical_values; ++i )
+    for ( Int i = 0; i < num_critical_values; ++i )
         {
-            critical_values[i] = min + static_cast<AUTOSQL_FLOAT>( i );
+            critical_values[i] = min + static_cast<Float>( i );
         }
 
     // ---------------------------------------------------------------------------
@@ -287,7 +287,7 @@ std::vector<AUTOSQL_FLOAT> DecisionTreeNode::calculate_critical_values_discrete(
 
 // ----------------------------------------------------------------------------
 
-std::vector<AUTOSQL_FLOAT>
+std::vector<Float>
 DecisionTreeNode::calculate_critical_values_numerical(
     containers::MatchPtrs::iterator _sample_container_begin,
     containers::MatchPtrs::iterator _sample_container_end,
@@ -297,7 +297,7 @@ DecisionTreeNode::calculate_critical_values_numerical(
 
     debug_log( "calculate_critical_values_numerical..." );
 
-    AUTOSQL_FLOAT min = 0.0, max = 0.0;
+    Float min = 0.0, max = 0.0;
 
     // ---------------------------------------------------------------------------
     // In distributed versions, it is possible that there are no sample sizes
@@ -312,15 +312,15 @@ DecisionTreeNode::calculate_critical_values_numerical(
         }
     else
         {
-            min = std::numeric_limits<AUTOSQL_FLOAT>::max();
-            max = std::numeric_limits<AUTOSQL_FLOAT>::lowest();
+            min = std::numeric_limits<Float>::max();
+            max = std::numeric_limits<Float>::lowest();
         }
 
     utils::Reducer::reduce(
-        multithreading::minimum<AUTOSQL_FLOAT>(), &min, comm() );
+        multithreading::minimum<Float>(), &min, comm() );
 
     utils::Reducer::reduce(
-        multithreading::maximum<AUTOSQL_FLOAT>(), &max, comm() );
+        multithreading::maximum<Float>(), &max, comm() );
 
     // ---------------------------------------------------------------------------
     // There is a possibility that all critical values are NAN in all processes.
@@ -331,23 +331,23 @@ DecisionTreeNode::calculate_critical_values_numerical(
             debug_log(
                 "calculate_critical_values_discrete...done (edge case)." );
 
-            return std::vector<AUTOSQL_FLOAT>( 0, 1 );
+            return std::vector<Float>( 0, 1 );
         }
 
     // ---------------------------------------------------------------------------
 
-    AUTOSQL_INT num_critical_values =
+    Int num_critical_values =
         calculate_num_critical_values( _sample_size );
 
-    AUTOSQL_FLOAT step_size =
-        ( max - min ) / static_cast<AUTOSQL_FLOAT>( num_critical_values + 1 );
+    Float step_size =
+        ( max - min ) / static_cast<Float>( num_critical_values + 1 );
 
-    std::vector<AUTOSQL_FLOAT> critical_values( num_critical_values, 1 );
+    std::vector<Float> critical_values( num_critical_values, 1 );
 
-    for ( AUTOSQL_INT i = 0; i < num_critical_values; ++i )
+    for ( Int i = 0; i < num_critical_values; ++i )
         {
             critical_values[i] =
-                min + static_cast<AUTOSQL_FLOAT>( i + 1 ) * step_size;
+                min + static_cast<Float>( i + 1 ) * step_size;
         }
 
     debug_log( "calculate_critical_values_discrete...done." );
@@ -411,7 +411,7 @@ void DecisionTreeNode::fit(
     const size_t sample_size = reduce_sample_size(
         std::distance( _sample_container_begin, _sample_container_end ) );
 
-    if ( sample_size == 0 || static_cast<AUTOSQL_INT>( sample_size ) <
+    if ( sample_size == 0 || static_cast<Int>( sample_size ) <
                                  tree_->min_num_samples() * 2 )
         {
             return;
@@ -439,9 +439,9 @@ void DecisionTreeNode::fit(
     debug_log( "fit: Find maximum..." );
 
     // Find maximum
-    AUTOSQL_INT ix_max = optimization_criterion()->find_maximum();
+    Int ix_max = optimization_criterion()->find_maximum();
 
-    const AUTOSQL_FLOAT max_value =
+    const Float max_value =
         optimization_criterion()->values_stored( ix_max );
 
     // ------------------------------------------------------------------------
@@ -452,22 +452,22 @@ void DecisionTreeNode::fit(
 
     auto global_storage_ix = optimization_criterion()->storage_ix();
 
-    utils::Reducer::reduce<AUTOSQL_INT>(
-        multithreading::maximum<AUTOSQL_INT>(), &global_storage_ix, comm() );
+    utils::Reducer::reduce<Int>(
+        multithreading::maximum<Int>(), &global_storage_ix, comm() );
 
     assert( global_storage_ix == optimization_criterion()->storage_ix() );
 
     auto global_value = optimization_criterion()->value();
 
-    utils::Reducer::reduce<AUTOSQL_FLOAT>(
-        multithreading::maximum<AUTOSQL_FLOAT>(), &global_value, comm() );
+    utils::Reducer::reduce<Float>(
+        multithreading::maximum<Float>(), &global_value, comm() );
 
     assert( global_value == optimization_criterion()->value() );
 
     auto global_max_value = max_value;
 
-    utils::Reducer::reduce<AUTOSQL_FLOAT>(
-        multithreading::maximum<AUTOSQL_FLOAT>(), &global_max_value, comm() );
+    utils::Reducer::reduce<Float>(
+        multithreading::maximum<Float>(), &global_max_value, comm() );
 
     assert( global_max_value == max_value );
 
@@ -585,7 +585,7 @@ std::string DecisionTreeNode::greater_or_not_equal_to(
 
                     assert( category_used >= 0 );
                     assert(
-                        category_used < static_cast<AUTOSQL_INT>(
+                        category_used < static_cast<Int>(
                                             tree_->categories().size() ) );
 
                     if ( it != categories_used_begin() )
@@ -666,7 +666,7 @@ containers::MatchPtrs::iterator DecisionTreeNode::identify_parameters(
         {
             // --------------------------------------------------------------
 
-            std::vector<AUTOSQL_FLOAT> critical_values( 1, 1 );
+            std::vector<Float> critical_values( 1, 1 );
 
             critical_values[0] = critical_value();
 
@@ -739,7 +739,7 @@ size_t DecisionTreeNode::reduce_sample_size( const size_t _sample_size )
     size_t global_sample_size = _sample_size;
 
     utils::Reducer::reduce(
-        std::plus<AUTOSQL_FLOAT>(), &global_sample_size, comm() );
+        std::plus<Float>(), &global_sample_size, comm() );
 
     return global_sample_size;
 }
@@ -999,7 +999,7 @@ std::string DecisionTreeNode::smaller_or_equal_to(
 
                     assert( category_used >= 0 );
                     assert(
-                        category_used < static_cast<AUTOSQL_INT>(
+                        category_used < static_cast<Int>(
                                             tree_->categories().size() ) );
 
                     if ( it != categories_used_begin() )
@@ -1068,7 +1068,7 @@ void DecisionTreeNode::spawn_child_nodes(
                 return std::any_of(
                     categories_used_begin(),
                     categories_used_end(),
-                    [_sample]( AUTOSQL_INT cat ) {
+                    [_sample]( Int cat ) {
                         return cat == _sample->categorical_value;
                     } );
             };
@@ -1080,7 +1080,7 @@ void DecisionTreeNode::spawn_child_nodes(
         {
             while ( it < _sample_container_end )
                 {
-                    const AUTOSQL_FLOAT val = ( *it )->numerical_value;
+                    const Float val = ( *it )->numerical_value;
 
                     // If val != val, then all samples but the NULL samples
                     // are activated. This is a corner case that can only
@@ -1376,7 +1376,7 @@ void DecisionTreeNode::transform(
                         return std::any_of(
                             categories_used_begin(),
                             categories_used_end(),
-                            [_sample]( AUTOSQL_INT cat ) {
+                            [_sample]( Int cat ) {
                                 return cat == _sample->categorical_value;
                             } );
                     };
@@ -1717,7 +1717,7 @@ void DecisionTreeNode::try_numerical_population(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_categorical_values(
-    const AUTOSQL_INT _column_used,
+    const Int _column_used,
     const enums::DataUsed _data_used,
     const size_t _sample_size,
     containers::MatchPtrs::iterator _sample_container_begin,
@@ -1734,7 +1734,7 @@ void DecisionTreeNode::try_categorical_values(
     const auto index = containers::CategoryIndex(
         *categories, _sample_container_begin, _sample_container_end );
 
-    const auto num_categories = static_cast<AUTOSQL_INT>( categories->size() );
+    const auto num_categories = static_cast<Int>( categories->size() );
 
     // -----------------------------------------------------------------------
     // Add new splits to the candidate splits
@@ -1846,7 +1846,7 @@ void DecisionTreeNode::try_categorical_values(
     const auto storage_ix = optimization_criterion()->storage_ix();
 
     auto sorted_by_containing =
-        std::make_shared<std::vector<AUTOSQL_INT>>( num_categories );
+        std::make_shared<std::vector<Int>>( num_categories );
 
     {
         const auto indices = optimization_criterion()->argsort(
@@ -1867,7 +1867,7 @@ void DecisionTreeNode::try_categorical_values(
     // Produce sorted_by_not_containing.
 
     auto sorted_by_not_containing =
-        std::make_shared<std::vector<AUTOSQL_INT>>( num_categories );
+        std::make_shared<std::vector<Int>>( num_categories );
 
     {
         const auto indices = optimization_criterion()->argsort(
@@ -2097,7 +2097,7 @@ void DecisionTreeNode::try_conditions(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_discrete_values(
-    const AUTOSQL_INT _column_used,
+    const Int _column_used,
     const enums::DataUsed _data_used,
     const size_t _sample_size,
     containers::MatchPtrs::iterator _sample_container_begin,
@@ -2138,10 +2138,10 @@ void DecisionTreeNode::try_discrete_values(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_non_categorical_values(
-    const AUTOSQL_INT _column_used,
+    const Int _column_used,
     const enums::DataUsed _data_used,
     const size_t _sample_size,
-    const std::vector<AUTOSQL_FLOAT> _critical_values,
+    const std::vector<Float> _critical_values,
     containers::MatchPtrs::iterator _sample_container_begin,
     containers::MatchPtrs::iterator _null_values_separator,
     containers::MatchPtrs::iterator _sample_container_end,
@@ -2292,7 +2292,7 @@ void DecisionTreeNode::try_non_categorical_values(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_numerical_values(
-    const AUTOSQL_INT _column_used,
+    const Int _column_used,
     const enums::DataUsed _data_used,
     const size_t _sample_size,
     containers::MatchPtrs::iterator _sample_container_begin,

@@ -11,28 +11,28 @@ class Summarizer
 {
    public:
     /// Calculates the density plots of each column.
-    static std::vector<std::vector<AUTOSQL_INT>> calculate_column_densities(
-        const AUTOSQL_INT _num_bins,
-        const containers::Matrix<AUTOSQL_FLOAT>& _mat,
+    static std::vector<std::vector<Int>> calculate_column_densities(
+        const Int _num_bins,
+        const containers::Matrix<Float>& _mat,
         multithreading::Communicator* _comm );
 
     /// Calculates the pearson r between features and
     /// a set of targets.
-    static std::vector<std::vector<AUTOSQL_FLOAT>>
+    static std::vector<std::vector<Float>>
     calculate_feature_correlations(
-        const containers::Matrix<AUTOSQL_FLOAT>& _features,
+        const containers::Matrix<Float>& _features,
         const containers::DataFrameView& _targets,
         multithreading::Communicator* _comm );
 
     /// Calculates the data needed for the plots in the feature view.
     static void calculate_feature_plots(
-        const AUTOSQL_INT _num_bins,
-        const containers::Matrix<AUTOSQL_FLOAT>& _mat,
+        const Int _num_bins,
+        const containers::Matrix<Float>& _mat,
         const containers::DataFrameView& _targets,
         multithreading::Communicator* _comm,
-        std::vector<std::vector<AUTOSQL_FLOAT>>& _labels,
-        std::vector<std::vector<AUTOSQL_INT>>& _feature_densities,
-        std::vector<std::vector<std::vector<AUTOSQL_FLOAT>>>& _average_targets );
+        std::vector<std::vector<Float>>& _labels,
+        std::vector<std::vector<Int>>& _feature_densities,
+        std::vector<std::vector<std::vector<Float>>>& _average_targets );
 
 #ifdef AUTOSQL_PARALLEL
 
@@ -50,52 +50,52 @@ class Summarizer
    private:
     /// This is needed for the column_densities and target_averages
     static void calculate_step_sizes_and_num_bins(
-        const std::vector<AUTOSQL_FLOAT>& _minima,
-        const std::vector<AUTOSQL_FLOAT>& _maxima,
-        const AUTOSQL_FLOAT _num_bins,
-        std::vector<AUTOSQL_FLOAT>& _step_sizes,
-        std::vector<AUTOSQL_INT>& _actual_num_bins );
+        const std::vector<Float>& _minima,
+        const std::vector<Float>& _maxima,
+        const Float _num_bins,
+        std::vector<Float>& _step_sizes,
+        std::vector<Int>& _actual_num_bins );
 
     /// Divides results by the number of rows
     static void divide_by_nrows(
-        const AUTOSQL_INT _nrows, std::vector<AUTOSQL_FLOAT>& _results );
+        const Int _nrows, std::vector<Float>& _results );
 
     /// Identifies the correct bin for _val based on _step_size and _min.
-    static AUTOSQL_INT identify_bin(
-        const AUTOSQL_INT _num_bins,
-        const AUTOSQL_FLOAT _step_size,
-        const AUTOSQL_FLOAT _val,
-        const AUTOSQL_FLOAT _min );
+    static Int identify_bin(
+        const Int _num_bins,
+        const Float _step_size,
+        const Float _val,
+        const Float _min );
 
     /// Finds the maximum elements in each column
-    static std::vector<AUTOSQL_FLOAT> max( const Matrix<AUTOSQL_FLOAT>& _mat );
+    static std::vector<Float> max( const Matrix<Float>& _mat );
 
     /// Finds the mean elements in each column
-    static std::vector<AUTOSQL_FLOAT> mean( const Matrix<AUTOSQL_FLOAT>& _mat );
+    static std::vector<Float> mean( const Matrix<Float>& _mat );
 
     /// Finds the minimum elements in each column
-    static std::vector<AUTOSQL_FLOAT> min( const Matrix<AUTOSQL_FLOAT>& _mat );
+    static std::vector<Float> min( const Matrix<Float>& _mat );
 
     /// Finds the minimum and maximum, in parallel.
     static void min_and_max(
-        const containers::Matrix<AUTOSQL_FLOAT>& _mat,
+        const containers::Matrix<Float>& _mat,
         multithreading::Communicator* _comm,
-        std::vector<AUTOSQL_FLOAT>& _minima,
-        std::vector<AUTOSQL_FLOAT>& _maxima );
+        std::vector<Float>& _minima,
+        std::vector<Float>& _maxima );
 
-    /// Finds the share of nan (for AUTOSQL_FLOAT)
-    static std::vector<AUTOSQL_FLOAT> share_nan(
-        const Matrix<AUTOSQL_FLOAT>& _mat );
+    /// Finds the share of nan (for Float)
+    static std::vector<Float> share_nan(
+        const Matrix<Float>& _mat );
 
-    /// Finds the share of nan (for AUTOSQL_INT)
-    static std::vector<AUTOSQL_FLOAT> share_nan(
-        const Matrix<AUTOSQL_INT>& _mat );
+    /// Finds the share of nan (for Int)
+    static std::vector<Float> share_nan(
+        const Matrix<Int>& _mat );
 
     /// Returns statistics summarizing a float matrix
-    static Poco::JSON::Object summarize( const Matrix<AUTOSQL_FLOAT>& _mat );
+    static Poco::JSON::Object summarize( const Matrix<Float>& _mat );
 
     /// Returns statistics summarizing an int matrix
-    static Poco::JSON::Object summarize( const Matrix<AUTOSQL_INT>& _mat );
+    static Poco::JSON::Object summarize( const Matrix<Int>& _mat );
 };
 
 // -------------------------------------------------------------------------

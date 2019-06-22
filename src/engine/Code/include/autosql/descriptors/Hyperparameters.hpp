@@ -59,16 +59,16 @@ struct Hyperparameters
     const bool round_robin_;
 
     /// Determines the sampling rate - parameter passed by the user
-    const AUTOSQL_FLOAT sampling_factor_;
+    const Float sampling_factor_;
 
     /// The seed used for the hyperparameter optimization
     const size_t seed_;
 
     /// The share of aggregations randomly selected
-    const AUTOSQL_FLOAT share_aggregations_;
+    const Float share_aggregations_;
 
     /// Shrinkage of learning rate
-    const AUTOSQL_FLOAT shrinkage_;
+    const Float shrinkage_;
 
     /// Hyperparameters necessary for training the tree
     const std::shared_ptr<const TreeHyperparameters> tree_hyperparameters_;

@@ -6,8 +6,8 @@ namespace aggregations
 {
 // ----------------------------------------------------------------------------
 
-const AUTOSQL_FLOAT AggregationIndex::get_count(
-    const AUTOSQL_INT _ix_agg ) const
+const Float AggregationIndex::get_count(
+    const Int _ix_agg ) const
 {
     assert( _ix_agg >= 0 );
     assert( _ix_agg < output_table_.nrows() );
@@ -16,9 +16,9 @@ const AUTOSQL_FLOAT AggregationIndex::get_count(
 
     auto it = input_table_.df().find( output_table_.join_key( _ix_agg ) );
 
-    AUTOSQL_FLOAT count = 0.0;
+    Float count = 0.0;
 
-    const AUTOSQL_FLOAT time_stamp_output = output_table_.time_stamp( _ix_agg );
+    const Float time_stamp_output = output_table_.time_stamp( _ix_agg );
 
     for ( auto ix_input : it->second )
         {
@@ -40,15 +40,15 @@ const AUTOSQL_FLOAT AggregationIndex::get_count(
 
 // ----------------------------------------------------------------------------
 
-std::shared_ptr<std::vector<AUTOSQL_FLOAT>>
+std::shared_ptr<std::vector<Float>>
 AggregationIndex::make_sample_weights(
-    const std::shared_ptr<const std::vector<AUTOSQL_FLOAT>>
+    const std::shared_ptr<const std::vector<Float>>
         _sample_weights_parent ) const
 {
     assert( _sample_weights_parent->size() == output_table_.nrows() );
 
     auto sample_weights =
-        std::make_shared<std::vector<AUTOSQL_FLOAT>>( input_table_.nrows() );
+        std::make_shared<std::vector<Float>>( input_table_.nrows() );
 
     for ( size_t i = 0; i < _sample_weights_parent->size(); ++i )
         {
@@ -71,10 +71,10 @@ AggregationIndex::make_sample_weights(
                     assert( ix_input >= 0 );
                     assert( ix_input < input_table_.df().nrows() );
 
-                    const AUTOSQL_FLOAT time_stamp_input =
+                    const Float time_stamp_input =
                         input_table_.df().time_stamp( ix_input );
 
-                    const AUTOSQL_FLOAT upper_time_stamp =
+                    const Float upper_time_stamp =
                         input_table_.df().upper_time_stamp( ix_input );
 
                     const bool use_this_sample =
@@ -109,25 +109,25 @@ AggregationIndex::make_sample_weights(
 
 // ----------------------------------------------------------------------------
 
-const std::vector<AUTOSQL_INT> AggregationIndex::transform(
-    const AUTOSQL_INT _ix_input ) const
+const std::vector<Int> AggregationIndex::transform(
+    const Int _ix_input ) const
 {
     assert( _ix_input >= 0 );
     assert( _ix_input < input_table_.nrows() );
 
     if ( !output_table_.df().has( input_table_.join_key( _ix_input ) ) )
         {
-            return std::vector<AUTOSQL_INT>();
+            return std::vector<Int>();
         }
 
     auto it = output_table_.df().find( input_table_.join_key( _ix_input ) );
 
-    const AUTOSQL_FLOAT time_stamp_input = input_table_.time_stamp( _ix_input );
+    const Float time_stamp_input = input_table_.time_stamp( _ix_input );
 
-    const AUTOSQL_FLOAT upper_time_stamp =
+    const Float upper_time_stamp =
         input_table_.upper_time_stamp( _ix_input );
 
-    std::vector<AUTOSQL_INT> indices;
+    std::vector<Int> indices;
 
     for ( auto ix_agg : it->second )
         {
@@ -159,9 +159,9 @@ const std::vector<AUTOSQL_INT> AggregationIndex::transform(
 
 // ----------------------------------------------------------------------------
 
-AUTOSQL_INT AggregationIndex::transform_ix_agg(
-    const AUTOSQL_INT _ix_agg,
-    const std::map<AUTOSQL_INT, AUTOSQL_INT>& _rows_map ) const
+Int AggregationIndex::transform_ix_agg(
+    const Int _ix_agg,
+    const std::map<Int, Int>& _rows_map ) const
 {
     assert( _rows_map.size() > 0 );
 

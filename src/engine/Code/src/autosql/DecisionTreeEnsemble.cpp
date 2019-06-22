@@ -35,7 +35,7 @@ DecisionTreeEnsemble::DecisionTreeEnsemble(
 // ----------------------------------------------------------------------------
 
 std::list<decisiontrees::DecisionTree> DecisionTreeEnsemble::build_candidates(
-    const AUTOSQL_INT _ix_feature,
+    const Int _ix_feature,
     const std::vector<descriptors::SameUnits> &_same_units,
     const decisiontrees::TableHolder &_table_holder )
 {
@@ -423,7 +423,7 @@ void DecisionTreeEnsemble::fit(
     const auto nrows = _table_holder->main_tables_[0].nrows();
 
     auto sample_weights =
-        std::make_shared<std::vector<AUTOSQL_FLOAT>>( nrows, 1.0 );
+        std::make_shared<std::vector<Float>>( nrows, 1.0 );
 
     random_number_generator().reset(
         new std::mt19937( static_cast<size_t>( hyperparameters().seed_ ) ) );
@@ -537,7 +537,7 @@ void DecisionTreeEnsemble::fit(
                 {
                     const auto ix = last_tree()->ix_perip_used();
 
-                    std::vector<AUTOSQL_FLOAT> new_feature =
+                    std::vector<Float> new_feature =
                         last_tree()->transform(
                             _table_holder->main_tables_[ix],
                             _table_holder->peripheral_tables_[ix],
@@ -922,7 +922,7 @@ std::string DecisionTreeEnsemble::to_sql() const
 
 // ----------------------------------------------------------------------------
 
-std::shared_ptr<std::vector<AUTOSQL_FLOAT>> DecisionTreeEnsemble::transform(
+std::shared_ptr<std::vector<Float>> DecisionTreeEnsemble::transform(
     const containers::DataFrame &_population,
     const std::vector<containers::DataFrame> &_peripheral,
     const std::shared_ptr<const logging::AbstractLogger> _logger ) const
@@ -948,7 +948,7 @@ std::shared_ptr<std::vector<AUTOSQL_FLOAT>> DecisionTreeEnsemble::transform(
     // -------------------------------------------------------
     // Launch threads and generate predictions on the subviews.
 
-    auto features = std::make_shared<std::vector<AUTOSQL_FLOAT>>(
+    auto features = std::make_shared<std::vector<Float>>(
         _population.nrows() * num_features() );
 
     std::vector<std::thread> threads;
@@ -1045,7 +1045,7 @@ containers::Predictions DecisionTreeEnsemble::transform(
 
 // ----------------------------------------------------------------------------
 
-std::vector<AUTOSQL_FLOAT> DecisionTreeEnsemble::transform(
+std::vector<Float> DecisionTreeEnsemble::transform(
     const decisiontrees::TableHolder &_table_holder,
     const std::vector<containers::Subfeatures> &_subfeatures,
     const size_t _num_feature,

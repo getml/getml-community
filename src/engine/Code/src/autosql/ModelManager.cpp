@@ -336,7 +336,7 @@ void ModelManager::transform(
     // -------------------------------------------------------
     // Send data
 
-    engine::Sender::send_matrix<AUTOSQL_FLOAT>( _socket, false, yhat );
+    engine::Sender::send_matrix<Float>( _socket, false, yhat );
 
     // -------------------------------------------------------
 

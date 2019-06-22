@@ -40,7 +40,8 @@
 
 #include "multithreading/multithreading.hpp"
 
-#include "autosql/types.hpp"
+#include "autosql/Float.hpp"
+#include "autosql/Int.hpp"
 
 #include "autosql/descriptors/descriptors.hpp"
 

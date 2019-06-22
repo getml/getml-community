@@ -44,7 +44,7 @@ class Model : public AbstractModel
         Poco::Net::StreamSocket* _socket ) final;
 
     /// Generate features.
-    containers::Matrix<ENGINE_FLOAT> transform(
+    containers::Matrix<Float> transform(
         const Poco::JSON::Object& _cmd,
         const std::shared_ptr<const monitoring::Logger>& _logger,
         const std::map<std::string, containers::DataFrame>& _data_frames,
@@ -75,7 +75,7 @@ class Model : public AbstractModel
    private:
     /// Calculates the correlations of each feature with the targets.
     void calculate_feature_stats(
-        const std::vector<ENGINE_FLOAT>& _features,
+        const std::vector<Float>& _features,
         const size_t _nrows,
         const size_t _ncols,
         const typename FeatureEngineererType::DataFrameType& _df );
@@ -266,14 +266,14 @@ Model<FeatureEngineererType>::Model(
 
 template <typename FeatureEngineererType>
 void Model<FeatureEngineererType>::calculate_feature_stats(
-    const std::vector<ENGINE_FLOAT>& _features,
+    const std::vector<Float>& _features,
     const size_t _nrows,
     const size_t _ncols,
     const typename FeatureEngineererType::DataFrameType& _df )
 {
     const size_t num_bins = 50;
 
-    std::vector<const ENGINE_FLOAT*> targets;
+    std::vector<const Float*> targets;
 
     for ( size_t j = 0; j < _df.num_targets(); ++j )
         {
@@ -394,7 +394,7 @@ Poco::JSON::Object Model<FeatureEngineererType>::feature_importances()
     // ----------------------------------------------------------------
     // Extract feature importances
 
-    std::vector<std::vector<ENGINE_FLOAT>> feature_importances_transposed;
+    std::vector<std::vector<Float>> feature_importances_transposed;
 
     for ( size_t i = 0; i < num_predictors(); ++i )
         {
@@ -766,7 +766,7 @@ void Model<FeatureEngineererType>::select_features(
     // ------------------------------------------------------------------------
     // Calculate sum of feature importances.
 
-    std::vector<RELBOOST_FLOAT> feature_importances(
+    std::vector<Float> feature_importances(
         feature_engineerer().num_features() );
 
     for ( auto& fs : feature_selectors )
@@ -779,7 +779,7 @@ void Model<FeatureEngineererType>::select_features(
                 temp.end(),
                 feature_importances.begin(),
                 feature_importances.begin(),
-                std::plus<RELBOOST_FLOAT>() );
+                std::plus<Float>() );
         }
 
     // ------------------------------------------------------------------------
@@ -810,7 +810,7 @@ void Model<FeatureEngineererType>::select_features(
 // ----------------------------------------------------------------------------
 
 template <typename FeatureEngineererType>
-containers::Matrix<ENGINE_FLOAT> Model<FeatureEngineererType>::transform(
+containers::Matrix<Float> Model<FeatureEngineererType>::transform(
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<const monitoring::Logger>& _logger,
     const std::map<std::string, containers::DataFrame>& _data_frames,
@@ -859,7 +859,7 @@ containers::Matrix<ENGINE_FLOAT> Model<FeatureEngineererType>::transform(
 
     const auto ncols = features->size() / population_table.nrows();
 
-    const auto mat = containers::Matrix<ENGINE_FLOAT>( nrows, ncols, features );
+    const auto mat = containers::Matrix<Float>( nrows, ncols, features );
 
     // ------------------------------------------------
     // Get the feature importances, if applicable.

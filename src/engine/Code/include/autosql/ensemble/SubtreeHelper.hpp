@@ -45,7 +45,7 @@ class SubtreeHelper
     static void fit_subensemble(
         const std::shared_ptr<const decisiontrees::TableHolder>& _table_holder,
         const std::shared_ptr<const logging::AbstractLogger> _logger,
-        const std::shared_ptr<const std::map<AUTOSQL_INT, AUTOSQL_INT>>&
+        const std::shared_ptr<const std::map<Int, Int>>&
             _output_map,
         const descriptors::Hyperparameters& _hyperparameters,
         const size_t _ix_perip_used,
@@ -71,7 +71,7 @@ template <typename AggType>
 void SubtreeHelper::fit_subensemble(
     const std::shared_ptr<const decisiontrees::TableHolder>& _table_holder,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
-    const std::shared_ptr<const std::map<AUTOSQL_INT, AUTOSQL_INT>>&
+    const std::shared_ptr<const std::map<Int, Int>>&
         _output_map,
     const descriptors::Hyperparameters& _hyperparameters,
     const size_t _ix_perip_used,

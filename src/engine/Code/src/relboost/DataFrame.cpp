@@ -7,14 +7,14 @@ namespace containers
 // ----------------------------------------------------------------------------
 
 DataFrame::DataFrame(
-    const std::vector<Column<RELBOOST_INT>>& _categoricals,
-    const std::vector<Column<RELBOOST_FLOAT>>& _discretes,
+    const std::vector<Column<Int>>& _categoricals,
+    const std::vector<Column<Float>>& _discretes,
     const std::vector<std::shared_ptr<containers::Index>>& _indices,
-    const std::vector<Column<RELBOOST_INT>>& _join_keys,
+    const std::vector<Column<Int>>& _join_keys,
     const std::string& _name,
-    const std::vector<Column<RELBOOST_FLOAT>>& _numericals,
-    const std::vector<Column<RELBOOST_FLOAT>>& _targets,
-    const std::vector<Column<RELBOOST_FLOAT>>& _time_stamps )
+    const std::vector<Column<Float>>& _numericals,
+    const std::vector<Column<Float>>& _targets,
+    const std::vector<Column<Float>>& _time_stamps )
     : categoricals_( _categoricals ),
       discretes_( _discretes ),
       indices_( _indices ),
@@ -62,13 +62,13 @@ DataFrame::DataFrame(
 // ----------------------------------------------------------------------------
 
 DataFrame::DataFrame(
-    const std::vector<Column<RELBOOST_INT>>& _categorical,
-    const std::vector<Column<RELBOOST_FLOAT>>& _discrete,
-    const std::vector<Column<RELBOOST_INT>>& _join_keys,
+    const std::vector<Column<Int>>& _categorical,
+    const std::vector<Column<Float>>& _discrete,
+    const std::vector<Column<Int>>& _join_keys,
     const std::string& _name,
-    const std::vector<Column<RELBOOST_FLOAT>>& _numerical,
-    const std::vector<Column<RELBOOST_FLOAT>>& _target,
-    const std::vector<Column<RELBOOST_FLOAT>>& _time_stamps )
+    const std::vector<Column<Float>>& _numerical,
+    const std::vector<Column<Float>>& _target,
+    const std::vector<Column<Float>>& _time_stamps )
     : DataFrame(
           _categorical,
           _discrete,
@@ -84,7 +84,7 @@ DataFrame::DataFrame(
 // ----------------------------------------------------------------------------
 
 std::vector<std::shared_ptr<containers::Index>> DataFrame::create_indices(
-    const std::vector<Column<RELBOOST_INT>>& _join_keys )
+    const std::vector<Column<Int>>& _join_keys )
 {
     std::vector<std::shared_ptr<containers::Index>> indices;
 

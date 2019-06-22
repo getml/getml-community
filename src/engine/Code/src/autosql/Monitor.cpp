@@ -28,7 +28,7 @@ bool Monitor::get_start_message() const
 
     std::string response_content;
 
-    AUTOSQL_INT attempts = 0;
+    Int attempts = 0;
 
     while ( true )
         {

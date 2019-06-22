@@ -21,7 +21,7 @@ void Encoding::append( const Encoding& _other, bool _include_subencoding )
 
 // ----------------------------------------------------------------------------
 
-ENGINE_INT Encoding::insert( const std::string& _val )
+Int Encoding::insert( const std::string& _val )
 {
     assert( map_.find( _val ) == map_.end() );
 
@@ -36,7 +36,7 @@ ENGINE_INT Encoding::insert( const std::string& _val )
 
 // ----------------------------------------------------------------------------
 
-ENGINE_INT Encoding::operator[]( const std::string& _val )
+Int Encoding::operator[]( const std::string& _val )
 {
     // -----------------------------------
     // If this is a NULL value, return -1.
@@ -79,7 +79,7 @@ ENGINE_INT Encoding::operator[]( const std::string& _val )
 
 // ----------------------------------------------------------------------------
 
-ENGINE_INT Encoding::operator[]( const std::string& _val ) const
+Int Encoding::operator[]( const std::string& _val ) const
 {
     // -----------------------------------
     // If this is a NULL value, return -1.

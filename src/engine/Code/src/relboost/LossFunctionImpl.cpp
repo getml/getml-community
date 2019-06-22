@@ -7,7 +7,7 @@ namespace lossfunctions
 // ----------------------------------------------------------------------------
 
 std::vector<size_t> LossFunctionImpl::calc_sample_index(
-    const std::shared_ptr<const std::vector<RELBOOST_FLOAT>>& _sample_weights )
+    const std::shared_ptr<const std::vector<Float>>& _sample_weights )
     const
 {
     assert( _sample_weights );
@@ -27,14 +27,14 @@ std::vector<size_t> LossFunctionImpl::calc_sample_index(
 
 // ----------------------------------------------------------------------------
 
-RELBOOST_FLOAT LossFunctionImpl::calc_regularization_reduction(
-    const std::vector<RELBOOST_FLOAT>& _eta1,
-    const std::vector<RELBOOST_FLOAT>& _eta2,
+Float LossFunctionImpl::calc_regularization_reduction(
+    const std::vector<Float>& _eta1,
+    const std::vector<Float>& _eta2,
     const std::vector<size_t>& _indices,
-    const RELBOOST_FLOAT _old_intercept,
-    const RELBOOST_FLOAT _old_weight,
-    const std::array<RELBOOST_FLOAT, 3>& _weights,
-    const RELBOOST_FLOAT _sum_sample_weights,
+    const Float _old_intercept,
+    const Float _old_weight,
+    const std::array<Float, 3>& _weights,
+    const Float _sum_sample_weights,
     multithreading::Communicator* _comm ) const
 {
     // ------------------------------------------------------------------------
@@ -57,7 +57,7 @@ RELBOOST_FLOAT LossFunctionImpl::calc_regularization_reduction(
 
     // ------------------------------------------------------------------------
 
-    RELBOOST_FLOAT regularization = 0.0;
+    Float regularization = 0.0;
 
     if ( std::isnan( std::get<1>( _weights ) ) )
         {
@@ -94,7 +94,7 @@ RELBOOST_FLOAT LossFunctionImpl::calc_regularization_reduction(
     // ------------------------------------------------------------------------
 
     utils::Reducer::reduce(
-        std::plus<RELBOOST_FLOAT>(), &regularization, _comm );
+        std::plus<Float>(), &regularization, _comm );
 
     // ------------------------------------------------------------------------
 
@@ -111,12 +111,12 @@ RELBOOST_FLOAT LossFunctionImpl::calc_regularization_reduction(
 
 // ----------------------------------------------------------------------------
 
-RELBOOST_FLOAT LossFunctionImpl::calc_regularization_reduction(
-    const std::vector<RELBOOST_FLOAT>& _eta_old,
-    const std::vector<RELBOOST_FLOAT>& _eta_new,
+Float LossFunctionImpl::calc_regularization_reduction(
+    const std::vector<Float>& _eta_old,
+    const std::vector<Float>& _eta_new,
     const std::vector<size_t>& _indices,
-    const RELBOOST_FLOAT _old_weight,
-    const RELBOOST_FLOAT _new_weight ) const
+    const Float _old_weight,
+    const Float _new_weight ) const
 {
     assert( _eta_old.size() == targets().size() );
     assert( _eta_new.size() == targets().size() );
@@ -124,7 +124,7 @@ RELBOOST_FLOAT LossFunctionImpl::calc_regularization_reduction(
     assert( sample_weights_ );
     assert( sample_weights_->size() == targets().size() );
 
-    RELBOOST_FLOAT regularization = 0.0;
+    Float regularization = 0.0;
 
     if ( std::isnan( _old_weight ) )
         {
@@ -155,10 +155,10 @@ RELBOOST_FLOAT LossFunctionImpl::calc_regularization_reduction(
 
 void LossFunctionImpl::calc_sums(
     const std::vector<size_t>& _sample_index,
-    const std::vector<RELBOOST_FLOAT>& _sample_weights,
-    RELBOOST_FLOAT* _sum_g,
-    RELBOOST_FLOAT* _sum_h,
-    RELBOOST_FLOAT* _sum_sample_weights,
+    const std::vector<Float>& _sample_weights,
+    Float* _sum_g,
+    Float* _sum_h,
+    Float* _sum_sample_weights,
     multithreading::Communicator* _comm ) const
 {
     // ------------------------------------------------------------------------
@@ -199,16 +199,16 @@ void LossFunctionImpl::calc_sums(
     // ------------------------------------------------------------------------
 
     utils::Reducer::reduce(
-        std::plus<RELBOOST_FLOAT>(), _sum_sample_weights, _comm );
+        std::plus<Float>(), _sum_sample_weights, _comm );
 
     // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
 
-RELBOOST_FLOAT LossFunctionImpl::calc_update_rate(
-    const std::vector<RELBOOST_FLOAT>& _yhat_old,
-    const std::vector<RELBOOST_FLOAT>& _predictions,
+Float LossFunctionImpl::calc_update_rate(
+    const std::vector<Float>& _yhat_old,
+    const std::vector<Float>& _predictions,
     multithreading::Communicator* _comm ) const
 {
     // ------------------------------------------------------------------------
@@ -221,7 +221,7 @@ RELBOOST_FLOAT LossFunctionImpl::calc_update_rate(
 
     // ------------------------------------------------------------------------
 
-    RELBOOST_FLOAT sum_g_predictions = 0.0;
+    Float sum_g_predictions = 0.0;
 
     for ( size_t i = 0; i < _predictions.size(); ++i )
         {
@@ -230,7 +230,7 @@ RELBOOST_FLOAT LossFunctionImpl::calc_update_rate(
 
     // ------------------------------------------------------------------------
 
-    RELBOOST_FLOAT sum_h_predictions = 0.0;
+    Float sum_h_predictions = 0.0;
 
     for ( size_t i = 0; i < _predictions.size(); ++i )
         {
@@ -240,10 +240,10 @@ RELBOOST_FLOAT LossFunctionImpl::calc_update_rate(
     // ------------------------------------------------------------------------
 
     utils::Reducer::reduce(
-        std::plus<RELBOOST_FLOAT>(), &sum_g_predictions, _comm );
+        std::plus<Float>(), &sum_g_predictions, _comm );
 
     utils::Reducer::reduce(
-        std::plus<RELBOOST_FLOAT>(), &sum_h_predictions, _comm );
+        std::plus<Float>(), &sum_h_predictions, _comm );
 
     // ------------------------------------------------------------------------
 
@@ -261,9 +261,9 @@ RELBOOST_FLOAT LossFunctionImpl::calc_update_rate(
 
 // ----------------------------------------------------------------------------
 
-std::vector<std::array<RELBOOST_FLOAT, 3>> LossFunctionImpl::calc_weights(
+std::vector<std::array<Float, 3>> LossFunctionImpl::calc_weights(
     const enums::Update _update,
-    const RELBOOST_FLOAT _old_weight,
+    const Float _old_weight,
     const std::vector<const containers::Match*>::iterator _begin,
     const std::vector<const containers::Match*>::iterator _split_begin,
     const std::vector<const containers::Match*>::iterator _split_end,
@@ -274,7 +274,7 @@ std::vector<std::array<RELBOOST_FLOAT, 3>> LossFunctionImpl::calc_weights(
     // Note the minus!
 
     const auto calc_g =
-        [this]( const RELBOOST_FLOAT init, const containers::Match* ptr ) {
+        [this]( const Float init, const containers::Match* ptr ) {
             return init - g_[ptr->ix_output];
         };
 
@@ -287,7 +287,7 @@ std::vector<std::array<RELBOOST_FLOAT, 3>> LossFunctionImpl::calc_weights(
     // ------------------------------------------------------------------------
 
     const auto calc_h = [this](
-                            const RELBOOST_FLOAT init,
+                            const Float init,
                             const containers::Match* ptr ) {
         return init + h_[ptr->ix_output] * ( 1.0 + hyperparameters().lambda_ );
     };
@@ -301,22 +301,22 @@ std::vector<std::array<RELBOOST_FLOAT, 3>> LossFunctionImpl::calc_weights(
     // ------------------------------------------------------------------------
     // In this case, it is impossible for the weights to be NAN.
 
-    const auto arr = std::array<RELBOOST_FLOAT, 3>( {0.0, g1 / h1, g2 / h2} );
+    const auto arr = std::array<Float, 3>( {0.0, g1 / h1, g2 / h2} );
 
-    return std::vector<std::array<RELBOOST_FLOAT, 3>>( {arr} );
+    return std::vector<std::array<Float, 3>>( {arr} );
 
     // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
 
-std::array<RELBOOST_FLOAT, 3> LossFunctionImpl::calc_weights_avg_null(
+std::array<Float, 3> LossFunctionImpl::calc_weights_avg_null(
     const enums::Aggregation _agg,
-    const RELBOOST_FLOAT _old_weight,
+    const Float _old_weight,
     const std::vector<size_t>& _indices,
-    const std::vector<RELBOOST_FLOAT>& _eta,
-    const std::vector<RELBOOST_FLOAT>& _w_fixed,
-    const std::vector<RELBOOST_FLOAT>& _yhat_committed,
+    const std::vector<Float>& _eta,
+    const std::vector<Float>& _w_fixed,
+    const std::vector<Float>& _yhat_committed,
     multithreading::Communicator* _comm ) const
 {
     // ------------------------------------------------------------------------
@@ -332,7 +332,7 @@ std::array<RELBOOST_FLOAT, 3> LossFunctionImpl::calc_weights_avg_null(
     // ------------------------------------------------------------------------
     // Calculate g_eta.
 
-    std::array<RELBOOST_FLOAT, 2> g_eta_arr = {0.0, 0.0};
+    std::array<Float, 2> g_eta_arr = {0.0, 0.0};
 
     // The intercept term.
     g_eta_arr[0] = -sum_g_;
@@ -346,7 +346,7 @@ std::array<RELBOOST_FLOAT, 3> LossFunctionImpl::calc_weights_avg_null(
     // ------------------------------------------------------------------------
     // Calculate h_w_const.
 
-    std::array<RELBOOST_FLOAT, 2> h_w_const_arr = {0.0, 0.0};
+    std::array<Float, 2> h_w_const_arr = {0.0, 0.0};
 
     h_w_const_arr[0] = -sum_h_yhat_committed_;
 
@@ -365,11 +365,11 @@ std::array<RELBOOST_FLOAT, 3> LossFunctionImpl::calc_weights_avg_null(
     // ------------------------------------------------------------------------
     // Calculate A.
 
-    std::array<RELBOOST_FLOAT, 3> A_arr = {0.0, 0.0, 0.0};
+    std::array<Float, 3> A_arr = {0.0, 0.0, 0.0};
 
     // The intercept term.
     A_arr[0] = sum_h_ +
-               hyperparameters().lambda_ * static_cast<RELBOOST_FLOAT>(
+               hyperparameters().lambda_ * static_cast<Float>(
                                                targets().size() );  // A( 0, 0 )
 
     for ( const auto ix : _indices )
@@ -385,25 +385,25 @@ std::array<RELBOOST_FLOAT, 3> LossFunctionImpl::calc_weights_avg_null(
     // ------------------------------------------------------------------------
     // Reduce.
 
-    utils::Reducer::reduce<2>( std::plus<RELBOOST_FLOAT>(), &g_eta_arr, _comm );
+    utils::Reducer::reduce<2>( std::plus<Float>(), &g_eta_arr, _comm );
 
     utils::Reducer::reduce<2>(
-        std::plus<RELBOOST_FLOAT>(), &h_w_const_arr, _comm );
+        std::plus<Float>(), &h_w_const_arr, _comm );
 
-    utils::Reducer::reduce<3>( std::plus<RELBOOST_FLOAT>(), &A_arr, _comm );
+    utils::Reducer::reduce<3>( std::plus<Float>(), &A_arr, _comm );
 
     // ------------------------------------------------------------------------
     // Transfer data to Eigen::Matrix.
 
-    Eigen::Matrix<RELBOOST_FLOAT, 2, 1> g_eta;
+    Eigen::Matrix<Float, 2, 1> g_eta;
     g_eta[0] = g_eta_arr[0];
     g_eta[1] = g_eta_arr[1];
 
-    Eigen::Matrix<RELBOOST_FLOAT, 2, 1> h_w_const;
+    Eigen::Matrix<Float, 2, 1> h_w_const;
     h_w_const[0] = h_w_const_arr[0];
     h_w_const[1] = h_w_const_arr[1];
 
-    Eigen::Matrix<RELBOOST_FLOAT, 2, 2> A;
+    Eigen::Matrix<Float, 2, 2> A;
     A( 0, 0 ) = A_arr[0];
     A( 1, 1 ) = A_arr[2];
     A( 1, 0 ) = A( 0, 1 ) = A_arr[1];
@@ -425,26 +425,26 @@ std::array<RELBOOST_FLOAT, 3> LossFunctionImpl::calc_weights_avg_null(
 
     if ( relative_error > 1e-10 )
         {
-            return std::array<RELBOOST_FLOAT, 3>( {NAN, NAN, NAN} );
+            return std::array<Float, 3>( {NAN, NAN, NAN} );
         }
 
     // ------------------------------------------------------------------------
 
     if ( _agg == enums::Aggregation::avg_first_null )
         {
-            return std::array<RELBOOST_FLOAT, 3>(
+            return std::array<Float, 3>(
                 {weights[0], NAN, weights[1]} );
         }
     else if ( _agg == enums::Aggregation::avg_second_null )
         {
-            return std::array<RELBOOST_FLOAT, 3>(
+            return std::array<Float, 3>(
                 {weights[0], weights[1], NAN} );
         }
     else
         {
             assert( false && "Aggregation type not known!" );
 
-            return std::array<RELBOOST_FLOAT, 3>( {NAN, NAN, NAN} );
+            return std::array<Float, 3>( {NAN, NAN, NAN} );
         }
 
     // ------------------------------------------------------------------------
@@ -452,12 +452,12 @@ std::array<RELBOOST_FLOAT, 3> LossFunctionImpl::calc_weights_avg_null(
 
 // ----------------------------------------------------------------------------
 
-std::array<RELBOOST_FLOAT, 3> LossFunctionImpl::calc_weights(
-    const RELBOOST_FLOAT _old_weight,
+std::array<Float, 3> LossFunctionImpl::calc_weights(
+    const Float _old_weight,
     const std::vector<size_t>& _indices,
-    const std::vector<RELBOOST_FLOAT>& _eta1,
-    const std::vector<RELBOOST_FLOAT>& _eta2,
-    const std::vector<RELBOOST_FLOAT>& _yhat_committed,
+    const std::vector<Float>& _eta1,
+    const std::vector<Float>& _eta2,
+    const std::vector<Float>& _yhat_committed,
     multithreading::Communicator* _comm ) const
 {
     // ------------------------------------------------------------------------
@@ -473,7 +473,7 @@ std::array<RELBOOST_FLOAT, 3> LossFunctionImpl::calc_weights(
     // ------------------------------------------------------------------------
     // Calculate g_eta_arr.
 
-    std::array<RELBOOST_FLOAT, 3> g_eta_arr = {0.0, 0.0, 0.0};
+    std::array<Float, 3> g_eta_arr = {0.0, 0.0, 0.0};
 
     // The intercept term.
     g_eta_arr[0] = -sum_g_;
@@ -488,7 +488,7 @@ std::array<RELBOOST_FLOAT, 3> LossFunctionImpl::calc_weights(
     // ------------------------------------------------------------------------
     // Calculate h_w_const_arr.
 
-    std::array<RELBOOST_FLOAT, 3> h_w_const_arr = {0.0, 0.0, 0.0};
+    std::array<Float, 3> h_w_const_arr = {0.0, 0.0, 0.0};
 
     h_w_const_arr[0] = -sum_h_yhat_committed_;
 
@@ -508,11 +508,11 @@ std::array<RELBOOST_FLOAT, 3> LossFunctionImpl::calc_weights(
     // ------------------------------------------------------------------------
     // Calculate A_arr.
 
-    std::array<RELBOOST_FLOAT, 6> A_arr = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+    std::array<Float, 6> A_arr = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
     // The intercept term.
     A_arr[0] = sum_h_ +
-               hyperparameters().lambda_ * static_cast<RELBOOST_FLOAT>(
+               hyperparameters().lambda_ * static_cast<Float>(
                                                targets().size() );  // A( 0, 0 )
 
     for ( const auto ix : _indices )
@@ -537,27 +537,27 @@ std::array<RELBOOST_FLOAT, 3> LossFunctionImpl::calc_weights(
     // ------------------------------------------------------------------------
     // Reduce.
 
-    utils::Reducer::reduce<3>( std::plus<RELBOOST_FLOAT>(), &g_eta_arr, _comm );
+    utils::Reducer::reduce<3>( std::plus<Float>(), &g_eta_arr, _comm );
 
     utils::Reducer::reduce<3>(
-        std::plus<RELBOOST_FLOAT>(), &h_w_const_arr, _comm );
+        std::plus<Float>(), &h_w_const_arr, _comm );
 
-    utils::Reducer::reduce<6>( std::plus<RELBOOST_FLOAT>(), &A_arr, _comm );
+    utils::Reducer::reduce<6>( std::plus<Float>(), &A_arr, _comm );
 
     // ------------------------------------------------------------------------
     // Transfer data to Eigen::Matrix.
 
-    Eigen::Matrix<RELBOOST_FLOAT, 3, 1> g_eta;
+    Eigen::Matrix<Float, 3, 1> g_eta;
     g_eta[0] = g_eta_arr[0];
     g_eta[1] = g_eta_arr[1];
     g_eta[2] = g_eta_arr[2];
 
-    Eigen::Matrix<RELBOOST_FLOAT, 3, 1> h_w_const;
+    Eigen::Matrix<Float, 3, 1> h_w_const;
     h_w_const[0] = h_w_const_arr[0];
     h_w_const[1] = h_w_const_arr[1];
     h_w_const[2] = h_w_const_arr[2];
 
-    Eigen::Matrix<RELBOOST_FLOAT, 3, 3> A;
+    Eigen::Matrix<Float, 3, 3> A;
     A( 0, 0 ) = A_arr[0];
     A( 1, 1 ) = A_arr[3];
     A( 2, 2 ) = A_arr[5];
@@ -582,12 +582,12 @@ std::array<RELBOOST_FLOAT, 3> LossFunctionImpl::calc_weights(
 
     if ( relative_error > 1e-10 )
         {
-            return std::array<RELBOOST_FLOAT, 3>( {NAN, NAN, NAN} );
+            return std::array<Float, 3>( {NAN, NAN, NAN} );
         }
 
     // ------------------------------------------------------------------------
 
-    return std::array<RELBOOST_FLOAT, 3>(
+    return std::array<Float, 3>(
         {weights[0], weights[1], weights[2]} );
 
     // ------------------------------------------------------------------------
@@ -596,13 +596,13 @@ std::array<RELBOOST_FLOAT, 3> LossFunctionImpl::calc_weights(
 // ----------------------------------------------------------------------------
 
 void LossFunctionImpl::calc_yhat(
-    const RELBOOST_FLOAT _old_weight,
-    const std::array<RELBOOST_FLOAT, 3>& _new_weights,
+    const Float _old_weight,
+    const std::array<Float, 3>& _new_weights,
     const std::vector<size_t>& _indices,
-    const std::vector<RELBOOST_FLOAT>& _eta1,
-    const std::vector<RELBOOST_FLOAT>& _eta2,
-    const std::vector<RELBOOST_FLOAT>& _yhat_committed,
-    std::vector<RELBOOST_FLOAT>* _yhat ) const
+    const std::vector<Float>& _eta1,
+    const std::vector<Float>& _eta2,
+    const std::vector<Float>& _yhat_committed,
+    std::vector<Float>* _yhat ) const
 {
     for ( auto ix : _indices )
         {
@@ -616,12 +616,12 @@ void LossFunctionImpl::calc_yhat(
 // ----------------------------------------------------------------------------
 
 void LossFunctionImpl::calc_yhat_avg_null(
-    const RELBOOST_FLOAT _old_weight,
-    const std::array<RELBOOST_FLOAT, 3>& _new_weights,
+    const Float _old_weight,
+    const std::array<Float, 3>& _new_weights,
     const std::vector<size_t>& _indices,
-    const std::vector<RELBOOST_FLOAT>& _eta,
-    const std::vector<RELBOOST_FLOAT>& _w_fixed,
-    std::vector<RELBOOST_FLOAT>* _yhat ) const
+    const std::vector<Float>& _eta,
+    const std::vector<Float>& _w_fixed,
+    std::vector<Float>* _yhat ) const
 {
     if ( std::isnan( std::get<2>( _new_weights ) ) )
         {
@@ -652,15 +652,15 @@ void LossFunctionImpl::calc_yhat_avg_null(
 
 // ----------------------------------------------------------------------------
 
-RELBOOST_FLOAT LossFunctionImpl::commit(
+Float LossFunctionImpl::commit(
     const std::vector<size_t>& _indices,
-    const std::vector<RELBOOST_FLOAT>& _yhat,
-    std::vector<RELBOOST_FLOAT>* _yhat_committed ) const
+    const std::vector<Float>& _yhat,
+    std::vector<Float>* _yhat_committed ) const
 {
     assert( _yhat_committed->size() == _yhat.size() );
     assert( _yhat_committed->size() == h_.size() );
 
-    RELBOOST_FLOAT sum_h_yhat = sum_h_yhat_committed_;
+    Float sum_h_yhat = sum_h_yhat_committed_;
 
     for ( size_t ix : _indices )
         {
@@ -680,8 +680,8 @@ RELBOOST_FLOAT LossFunctionImpl::commit(
 
 void LossFunctionImpl::revert_to_commit(
     const std::vector<size_t>& _indices,
-    const std::vector<RELBOOST_FLOAT>& _yhat_committed,
-    std::vector<RELBOOST_FLOAT>* _yhat ) const
+    const std::vector<Float>& _yhat_committed,
+    std::vector<Float>* _yhat ) const
 {
     for ( auto ix : _indices )
         {
@@ -694,8 +694,8 @@ void LossFunctionImpl::revert_to_commit(
 void LossFunctionImpl::transform(
     const std::vector<const containers::Match*>::iterator _begin,
     const std::vector<const containers::Match*>::iterator _end,
-    const std::vector<RELBOOST_FLOAT>& _weights,
-    std::vector<RELBOOST_FLOAT>* _predictions ) const
+    const std::vector<Float>& _weights,
+    std::vector<Float>* _predictions ) const
 {
     assert(
         static_cast<int>( _weights.size() ) == std::distance( _begin, _end ) );

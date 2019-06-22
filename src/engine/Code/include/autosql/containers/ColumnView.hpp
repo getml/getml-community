@@ -47,7 +47,7 @@ class ColumnView
     /// Whether or not the column view is empty.
     operator bool() const { return ( col_ && true ); }
 
-    /// Accessor to data (when rows are std::vector<AUTOSQL_INT>)
+    /// Accessor to data (when rows are std::vector<Int>)
     template <
         typename CType = ContainerType,
         typename std::enable_if<
@@ -59,13 +59,13 @@ class ColumnView
         return ( *col_ )[( *rows_ )[_i]];
     }
 
-    /// Accessor to data (when rows are std::map<AUTOSQL_INT, AUTOSQL_INT>)
+    /// Accessor to data (when rows are std::map<Int, Int>)
     template <
         typename CType = ContainerType,
         typename std::enable_if<
-            std::is_same<CType, std::map<AUTOSQL_INT, AUTOSQL_INT>>::value,
+            std::is_same<CType, std::map<Int, Int>>::value,
             int>::type = 0>
-    inline T operator[]( const AUTOSQL_INT _i ) const
+    inline T operator[]( const Int _i ) const
     {
         assert( _i >= 0 );
         auto it = rows_->find( _i );

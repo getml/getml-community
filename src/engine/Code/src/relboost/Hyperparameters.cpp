@@ -24,19 +24,19 @@ Hyperparameters::Hyperparameters()
 // ----------------------------------------------------------------------------
 
 Hyperparameters::Hyperparameters( const Poco::JSON::Object& _obj )
-    : eta_( JSON::get_value<RELBOOST_FLOAT>( _obj, "eta_" ) ),
-      gamma_( JSON::get_value<RELBOOST_FLOAT>( _obj, "gamma_" ) ),
-      lambda_( JSON::get_value<RELBOOST_FLOAT>( _obj, "lambda_" ) ),
-      max_depth_( JSON::get_value<RELBOOST_INT>( _obj, "max_depth_" ) ),
+    : eta_( JSON::get_value<Float>( _obj, "eta_" ) ),
+      gamma_( JSON::get_value<Float>( _obj, "gamma_" ) ),
+      lambda_( JSON::get_value<Float>( _obj, "lambda_" ) ),
+      max_depth_( JSON::get_value<Int>( _obj, "max_depth_" ) ),
       min_num_samples_(
-          JSON::get_value<RELBOOST_INT>( _obj, "min_num_samples_" ) ),
-      num_features_( JSON::get_value<RELBOOST_INT>( _obj, "num_features_" ) ),
+          JSON::get_value<Int>( _obj, "min_num_samples_" ) ),
+      num_features_( JSON::get_value<Int>( _obj, "num_features_" ) ),
       num_selected_features_(
-          JSON::get_value<RELBOOST_INT>( _obj, "num_selected_features_" ) ),
-      num_threads_( JSON::get_value<RELBOOST_INT>( _obj, "num_threads_" ) ),
+          JSON::get_value<Int>( _obj, "num_selected_features_" ) ),
+      num_threads_( JSON::get_value<Int>( _obj, "num_threads_" ) ),
       objective_( JSON::get_value<std::string>( _obj, "objective_" ) ),
       sampling_factor_(
-          JSON::get_value<RELBOOST_FLOAT>( _obj, "sampling_factor_" ) ),
+          JSON::get_value<Float>( _obj, "sampling_factor_" ) ),
       seed_( JSON::get_value<size_t>( _obj, "seed_" ) ),
       silent_( JSON::get_value<bool>( _obj, "silent_" ) ),
       use_timestamps_( JSON::get_value<bool>( _obj, "use_timestamps_" ) )

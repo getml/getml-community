@@ -8,7 +8,7 @@ namespace containers
 // ----------------------------------------------------------------------------
 
 void DataFrame::add_categorical(
-    const Matrix<ENGINE_INT> &_mat, const size_t _num )
+    const Matrix<Int> &_mat, const size_t _num )
 {
     if ( _num < num_categoricals() )
         {
@@ -28,7 +28,7 @@ void DataFrame::add_categorical(
 // ----------------------------------------------------------------------------
 
 void DataFrame::add_discrete(
-    const Matrix<ENGINE_FLOAT> &_mat, const size_t _num )
+    const Matrix<Float> &_mat, const size_t _num )
 {
     if ( _num < num_discretes() )
         {
@@ -48,7 +48,7 @@ void DataFrame::add_discrete(
 // ----------------------------------------------------------------------------
 
 void DataFrame::add_float_column(
-    const Matrix<ENGINE_FLOAT> &_mat,
+    const Matrix<Float> &_mat,
     const std::string &_role,
     const size_t _num )
 {
@@ -80,7 +80,7 @@ void DataFrame::add_float_column(
 
 void DataFrame::add_float_vectors(
     const std::vector<std::string> &_names,
-    const std::vector<std::shared_ptr<std::vector<ENGINE_FLOAT>>> &_vectors,
+    const std::vector<std::shared_ptr<std::vector<Float>>> &_vectors,
     const std::string &_role )
 {
     assert( _names.size() == _vectors.size() );
@@ -90,7 +90,7 @@ void DataFrame::add_float_vectors(
             assert( _vectors[i] );
 
             auto mat =
-                Matrix<ENGINE_FLOAT>( _vectors[i]->size(), 1, _vectors[i] );
+                Matrix<Float>( _vectors[i]->size(), 1, _vectors[i] );
 
             mat.name() = _names[i];
 
@@ -103,7 +103,7 @@ void DataFrame::add_float_vectors(
 // ----------------------------------------------------------------------------
 
 void DataFrame::add_int_column(
-    const Matrix<ENGINE_INT> &_mat, const std::string _role, const size_t _num )
+    const Matrix<Int> &_mat, const std::string _role, const size_t _num )
 {
     assert( _mat.ncols() == 1 );
 
@@ -125,7 +125,7 @@ void DataFrame::add_int_column(
 
 void DataFrame::add_int_vectors(
     const std::vector<std::string> &_names,
-    const std::vector<std::shared_ptr<std::vector<ENGINE_INT>>> &_vectors,
+    const std::vector<std::shared_ptr<std::vector<Int>>> &_vectors,
     const std::string &_role )
 {
     assert( _names.size() == _vectors.size() );
@@ -135,7 +135,7 @@ void DataFrame::add_int_vectors(
             assert( _vectors[i] );
 
             auto mat =
-                Matrix<ENGINE_INT>( _vectors[i]->size(), 1, _vectors[i] );
+                Matrix<Int>( _vectors[i]->size(), 1, _vectors[i] );
 
             mat.name() = _names[i];
 
@@ -148,7 +148,7 @@ void DataFrame::add_int_vectors(
 // ----------------------------------------------------------------------------
 
 void DataFrame::add_join_key(
-    const Matrix<ENGINE_INT> &_mat, const size_t _num )
+    const Matrix<Int> &_mat, const size_t _num )
 {
     if ( _num < num_join_keys() )
         {
@@ -168,7 +168,7 @@ void DataFrame::add_join_key(
 // ----------------------------------------------------------------------------
 
 void DataFrame::add_numerical(
-    const Matrix<ENGINE_FLOAT> &_mat, const size_t _num )
+    const Matrix<Float> &_mat, const size_t _num )
 {
     if ( _num < num_numericals() )
         {
@@ -188,7 +188,7 @@ void DataFrame::add_numerical(
 // ----------------------------------------------------------------------------
 
 void DataFrame::add_target(
-    const Matrix<ENGINE_FLOAT> &_mat, const size_t _num )
+    const Matrix<Float> &_mat, const size_t _num )
 {
     if ( _num < num_targets() )
         {
@@ -208,7 +208,7 @@ void DataFrame::add_target(
 // ----------------------------------------------------------------------------
 
 void DataFrame::add_time_stamp(
-    const Matrix<ENGINE_FLOAT> &_mat, const size_t _num )
+    const Matrix<Float> &_mat, const size_t _num )
 {
     if ( _num < num_time_stamps() )
         {
@@ -329,42 +329,42 @@ void DataFrame::check_plausibility() const
     const bool any_categorical_does_not_match = std::any_of(
         categoricals_.begin(),
         categoricals_.end(),
-        [expected_nrows]( const Matrix<ENGINE_INT> &mat ) {
+        [expected_nrows]( const Matrix<Int> &mat ) {
             return mat.nrows() != expected_nrows;
         } );
 
     const bool any_discrete_does_not_match = std::any_of(
         discretes_.begin(),
         discretes_.end(),
-        [expected_nrows]( const Matrix<ENGINE_FLOAT> &mat ) {
+        [expected_nrows]( const Matrix<Float> &mat ) {
             return mat.nrows() != expected_nrows;
         } );
 
     const bool any_join_key_does_not_match = std::any_of(
         join_keys_.begin(),
         join_keys_.end(),
-        [expected_nrows]( const Matrix<ENGINE_INT> &mat ) {
+        [expected_nrows]( const Matrix<Int> &mat ) {
             return mat.nrows() != expected_nrows;
         } );
 
     const bool any_numerical_does_not_match = std::any_of(
         numericals_.begin(),
         numericals_.end(),
-        [expected_nrows]( const Matrix<ENGINE_FLOAT> &mat ) {
+        [expected_nrows]( const Matrix<Float> &mat ) {
             return mat.nrows() != expected_nrows;
         } );
 
     const bool any_target_does_not_match = std::any_of(
         targets_.begin(),
         targets_.end(),
-        [expected_nrows]( const Matrix<ENGINE_FLOAT> &mat ) {
+        [expected_nrows]( const Matrix<Float> &mat ) {
             return mat.nrows() != expected_nrows;
         } );
 
     const bool any_time_stamp_does_not_match = std::any_of(
         time_stamps_.begin(),
         time_stamps_.end(),
-        [expected_nrows]( const Matrix<ENGINE_FLOAT> &mat ) {
+        [expected_nrows]( const Matrix<Float> &mat ) {
             return mat.nrows() != expected_nrows;
         } );
 
@@ -442,7 +442,7 @@ void DataFrame::create_indices()
 
 // ----------------------------------------------------------------------------
 
-const Matrix<ENGINE_FLOAT> &DataFrame::float_matrix(
+const Matrix<Float> &DataFrame::float_matrix(
     const std::string &_role, const size_t _num ) const
 {
     if ( _role == "discrete" )
@@ -479,17 +479,17 @@ void DataFrame::from_db(
 {
     // ----------------------------------------
 
-    auto categoricals = make_vectors<ENGINE_INT>( _categorical_names.size() );
+    auto categoricals = make_vectors<Int>( _categorical_names.size() );
 
-    auto discretes = make_vectors<ENGINE_FLOAT>( _discrete_names.size() );
+    auto discretes = make_vectors<Float>( _discrete_names.size() );
 
-    auto join_keys = make_vectors<ENGINE_INT>( _join_key_names.size() );
+    auto join_keys = make_vectors<Int>( _join_key_names.size() );
 
-    auto numericals = make_vectors<ENGINE_FLOAT>( _numerical_names.size() );
+    auto numericals = make_vectors<Float>( _numerical_names.size() );
 
-    auto targets = make_vectors<ENGINE_FLOAT>( _target_names.size() );
+    auto targets = make_vectors<Float>( _target_names.size() );
 
-    auto time_stamps = make_vectors<ENGINE_FLOAT>( _time_stamp_names.size() );
+    auto time_stamps = make_vectors<Float>( _time_stamp_names.size() );
 
     // ----------------------------------------
 
@@ -608,7 +608,7 @@ void DataFrame::from_json(
 
             const auto arr = JSON::get_array( _obj, name );
 
-            auto column = Matrix<ENGINE_INT>( arr->size(), 1 );
+            auto column = Matrix<Int>( arr->size(), 1 );
 
             for ( size_t j = 0; j < arr->size(); ++j )
                 {
@@ -644,11 +644,11 @@ void DataFrame::from_json(
 
             const auto arr = JSON::get_array( _obj, name );
 
-            auto column = Matrix<ENGINE_FLOAT>( arr->size(), 1 );
+            auto column = Matrix<Float>( arr->size(), 1 );
 
             for ( size_t j = 0; j < arr->size(); ++j )
                 {
-                    column[j] = arr->getElement<ENGINE_FLOAT>( j );
+                    column[j] = arr->getElement<Float>( j );
                 }
 
             column.name() = _names[i];
@@ -672,7 +672,7 @@ void DataFrame::from_json(
 
             const auto arr = JSON::get_array( _obj, name );
 
-            auto column = Matrix<ENGINE_FLOAT>( arr->size(), 1 );
+            auto column = Matrix<Float>( arr->size(), 1 );
 
             for ( size_t j = 0; j < arr->size(); ++j )
                 {
@@ -684,7 +684,7 @@ void DataFrame::from_json(
                         }
                     catch ( std::exception &e )
                         {
-                            column[j] = arr->getElement<ENGINE_FLOAT>( j );
+                            column[j] = arr->getElement<Float>( j );
                         }
                 }
 
@@ -824,7 +824,7 @@ Poco::JSON::Object DataFrame::get_content(
 
 // ----------------------------------------------------------------------------
 
-const Matrix<ENGINE_INT> &DataFrame::int_matrix(
+const Matrix<Int> &DataFrame::int_matrix(
     const std::string &_role, const size_t _num ) const
 {
     if ( _role == "categorical" )
@@ -865,17 +865,17 @@ void DataFrame::load( const std::string &_path )
     // ---------------------------------------------------------------------
     // Load contents.
 
-    categoricals_ = load_matrices<ENGINE_INT>( _path, "categorical_" );
+    categoricals_ = load_matrices<Int>( _path, "categorical_" );
 
-    discretes_ = load_matrices<ENGINE_FLOAT>( _path, "discrete_" );
+    discretes_ = load_matrices<Float>( _path, "discrete_" );
 
-    join_keys_ = load_matrices<ENGINE_INT>( _path, "join_key_" );
+    join_keys_ = load_matrices<Int>( _path, "join_key_" );
 
-    numericals_ = load_matrices<ENGINE_FLOAT>( _path, "numerical_" );
+    numericals_ = load_matrices<Float>( _path, "numerical_" );
 
-    targets_ = load_matrices<ENGINE_FLOAT>( _path, "target_" );
+    targets_ = load_matrices<Float>( _path, "target_" );
 
-    time_stamps_ = load_matrices<ENGINE_FLOAT>( _path, "time_stamp_" );
+    time_stamps_ = load_matrices<Float>( _path, "time_stamp_" );
 
     // ---------------------------------------------------------------------
     // Create index
@@ -887,9 +887,9 @@ void DataFrame::load( const std::string &_path )
 
 // ----------------------------------------------------------------------------
 
-ENGINE_UNSIGNED_LONG DataFrame::nbytes() const
+ULong DataFrame::nbytes() const
 {
-    ENGINE_UNSIGNED_LONG nbytes = 0;
+    ULong nbytes = 0;
 
     nbytes += calc_nbytes( categoricals_ );
 
@@ -978,7 +978,7 @@ Poco::JSON::Object DataFrame::to_monitor( const std::string _name )
 
     obj.set( "numerical_units_", get_units( numericals_ ) );
 
-    obj.set( "size_", static_cast<ENGINE_FLOAT>( nbytes() ) / 1000000.0 );
+    obj.set( "size_", static_cast<Float>( nbytes() ) / 1000000.0 );
 
     obj.set( "targets_", get_colnames( targets_ ) );
 
@@ -994,7 +994,7 @@ Poco::JSON::Object DataFrame::to_monitor( const std::string _name )
 // ----------------------------------------------------------------------------
 
 std::string DataFrame::to_time_stamp(
-    const ENGINE_FLOAT &_time_stamp_float ) const
+    const Float &_time_stamp_float ) const
 {
     if ( std::isnan( _time_stamp_float ) )
         {

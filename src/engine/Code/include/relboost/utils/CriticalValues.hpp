@@ -15,7 +15,7 @@ class CriticalValues
 
    public:
     /// Calculates the critical values for categorical columns.
-    static const std::shared_ptr<const std::vector<RELBOOST_INT>>
+    static const std::shared_ptr<const std::vector<Int>>
     calc_categorical(
         const enums::DataUsed _data_used,
         const size_t _num_column,
@@ -26,7 +26,7 @@ class CriticalValues
         multithreading::Communicator* _comm );
 
     /// Calculates the critical values for discrete columns.
-    static std::vector<RELBOOST_FLOAT> calc_discrete(
+    static std::vector<Float> calc_discrete(
         const enums::DataUsed _data_used,
         const size_t _input_col,
         const size_t _output_col,
@@ -37,7 +37,7 @@ class CriticalValues
         multithreading::Communicator* _comm );
 
     /// Calculates the critical values for numerical columns.
-    static std::vector<RELBOOST_FLOAT> calc_numerical(
+    static std::vector<Float> calc_numerical(
         const enums::DataUsed _data_used,
         const size_t _input_col,
         const size_t _output_col,
@@ -51,7 +51,7 @@ class CriticalValues
 
    public:
     /// Wrapper around calc_discrete.
-    static std::vector<RELBOOST_FLOAT> calc_discrete(
+    static std::vector<Float> calc_discrete(
         const enums::DataUsed _data_used,
         const size_t _num_column,
         const containers::DataFrame& _input,
@@ -75,7 +75,7 @@ class CriticalValues
     }
 
     /// Wrapper around calc_numerical.
-    static std::vector<RELBOOST_FLOAT> calc_numerical(
+    static std::vector<Float> calc_numerical(
         const enums::DataUsed _data_used,
         const size_t _num_column,
         const containers::DataFrame& _input,
@@ -110,8 +110,8 @@ class CriticalValues
         const containers::DataFrameView& _output,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end,
-        RELBOOST_INT* _min,
-        RELBOOST_INT* _max,
+        Int* _min,
+        Int* _max,
         multithreading::Communicator* _comm );
 
     /// Finds the minimum and the maximum needed for calculating the
@@ -123,8 +123,8 @@ class CriticalValues
         const containers::DataFrameView& _output,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end,
-        RELBOOST_FLOAT* _min,
-        RELBOOST_FLOAT* _max,
+        Float* _min,
+        Float* _max,
         multithreading::Communicator* _comm );
 
     /// Finds the minimum and the maximum needed for calculating the
@@ -137,19 +137,19 @@ class CriticalValues
         const containers::DataFrameView& _output,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end,
-        RELBOOST_FLOAT* _min,
-        RELBOOST_FLOAT* _max,
+        Float* _min,
+        Float* _max,
         multithreading::Communicator* _comm );
 
     // --------------------------------------------------------------------
 
    private:
     /// Calculates the number of critical values needed for numerical columns
-    static size_t calc_num_critical_values( RELBOOST_INT _num_matches )
+    static size_t calc_num_critical_values( Int _num_matches )
     {
         return std::max(
             static_cast<size_t>(
-                std::sqrt( static_cast<RELBOOST_FLOAT>( _num_matches ) ) ),
+                std::sqrt( static_cast<Float>( _num_matches ) ) ),
             static_cast<size_t>( 1 ) );
     }
 

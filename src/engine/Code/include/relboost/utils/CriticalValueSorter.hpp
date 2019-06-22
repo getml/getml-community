@@ -12,7 +12,7 @@ namespace utils
 struct CriticalValueSorter
 {
     /// Sort critical values in DESCENDING order of associated weights.
-    static std::shared_ptr<const std::vector<RELBOOST_INT>> sort(
+    static std::shared_ptr<const std::vector<Int>> sort(
         const std::vector<containers::CandidateSplit>::iterator _begin,
         const std::vector<containers::CandidateSplit>::iterator _end );
 

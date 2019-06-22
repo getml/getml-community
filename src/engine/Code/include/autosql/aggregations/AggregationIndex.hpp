@@ -14,9 +14,9 @@ class AggregationIndex
     AggregationIndex(
         const containers::DataFrameView& _input_table,
         const containers::DataFrameView& _output_table,
-        const std::shared_ptr<const std::map<AUTOSQL_INT, AUTOSQL_INT>>&
+        const std::shared_ptr<const std::map<Int, Int>>&
             _input_map,
-        const std::shared_ptr<const std::map<AUTOSQL_INT, AUTOSQL_INT>>&
+        const std::shared_ptr<const std::map<Int, Int>>&
             _output_map,
         const bool _use_timestamps )
         : input_map_( _input_map ),
@@ -36,22 +36,22 @@ class AggregationIndex
     /// Returns the number of elements in input_table_ that are
     /// linked to the element of the output_table_ designated by
     /// _ix_agg
-    const AUTOSQL_FLOAT get_count( const AUTOSQL_INT _ix_agg ) const;
+    const Float get_count( const Int _ix_agg ) const;
 
     /// Matches the sample weights returned by the parent to make "sample
     /// weights" for the subfeatures.
-    std::shared_ptr<std::vector<AUTOSQL_FLOAT>> make_sample_weights(
-        const std::shared_ptr<const std::vector<AUTOSQL_FLOAT>>
+    std::shared_ptr<std::vector<Float>> make_sample_weights(
+        const std::shared_ptr<const std::vector<Float>>
             _sample_weights_parent ) const;
 
     /// Maps _ix_input to all indices
-    const std::vector<AUTOSQL_INT> transform(
-        const AUTOSQL_INT _ix_input ) const;
+    const std::vector<Int> transform(
+        const Int _ix_input ) const;
 
     /// Transform ix_agg using the output map
-    AUTOSQL_INT transform_ix_agg(
-        const AUTOSQL_INT _ix_agg,
-        const std::map<AUTOSQL_INT, AUTOSQL_INT>& _rows_map ) const;
+    Int transform_ix_agg(
+        const Int _ix_agg,
+        const std::map<Int, Int>& _rows_map ) const;
 
     // ------------------------------------------------------------
 
@@ -59,9 +59,9 @@ class AggregationIndex
     /// Checks whether _time_stamp_output is within the range defined by
     /// _time_stamp_input and _upper_time_stamp.
     bool time_stamp_output_in_range(
-        const AUTOSQL_FLOAT _time_stamp_input,
-        const AUTOSQL_FLOAT _upper_time_stamp,
-        const AUTOSQL_FLOAT _time_stamp_output ) const
+        const Float _time_stamp_input,
+        const Float _upper_time_stamp,
+        const Float _time_stamp_output ) const
     {
         return (
             ( _time_stamp_input <= _time_stamp_output ) &&
@@ -75,7 +75,7 @@ class AggregationIndex
     /// Maps the indices of the underlying DataFrame to the row indices of the
     /// DataFrameView (in effect reversing the row indices in the DataFrameView)
     /// for the INPUT table.
-    const std::shared_ptr<const std::map<AUTOSQL_INT, AUTOSQL_INT>> input_map_;
+    const std::shared_ptr<const std::map<Int, Int>> input_map_;
 
     /// Data frame that is aggregated (the right table)
     const containers::DataFrameView input_table_;
@@ -83,7 +83,7 @@ class AggregationIndex
     /// Maps the indices of the underlying DataFrame to the row indices of the
     /// DataFrameView (in effect reversing the row indices in the DataFrameView)
     /// for the OUTPUT table.
-    const std::shared_ptr<const std::map<AUTOSQL_INT, AUTOSQL_INT>> output_map_;
+    const std::shared_ptr<const std::map<Int, Int>> output_map_;
 
     /// Data frame on which the input table is joined (the left table)
     const containers::DataFrameView output_table_;

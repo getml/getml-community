@@ -16,8 +16,8 @@ class AggregationImpl
    public:
     AggregationImpl(
         lossfunctions::LossFunction* _child,
-        std::vector<RELBOOST_FLOAT>* _eta1,
-        std::vector<RELBOOST_FLOAT>* _eta2,
+        std::vector<Float>* _eta1,
+        std::vector<Float>* _eta2,
         containers::IntSet* _indices,
         containers::IntSet* _indices_current )
         : child_( _child ),
@@ -34,13 +34,13 @@ class AggregationImpl
 
    public:
     /// Commits the _weights.
-    void commit( const std::array<RELBOOST_FLOAT, 3>& _weights );
+    void commit( const std::array<Float, 3>& _weights );
 
     /// Returns the loss reduction associated with a split.
-    RELBOOST_FLOAT evaluate_split(
-        const RELBOOST_FLOAT _old_intercept,
-        const RELBOOST_FLOAT _old_weight,
-        const std::array<RELBOOST_FLOAT, 3>& _weights );
+    Float evaluate_split(
+        const Float _old_intercept,
+        const Float _old_weight,
+        const std::array<Float, 3>& _weights );
 
     /// Resets the critical resources to zero.
     void reset();
@@ -58,10 +58,10 @@ class AggregationImpl
     lossfunctions::LossFunction* const child_;
 
     /// Parameters for weight 1.
-    std::vector<RELBOOST_FLOAT>& eta1_;
+    std::vector<Float>& eta1_;
 
     /// Parameters for weight 2.
-    std::vector<RELBOOST_FLOAT>& eta2_;
+    std::vector<Float>& eta2_;
 
     /// Keeps track of the samples that have been altered.
     containers::IntSet& indices_;

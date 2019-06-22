@@ -23,8 +23,8 @@ class RandomNumberGenerator
 
    public:
     /// Returns a random integer in the range (_min, _max).
-    AUTOSQL_FLOAT random_float(
-        const AUTOSQL_FLOAT _min, const AUTOSQL_FLOAT _max )
+    Float random_float(
+        const Float _min, const Float _max )
     {
         std::uniform_real_distribution<> uniform_distribution( _min, _max );
 
@@ -40,7 +40,7 @@ class RandomNumberGenerator
     }
 
     /// Returns a random integer in the range (_min, _max).
-    AUTOSQL_INT random_int( const AUTOSQL_INT _min, const AUTOSQL_INT _max )
+    Int random_int( const Int _min, const Int _max )
     {
         std::uniform_int_distribution<> uniform_distribution( _min, _max );
 

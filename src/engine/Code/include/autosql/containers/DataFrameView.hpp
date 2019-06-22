@@ -12,9 +12,9 @@ class DataFrameView
     // ---------------------------------------------------------------------
 
    public:
-    typedef autosql::containers::Column<AUTOSQL_FLOAT> FloatColumnType;
+    typedef autosql::containers::Column<Float> FloatColumnType;
 
-    typedef autosql::containers::Column<AUTOSQL_INT> IntColumnType;
+    typedef autosql::containers::Column<Int> IntColumnType;
 
     // ---------------------------------------------------------------------
 
@@ -32,16 +32,16 @@ class DataFrameView
 
    public:
     /// Getter for a categorical value.
-    AUTOSQL_INT categorical( size_t _i, size_t _j ) const
+    Int categorical( size_t _i, size_t _j ) const
     {
         return df_.categorical( row( _i ), _j );
     }
 
     /// Getter for a categorical column.
-    const ColumnView<AUTOSQL_INT, std::vector<size_t>> categorical_col(
+    const ColumnView<Int, std::vector<size_t>> categorical_col(
         size_t _j ) const
     {
-        return ColumnView<AUTOSQL_INT, std::vector<size_t>>(
+        return ColumnView<Int, std::vector<size_t>>(
             df_.categorical_col( _j ), rows_ );
     }
 
@@ -74,16 +74,16 @@ class DataFrameView
     const DataFrame df() const { return df_; }
 
     /// Getter for a discrete value.
-    AUTOSQL_FLOAT discrete( size_t _i, size_t _j ) const
+    Float discrete( size_t _i, size_t _j ) const
     {
         return df_.discrete( row( _i ), _j );
     }
 
     /// Getter for a discrete column.
-    const ColumnView<AUTOSQL_FLOAT, std::vector<size_t>> discrete_col(
+    const ColumnView<Float, std::vector<size_t>> discrete_col(
         size_t _j ) const
     {
-        return ColumnView<AUTOSQL_FLOAT, std::vector<size_t>>(
+        return ColumnView<Float, std::vector<size_t>>(
             df_.discrete_col( _j ), rows_ );
     }
 
@@ -106,13 +106,13 @@ class DataFrameView
     }
 
     /// Getter for a join key.
-    AUTOSQL_INT join_key( size_t _i ) const
+    Int join_key( size_t _i ) const
     {
         return df_.join_key( row( _i ) );
     }
 
     /// Getter for a join keys.
-    const std::vector<Column<AUTOSQL_INT>>& join_keys() const
+    const std::vector<Column<Int>>& join_keys() const
     {
         return df_.join_keys();
     }
@@ -149,16 +149,16 @@ class DataFrameView
     size_t num_time_stamps() const { return df_.num_time_stamps(); }
 
     /// Getter for a numerical value.
-    AUTOSQL_FLOAT numerical( size_t _i, size_t _j ) const
+    Float numerical( size_t _i, size_t _j ) const
     {
         return df_.numerical( row( _i ), _j );
     }
 
     /// Getter for a numerical column.
-    const ColumnView<AUTOSQL_FLOAT, std::vector<size_t>> numerical_col(
+    const ColumnView<Float, std::vector<size_t>> numerical_col(
         size_t _j ) const
     {
-        return ColumnView<AUTOSQL_FLOAT, std::vector<size_t>>(
+        return ColumnView<Float, std::vector<size_t>>(
             df_.numerical_col( _j ), rows_ );
     }
 
@@ -184,16 +184,16 @@ class DataFrameView
     }
 
     /// Getter for a target value.
-    AUTOSQL_FLOAT target( size_t _i, size_t _j ) const
+    Float target( size_t _i, size_t _j ) const
     {
         return df_.target( row( _i ), _j );
     }
 
     /// Getter for a target column.
-    const ColumnView<AUTOSQL_FLOAT, std::vector<size_t>> target_col(
+    const ColumnView<Float, std::vector<size_t>> target_col(
         size_t _j ) const
     {
-        return ColumnView<AUTOSQL_FLOAT, std::vector<size_t>>(
+        return ColumnView<Float, std::vector<size_t>>(
             df_.target_col( _j ), rows_ );
     }
 
@@ -210,15 +210,15 @@ class DataFrameView
     }
 
     /// Trivial getter
-    AUTOSQL_FLOAT time_stamp( size_t _i ) const
+    Float time_stamp( size_t _i ) const
     {
         return df_.time_stamp( row( _i ) );
     }
 
     /// Getter for the time stamps col.
-    const ColumnView<AUTOSQL_FLOAT, std::vector<size_t>> time_stamp_col() const
+    const ColumnView<Float, std::vector<size_t>> time_stamp_col() const
     {
-        return ColumnView<AUTOSQL_FLOAT, std::vector<size_t>>(
+        return ColumnView<Float, std::vector<size_t>>(
             df_.time_stamp_col(), rows_ );
     }
 
@@ -229,7 +229,7 @@ class DataFrameView
     }
 
     /// Trivial getter
-    AUTOSQL_FLOAT upper_time_stamp( size_t _i ) const
+    Float upper_time_stamp( size_t _i ) const
     {
         return df_.upper_time_stamp( row( _i ) );
     }

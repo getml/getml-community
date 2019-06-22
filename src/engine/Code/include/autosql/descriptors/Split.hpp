@@ -12,11 +12,11 @@ struct Split
     /// Constructor for splits on numerical values.
     Split(
         const bool _apply_from_above,
-        const AUTOSQL_FLOAT _critical_value,
-        const AUTOSQL_INT _column_used,
+        const Float _critical_value,
+        const Int _column_used,
         const enums::DataUsed _data_used )
         : apply_from_above( _apply_from_above ),
-          categories_used( std::make_shared<std::vector<AUTOSQL_INT>>( 0 ) ),
+          categories_used( std::make_shared<std::vector<Int>>( 0 ) ),
           categories_used_begin( categories_used->cbegin() ),
           categories_used_end( categories_used->cend() ),
           column_used( _column_used ),
@@ -28,10 +28,10 @@ struct Split
     /// Constructor for splits on categorical values.
     Split(
         const bool _apply_from_above,
-        const std::shared_ptr<const std::vector<AUTOSQL_INT>> _categories_used,
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_used_begin,
-        const std::vector<AUTOSQL_INT>::const_iterator _categories_used_end,
-        const AUTOSQL_INT _column_used,
+        const std::shared_ptr<const std::vector<Int>> _categories_used,
+        const std::vector<Int>::const_iterator _categories_used_begin,
+        const std::vector<Int>::const_iterator _categories_used_end,
+        const Int _column_used,
         const enums::DataUsed _data_used )
         : apply_from_above( _apply_from_above ),
           categories_used( _categories_used ),
@@ -46,9 +46,9 @@ struct Split
     /// Constructor for deep copies.
     Split(
         const bool _apply_from_above,
-        const AUTOSQL_FLOAT _critical_value,
-        const std::shared_ptr<const std::vector<AUTOSQL_INT>> _categories_used,
-        const AUTOSQL_INT _column_used,
+        const Float _critical_value,
+        const std::shared_ptr<const std::vector<Int>> _categories_used,
+        const Int _column_used,
         const enums::DataUsed _data_used )
         : apply_from_above( _apply_from_above ),
           categories_used( _categories_used ),
@@ -63,17 +63,17 @@ struct Split
     /// Constructor for from Poco::JSON::Object.
     Split( const Poco::JSON::Object &_json_obj )
         : apply_from_above( JSON::get_value<bool>( _json_obj, "app_" ) ),
-          categories_used( std::make_shared<std::vector<AUTOSQL_INT>>(
-              JSON::array_to_vector<AUTOSQL_INT>(
+          categories_used( std::make_shared<std::vector<Int>>(
+              JSON::array_to_vector<Int>(
                   JSON::get_array( _json_obj, "categories_used_" ) ) ) ),
           categories_used_begin( categories_used->cbegin() ),
           categories_used_end( categories_used->cend() ),
           column_used(
-              JSON::get_value<AUTOSQL_INT>( _json_obj, "column_used_" ) ),
+              JSON::get_value<Int>( _json_obj, "column_used_" ) ),
           critical_value(
-              JSON::get_value<AUTOSQL_FLOAT>( _json_obj, "critical_value_" ) ),
+              JSON::get_value<Float>( _json_obj, "critical_value_" ) ),
           data_used( JSON::int_to_data_used(
-              JSON::get_value<AUTOSQL_INT>( _json_obj, "data_used_" ) ) )
+              JSON::get_value<Int>( _json_obj, "data_used_" ) ) )
     {
     }
 
@@ -84,7 +84,7 @@ struct Split
     /// Returns a deep copy of the Split.
     Split deep_copy() const
     {
-        auto sorted = std::make_shared<std::vector<AUTOSQL_INT>>(
+        auto sorted = std::make_shared<std::vector<Int>>(
             categories_used_begin, categories_used_end );
 
         std::sort( sorted->begin(), sorted->end() );
@@ -102,19 +102,19 @@ struct Split
     const bool apply_from_above;
 
     // Categories used for the node - for categorical values.
-    const std::shared_ptr<const std::vector<AUTOSQL_INT>> categories_used;
+    const std::shared_ptr<const std::vector<Int>> categories_used;
 
     // Iterator pointing to the beginning of the categories used.
-    const std::vector<AUTOSQL_INT>::const_iterator categories_used_begin;
+    const std::vector<Int>::const_iterator categories_used_begin;
 
     // Iterator pointing to the end of the categories used.
-    const std::vector<AUTOSQL_INT>::const_iterator categories_used_end;
+    const std::vector<Int>::const_iterator categories_used_end;
 
     // Number of column used
-    const AUTOSQL_INT column_used;
+    const Int column_used;
 
     // Critical value for the node - for numeric values
-    const AUTOSQL_FLOAT critical_value;
+    const Float critical_value;
 
     // Signifies whether we use x_popul_numerical, x_popul_discrete,
     // x_perip_numerical, x_perip_discrete or time_stamps_diff

@@ -6,14 +6,14 @@ namespace utils
 {
 // ----------------------------------------------------------------------------
 
-std::shared_ptr<const std::vector<RELBOOST_INT>> CriticalValueSorter::sort(
+std::shared_ptr<const std::vector<Int>> CriticalValueSorter::sort(
     const std::vector<containers::CandidateSplit>::iterator _begin,
     const std::vector<containers::CandidateSplit>::iterator _end )
 {
     // ------------------------------------------------------------------------
     // Create tuples
 
-    auto tuples = std::vector<std::tuple<RELBOOST_FLOAT, RELBOOST_INT>>( 0 );
+    auto tuples = std::vector<std::tuple<Float, Int>>( 0 );
 
     assert( _end >= _begin );
 
@@ -42,8 +42,8 @@ std::shared_ptr<const std::vector<RELBOOST_INT>> CriticalValueSorter::sort(
     // weights.
 
     const auto sort_tuples =
-        []( const std::tuple<RELBOOST_FLOAT, RELBOOST_INT>& t1,
-            const std::tuple<RELBOOST_FLOAT, RELBOOST_INT>& t2 ) {
+        []( const std::tuple<Float, Int>& t1,
+            const std::tuple<Float, Int>& t2 ) {
             return std::get<0>( t1 ) > std::get<0>( t2 );
         };
 
@@ -53,7 +53,7 @@ std::shared_ptr<const std::vector<RELBOOST_INT>> CriticalValueSorter::sort(
     // Copy into critical values.
 
     const auto sorted =
-        std::make_shared<std::vector<RELBOOST_INT>>( tuples.size() );
+        std::make_shared<std::vector<Int>>( tuples.size() );
 
     for ( size_t i = 0; i < tuples.size(); ++i )
         {

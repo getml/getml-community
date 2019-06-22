@@ -15,7 +15,7 @@ struct LossFunctionParser
     static std::shared_ptr<LossFunction> parse(
         const std::string& _type,
         const std::shared_ptr<const Hyperparameters>& _hyperparameters,
-        const std::shared_ptr<std::vector<RELBOOST_FLOAT>> _targets );
+        const std::shared_ptr<std::vector<Float>> _targets );
 };
 
 // ------------------------------------------------------------------------

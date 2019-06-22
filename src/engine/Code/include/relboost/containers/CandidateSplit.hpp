@@ -10,9 +10,9 @@ namespace containers
 struct CandidateSplit
 {
     CandidateSplit(
-        const RELBOOST_FLOAT _loss_reduction,
+        const Float _loss_reduction,
         const Split& _split,
-        const std::array<RELBOOST_FLOAT, 3>& _weights )
+        const std::array<Float, 3>& _weights )
         : loss_reduction_( _loss_reduction ),
           split_( _split ),
           weights_( _weights )
@@ -21,11 +21,11 @@ struct CandidateSplit
 
     ~CandidateSplit() = default;
 
-    const RELBOOST_FLOAT loss_reduction_;
+    const Float loss_reduction_;
 
     const Split split_;
 
-    const std::array<RELBOOST_FLOAT, 3> weights_;
+    const std::array<Float, 3> weights_;
 };
 
 // -------------------------------------------------------------------------

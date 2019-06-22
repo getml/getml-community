@@ -32,10 +32,10 @@ class Encoding
     const std::string& operator[]( const T _i ) const;
 
     /// Returns the integer mapped to a string.
-    ENGINE_INT operator[]( const std::string& _val );
+    Int operator[]( const std::string& _val );
 
     /// Returns the integer mapped to a string (const version).
-    ENGINE_INT operator[]( const std::string& _val ) const;
+    Int operator[]( const std::string& _val ) const;
 
     /// Copies a vector
     Encoding& operator=( std::vector<std::string>&& _vector ) noexcept;
@@ -74,13 +74,13 @@ class Encoding
 
    private:
     /// Adds an integer to map_ and vector_, assuming it is not already included
-    ENGINE_INT insert( const std::string& _val );
+    Int insert( const std::string& _val );
 
     // -------------------------------
 
    private:
     /// For fast lookup
-    std::unordered_map<std::string, ENGINE_INT> map_;
+    std::unordered_map<std::string, Int> map_;
 
     /// The null value (needed because strings are returned by reference).
     const std::string null_value_;

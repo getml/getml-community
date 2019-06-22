@@ -32,7 +32,7 @@ class IntermediateAggregation
 
     /// Initializes yhat
     void init_yhat(
-        const std::vector<AUTOSQL_FLOAT>& _yhat,
+        const std::vector<Float>& _yhat,
         const containers::IntSet& _indices ) final;
 
     /// Resets sufficient statistics to zero
@@ -45,20 +45,20 @@ class IntermediateAggregation
     /// Updates all samples designated by _indices
     void update_samples(
         const containers::IntSet& _indices,
-        const std::vector<AUTOSQL_FLOAT>& _new_values,
-        const std::vector<AUTOSQL_FLOAT>& _old_values ) final;
+        const std::vector<Float>& _new_values,
+        const std::vector<Float>& _old_values ) final;
 
     /// Updates yhat_old based on _yhat_new.
     void update_yhat_old(
-        const std::vector<AUTOSQL_FLOAT>& _sample_weights,
-        const std::vector<AUTOSQL_FLOAT>& _yhat_new ) final;
+        const std::vector<Float>& _sample_weights,
+        const std::vector<Float>& _yhat_new ) final;
     // --------------------------------------
 
     /// Sorts a specific subsection of the values defined by _begin and _end.
     /// Returns the indices from greatest to smallest. This is useful for
     /// combining categories.
-    std::vector<AUTOSQL_INT> argsort(
-        const AUTOSQL_INT _begin, const AUTOSQL_INT _end ) const final
+    std::vector<Int> argsort(
+        const Int _begin, const Int _end ) const final
     {
         return parent().argsort( _begin, _end );
     }
@@ -70,7 +70,7 @@ class IntermediateAggregation
     void calc_sampling_rate() final { parent().calc_sampling_rate(); }
 
     /// Calculates statistics that have to be calculated only once
-    void init( const std::vector<AUTOSQL_FLOAT>& _sample_weights ) final
+    void init( const std::vector<Float>& _sample_weights ) final
     {
         reset();
         parent().init( *sample_weights_parent() );
@@ -78,10 +78,10 @@ class IntermediateAggregation
 
     /// Finds the index associated with the maximum of the optimization
     /// criterion
-    AUTOSQL_INT find_maximum() final { return parent().find_maximum(); }
+    Int find_maximum() final { return parent().find_maximum(); }
 
     /// Generates a new set of sample weights.
-    std::shared_ptr<std::vector<AUTOSQL_FLOAT>> make_sample_weights() final
+    std::shared_ptr<std::vector<Float>> make_sample_weights() final
     {
         sample_weights_parent() = parent().make_sample_weights();
         return index().make_sample_weights( sample_weights_parent() );
@@ -95,22 +95,22 @@ class IntermediateAggregation
 
     /// An intermediate aggregation has no storage, so it
     /// is redelegated to the parent.
-    const AUTOSQL_INT storage_ix() const final { return parent().storage_ix(); }
+    const Int storage_ix() const final { return parent().storage_ix(); }
 
     /// Stores the current stage
     void store_current_stage(
-        const AUTOSQL_FLOAT _num_samples_smaller,
-        const AUTOSQL_FLOAT _num_samples_greater )
+        const Float _num_samples_smaller,
+        const Float _num_samples_greater )
     {
         parent().store_current_stage(
             _num_samples_smaller, _num_samples_greater );
     }
 
     /// Trivial getter
-    AUTOSQL_FLOAT value() final { return parent().value(); }
+    Float value() final { return parent().value(); }
 
     /// Trivial getter
-    AUTOSQL_FLOAT values_stored( const size_t _i ) final
+    Float values_stored( const size_t _i ) final
     {
         return parent().values_stored( _i );
     }
@@ -120,13 +120,13 @@ class IntermediateAggregation
    private:
     /// Calculates the counts designated by _indices_agg, if necessary.
     /// Remember - counts don't change.
-    void calculate_counts( const std::vector<AUTOSQL_INT>& _indices_agg );
+    void calculate_counts( const std::vector<Int>& _indices_agg );
 
     // --------------------------------------
 
    private:
     /// Trivial accessor
-    inline std::vector<AUTOSQL_FLOAT>& count() { return impl().count_; }
+    inline std::vector<Float>& count() { return impl().count_; }
 
     /// Trivial accessor
     inline const AggregationIndex& index() const { return impl().index(); }
@@ -164,9 +164,9 @@ class IntermediateAggregation
             std::is_same<Agg, AggregationType::Avg>::value,
             int>::type = 0>
     inline void update_sample(
-        const AUTOSQL_INT _ix_agg,
-        const AUTOSQL_FLOAT& _new_value,
-        const AUTOSQL_FLOAT& _old_value )
+        const Int _ix_agg,
+        const Float& _new_value,
+        const Float& _old_value )
     {
         assert( _ix_agg >= 0 );
         assert( static_cast<size_t>( _ix_agg ) < yhat().size() );
@@ -186,9 +186,9 @@ class IntermediateAggregation
             std::is_same<Agg, AggregationType::Sum>::value,
             int>::type = 0>
     inline void update_sample(
-        const AUTOSQL_INT _ix_agg,
-        const AUTOSQL_FLOAT& _new_value,
-        const AUTOSQL_FLOAT& _old_value )
+        const Int _ix_agg,
+        const Float& _new_value,
+        const Float& _old_value )
     {
         assert( _ix_agg >= 0 );
         assert( static_cast<size_t>( _ix_agg ) < yhat().size() );
@@ -203,9 +203,9 @@ class IntermediateAggregation
             std::is_same<Agg, AggregationType::Skewness>::value,
             int>::type = 0>
     inline void update_sample(
-        const AUTOSQL_INT _ix_agg,
-        const AUTOSQL_FLOAT& _new_value,
-        const AUTOSQL_FLOAT& _old_value )
+        const Int _ix_agg,
+        const Float& _new_value,
+        const Float& _old_value )
     {
         assert( _ix_agg >= 0 );
         assert( static_cast<size_t>( _ix_agg ) < yhat().size() );
@@ -228,9 +228,9 @@ class IntermediateAggregation
         sum_cubed()[_ix_agg] += _new_value * _new_value * _new_value -
                                 _old_value * _old_value * _old_value;
 
-        const AUTOSQL_FLOAT mean = sum()[_ix_agg] / count()[_ix_agg];
+        const Float mean = sum()[_ix_agg] / count()[_ix_agg];
 
-        const AUTOSQL_FLOAT stddev = std::sqrt(
+        const Float stddev = std::sqrt(
             sum_squared()[_ix_agg] / count()[_ix_agg] - mean * mean );
 
         yhat()[_ix_agg] =
@@ -246,9 +246,9 @@ class IntermediateAggregation
             std::is_same<Agg, AggregationType::Var>::value,
             int>::type = 0>
     inline void update_sample(
-        const AUTOSQL_INT _ix_agg,
-        const AUTOSQL_FLOAT& _new_value,
-        const AUTOSQL_FLOAT& _old_value )
+        const Int _ix_agg,
+        const Float& _new_value,
+        const Float& _old_value )
     {
         assert( _ix_agg >= 0 );
         assert( static_cast<size_t>( _ix_agg ) < yhat().size() );
@@ -266,7 +266,7 @@ class IntermediateAggregation
         sum_squared()[_ix_agg] +=
             _new_value * _new_value - _old_value * _old_value;
 
-        const AUTOSQL_FLOAT mean = sum()[_ix_agg] / count()[_ix_agg];
+        const Float mean = sum()[_ix_agg] / count()[_ix_agg];
 
         yhat()[_ix_agg] =
             sum_squared()[_ix_agg] / count()[_ix_agg] - mean * mean;
@@ -279,9 +279,9 @@ class IntermediateAggregation
             std::is_same<Agg, AggregationType::Stddev>::value,
             int>::type = 0>
     inline void update_sample(
-        const AUTOSQL_INT _ix_agg,
-        const AUTOSQL_FLOAT& _new_value,
-        const AUTOSQL_FLOAT& _old_value )
+        const Int _ix_agg,
+        const Float& _new_value,
+        const Float& _old_value )
     {
         update_sample<AggregationType::Var, 0>(
             _ix_agg, _new_value, _old_value );
@@ -302,52 +302,52 @@ class IntermediateAggregation
     }
 
     /// Trivial accessor
-    inline std::shared_ptr<std::vector<AUTOSQL_FLOAT>>& sample_weights_parent()
+    inline std::shared_ptr<std::vector<Float>>& sample_weights_parent()
     {
         return impl().sample_weights_parent_;
     }
 
     /// Trivial accessor
-    inline std::vector<AUTOSQL_FLOAT>& sum() { return impl().sum_; }
+    inline std::vector<Float>& sum() { return impl().sum_; }
 
     /// Trivial accessor
-    inline std::vector<AUTOSQL_FLOAT>& sum_committed()
+    inline std::vector<Float>& sum_committed()
     {
         return impl().sum_committed_;
     }
 
     /// Trivial accessor
-    inline std::vector<AUTOSQL_FLOAT>& sum_cubed() { return impl().sum_cubed_; }
+    inline std::vector<Float>& sum_cubed() { return impl().sum_cubed_; }
 
     /// Trivial accessor
-    inline std::vector<AUTOSQL_FLOAT>& sum_cubed_committed()
+    inline std::vector<Float>& sum_cubed_committed()
     {
         return impl().sum_cubed_committed_;
     }
 
     /// Trivial accessor
-    inline std::vector<AUTOSQL_FLOAT>& sum_squared()
+    inline std::vector<Float>& sum_squared()
     {
         return impl().sum_squared_;
     }
 
     /// Trivial accessor
-    inline std::vector<AUTOSQL_FLOAT>& sum_squared_committed()
+    inline std::vector<Float>& sum_squared_committed()
     {
         return impl().sum_squared_committed_;
     }
 
     /// Trivial accessor
-    inline std::vector<AUTOSQL_FLOAT>& yhat() { return impl().yhat_; }
+    inline std::vector<Float>& yhat() { return impl().yhat_; }
 
     /// Trivial accessor
-    inline std::vector<AUTOSQL_FLOAT>& yhat_committed()
+    inline std::vector<Float>& yhat_committed()
     {
         return impl().yhat_committed_;
     }
 
     /// Trivial accessor
-    inline std::vector<AUTOSQL_FLOAT>& yhat_stored()
+    inline std::vector<Float>& yhat_stored()
     {
         return impl().yhat_stored_;
     }
@@ -389,7 +389,7 @@ class IntermediateAggregation
 
 template <typename AggType>
 void IntermediateAggregation<AggType>::calculate_counts(
-    const std::vector<AUTOSQL_INT>& _indices_agg )
+    const std::vector<Int>& _indices_agg )
 {
     for ( auto ix_agg : _indices_agg )
         {
@@ -460,7 +460,7 @@ void IntermediateAggregation<AggType>::commit()
 
 template <typename AggType>
 void IntermediateAggregation<AggType>::init_yhat(
-    const std::vector<AUTOSQL_FLOAT>& _yhat,
+    const std::vector<Float>& _yhat,
     const containers::IntSet& _indices )
 {
     debug_log( "IntermediateAgg: init_yhat..." );
@@ -469,7 +469,7 @@ void IntermediateAggregation<AggType>::init_yhat(
 
     for ( auto ix_input : _indices )
         {
-            const std::vector<AUTOSQL_INT> indices_agg =
+            const std::vector<Int> indices_agg =
                 index().transform( ix_input );
 
             if ( needs_count_ )
@@ -490,7 +490,7 @@ void IntermediateAggregation<AggType>::init_yhat(
 
     parent().init_yhat( yhat(), updates_stored() );
 
-    for ( AUTOSQL_INT ix_agg : updates_stored() )
+    for ( Int ix_agg : updates_stored() )
         {
             yhat_stored()[ix_agg] = yhat()[ix_agg];
         }
@@ -620,12 +620,12 @@ void IntermediateAggregation<AggType>::revert_to_commit()
 template <typename AggType>
 void IntermediateAggregation<AggType>::update_samples(
     const containers::IntSet& _indices,
-    const std::vector<AUTOSQL_FLOAT>& _new_values,
-    const std::vector<AUTOSQL_FLOAT>& _old_values )
+    const std::vector<Float>& _new_values,
+    const std::vector<Float>& _old_values )
 {
     for ( auto ix_input : _indices )
         {
-            const std::vector<AUTOSQL_INT> indices_agg =
+            const std::vector<Int> indices_agg =
                 index().transform( ix_input );
 
             for ( auto ix_agg : indices_agg )
@@ -643,7 +643,7 @@ void IntermediateAggregation<AggType>::update_samples(
 
     parent().update_samples( updates_current(), yhat(), yhat_stored() );
 
-    for ( AUTOSQL_INT ix_agg : updates_current() )
+    for ( Int ix_agg : updates_current() )
         {
             yhat_stored()[ix_agg] = yhat()[ix_agg];
         }
@@ -655,8 +655,8 @@ void IntermediateAggregation<AggType>::update_samples(
 
 template <typename AggType>
 void IntermediateAggregation<AggType>::update_yhat_old(
-    const std::vector<AUTOSQL_FLOAT>& _sample_weights,
-    const std::vector<AUTOSQL_FLOAT>& _yhat_new )
+    const std::vector<Float>& _sample_weights,
+    const std::vector<Float>& _yhat_new )
 {
     assert( _sample_weights.size() == _yhat_new.size() );
 
@@ -669,7 +669,7 @@ void IntermediateAggregation<AggType>::update_yhat_old(
                     continue;
                 }
 
-            const std::vector<AUTOSQL_INT> indices_agg = index().transform( i );
+            const std::vector<Int> indices_agg = index().transform( i );
 
             if ( needs_count_ )
                 {
