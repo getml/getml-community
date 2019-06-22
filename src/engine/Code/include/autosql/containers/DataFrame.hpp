@@ -22,7 +22,7 @@ class DataFrame
     DataFrame(
         const std::vector<Column<AUTOSQL_INT>>& _categoricals,
         const std::vector<Column<AUTOSQL_FLOAT>>& _discretes,
-        const std::vector<std::shared_ptr<AUTOSQL_INDEX>>& _indices,
+        const std::vector<std::shared_ptr<Index>>& _indices,
         const std::vector<Column<AUTOSQL_INT>>& _join_keys,
         const std::string& _name,
         const std::vector<Column<AUTOSQL_FLOAT>>& _numericals,
@@ -110,7 +110,7 @@ class DataFrame
     }
 
     /// Find the indices associated with this join key.
-    AUTOSQL_INDEX::const_iterator find( const AUTOSQL_INT _join_key ) const
+    Index::const_iterator find( const AUTOSQL_INT _join_key ) const
     {
         assert( indices().size() == 1 );
         return indices_[0]->find( _join_key );
@@ -124,7 +124,7 @@ class DataFrame
     }
 
     /// Getter for the indices (TODO: make this private).
-    const std::vector<std::shared_ptr<AUTOSQL_INDEX>>& indices() const
+    const std::vector<std::shared_ptr<Index>>& indices() const
     {
         return indices_;
     }
@@ -299,7 +299,7 @@ class DataFrame
 
    private:
     /// Creates the indices for this data frame
-    static std::vector<std::shared_ptr<AUTOSQL_INDEX>> create_indices(
+    static std::vector<std::shared_ptr<Index>> create_indices(
         const std::vector<Column<AUTOSQL_INT>>& _join_keys );
 
     /// Helper class that extracts the column names.
@@ -317,7 +317,7 @@ class DataFrame
     const std::vector<Column<AUTOSQL_FLOAT>> discretes_;
 
     /// Indices assiciated with join keys.
-    const std::vector<std::shared_ptr<AUTOSQL_INDEX>> indices_;
+    const std::vector<std::shared_ptr<Index>> indices_;
 
     /// Join keys of this data frame.
     const std::vector<Column<AUTOSQL_INT>> join_keys_;

@@ -23,8 +23,6 @@
         descriptors::ColumnToBeAggregated, \
         descriptors::ColumnToBeAggregated>>
 
-#define AUTOSQL_INDEX std::unordered_map<size_t, std::vector<size_t>>
-
 // ----------------------------------------------------------------------------
 
 #endif  // AUTOSQL_TYPES_HPP_

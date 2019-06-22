@@ -9,7 +9,7 @@ namespace containers
 DataFrame::DataFrame(
     const std::vector<Column<AUTOSQL_INT>>& _categoricals,
     const std::vector<Column<AUTOSQL_FLOAT>>& _discretes,
-    const std::vector<std::shared_ptr<AUTOSQL_INDEX>>& _indices,
+    const std::vector<std::shared_ptr<Index>>& _indices,
     const std::vector<Column<AUTOSQL_INT>>& _join_keys,
     const std::string& _name,
     const std::vector<Column<AUTOSQL_FLOAT>>& _numericals,
@@ -83,14 +83,14 @@ DataFrame::DataFrame(
 
 // ----------------------------------------------------------------------------
 
-std::vector<std::shared_ptr<AUTOSQL_INDEX>> DataFrame::create_indices(
+std::vector<std::shared_ptr<Index>> DataFrame::create_indices(
     const std::vector<Column<AUTOSQL_INT>>& _join_keys )
 {
-    std::vector<std::shared_ptr<AUTOSQL_INDEX>> indices;
+    std::vector<std::shared_ptr<Index>> indices;
 
     for ( size_t i = 0; i < _join_keys.size(); ++i )
         {
-            AUTOSQL_INDEX new_index;
+            Index new_index;
 
             const auto& current_join_key = _join_keys[i];
 
@@ -114,7 +114,7 @@ std::vector<std::shared_ptr<AUTOSQL_INDEX>> DataFrame::create_indices(
                         }
                 }
 
-            indices.push_back( std::make_shared<AUTOSQL_INDEX>( new_index ) );
+            indices.push_back( std::make_shared<Index>( new_index ) );
         }
 
     return indices;

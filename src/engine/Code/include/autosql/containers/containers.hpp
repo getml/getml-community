@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <array>
+#include <map>
 #include <memory>
 #include <type_traits>
 #include <vector>
@@ -24,9 +25,11 @@
 // ----------------------------------------------------
 // Module files
 
+// These are just typedefs.
+#include "autosql/containers/Index.hpp"
 #include "autosql/containers/Match.hpp"
-#include "autosql/containers/Matches.hpp"
 #include "autosql/containers/MatchPtrs.hpp"
+#include "autosql/containers/Matches.hpp"
 
 #include "autosql/containers/CategoryIndex.hpp"
 #include "autosql/containers/IntSet.hpp"

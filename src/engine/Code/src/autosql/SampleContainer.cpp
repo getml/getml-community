@@ -46,7 +46,7 @@ SampleContainer::create_output_map(
 void SampleContainer::create_samples(
     const AUTOSQL_INT _ix_x_popul,
     const bool _use_timestamps,
-    const AUTOSQL_INDEX& _index,
+    const Index& _index,
     const containers::Matrix<AUTOSQL_INT>& _join_keys_perip,
     const AUTOSQL_INT _join_key_popul,
     const containers::Matrix<AUTOSQL_FLOAT>& _time_stamps_perip,
