@@ -10,7 +10,7 @@ namespace containers
 class DataFrameIndex
 {
    public:
-    DataFrameIndex() : begin_( 0 ), map_( std::make_shared<ENGINE_INDEX>() ) {}
+    DataFrameIndex() : begin_( 0 ), map_( std::make_shared<Index>() ) {}
 
     ~DataFrameIndex() = default;
 
@@ -22,7 +22,7 @@ class DataFrameIndex
     // -------------------------------
 
     /// Returns a const copy to the underlying map.
-    std::shared_ptr<ENGINE_INDEX> map() const { return map_; }
+    std::shared_ptr<Index> map() const { return map_; }
 
     // -------------------------------
 
@@ -31,10 +31,12 @@ class DataFrameIndex
     size_t begin_;
 
     /// Performs the role of an "index" over the join keys/
-    std::shared_ptr<ENGINE_INDEX> map_;
+    std::shared_ptr<Index> map_;
 
     // -------------------------------
 };
+
+// -------------------------------------------------------------------------
 
 }  // namespace containers
 }  // namespace engine

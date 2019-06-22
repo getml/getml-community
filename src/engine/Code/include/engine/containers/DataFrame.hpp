@@ -191,9 +191,9 @@ class DataFrame
     }
 
     /// Returns the maps underlying the indices.
-    const std::vector<std::shared_ptr<ENGINE_INDEX>> maps() const
+    const std::vector<std::shared_ptr<Index>> maps() const
     {
-        std::vector<std::shared_ptr<ENGINE_INDEX>> maps;
+        std::vector<std::shared_ptr<Index>> maps;
         for ( const auto &ix : indices_ ) maps.push_back( ix.map() );
         return maps;
     }

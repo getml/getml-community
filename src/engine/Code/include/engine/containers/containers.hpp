@@ -46,6 +46,7 @@
 // Module files
 
 #include "engine/containers/Encoding.hpp"
+#include "engine/containers/Index.hpp"
 #include "engine/containers/Matrix.hpp"
 
 #include "engine/containers/DataFrameIndex.hpp"
