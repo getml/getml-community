@@ -190,7 +190,7 @@ class DecisionTreeNode
     const AUTOSQL_INT get_same_unit_categorical(
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
-        const Sample *_sample,
+        const containers::Match *_sample,
         const AUTOSQL_INT _col ) const
     {
         const AUTOSQL_INT col1 =
@@ -220,7 +220,7 @@ class DecisionTreeNode
     const AUTOSQL_FLOAT get_same_unit_discrete(
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
-        const Sample *_sample,
+        const containers::Match *_sample,
         const AUTOSQL_INT _col ) const
     {
         const AUTOSQL_INT col1 =
@@ -272,7 +272,7 @@ class DecisionTreeNode
     const AUTOSQL_FLOAT get_same_unit_numerical(
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
-        const Sample *_sample,
+        const containers::Match *_sample,
         const AUTOSQL_INT _col ) const
     {
         const AUTOSQL_INT col1 =
@@ -322,7 +322,7 @@ class DecisionTreeNode
     inline const AUTOSQL_FLOAT get_time_stamps_diff(
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
-        const Sample *_sample ) const
+        const containers::Match *_sample ) const
     {
         return _population.time_stamp( _sample->ix_x_popul ) -
                _peripheral.time_stamp( _sample->ix_x_perip );
@@ -331,7 +331,7 @@ class DecisionTreeNode
     /// Trivial getter
     inline const AUTOSQL_INT get_x_perip_categorical(
         const containers::DataFrame &_peripheral,
-        const Sample *_sample,
+        const containers::Match *_sample,
         const size_t _col ) const
     {
         return _peripheral.categorical( _sample->ix_x_perip, _col );
@@ -340,7 +340,7 @@ class DecisionTreeNode
     /// Trivial getter
     inline const AUTOSQL_FLOAT get_x_perip_numerical(
         const containers::DataFrame &_peripheral,
-        const Sample *_sample,
+        const containers::Match *_sample,
         const size_t _col ) const
     {
         return _peripheral.numerical( _sample->ix_x_perip, _col );
@@ -349,7 +349,7 @@ class DecisionTreeNode
     /// Trivial getter
     inline const AUTOSQL_FLOAT get_x_perip_discrete(
         const containers::DataFrame &_peripheral,
-        const Sample *_sample,
+        const containers::Match *_sample,
         const size_t _col ) const
     {
         return _peripheral.discrete( _sample->ix_x_perip, _col );
@@ -358,7 +358,7 @@ class DecisionTreeNode
     /// Trivial getter
     inline const AUTOSQL_INT get_x_popul_categorical(
         const containers::DataFrameView &_population,
-        const Sample *_sample,
+        const containers::Match *_sample,
         const size_t _col ) const
     {
         return _population.categorical( _sample->ix_x_popul, _col );
@@ -367,7 +367,7 @@ class DecisionTreeNode
     /// Trivial getter
     inline const AUTOSQL_FLOAT get_x_popul_numerical(
         const containers::DataFrameView &_population,
-        const Sample *_sample,
+        const containers::Match *_sample,
         const size_t _col ) const
     {
         return _population.numerical( _sample->ix_x_popul, _col );
@@ -376,7 +376,7 @@ class DecisionTreeNode
     /// Trivial getter
     inline const AUTOSQL_FLOAT get_x_popul_discrete(
         const containers::DataFrameView &_population,
-        const Sample *_sample,
+        const containers::Match *_sample,
         const size_t _col ) const
     {
         return _population.discrete( _sample->ix_x_popul, _col );
@@ -387,7 +387,7 @@ class DecisionTreeNode
         const std::vector<containers::ColumnView<
             AUTOSQL_FLOAT,
             std::map<AUTOSQL_INT, AUTOSQL_INT>>> &_subfeatures,
-        const Sample *_sample,
+        const containers::Match *_sample,
         const size_t _col ) const
     {
         assert( _col < _subfeatures.size() );

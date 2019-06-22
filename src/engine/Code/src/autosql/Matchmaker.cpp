@@ -6,13 +6,13 @@ namespace utils
 {
 // ----------------------------------------------------------------------------
 
-std::vector<Sample> Matchmaker::make_matches(
+std::vector<containers::Match> Matchmaker::make_matches(
     const containers::DataFrameView& _population,
     const containers::DataFrame& _peripheral,
     const std::shared_ptr<const std::vector<AUTOSQL_FLOAT>>& _sample_weights,
     const bool _use_timestamps )
 {
-    std::vector<Sample> matches;
+    std::vector<containers::Match> matches;
 
     for ( size_t ix_output = 0; ix_output < _population.nrows(); ++ix_output )
         {
@@ -43,7 +43,7 @@ void Matchmaker::make_matches(
     const containers::DataFrame& _peripheral,
     const bool _use_timestamps,
     const size_t _ix_output,
-    std::vector<Sample>* _matches )
+    std::vector<containers::Match>* _matches )
 {
     const auto join_key = _population.join_key( _ix_output );
 
@@ -80,7 +80,7 @@ void Matchmaker::make_matches(
 // ----------------------------------------------------------------------------
 
 AUTOSQL_SAMPLE_CONTAINER Matchmaker::make_pointers(
-    std::vector<Sample>* _matches )
+    std::vector<containers::Match>* _matches )
 {
     auto pointers = AUTOSQL_SAMPLE_CONTAINER( _matches->size() );
 

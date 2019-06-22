@@ -1,11 +1,13 @@
-#ifndef AUTOSQL_SAMPLE_HPP_
-#define AUTOSQL_SAMPLE_HPP_
+#ifndef AUTOSQL_CONTAINERS_MATCH_HPP_
+#define AUTOSQL_CONTAINERS_MATCH_HPP_
 
 namespace autosql
 {
+namespace containers
+{
 // ----------------------------------------------------------------------------
 
-struct Sample
+struct Match
 {
     bool activated;
 
@@ -19,6 +21,7 @@ struct Sample
 };
 
 // ----------------------------------------------------------------------------
+}  // namespace containers
 }  // namespace autosql
 
-#endif  // AUTOSQL_SAMPLE_HPP_
+#endif  // AUTOSQL_CONTAINERS_MATCH_HPP_

@@ -21,10 +21,10 @@
 
 #include "autosql/JSON.hpp"
 
-#include "autosql/Sample.hpp"
-
 // ----------------------------------------------------
 // Module files
+
+#include "autosql/containers/Match.hpp"
 
 #include "autosql/containers/CategoryIndex.hpp"
 #include "autosql/containers/IntSet.hpp"

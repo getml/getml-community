@@ -46,8 +46,6 @@
 
 #include "autosql/JSON.hpp"
 
-#include "autosql/Sample.hpp"
-
 #include "autosql/containers/containers.hpp"
 
 #include "autosql/aggregations/aggregations.hpp"

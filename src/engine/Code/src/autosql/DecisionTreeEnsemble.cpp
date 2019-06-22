@@ -409,7 +409,7 @@ void DecisionTreeEnsemble::fit(
         _table_holder->main_tables_[0].df() );
 
     // ----------------------------------------------------------------
-    // Sample weights are needed for the random-forest-like functionality
+    // containers::Match weights are needed for the random-forest-like functionality
 
     debug_log( "fit: Setting up sampling..." );
 
@@ -429,7 +429,7 @@ void DecisionTreeEnsemble::fit(
         new std::mt19937( static_cast<size_t>( hyperparameters().seed_ ) ) );
 
     // ----------------------------------------------------------------
-    // Sample containers are pointers to simple structs, which represent a match
+    // containers::Match containers are pointers to simple structs, which represent a match
     // between a key in the peripheral table and a key in the population table.
 
     debug_log( "fit: Creating samples..." );
@@ -462,7 +462,7 @@ void DecisionTreeEnsemble::fit(
     for ( size_t ix_feature = 0; ix_feature < _num_features; ++ix_feature )
         {
             // ----------------------------------------------------------------
-            // Sample for a random-forest-like algorithm - can be turned off
+            // containers::Match for a random-forest-like algorithm - can be turned off
             // by setting _sampling_rate to 0.0
 
             debug_log( "fit: Sampling from population..." );

@@ -22,9 +22,9 @@
     std::vector<                     \
         std::tuple<descriptors::ColumnToBeAggregated, descriptors::ColumnToBeAggregated>>
 
-#define AUTOSQL_SAMPLES std::vector<Sample>
+#define AUTOSQL_SAMPLES std::vector<containers::Match>
 
-#define AUTOSQL_SAMPLE_CONTAINER std::vector<Sample*>
+#define AUTOSQL_SAMPLE_CONTAINER std::vector<containers::Match*>
 
 #define AUTOSQL_SAMPLE_ITERATOR AUTOSQL_SAMPLE_CONTAINER::iterator
 

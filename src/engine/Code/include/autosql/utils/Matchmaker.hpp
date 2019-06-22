@@ -12,7 +12,7 @@ namespace utils
 struct Matchmaker
 {
     /// Identifies matches between population table and peripheral tables.
-    static std::vector<Sample> make_matches(
+    static std::vector<containers::Match> make_matches(
         const containers::DataFrameView& _population,
         const containers::DataFrame& _peripheral,
         const std::shared_ptr<const std::vector<AUTOSQL_FLOAT>>&
@@ -26,11 +26,11 @@ struct Matchmaker
         const containers::DataFrame& _peripheral,
         const bool _use_timestamps,
         const size_t _ix_output,
-        std::vector<Sample>* _matches );
+        std::vector<containers::Match>* _matches );
 
     /// Creates pointers to the matches.
     static AUTOSQL_SAMPLE_CONTAINER make_pointers(
-        std::vector<Sample>* _matches );
+        std::vector<containers::Match>* _matches );
 };
 
 // ------------------------------------------------------------------------

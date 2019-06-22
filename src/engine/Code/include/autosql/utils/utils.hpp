@@ -21,8 +21,6 @@
 
 #include "autosql/descriptors/descriptors.hpp"
 
-#include "autosql/Sample.hpp"
-
 // ------------------------------------------------------------------------
 
 #include "autosql/utils/DataFrameScatterer.hpp"

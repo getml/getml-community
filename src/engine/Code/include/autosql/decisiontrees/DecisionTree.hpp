@@ -221,7 +221,7 @@ class DecisionTree
     /// this is required by those aggregations that also need the
     /// samples to be sorted)
     inline void set_samples_begin_end(
-        Sample *_samples_begin, Sample *_samples_end )
+        containers::Match *_samples_begin, containers::Match *_samples_end )
     {
         aggregation()->set_samples_begin_end( _samples_begin, _samples_end );
     }

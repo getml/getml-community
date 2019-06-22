@@ -12,8 +12,8 @@ struct AggregationImpl
     AggregationImpl( size_t _sample_size )
         : count_( std::vector<AUTOSQL_FLOAT>( _sample_size ) ),
           count_committed_( std::vector<AUTOSQL_FLOAT>( _sample_size ) ),
-          sample_ptr_( std::vector<Sample*>( _sample_size ) ),
-          sample_ptr_committed_( std::vector<Sample*>( _sample_size ) ),
+          sample_ptr_( std::vector<containers::Match*>( _sample_size ) ),
+          sample_ptr_committed_( std::vector<containers::Match*>( _sample_size ) ),
           sum_( std::vector<AUTOSQL_FLOAT>( _sample_size ) ),
           sum_committed_( std::vector<AUTOSQL_FLOAT>( _sample_size ) ),
           sum_cubed_( std::vector<AUTOSQL_FLOAT>( _sample_size ) ),
@@ -41,10 +41,10 @@ struct AggregationImpl
 
     /// Vector of pointers to the sample currently in place - needed
     /// by some aggregation like MIN or MAX
-    std::vector<Sample*> sample_ptr_;
+    std::vector<containers::Match*> sample_ptr_;
 
     /// Vector of pointers to the sample currently in place (committed)
-    std::vector<Sample*> sample_ptr_committed_;
+    std::vector<containers::Match*> sample_ptr_committed_;
 
     /// Vector sums
     std::vector<AUTOSQL_FLOAT> sum_;

@@ -751,11 +751,11 @@ AUTOSQL_SAMPLE_ITERATOR DecisionTreeNode::separate_null_values(
     AUTOSQL_SAMPLE_ITERATOR _sample_container_end,
     bool _null_values_to_beginning ) const
 {
-    auto is_null = []( Sample *sample ) {
+    auto is_null = []( containers::Match *sample ) {
         return sample->numerical_value != sample->numerical_value;
     };
 
-    auto is_not_null = []( Sample *sample ) {
+    auto is_not_null = []( containers::Match *sample ) {
         return sample->numerical_value == sample->numerical_value;
     };
 
@@ -956,7 +956,7 @@ void DecisionTreeNode::sort_by_categorical_value(
     AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
 {
-    auto compare_op = []( const Sample *sample1, const Sample *sample2 ) {
+    auto compare_op = []( const containers::Match *sample1, const containers::Match *sample2 ) {
         return sample1->categorical_value < sample2->categorical_value;
     };
 
@@ -969,7 +969,7 @@ void DecisionTreeNode::sort_by_numerical_value(
     AUTOSQL_SAMPLE_ITERATOR _sample_container_begin,
     AUTOSQL_SAMPLE_ITERATOR _sample_container_end )
 {
-    auto compare_op = []( const Sample *sample1, const Sample *sample2 ) {
+    auto compare_op = []( const containers::Match *sample1, const containers::Match *sample2 ) {
         return sample1->numerical_value < sample2->numerical_value;
     };
 
@@ -1064,7 +1064,7 @@ void DecisionTreeNode::spawn_child_nodes(
             // for the numerical values, samples_smaller contains all values
             // <= critical_value()
 
-            const auto is_contained = [this]( const Sample *_sample ) {
+            const auto is_contained = [this]( const containers::Match *_sample ) {
                 return std::any_of(
                     categories_used_begin(),
                     categories_used_end(),
@@ -1372,7 +1372,7 @@ void DecisionTreeNode::transform(
 
             if ( categorical_data_used() )
                 {
-                    const auto is_contained = [this]( const Sample *_sample ) {
+                    const auto is_contained = [this]( const containers::Match *_sample ) {
                         return std::any_of(
                             categories_used_begin(),
                             categories_used_end(),
@@ -1409,7 +1409,7 @@ void DecisionTreeNode::transform(
                             it = std::partition(
                                 null_values_separator,
                                 _sample_container_end,
-                                [this]( const Sample *_sample ) {
+                                [this]( const containers::Match *_sample ) {
                                     return _sample->numerical_value <=
                                            critical_value();
                                 } );
@@ -1419,7 +1419,7 @@ void DecisionTreeNode::transform(
                             it = std::partition(
                                 _sample_container_begin,
                                 null_values_separator,
-                                [this]( const Sample *_sample ) {
+                                [this]( const containers::Match *_sample ) {
                                     return _sample->numerical_value <=
                                            critical_value();
                                 } );

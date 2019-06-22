@@ -206,7 +206,7 @@ class AbstractAggregation
     /// Sets the beginning and the end of the actual samples -
     /// some aggregations like MIN or MAX needs this information.
     virtual void set_samples_begin_end(
-        Sample *_samples_begin, Sample *_samples_end ) = 0;
+        containers::Match *_samples_begin, containers::Match *_samples_end ) = 0;
 
     /// Trivial setter
     virtual void set_value_to_be_aggregated(

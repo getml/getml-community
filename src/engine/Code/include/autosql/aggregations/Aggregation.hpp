@@ -220,7 +220,7 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             std::is_same<Agg, AggregationType::Avg>::value,
             int>::type = 0>
-    inline void activate_sample( Sample *_sample )
+    inline void activate_sample( containers::Match *_sample )
     {
         assert( _sample->ix_x_popul >= 0 );
         assert(
@@ -257,7 +257,7 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             std::is_same<Agg, AggregationType::Avg>::value,
             int>::type = 0>
-    inline void deactivate_sample( Sample *_sample )
+    inline void deactivate_sample( containers::Match *_sample )
     {
         assert( _sample->ix_x_popul >= 0 );
         assert(
@@ -293,7 +293,7 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             std::is_same<Agg, AggregationType::Count>::value,
             int>::type = 0>
-    inline void activate_sample( Sample *_sample )
+    inline void activate_sample( containers::Match *_sample )
     {
         yhat_inline()[_sample->ix_x_popul] += 1.0;
 
@@ -309,7 +309,7 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             std::is_same<Agg, AggregationType::Count>::value,
             int>::type = 0>
-    inline void deactivate_sample( Sample *_sample )
+    inline void deactivate_sample( containers::Match *_sample )
     {
         assert( yhat_inline()[_sample->ix_x_popul] > 0.0 );
 
@@ -328,7 +328,7 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             std::is_same<Agg, AggregationType::CountDistinct>::value,
             int>::type = 0>
-    inline void activate_sample( Sample *_sample )
+    inline void activate_sample( containers::Match *_sample )
     {
         assert( _sample->activated == false );
 
@@ -389,7 +389,7 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             std::is_same<Agg, AggregationType::CountDistinct>::value,
             int>::type = 0>
-    inline void deactivate_sample( Sample *_sample )
+    inline void deactivate_sample( containers::Match *_sample )
     {
         assert( _sample->activated );
 
@@ -451,7 +451,7 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             std::is_same<Agg, AggregationType::CountMinusCountDistinct>::value,
             int>::type = 0>
-    inline void activate_sample( Sample *_sample )
+    inline void activate_sample( containers::Match *_sample )
     {
         assert( _sample->activated == false );
 
@@ -511,7 +511,7 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             std::is_same<Agg, AggregationType::CountMinusCountDistinct>::value,
             int>::type = 0>
-    inline void deactivate_sample( Sample *_sample )
+    inline void deactivate_sample( containers::Match *_sample )
     {
         assert( _sample->activated );
 
@@ -572,7 +572,7 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             std::is_same<Agg, AggregationType::Max>::value,
             int>::type = 0>
-    inline void activate_sample( Sample *_sample )
+    inline void activate_sample( containers::Match *_sample )
     {
         assert( _sample->activated == false );
 
@@ -607,7 +607,7 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             std::is_same<Agg, AggregationType::Max>::value,
             int>::type = 0>
-    void deactivate_sample( Sample *_sample )
+    void deactivate_sample( containers::Match *_sample )
     {
         assert( _sample->activated );
 
@@ -654,7 +654,7 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             std::is_same<Agg, AggregationType::Median>::value,
             int>::type = 0>
-    inline void activate_sample( Sample *_sample )
+    inline void activate_sample( containers::Match *_sample )
     {
         assert( _sample->activated == false );
 
@@ -696,7 +696,7 @@ class Aggregation : public AbstractAggregation
 
                 auto it_smaller = it_greater;
 
-                // Because we cannot take the average of two Sample*,
+                // Because we cannot take the average of two containers::Match*,
                 // we always store the GREATER one by convention when
                 // there is an even number of samples.
                 if ( _sample > it_greater )
@@ -737,7 +737,7 @@ class Aggregation : public AbstractAggregation
                         sample_ptr()[_sample->ix_x_popul] = it;
                     }
 
-                // We always store the greater Sample*. So when the
+                // We always store the greater containers::Match*. So when the
                 // _sample > sample_ptr()[_sample->ix_x_popul],
                 // just leave sample_ptr()[_sample->ix_x_popul]
                 // as it is.
@@ -756,7 +756,7 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             std::is_same<Agg, AggregationType::Median>::value,
             int>::type = 0>
-    void deactivate_sample( Sample *_sample )
+    void deactivate_sample( containers::Match *_sample )
     {
         assert( _sample->activated );
 
@@ -790,7 +790,7 @@ class Aggregation : public AbstractAggregation
 
                 auto it_smaller = it_greater;
 
-                // Because we cannot take the average of two Sample*,
+                // Because we cannot take the average of two containers::Match*,
                 // we always store the GREATER one by convention when
                 // there is an even number of samples.
                 if ( _sample < it_greater )
@@ -851,7 +851,7 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             std::is_same<Agg, AggregationType::Min>::value,
             int>::type = 0>
-    inline void activate_sample( Sample *_sample )
+    inline void activate_sample( containers::Match *_sample )
     {
         assert( _sample->activated == false );
 
@@ -886,7 +886,7 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             std::is_same<Agg, AggregationType::Min>::value,
             int>::type = 0>
-    void deactivate_sample( Sample *_sample )
+    void deactivate_sample( containers::Match *_sample )
     {
         assert( _sample->activated );
 
@@ -933,7 +933,7 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             std::is_same<Agg, AggregationType::Skewness>::value,
             int>::type = 0>
-    inline void activate_sample( Sample *_sample )
+    inline void activate_sample( containers::Match *_sample )
     {
         const AUTOSQL_FLOAT val = value_to_be_aggregated( _sample );
 
@@ -962,7 +962,7 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             std::is_same<Agg, AggregationType::Skewness>::value,
             int>::type = 0>
-    inline void calculate_skewness( Sample *_sample )
+    inline void calculate_skewness( containers::Match *_sample )
     {
         if ( count()[_sample->ix_x_popul] == 0.0 )
             {
@@ -999,7 +999,7 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             std::is_same<Agg, AggregationType::Skewness>::value,
             int>::type = 0>
-    inline void deactivate_sample( Sample *_sample )
+    inline void deactivate_sample( containers::Match *_sample )
     {
         const AUTOSQL_FLOAT val = value_to_be_aggregated( _sample );
 
@@ -1028,7 +1028,7 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             std::is_same<Agg, AggregationType::Stddev>::value,
             int>::type = 0>
-    inline void activate_sample( Sample *_sample )
+    inline void activate_sample( containers::Match *_sample )
     {
         const AUTOSQL_FLOAT val = value_to_be_aggregated( _sample );
 
@@ -1067,7 +1067,7 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             std::is_same<Agg, AggregationType::Stddev>::value,
             int>::type = 0>
-    inline void deactivate_sample( Sample *_sample )
+    inline void deactivate_sample( containers::Match *_sample )
     {
         const AUTOSQL_FLOAT val = value_to_be_aggregated( _sample );
 
@@ -1113,7 +1113,7 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             std::is_same<Agg, AggregationType::Sum>::value,
             int>::type = 0>
-    inline void activate_sample( Sample *_sample )
+    inline void activate_sample( containers::Match *_sample )
     {
         yhat_inline()[_sample->ix_x_popul] += value_to_be_aggregated( _sample );
     }
@@ -1127,7 +1127,7 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             std::is_same<Agg, AggregationType::Sum>::value,
             int>::type = 0>
-    inline void deactivate_sample( Sample *_sample )
+    inline void deactivate_sample( containers::Match *_sample )
     {
         yhat_inline()[_sample->ix_x_popul] -= value_to_be_aggregated( _sample );
     }
@@ -1144,7 +1144,7 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             std::is_same<Agg, AggregationType::Var>::value,
             int>::type = 0>
-    inline void activate_sample( Sample *_sample )
+    inline void activate_sample( containers::Match *_sample )
     {
         const AUTOSQL_FLOAT val = value_to_be_aggregated( _sample );
 
@@ -1177,7 +1177,7 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             std::is_same<Agg, AggregationType::Var>::value,
             int>::type = 0>
-    inline void deactivate_sample( Sample *_sample )
+    inline void deactivate_sample( containers::Match *_sample )
     {
         const AUTOSQL_FLOAT val = value_to_be_aggregated( _sample );
 
@@ -1229,7 +1229,7 @@ class Aggregation : public AbstractAggregation
 
     /// Trivial setter
     void set_samples_begin_end(
-        Sample *_samples_begin, Sample *_samples_end ) final
+        containers::Match *_samples_begin, containers::Match *_samples_end ) final
     {
         samples_begin_ = _samples_begin;
         samples_end_ = _samples_end;
@@ -1293,7 +1293,7 @@ class Aggregation : public AbstractAggregation
 
    private:
     /// Trivial accessor
-    std::vector<Sample *> &altered_samples() { return altered_samples_; }
+    std::vector<containers::Match *> &altered_samples() { return altered_samples_; }
 
     /// Trivial accessor
     inline std::vector<AUTOSQL_FLOAT> &count()
@@ -1312,7 +1312,7 @@ class Aggregation : public AbstractAggregation
     /// Finds the next greater sample that is activated.
     /// Assumes that there is at least one activated sample
     /// greater than _begin.
-    inline Sample *find_next_greater( Sample *_begin )
+    inline containers::Match *find_next_greater( containers::Match *_begin )
     {
         auto it = _begin + 1;
 
@@ -1329,7 +1329,7 @@ class Aggregation : public AbstractAggregation
     /// Finds the next smaller sample that is activated.
     /// Assumes that there is at least one activated sample
     /// smaller than _begin.
-    inline Sample *find_next_smaller( Sample *_begin )
+    inline containers::Match *find_next_smaller( containers::Match *_begin )
     {
         auto it = _begin - 1;
 
@@ -1350,14 +1350,14 @@ class Aggregation : public AbstractAggregation
     }
 
     /// Trivial accessor
-    inline std::vector<Sample *> &sample_ptr()
+    inline std::vector<containers::Match *> &sample_ptr()
     {
         assert( aggregation_impl_ != nullptr );
         return aggregation_impl_->sample_ptr_;
     }
 
     /// Trivial accessor
-    inline std::vector<Sample *> &sample_ptr_committed()
+    inline std::vector<containers::Match *> &sample_ptr_committed()
     {
         assert( aggregation_impl_ != nullptr );
         return aggregation_impl_->sample_ptr_committed_;
@@ -1450,7 +1450,7 @@ class Aggregation : public AbstractAggregation
                 AggregationType::IsComparison<data_used>::value &&
                 is_population,
             int>::type = 0>
-    inline const AUTOSQL_FLOAT value_to_be_aggregated( const Sample *_sample )
+    inline const AUTOSQL_FLOAT value_to_be_aggregated( const containers::Match *_sample )
     {
         return value_to_be_compared()[_sample->ix_x_popul] -
                value_to_be_aggregated().col()[_sample->ix_x_perip];
@@ -1469,7 +1469,7 @@ class Aggregation : public AbstractAggregation
                 AggregationType::IsComparison<data_used>::value &&
                 !is_population,
             int>::type = 0>
-    inline const AUTOSQL_FLOAT value_to_be_aggregated( const Sample *_sample )
+    inline const AUTOSQL_FLOAT value_to_be_aggregated( const containers::Match *_sample )
     {
         return value_to_be_compared().col()[_sample->ix_x_perip] -
                value_to_be_aggregated().col()[_sample->ix_x_perip];
@@ -1487,7 +1487,7 @@ class Aggregation : public AbstractAggregation
                 !AggregationType::IsComparison<data_used>::value &&
                 data_used != enums::DataUsed::x_subfeature,
             int>::type = 0>
-    inline const AUTOSQL_FLOAT value_to_be_aggregated( const Sample *_sample )
+    inline const AUTOSQL_FLOAT value_to_be_aggregated( const containers::Match *_sample )
     {
         return value_to_be_aggregated().col()[_sample->ix_x_perip];
     }
@@ -1504,7 +1504,7 @@ class Aggregation : public AbstractAggregation
                 !AggregationType::IsComparison<data_used>::value &&
                 data_used == enums::DataUsed::x_subfeature,
             int>::type = 0>
-    inline const AUTOSQL_FLOAT value_to_be_aggregated( const Sample *_sample )
+    inline const AUTOSQL_FLOAT value_to_be_aggregated( const containers::Match *_sample )
     {
         return value_to_be_aggregated()[_sample->ix_x_perip];
     }
@@ -1517,7 +1517,7 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             AggregationType::IsCategorical<data_used>::value,
             int>::type = 0>
-    inline const AUTOSQL_FLOAT value_to_be_aggregated( const Sample *_sample )
+    inline const AUTOSQL_FLOAT value_to_be_aggregated( const containers::Match *_sample )
     {
         return static_cast<AUTOSQL_FLOAT>(
             value_to_be_aggregated_categorical().col()[_sample->ix_x_perip] );
@@ -1562,7 +1562,7 @@ class Aggregation : public AbstractAggregation
 
     /// Contains pointers to samples that have been changed
     /// since the last commit
-    std::vector<Sample *> altered_samples_;
+    std::vector<containers::Match *> altered_samples_;
 
     /// Whether the appropriate intermediate aggregation is AVG.
     constexpr static bool avg_intermediate_ =
@@ -1632,11 +1632,11 @@ class Aggregation : public AbstractAggregation
 
     /// Pointer to the first element in samples - some aggregations
     /// like min and max need to know this
-    Sample *samples_begin_;
+    containers::Match *samples_begin_;
 
     /// Pointer to the element behind the last element in samples -
     /// some aggregations like min and max need to know this
-    Sample *samples_end_;
+    containers::Match *samples_end_;
 
     /// Denotes whether the updates since the last commit had
     /// been activated or deactivated. revert_to_commit() needs this
@@ -2588,7 +2588,7 @@ void Aggregation<AggType, data_used_, is_population_>::revert_to_commit()
 
     if ( needs_altered_samples_ )
         {
-            for ( Sample *sample : altered_samples() )
+            for ( containers::Match *sample : altered_samples() )
                 {
                     sample->activated = !( sample->activated );
                 }
@@ -2669,7 +2669,7 @@ AUTOSQL_SAMPLES::iterator
 Aggregation<AggType, data_used_, is_population_>::separate_null_values(
     AUTOSQL_SAMPLES &_samples )
 {
-    auto is_null = [this]( Sample &sample ) {
+    auto is_null = [this]( containers::Match &sample ) {
         AUTOSQL_FLOAT val = value_to_be_aggregated( &sample );
         return val != val;
     };
@@ -2693,7 +2693,7 @@ AUTOSQL_SAMPLE_CONTAINER::iterator
 Aggregation<AggType, data_used_, is_population_>::separate_null_values(
     AUTOSQL_SAMPLE_CONTAINER &_samples )
 {
-    auto is_null = [this]( Sample *sample ) {
+    auto is_null = [this]( containers::Match *sample ) {
         AUTOSQL_FLOAT val = value_to_be_aggregated( sample );
         return val != val;
     };
@@ -2728,7 +2728,7 @@ void Aggregation<AggType, data_used_, is_population_>::sort_samples(
             return;
         }
 
-    auto compare_op = [this]( const Sample &sample1, const Sample &sample2 ) {
+    auto compare_op = [this]( const containers::Match &sample1, const containers::Match &sample2 ) {
         if ( sample1.ix_x_popul < sample2.ix_x_popul )
             {
                 return true;
