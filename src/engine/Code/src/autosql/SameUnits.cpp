@@ -11,15 +11,15 @@ SameUnits SameUnits::from_json_obj( const Poco::JSON::Object& _obj ) const
     SameUnits same_units;
 
     same_units.same_units_categorical_ =
-        std::make_shared<AUTOSQL_SAME_UNITS_CONTAINER>( json_arr_to_same_units(
+        std::make_shared<descriptors::SameUnitsContainer>( json_arr_to_same_units(
             *JSON::get_array( _obj, "same_units_categorical_" ) ) );
 
     same_units.same_units_discrete_ =
-        std::make_shared<AUTOSQL_SAME_UNITS_CONTAINER>( json_arr_to_same_units(
+        std::make_shared<descriptors::SameUnitsContainer>( json_arr_to_same_units(
             *JSON::get_array( _obj, "same_units_discrete_" ) ) );
 
     same_units.same_units_numerical_ =
-        std::make_shared<AUTOSQL_SAME_UNITS_CONTAINER>( json_arr_to_same_units(
+        std::make_shared<descriptors::SameUnitsContainer>( json_arr_to_same_units(
             *JSON::get_array( _obj, "same_units_numerical_" ) ) );
 
     return same_units;
@@ -27,10 +27,10 @@ SameUnits SameUnits::from_json_obj( const Poco::JSON::Object& _obj ) const
 
 // ----------------------------------------------------------------------------
 
-AUTOSQL_SAME_UNITS_CONTAINER SameUnits::json_arr_to_same_units(
+descriptors::SameUnitsContainer SameUnits::json_arr_to_same_units(
     const Poco::JSON::Array& _json_arr ) const
 {
-    AUTOSQL_SAME_UNITS_CONTAINER same_units;
+    descriptors::SameUnitsContainer same_units;
 
     for ( size_t j = 0; j < _json_arr.size(); ++j )
         {
@@ -82,7 +82,7 @@ AUTOSQL_SAME_UNITS_CONTAINER SameUnits::json_arr_to_same_units(
 // ----------------------------------------------------------------------------
 
 Poco::JSON::Array SameUnits::same_units_to_json_arr(
-    const AUTOSQL_SAME_UNITS_CONTAINER& _same_units ) const
+    const descriptors::SameUnitsContainer& _same_units ) const
 {
     Poco::JSON::Array arr;
 

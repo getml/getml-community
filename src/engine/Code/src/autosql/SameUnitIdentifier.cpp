@@ -6,7 +6,7 @@ namespace ensemble
 {
 // ----------------------------------------------------------------------------
 
-std::vector<AUTOSQL_SAME_UNITS_CONTAINER>
+std::vector<descriptors::SameUnitsContainer>
 SameUnitIdentifier::get_same_units_categorical(
     const std::vector<containers::DataFrame> &_peripheral_tables,
     const containers::DataFrame &_population_table )
@@ -42,7 +42,7 @@ SameUnitIdentifier::get_same_units_categorical(
 
     debug_log( "identify_same_units: To containers (categorical)..." );
 
-    std::vector<AUTOSQL_SAME_UNITS_CONTAINER> same_units_categorical(
+    std::vector<descriptors::SameUnitsContainer> same_units_categorical(
         _peripheral_tables.size() );
 
     unit_map_to_same_unit_container( unit_map, &same_units_categorical );
@@ -52,7 +52,7 @@ SameUnitIdentifier::get_same_units_categorical(
 
 // ----------------------------------------------------------------------------
 
-std::vector<AUTOSQL_SAME_UNITS_CONTAINER>
+std::vector<descriptors::SameUnitsContainer>
 SameUnitIdentifier::get_same_units_discrete(
     const std::vector<containers::DataFrame> &_peripheral_tables,
     const containers::DataFrame &_population_table )
@@ -88,7 +88,7 @@ SameUnitIdentifier::get_same_units_discrete(
 
     debug_log( "identify_same_units: To containers (discrete)..." );
 
-    std::vector<AUTOSQL_SAME_UNITS_CONTAINER> same_units_discrete(
+    std::vector<descriptors::SameUnitsContainer> same_units_discrete(
         _peripheral_tables.size() );
 
     unit_map_to_same_unit_container( unit_map, &same_units_discrete );
@@ -98,7 +98,7 @@ SameUnitIdentifier::get_same_units_discrete(
 
 // ----------------------------------------------------------------------------
 
-std::vector<AUTOSQL_SAME_UNITS_CONTAINER>
+std::vector<descriptors::SameUnitsContainer>
 SameUnitIdentifier::get_same_units_numerical(
     const std::vector<containers::DataFrame> &_peripheral_tables,
     const containers::DataFrame &_population_table )
@@ -134,7 +134,7 @@ SameUnitIdentifier::get_same_units_numerical(
 
     debug_log( "identify_same_units: To containers (numerical)..." );
 
-    std::vector<AUTOSQL_SAME_UNITS_CONTAINER> same_units_numerical(
+    std::vector<descriptors::SameUnitsContainer> same_units_numerical(
         _peripheral_tables.size() );
 
     unit_map_to_same_unit_container( unit_map, &same_units_numerical );
@@ -167,15 +167,15 @@ std::vector<descriptors::SameUnits> SameUnitIdentifier::identify_same_units(
     for ( size_t i = 0; i < same_units.size(); ++i )
         {
             same_units[i].same_units_categorical_ =
-                std::make_shared<AUTOSQL_SAME_UNITS_CONTAINER>(
+                std::make_shared<descriptors::SameUnitsContainer>(
                     same_units_categorical[i] );
 
             same_units[i].same_units_discrete_ =
-                std::make_shared<AUTOSQL_SAME_UNITS_CONTAINER>(
+                std::make_shared<descriptors::SameUnitsContainer>(
                     same_units_discrete[i] );
 
             same_units[i].same_units_numerical_ =
-                std::make_shared<AUTOSQL_SAME_UNITS_CONTAINER>(
+                std::make_shared<descriptors::SameUnitsContainer>(
                     same_units_numerical[i] );
         }
 
@@ -191,7 +191,7 @@ std::vector<descriptors::SameUnits> SameUnitIdentifier::identify_same_units(
 void SameUnitIdentifier::unit_map_to_same_unit_container(
     const std::map<std::string, std::vector<descriptors::ColumnToBeAggregated>>
         &_unit_map,
-    std::vector<AUTOSQL_SAME_UNITS_CONTAINER> *_same_units )
+    std::vector<descriptors::SameUnitsContainer> *_same_units )
 {
     for ( auto &unit_pair : _unit_map )
         {

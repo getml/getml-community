@@ -24,6 +24,8 @@
 
 #include "autosql/descriptors/Hyperparameters.hpp"
 
+#include "autosql/descriptors/SameUnitsContainer.hpp"
+
 #include "autosql/descriptors/SameUnits.hpp"
 
 #include "autosql/descriptors/Split.hpp"

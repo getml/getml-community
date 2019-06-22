@@ -404,21 +404,21 @@ class DecisionTreeNode
     }
 
     /// Trivial getter
-    inline const AUTOSQL_SAME_UNITS_CONTAINER &same_units_categorical() const
+    inline const descriptors::SameUnitsContainer &same_units_categorical() const
     {
         assert( tree_->same_units_.same_units_categorical_ );
         return *tree_->same_units_.same_units_categorical_;
     }
 
     /// Trivial getter
-    inline const AUTOSQL_SAME_UNITS_CONTAINER &same_units_discrete() const
+    inline const descriptors::SameUnitsContainer &same_units_discrete() const
     {
         assert( tree_->same_units_.same_units_discrete_ );
         return *tree_->same_units_.same_units_discrete_;
     }
 
     /// Trivial getter
-    inline const AUTOSQL_SAME_UNITS_CONTAINER &same_units_numerical() const
+    inline const descriptors::SameUnitsContainer &same_units_numerical() const
     {
         assert( tree_->same_units_.same_units_numerical_ );
         return *tree_->same_units_.same_units_numerical_;

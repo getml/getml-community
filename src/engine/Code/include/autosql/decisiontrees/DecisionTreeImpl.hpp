@@ -103,21 +103,21 @@ struct DecisionTreeImpl
     }
 
     /// Trivial accessor
-    inline const AUTOSQL_SAME_UNITS_CONTAINER& same_units_categorical() const
+    inline const descriptors::SameUnitsContainer& same_units_categorical() const
     {
         assert( same_units_.same_units_categorical_ );
         return *same_units_.same_units_categorical_;
     }
 
     /// Trivial accessor
-    inline const AUTOSQL_SAME_UNITS_CONTAINER& same_units_discrete() const
+    inline const descriptors::SameUnitsContainer& same_units_discrete() const
     {
         assert( same_units_.same_units_discrete_ );
         return *same_units_.same_units_discrete_;
     }
 
     /// Trivial accessor
-    inline const AUTOSQL_SAME_UNITS_CONTAINER& same_units_numerical() const
+    inline const descriptors::SameUnitsContainer& same_units_numerical() const
     {
         assert( same_units_.same_units_numerical_ );
         return *same_units_.same_units_numerical_;

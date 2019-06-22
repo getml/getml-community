@@ -11,8 +11,8 @@ AggregationParser::parse_aggregation(
     const std::string& _aggregation,
     const enums::DataUsed _data_used,
     const size_t _ix_column_used,
-    const AUTOSQL_SAME_UNITS_CONTAINER& _same_units_numerical,
-    const AUTOSQL_SAME_UNITS_CONTAINER& _same_units_discrete )
+    const descriptors::SameUnitsContainer& _same_units_numerical,
+    const descriptors::SameUnitsContainer& _same_units_discrete )
 {
     if ( _aggregation == "AVG" )
         {

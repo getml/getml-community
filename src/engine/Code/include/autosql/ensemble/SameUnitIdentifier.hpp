@@ -33,27 +33,27 @@ class SameUnitIdentifier
             _unit_map );
 
     /// Finds the same units for categorical columns.
-    static std::vector<AUTOSQL_SAME_UNITS_CONTAINER> get_same_units_categorical(
+    static std::vector<descriptors::SameUnitsContainer> get_same_units_categorical(
         const std::vector<containers::DataFrame>& _peripheral_tables,
         const containers::DataFrame& _population_table );
 
     /// Finds the same units for discrete columns.
-    static std::vector<AUTOSQL_SAME_UNITS_CONTAINER> get_same_units_discrete(
+    static std::vector<descriptors::SameUnitsContainer> get_same_units_discrete(
         const std::vector<containers::DataFrame>& _peripheral_tables,
         const containers::DataFrame& _population_table );
 
     /// Finds the same units for numerical columns.
-    static std::vector<AUTOSQL_SAME_UNITS_CONTAINER> get_same_units_numerical(
+    static std::vector<descriptors::SameUnitsContainer> get_same_units_numerical(
         const std::vector<containers::DataFrame>& _peripheral_tables,
         const containers::DataFrame& _population_table );
 
     /// Once the unit maps have been fitted, this transforms it to a vector of
-    /// AUTOSQL_SAME_UNITS_CONTAINER objects.
+    /// descriptors::SameUnitsContainer objects.
     static void unit_map_to_same_unit_container(
         const std::map<
             std::string,
             std::vector<descriptors::ColumnToBeAggregated>>& _unit_map,
-        std::vector<AUTOSQL_SAME_UNITS_CONTAINER>* _same_units );
+        std::vector<descriptors::SameUnitsContainer>* _same_units );
 
     // -------------------------------------------------------------------------
 };

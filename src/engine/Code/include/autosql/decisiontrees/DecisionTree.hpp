@@ -348,19 +348,19 @@ class DecisionTree
     }
 
     /// Trivial accessor
-    inline const AUTOSQL_SAME_UNITS_CONTAINER &same_units_categorical() const
+    inline const descriptors::SameUnitsContainer &same_units_categorical() const
     {
         return impl()->same_units_categorical();
     }
 
     /// Trivial accessor
-    inline const AUTOSQL_SAME_UNITS_CONTAINER &same_units_discrete() const
+    inline const descriptors::SameUnitsContainer &same_units_discrete() const
     {
         return impl()->same_units_discrete();
     }
 
     /// Trivial accessor
-    inline const AUTOSQL_SAME_UNITS_CONTAINER &same_units_numerical() const
+    inline const descriptors::SameUnitsContainer &same_units_numerical() const
     {
         return impl()->same_units_numerical();
     }
