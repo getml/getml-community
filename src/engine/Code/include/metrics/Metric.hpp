@@ -17,10 +17,10 @@ class Metric
     /// This calculates the score based on the predictions _yhat
     /// and the targets _y.
     virtual Poco::JSON::Object score(
-        const METRICS_FLOAT* const _yhat,
+        const Float* const _yhat,
         const size_t _yhat_nrows,
         const size_t _yhat_ncols,
-        const METRICS_FLOAT* const _y,
+        const Float* const _y,
         const size_t _y_nrows,
         const size_t _y_ncols ) = 0;
 

@@ -13,12 +13,13 @@
 #include <Poco/JSON/Object.h>
 #include <Poco/JSON/Stringifier.h>
 
-#include "metrics/types.hpp"
-
 #include "multithreading/multithreading.hpp"
 
 // ----------------------------------------------------
 // Module files
+
+#include "metrics/Float.hpp"
+#include "metrics/Int.hpp"
 
 #include "metrics/JSON.hpp"
 

@@ -19,10 +19,10 @@ class RSquared : public Metric
     /// This calculates the loss based on the predictions _yhat
     /// and the targets _y.
     Poco::JSON::Object score(
-        const METRICS_FLOAT* const _yhat,
+        const Float* const _yhat,
         const size_t _yhat_nrows,
         const size_t _yhat_ncols,
-        const METRICS_FLOAT* const _y,
+        const Float* const _y,
         const size_t _y_nrows,
         const size_t _y_ncols ) final;
 
@@ -39,7 +39,7 @@ class RSquared : public Metric
     size_t nrows() const { return impl_.nrows(); }
 
     /// Trivial getter
-    METRICS_FLOAT& sufficient_statistics( size_t _i, size_t _j )
+    Float& sufficient_statistics( size_t _i, size_t _j )
     {
         assert( sufficient_statistics_.size() % ncols() == 0 );
         assert( _i < sufficient_statistics_.size() / ncols() );
@@ -49,13 +49,13 @@ class RSquared : public Metric
     }
 
     /// Trivial getter
-    METRICS_FLOAT yhat( size_t _i, size_t _j ) const
+    Float yhat( size_t _i, size_t _j ) const
     {
         return impl_.yhat( _i, _j );
     }
 
     /// Trivial getter
-    METRICS_FLOAT y( size_t _i, size_t _j ) const { return impl_.y( _i, _j ); }
+    Float y( size_t _i, size_t _j ) const { return impl_.y( _i, _j ); }
 
     // ------------------------------------------------------------------------
 
@@ -64,7 +64,7 @@ class RSquared : public Metric
     MetricImpl impl_;
 
     /// Sufficient statistics for calculating RSquared
-    std::vector<METRICS_FLOAT> sufficient_statistics_;
+    std::vector<Float> sufficient_statistics_;
 
     // ------------------------------------------------------------------------
 };

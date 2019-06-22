@@ -5,10 +5,10 @@ namespace metrics
 // ----------------------------------------------------------------------------
 
 Poco::JSON::Object RMSE::score(
-    const METRICS_FLOAT* const _yhat,
+    const Float* const _yhat,
     const size_t _yhat_nrows,
     const size_t _yhat_ncols,
-    const METRICS_FLOAT* const _y,
+    const Float* const _y,
     const size_t _y_nrows,
     const size_t _y_ncols )
 {
@@ -18,7 +18,7 @@ Poco::JSON::Object RMSE::score(
 
     // -----------------------------------------
 
-    std::vector<METRICS_FLOAT> rmse( ncols() );
+    std::vector<Float> rmse( ncols() );
 
     // -----------------------------------------------------
     // Get sum of squared errors
@@ -35,16 +35,16 @@ Poco::JSON::Object RMSE::score(
     // -----------------------------------------------------
     // Get nrows
 
-    METRICS_FLOAT nrows_float = static_cast<METRICS_FLOAT>( nrows() );
+    Float nrows_float = static_cast<Float>( nrows() );
 
     // -----------------------------------------------------
     // Reduce, if necessary
 
     if ( impl_.has_comm() )
         {
-            impl_.reduce( std::plus<METRICS_FLOAT>(), &rmse );
+            impl_.reduce( std::plus<Float>(), &rmse );
 
-            impl_.reduce( std::plus<METRICS_FLOAT>(), &nrows_float );
+            impl_.reduce( std::plus<Float>(), &nrows_float );
         }
 
     // -----------------------------------------------------

@@ -5,10 +5,10 @@ namespace metrics
 // ----------------------------------------------------------------------------
 
 Poco::JSON::Object CrossEntropy::score(
-    const METRICS_FLOAT* const _yhat,
+    const Float* const _yhat,
     const size_t _yhat_nrows,
     const size_t _yhat_ncols,
-    const METRICS_FLOAT* const _y,
+    const Float* const _y,
     const size_t _y_nrows,
     const size_t _y_ncols )
 {
@@ -18,7 +18,7 @@ Poco::JSON::Object CrossEntropy::score(
 
     // -----------------------------------------
 
-    std::vector<METRICS_FLOAT> cross_entropy( ncols() );
+    std::vector<Float> cross_entropy( ncols() );
 
     // -----------------------------------------------------
     // Calculate cross entropy
@@ -47,16 +47,16 @@ Poco::JSON::Object CrossEntropy::score(
     // -----------------------------------------------------
     // Get nrows
 
-    METRICS_FLOAT nrows_float = static_cast<METRICS_FLOAT>( nrows() );
+    Float nrows_float = static_cast<Float>( nrows() );
 
     // -----------------------------------------------------
     // Reduce, if necessary
 
     if ( impl_.has_comm() )
         {
-            impl_.reduce( std::plus<METRICS_FLOAT>(), &cross_entropy );
+            impl_.reduce( std::plus<Float>(), &cross_entropy );
 
-            impl_.reduce( std::plus<METRICS_FLOAT>(), &nrows_float );
+            impl_.reduce( std::plus<Float>(), &nrows_float );
         }
 
     // -----------------------------------------------------

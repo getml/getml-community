@@ -5,10 +5,10 @@ namespace metrics
 // ----------------------------------------------------------------------------
 
 Poco::JSON::Object AUC::score(
-    const METRICS_FLOAT* const _yhat,
+    const Float* const _yhat,
     const size_t _yhat_nrows,
     const size_t _yhat_ncols,
-    const METRICS_FLOAT* const _y,
+    const Float* const _y,
     const size_t _y_nrows,
     const size_t _y_ncols )
 {
@@ -27,7 +27,7 @@ Poco::JSON::Object AUC::score(
 
     // -----------------------------------------------------
 
-    std::vector<METRICS_FLOAT> auc( ncols() );
+    std::vector<Float> auc( ncols() );
 
     auto true_positive_arr = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
 
@@ -40,9 +40,9 @@ Poco::JSON::Object AUC::score(
             // ---------------------------------------------
             // Find minimum and maximum
 
-            METRICS_FLOAT yhat_min = yhat( 0, j );
+            Float yhat_min = yhat( 0, j );
 
-            METRICS_FLOAT yhat_max = yhat( 0, j );
+            Float yhat_max = yhat( 0, j );
 
             for ( size_t i = 0; i < nrows(); ++i )
                 {
@@ -59,10 +59,10 @@ Poco::JSON::Object AUC::score(
             if ( impl_.has_comm() )
                 {
                     impl_.reduce(
-                        multithreading::minimum<METRICS_FLOAT>(), &yhat_min );
+                        multithreading::minimum<Float>(), &yhat_min );
 
                     impl_.reduce(
-                        multithreading::maximum<METRICS_FLOAT>(), &yhat_max );
+                        multithreading::maximum<Float>(), &yhat_max );
                 }
 
             // ---------------------------------------------
@@ -82,16 +82,16 @@ Poco::JSON::Object AUC::score(
             // We use num_critical_values - 1, so that the greatest
             // critical_value will actually be greater than y_max.
             // This is to avoid segfaults.
-            const METRICS_FLOAT step_size =
+            const Float step_size =
                 ( yhat_max - yhat_min ) /
-                static_cast<METRICS_FLOAT>( num_critical_values - 1 );
+                static_cast<Float>( num_critical_values - 1 );
 
             // ---------------------------------------------
             // Calculate true_positives and predicted_negative
 
-            std::vector<METRICS_FLOAT> true_positives( num_critical_values );
+            std::vector<Float> true_positives( num_critical_values );
 
-            std::vector<METRICS_FLOAT> predicted_negative(
+            std::vector<Float> predicted_negative(
                 num_critical_values );
 
             for ( size_t i = 0; i < nrows(); ++i )
@@ -107,10 +107,10 @@ Poco::JSON::Object AUC::score(
 
             if ( impl_.has_comm() )
                 {
-                    impl_.reduce( std::plus<METRICS_FLOAT>(), &true_positives );
+                    impl_.reduce( std::plus<Float>(), &true_positives );
 
                     impl_.reduce(
-                        std::plus<METRICS_FLOAT>(), &predicted_negative );
+                        std::plus<Float>(), &predicted_negative );
                 }
 
             std::partial_sum(
@@ -118,7 +118,7 @@ Poco::JSON::Object AUC::score(
                 predicted_negative.end(),
                 predicted_negative.begin() );
 
-            const METRICS_FLOAT all_positives = std::accumulate(
+            const Float all_positives = std::accumulate(
                 true_positives.begin(), true_positives.end(), 0.0 );
 
             std::partial_sum(
@@ -129,21 +129,21 @@ Poco::JSON::Object AUC::score(
             std::for_each(
                 true_positives.begin(),
                 true_positives.end(),
-                [all_positives]( METRICS_FLOAT& val ) {
+                [all_positives]( Float& val ) {
                     val = all_positives - val;
                 } );
 
             // ---------------------------------------------
             // Calculate false positives
 
-            METRICS_FLOAT nrow_float = static_cast<METRICS_FLOAT>( nrows() );
+            Float nrow_float = static_cast<Float>( nrows() );
 
             if ( impl_.has_comm() )
                 {
-                    impl_.reduce( std::plus<METRICS_FLOAT>(), &nrow_float );
+                    impl_.reduce( std::plus<Float>(), &nrow_float );
                 }
 
-            std::vector<METRICS_FLOAT> false_positives( num_critical_values );
+            std::vector<Float> false_positives( num_critical_values );
 
             std::transform(
                 true_positives.begin(),
@@ -151,26 +151,26 @@ Poco::JSON::Object AUC::score(
                 predicted_negative.begin(),
                 false_positives.begin(),
                 [nrow_float](
-                    const METRICS_FLOAT& tp, const METRICS_FLOAT& pn ) {
+                    const Float& tp, const Float& pn ) {
                     return nrow_float - tp - pn;
                 } );
 
             // ---------------------------------------------
             // Calculate true positive rate and false positive rate
 
-            std::vector<METRICS_FLOAT> true_positive_rate(
+            std::vector<Float> true_positive_rate(
                 num_critical_values );
 
-            std::vector<METRICS_FLOAT> false_positive_rate(
+            std::vector<Float> false_positive_rate(
                 num_critical_values );
 
-            const METRICS_FLOAT all_negatives = nrow_float - all_positives;
+            const Float all_negatives = nrow_float - all_positives;
 
             std::transform(
                 true_positives.begin(),
                 true_positives.end(),
                 true_positive_rate.begin(),
-                [all_positives]( const METRICS_FLOAT& tp ) {
+                [all_positives]( const Float& tp ) {
                     return tp / all_positives;
                 } );
 
@@ -178,7 +178,7 @@ Poco::JSON::Object AUC::score(
                 false_positives.begin(),
                 false_positives.end(),
                 false_positive_rate.begin(),
-                [all_negatives]( const METRICS_FLOAT& fp ) {
+                [all_negatives]( const Float& fp ) {
                     return fp / all_negatives;
                 } );
 

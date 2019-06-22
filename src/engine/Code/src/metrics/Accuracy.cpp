@@ -5,10 +5,10 @@ namespace metrics
 // ----------------------------------------------------------------------------
 
 Poco::JSON::Object Accuracy::score(
-    const METRICS_FLOAT* const _yhat,
+    const Float* const _yhat,
     const size_t _yhat_nrows,
     const size_t _yhat_ncols,
-    const METRICS_FLOAT* const _y,
+    const Float* const _y,
     const size_t _y_nrows,
     const size_t _y_ncols )
 {
@@ -18,12 +18,12 @@ Poco::JSON::Object Accuracy::score(
 
     // -----------------------------------------------------
 
-    std::vector<METRICS_FLOAT> accuracy( ncols() );
+    std::vector<Float> accuracy( ncols() );
 
     auto accuracy_curves = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
 
-    std::vector<METRICS_FLOAT> prediction_min( ncols() );
-    std::vector<METRICS_FLOAT> prediction_step_size( ncols() );
+    std::vector<Float> prediction_min( ncols() );
+    std::vector<Float> prediction_step_size( ncols() );
 
     // -----------------------------------------------------
 
@@ -32,9 +32,9 @@ Poco::JSON::Object Accuracy::score(
             // ---------------------------------------------
             // Find minimum and maximum
 
-            METRICS_FLOAT yhat_min = yhat( 0, j );
+            Float yhat_min = yhat( 0, j );
 
-            METRICS_FLOAT yhat_max = yhat( 0, j );
+            Float yhat_max = yhat( 0, j );
 
             for ( size_t i = 0; i < nrows(); ++i )
                 {
@@ -51,10 +51,10 @@ Poco::JSON::Object Accuracy::score(
             if ( impl_.has_comm() )
                 {
                     impl_.reduce(
-                        multithreading::minimum<METRICS_FLOAT>(), &yhat_min );
+                        multithreading::minimum<Float>(), &yhat_min );
 
                     impl_.reduce(
-                        multithreading::maximum<METRICS_FLOAT>(), &yhat_max );
+                        multithreading::maximum<Float>(), &yhat_max );
                 }
 
             // ---------------------------------------------
@@ -65,16 +65,16 @@ Poco::JSON::Object Accuracy::score(
             // We use num_critical_values - 1, so that the greatest
             // critical_value will actually be greater than y_max.
             // This is to avoid segfaults.
-            const METRICS_FLOAT step_size =
+            const Float step_size =
                 ( yhat_max - yhat_min ) /
-                static_cast<METRICS_FLOAT>( num_critical_values - 1 );
+                static_cast<Float>( num_critical_values - 1 );
 
             // -----------------------------------------------------
             // Calculate bins
 
-            std::vector<METRICS_FLOAT> negatives( num_critical_values );
+            std::vector<Float> negatives( num_critical_values );
 
-            std::vector<METRICS_FLOAT> false_positives( num_critical_values );
+            std::vector<Float> false_positives( num_critical_values );
 
             for ( size_t i = 0; i < nrows(); ++i )
                 {
@@ -101,10 +101,10 @@ Poco::JSON::Object Accuracy::score(
 
             if ( impl_.has_comm() )
                 {
-                    impl_.reduce( std::plus<METRICS_FLOAT>(), &negatives );
+                    impl_.reduce( std::plus<Float>(), &negatives );
 
                     impl_.reduce(
-                        std::plus<METRICS_FLOAT>(), &false_positives );
+                        std::plus<Float>(), &false_positives );
                 }
 
             // ---------------------------------------------
@@ -126,7 +126,7 @@ Poco::JSON::Object Accuracy::score(
             // ---------------------------------------------
             // Calculate accuracies.
 
-            std::vector<METRICS_FLOAT> accuracies( num_critical_values );
+            std::vector<Float> accuracies( num_critical_values );
 
             for ( size_t i = 0; i < num_critical_values; ++i )
                 {

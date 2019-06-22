@@ -11,7 +11,7 @@ class Parser
     // -------------------------------
 
     /// Transforms a string to a double.
-    static CSV_FLOAT to_double( const std::string& _str )
+    static Float to_double( const std::string& _str )
     {
         const auto trimmed = trim( _str );
 
@@ -28,7 +28,7 @@ class Parser
     // -------------------------------
 
     /// Transforms a string to an integer.
-    static CSV_INT to_int( const std::string& _str )
+    static Int to_int( const std::string& _str )
     {
         const auto trimmed = trim( _str );
 
@@ -46,7 +46,7 @@ class Parser
     // -------------------------------
 
     /// Transforms a string to a time stamp.
-    static CSV_FLOAT to_time_stamp(
+    static Float to_time_stamp(
         const std::string& _str, const std::vector<std::string>& _time_formats )
     {
         const auto trimmed = trim( _str );
@@ -65,7 +65,7 @@ class Parser
                     }
 
                 const auto duration =
-                    std::chrono::duration<CSV_FLOAT, std::ratio<1>>(
+                    std::chrono::duration<Float, std::ratio<1>>(
                         std::mktime( &tm ) );
 
                 return duration.count() / 86400.0;

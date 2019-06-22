@@ -24,7 +24,8 @@ extern "C"
 
 // ----------------------------------------------------------------------------
 
-#include "database/types.hpp"
+#include "database/Float.hpp"
+#include "database/Int.hpp"
 
 #include "database/Iterator.hpp"
 

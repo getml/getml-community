@@ -42,9 +42,9 @@ class MetricImpl
 
     /// Reduces a value in a multithreading context.
     template <typename OperatorType>
-    void reduce( const OperatorType& _operator, METRICS_FLOAT* _val )
+    void reduce( const OperatorType& _operator, Float* _val )
     {
-        METRICS_FLOAT global = 0.0;
+        Float global = 0.0;
 
         multithreading::all_reduce(
             comm(),    // comm
@@ -62,9 +62,9 @@ class MetricImpl
     /// Reduces a vector in a multithreading context.
     template <typename OperatorType>
     void reduce(
-        const OperatorType& _operator, std::vector<METRICS_FLOAT>* _vec )
+        const OperatorType& _operator, std::vector<Float>* _vec )
     {
-        std::vector<METRICS_FLOAT> global( _vec->size() );
+        std::vector<Float> global( _vec->size() );
 
         multithreading::all_reduce(
             comm(),         // comm
@@ -81,10 +81,10 @@ class MetricImpl
 
     /// Trivial setter
     void set_data(
-        const METRICS_FLOAT* const _yhat,
+        const Float* const _yhat,
         const size_t _yhat_nrows,
         const size_t _yhat_ncols,
-        const METRICS_FLOAT* const _y,
+        const Float* const _y,
         const size_t _y_nrows,
         const size_t _y_ncols )
     {
@@ -98,7 +98,7 @@ class MetricImpl
     }
 
     /// Trivial getter
-    METRICS_FLOAT y( size_t _i, size_t _j ) const
+    Float y( size_t _i, size_t _j ) const
     {
         assert( y_ != nullptr );
         assert( _i < nrows_ );
@@ -108,7 +108,7 @@ class MetricImpl
     }
 
     /// Trivial getter
-    METRICS_FLOAT yhat( size_t _i, size_t _j ) const
+    Float yhat( size_t _i, size_t _j ) const
     {
         assert( yhat_ != nullptr );
         assert( _i < nrows_ );
@@ -130,10 +130,10 @@ class MetricImpl
     size_t nrows_;
 
     /// Pointer to ground truth.
-    const METRICS_FLOAT* y_;
+    const Float* y_;
 
     /// Pointer to predictions.
-    const METRICS_FLOAT* yhat_;
+    const Float* yhat_;
 
     // -----------------------------------------
 };

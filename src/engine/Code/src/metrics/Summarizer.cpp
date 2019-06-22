@@ -5,14 +5,14 @@ namespace metrics
 // ----------------------------------------------------------------------------
 
 Poco::JSON::Array::Ptr Summarizer::calculate_average_targets(
-    const std::vector<METRICS_FLOAT>& _minima,
-    const std::vector<METRICS_FLOAT>& _step_sizes,
+    const std::vector<Float>& _minima,
+    const std::vector<Float>& _step_sizes,
     const std::vector<size_t>& _actual_num_bins,
-    const std::vector<std::vector<METRICS_INT>>& _feature_densities,
-    const std::vector<METRICS_FLOAT>& _features,
+    const std::vector<std::vector<Int>>& _feature_densities,
+    const std::vector<Float>& _features,
     const size_t _nrows,
     const size_t _ncols,
-    const std::vector<const METRICS_FLOAT*>& _targets )
+    const std::vector<const Float*>& _targets )
 {
     // ------------------------------------------------------------------------
     // Init average_targets.
@@ -24,12 +24,12 @@ Poco::JSON::Array::Ptr Summarizer::calculate_average_targets(
     const auto num_targets = _targets.size();
 
     auto average_targets =
-        std::vector<std::vector<std::vector<METRICS_FLOAT>>>( _ncols );
+        std::vector<std::vector<std::vector<Float>>>( _ncols );
 
     std::for_each(
         average_targets.begin(),
         average_targets.end(),
-        [num_targets]( std::vector<std::vector<METRICS_FLOAT>>& vec ) {
+        [num_targets]( std::vector<std::vector<Float>>& vec ) {
             vec.resize( num_targets );
         } );
 
@@ -85,7 +85,7 @@ Poco::JSON::Array::Ptr Summarizer::calculate_average_targets(
                                   ++k )
                                 {
                                     average_targets[j][k][bin] /=
-                                        static_cast<METRICS_FLOAT>(
+                                        static_cast<Float>(
                                             _feature_densities[j][bin] );
                                 }
                         }
@@ -119,18 +119,18 @@ Poco::JSON::Array::Ptr Summarizer::calculate_average_targets(
 // ----------------------------------------------------------------------------
 
 Poco::JSON::Object Summarizer::calculate_feature_plots(
-    const std::vector<METRICS_FLOAT>& _features,
+    const std::vector<Float>& _features,
     const size_t _nrows,
     const size_t _ncols,
     const size_t _num_bins,
-    const std::vector<const METRICS_FLOAT*>& _targets )
+    const std::vector<const Float*>& _targets )
 {
     // ------------------------------------------------------------------------
     // Find minima and maxima
 
-    auto minima = std::vector<METRICS_FLOAT>( 0 );
+    auto minima = std::vector<Float>( 0 );
 
-    auto maxima = std::vector<METRICS_FLOAT>( 0 );
+    auto maxima = std::vector<Float>( 0 );
 
     find_min_and_max( _features, _nrows, _ncols, &minima, &maxima );
 
@@ -138,14 +138,14 @@ Poco::JSON::Object Summarizer::calculate_feature_plots(
     // Calculate step_sizes and actual_num_bins. Note that actual_num_bins
     // can be smaller than num_bins.
 
-    auto step_sizes = std::vector<METRICS_FLOAT>( 0 );
+    auto step_sizes = std::vector<Float>( 0 );
 
     auto actual_num_bins = std::vector<size_t>( 0 );
 
     calculate_step_sizes_and_num_bins(
         minima,
         maxima,
-        static_cast<METRICS_FLOAT>( _num_bins ),
+        static_cast<Float>( _num_bins ),
         &step_sizes,
         &actual_num_bins );
 
@@ -155,7 +155,7 @@ Poco::JSON::Object Summarizer::calculate_feature_plots(
     // ------------------------------------------------------------------------
     // Init feature densities.
 
-    auto feature_densities = std::vector<std::vector<METRICS_INT>>( _ncols );
+    auto feature_densities = std::vector<std::vector<Int>>( _ncols );
 
     for ( size_t j = 0; j < _ncols; ++j )
         {
@@ -236,10 +236,10 @@ Poco::JSON::Object Summarizer::calculate_feature_plots(
 // ----------------------------------------------------------------------------
 
 Poco::JSON::Object Summarizer::calculate_feature_correlations(
-    const std::vector<METRICS_FLOAT>& _features,
+    const std::vector<Float>& _features,
     const size_t _nrows,
     const size_t _ncols,
-    const std::vector<const METRICS_FLOAT*>& _targets )
+    const std::vector<const Float*>& _targets )
 {
     // -----------------------------------------------------------
 
@@ -250,15 +250,15 @@ Poco::JSON::Object Summarizer::calculate_feature_correlations(
     // -----------------------------------------------------------
     // Prepare datasets
 
-    std::vector<METRICS_FLOAT> sum_yhat( _ncols );
+    std::vector<Float> sum_yhat( _ncols );
 
-    std::vector<METRICS_FLOAT> sum_yhat_yhat( _ncols );
+    std::vector<Float> sum_yhat_yhat( _ncols );
 
-    std::vector<METRICS_FLOAT> sum_y( t_ncols );
+    std::vector<Float> sum_y( t_ncols );
 
-    std::vector<METRICS_FLOAT> sum_y_y( t_ncols );
+    std::vector<Float> sum_y_y( t_ncols );
 
-    std::vector<METRICS_FLOAT> sum_yhat_y( _ncols * t_ncols );
+    std::vector<Float> sum_yhat_y( _ncols * t_ncols );
 
     // -----------------------------------------------------------
     // Calculate sufficient statistics
@@ -293,22 +293,22 @@ Poco::JSON::Object Summarizer::calculate_feature_correlations(
     // -----------------------------------------------------------
     // Calculate correlations from sufficient statistics
 
-    const auto n = static_cast<METRICS_FLOAT>( _nrows );
+    const auto n = static_cast<Float>( _nrows );
 
-    auto feature_correlations = std::vector<std::vector<METRICS_FLOAT>>(
-        _ncols, std::vector<METRICS_FLOAT>( t_ncols ) );
+    auto feature_correlations = std::vector<std::vector<Float>>(
+        _ncols, std::vector<Float>( t_ncols ) );
 
     for ( size_t j = 0; j < _ncols; ++j )
         for ( size_t k = 0; k < t_ncols; ++k )
             {
-                const METRICS_FLOAT var_yhat =
+                const Float var_yhat =
                     sum_yhat_yhat[j] / n -
                     ( sum_yhat[j] / n ) * ( sum_yhat[j] / n );
 
-                const METRICS_FLOAT var_y =
+                const Float var_y =
                     sum_y_y[k] / n - ( sum_y[k] / n ) * ( sum_y[k] / n );
 
-                const METRICS_FLOAT cov_y_yhat =
+                const Float cov_y_yhat =
                     get( j, k, t_ncols, &sum_yhat_y ) / n -
                     ( sum_yhat[j] / n ) * ( sum_y[k] / n );
 
@@ -346,18 +346,18 @@ Poco::JSON::Object Summarizer::calculate_feature_correlations(
 // ----------------------------------------------------------------------------
 
 Poco::JSON::Array::Ptr Summarizer::calculate_labels(
-    const std::vector<METRICS_FLOAT>& _minima,
-    const std::vector<METRICS_FLOAT>& _step_sizes,
+    const std::vector<Float>& _minima,
+    const std::vector<Float>& _step_sizes,
     const std::vector<size_t>& _actual_num_bins,
-    const std::vector<std::vector<METRICS_INT>>& _feature_densities,
-    const std::vector<METRICS_FLOAT>& _features,
+    const std::vector<std::vector<Int>>& _feature_densities,
+    const std::vector<Float>& _features,
     const size_t _nrows,
     const size_t _ncols )
 {
     // ------------------------------------------------------------------------
     // Init labels.
 
-    auto labels = std::vector<std::vector<METRICS_FLOAT>>( _ncols );
+    auto labels = std::vector<std::vector<Float>>( _ncols );
 
     for ( size_t j = 0; j < _ncols; ++j )
         {
@@ -397,14 +397,14 @@ Poco::JSON::Array::Ptr Summarizer::calculate_labels(
                 {
                     if ( _feature_densities[j][bin] > 0 )
                         {
-                            labels[j][bin] /= static_cast<METRICS_FLOAT>(
+                            labels[j][bin] /= static_cast<Float>(
                                 _feature_densities[j][bin] );
                         }
                     else
                         {
                             labels[j][bin] =
                                 _minima[j] +
-                                ( static_cast<METRICS_FLOAT>( bin ) + 0.5 ) *
+                                ( static_cast<Float>( bin ) + 0.5 ) *
                                     _step_sizes[j];
                         }
                 }
@@ -430,10 +430,10 @@ Poco::JSON::Array::Ptr Summarizer::calculate_labels(
 // ----------------------------------------------------------------------------
 
 void Summarizer::calculate_step_sizes_and_num_bins(
-    const std::vector<METRICS_FLOAT>& _minima,
-    const std::vector<METRICS_FLOAT>& _maxima,
-    const METRICS_FLOAT _num_bins,
-    std::vector<METRICS_FLOAT>* _step_sizes,
+    const std::vector<Float>& _minima,
+    const std::vector<Float>& _maxima,
+    const Float _num_bins,
+    std::vector<Float>* _step_sizes,
     std::vector<size_t>* _actual_num_bins )
 {
     assert( _minima.size() == _maxima.size() );
@@ -463,17 +463,17 @@ void Summarizer::calculate_step_sizes_and_num_bins(
 // ----------------------------------------------------------------------------
 
 void Summarizer::find_min_and_max(
-    const std::vector<METRICS_FLOAT>& _features,
+    const std::vector<Float>& _features,
     const size_t _nrows,
     const size_t _ncols,
-    std::vector<METRICS_FLOAT>* _minima,
-    std::vector<METRICS_FLOAT>* _maxima )
+    std::vector<Float>* _minima,
+    std::vector<Float>* _maxima )
 {
-    *_minima = std::vector<METRICS_FLOAT>(
-        _ncols, std::numeric_limits<METRICS_FLOAT>::max() );
+    *_minima = std::vector<Float>(
+        _ncols, std::numeric_limits<Float>::max() );
 
-    *_maxima = std::vector<METRICS_FLOAT>(
-        _ncols, std::numeric_limits<METRICS_FLOAT>::lowest() );
+    *_maxima = std::vector<Float>(
+        _ncols, std::numeric_limits<Float>::lowest() );
 
     for ( size_t i = 0; i < _nrows; ++i )
         {
@@ -495,9 +495,9 @@ void Summarizer::find_min_and_max(
 
 size_t Summarizer::identify_bin(
     const size_t _num_bins,
-    const METRICS_FLOAT _step_size,
-    const METRICS_FLOAT _val,
-    const METRICS_FLOAT _min )
+    const Float _step_size,
+    const Float _val,
+    const Float _min )
 {
     assert( _step_size > 0.0 );
 

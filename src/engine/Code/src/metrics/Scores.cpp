@@ -24,13 +24,13 @@ void Scores::from_json_obj( const Poco::JSON::Object& _json_obj )
 
     if ( _json_obj.has( "prediction_min_" ) )
         {
-            prediction_min_ = JSON::array_to_vector<METRICS_FLOAT>(
+            prediction_min_ = JSON::array_to_vector<Float>(
                 JSON::get_array( _json_obj, "prediction_min_" ) );
         }
 
     if ( _json_obj.has( "prediction_step_size_" ) )
         {
-            prediction_step_size_ = JSON::array_to_vector<METRICS_FLOAT>(
+            prediction_step_size_ = JSON::array_to_vector<Float>(
                 JSON::get_array( _json_obj, "prediction_step_size_" ) );
         }
 
@@ -38,37 +38,37 @@ void Scores::from_json_obj( const Poco::JSON::Object& _json_obj )
 
     if ( _json_obj.has( "accuracy_" ) )
         {
-            accuracy_ = JSON::array_to_vector<METRICS_FLOAT>(
+            accuracy_ = JSON::array_to_vector<Float>(
                 JSON::get_array( _json_obj, "accuracy_" ) );
         }
 
     if ( _json_obj.has( "auc_" ) )
         {
-            auc_ = JSON::array_to_vector<METRICS_FLOAT>(
+            auc_ = JSON::array_to_vector<Float>(
                 JSON::get_array( _json_obj, "auc_" ) );
         }
 
     if ( _json_obj.has( "cross_entropy_" ) )
         {
-            cross_entropy_ = JSON::array_to_vector<METRICS_FLOAT>(
+            cross_entropy_ = JSON::array_to_vector<Float>(
                 JSON::get_array( _json_obj, "cross_entropy_" ) );
         }
 
     if ( _json_obj.has( "mae_" ) )
         {
-            mae_ = JSON::array_to_vector<METRICS_FLOAT>(
+            mae_ = JSON::array_to_vector<Float>(
                 JSON::get_array( _json_obj, "mae_" ) );
         }
 
     if ( _json_obj.has( "rmse_" ) )
         {
-            rmse_ = JSON::array_to_vector<METRICS_FLOAT>(
+            rmse_ = JSON::array_to_vector<Float>(
                 JSON::get_array( _json_obj, "rmse_" ) );
         }
 
     if ( _json_obj.has( "rsquared_" ) )
         {
-            rsquared_ = JSON::array_to_vector<METRICS_FLOAT>(
+            rsquared_ = JSON::array_to_vector<Float>(
                 JSON::get_array( _json_obj, "rsquared_" ) );
         }
 
@@ -83,7 +83,7 @@ void Scores::from_json_obj( const Poco::JSON::Object& _json_obj )
             for ( size_t i = 0; i < arr->size(); ++i )
                 {
                     accuracy_curves().push_back(
-                        JSON::array_to_vector<METRICS_FLOAT>(
+                        JSON::array_to_vector<Float>(
                             arr->getArray( static_cast<unsigned int>( i ) ) ) );
                 }
         }
@@ -98,13 +98,13 @@ void Scores::from_json_obj( const Poco::JSON::Object& _json_obj )
 
             for ( size_t i = 0; i < arr->size(); ++i )
                 {
-                    auto vec = std::vector<std::vector<METRICS_FLOAT>>( 0 );
+                    auto vec = std::vector<std::vector<Float>>( 0 );
 
                     auto arr2 = arr->getArray( static_cast<unsigned int>( i ) );
 
                     for ( size_t j = 0; j < arr2->size(); ++j )
                         {
-                            vec.push_back( JSON::array_to_vector<METRICS_FLOAT>(
+                            vec.push_back( JSON::array_to_vector<Float>(
                                 arr2->getArray(
                                     static_cast<unsigned int>( j ) ) ) );
                         }
@@ -124,7 +124,7 @@ void Scores::from_json_obj( const Poco::JSON::Object& _json_obj )
             for ( size_t i = 0; i < arr->size(); ++i )
                 {
                     feature_correlations_.push_back(
-                        JSON::array_to_vector<METRICS_FLOAT>(
+                        JSON::array_to_vector<Float>(
                             arr->getArray( static_cast<unsigned int>( i ) ) ) );
                 }
         }
@@ -140,7 +140,7 @@ void Scores::from_json_obj( const Poco::JSON::Object& _json_obj )
             for ( size_t i = 0; i < arr->size(); ++i )
                 {
                     feature_densities_.push_back(
-                        JSON::array_to_vector<METRICS_INT>(
+                        JSON::array_to_vector<Int>(
                             arr->getArray( static_cast<unsigned int>( i ) ) ) );
                 }
         }
@@ -156,7 +156,7 @@ void Scores::from_json_obj( const Poco::JSON::Object& _json_obj )
             for ( size_t i = 0; i < arr->size(); ++i )
                 {
                     feature_importances_.push_back(
-                        JSON::array_to_vector<METRICS_FLOAT>(
+                        JSON::array_to_vector<Float>(
                             arr->getArray( static_cast<unsigned int>( i ) ) ) );
                 }
         }
@@ -171,7 +171,7 @@ void Scores::from_json_obj( const Poco::JSON::Object& _json_obj )
 
             for ( size_t i = 0; i < arr->size(); ++i )
                 {
-                    fpr().push_back( JSON::array_to_vector<METRICS_FLOAT>(
+                    fpr().push_back( JSON::array_to_vector<Float>(
                         arr->getArray( static_cast<unsigned int>( i ) ) ) );
                 }
         }
@@ -186,7 +186,7 @@ void Scores::from_json_obj( const Poco::JSON::Object& _json_obj )
 
             for ( size_t i = 0; i < arr->size(); ++i )
                 {
-                    labels_.push_back( JSON::array_to_vector<METRICS_FLOAT>(
+                    labels_.push_back( JSON::array_to_vector<Float>(
                         arr->getArray( static_cast<unsigned int>( i ) ) ) );
                 }
         }
@@ -201,7 +201,7 @@ void Scores::from_json_obj( const Poco::JSON::Object& _json_obj )
 
             for ( size_t i = 0; i < arr->size(); ++i )
                 {
-                    tpr().push_back( JSON::array_to_vector<METRICS_FLOAT>(
+                    tpr().push_back( JSON::array_to_vector<Float>(
                         arr->getArray( static_cast<unsigned int>( i ) ) ) );
                 }
         }

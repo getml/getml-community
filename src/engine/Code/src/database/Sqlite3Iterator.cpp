@@ -88,7 +88,7 @@ Sqlite3Iterator::Sqlite3Iterator(
 
 // ----------------------------------------------------------------------------
 
-DATABASE_FLOAT Sqlite3Iterator::get_double()
+Float Sqlite3Iterator::get_double()
 {
     if ( end_ )
         {
@@ -96,7 +96,7 @@ DATABASE_FLOAT Sqlite3Iterator::get_double()
         }
 
     auto val =
-        static_cast<DATABASE_FLOAT>( sqlite3_column_double( stmt(), colnum_ ) );
+        static_cast<Float>( sqlite3_column_double( stmt(), colnum_ ) );
 
     // sqlite3_column_double(...) returns 0.0 when the value is NULL.
     if ( val == 0.0 )
@@ -133,7 +133,7 @@ DATABASE_FLOAT Sqlite3Iterator::get_double()
 
 // ----------------------------------------------------------------------------
 
-DATABASE_INT Sqlite3Iterator::get_int()
+Int Sqlite3Iterator::get_int()
 {
     if ( end_ )
         {
@@ -141,7 +141,7 @@ DATABASE_INT Sqlite3Iterator::get_int()
         }
 
     const auto val =
-        static_cast<DATABASE_INT>( sqlite3_column_int( stmt(), colnum_ ) );
+        static_cast<Int>( sqlite3_column_int( stmt(), colnum_ ) );
 
     if ( ++colnum_ == num_cols_ )
         {
@@ -186,7 +186,7 @@ std::string Sqlite3Iterator::get_string()
 
 // ----------------------------------------------------------------------------
 
-DATABASE_FLOAT Sqlite3Iterator::get_time_stamp()
+Float Sqlite3Iterator::get_time_stamp()
 {
     if ( end_ )
         {
@@ -195,7 +195,7 @@ DATABASE_FLOAT Sqlite3Iterator::get_time_stamp()
 
     const auto ptr = sqlite3_column_text( stmt(), colnum_ );
 
-    DATABASE_FLOAT val = 0.0;
+    Float val = 0.0;
 
     // sqlite3_column_text(...) returns NULL when the value is NULL.
     if ( ptr )

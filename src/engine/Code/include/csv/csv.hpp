@@ -18,7 +18,8 @@
 
 // ----------------------------------------------------------------------------
 
-#include "csv/types.hpp"
+#include "csv/Int.hpp"
+#include "csv/Float.hpp"
 
 #include "csv/Datatype.hpp"
 #include "csv/Parser.hpp"

@@ -24,16 +24,16 @@ class Sqlite3Iterator : public Iterator
 
    public:
     /// Returns a double and increments the iterator.
-    DATABASE_FLOAT get_double() final;
+    Float get_double() final;
 
     /// Returns a double and increments the iterator.
-    DATABASE_INT get_int() final;
+    Int get_int() final;
 
     /// Returns a string and increments the iterator.
     std::string get_string() final;
 
     /// Returns a time stamps and increments the iterator.
-    DATABASE_FLOAT get_time_stamp() final;
+    Float get_time_stamp() final;
 
     // -------------------------------
 

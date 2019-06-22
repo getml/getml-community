@@ -5,10 +5,10 @@ namespace metrics
 // ----------------------------------------------------------------------------
 
 Poco::JSON::Object RSquared::score(
-    const METRICS_FLOAT* const _yhat,
+    const Float* const _yhat,
     const size_t _yhat_nrows,
     const size_t _yhat_ncols,
-    const METRICS_FLOAT* const _y,
+    const Float* const _y,
     const size_t _y_nrows,
     const size_t _y_ncols )
 {
@@ -16,7 +16,7 @@ Poco::JSON::Object RSquared::score(
 
     impl_.set_data( _yhat, _yhat_nrows, _yhat_ncols, _y, _y_nrows, _y_ncols );
 
-    sufficient_statistics_ = std::vector<METRICS_FLOAT>( 6 * ncols() );
+    sufficient_statistics_ = std::vector<Float>( 6 * ncols() );
 
     // -----------------------------------------------------
     // Calculate sufficient statistics
@@ -47,43 +47,43 @@ Poco::JSON::Object RSquared::score(
             sufficient_statistics( 4, j ) += yhat( i, j ) * y( i, j );
 
     // Store n
-    sufficient_statistics( 5, 0 ) = static_cast<METRICS_FLOAT>( nrows() );
+    sufficient_statistics( 5, 0 ) = static_cast<Float>( nrows() );
 
     // -----------------------------------------------------
     // Reduce, if necessary
 
     if ( impl_.has_comm() )
         {
-            impl_.reduce( std::plus<METRICS_FLOAT>(), &sufficient_statistics_ );
+            impl_.reduce( std::plus<Float>(), &sufficient_statistics_ );
         }
 
     // -----------------------------------------------------
     // Calculate rsquared
 
-    std::vector<METRICS_FLOAT> rsquared( ncols() );
+    std::vector<Float> rsquared( ncols() );
 
     for ( size_t j = 0; j < ncols(); ++j )
         {
-            const METRICS_FLOAT sum_yhat = sufficient_statistics( 0, j );
+            const Float sum_yhat = sufficient_statistics( 0, j );
 
-            const METRICS_FLOAT sum_yhat_yhat = sufficient_statistics( 1, j );
+            const Float sum_yhat_yhat = sufficient_statistics( 1, j );
 
-            const METRICS_FLOAT sum_y = sufficient_statistics( 2, j );
+            const Float sum_y = sufficient_statistics( 2, j );
 
-            const METRICS_FLOAT sum_y_y = sufficient_statistics( 3, j );
+            const Float sum_y_y = sufficient_statistics( 3, j );
 
-            const METRICS_FLOAT sum_yhat_y = sufficient_statistics( 4, j );
+            const Float sum_yhat_y = sufficient_statistics( 4, j );
 
             // n is the same for all j!
-            const METRICS_FLOAT n = sufficient_statistics( 5, 0 );
+            const Float n = sufficient_statistics( 5, 0 );
 
-            const METRICS_FLOAT var_yhat =
+            const Float var_yhat =
                 sum_yhat_yhat / n - ( sum_yhat / n ) * ( sum_yhat / n );
 
-            const METRICS_FLOAT var_y =
+            const Float var_y =
                 sum_y_y / n - ( sum_y / n ) * ( sum_y / n );
 
-            const METRICS_FLOAT cov_y_yhat =
+            const Float cov_y_yhat =
                 sum_yhat_y / n - ( sum_yhat / n ) * ( sum_y / n );
 
             rsquared[j] = ( cov_y_yhat * cov_y_yhat ) / ( var_yhat * var_y );
