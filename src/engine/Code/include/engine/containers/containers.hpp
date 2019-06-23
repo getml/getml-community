@@ -47,6 +47,8 @@
 // ----------------------------------------------------
 // Module files
 
+#include "engine/containers/Features.hpp"
+
 #include "engine/containers/Encoding.hpp"
 #include "engine/containers/Index.hpp"
 #include "engine/containers/Matrix.hpp"

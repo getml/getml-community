@@ -21,6 +21,8 @@
 #include "metrics/Float.hpp"
 #include "metrics/Int.hpp"
 
+#include "metrics/Features.hpp"
+
 #include "metrics/JSON.hpp"
 
 #include "metrics/Metric.hpp"

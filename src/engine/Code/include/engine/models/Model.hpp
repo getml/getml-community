@@ -75,7 +75,7 @@ class Model : public AbstractModel
    private:
     /// Calculates the correlations of each feature with the targets.
     void calculate_feature_stats(
-        const std::vector<Float>& _features,
+        const containers::Features _features,
         const size_t _nrows,
         const size_t _ncols,
         const typename FeatureEngineererType::DataFrameType& _df );
@@ -266,12 +266,12 @@ Model<FeatureEngineererType>::Model(
 
 template <typename FeatureEngineererType>
 void Model<FeatureEngineererType>::calculate_feature_stats(
-    const std::vector<Float>& _features,
+    const containers::Features _features,
     const size_t _nrows,
     const size_t _ncols,
     const typename FeatureEngineererType::DataFrameType& _df )
 {
-    const size_t num_bins = 50;
+    // const size_t num_bins = 50;
 
     std::vector<const Float*> targets;
 
@@ -283,8 +283,8 @@ void Model<FeatureEngineererType>::calculate_feature_stats(
     scores_.from_json_obj( metrics::Summarizer::calculate_feature_correlations(
         _features, _nrows, _ncols, targets ) );
 
-    scores_.from_json_obj( metrics::Summarizer::calculate_feature_plots(
-        _features, _nrows, _ncols, num_bins, targets ) );
+    /*scores_.from_json_obj( metrics::Summarizer::calculate_feature_plots(
+        _features, _nrows, _ncols, num_bins, targets ) );*/
 }
 
 // ----------------------------------------------------------------------------
@@ -875,8 +875,7 @@ containers::Matrix<Float> Model<FeatureEngineererType>::transform(
 
     if ( score )
         {
-            /*calculate_feature_stats(
-             *features, nrows, ncols, population_table );*/
+            calculate_feature_stats( features, nrows, ncols, population_table );
         }
 
     // ------------------------------------------------------------------------

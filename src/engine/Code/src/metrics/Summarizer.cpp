@@ -236,14 +236,14 @@ Poco::JSON::Object Summarizer::calculate_feature_plots(
 // ----------------------------------------------------------------------------
 
 Poco::JSON::Object Summarizer::calculate_feature_correlations(
-    const std::vector<Float>& _features,
+    const Features& _features,
     const size_t _nrows,
     const size_t _ncols,
     const std::vector<const Float*>& _targets )
 {
     // -----------------------------------------------------------
 
-    assert( _nrows * _ncols == _features.size() );
+    assert( _ncols == _features.size() );
 
     const auto t_ncols = _targets.size();
 
@@ -266,13 +266,12 @@ Poco::JSON::Object Summarizer::calculate_feature_correlations(
     // Calculate sum yhat
     for ( size_t i = 0; i < _nrows; ++i )
         for ( size_t j = 0; j < _ncols; ++j )
-            sum_yhat[j] += get( i, j, _ncols, _features );
+            sum_yhat[j] += get( i, j, _features );
 
     // Calculate sum yhat_yhat
     for ( size_t i = 0; i < _nrows; ++i )
         for ( size_t j = 0; j < _ncols; ++j )
-            sum_yhat_yhat[j] +=
-                get( i, j, _ncols, _features ) * get( i, j, _ncols, _features );
+            sum_yhat_yhat[j] += get( i, j, _features ) * get( i, j, _features );
 
     // Calculate sum y
     for ( size_t k = 0; k < t_ncols; ++k )
@@ -288,7 +287,7 @@ Poco::JSON::Object Summarizer::calculate_feature_correlations(
         for ( size_t i = 0; i < _nrows; ++i )
             for ( size_t j = 0; j < _ncols; ++j )
                 get( j, k, t_ncols, &sum_yhat_y ) +=
-                    get( i, j, _ncols, _features ) * _targets[k][i];
+                    get( i, j, _features ) * _targets[k][i];
 
     // -----------------------------------------------------------
     // Calculate correlations from sufficient statistics
@@ -308,9 +307,8 @@ Poco::JSON::Object Summarizer::calculate_feature_correlations(
                 const Float var_y =
                     sum_y_y[k] / n - ( sum_y[k] / n ) * ( sum_y[k] / n );
 
-                const Float cov_y_yhat =
-                    get( j, k, t_ncols, &sum_yhat_y ) / n -
-                    ( sum_yhat[j] / n ) * ( sum_y[k] / n );
+                const Float cov_y_yhat = get( j, k, t_ncols, &sum_yhat_y ) / n -
+                                         ( sum_yhat[j] / n ) * ( sum_y[k] / n );
 
                 feature_correlations[j][k] =
                     cov_y_yhat / sqrt( var_yhat * var_y );
@@ -469,11 +467,10 @@ void Summarizer::find_min_and_max(
     std::vector<Float>* _minima,
     std::vector<Float>* _maxima )
 {
-    *_minima = std::vector<Float>(
-        _ncols, std::numeric_limits<Float>::max() );
+    *_minima = std::vector<Float>( _ncols, std::numeric_limits<Float>::max() );
 
-    *_maxima = std::vector<Float>(
-        _ncols, std::numeric_limits<Float>::lowest() );
+    *_maxima =
+        std::vector<Float>( _ncols, std::numeric_limits<Float>::lowest() );
 
     for ( size_t i = 0; i < _nrows; ++i )
         {

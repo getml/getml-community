@@ -13,7 +13,7 @@ class Summarizer
     /// Calculates the pearson r between features and
     /// a set of targets.
     static Poco::JSON::Object calculate_feature_correlations(
-        const std::vector<Float>& _features,
+        const Features& _features,
         const size_t _nrows,
         const size_t _ncols,
         const std::vector<const Float*>& _targets );
@@ -104,6 +104,15 @@ class Summarizer
         assert( _j < _ncols );
         assert( _i * _ncols + _j < _vec->size() );
         return ( *_vec )[_i * _ncols + _j];
+    }
+
+    /// Helper function
+    static const Float& get(
+        const size_t _i, const size_t _j, const Features& _features )
+    {
+        assert( _j < _features.size() );
+        assert( _i < _features[_j]->size() );
+        return ( *_features[_j] )[_i];
     }
 
     // ---------------------------------------------------------------------
