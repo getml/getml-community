@@ -1,0 +1,5 @@
+set(
+    PREDICTORS_OBJ
+    ${PREDICTORS_SOURCE_DIRECTORY}/XGBoostHyperparams.cpp
+    ${PREDICTORS_SOURCE_DIRECTORY}/XGBoostPredictor.cpp
+)

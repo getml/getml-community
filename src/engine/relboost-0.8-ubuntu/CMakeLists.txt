@@ -35,19 +35,21 @@ include_directories(
     "${XGBOOST_DIR}/rabit/include"
 )
 
-set(AUTOSQL_SOURCE_DIRECTORY ${PROJECT_SOURCE_DIR}/../Code/src/autosql)
-set(CSV_SOURCE_DIRECTORY ${PROJECT_SOURCE_DIR}/../Code/src/csv)
-set(DATABASE_SOURCE_DIRECTORY ${PROJECT_SOURCE_DIR}/../Code/src/database)
+set(AUTOSQL_SOURCE_DIRECTORY "${PROJECT_SOURCE_DIR}/../Code/src/autosql")
+set(CSV_SOURCE_DIRECTORY "${PROJECT_SOURCE_DIR}/../Code/src/csv")
+set(DATABASE_SOURCE_DIRECTORY "${PROJECT_SOURCE_DIR}/../Code/src/database")
 set(ENGINE_SOURCE_DIRECTORY "${PROJECT_SOURCE_DIR}/../Code/src/engine")
 set(METRICS_SOURCE_DIRECTORY "${PROJECT_SOURCE_DIR}/../Code/src/metrics")
+set(PREDICTORS_SOURCE_DIRECTORY "${PROJECT_SOURCE_DIR}/../Code/src/predictors")
 set(RELBOOST_SOURCE_DIRECTORY "${PROJECT_SOURCE_DIR}/../Code/src/relboost")
-set(SQLITE3_SOURCE_DIRECTORY ${PROJECT_SOURCE_DIR}/../Code/src/sqlite3)
+set(SQLITE3_SOURCE_DIRECTORY "${PROJECT_SOURCE_DIR}/../Code/src/sqlite3")
 
 include(${AUTOSQL_SOURCE_DIRECTORY}/obj.txt)
 include(${CSV_SOURCE_DIRECTORY}/obj.txt)
 include(${DATABASE_SOURCE_DIRECTORY}/obj.txt)
 include(${ENGINE_SOURCE_DIRECTORY}/obj.txt)
 include(${METRICS_SOURCE_DIRECTORY}/obj.txt)
+include(${PREDICTORS_SOURCE_DIRECTORY}/obj.txt)
 include(${RELBOOST_SOURCE_DIRECTORY}/obj.txt)
 include(${SQLITE3_SOURCE_DIRECTORY}/obj.txt)
 
@@ -79,6 +81,7 @@ add_executable(
  	${DATABASE_OBJ}
  	${ENGINE_OBJ}
  	${METRICS_OBJ}
+  ${PREDICTORS_OBJ}
  	${RELBOOST_OBJ}
  	${SQLITE3_OBJ}
  	${ENGINE_SOURCE_DIRECTORY}/main.cpp
