@@ -79,7 +79,7 @@ class DecisionTreeEnsemble
 
     /// Returns the features underlying the model (the predictions of the
     /// individual trees as opposed to the entire prediction)
-    std::shared_ptr<std::vector<Float>> transform(
+    containers::Features transform(
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral,
         const std::shared_ptr<const logging::AbstractLogger> _logger =
@@ -265,8 +265,7 @@ class DecisionTreeEnsemble
             _yhat_old->end(),
             _predictions.begin(),
             _yhat_old->begin(),
-            [this, _update_rate](
-                const Float yhat, const Float pred ) {
+            [this, _update_rate]( const Float yhat, const Float pred ) {
                 return yhat + pred * hyperparameters().eta_ * _update_rate;
             } );
     }

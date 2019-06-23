@@ -12,8 +12,8 @@
 #include <map>
 #include <memory>
 #include <type_traits>
-#include <vector>
 #include <unordered_map>
+#include <vector>
 
 #include <Poco/JSON/Object.h>
 
@@ -28,6 +28,7 @@
 // Module files
 
 // These are just typedefs.
+#include "autosql/containers/Features.hpp"
 #include "autosql/containers/Index.hpp"
 #include "autosql/containers/Match.hpp"
 #include "autosql/containers/MatchPtrs.hpp"

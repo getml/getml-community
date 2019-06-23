@@ -183,24 +183,39 @@ void test20_saving_and_loading_models()
     // ------------------------------------------------------------------------
     // Generate predictions.
 
-    const auto predictions = *model.transform( population_df, {peripheral_df} );
+    const auto predictions = model.transform( population_df, {peripheral_df} );
 
     const auto predictions2 =
-        *model2.transform( population_df, {peripheral_df} );
+        model2.transform( population_df, {peripheral_df} );
 
     const auto predictions3 =
-        *model3.transform( population_df, {peripheral_df} );
+        model3.transform( population_df, {peripheral_df} );
 
     assert( predictions.size() == predictions2.size() );
+    assert( predictions.size() == predictions3.size() );
 
-    for ( size_t i = 0; i < predictions.size(); ++i )
+    for ( size_t j = 0; j < predictions.size(); ++j )
         {
-            /* std::cout << "prediction: " << predictions[i]
-                       << ", prediction2: " << predictions2[i] << std::endl;*/
+            assert( predictions[j]->size() == predictions2[j]->size() );
+            assert( predictions[j]->size() == predictions3[j]->size() );
 
-            assert( std::abs( predictions[i] - predictions2[i] ) < 1e-07 );
+            for ( size_t i = 0; i < predictions[j]->size(); ++i )
+                {
+                    assert(
+                        std::abs(
+                            ( *predictions[j] )[i] - ( *predictions2[j] )[i] ) <
+                        1e-07 );
 
-            assert( std::abs( predictions[i] - predictions3[i] ) < 1e-07 );
+                    assert(
+                        std::abs(
+                            ( *predictions[j] )[i] - ( *predictions3[j] )[i] ) <
+                        1e-07 );
+
+                    assert(
+                        std::abs(
+                            population_df.target( i, 0 ) -
+                            ( *predictions[j] )[i] ) < 5.0 );
+                }
         }
     std::cout << std::endl << std::endl;
 

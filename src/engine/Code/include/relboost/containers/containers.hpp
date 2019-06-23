@@ -27,6 +27,8 @@
 
 // ----------------------------------------------------------------------------
 
+// These are just typedefs
+#include "relboost/containers/Features.hpp"
 #include "relboost/containers/Index.hpp"
 
 #include "relboost/containers/Column.hpp"

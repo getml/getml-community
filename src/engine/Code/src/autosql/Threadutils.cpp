@@ -8,16 +8,16 @@ namespace ensemble
 
 void Threadutils::copy(
     const std::vector<size_t> _rows,
-    const size_t _col,
-    const size_t _num_features,
-    const std::vector<Float>& _new_feature,
-    std::vector<Float>* _features )
+    const std::vector<Float>& _local_feature,
+    std::vector<Float>* _global_feature )
 {
+    assert( _rows.size() == _local_feature.size() );
+
     for ( size_t i = 0; i < _rows.size(); ++i )
         {
-            assert( _rows[i] * _num_features + _col < _features->size() );
+            assert( _rows[i] < _global_feature->size() );
 
-            ( *_features )[_rows[i] * _num_features + _col] = _new_feature[i];
+            ( *_global_feature )[_rows[i]] = _local_feature[i];
         }
 }
 
@@ -105,9 +105,7 @@ Int Threadutils::get_num_threads( const Int _num_threads )
         {
             num_threads = std::max(
                 2,
-                static_cast<Int>(
-                    std::thread::hardware_concurrency() ) -
-                    2 );
+                static_cast<Int>( std::thread::hardware_concurrency() ) - 2 );
         }
 
     return num_threads;
@@ -122,7 +120,7 @@ void Threadutils::transform_ensemble(
     const std::vector<containers::DataFrame>& _peripheral,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
     const ensemble::DecisionTreeEnsemble& _ensemble,
-    std::vector<Float>* _features )
+    containers::Features* _features )
 {
     try
         {
@@ -165,6 +163,8 @@ void Threadutils::transform_ensemble(
             // ----------------------------------------------------------------
             // Build the actual features.
 
+            assert( _ensemble.trees().size() == _features->size() );
+
             for ( size_t i = 0; i < _ensemble.trees().size(); ++i )
                 {
                     const auto new_feature = _ensemble.transform(
@@ -172,10 +172,8 @@ void Threadutils::transform_ensemble(
 
                     copy(
                         population_subview.rows(),
-                        i,
-                        _ensemble.num_features(),
                         new_feature,
-                        _features );
+                        ( *_features )[i].get() );
 
                     if ( _logger /*&& !silent */ )
                         {

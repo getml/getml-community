@@ -164,26 +164,6 @@ void test15_discrete_output()
     sql.close();
 
     // ------------------------------------------------------------------------
-    // Generate predictions.
-
-    const auto predictions = *model.transform( population_df, {peripheral_df} );
-
-    // const auto num_features = hyperparameters->num_features_;
-
-    for ( size_t i = 0; i < predictions.size(); ++i )
-        {
-            /*  std::cout << "target: "
-                        << population_df.target( i / num_features, 0 )
-                        << ", prediction: " << predictions[i] << std::endl;*/
-
-            /*assert(
-                std::abs(
-                    population_df.target( i / num_features, 0 ) -
-                    predictions[i] ) < 50.0 );*/
-        }
-    std::cout << std::endl << std::endl;
-
-    // ------------------------------------------------------------------------
 
     std::cout << "OK." << std::endl << std::endl;
 

@@ -37,7 +37,7 @@ class Threadutils
         const std::vector<containers::DataFrame>& _peripheral,
         const std::shared_ptr<const logging::AbstractLogger> _logger,
         const DecisionTreeEnsemble& _ensemble,
-        std::vector<Float>* features );
+        containers::Features* _features );
 
     // ------------------------------------------------------------------------
 
@@ -45,10 +45,8 @@ class Threadutils
     /// Copies to the features.
     static void copy(
         const std::vector<size_t> _rows,
-        const size_t _col,
-        const size_t _num_features,
-        const std::vector<Float>& _new_feature,
-        std::vector<Float>* _features );
+        const std::vector<Float>& _local_feature,
+        std::vector<Float>* _global_feature );
 
     // ------------------------------------------------------------------------
 };

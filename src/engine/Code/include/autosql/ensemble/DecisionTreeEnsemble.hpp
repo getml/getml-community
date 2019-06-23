@@ -73,9 +73,8 @@ class DecisionTreeEnsemble
     /// Extracts the SQL statements underlying these features as a string
     std::string to_sql() const;
 
-    /// Transforms a set of raw data into extracted features. This is called by
-    /// Threadutils.
-    std::shared_ptr<std::vector<Float>> transform(
+    /// Transforms a set of raw data into extracted features.
+    containers::Features transform(
         const containers::DataFrame &_population,
         const std::vector<containers::DataFrame> &_peripheral,
         const std::shared_ptr<const logging::AbstractLogger> _logger =

@@ -5,7 +5,9 @@ void test10_same_units_categorical()
 {
     // ------------------------------------------------------------------------
 
-    std::cout << std::endl << "Test 10 (same units categorical): " << std::endl << std::endl;
+    std::cout << std::endl
+              << "Test 10 (same units categorical): " << std::endl
+              << std::endl;
 
     // ------------------------------------------------------------------------
     // Build artificial data set.
@@ -166,20 +168,22 @@ void test10_same_units_categorical()
     // ------------------------------------------------------------------------
     // Generate predictions.
 
-    const auto predictions = *model.transform( population_df, {peripheral_df} );
+    const auto predictions = model.transform( population_df, {peripheral_df} );
 
-    const auto num_features = hyperparameters->num_features_;
-
-    for ( size_t i = 0; i < predictions.size(); ++i )
+    for ( size_t j = 0; j < predictions.size(); ++j )
         {
-            /*std::cout << "target: "
-                       << population_df.target( i / num_features, 0 )
-                       << ", prediction: " << predictions[i] << std::endl;*/
+            for ( size_t i = 0; i < predictions[j]->size(); ++i )
+                {
+                    /*std::cout << "target: "
+                               << population_df.target( i , 0 )
+                               << ", prediction: " << predictions[j][i] <<
+                       std::endl;*/
 
-            assert(
-                std::abs(
-                    population_df.target( i / num_features, 0 ) -
-                    predictions[i] ) < 5.0 );
+                    assert(
+                        std::abs(
+                            population_df.target( i, 0 ) -
+                            ( *predictions[j] )[i] ) < 5.0 );
+                }
         }
     std::cout << std::endl << std::endl;
 

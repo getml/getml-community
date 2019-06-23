@@ -138,8 +138,7 @@ Float DecisionTreeEnsemble::calc_loss_reduction(
     const auto update_rate = _decision_tree.update_rate();
 
     const auto update_function = [update_rate](
-                                     const Float y_old,
-                                     const Float y_new ) {
+                                     const Float y_old, const Float y_new ) {
         return y_old + y_new * update_rate;
     };
 
@@ -523,16 +522,18 @@ std::vector<Float> DecisionTreeEnsemble::predict(
 {
     const auto features = transform( _population, _peripheral );
 
-    assert( features->size() == _population.nrows() * num_features() );
+    assert( features.size() == num_features() );
 
-    auto predictions = std::vector<Float>(
-        _population.nrows(), initial_prediction() );
+    auto predictions =
+        std::vector<Float>( _population.nrows(), initial_prediction() );
 
-    for ( size_t i = 0; i < _population.nrows(); ++i )
+    for ( size_t j = 0; j < num_features(); ++j )
         {
-            for ( size_t j = 0; j < num_features(); ++j )
+            assert( features[j]->size() == _population.nrows() );
+
+            for ( size_t i = 0; i < _population.nrows(); ++i )
                 {
-                    predictions[i] += ( *features )[i * num_features() + j] *
+                    predictions[i] += ( *features[j] )[i] *
                                       hyperparameters().eta_ *
                                       trees()[j].update_rate();
                 }
@@ -653,7 +654,7 @@ Poco::JSON::Object DecisionTreeEnsemble::to_monitor(
 
 // ----------------------------------------------------------------------------
 
-std::shared_ptr<std::vector<Float>> DecisionTreeEnsemble::transform(
+containers::Features DecisionTreeEnsemble::transform(
     const containers::DataFrame &_population,
     const std::vector<containers::DataFrame> &_peripheral,
     const std::shared_ptr<const logging::AbstractLogger> _logger ) const
@@ -679,8 +680,12 @@ std::shared_ptr<std::vector<Float>> DecisionTreeEnsemble::transform(
     // -------------------------------------------------------
     // Launch threads and generate predictions on the subviews.
 
-    auto features = std::make_shared<std::vector<Float>>(
-        _population.nrows() * num_features() );
+    auto features = containers::Features( num_features() );
+
+    for ( auto &f : features )
+        {
+            f = std::make_shared<std::vector<Float>>( _population.nrows() );
+        }
 
     std::vector<std::thread> threads;
 
@@ -694,7 +699,7 @@ std::shared_ptr<std::vector<Float>> DecisionTreeEnsemble::transform(
                 _peripheral,
                 std::shared_ptr<const logging::AbstractLogger>(),
                 *this,
-                features.get() ) );
+                &features ) );
         }
 
     // ------------------------------------------------------
@@ -709,7 +714,7 @@ std::shared_ptr<std::vector<Float>> DecisionTreeEnsemble::transform(
                 _peripheral,
                 _logger,
                 *this,
-                features.get() );
+                &features );
         }
     catch ( std::exception &e )
         {

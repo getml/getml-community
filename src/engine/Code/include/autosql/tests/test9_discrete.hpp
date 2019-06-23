@@ -30,11 +30,10 @@ void test9_discrete()
 
     const auto time_stamps_peripheral = make_column<double>( 250000, rng );
 
-    const auto time_stamps_peripheral_col =
-        autosql::containers::Column<double>(
-            time_stamps_peripheral.data(),
-            "time_stamp",
-            time_stamps_peripheral.size() );
+    const auto time_stamps_peripheral_col = autosql::containers::Column<double>(
+        time_stamps_peripheral.data(),
+        "time_stamp",
+        time_stamps_peripheral.size() );
 
     const auto peripheral_df = autosql::containers::DataFrame(
         {},
@@ -68,11 +67,10 @@ void test9_discrete()
 
     const auto time_stamps_population = make_column<double>( 500, rng );
 
-    const auto time_stamps_population_col =
-        autosql::containers::Column<double>(
-            time_stamps_population.data(),
-            "time_stamp",
-            time_stamps_population.size() );
+    const auto time_stamps_population_col = autosql::containers::Column<double>(
+        time_stamps_population.data(),
+        "time_stamp",
+        time_stamps_population.size() );
 
     auto targets_population = std::vector<double>( 500 );
 
@@ -160,20 +158,22 @@ void test9_discrete()
     // ------------------------------------------------------------------------
     // Generate predictions.
 
-    const auto predictions = *model.transform( population_df, {peripheral_df} );
+    const auto predictions = model.transform( population_df, {peripheral_df} );
 
-    const auto num_features = hyperparameters->num_features_;
-
-    for ( size_t i = 0; i < predictions.size(); ++i )
+    for ( size_t j = 0; j < predictions.size(); ++j )
         {
-            /*std::cout << "target: "
-                       << population_df.target( i / num_features, 0 )
-                       << ", prediction: " << predictions[i] << std::endl;*/
+            for ( size_t i = 0; i < predictions[j]->size(); ++i )
+                {
+                    /*std::cout << "target: "
+                               << population_df.target( i , 0 )
+                               << ", prediction: " << predictions[j][i] <<
+                       std::endl;*/
 
-            assert(
-                std::abs(
-                    population_df.target( i / num_features, 0 ) -
-                    predictions[i] ) < 5.0 );
+                    assert(
+                        std::abs(
+                            population_df.target( i, 0 ) -
+                            ( *predictions[j] )[i] ) < 5.0 );
+                }
         }
     std::cout << std::endl << std::endl;
 

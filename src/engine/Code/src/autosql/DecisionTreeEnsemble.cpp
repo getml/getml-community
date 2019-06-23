@@ -409,7 +409,8 @@ void DecisionTreeEnsemble::fit(
         _table_holder->main_tables_[0].df() );
 
     // ----------------------------------------------------------------
-    // containers::Match weights are needed for the random-forest-like functionality
+    // containers::Match weights are needed for the random-forest-like
+    // functionality
 
     debug_log( "fit: Setting up sampling..." );
 
@@ -422,15 +423,15 @@ void DecisionTreeEnsemble::fit(
 
     const auto nrows = _table_holder->main_tables_[0].nrows();
 
-    auto sample_weights =
-        std::make_shared<std::vector<Float>>( nrows, 1.0 );
+    auto sample_weights = std::make_shared<std::vector<Float>>( nrows, 1.0 );
 
     random_number_generator().reset(
         new std::mt19937( static_cast<size_t>( hyperparameters().seed_ ) ) );
 
     // ----------------------------------------------------------------
-    // containers::Match containers are pointers to simple structs, which represent a match
-    // between a key in the peripheral table and a key in the population table.
+    // containers::Match containers are pointers to simple structs, which
+    // represent a match between a key in the peripheral table and a key in the
+    // population table.
 
     debug_log( "fit: Creating samples..." );
 
@@ -462,8 +463,8 @@ void DecisionTreeEnsemble::fit(
     for ( size_t ix_feature = 0; ix_feature < _num_features; ++ix_feature )
         {
             // ----------------------------------------------------------------
-            // containers::Match for a random-forest-like algorithm - can be turned off
-            // by setting _sampling_rate to 0.0
+            // containers::Match for a random-forest-like algorithm - can be
+            // turned off by setting _sampling_rate to 0.0
 
             debug_log( "fit: Sampling from population..." );
 
@@ -537,12 +538,11 @@ void DecisionTreeEnsemble::fit(
                 {
                     const auto ix = last_tree()->ix_perip_used();
 
-                    std::vector<Float> new_feature =
-                        last_tree()->transform(
-                            _table_holder->main_tables_[ix],
-                            _table_holder->peripheral_tables_[ix],
-                            subfeatures[ix],
-                            hyperparameters().use_timestamps_ );
+                    std::vector<Float> new_feature = last_tree()->transform(
+                        _table_holder->main_tables_[ix],
+                        _table_holder->peripheral_tables_[ix],
+                        subfeatures[ix],
+                        hyperparameters().use_timestamps_ );
 
                     _opt->update_yhat_old( *sample_weights, new_feature );
 
@@ -922,7 +922,7 @@ std::string DecisionTreeEnsemble::to_sql() const
 
 // ----------------------------------------------------------------------------
 
-std::shared_ptr<std::vector<Float>> DecisionTreeEnsemble::transform(
+containers::Features DecisionTreeEnsemble::transform(
     const containers::DataFrame &_population,
     const std::vector<containers::DataFrame> &_peripheral,
     const std::shared_ptr<const logging::AbstractLogger> _logger ) const
@@ -948,8 +948,12 @@ std::shared_ptr<std::vector<Float>> DecisionTreeEnsemble::transform(
     // -------------------------------------------------------
     // Launch threads and generate predictions on the subviews.
 
-    auto features = std::make_shared<std::vector<Float>>(
-        _population.nrows() * num_features() );
+    auto features = containers::Features( num_features() );
+
+    for ( auto &f : features )
+        {
+            f = std::make_shared<std::vector<Float>>( _population.nrows() );
+        }
 
     std::vector<std::thread> threads;
 
@@ -963,7 +967,7 @@ std::shared_ptr<std::vector<Float>> DecisionTreeEnsemble::transform(
                 _peripheral,
                 std::shared_ptr<const logging::AbstractLogger>(),
                 *this,
-                features.get() ) );
+                &features ) );
         }
 
     // ------------------------------------------------------
@@ -978,7 +982,7 @@ std::shared_ptr<std::vector<Float>> DecisionTreeEnsemble::transform(
                 _peripheral,
                 _logger,
                 *this,
-                features.get() );
+                &features );
         }
     catch ( std::exception &e )
         {

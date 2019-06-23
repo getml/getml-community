@@ -851,15 +851,21 @@ containers::Matrix<Float> Model<FeatureEngineererType>::transform(
         population_table, peripheral_tables, _logger );
 
     // ------------------------------------------------------------------------
-    // Build matrix.
+    // Build matrix (temporary fix, remove later).
 
-    assert( features->size() % population_table.nrows() == 0 );
+    const size_t ncols = features.size();
 
-    const auto nrows = population_table.nrows();
+    const size_t nrows = ( ncols == 0 ) ? ( 0 ) : features[0]->size();
 
-    const auto ncols = features->size() / population_table.nrows();
+    auto mat = containers::Matrix<Float>( nrows, ncols );
 
-    const auto mat = containers::Matrix<Float>( nrows, ncols, features );
+    for ( size_t j = 0; j < features.size(); ++j )
+        {
+            for ( size_t i = 0; i < features[j]->size(); ++i )
+                {
+                    mat( i, j ) = ( *features[j] )[i];
+                }
+        }
 
     // ------------------------------------------------
     // Get the feature importances, if applicable.
@@ -869,8 +875,8 @@ containers::Matrix<Float> Model<FeatureEngineererType>::transform(
 
     if ( score )
         {
-            calculate_feature_stats(
-                *features, nrows, ncols, population_table );
+            /*calculate_feature_stats(
+             *features, nrows, ncols, population_table );*/
         }
 
     // ------------------------------------------------------------------------
