@@ -147,6 +147,12 @@ class Matrix
     /// Trivial getter
     T *data() const { return data_ptr_; }
 
+    /// Trivial getter
+    std::shared_ptr<std::vector<T>> &data_ptr() { return data_; }
+
+    /// Trivial getter
+    const std::shared_ptr<std::vector<T>> &data_ptr() const { return data_; }
+
     /// Iterator to end of data
     T *end() { return data_ptr_ + size(); }
 
@@ -187,9 +193,8 @@ class Matrix
     /// Accessor to data
     template <
         typename T2,
-        typename std::enable_if<
-            std::is_same<T2, ULong>::value == false,
-            int>::type = 0>
+        typename std::enable_if<std::is_same<T2, ULong>::value == false, int>::
+            type = 0>
     T &operator()( const T2 _i, const T2 _j )
     {
         assert( _i >= 0 );
@@ -198,16 +203,14 @@ class Matrix
         assert( static_cast<size_t>( _j ) < ncols() );
 
         return data_ptr_
-            [ncols_long_ * static_cast<ULong>( _i ) +
-             static_cast<ULong>( _j )];
+            [ncols_long_ * static_cast<ULong>( _i ) + static_cast<ULong>( _j )];
     }
 
     /// Accessor to data
     template <
         typename T2,
-        typename std::enable_if<
-            std::is_same<T2, ULong>::value == false,
-            int>::type = 0>
+        typename std::enable_if<std::is_same<T2, ULong>::value == false, int>::
+            type = 0>
     T operator()( const T2 _i, const T2 _j ) const
     {
         assert( _i >= 0 );
@@ -216,14 +219,12 @@ class Matrix
         assert( static_cast<size_t>( _j ) < ncols() );
 
         return data_ptr_
-            [ncols_long_ * static_cast<ULong>( _i ) +
-             static_cast<ULong>( _j )];
+            [ncols_long_ * static_cast<ULong>( _i ) + static_cast<ULong>( _j )];
     }
 
     /// Accessor to data - specialization for when _i and _j are
     /// already of type ULong
-    T &operator()(
-        const ULong _i, const ULong _j )
+    T &operator()( const ULong _i, const ULong _j )
     {
         assert( _i < nrows_long_ );
         assert( _j < ncols_long_ );
@@ -233,8 +234,7 @@ class Matrix
 
     /// Accessor to data - specialization for when _i and _j are
     /// already of type ULong
-    T operator()(
-        const ULong _i, const ULong _j ) const
+    T operator()( const ULong _i, const ULong _j ) const
     {
         assert( _i < nrows_long_ );
         assert( _j < ncols_long_ );
@@ -305,10 +305,7 @@ class Matrix
     }
 
     /// Returns size of data
-    const ULong size() const
-    {
-        return nrows_long_ * ncols_long_;
-    }
+    const ULong size() const { return nrows_long_ * ncols_long_; }
 
     /// Trivial getter
     const std::string type() const { return type_; }
@@ -964,8 +961,7 @@ void Matrix<T>::save( const std::string &_fname ) const
 template <class T>
 Matrix<T> Matrix<T>::sort_by_key( const std::vector<Int> &_key ) const
 {
-    Matrix<Int> key(
-        _key.size(), static_cast<Int>( 1 ), _key.data() );
+    Matrix<Int> key( _key.size(), static_cast<Int>( 1 ), _key.data() );
 
     return sort_by_key( key );
 }
@@ -1016,8 +1012,7 @@ const Matrix<T> Matrix<T>::subview( T2 _row_begin, T2 _row_end ) const
     auto mat = Matrix<T>(
         static_cast<size_t>( _row_end - _row_begin ),
         ncols_,
-        data_ptr_ +
-            static_cast<ULong>( _row_begin ) * ncols_long_ );
+        data_ptr_ + static_cast<ULong>( _row_begin ) * ncols_long_ );
 
     mat.set_colnames( *( colnames_.get() ) );
 

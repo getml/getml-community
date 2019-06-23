@@ -12,14 +12,17 @@ struct Sender
     /// Sends data of any kind to the client
     template <class T>
     static void send(
-        const ULong _size,
-        const T* _data,
-        Poco::Net::StreamSocket* _socket );
+        const ULong _size, const T* _data, Poco::Net::StreamSocket* _socket );
 
     /// Sends categorical matrix to the client
     static void send_categorical_matrix(
         const containers::Matrix<Int>& _matrix,
         const containers::Encoding& _encoding,
+        Poco::Net::StreamSocket* _socket );
+
+    /// Sends features to the client, tranposing them.
+    static void send_features(
+        const containers::Features& _features,
         Poco::Net::StreamSocket* _socket );
 
     /// Sends matrix to the client
@@ -37,9 +40,7 @@ struct Sender
 
 template <class T>
 void Sender::send(
-    const ULong _size,
-    const T* _data,
-    Poco::Net::StreamSocket* _socket )
+    const ULong _size, const T* _data, Poco::Net::StreamSocket* _socket )
 {
     const ULong len = 4096;
 

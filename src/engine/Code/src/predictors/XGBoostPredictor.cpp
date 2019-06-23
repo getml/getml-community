@@ -43,7 +43,7 @@ XGBoostPredictor::convert_to_dmatrix(
                         "All columns must have the same length!" );
                 }
 
-            for ( size_t i = 0; i < _X[j]->size(); ++j )
+            for ( size_t i = 0; i < _X[j]->size(); ++i )
                 {
                     mat_float[i * _X.size() + j] = ( *_X[j] )[i];
                 }

@@ -13,6 +13,8 @@
 
 #include <multithreading/multithreading.hpp>
 
+#include "predictors/predictors.hpp"
+
 #include "engine/config/config.hpp"
 
 #include "engine/utils/utils.hpp"
@@ -22,8 +24,6 @@
 #include "engine/containers/containers.hpp"
 
 #include "engine/communication/communication.hpp"
-
-#include "engine/predictors/predictors.hpp"
 
 #include "autosql/ensemble/ensemble.hpp"
 

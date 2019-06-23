@@ -3,7 +3,7 @@
 
 namespace predictors
 {
-typedef std::shared_ptr<const std::vector<Float>> CFloatColumn;
+typedef std::shared_ptr<std::vector<Float>> CFloatColumn;
 }
 
 #endif  // PREDICTORS_CFLOATCOLUMN_HPP_

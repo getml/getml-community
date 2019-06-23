@@ -44,7 +44,7 @@ class Model : public AbstractModel
         Poco::Net::StreamSocket* _socket ) final;
 
     /// Generate features.
-    containers::Matrix<Float> transform(
+    containers::Features transform(
         const Poco::JSON::Object& _cmd,
         const std::shared_ptr<const monitoring::Logger>& _logger,
         const std::map<std::string, containers::DataFrame>& _data_frames,
@@ -529,7 +529,9 @@ void Model<FeatureEngineererType>::fit(
             for ( size_t i = 0; i < _predictors->size(); ++i )
                 {
                     ( *_predictors )[i]->fit(
-                        _logger, features, population_df.target( i ) );
+                        _logger,
+                        features,
+                        population_df.target( i ).data_ptr() );
                 }
         }
 }
@@ -810,7 +812,7 @@ void Model<FeatureEngineererType>::select_features(
 // ----------------------------------------------------------------------------
 
 template <typename FeatureEngineererType>
-containers::Matrix<Float> Model<FeatureEngineererType>::transform(
+containers::Features Model<FeatureEngineererType>::transform(
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<const monitoring::Logger>& _logger,
     const std::map<std::string, containers::DataFrame>& _data_frames,
@@ -850,31 +852,18 @@ containers::Matrix<Float> Model<FeatureEngineererType>::transform(
     const auto features = feature_engineerer().transform(
         population_table, peripheral_tables, _logger );
 
-    // ------------------------------------------------------------------------
-    // Build matrix (temporary fix, remove later).
-
-    const size_t ncols = features.size();
-
-    const size_t nrows = ( ncols == 0 ) ? ( 0 ) : features[0]->size();
-
-    auto mat = containers::Matrix<Float>( nrows, ncols );
-
-    for ( size_t j = 0; j < features.size(); ++j )
-        {
-            for ( size_t i = 0; i < features[j]->size(); ++i )
-                {
-                    mat( i, j ) = ( *features[j] )[i];
-                }
-        }
-
     // ------------------------------------------------
     // Get the feature importances, if applicable.
 
     const bool score =
         _cmd.has( "score_" ) && JSON::get_value<bool>( _cmd, "score_" );
 
-    if ( score )
+    const auto ncols = features.size();
+
+    if ( score && ncols > 0 )
         {
+            const auto nrows = features[0]->size();
+
             calculate_feature_stats( features, nrows, ncols, population_table );
         }
 
@@ -886,11 +875,19 @@ containers::Matrix<Float> Model<FeatureEngineererType>::transform(
 
     if ( predict && num_predictors() > 0 )
         {
-            return predictor( 0 )->predict( mat );
+            auto predictions = containers::Features();
+
+            for ( size_t i = 0; i < num_predictors(); ++i )
+                {
+                    predictions.push_back(
+                        predictor( i )->predict( features ) );
+                }
+
+            return predictions;
         }
     else
         {
-            return mat;
+            return features;
         }
 
     // ------------------------------------------------------------------------

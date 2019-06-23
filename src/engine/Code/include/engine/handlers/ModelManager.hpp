@@ -564,7 +564,7 @@ void ModelManager<ModelType>::transform(
     // -------------------------------------------------------
     // Send data
 
-    communication::Sender::send_matrix( yhat, _socket );
+    communication::Sender::send_features( yhat, _socket );
 
     send_data( categories_, local_data_frames, _socket );
 

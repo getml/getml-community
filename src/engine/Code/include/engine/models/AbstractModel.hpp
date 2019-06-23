@@ -45,7 +45,7 @@ class AbstractModel
     virtual std::string to_sql() const = 0;
 
     /// Generate features.
-    virtual containers::Matrix<Float> transform(
+    virtual containers::Features transform(
         const Poco::JSON::Object& _cmd,
         const std::shared_ptr<const monitoring::Logger>& _logger,
         const std::map<std::string, containers::DataFrame>& _data_frames,
