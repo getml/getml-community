@@ -9,7 +9,7 @@ Poco::JSON::Array::Ptr Summarizer::calculate_average_targets(
     const std::vector<Float>& _step_sizes,
     const std::vector<size_t>& _actual_num_bins,
     const std::vector<std::vector<Int>>& _feature_densities,
-    const std::vector<Float>& _features,
+    const Features& _features,
     const size_t _nrows,
     const size_t _ncols,
     const std::vector<const Float*>& _targets )
@@ -50,7 +50,7 @@ Poco::JSON::Array::Ptr Summarizer::calculate_average_targets(
         {
             for ( size_t j = 0; j < _ncols; ++j )
                 {
-                    const auto val = get( i, j, _ncols, _features );
+                    const auto val = get( i, j, _features );
 
                     if ( _actual_num_bins[j] == 0 || std::isinf( val ) ||
                          std::isnan( val ) )
@@ -119,7 +119,7 @@ Poco::JSON::Array::Ptr Summarizer::calculate_average_targets(
 // ----------------------------------------------------------------------------
 
 Poco::JSON::Object Summarizer::calculate_feature_plots(
-    const std::vector<Float>& _features,
+    const Features& _features,
     const size_t _nrows,
     const size_t _ncols,
     const size_t _num_bins,
@@ -169,7 +169,7 @@ Poco::JSON::Object Summarizer::calculate_feature_plots(
         {
             for ( size_t j = 0; j < _ncols; ++j )
                 {
-                    const auto val = get( i, j, _ncols, _features );
+                    const auto val = get( i, j, _features );
 
                     if ( actual_num_bins[j] == 0 || std::isinf( val ) ||
                          std::isnan( val ) )
@@ -348,7 +348,7 @@ Poco::JSON::Array::Ptr Summarizer::calculate_labels(
     const std::vector<Float>& _step_sizes,
     const std::vector<size_t>& _actual_num_bins,
     const std::vector<std::vector<Int>>& _feature_densities,
-    const std::vector<Float>& _features,
+    const Features& _features,
     const size_t _nrows,
     const size_t _ncols )
 {
@@ -369,7 +369,7 @@ Poco::JSON::Array::Ptr Summarizer::calculate_labels(
         {
             for ( size_t j = 0; j < _ncols; ++j )
                 {
-                    const auto val = get( i, j, _ncols, _features );
+                    const auto val = get( i, j, _features );
 
                     if ( _actual_num_bins[j] == 0 || std::isinf( val ) ||
                          std::isnan( val ) )
@@ -461,7 +461,7 @@ void Summarizer::calculate_step_sizes_and_num_bins(
 // ----------------------------------------------------------------------------
 
 void Summarizer::find_min_and_max(
-    const std::vector<Float>& _features,
+    const Features& _features,
     const size_t _nrows,
     const size_t _ncols,
     std::vector<Float>* _minima,
@@ -476,13 +476,13 @@ void Summarizer::find_min_and_max(
         {
             for ( size_t j = 0; j < _ncols; ++j )
                 {
-                    if ( get( i, j, _ncols, _features ) < ( *_minima )[j] )
+                    if ( get( i, j, _features ) < ( *_minima )[j] )
                         {
-                            ( *_minima )[j] = get( i, j, _ncols, _features );
+                            ( *_minima )[j] = get( i, j, _features );
                         }
-                    else if ( get( i, j, _ncols, _features ) > ( *_maxima )[j] )
+                    else if ( get( i, j, _features ) > ( *_maxima )[j] )
                         {
-                            ( *_maxima )[j] = get( i, j, _ncols, _features );
+                            ( *_maxima )[j] = get( i, j, _features );
                         }
                 }
         }

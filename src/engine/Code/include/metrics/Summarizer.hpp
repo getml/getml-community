@@ -20,7 +20,7 @@ class Summarizer
 
     /// Calculates the plots needed to analyze the feature.
     static Poco::JSON::Object calculate_feature_plots(
-        const std::vector<Float>& _features,
+        const Features& _features,
         const size_t _nrows,
         const size_t _ncols,
         const size_t _num_bins,
@@ -35,7 +35,7 @@ class Summarizer
         const std::vector<Float>& _step_sizes,
         const std::vector<size_t>& _actual_num_bins,
         const std::vector<std::vector<Int>>& _feature_densities,
-        const std::vector<Float>& _features,
+        const Features& _features,
         const size_t _nrows,
         const size_t _ncols,
         const std::vector<const Float*>& _targets );
@@ -47,7 +47,7 @@ class Summarizer
         const std::vector<Float>& _step_sizes,
         const std::vector<size_t>& _actual_num_bins,
         const std::vector<std::vector<Int>>& _feature_densities,
-        const std::vector<Float>& _features,
+        const Features& _features,
         const size_t _nrows,
         const size_t _ncols );
 
@@ -63,7 +63,7 @@ class Summarizer
     /// Helper function for identifying the correct bin, which
     /// finds the minimum and maximum.
     static void find_min_and_max(
-        const std::vector<Float>& _features,
+        const Features& _features,
         const size_t _nrows,
         const size_t _ncols,
         std::vector<Float>* _minima,
