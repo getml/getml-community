@@ -105,6 +105,12 @@ class Model : public AbstractModel
         std::vector<std::shared_ptr<predictors::Predictor>>* _predictors,
         Poco::Net::StreamSocket* _socket );
 
+    /// Gets the numerical and discrete colnames from the population table that
+    /// haven't been marked "comparison only".
+    void get_colnames(
+        const Poco::JSON::Object& _cmd,
+        const std::map<std::string, containers::DataFrame>& _data_frames );
+
     /// Initialize feature_selectors before fitting.
     void init_feature_selectors(
         const size_t _num_targets,
@@ -119,11 +125,6 @@ class Model : public AbstractModel
 
     /// Helper function for loading a json object.
     static Poco::JSON::Object load_json_obj( const std::string& _fname );
-
-    /// Generates the feature names.
-    void make_feature_names(
-        const Poco::JSON::Object& _cmd,
-        const std::map<std::string, containers::DataFrame>& _data_frames );
 
     /// Helper function for saving a json object.
     void save_json_obj(
@@ -541,9 +542,13 @@ void Model<FeatureEngineererType>::fit(
     feature_engineerer().fit( population_table, peripheral_tables, _logger );
 
     // ------------------------------------------------
-    // Do feature selection, if applicable.
+    // Figure out which numerical and discrete columns in the population table
+    // should be used as additional features.
 
-    make_feature_names( _cmd, _data_frames );
+    get_colnames( _cmd, _data_frames );
+
+    // ------------------------------------------------
+    // Do feature selection, if applicable.
 
     select_features( _cmd, _logger, _data_frames, _socket );
 
@@ -591,6 +596,47 @@ void Model<FeatureEngineererType>::fit(
                         features,
                         population_df.target( i ).data_ptr() );
                 }
+        }
+}
+
+// ------------------------------------------------------------------------
+
+template <typename FeatureEngineererType>
+void Model<FeatureEngineererType>::get_colnames(
+    const Poco::JSON::Object& _cmd,
+    const std::map<std::string, containers::DataFrame>& _data_frames )
+{
+    const auto population_name =
+        JSON::get_value<std::string>( _cmd, "population_name_" );
+
+    const auto population_df =
+        utils::Getter::get( population_name, _data_frames );
+
+    discrete_colnames_.clear();
+
+    for ( size_t i = 0; i < population_df.num_discretes(); ++i )
+        {
+            if ( population_df.discrete( i ).unit( 0 ).find(
+                     "comparison only" ) != std::string::npos )
+                {
+                    continue;
+                }
+
+            discrete_colnames_.push_back( population_df.discrete( i ).name() );
+        }
+
+    numerical_colnames_.clear();
+
+    for ( size_t i = 0; i < population_df.num_numericals(); ++i )
+        {
+            if ( population_df.numerical( i ).unit( 0 ).find(
+                     "comparison only" ) != std::string::npos )
+                {
+                    continue;
+                }
+
+            numerical_colnames_.push_back(
+                population_df.numerical( i ).name() );
         }
 }
 
@@ -673,47 +719,6 @@ Poco::JSON::Object Model<FeatureEngineererType>::load_json_obj(
     return *Poco::JSON::Parser()
                 .parse( json.str() )
                 .extract<Poco::JSON::Object::Ptr>();
-}
-
-// ------------------------------------------------------------------------
-
-template <typename FeatureEngineererType>
-void Model<FeatureEngineererType>::make_feature_names(
-    const Poco::JSON::Object& _cmd,
-    const std::map<std::string, containers::DataFrame>& _data_frames )
-{
-    const auto population_name =
-        JSON::get_value<std::string>( _cmd, "population_name_" );
-
-    const auto population_df =
-        utils::Getter::get( population_name, _data_frames );
-
-    discrete_colnames_.clear();
-
-    for ( size_t i = 0; i < population_df.num_discretes(); ++i )
-        {
-            if ( population_df.discrete( i ).unit( 0 ).find(
-                     "comparison only" ) != std::string::npos )
-                {
-                    continue;
-                }
-
-            discrete_colnames_.push_back( population_df.discrete( i ).name() );
-        }
-
-    numerical_colnames_.clear();
-
-    for ( size_t i = 0; i < population_df.num_numericals(); ++i )
-        {
-            if ( population_df.numerical( i ).unit( 0 ).find(
-                     "comparison only" ) != std::string::npos )
-                {
-                    continue;
-                }
-
-            numerical_colnames_.push_back(
-                population_df.numerical( i ).name() );
-        }
 }
 
 // ----------------------------------------------------------------------------
