@@ -35,9 +35,7 @@ class DataFrame
 
     /// Setter for an int_matrix
     void add_int_column(
-        const Matrix<Int> &_mat,
-        const std::string _role,
-        const size_t _num );
+        const Matrix<Int> &_mat, const std::string _role, const size_t _num );
 
     /// Appends another data frame to this data frame.
     void append( const DataFrame &_other );
@@ -106,7 +104,10 @@ class DataFrame
     // -------------------------------
 
     /// Trivial accessor
-    template <class T>
+    template <
+        typename T,
+        typename std::enable_if<!std::is_same<T, std::string>::value, int>::
+            type = 0>
     const Matrix<Int> &categorical( const T _i ) const
     {
         assert( categoricals_.size() > 0 );
@@ -114,6 +115,22 @@ class DataFrame
         assert( _i < static_cast<T>( categoricals_.size() ) );
 
         return categoricals_[_i];
+    }
+
+    /// Trivial accessor
+    const Matrix<Int> &categorical( const std::string &_name ) const
+    {
+        for ( size_t i = 0; i < num_categoricals(); ++i )
+            {
+                if ( categorical( i ).name() == _name )
+                    {
+                        return categorical( i );
+                    }
+            }
+
+        throw std::invalid_argument(
+            "Data frame '" + name_ +
+            "' contains no categorical column named '" + _name + "'!" );
     }
 
     /// Trivial accessor
@@ -128,13 +145,32 @@ class DataFrame
     }
 
     /// Trivial accessor
-    template <class T>
+    template <
+        typename T,
+        typename std::enable_if<!std::is_same<T, std::string>::value, int>::
+            type = 0>
     const Matrix<Float> &discrete( const T _i ) const
     {
         assert( _i >= 0 );
         assert( _i < static_cast<T>( discretes_.size() ) );
 
         return discretes_[_i];
+    }
+
+    /// Trivial accessor
+    const Matrix<Float> &discrete( const std::string &_name ) const
+    {
+        for ( size_t i = 0; i < num_discretes(); ++i )
+            {
+                if ( discrete( i ).name() == _name )
+                    {
+                        return discrete( i );
+                    }
+            }
+
+        throw std::invalid_argument(
+            "Data frame '" + name_ + "' contains no discrete column named '" +
+            _name + "'!" );
     }
 
     /// Returns the index signified by index _i
@@ -168,7 +204,10 @@ class DataFrame
     const std::vector<DataFrameIndex> &indices() const { return indices_; }
 
     /// Returns the join key signified by index _i
-    template <class T>
+    template <
+        typename T,
+        typename std::enable_if<!std::is_same<T, std::string>::value, int>::
+            type = 0>
     const Matrix<Int> &join_key( const T _i ) const
     {
         assert( join_keys_.size() > 0 );
@@ -179,10 +218,23 @@ class DataFrame
     }
 
     /// Trivial accessor
-    const std::vector<Matrix<Int>> &join_keys() const
+    const Matrix<Int> &join_key( const std::string &_name ) const
     {
-        return join_keys_;
+        for ( size_t i = 0; i < num_join_keys(); ++i )
+            {
+                if ( join_key( i ).name() == _name )
+                    {
+                        return join_key( i );
+                    }
+            }
+
+        throw std::invalid_argument(
+            "Data frame '" + name_ + "' contains no join key named '" + _name +
+            "'!" );
     }
+
+    /// Trivial accessor
+    const std::vector<Matrix<Int>> &join_keys() const { return join_keys_; }
 
     /// Primitive abstraction for member join_keys_encoding_
     const Encoding &join_keys_encoding() const
@@ -231,7 +283,10 @@ class DataFrame
     size_t const num_time_stamps() const { return time_stamps_.size(); }
 
     /// Trivial accessor
-    template <class T>
+    template <
+        typename T,
+        typename std::enable_if<!std::is_same<T, std::string>::value, int>::
+            type = 0>
     const Matrix<Float> &numerical( const T _i ) const
     {
         assert( numericals_.size() > 0 );
@@ -239,6 +294,22 @@ class DataFrame
         assert( _i < static_cast<T>( numericals_.size() ) );
 
         return numericals_[_i];
+    }
+
+    /// Trivial accessor
+    const Matrix<Float> &numerical( const std::string &_name ) const
+    {
+        for ( size_t i = 0; i < num_numericals(); ++i )
+            {
+                if ( numerical( i ).name() == _name )
+                    {
+                        return numerical( i );
+                    }
+            }
+
+        throw std::invalid_argument(
+            "Data frame '" + name_ + "' contains no numerical column named '" +
+            _name + "'!" );
     }
 
     /// Primitive setter
@@ -255,7 +326,10 @@ class DataFrame
     }
 
     /// Trivial accessor
-    template <class T>
+    template <
+        typename T,
+        typename std::enable_if<!std::is_same<T, std::string>::value, int>::
+            type = 0>
     const Matrix<Float> &target( const T _i ) const
     {
         assert( targets_.size() > 0 );
@@ -265,8 +339,27 @@ class DataFrame
         return targets_[_i];
     }
 
-    /// Returns the time stamps signified by index _i
-    template <class T>
+    /// Trivial accessor
+    const Matrix<Float> &target( const std::string &_name ) const
+    {
+        for ( size_t i = 0; i < num_targets(); ++i )
+            {
+                if ( target( i ).name() == _name )
+                    {
+                        return target( i );
+                    }
+            }
+
+        throw std::invalid_argument(
+            "Data frame '" + name_ + "' contains no target column named '" +
+            _name + "'!" );
+    }
+
+    /// Trivial accessor
+    template <
+        typename T,
+        typename std::enable_if<!std::is_same<T, std::string>::value, int>::
+            type = 0>
     Matrix<Float> const &time_stamp( const T _i ) const
     {
         assert( time_stamps_.size() > 0 );
@@ -274,6 +367,22 @@ class DataFrame
         assert( _i < static_cast<T>( time_stamps_.size() ) );
 
         return time_stamps_[_i];
+    }
+
+    /// Trivial accessor
+    const Matrix<Float> &time_stamp( const std::string &_name ) const
+    {
+        for ( size_t i = 0; i < num_time_stamps(); ++i )
+            {
+                if ( time_stamp( i ).name() == _name )
+                    {
+                        return time_stamp( i );
+                    }
+            }
+
+        throw std::invalid_argument(
+            "Data frame '" + name_ + "' contains no time stamp named '" +
+            _name + "'!" );
     }
 
     /// Trivial accessor
@@ -317,8 +426,7 @@ class DataFrame
 
     /// Calculate the number of bytes.
     template <class T>
-    ULong calc_nbytes(
-        const std::vector<Matrix<T>> &_columns ) const;
+    ULong calc_nbytes( const std::vector<Matrix<T>> &_columns ) const;
 
     /// Concatenate a set of colnames.
     std::vector<std::string> concat_colnames(
@@ -425,8 +533,7 @@ namespace containers
 // -------------------------------------------------------------------------
 
 template <class T>
-ULong DataFrame::calc_nbytes(
-    const std::vector<Matrix<T>> &_columns ) const
+ULong DataFrame::calc_nbytes( const std::vector<Matrix<T>> &_columns ) const
 {
     return std::accumulate(
         _columns.begin(),

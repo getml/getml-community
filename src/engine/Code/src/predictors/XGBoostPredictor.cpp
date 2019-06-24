@@ -75,7 +75,7 @@ std::vector<Float> XGBoostPredictor::feature_importances(
 
     if ( XGBoosterLoadModelFromBuffer( *handle, model(), len() ) != 0 )
         {
-            std::invalid_argument( "Could not reload booster!" );
+            std::runtime_error( "Could not reload booster!" );
         }
 
     // --------------------------------------------------------------------

@@ -700,7 +700,7 @@ void DecisionTreeEnsemble::save( const std::string &_fname ) const
 
 void DecisionTreeEnsemble::select_features( const std::vector<size_t> &_index )
 {
-    assert( _index.size() == trees().size() );
+    assert( _index.size() >= trees().size() );
 
     const auto num_selected_features =
         ( hyperparameters().num_selected_features_ > 0 &&
@@ -714,9 +714,10 @@ void DecisionTreeEnsemble::select_features( const std::vector<size_t> &_index )
         {
             const auto ix = _index[i];
 
-            assert( ix < trees().size() );
-
-            selected_trees.push_back( trees()[ix] );
+            if ( ix < trees().size() )
+                {
+                    selected_trees.push_back( trees()[ix] );
+                }
         }
 
     trees() = selected_trees;
