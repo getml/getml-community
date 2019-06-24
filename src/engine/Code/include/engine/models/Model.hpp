@@ -126,6 +126,9 @@ class Model : public AbstractModel
     /// Helper function for loading a json object.
     static Poco::JSON::Object load_json_obj( const std::string& _fname );
 
+    /// Makes an array of colnames to be used for scoring.
+    std::vector<std::string> make_feature_names() const;
+
     /// Helper function for saving a json object.
     void save_json_obj(
         const Poco::JSON::Object& _obj, const std::string& _fname ) const;
@@ -560,6 +563,11 @@ void Model<FeatureEngineererType>::fit(
     fit( _cmd, _logger, _data_frames, &predictors_, _socket );
 
     // ------------------------------------------------
+    // Set the feature names.
+
+    scores_.feature_names() = make_feature_names();
+
+    // ------------------------------------------------
     // Get the feature importances, if applicable.
 
     scores_.from_json_obj( feature_importances() );
@@ -719,6 +727,32 @@ Poco::JSON::Object Model<FeatureEngineererType>::load_json_obj(
     return *Poco::JSON::Parser()
                 .parse( json.str() )
                 .extract<Poco::JSON::Object::Ptr>();
+}
+
+// ----------------------------------------------------------------------------
+
+template <typename FeatureEngineererType>
+std::vector<std::string> Model<FeatureEngineererType>::make_feature_names()
+    const
+{
+    std::vector<std::string> feature_names;
+
+    for ( size_t i = 0; i < feature_engineerer().num_features(); ++i )
+        {
+            feature_names.push_back( "FEATURE_" + std::to_string( i + 1 ) );
+        }
+
+    for ( const auto& col : discrete_colnames_ )
+        {
+            feature_names.push_back( col );
+        }
+
+    for ( const auto& col : numerical_colnames_ )
+        {
+            feature_names.push_back( col );
+        }
+
+    return feature_names;
 }
 
 // ----------------------------------------------------------------------------

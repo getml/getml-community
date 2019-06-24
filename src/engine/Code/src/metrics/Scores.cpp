@@ -36,6 +36,14 @@ void Scores::from_json_obj( const Poco::JSON::Object& _json_obj )
 
     // -------------------------
 
+    if ( _json_obj.has( "feature_names_" ) )
+        {
+            feature_names_ = JSON::array_to_vector<std::string>(
+                JSON::get_array( _json_obj, "feature_names_" ) );
+        }
+
+    // -------------------------
+
     if ( _json_obj.has( "accuracy_" ) )
         {
             accuracy_ = JSON::array_to_vector<Float>(
@@ -82,9 +90,8 @@ void Scores::from_json_obj( const Poco::JSON::Object& _json_obj )
 
             for ( size_t i = 0; i < arr->size(); ++i )
                 {
-                    accuracy_curves().push_back(
-                        JSON::array_to_vector<Float>(
-                            arr->getArray( static_cast<unsigned int>( i ) ) ) );
+                    accuracy_curves().push_back( JSON::array_to_vector<Float>(
+                        arr->getArray( static_cast<unsigned int>( i ) ) ) );
                 }
         }
 
@@ -104,8 +111,8 @@ void Scores::from_json_obj( const Poco::JSON::Object& _json_obj )
 
                     for ( size_t j = 0; j < arr2->size(); ++j )
                         {
-                            vec.push_back( JSON::array_to_vector<Float>(
-                                arr2->getArray(
+                            vec.push_back(
+                                JSON::array_to_vector<Float>( arr2->getArray(
                                     static_cast<unsigned int>( j ) ) ) );
                         }
 
@@ -139,9 +146,8 @@ void Scores::from_json_obj( const Poco::JSON::Object& _json_obj )
 
             for ( size_t i = 0; i < arr->size(); ++i )
                 {
-                    feature_densities_.push_back(
-                        JSON::array_to_vector<Int>(
-                            arr->getArray( static_cast<unsigned int>( i ) ) ) );
+                    feature_densities_.push_back( JSON::array_to_vector<Int>(
+                        arr->getArray( static_cast<unsigned int>( i ) ) ) );
                 }
         }
 
@@ -235,6 +241,10 @@ Poco::JSON::Object Scores::to_json_obj() const
     obj.set(
         "prediction_step_size_",
         JSON::vector_to_array_ptr( prediction_step_size_ ) );
+
+    // -------------------------
+
+    obj.set( "feature_names_", JSON::vector_to_array_ptr( feature_names() ) );
 
     // -------------------------
 

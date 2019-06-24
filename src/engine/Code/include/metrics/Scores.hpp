@@ -54,8 +54,7 @@ class Scores
     }
 
     /// Trivial accessor
-    const std::vector<std::vector<std::vector<Float>>>&
-    average_targets() const
+    const std::vector<std::vector<std::vector<Float>>>& average_targets() const
     {
         return average_targets_;
     }
@@ -97,6 +96,15 @@ class Scores
     }
 
     /// Trivial accessor
+    std::vector<std::string>& feature_names() { return feature_names_; }
+
+    /// Trivial accessor
+    const std::vector<std::string>& feature_names() const
+    {
+        return feature_names_;
+    }
+
+    /// Trivial accessor
     std::vector<std::vector<Float>>& fpr() { return fpr_; }
 
     /// Trivial accessor
@@ -106,10 +114,7 @@ class Scores
     std::vector<std::vector<Float>>& labels() { return labels_; }
 
     /// Trivial accessor
-    const std::vector<std::vector<Float>>& labels() const
-    {
-        return labels_;
-    }
+    const std::vector<std::vector<Float>>& labels() const { return labels_; }
 
     /// Trivial accessor
     std::vector<std::vector<Float>>& tpr() { return tpr_; }
@@ -143,6 +148,9 @@ class Scores
 
     /// Importances of individual features w.r.t. targets.
     std::vector<std::vector<Float>> feature_importances_;
+
+    /// The names of the features.
+    std::vector<std::string> feature_names_;
 
     /// False positive rate.
     std::vector<std::vector<Float>> fpr_;
