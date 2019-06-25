@@ -14,6 +14,8 @@
 
 #include <Poco/JSON/Parser.h>
 
+#include <Eigen/Dense>
+
 #include <xgboost/c_api.h>
 
 #include "logging/logging.hpp"
@@ -32,6 +34,8 @@
 #include "predictors/JSON.hpp"
 
 #include "predictors/Predictor.hpp"
+
+#include "predictors/LinearRegression.hpp"
 
 #include "predictors/XGBoostHyperparams.hpp"
 #include "predictors/XGBoostPredictor.hpp"
