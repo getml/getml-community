@@ -122,7 +122,7 @@ class DataFrame
     {
         for ( size_t i = 0; i < num_categoricals(); ++i )
             {
-                if ( categorical( i ).name() == _name )
+                if ( categorical( i ).colname( 0 ) == _name )
                     {
                         return categorical( i );
                     }
@@ -162,7 +162,7 @@ class DataFrame
     {
         for ( size_t i = 0; i < num_discretes(); ++i )
             {
-                if ( discrete( i ).name() == _name )
+                if ( discrete( i ).colname( 0 ) == _name )
                     {
                         return discrete( i );
                     }
@@ -222,7 +222,7 @@ class DataFrame
     {
         for ( size_t i = 0; i < num_join_keys(); ++i )
             {
-                if ( join_key( i ).name() == _name )
+                if ( join_key( i ).colname( 0 ) == _name )
                     {
                         return join_key( i );
                     }
@@ -301,7 +301,7 @@ class DataFrame
     {
         for ( size_t i = 0; i < num_numericals(); ++i )
             {
-                if ( numerical( i ).name() == _name )
+                if ( numerical( i ).colname( 0 ) == _name )
                     {
                         return numerical( i );
                     }
@@ -344,7 +344,7 @@ class DataFrame
     {
         for ( size_t i = 0; i < num_targets(); ++i )
             {
-                if ( target( i ).name() == _name )
+                if ( target( i ).colname( 0 ) == _name )
                     {
                         return target( i );
                     }
@@ -374,7 +374,7 @@ class DataFrame
     {
         for ( size_t i = 0; i < num_time_stamps(); ++i )
             {
-                if ( time_stamp( i ).name() == _name )
+                if ( time_stamp( i ).colname( 0 ) == _name )
                     {
                         return time_stamp( i );
                     }

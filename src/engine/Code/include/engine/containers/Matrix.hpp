@@ -12,8 +12,7 @@ class Matrix
 {
    public:
     Matrix( const size_t _nrows, const size_t _ncols, T *_data_ptr )
-        : batches_( std::make_shared<std::vector<size_t>>( 0 ) ),
-          colnames_( std::make_shared<std::vector<std::string>>( _ncols, "" ) ),
+        : colnames_( std::make_shared<std::vector<std::string>>( _ncols, "" ) ),
           data_ptr_( _data_ptr ),
           name_( std::make_shared<std::string>( "" ) ),
           ncols_( _ncols ),
@@ -26,8 +25,6 @@ class Matrix
         static_assert(
             std::is_arithmetic<T>::value,
             "Only arithmetic types allowed for Matrix<T>(...)!" );
-
-        batches() = {0, nrows_};
     }
 
     Matrix( const size_t _nrows = 0, const size_t _ncols = 0 )
@@ -93,30 +90,6 @@ class Matrix
     Matrix<T> transpose() const;
 
     // -------------------------------
-
-    /// Trivial getter
-    std::vector<size_t> &batches() { return batches_.get()[0]; }
-
-    /// Trivial getter
-    const std::vector<size_t> &batches() const { return batches_.get()[0]; }
-
-    /// Trivial getter for a batch. When the user loads the data in a batchwise
-    /// fashion, the engine will actually store the data in form of these
-    /// original batches.
-    template <class T2>
-    Matrix<T> batch( const T2 _batch_num )
-    {
-        return subview( batches()[_batch_num], batches()[_batch_num + 1] );
-    }
-
-    /// Trivial getter for a batch. When the user loads the data in a batchwise
-    /// fashion, the engine will actually store the data in form of these
-    /// original batches.
-    template <class T2>
-    const Matrix<T> batch( const T2 _batch_num ) const
-    {
-        return subview( batches()[_batch_num], batches()[_batch_num + 1] );
-    }
 
     /// Iterator to beginning of data
     T *begin() { return data_ptr_; }
@@ -251,13 +224,6 @@ class Matrix
     /// Trivial getter
     size_t nrows() const { return nrows_; }
 
-    /// Trivial getter
-    const size_t num_batches() const
-    {
-        assert( batches().size() > 0 );
-        return batches().size() - 1;
-    }
-
     /// Returns a shallow copy of a row
     template <class T2>
     Matrix<T> row( T2 _i )
@@ -326,14 +292,28 @@ class Matrix
     {
         return units_;
     }
+    // -------------------------------
+
+   private:
+    /// Called by load(...) when the system's byte order is big endian or the
+    /// underlying type is char.
+    Matrix<T> load_big_endian( const std::string &_fname ) const;
+
+    /// Called by load(...) when the system's byte order is little endian and
+    /// the underlying type is not char.
+    Matrix<T> load_little_endian( const std::string &_fname ) const;
+
+    /// Called by save(...) when the system's byte order is big endian or the
+    /// underlying type is char.
+    void save_big_endian( const std::string &_fname ) const;
+
+    /// Called by save(...) when the system's byte order is little endian and
+    /// the underlying type is not char.
+    void save_little_endian( const std::string &_fname ) const;
 
     // -------------------------------
 
    private:
-    /// Batches contain information on how data was loaded
-    /// into the containers, so the original order can be reconstructed
-    std::shared_ptr<std::vector<size_t>> batches_;
-
     /// Names of the columns
     std::shared_ptr<std::vector<std::string>> colnames_;
 
@@ -394,8 +374,6 @@ void Matrix<T>::append( const Matrix<T> &_other )
     nrows_ += _other.nrows();
 
     nrows_long_ = static_cast<ULong>( nrows_ );
-
-    batches().push_back( nrows_ );
 }
 
 // -------------------------------------------------------------------------
@@ -431,11 +409,31 @@ Matrix<T> Matrix<T>::column( T2 _j ) const
         }
 }
 
-// -------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 
 template <class T>
 void Matrix<T>::load( const std::string &_fname )
 {
+    if ( std::is_same<T, char>::value == false &&
+         utils::Endianness::is_little_endian() )
+        {
+            *this = load_little_endian( _fname );
+        }
+    else
+        {
+            *this = load_big_endian( _fname );
+        }
+}
+
+// -----------------------------------------------------------------------------
+
+template <class T>
+Matrix<T> Matrix<T>::load_big_endian( const std::string &_fname ) const
+{
+    // -------------------------------------------------------------------------
+
+    debug_log( "Matrix.load: Big endian..." );
+
     std::ifstream input( _fname, std::ios::binary );
 
     // -------------------------------------------------------------------------
@@ -457,206 +455,155 @@ void Matrix<T>::load( const std::string &_fname )
     input.read( reinterpret_cast<char *>( &ncols ), sizeof( size_t ) );
 
     // -------------------------------------------------------------------------
-    // Read num_batches
-
-    debug_log( "Matrix.load: Read num_batches..." );
-
-    size_t num_batches = 0;
-
-    input.read( reinterpret_cast<char *>( &num_batches ), sizeof( size_t ) );
-
-    // -------------------------------------------------------------------------
-    // Reverse byte order, if necessary
-
-    if ( std::is_same<T, char>::value == false &&
-         utils::Endianness::is_little_endian() )
-        {
-            debug_log( "Matrix.load: Is little endian (1)..." );
-
-            utils::Endianness::reverse_byte_order( &nrows );
-
-            utils::Endianness::reverse_byte_order( &ncols );
-
-            utils::Endianness::reverse_byte_order( &num_batches );
-        }
-
-    // -------------------------------------------------------------------------
-    // Read batches
-
-    debug_log( "Matrix.load: Reading batches..." );
-
-    std::vector<size_t> batches( num_batches );
-
-    input.read(
-        reinterpret_cast<char *>( batches.data() ),
-        num_batches * sizeof( size_t ) );
-
-    // -------------------------------------------------------------------------
-    // Reverse byte order, if necessary
-
-    if ( std::is_same<T, char>::value == false &&
-         utils::Endianness::is_little_endian() )
-        {
-            debug_log( "Matrix.load: Reverse byte order of batches..." );
-
-            auto reverse_batches = []( size_t &_val ) {
-                utils::Endianness::reverse_byte_order( &_val );
-            };
-
-            std::for_each( batches.begin(), batches.end(), reverse_batches );
-        }
-
-    // -------------------------------------------------------------------------
     // Init matrix
 
     debug_log( "Matrix.load: Init matrix..." );
 
-    *this = Matrix<T>( 0, ncols );
+    auto mat = Matrix<T>( nrows, ncols );
 
     // -------------------------------------------------------------------------
     // Read data
 
     debug_log( "Matrix.load: Read data..." );
 
-    assert( batches.size() > 1 );
+    input.read(
+        reinterpret_cast<char *>( mat.data() ),
+        mat.nrows() * mat.ncols() * sizeof( T ) );
 
-    for ( size_t i = 0; i < batches.size() - 1; ++i )
-        {
-            Matrix<T> mat( batches[i + 1] - batches[i], ncols );
+    // -------------------------------------------------------------------------
+    // Read colnames, units and name
 
-            input.read(
-                reinterpret_cast<char *>( mat.data() ),
-                mat.nrows() * mat.ncols() * sizeof( T ) );
+    auto read_string = [&input]( std::string &_str ) {
+        size_t str_size = 0;
 
-            append( mat );
-        }
+        input.read( reinterpret_cast<char *>( &str_size ), sizeof( size_t ) );
 
-    // Because declaring the matrix using zero entries will create
-    // and extra batch containing nothing, we drop that extra zero.
-    this->batches().erase( this->batches().begin() );
+        _str.resize( str_size );
+
+        input.read( &_str[0], str_size );
+    };
+
+    debug_log( "Matrix.load: Read colnames..." );
+
+    assert( static_cast<size_t>( mat.colnames()->size() ) == mat.ncols() );
+
+    std::for_each(
+        mat.colnames()->begin(), mat.colnames()->end(), read_string );
+
+    debug_log( "Matrix.load: Read units..." );
+
+    assert( static_cast<size_t>( mat.colnames()->size() ) == mat.ncols() );
+
+    std::for_each( mat.units()->begin(), mat.units()->end(), read_string );
+
+    read_string( mat.name() );
 
     // -------------------------------------------------------------------------
 
-    if ( std::is_same<T, char>::value == false &&
-         utils::Endianness::is_little_endian() )
-        {
-            debug_log( "Matrix.load: Is little endian (2)..." );
+    return mat;
 
-            // -------------------------------------------------------------------------
-            // Reverse byte order of data
-
-            debug_log( "Matrix.load: Reverse byte order of data..." );
-
-            {
-                auto reverse_data = []( T &_val ) {
-                    utils::Endianness::reverse_byte_order( &_val );
-                };
-
-                std::for_each( begin(), end(), reverse_data );
-            }
-
-            // -------------------------------------------------------------------------
-            // Read colnames and units
-
-            {
-                // ---------------------------------------------------------------------
-
-                auto read_string = [&input]( std::string &_str ) {
-                    size_t str_size = 0;
-
-                    input.read(
-                        reinterpret_cast<char *>( &str_size ),
-                        sizeof( size_t ) );
-
-                    utils::Endianness::reverse_byte_order( &str_size );
-
-                    _str.resize( str_size );
-
-                    input.read( &_str[0], str_size );
-                };
-
-                // ---------------------------------------------------------------------
-
-                debug_log( "Matrix.load: Read colnames..." );
-
-                assert(
-                    static_cast<size_t>( colnames()->size() ) ==
-                    this->ncols() );
-
-                std::for_each(
-                    colnames()->begin(), colnames()->end(), read_string );
-
-                // ---------------------------------------------------------------------
-
-                debug_log( "Matrix.load: Read units..." );
-
-                assert(
-                    static_cast<size_t>( units()->size() ) == this->ncols() );
-
-                std::for_each( units()->begin(), units()->end(), read_string );
-
-                // ---------------------------------------------------------------------
-
-                read_string( name() );
-
-                // ---------------------------------------------------------------------
-            }
-
-            // -------------------------------------------------------------------------
-        }
-    else
-        {
-            // -------------------------------------------------------------------------
-            // Read colnames and units
-
-            {
-                // ---------------------------------------------------------------------
-
-                auto read_string = [&input]( std::string &_str ) {
-                    size_t str_size = 0;
-
-                    input.read(
-                        reinterpret_cast<char *>( &str_size ),
-                        sizeof( size_t ) );
-
-                    _str.resize( str_size );
-
-                    input.read( &_str[0], str_size );
-                };
-
-                // ---------------------------------------------------------------------
-
-                debug_log( "Matrix.load: Read colnames..." );
-
-                assert(
-                    static_cast<size_t>( colnames()->size() ) ==
-                    this->ncols() );
-
-                std::for_each(
-                    colnames()->begin(), colnames()->end(), read_string );
-
-                // ---------------------------------------------------------------------
-
-                debug_log( "Matrix.load: Read units..." );
-
-                assert(
-                    static_cast<size_t>( colnames()->size() ) ==
-                    this->ncols() );
-
-                std::for_each( units()->begin(), units()->end(), read_string );
-
-                // ---------------------------------------------------------------------
-
-                read_string( name() );
-
-                // ---------------------------------------------------------------------
-            }
-
-            // -------------------------------------------------------------------------
-        }
+    // -------------------------------------------------------------------------
 }
 
-// -------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+
+template <class T>
+Matrix<T> Matrix<T>::load_little_endian( const std::string &_fname ) const
+{
+    // -------------------------------------------------------------------------
+
+    std::ifstream input( _fname, std::ios::binary );
+
+    // -------------------------------------------------------------------------
+    // Read nrows
+
+    debug_log( "Matrix.load: Read nrows..." );
+
+    size_t nrows = 0;
+
+    input.read( reinterpret_cast<char *>( &nrows ), sizeof( size_t ) );
+
+    // -------------------------------------------------------------------------
+    // Read ncols
+
+    debug_log( "Matrix.load: Read ncols..." );
+
+    size_t ncols = 0;
+
+    input.read( reinterpret_cast<char *>( &ncols ), sizeof( size_t ) );
+
+    // -------------------------------------------------------------------------
+    // Reverse byte order.
+
+    utils::Endianness::reverse_byte_order( &nrows );
+
+    utils::Endianness::reverse_byte_order( &ncols );
+
+    // -------------------------------------------------------------------------
+    // Init matrix
+
+    debug_log( "Matrix.load: Init matrix..." );
+
+    auto mat = Matrix<T>( nrows, ncols );
+
+    // -------------------------------------------------------------------------
+    // Read data
+
+    debug_log( "Matrix.load: Read data..." );
+
+    input.read(
+        reinterpret_cast<char *>( mat.data() ),
+        mat.nrows() * mat.ncols() * sizeof( T ) );
+
+    // -------------------------------------------------------------------------
+    // Reverse byte order.
+
+    debug_log( "Matrix.load: Reverse byte order of data..." );
+
+    auto reverse_data = []( T &_val ) {
+        utils::Endianness::reverse_byte_order( &_val );
+    };
+
+    std::for_each( mat.begin(), mat.end(), reverse_data );
+
+    // -------------------------------------------------------------------------
+    // Read colnames, units and name.
+
+    auto read_string = [&input]( std::string &_str ) {
+        size_t str_size = 0;
+
+        input.read( reinterpret_cast<char *>( &str_size ), sizeof( size_t ) );
+
+        utils::Endianness::reverse_byte_order( &str_size );
+
+        _str.resize( str_size );
+
+        input.read( &_str[0], str_size );
+    };
+
+    debug_log( "Matrix.load: Read colnames..." );
+
+    assert( static_cast<size_t>( mat.colnames()->size() ) == mat.ncols() );
+
+    std::for_each(
+        mat.colnames()->begin(), mat.colnames()->end(), read_string );
+
+    debug_log( "Matrix.load: Read units..." );
+
+    assert( static_cast<size_t>( mat.units()->size() ) == mat.ncols() );
+
+    std::for_each( mat.units()->begin(), mat.units()->end(), read_string );
+
+    read_string( mat.name() );
+
+    // -------------------------------------------------------------------------
+
+    return mat;
+
+    // -------------------------------------------------------------------------
+}
+
+// -----------------------------------------------------------------------------
 
 template <class T>
 Matrix<T> Matrix<T>::remove_by_key( const std::vector<bool> &_key )
@@ -692,268 +639,153 @@ Matrix<T> Matrix<T>::remove_by_key( const std::vector<bool> &_key )
     return trimmed;
 }
 
-// -------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 
 template <class T>
 void Matrix<T>::save( const std::string &_fname ) const
 {
-    std::ofstream output( _fname, std::ios::binary );
-
     if ( std::is_same<T, char>::value == false &&
          utils::Endianness::is_little_endian() )
         {
-            debug_log( "Matrix.save: Is little endian..." );
-
-            // -------------------------------------------------------------------------
-            // Write nrows
-
-            debug_log( "Matrix.save: Write nrows..." );
-
-            {
-                size_t nrows = nrows_;
-
-                utils::Endianness::reverse_byte_order( &nrows );
-
-                output.write(
-                    reinterpret_cast<const char *>( &nrows ),
-                    sizeof( size_t ) );
-            }
-
-            // -------------------------------------------------------------------------
-            // Write ncols
-
-            debug_log( "Matrix.save: Write ncols..." );
-
-            {
-                size_t ncols = ncols_;
-
-                utils::Endianness::reverse_byte_order( &ncols );
-
-                output.write(
-                    reinterpret_cast<const char *>( &ncols ),
-                    sizeof( size_t ) );
-            }
-
-            // -------------------------------------------------------------------------
-            // Write num_batches
-
-            debug_log( "Matrix.save: Write num_batches..." );
-
-            assert( batches_ );
-
-            {
-                size_t num_batches = batches_->size();
-
-                utils::Endianness::reverse_byte_order( &num_batches );
-
-                output.write(
-                    reinterpret_cast<const char *>( &num_batches ),
-                    sizeof( size_t ) );
-            }
-
-            // -------------------------------------------------------------------------
-            // Write batches
-
-            debug_log( "Matrix.save: Write batches..." );
-
-            assert( batches_ );
-
-            auto batches = this->batches();
-
-            {
-                // ---------------------------------------------------------------------
-
-                auto write_inverted_batches = [&output]( size_t &_val ) {
-                    size_t val_reversed = _val;
-
-                    utils::Endianness::reverse_byte_order( &val_reversed );
-
-                    output.write(
-                        reinterpret_cast<const char *>( &val_reversed ),
-                        sizeof( size_t ) );
-                };
-
-                std::for_each(
-                    batches.begin(), batches.end(), write_inverted_batches );
-
-                // ---------------------------------------------------------------------
-            }
-
-            // -------------------------------------------------------------------------
-            // Write data
-
-            debug_log( "Matrix.save: Write data..." );
-
-            assert( data_ );
-
-            {
-                // ---------------------------------------------------------------------
-
-                auto write_reversed_data = [&output]( T &_val ) {
-                    T val_reversed = _val;
-
-                    utils::Endianness::reverse_byte_order( &val_reversed );
-
-                    output.write(
-                        reinterpret_cast<const char *>( &val_reversed ),
-                        sizeof( T ) );
-                };
-
-                // ---------------------------------------------------------------------
-
-                for ( size_t i = 0; i < batches.size() - 1; ++i )
-                    {
-                        auto mat = batch( i );
-
-                        assert( mat.ncols() == this->ncols() );
-
-                        std::for_each(
-                            mat.begin(), mat.end(), write_reversed_data );
-                    }
-
-                // ---------------------------------------------------------------------
-            }
-
-            // -------------------------------------------------------------------------
-            // Write colnames, units and name
-
-            debug_log( "Matrix.save: Write colnames and units..." );
-
-            {
-                // ---------------------------------------------------------------------
-
-                auto write_string = [&output]( std::string &_str ) {
-                    size_t str_size = _str.size();
-
-                    utils::Endianness::reverse_byte_order( &str_size );
-
-                    output.write(
-                        reinterpret_cast<const char *>( &str_size ),
-                        sizeof( size_t ) );
-
-                    output.write( &( _str[0] ), _str.size() );
-                };
-
-                // ---------------------------------------------------------------------
-
-                std::for_each(
-                    colnames()->begin(), colnames()->end(), write_string );
-
-                // ---------------------------------------------------------------------
-
-                std::for_each( units()->begin(), units()->end(), write_string );
-
-                // ---------------------------------------------------------------------
-
-                write_string( this->name() );
-
-                // ---------------------------------------------------------------------
-            }
-
-            // -------------------------------------------------------------------------
+            save_little_endian( _fname );
         }
     else
         {
-            debug_log( "Matrix.save: Is big endian..." );
-
-            // -------------------------------------------------------------------------
-            // Write nrows
-
-            {
-                debug_log( "Matrix.save: Write nrows..." );
-
-                size_t nrows = nrows_;
-
-                output.write(
-                    reinterpret_cast<const char *>( &nrows ),
-                    sizeof( size_t ) );
-            }
-
-            // -------------------------------------------------------------------------
-            // Write ncols
-
-            debug_log( "Matrix.save: Write ncols..." );
-
-            output.write(
-                reinterpret_cast<const char *>( &( ncols_ ) ),
-                sizeof( size_t ) );
-
-            // -------------------------------------------------------------------------
-            // Write num_batches
-
-            debug_log( "Matrix.save: Write num_batches..." );
-
-            {
-                size_t num_batches = batches_->size();
-
-                output.write(
-                    reinterpret_cast<const char *>( &num_batches ),
-                    sizeof( size_t ) );
-            }
-
-            // -------------------------------------------------------------------------
-            // Write batches
-
-            auto batches = this->batches();
-
-            {
-                debug_log( "Matrix.save: Write batches..." );
-
-                output.write(
-                    reinterpret_cast<const char *>( batches.data() ),
-                    batches.size() * sizeof( size_t ) );
-            }
-
-            // -------------------------------------------------------------------------
-            // Write data
-
-            debug_log( "Matrix.save: Write data..." );
-
-            for ( size_t i = 0; i < batches.size() - 1; ++i )
-                {
-                    auto mat = batch( i );
-
-                    output.write(
-                        reinterpret_cast<const char *>( mat.data() ),
-                        mat.nrows() * mat.ncols() * sizeof( T ) );
-                }
-
-            // -------------------------------------------------------------------------
-            // Write colnames and units
-
-            debug_log( "Matrix.save: Write colnames and units..." );
-
-            {
-                // ---------------------------------------------------------------------
-
-                auto write_string = [&output]( std::string &_str ) {
-                    size_t str_size = _str.size();
-
-                    output.write(
-                        reinterpret_cast<const char *>( &str_size ),
-                        sizeof( size_t ) );
-
-                    output.write( &( _str[0] ), _str.size() );
-                };
-
-                // ---------------------------------------------------------------------
-
-                std::for_each(
-                    colnames()->begin(), colnames()->end(), write_string );
-
-                // ---------------------------------------------------------------------
-
-                std::for_each( units()->begin(), units()->end(), write_string );
-
-                // ---------------------------------------------------------------------
-
-                write_string( this->name() );
-
-                // ---------------------------------------------------------------------
-            }
-
-            // -------------------------------------------------------------------------
+            save_big_endian( _fname );
         }
+}
+
+// -----------------------------------------------------------------------------
+
+template <class T>
+void Matrix<T>::save_big_endian( const std::string &_fname ) const
+{
+    // -----------------------------------------------------------------
+
+    debug_log( "Matrix.save: Is big endian..." );
+
+    std::ofstream output( _fname, std::ios::binary );
+
+    // -----------------------------------------------------------------
+    // Write nrows
+
+    debug_log( "Matrix.save: Write nrows..." );
+
+    output.write( reinterpret_cast<const char *>( &nrows_ ), sizeof( size_t ) );
+
+    // -----------------------------------------------------------------
+    // Write ncols
+
+    debug_log( "Matrix.save: Write ncols..." );
+
+    output.write( reinterpret_cast<const char *>( &ncols_ ), sizeof( size_t ) );
+
+    // -----------------------------------------------------------------
+    // Write data
+
+    debug_log( "Matrix.save: Write data..." );
+
+    output.write(
+        reinterpret_cast<const char *>( data() ),
+        nrows() * ncols() * sizeof( T ) );
+
+    // -----------------------------------------------------------------
+    // Write colnames, units and name
+
+    debug_log( "Matrix.save: Write colnames and units..." );
+
+    auto write_string = [&output]( std::string &_str ) {
+        size_t str_size = _str.size();
+
+        output.write(
+            reinterpret_cast<const char *>( &str_size ), sizeof( size_t ) );
+
+        output.write( &( _str[0] ), _str.size() );
+    };
+
+    std::for_each( colnames()->begin(), colnames()->end(), write_string );
+
+    std::for_each( units()->begin(), units()->end(), write_string );
+
+    write_string( this->name() );
+
+    // -----------------------------------------------------------------
+}
+
+// -----------------------------------------------------------------------------
+
+template <class T>
+void Matrix<T>::save_little_endian( const std::string &_fname ) const
+{
+    // -----------------------------------------------------------------
+
+    debug_log( "Matrix.save: Is little endian..." );
+
+    std::ofstream output( _fname, std::ios::binary );
+
+    // -----------------------------------------------------------------
+    // Write nrows
+
+    debug_log( "Matrix.save: Write nrows..." );
+
+    auto nrows = nrows_;
+
+    utils::Endianness::reverse_byte_order( &nrows );
+
+    output.write( reinterpret_cast<const char *>( &nrows ), sizeof( size_t ) );
+
+    // -----------------------------------------------------------------
+    // Write ncols
+
+    debug_log( "Matrix.save: Write ncols..." );
+
+    auto ncols = ncols_;
+
+    utils::Endianness::reverse_byte_order( &ncols );
+
+    output.write( reinterpret_cast<const char *>( &ncols ), sizeof( size_t ) );
+
+    // -----------------------------------------------------------------
+    // Write data
+
+    debug_log( "Matrix.save: Write data..." );
+
+    assert( data_ );
+
+    auto write_reversed_data = [&output]( T &_val ) {
+        T val_reversed = _val;
+
+        utils::Endianness::reverse_byte_order( &val_reversed );
+
+        output.write(
+            reinterpret_cast<const char *>( &val_reversed ), sizeof( T ) );
+    };
+
+    std::for_each( begin(), end(), write_reversed_data );
+
+    // -----------------------------------------------------------------
+    // Write colnames, units and name
+
+    debug_log( "Matrix.save: Write colnames and units..." );
+
+    auto write_string = [&output]( std::string &_str ) {
+        size_t str_size = _str.size();
+
+        utils::Endianness::reverse_byte_order( &str_size );
+
+        output.write(
+            reinterpret_cast<const char *>( &str_size ), sizeof( size_t ) );
+
+        output.write( &( _str[0] ), _str.size() );
+    };
+
+    std::for_each( colnames()->begin(), colnames()->end(), write_string );
+
+    std::for_each( units()->begin(), units()->end(), write_string );
+
+    write_string( name() );
+
+    // -----------------------------------------------------------------
 }
 
 // -------------------------------------------------------------------------

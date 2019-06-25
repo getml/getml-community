@@ -630,7 +630,8 @@ void Model<FeatureEngineererType>::get_colnames(
                     continue;
                 }
 
-            discrete_colnames_.push_back( population_df.discrete( i ).name() );
+            discrete_colnames_.push_back(
+                population_df.discrete( i ).colname( 0 ) );
         }
 
     numerical_colnames_.clear();
@@ -644,7 +645,7 @@ void Model<FeatureEngineererType>::get_colnames(
                 }
 
             numerical_colnames_.push_back(
-                population_df.numerical( i ).name() );
+                population_df.numerical( i ).colname( 0 ) );
         }
 }
 
