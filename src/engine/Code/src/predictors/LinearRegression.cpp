@@ -24,7 +24,55 @@ std::string LinearRegression::fit(
 
 // -----------------------------------------------------------------------------
 
-void LinearRegression::load( const std::string& _fname ) {}
+void LinearRegression::load( const std::string& _fname )
+{
+    auto obj = load_json_obj( _fname + ".json" );
+
+    auto arr = obj.getArray( "weights_" );
+
+    if ( !arr )
+        {
+            throw std::runtime_error(
+                _fname + " contains no Array named 'weights'!" );
+        }
+
+    weights_.clear();
+
+    for ( size_t i = 0; i < arr->size(); ++i )
+        {
+            weights_.push_back( arr->getElement<Float>( i ) );
+        }
+}
+
+// ------------------------------------------------------------------------
+
+Poco::JSON::Object LinearRegression::load_json_obj(
+    const std::string& _fname ) const
+{
+    std::ifstream input( _fname );
+
+    std::stringstream json;
+
+    std::string line;
+
+    if ( input.is_open() )
+        {
+            while ( std::getline( input, line ) )
+                {
+                    json << line;
+                }
+
+            input.close();
+        }
+    else
+        {
+            throw std::invalid_argument( "File '" + _fname + "' not found!" );
+        }
+
+    return *Poco::JSON::Parser()
+                .parse( json.str() )
+                .extract<Poco::JSON::Object::Ptr>();
+}
 
 // -----------------------------------------------------------------------------
 
@@ -73,7 +121,16 @@ CFloatColumn LinearRegression::predict(
 
 // -----------------------------------------------------------------------------
 
-void LinearRegression::save( const std::string& _fname ) const {}
+void LinearRegression::save( const std::string& _fname ) const
+{
+    Poco::JSON::Object obj;
+
+    obj.set( "weights_", weights_ );
+
+    auto output = std::ofstream( _fname + ".json" );
+
+    Poco::JSON::Stringifier::stringify( obj, output );
+}
 
 // -----------------------------------------------------------------------------
 

@@ -6,10 +6,12 @@
 
 #include <cstdint>
 
+#include <fstream>
 #include <memory>
 #include <numeric>
 #include <vector>
 
+#include "Poco/JSON/Array.h"
 #include "Poco/JSON/Object.h"
 
 #include <Poco/JSON/Parser.h>

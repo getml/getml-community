@@ -44,6 +44,8 @@ class LinearRegression : public Predictor
     // -------------------------------------------------------------------------
 
    private:
+    Poco::JSON::Object load_json_obj( const std::string& _fname ) const;
+
     /// When possible, the linear regression will be fitted
     /// solved arithmetically.
     void solve_arithmetically(
