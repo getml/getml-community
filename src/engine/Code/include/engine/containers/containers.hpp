@@ -50,9 +50,9 @@
 
 #include "engine/containers/Features.hpp"
 
+#include "engine/containers/Column.hpp"
 #include "engine/containers/Encoding.hpp"
 #include "engine/containers/Index.hpp"
-#include "engine/containers/Matrix.hpp"
 
 #include "engine/containers/DataFrameIndex.hpp"
 

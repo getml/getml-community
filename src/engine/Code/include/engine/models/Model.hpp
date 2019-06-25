@@ -364,7 +364,7 @@ DataFrameType Model<FeatureEngineererType>::extract_df(
             const auto& mat = df.categorical( i );
 
             categoricals.push_back( typename DataFrameType::IntColumnType(
-                mat.data(), mat.colname( 0 ), mat.nrows(), mat.unit( 0 ) ) );
+                mat.data(), mat.name(), mat.nrows(), mat.unit() ) );
         }
 
     // ------------------------------------------------------------------------
@@ -376,7 +376,7 @@ DataFrameType Model<FeatureEngineererType>::extract_df(
             const auto& mat = df.discrete( i );
 
             discretes.push_back( typename DataFrameType::FloatColumnType(
-                mat.data(), mat.colname( 0 ), mat.nrows(), mat.unit( 0 ) ) );
+                mat.data(), mat.name(), mat.nrows(), mat.unit() ) );
         }
 
     // ------------------------------------------------------------------------
@@ -388,7 +388,7 @@ DataFrameType Model<FeatureEngineererType>::extract_df(
             const auto& mat = df.join_key( i );
 
             join_keys.push_back( typename DataFrameType::IntColumnType(
-                mat.data(), mat.colname( 0 ), mat.nrows(), mat.unit( 0 ) ) );
+                mat.data(), mat.name(), mat.nrows(), mat.unit() ) );
         }
 
     // ------------------------------------------------------------------------
@@ -400,7 +400,7 @@ DataFrameType Model<FeatureEngineererType>::extract_df(
             const auto& mat = df.numerical( i );
 
             numericals.push_back( typename DataFrameType::FloatColumnType(
-                mat.data(), mat.colname( 0 ), mat.nrows(), mat.unit( 0 ) ) );
+                mat.data(), mat.name(), mat.nrows(), mat.unit() ) );
         }
 
     // ------------------------------------------------------------------------
@@ -412,7 +412,7 @@ DataFrameType Model<FeatureEngineererType>::extract_df(
             const auto& mat = df.target( i );
 
             targets.push_back( typename DataFrameType::FloatColumnType(
-                mat.data(), mat.colname( 0 ), mat.nrows(), mat.unit( 0 ) ) );
+                mat.data(), mat.name(), mat.nrows(), mat.unit() ) );
         }
 
     // ------------------------------------------------------------------------
@@ -424,7 +424,7 @@ DataFrameType Model<FeatureEngineererType>::extract_df(
             const auto& mat = df.time_stamp( i );
 
             time_stamps.push_back( typename DataFrameType::FloatColumnType(
-                mat.data(), mat.colname( 0 ), mat.nrows(), mat.unit( 0 ) ) );
+                mat.data(), mat.name(), mat.nrows(), mat.unit() ) );
         }
 
     // ------------------------------------------------------------------------
@@ -624,28 +624,27 @@ void Model<FeatureEngineererType>::get_colnames(
 
     for ( size_t i = 0; i < population_df.num_discretes(); ++i )
         {
-            if ( population_df.discrete( i ).unit( 0 ).find(
-                     "comparison only" ) != std::string::npos )
+            if ( population_df.discrete( i ).unit().find( "comparison only" ) !=
+                 std::string::npos )
                 {
                     continue;
                 }
 
-            discrete_colnames_.push_back(
-                population_df.discrete( i ).colname( 0 ) );
+            discrete_colnames_.push_back( population_df.discrete( i ).name() );
         }
 
     numerical_colnames_.clear();
 
     for ( size_t i = 0; i < population_df.num_numericals(); ++i )
         {
-            if ( population_df.numerical( i ).unit( 0 ).find(
+            if ( population_df.numerical( i ).unit().find(
                      "comparison only" ) != std::string::npos )
                 {
                     continue;
                 }
 
             numerical_colnames_.push_back(
-                population_df.numerical( i ).colname( 0 ) );
+                population_df.numerical( i ).name() );
         }
 }
 
@@ -819,7 +818,8 @@ Poco::JSON::Object Model<FeatureEngineererType>::score(
     // ------------------------------------------------
     // Make sure input is plausible
 
-    if ( yhat.nrows() != y.nrows() )
+    // Temporary fix
+    /*if ( yhat.nrows() != y.nrows() )
         {
             throw std::invalid_argument(
                 "Number of rows in predictions and targets do not match! "
@@ -838,21 +838,24 @@ Poco::JSON::Object Model<FeatureEngineererType>::score(
                 std::to_string( yhat.ncols() ) +
                 ". Number of columns in targets: " +
                 std::to_string( y.ncols() ) + "." );
-        }
+        }*/
 
     // ------------------------------------------------
     // Calculate the score
 
     debug_log( "Calculating score..." );
 
-    auto obj = metrics::Scorer::score(
+    // Temporary fix
+    Poco::JSON::Object obj;
+
+    /*auto obj = metrics::Scorer::score(
         feature_engineerer().is_classification(),
         yhat.data(),
         yhat.nrows(),
         yhat.ncols(),
         y.data(),
         y.nrows(),
-        y.ncols() );
+        y.ncols() );*/
 
     scores_.from_json_obj( obj );
 

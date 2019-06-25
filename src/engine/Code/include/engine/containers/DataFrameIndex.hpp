@@ -17,7 +17,7 @@ class DataFrameIndex
     // -------------------------------
 
     /// Recalculates the index.
-    void calculate( const Matrix<Int>& _join_key );
+    void calculate( const Column<Int>& _join_key );
 
     // -------------------------------
 

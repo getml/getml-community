@@ -13,12 +13,10 @@ class Receiver
     /// Receives data of any type from the client
     template <class T>
     static void recv(
-        const ULong _size,
-        Poco::Net::StreamSocket *_socket,
-        T *_data );
+        const ULong _size, Poco::Net::StreamSocket *_socket, T *_data );
 
-    /// Receives a categorical matrix from the client
-    static containers::Matrix<Int> recv_categorical_matrix(
+    /// Receives a categorical Column from the client
+    static containers::Column<Int> recv_categorical_matrix(
         containers::Encoding *_encoding, Poco::Net::StreamSocket *_socket );
 
     /// Receives a string from the client
@@ -29,8 +27,8 @@ class Receiver
         const std::shared_ptr<const monitoring::Logger> &_logger,
         Poco::Net::StreamSocket *_socket );
 
-    /// Receives a matrix from the client
-    static containers::Matrix<Float> recv_matrix(
+    /// Receives a Column from the client
+    static containers::Column<Float> recv_matrix(
         Poco::Net::StreamSocket *_socket );
 };
 
@@ -39,9 +37,7 @@ class Receiver
 
 template <class T>
 void Receiver::recv(
-    const ULong _size,
-    Poco::Net::StreamSocket *_socket,
-    T *_data )
+    const ULong _size, Poco::Net::StreamSocket *_socket, T *_data )
 {
     const ULong len = 4096;
 

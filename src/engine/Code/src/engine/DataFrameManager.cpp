@@ -19,16 +19,16 @@ void DataFrameManager::add_categorical_column(
 
     const auto unit = JSON::get_value<std::string>( _cmd, "unit_" );
 
-    containers::Matrix<Int> mat;
+    containers::Column<Int> col;
 
     if ( role == "categorical" )
         {
-            mat = communication::Receiver::recv_categorical_matrix(
+            col = communication::Receiver::recv_categorical_matrix(
                 categories_.get(), _socket );
         }
     else if ( role == "join_key" )
         {
-            mat = communication::Receiver::recv_categorical_matrix(
+            col = communication::Receiver::recv_categorical_matrix(
                 join_keys_encoding_.get(), _socket );
         }
     else
@@ -38,18 +38,11 @@ void DataFrameManager::add_categorical_column(
                 "join key" );
         }
 
-    if ( mat.ncols() != 1 )
-        {
-            throw std::runtime_error(
-                "A matrix used as a data frame column must contains exactly "
-                "one column!" );
-        }
+    col.set_name( name );
 
-    mat.set_colnames( {name} );
+    col.set_unit( unit );
 
-    mat.set_units( {unit} );
-
-    _df->add_int_column( mat, role, num );
+    _df->add_int_column( col, role, num );
 
     communication::Sender::send_string( "Success!", _socket );
 }
@@ -124,20 +117,13 @@ void DataFrameManager::add_column(
 
     const auto unit = JSON::get_value<std::string>( _cmd, "unit_" );
 
-    auto mat = communication::Receiver::recv_matrix( _socket );
+    auto col = communication::Receiver::recv_matrix( _socket );
 
-    if ( mat.ncols() != 1 )
-        {
-            throw std::runtime_error(
-                "A matrix used as a data frame column must contains exactly "
-                "one column!" );
-        }
+    col.set_name( name );
 
-    mat.set_colnames( {name} );
+    col.set_unit( unit );
 
-    mat.set_units( {unit} );
-
-    _df->add_float_column( mat, role, num );
+    _df->add_float_column( col, role, num );
 
     communication::Sender::send_string( "Success!", _socket );
 }
@@ -428,7 +414,7 @@ void DataFrameManager::get_categorical_column(
 
     multithreading::ReadLock read_lock( read_write_lock_ );
 
-    auto mat =
+    auto col =
         utils::Getter::get( df_name, &data_frames() ).int_matrix( role, num );
 
     communication::Sender::send_string( "Found!", _socket );
@@ -436,12 +422,12 @@ void DataFrameManager::get_categorical_column(
     if ( role == "categorical" )
         {
             communication::Sender::send_categorical_matrix(
-                mat, *categories_, _socket );
+                col, *categories_, _socket );
         }
     else
         {
             communication::Sender::send_categorical_matrix(
-                mat, *join_keys_encoding_, _socket );
+                col, *join_keys_encoding_, _socket );
         }
 }
 
@@ -458,12 +444,12 @@ void DataFrameManager::get_column(
 
     multithreading::ReadLock read_lock( read_write_lock_ );
 
-    auto mat =
+    auto col =
         utils::Getter::get( df_name, &data_frames() ).float_matrix( role, num );
 
     communication::Sender::send_string( "Found!", _socket );
 
-    communication::Sender::send_matrix( mat, _socket );
+    communication::Sender::send_matrix( col, _socket );
 }
 
 // ------------------------------------------------------------------------

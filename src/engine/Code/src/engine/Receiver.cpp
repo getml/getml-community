@@ -6,7 +6,7 @@ namespace communication
 {
 // ------------------------------------------------------------------------
 
-containers::Matrix<Int> Receiver::recv_categorical_matrix(
+containers::Column<Int> Receiver::recv_categorical_matrix(
     containers::Encoding *_encoding, Poco::Net::StreamSocket *_socket )
 {
     // ------------------------------------------------
@@ -17,7 +17,7 @@ containers::Matrix<Int> Receiver::recv_categorical_matrix(
     recv<Int>( sizeof( Int ) * 2, _socket, shape.data() );
 
     // ------------------------------------------------
-    // Init matrix
+    // Init Column
 
     if ( std::get<0>( shape ) <= 0 )
         {
@@ -25,31 +25,25 @@ containers::Matrix<Int> Receiver::recv_categorical_matrix(
                 "Your data frame must contain at least one row!" );
         }
 
-    if ( std::get<1>( shape ) < 0 )
+    if ( std::get<1>( shape ) != 1 )
         {
             throw std::runtime_error(
-                "Number of columns can not be negative!" );
+                "Data must contain only a single column!" );
         }
 
-    containers::Matrix<Int> matrix(
-        static_cast<size_t>( std::get<0>( shape ) ),
-        static_cast<size_t>( std::get<1>( shape ) ) );
+    containers::Column<Int> col( static_cast<size_t>( std::get<0>( shape ) ) );
 
     // ------------------------------------------------
-    // Receive strings and map to int matrix
+    // Receive strings and map to int Column
 
-    for ( size_t i = 0; i < matrix.nrows(); ++i )
+    for ( size_t i = 0; i < col.nrows(); ++i )
         {
-            for ( size_t j = 0; j < matrix.ncols(); ++j )
-                {
-                    matrix( i, j ) =
-                        ( *_encoding )[Receiver::recv_string( _socket )];
-                }
+            col[i] = ( *_encoding )[Receiver::recv_string( _socket )];
         }
 
     // ------------------------------------------------
 
-    return matrix;
+    return col;
 
     // ------------------------------------------------
 }
@@ -94,7 +88,7 @@ Poco::JSON::Object Receiver::recv_cmd(
 
 // ------------------------------------------------------------------------
 
-containers::Matrix<Float> Receiver::recv_matrix(
+containers::Column<Float> Receiver::recv_matrix(
     Poco::Net::StreamSocket *_socket )
 {
     // ------------------------------------------------
@@ -105,7 +99,7 @@ containers::Matrix<Float> Receiver::recv_matrix(
     recv<Int>( sizeof( Int ) * 2, _socket, shape.data() );
 
     // ------------------------------------------------
-    // Init matrix
+    // Init Column
 
     if ( std::get<0>( shape ) <= 0 )
         {
@@ -113,29 +107,27 @@ containers::Matrix<Float> Receiver::recv_matrix(
                 "Your data frame must contain at least one row!" );
         }
 
-    if ( std::get<1>( shape ) < 0 )
+    if ( std::get<1>( shape ) != 1 )
         {
             throw std::runtime_error(
-                "Number of columns can not be negative!" );
+                "Data must contain only a single column!" );
         }
 
-    containers::Matrix<Float> matrix(
-        static_cast<size_t>( std::get<0>( shape ) ),
-        static_cast<size_t>( std::get<1>( shape ) ) );
+    auto col = containers::Column<Float>(
+        static_cast<size_t>( std::get<0>( shape ) ) );
 
     // ------------------------------------------------
     // Fill with data
 
     recv<Float>(
-        sizeof( Float ) *
-            static_cast<ULong>( std::get<0>( shape ) ) *
+        sizeof( Float ) * static_cast<ULong>( std::get<0>( shape ) ) *
             static_cast<ULong>( std::get<1>( shape ) ),
         _socket,
-        matrix.data() );
+        col.data() );
 
     // ------------------------------------------------
 
-    return matrix;
+    return col;
 
     // ------------------------------------------------
 }
@@ -149,13 +141,11 @@ std::string Receiver::recv_string( Poco::Net::StreamSocket *_socket )
 
     std::vector<Int> str_length( 1 );
 
-    Receiver::recv<Int>(
-        sizeof( Int ), _socket, str_length.data() );
+    Receiver::recv<Int>( sizeof( Int ), _socket, str_length.data() );
 
     std::string str( str_length[0], '0' );
 
-    const auto str_length_long =
-        static_cast<ULong>( str_length[0] );
+    const auto str_length_long = static_cast<ULong>( str_length[0] );
 
     // ------------------------------------------------
     // Receive string content from the client

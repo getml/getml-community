@@ -7,7 +7,7 @@ namespace containers
 {
 // ----------------------------------------------------------------------------
 
-void DataFrame::add_categorical( const Matrix<Int> &_mat, const size_t _num )
+void DataFrame::add_categorical( const Column<Int> &_mat, const size_t _num )
 {
     if ( _num < num_categoricals() )
         {
@@ -26,7 +26,7 @@ void DataFrame::add_categorical( const Matrix<Int> &_mat, const size_t _num )
 
 // ----------------------------------------------------------------------------
 
-void DataFrame::add_discrete( const Matrix<Float> &_mat, const size_t _num )
+void DataFrame::add_discrete( const Column<Float> &_mat, const size_t _num )
 {
     if ( _num < num_discretes() )
         {
@@ -46,10 +46,8 @@ void DataFrame::add_discrete( const Matrix<Float> &_mat, const size_t _num )
 // ----------------------------------------------------------------------------
 
 void DataFrame::add_float_column(
-    const Matrix<Float> &_mat, const std::string &_role, const size_t _num )
+    const Column<Float> &_mat, const std::string &_role, const size_t _num )
 {
-    assert( _mat.ncols() == 1 );
-
     if ( _role == "discrete" )
         {
             add_discrete( _mat, _num );
@@ -68,7 +66,7 @@ void DataFrame::add_float_column(
         }
     else
         {
-            throw std::invalid_argument( "Role for float matrix not known!" );
+            throw std::invalid_argument( "Role for float Column not known!" );
         }
 }
 
@@ -85,32 +83,30 @@ void DataFrame::add_float_vectors(
         {
             assert( _vectors[i] );
 
-            auto mat = Matrix<Float>( _vectors[i]->size(), 1, _vectors[i] );
+            auto col = Column<Float>( _vectors[i]->size(), _vectors[i] );
 
-            mat.set_colnames( {_names[i]} );
+            col.set_name( _names[i] );
 
-            add_float_column( mat, _role, i );
+            add_float_column( col, _role, i );
         }
 }
 
 // ----------------------------------------------------------------------------
 
 void DataFrame::add_int_column(
-    const Matrix<Int> &_mat, const std::string _role, const size_t _num )
+    const Column<Int> &_col, const std::string _role, const size_t _num )
 {
-    assert( _mat.ncols() == 1 );
-
     if ( _role == "categorical" )
         {
-            add_categorical( _mat, _num );
+            add_categorical( _col, _num );
         }
     else if ( _role == "join_key" )
         {
-            add_join_key( _mat, _num );
+            add_join_key( _col, _num );
         }
     else
         {
-            throw std::invalid_argument( "Role for int matrix not known!" );
+            throw std::invalid_argument( "Role for int Column not known!" );
         }
 }
 
@@ -127,17 +123,17 @@ void DataFrame::add_int_vectors(
         {
             assert( _vectors[i] );
 
-            auto mat = Matrix<Int>( _vectors[i]->size(), 1, _vectors[i] );
+            auto col = Column<Int>( _vectors[i]->size(), _vectors[i] );
 
-            mat.set_colnames( {_names[i]} );
+            col.set_name( _names[i] );
 
-            add_int_column( mat, _role, i );
+            add_int_column( col, _role, i );
         }
 }
 
 // ----------------------------------------------------------------------------
 
-void DataFrame::add_join_key( const Matrix<Int> &_mat, const size_t _num )
+void DataFrame::add_join_key( const Column<Int> &_mat, const size_t _num )
 {
     if ( _num < num_join_keys() )
         {
@@ -156,7 +152,7 @@ void DataFrame::add_join_key( const Matrix<Int> &_mat, const size_t _num )
 
 // ----------------------------------------------------------------------------
 
-void DataFrame::add_numerical( const Matrix<Float> &_mat, const size_t _num )
+void DataFrame::add_numerical( const Column<Float> &_mat, const size_t _num )
 {
     if ( _num < num_numericals() )
         {
@@ -175,7 +171,7 @@ void DataFrame::add_numerical( const Matrix<Float> &_mat, const size_t _num )
 
 // ----------------------------------------------------------------------------
 
-void DataFrame::add_target( const Matrix<Float> &_mat, const size_t _num )
+void DataFrame::add_target( const Column<Float> &_mat, const size_t _num )
 {
     if ( _num < num_targets() )
         {
@@ -194,7 +190,7 @@ void DataFrame::add_target( const Matrix<Float> &_mat, const size_t _num )
 
 // ----------------------------------------------------------------------------
 
-void DataFrame::add_time_stamp( const Matrix<Float> &_mat, const size_t _num )
+void DataFrame::add_time_stamp( const Column<Float> &_mat, const size_t _num )
 {
     if ( _num < num_time_stamps() )
         {
@@ -315,42 +311,42 @@ void DataFrame::check_plausibility() const
     const bool any_categorical_does_not_match = std::any_of(
         categoricals_.begin(),
         categoricals_.end(),
-        [expected_nrows]( const Matrix<Int> &mat ) {
+        [expected_nrows]( const Column<Int> &mat ) {
             return mat.nrows() != expected_nrows;
         } );
 
     const bool any_discrete_does_not_match = std::any_of(
         discretes_.begin(),
         discretes_.end(),
-        [expected_nrows]( const Matrix<Float> &mat ) {
+        [expected_nrows]( const Column<Float> &mat ) {
             return mat.nrows() != expected_nrows;
         } );
 
     const bool any_join_key_does_not_match = std::any_of(
         join_keys_.begin(),
         join_keys_.end(),
-        [expected_nrows]( const Matrix<Int> &mat ) {
+        [expected_nrows]( const Column<Int> &mat ) {
             return mat.nrows() != expected_nrows;
         } );
 
     const bool any_numerical_does_not_match = std::any_of(
         numericals_.begin(),
         numericals_.end(),
-        [expected_nrows]( const Matrix<Float> &mat ) {
+        [expected_nrows]( const Column<Float> &mat ) {
             return mat.nrows() != expected_nrows;
         } );
 
     const bool any_target_does_not_match = std::any_of(
         targets_.begin(),
         targets_.end(),
-        [expected_nrows]( const Matrix<Float> &mat ) {
+        [expected_nrows]( const Column<Float> &mat ) {
             return mat.nrows() != expected_nrows;
         } );
 
     const bool any_time_stamp_does_not_match = std::any_of(
         time_stamps_.begin(),
         time_stamps_.end(),
-        [expected_nrows]( const Matrix<Float> &mat ) {
+        [expected_nrows]( const Column<Float> &mat ) {
             return mat.nrows() != expected_nrows;
         } );
 
@@ -428,7 +424,7 @@ void DataFrame::create_indices()
 
 // ----------------------------------------------------------------------------
 
-const Matrix<Float> &DataFrame::float_matrix(
+const Column<Float> &DataFrame::float_matrix(
     const std::string &_role, const size_t _num ) const
 {
     if ( _role == "discrete" )
@@ -448,7 +444,7 @@ const Matrix<Float> &DataFrame::float_matrix(
             return time_stamp( _num );
         }
 
-    throw std::invalid_argument( "Role for float matrix not known!" );
+    throw std::invalid_argument( "Role for float Column not known!" );
 }
 
 // ----------------------------------------------------------------------------
@@ -594,7 +590,7 @@ void DataFrame::from_json(
 
             const auto arr = JSON::get_array( _obj, name );
 
-            auto column = Matrix<Int>( arr->size(), 1 );
+            auto column = Column<Int>( arr->size() );
 
             for ( size_t j = 0; j < arr->size(); ++j )
                 {
@@ -602,7 +598,7 @@ void DataFrame::from_json(
                         ( *_encoding )[arr->getElement<std::string>( j )];
                 }
 
-            column.set_colnames( {_names[i]} );
+            column.set_name( _names[i] );
 
             add_int_column( column, _type, i );
         }
@@ -628,14 +624,14 @@ void DataFrame::from_json(
 
             const auto arr = JSON::get_array( _obj, name );
 
-            auto column = Matrix<Float>( arr->size(), 1 );
+            auto column = Column<Float>( arr->size() );
 
             for ( size_t j = 0; j < arr->size(); ++j )
                 {
                     column[j] = arr->getElement<Float>( j );
                 }
 
-            column.set_colnames( {_names[i]} );
+            column.set_name( _names[i] );
 
             add_float_column( column, _type, count++ );
         }
@@ -654,7 +650,7 @@ void DataFrame::from_json(
 
             const auto arr = JSON::get_array( _obj, name );
 
-            auto column = Matrix<Float>( arr->size(), 1 );
+            auto column = Column<Float>( arr->size() );
 
             for ( size_t j = 0; j < arr->size(); ++j )
                 {
@@ -670,7 +666,7 @@ void DataFrame::from_json(
                         }
                 }
 
-            column.set_colnames( {_names[i]} );
+            column.set_name( _names[i] );
 
             add_float_column( column, "time_stamp", i );
         }
@@ -804,7 +800,7 @@ Poco::JSON::Object DataFrame::get_content(
 
 // ----------------------------------------------------------------------------
 
-const Matrix<Int> &DataFrame::int_matrix(
+const Column<Int> &DataFrame::int_matrix(
     const std::string &_role, const size_t _num ) const
 {
     if ( _role == "categorical" )
@@ -816,7 +812,7 @@ const Matrix<Int> &DataFrame::int_matrix(
             return join_key( _num );
         }
 
-    throw std::invalid_argument( "Role for int matrix not known!" );
+    throw std::invalid_argument( "Role for int Column not known!" );
 }
 
 // ----------------------------------------------------------------------------

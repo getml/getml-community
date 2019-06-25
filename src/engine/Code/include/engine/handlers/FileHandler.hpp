@@ -14,13 +14,13 @@ struct FileHandler
     static std::string create_project_directory(
         const std::string& _project_name, const config::Options& _options );
 
-    /// Determines the appropriate file ending for MatrixType
-    template <class MatrixType>
+    /// Determines the appropriate file ending for ColumnType
+    template <class ColumnType>
     static std::string file_ending();
 
     /// Loads matrix from disc
-    template <class MatrixType>
-    static MatrixType load(
+    template <class ColumnType>
+    static ColumnType load(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
 
     /// Loads data frame from disc
@@ -55,10 +55,10 @@ struct FileHandler
         std::map<std::string, Type>* _map );
 
     /// Saves matrix to disc
-    template <class MatrixType>
+    template <class ColumnType>
     static void save(
         const std::string& _name,
-        const std::map<std::string, MatrixType>& _map,
+        const std::map<std::string, ColumnType>& _map,
         Poco::Net::StreamSocket* _socket );
 
     /// Saves the encodings to disk
@@ -119,14 +119,14 @@ struct FileHandler
 // ------------------------------------------------------------------------
 // ------------------------------------------------------------------------
 
-template <class MatrixType>
+template <class ColumnType>
 std::string FileHandler::file_ending()
 {
-    if ( std::is_same<MatrixType, containers::Matrix<Float>>::value )
+    if ( std::is_same<ColumnType, containers::Column<Float>>::value )
         {
             return ".mat";
         }
-    else if ( std::is_same<MatrixType, containers::Matrix<Int>>::value )
+    else if ( std::is_same<ColumnType, containers::Column<Int>>::value )
         {
             return ".key";
         }
@@ -138,14 +138,14 @@ std::string FileHandler::file_ending()
 
 // ------------------------------------------------------------------------
 
-template <class MatrixType>
-MatrixType FileHandler::load(
+template <class ColumnType>
+ColumnType FileHandler::load(
     const std::string& _name, Poco::Net::StreamSocket* _socket )
 {
     // ---------------------------------------------------------------------
     // Create file name
 
-    std::string fname = _name + FileHandler::file_ending<MatrixType>();
+    std::string fname = _name + FileHandler::file_ending<ColumnType>();
 
     // ---------------------------------------------------------------------
     // Make sure that the file exists
@@ -162,7 +162,7 @@ MatrixType FileHandler::load(
     // ---------------------------------------------------------------------
     // Load data
 
-    MatrixType mat;
+    ColumnType mat;
 
     mat.load( fname );
 
@@ -204,10 +204,10 @@ void FileHandler::remove(
 
 // ------------------------------------------------------------------------
 
-template <class MatrixType>
+template <class ColumnType>
 void FileHandler::save(
     const std::string& _name,
-    const std::map<std::string, MatrixType>& _map,
+    const std::map<std::string, ColumnType>& _map,
     Poco::Net::StreamSocket* _socket )
 
 {
@@ -217,7 +217,7 @@ void FileHandler::save(
 
     std::string fname = _name;
 
-    fname.append( FileHandler::file_ending<MatrixType>() );
+    fname.append( FileHandler::file_ending<ColumnType>() );
 
     mat.save( fname );
 

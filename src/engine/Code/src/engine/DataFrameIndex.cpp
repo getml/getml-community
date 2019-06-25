@@ -6,7 +6,7 @@ namespace containers
 {
 // ----------------------------------------------------------------------------
 
-void DataFrameIndex::calculate( const Matrix<Int> &_join_key )
+void DataFrameIndex::calculate( const Column<Int> &_join_key )
 {
     if ( _join_key.size() < begin_ )
         {

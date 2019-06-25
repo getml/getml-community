@@ -7,7 +7,7 @@ namespace communication
 // ------------------------------------------------------------------------
 
 void Sender::send_categorical_matrix(
-    const containers::Matrix<Int>& _matrix,
+    const containers::Column<Int>& _col,
     const containers::Encoding& _encoding,
     Poco::Net::StreamSocket* _socket )
 {
@@ -16,22 +16,19 @@ void Sender::send_categorical_matrix(
 
     std::array<Int, 2> shape;
 
-    std::get<0>( shape ) = static_cast<Int>( _matrix.nrows() );
-    std::get<1>( shape ) = static_cast<Int>( _matrix.ncols() );
+    std::get<0>( shape ) = static_cast<Int>( _col.nrows() );
+    std::get<1>( shape ) = static_cast<Int>( 1 );
 
     Sender::send<Int>( 2 * sizeof( Int ), shape.data(), _socket );
 
     // ------------------------------------------------
     // Map to string and send.
 
-    for ( size_t i = 0; i < _matrix.nrows(); ++i )
+    for ( size_t i = 0; i < _col.nrows(); ++i )
         {
-            for ( size_t j = 0; j < _matrix.ncols(); ++j )
-                {
-                    const auto str = _encoding[_matrix( i, j )];
+            const auto str = _encoding[_col[i]];
 
-                    send_string( str, _socket );
-                }
+            send_string( str, _socket );
         }
 
     // ------------------------------------------------
@@ -109,23 +106,22 @@ void Sender::send_features(
 // ------------------------------------------------------------------------
 
 void Sender::send_matrix(
-    const containers::Matrix<Float>& _matrix, Poco::Net::StreamSocket* _socket )
+    const containers::Column<Float>& _col, Poco::Net::StreamSocket* _socket )
 {
     // ------------------------------------------------
     // Send dimensions of matrix
 
     std::array<Int, 2> shape;
 
-    std::get<0>( shape ) = static_cast<Int>( _matrix.nrows() );
-    std::get<1>( shape ) = static_cast<Int>( _matrix.ncols() );
+    std::get<0>( shape ) = static_cast<Int>( _col.nrows() );
+    std::get<1>( shape ) = static_cast<Int>( 1 );
 
     Sender::send<Int>( 2 * sizeof( Int ), shape.data(), _socket );
 
     // ------------------------------------------------
     // Send actual data
 
-    Sender::send<Float>(
-        _matrix.size() * sizeof( Float ), _matrix.data(), _socket );
+    Sender::send<Float>( _col.size() * sizeof( Float ), _col.data(), _socket );
 
     // ------------------------------------------------
 }

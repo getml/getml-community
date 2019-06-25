@@ -1,0 +1,564 @@
+#ifndef ENGINE_CONTAINERS_COLUMN_HPP_
+#define ENGINE_CONTAINERS_COLUMN_HPP_
+
+namespace engine
+{
+namespace containers
+{
+// -------------------------------------------------------------------------
+
+template <class T>
+class Column
+{
+   public:
+    Column( const size_t _nrows )
+        : data_ptr_( std::make_shared<std::vector<T>>( _nrows ) ),
+          name_( "" ),
+          nrows_( _nrows ),
+          unit_( "" )
+    {
+        static_assert(
+            std::is_arithmetic<T>::value,
+            "Only arithmetic types allowed for Column<T>(...)!" );
+    }
+
+    Column(
+        const size_t _nrows, const std::shared_ptr<std::vector<T>> &_data_ptr )
+        : data_ptr_( _data_ptr ), name_( "" ), nrows_( _nrows ), unit_( "" )
+    {
+    }
+
+    Column() : Column( 0 ) {}
+
+    ~Column() {}
+
+    // -------------------------------
+
+    /// Appends another Column through rowbinding
+    void append( const Column<T> &_other );
+
+    /// Sets nrows_, ncols_ to zero and intialises
+    /// data_ with an empty vector
+    void clear();
+
+    /// Loads the Column from binary format
+    void load( const std::string &_fname );
+
+    /// Returns a Column where all rows for which _key is true
+    /// are removed.
+    Column<T> remove_by_key( const std::vector<bool> &_key );
+
+    /// Saves the Column in binary format
+    void save( const std::string &_fname ) const;
+
+    /// Sorts the rows of the Column by the key provided
+    Column<T> sort_by_key( const Column<Int> &_key ) const;
+
+    /// Sorts the rows of the Column by the key provided
+    Column<T> sort_by_key( const std::vector<Int> &_key ) const;
+
+    /// Transforms Column to a std::vector
+    std::vector<T> to_vector() const;
+
+    // -------------------------------
+
+    /// Iterator to beginning of data
+    T *begin() { return data_ptr_->data(); }
+
+    /// Const iterator to beginning of data
+    T *begin() const { return data_ptr_->data(); }
+
+    /// Trivial getter
+    T *data() { return data_ptr_->data(); }
+
+    /// Trivial getter
+    const T *data() const { return data_ptr_->data(); }
+
+    /// Trivial getter
+    std::shared_ptr<std::vector<T>> &data_ptr() { return data_ptr_; }
+
+    /// Trivial getter
+    const std::shared_ptr<std::vector<T>> &data_ptr() const
+    {
+        return data_ptr_;
+    }
+
+    /// Iterator to end of data
+    T *end() { return data_ptr_->data() + nrows(); }
+
+    /// Iterator to end of data
+    T *end() const { return data_ptr_->data() + nrows(); }
+
+    /// Trivial getter
+    const std::string &name() const { return name_; }
+
+    /// Returns number of bytes occupied by the data
+    const ULong nbytes() const
+    {
+        return static_cast<ULong>( nrows() ) * sizeof( T );
+    }
+
+    /// Accessor to data
+    template <class T2>
+    T &operator[]( const T2 _i )
+    {
+        assert( _i >= 0 );
+        assert( static_cast<size_t>( _i ) < nrows() );
+
+        return ( *data_ptr_ )[_i];
+    }
+
+    /// Accessor to data
+    template <class T2>
+    T operator[]( const T2 _i ) const
+    {
+        assert( _i >= 0 );
+        assert( static_cast<size_t>( _i ) < nrows() );
+
+        return ( *data_ptr_ )[_i];
+    }
+
+    /// Trivial getter
+    size_t nrows() const { return nrows_; }
+
+    /// Trivial setter
+    void set_name( const std::string &_name ) { name_ = _name; }
+
+    /// Trivial setter
+    void set_unit( const std::string &_unit ) { unit_ = _unit; }
+
+    /// Trivial getter.
+    const size_t size() const { return nrows(); }
+
+    /// Trivial getter
+    const std::string &unit() const { return unit_; }
+
+    // -------------------------------
+
+   private:
+    /// Called by load(...) when the system's byte order is big endian or the
+    /// underlying type is char.
+    Column<T> load_big_endian( const std::string &_fname ) const;
+
+    /// Called by load(...) when the system's byte order is little endian and
+    /// the underlying type is not char.
+    Column<T> load_little_endian( const std::string &_fname ) const;
+
+    /// Called by save(...) when the system's byte order is big endian or the
+    /// underlying type is char.
+    void save_big_endian( const std::string &_fname ) const;
+
+    /// Called by save(...) when the system's byte order is little endian and
+    /// the underlying type is not char.
+    void save_little_endian( const std::string &_fname ) const;
+
+    // -------------------------------
+
+   private:
+    /// Called by load_big_endian(...).
+    void read_string_big_endian(
+        std::string *_str, std::ifstream *_input ) const
+    {
+        size_t str_size = 0;
+
+        _input->read( reinterpret_cast<char *>( &str_size ), sizeof( size_t ) );
+
+        _str->resize( str_size );
+
+        _input->read( &( *_str )[0], str_size );
+    };
+
+    /// Called by load_little_endian(...).
+    void read_string_little_endian(
+        std::string *_str, std::ifstream *_input ) const
+    {
+        size_t str_size = 0;
+
+        _input->read( reinterpret_cast<char *>( &str_size ), sizeof( size_t ) );
+
+        utils::Endianness::reverse_byte_order( &str_size );
+
+        _str->resize( str_size );
+
+        _input->read( &( *_str )[0], str_size );
+    };
+
+    /// Called by save_big_endian(...).
+    void write_string_big_endian(
+        const std::string &_str, std::ofstream *_output ) const
+    {
+        size_t str_size = _str.size();
+
+        _output->write(
+            reinterpret_cast<const char *>( &str_size ), sizeof( size_t ) );
+
+        _output->write( &_str[0], _str.size() );
+    };
+
+    /// Called by save_little_endian(...).
+    void write_string_little_endian(
+        const std::string &_str, std::ofstream *_output ) const
+    {
+        size_t str_size = _str.size();
+
+        utils::Endianness::reverse_byte_order( &str_size );
+
+        _output->write(
+            reinterpret_cast<const char *>( &str_size ), sizeof( size_t ) );
+
+        _output->write( &_str[0], _str.size() );
+    };
+
+    // -------------------------------
+
+   private:
+    /// The actual data.
+    std::shared_ptr<std::vector<T>> data_ptr_;
+
+    /// Name of the column.
+    std::string name_;
+
+    /// Number of rows.
+    size_t nrows_;
+
+    /// Unit of the column.
+    std::string unit_;
+
+    // -------------------------------
+};
+
+// -------------------------------------------------------------------------
+// -------------------------------------------------------------------------
+
+template <class T>
+void Column<T>::append( const Column<T> &_other )
+{
+    data_ptr_->insert( data_ptr_->end(), _other.begin(), _other.end() );
+
+    nrows_ += _other.nrows();
+}
+
+// -------------------------------------------------------------------------
+
+template <class T>
+void Column<T>::clear()
+{
+    *this = Column<T>( 0, 0 );
+}
+
+// -----------------------------------------------------------------------------
+
+template <class T>
+void Column<T>::load( const std::string &_fname )
+{
+    if ( std::is_same<T, char>::value == false &&
+         utils::Endianness::is_little_endian() )
+        {
+            *this = load_little_endian( _fname );
+        }
+    else
+        {
+            *this = load_big_endian( _fname );
+        }
+}
+
+// -----------------------------------------------------------------------------
+
+template <class T>
+Column<T> Column<T>::load_big_endian( const std::string &_fname ) const
+{
+    // -------------------------------------------------------------------------
+
+    debug_log( "Column.load: Big endian..." );
+
+    std::ifstream input( _fname, std::ios::binary );
+
+    // -------------------------------------------------------------------------
+    // Read nrows
+
+    debug_log( "Column.load: Read nrows..." );
+
+    size_t nrows = 0;
+
+    input.read( reinterpret_cast<char *>( &nrows ), sizeof( size_t ) );
+
+    // -------------------------------------------------------------------------
+    // Init matrix
+
+    debug_log( "Column.load: Init Column..." );
+
+    auto col = Column<T>( nrows );
+
+    // -------------------------------------------------------------------------
+    // Read data
+
+    debug_log( "Column.load: Read data..." );
+
+    input.read(
+        reinterpret_cast<char *>( col.data() ), col.nrows() * sizeof( T ) );
+
+    // -------------------------------------------------------------------------
+    // Read name and unit
+
+    read_string_big_endian( &col.name_, &input );
+
+    read_string_big_endian( &col.unit_, &input );
+
+    // -------------------------------------------------------------------------
+
+    return col;
+
+    // -------------------------------------------------------------------------
+}
+
+// -----------------------------------------------------------------------------
+
+template <class T>
+Column<T> Column<T>::load_little_endian( const std::string &_fname ) const
+{
+    // -------------------------------------------------------------------------
+
+    std::ifstream input( _fname, std::ios::binary );
+
+    // -------------------------------------------------------------------------
+    // Read nrows
+
+    debug_log( "Column.load: Read nrows..." );
+
+    size_t nrows = 0;
+
+    input.read( reinterpret_cast<char *>( &nrows ), sizeof( size_t ) );
+
+    // -------------------------------------------------------------------------
+    // Reverse byte order.
+
+    utils::Endianness::reverse_byte_order( &nrows );
+
+    // -------------------------------------------------------------------------
+    // Init Column
+
+    debug_log( "Column.load: Init Column..." );
+
+    auto col = Column<T>( nrows );
+
+    // -------------------------------------------------------------------------
+    // Read data
+
+    debug_log( "Column.load: Read data..." );
+
+    input.read(
+        reinterpret_cast<char *>( col.data() ), col.nrows() * sizeof( T ) );
+
+    // -------------------------------------------------------------------------
+    // Reverse byte order.
+
+    debug_log( "Column.load: Reverse byte order of data..." );
+
+    auto reverse_data = []( T &_val ) {
+        utils::Endianness::reverse_byte_order( &_val );
+    };
+
+    std::for_each( col.begin(), col.end(), reverse_data );
+
+    // -------------------------------------------------------------------------
+    // Read colnames and units.
+
+    read_string_little_endian( &col.name_, &input );
+
+    read_string_little_endian( &col.unit_, &input );
+
+    // -------------------------------------------------------------------------
+
+    return col;
+
+    // -------------------------------------------------------------------------
+}
+
+// -----------------------------------------------------------------------------
+
+template <class T>
+Column<T> Column<T>::remove_by_key( const std::vector<bool> &_key )
+{
+    assert(
+        static_cast<size_t>( _key.size() ) == nrows() &&
+        "Column: Size of keys must be identical to nrows!" );
+
+    auto op = []( size_t init, bool elem ) {
+        return ( ( elem ) ? ( init ) : ( init + 1 ) );
+    };
+
+    size_t nrows_new = std::accumulate( _key.begin(), _key.end(), 0, op );
+
+    Column<T> trimmed( nrows_new );
+
+    trimmed.name_ = name_;
+
+    trimmed.unit_ = unit_;
+
+    size_t k = 0;
+
+    for ( size_t i = 0; i < nrows(); ++i )
+        {
+            if ( _key[i] == false )
+                {
+                    trimmed[k++] = data[i];
+                }
+        }
+
+    return trimmed;
+}
+
+// -----------------------------------------------------------------------------
+
+template <class T>
+void Column<T>::save( const std::string &_fname ) const
+{
+    if ( std::is_same<T, char>::value == false &&
+         utils::Endianness::is_little_endian() )
+        {
+            save_little_endian( _fname );
+        }
+    else
+        {
+            save_big_endian( _fname );
+        }
+}
+
+// -----------------------------------------------------------------------------
+
+template <class T>
+void Column<T>::save_big_endian( const std::string &_fname ) const
+{
+    // -----------------------------------------------------------------
+
+    debug_log( "Column.save: Is big endian..." );
+
+    std::ofstream output( _fname, std::ios::binary );
+
+    // -----------------------------------------------------------------
+    // Write nrows
+
+    debug_log( "Column.save: Write nrows..." );
+
+    output.write( reinterpret_cast<const char *>( &nrows_ ), sizeof( size_t ) );
+
+    // -----------------------------------------------------------------
+    // Write data
+
+    debug_log( "Column.save: Write data..." );
+
+    output.write(
+        reinterpret_cast<const char *>( data() ), nrows() * sizeof( T ) );
+
+    // -----------------------------------------------------------------
+    // Write colnames and units
+
+    debug_log( "Column.save: Write colnames and units..." );
+
+    write_string_big_endian( name_, &output );
+
+    write_string_big_endian( unit_, &output );
+
+    // -----------------------------------------------------------------
+}
+
+// -----------------------------------------------------------------------------
+
+template <class T>
+void Column<T>::save_little_endian( const std::string &_fname ) const
+{
+    // -----------------------------------------------------------------
+
+    debug_log( "Column.save: Is little endian..." );
+
+    std::ofstream output( _fname, std::ios::binary );
+
+    // -----------------------------------------------------------------
+    // Write nrows
+
+    debug_log( "Column.save: Write nrows..." );
+
+    auto nrows = nrows_;
+
+    utils::Endianness::reverse_byte_order( &nrows );
+
+    output.write( reinterpret_cast<const char *>( &nrows ), sizeof( size_t ) );
+
+    // -----------------------------------------------------------------
+    // Write data
+
+    debug_log( "Column.save: Write data..." );
+
+    auto write_reversed_data = [&output]( T &_val ) {
+        T val_reversed = _val;
+
+        utils::Endianness::reverse_byte_order( &val_reversed );
+
+        output.write(
+            reinterpret_cast<const char *>( &val_reversed ), sizeof( T ) );
+    };
+
+    std::for_each( begin(), end(), write_reversed_data );
+
+    // -----------------------------------------------------------------
+    // Write name and unit
+
+    debug_log( "Column.save: Write colname and unit..." );
+
+    write_string_little_endian( name_, &output );
+
+    write_string_little_endian( unit_, &output );
+
+    // -----------------------------------------------------------------
+}
+
+// -------------------------------------------------------------------------
+
+template <class T>
+Column<T> Column<T>::sort_by_key( const std::vector<Int> &_key ) const
+{
+    Column<Int> key( _key.size(), static_cast<Int>( 1 ), _key.data() );
+
+    return sort_by_key( key );
+}
+
+// -------------------------------------------------------------------------
+
+template <class T>
+Column<T> Column<T>::sort_by_key( const Column<Int> &_key ) const
+{
+    assert(
+        _key.nrows() == nrows() &&
+        "Column: Size of keys must be identical to nrows!" );
+
+    Column<T> sorted( nrows() );
+
+    for ( size_t i = 0; i < nrows(); ++i )
+        {
+            assert(
+                _key[i] >= 0 && _key[i] < nrows() &&
+                "Column: Key out of bounds!" );
+
+            sorted[i] = ( *this )[_key[i]];
+        }
+
+    return sorted;
+}
+
+// -------------------------------------------------------------------------
+
+template <class T>
+std::vector<T> Column<T>::to_vector() const
+{
+    std::vector<T> vec( size() );
+
+    std::copy( begin(), end(), vec.begin() );
+
+    return vec;
+}
+
+// -------------------------------------------------------------------------
+}  // namespace containers
+}  // namespace engine
+
+#endif  // ENGINE_CONTAINERS_COLUMN_HPP_

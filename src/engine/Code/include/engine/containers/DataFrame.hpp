@@ -29,13 +29,13 @@ class DataFrame
 
     /// Setter for a float_matrix
     void add_float_column(
-        const Matrix<Float> &_mat,
+        const Column<Float> &_mat,
         const std::string &_role,
         const size_t _num );
 
     /// Setter for an int_matrix
     void add_int_column(
-        const Matrix<Int> &_mat, const std::string _role, const size_t _num );
+        const Column<Int> &_mat, const std::string _role, const size_t _num );
 
     /// Appends another data frame to this data frame.
     void append( const DataFrame &_other );
@@ -49,7 +49,7 @@ class DataFrame
     void create_indices();
 
     /// Getter for a float_matrix
-    const Matrix<Float> &float_matrix(
+    const Column<Float> &float_matrix(
         const std::string &_role, const size_t _num ) const;
 
     /// Builds a dataframe from a database connector.
@@ -85,7 +85,7 @@ class DataFrame
         const std::int32_t _length ) const;
 
     /// Getter for an int_matrix (either join keys or categorical)
-    const Matrix<Int> &int_matrix(
+    const Column<Int> &int_matrix(
         const std::string &_role, const size_t _num ) const;
 
     /// Loads the data from the hard-disk into the engine
@@ -108,7 +108,7 @@ class DataFrame
         typename T,
         typename std::enable_if<!std::is_same<T, std::string>::value, int>::
             type = 0>
-    const Matrix<Int> &categorical( const T _i ) const
+    const Column<Int> &categorical( const T _i ) const
     {
         assert( categoricals_.size() > 0 );
         assert( _i >= 0 );
@@ -118,11 +118,11 @@ class DataFrame
     }
 
     /// Trivial accessor
-    const Matrix<Int> &categorical( const std::string &_name ) const
+    const Column<Int> &categorical( const std::string &_name ) const
     {
         for ( size_t i = 0; i < num_categoricals(); ++i )
             {
-                if ( categorical( i ).colname( 0 ) == _name )
+                if ( categorical( i ).name() == _name )
                     {
                         return categorical( i );
                     }
@@ -149,7 +149,7 @@ class DataFrame
         typename T,
         typename std::enable_if<!std::is_same<T, std::string>::value, int>::
             type = 0>
-    const Matrix<Float> &discrete( const T _i ) const
+    const Column<Float> &discrete( const T _i ) const
     {
         assert( _i >= 0 );
         assert( _i < static_cast<T>( discretes_.size() ) );
@@ -158,11 +158,11 @@ class DataFrame
     }
 
     /// Trivial accessor
-    const Matrix<Float> &discrete( const std::string &_name ) const
+    const Column<Float> &discrete( const std::string &_name ) const
     {
         for ( size_t i = 0; i < num_discretes(); ++i )
             {
-                if ( discrete( i ).colname( 0 ) == _name )
+                if ( discrete( i ).name() == _name )
                     {
                         return discrete( i );
                     }
@@ -208,7 +208,7 @@ class DataFrame
         typename T,
         typename std::enable_if<!std::is_same<T, std::string>::value, int>::
             type = 0>
-    const Matrix<Int> &join_key( const T _i ) const
+    const Column<Int> &join_key( const T _i ) const
     {
         assert( join_keys_.size() > 0 );
         assert( _i >= 0 );
@@ -218,11 +218,11 @@ class DataFrame
     }
 
     /// Trivial accessor
-    const Matrix<Int> &join_key( const std::string &_name ) const
+    const Column<Int> &join_key( const std::string &_name ) const
     {
         for ( size_t i = 0; i < num_join_keys(); ++i )
             {
-                if ( join_key( i ).colname( 0 ) == _name )
+                if ( join_key( i ).name() == _name )
                     {
                         return join_key( i );
                     }
@@ -234,7 +234,7 @@ class DataFrame
     }
 
     /// Trivial accessor
-    const std::vector<Matrix<Int>> &join_keys() const { return join_keys_; }
+    const std::vector<Column<Int>> &join_keys() const { return join_keys_; }
 
     /// Primitive abstraction for member join_keys_encoding_
     const Encoding &join_keys_encoding() const
@@ -287,7 +287,7 @@ class DataFrame
         typename T,
         typename std::enable_if<!std::is_same<T, std::string>::value, int>::
             type = 0>
-    const Matrix<Float> &numerical( const T _i ) const
+    const Column<Float> &numerical( const T _i ) const
     {
         assert( numericals_.size() > 0 );
         assert( _i >= 0 );
@@ -297,11 +297,11 @@ class DataFrame
     }
 
     /// Trivial accessor
-    const Matrix<Float> &numerical( const std::string &_name ) const
+    const Column<Float> &numerical( const std::string &_name ) const
     {
         for ( size_t i = 0; i < num_numericals(); ++i )
             {
-                if ( numerical( i ).colname( 0 ) == _name )
+                if ( numerical( i ).name() == _name )
                     {
                         return numerical( i );
                     }
@@ -330,7 +330,7 @@ class DataFrame
         typename T,
         typename std::enable_if<!std::is_same<T, std::string>::value, int>::
             type = 0>
-    const Matrix<Float> &target( const T _i ) const
+    const Column<Float> &target( const T _i ) const
     {
         assert( targets_.size() > 0 );
         assert( _i >= 0 );
@@ -340,11 +340,11 @@ class DataFrame
     }
 
     /// Trivial accessor
-    const Matrix<Float> &target( const std::string &_name ) const
+    const Column<Float> &target( const std::string &_name ) const
     {
         for ( size_t i = 0; i < num_targets(); ++i )
             {
-                if ( target( i ).colname( 0 ) == _name )
+                if ( target( i ).name() == _name )
                     {
                         return target( i );
                     }
@@ -360,7 +360,7 @@ class DataFrame
         typename T,
         typename std::enable_if<!std::is_same<T, std::string>::value, int>::
             type = 0>
-    Matrix<Float> const &time_stamp( const T _i ) const
+    Column<Float> const &time_stamp( const T _i ) const
     {
         assert( time_stamps_.size() > 0 );
         assert( _i >= 0 );
@@ -370,11 +370,11 @@ class DataFrame
     }
 
     /// Trivial accessor
-    const Matrix<Float> &time_stamp( const std::string &_name ) const
+    const Column<Float> &time_stamp( const std::string &_name ) const
     {
         for ( size_t i = 0; i < num_time_stamps(); ++i )
             {
-                if ( time_stamp( i ).colname( 0 ) == _name )
+                if ( time_stamp( i ).name() == _name )
                     {
                         return time_stamp( i );
                     }
@@ -386,7 +386,7 @@ class DataFrame
     }
 
     /// Trivial accessor
-    const std::vector<Matrix<Float>> &time_stamps() const
+    const std::vector<Column<Float>> &time_stamps() const
     {
         return time_stamps_;
     }
@@ -395,10 +395,10 @@ class DataFrame
 
    private:
     /// Adds a categorical column.
-    void add_categorical( const Matrix<Int> &_mat, const size_t _num );
+    void add_categorical( const Column<Int> &_mat, const size_t _num );
 
     /// Adds a discrete column.
-    void add_discrete( const Matrix<Float> &_mat, const size_t _num );
+    void add_discrete( const Column<Float> &_mat, const size_t _num );
 
     /// Adds a vector of float vectors.
     void add_float_vectors(
@@ -413,20 +413,20 @@ class DataFrame
         const std::string &_role );
 
     /// Adds a join key column.
-    void add_join_key( const Matrix<Int> &_mat, const size_t _num );
+    void add_join_key( const Column<Int> &_mat, const size_t _num );
 
     /// Adds a numerical column.
-    void add_numerical( const Matrix<Float> &_mat, const size_t _num );
+    void add_numerical( const Column<Float> &_mat, const size_t _num );
 
     /// Adds a target column.
-    void add_target( const Matrix<Float> &_mat, const size_t _num );
+    void add_target( const Column<Float> &_mat, const size_t _num );
 
     /// Adds a time stamp column.
-    void add_time_stamp( const Matrix<Float> &_mat, const size_t _num );
+    void add_time_stamp( const Column<Float> &_mat, const size_t _num );
 
     /// Calculate the number of bytes.
     template <class T>
-    ULong calc_nbytes( const std::vector<Matrix<T>> &_columns ) const;
+    ULong calc_nbytes( const std::vector<Column<T>> &_columns ) const;
 
     /// Concatenate a set of colnames.
     std::vector<std::string> concat_colnames(
@@ -459,15 +459,15 @@ class DataFrame
     /// Returns the colnames of a vector of columns
     template <class T>
     Poco::JSON::Array get_colnames(
-        const std::vector<Matrix<T>> &_columns ) const;
+        const std::vector<Column<T>> &_columns ) const;
 
     /// Returns the units of a vector of columns
     template <class T>
-    Poco::JSON::Array get_units( const std::vector<Matrix<T>> &_columns ) const;
+    Poco::JSON::Array get_units( const std::vector<Column<T>> &_columns ) const;
 
     /// Loads columns.
     template <class T>
-    std::vector<Matrix<T>> load_matrices(
+    std::vector<Column<T>> load_matrices(
         const std::string &_path, const std::string &_prefix ) const;
 
     /// Creates a vector of vectors of type T.
@@ -478,7 +478,7 @@ class DataFrame
     /// Saves all matrices.
     template <class T>
     void save_matrices(
-        const std::vector<Matrix<T>> &_matrices,
+        const std::vector<Column<T>> &_matrices,
         const std::string &_path,
         const std::string &_prefix ) const;
 
@@ -489,19 +489,19 @@ class DataFrame
 
    private:
     /// Categorical data
-    std::vector<Matrix<Int>> categoricals_;
+    std::vector<Column<Int>> categoricals_;
 
     /// Maps integers to names of categories
     std::shared_ptr<Encoding> categories_;
 
     /// Discrete data
-    std::vector<Matrix<Float>> discretes_;
+    std::vector<Column<Float>> discretes_;
 
     /// Performs the role of an "index" over the join keys
     std::vector<DataFrameIndex> indices_;
 
     /// Join keys - note that their might be several
-    std::vector<Matrix<Int>> join_keys_;
+    std::vector<Column<Int>> join_keys_;
 
     /// Maps integers to names of join keys
     std::shared_ptr<Encoding> join_keys_encoding_;
@@ -510,13 +510,13 @@ class DataFrame
     std::string name_;
 
     /// Numerical data
-    std::vector<Matrix<Float>> numericals_;
+    std::vector<Column<Float>> numericals_;
 
     /// Targets - only exists for population tables
-    std::vector<Matrix<Float>> targets_;
+    std::vector<Column<Float>> targets_;
 
     /// Time stamps
-    std::vector<Matrix<Float>> time_stamps_;
+    std::vector<Column<Float>> time_stamps_;
 };
 
 // -------------------------------------------------------------------------
@@ -533,14 +533,14 @@ namespace containers
 // -------------------------------------------------------------------------
 
 template <class T>
-ULong DataFrame::calc_nbytes( const std::vector<Matrix<T>> &_columns ) const
+ULong DataFrame::calc_nbytes( const std::vector<Column<T>> &_columns ) const
 {
     return std::accumulate(
         _columns.begin(),
         _columns.end(),
         static_cast<ULong>( 0 ),
-        []( ULong &init, const Matrix<T> &mat ) {
-            return init + mat.nbytes();
+        []( ULong &init, const Column<T> &col ) {
+            return init + col.nbytes();
         } );
 }
 
@@ -548,13 +548,13 @@ ULong DataFrame::calc_nbytes( const std::vector<Matrix<T>> &_columns ) const
 
 template <class T>
 Poco::JSON::Array DataFrame::get_colnames(
-    const std::vector<Matrix<T>> &_columns ) const
+    const std::vector<Column<T>> &_columns ) const
 {
     std::vector<std::string> colnames;
 
     std::for_each(
-        _columns.begin(), _columns.end(), [&colnames]( const Matrix<T> &mat ) {
-            colnames.push_back( mat.colname( 0 ) );
+        _columns.begin(), _columns.end(), [&colnames]( const Column<T> &col ) {
+            colnames.push_back( col.name() );
         } );
 
     return JSON::vector_to_array( colnames );
@@ -564,13 +564,13 @@ Poco::JSON::Array DataFrame::get_colnames(
 
 template <class T>
 Poco::JSON::Array DataFrame::get_units(
-    const std::vector<Matrix<T>> &_columns ) const
+    const std::vector<Column<T>> &_columns ) const
 {
     std::vector<std::string> units;
 
     std::for_each(
-        _columns.begin(), _columns.end(), [&units]( const Matrix<T> &mat ) {
-            units.push_back( mat.unit( 0 ) );
+        _columns.begin(), _columns.end(), [&units]( const Column<T> &col ) {
+            units.push_back( col.unit() );
         } );
 
     return JSON::vector_to_array( units );
@@ -579,10 +579,10 @@ Poco::JSON::Array DataFrame::get_units(
 // ----------------------------------------------------------------------------
 
 template <class T>
-std::vector<Matrix<T>> DataFrame::load_matrices(
+std::vector<Column<T>> DataFrame::load_matrices(
     const std::string &_path, const std::string &_prefix ) const
 {
-    std::vector<Matrix<T>> matrices;
+    std::vector<Column<T>> matrices;
 
     for ( size_t i = 0; true; ++i )
         {
@@ -593,11 +593,11 @@ std::vector<Matrix<T>> DataFrame::load_matrices(
                     break;
                 }
 
-            Matrix<T> mat;
+            Column<T> col;
 
-            mat.load( fname );
+            col.load( fname );
 
-            matrices.push_back( mat );
+            matrices.push_back( col );
         }
 
     return matrices;
@@ -620,7 +620,7 @@ std::vector<std::shared_ptr<std::vector<T>>> DataFrame::make_vectors(
 
 template <class T>
 void DataFrame::save_matrices(
-    const std::vector<Matrix<T>> &_matrices,
+    const std::vector<Column<T>> &_matrices,
     const std::string &_path,
     const std::string &_prefix ) const
 {
