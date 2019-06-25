@@ -4,17 +4,11 @@ namespace metrics
 {
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object Accuracy::score(
-    const Float* const _yhat,
-    const size_t _yhat_nrows,
-    const size_t _yhat_ncols,
-    const Float* const _y,
-    const size_t _y_nrows,
-    const size_t _y_ncols )
+Poco::JSON::Object Accuracy::score( const Features _yhat, const Features _y )
 {
     // -----------------------------------------------------
 
-    impl_.set_data( _yhat, _yhat_nrows, _yhat_ncols, _y, _y_nrows, _y_ncols );
+    impl_.set_data( _yhat, _y );
 
     // -----------------------------------------------------
 
@@ -50,11 +44,9 @@ Poco::JSON::Object Accuracy::score(
 
             if ( impl_.has_comm() )
                 {
-                    impl_.reduce(
-                        multithreading::minimum<Float>(), &yhat_min );
+                    impl_.reduce( multithreading::minimum<Float>(), &yhat_min );
 
-                    impl_.reduce(
-                        multithreading::maximum<Float>(), &yhat_max );
+                    impl_.reduce( multithreading::maximum<Float>(), &yhat_max );
                 }
 
             // ---------------------------------------------
@@ -103,8 +95,7 @@ Poco::JSON::Object Accuracy::score(
                 {
                     impl_.reduce( std::plus<Float>(), &negatives );
 
-                    impl_.reduce(
-                        std::plus<Float>(), &false_positives );
+                    impl_.reduce( std::plus<Float>(), &false_positives );
                 }
 
             // ---------------------------------------------

@@ -10,14 +10,7 @@ class MetricImpl
    public:
     MetricImpl() : MetricImpl( nullptr ) {}
 
-    MetricImpl( multithreading::Communicator* _comm )
-        : comm_( _comm ),
-          ncols_( 0 ),
-          nrows_( 0 ),
-          y_( nullptr ),
-          yhat_( nullptr )
-    {
-    }
+    MetricImpl( multithreading::Communicator* _comm ) : comm_( _comm ) {}
 
     ~MetricImpl() = default;
 
@@ -35,10 +28,13 @@ class MetricImpl
     bool has_comm() const { return comm_ != nullptr; }
 
     /// Trivial getter
-    size_t ncols() const { return ncols_; }
+    size_t ncols() const { return y_.size(); }
 
     /// Trivial getter
-    size_t nrows() const { return nrows_; }
+    size_t nrows() const
+    {
+        return ( ncols() == 0 ) ? ( 0 ) : ( y_[0]->size() );
+    }
 
     /// Reduces a value in a multithreading context.
     template <typename OperatorType>
@@ -61,8 +57,7 @@ class MetricImpl
 
     /// Reduces a vector in a multithreading context.
     template <typename OperatorType>
-    void reduce(
-        const OperatorType& _operator, std::vector<Float>* _vec )
+    void reduce( const OperatorType& _operator, std::vector<Float>* _vec )
     {
         std::vector<Float> global( _vec->size() );
 
@@ -80,19 +75,16 @@ class MetricImpl
     }
 
     /// Trivial setter
-    void set_data(
-        const Float* const _yhat,
-        const size_t _yhat_nrows,
-        const size_t _yhat_ncols,
-        const Float* const _y,
-        const size_t _y_nrows,
-        const size_t _y_ncols )
+    void set_data( const Features _yhat, const Features _y )
     {
-        assert( _yhat_nrows == _y_nrows );
-        assert( _yhat_ncols == _y_ncols );
+        assert( _yhat.size() == _y.size() );
 
-        nrows_ = _yhat_nrows;
-        ncols_ = _yhat_ncols;
+        for ( size_t i = 0; i < _y.size(); ++i )
+            {
+                assert( _y[i]->size() == _yhat[i]->size() );
+                assert( _y[i]->size() == _y[0]->size() );
+            }
+
         yhat_ = _yhat;
         y_ = _y;
     }
@@ -100,21 +92,21 @@ class MetricImpl
     /// Trivial getter
     Float y( size_t _i, size_t _j ) const
     {
-        assert( y_ != nullptr );
-        assert( _i < nrows_ );
-        assert( _j < ncols_ );
+        assert( _j < y_.size() );
+        assert( y_[_j] );
+        assert( _i < y_[_j]->size() );
 
-        return y_[_i * ncols_ + _j];
+        return ( *y_[_j] )[_i];
     }
 
     /// Trivial getter
     Float yhat( size_t _i, size_t _j ) const
     {
-        assert( yhat_ != nullptr );
-        assert( _i < nrows_ );
-        assert( _j < ncols_ );
+        assert( _j < yhat_.size() );
+        assert( yhat_[_j] );
+        assert( _i < yhat_[_j]->size() );
 
-        return yhat_[_i * ncols_ + _j];
+        return ( *yhat_[_j] )[_i];
     }
 
     // -----------------------------------------
@@ -123,17 +115,11 @@ class MetricImpl
     /// Communicator object - for parallel versions only.
     multithreading::Communicator* comm_;
 
-    /// Number of columns.
-    size_t ncols_;
+    /// Ground truth.
+    Features y_;
 
-    /// Number of rows.
-    size_t nrows_;
-
-    /// Pointer to ground truth.
-    const Float* y_;
-
-    /// Pointer to predictions.
-    const Float* yhat_;
+    /// Predictions.
+    Features yhat_;
 
     // -----------------------------------------
 };

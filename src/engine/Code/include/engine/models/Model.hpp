@@ -806,56 +806,50 @@ Poco::JSON::Object Model<FeatureEngineererType>::score(
 
     debug_log( "Getting predictions..." );
 
-    // auto yhat = communication::Receiver::recv_matrix( _socket );
+    auto yhat = communication::Receiver::recv_features( _socket );
 
     // ------------------------------------------------
     // Get the target data
 
     debug_log( "Getting targets..." );
 
-    // auto y = communication::Receiver::recv_matrix( _socket );
+    auto y = communication::Receiver::recv_features( _socket );
 
     // ------------------------------------------------
     // Make sure input is plausible
 
-    // Temporary fix
-    /*if ( yhat.nrows() != y.nrows() )
-        {
-            throw std::invalid_argument(
-                "Number of rows in predictions and targets do not match! "
-                "Number of rows in predictions: " +
-                std::to_string( yhat.nrows() ) +
-                ". Number of rows in targets: " + std::to_string( y.nrows() ) +
-                "." );
-        }
-
-    if ( yhat.ncols() != y.ncols() )
+    if ( yhat.size() != y.size() )
         {
             throw std::invalid_argument(
                 "Number of columns in predictions and targets do not "
                 "match! "
                 "Number of columns in predictions: " +
-                std::to_string( yhat.ncols() ) +
+                std::to_string( yhat.size() ) +
                 ". Number of columns in targets: " +
-                std::to_string( y.ncols() ) + "." );
-        }*/
+                std::to_string( y.size() ) + "." );
+        }
+
+    for ( size_t i = 0; i < y.size(); ++i )
+        {
+            if ( yhat[i]->size() != y[i]->size() )
+                {
+                    throw std::invalid_argument(
+                        "Number of rows in predictions and targets do not "
+                        "match! "
+                        "Number of rows in predictions: " +
+                        std::to_string( yhat[i]->size() ) +
+                        ". Number of rows in targets: " +
+                        std::to_string( y[i]->size() ) + "." );
+                }
+        }
 
     // ------------------------------------------------
     // Calculate the score
 
     debug_log( "Calculating score..." );
 
-    // Temporary fix
-    Poco::JSON::Object obj;
-
-    /*auto obj = metrics::Scorer::score(
-        feature_engineerer().is_classification(),
-        yhat.data(),
-        yhat.nrows(),
-        yhat.ncols(),
-        y.data(),
-        y.nrows(),
-        y.ncols() );*/
+    auto obj = metrics::Scorer::score(
+        feature_engineerer().is_classification(), yhat, y );
 
     scores_.from_json_obj( obj );
 

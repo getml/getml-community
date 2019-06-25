@@ -18,13 +18,7 @@ class Accuracy : public Metric
 
     /// This calculates the loss based on the predictions _yhat
     /// and the targets _y.
-    Poco::JSON::Object score(
-        const Float* const _yhat,
-        const size_t _yhat_nrows,
-        const size_t _yhat_ncols,
-        const Float* const _y,
-        const size_t _y_nrows,
-        const size_t _y_ncols ) final;
+    Poco::JSON::Object score( const Features _yhat, const Features _y ) final;
 
     // ------------------------------------------------------------------------
 
@@ -39,10 +33,7 @@ class Accuracy : public Metric
     size_t nrows() const { return impl_.nrows(); }
 
     /// Trivial getter
-    Float yhat( size_t _i, size_t _j ) const
-    {
-        return impl_.yhat( _i, _j );
-    }
+    Float yhat( size_t _i, size_t _j ) const { return impl_.yhat( _i, _j ); }
 
     /// Trivial getter
     Float y( size_t _i, size_t _j ) const { return impl_.y( _i, _j ); }

@@ -13,12 +13,8 @@ struct Scorer
     /// Calculates scores.
     static Poco::JSON::Object score(
         const bool _is_classification,
-        const Float* const _yhat,
-        const size_t _yhat_nrows,
-        const size_t _yhat_ncols,
-        const Float* const _y,
-        const size_t _y_nrows,
-        const size_t _y_ncols );
+        const Features _yhat,
+        const Features _y );
 };
 
 // ----------------------------------------------------------------------------

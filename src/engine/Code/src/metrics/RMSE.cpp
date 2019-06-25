@@ -4,17 +4,11 @@ namespace metrics
 {
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object RMSE::score(
-    const Float* const _yhat,
-    const size_t _yhat_nrows,
-    const size_t _yhat_ncols,
-    const Float* const _y,
-    const size_t _y_nrows,
-    const size_t _y_ncols )
+Poco::JSON::Object RMSE::score( const Features _yhat, const Features _y )
 {
     // -----------------------------------------
 
-    impl_.set_data( _yhat, _yhat_nrows, _yhat_ncols, _y, _y_nrows, _y_ncols );
+    impl_.set_data( _yhat, _y );
 
     // -----------------------------------------
 

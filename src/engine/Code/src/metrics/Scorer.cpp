@@ -45,13 +45,7 @@ Poco::JSON::Object Scorer::get_metrics( const Poco::JSON::Object& _obj )
 // ----------------------------------------------------------------------------
 
 Poco::JSON::Object Scorer::score(
-    const bool _is_classification,
-    const Float* const _yhat,
-    const size_t _yhat_nrows,
-    const size_t _yhat_ncols,
-    const Float* const _y,
-    const size_t _y_nrows,
-    const size_t _y_ncols )
+    const bool _is_classification, const Features _yhat, const Features _y )
 {
     // ------------------------------------------------------------------------
     // Build up names.
@@ -82,8 +76,7 @@ Poco::JSON::Object Scorer::score(
             // implemented.
             const auto metric = metrics::MetricParser::parse( name, nullptr );
 
-            const auto scores = metric->score(
-                _yhat, _yhat_nrows, _yhat_ncols, _y, _y_nrows, _y_ncols );
+            const auto scores = metric->score( _yhat, _y );
 
             for ( auto it = scores.begin(); it != scores.end(); ++it )
                 {

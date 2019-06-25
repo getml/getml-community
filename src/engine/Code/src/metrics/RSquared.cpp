@@ -4,17 +4,11 @@ namespace metrics
 {
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object RSquared::score(
-    const Float* const _yhat,
-    const size_t _yhat_nrows,
-    const size_t _yhat_ncols,
-    const Float* const _y,
-    const size_t _y_nrows,
-    const size_t _y_ncols )
+Poco::JSON::Object RSquared::score( const Features _yhat, const Features _y )
 {
     // -----------------------------------------------------
 
-    impl_.set_data( _yhat, _yhat_nrows, _yhat_ncols, _y, _y_nrows, _y_ncols );
+    impl_.set_data( _yhat, _y );
 
     sufficient_statistics_ = std::vector<Float>( 6 * ncols() );
 
@@ -80,8 +74,7 @@ Poco::JSON::Object RSquared::score(
             const Float var_yhat =
                 sum_yhat_yhat / n - ( sum_yhat / n ) * ( sum_yhat / n );
 
-            const Float var_y =
-                sum_y_y / n - ( sum_y / n ) * ( sum_y / n );
+            const Float var_y = sum_y_y / n - ( sum_y / n ) * ( sum_y / n );
 
             const Float cov_y_yhat =
                 sum_yhat_y / n - ( sum_yhat / n ) * ( sum_y / n );

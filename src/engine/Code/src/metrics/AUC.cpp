@@ -4,17 +4,11 @@ namespace metrics
 {
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object AUC::score(
-    const Float* const _yhat,
-    const size_t _yhat_nrows,
-    const size_t _yhat_ncols,
-    const Float* const _y,
-    const size_t _y_nrows,
-    const size_t _y_ncols )
+Poco::JSON::Object AUC::score( const Features _yhat, const Features _y )
 {
     // -----------------------------------------------------
 
-    impl_.set_data( _yhat, _yhat_nrows, _yhat_ncols, _y, _y_nrows, _y_ncols );
+    impl_.set_data( _yhat, _y );
 
     // -----------------------------------------------------
 
@@ -58,11 +52,9 @@ Poco::JSON::Object AUC::score(
 
             if ( impl_.has_comm() )
                 {
-                    impl_.reduce(
-                        multithreading::minimum<Float>(), &yhat_min );
+                    impl_.reduce( multithreading::minimum<Float>(), &yhat_min );
 
-                    impl_.reduce(
-                        multithreading::maximum<Float>(), &yhat_max );
+                    impl_.reduce( multithreading::maximum<Float>(), &yhat_max );
                 }
 
             // ---------------------------------------------
@@ -91,8 +83,7 @@ Poco::JSON::Object AUC::score(
 
             std::vector<Float> true_positives( num_critical_values );
 
-            std::vector<Float> predicted_negative(
-                num_critical_values );
+            std::vector<Float> predicted_negative( num_critical_values );
 
             for ( size_t i = 0; i < nrows(); ++i )
                 {
@@ -109,8 +100,7 @@ Poco::JSON::Object AUC::score(
                 {
                     impl_.reduce( std::plus<Float>(), &true_positives );
 
-                    impl_.reduce(
-                        std::plus<Float>(), &predicted_negative );
+                    impl_.reduce( std::plus<Float>(), &predicted_negative );
                 }
 
             std::partial_sum(
@@ -129,9 +119,7 @@ Poco::JSON::Object AUC::score(
             std::for_each(
                 true_positives.begin(),
                 true_positives.end(),
-                [all_positives]( Float& val ) {
-                    val = all_positives - val;
-                } );
+                [all_positives]( Float& val ) { val = all_positives - val; } );
 
             // ---------------------------------------------
             // Calculate false positives
@@ -150,19 +138,16 @@ Poco::JSON::Object AUC::score(
                 true_positives.end(),
                 predicted_negative.begin(),
                 false_positives.begin(),
-                [nrow_float](
-                    const Float& tp, const Float& pn ) {
+                [nrow_float]( const Float& tp, const Float& pn ) {
                     return nrow_float - tp - pn;
                 } );
 
             // ---------------------------------------------
             // Calculate true positive rate and false positive rate
 
-            std::vector<Float> true_positive_rate(
-                num_critical_values );
+            std::vector<Float> true_positive_rate( num_critical_values );
 
-            std::vector<Float> false_positive_rate(
-                num_critical_values );
+            std::vector<Float> false_positive_rate( num_critical_values );
 
             const Float all_negatives = nrow_float - all_positives;
 
