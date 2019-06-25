@@ -14,7 +14,6 @@ class Matrix
     Matrix( const size_t _nrows, const size_t _ncols, T *_data_ptr )
         : colnames_( std::make_shared<std::vector<std::string>>( _ncols, "" ) ),
           data_ptr_( _data_ptr ),
-          name_( std::make_shared<std::string>( "" ) ),
           ncols_( _ncols ),
           ncols_long_( static_cast<ULong>( _ncols ) ),
           nrows_( _nrows ),
@@ -216,9 +215,6 @@ class Matrix
     }
 
     /// Trivial getter
-    std::string &name() const { return *( name_ ); }
-
-    /// Trivial getter
     size_t ncols() const { return ncols_; }
 
     /// Trivial getter
@@ -323,9 +319,6 @@ class Matrix
     /// Pointer to the actual data. This is used by all member
     /// functions, in order to account for virtual containers
     T *data_ptr_;
-
-    /// Name of this containers
-    std::shared_ptr<std::string> name_;
 
     /// Number of columns
     size_t ncols_;
@@ -471,7 +464,7 @@ Matrix<T> Matrix<T>::load_big_endian( const std::string &_fname ) const
         mat.nrows() * mat.ncols() * sizeof( T ) );
 
     // -------------------------------------------------------------------------
-    // Read colnames, units and name
+    // Read colnames and units
 
     auto read_string = [&input]( std::string &_str ) {
         size_t str_size = 0;
@@ -495,8 +488,6 @@ Matrix<T> Matrix<T>::load_big_endian( const std::string &_fname ) const
     assert( static_cast<size_t>( mat.colnames()->size() ) == mat.ncols() );
 
     std::for_each( mat.units()->begin(), mat.units()->end(), read_string );
-
-    read_string( mat.name() );
 
     // -------------------------------------------------------------------------
 
@@ -567,7 +558,7 @@ Matrix<T> Matrix<T>::load_little_endian( const std::string &_fname ) const
     std::for_each( mat.begin(), mat.end(), reverse_data );
 
     // -------------------------------------------------------------------------
-    // Read colnames, units and name.
+    // Read colnames and units.
 
     auto read_string = [&input]( std::string &_str ) {
         size_t str_size = 0;
@@ -593,8 +584,6 @@ Matrix<T> Matrix<T>::load_little_endian( const std::string &_fname ) const
     assert( static_cast<size_t>( mat.units()->size() ) == mat.ncols() );
 
     std::for_each( mat.units()->begin(), mat.units()->end(), read_string );
-
-    read_string( mat.name() );
 
     // -------------------------------------------------------------------------
 
@@ -690,7 +679,7 @@ void Matrix<T>::save_big_endian( const std::string &_fname ) const
         nrows() * ncols() * sizeof( T ) );
 
     // -----------------------------------------------------------------
-    // Write colnames, units and name
+    // Write colnames and units
 
     debug_log( "Matrix.save: Write colnames and units..." );
 
@@ -706,8 +695,6 @@ void Matrix<T>::save_big_endian( const std::string &_fname ) const
     std::for_each( colnames()->begin(), colnames()->end(), write_string );
 
     std::for_each( units()->begin(), units()->end(), write_string );
-
-    write_string( this->name() );
 
     // -----------------------------------------------------------------
 }
@@ -764,7 +751,7 @@ void Matrix<T>::save_little_endian( const std::string &_fname ) const
     std::for_each( begin(), end(), write_reversed_data );
 
     // -----------------------------------------------------------------
-    // Write colnames, units and name
+    // Write colnames and units
 
     debug_log( "Matrix.save: Write colnames and units..." );
 
@@ -782,8 +769,6 @@ void Matrix<T>::save_little_endian( const std::string &_fname ) const
     std::for_each( colnames()->begin(), colnames()->end(), write_string );
 
     std::for_each( units()->begin(), units()->end(), write_string );
-
-    write_string( name() );
 
     // -----------------------------------------------------------------
 }
@@ -849,8 +834,6 @@ const Matrix<T> Matrix<T>::subview( T2 _row_begin, T2 _row_end ) const
     mat.set_colnames( *( colnames_.get() ) );
 
     mat.set_units( *( units_ ) );
-
-    mat.name() = name();
 
     return mat;
 }

@@ -45,8 +45,6 @@ void DataFrameManager::add_categorical_column(
                 "one column!" );
         }
 
-    mat.name() = name;
-
     mat.set_colnames( {name} );
 
     mat.set_units( {unit} );
@@ -134,8 +132,6 @@ void DataFrameManager::add_column(
                 "A matrix used as a data frame column must contains exactly "
                 "one column!" );
         }
-
-    mat.name() = _df->name();
 
     mat.set_colnames( {name} );
 

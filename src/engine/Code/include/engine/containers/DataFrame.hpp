@@ -597,8 +597,6 @@ std::vector<Matrix<T>> DataFrame::load_matrices(
 
             mat.load( fname );
 
-            mat.name() = name();
-
             matrices.push_back( mat );
         }
 

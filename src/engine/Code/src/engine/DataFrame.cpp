@@ -7,8 +7,7 @@ namespace containers
 {
 // ----------------------------------------------------------------------------
 
-void DataFrame::add_categorical(
-    const Matrix<Int> &_mat, const size_t _num )
+void DataFrame::add_categorical( const Matrix<Int> &_mat, const size_t _num )
 {
     if ( _num < num_categoricals() )
         {
@@ -27,8 +26,7 @@ void DataFrame::add_categorical(
 
 // ----------------------------------------------------------------------------
 
-void DataFrame::add_discrete(
-    const Matrix<Float> &_mat, const size_t _num )
+void DataFrame::add_discrete( const Matrix<Float> &_mat, const size_t _num )
 {
     if ( _num < num_discretes() )
         {
@@ -48,9 +46,7 @@ void DataFrame::add_discrete(
 // ----------------------------------------------------------------------------
 
 void DataFrame::add_float_column(
-    const Matrix<Float> &_mat,
-    const std::string &_role,
-    const size_t _num )
+    const Matrix<Float> &_mat, const std::string &_role, const size_t _num )
 {
     assert( _mat.ncols() == 1 );
 
@@ -89,10 +85,7 @@ void DataFrame::add_float_vectors(
         {
             assert( _vectors[i] );
 
-            auto mat =
-                Matrix<Float>( _vectors[i]->size(), 1, _vectors[i] );
-
-            mat.name() = _names[i];
+            auto mat = Matrix<Float>( _vectors[i]->size(), 1, _vectors[i] );
 
             mat.set_colnames( {_names[i]} );
 
@@ -134,10 +127,7 @@ void DataFrame::add_int_vectors(
         {
             assert( _vectors[i] );
 
-            auto mat =
-                Matrix<Int>( _vectors[i]->size(), 1, _vectors[i] );
-
-            mat.name() = _names[i];
+            auto mat = Matrix<Int>( _vectors[i]->size(), 1, _vectors[i] );
 
             mat.set_colnames( {_names[i]} );
 
@@ -147,8 +137,7 @@ void DataFrame::add_int_vectors(
 
 // ----------------------------------------------------------------------------
 
-void DataFrame::add_join_key(
-    const Matrix<Int> &_mat, const size_t _num )
+void DataFrame::add_join_key( const Matrix<Int> &_mat, const size_t _num )
 {
     if ( _num < num_join_keys() )
         {
@@ -167,8 +156,7 @@ void DataFrame::add_join_key(
 
 // ----------------------------------------------------------------------------
 
-void DataFrame::add_numerical(
-    const Matrix<Float> &_mat, const size_t _num )
+void DataFrame::add_numerical( const Matrix<Float> &_mat, const size_t _num )
 {
     if ( _num < num_numericals() )
         {
@@ -187,8 +175,7 @@ void DataFrame::add_numerical(
 
 // ----------------------------------------------------------------------------
 
-void DataFrame::add_target(
-    const Matrix<Float> &_mat, const size_t _num )
+void DataFrame::add_target( const Matrix<Float> &_mat, const size_t _num )
 {
     if ( _num < num_targets() )
         {
@@ -207,8 +194,7 @@ void DataFrame::add_target(
 
 // ----------------------------------------------------------------------------
 
-void DataFrame::add_time_stamp(
-    const Matrix<Float> &_mat, const size_t _num )
+void DataFrame::add_time_stamp( const Matrix<Float> &_mat, const size_t _num )
 {
     if ( _num < num_time_stamps() )
         {
@@ -616,8 +602,6 @@ void DataFrame::from_json(
                         ( *_encoding )[arr->getElement<std::string>( j )];
                 }
 
-            column.name() = _names[i];
-
             column.set_colnames( {_names[i]} );
 
             add_int_column( column, _type, i );
@@ -650,8 +634,6 @@ void DataFrame::from_json(
                 {
                     column[j] = arr->getElement<Float>( j );
                 }
-
-            column.name() = _names[i];
 
             column.set_colnames( {_names[i]} );
 
@@ -687,8 +669,6 @@ void DataFrame::from_json(
                             column[j] = arr->getElement<Float>( j );
                         }
                 }
-
-            column.name() = _names[i];
 
             column.set_colnames( {_names[i]} );
 
@@ -993,8 +973,7 @@ Poco::JSON::Object DataFrame::to_monitor( const std::string _name )
 
 // ----------------------------------------------------------------------------
 
-std::string DataFrame::to_time_stamp(
-    const Float &_time_stamp_float ) const
+std::string DataFrame::to_time_stamp( const Float &_time_stamp_float ) const
 {
     if ( std::isnan( _time_stamp_float ) )
         {
