@@ -6,7 +6,7 @@ namespace communication
 {
 // ------------------------------------------------------------------------
 
-containers::Column<Int> Receiver::recv_categorical_matrix(
+containers::Column<Int> Receiver::recv_categorical_column(
     containers::Encoding *_encoding, Poco::Net::StreamSocket *_socket )
 {
     // ------------------------------------------------
@@ -88,7 +88,7 @@ Poco::JSON::Object Receiver::recv_cmd(
 
 // ------------------------------------------------------------------------
 
-containers::Column<Float> Receiver::recv_matrix(
+containers::Column<Float> Receiver::recv_column(
     Poco::Net::StreamSocket *_socket )
 {
     // ------------------------------------------------

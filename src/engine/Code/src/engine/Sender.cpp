@@ -6,7 +6,7 @@ namespace communication
 {
 // ------------------------------------------------------------------------
 
-void Sender::send_categorical_matrix(
+void Sender::send_categorical_column(
     const containers::Column<Int>& _col,
     const containers::Encoding& _encoding,
     Poco::Net::StreamSocket* _socket )
@@ -105,7 +105,7 @@ void Sender::send_features(
 
 // ------------------------------------------------------------------------
 
-void Sender::send_matrix(
+void Sender::send_column(
     const containers::Column<Float>& _col, Poco::Net::StreamSocket* _socket )
 {
     // ------------------------------------------------

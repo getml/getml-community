@@ -15,19 +15,19 @@ struct Sender
         const ULong _size, const T* _data, Poco::Net::StreamSocket* _socket );
 
     /// Sends categorical Column to the client
-    static void send_categorical_matrix(
-        const containers::Column<Int>& _matrix,
+    static void send_categorical_column(
+        const containers::Column<Int>& _col,
         const containers::Encoding& _encoding,
         Poco::Net::StreamSocket* _socket );
 
-    /// Sends features to the client, tranposing them.
+    /// Sends features to the client, transposing them.
     static void send_features(
         const containers::Features& _features,
         Poco::Net::StreamSocket* _socket );
 
     /// Sends Column to the client
-    static void send_matrix(
-        const containers::Column<Float>& _matrix,
+    static void send_column(
+        const containers::Column<Float>& _col,
         Poco::Net::StreamSocket* _socket );
 
     /// Sends a string to the client

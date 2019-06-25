@@ -23,12 +23,12 @@ void DataFrameManager::add_categorical_column(
 
     if ( role == "categorical" )
         {
-            col = communication::Receiver::recv_categorical_matrix(
+            col = communication::Receiver::recv_categorical_column(
                 categories_.get(), _socket );
         }
     else if ( role == "join_key" )
         {
-            col = communication::Receiver::recv_categorical_matrix(
+            col = communication::Receiver::recv_categorical_column(
                 join_keys_encoding_.get(), _socket );
         }
     else
@@ -117,7 +117,7 @@ void DataFrameManager::add_column(
 
     const auto unit = JSON::get_value<std::string>( _cmd, "unit_" );
 
-    auto col = communication::Receiver::recv_matrix( _socket );
+    auto col = communication::Receiver::recv_column( _socket );
 
     col.set_name( name );
 
@@ -421,12 +421,12 @@ void DataFrameManager::get_categorical_column(
 
     if ( role == "categorical" )
         {
-            communication::Sender::send_categorical_matrix(
+            communication::Sender::send_categorical_column(
                 col, *categories_, _socket );
         }
     else
         {
-            communication::Sender::send_categorical_matrix(
+            communication::Sender::send_categorical_column(
                 col, *join_keys_encoding_, _socket );
         }
 }
@@ -449,7 +449,7 @@ void DataFrameManager::get_column(
 
     communication::Sender::send_string( "Found!", _socket );
 
-    communication::Sender::send_matrix( col, _socket );
+    communication::Sender::send_column( col, _socket );
 }
 
 // ------------------------------------------------------------------------

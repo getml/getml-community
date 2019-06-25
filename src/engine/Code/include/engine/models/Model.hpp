@@ -806,14 +806,14 @@ Poco::JSON::Object Model<FeatureEngineererType>::score(
 
     debug_log( "Getting predictions..." );
 
-    auto yhat = communication::Receiver::recv_matrix( _socket );
+    // auto yhat = communication::Receiver::recv_matrix( _socket );
 
     // ------------------------------------------------
     // Get the target data
 
     debug_log( "Getting targets..." );
 
-    auto y = communication::Receiver::recv_matrix( _socket );
+    // auto y = communication::Receiver::recv_matrix( _socket );
 
     // ------------------------------------------------
     // Make sure input is plausible
