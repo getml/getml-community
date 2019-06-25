@@ -34,7 +34,7 @@ void Sender::send_categorical_column(
     // ------------------------------------------------
 }
 
-// ------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 
 void Sender::send_features(
     const containers::Features& _features, Poco::Net::StreamSocket* _socket )
@@ -66,11 +66,11 @@ void Sender::send_features(
 
     const ULong size = nrows * ncols;
 
-    const ULong len = 16384;
+    constexpr ULong len = 16384;
 
     ULong ix = 0;
 
-    auto buffer = std::vector<Float>( len );
+    auto buffer = std::array<Float, len>();
 
     while ( true )
         {
@@ -103,7 +103,7 @@ void Sender::send_features(
     // ------------------------------------------------
 }
 
-// ------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 
 void Sender::send_column(
     const containers::Column<Float>& _col, Poco::Net::StreamSocket* _socket )

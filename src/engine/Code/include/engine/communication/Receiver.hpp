@@ -27,6 +27,10 @@ class Receiver
         const std::shared_ptr<const monitoring::Logger> &_logger,
         Poco::Net::StreamSocket *_socket );
 
+    /// Receives features from the client, transposing them.
+    static containers::Features recv_features(
+        Poco::Net::StreamSocket *_socket );
+
     /// Receives a Column from the client
     static containers::Column<Float> recv_column(
         Poco::Net::StreamSocket *_socket );

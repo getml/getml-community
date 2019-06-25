@@ -4,7 +4,7 @@ namespace engine
 {
 namespace communication
 {
-// ------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 
 containers::Column<Int> Receiver::recv_categorical_column(
     containers::Encoding *_encoding, Poco::Net::StreamSocket *_socket )
@@ -48,7 +48,7 @@ containers::Column<Int> Receiver::recv_categorical_column(
     // ------------------------------------------------
 }
 
-// ------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 
 Poco::JSON::Object Receiver::recv_cmd(
     const std::shared_ptr<const monitoring::Logger> &_logger,
@@ -86,7 +86,7 @@ Poco::JSON::Object Receiver::recv_cmd(
     // ------------------------------------------------
 }
 
-// ------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 
 containers::Column<Float> Receiver::recv_column(
     Poco::Net::StreamSocket *_socket )
@@ -132,7 +132,78 @@ containers::Column<Float> Receiver::recv_column(
     // ------------------------------------------------
 }
 
-// ------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+
+containers::Features Receiver::recv_features( Poco::Net::StreamSocket *_socket )
+{
+    // -------------------------------------------------------------------------
+    // Receive shape
+
+    std::array<Int, 2> shape;
+
+    recv<Int>( sizeof( Int ) * 2, _socket, shape.data() );
+
+    const auto nrows = std::get<0>( shape );
+    const auto ncols = std::get<1>( shape );
+
+    // -------------------------------------------------------------------------
+    // Init features
+
+    auto features = containers::Features( ncols );
+
+    for ( auto &f : features )
+        {
+            f = std::make_shared<std::vector<Float>>( nrows );
+        }
+
+    // -------------------------------------------------------------------------
+    // Recv actual data
+
+    const ULong size = nrows * ncols;
+
+    constexpr ULong len = 16384;
+
+    ULong ix = 0;
+
+    auto buffer = std::array<Float, len>();
+
+    while ( true )
+        {
+            // -----------------------------------------------------------------
+            // Recv into buffer.
+
+            const ULong current_len = std::min( len, size - ix );
+
+            if ( current_len == 0 )
+                {
+                    break;
+                }
+
+            Receiver::recv<Float>(
+                current_len * sizeof( Float ), _socket, buffer.data() );
+
+            // -----------------------------------------------------------------
+            // Copy from buffer into features.
+
+            for ( ULong ix2 = 0; ix2 < current_len; ++ix, ++ix2 )
+                {
+                    const ULong i = ix / ncols;
+                    const ULong j = ix % ncols;
+
+                    ( *features[j] )[i] = buffer[ix2];
+                }
+
+            // -----------------------------------------------------------------
+        }
+
+    // -------------------------------------------------------------------------
+
+    return features;
+
+    // -------------------------------------------------------------------------
+}
+
+// -----------------------------------------------------------------------------
 
 std::string Receiver::recv_string( Poco::Net::StreamSocket *_socket )
 {
@@ -162,6 +233,6 @@ std::string Receiver::recv_string( Poco::Net::StreamSocket *_socket )
     // ------------------------------------------------
 }
 
-// ------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 }  // namespace communication
 }  // namespace engine
