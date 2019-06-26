@@ -68,6 +68,12 @@ add_executable(
 )
 
 add_executable(
+	${RELBOOST_VERSION}-64bit-predictors-test
+  ${PREDICTORS_OBJ}
+	${PREDICTORS_SOURCE_DIRECTORY}/main.cpp
+)
+
+add_executable(
 	${RELBOOST_VERSION}-64bit-relboost-test
 	${RELBOOST_OBJ}
 	${METRICS_OBJ}
@@ -107,6 +113,18 @@ target_link_libraries(
     "${POCO_DIR}/lib/Linux/x86_64/libPocoFoundation.a"
 	pthread
 	dl
+)
+
+target_link_libraries(
+    ${RELBOOST_VERSION}-64bit-predictors-test
+    "${POCO_DIR}/lib/Linux/x86_64/libPocoNet.a"
+    "${POCO_DIR}/lib/Linux/x86_64/libPocoUtil.a"
+    "${POCO_DIR}/lib/Linux/x86_64/libPocoJSON.a"
+    "${POCO_DIR}/lib/Linux/x86_64/libPocoXML.a"
+    "${POCO_DIR}/lib/Linux/x86_64/libPocoFoundation.a"
+    "${XGBOOST_DIR}/lib/libxgboost.a"
+    "${XGBOOST_DIR}/rabit/lib/librabit.a"
+    "${XGBOOST_DIR}/dmlc-core/libdmlc.a"
 )
 
 target_link_libraries(

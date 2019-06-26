@@ -11,7 +11,10 @@ std::string LinearRegression::fit(
 {
     // -------------------------------------------------------------------------
 
-    _logger->log( "Training LinearRegression arithmetically..." );
+    if ( _logger )
+        {
+            _logger->log( "Training LinearRegression arithmetically..." );
+        }
 
     solve_arithmetically( _X, _y );
 
@@ -44,7 +47,7 @@ void LinearRegression::load( const std::string& _fname )
         }
 }
 
-// ------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 
 Poco::JSON::Object LinearRegression::load_json_obj(
     const std::string& _fname ) const
@@ -99,10 +102,10 @@ CFloatColumn LinearRegression::predict(
         {
             assert( _X[0]->size() == _X[j]->size() );
 
-            if ( predictions->size() != _X[j]->size() )
+            if ( !predictions )
                 {
                     predictions =
-                        std::make_shared<std::vector<Float>>( _X[j]->size() );
+                        std::make_shared<std::vector<Float>>( _X[0]->size() );
                 }
 
             for ( size_t i = 0; i < _X[j]->size(); ++i )
@@ -140,8 +143,8 @@ void LinearRegression::solve_arithmetically(
     // -------------------------------------------------------------------------
     // Calculate XtX
 
-    auto XtX = Eigen::Matrix<Float, Eigen::Dynamic, Eigen::Dynamic>(
-        _X.size() + 1, _X.size() + 1 );
+    // CAREFUL: Do NOT use "auto"!
+    Eigen::MatrixXd XtX = Eigen::MatrixXd( _X.size() + 1, _X.size() + 1 );
 
     for ( size_t i = 0; i < _X.size(); ++i )
         {
@@ -162,10 +165,13 @@ void LinearRegression::solve_arithmetically(
                 std::accumulate( _X[i]->begin(), _X[i]->end(), 0.0 );
         }
 
+    XtX( _X.size(), _X.size() ) = static_cast<Float>( _y->size() );
+
     // -------------------------------------------------------------------------
     // Calculate Xy
 
-    auto Xy = Eigen::Matrix<Float, Eigen::Dynamic, 1>( _X.size() + 1 );
+    // CAREFUL: Do NOT use "auto"!
+    Eigen::MatrixXd Xy = Eigen::MatrixXd( _X.size() + 1, 1 );
 
     assert( _y );
 
@@ -182,7 +188,8 @@ void LinearRegression::solve_arithmetically(
     // -------------------------------------------------------------------------
     // Calculate weights_
 
-    auto weights = XtX.fullPivLu().solve( Xy );
+    // CAREFUL: Do NOT use "auto"!
+    Eigen::MatrixXd weights = XtX.fullPivLu().solve( Xy );
 
     weights_.resize( _X.size() + 1 );
 
