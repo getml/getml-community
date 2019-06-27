@@ -35,6 +35,8 @@
 
 #include "predictors/JSON.hpp"
 
+#include "predictors/CSRMatrix.hpp"
+
 #include "predictors/Predictor.hpp"
 
 #include "predictors/LinearRegression.hpp"
