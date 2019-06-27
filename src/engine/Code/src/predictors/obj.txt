@@ -1,6 +1,7 @@
 set(
     PREDICTORS_OBJ
     ${PREDICTORS_SOURCE_DIRECTORY}/CSRMatrix.cpp
+    ${PREDICTORS_SOURCE_DIRECTORY}/Encoding.cpp
     ${PREDICTORS_SOURCE_DIRECTORY}/LinearRegression.cpp
     ${PREDICTORS_SOURCE_DIRECTORY}/PredictorParser.cpp
     ${PREDICTORS_SOURCE_DIRECTORY}/XGBoostHyperparams.cpp

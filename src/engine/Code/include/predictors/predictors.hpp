@@ -9,6 +9,7 @@
 #include <fstream>
 #include <memory>
 #include <numeric>
+#include <unordered_map>
 #include <vector>
 
 #include "Poco/JSON/Array.h"
@@ -36,6 +37,7 @@
 #include "predictors/JSON.hpp"
 
 #include "predictors/CSRMatrix.hpp"
+#include "predictors/Encoding.hpp"
 
 #include "predictors/Predictor.hpp"
 
