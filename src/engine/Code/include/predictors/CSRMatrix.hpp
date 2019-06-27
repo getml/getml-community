@@ -17,7 +17,7 @@ class CSRMatrix
     CSRMatrix( const CFloatColumn& _col );
 
     /// Constructs a CSRMatrix from a categorical column.
-    CSRMatrix( const CIntColumn& _col );
+    CSRMatrix( const CIntColumn& _col, const size_t _n_unique );
 
     // -----------------------------------------------------------
 
@@ -26,7 +26,7 @@ class CSRMatrix
     void add( const CFloatColumn& _col );
 
     /// Adds a categorical column.
-    void add( const CIntColumn& _col );
+    void add( const CIntColumn& _col, const size_t _n_unique );
 
     // -----------------------------------------------------------
 
