@@ -2,7 +2,7 @@
 
 namespace predictors
 {
-// ------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 
 std::unique_ptr<BoosterHandle, XGBoostPredictor::BoosterDestructor>
 XGBoostPredictor::allocate_booster(
@@ -21,10 +21,26 @@ XGBoostPredictor::allocate_booster(
         booster, &XGBoostPredictor::delete_booster );
 }
 
-// ------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 
 std::unique_ptr<DMatrixHandle, XGBoostPredictor::DMatrixDestructor>
 XGBoostPredictor::convert_to_dmatrix(
+    const std::vector<CFloatColumn> &_X ) const
+{
+    if ( hyperparams_.include_categorical_ )
+        {
+            return convert_to_dmatrix_sparse( _X );
+        }
+    else
+        {
+            return convert_to_dmatrix_dense( _X );
+        }
+}
+
+// -----------------------------------------------------------------------------
+
+std::unique_ptr<DMatrixHandle, XGBoostPredictor::DMatrixDestructor>
+XGBoostPredictor::convert_to_dmatrix_dense(
     const std::vector<CFloatColumn> &_X ) const
 {
     if ( _X.size() == 0 )
@@ -56,14 +72,49 @@ XGBoostPredictor::convert_to_dmatrix(
         {
             delete d_matrix;
 
-            throw std::runtime_error( "Creating XGBoost DMatrix failed!" );
+            throw std::runtime_error(
+                "Creating XGBoost DMatrix from Matrix failed!" );
         }
 
     return std::unique_ptr<DMatrixHandle, XGBoostPredictor::DMatrixDestructor>(
         d_matrix, &XGBoostPredictor::delete_dmatrix );
 }
 
-// ------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+
+std::unique_ptr<DMatrixHandle, XGBoostPredictor::DMatrixDestructor>
+XGBoostPredictor::convert_to_dmatrix_sparse(
+    const std::vector<CFloatColumn> &_X ) const
+{
+    auto csr_mat = CSRMatrix<float, unsigned int, size_t>();
+
+    for ( const auto col : _X )
+        {
+            csr_mat.add( col );
+        }
+
+    DMatrixHandle *d_matrix = new DMatrixHandle;
+
+    if ( XGDMatrixCreateFromCSREx(
+             csr_mat.indptr(),
+             csr_mat.indices(),
+             csr_mat.data(),
+             csr_mat.nrows() + 1,
+             csr_mat.size(),
+             csr_mat.ncols(),
+             d_matrix ) != 0 )
+        {
+            delete d_matrix;
+
+            throw std::runtime_error(
+                "Creating XGBoost DMatrix from CSRMatrix failed!" );
+        }
+
+    return std::unique_ptr<DMatrixHandle, XGBoostPredictor::DMatrixDestructor>(
+        d_matrix, &XGBoostPredictor::delete_dmatrix );
+}
+
+// -----------------------------------------------------------------------------
 
 std::vector<Float> XGBoostPredictor::feature_importances(
     const size_t _num_features ) const
@@ -121,7 +172,7 @@ std::vector<Float> XGBoostPredictor::feature_importances(
     return feature_importances;
 }
 
-// ------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 
 std::string XGBoostPredictor::fit(
     const std::shared_ptr<const logging::AbstractLogger> _logger,
@@ -324,7 +375,7 @@ std::string XGBoostPredictor::fit(
     return msg.str();
 }
 
-// ------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 
 void XGBoostPredictor::load( const std::string &_fname )
 {
@@ -358,7 +409,7 @@ void XGBoostPredictor::load( const std::string &_fname )
     // --------------------------------------------------------------------
 }
 
-// ------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 
 void XGBoostPredictor::parse_dump(
     const std::string &_dump, std::vector<Float> *_feature_importances ) const
@@ -445,7 +496,7 @@ void XGBoostPredictor::parse_dump(
         }
 }
 
-// ------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 
 CFloatColumn XGBoostPredictor::predict(
     const std::vector<CFloatColumn> &_X ) const
@@ -501,7 +552,7 @@ CFloatColumn XGBoostPredictor::predict(
     // --------------------------------------------------------------------
 }
 
-// ------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 
 void XGBoostPredictor::save( const std::string &_fname ) const
 {
@@ -533,5 +584,5 @@ void XGBoostPredictor::save( const std::string &_fname ) const
     // --------------------------------------------------------------------
 }
 
-// ------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 }  // namespace predictors

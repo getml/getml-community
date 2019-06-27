@@ -90,6 +90,14 @@ class XGBoostPredictor : public Predictor
     std::unique_ptr<DMatrixHandle, DMatrixDestructor> convert_to_dmatrix(
         const std::vector<CFloatColumn>& _X ) const;
 
+    /// Convert matrix _mat to a dense DMatrixHandle
+    std::unique_ptr<DMatrixHandle, DMatrixDestructor> convert_to_dmatrix_dense(
+        const std::vector<CFloatColumn>& _X ) const;
+
+    /// Convert matrix _mat to a sparse DMatrixHandle
+    std::unique_ptr<DMatrixHandle, DMatrixDestructor> convert_to_dmatrix_sparse(
+        const std::vector<CFloatColumn>& _X ) const;
+
     /// Extracts feature importances from XGBoost dump
     void parse_dump(
         const std::string& _dump,
