@@ -6,7 +6,8 @@ namespace predictors
 
 std::string LinearRegression::fit(
     const std::shared_ptr<const logging::AbstractLogger> _logger,
-    const std::vector<CFloatColumn>& _X,
+    const std::vector<CIntColumn>& _X_categorical,
+    const std::vector<CFloatColumn>& _X_numerical,
     const CFloatColumn& _y )
 {
     // -------------------------------------------------------------------------
@@ -16,7 +17,7 @@ std::string LinearRegression::fit(
             _logger->log( "Training LinearRegression arithmetically..." );
         }
 
-    solve_arithmetically( _X, _y );
+    solve_arithmetically( _X_numerical, _y );
 
     // -------------------------------------------------------------------------
 
@@ -80,7 +81,8 @@ Poco::JSON::Object LinearRegression::load_json_obj(
 // -----------------------------------------------------------------------------
 
 CFloatColumn LinearRegression::predict(
-    const std::vector<CFloatColumn>& _X ) const
+    const std::vector<CIntColumn>& _X_categorical,
+    const std::vector<CFloatColumn>& _X_numerical ) const
 {
     if ( weights_.size() == 0 )
         {
@@ -88,35 +90,36 @@ CFloatColumn LinearRegression::predict(
                 "LinearRegression has not been trained!" );
         }
 
-    if ( weights_.size() != _X.size() + 1 )
+    if ( weights_.size() != _X_numerical.size() + 1 )
         {
             throw std::runtime_error(
                 "Incorrect number of features! Expected " +
                 std::to_string( weights_.size() - 1 ) + ", got " +
-                std::to_string( _X.size() ) + "." );
+                std::to_string( _X_numerical.size() ) + "." );
         }
 
     auto predictions = CFloatColumn();
 
-    for ( size_t j = 0; j < _X.size(); ++j )
+    for ( size_t j = 0; j < _X_numerical.size(); ++j )
         {
-            assert( _X[0]->size() == _X[j]->size() );
+            assert( _X_numerical[0]->size() == _X_numerical[j]->size() );
 
             if ( !predictions )
                 {
-                    predictions =
-                        std::make_shared<std::vector<Float>>( _X[0]->size() );
+                    predictions = std::make_shared<std::vector<Float>>(
+                        _X_numerical[0]->size() );
                 }
 
-            for ( size_t i = 0; i < _X[j]->size(); ++i )
+            for ( size_t i = 0; i < _X_numerical[j]->size(); ++i )
                 {
-                    ( *predictions )[i] += weights_[j] * ( *_X[j] )[i];
+                    ( *predictions )[i] +=
+                        weights_[j] * ( *_X_numerical[j] )[i];
                 }
         }
 
     for ( size_t i = 0; i < predictions->size(); ++i )
         {
-            ( *predictions )[i] += weights_[_X.size()];
+            ( *predictions )[i] += weights_[_X_numerical.size()];
         }
 
     return predictions;

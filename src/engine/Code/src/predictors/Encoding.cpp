@@ -4,31 +4,26 @@ namespace predictors
 {
 // -----------------------------------------------------------------------------
 
-CIntColumn Encoding::fit_transform( const CIntColumn& _col )
+void Encoding::fit( const CIntColumn& _col )
 {
     assert( _col );
 
-    auto output = std::make_shared<std::vector<Int>>( _col->size() );
+    min_ = *std::min_element( _col->begin(), _col->end() );
 
-    for ( size_t i = 0; i < _col->size(); ++i )
-        {
-            const auto val = ( *_col )[i];
+    max_ = *std::max_element( _col->begin(), _col->end() );
+}
 
-            const auto it = map_.find( val );
+// -----------------------------------------------------------------------------
 
-            if ( it == map_.end() )
-                {
-                    ( *output )[i] = static_cast<Int>( size() );
-                    map_[val] = ( *output )[i];
-                    vector_.push_back( ( *output )[i] );
-                }
-            else
-                {
-                    ( *output )[i] = it->second;
-                }
-        }
+Poco::JSON::Object Encoding::to_json_obj() const
+{
+    Poco::JSON::Object obj;
 
-    return output;
+    obj.set( "max_", max_ );
+
+    obj.set( "min_", min_ );
+
+    return obj;
 }
 
 // -----------------------------------------------------------------------------
@@ -41,17 +36,13 @@ CIntColumn Encoding::transform( const CIntColumn& _col ) const
 
     for ( size_t i = 0; i < _col->size(); ++i )
         {
-            const auto val = ( *_col )[i];
-
-            const auto it = map_.find( val );
-
-            if ( it == map_.end() )
+            if ( ( *_col )[i] < min_ || ( *_col )[i] > max_ )
                 {
                     ( *output )[i] = -1;
                 }
             else
                 {
-                    ( *output )[i] = it->second;
+                    ( *output )[i] = ( *_col )[i] - min_;
                 }
         }
 

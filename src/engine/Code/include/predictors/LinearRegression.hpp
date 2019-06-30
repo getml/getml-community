@@ -20,14 +20,17 @@ class LinearRegression : public Predictor
     /// Implements the fit(...) method in scikit-learn style
     std::string fit(
         const std::shared_ptr<const logging::AbstractLogger> _logger,
-        const std::vector<CFloatColumn>& _X,
+        const std::vector<CIntColumn>& _X_categorical,
+        const std::vector<CFloatColumn>& _X_numerical,
         const CFloatColumn& _y ) final;
 
     /// Loads the predictor
     void load( const std::string& _fname ) final;
 
     /// Implements the predict(...) method in scikit-learn style
-    CFloatColumn predict( const std::vector<CFloatColumn>& _X ) const final;
+    CFloatColumn predict(
+        const std::vector<CIntColumn>& _X_categorical,
+        const std::vector<CFloatColumn>& _X_numerical ) const final;
 
     /// Stores the predictor
     void save( const std::string& _fname ) const final;

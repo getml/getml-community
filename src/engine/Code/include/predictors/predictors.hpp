@@ -40,6 +40,7 @@
 #include "predictors/Encoding.hpp"
 
 #include "predictors/Predictor.hpp"
+#include "predictors/PredictorImpl.hpp"
 
 #include "predictors/LinearRegression.hpp"
 

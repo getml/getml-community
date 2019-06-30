@@ -105,11 +105,12 @@ class Model : public AbstractModel
         std::vector<std::shared_ptr<predictors::Predictor>>* _predictors,
         Poco::Net::StreamSocket* _socket );
 
-    /// Gets the numerical and discrete colnames from the population table that
-    /// haven't been marked "comparison only".
-    void get_colnames(
+    /// Gets the categorical columns in the population table that are to be
+    /// included in the predictor.
+    containers::CategoricalFeatures get_categorical_features(
         const Poco::JSON::Object& _cmd,
-        const std::map<std::string, containers::DataFrame>& _data_frames );
+        const std::map<std::string, containers::DataFrame>& _data_frames )
+        const;
 
     /// Initialize feature_selectors before fitting.
     void init_feature_selectors(
@@ -129,16 +130,16 @@ class Model : public AbstractModel
     /// Makes an array of colnames to be used for scoring.
     std::vector<std::string> make_feature_names() const;
 
+    /// Gets the categorical, numerical and discrete colnames from the
+    /// population table that haven't been marked "comparison only" and stores
+    /// them in a PredictorImpl object.
+    void make_predictor_impl(
+        const Poco::JSON::Object& _cmd,
+        const std::map<std::string, containers::DataFrame>& _data_frames );
+
     /// Helper function for saving a json object.
     void save_json_obj(
         const Poco::JSON::Object& _obj, const std::string& _fname ) const;
-
-    // Selects the discrete or numerical columns that have made the cut in the
-    // feature selection.
-    void select_cols(
-        const std::vector<size_t>& _index,
-        const size_t _ix_begin,
-        std::vector<std::string>* _colnames ) const;
 
     /// Undertakes the feature selection, if applicable.
     void select_features(
@@ -179,6 +180,20 @@ class Model : public AbstractModel
         return predictors_[_i];
     }
 
+    /// Trivial (private) accessor
+    predictors::PredictorImpl& predictor_impl()
+    {
+        assert( predictor_impl_ );
+        return *predictor_impl_;
+    }
+
+    /// Trivial (private) accessor
+    const predictors::PredictorImpl& predictor_impl() const
+    {
+        assert( predictor_impl_ );
+        return *predictor_impl_;
+    }
+
     /// Trivial (private) getter
     metrics::Scores& scores() { return scores_; }
 
@@ -191,16 +206,11 @@ class Model : public AbstractModel
     /// The underlying feature engineering algorithm.
     FeatureEngineererType feature_engineerer_;
 
-    /// Names of the discrete columns taken from the population table as
-    /// features.
-    std::vector<std::string> discrete_colnames_;
-
-    /// Names of the numerical columns taken from the population table as
-    /// features.
-    std::vector<std::string> numerical_colnames_;
-
     /// The hyperparameters used for fitting.
     Poco::JSON::Object predictor_hyperparameters_;
+
+    /// Pimpl for the predictors.
+    std::shared_ptr<predictors::PredictorImpl> predictor_impl_;
 
     /// The algorithm used for prediction (one for every target).
     std::vector<std::shared_ptr<predictors::Predictor>> predictors_;
@@ -258,6 +268,8 @@ Model<FeatureEngineererType>::Model(
           _encoding, load_json_obj( _path + "feature_engineerer.json" ) ),
       predictor_hyperparameters_(
           load_json_obj( _path + "predictor_hyperparameters.json" ) ),
+      predictor_impl_( std::make_shared<predictors::PredictorImpl>(
+          load_json_obj( _path + "impl.json" ) ) ),
       scores_( load_json_obj( _path + "scores.json" ) )
 
 {
@@ -307,12 +319,12 @@ void Model<FeatureEngineererType>::add_population_cols(
     const auto population_df =
         utils::Getter::get( population_name, _data_frames );
 
-    for ( const auto& col : discrete_colnames_ )
+    for ( const auto& col : predictor_impl().discrete_colnames() )
         {
             _features->push_back( population_df.discrete( col ).data_ptr() );
         }
 
-    for ( const auto& col : numerical_colnames_ )
+    for ( const auto& col : predictor_impl().numerical_colnames() )
         {
             _features->push_back( population_df.numerical( col ).data_ptr() );
         }
@@ -449,9 +461,8 @@ Poco::JSON::Object Model<FeatureEngineererType>::feature_importances()
 {
     // ----------------------------------------------------------------
 
-    const auto num_features = feature_engineerer().num_features() +
-                              discrete_colnames_.size() +
-                              numerical_colnames_.size();
+    const auto num_features =
+        feature_engineerer().num_features() + predictor_impl().num_columns();
 
     // ----------------------------------------------------------------
     // Extract feature importances
@@ -545,10 +556,10 @@ void Model<FeatureEngineererType>::fit(
     feature_engineerer().fit( population_table, peripheral_tables, _logger );
 
     // ------------------------------------------------
-    // Figure out which numerical and discrete columns in the population table
-    // should be used as additional features.
+    // Figure out which categorical, numerical and discrete columns in the
+    // population table should be used as additional features.
 
-    get_colnames( _cmd, _data_frames );
+    make_predictor_impl( _cmd, _data_frames );
 
     // ------------------------------------------------
     // Do feature selection, if applicable.
@@ -595,24 +606,35 @@ void Model<FeatureEngineererType>::fit(
         {
             assert( _predictors->size() == population_df.num_targets() );
 
-            auto features = transform( _cmd, _logger, _data_frames, _socket );
+            auto categorical_features =
+                get_categorical_features( _cmd, _data_frames );
+
+            predictor_impl().fit_encodings( categorical_features );
+
+            categorical_features =
+                predictor_impl().transform_encodings( categorical_features );
+
+            auto numerical_features =
+                transform( _cmd, _logger, _data_frames, _socket );
 
             for ( size_t i = 0; i < _predictors->size(); ++i )
                 {
                     ( *_predictors )[i]->fit(
                         _logger,
-                        features,
+                        categorical_features,
+                        numerical_features,
                         population_df.target( i ).data_ptr() );
                 }
         }
 }
 
-// ------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 template <typename FeatureEngineererType>
-void Model<FeatureEngineererType>::get_colnames(
+containers::CategoricalFeatures
+Model<FeatureEngineererType>::get_categorical_features(
     const Poco::JSON::Object& _cmd,
-    const std::map<std::string, containers::DataFrame>& _data_frames )
+    const std::map<std::string, containers::DataFrame>& _data_frames ) const
 {
     const auto population_name =
         JSON::get_value<std::string>( _cmd, "population_name_" );
@@ -620,32 +642,15 @@ void Model<FeatureEngineererType>::get_colnames(
     const auto population_df =
         utils::Getter::get( population_name, _data_frames );
 
-    discrete_colnames_.clear();
+    auto categorical_features = containers::CategoricalFeatures();
 
-    for ( size_t i = 0; i < population_df.num_discretes(); ++i )
+    for ( const auto& col : predictor_impl().categorical_colnames() )
         {
-            if ( population_df.discrete( i ).unit().find( "comparison only" ) !=
-                 std::string::npos )
-                {
-                    continue;
-                }
-
-            discrete_colnames_.push_back( population_df.discrete( i ).name() );
+            categorical_features.push_back(
+                population_df.categorical( col ).data_ptr() );
         }
 
-    numerical_colnames_.clear();
-
-    for ( size_t i = 0; i < population_df.num_numericals(); ++i )
-        {
-            if ( population_df.numerical( i ).unit().find(
-                     "comparison only" ) != std::string::npos )
-                {
-                    continue;
-                }
-
-            numerical_colnames_.push_back(
-                population_df.numerical( i ).name() );
-        }
+    return categorical_features;
 }
 
 // ----------------------------------------------------------------------------
@@ -667,10 +672,12 @@ void Model<FeatureEngineererType>::init_feature_selectors(
     const auto obj =
         *JSON::get_object( predictor_hyperparameters_, "feature_selector_" );
 
+    assert( predictor_impl_ );
+
     for ( size_t i = 0; i < _num_targets; ++i )
         {
             _feature_selectors->push_back(
-                predictors::PredictorParser::parse( obj ) );
+                predictors::PredictorParser::parse( obj, predictor_impl_ ) );
         }
 }
 
@@ -692,9 +699,12 @@ void Model<FeatureEngineererType>::init_predictors(
     const auto obj =
         *JSON::get_object( predictor_hyperparameters_, "predictor_" );
 
+    assert( predictor_impl_ );
+
     for ( size_t i = 0; i < _num_targets; ++i )
         {
-            _predictors->push_back( predictors::PredictorParser::parse( obj ) );
+            _predictors->push_back(
+                predictors::PredictorParser::parse( obj, predictor_impl_ ) );
         }
 }
 
@@ -742,17 +752,74 @@ std::vector<std::string> Model<FeatureEngineererType>::make_feature_names()
             feature_names.push_back( "FEATURE_" + std::to_string( i + 1 ) );
         }
 
-    for ( const auto& col : discrete_colnames_ )
+    for ( const auto& col : predictor_impl().discrete_colnames() )
         {
             feature_names.push_back( col );
         }
 
-    for ( const auto& col : numerical_colnames_ )
+    for ( const auto& col : predictor_impl().numerical_colnames() )
         {
             feature_names.push_back( col );
         }
 
     return feature_names;
+}
+
+// ------------------------------------------------------------------------
+
+template <typename FeatureEngineererType>
+void Model<FeatureEngineererType>::make_predictor_impl(
+    const Poco::JSON::Object& _cmd,
+    const std::map<std::string, containers::DataFrame>& _data_frames )
+{
+    const auto population_name =
+        JSON::get_value<std::string>( _cmd, "population_name_" );
+
+    const auto population_df =
+        utils::Getter::get( population_name, _data_frames );
+
+    auto categorical_colnames = std::vector<std::string>();
+
+    for ( size_t i = 0; i < population_df.num_categoricals(); ++i )
+        {
+            if ( population_df.categorical( i ).unit().find(
+                     "comparison only" ) != std::string::npos )
+                {
+                    continue;
+                }
+
+            categorical_colnames.push_back(
+                population_df.categorical( i ).name() );
+        }
+
+    auto discrete_colnames = std::vector<std::string>();
+
+    for ( size_t i = 0; i < population_df.num_discretes(); ++i )
+        {
+            if ( population_df.discrete( i ).unit().find( "comparison only" ) !=
+                 std::string::npos )
+                {
+                    continue;
+                }
+
+            discrete_colnames.push_back( population_df.discrete( i ).name() );
+        }
+
+    auto numerical_colnames = std::vector<std::string>();
+
+    for ( size_t i = 0; i < population_df.num_numericals(); ++i )
+        {
+            if ( population_df.numerical( i ).unit().find(
+                     "comparison only" ) != std::string::npos )
+                {
+                    continue;
+                }
+
+            numerical_colnames.push_back( population_df.numerical( i ).name() );
+        }
+
+    predictor_impl_ = std::make_shared<predictors::PredictorImpl>(
+        categorical_colnames, discrete_colnames, numerical_colnames );
 }
 
 // ----------------------------------------------------------------------------
@@ -775,6 +842,8 @@ void Model<FeatureEngineererType>::save( const std::string& _path ) const
 
     save_json_obj(
         predictor_hyperparameters_, _path + "predictor_hyperparameters.json" );
+
+    predictor_impl().save( _path + "impl.json" );
 
     for ( size_t i = 0; i < num_predictors(); ++i )
         {
@@ -863,44 +932,6 @@ Poco::JSON::Object Model<FeatureEngineererType>::score(
 // ----------------------------------------------------------------------------
 
 template <typename FeatureEngineererType>
-void Model<FeatureEngineererType>::select_cols(
-    const std::vector<size_t>& _index,
-    const size_t _ix_begin,
-    std::vector<std::string>* _colnames ) const
-{
-    const auto n_selected =
-        ( feature_engineerer().hyperparameters().num_selected_features_ > 0 &&
-          feature_engineerer().hyperparameters().num_selected_features_ <
-              _index.size() )
-            ? ( feature_engineerer().hyperparameters().num_selected_features_ )
-            : ( _index.size() );
-
-    std::vector<std::string> selected;
-
-    const auto begin = _index.begin();
-
-    const auto end = _index.begin() + n_selected;
-
-    for ( size_t i = 0; i < _colnames->size(); ++i )
-        {
-            const auto is_included = [_ix_begin, i]( size_t ix ) {
-                return ix == _ix_begin + i;
-            };
-
-            const auto it = std::find_if( begin, end, is_included );
-
-            if ( it != end )
-                {
-                    selected.push_back( ( *_colnames )[i] );
-                }
-        }
-
-    *_colnames = selected;
-}
-
-// ----------------------------------------------------------------------------
-
-template <typename FeatureEngineererType>
 void Model<FeatureEngineererType>::select_features(
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<const monitoring::Logger>& _logger,
@@ -943,9 +974,8 @@ void Model<FeatureEngineererType>::select_features(
     // ------------------------------------------------------------------------
     // Calculate sum of feature importances.
 
-    const auto num_features = feature_engineerer().num_features() +
-                              discrete_colnames_.size() +
-                              numerical_colnames_.size();
+    const auto num_features =
+        feature_engineerer().num_features() + predictor_impl().num_columns();
 
     std::vector<Float> feature_importances( num_features );
 
@@ -980,17 +1010,18 @@ void Model<FeatureEngineererType>::select_features(
         } );
 
     // ------------------------------------------------------------------------
-    // Select the discrete and numerical columns that have made the cut. Begin
-    // with the numerical ones, because ix_begin depends on the number for
-    // discrete columns.
+    // Select the categorical, discrete and numerical columns that have made the
+    // cut.
 
-    select_cols(
-        index,
-        feature_engineerer().num_features() + discrete_colnames_.size(),
-        &numerical_colnames_ );
+    const auto n_selected =
+        ( feature_engineerer().hyperparameters().num_selected_features_ > 0 &&
+          feature_engineerer().hyperparameters().num_selected_features_ <
+              index.size() )
+            ? ( feature_engineerer().hyperparameters().num_selected_features_ )
+            : ( index.size() );
 
-    select_cols(
-        index, feature_engineerer().num_features(), &discrete_colnames_ );
+    predictor_impl().select_cols(
+        n_selected, feature_engineerer().num_features(), index );
 
     // ------------------------------------------------------------------------
     // Tell the feature engineerer to select these features.
@@ -1009,7 +1040,7 @@ containers::Features Model<FeatureEngineererType>::transform(
     const std::map<std::string, containers::DataFrame>& _data_frames,
     Poco::Net::StreamSocket* _socket )
 {
-    // ------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Extract the peripheral tables
 
     auto peripheral_names = JSON::array_to_vector<std::string>(
@@ -1027,7 +1058,7 @@ containers::Features Model<FeatureEngineererType>::transform(
             peripheral_tables.push_back( df );
         }
 
-    // ------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Extract the population table
 
     const auto population_name =
@@ -1037,38 +1068,54 @@ containers::Features Model<FeatureEngineererType>::transform(
         extract_df<typename FeatureEngineererType::DataFrameType>(
             population_name, _data_frames );
 
-    // ------------------------------------------------------------------------
-    // Generate the features
+    // -------------------------------------------------------------------------
+    // Generate the features.
 
-    auto features = feature_engineerer().transform(
+    auto numerical_features = feature_engineerer().transform(
         population_table, peripheral_tables, _logger );
 
-    // ------------------------------------------------------------------------
-    // Add numerical and discrete columns from the population table, if they
-    // aren't marked "comparison only".
+    // -------------------------------------------------------------------------
+    // Add the discrete and numerical columns from the population table.
 
-    add_population_cols( _cmd, _data_frames, &features );
+    add_population_cols( _cmd, _data_frames, &numerical_features );
 
-    // ------------------------------------------------------------------------
-    // Get the feature importances, if applicable.
+    // -------------------------------------------------------------------------
+    // If we do not want to score or predict, then we can stop here.
 
     const bool score =
         _cmd.has( "score_" ) && JSON::get_value<bool>( _cmd, "score_" );
 
-    const auto ncols = features.size();
+    const bool predict =
+        _cmd.has( "predict_" ) && JSON::get_value<bool>( _cmd, "predict_" );
+
+    if ( !score && !predict )
+        {
+            return numerical_features;
+        }
+
+    // -------------------------------------------------------------------------
+    // Retrieve the categorical features.
+
+    auto categorical_features = get_categorical_features( _cmd, _data_frames );
+
+    categorical_features =
+        predictor_impl().transform_encodings( categorical_features );
+
+    // -------------------------------------------------------------------------
+    // Get the feature importances, if applicable.
+
+    const auto ncols = numerical_features.size();
 
     if ( score && ncols > 0 )
         {
-            const auto nrows = features[0]->size();
+            const auto nrows = numerical_features[0]->size();
 
-            calculate_feature_stats( features, nrows, ncols, population_table );
+            calculate_feature_stats(
+                numerical_features, nrows, ncols, population_table );
         }
 
-    // ------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Generate predictions, if applicable.
-
-    const bool predict =
-        _cmd.has( "predict_" ) && JSON::get_value<bool>( _cmd, "predict_" );
 
     if ( predict && num_predictors() > 0 )
         {
@@ -1076,15 +1123,15 @@ containers::Features Model<FeatureEngineererType>::transform(
 
             for ( size_t i = 0; i < num_predictors(); ++i )
                 {
-                    predictions.push_back(
-                        predictor( i )->predict( features ) );
+                    predictions.push_back( predictor( i )->predict(
+                        categorical_features, numerical_features ) );
                 }
 
             return predictions;
         }
     else
         {
-            return features;
+            return numerical_features;
         }
 
     // ------------------------------------------------------------------------

@@ -48,6 +48,7 @@
 // ----------------------------------------------------
 // Module files
 
+#include "engine/containers/CategoricalFeatures.hpp"
 #include "engine/containers/Features.hpp"
 
 #include "engine/containers/Column.hpp"

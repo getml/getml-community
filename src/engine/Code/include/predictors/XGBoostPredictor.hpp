@@ -21,8 +21,10 @@ class XGBoostPredictor : public Predictor
     // -----------------------------------------
 
    public:
-    XGBoostPredictor( const XGBoostHyperparams& _hyperparams )
-        : hyperparams_( _hyperparams )
+    XGBoostPredictor(
+        const XGBoostHyperparams& _hyperparams,
+        const std::shared_ptr<const PredictorImpl>& _impl )
+        : hyperparams_( _hyperparams ), impl_( _impl )
     {
     }
 
@@ -41,11 +43,14 @@ class XGBoostPredictor : public Predictor
     /// Implements the fit(...) method in scikit-learn style
     std::string fit(
         const std::shared_ptr<const logging::AbstractLogger> _logger,
-        const std::vector<CFloatColumn>& _X,
+        const std::vector<CIntColumn>& _X_categorical,
+        const std::vector<CFloatColumn>& _X_numerical,
         const CFloatColumn& _y ) final;
 
     /// Implements the predict(...) method in scikit-learn style
-    CFloatColumn predict( const std::vector<CFloatColumn>& _X ) const final;
+    CFloatColumn predict(
+        const std::vector<CIntColumn>& _X_categorical,
+        const std::vector<CFloatColumn>& _X_numerical ) const final;
 
     /// Saves the predictor
     void save( const std::string& _fname ) const final;
@@ -66,6 +71,13 @@ class XGBoostPredictor : public Predictor
         XGDMatrixFree( *_ptr );
         delete _ptr;
     };
+
+    /// Trivial (private) accessor.
+    const PredictorImpl& impl() const
+    {
+        assert( impl_ );
+        return *impl_;
+    }
 
     /// Returns size of the underlying model
     const bst_ulong len() const
@@ -88,15 +100,17 @@ class XGBoostPredictor : public Predictor
 
     /// Convert matrix _mat to a DMatrixHandle
     std::unique_ptr<DMatrixHandle, DMatrixDestructor> convert_to_dmatrix(
-        const std::vector<CFloatColumn>& _X ) const;
+        const std::vector<CIntColumn>& _X_categorical,
+        const std::vector<CFloatColumn>& _X_numerical ) const;
 
     /// Convert matrix _mat to a dense DMatrixHandle
     std::unique_ptr<DMatrixHandle, DMatrixDestructor> convert_to_dmatrix_dense(
-        const std::vector<CFloatColumn>& _X ) const;
+        const std::vector<CFloatColumn>& _X_numerical ) const;
 
     /// Convert matrix _mat to a sparse DMatrixHandle
     std::unique_ptr<DMatrixHandle, DMatrixDestructor> convert_to_dmatrix_sparse(
-        const std::vector<CFloatColumn>& _X ) const;
+        const std::vector<CIntColumn>& _X_categorical,
+        const std::vector<CFloatColumn>& _X_numerical ) const;
 
     /// Extracts feature importances from XGBoost dump
     void parse_dump(
@@ -106,11 +120,14 @@ class XGBoostPredictor : public Predictor
     // -----------------------------------------
 
    private:
-    /// The underlying XGBoost model, expressed in bytes
-    std::vector<char> model_;
-
     /// Hyperparameters for XGBoostPredictor
     const XGBoostHyperparams hyperparams_;
+
+    /// Implementation class for member functions common to most predictors.
+    std::shared_ptr<const PredictorImpl> impl_;
+
+    /// The underlying XGBoost model, expressed in bytes
+    std::vector<char> model_;
 };
 
 // ------------------------------------------------------------------------

@@ -10,36 +10,46 @@ class Encoding
    public:
     Encoding() {}
 
+    Encoding( const Poco::JSON::Object& _obj )
+        : max_( JSON::get_value<Int>( _obj, "max_" ) ),
+          min_( JSON::get_value<Int>( _obj, "min_" ) )
+    {
+    }
+
     ~Encoding() = default;
 
     // -------------------------------
 
     /// Adds column to map or vector, returning the transformed column.
-    CIntColumn fit_transform( const CIntColumn& _val );
+    void fit( const CIntColumn& _val );
+
+    /// Transform Encoding to JSON object.
+    Poco::JSON::Object to_json_obj() const;
 
     /// Transforms the column to the mapped integers.
     CIntColumn transform( const CIntColumn& _val ) const;
 
     // -------------------------------
 
-    /// Deletes all entries
-    void clear() { *this = Encoding(); }
-
-    /// Number of encoded elements
-    size_t size() const
+    /// Size means the number of elements in this column.
+    Int n_unique() const
     {
-        assert( map_.size() == vector_.size() );
-        return vector_.size();
+        if ( min_ > max_ )
+            {
+                throw std::runtime_error( "Encoding has not been fitted!" );
+            }
+
+        return max_ - min_ + 1;
     }
 
     // -------------------------------
 
    private:
-    /// Maps original integers to condensed integers.
-    std::unordered_map<Int, Int> map_;
+    /// Maximum integer found.
+    Int max_;
 
-    /// Maps condensed integers to original integers.
-    std::vector<Int> vector_;
+    /// Minimum integer found.
+    Int min_;
 
     // -------------------------------
 };

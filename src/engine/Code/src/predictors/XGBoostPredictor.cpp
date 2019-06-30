@@ -25,15 +25,16 @@ XGBoostPredictor::allocate_booster(
 
 std::unique_ptr<DMatrixHandle, XGBoostPredictor::DMatrixDestructor>
 XGBoostPredictor::convert_to_dmatrix(
-    const std::vector<CFloatColumn> &_X ) const
+    const std::vector<CIntColumn> &_X_categorical,
+    const std::vector<CFloatColumn> &_X_numerical ) const
 {
-    if ( hyperparams_.include_categorical_ )
+    if ( _X_categorical.size() > 0 )
         {
-            return convert_to_dmatrix_sparse( _X );
+            return convert_to_dmatrix_sparse( _X_categorical, _X_numerical );
         }
     else
         {
-            return convert_to_dmatrix_dense( _X );
+            return convert_to_dmatrix_dense( _X_numerical );
         }
 }
 
@@ -41,34 +42,40 @@ XGBoostPredictor::convert_to_dmatrix(
 
 std::unique_ptr<DMatrixHandle, XGBoostPredictor::DMatrixDestructor>
 XGBoostPredictor::convert_to_dmatrix_dense(
-    const std::vector<CFloatColumn> &_X ) const
+    const std::vector<CFloatColumn> &_X_numerical ) const
 {
-    if ( _X.size() == 0 )
+    if ( _X_numerical.size() == 0 )
         {
             throw std::invalid_argument(
                 "You must provide at least one column of data!" );
         }
 
-    std::vector<float> mat_float( _X.size() * _X[0]->size() );
+    std::vector<float> mat_float(
+        _X_numerical.size() * _X_numerical[0]->size() );
 
-    for ( size_t j = 0; j < _X.size(); ++j )
+    for ( size_t j = 0; j < _X_numerical.size(); ++j )
         {
-            if ( _X[j]->size() != _X[0]->size() )
+            if ( _X_numerical[j]->size() != _X_numerical[0]->size() )
                 {
                     throw std::invalid_argument(
                         "All columns must have the same length!" );
                 }
 
-            for ( size_t i = 0; i < _X[j]->size(); ++i )
+            for ( size_t i = 0; i < _X_numerical[j]->size(); ++i )
                 {
-                    mat_float[i * _X.size() + j] = ( *_X[j] )[i];
+                    mat_float[i * _X_numerical.size() + j] =
+                        ( *_X_numerical[j] )[i];
                 }
         }
 
     DMatrixHandle *d_matrix = new DMatrixHandle;
 
     if ( XGDMatrixCreateFromMat(
-             mat_float.data(), _X[0]->size(), _X.size(), -1, d_matrix ) != 0 )
+             mat_float.data(),
+             _X_numerical[0]->size(),
+             _X_numerical.size(),
+             -1,
+             d_matrix ) != 0 )
         {
             delete d_matrix;
 
@@ -84,13 +91,27 @@ XGBoostPredictor::convert_to_dmatrix_dense(
 
 std::unique_ptr<DMatrixHandle, XGBoostPredictor::DMatrixDestructor>
 XGBoostPredictor::convert_to_dmatrix_sparse(
-    const std::vector<CFloatColumn> &_X ) const
+    const std::vector<CIntColumn> &_X_categorical,
+    const std::vector<CFloatColumn> &_X_numerical ) const
 {
+    if ( impl().n_encodings() != _X_categorical.size() )
+        {
+            throw std::invalid_argument(
+                "Expected " + std::to_string( impl().n_encodings() ) +
+                " categorical columns, got " +
+                std::to_string( _X_categorical.size() ) + "." );
+        }
+
     auto csr_mat = CSRMatrix<float, unsigned int, size_t>();
 
-    for ( const auto col : _X )
+    for ( const auto col : _X_numerical )
         {
             csr_mat.add( col );
+        }
+
+    for ( size_t i = 0; i < _X_categorical.size(); ++i )
+        {
+            csr_mat.add( _X_categorical[i], impl().n_unique( i ) );
         }
 
     DMatrixHandle *d_matrix = new DMatrixHandle;
@@ -176,7 +197,8 @@ std::vector<Float> XGBoostPredictor::feature_importances(
 
 std::string XGBoostPredictor::fit(
     const std::shared_ptr<const logging::AbstractLogger> _logger,
-    const std::vector<CFloatColumn> &_X,
+    const std::vector<CIntColumn> &_X_categorical,
+    const std::vector<CFloatColumn> &_X_numerical,
     const CFloatColumn &_y )
 {
     // --------------------------------------------------------------------
@@ -186,12 +208,12 @@ std::string XGBoostPredictor::fit(
     // --------------------------------------------------------------------
     // Build DMatrix
 
-    auto d_matrix = convert_to_dmatrix( _X );
+    auto d_matrix = convert_to_dmatrix( _X_categorical, _X_numerical );
 
     // convert_to_dmatrix(...) should make sure of this.
-    assert( _X.size() > 0 );
+    assert( _X_numerical.size() > 0 );
 
-    if ( _y->size() != _X[0]->size() )
+    if ( _y->size() != _X_numerical[0]->size() )
         {
             throw std::invalid_argument(
                 "Targets must have same length as input data!" );
@@ -499,7 +521,8 @@ void XGBoostPredictor::parse_dump(
 // -----------------------------------------------------------------------------
 
 CFloatColumn XGBoostPredictor::predict(
-    const std::vector<CFloatColumn> &_X ) const
+    const std::vector<CIntColumn> &_X_categorical,
+    const std::vector<CFloatColumn> &_X_numerical ) const
 {
     // --------------------------------------------------------------------
 
@@ -511,7 +534,7 @@ CFloatColumn XGBoostPredictor::predict(
     // --------------------------------------------------------------------
     // Build DMatrix
 
-    auto d_matrix = convert_to_dmatrix( _X );
+    auto d_matrix = convert_to_dmatrix( _X_categorical, _X_numerical );
 
     // --------------------------------------------------------------------
     // Reload the booster
@@ -526,7 +549,7 @@ CFloatColumn XGBoostPredictor::predict(
     // --------------------------------------------------------------------
     // Generate predictions
 
-    auto yhat = std::make_shared<std::vector<Float>>( _X[0]->size() );
+    auto yhat = std::make_shared<std::vector<Float>>( _X_numerical[0]->size() );
 
     bst_ulong nrows = 0;
 

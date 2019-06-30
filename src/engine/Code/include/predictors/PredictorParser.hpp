@@ -10,7 +10,8 @@ struct PredictorParser
     /// Given the _tree, return a shared pointer containing the appropriate
     /// metric.
     static std::shared_ptr<Predictor> parse(
-        const Poco::JSON::Object &_json_obj );
+        const Poco::JSON::Object& _json_obj,
+        const std::shared_ptr<const PredictorImpl>& _impl );
 };
 
 // ----------------------------------------------------------------------

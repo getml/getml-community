@@ -24,7 +24,8 @@ class Predictor
     /// Implements the fit(...) method in scikit-learn style
     virtual std::string fit(
         const std::shared_ptr<const logging::AbstractLogger> _logger,
-        const std::vector<CFloatColumn>& _X,
+        const std::vector<CIntColumn>& _X_categorical,
+        const std::vector<CFloatColumn>& _X_numerical,
         const CFloatColumn& _y ) = 0;
 
     /// Loads the predictor
@@ -32,7 +33,8 @@ class Predictor
 
     /// Implements the predict(...) method in scikit-learn style
     virtual CFloatColumn predict(
-        const std::vector<CFloatColumn>& _X ) const = 0;
+        const std::vector<CIntColumn>& _X_categorical,
+        const std::vector<CFloatColumn>& _X_numerical ) const = 0;
 
     /// Stores the predictor
     virtual void save( const std::string& _fname ) const = 0;
