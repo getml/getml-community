@@ -10,5 +10,7 @@ int main( int argc, char* argv[] )
 
     test1_linear_regression_dense();
 
+    test2_csr_matrix();
+
     return 0;
 }
