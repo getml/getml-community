@@ -1,6 +1,7 @@
 {
     "aggregation_": ["SUM", "COUNT"],
     "fast_training_": false,
+    "include_categorical_": true,
     "loss_function_": "SquareLoss",
     "num_features_": 10,
     "num_selected_features_": 10,

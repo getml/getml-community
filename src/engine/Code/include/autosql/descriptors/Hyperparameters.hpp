@@ -38,6 +38,10 @@ struct Hyperparameters
     /// Determines whether max_length_probe == max_length
     const bool fast_training_;
 
+    /// Whether we want categorical columns from the population table to be
+    /// included in our prediction.
+    const bool include_categorical_;
+
     /// The loss function to be used
     const std::string loss_function_;
 

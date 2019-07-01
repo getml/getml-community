@@ -636,13 +636,18 @@ Model<FeatureEngineererType>::get_categorical_features(
     const Poco::JSON::Object& _cmd,
     const std::map<std::string, containers::DataFrame>& _data_frames ) const
 {
+    auto categorical_features = containers::CategoricalFeatures();
+
+    if ( !feature_engineerer().hyperparameters().include_categorical_ )
+        {
+            return categorical_features;
+        }
+
     const auto population_name =
         JSON::get_value<std::string>( _cmd, "population_name_" );
 
     const auto population_df =
         utils::Getter::get( population_name, _data_frames );
-
-    auto categorical_features = containers::CategoricalFeatures();
 
     for ( const auto& col : predictor_impl().categorical_colnames() )
         {

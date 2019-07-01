@@ -35,9 +35,6 @@ struct XGBoostHyperparams
     /// node of the tree.
     const Float gamma_;
 
-    /// Whether you want the XGBoostPredictor to include categorical columns.
-    const bool include_categorical_;
-
     /// L2 regularization term on weights
     const Float lambda_;
 

@@ -65,6 +65,10 @@ struct Hyperparameters
     /// node of the tree.
     const Float gamma_;
 
+    /// Whether we want categorical columns from the population table to be
+    /// included in our prediction.
+    const bool include_categorical_;
+
     /// L2 regularization term on weights
     const Float lambda_;
 

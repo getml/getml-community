@@ -10,6 +10,8 @@ Hyperparameters::Hyperparameters( const Poco::JSON::Object& _json_obj )
     : aggregations_( JSON::array_to_vector<std::string>(
           JSON::get_array( _json_obj, "aggregation_" ) ) ),
       fast_training_( JSON::get_value<bool>( _json_obj, "fast_training_" ) ),
+      include_categorical_(
+          JSON::get_value<bool>( _json_obj, "include_categorical_" ) ),
       loss_function_(
           JSON::get_value<std::string>( _json_obj, "loss_function_" ) ),
       num_features_( JSON::get_value<size_t>( _json_obj, "num_features_" ) ),
@@ -62,6 +64,8 @@ Poco::JSON::Object Hyperparameters::to_json_obj() const
     obj.set( "aggregation_", aggregations_ );
 
     obj.set( "allow_sets_", tree_hyperparameters_->allow_sets_ );
+
+    obj.set( "include_categorical_", include_categorical_ );
 
     obj.set( "loss_function_", loss_function_ );
 
