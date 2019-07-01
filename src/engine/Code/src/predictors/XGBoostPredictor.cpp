@@ -102,17 +102,8 @@ XGBoostPredictor::convert_to_dmatrix_sparse(
                 std::to_string( _X_categorical.size() ) + "." );
         }
 
-    auto csr_mat = CSRMatrix<float, unsigned int, size_t>();
-
-    for ( const auto col : _X_numerical )
-        {
-            csr_mat.add( col );
-        }
-
-    for ( size_t i = 0; i < _X_categorical.size(); ++i )
-        {
-            csr_mat.add( _X_categorical[i], impl().n_unique( i ) );
-        }
+    const auto csr_mat = impl().make_csr<float, unsigned int, size_t>(
+        _X_categorical, _X_numerical );
 
     DMatrixHandle *d_matrix = new DMatrixHandle;
 

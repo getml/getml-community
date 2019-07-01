@@ -53,7 +53,6 @@ void PredictorImpl::fit_encodings(
             encodings_.back().fit( col );
         }
 }
-
 // -------------------------------------------------------------------------
 
 void PredictorImpl::save( const std::string& _fname ) const

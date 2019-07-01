@@ -17,7 +17,14 @@ std::string LinearRegression::fit(
             _logger->log( "Training LinearRegression arithmetically..." );
         }
 
-    solve_arithmetically( _X_numerical, _y );
+    if ( _X_categorical.size() > 0 )
+        {
+            solve_numerically( _X_categorical, _X_numerical, _y );
+        }
+    else
+        {
+            solve_arithmetically( _X_numerical, _y );
+        }
 
     // -------------------------------------------------------------------------
 
@@ -205,6 +212,61 @@ void LinearRegression::solve_arithmetically(
     // Calculate feature_importances_
 
     // ...
+
+    // -------------------------------------------------------------------------
+}
+
+// -----------------------------------------------------------------------------
+
+void LinearRegression::solve_numerically(
+    const std::vector<CIntColumn>& _X_categorical,
+    const std::vector<CFloatColumn>& _X_numerical,
+    const CFloatColumn& _y )
+{
+    // -------------------------------------------------------------------------
+    // Build up CSRMatrix.
+
+    const auto csr_mat = impl().make_csr<Float, unsigned int, size_t>(
+        _X_categorical, _X_numerical );
+
+    // -------------------------------------------------------------------------
+    // Init weights.
+
+    std::mt19937 rng;
+
+    std::uniform_real_distribution<> dis( -1.0, 1.0 );
+
+    weights_ = std::vector<Float>( csr_mat.ncols() );
+
+    for ( auto& w : weights_ )
+        {
+            w = dis( rng );
+        }
+
+    // -------------------------------------------------------------------------
+    // Use the SGD algorithm to find the weights.
+
+    for ( size_t epoch = 0; epoch < 30; ++epoch )
+        {
+            for ( size_t i = 0; i < csr_mat.nrows(); ++i )
+                {
+                    const auto yhat = predict_sparse(
+                        csr_mat.indptr()[i],
+                        csr_mat.indptr()[i + 1],
+                        csr_mat.indices(),
+                        csr_mat.data() );
+
+                    const auto delta = yhat - ( *_y )[i];
+
+                    update_weights(
+                        csr_mat.indptr()[i],
+                        csr_mat.indptr()[i + 1],
+                        csr_mat.indices(),
+                        csr_mat.data(),
+                        delta,
+                        0.0001 );
+                }
+        }
 
     // -------------------------------------------------------------------------
 }

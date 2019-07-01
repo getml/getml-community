@@ -53,6 +53,12 @@ class PredictorImpl
     /// Fits the encodings.
     void fit_encodings( const std::vector<CIntColumn>& _X_categorical );
 
+    /// Generates a CSRMatrix from the categorical and numerical columns.
+    template <typename DataType, typename IndicesType, typename IndptrType>
+    CSRMatrix<DataType, IndicesType, IndptrType> make_csr(
+        const std::vector<CIntColumn>& _X_categorical,
+        const std::vector<CFloatColumn>& _X_numerical ) const;
+
     /// Select the columns that have made the cut during the feature selection.
     void select_cols(
         const size_t _n_selected,
@@ -161,6 +167,35 @@ class PredictorImpl
     // -----------------------------------------
 };
 
+// ----------------------------------------------------------------------------
+}  // namespace predictors
+
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+
+namespace predictors
+{
+// ----------------------------------------------------------------------------
+
+template <typename DataType, typename IndicesType, typename IndptrType>
+CSRMatrix<DataType, IndicesType, IndptrType> PredictorImpl::make_csr(
+    const std::vector<CIntColumn>& _X_categorical,
+    const std::vector<CFloatColumn>& _X_numerical ) const
+{
+    auto csr_mat = CSRMatrix<DataType, IndicesType, IndptrType>();
+
+    for ( const auto col : _X_numerical )
+        {
+            csr_mat.add( col );
+        }
+
+    for ( size_t i = 0; i < _X_categorical.size(); ++i )
+        {
+            csr_mat.add( _X_categorical[i], n_unique( i ) );
+        }
+
+    return csr_mat;
+}
 // ----------------------------------------------------------------------------
 }  // namespace predictors
 

@@ -32,7 +32,13 @@ void test1_linear_regression_dense()
                         7.0 * ( *X_numerical[2] )[i] + 2.0;
         }
 
-    auto lin_reg = predictors::LinearRegression();
+    const auto impl = std::make_shared<predictors::PredictorImpl>(
+        std::vector<std::string>(),
+        std::vector<std::string>(),
+        std::vector<std::string>(),
+        3 );
+
+    auto lin_reg = predictors::LinearRegression( impl );
 
     lin_reg.fit(
         std::shared_ptr<const logging::AbstractLogger>(),
