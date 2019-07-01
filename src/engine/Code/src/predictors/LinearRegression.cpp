@@ -12,17 +12,23 @@ std::string LinearRegression::fit(
 {
     // -------------------------------------------------------------------------
 
-    if ( _logger )
-        {
-            _logger->log( "Training LinearRegression arithmetically..." );
-        }
-
     if ( _X_categorical.size() > 0 )
         {
+            if ( _logger )
+                {
+                    _logger->log( "Training LinearRegression numerically..." );
+                }
+
             solve_numerically( _X_categorical, _X_numerical, _y );
         }
     else
         {
+            if ( _logger )
+                {
+                    _logger->log(
+                        "Training LinearRegression arithmetically..." );
+                }
+
             solve_arithmetically( _X_numerical, _y );
         }
 
