@@ -1,1 +1,0 @@
-{"categorical_colnames_":["UCC","UCC1","UCC2","UCC3","UCC4","UCC5"],"discrete_colnames_":["EXPNYR"],"encodings_":[{"max_":1258,"min_":0},{"max_":294,"min_":1},{"max_":1154,"min_":2},{"max_":1155,"min_":3},{"max_":1254,"min_":4},{"max_":1259,"min_":0}],"numerical_colnames_":["COST"]}

@@ -4,6 +4,43 @@ namespace predictors
 {
 // -----------------------------------------------------------------------------
 
+void PredictorImpl::compress_importances(
+    const std::vector<Float>& _all_feature_importances,
+    std::vector<Float>* _feature_importances ) const
+{
+    assert( _all_feature_importances.size() == ncols_csr() );
+
+    assert(
+        _feature_importances->size() == num_autofeatures() + num_columns() );
+
+    const auto n_dense = num_autofeatures_ + discrete_colnames_.size() +
+                         numerical_colnames_.size();
+
+    std::copy(
+        _all_feature_importances.begin(),
+        _all_feature_importances.begin() + n_dense,
+        _feature_importances->begin() );
+
+    auto begin = _all_feature_importances.begin() + n_dense;
+
+    assert(
+        encodings_.size() == categorical_colnames_.size() ||
+        encodings_.size() == 0 );
+
+    for ( size_t i = 0; i < encodings_.size(); ++i )
+        {
+            auto end = begin + encodings_[i].n_unique();
+
+            auto imp = std::accumulate( begin, end, 0.0 );
+
+            ( *_feature_importances )[n_dense + i] = imp;
+
+            begin = end;
+        }
+}
+
+// -----------------------------------------------------------------------------
+
 void PredictorImpl::fit_encodings(
     const std::vector<CIntColumn>& _X_categorical )
 {
@@ -35,6 +72,15 @@ void PredictorImpl::select_cols(
     const size_t _n_autofeatures,
     const std::vector<size_t>& _index )
 {
+    encodings_.clear();
+
+    select_cols(
+        _n_selected,
+        _index,
+        _n_autofeatures + discrete_colnames_.size() +
+            numerical_colnames_.size(),
+        &categorical_colnames_ );
+
     select_cols(
         _n_selected,
         _index,
@@ -42,6 +88,10 @@ void PredictorImpl::select_cols(
         &numerical_colnames_ );
 
     select_cols( _n_selected, _index, _n_autofeatures, &discrete_colnames_ );
+
+    assert( _n_selected >= num_columns() );
+
+    num_autofeatures_ = _n_selected - num_columns();
 }
 
 // ----------------------------------------------------------------------------
@@ -105,6 +155,10 @@ Poco::JSON::Object PredictorImpl::to_json_obj() const
         }
 
     obj.set( "encodings_", arr );
+
+    // -------------------------------------------------------------------------
+
+    obj.set( "num_autofeatures_", num_autofeatures_ );
 
     // -------------------------------------------------------------------------
 

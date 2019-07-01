@@ -14,10 +14,12 @@ class PredictorImpl
     PredictorImpl(
         const std::vector<std::string>& _categorical_colnames,
         const std::vector<std::string>& _discrete_colnames,
-        const std::vector<std::string>& _numerical_colnames )
+        const std::vector<std::string>& _numerical_colnames,
+        const size_t _num_autofeatures )
         : categorical_colnames_( _categorical_colnames ),
           discrete_colnames_( _discrete_colnames ),
-          numerical_colnames_( _numerical_colnames ){};
+          numerical_colnames_( _numerical_colnames ),
+          num_autofeatures_( _num_autofeatures ){};
 
     PredictorImpl( const Poco::JSON::Object& _obj )
         : categorical_colnames_( JSON::array_to_vector<std::string>(
@@ -25,7 +27,9 @@ class PredictorImpl
           discrete_colnames_( JSON::array_to_vector<std::string>(
               JSON::get_array( _obj, "discrete_colnames_" ) ) ),
           numerical_colnames_( JSON::array_to_vector<std::string>(
-              JSON::get_array( _obj, "numerical_colnames_" ) ) )
+              JSON::get_array( _obj, "numerical_colnames_" ) ) ),
+          num_autofeatures_(
+              JSON::get_value<size_t>( _obj, "num_autofeatures_" ) )
     {
         auto arr = JSON::get_array( _obj, "encodings_" );
 
@@ -40,6 +44,12 @@ class PredictorImpl
     // -----------------------------------------
 
    public:
+    /// Compresses importances calculated for a CSR Matrix to aggregated
+    /// importances for each categorical column,
+    void compress_importances(
+        const std::vector<Float>& _all_feature_importances,
+        std::vector<Float>* _feature_importances ) const;
+
     /// Fits the encodings.
     void fit_encodings( const std::vector<CIntColumn>& _X_categorical );
 
@@ -90,18 +100,28 @@ class PredictorImpl
         return encodings_[_i].n_unique();
     }
 
-    /// Trivial (const) getter.
-    const size_t num_columns() const
+    /// The number of columns in CSR Matrix resulting from this Impl.
+    size_t ncols_csr() const
     {
-        size_t n_categorical = 0;
+        size_t ncols = num_autofeatures_ + discrete_colnames_.size() +
+                       numerical_colnames_.size();
 
         for ( const auto& enc : encodings_ )
             {
-                n_categorical += static_cast<size_t>( enc.n_unique() );
+                ncols += enc.n_unique();
             }
 
-        return discrete_colnames_.size() + numerical_colnames_.size() +
-               n_categorical;
+        return ncols;
+    }
+
+    /// Trivial (const) getter.
+    const size_t num_autofeatures() const { return num_autofeatures_; }
+
+    /// Trivial (const) getter.
+    const size_t num_columns() const
+    {
+        return categorical_colnames_.size() + discrete_colnames_.size() +
+               numerical_colnames_.size();
     }
 
     // -----------------------------------------
@@ -134,6 +154,9 @@ class PredictorImpl
     /// Names of the numerical columns taken from the population table as
     /// features.
     std::vector<std::string> numerical_colnames_;
+
+    /// The number of autofeatures used.
+    size_t num_autofeatures_;
 
     // -----------------------------------------
 };

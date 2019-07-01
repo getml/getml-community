@@ -437,6 +437,12 @@ void XGBoostPredictor::parse_dump(
     const std::string &_dump, std::vector<Float> *_feature_importances ) const
 {
     // ----------------------------------------------------------------
+    // Make all_feature_importances, which calculates each sparse column
+    // separately.
+
+    std::vector<Float> all_feature_importances( impl().ncols_csr() );
+
+    // ----------------------------------------------------------------
     // Split _dump
 
     std::vector<std::string> lines;
@@ -454,11 +460,11 @@ void XGBoostPredictor::parse_dump(
 
     if ( hyperparams_.booster_ == "gblinear" )
         {
-            assert( lines.size() >= _feature_importances->size() + 3 );
+            assert( lines.size() >= all_feature_importances.size() + 3 );
 
-            for ( size_t i = 0; i < _feature_importances->size(); ++i )
+            for ( size_t i = 0; i < all_feature_importances.size(); ++i )
                 {
-                    ( *_feature_importances )[i] =
+                    all_feature_importances[i] =
                         std::abs( std::atof( lines[i + 3].c_str() ) );
                 }
         }
@@ -491,7 +497,7 @@ void XGBoostPredictor::parse_dump(
 
                             assert(
                                 fnum < static_cast<int>(
-                                           _feature_importances->size() ) );
+                                           all_feature_importances.size() ) );
 
                             // -----------------------
                             // Extract gain
@@ -510,12 +516,19 @@ void XGBoostPredictor::parse_dump(
                             // -----------------------
                             // Add to feature importances
 
-                            ( *_feature_importances )[fnum] += gain;
+                            all_feature_importances[fnum] += gain;
                         }
                 }
 
             // ----------------------------------------------------------------
         }
+
+    // ------------------------------------------------------------------------
+
+    impl().compress_importances(
+        all_feature_importances, _feature_importances );
+
+    // ------------------------------------------------------------------------
 }
 
 // -----------------------------------------------------------------------------

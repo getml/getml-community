@@ -767,6 +767,14 @@ std::vector<std::string> Model<FeatureEngineererType>::make_feature_names()
             feature_names.push_back( col );
         }
 
+    if ( feature_engineerer().hyperparameters().include_categorical_ )
+        {
+            for ( const auto& col : predictor_impl().categorical_colnames() )
+                {
+                    feature_names.push_back( col );
+                }
+        }
+
     return feature_names;
 }
 
@@ -785,16 +793,19 @@ void Model<FeatureEngineererType>::make_predictor_impl(
 
     auto categorical_colnames = std::vector<std::string>();
 
-    for ( size_t i = 0; i < population_df.num_categoricals(); ++i )
+    if ( feature_engineerer().hyperparameters().include_categorical_ )
         {
-            if ( population_df.categorical( i ).unit().find(
-                     "comparison only" ) != std::string::npos )
+            for ( size_t i = 0; i < population_df.num_categoricals(); ++i )
                 {
-                    continue;
-                }
+                    if ( population_df.categorical( i ).unit().find(
+                             "comparison only" ) != std::string::npos )
+                        {
+                            continue;
+                        }
 
-            categorical_colnames.push_back(
-                population_df.categorical( i ).name() );
+                    categorical_colnames.push_back(
+                        population_df.categorical( i ).name() );
+                }
         }
 
     auto discrete_colnames = std::vector<std::string>();
@@ -824,7 +835,10 @@ void Model<FeatureEngineererType>::make_predictor_impl(
         }
 
     predictor_impl_ = std::make_shared<predictors::PredictorImpl>(
-        categorical_colnames, discrete_colnames, numerical_colnames );
+        categorical_colnames,
+        discrete_colnames,
+        numerical_colnames,
+        feature_engineerer().num_features() );
 }
 
 // ----------------------------------------------------------------------------
