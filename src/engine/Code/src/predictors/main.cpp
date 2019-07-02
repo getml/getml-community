@@ -14,5 +14,7 @@ int main( int argc, char* argv[] )
 
     test3_linear_regression_sparse();
 
+    test4_saving_and_loading_linear_regression();
+
     return 0;
 }

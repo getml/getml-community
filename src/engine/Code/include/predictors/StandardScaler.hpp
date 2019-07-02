@@ -13,6 +13,10 @@ class StandardScaler
    public:
     StandardScaler(){};
 
+    StandardScaler( const Poco::JSON::Object _obj )
+        : std_( JSON::array_to_vector<Float>(
+              JSON::get_array( _obj, "std_" ) ) ){};
+
     ~StandardScaler() = default;
 
     // -------------------------------------------------------------------------
@@ -33,8 +37,18 @@ class StandardScaler
 
     // -------------------------------------------------------------------------
 
+    // Transforms StandardScaler to JSON object.
+    Poco::JSON::Object to_json_obj() const
+    {
+        Poco::JSON::Object obj;
+        obj.set( "std_", JSON::vector_to_array( std_ ) );
+        return obj;
+    }
+
+    // -------------------------------------------------------------------------
+
    private:
-    /// The slopes of the linear regression.
+    /// Standard deviations of the individual columns.
     std::vector<Float> std_;
 
     // -------------------------------------------------------------------------

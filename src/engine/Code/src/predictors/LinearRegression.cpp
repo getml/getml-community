@@ -47,22 +47,15 @@ std::string LinearRegression::fit(
 
 void LinearRegression::load( const std::string& _fname )
 {
-    auto obj = load_json_obj( _fname + ".json" );
+    const auto obj = load_json_obj( _fname + ".json" );
 
-    auto arr = obj.getArray( "weights_" );
+    hyperparams_ = std::make_shared<LinearHyperparams>(
+        JSON::get_value<Float>( obj, "lambda_" ) );
 
-    if ( !arr )
-        {
-            throw std::runtime_error(
-                _fname + " contains no Array named 'weights'!" );
-        }
+    scaler_ = StandardScaler( *JSON::get_object( obj, "scaler_" ) );
 
-    weights_.clear();
-
-    for ( size_t i = 0; i < arr->size(); ++i )
-        {
-            weights_.push_back( arr->getElement<Float>( i ) );
-        }
+    weights_ =
+        JSON::array_to_vector<Float>( JSON::get_array( obj, "weights_" ) );
 }
 
 // -----------------------------------------------------------------------------
@@ -233,6 +226,10 @@ CFloatColumn LinearRegression::predict_sparse(
 void LinearRegression::save( const std::string& _fname ) const
 {
     Poco::JSON::Object obj;
+
+    obj.set( "lambda_", hyperparams().lambda_ );
+
+    obj.set( "scaler_", scaler_.to_json_obj() );
 
     obj.set( "weights_", weights_ );
 

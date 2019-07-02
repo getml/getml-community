@@ -51,7 +51,7 @@ class LinearRegression : public Predictor
 
    private:
     /// Trivial (private const) accessor.
-    const LinearHyperparams& hyperparams()
+    const LinearHyperparams& hyperparams() const
     {
         assert( hyperparams_ );
         return *hyperparams_;
