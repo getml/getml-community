@@ -8,7 +8,7 @@ namespace predictors
 class Encoding
 {
    public:
-    Encoding() {}
+    Encoding() : max_( 1 ), min_( 0 ) {}
 
     Encoding( const Poco::JSON::Object& _obj )
         : max_( JSON::get_value<Int>( _obj, "max_" ) ),

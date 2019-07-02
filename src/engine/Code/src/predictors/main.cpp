@@ -12,5 +12,7 @@ int main( int argc, char* argv[] )
 
     test2_csr_matrix();
 
+    test3_linear_regression_sparse();
+
     return 0;
 }

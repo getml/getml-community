@@ -323,7 +323,7 @@ void LinearRegression::solve_numerically(
 
     std::uniform_real_distribution<> dis( -1.0, 1.0 );
 
-    weights_ = std::vector<Float>( csr_mat.ncols() );
+    weights_ = std::vector<Float>( csr_mat.ncols() + 1 );
 
     for ( auto& w : weights_ )
         {
@@ -333,7 +333,9 @@ void LinearRegression::solve_numerically(
     // -------------------------------------------------------------------------
     // Use the SGD algorithm to find the weights.
 
-    for ( size_t epoch = 0; epoch < 30; ++epoch )
+    const auto learning_rate = 0.001 / static_cast<Float>( csr_mat.nrows() );
+
+    for ( size_t epoch = 0; epoch < 100; ++epoch )
         {
             for ( size_t i = 0; i < csr_mat.nrows(); ++i )
                 {
@@ -351,7 +353,7 @@ void LinearRegression::solve_numerically(
                         csr_mat.indices(),
                         csr_mat.data(),
                         delta,
-                        0.0001 );
+                        learning_rate );
                 }
         }
 

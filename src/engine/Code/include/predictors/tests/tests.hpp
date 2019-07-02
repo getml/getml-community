@@ -13,5 +13,6 @@
 
 #include "predictors/tests/test1_linear_regression_dense.hpp"
 #include "predictors/tests/test2_csr_matrix.hpp"
+#include "predictors/tests/test3_linear_regression_sparse.hpp"
 
 // ---------------------------------------------------------------------------

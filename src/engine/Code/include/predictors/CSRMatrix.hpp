@@ -144,7 +144,7 @@ CSRMatrix<DataType, IndicesType, IndptrType>::CSRMatrix(
 
     data_ = std::vector<DataType>( indices_.size(), 1.0 );
 
-    ncols_ += _n_unique;
+    ncols_ = _n_unique;
 }
 
 // -----------------------------------------------------------------------------
