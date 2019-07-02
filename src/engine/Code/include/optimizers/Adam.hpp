@@ -40,10 +40,11 @@ class Adam : public Optimizer
         *_mom2 = *_mom2 * decay_mom2_ + ( 1.0 - decay_mom2_ ) * _g * _g;
 
         const auto numerator =
-            *_mom1 / ( 1.0 - pow( decay_mom1_, _epoch_num + 1.0 ) );
+            *_mom1 / ( 1.0 - std::pow( decay_mom1_, _epoch_num + 1.0 ) );
 
         const auto divisor =
-            sqrt( *_mom2 / ( 1.0 - pow( decay_mom2_, _epoch_num + 1.0 ) ) ) +
+            std::sqrt(
+                *_mom2 / ( 1.0 - std::pow( decay_mom2_, _epoch_num + 1.0 ) ) ) +
             offset_;
 
         *_w -= learning_rate_ * numerator / divisor;

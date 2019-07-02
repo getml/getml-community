@@ -24,7 +24,7 @@ class AdaGrad : public Optimizer
     void update( const Float _g, Float* _sum, Float* _w ) const
     {
         *_sum += _g * _g;
-        *_w -= learning_rate_ * _g / sqrt( *_sum + offset_ );
+        *_w -= learning_rate_ * _g / std::sqrt( *_sum + offset_ );
     };
 
     // ----------------------------------------------------------------------------
