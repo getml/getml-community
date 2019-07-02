@@ -333,10 +333,15 @@ void LinearRegression::solve_numerically(
     // -------------------------------------------------------------------------
     // Use the SGD algorithm to find the weights.
 
-    const auto learning_rate = 0.001 / static_cast<Float>( csr_mat.nrows() );
+    std::vector<Float> gradients( weights_.size() );
 
-    for ( size_t epoch = 0; epoch < 100; ++epoch )
+    auto optimizer =
+        optimizers::Adam( 0.9, 0.999, 10.0, 1e-10, weights_.size() );
+
+    for ( size_t epoch = 0; epoch < 1000; ++epoch )
         {
+            const auto epoch_float = static_cast<Float>( epoch );
+
             for ( size_t i = 0; i < csr_mat.nrows(); ++i )
                 {
                     const auto yhat = predict_sparse(
@@ -347,13 +352,22 @@ void LinearRegression::solve_numerically(
 
                     const auto delta = yhat - ( *_y )[i];
 
-                    update_weights(
+                    calculate_gradients(
                         csr_mat.indptr()[i],
                         csr_mat.indptr()[i + 1],
                         csr_mat.indices(),
                         csr_mat.data(),
                         delta,
-                        learning_rate );
+                        &gradients );
+
+                    if ( i % 200 == 199 || i == csr_mat.nrows() - 1 )
+                        {
+                            optimizer.update_weights(
+                                epoch_float, gradients, &weights_ );
+
+                            std::fill(
+                                gradients.begin(), gradients.end(), 0.0 );
+                        }
                 }
         }
 

@@ -74,6 +74,25 @@ class LinearRegression : public Predictor
     // -------------------------------------------------------------------------
 
    private:
+    /// Calculates the gradients needed for the updates.
+    const void calculate_gradients(
+        const size_t _begin,
+        const size_t _end,
+        const unsigned int* _indices,
+        const Float* _data,
+        const Float _delta,
+        std::vector<Float>* _gradients )
+    {
+        assert( _gradients->size() == weights_.size() );
+
+        for ( auto ix = _begin; ix < _end; ++ix )
+            {
+                assert( _indices[ix] < _gradients->size() );
+                ( *_gradients )[_indices[ix]] += _delta * _data[ix];
+            }
+        _gradients->back() += _delta;
+    }
+
     /// Trivial (private) accessor.
     const PredictorImpl& impl() const
     {
@@ -95,23 +114,6 @@ class LinearRegression : public Predictor
                 yhat += _data[ix] * weights_[_indices[ix]];
             }
         return yhat;
-    }
-
-    /// Updates the weights.
-    const void update_weights(
-        const size_t _begin,
-        const size_t _end,
-        const unsigned int* _indices,
-        const Float* _data,
-        const Float _delta,
-        const Float _learning_rate )
-    {
-        for ( auto ix = _begin; ix < _end; ++ix )
-            {
-                assert( _indices[ix] < weights_.size() );
-                weights_[_indices[ix]] -= _delta * _data[ix] * _learning_rate;
-            }
-        weights_.back() -= _delta * _learning_rate;
     }
 
     // -------------------------------------------------------------------------

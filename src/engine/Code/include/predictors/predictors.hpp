@@ -6,6 +6,7 @@
 
 #include <cstdint>
 
+#include <algorithm>
 #include <fstream>
 #include <memory>
 #include <numeric>
@@ -23,6 +24,8 @@
 #include <xgboost/c_api.h>
 
 #include "logging/logging.hpp"
+
+#include "optimizers/optimizers.hpp"
 
 // ----------------------------------------------------
 // Module files
