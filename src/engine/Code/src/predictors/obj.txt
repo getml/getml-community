@@ -5,6 +5,7 @@ set(
     ${PREDICTORS_SOURCE_DIRECTORY}/JSON.cpp
     ${PREDICTORS_SOURCE_DIRECTORY}/PredictorImpl.cpp
     ${PREDICTORS_SOURCE_DIRECTORY}/PredictorParser.cpp
+    ${PREDICTORS_SOURCE_DIRECTORY}/StandardScaler.cpp
     ${PREDICTORS_SOURCE_DIRECTORY}/XGBoostHyperparams.cpp
     ${PREDICTORS_SOURCE_DIRECTORY}/XGBoostPredictor.cpp
 )

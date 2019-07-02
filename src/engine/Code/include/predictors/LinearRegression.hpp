@@ -75,7 +75,7 @@ class LinearRegression : public Predictor
     /// When possible, the linear regression will be fitted
     ///  arithmetically.
     void solve_arithmetically(
-        const std::vector<CFloatColumn>& _X, const CFloatColumn& _y );
+        const std::vector<CFloatColumn>& _X_numerical, const CFloatColumn& _y );
 
     /// When necessary, we will use numerical algorithms.
     void solve_numerically(
@@ -153,6 +153,10 @@ class LinearRegression : public Predictor
 
     /// Implementation class for member functions common to most predictors.
     std::shared_ptr<const PredictorImpl> impl_;
+
+    /// For rescaling the input data such that the standard deviation of each
+    /// column is 1.0
+    StandardScaler scaler_;
 
     /// The slopes of the linear regression.
     std::vector<Float> weights_;

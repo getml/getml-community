@@ -43,6 +43,8 @@
 #include "predictors/CSRMatrix.hpp"
 #include "predictors/Encoding.hpp"
 
+#include "predictors/StandardScaler.hpp"
+
 #include "predictors/Predictor.hpp"
 #include "predictors/PredictorImpl.hpp"
 

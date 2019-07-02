@@ -125,7 +125,7 @@ CFloatColumn LinearRegression::predict_dense(
     const std::vector<CFloatColumn>& _X_numerical ) const
 {
     // -------------------------------------------------------------------------
-    // Make sure that the _X_numerical is plausible.
+    // Make sure that the X is plausible.
 
     if ( weights_.size() != _X_numerical.size() + 1 )
         {
@@ -136,24 +136,28 @@ CFloatColumn LinearRegression::predict_dense(
         }
 
     // -------------------------------------------------------------------------
+    // Rescale input
+
+    const auto X = scaler_.transform( _X_numerical );
+
+    // -------------------------------------------------------------------------
     // Calculate dot product with weights.
 
     auto predictions = CFloatColumn();
 
-    for ( size_t j = 0; j < _X_numerical.size(); ++j )
+    for ( size_t j = 0; j < X.size(); ++j )
         {
-            assert( _X_numerical[0]->size() == _X_numerical[j]->size() );
+            assert( X[0]->size() == X[j]->size() );
 
             if ( !predictions )
                 {
-                    predictions = std::make_shared<std::vector<Float>>(
-                        _X_numerical[0]->size() );
+                    predictions =
+                        std::make_shared<std::vector<Float>>( X[0]->size() );
                 }
 
-            for ( size_t i = 0; i < _X_numerical[j]->size(); ++i )
+            for ( size_t i = 0; i < X[j]->size(); ++i )
                 {
-                    ( *predictions )[i] +=
-                        weights_[j] * ( *_X_numerical[j] )[i];
+                    ( *predictions )[i] += weights_[j] * ( *X[j] )[i];
                 }
         }
 
@@ -162,7 +166,7 @@ CFloatColumn LinearRegression::predict_dense(
 
     for ( size_t i = 0; i < predictions->size(); ++i )
         {
-            ( *predictions )[i] += weights_[_X_numerical.size()];
+            ( *predictions )[i] += weights_[X.size()];
         }
 
     // -------------------------------------------------------------------------
@@ -235,40 +239,47 @@ void LinearRegression::save( const std::string& _fname ) const
 // -----------------------------------------------------------------------------
 
 void LinearRegression::solve_arithmetically(
-    const std::vector<CFloatColumn>& _X, const CFloatColumn& _y )
+    const std::vector<CFloatColumn>& _X_numerical, const CFloatColumn& _y )
 {
+    // -------------------------------------------------------------------------
+    // Rescale training set.
+
+    scaler_.fit( _X_numerical );
+
+    const auto X = scaler_.transform( _X_numerical );
+
     // -------------------------------------------------------------------------
     // Calculate XtX
 
     // CAREFUL: Do NOT use "auto"!
-    Eigen::MatrixXd XtX = Eigen::MatrixXd( _X.size() + 1, _X.size() + 1 );
+    Eigen::MatrixXd XtX = Eigen::MatrixXd( X.size() + 1, X.size() + 1 );
 
-    for ( size_t i = 0; i < _X.size(); ++i )
+    for ( size_t i = 0; i < X.size(); ++i )
         {
-            assert( _X[i] );
+            assert( X[i] );
 
             for ( size_t j = 0; j <= i; ++j )
                 {
-                    assert( _X[i]->size() == _X[j]->size() );
+                    assert( X[i]->size() == X[j]->size() );
 
                     XtX( i, j ) = XtX( j, i ) = std::inner_product(
-                        _X[i]->begin(), _X[i]->end(), _X[j]->begin(), 0.0 );
+                        X[i]->begin(), X[i]->end(), X[j]->begin(), 0.0 );
                 }
         }
 
-    for ( size_t i = 0; i < _X.size(); ++i )
+    for ( size_t i = 0; i < X.size(); ++i )
         {
-            XtX( _X.size(), i ) = XtX( i, _X.size() ) =
-                std::accumulate( _X[i]->begin(), _X[i]->end(), 0.0 );
+            XtX( X.size(), i ) = XtX( i, X.size() ) =
+                std::accumulate( X[i]->begin(), X[i]->end(), 0.0 );
         }
 
     const auto n = static_cast<Float>( _y->size() );
 
-    XtX( _X.size(), _X.size() ) = n;
+    XtX( X.size(), X.size() ) = n;
 
     if ( hyperparams().lambda_ > 0.0 )
         {
-            for ( size_t i = 0; i < _X.size(); ++i )
+            for ( size_t i = 0; i < X.size(); ++i )
                 {
                     XtX( i, i ) += hyperparams().lambda_ * n;
                 }
@@ -278,19 +289,19 @@ void LinearRegression::solve_arithmetically(
     // Calculate Xy
 
     // CAREFUL: Do NOT use "auto"!
-    Eigen::MatrixXd Xy = Eigen::MatrixXd( _X.size() + 1, 1 );
+    Eigen::MatrixXd Xy = Eigen::MatrixXd( X.size() + 1, 1 );
 
     assert( _y );
 
-    for ( size_t i = 0; i < _X.size(); ++i )
+    for ( size_t i = 0; i < X.size(); ++i )
         {
-            assert( _X[i]->size() == _y->size() );
+            assert( X[i]->size() == _y->size() );
 
             Xy( i ) = std::inner_product(
-                _X[i]->begin(), _X[i]->end(), _y->begin(), 0.0 );
+                X[i]->begin(), X[i]->end(), _y->begin(), 0.0 );
         }
 
-    Xy( _X.size() ) = std::accumulate( _y->begin(), _y->end(), 0.0 );
+    Xy( X.size() ) = std::accumulate( _y->begin(), _y->end(), 0.0 );
 
     // -------------------------------------------------------------------------
     // Calculate weights_
@@ -298,17 +309,12 @@ void LinearRegression::solve_arithmetically(
     // CAREFUL: Do NOT use "auto"!
     Eigen::MatrixXd weights = XtX.fullPivLu().solve( Xy );
 
-    weights_.resize( _X.size() + 1 );
+    weights_.resize( X.size() + 1 );
 
     for ( size_t i = 0; i < weights_.size(); ++i )
         {
             weights_[i] = weights( i );
         }
-
-    // -------------------------------------------------------------------------
-    // Calculate feature_importances_
-
-    // ...
 
     // -------------------------------------------------------------------------
 }
