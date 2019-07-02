@@ -50,6 +50,17 @@ class PredictorImpl
         const std::vector<Float>& _all_feature_importances,
         std::vector<Float>* _feature_importances ) const;
 
+    /// Makes sure that input columns passed by the user are plausible.
+    size_t check_plausibility(
+        const std::vector<CIntColumn>& _X_categorical,
+        const std::vector<CFloatColumn>& _X_numerical ) const;
+
+    /// Makes sure that input columns passed by the user are plausible.
+    void check_plausibility(
+        const std::vector<CIntColumn>& _X_categorical,
+        const std::vector<CFloatColumn>& _X_numerical,
+        const CFloatColumn& _y ) const;
+
     /// Fits the encodings.
     void fit_encodings( const std::vector<CIntColumn>& _X_categorical );
 

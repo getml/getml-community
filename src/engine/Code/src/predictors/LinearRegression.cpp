@@ -12,6 +12,10 @@ std::string LinearRegression::fit(
 {
     // -------------------------------------------------------------------------
 
+    impl().check_plausibility( _X_categorical, _X_numerical, _y );
+
+    // -------------------------------------------------------------------------
+
     if ( _X_categorical.size() > 0 )
         {
             if ( _logger )
@@ -103,6 +107,26 @@ CFloatColumn LinearRegression::predict(
                 "LinearRegression has not been trained!" );
         }
 
+    impl().check_plausibility( _X_categorical, _X_numerical );
+
+    if ( _X_categorical.size() > 0 )
+        {
+            return predict_sparse( _X_categorical, _X_numerical );
+        }
+    else
+        {
+            return predict_dense( _X_numerical );
+        }
+}
+
+// -----------------------------------------------------------------------------
+
+CFloatColumn LinearRegression::predict_dense(
+    const std::vector<CFloatColumn>& _X_numerical ) const
+{
+    // -------------------------------------------------------------------------
+    // Make sure that the _X_numerical is plausible.
+
     if ( weights_.size() != _X_numerical.size() + 1 )
         {
             throw std::runtime_error(
@@ -110,6 +134,9 @@ CFloatColumn LinearRegression::predict(
                 std::to_string( weights_.size() - 1 ) + ", got " +
                 std::to_string( _X_numerical.size() ) + "." );
         }
+
+    // -------------------------------------------------------------------------
+    // Calculate dot product with weights.
 
     auto predictions = CFloatColumn();
 
@@ -130,12 +157,66 @@ CFloatColumn LinearRegression::predict(
                 }
         }
 
+    // -------------------------------------------------------------------------
+    // Add intercept.
+
     for ( size_t i = 0; i < predictions->size(); ++i )
         {
             ( *predictions )[i] += weights_[_X_numerical.size()];
         }
 
+    // -------------------------------------------------------------------------
+
     return predictions;
+
+    // -------------------------------------------------------------------------
+}
+
+// -----------------------------------------------------------------------------
+
+CFloatColumn LinearRegression::predict_sparse(
+    const std::vector<CIntColumn>& _X_categorical,
+    const std::vector<CFloatColumn>& _X_numerical ) const
+{
+    // -------------------------------------------------------------------------
+    // Build up CSRMatrix.
+
+    const auto csr_mat = impl().make_csr<Float, unsigned int, size_t>(
+        _X_categorical, _X_numerical );
+
+    // -------------------------------------------------------------------------
+    // Make sure that the CSRMatrix is plausible.
+
+    if ( weights_.size() != csr_mat.ncols() + 1 )
+        {
+            throw std::runtime_error(
+                "Incorrect number of columns in CSRMatrix! Expected " +
+                std::to_string( weights_.size() - 1 ) + ", got " +
+                std::to_string( csr_mat.ncols() ) + "." );
+        }
+
+    // -------------------------------------------------------------------------
+    // Initialize predictions.
+
+    auto predictions = std::make_shared<std::vector<Float>>( csr_mat.nrows() );
+
+    // -------------------------------------------------------------------------
+    // Generate predictions.
+
+    for ( size_t i = 0; i < csr_mat.nrows(); ++i )
+        {
+            ( *predictions )[i] = predict_sparse(
+                csr_mat.indptr()[i],
+                csr_mat.indptr()[i + 1],
+                csr_mat.indices(),
+                csr_mat.data() );
+        }
+
+    // -------------------------------------------------------------------------
+
+    return predictions;
+
+    // -------------------------------------------------------------------------
 }
 
 // -----------------------------------------------------------------------------

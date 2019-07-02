@@ -50,6 +50,16 @@ class LinearRegression : public Predictor
    private:
     Poco::JSON::Object load_json_obj( const std::string& _fname ) const;
 
+    /// Generates predictions when no categorical columns have been passed.
+    CFloatColumn predict_dense(
+        const std::vector<CFloatColumn>& _X_numerical ) const;
+
+    /// Generates predictions when at least one categorical column has been
+    /// passed.
+    CFloatColumn predict_sparse(
+        const std::vector<CIntColumn>& _X_categorical,
+        const std::vector<CFloatColumn>& _X_numerical ) const;
+
     /// When possible, the linear regression will be fitted
     ///  arithmetically.
     void solve_arithmetically(

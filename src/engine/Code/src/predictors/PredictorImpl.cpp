@@ -53,6 +53,70 @@ void PredictorImpl::fit_encodings(
             encodings_.back().fit( col );
         }
 }
+
+// -------------------------------------------------------------------------
+
+size_t PredictorImpl::check_plausibility(
+    const std::vector<CIntColumn>& _X_categorical,
+    const std::vector<CFloatColumn>& _X_numerical ) const
+{
+    if ( _X_categorical.size() == 0 && _X_numerical.size() == 0 )
+        {
+            throw std::invalid_argument(
+                "You must provide at least one input column!" );
+        }
+
+    size_t expected_size = 0;
+
+    if ( _X_categorical.size() > 0 )
+        {
+            expected_size = _X_categorical[0]->size();
+        }
+    else
+        {
+            expected_size = _X_numerical[0]->size();
+        }
+
+    for ( const auto& X : _X_categorical )
+        {
+            if ( X->size() != expected_size )
+                {
+                    throw std::invalid_argument(
+                        "All input columns must have the same "
+                        "length!" );
+                }
+        }
+
+    for ( const auto& X : _X_numerical )
+        {
+            if ( X->size() != expected_size )
+                {
+                    throw std::invalid_argument(
+                        "All input columns must have the same length!" );
+                }
+        }
+
+    return expected_size;
+}
+
+// -------------------------------------------------------------------------
+
+void PredictorImpl::check_plausibility(
+    const std::vector<CIntColumn>& _X_categorical,
+    const std::vector<CFloatColumn>& _X_numerical,
+    const CFloatColumn& _y ) const
+{
+    const auto expected_size =
+        check_plausibility( _X_categorical, _X_numerical );
+
+    if ( _y->size() != expected_size )
+        {
+            throw std::invalid_argument(
+                "Length of targets must be the same as the length of the input "
+                "columns!" );
+        }
+}
+
 // -------------------------------------------------------------------------
 
 void PredictorImpl::save( const std::string& _fname ) const
