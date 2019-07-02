@@ -185,8 +185,13 @@ CFloatColumn LinearRegression::predict_sparse(
     // -------------------------------------------------------------------------
     // Build up CSRMatrix.
 
-    const auto csr_mat = impl().make_csr<Float, unsigned int, size_t>(
+    auto csr_mat = impl().make_csr<Float, unsigned int, size_t>(
         _X_categorical, _X_numerical );
+
+    // -------------------------------------------------------------------------
+    // Rescale CSRMatrix.
+
+    csr_mat = scaler_.transform( csr_mat );
 
     // -------------------------------------------------------------------------
     // Make sure that the CSRMatrix is plausible.
@@ -329,8 +334,15 @@ void LinearRegression::solve_numerically(
     // -------------------------------------------------------------------------
     // Build up CSRMatrix.
 
-    const auto csr_mat = impl().make_csr<Float, unsigned int, size_t>(
+    auto csr_mat = impl().make_csr<Float, unsigned int, size_t>(
         _X_categorical, _X_numerical );
+
+    // -------------------------------------------------------------------------
+    // Rescale CSRMatrix.
+
+    scaler_.fit( csr_mat );
+
+    csr_mat = scaler_.transform( csr_mat );
 
     // -------------------------------------------------------------------------
     // Init weights.

@@ -38,6 +38,9 @@ class CSRMatrix
     /// Deletes all data in the CSRMatrix.
     void clear() { *this = CSRMatrix(); }
 
+    /// Trivial accessor.
+    DataType* data() { return data_.data(); }
+
     /// Trivial (const) accessor.
     const DataType* data() const { return data_.data(); }
 

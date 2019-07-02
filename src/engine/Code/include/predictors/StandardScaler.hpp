@@ -20,9 +20,16 @@ class StandardScaler
     /// Calculates the standard deviations for dense data.
     void fit( const std::vector<CFloatColumn>& _X_numerical );
 
+    /// Calculates the standard deviations for sparse data.
+    void fit( const CSRMatrix<Float, unsigned int, size_t>& _X_sparse );
+
     /// Transforms dense data.
     std::vector<CFloatColumn> transform(
         const std::vector<CFloatColumn>& _X_numerical ) const;
+
+    /// Transforms sparse data.
+    const CSRMatrix<Float, unsigned int, size_t> transform(
+        const CSRMatrix<Float, unsigned int, size_t>& _X_sparse ) const;
 
     // -------------------------------------------------------------------------
 
