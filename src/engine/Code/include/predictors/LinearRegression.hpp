@@ -20,6 +20,10 @@ class LinearRegression : public Predictor
 
     // -------------------------------------------------------------------------
 
+    /// Returns an importance measure for the individual features.
+    std::vector<Float> feature_importances(
+        const size_t _num_features ) const final;
+
     /// Implements the fit(...) method in scikit-learn style
     std::string fit(
         const std::shared_ptr<const logging::AbstractLogger> _logger,
@@ -37,15 +41,6 @@ class LinearRegression : public Predictor
 
     /// Stores the predictor
     void save( const std::string& _fname ) const final;
-
-    // -------------------------------------------------------------------------
-
-    /// Returns an importance measure for the individual features
-    std::vector<Float> feature_importances(
-        const size_t _num_features ) const final
-    {
-        return feature_importances_;
-    }
 
     // -------------------------------------------------------------------------
 
@@ -145,9 +140,6 @@ class LinearRegression : public Predictor
     // -------------------------------------------------------------------------
 
    private:
-    /// The feature importances for the linear regression.
-    std::vector<Float> feature_importances_;
-
     /// The hyperparameters used for the LinearRegression.
     std::shared_ptr<const LinearHyperparams> hyperparams_;
 

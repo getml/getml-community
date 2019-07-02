@@ -4,6 +4,45 @@ namespace predictors
 {
 // -----------------------------------------------------------------------------
 
+std::vector<Float> LinearRegression::feature_importances(
+    const size_t _num_features ) const
+{
+    if ( weights_.size() == 0 )
+        {
+            throw std::invalid_argument(
+                "Cannot retrieve feature importances! Linear Regression has "
+                "not been trained!" );
+        }
+
+    if ( _num_features != weights_.size() - 1 )
+        {
+            throw std::invalid_argument(
+                "Incorrect number of features when retrieving in feature "
+                "importances! Expected " +
+                std::to_string( weights_.size() - 1 ) + ", got " +
+                std::to_string( _num_features ) + "." );
+        }
+
+    auto feature_importances = std::vector<Float>( _num_features );
+
+    for ( size_t i = 0; i < feature_importances.size(); ++i )
+        {
+            feature_importances[i] = std::abs( weights_[i] );
+        }
+
+    const auto sum = std::accumulate(
+        feature_importances.begin(), feature_importances.end(), 0.0 );
+
+    for ( auto& f : feature_importances )
+        {
+            f /= sum;
+        }
+
+    return feature_importances;
+}
+
+// -----------------------------------------------------------------------------
+
 std::string LinearRegression::fit(
     const std::shared_ptr<const logging::AbstractLogger> _logger,
     const std::vector<CIntColumn>& _X_categorical,
