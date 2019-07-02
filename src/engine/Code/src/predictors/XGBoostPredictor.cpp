@@ -194,6 +194,10 @@ std::string XGBoostPredictor::fit(
 {
     // --------------------------------------------------------------------
 
+    impl().check_plausibility( _X_categorical, _X_numerical, _y );
+
+    // --------------------------------------------------------------------
+
     _logger->log( "XGBoost: Preparing..." );
 
     // --------------------------------------------------------------------
@@ -203,12 +207,6 @@ std::string XGBoostPredictor::fit(
 
     // convert_to_dmatrix(...) should make sure of this.
     assert( _X_numerical.size() > 0 );
-
-    if ( _y->size() != _X_numerical[0]->size() )
-        {
-            throw std::invalid_argument(
-                "Targets must have same length as input data!" );
-        }
 
     std::vector<float> y_float( _y->size() );
 
@@ -528,6 +526,10 @@ CFloatColumn XGBoostPredictor::predict(
     const std::vector<CIntColumn> &_X_categorical,
     const std::vector<CFloatColumn> &_X_numerical ) const
 {
+    // --------------------------------------------------------------------
+
+    impl().check_plausibility( _X_categorical, _X_numerical );
+
     // --------------------------------------------------------------------
 
     if ( len() == 0 )
