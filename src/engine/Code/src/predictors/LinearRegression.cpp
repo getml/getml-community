@@ -262,7 +262,17 @@ void LinearRegression::solve_arithmetically(
                 std::accumulate( _X[i]->begin(), _X[i]->end(), 0.0 );
         }
 
-    XtX( _X.size(), _X.size() ) = static_cast<Float>( _y->size() );
+    const auto n = static_cast<Float>( _y->size() );
+
+    XtX( _X.size(), _X.size() ) = n;
+
+    if ( hyperparams().lambda_ > 0.0 )
+        {
+            for ( size_t i = 0; i < _X.size(); ++i )
+                {
+                    XtX( i, i ) += hyperparams().lambda_ * n;
+                }
+        }
 
     // -------------------------------------------------------------------------
     // Calculate Xy
@@ -331,7 +341,14 @@ void LinearRegression::solve_numerically(
         }
 
     // -------------------------------------------------------------------------
-    // Use the SGD algorithm to find the weights.
+    // Set some standard variables.
+
+    const size_t batch_size = 200;
+
+    const auto bsize_float = static_cast<Float>( batch_size );
+
+    // -------------------------------------------------------------------------
+    // Use Adam to find the weights.
 
     std::vector<Float> gradients( weights_.size() );
 
@@ -360,8 +377,11 @@ void LinearRegression::solve_numerically(
                         delta,
                         &gradients );
 
-                    if ( i % 200 == 199 || i == csr_mat.nrows() - 1 )
+                    if ( i % batch_size == batch_size - 1 ||
+                         i == csr_mat.nrows() - 1 )
                         {
+                            calculate_regularization( bsize_float, &gradients );
+
                             optimizer.update_weights(
                                 epoch_float, gradients, &weights_ );
 

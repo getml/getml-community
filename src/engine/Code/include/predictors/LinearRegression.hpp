@@ -11,8 +11,10 @@ class LinearRegression : public Predictor
     // -------------------------------------------------------------------------
 
    public:
-    LinearRegression( const std::shared_ptr<const PredictorImpl>& _impl )
-        : impl_( _impl ){};
+    LinearRegression(
+        const std::shared_ptr<LinearHyperparams>& _hyperparams,
+        const std::shared_ptr<const PredictorImpl>& _impl )
+        : hyperparams_( _hyperparams ), impl_( _impl ){};
 
     ~LinearRegression() = default;
 
@@ -43,6 +45,16 @@ class LinearRegression : public Predictor
         const size_t _num_features ) const final
     {
         return feature_importances_;
+    }
+
+    // -------------------------------------------------------------------------
+
+   private:
+    /// Trivial (private const) accessor.
+    const LinearHyperparams& hyperparams()
+    {
+        assert( hyperparams_ );
+        return *hyperparams_;
     }
 
     // -------------------------------------------------------------------------
@@ -93,6 +105,20 @@ class LinearRegression : public Predictor
         _gradients->back() += _delta;
     }
 
+    /// Applies the L2 regularization term for numerical optimization.
+    const void calculate_regularization(
+        const Float _bsize_float, std::vector<Float>* _gradients )
+    {
+        if ( hyperparams().lambda_ > 0.0 )
+            {
+                for ( size_t i = 0; i < weights_.size(); ++i )
+                    {
+                        ( *_gradients )[i] +=
+                            hyperparams().lambda_ * weights_[i] * _bsize_float;
+                    }
+            }
+    }
+
     /// Trivial (private) accessor.
     const PredictorImpl& impl() const
     {
@@ -121,6 +147,9 @@ class LinearRegression : public Predictor
    private:
     /// The feature importances for the linear regression.
     std::vector<Float> feature_importances_;
+
+    /// The hyperparameters used for the LinearRegression.
+    std::shared_ptr<const LinearHyperparams> hyperparams_;
 
     /// Implementation class for member functions common to most predictors.
     std::shared_ptr<const PredictorImpl> impl_;

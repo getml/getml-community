@@ -49,7 +49,10 @@ void test3_linear_regression_sparse()
 
     X_categorical = impl->transform_encodings( X_categorical );
 
-    auto lin_reg = predictors::LinearRegression( impl );
+    const auto hyperparams =
+        std::make_shared<predictors::LinearHyperparams>( 1e-10 );
+
+    auto lin_reg = predictors::LinearRegression( hyperparams, impl );
 
     lin_reg.fit(
         std::shared_ptr<const logging::AbstractLogger>(),

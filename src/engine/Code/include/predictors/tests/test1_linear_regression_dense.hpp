@@ -38,7 +38,10 @@ void test1_linear_regression_dense()
         std::vector<std::string>(),
         3 );
 
-    auto lin_reg = predictors::LinearRegression( impl );
+    const auto hyperparams =
+        std::make_shared<predictors::LinearHyperparams>( 1e-10 );
+
+    auto lin_reg = predictors::LinearRegression( hyperparams, impl );
 
     lin_reg.fit(
         std::shared_ptr<const logging::AbstractLogger>(),
@@ -53,7 +56,7 @@ void test1_linear_regression_dense()
             /*std::cout << "target: " << y->at( i )
                       << ", prediction: " << yhat->at( i ) << std::endl;*/
 
-            assert( std::abs( y->at( i ) - yhat->at( i ) < 1e-4 ) );
+            assert( std::abs( y->at( i ) - yhat->at( i ) < 1.0 ) );
         }
 
     std::cout << std::endl << std::endl;

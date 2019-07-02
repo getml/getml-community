@@ -46,6 +46,7 @@
 #include "predictors/Predictor.hpp"
 #include "predictors/PredictorImpl.hpp"
 
+#include "predictors/LinearHyperparams.hpp"
 #include "predictors/LinearRegression.hpp"
 
 #include "predictors/XGBoostHyperparams.hpp"

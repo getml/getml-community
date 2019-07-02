@@ -5,7 +5,7 @@ namespace predictors
 {
 // ----------------------------------------------------------------------
 
-/// Abstract base class for a predictor
+/// Hyperparameters for XGBoost.
 struct XGBoostHyperparams
 {
     // -----------------------------------------
