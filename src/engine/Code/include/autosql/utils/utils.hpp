@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <array>
 #include <memory>
+#include <numeric>
 #include <random>
 #include <tuple>
 #include <type_traits>

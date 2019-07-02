@@ -1,3 +1,0 @@
-[  7%] Built target relboost-0.8-ubuntu-64bit-database-test
-[ 42%] Built target relboost-0.8-ubuntu-64bit-relboost-test
-[ 43%] Building CXX object CMakeFiles/relboost-0.8-ubuntu-64bit.dir/home/patrick/relboost-engine/Code/src/autosql/DecisionTreeNode.cpp.o

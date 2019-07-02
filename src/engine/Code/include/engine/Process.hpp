@@ -12,7 +12,7 @@ struct Process
     static std::string get_process_id()
     {
 #if ( defined( _WIN32 ) || defined( _WIN64 ) )
-
+        return std::to_string( GetCurrentProcessId() );
 #else
         return std::to_string(::getpid() );
 #endif
