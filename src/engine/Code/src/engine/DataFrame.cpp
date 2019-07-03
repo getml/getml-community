@@ -771,6 +771,40 @@ ULong DataFrame::nbytes() const
 
 // ----------------------------------------------------------------------------
 
+const size_t DataFrame::nrows() const
+{
+    if ( join_keys_.size() > 0 )
+        {
+            return join_keys_[0].nrows();
+        }
+    else if ( time_stamps_.size() > 0 )
+        {
+            return time_stamps_[0].nrows();
+        }
+    else if ( categoricals_.size() > 0 )
+        {
+            return categoricals_[0].nrows();
+        }
+    else if ( discretes_.size() > 0 )
+        {
+            return discretes_[0].nrows();
+        }
+    else if ( numericals_.size() > 0 )
+        {
+            return numericals_[0].nrows();
+        }
+    else if ( targets_.size() > 0 )
+        {
+            return targets_[0].nrows();
+        }
+    else
+        {
+            return 0;
+        }
+}
+
+// ----------------------------------------------------------------------------
+
 void DataFrame::save( const std::string &_path )
 {
     // ---------------------------------------------------------------------

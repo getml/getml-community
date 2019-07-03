@@ -91,6 +91,9 @@ class DataFrame
     /// Returns number of bytes occupied by the data
     ULong nbytes() const;
 
+    /// Get the number of rows.
+    const size_t nrows() const;
+
     /// Saves the data on the engine
     void save( const std::string &_path );
 
@@ -252,14 +255,6 @@ class DataFrame
 
     /// Primitive abstraction for member name_
     const std::string &name() const { return name_; }
-
-    /// Get the number of rows
-    const size_t nrows() const
-    {
-        assert( num_join_keys() > 0 );
-
-        return join_keys_[0].nrows();
-    }
 
     /// Returns number of categorical columns.
     size_t const num_categoricals() const { return categoricals_.size(); }
@@ -520,6 +515,14 @@ template <class ColType>
 void DataFrame::add_column(
     const ColType &_col, std::vector<ColType> *_columns ) const
 {
+    if ( _col.nrows() != nrows() && nrows() != 0 )
+        {
+            throw std::invalid_argument(
+                "Column '" + _col.name() + "' is of length " +
+                std::to_string( _col.nrows() ) + ", expected " +
+                std::to_string( nrows() ) + "." );
+        }
+
     const auto has_same_name = [_col]( const ColType &c ) {
         return c.name() == _col.name();
     };
