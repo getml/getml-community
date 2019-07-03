@@ -25,7 +25,7 @@ Int Encoding::insert( const std::string& _val )
 {
     assert( map_.find( _val ) == map_.end() );
 
-    const auto ix = static_cast<size_t>( vector_->size() + subsize_ );
+    const auto ix = static_cast<Int>( vector_->size() + subsize_ );
 
     map_[_val] = ix;
 
@@ -130,7 +130,7 @@ Encoding& Encoding::operator=( std::vector<std::string>&& _vector ) noexcept
 
     map_.clear();
 
-    for ( size_t ix = 0; ix < static_cast<size_t>( vector_->size() ); ++ix )
+    for ( Int ix = 0; ix < static_cast<Int>( vector_->size() ); ++ix )
         {
             auto& val = ( *vector_ )[ix];
 

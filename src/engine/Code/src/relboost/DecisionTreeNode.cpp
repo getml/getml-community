@@ -109,10 +109,10 @@ void DecisionTreeNode::add_candidates(
     // -----------------------------------------------------------------
     // Check whether split would be balanced enough.
 
-    Int num_samples_smaller = std::distance( _last_it, _it );
+    auto num_samples_smaller = static_cast<Int>( std::distance( _last_it, _it ) );
 
-    Int num_samples_greater =
-        std::distance( _begin, _end ) - num_samples_smaller;
+    auto num_samples_greater =
+        static_cast<Int>( std::distance( _begin, _end ) ) - num_samples_smaller;
 
     utils::Reducer::reduce(
         std::plus<Int>(), &num_samples_smaller, &comm() );

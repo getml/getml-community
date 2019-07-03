@@ -595,7 +595,7 @@ void DataFrame::from_json(
             for ( size_t j = 0; j < arr->size(); ++j )
                 {
                     column[j] =
-                        ( *_encoding )[arr->getElement<std::string>( j )];
+                        ( *_encoding )[arr->getElement<std::string>( static_cast<unsigned int>( j ) )];
                 }
 
             column.set_name( _names[i] );
@@ -628,7 +628,8 @@ void DataFrame::from_json(
 
             for ( size_t j = 0; j < arr->size(); ++j )
                 {
-                    column[j] = arr->getElement<Float>( j );
+                    column[j] = arr->getElement<Float>(
+                        static_cast<unsigned int>( j ) );
                 }
 
             column.set_name( _names[i] );
@@ -657,12 +658,14 @@ void DataFrame::from_json(
                     try
                         {
                             column[j] = csv::Parser::to_time_stamp(
-                                arr->getElement<std::string>( j ),
+                                arr->getElement<std::string>(
+                                    static_cast<unsigned int>( j ) ),
                                 _time_formats );
                         }
                     catch ( std::exception &e )
                         {
-                            column[j] = arr->getElement<Float>( j );
+                            column[j] = arr->getElement<Float>(
+                                static_cast<unsigned int>( j ) );
                         }
                 }
 

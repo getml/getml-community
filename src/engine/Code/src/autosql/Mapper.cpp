@@ -16,7 +16,7 @@ Mapper::create_rows_map(
 
     for ( Int i = 0; i < size; ++i )
         {
-            ( *rows_map )[( *_rows )[i]] = i;
+            ( *rows_map )[static_cast<Int>( ( *_rows )[i] )] = i;
         }
 
     return rows_map;

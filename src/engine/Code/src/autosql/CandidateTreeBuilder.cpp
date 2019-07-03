@@ -63,13 +63,13 @@ void CandidateTreeBuilder::add_count_distincts(
                                     enums::DataUsed::x_perip_discrete,
                                     enums::DataUsed::time_stamps_diff} )
                 {
-                    Int ncols = get_ncols(
+                    size_t ncols = get_ncols(
                         _table_holder.peripheral_tables_,
                         _same_units,
                         _ix_perip_used,
                         data_used );
 
-                    for ( Int ix_column_used = 0;
+                    for ( size_t ix_column_used = 0;
                           ix_column_used < ncols;
                           ++ix_column_used )
                         {
@@ -117,13 +117,13 @@ void CandidateTreeBuilder::add_other_aggs(
                                     enums::DataUsed::same_unit_numerical,
                                     enums::DataUsed::same_unit_discrete} )
                 {
-                    Int ncols = get_ncols(
+                    size_t ncols = get_ncols(
                         _table_holder.peripheral_tables_,
                         _same_units,
                         _ix_perip_used,
                         data_used );
 
-                    for ( Int ix_column_used = 0;
+                    for ( size_t ix_column_used = 0;
                           ix_column_used < ncols;
                           ++ix_column_used )
                         {
@@ -209,7 +209,7 @@ std::list<decisiontrees::DecisionTree> CandidateTreeBuilder::build_candidates(
     const decisiontrees::TableHolder &_table_holder,
     const std::shared_ptr<const std::vector<std::string>> &_categories,
     const std::vector<descriptors::SameUnits> &_same_units,
-    const Int _ix_feature,
+    const size_t _ix_feature,
     const descriptors::Hyperparameters &_hyperparameters,
     containers::Optional<aggregations::AggregationImpl> *_aggregation_impl,
     std::mt19937 *_random_number_generator,
@@ -292,7 +292,7 @@ CandidateTreeBuilder::build_candidate_trees(
                 _categories,
                 _same_units,
                 _hyperparameters,
-                ix_perip_used,
+                static_cast<Int>( ix_perip_used ),
                 _random_number_generator,
                 _aggregation_impl,
                 _comm,
@@ -309,7 +309,7 @@ CandidateTreeBuilder::build_candidate_trees(
                 _categories,
                 _same_units,
                 _hyperparameters,
-                ix_perip_used,
+                static_cast<Int>( ix_perip_used ),
                 _random_number_generator,
                 _aggregation_impl,
                 _comm,
@@ -324,7 +324,7 @@ CandidateTreeBuilder::build_candidate_trees(
                 _categories,
                 _same_units,
                 _hyperparameters,
-                ix_perip_used,
+                static_cast<Int>( ix_perip_used ),
                 _random_number_generator,
                 _aggregation_impl,
                 _comm,
@@ -340,7 +340,7 @@ CandidateTreeBuilder::build_candidate_trees(
                         _categories,
                         _same_units,
                         _hyperparameters,
-                        ix_perip_used,
+                        static_cast<Int>( ix_perip_used ),
                         _random_number_generator,
                         _aggregation_impl,
                         _comm,
@@ -355,17 +355,15 @@ CandidateTreeBuilder::build_candidate_trees(
 
 // ----------------------------------------------------------------------------
 
-Int CandidateTreeBuilder::get_ncols(
+size_t CandidateTreeBuilder::get_ncols(
     const std::vector<containers::DataFrame> &_peripheral_tables,
     const std::vector<descriptors::SameUnits> &_same_units,
-    const Int _ix_perip_used,
+    const size_t _ix_perip_used,
     const enums::DataUsed _data_used )
 {
     assert( _peripheral_tables.size() == _same_units.size() );
 
-    assert( _ix_perip_used >= 0 );
-
-    assert( _ix_perip_used < static_cast<Int>( _same_units.size() ) );
+    assert( _ix_perip_used < _same_units.size() );
 
     switch ( _data_used )
         {
@@ -402,8 +400,8 @@ Int CandidateTreeBuilder::get_ncols(
 bool CandidateTreeBuilder::is_comparison_only(
     const decisiontrees::TableHolder &_table_holder,
     const enums::DataUsed _data_used,
-    const Int _ix_perip_used,
-    const Int _ix_column_used )
+    const size_t _ix_perip_used,
+    const size_t _ix_column_used )
 {
     if ( _data_used == enums::DataUsed::x_perip_numerical )
         {
@@ -469,7 +467,7 @@ void CandidateTreeBuilder::randomly_remove_candidate_trees(
 /// For the round_robin approach, we remove all features but
 /// one - the remaining one is a different one every time.
 void CandidateTreeBuilder::round_robin(
-    const Int _ix_feature,
+    const size_t _ix_feature,
     std::list<decisiontrees::DecisionTree> *_candidate_trees )
 {
     const size_t ix_feature_size = static_cast<size_t>( _ix_feature );

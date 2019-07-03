@@ -42,7 +42,7 @@ std::shared_ptr<std::vector<Float>> Sampler::make_sample_weights(
             return sample_weights;
         }
 
-    std::uniform_int_distribution<> dist( 0, _num_rows - 1 );
+    std::uniform_int_distribution<size_t> dist( 0, _num_rows - 1 );
 
     const auto num_samples = static_cast<size_t>(
         static_cast<Float>( _num_rows ) * sampling_rate_ );

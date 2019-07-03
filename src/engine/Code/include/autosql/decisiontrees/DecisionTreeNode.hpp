@@ -156,7 +156,7 @@ class DecisionTreeNode
     }
 
     /// Trivial accessor
-    inline Int column_used() const
+    inline size_t column_used() const
     {
         assert( split_ );
         return split_->column_used;
@@ -191,21 +191,21 @@ class DecisionTreeNode
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
         const containers::Match *_sample,
-        const Int _col ) const
+        const size_t _col ) const
     {
-        const Int col1 =
+        const auto col1 =
             std::get<0>( tree_->same_units_categorical()[_col] ).ix_column_used;
 
-        const Int col2 =
+        const auto col2 =
             std::get<1>( tree_->same_units_categorical()[_col] ).ix_column_used;
 
-        const Int val1 =
+        const auto val1 =
             ( std::get<0>( tree_->same_units_categorical()[_col] ).data_used ==
               enums::DataUsed::x_perip_categorical )
                 ? ( get_x_perip_categorical( _peripheral, _sample, col1 ) )
                 : ( get_x_popul_categorical( _population, _sample, col1 ) );
 
-        const Int val2 =
+        const auto val2 =
             ( std::get<1>( tree_->same_units_categorical()[_col] ).data_used ==
               enums::DataUsed::x_perip_categorical )
                 ? ( get_x_perip_categorical( _peripheral, _sample, col2 ) )
@@ -221,12 +221,12 @@ class DecisionTreeNode
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
         const containers::Match *_sample,
-        const Int _col ) const
+        const size_t _col ) const
     {
-        const Int col1 =
+        const auto col1 =
             std::get<0>( tree_->same_units_discrete()[_col] ).ix_column_used;
 
-        const Int col2 =
+        const auto col2 =
             std::get<1>( tree_->same_units_discrete()[_col] ).ix_column_used;
 
         Float val1 = 0.0;
@@ -273,12 +273,12 @@ class DecisionTreeNode
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
         const containers::Match *_sample,
-        const Int _col ) const
+        const size_t _col ) const
     {
-        const Int col1 =
+        const auto col1 =
             std::get<0>( tree_->same_units_numerical()[_col] ).ix_column_used;
 
-        const Int col2 =
+        const auto col2 =
             std::get<1>( tree_->same_units_numerical()[_col] ).ix_column_used;
 
         Float val1 = 0.0;
@@ -391,11 +391,11 @@ class DecisionTreeNode
         const size_t _col ) const
     {
         assert( _col < _subfeatures.size() );
-        return _subfeatures[_col][_sample->ix_x_perip];
+        return _subfeatures[_col][static_cast<Int>( _sample->ix_x_perip )];
     }
 
     /// Trivial getter
-    const Int ix_perip_used() const { return tree_->ix_perip_used(); }
+    const size_t ix_perip_used() const { return tree_->ix_perip_used(); }
 
     /// Trivial accessor
     inline optimizationcriteria::OptimizationCriterion *optimization_criterion()
@@ -571,7 +571,7 @@ class DecisionTreeNode
 
     /// Tries whether the categorical values might constitute a good split
     void try_categorical_values(
-        const Int _column_used,
+        const size_t _column_used,
         const enums::DataUsed _data_used,
         const size_t _sample_size,
         containers::MatchPtrs::iterator _sample_container_begin,
@@ -624,7 +624,7 @@ class DecisionTreeNode
 
     /// Tries whether the discrete values might constitute a good split
     void try_discrete_values(
-        const Int _column_used,
+        const size_t _column_used,
         const enums::DataUsed _data_used,
         const size_t _sample_size,
         containers::MatchPtrs::iterator _sample_container_begin,
@@ -633,7 +633,7 @@ class DecisionTreeNode
 
     /// Called by try_discrete_values(...) and try_numerical_values(...)
     void try_non_categorical_values(
-        const Int _column_used,
+        const size_t _column_used,
         const enums::DataUsed _data_used,
         const size_t _sample_size,
         const std::vector<Float> _critical_values,
@@ -644,7 +644,7 @@ class DecisionTreeNode
 
     /// Tries whether the numerical values might constitute a good split
     void try_numerical_values(
-        const Int _column_used,
+        const size_t _column_used,
         const enums::DataUsed _data_used,
         const size_t _sample_size,
         containers::MatchPtrs::iterator _sample_container_begin,

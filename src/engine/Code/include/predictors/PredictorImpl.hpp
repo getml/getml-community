@@ -35,7 +35,7 @@ class PredictorImpl
 
         for ( size_t i = 0; i < arr->size(); ++i )
             {
-                encodings_.push_back( Encoding( *arr->getObject( i ) ) );
+                encodings_.push_back( Encoding( *arr->getObject( static_cast<unsigned int>( i ) ) ) );
             }
     };
 

@@ -143,7 +143,7 @@ void Monitor::send_and_receive(
                 Poco::Net::Context::VerificationMode::VERIFY_NONE ) );
 
             Poco::Net::HTTPSClientSession session(
-                "127.0.0.1", options_.monitor_.port_, context );
+                "127.0.0.1", static_cast<Poco::UInt16>( options_.monitor_.port_ ), context );
 
             auto& req_stream = session.sendRequest( *_req );
 
@@ -156,7 +156,8 @@ void Monitor::send_and_receive(
     else
         {
             Poco::Net::HTTPClientSession session(
-                "127.0.0.1", options_.monitor_.port_ );
+                "127.0.0.1",
+                static_cast<Poco::UInt16>( options_.monitor_.port_ ) );
 
             auto& req_stream = session.sendRequest( *_req );
 
@@ -197,14 +198,17 @@ bool Monitor::shutdown() const
                                 VERIFY_NONE ) );
 
                     Poco::Net::HTTPSClientSession session(
-                        "127.0.0.1", options_.monitor_.port_, context );
+                        "127.0.0.1",
+                        static_cast<Poco::UInt16>( options_.monitor_.port_ ),
+                        context );
 
                     session.sendRequest( req );
                 }
             else
                 {
                     Poco::Net::HTTPClientSession session(
-                        "127.0.0.1", options_.monitor_.port_ );
+                        "127.0.0.1",
+                        static_cast<Poco::UInt16>( options_.monitor_.port_ ) );
 
                     session.sendRequest( req );
                 }

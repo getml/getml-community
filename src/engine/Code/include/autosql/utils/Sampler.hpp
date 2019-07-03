@@ -14,7 +14,7 @@ class Sampler
     // --------------------------------------------------------------------
 
    public:
-    Sampler( const size_t _seed )
+    Sampler( const unsigned int _seed )
         : random_number_generator_( std::mt19937( _seed ) )
     {
     }

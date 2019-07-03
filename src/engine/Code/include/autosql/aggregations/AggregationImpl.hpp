@@ -20,8 +20,8 @@ struct AggregationImpl
           sum_cubed_committed_( std::vector<Float>( _sample_size ) ),
           sum_squared_( std::vector<Float>( _sample_size ) ),
           sum_squared_committed_( std::vector<Float>( _sample_size ) ),
-          updates_current_( containers::IntSet( _sample_size ) ),
-          updates_stored_( containers::IntSet( _sample_size ) ),
+          updates_current_( containers::IntSet( static_cast<Int>( _sample_size ) ) ),
+          updates_stored_( containers::IntSet( static_cast<Int>( _sample_size ) ) ),
           yhat_( std::vector<Float>( _sample_size ) ),
           yhat_committed_( std::vector<Float>( _sample_size ) ),
           yhat_stored_( std::vector<Float>( _sample_size ) )

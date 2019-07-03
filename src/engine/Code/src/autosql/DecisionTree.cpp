@@ -104,7 +104,7 @@ void DecisionTree::create_value_to_be_aggregated(
 {
     // ------------------------------------------------------------------------
 
-    const Int ix_column_used = column_to_be_aggregated().ix_column_used;
+    const auto ix_column_used = column_to_be_aggregated().ix_column_used;
 
     switch ( column_to_be_aggregated().data_used )
         {
@@ -150,12 +150,12 @@ void DecisionTree::create_value_to_be_aggregated(
                             impl()->same_units_numerical()[ix_column_used] )
                             .data_used;
 
-                    const Int ix_column_used1 =
+                    const auto ix_column_used1 =
                         std::get<0>(
                             impl()->same_units_numerical()[ix_column_used] )
                             .ix_column_used;
 
-                    const Int ix_column_used2 =
+                    const auto ix_column_used2 =
                         std::get<1>(
                             impl()->same_units_numerical()[ix_column_used] )
                             .ix_column_used;
@@ -202,10 +202,7 @@ void DecisionTree::create_value_to_be_aggregated(
 
             case enums::DataUsed::same_unit_discrete:
 
-                assert(
-                    static_cast<Int>(
-                        impl()->same_units_discrete().size() ) >
-                    ix_column_used );
+                assert( impl()->same_units_discrete().size() > ix_column_used );
 
                 {
                     const enums::DataUsed data_used1 =
@@ -218,12 +215,12 @@ void DecisionTree::create_value_to_be_aggregated(
                             impl()->same_units_discrete()[ix_column_used] )
                             .data_used;
 
-                    const Int ix_column_used1 =
+                    const auto ix_column_used1 =
                         std::get<0>(
                             impl()->same_units_discrete()[ix_column_used] )
                             .ix_column_used;
 
-                    const Int ix_column_used2 =
+                    const auto ix_column_used2 =
                         std::get<1>(
                             impl()->same_units_discrete()[ix_column_used] )
                             .ix_column_used;

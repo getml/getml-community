@@ -22,8 +22,8 @@ Hyperparameters::Hyperparameters( const Poco::JSON::Object& _json_obj )
       num_threads_( JSON::get_value<size_t>( _json_obj, "num_threads_" ) ),
       round_robin_( JSON::get_value<bool>( _json_obj, "round_robin_" ) ),
       sampling_factor_(
-          JSON::get_value<size_t>( _json_obj, "sampling_factor_" ) ),
-      seed_( JSON::get_value<size_t>( _json_obj, "seed_" ) ),
+          JSON::get_value<Float>( _json_obj, "sampling_factor_" ) ),
+      seed_( JSON::get_value<unsigned int>( _json_obj, "seed_" ) ),
       share_aggregations_(
           JSON::get_value<Float>( _json_obj, "share_aggregations_" ) ),
       shrinkage_( JSON::get_value<Float>( _json_obj, "shrinkage_" ) ),

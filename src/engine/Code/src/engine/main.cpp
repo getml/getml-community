@@ -127,7 +127,7 @@ int main( int argc, char *argv[] )
 
     const auto shutdown = std::make_shared<std::atomic<bool>>( false );
 
-    Poco::Net::ServerSocket server_socket( options.engine_.port_, 64 );
+    Poco::Net::ServerSocket server_socket( static_cast<Poco::UInt16>( options.engine_.port_ ), 64 );
 
     server_socket.setReceiveTimeout( Poco::Timespan( 600, 0 ) );
 

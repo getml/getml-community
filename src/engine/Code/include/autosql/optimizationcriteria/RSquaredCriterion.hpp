@@ -24,8 +24,8 @@ class RSquaredCriterion : public OptimizationCriterion
     /// Sorts a specific subsection of the values defined by _begin and _end.
     /// Returns the indices from greatest to smallest. This is useful for
     /// combining categories.
-    std::vector<Int> argsort(
-        const Int _begin, const Int _end ) const final;
+    std::vector<size_t> argsort(
+        const size_t _begin, const size_t _end ) const final;
 
     /// Finds the index associated with the maximum of the optimization
     /// criterion
@@ -87,7 +87,7 @@ class RSquaredCriterion : public OptimizationCriterion
     }
 
     /// Trivial accessor.
-    const Int storage_ix() const final { return impl().storage_ix(); }
+    const size_t storage_ix() const final { return impl().storage_ix(); }
 
     /// Stores the current stage of the sufficient statistics
     void store_current_stage(

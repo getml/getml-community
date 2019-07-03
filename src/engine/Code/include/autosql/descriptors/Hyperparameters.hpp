@@ -66,7 +66,7 @@ struct Hyperparameters
     const Float sampling_factor_;
 
     /// The seed used for the hyperparameter optimization
-    const size_t seed_;
+    const unsigned int seed_;
 
     /// The share of aggregations randomly selected
     const Float share_aggregations_;

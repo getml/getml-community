@@ -67,20 +67,20 @@ struct DecisionTreeImpl
     }
 
     /// Trivial getter
-    inline Int ix_perip_used() const
+    inline size_t ix_perip_used() const
     {
         return column_to_be_aggregated_.ix_perip_used;
     }
 
     /// Trivial getter
-    inline Int max_length() const
+    inline size_t max_length() const
     {
         assert( tree_hyperparameters_ );
         return tree_hyperparameters_->max_length_;
     }
 
     /// Trivial getter
-    inline Int min_num_samples() const
+    inline size_t min_num_samples() const
     {
         assert( tree_hyperparameters_ );
         return tree_hyperparameters_->min_num_samples_;
@@ -148,7 +148,7 @@ struct DecisionTreeImpl
     std::string get_colname(
         const std::string& _feature_num,
         const enums::DataUsed _data_used,
-        const Int _ix_column_used,
+        const size_t _ix_column_used,
         const bool _equals = true ) const;
 
     // ------------------------------------------------------------

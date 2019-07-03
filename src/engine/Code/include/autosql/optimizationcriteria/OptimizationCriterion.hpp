@@ -19,8 +19,8 @@ class OptimizationCriterion
     /// Sorts a specific subsection of the values defined by _begin and _end.
     /// Returns the indices from greatest to smallest. This is useful for
     /// combining categories.
-    virtual std::vector<Int> argsort(
-        const Int _begin, const Int _end ) const = 0;
+    virtual std::vector<size_t> argsort(
+        const size_t _begin, const size_t _end ) const = 0;
 
     /// Calculates the residuals
     virtual void calc_residuals() = 0;
@@ -62,7 +62,7 @@ class OptimizationCriterion
 
     /// An intermediate aggregation has no storage, so it
     /// is redelegated to the parent.
-    virtual const Int storage_ix() const = 0;
+    virtual const size_t storage_ix() const = 0;
 
     /// Stores the current stage of the sufficient statistics
     virtual void store_current_stage(

@@ -97,15 +97,15 @@ void Threadutils::fit_ensemble(
 
 // ----------------------------------------------------------------------------
 
-Int Threadutils::get_num_threads( const Int _num_threads )
+size_t Threadutils::get_num_threads( const size_t _num_threads )
 {
     auto num_threads = _num_threads;
 
-    if ( num_threads <= 0 )
+    if ( num_threads == 0 )
         {
             num_threads = std::max(
-                2,
-                static_cast<Int>( std::thread::hardware_concurrency() ) - 2 );
+                static_cast<size_t>( 2 ),
+                static_cast<size_t>( std::thread::hardware_concurrency() ) - 2 );
         }
 
     return num_threads;

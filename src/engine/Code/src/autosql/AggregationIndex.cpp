@@ -87,7 +87,9 @@ AggregationIndex::make_sample_weights(
                     if ( use_this_sample )
                         {
                             auto ix_input_tr =
-                                transform_ix_agg( ix_input, *input_map_ );
+                                transform_ix_agg(
+                                  static_cast<Int>( ix_input ),
+                                  *input_map_ );
 
                             if ( ix_input_tr >= 0 )
                                 {
@@ -110,9 +112,8 @@ AggregationIndex::make_sample_weights(
 // ----------------------------------------------------------------------------
 
 const std::vector<Int> AggregationIndex::transform(
-    const Int _ix_input ) const
+    const size_t _ix_input ) const
 {
-    assert( _ix_input >= 0 );
     assert( _ix_input < input_table_.nrows() );
 
     if ( !output_table_.df().has( input_table_.join_key( _ix_input ) ) )
@@ -143,7 +144,9 @@ const std::vector<Int> AggregationIndex::transform(
 
             if ( use_this_sample )
                 {
-                    auto ix_agg_tr = transform_ix_agg( ix_agg, *output_map_ );
+                    auto ix_agg_tr = transform_ix_agg(
+                      static_cast<Int>( ix_agg ),
+                      *output_map_ );
 
                     if ( ix_agg_tr != -1 )
                         {

@@ -64,7 +64,7 @@ XGBoostPredictor::convert_to_dmatrix_dense(
             for ( size_t i = 0; i < _X_numerical[j]->size(); ++i )
                 {
                     mat_float[i * _X_numerical.size() + j] =
-                        ( *_X_numerical[j] )[i];
+                       static_cast<float>( ( *_X_numerical[j] )[i] );
                 }
         }
 
@@ -329,7 +329,7 @@ std::string XGBoostPredictor::fit(
     // --------------------------------------------------------------------
     // Do the actual fitting
 
-    for ( size_t i = 0; i < hyperparams_.n_iter_; ++i )
+    for ( int i = 0; i < static_cast<int>( hyperparams_.n_iter_ ); ++i )
         {
             if ( XGBoosterUpdateOneIter( *handle, i, *d_matrix ) != 0 )
                 {

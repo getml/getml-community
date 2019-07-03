@@ -1506,7 +1506,7 @@ class Aggregation : public AbstractAggregation
             int>::type = 0>
     inline const Float value_to_be_aggregated( const containers::Match *_sample )
     {
-        return value_to_be_aggregated()[_sample->ix_x_perip];
+        return value_to_be_aggregated()[static_cast<Int>( _sample->ix_x_perip )];
     }
 
     /// Accessor for the value to be aggregated to be used for all
@@ -1673,7 +1673,7 @@ void Aggregation<AggType, data_used_, is_population_>::activate_all(
                   it != _sample_container_end;
                   ++it )
                 {
-                    updates_stored().insert( ( *it )->ix_x_popul );
+                    updates_stored().insert( static_cast<Int>( ( *it )->ix_x_popul ) );
                 }
 
             init_optimization_criterion(
@@ -1739,8 +1739,8 @@ void Aggregation<AggType, data_used_, is_population_>::
                     assert( ( *it )->categorical_value == *cat );
                     activate_sample( *it );
 
-                    updates_stored().insert( ( *it )->ix_x_popul );
-                    updates_current().insert( ( *it )->ix_x_popul );
+                    updates_stored().insert( static_cast<Int>( ( *it )->ix_x_popul ) );
+                    updates_current().insert( static_cast<Int>( ( *it )->ix_x_popul ) );
 
                     ++num_samples_smaller;
                 }
@@ -1820,8 +1820,8 @@ void Aggregation<AggType, data_used_, is_population_>::
 
                     activate_sample( *it );
 
-                    updates_stored().insert( ( *it )->ix_x_popul );
-                    updates_current().insert( ( *it )->ix_x_popul );
+                    updates_stored().insert( static_cast<Int>( ( *it )->ix_x_popul ) );
+                    updates_current().insert( static_cast<Int>( ( *it )->ix_x_popul ) );
 
                     --it;
                 }
@@ -1877,8 +1877,8 @@ void Aggregation<AggType, data_used_, is_population_>::
 
                     activate_sample( *it );
 
-                    updates_stored().insert( ( *it )->ix_x_popul );
-                    updates_current().insert( ( *it )->ix_x_popul );
+                    updates_stored().insert( static_cast<Int>( ( *it )->ix_x_popul ) );
+                    updates_current().insert( static_cast<Int>( ( *it )->ix_x_popul ) );
 
                     ++it;
                 }
@@ -1947,8 +1947,8 @@ void Aggregation<AggType, data_used_, is_population_>::
         {
             activate_sample( *it );
 
-            updates_stored().insert( ( *it )->ix_x_popul );
-            updates_current().insert( ( *it )->ix_x_popul );
+            updates_stored().insert( static_cast<Int>( ( *it )->ix_x_popul ) );
+            updates_current().insert( static_cast<Int>( ( *it )->ix_x_popul ) );
         }
     // ------------------------------------------------------------------
     // Selectively deactivate those samples that are not of the
@@ -2161,8 +2161,8 @@ void Aggregation<AggType, data_used_, is_population_>::
                     assert( ( *it )->categorical_value == *cat );
                     deactivate_sample( *it );
 
-                    updates_stored().insert( ( *it )->ix_x_popul );
-                    updates_current().insert( ( *it )->ix_x_popul );
+                    updates_stored().insert( static_cast<Int>( ( *it )->ix_x_popul ) );
+                    updates_current().insert( static_cast<Int>( ( *it )->ix_x_popul ) );
 
                     ++num_samples_smaller;
                 }
@@ -2244,8 +2244,8 @@ void Aggregation<AggType, data_used_, is_population_>::
 
                     deactivate_sample( *it );
 
-                    updates_stored().insert( ( *it )->ix_x_popul );
-                    updates_current().insert( ( *it )->ix_x_popul );
+                    updates_stored().insert( static_cast<Int>( ( *it )->ix_x_popul ) );
+                    updates_current().insert( static_cast<Int>( ( *it )->ix_x_popul ) );
 
                     --it;
                 }
@@ -2765,7 +2765,7 @@ void Aggregation<AggType, data_used_, is_population_>::
         yhat_stored()       // _old_values
     );
 
-    for ( Int ix : updates_current() )
+    for ( auto ix : updates_current() )
         {
             yhat_stored()[ix] = yhat_inline()[ix];
         }

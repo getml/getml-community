@@ -18,8 +18,8 @@ struct IntermediateAggregationImpl
         : count_( std::vector<Float>( _nrows ) ),
           index_( _index ),
           parent_( _parent ),
-          updates_current_( containers::IntSet( _nrows ) ),
-          updates_stored_( containers::IntSet( _nrows ) ),
+          updates_current_( containers::IntSet( static_cast<Int>( _nrows ) ) ),
+          updates_stored_( containers::IntSet( static_cast<Int>( _nrows ) ) ),
           yhat_( std::vector<Float>( _nrows ) ),
           yhat_committed_( std::vector<Float>( _nrows ) ),
           yhat_stored_( std::vector<Float>( _nrows ) )

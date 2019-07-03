@@ -53,7 +53,7 @@ void test20_saving_and_loading_models()
 
     for ( size_t i = 0; i < join_keys_population.size(); ++i )
         {
-            join_keys_population[i] = i;
+            join_keys_population[i] = static_cast<std::int32_t>( i );
         }
 
     const auto join_keys_population_col =

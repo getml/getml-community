@@ -10,7 +10,7 @@ std::vector<T> make_categorical_column( size_t _length, std::mt19937& _rng )
 
     for ( auto& val : vec )
         {
-            val = dis( _rng );
+            val = static_cast<T>( dis( _rng ) );
         }
 
     return vec;

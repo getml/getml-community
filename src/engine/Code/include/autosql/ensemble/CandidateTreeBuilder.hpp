@@ -21,7 +21,7 @@ class CandidateTreeBuilder
         const decisiontrees::TableHolder &_table_holder,
         const std::shared_ptr<const std::vector<std::string>> &_categories,
         const std::vector<descriptors::SameUnits> &_same_units,
-        const Int _ix_feature,
+        const size_t _ix_feature,
         const descriptors::Hyperparameters &_hyperparameters,
         containers::Optional<aggregations::AggregationImpl> *_aggregation_impl,
         std::mt19937 *_random_number_generator,
@@ -94,8 +94,8 @@ class CandidateTreeBuilder
     static bool is_comparison_only(
         const decisiontrees::TableHolder &_table_holder,
         const enums::DataUsed _data_used,
-        const Int _ix_perip_used,
-        const Int _ix_column_used );
+        const size_t _ix_perip_used,
+        const size_t _ix_column_used );
 
     /// When the user provides a _share_aggregations that is not 1.0,
     /// the decisiontrees::DecisionTreeEnsemble actually initializes all trees,
@@ -110,14 +110,14 @@ class CandidateTreeBuilder
     /// For the round_robin approach, we remove all features but
     /// one - the remaining one is a different one every time.
     static void round_robin(
-        const Int _ix_feature,
+        const size_t _ix_feature,
         std::list<decisiontrees::DecisionTree> *_candidate_trees );
 
     /// Returns the number of columns
-    static Int get_ncols(
+    static size_t get_ncols(
         const std::vector<containers::DataFrame> &_peripheral_tables,
         const std::vector<descriptors::SameUnits> &_same_units,
-        const Int _ix_perip_used,
+        const size_t _ix_perip_used,
         const enums::DataUsed _data_used );
 
     // -------------------------------------------------------------------------

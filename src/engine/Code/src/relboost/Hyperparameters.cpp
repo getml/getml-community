@@ -38,7 +38,7 @@ Hyperparameters::Hyperparameters( const Poco::JSON::Object& _obj )
       num_threads_( JSON::get_value<Int>( _obj, "num_threads_" ) ),
       objective_( JSON::get_value<std::string>( _obj, "objective_" ) ),
       sampling_factor_( JSON::get_value<Float>( _obj, "sampling_factor_" ) ),
-      seed_( JSON::get_value<size_t>( _obj, "seed_" ) ),
+      seed_( JSON::get_value<unsigned int>( _obj, "seed_" ) ),
       silent_( JSON::get_value<bool>( _obj, "silent_" ) ),
       use_timestamps_( JSON::get_value<bool>( _obj, "use_timestamps_" ) )
 {

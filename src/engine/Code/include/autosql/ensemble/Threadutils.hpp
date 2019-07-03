@@ -27,7 +27,7 @@ class Threadutils
         ensemble::DecisionTreeEnsemble* _ensemble );
 
     /// Number of threads.
-    static Int get_num_threads( const Int _num_threads );
+    static size_t get_num_threads( const size_t _num_threads );
 
     /// Generates features.
     static void transform_ensemble(

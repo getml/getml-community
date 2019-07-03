@@ -142,6 +142,7 @@ class LossFunctionImpl
         else
             {
                 assert( false && "Aggregation not known!" );
+                return std::array<Float, 3>();
             }
     }
     // -----------------------------------------------------------------

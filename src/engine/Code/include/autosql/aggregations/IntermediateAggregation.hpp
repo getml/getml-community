@@ -57,8 +57,8 @@ class IntermediateAggregation
     /// Sorts a specific subsection of the values defined by _begin and _end.
     /// Returns the indices from greatest to smallest. This is useful for
     /// combining categories.
-    std::vector<Int> argsort(
-        const Int _begin, const Int _end ) const final
+    std::vector<size_t> argsort(
+        const size_t _begin, const size_t _end ) const final
     {
         return parent().argsort( _begin, _end );
     }
@@ -95,7 +95,7 @@ class IntermediateAggregation
 
     /// An intermediate aggregation has no storage, so it
     /// is redelegated to the parent.
-    const Int storage_ix() const final { return parent().storage_ix(); }
+    const size_t storage_ix() const final { return parent().storage_ix(); }
 
     /// Stores the current stage
     void store_current_stage(
@@ -490,7 +490,7 @@ void IntermediateAggregation<AggType>::init_yhat(
 
     parent().init_yhat( yhat(), updates_stored() );
 
-    for ( Int ix_agg : updates_stored() )
+    for ( auto ix_agg : updates_stored() )
         {
             yhat_stored()[ix_agg] = yhat()[ix_agg];
         }
@@ -643,7 +643,7 @@ void IntermediateAggregation<AggType>::update_samples(
 
     parent().update_samples( updates_current(), yhat(), yhat_stored() );
 
-    for ( Int ix_agg : updates_current() )
+    for ( auto ix_agg : updates_current() )
         {
             yhat_stored()[ix_agg] = yhat()[ix_agg];
         }
@@ -669,7 +669,7 @@ void IntermediateAggregation<AggType>::update_yhat_old(
                     continue;
                 }
 
-            const std::vector<Int> indices_agg = index().transform( i );
+            const std::vector<Int> indices_agg = index().transform( static_cast<Int>( i ) );
 
             if ( needs_count_ )
                 {

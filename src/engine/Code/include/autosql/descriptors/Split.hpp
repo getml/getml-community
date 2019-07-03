@@ -13,7 +13,7 @@ struct Split
     Split(
         const bool _apply_from_above,
         const Float _critical_value,
-        const Int _column_used,
+        const size_t _column_used,
         const enums::DataUsed _data_used )
         : apply_from_above( _apply_from_above ),
           categories_used( std::make_shared<std::vector<Int>>( 0 ) ),
@@ -31,7 +31,7 @@ struct Split
         const std::shared_ptr<const std::vector<Int>> _categories_used,
         const std::vector<Int>::const_iterator _categories_used_begin,
         const std::vector<Int>::const_iterator _categories_used_end,
-        const Int _column_used,
+        const size_t _column_used,
         const enums::DataUsed _data_used )
         : apply_from_above( _apply_from_above ),
           categories_used( _categories_used ),
@@ -48,7 +48,7 @@ struct Split
         const bool _apply_from_above,
         const Float _critical_value,
         const std::shared_ptr<const std::vector<Int>> _categories_used,
-        const Int _column_used,
+        const size_t _column_used,
         const enums::DataUsed _data_used )
         : apply_from_above( _apply_from_above ),
           categories_used( _categories_used ),
@@ -69,7 +69,7 @@ struct Split
           categories_used_begin( categories_used->cbegin() ),
           categories_used_end( categories_used->cend() ),
           column_used(
-              JSON::get_value<Int>( _json_obj, "column_used_" ) ),
+              JSON::get_value<size_t>( _json_obj, "column_used_" ) ),
           critical_value(
               JSON::get_value<Float>( _json_obj, "critical_value_" ) ),
           data_used( JSON::int_to_data_used(
@@ -111,7 +111,7 @@ struct Split
     const std::vector<Int>::const_iterator categories_used_end;
 
     // Number of column used
-    const Int column_used;
+    const size_t column_used;
 
     // Critical value for the node - for numeric values
     const Float critical_value;

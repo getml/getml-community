@@ -46,7 +46,7 @@ class AggregationIndex
 
     /// Maps _ix_input to all indices
     const std::vector<Int> transform(
-        const Int _ix_input ) const;
+        const size_t _ix_input ) const;
 
     /// Transform ix_agg using the output map
     Int transform_ix_agg(

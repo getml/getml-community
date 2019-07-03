@@ -35,7 +35,7 @@ DecisionTreeEnsemble::DecisionTreeEnsemble(
 // ----------------------------------------------------------------------------
 
 std::list<decisiontrees::DecisionTree> DecisionTreeEnsemble::build_candidates(
-    const Int _ix_feature,
+    const size_t _ix_feature,
     const std::vector<descriptors::SameUnits> &_same_units,
     const decisiontrees::TableHolder &_table_holder )
 {
@@ -426,7 +426,7 @@ void DecisionTreeEnsemble::fit(
     auto sample_weights = std::make_shared<std::vector<Float>>( nrows, 1.0 );
 
     random_number_generator().reset(
-        new std::mt19937( static_cast<size_t>( hyperparameters().seed_ ) ) );
+        new std::mt19937( static_cast<unsigned int>( hyperparameters().seed_ ) ) );
 
     // ----------------------------------------------------------------
     // containers::Match containers are pointers to simple structs, which

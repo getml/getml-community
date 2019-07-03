@@ -739,7 +739,7 @@ size_t DecisionTreeNode::reduce_sample_size( const size_t _sample_size )
     size_t global_sample_size = _sample_size;
 
     utils::Reducer::reduce(
-        std::plus<Float>(), &global_sample_size, comm() );
+        std::plus<size_t>(), &global_sample_size, comm() );
 
     return global_sample_size;
 }
@@ -1527,7 +1527,7 @@ void DecisionTreeNode::try_categorical_population(
                 }
 
             try_categorical_values(
-                col,
+                 col,
                 enums::DataUsed::x_popul_categorical,
                 _sample_size,
                 _sample_container_begin,
@@ -1717,7 +1717,7 @@ void DecisionTreeNode::try_numerical_population(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_categorical_values(
-    const Int _column_used,
+    const size_t _column_used,
     const enums::DataUsed _data_used,
     const size_t _sample_size,
     containers::MatchPtrs::iterator _sample_container_begin,
@@ -1734,7 +1734,7 @@ void DecisionTreeNode::try_categorical_values(
     const auto index = containers::CategoryIndex(
         *categories, _sample_container_begin, _sample_container_end );
 
-    const auto num_categories = static_cast<Int>( categories->size() );
+    const auto num_categories = categories->size();
 
     // -----------------------------------------------------------------------
     // Add new splits to the candidate splits
@@ -2097,7 +2097,7 @@ void DecisionTreeNode::try_conditions(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_discrete_values(
-    const Int _column_used,
+    const size_t _column_used,
     const enums::DataUsed _data_used,
     const size_t _sample_size,
     containers::MatchPtrs::iterator _sample_container_begin,
@@ -2138,7 +2138,7 @@ void DecisionTreeNode::try_discrete_values(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_non_categorical_values(
-    const Int _column_used,
+    const size_t _column_used,
     const enums::DataUsed _data_used,
     const size_t _sample_size,
     const std::vector<Float> _critical_values,
@@ -2156,11 +2156,11 @@ void DecisionTreeNode::try_non_categorical_values(
 
     debug_log( "try_non_categorical_values: Add new splits." );
 
-    for ( size_t i = 0; i < _critical_values.size(); ++i )
+    for ( auto it = _critical_values.rbegin(); it != _critical_values.rend(); ++it )
         {
             _candidate_splits->push_back( descriptors::Split(
                 true,
-                _critical_values.end()[-i - 1],
+                *it,
                 _column_used,
                 _data_used ) );
         }
@@ -2292,7 +2292,7 @@ void DecisionTreeNode::try_non_categorical_values(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_numerical_values(
-    const Int _column_used,
+    const size_t _column_used,
     const enums::DataUsed _data_used,
     const size_t _sample_size,
     containers::MatchPtrs::iterator _sample_container_begin,

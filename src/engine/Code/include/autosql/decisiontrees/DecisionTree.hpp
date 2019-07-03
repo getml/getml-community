@@ -145,7 +145,7 @@ class DecisionTree
     }
 
     /// Trivial getter
-    inline Int ix_perip_used() const { return impl()->ix_perip_used(); }
+    inline size_t ix_perip_used() const { return impl()->ix_perip_used(); }
 
     /// Creates the aggregation used by this tree or a clone thereof.
     inline std::shared_ptr<aggregations::AbstractAggregation> const
@@ -310,10 +310,10 @@ class DecisionTree
     inline Float grid_factor() const { return impl_.grid_factor(); }
 
     /// Trivial accessor
-    inline Int max_length() const { return impl_.max_length(); }
+    inline size_t max_length() const { return impl_.max_length(); }
 
     /// Trivial accessor
-    inline Int min_num_samples() const
+    inline size_t min_num_samples() const
     {
         return impl_.min_num_samples();
     }

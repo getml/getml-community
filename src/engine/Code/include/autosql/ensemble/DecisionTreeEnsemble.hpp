@@ -173,7 +173,7 @@ class DecisionTreeEnsemble
    private:
     /// Builds the candidates during fit(...)
     std::list<decisiontrees::DecisionTree> build_candidates(
-        const Int _ix_feature,
+        const size_t _ix_feature,
         const std::vector<descriptors::SameUnits> &_same_units,
         const decisiontrees::TableHolder &_table_holder );
 

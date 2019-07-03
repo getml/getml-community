@@ -100,7 +100,7 @@ struct Hyperparameters
     const Float sampling_factor_;
 
     /// The seed used for initializing the random number generator.
-    const size_t seed_;
+    const unsigned int seed_;
 
     /// Whether to print messages while running boosting
     const bool silent_;

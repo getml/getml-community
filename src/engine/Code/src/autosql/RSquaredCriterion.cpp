@@ -19,8 +19,8 @@ RSquaredCriterion::RSquaredCriterion(
 
 // ----------------------------------------------------------------------------
 
-std::vector<Int> RSquaredCriterion::argsort(
-    const Int _begin, const Int _end ) const
+std::vector<size_t> RSquaredCriterion::argsort(
+    const size_t _begin, const size_t _end ) const
 {
     // ---------------------------------------------------------------------
 
@@ -42,7 +42,7 @@ std::vector<Int> RSquaredCriterion::argsort(
 
     std::vector<Float> values( _end - _begin );
 
-    for ( Int i = _begin; i < _end; ++i )
+    for ( size_t i = _begin; i < _end; ++i )
         {
             values[i - _begin] =
                 calculate_r_squared( i, sufficient_statistics );
@@ -52,9 +52,9 @@ std::vector<Int> RSquaredCriterion::argsort(
 
     debug_log( "Calculating indices..." );
 
-    std::vector<Int> indices( _end - _begin );
+    std::vector<size_t> indices( _end - _begin );
 
-    for ( Int i = 0; i < _end - _begin; ++i )
+    for ( size_t i = 0; i < _end - _begin; ++i )
         {
             indices[i] = i;
         }
@@ -62,7 +62,7 @@ std::vector<Int> RSquaredCriterion::argsort(
     std::sort(
         indices.begin(),
         indices.end(),
-        [&values]( const Int ix1, const Int ix2 ) {
+        [&values]( const size_t ix1, const size_t ix2 ) {
             return values[ix1] > values[ix2];
         } );
 

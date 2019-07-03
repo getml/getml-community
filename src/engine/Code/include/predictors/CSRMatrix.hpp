@@ -280,7 +280,7 @@ void CSRMatrix<DataType, IndicesType, IndptrType>::add(
                     data_temp[indptr_[i + 1] + num_added] = 1.0;
 
                     indices_temp[indptr_[i + 1] + num_added] =
-                        static_cast<IndicesType>( ( *_col )[i] ) + ncols();
+                        static_cast<IndicesType>( ( *_col )[i] ) + static_cast<IndicesType>( ncols() );
 
                     ++num_added;
                 }
