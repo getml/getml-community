@@ -1,0 +1,15 @@
+{
+    "eta_": 0.4,
+    "gamma_": 1e-20,
+    "lambda_": 1e-20,
+    "max_depth_": 1,
+    "min_num_samples_": 200,
+    "num_features_": 10,
+    "num_selected_features_": 10,
+    "num_threads_": 0,
+    "objective_": "CrossEntropyLoss",
+    "seed_": 5849,
+    "silent_": true,
+    "sampling_factor_": 1.0,
+    "use_timestamps_": true
+}

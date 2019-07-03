@@ -1,0 +1,24 @@
+{
+    "aggregation_": [
+        "SUM",
+        "COUNT"
+    ],
+    "fast_training_": false,
+    "loss_function_": "SquareLoss",
+    "num_features_": 10,
+    "num_selected_features_": 10,
+    "num_subfeatures_": 10,
+    "num_threads_": 6,
+    "round_robin_": false,
+    "sampling_factor_": 1.0,
+    "seed_": 5849,
+    "share_aggregations_": 1.0,
+    "shrinkage_": 0.1,
+    "use_timestamps_": true,
+    "allow_sets_": true,
+    "grid_factor_": 1.0,
+    "max_length_": 1,
+    "min_num_samples_": 20,
+    "regularization_": 0.0,
+    "share_conditions_": 1.0
+}
