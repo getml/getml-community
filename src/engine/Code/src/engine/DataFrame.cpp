@@ -7,66 +7,28 @@ namespace containers
 {
 // ----------------------------------------------------------------------------
 
-void DataFrame::add_categorical( const Column<Int> &_mat, const size_t _num )
-{
-    if ( _num < num_categoricals() )
-        {
-            categoricals_[_num] = _mat;
-        }
-    else if ( _num == num_categoricals() )
-        {
-            categoricals_.push_back( _mat );
-        }
-    else
-        {
-            throw std::invalid_argument(
-                "Index " + std::to_string( _num ) + " out of range!" );
-        }
-}
-
-// ----------------------------------------------------------------------------
-
-void DataFrame::add_discrete( const Column<Float> &_mat, const size_t _num )
-{
-    if ( _num < num_discretes() )
-        {
-            discretes_[_num] = _mat;
-        }
-    else if ( _num == num_discretes() )
-        {
-            discretes_.push_back( _mat );
-        }
-    else
-        {
-            throw std::runtime_error(
-                "Index " + std::to_string( _num ) + " out of range!" );
-        }
-}
-
-// ----------------------------------------------------------------------------
-
 void DataFrame::add_float_column(
-    const Column<Float> &_mat, const std::string &_role, const size_t _num )
+    const Column<Float> &_col, const std::string &_role )
 {
     if ( _role == "discrete" )
         {
-            add_discrete( _mat, _num );
+            add_column( _col, &discretes_ );
         }
     else if ( _role == "numerical" )
         {
-            add_numerical( _mat, _num );
+            add_column( _col, &numericals_ );
         }
     else if ( _role == "target" )
         {
-            add_target( _mat, _num );
+            add_column( _col, &targets_ );
         }
     else if ( _role == "time_stamp" )
         {
-            add_time_stamp( _mat, _num );
+            add_column( _col, &time_stamps_ );
         }
     else
         {
-            throw std::invalid_argument( "Role for float Column not known!" );
+            throw std::invalid_argument( "Role for float column not known!" );
         }
 }
 
@@ -87,26 +49,26 @@ void DataFrame::add_float_vectors(
 
             col.set_name( _names[i] );
 
-            add_float_column( col, _role, i );
+            add_float_column( col, _role );
         }
 }
 
 // ----------------------------------------------------------------------------
 
 void DataFrame::add_int_column(
-    const Column<Int> &_col, const std::string _role, const size_t _num )
+    const Column<Int> &_col, const std::string _role )
 {
     if ( _role == "categorical" )
         {
-            add_categorical( _col, _num );
+            add_column( _col, &categoricals_ );
         }
     else if ( _role == "join_key" )
         {
-            add_join_key( _col, _num );
+            add_column( _col, &join_keys_ );
         }
     else
         {
-            throw std::invalid_argument( "Role for int Column not known!" );
+            throw std::invalid_argument( "Role for int column not known!" );
         }
 }
 
@@ -127,83 +89,7 @@ void DataFrame::add_int_vectors(
 
             col.set_name( _names[i] );
 
-            add_int_column( col, _role, i );
-        }
-}
-
-// ----------------------------------------------------------------------------
-
-void DataFrame::add_join_key( const Column<Int> &_mat, const size_t _num )
-{
-    if ( _num < num_join_keys() )
-        {
-            join_keys_[_num] = _mat;
-        }
-    else if ( _num == num_join_keys() )
-        {
-            join_keys_.push_back( _mat );
-        }
-    else
-        {
-            throw std::invalid_argument(
-                "Index " + std::to_string( _num ) + " out of range!" );
-        }
-}
-
-// ----------------------------------------------------------------------------
-
-void DataFrame::add_numerical( const Column<Float> &_mat, const size_t _num )
-{
-    if ( _num < num_numericals() )
-        {
-            numericals_[_num] = _mat;
-        }
-    else if ( _num == num_numericals() )
-        {
-            numericals_.push_back( _mat );
-        }
-    else
-        {
-            throw std::runtime_error(
-                "Index " + std::to_string( _num ) + " out of range!" );
-        }
-}
-
-// ----------------------------------------------------------------------------
-
-void DataFrame::add_target( const Column<Float> &_mat, const size_t _num )
-{
-    if ( _num < num_targets() )
-        {
-            targets_[_num] = _mat;
-        }
-    else if ( _num == num_targets() )
-        {
-            targets_.push_back( _mat );
-        }
-    else
-        {
-            throw std::runtime_error(
-                "Index " + std::to_string( _num ) + " out of range!" );
-        }
-}
-
-// ----------------------------------------------------------------------------
-
-void DataFrame::add_time_stamp( const Column<Float> &_mat, const size_t _num )
-{
-    if ( _num < num_time_stamps() )
-        {
-            time_stamps_[_num] = _mat;
-        }
-    else if ( _num == num_time_stamps() )
-        {
-            time_stamps_.push_back( _mat );
-        }
-    else
-        {
-            throw std::runtime_error(
-                "Index " + std::to_string( _num ) + " out of range!" );
+            add_int_column( col, _role );
         }
 }
 
@@ -594,13 +480,13 @@ void DataFrame::from_json(
 
             for ( size_t j = 0; j < arr->size(); ++j )
                 {
-                    column[j] =
-                        ( *_encoding )[arr->getElement<std::string>( static_cast<unsigned int>( j ) )];
+                    column[j] = ( *_encoding )[arr->getElement<std::string>(
+                        static_cast<unsigned int>( j ) )];
                 }
 
             column.set_name( _names[i] );
 
-            add_int_column( column, _type, i );
+            add_int_column( column, _type );
         }
 }
 
@@ -611,8 +497,6 @@ void DataFrame::from_json(
     const std::vector<std::string> &_names,
     const std::string &_type )
 {
-    size_t count = 0;
-
     for ( size_t i = 0; i < _names.size(); ++i )
         {
             const auto &name = _names[i];
@@ -634,7 +518,7 @@ void DataFrame::from_json(
 
             column.set_name( _names[i] );
 
-            add_float_column( column, _type, count++ );
+            add_float_column( column, _type );
         }
 }
 
@@ -671,7 +555,7 @@ void DataFrame::from_json(
 
             column.set_name( _names[i] );
 
-            add_float_column( column, "time_stamp", i );
+            add_float_column( column, "time_stamp" );
         }
 }
 

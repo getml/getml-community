@@ -29,13 +29,10 @@ class DataFrame
 
     /// Setter for a float_matrix
     void add_float_column(
-        const Column<Float> &_mat,
-        const std::string &_role,
-        const size_t _num );
+        const Column<Float> &_mat, const std::string &_role );
 
     /// Setter for an int_matrix
-    void add_int_column(
-        const Column<Int> &_mat, const std::string _role, const size_t _num );
+    void add_int_column( const Column<Int> &_mat, const std::string _role );
 
     /// Appends another data frame to this data frame.
     void append( const DataFrame &_other );
@@ -394,11 +391,10 @@ class DataFrame
     // -------------------------------
 
    private:
-    /// Adds a categorical column.
-    void add_categorical( const Column<Int> &_mat, const size_t _num );
-
-    /// Adds a discrete column.
-    void add_discrete( const Column<Float> &_mat, const size_t _num );
+    /// Adds a column to _columns.
+    template <class ColType>
+    void add_column(
+        const ColType &_col, std::vector<ColType> *_columns ) const;
 
     /// Adds a vector of float vectors.
     void add_float_vectors(
@@ -411,18 +407,6 @@ class DataFrame
         const std::vector<std::string> &_names,
         const std::vector<std::shared_ptr<std::vector<Int>>> &_vectors,
         const std::string &_role );
-
-    /// Adds a join key column.
-    void add_join_key( const Column<Int> &_mat, const size_t _num );
-
-    /// Adds a numerical column.
-    void add_numerical( const Column<Float> &_mat, const size_t _num );
-
-    /// Adds a target column.
-    void add_target( const Column<Float> &_mat, const size_t _num );
-
-    /// Adds a time stamp column.
-    void add_time_stamp( const Column<Float> &_mat, const size_t _num );
 
     /// Calculate the number of bytes.
     template <class T>
@@ -530,6 +514,29 @@ namespace engine
 {
 namespace containers
 {
+// ----------------------------------------------------------------------------
+
+template <class ColType>
+void DataFrame::add_column(
+    const ColType &_col, std::vector<ColType> *_columns ) const
+{
+    const auto has_same_name = [_col]( const ColType &c ) {
+        return c.name() == _col.name();
+    };
+
+    const auto it =
+        std::find_if( _columns->begin(), _columns->end(), has_same_name );
+
+    if ( it == _columns->end() )
+        {
+            _columns->push_back( _col );
+        }
+    else
+        {
+            *it = _col;
+        }
+}
+
 // -------------------------------------------------------------------------
 
 template <class T>

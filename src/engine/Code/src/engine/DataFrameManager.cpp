@@ -15,8 +15,6 @@ void DataFrameManager::add_categorical_column(
 
     const auto name = JSON::get_value<std::string>( _cmd, "name_" );
 
-    const auto num = JSON::get_value<size_t>( _cmd, "num_" );
-
     const auto unit = JSON::get_value<std::string>( _cmd, "unit_" );
 
     containers::Column<Int> col;
@@ -42,7 +40,7 @@ void DataFrameManager::add_categorical_column(
 
     col.set_unit( unit );
 
-    _df->add_int_column( col, role, num );
+    _df->add_int_column( col, role );
 
     communication::Sender::send_string( "Success!", _socket );
 }
@@ -113,8 +111,6 @@ void DataFrameManager::add_column(
 
     const auto name = JSON::get_value<std::string>( _cmd, "name_" );
 
-    const auto num = JSON::get_value<size_t>( _cmd, "num_" );
-
     const auto unit = JSON::get_value<std::string>( _cmd, "unit_" );
 
     auto col = communication::Receiver::recv_column( _socket );
@@ -123,7 +119,7 @@ void DataFrameManager::add_column(
 
     col.set_unit( unit );
 
-    _df->add_float_column( col, role, num );
+    _df->add_float_column( col, role );
 
     communication::Sender::send_string( "Success!", _socket );
 }
