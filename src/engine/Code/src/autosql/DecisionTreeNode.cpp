@@ -122,8 +122,7 @@ void DecisionTreeNode::apply_by_categories_used_and_commit(
 
 // ----------------------------------------------------------------------------
 
-std::shared_ptr<const std::vector<Int>>
-DecisionTreeNode::calculate_categories(
+std::shared_ptr<const std::vector<Int>> DecisionTreeNode::calculate_categories(
     const size_t _sample_size,
     containers::MatchPtrs::iterator _sample_container_begin,
     containers::MatchPtrs::iterator _sample_container_end )
@@ -247,11 +246,9 @@ std::vector<Float> DecisionTreeNode::calculate_critical_values_discrete(
             max = std::numeric_limits<Float>::lowest();
         }
 
-    utils::Reducer::reduce(
-        multithreading::minimum<Float>(), &min, comm() );
+    utils::Reducer::reduce( multithreading::minimum<Float>(), &min, comm() );
 
-    utils::Reducer::reduce(
-        multithreading::maximum<Float>(), &max, comm() );
+    utils::Reducer::reduce( multithreading::maximum<Float>(), &max, comm() );
 
     // ---------------------------------------------------------------------------
     // There is a possibility that all critical values are NAN in all processes.
@@ -287,8 +284,7 @@ std::vector<Float> DecisionTreeNode::calculate_critical_values_discrete(
 
 // ----------------------------------------------------------------------------
 
-std::vector<Float>
-DecisionTreeNode::calculate_critical_values_numerical(
+std::vector<Float> DecisionTreeNode::calculate_critical_values_numerical(
     containers::MatchPtrs::iterator _sample_container_begin,
     containers::MatchPtrs::iterator _sample_container_end,
     const size_t _sample_size )
@@ -316,11 +312,9 @@ DecisionTreeNode::calculate_critical_values_numerical(
             max = std::numeric_limits<Float>::lowest();
         }
 
-    utils::Reducer::reduce(
-        multithreading::minimum<Float>(), &min, comm() );
+    utils::Reducer::reduce( multithreading::minimum<Float>(), &min, comm() );
 
-    utils::Reducer::reduce(
-        multithreading::maximum<Float>(), &max, comm() );
+    utils::Reducer::reduce( multithreading::maximum<Float>(), &max, comm() );
 
     // ---------------------------------------------------------------------------
     // There is a possibility that all critical values are NAN in all processes.
@@ -336,8 +330,7 @@ DecisionTreeNode::calculate_critical_values_numerical(
 
     // ---------------------------------------------------------------------------
 
-    Int num_critical_values =
-        calculate_num_critical_values( _sample_size );
+    Int num_critical_values = calculate_num_critical_values( _sample_size );
 
     Float step_size =
         ( max - min ) / static_cast<Float>( num_critical_values + 1 );
@@ -346,8 +339,7 @@ DecisionTreeNode::calculate_critical_values_numerical(
 
     for ( Int i = 0; i < num_critical_values; ++i )
         {
-            critical_values[i] =
-                min + static_cast<Float>( i + 1 ) * step_size;
+            critical_values[i] = min + static_cast<Float>( i + 1 ) * step_size;
         }
 
     debug_log( "calculate_critical_values_discrete...done." );
@@ -411,8 +403,8 @@ void DecisionTreeNode::fit(
     const size_t sample_size = reduce_sample_size(
         std::distance( _sample_container_begin, _sample_container_end ) );
 
-    if ( sample_size == 0 || static_cast<Int>( sample_size ) <
-                                 tree_->min_num_samples() * 2 )
+    if ( sample_size == 0 ||
+         static_cast<Int>( sample_size ) < tree_->min_num_samples() * 2 )
         {
             return;
         }
@@ -441,8 +433,7 @@ void DecisionTreeNode::fit(
     // Find maximum
     Int ix_max = optimization_criterion()->find_maximum();
 
-    const Float max_value =
-        optimization_criterion()->values_stored( ix_max );
+    const Float max_value = optimization_criterion()->values_stored( ix_max );
 
     // ------------------------------------------------------------------------
     // DEBUG and parallel mode only: Make sure that the values_stored are
@@ -452,8 +443,8 @@ void DecisionTreeNode::fit(
 
     auto global_storage_ix = optimization_criterion()->storage_ix();
 
-    utils::Reducer::reduce<Int>(
-        multithreading::maximum<Int>(), &global_storage_ix, comm() );
+    utils::Reducer::reduce<size_t>(
+        multithreading::maximum<size_t>(), &global_storage_ix, comm() );
 
     assert( global_storage_ix == optimization_criterion()->storage_ix() );
 
@@ -585,8 +576,8 @@ std::string DecisionTreeNode::greater_or_not_equal_to(
 
                     assert( category_used >= 0 );
                     assert(
-                        category_used < static_cast<Int>(
-                                            tree_->categories().size() ) );
+                        category_used <
+                        static_cast<Int>( tree_->categories().size() ) );
 
                     if ( it != categories_used_begin() )
                         {
@@ -738,8 +729,7 @@ size_t DecisionTreeNode::reduce_sample_size( const size_t _sample_size )
 {
     size_t global_sample_size = _sample_size;
 
-    utils::Reducer::reduce(
-        std::plus<size_t>(), &global_sample_size, comm() );
+    utils::Reducer::reduce( std::plus<size_t>(), &global_sample_size, comm() );
 
     return global_sample_size;
 }
@@ -956,7 +946,8 @@ void DecisionTreeNode::sort_by_categorical_value(
     containers::MatchPtrs::iterator _sample_container_begin,
     containers::MatchPtrs::iterator _sample_container_end )
 {
-    auto compare_op = []( const containers::Match *sample1, const containers::Match *sample2 ) {
+    auto compare_op = []( const containers::Match *sample1,
+                          const containers::Match *sample2 ) {
         return sample1->categorical_value < sample2->categorical_value;
     };
 
@@ -969,7 +960,8 @@ void DecisionTreeNode::sort_by_numerical_value(
     containers::MatchPtrs::iterator _sample_container_begin,
     containers::MatchPtrs::iterator _sample_container_end )
 {
-    auto compare_op = []( const containers::Match *sample1, const containers::Match *sample2 ) {
+    auto compare_op = []( const containers::Match *sample1,
+                          const containers::Match *sample2 ) {
         return sample1->numerical_value < sample2->numerical_value;
     };
 
@@ -999,8 +991,8 @@ std::string DecisionTreeNode::smaller_or_equal_to(
 
                     assert( category_used >= 0 );
                     assert(
-                        category_used < static_cast<Int>(
-                                            tree_->categories().size() ) );
+                        category_used <
+                        static_cast<Int>( tree_->categories().size() ) );
 
                     if ( it != categories_used_begin() )
                         {
@@ -1064,14 +1056,15 @@ void DecisionTreeNode::spawn_child_nodes(
             // for the numerical values, samples_smaller contains all values
             // <= critical_value()
 
-            const auto is_contained = [this]( const containers::Match *_sample ) {
-                return std::any_of(
-                    categories_used_begin(),
-                    categories_used_end(),
-                    [_sample]( Int cat ) {
-                        return cat == _sample->categorical_value;
-                    } );
-            };
+            const auto is_contained =
+                [this]( const containers::Match *_sample ) {
+                    return std::any_of(
+                        categories_used_begin(),
+                        categories_used_end(),
+                        [_sample]( Int cat ) {
+                            return cat == _sample->categorical_value;
+                        } );
+                };
 
             it = std::partition(
                 _sample_container_begin, _sample_container_end, is_contained );
@@ -1372,14 +1365,15 @@ void DecisionTreeNode::transform(
 
             if ( categorical_data_used() )
                 {
-                    const auto is_contained = [this]( const containers::Match *_sample ) {
-                        return std::any_of(
-                            categories_used_begin(),
-                            categories_used_end(),
-                            [_sample]( Int cat ) {
-                                return cat == _sample->categorical_value;
-                            } );
-                    };
+                    const auto is_contained =
+                        [this]( const containers::Match *_sample ) {
+                            return std::any_of(
+                                categories_used_begin(),
+                                categories_used_end(),
+                                [_sample]( Int cat ) {
+                                    return cat == _sample->categorical_value;
+                                } );
+                        };
 
                     it = std::partition(
                         _sample_container_begin,
@@ -1527,7 +1521,7 @@ void DecisionTreeNode::try_categorical_population(
                 }
 
             try_categorical_values(
-                 col,
+                col,
                 enums::DataUsed::x_popul_categorical,
                 _sample_size,
                 _sample_container_begin,
@@ -2156,13 +2150,11 @@ void DecisionTreeNode::try_non_categorical_values(
 
     debug_log( "try_non_categorical_values: Add new splits." );
 
-    for ( auto it = _critical_values.rbegin(); it != _critical_values.rend(); ++it )
+    for ( auto it = _critical_values.rbegin(); it != _critical_values.rend();
+          ++it )
         {
-            _candidate_splits->push_back( descriptors::Split(
-                true,
-                *it,
-                _column_used,
-                _data_used ) );
+            _candidate_splits->push_back(
+                descriptors::Split( true, *it, _column_used, _data_used ) );
         }
 
     for ( auto &critical_value : _critical_values )
