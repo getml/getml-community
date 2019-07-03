@@ -61,11 +61,15 @@ class DataFrameManager
 
     /// Sends a categorical columm to the client
     void get_categorical_column(
-        const Poco::JSON::Object& _cmd, Poco::Net::StreamSocket* _socket );
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
 
     /// Sends a column to the client
     void get_column(
-        const Poco::JSON::Object& _cmd, Poco::Net::StreamSocket* _socket );
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
 
     /// Sends a data frame back to the client, column-by-column.
     void get_data_frame( Poco::Net::StreamSocket* _socket );
@@ -83,6 +87,18 @@ class DataFrameManager
 
     /// Refreshes a data frame.
     void refresh( const std::string& _name, Poco::Net::StreamSocket* _socket );
+
+    /// Changes the unit of _col.
+    void set_unit(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
+    /// Changes the unit of _col.
+    void set_unit_categorical(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
 
     /// Sends summary statistics back to the client.
     void summarize(

@@ -27,12 +27,12 @@ class DataFrame
 
     // -------------------------------
 
-    /// Setter for a float_matrix
+    /// Setter for a float_column
     void add_float_column(
-        const Column<Float> &_mat, const std::string &_role );
+        const Column<Float> &_col, const std::string &_role );
 
-    /// Setter for an int_matrix
-    void add_int_column( const Column<Int> &_mat, const std::string _role );
+    /// Setter for an int_column
+    void add_int_column( const Column<Int> &_col, const std::string _role );
 
     /// Appends another data frame to this data frame.
     void append( const DataFrame &_other );
@@ -45,9 +45,13 @@ class DataFrame
     /// an "index" over the join keys
     void create_indices();
 
-    /// Getter for a float_matrix
-    const Column<Float> &float_matrix(
+    /// Getter for a float_column.
+    const Column<Float> &float_column(
         const std::string &_role, const size_t _num ) const;
+
+    /// Getter for a float column.
+    const Column<Float> &float_column(
+        const std::string &_name, const std::string &_role ) const;
 
     /// Builds a dataframe from a database connector.
     void from_db(
@@ -81,9 +85,13 @@ class DataFrame
         const std::int32_t _start,
         const std::int32_t _length ) const;
 
-    /// Getter for an int_matrix (either join keys or categorical)
-    const Column<Int> &int_matrix(
+    /// Getter for an int_column (either join keys or categorical)
+    const Column<Int> &int_column(
         const std::string &_role, const size_t _num ) const;
+
+    /// Getter for a float column.
+    const Column<Int> &int_column(
+        const std::string &_name, const std::string &_role ) const;
 
     /// Loads the data from the hard-disk into the engine
     void load( const std::string &_path );
@@ -91,7 +99,8 @@ class DataFrame
     /// Returns number of bytes occupied by the data
     ULong nbytes() const;
 
-    /// Get the number of rows.
+    /// Get the number of rows or return 0, if the DataFrame contains no
+    /// columns.
     const size_t nrows() const;
 
     /// Saves the data on the engine
@@ -515,6 +524,12 @@ template <class ColType>
 void DataFrame::add_column(
     const ColType &_col, std::vector<ColType> *_columns ) const
 {
+    if ( _col.nrows() == 0 )
+        {
+            throw std::invalid_argument(
+                "Column '" + _col.name() + "' is of length 0." );
+        }
+
     if ( _col.nrows() != nrows() && nrows() != 0 )
         {
             throw std::invalid_argument(

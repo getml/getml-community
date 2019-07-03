@@ -67,11 +67,20 @@ void RequestHandler::run()
             else if ( type == "CategoricalColumn.get" )
                 {
                     data_frame_manager().get_categorical_column(
-                        cmd, &socket() );
+                        name, cmd, &socket() );
                 }
             else if ( type == "Column.get" )
                 {
-                    data_frame_manager().get_column( cmd, &socket() );
+                    data_frame_manager().get_column( name, cmd, &socket() );
+                }
+            else if ( type == "CategoricalColumn.set_unit" )
+                {
+                    data_frame_manager().set_unit_categorical(
+                        name, cmd, &socket() );
+                }
+            else if ( type == "Column.set_unit" )
+                {
+                    data_frame_manager().set_unit( name, cmd, &socket() );
                 }
             else if ( type == "Database.drop_table" )
                 {

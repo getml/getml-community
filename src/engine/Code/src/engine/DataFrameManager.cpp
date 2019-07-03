@@ -403,25 +403,18 @@ void DataFrameManager::from_json(
 // ------------------------------------------------------------------------
 
 void DataFrameManager::get_categorical_column(
-    const Poco::JSON::Object& _cmd, Poco::Net::StreamSocket* _socket )
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
 {
     const auto role = JSON::get_value<std::string>( _cmd, "role_" );
 
     const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
 
-    const auto num = JSON::get_value<size_t>( _cmd, "num_" );
-
-    if ( role != "categorical" && role != "join_key" )
-        {
-            throw std::runtime_error(
-                "Role for a categorical column must be categorical or "
-                "join_key!" );
-        }
-
     multithreading::ReadLock read_lock( read_write_lock_ );
 
     auto col =
-        utils::Getter::get( df_name, &data_frames() ).int_matrix( role, num );
+        utils::Getter::get( df_name, &data_frames() ).int_column( _name, role );
 
     communication::Sender::send_string( "Found!", _socket );
 
@@ -440,18 +433,18 @@ void DataFrameManager::get_categorical_column(
 // ------------------------------------------------------------------------
 
 void DataFrameManager::get_column(
-    const Poco::JSON::Object& _cmd, Poco::Net::StreamSocket* _socket )
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
 {
     const auto role = JSON::get_value<std::string>( _cmd, "role_" );
 
     const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
 
-    const auto num = JSON::get_value<size_t>( _cmd, "num_" );
-
     multithreading::ReadLock read_lock( read_write_lock_ );
 
-    auto col =
-        utils::Getter::get( df_name, &data_frames() ).float_matrix( role, num );
+    auto col = utils::Getter::get( df_name, &data_frames() )
+                   .float_column( _name, role );
 
     communication::Sender::send_string( "Found!", _socket );
 
@@ -493,15 +486,17 @@ void DataFrameManager::get_data_frame( Poco::Net::StreamSocket* _socket )
             Poco::JSON::Object cmd =
                 communication::Receiver::recv_cmd( logger_, _socket );
 
+            const auto name = JSON::get_value<std::string>( cmd, "name_" );
+
             const auto type = JSON::get_value<std::string>( cmd, "type_" );
 
             if ( type == "CategoricalColumn.get" )
                 {
-                    get_categorical_column( cmd, _socket );
+                    get_categorical_column( name, cmd, _socket );
                 }
             else if ( type == "Column.get" )
                 {
-                    get_column( cmd, _socket );
+                    get_column( name, cmd, _socket );
                 }
             else if ( type == "DataFrame.close" )
                 {
@@ -578,6 +573,66 @@ void DataFrameManager::refresh(
     read_lock.unlock();
 
     communication::Sender::send_string( JSON::stringify( encodings ), _socket );
+}
+
+// ------------------------------------------------------------------------
+
+void DataFrameManager::set_unit(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    multithreading::WriteLock write_lock( read_write_lock_ );
+
+    const auto role = JSON::get_value<std::string>( _cmd, "role_" );
+
+    const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
+
+    const auto unit = JSON::get_value<std::string>( _cmd, "unit_" );
+
+    auto& df = utils::Getter::get( df_name, &data_frames() );
+
+    auto column = df.float_column( _name, role );
+
+    column.set_unit( unit );
+
+    df.add_float_column( column, role );
+
+    monitor_->send( "postdataframe", df.to_monitor( df_name ) );
+
+    write_lock.unlock();
+
+    communication::Sender::send_string( "Success!", _socket );
+}
+
+// ------------------------------------------------------------------------
+
+void DataFrameManager::set_unit_categorical(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    multithreading::WriteLock write_lock( read_write_lock_ );
+
+    const auto role = JSON::get_value<std::string>( _cmd, "role_" );
+
+    const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
+
+    const auto unit = JSON::get_value<std::string>( _cmd, "unit_" );
+
+    auto& df = utils::Getter::get( df_name, &data_frames() );
+
+    auto column = df.int_column( _name, role );
+
+    column.set_unit( unit );
+
+    df.add_int_column( column, role );
+
+    monitor_->send( "postdataframe", df.to_monitor( df_name ) );
+
+    write_lock.unlock();
+
+    communication::Sender::send_string( "Success!", _socket );
 }
 
 // ------------------------------------------------------------------------

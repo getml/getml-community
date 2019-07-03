@@ -445,7 +445,7 @@ void ModelManager<ModelType>::send_data(
 
             if ( type == "Column.get" )
                 {
-                    local_data_frame_manager.get_column( cmd, _socket );
+                    local_data_frame_manager.get_column( name, cmd, _socket );
                 }
             else if ( type == "transform" )
                 {

@@ -310,7 +310,7 @@ void DataFrame::create_indices()
 
 // ----------------------------------------------------------------------------
 
-const Column<Float> &DataFrame::float_matrix(
+const Column<Float> &DataFrame::float_column(
     const std::string &_role, const size_t _num ) const
 {
     if ( _role == "discrete" )
@@ -330,7 +330,32 @@ const Column<Float> &DataFrame::float_matrix(
             return time_stamp( _num );
         }
 
-    throw std::invalid_argument( "Role for float Column not known!" );
+    throw std::invalid_argument( "Role '" + _role + "' not known!" );
+}
+
+// ----------------------------------------------------------------------------
+
+const Column<Float> &DataFrame::float_column(
+    const std::string &_name, const std::string &_role ) const
+{
+    if ( _role == "discrete" )
+        {
+            return discrete( _name );
+        }
+    else if ( _role == "numerical" )
+        {
+            return numerical( _name );
+        }
+    else if ( _role == "target" )
+        {
+            return target( _name );
+        }
+    else if ( _role == "time_stamp" )
+        {
+            return time_stamp( _name );
+        }
+
+    throw std::invalid_argument( "Role '" + _role + "' not known!" );
 }
 
 // ----------------------------------------------------------------------------
@@ -687,7 +712,7 @@ Poco::JSON::Object DataFrame::get_content(
 
 // ----------------------------------------------------------------------------
 
-const Column<Int> &DataFrame::int_matrix(
+const Column<Int> &DataFrame::int_column(
     const std::string &_role, const size_t _num ) const
 {
     if ( _role == "categorical" )
@@ -699,7 +724,24 @@ const Column<Int> &DataFrame::int_matrix(
             return join_key( _num );
         }
 
-    throw std::invalid_argument( "Role for int Column not known!" );
+    throw std::invalid_argument( "Role '" + _role + "' not known!" );
+}
+
+// ----------------------------------------------------------------------------
+
+const Column<Int> &DataFrame::int_column(
+    const std::string &_name, const std::string &_role ) const
+{
+    if ( _role == "categorical" )
+        {
+            return categorical( _name );
+        }
+    else if ( _role == "join_key" )
+        {
+            return join_key( _name );
+        }
+
+    throw std::invalid_argument( "Role '" + _role + "' not known!" );
 }
 
 // ----------------------------------------------------------------------------
