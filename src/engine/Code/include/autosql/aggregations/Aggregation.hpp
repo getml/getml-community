@@ -184,7 +184,8 @@ class Aggregation : public AbstractAggregation
     void revert_to_commit() final;
 
     /// Separates the samples for which the value to be aggregated is NULL
-    containers::Matches::iterator separate_null_values( containers::Matches &_samples );
+    containers::Matches::iterator separate_null_values(
+        containers::Matches &_samples );
 
     /// Separates the pointers to samples for which the value to be aggregated
     /// is NULL
@@ -226,10 +227,8 @@ class Aggregation : public AbstractAggregation
         assert(
             static_cast<size_t>( _sample->ix_x_popul ) < yhat_inline().size() );
 
-        assert(
-            _sample->ix_x_popul < static_cast<Int>( sum().size() ) );
-        assert(
-            _sample->ix_x_popul < static_cast<Int>( count().size() ) );
+        assert( _sample->ix_x_popul < static_cast<Int>( sum().size() ) );
+        assert( _sample->ix_x_popul < static_cast<Int>( count().size() ) );
 
         assert(
             value_to_be_aggregated( _sample ) ==
@@ -263,10 +262,8 @@ class Aggregation : public AbstractAggregation
         assert(
             static_cast<size_t>( _sample->ix_x_popul ) < yhat_inline().size() );
 
-        assert(
-            _sample->ix_x_popul < static_cast<Int>( sum().size() ) );
-        assert(
-            _sample->ix_x_popul < static_cast<Int>( count().size() ) );
+        assert( _sample->ix_x_popul < static_cast<Int>( sum().size() ) );
+        assert( _sample->ix_x_popul < static_cast<Int>( count().size() ) );
 
         assert( count()[_sample->ix_x_popul] > 0.0 );
 
@@ -978,12 +975,11 @@ class Aggregation : public AbstractAggregation
                         count()[_sample->ix_x_popul] -
                     mean * mean );
 
-                const Float skewness =
-                    ( ( sum_cubed()[_sample->ix_x_popul] /
-                        count()[_sample->ix_x_popul] ) -
-                      ( 3.0 * mean * stddev * stddev ) -
-                      ( mean * mean * mean ) ) /
-                    ( stddev * stddev * stddev );
+                const Float skewness = ( ( sum_cubed()[_sample->ix_x_popul] /
+                                           count()[_sample->ix_x_popul] ) -
+                                         ( 3.0 * mean * stddev * stddev ) -
+                                         ( mean * mean * mean ) ) /
+                                       ( stddev * stddev * stddev );
 
                 yhat_inline()[_sample->ix_x_popul] =
                     ( skewness != skewness ) ? ( 0.0 ) : ( skewness );
@@ -1229,7 +1225,8 @@ class Aggregation : public AbstractAggregation
 
     /// Trivial setter
     void set_samples_begin_end(
-        containers::Match *_samples_begin, containers::Match *_samples_end ) final
+        containers::Match *_samples_begin,
+        containers::Match *_samples_end ) final
     {
         samples_begin_ = _samples_begin;
         samples_end_ = _samples_end;
@@ -1239,8 +1236,8 @@ class Aggregation : public AbstractAggregation
     void set_value_to_be_aggregated(
         const containers::Column<Float> &_value_to_be_aggregated ) final
     {
-        value_to_be_aggregated() = containers::
-            ColumnView<Float, std::map<Int, Int>>(
+        value_to_be_aggregated() =
+            containers::ColumnView<Float, std::map<Int, Int>>(
                 _value_to_be_aggregated );
     }
 
@@ -1248,16 +1245,15 @@ class Aggregation : public AbstractAggregation
     void set_value_to_be_aggregated(
         const containers::Column<Int> &_value_to_be_aggregated ) final
     {
-        value_to_be_aggregated_categorical() = containers::
-            ColumnView<Int, std::map<Int, Int>>(
+        value_to_be_aggregated_categorical() =
+            containers::ColumnView<Int, std::map<Int, Int>>(
                 _value_to_be_aggregated );
     }
 
     /// Trivial setter
     void set_value_to_be_aggregated(
-        const containers::ColumnView<
-            Float,
-            std::map<Int, Int>> &_value_to_be_aggregated ) final
+        const containers::ColumnView<Float, std::map<Int, Int>>
+            &_value_to_be_aggregated ) final
     {
         value_to_be_aggregated() = _value_to_be_aggregated;
     }
@@ -1293,7 +1289,10 @@ class Aggregation : public AbstractAggregation
 
    private:
     /// Trivial accessor
-    std::vector<containers::Match *> &altered_samples() { return altered_samples_; }
+    std::vector<containers::Match *> &altered_samples()
+    {
+        return altered_samples_;
+    }
 
     /// Trivial accessor
     inline std::vector<Float> &count()
@@ -1420,18 +1419,16 @@ class Aggregation : public AbstractAggregation
     }
 
     /// Trivial accessor
-    inline containers::
-        ColumnView<Float, std::map<Int, Int>>
-            &value_to_be_aggregated()
+    inline containers::ColumnView<Float, std::map<Int, Int>>
+        &value_to_be_aggregated()
     {
         assert( aggregation_impl_ != nullptr );
         return aggregation_impl_->value_to_be_aggregated_;
     }
 
     /// Trivial accessor
-    inline containers::
-        ColumnView<Int, std::map<Int, Int>>
-            &value_to_be_aggregated_categorical()
+    inline containers::ColumnView<Int, std::map<Int, Int>>
+        &value_to_be_aggregated_categorical()
     {
         assert( aggregation_impl_ != nullptr );
         return aggregation_impl_->value_to_be_aggregated_categorical_;
@@ -1450,7 +1447,8 @@ class Aggregation : public AbstractAggregation
                 AggregationType::IsComparison<data_used>::value &&
                 is_population,
             int>::type = 0>
-    inline const Float value_to_be_aggregated( const containers::Match *_sample )
+    inline const Float value_to_be_aggregated(
+        const containers::Match *_sample )
     {
         return value_to_be_compared()[_sample->ix_x_popul] -
                value_to_be_aggregated().col()[_sample->ix_x_perip];
@@ -1469,7 +1467,8 @@ class Aggregation : public AbstractAggregation
                 AggregationType::IsComparison<data_used>::value &&
                 !is_population,
             int>::type = 0>
-    inline const Float value_to_be_aggregated( const containers::Match *_sample )
+    inline const Float value_to_be_aggregated(
+        const containers::Match *_sample )
     {
         return value_to_be_compared().col()[_sample->ix_x_perip] -
                value_to_be_aggregated().col()[_sample->ix_x_perip];
@@ -1487,7 +1486,8 @@ class Aggregation : public AbstractAggregation
                 !AggregationType::IsComparison<data_used>::value &&
                 data_used != enums::DataUsed::x_subfeature,
             int>::type = 0>
-    inline const Float value_to_be_aggregated( const containers::Match *_sample )
+    inline const Float value_to_be_aggregated(
+        const containers::Match *_sample )
     {
         return value_to_be_aggregated().col()[_sample->ix_x_perip];
     }
@@ -1504,9 +1504,11 @@ class Aggregation : public AbstractAggregation
                 !AggregationType::IsComparison<data_used>::value &&
                 data_used == enums::DataUsed::x_subfeature,
             int>::type = 0>
-    inline const Float value_to_be_aggregated( const containers::Match *_sample )
+    inline const Float value_to_be_aggregated(
+        const containers::Match *_sample )
     {
-        return value_to_be_aggregated()[static_cast<Int>( _sample->ix_x_perip )];
+        return value_to_be_aggregated()[static_cast<Int>(
+            _sample->ix_x_perip )];
     }
 
     /// Accessor for the value to be aggregated to be used for all
@@ -1517,7 +1519,8 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             AggregationType::IsCategorical<data_used>::value,
             int>::type = 0>
-    inline const Float value_to_be_aggregated( const containers::Match *_sample )
+    inline const Float value_to_be_aggregated(
+        const containers::Match *_sample )
     {
         return static_cast<Float>(
             value_to_be_aggregated_categorical().col()[_sample->ix_x_perip] );
@@ -1673,7 +1676,7 @@ void Aggregation<AggType, data_used_, is_population_>::activate_all(
                   it != _sample_container_end;
                   ++it )
                 {
-                    updates_stored().insert( static_cast<Int>( ( *it )->ix_x_popul ) );
+                    updates_stored().insert( ( *it )->ix_x_popul );
                 }
 
             init_optimization_criterion(
@@ -1726,8 +1729,8 @@ void Aggregation<AggType, data_used_, is_population_>::
 
     Float num_samples_smaller = 0.0;
 
-    auto sample_size = static_cast<Float>(
-        std::distance( _index.begin(), _index.end() ) );
+    auto sample_size =
+        static_cast<Float>( std::distance( _index.begin(), _index.end() ) );
 
     // ------------------------------------------------------------------
 
@@ -1739,8 +1742,8 @@ void Aggregation<AggType, data_used_, is_population_>::
                     assert( ( *it )->categorical_value == *cat );
                     activate_sample( *it );
 
-                    updates_stored().insert( static_cast<Int>( ( *it )->ix_x_popul ) );
-                    updates_current().insert( static_cast<Int>( ( *it )->ix_x_popul ) );
+                    updates_stored().insert( ( *it )->ix_x_popul );
+                    updates_current().insert( ( *it )->ix_x_popul );
 
                     ++num_samples_smaller;
                 }
@@ -1820,8 +1823,8 @@ void Aggregation<AggType, data_used_, is_population_>::
 
                     activate_sample( *it );
 
-                    updates_stored().insert( static_cast<Int>( ( *it )->ix_x_popul ) );
-                    updates_current().insert( static_cast<Int>( ( *it )->ix_x_popul ) );
+                    updates_stored().insert( ( *it )->ix_x_popul );
+                    updates_current().insert( ( *it )->ix_x_popul );
 
                     --it;
                 }
@@ -1877,8 +1880,8 @@ void Aggregation<AggType, data_used_, is_population_>::
 
                     activate_sample( *it );
 
-                    updates_stored().insert( static_cast<Int>( ( *it )->ix_x_popul ) );
-                    updates_current().insert( static_cast<Int>( ( *it )->ix_x_popul ) );
+                    updates_stored().insert( ( *it )->ix_x_popul );
+                    updates_current().insert( ( *it )->ix_x_popul );
 
                     ++it;
                 }
@@ -1947,8 +1950,8 @@ void Aggregation<AggType, data_used_, is_population_>::
         {
             activate_sample( *it );
 
-            updates_stored().insert( static_cast<Int>( ( *it )->ix_x_popul ) );
-            updates_current().insert( static_cast<Int>( ( *it )->ix_x_popul ) );
+            updates_stored().insert( ( *it )->ix_x_popul );
+            updates_current().insert( ( *it )->ix_x_popul );
         }
     // ------------------------------------------------------------------
     // Selectively deactivate those samples that are not of the
@@ -1956,8 +1959,8 @@ void Aggregation<AggType, data_used_, is_population_>::
 
     Float num_samples_smaller = 0.0;
 
-    auto sample_size = static_cast<Float>(
-        std::distance( _index.begin(), _index.end() ) );
+    auto sample_size =
+        static_cast<Float>( std::distance( _index.begin(), _index.end() ) );
 
     for ( auto cat = _categories_begin; cat < _categories_end; ++cat )
         {
@@ -2148,8 +2151,8 @@ void Aggregation<AggType, data_used_, is_population_>::
 
     Float num_samples_smaller = 0.0;
 
-    auto sample_size = static_cast<Float>(
-        std::distance( _index.begin(), _index.end() ) );
+    auto sample_size =
+        static_cast<Float>( std::distance( _index.begin(), _index.end() ) );
 
     // ------------------------------------------------------------------
 
@@ -2161,8 +2164,8 @@ void Aggregation<AggType, data_used_, is_population_>::
                     assert( ( *it )->categorical_value == *cat );
                     deactivate_sample( *it );
 
-                    updates_stored().insert( static_cast<Int>( ( *it )->ix_x_popul ) );
-                    updates_current().insert( static_cast<Int>( ( *it )->ix_x_popul ) );
+                    updates_stored().insert( ( *it )->ix_x_popul );
+                    updates_current().insert( ( *it )->ix_x_popul );
 
                     ++num_samples_smaller;
                 }
@@ -2244,8 +2247,8 @@ void Aggregation<AggType, data_used_, is_population_>::
 
                     deactivate_sample( *it );
 
-                    updates_stored().insert( static_cast<Int>( ( *it )->ix_x_popul ) );
-                    updates_current().insert( static_cast<Int>( ( *it )->ix_x_popul ) );
+                    updates_stored().insert( ( *it )->ix_x_popul );
+                    updates_current().insert( ( *it )->ix_x_popul );
 
                     --it;
                 }
@@ -2381,8 +2384,8 @@ void Aggregation<AggType, data_used_, is_population_>::
     // Selectively activate those samples that are not of the
     // particular category
 
-    auto sample_size = static_cast<Float>(
-        std::distance( _index.begin(), _index.end() ) );
+    auto sample_size =
+        static_cast<Float>( std::distance( _index.begin(), _index.end() ) );
 
     Float num_samples_smaller = 0.0;
 
@@ -2728,7 +2731,9 @@ void Aggregation<AggType, data_used_, is_population_>::sort_samples(
             return;
         }
 
-    auto compare_op = [this]( const containers::Match &sample1, const containers::Match &sample2 ) {
+    auto compare_op = [this](
+                          const containers::Match &sample1,
+                          const containers::Match &sample2 ) {
         if ( sample1.ix_x_popul < sample2.ix_x_popul )
             {
                 return true;
@@ -2756,8 +2761,7 @@ void Aggregation<AggType, data_used_, is_population_>::sort_samples(
 template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     update_optimization_criterion_and_clear_updates_current(
-        const Float _num_samples_smaller,
-        const Float _num_samples_greater )
+        const Float _num_samples_smaller, const Float _num_samples_greater )
 {
     optimization_criterion()->update_samples(
         updates_current(),  // _indices
