@@ -1,0 +1,188 @@
+.. _example08_random_search_1.py:
+
+=============
+example08_random_search_1.py
+=============
+
+::
+
+    # Copyright 2018 The SQLNet Company GmbH
+
+    # Permission is hereby granted, free of charge, to any person obtaining a copy
+    # of this software and associated documentation files (the "Software"), to
+    # deal in the Software without restriction, including without limitation the
+    # rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+    # sell copies of the Software, and to permit persons to whom the Software is
+    # furnished to do so, subject to the following conditions:
+
+    # The above copyright notice and this permission notice shall be included in
+    # all copies or substantial portions of the Software.
+
+    # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    # AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+    # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+    # DEALINGS IN THE SOFTWARE.
+
+    import matplotlib.pyplot as plt
+    import numpy as np
+    import pandas as pd
+    import pprint
+    import scipy.stats
+    import sklearn.linear_model as linear_model
+
+    import autosql.aggregations as aggregations
+    import autosql.engine as engine
+    import autosql.loss_functions as loss_functions
+    import autosql.metrics as metrics
+    import autosql.models as models
+    import autosql.predictors as predictors
+
+    #----------------
+
+    engine.set_project("examples")
+
+    #----------------
+    # Generate artificial dataset
+    # The problem we create looks like this:
+    #
+    # SELECT t1.*,
+    # COALESCE( MAX( * ), 0 ) AS target
+    # FROM POPULATION t1
+    # LEFT JOIN PERIPHERAL t2
+    # ON t1.join_key = t2.join_key
+    # WHERE t1.time_stamp - t2.time_stamp <= 0.5
+    # AND t2.time_stamp  <= t1.time_stamp
+    # GROUP BY t2.join_key;
+
+    population_table = pd.DataFrame()
+    population_table["column_01"] = np.random.rand(1000) * 2.0 - 1.0
+    population_table["join_key"] = range(1000)
+    population_table["time_stamp_population"] = np.random.rand(1000)
+
+    peripheral_table = pd.DataFrame()
+    peripheral_table["column_01"] = np.random.rand(125000) * 2.0 - 1.0
+    peripheral_table["join_key"] = [
+        int(1000.0 * np.random.rand(1)[0]) for i in range(125000)]
+    peripheral_table["time_stamp_peripheral"] = np.random.rand(125000)
+
+    # ----------------
+
+    temp = peripheral_table.merge(
+        population_table[["join_key", "time_stamp_population"]],
+        how="left",
+        on="join_key"
+    )
+
+    # Apply some conditions
+    temp = temp[
+        (temp["time_stamp_peripheral"] <= temp["time_stamp_population"]) &
+        (temp["time_stamp_peripheral"] >= temp["time_stamp_population"] - 0.5)
+    ]
+
+    # Define the aggregation
+    temp = temp[["column_01", "join_key"]].groupby(
+        ["join_key"],
+        as_index=False
+    ).max()
+
+    temp = temp.rename(index=str, columns={"column_01": "targets"})
+
+    population_table = population_table.merge(
+        temp,
+        how="left",
+        on="join_key"
+    )
+
+    del temp
+
+    # ----------------
+
+    population_table = population_table.rename(
+        index=str, columns={"time_stamp_population": "time_stamp"})
+
+    peripheral_table = peripheral_table.rename(
+        index=str, columns={"time_stamp_peripheral": "time_stamp"})
+
+    # ----------------
+
+    # Replace NaN targets with 0.0 - target values may never be NaN!.
+    population_table["targets"] = [
+        0.0 if val != val else val for val in population_table["targets"]
+    ]
+
+    # ----------------
+    # Split in training and validation set
+
+    population_table_training = population_table[:500]
+
+    population_table_validation = population_table[500:]
+
+    # ----------------
+    # Set up the random search
+
+    population_placeholder = models.Placeholder(
+        name="POPULATION",
+        numerical=["column_01"],
+        join_keys=["join_key"],
+        time_stamps=["time_stamp"],
+        targets=["targets"]
+    )
+
+    peripheral_placeholder = models.Placeholder(
+        name="PERIPHERAL",
+        numerical=["column_01"],
+        join_keys=["join_key"],
+        time_stamps=["time_stamp"]
+    )
+
+    population_placeholder.join(peripheral_placeholder, "join_key", "time_stamp")
+
+    rs = models.RandomSearch(
+        num_models=3,
+        feature_selector=predictors.XGBoostRegressor,
+        predictor=predictors.XGBoostRegressor,
+        population=population_placeholder,
+        peripheral=[peripheral_placeholder],
+        loss_function=loss_functions.SquareLoss(),
+        aggregation=[
+        [
+            aggregations.Avg(),
+            aggregations.Count(),
+            aggregations.Sum()
+        ],
+        [
+            aggregations.Count(),
+            aggregations.Max(),
+            aggregations.Sum()
+        ]
+        ],
+        num_features=[10, 20],
+        num_selected_features=[10, 20],
+        max_length=[2, 4, 8],
+        grid_factor=[1.0, 2.0, 4.0, 8.0, 16.0, 32.0],
+        min_num_samples=[100, 200, 400],
+        regularization=[0.0, 0.001],
+        share_aggregations=[0.5, 1.0],
+        fast_training=[False],
+        round_robin=[True, False],
+        __feature_selector__booster=["gbtree", "gblinear"],
+        __predictor__booster=["gbtree", "gblinear"],
+        __predictor__n_estimators=[50, 100, 200],
+        __predictor__learning_rate=[0.05, 0.1, 0.2],
+        __predictor__max_depth=[3, 5, 7],
+        __predictor__n_jobs=[6],
+        __predictor__reg_lambda=[0, 100, 200]
+    )
+
+    rs.fit(
+        population_table_training=population_table_training,
+        population_table_validation=population_table_validation,
+        peripheral_tables=[peripheral_table]
+    )
+
+    print(rs.scores)
+
+    print(rs.candidates)

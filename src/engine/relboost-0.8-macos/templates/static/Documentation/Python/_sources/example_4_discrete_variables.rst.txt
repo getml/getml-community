@@ -1,0 +1,273 @@
+Example 4: Discrete variables
+------------------------------
+
+For a full working example, please refer to :ref:`example_04_discrete.py`.
+
+Discrete variables are numerical variables that can only assume whole numbers. A typical example might be number of units sold: The number of units sold is numerical, but it can only assume whole numbers. It makes very little sense to say that I sold 3956.283 units in the last month.
+
+When you know that certain variables are discrete, you should probably mark them as such. This can increase accuracy and produce more readable SQL code.
+
+Let's just say we have a problem like this, where *t2.column01* is a discrete variable:
+
+.. code-block:: sql
+
+    SELECT MIN( t2.column01 )
+    FROM POPULATION_TABLE t1
+    LEFT JOIN PERIPHERAL_TABLE t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t2.column01 > 0 )
+    ) AND t2.time_stamps <= t1.time_stamps
+    GROUP BY t2.join_key;
+
+Building the model
+^^^^^^^^^^^^^^^^^^
+
+We can then mark this as a discrete variable, just like we mark categorical or numerical variables:
+
+::
+
+    population_placeholder = models.Placeholder(
+        name="POPULATION",
+        join_keys=["join_key"],
+        time_stamps=["time_stamp"],
+        targets=["targets"]
+    )
+
+    peripheral_placeholder = models.Placeholder(
+        name="PERIPHERAL",
+        discrete=["column_01"],
+        join_keys=["join_key"],
+        time_stamps=["time_stamp"]
+    )
+
+    population_placeholder.join(peripheral_placeholder, "join_key", "time_stamp")
+
+    model = models.Model(
+        population=population_placeholder,
+        peripheral=[peripheral_placeholder],
+        predictor=linear_model.LinearRegression(),
+        loss_function=loss_functions.SquareLoss(),
+        aggregation=[aggregations.Avg(),
+                 aggregations.Sum(),
+                 aggregations.Count(),
+                 aggregations.Min()],
+        use_timestamps=True,
+        num_features=10,
+        max_length=2,
+        fast_training=False,
+        min_num_samples=200,
+        grid_factor=1.0,
+        share_aggregations=1.0,
+        regularization=1e-07
+    ).send()
+
+    model = model.fit(
+        population_table=population_table,
+        peripheral_tables=[peripheral_table]
+    )
+
+The remainder is straight-forward. We use *.fit(...)*, *.transform(...)*, *.predict(...)* and *.to_sql(...)* like we always have.
+
+Generating SQL code
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The resulting SQL code looks like this:
+
+.. code-block:: sql
+
+    CREATE TABLE FEATURE_1 AS
+    SELECT MIN( t2.column_01 ) AS feature_1,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t2.column_01 > 0 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_2 AS
+    SELECT MIN( t2.column_01 ) AS feature_2,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t2.column_01 > 0 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_3 AS
+    SELECT MIN( t2.column_01 ) AS feature_3,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t2.column_01 > 0 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_4 AS
+    SELECT MIN( t2.column_01 ) AS feature_4,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t2.column_01 > 0 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_5 AS
+    SELECT MIN( t2.column_01 ) AS feature_5,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t2.column_01 > 0 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_6 AS
+    SELECT MIN( t2.column_01 ) AS feature_6,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t2.column_01 > 0 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_7 AS
+    SELECT MIN( t2.column_01 ) AS feature_7,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t2.column_01 > 0 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_8 AS
+    SELECT MIN( t2.column_01 ) AS feature_8,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t2.column_01 > 0 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_9 AS
+    SELECT MIN( t2.column_01 ) AS feature_9,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t2.column_01 > 0 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_10 AS
+    SELECT MIN( t2.column_01 ) AS feature_10,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t2.column_01 > 0 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+Validation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+As you can see, the SQL is more readable. It also solves the problem perfectly (so we do not actually need ten features - one would have been sufficient).
+
+.. image:: Example_4_ensemble.png

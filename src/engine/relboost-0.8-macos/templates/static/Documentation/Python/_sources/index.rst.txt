@@ -1,0 +1,255 @@
+.. AutoSQL documentation master file, created by
+   sphinx-quickstart on Sun Aug 13 11:25:39 2017.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
+
+.. Build using following command:
+   pip install sphinx_rtd_theme
+
+   cd your/path/here/Documentation/
+   sh install.sh
+
+AutoSQL in 5 minutes
+====================
+
+AutoSQL is a tool for automatic feature engineering in relational databases. Currently, data scientists spent major portions of their time hand-crafting features in SQL. AutoSQL is designed to automate this procedure.
+
+To understand how AutoSQL works, we first have to talk about the *star schema*. The star schema consists of one central table, which we call the *population table* and several *peripheral tables* that are organized around the population table. The star schema is the simplest and most popular way to organize a relational data base. When you do a data science project, it is advisable to first express your tables in the star schema, regardless of whether you use AutoSQL.
+
+.. image:: star_schema.png
+
+The population table defines the population of the problem. Each element in the population table contains one or several *targets* which is want we want to predict. The peripheral tables can be joined onto the population table using a LEFT JOIN via a join key. Peripheral tables might have their own join key or share join keys with other peripheral tables.
+
+Moreover, the population table and the peripheral tables all have a *time stamp*. The purpose of the time stamp is to make sure that we adhere to the "golden rule" of predictive analytics: You are not allowed to use data from the future. This means that AutoSQL will look at the time stamps in the population table and the peripheral tables. When joining the peripheral table to the population table, *AutoSQL will not match data for which the time stamp in the peripheral table is greater than the time stamp in the population table*. If for any reason you do not want this behavior, you can set *use_timestamps=False*, but we strongly recommend that you only do this in very exceptional cases.
+
+In addition to the *star schema*, there is the *snowflake schema*. When you organize your data in the *snowflake schema*, the peripheral tables can have peripheral tables on their own. Because this looks like a tree, the snowflake schema is often referred to as a *relational tree* in the academic literature. AutoSQL supports the snowflake schema as well, for cases where this is necessary. However, in our experience most real-world datasets can be expressed in the star schema.
+
+.. image:: snowflake_schema.png
+
+Once you have organized your data in the star or the snowflake schema, stored it in pandas.DataFrame() objects and started the AutoSQL engine, generating your features works like this:
+
+::
+
+    import autosql.aggregations as aggregations
+    import autosql.engine as engine
+    import autosql.loss_functions as loss_functions
+    import autosql.models as models
+    
+    population_placeholder = models.Placeholder(
+        name="POPULATION_TABLE",
+        join_keys=["JOIN_KEY_1", "JOIN_KEY_2", "JOIN_KEY_3"],
+        time_stamps=["TIME_STAMP"],
+        targets=["TARGET_VALUES"]
+    )
+
+    peripheral1_placeholder = models.Placeholder(
+        name="PERIPHERAL_TABLE_1",
+        join_keys=["JOIN_KEY_1"],
+        time_stamps=["TIME_STAMP"]
+    )
+
+    peripheral2_placeholder = models.Placeholder(
+        name="PERIPHERAL_TABLE_2",
+        join_keys=["JOIN_KEY_2"],
+        time_stamps=["TIME_STAMP"]
+    )
+
+    peripheral3_placeholder = models.Placeholder(
+        name="PERIPHERAL_TABLE_3",
+        join_keys=["JOIN_KEY_3"],
+        time_stamps=["TIME_STAMP"]
+    )
+
+    population_placeholder.join(peripheral1_placeholder, "JOIN_KEY_1", "TIME_STAMP")
+
+    population_placeholder.join(peripheral2_placeholder, "JOIN_KEY_2", "TIME_STAMP")
+
+    population_placeholder.join(peripheral3_placeholder, "JOIN_KEY_3", "TIME_STAMP")
+
+    model = models.Model(
+        population=population_placeholder,
+        peripheral=[peripheral1_placeholder, peripheral2_placeholder, peripheral3_placeholder],
+        predictor=linear_model.LinearRegression(),
+        loss_function=loss_functions.CrossEntropyLoss(),
+        aggregation=[aggregations.Sum(), aggregations.Count()],
+        num_features=100
+    ).send()
+    
+    model.fit(
+        population_table=population_table,
+        peripheral_tables=[peripheral_table1, peripheral_table2, peripheral_table3]
+    )
+
+*population_table*, *peripheral_table1*, *peripheral_table2* and *peripheral_table3* are pandas.DataFrame() objects. "TARGET_VALUES", "JOIN_KEY_1", "JOIN_KEY_2", "JOIN_KEY_3" and "TIME_STAMP" are names of columns in *population_table*, *peripheral_table1*, *peripheral_table2* and *peripheral_table3*.
+
+If you are familiar with deep learning libraries such as keras or TensorFlow, you are probably also familiar with the concept of a *placeholder*. A placeholder represents a dataset without containing any real data. In our case, placeholders are used to pass the information on the schema to AutoSQL. Specifically, the placeholder will tell the model which tables there are and which join keys may be used to join them.
+
+To transform your raw data to extract the features, just call *model.transform()*:
+
+::
+
+    features = model.transform(
+        population_table=population_table,
+        peripheral_tables=[peripheral_table1, peripheral_table2, peripheral_table3]
+    )
+
+Of course, you can also generate real SQL code using AutoSQL. Just call *model.to_sql()*. The result might be something like this:
+
+::
+
+    CREATE TABLE FEATURE_1 AS
+    SELECT COUNT( DISTINCT t2.UCC5 ) AS feature_1,
+           t1.BASKETID,
+           t1.TIME_STAMP
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY BASKETID, TIME_STAMP ASC ) AS rownum
+         FROM POPULATION_TABLE
+    ) t1
+    LEFT JOIN PERIPHERAL_TABLE_1 t2
+    ON t1.JOIN_KEY_1 = t2.JOIN_KEY_1
+    WHERE (
+       ( t1.UCC3 != '390' AND t1.UCC4 != '4000' AND t1.UCC != '330410' AND t1.UCC4 != '2061' AND t1.UCC2 = '25' )
+    OR ( t1.UCC3 != '390' AND t1.UCC4 != '4000' AND t1.UCC != '330410' AND t1.UCC4 = '2061' AND t1.COST <= 2.430000 )
+    OR ( t1.UCC3 != '390' AND t1.UCC4 != '4000' AND t1.UCC = '330410' AND t1.COST <= 5.282800 )
+    OR ( t1.UCC3 != '390' AND t1.UCC4 = '4000' AND t1.COST > 36.999583 )
+    OR ( t1.UCC3 = '390' )
+    ) AND t2.TIME_STAMP <= t1.TIME_STAMP
+    GROUP BY t1.rownum,
+         t1.JOIN_KEY_1,
+         t1.TIME_STAMP;
+
+Obviously, if you think that this feature is too complex, there are various ways to regularize the complexity of the generated features.
+
+The most important thing to understand about AutoSQL is that it does *not* use a brute force procedure: AutoSQL does *not* generate a large number of predefined features and then picks out the best 1% of them. Instead, it uses an intelligent algorithm that is somewhat similar to gradient boosting. This is a lot faster, more scalable and also generates better features (or have you have heard of a successful machine learning algorithm that uses brute force to fit its parameters? - we neither).
+
+An Example: Customer Churn
+===========================
+
+Imagine that you are a data scientist working for a bank and you want to predict which of your customers are going to churn (switch to another bank).
+
+You begin by building your population table: You define a reference date once a month. At this reference date, you look at all of your customers who were active on that reference date. You then define a variable that assumes a value of 1 if the customer closed his account within one month after the reference data and 0 otherwise. This variable is your target variable, which is what you want to predict. Your timestamp is the reference date.
+
+Let's say you have another table, which contains information on all transactions that your customers have made. You hypothesize that the volume and frequency with which customers conduct transactions can predict whether a customer is going to churn. This table is a peripheral table.
+
+You then have another peripheral table which contains customer complaints. Whenever a customer has filed a complaint, this table stores the customer ID, the content of the complaint and the date it was made.
+
+.. image:: snowflake_data_model_bank_example.png
+
+In the traditional way of doing data science, you would now start hand-crafting your features. For instance: How many transactions has a customer made in the 90 days before the reference date? What was the total volume of the transactions made in the 90 days before the reference date?
+
+You might handcraft features that look like this (using SQL or tools such as data.tables or pandas):
+
+
+.. code-block:: sql
+
+    CREATE TABLE NUMBER_OF_TRANSACTIONS_LAST_90_DAYS AS
+    SELECT COUNT( * ) AS number_of_transactions_last_90_days,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY customer_id, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN TRANSACTIONS t2
+    ON t1.customer_id = t2.customer_id
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 90 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.customer_id,
+         t1.time_stamp;
+
+    CREATE TABLE TOTAL_TRANSACTION_VOLUME_LAST_90_DAYS AS
+    SELECT SUM( t2.transaction_volume ) AS total_transaction_volume_last_90_days,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY customer_id, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN TRANSACTIONS t2
+    ON t1.customer_id = t2.customer_id
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 90 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.customer_id,
+         t1.time_stamp;
+    
+    ...many more...
+
+If you want to do this well, you will have to write hundreds of features like this.
+
+But this is a very cumbersome procedure and is largely based on trial-and-error. For instance, the time frame of 90 days seems completely arbitrary and there is no reason to assume that 30 days, 60 days or 180 days might not work well as well.
+
+So highly paid professional data scientists spend most of their time writing dull SQL statements - that does not seem to make a lot of sense economically and we have not met too many data scientists who enjoy doing this sort of work. But it is how data science is currently being practiced in many companies all over the world. 
+
+AutoSQL offers an alternative. If you can load the tables POPULATION, TRANSACTIONS and COMPLAINTS into Python as *pandas.DataFrame()* objects, you can let AutoSQL determine the features for you. All you need to do is to identify the join keys, the relevant time stamps and your target variable:
+
+::
+
+    import autosql.aggregations as aggregations
+    import autosql.engine as engine
+    import autosql.loss_functions as loss_functions
+    import autosql.models as models
+    
+    population_placeholder = models.Placeholder(
+        name="POPULATION",
+        join_keys=["customer_id"],
+        time_stamps=["time_stamp"],
+        targets=["churn"]
+    )
+
+    transactions_placeholder = models.Placeholder(
+        name="TRANSACTIONS",
+        join_keys=["customer_id"],
+        time_stamps=["time_stamp"]
+    )
+
+    complaints_placeholder = models.Placeholder(
+        name="COMPLAINTS",
+        join_keys=["customer_id"],
+        time_stamps=["time_stamp"]
+    )
+
+    population_placeholder.join(transactions_placeholder, "customer_id", "time_stamp")
+
+    population_placeholder.join(complaints_placeholder, "customer_id", "time_stamp")
+
+    model = models.Model(
+        population=population_placeholder,
+        peripheral=[transactions_placeholder, complaints_placeholder],
+        loss_function=loss_functions.CrossEntropyLoss(),
+        aggregation=[aggregations.Var(),
+                 aggregations.Avg(),
+                 aggregations.Sum(),
+                 aggregations.Stddev(),
+                 aggregations.Count()],
+        num_features=500
+    ).send()
+    
+    model.fit(
+        population_table=population_table,
+        peripheral_tables=[transactions, complaints]
+    )
+
+AutoSQL will then generate features such as the features above for you. It is possible to directly transform the raw data into a *pandas.DataFrame()* or a *numpy.array* containing your features. It is also possible to extract the SQL code underlying your features.
+
+We cannot stress this enough: AutoSQL does NOT use a brute force approach. Instead, it understands data blending as a supervised ensemble learning problem, which is far more efficient, more scalable and generates very high-quality features.
+
+Table of Contents
+====================
+
+.. toctree::
+
+    installation.rst
+    starting_the_autosql_engine.rst
+    accessing_the_autosql_monitor.rst
+    examples.rst
+    listings.rst
+    faq.rst
+    troubleshooting.rst
+    api_documentation.rst

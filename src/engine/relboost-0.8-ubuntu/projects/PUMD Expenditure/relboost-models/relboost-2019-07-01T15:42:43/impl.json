@@ -1,0 +1,1 @@
+{"categorical_colnames_":["UCC","UCC1","UCC2","UCC3","UCC4","UCC5"],"discrete_colnames_":[],"encodings_":[{"max_":476,"min_":0},{"max_":485,"min_":477},{"max_":548,"min_":486},{"max_":649,"min_":549},{"max_":910,"min_":168},{"max_":1248,"min_":0}],"num_autofeatures_":20,"numerical_colnames_":["COST"]}
