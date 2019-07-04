@@ -950,7 +950,7 @@ Poco::JSON::Object DataFrame::to_monitor( const std::string _name )
 
 std::string DataFrame::to_time_stamp( const Float &_time_stamp_float ) const
 {
-    if ( std::isnan( _time_stamp_float ) )
+    if ( std::isnan( _time_stamp_float ) || std::isinf( _time_stamp_float ) )
         {
             return "NULL";
         }
@@ -963,7 +963,7 @@ std::string DataFrame::to_time_stamp( const Float &_time_stamp_float ) const
     const auto time_stamp = std::chrono::system_clock::to_time_t(
         epoch_point + std::chrono::seconds( seconds_since_epoch ) );
 
-    return std::ctime( &time_stamp );
+    return std::asctime( std::gmtime( &time_stamp ) );
 }
 
 // ----------------------------------------------------------------------------

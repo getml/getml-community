@@ -157,6 +157,28 @@ containers::Column<Float> NumOpParser::unary_operation(
             const auto cos = []( const Float val ) { return std::cos( val ); };
             return un_op( _operand1, cos );
         }
+    else if ( _operator == "day" )
+        {
+            const std::chrono::time_point<std::chrono::system_clock>
+                epoch_point;
+
+            const auto day = [epoch_point]( const Float val ) {
+                if ( std::isnan( val ) || std::isinf( val ) )
+                    {
+                        return static_cast<Float>( NAN );
+                    }
+
+                const auto seconds_since_epoch =
+                    static_cast<std::time_t>( 86400.0 * val );
+
+                const auto time_stamp = std::chrono::system_clock::to_time_t(
+                    epoch_point + std::chrono::seconds( seconds_since_epoch ) );
+
+                return static_cast<Float>(
+                    std::gmtime( &time_stamp )->tm_mday );
+            };
+            return un_op( _operand1, day );
+        }
     else if ( _operator == "erf" )
         {
             const auto erf = []( const Float val ) { return std::erf( val ); };
@@ -174,6 +196,28 @@ containers::Column<Float> NumOpParser::unary_operation(
             };
             return un_op( _operand1, floor );
         }
+    else if ( _operator == "hour" )
+        {
+            const std::chrono::time_point<std::chrono::system_clock>
+                epoch_point;
+
+            const auto hour = [epoch_point]( const Float val ) {
+                if ( std::isnan( val ) || std::isinf( val ) )
+                    {
+                        return static_cast<Float>( NAN );
+                    }
+
+                const auto seconds_since_epoch =
+                    static_cast<std::time_t>( 86400.0 * val );
+
+                const auto time_stamp = std::chrono::system_clock::to_time_t(
+                    epoch_point + std::chrono::seconds( seconds_since_epoch ) );
+
+                return static_cast<Float>(
+                    std::gmtime( &time_stamp )->tm_hour );
+            };
+            return un_op( _operand1, hour );
+        }
     else if ( _operator == "lgamma" )
         {
             const auto lgamma = []( const Float val ) {
@@ -186,12 +230,76 @@ containers::Column<Float> NumOpParser::unary_operation(
             const auto log = []( const Float val ) { return std::log( val ); };
             return un_op( _operand1, log );
         }
+    else if ( _operator == "minute" )
+        {
+            const std::chrono::time_point<std::chrono::system_clock>
+                epoch_point;
+
+            const auto minute = [epoch_point]( const Float val ) {
+                if ( std::isnan( val ) || std::isinf( val ) )
+                    {
+                        return static_cast<Float>( NAN );
+                    }
+
+                const auto seconds_since_epoch =
+                    static_cast<std::time_t>( 86400.0 * val );
+
+                const auto time_stamp = std::chrono::system_clock::to_time_t(
+                    epoch_point + std::chrono::seconds( seconds_since_epoch ) );
+
+                return static_cast<Float>( std::gmtime( &time_stamp )->tm_min );
+            };
+            return un_op( _operand1, minute );
+        }
+    else if ( _operator == "month" )
+        {
+            const std::chrono::time_point<std::chrono::system_clock>
+                epoch_point;
+
+            const auto month = [epoch_point]( const Float val ) {
+                if ( std::isnan( val ) || std::isinf( val ) )
+                    {
+                        return static_cast<Float>( NAN );
+                    }
+
+                const auto seconds_since_epoch =
+                    static_cast<std::time_t>( 86400.0 * val );
+
+                const auto time_stamp = std::chrono::system_clock::to_time_t(
+                    epoch_point + std::chrono::seconds( seconds_since_epoch ) );
+
+                return static_cast<Float>(
+                    std::gmtime( &time_stamp )->tm_mon + 1 );
+            };
+            return un_op( _operand1, month );
+        }
     else if ( _operator == "round" )
         {
             const auto round = []( const Float val ) {
                 return std::round( val );
             };
             return un_op( _operand1, round );
+        }
+    else if ( _operator == "second" )
+        {
+            const std::chrono::time_point<std::chrono::system_clock>
+                epoch_point;
+
+            const auto second = [epoch_point]( const Float val ) {
+                if ( std::isnan( val ) || std::isinf( val ) )
+                    {
+                        return static_cast<Float>( NAN );
+                    }
+
+                const auto seconds_since_epoch =
+                    static_cast<std::time_t>( 86400.0 * val );
+
+                const auto time_stamp = std::chrono::system_clock::to_time_t(
+                    epoch_point + std::chrono::seconds( seconds_since_epoch ) );
+
+                return static_cast<Float>( std::gmtime( &time_stamp )->tm_sec );
+            };
+            return un_op( _operand1, second );
         }
     else if ( _operator == "sin" )
         {
@@ -216,6 +324,72 @@ containers::Column<Float> NumOpParser::unary_operation(
                 return std::tgamma( val );
             };
             return un_op( _operand1, tgamma );
+        }
+    else if ( _operator == "weekday" )
+        {
+            const std::chrono::time_point<std::chrono::system_clock>
+                epoch_point;
+
+            const auto weekday = [epoch_point]( const Float val ) {
+                if ( std::isnan( val ) || std::isinf( val ) )
+                    {
+                        return static_cast<Float>( NAN );
+                    }
+
+                const auto seconds_since_epoch =
+                    static_cast<std::time_t>( 86400.0 * val );
+
+                const auto time_stamp = std::chrono::system_clock::to_time_t(
+                    epoch_point + std::chrono::seconds( seconds_since_epoch ) );
+
+                return static_cast<Float>(
+                    std::gmtime( &time_stamp )->tm_wday );
+            };
+            return un_op( _operand1, weekday );
+        }
+    else if ( _operator == "year" )
+        {
+            const std::chrono::time_point<std::chrono::system_clock>
+                epoch_point;
+
+            const auto year = [epoch_point]( const Float val ) {
+                if ( std::isnan( val ) || std::isinf( val ) )
+                    {
+                        return static_cast<Float>( NAN );
+                    }
+
+                const auto seconds_since_epoch =
+                    static_cast<std::time_t>( 86400.0 * val );
+
+                const auto time_stamp = std::chrono::system_clock::to_time_t(
+                    epoch_point + std::chrono::seconds( seconds_since_epoch ) );
+
+                return static_cast<Float>(
+                    std::gmtime( &time_stamp )->tm_year + 1900 );
+            };
+            return un_op( _operand1, year );
+        }
+    else if ( _operator == "yearday" )
+        {
+            const std::chrono::time_point<std::chrono::system_clock>
+                epoch_point;
+
+            const auto yearday = [epoch_point]( const Float val ) {
+                if ( std::isnan( val ) || std::isinf( val ) )
+                    {
+                        return static_cast<Float>( NAN );
+                    }
+
+                const auto seconds_since_epoch =
+                    static_cast<std::time_t>( 86400.0 * val );
+
+                const auto time_stamp = std::chrono::system_clock::to_time_t(
+                    epoch_point + std::chrono::seconds( seconds_since_epoch ) );
+
+                return static_cast<Float>(
+                    std::gmtime( &time_stamp )->tm_yday + 1 );
+            };
+            return un_op( _operand1, yearday );
         }
     else
         {
