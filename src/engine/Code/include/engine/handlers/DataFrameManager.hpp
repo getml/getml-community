@@ -37,6 +37,12 @@ class DataFrameManager
     // ------------------------------------------------------------------------
 
    public:
+    /// Adds a new column to an existing data frame.
+    void add_column(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
     /// Creates a new data frame and adds it to the map of data frames.
     void add_data_frame(
         const std::string& _name, Poco::Net::StreamSocket* _socket );

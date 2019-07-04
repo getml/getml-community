@@ -52,6 +52,7 @@
 // Module files
 
 #include "engine/handlers/FileHandler.hpp"
+#include "engine/handlers/NumOpParser.hpp"
 
 #include "engine/handlers/DataFrameManager.hpp"
 #include "engine/handlers/DatabaseManager.hpp"

@@ -114,6 +114,10 @@ void RequestHandler::run()
                 {
                     project_manager().add_data_frame( name, &socket() );
                 }
+            else if ( type == "DataFrame.add_column" )
+                {
+                    data_frame_manager().add_column( name, cmd, &socket() );
+                }
             else if ( type == "DataFrame.append" )
                 {
                     data_frame_manager().append_to_data_frame(

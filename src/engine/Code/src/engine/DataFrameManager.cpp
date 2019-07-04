@@ -103,6 +103,42 @@ void DataFrameManager::add_data_frame(
 // ------------------------------------------------------------------------
 
 void DataFrameManager::add_column(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
+
+    const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
+
+    auto& df = utils::Getter::get( df_name, &data_frames() );
+
+    const auto role = JSON::get_value<std::string>( _cmd, "role_" );
+
+    const auto name = JSON::get_value<std::string>( _cmd, "name_" );
+
+    const auto unit = JSON::get_value<std::string>( _cmd, "unit_" );
+
+    const auto json_col = *JSON::get_object( _cmd, "col_" );
+
+    auto col = NumOpParser::parse( df, json_col );
+
+    col.set_name( name );
+
+    col.set_unit( unit );
+
+    weak_write_lock.upgrade();
+
+    df.add_float_column( col, role );
+
+    monitor_->send( "postdataframe", df.to_monitor( df_name ) );
+
+    communication::Sender::send_string( "Success!", _socket );
+}
+
+// ------------------------------------------------------------------------
+
+void DataFrameManager::add_column(
     const Poco::JSON::Object& _cmd,
     containers::DataFrame* _df,
     Poco::Net::StreamSocket* _socket )
