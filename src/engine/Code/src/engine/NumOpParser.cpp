@@ -70,6 +70,13 @@ containers::Column<Float> NumOpParser::binary_operation(
         {
             return bin_op( _operand1, _operand2, std::divides<Float>() );
         }
+    else if ( _operator == "fmod" )
+        {
+            const auto fmod = []( const Float val1, const Float val2 ) {
+                return std::fmod( val1, val2 );
+            };
+            return bin_op( _operand1, _operand2, fmod );
+        }
     else if ( _operator == "minus" )
         {
             return bin_op( _operand1, _operand2, std::minus<Float>() );
@@ -105,15 +112,91 @@ containers::Column<Float> NumOpParser::unary_operation(
 {
     auto result = containers::Column<Float>( _operand1.nrows() );
 
-    if ( _operator == "exp" )
+    if ( _operator == "abs" )
+        {
+            const auto abs = []( const Float val ) { return std::abs( val ); };
+            return un_op( _operand1, abs );
+        }
+    else if ( _operator == "acos" )
+        {
+            const auto acos = []( const Float val ) {
+                return std::acos( val );
+            };
+            return un_op( _operand1, acos );
+        }
+    else if ( _operator == "asin" )
+        {
+            const auto asin = []( const Float val ) {
+                return std::asin( val );
+            };
+            return un_op( _operand1, asin );
+        }
+    else if ( _operator == "atan" )
+        {
+            const auto atan = []( const Float val ) {
+                return std::atan( val );
+            };
+            return un_op( _operand1, atan );
+        }
+    else if ( _operator == "cbrt" )
+        {
+            const auto cbrt = []( const Float val ) {
+                return std::cbrt( val );
+            };
+            return un_op( _operand1, cbrt );
+        }
+    else if ( _operator == "ceil" )
+        {
+            const auto ceil = []( const Float val ) {
+                return std::ceil( val );
+            };
+            return un_op( _operand1, ceil );
+        }
+    else if ( _operator == "cos" )
+        {
+            const auto cos = []( const Float val ) { return std::cos( val ); };
+            return un_op( _operand1, cos );
+        }
+    else if ( _operator == "exp" )
         {
             const auto exp = []( const Float val ) { return std::exp( val ); };
             return un_op( _operand1, exp );
+        }
+    else if ( _operator == "floor" )
+        {
+            const auto floor = []( const Float val ) {
+                return std::floor( val );
+            };
+            return un_op( _operand1, floor );
         }
     else if ( _operator == "log" )
         {
             const auto log = []( const Float val ) { return std::log( val ); };
             return un_op( _operand1, log );
+        }
+    else if ( _operator == "round" )
+        {
+            const auto round = []( const Float val ) {
+                return std::round( val );
+            };
+            return un_op( _operand1, round );
+        }
+    else if ( _operator == "sin" )
+        {
+            const auto sin = []( const Float val ) { return std::sin( val ); };
+            return un_op( _operand1, sin );
+        }
+    else if ( _operator == "sqrt" )
+        {
+            const auto sqrt = []( const Float val ) {
+                return std::sqrt( val );
+            };
+            return un_op( _operand1, sqrt );
+        }
+    else if ( _operator == "tan" )
+        {
+            const auto tan = []( const Float val ) { return std::tan( val ); };
+            return un_op( _operand1, tan );
         }
     else
         {
