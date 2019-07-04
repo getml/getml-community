@@ -473,6 +473,16 @@ class DataFrame
     /// Transforms a float to a time stamp
     std::string to_time_stamp( const Float &_time_stamp_float ) const;
 
+   private:
+    /// Custom string conversions (produces to beautiful numbers than
+    /// std::to_string)
+    std::string to_string( const Float &_val ) const
+    {
+        std::ostringstream stream;
+        stream << _val;
+        return stream.str();
+    }
+
     // -------------------------------
 
    private:
