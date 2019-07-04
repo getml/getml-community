@@ -690,12 +690,28 @@ Poco::JSON::Object DataFrame::get_content(
 
             for ( size_t j = 0; j < num_discretes(); ++j )
                 {
-                    row.add( std::to_string( discrete( j )[i] ) );
+                    if ( discrete( j ).unit().find( "time stamp" ) !=
+                         std::string::npos )
+                        {
+                            row.add( to_time_stamp( discrete( j )[i] ) );
+                        }
+                    else
+                        {
+                            row.add( std::to_string( discrete( j )[i] ) );
+                        }
                 }
 
             for ( size_t j = 0; j < num_numericals(); ++j )
                 {
-                    row.add( std::to_string( numerical( j )[i] ) );
+                    if ( numerical( j ).unit().find( "time stamp" ) !=
+                         std::string::npos )
+                        {
+                            row.add( to_time_stamp( numerical( j )[i] ) );
+                        }
+                    else
+                        {
+                            row.add( std::to_string( numerical( j )[i] ) );
+                        }
                 }
 
             data.add( row );

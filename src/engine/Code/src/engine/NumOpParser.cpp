@@ -157,6 +157,11 @@ containers::Column<Float> NumOpParser::unary_operation(
             const auto cos = []( const Float val ) { return std::cos( val ); };
             return un_op( _operand1, cos );
         }
+    else if ( _operator == "erf" )
+        {
+            const auto erf = []( const Float val ) { return std::erf( val ); };
+            return un_op( _operand1, erf );
+        }
     else if ( _operator == "exp" )
         {
             const auto exp = []( const Float val ) { return std::exp( val ); };
@@ -168,6 +173,13 @@ containers::Column<Float> NumOpParser::unary_operation(
                 return std::floor( val );
             };
             return un_op( _operand1, floor );
+        }
+    else if ( _operator == "lgamma" )
+        {
+            const auto lgamma = []( const Float val ) {
+                return std::lgamma( val );
+            };
+            return un_op( _operand1, lgamma );
         }
     else if ( _operator == "log" )
         {
@@ -197,6 +209,13 @@ containers::Column<Float> NumOpParser::unary_operation(
         {
             const auto tan = []( const Float val ) { return std::tan( val ); };
             return un_op( _operand1, tan );
+        }
+    else if ( _operator == "tgamma" )
+        {
+            const auto tgamma = []( const Float val ) {
+                return std::tgamma( val );
+            };
+            return un_op( _operand1, tgamma );
         }
     else
         {
