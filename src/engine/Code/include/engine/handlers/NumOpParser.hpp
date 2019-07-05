@@ -21,14 +21,11 @@ class NumOpParser
    private:
     /// Parses the operator and undertakes a binary operation.
     static containers::Column<Float> binary_operation(
-        const std::string& _operator,
-        const containers::Column<Float>& _operand1,
-        const containers::Column<Float>& _operand2 );
+        const containers::DataFrame& _df, const Poco::JSON::Object& _col );
 
     /// Parses the operator and undertakes a unary operation.
     static containers::Column<Float> unary_operation(
-        const std::string& _operator,
-        const containers::Column<Float>& _operand1 );
+        const containers::DataFrame& _df, const Poco::JSON::Object& _col );
 
     // ------------------------------------------------------------------------
 
@@ -36,17 +33,24 @@ class NumOpParser
     /// Operator.
     template <class Operator>
     static containers::Column<Float> bin_op(
-        const containers::Column<Float>& _operand1,
-        const containers::Column<Float>& _operand2,
+        const containers::DataFrame& _df,
+        const Poco::JSON::Object& _col,
         const Operator& _op )
     {
-        assert( _operand1.nrows() == _operand2.nrows() );
-        auto result = containers::Column<Float>( _operand1.nrows() );
+        const auto operand1 =
+            parse( _df, *JSON::get_object( _col, "operand1_" ) );
+
+        const auto operand2 =
+            parse( _df, *JSON::get_object( _col, "operand2_" ) );
+
+        assert( operand1.nrows() == operand2.nrows() );
+
+        auto result = containers::Column<Float>( operand1.nrows() );
 
         std::transform(
-            _operand1.begin(),
-            _operand1.end(),
-            _operand2.begin(),
+            operand1.begin(),
+            operand1.end(),
+            operand2.begin(),
             result.begin(),
             _op );
 
@@ -57,12 +61,16 @@ class NumOpParser
     /// Operator.
     template <class Operator>
     static containers::Column<Float> un_op(
-        const containers::Column<Float>& _operand1, const Operator& _op )
+        const containers::DataFrame& _df,
+        const Poco::JSON::Object& _col,
+        const Operator& _op )
     {
-        auto result = containers::Column<Float>( _operand1.nrows() );
+        const auto operand1 =
+            parse( _df, *JSON::get_object( _col, "operand1_" ) );
 
-        std::transform(
-            _operand1.begin(), _operand1.end(), result.begin(), _op );
+        auto result = containers::Column<Float>( operand1.nrows() );
+
+        std::transform( operand1.begin(), operand1.end(), result.begin(), _op );
 
         return result;
     }

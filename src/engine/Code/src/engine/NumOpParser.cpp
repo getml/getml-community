@@ -31,24 +31,11 @@ containers::Column<Float> NumOpParser::parse(
         }
     else if ( type == "VirtualColumn" && _col.has( "operand2_" ) )
         {
-            const auto op = JSON::get_value<std::string>( _col, "operator_" );
-
-            const auto operand1 =
-                parse( _df, *JSON::get_object( _col, "operand1_" ) );
-
-            const auto operand2 =
-                parse( _df, *JSON::get_object( _col, "operand2_" ) );
-
-            return binary_operation( op, operand1, operand2 );
+            return binary_operation( _df, _col );
         }
     else if ( type == "VirtualColumn" && !_col.has( "operand2_" ) )
         {
-            const auto op = JSON::get_value<std::string>( _col, "operator_" );
-
-            const auto operand1 =
-                parse( _df, *JSON::get_object( _col, "operand1_" ) );
-
-            return unary_operation( op, operand1 );
+            return unary_operation( _df, _col );
         }
     else
         {
@@ -60,46 +47,44 @@ containers::Column<Float> NumOpParser::parse(
 // ----------------------------------------------------------------------------
 
 containers::Column<Float> NumOpParser::binary_operation(
-    const std::string& _operator,
-    const containers::Column<Float>& _operand1,
-    const containers::Column<Float>& _operand2 )
+    const containers::DataFrame& _df, const Poco::JSON::Object& _col )
 {
-    assert( _operand1.nrows() == _operand2.nrows() );
+    const auto op = JSON::get_value<std::string>( _col, "operator_" );
 
-    if ( _operator == "divides" )
+    if ( op == "divides" )
         {
-            return bin_op( _operand1, _operand2, std::divides<Float>() );
+            return bin_op( _df, _col, std::divides<Float>() );
         }
-    else if ( _operator == "fmod" )
+    else if ( op == "fmod" )
         {
             const auto fmod = []( const Float val1, const Float val2 ) {
                 return std::fmod( val1, val2 );
             };
-            return bin_op( _operand1, _operand2, fmod );
+            return bin_op( _df, _col, fmod );
         }
-    else if ( _operator == "minus" )
+    else if ( op == "minus" )
         {
-            return bin_op( _operand1, _operand2, std::minus<Float>() );
+            return bin_op( _df, _col, std::minus<Float>() );
         }
-    else if ( _operator == "multiplies" )
+    else if ( op == "multiplies" )
         {
-            return bin_op( _operand1, _operand2, std::multiplies<Float>() );
+            return bin_op( _df, _col, std::multiplies<Float>() );
         }
-    else if ( _operator == "plus" )
+    else if ( op == "plus" )
         {
-            return bin_op( _operand1, _operand2, std::plus<Float>() );
+            return bin_op( _df, _col, std::plus<Float>() );
         }
-    else if ( _operator == "pow" )
+    else if ( op == "pow" )
         {
             const auto pow = []( const Float val1, const Float val2 ) {
                 return std::pow( val1, val2 );
             };
-            return bin_op( _operand1, _operand2, pow );
+            return bin_op( _df, _col, pow );
         }
     else
         {
             throw std::invalid_argument(
-                "Operator '" + _operator + "' not recognized." );
+                "Operator '" + op + "' not recognized." );
 
             return containers::Column<Float>( 0 );
         }
@@ -108,56 +93,56 @@ containers::Column<Float> NumOpParser::binary_operation(
 // ----------------------------------------------------------------------------
 
 containers::Column<Float> NumOpParser::unary_operation(
-    const std::string& _operator, const containers::Column<Float>& _operand1 )
+    const containers::DataFrame& _df, const Poco::JSON::Object& _col )
 {
-    auto result = containers::Column<Float>( _operand1.nrows() );
+    const auto op = JSON::get_value<std::string>( _col, "operator_" );
 
-    if ( _operator == "abs" )
+    if ( op == "abs" )
         {
             const auto abs = []( const Float val ) { return std::abs( val ); };
-            return un_op( _operand1, abs );
+            return un_op( _df, _col, abs );
         }
-    else if ( _operator == "acos" )
+    else if ( op == "acos" )
         {
             const auto acos = []( const Float val ) {
                 return std::acos( val );
             };
-            return un_op( _operand1, acos );
+            return un_op( _df, _col, acos );
         }
-    else if ( _operator == "asin" )
+    else if ( op == "asin" )
         {
             const auto asin = []( const Float val ) {
                 return std::asin( val );
             };
-            return un_op( _operand1, asin );
+            return un_op( _df, _col, asin );
         }
-    else if ( _operator == "atan" )
+    else if ( op == "atan" )
         {
             const auto atan = []( const Float val ) {
                 return std::atan( val );
             };
-            return un_op( _operand1, atan );
+            return un_op( _df, _col, atan );
         }
-    else if ( _operator == "cbrt" )
+    else if ( op == "cbrt" )
         {
             const auto cbrt = []( const Float val ) {
                 return std::cbrt( val );
             };
-            return un_op( _operand1, cbrt );
+            return un_op( _df, _col, cbrt );
         }
-    else if ( _operator == "ceil" )
+    else if ( op == "ceil" )
         {
             const auto ceil = []( const Float val ) {
                 return std::ceil( val );
             };
-            return un_op( _operand1, ceil );
+            return un_op( _df, _col, ceil );
         }
-    else if ( _operator == "cos" )
+    else if ( op == "cos" )
         {
             const auto cos = []( const Float val ) { return std::cos( val ); };
-            return un_op( _operand1, cos );
+            return un_op( _df, _col, cos );
         }
-    else if ( _operator == "day" )
+    else if ( op == "day" )
         {
             const std::chrono::time_point<std::chrono::system_clock>
                 epoch_point;
@@ -177,26 +162,26 @@ containers::Column<Float> NumOpParser::unary_operation(
                 return static_cast<Float>(
                     std::gmtime( &time_stamp )->tm_mday );
             };
-            return un_op( _operand1, day );
+            return un_op( _df, _col, day );
         }
-    else if ( _operator == "erf" )
+    else if ( op == "erf" )
         {
             const auto erf = []( const Float val ) { return std::erf( val ); };
-            return un_op( _operand1, erf );
+            return un_op( _df, _col, erf );
         }
-    else if ( _operator == "exp" )
+    else if ( op == "exp" )
         {
             const auto exp = []( const Float val ) { return std::exp( val ); };
-            return un_op( _operand1, exp );
+            return un_op( _df, _col, exp );
         }
-    else if ( _operator == "floor" )
+    else if ( op == "floor" )
         {
             const auto floor = []( const Float val ) {
                 return std::floor( val );
             };
-            return un_op( _operand1, floor );
+            return un_op( _df, _col, floor );
         }
-    else if ( _operator == "hour" )
+    else if ( op == "hour" )
         {
             const std::chrono::time_point<std::chrono::system_clock>
                 epoch_point;
@@ -216,21 +201,21 @@ containers::Column<Float> NumOpParser::unary_operation(
                 return static_cast<Float>(
                     std::gmtime( &time_stamp )->tm_hour );
             };
-            return un_op( _operand1, hour );
+            return un_op( _df, _col, hour );
         }
-    else if ( _operator == "lgamma" )
+    else if ( op == "lgamma" )
         {
             const auto lgamma = []( const Float val ) {
                 return std::lgamma( val );
             };
-            return un_op( _operand1, lgamma );
+            return un_op( _df, _col, lgamma );
         }
-    else if ( _operator == "log" )
+    else if ( op == "log" )
         {
             const auto log = []( const Float val ) { return std::log( val ); };
-            return un_op( _operand1, log );
+            return un_op( _df, _col, log );
         }
-    else if ( _operator == "minute" )
+    else if ( op == "minute" )
         {
             const std::chrono::time_point<std::chrono::system_clock>
                 epoch_point;
@@ -249,9 +234,9 @@ containers::Column<Float> NumOpParser::unary_operation(
 
                 return static_cast<Float>( std::gmtime( &time_stamp )->tm_min );
             };
-            return un_op( _operand1, minute );
+            return un_op( _df, _col, minute );
         }
-    else if ( _operator == "month" )
+    else if ( op == "month" )
         {
             const std::chrono::time_point<std::chrono::system_clock>
                 epoch_point;
@@ -271,16 +256,16 @@ containers::Column<Float> NumOpParser::unary_operation(
                 return static_cast<Float>(
                     std::gmtime( &time_stamp )->tm_mon + 1 );
             };
-            return un_op( _operand1, month );
+            return un_op( _df, _col, month );
         }
-    else if ( _operator == "round" )
+    else if ( op == "round" )
         {
             const auto round = []( const Float val ) {
                 return std::round( val );
             };
-            return un_op( _operand1, round );
+            return un_op( _df, _col, round );
         }
-    else if ( _operator == "second" )
+    else if ( op == "second" )
         {
             const std::chrono::time_point<std::chrono::system_clock>
                 epoch_point;
@@ -299,33 +284,33 @@ containers::Column<Float> NumOpParser::unary_operation(
 
                 return static_cast<Float>( std::gmtime( &time_stamp )->tm_sec );
             };
-            return un_op( _operand1, second );
+            return un_op( _df, _col, second );
         }
-    else if ( _operator == "sin" )
+    else if ( op == "sin" )
         {
             const auto sin = []( const Float val ) { return std::sin( val ); };
-            return un_op( _operand1, sin );
+            return un_op( _df, _col, sin );
         }
-    else if ( _operator == "sqrt" )
+    else if ( op == "sqrt" )
         {
             const auto sqrt = []( const Float val ) {
                 return std::sqrt( val );
             };
-            return un_op( _operand1, sqrt );
+            return un_op( _df, _col, sqrt );
         }
-    else if ( _operator == "tan" )
+    else if ( op == "tan" )
         {
             const auto tan = []( const Float val ) { return std::tan( val ); };
-            return un_op( _operand1, tan );
+            return un_op( _df, _col, tan );
         }
-    else if ( _operator == "tgamma" )
+    else if ( op == "tgamma" )
         {
             const auto tgamma = []( const Float val ) {
                 return std::tgamma( val );
             };
-            return un_op( _operand1, tgamma );
+            return un_op( _df, _col, tgamma );
         }
-    else if ( _operator == "weekday" )
+    else if ( op == "weekday" )
         {
             const std::chrono::time_point<std::chrono::system_clock>
                 epoch_point;
@@ -345,9 +330,9 @@ containers::Column<Float> NumOpParser::unary_operation(
                 return static_cast<Float>(
                     std::gmtime( &time_stamp )->tm_wday );
             };
-            return un_op( _operand1, weekday );
+            return un_op( _df, _col, weekday );
         }
-    else if ( _operator == "year" )
+    else if ( op == "year" )
         {
             const std::chrono::time_point<std::chrono::system_clock>
                 epoch_point;
@@ -367,9 +352,9 @@ containers::Column<Float> NumOpParser::unary_operation(
                 return static_cast<Float>(
                     std::gmtime( &time_stamp )->tm_year + 1900 );
             };
-            return un_op( _operand1, year );
+            return un_op( _df, _col, year );
         }
-    else if ( _operator == "yearday" )
+    else if ( op == "yearday" )
         {
             const std::chrono::time_point<std::chrono::system_clock>
                 epoch_point;
@@ -389,15 +374,15 @@ containers::Column<Float> NumOpParser::unary_operation(
                 return static_cast<Float>(
                     std::gmtime( &time_stamp )->tm_yday + 1 );
             };
-            return un_op( _operand1, yearday );
+            return un_op( _df, _col, yearday );
         }
     else
         {
             throw std::invalid_argument(
-                "Operator '" + _operator + "' not recognized." );
-        }
+                "Operator '" + op + "' not recognized." );
 
-    return result;
+            return containers::Column<Float>( 0 );
+        }
 }
 
 // ----------------------------------------------------------------------------
