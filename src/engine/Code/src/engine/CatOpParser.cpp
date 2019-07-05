@@ -92,6 +92,61 @@ std::vector<std::string> CatOpParser::binary_operation(
 
 // ----------------------------------------------------------------------------
 
+std::vector<std::string> CatOpParser::to_string(
+    const containers::DataFrame& _df, const Poco::JSON::Object& _col )
+{
+    const auto obj = *JSON::get_object( _col, "operand1_" );
+
+    const auto operand1 = NumOpParser::parse( _df, obj );
+
+    const auto role = obj.has( "role_" )
+                          ? JSON::get_value<std::string>( obj, "role_" )
+                          : std::string( "" );
+
+    auto result = std::vector<std::string>( operand1.nrows() );
+
+    if ( role == "time_stamp" ||
+         operand1.unit().find( "time stamp" ) != std::string::npos )
+        {
+            const auto to_str = []( const Float val ) {
+                if ( std::isnan( val ) || std::isinf( val ) )
+                    {
+                        return std::string( "NULL" );
+                    }
+
+                const std::chrono::time_point<std::chrono::system_clock>
+                    epoch_point;
+
+                const auto seconds_since_epoch =
+                    static_cast<std::time_t>( 86400.0 * val );
+
+                const auto time_stamp = std::chrono::system_clock::to_time_t(
+                    epoch_point + std::chrono::seconds( seconds_since_epoch ) );
+
+                return std::string(
+                    std::asctime( std::gmtime( &time_stamp ) ) );
+            };
+
+            std::transform(
+                operand1.begin(), operand1.end(), result.begin(), to_str );
+        }
+    else
+        {
+            const auto to_str = []( const Float val ) {
+                std::ostringstream stream;
+                stream << val;
+                return stream.str();
+            };
+
+            std::transform(
+                operand1.begin(), operand1.end(), result.begin(), to_str );
+        }
+
+    return result;
+}
+
+// ----------------------------------------------------------------------------
+
 std::vector<std::string> CatOpParser::unary_operation(
     const containers::Encoding& categories_,
     const containers::Encoding& join_keys_encoding_,
@@ -111,6 +166,24 @@ std::vector<std::string> CatOpParser::unary_operation(
             };
 
             return un_op( categories_, join_keys_encoding_, _df, _col, substr );
+        }
+    else if ( op == "to_str" )
+        {
+            const auto operand1 = NumOpParser::parse(
+                _df, *JSON::get_object( _col, "operand1_" ) );
+
+            const auto to_str = []( const Float val ) {
+                std::ostringstream stream;
+                stream << val;
+                return stream.str();
+            };
+
+            auto result = std::vector<std::string>( operand1.nrows() );
+
+            std::transform(
+                operand1.begin(), operand1.end(), result.begin(), to_str );
+
+            return result;
         }
     else
         {
