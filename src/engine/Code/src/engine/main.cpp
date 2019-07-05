@@ -36,6 +36,12 @@ int main( int argc, char *argv[] )
     monitor->send( "postpid", engine::Process::get_process_id() );
 
     // -------------------------------------------
+    // Set the environment variable to UTC (it is unbelievable that we
+    // are forced to do this...time handling in C sucks.)
+
+    setenv( "TZ", "UTC", 1 );
+
+    // -------------------------------------------
 
     const auto categories = std::make_shared<engine::containers::Encoding>();
 
@@ -127,7 +133,8 @@ int main( int argc, char *argv[] )
 
     const auto shutdown = std::make_shared<std::atomic<bool>>( false );
 
-    Poco::Net::ServerSocket server_socket( static_cast<Poco::UInt16>( options.engine_.port_ ), 64 );
+    Poco::Net::ServerSocket server_socket(
+        static_cast<Poco::UInt16>( options.engine_.port_ ), 64 );
 
     server_socket.setReceiveTimeout( Poco::Timespan( 600, 0 ) );
 
