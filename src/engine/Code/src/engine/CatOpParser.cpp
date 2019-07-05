@@ -169,21 +169,7 @@ std::vector<std::string> CatOpParser::unary_operation(
         }
     else if ( op == "to_str" )
         {
-            const auto operand1 = NumOpParser::parse(
-                _df, *JSON::get_object( _col, "operand1_" ) );
-
-            const auto to_str = []( const Float val ) {
-                std::ostringstream stream;
-                stream << val;
-                return stream.str();
-            };
-
-            auto result = std::vector<std::string>( operand1.nrows() );
-
-            std::transform(
-                operand1.begin(), operand1.end(), result.begin(), to_str );
-
-            return result;
+            return to_string( _df, _col );
         }
     else
         {
