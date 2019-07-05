@@ -1,5 +1,6 @@
 set(
     ENGINE_OBJ
+    ${ENGINE_SOURCE_DIRECTORY}/CatOpParser.cpp
     ${ENGINE_SOURCE_DIRECTORY}/DatabaseManager.cpp
     ${ENGINE_SOURCE_DIRECTORY}/DataFrame.cpp
     ${ENGINE_SOURCE_DIRECTORY}/DataFrameIndex.cpp

@@ -51,6 +51,7 @@
 // ----------------------------------------------------
 // Module files
 
+#include "engine/handlers/CatOpParser.hpp"
 #include "engine/handlers/FileHandler.hpp"
 #include "engine/handlers/NumOpParser.hpp"
 

@@ -7,6 +7,96 @@ namespace handlers
 // ------------------------------------------------------------------------
 
 void DataFrameManager::add_categorical_column(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    // ------------------------------------------------------------------------
+
+    multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
+
+    // ------------------------------------------------------------------------
+
+    const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
+
+    auto& df = utils::Getter::get( df_name, &data_frames() );
+
+    // ------------------------------------------------------------------------
+
+    const auto role = JSON::get_value<std::string>( _cmd, "role_" );
+
+    const auto name = JSON::get_value<std::string>( _cmd, "name_" );
+
+    const auto unit = JSON::get_value<std::string>( _cmd, "unit_" );
+
+    const auto json_col = *JSON::get_object( _cmd, "col_" );
+
+    // ------------------------------------------------------------------------
+
+    const auto vec =
+        CatOpParser::parse( *categories_, *join_keys_encoding_, df, json_col );
+
+    // ------------------------------------------------------------------------
+
+    auto local_categories =
+        std::make_shared<containers::Encoding>( categories_ );
+
+    auto local_join_keys_encoding =
+        std::make_shared<containers::Encoding>( join_keys_encoding_ );
+
+    // ------------------------------------------------------------------------
+
+    auto col = containers::Column<Int>( vec.size() );
+
+    auto encoding = local_join_keys_encoding;
+
+    if ( role == "categorical" )
+        {
+            encoding = local_categories;
+        }
+
+    for ( size_t i = 0; i < vec.size(); ++i )
+        {
+            col[i] = ( *encoding )[vec[i]];
+        }
+
+    // ------------------------------------------------------------------------
+
+    col.set_name( name );
+
+    col.set_unit( unit );
+
+    // ------------------------------------------------------------------------
+
+    weak_write_lock.upgrade();
+
+    // ------------------------------------------------------------------------
+
+    df.add_int_column( col, role );
+
+    // ------------------------------------------------------------------------
+
+    if ( role == "categorical" )
+        {
+            categories_->append( *local_categories );
+        }
+    else
+        {
+            join_keys_encoding_->append( *local_join_keys_encoding );
+        }
+
+    // ------------------------------------------------------------------------
+
+    monitor_->send( "postdataframe", df.to_monitor( df_name ) );
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    // ------------------------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
+void DataFrameManager::add_categorical_column(
     const Poco::JSON::Object& _cmd,
     containers::DataFrame* _df,
     Poco::Net::StreamSocket* _socket )
