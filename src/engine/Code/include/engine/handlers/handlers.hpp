@@ -55,6 +55,8 @@
 #include "engine/handlers/FileHandler.hpp"
 #include "engine/handlers/NumOpParser.hpp"
 
+#include "engine/handlers/BoolOpParser.hpp"
+
 #include "engine/handlers/DataFrameManager.hpp"
 #include "engine/handlers/DatabaseManager.hpp"
 #include "engine/handlers/ModelManager.hpp"

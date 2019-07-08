@@ -6,9 +6,38 @@ namespace handlers
 {
 // ----------------------------------------------------------------------------
 
+std::vector<std::string> CatOpParser::binary_operation(
+    const containers::Encoding& _categories,
+    const containers::Encoding& _join_keys_encoding,
+    const containers::DataFrame& _df,
+    const Poco::JSON::Object& _col )
+{
+    const auto op = JSON::get_value<std::string>( _col, "operator_" );
+
+    if ( op == "concat" )
+        {
+            return bin_op(
+                _categories,
+                _join_keys_encoding,
+                _df,
+                _col,
+                std::plus<std::string>() );
+        }
+    else
+        {
+            throw std::invalid_argument(
+                "Operator '" + op +
+                "' not recognized for categorical columns." );
+
+            return std::vector<std::string>( 0 );
+        }
+}
+
+// ----------------------------------------------------------------------------
+
 std::vector<std::string> CatOpParser::parse(
-    const containers::Encoding& categories_,
-    const containers::Encoding& join_keys_encoding_,
+    const containers::Encoding& _categories,
+    const containers::Encoding& _join_keys_encoding,
     const containers::DataFrame& _df,
     const Poco::JSON::Object& _col )
 {
@@ -22,15 +51,15 @@ std::vector<std::string> CatOpParser::parse(
 
             if ( role == "categorical" )
                 {
-                    return to_vec( categories_, _df.int_column( name, role ) );
+                    return to_vec( _categories, _df.int_column( name, role ) );
                 }
             else
                 {
                     return to_vec(
-                        join_keys_encoding_, _df.int_column( name, role ) );
+                        _join_keys_encoding, _df.int_column( name, role ) );
                 }
         }
-    else if ( type == "Value" )
+    else if ( type == "CategoricalValue" )
         {
             const auto val = JSON::get_value<std::string>( _col, "value_" );
 
@@ -45,46 +74,19 @@ std::vector<std::string> CatOpParser::parse(
             if ( _col.has( "operand2_" ) )
                 {
                     return binary_operation(
-                        categories_, join_keys_encoding_, _df, _col );
+                        _categories, _join_keys_encoding, _df, _col );
                 }
             else
                 {
                     return unary_operation(
-                        categories_, join_keys_encoding_, _df, _col );
+                        _categories, _join_keys_encoding, _df, _col );
                 }
         }
     else
         {
             throw std::invalid_argument(
-                "Column of type '" + type + "' not recognized." );
-
-            return std::vector<std::string>( 0 );
-        }
-}
-
-// ----------------------------------------------------------------------------
-
-std::vector<std::string> CatOpParser::binary_operation(
-    const containers::Encoding& categories_,
-    const containers::Encoding& join_keys_encoding_,
-    const containers::DataFrame& _df,
-    const Poco::JSON::Object& _col )
-{
-    const auto op = JSON::get_value<std::string>( _col, "operator_" );
-
-    if ( op == "concat" )
-        {
-            return bin_op(
-                categories_,
-                join_keys_encoding_,
-                _df,
-                _col,
-                std::plus<std::string>() );
-        }
-    else
-        {
-            throw std::invalid_argument(
-                "Operator '" + op + "' not recognized." );
+                "Column of type '" + type +
+                "' not recognized for categorical columns." );
 
             return std::vector<std::string>( 0 );
         }
@@ -148,8 +150,8 @@ std::vector<std::string> CatOpParser::to_string(
 // ----------------------------------------------------------------------------
 
 std::vector<std::string> CatOpParser::unary_operation(
-    const containers::Encoding& categories_,
-    const containers::Encoding& join_keys_encoding_,
+    const containers::Encoding& _categories,
+    const containers::Encoding& _join_keys_encoding,
     const containers::DataFrame& _df,
     const Poco::JSON::Object& _col )
 {
@@ -165,7 +167,7 @@ std::vector<std::string> CatOpParser::unary_operation(
                 return val.substr( begin, len );
             };
 
-            return un_op( categories_, join_keys_encoding_, _df, _col, substr );
+            return un_op( _categories, _join_keys_encoding, _df, _col, substr );
         }
     else if ( op == "to_str" )
         {
@@ -174,7 +176,8 @@ std::vector<std::string> CatOpParser::unary_operation(
     else
         {
             throw std::invalid_argument(
-                "Operator '" + op + "' not recognized." );
+                "Operator '" + op +
+                "' not recognized for categorical columns." );
 
             return std::vector<std::string>( 0 );
         }

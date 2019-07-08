@@ -1,5 +1,5 @@
-#ifndef ENGINE_HANDLERS_CATOPPARSER_HPP_
-#define ENGINE_HANDLERS_CATOPPARSER_HPP_
+#ifndef ENGINE_HANDLERS_BOOLOPPARSER_HPP_
+#define ENGINE_HANDLERS_BOOLOPPARSER_HPP_
 
 namespace engine
 {
@@ -7,13 +7,13 @@ namespace handlers
 {
 // ----------------------------------------------------------------------------
 
-class CatOpParser
+class BoolOpParser
 {
     // ------------------------------------------------------------------------
 
    public:
     /// Parses a numerical column.
-    static std::vector<std::string> parse(
+    static std::vector<bool> parse(
         const containers::Encoding& _categories,
         const containers::Encoding& _join_keys_encoding,
         const containers::DataFrame& _df,
@@ -23,18 +23,14 @@ class CatOpParser
 
    private:
     /// Parses the operator and undertakes a binary operation.
-    static std::vector<std::string> binary_operation(
+    static std::vector<bool> binary_operation(
         const containers::Encoding& _categories,
         const containers::Encoding& _join_keys_encoding,
         const containers::DataFrame& _df,
         const Poco::JSON::Object& _col );
 
-    /// Transforms a float column to a string.
-    static std::vector<std::string> to_string(
-        const containers::DataFrame& _df, const Poco::JSON::Object& _col );
-
     /// Parses the operator and undertakes a unary operation.
-    static std::vector<std::string> unary_operation(
+    static std::vector<bool> unary_operation(
         const containers::Encoding& _categories,
         const containers::Encoding& _join_keys_encoding,
         const containers::DataFrame& _df,
@@ -45,7 +41,7 @@ class CatOpParser
     /// Undertakes a binary operation based on template class
     /// Operator.
     template <class Operator>
-    static std::vector<std::string> bin_op(
+    static std::vector<bool> bin_op(
         const containers::Encoding& _categories,
         const containers::Encoding& _join_keys_encoding,
         const containers::DataFrame& _df,
@@ -66,7 +62,79 @@ class CatOpParser
 
         assert( operand1.size() == operand2.size() );
 
-        auto result = std::vector<std::string>( operand1.size() );
+        auto result = std::vector<bool>( operand1.size() );
+
+        std::transform(
+            operand1.begin(),
+            operand1.end(),
+            operand2.begin(),
+            result.begin(),
+            _op );
+
+        return result;
+    }
+
+    /// Undertakes a binary operation based on template class
+    /// Operator.
+    template <class Operator>
+    static std::vector<bool> cat_bin_op(
+        const containers::Encoding& _categories,
+        const containers::Encoding& _join_keys_encoding,
+        const containers::DataFrame& _df,
+        const Poco::JSON::Object& _col,
+        const Operator& _op )
+    {
+        const auto operand1 = CatOpParser::parse(
+            _categories,
+            _join_keys_encoding,
+            _df,
+            *JSON::get_object( _col, "operand1_" ) );
+
+        const auto operand2 = CatOpParser::parse(
+            _categories,
+            _join_keys_encoding,
+            _df,
+            *JSON::get_object( _col, "operand2_" ) );
+
+        assert( operand1.size() == operand2.size() );
+
+        auto result = std::vector<bool>( operand1.size() );
+
+        std::transform(
+            operand1.begin(),
+            operand1.end(),
+            operand2.begin(),
+            result.begin(),
+            _op );
+
+        return result;
+    }
+
+    /// Undertakes a binary operation based on template class
+    /// Operator.
+    template <class Operator>
+    static std::vector<bool> num_bin_op(
+        const containers::Encoding& _categories,
+        const containers::Encoding& _join_keys_encoding,
+        const containers::DataFrame& _df,
+        const Poco::JSON::Object& _col,
+        const Operator& _op )
+    {
+        const auto operand1 = NumOpParser::parse(
+            /*_categories,
+            _join_keys_encoding,*/
+            _df,
+            *JSON::get_object( _col, "operand1_" ) );
+
+        const auto operand2 = NumOpParser::parse(
+            /*_categories,
+            _join_keys_encoding,*/
+            _df,
+            *JSON::get_object( _col, "operand2_" ) );
+
+        assert( operand1.size() == operand2.size() );
+
+        auto result = std::vector<bool>( operand1.size() );
 
         std::transform(
             operand1.begin(),
@@ -81,7 +149,7 @@ class CatOpParser
     /// Undertakes a unary operation based on template class
     /// Operator.
     template <class Operator>
-    static std::vector<std::string> un_op(
+    static std::vector<bool> un_op(
         const containers::Encoding& _categories,
         const containers::Encoding& _join_keys_encoding,
         const containers::DataFrame& _df,
@@ -94,25 +162,9 @@ class CatOpParser
             _df,
             *JSON::get_object( _col, "operand1_" ) );
 
-        auto result = std::vector<std::string>( operand1.size() );
+        auto result = std::vector<bool>( operand1.size() );
 
         std::transform( operand1.begin(), operand1.end(), result.begin(), _op );
-
-        return result;
-    }
-
-    /// Transforms a column to vector of equal length.
-    static std::vector<std::string> to_vec(
-        const containers::Encoding& _encoding,
-        const containers::Column<Int>& _col )
-    {
-        auto result = std::vector<std::string>( _col.nrows() );
-
-        std::transform(
-            _col.begin(),
-            _col.end(),
-            result.begin(),
-            [_encoding]( const Int val ) { return _encoding[val]; } );
 
         return result;
     }
@@ -124,4 +176,4 @@ class CatOpParser
 }  // namespace handlers
 }  // namespace engine
 
-#endif  // ENGINE_HANDLERS_CATOPPARSER_HPP_
+#endif  // ENGINE_HANDLERS_BOOLOPPARSER_HPP_

@@ -6,46 +6,6 @@ namespace handlers
 {
 // ----------------------------------------------------------------------------
 
-containers::Column<Float> NumOpParser::parse(
-    const containers::DataFrame& _df, const Poco::JSON::Object& _col )
-{
-    const auto type = JSON::get_value<std::string>( _col, "type_" );
-
-    if ( type == "Column" )
-        {
-            const auto name = JSON::get_value<std::string>( _col, "name_" );
-
-            const auto role = JSON::get_value<std::string>( _col, "role_" );
-
-            return _df.float_column( name, role );
-        }
-    else if ( type == "Value" )
-        {
-            const auto val = JSON::get_value<Float>( _col, "value_" );
-
-            auto col = containers::Column<Float>( _df.nrows() );
-
-            std::fill( col.begin(), col.end(), val );
-
-            return col;
-        }
-    else if ( type == "VirtualColumn" && _col.has( "operand2_" ) )
-        {
-            return binary_operation( _df, _col );
-        }
-    else if ( type == "VirtualColumn" && !_col.has( "operand2_" ) )
-        {
-            return unary_operation( _df, _col );
-        }
-    else
-        {
-            throw std::invalid_argument(
-                "Column of type '" + type + "' not recognized." );
-        }
-}
-
-// ----------------------------------------------------------------------------
-
 containers::Column<Float> NumOpParser::binary_operation(
     const containers::DataFrame& _df, const Poco::JSON::Object& _col )
 {
@@ -87,6 +47,46 @@ containers::Column<Float> NumOpParser::binary_operation(
                 "Operator '" + op + "' not recognized." );
 
             return containers::Column<Float>( 0 );
+        }
+}
+// ----------------------------------------------------------------------------
+
+containers::Column<Float> NumOpParser::parse(
+    const containers::DataFrame& _df, const Poco::JSON::Object& _col )
+{
+    const auto type = JSON::get_value<std::string>( _col, "type_" );
+
+    if ( type == "Column" )
+        {
+            const auto name = JSON::get_value<std::string>( _col, "name_" );
+
+            const auto role = JSON::get_value<std::string>( _col, "role_" );
+
+            return _df.float_column( name, role );
+        }
+    else if ( type == "Value" )
+        {
+            const auto val = JSON::get_value<Float>( _col, "value_" );
+
+            auto col = containers::Column<Float>( _df.nrows() );
+
+            std::fill( col.begin(), col.end(), val );
+
+            return col;
+        }
+    else if ( type == "VirtualColumn" && _col.has( "operand2_" ) )
+        {
+            return binary_operation( _df, _col );
+        }
+    else if ( type == "VirtualColumn" && !_col.has( "operand2_" ) )
+        {
+            return unary_operation( _df, _col );
+        }
+    else
+        {
+            throw std::invalid_argument(
+                "Column of type '" + type +
+                "' not recognized for numerical columns." );
         }
 }
 
@@ -379,7 +379,7 @@ containers::Column<Float> NumOpParser::unary_operation(
     else
         {
             throw std::invalid_argument(
-                "Operator '" + op + "' not recognized." );
+                "Operator '" + op + "' not recognized for numerical columns." );
 
             return containers::Column<Float>( 0 );
         }
