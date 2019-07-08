@@ -167,6 +167,10 @@ void RequestHandler::run()
                 {
                     project_manager().save_data_frame( name, &socket() );
                 }
+            else if ( type == "DataFrame.select" )
+                {
+                    data_frame_manager().select( name, cmd, &socket() );
+                }
             else if ( type == "DataFrame.summarize" )
                 {
                     data_frame_manager().summarize( name, &socket() );
