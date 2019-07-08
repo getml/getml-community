@@ -148,7 +148,8 @@ class Sniffer
     const std::string table_name_;
 
     /// The time formats to be tried for parsing time stamps. For a full
-    /// documentation, see https://en.cppreference.com/w/cpp/io/manip/get_time.
+    /// documentation, see
+    /// https://pocoproject.org/docs/Poco.DateTimeFormatter.html.
     const std::vector<std::string> time_formats_;
 
     // -------------------------------
