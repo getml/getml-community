@@ -57,6 +57,26 @@ class NumOpParser
         return result;
     }
 
+    /// Returns a columns containing random values.
+    static containers::Column<Float> random(
+        const containers::DataFrame& _df, const Poco::JSON::Object& _col )
+    {
+        const auto seed = JSON::get_value<unsigned int>( _col, "seed_" );
+
+        auto rng = std::mt19937( seed );
+
+        std::uniform_real_distribution<Float> dis( 0.0, 1.0 );
+
+        auto result = containers::Column<Float>( _df.nrows() );
+
+        for ( auto& val : result )
+            {
+                val = dis( rng );
+            }
+
+        return result;
+    }
+
     /// Undertakes a unary operation based on template class
     /// Operator.
     template <class Operator>

@@ -258,6 +258,10 @@ containers::Column<Float> NumOpParser::unary_operation(
             };
             return un_op( _df, _col, month );
         }
+    else if ( op == "random" )
+        {
+            return random( _df, _col );
+        }
     else if ( op == "round" )
         {
             const auto round = []( const Float val ) {
