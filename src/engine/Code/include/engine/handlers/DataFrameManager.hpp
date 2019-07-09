@@ -100,6 +100,12 @@ class DataFrameManager
     /// Refreshes a data frame.
     void refresh( const std::string& _name, Poco::Net::StreamSocket* _socket );
 
+    /// Removes a column from a DataFrame.
+    void remove_column(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
     /// Changes the unit of _col.
     void set_unit(
         const std::string& _name,

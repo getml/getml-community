@@ -703,6 +703,30 @@ void DataFrameManager::refresh(
 
 // ------------------------------------------------------------------------
 
+void DataFrameManager::remove_column(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
+
+    const auto role = JSON::get_value<std::string>( _cmd, "role_" );
+
+    const auto name = JSON::get_value<std::string>( _cmd, "name_" );
+
+    multithreading::WriteLock write_lock( read_write_lock_ );
+
+    auto& df = utils::Getter::get( df_name, &data_frames() );
+
+    df.remove_column( name, role );
+
+    monitor_->send( "postdataframe", df.to_monitor( df_name ) );
+
+    communication::Sender::send_string( "Success!", _socket );
+}
+
+// ------------------------------------------------------------------------
+
 void DataFrameManager::select(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,

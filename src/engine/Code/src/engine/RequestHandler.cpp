@@ -163,6 +163,10 @@ void RequestHandler::run()
                 {
                     data_frame_manager().refresh( name, &socket() );
                 }
+            else if ( type == "DataFrame.remove_column" )
+                {
+                    data_frame_manager().remove_column( name, cmd, &socket() );
+                }
             else if ( type == "DataFrame.save" )
                 {
                     project_manager().save_data_frame( name, &socket() );

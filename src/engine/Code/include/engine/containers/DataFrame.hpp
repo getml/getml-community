@@ -103,6 +103,9 @@ class DataFrame
     /// columns.
     const size_t nrows() const;
 
+    /// Removes a column.
+    void remove_column( const std::string &_name, const std::string &_role );
+
     /// Saves the data on the engine
     void save( const std::string &_path );
 
@@ -463,6 +466,13 @@ class DataFrame
     std::vector<std::shared_ptr<std::vector<T>>> make_vectors(
         const size_t _size ) const;
 
+    /// Returns the colnames of a vector of columns
+    template <class T>
+    void rm_col(
+        const std::string &_name,
+        std::vector<Column<T>> *_columns,
+        std::vector<DataFrameIndex> *_indices = nullptr ) const;
+
     /// Saves all matrices.
     template <class T>
     void save_matrices(
@@ -649,6 +659,40 @@ std::vector<std::shared_ptr<std::vector<T>>> DataFrame::make_vectors(
     for ( auto &vec : vectors ) vec = std::make_shared<std::vector<T>>( 0 );
 
     return vectors;
+}
+
+// ----------------------------------------------------------------------------
+
+template <class T>
+void DataFrame::rm_col(
+    const std::string &_name,
+    std::vector<Column<T>> *_columns,
+    std::vector<DataFrameIndex> *_indices ) const
+{
+    const auto has_name = [_name]( const Column<T> &_col ) {
+        return _col.name() == _name;
+    };
+
+    const auto it =
+        std::find_if( _columns->begin(), _columns->end(), has_name );
+
+    if ( it == _columns->end() )
+        {
+            throw std::invalid_argument(
+                "Could not remove column. Column named '" + _name +
+                "' not found." );
+        }
+
+    if ( _indices )
+        {
+            assert( _indices->size() == _columns->size() );
+
+            const auto dist = std::distance( _columns->begin(), it );
+
+            _indices->erase( _indices->begin() + dist );
+        }
+
+    _columns->erase( it );
 }
 
 // ----------------------------------------------------------------------------

@@ -65,6 +65,10 @@ void DataFrame::add_int_column(
     else if ( _role == "join_key" )
         {
             add_column( _col, &join_keys_ );
+
+            indices_.push_back( DataFrameIndex() );
+
+            create_indices();
         }
     else
         {
@@ -799,7 +803,6 @@ void DataFrame::load( const std::string &_path )
     time_stamps_ = load_matrices<Float>( _path, "time_stamp_" );
 
     // ---------------------------------------------------------------------
-    // Create index
 
     check_plausibility();
 
@@ -858,6 +861,41 @@ const size_t DataFrame::nrows() const
     else
         {
             return 0;
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+void DataFrame::remove_column(
+    const std::string &_name, const std::string &_role )
+{
+    if ( _role == "categorical" )
+        {
+            rm_col( _name, &categoricals_ );
+        }
+    else if ( _role == "discrete" )
+        {
+            rm_col( _name, &discretes_ );
+        }
+    else if ( _role == "join_key" )
+        {
+            rm_col( _name, &join_keys_, &indices_ );
+        }
+    else if ( _role == "numerical" )
+        {
+            rm_col( _name, &numericals_ );
+        }
+    else if ( _role == "target" )
+        {
+            rm_col( _name, &targets_ );
+        }
+    else if ( _role == "time_stamp" )
+        {
+            rm_col( _name, &time_stamps_ );
+        }
+    else
+        {
+            throw std::invalid_argument( "Role for float column not known!" );
         }
 }
 
