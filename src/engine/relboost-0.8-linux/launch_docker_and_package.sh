@@ -20,6 +20,10 @@ cd $HOMEDIR/relboost-monitor/Code
 source gopath.sh
 source install.sh
 
+# Get Python code
+cd $HOMEDIR/relboost-python-api
+source install.sh
+
 # Go back to relboost folder
 cd $HOMEDIR/relboost-engine/$RELBOOST_VERSION
 
@@ -30,4 +34,4 @@ sudo docker build --tag=centos7 .
 sudo docker run -it --rm -v "${HOMEDIR}":"/home/autosql/homedir/" ${DOCKER_IMAGE_NAME} bash package.sh
 
 # Make sure main user owns all files
-sudo chown -R $USER_NAME $HOMEDIR/relboost-engine/$AUTOSQL_VERSION/*
+sudo chown -R $USER_NAME $HOMEDIR/relboost-engine/$RELBOOST_VERSION/*

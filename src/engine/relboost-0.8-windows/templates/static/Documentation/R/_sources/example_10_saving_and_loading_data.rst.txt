@@ -1,0 +1,62 @@
+Example 10: Saving and loading data
+------------------------------------
+
+For a full working example, please refer to :ref:`example10_saving_data.R`.
+
+Loading and saving is just as easy as loading and saving models:
+
+We assume that you have two data frames, called PERIPHERAL and POPULATION.
+
+.. code-block:: r
+
+    population.table.on.engine <- create.autosql.data.frame(
+        name="POPULATION",
+        join.keys=c( "join_key" ),
+        time.stamps=c( "time_stamp" ),
+        targets=c( "targets" )
+    )
+
+    population.table.on.engine <- send.autosql.data.frame(
+        population.table.on.engine,
+        population.table
+    )
+
+    peripheral.table.on.engine <- create.autosql.data.frame(
+        name="PERIPHERAL",
+        join.keys=c( "join_key" ),
+        time.stamps=c( "time_stamp" )
+    )
+
+    peripheral.table.on.engine <- send.autosql.data.frame(
+        peripheral.table.on.engine,
+        peripheral.table
+    )
+
+Here is how you save your data:
+
+.. code-block:: r
+
+    set.autosql.project("examples")
+
+    save.autosql.data.frame(population.table.on.engine)
+
+    save.autosql.data.frame(peripheral.table.on.engine)
+
+Here is how you reload it:
+
+.. code-block:: r
+
+    set.autosql.project("examples")
+
+    population.table.on.engine.2 <- create.autosql.data.frame(
+        name="POPULATION"
+    )
+
+    population.table.on.engine.2 <- load.autosql.data.frame(population.table.on.engine.2)
+
+    peripheral.table.on.engine.2 <- create.autosql.data.frame(
+        name="PERIPHERAL"
+    )
+
+    peripheral.table.on.engine.2 <- load.autosql.data.frame(peripheral.table.on.engine.2)
+

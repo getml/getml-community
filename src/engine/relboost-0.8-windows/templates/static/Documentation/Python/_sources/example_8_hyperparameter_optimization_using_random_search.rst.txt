@@ -1,0 +1,95 @@
+Example 8: Hyperparameter optimization using random search
+------------------------------------------------------------
+
+For a full working example, please refer to :ref:`example08_random_search_1.py`.
+
+If you hand-optimize your AutoSQL hyperparameters instead of hand-engineering your features, you will still save a lot of time - but not as much as you could. 
+
+The more professional way to go is to conduct a proper hyperparameter optimization. And AutoSQL makes it very easy for you. Here is how it works:
+
+You begin by setting up a model, like you always would:
+
+::
+
+    population_placeholder = models.Placeholder(
+        name="POPULATION",
+        numerical=["column_01"],
+        join_keys=["join_key"],
+        time_stamps=["time_stamp"],
+        targets=["targets"]
+    )
+
+    peripheral_placeholder = models.Placeholder(
+        name="PERIPHERAL",
+        numerical=["column_01"],
+        join_keys=["join_key"],
+        time_stamps=["time_stamp"]
+    )
+
+    population_placeholder.join(peripheral_placeholder, "join_key", "time_stamp")
+
+    rs = models.RandomSearch(
+        num_models=3,
+        feature_selector=predictors.XGBoostRegressor,
+        predictor=predictors.XGBoostRegressor,
+        population=population_placeholder,
+        peripheral=[peripheral_placeholder],
+        loss_function=loss_functions.SquareLoss(),
+        aggregation=[
+        [
+            aggregations.Avg(),
+            aggregations.Count(),
+            aggregations.Sum()
+        ],
+        [
+            aggregations.Count(),
+            aggregations.Max(),
+            aggregations.Sum()
+        ]
+        ],
+        num_features=[10, 20],
+        num_selected_features=[10, 20],
+        max_length=[2, 4, 8],
+        grid_factor=[1.0, 2.0, 4.0, 8.0, 16.0, 32.0],
+        min_num_samples=[100, 200, 400],
+        regularization=[0.0, 0.001],
+        share_aggregations=[0.5, 1.0],
+        fast_training=[False],
+        round_robin=[True, False],
+        __feature_selector__booster=["gbtree", "gblinear"],
+        __predictor__booster=["gbtree", "gblinear"],
+        __predictor__n_estimators=[50, 100, 200],
+        __predictor__learning_rate=[0.05, 0.1, 0.2],
+        __predictor__max_depth=[3, 5, 7],
+        __predictor__n_jobs=[6],
+        __predictor__reg_lambda=[0, 100, 200]
+    )
+
+    rs.fit(
+        population_table_training=population_table_training,
+        population_table_validation=population_table_validation,
+        peripheral_tables=[peripheral_table]
+    )
+
+
+What will happen is the following:
+
+1. AutoSQL will train 3 different models (sets of features) on the training set (or whatever parameter you have chosen for *num_iterations*). The hyperparameters will be randomly sampled from your hyperparameter space (*params_dist*). Any hyperparameters not included in the hyperparameter space will be replaced by the default value.
+
+2. Using the feature selector, it will select the best features.
+
+3. On each of the features, it will train the predictor using the training set (which is why setting a predictor is mandatory for random search).
+
+4. It will then evaluate these features on the validation set using the loss function you have defined.
+
+Using *rs.scores* and *rs.candidates* you can then find the model you like most (or you can check out the AutoSQL Monitor for a more beautiful overview).
+
+::
+
+    print(rs.scores)
+    [{'mae_': 0.0038716656682411844, 'rmse_': 0.0399756457741414, 'rsquared_': 0.9485504808052492}, {'mae_': 0.08624757179744354, 'rmse_': 0.16333629807947495, 'rsquared_': 0.784163967530278},{'mae_': 0.047502375876264616, 'rmse_': 0.09753793784762373, 'rsquared_': 0.7751008661247546}]
+
+::
+
+    print(rs.candidates)
+    [{'population': {'name_': 'POPULATION', 'join_keys_used_': ['join_key'], 'other_join_keys_used_': ['join_key'], 'time_stamps_used_': ['time_stamp'], 'other_time_stamps_used_': ['time_stamp'], 'joined_tables_': [{'name_': 'PERIPHERAL', 'join_keys_used_': [], 'other_join_keys_used_': [], 'time_stamps_used_': [], 'other_time_stamps_used_': [], 'joined_tables_': [], 'categorical_': [], 'discrete_': [], 'numerical_': ['column_01'], 'join_keys_': ['join_key'], 'targets_': [], 'time_stamps_': ['time_stamp']}], 'categorical_': [], 'discrete_': [], 'numerical_': ['column_01'], 'join_keys_': ['join_key'], 'targets_': ['targets'], 'time_stamps_': ['time_stamp']}, 'peripheral': [{'name_': 'PERIPHERAL', 'join_keys_used_': [], 'other_join_keys_used_': [], 'time_stamps_used_': [], 'other_time_stamps_used_': [], 'joined_tables_': [], 'categorical_': [], 'discrete_': [], 'numerical_': ['column_01'], 'join_keys_': ['join_key'], 'targets_': [], 'time_stamps_': ['time_stamp']}], 'peripheral_tables': None, 'units': {}, 'aggregation': ['COUNT', 'MAX', 'SUM'], 'loss_function': 'SquareLoss', 'use_timestamps': True, 'num_features': 20, 'num_selected_features': 10, 'num_subfeatures': 10, 'max_length': 2, 'fast_training': False, 'min_num_samples': 200, 'shrinkage': 0.0, 'sampling_factor': 1.0, 'round_robin': False, 'share_aggregations': 1.0, 'share_conditions': 1.0, 'grid_factor': 8.0, 'regularization': 0.001, 'seed': 5489, 'num_threads': 0, 'feature_selector': {'type_': 'XGBoostPredictor', 'booster_': 'gbtree', 'colsample_bylevel_': 1, 'colsample_bytree_': 1, 'learning_rate_': 0.1, 'gamma_': 0.0, 'max_delta_step_': 0.0, 'max_depth_': 3, 'min_child_weights_': 1.0, 'n_estimators_': 100, 'normalize_type_': 'tree', 'num_parallel_tree_': 1, 'n_jobs_': 1, 'objective_': 'reg:linear', 'one_drop_': False, 'rate_drop_': 0.0, 'reg_alpha_': 0.0, 'reg_lambda_': 1.0, 'sample_type_': 'uniform', 'silent_': True, 'skip_drop_': 0.0, 'subsample_': 1.0}, 'predictor': {'type_': 'XGBoostPredictor', 'booster_': 'gbtree', 'colsample_bylevel_': 1, 'colsample_bytree_': 1, 'learning_rate_': 0.1, 'gamma_': 0.0, 'max_delta_step_': 0.0, 'max_depth_': 5, 'min_child_weights_': 1.0, 'n_estimators_': 200, 'normalize_type_': 'tree', 'num_parallel_tree_': 1, 'n_jobs_': 6, 'objective_': 'reg:linear', 'one_drop_': False, 'rate_drop_': 0.0, 'reg_alpha_': 0.0, 'reg_lambda_': 200, 'sample_type_': 'uniform', 'silent_': True, 'skip_drop_': 0.0, 'subsample_': 1.0}, 'send': False, 'host': 'localhost', 'port': 1708}, {'population': {'name_': 'POPULATION', 'join_keys_used_': ['join_key'], 'other_join_keys_used_': ['join_key'], 'time_stamps_used_': ['time_stamp'], 'other_time_stamps_used_': ['time_stamp'], 'joined_tables_': [{'name_': 'PERIPHERAL', 'join_keys_used_': [], 'other_join_keys_used_': [], 'time_stamps_used_': [], 'other_time_stamps_used_': [], 'joined_tables_': [], 'categorical_': [], 'discrete_': [], 'numerical_': ['column_01'], 'join_keys_': ['join_key'], 'targets_': [], 'time_stamps_': ['time_stamp']}], 'categorical_': [], 'discrete_': [], 'numerical_': ['column_01'], 'join_keys_': ['join_key'], 'targets_': ['targets'], 'time_stamps_': ['time_stamp']}, 'peripheral': [{'name_': 'PERIPHERAL', 'join_keys_used_': [],'other_join_keys_used_': [], 'time_stamps_used_': [], 'other_time_stamps_used_': [], 'joined_tables_': [], 'categorical_': [], 'discrete_': [], 'numerical_': ['column_01'], 'join_keys_': ['join_key'], 'targets_': [], 'time_stamps_': ['time_stamp']}], 'peripheral_tables': None, 'units': {}, 'aggregation': ['AVG', 'COUNT', 'SUM'], 'loss_function': 'SquareLoss', 'use_timestamps': True, 'num_features': 20, 'num_selected_features': 20, 'num_subfeatures': 10, 'max_length': 4, 'fast_training': False, 'min_num_samples': 200, 'shrinkage': 0.0, 'sampling_factor': 1.0, 'round_robin': False, 'share_aggregations': 1.0, 'share_conditions': 1.0, 'grid_factor': 1.0, 'regularization': 0.0, 'seed': 5489, 'num_threads': 0, 'feature_selector': {'type_': 'XGBoostPredictor', 'booster_': 'gbtree', 'colsample_bylevel_': 1, 'colsample_bytree_': 1, 'learning_rate_': 0.1, 'gamma_': 0.0, 'max_delta_step_': 0.0, 'max_depth_': 3, 'min_child_weights_': 1.0, 'n_estimators_': 100, 'normalize_type_': 'tree', 'num_parallel_tree_': 1, 'n_jobs_': 1, 'objective_': 'reg:linear', 'one_drop_': False, 'rate_drop_': 0.0, 'reg_alpha_': 0.0, 'reg_lambda_': 1.0, 'sample_type_': 'uniform', 'silent_': True, 'skip_drop_': 0.0, 'subsample_': 1.0}, 'predictor': {'type_': 'XGBoostPredictor', 'booster_': 'gblinear', 'colsample_bylevel_': 1, 'colsample_bytree_': 1, 'learning_rate_': 0.1, 'gamma_': 0.0, 'max_delta_step_': 0.0, 'max_depth_': 5, 'min_child_weights_': 1.0, 'n_estimators_': 200, 'normalize_type_': 'tree', 'num_parallel_tree_': 1, 'n_jobs_': 6, 'objective_': 'reg:linear', 'one_drop_': False, 'rate_drop_': 0.0, 'reg_alpha_': 0.0, 'reg_lambda_': 100, 'sample_type_': 'uniform', 'silent_': True, 'skip_drop_': 0.0, 'subsample_': 1.0}, 'send': False, 'host': 'localhost', 'port': 1708}, {'population': {'name_': 'POPULATION', 'join_keys_used_': ['join_key'], 'other_join_keys_used_': ['join_key'], 'time_stamps_used_': ['time_stamp'], 'other_time_stamps_used_': ['time_stamp'], 'joined_tables_': [{'name_': 'PERIPHERAL', 'join_keys_used_': [], 'other_join_keys_used_': [], 'time_stamps_used_': [],'other_time_stamps_used_': [], 'joined_tables_': [], 'categorical_': [], 'discrete_': [], 'numerical_': ['column_01'], 'join_keys_': ['join_key'], 'targets_': [], 'time_stamps_': ['time_stamp']}], 'categorical_': [], 'discrete_': [], 'numerical_': ['column_01'], 'join_keys_': ['join_key'], 'targets_': ['targets'], 'time_stamps_': ['time_stamp']}, 'peripheral': [{'name_': 'PERIPHERAL', 'join_keys_used_': [], 'other_join_keys_used_': [], 'time_stamps_used_': [], 'other_time_stamps_used_': [], 'joined_tables_': [], 'categorical_': [], 'discrete_': [], 'numerical_': ['column_01'], 'join_keys_': ['join_key'], 'targets_': [], 'time_stamps_': ['time_stamp']}], 'peripheral_tables': None, 'units': {}, 'aggregation': ['AVG', 'COUNT', 'SUM'], 'loss_function': 'SquareLoss', 'use_timestamps': True, 'num_features': 20, 'num_selected_features': 20, 'num_subfeatures': 10, 'max_length': 8, 'fast_training': False, 'min_num_samples': 400, 'shrinkage': 0.0, 'sampling_factor': 1.0, 'round_robin': False, 'share_aggregations': 1.0, 'share_conditions': 1.0, 'grid_factor': 32.0, 'regularization': 0.0, 'seed': 5489, 'num_threads': 0, 'feature_selector': {'type_': 'XGBoostPredictor', 'booster_': 'gbtree', 'colsample_bylevel_': 1, 'colsample_bytree_': 1, 'learning_rate_': 0.1, 'gamma_': 0.0, 'max_delta_step_': 0.0, 'max_depth_':3, 'min_child_weights_': 1.0, 'n_estimators_': 100, 'normalize_type_': 'tree', 'num_parallel_tree_': 1, 'n_jobs_': 1, 'objective_': 'reg:linear', 'one_drop_': False, 'rate_drop_': 0.0, 'reg_alpha_': 0.0, 'reg_lambda_': 1.0, 'sample_type_': 'uniform', 'silent_': True, 'skip_drop_': 0.0, 'subsample_': 1.0}, 'predictor': {'type_': 'XGBoostPredictor', 'booster_': 'gblinear', 'colsample_bylevel_': 1, 'colsample_bytree_': 1, 'learning_rate_': 0.05, 'gamma_': 0.0, 'max_delta_step_': 0.0, 'max_depth_': 5, 'min_child_weights_': 1.0, 'n_estimators_': 50, 'normalize_type_': 'tree', 'num_parallel_tree_': 1, 'n_jobs_': 6, 'objective_': 'reg:linear', 'one_drop_': False, 'rate_drop_': 0.0, 'reg_alpha_': 0.0, 'reg_lambda_': 0, 'sample_type_': 'uniform', 'silent_': True, 'skip_drop_': 0.0, 'subsample_': 1.0}, 'send': False, 'host': 'localhost', 'port': 1708}]

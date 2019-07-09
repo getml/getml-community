@@ -1,0 +1,404 @@
+Example 1: Using the high-level API
+-------------------------------------
+
+For a full working example, please refer to :ref:`example_01_high_level_1.R` and :ref:`example_01_high_level_2.R` (the second scripts demonstrates multiple targets).
+
+AutoSQL offers a high-level API that accepts *data.tables*. This is very useful, because *data.tables* offers every good interfaces to all sorts of relational database systems as well as an excellent CSV reader. Reading data into R using *data.tables* is a natural thing for a data scientist to do.
+
+For the first example, we will create an artificial dataset that contains one POPULATION table and one PERIPHERAL table. The target variable is defined as follows:
+
+.. code-block:: sql
+
+    SELECT COUNT( * )
+    FROM POPULATION t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.5 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.join_key,
+         t1.time_stamp;
+
+Obviously, our goal is that AutoSQL can figure out this logic on its own, without us telling it that COUNT(*) is the right aggregation to use, the number 0.5 has any significance
+or that filtering by the time stamps has any significance.
+
+Setting the project
+^^^^^^^^^^^^^^^^^^^
+
+The first thing you need to do is to set a project:
+
+.. code-block:: R
+
+    library(autosql)
+
+    set.autosql.project("examples")
+
+Every *autosql.model* and *autosql.data.frame* belongs to a project. If you have not set a project, then you will not be able to create new models or data frames. If you switch to a different project, all unsaved changes will be lost.
+
+
+Building the model
+^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: R
+
+    population.placeholder <- create.autosql.placeholder(
+        "POPULATION",
+        join.keys=c( "join_key" ),
+        time.stamps=c( "time_stamp" ),
+        targets=c( "targets" )
+    )
+
+    peripheral.placeholder <- create.autosql.placeholder(
+        "PERIPHERAL",
+        join.keys=c( "join_key" ),
+        time.stamps=c( "time_stamp" )
+    )
+
+    population.placeholder <- join.autosql.placeholder(
+        population.placeholder,
+        peripheral.placeholder,
+        "join_key",
+        "time_stamp"
+    )
+
+    model = create.autosql.model(
+        population=population.placeholder,
+        peripheral=list(peripheral.placeholder),
+        aggregation=list(        
+        autosql.count, 
+        autosql.sum 
+        ),
+        use.timestamps=TRUE,
+        num.features=10,
+        max.length=1,
+        fast.training=FALSE,
+        min.num.samples=200,
+        shrinkage=0.0,
+        grid.factor=1.0,
+        share.aggregations=1.0,
+        num.threads=6,
+        feature.selector=autosql.create.xgboost.regressor(),
+        predictor=autosql.create.xgboost.regressor()
+    )
+
+    send.autosql.model(model)
+
+
+For a full overview of what all of the parameters mean, please refer to the API documentation. But a few things merit discussion:
+
+* As a loss function, we have chosen use square loss. This is appropriate, because this is a regression problem.
+
+* We have offered two aggregation functions to AutoSQL to choose from, namely SUM and COUNT. Obviously, COUNT is the right one, but AutoSQL does not know that a priori.
+
+* We have told AutoSQL to extract ten features and then select five of them. For this example, one feature would have done the trick, but this is for illustration purposes only.
+
+* Note that the PERIPHERAL table contains roughly 120,000 lines. However, AutoSQL should be able to extract 10 features from it in well under one second (depends on your hardware, of course).
+
+
+Fitting
+^^^^^^^^^
+
+Now we need to get our POPULATION table and our PERIPHERAL table into a pandas.DataFrame() and then insert that into our model, like this:
+
+.. code-block:: R
+
+    model = fit.autosql.model(
+        model,
+        population.table,
+        peripheral.table
+    )
+
+Predicting
+^^^^^^^^^^^^^^^^^^^^
+
+Once you have understood initialization and the *.fit(...)* method, generating your features is pretty straight-forward:
+
+.. code-block:: R
+
+    model = fit.autosql.model(
+        model,
+        population.table,
+        peripheral.table
+    )
+
+This is will return a numpy array dataframe containing your features. You can then do with them whatever you please, such as inserting them into to your favorite machine learning algorithm.
+
+.. code-block:: R
+
+    features = autosql.model.transform(
+        model,
+        population.table,
+        peripheral.table
+    )
+
+If you want to use the XGBoost model we have already trained, just use the *.predict(...)* method:
+
+.. code-block:: R
+
+    predictions = autosql.model.predict(
+        model,
+        population.table,
+        peripheral.table
+    )
+
+This is will return a data frame containing predictions.
+
+But, of course, we would like to take a look at the SQL code for the features that AutoSQL has generated. This can be done by calling *autosql.model.to.sql(...)*:
+
+Generating SQL code
+^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: R
+
+    cat( autosql.model.to.sql(model) )
+
+Here is the SQL code AutoSQL has generated:
+
+.. code-block:: sql
+    
+    CREATE TABLE FEATURE_1 AS
+    SELECT COUNT( * ) AS feature_1,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.4972169145607967 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_2 AS
+    SELECT COUNT( * ) AS feature_2,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.50435252579698986 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_3 AS
+    SELECT COUNT( * ) AS feature_3,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.49896374257025794 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_4 AS
+    SELECT COUNT( * ) AS feature_4,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.49721691456079675 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_5 AS
+    SELECT COUNT( * ) AS feature_5,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.49846183435457186 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_6 AS
+    SELECT COUNT( * ) AS feature_6,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.49724452628087479 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_7 AS
+    SELECT COUNT( * ) AS feature_7,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.50199023741518456 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_8 AS
+    SELECT COUNT( * ) AS feature_8,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.49646908250790739 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_9 AS
+    SELECT COUNT( * ) AS feature_9,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.49646908250790733 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_10 AS
+    SELECT COUNT( * ) AS feature_10,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.49961263933203259 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+So, as you can see, it is pretty close to the real thing (recall that the correct solution is that the time stamps difference smaller than 0.5). And it has done all of that in less than a second. I bet you can not write SQL code that quickly.
+
+
+Validation
+^^^^^^^^^^^^^^^^^^^^
+
+To score the performance of your model, you can use the *score.autosql.model(...)* method. These scores will automatically appear in the AutoSQL Monitor. Also, AutoSQL will automatically calculate correlation coefficients of each generated features with the targets, which can also be found in the AutoSQL Monitor.
+
+.. code-block:: R
+
+    scores = score.autosql.model(
+        model,
+        population.table,
+        peripheral.table
+    )
+
+.. code-block:: R
+
+    $mae_
+    [x] 0.35448
+
+    $rmse_
+    [x] 0.54796
+
+    $rsquared_
+    [x] 0.99996
+
+We can further verify how well we have done, by plotting the the first feature against the target variable. As you can see, it is pretty accurate:
+
+::
+
+    plot( 
+        features[,1], 
+        features[,"targets"], 
+        type="p",
+        col="blue",
+        xlab="predictions",
+        ylab="targets"
+    )
+
+.. image:: Example_1.png
+
+But we can usually get the best predictions by including our predictor:
+
+::
+
+    plot( 
+        predictions, 
+        features[,"targets"], 
+        type="p",
+        col="blue",
+        xlab="predictions",
+        ylab="targets"
+    )
+
+.. image:: Example_1_predictor.png
+

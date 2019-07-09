@@ -7,11 +7,11 @@ export RELBOOST_VERSION=relboost-0.8-linux
 cd ./homedir/relboost-engine/$RELBOOST_VERSION
 
 # Create build directory
-# rm -rf build
-# mkdir build
+rm -rf build
+mkdir build
 
 # Run cmake
-# cmake3 -H. -Bbuild
+cmake3 -H. -Bbuild
 
 # Build AutoSQL
 bash build.sh

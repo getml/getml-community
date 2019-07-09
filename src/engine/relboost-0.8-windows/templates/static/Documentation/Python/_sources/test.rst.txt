@@ -1,0 +1,3041 @@
+.. AutoSQL documentation master file, created by
+   sphinx-quickstart on Sun Aug 13 11:25:39 2017.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
+
+.. Build using following command:
+   pip install sphinx_rtd_theme
+
+   cd your/path/here/Documentation/
+
+   sphinx-build -b html . html
+
+   sphinx-build -b latex . pdf
+   cd pdf
+   pdflatex AutoSQL.tex
+
+AutoSQL - Automated Feature Engineering in Relational Databases
+===============================================================
+
+Data science for business applications such as customer churn, fraud detection, predictive maintenance or learning to rank is still done the old-fashioned way. Data scientists have to spend a lot of their time writing SQL code to extract features. 
+
+Hand-crafting features using SQL (or similar tools like data.tables or pandas) takes up about 80% of the project time of an average data science project, is difficult to put into production and most data scientists hate it.
+
+So what if we could automate that? What if there were a way to free data scientists from the boring and repetitive task of writing SQL code for feature engineering? What if we could reduce the effort spent on a data science project by up to 80%? What if we could dramatically increase the quality of the SQL code, because it is written by a machine?
+
+This is exactly what AutoSQL does. All you have to do is provide your relational data, identify the join keys and time stamps and tell AutoSQL which columns you want to predict. AutoSQL will then generate features for you.
+
+AutoSQL does *not* use a brute-force approach. Instead, it relies on an intelligent algorithm that is comparable to gradient boosting. This makes AutoSQL fast, efficient and scalable.
+
+So if you are interested, keep on reading. We hope that AutoSQL will be useful for you. And if you ever encounter any problems, this documentation includes a troubleshooting section for you.
+
+An Example: Customer Churn
+===========================
+
+Imagine that you are a data scientist working for a bank and you want to predict which of your customers are going to churn (switch to another bank).
+
+You begin by building your population table: You define a reference date once a month. At this reference date, you look at all of your customers who were active on that reference date. You then define a variable that assumes a value of 1 if the customer closed his account within one month after the reference data and 0 otherwise. This variable is your target variable, which is what you want to predict. Your timestamp is the reference date.
+
+Let's say you have another table, which contains information on all transactions that your customers have made. You hypothesize that the volume and frequency with which customers conduct transactions can predict whether a customer is going to churn. This table is a peripheral table.
+
+You then have another peripheral table which contains customer complaints. Whenever a customer has filed a complaint, this table stores the customer ID, the content of the complaint and the date it was made.
+
+.. image:: snowflake_data_model_bank_example.png
+
+In the traditional way of doing data science, you would now start hand-crafting your features. For instance: How many transactions has a customer made in the 90 days before the reference date? What was the total volume of the transactions made in the 90 days before the reference date?
+
+You might handcraft features that look like this (using SQL or tools such as data.tables or pandas):
+
+
+.. code-block:: sql
+
+    CREATE TABLE NUMBER_OF_TRANSACTIONS_LAST_90_DAYS AS
+    SELECT COUNT( * ) AS number_of_transactions_last_90_days,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY customer_id, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN TRANSACTIONS t2
+    ON t1.customer_id = t2.customer_id
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 90 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.customer_id,
+         t1.time_stamp;
+
+    CREATE TABLE TOTAL_TRANSACTION_VOLUME_LAST_90_DAYS AS
+    SELECT SUM( t2.transaction_volume ) AS total_transaction_volume_last_90_days,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY customer_id, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN TRANSACTIONS t2
+    ON t1.customer_id = t2.customer_id
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 90 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.customer_id,
+         t1.time_stamp;
+    
+    ...many more...
+
+If you want to do this well, you will have to write hundreds of features like this.
+
+But this is a very cumbersome procedure and is largely based on trial-and-error. For instance, the time frame of 90 days seems completely arbitrary and there is no reason to assume that 30 days, 60 days or 180 days might not work well as well.
+
+So highly paid professional data scientists spend most of their time writing dull SQL statements - that does not seem to make a lot of sense economically and we have not met too many data scientists who enjoy doing this sort of work. But it is how data science is currently being practiced in many companies all over the world. 
+
+AutoSQL offers an alternative. If you can load the tables POPULATION, TRANSACTIONS and COMPLAINTS into Python as *pandas.DataFrame()* objects, you can let AutoSQL determine the features for you. All you need to do is to identify the join keys, the relevant time stamps and your target variable:
+
+::
+
+    import autosql.aggregations as aggregations
+    import autosql.engine as engine
+    import autosql.loss_functions as loss_functions
+    import autosql.models as models
+    
+    population_placeholder = models.Placeholder(
+        name="POPULATION",
+        join_keys=["customer_id"],
+        time_stamps=["time_stamp"],
+        targets=["churn"]
+    )
+
+    transactions_placeholder = models.Placeholder(
+        name="TRANSACTIONS",
+        join_keys=["customer_id"],
+        time_stamps=["time_stamp"]
+    )
+
+    complaints_placeholder = models.Placeholder(
+        name="COMPLAINTS",
+        join_keys=["customer_id"],
+        time_stamps=["time_stamp"]
+    )
+
+    population_placeholder.join(transactions_placeholder, "customer_id", "time_stamp")
+
+    population_placeholder.join(complaints_placeholder, "customer_id", "time_stamp")
+
+    model = models.Model(
+        population=population_placeholder,
+        peripheral=[transactions_placeholder, complaints_placeholder],
+        loss_function=loss_functions.CrossEntropyLoss(),
+        aggregation=[aggregations.Var(),
+                 aggregations.Avg(),
+                 aggregations.Sum(),
+                 aggregations.Stddev(),
+                 aggregations.Count()],
+        num_features=500
+    ).send()
+    
+    model.fit(
+        population_table=population_table,
+        peripheral_tables=[transactions, complaints]
+    )
+
+AutoSQL will then generate features such as the features above for you. It is possible to directly transform the raw data into a *pandas.DataFrame()* or a *numpy.array* containing your features. It is also possible to extract the SQL code underlying your features.
+
+We cannot stress this enough: AutoSQL does NOT use a brute force approach. Instead, it understands data blending as a supervised ensemble learning problem, which is far more efficient, more scalable and generates very high-quality features.
+
+
+AutoSQL in 5 minutes
+====================
+
+We first have to talk about the *star schema*. The star schema consists of one central table, which we call the *population table* and several *peripheral tables* that are organized around the population table. The star schema is the simplest and most popular way to organize a relational data base. When you do a data science project, it is advisable to first express your tables in the star schema, regardless of whether you use AutoSQL. For AutoSQL, it is required.
+
+.. image:: snowflake_data_model.png
+
+The population table defines the population of the problem. Each element in the population table contains one or several *targets* which is want we want to predict. The peripheral tables can be joined onto the population table using a LEFT JOIN via a join key. Peripheral tables might have their own join key or share join keys with other peripheral tables.
+
+Moreover, the population table and the peripheral tables all have a *time stamp*.
+
+Once you have organized your data in the star schema, stored it in pandas.DataFrame() objects and started the AutoSQL engine, generating your features works like this:
+
+::
+
+    import autosql.aggregations as aggregations
+    import autosql.engine as engine
+    import autosql.loss_functions as loss_functions
+    import autosql.models as models
+    
+    population_placeholder = models.Placeholder(
+        name="POPULATION_TABLE",
+        join_keys=["JOIN_KEY_1", "JOIN_KEY_2", "JOIN_KEY_3"],
+        time_stamps=["TIME_STAMP"],
+        targets=["TARGET_VALUES"]
+    )
+
+    peripheral1_placeholder = models.Placeholder(
+        name="PERIPHERAL_TABLE_1",
+        join_keys=["JOIN_KEY_1"],
+        time_stamps=["TIME_STAMP"]
+    )
+
+    peripheral2_placeholder = models.Placeholder(
+        name="PERIPHERAL_TABLE_2",
+        join_keys=["JOIN_KEY_2"],
+        time_stamps=["TIME_STAMP"]
+    )
+
+    peripheral3_placeholder = models.Placeholder(
+        name="PERIPHERAL_TABLE_3",
+        join_keys=["JOIN_KEY_3"],
+        time_stamps=["TIME_STAMP"]
+    )
+
+    population_placeholder.join(peripheral1_placeholder, "JOIN_KEY_1", "TIME_STAMP")
+
+    population_placeholder.join(peripheral2_placeholder, "JOIN_KEY_2", "TIME_STAMP")
+
+    population_placeholder.join(peripheral3_placeholder, "JOIN_KEY_3", "TIME_STAMP")
+
+    model = models.Model(
+        population=population_placeholder,
+        peripheral=[peripheral1_placeholder, peripheral2_placeholder, peripheral3_placeholder],
+        predictor=linear_model.LinearRegression(),
+        loss_function=loss_functions.CrossEntropyLoss(),
+        aggregation=[aggregations.Sum(), aggregations.Count()],
+        num_features=100
+    ).send()
+    
+    model.fit(
+        population_table=population_table,
+        peripheral_tables=[peripheral_table1, peripheral_table2, peripheral_table3]
+    )
+
+*population_table*, *peripheral_table1*, *peripheral_table2* and *peripheral_table3* are pandas.DataFrame() objects. "TARGET_VALUES", "JOIN_KEY_1", "JOIN_KEY_2", "JOIN_KEY_3" and "TIME_STAMP" are names of columns in *population_table*, *peripheral_table1*, *peripheral_table2* and *peripheral_table3*.
+
+If you are familiar with deep learning libraries such as keras or TensorFlow, you are probably also familiar with the concept of a *placeholder*. A placeholder represents a dataset without containing any real data. In our case, placeholders are used to pass the information on the schema to AutoSQL. Specifically, the placeholder will tell the model which tables there are and which join keys may be used to join them.
+
+To transform your raw data to extract the features, just call *model.transform()*:
+
+::
+
+    features = model.transform(
+        population_table=population_table,
+        peripheral_tables=[peripheral_table1, peripheral_table2, peripheral_table3]
+    )
+
+Of course, you can also generate real SQL code using AutoSQL. Just call *model.to_sql()*. The result might be something like this:
+
+::
+    
+    ...
+
+The most important thing to understand about AutoSQL is that it does *not* use a brute force procedure: AutoSQL does *not* generate a large number of predefined features and then picks out the best 1% of them. Instead, it uses an intelligent algorithm that is somewhat similar to gradient boosting. This is a lot faster, more scalable and also generates better features (or have you have heard of a successful machine learning algorithm that uses brute force to fit its parameters? - we neither).
+
+
+Installation
+===================
+
+**Step 1**: Download the AutoSQL engine for your operating system. 
+
+You do **NOT** need root or admin rights to install the AutoSQL engine.
+
+On **Linux**, use *cd* to get into the folder that contains *setup.sh*. Then, run setup.sh.
+
+::
+
+    cd /path/to/your/folder
+    sh setup.sh
+
+You should now find an AutoSQL icon on your desktop. If you do not want it there, you can place it in any other directory.
+
+**Step 2**: Install the dependencies (you can skip this step, if you are using Anaconda).
+
+AutoSQL depends on numpy, scipy and pandas. For the examples to run smoothly, you also need matplotlib and scikit-learn. If you have all of these installed already (they are all part of Anaconda), go on. Otherwise, open a console and enter the following:
+
+::
+
+    pip install numpy scipy pandas matplotlib sklearn
+
+If you are on an Unix system, you possibly need root rights for this, so you might want to use *sudo* (on Ubuntu/Linux Mint/Debian/...) or *su* (on Red Hat Enterprise Linux/Fedora/CentOS/...).
+
+**Step 3**: Install the AutoSQL Python library. 
+
+Download the AutoSQL Python library. Open a terminal (bash on Linux, cmd.exe on Windows). Use the *cd* command to get into the folder where you keep the SQLNet Python library, like this:
+
+::
+
+    cd /path/to/your/folder
+
+on Windows:
+
+::
+
+    cd C:\path\to\your\folder
+
+
+Then, type:
+
+::
+
+    python setup.py install
+
+The installation should take about one second. Again, you might need root rights for this.
+
+.. image:: screenshot_python_install.png
+
+Then, type "python" into your terminal and import autosql, like this:
+
+::
+
+    import autosql.models
+
+If that worked well, you are done. We hope you enjoy using AutoSQL.
+
+**Troubleshooting**
+
+**Problem 1**: My OS tells me I don't have the rights to install this
+
+If you are on Linux and operating system tells you that you don't have the proper rights to do this, try something like this (Ubuntu/Linux Mint/Debian/...):
+
+::
+
+    sudo pip install numpy scipy matplotlib sklearn
+
+or
+
+::
+
+    sudo python setup.py install
+
+or this (Red Hat Enterprise Linux/Fedora/CentOS/...):
+
+::
+
+    su
+    pip install numpy scipy matplotlib sklearn
+
+or
+
+::
+
+    su
+    python setup.py install
+
+
+It will ask you for your user password and then you can install the library.
+
+**Problem 2**: When I type python into the terminal, it can't find Python
+
+If this happens, you are probably using Anaconda and you haven't set the PATH variable. You can solve this problem in one of two ways:
+
+1. Reinstall Anaconda. When they ask you to change the PATH variable, say yes. They recommend you not to do it, but do it anyway.
+
+2. Find the folder in Anaconda that contains the python application. Then add that folder to your PATH variable. 
+
+How to add a folder to your PATH variable depends on your operating system. For instance, on Windows, it works like this:
+
+::
+
+    setx PATH "%PATH%;C:\path\to\your\folder\;"
+
+If you aren't really sure about this, your better option is probably to reinstall Anaconda and let them change the path for you.
+
+**Problem 3**: I have installed the AutoSQL Python library, but now Python can't find it
+
+This happens when you have several Python installations on your computer (for instance, an Anaconda version and another version). Again, this problem can be solved by editing the PATH variable.
+
+Starting the AutoSQL engine
+===============================================
+
+The AutoSQL engine is a standalone program that does the actual work of fitting your features.
+
+1. It makes installation of AutoSQL a lot easier. Because we have outsourced the calculation-intensive part to a standalone program written in C++, the AutoSQL Python library is written in pure Python.
+
+2. It makes it very easy to move things into production. Technically speaking, the SQLNet engine is a little webserver - so it is very easy to deploy a pipeline.
+
+3. It completely abstracts over any parallelization mode - it doesn't matter whether you want to run AutoSQL on a single CPU, several processes on a single workstation or a distributed CPU cluster - you don't have to change a single line of your Python code.
+
+Here are just some of the things you can do:
+
+1. The most common case is to have both the AutoSQL engine and the AutoSQL Python library on your own computer. You start the AutoSQL engine and then run your Python code.
+
+2. But you can also deploy the AutoSQL engine on a large computing cluster, upload your data to that cluster and connect to the engine from your laptop. Then you can fit your features as if the data were on your computer.
+
+After running *setup.sh*, you should find an icon on your desktop. **Double-click** it to run the engine. You can place it in any other directory, if you do not want it on your desktop.
+
+If you are not running the AutoSQL Engine on a desktop environment, use the *cd* command to get into the folder from which you can execute *run*:
+
+On Linux and Mac:
+
+::
+
+    cd /path/to/your/folder
+    ./run
+
+on Windows:
+
+::
+
+    cd C:\path\to\your\folder
+    run
+
+.. image:: screenshot_engine1.png
+
+If the console prints out a copyright notice, the licensing terms and some basic instructions for running the engine (as pictured above), everything is fine.
+
+.. image:: screenshot_engine2.png
+
+You can then start Python in a different console (of course, you could use Pycharm, Spyder, Jupyter or another tool of your choice). 
+
+Example 1: Using the high-level API
+===================================
+
+AutoSQL offers a high-level API that accepts pandas.DataFrame() objects. This is very useful, because pandas offers every good interfaces to all sorts of relational database systems as well as an excellent CSV reader. Reading data into Python using pandas is a natural thing for a data scientist to do.
+
+For the first example, we will create an artificial dataset that contains one POPULATION table and one PERIPHERAL table. The target variable is defined as follows:
+
+.. code-block:: sql
+
+    SELECT COUNT( * )
+    FROM POPULATION t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.5 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.join_key,
+         t1.time_stamp;
+
+Obviously, our goal is that AutoSQL can figure out this logic on its own, without us telling it that COUNT(*) is the right aggregation to use, the number 0.5 has any significance
+or that filtering by the time stamps has any significance. AutoSQL should figure out all of these things on its own.
+
+::
+
+    population_placeholder = models.Placeholder(
+        name="POPULATION",
+        join_keys=["join_key"],
+        time_stamps=["time_stamp"],
+        targets=["targets"]
+    )
+
+    peripheral_placeholder = models.Placeholder(
+        name="PERIPHERAL",
+        join_keys=["join_key"],
+        time_stamps=["time_stamp"]
+    )
+
+    population_placeholder.join(peripheral_placeholder, "join_key", "time_stamp")
+
+    model = models.Model(
+        population=population_placeholder,
+        peripheral=[peripheral_placeholder],
+        predictor=linear_model.LinearRegression(),
+        loss_function=loss_functions.SquareLoss(),
+        aggregation=[aggregations.Sum(), aggregations.Count()],
+        use_timestamps=True,
+        num_features=10,
+        max_length=1,
+        fast_training=False,
+        min_num_samples=200,
+        grid_factor=1.0,
+        share_aggregations=1.0,
+        num_threads=6
+    ).send()
+
+For a full overview of what all of the parameters mean, please see the listings in this documentation or use help(autosql.models.Model) in Python. But a few things merit discussion:
+
+* As a loss function, we have chosen use square loss. This is appropriate, because this is a regression problem.
+
+* We have offered two aggregation functions to AutoSQL to choose from, namely SUM and COUNT. Obviously, COUNT is the right one, but AutoSQL does not know that a priori.
+
+* We have told AutoSQL to extract 10 features. For this example, one feature would have done the trick, but this is for illustration purposes.
+
+* Note that the PERIPHERAL table contains roughly 120,000 lines. However, AutoSQL should be able to extract 10 features from it in well under one second (depends on your hardware, of course).
+
+* We have passed a scikit-learn *LinearRegression()* as a predictor. This is optional, but recommended. This will work for any predictor that conforms with the scikit-learn API.
+
+Now we need to get our POPULATION table and our PERIPHERAL table into a pandas.DataFrame() and then insert that into our model, like this:
+
+::
+
+    model = model.fit(
+        population_table=population_table,
+        peripheral_tables=[peripheral_table]
+    )
+
+Once you have understood initialization and the *.fit(...)* method, generating your features is pretty straight-forward:
+
+::
+
+    features = model.transform(
+        population_table=population_table,
+        peripheral_tables=[peripheral_table]
+    )
+
+This is will return a numpy array dataframe containing your features. You can then do with them whatever you please, such as inserting them into to your favorite machine learning algorithm.
+
+If you want to use the *LinearRegression()* we have already trained, just use the *.predict(...)* method:
+
+::
+
+    yhat = model.predict(
+        population_table=population_table,
+        peripheral_tables=[peripheral_table]
+    )
+
+This is will return a numpy array dataframe containing predictions.
+
+But, of course, we would like to take a look at the SQL code for the features that AutoSQL has generated. This can be done by calling the *.to_sql(...)* method:
+
+
+::
+
+    print(model.to_sql())
+
+Here is the SQL code AutoSQL has generated:
+
+.. code-block:: sql
+    
+    CREATE TABLE FEATURE_1 AS
+    SELECT COUNT( * ) AS feature_1,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.4972169145607967 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_2 AS
+    SELECT COUNT( * ) AS feature_2,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.50435252579698986 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_3 AS
+    SELECT COUNT( * ) AS feature_3,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.49896374257025794 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_4 AS
+    SELECT COUNT( * ) AS feature_4,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.49721691456079675 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_5 AS
+    SELECT COUNT( * ) AS feature_5,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.49846183435457186 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_6 AS
+    SELECT COUNT( * ) AS feature_6,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.49724452628087479 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_7 AS
+    SELECT COUNT( * ) AS feature_7,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.50199023741518456 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_8 AS
+    SELECT COUNT( * ) AS feature_8,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.49646908250790739 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_9 AS
+    SELECT COUNT( * ) AS feature_9,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.49646908250790733 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_10 AS
+    SELECT COUNT( * ) AS feature_10,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.49961263933203259 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+
+So, as you can see, it is pretty close to the real thing (recall that the correct solution is that the time stamps difference smaller than 0.5). And it has done all of that in less than a second. I bet you can not write SQL code that quickly.
+
+We can further verify how well we have done, by plotting the the first feature against the target variable. As you can see, it is pretty accurate:
+
+::
+
+    plt.grid(True)
+    plt.xlabel("targets")
+    plt.ylabel("predictions")
+    plt.scatter(targets.ravel(), features[:,0])
+    plt.show()
+
+.. image:: Example_1.png
+
+Even though it is good, it is not 100% perfect. But we can get better results by using the power of ensemble learning and simply averaging all of the extracted features. Since some features count too many elements and some count too few, these mistakes should about average out.
+
+
+::
+
+    plt.grid(True)
+    plt.xlabel("targets")
+    plt.ylabel("predictions")
+    plt.scatter(targets.ravel(), features.mean(axis=1)
+    plt.show()
+
+.. image:: Example_1_ensemble.png
+
+But we can usually get the best predictions by including our predictor:
+
+::
+
+    plt.grid(True)
+    plt.xlabel("targets")
+    plt.ylabel("predictions")
+    plt.scatter(targets.ravel(), yhat.ravel())
+    plt.show()
+
+.. image:: Example_1_predictor.png
+
+
+Example 2: Using the low-level API
+===================================
+
+The high-level API is fine and reasonably easy, but there are disadvantages: Most importantly, it forces you to keep the data in the memory twice: Once as pandas.DataFrame() objects and once more as a copy in the engine. When your dataset is not too large or you have a lot of memory, then the high-level API is fine. But if memory is a real constraint, you want to think about using the low-level API (it really is not that much harder anyway).
+
+For this example, we will create an artificial dataset that contains one POPULATION table and one PERIPHERAL table. The target variable is defined as follows:
+
+.. code-block:: sql
+
+    SELECT COUNT( * )
+    FROM POPULATION t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.5 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.join_key,
+         t1.time_stamp;
+
+So it is very much like the first one, only that in this example we want to use the MAX(...) aggregation instead of COUNT(*).
+
+For the low-level API, we first want to upload the data to the engine. 
+
+::
+
+    # Upload data to the AutoSQL engine
+
+    peripheral_on_engine = engine.DataFrame(
+        name="PERIPHERAL",
+        join_keys=["join_key"],
+        time_stamps=["time_stamp"]
+    )
+
+    # The low-level API allows you to upload
+    # data to the AutoSQL engine in a piecewise fashion.
+    # Here we load the first part of the pandas.DataFrame...
+    peripheral_on_engine.send(
+        peripheral_table[:2000]
+    )
+
+    # ...and now we load the second part
+    peripheral_on_engine.append(
+        peripheral_table[2000:]
+    )
+
+    population_on_engine = engine.DataFrame(
+        name="POPULATION",
+        join_keys=["join_key"],
+        time_stamps=["time_stamp"],
+        targets=["targets"]
+    )
+
+    # The low-level API allows you to upload
+    # data to the AutoSQL engine in a piecewise fashion.
+    # Here we load the first part of the pandas.DataFrame...
+    population_on_engine.send(
+        population_table[:20]
+    )
+
+    # ...and now we load the second part
+    population_on_engine.append(
+       population_table[20:]
+    )
+
+
+Now the data is no longer in Python. Instead, it is kept in the AutoSQL engine. The objects created by this procedure are handles, which do not contain any actual data. As you can see, it also possible to load your data in a piecewise fashion. This is useful when your dataset is large and distributed over several CSV files.
+
+There is one more thing you should know: When loading join keys, AutoSQL will first map these join keys to integers. This can dramatically reduce memory requirements and runtime. However, you want to make sure that you load all of your tables *during the same Python session*. If that is not possible for any reason, you can also reload DataFrames using the *.load()* method. If you haven't shut down your AutoSQL engine between loading your tables, the *.refresh()* method will also do the trick.
+
+If you fail to do this, then will be a **conflict** in your mappings: This means that different join keys will be assigned to the same integers. Obviously, this can create all sorts of problems, so AutoSQL will make sure that there are no conflicts and throw an exception, if necessary.
+
+Conflicts can never be an issue, if you use the high-level API.
+
+Setting up your placeholder actually becomes easier.
+
+::
+
+    # When defining your placeholders, you do not need to
+    # pass the column names - you have done that already when
+    # uploading the data.
+
+    population_placeholder = models.Placeholder("POPULATION")
+
+    peripheral_placeholder = models.Placeholder("PERIPHERAL")
+
+    population_placeholder.join(peripheral_placeholder, "join_key", "time_stamp")
+
+    model = models.Model(
+        population=population_placeholder,
+        peripheral=[peripheral_placeholder],
+        predictor=linear_model.LinearRegression(),
+        loss_function=loss_functions.SquareLoss(),
+        aggregation=[aggregations.Sum(), aggregations.Count()],
+        use_timestamps=True,
+        num_features=10,
+        max_length=1,
+        fast_training=False,
+        min_num_samples=200,
+        shrinkage=0.0,
+        grid_factor=1.0,
+        share_aggregations=1.0,
+        num_threads=6
+    ).send()
+
+Everything else is pretty much the same. You just have to pass the *autosql.engine.DataFrame* object instead of a *pandas.DataFrame*. 
+
+::
+
+    model = model.fit(
+        population_table=population_on_engine,
+        peripheral_tables=[peripheral_on_engine]
+    )
+
+    features = model.transform(
+        population_table=population_on_engine,
+        peripheral_tables=[peripheral_on_engine]
+    )
+
+    yhat = model.predict(
+        population_table=population_on_engine,
+        peripheral_tables=[peripheral_on_engine]
+    )
+
+
+Once again, you can generate SQL code using the *.to_sql(...)* method:
+
+::
+
+    print(model.to_sql())
+
+.. code-block:: sql
+
+    CREATE TABLE FEATURE_1 AS
+    SELECT COUNT( * ) AS feature_1,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.49607435974183928 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_2 AS
+    SELECT COUNT( * ) AS feature_2,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.50005617269617941 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_3 AS
+    SELECT COUNT( * ) AS feature_3,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.503629980961387 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_4 AS
+    SELECT COUNT( * ) AS feature_4,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.50353410921761477 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_5 AS
+    SELECT COUNT( * ) AS feature_5,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.49851269369130541 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_6 AS
+    SELECT COUNT( * ) AS feature_6,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.50089469254785479 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_7 AS
+    SELECT COUNT( * ) AS feature_7,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.503629980961387 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_8 AS
+    SELECT COUNT( * ) AS feature_8,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.50110588950578139 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_9 AS
+    SELECT COUNT( * ) AS feature_9,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.503629980961387 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_10 AS
+    SELECT COUNT( * ) AS feature_10,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.49851269369130541 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+Example 3: Categorical variables
+================================
+
+AutoSQL also supports categorical variables. Suppose we have a problem like this:
+
+.. code-block:: sql
+
+    SELECT COUNT( * )
+    FROM POPULATION_TABLE t1
+    LEFT JOIN PERIPHERAL_TABLE t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t2.column_01 != '1' AND t2.column_01 != '2' AND t2.column_01 != '9' )
+    ) AND t2.time_stamps <= t1.time_stamps
+    GROUP BY t2.join_key;
+
+We have to explicitly tell AutoSQL that a variable is categorical. In the high-level API, this is achieved by passing a list of the names of all categorical columns to *categorical* in the placeholder:
+
+::
+
+    population_placeholder = models.Placeholder(
+        name="POPULATION",
+        join_keys=["join_key"],
+        time_stamps=["time_stamp"],
+        targets=["targets"]
+    )
+
+    peripheral_placeholder = models.Placeholder(
+        name="PERIPHERAL",
+        categorical=["column_01"],
+        join_keys=["join_key"],
+        time_stamps=["time_stamp"]
+    )
+
+    population_placeholder.join(peripheral_placeholder, "join_key", "time_stamp")
+
+    model = models.Model(
+        population=population_placeholder,
+        peripheral=[peripheral_placeholder],
+        loss_function=loss_functions.SquareLoss(),
+        aggregation=[aggregations.Var(),
+                 aggregations.Avg(),
+                 aggregations.Sum(),
+                 aggregations.Stddev(),
+                 aggregations.Count()],
+        use_timestamps=True,
+        num_features=10,
+        max_length=5,
+        fast_training=False,
+        min_num_samples=200,
+        share_aggregations=1.0
+    ).send()
+
+    model = model.fit(
+        population_table=population_table,
+        peripheral_tables=[peripheral_table]
+    )
+
+
+Transforming the raw data to get the features works similarly:
+
+::
+
+
+    features = model.transform(
+        population_table=population_table,
+        peripheral_tables=[peripheral_table]
+    )
+
+
+For the low-level API, we also have to explicitly state which columns are categorical. But here, we do not have to pass this information to the placeholders. Instead, we pass it to the data frames:
+
+::
+
+    # Upload data to the AutoSQL engine
+
+    peripheral_on_engine = engine.DataFrame(
+        name="PERIPHERAL",
+        join_keys=["join_key"],
+        categorical=["column_01"],
+        time_stamps=["time_stamp"]
+    )
+
+    peripheral_on_engine.send(
+        peripheral_table
+    )
+
+    population_on_engine = engine.DataFrame(
+        name="POPULATION",
+        join_keys=["join_key"],
+        time_stamps=["time_stamp"],
+        targets=["targets"]
+    )
+
+    population_on_engine.send(
+        population_table
+    )
+
+    # Build data model
+
+    population_placeholder = models.Placeholder(name="POPULATION")
+
+    peripheral_placeholder = models.Placeholder(name="PERIPHERAL")
+
+    population_placeholder.join(peripheral_placeholder, "join_key", "time_stamp")
+
+    model = models.Model(
+        population=population_placeholder,
+        peripheral=[peripheral_placeholder],
+        loss_function=loss_functions.SquareLoss(),
+        aggregation=[aggregations.Avg(),
+                 aggregations.Sum(),
+                 aggregations.Count()],
+        use_timestamps=True,
+        num_features=10,
+        max_length=3,
+        fast_training=False,
+        min_num_samples=200,
+        share_aggregations=1.0
+    ).send()
+
+    model = model.fit(
+        population_table=population_on_engine,
+        peripheral_tables=[peripheral_on_engine]
+    )
+
+
+Here is the SQL code that we get:
+
+.. code-block:: sql
+
+    CREATE TABLE FEATURE_1 AS
+    SELECT COUNT( * ) AS feature_1,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t2.column_01 != '1' AND t2.column_01 != '9' AND t2.column_01 != '2' )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_2 AS
+    SELECT COUNT( * ) AS feature_2,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t2.column_01 != '9' AND t2.column_01 != '1' AND t2.column_01 != '2' )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_3 AS
+    SELECT COUNT( * ) AS feature_3,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t2.column_01 != '1' AND t2.column_01 != '9' AND t2.column_01 != '2' )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_4 AS
+    SELECT COUNT( * ) AS feature_4,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t2.column_01 != '1' AND t2.column_01 != '9' AND t2.column_01 != '2' )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_5 AS
+    SELECT COUNT( * ) AS feature_5,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t2.column_01 != '1' AND t2.column_01 != '9' AND t2.column_01 != '2' )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_6 AS
+    SELECT COUNT( * ) AS feature_6,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t2.column_01 != '1' AND t2.column_01 != '9' AND t2.column_01 != '2' )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_7 AS
+    SELECT COUNT( * ) AS feature_7,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t2.column_01 != '1' AND t2.column_01 != '9' AND t2.column_01 != '2' )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_8 AS
+    SELECT COUNT( * ) AS feature_8,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t2.column_01 != '9' AND t2.column_01 != '1' AND t2.column_01 != '2' )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_9 AS
+    SELECT COUNT( * ) AS feature_9,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t2.column_01 != '1' AND t2.column_01 != '2' AND t2.column_01 != '9' )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_10 AS
+    SELECT COUNT( * ) AS feature_10,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t2.column_01 != '9' AND t2.column_01 != '1' AND t2.column_01 != '2' )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+As you can see, this solves the problem perfectly.
+
+::
+
+    plt.grid(True)
+    plt.xlabel("targets")
+    plt.ylabel("predictions")
+    plt.scatter(targets.ravel(), features.mean(axis=1)
+    plt.show()
+
+.. image:: Example_3_ensemble.png
+
+When you use the low-level API, AutoSQL will first map the categories to integers, just like join keys. This can dramatically reduce memory requirements and runtime. However, you want to make sure that you load all of your tables *during the same Python session*. If that is not possible for any reason, you can also reload DataFrames using the *.load()* method. If you haven't shut down your AutoSQL engine between loading your tables, the *.refresh()* method will also do the trick.
+
+If you fail to do this, then will be a **conflict** in your mappings: This means that different categories will be assigned to the same integers. Obviously, this can create all sorts of problems, so AutoSQL will make sure that there are no conflicts and throw an exception, if necessary.
+
+Conflicts can never be an issue, if you use the high-level API.
+
+Example 4: Discrete variables
+==============================
+
+Discrete variables are numerical variables that can only assume whole numbers. A typical example might be number of units sold: The number of units sold is numerical, but it can only assume whole numbers. It makes very little sense to say that I sold 3956.283 units in the last month.
+
+When you know that certain variables are discrete, you should probably mark them as such. This can increase accuracy and produce more readable SQL code.
+
+Let's just say we have a problem like this, where *t2.column01* is a discrete variable:
+
+.. code-block:: sql
+
+    SELECT MIN( t2.column01 )
+    FROM POPULATION_TABLE t1
+    LEFT JOIN PERIPHERAL_TABLE t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t2.column01 > 0 )
+    ) AND t2.time_stamps <= t1.time_stamps
+    GROUP BY t2.join_key;
+
+
+We can then mark this as a discrete variable, just like we mark categorical variables:
+
+::
+
+    population_placeholder = models.Placeholder(
+        name="POPULATION",
+        join_keys=["join_key"],
+        time_stamps=["time_stamp"],
+        targets=["targets"]
+    )
+
+    peripheral_placeholder = models.Placeholder(
+        name="PERIPHERAL",
+        discrete=["column_01"],
+        join_keys=["join_key"],
+        time_stamps=["time_stamp"]
+    )
+
+    population_placeholder.join(peripheral_placeholder, "join_key", "time_stamp")
+
+    model = models.Model(
+        population=population_placeholder,
+        peripheral=[peripheral_placeholder],
+        predictor=linear_model.LinearRegression(),
+        loss_function=loss_functions.SquareLoss(),
+        aggregation=[aggregations.Avg(),
+                 aggregations.Sum(),
+                 aggregations.Count(),
+                 aggregations.Min()],
+        use_timestamps=True,
+        num_features=10,
+        max_length=2,
+        fast_training=False,
+        min_num_samples=200,
+        grid_factor=1.0,
+        share_aggregations=1.0,
+        regularization=1e-07
+    ).send()
+
+    model = model.fit(
+        population_table=population_table,
+        peripheral_tables=[peripheral_table]
+    )
+
+
+The remainder is straight-forward. We use *.fit(...)*, *.transform(...)*, *.predict(...)* and *.to_sql(...)* like we always have.
+
+The resulting SQL code looks like this:
+
+.. code-block:: sql
+
+    CREATE TABLE FEATURE_1 AS
+    SELECT MIN( t2.column_01 ) AS feature_1,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t2.column_01 > 0 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_2 AS
+    SELECT MIN( t2.column_01 ) AS feature_2,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t2.column_01 > 0 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_3 AS
+    SELECT MIN( t2.column_01 ) AS feature_3,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t2.column_01 > 0 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_4 AS
+    SELECT MIN( t2.column_01 ) AS feature_4,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t2.column_01 > 0 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_5 AS
+    SELECT MIN( t2.column_01 ) AS feature_5,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t2.column_01 > 0 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_6 AS
+    SELECT MIN( t2.column_01 ) AS feature_6,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t2.column_01 > 0 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_7 AS
+    SELECT MIN( t2.column_01 ) AS feature_7,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t2.column_01 > 0 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_8 AS
+    SELECT MIN( t2.column_01 ) AS feature_8,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t2.column_01 > 0 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_9 AS
+    SELECT MIN( t2.column_01 ) AS feature_9,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t2.column_01 > 0 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_10 AS
+    SELECT MIN( t2.column_01 ) AS feature_10,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t2.column_01 > 0 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+As you can see, the SQL is more readable. It also solves the problem perfectly (so we do not actually need ten features - one would have been sufficient).
+
+.. image:: Example_4_ensemble.png
+
+Example 5: Units (part 1)
+==========================
+
+In some cases, we would like to do something like this:
+
+.. code-block:: sql
+
+    SELECT COUNT( * )
+    FROM POPULATION t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE t1.column_01 - t2.column_01 <= 0.5
+    AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t2.join_key;
+
+
+The difference here is that we are directly comparing two different columns ( *t1.column_01 - t2.column_01 <= 0.5* ), instead of comparing one column to a fixed value. This is tricky for two reasons: First, from a standpoint of computational complexity theory, pairwise comparisons of columns have quadratic time complexity, which is undesirable. Second, many of these comparisons make no sense. Imagine that one column contains the size of the product at sale, the other one contains the height of the salesman. Under no conceivable circumstances would it ever make sense to compare the two. 
+
+So what can we do? A better solution is to only compare columns which have the same *units*. But AutoSQL does not know on its own what units certain columns have. So we have to tell it.
+
+If we are using the high-level API, a dictionary mapping column names to units will do the trick. That means all columns having a particular column name will be assigned that unit and will then be directly compared. If you have columns in different table that have the same name, you can not assign them differing units (but why would you want to anyway? - in our view that would be bad coding style).
+
+::
+
+    units = dict()
+    
+    units["column_01"] = "unit_01"
+
+In some cases, you want columns to be *for comparison only*. This might be the case when they contain time-related data. Such data only makes sense in comparison to other fields. If this is the case, you can just add "comparison only" to the unit, like this:
+
+::
+
+    units = dict()
+    
+    units["column_01"] = "unit_01, comparison only"
+
+When you are fitting your model, you have to pass the units. Note that this is only for the high-level API. For the low-level API, you have to pass the units to your *engine.DataFrame()* objects.
+
+.. code-block:: sql
+
+    population_placeholder = models.Placeholder(
+        name="POPULATION",
+        join_keys=["join_key"],
+        time_stamps=["time_stamp"],
+        targets=["targets"]
+    )
+
+    peripheral_placeholder = models.Placeholder(
+        name="PERIPHERAL",
+        join_keys=["join_key"],
+        time_stamps=["time_stamp"]
+    )
+
+    population_placeholder.join(peripheral_placeholder, "join_key", "time_stamp")
+
+    model = models.Model(
+        population=population_placeholder,
+        peripheral=[peripheral_placeholder],
+        predictor=linear_model.LinearRegression(),
+        units=units,  # Passing the units to the model
+        loss_function=loss_functions.SquareLoss(),
+        aggregation=[aggregations.Avg(),
+                 aggregations.Sum(),
+                 aggregations.Count()],
+        use_timestamps=True,
+        num_features=10,
+        max_length=3,
+        fast_training=True,
+        min_num_samples=200,
+        grid_factor=10.0,
+        regularization=0.0,
+        share_aggregations=1.0
+    ).send()
+
+
+
+Here is the SQL code we get:
+
+.. code-block:: sql
+
+    CREATE TABLE FEATURE_1 AS
+    SELECT COUNT( * ) AS feature_1,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.column_01 - t2.column_01 <= 0.50091776577397096 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_2 AS
+    SELECT COUNT( * ) AS feature_2,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.column_01 - t2.column_01 <= 0.50114653758222394 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_3 AS
+    SELECT COUNT( * ) AS feature_3,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.column_01 - t2.column_01 <= 0.50052117449112954 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_4 AS
+    SELECT COUNT( * ) AS feature_4,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.column_01 - t2.column_01 <= 0.49979404187997178 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_5 AS
+    SELECT COUNT( * ) AS feature_5,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.column_01 - t2.column_01 <= 0.5000655420167881 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_6 AS
+    SELECT COUNT( * ) AS feature_6,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.column_01 - t2.column_01 <= 0.50098902319564842 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_7 AS
+    SELECT COUNT( * ) AS feature_7,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.column_01 - t2.column_01 <= 0.4996181756723781 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_8 AS
+    SELECT COUNT( * ) AS feature_8,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.column_01 - t2.column_01 <= 0.50095847773428281 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_9 AS
+    SELECT COUNT( * ) AS feature_9,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.column_01 - t2.column_01 <= 0.49977327645686809 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_10 AS
+    SELECT COUNT( * ) AS feature_10,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.column_01 - t2.column_01 <= 0.50124886911132349 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+And when we look at the performance of our extracted features, we find that AutoSQL does a pretty decent job:
+
+::
+
+    plt.grid(True)
+    plt.xlabel("targets")
+    plt.ylabel("predictions")
+    plt.scatter(targets.ravel(), features.mean(axis=1)
+    plt.show()
+
+.. image:: Example_5_ensemble.png
+
+Example 6: Units (part 2)
+==========================
+
+The idea of units also applies to discrete and categorical variables. Don't worry - AutoSQL would never compare categorical to numerical, categorical to discrete or discrete to numerical variables, even if you decide to assign them the same unit for some reason.
+
+Suppose our problem is like this:
+
+.. code-block:: sql
+
+    SELECT t1.*,
+    COALESCE( COUNT( * ), 0 ) AS target
+    FROM POPULATION_TABLE t1
+    LEFT JOIN PERIPHERAL_TABLE t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.column_01 = t2.column_01 )
+    ) AND t2.time_stamps <= t1.time_stamps
+    GROUP BY t2.join_key;
+
+If we do not include the information that *column_01* in POPULATION_TABLE and PERIPHERAL_TABLE share the same unit, AutoSQL would have to create a special case for each possible manifestation of that variable. It is not impossible, but it is inefficient and the resulting SQL code would not be very beautiful.
+
+The way units are assigned works exactly as for the previous example:
+
+::
+
+    units = dict()
+    
+    units["column_01"] = "unit_01"
+
+And fitting is very similar as well, with the exception that we need to declare both *column_01* as categorical variables:
+
+::
+
+    population_placeholder = models.Placeholder(
+        name="POPULATION",
+        categorical=["column_01"],
+        join_keys=["join_key"],
+        time_stamps=["time_stamp"],
+        targets=["targets"]
+    )
+
+    peripheral_placeholder = models.Placeholder(
+        name="PERIPHERAL",
+        categorical=["column_01"],    
+        join_keys=["join_key"],
+        time_stamps=["time_stamp"]
+    )
+
+    population_placeholder.join(peripheral_placeholder, "join_key", "time_stamp")
+
+    model = models.Model(
+        population=population_placeholder,
+        peripheral=[peripheral_placeholder],
+        units=units,  # Passing the units to the model
+        loss_function=loss_functions.SquareLoss(),
+        aggregation=[aggregations.Avg(),
+                 aggregations.Sum(),
+                 aggregations.Count()],
+        use_timestamps=True,
+        num_features=10,
+        max_length=3,
+        fast_training=True,
+        min_num_samples=200,
+        grid_factor=10.0,
+        regularization=0.0,
+        share_aggregations=1.0
+    ).send()
+
+    model = model.fit(
+        population_table=population_table,
+        peripheral_tables=[peripheral_table]
+    )
+
+
+Here is how setting units works for the low-level API:
+
+::
+
+    # Set up units
+
+    units = dict()
+
+    units["column_01"] = "unit_01"
+
+    # Upload data to the AutoSQL engine
+
+    population_on_engine = engine.DataFrame(
+        name="POPULATION",
+        join_keys=["join_key"],
+        categorical=["column_01"],
+        time_stamps=["time_stamp"],
+        targets=["targets"],
+        units=units  # Passing units
+    )
+
+    population_on_engine.send(
+        population_table
+    )
+
+    peripheral_on_engine = engine.DataFrame(
+        name="PERIPHERAL",
+        join_keys=["join_key"],
+        categorical=["column_01"],
+        time_stamps=["time_stamp"],
+        units=units  # Passing units
+    )
+
+    peripheral_on_engine.send(
+        peripheral_table
+    )
+
+Since you have already set the units in the data frame, you do not have to pass it to the model anymore:
+
+::
+
+    population_placeholder = models.Placeholder(name="POPULATION")
+
+    peripheral_placeholder = models.Placeholder(name="PERIPHERAL")
+
+    population_placeholder.join(peripheral_placeholder, "join_key", "time_stamp")
+
+    model = models.Model(
+        population=population_placeholder,
+        peripheral=[peripheral_placeholder],
+        loss_function=loss_functions.SquareLoss(),
+        aggregation=[aggregations.Sum(),
+                 aggregations.Count()],
+        use_timestamps=True,
+        num_features=10,
+        max_length=3,
+        fast_training=False,
+        min_num_samples=200,
+        grid_factor=10.0,
+        share_aggregations=1.0
+    ).send()
+
+    model = model.fit(
+        population_table=population_on_engine,
+        peripheral_tables=[peripheral_on_engine]
+    )
+
+    features = model.transform(
+        population_table=population_on_engine,
+        peripheral_tables=[peripheral_on_engine]
+    )
+
+
+This is the resulting SQL code:
+
+::
+
+    population_placeholder = models.Placeholder(name="POPULATION")
+
+    peripheral_placeholder = models.Placeholder(name="PERIPHERAL")
+
+    population_placeholder.join(peripheral_placeholder, "join_key", "time_stamp")
+
+    model = models.Model(
+        population=population_placeholder,
+        peripheral=[peripheral_placeholder],
+        loss_function=loss_functions.SquareLoss(),
+        aggregation=[aggregations.Sum(),
+                 aggregations.Count()],
+        use_timestamps=True,
+        num_features=10,
+        max_length=3,
+        fast_training=False,
+        min_num_samples=200,
+        grid_factor=10.0,
+        share_aggregations=1.0
+    ).send()
+
+    model = model.fit(
+        population_table=population_on_engine,
+        peripheral_tables=[peripheral_on_engine]
+    )
+
+    features = model.transform(
+        population_table=population_on_engine,
+        peripheral_tables=[peripheral_on_engine]
+    )
+
+
+Of course, the extracted features solve the problem perfectly:
+
+.. image:: Example_6_ensemble.png
+
+Example 7: The NULL value handling policy
+==========================================================
+
+Missing values are a reality in many business datasets. AutoSQL features a NULL value handling policy that is in compliance with the SQL standard. In essence, the NULL value handling policy boils down to two rules:
+
+1) All aggregations except COUNT(*) will always ignore NULL values.
+
+2) NULL values are never greater than, smaller than or equal to anything (including NULL).
+
+Rule 1 implies that the sum of 1, 2 and NULL is 3 and the average of 1, 2 and NULL is 1.5. 
+
+Rule 2 implies almost all conditions are false when the value is NULL. For instance, consider the condition *t2.column_01 > 0.5*: If an entry in *column_01* happens to be a NULL value, then the condition is false. So are the conditions *t2.column_01 <= 0.5* and *t2.column_01 = 'category_a'*. However, if *column_01* is categorical, then the condition *t2.column_01 != 'category_a'* is possible and is true for entries that are NULL, because according to Rule 2, NULL values are never equal to anything.
+
+Rule 2 has another implication when it comes to join keys: Join keys that are NULL will never be matched with anything, including other join keys that are NULL.
+
+AutoSQL can handle NULL values in any values, except targets. Targets can not be NULL (because that would be silly).
+
+In the Python API, all fields that are either NaN, "nan", None, "None" or an empty string will be interpreted as NULL values.
+
+In this example, we try to solve the following problem:
+
+.. code-block:: sql
+
+    AVG( t2.column_01 ) AS target
+    FROM POPULATION t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE t2.column_01 > 0
+    AND t2.time_stamp  <= t1.time_stamp
+    GROUP BY t2.join_key;
+
+But some values are missing. The fact that some values are missing has no impact on AutoSQL and as you can see, it will solve the problem.
+
+.. image:: Example_7_ensemble.png
+
+Example 8: Hyperparameter optimization using random search
+==========================================================
+
+If you hand-optimize your AutoSQL hyperparameters instead of hand-engineering your features, you will still save a lot of time - but not as much as you could. 
+
+The more professional way to go is to conduct a proper hyperparameter optimization. And AutoSQL makes it very easy for you. Here is how it works:
+
+You begin by setting up a model, like you always would:
+
+::
+
+    population_placeholder = models.Placeholder(
+        name="POPULATION",
+        join_keys=["join_key"],
+        time_stamps=["time_stamp"],
+        targets=["targets"]
+    )
+
+    peripheral_placeholder = models.Placeholder(
+        name="PERIPHERAL",
+        join_keys=["join_key"],
+        time_stamps=["time_stamp"]
+    )
+
+    population_placeholder.join(peripheral_placeholder, "join_key", "time_stamp")
+
+    # Set up the autosql model
+    model = models.Model(
+        predictor=linear_model.LinearRegression(),
+        population=population_placeholder,
+        peripheral=[peripheral_placeholder],
+        loss_function=loss_functions.SquareLoss(),
+        aggregation=[aggregations.Max(),
+                 aggregations.Avg(),
+                 aggregations.Sum(),
+                 aggregations.Count()],
+        use_timestamps=True,
+    ).send()
+
+Then you define your hyperparameter space like this:
+
+::
+
+    params_dist = {
+        "num_features": [5, 10, 20],
+        "max_length": [2, 4, 8, 16],
+        "grid_factor": [1.0, 2.0, 4.0, 8.0, 16.0, 32.0],
+        "min_num_samples": [100, 200, 400],
+        "regularization": [0.0, 0.01, 0.1],
+        "share_aggregations": [0.25, 0.5, 0.75, 1.0],
+        "fast_training": [True, False]
+    }
+
+You should also divide your population table into a training and validation set. Now you can fit your model like this:
+
+::
+
+    model.random_search(
+        population_table_training=population_table_training,
+        population_table_validation=population_table_validation,
+        peripheral_tables=[peripheral_table],
+        params_dist=params_dist,
+        num_iterations=10,
+        metric=metrics.RMSE(),
+        low_memory_mode=False
+    )
+
+
+What will happen is the following:
+
+1. AutoSQL will train 10 different models (sets of features) on the training set (or whatever parameter you have chosen for *num_iterations*). The hyperparameters will be randomly sampled from your hyperparameter space (*params_dist*). Any hyperparameters not included in the hyperparameter space will be taken from your original model.
+
+2. On each of the features, it will train the predictor using the training set (which is why setting a predictor is mandatory for random search).
+
+3. It will then evaluate these features on the validation set using the loss function you have defined.
+
+4. It will then copy the best adapt the features of the best model you have trained.
+
+This means that random search can be seen as just another way of fitting a model. In fact, we recommend that you first use the normal *.fit(...)* method to get a rough idea of what sort of features might work and then conduct a thorough hyperparameter optimization. Don't be afraid to let it run for a long period of time - it is time you can spend working on something else. Your time is more precious than your computer's time.
+
+Once you have trained your model using random search, you can call *.to_sql(...)*, *.transform(...)* and *.predict(...)* just as if you had fitted your model using *.fit(...)*:
+
+::
+
+    print(model.to_sql())
+
+    features = model.transform(
+        population_table=population_table_validation,
+        peripheral_tables=[peripheral_table]
+    )
+
+    yhat = model.predict(
+        population_table=population_table_validation,
+        peripheral_tables=[peripheral_table]
+    )
+
+
+If you want to take a look at how the models did in total, you can use *.get_results()*. This will return the following information:
+
+1. 'params': The randomly chosen parameters
+
+2. 'rank': Models ordered by performance
+
+3. 'scores': The scores of the models on the validation set (higher being better).
+
+::
+
+    pprint.pprint(model.get_results())
+
+If you want use the other models, you can access them using *.get_candidates()*. For instance, the second-best model can be accessed as follows:
+
+::
+
+    ix_second = model.get_results()['rank'][1] # Best model is [0], #3 is [2]
+    second_best_model = model.get_candidates()[ix_second]
+
+    print(second_best_model.to_sql())
+
+
+Example 9: Hyperparameter optimization using scikit-learn
+=========================================================
+
+The Python version of AutoSQL can be integrated into a scikit-learn pipeline. This enables us to do hyperparameter optimization using the scikit-learn API. 
+
+When setting up your model there is one thing you have to keep in mind: You have to set the parameter *send* to True, so the model will be automatically sent to the AutoSQL engine without you having to explicitly call *.send()*.
+
+Here is how it works:
+
+::
+
+    population_placeholder = models.Placeholder(
+        name="POPULATION",
+        join_keys=["join_key"],
+        time_stamps=["time_stamp"],
+        targets=["targets"]
+    )
+
+    peripheral_placeholder = models.Placeholder(
+        name="PERIPHERAL",
+        join_keys=["join_key"],
+        time_stamps=["time_stamp"]
+    )
+
+    population_placeholder.join(peripheral_placeholder, "join_key", "time_stamp")
+
+    # Set up the autosql model
+    model = models.Model(
+        population=population_placeholder,
+        peripheral=[peripheral_placeholder],
+        loss_function=loss_functions.SquareLoss(),
+        aggregation=[aggregations.Max(),
+                 aggregations.Avg(),
+                 aggregations.Sum(),
+                 aggregations.Count()],
+        use_timestamps=True,
+        fast_training=False,
+        send=True # Needs to be set to True when using the scikit-learn pipeline
+    )
+
+    # The scikit-learn API does not have a concept
+    # of peripheral tables. So we set it using this
+    # method.
+    model.set_peripheral_tables([peripheral_table])
+
+    # Set up the scikit-learn pipeline.
+    # We are using a simple linear regression in this
+    # example, but any predictor that fits in the
+    # scikit-learn pipeline will do the trick.
+    pipe = pipeline.Pipeline([
+        ('autosql', model),
+        ('predictor', linear_model.LinearRegression())
+    ])
+
+    # Set up the search space for the hyperparameters.
+    # Hyperparameters for autosql are predeced by
+    # "autosql__" and hyperparameters for the predictor
+    # are preceded by "predictor__" (because these are the
+    # names defined in the pipeline). 
+    param_dist = {
+        "autosql__num_features": [5, 10, 20],
+        "autosql__max_length": [2, 4, 8, 16],
+        "autosql__grid_factor": [1.0, 2.0, 4.0, 8.0, 16.0, 32.0],
+        "autosql__shrinkage": [0.1, 0.3],
+        "autosql__min_num_samples": [100, 200, 400],
+        "autosql__regularization": [0.0, 0.01, 0.1],
+        "autosql__share_aggregations": [0.25, 0.5, 0.75, 1.0],
+        "autosql__fast_training": [True, False],
+        "predictor__fit_intercept": [True, False]
+    }
+
+    # Set up a random search over the pipeline.
+    # This will randomly sample from the hyperparameters
+    # ten times.
+    random_search = model_selection.RandomizedSearchCV(
+        pipe,
+        param_distributions=param_dist,
+        n_iter=3,
+        scoring="neg_mean_squared_error"
+    )
+
+    # Do the actual fitting. Note that y will
+    # also be passed to the autosql model,
+    # but the autosql model will ignore it.
+    # y is only relevant for the predictor.
+    random_search.fit(
+        X=population_table_training,
+        y=population_table_training[["targets"]].as_matrix()
+    )
+
+You can look at the results by using the following command:
+
+::
+
+    pprint.pprint(random_search.cv_results_)
+
+It has learned some pretty interesting features:
+
+::
+
+    print(
+        random_search.best_estimator_.named_steps['autosql'].to_sql()
+    )
+
+
+.. code-block:: sql
+
+    CREATE TABLE FEATURE_1 AS
+    SELECT t1.*,
+    COALESCE( SUM( t1.time_stamp - t2.time_stamp ), 0 ) AS feature_1
+    FROM POPULATION_TABLE t1
+    LEFT JOIN PERIPHERAL_TABLE_1 t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.255372 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t2.join_key;
+
+
+    CREATE TABLE FEATURE_2 AS
+    SELECT t1.*,
+    COALESCE( SUM( t1.time_stamp - t2.time_stamp ), 0 ) AS feature_2
+    FROM POPULATION_TABLE t1
+    LEFT JOIN PERIPHERAL_TABLE_1 t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.173368 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t2.join_key;
+
+
+    CREATE TABLE FEATURE_3 AS
+    SELECT t1.*,
+    COALESCE( MAX( t1.time_stamp - t2.time_stamp ), 0 ) AS feature_3
+    FROM POPULATION_TABLE t1
+    LEFT JOIN PERIPHERAL_TABLE_1 t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.203937 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t2.join_key;
+
+
+    CREATE TABLE FEATURE_4 AS
+    SELECT t1.*,
+    COALESCE( AVG( t2.column_01 ), 0 ) AS feature_4
+    FROM POPULATION_TABLE t1
+    LEFT JOIN PERIPHERAL_TABLE_1 t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t2.column_01 > 0.509252 AND t1.time_stamp - t2.time_stamp <= 0.669060 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t2.join_key;
+
+
+    CREATE TABLE FEATURE_5 AS
+    SELECT t1.*,
+    COALESCE( MAX( t2.column_01 ), 0 ) AS feature_5
+    FROM POPULATION_TABLE t1
+    LEFT JOIN PERIPHERAL_TABLE_1 t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.504527 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t2.join_key;
+
+
+    CREATE TABLE FEATURE_6 AS
+    SELECT t1.*,
+    COALESCE( SUM( t1.time_stamp - t2.time_stamp ), 0 ) AS feature_6
+    FROM POPULATION_TABLE t1
+    LEFT JOIN PERIPHERAL_TABLE_1 t2
+    ON t1.join_key = t2.join_key
+    WHERE t2.time_stamp <= t1.time_stamp
+    GROUP BY t2.join_key;
+
+
+    CREATE TABLE FEATURE_7 AS
+    SELECT t1.*,
+    COALESCE( COUNT( * ), 0 ) AS feature_7
+    FROM POPULATION_TABLE t1
+    LEFT JOIN PERIPHERAL_TABLE_1 t2
+    ON t1.join_key = t2.join_key
+    WHERE t2.time_stamp <= t1.time_stamp
+    GROUP BY t2.join_key;
+
+
+    CREATE TABLE FEATURE_8 AS
+    SELECT t1.*,
+    COALESCE( AVG( t2.column_01 ), 0 ) AS feature_8
+    FROM POPULATION_TABLE t1
+    LEFT JOIN PERIPHERAL_TABLE_1 t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t2.column_01 > 0.470528 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t2.join_key;
+
+
+    CREATE TABLE FEATURE_9 AS
+    SELECT t1.*,
+    COALESCE( AVG( t2.column_01 ), 0 ) AS feature_9
+    FROM POPULATION_TABLE t1
+    LEFT JOIN PERIPHERAL_TABLE_1 t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t2.column_01 > 0.468820 AND t1.time_stamp - t2.time_stamp <= 0.506224 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t2.join_key;
+
+
+    CREATE TABLE FEATURE_10 AS
+    SELECT t1.*,
+    COALESCE( AVG( t1.time_stamp - t2.time_stamp ), 0 ) AS feature_10
+    FROM POPULATION_TABLE t1
+    LEFT JOIN PERIPHERAL_TABLE_1 t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.356281 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t2.join_key;
+
+Here is how we can use the pipeline to generate predictions:
+
+::
+
+    # To generate new predictions, it might be necessary to define
+    # new peripheral tables. Here is how this can be done.
+    random_search.best_estimator_.named_steps[
+        'autosql'
+    ].set_peripheral_tables([peripheral_table])
+
+    # Now we can generate features
+    features = random_search.best_estimator_.named_steps[
+        'autosql'
+    ].transform(
+        population_table
+    )
+
+    # Now we can generate predictions
+    yhat = random_search.best_estimator_.predict(
+        X=population_table
+    )
+
+
+This is one of these cases where simply averaging your features will not do you much good:
+
+::
+
+    plt.grid(True)
+    plt.xlabel("targets")
+    plt.ylabel("predictions")
+    plt.scatter(targets.ravel(), features.mean(axis=1)
+    plt.show()
+
+.. image:: Example_8_ensemble.png
+
+But luckily, we have also fitted a proper predictor:
+
+::
+
+    plt.grid(True)
+    plt.xlabel("targets")
+    plt.ylabel("predictions")
+    plt.scatter(targets.ravel(), yhat.ravel())
+    plt.show()
+
+.. image:: Example_8_predictor.png
+
+
+Example 10: Saving and loading models
+=====================================
+
+When you have put in a lot of effort into training your models and optimizing your hyperparameters, you probably want to save them for later use. Or maybe you want to send them to a friend so he or she can use your features as well. This is very easy. You just have to use *Model.save()* and *Model.load()*.
+
+When you set up your model, give it a good name:
+
+::
+
+    population_placeholder = models.Placeholder(
+        name="POPULATION",
+        join_keys=["join_key"],
+        time_stamps=["time_stamp"],
+        targets=["targets"]
+    )
+
+    peripheral_placeholder = models.Placeholder(
+        name="PERIPHERAL",
+        join_keys=["join_key"],
+        time_stamps=["time_stamp"]
+    )
+
+    population_placeholder.join(peripheral_placeholder, "join_key", "time_stamp")
+
+    model1 = models.Model(
+        name="MyModel", # this name will identify the model
+        population=population_placeholder,
+        peripheral=[peripheral_placeholder],
+        predictor=linear_model.LinearRegression(),
+        loss_function=loss_functions.SquareLoss(),
+        aggregation=[aggregations.Sum(), aggregations.Count()],
+        use_timestamps=True,
+        num_features=10,
+        max_length=1,
+        fast_training=False,
+        min_num_samples=200,
+        shrinkage=0.0,
+        grid_factor=1.0,
+        share_aggregations=1.0,
+        num_threads=6
+    ).send()
+
+    model1 = model1.fit(
+        population_table=population_table,
+        peripheral_tables=[peripheral_table]
+    )
+
+Here is how you save your model:
+
+::
+
+    # You should find a file called "MyModel.json" in MY_DIRECTORY
+    MY_DIRECTORY = "/home/patrick"
+
+    engine.set_working_directory(MY_DIRECTORY)
+
+    model1.save()
+
+Here is how you reload it:
+
+::
+
+    engine.set_working_directory(MY_DIRECTORY)
+
+    model2 = models.Model(name="MyModel").load()
+
+
+Because the trained model is saved as a JSON, it is very portable. So even if your friend uses a different operating system, it doesn't matter - she can still load your models. The JSON files store everything about your model, including the hyperparameters you have set. The one thing that is NOT stored are the predictors on top of that. This is for the very obvious reason that they may not be serializable - so figuring out how to ship them is your responsibility.
+
+
+Example 11: Saving and loading data
+====================================
+
+Loading and saving is just as easy as loading and saving models:
+
+We assume that you have two data frames, called PERIPHERAL and POPULATION.
+
+::
+
+    peripheral_on_engine = engine.DataFrame(
+        name="PERIPHERAL",
+        join_keys=["join_key"],
+        time_stamps=["time_stamp"]
+    )
+
+    population_on_engine = engine.DataFrame(
+        name="POPULATION",
+        join_keys=["join_key"],
+        time_stamps=["time_stamp"],
+        targets=["targets"]
+    )
+
+Here is how you save your data:
+
+::
+
+    MY_DIRECTORY = "/home/patrick"
+
+    engine.set_working_directory(MY_DIRECTORY)
+
+    peripheral_on_engine.save()
+
+    population_on_engine.save()
+
+Here is how you reload it:
+
+::
+
+    engine.set_working_directory(MY_DIRECTORY)
+
+    peripheral_on_engine = engine.DataFrame("PERIPHERAL").load()
+
+    population_on_engine = engine.DataFrame("POPULATION").load()
+
+Example 12: Support for pyspark
+====================================
+
+The Python API features optional support for pyspark. That means you can use pyspark, if you want to, but it is not a dependency and you can still use AutoSQL if you do not have pyspark.
+
+Please keep in mind that the AutoSQL Python API returns predictions as a numpy array. This implies that tables with the number of rows of our population table does fit into memory of a single instance. (If your population table is too big for a single instance, then using Python would probably not do you much good and you should seriously consider using Scala and the AutoSQL Scala API.) However, it might be possible that the peripheral tables are much bigger than that and need to be uploaded in a batchwise fashion. The AutoSQL Python API supports this.
+
+For the high-level API, you can simply pass Spark SQL DataFrames instead of pandas DataFrames. The population table will be uploaded in one piece. The peripheral tables will be uploaded in batches of about 100,000 rows each.
+
+::
+
+    model = model.fit(
+        population_table=population_table,
+        peripheral_tables=[peripheral_table]
+    )
+
+    features = model.transform(
+        population_table=population_table,
+        peripheral_tables=[peripheral_table]
+    )
+
+    yhat = model.predict(
+        population_table=population_table,
+        peripheral_tables=[peripheral_table]
+    )
+
+If you want to use the low-level API, we have prepared the method *DataFrame.append_spark_df(...)* for you. This method relies on pyspark and will throw an exception if pyspark cannot be found:
+
+::
+
+    peripheral_on_engine = engine.DataFrame(
+        name="PERIPHERAL",
+        join_keys=["join_key"],
+        time_stamps=["time_stamp"]
+    )
+
+    # This will automatically upload the
+    # Spark DataFrame in a batch-wise fashion.
+    # If you want to upload the Spark DataFrame
+    # in one batch, just use .send(...) instead.
+    peripheral_on_engine.append_spark_df(
+        peripheral_table
+    )
+
+    population_on_engine = engine.DataFrame(
+        name="POPULATION",
+        join_keys=["join_key"],
+        time_stamps=["time_stamp"],
+        targets=["targets"]
+    )
+
+    # You should NOT use the 
+    # DataFrame.append_spark_df(...)
+    # method for the population table.
+    # Instead, upload the population table
+    # in one batch.
+    population_on_engine.send(
+        population_table.toPandas()
+    )
+
+That's it. This is all you need to know for using AutoSQL with pyspark.
+
+Example 13: Consumer Expenditure Data
+=====================================
+
+For your convenience, we have prepared example scripts on a real-world dataset. You are very much encouraged to use these scripts as templates for your own data science project.
+
+The data for this example is public-use microdata provided by the US Bureau of Labor Statistics. It can be downloaded under the following link: https://www.bls.gov/cex/pumd_data.htm. Specifically, you will need the expenditure files (expd) contained in the diaries. Please download the diary for 2015 in CSV format. You can obviously download more than one year and then integrate these extra files into your scripts (see *01_stage_data.py*).
+
+These files contain detailed diaries of what people have purchased in a given month. It also contains a flag that signifies whether the item purchased was bought as a gift. The goal of our exercise is to predict that flag.
+
+In other words, we want to analyze people's consumption patterns to predict whether a particular item has been bought for themselves or for someone else.
+
+Our data science project consists of three steps:
+
+Step 1) Stage your data using *01_stage_data.py*.
+
+This script will read the data from the raw CSV files, do some transformations on the data and then store it as a binary.
+
+Step 2) Build your features.
+
+You can either use hand-tuned hyperparameters *(02a-build_features.py)* or conduct a hyperparameter optimization  *(02b-random_search.py)*.
+
+Step 3) Train a predictor using *03_train_lightgbm_model.py*.
+
+We will use lightgbm for the final predictor. But you could also use xgboost, catboost or any other machine learning library. We are using the scikit-learn API, so using another classifier is very easy. These boosting libraries will usually get better results than a simple random forest.
+
+You will have to define a couple of folders:
+
+**RAW_DATA_FOLDER**: The folder in which you keep the CSV files you have downloaded.
+
+**WORKING_DIRECTORY**: A newly created folder in which the staged data and the models will be stored.
+
+**ANALYSIS_FOLDER**: A newly created folder in which the results of the analysis will be stored (i.e. the generated features in SQL format, ROC curves, importance rankings etc.).
+
+You can install lightgbm using pip:
+
+::
+
+    pip install lightgbm
+
+
+As you can see, doing a data science project can be very easy.
+
+This is mainly for illustration and as a template for future projects. We haven't really put a lot of effort into fine-tuning everything. You should able to beat our results by simply generating more features, conducting an extensive random search or playing with the lightgbm hyperparameters (let alone stacking different models).
+
+FAQ
+===
+
+**What would you consider to be the best-practice approach to using AutoSQL?**
+
+We recommend to first use the normal *.fit(...)* to get an idea what sort of hyperparameters might work. Then, do an extensive random search. Do not optimize the features and the predictor at the same time. Instead, use a simple and fast predictor like a linear function or the scikit-learn random forest with some 50 trees. Once you have your features, you can try more complex predictors and optimize their hyperparameters.
+
+The best idea is to use the scripts we have prepared for the Consumer Expenditure Data as a template.
+
+....
+
+**Which hyperparameters have the most impact?**
+
+There are a few lessons we have learned so far:
+
+1) The ideal **num_features** is often more than you think. 
+
+From our experience with hand-crafted features we are used to having some 30-50 features. But many problems, particularly for business-related datasets, often contain millions of samples of labeled data. That means if we create some 1000 features, the relationship of features to samples will still be below 0.1%. So the only thing that should stop us from generating 1000 features are memory limitations. But if you have sufficient memory - do try to generate 1000 features and see what happens.
+
+2) Playing with **share_aggregations** can really make a difference.
+
+Every time a new feature is generated, the aggregation will be taken from a random subsample of possible aggregations and values to be aggregated. *share_aggregations* determines the size of that subsample.
+
+We view share aggregations as the parameter to control the accuracy vs. variance trade-off: A higher *share_aggregations* means more accurate features, whereas a lower *share_aggregations* means greater variance. 
+
+The ideal value for *share_aggregations* can vary greatly with the dataset. We have seen datasets (such as our example dataset) where 0.25 is appropriate, but we have also had a value of 0.05.
+
+The most extreme way to get great variance at the expense of accuracy is **round_robin**: When *round_robin=True*, you will be guaranteed to have a great variety of features (but many of them might be meaningless).
+
+3) Put some effort into regularization.
+
+You can regularize your features using **regularization**, **min_num_samples** or **max_length**. Putting some effort into this can improve your results.
+
+4) A good data model trumps everything else.
+
+But the most important thing is to think about your data model. We have tried to make the API as easy and flexible as possible by introducing our Placeholder API. Thinking about your data model (don't forget about the units) is often a better use of your time than microtuning your hyperparameters. After all, you have got random search for your hyperparameters, but random search cannot design your data model.
+
+....
+
+**Would you recommend many simple features or few complex features?**
+
+We would certainly recommend many simple rather than few very complex features. We think it important, to keep the features readable, and we had also better experience with it. When we say *simple*, we mean up to 3-4 subconditions, which is probably far more complex than most hand-crafted you have ever written.
+
+....
+
+**What can I do to keep my features simple and avoid overfitting?**
+
+AutoSQL offers numerous parameters to regularize your features to keep them readable and avoid overfitting. Here are some:
+
+1. **regularization**: A higher *regularization* factor is probably the most elegant way to regularize your features and based on solid statistical theory.
+
+2. **min_num_samples**: We also got some pretty good results by playing with *min_num_samples*. There is also a very good theoretical explanation, why increasing *min_num_samples* will lead to good regularization.
+
+3. **max_length**: This parameter imposes a hard upper limit on the length of your subconditions.
+
+....
+
+**The features AutoSQL churns out are too similar to each other. What can I do?**
+
+You should think AutoSQL as an ensemble learner with support for relational databases. So the concept of the accuracy-variance-tradeoff in ensemble learning theory can be applied to AutoSQL, In order to control the variance of your features, two parameters come to mind:
+
+1. **share_aggregations**: Every time a new feature is generated, the aggregation will be taken from a random subsample of possible aggregations and values to be aggregated. *share_aggregations* determines the size of that subsample. A lower value for *share_aggregations* will therefore increase the variance of your features.
+
+2. **round_robin**: When you set *round_robin=True*, you force AutoSQL to use a different aggregation every time a new feature is generated. This is guaranteed to get you maximum variance.
+
+....
+
+**What can I do to reduce training time?**
+
+The following parameters can be used to reduce your training time:
+
+1. **fast_training**: Obviously, setting *fast_training* to True, will reduce your training time, but this would probably come at the expense of feature quality. So you should use *fast_training* in combination with *num_candidates*.
+
+2. **share_aggregations**: Every time a new feature is generated, the aggregation will be taken from a random subsample of possible aggregations and values to be aggregated. *share_aggregations* determines the size of that subsample. A lower value for *share_aggregations* will therefore increase training time significantly.
+
+3. **round_robin**: Setting *round_robin=True* will almost certainly reduce your training time.
+
+4. **regularization**, **min_num_samples**,  **max_length**: These parameters are used to regularize your features and keep them simple. Simpler features take less time to train. So anything you do to regularize your features will also impact training time.
+
+5. **aggregations**: Keep in mind that some aggregations, such as MIN and MAX, are far more expensive than others.
+
+6. **grid_factor**: A higher *grid_factor* will cause AutoSQL to try more critical values for your numeric features, which obviously takes time. But the time penalty is quite low compared to the increased accuracy you get.
+
+There is another thing you can do: You could invest in **AutoSQL Professional**, which parallelizes the AutoSQL engine without you having to change a single line of your Python code. This will obviously speed up training time.
+
+....
+
+**How does the data set influence training time?**
+
+It may sound very counterintuitive, but **size does not matter much**! AutoSQL uses a bootstrapping approach and uses a subsample of your population table. A new subsample is generated for each feature. So whether your population table consists of 500 lines, as in our examples or 50,000,000 lines does not matter all that much.
+
+What does matter, is the number of unique join keys is small relative to the size of your dataset. If there are a lot of entries to aggregate in your peripheral table for every entry in your population table (as you might get in a time series problem), that will take a while.
+
+By contrast, if you are doing a churn use case with many customers and few activities per customer, that will be fast.
+
+You should know that, categorical features tend to take a bit longer than numeric features.
+
+Troubleshooting
+================
+
+
+**socket.error: [Errno 111] Connection refused**
+
+You either forgot to start the AutoSQL engine or you started the AutoSQL engine on a different port then the one AutoSQL wants to connect to.
+
+....
+
+**'...' not found. Did you maybe forget to call .send()?**
+
+The error message really says it all: You need call *.send()*. When constructing your Model or DataFrame, all you really do is to construct it in Python, but not on the AutoSQL engine. There is no communication with the AutoSQL engine unless you call *.send()*. So if you do not *.send()* your model or DataFrame to the AutoSQL engine, it cannot find it.
+
+There is one exception to this rule: There is a parameter called *send* in Model, which you can set to True. Then your model will be automatically sent to the AutoSQL engine once it is created. This is necessary when are trying to put your model in a scikit-learn pipeline. 
+
+....
+
+**bind: Address already in use**
+
+You are trying to run the engine on a port that is in use by some other application. This may either be an AutoSQL process you have previously started or some other program. You can run the AutoSQL engine on a different port like this (8888 being a placeholder for the port you want to use):
+
+::
+
+./autosql-engine-single 8888
+
+Then, in Python, you have to tell your AutoSQL model to connect to the new port:
+
+::
+
+    import autosql.models as models
+    
+    model = models.Model(port=8888).send()
+
+....
+
+**Could not connect to time server!**
+
+The AutoSQL engine compares the system time to a time server to prevent manipulation. This happens only once, when you launch the engine. This means you need an active connection to the internet when you launch the engine. But once the engine is launched, you can safely close the connection.
+
+....
+
+**IndexError: index 0 is out of bounds for axis 0 with size 0**
+
+This happens when the AutoSQL Engine shuts down unexpectedly. There can be two reasons for this: 
+
+1) Somebody has inadvertently shut down the AutoSQL Engine.
+
+2) The AutoSQL Engine has crashed. This should never happen and we kindly ask you to copy the log of AutoSQL Engine and report it to us, so we can make sure these sort of things do not happen in the future.
+
+In case you are unsure what we mean by the log of the engine, it is in the terminal window in which you run the engine and looks like this:
+
+::
+
+    Wed Mar 28 13:31:54 2018
+    Command sent by 127.0.0.1:
+    {"type_": "fit", "name_": "expenditure_model", "peripheral_names_": ["EXPD"], "population_name_": "EXPD_TRAINING", "aggregation_": ["AVG", "COUNT", "COUNT DISTINCT", "COUNT MINUS COUNT DISTINCT", "MAX", "MEDIAN", "MIN", "SUM"], "loss_function_": "CrossEntropyLoss", "use_timestamps_": true, "num_features_": 50, "max_length_": 4, "fast_training_": false, "min_num_samples_": 100, "shrinkage_": 0.0, "sampling_factor_": 1.0, "round_robin_": false, "share_aggregations_": 0.08, "grid_factor_": 1.0, "regularization_": 0.0, "seed_": 5489, "num_threads_": 0}
+
+    Wed Mar 28 13:31:54 2018
+    There are 64 possible aggregations.
+
+    Wed Mar 28 13:31:55 2018
+    Trained FEATURE_1.
+
+    Wed Mar 28 13:31:57 2018
+    Trained FEATURE_2.
+
+    Wed Mar 28 13:31:57 2018
+    Trained FEATURE_3.
+
+....
+
+**Conflict in categories** or **Conflict in join keys encoding**
+
+The AutoSQL engine stores categorical data and join keys as an integer to save memory and runtime. The mapping of the strings to the integers happens in Python. However, it is very important that the same join keys or categories are always mapped to the same integers. This is why the AutoSQL Engine makes sure that this is the case (in other words the mappings are conflict-free) and throws this error when there is a conflict.
+
+To avoid this from happening you have to load all of the data into the AutoSQL Engine during the same Python session. If this is not possible, then reload the previously loaded data by using either the *.load()* or the *.refresh()* method contained in the engine.DataFrame class.
+
+::
+
+    # Use either .load() or .refresh().
+    # If you have not shut down the AutoSQL engine in the meantime, .refresh() is faster.
+    # Otherwise, use .load(). .load() calls .refresh(), so there is no reason to call both.
+    previous_data_frame = engine.DataFrame("PREVIOUS_DATA_FRAME").load()
+    previous_data_frame = engine.DataFrame("PREVIOUS_DATA_FRAME").refresh()
+
+    new_data_frame = engine.DataFrame("NEW_DATA_FRAME")
+    new_data_frame.send(some_data)
+
+....
+
+**std::bad_alloc**
+
+This is one is a bit tricky and you need to understand a bit about how AutoSQL works.
+
+std::bad_alloc usually means that the program is trying to allocate too much memory. With AutoSQL this may happen for two reasons:
+
+1. You are trying to load too much data into the AutoSQL engine. In that case the answer is simple: Reduce the size of your dataset.
+
+2. The number of unique join keys is small relative to the size of your dataset. For instance, if you have 100,000 samples in your population table but only 10 join keys, that means that there are 10,000 samples per join key on average. Let us assume your peripheral table has 100,000 samples as well. That means there are then 1,000,000,000 (= 100,000 * 10,000 ) matches between the two tables. AutoSQL will create create structs for each match in order to be able to handle them efficiently. Each of these structs has a few bytes only, but as you can see they add up to take several gigabytes of memory.
+
+The most elegant way to handle the second problem is to subsample from the population table, by setting the parameter *sampling_factor* appropriately. When the *sampling_factor* is set to 1.0 (the default parameter), it will choose about 2,000 samples from the population table, which in our example would lead to 20,000,000 (= 2,000 * 10,000 ) matches. 2,000 samples should be sufficient for most cases. Remember: This is a bootstrapping procedure and you will get different a different set of 2,000 samples for every feature that you fit.
+
+*Note*: This is only an issue during *fit* or *fit*. In *transform* or *predict*, this will not be an issue.
+
+*Note*: This will also not be an issue, if the number of join keys is large relative to the size of the dataset. In our example above, we had two tables of size 100,000 and 10 join keys. If instead of 10 join keys, we had 1,000 join keys, then there would be about 100 samples per join key. In other words, the number of matches would be 10,000,000 (= 100,000 * 100 ), which shouldn't create any problems. If in addition, you set the *sampling_factor* to 1.0 (again, what would be a good reason not to sample?), the number of matches is 200,000 (= 2,000 * 100 ). That means that the structs take up a few megabytes of memory - no problem.
+
+*Lesson learned:* You can use AutoSQL for time series or other datasets with a low ratio of join keys to data. But if you do so, choose your *sampling_factor* wisely.
+
+
+API Documentation
+=================
+
+Submodules
+----------
+
+autosql\.aggregations module
+----------------------------
+
+.. automodule:: autosql.aggregations
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+autosql\.engine module
+----------------------
+
+.. automodule:: autosql.engine
+    :members: DataFrame, load, set_working_directory, shutdown
+    :undoc-members:
+    :show-inheritance:
+
+autosql\.loss\_functions module
+-------------------------------
+
+.. automodule:: autosql.loss_functions
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+autosql\.metrics module
+-----------------------
+
+.. automodule:: autosql.metrics
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+autosql\.models module
+----------------------
+
+.. automodule:: autosql.models
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: autosql
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
+
+
+

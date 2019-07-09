@@ -1,0 +1,326 @@
+Example 2: Using the low-level API
+-----------------------------------
+
+For a full working example, please refer to :ref:`example_02_low_level_api.R`.
+
+The high-level API is fine and reasonably easy, but there are disadvantages: Most importantly, it forces you to keep the data in the memory twice: Once as pandas.DataFrame() objects and once more as a copy in the engine. When your dataset is not too large or you have a lot of memory, then the high-level API is fine. But if memory is a real constraint, you want to think about using the low-level API (it really is not that much harder anyway).
+
+For this example, we will create an artificial dataset that contains one POPULATION table and one PERIPHERAL table. The target variable is defined as follows:
+
+.. code-block:: sql
+
+    SELECT COUNT( * )
+    FROM POPULATION t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.5 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.join_key,
+         t1.time_stamp;
+
+Building the model
+^^^^^^^^^^^^^^^^^^
+
+For the low-level API, we first want to upload the data to the engine. 
+
+.. code-block:: R
+
+    population.table.on.engine <- create.autosql.data.frame(
+        name="POPULATION",
+        join.keys=c( "join_key" ),
+        time.stamps=c( "time_stamp" ),
+        targets=c( "targets" )
+    )
+
+    # The low-level API allows you to load the data in
+    # chunks. Now, we load the first chunk...
+    population.table.on.engine <- send.autosql.data.frame(
+        population.table.on.engine,
+        population.table[1:20,]
+    )
+
+    # ...now, we load the second chunk.
+    population.table.on.engine <- append.to.autosql.data.frame(
+        population.table.on.engine,
+        population.table[21:nrow(population.table),]
+    )
+
+    peripheral.table.on.engine <- create.autosql.data.frame(
+        name="PERIPHERAL",
+        join.keys=c( "join_key" ),
+        time.stamps=c( "time_stamp" )
+    )
+
+    peripheral.table.on.engine <- send.autosql.data.frame(
+        peripheral.table.on.engine,
+        peripheral.table[1:10000,]
+    )
+
+    peripheral.table.on.engine <- append.to.autosql.data.frame(
+        peripheral.table.on.engine,
+        peripheral.table[10001:nrow(peripheral.table),]
+    )
+
+
+Now the data is no longer in R. Instead, it is kept in the AutoSQL engine. The objects created by this procedure are handles, which do not contain any actual data. As you can see, it also possible to load your data in a piecewise fashion. This is useful when your dataset is large and distributed over several CSV files.
+
+Setting up your placeholders actually becomes easier.
+
+.. code-block:: R
+
+    population.placeholder <- create.autosql.placeholder("POPULATION")
+
+    peripheral.placeholder <- create.autosql.placeholder("PERIPHERAL")
+
+    population.placeholder <- join.autosql.placeholder(
+        population.placeholder,
+        peripheral.placeholder,
+        "join_key",
+        "time_stamp"
+    )
+
+    model = create.autosql.model(
+        name="Model 1",
+        population=population.placeholder,
+        peripheral=list(peripheral.placeholder),
+        aggregation=list(
+        autosql.count, 
+        autosql.sum
+        ),
+        use.timestamps=TRUE,
+        num.features=10,
+        max.length=1,
+        fast.training=FALSE,
+        min.num.samples=200,
+        shrinkage=0.0,
+        grid.factor=1.0,
+        share.aggregations=1.0,
+        feature.selector=autosql.create.xgboost.regressor(),
+        predictor=autosql.create.xgboost.regressor()
+    )
+
+    send.autosql.model(model)
+
+Everything else is pretty much the same. You just have to pass the *autosql.engine.DataFrame* object instead of a *pandas.DataFrame*. 
+
+.. code-block:: R
+
+    model = fit.autosql.model(
+        model,
+        population.table.on.engine,
+        peripheral.table.on.engine
+    )
+
+    features = autosql.model.transform(
+        model,
+        population.table.on.engine,
+        peripheral.table.on.engine
+    )
+
+    predictions = autosql.model.predict(
+        model,
+        population.table.on.engine,
+        peripheral.table.on.engine
+    )
+
+Generating SQL code
+^^^^^^^^^^^^^^^^^^^^^
+
+Once again, you can generate SQL code using *autosql.model.to.sql(...)*:
+
+.. code-block:: R
+
+    cat( autosql.model.to.sql(model) )
+
+.. code-block:: sql
+
+    CREATE TABLE FEATURE_1 AS
+    SELECT COUNT( * ) AS feature_1,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.49607435974183928 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_2 AS
+    SELECT COUNT( * ) AS feature_2,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.50005617269617941 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_3 AS
+    SELECT COUNT( * ) AS feature_3,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.503629980961387 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_4 AS
+    SELECT COUNT( * ) AS feature_4,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.50353410921761477 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_5 AS
+    SELECT COUNT( * ) AS feature_5,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.49851269369130541 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_6 AS
+    SELECT COUNT( * ) AS feature_6,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.50089469254785479 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_7 AS
+    SELECT COUNT( * ) AS feature_7,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.503629980961387 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_8 AS
+    SELECT COUNT( * ) AS feature_8,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.50110588950578139 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_9 AS
+    SELECT COUNT( * ) AS feature_9,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.503629980961387 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+
+
+    CREATE TABLE FEATURE_10 AS
+    SELECT COUNT( * ) AS feature_10,
+           t1.join_key,
+           t1.time_stamp
+    FROM (
+         SELECT *,
+            ROW_NUMBER() OVER ( ORDER BY join_key, time_stamp ASC ) AS rownum
+         FROM POPULATION
+    ) t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.49851269369130541 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.rownum,
+         t1.join_key,
+         t1.time_stamp;
+

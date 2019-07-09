@@ -1,0 +1,24 @@
+Example 14: Consumer Expenditure Data
+----------------------------------------
+
+For your convenience, we have prepared example scripts on a real-world dataset. You are very much encouraged to use these scripts as templates for your own data science project.
+
+The data for this example is public-use microdata provided by the US Bureau of Labor Statistics. It can be downloaded under the following link: https://www.bls.gov/cex/pumd_data.htm. Specifically, you will need the expenditure files (expd) contained in the diaries. Please download the diary for 2015 in CSV format. You can obviously download more than one year and then integrate these extra files into your scripts (see :ref:`01_stage_data.py`).
+
+These files contain detailed diaries of what people have purchased in a given month. It also contains a flag that signifies whether the item purchased was bought as a gift. The goal of our exercise is to predict that flag.
+
+In other words, we want to analyze people's consumption patterns to predict whether a particular item has been bought for themselves or for someone else.
+
+Our data science project consists of two steps:
+
+Step 1) Stage your data using :ref:`01_stage_data.py`.
+
+This script will read the data from the raw CSV files, do some transformations on the data and then store it as a binary. You will have to define the **RAW_DATA_FOLDER**. This is the folder in which you keep the CSV files you have downloaded.
+
+Step 2) Build your features.
+
+You can either use hand-tuned hyperparameters (:ref:`02a_build_features.py`) or conduct a hyperparameter optimization  (:ref:`02b_random_search.py`).
+
+As you can see, doing a data science project can be very easy.
+
+This is mainly for illustration and as a template for future projects. We haven't really put a lot of effort into fine-tuning everything. You should able to beat our results by simply generating more features, conducting an extensive random search or playing with the hyperparameters.

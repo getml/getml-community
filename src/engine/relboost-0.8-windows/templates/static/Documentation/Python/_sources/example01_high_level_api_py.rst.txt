@@ -1,0 +1,184 @@
+.. _example_01_high_level_1.py:
+
+=============
+example_01_high_level_1.py
+=============
+
+::
+
+    # Copyright 2018 The SQLNet Company GmbH
+
+    # Permission is hereby granted, free of charge, to any person obtaining a copy
+    # of this software and associated documentation files (the "Software"), to
+    # deal in the Software without restriction, including without limitation the
+    # rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+    # sell copies of the Software, and to permit persons to whom the Software is
+    # furnished to do so, subject to the following conditions:
+
+    # The above copyright notice and this permission notice shall be included in
+    # all copies or substantial portions of the Software.
+
+    # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    # AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+    # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+    # DEALINGS IN THE SOFTWARE.
+
+    import numpy as np
+    import pandas as pd
+    import scipy.stats
+    import sklearn.linear_model as linear_model
+
+    import autosql.aggregations as aggregations
+    import autosql.engine as engine
+    import autosql.loss_functions as loss_functions
+    import autosql.models as models
+    import autosql.predictors as predictors
+
+    #----------------
+
+    engine.set_project("examples")
+
+    #----------------
+    # Generate artificial dataset
+    # The problem we create looks like this:
+    #
+    # SELECT COUNT( * )
+    # FROM POPULATION t1
+    # LEFT JOIN PERIPHERAL t2
+    # ON t1.join_key = t2.join_key
+    # WHERE (
+    #    ( t1.time_stamp - t2.time_stamp <= 0.5 )
+    # ) AND t2.time_stamp <= t1.time_stamp
+    # GROUP BY t1.join_key,
+    #          t1.time_stamp;
+    #
+    # Don't worry - you don't really have to understand this part.
+    # This is just how we generate the example dataset. To learn more
+    # about AutoSQL just skip to "Build model".
+
+    population_table = pd.DataFrame()
+    population_table["column_01"] = np.random.rand(500) * 2.0 - 1.0
+    population_table["join_key"] = range(500)
+    population_table["time_stamp_population"] = np.random.rand(500)
+
+    peripheral_table = pd.DataFrame()
+    peripheral_table["column_01"] = np.random.rand(125000) * 2.0 - 1.0
+    peripheral_table["join_key"] = [
+        int(500.0 * np.random.rand(1)[0]) for i in range(125000)]
+    peripheral_table["time_stamp_peripheral"] = np.random.rand(125000)
+
+    # ----------------
+
+    temp = peripheral_table.merge(
+        population_table[["join_key", "time_stamp_population"]],
+        how="left",
+        on="join_key"
+    )
+
+    # Apply some conditions
+    temp = temp[
+        (temp["time_stamp_peripheral"] <= temp["time_stamp_population"]) &
+        (temp["time_stamp_peripheral"] >= temp["time_stamp_population"] - 0.5)
+    ]
+
+    # Define the aggregation
+    temp = temp[["column_01", "join_key"]].groupby(
+        ["join_key"],
+        as_index=False
+    ).count()
+
+    temp = temp.rename(index=str, columns={"column_01": "targets"})
+
+    population_table = population_table.merge(
+        temp,
+        how="left",
+        on="join_key"
+    )
+
+    del temp
+
+    # ----------------
+
+    population_table = population_table.rename(
+        index=str, columns={"time_stamp_population": "time_stamp"})
+
+    peripheral_table = peripheral_table.rename(
+        index=str, columns={"time_stamp_peripheral": "time_stamp"})
+
+    # ----------------
+
+    # Replace NaN targets with 0.0 - target values may never be NaN!.
+    population_table["targets"] = [
+        0.0 if val != val else val for val in population_table["targets"]
+    ]
+
+    # ----------------
+    # Build model
+
+    population_placeholder = models.Placeholder(
+        name="POPULATION",
+        numerical=["column_01"],
+        join_keys=["join_key"],
+        time_stamps=["time_stamp"],
+        targets=["targets"]
+    )
+
+    peripheral_placeholder = models.Placeholder(
+        name="PERIPHERAL",
+        numerical=["column_01"],
+        join_keys=["join_key"],
+        time_stamps=["time_stamp"]
+    )
+
+    population_placeholder.join(peripheral_placeholder, "join_key", "time_stamp")
+
+    model = models.Model(
+        population=population_placeholder,
+        peripheral=[peripheral_placeholder],
+        feature_selector=predictors.XGBoostRegressor(
+        booster="gblinear", reg_alpha=0.0, n_estimators=1),
+        predictor=predictors.XGBoostRegressor(
+        booster="gbtree", reg_alpha=10.0, gamma=1.0, n_estimators=100),
+        #predictor=linear_model.LinearRegression(),
+        loss_function=loss_functions.SquareLoss(),
+        aggregation=[aggregations.Sum(), aggregations.Count()],
+        use_timestamps=True,
+        num_features=10,
+        num_selected_features=5,
+        max_length=1,
+        fast_training=False,
+        min_num_samples=200,
+        shrinkage=0.1,
+        grid_factor=1.0,
+        share_aggregations=1.0
+    ).send()
+
+    # ----------------
+    # Fit model
+
+    model = model.fit(
+        population_table=population_table,
+        peripheral_tables=[peripheral_table]
+    )
+
+    scores = model.score(
+        population_table=population_table,
+        peripheral_tables=[peripheral_table]
+    )
+
+    features = model.transform(
+        population_table=population_table,
+        peripheral_tables=[peripheral_table]
+    )
+
+    yhat = model.predict(
+        population_table=population_table,
+        peripheral_tables=[peripheral_table]
+    )
+
+    print(model.to_sql())
+
+

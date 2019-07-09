@@ -1,0 +1,207 @@
+.. _example10_saving_models.py:
+
+=============
+example10_saving_models.py
+=============
+
+::
+
+    # Copyright 2018 The SQLNet Company GmbH
+
+    # Permission is hereby granted, free of charge, to any person obtaining a copy
+    # of this software and associated documentation files (the "Software"), to
+    # deal in the Software without restriction, including without limitation the
+    # rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+    # sell copies of the Software, and to permit persons to whom the Software is
+    # furnished to do so, subject to the following conditions:
+
+    # The above copyright notice and this permission notice shall be included in
+    # all copies or substantial portions of the Software.
+
+    # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    # AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+    # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+    # DEALINGS IN THE SOFTWARE.
+
+    import matplotlib.pyplot as plt
+    import numpy as np
+    import pandas as pd
+    import scipy.stats
+    import sklearn.linear_model as linear_model
+
+    import autosql.aggregations as aggregations
+    import autosql.engine as engine
+    import autosql.loss_functions as loss_functions
+    import autosql.models as models
+
+    #----------------
+
+    engine.set_project("examples")
+
+    #----------------
+    # Generate artificial dataset
+    # The problem we create looks like this:
+    #
+    # SELECT t1.*,
+    # COALESCE( COUNT( * ), 0 ) AS target
+    # FROM POPULATION t1
+    # LEFT JOIN PERIPHERAL t2
+    # ON t1.join_key = t2.join_key
+    # WHERE t1.time_stamp - t2.time_stamp <= 0.5
+    # AND t2.time_stamp  <= t1.time_stamp
+    # GROUP BY t2.join_key;
+
+
+    population_table = pd.DataFrame()
+    population_table["column_01"] = np.random.rand(500) * 2.0 - 1.0
+    population_table["join_key"] = range(500)
+    population_table["time_stamp_population"] = np.random.rand(500)
+
+    peripheral_table = pd.DataFrame()
+    peripheral_table["column_01"] = np.random.rand(125000) * 2.0 - 1.0
+    peripheral_table["join_key"] = [
+        int(500.0 * np.random.rand(1)[0]) for i in range(125000)]
+    peripheral_table["time_stamp_peripheral"] = np.random.rand(125000)
+
+    # ----------------
+
+    temp = peripheral_table.merge(
+        population_table[["join_key", "time_stamp_population"]],
+        how="left",
+        on="join_key"
+    )
+
+    # Apply some conditions
+    temp = temp[
+        (temp["time_stamp_peripheral"] <= temp["time_stamp_population"]) &
+        (temp["time_stamp_peripheral"] >= temp["time_stamp_population"] - 0.5)
+    ]
+
+    # Define the aggregation
+    temp = temp[["column_01", "join_key"]].groupby(
+        ["join_key"],
+        as_index=False
+    ).count()
+
+    temp = temp.rename(index=str, columns={"column_01": "targets"})
+
+    population_table = population_table.merge(
+        temp,
+        how="left",
+        on="join_key"
+    )
+
+    del temp
+
+    # ----------------
+
+    population_table = population_table.rename(
+        index=str, columns={"time_stamp_population": "time_stamp"})
+
+    peripheral_table = peripheral_table.rename(
+        index=str, columns={"time_stamp_peripheral": "time_stamp"})
+
+    # ----------------
+
+    # Replace NaN targets with 0.0 - target values may never be NaN!.
+    population_table["targets"] = [
+        0.0 if val != val else val for val in population_table["targets"]
+    ]
+
+    # ---------------------------------------------------------
+    # Fit model
+
+    population_placeholder = models.Placeholder(
+        name="POPULATION",
+        numerical=["column_01"],
+        join_keys=["join_key"],
+        time_stamps=["time_stamp"],
+        targets=["targets"]
+    )
+
+    peripheral_placeholder = models.Placeholder(
+        name="PERIPHERAL",
+        numerical=["column_01"],
+        join_keys=["join_key"],
+        time_stamps=["time_stamp"]
+    )
+
+    population_placeholder.join(peripheral_placeholder, "join_key", "time_stamp")
+
+    model1 = models.Model(
+        population=population_placeholder,
+        peripheral=[peripheral_placeholder],
+        predictor=linear_model.LinearRegression(),
+        loss_function=loss_functions.SquareLoss(),
+        aggregation=[aggregations.Sum(), aggregations.Count()],
+        use_timestamps=True,
+        num_features=10,
+        max_length=1,
+        fast_training=False,
+        min_num_samples=200,
+        shrinkage=0.0,
+        grid_factor=1.0,
+        share_aggregations=1.0
+    ).send()
+
+    model1 = model1.fit(
+        population_table=population_table,
+        peripheral_tables=[peripheral_table]
+    )
+
+    model1.score(
+        population_table=population_table,
+        peripheral_tables=[peripheral_table]
+    )
+
+    # ---------------------------------------------------------
+    # Save the trained model as a JSON
+
+    model1.save()
+
+    # ---------------------------------------------------------
+    # Build a new model and load the parameters from the old model
+
+    model2 = models.Model(name=model1.name).load()
+
+    # ---------------------------------------------------------
+    # When the model is already loaded in the AutoSQL engine
+    # you can just use .refresh(...) to load all of the hyperparameters
+
+    model3 = models.Model(name=model1.name).refresh()
+
+    # ---------------------------------------------------------
+    # Now the features generated by the two models are the same
+
+    features1 = model1.transform(
+        population_table=population_table,
+        peripheral_tables=[peripheral_table]
+    )
+
+    features2 = model2.transform(
+        population_table=population_table,
+        peripheral_tables=[peripheral_table]
+    )
+
+    assert (features1 == features2).all(), "Nothing should happen when you run this line!"
+
+    # ---------------------------------------------------------
+    # And the generated SQL code is the same as well
+
+    print(model1.to_sql())
+
+    print(model2.to_sql())
+
+    assert model1.to_sql() == model2.to_sql(), "Nothing should happen when you run this line!"
+
+    # ---------------------------------------------------------
+    # We can also plot this
+
+    plt.grid(True)
+    plt.xlabel("targets")
+    plt.ylabel("predictions")
+    plt.scatter(features1.mean(axis=1), features2.mean(axis=1))
+    plt.show()

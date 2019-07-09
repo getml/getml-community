@@ -1,0 +1,120 @@
+Installation
+===================
+
+Step 1: Install the AutoSQL engine for your operating system. 
+-------------------------------------------------------------------
+
+You do **NOT** need root or admin rights to install the AutoSQL engine.
+
+On **Linux** and **macOS**, use *cd* to get into the folder that contains *setup.sh*. Then, run setup.sh.
+
+::
+
+    cd /path/to/your/folder
+    sh setup.sh
+
+You should now get a message that AutoSQL was successfully installed.
+
+On **Windows**, no installation is necessary other than unzipping the ZIP-file.
+
+Step 2: Install the dependencies (you can skip this step, if you are using Anaconda).
+-------------------------------------------------------------------------------------
+
+AutoSQL depends on numpy, scipy and pandas. For the examples to run smoothly, you also need matplotlib and scikit-learn. If you have all of these installed already (they are all part of Anaconda), go on. Otherwise, open a console and enter the following:
+
+::
+
+    pip install numpy scipy pandas matplotlib sklearn
+
+If you are on an Unix system, you possibly need root rights for this, so you might want to use *sudo* (on Ubuntu/Linux Mint/Debian/...) or *su* (on Red Hat Enterprise Linux/Fedora/CentOS/...).
+
+Step 3: Install the AutoSQL Python library. 
+--------------------------------------------------------
+
+Use the *cd* command to get into the folder Python, which contains *setup.py*, like this:
+
+::
+
+    cd /path/to/your/folder
+
+on Windows:
+
+::
+
+    cd C:\path\to\your\folder
+
+
+Then, type:
+
+::
+
+    python setup.py install
+
+The installation should take about one second. Again, you might need root rights for this.
+
+.. image:: screenshot_python_install.png
+
+Then, type "python" into your terminal and import autosql, like this:
+
+::
+
+    import autosql.models
+
+If that worked well, you are done. We hope you enjoy using AutoSQL.
+
+**Troubleshooting**
+------------------------
+
+Problem 1: My OS tells me I don't have the rights to install this.
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you are on Linux and operating system tells you that you don't have the proper rights to do this, try something like this (Ubuntu/Linux Mint/Debian/...):
+
+::
+
+    sudo pip install numpy scipy matplotlib sklearn
+
+or
+
+::
+
+    sudo python setup.py install
+
+or this (Red Hat Enterprise Linux/Fedora/CentOS/...):
+
+::
+
+    su
+    pip install numpy scipy matplotlib sklearn
+
+or
+
+::
+
+    su
+    python setup.py install
+
+
+It will ask you for your user password and then you can install the library.
+
+Problem 2: When I type python into the terminal, it can't find Python.
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If this happens, you are probably using Anaconda and you haven't set the PATH variable. You can solve this problem in one of two ways:
+
+1. Reinstall Anaconda. When they ask you to change the PATH variable, say yes. They recommend you not to do it, but do it anyway.
+
+2. Find the folder in Anaconda that contains the python application. Then add that folder to your PATH variable. 
+
+How to add a folder to your PATH variable depends on your operating system. For instance, on Windows, it works like this:
+
+::
+
+    setx PATH "%PATH%;C:\path\to\your\folder\;"
+
+If you aren't really sure about this, your better option is probably to reinstall Anaconda and let them change the path for you.
+
+Problem 3: I have installed the AutoSQL Python library, but now Python can't find it
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This happens when you have several Python installations on your computer (for instance, an Anaconda version and another version). Again, this problem can be solved by editing the PATH variable.

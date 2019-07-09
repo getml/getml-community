@@ -1,0 +1,154 @@
+.. _02a_build_features.py:
+
+=============
+02a_build_features.py
+=============
+
+::
+
+    # Copyright 2018 The SQLNet Company GmbH
+
+    # Permission is hereby granted, free of charge, to any person obtaining a copy
+    # of this software and associated documentation files (the "Software"), to
+    # deal in the Software without restriction, including without limitation the
+    # rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+    # sell copies of the Software, and to permit persons to whom the Software is
+    # furnished to do so, subject to the following conditions:
+
+    # The above copyright notice and this permission notice shall be included in
+    # all copies or substantial portions of the Software.
+
+    # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    # AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+    # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+    # DEALINGS IN THE SOFTWARE.
+
+    import datetime
+    import os
+
+    import autosql.aggregations as aggregations
+    import autosql.engine as engine
+    import autosql.loss_functions as loss_functions
+    import autosql.models as models
+    import autosql.predictors as predictors
+    import matplotlib.pyplot as plt
+    import numpy as np
+    import pandas as pd
+    import scipy.stats
+    import sklearn.linear_model as linear_model
+    import sklearn.ensemble as ensemble
+    import sklearn.metrics as metrics
+
+    # -----------------------------------------------------------------------------
+
+    engine.set_project("PUMD Expenditure")
+
+    # -----------------------------------------------------------------------------
+    # Reload the data - if you haven't shut down the engine since loading the data
+    # in the first script, you can also call .refresh()
+
+    expd_training = engine.DataFrame("EXPD_TRAINING").load()
+
+    expd_validation = engine.DataFrame("EXPD_VALIDATION").load()
+
+    expd_testing = engine.DataFrame("EXPD_TESTING").load()
+
+    expd_all = engine.DataFrame("EXPD").load()
+
+    # -----------------------------------------------------------------------------
+    # Build data model - in this case, the data model is quite simple an consists
+    # of two self-joins
+
+    expd_placeholder = models.Placeholder("EXPD")
+
+    expd_placeholder2 = models.Placeholder("EXPD")
+
+    expd_placeholder.join(
+        expd_placeholder2,
+        join_key="NEWID",
+        time_stamp="TIME_STAMP",
+        other_time_stamp="TIME_STAMP_SHIFTED"
+    )
+
+    expd_placeholder.join(
+        expd_placeholder2,
+        join_key="BASKETID",
+        time_stamp="TIME_STAMP"
+    )
+
+    # -----------------------------------------------------------------------------
+    # Set hyperparameters - this is just for demonstration purposes. You are very
+    # welcome to play with the hyperparameters to get better results. For instance,
+    # increasing num_features should get you over an AUC of 0.8.
+
+    feature_selector = predictors.XGBoostClassifier(
+        booster="gbtree",
+        n_estimators=100,
+        n_jobs=6,
+        max_depth=7,
+        reg_lambda=500
+    )
+
+    predictor = predictors.XGBoostClassifier(
+        booster="gbtree",
+        n_estimators=100,
+        n_jobs=6,
+        max_depth=7,
+        reg_lambda=500
+    )
+
+    model = models.Model(
+        population=expd_placeholder,
+        peripheral=[expd_placeholder],
+        #feature_selector=feature_selector,
+        #num_selected_features=70,
+        predictor=predictor,
+        loss_function=loss_functions.CrossEntropyLoss(),
+        aggregation=[
+        aggregations.Avg(),
+        aggregations.Count(),
+        aggregations.CountDistinct(),
+        aggregations.CountMinusCountDistinct(),
+        aggregations.Max(),
+        aggregations.Median(),
+        aggregations.Min(),
+        aggregations.Sum()
+        ],
+        use_timestamps=True,
+        num_features=70,
+        max_length=7,
+        fast_training=False,
+        min_num_samples=100,
+        shrinkage=0.1,
+        grid_factor=1.0,
+        regularization=0.0,
+        round_robin=False,
+        share_aggregations=0.04,
+        share_conditions=0.8,
+        sampling_factor=1.0
+    ).send()
+
+    # -----------------------------------------------------------------------------
+    # Fit model
+
+    model = model.fit(
+        population_table=expd_training,
+        peripheral_tables=[expd_all]
+    )
+
+    # -----------------------------------------------------------------------------
+    # Score model
+
+    scores = model.score(
+        population_table=expd_validation,
+        peripheral_tables=[expd_all]
+    )
+
+    # -----------------------------------------------------------------------------
+
+    model.save()
+
+    # -----------------------------------------------------------------------------
