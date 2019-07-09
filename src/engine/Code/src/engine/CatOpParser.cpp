@@ -23,6 +23,23 @@ std::vector<std::string> CatOpParser::binary_operation(
                 _col,
                 std::plus<std::string>() );
         }
+    else if ( op == "contains" )
+        {
+            const auto contains = []( const std::string& str1,
+                                      const std::string& str2 ) {
+                if ( str1.find( str2 ) != std::string::npos )
+                    {
+                        return "yes";
+                    }
+                else
+                    {
+                        return "no";
+                    }
+            };
+
+            return bin_op(
+                _categories, _join_keys_encoding, _df, _col, contains );
+        }
     else
         {
             throw std::invalid_argument(
