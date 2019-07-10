@@ -77,6 +77,19 @@ class NumOpParser
         return result;
     }
 
+    /// Returns a columns containing the rowids.
+    static containers::Column<Float> rowid( const containers::DataFrame& _df )
+    {
+        auto result = containers::Column<Float>( _df.nrows() );
+
+        for ( size_t i = 0; i < _df.nrows(); ++i )
+            {
+                result[i] = static_cast<Float>( i );
+            }
+
+        return result;
+    }
+
     /// Undertakes a unary operation based on template class
     /// Operator.
     template <class Operator>

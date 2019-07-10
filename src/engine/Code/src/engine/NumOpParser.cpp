@@ -269,6 +269,10 @@ containers::Column<Float> NumOpParser::unary_operation(
             };
             return un_op( _df, _col, round );
         }
+    else if ( op == "rowid" )
+        {
+            return rowid( _df );
+        }
     else if ( op == "second" )
         {
             const std::chrono::time_point<std::chrono::system_clock>
