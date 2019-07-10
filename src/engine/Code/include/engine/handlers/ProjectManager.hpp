@@ -59,6 +59,12 @@ class ProjectManager
     void add_data_frame(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
 
+    /// Creates a new data frame from one or several CSV files.
+    void add_data_frame_from_csv(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
     /// Adds a new data frame taken from the database.
     void add_data_frame_from_db(
         const std::string& _name,

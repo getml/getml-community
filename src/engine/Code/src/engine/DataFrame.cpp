@@ -180,23 +180,7 @@ void DataFrame::check_plausibility() const
 {
     // -------------------------------------------------------------------------
 
-    if ( join_keys_.size() == 0 )
-        {
-            throw std::invalid_argument(
-                "You need to provide at least one join key column in " +
-                name() + "!" );
-        }
-
-    if ( time_stamps_.size() == 0 )
-        {
-            throw std::invalid_argument(
-                "You need to provide at least one time stamp column in " +
-                name() + "!" );
-        }
-
-    // -------------------------------------------------------------------------
-
-    auto expected_nrows = join_key( 0 ).nrows();
+    auto expected_nrows = nrows();
 
     const bool any_categorical_does_not_match = std::any_of(
         categoricals_.begin(),
@@ -360,6 +344,227 @@ const Column<Float> &DataFrame::float_column(
         }
 
     throw std::invalid_argument( "Role '" + _role + "' not known!" );
+}
+
+// ----------------------------------------------------------------------------
+
+void DataFrame::from_csv(
+    const std::string &_fname,
+    const std::string &_quotechar,
+    const std::string &_sep,
+    const std::vector<std::string> &_time_formats,
+    const std::vector<std::string> &_categorical_names,
+    const std::vector<std::string> &_discrete_names,
+    const std::vector<std::string> &_join_key_names,
+    const std::vector<std::string> &_numerical_names,
+    const std::vector<std::string> &_target_names,
+    const std::vector<std::string> &_time_stamp_names )
+{
+    // ------------------------------------------------------------------------
+
+    if ( _quotechar.size() != 1 )
+        {
+            throw std::invalid_argument(
+                "The quotechar must contain exactly one characeter!" );
+        }
+
+    if ( _sep.size() != 1 )
+        {
+            throw std::invalid_argument(
+                "The separator must contain exactly one characeter!" );
+        }
+
+    auto reader = csv::Reader( _fname, _quotechar[0], _sep[0] );
+
+    const auto csv_colnames = reader.next_line();
+
+    // ------------------------------------------------------------------------
+
+    auto categoricals = make_vectors<Int>( _categorical_names.size() );
+
+    auto discretes = make_vectors<Float>( _discrete_names.size() );
+
+    auto join_keys = make_vectors<Int>( _join_key_names.size() );
+
+    auto numericals = make_vectors<Float>( _numerical_names.size() );
+
+    auto targets = make_vectors<Float>( _target_names.size() );
+
+    auto time_stamps = make_vectors<Float>( _time_stamp_names.size() );
+
+    // ------------------------------------------------------------------------
+    // Define column_indices.
+
+    const auto df_colnames = concat_colnames(
+        _categorical_names,
+        _discrete_names,
+        _join_key_names,
+        _numerical_names,
+        _target_names,
+        _time_stamp_names );
+
+    auto colname_indices = std::vector<size_t>( 0 );
+
+    for ( const auto &colname : df_colnames )
+        {
+            const auto it =
+                std::find( csv_colnames.begin(), csv_colnames.end(), colname );
+
+            if ( it == csv_colnames.end() )
+                {
+                    throw std::runtime_error(
+                        "'" + _fname + "' contains no column named '" +
+                        colname + "'." );
+                }
+
+            colname_indices.push_back( static_cast<size_t>(
+                std::distance( csv_colnames.begin(), it ) ) );
+        }
+
+    // ------------------------------------------------------------------------
+    // Define lambda expressions.
+
+    const auto to_double = [_time_formats]( const std::string &_str ) {
+        try
+            {
+                return csv::Parser::to_double( _str );
+            }
+        catch ( std::exception &e )
+            {
+                try
+                    {
+                        return csv::Parser::to_time_stamp(
+                            _str, _time_formats );
+                    }
+                catch ( std::exception &e )
+                    {
+                        return static_cast<Float>( NAN );
+                    }
+            }
+    };
+
+    // ------------------------------------------------------------------------
+    // Read CSV file content into the vectors
+
+    size_t line_count = 1;
+
+    while ( !reader.eof() )
+        {
+            const auto line = reader.next_line();
+
+            ++line_count;
+
+            if ( line.size() == 0 )
+                {
+                    continue;
+                }
+            else if ( line.size() != csv_colnames.size() )
+                {
+                    std::cout << "Corrupted line: " << line_count
+                              << ". Expected " << csv_colnames.size()
+                              << " fields, saw " << line.size() << "."
+                              << std::endl;
+                    continue;
+                }
+
+            size_t col = 0;
+
+            for ( auto &vec : categoricals )
+                vec->push_back(
+                    ( *categories_ )[line[colname_indices[col++]]] );
+
+            for ( auto &vec : discretes )
+                vec->push_back( to_double( line[colname_indices[col++]] ) );
+
+            for ( auto &vec : join_keys )
+                vec->push_back(
+                    ( *join_keys_encoding_ )[line[colname_indices[col++]]] );
+
+            for ( auto &vec : numericals )
+                vec->push_back( to_double( line[colname_indices[col++]] ) );
+
+            for ( auto &vec : targets )
+                vec->push_back( to_double( line[colname_indices[col++]] ) );
+
+            for ( auto &vec : time_stamps )
+                vec->push_back( to_double( line[colname_indices[col++]] ) );
+        }
+
+    // ------------------------------------------------------------------------
+
+    auto df = DataFrame( categories_, join_keys_encoding_ );
+
+    df.add_int_vectors( _categorical_names, categoricals, "categorical" );
+
+    df.add_float_vectors( _discrete_names, discretes, "discrete" );
+
+    df.add_int_vectors( _join_key_names, join_keys, "join_key" );
+
+    df.add_float_vectors( _numerical_names, numericals, "numerical" );
+
+    df.add_float_vectors( _target_names, targets, "target" );
+
+    df.add_float_vectors( _time_stamp_names, time_stamps, "time_stamp" );
+
+    // ------------------------------------------------------------------------
+
+    df.check_plausibility();
+
+    // ------------------------------------------------------------------------
+
+    *this = std::move( df );
+
+    // ------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+void DataFrame::from_csv(
+    const std::vector<std::string> &_fnames,
+    const std::string &_quotechar,
+    const std::string &_sep,
+    const std::vector<std::string> &_time_formats,
+    const std::vector<std::string> &_categorical_names,
+    const std::vector<std::string> &_discrete_names,
+    const std::vector<std::string> &_join_key_names,
+    const std::vector<std::string> &_numerical_names,
+    const std::vector<std::string> &_target_names,
+    const std::vector<std::string> &_time_stamp_names )
+{
+    auto df = containers::DataFrame( categories_, join_keys_encoding_ );
+
+    df.name() = name();
+
+    for ( size_t i = 0; i < _fnames.size(); ++i )
+        {
+            auto local_df =
+                containers::DataFrame( categories_, join_keys_encoding_ );
+
+            local_df.name() = name();
+
+            local_df.from_csv(
+                _fnames[i],
+                _quotechar,
+                _sep,
+                _time_formats,
+                _categorical_names,
+                _discrete_names,
+                _join_key_names,
+                _numerical_names,
+                _target_names,
+                _time_stamp_names );
+
+            if ( i == 0 )
+                {
+                    df = std::move( local_df );
+                }
+            else
+                {
+                    df.append( local_df );
+                }
+        }
+
+    *this = std::move( df );
 }
 
 // ----------------------------------------------------------------------------

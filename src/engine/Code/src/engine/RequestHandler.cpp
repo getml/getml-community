@@ -159,6 +159,11 @@ void RequestHandler::run()
                 {
                     data_frame_manager().get_nbytes( name, &socket() );
                 }
+            else if ( type == "DataFrame.read_csv" )
+                {
+                    project_manager().add_data_frame_from_csv(
+                        name, cmd, &socket() );
+                }
             else if ( type == "DataFrame.refresh" )
                 {
                     data_frame_manager().refresh( name, &socket() );

@@ -53,6 +53,19 @@ class DataFrame
     const Column<Float> &float_column(
         const std::string &_name, const std::string &_role ) const;
 
+    /// Builds a dataframe from one or several CSV files.
+    void from_csv(
+        const std::vector<std::string> &_fnames,
+        const std::string &_quotechar,
+        const std::string &_sep,
+        const std::vector<std::string> &_time_formats,
+        const std::vector<std::string> &_categorical_names,
+        const std::vector<std::string> &_discrete_names,
+        const std::vector<std::string> &_join_key_names,
+        const std::vector<std::string> &_numerical_names,
+        const std::vector<std::string> &_target_names,
+        const std::vector<std::string> &_time_stamp_names );
+
     /// Builds a dataframe from a database connector.
     void from_db(
         const std::shared_ptr<database::Connector> _connector,
@@ -427,6 +440,19 @@ class DataFrame
         const std::vector<std::string> &_numerical_names,
         const std::vector<std::string> &_target_names,
         const std::vector<std::string> &_time_stamp_names ) const;
+
+    /// Builds a dataframe from a CSV file.
+    void from_csv(
+        const std::string &_fname,
+        const std::string &_quotechar,
+        const std::string &_sep,
+        const std::vector<std::string> &_time_formats,
+        const std::vector<std::string> &_categorical_names,
+        const std::vector<std::string> &_discrete_names,
+        const std::vector<std::string> &_join_key_names,
+        const std::vector<std::string> &_numerical_names,
+        const std::vector<std::string> &_target_names,
+        const std::vector<std::string> &_time_stamp_names );
 
     /// Parses int columns.
     void from_json(
