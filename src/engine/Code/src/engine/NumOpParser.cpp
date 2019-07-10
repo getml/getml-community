@@ -153,6 +153,49 @@ containers::Column<Float> NumOpParser::to_num(
 
 // ----------------------------------------------------------------------------
 
+containers::Column<Float> NumOpParser::to_ts(
+    const containers::Encoding& _categories,
+    const containers::Encoding& _join_keys_encoding,
+    const containers::DataFrame& _df,
+    const Poco::JSON::Object& _col )
+{
+    const auto time_formats = JSON::array_to_vector<std::string>(
+        JSON::get_array( _col, "time_formats_" ) );
+
+    const auto operand1 = CatOpParser::parse(
+        _categories,
+        _join_keys_encoding,
+        _df,
+        *JSON::get_object( _col, "operand1_" ) );
+
+    auto result = containers::Column<Float>( operand1.size() );
+
+    const auto to_time_stamp = [time_formats]( const std::string& _str ) {
+        try
+            {
+                return csv::Parser::to_time_stamp( _str, time_formats );
+            }
+        catch ( std::exception& e )
+            {
+                try
+                    {
+                        return csv::Parser::to_double( _str );
+                    }
+                catch ( std::exception& e )
+                    {
+                        return static_cast<Float>( NAN );
+                    }
+            }
+    };
+
+    std::transform(
+        operand1.begin(), operand1.end(), result.begin(), to_time_stamp );
+
+    return result;
+}
+
+// ----------------------------------------------------------------------------
+
 containers::Column<Float> NumOpParser::unary_operation(
     const containers::Encoding& _categories,
     const containers::Encoding& _join_keys_encoding,
@@ -385,6 +428,10 @@ containers::Column<Float> NumOpParser::unary_operation(
     else if ( op == "to_num" )
         {
             return to_num( _categories, _join_keys_encoding, _df, _col );
+        }
+    else if ( op == "to_ts" )
+        {
+            return to_ts( _categories, _join_keys_encoding, _df, _col );
         }
     else if ( op == "weekday" )
         {

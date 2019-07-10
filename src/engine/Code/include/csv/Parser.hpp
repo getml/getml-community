@@ -49,19 +49,26 @@ class Parser
     static Float to_time_stamp(
         const std::string& _str, const std::vector<std::string>& _time_formats )
     {
-        int utc = Poco::DateTimeFormatter::UTC;
-
         const auto trimmed = trim( _str );
+
+        std::tm tm = {};
 
         for ( const auto& fmt : _time_formats )
             {
-                const auto date_time =
-                    Poco::DateTimeParser::parse( fmt, trimmed, utc );
+                std::istringstream iss( _str );
 
-                //  return static_cast<Float>( date_time.utcTime() ) / ...;
+                iss >> std::get_time( &tm, fmt.c_str() );
 
-                return static_cast<Float>( date_time.timestamp().epochTime() ) /
-                       86400.0;
+                if ( iss.fail() )
+                    {
+                        continue;
+                    }
+
+                const auto duration =
+                    std::chrono::duration<Float, std::ratio<1>>(
+                        std::mktime( &tm ) );
+
+                return duration.count() / 86400.0;
             }
 
         throw std::runtime_error(

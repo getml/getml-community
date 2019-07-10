@@ -36,6 +36,13 @@ class NumOpParser
         const containers::DataFrame& _df,
         const Poco::JSON::Object& _col );
 
+    /// Transforms a string column to a time stamp.
+    static containers::Column<Float> to_ts(
+        const containers::Encoding& _categories,
+        const containers::Encoding& _join_keys_encoding,
+        const containers::DataFrame& _df,
+        const Poco::JSON::Object& _col );
+
     /// Parses the operator and undertakes a unary operation.
     static containers::Column<Float> unary_operation(
         const containers::Encoding& _categories,

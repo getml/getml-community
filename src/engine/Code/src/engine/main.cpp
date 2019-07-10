@@ -36,6 +36,12 @@ int main( int argc, char *argv[] )
     monitor->send( "postpid", engine::Process::get_process_id() );
 
     // -------------------------------------------
+    // Set the environment variable to UTC (it is unbelievable that we
+    // are forced to do this...time handling in C sucks.)
+
+    setenv( "TZ", "UTC", 1 );
+
+    // -------------------------------------------
 
     const auto categories = std::make_shared<engine::containers::Encoding>();
 
