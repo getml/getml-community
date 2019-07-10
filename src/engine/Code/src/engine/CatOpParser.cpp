@@ -112,11 +112,15 @@ std::vector<std::string> CatOpParser::parse(
 // ----------------------------------------------------------------------------
 
 std::vector<std::string> CatOpParser::to_string(
-    const containers::DataFrame& _df, const Poco::JSON::Object& _col )
+    const containers::Encoding& _categories,
+    const containers::Encoding& _join_keys_encoding,
+    const containers::DataFrame& _df,
+    const Poco::JSON::Object& _col )
 {
     const auto obj = *JSON::get_object( _col, "operand1_" );
 
-    const auto operand1 = NumOpParser::parse( _df, obj );
+    const auto operand1 =
+        NumOpParser::parse( _categories, _join_keys_encoding, _df, obj );
 
     const auto role = obj.has( "role_" )
                           ? JSON::get_value<std::string>( obj, "role_" )
@@ -188,7 +192,7 @@ std::vector<std::string> CatOpParser::unary_operation(
         }
     else if ( op == "to_str" )
         {
-            return to_string( _df, _col );
+            return to_string( _categories, _join_keys_encoding, _df, _col );
         }
     else
         {

@@ -121,14 +121,14 @@ class BoolOpParser
         const Operator& _op )
     {
         const auto operand1 = NumOpParser::parse(
-            /*_categories,
-            _join_keys_encoding,*/
+            _categories,
+            _join_keys_encoding,
             _df,
             *JSON::get_object( _col, "operand1_" ) );
 
         const auto operand2 = NumOpParser::parse(
-            /*_categories,
-            _join_keys_encoding,*/
+            _categories,
+            _join_keys_encoding,
             _df,
             *JSON::get_object( _col, "operand2_" ) );
 

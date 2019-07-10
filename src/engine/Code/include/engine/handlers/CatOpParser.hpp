@@ -31,7 +31,10 @@ class CatOpParser
 
     /// Transforms a float column to a string.
     static std::vector<std::string> to_string(
-        const containers::DataFrame& _df, const Poco::JSON::Object& _col );
+        const containers::Encoding& _categories,
+        const containers::Encoding& _join_keys_encoding,
+        const containers::DataFrame& _df,
+        const Poco::JSON::Object& _col );
 
     /// Parses the operator and undertakes a unary operation.
     static std::vector<std::string> unary_operation(

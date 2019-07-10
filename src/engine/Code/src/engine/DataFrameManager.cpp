@@ -211,7 +211,8 @@ void DataFrameManager::add_column(
 
     const auto json_col = *JSON::get_object( _cmd, "col_" );
 
-    auto col = NumOpParser::parse( df, json_col );
+    auto col =
+        NumOpParser::parse( *categories_, *join_keys_encoding_, df, json_col );
 
     col.set_name( name );
 

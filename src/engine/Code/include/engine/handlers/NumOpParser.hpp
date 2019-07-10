@@ -14,18 +14,34 @@ class NumOpParser
    public:
     /// Parses a numerical column.
     static containers::Column<Float> parse(
-        const containers::DataFrame& _df, const Poco::JSON::Object& _col );
+        const containers::Encoding& _categories,
+        const containers::Encoding& _join_keys_encoding,
+        const containers::DataFrame& _df,
+        const Poco::JSON::Object& _col );
 
     // ------------------------------------------------------------------------
 
    private:
     /// Parses the operator and undertakes a binary operation.
     static containers::Column<Float> binary_operation(
-        const containers::DataFrame& _df, const Poco::JSON::Object& _col );
+        const containers::Encoding& _categories,
+        const containers::Encoding& _join_keys_encoding,
+        const containers::DataFrame& _df,
+        const Poco::JSON::Object& _col );
+
+    /// Transforms a string column to a float.
+    static containers::Column<Float> to_num(
+        const containers::Encoding& _categories,
+        const containers::Encoding& _join_keys_encoding,
+        const containers::DataFrame& _df,
+        const Poco::JSON::Object& _col );
 
     /// Parses the operator and undertakes a unary operation.
     static containers::Column<Float> unary_operation(
-        const containers::DataFrame& _df, const Poco::JSON::Object& _col );
+        const containers::Encoding& _categories,
+        const containers::Encoding& _join_keys_encoding,
+        const containers::DataFrame& _df,
+        const Poco::JSON::Object& _col );
 
     // ------------------------------------------------------------------------
 
@@ -33,15 +49,23 @@ class NumOpParser
     /// Operator.
     template <class Operator>
     static containers::Column<Float> bin_op(
+        const containers::Encoding& _categories,
+        const containers::Encoding& _join_keys_encoding,
         const containers::DataFrame& _df,
         const Poco::JSON::Object& _col,
         const Operator& _op )
     {
-        const auto operand1 =
-            parse( _df, *JSON::get_object( _col, "operand1_" ) );
+        const auto operand1 = parse(
+            _categories,
+            _join_keys_encoding,
+            _df,
+            *JSON::get_object( _col, "operand1_" ) );
 
-        const auto operand2 =
-            parse( _df, *JSON::get_object( _col, "operand2_" ) );
+        const auto operand2 = parse(
+            _categories,
+            _join_keys_encoding,
+            _df,
+            *JSON::get_object( _col, "operand2_" ) );
 
         assert( operand1.nrows() == operand2.nrows() );
 
@@ -94,12 +118,17 @@ class NumOpParser
     /// Operator.
     template <class Operator>
     static containers::Column<Float> un_op(
+        const containers::Encoding& _categories,
+        const containers::Encoding& _join_keys_encoding,
         const containers::DataFrame& _df,
         const Poco::JSON::Object& _col,
         const Operator& _op )
     {
-        const auto operand1 =
-            parse( _df, *JSON::get_object( _col, "operand1_" ) );
+        const auto operand1 = parse(
+            _categories,
+            _join_keys_encoding,
+            _df,
+            *JSON::get_object( _col, "operand1_" ) );
 
         auto result = containers::Column<Float>( operand1.nrows() );
 
