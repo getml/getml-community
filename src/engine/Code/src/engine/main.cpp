@@ -147,7 +147,6 @@ int main( int argc, char *argv[] )
             data_frame_manager,
             logger,
             relboost_model_manager,
-            // monitor,
             options,
             project_manager,
             shutdown ),

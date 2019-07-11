@@ -208,7 +208,25 @@ std::vector<bool> BoolOpParser::unary_operation(
 {
     const auto op = JSON::get_value<std::string>( _col, "operator_" );
 
-    if ( op == "not" )
+    if ( op == "is_inf" )
+        {
+            const auto is_inf = []( const Float val ) {
+                return std::isinf( val );
+            };
+
+            return num_un_op(
+                _categories, _join_keys_encoding, _df, _col, is_inf );
+        }
+    else if ( op == "is_nan" )
+        {
+            const auto is_nan = []( const Float val ) {
+                return std::isnan( val );
+            };
+
+            return num_un_op(
+                _categories, _join_keys_encoding, _df, _col, is_nan );
+        }
+    else if ( op == "not" )
         {
             return un_op(
                 _categories,

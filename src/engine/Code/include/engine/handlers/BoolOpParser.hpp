@@ -75,7 +75,7 @@ class BoolOpParser
     }
 
     /// Undertakes a binary operation based on template class
-    /// Operator.
+    /// Operator for categorical columns.
     template <class Operator>
     static std::vector<bool> cat_bin_op(
         const containers::Encoding& _categories,
@@ -111,7 +111,7 @@ class BoolOpParser
     }
 
     /// Undertakes a binary operation based on template class
-    /// Operator.
+    /// Operator for numerical columns.
     template <class Operator>
     static std::vector<bool> num_bin_op(
         const containers::Encoding& _categories,
@@ -142,6 +142,29 @@ class BoolOpParser
             operand2.begin(),
             result.begin(),
             _op );
+
+        return result;
+    }
+
+    /// Undertakes a unary operation based on template class
+    /// Operator for numerical columns.
+    template <class Operator>
+    static std::vector<bool> num_un_op(
+        const containers::Encoding& _categories,
+        const containers::Encoding& _join_keys_encoding,
+        const containers::DataFrame& _df,
+        const Poco::JSON::Object& _col,
+        const Operator& _op )
+    {
+        const auto operand1 = NumOpParser::parse(
+            _categories,
+            _join_keys_encoding,
+            _df,
+            *JSON::get_object( _col, "operand1_" ) );
+
+        auto result = std::vector<bool>( operand1.size() );
+
+        std::transform( operand1.begin(), operand1.end(), result.begin(), _op );
 
         return result;
     }
