@@ -71,6 +71,12 @@ class DataFrameManager
         const bool _append,
         Poco::Net::StreamSocket* _socket );
 
+    /// Sends a boolean columm to the client
+    void get_boolean_column(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
     /// Sends a categorical columm to the client
     void get_categorical_column(
         const std::string& _name,

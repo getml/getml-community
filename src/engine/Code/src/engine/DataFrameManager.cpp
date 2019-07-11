@@ -529,6 +529,27 @@ void DataFrameManager::from_json(
 
 // ------------------------------------------------------------------------
 
+void DataFrameManager::get_boolean_column(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    const auto json_col = *JSON::get_object( _cmd, "col_" );
+
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    const auto df = utils::Getter::get( _name, &data_frames() );
+
+    const auto col =
+        BoolOpParser::parse( *categories_, *join_keys_encoding_, df, json_col );
+
+    communication::Sender::send_string( "Found!", _socket );
+
+    communication::Sender::send_boolean_column( col, _socket );
+}
+
+// ------------------------------------------------------------------------
+
 void DataFrameManager::get_categorical_column(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,

@@ -64,6 +64,11 @@ void RequestHandler::run()
                 {
                     autosql_model_manager().transform( name, cmd, &socket() );
                 }
+            else if ( type == "BooleanColumn.get" )
+                {
+                    data_frame_manager().get_boolean_column(
+                        name, cmd, &socket() );
+                }
             else if ( type == "CategoricalColumn.get" )
                 {
                     data_frame_manager().get_categorical_column(
