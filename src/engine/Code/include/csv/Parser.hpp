@@ -51,24 +51,25 @@ class Parser
     {
         const auto trimmed = trim( _str );
 
-        std::tm tm = {};
+        int utc = Poco::DateTimeFormatter::UTC;
 
         for ( const auto& fmt : _time_formats )
             {
-                std::istringstream iss( _str );
+                Poco::DateTime date_time;
 
-                iss >> std::get_time( &tm, fmt.c_str() );
+                const auto success = Poco::DateTimeParser::tryParse(
+                    fmt, trimmed, date_time, utc );
 
-                if ( iss.fail() )
+                const auto timestamp = date_time.timestamp();
+
+                if ( !success || Poco::DateTimeFormatter::format(
+                                     date_time, fmt, utc ) != trimmed )
                     {
                         continue;
                     }
 
-                const auto duration =
-                    std::chrono::duration<Float, std::ratio<1>>(
-                        std::mktime( &tm ) );
-
-                return duration.count() / 86400.0;
+                return static_cast<Float>( timestamp.epochMicroseconds() ) /
+                       8.64e10;
             }
 
         throw std::runtime_error(
