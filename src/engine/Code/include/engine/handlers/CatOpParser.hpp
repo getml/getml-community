@@ -43,6 +43,13 @@ class CatOpParser
         const containers::DataFrame& _df,
         const Poco::JSON::Object& _col );
 
+    /// Returns an updated version of the column.
+    static std::vector<std::string> update(
+        const containers::Encoding& _categories,
+        const containers::Encoding& _join_keys_encoding,
+        const containers::DataFrame& _df,
+        const Poco::JSON::Object& _col );
+
     // ------------------------------------------------------------------------
 
     /// Undertakes a binary operation based on template class

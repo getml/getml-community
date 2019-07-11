@@ -64,6 +64,10 @@ containers::Column<Float> NumOpParser::binary_operation(
             };
             return bin_op( _categories, _join_keys_encoding, _df, _col, pow );
         }
+    else if ( op == "update" )
+        {
+            return update( _categories, _join_keys_encoding, _df, _col );
+        }
     else
         {
             throw std::invalid_argument(
@@ -508,6 +512,46 @@ containers::Column<Float> NumOpParser::unary_operation(
 
             return containers::Column<Float>( 0 );
         }
+}
+
+// ----------------------------------------------------------------------------
+
+containers::Column<Float> NumOpParser::update(
+    const containers::Encoding& _categories,
+    const containers::Encoding& _join_keys_encoding,
+    const containers::DataFrame& _df,
+    const Poco::JSON::Object& _col )
+{
+    const auto operand1 = parse(
+        _categories,
+        _join_keys_encoding,
+        _df,
+        *JSON::get_object( _col, "operand1_" ) );
+
+    const auto operand2 = parse(
+        _categories,
+        _join_keys_encoding,
+        _df,
+        *JSON::get_object( _col, "operand2_" ) );
+
+    const auto condition = BoolOpParser::parse(
+        _categories,
+        _join_keys_encoding,
+        _df,
+        *JSON::get_object( _col, "condition_" ) );
+
+    assert( operand1.size() == operand2.size() );
+
+    assert( operand1.size() == condition.size() );
+
+    auto result = containers::Column<Float>( operand1.size() );
+
+    for ( size_t i = 0; i < operand1.size(); ++i )
+        {
+            result[i] = ( condition[i] ? operand2[i] : operand1[i] );
+        }
+
+    return result;
 }
 
 // ----------------------------------------------------------------------------
