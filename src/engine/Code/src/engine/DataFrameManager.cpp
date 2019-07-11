@@ -34,7 +34,7 @@ void DataFrameManager::add_categorical_column(
     // ------------------------------------------------------------------------
 
     const auto vec =
-        CatOpParser::parse( *categories_, *join_keys_encoding_, df, json_col );
+        CatOpParser::parse( *categories_, *join_keys_encoding_, df, _cmd );
 
     // ------------------------------------------------------------------------
 
@@ -534,27 +534,18 @@ void DataFrameManager::get_categorical_column(
     const Poco::JSON::Object& _cmd,
     Poco::Net::StreamSocket* _socket )
 {
-    const auto role = JSON::get_value<std::string>( _cmd, "role_" );
-
-    const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
+    const auto json_col = *JSON::get_object( _cmd, "col_" );
 
     multithreading::ReadLock read_lock( read_write_lock_ );
 
-    auto col =
-        utils::Getter::get( df_name, &data_frames() ).int_column( _name, role );
+    const auto df = utils::Getter::get( _name, &data_frames() );
+
+    const auto col =
+        CatOpParser::parse( *categories_, *join_keys_encoding_, df, json_col );
 
     communication::Sender::send_string( "Found!", _socket );
 
-    if ( role == "categorical" )
-        {
-            communication::Sender::send_categorical_column(
-                col, *categories_, _socket );
-        }
-    else
-        {
-            communication::Sender::send_categorical_column(
-                col, *join_keys_encoding_, _socket );
-        }
+    communication::Sender::send_categorical_column( col, _socket );
 }
 
 // ------------------------------------------------------------------------
@@ -564,14 +555,14 @@ void DataFrameManager::get_column(
     const Poco::JSON::Object& _cmd,
     Poco::Net::StreamSocket* _socket )
 {
-    const auto role = JSON::get_value<std::string>( _cmd, "role_" );
-
-    const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
+    const auto json_col = *JSON::get_object( _cmd, "col_" );
 
     multithreading::ReadLock read_lock( read_write_lock_ );
 
-    auto col = utils::Getter::get( df_name, &data_frames() )
-                   .float_column( _name, role );
+    const auto df = utils::Getter::get( _name, &data_frames() );
+
+    const auto col =
+        NumOpParser::parse( *categories_, *join_keys_encoding_, df, json_col );
 
     communication::Sender::send_string( "Found!", _socket );
 

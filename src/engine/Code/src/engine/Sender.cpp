@@ -7,9 +7,33 @@ namespace communication
 // ------------------------------------------------------------------------
 
 void Sender::send_categorical_column(
-    const containers::Column<Int>& _col,
-    const containers::Encoding& _encoding,
-    Poco::Net::StreamSocket* _socket )
+    const std::vector<std::string>& _col, Poco::Net::StreamSocket* _socket )
+{
+    // ------------------------------------------------
+    // Send dimensions of matrix
+
+    std::array<Int, 2> shape;
+
+    std::get<0>( shape ) = static_cast<Int>( _col.size() );
+    std::get<1>( shape ) = static_cast<Int>( 1 );
+
+    Sender::send<Int>( 2 * sizeof( Int ), shape.data(), _socket );
+
+    // ------------------------------------------------
+    // Send actual strings.
+
+    for ( const auto& str : _col )
+        {
+            send_string( str, _socket );
+        }
+
+    // ------------------------------------------------
+}
+
+// -----------------------------------------------------------------------------
+
+void Sender::send_column(
+    const containers::Column<Float>& _col, Poco::Net::StreamSocket* _socket )
 {
     // ------------------------------------------------
     // Send dimensions of matrix
@@ -22,14 +46,9 @@ void Sender::send_categorical_column(
     Sender::send<Int>( 2 * sizeof( Int ), shape.data(), _socket );
 
     // ------------------------------------------------
-    // Map to string and send.
+    // Send actual data
 
-    for ( size_t i = 0; i < _col.nrows(); ++i )
-        {
-            const auto str = _encoding[_col[i]];
-
-            send_string( str, _socket );
-        }
+    Sender::send<Float>( _col.nrows() * sizeof( Float ), _col.data(), _socket );
 
     // ------------------------------------------------
 }
@@ -99,29 +118,6 @@ void Sender::send_features(
 
             // ---------------------------------------------------------------
         }
-
-    // ------------------------------------------------
-}
-
-// -----------------------------------------------------------------------------
-
-void Sender::send_column(
-    const containers::Column<Float>& _col, Poco::Net::StreamSocket* _socket )
-{
-    // ------------------------------------------------
-    // Send dimensions of matrix
-
-    std::array<Int, 2> shape;
-
-    std::get<0>( shape ) = static_cast<Int>( _col.nrows() );
-    std::get<1>( shape ) = static_cast<Int>( 1 );
-
-    Sender::send<Int>( 2 * sizeof( Int ), shape.data(), _socket );
-
-    // ------------------------------------------------
-    // Send actual data
-
-    Sender::send<Float>( _col.size() * sizeof( Float ), _col.data(), _socket );
 
     // ------------------------------------------------
 }

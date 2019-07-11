@@ -16,8 +16,7 @@ struct Sender
 
     /// Sends categorical Column to the client
     static void send_categorical_column(
-        const containers::Column<Int>& _col,
-        const containers::Encoding& _encoding,
+        const std::vector<std::string>& _col,
         Poco::Net::StreamSocket* _socket );
 
     /// Sends features to the client, transposing them.
@@ -25,7 +24,7 @@ struct Sender
         const containers::Features& _features,
         Poco::Net::StreamSocket* _socket );
 
-    /// Sends Column to the client
+    /// Sends a vector to the client
     static void send_column(
         const containers::Column<Float>& _col,
         Poco::Net::StreamSocket* _socket );
