@@ -34,7 +34,7 @@ void DataFrameManager::add_categorical_column(
     // ------------------------------------------------------------------------
 
     const auto vec =
-        CatOpParser::parse( *categories_, *join_keys_encoding_, df, _cmd );
+        CatOpParser::parse( *categories_, *join_keys_encoding_, df, json_col );
 
     // ------------------------------------------------------------------------
 

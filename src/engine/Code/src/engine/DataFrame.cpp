@@ -64,11 +64,16 @@ void DataFrame::add_int_column(
         }
     else if ( _role == "join_key" )
         {
+            const auto num_join_keys = join_keys_.size();
+
             add_column( _col, &join_keys_ );
 
-            indices_.push_back( DataFrameIndex() );
+            if ( join_keys_.size() != num_join_keys )
+                {
+                    indices_.push_back( DataFrameIndex() );
 
-            create_indices();
+                    create_indices();
+                }
         }
     else
         {
