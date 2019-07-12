@@ -37,6 +37,16 @@ std::vector<bool> BoolOpParser::binary_operation(
                 _col,
                 std::logical_and<bool>() );
         }
+    else if ( op == "contains" )
+        {
+            const auto contains = []( const std::string& str1,
+                                      const std::string& str2 ) {
+                return ( str1.find( str2 ) != std::string::npos );
+            };
+
+            return cat_bin_op(
+                _categories, _join_keys_encoding, _df, _col, contains );
+        }
     else if ( is_boolean && op == "equal_to" )
         {
             return bin_op(

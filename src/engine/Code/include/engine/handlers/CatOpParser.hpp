@@ -29,8 +29,15 @@ class CatOpParser
         const containers::DataFrame& _df,
         const Poco::JSON::Object& _col );
 
+    /// Transforms a boolean column to a string.
+    static std::vector<std::string> boolean_to_string(
+        const containers::Encoding& _categories,
+        const containers::Encoding& _join_keys_encoding,
+        const containers::DataFrame& _df,
+        const Poco::JSON::Object& _col );
+
     /// Transforms a float column to a string.
-    static std::vector<std::string> to_string(
+    static std::vector<std::string> numerical_to_string(
         const containers::Encoding& _categories,
         const containers::Encoding& _join_keys_encoding,
         const containers::DataFrame& _df,
