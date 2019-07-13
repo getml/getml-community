@@ -341,7 +341,7 @@ Poco::JSON::Object ModelManager<ModelType>::receive_data(
 
     auto local_data_frame_manager = DataFrameManager(
         _categories,
-        std::shared_ptr<database::Connector>(),
+        std::shared_ptr<DatabaseManager>(),
         _data_frames,
         local_join_keys_encoding,
         // license_checker_,
@@ -413,7 +413,7 @@ void ModelManager<ModelType>::send_data(
 
     auto local_data_frame_manager = DataFrameManager(
         _categories,
-        std::shared_ptr<database::Connector>(),
+        std::shared_ptr<DatabaseManager>(),
         _local_data_frames,
         local_join_keys_encoding,
         // license_checker_,

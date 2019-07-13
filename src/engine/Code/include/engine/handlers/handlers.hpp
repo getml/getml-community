@@ -57,8 +57,9 @@
 
 #include "engine/handlers/BoolOpParser.hpp"
 
-#include "engine/handlers/DataFrameManager.hpp"
 #include "engine/handlers/DatabaseManager.hpp"
+
+#include "engine/handlers/DataFrameManager.hpp"
 #include "engine/handlers/ModelManager.hpp"
 
 #include "engine/handlers/AutoSQLModelManager.hpp"

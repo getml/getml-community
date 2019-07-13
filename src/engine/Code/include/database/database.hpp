@@ -20,6 +20,8 @@ extern "C"
 
 #include "csv/csv.hpp"
 
+#include "jsonutils/jsonutils.hpp"
+
 #include "multithreading/multithreading.hpp"
 
 // ----------------------------------------------------------------------------
@@ -34,6 +36,8 @@ extern "C"
 #include "database/Sqlite3Iterator.hpp"
 
 #include "database/Sqlite3.hpp"
+
+#include "database/DatabaseParser.hpp"
 
 // ----------------------------------------------------------------------------
 

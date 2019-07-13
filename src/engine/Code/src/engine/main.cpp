@@ -15,10 +15,6 @@ int main( int argc, char *argv[] )
     const auto monitor =
         std::make_shared<const engine::monitoring::Monitor>( options );
 
-    const auto connector =
-        std::make_shared<database::Sqlite3>( database::Sqlite3(
-            "../database.db", {"%Y/%m/%d %H:%M:%S", "%Y-%m-%d %H:%M:%S"} ) );
-
     const auto logger =
         std::make_shared<const engine::monitoring::Logger>( monitor );
 
@@ -59,8 +55,7 @@ int main( int argc, char *argv[] )
         std::make_shared<multithreading::ReadWriteLock>();
 
     const auto database_manager =
-        std::make_shared<engine::handlers::DatabaseManager>(
-            connector, logger, monitor );
+        std::make_shared<engine::handlers::DatabaseManager>( logger, monitor );
 
     const auto autosql_model_manager =
         std::make_shared<engine::handlers::AutoSQLModelManager>(
@@ -76,7 +71,7 @@ int main( int argc, char *argv[] )
     const auto data_frame_manager =
         std::make_shared<engine::handlers::DataFrameManager>(
             categories,
-            connector,
+            database_manager,
             data_frames,
             join_keys_encoding,
             // license_checker,

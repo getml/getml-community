@@ -11,10 +11,13 @@ class DatabaseManager
 {
    public:
     DatabaseManager(
-        const std::shared_ptr<database::Connector>& _connector,
         const std::shared_ptr<const monitoring::Logger>& _logger,
         const std::shared_ptr<const monitoring::Monitor>& _monitor )
-        : connector_( _connector ), logger_( _logger ), monitor_( _monitor )
+        : connector_( std::make_shared<database::Sqlite3>( database::Sqlite3(
+              "../database.db",
+              {"%Y/%m/%d %H:%M:%S", "%Y-%m-%d %H:%M:%S"} ) ) ),
+          logger_( _logger ),
+          monitor_( _monitor )
     {
         post_tables();
     }
@@ -60,14 +63,7 @@ class DatabaseManager
 
     // ------------------------------------------------------------------------
 
-   private:
-    /// Sends the name of all tables currently held in the database to the
-    /// monitor.
-    std::string post_tables();
-
-    // ------------------------------------------------------------------------
-
-   private:
+   public:
     /// Trivial accessor
     const std::shared_ptr<database::Connector>& connector()
     {
@@ -82,6 +78,16 @@ class DatabaseManager
         return connector_;
     }
 
+    // ------------------------------------------------------------------------
+
+   private:
+    /// Sends the name of all tables currently held in the database to the
+    /// monitor.
+    std::string post_tables();
+
+    // ------------------------------------------------------------------------
+
+   private:
     /// Trivial accessor
     const monitoring::Logger& logger() { return *logger_; }
 
@@ -89,7 +95,7 @@ class DatabaseManager
 
    private:
     /// Connector to the underlying database.
-    const std::shared_ptr<database::Connector> connector_;
+    std::shared_ptr<database::Connector> connector_;
 
     /// For logging
     const std::shared_ptr<const monitoring::Logger> logger_;
