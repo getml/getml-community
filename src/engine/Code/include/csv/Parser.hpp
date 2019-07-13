@@ -11,42 +11,54 @@ class Parser
     // -------------------------------
 
     /// Transforms a string to a double.
-    static Float to_double( const std::string& _str )
+    static std::pair<Float, bool> to_double( const std::string& _str )
     {
-        const auto trimmed = trim( _str );
-
-        if ( trimmed.find_first_not_of( "0123456789.e-+" ) !=
-             std::string::npos )
+        try
             {
-                throw std::runtime_error(
-                    "'" + _str + "' could not be converted to double!" );
-            }
+                const auto trimmed = trim( _str );
 
-        return std::stod( trimmed );
+                if ( trimmed.find_first_not_of( "0123456789.e-+" ) !=
+                     std::string::npos )
+                    {
+                        return std::pair<Float, bool>( 0.0, false );
+                    }
+
+                return std::pair<Float, bool>( std::stod( trimmed ), true );
+            }
+        catch ( std::exception& e )
+            {
+                return std::pair<Float, bool>( 0.0, false );
+            }
     }
 
     // -------------------------------
 
     /// Transforms a string to an integer.
-    static Int to_int( const std::string& _str )
+    static std::pair<Int, bool> to_int( const std::string& _str )
     {
-        const auto trimmed = trim( _str );
-
-        const auto val = std::stoi( trimmed );
-
-        if ( std::to_string( val ) != trimmed )
+        try
             {
-                throw std::runtime_error(
-                    "'" + _str + "' could not be converted to integer!" );
-            }
+                const auto trimmed = trim( _str );
 
-        return val;
+                const auto val = std::stoi( trimmed );
+
+                if ( std::to_string( val ) != trimmed )
+                    {
+                        return std::pair<Int, bool>( 0, false );
+                    }
+
+                return std::pair<Int, bool>( val, true );
+            }
+        catch ( std::exception& e )
+            {
+                return std::pair<Int, bool>( 0, false );
+            }
     }
 
     // -------------------------------
 
     /// Transforms a string to a time stamp.
-    static Float to_time_stamp(
+    static std::pair<Float, bool> to_time_stamp(
         const std::string& _str, const std::vector<std::string>& _time_formats )
     {
         const auto trimmed = trim( _str );
@@ -68,12 +80,13 @@ class Parser
                         continue;
                     }
 
-                return static_cast<Float>( timestamp.epochMicroseconds() ) /
-                       8.64e10;
+                return std::pair<Float, bool>(
+                    static_cast<Float>( timestamp.epochMicroseconds() ) /
+                        8.64e10,
+                    true );
             }
 
-        throw std::runtime_error(
-            "'" + _str + "' could not be converted to a time stamp!" );
+        return std::pair<Float, bool>( 0.0, false );
     }
 
     // -------------------------------
@@ -82,7 +95,14 @@ class Parser
     static std::string trim( const std::string& _str )
     {
         const auto pos = _str.find_first_not_of( "\t\v\f\r " );
+
+        if ( pos == std::string::npos )
+            {
+                return _str;
+            }
+
         const auto len = _str.find_last_not_of( "\t\v\f\r " ) - pos + 1;
+
         return _str.substr( pos, len );
     }
 

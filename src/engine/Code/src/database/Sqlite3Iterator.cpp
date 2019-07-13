@@ -95,8 +95,9 @@ Float Sqlite3Iterator::get_double()
             throw std::runtime_error( "End of table!" );
         }
 
-    auto val =
-        static_cast<Float>( sqlite3_column_double( stmt(), colnum_ ) );
+    auto val = static_cast<Float>( sqlite3_column_double( stmt(), colnum_ ) );
+
+    bool success = true;
 
     // sqlite3_column_double(...) returns 0.0 when the value is NULL.
     if ( val == 0.0 )
@@ -106,12 +107,10 @@ Float Sqlite3Iterator::get_double()
             // sqlite3_column_text(...) returns NULL when the value is NULL.
             if ( txt )
                 {
-                    try
-                        {
-                            val = csv::Parser::to_double( std::string(
-                                reinterpret_cast<const char*>( txt ) ) );
-                        }
-                    catch ( std::exception& e )
+                    std::tie( val, success ) = csv::Parser::to_double(
+                        std::string( reinterpret_cast<const char*>( txt ) ) );
+
+                    if ( !success )
                         {
                             val = NAN;
                         }
@@ -140,8 +139,7 @@ Int Sqlite3Iterator::get_int()
             throw std::runtime_error( "End of table!" );
         }
 
-    const auto val =
-        static_cast<Int>( sqlite3_column_int( stmt(), colnum_ ) );
+    const auto val = static_cast<Int>( sqlite3_column_int( stmt(), colnum_ ) );
 
     if ( ++colnum_ == num_cols_ )
         {
@@ -197,18 +195,19 @@ Float Sqlite3Iterator::get_time_stamp()
 
     Float val = 0.0;
 
+    bool success = true;
+
     // sqlite3_column_text(...) returns NULL when the value is NULL.
     if ( ptr )
         {
             const std::string str = reinterpret_cast<const char*>( ptr );
 
-            try
+            std::tie( val, success ) =
+                csv::Parser::to_time_stamp( str, time_formats_ );
+
+            if ( !success )
                 {
-                    val = csv::Parser::to_time_stamp( str, time_formats_ );
-                }
-            catch ( std::exception& e )
-                {
-                    return get_double();
+                    val = get_double();
                 }
         }
     else

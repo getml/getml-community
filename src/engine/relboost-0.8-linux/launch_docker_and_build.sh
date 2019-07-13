@@ -17,7 +17,7 @@ fi
 sudo docker build --tag=centos7 .
 
 # Start docker container and execute script
-sudo docker run -it --rm -v "${HOMEDIR}":"/home/autosql/homedir/" ${DOCKER_IMAGE_NAME} bash test.sh
+sudo docker run -it --rm -v "${HOMEDIR}":"/home/autosql/homedir/" ${DOCKER_IMAGE_NAME} bash build.sh
 
 # Make sure main user owns all files
 sudo chown -R $USER_NAME $HOMEDIR/relboost-engine/$AUTOSQL_VERSION/*

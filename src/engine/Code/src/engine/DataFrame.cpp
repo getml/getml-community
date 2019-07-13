@@ -430,22 +430,22 @@ void DataFrame::from_csv(
     // Define lambda expressions.
 
     const auto to_double = [_time_formats]( const std::string &_str ) {
-        try
+        auto [val, success] = csv::Parser::to_double( _str );
+
+        if ( success )
             {
-                return csv::Parser::to_double( _str );
+                return val;
             }
-        catch ( std::exception &e )
+
+        std::tie( val, success ) =
+            csv::Parser::to_time_stamp( _str, _time_formats );
+
+        if ( success )
             {
-                try
-                    {
-                        return csv::Parser::to_time_stamp(
-                            _str, _time_formats );
-                    }
-                catch ( std::exception &e )
-                    {
-                        return static_cast<Float>( NAN );
-                    }
+                return val;
             }
+
+        return static_cast<Float>( NAN );
     };
 
     // ------------------------------------------------------------------------
@@ -778,14 +778,14 @@ void DataFrame::from_json(
 
             for ( size_t j = 0; j < arr->size(); ++j )
                 {
-                    try
-                        {
-                            column[j] = csv::Parser::to_time_stamp(
-                                arr->getElement<std::string>(
-                                    static_cast<unsigned int>( j ) ),
-                                _time_formats );
-                        }
-                    catch ( std::exception &e )
+                    bool success = true;
+
+                    std::tie( column[j], success ) = csv::Parser::to_time_stamp(
+                        arr->getElement<std::string>(
+                            static_cast<unsigned int>( j ) ),
+                        _time_formats );
+
+                    if ( !success )
                         {
                             column[j] = arr->getElement<Float>(
                                 static_cast<unsigned int>( j ) );

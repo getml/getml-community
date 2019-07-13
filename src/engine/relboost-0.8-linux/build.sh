@@ -9,4 +9,4 @@ export CXX=/opt/rh/devtoolset-8/root/usr/bin/g++
 cd /home/autosql/homedir/relboost-engine/$RELBOOST_VERSION/build
 
 # Compile
-make -j1
+make

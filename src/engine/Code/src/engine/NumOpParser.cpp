@@ -139,11 +139,12 @@ containers::Column<Float> NumOpParser::to_num(
     auto result = containers::Column<Float>( operand1.size() );
 
     const auto to_double = []( const std::string& _str ) {
-        try
+        const auto [val, success] = csv::Parser::to_double( _str );
+        if ( success )
             {
-                return csv::Parser::to_double( _str );
+                return val;
             }
-        catch ( std::exception& e )
+        else
             {
                 return static_cast<Float>( NAN );
             }
@@ -175,21 +176,21 @@ containers::Column<Float> NumOpParser::to_ts(
     auto result = containers::Column<Float>( operand1.size() );
 
     const auto to_time_stamp = [time_formats]( const std::string& _str ) {
-        try
+        auto [val, success] = csv::Parser::to_time_stamp( _str, time_formats );
+
+        if ( success )
             {
-                return csv::Parser::to_time_stamp( _str, time_formats );
+                return val;
             }
-        catch ( std::exception& e )
+
+        std::tie( val, success ) = csv::Parser::to_double( _str );
+
+        if ( success )
             {
-                try
-                    {
-                        return csv::Parser::to_double( _str );
-                    }
-                catch ( std::exception& e )
-                    {
-                        return static_cast<Float>( NAN );
-                    }
+                return val;
             }
+
+        return static_cast<Float>( NAN );
     };
 
     std::transform(

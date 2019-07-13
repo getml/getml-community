@@ -301,13 +301,13 @@ void Sqlite3::insert_double(
 {
     int rc = 0;
 
-    try
+    const auto [val, success] = csv::Parser::to_double( _line[_colnum] );
+
+    if ( success )
         {
-            const auto val =
-                static_cast<double>( csv::Parser::to_double( _line[_colnum] ) );
             rc = sqlite3_bind_double( _stmt, _colnum + 1, val );
         }
-    catch ( const std::exception& e )
+    else
         {
             rc = sqlite3_bind_null( _stmt, _colnum + 1 );
         }
@@ -328,13 +328,14 @@ void Sqlite3::insert_int(
 {
     int rc = 0;
 
-    try
+    const auto [val, success] = csv::Parser::to_int( _line[_colnum] );
+
+    if ( success )
         {
-            const auto val =
-                static_cast<int>( csv::Parser::to_int( _line[_colnum] ) );
-            rc = sqlite3_bind_int( _stmt, _colnum + 1, val );
+            rc =
+                sqlite3_bind_int( _stmt, _colnum + 1, static_cast<int>( val ) );
         }
-    catch ( const std::exception& e )
+    else
         {
             rc = sqlite3_bind_null( _stmt, _colnum + 1 );
         }

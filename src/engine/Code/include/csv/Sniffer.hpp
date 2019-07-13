@@ -84,43 +84,23 @@ class Sniffer
     /// Checks whether a string can be converted to a double.
     bool is_double( const std::string& _str ) const
     {
-        try
-            {
-                Parser::to_double( _str );
-                return true;
-            }
-        catch ( std::exception& e )
-            {
-                return false;
-            }
+        const auto [val, success] = Parser::to_double( _str );
+        return success;
     }
 
     /// Checks whether a string can be converted to an integer.
     bool is_int( const std::string& _str ) const
     {
-        try
-            {
-                Parser::to_int( _str );
-                return true;
-            }
-        catch ( std::exception& e )
-            {
-                return false;
-            }
+        const auto [val, success] = Parser::to_int( _str );
+        return success;
     }
 
     /// Checks whether a string can be converted to a time stamp.
     bool is_time_stamp( const std::string& _str ) const
     {
-        try
-            {
-                Parser::to_time_stamp( _str, time_formats_ );
-                return true;
-            }
-        catch ( std::exception& e )
-            {
-                return false;
-            }
+        const auto [val, success] =
+            Parser::to_time_stamp( _str, time_formats_ );
+        return success;
     }
 
     // -------------------------------
