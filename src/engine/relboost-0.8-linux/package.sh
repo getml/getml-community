@@ -14,7 +14,7 @@ mkdir build
 cmake3 -H. -Bbuild
 
 # Build AutoSQL
-bash build.sh
+bash build.sh $1
 
 # Go into right folder
 cd ./homedir/relboost-engine/$RELBOOST_VERSION
