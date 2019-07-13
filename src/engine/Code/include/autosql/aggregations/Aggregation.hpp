@@ -2036,14 +2036,14 @@ void Aggregation<AggType, data_used_, is_population_>::commit()
 {
     // --------------------------------------------------
 
-    if ( needs_altered_samples_ )
+    if constexpr ( needs_altered_samples_ )
         {
             altered_samples().clear();
         }
 
     // --------------------------------------------------
 
-    if ( needs_count_ )
+    if constexpr ( needs_count_ )
         {
             for ( auto i : updates_stored() )
                 {
@@ -2053,7 +2053,7 @@ void Aggregation<AggType, data_used_, is_population_>::commit()
 
     // --------------------------------------------------
 
-    if ( needs_sample_ptr_ )
+    if constexpr ( needs_sample_ptr_ )
         {
             for ( auto i : updates_stored() )
                 {
@@ -2063,7 +2063,7 @@ void Aggregation<AggType, data_used_, is_population_>::commit()
 
     // --------------------------------------------------
 
-    if ( needs_sum_ )
+    if constexpr ( needs_sum_ )
         {
             for ( auto i : updates_stored() )
                 {
@@ -2073,7 +2073,7 @@ void Aggregation<AggType, data_used_, is_population_>::commit()
 
     // --------------------------------------------------
 
-    if ( needs_sum_cubed_ )
+    if constexpr ( needs_sum_cubed_ )
         {
             for ( auto i : updates_stored() )
                 {
@@ -2083,7 +2083,7 @@ void Aggregation<AggType, data_used_, is_population_>::commit()
 
     // --------------------------------------------------
 
-    if ( needs_sum_squared_ )
+    if constexpr ( needs_sum_squared_ )
         {
             for ( auto i : updates_stored() )
                 {
@@ -2589,7 +2589,7 @@ void Aggregation<AggType, data_used_, is_population_>::revert_to_commit()
 {
     // --------------------------------------------------
 
-    if ( needs_altered_samples_ )
+    if constexpr ( needs_altered_samples_ )
         {
             for ( containers::Match *sample : altered_samples() )
                 {
@@ -2601,7 +2601,7 @@ void Aggregation<AggType, data_used_, is_population_>::revert_to_commit()
 
     // --------------------------------------------------
 
-    if ( needs_count_ )
+    if constexpr ( needs_count_ )
         {
             for ( auto i : updates_stored() )
                 {
@@ -2611,7 +2611,7 @@ void Aggregation<AggType, data_used_, is_population_>::revert_to_commit()
 
     // --------------------------------------------------
 
-    if ( needs_sample_ptr_ )
+    if constexpr ( needs_sample_ptr_ )
         {
             for ( auto i : updates_stored() )
                 {
@@ -2621,7 +2621,7 @@ void Aggregation<AggType, data_used_, is_population_>::revert_to_commit()
 
     // --------------------------------------------------
 
-    if ( needs_sum_ )
+    if constexpr ( needs_sum_ )
         {
             for ( auto i : updates_stored() )
                 {
@@ -2631,7 +2631,7 @@ void Aggregation<AggType, data_used_, is_population_>::revert_to_commit()
 
     // --------------------------------------------------
 
-    if ( needs_sum_cubed_ )
+    if constexpr ( needs_sum_cubed_ )
         {
             for ( auto i : updates_stored() )
                 {
@@ -2641,7 +2641,7 @@ void Aggregation<AggType, data_used_, is_population_>::revert_to_commit()
 
     // --------------------------------------------------
 
-    if ( needs_sum_squared_ )
+    if constexpr ( needs_sum_squared_ )
         {
             for ( auto i : updates_stored() )
                 {
@@ -2787,14 +2787,14 @@ void Aggregation<AggType, data_used_, is_population_>::reset()
 {
     // --------------------------------------------------
 
-    if ( needs_altered_samples_ )
+    if constexpr ( needs_altered_samples_ )
         {
             altered_samples().clear();
         }
 
     // --------------------------------------------------
 
-    if ( needs_count_ )
+    if constexpr ( needs_count_ )
         {
             std::fill( count().begin(), count().end(), 0.0 );
 
@@ -2804,7 +2804,7 @@ void Aggregation<AggType, data_used_, is_population_>::reset()
 
     // --------------------------------------------------
 
-    if ( needs_sum_ )
+    if constexpr ( needs_sum_ )
         {
             std::fill( sum().begin(), sum().end(), 0.0 );
 
@@ -2813,7 +2813,7 @@ void Aggregation<AggType, data_used_, is_population_>::reset()
 
     // --------------------------------------------------
 
-    if ( needs_sum_cubed_ )
+    if constexpr ( needs_sum_cubed_ )
         {
             std::fill( sum_cubed().begin(), sum_cubed().end(), 0.0 );
 
@@ -2825,7 +2825,7 @@ void Aggregation<AggType, data_used_, is_population_>::reset()
 
     // --------------------------------------------------
 
-    if ( needs_sum_squared_ )
+    if constexpr ( needs_sum_squared_ )
         {
             std::fill( sum_squared().begin(), sum_squared().end(), 0.0 );
 

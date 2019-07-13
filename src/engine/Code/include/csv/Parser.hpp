@@ -98,7 +98,7 @@ class Parser
 
         if ( pos == std::string::npos )
             {
-                return _str;
+                return "";
             }
 
         const auto len = _str.find_last_not_of( "\t\v\f\r " ) - pos + 1;
