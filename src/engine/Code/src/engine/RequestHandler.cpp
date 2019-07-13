@@ -107,6 +107,10 @@ void RequestHandler::run()
                 {
                     database_manager().list_tables( &socket() );
                 }
+            else if ( type == "Database.new" )
+                {
+                    database_manager().new_db( cmd, &socket() );
+                }
             else if ( type == "Database.read_csv" )
                 {
                     database_manager().read_csv( name, cmd, &socket() );

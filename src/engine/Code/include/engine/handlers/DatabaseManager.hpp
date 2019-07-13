@@ -17,7 +17,8 @@ class DatabaseManager
               "../database.db",
               {"%Y/%m/%d %H:%M:%S", "%Y-%m-%d %H:%M:%S"} ) ) ),
           logger_( _logger ),
-          monitor_( _monitor )
+          monitor_( _monitor ),
+          read_write_lock_( std::make_shared<multithreading::ReadWriteLock>() )
     {
         post_tables();
     }
@@ -65,8 +66,9 @@ class DatabaseManager
 
    public:
     /// Trivial accessor
-    const std::shared_ptr<database::Connector>& connector()
+    const std::shared_ptr<database::Connector> connector()
     {
+        multithreading::ReadLock read_lock( read_write_lock_ );
         assert( connector_ );
         return connector_;
     }
@@ -74,8 +76,20 @@ class DatabaseManager
     /// Trivial accessor
     const std::shared_ptr<const database::Connector> connector() const
     {
+        multithreading::ReadLock read_lock( read_write_lock_ );
         assert( connector_ );
         return connector_;
+    }
+
+    /// Creates a new database connector.
+    void new_db(
+        const Poco::JSON::Object& _cmd, Poco::Net::StreamSocket* _socket )
+    {
+        multithreading::WriteLock write_lock( read_write_lock_ );
+        connector_ = database::DatabaseParser::parse( _cmd );
+        write_lock.unlock();
+        post_tables();
+        communication::Sender::send_string( "Success!", _socket );
     }
 
     // ------------------------------------------------------------------------
@@ -102,6 +116,10 @@ class DatabaseManager
 
     /// For communication with the monitor
     const std::shared_ptr<const monitoring::Monitor> monitor_;
+
+    /// Protects the shared_ptr of the connector - the connector might have to
+    /// implement its own locking strategy!
+    const std::shared_ptr<multithreading::ReadWriteLock> read_write_lock_;
 
     // ------------------------------------------------------------------------
 };
