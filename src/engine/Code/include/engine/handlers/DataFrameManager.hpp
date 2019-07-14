@@ -103,6 +103,12 @@ class DataFrameManager
     void get_nbytes(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
 
+    /// Creates a new data frame by joining two other tables.
+    void join(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
     /// Refreshes a data frame.
     void refresh( const std::string& _name, Poco::Net::StreamSocket* _socket );
 

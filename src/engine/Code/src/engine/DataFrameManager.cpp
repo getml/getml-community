@@ -666,6 +666,52 @@ void DataFrameManager::get_nbytes(
 
 // ------------------------------------------------------------------------
 
+void DataFrameManager::join(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    const auto df1_name = JSON::get_value<std::string>( _cmd, "df1_name_" );
+
+    const auto df2_name = JSON::get_value<std::string>( _cmd, "df2_name_" );
+
+    const auto join_key_used =
+        JSON::get_value<std::string>( _cmd, "join_key_used_" );
+
+    const auto other_join_key_used =
+        JSON::get_value<std::string>( _cmd, "other_join_key_used_" );
+
+    const auto how = JSON::get_value<std::string>( _cmd, "how_" );
+
+    multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
+
+    const auto& df1 = utils::Getter::get( df1_name, &data_frames() );
+
+    const auto& df2 = utils::Getter::get( df2_name, &data_frames() );
+
+    const auto joined_df = DataFrameJoiner::join(
+        _name,
+        df1,
+        df2,
+        join_key_used,
+        other_join_key_used,
+        how,
+        categories_,
+        join_keys_encoding_ );
+
+    weak_write_lock.upgrade();
+
+    data_frames()[_name] = joined_df;
+
+    monitor_->send( "postdataframe", data_frames()[_name].to_monitor( _name ) );
+
+    weak_write_lock.unlock();
+
+    communication::Sender::send_string( "Success!", _socket );
+}
+
+// ------------------------------------------------------------------------
+
 void DataFrameManager::receive_data(
     containers::DataFrame* _df, Poco::Net::StreamSocket* _socket )
 {

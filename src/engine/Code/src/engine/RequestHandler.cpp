@@ -164,6 +164,10 @@ void RequestHandler::run()
                     data_frame_manager().get_data_frame_content(
                         name, cmd, &socket() );
                 }
+            else if ( type == "DataFrame.join" )
+                {
+                    data_frame_manager().join( name, cmd, &socket() );
+                }
             else if ( type == "DataFrame.nbytes" )
                 {
                     data_frame_manager().get_nbytes( name, &socket() );

@@ -50,11 +50,12 @@ class Column
     /// Returns a Column containing all rows for which _key is true.
     Column<T> select( const std::vector<bool> &_key ) const;
 
-    /// Sorts the rows of the Column by the key provided
-    Column<T> sort_by_key( const Column<Int> &_key ) const;
-
-    /// Sorts the rows of the Column by the key provided
-    Column<T> sort_by_key( const std::vector<Int> &_key ) const;
+    /// Returns a copy of the column that has been sorted by the
+    /// key provided.
+    /// The resulting column does not have to be the same length
+    /// as the original one, but will be of the same length as the
+    /// _key.
+    Column<T> sort_by_key( const std::vector<size_t> &_key ) const;
 
     /// Transforms Column to a std::vector
     std::vector<T> to_vector() const;
@@ -514,31 +515,35 @@ Column<T> Column<T>::select( const std::vector<bool> &_key ) const
 // -------------------------------------------------------------------------
 
 template <class T>
-Column<T> Column<T>::sort_by_key( const std::vector<Int> &_key ) const
+Column<T> Column<T>::sort_by_key( const std::vector<size_t> &_key ) const
 {
-    Column<Int> key( _key.size(), static_cast<Int>( 1 ), _key.data() );
+    Column<T> sorted( _key.size() );
 
-    return sort_by_key( key );
-}
+    sorted.set_name( name() );
 
-// -------------------------------------------------------------------------
+    sorted.set_unit( unit() );
 
-template <class T>
-Column<T> Column<T>::sort_by_key( const Column<Int> &_key ) const
-{
-    assert(
-        _key.nrows() == nrows() &&
-        "Column: Size of keys must be identical to nrows!" );
-
-    Column<T> sorted( nrows() );
-
-    for ( size_t i = 0; i < nrows(); ++i )
+    for ( size_t i = 0; i < _key.size(); ++i )
         {
-            assert(
-                _key[i] >= 0 && _key[i] < nrows() &&
-                "Column: Key out of bounds!" );
-
-            sorted[i] = ( *this )[_key[i]];
+            if ( _key[i] < nrows() )
+                {
+                    sorted[i] = ( *this )[_key[i]];
+                }
+            else
+                {
+                    if constexpr ( std::is_same<T, Float>() )
+                        {
+                            sorted[i] = static_cast<Float>( NAN );
+                        }
+                    else if ( std::is_same<T, Int>() )
+                        {
+                            sorted[i] = -1;
+                        }
+                    else
+                        {
+                            assert( false );
+                        }
+                }
         }
 
     return sorted;
