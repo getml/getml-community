@@ -17,9 +17,12 @@ class DataFrame
     }
 
     DataFrame(
+        const std::string &_name,
         const std::shared_ptr<Encoding> &_categories,
         const std::shared_ptr<Encoding> &_join_keys_encoding )
-        : categories_( _categories ), join_keys_encoding_( _join_keys_encoding )
+        : categories_( _categories ),
+          join_keys_encoding_( _join_keys_encoding ),
+          name_( _name )
     {
     }
 
@@ -124,7 +127,7 @@ class DataFrame
 
     /// Extracts the data frame as a Poco::JSON::Object the monitor process can
     /// understand
-    Poco::JSON::Object to_monitor( const std::string _name );
+    Poco::JSON::Object to_monitor() const;
 
     // -------------------------------
 
@@ -274,9 +277,6 @@ class DataFrame
         for ( const auto &ix : indices_ ) maps.push_back( ix.map() );
         return maps;
     }
-
-    /// Primitive abstraction for member name_
-    std::string &name() { return name_; }
 
     /// Primitive abstraction for member name_
     const std::string &name() const { return name_; }

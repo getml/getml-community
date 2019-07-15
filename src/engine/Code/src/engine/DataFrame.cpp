@@ -497,7 +497,7 @@ void DataFrame::from_csv(
 
     // ------------------------------------------------------------------------
 
-    auto df = DataFrame( categories_, join_keys_encoding_ );
+    auto df = DataFrame( name(), categories_, join_keys_encoding_ );
 
     df.add_int_vectors( _categorical_names, categoricals, "categorical" );
 
@@ -536,16 +536,12 @@ void DataFrame::from_csv(
     const std::vector<std::string> &_target_names,
     const std::vector<std::string> &_time_stamp_names )
 {
-    auto df = containers::DataFrame( categories_, join_keys_encoding_ );
-
-    df.name() = name();
+    auto df = containers::DataFrame( name(), categories_, join_keys_encoding_ );
 
     for ( size_t i = 0; i < _fnames.size(); ++i )
         {
-            auto local_df =
-                containers::DataFrame( categories_, join_keys_encoding_ );
-
-            local_df.name() = name();
+            auto local_df = containers::DataFrame(
+                name(), categories_, join_keys_encoding_ );
 
             local_df.from_csv(
                 _fnames[i],
@@ -636,7 +632,7 @@ void DataFrame::from_db(
 
     // ----------------------------------------
 
-    auto df = DataFrame( categories_, join_keys_encoding_ );
+    auto df = DataFrame( name(), categories_, join_keys_encoding_ );
 
     df.add_int_vectors( _categorical_names, categoricals, "categorical" );
 
@@ -675,7 +671,7 @@ void DataFrame::from_json(
 {
     // ----------------------------------------
 
-    auto df = DataFrame( categories_, join_keys_encoding_ );
+    auto df = DataFrame( name(), categories_, join_keys_encoding_ );
 
     df.from_json( _obj, _categorical_names, "categorical", categories_.get() );
 
@@ -1143,7 +1139,7 @@ void DataFrame::save( const std::string &_path )
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object DataFrame::to_monitor( const std::string _name )
+Poco::JSON::Object DataFrame::to_monitor() const
 {
     // ---------------------------------------------------------------------
 
@@ -1161,7 +1157,7 @@ Poco::JSON::Object DataFrame::to_monitor( const std::string _name )
 
     obj.set( "join_keys_", get_colnames( join_keys_ ) );
 
-    obj.set( "name_", _name );
+    obj.set( "name_", name_ );
 
     obj.set( "num_categorical_", num_categoricals() );
 

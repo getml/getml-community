@@ -87,7 +87,7 @@ void DataFrameManager::add_categorical_column(
 
     // ------------------------------------------------------------------------
 
-    monitor_->send( "postdataframe", df.to_monitor( df_name ) );
+    monitor_->send( "postdataframe", df.to_monitor() );
 
     communication::Sender::send_string( "Success!", _socket );
 
@@ -154,10 +154,8 @@ void DataFrameManager::add_data_frame(
     auto local_join_keys_encoding =
         std::make_shared<containers::Encoding>( join_keys_encoding_ );
 
-    auto df =
-        containers::DataFrame( local_categories, local_join_keys_encoding );
-
-    df.name() = _name;
+    auto df = containers::DataFrame(
+        _name, local_categories, local_join_keys_encoding );
 
     communication::Sender::send_string( "Success!", _socket );
 
@@ -222,7 +220,7 @@ void DataFrameManager::add_column(
 
     df.add_float_column( col, role );
 
-    monitor_->send( "postdataframe", df.to_monitor( df_name ) );
+    monitor_->send( "postdataframe", df.to_monitor() );
 
     communication::Sender::send_string( "Success!", _socket );
 }
@@ -280,10 +278,8 @@ void DataFrameManager::append_to_data_frame(
     auto local_join_keys_encoding =
         std::make_shared<containers::Encoding>( join_keys_encoding_ );
 
-    auto df =
-        containers::DataFrame( local_categories, local_join_keys_encoding );
-
-    df.name() = _name;
+    auto df = containers::DataFrame(
+        _name, local_categories, local_join_keys_encoding );
 
     // --------------------------------------------------------------------
     // Fill the data frame with data. Note that this does not close the socket
@@ -308,7 +304,7 @@ void DataFrameManager::append_to_data_frame(
 
     data_frames()[_name].create_indices();
 
-    monitor_->send( "postdataframe", data_frames()[_name].to_monitor( _name ) );
+    monitor_->send( "postdataframe", data_frames()[_name].to_monitor() );
 
     // --------------------------------------------------------------------
 }
@@ -368,10 +364,8 @@ void DataFrameManager::from_db(
     auto local_join_keys_encoding =
         std::make_shared<containers::Encoding>( join_keys_encoding_ );
 
-    auto df =
-        containers::DataFrame( local_categories, local_join_keys_encoding );
-
-    df.name() = _name;
+    auto df = containers::DataFrame(
+        _name, local_categories, local_join_keys_encoding );
 
     // --------------------------------------------------------------------
     // Get the data from the data base.
@@ -475,10 +469,8 @@ void DataFrameManager::from_json(
     auto local_join_keys_encoding =
         std::make_shared<containers::Encoding>( join_keys_encoding_ );
 
-    auto df =
-        containers::DataFrame( local_categories, local_join_keys_encoding );
-
-    df.name() = _name;
+    auto df = containers::DataFrame(
+        _name, local_categories, local_join_keys_encoding );
 
     // --------------------------------------------------------------------
     // Parse the data from the JSON string.
@@ -671,6 +663,10 @@ void DataFrameManager::join(
     const Poco::JSON::Object& _cmd,
     Poco::Net::StreamSocket* _socket )
 {
+    const auto cols1 = *JSON::get_array( _cmd, "cols1_" );
+
+    const auto cols2 = *JSON::get_array( _cmd, "cols2_" );
+
     const auto df1_name = JSON::get_value<std::string>( _cmd, "df1_name_" );
 
     const auto df2_name = JSON::get_value<std::string>( _cmd, "df2_name_" );
@@ -693,6 +689,8 @@ void DataFrameManager::join(
         _name,
         df1,
         df2,
+        cols1,
+        cols2,
         join_key_used,
         other_join_key_used,
         how,
@@ -703,7 +701,7 @@ void DataFrameManager::join(
 
     data_frames()[_name] = joined_df;
 
-    monitor_->send( "postdataframe", data_frames()[_name].to_monitor( _name ) );
+    monitor_->send( "postdataframe", data_frames()[_name].to_monitor() );
 
     weak_write_lock.unlock();
 
@@ -779,7 +777,7 @@ void DataFrameManager::remove_column(
 
     df.remove_column( name, role );
 
-    monitor_->send( "postdataframe", df.to_monitor( df_name ) );
+    monitor_->send( "postdataframe", df.to_monitor() );
 
     communication::Sender::send_string( "Success!", _socket );
 }
@@ -808,7 +806,8 @@ void DataFrameManager::select(
 
     // --------------------------------------------------------------------
 
-    auto new_df = containers::DataFrame( categories_, join_keys_encoding_ );
+    auto new_df =
+        containers::DataFrame( new_df_name, categories_, join_keys_encoding_ );
 
     // --------------------------------------------------------------------
 
@@ -857,7 +856,7 @@ void DataFrameManager::select(
 
     data_frames()[new_df_name] = new_df;
 
-    monitor_->send( "postdataframe", new_df.to_monitor( new_df_name ) );
+    monitor_->send( "postdataframe", new_df.to_monitor() );
 
     weak_write_lock.unlock();
 
@@ -889,7 +888,7 @@ void DataFrameManager::set_unit(
 
     df.add_float_column( column, role );
 
-    monitor_->send( "postdataframe", df.to_monitor( df_name ) );
+    monitor_->send( "postdataframe", df.to_monitor() );
 
     write_lock.unlock();
 
@@ -919,7 +918,7 @@ void DataFrameManager::set_unit_categorical(
 
     df.add_int_column( column, role );
 
-    monitor_->send( "postdataframe", df.to_monitor( df_name ) );
+    monitor_->send( "postdataframe", df.to_monitor() );
 
     write_lock.unlock();
 
@@ -935,7 +934,7 @@ void DataFrameManager::summarize(
 
     auto& df = utils::Getter::get( _name, &data_frames() );
 
-    auto summary = df.to_monitor( _name );
+    auto summary = df.to_monitor();
 
     read_lock.unlock();
 

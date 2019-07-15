@@ -6,10 +6,122 @@ namespace handlers
 {
 // ----------------------------------------------------------------------------
 
+void DataFrameJoiner::add_all(
+    const containers::DataFrame& _df,
+    const std::vector<size_t>& _rindices,
+    containers::DataFrame* _joined_df )
+{
+    for ( size_t i = 0; i < _df.num_categoricals(); ++i )
+        _joined_df->add_int_column(
+            _df.categorical( i ).sort_by_key( _rindices ), "categorical" );
+
+    for ( size_t i = 0; i < _df.num_discretes(); ++i )
+        _joined_df->add_float_column(
+            _df.discrete( i ).sort_by_key( _rindices ), "discrete" );
+
+    for ( size_t i = 0; i < _df.num_join_keys(); ++i )
+        _joined_df->add_int_column(
+            _df.join_key( i ).sort_by_key( _rindices ), "join_key" );
+
+    for ( size_t i = 0; i < _df.num_numericals(); ++i )
+        _joined_df->add_float_column(
+            _df.numerical( i ).sort_by_key( _rindices ), "numerical" );
+
+    for ( size_t i = 0; i < _df.num_targets(); ++i )
+        _joined_df->add_float_column(
+            _df.target( i ).sort_by_key( _rindices ), "target" );
+
+    for ( size_t i = 0; i < _df.num_time_stamps(); ++i )
+        _joined_df->add_float_column(
+            _df.time_stamp( i ).sort_by_key( _rindices ), "time_stamp" );
+}
+
+// ----------------------------------------------------------------------------
+
+void DataFrameJoiner::add_cols(
+    const containers::DataFrame& _df,
+    const std::vector<size_t>& _rindices,
+    const Poco::JSON::Array& _cols,
+    containers::DataFrame* _joined_df )
+{
+    for ( size_t i = 0; i < _cols.size(); ++i )
+        {
+            const auto obj = *_cols.getObject( i );
+
+            const auto name =
+                jsonutils::JSON::get_value<std::string>( obj, "name_" );
+
+            const auto df_name =
+                jsonutils::JSON::get_value<std::string>( obj, "df_name_" );
+
+            if ( df_name != _df.name() )
+                {
+                    throw std::invalid_argument(
+                        "Column '" + name +
+                        "' is expected to be from DataFrame '" + _df.name() +
+                        "', but is from DataFrame '" + df_name + "'." );
+                }
+
+            const auto role =
+                jsonutils::JSON::get_value<std::string>( obj, "role_" );
+
+            const auto as =
+                obj.has( "as_" )
+                    ? jsonutils::JSON::get_value<std::string>( obj, "as_" )
+                    : name;
+
+            if ( role == "categorical" )
+                {
+                    auto col = _df.categorical( name ).sort_by_key( _rindices );
+                    col.set_name( as );
+                    _joined_df->add_int_column( col, role );
+                }
+            else if ( role == "discrete" )
+                {
+                    auto col = _df.discrete( name ).sort_by_key( _rindices );
+                    col.set_name( as );
+                    _joined_df->add_float_column( col, role );
+                }
+            else if ( role == "join_key" )
+                {
+                    auto col = _df.join_key( name ).sort_by_key( _rindices );
+                    col.set_name( as );
+                    _joined_df->add_int_column( col, role );
+                }
+            else if ( role == "numerical" )
+                {
+                    auto col = _df.numerical( name ).sort_by_key( _rindices );
+                    col.set_name( as );
+                    _joined_df->add_float_column( col, role );
+                }
+            else if ( role == "target" )
+                {
+                    auto col = _df.target( name ).sort_by_key( _rindices );
+                    col.set_name( as );
+                    _joined_df->add_float_column( col, role );
+                }
+            else if ( role == "time_stamp" )
+                {
+                    auto col = _df.time_stamp( name ).sort_by_key( _rindices );
+                    col.set_name( as );
+                    _joined_df->add_float_column( col, role );
+                }
+            else
+                {
+                    throw std::invalid_argument(
+                        "Role '" + role + "' not recognized." );
+                }
+        }
+}
+
+// ----------------------------------------------------------------------------
+
 containers::DataFrame DataFrameJoiner::join(
     const std::string& _name,
     const containers::DataFrame& _df1,
     const containers::DataFrame& _df2,
+    const Poco::JSON::Array& _cols1,
+    const Poco::JSON::Array& _cols2,
     const std::string& _join_key_used,
     const std::string& _other_join_key_used,
     const std::string& _how,
@@ -24,6 +136,8 @@ containers::DataFrame DataFrameJoiner::join(
                 _name,
                 _df2,
                 _df1,
+                _cols2,
+                _cols1,
                 _other_join_key_used,
                 _join_key_used,
                 "left",
@@ -38,61 +152,26 @@ containers::DataFrame DataFrameJoiner::join(
 
     // ------------------------------------------------------------------------
 
-    auto joined_df = containers::DataFrame( _categories, _join_keys_encoding );
+    auto joined_df =
+        containers::DataFrame( _name, _categories, _join_keys_encoding );
 
-    // ------------------------------------------------------------------------
+    if ( _cols1.size() > 0 )
+        {
+            add_cols( _df1, rindices1, _cols1, &joined_df );
+        }
+    else
+        {
+            add_all( _df1, rindices1, &joined_df );
+        }
 
-    for ( size_t i = 0; i < _df1.num_categoricals(); ++i )
-        joined_df.add_int_column(
-            _df1.categorical( i ).sort_by_key( rindices1 ), "categorical" );
-
-    for ( size_t i = 0; i < _df1.num_discretes(); ++i )
-        joined_df.add_float_column(
-            _df1.discrete( i ).sort_by_key( rindices1 ), "discrete" );
-
-    for ( size_t i = 0; i < _df1.num_join_keys(); ++i )
-        joined_df.add_int_column(
-            _df1.join_key( i ).sort_by_key( rindices1 ), "join_key" );
-
-    for ( size_t i = 0; i < _df1.num_numericals(); ++i )
-        joined_df.add_float_column(
-            _df1.numerical( i ).sort_by_key( rindices1 ), "numerical" );
-
-    for ( size_t i = 0; i < _df1.num_targets(); ++i )
-        joined_df.add_float_column(
-            _df1.target( i ).sort_by_key( rindices1 ), "target" );
-
-    for ( size_t i = 0; i < _df1.num_time_stamps(); ++i )
-        joined_df.add_float_column(
-            _df1.time_stamp( i ).sort_by_key( rindices1 ), "time_stamp" );
-
-    // ------------------------------------------------------------------------
-
-    for ( size_t i = 0; i < _df2.num_categoricals(); ++i )
-        joined_df.add_int_column(
-            _df2.categorical( i ).sort_by_key( rindices2 ), "categorical" );
-
-    for ( size_t i = 0; i < _df1.num_discretes(); ++i )
-        joined_df.add_float_column(
-            _df2.discrete( i ).sort_by_key( rindices2 ), "discrete" );
-
-    for ( size_t i = 0; i < _df2.num_join_keys(); ++i )
-        joined_df.add_int_column(
-            _df2.join_key( i ).sort_by_key( rindices2 ), "join_key" );
-
-    for ( size_t i = 0; i < _df2.num_numericals(); ++i )
-        joined_df.add_float_column(
-            _df2.numerical( i ).sort_by_key( rindices2 ), "numerical" );
-
-    for ( size_t i = 0; i < _df2.num_targets(); ++i )
-        joined_df.add_float_column(
-            _df2.target( i ).sort_by_key( rindices2 ), "target" );
-
-    for ( size_t i = 0; i < _df2.num_time_stamps(); ++i )
-        joined_df.add_float_column(
-            _df2.time_stamp( i ).sort_by_key( rindices2 ), "time_stamp" );
-
-    // ------------------------------------------------------------------------
+    if ( _cols2.size() > 0 )
+        {
+            add_cols( _df2, rindices2, _cols2, &joined_df );
+        }
+    else
+        {
+            add_all( _df2, rindices2, &joined_df );
+        }
 
     joined_df.create_indices();
 

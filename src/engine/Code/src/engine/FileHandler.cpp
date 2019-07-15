@@ -64,9 +64,7 @@ containers::DataFrame FileHandler::load(
     // ---------------------------------------------------------------------
     // Load data
 
-    auto df = containers::DataFrame( _categories, _join_keys_encoding );
-
-    df.name() = _name;
+    auto df = containers::DataFrame( _name, _categories, _join_keys_encoding );
 
     df.load( path );
 

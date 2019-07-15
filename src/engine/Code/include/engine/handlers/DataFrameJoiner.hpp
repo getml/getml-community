@@ -17,6 +17,8 @@ class DataFrameJoiner
         const std::string& _name,
         const containers::DataFrame& _df1,
         const containers::DataFrame& _df2,
+        const Poco::JSON::Array& _cols1,
+        const Poco::JSON::Array& _cols2,
         const std::string& _join_key_used,
         const std::string& _other_join_key_used,
         const std::string& _how,
@@ -26,6 +28,19 @@ class DataFrameJoiner
     // ------------------------------------------------------------------------
 
    private:
+    /// Adds all columns from _df to _joined_df, sorted by _rindices.
+    static void add_all(
+        const containers::DataFrame& _df,
+        const std::vector<size_t>& _rindices,
+        containers::DataFrame* _joined_df );
+
+    /// Adds columns in _cols from _df to _joined_df, sorted by _rindices.
+    static void add_cols(
+        const containers::DataFrame& _df,
+        const std::vector<size_t>& _rindices,
+        const Poco::JSON::Array& _cols,
+        containers::DataFrame* _joined_df );
+
     /// Returns the join key and index signified by _name.
     static std::pair<
         const containers::Column<Int>,

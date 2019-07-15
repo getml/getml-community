@@ -57,7 +57,7 @@ void ProjectManager::add_data_frame(
 
     multithreading::ReadLock read_lock( read_write_lock_ );
 
-    monitor_->send( "postdataframe", data_frames()[_name].to_monitor( _name ) );
+    monitor_->send( "postdataframe", data_frames()[_name].to_monitor() );
 }
 
 // ------------------------------------------------------------------------
@@ -115,10 +115,8 @@ void ProjectManager::add_data_frame_from_csv(
 
     // --------------------------------------------------------------------
 
-    auto df =
-        containers::DataFrame( local_categories, local_join_keys_encoding );
-
-    df.name() = _name;
+    auto df = containers::DataFrame(
+        _name, local_categories, local_join_keys_encoding );
 
     df.from_csv(
         fnames,
@@ -161,7 +159,7 @@ void ProjectManager::add_data_frame_from_csv(
 
     // --------------------------------------------------------------------
 
-    monitor_->send( "postdataframe", data_frames()[_name].to_monitor( _name ) );
+    monitor_->send( "postdataframe", data_frames()[_name].to_monitor() );
 
     communication::Sender::send_string( "Success!", _socket );
 
@@ -184,7 +182,7 @@ void ProjectManager::add_data_frame_from_db(
 
     multithreading::ReadLock read_lock( read_write_lock_ );
 
-    monitor_->send( "postdataframe", data_frames()[_name].to_monitor( _name ) );
+    monitor_->send( "postdataframe", data_frames()[_name].to_monitor() );
 }
 
 // ------------------------------------------------------------------------
@@ -203,7 +201,7 @@ void ProjectManager::add_data_frame_from_json(
 
     multithreading::ReadLock read_lock( read_write_lock_ );
 
-    monitor_->send( "postdataframe", data_frames()[_name].to_monitor( _name ) );
+    monitor_->send( "postdataframe", data_frames()[_name].to_monitor() );
 }
 
 // ------------------------------------------------------------------------
@@ -451,7 +449,7 @@ void ProjectManager::load_data_frame(
 
     data_frames()[_name].create_indices();
 
-    monitor_->send( "postdataframe", data_frames()[_name].to_monitor( _name ) );
+    monitor_->send( "postdataframe", data_frames()[_name].to_monitor() );
 
     engine::communication::Sender::send_string( "Success!", _socket );
 
