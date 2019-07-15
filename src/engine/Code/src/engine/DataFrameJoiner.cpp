@@ -19,6 +19,7 @@ void DataFrameJoiner::add_all(
                         "Duplicate categorical column: '" +
                         _df.categorical( i ).name() + "'." );
                 }
+
             _joined_df->add_int_column(
                 _df.categorical( i ).sort_by_key( _rindices ), "categorical" );
         }
@@ -31,6 +32,7 @@ void DataFrameJoiner::add_all(
                         "Duplicate discrete column: '" +
                         _df.discrete( i ).name() + "'." );
                 }
+
             _joined_df->add_float_column(
                 _df.discrete( i ).sort_by_key( _rindices ), "discrete" );
         }
@@ -43,6 +45,7 @@ void DataFrameJoiner::add_all(
                         "Duplicate join key: '" + _df.join_key( i ).name() +
                         "'." );
                 }
+
             _joined_df->add_int_column(
                 _df.join_key( i ).sort_by_key( _rindices ), "join_key" );
         }
@@ -55,6 +58,7 @@ void DataFrameJoiner::add_all(
                         "Duplicate numerical column: '" +
                         _df.numerical( i ).name() + "'." );
                 }
+
             _joined_df->add_float_column(
                 _df.numerical( i ).sort_by_key( _rindices ), "numerical" );
         }
@@ -67,6 +71,7 @@ void DataFrameJoiner::add_all(
                         "Duplicate target column: '" + _df.target( i ).name() +
                         "'." );
                 }
+
             _joined_df->add_float_column(
                 _df.target( i ).sort_by_key( _rindices ), "target" );
         }
@@ -79,6 +84,7 @@ void DataFrameJoiner::add_all(
                         "Duplicate time stamp column: '" +
                         _df.time_stamp( i ).name() + "'." );
                 }
+
             _joined_df->add_float_column(
                 _df.time_stamp( i ).sort_by_key( _rindices ), "time_stamp" );
         }
@@ -226,13 +232,13 @@ containers::DataFrame DataFrameJoiner::join(
 
     // ------------------------------------------------------------------------
 
-    const auto [rindices1, rindices2] = make_row_indices(
-        _df1, _df2, _join_key_used, _other_join_key_used, _how );
+    auto joined_df =
+        containers::DataFrame( _name, _categories, _join_keys_encoding );
 
     // ------------------------------------------------------------------------
 
-    auto joined_df =
-        containers::DataFrame( _name, _categories, _join_keys_encoding );
+    const auto [rindices1, rindices2] = make_row_indices(
+        _df1, _df2, _join_key_used, _other_join_key_used, _how );
 
     if ( _cols1.size() > 0 )
         {
@@ -251,6 +257,8 @@ containers::DataFrame DataFrameJoiner::join(
         {
             add_all( _df2, rindices2, &joined_df );
         }
+
+    // ------------------------------------------------------------------------
 
     joined_df.create_indices();
 
