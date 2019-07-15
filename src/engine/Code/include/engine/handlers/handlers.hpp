@@ -5,6 +5,7 @@
 // Dependencies
 
 #include <chrono>
+#include <optional>
 #include <thread>
 #include <type_traits>
 #include <vector>

@@ -54,7 +54,8 @@ class DataFrameJoiner
         const containers::DataFrame& _df2,
         const std::string& _join_key_used,
         const std::string& _other_join_key_used,
-        const std::string& _how );
+        const std::string& _how,
+        size_t* _begin );
 
     // ------------------------------------------------------------------------
 };

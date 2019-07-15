@@ -232,39 +232,69 @@ containers::DataFrame DataFrameJoiner::join(
 
     // ------------------------------------------------------------------------
 
-    auto joined_df =
-        containers::DataFrame( _name, _categories, _join_keys_encoding );
+    auto joined_df = std::optional<containers::DataFrame>();
 
     // ------------------------------------------------------------------------
 
-    const auto [rindices1, rindices2] = make_row_indices(
-        _df1, _df2, _join_key_used, _other_join_key_used, _how );
-
-    if ( _cols1.size() > 0 )
+    if ( _df1.nrows() == 0 )
         {
-            add_cols( _df1, rindices1, _cols1, &joined_df );
-        }
-    else
-        {
-            add_all( _df1, rindices1, &joined_df );
-        }
-
-    if ( _cols2.size() > 0 )
-        {
-            add_cols( _df2, rindices2, _cols2, &joined_df );
-        }
-    else
-        {
-            add_all( _df2, rindices2, &joined_df );
+            throw std::invalid_argument(
+                "DataFrame '" + _df1.name() + "' contains no rows!" );
         }
 
     // ------------------------------------------------------------------------
 
-    joined_df.create_indices();
+    size_t begin = 0;
+
+    while ( begin < _df1.nrows() )
+        {
+            const auto [rindices1, rindices2] = make_row_indices(
+                _df1,
+                _df2,
+                _join_key_used,
+                _other_join_key_used,
+                _how,
+                &begin );
+
+            auto temp_df = containers::DataFrame(
+                _name, _categories, _join_keys_encoding );
+
+            if ( _cols1.size() > 0 )
+                {
+                    add_cols( _df1, rindices1, _cols1, &temp_df );
+                }
+            else
+                {
+                    add_all( _df1, rindices1, &temp_df );
+                }
+
+            if ( _cols2.size() > 0 )
+                {
+                    add_cols( _df2, rindices2, _cols2, &temp_df );
+                }
+            else
+                {
+                    add_all( _df2, rindices2, &temp_df );
+                }
+
+            if ( joined_df )
+                {
+                    joined_df = std::make_optional<containers::DataFrame>(
+                        std::move( temp_df ) );
+                }
+            else
+                {
+                    joined_df->append( temp_df );
+                }
+        }
 
     // ------------------------------------------------------------------------
 
-    return joined_df;
+    joined_df->create_indices();
+
+    // ------------------------------------------------------------------------
+
+    return *joined_df;
 
     // ------------------------------------------------------------------------
 }
@@ -298,8 +328,11 @@ DataFrameJoiner::make_row_indices(
     const containers::DataFrame& _df2,
     const std::string& _join_key_used,
     const std::string& _other_join_key_used,
-    const std::string& _how )
+    const std::string& _how,
+    size_t* _begin )
 {
+    const size_t batch_size = 100000;
+
     const auto [join_key1, index1] = find_join_key( _df1, _join_key_used );
 
     const auto [join_key2, index2] =
@@ -307,8 +340,15 @@ DataFrameJoiner::make_row_indices(
 
     std::vector<size_t> rindices1, rindices2;
 
-    for ( size_t ix1 = 0; ix1 < _df1.nrows(); ++ix1 )
+    for ( size_t& ix1 = *_begin; ix1 < _df1.nrows(); ++ix1 )
         {
+            assert( rindices1.size() == rindices2.size() );
+
+            if ( rindices1.size() >= batch_size )
+                {
+                    break;
+                }
+
             const auto jk = join_key1[ix1];
 
             const auto it = index2.map()->find( jk );
