@@ -279,12 +279,12 @@ containers::DataFrame DataFrameJoiner::join(
 
             if ( joined_df )
                 {
-                    joined_df = std::make_optional<containers::DataFrame>(
-                        std::move( temp_df ) );
+                    joined_df->append( temp_df );
                 }
             else
                 {
-                    joined_df->append( temp_df );
+                    joined_df = std::make_optional<containers::DataFrame>(
+                        std::move( temp_df ) );
                 }
         }
 
