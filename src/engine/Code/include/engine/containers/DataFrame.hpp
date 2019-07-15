@@ -201,6 +201,90 @@ class DataFrame
             _name + "'!" );
     }
 
+    /// Whether the DataFrame has a categorical column named _name.
+    const bool has_categorical( const std::string &_name ) const
+    {
+        for ( size_t i = 0; i < num_categoricals(); ++i )
+            {
+                if ( categorical( i ).name() == _name )
+                    {
+                        return true;
+                    }
+            }
+
+        return false;
+    }
+
+    /// Whether the DataFrame has a discrete column named _name.
+    const bool has_discrete( const std::string &_name ) const
+    {
+        for ( size_t i = 0; i < num_discretes(); ++i )
+            {
+                if ( discrete( i ).name() == _name )
+                    {
+                        return true;
+                    }
+            }
+
+        return false;
+    }
+
+    /// Whether the DataFrame has a join_key named _name.
+    const bool has_join_key( const std::string &_name ) const
+    {
+        for ( size_t i = 0; i < num_join_keys(); ++i )
+            {
+                if ( join_key( i ).name() == _name )
+                    {
+                        return true;
+                    }
+            }
+
+        return false;
+    }
+
+    /// Whether the DataFrame has a numerical column named _name.
+    const bool has_numerical( const std::string &_name ) const
+    {
+        for ( size_t i = 0; i < num_numericals(); ++i )
+            {
+                if ( numerical( i ).name() == _name )
+                    {
+                        return true;
+                    }
+            }
+
+        return false;
+    }
+
+    /// Whether the DataFrame has a target column of named _name.
+    const bool has_target( const std::string &_name ) const
+    {
+        for ( size_t i = 0; i < num_targets(); ++i )
+            {
+                if ( target( i ).name() == _name )
+                    {
+                        return true;
+                    }
+            }
+
+        return false;
+    }
+
+    /// Whether the DataFrame has a time_stamp column of named _name.
+    const bool has_time_stamp( const std::string &_name ) const
+    {
+        for ( size_t i = 0; i < num_time_stamps(); ++i )
+            {
+                if ( time_stamp( i ).name() == _name )
+                    {
+                        return true;
+                    }
+            }
+
+        return false;
+    }
+
     /// Returns the index signified by index _i
     template <class T>
     DataFrameIndex &index( T _i )

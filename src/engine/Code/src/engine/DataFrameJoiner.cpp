@@ -12,28 +12,76 @@ void DataFrameJoiner::add_all(
     containers::DataFrame* _joined_df )
 {
     for ( size_t i = 0; i < _df.num_categoricals(); ++i )
-        _joined_df->add_int_column(
-            _df.categorical( i ).sort_by_key( _rindices ), "categorical" );
+        {
+            if ( _joined_df->has_categorical( _df.categorical( i ).name() ) )
+                {
+                    throw std::invalid_argument(
+                        "Duplicate categorical column: '" +
+                        _df.categorical( i ).name() + "'." );
+                }
+            _joined_df->add_int_column(
+                _df.categorical( i ).sort_by_key( _rindices ), "categorical" );
+        }
 
     for ( size_t i = 0; i < _df.num_discretes(); ++i )
-        _joined_df->add_float_column(
-            _df.discrete( i ).sort_by_key( _rindices ), "discrete" );
+        {
+            if ( _joined_df->has_discrete( _df.discrete( i ).name() ) )
+                {
+                    throw std::invalid_argument(
+                        "Duplicate discrete column: '" +
+                        _df.discrete( i ).name() + "'." );
+                }
+            _joined_df->add_float_column(
+                _df.discrete( i ).sort_by_key( _rindices ), "discrete" );
+        }
 
     for ( size_t i = 0; i < _df.num_join_keys(); ++i )
-        _joined_df->add_int_column(
-            _df.join_key( i ).sort_by_key( _rindices ), "join_key" );
+        {
+            if ( _joined_df->has_join_key( _df.join_key( i ).name() ) )
+                {
+                    throw std::invalid_argument(
+                        "Duplicate join key: '" + _df.join_key( i ).name() +
+                        "'." );
+                }
+            _joined_df->add_int_column(
+                _df.join_key( i ).sort_by_key( _rindices ), "join_key" );
+        }
 
     for ( size_t i = 0; i < _df.num_numericals(); ++i )
-        _joined_df->add_float_column(
-            _df.numerical( i ).sort_by_key( _rindices ), "numerical" );
+        {
+            if ( _joined_df->has_numerical( _df.numerical( i ).name() ) )
+                {
+                    throw std::invalid_argument(
+                        "Duplicate numerical column: '" +
+                        _df.numerical( i ).name() + "'." );
+                }
+            _joined_df->add_float_column(
+                _df.numerical( i ).sort_by_key( _rindices ), "numerical" );
+        }
 
     for ( size_t i = 0; i < _df.num_targets(); ++i )
-        _joined_df->add_float_column(
-            _df.target( i ).sort_by_key( _rindices ), "target" );
+        {
+            if ( _joined_df->has_target( _df.target( i ).name() ) )
+                {
+                    throw std::invalid_argument(
+                        "Duplicate target column: '" + _df.target( i ).name() +
+                        "'." );
+                }
+            _joined_df->add_float_column(
+                _df.target( i ).sort_by_key( _rindices ), "target" );
+        }
 
     for ( size_t i = 0; i < _df.num_time_stamps(); ++i )
-        _joined_df->add_float_column(
-            _df.time_stamp( i ).sort_by_key( _rindices ), "time_stamp" );
+        {
+            if ( _joined_df->has_time_stamp( _df.time_stamp( i ).name() ) )
+                {
+                    throw std::invalid_argument(
+                        "Duplicate time stamp column: '" +
+                        _df.time_stamp( i ).name() + "'." );
+                }
+            _joined_df->add_float_column(
+                _df.time_stamp( i ).sort_by_key( _rindices ), "time_stamp" );
+        }
 }
 
 // ----------------------------------------------------------------------------
@@ -72,36 +120,67 @@ void DataFrameJoiner::add_cols(
 
             if ( role == "categorical" )
                 {
+                    if ( _joined_df->has_categorical( as ) )
+                        {
+                            throw std::invalid_argument(
+                                "Duplicate categorical column: '" + name +
+                                "'." );
+                        }
                     auto col = _df.categorical( name ).sort_by_key( _rindices );
                     col.set_name( as );
                     _joined_df->add_int_column( col, role );
                 }
             else if ( role == "discrete" )
                 {
+                    if ( _joined_df->has_discrete( as ) )
+                        {
+                            throw std::invalid_argument(
+                                "Duplicate discrete column: '" + name + "'." );
+                        }
                     auto col = _df.discrete( name ).sort_by_key( _rindices );
                     col.set_name( as );
                     _joined_df->add_float_column( col, role );
                 }
             else if ( role == "join_key" )
                 {
+                    if ( _joined_df->has_join_key( as ) )
+                        {
+                            throw std::invalid_argument(
+                                "Duplicate join key: '" + name + "'." );
+                        }
                     auto col = _df.join_key( name ).sort_by_key( _rindices );
                     col.set_name( as );
                     _joined_df->add_int_column( col, role );
                 }
             else if ( role == "numerical" )
                 {
+                    if ( _joined_df->has_numerical( as ) )
+                        {
+                            throw std::invalid_argument(
+                                "Duplicate numerical: '" + name + "'." );
+                        }
                     auto col = _df.numerical( name ).sort_by_key( _rindices );
                     col.set_name( as );
                     _joined_df->add_float_column( col, role );
                 }
             else if ( role == "target" )
                 {
+                    if ( _joined_df->has_target( as ) )
+                        {
+                            throw std::invalid_argument(
+                                "Duplicate target: '" + name + "'." );
+                        }
                     auto col = _df.target( name ).sort_by_key( _rindices );
                     col.set_name( as );
                     _joined_df->add_float_column( col, role );
                 }
             else if ( role == "time_stamp" )
                 {
+                    if ( _joined_df->has_time_stamp( as ) )
+                        {
+                            throw std::invalid_argument(
+                                "Duplicate time_stamp: '" + name + "'." );
+                        }
                     auto col = _df.time_stamp( name ).sort_by_key( _rindices );
                     col.set_name( as );
                     _joined_df->add_float_column( col, role );
