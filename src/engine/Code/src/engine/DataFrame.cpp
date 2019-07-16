@@ -1139,6 +1139,47 @@ void DataFrame::save( const std::string &_path )
 
 // ----------------------------------------------------------------------------
 
+void DataFrame::select( const std::vector<bool> &_key )
+{
+    auto df = DataFrame( name(), categories_, join_keys_encoding_ );
+
+    for ( size_t i = 0; i < num_categoricals(); ++i )
+        {
+            df.add_int_column( categorical( i ).select( _key ), "categorical" );
+        }
+
+    for ( size_t i = 0; i < num_discretes(); ++i )
+        {
+            df.add_float_column( discrete( i ).select( _key ), "discrete" );
+        }
+
+    for ( size_t i = 0; i < num_join_keys(); ++i )
+        {
+            df.add_int_column( join_key( i ).select( _key ), "join_key" );
+        }
+
+    for ( size_t i = 0; i < num_numericals(); ++i )
+        {
+            df.add_float_column( numerical( i ).select( _key ), "numerical" );
+        }
+
+    for ( size_t i = 0; i < num_targets(); ++i )
+        {
+            df.add_float_column( target( i ).select( _key ), "target" );
+        }
+
+    for ( size_t i = 0; i < num_time_stamps(); ++i )
+        {
+            df.add_float_column( time_stamp( i ).select( _key ), "time_stamp" );
+        }
+
+    df.create_indices();
+
+    *this = std::move( df );
+}
+
+// ----------------------------------------------------------------------------
+
 Poco::JSON::Object DataFrame::to_monitor() const
 {
     // ---------------------------------------------------------------------

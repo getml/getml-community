@@ -483,9 +483,11 @@ void Column<T>::save_little_endian( const std::string &_fname ) const
 template <class T>
 Column<T> Column<T>::select( const std::vector<bool> &_key ) const
 {
-    assert(
-        static_cast<size_t>( _key.size() ) == nrows() &&
-        "Column: Size of keys must be identical to nrows!" );
+    if ( _key.size() != nrows() )
+        {
+            throw std::invalid_argument(
+                "Size of keys must be identical to number of rows!" );
+        }
 
     auto op = []( size_t init, bool elem ) {
         return ( ( elem ) ? ( init + 1 ) : ( init ) );

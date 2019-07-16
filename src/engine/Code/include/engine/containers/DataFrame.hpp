@@ -125,6 +125,9 @@ class DataFrame
     /// Saves the data on the engine
     void save( const std::string &_path );
 
+    /// Selects all rows for which the corresponding entry in _key is true.
+    void select( const std::vector<bool> &_key );
+
     /// Extracts the data frame as a Poco::JSON::Object the monitor process can
     /// understand
     Poco::JSON::Object to_monitor() const;
@@ -425,6 +428,9 @@ class DataFrame
     {
         join_keys_encoding_ = _join_keys_encoding;
     }
+
+    /// Primitive setter
+    void set_name( const std::string &_name ) { name_ = _name; }
 
     /// Trivial accessor
     template <

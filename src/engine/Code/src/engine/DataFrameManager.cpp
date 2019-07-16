@@ -679,6 +679,14 @@ void DataFrameManager::join(
 
     const auto how = JSON::get_value<std::string>( _cmd, "how_" );
 
+    auto where = std::optional<Poco::JSON::Object>();
+
+    if ( _cmd.has( "where_" ) )
+        {
+            where = std::make_optional<Poco::JSON::Object>(
+                *JSON::get_object( _cmd, "where_" ) );
+        }
+
     multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
 
     const auto& df1 = utils::Getter::get( df1_name, &data_frames() );
@@ -694,6 +702,7 @@ void DataFrameManager::join(
         join_key_used,
         other_join_key_used,
         how,
+        where,
         categories_,
         join_keys_encoding_ );
 
@@ -795,68 +804,28 @@ void DataFrameManager::select(
 
     // --------------------------------------------------------------------
 
-    const auto df = utils::Getter::get( _name, &data_frames() );
-
     const auto new_df_name = JSON::get_value<std::string>( _cmd, "new_df_" );
 
     const auto where_json = *JSON::get_object( _cmd, "where_" );
+
+    auto df = utils::Getter::get( _name, data_frames() );
 
     const auto where = BoolOpParser::parse(
         *categories_, *join_keys_encoding_, {df}, where_json );
 
     // --------------------------------------------------------------------
 
-    auto new_df =
-        containers::DataFrame( new_df_name, categories_, join_keys_encoding_ );
+    df.select( where );
 
-    // --------------------------------------------------------------------
-
-    for ( size_t i = 0; i < df.num_categoricals(); ++i )
-        {
-            new_df.add_int_column(
-                df.categorical( i ).select( where ), "categorical" );
-        }
-
-    for ( size_t i = 0; i < df.num_discretes(); ++i )
-        {
-            new_df.add_float_column(
-                df.discrete( i ).select( where ), "discrete" );
-        }
-
-    for ( size_t i = 0; i < df.num_join_keys(); ++i )
-        {
-            new_df.add_int_column(
-                df.join_key( i ).select( where ), "join_key" );
-        }
-
-    for ( size_t i = 0; i < df.num_numericals(); ++i )
-        {
-            new_df.add_float_column(
-                df.numerical( i ).select( where ), "numerical" );
-        }
-
-    for ( size_t i = 0; i < df.num_targets(); ++i )
-        {
-            new_df.add_float_column( df.target( i ).select( where ), "target" );
-        }
-
-    for ( size_t i = 0; i < df.num_time_stamps(); ++i )
-        {
-            new_df.add_float_column(
-                df.time_stamp( i ).select( where ), "time_stamp" );
-        }
-
-    // --------------------------------------------------------------------
-
-    new_df.create_indices();
+    df.set_name( new_df_name );
 
     // --------------------------------------------------------------------
 
     weak_write_lock.upgrade();
 
-    data_frames()[new_df_name] = new_df;
+    data_frames()[new_df_name] = df;
 
-    monitor_->send( "postdataframe", new_df.to_monitor() );
+    monitor_->send( "postdataframe", df.to_monitor() );
 
     weak_write_lock.unlock();
 

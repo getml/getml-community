@@ -92,6 +92,89 @@ void DataFrameJoiner::add_all(
 
 // ----------------------------------------------------------------------------
 
+void DataFrameJoiner::add_col(
+    const containers::DataFrame& _df,
+    const std::vector<size_t>& _rindices,
+    const std::string& _name,
+    const std::string& _role,
+    const std::string& _as,
+    containers::DataFrame* _joined_df )
+{
+    if ( _role == "categorical" )
+        {
+            if ( _joined_df->has_categorical( _as ) )
+                {
+                    throw std::invalid_argument(
+                        "Duplicate categorical column: '" + _name + "'." );
+                }
+            auto col = _df.categorical( _name ).sort_by_key( _rindices );
+            col.set_name( _as );
+            _joined_df->add_int_column( col, _role );
+        }
+    else if ( _role == "discrete" )
+        {
+            if ( _joined_df->has_discrete( _as ) )
+                {
+                    throw std::invalid_argument(
+                        "Duplicate discrete column: '" + _name + "'." );
+                }
+            auto col = _df.discrete( _name ).sort_by_key( _rindices );
+            col.set_name( _as );
+            _joined_df->add_float_column( col, _role );
+        }
+    else if ( _role == "join_key" )
+        {
+            if ( _joined_df->has_join_key( _as ) )
+                {
+                    throw std::invalid_argument(
+                        "Duplicate join key: '" + _name + "'." );
+                }
+            auto col = _df.join_key( _name ).sort_by_key( _rindices );
+            col.set_name( _as );
+            _joined_df->add_int_column( col, _role );
+        }
+    else if ( _role == "numerical" )
+        {
+            if ( _joined_df->has_numerical( _as ) )
+                {
+                    throw std::invalid_argument(
+                        "Duplicate numerical: '" + _name + "'." );
+                }
+            auto col = _df.numerical( _name ).sort_by_key( _rindices );
+            col.set_name( _as );
+            _joined_df->add_float_column( col, _role );
+        }
+    else if ( _role == "target" )
+        {
+            if ( _joined_df->has_target( _as ) )
+                {
+                    throw std::invalid_argument(
+                        "Duplicate target: '" + _name + "'." );
+                }
+            auto col = _df.target( _name ).sort_by_key( _rindices );
+            col.set_name( _as );
+            _joined_df->add_float_column( col, _role );
+        }
+    else if ( _role == "time_stamp" )
+        {
+            if ( _joined_df->has_time_stamp( _as ) )
+                {
+                    throw std::invalid_argument(
+                        "Duplicate time_stamp: '" + _name + "'." );
+                }
+            auto col = _df.time_stamp( _name ).sort_by_key( _rindices );
+            col.set_name( _as );
+            _joined_df->add_float_column( col, _role );
+        }
+    else
+        {
+            throw std::invalid_argument(
+                "Role '" + _role + "' not recognized." );
+        }
+}
+
+// ----------------------------------------------------------------------------
+
 void DataFrameJoiner::add_cols(
     const containers::DataFrame& _df,
     const std::vector<size_t>& _rindices,
@@ -124,79 +207,140 @@ void DataFrameJoiner::add_cols(
                     ? jsonutils::JSON::get_value<std::string>( obj, "as_" )
                     : name;
 
-            if ( role == "categorical" )
+            add_col( _df, _rindices, name, role, as, _joined_df );
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+void DataFrameJoiner::build_temp_dfs(
+    const containers::DataFrame& _df1,
+    const containers::DataFrame& _df2,
+    const std::vector<size_t>& _rindices1,
+    const std::vector<size_t>& _rindices2,
+    const Poco::JSON::Object& _col,
+    containers::DataFrame* _temp_df1,
+    containers::DataFrame* _temp_df2 )
+{
+    // ------------------------------------------------------------------------
+
+    const auto type = JSON::get_value<std::string>( _col, "type_" );
+
+    // ------------------------------------------------------------------------
+
+    if ( type == "Column" || type == "CategoricalColumn" )
+        {
+            const auto name = JSON::get_value<std::string>( _col, "name_" );
+
+            const auto role = JSON::get_value<std::string>( _col, "role_" );
+
+            const auto df_name =
+                JSON::get_value<std::string>( _col, "df_name_" );
+
+            if ( df_name == _df1.name() )
                 {
-                    if ( _joined_df->has_categorical( as ) )
+                    try
                         {
-                            throw std::invalid_argument(
-                                "Duplicate categorical column: '" + name +
-                                "'." );
+                            add_col(
+                                _df1, _rindices1, name, role, name, _temp_df1 );
                         }
-                    auto col = _df.categorical( name ).sort_by_key( _rindices );
-                    col.set_name( as );
-                    _joined_df->add_int_column( col, role );
+                    catch ( std::exception& e )
+                        {
+                        }
                 }
-            else if ( role == "discrete" )
+            else if ( df_name == _df2.name() )
                 {
-                    if ( _joined_df->has_discrete( as ) )
+                    try
                         {
-                            throw std::invalid_argument(
-                                "Duplicate discrete column: '" + name + "'." );
+                            add_col(
+                                _df2, _rindices2, name, role, name, _temp_df2 );
                         }
-                    auto col = _df.discrete( name ).sort_by_key( _rindices );
-                    col.set_name( as );
-                    _joined_df->add_float_column( col, role );
-                }
-            else if ( role == "join_key" )
-                {
-                    if ( _joined_df->has_join_key( as ) )
+                    catch ( std::exception& e )
                         {
-                            throw std::invalid_argument(
-                                "Duplicate join key: '" + name + "'." );
                         }
-                    auto col = _df.join_key( name ).sort_by_key( _rindices );
-                    col.set_name( as );
-                    _joined_df->add_int_column( col, role );
-                }
-            else if ( role == "numerical" )
-                {
-                    if ( _joined_df->has_numerical( as ) )
-                        {
-                            throw std::invalid_argument(
-                                "Duplicate numerical: '" + name + "'." );
-                        }
-                    auto col = _df.numerical( name ).sort_by_key( _rindices );
-                    col.set_name( as );
-                    _joined_df->add_float_column( col, role );
-                }
-            else if ( role == "target" )
-                {
-                    if ( _joined_df->has_target( as ) )
-                        {
-                            throw std::invalid_argument(
-                                "Duplicate target: '" + name + "'." );
-                        }
-                    auto col = _df.target( name ).sort_by_key( _rindices );
-                    col.set_name( as );
-                    _joined_df->add_float_column( col, role );
-                }
-            else if ( role == "time_stamp" )
-                {
-                    if ( _joined_df->has_time_stamp( as ) )
-                        {
-                            throw std::invalid_argument(
-                                "Duplicate time_stamp: '" + name + "'." );
-                        }
-                    auto col = _df.time_stamp( name ).sort_by_key( _rindices );
-                    col.set_name( as );
-                    _joined_df->add_float_column( col, role );
                 }
             else
                 {
                     throw std::invalid_argument(
-                        "Role '" + role + "' not recognized." );
+                        "Column '" + df_name + "' is part of DataFrame '" +
+                        df_name + "'." );
                 }
         }
+
+    // ------------------------------------------------------------------------
+
+    if ( _col.has( "operand1_" ) )
+        {
+            build_temp_dfs(
+                _df1,
+                _df2,
+                _rindices1,
+                _rindices2,
+                *JSON::get_object( _col, "operand1_" ),
+                _temp_df1,
+                _temp_df2 );
+        }
+
+    if ( _col.has( "operand2_" ) )
+        {
+            build_temp_dfs(
+                _df1,
+                _df2,
+                _rindices1,
+                _rindices2,
+                *JSON::get_object( _col, "operand2_" ),
+                _temp_df1,
+                _temp_df2 );
+        }
+
+    if ( _col.has( "condition_" ) )
+        {
+            build_temp_dfs(
+                _df1,
+                _df2,
+                _rindices1,
+                _rindices2,
+                *JSON::get_object( _col, "condition_" ),
+                _temp_df1,
+                _temp_df2 );
+        }
+
+    // ------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+void DataFrameJoiner::filter(
+    const containers::DataFrame& _df1,
+    const containers::DataFrame& _df2,
+    const std::vector<size_t>& _rindices1,
+    const std::vector<size_t>& _rindices2,
+    const Poco::JSON::Object& _where,
+    const std::shared_ptr<containers::Encoding>& _categories,
+    const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
+    containers::DataFrame* _temp_df )
+{
+    // ------------------------------------------------------------------------
+
+    auto temp_df1 =
+        containers::DataFrame( _df1.name(), _categories, _join_keys_encoding );
+
+    auto temp_df2 =
+        containers::DataFrame( _df2.name(), _categories, _join_keys_encoding );
+
+    build_temp_dfs(
+        _df1, _df2, _rindices1, _rindices2, _where, &temp_df1, &temp_df2 );
+
+    // ------------------------------------------------------------------------
+
+    const auto where = BoolOpParser::parse(
+        *_categories, *_join_keys_encoding, {temp_df1, temp_df2}, _where );
+
+    // ------------------------------------------------------------------------
+
+    _temp_df->select( where );
+
+    // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -210,6 +354,7 @@ containers::DataFrame DataFrameJoiner::join(
     const std::string& _join_key_used,
     const std::string& _other_join_key_used,
     const std::string& _how,
+    const std::optional<const Poco::JSON::Object>& _where,
     const std::shared_ptr<containers::Encoding>& _categories,
     const std::shared_ptr<containers::Encoding>& _join_keys_encoding )
 {
@@ -226,6 +371,7 @@ containers::DataFrame DataFrameJoiner::join(
                 _other_join_key_used,
                 _join_key_used,
                 "left",
+                _where,
                 _categories,
                 _join_keys_encoding );
         }
@@ -275,6 +421,19 @@ containers::DataFrame DataFrameJoiner::join(
             else
                 {
                     add_all( _df2, rindices2, &temp_df );
+                }
+
+            if ( _where )
+                {
+                    filter(
+                        _df1,
+                        _df2,
+                        rindices1,
+                        rindices2,
+                        *_where,
+                        _categories,
+                        _join_keys_encoding,
+                        &temp_df );
                 }
 
             if ( joined_df )

@@ -22,6 +22,7 @@ class DataFrameJoiner
         const std::string& _join_key_used,
         const std::string& _other_join_key_used,
         const std::string& _how,
+        const std::optional<const Poco::JSON::Object>& _where,
         const std::shared_ptr<containers::Encoding>& _categories,
         const std::shared_ptr<containers::Encoding>& _join_keys_encoding );
 
@@ -34,12 +35,40 @@ class DataFrameJoiner
         const std::vector<size_t>& _rindices,
         containers::DataFrame* _joined_df );
 
+    /// Adds column _col from _df to _joined_df, sorted by _rindices.
+    static void add_col(
+        const containers::DataFrame& _df,
+        const std::vector<size_t>& _rindices,
+        const std::string& _name,
+        const std::string& _role,
+        const std::string& _as,
+        containers::DataFrame* _joined_df );
+
     /// Adds columns in _cols from _df to _joined_df, sorted by _rindices.
     static void add_cols(
         const containers::DataFrame& _df,
         const std::vector<size_t>& _rindices,
         const Poco::JSON::Array& _cols,
         containers::DataFrame* _joined_df );
+
+    static void build_temp_dfs(
+        const containers::DataFrame& _df1,
+        const containers::DataFrame& _df2,
+        const std::vector<size_t>& _rindices1,
+        const std::vector<size_t>& _rindices2,
+        const Poco::JSON::Object& _col,
+        containers::DataFrame* _temp_df1,
+        containers::DataFrame* _temp_df2 );
+
+    static void filter(
+        const containers::DataFrame& _df1,
+        const containers::DataFrame& _df2,
+        const std::vector<size_t>& _rindices1,
+        const std::vector<size_t>& _rindices2,
+        const Poco::JSON::Object& _where,
+        const std::shared_ptr<containers::Encoding>& _categories,
+        const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
+        containers::DataFrame* _temp_df );
 
     /// Returns the join key and index signified by _name.
     static std::pair<
