@@ -9,7 +9,7 @@ namespace handlers
 containers::Column<Float> NumOpParser::binary_operation(
     const containers::Encoding& _categories,
     const containers::Encoding& _join_keys_encoding,
-    const containers::DataFrame& _df,
+    const std::vector<containers::DataFrame>& _df,
     const Poco::JSON::Object& _col )
 {
     const auto op = JSON::get_value<std::string>( _col, "operator_" );
@@ -81,7 +81,7 @@ containers::Column<Float> NumOpParser::binary_operation(
 containers::Column<Float> NumOpParser::parse(
     const containers::Encoding& _categories,
     const containers::Encoding& _join_keys_encoding,
-    const containers::DataFrame& _df,
+    const std::vector<containers::DataFrame>& _df,
     const Poco::JSON::Object& _col )
 {
     const auto type = JSON::get_value<std::string>( _col, "type_" );
@@ -92,13 +92,32 @@ containers::Column<Float> NumOpParser::parse(
 
             const auto role = JSON::get_value<std::string>( _col, "role_" );
 
-            return _df.float_column( name, role );
+            const auto df_name =
+                JSON::get_value<std::string>( _col, "df_name_" );
+
+            const auto has_df_name =
+                [df_name]( const containers::DataFrame& df ) {
+                    return df.name() == df_name;
+                };
+
+            const auto it = std::find_if( _df.begin(), _df.end(), has_df_name );
+
+            if ( it == _df.end() )
+                {
+                    throw std::invalid_argument(
+                        "Column '" + name + "' is from DataFrame '" + df_name +
+                        "'." );
+                }
+
+            return it->float_column( name, role );
         }
     else if ( type == "Value" )
         {
             const auto val = JSON::get_value<Float>( _col, "value_" );
 
-            auto col = containers::Column<Float>( _df.nrows() );
+            assert( _df.size() > 0 );
+
+            auto col = containers::Column<Float>( _df[0].nrows() );
 
             std::fill( col.begin(), col.end(), val );
 
@@ -127,7 +146,7 @@ containers::Column<Float> NumOpParser::parse(
 containers::Column<Float> NumOpParser::to_num(
     const containers::Encoding& _categories,
     const containers::Encoding& _join_keys_encoding,
-    const containers::DataFrame& _df,
+    const std::vector<containers::DataFrame>& _df,
     const Poco::JSON::Object& _col )
 {
     const auto operand1 = CatOpParser::parse(
@@ -161,7 +180,7 @@ containers::Column<Float> NumOpParser::to_num(
 containers::Column<Float> NumOpParser::to_ts(
     const containers::Encoding& _categories,
     const containers::Encoding& _join_keys_encoding,
-    const containers::DataFrame& _df,
+    const std::vector<containers::DataFrame>& _df,
     const Poco::JSON::Object& _col )
 {
     const auto time_formats = JSON::array_to_vector<std::string>(
@@ -204,7 +223,7 @@ containers::Column<Float> NumOpParser::to_ts(
 containers::Column<Float> NumOpParser::unary_operation(
     const containers::Encoding& _categories,
     const containers::Encoding& _join_keys_encoding,
-    const containers::DataFrame& _df,
+    const std::vector<containers::DataFrame>& _df,
     const Poco::JSON::Object& _col )
 {
     const auto op = JSON::get_value<std::string>( _col, "operator_" );
@@ -520,7 +539,7 @@ containers::Column<Float> NumOpParser::unary_operation(
 containers::Column<Float> NumOpParser::update(
     const containers::Encoding& _categories,
     const containers::Encoding& _join_keys_encoding,
-    const containers::DataFrame& _df,
+    const std::vector<containers::DataFrame>& _df,
     const Poco::JSON::Object& _col )
 {
     const auto operand1 = parse(

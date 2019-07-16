@@ -33,8 +33,8 @@ void DataFrameManager::add_categorical_column(
 
     // ------------------------------------------------------------------------
 
-    const auto vec =
-        CatOpParser::parse( *categories_, *join_keys_encoding_, df, json_col );
+    const auto vec = CatOpParser::parse(
+        *categories_, *join_keys_encoding_, {df}, json_col );
 
     // ------------------------------------------------------------------------
 
@@ -209,8 +209,8 @@ void DataFrameManager::add_column(
 
     const auto json_col = *JSON::get_object( _cmd, "col_" );
 
-    auto col =
-        NumOpParser::parse( *categories_, *join_keys_encoding_, df, json_col );
+    auto col = NumOpParser::parse(
+        *categories_, *join_keys_encoding_, {df}, json_col );
 
     col.set_name( name );
 
@@ -532,8 +532,8 @@ void DataFrameManager::get_boolean_column(
 
     const auto df = utils::Getter::get( _name, &data_frames() );
 
-    const auto col =
-        BoolOpParser::parse( *categories_, *join_keys_encoding_, df, json_col );
+    const auto col = BoolOpParser::parse(
+        *categories_, *join_keys_encoding_, {df}, json_col );
 
     communication::Sender::send_string( "Found!", _socket );
 
@@ -553,8 +553,8 @@ void DataFrameManager::get_categorical_column(
 
     const auto df = utils::Getter::get( _name, &data_frames() );
 
-    const auto col =
-        CatOpParser::parse( *categories_, *join_keys_encoding_, df, json_col );
+    const auto col = CatOpParser::parse(
+        *categories_, *join_keys_encoding_, {df}, json_col );
 
     communication::Sender::send_string( "Found!", _socket );
 
@@ -574,8 +574,8 @@ void DataFrameManager::get_column(
 
     const auto df = utils::Getter::get( _name, &data_frames() );
 
-    const auto col =
-        NumOpParser::parse( *categories_, *join_keys_encoding_, df, json_col );
+    const auto col = NumOpParser::parse(
+        *categories_, *join_keys_encoding_, {df}, json_col );
 
     communication::Sender::send_string( "Found!", _socket );
 
@@ -802,7 +802,7 @@ void DataFrameManager::select(
     const auto where_json = *JSON::get_object( _cmd, "where_" );
 
     const auto where = BoolOpParser::parse(
-        *categories_, *join_keys_encoding_, df, where_json );
+        *categories_, *join_keys_encoding_, {df}, where_json );
 
     // --------------------------------------------------------------------
 

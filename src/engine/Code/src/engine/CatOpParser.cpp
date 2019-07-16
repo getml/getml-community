@@ -9,7 +9,7 @@ namespace handlers
 std::vector<std::string> CatOpParser::binary_operation(
     const containers::Encoding& _categories,
     const containers::Encoding& _join_keys_encoding,
-    const containers::DataFrame& _df,
+    const std::vector<containers::DataFrame>& _df,
     const Poco::JSON::Object& _col )
 {
     const auto op = JSON::get_value<std::string>( _col, "operator_" );
@@ -42,7 +42,7 @@ std::vector<std::string> CatOpParser::binary_operation(
 std::vector<std::string> CatOpParser::boolean_to_string(
     const containers::Encoding& _categories,
     const containers::Encoding& _join_keys_encoding,
-    const containers::DataFrame& _df,
+    const std::vector<containers::DataFrame>& _df,
     const Poco::JSON::Object& _col )
 {
     const auto obj = *JSON::get_object( _col, "operand1_" );
@@ -73,7 +73,7 @@ std::vector<std::string> CatOpParser::boolean_to_string(
 std::vector<std::string> CatOpParser::numerical_to_string(
     const containers::Encoding& _categories,
     const containers::Encoding& _join_keys_encoding,
-    const containers::DataFrame& _df,
+    const std::vector<containers::DataFrame>& _df,
     const Poco::JSON::Object& _col )
 {
     const auto obj = *JSON::get_object( _col, "operand1_" );
@@ -132,7 +132,7 @@ std::vector<std::string> CatOpParser::numerical_to_string(
 std::vector<std::string> CatOpParser::parse(
     const containers::Encoding& _categories,
     const containers::Encoding& _join_keys_encoding,
-    const containers::DataFrame& _df,
+    const std::vector<containers::DataFrame>& _df,
     const Poco::JSON::Object& _col )
 {
     const auto type = JSON::get_value<std::string>( _col, "type_" );
@@ -143,21 +143,40 @@ std::vector<std::string> CatOpParser::parse(
 
             const auto role = JSON::get_value<std::string>( _col, "role_" );
 
+            const auto df_name =
+                JSON::get_value<std::string>( _col, "df_name_" );
+
+            const auto has_df_name =
+                [df_name]( const containers::DataFrame& df ) {
+                    return df.name() == df_name;
+                };
+
+            const auto it = std::find_if( _df.begin(), _df.end(), has_df_name );
+
+            if ( it == _df.end() )
+                {
+                    throw std::invalid_argument(
+                        "Column '" + name + "' is from DataFrame '" + df_name +
+                        "'." );
+                }
+
             if ( role == "categorical" )
                 {
-                    return to_vec( _categories, _df.int_column( name, role ) );
+                    return to_vec( _categories, it->int_column( name, role ) );
                 }
             else
                 {
                     return to_vec(
-                        _join_keys_encoding, _df.int_column( name, role ) );
+                        _join_keys_encoding, it->int_column( name, role ) );
                 }
         }
     else if ( type == "CategoricalValue" )
         {
             const auto val = JSON::get_value<std::string>( _col, "value_" );
 
-            auto vec = std::vector<std::string>( _df.nrows() );
+            assert( _df.size() > 0 );
+
+            auto vec = std::vector<std::string>( _df[0].nrows() );
 
             std::fill( vec.begin(), vec.end(), val );
 
@@ -191,7 +210,7 @@ std::vector<std::string> CatOpParser::parse(
 std::vector<std::string> CatOpParser::unary_operation(
     const containers::Encoding& _categories,
     const containers::Encoding& _join_keys_encoding,
-    const containers::DataFrame& _df,
+    const std::vector<containers::DataFrame>& _df,
     const Poco::JSON::Object& _col )
 {
     const auto op = JSON::get_value<std::string>( _col, "operator_" );
@@ -239,7 +258,7 @@ std::vector<std::string> CatOpParser::unary_operation(
 std::vector<std::string> CatOpParser::update(
     const containers::Encoding& _categories,
     const containers::Encoding& _join_keys_encoding,
-    const containers::DataFrame& _df,
+    const std::vector<containers::DataFrame>& _df,
     const Poco::JSON::Object& _col )
 {
     const auto operand1 = parse(

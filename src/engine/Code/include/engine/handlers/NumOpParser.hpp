@@ -16,7 +16,7 @@ class NumOpParser
     static containers::Column<Float> parse(
         const containers::Encoding& _categories,
         const containers::Encoding& _join_keys_encoding,
-        const containers::DataFrame& _df,
+        const std::vector<containers::DataFrame>& _df,
         const Poco::JSON::Object& _col );
 
     // ------------------------------------------------------------------------
@@ -26,35 +26,35 @@ class NumOpParser
     static containers::Column<Float> binary_operation(
         const containers::Encoding& _categories,
         const containers::Encoding& _join_keys_encoding,
-        const containers::DataFrame& _df,
+        const std::vector<containers::DataFrame>& _df,
         const Poco::JSON::Object& _col );
 
     /// Transforms a string column to a float.
     static containers::Column<Float> to_num(
         const containers::Encoding& _categories,
         const containers::Encoding& _join_keys_encoding,
-        const containers::DataFrame& _df,
+        const std::vector<containers::DataFrame>& _df,
         const Poco::JSON::Object& _col );
 
     /// Transforms a string column to a time stamp.
     static containers::Column<Float> to_ts(
         const containers::Encoding& _categories,
         const containers::Encoding& _join_keys_encoding,
-        const containers::DataFrame& _df,
+        const std::vector<containers::DataFrame>& _df,
         const Poco::JSON::Object& _col );
 
     /// Parses the operator and undertakes a unary operation.
     static containers::Column<Float> unary_operation(
         const containers::Encoding& _categories,
         const containers::Encoding& _join_keys_encoding,
-        const containers::DataFrame& _df,
+        const std::vector<containers::DataFrame>& _df,
         const Poco::JSON::Object& _col );
 
     /// Returns an updated version of the column.
     static containers::Column<Float> update(
         const containers::Encoding& _categories,
         const containers::Encoding& _join_keys_encoding,
-        const containers::DataFrame& _df,
+        const std::vector<containers::DataFrame>& _df,
         const Poco::JSON::Object& _col );
 
     // ------------------------------------------------------------------------
@@ -65,7 +65,7 @@ class NumOpParser
     static containers::Column<Float> bin_op(
         const containers::Encoding& _categories,
         const containers::Encoding& _join_keys_encoding,
-        const containers::DataFrame& _df,
+        const std::vector<containers::DataFrame>& _df,
         const Poco::JSON::Object& _col,
         const Operator& _op )
     {
@@ -97,7 +97,8 @@ class NumOpParser
 
     /// Returns a columns containing random values.
     static containers::Column<Float> random(
-        const containers::DataFrame& _df, const Poco::JSON::Object& _col )
+        const std::vector<containers::DataFrame>& _df,
+        const Poco::JSON::Object& _col )
     {
         const auto seed = JSON::get_value<unsigned int>( _col, "seed_" );
 
@@ -105,7 +106,9 @@ class NumOpParser
 
         std::uniform_real_distribution<Float> dis( 0.0, 1.0 );
 
-        auto result = containers::Column<Float>( _df.nrows() );
+        assert( _df.size() > 0 );
+
+        auto result = containers::Column<Float>( _df[0].nrows() );
 
         for ( auto& val : result )
             {
@@ -116,11 +119,14 @@ class NumOpParser
     }
 
     /// Returns a columns containing the rowids.
-    static containers::Column<Float> rowid( const containers::DataFrame& _df )
+    static containers::Column<Float> rowid(
+        const std::vector<containers::DataFrame>& _df )
     {
-        auto result = containers::Column<Float>( _df.nrows() );
+        assert( _df.size() > 0 );
 
-        for ( size_t i = 0; i < _df.nrows(); ++i )
+        auto result = containers::Column<Float>( _df[0].nrows() );
+
+        for ( size_t i = 0; i < result.size(); ++i )
             {
                 result[i] = static_cast<Float>( i );
             }
@@ -134,7 +140,7 @@ class NumOpParser
     static containers::Column<Float> un_op(
         const containers::Encoding& _categories,
         const containers::Encoding& _join_keys_encoding,
-        const containers::DataFrame& _df,
+        const std::vector<containers::DataFrame>& _df,
         const Poco::JSON::Object& _col,
         const Operator& _op )
     {

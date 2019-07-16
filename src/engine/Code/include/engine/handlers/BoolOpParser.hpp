@@ -16,7 +16,7 @@ class BoolOpParser
     static std::vector<bool> parse(
         const containers::Encoding& _categories,
         const containers::Encoding& _join_keys_encoding,
-        const containers::DataFrame& _df,
+        const std::vector<containers::DataFrame>& _df,
         const Poco::JSON::Object& _col );
 
     // ------------------------------------------------------------------------
@@ -26,14 +26,14 @@ class BoolOpParser
     static std::vector<bool> binary_operation(
         const containers::Encoding& _categories,
         const containers::Encoding& _join_keys_encoding,
-        const containers::DataFrame& _df,
+        const std::vector<containers::DataFrame>& _df,
         const Poco::JSON::Object& _col );
 
     /// Parses the operator and undertakes a unary operation.
     static std::vector<bool> unary_operation(
         const containers::Encoding& _categories,
         const containers::Encoding& _join_keys_encoding,
-        const containers::DataFrame& _df,
+        const std::vector<containers::DataFrame>& _df,
         const Poco::JSON::Object& _col );
 
     // ------------------------------------------------------------------------
@@ -44,7 +44,7 @@ class BoolOpParser
     static std::vector<bool> bin_op(
         const containers::Encoding& _categories,
         const containers::Encoding& _join_keys_encoding,
-        const containers::DataFrame& _df,
+        const std::vector<containers::DataFrame>& _df,
         const Poco::JSON::Object& _col,
         const Operator& _op )
     {
@@ -80,7 +80,7 @@ class BoolOpParser
     static std::vector<bool> cat_bin_op(
         const containers::Encoding& _categories,
         const containers::Encoding& _join_keys_encoding,
-        const containers::DataFrame& _df,
+        const std::vector<containers::DataFrame>& _df,
         const Poco::JSON::Object& _col,
         const Operator& _op )
     {
@@ -116,7 +116,7 @@ class BoolOpParser
     static std::vector<bool> num_bin_op(
         const containers::Encoding& _categories,
         const containers::Encoding& _join_keys_encoding,
-        const containers::DataFrame& _df,
+        const std::vector<containers::DataFrame>& _df,
         const Poco::JSON::Object& _col,
         const Operator& _op )
     {
@@ -152,7 +152,7 @@ class BoolOpParser
     static std::vector<bool> num_un_op(
         const containers::Encoding& _categories,
         const containers::Encoding& _join_keys_encoding,
-        const containers::DataFrame& _df,
+        const std::vector<containers::DataFrame>& _df,
         const Poco::JSON::Object& _col,
         const Operator& _op )
     {
@@ -175,7 +175,7 @@ class BoolOpParser
     static std::vector<bool> un_op(
         const containers::Encoding& _categories,
         const containers::Encoding& _join_keys_encoding,
-        const containers::DataFrame& _df,
+        const std::vector<containers::DataFrame>& _df,
         const Poco::JSON::Object& _col,
         const Operator& _op )
     {

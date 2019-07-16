@@ -9,7 +9,7 @@ namespace handlers
 std::vector<bool> BoolOpParser::binary_operation(
     const containers::Encoding& _categories,
     const containers::Encoding& _join_keys_encoding,
-    const containers::DataFrame& _df,
+    const std::vector<containers::DataFrame>& _df,
     const Poco::JSON::Object& _col )
 {
     const auto op = JSON::get_value<std::string>( _col, "operator_" );
@@ -170,7 +170,7 @@ std::vector<bool> BoolOpParser::binary_operation(
 std::vector<bool> BoolOpParser::parse(
     const containers::Encoding& _categories,
     const containers::Encoding& _join_keys_encoding,
-    const containers::DataFrame& _df,
+    const std::vector<containers::DataFrame>& _df,
     const Poco::JSON::Object& _col )
 {
     const auto type = JSON::get_value<std::string>( _col, "type_" );
@@ -179,7 +179,9 @@ std::vector<bool> BoolOpParser::parse(
         {
             const auto val = JSON::get_value<bool>( _col, "value_" );
 
-            auto vec = std::vector<bool>( _df.nrows() );
+            assert( _df.size() > 0 );
+
+            auto vec = std::vector<bool>( _df[0].nrows() );
 
             std::fill( vec.begin(), vec.end(), val );
 
@@ -213,7 +215,7 @@ std::vector<bool> BoolOpParser::parse(
 std::vector<bool> BoolOpParser::unary_operation(
     const containers::Encoding& _categories,
     const containers::Encoding& _join_keys_encoding,
-    const containers::DataFrame& _df,
+    const std::vector<containers::DataFrame>& _df,
     const Poco::JSON::Object& _col )
 {
     const auto op = JSON::get_value<std::string>( _col, "operator_" );

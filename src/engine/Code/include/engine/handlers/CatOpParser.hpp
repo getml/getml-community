@@ -16,7 +16,7 @@ class CatOpParser
     static std::vector<std::string> parse(
         const containers::Encoding& _categories,
         const containers::Encoding& _join_keys_encoding,
-        const containers::DataFrame& _df,
+        const std::vector<containers::DataFrame>& _df,
         const Poco::JSON::Object& _col );
 
     // ------------------------------------------------------------------------
@@ -26,35 +26,35 @@ class CatOpParser
     static std::vector<std::string> binary_operation(
         const containers::Encoding& _categories,
         const containers::Encoding& _join_keys_encoding,
-        const containers::DataFrame& _df,
+        const std::vector<containers::DataFrame>& _df,
         const Poco::JSON::Object& _col );
 
     /// Transforms a boolean column to a string.
     static std::vector<std::string> boolean_to_string(
         const containers::Encoding& _categories,
         const containers::Encoding& _join_keys_encoding,
-        const containers::DataFrame& _df,
+        const std::vector<containers::DataFrame>& _df,
         const Poco::JSON::Object& _col );
 
     /// Transforms a float column to a string.
     static std::vector<std::string> numerical_to_string(
         const containers::Encoding& _categories,
         const containers::Encoding& _join_keys_encoding,
-        const containers::DataFrame& _df,
+        const std::vector<containers::DataFrame>& _df,
         const Poco::JSON::Object& _col );
 
     /// Parses the operator and undertakes a unary operation.
     static std::vector<std::string> unary_operation(
         const containers::Encoding& _categories,
         const containers::Encoding& _join_keys_encoding,
-        const containers::DataFrame& _df,
+        const std::vector<containers::DataFrame>& _df,
         const Poco::JSON::Object& _col );
 
     /// Returns an updated version of the column.
     static std::vector<std::string> update(
         const containers::Encoding& _categories,
         const containers::Encoding& _join_keys_encoding,
-        const containers::DataFrame& _df,
+        const std::vector<containers::DataFrame>& _df,
         const Poco::JSON::Object& _col );
 
     // ------------------------------------------------------------------------
@@ -65,7 +65,7 @@ class CatOpParser
     static std::vector<std::string> bin_op(
         const containers::Encoding& _categories,
         const containers::Encoding& _join_keys_encoding,
-        const containers::DataFrame& _df,
+        const std::vector<containers::DataFrame>& _df,
         const Poco::JSON::Object& _col,
         const Operator& _op )
     {
@@ -101,7 +101,7 @@ class CatOpParser
     static std::vector<std::string> un_op(
         const containers::Encoding& _categories,
         const containers::Encoding& _join_keys_encoding,
-        const containers::DataFrame& _df,
+        const std::vector<containers::DataFrame>& _df,
         const Poco::JSON::Object& _col,
         const Operator& _op )
     {
