@@ -333,12 +333,12 @@ void DataFrameJoiner::filter(
 
     // ------------------------------------------------------------------------
 
-    const auto where = BoolOpParser::parse(
+    const auto condition = BoolOpParser::parse(
         *_categories, *_join_keys_encoding, {temp_df1, temp_df2}, _where );
 
     // ------------------------------------------------------------------------
 
-    _temp_df->select( where );
+    _temp_df->where( condition );
 
     // ------------------------------------------------------------------------
 }

@@ -47,9 +47,6 @@ class Column
     /// Saves the Column in binary format
     void save( const std::string &_fname ) const;
 
-    /// Returns a Column containing all rows for which _key is true.
-    Column<T> select( const std::vector<bool> &_key ) const;
-
     /// Returns a copy of the column that has been sorted by the
     /// key provided.
     /// The resulting column does not have to be the same length
@@ -59,6 +56,9 @@ class Column
 
     /// Transforms Column to a std::vector
     std::vector<T> to_vector() const;
+
+    /// Returns a Column containing all rows for which _key is true.
+    Column<T> where( const std::vector<bool> &_condition ) const;
 
     // -------------------------------
 
@@ -478,42 +478,6 @@ void Column<T>::save_little_endian( const std::string &_fname ) const
     // -----------------------------------------------------------------
 }
 
-// -----------------------------------------------------------------------------
-
-template <class T>
-Column<T> Column<T>::select( const std::vector<bool> &_key ) const
-{
-    if ( _key.size() != nrows() )
-        {
-            throw std::invalid_argument(
-                "Size of keys must be identical to number of rows!" );
-        }
-
-    auto op = []( size_t init, bool elem ) {
-        return ( ( elem ) ? ( init + 1 ) : ( init ) );
-    };
-
-    size_t nrows_new = std::accumulate( _key.begin(), _key.end(), 0, op );
-
-    Column<T> trimmed( nrows_new );
-
-    trimmed.name_ = name_;
-
-    trimmed.unit_ = unit_;
-
-    size_t k = 0;
-
-    for ( size_t i = 0; i < nrows(); ++i )
-        {
-            if ( _key[i] )
-                {
-                    trimmed[k++] = data()[i];
-                }
-        }
-
-    return trimmed;
-}
-
 // -------------------------------------------------------------------------
 
 template <class T>
@@ -561,6 +525,43 @@ std::vector<T> Column<T>::to_vector() const
     std::copy( begin(), end(), vec.begin() );
 
     return vec;
+}
+
+// -----------------------------------------------------------------------------
+
+template <class T>
+Column<T> Column<T>::where( const std::vector<bool> &_condition ) const
+{
+    if ( _condition.size() != nrows() )
+        {
+            throw std::invalid_argument(
+                "Size of keys must be identical to number of rows!" );
+        }
+
+    auto op = []( size_t init, bool elem ) {
+        return ( ( elem ) ? ( init + 1 ) : ( init ) );
+    };
+
+    size_t nrows_new =
+        std::accumulate( _condition.begin(), _condition.end(), 0, op );
+
+    Column<T> trimmed( nrows_new );
+
+    trimmed.name_ = name_;
+
+    trimmed.unit_ = unit_;
+
+    size_t k = 0;
+
+    for ( size_t i = 0; i < nrows(); ++i )
+        {
+            if ( _condition[i] )
+                {
+                    trimmed[k++] = data()[i];
+                }
+        }
+
+    return trimmed;
 }
 
 // -------------------------------------------------------------------------

@@ -125,12 +125,13 @@ class DataFrame
     /// Saves the data on the engine
     void save( const std::string &_path );
 
-    /// Selects all rows for which the corresponding entry in _key is true.
-    void select( const std::vector<bool> &_key );
-
     /// Extracts the data frame as a Poco::JSON::Object the monitor process can
     /// understand
     Poco::JSON::Object to_monitor() const;
+
+    /// Selects all rows for which the corresponding entry in _condition is
+    /// true.
+    void where( const std::vector<bool> &_condition );
 
     // -------------------------------
 

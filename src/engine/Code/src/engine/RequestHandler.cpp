@@ -189,14 +189,15 @@ void RequestHandler::run()
                 {
                     project_manager().save_data_frame( name, &socket() );
                 }
-            else if ( type == "DataFrame.select" )
-                {
-                    data_frame_manager().select( name, cmd, &socket() );
-                }
             else if ( type == "DataFrame.summarize" )
                 {
                     data_frame_manager().summarize( name, &socket() );
                 }
+            else if ( type == "DataFrame.where" )
+                {
+                    data_frame_manager().where( name, cmd, &socket() );
+                }
+
             else if ( type == "delete_all_users" )
                 {
                     /*    monitor().send( "deleteallusers", "" );

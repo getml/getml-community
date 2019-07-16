@@ -793,49 +793,6 @@ void DataFrameManager::remove_column(
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::select(
-    const std::string& _name,
-    const Poco::JSON::Object& _cmd,
-    Poco::Net::StreamSocket* _socket )
-{
-    // --------------------------------------------------------------------
-
-    multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
-
-    // --------------------------------------------------------------------
-
-    const auto new_df_name = JSON::get_value<std::string>( _cmd, "new_df_" );
-
-    const auto where_json = *JSON::get_object( _cmd, "where_" );
-
-    auto df = utils::Getter::get( _name, data_frames() );
-
-    const auto where = BoolOpParser::parse(
-        *categories_, *join_keys_encoding_, {df}, where_json );
-
-    // --------------------------------------------------------------------
-
-    df.select( where );
-
-    df.set_name( new_df_name );
-
-    // --------------------------------------------------------------------
-
-    weak_write_lock.upgrade();
-
-    data_frames()[new_df_name] = df;
-
-    monitor_->send( "postdataframe", df.to_monitor() );
-
-    weak_write_lock.unlock();
-
-    communication::Sender::send_string( "Success!", _socket );
-
-    // --------------------------------------------------------------------
-}
-
-// ------------------------------------------------------------------------
-
 void DataFrameManager::set_unit(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,
@@ -908,6 +865,49 @@ void DataFrameManager::summarize(
     read_lock.unlock();
 
     communication::Sender::send_string( JSON::stringify( summary ), _socket );
+}
+
+// ------------------------------------------------------------------------
+
+void DataFrameManager::where(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    // --------------------------------------------------------------------
+
+    multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
+
+    // --------------------------------------------------------------------
+
+    const auto new_df_name = JSON::get_value<std::string>( _cmd, "new_df_" );
+
+    const auto condition_json = *JSON::get_object( _cmd, "condition_" );
+
+    auto df = utils::Getter::get( _name, data_frames() );
+
+    const auto condition = BoolOpParser::parse(
+        *categories_, *join_keys_encoding_, {df}, condition_json );
+
+    // --------------------------------------------------------------------
+
+    df.where( condition );
+
+    df.set_name( new_df_name );
+
+    // --------------------------------------------------------------------
+
+    weak_write_lock.upgrade();
+
+    data_frames()[new_df_name] = df;
+
+    monitor_->send( "postdataframe", df.to_monitor() );
+
+    weak_write_lock.unlock();
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    // --------------------------------------------------------------------
 }
 
 // ------------------------------------------------------------------------
