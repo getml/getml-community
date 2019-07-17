@@ -7,8 +7,9 @@ set(
     ${ENGINE_SOURCE_DIRECTORY}/DataFrameIndex.cpp
     ${ENGINE_SOURCE_DIRECTORY}/DataFrameJoiner.cpp
     ${ENGINE_SOURCE_DIRECTORY}/DataFrameManager.cpp
-    ${ENGINE_SOURCE_DIRECTORY}/FileHandler.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Encoding.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/FileHandler.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/GroupByParser.cpp
     ${ENGINE_SOURCE_DIRECTORY}/JSON.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Monitor.cpp
     ${ENGINE_SOURCE_DIRECTORY}/NumOpParser.cpp

@@ -58,6 +58,8 @@
 
 #include "engine/handlers/BoolOpParser.hpp"
 
+#include "engine/handlers/GroupByParser.hpp"
+
 #include "engine/handlers/DataFrameJoiner.hpp"
 
 #include "engine/handlers/DatabaseManager.hpp"

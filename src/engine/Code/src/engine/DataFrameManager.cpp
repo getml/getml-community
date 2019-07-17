@@ -658,6 +658,43 @@ void DataFrameManager::get_nbytes(
 
 // ------------------------------------------------------------------------
 
+void DataFrameManager::group_by(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    const auto aggregations = *JSON::get_array( _cmd, "aggregations_" );
+
+    const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
+
+    const auto join_key_name =
+        JSON::get_value<std::string>( _cmd, "join_key_name_" );
+
+    multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
+
+    const auto df = utils::Getter::get( df_name, data_frames() );
+
+    const auto grouped_df = GroupByParser::group_by(
+        categories_,
+        join_keys_encoding_,
+        df,
+        _name,
+        join_key_name,
+        aggregations );
+
+    weak_write_lock.upgrade();
+
+    data_frames()[_name] = grouped_df;
+
+    monitor_->send( "postdataframe", grouped_df.to_monitor() );
+
+    weak_write_lock.unlock();
+
+    communication::Sender::send_string( "Success!", _socket );
+}
+
+// ------------------------------------------------------------------------
+
 void DataFrameManager::join(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,
