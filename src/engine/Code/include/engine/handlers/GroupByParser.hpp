@@ -177,6 +177,69 @@ class GroupByParser
         return result;
     }
 
+    /// Efficient implementation of stddev aggregation.
+    static containers::Column<Float> stddev(
+        const containers::Column<Int>& _unique,
+        const containers::DataFrameIndex& _index,
+        const containers::Column<Float>& _col,
+        const std::string& _as )
+    {
+        auto result = var( _unique, _index, _col, _as );
+
+        for ( auto& val : result )
+            {
+                val = std::sqrt( val );
+            }
+
+        return result;
+    }
+
+    /// Efficient implementation of var aggregation.
+    static containers::Column<Float> var(
+        const containers::Column<Int>& _unique,
+        const containers::DataFrameIndex& _index,
+        const containers::Column<Float>& _col,
+        const std::string& _as )
+    {
+        const auto sum = [_col]( const Float init, const size_t ix ) {
+            return init + _col[ix];
+        };
+
+        const auto sums = num_agg( _unique, _index, _col, _as, sum );
+
+        const auto counts = count( _unique, _index, _as );
+
+        assert( sums.nrows() == counts.nrows() );
+
+        assert( sums.nrows() == _unique.nrows() );
+
+        auto result = containers::Column<Float>( sums.nrows() );
+
+        result.set_name( _as );
+
+        for ( size_t i = 0; i < result.nrows(); ++i )
+            {
+                assert( counts[i] > 0.0 );
+
+                const auto mean = sums[i] / counts[i];
+
+                const auto it = _index.map()->find( _unique[i] );
+
+                assert( it != _index.map()->end() );
+
+                assert( it->second.size() > 0 );
+
+                for ( const auto ix : it->second )
+                    {
+                        const auto diff = _col[ix] - mean;
+
+                        result[i] += diff * diff / counts[i];
+                    }
+            }
+
+        return result;
+    }
+
     // ------------------------------------------------------------------------
 };
 

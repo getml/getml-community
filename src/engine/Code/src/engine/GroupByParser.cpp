@@ -138,6 +138,10 @@ containers::Column<Float> GroupByParser::numerical_aggregation(
 
             return num_agg( _unique, _index, col, as, min );
         }
+    else if ( type == "stddev" )
+        {
+            return stddev( _unique, _index, col, as );
+        }
     else if ( type == "sum" )
         {
             const auto sum = [col]( const Float init, const size_t ix ) {
@@ -145,6 +149,10 @@ containers::Column<Float> GroupByParser::numerical_aggregation(
             };
 
             return num_agg( _unique, _index, col, as, sum );
+        }
+    else if ( type == "var" )
+        {
+            return var( _unique, _index, col, as );
         }
     else
         {
