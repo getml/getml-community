@@ -116,7 +116,7 @@ containers::Column<Float> GroupByParser::numerical_aggregation(
         }
     else if ( type == "count" )
         {
-            return count( _unique, _index, col, as );
+            return count( _unique, _index, as );
         }
     else if ( type == "max" )
         {
@@ -125,6 +125,10 @@ containers::Column<Float> GroupByParser::numerical_aggregation(
             };
 
             return num_agg( _unique, _index, col, as, max );
+        }
+    else if ( type == "median" )
+        {
+            return median( _unique, _index, col, as );
         }
     else if ( type == "min" )
         {

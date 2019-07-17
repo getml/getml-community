@@ -56,7 +56,7 @@ class GroupByParser
 
         const auto numerator = num_agg( _unique, _index, _col, _as, sum );
 
-        const auto divisor = count( _unique, _index, _col, _as );
+        const auto divisor = count( _unique, _index, _as );
 
         assert( numerator.nrows() == divisor.nrows() );
 
@@ -78,7 +78,6 @@ class GroupByParser
     static containers::Column<Float> count(
         const containers::Column<Int>& _unique,
         const containers::DataFrameIndex& _index,
-        const containers::Column<Float>& _col,
         const std::string& _as )
     {
         assert( _index.map() );
@@ -94,6 +93,51 @@ class GroupByParser
                 assert( it != _index.map()->end() );
 
                 result[i] = static_cast<Float>( it->second.size() );
+            }
+
+        return result;
+    }
+
+    /// Efficient implementation of median aggregation.
+    static containers::Column<Float> median(
+        const containers::Column<Int>& _unique,
+        const containers::DataFrameIndex& _index,
+        const containers::Column<Float>& _col,
+        const std::string& _as )
+    {
+        assert( _index.map() );
+
+        auto result = containers::Column<Float>( _unique.nrows() );
+
+        result.set_name( _as );
+
+        for ( size_t i = 0; i < _unique.size(); ++i )
+            {
+                const auto it = _index.map()->find( _unique[i] );
+
+                assert( it != _index.map()->end() );
+
+                assert( it->second.size() > 0 );
+
+                auto values = std::vector<Float>( it->second.size() );
+
+                for ( size_t j = 0; j < it->second.size(); ++j )
+                    {
+                        values[j] = _col[it->second[j]];
+                    }
+
+                std::sort( values.begin(), values.end() );
+
+                if ( values.size() % 2 == 0 )
+                    {
+                        result[i] = ( values[( values.size() / 2 ) - 1] +
+                                      values[values.size() / 2] ) /
+                                    2.0;
+                    }
+                else
+                    {
+                        result[i] = values[values.size() / 2];
+                    }
             }
 
         return result;
