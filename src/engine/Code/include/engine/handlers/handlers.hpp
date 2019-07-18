@@ -8,6 +8,7 @@
 #include <optional>
 #include <thread>
 #include <type_traits>
+#include <unordered_set>
 #include <vector>
 
 #include <Poco/Crypto/DigestEngine.h>
