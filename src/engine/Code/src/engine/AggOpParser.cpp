@@ -6,35 +6,6 @@ namespace handlers
 {
 // ----------------------------------------------------------------------------
 
-Float AggOpParser::avg( const containers::Column<Float>& _col )
-{
-    const auto sum = []( const Float init, const Float val ) {
-        return init + val;
-    };
-
-    const auto numerator = num_agg( _col, sum );
-
-    const auto divisor = count( _col );
-
-    return numerator / divisor;
-}
-
-// ----------------------------------------------------------------------------
-
-Float AggOpParser::count_distinct( const std::vector<std::string>& _vec )
-{
-    auto set = std::unordered_set<std::string>();
-
-    for ( const auto& str : _vec )
-        {
-            set.insert( str );
-        }
-
-    return static_cast<Float>( set.size() );
-}
-
-// ----------------------------------------------------------------------------
-
 Float AggOpParser::categorical_aggregation(
     const containers::Encoding& _categories,
     const containers::Encoding& _join_keys_encoding,
@@ -45,9 +16,13 @@ Float AggOpParser::categorical_aggregation(
     const auto vec = CatOpParser::parse(
         _categories, _join_keys_encoding, {_df}, _json_col );
 
-    if ( _type == "count_distinct" )
+    if ( _type == "count_categorical" )
         {
-            return count_distinct( vec );
+            return utils::ColumnOperators::count_categorical( vec );
+        }
+    else if ( _type == "count_distinct" )
+        {
+            return utils::ColumnOperators::count_distinct( vec );
         }
     else
         {
@@ -71,11 +46,7 @@ Float AggOpParser::aggregate(
 
     const auto json_col = *JSON::get_object( _aggregation, "col_" );
 
-    if ( type == "count" )
-        {
-            return static_cast<Float>( _df.nrows() );
-        }
-    else if ( type == "count_distinct" )
+    if ( type == "count_categorical" || type == "count_distinct" )
         {
             return categorical_aggregation(
                 *_categories, *_join_keys_encoding, _df, type, json_col );
@@ -84,26 +55,6 @@ Float AggOpParser::aggregate(
         {
             return numerical_aggregation(
                 *_categories, *_join_keys_encoding, _df, type, json_col );
-        }
-}
-
-// ----------------------------------------------------------------------------
-
-Float AggOpParser::median( const containers::Column<Float>& _col )
-{
-    auto values = std::vector<Float>( _col.begin(), _col.end() );
-
-    std::sort( values.begin(), values.end() );
-
-    if ( values.size() % 2 == 0 )
-        {
-            return ( values[( values.size() / 2 ) - 1] +
-                     values[values.size() / 2] ) /
-                   2.0;
-        }
-    else
-        {
-            return values[values.size() / 2];
         }
 }
 
@@ -121,58 +72,40 @@ Float AggOpParser::numerical_aggregation(
 
     if ( _type == "assert_equal" )
         {
-            const auto assert_equal = []( const Float init, const Float val ) {
-                if ( init != val )
-                    {
-                        throw std::runtime_error(
-                            "Values not equal: " + std::to_string( init ) +
-                            " vs. " + std::to_string( val ) + "." );
-                    }
-
-                return init;
-            };
-
-            return num_agg( col, assert_equal );
+            return utils::ColumnOperators::assert_equal(
+                col.begin(), col.end() );
         }
     else if ( _type == "avg" )
         {
-            return avg( col );
+            return utils::ColumnOperators::avg( col.begin(), col.end() );
+        }
+    else if ( _type == "count" )
+        {
+            return utils::ColumnOperators::count( col.begin(), col.end() );
         }
     else if ( _type == "max" )
         {
-            const auto max = []( const Float init, const Float val ) {
-                return ( ( init > val ) ? init : val );
-            };
-
-            return num_agg( col, max );
+            return utils::ColumnOperators::max( col.begin(), col.end() );
         }
     else if ( _type == "median" )
         {
-            return median( col );
+            return utils::ColumnOperators::median( col.begin(), col.end() );
         }
     else if ( _type == "min" )
         {
-            const auto min = []( const Float init, const Float val ) {
-                return ( ( init < val ) ? init : val );
-            };
-
-            return num_agg( col, min );
+            return utils::ColumnOperators::min( col.begin(), col.end() );
         }
     else if ( _type == "stddev" )
         {
-            return stddev( col );
+            return utils::ColumnOperators::stddev( col.begin(), col.end() );
         }
     else if ( _type == "sum" )
         {
-            const auto sum = []( const Float init, const Float val ) {
-                return init + val;
-            };
-
-            return num_agg( col, sum );
+            return utils::ColumnOperators::sum( col.begin(), col.end() );
         }
     else if ( _type == "var" )
         {
-            return var( col );
+            return utils::ColumnOperators::var( col.begin(), col.end() );
         }
     else
         {
@@ -182,23 +115,6 @@ Float AggOpParser::numerical_aggregation(
 
             return 0.0;
         }
-}
-
-// ----------------------------------------------------------------------------
-
-/// Efficient implementation of var aggregation.
-Float AggOpParser::var( const containers::Column<Float>& _col )
-{
-    const auto mean = avg( _col );
-
-    const auto n = count( _col );
-
-    const auto var_op = [mean, n]( const Float init, const Float val ) {
-        const auto diff = val - mean;
-        return init + diff * diff / n;
-    };
-
-    return std::accumulate( _col.begin(), _col.end(), 0.0, var_op );
 }
 
 // ----------------------------------------------------------------------------

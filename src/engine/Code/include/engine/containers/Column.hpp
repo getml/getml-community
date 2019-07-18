@@ -11,6 +11,8 @@ template <class T>
 class Column
 {
    public:
+    typedef T value_type;
+
     Column( const size_t _nrows )
         : data_ptr_( std::make_shared<std::vector<T>>( _nrows ) ),
           name_( "" ),

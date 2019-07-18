@@ -24,26 +24,6 @@ class GroupByParser
     // ------------------------------------------------------------------------
 
    private:
-    /// Efficient implementation of avg aggregation.
-    static containers::Column<Float> avg(
-        const containers::Column<Int>& _unique,
-        const containers::DataFrameIndex& _index,
-        const containers::Column<Float>& _col,
-        const std::string& _as );
-
-    /// Efficient implementation of count aggregation.
-    static containers::Column<Float> count(
-        const containers::Column<Int>& _unique,
-        const containers::DataFrameIndex& _index,
-        const std::string& _as );
-
-    /// Efficient implementation of count_distinct aggregation.
-    static containers::Column<Float> count_distinct(
-        const containers::Column<Int>& _unique,
-        const containers::DataFrameIndex& _index,
-        const std::vector<std::string>& _vec,
-        const std::string& _as );
-
     /// Aggregates over a categorical column.
     static containers::Column<Float> categorical_aggregation(
         const containers::Encoding& _categories,
@@ -55,19 +35,18 @@ class GroupByParser
         const containers::Column<Int>& _unique,
         const containers::DataFrameIndex& _index );
 
+    static containers::Column<Float> count_distinct(
+        const containers::Column<Int>& _unique,
+        const containers::DataFrameIndex& _index,
+        const std::vector<std::string>& _vec,
+        const std::string& _as );
+
     /// Finds the correct index.
     static std::
         pair<const containers::DataFrameIndex, const containers::Column<Int>>
         find_index(
             const containers::DataFrame& _df,
             const std::string& _join_key_name );
-
-    /// Efficient implementation of median aggregation.
-    static containers::Column<Float> median(
-        const containers::Column<Int>& _unique,
-        const containers::DataFrameIndex& _index,
-        const containers::Column<Float>& _col,
-        const std::string& _as );
 
     /// Parses a particular numerical aggregation.
     static containers::Column<Float> numerical_aggregation(
@@ -80,23 +59,16 @@ class GroupByParser
         const containers::Column<Int>& _unique,
         const containers::DataFrameIndex& _index );
 
-    /// Efficient implementation of var aggregation.
-    static containers::Column<Float> var(
-        const containers::Column<Int>& _unique,
-        const containers::DataFrameIndex& _index,
-        const containers::Column<Float>& _col,
-        const std::string& _as );
-
     // ------------------------------------------------------------------------
 
    private:
     /// Undertakes a numerical aggregation based on template class
     /// Aggreagation.
-    template <class Aggregation>
-    static containers::Column<Float> num_agg(
+    template <class Aggregation, class ColumnType>
+    static containers::Column<Float> aggregate(
         const containers::Column<Int>& _unique,
         const containers::DataFrameIndex& _index,
-        const containers::Column<Float>& _col,
+        const ColumnType& _col,
         const std::string& _as,
         const Aggregation& _agg )
     {
@@ -114,28 +86,17 @@ class GroupByParser
 
                 assert( it->second.size() > 0 );
 
-                result[i] = std::accumulate(
-                    it->second.begin() + 1,
-                    it->second.end(),
-                    _col[*it->second.begin()],
-                    _agg );
-            }
+                auto values = std::vector<typename ColumnType::value_type>(
+                    it->second.size() );
 
-        return result;
-    }
+                for ( size_t j = 0; j < values.size(); ++j )
+                    {
+                        const auto ix = it->second[j];
+                        assert( ix < _col.size() );
+                        values[j] = _col[ix];
+                    }
 
-    /// Efficient implementation of stddev aggregation.
-    static containers::Column<Float> stddev(
-        const containers::Column<Int>& _unique,
-        const containers::DataFrameIndex& _index,
-        const containers::Column<Float>& _col,
-        const std::string& _as )
-    {
-        auto result = var( _unique, _index, _col, _as );
-
-        for ( auto& val : result )
-            {
-                val = std::sqrt( val );
+                result[i] = _agg( values );
             }
 
         return result;
