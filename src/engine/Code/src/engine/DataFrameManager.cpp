@@ -251,6 +251,33 @@ void DataFrameManager::add_column(
 
 // ------------------------------------------------------------------------
 
+void DataFrameManager::aggregate(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    const auto aggregation = *JSON::get_object( _cmd, "aggregation_" );
+
+    const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
+
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    const auto df = utils::Getter::get( df_name, data_frames() );
+
+    auto response = containers::Column<Float>( 1 );
+
+    response[0] = AggOpParser::aggregate(
+        categories_, join_keys_encoding_, df, aggregation );
+
+    read_lock.unlock();
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    communication::Sender::send_column( response, _socket );
+}
+
+// ------------------------------------------------------------------------
+
 void DataFrameManager::append_to_data_frame(
     const std::string& _name, Poco::Net::StreamSocket* _socket )
 {

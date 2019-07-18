@@ -74,6 +74,10 @@ void RequestHandler::run()
                     data_frame_manager().get_categorical_column(
                         name, cmd, &socket() );
                 }
+            else if ( type == "Column.aggregate" )
+                {
+                    data_frame_manager().aggregate( name, cmd, &socket() );
+                }
             else if ( type == "Column.get" )
                 {
                     data_frame_manager().get_column( name, cmd, &socket() );

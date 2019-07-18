@@ -53,6 +53,12 @@ class DataFrameManager
     void add_data_frame(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
 
+    /// Undertakes an aggregation on an entire column.
+    void aggregate(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
     /// Appends data to an existing data frame.
     void append_to_data_frame(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
