@@ -16,5 +16,9 @@ int main( int argc, char* argv[] )
 
     test4_saving_and_loading_linear_regression();
 
+    test5_logistic_regression_dense();
+
+    test6_logistic_regression_sparse();
+
     return 0;
 }
