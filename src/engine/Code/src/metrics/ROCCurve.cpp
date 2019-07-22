@@ -4,7 +4,7 @@ namespace metrics
 {
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object AUC::score( const Features _yhat, const Features _y )
+Poco::JSON::Object ROCCurve::score( const Features _yhat, const Features _y )
 {
     // -----------------------------------------------------
 
@@ -21,7 +21,9 @@ Poco::JSON::Object AUC::score( const Features _yhat, const Features _y )
 
     // -----------------------------------------------------
 
-    std::vector<Float> auc( ncols() );
+    auto true_positive_arr = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
+
+    auto false_positive_arr = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
 
     // -----------------------------------------------------
 
@@ -58,14 +60,19 @@ Poco::JSON::Object AUC::score( const Features _yhat, const Features _y )
 
             if ( yhat_min == yhat_max )
                 {
-                    auc[j] = 0.5;
+                    true_positive_arr->add( JSON::vector_to_array_ptr(
+                        std::vector<Float>( {1.0, 0.0} ) ) );
+
+                    false_positive_arr->add( JSON::vector_to_array_ptr(
+                        std::vector<Float>( {0.0, 1.0} ) ) );
+
                     continue;
                 }
 
             // ---------------------------------------------
             // Calculate step_size
 
-            const size_t num_critical_values = 10000;
+            const size_t num_critical_values = 100;
 
             // We use num_critical_values - 1, so that the greatest
             // critical_value will actually be greater than y_max.
@@ -163,22 +170,14 @@ Poco::JSON::Object AUC::score( const Features _yhat, const Features _y )
                     return fp / all_negatives;
                 } );
 
-            // ---------------------------------------------
-            // Calculate area under curve - note that the last critical
-            // value is greater than y_max, so the last point must always be
-            // (1, 1).
+            // -----------------------------------------------------
+            // Add to arrays.
 
-            auc[j] +=
-                ( 1.0 - false_positive_rate[0] ) * true_positive_rate[0] * 0.5;
+            true_positive_arr->add(
+                JSON::vector_to_array_ptr( true_positive_rate ) );
 
-            for ( size_t i = 0; i < num_critical_values - 1; ++i )
-                {
-                    auc[j] +=
-                        ( false_positive_rate[i] -
-                          false_positive_rate[i + 1] ) *
-                        ( true_positive_rate[i] + true_positive_rate[i + 1] ) *
-                        0.5;
-                }
+            false_positive_arr->add(
+                JSON::vector_to_array_ptr( false_positive_rate ) );
 
             // ---------------------------------------------
         }
@@ -188,7 +187,9 @@ Poco::JSON::Object AUC::score( const Features _yhat, const Features _y )
 
     Poco::JSON::Object obj;
 
-    obj.set( "auc_", JSON::vector_to_array_ptr( auc ) );
+    obj.set( "fpr_", false_positive_arr );
+
+    obj.set( "tpr_", true_positive_arr );
 
     // -----------------------------------------------------
 

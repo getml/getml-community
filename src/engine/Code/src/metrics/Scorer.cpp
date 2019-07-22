@@ -57,6 +57,7 @@ Poco::JSON::Object Scorer::score(
             names.push_back( "accuracy_" );
             names.push_back( "auc_" );
             names.push_back( "cross_entropy_" );
+            names.push_back( "roc_curve_" );
         }
     else
         {
