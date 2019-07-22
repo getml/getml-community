@@ -6,6 +6,8 @@ namespace predictors
 
 void StandardScaler::fit( const std::vector<CFloatColumn>& _X_numerical )
 {
+    mean_.resize( _X_numerical.size() );
+
     std_.resize( _X_numerical.size() );
 
     for ( size_t j = 0; j < _X_numerical.size(); ++j )
@@ -28,6 +30,8 @@ void StandardScaler::fit( const std::vector<CFloatColumn>& _X_numerical )
                 0.0,
                 std::plus<Float>(),
                 mult );
+
+            mean_[j] = mean;
 
             std_[j] = std::sqrt( std_[j] );
         }
@@ -99,7 +103,20 @@ std::vector<CFloatColumn> StandardScaler::transform(
     const std::vector<CFloatColumn>& _X_numerical ) const
 {
     assert( _X_numerical.size() > 0 );
-    assert( _X_numerical.size() == std_.size() );
+
+    if ( _X_numerical.size() != std_.size() )
+        {
+            throw std::runtime_error(
+                "Size of standard deviation in standard scaler does not "
+                "match!" );
+        }
+
+    if ( _X_numerical.size() != mean_.size() )
+        {
+            throw std::runtime_error(
+                "Standard scaler seems to have been trained using sparse data, "
+                "but is not expected to transform dense data." );
+        }
 
     std::vector<CFloatColumn> output;
 
@@ -113,7 +130,8 @@ std::vector<CFloatColumn> StandardScaler::transform(
                     for ( size_t i = 0; i < _X_numerical[j]->size(); ++i )
                         {
                             ( *output.back() )[i] =
-                                ( *_X_numerical[j] )[i] / std_[j];
+                                ( ( *_X_numerical[j] )[i] - mean_[j] ) /
+                                std_[j];
                         }
                 }
         }

@@ -14,7 +14,9 @@ class StandardScaler
     StandardScaler(){};
 
     StandardScaler( const Poco::JSON::Object _obj )
-        : std_( JSON::array_to_vector<Float>(
+        : mean_( JSON::array_to_vector<Float>(
+              JSON::get_array( _obj, "mean_" ) ) ),
+          std_( JSON::array_to_vector<Float>(
               JSON::get_array( _obj, "std_" ) ) ){};
 
     ~StandardScaler() = default;
@@ -41,6 +43,7 @@ class StandardScaler
     Poco::JSON::Object to_json_obj() const
     {
         Poco::JSON::Object obj;
+        obj.set( "mean_", JSON::vector_to_array( std_ ) );
         obj.set( "std_", JSON::vector_to_array( std_ ) );
         return obj;
     }
@@ -48,6 +51,9 @@ class StandardScaler
     // -------------------------------------------------------------------------
 
    private:
+    /// Means of the individual columns.
+    std::vector<Float> mean_;
+
     /// Standard deviations of the individual columns.
     std::vector<Float> std_;
 
