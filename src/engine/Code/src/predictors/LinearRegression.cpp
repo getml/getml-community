@@ -89,7 +89,8 @@ void LinearRegression::load( const std::string& _fname )
     const auto obj = load_json_obj( _fname + ".json" );
 
     hyperparams_ = std::make_shared<LinearHyperparams>(
-        JSON::get_value<Float>( obj, "lambda_" ) );
+        JSON::get_value<Float>( obj, "lambda_" ),
+        JSON::get_value<Float>( obj, "learning_rate_" ) );
 
     scaler_ = StandardScaler( *JSON::get_object( obj, "scaler_" ) );
 
@@ -268,6 +269,8 @@ void LinearRegression::save( const std::string& _fname ) const
 
     obj.set( "lambda_", hyperparams().lambda_ );
 
+    obj.set( "learning_rate_", hyperparams().learning_rate_ );
+
     obj.set( "scaler_", scaler_.to_json_obj() );
 
     obj.set( "weights_", weights_ );
@@ -406,8 +409,8 @@ void LinearRegression::solve_numerically(
 
     std::vector<Float> gradients( weights_.size() );
 
-    auto optimizer =
-        optimizers::Adam( 0.9, 0.999, 10.0, 1e-10, weights_.size() );
+    auto optimizer = optimizers::Adam(
+        hyperparams().learning_rate_, 0.999, 10.0, 1e-10, weights_.size() );
 
     for ( size_t epoch = 0; epoch < 1000; ++epoch )
         {

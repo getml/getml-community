@@ -59,7 +59,7 @@ void test6_logistic_regression_sparse()
     X_categorical = impl->transform_encodings( X_categorical );
 
     const auto hyperparams =
-        std::make_shared<predictors::LinearHyperparams>( 1e-12 );
+        std::make_shared<predictors::LinearHyperparams>( 1e-10, 0.9 );
 
     auto log_reg = predictors::LogisticRegression( hyperparams, impl );
 

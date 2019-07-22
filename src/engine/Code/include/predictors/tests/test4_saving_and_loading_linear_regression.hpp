@@ -50,7 +50,7 @@ void test4_saving_and_loading_linear_regression()
     X_categorical = impl->transform_encodings( X_categorical );
 
     const auto hyperparams =
-        std::make_shared<predictors::LinearHyperparams>( 1e-12 );
+        std::make_shared<predictors::LinearHyperparams>( 1e-12, 0.9 );
 
     auto lin_reg = predictors::LinearRegression( hyperparams, impl );
 

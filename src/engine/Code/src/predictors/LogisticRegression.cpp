@@ -111,8 +111,8 @@ void LogisticRegression::fit_dense(
 
     std::vector<Float> gradients( weights_.size() );
 
-    auto optimizer =
-        optimizers::Adam( 0.9, 0.999, 10.0, 1e-10, weights_.size() );
+    auto optimizer = optimizers::Adam(
+        hyperparams().learning_rate_, 0.999, 10.0, 1e-10, weights_.size() );
 
     for ( size_t epoch = 0; epoch < 1000; ++epoch )
         {
@@ -188,8 +188,8 @@ void LogisticRegression::fit_sparse(
 
     std::vector<Float> gradients( weights_.size() );
 
-    auto optimizer =
-        optimizers::Adam( 0.9, 0.999, 10.0, 1e-10, weights_.size() );
+    auto optimizer = optimizers::Adam(
+        hyperparams().learning_rate_, 0.999, 10.0, 1e-10, weights_.size() );
 
     for ( size_t epoch = 0; epoch < 1000; ++epoch )
         {
@@ -237,7 +237,8 @@ void LogisticRegression::load( const std::string& _fname )
     const auto obj = load_json_obj( _fname + ".json" );
 
     hyperparams_ = std::make_shared<LinearHyperparams>(
-        JSON::get_value<Float>( obj, "lambda_" ) );
+        JSON::get_value<Float>( obj, "lambda_" ),
+        JSON::get_value<Float>( obj, "learning_rate_" ) );
 
     scaler_ = StandardScaler( *JSON::get_object( obj, "scaler_" ) );
 
@@ -289,13 +290,13 @@ CFloatColumn LogisticRegression::predict(
 
     impl().check_plausibility( _X_categorical, _X_numerical );
 
-    if ( _X_categorical.size() > 0 )
+    if ( _X_categorical.size() == 0 )
         {
-            return predict_sparse( _X_categorical, _X_numerical );
+            return predict_dense( _X_numerical );
         }
     else
         {
-            return predict_dense( _X_numerical );
+            return predict_sparse( _X_categorical, _X_numerical );
         }
 }
 
@@ -417,6 +418,8 @@ void LogisticRegression::save( const std::string& _fname ) const
     Poco::JSON::Object obj;
 
     obj.set( "lambda_", hyperparams().lambda_ );
+
+    obj.set( "learning_rate_", hyperparams().learning_rate_ );
 
     obj.set( "scaler_", scaler_.to_json_obj() );
 

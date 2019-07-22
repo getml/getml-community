@@ -48,7 +48,7 @@ void test5_logistic_regression_dense()
         3 );
 
     const auto hyperparams =
-        std::make_shared<predictors::LinearHyperparams>( 1e-10 );
+        std::make_shared<predictors::LinearHyperparams>( 1e-10, 0.9 );
 
     auto log_reg = predictors::LogisticRegression( hyperparams, impl );
 

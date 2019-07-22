@@ -39,7 +39,7 @@ void test1_linear_regression_dense()
         3 );
 
     const auto hyperparams =
-        std::make_shared<predictors::LinearHyperparams>( 1e-10 );
+        std::make_shared<predictors::LinearHyperparams>( 1e-10, 0.9 );
 
     auto lin_reg = predictors::LinearRegression( hyperparams, impl );
 
