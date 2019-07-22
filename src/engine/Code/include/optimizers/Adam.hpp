@@ -27,6 +27,30 @@ class Adam : public Optimizer
 
     // ----------------------------------------------------------------------------
 
+    /// This member functions implements the updating strategy of the optimizer.
+    void update_weights(
+        const Float _epoch_num,
+        const std::vector<Float>& _gradients,
+        std::vector<Float>* _weights ) final
+    {
+        assert( _gradients.size() == _weights->size() );
+        assert( _gradients.size() == first_moment_.size() );
+        assert( _gradients.size() == second_moment_.size() );
+
+        for ( size_t i = 0; i < _weights->size(); ++i )
+            {
+                update(
+                    _gradients[i],
+                    _epoch_num,
+                    &first_moment_[i],
+                    &second_moment_[i],
+                    &( *_weights )[i] );
+            }
+    }
+
+    // ----------------------------------------------------------------------------
+
+   private:
     // Does the actual Adam updates.
     void update(
         const Float _g,
@@ -48,29 +72,6 @@ class Adam : public Optimizer
             offset_;
 
         *_w -= learning_rate_ * numerator / divisor;
-    }
-
-    // ----------------------------------------------------------------------------
-
-    /// This member functions implements the updating strategy of the optimizer.
-    void update_weights(
-        const Float _epoch_num,
-        const std::vector<Float>& _gradients,
-        std::vector<Float>* _weights ) final
-    {
-        assert( _gradients.size() == _weights->size() );
-        assert( _gradients.size() == first_moment_.size() );
-        assert( _gradients.size() == second_moment_.size() );
-
-        for ( size_t i = 0; i < _weights->size(); ++i )
-            {
-                update(
-                    _gradients[i],
-                    _epoch_num,
-                    &first_moment_[i],
-                    &second_moment_[i],
-                    &( *_weights )[i] );
-            }
     }
 
     // ----------------------------------------------------------------------------

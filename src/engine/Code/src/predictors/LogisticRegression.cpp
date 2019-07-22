@@ -57,11 +57,11 @@ std::string LogisticRegression::fit(
 
     if ( _X_categorical.size() == 0 )
         {
-            fit_dense( _X_numerical, _y );
+            fit_dense( _logger, _X_numerical, _y );
         }
     else
         {
-            fit_sparse( _X_categorical, _X_numerical, _y );
+            fit_sparse( _logger, _X_categorical, _X_numerical, _y );
         }
 
     // -------------------------------------------------------------------------
@@ -74,8 +74,19 @@ std::string LogisticRegression::fit(
 // -----------------------------------------------------------------------------
 
 void LogisticRegression::fit_dense(
-    const std::vector<CFloatColumn>& _X_numerical, const CFloatColumn& _y )
+    const std::shared_ptr<const logging::AbstractLogger> _logger,
+    const std::vector<CFloatColumn>& _X_numerical,
+    const CFloatColumn& _y )
 {
+    // -------------------------------------------------------------------------
+
+    if ( _logger )
+        {
+            _logger->log(
+                "Training the logistic regression using the "
+                "Broyden–Fletcher–Goldfarb–Shanno (BFGS) algorithm..." );
+        }
+
     // -------------------------------------------------------------------------
     // Rescale training set.
 
@@ -100,19 +111,18 @@ void LogisticRegression::fit_dense(
     // -------------------------------------------------------------------------
     // Set some standard variables.
 
-    const size_t batch_size = 200;
-
-    const auto bsize_float = static_cast<Float>( batch_size );
-
     const auto nrows = X[0]->size();
+
+    const auto nrows_float = static_cast<Float>( nrows );
 
     // -------------------------------------------------------------------------
     // Use Adam to find the weights.
 
     std::vector<Float> gradients( weights_.size() );
 
-    auto optimizer = optimizers::Adam(
-        hyperparams().learning_rate_, 0.999, 10.0, 1e-10, weights_.size() );
+    auto optimizer = optimizers::BFGS( 1.0, weights_.size() );
+
+    bool has_converged = false;
 
     for ( size_t epoch = 0; epoch < 1000; ++epoch )
         {
@@ -126,9 +136,27 @@ void LogisticRegression::fit_dense(
 
                     calculate_gradients( X, i, delta, &gradients );
 
-                    if ( i % batch_size == batch_size - 1 || i == nrows - 1 )
+                    if ( i == nrows - 1 )
                         {
-                            calculate_regularization( bsize_float, &gradients );
+                            for ( auto& g : gradients )
+                                {
+                                    g /= nrows_float;
+                                }
+
+                            calculate_regularization( 1.0, &gradients );
+
+                            const auto gradients_rmse =
+                                std::sqrt( std::inner_product(
+                                    gradients.begin(),
+                                    gradients.end(),
+                                    gradients.begin(),
+                                    0.0 ) );
+
+                            if ( gradients_rmse < 1e-04 )
+                                {
+                                    has_converged = true;
+                                    break;
+                                }
 
                             optimizer.update_weights(
                                 epoch_float, gradients, &weights_ );
@@ -136,6 +164,18 @@ void LogisticRegression::fit_dense(
                             std::fill(
                                 gradients.begin(), gradients.end(), 0.0 );
                         }
+                }
+
+            if ( has_converged )
+                {
+                    if ( _logger )
+                        {
+                            _logger->log(
+                                "Converged after " + std::to_string( epoch ) +
+                                " updates." );
+                        }
+
+                    break;
                 }
         }
 
@@ -145,10 +185,20 @@ void LogisticRegression::fit_dense(
 // -----------------------------------------------------------------------------
 
 void LogisticRegression::fit_sparse(
+    const std::shared_ptr<const logging::AbstractLogger> _logger,
     const std::vector<CIntColumn>& _X_categorical,
     const std::vector<CFloatColumn>& _X_numerical,
     const CFloatColumn& _y )
 {
+    // -------------------------------------------------------------------------
+
+    if ( _logger )
+        {
+            _logger->log(
+                "Training the logistic regression using the Adaptive Moments "
+                "(Adam) algorithm..." );
+        }
+
     // -------------------------------------------------------------------------
     // Build up CSRMatrix.
 

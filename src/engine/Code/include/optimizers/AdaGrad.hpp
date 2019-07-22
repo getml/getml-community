@@ -20,15 +20,6 @@ class AdaGrad : public Optimizer
 
     // ----------------------------------------------------------------------------
 
-    // Does the actual AdaGrad updates.
-    void update( const Float _g, Float* _sum, Float* _w ) const
-    {
-        *_sum += _g * _g;
-        *_w -= learning_rate_ * _g / std::sqrt( *_sum + offset_ );
-    };
-
-    // ----------------------------------------------------------------------------
-
     /// This member functions implements the updating strategy of the optimizer.
     void update_weights(
         const Float _epoch_num,
@@ -46,6 +37,16 @@ class AdaGrad : public Optimizer
                     &( *_weights )[i] );
             }
     }
+
+    // ----------------------------------------------------------------------------
+
+   private:
+    // Does the actual AdaGrad updates.
+    void update( const Float _g, Float* _sum, Float* _w ) const
+    {
+        *_sum += _g * _g;
+        *_w -= learning_rate_ * _g / std::sqrt( *_sum + offset_ );
+    };
 
     // ----------------------------------------------------------------------------
 

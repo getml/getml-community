@@ -59,10 +59,13 @@ class LogisticRegression : public Predictor
 
     /// Fit on dense data.
     void fit_dense(
-        const std::vector<CFloatColumn>& _X_numerical, const CFloatColumn& _y );
+        const std::shared_ptr<const logging::AbstractLogger> _logger,
+        const std::vector<CFloatColumn>& _X_numerical,
+        const CFloatColumn& _y );
 
     /// Fit on sparse data.
     void fit_sparse(
+        const std::shared_ptr<const logging::AbstractLogger> _logger,
         const std::vector<CIntColumn>& _X_categorical,
         const std::vector<CFloatColumn>& _X_numerical,
         const CFloatColumn& _y );
