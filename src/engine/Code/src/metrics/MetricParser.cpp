@@ -27,10 +27,6 @@ std::shared_ptr<Metric> MetricParser::parse(
         {
             return std::make_shared<RMSE>( _comm );
         }
-    else if ( _type == "roc_curve_" )
-        {
-            return std::make_shared<ROCCurve>( _comm );
-        }
     else if ( _type == "rsquared_" )
         {
             return std::make_shared<RSquared>( _comm );

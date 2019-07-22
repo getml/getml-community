@@ -23,6 +23,10 @@ Poco::JSON::Object AUC::score( const Features _yhat, const Features _y )
 
     std::vector<Float> auc( ncols() );
 
+    auto true_positive_arr = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
+
+    auto false_positive_arr = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
+
     // -----------------------------------------------------
 
     for ( size_t j = 0; j < ncols(); ++j )
@@ -58,76 +62,103 @@ Poco::JSON::Object AUC::score( const Features _yhat, const Features _y )
 
             if ( yhat_min == yhat_max )
                 {
+                    true_positive_arr->add( JSON::vector_to_array_ptr(
+                        std::vector<Float>( {1.0, 0.0} ) ) );
+
+                    false_positive_arr->add( JSON::vector_to_array_ptr(
+                        std::vector<Float>( {0.0, 1.0} ) ) );
+
                     auc[j] = 0.5;
+
                     continue;
                 }
 
             // ---------------------------------------------
-            // Calculate step_size
+            // Create prediction-target-pairs.
 
-            const size_t num_critical_values = 10000;
+            std::vector<std::pair<Float, Float>> pairs( nrows() );
 
-            // We use num_critical_values - 1, so that the greatest
-            // critical_value will actually be greater than y_max.
-            // This is to avoid segfaults.
-            const Float step_size =
-                ( yhat_max - yhat_min ) /
-                static_cast<Float>( num_critical_values - 1 );
+            for ( size_t i = 0; i < pairs.size(); ++i )
+                {
+                    pairs[i] =
+                        std::pair<Float, Float>( yhat( i, j ), y( i, j ) );
+                }
 
             // ---------------------------------------------
-            // Calculate true_positives and predicted_negative
+            // Sort prediction-target-pairs by prediction.
 
-            std::vector<Float> true_positives( num_critical_values );
+            const auto sort_by_prediction =
+                []( const std::pair<Float, Float>& p1,
+                    const std::pair<Float, Float>& p2 ) {
+                    return ( std::get<0>( p1 ) < std::get<0>( p2 ) );
+                };
 
-            std::vector<Float> predicted_negative( num_critical_values );
+            std::stable_sort( pairs.begin(), pairs.end(), sort_by_prediction );
+
+            // ---------------------------------------------
+            // Calculate true_positives_uncompressed
+
+            auto true_positives_uncompressed = std::vector<Float>( nrows() );
 
             for ( size_t i = 0; i < nrows(); ++i )
                 {
-                    // Note that this operation will always round down.
-                    const size_t crv = static_cast<size_t>(
-                        ( yhat( i, j ) - yhat_min ) / step_size );
-
-                    true_positives[crv] += y( i, j );
-
-                    predicted_negative[crv] += 1.0;
-                }
-
-            if ( impl_.has_comm() )
-                {
-                    impl_.reduce( std::plus<Float>(), &true_positives );
-
-                    impl_.reduce( std::plus<Float>(), &predicted_negative );
+                    true_positives_uncompressed[i] = std::get<1>( pairs[i] );
                 }
 
             std::partial_sum(
-                predicted_negative.begin(),
-                predicted_negative.end(),
-                predicted_negative.begin() );
+                true_positives_uncompressed.begin(),
+                true_positives_uncompressed.end(),
+                true_positives_uncompressed.begin() );
 
-            const Float all_positives = std::accumulate(
-                true_positives.begin(), true_positives.end(), 0.0 );
-
-            std::partial_sum(
-                true_positives.begin(),
-                true_positives.end(),
-                true_positives.begin() );
+            const Float all_positives = true_positives_uncompressed.back();
 
             std::for_each(
-                true_positives.begin(),
-                true_positives.end(),
+                true_positives_uncompressed.begin(),
+                true_positives_uncompressed.end(),
                 [all_positives]( Float& val ) { val = all_positives - val; } );
+
+            // ---------------------------------------------
+            // Compress true_positives_uncompressed to get the actual
+            // true_positives and predicted_negative.
+
+            auto true_positives = std::vector<Float>( {all_positives} );
+
+            auto predicted_negative = std::vector<Float>( {0.0} );
+
+            for ( size_t i = 0; i < pairs.size(); )
+                {
+                    const auto it1 = pairs.begin() + i;
+
+                    const auto prediction_is_greater =
+                        [it1]( const std::pair<Float, Float>& p ) {
+                            return std::get<0>( p ) > std::get<0>( *it1 );
+                        };
+
+                    const auto it2 =
+                        std::find_if( it1, pairs.end(), prediction_is_greater );
+
+                    const auto dist =
+                        static_cast<size_t>( std::distance( it1, it2 ) );
+
+                    assert( dist > 0 );
+                    assert( i + dist - 1 < true_positives_uncompressed.size() );
+
+                    true_positives.push_back(
+                        true_positives_uncompressed[i + dist - 1] );
+
+                    predicted_negative.push_back(
+                        predicted_negative.back() +
+                        static_cast<Float>( dist ) );
+
+                    i += dist;
+                }
 
             // ---------------------------------------------
             // Calculate false positives
 
             Float nrow_float = static_cast<Float>( nrows() );
 
-            if ( impl_.has_comm() )
-                {
-                    impl_.reduce( std::plus<Float>(), &nrow_float );
-                }
-
-            std::vector<Float> false_positives( num_critical_values );
+            std::vector<Float> false_positives( true_positives.size() );
 
             std::transform(
                 true_positives.begin(),
@@ -141,9 +172,9 @@ Poco::JSON::Object AUC::score( const Features _yhat, const Features _y )
             // ---------------------------------------------
             // Calculate true positive rate and false positive rate
 
-            std::vector<Float> true_positive_rate( num_critical_values );
+            std::vector<Float> true_positive_rate( true_positives.size() );
 
-            std::vector<Float> false_positive_rate( num_critical_values );
+            std::vector<Float> false_positive_rate( true_positives.size() );
 
             const Float all_negatives = nrow_float - all_positives;
 
@@ -164,21 +195,46 @@ Poco::JSON::Object AUC::score( const Features _yhat, const Features _y )
                 } );
 
             // ---------------------------------------------
-            // Calculate area under curve - note that the last critical
-            // value is greater than y_max, so the last point must always be
-            // (1, 1).
+            // Calculate area under curve.
 
-            auc[j] +=
-                ( 1.0 - false_positive_rate[0] ) * true_positive_rate[0] * 0.5;
-
-            for ( size_t i = 0; i < num_critical_values - 1; ++i )
+            for ( size_t i = 1; i < true_positives.size(); ++i )
                 {
                     auc[j] +=
-                        ( false_positive_rate[i] -
-                          false_positive_rate[i + 1] ) *
-                        ( true_positive_rate[i] + true_positive_rate[i + 1] ) *
+                        ( false_positive_rate[i - 1] -
+                          false_positive_rate[i] ) *
+                        ( true_positive_rate[i] + true_positive_rate[i - 1] ) *
                         0.5;
                 }
+
+            // ---------------------------------------------
+            // Downsample true_postive_rate and false_positive_rate to be
+            // displayed.
+
+            const auto step_size = true_positives.size() / 100;
+
+            auto tpr_downsampled = std::vector<Float>( 0 );
+
+            auto fpr_downsampled = std::vector<Float>( 0 );
+
+            for ( size_t i = 0; i < true_positives.size(); i += step_size )
+                {
+                    tpr_downsampled.push_back( true_positive_rate[i] );
+
+                    fpr_downsampled.push_back( false_positive_rate[i] );
+                }
+
+            tpr_downsampled.push_back( true_positive_rate.back() );
+
+            fpr_downsampled.push_back( false_positive_rate.back() );
+
+            // -----------------------------------------------------
+            // Add to arrays.
+
+            true_positive_arr->add(
+                JSON::vector_to_array_ptr( tpr_downsampled ) );
+
+            false_positive_arr->add(
+                JSON::vector_to_array_ptr( fpr_downsampled ) );
 
             // ---------------------------------------------
         }
@@ -189,6 +245,10 @@ Poco::JSON::Object AUC::score( const Features _yhat, const Features _y )
     Poco::JSON::Object obj;
 
     obj.set( "auc_", JSON::vector_to_array_ptr( auc ) );
+
+    obj.set( "fpr_", false_positive_arr );
+
+    obj.set( "tpr_", true_positive_arr );
 
     // -----------------------------------------------------
 

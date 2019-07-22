@@ -33,7 +33,6 @@
 #include "metrics/CrossEntropy.hpp"
 #include "metrics/MAE.hpp"
 #include "metrics/RMSE.hpp"
-#include "metrics/ROCCurve.hpp"
 #include "metrics/RSquared.hpp"
 
 #include "metrics/MetricParser.hpp"
