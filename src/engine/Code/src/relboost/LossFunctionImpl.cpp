@@ -7,8 +7,7 @@ namespace lossfunctions
 // ----------------------------------------------------------------------------
 
 std::vector<size_t> LossFunctionImpl::calc_sample_index(
-    const std::shared_ptr<const std::vector<Float>>& _sample_weights )
-    const
+    const std::shared_ptr<const std::vector<Float>>& _sample_weights ) const
 {
     assert( _sample_weights );
 
@@ -50,7 +49,7 @@ Float LossFunctionImpl::calc_regularization_reduction(
 
     // ------------------------------------------------------------------------
 
-    if ( hyperparameters().lambda_ == 0.0 )
+    if ( hyperparameters().reg_lambda_ == 0.0 )
         {
             return 0.0;
         }
@@ -93,8 +92,7 @@ Float LossFunctionImpl::calc_regularization_reduction(
 
     // ------------------------------------------------------------------------
 
-    utils::Reducer::reduce(
-        std::plus<Float>(), &regularization, _comm );
+    utils::Reducer::reduce( std::plus<Float>(), &regularization, _comm );
 
     // ------------------------------------------------------------------------
 
@@ -106,7 +104,7 @@ Float LossFunctionImpl::calc_regularization_reduction(
 
     // ------------------------------------------------------------------------
 
-    return 0.5 * hyperparameters().lambda_ * regularization;
+    return 0.5 * hyperparameters().reg_lambda_ * regularization;
 }
 
 // ----------------------------------------------------------------------------
@@ -198,8 +196,7 @@ void LossFunctionImpl::calc_sums(
 
     // ------------------------------------------------------------------------
 
-    utils::Reducer::reduce(
-        std::plus<Float>(), _sum_sample_weights, _comm );
+    utils::Reducer::reduce( std::plus<Float>(), _sum_sample_weights, _comm );
 
     // ------------------------------------------------------------------------
 }
@@ -239,11 +236,9 @@ Float LossFunctionImpl::calc_update_rate(
 
     // ------------------------------------------------------------------------
 
-    utils::Reducer::reduce(
-        std::plus<Float>(), &sum_g_predictions, _comm );
+    utils::Reducer::reduce( std::plus<Float>(), &sum_g_predictions, _comm );
 
-    utils::Reducer::reduce(
-        std::plus<Float>(), &sum_h_predictions, _comm );
+    utils::Reducer::reduce( std::plus<Float>(), &sum_h_predictions, _comm );
 
     // ------------------------------------------------------------------------
 
@@ -273,10 +268,10 @@ std::vector<std::array<Float, 3>> LossFunctionImpl::calc_weights(
     // ------------------------------------------------------------------------
     // Note the minus!
 
-    const auto calc_g =
-        [this]( const Float init, const containers::Match* ptr ) {
-            return init - g_[ptr->ix_output];
-        };
+    const auto calc_g = [this](
+                            const Float init, const containers::Match* ptr ) {
+        return init - g_[ptr->ix_output];
+    };
 
     auto g2 = std::accumulate( _begin, _split_begin, 0.0, calc_g );
 
@@ -287,9 +282,9 @@ std::vector<std::array<Float, 3>> LossFunctionImpl::calc_weights(
     // ------------------------------------------------------------------------
 
     const auto calc_h = [this](
-                            const Float init,
-                            const containers::Match* ptr ) {
-        return init + h_[ptr->ix_output] * ( 1.0 + hyperparameters().lambda_ );
+                            const Float init, const containers::Match* ptr ) {
+        return init +
+               h_[ptr->ix_output] * ( 1.0 + hyperparameters().reg_lambda_ );
     };
 
     auto h2 = std::accumulate( _begin, _split_begin, 0.0, calc_h );
@@ -368,9 +363,9 @@ std::array<Float, 3> LossFunctionImpl::calc_weights_avg_null(
     std::array<Float, 3> A_arr = {0.0, 0.0, 0.0};
 
     // The intercept term.
-    A_arr[0] = sum_h_ +
-               hyperparameters().lambda_ * static_cast<Float>(
-                                               targets().size() );  // A( 0, 0 )
+    A_arr[0] =
+        sum_h_ + hyperparameters().reg_lambda_ *
+                     static_cast<Float>( targets().size() );  // A( 0, 0 )
 
     for ( const auto ix : _indices )
         {
@@ -378,7 +373,7 @@ std::array<Float, 3> LossFunctionImpl::calc_weights_avg_null(
 
             A_arr[1] += h_[ix] * _eta[ix] * sample_weights( ix );  // A( 0, 1 )
 
-            A_arr[2] += ( h_[ix] * _eta[ix] + hyperparameters().lambda_ ) *
+            A_arr[2] += ( h_[ix] * _eta[ix] + hyperparameters().reg_lambda_ ) *
                         _eta[ix] * sample_weights( ix );  // A( 1, 1 )
         }
 
@@ -387,8 +382,7 @@ std::array<Float, 3> LossFunctionImpl::calc_weights_avg_null(
 
     utils::Reducer::reduce<2>( std::plus<Float>(), &g_eta_arr, _comm );
 
-    utils::Reducer::reduce<2>(
-        std::plus<Float>(), &h_w_const_arr, _comm );
+    utils::Reducer::reduce<2>( std::plus<Float>(), &h_w_const_arr, _comm );
 
     utils::Reducer::reduce<3>( std::plus<Float>(), &A_arr, _comm );
 
@@ -432,13 +426,11 @@ std::array<Float, 3> LossFunctionImpl::calc_weights_avg_null(
 
     if ( _agg == enums::Aggregation::avg_first_null )
         {
-            return std::array<Float, 3>(
-                {weights[0], NAN, weights[1]} );
+            return std::array<Float, 3>( {weights[0], NAN, weights[1]} );
         }
     else if ( _agg == enums::Aggregation::avg_second_null )
         {
-            return std::array<Float, 3>(
-                {weights[0], weights[1], NAN} );
+            return std::array<Float, 3>( {weights[0], weights[1], NAN} );
         }
     else
         {
@@ -511,9 +503,9 @@ std::array<Float, 3> LossFunctionImpl::calc_weights(
     std::array<Float, 6> A_arr = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
     // The intercept term.
-    A_arr[0] = sum_h_ +
-               hyperparameters().lambda_ * static_cast<Float>(
-                                               targets().size() );  // A( 0, 0 )
+    A_arr[0] =
+        sum_h_ + hyperparameters().reg_lambda_ *
+                     static_cast<Float>( targets().size() );  // A( 0, 0 )
 
     for ( const auto ix : _indices )
         {
@@ -524,13 +516,13 @@ std::array<Float, 3> LossFunctionImpl::calc_weights(
             A_arr[2] +=
                 h_[ix] * _eta2[ix] * sample_weights( ix );  //  A( 0, 2 )
 
-            A_arr[3] += ( h_[ix] * _eta1[ix] + hyperparameters().lambda_ ) *
+            A_arr[3] += ( h_[ix] * _eta1[ix] + hyperparameters().reg_lambda_ ) *
                         _eta1[ix] * sample_weights( ix );  // A( 1, 1 )
 
             A_arr[4] += h_[ix] * _eta1[ix] * _eta2[ix] *
                         sample_weights( ix );  // A( 1, 2 )
 
-            A_arr[5] += ( h_[ix] * _eta2[ix] + hyperparameters().lambda_ ) *
+            A_arr[5] += ( h_[ix] * _eta2[ix] + hyperparameters().reg_lambda_ ) *
                         _eta2[ix] * sample_weights( ix );  // A( 2, 2 )
         }
 
@@ -539,8 +531,7 @@ std::array<Float, 3> LossFunctionImpl::calc_weights(
 
     utils::Reducer::reduce<3>( std::plus<Float>(), &g_eta_arr, _comm );
 
-    utils::Reducer::reduce<3>(
-        std::plus<Float>(), &h_w_const_arr, _comm );
+    utils::Reducer::reduce<3>( std::plus<Float>(), &h_w_const_arr, _comm );
 
     utils::Reducer::reduce<6>( std::plus<Float>(), &A_arr, _comm );
 
@@ -587,8 +578,7 @@ std::array<Float, 3> LossFunctionImpl::calc_weights(
 
     // ------------------------------------------------------------------------
 
-    return std::array<Float, 3>(
-        {weights[0], weights[1], weights[2]} );
+    return std::array<Float, 3>( {weights[0], weights[1], weights[2]} );
 
     // ------------------------------------------------------------------------
 }

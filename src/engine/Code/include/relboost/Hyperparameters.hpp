@@ -69,9 +69,6 @@ struct Hyperparameters
     /// included in our prediction.
     const bool include_categorical_;
 
-    /// L2 regularization term on weights
-    const Float lambda_;
-
     /// Maximum delta step we allow each tree’s weight estimation to be.
     // const Float max_delta_step;
 
@@ -95,6 +92,9 @@ struct Hyperparameters
 
     /// The objective for the learning function.
     const std::string objective_;
+
+    /// L2 regularization term on weights
+    const Float reg_lambda_;
 
     /// Proportional to the subsample ratio.
     const Float sampling_factor_;
