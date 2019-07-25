@@ -42,6 +42,14 @@ class AggregationImpl
         const Float _old_weight,
         const std::array<Float, 3>& _weights );
 
+    /// Helper class that determines whether the min_num_samples requirement is
+    /// fulfilled.
+    bool is_balanced(
+        const Float _num_samples_1,
+        const Float _num_samples_2,
+        const Float _min_num_samples,
+        multithreading::Communicator* _comm ) const;
+
     /// Resets the critical resources to zero.
     void reset();
 

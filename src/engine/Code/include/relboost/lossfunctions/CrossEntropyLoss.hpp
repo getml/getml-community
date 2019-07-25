@@ -88,8 +88,7 @@ class CrossEntropyLoss : public LossFunction
    public:
     /// Calculates first and second derivatives.
     void calc_gradients(
-        const std::shared_ptr<const std::vector<Float>>& _yhat_old )
-        final;
+        const std::shared_ptr<const std::vector<Float>>& _yhat_old ) final;
 
     /// Evaluates split given matches. In this case, the loss function effective
     /// turns into XGBoost.
@@ -99,8 +98,7 @@ class CrossEntropyLoss : public LossFunction
         const std::array<Float, 3>& _weights ) final;
 
     /// Evaluates and entire tree.
-    Float evaluate_tree(
-        const std::vector<Float>& _yhat_new ) final;
+    Float evaluate_tree( const std::vector<Float>& _yhat_new ) final;
 
     // -----------------------------------------------------------------
 
@@ -118,16 +116,14 @@ class CrossEntropyLoss : public LossFunction
     // all.
     void apply_transformation( std::vector<Float>* yhat_ ) const final
     {
-        std::for_each(
-            yhat_->begin(), yhat_->end(), [this]( Float& _val ) {
-                _val = logistic_function( _val );
-            } );
+        std::for_each( yhat_->begin(), yhat_->end(), [this]( Float& _val ) {
+            _val = logistic_function( _val );
+        } );
     }
 
     /// Calculates an index that contains all non-zero samples.
     void calc_sample_index(
-        const std::shared_ptr<const std::vector<Float>>&
-            _sample_weights )
+        const std::shared_ptr<const std::vector<Float>>& _sample_weights )
     {
         sample_weights_ = _sample_weights;
         sample_index_ = impl_.calc_sample_index( _sample_weights );
@@ -158,6 +154,7 @@ class CrossEntropyLoss : public LossFunction
     std::vector<std::array<Float, 3>> calc_weights(
         const enums::Revert _revert,
         const enums::Update _update,
+        const Float _min_num_samples,
         const Float _old_weight,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _split_begin,
@@ -326,8 +323,7 @@ class CrossEntropyLoss : public LossFunction
     }
 
     /// Generates the predictions.
-    Float transform(
-        const std::vector<Float>& _weights ) const final
+    Float transform( const std::vector<Float>& _weights ) const final
     {
         assert( false && "ToDO" );
         return 0.0;
@@ -401,8 +397,7 @@ class CrossEntropyLoss : public LossFunction
     }
 
     /// Applies the log loss function.
-    Float log_loss(
-        const Float _sigma_yhat, const Float _target ) const
+    Float log_loss( const Float _sigma_yhat, const Float _target ) const
     {
         Float part1 = -_target * std::log( _sigma_yhat );
 
@@ -411,8 +406,7 @@ class CrossEntropyLoss : public LossFunction
                 part1 = _target * 1e10;
             }
 
-        Float part2 =
-            -( 1.0 - _target ) * std::log( 1.0 - _sigma_yhat );
+        Float part2 = -( 1.0 - _target ) * std::log( 1.0 - _sigma_yhat );
 
         if ( std::isnan( part2 ) || std::isinf( part2 ) )
             {

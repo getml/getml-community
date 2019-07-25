@@ -44,8 +44,7 @@ class SquareLoss : public LossFunction
    public:
     /// Calculates first and second derivatives.
     void calc_gradients(
-        const std::shared_ptr<const std::vector<Float>>& _yhat_old )
-        final;
+        const std::shared_ptr<const std::vector<Float>>& _yhat_old ) final;
 
     /// Evaluates split given matches. In this case, the loss function effective
     /// turns into XGBoost.
@@ -55,8 +54,7 @@ class SquareLoss : public LossFunction
         const std::array<Float, 3>& _weights ) final;
 
     /// Evaluates and entire tree.
-    Float evaluate_tree(
-        const std::vector<Float>& _yhat_new ) final;
+    Float evaluate_tree( const std::vector<Float>& _yhat_new ) final;
 
     // -----------------------------------------------------------------
 
@@ -69,14 +67,11 @@ class SquareLoss : public LossFunction
     // Applies a transformation function. Some loss functions (such as
     // CrossEntropyLoss) require this. For others, this won't do anything at
     // all.
-    void apply_transformation( std::vector<Float>* yhat_ ) const final
-    {
-    }
+    void apply_transformation( std::vector<Float>* yhat_ ) const final {}
 
     /// Calculates an index that contains all non-zero samples.
     void calc_sample_index(
-        const std::shared_ptr<const std::vector<Float>>&
-            _sample_weights )
+        const std::shared_ptr<const std::vector<Float>>& _sample_weights )
     {
         sample_weights_ = _sample_weights;
         sample_index_ = impl_.calc_sample_index( _sample_weights );
@@ -107,6 +102,7 @@ class SquareLoss : public LossFunction
     std::vector<std::array<Float, 3>> calc_weights(
         const enums::Revert _revert,
         const enums::Update _update,
+        const Float _min_num_samples,
         const Float _old_weight,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _split_begin,
@@ -275,8 +271,7 @@ class SquareLoss : public LossFunction
     }
 
     /// Generates the predictions.
-    Float transform(
-        const std::vector<Float>& _weights ) const final
+    Float transform( const std::vector<Float>& _weights ) const final
     {
         assert( false && "ToDO" );
         return 0.0;

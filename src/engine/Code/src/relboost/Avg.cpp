@@ -25,6 +25,7 @@ void Avg::activate(
             else
                 {
                     assert( !std::isnan( w_fixed_committed_[ix] ) );
+                    assert( count_committed_[ix] + count1_[ix] > 0.5 );
 
                     eta1_2_null_[ix] =
                         count1_[ix] / ( count_committed_[ix] + count1_[ix] );
@@ -44,6 +45,7 @@ void Avg::activate(
             else
                 {
                     assert( !std::isnan( w_fixed_committed_[ix] ) );
+                    assert( count_committed_[ix] + count2_[ix] > 0.5 );
 
                     eta2_1_null_[ix] =
                         count2_[ix] / ( count_committed_[ix] + count2_[ix] );
@@ -95,6 +97,12 @@ void Avg::calc_all(
 #endif  // NDEBUG
 
     // ------------------------------------------------------------------------
+
+    num_samples_1_ = 0.0;
+
+    num_samples_2_ = 0.0;
+
+    // ------------------------------------------------------------------------
     // Calculate eta1_, eta2_, eta_old_, count1_ and count2_.
 
     if ( !std::isnan( _old_weight ) )
@@ -109,6 +117,8 @@ void Avg::calc_all(
 
                     ++count2_[ix];
 
+                    ++num_samples_2_;
+
                     indices_.insert( ix );
                 }
 
@@ -122,6 +132,8 @@ void Avg::calc_all(
 
                     ++count1_[ix];
 
+                    ++num_samples_1_;
+
                     indices_.insert( ix );
                 }
 
@@ -134,6 +146,8 @@ void Avg::calc_all(
                     eta2_[ix] += 1.0 / count_committed_[ix];
 
                     ++count2_[ix];
+
+                    ++num_samples_2_;
 
                     indices_.insert( ix );
                 }
@@ -151,6 +165,8 @@ void Avg::calc_all(
 
                     ++count2_[ix];
 
+                    ++num_samples_2_;
+
                     indices_.insert( ix );
                 }
 
@@ -160,6 +176,8 @@ void Avg::calc_all(
 
                     ++count1_[ix];
 
+                    ++num_samples_1_;
+
                     indices_.insert( ix );
                 }
 
@@ -168,6 +186,8 @@ void Avg::calc_all(
                     const auto ix = ( *it )->ix_output;
 
                     ++count2_[ix];
+
+                    ++num_samples_2_;
 
                     indices_.insert( ix );
                 }
@@ -216,9 +236,13 @@ void Avg::calc_diff(
     const std::vector<const containers::Match*>::iterator _split_begin,
     const std::vector<const containers::Match*>::iterator _split_end )
 {
+    // ------------------------------------------------------------------------
+
     assert( _split_end >= _split_begin );
 
     indices_current_.clear();
+
+    // ------------------------------------------------------------------------
 
     if ( !std::isnan( _old_weight ) )
         {
@@ -258,6 +282,16 @@ void Avg::calc_diff(
                 }
         }
 
+    // ------------------------------------------------------------------------
+
+    const auto dist =
+        static_cast<Float>( std::distance( _split_begin, _split_end ) );
+
+    num_samples_1_ += dist;
+    num_samples_2_ -= dist;
+
+    // ------------------------------------------------------------------------
+
     if ( std::isnan( _old_weight ) )
         {
             activate( indices_current_.begin(), indices_current_.end() );
@@ -267,6 +301,8 @@ void Avg::calc_diff(
             deactivate(
                 _old_weight, indices_current_.begin(), indices_current_.end() );
         }
+
+    // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -274,6 +310,7 @@ void Avg::calc_diff(
 std::vector<std::array<Float, 3>> Avg::calc_weights(
     const enums::Revert _revert,
     const enums::Update _update,
+    const Float _min_num_samples,
     const Float _old_weight,
     const std::vector<const containers::Match*>::iterator _begin,
     const std::vector<const containers::Match*>::iterator _split_begin,
@@ -317,6 +354,16 @@ std::vector<std::array<Float, 3>> Avg::calc_weights(
 
     std::vector<std::array<Float, 3>> results;
 
+    // -------------------------------------------------------------
+
+    if ( !impl_.is_balanced(
+             num_samples_1_, num_samples_2_, _min_num_samples, comm_ ) )
+        {
+            return results;
+        }
+
+    // -------------------------------------------------------------
+
     if ( !std::isnan( _old_weight ) )
         {
             results.push_back( child_->calc_weights(
@@ -346,7 +393,7 @@ std::vector<std::array<Float, 3>> Avg::calc_weights(
     return results;
 
     // -------------------------------------------------------------
-}
+}  // namespace aggregations
 
 // ----------------------------------------------------------------------------
 
@@ -409,8 +456,7 @@ std::array<Float, 3> Avg::calc_weights(
 // ----------------------------------------------------------------------------
 
 void Avg::calc_yhat(
-    const Float _old_weight,
-    const std::array<Float, 3>& _new_weights )
+    const Float _old_weight, const std::array<Float, 3>& _new_weights )
 {
     assert( !std::isnan( std::get<0>( _new_weights ) ) );
 
@@ -677,6 +723,7 @@ void Avg::deactivate(
             else
                 {
                     assert( !std::isnan( w_fixed_committed_[ix] ) );
+                    assert( count_committed_[ix] - count2_[ix] > 0.5 );
 
                     eta1_2_null_[ix] =
                         count1_[ix] / ( count_committed_[ix] - count2_[ix] );
@@ -697,6 +744,7 @@ void Avg::deactivate(
             else
                 {
                     assert( !std::isnan( w_fixed_committed_[ix] ) );
+                    assert( count_committed_[ix] - count1_[ix] > 0.5 );
 
                     eta2_1_null_[ix] =
                         count2_[ix] / ( count_committed_[ix] - count1_[ix] );
@@ -854,6 +902,10 @@ void Avg::revert( const Float _old_weight )
                 _old_weight, indices_current_.begin(), indices_current_.end() );
         }
 
+    num_samples_2_ += num_samples_1_;
+
+    num_samples_1_ = 0.0;
+
     indices_current_.clear();
 }
 
@@ -901,8 +953,7 @@ void Avg::revert_to_commit()
 
 // ----------------------------------------------------------------------------
 
-Float Avg::transform(
-    const std::vector<Float>& _weights ) const
+Float Avg::transform( const std::vector<Float>& _weights ) const
 {
     Float count = 0.0;
 

@@ -410,17 +410,7 @@ std::array<Float, 3> LossFunctionImpl::calc_weights_avg_null(
     // ------------------------------------------------------------------------
     // Calculate weight by solving A*weight = b.
 
-    auto weights = A.fullPivLu().solve( b );
-
-    // ------------------------------------------------------------------------
-    // Check relative error.
-
-    const auto relative_error = ( A * weights - b ).norm() / b.norm();
-
-    if ( relative_error > 1e-10 )
-        {
-            return std::array<Float, 3>( {NAN, NAN, NAN} );
-        }
+    Eigen::Matrix<Float, 2, 1> weights = A.fullPivLu().solve( b );
 
     // ------------------------------------------------------------------------
 
@@ -488,6 +478,8 @@ std::array<Float, 3> LossFunctionImpl::calc_weights(
         {
             const auto w_old = _old_weight * ( _eta1[ix] + _eta2[ix] );
             const auto w_fixed = _yhat_committed[ix] - w_old;
+
+            assert( sample_weights( ix ) > 0.0 );
 
             assert( ix < targets().size() );
             h_w_const_arr[0] += h_[ix] * w_old * sample_weights( ix );
@@ -565,16 +557,6 @@ std::array<Float, 3> LossFunctionImpl::calc_weights(
     // Calculate weights by solving A*weights = b.
 
     auto weights = A.fullPivLu().solve( b );
-
-    // ------------------------------------------------------------------------
-    // Check relative error.
-
-    const auto relative_error = ( A * weights - b ).norm() / b.norm();
-
-    if ( relative_error > 1e-10 )
-        {
-            return std::array<Float, 3>( {NAN, NAN, NAN} );
-        }
 
     // ------------------------------------------------------------------------
 

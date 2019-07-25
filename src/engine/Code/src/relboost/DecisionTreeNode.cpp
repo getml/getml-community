@@ -36,9 +36,8 @@ DecisionTreeNode::DecisionTreeNode(
       hyperparameters_( _hyperparameters ),
       loss_function_( _loss_function ),
       weight_(
-          _obj.has( "weight_" )
-              ? JSON::get_value<Float>( _obj, "weight_" )
-              : NAN )
+          _obj.has( "weight_" ) ? JSON::get_value<Float>( _obj, "weight_" )
+                                : NAN )
 {
     input_.reset(
         new containers::Schema( *JSON::get_object( _obj, "input_" ) ) );
@@ -104,25 +103,14 @@ void DecisionTreeNode::add_candidates(
     // Calculate weights.
 
     auto all_new_weights = loss_function().calc_weights(
-        _revert, _update, weight_, _begin, _last_it, _it, _end );
-
-    // -----------------------------------------------------------------
-    // Check whether split would be balanced enough.
-
-    auto num_samples_smaller = static_cast<Int>( std::distance( _last_it, _it ) );
-
-    auto num_samples_greater =
-        static_cast<Int>( std::distance( _begin, _end ) ) - num_samples_smaller;
-
-    utils::Reducer::reduce(
-        std::plus<Int>(), &num_samples_smaller, &comm() );
-
-    utils::Reducer::reduce(
-        std::plus<Int>(), &num_samples_greater, &comm() );
-
-    const bool is_balanced =
-        num_samples_smaller > hyperparameters().min_num_samples_ &&
-        num_samples_greater > hyperparameters().min_num_samples_;
+        _revert,
+        _update,
+        hyperparameters().min_num_samples_,
+        weight_,
+        _begin,
+        _last_it,
+        _it,
+        _end );
 
     // -----------------------------------------------------------------
     // Calculate and store loss reduction.
@@ -145,11 +133,8 @@ void DecisionTreeNode::add_candidates(
             auto loss_reduction = loss_function().evaluate_split(
                 _old_intercept, weight_, new_weights );
 
-            if ( is_balanced )
-                {
-                    _candidates->push_back( containers::CandidateSplit(
-                        loss_reduction, _split, new_weights ) );
-                }
+            _candidates->push_back( containers::CandidateSplit(
+                loss_reduction, _split, new_weights ) );
         }
 
     // -----------------------------------------------------------------

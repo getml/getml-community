@@ -21,9 +21,15 @@ void Sum::calc_all(
     // All matches between _split_begin and _split_end are allocated to _eta1.
     // All others are allocated to eta1_.
 
+    num_samples_1_ = 0.0;
+
+    num_samples_2_ = 0.0;
+
     for ( auto it = _begin; it != _split_begin; ++it )
         {
             ++eta2_[( *it )->ix_output];
+
+            ++num_samples_2_;
 
             indices_.insert( ( *it )->ix_output );
         }
@@ -32,12 +38,16 @@ void Sum::calc_all(
         {
             ++eta1_[( *it )->ix_output];
 
+            ++num_samples_1_;
+
             indices_.insert( ( *it )->ix_output );
         }
 
     for ( auto it = _split_end; it != _end; ++it )
         {
             ++eta2_[( *it )->ix_output];
+
+            ++num_samples_2_;
 
             indices_.insert( ( *it )->ix_output );
         }
@@ -85,6 +95,14 @@ void Sum::calc_diff(
         }
 
     // ------------------------------------------------------------------------
+
+    const auto dist =
+        static_cast<Float>( std::distance( _split_begin, _split_end ) );
+
+    num_samples_1_ += dist;
+    num_samples_2_ -= dist;
+
+    // ------------------------------------------------------------------------
     // If we need to be able to revert this, we have to keep track of all
     // ix which we have just changed.
 
@@ -108,13 +126,18 @@ void Sum::calc_diff(
 std::vector<std::array<Float, 3>> Sum::calc_weights(
     const enums::Revert _revert,
     const enums::Update _update,
+    const Float _min_num_samples,
     const Float _old_weight,
     const std::vector<const containers::Match*>::iterator _begin,
     const std::vector<const containers::Match*>::iterator _split_begin,
     const std::vector<const containers::Match*>::iterator _split_end,
     const std::vector<const containers::Match*>::iterator _end )
 {
+    // -------------------------------------------------------------
+
     assert( eta1_.size() == eta2_.size() );
+
+    // -------------------------------------------------------------
 
     debug_log(
         "std::distance(_begin, _split_begin): " +
@@ -145,7 +168,19 @@ std::vector<std::array<Float, 3>> Sum::calc_weights(
 
     // -------------------------------------------------------------
 
-    std::vector<std::array<Float, 3>> results = {child_->calc_weights(
+    std::vector<std::array<Float, 3>> results;
+
+    // -------------------------------------------------------------
+
+    if ( !impl_.is_balanced(
+             num_samples_1_, num_samples_2_, _min_num_samples, comm_ ) )
+        {
+            return results;
+        }
+
+    // -------------------------------------------------------------
+
+    results = {child_->calc_weights(
         enums::Aggregation::sum,
         _old_weight,
         indices_.unique_integers(),
@@ -295,13 +330,16 @@ void Sum::revert( const Float _old_weight )
             eta1_[ix] = 0.0;
         }
 
+    num_samples_2_ += num_samples_1_;
+
+    num_samples_1_ = 0.0;
+
     indices_current_.clear();
 }
 
 // ----------------------------------------------------------------------------
 
-Float Sum::transform(
-    const std::vector<Float>& _weights ) const
+Float Sum::transform( const std::vector<Float>& _weights ) const
 {
     return std::accumulate( _weights.begin(), _weights.end(), 0.0 );
 }

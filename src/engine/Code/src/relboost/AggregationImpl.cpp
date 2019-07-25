@@ -25,6 +25,31 @@ void AggregationImpl::commit( const std::array<Float, 3>& _weights )
 
 // ----------------------------------------------------------------------------
 
+bool AggregationImpl::is_balanced(
+    const Float _num_samples_1,
+    const Float _num_samples_2,
+    const Float _min_num_samples,
+    multithreading::Communicator* _comm ) const
+{
+    auto global_num_samples_1 = _num_samples_1;
+
+    auto global_num_samples_2 = _num_samples_2;
+
+    assert( _comm != nullptr );
+
+    utils::Reducer::reduce<Float>(
+        std::plus<Float>(), &global_num_samples_1, _comm );
+
+    utils::Reducer::reduce<Float>(
+        std::plus<Float>(), &global_num_samples_2, _comm );
+
+    return (
+        global_num_samples_1 > _min_num_samples &&
+        global_num_samples_2 > _min_num_samples );
+}
+
+// ----------------------------------------------------------------------------
+
 void AggregationImpl::reset()
 {
     indices_.clear();

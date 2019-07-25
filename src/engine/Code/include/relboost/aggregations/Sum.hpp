@@ -16,12 +16,16 @@ class Sum : public lossfunctions::LossFunction
    public:
     Sum( const std::shared_ptr<lossfunctions::LossFunction>& _child,
          const containers::DataFrame& _input,
-         const containers::DataFrameView& _output )
+         const containers::DataFrameView& _output,
+         multithreading::Communicator* _comm )
         : child_( _child ),
+          comm_( _comm ),
           depth_( _child->depth() + 1 ),
           indices_( _output.nrows() ),
           indices_current_( _output.nrows() ),
           input_join_keys_( _input.join_keys() ),
+          num_samples_1_( 0.0 ),
+          num_samples_2_( 0.0 ),
           output_indices_( _output.indices() ),
           impl_( AggregationImpl(
               _child.get(), &eta1_, &eta2_, &indices_, &indices_current_ ) )
@@ -31,11 +35,15 @@ class Sum : public lossfunctions::LossFunction
 
     Sum( const std::shared_ptr<lossfunctions::LossFunction>& _child )
         : child_( _child ),
+          comm_( nullptr ),
           depth_( _child->depth() + 1 ),
           indices_( 0 ),
           indices_current_( 0 ),
+          num_samples_1_( 0.0 ),
+          num_samples_2_( 0.0 ),
           impl_( AggregationImpl(
               _child.get(), &eta1_, &eta2_, &indices_, &indices_current_ ) )
+
     {
     }
 
@@ -64,6 +72,7 @@ class Sum : public lossfunctions::LossFunction
     std::vector<std::array<Float, 3>> calc_weights(
         const enums::Revert _revert,
         const enums::Update _update,
+        const Float _min_num_samples,
         const Float _old_weight,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _split_begin,
@@ -100,8 +109,7 @@ class Sum : public lossfunctions::LossFunction
     void revert( const Float _old_weight ) final;
 
     /// Generates the predictions.
-    Float transform(
-        const std::vector<Float>& _weights ) const final;
+    Float transform( const std::vector<Float>& _weights ) const final;
 
     // -----------------------------------------------------------------
 
@@ -114,22 +122,18 @@ class Sum : public lossfunctions::LossFunction
     // Applies a transformation function. Some loss functions (such as
     // CrossEntropyLoss) require this. For others, this won't do anything at
     // all.
-    void apply_transformation( std::vector<Float>* yhat_ ) const final
-    {
-    }
+    void apply_transformation( std::vector<Float>* yhat_ ) const final {}
 
     /// Aggregations do not calculate gradients, only real loss functions do.
     void calc_gradients(
-        const std::shared_ptr<const std::vector<Float>>& _yhat_old )
-        final
+        const std::shared_ptr<const std::vector<Float>>& _yhat_old ) final
     {
         child_->calc_gradients( _yhat_old );
     }
 
     /// Calculates an index that contains all non-zero samples.
     void calc_sample_index(
-        const std::shared_ptr<const std::vector<Float>>&
-            _sample_weights )
+        const std::shared_ptr<const std::vector<Float>>& _sample_weights )
     {
         child_->calc_sample_index( _sample_weights );
     }
@@ -176,8 +180,7 @@ class Sum : public lossfunctions::LossFunction
     void commit() final { child_->commit(); }
 
     /// Evaluates an entire tree.
-    Float evaluate_tree(
-        const std::vector<Float>& _yhat_new ) final
+    Float evaluate_tree( const std::vector<Float>& _yhat_new ) final
     {
         return child_->evaluate_tree( _yhat_new );
     }
@@ -203,6 +206,7 @@ class Sum : public lossfunctions::LossFunction
     /// Trivial setter.
     void set_comm( multithreading::Communicator* _comm ) final
     {
+        comm_ = _comm;
         child_->set_comm( _comm );
     }
 
@@ -233,8 +237,7 @@ class Sum : public lossfunctions::LossFunction
     /// Calculates the new yhat assuming that this is the
     /// lowest aggregation.
     void calc_yhat(
-        const Float _old_weight,
-        const std::array<Float, 3>& _new_weights )
+        const Float _old_weight, const std::array<Float, 3>& _new_weights )
     {
         child_->calc_yhat(
             enums::Aggregation::sum,
@@ -250,6 +253,9 @@ class Sum : public lossfunctions::LossFunction
    private:
     /// Either The next higher level of aggregation or the loss function.
     const std::shared_ptr<lossfunctions::LossFunction>& child_;
+
+    /// A communicator used for exchaning information between threads.
+    multithreading::Communicator* comm_;
 
     /// Depth at this aggregation.
     const size_t depth_;
@@ -268,6 +274,12 @@ class Sum : public lossfunctions::LossFunction
 
     /// The join keys of the input table.
     std::vector<containers::Column<Int>> input_join_keys_;
+
+    /// Total number of samples for eta1_.
+    Float num_samples_1_;
+
+    /// Total number of samples for eta2_.
+    Float num_samples_2_;
 
     /// The indices of the output table.
     std::vector<std::shared_ptr<containers::Index>> output_indices_;

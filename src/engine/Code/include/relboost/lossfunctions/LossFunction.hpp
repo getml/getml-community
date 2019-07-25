@@ -20,18 +20,15 @@ class LossFunction
     // Applies a transformation function. Some loss functions (such as
     // CrossEntropyLoss) require this. For others, this won't do anything at
     // all.
-    virtual void apply_transformation(
-        std::vector<Float>* yhat_ ) const = 0;
+    virtual void apply_transformation( std::vector<Float>* yhat_ ) const = 0;
 
     /// Calculates first and second derivatives.
     virtual void calc_gradients(
-        const std::shared_ptr<const std::vector<Float>>&
-            _yhat_old ) = 0;
+        const std::shared_ptr<const std::vector<Float>>& _yhat_old ) = 0;
 
     /// Calculates an index that contains all non-zero samples.
     virtual void calc_sample_index(
-        const std::shared_ptr<const std::vector<Float>>&
-            _sample_weights ) = 0;
+        const std::shared_ptr<const std::vector<Float>>& _sample_weights ) = 0;
 
     /// Calculates sum_g_ and sum_h_.
     virtual void calc_sums() = 0;
@@ -45,6 +42,7 @@ class LossFunction
     virtual std::vector<std::array<Float, 3>> calc_weights(
         const enums::Revert _revert,
         const enums::Update _update,
+        const Float _min_num_samples,
         const Float _old_weight,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _split_begin,
@@ -115,8 +113,7 @@ class LossFunction
         const std::array<Float, 3>& _weights ) = 0;
 
     /// Evaluates and entire tree.
-    virtual Float evaluate_tree(
-        const std::vector<Float>& _yhat_new ) = 0;
+    virtual Float evaluate_tree( const std::vector<Float>& _yhat_new ) = 0;
 
     /// Resets the critical resources to zero.
     virtual void reset() = 0;
@@ -139,8 +136,7 @@ class LossFunction
     virtual void set_comm( multithreading::Communicator* _comm ) = 0;
 
     /// Generates the predictions.
-    virtual Float transform(
-        const std::vector<Float>& _weights ) const = 0;
+    virtual Float transform( const std::vector<Float>& _weights ) const = 0;
 
     /// Describes the type of the loss function (SquareLoss, CrossEntropyLoss,
     /// etc.)

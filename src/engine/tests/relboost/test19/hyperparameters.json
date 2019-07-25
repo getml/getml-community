@@ -2,7 +2,7 @@
     "eta_": 0.4,
     "gamma_": 1e-20,
     "include_categorical_": false,
-    "lambda_": 1e-20,
+    "reg_lambda_": 1e-20,
     "max_depth_": 1,
     "min_num_samples_": 200,
     "num_features_": 10,

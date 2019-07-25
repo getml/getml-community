@@ -337,10 +337,14 @@ void DecisionTreeEnsemble::fit_new_feature()
                 aggregations;
 
             aggregations.push_back( std::make_shared<aggregations::Avg>(
-                loss_function_, matches_ptr, input_table, output_table ) );
+                loss_function_,
+                matches_ptr,
+                input_table,
+                output_table,
+                &comm() ) );
 
             aggregations.push_back( std::make_shared<aggregations::Sum>(
-                loss_function_, input_table, output_table ) );
+                loss_function_, input_table, output_table, &comm() ) );
 
             // ------------------------------------------------------------------------
             // Iterate through aggregations.
