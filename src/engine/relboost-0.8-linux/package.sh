@@ -43,8 +43,10 @@ cp /lib64/libssl3.so lib
 cp /lib64/libsmime3.so lib
 cp /lib64/libplds4.so lib
 cp /lib64/libplc4.so lib
-cp /lib64/libnspr4.so  lib
-cp /lib64/libfreebl3.so  lib
+cp /lib64/libnspr4.so lib
+cp /lib64/libfreebl3.so lib
+cp /lib64/libnss3.so lib
+cp /lib64/libnssutil3.so lib
 
 # Create temporary folder
 mkdir -p $RELBOOST_VERSION
