@@ -148,5 +148,7 @@ target_link_libraries(
    "${XGBOOST_DIR}/dmlc-core/libdmlc.a"
    ssl
    crypto
+   pqxx
+   pq
    dl
 )
