@@ -11,6 +11,10 @@
 #include <stdexcept>
 #include <string>
 
+#include <libpq-fe.h>
+
+#include <pqxx/pqxx>
+
 #include "Poco/JSON/Object.h"
 
 extern "C"
@@ -33,8 +37,10 @@ extern "C"
 
 #include "database/Connector.hpp"
 
+#include "database/PostgresIterator.hpp"
 #include "database/Sqlite3Iterator.hpp"
 
+#include "database/Postgres.hpp"
 #include "database/Sqlite3.hpp"
 
 #include "database/DatabaseParser.hpp"

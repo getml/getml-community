@@ -5,6 +5,7 @@
 
 #include "database/database.hpp"
 
+// Tests for sqlite
 #include "database/tests/test1.hpp"
 #include "database/tests/test2.hpp"
 #include "database/tests/test3.hpp"
@@ -12,5 +13,8 @@
 #include "database/tests/test5.hpp"
 #include "database/tests/test6.hpp"
 #include "database/tests/test7.hpp"
+
+// Tests for postgres
+#include "database/tests/test8.hpp"
 
 #endif  // DATABASE_TESTS_TESTS_HPP_

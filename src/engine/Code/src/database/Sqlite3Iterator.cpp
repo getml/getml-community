@@ -207,7 +207,12 @@ Float Sqlite3Iterator::get_time_stamp()
 
             if ( !success )
                 {
-                    val = get_double();
+                    std::tie( val, success ) = csv::Parser::to_double( str );
+                }
+
+            if ( !success )
+                {
+                    val = NAN;
                 }
         }
     else

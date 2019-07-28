@@ -90,14 +90,53 @@ std::string Sniffer::make_statement(
     const std::vector<std::string>& _colnames,
     const std::vector<Datatype>& _datatypes ) const
 {
+    if ( dialect_ == "postgres" )
+        {
+            return make_statement_postgres( _colnames, _datatypes );
+        }
     if ( dialect_ == "sqlite" )
         {
             return make_statement_sqlite( _colnames, _datatypes );
         }
     else
         {
-            return "SQL dialect '" + dialect_ + "' not known!";
+            throw std::invalid_argument(
+                "SQL dialect '" + dialect_ + "' not known!" );
+            return "";
         }
+}
+
+// ----------------------------------------------------------------------------
+
+std::string Sniffer::make_statement_postgres(
+    const std::vector<std::string>& _colnames,
+    const std::vector<Datatype>& _datatypes ) const
+{
+    assert( _colnames.size() == _datatypes.size() );
+
+    std::stringstream statement;
+
+    statement << "DROP TABLE IF EXISTS \"" << table_name_ << "\";" << std::endl
+              << std::endl;
+
+    statement << "CREATE TABLE \"" << table_name_ << "\"(" << std::endl;
+
+    for ( size_t i = 0; i < _colnames.size(); ++i )
+        {
+            statement << "    \"" << _colnames[i] << "\" "
+                      << to_string_postgres( _datatypes[i] );
+
+            if ( i < _colnames.size() - 1 )
+                {
+                    statement << "," << std::endl;
+                }
+            else
+                {
+                    statement << ");" << std::endl;
+                }
+        }
+
+    return statement.str();
 }
 
 // ----------------------------------------------------------------------------
@@ -202,7 +241,31 @@ std::string Sniffer::sniff() const
     return make_statement( colnames, datatypes );
 
     // ------------------------------------------------------------------------
-}  // namespace csv
+}
+
+// ----------------------------------------------------------------------------
+
+std::string Sniffer::to_string_postgres( const Datatype _type ) const
+{
+    switch ( _type )
+        {
+            case Datatype::double_precision:
+                return "DOUBLE PRECISION";
+
+            case Datatype::integer:
+                return "INTEGER";
+
+            case Datatype::string:
+                return "TEXT";
+
+            case Datatype::time_stamp:
+                return "TIMESTAMP";
+
+            default:
+                assert( false );
+                return "";
+        }
+}
 
 // ----------------------------------------------------------------------------
 

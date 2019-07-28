@@ -37,6 +37,12 @@ class Reader
     /// Whether the end of the file has been reached.
     bool eof() const { return filestream_->eof(); }
 
+    /// Trivial getter.
+    char quotechar() const { return quotechar_; }
+
+    /// Trivial getter.
+    char sep() const { return sep_; }
+
     // -------------------------------
 
    private:

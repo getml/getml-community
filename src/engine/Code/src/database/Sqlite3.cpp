@@ -54,61 +54,6 @@ void Sqlite3::execute( const std::string& _sql )
 
 // ----------------------------------------------------------------------------
 
-std::vector<csv::Datatype> Sqlite3::get_coltypes(
-    const std::string& _table, const std::vector<std::string>& _colnames ) const
-{
-    multithreading::ReadLock read_lock( read_write_lock_ );
-
-    std::vector<csv::Datatype> datatypes;
-
-    for ( size_t i = 0; i < _colnames.size(); ++i )
-        {
-            int pNotNull = 0, pPrimaryKey = 0, pAutoinc = 0;
-
-            char const* data_type = nullptr;
-
-            char const* pzCollSeq = nullptr;
-
-            int rc = sqlite3_table_column_metadata(
-                db(),                  // Connection handle
-                NULL,                  // Database name or NULL
-                _table.c_str(),        // Table name
-                _colnames[i].c_str(),  // Column name
-                &data_type,            // OUTPUT: Declared data type
-                &pzCollSeq,            // OUTPUT: Collation sequence name
-                &pNotNull,     // OUTPUT: True if NOT NULL constraint exists
-                &pPrimaryKey,  // OUTPUT: True if column part of PK
-                &pAutoinc      // OUTPUT: True if column is auto-increment
-            );
-
-            if ( rc != SQLITE_OK )
-                {
-                    throw std::runtime_error( sqlite3_errmsg( db() ) );
-                }
-
-            assert( data_type != nullptr );
-
-            const auto str = std::string( data_type );
-
-            if ( str == "REAL" )
-                {
-                    datatypes.push_back( csv::Datatype::double_precision );
-                }
-            else if ( str == "INTEGER" )
-                {
-                    datatypes.push_back( csv::Datatype::integer );
-                }
-            else
-                {
-                    datatypes.push_back( csv::Datatype::string );
-                }
-        }
-
-    return datatypes;
-}
-
-// ----------------------------------------------------------------------------
-
 std::vector<std::string> Sqlite3::get_colnames(
     const std::string& _table ) const
 {
@@ -163,6 +108,61 @@ std::vector<std::string> Sqlite3::get_colnames(
     return colnames;
 
     // ------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<csv::Datatype> Sqlite3::get_coltypes(
+    const std::string& _table, const std::vector<std::string>& _colnames ) const
+{
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    std::vector<csv::Datatype> datatypes;
+
+    for ( size_t i = 0; i < _colnames.size(); ++i )
+        {
+            int pNotNull = 0, pPrimaryKey = 0, pAutoinc = 0;
+
+            char const* data_type = nullptr;
+
+            char const* pzCollSeq = nullptr;
+
+            int rc = sqlite3_table_column_metadata(
+                db(),                  // Connection handle
+                NULL,                  // Database name or NULL
+                _table.c_str(),        // Table name
+                _colnames[i].c_str(),  // Column name
+                &data_type,            // OUTPUT: Declared data type
+                &pzCollSeq,            // OUTPUT: Collation sequence name
+                &pNotNull,     // OUTPUT: True if NOT NULL constraint exists
+                &pPrimaryKey,  // OUTPUT: True if column part of PK
+                &pAutoinc      // OUTPUT: True if column is auto-increment
+            );
+
+            if ( rc != SQLITE_OK )
+                {
+                    throw std::runtime_error( sqlite3_errmsg( db() ) );
+                }
+
+            assert( data_type != nullptr );
+
+            const auto str = std::string( data_type );
+
+            if ( str == "REAL" )
+                {
+                    datatypes.push_back( csv::Datatype::double_precision );
+                }
+            else if ( str == "INTEGER" )
+                {
+                    datatypes.push_back( csv::Datatype::integer );
+                }
+            else
+                {
+                    datatypes.push_back( csv::Datatype::string );
+                }
+        }
+
+    return datatypes;
 }
 
 // ----------------------------------------------------------------------------

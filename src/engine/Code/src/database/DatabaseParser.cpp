@@ -20,6 +20,10 @@ std::shared_ptr<Connector> DatabaseParser::parse(
 
             return std::make_shared<Sqlite3>( name, time_formats );
         }
+    else if ( db == "postgres" )
+        {
+            return std::make_shared<Postgres>( _obj, time_formats );
+        }
     else
         {
             throw std::invalid_argument(

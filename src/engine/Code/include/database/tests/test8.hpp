@@ -1,15 +1,16 @@
-#ifndef DATABASE_TESTS_TEST1_HPP_
-#define DATABASE_TESTS_TEST1_HPP_
+#ifndef DATABASE_TESTS_TEST8_HPP_
+#define DATABASE_TESTS_TEST8_HPP_
 
-void test1()
+void test8()
 {
-    std::cout << "Test 1: Parsing and inserting a CSV file." << std::endl
+    std::cout << "Test 8: Parsing and inserting a CSV file into postgres."
+              << std::endl
               << std::endl;
 
-    auto sqlite_db = database::Sqlite3( ":memory:", {"%Y-%m-%d %H:%M:%S"} );
+    auto postgres_db = database::Postgres( {"%Y-%m-%d %H:%M:%S"} );
 
     auto population_sniffer = csv::Sniffer(
-        "sqlite",
+        "postgres",
         {"POPULATION.CSV", "POPULATION.CSV"},
         true,
         100,
@@ -22,13 +23,13 @@ void test1()
 
     std::cout << population_statement << std::endl;
 
-    sqlite_db.execute( population_statement );
+    postgres_db.execute( population_statement );
 
     auto reader = csv::Reader( "POPULATION.CSV", '\"', ',' );
 
-    sqlite_db.read_csv( "POPULATION", true, &reader );
+    postgres_db.read_csv( "POPULATION", true, &reader );
 
-    auto it = sqlite_db.select(
+    /*auto it = sqlite_db.select(
         {"column_01", "join_key", "time_stamp", "targets"}, "POPULATION", "" );
 
     // First line:
@@ -36,10 +37,10 @@ void test1()
     assert( std::abs( it->get_double() - 0.099024 ) < 1e-4 );
     assert( it->get_string() == "0" );
     assert( std::abs( it->get_time_stamp() - 0.738654 ) < 1e-4 );
-    assert( std::abs( it->get_double() - 113.0 ) < 1e-4 );
+    assert( it->get_int() == 113 );
 
     std::cout << std::endl << std::endl;
-    std::cout << "OK." << std::endl << std::endl;
+    std::cout << "OK." << std::endl << std::endl;*/
 }
 
-#endif  // DATABASE_TESTS_TEST1_HPP_
+#endif  // DATABASE_TESTS_TEST8_HPP_
