@@ -117,31 +117,7 @@ class Postgres : public Connector
     /// Makes sure that the colnames of the CSV file match the colnames of the
     /// target table.
     /*    void check_colnames(
-            const std::vector<std::string>& _colnames, csv::Reader* _reader );
-
-        /// Inserts a single line from a CSV file into a table.
-        void insert_line(
-            const std::vector<std::string>& _line,
-            const std::vector<csv::Datatype>& _coltypes,
-            sqlite3_stmt* stmt ) const;
-
-        /// Inserts a column in double format.
-        void insert_double(
-            const std::vector<std::string>& _line,
-            const int _colnum,
-            sqlite3_stmt* _stmt ) const;
-
-        /// Inserts a column in int format.
-        void insert_int(
-            const std::vector<std::string>& _line,
-            const int _colnum,
-            sqlite3_stmt* _stmt ) const;
-
-        /// Inserts a column in text format.
-        void insert_text(
-            const std::vector<std::string>& _line,
-            const int _colnum,
-            sqlite3_stmt* _stmt ) const;*/
+            const std::vector<std::string>& _colnames, csv::Reader* _reader );*/
 
     /// Returns the csv::Datatype associated with a oid.
     csv::Datatype interpret_oid( pqxx::oid _oid ) const;
@@ -163,12 +139,6 @@ class Postgres : public Connector
         const csv::Datatype _datatype,
         const char _sep,
         const char _quotechar ) const;
-
-    /// Prepares an insert statement for reading in CSV data.
-    /*  std::unique_ptr<sqlite3_stmt, int ( * )( sqlite3_stmt* )>
-      make_insert_statement(
-          const std::string& _table,
-          const std::vector<std::string>& _colnames ) const;*/
 
     // -------------------------------
 

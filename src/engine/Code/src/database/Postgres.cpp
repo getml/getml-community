@@ -297,6 +297,8 @@ void Postgres::read_csv(
             throw std::runtime_error( PQerrorMessage( conn.get() ) );
         }
 
+    PQgetResult( conn.get() );
+
     try
         {
             while ( !_reader->eof() )
@@ -351,6 +353,8 @@ void Postgres::read_csv(
         {
             throw std::runtime_error( PQerrorMessage( conn.get() ) );
         }
+
+    PQgetResult( conn.get() );
 
     // ------------------------------------------------------------------------
 }

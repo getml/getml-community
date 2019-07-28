@@ -8,6 +8,7 @@ int main( int argc, char* argv[] )
               << std::endl;
     std::cout << "TESTS FOR MODULE 'DATABASE':" << std::endl << std::endl;
 
+    // Tests for sqlite
     test1();
     test2();
     test3();
@@ -16,5 +17,8 @@ int main( int argc, char* argv[] )
     test6();
     test7();
 
+    // Tests for postgres
     test8();
+    test9();
+    test10();
 }

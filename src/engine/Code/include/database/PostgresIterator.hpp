@@ -51,7 +51,9 @@ class PostgresIterator : public Iterator
     {
         check();
 
-        const auto val = ( *rows_iterator_ )[colnum_].c_str();
+        const std::string val = ( ( *rows_iterator_ )[colnum_].is_null() )
+                                    ? "NULL"
+                                    : ( *rows_iterator_ )[colnum_].c_str();
 
         increment();
 

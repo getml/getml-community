@@ -16,5 +16,8 @@
 
 // Tests for postgres
 #include "database/tests/test8.hpp"
+#include "database/tests/test9.hpp"
+
+#include "database/tests/test10.hpp"
 
 #endif  // DATABASE_TESTS_TESTS_HPP_

@@ -1,9 +1,9 @@
-#ifndef DATABASE_TESTS_TEST8_HPP_
-#define DATABASE_TESTS_TEST8_HPP_
+#ifndef DATABASE_TESTS_TEST10_HPP_
+#define DATABASE_TESTS_TEST10_HPP_
 
-void test8()
+void test10()
 {
-    std::cout << "Test 8: Parsing and inserting a CSV file into postgres."
+    std::cout << "Test 10: Parsing columns encoded as text in postgres."
               << std::endl
               << std::endl;
 
@@ -12,7 +12,7 @@ void test8()
     auto population_sniffer = csv::Sniffer(
         "postgres",
         {"POPULATION.CSV", "POPULATION.CSV"},
-        true,
+        false,
         100,
         '\"',
         ',',
@@ -27,15 +27,21 @@ void test8()
 
     auto reader = csv::Reader( "POPULATION.CSV", '\"', ',' );
 
-    postgres_db.read_csv( "POPULATION", true, &reader );
+    postgres_db.read_csv( "POPULATION", false, &reader );
 
     auto it = postgres_db.select(
-        {"column_01", "join_key", "time_stamp", "targets"}, "POPULATION", "" );
+        {"COLUMN_1", "COLUMN_2", "COLUMN_3", "COLUMN_4"}, "POPULATION", "" );
 
-    // First line:
+    // Header line (read in and formatted):
+    assert( std::isnan( it->get_double() ) );
+    assert( std::isnan( it->get_double() ) );
+    assert( std::isnan( it->get_double() ) );
+    assert( std::isnan( it->get_double() ) );
+
+    // First line (pay special attention to column 2 - it should not be NULL!):
     // 0.09902457667435494, 0, 0.7386545235592108, 113.0
     assert( std::abs( it->get_double() - 0.099024 ) < 1e-4 );
-    assert( it->get_string() == "0" );
+    assert( it->get_double() == 0.0 );
     assert( std::abs( it->get_time_stamp() - 0.738654 ) < 1e-4 );
     assert( it->get_int() == 113 );
 
@@ -43,4 +49,4 @@ void test8()
     std::cout << "OK." << std::endl << std::endl;
 }
 
-#endif  // DATABASE_TESTS_TEST8_HPP_
+#endif  // DATABASE_TESTS_TEST10_HPP_
