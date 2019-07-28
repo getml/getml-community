@@ -43,11 +43,9 @@ std::vector<csv::Datatype> Postgres::get_coltypes(
 
     for ( pqxx::row_size_type i = 0; i < rows.columns(); ++i )
         {
-            // ToDo
+            const auto oid = rows.column_type( i );
 
-            // if ()
-
-            // colnames.push_back( rows.column_type( i ) );
+            coltypes.push_back( interpret_oid( oid ) );
         }
 
     return coltypes;
@@ -55,31 +53,84 @@ std::vector<csv::Datatype> Postgres::get_coltypes(
 
 // ----------------------------------------------------------------------------
 
+csv::Datatype Postgres::interpret_oid( pqxx::oid _oid ) const
+{
+    // ------------------------------------------------------------------------
+    // Get the typname associated with the oid
+
+    const std::string sql =
+        "SELECT typname FROM pg_type WHERE oid=" + std::to_string( _oid ) + ";";
+
+    auto connection = make_connection();
+
+    auto work = pqxx::work( *connection );
+
+    const auto rows = work.exec( sql );
+
+    if ( rows.size() == 0 )
+        {
+            throw std::runtime_error(
+                "Type for oid " + std::to_string( _oid ) + " not known!" );
+        }
+
+    const std::string typname = rows[0][0].c_str();
+
+    // ------------------------------------------------------------------------
+    // Check whether it might be double precision.
+
+    auto typnames = typnames_double_precision();
+
+    if ( std::find( typnames.begin(), typnames.end(), typname ) !=
+         typnames.end() )
+        {
+            return csv::Datatype::double_precision;
+        }
+
+    // ------------------------------------------------------------------------
+    // Check whether it might be an integer.
+
+    typnames = typnames_int();
+
+    if ( std::find( typnames.begin(), typnames.end(), typname ) !=
+         typnames.end() )
+        {
+            return csv::Datatype::integer;
+        }
+
+    // ------------------------------------------------------------------------
+    // Check whether it might be time stamp.
+
+    typnames = typnames_timestamp();
+
+    if ( std::find( typnames.begin(), typnames.end(), typname ) !=
+         typnames.end() )
+        {
+            return csv::Datatype::time_stamp;
+        }
+
+    // ------------------------------------------------------------------------
+    // Otherwise, interpret it as a string.
+
+    return csv::Datatype::string;
+
+    // ------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
 std::string Postgres::make_buffer(
-    const std::vector<std::string>& _line, const char _sep, const char _quote )
+    const std::vector<std::string>& _line,
+    const std::vector<csv::Datatype>& _coltypes,
+    const char _sep,
+    const char _quotechar )
 {
     std::string buffer;
 
+    assert( _line.size() == _coltypes.size() );
+
     for ( size_t i = 0; i < _line.size(); ++i )
         {
-            auto field = _line[i];
-
-            // std::remove moves all occurences of _quote to the very left.
-            // Erase then gets rid of them. This is called the
-            // remove-erase-idiom.
-            field.erase(
-                std::remove( field.begin(), field.end(), _quote ),
-                field.end() );
-
-            if ( field.find( _sep ) != std::string::npos )
-                {
-                    buffer += _quote;
-                    buffer += field + _quote;
-                }
-            else
-                {
-                    buffer += field;
-                }
+            buffer += parse_field( _line[i], _coltypes[i], _sep, _quotechar );
 
             if ( i < _line.size() - 1 )
                 {
@@ -130,6 +181,81 @@ std::string Postgres::make_connection_string( const Poco::JSON::Object& _obj )
 
 // ----------------------------------------------------------------------------
 
+std::string Postgres::parse_field(
+    const std::string& _raw_field,
+    const csv::Datatype _datatype,
+    const char _sep,
+    const char _quotechar ) const
+{
+    switch ( _datatype )
+        {
+            case csv::Datatype::double_precision:
+                {
+                    const auto [val, success] =
+                        csv::Parser::to_double( _raw_field );
+
+                    if ( success )
+                        {
+                            return std::to_string( val );
+                        }
+                    else
+                        {
+                            return "";
+                        }
+                }
+
+                // ------------------------------------------------------------
+
+            case csv::Datatype::integer:
+                {
+                    const auto [val, success] =
+                        csv::Parser::to_int( _raw_field );
+
+                    if ( success )
+                        {
+                            return std::to_string( val );
+                        }
+                    else
+                        {
+                            return "";
+                        }
+                }
+
+                // ------------------------------------------------------------
+
+            case csv::Datatype::time_stamp:
+                {
+                    assert( false && "ToDo" );
+
+                    return "";
+                }
+
+                // ------------------------------------------------------------
+
+            default:
+                auto field = _raw_field;
+
+                // std::remove moves all occurences of _quotechar to the very
+                // left.
+                // Erase then gets rid of them. This is called the
+                // remove-erase-idiom.
+                field.erase(
+                    std::remove( field.begin(), field.end(), _quotechar ),
+                    field.end() );
+
+                if ( field.find( _sep ) != std::string::npos )
+                    {
+                        field = _quotechar + field + _quotechar;
+                    }
+
+                return field;
+
+                // ------------------------------------------------------------
+        }
+}
+
+// ----------------------------------------------------------------------------
+
 void Postgres::read_csv(
     const std::string& _table, const bool _header, csv::Reader* _reader )
 {
@@ -175,7 +301,7 @@ void Postgres::read_csv(
         {
             while ( !_reader->eof() )
                 {
-                    std::vector<std::string> line = _reader->next_line();
+                    const std::vector<std::string> line = _reader->next_line();
 
                     ++line_count;
 
@@ -183,7 +309,7 @@ void Postgres::read_csv(
                         {
                             continue;
                         }
-                    else if ( line.size() != colnames.size() )
+                    else if ( line.size() != coltypes.size() )
                         {
                             std::cout << "Corrupted line: " << line_count
                                       << ". Expected " << colnames.size()
@@ -193,18 +319,19 @@ void Postgres::read_csv(
                             continue;
                         }
 
-                    const auto buffer = make_buffer(
-                        line, _reader->sep(), _reader->quotechar() );
+                    const std::string buffer = make_buffer(
+                        line, coltypes, _reader->sep(), _reader->quotechar() );
 
                     const auto success = PQputCopyData(
                         conn.get(),
                         buffer.c_str(),
                         static_cast<int>( buffer.size() ) );
 
-                    if ( success == -1 )
+                    if ( success != 1 )
                         {
                             throw std::runtime_error(
-                                PQerrorMessage( conn.get() ) );
+                                "Write error in line " +
+                                std::to_string( line_count ) + "." );
                         }
                 }
         }
@@ -212,21 +339,10 @@ void Postgres::read_csv(
         {
             PQputCopyEnd( conn.get(), e.what() );
 
+            execute( "VACUUM;" );
+
             throw std::runtime_error( e.what() );
         }
-
-    // ------------------------------------------------------------------------
-    // Just for testing - this proves that we need to do explicit type checks.
-
-    /*  std::string buffer = "gege,gege,gege,gege\n";
-
-        const auto success = PQputCopyData(
-            conn.get(), buffer.c_str(), static_cast<int>( buffer.size() ) );
-
-        if ( success == -1 )
-            {
-                throw std::runtime_error( PQerrorMessage( conn.get() ) );
-            }*/
 
     // ------------------------------------------------------------------------
     // End copying.

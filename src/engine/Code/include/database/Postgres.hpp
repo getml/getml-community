@@ -143,6 +143,9 @@ class Postgres : public Connector
             const int _colnum,
             sqlite3_stmt* _stmt ) const;*/
 
+    /// Returns the csv::Datatype associated with a oid.
+    csv::Datatype interpret_oid( pqxx::oid _oid ) const;
+
     /// Prepares a shared ptr to the connection object
     /// Called by the constructor.
     static std::string make_connection_string( const Poco::JSON::Object& _obj );
@@ -150,8 +153,16 @@ class Postgres : public Connector
     /// Turns a line into a buffer to be read by PQputCopyData.
     std::string make_buffer(
         const std::vector<std::string>& _line,
+        const std::vector<csv::Datatype>& _coltypes,
         const char _sep,
-        const char _quote );
+        const char _quotechar );
+
+    /// Parses a raw field according to its datatype.
+    std::string parse_field(
+        const std::string& _raw_field,
+        const csv::Datatype _datatype,
+        const char _sep,
+        const char _quotechar ) const;
 
     /// Prepares an insert statement for reading in CSV data.
     /*  std::unique_ptr<sqlite3_stmt, int ( * )( sqlite3_stmt* )>
@@ -192,11 +203,39 @@ class Postgres : public Connector
         return conn;
     }
 
+    /// List of all typnames that will be interpreted as double precision.
+    static std::vector<std::string> typnames_double_precision()
+    {
+        return {
+            "float4", "float8", "_float4", "_float8", "numeric", "_numeric"};
+    }
+
+    /// List of all typnames that will be interpreted as int.
+    static std::vector<std::string> typnames_int()
+    {
+        return {"int8", "int2", "int4", "_int2", "_int4"};
+    }
+
+    /// List of all typnames that will be interpreted as a timestamp.
+    static std::vector<std::string> typnames_timestamp()
+    {
+        return {"timestamp",
+                "date",
+                "time",
+                "_timestamp",
+                "_date",
+                "_time",
+                "timestamptz",
+                "timetz",
+                "_timestamptz",
+                "_timetz"};
+    }
+
     // -------------------------------
 
    private:
     /// String containing the meta-information related to the connection.
-    const std::string connection_string_;
+    std::string connection_string_;
 
     /// Vector containing the time formats.
     const std::vector<std::string> time_formats_;
