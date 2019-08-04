@@ -48,7 +48,21 @@ PostgresIterator::PostgresIterator(
                 }
         }
 
-    sql += " FROM \"" + _tname + "\"";
+    // Note that the user might want to pass information on the schema.
+    const auto pos = _tname.find( "." );
+
+    if ( pos != std::string::npos )
+        {
+            const auto schema = _tname.substr( 0, pos );
+
+            const auto table_name = _tname.substr( pos + 1 );
+
+            sql += " FROM " + schema + ".\"" + table_name + "\"";
+        }
+    else
+        {
+            sql += " FROM \"" + _tname + "\"";
+        }
 
     if ( _where != "" )
         {

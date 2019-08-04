@@ -206,6 +206,27 @@ csv::Datatype Postgres::interpret_oid( Oid _oid ) const
 
 // ----------------------------------------------------------------------------
 
+std::vector<std::string> Postgres::list_tables()
+{
+    auto iterator = std::make_shared<PostgresIterator>(
+        make_raw_connection(),
+        std::vector<std::string>( {"table_name"} ),
+        time_formats_,
+        "information_schema.tables",
+        "table_schema='public'" );
+
+    auto tnames = std::vector<std::string>( 0 );
+
+    while ( !iterator->end() )
+        {
+            tnames.push_back( iterator->get_string() );
+        }
+
+    return tnames;
+}
+
+// ----------------------------------------------------------------------------
+
 std::string Postgres::make_buffer(
     const std::vector<std::string>& _line,
     const std::vector<csv::Datatype>& _coltypes,

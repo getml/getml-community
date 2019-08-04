@@ -24,5 +24,6 @@
 #include "database/tests/test11.hpp"
 #include "database/tests/test12.hpp"
 #include "database/tests/test13.hpp"
+#include "database/tests/test14.hpp"
 
 #endif  // DATABASE_TESTS_TESTS_HPP_
