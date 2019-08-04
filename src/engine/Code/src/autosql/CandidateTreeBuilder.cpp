@@ -69,8 +69,7 @@ void CandidateTreeBuilder::add_count_distincts(
                         _ix_perip_used,
                         data_used );
 
-                    for ( size_t ix_column_used = 0;
-                          ix_column_used < ncols;
+                    for ( size_t ix_column_used = 0; ix_column_used < ncols;
                           ++ix_column_used )
                         {
                             _candidate_trees->push_back(
@@ -123,8 +122,7 @@ void CandidateTreeBuilder::add_other_aggs(
                         _ix_perip_used,
                         data_used );
 
-                    for ( size_t ix_column_used = 0;
-                          ix_column_used < ncols;
+                    for ( size_t ix_column_used = 0; ix_column_used < ncols;
                           ++ix_column_used )
                         {
                             // -----------------------------------------------------
@@ -447,8 +445,7 @@ void CandidateTreeBuilder::randomly_remove_candidate_trees(
 
     while ( _candidate_trees->size() > num_candidates )
         {
-            const auto max =
-                static_cast<Int>( _candidate_trees->size() ) - 1;
+            const auto max = static_cast<Int>( _candidate_trees->size() ) - 1;
 
             auto ix_remove = rng.random_int( 0, max );
 

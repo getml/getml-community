@@ -4,18 +4,22 @@
 namespace database
 {
 // ----------------------------------------------------------------------------
-
-// https://stackoverflow.com/questions/23332978/c-postgres-libpqxx-huge-query
+// Refer to the following sources in the documentation:
+// https://www.postgresql.org/docs/8.4/libpq-example.html
+// https://www.postgresql.org/docs/8.1/sql-fetch.html
 
 PostgresIterator::PostgresIterator(
-    const std::shared_ptr<pqxx::connection>& _connection,
+    const std::shared_ptr<PGconn>& _connection,
     const std::vector<std::string>& _colnames,
     const std::vector<std::string>& _time_formats,
     const std::string& _tname,
     const std::string& _where )
-    : colnum_( 0 ),
+    : close_required_( false ),
+      colnum_( 0 ),
       connection_( _connection ),
-      num_cols_( _colnames.size() ),
+      end_required_( false ),
+      num_cols_( static_cast<int>( _colnames.size() ) ),
+      rownum_( 0 ),
       time_formats_( _time_formats )
 {
     // ------------------------------------------------------------------------
@@ -52,20 +56,43 @@ PostgresIterator::PostgresIterator(
     sql += ";";
 
     // ------------------------------------------------------------------------
-    // Prepare work and rows.
+    // Begin transaction and prepare cursor.
 
-    work_ = std::make_unique<pqxx::work>( connection() );
+    execute( "BEGIN" );
 
-    rows_ = std::make_unique<pqxx::result>( work().exec( sql ) );
+    end_required_ = true;
 
-    rows_iterator_ = rows().begin();
+    execute( "DECLARE scalemlcursor CURSOR FOR " + sql );
+
+    close_required_ = true;
+
+    // ------------------------------------------------------------------------
+    // Fetch the first 10000 rows.
+
+    fetch_next_10000();
+
+    if ( end() )
+        {
+            throw std::runtime_error( "Query returned no results!" );
+        }
 
     // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
 
-PostgresIterator::~PostgresIterator() = default;
+PostgresIterator::~PostgresIterator()
+{
+    if ( close_required_ )
+        {
+            close_cursor();
+        }
+
+    if ( end_required_ )
+        {
+            end_transaction();
+        }
+}
 
 // ----------------------------------------------------------------------------
 

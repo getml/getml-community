@@ -11,7 +11,7 @@ class PostgresIterator : public Iterator
 
    public:
     PostgresIterator(
-        const std::shared_ptr<pqxx::connection>& _connection,
+        const std::shared_ptr<PGconn>& _connection,
         const std::vector<std::string>& _colnames,
         const std::vector<std::string>& _time_formats,
         const std::string& _tname,
@@ -22,40 +22,57 @@ class PostgresIterator : public Iterator
     // -------------------------------
 
    public:
-    /// Returns a double and increments the iterator.
+    /// Returns a double.
     Float get_double() final
     {
-        check();
+        const auto [str, is_null] = get_value();
 
-        const auto val = ( *rows_iterator_ )[colnum_].as<Float>( NAN );
+        if ( is_null )
+            {
+                return static_cast<Float>( NAN );
+            }
 
-        increment();
+        const auto [val, success] =
+            csv::Parser::to_double( std::string( str ) );
+
+        if ( !success )
+            {
+                return static_cast<Float>( NAN );
+            }
 
         return val;
     }
 
-    /// Returns an int and increments the iterator.
+    /// Returns an int.
     Int get_int() final
     {
-        check();
+        const auto [str, is_null] = get_value();
 
-        const auto val = ( *rows_iterator_ )[colnum_].as<Int>( -1 );
+        if ( is_null )
+            {
+                return 0;
+            }
 
-        increment();
+        const auto [val, success] =
+            csv::Parser::to_double( std::string( str ) );
 
-        return val;
+        if ( !success )
+            {
+                return 0;
+            }
+
+        return static_cast<Int>( val );
     }
 
-    /// Returns a string and increments the iterator.
+    /// Returns a string .
     std::string get_string() final
     {
-        check();
+        const auto [val, is_null] = get_value();
 
-        const std::string val = ( ( *rows_iterator_ )[colnum_].is_null() )
-                                    ? "NULL"
-                                    : ( *rows_iterator_ )[colnum_].c_str();
-
-        increment();
+        if ( is_null )
+            {
+                return "NULL";
+            }
 
         return val;
     }
@@ -63,17 +80,47 @@ class PostgresIterator : public Iterator
     /// Returns a time stamps and increments the iterator.
     Float get_time_stamp() final
     {
-        check();
+        const auto [str, is_null] = get_value();
 
-        const auto val = ( *rows_iterator_ )[colnum_].as<Float>( NAN );
+        if ( is_null )
+            {
+                return static_cast<Float>( NAN );
+            }
 
-        increment();
+        const auto [val, success] =
+            csv::Parser::to_double( std::string( str ) );
+
+        if ( !success )
+            {
+                return static_cast<Float>( NAN );
+            }
 
         return val;
     }
 
+    /// Returns the raw value.
+    std::pair<char*, bool> get_value()
+    {
+        check();
+
+        const bool is_null = PQgetisnull( result(), rownum_, colnum_ );
+
+        if ( is_null )
+            {
+                increment();
+
+                return std::pair<char*, bool>( nullptr, true );
+            }
+
+        const auto val = PQgetvalue( result(), rownum_, colnum_ );
+
+        increment();
+
+        return std::pair<char*, bool>( val, false );
+    }
+
     /// Whether the end is reached.
-    bool end() const final { return ( rows_iterator_ == rows().end() ); }
+    bool end() const final { return ( PQntuples( result() ) == 0 ); }
 
     // -------------------------------
 
@@ -86,24 +133,58 @@ class PostgresIterator : public Iterator
                 throw std::invalid_argument( "End of query is reached." );
             }
 
-        if ( colnum_ >= rows_iterator_->size() )
+        if ( colnum_ >= num_cols_ )
             {
                 throw std::invalid_argument( "Row number out of bounds." );
             }
     }
 
-    /// Trivial (private) accessor
-    pqxx::connection& connection() const
+    /// Closes the cursor.
+    void close_cursor()
     {
-        assert( connection_ );
-        return *connection_;
+        auto raw_ptr = PQexec( connection(), "CLOSE scalemlcursor" );
+        PQclear( raw_ptr );
+        close_required_ = false;
     }
 
     /// Trivial (private) accessor
-    pqxx::result& current_row() const
+    PGconn* connection() const
     {
-        assert( rows_ );
-        return *rows_;
+        assert( connection_ );
+        return connection_.get();
+    }
+
+    /// Ends the transaction.
+    void end_transaction()
+    {
+        auto raw_ptr = PQexec( connection(), "END" );
+        PQclear( raw_ptr );
+        end_required_ = false;
+    }
+
+    /// Executes and SQL command.
+    std::shared_ptr<PGresult> execute( const std::string& _sql ) const
+    {
+        auto raw_ptr = PQexec( connection(), _sql.c_str() );
+
+        auto result = std::shared_ptr<PGresult>( raw_ptr, PQclear );
+
+        const auto status = PQresultStatus( result.get() );
+
+        if ( status != PGRES_COMMAND_OK && status != PGRES_TUPLES_OK )
+            {
+                throw std::runtime_error(
+                    "Executing command '" + _sql +
+                    "' in PostgresIterator failed!" );
+            }
+
+        return result;
+    }
+
+    /// Fetches the next 10000 rows.
+    void fetch_next_10000()
+    {
+        result_ = execute( "FETCH FORWARD 10000 FROM scalemlcursor;" );
     }
 
     /// Increments the iterator.
@@ -112,47 +193,54 @@ class PostgresIterator : public Iterator
         if ( ++colnum_ == num_cols_ )
             {
                 colnum_ = 0;
-                ++rows_iterator_;
+
+                if ( ++rownum_ == PQntuples( result() ) )
+                    {
+                        fetch_next_10000();
+                        rownum_ = 0;
+                    }
+
+                if ( end() )
+                    {
+                        close_cursor();
+                        end_transaction();
+                    }
             }
     }
 
     /// Trivial (private) accessor
-    pqxx::result& rows() const
+    PGresult* result() const
     {
-        assert( rows_ );
-        return *rows_;
-    }
-
-    /// Trivial (private) accessor
-    pqxx::work& work() const
-    {
-        assert( work_ );
-        return *work_;
+        assert( result_ );
+        return result_.get();
     }
 
     // -------------------------------
 
    private:
+    /// Whether we have to close the cursor upon destruction.
+    bool close_required_;
+
     /// The current column.
     int colnum_;
 
     /// Shared ptr containing the connection object.
-    const std::shared_ptr<pqxx::connection> connection_;
+    const std::shared_ptr<PGconn> connection_;
+
+    /// Whether we have to end the transaction upon destruction.
+    bool end_required_;
 
     /// The total number of columns.
-    const size_t num_cols_;
+    const int num_cols_;
 
-    /// Iterator to the current row.
-    pqxx::result::const_iterator rows_iterator_;
+    /// Result of the query.
+    std::shared_ptr<PGresult> result_;
 
-    /// Pointer to the rows generated by the query.
-    std::unique_ptr<pqxx::result> rows_;
+    /// The current row.
+    int rownum_;
 
     /// Vector containing the time formats.
     const std::vector<std::string> time_formats_;
-
-    /// Pointer to the work generated by the query.
-    std::unique_ptr<pqxx::work> work_;
 
     // -------------------------------
 };

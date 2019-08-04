@@ -83,7 +83,7 @@ class Postgres : public Connector
     /// Drops a table and cleans up, if necessary.
     void drop_table( const std::string& _tname ) final
     {
-        execute( "DROP TABLE \"" + _tname + "\"; VACUUM;" );
+        execute( "DROP TABLE \"" + _tname + "\";" );
     }
 
     /// Executes an SQL query.
@@ -108,7 +108,7 @@ class Postgres : public Connector
         const std::string& _where ) final
     {
         return std::make_shared<PostgresIterator>(
-            make_connection(), _colnames, time_formats_, _tname, _where );
+            make_raw_connection(), _colnames, time_formats_, _tname, _where );
     }
 
     // -------------------------------

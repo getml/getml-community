@@ -341,8 +341,6 @@ void Postgres::read_csv(
         {
             PQputCopyEnd( conn.get(), e.what() );
 
-            execute( "VACUUM;" );
-
             throw std::runtime_error( e.what() );
         }
 
