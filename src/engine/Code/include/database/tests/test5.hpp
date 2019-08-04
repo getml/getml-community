@@ -8,9 +8,6 @@ void test5()
               << std::endl
               << std::endl;
 
-    auto sqlite_db = database::Sqlite3(
-        ":memory:", {"%Y/%m/%d %H:%M:%S", "%Y-%m-%d %H:%M:%S"} );
-
     try
         {
             auto population_sniffer = csv::Sniffer(

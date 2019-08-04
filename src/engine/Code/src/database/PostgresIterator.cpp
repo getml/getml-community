@@ -13,7 +13,9 @@ PostgresIterator::PostgresIterator(
     const std::vector<std::string>& _colnames,
     const std::vector<std::string>& _time_formats,
     const std::string& _tname,
-    const std::string& _where )
+    const std::string& _where,
+    const std::int32_t _begin,
+    const std::int32_t _end )
     : close_required_( false ),
       colnum_( 0 ),
       connection_( _connection ),
@@ -67,13 +69,25 @@ PostgresIterator::PostgresIterator(
     close_required_ = true;
 
     // ------------------------------------------------------------------------
-    // Fetch the first 10000 rows.
+    // If _begin and _end are not -1, then we are probably using the DataTables
+    // API.
 
-    fetch_next_10000();
-
-    if ( end() )
+    if ( _begin >= 0 && _end >= _begin )
         {
-            throw std::runtime_error( "Query returned no results!" );
+            skip_next( _begin );
+
+            // We fetch one extra row to prevent the iterator from unnecessarily
+            // fetching 10000 extra rows.
+            fetch_next( _end - _begin + 1 );
+        }
+    else
+        {
+            fetch_next( 10000 );
+
+            if ( end() )
+                {
+                    throw std::runtime_error( "Query returned no results!" );
+                }
         }
 
     // ------------------------------------------------------------------------

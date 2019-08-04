@@ -10,17 +10,17 @@ std::vector<std::string> Postgres::get_colnames(
 {
     const std::string sql = "SELECT * FROM \"" + _table + "\" LIMIT 0";
 
-    auto connection = make_connection();
+    const auto connection = make_raw_connection();
 
-    auto work = pqxx::work( *connection );
+    const auto result = exec( sql, connection.get() );
 
-    auto rows = work.exec( sql );
+    const int num_cols = PQnfields( result.get() );
 
-    auto colnames = std::vector<std::string>( 0 );
+    auto colnames = std::vector<std::string>( num_cols );
 
-    for ( pqxx::row_size_type i = 0; i < rows.columns(); ++i )
+    for ( int i = 0; i < num_cols; ++i )
         {
-            colnames.push_back( rows.column_name( i ) );
+            colnames[i] = PQfname( result.get(), i );
         }
 
     return colnames;
@@ -33,19 +33,19 @@ std::vector<csv::Datatype> Postgres::get_coltypes(
 {
     const std::string sql = "SELECT * FROM \"" + _table + "\" LIMIT 0";
 
-    auto connection = make_connection();
+    const auto connection = make_raw_connection();
 
-    auto work = pqxx::work( *connection );
+    const auto result = exec( sql, connection.get() );
 
-    auto rows = work.exec( sql );
+    const int num_cols = PQnfields( result.get() );
 
-    auto coltypes = std::vector<csv::Datatype>( 0 );
+    auto coltypes = std::vector<csv::Datatype>( num_cols );
 
-    for ( pqxx::row_size_type i = 0; i < rows.columns(); ++i )
+    for ( int i = 0; i < num_cols; ++i )
         {
-            const auto oid = rows.column_type( i );
+            const auto oid = PQftype( result.get(), i );
 
-            coltypes.push_back( interpret_oid( oid ) );
+            coltypes[i] = interpret_oid( oid );
         }
 
     return coltypes;
@@ -53,7 +53,97 @@ std::vector<csv::Datatype> Postgres::get_coltypes(
 
 // ----------------------------------------------------------------------------
 
-csv::Datatype Postgres::interpret_oid( pqxx::oid _oid ) const
+Poco::JSON::Object Postgres::get_content(
+    const std::string& _tname,
+    const std::int32_t _draw,
+    const std::int32_t _start,
+    const std::int32_t _length )
+{
+    // ----------------------------------------
+
+    const auto nrows = get_nrows( _tname );
+
+    const auto colnames = get_colnames( _tname );
+
+    const auto ncols = colnames.size();
+
+    // ----------------------------------------
+
+    if ( _length < 0 )
+        {
+            throw std::invalid_argument( "length must be positive!" );
+        }
+
+    if ( _start < 0 )
+        {
+            throw std::invalid_argument( "start must be positive!" );
+        }
+
+    if ( _start >= nrows )
+        {
+            throw std::invalid_argument(
+                "start must be smaller than number of rows!" );
+        }
+
+    // ----------------------------------------
+
+    Poco::JSON::Object obj;
+
+    // ----------------------------------------
+
+    obj.set( "draw", _draw );
+
+    obj.set( "recordsTotal", nrows );
+
+    obj.set( "recordsFiltered", nrows );
+
+    // ----------------------------------------
+
+    const auto begin = _start;
+
+    const auto end = ( _start + _length > nrows ) ? nrows : _start + _length;
+
+    // ----------------------------------------
+
+    auto iterator = std::make_shared<PostgresIterator>(
+        make_raw_connection(),
+        colnames,
+        time_formats_,
+        _tname,
+        "",
+        begin,
+        end );
+
+    // ----------------------------------------
+
+    Poco::JSON::Array data;
+
+    for ( auto i = begin; i < end; ++i )
+        {
+            Poco::JSON::Array row;
+
+            for ( size_t j = 0; j < ncols; ++j )
+                {
+                    row.add( iterator->get_string() );
+                }
+
+            data.add( row );
+        }
+
+    // ----------------------------------------
+
+    obj.set( "data", data );
+
+    // ----------------------------------------
+
+    return obj;
+
+    // ----------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+csv::Datatype Postgres::interpret_oid( Oid _oid ) const
 {
     // ------------------------------------------------------------------------
     // Get the typname associated with the oid
@@ -61,19 +151,17 @@ csv::Datatype Postgres::interpret_oid( pqxx::oid _oid ) const
     const std::string sql =
         "SELECT typname FROM pg_type WHERE oid=" + std::to_string( _oid ) + ";";
 
-    auto connection = make_connection();
+    auto connection = make_raw_connection();
 
-    auto work = pqxx::work( *connection );
+    const auto result = exec( sql, connection.get() );
 
-    const auto rows = work.exec( sql );
-
-    if ( rows.size() == 0 )
+    if ( PQntuples( result.get() ) == 0 )
         {
             throw std::runtime_error(
                 "Type for oid " + std::to_string( _oid ) + " not known!" );
         }
 
-    const std::string typname = rows[0][0].c_str();
+    const std::string typname = PQgetvalue( result.get(), 0, 0 );
 
     // ------------------------------------------------------------------------
     // Check whether it might be double precision.

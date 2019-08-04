@@ -13,8 +13,6 @@
 
 #include <libpq-fe.h>
 
-#include <pqxx/pqxx>
-
 #include "Poco/JSON/Object.h"
 
 extern "C"

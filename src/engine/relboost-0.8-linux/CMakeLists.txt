@@ -18,9 +18,6 @@ set(POCO_DIR /home/autosql/poco-1.9.0-all)
 # Should include folders "include", "lib" and "rabit"
 set(XGBOOST_DIR /home/autosql/xgboost)
 
-# Set the path containing libpqxx
-set(LIBPQXX_DIR /home/autosql/libpqxx)
-
 project(${RELBOOST_VERSION}-64bit)
 
 set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR})
@@ -36,7 +33,6 @@ include_directories(
     "${POCO_DIR}/Foundation/include"
     "${XGBOOST_DIR}/include"
     "${XGBOOST_DIR}/rabit/include"
-    "${LIBPQXX_DIR}/include"
 )
 
 set(AUTOSQL_SOURCE_DIRECTORY "${PROJECT_SOURCE_DIR}/../Code/src/autosql")
@@ -115,7 +111,6 @@ target_link_libraries(
   	${CMAKE_DL_LIBS}
     "${POCO_DIR}/cmake-build/lib/libPocoJSON.a"
     "${POCO_DIR}/cmake-build/lib/libPocoFoundation.a"
-    "${LIBPQXX_DIR}/src/.libs/libpqxx.a"
     pq
     pthread
 	  dl
@@ -152,7 +147,6 @@ target_link_libraries(
    "${XGBOOST_DIR}/lib/libxgboost.a"
    "${XGBOOST_DIR}/rabit/lib/librabit.a"
    "${XGBOOST_DIR}/dmlc-core/libdmlc.a"
-   "${LIBPQXX_DIR}/src/.libs/libpqxx.a"
    ssl
    crypto
    pq

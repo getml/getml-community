@@ -28,24 +28,6 @@ class Postgres : public Connector
     // -------------------------------
 
    public:
-    /// Returns the content of a table in a format that is compatible
-    /// with the DataTables.js server-side processing API.
-    Poco::JSON::Object get_content(
-        const std::string& _tname,
-        const std::int32_t _draw,
-        const std::int32_t _start,
-        const std::int32_t _length ) final
-    {
-        assert( false && "ToDo" );
-        return Poco::JSON::Object();
-    };
-
-    /// Reads a CSV file into a table.
-    void read_csv(
-        const std::string& _table,
-        const bool _header,
-        csv::Reader* _reader ) final;
-
     /// Returns the names of the table columns.
     std::vector<std::string> get_colnames(
         const std::string& _table ) const final;
@@ -55,12 +37,26 @@ class Postgres : public Connector
         const std::string& _table,
         const std::vector<std::string>& _colnames ) const;
 
+    /// Returns the content of a table in a format that is compatible
+    /// with the DataTables.js server-side processing API.
+    Poco::JSON::Object get_content(
+        const std::string& _tname,
+        const std::int32_t _draw,
+        const std::int32_t _start,
+        const std::int32_t _length ) final;
+
     /// Lists the name of the tables held in the database.
     std::vector<std::string> list_tables() final
     {
         assert( false && "ToDo" );
         return std::vector<std::string>( 0 );
     };
+
+    /// Reads a CSV file into a table.
+    void read_csv(
+        const std::string& _table,
+        const bool _header,
+        csv::Reader* _reader ) final;
 
     /// Returns a shared_ptr containing a Sqlite3Iterator where
     /// _join_key is any one of _values.
@@ -89,10 +85,12 @@ class Postgres : public Connector
     /// Executes an SQL query.
     void execute( const std::string& _sql ) final
     {
-        auto connection = make_connection();
-        auto work = pqxx::work( *connection );
-        work.exec( _sql );
-        work.commit();
+        auto conn = make_raw_connection();
+        exec( _sql, conn.get() );
+        if ( PQtransactionStatus( conn.get() ) == PQTRANS_INTRANS )
+            {
+                exec( "COMMIT", conn.get() );
+            }
     }
 
     /// Returns the number of rows in the table signified by _tname.
@@ -120,7 +118,7 @@ class Postgres : public Connector
             const std::vector<std::string>& _colnames, csv::Reader* _reader );*/
 
     /// Returns the csv::Datatype associated with a oid.
-    csv::Datatype interpret_oid( pqxx::oid _oid ) const;
+    csv::Datatype interpret_oid( Oid _oid ) const;
 
     /// Prepares a shared ptr to the connection object
     /// Called by the constructor.
@@ -143,17 +141,23 @@ class Postgres : public Connector
     // -------------------------------
 
    private:
-    /// Returns a new connection based on the connection_string_
-    std::shared_ptr<pqxx::connection> make_connection() const
+    /// Executes and SQL command given a connection.
+    std::shared_ptr<PGresult> exec(
+        const std::string& _sql, PGconn* _conn ) const
     {
-        if ( connection_string_ == "" )
+        auto raw_ptr = PQexec( _conn, _sql.c_str() );
+
+        auto result = std::shared_ptr<PGresult>( raw_ptr, PQclear );
+
+        const auto status = PQresultStatus( result.get() );
+
+        if ( status != PGRES_COMMAND_OK && status != PGRES_TUPLES_OK )
             {
-                return std::make_shared<pqxx::connection>();
+                throw std::runtime_error(
+                    "Executing command '" + _sql + "' in postgres failed!" );
             }
-        else
-            {
-                return std::make_shared<pqxx::connection>( connection_string_ );
-            }
+
+        return result;
     }
 
     /// Returns a new connection based on the connection_string_

@@ -15,7 +15,9 @@ class PostgresIterator : public Iterator
         const std::vector<std::string>& _colnames,
         const std::vector<std::string>& _time_formats,
         const std::string& _tname,
-        const std::string& _where );
+        const std::string& _where,
+        const std::int32_t _begin = -1,
+        const std::int32_t _end = -1 );
 
     ~PostgresIterator();
 
@@ -87,8 +89,13 @@ class PostgresIterator : public Iterator
                 return static_cast<Float>( NAN );
             }
 
-        const auto [val, success] =
-            csv::Parser::to_double( std::string( str ) );
+        auto [val, success] = csv::Parser::to_time_stamp( str, time_formats_ );
+
+        if ( !success )
+            {
+                std::tie( val, success ) =
+                    csv::Parser::to_double( std::string( str ) );
+            }
 
         if ( !success )
             {
@@ -181,10 +188,11 @@ class PostgresIterator : public Iterator
         return result;
     }
 
-    /// Fetches the next 10000 rows.
-    void fetch_next_10000()
+    /// Fetches the next n rows.
+    void fetch_next( const std::int32_t _n )
     {
-        result_ = execute( "FETCH FORWARD 10000 FROM scalemlcursor;" );
+        result_ = execute(
+            "FETCH FORWARD " + std::to_string( _n ) + " FROM scalemlcursor;" );
     }
 
     /// Increments the iterator.
@@ -196,7 +204,7 @@ class PostgresIterator : public Iterator
 
                 if ( ++rownum_ == PQntuples( result() ) )
                     {
-                        fetch_next_10000();
+                        fetch_next( 10000 );
                         rownum_ = 0;
                     }
 
@@ -213,6 +221,13 @@ class PostgresIterator : public Iterator
     {
         assert( result_ );
         return result_.get();
+    }
+
+    /// Skipts the next n rows.
+    void skip_next( const std::int32_t _n )
+    {
+        result_ = execute(
+            "MOVE FORWARD " + std::to_string( _n ) + " IN scalemlcursor;" );
     }
 
     // -------------------------------
