@@ -2,5 +2,6 @@
 *.bin
 *.o
 *.db
+*.swp
 projects/*
 .vscode/*
