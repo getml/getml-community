@@ -3,11 +3,11 @@
 
 namespace database
 {
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 
 class PostgresIterator : public Iterator
 {
-    // -------------------------------
+    // -------------------------------------------------------------------------
 
    public:
     PostgresIterator(
@@ -21,7 +21,7 @@ class PostgresIterator : public Iterator
 
     ~PostgresIterator();
 
-    // -------------------------------
+    // -------------------------------------------------------------------------
 
    public:
     /// Returns a double.
@@ -129,7 +129,7 @@ class PostgresIterator : public Iterator
     /// Whether the end is reached.
     bool end() const final { return ( PQntuples( result() ) == 0 ); }
 
-    // -------------------------------
+    // -------------------------------------------------------------------------
 
    private:
     /// Prevents segfaults before getting the next entry.
@@ -230,7 +230,7 @@ class PostgresIterator : public Iterator
             "MOVE FORWARD " + std::to_string( _n ) + " IN scalemlcursor;" );
     }
 
-    // -------------------------------
+    // -------------------------------------------------------------------------
 
    private:
     /// Whether we have to close the cursor upon destruction.
@@ -257,7 +257,7 @@ class PostgresIterator : public Iterator
     /// Vector containing the time formats.
     const std::vector<std::string> time_formats_;
 
-    // -------------------------------
+    // -------------------------------------------------------------------------
 };
 
 // ----------------------------------------------------------------------------

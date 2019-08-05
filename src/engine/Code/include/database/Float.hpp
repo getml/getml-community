@@ -1,7 +1,8 @@
 #ifndef DATABASE_FLOAT_HPP_
 #define DATABASE_FLOAT_HPP_
 
-namespace database {
+namespace database
+{
 typedef double Float;
 }
 
