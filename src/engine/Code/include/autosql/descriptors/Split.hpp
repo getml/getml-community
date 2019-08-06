@@ -63,13 +63,12 @@ struct Split
     /// Constructor for from Poco::JSON::Object.
     Split( const Poco::JSON::Object &_json_obj )
         : apply_from_above( JSON::get_value<bool>( _json_obj, "app_" ) ),
-          categories_used( std::make_shared<std::vector<Int>>(
-              JSON::array_to_vector<Int>(
+          categories_used(
+              std::make_shared<std::vector<Int>>( JSON::array_to_vector<Int>(
                   JSON::get_array( _json_obj, "categories_used_" ) ) ) ),
           categories_used_begin( categories_used->cbegin() ),
           categories_used_end( categories_used->cend() ),
-          column_used(
-              JSON::get_value<size_t>( _json_obj, "column_used_" ) ),
+          column_used( JSON::get_value<size_t>( _json_obj, "column_used_" ) ),
           critical_value(
               JSON::get_value<Float>( _json_obj, "critical_value_" ) ),
           data_used( JSON::int_to_data_used(
@@ -95,29 +94,29 @@ struct Split
 
     // ------------------------------------------------------------------------
 
-    // If true, the status change from activation to
-    // deactivation or from deactivation to activation
-    // is applied to all values greater than the critical
-    // value and vice versa.
+    /// If true, the status change from activation to
+    /// deactivation or from deactivation to activation
+    /// is applied to all values greater than the critical
+    /// value and vice versa.
     const bool apply_from_above;
 
-    // Categories used for the node - for categorical values.
+    /// Categories used for the node - for categorical values.
     const std::shared_ptr<const std::vector<Int>> categories_used;
 
-    // Iterator pointing to the beginning of the categories used.
+    /// Iterator pointing to the beginning of the categories used.
     const std::vector<Int>::const_iterator categories_used_begin;
 
-    // Iterator pointing to the end of the categories used.
+    /// Iterator pointing to the end of the categories used.
     const std::vector<Int>::const_iterator categories_used_end;
 
-    // Number of column used
+    /// Number of column used
     const size_t column_used;
 
-    // Critical value for the node - for numeric values
+    /// Critical value for the node - for numeric values
     const Float critical_value;
 
-    // Signifies whether we use x_popul_numerical, x_popul_discrete,
-    // x_perip_numerical, x_perip_discrete or time_stamps_diff
+    /// Signifies whether we use x_popul_numerical, x_popul_discrete,
+    /// x_perip_numerical, x_perip_discrete or time_stamps_diff
     const enums::DataUsed data_used;
 };
 
