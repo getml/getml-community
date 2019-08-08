@@ -277,7 +277,7 @@ void DecisionTreeEnsemble::fit_new_feature()
     assert( table_holder().main_tables_.size() > 0 );
 
     // ------------------------------------------------------------------------
-    // Create new sample weights.
+    // Create new loss function.
 
     const auto nrows = table_holder().main_tables_[0].nrows();
 
@@ -409,6 +409,11 @@ void DecisionTreeEnsemble::fit_new_feature()
     // Add best candidate to trees
 
     trees().push_back( std::move( candidates[dist] ) );
+
+    // ------------------------------------------------------------------------
+    // Get rid of data no longer needed.
+
+    trees().back().clear();
 
     // ------------------------------------------------------------------------
 }

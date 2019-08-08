@@ -65,10 +65,13 @@ void AggregationImpl::reset()
 
 void AggregationImpl::resize( size_t _size )
 {
-    eta1_.resize( _size );
-    eta2_.resize( _size );
-    indices_.resize( _size );
-    indices_current_.resize( _size );
+    eta1_ = std::vector<Float>( _size );
+
+    eta2_ = std::vector<Float>( _size );
+
+    indices_ = containers::IntSet( _size );
+
+    indices_current_ = containers::IntSet( _size );
 }
 
 // ----------------------------------------------------------------------------

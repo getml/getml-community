@@ -171,7 +171,7 @@ class Avg : public lossfunctions::LossFunction
     }
 
     /// Deletes all resources.
-    void clear() final { impl_.resize( 0 ); }
+    void clear() final { resize( 0 ); }
 
     /// Commits _yhat_old.
     void commit() final { child_->commit(); }

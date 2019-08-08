@@ -59,6 +59,9 @@ class DecisionTree
             loss_function().calc_update_rate( _yhat_old, _predictions );
     }
 
+    /// Clears data no longer needed.
+    void clear() { loss_function().clear(); }
+
     /// Trivial getter
     const Float intercept() const { return intercept_; }
 
@@ -140,7 +143,7 @@ class DecisionTree
     /// The intercept term that is added after aggregation.
     Float intercept_;
 
-    /// Hyperparameters used to train the relboost model
+    /// Loss function used to train the relboost model
     std::shared_ptr<lossfunctions::LossFunction> loss_function_;
 
     /// The output table used (we keep it, because we need the colnames)

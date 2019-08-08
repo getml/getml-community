@@ -221,6 +221,7 @@ class CrossEntropyLoss : public LossFunction
     {
         resize( 0 );
         sample_index_.clear();
+        sample_weights_.reset();
     }
 
     /// Commits _yhat_old.

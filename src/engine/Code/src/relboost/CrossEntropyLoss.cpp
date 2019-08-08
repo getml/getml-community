@@ -53,8 +53,7 @@ void CrossEntropyLoss::calc_gradients(
 
 // ----------------------------------------------------------------------------
 
-Float CrossEntropyLoss::calc_loss(
-    const std::array<Float, 3>& _weights )
+Float CrossEntropyLoss::calc_loss( const std::array<Float, 3>& _weights )
 {
     // ------------------------------------------------------------------------
 
@@ -91,9 +90,7 @@ Float CrossEntropyLoss::calc_loss(
     auto global_sum_sample_weights = sum_sample_weights_;
 
     utils::Reducer::reduce(
-        multithreading::maximum<Float>(),
-        &global_sum_sample_weights,
-        &comm() );
+        multithreading::maximum<Float>(), &global_sum_sample_weights, &comm() );
 
     assert( global_sum_sample_weights == sum_sample_weights_ );
 
@@ -166,8 +163,7 @@ Float CrossEntropyLoss::evaluate_split(
 
 // ----------------------------------------------------------------------------
 
-Float CrossEntropyLoss::evaluate_tree(
-    const std::vector<Float>& _yhat_new )
+Float CrossEntropyLoss::evaluate_tree( const std::vector<Float>& _yhat_new )
 {
     assert( _yhat_new.size() == targets().size() );
 

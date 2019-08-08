@@ -855,20 +855,21 @@ void Avg::init_count_committed(
 
 void Avg::resize( size_t _size )
 {
-    count_committed_.resize( _size );
-    count1_.resize( _size );
-    count2_.resize( _size );
+    count_committed_ = std::vector<Float>( _size );
 
-    eta1_2_null_.resize( _size );
-    eta2_1_null_.resize( _size );
+    count1_ = std::vector<Float>( _size );
+    count2_ = std::vector<Float>( _size );
 
-    eta_old_.resize( _size );
+    eta1_2_null_ = std::vector<Float>( _size );
+    eta2_1_null_ = std::vector<Float>( _size );
 
-    w_fixed_1_.resize( _size );
-    w_fixed_2_.resize( _size );
-    w_fixed_committed_.resize( _size );
+    eta_old_ = std::vector<Float>( _size );
 
-    indices_current_.resize( _size );
+    w_fixed_1_ = std::vector<Float>( _size );
+    w_fixed_2_ = std::vector<Float>( _size );
+    w_fixed_committed_ = std::vector<Float>( _size );
+
+    indices_current_ = containers::IntSet( _size );
 
     impl_.resize( _size );
 }
