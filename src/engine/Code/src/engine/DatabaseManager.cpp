@@ -79,6 +79,18 @@ void DatabaseManager::get_content(
 
 // ------------------------------------------------------------------------
 
+void DatabaseManager::get_nrows(
+    const std::string& _name, Poco::Net::StreamSocket* _socket )
+{
+    const std::int32_t nrows = connector()->get_nrows( _name );
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    communication::Sender::send( sizeof( std::int32_t ), &nrows, _socket );
+}
+
+// ------------------------------------------------------------------------
+
 void DatabaseManager::list_tables( Poco::Net::StreamSocket* _socket )
 {
     const auto array = post_tables();

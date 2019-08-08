@@ -97,11 +97,6 @@ PostgresIterator::PostgresIterator(
     else
         {
             fetch_next( 10000 );
-
-            if ( end() )
-                {
-                    throw std::runtime_error( "Query returned no results!" );
-                }
         }
 
     // ------------------------------------------------------------------------

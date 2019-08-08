@@ -107,6 +107,10 @@ void RequestHandler::run()
                 {
                     database_manager().get_content( name, cmd, &socket() );
                 }
+            else if ( type == "Database.get_nrows" )
+                {
+                    database_manager().get_nrows( name, &socket() );
+                }
             else if ( type == "Database.list_tables" )
                 {
                     database_manager().list_tables( &socket() );

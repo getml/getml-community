@@ -180,9 +180,12 @@ class PostgresIterator : public Iterator
 
         if ( status != PGRES_COMMAND_OK && status != PGRES_TUPLES_OK )
             {
+                const std::string error_msg =
+                    PQresultErrorMessage( result.get() );
+
                 throw std::runtime_error(
-                    "Executing command '" + _sql +
-                    "' in PostgresIterator failed!" );
+                    "Executing command in postgres iterator failed: " +
+                    error_msg );
             }
 
         return result;

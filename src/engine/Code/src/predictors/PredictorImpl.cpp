@@ -39,21 +39,6 @@ void PredictorImpl::compress_importances(
         }
 }
 
-// -----------------------------------------------------------------------------
-
-void PredictorImpl::fit_encodings(
-    const std::vector<CIntColumn>& _X_categorical )
-{
-    encodings_.clear();
-
-    for ( auto& col : _X_categorical )
-        {
-            encodings_.push_back( Encoding() );
-
-            encodings_.back().fit( col );
-        }
-}
-
 // -------------------------------------------------------------------------
 
 size_t PredictorImpl::check_plausibility(
@@ -114,6 +99,21 @@ void PredictorImpl::check_plausibility(
             throw std::invalid_argument(
                 "Length of targets must be the same as the length of the input "
                 "columns!" );
+        }
+}
+
+// -----------------------------------------------------------------------------
+
+void PredictorImpl::fit_encodings(
+    const std::vector<CIntColumn>& _X_categorical )
+{
+    encodings_.clear();
+
+    for ( auto& col : _X_categorical )
+        {
+            encodings_.push_back( Encoding() );
+
+            encodings_.back().fit( col );
         }
 }
 

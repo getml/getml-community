@@ -46,6 +46,10 @@ class DatabaseManager
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
+    /// Returns the number of rows of the table signified by _name.
+    void get_nrows(
+        const std::string& _name, Poco::Net::StreamSocket* _socket );
+
     /// Lists all tables contained in the database.
     void list_tables( Poco::Net::StreamSocket* _socket );
 
