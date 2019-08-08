@@ -78,7 +78,7 @@ PostgresIterator::PostgresIterator(
 
     end_required_ = true;
 
-    execute( "DECLARE scalemlcursor CURSOR FOR " + sql );
+    execute( "DECLARE getmlcursor CURSOR FOR " + sql );
 
     close_required_ = true;
 

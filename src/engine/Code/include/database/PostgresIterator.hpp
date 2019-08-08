@@ -149,7 +149,7 @@ class PostgresIterator : public Iterator
     /// Closes the cursor.
     void close_cursor()
     {
-        auto raw_ptr = PQexec( connection(), "CLOSE scalemlcursor" );
+        auto raw_ptr = PQexec( connection(), "CLOSE getmlcursor" );
         PQclear( raw_ptr );
         close_required_ = false;
     }
@@ -195,7 +195,7 @@ class PostgresIterator : public Iterator
     void fetch_next( const std::int32_t _n )
     {
         result_ = execute(
-            "FETCH FORWARD " + std::to_string( _n ) + " FROM scalemlcursor;" );
+            "FETCH FORWARD " + std::to_string( _n ) + " FROM getmlcursor;" );
     }
 
     /// Increments the iterator.
@@ -230,7 +230,7 @@ class PostgresIterator : public Iterator
     void skip_next( const std::int32_t _n )
     {
         result_ = execute(
-            "MOVE FORWARD " + std::to_string( _n ) + " IN scalemlcursor;" );
+            "MOVE FORWARD " + std::to_string( _n ) + " IN getmlcursor;" );
     }
 
     // -------------------------------------------------------------------------
