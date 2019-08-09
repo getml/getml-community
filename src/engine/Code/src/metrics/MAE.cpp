@@ -27,7 +27,7 @@ Poco::JSON::Object MAE::score( const Features _yhat, const Features _y )
 
     // -----------------------------------------------------
     // Get size
-    
+
     Float nrows_float = static_cast<Float>( nrows() );
 
     // -----------------------------------------------------
@@ -53,7 +53,7 @@ Poco::JSON::Object MAE::score( const Features _yhat, const Features _y )
 
     Poco::JSON::Object obj;
 
-    obj.set( "mae_", JSON::vector_to_array_ptr( mae ) );
+    obj.set( "mae_", jsonutils::JSON::vector_to_array_ptr( mae ) );
 
     // -----------------------------------------------------
 

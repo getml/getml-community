@@ -62,11 +62,13 @@ Poco::JSON::Object AUC::score( const Features _yhat, const Features _y )
 
             if ( yhat_min == yhat_max )
                 {
-                    true_positive_arr->add( JSON::vector_to_array_ptr(
-                        std::vector<Float>( {1.0, 0.0} ) ) );
+                    true_positive_arr->add(
+                        jsonutils::JSON::vector_to_array_ptr(
+                            std::vector<Float>( {1.0, 0.0} ) ) );
 
-                    false_positive_arr->add( JSON::vector_to_array_ptr(
-                        std::vector<Float>( {0.0, 1.0} ) ) );
+                    false_positive_arr->add(
+                        jsonutils::JSON::vector_to_array_ptr(
+                            std::vector<Float>( {0.0, 1.0} ) ) );
 
                     auc[j] = 0.5;
 
@@ -231,10 +233,10 @@ Poco::JSON::Object AUC::score( const Features _yhat, const Features _y )
             // Add to arrays.
 
             true_positive_arr->add(
-                JSON::vector_to_array_ptr( tpr_downsampled ) );
+                jsonutils::JSON::vector_to_array_ptr( tpr_downsampled ) );
 
             false_positive_arr->add(
-                JSON::vector_to_array_ptr( fpr_downsampled ) );
+                jsonutils::JSON::vector_to_array_ptr( fpr_downsampled ) );
 
             // ---------------------------------------------
         }
@@ -244,7 +246,7 @@ Poco::JSON::Object AUC::score( const Features _yhat, const Features _y )
 
     Poco::JSON::Object obj;
 
-    obj.set( "auc_", JSON::vector_to_array_ptr( auc ) );
+    obj.set( "auc_", jsonutils::JSON::vector_to_array_ptr( auc ) );
 
     obj.set( "fpr_", false_positive_arr );
 

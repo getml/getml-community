@@ -103,7 +103,7 @@ Poco::JSON::Array::Ptr Summarizer::calculate_average_targets(
 
             for ( const auto& v : vec )
                 {
-                    subarr->add( JSON::vector_to_array_ptr( v ) );
+                    subarr->add( jsonutils::JSON::vector_to_array_ptr( v ) );
                 }
 
             arr->add( subarr );
@@ -191,7 +191,7 @@ Poco::JSON::Object Summarizer::calculate_feature_plots(
 
     for ( const auto& c : feature_densities )
         {
-            densities_arr->add( JSON::vector_to_array_ptr( c ) );
+            densities_arr->add( jsonutils::JSON::vector_to_array_ptr( c ) );
         }
 
     // ------------------------------------------------------------------------
@@ -313,7 +313,8 @@ Poco::JSON::Object Summarizer::calculate_feature_correlations(
                 feature_correlations[j][k] =
                     cov_y_yhat / sqrt( var_yhat * var_y );
 
-                if ( feature_correlations[j][k] != feature_correlations[j][k] )
+                if ( std::isnan( feature_correlations[j][k] ) ||
+                     std::isinf( feature_correlations[j][k] ) )
                     {
                         feature_correlations[j][k] = 0.0;
                     }
@@ -326,7 +327,7 @@ Poco::JSON::Object Summarizer::calculate_feature_correlations(
 
     for ( const auto& f : feature_correlations )
         {
-            arr->add( JSON::vector_to_array_ptr( f ) );
+            arr->add( jsonutils::JSON::vector_to_array_ptr( f ) );
         }
 
     // -----------------------------------------------------------
@@ -415,7 +416,7 @@ Poco::JSON::Array::Ptr Summarizer::calculate_labels(
 
     for ( const auto& l : labels )
         {
-            arr->add( JSON::vector_to_array_ptr( l ) );
+            arr->add( jsonutils::JSON::vector_to_array_ptr( l ) );
         }
 
     // ------------------------------------------------------------------------

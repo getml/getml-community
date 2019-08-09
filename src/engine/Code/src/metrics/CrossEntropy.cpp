@@ -79,7 +79,9 @@ Poco::JSON::Object CrossEntropy::score(
 
     Poco::JSON::Object obj;
 
-    obj.set( "cross_entropy_", JSON::vector_to_array_ptr( cross_entropy ) );
+    obj.set(
+        "cross_entropy_",
+        jsonutils::JSON::vector_to_array_ptr( cross_entropy ) );
 
     // -----------------------------------------------------
 

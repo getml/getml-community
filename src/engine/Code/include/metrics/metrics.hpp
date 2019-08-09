@@ -9,10 +9,7 @@
 #include <memory>
 #include <numeric>
 
-#include <Poco/JSON/Array.h>
-#include <Poco/JSON/Object.h>
-#include <Poco/JSON/Stringifier.h>
-
+#include "jsonutils/jsonutils.hpp"
 #include "multithreading/multithreading.hpp"
 
 // ----------------------------------------------------
@@ -22,8 +19,6 @@
 #include "metrics/Int.hpp"
 
 #include "metrics/Features.hpp"
-
-#include "metrics/JSON.hpp"
 
 #include "metrics/Metric.hpp"
 #include "metrics/MetricImpl.hpp"

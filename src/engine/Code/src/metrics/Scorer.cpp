@@ -10,33 +10,36 @@ Poco::JSON::Object Scorer::get_metrics( const Poco::JSON::Object& _obj )
 
     if ( _obj.has( "accuracy_" ) )
         {
-            result.set( "accuracy_", JSON::get_array( _obj, "accuracy_" ) );
+            result.set(
+                "accuracy_", jsonutils::JSON::get_array( _obj, "accuracy_" ) );
         }
 
     if ( _obj.has( "auc_" ) )
         {
-            result.set( "auc_", JSON::get_array( _obj, "auc_" ) );
+            result.set( "auc_", jsonutils::JSON::get_array( _obj, "auc_" ) );
         }
 
     if ( _obj.has( "cross_entropy_" ) )
         {
             result.set(
-                "cross_entropy_", JSON::get_array( _obj, "cross_entropy_" ) );
+                "cross_entropy_",
+                jsonutils::JSON::get_array( _obj, "cross_entropy_" ) );
         }
 
     if ( _obj.has( "mae_" ) )
         {
-            result.set( "mae_", JSON::get_array( _obj, "mae_" ) );
+            result.set( "mae_", jsonutils::JSON::get_array( _obj, "mae_" ) );
         }
 
     if ( _obj.has( "rmse_" ) )
         {
-            result.set( "rmse_", JSON::get_array( _obj, "rmse_" ) );
+            result.set( "rmse_", jsonutils::JSON::get_array( _obj, "rmse_" ) );
         }
 
     if ( _obj.has( "rsquared_" ) )
         {
-            result.set( "rsquared_", JSON::get_array( _obj, "rsquared_" ) );
+            result.set(
+                "rsquared_", jsonutils::JSON::get_array( _obj, "rsquared_" ) );
         }
 
     return result;

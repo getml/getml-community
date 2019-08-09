@@ -719,6 +719,8 @@ template <typename FeatureEngineererType>
 Poco::JSON::Object Model<FeatureEngineererType>::load_json_obj(
     const std::string& _fname )
 {
+    std::cout << "Loading " << _fname << "..." << std::endl;
+
     std::ifstream input( _fname );
 
     std::stringstream json;
@@ -738,6 +740,8 @@ Poco::JSON::Object Model<FeatureEngineererType>::load_json_obj(
         {
             throw std::invalid_argument( "File '" + _fname + "' not found!" );
         }
+
+    std::cout << json.str() << std::endl;
 
     return *Poco::JSON::Parser()
                 .parse( json.str() )

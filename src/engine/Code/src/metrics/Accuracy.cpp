@@ -141,7 +141,8 @@ Poco::JSON::Object Accuracy::score( const Features _yhat, const Features _y )
             prediction_min[j] = yhat_min;
             prediction_step_size[j] = step_size;
 
-            accuracy_curves->add( JSON::vector_to_array_ptr( accuracies ) );
+            accuracy_curves->add(
+                jsonutils::JSON::vector_to_array_ptr( accuracies ) );
 
             // -----------------------------------------------------
         }
@@ -151,15 +152,17 @@ Poco::JSON::Object Accuracy::score( const Features _yhat, const Features _y )
 
     Poco::JSON::Object obj;
 
-    obj.set( "accuracy_", JSON::vector_to_array_ptr( accuracy ) );
+    obj.set( "accuracy_", jsonutils::JSON::vector_to_array_ptr( accuracy ) );
 
     obj.set( "accuracy_curves_", accuracy_curves );
 
-    obj.set( "prediction_min_", JSON::vector_to_array_ptr( prediction_min ) );
+    obj.set(
+        "prediction_min_",
+        jsonutils::JSON::vector_to_array_ptr( prediction_min ) );
 
     obj.set(
         "prediction_step_size_",
-        JSON::vector_to_array_ptr( prediction_step_size ) );
+        jsonutils::JSON::vector_to_array_ptr( prediction_step_size ) );
 
     // -----------------------------------------------------
 

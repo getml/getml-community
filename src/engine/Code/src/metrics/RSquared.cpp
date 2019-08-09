@@ -98,7 +98,7 @@ Poco::JSON::Object RSquared::score( const Features _yhat, const Features _y )
 
     Poco::JSON::Object obj;
 
-    obj.set( "rsquared_", JSON::vector_to_array_ptr( rsquared ) );
+    obj.set( "rsquared_", jsonutils::JSON::vector_to_array_ptr( rsquared ) );
 
     // -----------------------------------------------------
 

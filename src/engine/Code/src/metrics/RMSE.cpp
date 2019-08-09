@@ -56,7 +56,7 @@ Poco::JSON::Object RMSE::score( const Features _yhat, const Features _y )
 
     Poco::JSON::Object obj;
 
-    obj.set( "rmse_", JSON::vector_to_array_ptr( rmse ) );
+    obj.set( "rmse_", jsonutils::JSON::vector_to_array_ptr( rmse ) );
 
     // -----------------------------------------------------
 
