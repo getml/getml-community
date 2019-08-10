@@ -425,36 +425,36 @@ void DecisionTreeEnsemble::fit(
 
     auto sample_weights = std::make_shared<std::vector<Float>>( nrows, 1.0 );
 
-    random_number_generator().reset(
-        new std::mt19937( static_cast<unsigned int>( hyperparameters().seed_ ) ) );
+    random_number_generator().reset( new std::mt19937(
+        static_cast<unsigned int>( hyperparameters().seed_ ) ) );
 
     // ----------------------------------------------------------------
     // containers::Match containers are pointers to simple structs, which
     // represent a match between a key in the peripheral table and a key in the
     // population table.
 
-    debug_log( "fit: Creating samples..." );
+    debug_log( "fit: Creating matches..." );
 
     const auto num_peripheral = _table_holder->peripheral_tables_.size();
 
     assert( _table_holder->main_tables_.size() == num_peripheral );
 
-    std::vector<containers::Matches> samples( num_peripheral );
+    std::vector<containers::Matches> matches( num_peripheral );
 
-    std::vector<containers::MatchPtrs> sample_containers( num_peripheral );
+    std::vector<containers::MatchPtrs> match_ptrs( num_peripheral );
 
     if ( hyperparameters().sampling_factor_ <= 0.0 )
         {
             for ( size_t i = 0; i < num_peripheral; ++i )
                 {
-                    samples.push_back( utils::Matchmaker::make_matches(
+                    matches[i] = utils::Matchmaker::make_matches(
                         _table_holder->main_tables_[i],
                         _table_holder->peripheral_tables_[i],
                         sample_weights,
-                        hyperparameters().use_timestamps_ ) );
+                        hyperparameters().use_timestamps_ );
 
-                    sample_containers.push_back(
-                        utils::Matchmaker::make_pointers( &samples.back() ) );
+                    match_ptrs[i] =
+                        utils::Matchmaker::make_pointers( &matches[i] );
                 }
         }
 
@@ -480,15 +480,14 @@ void DecisionTreeEnsemble::fit(
 
                     for ( size_t i = 0; i < num_peripheral; ++i )
                         {
-                            samples[i] = utils::Matchmaker::make_matches(
+                            matches[i] = utils::Matchmaker::make_matches(
                                 _table_holder->main_tables_[i],
                                 _table_holder->peripheral_tables_[i],
                                 sample_weights,
                                 hyperparameters().use_timestamps_ );
 
-                            sample_containers[i] =
-                                utils::Matchmaker::make_pointers(
-                                    &samples.back() );
+                            match_ptrs[i] =
+                                utils::Matchmaker::make_pointers( &matches[i] );
                         }
                 }
 
@@ -522,8 +521,8 @@ void DecisionTreeEnsemble::fit(
             tree_fitter.fit(
                 *_table_holder,
                 subfeatures,
-                &samples,
-                &sample_containers,
+                &matches,
+                &match_ptrs,
                 _opt,
                 &candidate_trees,
                 &trees() );

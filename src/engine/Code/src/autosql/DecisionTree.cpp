@@ -135,8 +135,7 @@ void DecisionTree::create_value_to_be_aggregated(
             case enums::DataUsed::same_unit_numerical:
 
                 assert(
-                    static_cast<Int>(
-                        impl()->same_units_numerical().size() ) >
+                    static_cast<Int>( impl()->same_units_numerical().size() ) >
                     ix_column_used );
 
                 {
@@ -715,16 +714,16 @@ std::vector<Float> DecisionTree::transform(
 
             debug_log( "transform: Create sample containers..." );
 
-            containers::Matches samples;
+            containers::Matches matches;
 
             utils::Matchmaker::make_matches(
                 _population,
                 _peripheral,
                 _use_timestamps,
                 ix_x_popul,
-                &samples );
+                &matches );
 
-            auto match_ptrs = utils::Matchmaker::make_pointers( &samples );
+            auto match_ptrs = utils::Matchmaker::make_pointers( &matches );
 
             // ------------------------------------------------------
 
@@ -742,33 +741,33 @@ std::vector<Float> DecisionTree::transform(
             debug_log( "transform: Set begin, end..." );
 
             auto null_values_dist =
-                std::distance( samples.begin(), samples.begin() );
+                std::distance( matches.begin(), matches.begin() );
 
             if ( aggregation_type() != "COUNT" )
                 {
                     auto null_values_separator =
-                        _aggregation->separate_null_values( samples );
+                        _aggregation->separate_null_values( &matches );
 
                     null_values_dist =
-                        std::distance( samples.begin(), null_values_separator );
+                        std::distance( matches.begin(), null_values_separator );
 
                     _aggregation->set_samples_begin_end(
-                        samples.data() + null_values_dist,
-                        samples.data() + samples.size() );
+                        matches.data() + null_values_dist,
+                        matches.data() + matches.size() );
 
                     if ( _aggregation->needs_sorting() )
                         {
-                            _aggregation->sort_samples(
-                                null_values_separator, samples.end() );
+                            _aggregation->sort_matches(
+                                null_values_separator, matches.end() );
                         }
 
-                    // Because keep on generating samples and sample_container,
+                    // Because keep on generating matches and sample_container,
                     // we do not have to explicitly sort the sample containers!
                 }
             else
                 {
                     _aggregation->set_samples_begin_end(
-                        samples.data(), samples.data() + samples.size() );
+                        matches.data(), matches.data() + matches.size() );
                 }
 
             // ------------------------------------------------------

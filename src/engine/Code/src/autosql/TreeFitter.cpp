@@ -140,49 +140,56 @@ void TreeFitter::fit_tree(
 
     const auto ix_perip_used = _tree->column_to_be_aggregated().ix_perip_used;
 
-    auto &samples = ( *_samples )[ix_perip_used];
+    auto &matches = ( *_samples )[ix_perip_used];
 
-    auto &sample_container = ( *_sample_containers )[ix_perip_used];
+    auto &match_ptrs = ( *_sample_containers )[ix_perip_used];
 
-    assert(
-        ix_perip_used <
-        static_cast<Int>( _sample_containers->size() ) );
+    debug_log( "matches.size(): " + std::to_string( matches.size() ) );
 
-    auto null_values_dist = std::distance( samples.begin(), samples.begin() );
+    debug_log( "match_ptrs.size(): " + std::to_string( match_ptrs.size() ) );
+
+    assert( matches.size() == match_ptrs.size() );
+
+    assert( ix_perip_used < static_cast<Int>( _sample_containers->size() ) );
+
+    auto null_values_dist = std::distance( matches.begin(), matches.begin() );
 
     if ( _tree->aggregation_type() != "COUNT" )
         {
             debug_log( "fit: Creating value to be aggregated.." );
 
             _tree->create_value_to_be_aggregated(
-                _population, _peripheral, _subfeatures, sample_container );
+                _population, _peripheral, _subfeatures, match_ptrs );
 
-            auto null_value_separator = _tree->separate_null_values( samples );
+            auto null_value_separator = _tree->separate_null_values( &matches );
 
             null_values_dist =
-                std::distance( samples.begin(), null_value_separator );
+                std::distance( matches.begin(), null_value_separator );
 
             debug_log(
                 "null_values_dist: " + std::to_string( null_values_dist ) );
 
             _tree->set_samples_begin_end(
-                samples.data() + null_values_dist,
-                samples.data() + samples.size() );
+                matches.data() + null_values_dist,
+                matches.data() + matches.size() );
 
             if ( _tree->aggregation_needs_sorting() )
                 {
-                    _tree->sort_samples( null_value_separator, samples.end() );
+                    debug_log( "Sorting samples..." );
+                    _tree->sort_samples( null_value_separator, matches.end() );
                 }
 
-            // NOTE: Samples are the actual samples, whereas
-            // _sample_containers are pointers to samples!
-            _tree->separate_null_values( sample_container );
+            debug_log( "Separating NULL values..." );
+
+            _tree->separate_null_values( &match_ptrs );
+
+            debug_log( "Separated NULL values..." );
 
             assert(
                 null_values_dist ==
                 std::distance(
-                    sample_container.begin(),
-                    _tree->separate_null_values( sample_container ) ) );
+                    match_ptrs.begin(),
+                    _tree->separate_null_values( &match_ptrs ) ) );
         }
     else
         {
@@ -200,8 +207,8 @@ void TreeFitter::fit_tree(
         _population,
         _peripheral,
         _subfeatures,
-        sample_container.begin(),
-        sample_container.end(),
+        match_ptrs.begin(),
+        match_ptrs.end(),
         _optimization_criterion );
 
     // ---------------------------------------------------------

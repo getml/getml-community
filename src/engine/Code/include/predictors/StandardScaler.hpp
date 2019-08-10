@@ -43,7 +43,7 @@ class StandardScaler
     Poco::JSON::Object to_json_obj() const
     {
         Poco::JSON::Object obj;
-        obj.set( "mean_", JSON::vector_to_array( std_ ) );
+        obj.set( "mean_", JSON::vector_to_array( mean_ ) );
         obj.set( "std_", JSON::vector_to_array( std_ ) );
         return obj;
     }

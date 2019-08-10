@@ -64,7 +64,7 @@ XGBoostPredictor::convert_to_dmatrix_dense(
             for ( size_t i = 0; i < _X_numerical[j]->size(); ++i )
                 {
                     mat_float[i * _X_numerical.size() + j] =
-                       static_cast<float>( ( *_X_numerical[j] )[i] );
+                        static_cast<float>( ( *_X_numerical[j] )[i] );
                 }
         }
 
@@ -156,12 +156,21 @@ std::vector<Float> XGBoostPredictor::feature_importances(
     // --------------------------------------------------------------------
     // Parse dump
 
-    std::vector<Float> feature_importances( _num_features );
+    std::vector<Float> all_feature_importances( impl().ncols_csr() );
 
     for ( bst_ulong i = 0; i < out_len; ++i )
         {
-            parse_dump( out_dump_array[i], &feature_importances );
+            parse_dump( out_dump_array[i], &all_feature_importances );
         }
+
+    // --------------------------------------------------------------------
+    // Compress the sparse importances to calculate the importance of the entire
+    // categorical feature.
+
+    std::vector<Float> feature_importances( _num_features );
+
+    impl().compress_importances(
+        all_feature_importances, &feature_importances );
 
     // --------------------------------------------------------------------
     // Normalize feature importances
@@ -173,7 +182,7 @@ std::vector<Float> XGBoostPredictor::feature_importances(
         {
             val = val / sum_importances;
 
-            if ( val != val )
+            if ( std::isnan( val ) )
                 {
                     val = 0.0;
                 }
@@ -423,14 +432,9 @@ void XGBoostPredictor::load( const std::string &_fname )
 // -----------------------------------------------------------------------------
 
 void XGBoostPredictor::parse_dump(
-    const std::string &_dump, std::vector<Float> *_feature_importances ) const
+    const std::string &_dump,
+    std::vector<Float> *_all_feature_importances ) const
 {
-    // ----------------------------------------------------------------
-    // Make all_feature_importances, which calculates each sparse column
-    // separately.
-
-    std::vector<Float> all_feature_importances( impl().ncols_csr() );
-
     // ----------------------------------------------------------------
     // Split _dump
 
@@ -449,11 +453,11 @@ void XGBoostPredictor::parse_dump(
 
     if ( hyperparams_.booster_ == "gblinear" )
         {
-            assert( lines.size() >= all_feature_importances.size() + 3 );
+            assert( lines.size() >= _all_feature_importances->size() + 3 );
 
-            for ( size_t i = 0; i < all_feature_importances.size(); ++i )
+            for ( size_t i = 0; i < _all_feature_importances->size(); ++i )
                 {
-                    all_feature_importances[i] =
+                    ( *_all_feature_importances )[i] =
                         std::abs( std::atof( lines[i + 3].c_str() ) );
                 }
         }
@@ -486,7 +490,7 @@ void XGBoostPredictor::parse_dump(
 
                             assert(
                                 fnum < static_cast<int>(
-                                           all_feature_importances.size() ) );
+                                           _all_feature_importances->size() ) );
 
                             // -----------------------
                             // Extract gain
@@ -505,17 +509,12 @@ void XGBoostPredictor::parse_dump(
                             // -----------------------
                             // Add to feature importances
 
-                            all_feature_importances[fnum] += gain;
+                            ( *_all_feature_importances )[fnum] += gain;
                         }
                 }
 
             // ----------------------------------------------------------------
         }
-
-    // ------------------------------------------------------------------------
-
-    impl().compress_importances(
-        all_feature_importances, _feature_importances );
 
     // ------------------------------------------------------------------------
 }

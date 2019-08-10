@@ -187,12 +187,12 @@ class AbstractAggregation
 
     /// Separates the samples for which the value to be aggregated is NULL
     virtual containers::Matches::iterator separate_null_values(
-        containers::Matches &_samples ) = 0;
+        containers::Matches *_matches ) = 0;
 
     /// Separates the pointers to samples for which the value to be aggregated
     /// is NULL
     virtual containers::MatchPtrs::iterator separate_null_values(
-        containers::MatchPtrs &_samples ) = 0;
+        containers::MatchPtrs *_match_ptrs ) = 0;
 
     /// Trivial setter
     virtual void set_aggregation_impl(
@@ -206,7 +206,8 @@ class AbstractAggregation
     /// Sets the beginning and the end of the actual samples -
     /// some aggregations like MIN or MAX needs this information.
     virtual void set_samples_begin_end(
-        containers::Match *_samples_begin, containers::Match *_samples_end ) = 0;
+        containers::Match *_samples_begin,
+        containers::Match *_samples_end ) = 0;
 
     /// Trivial setter
     virtual void set_value_to_be_aggregated(
@@ -214,9 +215,8 @@ class AbstractAggregation
 
     /// Trivial setter
     virtual void set_value_to_be_aggregated(
-        const containers::ColumnView<
-            Float,
-            std::map<Int, Int>> &_value_to_be_aggregated ) = 0;
+        const containers::ColumnView<Float, std::map<Int, Int>>
+            &_value_to_be_aggregated ) = 0;
 
     /// Trivial setter
     virtual void set_value_to_be_aggregated(
@@ -233,9 +233,9 @@ class AbstractAggregation
 
     /// Sorts the samples by value to be aggregated (within the element in
     /// population table)
-    virtual void sort_samples(
-        containers::Matches::iterator _samples_begin,
-        containers::Matches::iterator _samples_end ) = 0;
+    virtual void sort_matches(
+        containers::Matches::iterator _matches_begin,
+        containers::Matches::iterator _matches_end ) = 0;
 
     /// Returns a string describing the type of the aggregation
     virtual std::string type() const = 0;

@@ -185,18 +185,18 @@ class Aggregation : public AbstractAggregation
 
     /// Separates the samples for which the value to be aggregated is NULL
     containers::Matches::iterator separate_null_values(
-        containers::Matches &_samples );
+        containers::Matches *_matches );
 
     /// Separates the pointers to samples for which the value to be aggregated
     /// is NULL
     containers::MatchPtrs::iterator separate_null_values(
-        containers::MatchPtrs &_samples );
+        containers::MatchPtrs *_match_ptrs );
 
     /// Sorts the samples by value to be aggregated (within the element in
     /// population table)
-    void sort_samples(
-        containers::Matches::iterator _samples_begin,
-        containers::Matches::iterator _samples_end );
+    void sort_matches(
+        containers::Matches::iterator _matches_begin,
+        containers::Matches::iterator _matches_end );
 
     /// Updates the optimization criterion, makes it store its
     /// current stage and clears updates_current()
@@ -1496,7 +1496,7 @@ class Aggregation : public AbstractAggregation
     /// aggregations that ...
     /// 1. ...are NOT applied to categorical data
     /// 2. ...are NOT a comparison
-    /// 3. ...ARE applied to to subfeatures
+    /// 3. ...ARE applied to subfeatures
     template <
         enums::DataUsed data_used = data_used_,
         typename std::enable_if<
@@ -2670,22 +2670,22 @@ void Aggregation<AggType, data_used_, is_population_>::revert_to_commit()
 template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 containers::Matches::iterator
 Aggregation<AggType, data_used_, is_population_>::separate_null_values(
-    containers::Matches &_samples )
+    containers::Matches *_matches )
 {
     auto is_null = [this]( containers::Match &sample ) {
         Float val = value_to_be_aggregated( &sample );
-        return val != val;
+        return std::isnan( val );
     };
 
-    if ( std::is_partitioned( _samples.begin(), _samples.end(), is_null ) )
+    if ( std::is_partitioned( _matches->begin(), _matches->end(), is_null ) )
         {
             return std::partition_point(
-                _samples.begin(), _samples.end(), is_null );
+                _matches->begin(), _matches->end(), is_null );
         }
     else
         {
             return std::stable_partition(
-                _samples.begin(), _samples.end(), is_null );
+                _matches->begin(), _matches->end(), is_null );
         }
 }
 
@@ -2694,31 +2694,32 @@ Aggregation<AggType, data_used_, is_population_>::separate_null_values(
 template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 containers::MatchPtrs::iterator
 Aggregation<AggType, data_used_, is_population_>::separate_null_values(
-    containers::MatchPtrs &_samples )
+    containers::MatchPtrs *_match_ptrs )
 {
     auto is_null = [this]( containers::Match *sample ) {
         Float val = value_to_be_aggregated( sample );
-        return val != val;
+        return std::isnan( val );
     };
 
-    if ( std::is_partitioned( _samples.begin(), _samples.end(), is_null ) )
+    if ( std::is_partitioned(
+             _match_ptrs->begin(), _match_ptrs->end(), is_null ) )
         {
             return std::partition_point(
-                _samples.begin(), _samples.end(), is_null );
+                _match_ptrs->begin(), _match_ptrs->end(), is_null );
         }
     else
         {
             return std::stable_partition(
-                _samples.begin(), _samples.end(), is_null );
+                _match_ptrs->begin(), _match_ptrs->end(), is_null );
         }
 }
 
 // ----------------------------------------------------------------------------
 
 template <typename AggType, enums::DataUsed data_used_, bool is_population_>
-void Aggregation<AggType, data_used_, is_population_>::sort_samples(
-    containers::Matches::iterator _samples_begin,
-    containers::Matches::iterator _samples_end )
+void Aggregation<AggType, data_used_, is_population_>::sort_matches(
+    containers::Matches::iterator _matches_begin,
+    containers::Matches::iterator _matches_end )
 {
     // -----------------------------------
 
@@ -2726,32 +2727,32 @@ void Aggregation<AggType, data_used_, is_population_>::sort_samples(
 
     // -----------------------------------
 
-    if ( std::distance( _samples_begin, _samples_end ) == 0 )
+    if ( std::distance( _matches_begin, _matches_end ) == 0 )
         {
             return;
         }
 
     auto compare_op = [this](
-                          const containers::Match &sample1,
-                          const containers::Match &sample2 ) {
-        if ( sample1.ix_x_popul < sample2.ix_x_popul )
+                          const containers::Match &match1,
+                          const containers::Match &match2 ) {
+        if ( match1.ix_x_popul < match2.ix_x_popul )
             {
                 return true;
             }
-        else if ( sample1.ix_x_popul > sample2.ix_x_popul )
+        else if ( match1.ix_x_popul > match2.ix_x_popul )
             {
                 return false;
             }
         else
             {
-                return value_to_be_aggregated( &sample1 ) <
-                       value_to_be_aggregated( &sample2 );
+                return value_to_be_aggregated( &match1 ) <
+                       value_to_be_aggregated( &match2 );
             }
     };
 
     // -----------------------------------
 
-    std::sort( _samples_begin, _samples_end, compare_op );
+    std::sort( _matches_begin, _matches_end, compare_op );
 
     // -----------------------------------
 }

@@ -116,7 +116,7 @@ void LogisticRegression::fit_dense(
     const auto nrows_float = static_cast<Float>( nrows );
 
     // -------------------------------------------------------------------------
-    // Use Adam to find the weights.
+    // Use BFGS to find the weights.
 
     std::vector<Float> gradients( weights_.size() );
 

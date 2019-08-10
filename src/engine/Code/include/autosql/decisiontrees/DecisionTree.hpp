@@ -179,17 +179,17 @@ class DecisionTree
 
     /// Separates all null values in the samples
     inline containers::Matches::iterator separate_null_values(
-        containers::Matches &_samples )
+        containers::Matches *_matches )
     {
-        return aggregation()->separate_null_values( _samples );
+        return aggregation()->separate_null_values( _matches );
     }
 
     /// Separates all null values in the sample containers (recall
     /// that a sample containers contains pointers to samples)
     inline containers::MatchPtrs::iterator separate_null_values(
-        containers::MatchPtrs &_samples )
+        containers::MatchPtrs *_match_ptrs )
     {
-        return aggregation()->separate_null_values( _samples );
+        return aggregation()->separate_null_values( _match_ptrs );
     }
 
     /// Passes the impl of the aggregation to the aggregation
@@ -221,9 +221,9 @@ class DecisionTree
     /// this is required by those aggregations that also need the
     /// samples to be sorted)
     inline void set_samples_begin_end(
-        containers::Match *_samples_begin, containers::Match *_samples_end )
+        containers::Match *_matches_begin, containers::Match *_matches_end )
     {
-        aggregation()->set_samples_begin_end( _samples_begin, _samples_end );
+        aggregation()->set_samples_begin_end( _matches_begin, _matches_end );
     }
 
     /// Some aggregations, such as MIN and MAX require the samples
@@ -232,14 +232,13 @@ class DecisionTree
         containers::Matches::iterator _samples_begin,
         containers::Matches::iterator _samples_end )
     {
-        aggregation()->sort_samples( _samples_begin, _samples_end );
+        aggregation()->sort_matches( _samples_begin, _samples_end );
     }
 
     /// Stores the current stage (storing means that it is a candidate for
     /// a commit)
     inline void store_current_stage(
-        const Float _num_samples_smaller,
-        const Float _num_samples_greater )
+        const Float _num_samples_smaller, const Float _num_samples_greater )
     {
         optimization_criterion()->store_current_stage(
             _num_samples_smaller, _num_samples_greater );
@@ -313,10 +312,7 @@ class DecisionTree
     inline size_t max_length() const { return impl_.max_length(); }
 
     /// Trivial accessor
-    inline size_t min_num_samples() const
-    {
-        return impl_.min_num_samples();
-    }
+    inline size_t min_num_samples() const { return impl_.min_num_samples(); }
 
     /// Trivial accessor
     inline optimizationcriteria::OptimizationCriterion *&
@@ -333,10 +329,7 @@ class DecisionTree
     }
 
     /// Trivial accessor
-    inline Float regularization() const
-    {
-        return impl_.regularization();
-    }
+    inline Float regularization() const { return impl_.regularization(); }
 
     /// Trivial accessor
     inline containers::Optional<DecisionTreeNode> &root() { return root_; }
@@ -366,10 +359,7 @@ class DecisionTree
     }
 
     /// Trivial accessor
-    inline Float share_conditions() const
-    {
-        return impl_.share_conditions();
-    }
+    inline Float share_conditions() const { return impl_.share_conditions(); }
 
     /// Subtrees
     inline std::vector<DecisionTree> &subtrees() { return subtrees_; }

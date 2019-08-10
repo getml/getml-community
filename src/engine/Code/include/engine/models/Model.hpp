@@ -1025,7 +1025,7 @@ void Model<FeatureEngineererType>::select_features(
             index[ix] = ix;
         }
 
-    std::sort(
+    std::stable_sort(
         index.begin(),
         index.end(),
         [feature_importances]( const size_t& ix1, const size_t& ix2 ) {
