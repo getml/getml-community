@@ -12,7 +12,9 @@ std::vector<std::string> Postgres::get_colnames(
 
     const auto connection = make_raw_connection();
 
-    const auto result = exec( sql, connection.get() );
+    const auto
+
+        const auto result = exec( sql, connection.get() );
 
     const int num_cols = PQnfields( result.get() );
 
