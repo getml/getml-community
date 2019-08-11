@@ -108,12 +108,11 @@ target_link_libraries(
 
 target_link_libraries(
     ${RELBOOST_VERSION}-64bit-database-test
-  	${CMAKE_DL_LIBS}
+    ${CMAKE_DL_LIBS}
     "${POCO_DIR}/cmake-build/lib/libPocoJSON.a"
     "${POCO_DIR}/cmake-build/lib/libPocoFoundation.a"
     pq
-    pthread
-	  dl
+    dl
 )
 
 target_link_libraries(

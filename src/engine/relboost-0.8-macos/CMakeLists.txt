@@ -18,6 +18,9 @@ set(XGBOOST_DIR $ENV{HOME}/xgboost)
 # Set the path to OpenSSL
 set(OPENSSL_DIR /usr/local/opt/openssl)
 
+# Set the path to psql.
+set(PSQL_DIR /usr/local/opt/libpq)
+
 project(${RELBOOST_VERSION}-64bit)
 
 set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR})
@@ -34,6 +37,7 @@ include_directories(
     "${OPENSSL_DIR}/include"
     "${XGBOOST_DIR}/include"
     "${XGBOOST_DIR}/rabit/include"
+    "${PSQL_DIR}/include"
 )
 
 link_directories(${OPENSSL_DIR}/lib)
@@ -114,10 +118,13 @@ target_link_libraries(
 
 target_link_libraries(
     ${RELBOOST_VERSION}-64bit-database-test
-	${CMAKE_DL_LIBS}
+    ${CMAKE_DL_LIBS}
     "${POCO_DIR}/lib/Darwin/x86_64/libPocoJSON.a"
     "${POCO_DIR}/lib/Darwin/x86_64/libPocoFoundation.a"
-	pthread
+    "${PSQL_DIR}/lib/libpq.a"
+    ssl
+    crypto
+    dl
 )
 
 target_link_libraries(
@@ -151,6 +158,8 @@ target_link_libraries(
     "${XGBOOST_DIR}/lib/libxgboost.a"
     "${XGBOOST_DIR}/rabit/lib/librabit.a"
     "${XGBOOST_DIR}/dmlc-core/libdmlc.a"
-    crypto
+    "${PSQL_DIR}/lib/libpq.a"
     ssl
+    crypto
+    dl
 )
