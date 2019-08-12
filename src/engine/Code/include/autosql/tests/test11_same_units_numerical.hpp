@@ -134,9 +134,6 @@ void test11_same_units_numerical()
     const auto hyperparameters_json =
         load_json( "../../tests/autosql/test11/hyperparameters.json" );
 
-    std::cout << autosql::JSON::stringify( *hyperparameters_json ) << std::endl
-              << std::endl;
-
     const auto hyperparameters =
         std::make_shared<autosql::descriptors::Hyperparameters>(
             *hyperparameters_json );
@@ -174,11 +171,6 @@ void test11_same_units_numerical()
         {
             for ( size_t i = 0; i < predictions[j]->size(); ++i )
                 {
-                    /*std::cout << "target: "
-                               << population_df.target( i , 0 )
-                               << ", prediction: " << predictions[j][i] <<
-                       std::endl;*/
-
                     assert(
                         std::abs(
                             population_df.target( i, 0 ) -

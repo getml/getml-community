@@ -270,15 +270,6 @@ void DecisionTree::create_value_to_be_aggregated(
 
             case enums::DataUsed::x_subfeature:
 
-                if ( ix_column_used >= _subfeatures.size() )
-                    {
-                        std::cout << "ix_column_used: " << ix_column_used
-                                  << std::endl;
-                        std::cout
-                            << "_subfeatures.size(): " << _subfeatures.size()
-                            << std::endl;
-                    }
-
                 assert( ix_column_used < _subfeatures.size() );
 
                 _aggregation->set_value_to_be_aggregated(
@@ -510,17 +501,6 @@ Poco::JSON::Object DecisionTree::to_json_obj() const
     obj.set( "output_", impl()->output().to_json_obj() );
 
     obj.set( "same_units_", impl()->same_units_.to_json_obj() );
-
-    // -----------------------------------
-
-    /*Poco::JSON::Array subtrees_arr;
-
-    for ( auto &subtree : subtrees() )
-        {
-            subtrees_arr.add( subtree.to_json_obj() );
-        }
-
-    obj.set( "subfeatures_", subtrees_arr );*/
 
     // -----------------------------------
 
