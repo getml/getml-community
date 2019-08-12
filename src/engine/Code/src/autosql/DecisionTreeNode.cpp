@@ -2180,7 +2180,7 @@ void DecisionTreeNode::try_non_categorical_values(
     // _sample_container_end ) is zero, when we are using the distributed
     // version. In that case we want this process to continue until this point,
     // because calculate_critical_values_numerical and
-    // calculate_critical_values_discrete contain a barriers and we want to
+    // calculate_critical_values_discrete contains barriers and we want to
     // avoid a livelock.
 
     if ( std::distance( _null_values_separator, _sample_container_end ) == 0 )

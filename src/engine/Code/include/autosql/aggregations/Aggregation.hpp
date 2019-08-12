@@ -40,23 +40,6 @@ class Aggregation : public AbstractAggregation
         const Revert _revert,
         const containers::CategoryIndex &_index ) final;
 
-    /// Activates all samples that do not contain any category between
-    /// _categories_begin and _categories_end. Used for prediction.
-    void activate_samples_not_containing_categories(
-        const std::vector<Int>::const_iterator _categories_begin,
-        const std::vector<Int>::const_iterator _categories_end,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end ) final;
-
-    /// Iterates through the categories and selectively
-    /// activates samples.
-    /// Used for training.
-    void activate_samples_not_containing_categories(
-        const std::vector<Int>::const_iterator _categories_begin,
-        const std::vector<Int>::const_iterator _categories_end,
-        const Revert _revert,
-        const containers::CategoryIndex &_index ) final;
-
     /// Iterates through the samples and activates those.
     /// samples that are greater than the critical value.
     void activate_samples_from_above(
@@ -84,6 +67,57 @@ class Aggregation : public AbstractAggregation
         const std::vector<Float> &_critical_values,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) final;
+
+    /// Implements a lag functionality through moving time windows - used by
+    /// transform.
+    void activate_samples_in_window(
+        const Float _critical_value,
+        const Float _lag,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end ) final;
+
+    /// Implements a lag functionality through moving time windows - used by
+    /// fit.
+    void activate_samples_in_window(
+        const std::vector<Float> &_critical_values,
+        const Float _lag,
+        const Revert _revert,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end ) final;
+
+    /// Implements a lag functionality through moving time windows - used by
+    /// transform.
+    void activate_samples_outside_window(
+        const Float _critical_value,
+        const Float _lag,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end ) final;
+
+    /// Implements a lag functionality through moving time windows - used by
+    /// fit.
+    void activate_samples_outside_window(
+        const std::vector<Float> &_critical_values,
+        const Float _lag,
+        const Revert _revert,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end ) final;
+
+    /// Activates all samples that do not contain any category between
+    /// _categories_begin and _categories_end. Used for prediction.
+    void activate_samples_not_containing_categories(
+        const std::vector<Int>::const_iterator _categories_begin,
+        const std::vector<Int>::const_iterator _categories_end,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end ) final;
+
+    /// Iterates through the categories and selectively
+    /// activates samples.
+    /// Used for training.
+    void activate_samples_not_containing_categories(
+        const std::vector<Int>::const_iterator _categories_begin,
+        const std::vector<Int>::const_iterator _categories_end,
+        const Revert _revert,
+        const containers::CategoryIndex &_index ) final;
 
     /// Gets rid of data that is no longer needed.
     void clear() final;
@@ -134,6 +168,40 @@ class Aggregation : public AbstractAggregation
     /// starting with the smallest.
     void deactivate_samples_from_below(
         const std::vector<Float> &_critical_values,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end ) final;
+
+    /// Implements a lag functionality through moving time windows - used by
+    /// transform.
+    void deactivate_samples_in_window(
+        const Float _critical_value,
+        const Float _lag,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end ) final;
+
+    /// Implements a lag functionality through moving time windows - used by
+    /// fit.
+    void deactivate_samples_in_window(
+        const std::vector<Float> &_critical_values,
+        const Float _lag,
+        const Revert _revert,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end ) final;
+
+    /// Implements a lag functionality through moving time windows - used by
+    /// transform.
+    void deactivate_samples_outside_window(
+        const Float _critical_value,
+        const Float _lag,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end ) final;
+
+    /// Implements a lag functionality through moving time windows - used by
+    /// fit.
+    void deactivate_samples_outside_window(
+        const std::vector<Float> &_critical_values,
+        const Float _lag,
+        const Revert _revert,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) final;
 
@@ -1901,6 +1969,211 @@ void Aggregation<AggType, data_used_, is_population_>::
 
 template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
+    activate_samples_in_window(
+        const Float _critical_value,
+        const Float _lag,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end )
+{
+    for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
+        {
+            if ( ( *it )->numerical_value >= _critical_value - _lag &&
+                 ( *it )->numerical_value < _critical_value )
+                {
+                    activate_sample( *it );
+                }
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
+void Aggregation<AggType, data_used_, is_population_>::
+    activate_samples_in_window(
+        const std::vector<Float> &_critical_values,
+        const Float _lag,
+        const Revert _revert,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end )
+{
+    // ------------------------------------------------------------------
+
+    assert( _sample_container_end > _sample_container_begin );
+
+    const Float sample_size = static_cast<Float>(
+        std::distance( _sample_container_begin, _sample_container_end ) );
+
+    Float num_samples_smaller = 0.0;
+
+    // ------------------------------------------------------------------
+
+    auto wbegin = _sample_container_begin;
+
+    auto wend = _sample_container_begin;
+
+    for ( const auto c : _critical_values )
+        {
+            const auto at_begin = [c, _lag]( containers::Match *m ) {
+                return m->numerical_value >= c - _lag;
+            };
+
+            const auto at_end = [c]( containers::Match *m ) {
+                return m->numerical_value > c;
+            };
+
+            wbegin = std::find_if( wbegin, _sample_container_end, at_begin );
+
+            wend = std::find_if( wend, _sample_container_end, at_end );
+
+            for ( auto it = wbegin; it != wend; ++it )
+                {
+                    activate_sample( *it );
+
+                    updates_stored().insert( ( *it )->ix_x_popul );
+                    updates_current().insert( ( *it )->ix_x_popul );
+                }
+
+            if ( _revert != Revert::not_at_all )
+                {
+                    update_optimization_criterion_and_clear_updates_current(
+                        num_samples_smaller,
+                        sample_size - num_samples_smaller );
+
+                    revert_to_commit();
+
+                    optimization_criterion()->revert_to_commit();
+
+                    num_samples_smaller = 0.0;
+                }
+        }
+
+    // ------------------------------------------------------------------
+
+    if ( _revert == Revert::not_at_all )
+        {
+            update_optimization_criterion_and_clear_updates_current(
+                num_samples_smaller, sample_size - num_samples_smaller );
+        }
+
+    // ------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
+void Aggregation<AggType, data_used_, is_population_>::
+    activate_samples_outside_window(
+        const Float _critical_value,
+        const Float _lag,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end )
+{
+    for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
+        {
+            if ( ( *it )->numerical_value < _critical_value - _lag ||
+                 ( *it )->numerical_value >= _critical_value )
+                {
+                    activate_sample( *it );
+                }
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
+void Aggregation<AggType, data_used_, is_population_>::
+    activate_samples_outside_window(
+        const std::vector<Float> &_critical_values,
+        const Float _lag,
+        const Revert _revert,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end )
+{
+    // ------------------------------------------------------------------
+
+    assert( _sample_container_end > _sample_container_begin );
+
+    const Float sample_size = static_cast<Float>(
+        std::distance( _sample_container_begin, _sample_container_end ) );
+
+    Float num_samples_smaller = 0.0;
+
+    // ------------------------------------------------------------------
+    // Activate all samples
+
+    for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
+        {
+            activate_sample( *it );
+
+            updates_stored().insert( ( *it )->ix_x_popul );
+            updates_current().insert( ( *it )->ix_x_popul );
+        }
+
+    // ------------------------------------------------------------------
+    // Selectively deactivate those samples that are inside the window.
+
+    auto wbegin = _sample_container_begin;
+
+    auto wend = _sample_container_begin;
+
+    for ( const auto c : _critical_values )
+        {
+            const auto at_begin = [c, _lag]( containers::Match *m ) {
+                return m->numerical_value >= c - _lag;
+            };
+
+            const auto at_end = [c]( containers::Match *m ) {
+                return m->numerical_value > c;
+            };
+
+            wbegin = std::find_if( wbegin, _sample_container_end, at_begin );
+
+            wend = std::find_if( wend, _sample_container_end, at_end );
+
+            for ( auto it = wbegin; it != wend; ++it )
+                {
+                    deactivate_sample( *it );
+
+                    updates_stored().insert( ( *it )->ix_x_popul );
+                    updates_current().insert( ( *it )->ix_x_popul );
+                }
+
+            if ( _revert != Revert::not_at_all )
+                {
+                    update_optimization_criterion_and_clear_updates_current(
+                        num_samples_smaller,
+                        sample_size - num_samples_smaller );
+
+                    for ( auto it = wbegin; it != wend; ++it )
+                        {
+                            activate_sample( *it );
+                        }
+
+                    num_samples_smaller = 0.0;
+                }
+        }
+
+    // ------------------------------------------------------------------
+    // Revert to the original commit
+
+    if ( _revert != Revert::not_at_all )
+        {
+            revert_to_commit();
+            optimization_criterion()->revert_to_commit();
+        }
+    else
+        {
+            update_optimization_criterion_and_clear_updates_current(
+                num_samples_smaller, sample_size - num_samples_smaller );
+        }
+
+    // ------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
+void Aggregation<AggType, data_used_, is_population_>::
     activate_samples_not_containing_categories(
         const std::vector<Int>::const_iterator _categories_begin,
         const std::vector<Int>::const_iterator _categories_end,
@@ -1953,6 +2226,7 @@ void Aggregation<AggType, data_used_, is_population_>::
             updates_stored().insert( ( *it )->ix_x_popul );
             updates_current().insert( ( *it )->ix_x_popul );
         }
+
     // ------------------------------------------------------------------
     // Selectively deactivate those samples that are not of the
     // particular category
@@ -2321,6 +2595,210 @@ void Aggregation<AggType, data_used_, is_population_>::
             update_optimization_criterion_and_clear_updates_current(
                 num_samples_smaller, num_samples_greater );
         }
+}
+// ----------------------------------------------------------------------------
+
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
+void Aggregation<AggType, data_used_, is_population_>::
+    deactivate_samples_in_window(
+        const Float _critical_value,
+        const Float _lag,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end )
+{
+    for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
+        {
+            if ( ( *it )->numerical_value >= _critical_value - _lag &&
+                 ( *it )->numerical_value < _critical_value )
+                {
+                    deactivate_sample( *it );
+                }
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
+void Aggregation<AggType, data_used_, is_population_>::
+    deactivate_samples_in_window(
+        const std::vector<Float> &_critical_values,
+        const Float _lag,
+        const Revert _revert,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end )
+{
+    // ------------------------------------------------------------------
+
+    assert( _sample_container_end > _sample_container_begin );
+
+    const Float sample_size = static_cast<Float>(
+        std::distance( _sample_container_begin, _sample_container_end ) );
+
+    Float num_samples_smaller = 0.0;
+
+    // ------------------------------------------------------------------
+
+    auto wbegin = _sample_container_begin;
+
+    auto wend = _sample_container_begin;
+
+    for ( const auto c : _critical_values )
+        {
+            const auto at_begin = [c, _lag]( containers::Match *m ) {
+                return m->numerical_value >= c - _lag;
+            };
+
+            const auto at_end = [c]( containers::Match *m ) {
+                return m->numerical_value > c;
+            };
+
+            wbegin = std::find_if( wbegin, _sample_container_end, at_begin );
+
+            wend = std::find_if( wend, _sample_container_end, at_end );
+
+            for ( auto it = wbegin; it != wend; ++it )
+                {
+                    deactivate_sample( *it );
+
+                    updates_stored().insert( ( *it )->ix_x_popul );
+                    updates_current().insert( ( *it )->ix_x_popul );
+                }
+
+            if ( _revert != Revert::not_at_all )
+                {
+                    update_optimization_criterion_and_clear_updates_current(
+                        num_samples_smaller,
+                        sample_size - num_samples_smaller );
+
+                    revert_to_commit();
+
+                    optimization_criterion()->revert_to_commit();
+
+                    num_samples_smaller = 0.0;
+                }
+        }
+
+    // ------------------------------------------------------------------
+
+    if ( _revert == Revert::not_at_all )
+        {
+            update_optimization_criterion_and_clear_updates_current(
+                num_samples_smaller, sample_size - num_samples_smaller );
+        }
+
+    // ------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
+void Aggregation<AggType, data_used_, is_population_>::
+    deactivate_samples_outside_window(
+        const Float _critical_value,
+        const Float _lag,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end )
+{
+    for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
+        {
+            if ( ( *it )->numerical_value < _critical_value - _lag ||
+                 ( *it )->numerical_value >= _critical_value )
+                {
+                    deactivate_sample( *it );
+                }
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
+void Aggregation<AggType, data_used_, is_population_>::
+    deactivate_samples_outside_window(
+        const std::vector<Float> &_critical_values,
+        const Float _lag,
+        const Revert _revert,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end )
+{
+    // ------------------------------------------------------------------
+
+    assert( _sample_container_end > _sample_container_begin );
+
+    const Float sample_size = static_cast<Float>(
+        std::distance( _sample_container_begin, _sample_container_end ) );
+
+    Float num_samples_smaller = 0.0;
+
+    // ------------------------------------------------------------------
+    // Deactivate all samples
+
+    for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
+        {
+            deactivate_sample( *it );
+
+            updates_stored().insert( ( *it )->ix_x_popul );
+            updates_current().insert( ( *it )->ix_x_popul );
+        }
+
+    // ------------------------------------------------------------------
+    // Selectively activate those samples that are inside the window.
+
+    auto wbegin = _sample_container_begin;
+
+    auto wend = _sample_container_begin;
+
+    for ( const auto c : _critical_values )
+        {
+            const auto at_begin = [c, _lag]( containers::Match *m ) {
+                return m->numerical_value >= c - _lag;
+            };
+
+            const auto at_end = [c]( containers::Match *m ) {
+                return m->numerical_value > c;
+            };
+
+            wbegin = std::find_if( wbegin, _sample_container_end, at_begin );
+
+            wend = std::find_if( wend, _sample_container_end, at_end );
+
+            for ( auto it = wbegin; it != wend; ++it )
+                {
+                    activate_sample( *it );
+
+                    updates_stored().insert( ( *it )->ix_x_popul );
+                    updates_current().insert( ( *it )->ix_x_popul );
+                }
+
+            if ( _revert != Revert::not_at_all )
+                {
+                    update_optimization_criterion_and_clear_updates_current(
+                        num_samples_smaller,
+                        sample_size - num_samples_smaller );
+
+                    for ( auto it = wbegin; it != wend; ++it )
+                        {
+                            deactivate_sample( *it );
+                        }
+
+                    num_samples_smaller = 0.0;
+                }
+        }
+
+    // ------------------------------------------------------------------
+    // Revert to the original commit
+
+    if ( _revert != Revert::not_at_all )
+        {
+            revert_to_commit();
+            optimization_criterion()->revert_to_commit();
+        }
+    else
+        {
+            update_optimization_criterion_and_clear_updates_current(
+                num_samples_smaller, sample_size - num_samples_smaller );
+        }
+
+    // ------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------

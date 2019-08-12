@@ -39,6 +39,40 @@ class AbstractAggregation
         const Revert _revert,
         const containers::CategoryIndex &_index ) = 0;
 
+    /// Implements a lag functionality through moving time windows - used by
+    /// transform.
+    virtual void activate_samples_in_window(
+        const Float _critical_value,
+        const Float _lag,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end ) = 0;
+
+    /// Implements a lag functionality through moving time windows - used by
+    /// fit.
+    virtual void activate_samples_in_window(
+        const std::vector<Float> &_critical_values,
+        const Float _lag,
+        const Revert _revert,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end ) = 0;
+
+    /// Implements a lag functionality through moving time windows - used by
+    /// transform.
+    virtual void activate_samples_outside_window(
+        const Float _critical_value,
+        const Float _lag,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end ) = 0;
+
+    /// Implements a lag functionality through moving time windows - used by
+    /// fit.
+    virtual void activate_samples_outside_window(
+        const std::vector<Float> &_critical_values,
+        const Float _lag,
+        const Revert _revert,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end ) = 0;
+
     /// Activates all samples that do not contain _category
     /// Used for prediction
     virtual void activate_samples_not_containing_categories(
@@ -138,6 +172,40 @@ class AbstractAggregation
     /// starting with the smallest
     virtual void deactivate_samples_from_below(
         const std::vector<Float> &_critical_values,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end ) = 0;
+
+    /// Implements a lag functionality through moving time windows - used by
+    /// transform.
+    virtual void deactivate_samples_in_window(
+        const Float _critical_value,
+        const Float _lag,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end ) = 0;
+
+    /// Implements a lag functionality through moving time windows - used by
+    /// fit.
+    virtual void deactivate_samples_in_window(
+        const std::vector<Float> &_critical_values,
+        const Float _lag,
+        const Revert _revert,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end ) = 0;
+
+    /// Implements a lag functionality through moving time windows - used by
+    /// transform.
+    virtual void deactivate_samples_outside_window(
+        const Float _critical_value,
+        const Float _lag,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end ) = 0;
+
+    /// Implements a lag functionality through moving time windows - used by
+    /// fit.
+    virtual void deactivate_samples_outside_window(
+        const std::vector<Float> &_critical_values,
+        const Float _lag,
+        const Revert _revert,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) = 0;
 
