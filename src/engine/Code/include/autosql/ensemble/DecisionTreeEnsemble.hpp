@@ -222,11 +222,25 @@ class DecisionTreeEnsemble
         return impl().placeholder_peripheral_;
     }
 
+    /// Trivial (private) accessor
+    const std::vector<containers::Schema> &peripheral_schema() const
+    {
+        assert( impl().peripheral_schema_ );
+        return *impl().peripheral_schema_;
+    }
+
     /// Trivial accessor
     inline decisiontrees::Placeholder &placeholder()
     {
         assert( impl().placeholder_population_ );
         return *impl().placeholder_population_;
+    }
+
+    /// Trivial (private) accessor
+    const containers::Schema &population_schema() const
+    {
+        assert( impl().population_schema_ );
+        return *impl().population_schema_;
     }
 
     /// Trivial accessor

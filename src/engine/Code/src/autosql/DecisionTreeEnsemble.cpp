@@ -627,80 +627,90 @@ DecisionTreeEnsemble DecisionTreeEnsemble::from_json_obj(
 
     // ----------------------------------------
 
-    if ( _json_obj.has( "features_" ) )
+    // ----------------------------------------
+    // Extract features.
+
+    auto features = JSON::get_array( _json_obj, "features_" );
+
+    for ( size_t i = 0; i < features->size(); ++i )
         {
-            // ----------------------------------------
-            // Extract features.
+            auto obj = features->getObject( static_cast<unsigned int>( i ) );
 
-            auto features = JSON::get_array( _json_obj, "features_" );
-
-            for ( size_t i = 0; i < features->size(); ++i )
-                {
-                    auto obj =
-                        features->getObject( static_cast<unsigned int>( i ) );
-
-                    model.trees().push_back( decisiontrees::DecisionTree(
-                        model.categories(),
-                        model.hyperparameters().tree_hyperparameters_,
-                        *obj ) );
-                }
-
-            // ----------------------------------------
-            // Extract targets
-
-            model.targets() = JSON::array_to_vector<std::string>(
-                JSON::get_array( _json_obj, "targets_" ) );
-
-            // ----------------------------------------
-            // Extract subensembles_avg_
-
-            auto features_avg = JSON::get_array( _json_obj, "subfeatures1_" );
-
-            model.subensembles_avg_ =
-                std::vector<containers::Optional<DecisionTreeEnsemble>>(
-                    features_avg->size() );
-
-            for ( size_t i = 0; i < features_avg->size(); ++i )
-                {
-                    auto obj = features_avg->getObject(
-                        static_cast<unsigned int>( i ) );
-
-                    if ( obj )
-                        {
-                            model.subensembles_avg_[i].reset(
-                                new DecisionTreeEnsemble(
-                                    model.categories(), *obj ) );
-                        }
-                }
-
-            // ----------------------------------------
-            // Extract subensembles_sum_
-
-            auto features_sum = JSON::get_array( _json_obj, "subfeatures2_" );
-
-            model.subensembles_sum_ =
-                std::vector<containers::Optional<DecisionTreeEnsemble>>(
-                    features_sum->size() );
-
-            for ( size_t i = 0; i < features_sum->size(); ++i )
-                {
-                    auto obj = features_sum->getObject(
-                        static_cast<unsigned int>( i ) );
-
-                    if ( obj )
-                        {
-                            model.subensembles_sum_[i].reset(
-                                new DecisionTreeEnsemble(
-                                    model.categories(), *obj ) );
-                        }
-                }
-
-            // ----------------------------------------
+            model.trees().push_back( decisiontrees::DecisionTree(
+                model.categories(),
+                model.hyperparameters().tree_hyperparameters_,
+                *obj ) );
         }
 
     // ----------------------------------------
+    // Extract targets
 
-    // ToDo: Plausibility checks.
+    model.targets() = JSON::array_to_vector<std::string>(
+        JSON::get_array( _json_obj, "targets_" ) );
+
+    // ----------------------------------------
+    // Extract subensembles_avg_
+
+    auto features_avg = JSON::get_array( _json_obj, "subfeatures1_" );
+
+    model.subensembles_avg_ =
+        std::vector<containers::Optional<DecisionTreeEnsemble>>(
+            features_avg->size() );
+
+    for ( size_t i = 0; i < features_avg->size(); ++i )
+        {
+            auto obj =
+                features_avg->getObject( static_cast<unsigned int>( i ) );
+
+            if ( obj )
+                {
+                    model.subensembles_avg_[i].reset(
+                        new DecisionTreeEnsemble( model.categories(), *obj ) );
+                }
+        }
+
+    // ----------------------------------------
+    // Extract subensembles_sum_
+
+    auto features_sum = JSON::get_array( _json_obj, "subfeatures2_" );
+
+    model.subensembles_sum_ =
+        std::vector<containers::Optional<DecisionTreeEnsemble>>(
+            features_sum->size() );
+
+    for ( size_t i = 0; i < features_sum->size(); ++i )
+        {
+            auto obj =
+                features_sum->getObject( static_cast<unsigned int>( i ) );
+
+            if ( obj )
+                {
+                    model.subensembles_sum_[i].reset(
+                        new DecisionTreeEnsemble( model.categories(), *obj ) );
+                }
+        }
+
+    // ------------------------------------------------------------------------
+
+    model.impl().population_schema_ =
+        std::make_shared<const containers::Schema>(
+            *JSON::get_object( _json_obj, "population_schema_" ) );
+
+    // ------------------------------------------------------------------------
+
+    std::vector<containers::Schema> peripheral;
+
+    const auto peripheral_arr =
+        *JSON::get_array( _json_obj, "peripheral_schema_" );
+
+    for ( size_t i = 0; i < peripheral_arr.size(); ++i )
+        {
+            peripheral.push_back( containers::Schema(
+                *peripheral_arr.getObject( static_cast<unsigned int>( i ) ) ) );
+        }
+
+    model.impl().peripheral_schema_ =
+        std::make_shared<std::vector<containers::Schema>>( peripheral );
 
     // ----------------------------------------
 
@@ -777,6 +787,22 @@ Poco::JSON::Object DecisionTreeEnsemble::to_monitor(
                 obj.set( "population_", placeholder().to_json_obj() );
 
                 // ----------------------------------------
+                // Insert schema
+
+                Poco::JSON::Array peripheral_schema_arr;
+
+                for ( size_t i = 0; i < peripheral_schema().size(); ++i )
+                    {
+                        peripheral_schema_arr.add(
+                            peripheral_schema()[i].to_json_obj() );
+                    }
+
+                obj.set( "peripheral_schema_", peripheral_schema_arr );
+
+                obj.set(
+                    "population_schema_", population_schema().to_json_obj() );
+
+                // ----------------------------------------
                 // Extract features
 
                 Poco::JSON::Array features;
@@ -849,6 +875,13 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json_obj() const
 {
     // ----------------------------------------
 
+    if ( !has_been_fitted() )
+        {
+            throw std::runtime_error( "Model has not been fitted!" );
+        }
+
+    // ----------------------------------------
+
     Poco::JSON::Object obj;
 
     // ----------------------------------------
@@ -862,66 +895,71 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json_obj() const
 
     // ----------------------------------------
 
-    if ( has_been_fitted() )
+    Poco::JSON::Array peripheral_schema_arr;
+
+    for ( auto &p : peripheral_schema() )
         {
-            // ----------------------------------------
-            // Extract features
-
-            Poco::JSON::Array features;
-
-            for ( auto &tree : trees() )
-                {
-                    features.add( tree.to_json_obj() );
-                }
-
-            obj.set( "features_", features );
-
-            // ----------------------------------------
-            // Extract targets
-
-            obj.set(
-                "targets_", JSON::vector_to_array<std::string>( targets() ) );
-
-            // ----------------------------------------
-            // Extract subensembles_avg_
-
-            Poco::JSON::Array features_avg;
-
-            for ( const auto &sub : subensembles_avg_ )
-                {
-                    if ( sub )
-                        {
-                            features_avg.add( sub->to_json_obj() );
-                        }
-                    else
-                        {
-                            features_avg.add( Poco::Dynamic::Var() );
-                        }
-                }
-
-            obj.set( "subfeatures1_", features_avg );
-
-            // ----------------------------------------
-            // Extract subensembles_sum_
-
-            Poco::JSON::Array features_sum;
-
-            for ( const auto &sub : subensembles_sum_ )
-                {
-                    if ( sub )
-                        {
-                            features_sum.add( sub->to_json_obj() );
-                        }
-                    else
-                        {
-                            features_sum.add( Poco::Dynamic::Var() );
-                        }
-                }
-
-            obj.set( "subfeatures2_", features_sum );
-
-            // ----------------------------------------
+            peripheral_schema_arr.add( p.to_json_obj() );
         }
+
+    obj.set( "peripheral_schema_", peripheral_schema_arr );
+
+    obj.set( "population_schema_", population_schema().to_json_obj() );
+
+    // ----------------------------------------
+    // Extract features
+
+    Poco::JSON::Array features;
+
+    for ( auto &tree : trees() )
+        {
+            features.add( tree.to_json_obj() );
+        }
+
+    obj.set( "features_", features );
+
+    // ----------------------------------------
+    // Extract targets
+
+    obj.set( "targets_", JSON::vector_to_array<std::string>( targets() ) );
+
+    // ----------------------------------------
+    // Extract subensembles_avg_
+
+    Poco::JSON::Array features_avg;
+
+    for ( const auto &sub : subensembles_avg_ )
+        {
+            if ( sub )
+                {
+                    features_avg.add( sub->to_json_obj() );
+                }
+            else
+                {
+                    features_avg.add( Poco::Dynamic::Var() );
+                }
+        }
+
+    obj.set( "subfeatures1_", features_avg );
+
+    // ----------------------------------------
+    // Extract subensembles_sum_
+
+    Poco::JSON::Array features_sum;
+
+    for ( const auto &sub : subensembles_sum_ )
+        {
+            if ( sub )
+                {
+                    features_sum.add( sub->to_json_obj() );
+                }
+            else
+                {
+                    features_sum.add( Poco::Dynamic::Var() );
+                }
+        }
+
+    obj.set( "subfeatures2_", features_sum );
 
     // ----------------------------------------
 
