@@ -200,11 +200,36 @@ void DecisionTreeEnsemble::check_plausibility_of_targets(
 
 // ----------------------------------------------------------------------------
 
+void DecisionTreeEnsemble::extract_schemas(
+    const containers::DataFrame &_population,
+    const std::vector<containers::DataFrame> &_peripheral )
+{
+    impl().population_schema_.reset(
+        new containers::Schema( _population.to_schema() ) );
+
+    std::vector<containers::Schema> peripheral;
+
+    for ( auto &df : _peripheral )
+        {
+            peripheral.push_back( df.to_schema() );
+        }
+
+    impl().peripheral_schema_.reset(
+        new std::vector<containers::Schema>( peripheral ) );
+}
+
+// ----------------------------------------------------------------------------
+
 void DecisionTreeEnsemble::fit(
     const containers::DataFrame &_population,
     const std::vector<containers::DataFrame> &_peripheral,
     const std::shared_ptr<const logging::AbstractLogger> _logger )
 {
+    // ------------------------------------------------------
+    // We need to store the schemas for future reference.
+
+    extract_schemas( _population, _peripheral );
+
     // ------------------------------------------------------
 
     debug_log( "Building communicator..." );

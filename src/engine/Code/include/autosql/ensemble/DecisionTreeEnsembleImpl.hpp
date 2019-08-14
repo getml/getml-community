@@ -44,11 +44,17 @@ struct DecisionTreeEnsembleImpl
     /// The hyperparameters used in this ensemble
     std::shared_ptr<const descriptors::Hyperparameters> hyperparameters_;
 
+    /// Schema of the peripheral tables.
+    std::shared_ptr<const std::vector<containers::Schema>> peripheral_schema_;
+
     /// decisiontrees::Placeholder for the peripheral tables
     std::vector<std::string> placeholder_peripheral_;
 
     /// decisiontrees::Placeholder for the population table
     containers::Optional<decisiontrees::Placeholder> placeholder_population_;
+
+    /// Schema of the population table.
+    std::shared_ptr<const containers::Schema> population_schema_;
 
     /// Random number generator for creating sample weights and
     /// the like.

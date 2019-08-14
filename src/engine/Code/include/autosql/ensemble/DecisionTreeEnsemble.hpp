@@ -183,6 +183,11 @@ class DecisionTreeEnsemble
     void check_plausibility_of_targets(
         const containers::DataFrameView &_population_table );
 
+    /// Extracts the schemas from the data frames, for future referece.
+    void extract_schemas(
+        const containers::DataFrame &_population,
+        const std::vector<containers::DataFrame> &_peripheral );
+
     /// Extracts a DecisionTreeEnsemble from a JSON object.
     DecisionTreeEnsemble from_json_obj(
         const Poco::JSON::Object &_json_obj ) const;
