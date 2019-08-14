@@ -44,6 +44,7 @@ class AbstractAggregation
     virtual void activate_samples_in_window(
         const Float _critical_value,
         const Float _lag,
+        const Revert _revert,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) = 0;
 
@@ -61,6 +62,7 @@ class AbstractAggregation
     virtual void activate_samples_outside_window(
         const Float _critical_value,
         const Float _lag,
+        const Revert _revert,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) = 0;
 
@@ -180,6 +182,7 @@ class AbstractAggregation
     virtual void deactivate_samples_in_window(
         const Float _critical_value,
         const Float _lag,
+        const Revert _revert,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) = 0;
 
@@ -197,6 +200,7 @@ class AbstractAggregation
     virtual void deactivate_samples_outside_window(
         const Float _critical_value,
         const Float _lag,
+        const Revert _revert,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) = 0;
 

@@ -13,10 +13,9 @@ struct TreeHyperparameters
 {
     TreeHyperparameters( const Poco::JSON::Object& _json_obj )
         : allow_sets_( JSON::get_value<bool>( _json_obj, "allow_sets_" ) ),
-          grid_factor_(
-              JSON::get_value<Float>( _json_obj, "grid_factor_" ) ),
-          max_length_(
-              JSON::get_value<Int>( _json_obj, "max_length_" ) ),
+          grid_factor_( JSON::get_value<Float>( _json_obj, "grid_factor_" ) ),
+          lag_( JSON::get_value<Float>( _json_obj, "lag_" ) ),
+          max_length_( JSON::get_value<Int>( _json_obj, "max_length_" ) ),
           max_length_probe_(
               TreeHyperparameters::calc_max_length_probe( _json_obj ) ),
           min_num_samples_(
@@ -52,6 +51,9 @@ struct TreeHyperparameters
 
     /// Proportional to the frequency of critical values
     const Float grid_factor_;
+
+    /// Lag used for the moving time windows.
+    const Float lag_;
 
     /// The maximum depth of a decision tree
     const size_t max_length_;

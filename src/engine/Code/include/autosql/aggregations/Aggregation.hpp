@@ -73,6 +73,7 @@ class Aggregation : public AbstractAggregation
     void activate_samples_in_window(
         const Float _critical_value,
         const Float _lag,
+        const Revert _revert,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) final;
 
@@ -90,6 +91,7 @@ class Aggregation : public AbstractAggregation
     void activate_samples_outside_window(
         const Float _critical_value,
         const Float _lag,
+        const Revert _revert,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) final;
 
@@ -176,6 +178,7 @@ class Aggregation : public AbstractAggregation
     void deactivate_samples_in_window(
         const Float _critical_value,
         const Float _lag,
+        const Revert _revert,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) final;
 
@@ -193,6 +196,7 @@ class Aggregation : public AbstractAggregation
     void deactivate_samples_outside_window(
         const Float _critical_value,
         const Float _lag,
+        const Revert _revert,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) final;
 
@@ -1972,6 +1976,7 @@ void Aggregation<AggType, data_used_, is_population_>::
     activate_samples_in_window(
         const Float _critical_value,
         const Float _lag,
+        const Revert _revert,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end )
 {
@@ -2027,10 +2032,15 @@ void Aggregation<AggType, data_used_, is_population_>::
 
             for ( auto it = wbegin; it != wend; ++it )
                 {
+                    assert( ( *it )->numerical_value >= c - _lag );
+                    assert( ( *it )->numerical_value < c );
+
                     activate_sample( *it );
 
                     updates_stored().insert( ( *it )->ix_x_popul );
                     updates_current().insert( ( *it )->ix_x_popul );
+
+                    ++num_samples_smaller;
                 }
 
             if ( _revert != Revert::not_at_all )
@@ -2065,6 +2075,7 @@ void Aggregation<AggType, data_used_, is_population_>::
     activate_samples_outside_window(
         const Float _critical_value,
         const Float _lag,
+        const Revert _revert,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end )
 {
@@ -2103,6 +2114,10 @@ void Aggregation<AggType, data_used_, is_population_>::
 
     for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
         {
+            assert(
+                it == _sample_container_begin ||
+                ( *it )->numerical_value >= ( *( it - 1 ) )->numerical_value );
+
             activate_sample( *it );
 
             updates_stored().insert( ( *it )->ix_x_popul );
@@ -2132,10 +2147,14 @@ void Aggregation<AggType, data_used_, is_population_>::
 
             for ( auto it = wbegin; it != wend; ++it )
                 {
+                    assert( ( *it )->numerical_value >= c - _lag );
+                    assert( ( *it )->numerical_value < c );
+
                     deactivate_sample( *it );
 
-                    updates_stored().insert( ( *it )->ix_x_popul );
                     updates_current().insert( ( *it )->ix_x_popul );
+
+                    ++num_samples_smaller;
                 }
 
             if ( _revert != Revert::not_at_all )
@@ -2146,7 +2165,12 @@ void Aggregation<AggType, data_used_, is_population_>::
 
                     for ( auto it = wbegin; it != wend; ++it )
                         {
+                            assert( ( *it )->numerical_value >= c - _lag );
+                            assert( ( *it )->numerical_value < c );
+
                             activate_sample( *it );
+
+                            updates_current().insert( ( *it )->ix_x_popul );
                         }
 
                     num_samples_smaller = 0.0;
@@ -2242,7 +2266,10 @@ void Aggregation<AggType, data_used_, is_population_>::
                   ++it )
                 {
                     assert( ( *it )->categorical_value == *cat );
+
                     deactivate_sample( *it );
+
+                    updates_current().insert( ( *it )->ix_x_popul );
 
                     ++num_samples_smaller;
                 }
@@ -2261,7 +2288,10 @@ void Aggregation<AggType, data_used_, is_population_>::
                           ++it )
                         {
                             assert( ( *it )->categorical_value == *cat );
+
                             activate_sample( *it );
+
+                            updates_current().insert( ( *it )->ix_x_popul );
                         }
 
                     num_samples_smaller = 0.0;
@@ -2603,6 +2633,7 @@ void Aggregation<AggType, data_used_, is_population_>::
     deactivate_samples_in_window(
         const Float _critical_value,
         const Float _lag,
+        const Revert _revert,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end )
 {
@@ -2658,10 +2689,15 @@ void Aggregation<AggType, data_used_, is_population_>::
 
             for ( auto it = wbegin; it != wend; ++it )
                 {
+                    assert( ( *it )->numerical_value >= c - _lag );
+                    assert( ( *it )->numerical_value < c );
+
                     deactivate_sample( *it );
 
                     updates_stored().insert( ( *it )->ix_x_popul );
                     updates_current().insert( ( *it )->ix_x_popul );
+
+                    ++num_samples_smaller;
                 }
 
             if ( _revert != Revert::not_at_all )
@@ -2696,6 +2732,7 @@ void Aggregation<AggType, data_used_, is_population_>::
     deactivate_samples_outside_window(
         const Float _critical_value,
         const Float _lag,
+        const Revert _revert,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end )
 {
@@ -2734,6 +2771,10 @@ void Aggregation<AggType, data_used_, is_population_>::
 
     for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
         {
+            assert(
+                it == _sample_container_begin ||
+                ( *it )->numerical_value >= ( *( it - 1 ) )->numerical_value );
+
             deactivate_sample( *it );
 
             updates_stored().insert( ( *it )->ix_x_popul );
@@ -2763,10 +2804,14 @@ void Aggregation<AggType, data_used_, is_population_>::
 
             for ( auto it = wbegin; it != wend; ++it )
                 {
+                    assert( ( *it )->numerical_value >= c - _lag );
+                    assert( ( *it )->numerical_value < c );
+
                     activate_sample( *it );
 
-                    updates_stored().insert( ( *it )->ix_x_popul );
                     updates_current().insert( ( *it )->ix_x_popul );
+
+                    ++num_samples_smaller;
                 }
 
             if ( _revert != Revert::not_at_all )
@@ -2777,7 +2822,12 @@ void Aggregation<AggType, data_used_, is_population_>::
 
                     for ( auto it = wbegin; it != wend; ++it )
                         {
+                            assert( ( *it )->numerical_value >= c - _lag );
+                            assert( ( *it )->numerical_value < c );
+
                             deactivate_sample( *it );
+
+                            updates_current().insert( ( *it )->ix_x_popul );
                         }
 
                     num_samples_smaller = 0.0;
@@ -2873,7 +2923,10 @@ void Aggregation<AggType, data_used_, is_population_>::
                   ++it )
                 {
                     assert( ( *it )->categorical_value == *cat );
+
                     activate_sample( *it );
+
+                    updates_current().insert( ( *it )->ix_x_popul );
 
                     ++num_samples_smaller;
                 }
@@ -2892,7 +2945,10 @@ void Aggregation<AggType, data_used_, is_population_>::
                           ++it )
                         {
                             assert( ( *it )->categorical_value == *cat );
+
                             deactivate_sample( *it );
+
+                            updates_current().insert( ( *it )->ix_x_popul );
                         }
 
                     num_samples_smaller = 0.0;
@@ -3238,30 +3294,6 @@ void Aggregation<AggType, data_used_, is_population_>::sort_matches(
 // ----------------------------------------------------------------------------
 
 template <typename AggType, enums::DataUsed data_used_, bool is_population_>
-void Aggregation<AggType, data_used_, is_population_>::
-    update_optimization_criterion_and_clear_updates_current(
-        const Float _num_samples_smaller, const Float _num_samples_greater )
-{
-    optimization_criterion()->update_samples(
-        updates_current(),  // _indices
-        yhat_inline(),      // _new_values
-        yhat_stored()       // _old_values
-    );
-
-    for ( auto ix : updates_current() )
-        {
-            yhat_stored()[ix] = yhat_inline()[ix];
-        }
-
-    updates_current().clear();
-
-    optimization_criterion()->store_current_stage(
-        _num_samples_smaller, _num_samples_greater );
-}
-
-// ----------------------------------------------------------------------------
-
-template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::reset()
 {
     // --------------------------------------------------
@@ -3329,6 +3361,30 @@ void Aggregation<AggType, data_used_, is_population_>::reset()
     updates_stored().clear();
 
     // --------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
+void Aggregation<AggType, data_used_, is_population_>::
+    update_optimization_criterion_and_clear_updates_current(
+        const Float _num_samples_smaller, const Float _num_samples_greater )
+{
+    optimization_criterion()->update_samples(
+        updates_current(),  // _indices
+        yhat_inline(),      // _new_values
+        yhat_stored()       // _old_values
+    );
+
+    for ( auto ix : updates_current() )
+        {
+            yhat_stored()[ix] = yhat_inline()[ix];
+        }
+
+    updates_current().clear();
+
+    optimization_criterion()->store_current_stage(
+        _num_samples_smaller, _num_samples_greater );
 }
 
 // ----------------------------------------------------------------------------

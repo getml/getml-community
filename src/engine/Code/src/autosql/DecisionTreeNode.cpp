@@ -213,9 +213,9 @@ std::shared_ptr<const std::vector<Int>> DecisionTreeNode::calculate_categories(
 // ----------------------------------------------------------------------------
 
 std::vector<Float> DecisionTreeNode::calculate_critical_values_discrete(
+    const size_t _sample_size,
     containers::MatchPtrs::iterator _sample_container_begin,
-    containers::MatchPtrs::iterator _sample_container_end,
-    const size_t _sample_size )
+    containers::MatchPtrs::iterator _sample_container_end )
 {
     // ---------------------------------------------------------------------------
 
@@ -285,9 +285,9 @@ std::vector<Float> DecisionTreeNode::calculate_critical_values_discrete(
 // ----------------------------------------------------------------------------
 
 std::vector<Float> DecisionTreeNode::calculate_critical_values_numerical(
+    const size_t _sample_size,
     containers::MatchPtrs::iterator _sample_container_begin,
-    containers::MatchPtrs::iterator _sample_container_end,
-    const size_t _sample_size )
+    containers::MatchPtrs::iterator _sample_container_end )
 {
     // ---------------------------------------------------------------------------
 
@@ -325,7 +325,7 @@ std::vector<Float> DecisionTreeNode::calculate_critical_values_numerical(
             debug_log(
                 "calculate_critical_values_discrete...done (edge case)." );
 
-            return std::vector<Float>( 0, 1 );
+            return std::vector<Float>( 0 );
         }
 
     // ---------------------------------------------------------------------------
@@ -335,7 +335,7 @@ std::vector<Float> DecisionTreeNode::calculate_critical_values_numerical(
     Float step_size =
         ( max - min ) / static_cast<Float>( num_critical_values + 1 );
 
-    std::vector<Float> critical_values( num_critical_values, 1 );
+    std::vector<Float> critical_values( num_critical_values );
 
     for ( Int i = 0; i < num_critical_values; ++i )
         {
@@ -343,6 +343,70 @@ std::vector<Float> DecisionTreeNode::calculate_critical_values_numerical(
         }
 
     debug_log( "calculate_critical_values_discrete...done." );
+
+    return critical_values;
+
+    // ---------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<Float> DecisionTreeNode::calculate_critical_values_window(
+    const Float _lag,
+    containers::MatchPtrs::iterator _sample_container_begin,
+    containers::MatchPtrs::iterator _sample_container_end )
+{
+    // ---------------------------------------------------------------------------
+
+    debug_log( "calculate_critical_values_window..." );
+
+    Float min = 0.0, max = 0.0;
+
+    // ---------------------------------------------------------------------------
+    // In distributed versions, it is possible that there are no sample sizes
+    // left in this process rank. In that case we effectively pass plus infinity
+    // to min and minus infinity to max, ensuring that they not will be the
+    // chosen minimum or maximum.
+
+    if ( std::distance( _sample_container_begin, _sample_container_end ) > 0 )
+        {
+            min = ( *_sample_container_begin )->numerical_value;
+            max = ( *( _sample_container_end - 1 ) )->numerical_value;
+        }
+    else
+        {
+            min = std::numeric_limits<Float>::max();
+            max = std::numeric_limits<Float>::lowest();
+        }
+
+    utils::Reducer::reduce( multithreading::minimum<Float>(), &min, comm() );
+
+    utils::Reducer::reduce( multithreading::maximum<Float>(), &max, comm() );
+
+    // ---------------------------------------------------------------------------
+    // There is a possibility that all critical values are NAN in all processes.
+    // This accounts for this edge case.
+
+    if ( min > max )
+        {
+            debug_log( "calculate_critical_values_window...done (edge case)." );
+
+            return std::vector<Float>( 0, 1 );
+        }
+
+    // ---------------------------------------------------------------------------
+
+    const auto num_critical_values =
+        static_cast<size_t>( ( max - min ) / _lag ) + 1;
+
+    std::vector<Float> critical_values( num_critical_values );
+
+    for ( size_t i = 0; i < num_critical_values; ++i )
+        {
+            critical_values[i] = min + static_cast<Float>( i + 1 ) * _lag;
+        }
+
+    debug_log( "calculate_critical_values_window...done." );
 
     return critical_values;
 
@@ -375,6 +439,10 @@ void DecisionTreeNode::commit(
 
     optimization_criterion()->commit();
 
+    debug_log(
+        "commit: optimization_criterion()->value(): " +
+        std::to_string( optimization_criterion()->value() ) );
+
     if ( depth_ < tree_->max_length() )
         {
             debug_log( "fit: Max length not reached..." );
@@ -403,8 +471,7 @@ void DecisionTreeNode::fit(
     const size_t sample_size = reduce_sample_size(
         std::distance( _sample_container_begin, _sample_container_end ) );
 
-    if ( sample_size == 0 ||
-         static_cast<Int>( sample_size ) < tree_->min_num_samples() * 2 )
+    if ( sample_size == 0 || sample_size < tree_->min_num_samples() * 2 )
         {
             return;
         }
@@ -434,6 +501,8 @@ void DecisionTreeNode::fit(
     Int ix_max = optimization_criterion()->find_maximum();
 
     const Float max_value = optimization_criterion()->values_stored( ix_max );
+
+    debug_log( "max_value:" + std::to_string( max_value ) );
 
     // ------------------------------------------------------------------------
     // DEBUG and parallel mode only: Make sure that the values_stored are
@@ -597,11 +666,29 @@ std::string DecisionTreeNode::greater_or_not_equal_to(
         }
     else
         {
+            if ( lag_used() )
+                {
+                    sql << "( ";
+
+                    sql << _colname;
+
+                    sql << " <= ";
+
+                    sql << std::to_string( critical_value() - tree_->lag() );
+
+                    sql << " OR ";
+                }
+
             sql << _colname;
 
             sql << " > ";
 
             sql << std::to_string( critical_value() );
+
+            if ( lag_used() )
+                {
+                    sql << " )";
+                }
         }
 
     return sql.str();
@@ -641,6 +728,10 @@ containers::MatchPtrs::iterator DecisionTreeNode::identify_parameters(
 
     auto null_values_separator = _sample_container_begin;
 
+    debug_log(
+        "Data used: " +
+        std::to_string( JSON::data_used_to_int( split_->data_used ) ) );
+
     if ( categorical_data_used() )
         {
             debug_log( "Identify_parameters: Sort.." );
@@ -657,7 +748,7 @@ containers::MatchPtrs::iterator DecisionTreeNode::identify_parameters(
         {
             // --------------------------------------------------------------
 
-            std::vector<Float> critical_values( 1, 1 );
+            std::vector<Float> critical_values( 1 );
 
             critical_values[0] = critical_value();
 
@@ -721,6 +812,84 @@ containers::MatchPtrs::iterator DecisionTreeNode::identify_parameters(
     // --------------------------------------------------------------
 
     return null_values_separator;
+}
+
+// ----------------------------------------------------------------------------
+
+containers::MatchPtrs::iterator DecisionTreeNode::partition_by_categories_used(
+    containers::MatchPtrs::iterator _sample_container_begin,
+    containers::MatchPtrs::iterator _sample_container_end ) const
+{
+    const auto is_contained = [this]( const containers::Match *_sample ) {
+        return std::any_of(
+            categories_used_begin(),
+            categories_used_end(),
+            [_sample]( Int cat ) {
+                return cat == _sample->categorical_value;
+            } );
+    };
+
+    return std::partition(
+        _sample_container_begin, _sample_container_end, is_contained );
+}
+
+// ----------------------------------------------------------------------------
+
+containers::MatchPtrs::iterator DecisionTreeNode::partition_by_critical_value(
+    containers::MatchPtrs::iterator _sample_container_begin,
+    containers::MatchPtrs::iterator _sample_container_end ) const
+{
+    // ---------------------------------------------------------
+
+    debug_log( "transform: Separating null values..." );
+
+    const bool null_values_to_beginning =
+        ( apply_from_above() != is_activated_ );
+
+    auto null_values_separator = separate_null_values(
+        _sample_container_begin,
+        _sample_container_end,
+        null_values_to_beginning );
+
+    // ---------------------------------------------------------
+
+    debug_log( "transform: Separating by critical values..." );
+
+    if ( lag_used() )
+        {
+            return std::partition(
+                _sample_container_begin,
+                _sample_container_end,
+                [this]( const containers::Match *_sample ) {
+                    return (
+                        _sample->numerical_value <= critical_value() &&
+                        _sample->numerical_value >
+                            critical_value() - tree_->lag() );
+                } );
+        }
+    else
+        {
+            if ( null_values_to_beginning )
+                {
+                    return std::partition(
+                        null_values_separator,
+                        _sample_container_end,
+                        [this]( const containers::Match *_sample ) {
+                            return _sample->numerical_value <= critical_value();
+                        } );
+                }
+            else
+                {
+                    return std::partition(
+                        _sample_container_begin,
+                        null_values_separator,
+                        [this]( const containers::Match *_sample ) {
+                            return _sample->numerical_value <= critical_value();
+                        } );
+                }
+        }
+
+    // ---------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -934,6 +1103,18 @@ void DecisionTreeNode::set_samples(
 
                 break;
 
+            case enums::DataUsed::time_stamps_window:
+
+                for ( auto it = _sample_container_begin;
+                      it != _sample_container_end;
+                      ++it )
+                    {
+                        ( *it )->numerical_value = get_time_stamps_diff(
+                            _population, _peripheral, *it );
+                    }
+
+                break;
+
             default:
 
                 assert( false && "Unknown enums::DataUsed!" );
@@ -1012,11 +1193,29 @@ std::string DecisionTreeNode::smaller_or_equal_to(
         }
     else
         {
+            if ( lag_used() )
+                {
+                    sql << "( ";
+
+                    sql << _colname;
+
+                    sql << " > ";
+
+                    sql << std::to_string( critical_value() - tree_->lag() );
+
+                    sql << " AND ";
+                }
+
             sql << _colname;
 
             sql << " <= ";
 
             sql << std::to_string( critical_value() );
+
+            if ( lag_used() )
+                {
+                    sql << " )";
+                }
         }
 
     return sql.str();
@@ -1042,50 +1241,57 @@ void DecisionTreeNode::spawn_child_nodes(
     // If child_node_greater_is_activated, then the NULL samples
     // are allocated to the beginning, since they must always be
     // deactivated.
-    if ( child_node_greater_is_activated )
-        {
-            it = _null_values_separator;
-        }
+    /*  if ( child_node_greater_is_activated )
+          {
+              it = _null_values_separator;
+          }*/
 
     // -------------------------------------------------------------------------
 
     if ( categorical_data_used() )
         {
+            it = partition_by_categories_used(
+                _sample_container_begin, _sample_container_end );
+
             // The samples where the category equals any of categories_used()
             // are copied into samples_smaller. This makes sense, because
             // for the numerical values, samples_smaller contains all values
             // <= critical_value()
 
-            const auto is_contained =
-                [this]( const containers::Match *_sample ) {
-                    return std::any_of(
-                        categories_used_begin(),
-                        categories_used_end(),
-                        [_sample]( Int cat ) {
-                            return cat == _sample->categorical_value;
-                        } );
-                };
+            /* const auto is_contained =
+                 [this]( const containers::Match *_sample ) {
+                     return std::any_of(
+                         categories_used_begin(),
+                         categories_used_end(),
+                         [_sample]( Int cat ) {
+                             return cat == _sample->categorical_value;
+                         } );
+                 };
 
-            it = std::partition(
-                _sample_container_begin, _sample_container_end, is_contained );
+             it = std::partition(
+                 _sample_container_begin, _sample_container_end, is_contained
+             );*/
         }
     else
         {
-            while ( it < _sample_container_end )
-                {
-                    const Float val = ( *it )->numerical_value;
+            it = partition_by_critical_value(
+                _sample_container_begin, _sample_container_end );
 
-                    // If val != val, then all samples but the NULL samples
-                    // are activated. This is a corner case that can only
-                    // happen when the user has defined a min_num_samples
-                    // of 0.
-                    if ( val > critical_value() || val != val )
-                        {
-                            break;
-                        }
+            /*  while ( it < _sample_container_end )
+                  {
+                      const Float val = ( *it )->numerical_value;
 
-                    ++it;
-                }
+                      // If val != val, then all samples but the NULL samples
+                      // are activated. This is a corner case that can only
+                      // happen when the user has defined a min_num_samples
+                      // of 0.
+                      if ( val > critical_value() || val != val )
+                          {
+                              break;
+                          }
+
+                      ++it;
+                  }*/
         }
 
     // -------------------------------------------------------------------------
@@ -1365,61 +1571,13 @@ void DecisionTreeNode::transform(
 
             if ( categorical_data_used() )
                 {
-                    const auto is_contained =
-                        [this]( const containers::Match *_sample ) {
-                            return std::any_of(
-                                categories_used_begin(),
-                                categories_used_end(),
-                                [_sample]( Int cat ) {
-                                    return cat == _sample->categorical_value;
-                                } );
-                        };
-
-                    it = std::partition(
-                        _sample_container_begin,
-                        _sample_container_end,
-                        is_contained );
+                    it = partition_by_categories_used(
+                        _sample_container_begin, _sample_container_end );
                 }
             else
                 {
-                    // ---------------------------------------------------------
-
-                    debug_log( "transform: Separating null values..." );
-
-                    const bool null_values_to_beginning =
-                        ( apply_from_above() != is_activated_ );
-
-                    auto null_values_separator = separate_null_values(
-                        _sample_container_begin,
-                        _sample_container_end,
-                        null_values_to_beginning );
-
-                    // ---------------------------------------------------------
-
-                    debug_log( "transform: Separating by critical values..." );
-
-                    if ( null_values_to_beginning )
-                        {
-                            it = std::partition(
-                                null_values_separator,
-                                _sample_container_end,
-                                [this]( const containers::Match *_sample ) {
-                                    return _sample->numerical_value <=
-                                           critical_value();
-                                } );
-                        }
-                    else
-                        {
-                            it = std::partition(
-                                _sample_container_begin,
-                                null_values_separator,
-                                [this]( const containers::Match *_sample ) {
-                                    return _sample->numerical_value <=
-                                           critical_value();
-                                } );
-                        }
-
-                    // ---------------------------------------------------------
+                    it = partition_by_critical_value(
+                        _sample_container_begin, _sample_container_end );
                 }
 
             // ---------------------------------------------------------
@@ -2110,7 +2268,7 @@ void DecisionTreeNode::try_discrete_values(
     sort_by_numerical_value( null_values_separator, _sample_container_end );
 
     auto critical_values = calculate_critical_values_discrete(
-        null_values_separator, _sample_container_end, _sample_size );
+        _sample_size, null_values_separator, _sample_container_end );
 
     // -----------------------------------------------------------------------
 
@@ -2299,7 +2457,7 @@ void DecisionTreeNode::try_numerical_values(
     sort_by_numerical_value( null_values_separator, _sample_container_end );
 
     auto critical_values = calculate_critical_values_numerical(
-        null_values_separator, _sample_container_end, _sample_size );
+        _sample_size, null_values_separator, _sample_container_end );
 
     // -----------------------------------------------------------------------
 
@@ -2502,7 +2660,153 @@ void DecisionTreeNode::try_time_stamps_diff(
         _sample_container_end,
         _candidate_splits );
 
+    if ( tree_->lag() > 0.0 )
+        {
+            debug_log( "try time_stamps_window..." );
+
+            try_window(
+                0,
+                enums::DataUsed::time_stamps_window,
+                _sample_size,
+                tree_->lag(),
+                _sample_container_begin,
+                _sample_container_end,
+                _candidate_splits );
+        }
+
     debug_log( "try_time_stamps_diff...done" );
+}
+
+// ----------------------------------------------------------------------------
+
+void DecisionTreeNode::try_window(
+    const size_t _column_used,
+    const enums::DataUsed _data_used,
+    const size_t _sample_size,
+    const Float _lag,
+    containers::MatchPtrs::iterator _sample_container_begin,
+    containers::MatchPtrs::iterator _sample_container_end,
+    std::vector<descriptors::Split> *_candidate_splits )
+{
+    // -----------------------------------------------------------------------
+
+    debug_log( "try_window..." );
+
+    // -----------------------------------------------------------------------
+
+    containers::MatchPtrs::iterator null_values_separator =
+        separate_null_values( _sample_container_begin, _sample_container_end );
+
+    assert(
+        std::distance( _sample_container_begin, null_values_separator ) == 0 );
+
+    sort_by_numerical_value( null_values_separator, _sample_container_end );
+
+    auto critical_values = calculate_critical_values_window(
+        _lag, null_values_separator, _sample_container_end );
+
+    // -----------------------------------------------------------------------
+    // Add new splits to the candidate splits
+
+    debug_log( "try_window: Add new splits." );
+
+    for ( auto &critical_value : critical_values )
+        {
+            _candidate_splits->push_back( descriptors::Split(
+                true, critical_value, _column_used, _data_used ) );
+        }
+
+    for ( auto &critical_value : critical_values )
+        {
+            _candidate_splits->push_back( descriptors::Split(
+                false, critical_value, _column_used, _data_used ) );
+        }
+
+    // -----------------------------------------------------------------------
+    // It is possible that std::distance( _sample_container_begin,
+    // _sample_container_end ) is zero, when we are using the distributed
+    // version. In that case we want this process to continue until this point,
+    // because calculate_critical_values_numerical and
+    // calculate_critical_values_discrete contains barriers and we want to
+    // avoid a livelock.
+
+    if ( std::distance( null_values_separator, _sample_container_end ) == 0 )
+        {
+            for ( size_t i = 0; i < critical_values.size() * 2; ++i )
+                {
+                    aggregation()
+                        ->update_optimization_criterion_and_clear_updates_current(
+                            0.0,  // _num_samples_smaller
+                            0.0   // _num_samples_greater
+                        );
+                }
+
+            return;
+        }
+
+    // -----------------------------------------------------------------------
+    // Try applying outside the window
+
+    debug_log( "try_window: Apply from above..." );
+
+    // Apply changes and store resulting value of optimization criterion
+    if ( is_activated_ )
+        {
+            debug_log( "Deactivate..." );
+
+            aggregation()->deactivate_samples_outside_window(
+                critical_values,
+                _lag,
+                aggregations::Revert::after_each_category,
+                null_values_separator,
+                _sample_container_end );
+        }
+    else
+        {
+            debug_log( "Activate..." );
+
+            aggregation()->activate_samples_outside_window(
+                critical_values,
+                _lag,
+                aggregations::Revert::after_each_category,
+                null_values_separator,
+                _sample_container_end );
+        }
+
+    // -----------------------------------------------------------------------
+    // Try applying inside the window
+
+    debug_log( "try_window: Apply from below..." );
+
+    // Apply changes and store resulting value of optimization criterion
+    if ( is_activated_ )
+        {
+            debug_log( "try_window: Deactivate..." );
+
+            aggregation()->deactivate_samples_in_window(
+                critical_values,
+                _lag,
+                aggregations::Revert::after_each_category,
+                null_values_separator,
+                _sample_container_end );
+        }
+    else
+        {
+            debug_log( "try_window: Activate..." );
+
+            aggregation()->activate_samples_in_window(
+                critical_values,
+                _lag,
+                aggregations::Revert::after_each_category,
+                null_values_separator,
+                _sample_container_end );
+        }
+
+    // -----------------------------------------------------------------------
+
+    debug_log( "try_window...done." );
+
+    // -----------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------

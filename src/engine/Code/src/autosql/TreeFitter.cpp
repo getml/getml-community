@@ -54,7 +54,7 @@ void TreeFitter::find_best_trees(
             _trees->emplace_back( std::move( *it ) );
         }
 
-    _candidate_trees->clear();
+    *_candidate_trees = std::list<decisiontrees::DecisionTree>();
 
     // -------------------------------------------------------------------
     // Refit best tree, if necessary

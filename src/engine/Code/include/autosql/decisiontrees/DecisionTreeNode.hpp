@@ -32,9 +32,8 @@ class DecisionTreeNode
     void fit_as_root(
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
-        const std::vector<containers::ColumnView<
-            Float,
-            std::map<Int, Int>>> &_subfeatures,
+        const std::vector<containers::ColumnView<Float, std::map<Int, Int>>>
+            &_subfeatures,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end );
 
@@ -61,9 +60,8 @@ class DecisionTreeNode
     void transform(
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
-        const std::vector<containers::ColumnView<
-            Float,
-            std::map<Int, Int>>> &_subfeatures,
+        const std::vector<containers::ColumnView<Float, std::map<Int, Int>>>
+            &_subfeatures,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end,
         aggregations::AbstractAggregation *_aggregation ) const;
@@ -100,13 +98,12 @@ class DecisionTreeNode
     }
 
     /// Calculates the appropriate number of critical values
-    inline Int calculate_num_critical_values(
-        size_t _num_samples_on_node )
+    inline Int calculate_num_critical_values( size_t _num_samples_on_node )
     {
         return std::max(
             static_cast<Int>(
-                tree_->grid_factor() * std::sqrt( static_cast<Float>(
-                                           _num_samples_on_node ) ) ),
+                tree_->grid_factor() *
+                std::sqrt( static_cast<Float>( _num_samples_on_node ) ) ),
             1 );
     }
 
@@ -134,8 +131,7 @@ class DecisionTreeNode
     }
 
     /// Trivial accessor
-    inline std::vector<Int>::const_iterator categories_used_begin()
-        const
+    inline std::vector<Int>::const_iterator categories_used_begin() const
     {
         assert( split_ );
         return split_->categories_used_begin;
@@ -384,9 +380,8 @@ class DecisionTreeNode
 
     /// Trivial getter
     inline const Float get_x_subfeature(
-        const std::vector<containers::ColumnView<
-            Float,
-            std::map<Int, Int>>> &_subfeatures,
+        const std::vector<containers::ColumnView<Float, std::map<Int, Int>>>
+            &_subfeatures,
         const containers::Match *_sample,
         const size_t _col ) const
     {
@@ -396,6 +391,13 @@ class DecisionTreeNode
 
     /// Trivial getter
     const size_t ix_perip_used() const { return tree_->ix_perip_used(); }
+
+    /// Whether the data used is based on a lag variable
+    inline bool lag_used() const
+    {
+        assert( split_ );
+        return ( split_->data_used == enums::DataUsed::time_stamps_window );
+    }
 
     /// Trivial accessor
     inline optimizationcriteria::OptimizationCriterion *optimization_criterion()
@@ -460,6 +462,14 @@ class DecisionTreeNode
         containers::MatchPtrs::iterator _sample_container_end,
         aggregations::AbstractAggregation *_aggregation ) const;
 
+    /// Apply changes based on the lag operator
+    template <typename T>
+    void apply_by_lag(
+        const T &_critical_value,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end,
+        aggregations::AbstractAggregation *_aggregation ) const;
+
     /// Calculates the beginning and end of the categorical
     /// values considered
     std::shared_ptr<const std::vector<Int>> calculate_categories(
@@ -470,24 +480,30 @@ class DecisionTreeNode
     /// Given the sorted sample containers, this returns the critical_values
     /// for discrete values
     std::vector<Float> calculate_critical_values_discrete(
+        const size_t _sample_size,
         containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end,
-        const size_t _sample_size );
+        containers::MatchPtrs::iterator _sample_container_end );
 
     /// Given the sorted sample containers, this returns the critical_values
     /// for numerical values
     std::vector<Float> calculate_critical_values_numerical(
+        const size_t _sample_size,
         containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end,
-        const size_t _sample_size );
+        containers::MatchPtrs::iterator _sample_container_end );
+
+    /// Given the sorted sample containers, this returns the critical_values
+    /// for the moving time windows (lag variables).
+    std::vector<Float> calculate_critical_values_window(
+        const Float _lag,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end );
 
     /// Commits the split and spawns child nodes
     void commit(
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
-        const std::vector<containers::ColumnView<
-            Float,
-            std::map<Int, Int>>> &_subfeatures,
+        const std::vector<containers::ColumnView<Float, std::map<Int, Int>>>
+            &_subfeatures,
         const descriptors::Split &_split,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end );
@@ -504,6 +520,16 @@ class DecisionTreeNode
         const descriptors::Split &_column,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end );
+
+    /// Partitions the iterators according by the categories.
+    containers::MatchPtrs::iterator partition_by_categories_used(
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end ) const;
+
+    /// Partitions the iterators according by the categories.
+    containers::MatchPtrs::iterator partition_by_critical_value(
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end ) const;
 
     /// Returns the sum of the sample sizes of all processes
     size_t reduce_sample_size( const size_t _sample_size );
@@ -522,9 +548,7 @@ class DecisionTreeNode
     void set_samples(
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
-        const std::vector<containers::ColumnView<
-            Float,
-            std::map<Int, Int>>> &_subfeatures,
+        const containers::Subfeatures &_subfeatures,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) const;
 
@@ -546,9 +570,7 @@ class DecisionTreeNode
     void spawn_child_nodes(
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
-        const std::vector<containers::ColumnView<
-            Float,
-            std::map<Int, Int>>> &_subfeatures,
+        const containers::Subfeatures &_subfeatures,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _null_values_separator,
         containers::MatchPtrs::iterator _sample_container_end );
@@ -582,9 +604,8 @@ class DecisionTreeNode
     void try_conditions(
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
-        const std::vector<containers::ColumnView<
-            Float,
-            std::map<Int, Int>>> &_subfeatures,
+        const std::vector<containers::ColumnView<Float, std::map<Int, Int>>>
+            &_subfeatures,
         const size_t _sample_size,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end,
@@ -696,6 +717,16 @@ class DecisionTreeNode
         containers::MatchPtrs::iterator _sample_container_end,
         std::vector<descriptors::Split> *_candidate_splits );
 
+    /// Tries to apply a moving time window, simulating a lag variable.
+    void try_window(
+        const size_t _column_used,
+        const enums::DataUsed _data_used,
+        const size_t _sample_size,
+        const Float _lag,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end,
+        std::vector<descriptors::Split> *_candidate_splits );
+
     // --------------------------------------
 
    private:
@@ -739,6 +770,18 @@ void DecisionTreeNode::apply_by_critical_value(
 {
     if ( std::distance( _sample_container_begin, _sample_container_end ) == 0 )
         {
+            debug_log( "Distance is zero..." );
+            return;
+        }
+
+    if ( lag_used() )
+        {
+            apply_by_lag(
+                _critical_value,
+                _sample_container_begin,
+                _sample_container_end,
+                _aggregation );
+
             return;
         }
 
@@ -782,6 +825,77 @@ void DecisionTreeNode::apply_by_critical_value(
 
                     _aggregation->activate_samples_from_below(
                         _critical_value,
+                        _sample_container_begin,
+                        _sample_container_end );
+                }
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+// This is templated, because it makes a difference whether _critical_value
+// is of type Float or or type std::vector<Float>
+
+template <typename T>
+void DecisionTreeNode::apply_by_lag(
+    const T &_critical_value,
+    containers::MatchPtrs::iterator _sample_container_begin,
+    containers::MatchPtrs::iterator _sample_container_end,
+    aggregations::AbstractAggregation *_aggregation ) const
+{
+    if ( std::distance( _sample_container_begin, _sample_container_end ) == 0 )
+        {
+            return;
+        }
+
+    debug_log( "Apply by lag..." );
+
+    if ( apply_from_above() )
+        {
+            if ( is_activated_ )
+                {
+                    debug_log( "deactivate_samples_outside_window..." );
+
+                    _aggregation->deactivate_samples_outside_window(
+                        _critical_value,
+                        tree_->lag(),
+                        aggregations::Revert::not_at_all,
+                        _sample_container_begin,
+                        _sample_container_end );
+                }
+            else
+                {
+                    debug_log( "activate_samples_outside_window..." );
+
+                    _aggregation->activate_samples_outside_window(
+                        _critical_value,
+                        tree_->lag(),
+                        aggregations::Revert::not_at_all,
+                        _sample_container_begin,
+                        _sample_container_end );
+                }
+        }
+    else
+        {
+            if ( is_activated_ )
+                {
+                    debug_log( "deactivate_samples_in_window..." );
+
+                    _aggregation->deactivate_samples_in_window(
+                        _critical_value,
+                        tree_->lag(),
+                        aggregations::Revert::not_at_all,
+                        _sample_container_begin,
+                        _sample_container_end );
+                }
+            else
+                {
+                    debug_log( "activate_samples_in_window..." );
+
+                    _aggregation->activate_samples_in_window(
+                        _critical_value,
+                        tree_->lag(),
+                        aggregations::Revert::not_at_all,
                         _sample_container_begin,
                         _sample_container_end );
                 }

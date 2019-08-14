@@ -67,6 +67,8 @@ Poco::JSON::Object Hyperparameters::to_json_obj() const
 
     obj.set( "include_categorical_", include_categorical_ );
 
+    obj.set( "lag_", tree_hyperparameters_->lag_ );
+
     obj.set( "loss_function_", loss_function_ );
 
     obj.set( "use_timestamps_", use_timestamps_ );

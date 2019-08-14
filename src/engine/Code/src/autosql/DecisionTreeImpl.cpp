@@ -137,6 +137,13 @@ std::string DecisionTreeImpl::get_colname(
 
                 break;
 
+            case enums::DataUsed::time_stamps_window:
+
+                colname = "t1." + output().time_stamps_name() + " - t2." +
+                          input().time_stamps_name();
+
+                break;
+
             default:
 
                 assert(

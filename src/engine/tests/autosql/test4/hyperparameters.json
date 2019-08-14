@@ -2,6 +2,7 @@
     "aggregation_": ["SUM", "COUNT", "AVG", "MAX", "MIN"],
     "fast_training_": false,
     "include_categorical_": false,
+    "lag_": 0.0,
     "loss_function_": "SquareLoss",
     "num_features_": 10,
     "num_selected_features_": 10,

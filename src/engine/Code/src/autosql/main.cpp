@@ -37,5 +37,7 @@ int main( int argc, char* argv[] )
 
     test21_snowflake_model();
 
+    test22_time_windows();
+
     return 0;
 }

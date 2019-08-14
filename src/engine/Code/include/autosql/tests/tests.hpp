@@ -46,4 +46,6 @@
 
 #include "autosql/tests/test21_snowflake_model.hpp"
 
+#include "autosql/tests/test22_time_windows.hpp"
+
 // ---------------------------------------------------------------------------

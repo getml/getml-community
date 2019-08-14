@@ -67,6 +67,13 @@ struct DecisionTreeImpl
     }
 
     /// Trivial getter
+    inline Float lag() const
+    {
+        assert( tree_hyperparameters_ );
+        return tree_hyperparameters_->lag_;
+    }
+
+    /// Trivial getter
     inline size_t ix_perip_used() const
     {
         return column_to_be_aggregated_.ix_perip_used;

@@ -22,7 +22,8 @@ enum class DataUsed
     x_popul_numerical,
     x_popul_discrete,
     x_subfeature,
-    time_stamps_diff
+    time_stamps_diff,
+    time_stamps_window
 };
 
 // ----------------------------------------------------------------------------
