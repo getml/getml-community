@@ -33,6 +33,7 @@ class DecisionTreeEnsemble
 
     // -----------------------------------------------------------------
 
+   public:
     /// Makes sure that the input provided by the user is plausible
     /// and throws an exception if it isn't
     void check_plausibility(
@@ -95,6 +96,7 @@ class DecisionTreeEnsemble
 
     // -----------------------------------------------------------------
 
+   public:
     /// Trivial accessor
     inline const std::shared_ptr<const std::vector<std::string>> &categories()
         const
@@ -129,11 +131,25 @@ class DecisionTreeEnsemble
         return impl().placeholder_peripheral_;
     }
 
+    /// Trivial (const) accessor
+    const std::vector<containers::Schema> &peripheral_schema() const
+    {
+        assert( impl().peripheral_schema_ );
+        return *impl().peripheral_schema_;
+    }
+
     /// Trivial accessor
     inline const decisiontrees::Placeholder &placeholder() const
     {
         assert( impl().placeholder_population_ );
         return *impl().placeholder_population_;
+    }
+
+    /// Trivial (const) accessor
+    const containers::Schema &population_schema() const
+    {
+        assert( impl().population_schema_ );
+        return *impl().population_schema_;
     }
 
     /// Trivial setter
@@ -222,25 +238,11 @@ class DecisionTreeEnsemble
         return impl().placeholder_peripheral_;
     }
 
-    /// Trivial (private) accessor
-    const std::vector<containers::Schema> &peripheral_schema() const
-    {
-        assert( impl().peripheral_schema_ );
-        return *impl().peripheral_schema_;
-    }
-
     /// Trivial accessor
     inline decisiontrees::Placeholder &placeholder()
     {
         assert( impl().placeholder_population_ );
         return *impl().placeholder_population_;
-    }
-
-    /// Trivial (private) accessor
-    const containers::Schema &population_schema() const
-    {
-        assert( impl().population_schema_ );
-        return *impl().population_schema_;
     }
 
     /// Trivial accessor

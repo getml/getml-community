@@ -121,11 +121,25 @@ class DecisionTreeEnsemble
         return *impl().peripheral_names_;
     }
 
+    /// Trivial (const) accessor
+    const std::vector<containers::Schema>& peripheral_schema() const
+    {
+        assert( impl().peripheral_schema_ );
+        return *impl().peripheral_schema_;
+    }
+
     /// Trivial accessor.
     const Placeholder& placeholder() const
     {
         assert( impl().placeholder_ );
         return *impl().placeholder_;
+    }
+
+    /// Trivial (const) accessor
+    const containers::Schema& population_schema() const
+    {
+        assert( impl().population_schema_ );
+        return *impl().population_schema_;
     }
 
     // -----------------------------------------------------------------
@@ -193,20 +207,6 @@ class DecisionTreeEnsemble
     {
         assert( loss_function_ );
         return *loss_function_;
-    }
-
-    /// Trivial (private) accessor
-    const std::vector<containers::Schema>& peripheral_schema() const
-    {
-        assert( impl().peripheral_schema_ );
-        return *impl().peripheral_schema_;
-    }
-
-    /// Trivial (private) accessor
-    const containers::Schema& population_schema() const
-    {
-        assert( impl().population_schema_ );
-        return *impl().population_schema_;
     }
 
     /// Trivial (private) accessor

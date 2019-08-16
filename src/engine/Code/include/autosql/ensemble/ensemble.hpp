@@ -4,6 +4,8 @@
 // ----------------------------------------------------
 // Dependencies
 
+#include <optional>
+
 #include <Poco/Dynamic/Var.h>
 
 #include "logging/logging.hpp"

@@ -626,8 +626,6 @@ DecisionTreeEnsemble DecisionTreeEnsemble::from_json_obj(
         *JSON::get_object( _json_obj, "population_" ) ) );
 
     // ----------------------------------------
-
-    // ----------------------------------------
     // Extract features.
 
     auto features = JSON::get_array( _json_obj, "features_" );
@@ -692,25 +690,29 @@ DecisionTreeEnsemble DecisionTreeEnsemble::from_json_obj(
 
     // ------------------------------------------------------------------------
 
-    model.impl().population_schema_ =
-        std::make_shared<const containers::Schema>(
-            *JSON::get_object( _json_obj, "population_schema_" ) );
-
-    // ------------------------------------------------------------------------
-
-    std::vector<containers::Schema> peripheral;
-
-    const auto peripheral_arr =
-        *JSON::get_array( _json_obj, "peripheral_schema_" );
-
-    for ( size_t i = 0; i < peripheral_arr.size(); ++i )
+    // Subensembles in a snowflake model do not have schemata.
+    if ( _json_obj.has( "population_schema_" ) )
         {
-            peripheral.push_back( containers::Schema(
-                *peripheral_arr.getObject( static_cast<unsigned int>( i ) ) ) );
-        }
+            model.impl().population_schema_ =
+                std::make_shared<const containers::Schema>(
+                    *JSON::get_object( _json_obj, "population_schema_" ) );
 
-    model.impl().peripheral_schema_ =
-        std::make_shared<std::vector<containers::Schema>>( peripheral );
+            std::vector<containers::Schema> peripheral;
+
+            const auto peripheral_arr =
+                *JSON::get_array( _json_obj, "peripheral_schema_" );
+
+            for ( size_t i = 0; i < peripheral_arr.size(); ++i )
+                {
+                    peripheral.push_back(
+                        containers::Schema( *peripheral_arr.getObject(
+                            static_cast<unsigned int>( i ) ) ) );
+                }
+
+            model.impl().peripheral_schema_ =
+                std::make_shared<const std::vector<containers::Schema>>(
+                    peripheral );
+        }
 
     // ----------------------------------------
 
@@ -895,16 +897,20 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json_obj() const
 
     // ----------------------------------------
 
-    Poco::JSON::Array peripheral_schema_arr;
-
-    for ( auto &p : peripheral_schema() )
+    // Subensembles in a snowflake model do not have schemata.
+    if ( impl().population_schema_ )
         {
-            peripheral_schema_arr.add( p.to_json_obj() );
+            Poco::JSON::Array peripheral_schema_arr;
+
+            for ( auto &p : peripheral_schema() )
+                {
+                    peripheral_schema_arr.add( p.to_json_obj() );
+                }
+
+            obj.set( "peripheral_schema_", peripheral_schema_arr );
+
+            obj.set( "population_schema_", population_schema().to_json_obj() );
         }
-
-    obj.set( "peripheral_schema_", peripheral_schema_arr );
-
-    obj.set( "population_schema_", population_schema().to_json_obj() );
 
     // ----------------------------------------
     // Extract features

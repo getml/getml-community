@@ -66,6 +66,13 @@ class Schema
         return discretes_[_j];
     }
 
+    /// Getter for a join keys name  name.
+    const std::string& join_keys_name( size_t _j ) const
+    {
+        assert( _j < join_keys_.size() );
+        return join_keys_[_j];
+    }
+
     /// Getter for the join key name.
     const std::string& join_keys_name() const
     {
@@ -110,6 +117,13 @@ class Schema
     {
         assert( _j < targets_.size() );
         return targets_[_j];
+    }
+
+    /// Getter for a time stamp name.
+    const std::string& time_stamps_name( size_t _j ) const
+    {
+        assert( _j < time_stamps_.size() );
+        return time_stamps_[_j];
     }
 
     /// Getter for the time stamps name.

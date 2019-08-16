@@ -94,6 +94,14 @@ class Model : public AbstractModel
         const std::string& _name,
         const std::map<std::string, containers::DataFrame>& _data_frames );
 
+    /// Extract a data frame of type FeatureEngineererType::DataFrameType from
+    /// an engine::containers::DataFrame using the pre-stored schema.
+    template <typename DataFrameType, typename SchemaType>
+    DataFrameType extract_df_by_colnames(
+        const std::string& _name,
+        const SchemaType& _schema,
+        const std::map<std::string, containers::DataFrame>& _data_frames );
+
     /// Calculates the feature importances.
     Poco::JSON::Object feature_importances();
 
@@ -437,6 +445,121 @@ DataFrameType Model<FeatureEngineererType>::extract_df(
 
             time_stamps.push_back( typename DataFrameType::FloatColumnType(
                 mat.data(), mat.name(), mat.nrows(), mat.unit() ) );
+        }
+
+    // ------------------------------------------------------------------------
+
+    return DataFrameType(
+        categoricals,
+        discretes,
+        df.maps(),
+        join_keys,
+        _name,
+        numericals,
+        targets,
+        time_stamps );
+
+    // ------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+template <typename FeatureEngineererType>
+template <typename DataFrameType, typename SchemaType>
+DataFrameType Model<FeatureEngineererType>::extract_df_by_colnames(
+    const std::string& _name,
+    const SchemaType& _schema,
+    const std::map<std::string, containers::DataFrame>& _data_frames )
+{
+    // ------------------------------------------------------------------------
+
+    const auto df = utils::Getter::get( _name, _data_frames );
+
+    // ------------------------------------------------------------------------
+
+    std::vector<typename DataFrameType::IntColumnType> categoricals;
+
+    for ( size_t i = 0; i < _schema.num_categoricals(); ++i )
+        {
+            const auto& name = _schema.categorical_name( i );
+
+            const auto& mat = df.categorical( name );
+
+            categoricals.push_back( typename DataFrameType::IntColumnType(
+                mat.data(), name, mat.nrows(), mat.unit() ) );
+        }
+
+    // ------------------------------------------------------------------------
+
+    std::vector<typename DataFrameType::FloatColumnType> discretes;
+
+    for ( size_t i = 0; i < _schema.num_discretes(); ++i )
+        {
+            const auto& name = _schema.discrete_name( i );
+
+            const auto& mat = df.discrete( name );
+
+            discretes.push_back( typename DataFrameType::FloatColumnType(
+                mat.data(), name, mat.nrows(), mat.unit() ) );
+        }
+
+    // ------------------------------------------------------------------------
+
+    std::vector<typename DataFrameType::IntColumnType> join_keys;
+
+    for ( size_t i = 0; i < _schema.num_join_keys(); ++i )
+        {
+            const auto& name = _schema.join_keys_name( i );
+
+            const auto& mat = df.join_key( name );
+
+            join_keys.push_back( typename DataFrameType::IntColumnType(
+                mat.data(), name, mat.nrows(), mat.unit() ) );
+        }
+
+    // ------------------------------------------------------------------------
+
+    std::vector<typename DataFrameType::FloatColumnType> numericals;
+
+    for ( size_t i = 0; i < _schema.num_numericals(); ++i )
+        {
+            const auto& name = _schema.numerical_name( i );
+
+            const auto& mat = df.numerical( name );
+
+            numericals.push_back( typename DataFrameType::FloatColumnType(
+                mat.data(), name, mat.nrows(), mat.unit() ) );
+        }
+
+    // ------------------------------------------------------------------------
+
+    std::vector<typename DataFrameType::FloatColumnType> targets;
+
+    for ( size_t i = 0; i < _schema.num_targets(); ++i )
+        {
+            const auto& name = _schema.target_name( i );
+
+            if ( df.has_target( name ) )
+                {
+                    const auto& mat = df.target( name );
+
+                    targets.push_back( typename DataFrameType::FloatColumnType(
+                        mat.data(), name, mat.nrows(), mat.unit() ) );
+                }
+        }
+
+    // ------------------------------------------------------------------------
+
+    std::vector<typename DataFrameType::FloatColumnType> time_stamps;
+
+    for ( size_t i = 0; i < _schema.num_time_stamps(); ++i )
+        {
+            const auto& name = _schema.time_stamps_name( i );
+
+            const auto& mat = df.time_stamp( name );
+
+            time_stamps.push_back( typename DataFrameType::FloatColumnType(
+                mat.data(), name, mat.nrows(), mat.unit() ) );
         }
 
     // ------------------------------------------------------------------------
@@ -1062,17 +1185,27 @@ containers::Features Model<FeatureEngineererType>::transform(
     // -------------------------------------------------------------------------
     // Extract the peripheral tables
 
-    auto peripheral_names = JSON::array_to_vector<std::string>(
+    const auto peripheral_schema = feature_engineerer().peripheral_schema();
+
+    const auto peripheral_names = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "peripheral_names_" ) );
+
+    if ( peripheral_schema.size() != peripheral_names.size() )
+        {
+            throw std::invalid_argument(
+                "Expected " + std::to_string( peripheral_schema.size() ) +
+                " peripheral tables, got " +
+                std::to_string( peripheral_names.size() ) + "." );
+        }
 
     std::vector<typename FeatureEngineererType::DataFrameType>
         peripheral_tables = {};
 
-    for ( auto& name : peripheral_names )
+    for ( size_t i = 0; i < peripheral_names.size(); ++i )
         {
-            const auto df =
-                extract_df<typename FeatureEngineererType::DataFrameType>(
-                    name, _data_frames );
+            const auto df = extract_df_by_colnames<
+                typename FeatureEngineererType::DataFrameType>(
+                peripheral_names[i], peripheral_schema[i], _data_frames );
 
             peripheral_tables.push_back( df );
         }
@@ -1080,12 +1213,14 @@ containers::Features Model<FeatureEngineererType>::transform(
     // -------------------------------------------------------------------------
     // Extract the population table
 
+    const auto population_schema = feature_engineerer().population_schema();
+
     const auto population_name =
         JSON::get_value<std::string>( _cmd, "population_name_" );
 
     const auto population_table =
-        extract_df<typename FeatureEngineererType::DataFrameType>(
-            population_name, _data_frames );
+        extract_df_by_colnames<typename FeatureEngineererType::DataFrameType>(
+            population_name, population_schema, _data_frames );
 
     // -------------------------------------------------------------------------
     // Generate the features.
@@ -1121,7 +1256,7 @@ containers::Features Model<FeatureEngineererType>::transform(
         predictor_impl().transform_encodings( categorical_features );
 
     // -------------------------------------------------------------------------
-    // Get the feature importances, if applicable.
+    // Get the feature correlations, if applicable.
 
     const auto ncols = numerical_features.size();
 
