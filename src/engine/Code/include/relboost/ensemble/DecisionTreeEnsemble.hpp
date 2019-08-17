@@ -155,6 +155,10 @@ class DecisionTreeEnsemble
         const std::vector<Float>& _yhat_old,
         const std::vector<Float>& _predictions ) const;
 
+    // Makes sure that the target values are well-behaved.
+    void check_plausibility_of_targets(
+        const containers::DataFrame& _population_table );
+
     /// Extracts the schemas of the population table and the peripheral tables.
     void extract_schemas(
         const containers::DataFrame& _population,

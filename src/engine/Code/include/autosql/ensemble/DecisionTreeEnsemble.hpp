@@ -34,12 +34,6 @@ class DecisionTreeEnsemble
     // -----------------------------------------------------------------
 
    public:
-    /// Makes sure that the input provided by the user is plausible
-    /// and throws an exception if it isn't
-    void check_plausibility(
-        const std::vector<containers::DataFrame> &_peripheral_tables,
-        const containers::DataFrameView &_population_table );
-
     /// Calculates feature importances
     void feature_importances();
 
@@ -197,7 +191,7 @@ class DecisionTreeEnsemble
     /// and throws an exception if it isn't. Only the fit(...) member
     /// function needs to call this, not transform(...).
     void check_plausibility_of_targets(
-        const containers::DataFrameView &_population_table );
+        const containers::DataFrame &_population_table );
 
     /// Extracts the schemas from the data frames, for future referece.
     void extract_schemas(

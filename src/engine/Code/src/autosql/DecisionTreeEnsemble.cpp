@@ -54,127 +54,13 @@ std::list<decisiontrees::DecisionTree> DecisionTreeEnsemble::build_candidates(
 
 // ----------------------------------------------------------------------------
 
-void DecisionTreeEnsemble::check_plausibility(
-    const std::vector<containers::DataFrame> &_peripheral_tables,
-    const containers::DataFrameView &_population_table )
-{
-    // -----------------------------------------------------
-    // Sizes of arrays must match
-
-    /*   auto expected_size = _population_table.num_join_keys();
-
-       if ( expected_size == 0 )
-           {
-               throw std::invalid_argument(
-                   "You must provide join keys for the population table!" );
-           }
-
-       assert( expected_size == _peripheral_tables.size() );
-
-       assert( expected_size == num_columns_peripheral_categorical().size() );
-
-       // -----------------------------------------------------
-       // Number of columns must match
-
-       if ( _population_table.num_categoricals() !=
-            num_columns_population_categorical() )
-           {
-               throw std::invalid_argument(
-                   "Wrong number of categorical columns in population table! "
-                   "Expected " +
-                   std::to_string( num_columns_population_categorical() ) +
-                   ", got " +
-                   std::to_string( _population_table.num_categoricals() ) + "!"
-       );
-           }
-
-       if ( _population_table.num_discretes() !=
-            num_columns_population_discrete() )
-           {
-               throw std::invalid_argument(
-                   "Wrong number of discrete columns in population table! "
-                   "Expected " +
-                   std::to_string( num_columns_population_discrete() ) + ", got
-       " + std::to_string( _population_table.num_discretes() ) + "!" );
-           }
-
-       if ( _population_table.num_numericals() !=
-            num_columns_population_numerical() )
-           {
-               throw std::invalid_argument(
-                   "Wrong number of numerical columns in population table! "
-                   "Expected " +
-                   std::to_string( num_columns_population_numerical() ) +
-                   ", got " +
-                   std::to_string( _population_table.num_numericals() ) + "!" );
-           }
-
-       for ( size_t i = 0; i < _peripheral_tables.size(); ++i )
-           {
-               if ( _peripheral_tables[i].num_categoricals() !=
-                    num_columns_peripheral_categorical()[i] )
-                   {
-                       throw std::invalid_argument(
-                           "Wrong number of categorical columns in peripheral "
-                           "table " +
-                           std::to_string( i ) + "! Expected " +
-                           std::to_string(
-                               num_columns_peripheral_categorical()[i] ) +
-                           ", got " +
-                           std::to_string(
-                               _peripheral_tables[i].num_categoricals() ) +
-                           "!" );
-                   }
-           }
-
-       for ( size_t i = 0; i < _peripheral_tables.size(); ++i )
-           {
-               if ( _peripheral_tables[i].num_discretes() !=
-                    num_columns_peripheral_discrete()[i] )
-                   {
-                       throw std::invalid_argument(
-                           "Wrong number of discrete columns in peripheral "
-                           "table " +
-                           std::to_string( i ) + "! Expected " +
-                           std::to_string( num_columns_peripheral_discrete()[i]
-       ) +
-                           ", got " +
-                           std::to_string(
-                               _peripheral_tables[i].num_discretes() ) +
-                           "!" );
-                   }
-           }
-
-       for ( size_t i = 0; i < _peripheral_tables.size(); ++i )
-           {
-               if ( _peripheral_tables[i].num_numericals() !=
-                    num_columns_peripheral_numerical()[i] )
-                   {
-                       throw std::invalid_argument(
-                           "Wrong number of numerical columns in peripheral "
-                           "table " +
-                           std::to_string( i ) + "! Expected " +
-                           std::to_string(
-                               num_columns_peripheral_numerical()[i] ) +
-                           ", got " +
-                           std::to_string(
-                               _peripheral_tables[i].num_numericals() ) +
-                           "!" );
-                   }
-           }*/
-
-    // -----------------------------------------------------
-}
-
-// ----------------------------------------------------------------------------
-
 void DecisionTreeEnsemble::check_plausibility_of_targets(
-    const containers::DataFrameView &_population_table )
+    const containers::DataFrame &_population_table )
 {
     if ( _population_table.num_targets() < 1 )
         {
             throw std::invalid_argument(
-                "Targets must have at least one column!" );
+                "The population table must have at least one target column!" );
         }
 
     for ( size_t j = 0; j < _population_table.num_targets(); ++j )
@@ -190,11 +76,21 @@ void DecisionTreeEnsemble::check_plausibility_of_targets(
                 }
         }
 
-    if ( hyperparameters().share_aggregations_ < 0.0 ||
-         hyperparameters().share_aggregations_ > 1.0 )
+    if ( is_classification() )
         {
-            throw std::invalid_argument(
-                "share_aggregations must be between 0.0 and 1.0!" );
+            for ( size_t j = 0; j < _population_table.num_targets(); ++j )
+                {
+                    for ( size_t i = 0; i < _population_table.nrows(); ++i )
+                        {
+                            if ( _population_table.target( i, j ) != 0.0 &&
+                                 _population_table.target( i, j ) != 1.0 )
+                                {
+                                    throw std::invalid_argument(
+                                        "Target values for a classification "
+                                        "problem have to be 0.0 or 1.0!" );
+                                }
+                        }
+                }
         }
 }
 
@@ -225,6 +121,11 @@ void DecisionTreeEnsemble::fit(
     const std::vector<containers::DataFrame> &_peripheral,
     const std::shared_ptr<const logging::AbstractLogger> _logger )
 {
+    // ------------------------------------------------------
+    // Make sure that the target values are all well-behaved.
+
+    check_plausibility_of_targets( _population );
+
     // ------------------------------------------------------
     // We need to store the schemas for future reference.
 
@@ -371,14 +272,6 @@ void DecisionTreeEnsemble::fit(
     debug_log( "fit: Checking plausibility of input..." );
 
     assert( _table_holder->main_tables_.size() > 0 );
-
-    check_plausibility(
-        _table_holder->peripheral_tables_, _table_holder->main_tables_[0] );
-
-    if ( _table_holder->main_tables_[0].num_targets() > 0 )
-        {
-            check_plausibility_of_targets( _table_holder->main_tables_[0] );
-        }
 
     // ----------------------------------------------------------------
     // Store names of the targets

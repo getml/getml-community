@@ -151,6 +151,47 @@ Float DecisionTreeEnsemble::calc_loss_reduction(
 
     return loss_function_->evaluate_tree( yhat_new );
 }
+// ----------------------------------------------------------------------------
+
+void DecisionTreeEnsemble::check_plausibility_of_targets(
+    const containers::DataFrame &_population_table )
+{
+    if ( _population_table.num_targets() < 1 )
+        {
+            throw std::invalid_argument(
+                "The population table must have at least one target column!" );
+        }
+
+    for ( size_t j = 0; j < _population_table.num_targets(); ++j )
+        {
+            for ( size_t i = 0; i < _population_table.nrows(); ++i )
+                {
+                    if ( std::isnan( _population_table.target( i, j ) ) ||
+                         std::isinf( _population_table.target( i, j ) ) )
+                        {
+                            throw std::invalid_argument(
+                                "Target values can not be NULL or infinite!" );
+                        }
+                }
+        }
+
+    if ( is_classification() )
+        {
+            for ( size_t j = 0; j < _population_table.num_targets(); ++j )
+                {
+                    for ( size_t i = 0; i < _population_table.nrows(); ++i )
+                        {
+                            if ( _population_table.target( i, j ) != 0.0 &&
+                                 _population_table.target( i, j ) != 1.0 )
+                                {
+                                    throw std::invalid_argument(
+                                        "Target values for a classification "
+                                        "problem have to be 0.0 or 1.0!" );
+                                }
+                        }
+                }
+        }
+}
 
 // ----------------------------------------------------------------------------
 
@@ -188,6 +229,11 @@ void DecisionTreeEnsemble::fit(
     const std::vector<containers::DataFrame> &_peripheral,
     const std::shared_ptr<const logging::AbstractLogger> _logger )
 {
+    // ------------------------------------------------------
+    // Make sure that the target values are all well-behaved.
+
+    check_plausibility_of_targets( _population );
+
     // ------------------------------------------------------
     // We need to store the schemas for future reference.
 
