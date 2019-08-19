@@ -35,9 +35,6 @@ struct Hyperparameters
     /// Describes the aggregations that may be used
     const std::vector<std::string> aggregations_;
 
-    /// Determines whether max_length_probe == max_length
-    const bool fast_training_;
-
     /// Whether we want categorical columns from the population table to be
     /// included in our prediction.
     const bool include_categorical_;

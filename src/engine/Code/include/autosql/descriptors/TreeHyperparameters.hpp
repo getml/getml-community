@@ -16,8 +16,6 @@ struct TreeHyperparameters
           grid_factor_( JSON::get_value<Float>( _json_obj, "grid_factor_" ) ),
           lag_( JSON::get_value<Float>( _json_obj, "lag_" ) ),
           max_length_( JSON::get_value<Int>( _json_obj, "max_length_" ) ),
-          max_length_probe_(
-              TreeHyperparameters::calc_max_length_probe( _json_obj ) ),
           min_num_samples_(
               JSON::get_value<Int>( _json_obj, "min_num_samples_" ) ),
           regularization_(
@@ -25,22 +23,6 @@ struct TreeHyperparameters
           share_conditions_(
               JSON::get_value<Float>( _json_obj, "share_conditions_" ) )
     {
-    }
-
-    // ------------------------------------------------------
-
-    /// Calculates max_length_probe
-    static size_t calc_max_length_probe( const Poco::JSON::Object& _json_obj )
-    {
-        if ( JSON::get_value<bool>( _json_obj, "fast_training_" ) &&
-             !JSON::get_value<bool>( _json_obj, "round_robin_" ) )
-            {
-                return 0;
-            }
-        else
-            {
-                return JSON::get_value<size_t>( _json_obj, "max_length_" );
-            }
     }
 
     // ------------------------------------------------------
@@ -57,9 +39,6 @@ struct TreeHyperparameters
 
     /// The maximum depth of a decision tree
     const size_t max_length_;
-
-    /// The maximum depth during the "probing" phase
-    const size_t max_length_probe_;
 
     /// The minimum number of samples needed for a split
     const size_t min_num_samples_;

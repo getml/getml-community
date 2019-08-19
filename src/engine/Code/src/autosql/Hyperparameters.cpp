@@ -9,7 +9,6 @@ namespace descriptors
 Hyperparameters::Hyperparameters( const Poco::JSON::Object& _json_obj )
     : aggregations_( JSON::array_to_vector<std::string>(
           JSON::get_array( _json_obj, "aggregation_" ) ) ),
-      fast_training_( JSON::get_value<bool>( _json_obj, "fast_training_" ) ),
       include_categorical_(
           JSON::get_value<bool>( _json_obj, "include_categorical_" ) ),
       loss_function_(
@@ -80,8 +79,6 @@ Poco::JSON::Object Hyperparameters::to_json_obj() const
     obj.set( "num_subfeatures_", num_subfeatures_ );
 
     obj.set( "max_length_", tree_hyperparameters_->max_length_ );
-
-    obj.set( "fast_training_", fast_training_ );
 
     obj.set( "min_num_samples_", tree_hyperparameters_->min_num_samples_ );
 

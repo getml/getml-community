@@ -57,23 +57,6 @@ void TreeFitter::find_best_trees(
     *_candidate_trees = std::list<decisiontrees::DecisionTree>();
 
     // -------------------------------------------------------------------
-    // Refit best tree, if necessary
-
-    if ( tree_hyperparameters().max_length_probe_ <
-         tree_hyperparameters().max_length_ )
-        {
-            /* fit_tree(
-                 tree_hyperparameters().max_length_,
-                 _samples,
-                 _sample_containers,
-                 _table_holder,
-                 _optimization_criterion,
-                 *_trees->last() );
-
-                 */
-        }
-
-    // -------------------------------------------------------------------
 }
 
 // ------------------------------------------------------------------------
