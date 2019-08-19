@@ -59,7 +59,7 @@ class DecisionTreeEnsemble
     void select_features( const std::vector<size_t> &_index );
 
     /// Extracts the ensemble as a Poco::JSON object
-    Poco::JSON::Object to_json_obj() const;
+    Poco::JSON::Object to_json_obj( const bool _schema_only = false ) const;
 
     /// Extracts the ensemble as a Boost property tree the monitor process can
     /// understand

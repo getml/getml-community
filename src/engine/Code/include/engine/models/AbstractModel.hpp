@@ -36,7 +36,7 @@ class AbstractModel
         const Poco::JSON::Object& _cmd, Poco::Net::StreamSocket* _socket ) = 0;
 
     /// Return model as JSON Object.
-    virtual Poco::JSON::Object to_json_obj() const = 0;
+    virtual Poco::JSON::Object to_json_obj( const bool _schema_only ) const = 0;
 
     /// Returns model as JSON Object in a form that the monitor can understand.
     virtual Poco::JSON::Object to_monitor( const std::string& _name ) const = 0;

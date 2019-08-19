@@ -392,6 +392,22 @@ Poco::JSON::Object ModelManager<ModelType>::receive_data(
 // ------------------------------------------------------------------------
 
 template <typename ModelType>
+void ModelManager<ModelType>::refresh_model(
+    const std::string& _name, Poco::Net::StreamSocket* _socket )
+{
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    const auto model = get_model( _name );
+
+    // true refers to _schema_only.
+    const auto obj = model.to_json_obj( true );
+
+    communication::Sender::send_string( JSON::stringify( obj ), _socket );
+}
+
+// ------------------------------------------------------------------------
+
+template <typename ModelType>
 void ModelManager<ModelType>::send_data(
     const std::shared_ptr<containers::Encoding>& _categories,
     const std::shared_ptr<std::map<std::string, containers::DataFrame>>&

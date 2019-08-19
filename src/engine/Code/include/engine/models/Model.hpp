@@ -54,9 +54,10 @@ class Model : public AbstractModel
 
    public:
     /// Returns model as JSON Object.
-    Poco::JSON::Object to_json_obj() const final
+    Poco::JSON::Object to_json_obj(
+        const bool _schema_only = false ) const final
     {
-        return feature_engineerer().to_json_obj();
+        return feature_engineerer().to_json_obj( _schema_only );
     }
 
     /// Returns model as JSON Object in a form that the monitor can understand.

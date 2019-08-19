@@ -44,6 +44,10 @@ void RequestHandler::run()
                 {
                     project_manager().load_autosql_model( name, &socket() );
                 }
+            else if ( type == "AutoSQLModel.refresh" )
+                {
+                    autosql_model_manager().refresh_model( name, &socket() );
+                }
             else if ( type == "AutoSQLModel.save" )
                 {
                     project_manager().save_autosql_model( name, &socket() );
@@ -248,6 +252,10 @@ void RequestHandler::run()
                 {
                     project_manager().load_relboost_model( name, &socket() );
                 }
+            else if ( type == "RelboostModel.refresh" )
+                {
+                    relboost_model_manager().refresh_model( name, &socket() );
+                }
             else if ( type == "RelboostModel.save" )
                 {
                     project_manager().save_relboost_model( name, &socket() );
@@ -268,10 +276,6 @@ void RequestHandler::run()
                 {
                     relboost_model_manager().transform( name, cmd, &socket() );
                 }
-            else if ( type == "refresh" )
-                {
-                    // project_manager().refresh( socket() );
-                }
             else if ( type == "set_project" )
                 {
                     project_manager().set_project( name, &socket() );
@@ -288,7 +292,7 @@ void RequestHandler::run()
 
             communication::Sender::send_string( e.what(), &socket() );
         }
-}
+}  // namespace srv
 
 // ------------------------------------------------------------------------
 }  // namespace srv

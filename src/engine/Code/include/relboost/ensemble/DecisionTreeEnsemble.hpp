@@ -90,7 +90,7 @@ class DecisionTreeEnsemble
         const TableHolder& _table_holder, size_t _n_feature ) const;
 
     /// Expresses DecisionTreeEnsemble as Poco::JSON::Object.
-    Poco::JSON::Object to_json_obj() const;
+    Poco::JSON::Object to_json_obj( const bool _schema_only = false ) const;
 
     /// Expresses DecisionTreeEnsemble as SQL code.
     std::string to_sql() const;

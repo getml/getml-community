@@ -27,7 +27,7 @@ DecisionTreeEnsemble::DecisionTreeEnsemble(
           JSON::array_to_vector<std::string>(
               JSON::get_array( _json_obj, "peripheral_" ) ),
           decisiontrees::Placeholder(
-              *JSON::get_object( _json_obj, "population_" ) ) )
+              *JSON::get_object( _json_obj, "placeholder_" ) ) )
 {
     *this = from_json_obj( _json_obj );
 }
@@ -516,7 +516,7 @@ DecisionTreeEnsemble DecisionTreeEnsemble::from_json_obj(
         JSON::get_array( _json_obj, "peripheral_" ) );
 
     model.impl().placeholder_population_.reset( new decisiontrees::Placeholder(
-        *JSON::get_object( _json_obj, "population_" ) ) );
+        *JSON::get_object( _json_obj, "placeholder_" ) ) );
 
     // ----------------------------------------
     // Extract features.
@@ -766,27 +766,24 @@ Poco::JSON::Object DecisionTreeEnsemble::to_monitor(
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object DecisionTreeEnsemble::to_json_obj() const
+Poco::JSON::Object DecisionTreeEnsemble::to_json_obj(
+    const bool _schema_only ) const
 {
-    // ----------------------------------------
-
-    if ( !has_been_fitted() )
-        {
-            throw std::runtime_error( "Model has not been fitted!" );
-        }
-
     // ----------------------------------------
 
     Poco::JSON::Object obj;
 
     // ----------------------------------------
-    // Extract placeholders
+    // Extract hyperparameters
 
     obj.set( "hyperparameters_", hyperparameters().to_json_obj() );
 
+    // ----------------------------------------
+    // Extract placeholders
+
     obj.set( "peripheral_", JSON::vector_to_array( peripheral_names() ) );
 
-    obj.set( "population_", placeholder().to_json_obj() );
+    obj.set( "placeholder_", placeholder().to_json_obj() );
 
     // ----------------------------------------
 
@@ -803,6 +800,20 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json_obj() const
             obj.set( "peripheral_schema_", peripheral_schema_arr );
 
             obj.set( "population_schema_", population_schema().to_json_obj() );
+        }
+
+    // ----------------------------------------
+
+    if ( _schema_only )
+        {
+            return obj;
+        }
+
+    // ----------------------------------------
+
+    if ( !has_been_fitted() )
+        {
+            throw std::runtime_error( "Model has not been fitted!" );
         }
 
     // ----------------------------------------

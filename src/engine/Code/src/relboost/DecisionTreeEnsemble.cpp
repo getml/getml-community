@@ -30,7 +30,7 @@ DecisionTreeEnsemble::DecisionTreeEnsemble(
               *JSON::get_object( _obj, "hyperparameters_" ) ),
           std::make_shared<const std::vector<std::string>>(
               JSON::array_to_vector<std::string>(
-                  JSON::get_array( _obj, "peripheral_names_" ) ) ),
+                  JSON::get_array( _obj, "peripheral_" ) ) ),
           std::make_shared<const Placeholder>(
               *JSON::get_object( _obj, "placeholder_" ) ) ) ),
       targets_( std::make_shared<std::vector<Float>>( 0 ) )
@@ -808,8 +808,47 @@ std::vector<Float> DecisionTreeEnsemble::transform(
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object DecisionTreeEnsemble::to_json_obj() const
+Poco::JSON::Object DecisionTreeEnsemble::to_json_obj(
+    const bool _schema_only ) const
 {
+    // ------------------------------------------------------------------------
+
+    Poco::JSON::Object obj;
+
+    // ------------------------------------------------------------------------
+
+    obj.set( "hyperparameters_", hyperparameters().to_json_obj() );
+
+    // ------------------------------------------------------------------------
+
+    obj.set( "peripheral_", JSON::vector_to_array( peripheral_names() ) );
+
+    obj.set( "placeholder_", placeholder().to_json_obj() );
+
+    // ------------------------------------------------------------------------
+
+    // Subensembles in a snowflake model do not have schemata.
+    if ( impl().population_schema_ )
+        {
+            Poco::JSON::Array peripheral_schema_arr;
+
+            for ( auto &p : peripheral_schema() )
+                {
+                    peripheral_schema_arr.add( p.to_json_obj() );
+                }
+
+            obj.set( "peripheral_schema_", peripheral_schema_arr );
+
+            obj.set( "population_schema_", population_schema().to_json_obj() );
+        }
+
+    // ----------------------------------------
+
+    if ( _schema_only )
+        {
+            return obj;
+        }
+
     // ------------------------------------------------------------------------
 
     if ( trees().size() == 0 )
@@ -819,33 +858,14 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json_obj() const
 
     // ------------------------------------------------------------------------
 
-    Poco::JSON::Object obj;
-
-    // ------------------------------------------------------------------------
-
-    obj.set( "hyperparameters_", hyperparameters().to_json_obj() );
-
     obj.set( "initial_prediction_", initial_prediction() );
 
-    obj.set( "peripheral_names_", JSON::vector_to_array( peripheral_names() ) );
-
-    obj.set( "placeholder_", placeholder().to_json_obj() );
-
     // ------------------------------------------------------------------------
 
-    Poco::JSON::Array peripheral_schema_arr;
-
-    for ( auto &p : peripheral_schema() )
+    if ( trees().size() == 0 )
         {
-            peripheral_schema_arr.add( p.to_json_obj() );
+            throw std::runtime_error( "Model has not been fitted!" );
         }
-
-    obj.set( "peripheral_schema_", peripheral_schema_arr );
-
-    obj.set( "population_schema_", population_schema().to_json_obj() );
-
-    // ------------------------------------------------------------------------
-
     Poco::JSON::Array trees_arr;
 
     for ( auto &tree : trees() )
