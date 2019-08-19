@@ -1,1 +1,0 @@
-{"feature_selector_":{"lambda_":0.0000000001,"learning_rate_":0.9,"type_":"LogisticRegression"},"predictor_":{"lambda_":0.0000000001,"learning_rate_":0.9,"type_":"LogisticRegression"}}
