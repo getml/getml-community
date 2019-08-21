@@ -150,7 +150,7 @@ int main( int argc, char *argv[] )
 
     // -------------------------------------------
 
-    std::cout << "Relboost engine successfully shut down." << std::endl;
+    std::cout << "getML engine successfully shut down." << std::endl;
 
     // -------------------------------------------
 

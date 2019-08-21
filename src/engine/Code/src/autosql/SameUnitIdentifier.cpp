@@ -11,7 +11,8 @@ SameUnitIdentifier::get_same_units_categorical(
     const std::vector<containers::DataFrame> &_peripheral_tables,
     const containers::DataFrame &_population_table )
 {
-    std::map<std::string, std::vector<descriptors::ColumnToBeAggregated>> unit_map;
+    std::map<std::string, std::vector<descriptors::ColumnToBeAggregated>>
+        unit_map;
 
     debug_log( "identify_same_units: Adding outputs (categorical)..." );
 
@@ -29,7 +30,8 @@ SameUnitIdentifier::get_same_units_categorical(
         {
             debug_log( "identify_same_units: Adding inputs (categorical)..." );
 
-            for ( size_t j = 0; j < _population_table.num_categoricals(); ++j )
+            for ( size_t j = 0; j < _peripheral_tables[i].num_categoricals();
+                  ++j )
                 {
                     add_to_unit_map(
                         enums::DataUsed::x_perip_categorical,
@@ -57,7 +59,8 @@ SameUnitIdentifier::get_same_units_discrete(
     const std::vector<containers::DataFrame> &_peripheral_tables,
     const containers::DataFrame &_population_table )
 {
-    std::map<std::string, std::vector<descriptors::ColumnToBeAggregated>> unit_map;
+    std::map<std::string, std::vector<descriptors::ColumnToBeAggregated>>
+        unit_map;
 
     debug_log( "identify_same_units: Adding outputs (discrete)..." );
 
@@ -75,7 +78,7 @@ SameUnitIdentifier::get_same_units_discrete(
         {
             debug_log( "identify_same_units: Adding inputs (discrete)..." );
 
-            for ( size_t j = 0; j < _population_table.num_discretes(); ++j )
+            for ( size_t j = 0; j < _peripheral_tables[i].num_discretes(); ++j )
                 {
                     add_to_unit_map(
                         enums::DataUsed::x_perip_discrete,
@@ -103,7 +106,8 @@ SameUnitIdentifier::get_same_units_numerical(
     const std::vector<containers::DataFrame> &_peripheral_tables,
     const containers::DataFrame &_population_table )
 {
-    std::map<std::string, std::vector<descriptors::ColumnToBeAggregated>> unit_map;
+    std::map<std::string, std::vector<descriptors::ColumnToBeAggregated>>
+        unit_map;
 
     debug_log( "identify_same_units: Adding outputs (numerical)..." );
 
@@ -121,7 +125,8 @@ SameUnitIdentifier::get_same_units_numerical(
         {
             debug_log( "identify_same_units: Adding inputs (numerical)..." );
 
-            for ( size_t j = 0; j < _population_table.num_numericals(); ++j )
+            for ( size_t j = 0; j < _peripheral_tables[i].num_numericals();
+                  ++j )
                 {
                     add_to_unit_map(
                         enums::DataUsed::x_perip_numerical,
