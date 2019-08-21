@@ -178,7 +178,9 @@ void ProjectManager::add_data_frame_from_db(
             throw std::invalid_argument( "You have not set a project!" );
         }
 
-    data_frame_manager_->from_db( _name, _cmd, true, _socket );
+    const auto append = JSON::get_value<bool>( _cmd, "append_" );
+
+    data_frame_manager_->from_db( _name, _cmd, append, _socket );
 
     multithreading::ReadLock read_lock( read_write_lock_ );
 
@@ -197,7 +199,9 @@ void ProjectManager::add_data_frame_from_json(
             throw std::invalid_argument( "You have not set a project!" );
         }
 
-    data_frame_manager_->from_json( _name, _cmd, true, _socket );
+    const auto append = JSON::get_value<bool>( _cmd, "append_" );
+
+    data_frame_manager_->from_json( _name, _cmd, append, _socket );
 
     multithreading::ReadLock read_lock( read_write_lock_ );
 
