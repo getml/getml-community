@@ -35,6 +35,28 @@ void Sniffer::check(
 
 // ----------------------------------------------------------------------------
 
+size_t Sniffer::find_max_size( const std::vector<std::string>& _colnames ) const
+{
+    if ( _colnames.size() == 0 )
+        {
+            return 0;
+        }
+    else
+        {
+            const auto comp = []( const std::string& str1,
+                                  const std::string& str2 ) {
+                return ( str1.size() < str2.size() );
+            };
+
+            const auto it =
+                std::max_element( _colnames.begin(), _colnames.end(), comp );
+
+            return it->size();
+        }
+}
+
+// ----------------------------------------------------------------------------
+
 Datatype Sniffer::infer_datatype(
     const Datatype _type, const std::string& _str ) const
 {
@@ -114,6 +136,8 @@ std::string Sniffer::make_statement_postgres(
 {
     assert( _colnames.size() == _datatypes.size() );
 
+    const auto max_size = find_max_size( _colnames );
+
     std::stringstream statement;
 
     statement << "DROP TABLE IF EXISTS \"" << table_name_ << "\";" << std::endl
@@ -124,6 +148,7 @@ std::string Sniffer::make_statement_postgres(
     for ( size_t i = 0; i < _colnames.size(); ++i )
         {
             statement << "    \"" << _colnames[i] << "\" "
+                      << make_gap( _colnames[i], max_size )
                       << to_string_postgres( _datatypes[i] );
 
             if ( i < _colnames.size() - 1 )
@@ -147,6 +172,8 @@ std::string Sniffer::make_statement_sqlite(
 {
     assert( _colnames.size() == _datatypes.size() );
 
+    const auto max_size = find_max_size( _colnames );
+
     std::stringstream statement;
 
     statement << "DROP TABLE IF EXISTS " << table_name_ << ";" << std::endl
@@ -157,6 +184,7 @@ std::string Sniffer::make_statement_sqlite(
     for ( size_t i = 0; i < _colnames.size(); ++i )
         {
             statement << "    " << _colnames[i] << " "
+                      << make_gap( _colnames[i], max_size )
                       << to_string_sqlite( _datatypes[i] );
 
             if ( i < _colnames.size() - 1 )

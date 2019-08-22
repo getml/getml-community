@@ -52,6 +52,9 @@ class Sniffer
         const std::vector<std::string>& _colnames,
         const std::string& _fname ) const;
 
+    /// Finds the maximum size of the colnames.
+    size_t find_max_size( const std::vector<std::string>& _colnames ) const;
+
     /// Parses the datatype from a string.
     Datatype infer_datatype(
         const Datatype _type, const std::string& _str ) const;
@@ -106,6 +109,14 @@ class Sniffer
         const auto [val, success] =
             Parser::to_time_stamp( _str, time_formats_ );
         return success;
+    }
+
+    /// Produces a gap to ensure that all types are aligned.
+    std::string make_gap(
+        const std::string& _colname, const size_t _max_size ) const
+    {
+        assert( _colname.size() <= _max_size );
+        return std::string( _max_size - _colname.size(), ' ' );
     }
 
     // -------------------------------
