@@ -632,9 +632,9 @@ void DecisionTreeEnsemble::select_features( const std::vector<size_t> &_index )
     assert( _index.size() >= trees().size() );
 
     const auto num_selected_features =
-        ( hyperparameters().num_selected_features_ > 0 &&
-          hyperparameters().num_selected_features_ < _index.size() )
-            ? ( hyperparameters().num_selected_features_ )
+        ( hyperparameters().num_selected_features() > 0 &&
+          hyperparameters().num_selected_features() < _index.size() )
+            ? ( hyperparameters().num_selected_features() )
             : ( _index.size() );
 
     std::vector<decisiontrees::DecisionTree> selected_trees;

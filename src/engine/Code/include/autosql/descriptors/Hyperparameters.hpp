@@ -18,14 +18,13 @@ struct Hyperparameters
 
     // ------------------------------------------------------
 
-    /// Calculates the number of selected features.
-    static size_t calc_num_selected_features(
-        const Poco::JSON::Object& _json_obj );
-
     /// Transforms the hyperparameters into a JSON object
     Poco::JSON::Object to_json_obj() const;
 
     // ------------------------------------------------------
+
+    /// Calculates the absolute number of selected features.
+    size_t num_selected_features() const;
 
     /// Transforms the hyperparameters into a JSON string
     std::string to_json() const { return JSON::stringify( to_json_obj() ); }
@@ -45,10 +44,6 @@ struct Hyperparameters
     /// The number of features to be extracted
     const size_t num_features_;
 
-    /// The number of features to be selected. Must be smaller than
-    /// num_features. When set to 0, then there is no feature selection.
-    const size_t num_selected_features_;
-
     /// The number of subfeatures to be extracted. Only relevant for
     /// "snowflake" data model.
     const size_t num_subfeatures_;
@@ -67,6 +62,10 @@ struct Hyperparameters
 
     /// The share of aggregations randomly selected
     const Float share_aggregations_;
+
+    /// The share of features to be selected.
+    /// When set to 0, then there is no feature selection.
+    const Float share_selected_features_;
 
     /// Shrinkage of learning rate
     const Float shrinkage_;

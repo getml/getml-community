@@ -36,6 +36,9 @@ struct Hyperparameters
 
     // --------------------------------------------------------
 
+    /// Calculates the absolute number of selected features.
+    size_t num_selected_features() const;
+
     /// Transforms the Hyperparameters into a JSON object
     Poco::JSON::Object to_json_obj() const;
 
@@ -81,9 +84,6 @@ struct Hyperparameters
     /// Number of features (number of trees in boosted ensemble)
     const Int num_features_;
 
-    /// Number of features to be selected.
-    const Int num_selected_features_;
-
     /// ...
     // const Int num_parallel_tree;
 
@@ -101,6 +101,10 @@ struct Hyperparameters
 
     /// The seed used for initializing the random number generator.
     const unsigned int seed_;
+
+    /// The share of features to be selected.
+    /// When set to 0, then there is no feature selection.
+    const Float share_selected_features_;
 
     /// Whether to print messages while running boosting
     const bool silent_;

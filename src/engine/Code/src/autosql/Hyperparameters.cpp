@@ -14,8 +14,6 @@ Hyperparameters::Hyperparameters( const Poco::JSON::Object& _json_obj )
       loss_function_(
           JSON::get_value<std::string>( _json_obj, "loss_function_" ) ),
       num_features_( JSON::get_value<size_t>( _json_obj, "num_features_" ) ),
-      num_selected_features_(
-          Hyperparameters::calc_num_selected_features( _json_obj ) ),
       num_subfeatures_(
           JSON::get_value<size_t>( _json_obj, "num_subfeatures_" ) ),
       num_threads_( JSON::get_value<size_t>( _json_obj, "num_threads_" ) ),
@@ -25,6 +23,8 @@ Hyperparameters::Hyperparameters( const Poco::JSON::Object& _json_obj )
       seed_( JSON::get_value<unsigned int>( _json_obj, "seed_" ) ),
       share_aggregations_(
           JSON::get_value<Float>( _json_obj, "share_aggregations_" ) ),
+      share_selected_features_(
+          JSON::get_value<Float>( _json_obj, "share_selected_features_" ) ),
       shrinkage_( JSON::get_value<Float>( _json_obj, "shrinkage_" ) ),
       tree_hyperparameters_(
           std::make_shared<const TreeHyperparameters>( _json_obj ) ),
@@ -34,19 +34,20 @@ Hyperparameters::Hyperparameters( const Poco::JSON::Object& _json_obj )
 
 // ----------------------------------------------------------------------------
 
-size_t Hyperparameters::calc_num_selected_features(
-    const Poco::JSON::Object& _json_obj )
+size_t Hyperparameters::num_selected_features() const
 {
-    const auto nsf =
-        JSON::get_value<size_t>( _json_obj, "num_selected_features_" );
-
-    if ( _json_obj.has( "feature_selector_" ) && nsf <= 0 )
+    if ( share_selected_features_ <= 0.0 )
         {
-            return JSON::get_value<size_t>( _json_obj, "num_features_" );
+            return 0;
+        }
+    else if ( share_selected_features_ >= 1.0 )
+        {
+            return num_features_;
         }
     else
         {
-            return nsf;
+            return static_cast<size_t>(
+                share_selected_features_ * num_features_ );
         }
 }
 
@@ -74,8 +75,6 @@ Poco::JSON::Object Hyperparameters::to_json_obj() const
 
     obj.set( "num_features_", num_features_ );
 
-    obj.set( "num_selected_features_", num_selected_features_ );
-
     obj.set( "num_subfeatures_", num_subfeatures_ );
 
     obj.set( "max_length_", tree_hyperparameters_->max_length_ );
@@ -91,6 +90,8 @@ Poco::JSON::Object Hyperparameters::to_json_obj() const
     obj.set( "share_aggregations_", share_aggregations_ );
 
     obj.set( "share_conditions_", tree_hyperparameters_->share_conditions_ );
+
+    obj.set( "share_selected_features_", share_selected_features_ );
 
     obj.set( "grid_factor_", tree_hyperparameters_->grid_factor_ );
 

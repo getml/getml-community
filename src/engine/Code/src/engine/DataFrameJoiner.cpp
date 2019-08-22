@@ -518,6 +518,7 @@ DataFrameJoiner::make_row_indices(
                         {
                             rindices1.push_back( ix1 );
                             rindices2.push_back( _df2.nrows() );
+                            continue;
                         }
                     else if ( _how == "inner" )
                         {

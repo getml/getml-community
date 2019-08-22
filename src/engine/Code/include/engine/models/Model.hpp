@@ -1090,7 +1090,7 @@ void Model<FeatureEngineererType>::select_features(
             return;
         }
 
-    if ( feature_engineerer().hyperparameters().num_selected_features_ <= 0 )
+    if ( feature_engineerer().hyperparameters().num_selected_features() <= 0 )
         {
             throw std::invalid_argument(
                 "Number of features must be positive!" );
@@ -1157,10 +1157,10 @@ void Model<FeatureEngineererType>::select_features(
     // cut.
 
     const auto n_selected =
-        ( feature_engineerer().hyperparameters().num_selected_features_ > 0 &&
-          feature_engineerer().hyperparameters().num_selected_features_ <
+        ( feature_engineerer().hyperparameters().num_selected_features() > 0 &&
+          feature_engineerer().hyperparameters().num_selected_features() <
               index.size() )
-            ? ( feature_engineerer().hyperparameters().num_selected_features_ )
+            ? ( feature_engineerer().hyperparameters().num_selected_features() )
             : ( index.size() );
 
     predictor_impl().select_cols(
