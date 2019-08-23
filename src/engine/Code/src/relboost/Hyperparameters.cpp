@@ -26,6 +26,7 @@ Hyperparameters::Hyperparameters()
 
 Hyperparameters::Hyperparameters( const Poco::JSON::Object& _obj )
     : eta_( JSON::get_value<Float>( _obj, "eta_" ) ),
+      feature_selector_( _obj.getObject( "feature_selector_" ) ),
       gamma_( JSON::get_value<Float>( _obj, "gamma_" ) ),
       include_categorical_(
           JSON::get_value<bool>( _obj, "include_categorical_" ) ),
@@ -34,6 +35,7 @@ Hyperparameters::Hyperparameters( const Poco::JSON::Object& _obj )
       num_features_( JSON::get_value<Int>( _obj, "num_features_" ) ),
       num_threads_( JSON::get_value<Int>( _obj, "num_threads_" ) ),
       objective_( JSON::get_value<std::string>( _obj, "objective_" ) ),
+      predictor_( _obj.getObject( "predictor_" ) ),
       reg_lambda_( JSON::get_value<Float>( _obj, "reg_lambda_" ) ),
       sampling_factor_( JSON::get_value<Float>( _obj, "sampling_factor_" ) ),
       seed_( JSON::get_value<unsigned int>( _obj, "seed_" ) ),
@@ -75,6 +77,11 @@ Poco::JSON::Object Hyperparameters::to_json_obj() const
 
     obj.set( "eta_", eta_ );
 
+    if ( feature_selector_ )
+        {
+            obj.set( "feature_selector_", *feature_selector_ );
+        }
+
     obj.set( "gamma_", gamma_ );
 
     obj.set( "include_categorical_", include_categorical_ );
@@ -88,6 +95,11 @@ Poco::JSON::Object Hyperparameters::to_json_obj() const
     obj.set( "num_threads_", num_threads_ );
 
     obj.set( "objective_", objective_ );
+
+    if ( predictor_ )
+        {
+            obj.set( "predictor_", *predictor_ );
+        }
 
     obj.set( "reg_lambda_", reg_lambda_ );
 

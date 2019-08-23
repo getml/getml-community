@@ -38,6 +38,10 @@ struct Hyperparameters
     /// included in our prediction.
     const bool include_categorical_;
 
+    /// Stores the hyperparameters of the feature selector - needed for .refresh
+    /// to work properly.
+    const Poco::JSON::Object::Ptr feature_selector_;
+
     /// The loss function to be used
     const std::string loss_function_;
 
@@ -50,6 +54,10 @@ struct Hyperparameters
 
     /// The number of threads to be used, 0 for automatic determination
     const size_t num_threads_;
+
+    /// Stores the hyperparameters of the predictor - needed for .refresh
+    /// to work properly.
+    const Poco::JSON::Object::Ptr predictor_;
 
     /// Whether you just want to select the features one by one
     const bool round_robin_;

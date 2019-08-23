@@ -64,6 +64,10 @@ struct Hyperparameters
     /// Boosting learning rate
     const Float eta_;
 
+    /// Stores the hyperparameters of the feature selector - needed for .refresh
+    /// to work properly.
+    const Poco::JSON::Object::Ptr feature_selector_;
+
     /// Minimum loss reduction required to make a further partition on a leaf
     /// node of the tree.
     const Float gamma_;
@@ -92,6 +96,10 @@ struct Hyperparameters
 
     /// The objective for the learning function.
     const std::string objective_;
+
+    /// Stores the hyperparameters of the predictor - needed for .refresh
+    /// to work properly.
+    const Poco::JSON::Object::Ptr predictor_;
 
     /// L2 regularization term on weights
     const Float reg_lambda_;

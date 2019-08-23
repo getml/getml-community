@@ -11,12 +11,14 @@ Hyperparameters::Hyperparameters( const Poco::JSON::Object& _json_obj )
           JSON::get_array( _json_obj, "aggregation_" ) ) ),
       include_categorical_(
           JSON::get_value<bool>( _json_obj, "include_categorical_" ) ),
+      feature_selector_( _json_obj.getObject( "feature_selector_" ) ),
       loss_function_(
           JSON::get_value<std::string>( _json_obj, "loss_function_" ) ),
       num_features_( JSON::get_value<size_t>( _json_obj, "num_features_" ) ),
       num_subfeatures_(
           JSON::get_value<size_t>( _json_obj, "num_subfeatures_" ) ),
       num_threads_( JSON::get_value<size_t>( _json_obj, "num_threads_" ) ),
+      predictor_( _json_obj.getObject( "predictor_" ) ),
       round_robin_( JSON::get_value<bool>( _json_obj, "round_robin_" ) ),
       sampling_factor_(
           JSON::get_value<Float>( _json_obj, "sampling_factor_" ) ),
@@ -65,6 +67,11 @@ Poco::JSON::Object Hyperparameters::to_json_obj() const
 
     obj.set( "allow_sets_", tree_hyperparameters_->allow_sets_ );
 
+    if ( feature_selector_ )
+        {
+            obj.set( "feature_selector_", *feature_selector_ );
+        }
+
     obj.set( "include_categorical_", include_categorical_ );
 
     obj.set( "lag_", tree_hyperparameters_->lag_ );
@@ -80,6 +87,11 @@ Poco::JSON::Object Hyperparameters::to_json_obj() const
     obj.set( "max_length_", tree_hyperparameters_->max_length_ );
 
     obj.set( "min_num_samples_", tree_hyperparameters_->min_num_samples_ );
+
+    if ( predictor_ )
+        {
+            obj.set( "predictor_", *predictor_ );
+        }
 
     obj.set( "shrinkage_", shrinkage_ );
 

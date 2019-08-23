@@ -4,6 +4,8 @@
 // ----------------------------------------------------------------------------
 // Dependencies
 
+#include <optional>
+
 #include <Poco/JSON/Array.h>
 #include <Poco/JSON/Object.h>
 
