@@ -6,7 +6,8 @@ namespace utils
 {
 // ----------------------------------------------------------------------------
 
-const std::vector<size_t> DataFrameScatterer::build_thread_nums(
+const std::pair<std::vector<size_t>, size_t>
+DataFrameScatterer::build_thread_nums(
     const std::map<Int, size_t>& _min_keys_map,
     const containers::Column<Int>& _min_join_key )
 {
@@ -21,12 +22,14 @@ const std::vector<size_t> DataFrameScatterer::build_thread_nums(
             thread_nums[i] = it->second;
         }
 
-    return thread_nums;
+    return std::pair<std::vector<size_t>, size_t>(
+        thread_nums, _min_keys_map.size() );
 }
 
 // ----------------------------------------------------------------------------
 
-const std::vector<size_t> DataFrameScatterer::build_thread_nums(
+const std::pair<std::vector<size_t>, size_t>
+DataFrameScatterer::build_thread_nums(
     const std::vector<containers::Column<Int>>& _keys,
     const size_t _num_threads )
 {

@@ -230,7 +230,13 @@ void DecisionTreeEnsemble::fit(
     const std::shared_ptr<const logging::AbstractLogger> _logger )
 {
     // ------------------------------------------------------
-    // Make sure that the target values are all well-behaved.
+    // Some plausibility checks.
+
+    if ( _population.nrows() == 0 )
+        {
+            throw std::runtime_error(
+                "Population table needs to contain at least some data!" );
+        }
 
     check_plausibility_of_targets( _population );
 
@@ -241,18 +247,29 @@ void DecisionTreeEnsemble::fit(
 
     // ------------------------------------------------------
 
-    const auto num_threads =
+    auto num_threads =
         Threadutils::get_num_threads( hyperparameters().num_threads_ );
-
-    multithreading::Communicator comm( num_threads );
-
-    set_comm( &comm );
 
     // ------------------------------------------------------
     // Build thread_nums
 
-    const auto thread_nums = utils::DataFrameScatterer::build_thread_nums(
-        _population.join_keys(), num_threads );
+    const auto [thread_nums, n_unique] =
+        utils::DataFrameScatterer::build_thread_nums(
+            _population.join_keys(), num_threads );
+
+    // ------------------------------------------------------
+    // Take care of an edge case.
+
+    if ( num_threads > n_unique )
+        {
+            num_threads = n_unique;
+        }
+
+    // ------------------------------------------------------
+
+    multithreading::Communicator comm( num_threads );
+
+    set_comm( &comm );
 
     // ------------------------------------------------------
     // Create deep copies of this ensemble.
@@ -723,15 +740,30 @@ containers::Features DecisionTreeEnsemble::transform(
             throw std::runtime_error( "Relboost model has not been fitted!" );
         }
 
+    if ( _population.nrows() == 0 )
+        {
+            throw std::runtime_error(
+                "Population table needs to contain at least some data!" );
+        }
+
     // ------------------------------------------------------
     // thread_nums signify the thread number that a particular row belongs to.
     // The idea is to separate the join keys as clearly as possible.
 
-    const auto num_threads =
+    auto num_threads =
         Threadutils::get_num_threads( hyperparameters().num_threads_ );
 
-    const auto thread_nums = utils::DataFrameScatterer::build_thread_nums(
-        _population.join_keys(), num_threads );
+    const auto [thread_nums, n_unique] =
+        utils::DataFrameScatterer::build_thread_nums(
+            _population.join_keys(), num_threads );
+
+    // ------------------------------------------------------
+    // Take care of an edge case.
+
+    if ( num_threads > n_unique )
+        {
+            num_threads = n_unique;
+        }
 
     // -------------------------------------------------------
     // Launch threads and generate predictions on the subviews.

@@ -1093,7 +1093,7 @@ void Model<FeatureEngineererType>::select_features(
     if ( feature_engineerer().hyperparameters().num_selected_features() <= 0 )
         {
             throw std::invalid_argument(
-                "Number of features must be positive!" );
+                "Number of selected features must be positive!" );
         }
 
     // ------------------------------------------------------------------------

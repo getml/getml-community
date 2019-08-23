@@ -38,18 +38,23 @@ Hyperparameters::Hyperparameters( const Poco::JSON::Object& _json_obj )
 
 size_t Hyperparameters::num_selected_features() const
 {
-    if ( share_selected_features_ <= 0.0 )
-        {
-            return 0;
-        }
-    else if ( share_selected_features_ >= 1.0 )
+    if ( share_selected_features_ <= 0.0 || share_selected_features_ >= 1.0 )
         {
             return num_features_;
         }
     else
         {
-            return static_cast<size_t>(
-                share_selected_features_ * num_features_ );
+            const auto num_selected =
+                static_cast<size_t>( share_selected_features_ * num_features_ );
+
+            if ( num_selected == 0 )
+                {
+                    return 1;
+                }
+            else
+                {
+                    return num_selected;
+                }
         }
 }
 

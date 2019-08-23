@@ -124,6 +124,12 @@ void DecisionTreeEnsemble::fit(
     // ------------------------------------------------------
     // Make sure that the target values are all well-behaved.
 
+    if ( _population.nrows() == 0 )
+        {
+            throw std::runtime_error(
+                "Population table needs to contain at least some data!" );
+        }
+
     check_plausibility_of_targets( _population );
 
     // ------------------------------------------------------
@@ -135,18 +141,29 @@ void DecisionTreeEnsemble::fit(
 
     debug_log( "Building communicator..." );
 
-    const auto num_threads =
+    auto num_threads =
         Threadutils::get_num_threads( hyperparameters().num_threads_ );
-
-    multithreading::Communicator comm( num_threads );
 
     // ------------------------------------------------------
     // Build thread_nums
 
     debug_log( "Building the thread nums..." );
 
-    const auto thread_nums = utils::DataFrameScatterer::build_thread_nums(
-        _population.join_keys(), num_threads );
+    const auto [thread_nums, n_unique] =
+        utils::DataFrameScatterer::build_thread_nums(
+            _population.join_keys(), num_threads );
+
+    // ------------------------------------------------------
+    // Take care of an edge case.
+
+    if ( num_threads > n_unique )
+        {
+            num_threads = n_unique;
+        }
+
+    // ------------------------------------------------------
+
+    multithreading::Communicator comm( num_threads );
 
     // ------------------------------------------------------
     // Create deep copies of this ensemble.
@@ -903,6 +920,12 @@ containers::Features DecisionTreeEnsemble::transform(
     // ------------------------------------------------------
     // Check plausibility.
 
+    if ( _population.nrows() == 0 )
+        {
+            throw std::runtime_error(
+                "Population table needs to contain at least some data!" );
+        }
+
     if ( num_features() == 0 )
         {
             throw std::runtime_error( "AutoSQL model has not been fitted!" );
@@ -912,11 +935,25 @@ containers::Features DecisionTreeEnsemble::transform(
     // thread_nums signify the thread number that a particular row belongs to.
     // The idea is to separate the join keys as clearly as possible.
 
-    const auto num_threads =
+    auto num_threads =
         Threadutils::get_num_threads( hyperparameters().num_threads_ );
 
-    const auto thread_nums = utils::DataFrameScatterer::build_thread_nums(
-        _population.join_keys(), num_threads );
+    // ------------------------------------------------------
+    // Build thread_nums
+
+    debug_log( "Building the thread nums..." );
+
+    const auto [thread_nums, n_unique] =
+        utils::DataFrameScatterer::build_thread_nums(
+            _population.join_keys(), num_threads );
+
+    // ------------------------------------------------------
+    // Take care of an edge case.
+
+    if ( num_threads > n_unique )
+        {
+            num_threads = n_unique;
+        }
 
     // -------------------------------------------------------
     // Launch threads and generate predictions on the subviews.

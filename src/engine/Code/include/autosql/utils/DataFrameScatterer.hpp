@@ -14,7 +14,7 @@ class DataFrameScatterer
    public:
     /// Returns a vector of the same length as the keys that signifies
     /// the thread to which each row belongs.
-    static const std::vector<size_t> build_thread_nums(
+    static const std::pair<std::vector<size_t>, size_t> build_thread_nums(
         const std::vector<containers::Column<Int> >& _keys,
         const size_t _num_threads );
 
@@ -29,7 +29,7 @@ class DataFrameScatterer
    private:
     /// Returns a vector of the same length as the keys that signifies
     /// the thread to which each row belongs.
-    static const std::vector<size_t> build_thread_nums(
+    static const std::pair<std::vector<size_t>, size_t> build_thread_nums(
         const std::map<Int, size_t>& _min_keys_map,
         const containers::Column<Int>& min_join_key );
 
