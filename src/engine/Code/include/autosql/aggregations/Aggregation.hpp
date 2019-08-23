@@ -2019,7 +2019,7 @@ void Aggregation<AggType, data_used_, is_population_>::
     for ( const auto c : _critical_values )
         {
             const auto at_begin = [c, _lag]( containers::Match *m ) {
-                return m->numerical_value >= c - _lag;
+                return m->numerical_value > c - _lag;
             };
 
             const auto at_end = [c]( containers::Match *m ) {
@@ -2032,8 +2032,8 @@ void Aggregation<AggType, data_used_, is_population_>::
 
             for ( auto it = wbegin; it != wend; ++it )
                 {
-                    assert( ( *it )->numerical_value >= c - _lag );
-                    assert( ( *it )->numerical_value < c );
+                    assert( ( *it )->numerical_value > c - _lag );
+                    assert( ( *it )->numerical_value <= c );
 
                     activate_sample( *it );
 
@@ -2134,7 +2134,7 @@ void Aggregation<AggType, data_used_, is_population_>::
     for ( const auto c : _critical_values )
         {
             const auto at_begin = [c, _lag]( containers::Match *m ) {
-                return m->numerical_value >= c - _lag;
+                return m->numerical_value > c - _lag;
             };
 
             const auto at_end = [c]( containers::Match *m ) {
@@ -2147,8 +2147,8 @@ void Aggregation<AggType, data_used_, is_population_>::
 
             for ( auto it = wbegin; it != wend; ++it )
                 {
-                    assert( ( *it )->numerical_value >= c - _lag );
-                    assert( ( *it )->numerical_value < c );
+                    assert( ( *it )->numerical_value > c - _lag );
+                    assert( ( *it )->numerical_value <= c );
 
                     deactivate_sample( *it );
 
@@ -2165,8 +2165,8 @@ void Aggregation<AggType, data_used_, is_population_>::
 
                     for ( auto it = wbegin; it != wend; ++it )
                         {
-                            assert( ( *it )->numerical_value >= c - _lag );
-                            assert( ( *it )->numerical_value < c );
+                            assert( ( *it )->numerical_value > c - _lag );
+                            assert( ( *it )->numerical_value <= c );
 
                             activate_sample( *it );
 
@@ -2676,7 +2676,7 @@ void Aggregation<AggType, data_used_, is_population_>::
     for ( const auto c : _critical_values )
         {
             const auto at_begin = [c, _lag]( containers::Match *m ) {
-                return m->numerical_value >= c - _lag;
+                return m->numerical_value > c - _lag;
             };
 
             const auto at_end = [c]( containers::Match *m ) {
@@ -2689,8 +2689,8 @@ void Aggregation<AggType, data_used_, is_population_>::
 
             for ( auto it = wbegin; it != wend; ++it )
                 {
-                    assert( ( *it )->numerical_value >= c - _lag );
-                    assert( ( *it )->numerical_value < c );
+                    assert( ( *it )->numerical_value > c - _lag );
+                    assert( ( *it )->numerical_value <= c );
 
                     deactivate_sample( *it );
 
@@ -2791,7 +2791,7 @@ void Aggregation<AggType, data_used_, is_population_>::
     for ( const auto c : _critical_values )
         {
             const auto at_begin = [c, _lag]( containers::Match *m ) {
-                return m->numerical_value >= c - _lag;
+                return m->numerical_value > c - _lag;
             };
 
             const auto at_end = [c]( containers::Match *m ) {
@@ -2804,8 +2804,8 @@ void Aggregation<AggType, data_used_, is_population_>::
 
             for ( auto it = wbegin; it != wend; ++it )
                 {
-                    assert( ( *it )->numerical_value >= c - _lag );
-                    assert( ( *it )->numerical_value < c );
+                    assert( ( *it )->numerical_value > c - _lag );
+                    assert( ( *it )->numerical_value <= c );
 
                     activate_sample( *it );
 
@@ -2822,8 +2822,8 @@ void Aggregation<AggType, data_used_, is_population_>::
 
                     for ( auto it = wbegin; it != wend; ++it )
                         {
-                            assert( ( *it )->numerical_value >= c - _lag );
-                            assert( ( *it )->numerical_value < c );
+                            assert( ( *it )->numerical_value > c - _lag );
+                            assert( ( *it )->numerical_value <= c );
 
                             deactivate_sample( *it );
 
