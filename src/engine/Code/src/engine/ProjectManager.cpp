@@ -262,6 +262,12 @@ void ProjectManager::clear()
                 "removedataframe", "{\"name\":\"" + pair.first + "\"}" );
         }
 
+    for ( auto& pair : autosql_models() )
+        {
+            monitor_->send(
+                "removeautosqlmodel", "{\"name\":\"" + pair.first + "\"}" );
+        }
+
     for ( auto& pair : relboost_models() )
         {
             monitor_->send(
