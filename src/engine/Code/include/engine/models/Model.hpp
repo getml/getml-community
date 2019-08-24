@@ -215,9 +215,6 @@ class Model : public AbstractModel
     /// The underlying feature engineering algorithm.
     FeatureEngineererType feature_engineerer_;
 
-    /// The hyperparameters used for fitting.
-    Poco::JSON::Object predictor_hyperparameters_;
-
     /// Pimpl for the predictors.
     std::shared_ptr<predictors::PredictorImpl> predictor_impl_;
 
@@ -250,21 +247,6 @@ Model<FeatureEngineererType>::Model(
     const Poco::JSON::Object& _hyperparameters )
     : feature_engineerer_( _feature_engineerer )
 {
-    if ( _hyperparameters.has( "feature_selector_" ) &&
-         !_hyperparameters.isNull( "feature_selector_" ) )
-        {
-            predictor_hyperparameters_.set(
-                "feature_selector_",
-                JSON::get_object( _hyperparameters, "feature_selector_" ) );
-        }
-
-    if ( _hyperparameters.has( "predictor_" ) &&
-         !_hyperparameters.isNull( "predictor_" ) )
-        {
-            predictor_hyperparameters_.set(
-                "predictor_",
-                JSON::get_object( _hyperparameters, "predictor_" ) );
-        }
 }
 
 // ----------------------------------------------------------------------------
@@ -275,8 +257,6 @@ Model<FeatureEngineererType>::Model(
     const std::string& _path )
     : feature_engineerer_(
           _encoding, load_json_obj( _path + "feature_engineerer.json" ) ),
-      predictor_hyperparameters_(
-          load_json_obj( _path + "predictor_hyperparameters.json" ) ),
       predictor_impl_( std::make_shared<predictors::PredictorImpl>(
           load_json_obj( _path + "impl.json" ) ) ),
       scores_( load_json_obj( _path + "scores.json" ) )
@@ -792,14 +772,12 @@ void Model<FeatureEngineererType>::init_feature_selectors(
 {
     _feature_selectors->clear();
 
-    if ( !predictor_hyperparameters_.has( "feature_selector_" ) ||
-         predictor_hyperparameters_.isNull( "feature_selector_" ) )
+    if ( !feature_engineerer().hyperparameters().feature_selector_ )
         {
             return;
         }
 
-    const auto obj =
-        *JSON::get_object( predictor_hyperparameters_, "feature_selector_" );
+    const auto obj = *feature_engineerer().hyperparameters().feature_selector_;
 
     assert( predictor_impl_ );
 
@@ -819,14 +797,12 @@ void Model<FeatureEngineererType>::init_predictors(
 {
     _predictors->clear();
 
-    if ( !predictor_hyperparameters_.has( "predictor_" ) ||
-         predictor_hyperparameters_.isNull( "predictor_" ) )
+    if ( !feature_engineerer().hyperparameters().predictor_ )
         {
             return;
         }
 
-    const auto obj =
-        *JSON::get_object( predictor_hyperparameters_, "predictor_" );
+    const auto obj = *feature_engineerer().hyperparameters().predictor_;
 
     assert( predictor_impl_ );
 
@@ -983,9 +959,6 @@ void Model<FeatureEngineererType>::save( const std::string& _path ) const
 
     scores().save( _path + "scores.json" );
 
-    save_json_obj(
-        predictor_hyperparameters_, _path + "predictor_hyperparameters.json" );
-
     predictor_impl().save( _path + "impl.json" );
 
     for ( size_t i = 0; i < num_predictors(); ++i )
@@ -1084,8 +1057,7 @@ void Model<FeatureEngineererType>::select_features(
     // ------------------------------------------------------------------------
     // Plausibility checks
 
-    if ( !predictor_hyperparameters_.has( "feature_selector_" ) ||
-         predictor_hyperparameters_.isNull( "feature_selector_" ) )
+    if ( !feature_engineerer().hyperparameters().feature_selector_ )
         {
             return;
         }

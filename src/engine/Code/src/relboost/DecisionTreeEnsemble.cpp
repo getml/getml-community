@@ -232,6 +232,12 @@ void DecisionTreeEnsemble::fit(
     // ------------------------------------------------------
     // Some plausibility checks.
 
+    if ( num_features() != 0 )
+        {
+            throw std::runtime_error(
+                "Relboost model has already been fitted!" );
+        }
+
     if ( _population.nrows() == 0 )
         {
             throw std::runtime_error(

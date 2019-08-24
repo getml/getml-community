@@ -122,7 +122,13 @@ void DecisionTreeEnsemble::fit(
     const std::shared_ptr<const logging::AbstractLogger> _logger )
 {
     // ------------------------------------------------------
-    // Make sure that the target values are all well-behaved.
+    // Some plausibility checks.
+
+    if ( num_features() != 0 )
+        {
+            throw std::runtime_error(
+                "AutoSQL model has already been fitted!" );
+        }
 
     if ( _population.nrows() == 0 )
         {
