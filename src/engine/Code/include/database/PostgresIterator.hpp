@@ -34,8 +34,13 @@ class PostgresIterator : public Iterator
                 return static_cast<Float>( NAN );
             }
 
-        const auto [val, success] =
-            csv::Parser::to_double( std::string( str ) );
+        auto [val, success] = csv::Parser::to_double( std::string( str ) );
+
+        if ( !success )
+            {
+                std::tie( val, success ) = csv::Parser::to_time_stamp(
+                    std::string( str ), time_formats_ );
+            }
 
         if ( !success )
             {
