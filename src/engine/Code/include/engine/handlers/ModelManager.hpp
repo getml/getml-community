@@ -58,6 +58,10 @@ class ModelManager
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
+    /// Sends a command to the monitor to launch a hyperparameter optimization.
+    void launch_hyperopt(
+        const std::string& _name, Poco::Net::StreamSocket* _socket );
+
     /// Refreshes a model in the target language
     void refresh_model(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
@@ -312,6 +316,30 @@ void ModelManager<ModelType>::fit_model(
     communication::Sender::send_string( "Trained model.", _socket );
 
     send_data( categories_, local_data_frames, _socket );
+
+    // -------------------------------------------------------
+}
+// ------------------------------------------------------------------------
+
+template <typename ModelType>
+void ModelManager<ModelType>::launch_hyperopt(
+    const std::string& _name, Poco::Net::StreamSocket* _socket )
+{
+    // -------------------------------------------------------
+    // Find the reference model.
+
+    auto model = get_model( _name );
+
+    communication::Sender::send_string( "Found!", _socket );
+
+    // -------------------------------------------------------
+    // Receive the complete command and send to engine.
+
+    const auto json_str = communication::Receiver::recv_string( _socket );
+
+    monitor_->send( "launchhyperopt", json_str );
+
+    communication::Sender::send_string( "Success!", _socket );
 
     // -------------------------------------------------------
 }
