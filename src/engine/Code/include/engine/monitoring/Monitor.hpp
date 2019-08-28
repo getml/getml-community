@@ -29,10 +29,8 @@ class Monitor
                   << std::endl;
     }
 
-    // ------------------------------------------------------------------------
-
     /// Sends a message (consisting of _type and _obj) to the AutoSQL monitor
-    std::string send(
+    std::pair<Poco::Net::HTTPResponse::HTTPStatus, std::string> send(
         const std::string& _type, const Poco::JSON::Object& _obj ) const
     {
         return send( _type, JSON::stringify( _obj ) );
@@ -44,7 +42,7 @@ class Monitor
     bool get_start_message() const;
 
     /// Sends a message (consisting of _type and _json) to the AutoSQL monitor
-    std::string send(
+    std::pair<Poco::Net::HTTPResponse::HTTPStatus, std::string> send(
         const std::string& _type, const std::string& _json ) const;
 
     /// Sends a GET request to shut down the AutoSQL Monitor.

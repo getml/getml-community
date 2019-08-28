@@ -67,7 +67,7 @@ bool Monitor::get_start_message() const
 
 // ------------------------------------------------------------------------
 
-std::string Monitor::send(
+std::pair<Poco::Net::HTTPResponse::HTTPStatus, std::string> Monitor::send(
     const std::string& _type, const std::string& _json ) const
 {
     // --------------------------------------------------------------
@@ -103,7 +103,9 @@ std::string Monitor::send(
             log( "Communication with AutoSQL monitor failed: " +
                  std::string( e.what() ) + "." );
 
-            return "";
+            return std::pair<Poco::Net::HTTPResponse::HTTPStatus, std::string>(
+                Poco::Net::HTTPResponse::HTTPStatus::HTTP_MOVED_PERMANENTLY,
+                "" );
         }
 
     // --------------------------------------------------------------
@@ -122,7 +124,8 @@ std::string Monitor::send(
 
     // --------------------------------------------------------------
 
-    return response_content;
+    return std::pair<Poco::Net::HTTPResponse::HTTPStatus, std::string>(
+        res.getStatus(), response_content );
 
     // --------------------------------------------------------------
 }
@@ -143,7 +146,9 @@ void Monitor::send_and_receive(
                 Poco::Net::Context::VerificationMode::VERIFY_NONE ) );
 
             Poco::Net::HTTPSClientSession session(
-                "127.0.0.1", static_cast<Poco::UInt16>( options_.monitor_.port_ ), context );
+                "127.0.0.1",
+                static_cast<Poco::UInt16>( options_.monitor_.port_ ),
+                context );
 
             auto& req_stream = session.sendRequest( *_req );
 
@@ -158,6 +163,8 @@ void Monitor::send_and_receive(
             Poco::Net::HTTPClientSession session(
                 "127.0.0.1",
                 static_cast<Poco::UInt16>( options_.monitor_.port_ ) );
+
+            session.setTimeout( 0 );
 
             auto& req_stream = session.sendRequest( *_req );
 

@@ -337,9 +337,17 @@ void ModelManager<ModelType>::launch_hyperopt(
 
     const auto json_str = communication::Receiver::recv_string( _socket );
 
-    monitor_->send( "launchhyperopt", json_str );
+    const auto [status, response] =
+        monitor_->send( "launchhyperopt", json_str );
 
-    communication::Sender::send_string( "Success!", _socket );
+    if ( status == Poco::Net::HTTPResponse::HTTPStatus::HTTP_OK )
+        {
+            communication::Sender::send_string( "Success!", _socket );
+        }
+    else
+        {
+            communication::Sender::send_string( response, _socket );
+        }
 
     // -------------------------------------------------------
 }
