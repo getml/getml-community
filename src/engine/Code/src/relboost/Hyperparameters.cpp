@@ -16,6 +16,7 @@ Hyperparameters::Hyperparameters()
       reg_lambda_( 0.0 ),
       sampling_factor_( 1.0 ),
       seed_( 5843 ),
+      session_name_( "" ),
       share_selected_features_( 0.0 ),
       silent_( true ),
       use_timestamps_( true )
@@ -39,6 +40,10 @@ Hyperparameters::Hyperparameters( const Poco::JSON::Object& _obj )
       reg_lambda_( JSON::get_value<Float>( _obj, "reg_lambda_" ) ),
       sampling_factor_( JSON::get_value<Float>( _obj, "sampling_factor_" ) ),
       seed_( JSON::get_value<unsigned int>( _obj, "seed_" ) ),
+      session_name_(
+          _obj.has( "session_name_" )
+              ? JSON::get_value<std::string>( _obj, "session_name_" )
+              : "" ),
       share_selected_features_(
           JSON::get_value<Float>( _obj, "share_selected_features_" ) ),
       silent_( JSON::get_value<bool>( _obj, "silent_" ) ),
@@ -111,6 +116,8 @@ Poco::JSON::Object Hyperparameters::to_json_obj() const
     obj.set( "sampling_factor_", sampling_factor_ );
 
     obj.set( "seed_", seed_ );
+
+    obj.set( "session_name_", session_name_ );
 
     obj.set( "share_selected_features_", share_selected_features_ );
 

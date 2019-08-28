@@ -216,6 +216,12 @@ class DecisionTreeEnsemble
     /// Trivial (private) accessor
     utils::Sampler& sampler() { return impl().sampler_; }
 
+    /// Trivial (const) accessor
+    const std::string& session_name() const
+    {
+        return hyperparameters().session_name_;
+    }
+
     /// Trivial (private) setter.
     void set_comm( multithreading::Communicator* _comm )
     {
