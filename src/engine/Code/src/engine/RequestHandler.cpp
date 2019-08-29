@@ -252,7 +252,7 @@ void RequestHandler::run()
                 {
                     relboost_model_manager().fit_model( name, cmd, &socket() );
                 }
-            else if ( type == "AutoSQLModel.launch_hyperopt" )
+            else if ( type == "RelboostModel.launch_hyperopt" )
                 {
                     relboost_model_manager().launch_hyperopt( name, &socket() );
                 }
