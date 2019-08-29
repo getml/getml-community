@@ -150,6 +150,10 @@ void Monitor::send_and_receive(
                 static_cast<Poco::UInt16>( options_.monitor_.port_ ),
                 context );
 
+            const auto one_year = Poco::Timespan( 365, 0, 0, 0, 0 );
+
+            session.setTimeout( one_year );
+
             auto& req_stream = session.sendRequest( *_req );
 
             req_stream << _json;
@@ -164,7 +168,9 @@ void Monitor::send_and_receive(
                 "127.0.0.1",
                 static_cast<Poco::UInt16>( options_.monitor_.port_ ) );
 
-            session.setTimeout( 0 );
+            const auto one_year = Poco::Timespan( 365, 0, 0, 0, 0 );
+
+            session.setTimeout( one_year );
 
             auto& req_stream = session.sendRequest( *_req );
 
