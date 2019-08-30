@@ -59,6 +59,10 @@ class ModelManager
         Poco::Net::StreamSocket* _socket );
 
     /// Returns the scores of all models belonging to the session _name.
+    void get_hyperopt_names(
+        const std::string& _name, Poco::Net::StreamSocket* _socket ) const;
+
+    /// Returns the scores of all models belonging to the session _name.
     void get_hyperopt_scores(
         const std::string& _name, Poco::Net::StreamSocket* _socket ) const;
 
@@ -322,6 +326,33 @@ void ModelManager<ModelType>::fit_model(
     send_data( categories_, local_data_frames, _socket );
 
     // -------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
+template <typename ModelType>
+void ModelManager<ModelType>::get_hyperopt_names(
+    const std::string& _name, Poco::Net::StreamSocket* _socket ) const
+{
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    Poco::JSON::Array names;
+
+    for ( const auto& [key, model] : models() )
+        {
+            if ( model->session_name() == _name )
+                {
+                    names.add( key );
+                }
+        }
+
+    Poco::JSON::Object obj;
+
+    obj.set( "names_", names );
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    communication::Sender::send_string( JSON::stringify( obj ), _socket );
 }
 
 // ------------------------------------------------------------------------
