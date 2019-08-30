@@ -71,6 +71,15 @@ class Model : public AbstractModel
     /// Return feature engineerer as SQL code.
     std::string to_sql() const final { return feature_engineerer().to_sql(); }
 
+    /// Trivial (const) getter.
+    const metrics::Scores& scores() const { return scores_; }
+
+    /// Trivial (const) getter.
+    const std::string& session_name() const
+    {
+        return feature_engineerer().hyperparameters().session_name_;
+    }
+
     // --------------------------------------------------------
 
    private:
@@ -202,12 +211,6 @@ class Model : public AbstractModel
         assert( predictor_impl_ );
         return *predictor_impl_;
     }
-
-    /// Trivial (private) getter
-    metrics::Scores& scores() { return scores_; }
-
-    /// Trivial (private) getter
-    const metrics::Scores& scores() const { return scores_; }
 
     // --------------------------------------------------------
 

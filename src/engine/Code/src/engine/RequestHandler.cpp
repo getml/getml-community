@@ -40,6 +40,11 @@ void RequestHandler::run()
                 {
                     autosql_model_manager().fit_model( name, cmd, &socket() );
                 }
+            else if ( type == "AutoSQLModel.get_hyperopt_scores" )
+                {
+                    autosql_model_manager().get_hyperopt_scores(
+                        name, &socket() );
+                }
             else if ( type == "AutoSQLModel.launch_hyperopt" )
                 {
                     autosql_model_manager().launch_hyperopt( name, &socket() );
@@ -251,6 +256,11 @@ void RequestHandler::run()
             else if ( type == "RelboostModel.fit" )
                 {
                     relboost_model_manager().fit_model( name, cmd, &socket() );
+                }
+            else if ( type == "RelboostModel.get_hyperopt_scores" )
+                {
+                    relboost_model_manager().get_hyperopt_scores(
+                        name, &socket() );
                 }
             else if ( type == "RelboostModel.launch_hyperopt" )
                 {

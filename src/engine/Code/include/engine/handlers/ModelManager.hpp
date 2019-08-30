@@ -58,6 +58,10 @@ class ModelManager
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
+    /// Returns the scores of all models belonging to the session _name.
+    void get_hyperopt_scores(
+        const std::string& _name, Poco::Net::StreamSocket* _socket ) const;
+
     /// Sends a command to the monitor to launch a hyperparameter optimization.
     void launch_hyperopt(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
@@ -319,6 +323,33 @@ void ModelManager<ModelType>::fit_model(
 
     // -------------------------------------------------------
 }
+
+// ------------------------------------------------------------------------
+
+template <typename ModelType>
+void ModelManager<ModelType>::get_hyperopt_scores(
+    const std::string& _name, Poco::Net::StreamSocket* _socket ) const
+{
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    Poco::JSON::Object scores;
+
+    for ( const auto& [key, model] : models() )
+        {
+            if ( model->session_name() == _name )
+                {
+                    const auto new_scores = metrics::Scorer::get_metrics(
+                        model->scores().to_json_obj() );
+
+                    scores.set( key, new_scores );
+                }
+        }
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    communication::Sender::send_string( JSON::stringify( scores ), _socket );
+}
+
 // ------------------------------------------------------------------------
 
 template <typename ModelType>
