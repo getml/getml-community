@@ -16,7 +16,7 @@ DecisionTreeEnsemble::DecisionTreeEnsemble(
       targets_( std::make_shared<std::vector<Float>>( 0 ) )
 {
     loss_function_ = lossfunctions::LossFunctionParser::parse(
-        _hyperparameters->objective_, impl().hyperparameters_, targets_ );
+        _hyperparameters->loss_function_, impl().hyperparameters_, targets_ );
 }
 
 // ----------------------------------------------------------------------------
@@ -41,7 +41,7 @@ DecisionTreeEnsemble::DecisionTreeEnsemble(
         JSON::get_value<Float>( _obj, "initial_prediction_" );
 
     loss_function_ = lossfunctions::LossFunctionParser::parse(
-        hyperparameters().objective_, impl().hyperparameters_, targets_ );
+        hyperparameters().loss_function_, impl().hyperparameters_, targets_ );
 
     // ------------------------------------------------------------------------
 

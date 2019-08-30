@@ -8,11 +8,11 @@ Hyperparameters::Hyperparameters()
     : eta_( 0.3 ),
       gamma_( 1.0 ),
       include_categorical_( true ),
+      loss_function_( "SquareLoss" ),
       max_depth_( 1 ),
       min_num_samples_( 200 ),
       num_features_( 10 ),
       num_threads_( 0 ),
-      objective_( "SquareLoss" ),
       reg_lambda_( 0.0 ),
       sampling_factor_( 1.0 ),
       seed_( 5843 ),
@@ -31,11 +31,11 @@ Hyperparameters::Hyperparameters( const Poco::JSON::Object& _obj )
       gamma_( JSON::get_value<Float>( _obj, "gamma_" ) ),
       include_categorical_(
           JSON::get_value<bool>( _obj, "include_categorical_" ) ),
+      loss_function_( JSON::get_value<std::string>( _obj, "loss_function_" ) ),
       max_depth_( JSON::get_value<Int>( _obj, "max_depth_" ) ),
       min_num_samples_( JSON::get_value<Int>( _obj, "min_num_samples_" ) ),
       num_features_( JSON::get_value<Int>( _obj, "num_features_" ) ),
       num_threads_( JSON::get_value<Int>( _obj, "num_threads_" ) ),
-      objective_( JSON::get_value<std::string>( _obj, "objective_" ) ),
       predictor_( _obj.getObject( "predictor_" ) ),
       reg_lambda_( JSON::get_value<Float>( _obj, "reg_lambda_" ) ),
       sampling_factor_( JSON::get_value<Float>( _obj, "sampling_factor_" ) ),
@@ -96,6 +96,8 @@ Poco::JSON::Object Hyperparameters::to_json_obj() const
 
     obj.set( "include_categorical_", include_categorical_ );
 
+    obj.set( "loss_function_", loss_function_ );
+
     obj.set( "max_depth_", max_depth_ );
 
     obj.set( "min_num_samples_", min_num_samples_ );
@@ -103,8 +105,6 @@ Poco::JSON::Object Hyperparameters::to_json_obj() const
     obj.set( "num_features_", num_features_ );
 
     obj.set( "num_threads_", num_threads_ );
-
-    obj.set( "objective_", objective_ );
 
     if ( predictor_ )
         {

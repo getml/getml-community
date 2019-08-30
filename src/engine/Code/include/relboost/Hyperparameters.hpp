@@ -76,6 +76,9 @@ struct Hyperparameters
     /// included in our prediction.
     const bool include_categorical_;
 
+    /// The loss function used for the learning function.
+    const std::string loss_function_;
+
     /// Maximum delta step we allow each tree’s weight estimation to be.
     // const Float max_delta_step;
 
@@ -93,9 +96,6 @@ struct Hyperparameters
 
     /// Number of parallel threads used to run xgboost
     const Int num_threads_;
-
-    /// The objective for the learning function.
-    const std::string objective_;
 
     /// Stores the hyperparameters of the predictor - needed for .refresh
     /// to work properly.
