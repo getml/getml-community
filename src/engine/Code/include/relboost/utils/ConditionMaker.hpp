@@ -33,6 +33,10 @@ class ConditionMaker
         const containers::Split& _split ) const;
 
    private:
+    /// Returns a list of the categories.
+    std::string list_categories( const containers::Split& _split ) const;
+
+   private:
     /// Trivial accessor.
     std::string encoding( size_t _i ) const
     {

@@ -17,28 +17,9 @@ std::string ConditionMaker::condition_greater(
                 {
                     assert( _split.column_ < _input.num_categoricals() );
 
-                    std::string condition = "( ";
-
-                    assert(
-                        _split.categories_used_begin_ <=
-                        _split.categories_used_end_ );
-
-                    for ( auto it = _split.categories_used_begin_;
-                          it != _split.categories_used_end_;
-                          ++it )
-                        {
-                            if ( it != _split.categories_used_begin_ )
-                                {
-                                    condition += " OR ";
-                                }
-
-                            condition +=
-                                "t2." +
-                                _input.categorical_name( _split.column_ ) +
-                                " = '" + encoding( *it ) + "'";
-                        }
-
-                    condition += " )";
+                    const std::string condition =
+                        "( t2." + _input.categorical_name( _split.column_ ) +
+                        " NOT IN " + list_categories( _split ) + " )";
 
                     return condition;
                 }
@@ -47,28 +28,9 @@ std::string ConditionMaker::condition_greater(
                 {
                     assert( _split.column_ < _output.num_categoricals() );
 
-                    std::string condition = "( ";
-
-                    assert(
-                        _split.categories_used_begin_ <=
-                        _split.categories_used_end_ );
-
-                    for ( auto it = _split.categories_used_begin_;
-                          it != _split.categories_used_end_;
-                          ++it )
-                        {
-                            if ( it != _split.categories_used_begin_ )
-                                {
-                                    condition += " OR ";
-                                }
-
-                            condition +=
-                                "t1." +
-                                _output.categorical_name( _split.column_ ) +
-                                " = '" + encoding( *it ) + "'";
-                        }
-
-                    condition += " )";
+                    const std::string condition =
+                        "( t1." + _output.categorical_name( _split.column_ ) +
+                        " NOT IN " + list_categories( _split ) + " )";
 
                     return condition;
                 }
@@ -175,28 +137,9 @@ std::string ConditionMaker::condition_smaller(
                 {
                     assert( _split.column_ < _input.num_categoricals() );
 
-                    std::string condition = "( ";
-
-                    assert(
-                        _split.categories_used_begin_ <=
-                        _split.categories_used_end_ );
-
-                    for ( auto it = _split.categories_used_begin_;
-                          it != _split.categories_used_end_;
-                          ++it )
-                        {
-                            if ( it != _split.categories_used_begin_ )
-                                {
-                                    condition += " AND ";
-                                }
-
-                            condition +=
-                                "t2." +
-                                _input.categorical_name( _split.column_ ) +
-                                " != '" + encoding( *it ) + "'";
-                        }
-
-                    condition += " )";
+                    const std::string condition =
+                        "( t2." + _input.categorical_name( _split.column_ ) +
+                        " IN " + list_categories( _split ) + " )";
 
                     return condition;
                 }
@@ -205,28 +148,9 @@ std::string ConditionMaker::condition_smaller(
                 {
                     assert( _split.column_ < _output.num_categoricals() );
 
-                    std::string condition = "( ";
-
-                    assert(
-                        _split.categories_used_begin_ <=
-                        _split.categories_used_end_ );
-
-                    for ( auto it = _split.categories_used_begin_;
-                          it != _split.categories_used_end_;
-                          ++it )
-                        {
-                            if ( it != _split.categories_used_begin_ )
-                                {
-                                    condition += " AND ";
-                                }
-
-                            condition +=
-                                "t1." +
-                                _output.categorical_name( _split.column_ ) +
-                                " != '" + encoding( *it ) + "'";
-                        }
-
-                    condition += " )";
+                    const std::string condition =
+                        "( t1." + _output.categorical_name( _split.column_ ) +
+                        " IN " + list_categories( _split ) + " )";
 
                     return condition;
                 }
@@ -337,6 +261,32 @@ std::string ConditionMaker::condition_smaller(
                 assert( false && "Unknown data_used_" );
                 return "";
         }
+}
+
+// ----------------------------------------------------------------------------
+
+std::string ConditionMaker::list_categories(
+    const containers::Split& _split ) const
+{
+    std::string categories = "( ";
+
+    assert( _split.categories_used_begin_ <= _split.categories_used_end_ );
+
+    for ( auto it = _split.categories_used_begin_;
+          it != _split.categories_used_end_;
+          ++it )
+        {
+            categories += "'" + encoding( *it ) + "'";
+
+            if ( std::next( it, 1 ) != _split.categories_used_end_ )
+                {
+                    categories += ", ";
+                }
+        }
+
+    categories += " )";
+
+    return categories;
 }
 
 // ----------------------------------------------------------------------------
