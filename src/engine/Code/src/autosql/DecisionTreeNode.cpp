@@ -636,7 +636,7 @@ std::string DecisionTreeNode::greater_or_not_equal_to(
 
     if ( categorical_data_used() )
         {
-            sql << "( ";
+            sql << _colname << " NOT IN ( ";
 
             for ( auto it = categories_used_begin(); it < categories_used_end();
                   ++it )
@@ -648,18 +648,16 @@ std::string DecisionTreeNode::greater_or_not_equal_to(
                         category_used <
                         static_cast<Int>( tree_->categories().size() ) );
 
-                    if ( it != categories_used_begin() )
-                        {
-                            sql << " AND ";
-                        }
-
-                    sql << _colname;
-
-                    sql << " != '";
+                    sql << "'";
 
                     sql << tree_->categories()[category_used];
 
                     sql << "'";
+
+                    if ( std::next( it, 1 ) != categories_used_end() )
+                        {
+                            sql << ", ";
+                        }
                 }
 
             sql << " )";
@@ -1163,7 +1161,7 @@ std::string DecisionTreeNode::smaller_or_equal_to(
 
     if ( categorical_data_used() )
         {
-            sql << "( ";
+            sql << _colname << " IN ( ";
 
             for ( auto it = categories_used_begin(); it < categories_used_end();
                   ++it )
@@ -1175,18 +1173,16 @@ std::string DecisionTreeNode::smaller_or_equal_to(
                         category_used <
                         static_cast<Int>( tree_->categories().size() ) );
 
-                    if ( it != categories_used_begin() )
-                        {
-                            sql << " OR ";
-                        }
-
-                    sql << _colname;
-
-                    sql << " = '";
+                    sql << "'";
 
                     sql << tree_->categories()[category_used];
 
                     sql << "'";
+
+                    if ( std::next( it, 1 ) != categories_used_end() )
+                        {
+                            sql << ", ";
+                        }
                 }
 
             sql << " )";
