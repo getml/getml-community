@@ -18,16 +18,43 @@ int main( int argc, char *argv[] )
     const auto logger =
         std::make_shared<const engine::monitoring::Logger>( monitor );
 
+    // -------------------------------------------
+    // Instruct the user to log in and wait for the token.
+
+    std::cout << "getML - Automated Machine Learning and Automated Feature"
+              << " Engineering for Relational Data and Time Series."
+              << std::endl
+              << std::endl;
+
+    std::cout << "The getML engine launched successfully on port "
+              << options.engine_.port_ << "." << std::endl
+              << std::endl;
+
+    const auto http = ( options.monitor_.tls_encryption_ ? "https" : "http" );
+
+    std::cout << "Please open a web browser (like Firefox, Chrome or Safari) "
+              << "and go to " << http
+              << "://localhost:" << options.monitor_.port_ << "/ to log in."
+              << std::endl
+              << std::endl;
+
     /*  const auto license_checker =
           std::make_shared<engine::licensing::LicenseChecker>(
               logger, monitor, options );*/
 
-    // -------------------------------------------
-    // Tell the AutoSQL Monitor the process ID of the engine.
-    // This is necessary for some system statistics.
-
     // Temporary fix - to be removed once the licensing process is in place.
     std::this_thread::sleep_for( std::chrono::seconds( 1 ) );
+
+    /*if ( !monitor->get_start_message() )
+        {
+            exit( 0 );
+        }
+
+    license_checker->receive_token();*/
+
+    // -------------------------------------------
+    // Tell the monitor the process ID of the engine.
+    // This is necessary for some system statistics.
 
     monitor->send( "postpid", engine::Process::get_process_id() );
 
@@ -102,20 +129,6 @@ int main( int argc, char *argv[] )
             monitor,
             options,
             read_write_lock );
-
-    // -------------------------------------------
-    // Print some output
-
-    /*engine::Printer::print_license();
-
-    engine::Printer::print_start_message( options );
-
-    if ( !monitor->get_start_message() )
-        {
-            exit( 0 );
-        }
-
-    license_checker->receive_token();*/
 
     // -------------------------------------------
     // This is where the actual communication begins
