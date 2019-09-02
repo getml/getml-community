@@ -288,11 +288,19 @@ std::string XGBoostPredictor::fit(
     XGBoosterSetParam(
         *handle, "nthread", std::to_string( hyperparams_.nthread_ ).c_str() );
 
-    /// XGBoost has deprecated reg::linear, but we will continue to support it.
-    if ( hyperparams_.objective_ == "reg::linear" )
+    // XGBoost has deprecated reg::linear, but we will continue to support it.
+    // Strangely enough, its exactly the other way around for windows.
+#if ( defined( _WIN32 ) || defined( _WIN64 ) )
+    if ( hyperparams_.objective_ == "reg:squarederror" )
+    {
+        XGBoosterSetParam( *handle, "objective", "reg:linear" );
+    }
+# else
+    if ( hyperparams_.objective_ == "reg:linear" )
         {
-            XGBoosterSetParam( *handle, "objective", "reg::squarederror" );
+            XGBoosterSetParam( *handle, "objective", "reg:squarederror" );
         }
+#endif
     else
         {
             XGBoosterSetParam(

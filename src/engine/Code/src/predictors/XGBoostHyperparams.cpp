@@ -45,7 +45,7 @@ XGBoostHyperparams::XGBoostHyperparams( const Poco::JSON::Object &_json_obj )
         {
             throw std::invalid_argument(
                 "Objective of type '" + objective_ +
-                "' not known! Please use 'reg:linear', 'reg:logistic', "
+                "' not known! Please use 'reg:squarederror', 'reg:linear', 'reg:logistic', "
                 "'binary:logistic' or 'binary:logitraw'!" );
         }
 
