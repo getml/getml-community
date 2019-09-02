@@ -18,6 +18,9 @@ int main( int argc, char* argv[] )
     test7();
 
     // Tests for postgres
+#if ( defined( _WIN32 ) || defined( _WIN64 ) )
+    // postgres is not supported on windows
+#else
     test8();
     test9();
     test10();
@@ -25,4 +28,5 @@ int main( int argc, char* argv[] )
     test12();
     test13();
     test14();
+#endif
 }

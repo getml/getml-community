@@ -17,13 +17,16 @@
 #include "database/tests/test7.hpp"
 
 // Tests for postgres
+#if ( defined( _WIN32 ) || defined( _WIN64 ) )
+// postgres is not supported in windows
+#else
 #include "database/tests/test8.hpp"
 #include "database/tests/test9.hpp"
-
 #include "database/tests/test10.hpp"
 #include "database/tests/test11.hpp"
 #include "database/tests/test12.hpp"
 #include "database/tests/test13.hpp"
 #include "database/tests/test14.hpp"
+#endif
 
 #endif  // DATABASE_TESTS_TESTS_HPP_

@@ -5,6 +5,8 @@
 // Dependencies
 
 #include <cassert>
+
+#include <array>
 #include <memory>
 
 #include <Poco/Net/StreamSocket.h>

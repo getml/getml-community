@@ -22,7 +22,14 @@ std::shared_ptr<Connector> DatabaseParser::parse(
         }
     else if ( db == "postgres" )
         {
+#if ( defined( _WIN32 ) || defined( _WIN64 ) )
+            throw std::invalid_argument(
+                "PostgreSQL is not supported on Windows!" );
+
+            return std::shared_ptr<Connector>();
+#else
             return std::make_shared<Postgres>( _obj, time_formats );
+#endif
         }
     else
         {
