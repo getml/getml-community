@@ -11,7 +11,11 @@
 #include <stdexcept>
 #include <string>
 
-//#include <libpq-fe.h>
+#if ( defined( _WIN32 ) || defined( _WIN64 ) )
+// postgres is not supported in windows
+#else
+#include <libpq-fe.h>
+#endif
 
 #include "Poco/JSON/Object.h"
 
@@ -36,12 +40,14 @@ extern "C"
 #include "database/Connector.hpp"
 
 #include "database/Sqlite3Iterator.hpp"
+
 #include "database/Sqlite3.hpp"
 
 #if ( defined( _WIN32 ) || defined( _WIN64 ) )
 // postgres is not supported in windows
 #else
 #include "database/PostgresIterator.hpp"
+
 #include "database/Postgres.hpp"
 #endif
 
