@@ -26,10 +26,6 @@ int main( int argc, char *argv[] )
               << std::endl
               << std::endl;
 
-    std::cout << "The getML engine launched successfully on port "
-              << options.engine_.port_ << "." << std::endl
-              << std::endl;
-
     const auto http = ( options.monitor_.tls_encryption_ ? "https" : "http" );
 
     std::cout << "Please open a web browser (like Firefox, Chrome or Safari) "
@@ -48,9 +44,19 @@ int main( int argc, char *argv[] )
 
     // -------------------------------------------
     // Tell the monitor the process ID of the engine.
-    // This is necessary for some system statistics.
+    // This is necessary so the monitor can check whether the engine is still alive.
 
     monitor->send( "postpid", engine::Process::get_process_id() );
+
+    // -------------------------------------------
+    // Check whether the port is currently occupied
+
+    const auto [status, response] = monitor->send( "checkengineport", "" );
+
+    if ( status != Poco::Net::HTTPResponse::HTTPStatus::HTTP_OK ) {
+        monitor->log( response );
+        exit( 0 );
+    }
 
     // -------------------------------------------
 
@@ -149,6 +155,9 @@ int main( int argc, char *argv[] )
         server_socket );
 
     srv.start();
+
+    monitor->log( "The getML engine launched successfully on port " +
+               std::to_string( options.engine_.port_ ) + "." );
 
     while ( *shutdown == false )
         {
