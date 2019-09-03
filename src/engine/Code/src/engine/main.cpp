@@ -38,19 +38,11 @@ int main( int argc, char *argv[] )
               << std::endl
               << std::endl;
 
-    /*  const auto license_checker =
-          std::make_shared<engine::licensing::LicenseChecker>(
-              logger, monitor, options );*/
+    const auto license_checker =
+        std::make_shared<engine::licensing::LicenseChecker>(
+            logger, monitor, options );
 
-    // Temporary fix - to be removed once the licensing process is in place.
-    std::this_thread::sleep_for( std::chrono::seconds( 1 ) );
-
-    /*if ( !monitor->get_start_message() )
-        {
-            exit( 0 );
-        }
-
-    license_checker->receive_token();*/
+    license_checker->receive_token( "main" );
 
     // -------------------------------------------
     // Tell the monitor the process ID of the engine.
