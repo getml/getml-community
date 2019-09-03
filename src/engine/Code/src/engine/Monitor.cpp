@@ -47,7 +47,7 @@ bool Monitor::get_start_message() const
                         }
                     else
                         {
-                            log( "AutoSQL has not started." );
+                            log( "getML has not started." );
 
                             return false;
                         }
@@ -100,7 +100,7 @@ std::pair<Poco::Net::HTTPResponse::HTTPStatus, std::string> Monitor::send(
         }
     catch ( std::exception& e )
         {
-            log( "Communication with AutoSQL monitor failed: " +
+            log( "Communication with getML monitor failed: " +
                  std::string( e.what() ) + "." );
 
             return std::pair<Poco::Net::HTTPResponse::HTTPStatus, std::string>(
@@ -228,7 +228,7 @@ bool Monitor::shutdown() const
         }
     catch ( std::exception& e )
         {
-            log( "Communication with AutoSQL monitor failed: " +
+            log( "Communication with getML monitor failed: " +
                  std::string( e.what() ) + "." );
 
             return false;

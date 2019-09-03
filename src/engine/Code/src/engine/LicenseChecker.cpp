@@ -44,9 +44,9 @@ void LicenseChecker::receive_token( const std::string& _caller_id )
 {
     // -------------------------------------------------------------
 
-    logger_->log( "Attempting to receive a token..." );
-
     Poco::JSON::Parser parser;
+
+    logger_->log( "Attempting to receive a token..." );
 
     // -------------------------------------------------------------
     // Make request
