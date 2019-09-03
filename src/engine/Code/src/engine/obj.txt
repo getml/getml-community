@@ -20,4 +20,5 @@ set(
     ${ENGINE_SOURCE_DIRECTORY}/Receiver.cpp
     ${ENGINE_SOURCE_DIRECTORY}/RequestHandler.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Sender.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/Token.cpp
 )
