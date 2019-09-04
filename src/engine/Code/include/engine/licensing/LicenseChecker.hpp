@@ -31,12 +31,12 @@ class LicenseChecker
    public:
     /// Makes sure that the size of the raw data used does not exceed the
     /// memory limit.
-    /*void check_memory_size(
-        std::map<std::string, containers::DataFrame>& _data_frames,
-        containers::DataFrame& _most_recent_data_frame );*/
+    void check_mem_size(
+        const std::map<std::string, containers::DataFrame>& _data_frames,
+        const ULong _new_df_size = 0 ) const;
 
     /// Receives a token from the license server
-    void receive_token( const std::string& _called_id );
+    void receive_token( const std::string& _caller_id );
 
     // ------------------------------------------------------------------------
 
@@ -55,6 +55,13 @@ class LicenseChecker
         assert( token_ );
         return *token_;
     }
+
+    // ------------------------------------------------------------------------
+
+   private:
+    /// Calculates the memory size of the data frames.
+    ULong calc_mem_size( const std::map<std::string, containers::DataFrame>&
+                             _data_frames ) const;
 
     // ------------------------------------------------------------------------
 

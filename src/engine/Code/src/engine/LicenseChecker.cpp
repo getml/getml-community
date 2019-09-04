@@ -6,37 +6,45 @@ namespace licensing
 {
 // ------------------------------------------------------------------------
 
-/*void LicenseChecker::check_memory_size(
-    std::map<std::string, containers::DataFrame>& _data_frames,
-    containers::DataFrame& _most_recent_data_frame )
+ULong LicenseChecker::calc_mem_size(
+    const std::map<std::string, containers::DataFrame>& _data_frames ) const
 {
-    assert( token_ );
+    ULong mem_size = 0;
 
-    if ( token_->mem_size_ == 0.0 )
+    for ( const auto& [name, df] : _data_frames )
+        {
+            mem_size += df.nbytes();
+        }
+
+    return mem_size;
+}
+
+// ------------------------------------------------------------------------
+
+void LicenseChecker::check_mem_size(
+    const std::map<std::string, containers::DataFrame>& _data_frames,
+    const ULong _new_df_size ) const
+{
+    const auto msize = token().mem_;
+
+    if ( msize <= 0 )
         {
             return;
         }
 
-    auto memory_size =
-        _most_recent_data_frame.nbytes() +
-        std::accumulate(
-            _data_frames.begin(),
-            _data_frames.end(),
-            static_cast<SQLNET_UNSIGNED_LONG>( 0 ),
-            []( const SQLNET_UNSIGNED_LONG& init,
-                std::pair<std::string, containers::DataFrame> df ) {
-                return init + df.second.nbytes();
-            } );
+    const auto allowed_mem_size = static_cast<ULong>( msize ) * 1000000;
 
-    if ( memory_size > token_->mem_size_ )
+    if ( calc_mem_size( _data_frames ) + _new_df_size > allowed_mem_size )
         {
             throw std::runtime_error(
-                "Memory size limit of " + std::to_string( token_->mem_size_ ) +
-                " was exceeded (" + std::to_string( memory_size ) +
-                " bytes)! The batch of data that was most recently uploaded "
-                "has been removed!" );
+                "Adding this data frame would result in "
+                "memory usage that exceeds the memory limit "
+                "of " +
+                std::to_string( msize ) +
+                " MB. Please "
+                "upgrade to the getML enterprise version." );
         }
-}*/
+}
 
 // ------------------------------------------------------------------------
 
