@@ -67,105 +67,18 @@ void ProjectManager::add_data_frame_from_csv(
     const Poco::JSON::Object& _cmd,
     Poco::Net::StreamSocket* _socket )
 {
-    // --------------------------------------------------------------------
-    // Parse the command.
+    if ( project_directory_ == "" )
+        {
+            throw std::invalid_argument( "You have not set a project!" );
+        }
 
     const auto append = JSON::get_value<bool>( _cmd, "append_" );
 
-    const auto fnames = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "fnames_" ) );
+    data_frame_manager_->from_csv( _name, _cmd, append, _socket );
 
-    const auto quotechar = JSON::get_value<std::string>( _cmd, "quotechar_" );
-
-    const auto sep = JSON::get_value<std::string>( _cmd, "sep_" );
-
-    const auto time_formats = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "time_formats_" ) );
-
-    const auto categoricals = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "categoricals_" ) );
-
-    const auto discretes = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "discretes_" ) );
-
-    const auto join_keys = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "join_keys_" ) );
-
-    const auto numericals = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "numericals_" ) );
-
-    const auto targets = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "targets_" ) );
-
-    const auto time_stamps = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "time_stamps_" ) );
-
-    // --------------------------------------------------------------------
-    // We need the weak write lock for the categories and join keys encoding.
-
-    multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
-
-    // --------------------------------------------------------------------
-
-    auto local_categories =
-        std::make_shared<containers::Encoding>( categories_ );
-
-    auto local_join_keys_encoding =
-        std::make_shared<containers::Encoding>( join_keys_encoding_ );
-
-    // --------------------------------------------------------------------
-
-    auto df = containers::DataFrame(
-        _name, local_categories, local_join_keys_encoding );
-
-    df.from_csv(
-        fnames,
-        quotechar,
-        sep,
-        time_formats,
-        categoricals,
-        discretes,
-        join_keys,
-        numericals,
-        targets,
-        time_stamps );
-
-    license_checker().check_mem_size( data_frames(), df.nbytes() );
-
-    // --------------------------------------------------------------------
-    // Now we upgrade the weak write lock to a strong write lock to commit
-    // the changes.
-
-    weak_write_lock.upgrade();
-
-    // --------------------------------------------------------------------
-
-    categories_->append( *local_categories );
-
-    join_keys_encoding_->append( *local_join_keys_encoding );
-
-    df.set_categories( categories_ );
-
-    df.set_join_keys_encoding( join_keys_encoding_ );
-
-    if ( !append || data_frames().find( _name ) == data_frames().end() )
-        {
-            data_frames()[_name] = df;
-        }
-    else
-        {
-            data_frames()[_name].append( df );
-        }
-
-    data_frames()[_name].create_indices();
-
-    // --------------------------------------------------------------------
+    multithreading::ReadLock read_lock( read_write_lock_ );
 
     monitor_->send( "postdataframe", data_frames()[_name].to_monitor() );
-
-    communication::Sender::send_string( "Success!", _socket );
-
-    // --------------------------------------------------------------------
 }
 
 // ------------------------------------------------------------------------
