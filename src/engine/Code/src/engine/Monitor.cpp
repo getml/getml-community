@@ -109,20 +109,6 @@ std::pair<Poco::Net::HTTPResponse::HTTPStatus, std::string> Monitor::send(
         }
 
     // --------------------------------------------------------------
-    // Print HTTPRequest as status message, if not successful
-
-    if ( res.getStatus() != Poco::Net::HTTPResponse::HTTPStatus::HTTP_OK )
-        {
-            std::stringstream stream;
-
-            req.write( stream );
-
-            stream << res.getStatus() << " " << res.getReason() << std::endl;
-
-            log( stream.str() );
-        }
-
-    // --------------------------------------------------------------
 
     return std::pair<Poco::Net::HTTPResponse::HTTPStatus, std::string>(
         res.getStatus(), response_content );
