@@ -49,6 +49,7 @@ struct Token
     const std::string expiry_date_;
 
     /// The functions that are allowed.
+    /// Possible values are "basic", "enterprise" and "none".
     const std::string function_set_id_;
 
     /// Maximum memory usage allowed, in MB.

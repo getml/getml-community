@@ -35,6 +35,9 @@ class LicenseChecker
         const std::map<std::string, containers::DataFrame>& _data_frames,
         const ULong _new_size = 0 ) const;
 
+    /// Makes sure that this is an enterprise user.
+    void check_enterprise() const;
+
     /// Receives a token from the license server
     void receive_token( const std::string& _caller_id );
 
@@ -46,6 +49,13 @@ class LicenseChecker
     {
         multithreading::ReadLock read_lock( read_write_lock_ );
         return token_ && token_->currently_active();
+    }
+
+    /// Checks whether is an enterprise version.
+    bool is_enterprise() const
+    {
+        multithreading::ReadLock read_lock( read_write_lock_ );
+        return token_ && ( token_->function_set_id_ == "enterprise" );
     }
 
     /// Trivial accessor

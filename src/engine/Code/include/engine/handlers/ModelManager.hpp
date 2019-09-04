@@ -130,6 +130,13 @@ class ModelManager
         return *ptr;
     }
 
+    /// Trivial accessor
+    const licensing::LicenseChecker& license_checker() const
+    {
+        assert( license_checker_ );
+        return *license_checker_;
+    }
+
     /// Trivial (private) accessor
     const monitoring::Logger& logger() { return *logger_; }
 
@@ -463,11 +470,15 @@ Poco::JSON::Object ModelManager<ModelType>::receive_data(
                 }
             else if ( type == "DataFrame.from_db" )
                 {
+                    license_checker().check_enterprise();
+
                     local_data_frame_manager.from_db(
                         name, cmd, false, _socket );
                 }
             else if ( type == "DataFrame.from_json" )
                 {
+                    license_checker().check_enterprise();
+
                     local_data_frame_manager.from_json(
                         name, cmd, false, _socket );
                 }
