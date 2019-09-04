@@ -33,7 +33,7 @@ class LicenseChecker
     /// memory limit.
     void check_mem_size(
         const std::map<std::string, containers::DataFrame>& _data_frames,
-        const ULong _new_df_size = 0 ) const;
+        const ULong _new_size = 0 ) const;
 
     /// Receives a token from the license server
     void receive_token( const std::string& _caller_id );

@@ -179,16 +179,24 @@ class DataFrameManager
 
    private:
     /// Trivial accessor
-    std::map<std::string, containers::DataFrame>& data_frames()
-    {
-        return *data_frames_;
-    }
-
-    /// Trivial accessor
     std::shared_ptr<database::Connector> connector()
     {
         assert( database_manager_ );
         return database_manager_->connector();
+    }
+
+    /// Trivial accessor
+    std::map<std::string, containers::DataFrame>& data_frames()
+    {
+        assert( data_frames_ );
+        return *data_frames_;
+    }
+
+    /// Trivial accessor
+    licensing::LicenseChecker& license_checker()
+    {
+        assert( license_checker_ );
+        return *license_checker_;
     }
 
     /// Trivial accessor
@@ -211,7 +219,7 @@ class DataFrameManager
     const std::shared_ptr<containers::Encoding> join_keys_encoding_;
 
     /// For checking the license and memory usage
-    const std::shared_ptr<engine::licensing::LicenseChecker> license_checker_;
+    const std::shared_ptr<licensing::LicenseChecker> license_checker_;
 
     /// For logging
     const std::shared_ptr<const monitoring::Logger> logger_;

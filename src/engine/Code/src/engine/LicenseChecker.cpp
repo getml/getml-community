@@ -23,7 +23,7 @@ ULong LicenseChecker::calc_mem_size(
 
 void LicenseChecker::check_mem_size(
     const std::map<std::string, containers::DataFrame>& _data_frames,
-    const ULong _new_df_size ) const
+    const ULong _new_size ) const
 {
     const auto msize = token().mem_;
 
@@ -34,15 +34,16 @@ void LicenseChecker::check_mem_size(
 
     const auto allowed_mem_size = static_cast<ULong>( msize ) * 1000000;
 
-    if ( calc_mem_size( _data_frames ) + _new_df_size > allowed_mem_size )
+    if ( calc_mem_size( _data_frames ) + _new_size > allowed_mem_size )
         {
             throw std::runtime_error(
-                "Adding this data frame would result in "
+                "This operation would result in "
                 "memory usage that exceeds the memory limit "
                 "of " +
                 std::to_string( msize ) +
                 " MB. Please "
-                "upgrade to the getML enterprise version." );
+                "upgrade to the getML enterprise version for unlimited "
+                "memory." );
         }
 }
 

@@ -130,6 +130,8 @@ void ProjectManager::add_data_frame_from_csv(
         targets,
         time_stamps );
 
+    license_checker().check_mem_size( data_frames(), df.nbytes() );
+
     // --------------------------------------------------------------------
     // Now we upgrade the weak write lock to a strong write lock to commit
     // the changes.
@@ -445,8 +447,9 @@ void ProjectManager::load_data_frame(
         categories_,
         join_keys_encoding_,
         project_directory_,
-        _name/*,
-        license_checker()*/ );
+        _name );
+
+    license_checker().check_mem_size( data_frames(), df.nbytes() );
 
     // --------------------------------------------------------------------
 
