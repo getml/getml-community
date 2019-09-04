@@ -25,8 +25,7 @@ class ProjectManager
         const std::shared_ptr<std::map<std::string, containers::DataFrame>>
             _data_frames,
         const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
-        /*const std::shared_ptr<engine::licensing::LicenseChecker>&
-            _license_checker,*/
+        const std::shared_ptr<licensing::LicenseChecker>& _license_checker,
         const std::shared_ptr<RelboostModelMapType>& _relboost_models,
         const std::shared_ptr<const monitoring::Monitor>& _monitor,
         const config::Options& _options,
@@ -36,7 +35,7 @@ class ProjectManager
           data_frame_manager_( _data_frame_manager ),
           data_frames_( _data_frames ),
           join_keys_encoding_( _join_keys_encoding ),
-          // license_checker_( _license_checker ),
+          license_checker_( _license_checker ),
           monitor_( _monitor ),
           options_( _options ),
           read_write_lock_( _read_write_lock ),
@@ -201,10 +200,11 @@ class ProjectManager
     containers::Encoding& join_keys_encoding() { return *join_keys_encoding_; }
 
     /// Trivial accessor
-    /*engine::licensing::LicenseChecker& license_checker()
+    engine::licensing::LicenseChecker& license_checker()
     {
+        assert( license_checker_ );
         return *license_checker_;
-    }*/
+    }
 
     /// Trivial (private) accessor
     RelboostModelMapType& relboost_models()
@@ -283,8 +283,7 @@ class ProjectManager
     const std::shared_ptr<containers::Encoding> join_keys_encoding_;
 
     /// For checking the license and memory usage
-    // const std::shared_ptr<engine::licensing::LicenseChecker>
-    // license_checker_;
+    const std::shared_ptr<licensing::LicenseChecker> license_checker_;
 
     /// For communication with the monitor
     const std::shared_ptr<const monitoring::Monitor> monitor_;

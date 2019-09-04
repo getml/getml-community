@@ -16,8 +16,7 @@ class DataFrameManager
         const std::shared_ptr<std::map<std::string, containers::DataFrame>>
             _data_frames,
         const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
-        /*const std::shared_ptr<engine::licensing::LicenseChecker>&
-            _license_checker,*/
+        const std::shared_ptr<licensing::LicenseChecker>& _license_checker,
         const std::shared_ptr<const monitoring::Logger>& _logger,
         const std::shared_ptr<const monitoring::Monitor>& _monitor,
         const std::shared_ptr<multithreading::ReadWriteLock>& _read_write_lock )
@@ -25,7 +24,7 @@ class DataFrameManager
           database_manager_( _database_manager ),
           data_frames_( _data_frames ),
           join_keys_encoding_( _join_keys_encoding ),
-          // license_checker_( _license_checker ),
+          license_checker_( _license_checker ),
           logger_( _logger ),
           monitor_( _monitor ),
           read_write_lock_( _read_write_lock )
@@ -212,8 +211,7 @@ class DataFrameManager
     const std::shared_ptr<containers::Encoding> join_keys_encoding_;
 
     /// For checking the license and memory usage
-    // const std::shared_ptr<engine::licensing::LicenseChecker>
-    // license_checker_;
+    const std::shared_ptr<engine::licensing::LicenseChecker> license_checker_;
 
     /// For logging
     const std::shared_ptr<const monitoring::Logger> logger_;

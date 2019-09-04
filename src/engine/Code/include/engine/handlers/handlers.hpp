@@ -50,6 +50,8 @@
 
 #include "engine/models/models.hpp"
 
+#include "engine/licensing/licensing.hpp"
+
 // ----------------------------------------------------
 // Module files
 

@@ -44,7 +44,8 @@ int main( int argc, char *argv[] )
 
     // -------------------------------------------
     // Tell the monitor the process ID of the engine.
-    // This is necessary so the monitor can check whether the engine is still alive.
+    // This is necessary so the monitor can check whether the engine is still
+    // alive.
 
     monitor->send( "postpid", engine::Process::get_process_id() );
 
@@ -53,10 +54,11 @@ int main( int argc, char *argv[] )
 
     const auto [status, response] = monitor->send( "checkengineport", "" );
 
-    if ( status != Poco::Net::HTTPResponse::HTTPStatus::HTTP_OK ) {
-        monitor->log( response );
-        exit( 0 );
-    }
+    if ( status != Poco::Net::HTTPResponse::HTTPStatus::HTTP_OK )
+        {
+            monitor->log( response );
+            exit( 0 );
+        }
 
     // -------------------------------------------
 
@@ -89,7 +91,7 @@ int main( int argc, char *argv[] )
             categories,
             data_frames,
             join_keys_encoding,
-            // license_checker,
+            license_checker,
             logger,
             autosql_models,
             monitor,
@@ -101,7 +103,7 @@ int main( int argc, char *argv[] )
             database_manager,
             data_frames,
             join_keys_encoding,
-            // license_checker,
+            license_checker,
             logger,
             monitor,
             read_write_lock );
@@ -111,7 +113,7 @@ int main( int argc, char *argv[] )
             categories,
             data_frames,
             join_keys_encoding,
-            // license_checker,
+            license_checker,
             logger,
             relboost_models,
             monitor,
@@ -124,7 +126,7 @@ int main( int argc, char *argv[] )
             data_frame_manager,
             data_frames,
             join_keys_encoding,
-            // license_checker,
+            license_checker,
             relboost_models,
             monitor,
             options,
@@ -156,8 +158,9 @@ int main( int argc, char *argv[] )
 
     srv.start();
 
-    monitor->log( "The getML engine launched successfully on port " +
-               std::to_string( options.engine_.port_ ) + "." );
+    monitor->log(
+        "The getML engine launched successfully on port " +
+        std::to_string( options.engine_.port_ ) + "." );
 
     while ( *shutdown == false )
         {

@@ -23,8 +23,8 @@ class ModelManager
         const std::shared_ptr<std::map<std::string, containers::DataFrame>>
             _data_frames,
         const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
-        /*const std::shared_ptr<engine::licensing::LicenseChecker>&
-            _license_checker,*/
+        const std::shared_ptr<engine::licensing::LicenseChecker>&
+            _license_checker,
         const std::shared_ptr<const monitoring::Logger>& _logger,
         const std::shared_ptr<ModelMapType>& _models,
         const std::shared_ptr<const monitoring::Monitor>& _monitor,
@@ -32,7 +32,7 @@ class ModelManager
         : categories_( _categories ),
           data_frames_( _data_frames ),
           join_keys_encoding_( _join_keys_encoding ),
-          // license_checker_( _license_checker ),
+          license_checker_( _license_checker ),
           logger_( _logger ),
           models_( _models ),
           monitor_( _monitor ),
@@ -201,9 +201,8 @@ class ModelManager
     /// Maps integers to join key names
     const std::shared_ptr<containers::Encoding> join_keys_encoding_;
 
-    /// For checking the license and memory usage
-    // const std::shared_ptr<engine::licensing::LicenseChecker>
-    // license_checker_;
+    /// For checking the number of cores and memory usage
+    const std::shared_ptr<licensing::LicenseChecker> license_checker_;
 
     /// For logging
     const std::shared_ptr<const monitoring::Logger> logger_;
@@ -442,7 +441,7 @@ Poco::JSON::Object ModelManager<ModelType>::receive_data(
         std::shared_ptr<DatabaseManager>(),
         _data_frames,
         local_join_keys_encoding,
-        // license_checker_,
+        license_checker_,
         logger_,
         monitor_,
         local_read_write_lock );
@@ -530,7 +529,7 @@ void ModelManager<ModelType>::send_data(
         std::shared_ptr<DatabaseManager>(),
         _local_data_frames,
         local_join_keys_encoding,
-        // license_checker_,
+        license_checker_,
         logger_,
         monitor_,
         local_read_write_lock );
@@ -539,7 +538,7 @@ void ModelManager<ModelType>::send_data(
         _categories,
         _local_data_frames,
         local_join_keys_encoding,
-        // license_checker_,
+        license_checker_,
         logger_,
         models_,
         monitor_,

@@ -49,7 +49,7 @@ class LicenseChecker
     }
 
     /// Trivial accessor
-    licensing::Token token() const
+    Token token() const
     {
         multithreading::ReadLock read_lock( read_write_lock_ );
         assert( token_ );
