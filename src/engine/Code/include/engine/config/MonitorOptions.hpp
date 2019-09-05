@@ -13,9 +13,7 @@ struct MonitorOptions
     // ------------------------------------------------------
 
     MonitorOptions( const Poco::JSON::Object& _json_obj )
-        : license_server_url_(
-              JSON::get_value<std::string>( _json_obj, "licenseServerURL" ) ),
-          port_( JSON::get_value<size_t>( _json_obj, "port" ) ),
+        : port_( JSON::get_value<size_t>( _json_obj, "port" ) ),
           tls_encryption_(
               Poco::File( "../cert.pem" ).exists() &&
               Poco::File( "../key.pem" ).exists() )
@@ -23,8 +21,7 @@ struct MonitorOptions
     }
 
     MonitorOptions()
-        : license_server_url_( "https://api.autosql.ai/alpha/license/" ),
-          port_( 1709 ),
+        : port_( 1709 ),
           tls_encryption_(
               Poco::File( "../cert.pem" ).exists() &&
               Poco::File( "../key.pem" ).exists() )
@@ -34,9 +31,6 @@ struct MonitorOptions
     ~MonitorOptions() = default;
 
     // ------------------------------------------------------
-
-    /// The URL of the license server
-    const std::string license_server_url_;
 
     /// The port of the AutoSQL engine
     const size_t port_;

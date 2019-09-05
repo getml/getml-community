@@ -17,17 +17,14 @@ struct Options
               JSON::get_value<std::string>( _json_obj, "projectDirectory" ) ),
           engine_( EngineOptions( *JSON::get_object( _json_obj, "engine" ) ) ),
           monitor_(
-              MonitorOptions( *JSON::get_object( _json_obj, "monitor" ) ) ),
-          registration_email_(
-              JSON::get_value<std::string>( _json_obj, "registrationEmail" ) )
+              MonitorOptions( *JSON::get_object( _json_obj, "monitor" ) ) )
     {
     }
 
     Options()
         : all_projects_directory_( "../projects/" ),
           engine_( EngineOptions() ),
-          monitor_( MonitorOptions() ),
-          registration_email_( "" )
+          monitor_( MonitorOptions() )
     {
     }
 
@@ -49,9 +46,6 @@ struct Options
 
     /// Configurations for the monitor.
     const MonitorOptions monitor_;
-
-    /// The email with which the user is registered
-    const std::string registration_email_;
 
     // ------------------------------------------------------
 };

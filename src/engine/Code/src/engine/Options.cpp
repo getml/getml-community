@@ -50,7 +50,7 @@ Options Options::make_options()
                       << std::endl;
 
             std::cout << std::ctime( &current_time )
-                      << "AutoSQL failed to load config.json. Using default "
+                      << "getML failed to load config.json. Using default "
                          "configurations instead."
                       << std::endl
                       << std::endl;
