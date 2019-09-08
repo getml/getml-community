@@ -72,7 +72,7 @@ class GroupByParser
         const std::string& _as,
         const Aggregation& _agg )
     {
-        assert( _index.map() );
+        assert_true( _index.map() );
 
         auto result = containers::Column<Float>( _unique.nrows() );
 
@@ -82,9 +82,9 @@ class GroupByParser
             {
                 const auto it = _index.map()->find( _unique[i] );
 
-                assert( it != _index.map()->end() );
+                assert_true( it != _index.map()->end() );
 
-                assert( it->second.size() > 0 );
+                assert_true( it->second.size() > 0 );
 
                 auto values = std::vector<typename ColumnType::value_type>(
                     it->second.size() );
@@ -92,7 +92,7 @@ class GroupByParser
                 for ( size_t j = 0; j < values.size(); ++j )
                     {
                         const auto ix = it->second[j];
-                        assert( ix < _col.size() );
+                        assert_true( ix < _col.size() );
                         values[j] = _col[ix];
                     }
 

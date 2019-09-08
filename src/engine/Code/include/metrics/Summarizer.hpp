@@ -88,8 +88,8 @@ class Summarizer
         const size_t _ncols,
         const std::vector<T>& _vec )
     {
-        assert( _j < _ncols );
-        assert( _i * _ncols + _j < _vec.size() );
+        assert_true( _j < _ncols );
+        assert_true( _i * _ncols + _j < _vec.size() );
         return _vec[_i * _ncols + _j];
     }
 
@@ -101,8 +101,8 @@ class Summarizer
         const size_t _ncols,
         std::vector<T>* _vec )
     {
-        assert( _j < _ncols );
-        assert( _i * _ncols + _j < _vec->size() );
+        assert_true( _j < _ncols );
+        assert_true( _i * _ncols + _j < _vec->size() );
         return ( *_vec )[_i * _ncols + _j];
     }
 
@@ -110,8 +110,8 @@ class Summarizer
     static const Float& get(
         const size_t _i, const size_t _j, const Features& _features )
     {
-        assert( _j < _features.size() );
-        assert( _i < _features[_j]->size() );
+        assert_true( _j < _features.size() );
+        assert_true( _i < _features[_j]->size() );
         return ( *_features[_j] )[_i];
     }
 

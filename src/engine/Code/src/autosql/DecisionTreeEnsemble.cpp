@@ -39,7 +39,7 @@ std::list<decisiontrees::DecisionTree> DecisionTreeEnsemble::build_candidates(
     const std::vector<descriptors::SameUnits> &_same_units,
     const decisiontrees::TableHolder &_table_holder )
 {
-    assert( random_number_generator() );
+    assert_true( random_number_generator() );
 
     return CandidateTreeBuilder::build_candidates(
         _table_holder,
@@ -186,7 +186,7 @@ void DecisionTreeEnsemble::fit(
     // ------------------------------------------------------
     // Spawn threads.
 
-    assert( impl().hyperparameters_ );
+    assert_true( impl().hyperparameters_ );
 
     debug_log( "Spawning threads..." );
 
@@ -287,14 +287,14 @@ void DecisionTreeEnsemble::fit(
 
     debug_log( "fit: Storing column numbers..." );
 
-    assert( _table_holder->main_tables_.size() > 0 );
+    assert_true( _table_holder->main_tables_.size() > 0 );
 
     // ----------------------------------------------------------------
     // Make sure that the data passed by the user is plausible
 
     debug_log( "fit: Checking plausibility of input..." );
 
-    assert( _table_holder->main_tables_.size() > 0 );
+    assert_true( _table_holder->main_tables_.size() > 0 );
 
     // ----------------------------------------------------------------
     // Store names of the targets
@@ -329,7 +329,7 @@ void DecisionTreeEnsemble::fit(
     // aggregations::AggregationImpl stores most of the data for the
     // aggregations. We do not want to reallocate the data all the time.
 
-    assert( _table_holder->main_tables_.size() > 0 );
+    assert_true( _table_holder->main_tables_.size() > 0 );
 
     aggregation_impl().reset( new aggregations::AggregationImpl(
         _table_holder->main_tables_[0].nrows() ) );
@@ -340,8 +340,8 @@ void DecisionTreeEnsemble::fit(
 
     debug_log( "fit: Identifying same units..." );
 
-    assert( _table_holder->main_tables_.size() > 0 );
-    assert(
+    assert_true( _table_holder->main_tables_.size() > 0 );
+    assert_true(
         _table_holder->main_tables_.size() ==
         _table_holder->peripheral_tables_.size() );
 
@@ -360,7 +360,7 @@ void DecisionTreeEnsemble::fit(
             throw std::invalid_argument( "Seed must be positive!" );
         }
 
-    assert( _table_holder->main_tables_.size() > 0 );
+    assert_true( _table_holder->main_tables_.size() > 0 );
 
     const auto nrows = _table_holder->main_tables_[0].nrows();
 
@@ -378,7 +378,7 @@ void DecisionTreeEnsemble::fit(
 
     const auto num_peripheral = _table_holder->peripheral_tables_.size();
 
-    assert( _table_holder->main_tables_.size() == num_peripheral );
+    assert_true( _table_holder->main_tables_.size() == num_peripheral );
 
     std::vector<containers::Matches> matches( num_peripheral );
 
@@ -413,9 +413,9 @@ void DecisionTreeEnsemble::fit(
                 {
                     sample_weights = _opt->make_sample_weights();
 
-                    assert( _table_holder->main_tables_.size() > 0 );
+                    assert_true( _table_holder->main_tables_.size() > 0 );
 
-                    assert(
+                    assert_true(
                         sample_weights->size() ==
                         _table_holder->main_tables_[0].nrows() );
 
@@ -652,7 +652,7 @@ void DecisionTreeEnsemble::save( const std::string &_fname ) const
 
 void DecisionTreeEnsemble::select_features( const std::vector<size_t> &_index )
 {
-    assert( _index.size() >= trees().size() );
+    assert_true( _index.size() >= trees().size() );
 
     const auto num_selected_features =
         ( hyperparameters().num_selected_features() > 0 &&
@@ -1032,7 +1032,7 @@ containers::Predictions DecisionTreeEnsemble::transform(
 {
     // ----------------------------------------------------------------
 
-    assert( _table_holder.main_tables_.size() > 0 );
+    assert_true( _table_holder.main_tables_.size() > 0 );
 
     // ----------------------------------------------------------------
     // If there are any subfeatures, create them.
@@ -1071,20 +1071,20 @@ std::vector<Float> DecisionTreeEnsemble::transform(
     const size_t _num_feature,
     containers::Optional<aggregations::AggregationImpl> *_impl ) const
 {
-    assert( _num_feature < trees().size() );
+    assert_true( _num_feature < trees().size() );
 
-    assert(
+    assert_true(
         _table_holder.main_tables_.size() ==
         _table_holder.peripheral_tables_.size() );
 
-    assert(
+    assert_true(
         _table_holder.main_tables_.size() == _table_holder.subtables_.size() );
 
-    assert( _table_holder.main_tables_.size() == _subfeatures.size() );
+    assert_true( _table_holder.main_tables_.size() == _subfeatures.size() );
 
     const auto ix = trees()[_num_feature].ix_perip_used();
 
-    assert( ix < _table_holder.main_tables_.size() );
+    assert_true( ix < _table_holder.main_tables_.size() );
 
     auto aggregation = trees()[_num_feature].make_aggregation();
 

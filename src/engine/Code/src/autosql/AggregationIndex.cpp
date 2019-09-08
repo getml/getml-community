@@ -9,10 +9,10 @@ namespace aggregations
 const Float AggregationIndex::get_count(
     const Int _ix_agg ) const
 {
-    assert( _ix_agg >= 0 );
-    assert( _ix_agg < output_table_.nrows() );
+    assert_true( _ix_agg >= 0 );
+    assert_true( _ix_agg < output_table_.nrows() );
 
-    assert( input_table_.df().has( output_table_.join_key( _ix_agg ) ) );
+    assert_true( input_table_.df().has( output_table_.join_key( _ix_agg ) ) );
 
     auto it = input_table_.df().find( output_table_.join_key( _ix_agg ) );
 
@@ -45,7 +45,7 @@ AggregationIndex::make_sample_weights(
     const std::shared_ptr<const std::vector<Float>>
         _sample_weights_parent ) const
 {
-    assert( _sample_weights_parent->size() == output_table_.nrows() );
+    assert_true( _sample_weights_parent->size() == output_table_.nrows() );
 
     auto sample_weights =
         std::make_shared<std::vector<Float>>( input_table_.nrows() );
@@ -68,8 +68,8 @@ AggregationIndex::make_sample_weights(
 
             for ( auto ix_input : it->second )
                 {
-                    assert( ix_input >= 0 );
-                    assert( ix_input < input_table_.df().nrows() );
+                    assert_true( ix_input >= 0 );
+                    assert_true( ix_input < input_table_.df().nrows() );
 
                     const Float time_stamp_input =
                         input_table_.df().time_stamp( ix_input );
@@ -93,10 +93,10 @@ AggregationIndex::make_sample_weights(
 
                             if ( ix_input_tr >= 0 )
                                 {
-                                    assert(
+                                    assert_true(
                                         ix_input_tr < input_table_.nrows() );
 
-                                    assert(
+                                    assert_true(
                                         ix_input ==
                                         input_table_.rows()[ix_input_tr] );
 
@@ -114,7 +114,7 @@ AggregationIndex::make_sample_weights(
 const std::vector<Int> AggregationIndex::transform(
     const size_t _ix_input ) const
 {
-    assert( _ix_input < input_table_.nrows() );
+    assert_true( _ix_input < input_table_.nrows() );
 
     if ( !output_table_.df().has( input_table_.join_key( _ix_input ) ) )
         {
@@ -132,8 +132,8 @@ const std::vector<Int> AggregationIndex::transform(
 
     for ( auto ix_agg : it->second )
         {
-            assert( ix_agg >= 0 );
-            assert( ix_agg < output_table_.df().nrows() );
+            assert_true( ix_agg >= 0 );
+            assert_true( ix_agg < output_table_.df().nrows() );
 
             const bool use_this_sample =
                 ( !use_timestamps_ ||
@@ -150,7 +150,7 @@ const std::vector<Int> AggregationIndex::transform(
 
                     if ( ix_agg_tr != -1 )
                         {
-                            assert( ix_agg == output_table_.rows()[ix_agg_tr] );
+                            assert_true( ix_agg == output_table_.rows()[ix_agg_tr] );
 
                             indices.push_back( ix_agg_tr );
                         }
@@ -166,7 +166,7 @@ Int AggregationIndex::transform_ix_agg(
     const Int _ix_agg,
     const std::map<Int, Int>& _rows_map ) const
 {
-    assert( _rows_map.size() > 0 );
+    assert_true( _rows_map.size() > 0 );
 
     const auto it = _rows_map.find( _ix_agg );
 

@@ -60,7 +60,7 @@ class BoolOpParser
             _df,
             *JSON::get_object( _col, "operand2_" ) );
 
-        assert( operand1.size() == operand2.size() );
+        assert_true( operand1.size() == operand2.size() );
 
         auto result = std::vector<bool>( operand1.size() );
 
@@ -96,7 +96,7 @@ class BoolOpParser
             _df,
             *JSON::get_object( _col, "operand2_" ) );
 
-        assert( operand1.size() == operand2.size() );
+        assert_true( operand1.size() == operand2.size() );
 
         auto result = std::vector<bool>( operand1.size() );
 
@@ -132,7 +132,7 @@ class BoolOpParser
             _df,
             *JSON::get_object( _col, "operand2_" ) );
 
-        assert( operand1.size() == operand2.size() );
+        assert_true( operand1.size() == operand2.size() );
 
         auto result = std::vector<bool>( operand1.size() );
 

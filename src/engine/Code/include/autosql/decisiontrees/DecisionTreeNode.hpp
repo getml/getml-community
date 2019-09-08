@@ -93,7 +93,7 @@ class DecisionTreeNode
     /// Trivial accessor
     inline bool apply_from_above() const
     {
-        assert( split_ );
+        assert_true( split_ );
         return split_->apply_from_above;
     }
 
@@ -110,7 +110,7 @@ class DecisionTreeNode
     /// Whether the data used is categorical
     inline bool categorical_data_used() const
     {
-        assert( split_ );
+        assert_true( split_ );
         return (
             split_->data_used == enums::DataUsed::same_unit_categorical ||
             split_->data_used == enums::DataUsed::x_perip_categorical ||
@@ -120,11 +120,11 @@ class DecisionTreeNode
     /// Trivial accessor
     inline const std::vector<Int> &categories_used() const
     {
-        assert( split_ );
-        assert(
+        assert_true( split_ );
+        assert_true(
             split_->categories_used->cbegin() ==
             split_->categories_used_begin );
-        assert(
+        assert_true(
             split_->categories_used->cend() == split_->categories_used_end );
 
         return *split_->categories_used;
@@ -133,49 +133,49 @@ class DecisionTreeNode
     /// Trivial accessor
     inline std::vector<Int>::const_iterator categories_used_begin() const
     {
-        assert( split_ );
+        assert_true( split_ );
         return split_->categories_used_begin;
     }
 
     /// Trivial accessor
     inline std::vector<Int>::const_iterator categories_used_end() const
     {
-        assert( split_ );
+        assert_true( split_ );
         return split_->categories_used_end;
     }
 
     /// Trivial accessor
     inline multithreading::Communicator *comm()
     {
-        assert( tree_->comm_ != nullptr );
+        assert_true( tree_->comm_ != nullptr );
         return tree_->comm_;
     }
 
     /// Trivial accessor
     inline size_t column_used() const
     {
-        assert( split_ );
+        assert_true( split_ );
         return split_->column_used;
     }
 
     /// Trivial accessor
     inline Float critical_value() const
     {
-        assert( split_ );
+        assert_true( split_ );
         return split_->critical_value;
     }
 
     /// Trivial accessor
     inline enums::DataUsed data_used() const
     {
-        assert( split_ );
+        assert_true( split_ );
         return split_->data_used;
     }
 
     /// Whether the data used is discrete
     inline bool discrete_data_used() const
     {
-        assert( split_ );
+        assert_true( split_ );
         return (
             split_->data_used == enums::DataUsed::same_unit_discrete ||
             split_->data_used == enums::DataUsed::x_perip_discrete ||
@@ -238,7 +238,7 @@ class DecisionTreeNode
                     break;
 
                 default:
-                    assert(
+                    assert_true(
                         !"get_same_unit_discrete: enums::DataUsed not known!" );
                     break;
             }
@@ -256,7 +256,7 @@ class DecisionTreeNode
                     break;
 
                 default:
-                    assert(
+                    assert_true(
                         !"get_same_unit_discrete: enums::DataUsed not known!" );
                     break;
             }
@@ -290,7 +290,7 @@ class DecisionTreeNode
                     break;
 
                 default:
-                    assert( !"get_same_unit_numerical: enums::DataUsed not known!" );
+                    assert_true( !"get_same_unit_numerical: enums::DataUsed not known!" );
                     break;
             }
 
@@ -307,7 +307,7 @@ class DecisionTreeNode
                     break;
 
                 default:
-                    assert( !"get_same_unit_numerical: enums::DataUsed not known!" );
+                    assert_true( !"get_same_unit_numerical: enums::DataUsed not known!" );
                     break;
             }
 
@@ -385,7 +385,7 @@ class DecisionTreeNode
         const containers::Match *_sample,
         const size_t _col ) const
     {
-        assert( _col < _subfeatures.size() );
+        assert_true( _col < _subfeatures.size() );
         return _subfeatures[_col][static_cast<Int>( _sample->ix_x_perip )];
     }
 
@@ -395,7 +395,7 @@ class DecisionTreeNode
     /// Whether the data used is based on a lag variable
     inline bool lag_used() const
     {
-        assert( split_ );
+        assert_true( split_ );
         return ( split_->data_used == enums::DataUsed::time_stamps_window );
     }
 
@@ -408,21 +408,21 @@ class DecisionTreeNode
     /// Trivial getter
     inline const descriptors::SameUnitsContainer &same_units_categorical() const
     {
-        assert( tree_->same_units_.same_units_categorical_ );
+        assert_true( tree_->same_units_.same_units_categorical_ );
         return *tree_->same_units_.same_units_categorical_;
     }
 
     /// Trivial getter
     inline const descriptors::SameUnitsContainer &same_units_discrete() const
     {
-        assert( tree_->same_units_.same_units_discrete_ );
+        assert_true( tree_->same_units_.same_units_discrete_ );
         return *tree_->same_units_.same_units_discrete_;
     }
 
     /// Trivial getter
     inline const descriptors::SameUnitsContainer &same_units_numerical() const
     {
-        assert( tree_->same_units_.same_units_numerical_ );
+        assert_true( tree_->same_units_.same_units_numerical_ );
         return *tree_->same_units_.same_units_numerical_;
     }
 

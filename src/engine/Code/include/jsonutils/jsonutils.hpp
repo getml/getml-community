@@ -4,7 +4,6 @@
 // ------------------------------------------------------------------------
 // Dependencies
 
-#include <cassert>
 #include <cmath>
 
 #include <memory>
@@ -14,6 +13,8 @@
 #include <Poco/JSON/Array.h>
 #include <Poco/JSON/Object.h>
 #include <Poco/JSON/Parser.h>
+
+#include "debug/debug.hpp"
 
 // ------------------------------------------------------------------------
 

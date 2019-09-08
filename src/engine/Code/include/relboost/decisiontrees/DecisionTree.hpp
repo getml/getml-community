@@ -87,42 +87,42 @@ class DecisionTree
     /// Trivial (private) accessor.
     multithreading::Communicator& comm()
     {
-        assert( comm_ != nullptr );
+        assert_true( comm_ != nullptr );
         return *comm_;
     }
 
     /// Trivial (private) accessor
     const Hyperparameters& hyperparameters()
     {
-        assert( hyperparameters_ );
+        assert_true( hyperparameters_ );
         return *hyperparameters_;
     }
 
     /// Trivial (private) accessor
     const containers::Schema& input() const
     {
-        assert( input_ );
+        assert_true( input_ );
         return *input_;
     }
 
     /// Trivial (private) accessor
     lossfunctions::LossFunction& loss_function()
     {
-        assert( loss_function_ );
+        assert_true( loss_function_ );
         return *loss_function_;
     }
 
     /// Trivial (private) accessor
     const lossfunctions::LossFunction& loss_function() const
     {
-        assert( loss_function_ );
+        assert_true( loss_function_ );
         return *loss_function_;
     }
 
     /// Trivial (private) accessor
     const containers::Schema& output() const
     {
-        assert( output_ );
+        assert_true( output_ );
         return *output_;
     }
     // -----------------------------------------------------------------

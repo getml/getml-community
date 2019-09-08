@@ -175,7 +175,7 @@ class SquareLoss : public LossFunction
     /// Commits _yhat_old.
     void commit() final
     {
-        assert( yhat_old().size() == targets().size() );
+        assert_true( yhat_old().size() == targets().size() );
         auto zeros = std::vector<Float>( targets().size() );
         auto weights = std::array<Float, 3>( {0.0, 0.0, 0.0} );
         auto indices = std::vector<size_t>( 0 );
@@ -255,7 +255,7 @@ class SquareLoss : public LossFunction
     /// Keeps the current weights.
     void revert_to_commit() final
     {
-        assert( false );
+        assert_true( false );
         // ToDO
     };
 
@@ -274,7 +274,7 @@ class SquareLoss : public LossFunction
     /// Generates the predictions.
     Float transform( const std::vector<Float>& _weights ) const final
     {
-        assert( false && "ToDO" );
+        assert_true( false && "ToDO" );
         return 0.0;
     }
 
@@ -294,28 +294,28 @@ class SquareLoss : public LossFunction
     /// Trivial (private) accessor
     multithreading::Communicator& comm() const
     {
-        assert( comm_ != nullptr );
+        assert_true( comm_ != nullptr );
         return *comm_;
     }
 
     /// Trivial accessor
     const Hyperparameters& hyperparameters() const
     {
-        assert( hyperparameters_ );
+        assert_true( hyperparameters_ );
         return *hyperparameters_;
     }
 
     /// Trivial accessor
     const std::vector<Float>& targets() const
     {
-        assert( targets_ );
+        assert_true( targets_ );
         return *targets_;
     }
 
     /// Trivial accessor
     const std::vector<Float>& yhat_old() const
     {
-        assert( yhat_old_ );
+        assert_true( yhat_old_ );
         return *yhat_old_;
     }
 

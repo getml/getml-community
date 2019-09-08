@@ -105,7 +105,7 @@ std::shared_ptr<AbstractAggregation> AggregationParser::make_aggregation(
                         }
                     else
                         {
-                            assert( !"Unknown data_used2 in make_aggregation(...)!" );
+                            assert_true( !"Unknown data_used2 in make_aggregation(...)!" );
 
                             return std::shared_ptr<
                                 aggregations::AbstractAggregation>();
@@ -137,7 +137,7 @@ std::shared_ptr<AbstractAggregation> AggregationParser::make_aggregation(
                         }
                     else
                         {
-                            assert( !"Unknown data_used2 in make_aggregation(...)!" );
+                            assert_true( !"Unknown data_used2 in make_aggregation(...)!" );
 
                             return std::shared_ptr<
                                 aggregations::AbstractAggregation>();
@@ -175,7 +175,7 @@ std::shared_ptr<AbstractAggregation> AggregationParser::make_aggregation(
 
             default:
 
-                assert( !"Unknown enums::DataUsed in make_aggregation(...)!" );
+                assert_true( !"Unknown enums::DataUsed in make_aggregation(...)!" );
 
                 return std::shared_ptr<aggregations::AbstractAggregation>();
         }

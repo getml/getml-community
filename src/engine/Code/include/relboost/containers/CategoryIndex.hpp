@@ -16,7 +16,7 @@ class CategoryIndex
         const std::vector<const containers::Match*>::iterator _end )
         : begin_( _begin ), end_( _end ), minimum_( 0 )
     {
-        assert( end_ >= begin_ );
+        assert_true( end_ >= begin_ );
     }
 
     ~CategoryIndex() = default;
@@ -49,8 +49,8 @@ class CategoryIndex
                 return begin_;
             }
 
-        assert( _category - minimum_ >= 0 );
-        assert(
+        assert_true( _category - minimum_ >= 0 );
+        assert_true(
             _category - minimum_ + 1 <
             static_cast<Int>( indptr_.size() ) );
 
@@ -69,8 +69,8 @@ class CategoryIndex
                 return begin_;
             }
 
-        assert( _category - minimum_ >= 0 );
-        assert(
+        assert_true( _category - minimum_ >= 0 );
+        assert_true(
             _category - minimum_ + 1 <
             static_cast<Int>( indptr_.size() ) );
 
@@ -139,7 +139,7 @@ void CategoryIndex::build_indptr(
 {
     // ------------------------------------------------------------------------
 
-    assert( end_ >= begin_ );
+    assert_true( end_ >= begin_ );
 
     if ( std::distance( begin_, end_ ) == 0 || _critical_values.size() == 0 )
         {
@@ -152,7 +152,7 @@ void CategoryIndex::build_indptr(
     const auto minimum = _critical_values.front();
     const auto maximum = _critical_values.back();
 
-    assert( maximum >= minimum );
+    assert_true( maximum >= minimum );
 
     const auto dist =
         static_cast<Int>( std::distance( begin_, end_ ) );
@@ -194,8 +194,8 @@ void CategoryIndex::build_indptr(
 
     for ( auto val : indptr_ )
         {
-            assert( val >= 0 );
-            assert( val <= dist );
+            assert_true( val >= 0 );
+            assert_true( val <= dist );
         }
 
 #endif  // NDEBUG
@@ -214,7 +214,7 @@ void CategoryIndex::build_indptr(
                         {
                             const auto num_row = get_num_row<_data_used>( *it );
 
-                            assert(
+                            assert_true(
                                 _df.categorical( num_row, _num_column ) ==
                                 cat );
                         }

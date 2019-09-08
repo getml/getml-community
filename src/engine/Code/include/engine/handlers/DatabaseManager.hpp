@@ -73,7 +73,7 @@ class DatabaseManager
     const std::shared_ptr<database::Connector> connector()
     {
         multithreading::ReadLock read_lock( read_write_lock_ );
-        assert( connector_ );
+        assert_true( connector_ );
         return connector_;
     }
 
@@ -81,7 +81,7 @@ class DatabaseManager
     const std::shared_ptr<const database::Connector> connector() const
     {
         multithreading::ReadLock read_lock( read_write_lock_ );
-        assert( connector_ );
+        assert_true( connector_ );
         return connector_;
     }
 

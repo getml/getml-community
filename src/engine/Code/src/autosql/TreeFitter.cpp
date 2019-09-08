@@ -20,7 +20,7 @@ void TreeFitter::find_best_trees(
     // -------------------------------------------------------------------
     // Identify and store best tree
 
-    assert( _candidate_trees->size() == _values.size() );
+    assert_true( _candidate_trees->size() == _values.size() );
 
     debug_log( "Identifying best feature..." );
 
@@ -119,7 +119,7 @@ void TreeFitter::fit_tree(
     optimizationcriteria::OptimizationCriterion *_optimization_criterion,
     decisiontrees::DecisionTree *_tree )
 {
-    assert( _sample_containers->size() == _samples->size() );
+    assert_true( _sample_containers->size() == _samples->size() );
 
     const auto ix_perip_used = _tree->column_to_be_aggregated().ix_perip_used;
 
@@ -131,9 +131,9 @@ void TreeFitter::fit_tree(
 
     debug_log( "match_ptrs.size(): " + std::to_string( match_ptrs.size() ) );
 
-    assert( matches.size() == match_ptrs.size() );
+    assert_true( matches.size() == match_ptrs.size() );
 
-    assert( ix_perip_used < static_cast<Int>( _sample_containers->size() ) );
+    assert_true( ix_perip_used < static_cast<Int>( _sample_containers->size() ) );
 
     auto null_values_dist = std::distance( matches.begin(), matches.begin() );
 
@@ -168,7 +168,7 @@ void TreeFitter::fit_tree(
 
             debug_log( "Separated NULL values..." );
 
-            assert(
+            assert_true(
                 null_values_dist ==
                 std::distance(
                     match_ptrs.begin(),
@@ -212,9 +212,9 @@ void TreeFitter::probe(
         {
             const auto ix = tree.ix_perip_used();
 
-            assert( ix < _table_holder.main_tables_.size() );
-            assert( _subfeatures.size() == _table_holder.main_tables_.size() );
-            assert(
+            assert_true( ix < _table_holder.main_tables_.size() );
+            assert_true( _subfeatures.size() == _table_holder.main_tables_.size() );
+            assert_true(
                 _subfeatures.size() ==
                 _table_holder.peripheral_tables_.size() );
 

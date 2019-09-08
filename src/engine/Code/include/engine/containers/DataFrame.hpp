@@ -142,9 +142,9 @@ class DataFrame
             type = 0>
     const Column<Int> &categorical( const T _i ) const
     {
-        assert( categoricals_.size() > 0 );
-        assert( _i >= 0 );
-        assert( _i < static_cast<T>( categoricals_.size() ) );
+        assert_true( categoricals_.size() > 0 );
+        assert_true( _i >= 0 );
+        assert_true( _i < static_cast<T>( categoricals_.size() ) );
 
         return categoricals_[_i];
     }
@@ -171,7 +171,7 @@ class DataFrame
     /// Trivial accessor
     std::string const &category( const size_t _i ) const
     {
-        assert( _i < categories().size() );
+        assert_true( _i < categories().size() );
 
         return categories()[_i];
     }
@@ -183,8 +183,8 @@ class DataFrame
             type = 0>
     const Column<Float> &discrete( const T _i ) const
     {
-        assert( _i >= 0 );
-        assert( _i < static_cast<T>( discretes_.size() ) );
+        assert_true( _i >= 0 );
+        assert_true( _i < static_cast<T>( discretes_.size() ) );
 
         return discretes_[_i];
     }
@@ -293,10 +293,10 @@ class DataFrame
     template <class T>
     DataFrameIndex &index( T _i )
     {
-        assert( indices_.size() == join_keys_.size() );
-        assert( join_keys_.size() > 0 );
-        assert( _i >= 0 );
-        assert( static_cast<size_t>( _i ) < indices_.size() );
+        assert_true( indices_.size() == join_keys_.size() );
+        assert_true( join_keys_.size() > 0 );
+        assert_true( _i >= 0 );
+        assert_true( static_cast<size_t>( _i ) < indices_.size() );
 
         return indices_[_i];
     }
@@ -305,10 +305,10 @@ class DataFrame
     template <class T>
     const DataFrameIndex index( T _i ) const
     {
-        assert( indices_.size() == join_keys_.size() );
-        assert( join_keys_.size() > 0 );
-        assert( _i >= 0 );
-        assert( static_cast<size_t>( _i ) < indices_.size() );
+        assert_true( indices_.size() == join_keys_.size() );
+        assert_true( join_keys_.size() > 0 );
+        assert_true( _i >= 0 );
+        assert_true( static_cast<size_t>( _i ) < indices_.size() );
 
         return indices_[_i];
     }
@@ -326,9 +326,9 @@ class DataFrame
             type = 0>
     const Column<Int> &join_key( const T _i ) const
     {
-        assert( join_keys_.size() > 0 );
-        assert( _i >= 0 );
-        assert( _i < static_cast<T>( join_keys_.size() ) );
+        assert_true( join_keys_.size() > 0 );
+        assert_true( _i >= 0 );
+        assert_true( _i < static_cast<T>( join_keys_.size() ) );
 
         return join_keys_[_i];
     }
@@ -394,9 +394,9 @@ class DataFrame
             type = 0>
     const Column<Float> &numerical( const T _i ) const
     {
-        assert( numericals_.size() > 0 );
-        assert( _i >= 0 );
-        assert( _i < static_cast<T>( numericals_.size() ) );
+        assert_true( numericals_.size() > 0 );
+        assert_true( _i >= 0 );
+        assert_true( _i < static_cast<T>( numericals_.size() ) );
 
         return numericals_[_i];
     }
@@ -440,9 +440,9 @@ class DataFrame
             type = 0>
     const Column<Float> &target( const T _i ) const
     {
-        assert( targets_.size() > 0 );
-        assert( _i >= 0 );
-        assert( _i < static_cast<T>( targets_.size() ) );
+        assert_true( targets_.size() > 0 );
+        assert_true( _i >= 0 );
+        assert_true( _i < static_cast<T>( targets_.size() ) );
 
         return targets_[_i];
     }
@@ -470,9 +470,9 @@ class DataFrame
             type = 0>
     Column<Float> const &time_stamp( const T _i ) const
     {
-        assert( time_stamps_.size() > 0 );
-        assert( _i >= 0 );
-        assert( _i < static_cast<T>( time_stamps_.size() ) );
+        assert_true( time_stamps_.size() > 0 );
+        assert_true( _i >= 0 );
+        assert_true( _i < static_cast<T>( time_stamps_.size() ) );
 
         return time_stamps_[_i];
     }
@@ -802,7 +802,7 @@ void DataFrame::rm_col(
 
     if ( _indices )
         {
-            assert( _indices->size() == _columns->size() );
+            assert_true( _indices->size() == _columns->size() );
 
             const auto dist = std::distance( _columns->begin(), it );
 

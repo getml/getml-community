@@ -149,7 +149,7 @@ class Sqlite3 : public Connector
     /// Frees the error message, then throws and exception.
     void throw_exception( char* _error_message )
     {
-        assert( _error_message != nullptr );
+        assert_true( _error_message != nullptr );
         std::string msg = _error_message;
         sqlite3_free( _error_message );
         throw std::runtime_error( msg );

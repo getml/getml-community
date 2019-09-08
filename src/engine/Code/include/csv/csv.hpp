@@ -4,8 +4,6 @@
 // ----------------------------------------------------------------------------
 // Dependencies
 
-#include <cassert>
-
 #include <algorithm>
 #include <chrono>
 #include <fstream>
@@ -21,6 +19,8 @@
 #include <Poco/DateTime.h>
 #include <Poco/DateTimeFormatter.h>
 #include <Poco/DateTimeParser.h>
+
+#include "debug/debug.hpp"
 
 // ----------------------------------------------------------------------------
 

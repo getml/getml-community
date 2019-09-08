@@ -34,10 +34,10 @@ void test4()
 
     // First line:
     // 0.09902457667435494, 0, 0.7386545235592108, 113.0
-    assert( std::abs( it->get_double() - 0.099024 ) < 1e-4 );
-    assert( it->get_string() == "0" );
-    assert( std::abs( it->get_time_stamp() - 6647.85 ) < 1.0 );
-    assert( it->get_int() == 113 );
+    assert_true( std::abs( it->get_double() - 0.099024 ) < 1e-4 );
+    assert_true( it->get_string() == "0" );
+    assert_true( std::abs( it->get_time_stamp() - 6647.85 ) < 1.0 );
+    assert_true( it->get_int() == 113 );
 
     std::cout << std::endl << std::endl;
     std::cout << "OK." << std::endl << std::endl;

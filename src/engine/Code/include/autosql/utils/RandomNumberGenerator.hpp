@@ -30,7 +30,7 @@ class RandomNumberGenerator
 
         auto random = uniform_distribution( *random_number_generator_ );
 
-        assert( comm_ != nullptr );
+        assert_true( comm_ != nullptr );
 
         multithreading::broadcast( *comm_, random, 0 );
 
@@ -46,7 +46,7 @@ class RandomNumberGenerator
 
         auto random = uniform_distribution( *random_number_generator_ );
 
-        assert( comm_ != nullptr );
+        assert_true( comm_ != nullptr );
 
         multithreading::broadcast( *comm_, random, 0 );
 

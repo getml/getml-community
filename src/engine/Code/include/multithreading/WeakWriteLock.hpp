@@ -26,8 +26,8 @@ class WeakWriteLock
     /// Lock the ReadWriteLock.
     void lock()
     {
-        assert( released_ );
-        assert( weak_released_ );
+        assert_true( released_ );
+        assert_true( weak_released_ );
         weak_released_ = false;
         lock_->weak_write_lock();
     }
@@ -51,8 +51,8 @@ class WeakWriteLock
     /// Upgrade from a weak write lock to a strong write lock.
     void upgrade()
     {
-        assert( !weak_released_ );
-        assert( released_ );
+        assert_true( !weak_released_ );
+        assert_true( released_ );
         lock_->upgrade_weak_write_lock();
         weak_released_ = true;
         released_ = false;

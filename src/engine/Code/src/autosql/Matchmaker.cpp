@@ -18,7 +18,7 @@ std::vector<containers::Match> Matchmaker::make_matches(
         {
             if ( _sample_weights )
                 {
-                    assert( _sample_weights->size() == _population.nrows() );
+                    assert_true( _sample_weights->size() == _population.nrows() );
                     if ( ( *_sample_weights )[ix_output] <= 0.0 )
                         {
                             continue;

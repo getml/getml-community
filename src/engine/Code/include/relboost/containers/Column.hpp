@@ -44,7 +44,7 @@ struct Column
     /// Access operator
     const T& operator[]( size_t _i ) const
     {
-        assert( _i < nrows_ );
+        assert_true( _i < nrows_ );
 
         return *( data_ + _i );
     }

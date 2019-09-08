@@ -172,7 +172,7 @@ void CandidateTreeBuilder::add_subfeature_aggs(
     multithreading::Communicator *_comm,
     std::list<decisiontrees::DecisionTree> *_candidate_trees )
 {
-    assert( _table_holder.subtables_[_ix_perip_used] );
+    assert_true( _table_holder.subtables_[_ix_perip_used] );
 
     for ( auto &agg : _hyperparameters.aggregations_ )
         {
@@ -359,9 +359,9 @@ size_t CandidateTreeBuilder::get_ncols(
     const size_t _ix_perip_used,
     const enums::DataUsed _data_used )
 {
-    assert( _peripheral_tables.size() == _same_units.size() );
+    assert_true( _peripheral_tables.size() == _same_units.size() );
 
-    assert( _ix_perip_used < _same_units.size() );
+    assert_true( _ix_perip_used < _same_units.size() );
 
     switch ( _data_used )
         {
@@ -378,17 +378,17 @@ size_t CandidateTreeBuilder::get_ncols(
                 return 1;
 
             case enums::DataUsed::same_unit_discrete:
-                assert( _same_units[_ix_perip_used].same_units_discrete_ );
+                assert_true( _same_units[_ix_perip_used].same_units_discrete_ );
                 return static_cast<Int>(
                     _same_units[_ix_perip_used].same_units_discrete_->size() );
 
             case enums::DataUsed::same_unit_numerical:
-                assert( _same_units[_ix_perip_used].same_units_numerical_ );
+                assert_true( _same_units[_ix_perip_used].same_units_numerical_ );
                 return static_cast<Int>(
                     _same_units[_ix_perip_used].same_units_numerical_->size() );
 
             default:
-                assert( !"Unknown enums::DataUsed in get_ncols!" );
+                assert_true( !"Unknown enums::DataUsed in get_ncols!" );
                 return 0;
         }
 }

@@ -101,7 +101,7 @@ class DecisionTreeEnsemble
     /// Trivial accessor
     const Hyperparameters& hyperparameters() const
     {
-        assert( impl().hyperparameters_ );
+        assert_true( impl().hyperparameters_ );
         return *impl().hyperparameters_;
     }
 
@@ -117,28 +117,28 @@ class DecisionTreeEnsemble
     /// Trivial  accessor.
     const std::vector<std::string>& peripheral_names() const
     {
-        assert( impl().peripheral_names_ );
+        assert_true( impl().peripheral_names_ );
         return *impl().peripheral_names_;
     }
 
     /// Trivial (const) accessor
     const std::vector<containers::Schema>& peripheral_schema() const
     {
-        assert( impl().peripheral_schema_ );
+        assert_true( impl().peripheral_schema_ );
         return *impl().peripheral_schema_;
     }
 
     /// Trivial accessor.
     const Placeholder& placeholder() const
     {
-        assert( impl().placeholder_ );
+        assert_true( impl().placeholder_ );
         return *impl().placeholder_;
     }
 
     /// Trivial (const) accessor
     const containers::Schema& population_schema() const
     {
-        assert( impl().population_schema_ );
+        assert_true( impl().population_schema_ );
         return *impl().population_schema_;
     }
 
@@ -180,7 +180,7 @@ class DecisionTreeEnsemble
     /// Trivial (private) accessor
     multithreading::Communicator& comm() const
     {
-        assert( impl().comm_ != nullptr );
+        assert_true( impl().comm_ != nullptr );
         return *impl().comm_;
     }
 
@@ -202,14 +202,14 @@ class DecisionTreeEnsemble
     /// Trivial (private) accessor
     lossfunctions::LossFunction& loss_function()
     {
-        assert( loss_function_ );
+        assert_true( loss_function_ );
         return *loss_function_;
     }
 
     /// Trivial (private) accessor
     const lossfunctions::LossFunction& loss_function() const
     {
-        assert( loss_function_ );
+        assert_true( loss_function_ );
         return *loss_function_;
     }
 
@@ -236,21 +236,21 @@ class DecisionTreeEnsemble
     /// Trivial (private) accessor
     const TableHolder& table_holder() const
     {
-        assert( table_holder_ );
+        assert_true( table_holder_ );
         return *table_holder_;
     }
 
     /// Trivial (private) accessor
     std::vector<Float>& targets()
     {
-        assert( targets_ );
+        assert_true( targets_ );
         return *targets_;
     }
 
     /// Trivial (private) accessor
     const std::vector<Float>& targets() const
     {
-        assert( targets_ );
+        assert_true( targets_ );
         return *targets_;
     }
 
@@ -269,7 +269,7 @@ class DecisionTreeEnsemble
         const std::vector<Float>& _predictions,
         std::vector<Float>* _yhat_old ) const
     {
-        assert( _predictions.size() == _yhat_old->size() );
+        assert_true( _predictions.size() == _yhat_old->size() );
         std::transform(
             _yhat_old->begin(),
             _yhat_old->end(),
@@ -283,7 +283,7 @@ class DecisionTreeEnsemble
     /// Trivial (private) accessor
     std::vector<Float>& yhat_old()
     {
-        assert( yhat_old_ );
+        assert_true( yhat_old_ );
         return *yhat_old_;
     }
 

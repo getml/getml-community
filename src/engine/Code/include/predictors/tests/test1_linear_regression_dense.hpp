@@ -56,7 +56,7 @@ void test1_linear_regression_dense()
             /*std::cout << "target: " << y->at( i )
                       << ", prediction: " << yhat->at( i ) << std::endl;*/
 
-            assert( std::abs( y->at( i ) - yhat->at( i ) < 1.0 ) );
+            assert_true( std::abs( y->at( i ) - yhat->at( i ) < 1.0 ) );
         }
 
     std::cout << std::endl << std::endl;

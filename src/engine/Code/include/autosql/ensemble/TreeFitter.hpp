@@ -81,7 +81,7 @@ class TreeFitter
     /// Trivial accessor
     std::shared_ptr<const std::vector<std::string>> &categories()
     {
-        assert( categories_ );
+        assert_true( categories_ );
         return categories_;
     }
 
@@ -91,7 +91,7 @@ class TreeFitter
     /// Trivial accessor
     const descriptors::Hyperparameters &hyperparameters() const
     {
-        assert( hyperparameters_ );
+        assert_true( hyperparameters_ );
         return *hyperparameters_;
     }
 
@@ -104,15 +104,15 @@ class TreeFitter
     /// Trivial accessor
     const descriptors::TreeHyperparameters &tree_hyperparameters() const
     {
-        assert( hyperparameters_ );
-        assert( hyperparameters_->tree_hyperparameters_ );
+        assert_true( hyperparameters_ );
+        assert_true( hyperparameters_->tree_hyperparameters_ );
         return *hyperparameters_->tree_hyperparameters_;
     }
 
     /// Trivial accessor
     bool use_timestamps() const
     {
-        assert( hyperparameters_ );
+        assert_true( hyperparameters_ );
         return hyperparameters_->use_timestamps_;
     }
 

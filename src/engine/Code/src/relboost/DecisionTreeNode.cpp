@@ -117,16 +117,16 @@ void DecisionTreeNode::add_candidates(
 
     for ( const auto& new_weights : all_new_weights )
         {
-            assert( !std::isinf( std::get<0>( new_weights ) ) );
-            assert( !std::isinf( std::get<1>( new_weights ) ) );
-            assert( !std::isinf( std::get<2>( new_weights ) ) );
+            assert_true( !std::isinf( std::get<0>( new_weights ) ) );
+            assert_true( !std::isinf( std::get<1>( new_weights ) ) );
+            assert_true( !std::isinf( std::get<2>( new_weights ) ) );
 
             if ( std::isnan( std::get<0>( new_weights ) ) )
                 {
                     continue;
                 }
 
-            assert(
+            assert_true(
                 !std::isnan( std::get<1>( new_weights ) ) ||
                 !std::isnan( std::get<2>( new_weights ) ) );
 
@@ -179,9 +179,9 @@ void DecisionTreeNode::assert_aligned(
         &global_loss_reduction,
         &comm() );
 
-    assert( global_num_candidates == num_candidates );
-    assert( global_ix_best == ix_best );
-    assert( global_loss_reduction == loss_reduction );
+    assert_true( global_num_candidates == num_candidates );
+    assert_true( global_ix_best == ix_best );
+    assert_true( global_loss_reduction == loss_reduction );
 
 #endif  /// NDEBUG
 }
@@ -388,7 +388,7 @@ std::vector<const containers::Match*>::iterator DecisionTreeNode::partition(
                     partition( split_, _input, _output, _begin, _end );
 
             default:
-                assert( false && "Unknown data_used_" );
+                assert_true( false && "Unknown data_used_" );
                 return _begin;
         }
 }
@@ -410,7 +410,7 @@ Poco::JSON::Object DecisionTreeNode::to_json_obj() const
 
     if ( child_greater_ )
         {
-            assert( child_smaller_ );
+            assert_true( child_smaller_ );
 
             obj.set( "column_", split_.column_ );
 
@@ -441,7 +441,7 @@ void DecisionTreeNode::to_sql(
 {
     if ( child_greater_ )
         {
-            assert( child_smaller_ );
+            assert_true( child_smaller_ );
 
             const auto prefix = ( _sql == "" ) ? "WHEN " : " AND ";
 
@@ -486,7 +486,7 @@ Float DecisionTreeNode::transform(
     // ------------------------------------------------------------------------
     // Calculate the value used for determining the split.
 
-    assert( child_smaller_ );
+    assert_true( child_smaller_ );
 
     bool is_greater = false;
 
@@ -599,7 +599,7 @@ Float DecisionTreeNode::transform(
                 break;
 
             default:
-                assert( false && "Unknown data_used_" );
+                assert_true( false && "Unknown data_used_" );
         }
 
     // ------------------------------------------------------------------------
@@ -1244,8 +1244,8 @@ void DecisionTreeNode::try_same_units_categorical(
                     const auto partition_function =
                         [input_col, output_col, &_input, &_output](
                             const containers::Match* m ) {
-                            assert( m->ix_input < _input.nrows() );
-                            assert( m->ix_output < _output.nrows() );
+                            assert_true( m->ix_input < _input.nrows() );
+                            assert_true( m->ix_output < _output.nrows() );
 
                             const bool is_same =
                                 ( _input.categorical(

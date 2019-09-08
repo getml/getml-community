@@ -4,12 +4,12 @@
 // ----------------------------------------------------
 // Dependencies
 
-#include <cassert>
-
 #include <array>
 #include <memory>
 
 #include <Poco/Net/StreamSocket.h>
+
+#include "debug/debug.hpp"
 
 #include "engine/Float.hpp"
 #include "engine/Int.hpp"

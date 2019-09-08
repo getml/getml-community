@@ -82,8 +82,8 @@ void test4_saving_and_loading_linear_regression()
 
     for ( size_t i = 0; i < yhat->size(); ++i )
         {
-            assert( std::abs( yhat->at( i ) - yhat2->at( i ) ) < 1e-4 );
-            assert( std::abs( yhat->at( i ) - yhat3->at( i ) ) < 1e-4 );
+            assert_true( std::abs( yhat->at( i ) - yhat2->at( i ) ) < 1e-4 );
+            assert_true( std::abs( yhat->at( i ) - yhat3->at( i ) ) < 1e-4 );
         }
 
     std::cout << std::endl << std::endl;

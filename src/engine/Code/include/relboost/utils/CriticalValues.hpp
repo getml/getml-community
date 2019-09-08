@@ -60,8 +60,8 @@ class CriticalValues
         const std::vector<const containers::Match*>::iterator _end,
         multithreading::Communicator* _comm )
     {
-        assert( !is_same_units( _data_used ) );
-        assert( _data_used != enums::DataUsed::same_units_categorical );
+        assert_true( !is_same_units( _data_used ) );
+        assert_true( _data_used != enums::DataUsed::same_units_categorical );
 
         return calc_discrete(
             _data_used,
@@ -84,8 +84,8 @@ class CriticalValues
         const std::vector<const containers::Match*>::iterator _end,
         multithreading::Communicator* _comm )
     {
-        assert( !is_same_units( _data_used ) );
-        assert( _data_used != enums::DataUsed::same_units_categorical );
+        assert_true( !is_same_units( _data_used ) );
+        assert_true( _data_used != enums::DataUsed::same_units_categorical );
 
         return calc_numerical(
             _data_used,

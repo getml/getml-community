@@ -13,7 +13,7 @@ void broadcast(
     // Root is contained to ensure compatability with MPI, but
     // in reality root process must always be 0.
 
-    assert( _root == 0 && "broadcast" );
+    assert_true( _root == 0 && "broadcast" );
 
     // ---------------------------------------------------------
     // The number of threads might be one - this happens surprisingly

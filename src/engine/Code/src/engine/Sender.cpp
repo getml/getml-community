@@ -109,7 +109,7 @@ void Sender::send_features(
 
     for ( auto& f : _features )
         {
-            assert( f->size() == nrows );
+            assert_true( f->size() == nrows );
         }
 
     // ------------------------------------------------

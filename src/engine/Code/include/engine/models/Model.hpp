@@ -184,8 +184,8 @@ class Model : public AbstractModel
     /// Trivial (private) getter
     std::shared_ptr<predictors::Predictor>& predictor( const size_t _i )
     {
-        assert( _i < predictors_.size() );
-        assert( predictors_[_i] );
+        assert_true( _i < predictors_.size() );
+        assert_true( predictors_[_i] );
         return predictors_[_i];
     }
 
@@ -193,22 +193,22 @@ class Model : public AbstractModel
     const std::shared_ptr<const predictors::Predictor> predictor(
         const size_t _i ) const
     {
-        assert( _i < predictors_.size() );
-        assert( predictors_[_i] );
+        assert_true( _i < predictors_.size() );
+        assert_true( predictors_[_i] );
         return predictors_[_i];
     }
 
     /// Trivial (private) accessor
     predictors::PredictorImpl& predictor_impl()
     {
-        assert( predictor_impl_ );
+        assert_true( predictor_impl_ );
         return *predictor_impl_;
     }
 
     /// Trivial (private) accessor
     const predictors::PredictorImpl& predictor_impl() const
     {
-        assert( predictor_impl_ );
+        assert_true( predictor_impl_ );
         return *predictor_impl_;
     }
 
@@ -598,7 +598,7 @@ Poco::JSON::Object Model<FeatureEngineererType>::feature_importances()
 
             for ( auto& feat : feature_importances_transposed )
                 {
-                    assert( feat.size() == num_features );
+                    assert_true( feat.size() == num_features );
                     temp->add( feat[i] );
                 }
 
@@ -711,7 +711,7 @@ void Model<FeatureEngineererType>::fit(
 
     if ( _predictors->size() > 0 )
         {
-            assert( _predictors->size() == population_df.num_targets() );
+            assert_true( _predictors->size() == population_df.num_targets() );
 
             auto categorical_features =
                 get_categorical_features( _cmd, _data_frames );
@@ -782,7 +782,7 @@ void Model<FeatureEngineererType>::init_feature_selectors(
 
     const auto obj = *feature_engineerer().hyperparameters().feature_selector_;
 
-    assert( predictor_impl_ );
+    assert_true( predictor_impl_ );
 
     for ( size_t i = 0; i < _num_targets; ++i )
         {
@@ -807,7 +807,7 @@ void Model<FeatureEngineererType>::init_predictors(
 
     const auto obj = *feature_engineerer().hyperparameters().predictor_;
 
-    assert( predictor_impl_ );
+    assert_true( predictor_impl_ );
 
     for ( size_t i = 0; i < _num_targets; ++i )
         {

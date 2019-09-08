@@ -97,7 +97,7 @@ void test19_classification()
         {
             const auto jk = peripheral_df.join_key( i );
 
-            assert( jk < 500 );
+            assert_true( jk < 500 );
 
             if ( peripheral_df.time_stamp( i ) <=
                      time_stamps_population_col[jk] &&
@@ -166,7 +166,7 @@ void test19_classification()
 
     const auto predictions = model.predict( population_df, {peripheral_df} );
 
-    assert( predictions.size() == population_df.nrows() );
+    assert_true( predictions.size() == population_df.nrows() );
 
     relboost::Float accuracy = 0.0;
 
@@ -188,7 +188,7 @@ void test19_classification()
 
     std::cout << " accuracy: " << accuracy << std::endl;
 
-    assert( accuracy > 0.95 );
+    assert_true( accuracy > 0.95 );
 
     std::cout << std::endl << std::endl;
 

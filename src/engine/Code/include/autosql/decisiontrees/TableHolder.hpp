@@ -22,8 +22,8 @@ struct TableHolder
               _placeholder, _population, _peripheral, _peripheral_names ) )
 
     {
-        assert( main_tables_.size() == peripheral_tables_.size() );
-        assert( main_tables_.size() == subtables_.size() );
+        assert_true( main_tables_.size() == peripheral_tables_.size() );
+        assert_true( main_tables_.size() == subtables_.size() );
     }
 
     ~TableHolder() = default;

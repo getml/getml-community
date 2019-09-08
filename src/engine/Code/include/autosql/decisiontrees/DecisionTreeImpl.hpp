@@ -34,14 +34,14 @@ struct DecisionTreeImpl
     /// Trivial getter
     inline bool allow_sets() const
     {
-        assert( tree_hyperparameters_ );
+        assert_true( tree_hyperparameters_ );
         return tree_hyperparameters_->allow_sets_;
     }
 
     /// Trivial accessor
     inline const std::vector<std::string>& categories() const
     {
-        assert( categories_ );
+        assert_true( categories_ );
         return *categories_;
     }
 
@@ -55,21 +55,21 @@ struct DecisionTreeImpl
     /// Trivial getter
     inline Float grid_factor() const
     {
-        assert( tree_hyperparameters_ );
+        assert_true( tree_hyperparameters_ );
         return tree_hyperparameters_->grid_factor_;
     }
 
     /// Trivial getter
     inline const containers::Schema& input() const
     {
-        assert( input_ );
+        assert_true( input_ );
         return *input_;
     }
 
     /// Trivial getter
     inline Float lag() const
     {
-        assert( tree_hyperparameters_ );
+        assert_true( tree_hyperparameters_ );
         return tree_hyperparameters_->lag_;
     }
 
@@ -82,49 +82,49 @@ struct DecisionTreeImpl
     /// Trivial getter
     inline size_t max_length() const
     {
-        assert( tree_hyperparameters_ );
+        assert_true( tree_hyperparameters_ );
         return tree_hyperparameters_->max_length_;
     }
 
     /// Trivial getter
     inline size_t min_num_samples() const
     {
-        assert( tree_hyperparameters_ );
+        assert_true( tree_hyperparameters_ );
         return tree_hyperparameters_->min_num_samples_;
     }
 
     /// Trivial getter
     inline const containers::Schema& output() const
     {
-        assert( output_ );
+        assert_true( output_ );
         return *output_;
     }
 
     /// Returns a custom random number generator
     inline utils::RandomNumberGenerator rng() const
     {
-        assert( random_number_generator_ != nullptr );
+        assert_true( random_number_generator_ != nullptr );
         return utils::RandomNumberGenerator( random_number_generator_, comm_ );
     }
 
     /// Trivial accessor
     inline const descriptors::SameUnitsContainer& same_units_categorical() const
     {
-        assert( same_units_.same_units_categorical_ );
+        assert_true( same_units_.same_units_categorical_ );
         return *same_units_.same_units_categorical_;
     }
 
     /// Trivial accessor
     inline const descriptors::SameUnitsContainer& same_units_discrete() const
     {
-        assert( same_units_.same_units_discrete_ );
+        assert_true( same_units_.same_units_discrete_ );
         return *same_units_.same_units_discrete_;
     }
 
     /// Trivial accessor
     inline const descriptors::SameUnitsContainer& same_units_numerical() const
     {
-        assert( same_units_.same_units_numerical_ );
+        assert_true( same_units_.same_units_numerical_ );
         return *same_units_.same_units_numerical_;
     }
 
@@ -137,14 +137,14 @@ struct DecisionTreeImpl
     /// Trivial getter
     inline Float regularization() const
     {
-        assert( tree_hyperparameters_ );
+        assert_true( tree_hyperparameters_ );
         return tree_hyperparameters_->regularization_;
     }
 
     /// Trivial getter
     inline Float share_conditions() const
     {
-        assert( tree_hyperparameters_ );
+        assert_true( tree_hyperparameters_ );
         return tree_hyperparameters_->share_conditions_;
     }
 

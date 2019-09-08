@@ -140,7 +140,7 @@ class DecisionTree
     /// aggregation of this DecisionTree.
     inline std::string intermediate_type() const
     {
-        assert( impl()->aggregation_ );
+        assert_true( impl()->aggregation_ );
         return impl()->aggregation_->intermediate_type();
     }
 
@@ -165,7 +165,7 @@ class DecisionTree
     make_intermediate(
         std::shared_ptr<aggregations::IntermediateAggregationImpl> _impl ) const
     {
-        assert( impl()->aggregation_ );
+        assert_true( impl()->aggregation_ );
         return impl()->aggregation_->make_intermediate( _impl );
     }
 
@@ -265,14 +265,14 @@ class DecisionTree
     /// Trivial accessor
     inline aggregations::AbstractAggregation *aggregation()
     {
-        assert( impl_.aggregation_ && "aggregation()" );
+        assert_true( impl_.aggregation_ && "aggregation()" );
         return impl_.aggregation_.get();
     }
 
     /// Trivial accessor
     inline const aggregations::AbstractAggregation *aggregation() const
     {
-        assert( impl_.aggregation_ && "aggregation()" );
+        assert_true( impl_.aggregation_ && "aggregation()" );
         return impl_.aggregation_.get();
     }
 
@@ -288,7 +288,7 @@ class DecisionTree
     /// Trivial accessor
     inline multithreading::Communicator *comm()
     {
-        assert( impl_.comm_ != nullptr );
+        assert_true( impl_.comm_ != nullptr );
         return impl_.comm_;
     }
 
@@ -301,7 +301,7 @@ class DecisionTree
     /// Trivial accessor
     inline const containers::Schema &input() const
     {
-        assert( impl()->input_ );
+        assert_true( impl()->input_ );
         return *impl()->input_;
     }
 
@@ -324,7 +324,7 @@ class DecisionTree
     /// Trivial accessor
     inline const containers::Schema &output() const
     {
-        assert( impl()->output_ );
+        assert_true( impl()->output_ );
         return *impl()->output_;
     }
 

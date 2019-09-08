@@ -11,11 +11,11 @@ void Threadutils::copy(
     const std::vector<Float>& _local_feature,
     std::vector<Float>* _global_feature )
 {
-    assert( _rows.size() == _local_feature.size() );
+    assert_true( _rows.size() == _local_feature.size() );
 
     for ( size_t i = 0; i < _rows.size(); ++i )
         {
-            assert( _rows[i] < _global_feature->size() );
+            assert_true( _rows[i] < _global_feature->size() );
 
             ( *_global_feature )[_rows[i]] = _local_feature[i];
         }

@@ -95,7 +95,7 @@ void test20_saving_and_loading_models()
         {
             const auto jk = peripheral_df.join_key( i );
 
-            assert( jk < 500 );
+            assert_true( jk < 500 );
 
             if ( peripheral_df.time_stamp( i ) <=
                      time_stamps_population_col[jk] &&
@@ -191,27 +191,27 @@ void test20_saving_and_loading_models()
     const auto predictions3 =
         model3.transform( population_df, {peripheral_df} );
 
-    assert( predictions.size() == predictions2.size() );
-    assert( predictions.size() == predictions3.size() );
+    assert_true( predictions.size() == predictions2.size() );
+    assert_true( predictions.size() == predictions3.size() );
 
     for ( size_t j = 0; j < predictions.size(); ++j )
         {
-            assert( predictions[j]->size() == predictions2[j]->size() );
-            assert( predictions[j]->size() == predictions3[j]->size() );
+            assert_true( predictions[j]->size() == predictions2[j]->size() );
+            assert_true( predictions[j]->size() == predictions3[j]->size() );
 
             for ( size_t i = 0; i < predictions[j]->size(); ++i )
                 {
-                    assert(
+                    assert_true(
                         std::abs(
                             ( *predictions[j] )[i] - ( *predictions2[j] )[i] ) <
                         1e-07 );
 
-                    assert(
+                    assert_true(
                         std::abs(
                             ( *predictions[j] )[i] - ( *predictions3[j] )[i] ) <
                         1e-07 );
 
-                    assert(
+                    assert_true(
                         std::abs(
                             population_df.target( i, 0 ) -
                             ( *predictions[j] )[i] ) < 5.0 );

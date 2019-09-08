@@ -66,7 +66,7 @@ void test5_logistic_regression_dense()
                         << ", prediction: " << yhat->at( i ) << std::endl;*/
 
             // Note that this implies 100% predictive accuracy.
-            assert( std::abs( y->at( i ) - yhat->at( i ) ) < 0.5 );
+            assert_true( std::abs( y->at( i ) - yhat->at( i ) ) < 0.5 );
         }
 
     std::cout << std::endl << std::endl;

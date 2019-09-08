@@ -117,7 +117,7 @@ class Sniffer
     std::string make_gap(
         const std::string& _colname, const size_t _max_size ) const
     {
-        assert( _colname.size() <= _max_size );
+        assert_true( _colname.size() <= _max_size );
         return std::string( _max_size - _colname.size(), ' ' );
     }
 

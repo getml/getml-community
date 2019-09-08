@@ -6,11 +6,12 @@
 
 #include <algorithm>
 #include <atomic>
-#include <cassert>
 #include <condition_variable>
 #include <mutex>
 #include <thread>
 #include <vector>
+
+#include "debug/debug.hpp"
 
 // ----------------------------------------------------
 

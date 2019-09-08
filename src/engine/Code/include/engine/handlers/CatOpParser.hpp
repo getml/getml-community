@@ -81,7 +81,7 @@ class CatOpParser
             _df,
             *JSON::get_object( _col, "operand2_" ) );
 
-        assert( operand1.size() == operand2.size() );
+        assert_true( operand1.size() == operand2.size() );
 
         auto result = std::vector<std::string>( operand1.size() );
 

@@ -70,7 +70,7 @@ CriticalValues::calc_categorical(
                         break;
 
                     default:
-                        assert( false && "Unknown _data_used!" );
+                        assert_true( false && "Unknown _data_used!" );
                 }
 
             if ( cat < 0 )
@@ -78,8 +78,8 @@ CriticalValues::calc_categorical(
                     continue;
                 }
 
-            assert( cat >= min );
-            assert( cat < max );
+            assert_true( cat >= min );
+            assert_true( cat < max );
 
             included[cat - min] = 1;
         }
@@ -148,7 +148,7 @@ std::vector<Float> CriticalValues::calc_discrete(
         }
     else
         {
-            assert( _input_col == _output_col );
+            assert_true( _input_col == _output_col );
 
             find_min_max(
                 _data_used,
@@ -230,7 +230,7 @@ std::vector<Float> CriticalValues::calc_numerical(
         }
     else
         {
-            assert( _input_col == _output_col );
+            assert_true( _input_col == _output_col );
 
             find_min_max(
                 _data_used,
@@ -314,7 +314,7 @@ void CriticalValues::find_min_max(
                         break;
 
                     default:
-                        assert( false && "Unknown _data_used!" );
+                        assert_true( false && "Unknown _data_used!" );
                 }
 
             if ( *_min < 0 )
@@ -387,7 +387,7 @@ void CriticalValues::find_min_max(
                         break;
 
                     default:
-                        assert( false && "Unknown _data_used!" );
+                        assert_true( false && "Unknown _data_used!" );
                 }
         }
 
@@ -470,7 +470,7 @@ void CriticalValues::find_min_max(
                         break;
 
                     default:
-                        assert( false && "Unknown _data_used!" );
+                        assert_true( false && "Unknown _data_used!" );
                 }
         }
 

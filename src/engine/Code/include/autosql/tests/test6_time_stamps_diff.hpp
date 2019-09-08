@@ -95,7 +95,7 @@ void test6_time_stamps_diff()
         {
             const auto jk = peripheral_df.join_key( i );
 
-            assert( jk < 500 );
+            assert_true( jk < 500 );
 
             if ( peripheral_df.time_stamp( i ) <=
                      time_stamps_population_col[jk] &&
@@ -171,7 +171,7 @@ void test6_time_stamps_diff()
                                << ", prediction: " << predictions[j][i] <<
                        std::endl;*/
 
-                    assert(
+                    assert_true(
                         std::abs(
                             population_df.target( i, 0 ) -
                             ( *predictions[j] )[i] ) < 5.0 );

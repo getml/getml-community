@@ -20,7 +20,7 @@ class MetricImpl
     /// Trivial getter
     multithreading::Communicator& comm()
     {
-        assert( has_comm() );
+        assert_true( has_comm() );
         return *( comm_ );
     }
 
@@ -77,12 +77,12 @@ class MetricImpl
     /// Trivial setter
     void set_data( const Features _yhat, const Features _y )
     {
-        assert( _yhat.size() == _y.size() );
+        assert_true( _yhat.size() == _y.size() );
 
         for ( size_t i = 0; i < _y.size(); ++i )
             {
-                assert( _y[i]->size() == _yhat[i]->size() );
-                assert( _y[i]->size() == _y[0]->size() );
+                assert_true( _y[i]->size() == _yhat[i]->size() );
+                assert_true( _y[i]->size() == _y[0]->size() );
             }
 
         yhat_ = _yhat;
@@ -92,9 +92,9 @@ class MetricImpl
     /// Trivial getter
     Float y( size_t _i, size_t _j ) const
     {
-        assert( _j < y_.size() );
-        assert( y_[_j] );
-        assert( _i < y_[_j]->size() );
+        assert_true( _j < y_.size() );
+        assert_true( y_[_j] );
+        assert_true( _i < y_[_j]->size() );
 
         return ( *y_[_j] )[_i];
     }
@@ -102,9 +102,9 @@ class MetricImpl
     /// Trivial getter
     Float yhat( size_t _i, size_t _j ) const
     {
-        assert( _j < yhat_.size() );
-        assert( yhat_[_j] );
-        assert( _i < yhat_[_j]->size() );
+        assert_true( _j < yhat_.size() );
+        assert_true( yhat_[_j] );
+        assert_true( _i < yhat_[_j]->size() );
 
         return ( *yhat_[_j] )[_i];
     }

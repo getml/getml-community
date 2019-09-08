@@ -141,7 +141,7 @@ class LossFunctionImpl
             }
         else
             {
-                assert( false && "Aggregation not known!" );
+                assert_true( false && "Aggregation not known!" );
                 return std::array<Float, 3>();
             }
     }
@@ -180,7 +180,7 @@ class LossFunctionImpl
             }
         else
             {
-                assert( false && "Aggregation not known!" );
+                assert_true( false && "Aggregation not known!" );
             }
     }
 
@@ -246,8 +246,8 @@ class LossFunctionImpl
 
     const Float sample_weights( size_t _i ) const
     {
-        assert( sample_weights_ );
-        assert( _i < sample_weights_->size() );
+        assert_true( sample_weights_ );
+        assert_true( _i < sample_weights_->size() );
         return ( *sample_weights_ )[_i];
     }
 

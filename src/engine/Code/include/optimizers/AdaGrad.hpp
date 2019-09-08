@@ -26,8 +26,8 @@ class AdaGrad : public Optimizer
         const std::vector<Float>& _gradients,
         std::vector<Float>* _weights ) final
     {
-        assert( _gradients.size() == _weights->size() );
-        assert( _gradients.size() == sum_squared_gradients_.size() );
+        assert_true( _gradients.size() == _weights->size() );
+        assert_true( _gradients.size() == sum_squared_gradients_.size() );
 
         for ( size_t i = 0; i < _weights->size(); ++i )
             {

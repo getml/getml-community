@@ -63,7 +63,7 @@ class Postgres : public Connector
         const std::string& _join_key,
         const std::vector<std::string>& _values ) final
     {
-        assert( false && "ToDo" );
+        assert_true( false && "ToDo" );
         return std::shared_ptr<Iterator>();
     };
 

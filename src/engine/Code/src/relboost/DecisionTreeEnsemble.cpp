@@ -130,8 +130,8 @@ Float DecisionTreeEnsemble::calc_loss_reduction(
     const std::vector<Float> &_yhat_old,
     const std::vector<Float> &_predictions ) const
 {
-    assert( _yhat_old.size() == targets().size() );
-    assert( _predictions.size() == targets().size() );
+    assert_true( _yhat_old.size() == targets().size() );
+    assert_true( _predictions.size() == targets().size() );
 
     std::vector<Float> yhat_new( _yhat_old.size() );
 
@@ -339,11 +339,11 @@ void DecisionTreeEnsemble::fit_new_feature()
 {
     // ------------------------------------------------------------------------
 
-    assert(
+    assert_true(
         table_holder().main_tables_.size() ==
         table_holder().peripheral_tables_.size() );
 
-    assert( table_holder().main_tables_.size() > 0 );
+    assert_true( table_holder().main_tables_.size() > 0 );
 
     // ------------------------------------------------------------------------
     // Create new loss function.
@@ -380,7 +380,7 @@ void DecisionTreeEnsemble::fit_new_feature()
 
             // ------------------------------------------------------------------------
 
-            assert( output_table.nrows() == sample_weights->size() );
+            assert_true( output_table.nrows() == sample_weights->size() );
 
             // ------------------------------------------------------------------------
             // Matches can potentially use a lot of memory - better to create
@@ -394,7 +394,7 @@ void DecisionTreeEnsemble::fit_new_feature()
 
             auto matches_ptr = utils::Matchmaker::make_pointers( matches );
 
-            assert( matches.size() == matches_ptr.size() );
+            assert_true( matches.size() == matches_ptr.size() );
 
             debug_log(
                 "Number of matches: " + std::to_string( matches.size() ) );
@@ -453,8 +453,8 @@ void DecisionTreeEnsemble::fit_new_feature()
     // ------------------------------------------------------------------------
     // Find best candidate
 
-    assert( loss.size() == candidates.size() );
-    assert( predictions.size() == candidates.size() );
+    assert_true( loss.size() == candidates.size() );
+    assert_true( predictions.size() == candidates.size() );
 
     const auto it = std::min_element( loss.begin(), loss.end() );
 
@@ -465,7 +465,7 @@ void DecisionTreeEnsemble::fit_new_feature()
     // ------------------------------------------------------------------------
     // Update yhat_old_.
 
-    assert( yhat_old_ );
+    assert_true( yhat_old_ );
 
     update_predictions(
         candidates[dist].update_rate(), best_predictions, &yhat_old() );
@@ -600,14 +600,14 @@ std::vector<Float> DecisionTreeEnsemble::predict(
 {
     const auto features = transform( _population, _peripheral );
 
-    assert( features.size() == num_features() );
+    assert_true( features.size() == num_features() );
 
     auto predictions =
         std::vector<Float>( _population.nrows(), initial_prediction() );
 
     for ( size_t j = 0; j < num_features(); ++j )
         {
-            assert( features[j]->size() == _population.nrows() );
+            assert_true( features[j]->size() == _population.nrows() );
 
             for ( size_t i = 0; i < _population.nrows(); ++i )
                 {
@@ -635,7 +635,7 @@ void DecisionTreeEnsemble::save( const std::string &_fname ) const
 
 void DecisionTreeEnsemble::select_features( const std::vector<size_t> &_index )
 {
-    assert( _index.size() >= trees().size() );
+    assert_true( _index.size() >= trees().size() );
 
     const auto num_selected_features =
         ( hyperparameters().num_selected_features() > 0 &&
@@ -839,7 +839,7 @@ containers::Features DecisionTreeEnsemble::transform(
 std::vector<Float> DecisionTreeEnsemble::transform(
     const TableHolder &_table_holder, size_t _n_feature ) const
 {
-    assert( _n_feature < num_features() );
+    assert_true( _n_feature < num_features() );
 
     return generate_predictions( trees()[_n_feature], _table_holder );
 }

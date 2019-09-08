@@ -39,8 +39,8 @@ class ColumnView
     /// Returns the underlying column.
     const Column<T>& col() const
     {
-        assert( col_ );
-        assert( !rows_ );
+        assert_true( col_ );
+        assert_true( !rows_ );
         return *col_;
     }
 
@@ -55,7 +55,7 @@ class ColumnView
             int>::type = 0>
     inline T operator[]( const size_t _i ) const
     {
-        assert( _i < rows_->size() );
+        assert_true( _i < rows_->size() );
         return ( *col_ )[( *rows_ )[_i]];
     }
 
@@ -67,9 +67,9 @@ class ColumnView
             int>::type = 0>
     inline T operator[]( const Int _i ) const
     {
-        assert( _i >= 0 );
+        assert_true( _i >= 0 );
         auto it = rows_->find( _i );
-        assert( it != rows_->end() );
+        assert_true( it != rows_->end() );
         return ( *col_ )[it->second];
     }
 

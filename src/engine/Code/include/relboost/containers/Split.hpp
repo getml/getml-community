@@ -37,7 +37,7 @@ struct Split
           critical_value_( 0.0 ),
           data_used_( _data_used )
     {
-        assert(
+        assert_true(
             _data_used == enums::DataUsed::categorical_input ||
             _data_used == enums::DataUsed::categorical_output );
     }
@@ -55,7 +55,7 @@ struct Split
           critical_value_( _critical_value ),
           data_used_( _data_used )
     {
-        assert(
+        assert_true(
             _data_used == enums::DataUsed::discrete_input ||
             _data_used == enums::DataUsed::discrete_input_is_nan ||
             _data_used == enums::DataUsed::discrete_output ||
@@ -66,7 +66,7 @@ struct Split
             _data_used == enums::DataUsed::numerical_output_is_nan ||
             _data_used == enums::DataUsed::time_stamps_diff );
 
-        assert(
+        assert_true(
             _data_used != enums::DataUsed::time_stamps_diff || _column == 0 );
     }
 
@@ -96,7 +96,7 @@ struct Split
           critical_value_( _critical_value ),
           data_used_( _data_used )
     {
-        assert(
+        assert_true(
             _data_used == enums::DataUsed::same_units_discrete ||
             _data_used == enums::DataUsed::same_units_discrete_is_nan ||
             _data_used == enums::DataUsed::same_units_numerical ||

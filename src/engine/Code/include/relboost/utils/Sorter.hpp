@@ -27,9 +27,9 @@ struct Sorter<enums::DataUsed::categorical_input>
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end )
     {
-        assert( _end >= _begin );
+        assert_true( _end >= _begin );
 
-        assert( _num_column < _df.num_categoricals() );
+        assert_true( _num_column < _df.num_categoricals() );
 
         // Note that we are sorting in ASCENDING order!
 
@@ -38,8 +38,8 @@ struct Sorter<enums::DataUsed::categorical_input>
             _end,
             [_num_column, &_df](
                 const containers::Match* m1, const containers::Match* m2 ) {
-                assert( m1->ix_input < _df.nrows() );
-                assert( m2->ix_input < _df.nrows() );
+                assert_true( m1->ix_input < _df.nrows() );
+                assert_true( m2->ix_input < _df.nrows() );
 
                 return _df.categorical( m1->ix_input, _num_column ) <
                        _df.categorical( m2->ix_input, _num_column );
@@ -58,9 +58,9 @@ struct Sorter<enums::DataUsed::categorical_output>
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end )
     {
-        assert( _end >= _begin );
+        assert_true( _end >= _begin );
 
-        assert( _num_column < _df.num_categoricals() );
+        assert_true( _num_column < _df.num_categoricals() );
 
         // Note that we are sorting in ASCENDING order!
 
@@ -69,8 +69,8 @@ struct Sorter<enums::DataUsed::categorical_output>
             _end,
             [_num_column, &_df](
                 const containers::Match* m1, const containers::Match* m2 ) {
-                assert( m1->ix_output < _df.nrows() );
-                assert( m2->ix_output < _df.nrows() );
+                assert_true( m1->ix_output < _df.nrows() );
+                assert_true( m2->ix_output < _df.nrows() );
 
                 return _df.categorical( m1->ix_output, _num_column ) <
                        _df.categorical( m2->ix_output, _num_column );
@@ -89,9 +89,9 @@ struct Sorter<enums::DataUsed::discrete_input>
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end )
     {
-        assert( _end >= _begin );
+        assert_true( _end >= _begin );
 
-        assert( _num_column < _df.num_discretes() );
+        assert_true( _num_column < _df.num_discretes() );
 
         // Note that we are sorting in DESCENDING order!
 
@@ -100,8 +100,8 @@ struct Sorter<enums::DataUsed::discrete_input>
             _end,
             [_num_column, &_df](
                 const containers::Match* m1, const containers::Match* m2 ) {
-                assert( m1->ix_input < _df.nrows() );
-                assert( m2->ix_input < _df.nrows() );
+                assert_true( m1->ix_input < _df.nrows() );
+                assert_true( m2->ix_input < _df.nrows() );
 
                 return _df.discrete( m1->ix_input, _num_column ) >
                        _df.discrete( m2->ix_input, _num_column );
@@ -120,9 +120,9 @@ struct Sorter<enums::DataUsed::discrete_output>
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end )
     {
-        assert( _end >= _begin );
+        assert_true( _end >= _begin );
 
-        assert( _num_column < _df.num_discretes() );
+        assert_true( _num_column < _df.num_discretes() );
 
         // Note that we are sorting in DESCENDING order!
 
@@ -131,8 +131,8 @@ struct Sorter<enums::DataUsed::discrete_output>
             _end,
             [_num_column, &_df](
                 const containers::Match* m1, const containers::Match* m2 ) {
-                assert( m1->ix_output < _df.nrows() );
-                assert( m2->ix_output < _df.nrows() );
+                assert_true( m1->ix_output < _df.nrows() );
+                assert_true( m2->ix_output < _df.nrows() );
 
                 return _df.discrete( m1->ix_output, _num_column ) >
                        _df.discrete( m2->ix_output, _num_column );
@@ -151,9 +151,9 @@ struct Sorter<enums::DataUsed::numerical_input>
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end )
     {
-        assert( _end >= _begin );
+        assert_true( _end >= _begin );
 
-        assert( _num_column < _df.num_numericals() );
+        assert_true( _num_column < _df.num_numericals() );
 
         // Note that we are sorting in DESCENDING order!
 
@@ -162,8 +162,8 @@ struct Sorter<enums::DataUsed::numerical_input>
             _end,
             [_num_column, &_df](
                 const containers::Match* m1, const containers::Match* m2 ) {
-                assert( m1->ix_input < _df.nrows() );
-                assert( m2->ix_input < _df.nrows() );
+                assert_true( m1->ix_input < _df.nrows() );
+                assert_true( m2->ix_input < _df.nrows() );
 
                 return _df.numerical( m1->ix_input, _num_column ) >
                        _df.numerical( m2->ix_input, _num_column );
@@ -182,9 +182,9 @@ struct Sorter<enums::DataUsed::numerical_output>
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end )
     {
-        assert( _end >= _begin );
+        assert_true( _end >= _begin );
 
-        assert( _num_column < _df.num_numericals() );
+        assert_true( _num_column < _df.num_numericals() );
 
         // Note that we are sorting in DESCENDING order!
 
@@ -193,8 +193,8 @@ struct Sorter<enums::DataUsed::numerical_output>
             _end,
             [_num_column, &_df](
                 const containers::Match* m1, const containers::Match* m2 ) {
-                assert( m1->ix_output < _df.nrows() );
-                assert( m2->ix_output < _df.nrows() );
+                assert_true( m1->ix_output < _df.nrows() );
+                assert_true( m2->ix_output < _df.nrows() );
 
                 return _df.numerical( m1->ix_output, _num_column ) >
                        _df.numerical( m2->ix_output, _num_column );
@@ -217,21 +217,21 @@ struct Sorter<enums::DataUsed::same_units_discrete>
     {
         // Note that we are sorting in DESCENDING order!
 
-        assert( _end >= _begin );
+        assert_true( _end >= _begin );
 
-        assert( _input_col < _input.num_discretes() );
-        assert( _output_col < _output.num_discretes() );
+        assert_true( _input_col < _input.num_discretes() );
+        assert_true( _output_col < _output.num_discretes() );
 
         std::sort(
             _begin,
             _end,
             [_input_col, _output_col, &_input, &_output](
                 const containers::Match* m1, const containers::Match* m2 ) {
-                assert( m1->ix_input < _input.nrows() );
-                assert( m2->ix_input < _input.nrows() );
+                assert_true( m1->ix_input < _input.nrows() );
+                assert_true( m2->ix_input < _input.nrows() );
 
-                assert( m1->ix_output < _output.nrows() );
-                assert( m2->ix_output < _output.nrows() );
+                assert_true( m1->ix_output < _output.nrows() );
+                assert_true( m2->ix_output < _output.nrows() );
 
                 const auto diff1 =
                     _output.discrete( m1->ix_output, _output_col ) -
@@ -259,10 +259,10 @@ struct Sorter<enums::DataUsed::same_units_numerical>
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end )
     {
-        assert( _end >= _begin );
+        assert_true( _end >= _begin );
 
-        assert( _input_col < _input.num_numericals() );
-        assert( _output_col < _output.num_numericals() );
+        assert_true( _input_col < _input.num_numericals() );
+        assert_true( _output_col < _output.num_numericals() );
 
         // Note that we are sorting in DESCENDING order!
 
@@ -271,11 +271,11 @@ struct Sorter<enums::DataUsed::same_units_numerical>
             _end,
             [_input_col, _output_col, &_input, &_output](
                 const containers::Match* m1, const containers::Match* m2 ) {
-                assert( m1->ix_input < _input.nrows() );
-                assert( m2->ix_input < _input.nrows() );
+                assert_true( m1->ix_input < _input.nrows() );
+                assert_true( m2->ix_input < _input.nrows() );
 
-                assert( m1->ix_output < _output.nrows() );
-                assert( m2->ix_output < _output.nrows() );
+                assert_true( m1->ix_output < _output.nrows() );
+                assert_true( m2->ix_output < _output.nrows() );
 
                 const auto diff1 =
                     _output.numerical( m1->ix_output, _output_col ) -
@@ -301,7 +301,7 @@ struct Sorter<enums::DataUsed::time_stamps_diff>
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end )
     {
-        assert( _end >= _begin );
+        assert_true( _end >= _begin );
 
         // Note that we are sorting in DESCENDING order!
 
@@ -310,11 +310,11 @@ struct Sorter<enums::DataUsed::time_stamps_diff>
             _end,
             [&_input, &_output](
                 const containers::Match* m1, const containers::Match* m2 ) {
-                assert( m1->ix_input < _input.nrows() );
-                assert( m2->ix_input < _input.nrows() );
+                assert_true( m1->ix_input < _input.nrows() );
+                assert_true( m2->ix_input < _input.nrows() );
 
-                assert( m1->ix_output < _output.nrows() );
-                assert( m2->ix_output < _output.nrows() );
+                assert_true( m1->ix_output < _output.nrows() );
+                assert_true( m2->ix_output < _output.nrows() );
 
                 return ( _output.time_stamp( m1->ix_output ) -
                          _input.time_stamp( m1->ix_input ) ) >

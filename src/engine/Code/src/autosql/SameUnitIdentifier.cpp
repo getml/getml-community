@@ -233,7 +233,7 @@ void SameUnitIdentifier::unit_map_to_same_unit_container(
                             // From the way the unit maps and the
                             // same_unit_containers are constructed, ix1 can
                             // never be the population table.
-                            assert( unit_vector[ix1].ix_perip_used != -1 );
+                            assert_true( unit_vector[ix1].ix_perip_used != -1 );
 
                             ( *_same_units )[unit_vector[ix1].ix_perip_used]
                                 .push_back( new_tuple );

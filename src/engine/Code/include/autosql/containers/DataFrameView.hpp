@@ -126,7 +126,7 @@ class DataFrameView
     /// Trivial getter
     size_t nrows() const
     {
-        assert( rows_ );
+        assert_true( rows_ );
         return rows_->size();
     }
 
@@ -246,8 +246,8 @@ class DataFrameView
     /// Transforms the index.
     const size_t row( size_t _i ) const
     {
-        assert( rows_ );
-        assert( _i < rows_->size() );
+        assert_true( rows_ );
+        assert_true( _i < rows_->size() );
         return ( *rows_ )[_i];
     }
 

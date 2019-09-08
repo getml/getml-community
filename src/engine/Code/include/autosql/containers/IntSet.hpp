@@ -48,7 +48,7 @@ class IntSet
     /// Adds an integer to unique_integers_, if it is not already included
     void insert( const size_t _val )
     {
-        assert( _val < already_included_.size() );
+        assert_true( _val < already_included_.size() );
 
         if ( !already_included_[_val] )
             {

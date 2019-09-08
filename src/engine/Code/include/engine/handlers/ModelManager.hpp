@@ -133,7 +133,7 @@ class ModelManager
     /// Trivial accessor
     const licensing::LicenseChecker& license_checker() const
     {
-        assert( license_checker_ );
+        assert_true( license_checker_ );
         return *license_checker_;
     }
 
@@ -143,14 +143,14 @@ class ModelManager
     /// Trivial (private) accessor
     ModelMapType& models()
     {
-        assert( models_ );
+        assert_true( models_ );
         return *models_;
     }
 
     /// Trivial (private) accessor
     const ModelMapType& models() const
     {
-        assert( models_ );
+        assert_true( models_ );
         return *models_;
     }
 
@@ -313,9 +313,9 @@ void ModelManager<ModelType>::fit_model(
             it->second = std::make_shared<ModelType>( model );
         }
 
-    assert( categories_ );
+    assert_true( categories_ );
 
-    assert( local_categories );
+    assert_true( local_categories );
 
     categories_->append( *local_categories );
 

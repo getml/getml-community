@@ -4,6 +4,8 @@
 // ----------------------------------------------------------------------------
 // Dependencies
 
+#include <cassert>
+
 #include <chrono>
 #include <ctime>
 #include <iostream>
@@ -11,11 +13,12 @@
 
 // ----------------------------------------------------------------------------
 
+#include "debug/Assert.hpp"
 #include "debug/Debugger.hpp"
 
+#include "debug/assert_true.hpp"
 #include "debug/debug_log.hpp"
 
 // ----------------------------------------------------------------------------
-
 
 #endif  // DEBUG_DEBUG_HPP_

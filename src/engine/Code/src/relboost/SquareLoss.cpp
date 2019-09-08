@@ -11,8 +11,8 @@ void SquareLoss::calc_gradients(
 {
     // ------------------------------------------------------------------------
 
-    assert( _yhat_old );
-    assert( _yhat_old->size() == targets().size() );
+    assert_true( _yhat_old );
+    assert_true( _yhat_old->size() == targets().size() );
 
     yhat_old_ = _yhat_old;
 
@@ -51,20 +51,20 @@ Float SquareLoss::calc_loss(
 {
     // ------------------------------------------------------------------------
 
-    assert( yhat_.size() == targets().size() );
+    assert_true( yhat_.size() == targets().size() );
 
-    assert( sample_weights_ );
-    assert( yhat_.size() == sample_weights_->size() );
+    assert_true( sample_weights_ );
+    assert_true( yhat_.size() == sample_weights_->size() );
 
     // ------------------------------------------------------------------------
 
-    assert( !std::isnan( std::get<0>( _weights ) ) );
+    assert_true( !std::isnan( std::get<0>( _weights ) ) );
 
     Float loss = 0.0;
 
     for ( size_t ix : sample_index_ )
         {
-            assert( ix < yhat_.size() );
+            assert_true( ix < yhat_.size() );
 
             auto diff = yhat_old()[ix] + yhat_[ix] + std::get<0>( _weights ) -
                         targets()[ix];
@@ -87,13 +87,13 @@ Float SquareLoss::calc_loss(
         &global_sum_sample_weights,
         &comm() );
 
-    assert( global_sum_sample_weights == sum_sample_weights_ );
+    assert_true( global_sum_sample_weights == sum_sample_weights_ );
 
 #endif  // NDEBUG
 
     // ------------------------------------------------------------------------
 
-    assert( sum_sample_weights_ > 0.0 || sample_index_.size() == 0.0 );
+    assert_true( sum_sample_weights_ > 0.0 || sample_index_.size() == 0.0 );
 
     if ( sum_sample_weights_ > 0.0 )
         {
@@ -109,7 +109,7 @@ Float SquareLoss::calc_loss(
     utils::Reducer::reduce(
         multithreading::maximum<Float>(), &global_loss, &comm() );
 
-    assert( global_loss == loss );
+    assert_true( global_loss == loss );
 
 #endif  // NDEBUG
 
@@ -140,7 +140,7 @@ Float SquareLoss::evaluate_split(
                                      const containers::Match* ptr ) {
           const auto ix = ptr->ix_output;
 
-          assert( ix < targets().size() );
+          assert_true( ix < targets().size() );
 
           const auto diff_old = _old_weight - targets()[ix];
 
@@ -174,7 +174,7 @@ Float SquareLoss::evaluate_split(
 Float SquareLoss::evaluate_tree(
     const std::vector<Float>& _yhat_new )
 {
-    assert( _yhat_new.size() == targets().size() );
+    assert_true( _yhat_new.size() == targets().size() );
 
     Float loss = 0.0;
 

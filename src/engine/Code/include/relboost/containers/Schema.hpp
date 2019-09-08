@@ -55,28 +55,28 @@ class Schema
     /// Getter for a categorical name.
     const std::string& categorical_name( size_t _j ) const
     {
-        assert( _j < categoricals_.size() );
+        assert_true( _j < categoricals_.size() );
         return categoricals_[_j];
     }
 
     /// Getter for a discrete name.
     const std::string& discrete_name( size_t _j ) const
     {
-        assert( _j < discretes_.size() );
+        assert_true( _j < discretes_.size() );
         return discretes_[_j];
     }
 
     /// Getter for a join keys name  name.
     const std::string& join_keys_name( size_t _j ) const
     {
-        assert( _j < join_keys_.size() );
+        assert_true( _j < join_keys_.size() );
         return join_keys_[_j];
     }
 
     /// Getter for the join key name.
     const std::string& join_keys_name() const
     {
-        assert( join_keys_.size() == 1 );
+        assert_true( join_keys_.size() == 1 );
 
         return join_keys_[0];
     }
@@ -105,7 +105,7 @@ class Schema
     /// Getter for a numerical name.
     const std::string& numerical_name( size_t _j ) const
     {
-        assert( _j < numericals_.size() );
+        assert_true( _j < numericals_.size() );
         return numericals_[_j];
     }
 
@@ -115,21 +115,21 @@ class Schema
     /// Getter for a target name.
     const std::string& target_name( size_t _j ) const
     {
-        assert( _j < targets_.size() );
+        assert_true( _j < targets_.size() );
         return targets_[_j];
     }
 
     /// Getter for a time stamp name.
     const std::string& time_stamps_name( size_t _j ) const
     {
-        assert( _j < time_stamps_.size() );
+        assert_true( _j < time_stamps_.size() );
         return time_stamps_[_j];
     }
 
     /// Getter for the time stamps name.
     const std::string& time_stamps_name() const
     {
-        assert( time_stamps_.size() == 1 || time_stamps_.size() == 2 );
+        assert_true( time_stamps_.size() == 1 || time_stamps_.size() == 2 );
 
         return time_stamps_[0];
     }
@@ -154,7 +154,7 @@ class Schema
     /// Getter for the time stamps name.
     const std::string& upper_time_stamps_name() const
     {
-        assert( time_stamps_.size() == 2 );
+        assert_true( time_stamps_.size() == 2 );
 
         return time_stamps_[1];
     }

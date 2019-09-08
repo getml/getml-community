@@ -23,7 +23,7 @@ void test5()
 
             const auto population_statement = population_sniffer.sniff();
 
-            assert( false );
+            assert_true( false );
         }
     catch ( std::exception &e )
         {
@@ -34,7 +34,7 @@ void test5()
         {
             auto reader = csv::Reader( "DOESNOTEXIST.CSV", '\"', ',' );
 
-            assert( false );
+            assert_true( false );
         }
     catch ( std::exception &e )
         {

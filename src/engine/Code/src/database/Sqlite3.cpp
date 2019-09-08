@@ -144,7 +144,7 @@ std::vector<csv::Datatype> Sqlite3::get_coltypes(
                     throw std::runtime_error( sqlite3_errmsg( db() ) );
                 }
 
-            assert( data_type != nullptr );
+            assert_true( data_type != nullptr );
 
             const auto str = std::string( data_type );
 

@@ -295,14 +295,14 @@ class Aggregation : public AbstractAggregation
             int>::type = 0>
     inline void activate_sample( containers::Match *_sample )
     {
-        assert( _sample->ix_x_popul >= 0 );
-        assert(
+        assert_true( _sample->ix_x_popul >= 0 );
+        assert_true(
             static_cast<size_t>( _sample->ix_x_popul ) < yhat_inline().size() );
 
-        assert( _sample->ix_x_popul < static_cast<Int>( sum().size() ) );
-        assert( _sample->ix_x_popul < static_cast<Int>( count().size() ) );
+        assert_true( _sample->ix_x_popul < static_cast<Int>( sum().size() ) );
+        assert_true( _sample->ix_x_popul < static_cast<Int>( count().size() ) );
 
-        assert(
+        assert_true(
             value_to_be_aggregated( _sample ) ==
             value_to_be_aggregated( _sample ) );
 
@@ -313,7 +313,7 @@ class Aggregation : public AbstractAggregation
 
         count()[_sample->ix_x_popul] += 1.0;
 
-        assert( count()[_sample->ix_x_popul] > 0.0 );
+        assert_true( count()[_sample->ix_x_popul] > 0.0 );
 
         yhat_inline()[_sample->ix_x_popul] =
             sum()[_sample->ix_x_popul] / count()[_sample->ix_x_popul];
@@ -330,14 +330,14 @@ class Aggregation : public AbstractAggregation
             int>::type = 0>
     inline void deactivate_sample( containers::Match *_sample )
     {
-        assert( _sample->ix_x_popul >= 0 );
-        assert(
+        assert_true( _sample->ix_x_popul >= 0 );
+        assert_true(
             static_cast<size_t>( _sample->ix_x_popul ) < yhat_inline().size() );
 
-        assert( _sample->ix_x_popul < static_cast<Int>( sum().size() ) );
-        assert( _sample->ix_x_popul < static_cast<Int>( count().size() ) );
+        assert_true( _sample->ix_x_popul < static_cast<Int>( sum().size() ) );
+        assert_true( _sample->ix_x_popul < static_cast<Int>( count().size() ) );
 
-        assert( count()[_sample->ix_x_popul] > 0.0 );
+        assert_true( count()[_sample->ix_x_popul] > 0.0 );
 
         sum()[_sample->ix_x_popul] -= value_to_be_aggregated( _sample );
 
@@ -366,7 +366,7 @@ class Aggregation : public AbstractAggregation
     {
         yhat_inline()[_sample->ix_x_popul] += 1.0;
 
-        assert( yhat_inline()[_sample->ix_x_popul] > 0.0 );
+        assert_true( yhat_inline()[_sample->ix_x_popul] > 0.0 );
     }
 
     /// COUNT aggregation:
@@ -380,7 +380,7 @@ class Aggregation : public AbstractAggregation
             int>::type = 0>
     inline void deactivate_sample( containers::Match *_sample )
     {
-        assert( yhat_inline()[_sample->ix_x_popul] > 0.0 );
+        assert_true( yhat_inline()[_sample->ix_x_popul] > 0.0 );
 
         yhat_inline()[_sample->ix_x_popul] -= 1.0;
     }
@@ -399,9 +399,9 @@ class Aggregation : public AbstractAggregation
             int>::type = 0>
     inline void activate_sample( containers::Match *_sample )
     {
-        assert( _sample->activated == false );
+        assert_true( _sample->activated == false );
 
-        assert( yhat_inline()[_sample->ix_x_popul] > -0.5 );
+        assert_true( yhat_inline()[_sample->ix_x_popul] > -0.5 );
 
         static_assert( needs_altered_samples_, "altered samples needed" );
 
@@ -460,9 +460,9 @@ class Aggregation : public AbstractAggregation
             int>::type = 0>
     inline void deactivate_sample( containers::Match *_sample )
     {
-        assert( _sample->activated );
+        assert_true( _sample->activated );
 
-        assert( yhat_inline()[_sample->ix_x_popul] > 0.5 );
+        assert_true( yhat_inline()[_sample->ix_x_popul] > 0.5 );
 
         _sample->activated = false;
 
@@ -522,9 +522,9 @@ class Aggregation : public AbstractAggregation
             int>::type = 0>
     inline void activate_sample( containers::Match *_sample )
     {
-        assert( _sample->activated == false );
+        assert_true( _sample->activated == false );
 
-        assert( yhat_inline()[_sample->ix_x_popul] > -0.5 );
+        assert_true( yhat_inline()[_sample->ix_x_popul] > -0.5 );
 
         static_assert( needs_altered_samples_, "altered samples needed" );
 
@@ -582,9 +582,9 @@ class Aggregation : public AbstractAggregation
             int>::type = 0>
     inline void deactivate_sample( containers::Match *_sample )
     {
-        assert( _sample->activated );
+        assert_true( _sample->activated );
 
-        assert( yhat_inline()[_sample->ix_x_popul] > -0.5 );
+        assert_true( yhat_inline()[_sample->ix_x_popul] > -0.5 );
 
         _sample->activated = false;
 
@@ -643,11 +643,11 @@ class Aggregation : public AbstractAggregation
             int>::type = 0>
     inline void activate_sample( containers::Match *_sample )
     {
-        assert( _sample->activated == false );
+        assert_true( _sample->activated == false );
 
         ++( count()[_sample->ix_x_popul] );
 
-        assert( count()[_sample->ix_x_popul] > 0.0 );
+        assert_true( count()[_sample->ix_x_popul] > 0.0 );
 
         static_assert( needs_sample_ptr_, "sample_ptr needed" );
         static_assert( needs_count_, "count needed" );
@@ -678,9 +678,9 @@ class Aggregation : public AbstractAggregation
             int>::type = 0>
     void deactivate_sample( containers::Match *_sample )
     {
-        assert( _sample->activated );
+        assert_true( _sample->activated );
 
-        assert( count()[_sample->ix_x_popul] > 0.0 );
+        assert_true( count()[_sample->ix_x_popul] > 0.0 );
 
         --( count()[_sample->ix_x_popul] );
 
@@ -725,13 +725,13 @@ class Aggregation : public AbstractAggregation
             int>::type = 0>
     inline void activate_sample( containers::Match *_sample )
     {
-        assert( _sample->activated == false );
+        assert_true( _sample->activated == false );
 
         ++( count()[_sample->ix_x_popul] );
 
-        assert( count()[_sample->ix_x_popul] > 0.0 );
+        assert_true( count()[_sample->ix_x_popul] > 0.0 );
 
-        assert( _sample->activated == false );
+        assert_true( _sample->activated == false );
 
         static_assert( needs_sample_ptr_, "sample_ptr needed" );
         static_assert( needs_count_, "count needed" );
@@ -827,11 +827,11 @@ class Aggregation : public AbstractAggregation
             int>::type = 0>
     void deactivate_sample( containers::Match *_sample )
     {
-        assert( _sample->activated );
+        assert_true( _sample->activated );
 
-        assert( count()[_sample->ix_x_popul] > 0.0 );
+        assert_true( count()[_sample->ix_x_popul] > 0.0 );
 
-        assert( _sample->activated );
+        assert_true( _sample->activated );
 
         --( count()[_sample->ix_x_popul] );
 
@@ -922,11 +922,11 @@ class Aggregation : public AbstractAggregation
             int>::type = 0>
     inline void activate_sample( containers::Match *_sample )
     {
-        assert( _sample->activated == false );
+        assert_true( _sample->activated == false );
 
         ++( count()[_sample->ix_x_popul] );
 
-        assert( count()[_sample->ix_x_popul] > 0.0 );
+        assert_true( count()[_sample->ix_x_popul] > 0.0 );
 
         static_assert( needs_sample_ptr_, "sample_ptr needed" );
         static_assert( needs_count_, "count needed" );
@@ -957,9 +957,9 @@ class Aggregation : public AbstractAggregation
             int>::type = 0>
     void deactivate_sample( containers::Match *_sample )
     {
-        assert( _sample->activated );
+        assert_true( _sample->activated );
 
-        assert( count()[_sample->ix_x_popul] > 0.0 );
+        assert_true( count()[_sample->ix_x_popul] > 0.0 );
 
         --( count()[_sample->ix_x_popul] );
 
@@ -1019,7 +1019,7 @@ class Aggregation : public AbstractAggregation
 
         count()[_sample->ix_x_popul] += 1.0;
 
-        assert( count()[_sample->ix_x_popul] > 0.0 );
+        assert_true( count()[_sample->ix_x_popul] > 0.0 );
 
         calculate_skewness( _sample );
     }
@@ -1077,7 +1077,7 @@ class Aggregation : public AbstractAggregation
 
         sum_cubed()[_sample->ix_x_popul] -= val * val * val;
 
-        assert( count()[_sample->ix_x_popul] > 0.0 );
+        assert_true( count()[_sample->ix_x_popul] > 0.0 );
 
         count()[_sample->ix_x_popul] -= 1.0;
 
@@ -1110,7 +1110,7 @@ class Aggregation : public AbstractAggregation
 
         count()[_sample->ix_x_popul] += 1.0;
 
-        assert( count()[_sample->ix_x_popul] > 0.0 );
+        assert_true( count()[_sample->ix_x_popul] > 0.0 );
 
         const Float mean =
             sum()[_sample->ix_x_popul] / count()[_sample->ix_x_popul];
@@ -1143,7 +1143,7 @@ class Aggregation : public AbstractAggregation
 
         sum_squared()[_sample->ix_x_popul] -= val * val;
 
-        assert( count()[_sample->ix_x_popul] > 0.0 );
+        assert_true( count()[_sample->ix_x_popul] > 0.0 );
 
         count()[_sample->ix_x_popul] -= 1.0;
 
@@ -1226,7 +1226,7 @@ class Aggregation : public AbstractAggregation
 
         count()[_sample->ix_x_popul] += 1.0;
 
-        assert( count()[_sample->ix_x_popul] > 0.0 );
+        assert_true( count()[_sample->ix_x_popul] > 0.0 );
 
         const Float mean =
             sum()[_sample->ix_x_popul] / count()[_sample->ix_x_popul];
@@ -1253,7 +1253,7 @@ class Aggregation : public AbstractAggregation
 
         sum_squared()[_sample->ix_x_popul] -= val * val;
 
-        assert( count()[_sample->ix_x_popul] > 0.0 );
+        assert_true( count()[_sample->ix_x_popul] > 0.0 );
 
         count()[_sample->ix_x_popul] -= 1.0;
 
@@ -1353,7 +1353,7 @@ class Aggregation : public AbstractAggregation
     /// Returns a reference to the predictions stored by the aggregation
     std::vector<Float> &yhat() final
     {
-        assert( aggregation_impl_ != nullptr );
+        assert_true( aggregation_impl_ != nullptr );
         return aggregation_impl_->yhat_;
     }
 
@@ -1369,14 +1369,14 @@ class Aggregation : public AbstractAggregation
     /// Trivial accessor
     inline std::vector<Float> &count()
     {
-        assert( aggregation_impl_ != nullptr );
+        assert_true( aggregation_impl_ != nullptr );
         return aggregation_impl_->count_;
     }
 
     /// Trivial accessor
     inline std::vector<Float> &count_committed()
     {
-        assert( aggregation_impl_ != nullptr );
+        assert_true( aggregation_impl_ != nullptr );
         return aggregation_impl_->count_committed_;
     }
 
@@ -1389,8 +1389,8 @@ class Aggregation : public AbstractAggregation
 
         while ( it->activated == false )
             {
-                assert( it < samples_end_ );
-                assert( it->ix_x_popul == _begin->ix_x_popul );
+                assert_true( it < samples_end_ );
+                assert_true( it->ix_x_popul == _begin->ix_x_popul );
                 ++it;
             }
 
@@ -1406,8 +1406,8 @@ class Aggregation : public AbstractAggregation
 
         while ( it->activated == false )
             {
-                assert( it >= samples_begin_ );
-                assert( it->ix_x_popul == _begin->ix_x_popul );
+                assert_true( it >= samples_begin_ );
+                assert_true( it->ix_x_popul == _begin->ix_x_popul );
                 --it;
             }
 
@@ -1423,70 +1423,70 @@ class Aggregation : public AbstractAggregation
     /// Trivial accessor
     inline std::vector<containers::Match *> &sample_ptr()
     {
-        assert( aggregation_impl_ != nullptr );
+        assert_true( aggregation_impl_ != nullptr );
         return aggregation_impl_->sample_ptr_;
     }
 
     /// Trivial accessor
     inline std::vector<containers::Match *> &sample_ptr_committed()
     {
-        assert( aggregation_impl_ != nullptr );
+        assert_true( aggregation_impl_ != nullptr );
         return aggregation_impl_->sample_ptr_committed_;
     }
 
     /// Trivial accessor
     inline std::vector<Float> &sum()
     {
-        assert( aggregation_impl_ != nullptr );
+        assert_true( aggregation_impl_ != nullptr );
         return aggregation_impl_->sum_;
     }
 
     /// Trivial accessor
     inline std::vector<Float> &sum_committed()
     {
-        assert( aggregation_impl_ != nullptr );
+        assert_true( aggregation_impl_ != nullptr );
         return aggregation_impl_->sum_committed_;
     }
 
     /// Trivial accessor
     inline std::vector<Float> &sum_cubed()
     {
-        assert( aggregation_impl_ != nullptr );
+        assert_true( aggregation_impl_ != nullptr );
         return aggregation_impl_->sum_cubed_;
     }
 
     /// Trivial accessor
     inline std::vector<Float> &sum_cubed_committed()
     {
-        assert( aggregation_impl_ != nullptr );
+        assert_true( aggregation_impl_ != nullptr );
         return aggregation_impl_->sum_cubed_committed_;
     }
 
     /// Trivial accessor
     inline std::vector<Float> &sum_squared()
     {
-        assert( aggregation_impl_ != nullptr );
+        assert_true( aggregation_impl_ != nullptr );
         return aggregation_impl_->sum_squared_;
     }
 
     /// Trivial accessor
     inline std::vector<Float> &sum_squared_committed()
     {
-        assert( aggregation_impl_ != nullptr );
+        assert_true( aggregation_impl_ != nullptr );
         return aggregation_impl_->sum_squared_committed_;
     }
 
     /// Trivial accessor
     inline containers::IntSet &updates_current()
     {
-        assert( aggregation_impl_ != nullptr );
+        assert_true( aggregation_impl_ != nullptr );
         return aggregation_impl_->updates_current_;
     }
 
     /// Trivial accessor
     inline containers::IntSet &updates_stored()
     {
-        assert( aggregation_impl_ != nullptr );
+        assert_true( aggregation_impl_ != nullptr );
         return aggregation_impl_->updates_stored_;
     }
 
@@ -1494,7 +1494,7 @@ class Aggregation : public AbstractAggregation
     inline containers::ColumnView<Float, std::map<Int, Int>>
         &value_to_be_aggregated()
     {
-        assert( aggregation_impl_ != nullptr );
+        assert_true( aggregation_impl_ != nullptr );
         return aggregation_impl_->value_to_be_aggregated_;
     }
 
@@ -1502,7 +1502,7 @@ class Aggregation : public AbstractAggregation
     inline containers::ColumnView<Int, std::map<Int, Int>>
         &value_to_be_aggregated_categorical()
     {
-        assert( aggregation_impl_ != nullptr );
+        assert_true( aggregation_impl_ != nullptr );
         return aggregation_impl_->value_to_be_aggregated_categorical_;
     }
 
@@ -1603,7 +1603,7 @@ class Aggregation : public AbstractAggregation
     inline containers::ColumnView<Float, std::vector<size_t>>
         &value_to_be_compared()
     {
-        assert( aggregation_impl_ != nullptr );
+        assert_true( aggregation_impl_ != nullptr );
         return aggregation_impl_->value_to_be_compared_;
     }
 
@@ -1611,21 +1611,21 @@ class Aggregation : public AbstractAggregation
     /// time_stamps and the same_units.
     inline std::vector<Float> &yhat_committed()
     {
-        assert( aggregation_impl_ != nullptr );
+        assert_true( aggregation_impl_ != nullptr );
         return aggregation_impl_->yhat_committed_;
     }
 
     /// Trivial accessor
     inline std::vector<Float> &yhat_inline()
     {
-        assert( aggregation_impl_ != nullptr );
+        assert_true( aggregation_impl_ != nullptr );
         return aggregation_impl_->yhat_;
     }
 
     /// Trivial accessor
     inline std::vector<Float> &yhat_stored()
     {
-        assert( aggregation_impl_ != nullptr );
+        assert_true( aggregation_impl_ != nullptr );
         return aggregation_impl_->yhat_stored_;
     }
 
@@ -1772,7 +1772,7 @@ void Aggregation<AggType, data_used_, is_population_>::
         {
             for ( auto cat = _categories_begin; cat < _categories_end; ++cat )
                 {
-                    assert( cat == _categories_begin || *cat > *( cat - 1 ) );
+                    assert_true( cat == _categories_begin || *cat > *( cat - 1 ) );
 
                     if ( ( *it )->categorical_value == *cat )
                         {
@@ -1811,7 +1811,7 @@ void Aggregation<AggType, data_used_, is_population_>::
             for ( auto it = _index.begin( *cat ); it < _index.end( *cat );
                   ++it )
                 {
-                    assert( ( *it )->categorical_value == *cat );
+                    assert_true( ( *it )->categorical_value == *cat );
                     activate_sample( *it );
 
                     updates_stored().insert( ( *it )->ix_x_popul );
@@ -1878,8 +1878,8 @@ void Aggregation<AggType, data_used_, is_population_>::
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end )
 {
-    assert( _sample_container_end > _sample_container_begin );
-    assert( _critical_values.size() > 0 );
+    assert_true( _sample_container_end > _sample_container_begin );
+    assert_true( _critical_values.size() > 0 );
 
     auto it = _sample_container_end - 1;
 
@@ -2003,7 +2003,7 @@ void Aggregation<AggType, data_used_, is_population_>::
 {
     // ------------------------------------------------------------------
 
-    assert( _sample_container_end > _sample_container_begin );
+    assert_true( _sample_container_end > _sample_container_begin );
 
     const Float sample_size = static_cast<Float>(
         std::distance( _sample_container_begin, _sample_container_end ) );
@@ -2032,8 +2032,8 @@ void Aggregation<AggType, data_used_, is_population_>::
 
             for ( auto it = wbegin; it != wend; ++it )
                 {
-                    assert( ( *it )->numerical_value > c - _lag );
-                    assert( ( *it )->numerical_value <= c );
+                    assert_true( ( *it )->numerical_value > c - _lag );
+                    assert_true( ( *it )->numerical_value <= c );
 
                     activate_sample( *it );
 
@@ -2102,7 +2102,7 @@ void Aggregation<AggType, data_used_, is_population_>::
 {
     // ------------------------------------------------------------------
 
-    assert( _sample_container_end > _sample_container_begin );
+    assert_true( _sample_container_end > _sample_container_begin );
 
     const Float sample_size = static_cast<Float>(
         std::distance( _sample_container_begin, _sample_container_end ) );
@@ -2114,7 +2114,7 @@ void Aggregation<AggType, data_used_, is_population_>::
 
     for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
         {
-            assert(
+            assert_true(
                 it == _sample_container_begin ||
                 ( *it )->numerical_value >= ( *( it - 1 ) )->numerical_value );
 
@@ -2147,8 +2147,8 @@ void Aggregation<AggType, data_used_, is_population_>::
 
             for ( auto it = wbegin; it != wend; ++it )
                 {
-                    assert( ( *it )->numerical_value > c - _lag );
-                    assert( ( *it )->numerical_value <= c );
+                    assert_true( ( *it )->numerical_value > c - _lag );
+                    assert_true( ( *it )->numerical_value <= c );
 
                     deactivate_sample( *it );
 
@@ -2165,8 +2165,8 @@ void Aggregation<AggType, data_used_, is_population_>::
 
                     for ( auto it = wbegin; it != wend; ++it )
                         {
-                            assert( ( *it )->numerical_value > c - _lag );
-                            assert( ( *it )->numerical_value <= c );
+                            assert_true( ( *it )->numerical_value > c - _lag );
+                            assert_true( ( *it )->numerical_value <= c );
 
                             activate_sample( *it );
 
@@ -2210,7 +2210,7 @@ void Aggregation<AggType, data_used_, is_population_>::
 
             for ( auto cat = _categories_begin; cat < _categories_end; ++cat )
                 {
-                    assert( cat == _categories_begin || *cat > *( cat - 1 ) );
+                    assert_true( cat == _categories_begin || *cat > *( cat - 1 ) );
 
                     if ( ( *it )->categorical_value == *cat )
                         {
@@ -2265,7 +2265,7 @@ void Aggregation<AggType, data_used_, is_population_>::
             for ( auto it = _index.begin( *cat ); it < _index.end( *cat );
                   ++it )
                 {
-                    assert( ( *it )->categorical_value == *cat );
+                    assert_true( ( *it )->categorical_value == *cat );
 
                     deactivate_sample( *it );
 
@@ -2287,7 +2287,7 @@ void Aggregation<AggType, data_used_, is_population_>::
                           it < _index.end( *cat );
                           ++it )
                         {
-                            assert( ( *it )->categorical_value == *cat );
+                            assert_true( ( *it )->categorical_value == *cat );
 
                             activate_sample( *it );
 
@@ -2425,7 +2425,7 @@ void Aggregation<AggType, data_used_, is_population_>::
         {
             for ( auto cat = _categories_begin; cat < _categories_end; ++cat )
                 {
-                    assert( cat == _categories_begin || *cat > *( cat - 1 ) );
+                    assert_true( cat == _categories_begin || *cat > *( cat - 1 ) );
 
                     if ( ( *it )->categorical_value == *cat )
                         {
@@ -2465,7 +2465,7 @@ void Aggregation<AggType, data_used_, is_population_>::
             for ( auto it = _index.begin( *cat ); it < _index.end( *cat );
                   ++it )
                 {
-                    assert( ( *it )->categorical_value == *cat );
+                    assert_true( ( *it )->categorical_value == *cat );
                     deactivate_sample( *it );
 
                     updates_stored().insert( ( *it )->ix_x_popul );
@@ -2534,8 +2534,8 @@ void Aggregation<AggType, data_used_, is_population_>::
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end )
 {
-    assert( _sample_container_end > _sample_container_begin );
-    assert( _critical_values.size() > 0 );
+    assert_true( _sample_container_end > _sample_container_begin );
+    assert_true( _critical_values.size() > 0 );
 
     auto it = _sample_container_end - 1;
 
@@ -2660,7 +2660,7 @@ void Aggregation<AggType, data_used_, is_population_>::
 {
     // ------------------------------------------------------------------
 
-    assert( _sample_container_end > _sample_container_begin );
+    assert_true( _sample_container_end > _sample_container_begin );
 
     const Float sample_size = static_cast<Float>(
         std::distance( _sample_container_begin, _sample_container_end ) );
@@ -2689,8 +2689,8 @@ void Aggregation<AggType, data_used_, is_population_>::
 
             for ( auto it = wbegin; it != wend; ++it )
                 {
-                    assert( ( *it )->numerical_value > c - _lag );
-                    assert( ( *it )->numerical_value <= c );
+                    assert_true( ( *it )->numerical_value > c - _lag );
+                    assert_true( ( *it )->numerical_value <= c );
 
                     deactivate_sample( *it );
 
@@ -2759,7 +2759,7 @@ void Aggregation<AggType, data_used_, is_population_>::
 {
     // ------------------------------------------------------------------
 
-    assert( _sample_container_end > _sample_container_begin );
+    assert_true( _sample_container_end > _sample_container_begin );
 
     const Float sample_size = static_cast<Float>(
         std::distance( _sample_container_begin, _sample_container_end ) );
@@ -2771,7 +2771,7 @@ void Aggregation<AggType, data_used_, is_population_>::
 
     for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
         {
-            assert(
+            assert_true(
                 it == _sample_container_begin ||
                 ( *it )->numerical_value >= ( *( it - 1 ) )->numerical_value );
 
@@ -2804,8 +2804,8 @@ void Aggregation<AggType, data_used_, is_population_>::
 
             for ( auto it = wbegin; it != wend; ++it )
                 {
-                    assert( ( *it )->numerical_value > c - _lag );
-                    assert( ( *it )->numerical_value <= c );
+                    assert_true( ( *it )->numerical_value > c - _lag );
+                    assert_true( ( *it )->numerical_value <= c );
 
                     activate_sample( *it );
 
@@ -2822,8 +2822,8 @@ void Aggregation<AggType, data_used_, is_population_>::
 
                     for ( auto it = wbegin; it != wend; ++it )
                         {
-                            assert( ( *it )->numerical_value > c - _lag );
-                            assert( ( *it )->numerical_value <= c );
+                            assert_true( ( *it )->numerical_value > c - _lag );
+                            assert_true( ( *it )->numerical_value <= c );
 
                             deactivate_sample( *it );
 
@@ -2867,7 +2867,7 @@ void Aggregation<AggType, data_used_, is_population_>::
 
             for ( auto cat = _categories_begin; cat < _categories_end; ++cat )
                 {
-                    assert( cat == _categories_begin || *cat > *( cat - 1 ) );
+                    assert_true( cat == _categories_begin || *cat > *( cat - 1 ) );
 
                     if ( ( *it )->categorical_value == *cat )
                         {
@@ -2922,7 +2922,7 @@ void Aggregation<AggType, data_used_, is_population_>::
             for ( auto it = _index.begin( *cat ); it < _index.end( *cat );
                   ++it )
                 {
-                    assert( ( *it )->categorical_value == *cat );
+                    assert_true( ( *it )->categorical_value == *cat );
 
                     activate_sample( *it );
 
@@ -2944,7 +2944,7 @@ void Aggregation<AggType, data_used_, is_population_>::
                           it < _index.end( *cat );
                           ++it )
                         {
-                            assert( ( *it )->categorical_value == *cat );
+                            assert_true( ( *it )->categorical_value == *cat );
 
                             deactivate_sample( *it );
 
@@ -2980,7 +2980,7 @@ void Aggregation<AggType, data_used_, is_population_>::
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _null_values_separator )
 {
-    assert( _null_values_separator >= _sample_container_begin );
+    assert_true( _null_values_separator >= _sample_container_begin );
 
     for ( auto it = _sample_container_begin; it != _null_values_separator;
           ++it )
@@ -3056,7 +3056,7 @@ Aggregation<AggType, data_used_, is_population_>::make_intermediate(
 
     debug_log( "make_intermediate..." );
 
-    assert( !no_intermediate_ );
+    assert_true( !no_intermediate_ );
 
     // --------------------------------------------------
     // AVG, MAX, MEDIAN, MIN
@@ -3107,7 +3107,7 @@ Aggregation<AggType, data_used_, is_population_>::make_intermediate(
 
     else
         {
-            assert(
+            assert_true(
                 false &&
                 "Unknown aggregation type in make_intermediate(...)!" );
 
@@ -3257,7 +3257,7 @@ void Aggregation<AggType, data_used_, is_population_>::sort_matches(
 {
     // -----------------------------------
 
-    assert( needs_sorting_ );
+    assert_true( needs_sorting_ );
 
     // -----------------------------------
 

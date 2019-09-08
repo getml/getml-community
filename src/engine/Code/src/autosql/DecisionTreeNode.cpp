@@ -181,8 +181,8 @@ std::shared_ptr<const std::vector<Int>> DecisionTreeNode::calculate_categories(
                     continue;
                 }
 
-            assert( ( *it )->categorical_value >= categories_begin );
-            assert( ( *it )->categorical_value < categories_end );
+            assert_true( ( *it )->categorical_value >= categories_begin );
+            assert_true( ( *it )->categorical_value < categories_end );
 
             included[( *it )->categorical_value - categories_begin] = 1;
         }
@@ -515,21 +515,21 @@ void DecisionTreeNode::fit(
     utils::Reducer::reduce<size_t>(
         multithreading::maximum<size_t>(), &global_storage_ix, comm() );
 
-    assert( global_storage_ix == optimization_criterion()->storage_ix() );
+    assert_true( global_storage_ix == optimization_criterion()->storage_ix() );
 
     auto global_value = optimization_criterion()->value();
 
     utils::Reducer::reduce<Float>(
         multithreading::maximum<Float>(), &global_value, comm() );
 
-    assert( global_value == optimization_criterion()->value() );
+    assert_true( global_value == optimization_criterion()->value() );
 
     auto global_max_value = max_value;
 
     utils::Reducer::reduce<Float>(
         multithreading::maximum<Float>(), &global_max_value, comm() );
 
-    assert( global_max_value == max_value );
+    assert_true( global_max_value == max_value );
 
 #endif  // NDEBUG
 
@@ -542,7 +542,7 @@ void DecisionTreeNode::fit(
         {
             debug_log( "fit: Committing..." );
 
-            assert( ix_max < candidate_splits.size() );
+            assert_true( ix_max < candidate_splits.size() );
 
             commit(
                 _population,
@@ -643,8 +643,8 @@ std::string DecisionTreeNode::greater_or_not_equal_to(
                 {
                     const auto category_used = *it;
 
-                    assert( category_used >= 0 );
-                    assert(
+                    assert_true( category_used >= 0 );
+                    assert_true(
                         category_used <
                         static_cast<Int>( tree_->categories().size() ) );
 
@@ -1115,7 +1115,7 @@ void DecisionTreeNode::set_samples(
 
             default:
 
-                assert( false && "Unknown enums::DataUsed!" );
+                assert_true( false && "Unknown enums::DataUsed!" );
         }
 }
 
@@ -1168,8 +1168,8 @@ std::string DecisionTreeNode::smaller_or_equal_to(
                 {
                     const auto category_used = *it;
 
-                    assert( category_used >= 0 );
-                    assert(
+                    assert_true( category_used >= 0 );
+                    assert_true(
                         category_used <
                         static_cast<Int>( tree_->categories().size() ) );
 
@@ -2000,12 +2000,12 @@ void DecisionTreeNode::try_categorical_values(
         const auto indices = optimization_criterion()->argsort(
             storage_ix - num_categories * 2, storage_ix - num_categories );
 
-        assert( indices.size() == categories->size() );
+        assert_true( indices.size() == categories->size() );
 
         for ( size_t i = 0; i < indices.size(); ++i )
             {
-                assert( indices[i] >= 0 );
-                assert( indices[i] < num_categories );
+                assert_true( indices[i] >= 0 );
+                assert_true( indices[i] < num_categories );
 
                 ( *sorted_by_containing )[i] = ( *categories )[indices[i]];
             }
@@ -2021,12 +2021,12 @@ void DecisionTreeNode::try_categorical_values(
         const auto indices = optimization_criterion()->argsort(
             storage_ix - num_categories, storage_ix );
 
-        assert( indices.size() == categories->size() );
+        assert_true( indices.size() == categories->size() );
 
         for ( size_t i = 0; i < indices.size(); ++i )
             {
-                assert( indices[i] >= 0 );
-                assert( indices[i] < num_categories );
+                assert_true( indices[i] >= 0 );
+                assert_true( indices[i] < num_categories );
 
                 ( *sorted_by_not_containing )[i] = ( *categories )[indices[i]];
             }
@@ -2693,7 +2693,7 @@ void DecisionTreeNode::try_window(
     containers::MatchPtrs::iterator null_values_separator =
         separate_null_values( _sample_container_begin, _sample_container_end );
 
-    assert(
+    assert_true(
         std::distance( _sample_container_begin, null_values_separator ) == 0 );
 
     sort_by_numerical_value( null_values_separator, _sample_container_end );

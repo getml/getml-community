@@ -15,19 +15,19 @@ std::vector<std::vector<Float>> CrossEntropyLoss::calculate_residuals(
     const std::vector<std::vector<Float>>& _yhat_old,
     const containers::DataFrameView& _y )
 {
-    assert( _yhat_old.size() == _y.num_targets() );
+    assert_true( _yhat_old.size() == _y.num_targets() );
 
     auto residuals = std::vector<std::vector<Float>>(
         _y.num_targets(), std::vector<Float>( _y.nrows() ) );
 
     for ( size_t j = 0; j < _y.num_targets(); ++j )
         {
-            assert( _yhat_old[j].size() == _y.nrows() );
+            assert_true( _yhat_old[j].size() == _y.nrows() );
 
             for ( size_t i = 0; i < _y.nrows(); ++i )
                 {
-                    assert( !std::isnan( _y.target( i, j ) ) );
-                    assert( !std::isnan( _yhat_old[j][i] ) );
+                    assert_true( !std::isnan( _y.target( i, j ) ) );
+                    assert_true( !std::isnan( _yhat_old[j][i] ) );
 
                     residuals[j][i] = _y.target( i, j ) -
                                       logistic_function( _yhat_old[j][i] );
@@ -47,8 +47,8 @@ std::vector<Float> CrossEntropyLoss::calculate_update_rates(
 {
     // ---------------------------------------------------
 
-    assert( _yhat_old.size() == _predictions.size() );
-    assert( _yhat_old.size() == _y.num_targets() );
+    assert_true( _yhat_old.size() == _predictions.size() );
+    assert_true( _yhat_old.size() == _y.num_targets() );
 
     // ---------------------------------------------------
     // Calculate g_times_f and h_times_f_squared
@@ -61,8 +61,8 @@ std::vector<Float> CrossEntropyLoss::calculate_update_rates(
 
     for ( size_t j = 0; j < _y.num_targets(); ++j )
         {
-            assert( _yhat_old[j].size() == _y.nrows() );
-            assert( _predictions[j].size() == _y.nrows() );
+            assert_true( _yhat_old[j].size() == _y.nrows() );
+            assert_true( _predictions[j].size() == _y.nrows() );
 
             for ( size_t i = 0; i < _y.nrows(); ++i )
                 {

@@ -180,7 +180,7 @@ CFloatColumn LinearRegression::predict_dense(
 
     for ( size_t j = 0; j < X.size(); ++j )
         {
-            assert( X[0]->size() == X[j]->size() );
+            assert_true( X[0]->size() == X[j]->size() );
 
             if ( !predictions )
                 {
@@ -300,11 +300,11 @@ void LinearRegression::solve_arithmetically(
 
     for ( size_t i = 0; i < X.size(); ++i )
         {
-            assert( X[i] );
+            assert_true( X[i] );
 
             for ( size_t j = 0; j <= i; ++j )
                 {
-                    assert( X[i]->size() == X[j]->size() );
+                    assert_true( X[i]->size() == X[j]->size() );
 
                     XtX( i, j ) = XtX( j, i ) = std::inner_product(
                         X[i]->begin(), X[i]->end(), X[j]->begin(), 0.0 );
@@ -335,11 +335,11 @@ void LinearRegression::solve_arithmetically(
     // CAREFUL: Do NOT use "auto"!
     Eigen::MatrixXd Xy = Eigen::MatrixXd( X.size() + 1, 1 );
 
-    assert( _y );
+    assert_true( _y );
 
     for ( size_t i = 0; i < X.size(); ++i )
         {
-            assert( X[i]->size() == _y->size() );
+            assert_true( X[i]->size() == _y->size() );
 
             Xy( i ) = std::inner_product(
                 X[i]->begin(), X[i]->end(), _y->begin(), 0.0 );

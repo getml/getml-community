@@ -47,8 +47,8 @@ struct Partitioner<enums::DataUsed::categorical_input>
         const auto i = _match.ix_input;
         const auto j = _split.column_;
 
-        assert( i < _input.nrows() );
-        assert( j < _input.num_categoricals() );
+        assert_true( i < _input.nrows() );
+        assert_true( j < _input.num_categoricals() );
 
         const auto it = std::find(
             _split.categories_used_begin_,
@@ -92,8 +92,8 @@ struct Partitioner<enums::DataUsed::categorical_output>
         const auto i = _match.ix_output;
         const auto j = _split.column_;
 
-        assert( i < _output.nrows() );
-        assert( j < _output.num_categoricals() );
+        assert_true( i < _output.nrows() );
+        assert_true( j < _output.num_categoricals() );
 
         const auto it = std::find(
             _split.categories_used_begin_,
@@ -137,8 +137,8 @@ struct Partitioner<enums::DataUsed::discrete_input>
         const auto i = _match.ix_input;
         const auto j = _split.column_;
 
-        assert( i < _input.nrows() );
-        assert( j < _input.num_discretes() );
+        assert_true( i < _input.nrows() );
+        assert_true( j < _input.num_discretes() );
 
         return _input.discrete( i, j ) > _split.critical_value_;
     }
@@ -157,7 +157,7 @@ struct Partitioner<enums::DataUsed::discrete_input_is_nan>
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end )
     {
-        assert( _end >= _begin );
+        assert_true( _end >= _begin );
 
         return std::partition(
             _begin,
@@ -176,8 +176,8 @@ struct Partitioner<enums::DataUsed::discrete_input_is_nan>
     {
         const auto i = _match.ix_input;
 
-        assert( i < _input.nrows() );
-        assert( _num_column < _input.num_discretes());
+        assert_true( i < _input.nrows() );
+        assert_true( _num_column < _input.num_discretes());
 
         return !std::isnan( _input.discrete( _match.ix_input, _num_column ) );
     }
@@ -216,8 +216,8 @@ struct Partitioner<enums::DataUsed::discrete_output>
         const auto i = _match.ix_output;
         const auto j = _split.column_;
 
-        assert( i < _output.nrows() );
-        assert( j < _output.num_discretes());
+        assert_true( i < _output.nrows() );
+        assert_true( j < _output.num_discretes());
 
         return ( _output.discrete( i, j ) > _split.critical_value_ );
     }
@@ -236,7 +236,7 @@ struct Partitioner<enums::DataUsed::discrete_output_is_nan>
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end )
     {
-        assert( _end >= _begin );
+        assert_true( _end >= _begin );
 
         return std::partition(
             _begin,
@@ -255,8 +255,8 @@ struct Partitioner<enums::DataUsed::discrete_output_is_nan>
     {
         const auto i = _match.ix_output;
 
-        assert( i < _output.nrows() );
-        assert( _num_column < _output.num_discretes());
+        assert_true( i < _output.nrows() );
+        assert_true( _num_column < _output.num_discretes());
 
         return !std::isnan(
             _output.discrete( _match.ix_output, _num_column ) );
@@ -296,8 +296,8 @@ struct Partitioner<enums::DataUsed::numerical_input>
         const auto i = _match.ix_input;
         const auto j = _split.column_;
 
-        assert( i < _input.nrows() );
-        assert( j < _input.num_numericals() );
+        assert_true( i < _input.nrows() );
+        assert_true( j < _input.num_numericals() );
 
         return _input.numerical( i, j ) > _split.critical_value_;
     }
@@ -316,7 +316,7 @@ struct Partitioner<enums::DataUsed::numerical_input_is_nan>
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end )
     {
-        assert( _end >= _begin );
+        assert_true( _end >= _begin );
 
         return std::partition(
             _begin,
@@ -335,8 +335,8 @@ struct Partitioner<enums::DataUsed::numerical_input_is_nan>
     {
         const auto i = _match.ix_input;
 
-        assert( i < _input.nrows() );
-        assert( _num_column < _input.num_numericals() );
+        assert_true( i < _input.nrows() );
+        assert_true( _num_column < _input.num_numericals() );
 
         return !std::isnan( _input.numerical( _match.ix_input, _num_column ) );
     }
@@ -375,8 +375,8 @@ struct Partitioner<enums::DataUsed::numerical_output>
         const auto i = _match.ix_output;
         const auto j = _split.column_;
 
-        assert( i < _output.nrows() );
-        assert( j < _output.num_numericals() );
+        assert_true( i < _output.nrows() );
+        assert_true( j < _output.num_numericals() );
 
         return ( _output.numerical( i, j ) > _split.critical_value_ );
     }
@@ -395,7 +395,7 @@ struct Partitioner<enums::DataUsed::numerical_output_is_nan>
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end )
     {
-        assert( _end >= _begin );
+        assert_true( _end >= _begin );
 
         return std::partition(
             _begin,
@@ -414,8 +414,8 @@ struct Partitioner<enums::DataUsed::numerical_output_is_nan>
     {
         const auto i = _match.ix_output;
 
-        assert( i < _output.nrows() );
-        assert( _num_column < _output.num_numericals() );
+        assert_true( i < _output.nrows() );
+        assert_true( _num_column < _output.num_numericals() );
 
         return !std::isnan(
             _output.numerical( _match.ix_output, _num_column ) );
@@ -454,11 +454,11 @@ struct Partitioner<enums::DataUsed::same_units_categorical>
         const containers::DataFrameView& _output,
         const containers::Match& _match )
     {
-        assert( _match.ix_input < _input.nrows() );
-        assert( _match.ix_output < _output.nrows() );
+        assert_true( _match.ix_input < _input.nrows() );
+        assert_true( _match.ix_output < _output.nrows() );
 
-        assert( _split.column_input_ < _input.num_categoricals() );
-        assert( _split.column_ < _output.num_categoricals() );
+        assert_true( _split.column_input_ < _input.num_categoricals() );
+        assert_true( _split.column_ < _output.num_categoricals() );
 
         const bool is_same =
             ( _input.categorical( _match.ix_input, _split.column_input_ ) ==
@@ -500,11 +500,11 @@ struct Partitioner<enums::DataUsed::same_units_discrete>
         const containers::DataFrameView& _output,
         const containers::Match& _match )
     {
-        assert( _match.ix_input < _input.nrows() );
-        assert( _match.ix_output < _output.nrows() );
+        assert_true( _match.ix_input < _input.nrows() );
+        assert_true( _match.ix_output < _output.nrows() );
 
-        assert( _split.column_input_ < _input.num_discretes());
-        assert( _split.column_ < _output.num_discretes());
+        assert_true( _split.column_input_ < _input.num_discretes());
+        assert_true( _split.column_ < _output.num_discretes());
 
         const auto diff =
             _output.discrete( _match.ix_output, _split.column_ ) -
@@ -550,11 +550,11 @@ struct Partitioner<enums::DataUsed::same_units_discrete_is_nan>
         const containers::DataFrameView& _output,
         const containers::Match& _match )
     {
-        assert( _match.ix_input < _input.nrows() );
-        assert( _match.ix_output < _output.nrows() );
+        assert_true( _match.ix_input < _input.nrows() );
+        assert_true( _match.ix_output < _output.nrows() );
 
-        assert( _input_col < _input.num_discretes());
-        assert( _output_col < _output.num_discretes());
+        assert_true( _input_col < _input.num_discretes());
+        assert_true( _output_col < _output.num_discretes());
 
         const auto val1 = _input.discrete( _match.ix_input, _input_col );
         const auto val2 = _output.discrete( _match.ix_output, _output_col );
@@ -595,11 +595,11 @@ struct Partitioner<enums::DataUsed::same_units_numerical>
         const containers::DataFrameView& _output,
         const containers::Match& _match )
     {
-        assert( _match.ix_input < _input.nrows() );
-        assert( _match.ix_output < _output.nrows() );
+        assert_true( _match.ix_input < _input.nrows() );
+        assert_true( _match.ix_output < _output.nrows() );
 
-        assert( _split.column_input_ < _input.num_numericals() );
-        assert( _split.column_ < _output.num_numericals() );
+        assert_true( _split.column_input_ < _input.num_numericals() );
+        assert_true( _split.column_ < _output.num_numericals() );
 
         const auto diff =
             _output.numerical( _match.ix_output, _split.column_ ) -
@@ -645,11 +645,11 @@ struct Partitioner<enums::DataUsed::same_units_numerical_is_nan>
         const containers::DataFrameView& _output,
         const containers::Match& _match )
     {
-        assert( _match.ix_input < _input.nrows() );
-        assert( _match.ix_output < _output.nrows() );
+        assert_true( _match.ix_input < _input.nrows() );
+        assert_true( _match.ix_output < _output.nrows() );
 
-        assert( _input_col < _input.num_numericals() );
-        assert( _output_col < _output.num_numericals() );
+        assert_true( _input_col < _input.num_numericals() );
+        assert_true( _output_col < _output.num_numericals() );
 
         const auto val1 = _input.numerical( _match.ix_input, _input_col );
         const auto val2 = _output.numerical( _match.ix_output, _output_col );
@@ -693,8 +693,8 @@ struct Partitioner<enums::DataUsed::time_stamps_diff>
         const auto in = _match.ix_input;
         const auto out = _match.ix_output;
 
-        assert( in < _input.nrows() );
-        assert( out < _output.nrows() );
+        assert_true( in < _input.nrows() );
+        assert_true( out < _output.nrows() );
 
         return (
             _output.time_stamp( out ) - _input.time_stamp( in ) >

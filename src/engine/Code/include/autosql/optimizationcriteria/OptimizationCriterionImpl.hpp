@@ -62,8 +62,8 @@ class OptimizationCriterionImpl
     /// Calculates the sampling rate.
     void calc_sampling_rate()
     {
-        assert( comm_ != nullptr );
-        assert( hyperparameters_ );
+        assert_true( comm_ != nullptr );
+        assert_true( hyperparameters_ );
         sampler_.calc_sampling_rate(
             main_table_.nrows(), hyperparameters_->sampling_factor_, comm_ );
     }
@@ -108,7 +108,7 @@ class OptimizationCriterionImpl
     {
         if ( _i < storage_ix() )
             {
-                assert( _i < values_stored().size() );
+                assert_true( _i < values_stored().size() );
 
                 return values_stored()[_i];
             }
@@ -130,7 +130,7 @@ class OptimizationCriterionImpl
     /// Trivial (private) accessor
     inline lossfunctions::LossFunction* loss_function()
     {
-        assert( loss_function_ );
+        assert_true( loss_function_ );
         return loss_function_.get();
     }
 

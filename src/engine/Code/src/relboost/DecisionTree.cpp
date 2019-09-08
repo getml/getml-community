@@ -75,7 +75,7 @@ void DecisionTree::fit(
 
     debug_log( "Set up and fit root node." );
 
-    assert( encoding_ );
+    assert_true( encoding_ );
 
     root_.reset( new DecisionTreeNode(
         utils::ConditionMaker( encoding_ ),
@@ -101,7 +101,7 @@ Poco::JSON::Object DecisionTree::to_json_obj() const
 {
     Poco::JSON::Object obj;
 
-    assert( root_ );
+    assert_true( root_ );
 
     obj.set( "input_", input().to_json_obj() );
 
@@ -155,7 +155,7 @@ std::string DecisionTree::to_sql(
 
     std::vector<std::string> conditions;
 
-    assert( root_ );
+    assert_true( root_ );
 
     root_->to_sql( _feature_num, "", &conditions );
 
@@ -241,7 +241,7 @@ std::vector<Float> DecisionTree::transform(
 {
     // ------------------------------------------------------------------------
 
-    assert( root_ );
+    assert_true( root_ );
 
     // ------------------------------------------------------------------------
 

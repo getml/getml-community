@@ -172,7 +172,7 @@ void test21_snowflake_model()
         {
             const auto jk = join_key1_peripheral1[i];
 
-            assert( jk < 500 );
+            assert_true( jk < 500 );
 
             if ( time_stamp1_peripheral1[i] <= time_stamps_population[jk] )
                 {
@@ -245,7 +245,7 @@ void test21_snowflake_model()
                                << ", prediction: " << predictions[j][i] <<
                        std::endl;*/
 
-                    assert(
+                    assert_true(
                         std::abs(
                             population_df.target( i, 0 ) -
                             ( *predictions[j] )[i] ) < 10.0 );

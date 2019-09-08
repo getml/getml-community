@@ -142,8 +142,8 @@ Poco::JSON::Object AUC::score( const Features _yhat, const Features _y )
                     const auto dist =
                         static_cast<size_t>( std::distance( it1, it2 ) );
 
-                    assert( dist > 0 );
-                    assert( i + dist - 1 < true_positives_uncompressed.size() );
+                    assert_true( dist > 0 );
+                    assert_true( i + dist - 1 < true_positives_uncompressed.size() );
 
                     true_positives.push_back(
                         true_positives_uncompressed[i + dist - 1] );

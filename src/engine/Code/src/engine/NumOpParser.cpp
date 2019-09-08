@@ -115,7 +115,7 @@ containers::Column<Float> NumOpParser::parse(
         {
             const auto val = JSON::get_value<Float>( _col, "value_" );
 
-            assert( _df.size() > 0 );
+            assert_true( _df.size() > 0 );
 
             auto col = containers::Column<Float>( _df[0].nrows() );
 
@@ -560,9 +560,9 @@ containers::Column<Float> NumOpParser::update(
         _df,
         *JSON::get_object( _col, "condition_" ) );
 
-    assert( operand1.size() == operand2.size() );
+    assert_true( operand1.size() == operand2.size() );
 
-    assert( operand1.size() == condition.size() );
+    assert_true( operand1.size() == condition.size() );
 
     auto result = containers::Column<Float>( operand1.size() );
 

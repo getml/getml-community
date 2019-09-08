@@ -8,6 +8,8 @@
 #include <thread>
 #include <vector>
 
+#include "debug/debug.hpp"
+
 #include "database/database.hpp"
 
 #include "multithreading/multithreading.hpp"

@@ -48,7 +48,7 @@ class LinearRegression : public Predictor
     /// Trivial (private const) accessor.
     const LinearHyperparams& hyperparams() const
     {
-        assert( hyperparams_ );
+        assert_true( hyperparams_ );
         return *hyperparams_;
     }
 
@@ -90,11 +90,11 @@ class LinearRegression : public Predictor
         const Float _delta,
         std::vector<Float>* _gradients )
     {
-        assert( _gradients->size() == weights_.size() );
+        assert_true( _gradients->size() == weights_.size() );
 
         for ( auto ix = _begin; ix < _end; ++ix )
             {
-                assert( _indices[ix] < _gradients->size() );
+                assert_true( _indices[ix] < _gradients->size() );
                 ( *_gradients )[_indices[ix]] += _delta * _data[ix];
             }
         _gradients->back() += _delta;
@@ -117,7 +117,7 @@ class LinearRegression : public Predictor
     /// Trivial (private) accessor.
     const PredictorImpl& impl() const
     {
-        assert( impl_ );
+        assert_true( impl_ );
         return *impl_;
     }
 
@@ -131,7 +131,7 @@ class LinearRegression : public Predictor
         Float yhat = weights_.back();
         for ( auto ix = _begin; ix < _end; ++ix )
             {
-                assert( _indices[ix] < weights_.size() );
+                assert_true( _indices[ix] < weights_.size() );
                 yhat += _data[ix] * weights_[_indices[ix]];
             }
         return yhat;

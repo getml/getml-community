@@ -44,7 +44,7 @@ DecisionTree::DecisionTree(
 
     column_to_be_aggregated().ix_column_used = _ix_column_used;
 
-    assert( _agg != "" );
+    assert_true( _agg != "" );
 
     impl_.aggregation_type_ = _agg;
 
@@ -68,7 +68,7 @@ DecisionTree::DecisionTree( const DecisionTree &_other )
 {
     debug_log( "Feature: Copy constructor..." );
 
-    assert( _other.impl_.aggregation_type_ != "" );
+    assert_true( _other.impl_.aggregation_type_ != "" );
 
     aggregation_ptr() = _other.make_aggregation();
 
@@ -134,7 +134,7 @@ void DecisionTree::create_value_to_be_aggregated(
 
             case enums::DataUsed::same_unit_numerical:
 
-                assert(
+                assert_true(
                     static_cast<Int>( impl()->same_units_numerical().size() ) >
                     ix_column_used );
 
@@ -161,7 +161,7 @@ void DecisionTree::create_value_to_be_aggregated(
 
                     if ( data_used1 == enums::DataUsed::x_perip_numerical )
                         {
-                            assert(
+                            assert_true(
                                 _peripheral.num_numericals() >
                                 ix_column_used1 );
 
@@ -170,12 +170,12 @@ void DecisionTree::create_value_to_be_aggregated(
                         }
                     else
                         {
-                            assert( !"Unknown data_used1 in set_value_to_be_aggregated(...)!" );
+                            assert_true( !"Unknown data_used1 in set_value_to_be_aggregated(...)!" );
                         }
 
                     if ( data_used2 == enums::DataUsed::x_popul_numerical )
                         {
-                            assert(
+                            assert_true(
                                 _population.num_numericals() >
                                 ix_column_used2 );
 
@@ -184,7 +184,7 @@ void DecisionTree::create_value_to_be_aggregated(
                         }
                     else if ( data_used2 == enums::DataUsed::x_perip_numerical )
                         {
-                            assert(
+                            assert_true(
                                 _peripheral.num_numericals() >
                                 ix_column_used2 );
 
@@ -193,7 +193,7 @@ void DecisionTree::create_value_to_be_aggregated(
                         }
                     else
                         {
-                            assert( !"Unknown data_used2 in set_value_to_be_compared(...)!" );
+                            assert_true( !"Unknown data_used2 in set_value_to_be_compared(...)!" );
                         }
                 }
 
@@ -201,7 +201,7 @@ void DecisionTree::create_value_to_be_aggregated(
 
             case enums::DataUsed::same_unit_discrete:
 
-                assert( impl()->same_units_discrete().size() > ix_column_used );
+                assert_true( impl()->same_units_discrete().size() > ix_column_used );
 
                 {
                     const enums::DataUsed data_used1 =
@@ -226,7 +226,7 @@ void DecisionTree::create_value_to_be_aggregated(
 
                     if ( data_used1 == enums::DataUsed::x_perip_discrete )
                         {
-                            assert(
+                            assert_true(
                                 _peripheral.num_discretes() > ix_column_used1 );
 
                             _aggregation->set_value_to_be_aggregated(
@@ -234,12 +234,12 @@ void DecisionTree::create_value_to_be_aggregated(
                         }
                     else
                         {
-                            assert( !"Unknown data_used1 in set_value_to_be_aggregated(...)!" );
+                            assert_true( !"Unknown data_used1 in set_value_to_be_aggregated(...)!" );
                         }
 
                     if ( data_used2 == enums::DataUsed::x_popul_discrete )
                         {
-                            assert(
+                            assert_true(
                                 _population.num_discretes() > ix_column_used2 );
 
                             _aggregation->set_value_to_be_compared(
@@ -247,7 +247,7 @@ void DecisionTree::create_value_to_be_aggregated(
                         }
                     else if ( data_used2 == enums::DataUsed::x_perip_discrete )
                         {
-                            assert(
+                            assert_true(
                                 _peripheral.num_discretes() > ix_column_used2 );
 
                             _aggregation->set_value_to_be_compared(
@@ -255,7 +255,7 @@ void DecisionTree::create_value_to_be_aggregated(
                         }
                     else
                         {
-                            assert( !"Unknown data_used2 in set_value_to_be_compared(...)!" );
+                            assert_true( !"Unknown data_used2 in set_value_to_be_compared(...)!" );
                         }
                 }
 
@@ -270,7 +270,7 @@ void DecisionTree::create_value_to_be_aggregated(
 
             case enums::DataUsed::x_subfeature:
 
-                assert( ix_column_used < _subfeatures.size() );
+                assert_true( ix_column_used < _subfeatures.size() );
 
                 _aggregation->set_value_to_be_aggregated(
                     _subfeatures[ix_column_used] );
@@ -283,7 +283,7 @@ void DecisionTree::create_value_to_be_aggregated(
 
             default:
 
-                assert( !"Unknown enums::DataUsed in column_to_be_aggregated(...)!" );
+                assert_true( !"Unknown enums::DataUsed in column_to_be_aggregated(...)!" );
         }
 
     // ---------------------------------------------------------------------
@@ -365,7 +365,7 @@ void DecisionTree::from_json_obj( const Poco::JSON::Object &_json_obj )
 
     const auto agg = JSON::get_value<std::string>( _json_obj, "aggregation_" );
 
-    assert( agg != "" );
+    assert_true( agg != "" );
 
     impl_.aggregation_type_ = agg;
 

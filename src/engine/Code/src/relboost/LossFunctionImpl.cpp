@@ -9,7 +9,7 @@ namespace lossfunctions
 std::vector<size_t> LossFunctionImpl::calc_sample_index(
     const std::shared_ptr<const std::vector<Float>>& _sample_weights ) const
 {
-    assert( _sample_weights );
+    assert_true( _sample_weights );
 
     auto sample_index = std::vector<size_t>( 0 );
 
@@ -38,14 +38,14 @@ Float LossFunctionImpl::calc_regularization_reduction(
 {
     // ------------------------------------------------------------------------
 
-    assert( !std::isnan( std::get<0>( _weights ) ) );
-    assert( !std::isnan( _old_intercept ) );
+    assert_true( !std::isnan( std::get<0>( _weights ) ) );
+    assert_true( !std::isnan( _old_intercept ) );
 
-    assert( _eta1.size() == _eta2.size() );
-    assert( _eta1.size() == targets().size() );
+    assert_true( _eta1.size() == _eta2.size() );
+    assert_true( _eta1.size() == targets().size() );
 
-    assert( sample_weights_ );
-    assert( _eta1.size() == sample_weights_->size() );
+    assert_true( sample_weights_ );
+    assert_true( _eta1.size() == sample_weights_->size() );
 
     // ------------------------------------------------------------------------
 
@@ -78,7 +78,7 @@ Float LossFunctionImpl::calc_regularization_reduction(
         {
             for ( size_t ix : _indices )
                 {
-                    assert( ix < targets().size() );
+                    assert_true( ix < targets().size() );
                     regularization +=
                         sample_weights( ix ) *
                         ( _old_weight * _old_weight *
@@ -116,11 +116,11 @@ Float LossFunctionImpl::calc_regularization_reduction(
     const Float _old_weight,
     const Float _new_weight ) const
 {
-    assert( _eta_old.size() == targets().size() );
-    assert( _eta_new.size() == targets().size() );
+    assert_true( _eta_old.size() == targets().size() );
+    assert_true( _eta_new.size() == targets().size() );
 
-    assert( sample_weights_ );
-    assert( sample_weights_->size() == targets().size() );
+    assert_true( sample_weights_ );
+    assert_true( sample_weights_->size() == targets().size() );
 
     Float regularization = 0.0;
 
@@ -128,7 +128,7 @@ Float LossFunctionImpl::calc_regularization_reduction(
         {
             for ( size_t ix : _indices )
                 {
-                    assert( ix < targets().size() );
+                    assert_true( ix < targets().size() );
                     regularization -=
                         sample_weights( ix ) *
                         ( _new_weight * _new_weight * _eta_new[ix] );
@@ -138,7 +138,7 @@ Float LossFunctionImpl::calc_regularization_reduction(
         {
             for ( size_t ix : _indices )
                 {
-                    assert( ix < targets().size() );
+                    assert_true( ix < targets().size() );
                     regularization +=
                         sample_weights( ix ) *
                         ( _old_weight * _old_weight * _eta_old[ix] -
@@ -161,8 +161,8 @@ void LossFunctionImpl::calc_sums(
 {
     // ------------------------------------------------------------------------
 
-    assert( g_.size() == _sample_weights.size() );
-    assert( h_.size() == _sample_weights.size() );
+    assert_true( g_.size() == _sample_weights.size() );
+    assert_true( h_.size() == _sample_weights.size() );
 
     // ------------------------------------------------------------------------
 
@@ -170,7 +170,7 @@ void LossFunctionImpl::calc_sums(
 
     for ( auto ix : _sample_index )
         {
-            assert( ix < _sample_weights.size() );
+            assert_true( ix < _sample_weights.size() );
             *_sum_g += g_[ix] * _sample_weights[ix];
         }
 
@@ -180,7 +180,7 @@ void LossFunctionImpl::calc_sums(
 
     for ( auto ix : _sample_index )
         {
-            assert( ix < _sample_weights.size() );
+            assert_true( ix < _sample_weights.size() );
             *_sum_h += h_[ix] * _sample_weights[ix];
         }
 
@@ -190,7 +190,7 @@ void LossFunctionImpl::calc_sums(
 
     for ( auto ix : _sample_index )
         {
-            assert( ix < _sample_weights.size() );
+            assert_true( ix < _sample_weights.size() );
             *_sum_sample_weights += _sample_weights[ix];
         }
 
@@ -210,11 +210,11 @@ Float LossFunctionImpl::calc_update_rate(
 {
     // ------------------------------------------------------------------------
 
-    assert( _yhat_old.size() == _predictions.size() );
-    assert( _yhat_old.size() == targets().size() );
+    assert_true( _yhat_old.size() == _predictions.size() );
+    assert_true( _yhat_old.size() == targets().size() );
 
-    assert( _yhat_old.size() == g_.size() );
-    assert( _yhat_old.size() == h_.size() );
+    assert_true( _yhat_old.size() == g_.size() );
+    assert_true( _yhat_old.size() == h_.size() );
 
     // ------------------------------------------------------------------------
 
@@ -316,13 +316,13 @@ std::array<Float, 3> LossFunctionImpl::calc_weights_avg_null(
 {
     // ------------------------------------------------------------------------
 
-    assert( _eta.size() == targets().size() );
-    assert( _w_fixed.size() == targets().size() );
-    assert( g_.size() == targets().size() );
-    assert( h_.size() == targets().size() );
+    assert_true( _eta.size() == targets().size() );
+    assert_true( _w_fixed.size() == targets().size() );
+    assert_true( g_.size() == targets().size() );
+    assert_true( h_.size() == targets().size() );
 
-    assert( sample_weights_ );
-    assert( sample_weights_->size() == targets().size() );
+    assert_true( sample_weights_ );
+    assert_true( sample_weights_->size() == targets().size() );
 
     // ------------------------------------------------------------------------
     // Calculate g_eta.
@@ -334,7 +334,7 @@ std::array<Float, 3> LossFunctionImpl::calc_weights_avg_null(
 
     for ( const auto ix : _indices )
         {
-            assert( ix < targets().size() );
+            assert_true( ix < targets().size() );
             g_eta_arr[1] -= g_[ix] * _eta[ix] * sample_weights( ix );
         }
 
@@ -347,8 +347,8 @@ std::array<Float, 3> LossFunctionImpl::calc_weights_avg_null(
 
     for ( const auto ix : _indices )
         {
-            assert( !std::isnan( _w_fixed[ix] ) );
-            assert( ix < targets().size() );
+            assert_true( !std::isnan( _w_fixed[ix] ) );
+            assert_true( ix < targets().size() );
 
             h_w_const_arr[0] -= h_[ix] *
                                 ( _w_fixed[ix] - _yhat_committed[ix] ) *
@@ -369,7 +369,7 @@ std::array<Float, 3> LossFunctionImpl::calc_weights_avg_null(
 
     for ( const auto ix : _indices )
         {
-            assert( ix < targets().size() );
+            assert_true( ix < targets().size() );
 
             A_arr[1] += h_[ix] * _eta[ix] * sample_weights( ix );  // A( 0, 1 )
 
@@ -424,7 +424,7 @@ std::array<Float, 3> LossFunctionImpl::calc_weights_avg_null(
         }
     else
         {
-            assert( false && "Aggregation type not known!" );
+            assert_true( false && "Aggregation type not known!" );
 
             return std::array<Float, 3>( {NAN, NAN, NAN} );
         }
@@ -444,13 +444,13 @@ std::array<Float, 3> LossFunctionImpl::calc_weights(
 {
     // ------------------------------------------------------------------------
 
-    assert( _eta1.size() == targets().size() );
-    assert( _eta2.size() == targets().size() );
-    assert( g_.size() == targets().size() );
-    assert( h_.size() == targets().size() );
+    assert_true( _eta1.size() == targets().size() );
+    assert_true( _eta2.size() == targets().size() );
+    assert_true( g_.size() == targets().size() );
+    assert_true( h_.size() == targets().size() );
 
-    assert( sample_weights_ );
-    assert( sample_weights_->size() == targets().size() );
+    assert_true( sample_weights_ );
+    assert_true( sample_weights_->size() == targets().size() );
 
     // ------------------------------------------------------------------------
     // Calculate g_eta_arr.
@@ -462,7 +462,7 @@ std::array<Float, 3> LossFunctionImpl::calc_weights(
 
     for ( const auto ix : _indices )
         {
-            assert( ix < targets().size() );
+            assert_true( ix < targets().size() );
             g_eta_arr[1] -= g_[ix] * _eta1[ix] * sample_weights( ix );
             g_eta_arr[2] -= g_[ix] * _eta2[ix] * sample_weights( ix );
         }
@@ -479,9 +479,9 @@ std::array<Float, 3> LossFunctionImpl::calc_weights(
             const auto w_old = _old_weight * ( _eta1[ix] + _eta2[ix] );
             const auto w_fixed = _yhat_committed[ix] - w_old;
 
-            assert( sample_weights( ix ) > 0.0 );
+            assert_true( sample_weights( ix ) > 0.0 );
 
-            assert( ix < targets().size() );
+            assert_true( ix < targets().size() );
             h_w_const_arr[0] += h_[ix] * w_old * sample_weights( ix );
             h_w_const_arr[1] -=
                 h_[ix] * w_fixed * _eta1[ix] * sample_weights( ix );
@@ -501,7 +501,7 @@ std::array<Float, 3> LossFunctionImpl::calc_weights(
 
     for ( const auto ix : _indices )
         {
-            assert( ix < targets().size() );
+            assert_true( ix < targets().size() );
 
             A_arr[1] += h_[ix] * _eta1[ix] * sample_weights( ix );  // A( 0, 1 )
 
@@ -597,7 +597,7 @@ void LossFunctionImpl::calc_yhat_avg_null(
 {
     if ( std::isnan( std::get<2>( _new_weights ) ) )
         {
-            assert( !std::isnan( std::get<1>( _new_weights ) ) );
+            assert_true( !std::isnan( std::get<1>( _new_weights ) ) );
 
             for ( auto ix : _indices )
                 {
@@ -607,7 +607,7 @@ void LossFunctionImpl::calc_yhat_avg_null(
         }
     else if ( std::isnan( std::get<1>( _new_weights ) ) )
         {
-            assert( !std::isnan( std::get<2>( _new_weights ) ) );
+            assert_true( !std::isnan( std::get<2>( _new_weights ) ) );
 
             for ( auto ix : _indices )
                 {
@@ -617,7 +617,7 @@ void LossFunctionImpl::calc_yhat_avg_null(
         }
     else
         {
-            assert(
+            assert_true(
                 false && "Either the first or the second weight must be NAN!" );
         }
 }
@@ -629,14 +629,14 @@ Float LossFunctionImpl::commit(
     const std::vector<Float>& _yhat,
     std::vector<Float>* _yhat_committed ) const
 {
-    assert( _yhat_committed->size() == _yhat.size() );
-    assert( _yhat_committed->size() == h_.size() );
+    assert_true( _yhat_committed->size() == _yhat.size() );
+    assert_true( _yhat_committed->size() == h_.size() );
 
     Float sum_h_yhat = sum_h_yhat_committed_;
 
     for ( size_t ix : _indices )
         {
-            assert( ix < _yhat.size() );
+            assert_true( ix < _yhat.size() );
 
             sum_h_yhat += ( _yhat[ix] - ( *_yhat_committed )[ix] ) * h_[ix];
         }
@@ -669,16 +669,16 @@ void LossFunctionImpl::transform(
     const std::vector<Float>& _weights,
     std::vector<Float>* _predictions ) const
 {
-    assert(
+    assert_true(
         static_cast<int>( _weights.size() ) == std::distance( _begin, _end ) );
 
     for ( size_t i = 0; i < _weights.size(); ++i )
         {
             const auto it = _begin + i;
 
-            assert( ( *it )->ix_output < _predictions->size() );
+            assert_true( ( *it )->ix_output < _predictions->size() );
 
-            assert( ( *_predictions )[( *it )->ix_output] == 0.0 );
+            assert_true( ( *_predictions )[( *it )->ix_output] == 0.0 );
 
             ( *_predictions )[( *it )->ix_output] = _weights[i];
         }

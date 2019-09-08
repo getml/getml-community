@@ -14,9 +14,9 @@ void Avg::activate(
         {
             const auto ix = *it;
 
-            assert( count_committed_[ix] >= 0.0 );
-            assert( count1_[ix] >= 0.0 );
-            assert( count2_[ix] >= 0.0 );
+            assert_true( count_committed_[ix] >= 0.0 );
+            assert_true( count1_[ix] >= 0.0 );
+            assert_true( count2_[ix] >= 0.0 );
 
             if ( count_committed_[ix] + count1_[ix] == 0.0 )
                 {
@@ -24,8 +24,8 @@ void Avg::activate(
                 }
             else
                 {
-                    assert( !std::isnan( w_fixed_committed_[ix] ) );
-                    assert( count_committed_[ix] + count1_[ix] > 0.5 );
+                    assert_true( !std::isnan( w_fixed_committed_[ix] ) );
+                    assert_true( count_committed_[ix] + count1_[ix] > 0.5 );
 
                     eta1_2_null_[ix] =
                         count1_[ix] / ( count_committed_[ix] + count1_[ix] );
@@ -34,8 +34,8 @@ void Avg::activate(
                                      count_committed_[ix] /
                                      ( count_committed_[ix] + count1_[ix] );
 
-                    assert( !std::isnan( eta1_2_null_[ix] ) );
-                    assert( !std::isnan( w_fixed_1_[ix] ) );
+                    assert_true( !std::isnan( eta1_2_null_[ix] ) );
+                    assert_true( !std::isnan( w_fixed_1_[ix] ) );
                 }
 
             if ( count_committed_[ix] + count2_[ix] == 0.0 )
@@ -44,8 +44,8 @@ void Avg::activate(
                 }
             else
                 {
-                    assert( !std::isnan( w_fixed_committed_[ix] ) );
-                    assert( count_committed_[ix] + count2_[ix] > 0.5 );
+                    assert_true( !std::isnan( w_fixed_committed_[ix] ) );
+                    assert_true( count_committed_[ix] + count2_[ix] > 0.5 );
 
                     eta2_1_null_[ix] =
                         count2_[ix] / ( count_committed_[ix] + count2_[ix] );
@@ -54,8 +54,8 @@ void Avg::activate(
                                      count_committed_[ix] /
                                      ( count_committed_[ix] + count2_[ix] );
 
-                    assert( !std::isnan( eta2_1_null_[ix] ) );
-                    assert( !std::isnan( w_fixed_2_[ix] ) );
+                    assert_true( !std::isnan( eta2_1_null_[ix] ) );
+                    assert_true( !std::isnan( w_fixed_2_[ix] ) );
                 }
         }
 }
@@ -72,13 +72,13 @@ void Avg::calc_all(
 {
     // ------------------------------------------------------------------------
 
-    assert( eta1_.size() == eta2_.size() );
-    assert( eta1_.size() == eta_old_.size() );
-    assert( eta1_.size() == count_committed_.size() );
-    assert( eta1_.size() == w_fixed_1_.size() );
-    assert( eta1_.size() == w_fixed_2_.size() );
+    assert_true( eta1_.size() == eta2_.size() );
+    assert_true( eta1_.size() == eta_old_.size() );
+    assert_true( eta1_.size() == count_committed_.size() );
+    assert_true( eta1_.size() == w_fixed_1_.size() );
+    assert_true( eta1_.size() == w_fixed_2_.size() );
 
-    assert( indices_.size() == 0 );
+    assert_true( indices_.size() == 0 );
 
     // ------------------------------------------------------------------------
 
@@ -86,12 +86,12 @@ void Avg::calc_all(
 
     for ( auto val : count1_ )
         {
-            assert( val == 0.0 );
+            assert_true( val == 0.0 );
         }
 
     for ( auto val : count2_ )
         {
-            assert( val == 0.0 );
+            assert_true( val == 0.0 );
         }
 
 #endif  // NDEBUG
@@ -111,7 +111,7 @@ void Avg::calc_all(
                 {
                     const auto ix = ( *it )->ix_output;
 
-                    assert( count_committed_[ix] > 0.0 );
+                    assert_true( count_committed_[ix] > 0.0 );
 
                     eta2_[ix] += 1.0 / count_committed_[ix];
 
@@ -126,7 +126,7 @@ void Avg::calc_all(
                 {
                     const auto ix = ( *it )->ix_output;
 
-                    assert( count_committed_[ix] > 0.0 );
+                    assert_true( count_committed_[ix] > 0.0 );
 
                     eta1_[ix] += 1.0 / count_committed_[ix];
 
@@ -141,7 +141,7 @@ void Avg::calc_all(
                 {
                     const auto ix = ( *it )->ix_output;
 
-                    assert( count_committed_[ix] > 0.0 );
+                    assert_true( count_committed_[ix] > 0.0 );
 
                     eta2_[ix] += 1.0 / count_committed_[ix];
 
@@ -238,7 +238,7 @@ void Avg::calc_diff(
 {
     // ------------------------------------------------------------------------
 
-    assert( _split_end >= _split_begin );
+    assert_true( _split_end >= _split_begin );
 
     indices_current_.clear();
 
@@ -250,9 +250,9 @@ void Avg::calc_diff(
                 {
                     const auto ix = ( *it )->ix_output;
 
-                    assert( ix < eta1_.size() );
+                    assert_true( ix < eta1_.size() );
 
-                    assert( count_committed_[ix] > 0.0 );
+                    assert_true( count_committed_[ix] > 0.0 );
 
                     eta1_[ix] += 1.0 / count_committed_[ix];
                     eta2_[ix] -= 1.0 / count_committed_[ix];
@@ -260,7 +260,7 @@ void Avg::calc_diff(
                     ++count1_[ix];
                     --count2_[ix];
 
-                    assert( count2_[ix] >= 0.0 );
+                    assert_true( count2_[ix] >= 0.0 );
 
                     indices_current_.insert( ix );
                 }
@@ -271,12 +271,12 @@ void Avg::calc_diff(
                 {
                     const auto ix = ( *it )->ix_output;
 
-                    assert( ix < eta1_.size() );
+                    assert_true( ix < eta1_.size() );
 
                     ++count1_[ix];
                     --count2_[ix];
 
-                    assert( count2_[ix] >= 0.0 );
+                    assert_true( count2_[ix] >= 0.0 );
 
                     indices_current_.insert( ix );
                 }
@@ -319,8 +319,8 @@ std::vector<std::array<Float, 3>> Avg::calc_weights(
 {
     // -------------------------------------------------------------
 
-    assert( eta1_.size() == eta2_.size() );
-    assert( eta1_.size() == count_committed_.size() );
+    assert_true( eta1_.size() == eta2_.size() );
+    assert_true( eta1_.size() == count_committed_.size() );
 
     debug_log(
         "std::distance(_begin, _split_begin): " +
@@ -347,7 +347,7 @@ std::vector<std::array<Float, 3>> Avg::calc_weights(
         }
     else
         {
-            assert( false && "Unknown Update!" );
+            assert_true( false && "Unknown Update!" );
         }
 
     // -------------------------------------------------------------
@@ -411,14 +411,14 @@ std::array<Float, 3> Avg::calc_weights(
             // -----------------------------------------------------------------
             // Figure out whether there are any matches in output table.
 
-            assert( _eta1.size() == _eta2.size() );
+            assert_true( _eta1.size() == _eta2.size() );
 
-            assert( eta1_.size() == count_committed_.size() );
-            assert( eta2_.size() == count_committed_.size() );
+            assert_true( eta1_.size() == count_committed_.size() );
+            assert_true( eta2_.size() == count_committed_.size() );
 
-            assert( output_indices_.size() > 0 );
-            assert( input_join_keys_.size() > 0 );
-            assert( input_join_keys_[0].nrows_ > ix_input );
+            assert_true( output_indices_.size() > 0 );
+            assert_true( input_join_keys_.size() > 0 );
+            assert_true( input_join_keys_[0].nrows_ > ix_input );
 
             auto it = output_indices_[0]->find( input_join_keys_[0][ix_input] );
 
@@ -432,10 +432,10 @@ std::array<Float, 3> Avg::calc_weights(
 
             for ( auto ix_output : it->second )
                 {
-                    assert( ix_input < _eta1.size() );
-                    assert( ix_output < eta1_.size() );
+                    assert_true( ix_input < _eta1.size() );
+                    assert_true( ix_output < eta1_.size() );
 
-                    assert( count_committed_[ix_output] > 0.0 );
+                    assert_true( count_committed_[ix_output] > 0.0 );
 
                     eta1_[ix_output] +=
                         _eta1[ix_input] / count_committed_[ix_output];
@@ -458,11 +458,11 @@ std::array<Float, 3> Avg::calc_weights(
 void Avg::calc_yhat(
     const Float _old_weight, const std::array<Float, 3>& _new_weights )
 {
-    assert( !std::isnan( std::get<0>( _new_weights ) ) );
+    assert_true( !std::isnan( std::get<0>( _new_weights ) ) );
 
     if ( std::isnan( std::get<2>( _new_weights ) ) )
         {
-            assert( !std::isnan( std::get<1>( _new_weights ) ) );
+            assert_true( !std::isnan( std::get<1>( _new_weights ) ) );
 
             child_->calc_yhat(
                 enums::Aggregation::avg_second_null,
@@ -474,7 +474,7 @@ void Avg::calc_yhat(
         }
     else if ( std::isnan( std::get<1>( _new_weights ) ) )
         {
-            assert( !std::isnan( std::get<2>( _new_weights ) ) );
+            assert_true( !std::isnan( std::get<2>( _new_weights ) ) );
 
             child_->calc_yhat(
                 enums::Aggregation::avg_first_null,
@@ -506,12 +506,12 @@ void Avg::calc_yhat(
     const std::vector<Float>& _eta1,
     const std::vector<Float>& _eta2 )
 {
-    assert( !std::isnan( std::get<0>( _new_weights ) ) );
+    assert_true( !std::isnan( std::get<0>( _new_weights ) ) );
 
     switch ( _agg )
         {
             case enums::Aggregation::avg_second_null:
-                assert( !std::isnan( std::get<1>( _new_weights ) ) );
+                assert_true( !std::isnan( std::get<1>( _new_weights ) ) );
                 child_->calc_yhat(
                     _agg,
                     _old_weight,
@@ -522,7 +522,7 @@ void Avg::calc_yhat(
                 break;
 
             case enums::Aggregation::avg_first_null:
-                assert( !std::isnan( std::get<2>( _new_weights ) ) );
+                assert_true( !std::isnan( std::get<2>( _new_weights ) ) );
                 child_->calc_yhat(
                     _agg,
                     _old_weight,
@@ -543,7 +543,7 @@ void Avg::calc_yhat(
                 break;
 
             default:
-                assert( false && "Unknown aggregation!" );
+                assert_true( false && "Unknown aggregation!" );
         }
 }
 
@@ -570,17 +570,17 @@ void Avg::commit(
 {
     // ------------------------------------------------------------------------
 
-    assert( eta1_.size() == eta2_.size() );
-    assert( eta1_.size() == count_committed_.size() );
+    assert_true( eta1_.size() == eta2_.size() );
+    assert_true( eta1_.size() == count_committed_.size() );
 
-    assert( eta1_.size() == count1_.size() );
-    assert( eta1_.size() == count2_.size() );
-    assert( eta1_.size() == eta1_2_null_.size() );
-    assert( eta1_.size() == eta2_1_null_.size() );
+    assert_true( eta1_.size() == count1_.size() );
+    assert_true( eta1_.size() == count2_.size() );
+    assert_true( eta1_.size() == eta1_2_null_.size() );
+    assert_true( eta1_.size() == eta2_1_null_.size() );
 
-    assert( eta1_.size() == w_fixed_1_.size() );
-    assert( eta1_.size() == w_fixed_2_.size() );
-    assert( eta1_.size() == w_fixed_committed_.size() );
+    assert_true( eta1_.size() == w_fixed_1_.size() );
+    assert_true( eta1_.size() == w_fixed_2_.size() );
+    assert_true( eta1_.size() == w_fixed_committed_.size() );
 
     // ------------------------------------------------------------------------
 
@@ -594,7 +594,7 @@ void Avg::commit(
 
     if ( std::isnan( std::get<2>( _weights ) ) )
         {
-            assert( !std::isnan( std::get<1>( _weights ) ) );
+            assert_true( !std::isnan( std::get<1>( _weights ) ) );
 
             if ( std::isnan( _old_weight ) )
                 {
@@ -607,7 +607,7 @@ void Avg::commit(
                 {
                     for ( auto ix : indices_ )
                         {
-                            assert( count_committed_[ix] >= count2_[ix] );
+                            assert_true( count_committed_[ix] >= count2_[ix] );
                             count_committed_[ix] -= count2_[ix];
                         }
                 }
@@ -624,7 +624,7 @@ void Avg::commit(
 
     else if ( std::isnan( std::get<1>( _weights ) ) )
         {
-            assert( !std::isnan( std::get<2>( _weights ) ) );
+            assert_true( !std::isnan( std::get<2>( _weights ) ) );
 
             if ( std::isnan( _old_weight ) )
                 {
@@ -637,7 +637,7 @@ void Avg::commit(
                 {
                     for ( auto ix : indices_ )
                         {
-                            assert( count_committed_[ix] >= count1_[ix] );
+                            assert_true( count_committed_[ix] >= count1_[ix] );
                             count_committed_[ix] -= count1_[ix];
                         }
                 }
@@ -654,7 +654,7 @@ void Avg::commit(
 
     else
         {
-            assert( !std::isnan( _old_weight ) );
+            assert_true( !std::isnan( _old_weight ) );
 
             for ( auto ix : indices_ )
                 {
@@ -669,7 +669,7 @@ void Avg::commit(
 
     for ( auto ix : indices_ )
         {
-            assert( ix < count1_.size() );
+            assert_true( ix < count1_.size() );
             count1_[ix] = 0.0;
             count2_[ix] = 0.0;
         }
@@ -680,12 +680,12 @@ void Avg::commit(
 
     for ( auto val : count1_ )
         {
-            assert( val == 0.0 );
+            assert_true( val == 0.0 );
         }
 
     for ( auto val : count2_ )
         {
-            assert( val == 0.0 );
+            assert_true( val == 0.0 );
         }
 
 #endif  // NDEBUG
@@ -710,11 +710,11 @@ void Avg::deactivate(
         {
             const auto ix = *it;
 
-            assert( count_committed_[ix] >= 0.0 );
-            assert( count1_[ix] >= 0.0 );
-            assert( count2_[ix] >= 0.0 );
+            assert_true( count_committed_[ix] >= 0.0 );
+            assert_true( count1_[ix] >= 0.0 );
+            assert_true( count2_[ix] >= 0.0 );
 
-            assert( count_committed_[ix] >= count1_[ix] + count2_[ix] );
+            assert_true( count_committed_[ix] >= count1_[ix] + count2_[ix] );
 
             if ( count_committed_[ix] == count2_[ix] )
                 {
@@ -722,8 +722,8 @@ void Avg::deactivate(
                 }
             else
                 {
-                    assert( !std::isnan( w_fixed_committed_[ix] ) );
-                    assert( count_committed_[ix] - count2_[ix] > 0.5 );
+                    assert_true( !std::isnan( w_fixed_committed_[ix] ) );
+                    assert_true( count_committed_[ix] - count2_[ix] > 0.5 );
 
                     eta1_2_null_[ix] =
                         count1_[ix] / ( count_committed_[ix] - count2_[ix] );
@@ -733,8 +733,8 @@ void Avg::deactivate(
                           _old_weight * eta_old_[ix] ) /
                         ( count_committed_[ix] - count2_[ix] );
 
-                    assert( !std::isnan( eta1_2_null_[ix] ) );
-                    assert( !std::isnan( w_fixed_1_[ix] ) );
+                    assert_true( !std::isnan( eta1_2_null_[ix] ) );
+                    assert_true( !std::isnan( w_fixed_1_[ix] ) );
                 }
 
             if ( count_committed_[ix] == count1_[ix] )
@@ -743,8 +743,8 @@ void Avg::deactivate(
                 }
             else
                 {
-                    assert( !std::isnan( w_fixed_committed_[ix] ) );
-                    assert( count_committed_[ix] - count1_[ix] > 0.5 );
+                    assert_true( !std::isnan( w_fixed_committed_[ix] ) );
+                    assert_true( count_committed_[ix] - count1_[ix] > 0.5 );
 
                     eta2_1_null_[ix] =
                         count2_[ix] / ( count_committed_[ix] - count1_[ix] );
@@ -754,8 +754,8 @@ void Avg::deactivate(
                           _old_weight * eta_old_[ix] ) /
                         ( count_committed_[ix] - count1_[ix] );
 
-                    assert( !std::isnan( eta2_1_null_[ix] ) );
-                    assert( !std::isnan( w_fixed_2_[ix] ) );
+                    assert_true( !std::isnan( eta2_1_null_[ix] ) );
+                    assert_true( !std::isnan( w_fixed_2_[ix] ) );
                 }
         }
 
@@ -781,7 +781,7 @@ Float Avg::evaluate_split(
 
     if ( std::isnan( std::get<2>( _weights ) ) )
         {
-            assert( !std::isnan( std::get<1>( _weights ) ) );
+            assert_true( !std::isnan( std::get<1>( _weights ) ) );
 
             loss_reduction = child_->evaluate_split(
                 _old_intercept,
@@ -793,7 +793,7 @@ Float Avg::evaluate_split(
         }
     else if ( std::isnan( std::get<1>( _weights ) ) )
         {
-            assert( !std::isnan( std::get<2>( _weights ) ) );
+            assert_true( !std::isnan( std::get<2>( _weights ) ) );
 
             loss_reduction = child_->evaluate_split(
                 _old_intercept,
@@ -845,7 +845,7 @@ void Avg::init_count_committed(
 {
     for ( auto m : _matches_ptr )
         {
-            assert( m->ix_output < count_committed_.size() );
+            assert_true( m->ix_output < count_committed_.size() );
 
             ++count_committed_[m->ix_output];
         }
@@ -916,13 +916,13 @@ void Avg::revert_to_commit()
 {
     // ------------------------------------------------------------------------
 
-    assert( count1_.size() == count2_.size() );
+    assert_true( count1_.size() == count2_.size() );
 
     // ------------------------------------------------------------------------
 
     for ( auto ix : indices_ )
         {
-            assert( ix < count1_.size() );
+            assert_true( ix < count1_.size() );
             count1_[ix] = 0.0;
             count2_[ix] = 0.0;
         }
@@ -933,12 +933,12 @@ void Avg::revert_to_commit()
 
     for ( auto val : count1_ )
         {
-            assert( val == 0.0 );
+            assert_true( val == 0.0 );
         }
 
     for ( auto val : count2_ )
         {
-            assert( val == 0.0 );
+            assert_true( val == 0.0 );
         }
 
 #endif  // NDEBUG
@@ -947,7 +947,7 @@ void Avg::revert_to_commit()
 
     impl_.revert_to_commit();
 
-    assert( indices_.size() == 0 );
+    assert_true( indices_.size() == 0 );
 
     // ------------------------------------------------------------------------
 }

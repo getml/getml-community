@@ -113,7 +113,7 @@ class PredictorImpl
     /// Trivial (const) getter.
     Int n_unique( const size_t _i ) const
     {
-        assert( _i < encodings_.size() );
+        assert_true( _i < encodings_.size() );
         return encodings_[_i].n_unique();
     }
 

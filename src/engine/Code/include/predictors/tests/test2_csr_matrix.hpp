@@ -34,7 +34,7 @@ void test2_csr_matrix()
     for ( size_t i = 0; i < 21; ++i )
         {
             std::cout << csr_matrix.indptr()[i] << " ";
-            assert( csr_matrix.indptr()[i] == i * 4 );
+            assert_true( csr_matrix.indptr()[i] == i * 4 );
         }
     std::cout << std::endl << std::endl;
 
@@ -42,12 +42,12 @@ void test2_csr_matrix()
     for ( size_t i = 0; i < 80; ++i )
         {
             std::cout << csr_matrix.indices()[i] << " ";
-            assert( i % 4 != 0 || csr_matrix.indices()[i] == 0 );
-            assert( i % 4 != 1 || csr_matrix.indices()[i] == 1 );
-            assert(
+            assert_true( i % 4 != 0 || csr_matrix.indices()[i] == 0 );
+            assert_true( i % 4 != 1 || csr_matrix.indices()[i] == 1 );
+            assert_true(
                 i % 4 != 2 || ( csr_matrix.indices()[i] > 1 &&
                                 csr_matrix.indices()[i] < 502 ) );
-            assert( i % 4 != 3 || ( csr_matrix.indices()[i] > 501 ) );
+            assert_true( i % 4 != 3 || ( csr_matrix.indices()[i] > 501 ) );
         }
     std::cout << std::endl << std::endl;
 
@@ -55,8 +55,8 @@ void test2_csr_matrix()
     for ( size_t i = 0; i < 80; ++i )
         {
             std::cout << csr_matrix.data()[i] << " ";
-            assert( i % 4 != 2 || csr_matrix.data()[i] == 1.0 );
-            assert( i % 4 != 3 || csr_matrix.data()[i] == 1.0 );
+            assert_true( i % 4 != 2 || csr_matrix.data()[i] == 1.0 );
+            assert_true( i % 4 != 3 || csr_matrix.data()[i] == 1.0 );
         }
     std::cout << std::endl << std::endl;
 

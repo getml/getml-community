@@ -174,7 +174,7 @@ std::vector<std::string> CatOpParser::parse(
         {
             const auto val = JSON::get_value<std::string>( _col, "value_" );
 
-            assert( _df.size() > 0 );
+            assert_true( _df.size() > 0 );
 
             auto vec = std::vector<std::string>( _df[0].nrows() );
 
@@ -279,9 +279,9 @@ std::vector<std::string> CatOpParser::update(
         _df,
         *JSON::get_object( _col, "condition_" ) );
 
-    assert( operand1.size() == operand2.size() );
+    assert_true( operand1.size() == operand2.size() );
 
-    assert( operand1.size() == condition.size() );
+    assert_true( operand1.size() == condition.size() );
 
     auto result = std::vector<std::string>( operand1.size() );
 

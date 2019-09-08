@@ -24,7 +24,7 @@ CategoryIndex::CategoryIndex(
                 {
                     for ( auto it = begin( cat ); it < end( cat ); ++it )
                         {
-                            assert( ( *it )->categorical_value == cat );
+                            assert_true( ( *it )->categorical_value == cat );
                         }
                 }
         }
@@ -41,7 +41,7 @@ std::vector<Int> CategoryIndex::build_indptr(
 {
     // ------------------------------------------------------------------------
 
-    assert( _end >= _begin );
+    assert_true( _end >= _begin );
 
     if ( std::distance( _begin, _end ) == 0 || _categories.size() == 0 )
         {
@@ -53,7 +53,7 @@ std::vector<Int> CategoryIndex::build_indptr(
     const auto minimum = _categories.front();
     const auto maximum = _categories.back();
 
-    assert( maximum >= minimum );
+    assert_true( maximum >= minimum );
 
     const auto dist = static_cast<Int>( std::distance( _begin, _end ) );
 
@@ -67,7 +67,7 @@ std::vector<Int> CategoryIndex::build_indptr(
         {
             while ( i < dist )
                 {
-                    assert(
+                    assert_true(
                         i == 0 || _begin[i]->categorical_value >=
                                       _begin[i - 1]->categorical_value );
 
@@ -94,8 +94,8 @@ std::vector<Int> CategoryIndex::build_indptr(
 
     for ( auto val : indptr )
         {
-            assert( val >= 0 );
-            assert( val <= dist );
+            assert_true( val >= 0 );
+            assert_true( val <= dist );
         }
 
 #endif  // NDEBUG

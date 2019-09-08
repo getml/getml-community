@@ -75,7 +75,7 @@ class XGBoostPredictor : public Predictor
     /// Trivial (private) accessor.
     const PredictorImpl& impl() const
     {
-        assert( impl_ );
+        assert_true( impl_ );
         return *impl_;
     }
 
@@ -88,7 +88,7 @@ class XGBoostPredictor : public Predictor
     /// Returns reference to the underlying model
     const char* model() const
     {
-        assert( model_.size() > 0 );
+        assert_true( model_.size() > 0 );
         return model_.data();
     }
 

@@ -160,14 +160,14 @@ class ProjectManager
     /// Trivial (private) accessor
     AutoSQLModelMapType& autosql_models()
     {
-        assert( autosql_models_ );
+        assert_true( autosql_models_ );
         return *autosql_models_;
     }
 
     /// Trivial (private) accessor
     const AutoSQLModelMapType& autosql_models() const
     {
-        assert( autosql_models_ );
+        assert_true( autosql_models_ );
         return *autosql_models_;
     }
 
@@ -202,21 +202,21 @@ class ProjectManager
     /// Trivial accessor
     engine::licensing::LicenseChecker& license_checker()
     {
-        assert( license_checker_ );
+        assert_true( license_checker_ );
         return *license_checker_;
     }
 
     /// Trivial (private) accessor
     RelboostModelMapType& relboost_models()
     {
-        assert( relboost_models_ );
+        assert_true( relboost_models_ );
         return *relboost_models_;
     }
 
     /// Trivial (private) accessor
     const RelboostModelMapType& relboost_models() const
     {
-        assert( relboost_models_ );
+        assert_true( relboost_models_ );
         return *relboost_models_;
     }
 

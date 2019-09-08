@@ -134,14 +134,14 @@ class IntermediateAggregation
     /// Trivial accessor
     inline IntermediateAggregationImpl& impl()
     {
-        assert( impl_ );
+        assert_true( impl_ );
         return *impl_;
     }
 
     /// Trivial accessor
     inline const IntermediateAggregationImpl& impl() const
     {
-        assert( impl_ );
+        assert_true( impl_ );
         return *impl_;
     }
 
@@ -168,10 +168,10 @@ class IntermediateAggregation
         const Float& _new_value,
         const Float& _old_value )
     {
-        assert( _ix_agg >= 0 );
-        assert( static_cast<size_t>( _ix_agg ) < yhat().size() );
-        assert( count().size() == yhat().size() );
-        assert( count()[_ix_agg] > 0.0 );
+        assert_true( _ix_agg >= 0 );
+        assert_true( static_cast<size_t>( _ix_agg ) < yhat().size() );
+        assert_true( count().size() == yhat().size() );
+        assert_true( count()[_ix_agg] > 0.0 );
 
         static_assert( needs_count_, "COUNT needed!" );
 
@@ -190,8 +190,8 @@ class IntermediateAggregation
         const Float& _new_value,
         const Float& _old_value )
     {
-        assert( _ix_agg >= 0 );
-        assert( static_cast<size_t>( _ix_agg ) < yhat().size() );
+        assert_true( _ix_agg >= 0 );
+        assert_true( static_cast<size_t>( _ix_agg ) < yhat().size() );
 
         yhat()[_ix_agg] += _new_value - _old_value;
     }
@@ -207,13 +207,13 @@ class IntermediateAggregation
         const Float& _new_value,
         const Float& _old_value )
     {
-        assert( _ix_agg >= 0 );
-        assert( static_cast<size_t>( _ix_agg ) < yhat().size() );
-        assert( sum().size() == yhat().size() );
-        assert( sum_squared().size() == yhat().size() );
-        assert( sum_cubed().size() == yhat().size() );
-        assert( count().size() == yhat().size() );
-        assert( count()[_ix_agg] > 0.0 );
+        assert_true( _ix_agg >= 0 );
+        assert_true( static_cast<size_t>( _ix_agg ) < yhat().size() );
+        assert_true( sum().size() == yhat().size() );
+        assert_true( sum_squared().size() == yhat().size() );
+        assert_true( sum_cubed().size() == yhat().size() );
+        assert_true( count().size() == yhat().size() );
+        assert_true( count()[_ix_agg] > 0.0 );
 
         static_assert( needs_count_, "count needed!" );
         static_assert( needs_sum_, "sum needed!" );
@@ -250,12 +250,12 @@ class IntermediateAggregation
         const Float& _new_value,
         const Float& _old_value )
     {
-        assert( _ix_agg >= 0 );
-        assert( static_cast<size_t>( _ix_agg ) < yhat().size() );
-        assert( sum().size() == yhat().size() );
-        assert( sum_squared().size() == yhat().size() );
-        assert( count().size() == yhat().size() );
-        assert( count()[_ix_agg] > 0.0 );
+        assert_true( _ix_agg >= 0 );
+        assert_true( static_cast<size_t>( _ix_agg ) < yhat().size() );
+        assert_true( sum().size() == yhat().size() );
+        assert_true( sum_squared().size() == yhat().size() );
+        assert_true( count().size() == yhat().size() );
+        assert_true( count()[_ix_agg] > 0.0 );
 
         static_assert( needs_count_, "count needed!" );
         static_assert( needs_sum_, "sum needed!" );
@@ -447,7 +447,7 @@ void IntermediateAggregation<AggType>::commit()
 
     // --------------------------------------------------
 
-    assert( updates_current().size() == 0 );
+    assert_true( updates_current().size() == 0 );
 
     updates_stored().clear();
 
@@ -465,7 +465,7 @@ void IntermediateAggregation<AggType>::init_yhat(
 {
     debug_log( "IntermediateAgg: init_yhat..." );
 
-    assert( updates_current().size() == 0 );
+    assert_true( updates_current().size() == 0 );
 
     for ( auto ix_input : _indices )
         {
@@ -606,7 +606,7 @@ void IntermediateAggregation<AggType>::revert_to_commit()
 
     // --------------------------------------------------
 
-    assert( updates_current().size() == 0 );
+    assert_true( updates_current().size() == 0 );
 
     updates_stored().clear();
 
@@ -658,7 +658,7 @@ void IntermediateAggregation<AggType>::update_yhat_old(
     const std::vector<Float>& _sample_weights,
     const std::vector<Float>& _yhat_new )
 {
-    assert( _sample_weights.size() == _yhat_new.size() );
+    assert_true( _sample_weights.size() == _yhat_new.size() );
 
     reset();
 

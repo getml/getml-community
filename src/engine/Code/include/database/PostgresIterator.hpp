@@ -162,7 +162,7 @@ class PostgresIterator : public Iterator
     /// Trivial (private) accessor
     PGconn* connection() const
     {
-        assert( connection_ );
+        assert_true( connection_ );
         return connection_.get();
     }
 
@@ -227,7 +227,7 @@ class PostgresIterator : public Iterator
     /// Trivial (private) accessor
     PGresult* result() const
     {
-        assert( result_ );
+        assert_true( result_ );
         return result_.get();
     }
 

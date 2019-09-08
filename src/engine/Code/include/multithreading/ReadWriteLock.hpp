@@ -19,7 +19,7 @@ class ReadWriteLock
           num_waiting_weak_writers_( 0 ),
           num_waiting_writers_( 0 )
     {
-        assert( no_active_writers() );
+        assert_true( no_active_writers() );
     }
 
     ~ReadWriteLock() = default;
@@ -62,7 +62,7 @@ class ReadWriteLock
     /// Upgrades a weak write lock to a read lock.
     void upgrade_weak_write_lock()
     {
-        assert( active_weak_writer_exists_ );
+        assert_true( active_weak_writer_exists_ );
         ++num_waiting_writers_;
         std::unique_lock<std::mutex> lock( mtx_ );
         writer_cond_.wait( lock, [this] {

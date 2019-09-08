@@ -39,11 +39,11 @@ void DataFrame::add_float_vectors(
     const std::vector<std::shared_ptr<std::vector<Float>>> &_vectors,
     const std::string &_role )
 {
-    assert( _names.size() == _vectors.size() );
+    assert_true( _names.size() == _vectors.size() );
 
     for ( size_t i = 0; i < _vectors.size(); ++i )
         {
-            assert( _vectors[i] );
+            assert_true( _vectors[i] );
 
             auto col = Column<Float>( _vectors[i]->size(), _vectors[i] );
 
@@ -88,11 +88,11 @@ void DataFrame::add_int_vectors(
     const std::vector<std::shared_ptr<std::vector<Int>>> &_vectors,
     const std::string &_role )
 {
-    assert( _names.size() == _vectors.size() );
+    assert_true( _names.size() == _vectors.size() );
 
     for ( size_t i = 0; i < _vectors.size(); ++i )
         {
-            assert( _vectors[i] );
+            assert_true( _vectors[i] );
 
             auto col = Column<Int>( _vectors[i]->size(), _vectors[i] );
 

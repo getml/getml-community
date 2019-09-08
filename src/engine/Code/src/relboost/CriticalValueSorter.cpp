@@ -15,7 +15,7 @@ std::shared_ptr<const std::vector<Int>> CriticalValueSorter::sort(
 
     auto tuples = std::vector<std::tuple<Float, Int>>( 0 );
 
-    assert( _end >= _begin );
+    assert_true( _end >= _begin );
 
     for ( auto it = _begin; it != _end; ++it )
         {
@@ -27,7 +27,7 @@ std::shared_ptr<const std::vector<Int>> CriticalValueSorter::sort(
 
             const auto weight = std::get<1>( it->weights_ );
 
-            assert(
+            assert_true(
                 std::distance(
                     it->split_.categories_used_begin_,
                     it->split_.categories_used_end_ ) == 1 );

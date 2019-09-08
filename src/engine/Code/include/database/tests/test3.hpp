@@ -33,17 +33,17 @@ void test3()
         {"COLUMN_1", "COLUMN_2", "COLUMN_3", "COLUMN_4"}, "POPULATION", "" );
 
     // Header line (read in and formatted):
-    assert( std::isnan( it->get_double() ) );
-    assert( std::isnan( it->get_double() ) );
-    assert( std::isnan( it->get_double() ) );
-    assert( std::isnan( it->get_double() ) );
+    assert_true( std::isnan( it->get_double() ) );
+    assert_true( std::isnan( it->get_double() ) );
+    assert_true( std::isnan( it->get_double() ) );
+    assert_true( std::isnan( it->get_double() ) );
 
     // First line (pay special attention to column 2 - it should not be NULL!):
     // 0.09902457667435494, 0, 0.7386545235592108, 113.0
-    assert( std::abs( it->get_double() - 0.099024 ) < 1e-4 );
-    assert( it->get_double() == 0.0 );
-    assert( std::abs( it->get_time_stamp() - 0.738654 ) < 1e-4 );
-    assert( it->get_int() == 113 );
+    assert_true( std::abs( it->get_double() - 0.099024 ) < 1e-4 );
+    assert_true( it->get_double() == 0.0 );
+    assert_true( std::abs( it->get_time_stamp() - 0.738654 ) < 1e-4 );
+    assert_true( it->get_int() == 113 );
 
     std::cout << std::endl << std::endl;
     std::cout << "OK." << std::endl << std::endl;

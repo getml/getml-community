@@ -42,14 +42,14 @@ class Optional
 
     inline T* get()
     {
-        assert( thisptr() && "Optional.get() called on empty Optional!" );
+        assert_true( thisptr() && "Optional.get() called on empty Optional!" );
 
         return thisptr().get();
     }
 
     inline const T* get() const
     {
-        assert( thisptr() && "Optional.get() called on empty Optional!" );
+        assert_true( thisptr() && "Optional.get() called on empty Optional!" );
 
         return thisptr().get();
     }
@@ -81,28 +81,28 @@ class Optional
 
     T& operator*()
     {
-        assert( thisptr() && "Optional* called on empty Optional!" );
+        assert_true( thisptr() && "Optional* called on empty Optional!" );
 
         return *thisptr().get();
     }
 
     const T& operator*() const
     {
-        assert( thisptr() && "Optional* called on empty Optional!" );
+        assert_true( thisptr() && "Optional* called on empty Optional!" );
 
         return *thisptr().get();
     }
 
     T* operator->()
     {
-        assert( thisptr() && "Optional-> called on empty Optional!" );
+        assert_true( thisptr() && "Optional-> called on empty Optional!" );
 
         return thisptr().get();
     }
 
     const T* operator->() const
     {
-        assert( thisptr() && "Optional-> called on empty Optional!" );
+        assert_true( thisptr() && "Optional-> called on empty Optional!" );
 
         return thisptr().get();
     }

@@ -16,7 +16,7 @@ class ConditionMaker
         const std::shared_ptr<const std::vector<std::string>>& _encoding )
         : encoding_( _encoding )
     {
-        assert( encoding_ );
+        assert_true( encoding_ );
     }
 
     ~ConditionMaker() = default;
@@ -40,7 +40,7 @@ class ConditionMaker
     /// Trivial accessor.
     std::string encoding( size_t _i ) const
     {
-        assert( encoding_ );
+        assert_true( encoding_ );
 
         if ( _i < encoding_->size() )
             {
@@ -48,7 +48,7 @@ class ConditionMaker
             }
         else
             {
-                assert( false && "Encoding out of range!" );
+                assert_true( false && "Encoding out of range!" );
                 return "";
             }
     }

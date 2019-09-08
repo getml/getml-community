@@ -37,10 +37,10 @@ std::vector<containers::DataFrameView> TableHolder::parse_main_tables(
     const Placeholder& _placeholder,
     const containers::DataFrameView& _population )
 {
-    assert(
+    assert_true(
         _placeholder.joined_tables_.size() ==
         _placeholder.join_keys_used_.size() );
-    assert(
+    assert_true(
         _placeholder.joined_tables_.size() ==
         _placeholder.time_stamps_used_.size() );
 
@@ -65,14 +65,14 @@ std::vector<containers::DataFrame> TableHolder::parse_peripheral_tables(
     const std::vector<containers::DataFrame>& _peripheral,
     const std::vector<std::string>& _peripheral_names )
 {
-    assert(
+    assert_true(
         _placeholder.joined_tables_.size() ==
         _placeholder.other_join_keys_used_.size() );
-    assert(
+    assert_true(
         _placeholder.joined_tables_.size() ==
         _placeholder.other_time_stamps_used_.size() );
-    assert( _peripheral.size() > 0 );
-    assert( _peripheral_names.size() == _peripheral.size() );
+    assert_true( _peripheral.size() > 0 );
+    assert_true( _peripheral_names.size() == _peripheral.size() );
 
     std::vector<containers::DataFrame> result;
 
@@ -110,8 +110,8 @@ std::vector<containers::Optional<TableHolder>> TableHolder::parse_subtables(
     const std::vector<containers::DataFrame>& _peripheral,
     const std::vector<std::string>& _peripheral_names )
 {
-    assert( _peripheral.size() > 0 );
-    assert( _peripheral_names.size() == _peripheral.size() );
+    assert_true( _peripheral.size() > 0 );
+    assert_true( _peripheral_names.size() == _peripheral.size() );
 
     std::vector<containers::Optional<TableHolder>> result;
 

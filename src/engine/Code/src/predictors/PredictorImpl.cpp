@@ -8,9 +8,9 @@ void PredictorImpl::compress_importances(
     const std::vector<Float>& _all_feature_importances,
     std::vector<Float>* _feature_importances ) const
 {
-    assert( _all_feature_importances.size() == ncols_csr() );
+    assert_true( _all_feature_importances.size() == ncols_csr() );
 
-    assert(
+    assert_true(
         _feature_importances->size() == num_autofeatures() + num_columns() );
 
     const auto n_dense = num_autofeatures_ + discrete_colnames_.size() +
@@ -23,7 +23,7 @@ void PredictorImpl::compress_importances(
 
     auto begin = _all_feature_importances.begin() + n_dense;
 
-    assert(
+    assert_true(
         encodings_.size() == categorical_colnames_.size() ||
         encodings_.size() == 0 );
 
@@ -152,7 +152,7 @@ void PredictorImpl::select_cols(
 
     select_cols( _n_selected, _index, _n_autofeatures, &discrete_colnames_ );
 
-    assert( _n_selected >= num_columns() );
+    assert_true( _n_selected >= num_columns() );
 
     num_autofeatures_ = _n_selected - num_columns();
 }

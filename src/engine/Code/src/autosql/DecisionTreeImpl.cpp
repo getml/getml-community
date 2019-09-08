@@ -146,7 +146,7 @@ std::string DecisionTreeImpl::get_colname(
 
             default:
 
-                assert(
+                assert_true(
                     false && "Unknown enums::DataUsed in get_colname(...)!" );
         }
 

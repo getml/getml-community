@@ -11,11 +11,11 @@ void Threadutils::copy(
     const std::vector<Float>& _local_feature,
     std::vector<Float>* _global_feature )
 {
-    assert( _rows.size() == _local_feature.size() );
+    assert_true( _rows.size() == _local_feature.size() );
 
     for ( size_t i = 0; i < _rows.size(); ++i )
         {
-            assert( _rows[i] < _global_feature->size() );
+            assert_true( _rows[i] < _global_feature->size() );
 
             ( *_global_feature )[_rows[i]] = _local_feature[i];
         }
@@ -58,9 +58,9 @@ void Threadutils::fit_ensemble(
             // ----------------------------------------------------------------
             // Create and initialize the optimization criterion.
 
-            assert( table_holder->main_tables_.size() > 0 );
+            assert_true( table_holder->main_tables_.size() > 0 );
 
-            assert( _hyperparameters );
+            assert_true( _hyperparameters );
 
             const auto opt =
                 std::unique_ptr<optimizationcriteria::OptimizationCriterion>(
@@ -163,7 +163,7 @@ void Threadutils::transform_ensemble(
             // ----------------------------------------------------------------
             // Build the actual features.
 
-            assert( _ensemble.trees().size() == _features->size() );
+            assert_true( _ensemble.trees().size() == _features->size() );
 
             for ( size_t i = 0; i < _ensemble.trees().size(); ++i )
                 {

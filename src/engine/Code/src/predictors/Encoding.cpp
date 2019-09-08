@@ -6,7 +6,7 @@ namespace predictors
 
 void Encoding::fit( const CIntColumn& _col )
 {
-    assert( _col );
+    assert_true( _col );
 
     min_ = *std::min_element( _col->begin(), _col->end() );
 
@@ -30,7 +30,7 @@ Poco::JSON::Object Encoding::to_json_obj() const
 
 CIntColumn Encoding::transform( const CIntColumn& _col ) const
 {
-    assert( _col );
+    assert_true( _col );
 
     auto output = std::make_shared<std::vector<Int>>( _col->size() );
 

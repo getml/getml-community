@@ -53,7 +53,7 @@ class Sqlite3Iterator : public Iterator
     /// Trivial (private) accessor
     sqlite3_stmt* stmt() const
     {
-        assert( stmt_ );
+        assert_true( stmt_ );
         return stmt_.get();
     }
 

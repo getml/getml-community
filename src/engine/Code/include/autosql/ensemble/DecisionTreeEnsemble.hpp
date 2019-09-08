@@ -128,21 +128,21 @@ class DecisionTreeEnsemble
     /// Trivial (const) accessor
     const std::vector<containers::Schema> &peripheral_schema() const
     {
-        assert( impl().peripheral_schema_ );
+        assert_true( impl().peripheral_schema_ );
         return *impl().peripheral_schema_;
     }
 
     /// Trivial accessor
     inline const decisiontrees::Placeholder &placeholder() const
     {
-        assert( impl().placeholder_population_ );
+        assert_true( impl().placeholder_population_ );
         return *impl().placeholder_population_;
     }
 
     /// Trivial (const) accessor
     const containers::Schema &population_schema() const
     {
-        assert( impl().population_schema_ );
+        assert_true( impl().population_schema_ );
         return *impl().population_schema_;
     }
 
@@ -228,7 +228,7 @@ class DecisionTreeEnsemble
     /// the ensemble
     inline decisiontrees::DecisionTree *last_tree()
     {
-        assert( trees().size() > 0 );
+        assert_true( trees().size() > 0 );
         return &( trees().back() );
     }
 
@@ -241,7 +241,7 @@ class DecisionTreeEnsemble
     /// Trivial accessor
     inline decisiontrees::Placeholder &placeholder()
     {
-        assert( impl().placeholder_population_ );
+        assert_true( impl().placeholder_population_ );
         return *impl().placeholder_population_;
     }
 
@@ -254,8 +254,8 @@ class DecisionTreeEnsemble
     /// Trivial accessor
     inline decisiontrees::DecisionTree *tree( const Int _i )
     {
-        assert( trees().size() > 0 );
-        assert( static_cast<Int>( trees().size() ) > _i );
+        assert_true( trees().size() > 0 );
+        assert_true( static_cast<Int>( trees().size() ) > _i );
 
         return trees().data() + _i;
     }

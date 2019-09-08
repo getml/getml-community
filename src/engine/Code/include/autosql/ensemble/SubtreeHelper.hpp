@@ -83,7 +83,7 @@ void SubtreeHelper::fit_subensemble(
         std::make_shared<const decisiontrees::TableHolder>(
             *_table_holder->subtables_[_ix_perip_used] );
 
-    assert( subtable_holder->main_tables_.size() > 0 );
+    assert_true( subtable_holder->main_tables_.size() > 0 );
 
     const auto input_table = containers::DataFrameView(
         _table_holder->peripheral_tables_[_ix_perip_used],

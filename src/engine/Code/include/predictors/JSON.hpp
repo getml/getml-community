@@ -4,11 +4,12 @@
 // ------------------------------------------------------------------------
 // Dependencies
 
-#include <cassert>
 #include <memory>
 #include <vector>
 
 #include <Poco/JSON/Parser.h>
+
+#include "debug/debug.hpp"
 
 // ------------------------------------------------------------------------
 

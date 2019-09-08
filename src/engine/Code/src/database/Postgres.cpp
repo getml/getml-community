@@ -235,7 +235,7 @@ std::string Postgres::make_buffer(
 {
     std::string buffer;
 
-    assert( _line.size() == _coltypes.size() );
+    assert_true( _line.size() == _coltypes.size() );
 
     for ( size_t i = 0; i < _line.size(); ++i )
         {
@@ -334,7 +334,7 @@ std::string Postgres::parse_field(
 
             case csv::Datatype::time_stamp:
                 {
-                    assert( false && "ToDo" );
+                    assert_true( false && "ToDo" );
 
                     return "";
                 }

@@ -17,9 +17,9 @@ Poco::JSON::Array::Ptr Summarizer::calculate_average_targets(
     // ------------------------------------------------------------------------
     // Init average_targets.
 
-    assert( _actual_num_bins.size() == _step_sizes.size() );
+    assert_true( _actual_num_bins.size() == _step_sizes.size() );
 
-    assert( _actual_num_bins.size() == _ncols );
+    assert_true( _actual_num_bins.size() == _ncols );
 
     const auto num_targets = _targets.size();
 
@@ -44,7 +44,7 @@ Poco::JSON::Array::Ptr Summarizer::calculate_average_targets(
     // ------------------------------------------------------------------------
     // Calculate sums.
 
-    assert( _feature_densities.size() == _ncols );
+    assert_true( _feature_densities.size() == _ncols );
 
     for ( size_t i = 0; i < _nrows; ++i )
         {
@@ -61,11 +61,11 @@ Poco::JSON::Array::Ptr Summarizer::calculate_average_targets(
                     const auto bin = identify_bin(
                         _actual_num_bins[j], _step_sizes[j], val, _minima[j] );
 
-                    assert( bin < _feature_densities[j].size() );
+                    assert_true( bin < _feature_densities[j].size() );
 
                     for ( size_t k = 0; k < average_targets[j].size(); ++k )
                         {
-                            assert( bin < average_targets[j][k].size() );
+                            assert_true( bin < average_targets[j][k].size() );
 
                             average_targets[j][k][bin] += _targets[k][i];
                         }
@@ -149,8 +149,8 @@ Poco::JSON::Object Summarizer::calculate_feature_plots(
         &step_sizes,
         &actual_num_bins );
 
-    assert( step_sizes.size() == _ncols );
-    assert( actual_num_bins.size() == _ncols );
+    assert_true( step_sizes.size() == _ncols );
+    assert_true( actual_num_bins.size() == _ncols );
 
     // ------------------------------------------------------------------------
     // Init feature densities.
@@ -243,7 +243,7 @@ Poco::JSON::Object Summarizer::calculate_feature_correlations(
 {
     // -----------------------------------------------------------
 
-    assert( _ncols == _features.size() );
+    assert_true( _ncols == _features.size() );
 
     const auto t_ncols = _targets.size();
 
@@ -390,7 +390,7 @@ Poco::JSON::Array::Ptr Summarizer::calculate_labels(
 
     for ( size_t j = 0; j < _ncols; ++j )
         {
-            assert( labels[j].size() == _feature_densities[j].size() );
+            assert_true( labels[j].size() == _feature_densities[j].size() );
 
             for ( size_t bin = 0; bin < labels[j].size(); ++bin )
                 {
@@ -435,7 +435,7 @@ void Summarizer::calculate_step_sizes_and_num_bins(
     std::vector<Float>* _step_sizes,
     std::vector<size_t>* _actual_num_bins )
 {
-    assert( _minima.size() == _maxima.size() );
+    assert_true( _minima.size() == _maxima.size() );
 
     _step_sizes->resize( _minima.size() );
 
@@ -497,12 +497,12 @@ size_t Summarizer::identify_bin(
     const Float _val,
     const Float _min )
 {
-    assert( _step_size > 0.0 );
+    assert_true( _step_size > 0.0 );
 
     // Note that this always rounds down.
     auto bin = static_cast<size_t>( ( _val - _min ) / _step_size );
 
-    assert( bin >= 0 );
+    assert_true( bin >= 0 );
 
     // The maximum value will be out of range, if we do not
     // do this!

@@ -188,21 +188,21 @@ class DataFrameManager
     /// Trivial accessor
     std::shared_ptr<database::Connector> connector()
     {
-        assert( database_manager_ );
+        assert_true( database_manager_ );
         return database_manager_->connector();
     }
 
     /// Trivial accessor
     std::map<std::string, containers::DataFrame>& data_frames()
     {
-        assert( data_frames_ );
+        assert_true( data_frames_ );
         return *data_frames_;
     }
 
     /// Trivial accessor
     licensing::LicenseChecker& license_checker()
     {
-        assert( license_checker_ );
+        assert_true( license_checker_ );
         return *license_checker_;
     }
 

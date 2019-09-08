@@ -101,7 +101,7 @@ void test14_numerical_output()
         {
             const auto jk = peripheral_df.join_key( i );
 
-            assert( jk < 500 );
+            assert_true( jk < 500 );
 
             if ( peripheral_df.time_stamp( i ) <=
                  time_stamps_population_col[jk] )

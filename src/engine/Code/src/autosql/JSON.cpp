@@ -48,7 +48,7 @@ size_t JSON::data_used_to_int( const enums::DataUsed& _data_used )
                 return 12;
 
             default:
-                assert( !"Unknown enums::DataUsed!" );
+                assert_true( !"Unknown enums::DataUsed!" );
                 return 0;
         }
 }
@@ -142,7 +142,7 @@ enums::DataUsed JSON::int_to_data_used( const size_t& _val )
                 return enums::DataUsed::time_stamps_window;
 
             default:
-                assert( !"Unknown enums::DataUsed!" );
+                assert_true( !"Unknown enums::DataUsed!" );
                 return enums::DataUsed::not_applicable;
         }
 }

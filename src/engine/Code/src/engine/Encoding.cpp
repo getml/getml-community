@@ -23,7 +23,7 @@ void Encoding::append( const Encoding& _other, bool _include_subencoding )
 
 Int Encoding::insert( const std::string& _val )
 {
-    assert( map_.find( _val ) == map_.end() );
+    assert_true( map_.find( _val ) == map_.end() );
 
     const auto ix = static_cast<Int>( vector_->size() + subsize_ );
 
@@ -124,7 +124,7 @@ Int Encoding::operator[]( const std::string& _val ) const
 
 Encoding& Encoding::operator=( std::vector<std::string>&& _vector ) noexcept
 {
-    assert( !subencoding_ );
+    assert_true( !subencoding_ );
 
     *vector_ = _vector;
 
@@ -134,7 +134,7 @@ Encoding& Encoding::operator=( std::vector<std::string>&& _vector ) noexcept
         {
             auto& val = ( *vector_ )[ix];
 
-            assert( map_.find( val ) == map_.end() );
+            assert_true( map_.find( val ) == map_.end() );
 
             map_[val] = ix;
         }

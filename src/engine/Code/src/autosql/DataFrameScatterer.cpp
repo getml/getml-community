@@ -17,7 +17,7 @@ DataFrameScatterer::build_thread_nums(
         {
             auto it = _min_keys_map.find( _min_join_key[i] );
 
-            assert( it != _min_keys_map.end() );
+            assert_true( it != _min_keys_map.end() );
 
             thread_nums[i] = it->second;
         }
@@ -79,7 +79,7 @@ containers::DataFrameView DataFrameScatterer::scatter_data_frame(
     const std::vector<size_t>& _thread_nums,
     const size_t _thread_num )
 {
-    assert( _df.nrows() == _thread_nums.size() );
+    assert_true( _df.nrows() == _thread_nums.size() );
 
     auto indices = std::make_shared<std::vector<size_t>>( 0 );
 

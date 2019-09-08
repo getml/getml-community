@@ -9,10 +9,12 @@
 
 #include <Eigen/Dense>
 
-#include "optimizers/Float.hpp"
-#include "optimizers/Int.hpp"
+#include "debug/debug.hpp"
 
 // ----------------------------------------------------------------------------
+
+#include "optimizers/Float.hpp"
+#include "optimizers/Int.hpp"
 
 #include "optimizers/Optimizer.hpp"
 

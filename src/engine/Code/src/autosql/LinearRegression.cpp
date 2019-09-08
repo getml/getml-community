@@ -25,7 +25,7 @@ void LinearRegression::fit(
     // ----------------------------------------------------
     // Calculate mean_new_feature
 
-    assert( _new_feature.size() == _sample_weights.size() );
+    assert_true( _new_feature.size() == _sample_weights.size() );
 
     Float mean_new_feature = 0.0;
 
@@ -46,7 +46,7 @@ void LinearRegression::fit(
 
     for ( size_t i = 0; i < _residuals.size(); ++i )
         {
-            assert( _residuals[i].size() == _sample_weights.size() );
+            assert_true( _residuals[i].size() == _sample_weights.size() );
 
             for ( size_t j = 0; j < _residuals[i].size(); ++j )
                 {
@@ -65,7 +65,7 @@ void LinearRegression::fit(
     // ----------------------------------------------------
     // Calculate var_new_feature
 
-    assert( _new_feature.size() == _sample_weights.size() );
+    assert_true( _new_feature.size() == _sample_weights.size() );
 
     Float var_new_feature = 0.0;
 

@@ -175,7 +175,7 @@ std::string JSON::stringify( const enums::DataUsed& _data_used )
                 return "time_stamps_diff";
 
             default:
-                assert( false && "Unknown data_used_" );
+                assert_true( false && "Unknown data_used_" );
                 return "";
         }
 }

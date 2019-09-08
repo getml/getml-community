@@ -4,7 +4,6 @@
 // ----------------------------------------------------------------------------
 // Dependencies
 
-#include <cassert>
 #include <cmath>
 
 #include <algorithm>

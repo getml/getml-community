@@ -15,14 +15,14 @@ std::vector<std::vector<Float>> SquareLoss::calculate_residuals(
     const std::vector<std::vector<Float>>& _yhat_old,
     const containers::DataFrameView& _y )
 {
-    assert( _yhat_old.size() == _y.num_targets() );
+    assert_true( _yhat_old.size() == _y.num_targets() );
 
     auto residuals = std::vector<std::vector<Float>>(
         _y.num_targets(), std::vector<Float>( _y.nrows() ) );
 
     for ( size_t j = 0; j < _y.num_targets(); ++j )
         {
-            assert( _yhat_old[j].size() == _y.nrows() );
+            assert_true( _yhat_old[j].size() == _y.nrows() );
 
             for ( size_t i = 0; i < _y.nrows(); ++i )
                 {
@@ -41,8 +41,8 @@ std::vector<Float> SquareLoss::calculate_update_rates(
     const containers::DataFrameView& _y,
     const std::vector<Float>& _sample_weights )
 {
-    assert( _yhat_old.size() == _predictions.size() );
-    assert( _yhat_old.size() == _y.num_targets() );
+    assert_true( _yhat_old.size() == _predictions.size() );
+    assert_true( _yhat_old.size() == _y.num_targets() );
 
     std::vector<Float> update_rates( _yhat_old.size() );
 

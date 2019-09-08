@@ -104,8 +104,8 @@ class Column
     template <class T2>
     T &operator[]( const T2 _i )
     {
-        assert( _i >= 0 );
-        assert( static_cast<size_t>( _i ) < nrows() );
+        assert_true( _i >= 0 );
+        assert_true( static_cast<size_t>( _i ) < nrows() );
 
         return ( *data_ptr_ )[_i];
     }
@@ -114,8 +114,8 @@ class Column
     template <class T2>
     T operator[]( const T2 _i ) const
     {
-        assert( _i >= 0 );
-        assert( static_cast<size_t>( _i ) < nrows() );
+        assert_true( _i >= 0 );
+        assert_true( static_cast<size_t>( _i ) < nrows() );
 
         return ( *data_ptr_ )[_i];
     }
@@ -509,7 +509,7 @@ Column<T> Column<T>::sort_by_key( const std::vector<size_t> &_key ) const
                         }
                     else
                         {
-                            assert( false );
+                            assert_true( false );
                         }
                 }
         }

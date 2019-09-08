@@ -81,7 +81,7 @@ class NumOpParser
             _df,
             *JSON::get_object( _col, "operand2_" ) );
 
-        assert( operand1.nrows() == operand2.nrows() );
+        assert_true( operand1.nrows() == operand2.nrows() );
 
         auto result = containers::Column<Float>( operand1.nrows() );
 
@@ -106,7 +106,7 @@ class NumOpParser
 
         std::uniform_real_distribution<Float> dis( 0.0, 1.0 );
 
-        assert( _df.size() > 0 );
+        assert_true( _df.size() > 0 );
 
         auto result = containers::Column<Float>( _df[0].nrows() );
 
@@ -122,7 +122,7 @@ class NumOpParser
     static containers::Column<Float> rowid(
         const std::vector<containers::DataFrame>& _df )
     {
-        assert( _df.size() > 0 );
+        assert_true( _df.size() > 0 );
 
         auto result = containers::Column<Float>( _df[0].nrows() );
 

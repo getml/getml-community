@@ -31,7 +31,7 @@ struct Finder<enums::DataUsed::discrete_input>
     {
         const auto smaller_than_cv =
             [&_input, _num_column, _cv]( const containers::Match* m ) {
-                assert( m->ix_input < _input.nrows() );
+                assert_true( m->ix_input < _input.nrows() );
                 return _input.discrete( m->ix_input, _num_column ) <= _cv;
             };
 
@@ -53,7 +53,7 @@ struct Finder<enums::DataUsed::discrete_output>
     {
         const auto smaller_than_cv =
             [&_output, _num_column, _cv]( const containers::Match* m ) {
-                assert( m->ix_output < _output.nrows() );
+                assert_true( m->ix_output < _output.nrows() );
                 return _output.discrete( m->ix_output, _num_column ) <= _cv;
             };
 
@@ -75,7 +75,7 @@ struct Finder<enums::DataUsed::numerical_input>
     {
         const auto smaller_than_cv =
             [&_input, _num_column, _cv]( const containers::Match* m ) {
-                assert( m->ix_input < _input.nrows() );
+                assert_true( m->ix_input < _input.nrows() );
                 return _input.numerical( m->ix_input, _num_column ) <= _cv;
             };
 
@@ -97,7 +97,7 @@ struct Finder<enums::DataUsed::numerical_output>
     {
         const auto smaller_than_cv =
             [&_output, _num_column, _cv]( const containers::Match* m ) {
-                assert( m->ix_output < _output.nrows() );
+                assert_true( m->ix_output < _output.nrows() );
                 return _output.numerical( m->ix_output, _num_column ) <= _cv;
             };
 
@@ -124,8 +124,8 @@ struct Finder<enums::DataUsed::same_units_discrete>
                                 _input_col,
                                 _output_col,
                                 _cv]( const containers::Match* m ) {
-            assert( m->ix_input < _input.nrows() );
-            assert( m->ix_output < _output.nrows() );
+            assert_true( m->ix_input < _input.nrows() );
+            assert_true( m->ix_output < _output.nrows() );
 
             const auto diff = _output.discrete( m->ix_output, _output_col ) -
                               _input.discrete( m->ix_input, _input_col );
@@ -156,8 +156,8 @@ struct Finder<enums::DataUsed::same_units_numerical>
                                 _input_col,
                                 _output_col,
                                 _cv]( const containers::Match* m ) {
-            assert( m->ix_input < _input.nrows() );
-            assert( m->ix_output < _output.nrows() );
+            assert_true( m->ix_input < _input.nrows() );
+            assert_true( m->ix_output < _output.nrows() );
 
             const auto diff = _output.numerical( m->ix_output, _output_col ) -
                               _input.numerical( m->ix_input, _input_col );
@@ -183,8 +183,8 @@ struct Finder<enums::DataUsed::time_stamps_diff>
     {
         auto smaller_than_cv =
             [&_input, &_output, _cv]( const containers::Match* m ) {
-                assert( m->ix_input < _input.nrows() );
-                assert( m->ix_output < _output.nrows() );
+                assert_true( m->ix_input < _input.nrows() );
+                assert_true( m->ix_output < _output.nrows() );
 
                 const auto diff = _output.time_stamp( m->ix_output ) -
                                   _input.time_stamp( m->ix_input );

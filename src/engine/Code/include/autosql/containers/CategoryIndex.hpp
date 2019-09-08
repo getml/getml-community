@@ -27,8 +27,8 @@ class CategoryIndex
     /// Returns iterator to the beginning of a set of categories.
     containers::MatchPtrs::iterator begin( const Int _category ) const
     {
-        assert( _category - minimum_ >= 0 );
-        assert(
+        assert_true( _category - minimum_ >= 0 );
+        assert_true(
             _category - minimum_ + 1 <
             static_cast<Int>( indptr_.size() ) );
         return begin_ + indptr_[_category - minimum_];
@@ -40,8 +40,8 @@ class CategoryIndex
     /// Returns iterator to the end of a set of categories.
     containers::MatchPtrs::iterator end( const Int _category ) const
     {
-        assert( _category - minimum_ >= 0 );
-        assert(
+        assert_true( _category - minimum_ >= 0 );
+        assert_true(
             _category - minimum_ + 1 <
             static_cast<Int>( indptr_.size() ) );
         return begin_ + indptr_[_category - minimum_ + 1];

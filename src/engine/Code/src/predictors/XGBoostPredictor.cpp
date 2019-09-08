@@ -215,7 +215,7 @@ std::string XGBoostPredictor::fit(
     auto d_matrix = convert_to_dmatrix( _X_categorical, _X_numerical );
 
     // convert_to_dmatrix(...) should make sure of this.
-    assert( _X_numerical.size() > 0 );
+    assert_true( _X_numerical.size() > 0 );
 
     std::vector<float> y_float( _y->size() );
 
@@ -461,7 +461,7 @@ void XGBoostPredictor::parse_dump(
 
     if ( hyperparams_.booster_ == "gblinear" )
         {
-            assert( lines.size() >= _all_feature_importances->size() + 3 );
+            assert_true( lines.size() >= _all_feature_importances->size() + 3 );
 
             for ( size_t i = 0; i < _all_feature_importances->size(); ++i )
                 {
@@ -494,9 +494,9 @@ void XGBoostPredictor::parse_dump(
                             int fnum =
                                 std::stoi( line.substr( begin, end - begin ) );
 
-                            assert( fnum >= 0 );
+                            assert_true( fnum >= 0 );
 
-                            assert(
+                            assert_true(
                                 fnum < static_cast<int>(
                                            _all_feature_importances->size() ) );
 
@@ -505,11 +505,11 @@ void XGBoostPredictor::parse_dump(
 
                             begin = line.find( "gain=" ) + 5;
 
-                            assert( begin - 5 != std::string::npos );
+                            assert_true( begin - 5 != std::string::npos );
 
                             end = line.find( ",", begin );
 
-                            assert( end != std::string::npos );
+                            assert_true( end != std::string::npos );
 
                             Float gain =
                                 std::stod( line.substr( begin, end - begin ) );
@@ -574,7 +574,7 @@ CFloatColumn XGBoostPredictor::predict(
             std::runtime_error( "Generating XGBoost predictions failed!" );
         }
 
-    assert( static_cast<size_t>( nrows ) == yhat->size() );
+    assert_true( static_cast<size_t>( nrows ) == yhat->size() );
 
     std::transform(
         yhat_float, yhat_float + nrows, yhat->begin(), []( const float val ) {

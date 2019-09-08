@@ -30,19 +30,19 @@ OptimizationCriterionImpl::OptimizationCriterionImpl(
 void OptimizationCriterionImpl::commit(
     std::vector<Float>* _sufficient_statistics_committed )
 {
-    assert( max_ix_ >= 0 );
+    assert_true( max_ix_ >= 0 );
 
-    assert( max_ix_ < storage_ix() );
+    assert_true( max_ix_ < storage_ix() );
 
-    assert( max_ix_ < values_stored_.size() );
+    assert_true( max_ix_ < values_stored_.size() );
 
-    assert( max_ix_ < sufficient_statistics_stored_.size() );
+    assert_true( max_ix_ < sufficient_statistics_stored_.size() );
 
     const auto ncols = _sufficient_statistics_committed->size();
 
     // sufficient_statistics_stored_ has two extra columns for
     // num_samples_smaller and num_samples_greater
-    assert( ncols == sufficient_statistics_stored_[max_ix_].size() - 2 );
+    assert_true( ncols == sufficient_statistics_stored_[max_ix_].size() - 2 );
 
     std::copy(
         sufficient_statistics_stored_[max_ix_].begin(),
@@ -134,7 +134,7 @@ void OptimizationCriterionImpl::update_yhat_old(
 {
     // ----------------------------------------------------------------
 
-    assert( hyperparameters_ );
+    assert_true( hyperparameters_ );
 
     const auto shrinkage = hyperparameters_->shrinkage_;
 
@@ -163,12 +163,12 @@ void OptimizationCriterionImpl::update_yhat_old(
     // ----------------------------------------------------------------
     // Do the actual updates
 
-    assert( update_rates.size() == predictions.size() );
-    assert( update_rates.size() == yhat_old_.size() );
+    assert_true( update_rates.size() == predictions.size() );
+    assert_true( update_rates.size() == yhat_old_.size() );
 
     for ( size_t j = 0; j < predictions.size(); ++j )
         {
-            assert( yhat_old_[j].size() == predictions[j].size() );
+            assert_true( yhat_old_[j].size() == predictions[j].size() );
 
             for ( size_t i = 0; i < predictions[j].size(); ++i )
                 {

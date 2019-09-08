@@ -57,7 +57,7 @@ void StandardScaler::fit(
                   j < _X_sparse.indptr()[i + 1];
                   ++j )
                 {
-                    assert( _X_sparse.indices()[j] < _X_sparse.ncols() );
+                    assert_true( _X_sparse.indices()[j] < _X_sparse.ncols() );
 
                     means[_X_sparse.indices()[j]] += _X_sparse.data()[j];
                 }
@@ -79,7 +79,7 @@ void StandardScaler::fit(
                   j < _X_sparse.indptr()[i + 1];
                   ++j )
                 {
-                    assert( _X_sparse.indices()[j] < _X_sparse.ncols() );
+                    assert_true( _X_sparse.indices()[j] < _X_sparse.ncols() );
 
                     auto diff =
                         ( _X_sparse.data()[j] - means[_X_sparse.indices()[j]] );
@@ -102,7 +102,7 @@ void StandardScaler::fit(
 std::vector<CFloatColumn> StandardScaler::transform(
     const std::vector<CFloatColumn>& _X_numerical ) const
 {
-    assert( _X_numerical.size() > 0 );
+    assert_true( _X_numerical.size() > 0 );
 
     if ( _X_numerical.size() != std_.size() )
         {
@@ -151,7 +151,7 @@ const CSRMatrix<Float, unsigned int, size_t> StandardScaler::transform(
             for ( size_t j = output.indptr()[i]; j < output.indptr()[i + 1];
                   ++j )
                 {
-                    assert( output.indices()[j] < output.ncols() );
+                    assert_true( output.indices()[j] < output.ncols() );
 
                     const auto std = std_[_X_sparse.indices()[j]];
 

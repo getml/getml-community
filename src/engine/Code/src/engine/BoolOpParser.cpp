@@ -179,7 +179,7 @@ std::vector<bool> BoolOpParser::parse(
         {
             const auto val = JSON::get_value<bool>( _col, "value_" );
 
-            assert( _df.size() > 0 );
+            assert_true( _df.size() > 0 );
 
             auto vec = std::vector<bool>( _df[0].nrows() );
 

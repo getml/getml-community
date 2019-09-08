@@ -62,7 +62,7 @@ class LicenseChecker
     Token token() const
     {
         multithreading::ReadLock read_lock( read_write_lock_ );
-        assert( token_ );
+        assert_true( token_ );
         return *token_;
     }
 

@@ -378,7 +378,7 @@ CFloatColumn LogisticRegression::predict_dense(
 
     for ( size_t j = 0; j < X.size(); ++j )
         {
-            assert( X[0]->size() == X[j]->size() );
+            assert_true( X[0]->size() == X[j]->size() );
 
             if ( !predictions )
                 {

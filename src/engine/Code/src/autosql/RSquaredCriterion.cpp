@@ -26,10 +26,10 @@ std::vector<size_t> RSquaredCriterion::argsort(
 
     debug_log( "argsort..." );
 
-    assert( _begin <= _end );
+    assert_true( _begin <= _end );
 
-    assert( _begin >= 0 );
-    assert( _end <= impl().storage_ix() );
+    assert_true( _begin >= 0 );
+    assert_true( _end <= impl().storage_ix() );
 
     debug_log( "Preparing sufficient statistics..." );
 
@@ -79,21 +79,21 @@ Float RSquaredCriterion::calculate_r_squared(
     const size_t _i,
     const std::deque<std::vector<Float>>& _sufficient_statistics ) const
 {
-    assert( sample_weights_.size() == y_centered_[0].size() );
+    assert_true( sample_weights_.size() == y_centered_[0].size() );
 
-    assert( _i < _sufficient_statistics.size() );
+    assert_true( _i < _sufficient_statistics.size() );
 
-    assert( _sufficient_statistics[_i].size() == y_.size() + 4 );
+    assert_true( _sufficient_statistics[_i].size() == y_.size() + 4 );
 
-    assert( sum_y_centered_y_centered_.size() == y_.size() );
+    assert_true( sum_y_centered_y_centered_.size() == y_.size() );
 
     const Float sum_yhat = _sufficient_statistics[_i][0];
 
-    assert( sum_yhat == sum_yhat );
+    assert_true( sum_yhat == sum_yhat );
 
     const Float sum_yhat_yhat = _sufficient_statistics[_i][1];
 
-    assert( sum_yhat_yhat == sum_yhat_yhat );
+    assert_true( sum_yhat_yhat == sum_yhat_yhat );
 
     Float r_squared = 0.0;
 
@@ -102,7 +102,7 @@ Float RSquaredCriterion::calculate_r_squared(
             const Float sum_y_centered_yhat =
                 _sufficient_statistics[_i][2 + j];
 
-            assert( !std::isnan( sum_y_centered_yhat ) );
+            assert_true( !std::isnan( sum_y_centered_yhat ) );
 
             const Float var_yhat =
                 sum_sample_weights_ * sum_yhat_yhat - sum_yhat * sum_yhat;
@@ -117,7 +117,7 @@ Float RSquaredCriterion::calculate_r_squared(
                 ( sum_y_centered_yhat / sum_y_centered_y_centered_[j] );
         }
 
-    assert( sample_weights_.size() == y_centered_[0].size() );
+    assert_true( sample_weights_.size() == y_centered_[0].size() );
 
     return r_squared;
 }
@@ -126,7 +126,7 @@ Float RSquaredCriterion::calculate_r_squared(
 
 Int RSquaredCriterion::find_maximum()
 {
-    assert( sample_weights_.size() == y_centered_[0].size() );
+    assert_true( sample_weights_.size() == y_centered_[0].size() );
 
     Int max_ix = 0;
 
@@ -137,15 +137,15 @@ Int RSquaredCriterion::find_maximum()
 
     debug_log( "Finding maximum..." );
 
-    assert( sample_weights_.size() == y_centered_[0].size() );
+    assert_true( sample_weights_.size() == y_centered_[0].size() );
 
-    assert( impl().storage_ix() == sufficient_statistics.size() );
+    assert_true( impl().storage_ix() == sufficient_statistics.size() );
 
     impl().values_stored().resize( impl().storage_ix() );
 
     for ( size_t i = 0; i < sufficient_statistics.size(); ++i )
         {
-            assert( i < impl().values_stored().size() );
+            assert_true( i < impl().values_stored().size() );
 
             impl().values_stored()[i] = 0.0;
 
@@ -155,7 +155,7 @@ Int RSquaredCriterion::find_maximum()
             // sufficient_statistics_stored_ has two extra columns over
             // ..._current and ..._committed.
 
-            assert( sufficient_statistics[i].size() >= 2 );
+            assert_true( sufficient_statistics[i].size() >= 2 );
 
             const Float num_samples_smaller =
                 sufficient_statistics[i][sufficient_statistics[i].size() - 2];
@@ -163,9 +163,9 @@ Int RSquaredCriterion::find_maximum()
             const Float num_samples_greater =
                 sufficient_statistics[i][sufficient_statistics[i].size() - 1];
 
-            assert( hyperparameters_ );
+            assert_true( hyperparameters_ );
 
-            assert( hyperparameters_->tree_hyperparameters_ );
+            assert_true( hyperparameters_->tree_hyperparameters_ );
 
             const auto min_num_samples = static_cast<Float>(
                 hyperparameters_->tree_hyperparameters_->min_num_samples_ );
@@ -191,7 +191,7 @@ Int RSquaredCriterion::find_maximum()
 
     debug_log( "Done finding maximum..." );
 
-    assert( sample_weights_.size() == y_centered_[0].size() );
+    assert_true( sample_weights_.size() == y_centered_[0].size() );
 
     return max_ix;
 }
@@ -203,7 +203,7 @@ void RSquaredCriterion::init(
 {
     // ---------------------------------------------------------------------
 
-    assert( _sample_weights.size() > 0 );
+    assert_true( _sample_weights.size() > 0 );
 
     debug_log( "Optimization init " );
 
@@ -252,13 +252,13 @@ void RSquaredCriterion::init(
 
     for ( size_t j = 0; j < y_.size(); ++j )
         {
-            assert( sample_weights_.size() == y_[j].size() );
+            assert_true( sample_weights_.size() == y_[j].size() );
 
             for ( size_t i = 0; i < y_[j].size(); ++i )
                 {
-                    assert(
+                    assert_true(
                         !std::isnan( y_[j][i] ) && !std::isinf( y_[j][i] ) );
-                    assert(
+                    assert_true(
                         !std::isnan( sample_weights_[i] ) &&
                         !std::isinf( sample_weights_[i] ) );
 
@@ -278,12 +278,12 @@ void RSquaredCriterion::init(
 
     for ( size_t j = 0; j < y_.size(); ++j )
         {
-            assert( y_centered_[j].size() == y_[j].size() );
+            assert_true( y_centered_[j].size() == y_[j].size() );
 
             for ( size_t i = 0; i < y_[j].size(); ++i )
                 {
-                    assert( !std::isnan( y_[j][i] ) );
-                    assert( !std::isnan( y_mean[j] ) );
+                    assert_true( !std::isnan( y_[j][i] ) );
+                    assert_true( !std::isnan( y_mean[j] ) );
 
                     y_centered_[j][i] = y_[j][i] - y_mean[j];
                 }
@@ -292,24 +292,24 @@ void RSquaredCriterion::init(
     // ---------------------------------------------------------------------
     // Calculate sum_y_centered_y_centered_
 
-    assert( sum_y_centered_y_centered_.size() == y_.size() );
+    assert_true( sum_y_centered_y_centered_.size() == y_.size() );
 
     for ( size_t j = 0; j < y_.size(); ++j )
         {
-            assert( y_centered_[j].size() == y_[j].size() );
-            assert( y_centered_[j].size() == sample_weights_.size() );
+            assert_true( y_centered_[j].size() == y_[j].size() );
+            assert_true( y_centered_[j].size() == sample_weights_.size() );
 
             for ( size_t i = 0; i < y_[j].size(); ++i )
                 {
-                    assert( !std::isnan( y_centered_[j][i] ) );
-                    assert( !std::isnan( sample_weights_[i] ) );
+                    assert_true( !std::isnan( y_centered_[j][i] ) );
+                    assert_true( !std::isnan( sample_weights_[i] ) );
 
                     sum_y_centered_y_centered_[j] += y_centered_[j][i] *
                                                      y_centered_[j][i] *
                                                      sample_weights_[i];
                 }
 
-            assert( !std::isnan( sum_y_centered_y_centered_[j] ) );
+            assert_true( !std::isnan( sum_y_centered_y_centered_[j] ) );
         }
 
     utils::Reducer::reduce(
@@ -317,7 +317,7 @@ void RSquaredCriterion::init(
 
     for ( size_t j = 0; j < sum_y_centered_y_centered_.size(); ++j )
         {
-            assert( !std::isnan( sum_y_centered_y_centered_[j] ) );
+            assert_true( !std::isnan( sum_y_centered_y_centered_[j] ) );
         }
 
     debug_log(
@@ -327,7 +327,7 @@ void RSquaredCriterion::init(
 
     debug_log( "Optimization done." );
 
-    assert( sample_weights_.size() == y_centered_[0].size() );
+    assert_true( sample_weights_.size() == y_centered_[0].size() );
 
     // ---------------------------------------------------------------------
 }
@@ -340,7 +340,7 @@ void RSquaredCriterion::init_yhat(
 {
     // ---------------------------------------------------------------------
 
-    assert( sample_weights_.size() == y_centered_[0].size() );
+    assert_true( sample_weights_.size() == y_centered_[0].size() );
 
     // ---------------------------------------------------------------------
 
@@ -374,7 +374,7 @@ void RSquaredCriterion::init_yhat(
 
     *sum_yhat_yhat_current_ = 0.0;
 
-    assert( _yhat.size() == sample_weights_.size() );
+    assert_true( _yhat.size() == sample_weights_.size() );
 
     for ( size_t i = 0; i < _yhat.size(); ++i )
         {
@@ -386,7 +386,7 @@ void RSquaredCriterion::init_yhat(
     // ---------------------------------------------------------------------
     // Calculate sum_y_centered_yhat_current_
 
-    assert( y_.size() == y_centered_.size() );
+    assert_true( y_.size() == y_centered_.size() );
 
     std::fill(
         sum_y_centered_yhat_current_,
@@ -395,7 +395,7 @@ void RSquaredCriterion::init_yhat(
 
     for ( size_t j = 0; j < y_.size(); ++j )
         {
-            assert( _yhat.size() == y_centered_[j].size() );
+            assert_true( _yhat.size() == y_centered_[j].size() );
 
             for ( size_t i = 0; i < _yhat.size(); ++i )
                 {
@@ -433,7 +433,7 @@ void RSquaredCriterion::update_samples(
 
             for ( size_t j = 0; j < y_.size(); ++j )
                 {
-                    assert( ix < y_centered_[j].size() );
+                    assert_true( ix < y_centered_[j].size() );
 
                     sum_y_centered_yhat_current_[j] +=
                         y_centered_[j][ix] * ( new_value - old_value ) *
@@ -441,7 +441,7 @@ void RSquaredCriterion::update_samples(
                 }
         }
 
-    assert( sample_weights_.size() == y_centered_[0].size() );
+    assert_true( sample_weights_.size() == y_centered_[0].size() );
 }
 
 // ----------------------------------------------------------------------------

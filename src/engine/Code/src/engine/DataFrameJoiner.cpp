@@ -501,7 +501,7 @@ DataFrameJoiner::make_row_indices(
 
     for ( size_t& ix1 = *_begin; ix1 < _df1.nrows(); ++ix1 )
         {
-            assert( rindices1.size() == rindices2.size() );
+            assert_true( rindices1.size() == rindices2.size() );
 
             if ( rindices1.size() >= batch_size )
                 {

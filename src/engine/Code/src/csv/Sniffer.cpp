@@ -134,7 +134,7 @@ std::string Sniffer::make_statement_postgres(
     const std::vector<std::string>& _colnames,
     const std::vector<Datatype>& _datatypes ) const
 {
-    assert( _colnames.size() == _datatypes.size() );
+    assert_true( _colnames.size() == _datatypes.size() );
 
     const auto max_size = find_max_size( _colnames );
 
@@ -170,7 +170,7 @@ std::string Sniffer::make_statement_sqlite(
     const std::vector<std::string>& _colnames,
     const std::vector<Datatype>& _datatypes ) const
 {
-    assert( _colnames.size() == _datatypes.size() );
+    assert_true( _colnames.size() == _datatypes.size() );
 
     const auto max_size = find_max_size( _colnames );
 
@@ -258,9 +258,9 @@ std::string Sniffer::sniff() const
                     // --------------------------------------------------------
                     // Do the actual parsing.
 
-                    assert( datatypes.size() == line.size() );
+                    assert_true( datatypes.size() == line.size() );
 
-                    assert( datatypes.size() == colnames.size() );
+                    assert_true( datatypes.size() == colnames.size() );
 
                     for ( size_t i = 0; i < datatypes.size(); ++i )
                         {
@@ -298,7 +298,7 @@ std::string Sniffer::to_string_postgres( const Datatype _type ) const
                 return "TIMESTAMP";
 
             default:
-                assert( false );
+                assert_true( false );
                 return "";
         }
 }
@@ -322,7 +322,7 @@ std::string Sniffer::to_string_sqlite( const Datatype _type ) const
                 return "TEXT";  // sqlite has no time stamp type.
 
             default:
-                assert( false );
+                assert_true( false );
                 return "";
         }
 }

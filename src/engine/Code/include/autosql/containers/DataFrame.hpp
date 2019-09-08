@@ -56,70 +56,70 @@ class DataFrame
     /// Getter for a categorical value.
     Int categorical( size_t _i, size_t _j ) const
     {
-        assert( _j < categoricals_.size() );
+        assert_true( _j < categoricals_.size() );
         return categoricals_[_j][_i];
     }
 
     /// Getter for a categorical column.
     const Column<Int> categorical_col( size_t _j ) const
     {
-        assert( _j < categoricals_.size() );
+        assert_true( _j < categoricals_.size() );
         return categoricals_[_j];
     }
 
     /// Getter for a categorical name.
     const std::string& categorical_name( size_t _j ) const
     {
-        assert( _j < categoricals_.size() );
+        assert_true( _j < categoricals_.size() );
         return categoricals_[_j].name_;
     }
 
     /// Getter for a categorical name.
     const std::string& categorical_unit( size_t _j ) const
     {
-        assert( _j < categoricals_.size() );
+        assert_true( _j < categoricals_.size() );
         return categoricals_[_j].unit_;
     }
 
     /// Getter for a discrete value.
     Float discrete( size_t _i, size_t _j ) const
     {
-        assert( _j < discretes_.size() );
+        assert_true( _j < discretes_.size() );
         return discretes_[_j][_i];
     }
 
     /// Getter for a discrete column.
     const Column<Float> discrete_col( size_t _j ) const
     {
-        assert( _j < discretes_.size() );
+        assert_true( _j < discretes_.size() );
         return discretes_[_j];
     }
 
     /// Getter for a discrete name.
     const std::string& discrete_name( size_t _j ) const
     {
-        assert( _j < discretes_.size() );
+        assert_true( _j < discretes_.size() );
         return discretes_[_j].name_;
     }
 
     /// Getter for a discrete name.
     const std::string& discrete_unit( size_t _j ) const
     {
-        assert( _j < discretes_.size() );
+        assert_true( _j < discretes_.size() );
         return discretes_[_j].unit_;
     }
 
     /// Find the indices associated with this join key.
     Index::const_iterator find( const Int _join_key ) const
     {
-        assert( indices().size() == 1 );
+        assert_true( indices().size() == 1 );
         return indices_[0]->find( _join_key );
     }
 
     /// Whether a certain join key is included in the indices.
     bool has( const Int _join_key ) const
     {
-        assert( indices().size() == 1 );
+        assert_true( indices().size() == 1 );
         return indices_[0]->find( _join_key ) != indices_[0]->end();
     }
 
@@ -132,7 +132,7 @@ class DataFrame
     /// Getter for a join key.
     Int join_key( size_t _i ) const
     {
-        assert( join_keys_.size() == 1 );
+        assert_true( join_keys_.size() == 1 );
 
         return join_keys_[0][_i];
     }
@@ -146,7 +146,7 @@ class DataFrame
     /// Getter for the join key name.
     const std::string& join_keys_name() const
     {
-        assert( join_keys_.size() == 1 );
+        assert_true( join_keys_.size() == 1 );
 
         return join_keys_[0].name_;
     }
@@ -157,7 +157,7 @@ class DataFrame
     /// Trivial getter
     size_t nrows() const
     {
-        assert( join_keys_.size() > 0 );
+        assert_true( join_keys_.size() > 0 );
         return join_keys_[0].nrows_;
     }
 
@@ -182,64 +182,64 @@ class DataFrame
     /// Getter for a numerical value.
     Float numerical( size_t _i, size_t _j ) const
     {
-        assert( _j < numericals_.size() );
+        assert_true( _j < numericals_.size() );
         return numericals_[_j][_i];
     }
 
     /// Getter for a numerical column.
     const Column<Float> numerical_col( size_t _j ) const
     {
-        assert( _j < numericals_.size() );
+        assert_true( _j < numericals_.size() );
         return numericals_[_j];
     }
 
     /// Getter for a numerical name.
     const std::string& numerical_name( size_t _j ) const
     {
-        assert( _j < numericals_.size() );
+        assert_true( _j < numericals_.size() );
         return numericals_[_j].name_;
     }
 
     /// Getter for a numerical name.
     const std::string& numerical_unit( size_t _j ) const
     {
-        assert( _j < numericals_.size() );
+        assert_true( _j < numericals_.size() );
         return numericals_[_j].unit_;
     }
 
     /// Getter for a target value.
     Float target( size_t _i, size_t _j ) const
     {
-        assert( _j < targets_.size() );
+        assert_true( _j < targets_.size() );
         return targets_[_j][_i];
     }
 
     /// Getter for a target column.
     const Column<Float> target_col( size_t _j ) const
     {
-        assert( _j < targets_.size() );
+        assert_true( _j < targets_.size() );
         return targets_[_j];
     }
 
     /// Getter for a target name.
     const std::string& target_name( size_t _j ) const
     {
-        assert( _j < targets_.size() );
+        assert_true( _j < targets_.size() );
         return targets_[_j].name_;
     }
 
     /// Getter for a target name.
     const std::string& target_unit( size_t _j ) const
     {
-        assert( _j < targets_.size() );
+        assert_true( _j < targets_.size() );
         return targets_[_j].unit_;
     }
 
     /// Trivial getter
     Float time_stamp( size_t _i ) const
     {
-        assert( time_stamps_.size() == 1 || time_stamps_.size() == 2 );
-        assert( _i < time_stamps_[0].nrows_ );
+        assert_true( time_stamps_.size() == 1 || time_stamps_.size() == 2 );
+        assert_true( _i < time_stamps_[0].nrows_ );
 
         return time_stamps_[0][_i];
     }
@@ -247,14 +247,14 @@ class DataFrame
     /// Getter for the time stamps column.
     const Column<Float> time_stamp_col() const
     {
-        assert( time_stamps_.size() == 1 || time_stamps_.size() == 2 );
+        assert_true( time_stamps_.size() == 1 || time_stamps_.size() == 2 );
         return time_stamps_[0];
     }
 
     /// Getter for the time stamps name.
     const std::string& time_stamps_name() const
     {
-        assert( time_stamps_.size() == 1 || time_stamps_.size() == 2 );
+        assert_true( time_stamps_.size() == 1 || time_stamps_.size() == 2 );
 
         return time_stamps_[0].name_;
     }
@@ -275,14 +275,14 @@ class DataFrame
     /// Trivial getter
     Float upper_time_stamp( size_t _i ) const
     {
-        assert( time_stamps_.size() == 1 || time_stamps_.size() == 2 );
+        assert_true( time_stamps_.size() == 1 || time_stamps_.size() == 2 );
 
         if ( time_stamps_.size() == 1 )
             {
                 return NAN;
             }
 
-        assert( _i < time_stamps_[1].nrows_ );
+        assert_true( _i < time_stamps_[1].nrows_ );
 
         return time_stamps_[1][_i];
     }
@@ -290,7 +290,7 @@ class DataFrame
     /// Getter for the time stamps name.
     const std::string& upper_time_stamps_name() const
     {
-        assert( time_stamps_.size() == 2 );
+        assert_true( time_stamps_.size() == 2 );
 
         return time_stamps_[1].name_;
     }

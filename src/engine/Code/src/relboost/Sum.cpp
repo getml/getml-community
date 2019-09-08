@@ -15,7 +15,7 @@ void Sum::calc_all(
 {
     // ------------------------------------------------------------------------
 
-    assert( indices_.size() == 0 );
+    assert_true( indices_.size() == 0 );
 
     // ------------------------------------------------------------------------
     // All matches between _split_begin and _split_end are allocated to _eta1.
@@ -78,20 +78,20 @@ void Sum::calc_diff(
     const std::vector<const containers::Match*>::iterator _split_begin,
     const std::vector<const containers::Match*>::iterator _split_end )
 {
-    assert( _split_end >= _split_begin );
+    assert_true( _split_end >= _split_begin );
 
     // ------------------------------------------------------------------------
     // Incremental updates imply that we move samples from eta2_ to eta1_.
 
     for ( auto it = _split_begin; it != _split_end; ++it )
         {
-            assert( ( *it )->ix_output < eta1_.size() );
+            assert_true( ( *it )->ix_output < eta1_.size() );
 
             ++eta1_[( *it )->ix_output];
 
             --eta2_[( *it )->ix_output];
 
-            assert( eta2_[( *it )->ix_output] >= 0.0 );
+            assert_true( eta2_[( *it )->ix_output] >= 0.0 );
         }
 
     // ------------------------------------------------------------------------
@@ -135,7 +135,7 @@ std::vector<std::array<Float, 3>> Sum::calc_weights(
 {
     // -------------------------------------------------------------
 
-    assert( eta1_.size() == eta2_.size() );
+    assert_true( eta1_.size() == eta2_.size() );
 
     // -------------------------------------------------------------
 
@@ -163,7 +163,7 @@ std::vector<std::array<Float, 3>> Sum::calc_weights(
         }
     else
         {
-            assert( false && "Unknown Update!" );
+            assert_true( false && "Unknown Update!" );
         }
 
     // -------------------------------------------------------------
@@ -208,11 +208,11 @@ std::array<Float, 3> Sum::calc_weights(
             // -----------------------------------------------------------------
             // Figure out whether there are any matches in output table.
 
-            assert( _eta1.size() == _eta2.size() );
+            assert_true( _eta1.size() == _eta2.size() );
 
-            assert( output_indices_.size() > 0 );
-            assert( input_join_keys_.size() > 0 );
-            assert( input_join_keys_[0].nrows_ > ix_input );
+            assert_true( output_indices_.size() > 0 );
+            assert_true( input_join_keys_.size() > 0 );
+            assert_true( input_join_keys_[0].nrows_ > ix_input );
 
             auto it = output_indices_[0]->find( input_join_keys_[0][ix_input] );
 
@@ -226,8 +226,8 @@ std::array<Float, 3> Sum::calc_weights(
 
             for ( auto ix_output : it->second )
                 {
-                    assert( ix_input < _eta1.size() );
-                    assert( ix_output < eta1_.size() );
+                    assert_true( ix_input < _eta1.size() );
+                    assert_true( ix_output < eta1_.size() );
 
                     eta1_[ix_output] += _eta1[ix_input];
                     eta2_[ix_output] += _eta2[ix_input];
@@ -263,7 +263,7 @@ void Sum::commit(
     const std::vector<const containers::Match*>::iterator _split,
     const std::vector<const containers::Match*>::iterator _end )
 {
-    assert( eta1_.size() == eta2_.size() );
+    assert_true( eta1_.size() == eta2_.size() );
 
     // When we are committing, the weight1 and weight2 matches are clearly
     // partitioned, so _begin == _split_begin.

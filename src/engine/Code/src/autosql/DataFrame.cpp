@@ -24,38 +24,38 @@ DataFrame::DataFrame(
       targets_( _targets ),
       time_stamps_( _time_stamps )
 {
-    assert( _join_keys.size() > 0 );
-    assert( _time_stamps.size() > 0 );
-    assert( _indices.size() == _join_keys.size() );
+    assert_true( _join_keys.size() > 0 );
+    assert_true( _time_stamps.size() > 0 );
+    assert_true( _indices.size() == _join_keys.size() );
 
     for ( auto& col : _categoricals )
         {
-            assert( col.nrows_ == nrows() );
+            assert_true( col.nrows_ == nrows() );
         }
 
     for ( auto& col : _discretes )
         {
-            assert( col.nrows_ == nrows() );
+            assert_true( col.nrows_ == nrows() );
         }
 
     for ( auto& col : _join_keys )
         {
-            assert( col.nrows_ == nrows() );
+            assert_true( col.nrows_ == nrows() );
         }
 
     for ( auto& col : _numericals )
         {
-            assert( col.nrows_ == nrows() );
+            assert_true( col.nrows_ == nrows() );
         }
 
     for ( auto& col : _targets )
         {
-            assert( col.nrows_ == nrows() );
+            assert_true( col.nrows_ == nrows() );
         }
 
     for ( auto& col : _time_stamps )
         {
-            assert( col.nrows_ == nrows() );
+            assert_true( col.nrows_ == nrows() );
         }
 }
 

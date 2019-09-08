@@ -50,21 +50,21 @@ class RequestHandler : public Poco::Net::TCPServerConnection
     /// Trivial accessor
     handlers::AutoSQLModelManager& autosql_model_manager()
     {
-        assert( autosql_model_manager_ );
+        assert_true( autosql_model_manager_ );
         return *autosql_model_manager_;
     }
 
     /// Trivial accessor
     handlers::DatabaseManager& database_manager()
     {
-        assert( database_manager_ );
+        assert_true( database_manager_ );
         return *database_manager_;
     }
 
     /// Trivial accessor
     handlers::DataFrameManager& data_frame_manager()
     {
-        assert( data_frame_manager_ );
+        assert_true( data_frame_manager_ );
         return *data_frame_manager_;
     }
 
@@ -74,7 +74,7 @@ class RequestHandler : public Poco::Net::TCPServerConnection
     /// Trivial accessor
     handlers::RelboostModelManager& relboost_model_manager()
     {
-        assert( relboost_model_manager_ );
+        assert_true( relboost_model_manager_ );
         return *relboost_model_manager_;
     }
 
@@ -84,7 +84,7 @@ class RequestHandler : public Poco::Net::TCPServerConnection
     /// Trivial accessor
     handlers::ProjectManager& project_manager()
     {
-        assert( project_manager_ );
+        assert_true( project_manager_ );
         return *project_manager_;
     }
 

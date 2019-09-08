@@ -28,8 +28,8 @@ class BFGS : public Optimizer
     {
         // --------------------------------------------------------------------
 
-        assert( _gradients.size() == _weights->size() );
-        assert( _gradients.size() == size_ );
+        assert_true( _gradients.size() == _weights->size() );
+        assert_true( _gradients.size() == size_ );
 
         // --------------------------------------------------------------------
         // Copy the gradient.

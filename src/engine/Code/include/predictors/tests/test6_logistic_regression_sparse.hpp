@@ -85,7 +85,7 @@ void test6_logistic_regression_sparse()
         }
 
     std::cout << "Accuracy: " << accuracy << std::endl;
-    assert( accuracy > 0.99 );
+    assert_true( accuracy > 0.99 );
 
     std::cout << std::endl << std::endl;
 

@@ -103,9 +103,9 @@ class Encoding
 template <typename T>
 const std::string& Encoding::operator[]( const T _i ) const
 {
-    assert( size() > 0 );
+    assert_true( size() > 0 );
 
-    assert( _i < 0 || static_cast<size_t>( _i ) < size() );
+    assert_true( _i < 0 || static_cast<size_t>( _i ) < size() );
 
     if ( _i < 0 || static_cast<size_t>( _i ) >= size() )
         {

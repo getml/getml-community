@@ -7,6 +7,8 @@
 
 #include <Poco/JSON/Parser.h>
 
+#include "debug/debug.hpp"
+
 #include "autosql/JSON.hpp"
 #include "autosql/containers/containers.hpp"
 #include "autosql/descriptors/descriptors.hpp"

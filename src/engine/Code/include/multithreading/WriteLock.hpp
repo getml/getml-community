@@ -26,7 +26,7 @@ class WriteLock
     /// Lock the ReadWriteLock.
     void lock()
     {
-        assert( released_ );
+        assert_true( released_ );
         released_ = false;
         lock_->write_lock();
     }

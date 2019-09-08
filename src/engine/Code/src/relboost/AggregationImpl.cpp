@@ -8,13 +8,13 @@ namespace aggregations
 
 void AggregationImpl::commit( const std::array<Float, 3>& _weights )
 {
-    assert( eta1_.size() == eta2_.size() );
+    assert_true( eta1_.size() == eta2_.size() );
 
     child_->commit( eta1_, eta2_, indices_.unique_integers(), _weights );
 
     for ( auto ix : indices_ )
         {
-            assert( ix < eta1_.size() );
+            assert_true( ix < eta1_.size() );
             eta1_[ix] = 0.0;
             eta2_[ix] = 0.0;
         }
@@ -35,7 +35,7 @@ bool AggregationImpl::is_balanced(
 
     auto global_num_samples_2 = _num_samples_2;
 
-    assert( _comm != nullptr );
+    assert_true( _comm != nullptr );
 
     utils::Reducer::reduce<Float>(
         std::plus<Float>(), &global_num_samples_1, _comm );
@@ -78,11 +78,11 @@ void AggregationImpl::resize( size_t _size )
 
 void AggregationImpl::revert_to_commit()
 {
-    assert( eta1_.size() == eta2_.size() );
+    assert_true( eta1_.size() == eta2_.size() );
 
     for ( auto ix : indices_ )
         {
-            assert( ix < eta1_.size() );
+            assert_true( ix < eta1_.size() );
             eta1_[ix] = 0.0;
             eta2_[ix] = 0.0;
         }

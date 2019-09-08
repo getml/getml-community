@@ -56,14 +56,14 @@ class CSRMatrix
     /// Trivial (const) accessor.
     const size_t nrows() const
     {
-        assert( indptr_.size() != 0 );
+        assert_true( indptr_.size() != 0 );
         return indptr_.size() - 1;
     }
 
     /// Number of non-zero entries.
     const size_t size() const
     {
-        assert( data_.size() == indices_.size() );
+        assert_true( data_.size() == indices_.size() );
         return data_.size();
     }
 
@@ -99,7 +99,7 @@ template <typename DataType, typename IndicesType, typename IndptrType>
 CSRMatrix<DataType, IndicesType, IndptrType>::CSRMatrix(
     const CFloatColumn& _col )
 {
-    assert( _col );
+    assert_true( _col );
 
     data_ = std::vector<DataType>( _col->size() );
 
@@ -126,7 +126,7 @@ template <typename DataType, typename IndicesType, typename IndptrType>
 CSRMatrix<DataType, IndicesType, IndptrType>::CSRMatrix(
     const CIntColumn& _col, const size_t _n_unique )
 {
-    assert( _col );
+    assert_true( _col );
 
     indptr_ = std::vector<IndptrType>( _col->size() + 1 );
 
@@ -158,7 +158,7 @@ void CSRMatrix<DataType, IndicesType, IndptrType>::add(
 {
     // -------------------------------------------------------------------------
 
-    assert( _col );
+    assert_true( _col );
 
     // -------------------------------------------------------------------------
     // If the CSRMatrix is empty, simply construct it from the column.
@@ -169,7 +169,7 @@ void CSRMatrix<DataType, IndicesType, IndptrType>::add(
             return;
         }
 
-    assert( _col->size() == nrows() );
+    assert_true( _col->size() == nrows() );
 
     // -------------------------------------------------------------------------
     // Adapt data_.
@@ -232,7 +232,7 @@ void CSRMatrix<DataType, IndicesType, IndptrType>::add(
 {
     // -------------------------------------------------------------------------
 
-    assert( _col );
+    assert_true( _col );
 
     // -------------------------------------------------------------------------
     // If the CSRMatrix is empty, simply construct it from the column.
@@ -243,7 +243,7 @@ void CSRMatrix<DataType, IndicesType, IndptrType>::add(
             return;
         }
 
-    assert( _col->size() == nrows() );
+    assert_true( _col->size() == nrows() );
 
     // -------------------------------------------------------------------------
     // Count the number of non-negative entries in _col.
@@ -286,7 +286,7 @@ void CSRMatrix<DataType, IndicesType, IndptrType>::add(
                 }
         }
 
-    assert( num_added == num_non_negative );
+    assert_true( num_added == num_non_negative );
 
     data_ = std::move( data_temp );
 
@@ -307,7 +307,7 @@ void CSRMatrix<DataType, IndicesType, IndptrType>::add(
             indptr_[i + 1] += num_added;
         }
 
-    assert( num_added == num_non_negative );
+    assert_true( num_added == num_non_negative );
 
     // -------------------------------------------------------------------------
     // Finally, we must adapt ncols_.
