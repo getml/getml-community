@@ -14,6 +14,7 @@ void test9()
         100,
         '\"',
         ',',
+        0,
         "POPULATION",
         {"%Y-%b-%d %H:%M:%S"} );
 
@@ -26,7 +27,7 @@ void test9()
     auto reader = csv::Reader( "POPULATION.CSV", '\"', ',' );
 
     // We read in the header, which should be parsed as NULL values.
-    postgres_db.read_csv( "POPULATION", false, &reader );
+    postgres_db.read_csv( "POPULATION", false, 0, &reader );
 
     auto it = postgres_db.select(
         {"column_01", "join_key", "time_stamp", "targets"}, "POPULATION", "" );

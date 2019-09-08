@@ -145,6 +145,8 @@ void DatabaseManager::read_csv(
 
     const auto sep = JSON::get_value<std::string>( _cmd, "sep_" );
 
+    const auto skip = JSON::get_value<size_t>( _cmd, "skip_" );
+
     // --------------------------------------------------------------------
 
     if ( quotechar.size() != 1 )
@@ -165,7 +167,7 @@ void DatabaseManager::read_csv(
         {
             auto reader = csv::Reader( fname, quotechar[0], sep[0] );
 
-            connector()->read_csv( _name, header, &reader );
+            connector()->read_csv( _name, header, skip, &reader );
 
             logger().log( "Read '" + fname + "'." );
         }
@@ -198,6 +200,8 @@ void DatabaseManager::sniff_csv(
 
     const auto sep = JSON::get_value<std::string>( _cmd, "sep_" );
 
+    const auto skip = JSON::get_value<size_t>( _cmd, "skip_" );
+
     const auto time_formats = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "time_formats_" ) );
 
@@ -224,6 +228,7 @@ void DatabaseManager::sniff_csv(
         num_lines_sniffed,
         quotechar[0],
         sep[0],
+        skip,
         _name,
         time_formats );
 

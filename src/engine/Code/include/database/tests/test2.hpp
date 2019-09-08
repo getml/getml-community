@@ -14,6 +14,7 @@ void test2()
         100,
         '\"',
         ',',
+        0,
         "POPULATION",
         {"%Y-%b-%d %H:%M:%S"} );
 
@@ -25,7 +26,7 @@ void test2()
 
     auto reader = csv::Reader( "POPULATION.CSV", '\"', ',' );
 
-    sqlite_db.read_csv( "POPULATION", false, &reader );
+    sqlite_db.read_csv( "POPULATION", false, 0, &reader );
 
     auto it = sqlite_db.select(
         {"column_01", "join_key", "time_stamp", "targets"}, "POPULATION", "" );

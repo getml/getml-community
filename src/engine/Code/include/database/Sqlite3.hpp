@@ -40,6 +40,7 @@ class Sqlite3 : public Connector
     void read_csv(
         const std::string& _table,
         const bool _header,
+        const size_t _skip,
         csv::Reader* _reader ) final;
 
     /// Returns the names of the table columns.

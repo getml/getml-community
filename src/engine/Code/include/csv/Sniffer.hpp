@@ -17,6 +17,7 @@ class Sniffer
         const size_t _num_lines_sniffed,
         const char _quotechar,
         const char _sep,
+        const size_t _skip,
         const std::string& _table_name,
         const std::vector<std::string>& _time_formats )
         : dialect_( _dialect ),
@@ -25,6 +26,7 @@ class Sniffer
           num_lines_sniffed_( _num_lines_sniffed ),
           quotechar_( _quotechar ),
           sep_( _sep ),
+          skip_( _skip ),
           table_name_( _table_name ),
           time_formats_( _time_formats )
     {
@@ -139,6 +141,9 @@ class Sniffer
 
     /// The character used for separating fields.
     const char sep_;
+
+    /// The number of lines skipped in each file.
+    const size_t skip_;
 
     /// The name of the table to be produced.
     const std::string table_name_;

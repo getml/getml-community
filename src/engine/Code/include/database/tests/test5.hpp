@@ -17,6 +17,7 @@ void test5()
                 100,
                 '\"',
                 ',',
+                0,
                 "POPULATION",
                 {} );
 

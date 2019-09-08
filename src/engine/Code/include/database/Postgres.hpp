@@ -52,6 +52,7 @@ class Postgres : public Connector
     void read_csv(
         const std::string& _table,
         const bool _header,
+        const size_t _skip,
         csv::Reader* _reader ) final;
 
     /// Returns a shared_ptr containing a Sqlite3Iterator where

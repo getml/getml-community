@@ -10,16 +10,16 @@ void Sniffer::check(
     const std::vector<std::string>& _colnames,
     const std::string& _fname ) const
 {
+    if ( _line.size() != _colnames.size() )
+        {
+            throw std::invalid_argument(
+                "Wrong number of columns in '" + _fname + "'. Expected " +
+                std::to_string( _colnames.size() ) + ", saw " +
+                std::to_string( _line.size() ) + "." );
+        }
+
     if ( header_ )
         {
-            if ( _line.size() != _colnames.size() )
-                {
-                    throw std::invalid_argument(
-                        "Wrong number of columns in '" + _fname +
-                        "'. Expected " + std::to_string( _colnames.size() ) +
-                        ", saw " + std::to_string( _line.size() ) + "." );
-                }
-
             for ( size_t i = 0; i < _line.size(); ++i )
                 {
                     if ( _line[i] != _colnames[i] )
@@ -230,7 +230,9 @@ std::string Sniffer::sniff() const
                     // --------------------------------------------------------
                     // Check the line size.
 
-                    if ( line_count++ == 0 )
+                    ++line_count;
+
+                    if ( line_count - 1 == skip_ )
                         {
                             if ( colnames.size() == 0 )
                                 init( line, &colnames, &datatypes );
@@ -238,6 +240,10 @@ std::string Sniffer::sniff() const
                                 check( line, colnames, fname );
 
                             if ( header_ ) continue;
+                        }
+                    else if ( line_count - 1 < skip_ )
+                        {
+                            continue;
                         }
                     else if ( line.size() != datatypes.size() )
                         {
@@ -253,6 +259,8 @@ std::string Sniffer::sniff() const
                     // Do the actual parsing.
 
                     assert( datatypes.size() == line.size() );
+
+                    assert( datatypes.size() == colnames.size() );
 
                     for ( size_t i = 0; i < datatypes.size(); ++i )
                         {

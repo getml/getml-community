@@ -16,6 +16,7 @@ void test11()
         100,
         '\"',
         ',',
+        0,
         "POPULATION",
         {} );
 
@@ -27,7 +28,7 @@ void test11()
 
     auto reader = csv::Reader( "POPULATION2.CSV", '\"', ',' );
 
-    postgres_db.read_csv( "POPULATION", true, &reader );
+    postgres_db.read_csv( "POPULATION", true, 0, &reader );
 
     auto it = postgres_db.select(
         {"column_01", "join_key", "time_stamp", "targets"}, "POPULATION", "" );

@@ -16,6 +16,7 @@ void test13()
         100,
         '\"',
         ',',
+        0,
         "POPULATION",
         {"%Y-%b-%d %H:%M:%S"} );
 
@@ -27,7 +28,7 @@ void test13()
 
     auto reader = csv::Reader( "POPULATION.CSV", '\"', ',' );
 
-    postgres_db.read_csv( "POPULATION", true, &reader );
+    postgres_db.read_csv( "POPULATION", true, 0, &reader );
 
     const auto colnames = postgres_db.get_colnames( "POPULATION" );
 

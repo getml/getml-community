@@ -465,7 +465,10 @@ Sqlite3::make_insert_statement(
 // ----------------------------------------------------------------------------
 
 void Sqlite3::read_csv(
-    const std::string& _table, const bool _header, csv::Reader* _reader )
+    const std::string& _table,
+    const bool _header,
+    const size_t _skip,
+    csv::Reader* _reader )
 {
     // ------------------------------------------------------------------------
     // Get colnames and coltypes
@@ -487,9 +490,18 @@ void Sqlite3::read_csv(
     const auto stmt = make_insert_statement( _table, colnames );
 
     // ------------------------------------------------------------------------
-    // Check headers, if necessary.
+    // Skip lines, if necessary.
 
     size_t line_count = 0;
+
+    for ( size_t i = 0; i < _skip; ++i )
+        {
+            _reader->next_line();
+            ++line_count;
+        }
+
+    // ------------------------------------------------------------------------
+    // Check headers, if necessary.
 
     if ( _header )
         {

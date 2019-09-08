@@ -48,6 +48,7 @@ class Connector
     virtual void read_csv(
         const std::string& _table,
         const bool _header,
+        const size_t _skip,
         csv::Reader* _reader ) = 0;
 
     /// Returns a shared_ptr containing the corresponding iterator.

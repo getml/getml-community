@@ -14,6 +14,7 @@ void test6()
         100,
         '\"',
         ',',
+        0,
         "POPULATION",
         {"%Y-%b-%d %H:%M:%S"} );
 
@@ -25,7 +26,7 @@ void test6()
 
     auto reader = csv::Reader( "POPULATION.CSV", '\"', ',' );
 
-    sqlite_db.read_csv( "POPULATION", true, &reader );
+    sqlite_db.read_csv( "POPULATION", true, 0, &reader );
 
     sqlite_db.drop_table( "POPULATION" );
 
