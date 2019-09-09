@@ -123,6 +123,9 @@ void TreeFitter::fit_tree(
 
     const auto ix_perip_used = _tree->column_to_be_aggregated().ix_perip_used;
 
+    assert_true(
+        ix_perip_used < static_cast<Int>( _sample_containers->size() ) );
+
     auto &matches = ( *_samples )[ix_perip_used];
 
     auto &match_ptrs = ( *_sample_containers )[ix_perip_used];
@@ -132,8 +135,6 @@ void TreeFitter::fit_tree(
     debug_log( "match_ptrs.size(): " + std::to_string( match_ptrs.size() ) );
 
     assert_true( matches.size() == match_ptrs.size() );
-
-    assert_true( ix_perip_used < static_cast<Int>( _sample_containers->size() ) );
 
     auto null_values_dist = std::distance( matches.begin(), matches.begin() );
 
@@ -190,7 +191,7 @@ void TreeFitter::fit_tree(
         _population,
         _peripheral,
         _subfeatures,
-        match_ptrs.begin(),
+        match_ptrs.begin() + null_values_dist,
         match_ptrs.end(),
         _optimization_criterion );
 
@@ -213,7 +214,8 @@ void TreeFitter::probe(
             const auto ix = tree.ix_perip_used();
 
             assert_true( ix < _table_holder.main_tables_.size() );
-            assert_true( _subfeatures.size() == _table_holder.main_tables_.size() );
+            assert_true(
+                _subfeatures.size() == _table_holder.main_tables_.size() );
             assert_true(
                 _subfeatures.size() ==
                 _table_holder.peripheral_tables_.size() );

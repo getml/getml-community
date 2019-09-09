@@ -1772,7 +1772,8 @@ void Aggregation<AggType, data_used_, is_population_>::
         {
             for ( auto cat = _categories_begin; cat < _categories_end; ++cat )
                 {
-                    assert_true( cat == _categories_begin || *cat > *( cat - 1 ) );
+                    assert_true(
+                        cat == _categories_begin || *cat > *( cat - 1 ) );
 
                     if ( ( *it )->categorical_value == *cat )
                         {
@@ -2210,7 +2211,8 @@ void Aggregation<AggType, data_used_, is_population_>::
 
             for ( auto cat = _categories_begin; cat < _categories_end; ++cat )
                 {
-                    assert_true( cat == _categories_begin || *cat > *( cat - 1 ) );
+                    assert_true(
+                        cat == _categories_begin || *cat > *( cat - 1 ) );
 
                     if ( ( *it )->categorical_value == *cat )
                         {
@@ -2425,7 +2427,8 @@ void Aggregation<AggType, data_used_, is_population_>::
         {
             for ( auto cat = _categories_begin; cat < _categories_end; ++cat )
                 {
-                    assert_true( cat == _categories_begin || *cat > *( cat - 1 ) );
+                    assert_true(
+                        cat == _categories_begin || *cat > *( cat - 1 ) );
 
                     if ( ( *it )->categorical_value == *cat )
                         {
@@ -2867,7 +2870,8 @@ void Aggregation<AggType, data_used_, is_population_>::
 
             for ( auto cat = _categories_begin; cat < _categories_end; ++cat )
                 {
-                    assert_true( cat == _categories_begin || *cat > *( cat - 1 ) );
+                    assert_true(
+                        cat == _categories_begin || *cat > *( cat - 1 ) );
 
                     if ( ( *it )->categorical_value == *cat )
                         {
@@ -3208,7 +3212,7 @@ Aggregation<AggType, data_used_, is_population_>::separate_null_values(
 {
     auto is_null = [this]( containers::Match &sample ) {
         Float val = value_to_be_aggregated( &sample );
-        return std::isnan( val );
+        return ( std::isnan( val ) || std::isinf( val ) );
     };
 
     if ( std::is_partitioned( _matches->begin(), _matches->end(), is_null ) )
@@ -3232,7 +3236,7 @@ Aggregation<AggType, data_used_, is_population_>::separate_null_values(
 {
     auto is_null = [this]( containers::Match *sample ) {
         Float val = value_to_be_aggregated( sample );
-        return std::isnan( val );
+        return ( std::isnan( val ) || std::isinf( val ) );
     };
 
     if ( std::is_partitioned(

@@ -909,11 +909,15 @@ containers::MatchPtrs::iterator DecisionTreeNode::separate_null_values(
     bool _null_values_to_beginning ) const
 {
     auto is_null = []( containers::Match *sample ) {
-        return sample->numerical_value != sample->numerical_value;
+        return (
+            std::isnan( sample->numerical_value ) ||
+            std::isinf( sample->numerical_value ) );
     };
 
     auto is_not_null = []( containers::Match *sample ) {
-        return sample->numerical_value == sample->numerical_value;
+        return (
+            !std::isnan( sample->numerical_value ) &&
+            !std::isinf( sample->numerical_value ) );
     };
 
     if ( _null_values_to_beginning )
