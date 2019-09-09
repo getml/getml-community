@@ -41,7 +41,7 @@ class DecisionTreeNode
         Float* _intercept );
 
     /// Expresses the DecisionTreeNode as a Poco::JSON::Object.
-    Poco::JSON::Object to_json_obj() const;
+    Poco::JSON::Object::Ptr to_json_obj() const;
 
     /// Expresses the DecisionTreeNode as SQL code.
     void to_sql(

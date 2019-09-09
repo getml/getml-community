@@ -97,25 +97,25 @@ void DecisionTree::fit(
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object DecisionTree::to_json_obj() const
+Poco::JSON::Object::Ptr DecisionTree::to_json_obj() const
 {
-    Poco::JSON::Object obj;
+    Poco::JSON::Object::Ptr obj( new Poco::JSON::Object );
 
     assert_true( root_ );
 
-    obj.set( "input_", input().to_json_obj() );
+    obj->set( "input_", input().to_json_obj() );
 
-    obj.set( "intercept_", intercept_ );
+    obj->set( "intercept_", intercept_ );
 
-    obj.set( "loss_", loss_function().type() );
+    obj->set( "loss_", loss_function().type() );
 
-    obj.set( "output_", output().to_json_obj() );
+    obj->set( "output_", output().to_json_obj() );
 
-    obj.set( "peripheral_used_", peripheral_used_ );
+    obj->set( "peripheral_used_", peripheral_used_ );
 
-    obj.set( "root_", root_->to_json_obj() );
+    obj->set( "root_", root_->to_json_obj() );
 
-    obj.set( "update_rate_", update_rate_ );
+    obj->set( "update_rate_", update_rate_ );
 
     return obj;
 }

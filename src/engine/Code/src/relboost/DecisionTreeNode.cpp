@@ -395,38 +395,38 @@ std::vector<const containers::Match*>::iterator DecisionTreeNode::partition(
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object DecisionTreeNode::to_json_obj() const
+Poco::JSON::Object::Ptr DecisionTreeNode::to_json_obj() const
 {
-    Poco::JSON::Object obj;
+    Poco::JSON::Object::Ptr obj( new Poco::JSON::Object() );
 
-    obj.set( "input_", input().to_json_obj() );
+    obj->set( "input_", input().to_json_obj() );
 
-    obj.set( "output_", output().to_json_obj() );
+    obj->set( "output_", output().to_json_obj() );
 
     if ( !std::isnan( weight_ ) )
         {
-            obj.set( "weight_", weight_ );
+            obj->set( "weight_", weight_ );
         }
 
     if ( child_greater_ )
         {
             assert_true( child_smaller_ );
 
-            obj.set( "column_", split_.column_ );
+            obj->set( "column_", split_.column_ );
 
-            obj.set( "column_input_", split_.column_input_ );
+            obj->set( "column_input_", split_.column_input_ );
 
-            obj.set(
+            obj->set(
                 "categories_used_",
-                JSON::vector_to_array( *split_.categories_used_ ) );
+                JSON::vector_to_array_ptr( *split_.categories_used_ ) );
 
-            obj.set( "critical_value_", split_.critical_value_ );
+            obj->set( "critical_value_", split_.critical_value_ );
 
-            obj.set( "data_used_", JSON::stringify( split_.data_used_ ) );
+            obj->set( "data_used_", JSON::stringify( split_.data_used_ ) );
 
-            obj.set( "child_greater_", child_greater_->to_json_obj() );
+            obj->set( "child_greater_", child_greater_->to_json_obj() );
 
-            obj.set( "child_smaller_", child_smaller_->to_json_obj() );
+            obj->set( "child_smaller_", child_smaller_->to_json_obj() );
         }
 
     return obj;

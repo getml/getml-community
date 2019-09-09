@@ -80,7 +80,8 @@ XGBoostPredictor::convert_to_dmatrix_dense(
             delete d_matrix;
 
             throw std::runtime_error(
-                "Creating XGBoost DMatrix from Matrix failed!" );
+                "Creating XGBoost DMatrix from Matrix failed! Do your "
+                "features contain NAN or infinite values?" );
         }
 
     return std::unique_ptr<DMatrixHandle, XGBoostPredictor::DMatrixDestructor>(
@@ -119,7 +120,8 @@ XGBoostPredictor::convert_to_dmatrix_sparse(
             delete d_matrix;
 
             throw std::runtime_error(
-                "Creating XGBoost DMatrix from CSRMatrix failed!" );
+                "Creating XGBoost DMatrix from CSRMatrix failed! Do your "
+                "features contain NAN or infinite values?" );
         }
 
     return std::unique_ptr<DMatrixHandle, XGBoostPredictor::DMatrixDestructor>(
@@ -292,10 +294,10 @@ std::string XGBoostPredictor::fit(
     // Strangely enough, its exactly the other way around for windows.
 #if ( defined( _WIN32 ) || defined( _WIN64 ) )
     if ( hyperparams_.objective_ == "reg:squarederror" )
-    {
-        XGBoosterSetParam( *handle, "objective", "reg:linear" );
-    }
-# else
+        {
+            XGBoosterSetParam( *handle, "objective", "reg:linear" );
+        }
+#else
     if ( hyperparams_.objective_ == "reg:linear" )
         {
             XGBoosterSetParam( *handle, "objective", "reg:squarederror" );

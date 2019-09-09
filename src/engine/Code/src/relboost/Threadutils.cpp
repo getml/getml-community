@@ -55,8 +55,6 @@ void Threadutils::fit_ensemble(
                                 "." );
                         }
                 }
-
-            _ensemble->clean_up();
         }
     catch ( std::exception& e )
         {

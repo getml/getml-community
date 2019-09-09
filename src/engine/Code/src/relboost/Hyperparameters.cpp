@@ -77,53 +77,53 @@ size_t Hyperparameters::num_selected_features() const
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object Hyperparameters::to_json_obj() const
+Poco::JSON::Object::Ptr Hyperparameters::to_json_obj() const
 {
     // ---------------------------------------------------------
 
-    Poco::JSON::Object obj;
+    Poco::JSON::Object::Ptr obj( new Poco::JSON::Object() );
 
     // ---------------------------------------------------------
 
-    obj.set( "eta_", eta_ );
+    obj->set( "eta_", eta_ );
 
     if ( feature_selector_ )
         {
-            obj.set( "feature_selector_", *feature_selector_ );
+            obj->set( "feature_selector_", feature_selector_ );
         }
 
-    obj.set( "gamma_", gamma_ );
+    obj->set( "gamma_", gamma_ );
 
-    obj.set( "include_categorical_", include_categorical_ );
+    obj->set( "include_categorical_", include_categorical_ );
 
-    obj.set( "loss_function_", loss_function_ );
+    obj->set( "loss_function_", loss_function_ );
 
-    obj.set( "max_depth_", max_depth_ );
+    obj->set( "max_depth_", max_depth_ );
 
-    obj.set( "min_num_samples_", min_num_samples_ );
+    obj->set( "min_num_samples_", min_num_samples_ );
 
-    obj.set( "num_features_", num_features_ );
+    obj->set( "num_features_", num_features_ );
 
-    obj.set( "num_threads_", num_threads_ );
+    obj->set( "num_threads_", num_threads_ );
 
     if ( predictor_ )
         {
-            obj.set( "predictor_", *predictor_ );
+            obj->set( "predictor_", predictor_ );
         }
 
-    obj.set( "reg_lambda_", reg_lambda_ );
+    obj->set( "reg_lambda_", reg_lambda_ );
 
-    obj.set( "sampling_factor_", sampling_factor_ );
+    obj->set( "sampling_factor_", sampling_factor_ );
 
-    obj.set( "seed_", seed_ );
+    obj->set( "seed_", seed_ );
 
-    obj.set( "session_name_", session_name_ );
+    obj->set( "session_name_", session_name_ );
 
-    obj.set( "share_selected_features_", share_selected_features_ );
+    obj->set( "share_selected_features_", share_selected_features_ );
 
-    obj.set( "silent_", silent_ );
+    obj->set( "silent_", silent_ );
 
-    obj.set( "use_timestamps_", use_timestamps_ );
+    obj->set( "use_timestamps_", use_timestamps_ );
 
     // ---------------------------------------------------------
 

@@ -20,6 +20,7 @@ class LinearRegression : public Predictor
 
     // -------------------------------------------------------------------------
 
+   public:
     /// Returns an importance measure for the individual features.
     std::vector<Float> feature_importances(
         const size_t _num_features ) const final;
@@ -41,6 +42,12 @@ class LinearRegression : public Predictor
 
     /// Stores the predictor
     void save( const std::string& _fname ) const final;
+
+    // -------------------------------------------------------------------------
+
+   public:
+    /// Whether the predictor accepts null values.
+    bool accepts_null() const { return false; }
 
     // -------------------------------------------------------------------------
 

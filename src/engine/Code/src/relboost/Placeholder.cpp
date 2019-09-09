@@ -52,14 +52,14 @@ void Placeholder::check_vector_length()
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Array Placeholder::joined_tables_to_array(
+Poco::JSON::Array::Ptr Placeholder::joined_tables_to_array(
     const std::vector<Placeholder>& _vector )
 {
-    Poco::JSON::Array arr;
+    Poco::JSON::Array::Ptr arr( new Poco::JSON::Array() );
 
     for ( auto& elem : _vector )
         {
-            arr.add( elem.to_json_obj() );
+            arr->add( elem.to_json_obj() );
         }
 
     return arr;
@@ -90,27 +90,34 @@ std::vector<Placeholder> Placeholder::parse_joined_tables(
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object Placeholder::to_json_obj() const
+Poco::JSON::Object::Ptr Placeholder::to_json_obj() const
 {
-    Poco::JSON::Object obj;
+    Poco::JSON::Object::Ptr obj( new Poco::JSON::Object() );
 
     // ---------------------------------------------------------
 
-    obj.set(
+    obj->set(
         "joined_tables_",
         Placeholder::joined_tables_to_array( joined_tables_ ) );
 
-    obj.set( "join_keys_used_", join_keys_used_ );
+    obj->set( "join_keys_used_", JSON::vector_to_array_ptr( join_keys_used_ ) );
 
-    obj.set( "other_join_keys_used_", other_join_keys_used_ );
+    obj->set(
+        "other_join_keys_used_",
+        JSON::vector_to_array_ptr( other_join_keys_used_ ) );
 
-    obj.set( "other_time_stamps_used_", other_time_stamps_used_ );
+    obj->set(
+        "other_time_stamps_used_",
+        JSON::vector_to_array_ptr( other_time_stamps_used_ ) );
 
-    obj.set( "name_", name_ );
+    obj->set( "name_", name_ );
 
-    obj.set( "time_stamps_used_", time_stamps_used_ );
+    obj->set(
+        "time_stamps_used_", JSON::vector_to_array_ptr( time_stamps_used_ ) );
 
-    obj.set( "upper_time_stamps_used_", upper_time_stamps_used_ );
+    obj->set(
+        "upper_time_stamps_used_",
+        JSON::vector_to_array_ptr( upper_time_stamps_used_ ) );
 
     // ---------------------------------------------------------
 

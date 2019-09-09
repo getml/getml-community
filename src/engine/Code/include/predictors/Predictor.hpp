@@ -17,6 +17,9 @@ class Predictor
 
     // -----------------------------------------
 
+    /// Whether the predictor accepts null values.
+    virtual bool accepts_null() const = 0;
+
     /// Returns an importance measure for the individual features
     virtual std::vector<Float> feature_importances(
         const size_t _num_features ) const = 0;

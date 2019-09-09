@@ -55,6 +55,12 @@ class XGBoostPredictor : public Predictor
     /// Saves the predictor
     void save( const std::string& _fname ) const final;
 
+    // -------------------------------------------------------------------------
+
+   public:
+    /// Whether the predictor accepts null values.
+    bool accepts_null() const { return false; }
+
     // -----------------------------------------
 
    private:

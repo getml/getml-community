@@ -90,6 +90,9 @@ class Model : public AbstractModel
         const std::map<std::string, containers::DataFrame>& _data_frames,
         containers::Features* _features ) const;
 
+    /// Whether we allow null values in the features passed to the predictor.
+    bool allow_null_values() const;
+
     /// Calculates the correlations of each feature with the targets.
     void calculate_feature_stats(
         const containers::Features _features,
@@ -320,6 +323,42 @@ void Model<FeatureEngineererType>::add_population_cols(
         {
             _features->push_back( population_df.numerical( col ).data_ptr() );
         }
+}
+
+// ----------------------------------------------------------------------------
+
+template <typename FeatureEngineererType>
+bool Model<FeatureEngineererType>::allow_null_values() const
+{
+    assert_true( predictor_impl_ );
+
+    bool allow_null = true;
+
+    if ( feature_engineerer().hyperparameters().feature_selector_ )
+        {
+            const auto obj =
+                *feature_engineerer().hyperparameters().feature_selector_;
+
+            allow_null =
+                predictors::PredictorParser::parse( obj, predictor_impl_ )
+                    ->accepts_null();
+        }
+
+    if ( !allow_null )
+        {
+            return false;
+        }
+
+    if ( feature_engineerer().hyperparameters().predictor_ )
+        {
+            const auto obj = *feature_engineerer().hyperparameters().predictor_;
+
+            allow_null =
+                predictors::PredictorParser::parse( obj, predictor_impl_ )
+                    ->accepts_null();
+        }
+
+    return allow_null;
 }
 
 // ----------------------------------------------------------------------------
@@ -888,11 +927,30 @@ void Model<FeatureEngineererType>::make_predictor_impl(
     const Poco::JSON::Object& _cmd,
     const std::map<std::string, containers::DataFrame>& _data_frames )
 {
+    // --------------------------------------------------------------------
+    // Temporary impl, needed by allow_null_values.
+
+    predictor_impl_ = std::make_shared<predictors::PredictorImpl>(
+        std::vector<std::string>(),
+        std::vector<std::string>(),
+        std::vector<std::string>(),
+        feature_engineerer().num_features() );
+
+    // --------------------------------------------------------------------
+
     const auto population_name =
         JSON::get_value<std::string>( _cmd, "population_name_" );
 
     const auto population_df =
         utils::Getter::get( population_name, _data_frames );
+
+    const auto allow_null = allow_null_values();
+
+    const auto is_null = []( const Float val ) {
+        return ( std::isnan( val ) || std::isinf( val ) );
+    };
+
+    // --------------------------------------------------------------------
 
     auto categorical_colnames = std::vector<std::string>();
 
@@ -911,6 +969,8 @@ void Model<FeatureEngineererType>::make_predictor_impl(
                 }
         }
 
+    // --------------------------------------------------------------------
+
     auto discrete_colnames = std::vector<std::string>();
 
     for ( size_t i = 0; i < population_df.num_discretes(); ++i )
@@ -921,8 +981,23 @@ void Model<FeatureEngineererType>::make_predictor_impl(
                     continue;
                 }
 
+            if ( !allow_null )
+                {
+                    const auto contains_null = std::any_of(
+                        population_df.discrete( i ).begin(),
+                        population_df.discrete( i ).end(),
+                        is_null );
+
+                    if ( contains_null )
+                        {
+                            continue;
+                        }
+                }
+
             discrete_colnames.push_back( population_df.discrete( i ).name() );
         }
+
+    // --------------------------------------------------------------------
 
     auto numerical_colnames = std::vector<std::string>();
 
@@ -934,14 +1009,31 @@ void Model<FeatureEngineererType>::make_predictor_impl(
                     continue;
                 }
 
+            if ( !allow_null )
+                {
+                    const auto contains_null = std::any_of(
+                        population_df.numerical( i ).begin(),
+                        population_df.numerical( i ).end(),
+                        is_null );
+
+                    if ( contains_null )
+                        {
+                            continue;
+                        }
+                }
+
             numerical_colnames.push_back( population_df.numerical( i ).name() );
         }
+
+    // --------------------------------------------------------------------
 
     predictor_impl_ = std::make_shared<predictors::PredictorImpl>(
         categorical_colnames,
         discrete_colnames,
         numerical_colnames,
         feature_engineerer().num_features() );
+
+    // --------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
