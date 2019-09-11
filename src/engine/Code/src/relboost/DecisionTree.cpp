@@ -48,7 +48,7 @@ DecisionTree::DecisionTree(
     update_rate_ = JSON::get_value<Float>( _obj, "update_rate_" );
 
     root_.reset( new DecisionTreeNode(
-        utils::ConditionMaker( encoding_ ),
+        utils::ConditionMaker( encoding_, hyperparameters().lag_ ),
         0,  // _depth
         hyperparameters_,
         loss_function_,
@@ -78,7 +78,7 @@ void DecisionTree::fit(
     assert_true( encoding_ );
 
     root_.reset( new DecisionTreeNode(
-        utils::ConditionMaker( encoding_ ),
+        utils::ConditionMaker( encoding_, hyperparameters().lag_ ),
         0,
         hyperparameters_,
         loss_function_,

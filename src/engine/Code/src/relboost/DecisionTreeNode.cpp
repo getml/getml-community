@@ -387,6 +387,16 @@ std::vector<const containers::Match*>::iterator DecisionTreeNode::partition(
                 return utils::Partitioner<enums::DataUsed::time_stamps_diff>::
                     partition( split_, _input, _output, _begin, _end );
 
+            case enums::DataUsed::time_stamps_window:
+                return utils::Partitioner<enums::DataUsed::time_stamps_window>::
+                    partition(
+                        split_,
+                        hyperparameters().lag_,
+                        _input,
+                        _output,
+                        _begin,
+                        _end );
+
             default:
                 assert_true( false && "Unknown data_used_" );
                 return _begin;
@@ -596,6 +606,17 @@ Float DecisionTreeNode::transform(
                 is_greater =
                     utils::Partitioner<enums::DataUsed::time_stamps_diff>::
                         is_greater( split_, _input, _output, _match );
+                break;
+
+            case enums::DataUsed::time_stamps_window:
+                is_greater =
+                    utils::Partitioner<enums::DataUsed::time_stamps_window>::
+                        is_greater(
+                            split_,
+                            hyperparameters().lag_,
+                            _input,
+                            _output,
+                            _match );
                 break;
 
             default:
@@ -1531,7 +1552,7 @@ void DecisionTreeNode::try_time_stamps_diff(
     const std::vector<const containers::Match*>::iterator _end,
     std::vector<containers::CandidateSplit>* _candidates )
 {
-    debug_log( "Numerical population." );
+    debug_log( "Time stamps diff." );
 
     // Note that this sorts in DESCENDING order.
     utils::Sorter<enums::DataUsed::time_stamps_diff>::sort(
@@ -1585,6 +1606,95 @@ void DecisionTreeNode::try_time_stamps_diff(
         }
 
     loss_function().revert_to_commit();
+
+    if ( hyperparameters().lag_ > 0.0 )
+        {
+            try_window(
+                _old_intercept, _input, _output, _begin, _end, _candidates );
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+void DecisionTreeNode::try_window(
+    const Float _old_intercept,
+    const containers::DataFrame& _input,
+    const containers::DataFrameView& _output,
+    const std::vector<const containers::Match*>::iterator _begin,
+    const std::vector<const containers::Match*>::iterator _end,
+    std::vector<containers::CandidateSplit>* _candidates )
+{
+    // ------------------------------------------------------------------------
+
+    debug_log( "Time windows." );
+
+#ifndef NDEBUG
+
+    // Should already be sorted by time stamps.
+    const bool is_sorted = std::is_sorted(
+        _begin,
+        _end,
+        [&_input, &_output](
+            const containers::Match* m1, const containers::Match* m2 ) {
+            assert_true( m1->ix_input < _input.nrows() );
+            assert_true( m2->ix_input < _input.nrows() );
+
+            assert_true( m1->ix_output < _output.nrows() );
+            assert_true( m2->ix_output < _output.nrows() );
+
+            return ( _output.time_stamp( m1->ix_output ) -
+                     _input.time_stamp( m1->ix_input ) ) >
+                   ( _output.time_stamp( m2->ix_output ) -
+                     _input.time_stamp( m2->ix_input ) );
+        } );
+
+    assert_true( is_sorted );
+
+#endif  // NDEBUG
+
+    // ------------------------------------------------------------------------
+
+    const auto critical_values = utils::CriticalValues::calc_time_window(
+        hyperparameters().lag_, _input, _output, _begin, _end, &comm() );
+
+    if ( critical_values.size() == 0 ||
+         critical_values.front() == critical_values.back() )
+        {
+            return;
+        }
+
+    auto it = _begin;
+
+    auto last_it = _begin;
+
+    for ( auto& cv : critical_values )
+        {
+            debug_log( "cv: " + std::to_string( cv ) );
+
+            it = utils::Finder<enums::DataUsed::time_stamps_diff>::next_split(
+                cv, _input, _output, it, _end );
+
+            const auto update =
+                ( cv == critical_values[0] ? enums::Update::calc_all
+                                           : enums::Update::calc_diff );
+
+            add_candidates(
+                enums::Revert::True,
+                update,
+                _old_intercept,
+                containers::Split( 0, cv, enums::DataUsed::time_stamps_window ),
+                _begin,
+                last_it,
+                it,
+                _end,
+                _candidates );
+
+            last_it = it;
+        }
+
+    loss_function().revert_to_commit();
+
+    // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------

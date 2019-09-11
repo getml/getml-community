@@ -23,8 +23,7 @@ struct Split
 
     /// Constructor for splits on categorical values.
     Split(
-        const std::shared_ptr<const std::vector<Int>>&
-            _categories_used,
+        const std::shared_ptr<const std::vector<Int>>& _categories_used,
         const std::vector<Int>::const_iterator _categories_used_begin,
         const std::vector<Int>::const_iterator _categories_used_end,
         const size_t _column,
@@ -64,10 +63,14 @@ struct Split
             _data_used == enums::DataUsed::numerical_input_is_nan ||
             _data_used == enums::DataUsed::numerical_output ||
             _data_used == enums::DataUsed::numerical_output_is_nan ||
-            _data_used == enums::DataUsed::time_stamps_diff );
+            _data_used == enums::DataUsed::time_stamps_diff ||
+            _data_used == enums::DataUsed::time_stamps_window );
 
         assert_true(
             _data_used != enums::DataUsed::time_stamps_diff || _column == 0 );
+
+        assert_true(
+            _data_used != enums::DataUsed::time_stamps_window || _column == 0 );
     }
 
     /// Constructor for splits on same units (categorical).
@@ -105,8 +108,7 @@ struct Split
 
     /// Constructor for deep copies and reconstruction from JSON.
     Split(
-        const std::shared_ptr<const std::vector<Int>>&
-            _categories_used,
+        const std::shared_ptr<const std::vector<Int>>& _categories_used,
         const size_t _column,
         const size_t _column_input,
         const Float _critical_value,

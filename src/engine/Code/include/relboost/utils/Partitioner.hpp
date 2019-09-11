@@ -177,7 +177,7 @@ struct Partitioner<enums::DataUsed::discrete_input_is_nan>
         const auto i = _match.ix_input;
 
         assert_true( i < _input.nrows() );
-        assert_true( _num_column < _input.num_discretes());
+        assert_true( _num_column < _input.num_discretes() );
 
         return !std::isnan( _input.discrete( _match.ix_input, _num_column ) );
     }
@@ -217,7 +217,7 @@ struct Partitioner<enums::DataUsed::discrete_output>
         const auto j = _split.column_;
 
         assert_true( i < _output.nrows() );
-        assert_true( j < _output.num_discretes());
+        assert_true( j < _output.num_discretes() );
 
         return ( _output.discrete( i, j ) > _split.critical_value_ );
     }
@@ -256,10 +256,9 @@ struct Partitioner<enums::DataUsed::discrete_output_is_nan>
         const auto i = _match.ix_output;
 
         assert_true( i < _output.nrows() );
-        assert_true( _num_column < _output.num_discretes());
+        assert_true( _num_column < _output.num_discretes() );
 
-        return !std::isnan(
-            _output.discrete( _match.ix_output, _num_column ) );
+        return !std::isnan( _output.discrete( _match.ix_output, _num_column ) );
     }
 
     // --------------------------------------------------------------------
@@ -503,8 +502,8 @@ struct Partitioner<enums::DataUsed::same_units_discrete>
         assert_true( _match.ix_input < _input.nrows() );
         assert_true( _match.ix_output < _output.nrows() );
 
-        assert_true( _split.column_input_ < _input.num_discretes());
-        assert_true( _split.column_ < _output.num_discretes());
+        assert_true( _split.column_input_ < _input.num_discretes() );
+        assert_true( _split.column_ < _output.num_discretes() );
 
         const auto diff =
             _output.discrete( _match.ix_output, _split.column_ ) -
@@ -553,8 +552,8 @@ struct Partitioner<enums::DataUsed::same_units_discrete_is_nan>
         assert_true( _match.ix_input < _input.nrows() );
         assert_true( _match.ix_output < _output.nrows() );
 
-        assert_true( _input_col < _input.num_discretes());
-        assert_true( _output_col < _output.num_discretes());
+        assert_true( _input_col < _input.num_discretes() );
+        assert_true( _output_col < _output.num_discretes() );
 
         const auto val1 = _input.discrete( _match.ix_input, _input_col );
         const auto val2 = _output.discrete( _match.ix_output, _output_col );
@@ -699,6 +698,54 @@ struct Partitioner<enums::DataUsed::time_stamps_diff>
         return (
             _output.time_stamp( out ) - _input.time_stamp( in ) >
             _split.critical_value_ );
+    }
+
+    // --------------------------------------------------------------------
+};
+
+// ----------------------------------------------------------------------------
+
+template <>
+struct Partitioner<enums::DataUsed::time_stamps_window>
+{
+    // --------------------------------------------------------------------
+
+    static std::vector<const containers::Match*>::iterator partition(
+        const containers::Split& _split,
+        const Float _lag,
+        const containers::DataFrame& _input,
+        const containers::DataFrameView& _output,
+        const std::vector<const containers::Match*>::iterator _begin,
+        const std::vector<const containers::Match*>::iterator _end )
+    {
+        const auto partition_function =
+            [_split, _lag, &_input, &_output]( const containers::Match* ptr ) {
+                return is_greater( _split, _lag, _input, _output, *ptr );
+            };
+
+        return std::partition( _begin, _end, partition_function );
+    }
+
+    // --------------------------------------------------------------------
+
+    static bool is_greater(
+        const containers::Split& _split,
+        const Float _lag,
+        const containers::DataFrame& _input,
+        const containers::DataFrameView& _output,
+        const containers::Match& _match )
+    {
+        const auto in = _match.ix_input;
+        const auto out = _match.ix_output;
+
+        assert_true( in < _input.nrows() );
+        assert_true( out < _output.nrows() );
+
+        const auto diff = _output.time_stamp( out ) - _input.time_stamp( in );
+
+        return (
+            ( diff > _split.critical_value_ ) &&
+            ( diff <= _split.critical_value_ + _lag ) );
     }
 
     // --------------------------------------------------------------------

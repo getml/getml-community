@@ -65,7 +65,7 @@ class XGBoostPredictor : public Predictor
 
    private:
     /// Frees a Booster pointer
-    static void delete_booster( DMatrixHandle* _ptr )
+    static void delete_booster( BoosterHandle* _ptr )
     {
         XGBoosterFree( *_ptr );
         delete _ptr;

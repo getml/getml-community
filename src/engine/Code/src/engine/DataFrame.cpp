@@ -292,7 +292,7 @@ void DataFrame::create_indices()
 {
     if ( indices().size() != join_keys().size() )
         {
-            indices().resize( join_keys().size() );
+            indices() = std::vector<DataFrameIndex>( join_keys().size() );
         }
 
     for ( size_t i = 0; i < join_keys().size(); ++i )

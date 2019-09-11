@@ -118,6 +118,14 @@ std::string ConditionMaker::condition_greater(
                        _input.time_stamps_name() + " > " +
                        std::to_string( _split.critical_value_ ) + " )";
 
+            case enums::DataUsed::time_stamps_window:
+                return "( t1." + _output.time_stamps_name() + " - t2." +
+                       _input.time_stamps_name() + " > " +
+                       std::to_string( _split.critical_value_ ) + " AND t1." +
+                       _output.time_stamps_name() + " - t2." +
+                       _input.time_stamps_name() + " <= " +
+                       std::to_string( _split.critical_value_ + lag_ ) + " )";
+
             default:
                 assert_true( false && "Unknown data_used_" );
                 return "";
@@ -253,6 +261,17 @@ std::string ConditionMaker::condition_smaller(
                 return "( t1." + _output.time_stamps_name() + " - t2." +
                        _input.time_stamps_name() +
                        " <= " + std::to_string( _split.critical_value_ ) +
+                       " OR t1." + _output.time_stamps_name() +
+                       " IS NULL OR t2." + _input.time_stamps_name() +
+                       " IS NULL )";
+
+            case enums::DataUsed::time_stamps_window:
+                return "( t1." + _output.time_stamps_name() + " - t2." +
+                       _input.time_stamps_name() +
+                       " <= " + std::to_string( _split.critical_value_ ) +
+                       " OR t1." + _output.time_stamps_name() + " - t2." +
+                       _input.time_stamps_name() + " > " +
+                       std::to_string( _split.critical_value_ + lag_ ) +
                        " OR t1." + _output.time_stamps_name() +
                        " IS NULL OR t2." + _input.time_stamps_name() +
                        " IS NULL )";

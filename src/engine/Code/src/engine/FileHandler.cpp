@@ -37,8 +37,7 @@ containers::DataFrame FileHandler::load(
     const std::shared_ptr<containers::Encoding>& _categories,
     const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
     const std::string& _project_directory,
-    const std::string& _name/*,
-    licensing::LicenseChecker& _license_checker*/ )
+    const std::string& _name )
 {
     const auto path = _project_directory + "data/" + _name + "/";
 
@@ -67,15 +66,6 @@ containers::DataFrame FileHandler::load(
     auto df = containers::DataFrame( _name, _categories, _join_keys_encoding );
 
     df.load( path );
-
-    /*if ( _license_checker.token().mem_size > 0 )
-        {
-            auto temporary_data_frames = _data_frames;
-
-            temporary_data_frames[_name] = df;
-
-            _license_checker.check_memory_size( temporary_data_frames, df );
-        }*/
 
     // ---------------------------------------------------------------------
 

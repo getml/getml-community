@@ -15,8 +15,7 @@ class CriticalValues
 
    public:
     /// Calculates the critical values for categorical columns.
-    static const std::shared_ptr<const std::vector<Int>>
-    calc_categorical(
+    static const std::shared_ptr<const std::vector<Int>> calc_categorical(
         const enums::DataUsed _data_used,
         const size_t _num_column,
         const containers::DataFrame& _input,
@@ -41,6 +40,15 @@ class CriticalValues
         const enums::DataUsed _data_used,
         const size_t _input_col,
         const size_t _output_col,
+        const containers::DataFrame& _input,
+        const containers::DataFrameView& _output,
+        const std::vector<const containers::Match*>::iterator _begin,
+        const std::vector<const containers::Match*>::iterator _end,
+        multithreading::Communicator* _comm );
+
+    /// Calculate the critical values necessary for the moving time window.
+    static std::vector<Float> calc_time_window(
+        const Float _lag,
         const containers::DataFrame& _input,
         const containers::DataFrameView& _output,
         const std::vector<const containers::Match*>::iterator _begin,

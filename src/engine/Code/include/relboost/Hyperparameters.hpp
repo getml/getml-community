@@ -76,6 +76,10 @@ struct Hyperparameters
     /// included in our prediction.
     const bool include_categorical_;
 
+    /// The lag variable used for calculating the moving time windows. When set
+    /// to 0.0 or negative value, moving time windows will be omitted.
+    const Float lag_;
+
     /// The loss function used for the learning function.
     const std::string loss_function_;
 

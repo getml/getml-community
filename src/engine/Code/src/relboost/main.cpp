@@ -41,5 +41,7 @@ int main( int argc, char* argv[] )
 
     test20_saving_and_loading();
 
+    test21_time_windows();
+
     return 0;
 }

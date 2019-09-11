@@ -51,8 +51,8 @@ class Encoding
     /// Deletes all entries
     void clear()
     {
-        map_.clear();
-        vector_->clear();
+        map_ = std::unordered_map<std::string, Int>();
+        *vector_ = std::vector<std::string>();
     }
 
     /// Returns end of unique integers

@@ -13,8 +13,9 @@ class ConditionMaker
 {
    public:
     ConditionMaker(
-        const std::shared_ptr<const std::vector<std::string>>& _encoding )
-        : encoding_( _encoding )
+        const std::shared_ptr<const std::vector<std::string>>& _encoding,
+        const Float _lag )
+        : encoding_( _encoding ), lag_( _lag )
     {
         assert_true( encoding_ );
     }
@@ -56,6 +57,9 @@ class ConditionMaker
    private:
     /// Encoding for the categorical data, maps integers to underlying category.
     const std::shared_ptr<const std::vector<std::string>> encoding_;
+
+    /// The lag variable used for the moving time window.
+    const Float lag_;
 };
 
 // ------------------------------------------------------------------------

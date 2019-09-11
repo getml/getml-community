@@ -213,6 +213,15 @@ class DecisionTreeNode
         const std::vector<const containers::Match*>::iterator _end,
         std::vector<containers::CandidateSplit>* _candidates );
 
+    /// Try the difference between time stamps in input and output as splits.
+    void try_window(
+        const Float _old_intercept,
+        const containers::DataFrame& _input,
+        const containers::DataFrameView& _output,
+        const std::vector<const containers::Match*>::iterator _begin,
+        const std::vector<const containers::Match*>::iterator _end,
+        std::vector<containers::CandidateSplit>* _candidates );
+
     // -----------------------------------------------------------------
 
    private:

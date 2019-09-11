@@ -6,8 +6,7 @@ namespace utils
 {
 // ----------------------------------------------------------------------------
 
-const std::shared_ptr<const std::vector<Int>>
-CriticalValues::calc_categorical(
+const std::shared_ptr<const std::vector<Int>> CriticalValues::calc_categorical(
     const enums::DataUsed _data_used,
     const size_t _num_column,
     const containers::DataFrame& _input,
@@ -179,8 +178,7 @@ std::vector<Float> CriticalValues::calc_discrete(
 
     // ---------------------------------------------------------------------------
 
-    std::vector<Float> critical_values(
-        static_cast<int>( max - min ) );
+    std::vector<Float> critical_values( static_cast<int>( max - min ) );
 
     for ( size_t i = 0; i < critical_values.size(); ++i )
         {
@@ -268,8 +266,66 @@ std::vector<Float> CriticalValues::calc_numerical(
 
     for ( size_t i = 0; i < num_critical_values; ++i )
         {
-            critical_values[i] =
-                max - static_cast<Float>( i + 1 ) * step_size;
+            critical_values[i] = max - static_cast<Float>( i + 1 ) * step_size;
+        }
+
+    return critical_values;
+
+    // ---------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<Float> CriticalValues::calc_time_window(
+    const Float _lag,
+    const containers::DataFrame& _input,
+    const containers::DataFrameView& _output,
+    const std::vector<const containers::Match*>::iterator _begin,
+    const std::vector<const containers::Match*>::iterator _end,
+    multithreading::Communicator* _comm )
+{
+    // ---------------------------------------------------------------------------
+    // In parallel versions, it is possible that there are no sample sizes
+    // left in this process rank. In that case we effectively pass plus infinity
+    // to min and minus infinity to max, ensuring that they not will be the
+    // chosen minimum or maximum.
+
+    Float min = std::numeric_limits<Float>::max();
+
+    Float max = std::numeric_limits<Float>::lowest();
+
+    find_min_max(
+        enums::DataUsed::time_stamps_diff,
+        0,
+        _input,
+        _output,
+        _begin,
+        _end,
+        &min,
+        &max,
+        _comm );
+
+    // ---------------------------------------------------------------------------
+    // There is a possibility that all critical values are NAN in all processes.
+    // This accounts for this edge case.
+
+    if ( min > max )
+        {
+            return std::vector<Float>( 0 );
+        }
+
+    // ---------------------------------------------------------------------------
+
+    assert_true( _lag > 0.0 );
+
+    const auto num_critical_values =
+        static_cast<size_t>( ( max - min ) / _lag ) + 1;
+
+    std::vector<Float> critical_values( num_critical_values );
+
+    for ( size_t i = 0; i < num_critical_values; ++i )
+        {
+            critical_values[i] = max - static_cast<Float>( i + 1 ) * _lag;
         }
 
     return critical_values;
@@ -328,11 +384,9 @@ void CriticalValues::find_min_max(
                 }
         }
 
-    utils::Reducer::reduce(
-        multithreading::minimum<Int>(), _min, _comm );
+    utils::Reducer::reduce( multithreading::minimum<Int>(), _min, _comm );
 
-    utils::Reducer::reduce(
-        multithreading::maximum<Int>(), _max, _comm );
+    utils::Reducer::reduce( multithreading::maximum<Int>(), _max, _comm );
 
     debug_log( "find_min_max, min: " + std::to_string( *_min ) );
     debug_log( "find_min_max, max: " + std::to_string( *_max ) );
@@ -391,11 +445,9 @@ void CriticalValues::find_min_max(
                 }
         }
 
-    utils::Reducer::reduce(
-        multithreading::minimum<Float>(), _min, _comm );
+    utils::Reducer::reduce( multithreading::minimum<Float>(), _min, _comm );
 
-    utils::Reducer::reduce(
-        multithreading::maximum<Float>(), _max, _comm );
+    utils::Reducer::reduce( multithreading::maximum<Float>(), _max, _comm );
 
     debug_log( "find_min_max, min: " + std::to_string( *_min ) );
     debug_log( "find_min_max, max: " + std::to_string( *_max ) );
@@ -474,11 +526,9 @@ void CriticalValues::find_min_max(
                 }
         }
 
-    utils::Reducer::reduce(
-        multithreading::minimum<Float>(), _min, _comm );
+    utils::Reducer::reduce( multithreading::minimum<Float>(), _min, _comm );
 
-    utils::Reducer::reduce(
-        multithreading::maximum<Float>(), _max, _comm );
+    utils::Reducer::reduce( multithreading::maximum<Float>(), _max, _comm );
 
     debug_log( "find_min_max, min: " + std::to_string( *_min ) );
     debug_log( "find_min_max, max: " + std::to_string( *_max ) );

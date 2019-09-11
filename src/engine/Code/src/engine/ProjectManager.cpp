@@ -165,10 +165,6 @@ void ProjectManager::add_relboost_model(
 void ProjectManager::clear()
 {
     // --------------------------------
-
-    multithreading::WriteLock write_lock( read_write_lock_ );
-
-    // --------------------------------
     // Remove from monitor.
 
     for ( auto& pair : data_frames() )
@@ -192,9 +188,11 @@ void ProjectManager::clear()
     // --------------------------------
     // Remove from engine.
 
-    data_frames().clear();
+    autosql_models() = engine::handlers::AutoSQLModelManager::ModelMapType();
 
-    relboost_models().clear();
+    data_frames() = std::map<std::string, engine::containers::DataFrame>();
+
+    relboost_models() = engine::handlers::RelboostModelManager::ModelMapType();
 
     categories().clear();
 
@@ -515,12 +513,12 @@ void ProjectManager::set_project(
 
     monitor_->send( "postproject", "{\"name\":\"" + _name + "\"}" );
 
-    write_lock.unlock();
-
     clear();
 
     FileHandler::load_encodings(
         project_directory_, &categories(), &join_keys_encoding() );
+
+    write_lock.unlock();
 
     load_all_models();
 
