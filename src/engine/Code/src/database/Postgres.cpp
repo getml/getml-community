@@ -10,7 +10,7 @@ std::vector<std::string> Postgres::get_colnames(
 {
     const std::string sql = "SELECT * FROM \"" + _table + "\" LIMIT 0";
 
-    const auto connection = make_raw_connection();
+    const auto connection = make_connection();
 
     const auto result = exec( sql, connection.get() );
 
@@ -33,7 +33,7 @@ std::vector<csv::Datatype> Postgres::get_coltypes(
 {
     const std::string sql = "SELECT * FROM \"" + _table + "\" LIMIT 0";
 
-    const auto connection = make_raw_connection();
+    const auto connection = make_connection();
 
     const auto result = exec( sql, connection.get() );
 
@@ -106,13 +106,7 @@ Poco::JSON::Object Postgres::get_content(
     // ----------------------------------------
 
     auto iterator = std::make_shared<PostgresIterator>(
-        make_raw_connection(),
-        colnames,
-        time_formats_,
-        _tname,
-        "",
-        begin,
-        end );
+        make_connection(), colnames, time_formats_, _tname, "", begin, end );
 
     // ----------------------------------------
 
@@ -151,7 +145,7 @@ csv::Datatype Postgres::interpret_oid( Oid _oid ) const
     const std::string sql =
         "SELECT typname FROM pg_type WHERE oid=" + std::to_string( _oid ) + ";";
 
-    auto connection = make_raw_connection();
+    auto connection = make_connection();
 
     const auto result = exec( sql, connection.get() );
 
@@ -209,7 +203,7 @@ csv::Datatype Postgres::interpret_oid( Oid _oid ) const
 std::vector<std::string> Postgres::list_tables()
 {
     auto iterator = std::make_shared<PostgresIterator>(
-        make_raw_connection(),
+        make_connection(),
         std::vector<std::string>( {"table_name"} ),
         time_formats_,
         "information_schema.tables",
@@ -409,7 +403,7 @@ void Postgres::read_csv(
                                 std::string( "' CSV QUOTE '" ) +
                                 _reader->quotechar() + std::string( "';" );
 
-    auto conn = make_raw_connection();
+    auto conn = make_connection();
 
     auto res = PQexec( conn.get(), copy_statement.c_str() );
 

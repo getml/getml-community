@@ -82,7 +82,7 @@ class Postgres : public Connector
     /// Executes an SQL query.
     void execute( const std::string& _sql ) final
     {
-        auto conn = make_raw_connection();
+        auto conn = make_connection();
         exec( _sql, conn.get() );
         if ( PQtransactionStatus( conn.get() ) == PQTRANS_INTRANS )
             {
@@ -96,14 +96,14 @@ class Postgres : public Connector
         return select( {"COUNT(*)"}, _tname, "" )->get_int();
     }
 
-    /// Returns a shared_ptr containing a Sqlite3Iterator.
+    /// Returns a shared_ptr containing a PostgresIterator.
     std::shared_ptr<Iterator> select(
         const std::vector<std::string>& _colnames,
         const std::string& _tname,
         const std::string& _where ) final
     {
         return std::make_shared<PostgresIterator>(
-            make_raw_connection(), _colnames, time_formats_, _tname, _where );
+            make_connection(), _colnames, time_formats_, _tname, _where );
     }
 
     // -------------------------------
@@ -161,7 +161,7 @@ class Postgres : public Connector
     }
 
     /// Returns a new connection based on the connection_string_
-    std::shared_ptr<PGconn> make_raw_connection() const
+    std::shared_ptr<PGconn> make_connection() const
     {
         auto raw_ptr = PQconnectdb( connection_string_.c_str() );
 
