@@ -30,6 +30,7 @@
 #include "csv/Datatype.hpp"
 #include "csv/Parser.hpp"
 #include "csv/Reader.hpp"
+#include "csv/StatementMaker.hpp"
 
 #include "csv/Sniffer.hpp"
 

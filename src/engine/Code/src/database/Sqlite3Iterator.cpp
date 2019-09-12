@@ -7,53 +7,17 @@ namespace database
 
 Sqlite3Iterator::Sqlite3Iterator(
     const std::shared_ptr<sqlite3>& _db,
-    const std::vector<std::string>& _colnames,
+    const std::string& _sql,
     const std::shared_ptr<multithreading::ReadWriteLock>& _read_write_lock,
-    const std::vector<std::string>& _time_formats,
-    const std::string& _tname,
-    const std::string& _where )
+    const std::vector<std::string>& _time_formats )
     : colnum_( 0 ),
       db_( _db ),
       end_( false ),
-      num_cols_( static_cast<int>( _colnames.size() ) ),
       read_lock_( multithreading::ReadLock( _read_write_lock ) ),
       stmt_( std::unique_ptr<sqlite3_stmt, int ( * )( sqlite3_stmt* )>(
           nullptr, sqlite3_finalize ) ),
       time_formats_( _time_formats )
 {
-    // ------------------------------------------------------------------------
-    // Prepare SQL query.
-
-    std::string sql = "SELECT ";
-
-    for ( size_t i = 0; i < _colnames.size(); ++i )
-        {
-            if ( _colnames[i] == "COUNT(*)" )
-                {
-                    sql += _colnames[i];
-                }
-            else
-                {
-                    sql += "\"";
-                    sql += _colnames[i];
-                    sql += "\"";
-                }
-
-            if ( i + 1 < _colnames.size() )
-                {
-                    sql += ", ";
-                }
-        }
-
-    sql += " FROM " + _tname;
-
-    if ( _where != "" )
-        {
-            sql += " WHERE " + _where;
-        }
-
-    sql += ";";
-
     // ------------------------------------------------------------------------
     // Prepare statement.
 
@@ -63,10 +27,10 @@ Sqlite3Iterator::Sqlite3Iterator(
     sqlite3_stmt* raw_ptr = nullptr;
 
     int rc = sqlite3_prepare_v2(
-        db(),                            // Database handle.
-        sql.c_str(),                     // SQL statement, UTF-8 encoded.
-        static_cast<int>( sql.size() ),  // Maximum length of zSql in bytes.
-        &raw_ptr,                        // OUT: Statement handle.
+        db(),                             // Database handle.
+        _sql.c_str(),                     // SQL statement, UTF-8 encoded.
+        static_cast<int>( _sql.size() ),  // Maximum length of zSql in bytes.
+        &raw_ptr,                         // OUT: Statement handle.
         NULL  // OUT: Pointer to unused portion of zSql
     );
 
@@ -78,12 +42,33 @@ Sqlite3Iterator::Sqlite3Iterator(
         {
             throw std::runtime_error( sqlite3_errmsg( db() ) );
         }
+    // ------------------------------------------------------------------------
+
+    num_cols_ = sqlite3_column_count( stmt_.get() );
 
     // ------------------------------------------------------------------------
 
     next_row();
 
     // ------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+Sqlite3Iterator::Sqlite3Iterator(
+    const std::shared_ptr<sqlite3>& _db,
+    const std::vector<std::string>& _colnames,
+    const std::shared_ptr<multithreading::ReadWriteLock>& _read_write_lock,
+    const std::vector<std::string>& _time_formats,
+    const std::string& _tname,
+    const std::string& _where )
+    : Sqlite3Iterator(
+          _db,
+          make_sql( _colnames, _tname, _where ),
+          _read_write_lock,
+          _time_formats )
+
+{
 }
 
 // ----------------------------------------------------------------------------
@@ -236,6 +221,46 @@ Float Sqlite3Iterator::get_time_stamp()
         }
 
     return val;
+}
+
+// ----------------------------------------------------------------------------
+
+std::string Sqlite3Iterator::make_sql(
+    const std::vector<std::string>& _colnames,
+    const std::string& _tname,
+    const std::string& _where )
+{
+    std::string sql = "SELECT ";
+
+    for ( size_t i = 0; i < _colnames.size(); ++i )
+        {
+            if ( _colnames[i] == "COUNT(*)" )
+                {
+                    sql += _colnames[i];
+                }
+            else
+                {
+                    sql += "\"";
+                    sql += _colnames[i];
+                    sql += "\"";
+                }
+
+            if ( i + 1 < _colnames.size() )
+                {
+                    sql += ", ";
+                }
+        }
+
+    sql += " FROM " + _tname;
+
+    if ( _where != "" )
+        {
+            sql += " WHERE " + _where;
+        }
+
+    sql += ";";
+
+    return sql;
 }
 
 // ----------------------------------------------------------------------------

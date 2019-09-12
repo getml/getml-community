@@ -54,9 +54,6 @@ class Sniffer
         const std::vector<std::string>& _colnames,
         const std::string& _fname ) const;
 
-    /// Finds the maximum size of the colnames.
-    size_t find_max_size( const std::vector<std::string>& _colnames ) const;
-
     /// Parses the datatype from a string.
     Datatype infer_datatype(
         const Datatype _type, const std::string& _str ) const;
@@ -66,27 +63,6 @@ class Sniffer
         const std::vector<std::string>& _line,
         std::vector<std::string>* _colnames,
         std::vector<Datatype>* _datatypes ) const;
-
-    /// Produces the CREATE TABLE statement.
-    std::string make_statement(
-        const std::vector<std::string>& _colnames,
-        const std::vector<Datatype>& _datatypes ) const;
-
-    /// Produces the CREATE TABLE statement for postgres.
-    std::string make_statement_postgres(
-        const std::vector<std::string>& _colnames,
-        const std::vector<Datatype>& _datatypes ) const;
-
-    /// Produces the CREATE TABLE statement for sqlite.
-    std::string make_statement_sqlite(
-        const std::vector<std::string>& _colnames,
-        const std::vector<Datatype>& _datatypes ) const;
-
-    /// Transforms a datatype to the string required for the postgres dialect.
-    std::string to_string_postgres( const Datatype _type ) const;
-
-    /// Transforms a datatype to the string required for the sqlite dialect.
-    std::string to_string_sqlite( const Datatype _type ) const;
 
     // -------------------------------
 
@@ -111,14 +87,6 @@ class Sniffer
         const auto [val, success] =
             Parser::to_time_stamp( _str, time_formats_ );
         return success;
-    }
-
-    /// Produces a gap to ensure that all types are aligned.
-    std::string make_gap(
-        const std::string& _colname, const size_t _max_size ) const
-    {
-        assert_true( _colname.size() <= _max_size );
-        return std::string( _max_size - _colname.size(), ' ' );
     }
 
     // -------------------------------

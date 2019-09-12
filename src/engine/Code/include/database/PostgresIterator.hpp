@@ -12,6 +12,13 @@ class PostgresIterator : public Iterator
    public:
     PostgresIterator(
         const std::shared_ptr<PGconn>& _connection,
+        const std::string& _sql,
+        const std::vector<std::string>& _time_formats,
+        const std::int32_t _begin = -1,
+        const std::int32_t _end = -1 );
+
+    PostgresIterator(
+        const std::shared_ptr<PGconn>& _connection,
         const std::vector<std::string>& _colnames,
         const std::vector<std::string>& _time_formats,
         const std::string& _tname,
@@ -137,6 +144,16 @@ class PostgresIterator : public Iterator
     // -------------------------------------------------------------------------
 
    private:
+    /// Generates an SQL statement fro the colnames, the table name and an
+    /// optional _where.
+    static std::string make_sql(
+        const std::vector<std::string>& _colnames,
+        const std::string& _tname,
+        const std::string& _where );
+
+    // -------------------------------------------------------------------------
+
+   private:
     /// Prevents segfaults before getting the next entry.
     void check()
     {
@@ -254,7 +271,7 @@ class PostgresIterator : public Iterator
     bool end_required_;
 
     /// The total number of columns.
-    const int num_cols_;
+    int num_cols_;
 
     /// Result of the query.
     std::shared_ptr<PGresult> result_;

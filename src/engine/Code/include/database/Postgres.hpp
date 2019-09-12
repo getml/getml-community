@@ -55,18 +55,6 @@ class Postgres : public Connector
         const size_t _skip,
         csv::Reader* _reader ) final;
 
-    /// Returns a shared_ptr containing a Sqlite3Iterator where
-    /// _join_key is any one of _values.
-    std::shared_ptr<Iterator> select(
-        const std::vector<std::string>& _colnames,
-        const std::string& _tname,
-        const std::string& _join_key,
-        const std::vector<std::string>& _values ) final
-    {
-        assert_true( false && "ToDo" );
-        return std::shared_ptr<Iterator>();
-    };
-
     // -------------------------------
 
    public:
@@ -104,6 +92,13 @@ class Postgres : public Connector
     {
         return std::make_shared<PostgresIterator>(
             make_connection(), _colnames, time_formats_, _tname, _where );
+    }
+
+    /// Returns a shared_ptr containing a PostgresIterator.
+    std::shared_ptr<Iterator> select( const std::string& _sql ) final
+    {
+        return std::make_shared<PostgresIterator>(
+            make_connection(), _sql, time_formats_ );
     }
 
     // -------------------------------

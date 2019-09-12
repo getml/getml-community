@@ -10,23 +10,100 @@ namespace database
 
 PostgresIterator::PostgresIterator(
     const std::shared_ptr<PGconn>& _connection,
-    const std::vector<std::string>& _colnames,
+    const std::string& _sql,
     const std::vector<std::string>& _time_formats,
-    const std::string& _tname,
-    const std::string& _where,
     const std::int32_t _begin,
     const std::int32_t _end )
     : close_required_( false ),
       colnum_( 0 ),
       connection_( _connection ),
       end_required_( false ),
-      num_cols_( static_cast<int>( _colnames.size() ) ),
       rownum_( 0 ),
       time_formats_( _time_formats )
 {
     // ------------------------------------------------------------------------
-    // Prepare SQL query.
+    // Begin transaction and prepare cursor.
 
+    execute( "BEGIN" );
+
+    end_required_ = true;
+
+    execute( "DECLARE getmlcursor CURSOR FOR " + _sql );
+
+    close_required_ = true;
+
+    // ------------------------------------------------------------------------
+    // If _begin and _end are not -1, then we are probably using the DataTables
+    // API.
+
+    if ( _begin >= 0 && _end >= _begin )
+        {
+            skip_next( _begin );
+
+            // We fetch one extra row to prevent the iterator from unnecessarily
+            // fetching 10000 extra rows.
+            fetch_next( _end - _begin + 1 );
+        }
+    else
+        {
+            fetch_next( 10000 );
+        }
+
+    // ------------------------------------------------------------------------
+
+    num_cols_ = PQnfields( result() );
+
+    if ( num_cols_ <= 0 )
+        {
+            throw std::invalid_argument(
+                "Your query must contain at least"
+                " one column!" );
+        }
+
+    // ------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+PostgresIterator::PostgresIterator(
+    const std::shared_ptr<PGconn>& _connection,
+    const std::vector<std::string>& _colnames,
+    const std::vector<std::string>& _time_formats,
+    const std::string& _tname,
+    const std::string& _where,
+    const std::int32_t _begin,
+    const std::int32_t _end )
+    : PostgresIterator(
+          _connection,
+          make_sql( _colnames, _tname, _where ),
+          _time_formats,
+          _begin,
+          _end )
+{
+}
+
+// ----------------------------------------------------------------------------
+
+PostgresIterator::~PostgresIterator()
+{
+    if ( close_required_ )
+        {
+            close_cursor();
+        }
+
+    if ( end_required_ )
+        {
+            end_transaction();
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+std::string PostgresIterator::make_sql(
+    const std::vector<std::string>& _colnames,
+    const std::string& _tname,
+    const std::string& _where )
+{
     std::string sql = "SELECT ";
 
     for ( size_t i = 0; i < _colnames.size(); ++i )
@@ -71,50 +148,7 @@ PostgresIterator::PostgresIterator(
 
     sql += ";";
 
-    // ------------------------------------------------------------------------
-    // Begin transaction and prepare cursor.
-
-    execute( "BEGIN" );
-
-    end_required_ = true;
-
-    execute( "DECLARE getmlcursor CURSOR FOR " + sql );
-
-    close_required_ = true;
-
-    // ------------------------------------------------------------------------
-    // If _begin and _end are not -1, then we are probably using the DataTables
-    // API.
-
-    if ( _begin >= 0 && _end >= _begin )
-        {
-            skip_next( _begin );
-
-            // We fetch one extra row to prevent the iterator from unnecessarily
-            // fetching 10000 extra rows.
-            fetch_next( _end - _begin + 1 );
-        }
-    else
-        {
-            fetch_next( 10000 );
-        }
-
-    // ------------------------------------------------------------------------
-}
-
-// ----------------------------------------------------------------------------
-
-PostgresIterator::~PostgresIterator()
-{
-    if ( close_required_ )
-        {
-            close_cursor();
-        }
-
-    if ( end_required_ )
-        {
-            end_transaction();
-        }
+    return sql;
 }
 
 // ----------------------------------------------------------------------------
