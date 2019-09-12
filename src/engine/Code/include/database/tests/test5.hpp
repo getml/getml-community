@@ -32,7 +32,7 @@ void test5()
 
     try
         {
-            auto reader = csv::Reader( "DOESNOTEXIST.CSV", '\"', ',' );
+            auto reader = csv::CSVReader( "DOESNOTEXIST.CSV", '\"', ',' );
 
             assert_true( false );
         }
@@ -41,7 +41,7 @@ void test5()
             std::cout << e.what() << std::endl;
         }
 
-    auto reader = csv::Reader( "POPULATION2.CSV", '\"', ',' );
+    auto reader = csv::CSVReader( "POPULATION2.CSV", '\"', ',' );
 
     std::cout << std::endl << std::endl;
     std::cout << "OK." << std::endl << std::endl;

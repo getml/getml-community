@@ -24,10 +24,10 @@ void test9()
 
     postgres_db.execute( population_statement );
 
-    auto reader = csv::Reader( "POPULATION.CSV", '\"', ',' );
+    auto reader = csv::CSVReader( "POPULATION.CSV", '\"', ',' );
 
     // We read in the header, which should be parsed as NULL values.
-    postgres_db.read_csv( "POPULATION", false, 0, &reader );
+    postgres_db.read( "POPULATION", false, 0, &reader );
 
     auto it = postgres_db.select(
         {"column_01", "join_key", "time_stamp", "targets"}, "POPULATION", "" );

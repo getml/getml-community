@@ -165,9 +165,9 @@ void DatabaseManager::read_csv(
 
     for ( const auto& fname : fnames )
         {
-            auto reader = csv::Reader( fname, quotechar[0], sep[0] );
+            auto reader = csv::CSVReader( fname, quotechar[0], sep[0] );
 
-            connector()->read_csv( _name, header, skip, &reader );
+            connector()->read( _name, header, skip, &reader );
 
             logger().log( "Read '" + fname + "'." );
         }

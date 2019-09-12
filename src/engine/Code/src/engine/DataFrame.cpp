@@ -379,7 +379,7 @@ void DataFrame::from_csv(
                 "The separator must contain exactly one characeter!" );
         }
 
-    auto reader = csv::Reader( _fname, _quotechar[0], _sep[0] );
+    auto reader = csv::CSVReader( _fname, _quotechar[0], _sep[0] );
 
     const auto csv_colnames = reader.next_line();
 

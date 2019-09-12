@@ -100,7 +100,7 @@ std::string Sniffer::sniff() const
         {
             size_t line_count = 0;
 
-            auto reader = Reader( fname, quotechar_, sep_ );
+            auto reader = CSVReader( fname, quotechar_, sep_ );
 
             while ( !reader.eof() && line_count < num_lines_sniffed_ )
                 {

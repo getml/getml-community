@@ -5,7 +5,7 @@ namespace csv
 {
 // ----------------------------------------------------------------------------
 
-std::vector<std::string> Reader::next_line()
+std::vector<std::string> CSVReader::next_line()
 {
     // ------------------------------------------------------------------------
     // Usually the calling function should make sure that we haven't reached

@@ -26,9 +26,9 @@ void test10()
 
     postgres_db.execute( population_statement );
 
-    auto reader = csv::Reader( "POPULATION.CSV", '\"', ',' );
+    auto reader = csv::CSVReader( "POPULATION.CSV", '\"', ',' );
 
-    postgres_db.read_csv( "POPULATION", false, 0, &reader );
+    postgres_db.read( "POPULATION", false, 0, &reader );
 
     auto it = postgres_db.select(
         {"COLUMN_1", "COLUMN_2", "COLUMN_3", "COLUMN_4"}, "POPULATION", "" );

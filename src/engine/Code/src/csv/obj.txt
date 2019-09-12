@@ -1,6 +1,6 @@
 set(
     CSV_OBJ 
-    ${CSV_SOURCE_DIRECTORY}/Reader.cpp
+    ${CSV_SOURCE_DIRECTORY}/CSVReader.cpp
     ${CSV_SOURCE_DIRECTORY}/Sniffer.cpp
     ${CSV_SOURCE_DIRECTORY}/StatementMaker.cpp
 )

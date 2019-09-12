@@ -26,9 +26,9 @@ void test8()
 
     postgres_db.execute( population_statement );
 
-    auto reader = csv::Reader( "POPULATION.CSV", '\"', ',' );
+    auto reader = csv::CSVReader( "POPULATION.CSV", '\"', ',' );
 
-    postgres_db.read_csv( "POPULATION", true, 0, &reader );
+    postgres_db.read( "POPULATION", true, 0, &reader );
 
     auto it = postgres_db.select(
         {"column_01", "join_key", "time_stamp", "targets"}, "POPULATION", "" );

@@ -464,7 +464,7 @@ Sqlite3::make_insert_statement(
 
 // ----------------------------------------------------------------------------
 
-void Sqlite3::read_csv(
+void Sqlite3::read(
     const std::string& _table,
     const bool _header,
     const size_t _skip,

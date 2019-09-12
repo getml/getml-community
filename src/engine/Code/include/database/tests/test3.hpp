@@ -25,9 +25,9 @@ void test3()
 
     sqlite_db.execute( population_statement );
 
-    auto reader = csv::Reader( "POPULATION.CSV", '\"', ',' );
+    auto reader = csv::CSVReader( "POPULATION.CSV", '\"', ',' );
 
-    sqlite_db.read_csv( "POPULATION", false, 0, &reader );
+    sqlite_db.read( "POPULATION", false, 0, &reader );
 
     auto it = sqlite_db.select(
         {"COLUMN_1", "COLUMN_2", "COLUMN_3", "COLUMN_4"}, "POPULATION", "" );

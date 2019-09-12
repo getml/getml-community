@@ -32,6 +32,8 @@
 #include "csv/Reader.hpp"
 #include "csv/StatementMaker.hpp"
 
+#include "csv/CSVReader.hpp"
+
 #include "csv/Sniffer.hpp"
 
 // ----------------------------------------------------------------------------

@@ -26,9 +26,9 @@ void test13()
 
     postgres_db.execute( population_statement );
 
-    auto reader = csv::Reader( "POPULATION.CSV", '\"', ',' );
+    auto reader = csv::CSVReader( "POPULATION.CSV", '\"', ',' );
 
-    postgres_db.read_csv( "POPULATION", true, 0, &reader );
+    postgres_db.read( "POPULATION", true, 0, &reader );
 
     const auto colnames = postgres_db.get_colnames( "POPULATION" );
 

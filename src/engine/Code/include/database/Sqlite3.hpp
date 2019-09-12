@@ -36,8 +36,8 @@ class Sqlite3 : public Connector
         const std::int32_t _start,
         const std::int32_t _length ) final;
 
-    /// Reads a CSV file into a table.
-    void read_csv(
+    /// Reads a CSV file or another data source into a table.
+    void read(
         const std::string& _table,
         const bool _header,
         const size_t _skip,

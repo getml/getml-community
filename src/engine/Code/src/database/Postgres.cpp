@@ -359,7 +359,7 @@ std::string Postgres::parse_field(
 
 // ----------------------------------------------------------------------------
 
-void Postgres::read_csv(
+void Postgres::read(
     const std::string& _table,
     const bool _header,
     const size_t _skip,

@@ -48,8 +48,8 @@ class Postgres : public Connector
     /// Lists the name of the tables held in the database.
     std::vector<std::string> list_tables() final;
 
-    /// Reads a CSV file into a table.
-    void read_csv(
+    /// Reads a CSV file or another data source into a table.
+    void read(
         const std::string& _table,
         const bool _header,
         const size_t _skip,

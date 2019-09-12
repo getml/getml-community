@@ -44,8 +44,8 @@ class Connector
     /// Lists the name of the tables held in the database.
     virtual std::vector<std::string> list_tables() = 0;
 
-    /// Reads a CSV file into a table.
-    virtual void read_csv(
+    /// Reads from a CSV file or another data source.
+    virtual void read(
         const std::string& _table,
         const bool _header,
         const size_t _skip,
