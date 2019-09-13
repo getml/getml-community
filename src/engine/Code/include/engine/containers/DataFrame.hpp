@@ -129,6 +129,9 @@ class DataFrame
     /// understand
     Poco::JSON::Object to_monitor() const;
 
+    /// Transforms a float to a time stamp
+    std::string to_time_stamp( const Float &_time_stamp_float ) const;
+
     /// Selects all rows for which the corresponding entry in _condition is
     /// true.
     void where( const std::vector<bool> &_condition );
@@ -596,9 +599,6 @@ class DataFrame
         const std::vector<Column<T>> &_matrices,
         const std::string &_path,
         const std::string &_prefix ) const;
-
-    /// Transforms a float to a time stamp
-    std::string to_time_stamp( const Float &_time_stamp_float ) const;
 
    private:
     /// Custom string conversions (produces to beautiful numbers than

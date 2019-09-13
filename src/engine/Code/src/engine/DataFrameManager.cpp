@@ -1073,8 +1073,10 @@ void DataFrameManager::to_db(
 
     const auto& df = utils::Getter::get( _name, data_frames() );
 
+    // We are using the bell character (\a) as the quotechar. It is least likely
+    // to appear in any field.
     auto reader = containers::DataFrameReader(
-        df, categories_, join_keys_encoding_, '"', '|' );
+        df, categories_, join_keys_encoding_, '\a', '|' );
 
     // --------------------------------------------------------------------
     // Create the table.
@@ -1084,6 +1086,8 @@ void DataFrameManager::to_db(
         connector()->dialect(),
         reader.colnames(),
         reader.coltypes() );
+
+    logger().log( statement );
 
     connector()->execute( statement );
 
