@@ -17,8 +17,7 @@ void test11()
         '\"',
         ',',
         0,
-        "POPULATION",
-        {} );
+        "POPULATION" );
 
     const auto population_statement = population_sniffer.sniff();
 

@@ -185,21 +185,6 @@ class Postgres : public Connector
         return {"int8", "int2", "int4", "_int2", "_int4"};
     }
 
-    /// List of all typnames that will be interpreted as a timestamp.
-    static std::vector<std::string> typnames_timestamp()
-    {
-        return {"timestamp",
-                "date",
-                "time",
-                "_timestamp",
-                "_date",
-                "_time",
-                "timestamptz",
-                "timetz",
-                "_timestamptz",
-                "_timetz"};
-    }
-
     // -------------------------------
 
    private:

@@ -18,8 +18,7 @@ class Sniffer
         const char _quotechar,
         const char _sep,
         const size_t _skip,
-        const std::string& _table_name,
-        const std::vector<std::string>& _time_formats )
+        const std::string& _table_name )
         : dialect_( _dialect ),
           files_( _files ),
           header_( _header ),
@@ -27,8 +26,7 @@ class Sniffer
           quotechar_( _quotechar ),
           sep_( _sep ),
           skip_( _skip ),
-          table_name_( _table_name ),
-          time_formats_( _time_formats )
+          table_name_( _table_name )
     {
         if ( _files.size() == 0 )
             {
@@ -81,14 +79,6 @@ class Sniffer
         return success;
     }
 
-    /// Checks whether a string can be converted to a time stamp.
-    bool is_time_stamp( const std::string& _str ) const
-    {
-        const auto [val, success] =
-            Parser::to_time_stamp( _str, time_formats_ );
-        return success;
-    }
-
     // -------------------------------
 
    private:
@@ -115,11 +105,6 @@ class Sniffer
 
     /// The name of the table to be produced.
     const std::string table_name_;
-
-    /// The time formats to be tried for parsing time stamps. For a full
-    /// documentation, see
-    /// https://pocoproject.org/docs/Poco.DateTimeFormatter.html.
-    const std::vector<std::string> time_formats_;
 
     // -------------------------------
 };  // namespace csv

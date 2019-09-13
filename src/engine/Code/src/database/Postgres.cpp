@@ -180,17 +180,6 @@ csv::Datatype Postgres::interpret_oid( Oid _oid ) const
         }
 
     // ------------------------------------------------------------------------
-    // Check whether it might be time stamp.
-
-    typnames = typnames_timestamp();
-
-    if ( std::find( typnames.begin(), typnames.end(), typname ) !=
-         typnames.end() )
-        {
-            return csv::Datatype::time_stamp;
-        }
-
-    // ------------------------------------------------------------------------
     // Otherwise, interpret it as a string.
 
     return csv::Datatype::string;
@@ -322,15 +311,6 @@ std::string Postgres::parse_field(
                         {
                             return "";
                         }
-                }
-
-                // ------------------------------------------------------------
-
-            case csv::Datatype::time_stamp:
-                {
-                    assert_true( false && "ToDo" );
-
-                    return "";
                 }
 
                 // ------------------------------------------------------------

@@ -10,7 +10,6 @@ enum Datatype
     double_precision,
     integer,
     string,
-    time_stamp,
     unknown
 };
 

@@ -140,9 +140,6 @@ std::string StatementMaker::to_string_postgres( const Datatype _type )
             case Datatype::string:
                 return "TEXT";
 
-            case Datatype::time_stamp:
-                return "TIMESTAMP";
-
             default:
                 assert_true( false );
                 return "";
@@ -163,9 +160,6 @@ std::string StatementMaker::to_string_sqlite( const Datatype _type )
 
             case Datatype::string:
                 return "TEXT";
-
-            case Datatype::time_stamp:
-                return "TEXT";  // sqlite has no time stamp type.
 
             default:
                 assert_true( false );

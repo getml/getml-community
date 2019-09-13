@@ -50,12 +50,6 @@ Datatype Sniffer::infer_datatype(
         {
             return Datatype::double_precision;
         }
-    else if (
-        ( _type == Datatype::time_stamp || _type == Datatype::unknown ) &&
-        is_time_stamp( _str ) )
-        {
-            return Datatype::time_stamp;
-        }
     else
         {
             return Datatype::string;

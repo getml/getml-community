@@ -202,9 +202,6 @@ void DatabaseManager::sniff_csv(
 
     const auto skip = JSON::get_value<size_t>( _cmd, "skip_" );
 
-    const auto time_formats = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "time_formats_" ) );
-
     // --------------------------------------------------------------------
 
     if ( quotechar.size() != 1 )
@@ -229,8 +226,7 @@ void DatabaseManager::sniff_csv(
         quotechar[0],
         sep[0],
         skip,
-        _name,
-        time_formats );
+        _name );
 
     const auto create_table_statement = sniffer.sniff();
 
