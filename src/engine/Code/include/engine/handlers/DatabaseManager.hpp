@@ -96,9 +96,6 @@ class DatabaseManager
         communication::Sender::send_string( "Success!", _socket );
     }
 
-    // ------------------------------------------------------------------------
-
-   private:
     /// Sends the name of all tables currently held in the database to the
     /// monitor.
     std::string post_tables();

@@ -1054,6 +1054,55 @@ void DataFrameManager::summarize(
 
 // ------------------------------------------------------------------------
 
+void DataFrameManager::to_db(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    // --------------------------------------------------------------------
+    // Parse the command.
+
+    const auto table_name = JSON::get_value<std::string>( _cmd, "table_name_" );
+
+    // --------------------------------------------------------------------
+
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    // --------------------------------------------------------------------
+    // Set up the DateFrameReader.
+
+    const auto& df = utils::Getter::get( _name, data_frames() );
+
+    auto reader = containers::DataFrameReader(
+        df, categories_, join_keys_encoding_, '"', '|' );
+
+    // --------------------------------------------------------------------
+    // Create the table.
+
+    const auto statement = csv::StatementMaker::make_statement(
+        table_name,
+        connector()->dialect(),
+        reader.colnames(),
+        reader.coltypes() );
+
+    connector()->execute( statement );
+
+    // --------------------------------------------------------------------
+    // Write data to the data base.
+
+    connector()->read( table_name, false, 0, &reader );
+
+    database_manager_->post_tables();
+
+    // --------------------------------------------------------------------
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    // --------------------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
 void DataFrameManager::where(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,

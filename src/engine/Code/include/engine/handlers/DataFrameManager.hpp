@@ -152,6 +152,12 @@ class DataFrameManager
     void summarize(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
 
+    /// Writes the dataframe into the data base.
+    void to_db(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
     /// Creates a new data frame by selecting from an existing one.
     void where(
         const std::string& _name,

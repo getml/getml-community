@@ -58,6 +58,8 @@
 
 #include "engine/containers/DataFrame.hpp"
 
+#include "engine/containers/DataFrameReader.hpp"
+
 // ----------------------------------------------------
 
 #endif  // ENGINE_CONTAINERS_HPP_

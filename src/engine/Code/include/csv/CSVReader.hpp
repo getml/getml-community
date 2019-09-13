@@ -30,19 +30,19 @@ class CSVReader : public Reader
 
    public:
     /// Returns the next line in the CSV file.
-    std::vector<std::string> next_line();
+    std::vector<std::string> next_line() final;
 
     // -------------------------------
 
    public:
     /// Whether the end of the file has been reached.
-    bool eof() const { return filestream_->eof(); }
+    bool eof() const final { return filestream_->eof(); }
 
     /// Trivial getter.
-    char quotechar() const { return quotechar_; }
+    char quotechar() const final { return quotechar_; }
 
     /// Trivial getter.
-    char sep() const { return sep_; }
+    char sep() const final { return sep_; }
 
     // -------------------------------
 
