@@ -1199,15 +1199,13 @@ std::string DataFrame::to_time_stamp( const Float &_time_stamp_float ) const
             return "NULL";
         }
 
-    const std::chrono::time_point<std::chrono::system_clock> epoch_point;
+    const auto microseconds_since_epoch = static_cast<Poco::Timestamp::TimeVal>(
+        86400000000.0 * _time_stamp_float );
 
-    const auto seconds_since_epoch =
-        static_cast<std::time_t>( 86400.0 * _time_stamp_float );
+    const auto time_stamp = Poco::Timestamp( microseconds_since_epoch );
 
-    const auto time_stamp = std::chrono::system_clock::to_time_t(
-        epoch_point + std::chrono::seconds( seconds_since_epoch ) );
-
-    return std::asctime( std::gmtime( &time_stamp ) );
+    return Poco::DateTimeFormatter::format(
+        time_stamp, Poco::DateTimeFormat::ISO8601_FRAC_FORMAT );
 }
 
 // ----------------------------------------------------------------------------

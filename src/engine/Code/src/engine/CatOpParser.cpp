@@ -96,17 +96,15 @@ std::vector<std::string> CatOpParser::numerical_to_string(
                         return std::string( "NULL" );
                     }
 
-                const std::chrono::time_point<std::chrono::system_clock>
-                    epoch_point;
+                const auto microseconds_since_epoch =
+                    static_cast<Poco::Timestamp::TimeVal>(
+                        86400000000.0 * val );
 
-                const auto seconds_since_epoch =
-                    static_cast<std::time_t>( 86400.0 * val );
+                const auto time_stamp =
+                    Poco::Timestamp( microseconds_since_epoch );
 
-                const auto time_stamp = std::chrono::system_clock::to_time_t(
-                    epoch_point + std::chrono::seconds( seconds_since_epoch ) );
-
-                return std::string(
-                    std::asctime( std::gmtime( &time_stamp ) ) );
+                return Poco::DateTimeFormatter::format(
+                    time_stamp, Poco::DateTimeFormat::ISO8601_FRAC_FORMAT );
             };
 
             std::transform(
