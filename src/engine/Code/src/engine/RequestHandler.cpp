@@ -227,6 +227,10 @@ void RequestHandler::run()
                 {
                     data_frame_manager().to_db( name, cmd, &socket() );
                 }
+            else if ( type == "DataFrame.to_csv" )
+                {
+                    data_frame_manager().to_csv( name, cmd, &socket() );
+                }
             else if ( type == "DataFrame.where" )
                 {
                     data_frame_manager().where( name, cmd, &socket() );

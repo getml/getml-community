@@ -10,6 +10,21 @@ class Parser
    public:
     // -------------------------------
 
+    /// Removes the quotechars.
+    static std::string remove_quotechars(
+        const std::string& _str, const char _quotechar )
+    {
+        auto field = _str;
+
+        field.erase(
+            std::remove( field.begin(), field.end(), _quotechar ),
+            field.end() );
+
+        return field;
+    }
+
+    // -------------------------------
+
     /// Transforms a string to a double.
     static std::pair<Float, bool> to_double( const std::string& _str )
     {

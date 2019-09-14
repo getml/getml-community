@@ -7,7 +7,8 @@ namespace containers
 {
 // ----------------------------------------------------------------------------
 
-std::vector<std::string> DataFrameReader::make_colnames( const DataFrame& _df )
+std::vector<std::string> DataFrameReader::make_colnames(
+    const DataFrame& _df, char _quotechar )
 {
     // ------------------------------------------------------------------------
 
@@ -105,6 +106,13 @@ std::vector<std::string> DataFrameReader::make_colnames( const DataFrame& _df )
                 colnames.push_back( colname );
             else
                 colnames.push_back( "time_stamp_" + colname );
+        }
+
+    // ------------------------------------------------------------------------
+
+    for ( auto& name : colnames )
+        {
+            name = csv::Parser::remove_quotechars( name, _quotechar );
         }
 
     // ------------------------------------------------------------------------

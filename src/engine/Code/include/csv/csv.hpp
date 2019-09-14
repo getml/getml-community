@@ -33,6 +33,7 @@
 #include "csv/StatementMaker.hpp"
 
 #include "csv/CSVReader.hpp"
+#include "csv/CSVWriter.hpp"
 
 #include "csv/Sniffer.hpp"
 

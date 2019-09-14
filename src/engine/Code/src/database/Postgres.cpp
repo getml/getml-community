@@ -316,15 +316,8 @@ std::string Postgres::parse_field(
                 // ------------------------------------------------------------
 
             default:
-                auto field = _raw_field;
-
-                // std::remove moves all occurences of _quotechar to the very
-                // left.
-                // Erase then gets rid of them. This is called the
-                // remove-erase-idiom.
-                field.erase(
-                    std::remove( field.begin(), field.end(), _quotechar ),
-                    field.end() );
+                auto field =
+                    csv::Parser::remove_quotechars( _raw_field, _quotechar );
 
                 if ( field.find( _sep ) != std::string::npos )
                     {

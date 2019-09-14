@@ -1054,6 +1054,52 @@ void DataFrameManager::summarize(
 
 // ------------------------------------------------------------------------
 
+void DataFrameManager::to_csv(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    // --------------------------------------------------------------------
+
+    const auto fname = JSON::get_value<std::string>( _cmd, "fname_" );
+
+    const auto quotechar = JSON::get_value<std::string>( _cmd, "quotechar_" );
+
+    const auto sep = JSON::get_value<std::string>( _cmd, "sep_" );
+
+    // --------------------------------------------------------------------
+
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    // --------------------------------------------------------------------
+    // Set up the DataFrameReader.
+
+    const auto& df = utils::Getter::get( _name, data_frames() );
+
+    // We are using the bell character (\a) as the quotechar. It is least likely
+    // to appear in any field.
+    auto reader = containers::DataFrameReader(
+        df, categories_, join_keys_encoding_, '\a', '|' );
+
+    // --------------------------------------------------------------------
+    // Set up the CSVWriter.
+
+    auto writer = csv::CSVWriter( fname, reader.colnames(), quotechar, sep );
+
+    // --------------------------------------------------------------------
+    // Write data to the file.
+
+    writer.write( &reader );
+
+    // --------------------------------------------------------------------
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    // --------------------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
 void DataFrameManager::to_db(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,
@@ -1069,7 +1115,7 @@ void DataFrameManager::to_db(
     multithreading::ReadLock read_lock( read_write_lock_ );
 
     // --------------------------------------------------------------------
-    // Set up the DateFrameReader.
+    // Set up the DataFrameReader.
 
     const auto& df = utils::Getter::get( _name, data_frames() );
 

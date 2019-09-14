@@ -20,7 +20,7 @@ class DataFrameReader : public csv::Reader
         const char _quotechar,
         const char _sep )
         : categories_( _categories ),
-          colnames_( make_colnames( _df ) ),
+          colnames_( make_colnames( _df, _quotechar ) ),
           coltypes_( make_coltypes( _df ) ),
           df_( _df ),
           join_keys_encoding_( _join_keys_encoding ),
@@ -61,7 +61,8 @@ class DataFrameReader : public csv::Reader
 
    private:
     /// Generates the column names.
-    static std::vector<std::string> make_colnames( const DataFrame& _df );
+    static std::vector<std::string> make_colnames(
+        const DataFrame& _df, char _quotechar );
 
     /// Generates the column types.
     static std::vector<csv::Datatype> make_coltypes( const DataFrame& _df );
