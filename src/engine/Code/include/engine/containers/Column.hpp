@@ -24,10 +24,11 @@ class Column
             "Only arithmetic types allowed for Column<T>(...)!" );
     }
 
-    Column(
-        const size_t _nrows, const std::shared_ptr<std::vector<T>> &_data_ptr )
-        : data_ptr_( _data_ptr ), name_( "" ), nrows_( _nrows ), unit_( "" )
+    Column( const std::shared_ptr<std::vector<T>> &_data_ptr )
+        : data_ptr_( _data_ptr ), name_( "" ), unit_( "" )
     {
+        assert_true( data_ptr_ );
+        nrows_ = data_ptr_->size();
     }
 
     Column() : Column( 0 ) {}

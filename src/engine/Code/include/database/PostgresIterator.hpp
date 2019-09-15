@@ -31,119 +31,33 @@ class PostgresIterator : public Iterator
     // -------------------------------------------------------------------------
 
    public:
+    /// Returns the column names of the query.
+    std::vector<std::string> colnames() const final;
+
     /// Returns a double.
-    Float get_double() final
-    {
-        const auto [str, is_null] = get_value();
-
-        if ( is_null )
-            {
-                return static_cast<Float>( NAN );
-            }
-
-        auto [val, success] = csv::Parser::to_double( std::string( str ) );
-
-        if ( !success )
-            {
-                std::tie( val, success ) = csv::Parser::to_time_stamp(
-                    std::string( str ), time_formats_ );
-            }
-
-        if ( !success )
-            {
-                return static_cast<Float>( NAN );
-            }
-
-        return val;
-    }
+    Float get_double() final;
 
     /// Returns an int.
-    Int get_int() final
-    {
-        const auto [str, is_null] = get_value();
-
-        if ( is_null )
-            {
-                return 0;
-            }
-
-        const auto [val, success] =
-            csv::Parser::to_double( std::string( str ) );
-
-        if ( !success )
-            {
-                return 0;
-            }
-
-        return static_cast<Int>( val );
-    }
-
-    /// Returns a string .
-    std::string get_string() final
-    {
-        const auto [val, is_null] = get_value();
-
-        if ( is_null )
-            {
-                return "NULL";
-            }
-
-        return val;
-    }
+    Int get_int() final;
 
     /// Returns a time stamps and increments the iterator.
-    Float get_time_stamp() final
-    {
-        const auto [str, is_null] = get_value();
+    Float get_time_stamp() final;
 
-        if ( is_null )
-            {
-                return static_cast<Float>( NAN );
-            }
+    /// Returns a string .
+    std::string get_string() final;
 
-        auto [val, success] = csv::Parser::to_time_stamp( str, time_formats_ );
+    // -------------------------------------------------------------------------
 
-        if ( !success )
-            {
-                std::tie( val, success ) =
-                    csv::Parser::to_double( std::string( str ) );
-            }
-
-        if ( !success )
-            {
-                return static_cast<Float>( NAN );
-            }
-
-        return val;
-    }
-
-    /// Returns the raw value.
-    std::pair<char*, bool> get_value()
-    {
-        check();
-
-        const bool is_null = PQgetisnull( result(), rownum_, colnum_ );
-
-        if ( is_null )
-            {
-                increment();
-
-                return std::pair<char*, bool>( nullptr, true );
-            }
-
-        const auto val = PQgetvalue( result(), rownum_, colnum_ );
-
-        increment();
-
-        return std::pair<char*, bool>( val, false );
-    }
-
+   public:
     /// Whether the end is reached.
     bool end() const final { return ( PQntuples( result() ) == 0 ); }
 
     // -------------------------------------------------------------------------
 
    private:
+    /// Executes an SQL command.
+    std::shared_ptr<PGresult> execute( const std::string& _sql ) const;
+
     /// Generates an SQL statement fro the colnames, the table name and an
     /// optional _where.
     static std::string make_sql(
@@ -191,33 +105,32 @@ class PostgresIterator : public Iterator
         end_required_ = false;
     }
 
-    /// Executes and SQL command.
-    std::shared_ptr<PGresult> execute( const std::string& _sql ) const
-    {
-        auto raw_ptr = PQexec( connection(), _sql.c_str() );
-
-        auto result = std::shared_ptr<PGresult>( raw_ptr, PQclear );
-
-        const auto status = PQresultStatus( result.get() );
-
-        if ( status != PGRES_COMMAND_OK && status != PGRES_TUPLES_OK )
-            {
-                const std::string error_msg =
-                    PQresultErrorMessage( result.get() );
-
-                throw std::runtime_error(
-                    "Executing command in postgres iterator failed: " +
-                    error_msg );
-            }
-
-        return result;
-    }
-
     /// Fetches the next n rows.
     void fetch_next( const std::int32_t _n )
     {
         result_ = execute(
             "FETCH FORWARD " + std::to_string( _n ) + " FROM getmlcursor;" );
+    }
+
+    /// Returns the raw value.
+    std::pair<char*, bool> get_value()
+    {
+        check();
+
+        const bool is_null = PQgetisnull( result(), rownum_, colnum_ );
+
+        if ( is_null )
+            {
+                increment();
+
+                return std::pair<char*, bool>( nullptr, true );
+            }
+
+        const auto val = PQgetvalue( result(), rownum_, colnum_ );
+
+        increment();
+
+        return std::pair<char*, bool>( val, false );
     }
 
     /// Increments the iterator.

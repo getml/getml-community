@@ -36,6 +36,8 @@ extern "C"
 #include "database/Float.hpp"
 #include "database/Int.hpp"
 
+#include "database/Getter.hpp"
+
 #include "database/Iterator.hpp"
 
 #include "database/Connector.hpp"

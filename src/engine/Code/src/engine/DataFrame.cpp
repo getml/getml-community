@@ -45,7 +45,7 @@ void DataFrame::add_float_vectors(
         {
             assert_true( _vectors[i] );
 
-            auto col = Column<Float>( _vectors[i]->size(), _vectors[i] );
+            auto col = Column<Float>( _vectors[i] );
 
             col.set_name( _names[i] );
 
@@ -94,7 +94,7 @@ void DataFrame::add_int_vectors(
         {
             assert_true( _vectors[i] );
 
-            auto col = Column<Int>( _vectors[i]->size(), _vectors[i] );
+            auto col = Column<Int>( _vectors[i] );
 
             col.set_name( _names[i] );
 
@@ -792,6 +792,157 @@ void DataFrame::from_json(
 
             add_float_column( column, "time_stamp" );
         }
+}
+
+// ----------------------------------------------------------------------------
+
+void DataFrame::from_query(
+    const std::shared_ptr<database::Connector> _connector,
+    const std::string &_query,
+    const std::vector<std::string> &_categorical_names,
+    const std::vector<std::string> &_discrete_names,
+    const std::vector<std::string> &_join_key_names,
+    const std::vector<std::string> &_numerical_names,
+    const std::vector<std::string> &_target_names,
+    const std::vector<std::string> &_time_stamp_names )
+{
+    // ----------------------------------------
+
+    auto categoricals = make_vectors<Int>( _categorical_names.size() );
+
+    auto discretes = make_vectors<Float>( _discrete_names.size() );
+
+    auto join_keys = make_vectors<Int>( _join_key_names.size() );
+
+    auto numericals = make_vectors<Float>( _numerical_names.size() );
+
+    auto targets = make_vectors<Float>( _target_names.size() );
+
+    auto time_stamps = make_vectors<Float>( _time_stamp_names.size() );
+
+    // ----------------------------------------
+
+    auto iterator = _connector->select( _query );
+
+    const auto iter_colnames = iterator->colnames();
+
+    // ----------------------------------------
+
+    const auto make_column_indices =
+        [iter_colnames]( const std::vector<std::string> &_names ) {
+            std::vector<size_t> indices;
+
+            for ( const auto &name : _names )
+                {
+                    const auto it = std::find(
+                        iter_colnames.begin(), iter_colnames.end(), name );
+
+                    if ( it == _names.end() )
+                        {
+                            throw std::invalid_argument(
+                                "No column named '" + name + "' in query!" );
+                        }
+
+                    indices.push_back( static_cast<size_t>(
+                        std::distance( iter_colnames.begin(), it ) ) );
+                }
+
+            return indices;
+        };
+
+    // ----------------------------------------
+
+    const auto categorical_ix = make_column_indices( _categorical_names );
+
+    const auto discrete_ix = make_column_indices( _discrete_names );
+
+    const auto join_key_ix = make_column_indices( _join_key_names );
+
+    const auto numerical_ix = make_column_indices( _numerical_names );
+
+    const auto target_ix = make_column_indices( _target_names );
+
+    const auto time_stamp_ix = make_column_indices( _time_stamp_names );
+
+    // ----------------------------------------
+
+    const auto time_formats = _connector->time_formats();
+
+    while ( !iterator->end() )
+        {
+            auto line = std::vector<std::string>( iter_colnames.size() );
+
+            for ( auto &field : line )
+                {
+                    field = iterator->get_string();
+                }
+
+            for ( size_t i = 0; i < categoricals.size(); ++i )
+                {
+                    const auto &str = line[categorical_ix[i]];
+                    categoricals[i]->push_back( ( *categories_ )[str] );
+                }
+
+            for ( size_t i = 0; i < discretes.size(); ++i )
+                {
+                    const auto &str = line[discrete_ix[i]];
+                    discretes[i]->push_back(
+                        database::Getter::get_double( str, time_formats ) );
+                }
+
+            for ( size_t i = 0; i < join_keys.size(); ++i )
+                {
+                    const auto &str = line[join_key_ix[i]];
+                    join_keys[i]->push_back( ( *join_keys_encoding_ )[str] );
+                }
+
+            for ( size_t i = 0; i < numericals.size(); ++i )
+                {
+                    const auto &str = line[numerical_ix[i]];
+                    numericals[i]->push_back(
+                        database::Getter::get_double( str, time_formats ) );
+                }
+
+            for ( size_t i = 0; i < targets.size(); ++i )
+                {
+                    const auto &str = line[target_ix[i]];
+                    targets[i]->push_back(
+                        database::Getter::get_double( str, time_formats ) );
+                }
+
+            for ( size_t i = 0; i < time_stamps.size(); ++i )
+                {
+                    const auto &str = line[time_stamp_ix[i]];
+                    time_stamps[i]->push_back(
+                        database::Getter::get_time_stamp( str, time_formats ) );
+                }
+        }
+
+    // ----------------------------------------
+
+    auto df = DataFrame( name(), categories_, join_keys_encoding_ );
+
+    df.add_int_vectors( _categorical_names, categoricals, "categorical" );
+
+    df.add_float_vectors( _discrete_names, discretes, "discrete" );
+
+    df.add_int_vectors( _join_key_names, join_keys, "join_key" );
+
+    df.add_float_vectors( _numerical_names, numericals, "numerical" );
+
+    df.add_float_vectors( _target_names, targets, "target" );
+
+    df.add_float_vectors( _time_stamp_names, time_stamps, "time_stamp" );
+
+    // ----------------------------------------
+
+    df.check_plausibility();
+
+    // ----------------------------------------
+
+    *this = std::move( df );
+
+    // ----------------------------------------
 }
 
 // ----------------------------------------------------------------------------

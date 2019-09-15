@@ -99,6 +99,98 @@ PostgresIterator::~PostgresIterator()
 
 // ----------------------------------------------------------------------------
 
+std::vector<std::string> PostgresIterator::colnames() const
+{
+    std::vector<std::string> colnames( num_cols_ );
+
+    for ( int i = 0; i < num_cols_; ++i )
+        {
+            colnames[i] = PQfname( result(), i );
+        }
+
+    return colnames;
+}
+
+// ----------------------------------------------------------------------------
+
+std::shared_ptr<PGresult> PostgresIterator::execute(
+    const std::string& _sql ) const
+{
+    auto raw_ptr = PQexec( connection(), _sql.c_str() );
+
+    auto result = std::shared_ptr<PGresult>( raw_ptr, PQclear );
+
+    const auto status = PQresultStatus( result.get() );
+
+    if ( status != PGRES_COMMAND_OK && status != PGRES_TUPLES_OK )
+        {
+            const std::string error_msg = PQresultErrorMessage( result.get() );
+
+            throw std::runtime_error(
+                "Executing command in postgres iterator failed: " + error_msg );
+        }
+
+    return result;
+}
+
+// ----------------------------------------------------------------------------
+
+Float PostgresIterator::get_double()
+{
+    const auto [str, is_null] = get_value();
+
+    if ( is_null )
+        {
+            return static_cast<Float>( NAN );
+        }
+
+    return Getter::get_double( std::string( str ), time_formats_ );
+}
+
+// ----------------------------------------------------------------------------
+
+Int PostgresIterator::get_int()
+{
+    const auto [str, is_null] = get_value();
+
+    if ( is_null )
+        {
+            return 0;
+        }
+
+    return Getter::get_int( std::string( str ) );
+}
+
+// ----------------------------------------------------------------------------
+
+std::string PostgresIterator::get_string()
+{
+    const auto [val, is_null] = get_value();
+
+    if ( is_null )
+        {
+            return "NULL";
+        }
+
+    return val;
+}
+
+// ----------------------------------------------------------------------------
+
+Float PostgresIterator::get_time_stamp()
+{
+    const auto [str, is_null] = get_value();
+
+    if ( is_null )
+        {
+            return static_cast<Float>( NAN );
+        }
+
+    return Getter::get_time_stamp( std::string( str ), time_formats_ );
+}
+
+// ----------------------------------------------------------------------------
+
 std::string PostgresIterator::make_sql(
     const std::vector<std::string>& _colnames,
     const std::string& _tname,

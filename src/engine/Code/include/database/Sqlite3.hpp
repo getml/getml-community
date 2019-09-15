@@ -90,6 +90,12 @@ class Sqlite3 : public Connector
             db_, _sql, read_write_lock_, time_formats_ );
     }
 
+    /// Returns the time formats used.
+    const std::vector<std::string>& time_formats() const
+    {
+        return time_formats_;
+    }
+
     // -------------------------------
 
    private:

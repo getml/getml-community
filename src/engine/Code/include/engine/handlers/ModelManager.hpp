@@ -468,11 +468,11 @@ Poco::JSON::Object ModelManager<ModelType>::receive_data(
                 {
                     local_data_frame_manager.add_data_frame( name, _socket );
                 }
-            else if ( type == "DataFrame.from_db" )
+            else if ( type == "DataFrame.from_query" )
                 {
                     license_checker().check_enterprise();
 
-                    local_data_frame_manager.from_db(
+                    local_data_frame_manager.from_query(
                         name, cmd, false, _socket );
                 }
             else if ( type == "DataFrame.from_json" )

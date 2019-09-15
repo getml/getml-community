@@ -29,6 +29,9 @@ class Sqlite3Iterator : public Iterator
     // -------------------------------
 
    public:
+    /// Returns the column names of the query.
+    std::vector<std::string> colnames() const final;
+
     /// Returns a double and increments the iterator.
     Float get_double() final;
 

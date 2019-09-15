@@ -125,6 +125,26 @@ void ProjectManager::add_data_frame_from_json(
 
 // ------------------------------------------------------------------------
 
+void ProjectManager::add_data_frame_from_query(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    if ( project_directory_ == "" )
+        {
+            throw std::invalid_argument( "You have not set a project!" );
+        }
+
+    const auto append = JSON::get_value<bool>( _cmd, "append_" );
+
+    data_frame_manager_->from_query( _name, _cmd, append, _socket );
+
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    monitor_->send( "postdataframe", data_frames()[_name].to_monitor() );
+}
+// ------------------------------------------------------------------------
+
 void ProjectManager::add_relboost_model(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,

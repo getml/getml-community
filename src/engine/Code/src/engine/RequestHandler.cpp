@@ -177,6 +177,11 @@ void RequestHandler::run()
                     project_manager().add_data_frame_from_json(
                         name, cmd, &socket() );
                 }
+            else if ( type == "DataFrame.from_query" )
+                {
+                    project_manager().add_data_frame_from_query(
+                        name, cmd, &socket() );
+                }
             else if ( type == "DataFrame.load" )
                 {
                     project_manager().load_data_frame( name, &socket() );
@@ -223,26 +228,17 @@ void RequestHandler::run()
                 {
                     data_frame_manager().summarize( name, &socket() );
                 }
-            else if ( type == "DataFrame.to_db" )
-                {
-                    data_frame_manager().to_db( name, cmd, &socket() );
-                }
             else if ( type == "DataFrame.to_csv" )
                 {
                     data_frame_manager().to_csv( name, cmd, &socket() );
                 }
+            else if ( type == "DataFrame.to_db" )
+                {
+                    data_frame_manager().to_db( name, cmd, &socket() );
+                }
             else if ( type == "DataFrame.where" )
                 {
                     data_frame_manager().where( name, cmd, &socket() );
-                }
-
-            else if ( type == "delete_all_users" )
-                {
-                    /*    monitor().send( "deleteallusers", "" );
-
-                        communication::Sender::send_string( "Success!",
-                       &socket()
-                       );*/
                 }
             else if ( type == "delete_project" )
                 {

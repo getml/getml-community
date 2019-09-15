@@ -69,10 +69,21 @@ class DataFrame
         const std::vector<std::string> &_target_names,
         const std::vector<std::string> &_time_stamp_names );
 
-    /// Builds a dataframe from a database connector.
+    /// Builds a dataframe from a table in the data base.
     void from_db(
         const std::shared_ptr<database::Connector> _connector,
         const std::string &_tname,
+        const std::vector<std::string> &_categoricals,
+        const std::vector<std::string> &_discretes,
+        const std::vector<std::string> &_join_keys,
+        const std::vector<std::string> &_numericals,
+        const std::vector<std::string> &_targets,
+        const std::vector<std::string> &_time_stamps );
+
+    /// Builds a dataframe from a query.
+    void from_query(
+        const std::shared_ptr<database::Connector> _connector,
+        const std::string &_query,
         const std::vector<std::string> &_categoricals,
         const std::vector<std::string> &_discretes,
         const std::vector<std::string> &_join_keys,

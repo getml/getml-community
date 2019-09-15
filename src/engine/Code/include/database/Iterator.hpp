@@ -17,6 +17,9 @@ class Iterator
     // -------------------------------
 
    public:
+    /// Returns the column names of the query.
+    virtual std::vector<std::string> colnames() const = 0;
+
     /// Whether the end is reached.
     virtual bool end() const = 0;
 

@@ -73,6 +73,20 @@ Sqlite3Iterator::Sqlite3Iterator(
 
 // ----------------------------------------------------------------------------
 
+std::vector<std::string> Sqlite3Iterator::colnames() const
+{
+    std::vector<std::string> colnames( num_cols_ );
+
+    for ( int i = 0; i < num_cols_; ++i )
+        {
+            colnames[i] = sqlite3_column_name( stmt(), i );
+        }
+
+    return colnames;
+}
+
+// ----------------------------------------------------------------------------
+
 Float Sqlite3Iterator::get_double()
 {
     if ( end_ )
@@ -82,8 +96,6 @@ Float Sqlite3Iterator::get_double()
 
     auto val = static_cast<Float>( sqlite3_column_double( stmt(), colnum_ ) );
 
-    bool success = true;
-
     // sqlite3_column_double(...) returns 0.0 when the value is NULL.
     if ( val == 0.0 )
         {
@@ -92,22 +104,10 @@ Float Sqlite3Iterator::get_double()
             // sqlite3_column_text(...) returns NULL when the value is NULL.
             if ( txt )
                 {
-                    std::tie( val, success ) = csv::Parser::to_double(
-                        std::string( reinterpret_cast<const char*>( txt ) ) );
+                    const auto str =
+                        std::string( reinterpret_cast<const char*>( txt ) );
 
-                    if ( !success )
-                        {
-                            std::tie( val, success ) =
-                                csv::Parser::to_time_stamp(
-                                    std::string(
-                                        reinterpret_cast<const char*>( txt ) ),
-                                    time_formats_ );
-                        }
-
-                    if ( !success )
-                        {
-                            val = NAN;
-                        }
+                    val = Getter::get_double( str, time_formats_ );
                 }
             else
                 {
@@ -189,25 +189,12 @@ Float Sqlite3Iterator::get_time_stamp()
 
     Float val = 0.0;
 
-    bool success = true;
-
     // sqlite3_column_text(...) returns NULL when the value is NULL.
     if ( ptr )
         {
             const std::string str = reinterpret_cast<const char*>( ptr );
 
-            std::tie( val, success ) =
-                csv::Parser::to_time_stamp( str, time_formats_ );
-
-            if ( !success )
-                {
-                    std::tie( val, success ) = csv::Parser::to_double( str );
-                }
-
-            if ( !success )
-                {
-                    val = NAN;
-                }
+            val = Getter::get_time_stamp( str, time_formats_ );
         }
     else
         {

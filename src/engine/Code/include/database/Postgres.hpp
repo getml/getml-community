@@ -101,6 +101,12 @@ class Postgres : public Connector
             make_connection(), _sql, time_formats_ );
     }
 
+    /// Returns the time formats used.
+    const std::vector<std::string>& time_formats() const
+    {
+        return time_formats_;
+    }
+
     // -------------------------------
 
    private:

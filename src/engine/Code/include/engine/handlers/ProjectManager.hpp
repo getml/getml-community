@@ -76,6 +76,12 @@ class ProjectManager
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
+    /// Adds a new data frame generated from a query.
+    void add_data_frame_from_query(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
     /// Adds a new relboost model to the project.
     void add_relboost_model(
         const std::string& _name,
