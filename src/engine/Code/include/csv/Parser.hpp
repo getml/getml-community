@@ -87,16 +87,16 @@ class Parser
                 const auto success = Poco::DateTimeParser::tryParse(
                     fmt, trimmed, date_time, utc );
 
-                const auto timestamp = date_time.timestamp();
+                const auto time_stamp = date_time.timestamp();
 
                 if ( !success || Poco::DateTimeFormatter::format(
-                                     date_time, fmt, utc ) != trimmed )
+                                     time_stamp, fmt ) != trimmed )
                     {
                         continue;
                     }
 
                 return std::pair<Float, bool>(
-                    static_cast<Float>( timestamp.epochMicroseconds() ) /
+                    static_cast<Float>( time_stamp.epochMicroseconds() ) /
                         8.64e10,
                     true );
             }

@@ -15,7 +15,9 @@ class DatabaseManager
         const std::shared_ptr<const monitoring::Monitor>& _monitor )
         : connector_( std::make_shared<database::Sqlite3>( database::Sqlite3(
               "../database.db",
-              {"%Y/%m/%d %H:%M:%S", "%Y-%m-%d %H:%M:%S"} ) ) ),
+              {"%Y-%m-%dT%H:%M:%s%z",
+               "%Y/%m/%d %H:%M:%S",
+               "%Y-%m-%d %H:%M:%S"} ) ) ),
           logger_( _logger ),
           monitor_( _monitor ),
           read_write_lock_( std::make_shared<multithreading::ReadWriteLock>() )

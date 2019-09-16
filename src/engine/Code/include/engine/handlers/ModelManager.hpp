@@ -20,6 +20,7 @@ class ModelManager
    public:
     ModelManager(
         const std::shared_ptr<containers::Encoding>& _categories,
+        const std::shared_ptr<DatabaseManager>& _database_manager,
         const std::shared_ptr<std::map<std::string, containers::DataFrame>>
             _data_frames,
         const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
@@ -30,6 +31,7 @@ class ModelManager
         const std::shared_ptr<const monitoring::Monitor>& _monitor,
         const std::shared_ptr<multithreading::ReadWriteLock>& _read_write_lock )
         : categories_( _categories ),
+          database_manager_( _database_manager ),
           data_frames_( _data_frames ),
           join_keys_encoding_( _join_keys_encoding ),
           license_checker_( _license_checker ),
@@ -200,6 +202,9 @@ class ModelManager
    private:
     /// Maps integeres to category names
     const std::shared_ptr<containers::Encoding> categories_;
+
+    /// Connector to the underlying database.
+    const std::shared_ptr<DatabaseManager> database_manager_;
 
     /// The data frames currently held in memory
     const std::shared_ptr<std::map<std::string, containers::DataFrame>>
@@ -445,7 +450,7 @@ Poco::JSON::Object ModelManager<ModelType>::receive_data(
 
     auto local_data_frame_manager = DataFrameManager(
         _categories,
-        std::shared_ptr<DatabaseManager>(),
+        database_manager_,
         _data_frames,
         local_join_keys_encoding,
         license_checker_,
@@ -537,7 +542,7 @@ void ModelManager<ModelType>::send_data(
 
     auto local_data_frame_manager = DataFrameManager(
         _categories,
-        std::shared_ptr<DatabaseManager>(),
+        database_manager_,
         _local_data_frames,
         local_join_keys_encoding,
         license_checker_,
@@ -547,6 +552,7 @@ void ModelManager<ModelType>::send_data(
 
     auto local_model_manager = ModelManager(
         _categories,
+        database_manager_,
         _local_data_frames,
         local_join_keys_encoding,
         license_checker_,

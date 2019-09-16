@@ -89,6 +89,7 @@ int main( int argc, char *argv[] )
     const auto autosql_model_manager =
         std::make_shared<engine::handlers::AutoSQLModelManager>(
             categories,
+            database_manager,
             data_frames,
             join_keys_encoding,
             license_checker,
@@ -111,6 +112,7 @@ int main( int argc, char *argv[] )
     const auto relboost_model_manager =
         std::make_shared<engine::handlers::RelboostModelManager>(
             categories,
+            database_manager,
             data_frames,
             join_keys_encoding,
             license_checker,
