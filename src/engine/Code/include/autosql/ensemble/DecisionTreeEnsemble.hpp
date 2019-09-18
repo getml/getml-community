@@ -107,6 +107,8 @@ class DecisionTreeEnsemble
     /// Trivial accessor
     const descriptors::Hyperparameters &hyperparameters() const
     {
+        throw_unless(
+            impl().hyperparameters_, "Model has no hyperparameters." );
         return *impl().hyperparameters_;
     }
 
@@ -128,21 +130,28 @@ class DecisionTreeEnsemble
     /// Trivial (const) accessor
     const std::vector<containers::Schema> &peripheral_schema() const
     {
-        assert_true( impl().peripheral_schema_ );
+        throw_unless(
+            impl().peripheral_schema_,
+            "Model has no peripheral schema - did you maybe forget to fit "
+            "it?" );
         return *impl().peripheral_schema_;
     }
 
     /// Trivial accessor
     inline const decisiontrees::Placeholder &placeholder() const
     {
-        assert_true( impl().placeholder_population_ );
+        throw_unless(
+            impl().placeholder_population_, "Model has no placeholder." );
         return *impl().placeholder_population_;
     }
 
     /// Trivial (const) accessor
     const containers::Schema &population_schema() const
     {
-        assert_true( impl().population_schema_ );
+        throw_unless(
+            impl().population_schema_,
+            "Model has no population schema - did you may be forget to fit "
+            "it?" );
         return *impl().population_schema_;
     }
 

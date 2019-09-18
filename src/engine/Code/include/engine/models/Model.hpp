@@ -1252,6 +1252,7 @@ containers::Features Model<FeatureEngineererType>::transform(
 {
     // -------------------------------------------------------------------------
     // Extract the peripheral tables
+    //
 
     const auto peripheral_schema = feature_engineerer().peripheral_schema();
 
