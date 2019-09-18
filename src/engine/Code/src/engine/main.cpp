@@ -26,13 +26,19 @@ int main( int argc, char *argv[] )
               << std::endl
               << std::endl;
 
-    const auto http = ( options.monitor_.tls_encryption_ ? "https" : "http" );
-
     std::cout << "Please open a web browser (like Firefox, Chrome or Safari) "
-              << "and go to " << http
-              << "://localhost:" << options.monitor_.port_ << "/ to log in."
-              << std::endl
+              << "and go to http://localhost:" << options.monitor_.port_
+              << "/ to log in." << std::endl
               << std::endl;
+
+    if ( options.monitor_.tls_encryption_ )
+        {
+            std::cout << "An HTTPS server that accepts remote connections has "
+                         "been launched "
+                      << "on https://localhost:"
+                      << options.monitor_.remote_port_ << "/." << std::endl
+                      << std::endl;
+        }
 
     std::this_thread::sleep_for( std::chrono::seconds( 1 ) );
 

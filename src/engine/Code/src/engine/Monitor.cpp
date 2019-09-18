@@ -124,48 +124,20 @@ void Monitor::send_and_receive(
     Poco::Net::HTTPResponse* _res,
     std::string* _response_content ) const
 {
-    if ( options_.monitor_.tls_encryption_ )
-        {
-            const Poco::Net::Context::Ptr context( new Poco::Net::Context(
-                Poco::Net::Context::Usage::CLIENT_USE,
-                "",
-                Poco::Net::Context::VerificationMode::VERIFY_NONE ) );
+    Poco::Net::HTTPClientSession session(
+        "127.0.0.1", static_cast<Poco::UInt16>( options_.monitor_.port_ ) );
 
-            Poco::Net::HTTPSClientSession session(
-                "127.0.0.1",
-                static_cast<Poco::UInt16>( options_.monitor_.port_ ),
-                context );
+    const auto one_year = Poco::Timespan( 365, 0, 0, 0, 0 );
 
-            const auto one_year = Poco::Timespan( 365, 0, 0, 0, 0 );
+    session.setTimeout( one_year );
 
-            session.setTimeout( one_year );
+    auto& req_stream = session.sendRequest( *_req );
 
-            auto& req_stream = session.sendRequest( *_req );
+    req_stream << _json;
 
-            req_stream << _json;
+    std::istream& rs = session.receiveResponse( *_res );
 
-            std::istream& rs = session.receiveResponse( *_res );
-
-            Poco::StreamCopier::copyToString( rs, *_response_content );
-        }
-    else
-        {
-            Poco::Net::HTTPClientSession session(
-                "127.0.0.1",
-                static_cast<Poco::UInt16>( options_.monitor_.port_ ) );
-
-            const auto one_year = Poco::Timespan( 365, 0, 0, 0, 0 );
-
-            session.setTimeout( one_year );
-
-            auto& req_stream = session.sendRequest( *_req );
-
-            req_stream << _json;
-
-            std::istream& rs = session.receiveResponse( *_res );
-
-            Poco::StreamCopier::copyToString( rs, *_response_content );
-        }
+    Poco::StreamCopier::copyToString( rs, *_response_content );
 }
 
 // ------------------------------------------------------------------------
