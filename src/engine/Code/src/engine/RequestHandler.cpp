@@ -10,8 +10,7 @@ void RequestHandler::run()
 {
     try
         {
-            if ( options_.engine_.allow_remote_ &&
-                 socket().peerAddress().host().toString() != "127.0.0.1" )
+            if ( socket().peerAddress().host().toString() != "127.0.0.1" )
                 {
                     throw std::invalid_argument(
                         "Illegal connection attempt from " +
