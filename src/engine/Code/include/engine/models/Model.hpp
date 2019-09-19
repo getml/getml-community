@@ -32,6 +32,7 @@ class Model : public AbstractModel
     std::tuple<
         std::vector<std::string>,
         std::vector<std::string>,
+        std::vector<std::string>,
         std::vector<std::string>>
     feature_names() const;
 
@@ -113,6 +114,9 @@ class Model : public AbstractModel
         const size_t _ncols,
         const typename FeatureEngineererType::DataFrameType& _df );
 
+    /// Makes an array of colnames to be used for scoring.
+    std::vector<std::string> concat_feature_names() const;
+
     /// Extract a data frame of type FeatureEngineererType::DataFrameType from
     /// an engine::containers::DataFrame.
     template <typename DataFrameType>
@@ -160,9 +164,6 @@ class Model : public AbstractModel
 
     /// Helper function for loading a json object.
     static Poco::JSON::Object load_json_obj( const std::string& _fname );
-
-    /// Makes an array of colnames to be used for scoring.
-    std::vector<std::string> make_feature_names() const;
 
     /// Gets the categorical, numerical and discrete colnames from the
     /// population table that haven't been marked "comparison only" and stores
@@ -675,6 +676,7 @@ template <typename FeatureEngineererType>
 std::tuple<
     std::vector<std::string>,
     std::vector<std::string>,
+    std::vector<std::string>,
     std::vector<std::string>>
 Model<FeatureEngineererType>::feature_names() const
 {
@@ -689,6 +691,7 @@ Model<FeatureEngineererType>::feature_names() const
         {
             return std::make_tuple(
                 autofeatures,
+                predictor_impl().categorical_colnames(),
                 predictor_impl().discrete_colnames(),
                 predictor_impl().numerical_colnames() );
         }
@@ -696,6 +699,7 @@ Model<FeatureEngineererType>::feature_names() const
         {
             return std::make_tuple(
                 autofeatures,
+                std::vector<std::string>(),
                 std::vector<std::string>(),
                 std::vector<std::string>() );
         }
@@ -767,7 +771,7 @@ void Model<FeatureEngineererType>::fit(
     // ------------------------------------------------
     // Set the feature names.
 
-    scores_.feature_names() = make_feature_names();
+    scores_.feature_names() = concat_feature_names();
 
     // ------------------------------------------------
     // Get the feature importances, if applicable.
@@ -934,12 +938,13 @@ Poco::JSON::Object Model<FeatureEngineererType>::load_json_obj(
 // ----------------------------------------------------------------------------
 
 template <typename FeatureEngineererType>
-std::vector<std::string> Model<FeatureEngineererType>::make_feature_names()
+std::vector<std::string> Model<FeatureEngineererType>::concat_feature_names()
     const
 {
     std::vector<std::string> names;
 
-    const auto [autofeatures, discrete, numerical] = feature_names();
+    const auto [autofeatures, categorical, discrete, numerical] =
+        feature_names();
 
     names.insert( names.end(), autofeatures.begin(), autofeatures.end() );
 
@@ -949,10 +954,7 @@ std::vector<std::string> Model<FeatureEngineererType>::make_feature_names()
 
     if ( feature_engineerer().hyperparameters().include_categorical_ )
         {
-            names.insert(
-                names.end(),
-                predictor_impl().categorical_colnames().begin(),
-                predictor_impl().categorical_colnames().end() );
+            names.insert( names.end(), categorical.begin(), categorical.end() );
         }
 
     return names;

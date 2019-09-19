@@ -120,6 +120,8 @@ class ModelManager
         const ModelType& _model,
         const Poco::JSON::Object& _cmd,
         const containers::Features& _yhat,
+        const std::shared_ptr<std::map<std::string, containers::DataFrame>>&
+            _local_data_frames,
         Poco::Net::StreamSocket* _socket );
 
     // ------------------------------------------------------------------------
@@ -645,8 +647,19 @@ void ModelManager<ModelType>::to_db(
     const ModelType& _model,
     const Poco::JSON::Object& _cmd,
     const containers::Features& _yhat,
+    const std::shared_ptr<std::map<std::string, containers::DataFrame>>&
+        _local_data_frames,
     Poco::Net::StreamSocket* _socket )
 {
+    // -------------------------------------------------------
+    // Get population table.
+
+    const auto population_name =
+        JSON::get_value<std::string>( _cmd, "population_name_" );
+
+    const auto& population_table =
+        utils::Getter::get( population_name, _local_data_frames.get() );
+
     // -------------------------------------------------------
     // Build data frame.
 
@@ -667,7 +680,7 @@ void ModelManager<ModelType>::to_db(
         }
     else
         {
-            const auto [autofeatures, discrete, numerical] =
+            const auto [autofeatures, categorical, discrete, numerical] =
                 _model.feature_names();
 
             assert_true(
@@ -696,6 +709,27 @@ void ModelManager<ModelType>::to_db(
                     col.set_name( numerical[i] );
                     df.add_float_column( col, "numerical" );
                 }
+
+            for ( const auto& colname : categorical )
+                {
+                    auto col = population_table.categorical( colname );
+                    df.add_int_column( col, "categorical" );
+                }
+        }
+
+    // -------------------------------------------------------
+    // Add join keys and time stamps.
+
+    for ( size_t i = 0; i < population_table.num_join_keys(); ++i )
+        {
+            const auto col = population_table.join_key( i );
+            df.add_int_column( col, "join_key" );
+        }
+
+    for ( size_t i = 0; i < population_table.num_time_stamps(); ++i )
+        {
+            const auto col = population_table.time_stamp( i );
+            df.add_float_column( col, "time_stamp" );
         }
 
     // -------------------------------------------------------
@@ -801,7 +835,7 @@ void ModelManager<ModelType>::transform(
         }
     else
         {
-            to_db( model, cmd, yhat, _socket );
+            to_db( model, cmd, yhat, local_data_frames, _socket );
         }
 
     send_data( categories_, local_data_frames, _socket );
