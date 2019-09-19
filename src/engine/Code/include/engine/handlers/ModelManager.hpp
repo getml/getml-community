@@ -115,9 +115,23 @@ class ModelManager
             _local_data_frames,
         Poco::Net::StreamSocket* _socket );
 
+    /// Writes a set of features to the data base.
+    void to_db(
+        const ModelType& _model,
+        const Poco::JSON::Object& _cmd,
+        const containers::Features& _yhat,
+        Poco::Net::StreamSocket* _socket );
+
     // ------------------------------------------------------------------------
 
    private:
+    /// Trivial accessor
+    std::shared_ptr<database::Connector> connector()
+    {
+        assert_true( database_manager_ );
+        return database_manager_->connector();
+    }
+
     /// Trivial accessor
     std::map<std::string, containers::DataFrame>& data_frames()
     {
@@ -627,6 +641,93 @@ void ModelManager<ModelType>::score(
 // ------------------------------------------------------------------------
 
 template <typename ModelType>
+void ModelManager<ModelType>::to_db(
+    const ModelType& _model,
+    const Poco::JSON::Object& _cmd,
+    const containers::Features& _yhat,
+    Poco::Net::StreamSocket* _socket )
+{
+    // -------------------------------------------------------
+    // Build data frame.
+
+    containers::DataFrame df;
+
+    if ( _cmd.has( "predict_" ) && JSON::get_value<bool>( _cmd, "predict_" ) )
+        {
+            const auto target_names = _model.target_names();
+
+            assert_true( target_names.size() == _yhat.size() );
+
+            for ( size_t i = 0; i < target_names.size(); ++i )
+                {
+                    auto col = containers::Column( _yhat[i] );
+                    col.set_name( target_names[i] + "_prediction" );
+                    df.add_float_column( col, "target" );
+                }
+        }
+    else
+        {
+            const auto [autofeatures, discrete, numerical] =
+                _model.feature_names();
+
+            assert_true(
+                autofeatures.size() + discrete.size() + numerical.size() ==
+                _yhat.size() );
+
+            size_t j = 0;
+
+            for ( size_t i = 0; i < autofeatures.size(); ++i )
+                {
+                    auto col = containers::Column( _yhat[j++] );
+                    col.set_name( autofeatures[i] );
+                    df.add_float_column( col, "numerical" );
+                }
+
+            for ( size_t i = 0; i < discrete.size(); ++i )
+                {
+                    auto col = containers::Column( _yhat[j++] );
+                    col.set_name( discrete[i] );
+                    df.add_float_column( col, "discrete" );
+                }
+
+            for ( size_t i = 0; i < numerical.size(); ++i )
+                {
+                    auto col = containers::Column( _yhat[j++] );
+                    col.set_name( numerical[i] );
+                    df.add_float_column( col, "numerical" );
+                }
+        }
+
+    // -------------------------------------------------------
+    // Write data frame to data base.
+
+    const auto table_name = JSON::get_value<std::string>( _cmd, "table_name_" );
+
+    // We are using the bell character (\a) as the quotechar. It is least likely
+    // to appear in any field.
+    auto reader = containers::DataFrameReader(
+        df, categories_, join_keys_encoding_, '\a', '|' );
+
+    const auto statement = csv::StatementMaker::make_statement(
+        table_name,
+        connector()->dialect(),
+        reader.colnames(),
+        reader.coltypes() );
+
+    logger().log( statement );
+
+    connector()->execute( statement );
+
+    connector()->read( table_name, false, 0, &reader );
+
+    database_manager_->post_tables();
+
+    // -------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
+template <typename ModelType>
 void ModelManager<ModelType>::to_json(
     const std::string& _name, Poco::Net::StreamSocket* _socket )
 {
@@ -692,9 +793,16 @@ void ModelManager<ModelType>::transform(
     communication::Sender::send_string( "Success!", _socket );
 
     // -------------------------------------------------------
-    // Send data
+    // Send data to client or write to data base
 
-    communication::Sender::send_features( yhat, _socket );
+    if ( JSON::get_value<std::string>( cmd, "table_name_" ) == "" )
+        {
+            communication::Sender::send_features( yhat, _socket );
+        }
+    else
+        {
+            to_db( model, cmd, yhat, _socket );
+        }
 
     send_data( categories_, local_data_frames, _socket );
 

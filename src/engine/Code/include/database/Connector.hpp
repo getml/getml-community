@@ -57,7 +57,7 @@ class Connector
         const std::string& _tname,
         const std::string& _where ) = 0;
 
-    /// Returns a shared_ptr containing a Sqlite3Iterator for the SQL query.
+    /// Returns a shared_ptr containing an iterator for the SQL query.
     virtual std::shared_ptr<Iterator> select( const std::string& _sql ) = 0;
 
     /// Returns the time formats used.

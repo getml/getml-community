@@ -38,7 +38,7 @@ class Logger : public logging::AbstractLogger
 
     // ----------------------------------------------------
 
-    // private:
+   private:
     /// The Monitor is supposed to monitor all of the logs as well.
     const std::shared_ptr<const Monitor> monitor_;
 

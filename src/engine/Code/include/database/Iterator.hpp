@@ -26,7 +26,7 @@ class Iterator
     /// Returns a double and increments the iterator.
     virtual Float get_double() = 0;
 
-    /// Returns a double and increments the iterator.
+    /// Returns an int and increments the iterator.
     virtual Int get_int() = 0;
 
     /// Returns a string and increments the iterator.

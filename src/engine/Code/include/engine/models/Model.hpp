@@ -28,6 +28,13 @@ class Model : public AbstractModel
     // --------------------------------------------------------
 
    public:
+    /// Returns the feature names.
+    std::tuple<
+        std::vector<std::string>,
+        std::vector<std::string>,
+        std::vector<std::string>>
+    feature_names() const;
+
     /// Fits the model.
     void fit(
         const Poco::JSON::Object& _cmd,
@@ -78,6 +85,12 @@ class Model : public AbstractModel
     const std::string& session_name() const
     {
         return feature_engineerer().hyperparameters().session_name_;
+    }
+
+    /// Returns the feature names.
+    const std::vector<std::string>& target_names() const
+    {
+        return feature_engineerer().population_schema().targets();
     }
 
     // --------------------------------------------------------
@@ -659,6 +672,38 @@ Poco::JSON::Object Model<FeatureEngineererType>::feature_importances()
 // ----------------------------------------------------------------------------
 
 template <typename FeatureEngineererType>
+std::tuple<
+    std::vector<std::string>,
+    std::vector<std::string>,
+    std::vector<std::string>>
+Model<FeatureEngineererType>::feature_names() const
+{
+    std::vector<std::string> autofeatures;
+
+    for ( size_t i = 0; i < feature_engineerer().num_features(); ++i )
+        {
+            autofeatures.push_back( "feature_" + std::to_string( i + 1 ) );
+        }
+
+    if ( predictor_impl_ )
+        {
+            return std::make_tuple(
+                autofeatures,
+                predictor_impl().discrete_colnames(),
+                predictor_impl().numerical_colnames() );
+        }
+    else
+        {
+            return std::make_tuple(
+                autofeatures,
+                std::vector<std::string>(),
+                std::vector<std::string>() );
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+template <typename FeatureEngineererType>
 void Model<FeatureEngineererType>::fit(
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<const monitoring::Logger>& _logger,
@@ -892,32 +937,25 @@ template <typename FeatureEngineererType>
 std::vector<std::string> Model<FeatureEngineererType>::make_feature_names()
     const
 {
-    std::vector<std::string> feature_names;
+    std::vector<std::string> names;
 
-    for ( size_t i = 0; i < feature_engineerer().num_features(); ++i )
-        {
-            feature_names.push_back( "FEATURE_" + std::to_string( i + 1 ) );
-        }
+    const auto [autofeatures, discrete, numerical] = feature_names();
 
-    for ( const auto& col : predictor_impl().discrete_colnames() )
-        {
-            feature_names.push_back( col );
-        }
+    names.insert( names.end(), autofeatures.begin(), autofeatures.end() );
 
-    for ( const auto& col : predictor_impl().numerical_colnames() )
-        {
-            feature_names.push_back( col );
-        }
+    names.insert( names.end(), discrete.begin(), discrete.end() );
+
+    names.insert( names.end(), numerical.begin(), numerical.end() );
 
     if ( feature_engineerer().hyperparameters().include_categorical_ )
         {
-            for ( const auto& col : predictor_impl().categorical_colnames() )
-                {
-                    feature_names.push_back( col );
-                }
+            names.insert(
+                names.end(),
+                predictor_impl().categorical_colnames().begin(),
+                predictor_impl().categorical_colnames().end() );
         }
 
-    return feature_names;
+    return names;
 }
 
 // ------------------------------------------------------------------------
