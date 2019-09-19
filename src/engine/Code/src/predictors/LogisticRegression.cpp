@@ -14,21 +14,27 @@ std::vector<Float> LogisticRegression::feature_importances(
                 "not been trained!" );
         }
 
-    if ( _num_features != weights_.size() - 1 )
+    if ( _num_features != impl().num_autofeatures() + impl().num_columns() )
         {
             throw std::invalid_argument(
                 "Incorrect number of features when retrieving in feature "
                 "importances! Expected " +
-                std::to_string( weights_.size() - 1 ) + ", got " +
-                std::to_string( _num_features ) + "." );
+                std::to_string(
+                    impl().num_autofeatures() + impl().num_columns() ) +
+                ", got " + std::to_string( _num_features ) + "." );
         }
 
-    auto feature_importances = std::vector<Float>( _num_features );
+    std::vector<Float> all_feature_importances( weights_.size() - 1 );
 
-    for ( size_t i = 0; i < feature_importances.size(); ++i )
+    for ( size_t i = 0; i < all_feature_importances.size(); ++i )
         {
-            feature_importances[i] = std::abs( weights_[i] );
+            all_feature_importances[i] = std::abs( weights_[i] );
         }
+
+    std::vector<Float> feature_importances( _num_features );
+
+    impl().compress_importances(
+        all_feature_importances, &feature_importances );
 
     const auto sum = std::accumulate(
         feature_importances.begin(), feature_importances.end(), 0.0 );
