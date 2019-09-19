@@ -27,7 +27,7 @@ int main( int argc, char *argv[] )
               << std::endl;
 
     std::cout << "Please open a web browser (like Firefox, Chrome or Safari) "
-              << "and go to http://localhost:" << options.monitor_.port_
+              << "and go to http://localhost:" << options.monitor_.http_port_
               << "/ to log in." << std::endl
               << std::endl;
 
@@ -35,8 +35,8 @@ int main( int argc, char *argv[] )
         {
             std::cout << "An HTTPS server that accepts remote connections has "
                          "been launched "
-                      << "on https://localhost:"
-                      << options.monitor_.remote_port_ << "/." << std::endl
+                      << "on https://localhost:" << options.monitor_.http_port_
+                      << "/." << std::endl
                       << std::endl;
         }
 

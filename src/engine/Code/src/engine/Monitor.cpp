@@ -12,7 +12,7 @@ bool Monitor::get_start_message() const
     // Create HTTPRequest
 
     const std::string url =
-        "127.0.0.1:" + std::to_string( options_.monitor_.port_ );
+        "127.0.0.1:" + std::to_string( options_.monitor_.http_port_ );
 
     const std::string path = "/getstartmessage/";
 
@@ -74,7 +74,7 @@ std::pair<Poco::Net::HTTPResponse::HTTPStatus, std::string> Monitor::send(
     // Create HTTPRequest
 
     const std::string url =
-        "127.0.0.1:" + std::to_string( options_.monitor_.port_ );
+        "127.0.0.1:" + std::to_string( options_.monitor_.http_port_ );
 
     const std::string path = "/" + _type + "/";
 
@@ -125,7 +125,8 @@ void Monitor::send_and_receive(
     std::string* _response_content ) const
 {
     Poco::Net::HTTPClientSession session(
-        "127.0.0.1", static_cast<Poco::UInt16>( options_.monitor_.port_ ) );
+        "127.0.0.1",
+        static_cast<Poco::UInt16>( options_.monitor_.http_port_ ) );
 
     const auto one_year = Poco::Timespan( 365, 0, 0, 0, 0 );
 
@@ -159,30 +160,11 @@ bool Monitor::shutdown() const
 
     try
         {
-            if ( options_.monitor_.tls_encryption_ )
-                {
-                    const Poco::Net::Context::Ptr context(
-                        new Poco::Net::Context(
-                            Poco::Net::Context::Usage::CLIENT_USE,
-                            "",
-                            Poco::Net::Context::VerificationMode::
-                                VERIFY_NONE ) );
+            Poco::Net::HTTPClientSession session(
+                "127.0.0.1",
+                static_cast<Poco::UInt16>( options_.monitor_.http_port_ ) );
 
-                    Poco::Net::HTTPSClientSession session(
-                        "127.0.0.1",
-                        static_cast<Poco::UInt16>( options_.monitor_.port_ ),
-                        context );
-
-                    session.sendRequest( req );
-                }
-            else
-                {
-                    Poco::Net::HTTPClientSession session(
-                        "127.0.0.1",
-                        static_cast<Poco::UInt16>( options_.monitor_.port_ ) );
-
-                    session.sendRequest( req );
-                }
+            session.sendRequest( req );
         }
     catch ( std::exception& e )
         {
