@@ -17,8 +17,8 @@ std::vector<std::string> CSVReader::next_line()
         }
 
     // ------------------------------------------------------------------------
-    // Read the next line from the filestream - if it is empty, return an empty
-    // vector.
+    // Read the next line from the filestream - if it is empty, return an
+    // empty vector.
 
     std::string line;
 
