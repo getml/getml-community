@@ -35,7 +35,7 @@ int main( int argc, char *argv[] )
         {
             std::cout << "An HTTPS server that accepts remote connections has "
                          "been launched "
-                      << "on https://localhost:" << options.monitor_.http_port_
+                      << "on https://localhost:" << options.monitor_.https_port_
                       << "/." << std::endl
                       << std::endl;
         }
