@@ -352,7 +352,7 @@ std::vector<Float> DecisionTreeNode::calculate_critical_values_numerical(
 // ----------------------------------------------------------------------------
 
 std::vector<Float> DecisionTreeNode::calculate_critical_values_window(
-    const Float _lag,
+    const Float _delta_t,
     containers::MatchPtrs::iterator _sample_container_begin,
     containers::MatchPtrs::iterator _sample_container_end )
 {
@@ -397,13 +397,13 @@ std::vector<Float> DecisionTreeNode::calculate_critical_values_window(
     // ---------------------------------------------------------------------------
 
     const auto num_critical_values =
-        static_cast<size_t>( ( max - min ) / _lag ) + 1;
+        static_cast<size_t>( ( max - min ) / _delta_t ) + 1;
 
     std::vector<Float> critical_values( num_critical_values );
 
     for ( size_t i = 0; i < num_critical_values; ++i )
         {
-            critical_values[i] = min + static_cast<Float>( i + 1 ) * _lag;
+            critical_values[i] = min + static_cast<Float>( i + 1 ) * _delta_t;
         }
 
     debug_log( "calculate_critical_values_window...done." );
@@ -672,7 +672,8 @@ std::string DecisionTreeNode::greater_or_not_equal_to(
 
                     sql << " <= ";
 
-                    sql << std::to_string( critical_value() - tree_->lag() );
+                    sql << std::to_string(
+                        critical_value() - tree_->delta_t() );
 
                     sql << " OR ";
                 }
@@ -862,7 +863,7 @@ containers::MatchPtrs::iterator DecisionTreeNode::partition_by_critical_value(
                     return (
                         _sample->numerical_value <= critical_value() &&
                         _sample->numerical_value >
-                            critical_value() - tree_->lag() );
+                            critical_value() - tree_->delta_t() );
                 } );
         }
     else
@@ -1201,7 +1202,8 @@ std::string DecisionTreeNode::smaller_or_equal_to(
 
                     sql << " > ";
 
-                    sql << std::to_string( critical_value() - tree_->lag() );
+                    sql << std::to_string(
+                        critical_value() - tree_->delta_t() );
 
                     sql << " AND ";
                 }
@@ -2660,7 +2662,7 @@ void DecisionTreeNode::try_time_stamps_diff(
         _sample_container_end,
         _candidate_splits );
 
-    if ( tree_->lag() > 0.0 )
+    if ( tree_->delta_t() > 0.0 )
         {
             debug_log( "try time_stamps_window..." );
 
@@ -2668,7 +2670,7 @@ void DecisionTreeNode::try_time_stamps_diff(
                 0,
                 enums::DataUsed::time_stamps_window,
                 _sample_size,
-                tree_->lag(),
+                tree_->delta_t(),
                 _sample_container_begin,
                 _sample_container_end,
                 _candidate_splits );
@@ -2683,7 +2685,7 @@ void DecisionTreeNode::try_window(
     const size_t _column_used,
     const enums::DataUsed _data_used,
     const size_t _sample_size,
-    const Float _lag,
+    const Float _delta_t,
     containers::MatchPtrs::iterator _sample_container_begin,
     containers::MatchPtrs::iterator _sample_container_end,
     std::vector<descriptors::Split> *_candidate_splits )
@@ -2703,7 +2705,7 @@ void DecisionTreeNode::try_window(
     sort_by_numerical_value( null_values_separator, _sample_container_end );
 
     auto critical_values = calculate_critical_values_window(
-        _lag, null_values_separator, _sample_container_end );
+        _delta_t, null_values_separator, _sample_container_end );
 
     // -----------------------------------------------------------------------
     // Add new splits to the candidate splits
@@ -2756,7 +2758,7 @@ void DecisionTreeNode::try_window(
 
             aggregation()->deactivate_samples_outside_window(
                 critical_values,
-                _lag,
+                _delta_t,
                 aggregations::Revert::after_each_category,
                 null_values_separator,
                 _sample_container_end );
@@ -2767,7 +2769,7 @@ void DecisionTreeNode::try_window(
 
             aggregation()->activate_samples_outside_window(
                 critical_values,
-                _lag,
+                _delta_t,
                 aggregations::Revert::after_each_category,
                 null_values_separator,
                 _sample_container_end );
@@ -2785,7 +2787,7 @@ void DecisionTreeNode::try_window(
 
             aggregation()->deactivate_samples_in_window(
                 critical_values,
-                _lag,
+                _delta_t,
                 aggregations::Revert::after_each_category,
                 null_values_separator,
                 _sample_container_end );
@@ -2796,7 +2798,7 @@ void DecisionTreeNode::try_window(
 
             aggregation()->activate_samples_in_window(
                 critical_values,
-                _lag,
+                _delta_t,
                 aggregations::Revert::after_each_category,
                 null_values_separator,
                 _sample_container_end );

@@ -48,7 +48,7 @@ class CriticalValues
 
     /// Calculate the critical values necessary for the moving time window.
     static std::vector<Float> calc_time_window(
-        const Float _lag,
+        const Float _delta_t,
         const containers::DataFrame& _input,
         const containers::DataFrameView& _output,
         const std::vector<const containers::Match*>::iterator _begin,

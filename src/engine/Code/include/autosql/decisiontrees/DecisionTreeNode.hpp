@@ -858,7 +858,7 @@ void DecisionTreeNode::apply_by_lag(
 
                     _aggregation->deactivate_samples_outside_window(
                         _critical_value,
-                        tree_->lag(),
+                        tree_->delta_t(),
                         aggregations::Revert::not_at_all,
                         _sample_container_begin,
                         _sample_container_end );
@@ -869,7 +869,7 @@ void DecisionTreeNode::apply_by_lag(
 
                     _aggregation->activate_samples_outside_window(
                         _critical_value,
-                        tree_->lag(),
+                        tree_->delta_t(),
                         aggregations::Revert::not_at_all,
                         _sample_container_begin,
                         _sample_container_end );
@@ -883,7 +883,7 @@ void DecisionTreeNode::apply_by_lag(
 
                     _aggregation->deactivate_samples_in_window(
                         _critical_value,
-                        tree_->lag(),
+                        tree_->delta_t(),
                         aggregations::Revert::not_at_all,
                         _sample_container_begin,
                         _sample_container_end );
@@ -894,7 +894,7 @@ void DecisionTreeNode::apply_by_lag(
 
                     _aggregation->activate_samples_in_window(
                         _critical_value,
-                        tree_->lag(),
+                        tree_->delta_t(),
                         aggregations::Revert::not_at_all,
                         _sample_container_begin,
                         _sample_container_end );

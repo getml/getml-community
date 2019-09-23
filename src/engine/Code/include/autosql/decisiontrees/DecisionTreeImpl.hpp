@@ -51,6 +51,12 @@ struct DecisionTreeImpl
         aggregation_->clear();
         aggregation_->clear_extras();
     }
+    /// Trivial getter
+    inline Float delta_t() const
+    {
+        assert_true( tree_hyperparameters_ );
+        return tree_hyperparameters_->delta_t_;
+    }
 
     /// Trivial getter
     inline Float grid_factor() const
@@ -64,13 +70,6 @@ struct DecisionTreeImpl
     {
         assert_true( input_ );
         return *input_;
-    }
-
-    /// Trivial getter
-    inline Float lag() const
-    {
-        assert_true( tree_hyperparameters_ );
-        return tree_hyperparameters_->lag_;
     }
 
     /// Trivial getter

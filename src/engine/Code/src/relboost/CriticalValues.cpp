@@ -277,7 +277,7 @@ std::vector<Float> CriticalValues::calc_numerical(
 // ----------------------------------------------------------------------------
 
 std::vector<Float> CriticalValues::calc_time_window(
-    const Float _lag,
+    const Float _delta_t,
     const containers::DataFrame& _input,
     const containers::DataFrameView& _output,
     const std::vector<const containers::Match*>::iterator _begin,
@@ -316,16 +316,16 @@ std::vector<Float> CriticalValues::calc_time_window(
 
     // ---------------------------------------------------------------------------
 
-    assert_true( _lag > 0.0 );
+    assert_true( _delta_t > 0.0 );
 
     const auto num_critical_values =
-        static_cast<size_t>( ( max - min ) / _lag ) + 1;
+        static_cast<size_t>( ( max - min ) / _delta_t ) + 1;
 
     std::vector<Float> critical_values( num_critical_values );
 
     for ( size_t i = 0; i < num_critical_values; ++i )
         {
-            critical_values[i] = max - static_cast<Float>( i + 1 ) * _lag;
+            critical_values[i] = max - static_cast<Float>( i + 1 ) * _delta_t;
         }
 
     return critical_values;

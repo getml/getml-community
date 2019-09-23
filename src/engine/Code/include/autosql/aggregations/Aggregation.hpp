@@ -72,7 +72,7 @@ class Aggregation : public AbstractAggregation
     /// transform.
     void activate_samples_in_window(
         const Float _critical_value,
-        const Float _lag,
+        const Float _delta_t,
         const Revert _revert,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) final;
@@ -81,7 +81,7 @@ class Aggregation : public AbstractAggregation
     /// fit.
     void activate_samples_in_window(
         const std::vector<Float> &_critical_values,
-        const Float _lag,
+        const Float _delta_t,
         const Revert _revert,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) final;
@@ -90,7 +90,7 @@ class Aggregation : public AbstractAggregation
     /// transform.
     void activate_samples_outside_window(
         const Float _critical_value,
-        const Float _lag,
+        const Float _delta_t,
         const Revert _revert,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) final;
@@ -99,7 +99,7 @@ class Aggregation : public AbstractAggregation
     /// fit.
     void activate_samples_outside_window(
         const std::vector<Float> &_critical_values,
-        const Float _lag,
+        const Float _delta_t,
         const Revert _revert,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) final;
@@ -177,7 +177,7 @@ class Aggregation : public AbstractAggregation
     /// transform.
     void deactivate_samples_in_window(
         const Float _critical_value,
-        const Float _lag,
+        const Float _delta_t,
         const Revert _revert,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) final;
@@ -186,7 +186,7 @@ class Aggregation : public AbstractAggregation
     /// fit.
     void deactivate_samples_in_window(
         const std::vector<Float> &_critical_values,
-        const Float _lag,
+        const Float _delta_t,
         const Revert _revert,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) final;
@@ -195,7 +195,7 @@ class Aggregation : public AbstractAggregation
     /// transform.
     void deactivate_samples_outside_window(
         const Float _critical_value,
-        const Float _lag,
+        const Float _delta_t,
         const Revert _revert,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) final;
@@ -204,7 +204,7 @@ class Aggregation : public AbstractAggregation
     /// fit.
     void deactivate_samples_outside_window(
         const std::vector<Float> &_critical_values,
-        const Float _lag,
+        const Float _delta_t,
         const Revert _revert,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) final;
@@ -1976,14 +1976,14 @@ template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     activate_samples_in_window(
         const Float _critical_value,
-        const Float _lag,
+        const Float _delta_t,
         const Revert _revert,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end )
 {
     for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
         {
-            if ( ( *it )->numerical_value >= _critical_value - _lag &&
+            if ( ( *it )->numerical_value >= _critical_value - _delta_t &&
                  ( *it )->numerical_value < _critical_value )
                 {
                     activate_sample( *it );
@@ -1997,7 +1997,7 @@ template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     activate_samples_in_window(
         const std::vector<Float> &_critical_values,
-        const Float _lag,
+        const Float _delta_t,
         const Revert _revert,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end )
@@ -2019,8 +2019,8 @@ void Aggregation<AggType, data_used_, is_population_>::
 
     for ( const auto c : _critical_values )
         {
-            const auto at_begin = [c, _lag]( containers::Match *m ) {
-                return m->numerical_value > c - _lag;
+            const auto at_begin = [c, _delta_t]( containers::Match *m ) {
+                return m->numerical_value > c - _delta_t;
             };
 
             const auto at_end = [c]( containers::Match *m ) {
@@ -2033,7 +2033,7 @@ void Aggregation<AggType, data_used_, is_population_>::
 
             for ( auto it = wbegin; it != wend; ++it )
                 {
-                    assert_true( ( *it )->numerical_value > c - _lag );
+                    assert_true( ( *it )->numerical_value > c - _delta_t );
                     assert_true( ( *it )->numerical_value <= c );
 
                     activate_sample( *it );
@@ -2075,14 +2075,14 @@ template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     activate_samples_outside_window(
         const Float _critical_value,
-        const Float _lag,
+        const Float _delta_t,
         const Revert _revert,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end )
 {
     for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
         {
-            if ( ( *it )->numerical_value < _critical_value - _lag ||
+            if ( ( *it )->numerical_value < _critical_value - _delta_t ||
                  ( *it )->numerical_value >= _critical_value )
                 {
                     activate_sample( *it );
@@ -2096,7 +2096,7 @@ template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     activate_samples_outside_window(
         const std::vector<Float> &_critical_values,
-        const Float _lag,
+        const Float _delta_t,
         const Revert _revert,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end )
@@ -2134,8 +2134,8 @@ void Aggregation<AggType, data_used_, is_population_>::
 
     for ( const auto c : _critical_values )
         {
-            const auto at_begin = [c, _lag]( containers::Match *m ) {
-                return m->numerical_value > c - _lag;
+            const auto at_begin = [c, _delta_t]( containers::Match *m ) {
+                return m->numerical_value > c - _delta_t;
             };
 
             const auto at_end = [c]( containers::Match *m ) {
@@ -2148,7 +2148,7 @@ void Aggregation<AggType, data_used_, is_population_>::
 
             for ( auto it = wbegin; it != wend; ++it )
                 {
-                    assert_true( ( *it )->numerical_value > c - _lag );
+                    assert_true( ( *it )->numerical_value > c - _delta_t );
                     assert_true( ( *it )->numerical_value <= c );
 
                     deactivate_sample( *it );
@@ -2166,7 +2166,8 @@ void Aggregation<AggType, data_used_, is_population_>::
 
                     for ( auto it = wbegin; it != wend; ++it )
                         {
-                            assert_true( ( *it )->numerical_value > c - _lag );
+                            assert_true(
+                                ( *it )->numerical_value > c - _delta_t );
                             assert_true( ( *it )->numerical_value <= c );
 
                             activate_sample( *it );
@@ -2635,14 +2636,14 @@ template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     deactivate_samples_in_window(
         const Float _critical_value,
-        const Float _lag,
+        const Float _delta_t,
         const Revert _revert,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end )
 {
     for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
         {
-            if ( ( *it )->numerical_value >= _critical_value - _lag &&
+            if ( ( *it )->numerical_value >= _critical_value - _delta_t &&
                  ( *it )->numerical_value < _critical_value )
                 {
                     deactivate_sample( *it );
@@ -2656,7 +2657,7 @@ template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     deactivate_samples_in_window(
         const std::vector<Float> &_critical_values,
-        const Float _lag,
+        const Float _delta_t,
         const Revert _revert,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end )
@@ -2678,8 +2679,8 @@ void Aggregation<AggType, data_used_, is_population_>::
 
     for ( const auto c : _critical_values )
         {
-            const auto at_begin = [c, _lag]( containers::Match *m ) {
-                return m->numerical_value > c - _lag;
+            const auto at_begin = [c, _delta_t]( containers::Match *m ) {
+                return m->numerical_value > c - _delta_t;
             };
 
             const auto at_end = [c]( containers::Match *m ) {
@@ -2692,7 +2693,7 @@ void Aggregation<AggType, data_used_, is_population_>::
 
             for ( auto it = wbegin; it != wend; ++it )
                 {
-                    assert_true( ( *it )->numerical_value > c - _lag );
+                    assert_true( ( *it )->numerical_value > c - _delta_t );
                     assert_true( ( *it )->numerical_value <= c );
 
                     deactivate_sample( *it );
@@ -2734,14 +2735,14 @@ template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     deactivate_samples_outside_window(
         const Float _critical_value,
-        const Float _lag,
+        const Float _delta_t,
         const Revert _revert,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end )
 {
     for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
         {
-            if ( ( *it )->numerical_value < _critical_value - _lag ||
+            if ( ( *it )->numerical_value < _critical_value - _delta_t ||
                  ( *it )->numerical_value >= _critical_value )
                 {
                     deactivate_sample( *it );
@@ -2755,7 +2756,7 @@ template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     deactivate_samples_outside_window(
         const std::vector<Float> &_critical_values,
-        const Float _lag,
+        const Float _delta_t,
         const Revert _revert,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end )
@@ -2793,8 +2794,8 @@ void Aggregation<AggType, data_used_, is_population_>::
 
     for ( const auto c : _critical_values )
         {
-            const auto at_begin = [c, _lag]( containers::Match *m ) {
-                return m->numerical_value > c - _lag;
+            const auto at_begin = [c, _delta_t]( containers::Match *m ) {
+                return m->numerical_value > c - _delta_t;
             };
 
             const auto at_end = [c]( containers::Match *m ) {
@@ -2807,7 +2808,7 @@ void Aggregation<AggType, data_used_, is_population_>::
 
             for ( auto it = wbegin; it != wend; ++it )
                 {
-                    assert_true( ( *it )->numerical_value > c - _lag );
+                    assert_true( ( *it )->numerical_value > c - _delta_t );
                     assert_true( ( *it )->numerical_value <= c );
 
                     activate_sample( *it );
@@ -2825,7 +2826,8 @@ void Aggregation<AggType, data_used_, is_population_>::
 
                     for ( auto it = wbegin; it != wend; ++it )
                         {
-                            assert_true( ( *it )->numerical_value > c - _lag );
+                            assert_true(
+                                ( *it )->numerical_value > c - _delta_t );
                             assert_true( ( *it )->numerical_value <= c );
 
                             deactivate_sample( *it );

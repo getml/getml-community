@@ -61,6 +61,10 @@ struct Hyperparameters
     /// Subsample ratio of columns when constructing each tree.
     // const Float colsample_bytree;
 
+    /// The lag variable used for calculating the moving time windows. When set
+    /// to 0.0 or negative value, moving time windows will be omitted.
+    const Float delta_t_;
+
     /// Boosting learning rate
     const Float eta_;
 
@@ -75,10 +79,6 @@ struct Hyperparameters
     /// Whether we want categorical columns from the population table to be
     /// included in our prediction.
     const bool include_categorical_;
-
-    /// The lag variable used for calculating the moving time windows. When set
-    /// to 0.0 or negative value, moving time windows will be omitted.
-    const Float lag_;
 
     /// The loss function used for the learning function.
     const std::string loss_function_;

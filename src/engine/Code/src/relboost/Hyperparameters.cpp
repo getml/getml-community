@@ -5,10 +5,10 @@ namespace relboost
 // ----------------------------------------------------------------------------
 
 Hyperparameters::Hyperparameters()
-    : eta_( 0.3 ),
+    : delta_t_( 0.3 ),
+      eta_( 0.3 ),
       gamma_( 1.0 ),
       include_categorical_( true ),
-      lag_( 0.0 ),
       loss_function_( "SquareLoss" ),
       max_depth_( 1 ),
       min_num_samples_( 200 ),
@@ -27,12 +27,12 @@ Hyperparameters::Hyperparameters()
 // ----------------------------------------------------------------------------
 
 Hyperparameters::Hyperparameters( const Poco::JSON::Object& _obj )
-    : eta_( JSON::get_value<Float>( _obj, "eta_" ) ),
+    : delta_t_( JSON::get_value<Float>( _obj, "delta_t_" ) ),
+      eta_( JSON::get_value<Float>( _obj, "eta_" ) ),
       feature_selector_( _obj.getObject( "feature_selector_" ) ),
       gamma_( JSON::get_value<Float>( _obj, "gamma_" ) ),
       include_categorical_(
           JSON::get_value<bool>( _obj, "include_categorical_" ) ),
-      lag_( JSON::get_value<Float>( _obj, "lag_" ) ),
       loss_function_( JSON::get_value<std::string>( _obj, "loss_function_" ) ),
       max_depth_( JSON::get_value<Int>( _obj, "max_depth_" ) ),
       min_num_samples_( JSON::get_value<Int>( _obj, "min_num_samples_" ) ),
@@ -87,6 +87,8 @@ Poco::JSON::Object::Ptr Hyperparameters::to_json_obj() const
 
     // ---------------------------------------------------------
 
+    obj->set( "delta_t_", delta_t_ );
+
     obj->set( "eta_", eta_ );
 
     if ( feature_selector_ )
@@ -97,8 +99,6 @@ Poco::JSON::Object::Ptr Hyperparameters::to_json_obj() const
     obj->set( "gamma_", gamma_ );
 
     obj->set( "include_categorical_", include_categorical_ );
-
-    obj->set( "lag_", lag_ );
 
     obj->set( "loss_function_", loss_function_ );
 

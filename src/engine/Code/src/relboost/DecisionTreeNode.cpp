@@ -391,7 +391,7 @@ std::vector<const containers::Match*>::iterator DecisionTreeNode::partition(
                 return utils::Partitioner<enums::DataUsed::time_stamps_window>::
                     partition(
                         split_,
-                        hyperparameters().lag_,
+                        hyperparameters().delta_t_,
                         _input,
                         _output,
                         _begin,
@@ -613,7 +613,7 @@ Float DecisionTreeNode::transform(
                     utils::Partitioner<enums::DataUsed::time_stamps_window>::
                         is_greater(
                             split_,
-                            hyperparameters().lag_,
+                            hyperparameters().delta_t_,
                             _input,
                             _output,
                             _match );
@@ -1607,7 +1607,7 @@ void DecisionTreeNode::try_time_stamps_diff(
 
     loss_function().revert_to_commit();
 
-    if ( hyperparameters().lag_ > 0.0 )
+    if ( hyperparameters().delta_t_ > 0.0 )
         {
             try_window(
                 _old_intercept, _input, _output, _begin, _end, _candidates );
@@ -1655,7 +1655,7 @@ void DecisionTreeNode::try_window(
     // ------------------------------------------------------------------------
 
     const auto critical_values = utils::CriticalValues::calc_time_window(
-        hyperparameters().lag_, _input, _output, _begin, _end, &comm() );
+        hyperparameters().delta_t_, _input, _output, _begin, _end, &comm() );
 
     if ( critical_values.size() == 0 ||
          critical_values.front() == critical_values.back() )

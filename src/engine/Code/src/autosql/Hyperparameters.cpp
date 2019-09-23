@@ -76,14 +76,14 @@ Poco::JSON::Object Hyperparameters::to_json_obj() const
 
     obj.set( "allow_sets_", tree_hyperparameters_->allow_sets_ );
 
+    obj.set( "delta_t_", tree_hyperparameters_->delta_t_ );
+
     if ( feature_selector_ )
         {
             obj.set( "feature_selector_", *feature_selector_ );
         }
 
     obj.set( "include_categorical_", include_categorical_ );
-
-    obj.set( "lag_", tree_hyperparameters_->lag_ );
 
     obj.set( "loss_function_", loss_function_ );
 
