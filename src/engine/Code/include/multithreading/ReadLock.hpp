@@ -1,5 +1,5 @@
-#ifndef AUTOSQL_MULTITHREADING_READLOCK_HPP_
-#define AUTOSQL_MULTITHREADING_READLOCK_HPP_
+#ifndef MULTIREL_MULTITHREADING_READLOCK_HPP_
+#define MULTIREL_MULTITHREADING_READLOCK_HPP_
 
 namespace multithreading
 {
@@ -53,4 +53,4 @@ class ReadLock
 // ----------------------------------------------------------------------------
 }  // namespace multithreading
 
-#endif  // AUTOSQL_MULTITHREADING_READLOCK_HPP_
+#endif  // MULTIREL_MULTITHREADING_READLOCK_HPP_

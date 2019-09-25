@@ -39,4 +39,4 @@ class SHA256
 }  // namespace crypto
 }  // namespace engine
 
-#endif  // AUTOSQL_ENGINE_LICENSING_CRYPTO_SHA256_HPP_
+#endif  // MULTIREL_ENGINE_LICENSING_CRYPTO_SHA256_HPP_

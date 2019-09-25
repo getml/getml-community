@@ -77,16 +77,16 @@ struct FileHandler
 
     // ------------------------------------------------------------------------
 
-    /// Makes the filename for an AutoSQL model.
+    /// Makes the filename for an Multirel model.
     template <
         typename RType,
         typename std::enable_if<
-            std::is_same<RType, std::shared_ptr<models::AutoSQLModel>>::value,
+            std::is_same<RType, std::shared_ptr<models::MultirelModel>>::value,
             int>::type = 0>
     static std::string make_fname(
         const std::string& _project_directory, const std::string& _name )
     {
-        return _project_directory + "autosql-models/" + _name;
+        return _project_directory + "multirel-models/" + _name;
     }
 
     /// Makes the filename for a data frame.

@@ -1,5 +1,5 @@
-#ifndef AUTOSQL_ENGINE_LICENSING_TOKEN_HPP_
-#define AUTOSQL_ENGINE_LICENSING_TOKEN_HPP_
+#ifndef MULTIREL_ENGINE_LICENSING_TOKEN_HPP_
+#define MULTIREL_ENGINE_LICENSING_TOKEN_HPP_
 
 namespace engine
 {
@@ -76,4 +76,4 @@ struct Token
 }  // namespace licensing
 }  // namespace engine
 
-#endif  // AUTOSQL_ENGINE_LICENSING_TOKEN_HPP_
+#endif  // MULTIREL_ENGINE_LICENSING_TOKEN_HPP_

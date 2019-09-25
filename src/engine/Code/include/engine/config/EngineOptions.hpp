@@ -6,7 +6,7 @@ namespace engine
 namespace config
 {
 // ----------------------------------------------------------------------------
-// Configuration information for the AutoSQL engine
+// Configuration information for the engine
 
 struct EngineOptions
 {
@@ -23,7 +23,7 @@ struct EngineOptions
 
     // ------------------------------------------------------
 
-    /// The port of the AutoSQL engine
+    /// The port of the engine
     const size_t port_;
 
     // ------------------------------------------------------

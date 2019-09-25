@@ -172,15 +172,15 @@ class ModelManager
         return *models_;
     }
 
-    /// Posts an AutoSQL model.
+    /// Posts an Multirel model.
     template <
         typename MType = ModelType,
         typename std::enable_if<
-            std::is_same<MType, models::AutoSQLModel>::value,
+            std::is_same<MType, models::MultirelModel>::value,
             int>::type = 0>
     void post_model( const Poco::JSON::Object& _obj )
     {
-        monitor_->send( "postautosqlmodel", _obj );
+        monitor_->send( "postmultirelmodel", _obj );
     }
 
     /// Posts a relboost model.

@@ -6,7 +6,7 @@ namespace engine
 namespace config
 {
 // ----------------------------------------------------------------------------
-// Configuration information for the AutoSQL monitor
+// Configuration information for the monitor
 
 struct MonitorOptions
 {
@@ -34,10 +34,10 @@ struct MonitorOptions
 
     // ------------------------------------------------------
 
-    /// The HTTP port of the AutoSQL monitor, used for local connections.
+    /// The HTTP port of the monitor, used for local connections.
     const size_t http_port_;
 
-    /// The port of the AutoSQL monitor that also accepts
+    /// The port of the monitor that also accepts
     /// remote connections. (The engine will never communicate
     /// with this port. It is only needed to print out the initial message).
     const size_t https_port_;

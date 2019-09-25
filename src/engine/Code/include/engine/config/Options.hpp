@@ -6,7 +6,7 @@ namespace engine
 namespace config
 {
 // ----------------------------------------------------------------------------
-// Configuration information for the AutoSQL engine
+// Configuration information for the engine
 
 struct Options
 {

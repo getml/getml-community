@@ -12,14 +12,14 @@ class ProjectManager
     // ------------------------------------------------------------------------
 
    public:
-    typedef AutoSQLModelManager::ModelMapType AutoSQLModelMapType;
+    typedef MultirelModelManager::ModelMapType MultirelModelMapType;
     typedef RelboostModelManager::ModelMapType RelboostModelMapType;
 
     // ------------------------------------------------------------------------
 
    public:
     ProjectManager(
-        const std::shared_ptr<AutoSQLModelMapType>& _autosql_models,
+        const std::shared_ptr<MultirelModelMapType>& _multirel_models,
         const std::shared_ptr<containers::Encoding>& _categories,
         const std::shared_ptr<DataFrameManager>& _data_frame_manager,
         const std::shared_ptr<std::map<std::string, containers::DataFrame>>
@@ -30,7 +30,7 @@ class ProjectManager
         const std::shared_ptr<const monitoring::Monitor>& _monitor,
         const config::Options& _options,
         const std::shared_ptr<multithreading::ReadWriteLock>& _read_write_lock )
-        : autosql_models_( _autosql_models ),
+        : multirel_models_( _multirel_models ),
           categories_( _categories ),
           data_frame_manager_( _data_frame_manager ),
           data_frames_( _data_frames ),
@@ -48,8 +48,8 @@ class ProjectManager
     // ------------------------------------------------------------------------
 
    public:
-    /// Adds a new AutoSQL model to the project.
-    void add_autosql_model(
+    /// Adds a new Multirel model to the project.
+    void add_multirel_model(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
@@ -88,8 +88,8 @@ class ProjectManager
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
-    /// Deletes an AutoSQL model
-    void delete_autosql_model(
+    /// Deletes an Multirel model
+    void delete_multirel_model(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
@@ -110,8 +110,8 @@ class ProjectManager
     void delete_project(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
 
-    /// Loads an AutoSQL model
-    void load_autosql_model(
+    /// Loads an Multirel model
+    void load_multirel_model(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
 
     /// Loads a data frame
@@ -125,8 +125,8 @@ class ProjectManager
     /// Updates the encodings in the client
     void refresh( Poco::Net::StreamSocket* _socket );
 
-    /// Saves an AutoSQL model to disc.
-    void save_autosql_model(
+    /// Saves an Multirel model to disc.
+    void save_multirel_model(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
 
     /// Saves a data frame
@@ -164,17 +164,17 @@ class ProjectManager
 
    private:
     /// Trivial (private) accessor
-    AutoSQLModelMapType& autosql_models()
+    MultirelModelMapType& multirel_models()
     {
-        assert_true( autosql_models_ );
-        return *autosql_models_;
+        assert_true( multirel_models_ );
+        return *multirel_models_;
     }
 
     /// Trivial (private) accessor
-    const AutoSQLModelMapType& autosql_models() const
+    const MultirelModelMapType& multirel_models() const
     {
-        assert_true( autosql_models_ );
-        return *autosql_models_;
+        assert_true( multirel_models_ );
+        return *multirel_models_;
     }
 
     /// Trivial accessor
@@ -187,10 +187,10 @@ class ProjectManager
     }
 
     /// Returns a deep copy of a model.
-    models::AutoSQLModel get_autosql_model( const std::string& _name )
+    models::MultirelModel get_multirel_model( const std::string& _name )
     {
         multithreading::ReadLock read_lock( read_write_lock_ );
-        auto ptr = utils::Getter::get( _name, &autosql_models() );
+        auto ptr = utils::Getter::get( _name, &multirel_models() );
         return *ptr;
     }
 
@@ -227,23 +227,23 @@ class ProjectManager
     }
 
     /// Sets a model.
-    void set_autosql_model(
-        const std::string& _name, const models::AutoSQLModel& _model )
+    void set_multirel_model(
+        const std::string& _name, const models::MultirelModel& _model )
     {
         multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
 
-        auto it = autosql_models().find( _name );
+        auto it = multirel_models().find( _name );
 
         weak_write_lock.upgrade();
 
-        if ( it == autosql_models().end() )
+        if ( it == multirel_models().end() )
             {
-                autosql_models()[_name] =
-                    std::make_shared<models::AutoSQLModel>( _model );
+                multirel_models()[_name] =
+                    std::make_shared<models::MultirelModel>( _model );
             }
         else
             {
-                it->second = std::make_shared<models::AutoSQLModel>( _model );
+                it->second = std::make_shared<models::MultirelModel>( _model );
             }
     }
 
@@ -272,8 +272,8 @@ class ProjectManager
     // ------------------------------------------------------------------------
 
    private:
-    /// The AutoSQL models currently held in memory
-    const std::shared_ptr<AutoSQLModelMapType> autosql_models_;
+    /// The Multirel models currently held in memory
+    const std::shared_ptr<MultirelModelMapType> multirel_models_;
 
     /// Maps integeres to category names
     const std::shared_ptr<containers::Encoding> categories_;

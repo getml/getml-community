@@ -6,7 +6,7 @@ namespace handlers
 {
 // ------------------------------------------------------------------------
 
-void ProjectManager::add_autosql_model(
+void ProjectManager::add_multirel_model(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,
     Poco::Net::StreamSocket* _socket )
@@ -20,7 +20,7 @@ void ProjectManager::add_autosql_model(
         JSON::get_object( _cmd, "hyperparameters_" );
 
     const auto hyperparameters =
-        std::make_shared<autosql::descriptors::Hyperparameters>(
+        std::make_shared<multirel::descriptors::Hyperparameters>(
             *hyperparameters_obj );
 
     const auto peripheral = std::make_shared<std::vector<std::string>>(
@@ -28,17 +28,17 @@ void ProjectManager::add_autosql_model(
             JSON::get_array( _cmd, "peripheral_" ) ) );
 
     const auto placeholder =
-        std::make_shared<autosql::decisiontrees::Placeholder>(
+        std::make_shared<multirel::decisiontrees::Placeholder>(
             JSON::get_object( _cmd, "population_" ) );
 
-    const auto model = models::AutoSQLModel(
-        autosql::ensemble::DecisionTreeEnsemble(
+    const auto model = models::MultirelModel(
+        multirel::ensemble::DecisionTreeEnsemble(
             categories_->vector(), hyperparameters, peripheral, placeholder ),
         *hyperparameters_obj );
 
-    set_autosql_model( _name, model );
+    set_multirel_model( _name, model );
 
-    monitor_->send( "postautosqlmodel", model.to_monitor( _name ) );
+    monitor_->send( "postmultirelmodel", model.to_monitor( _name ) );
 
     engine::communication::Sender::send_string( "Success!", _socket );
 }
@@ -193,10 +193,10 @@ void ProjectManager::clear()
                 "removedataframe", "{\"name\":\"" + pair.first + "\"}" );
         }
 
-    for ( auto& pair : autosql_models() )
+    for ( auto& pair : multirel_models() )
         {
             monitor_->send(
-                "removeautosqlmodel", "{\"name\":\"" + pair.first + "\"}" );
+                "removemultirelmodel", "{\"name\":\"" + pair.first + "\"}" );
         }
 
     for ( auto& pair : relboost_models() )
@@ -208,7 +208,7 @@ void ProjectManager::clear()
     // --------------------------------
     // Remove from engine.
 
-    autosql_models() = engine::handlers::AutoSQLModelManager::ModelMapType();
+    multirel_models() = engine::handlers::MultirelModelManager::ModelMapType();
 
     data_frames() = std::map<std::string, engine::containers::DataFrame>();
 
@@ -223,16 +223,16 @@ void ProjectManager::clear()
 
 // ------------------------------------------------------------------------
 
-void ProjectManager::delete_autosql_model(
+void ProjectManager::delete_multirel_model(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,
     Poco::Net::StreamSocket* _socket )
 {
     multithreading::WriteLock write_lock( read_write_lock_ );
 
-    FileHandler::remove( _name, project_directory_, _cmd, &autosql_models() );
+    FileHandler::remove( _name, project_directory_, _cmd, &multirel_models() );
 
-    monitor_->send( "removeautosqlmodel", "{\"name\":\"" + _name + "\"}" );
+    monitor_->send( "removemultirelmodel", "{\"name\":\"" + _name + "\"}" );
 
     communication::Sender::send_string( "Success!", _socket );
 }
@@ -304,7 +304,7 @@ void ProjectManager::load_all_models()
 
     Poco::DirectoryIterator end;
 
-    for ( Poco::DirectoryIterator it( project_directory_ + "autosql-models/" );
+    for ( Poco::DirectoryIterator it( project_directory_ + "multirel-models/" );
           it != end;
           ++it )
         {
@@ -314,11 +314,11 @@ void ProjectManager::load_all_models()
                 }
 
             auto model =
-                models::AutoSQLModel( categories().vector(), it->path() + "/" );
+                models::MultirelModel( categories().vector(), it->path() + "/" );
 
-            set_autosql_model( it.name(), model );
+            set_multirel_model( it.name(), model );
 
-            monitor_->send( "postautosqlmodel", model.to_monitor( it.name() ) );
+            monitor_->send( "postmultirelmodel", model.to_monitor( it.name() ) );
         }
 
     for ( Poco::DirectoryIterator it( project_directory_ + "relboost-models/" );
@@ -342,7 +342,7 @@ void ProjectManager::load_all_models()
 
 // ------------------------------------------------------------------------
 
-void ProjectManager::load_autosql_model(
+void ProjectManager::load_multirel_model(
     const std::string& _name, Poco::Net::StreamSocket* _socket )
 {
     if ( project_directory_ == "" )
@@ -350,13 +350,13 @@ void ProjectManager::load_autosql_model(
             throw std::invalid_argument( "You have not set a project!" );
         }
 
-    const auto path = project_directory_ + "autosql-models/" + _name + "/";
+    const auto path = project_directory_ + "multirel-models/" + _name + "/";
 
-    auto model = models::AutoSQLModel( categories().vector(), path );
+    auto model = models::MultirelModel( categories().vector(), path );
 
-    set_autosql_model( _name, model );
+    set_multirel_model( _name, model );
 
-    monitor_->send( "postautosqlmodel", model.to_monitor( _name ) );
+    monitor_->send( "postmultirelmodel", model.to_monitor( _name ) );
 
     engine::communication::Sender::send_string( "Success!", _socket );
 }
@@ -441,7 +441,7 @@ void ProjectManager::refresh( Poco::Net::StreamSocket* _socket )
 
 // ------------------------------------------------------------------------
 
-void ProjectManager::save_autosql_model(
+void ProjectManager::save_multirel_model(
     const std::string& _name, Poco::Net::StreamSocket* _socket )
 {
     if ( project_directory_ == "" )
@@ -451,9 +451,9 @@ void ProjectManager::save_autosql_model(
 
     multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
 
-    auto model = get_autosql_model( _name );
+    auto model = get_multirel_model( _name );
 
-    const auto path = project_directory_ + "autosql-models/" + _name + "/";
+    const auto path = project_directory_ + "multirel-models/" + _name + "/";
 
     model.save( path );
 

@@ -29,7 +29,7 @@ class Monitor
                   << std::endl;
     }
 
-    /// Sends a message (consisting of _type and _obj) to the AutoSQL monitor
+    /// Sends a message (consisting of _type and _obj) to the Multirel monitor
     std::pair<Poco::Net::HTTPResponse::HTTPStatus, std::string> send(
         const std::string& _type, const Poco::JSON::Object& _obj ) const
     {
@@ -41,11 +41,11 @@ class Monitor
     /// Makes sure that the monitor has started.
     bool get_start_message() const;
 
-    /// Sends a message (consisting of _type and _json) to the AutoSQL monitor
+    /// Sends a message (consisting of _type and _json) to the Multirel monitor
     std::pair<Poco::Net::HTTPResponse::HTTPStatus, std::string> send(
         const std::string& _type, const std::string& _json ) const;
 
-    /// Sends a GET request to shut down the AutoSQL Monitor.
+    /// Sends a GET request to shut down the Multirel Monitor.
     bool shutdown() const;
 
     // -----------------------------------------------------------------------

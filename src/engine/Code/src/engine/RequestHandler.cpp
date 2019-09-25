@@ -26,62 +26,7 @@ void RequestHandler::run()
 
             const auto name = JSON::get_value<std::string>( cmd, "name_" );
 
-            if ( type == "AutoSQLModel" )
-                {
-                    project_manager().add_autosql_model( name, cmd, &socket() );
-                }
-            else if ( type == "AutoSQLModel.delete" )
-                {
-                    project_manager().delete_autosql_model(
-                        name, cmd, &socket() );
-                }
-            else if ( type == "AutoSQLModel.fit" )
-                {
-                    autosql_model_manager().fit_model( name, cmd, &socket() );
-                }
-            else if ( type == "AutoSQLModel.get_hyperopt_names" )
-                {
-                    autosql_model_manager().get_hyperopt_names(
-                        name, &socket() );
-                }
-            else if ( type == "AutoSQLModel.get_hyperopt_scores" )
-                {
-                    autosql_model_manager().get_hyperopt_scores(
-                        name, &socket() );
-                }
-            else if ( type == "AutoSQLModel.launch_hyperopt" )
-                {
-                    autosql_model_manager().launch_hyperopt( name, &socket() );
-                }
-            else if ( type == "AutoSQLModel.load" )
-                {
-                    project_manager().load_autosql_model( name, &socket() );
-                }
-            else if ( type == "AutoSQLModel.refresh" )
-                {
-                    autosql_model_manager().refresh_model( name, &socket() );
-                }
-            else if ( type == "AutoSQLModel.save" )
-                {
-                    project_manager().save_autosql_model( name, &socket() );
-                }
-            else if ( type == "AutoSQLModel.score" )
-                {
-                    autosql_model_manager().score( name, cmd, &socket() );
-                }
-            else if ( type == "AutoSQLModel.to_json" )
-                {
-                    autosql_model_manager().to_json( name, &socket() );
-                }
-            else if ( type == "AutoSQLModel.to_sql" )
-                {
-                    autosql_model_manager().to_sql( name, &socket() );
-                }
-            else if ( type == "AutoSQLModel.transform" )
-                {
-                    autosql_model_manager().transform( name, cmd, &socket() );
-                }
-            else if ( type == "BooleanColumn.get" )
+            if ( type == "BooleanColumn.get" )
                 {
                     data_frame_manager().get_boolean_column(
                         name, cmd, &socket() );
@@ -246,6 +191,62 @@ void RequestHandler::run()
             else if ( type == "is_alive" )
                 {
                     return;
+                }
+            else if ( type == "MultirelModel" )
+                {
+                    project_manager().add_multirel_model(
+                        name, cmd, &socket() );
+                }
+            else if ( type == "MultirelModel.delete" )
+                {
+                    project_manager().delete_multirel_model(
+                        name, cmd, &socket() );
+                }
+            else if ( type == "MultirelModel.fit" )
+                {
+                    multirel_model_manager().fit_model( name, cmd, &socket() );
+                }
+            else if ( type == "MultirelModel.get_hyperopt_names" )
+                {
+                    multirel_model_manager().get_hyperopt_names(
+                        name, &socket() );
+                }
+            else if ( type == "MultirelModel.get_hyperopt_scores" )
+                {
+                    multirel_model_manager().get_hyperopt_scores(
+                        name, &socket() );
+                }
+            else if ( type == "MultirelModel.launch_hyperopt" )
+                {
+                    multirel_model_manager().launch_hyperopt( name, &socket() );
+                }
+            else if ( type == "MultirelModel.load" )
+                {
+                    project_manager().load_multirel_model( name, &socket() );
+                }
+            else if ( type == "MultirelModel.refresh" )
+                {
+                    multirel_model_manager().refresh_model( name, &socket() );
+                }
+            else if ( type == "MultirelModel.save" )
+                {
+                    project_manager().save_multirel_model( name, &socket() );
+                }
+            else if ( type == "MultirelModel.score" )
+                {
+                    multirel_model_manager().score( name, cmd, &socket() );
+                }
+            else if ( type == "MultirelModel.to_json" )
+                {
+                    multirel_model_manager().to_json( name, &socket() );
+                }
+            else if ( type == "MultirelModel.to_sql" )
+                {
+                    multirel_model_manager().to_sql( name, &socket() );
+                }
+            else if ( type == "MultirelModel.transform" )
+                {
+                    multirel_model_manager().transform( name, cmd, &socket() );
                 }
             else if ( type == "RelboostModel" )
                 {

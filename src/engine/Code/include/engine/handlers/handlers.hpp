@@ -32,11 +32,11 @@
 
 #include <multithreading/multithreading.hpp>
 
-#include "autosql/descriptors/descriptors.hpp"
+#include "multirel/descriptors/descriptors.hpp"
 
-#include "autosql/decisiontrees/decisiontrees.hpp"
+#include "multirel/decisiontrees/decisiontrees.hpp"
 
-#include "autosql/ensemble/ensemble.hpp"
+#include "multirel/ensemble/ensemble.hpp"
 
 #include "relboost/Hyperparameters.hpp"
 
@@ -75,7 +75,7 @@
 #include "engine/handlers/DataFrameManager.hpp"
 #include "engine/handlers/ModelManager.hpp"
 
-#include "engine/handlers/AutoSQLModelManager.hpp"
+#include "engine/handlers/MultirelModelManager.hpp"
 #include "engine/handlers/RelboostModelManager.hpp"
 
 #include "engine/handlers/ProjectManager.hpp"

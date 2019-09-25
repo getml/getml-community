@@ -21,7 +21,7 @@ std::string FileHandler::create_project_directory(
 
     Poco::File( project_directory ).createDirectories();
 
-    Poco::File( project_directory + "autosql-models/" ).createDirectories();
+    Poco::File( project_directory + "multirel-models/" ).createDirectories();
 
     Poco::File( project_directory + "data/" ).createDirectories();
 

@@ -15,8 +15,8 @@ class RequestHandler : public Poco::Net::TCPServerConnection
    public:
     RequestHandler(
         const Poco::Net::StreamSocket& _socket,
-        const std::shared_ptr<handlers::AutoSQLModelManager>&
-            _autosql_model_manager,
+        const std::shared_ptr<handlers::MultirelModelManager>&
+            _multirel_model_manager,
         const std::shared_ptr<handlers::DatabaseManager>& _database_manager,
         const std::shared_ptr<handlers::DataFrameManager>& _data_frame_manager,
         const std::shared_ptr<const monitoring::Logger>& _logger,
@@ -27,7 +27,7 @@ class RequestHandler : public Poco::Net::TCPServerConnection
         const std::shared_ptr<handlers::ProjectManager>& _project_manager,
         const std::shared_ptr<std::atomic<bool>>& _shutdown )
         : Poco::Net::TCPServerConnection( _socket ),
-          autosql_model_manager_( _autosql_model_manager ),
+          multirel_model_manager_( _multirel_model_manager ),
           database_manager_( _database_manager ),
           data_frame_manager_( _data_frame_manager ),
           logger_( _logger ),
@@ -48,10 +48,10 @@ class RequestHandler : public Poco::Net::TCPServerConnection
 
    private:
     /// Trivial accessor
-    handlers::AutoSQLModelManager& autosql_model_manager()
+    handlers::MultirelModelManager& multirel_model_manager()
     {
-        assert_true( autosql_model_manager_ );
-        return *autosql_model_manager_;
+        assert_true( multirel_model_manager_ );
+        return *multirel_model_manager_;
     }
 
     /// Trivial accessor
@@ -91,8 +91,8 @@ class RequestHandler : public Poco::Net::TCPServerConnection
     // -------------------------------------------------------------
 
    private:
-    /// Handles requests related to the autosql models such as fit or transform.
-    const std::shared_ptr<handlers::AutoSQLModelManager> autosql_model_manager_;
+    /// Handles requests related to the multirel models such as fit or transform.
+    const std::shared_ptr<handlers::MultirelModelManager> multirel_model_manager_;
 
     /// Handles requests related to the database.
     const std::shared_ptr<handlers::DatabaseManager> database_manager_;

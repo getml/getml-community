@@ -1,5 +1,5 @@
-#ifndef AUTOSQL_ENGINE_LICENSING_HPP_
-#define AUTOSQL_ENGINE_LICENSING_HPP_
+#ifndef MULTIREL_ENGINE_LICENSING_HPP_
+#define MULTIREL_ENGINE_LICENSING_HPP_
 
 // ----------------------------------------------------------------------------
 
@@ -32,4 +32,4 @@
 
 // ----------------------------------------------------------------------------
 
-#endif  // AUTOSQL_ENGINE _LICENSING_HPP_
+#endif  // MULTIREL_ENGINE _LICENSING_HPP_

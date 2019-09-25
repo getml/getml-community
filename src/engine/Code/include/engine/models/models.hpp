@@ -25,7 +25,7 @@
 
 #include "engine/communication/communication.hpp"
 
-#include "autosql/ensemble/ensemble.hpp"
+#include "multirel/ensemble/ensemble.hpp"
 
 #include "relboost/ensemble/ensemble.hpp"
 
@@ -36,7 +36,7 @@
 
 #include "engine/models/Model.hpp"
 
-#include "engine/models/AutoSQLModel.hpp"
+#include "engine/models/MultirelModel.hpp"
 #include "engine/models/RelboostModel.hpp"
 
 // ----------------------------------------------------

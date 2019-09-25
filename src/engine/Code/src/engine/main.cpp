@@ -75,8 +75,8 @@ int main( int argc, char *argv[] )
 
     // -------------------------------------------
 
-    const auto autosql_models =
-        std::make_shared<engine::handlers::AutoSQLModelManager::ModelMapType>();
+    const auto multirel_models =
+        std::make_shared<engine::handlers::MultirelModelManager::ModelMapType>();
 
     const auto data_frames = std::make_shared<
         std::map<std::string, engine::containers::DataFrame>>();
@@ -92,15 +92,15 @@ int main( int argc, char *argv[] )
     const auto database_manager =
         std::make_shared<engine::handlers::DatabaseManager>( logger, monitor );
 
-    const auto autosql_model_manager =
-        std::make_shared<engine::handlers::AutoSQLModelManager>(
+    const auto multirel_model_manager =
+        std::make_shared<engine::handlers::MultirelModelManager>(
             categories,
             database_manager,
             data_frames,
             join_keys_encoding,
             license_checker,
             logger,
-            autosql_models,
+            multirel_models,
             monitor,
             read_write_lock );
 
@@ -129,7 +129,7 @@ int main( int argc, char *argv[] )
 
     const auto project_manager =
         std::make_shared<engine::handlers::ProjectManager>(
-            autosql_models,
+            multirel_models,
             categories,
             data_frame_manager,
             data_frames,
@@ -154,7 +154,7 @@ int main( int argc, char *argv[] )
 
     Poco::Net::TCPServer srv(
         new engine::srv::ServerConnectionFactoryImpl(
-            autosql_model_manager,
+            multirel_model_manager,
             database_manager,
             data_frame_manager,
             logger,

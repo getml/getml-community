@@ -13,8 +13,8 @@ class ServerConnectionFactoryImpl : public Poco::Net::TCPServerConnectionFactory
 
    public:
     ServerConnectionFactoryImpl(
-        const std::shared_ptr<handlers::AutoSQLModelManager>&
-            _autosql_model_manager,
+        const std::shared_ptr<handlers::MultirelModelManager>&
+            _multirel_model_manager,
         const std::shared_ptr<handlers::DatabaseManager>& _database_manager,
         const std::shared_ptr<handlers::DataFrameManager>& _data_frame_manager,
         const std::shared_ptr<const monitoring::Logger>& _logger,
@@ -24,7 +24,7 @@ class ServerConnectionFactoryImpl : public Poco::Net::TCPServerConnectionFactory
         const config::Options& _options,
         const std::shared_ptr<handlers::ProjectManager>& _project_manager,
         const std::shared_ptr<std::atomic<bool>>& _shutdown )
-        : autosql_model_manager_( _autosql_model_manager ),
+        : multirel_model_manager_( _multirel_model_manager ),
           database_manager_( _database_manager ),
           data_frame_manager_( _data_frame_manager ),
           logger_( _logger ),
@@ -43,7 +43,7 @@ class ServerConnectionFactoryImpl : public Poco::Net::TCPServerConnectionFactory
     {
         return new RequestHandler(
             _socket,
-            autosql_model_manager_,
+            multirel_model_manager_,
             database_manager_,
             data_frame_manager_,
             logger_,
@@ -57,8 +57,8 @@ class ServerConnectionFactoryImpl : public Poco::Net::TCPServerConnectionFactory
     // -------------------------------------------------------------
 
    private:
-    /// Handles requests related to the AutoSQL models such as fit or transform.
-    const std::shared_ptr<handlers::AutoSQLModelManager> autosql_model_manager_;
+    /// Handles requests related to the Multirel models such as fit or transform.
+    const std::shared_ptr<handlers::MultirelModelManager> multirel_model_manager_;
 
     /// Handles requests related to the database.
     const std::shared_ptr<handlers::DatabaseManager> database_manager_;
