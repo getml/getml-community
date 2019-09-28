@@ -14,21 +14,11 @@ struct MonitorOptions
 
     MonitorOptions( const Poco::JSON::Object& _json_obj )
         : http_port_( JSON::get_value<size_t>( _json_obj, "httpPort" ) ),
-          https_port_( JSON::get_value<size_t>( _json_obj, "httpsPort" ) ),
-          tls_encryption_(
-              Poco::File( "../cert.pem" ).exists() &&
-              Poco::File( "../key.pem" ).exists() )
+          https_port_( JSON::get_value<size_t>( _json_obj, "httpsPort" ) )
     {
     }
 
-    MonitorOptions()
-        : http_port_( 1709 ),
-          https_port_( 1710 ),
-          tls_encryption_(
-              Poco::File( "../cert.pem" ).exists() &&
-              Poco::File( "../key.pem" ).exists() )
-    {
-    }
+    MonitorOptions() : http_port_( 1709 ), https_port_( 1710 ) {}
 
     ~MonitorOptions() = default;
 
@@ -41,10 +31,6 @@ struct MonitorOptions
     /// remote connections. (The engine will never communicate
     /// with this port. It is only needed to print out the initial message).
     const size_t https_port_;
-
-    /// Whether you want to use TLS encryption to communicate
-    /// with the monitor
-    const bool tls_encryption_;
 
     // ------------------------------------------------------
 };

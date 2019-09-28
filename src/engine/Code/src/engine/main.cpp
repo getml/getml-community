@@ -31,14 +31,10 @@ int main( int argc, char *argv[] )
               << "/ to log in." << std::endl
               << std::endl;
 
-    if ( options.monitor_.tls_encryption_ )
-        {
-            std::cout << "An HTTPS server that accepts remote connections has "
-                         "been launched "
-                      << "on https://localhost:" << options.monitor_.https_port_
-                      << "/." << std::endl
-                      << std::endl;
-        }
+    std::cout << "An HTTPS server that accepts remote connections has "
+                 "been launched "
+              << "on port " << options.monitor_.https_port_ << "." << std::endl
+              << std::endl;
 
     std::this_thread::sleep_for( std::chrono::seconds( 1 ) );
 
@@ -75,8 +71,8 @@ int main( int argc, char *argv[] )
 
     // -------------------------------------------
 
-    const auto multirel_models =
-        std::make_shared<engine::handlers::MultirelModelManager::ModelMapType>();
+    const auto multirel_models = std::make_shared<
+        engine::handlers::MultirelModelManager::ModelMapType>();
 
     const auto data_frames = std::make_shared<
         std::map<std::string, engine::containers::DataFrame>>();
