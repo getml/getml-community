@@ -835,6 +835,7 @@ void ModelManager<ModelType>::transform(
         }
     else
         {
+            license_checker().check_enterprise();
             to_db( model, cmd, yhat, local_data_frames, _socket );
         }
 
