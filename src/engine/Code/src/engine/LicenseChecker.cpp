@@ -23,13 +23,13 @@ ULong LicenseChecker::calc_mem_size(
 
 void LicenseChecker::check_enterprise() const
 {
-    /*if ( !is_enterprise() )
+    if ( !is_enterprise() )
         {
             throw std::runtime_error(
-                "This operation is only allowed for enterprise users. Please "
-                "upgrade to the getML enterprise version to access this "
+                "This operation is only allowed for premium users. Please "
+                "upgrade to the getML premium version to access this "
                 "function." );
-        }*/
+        }
 }
 
 // ------------------------------------------------------------------------
@@ -55,7 +55,7 @@ void LicenseChecker::check_mem_size(
                 "of " +
                 std::to_string( msize ) +
                 " MB. Please "
-                "upgrade to the getML enterprise version for unlimited "
+                "upgrade to the getML premium version for unlimited "
                 "memory." );
         }
 }
