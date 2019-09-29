@@ -248,66 +248,68 @@ void RequestHandler::run()
                 {
                     multirel_model_manager().transform( name, cmd, &socket() );
                 }
-            else if ( type == "RelboostModel" )
-                {
-                    project_manager().add_relboost_model(
-                        name, cmd, &socket() );
-                }
-            else if ( type == "RelboostModel.copy" )
-                {
-                    relboost_model_manager().copy_model( name, cmd, &socket() );
-                }
-            else if ( type == "RelboostModel.delete" )
-                {
-                    project_manager().delete_relboost_model(
-                        name, cmd, &socket() );
-                }
-            else if ( type == "RelboostModel.fit" )
-                {
-                    relboost_model_manager().fit_model( name, cmd, &socket() );
-                }
-            else if ( type == "RelboostModel.get_hyperopt_names" )
-                {
-                    relboost_model_manager().get_hyperopt_names(
-                        name, &socket() );
-                }
-            else if ( type == "RelboostModel.get_hyperopt_scores" )
-                {
-                    relboost_model_manager().get_hyperopt_scores(
-                        name, &socket() );
-                }
-            else if ( type == "RelboostModel.launch_hyperopt" )
-                {
-                    relboost_model_manager().launch_hyperopt( name, &socket() );
-                }
-            else if ( type == "RelboostModel.load" )
-                {
-                    project_manager().load_relboost_model( name, &socket() );
-                }
-            else if ( type == "RelboostModel.refresh" )
-                {
-                    relboost_model_manager().refresh_model( name, &socket() );
-                }
-            else if ( type == "RelboostModel.save" )
-                {
-                    project_manager().save_relboost_model( name, &socket() );
-                }
-            else if ( type == "RelboostModel.score" )
-                {
-                    relboost_model_manager().score( name, cmd, &socket() );
-                }
-            else if ( type == "RelboostModel.to_json" )
-                {
-                    relboost_model_manager().to_json( name, &socket() );
-                }
-            else if ( type == "RelboostModel.to_sql" )
-                {
-                    relboost_model_manager().to_sql( name, &socket() );
-                }
-            else if ( type == "RelboostModel.transform" )
-                {
-                    relboost_model_manager().transform( name, cmd, &socket() );
-                }
+            /* else if ( type == "RelboostModel" )
+                 {
+                     project_manager().add_relboost_model(
+                         name, cmd, &socket() );
+                 }
+             else if ( type == "RelboostModel.copy" )
+                 {
+                     relboost_model_manager().copy_model( name, cmd, &socket()
+             );
+                 }
+             else if ( type == "RelboostModel.delete" )
+                 {
+                     project_manager().delete_relboost_model(
+                         name, cmd, &socket() );
+                 }
+             else if ( type == "RelboostModel.fit" )
+                 {
+                     relboost_model_manager().fit_model( name, cmd, &socket() );
+                 }
+             else if ( type == "RelboostModel.get_hyperopt_names" )
+                 {
+                     relboost_model_manager().get_hyperopt_names(
+                         name, &socket() );
+                 }
+             else if ( type == "RelboostModel.get_hyperopt_scores" )
+                 {
+                     relboost_model_manager().get_hyperopt_scores(
+                         name, &socket() );
+                 }
+             else if ( type == "RelboostModel.launch_hyperopt" )
+                 {
+                     relboost_model_manager().launch_hyperopt( name, &socket()
+             );
+                 }
+             else if ( type == "RelboostModel.load" )
+                 {
+                     project_manager().load_relboost_model( name, &socket() );
+                 }
+             else if ( type == "RelboostModel.refresh" )
+                 {
+                     relboost_model_manager().refresh_model( name, &socket() );
+                 }
+             else if ( type == "RelboostModel.save" )
+                 {
+                     project_manager().save_relboost_model( name, &socket() );
+                 }
+             else if ( type == "RelboostModel.score" )
+                 {
+                     relboost_model_manager().score( name, cmd, &socket() );
+                 }
+             else if ( type == "RelboostModel.to_json" )
+                 {
+                     relboost_model_manager().to_json( name, &socket() );
+                 }
+             else if ( type == "RelboostModel.to_sql" )
+                 {
+                     relboost_model_manager().to_sql( name, &socket() );
+                 }
+             else if ( type == "RelboostModel.transform" )
+                 {
+                     relboost_model_manager().transform( name, cmd, &socket() );
+                 }*/
             else if ( type == "set_project" )
                 {
                     project_manager().set_project( name, &socket() );
