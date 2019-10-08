@@ -29,6 +29,7 @@
 // These are just typedefs
 #include "relboost/containers/Features.hpp"
 #include "relboost/containers/Index.hpp"
+#include "relboost/containers/Predictions.hpp"
 
 #include "relboost/containers/Column.hpp"
 #include "relboost/containers/IntSet.hpp"
@@ -36,6 +37,10 @@
 #include "relboost/containers/Optional.hpp"
 #include "relboost/containers/Schema.hpp"
 #include "relboost/containers/Split.hpp"
+
+#include "relboost/containers/ColumnView.hpp"
+
+#include "relboost/containers/Subfeatures.hpp"
 
 #include "relboost/containers/DataFrame.hpp"
 

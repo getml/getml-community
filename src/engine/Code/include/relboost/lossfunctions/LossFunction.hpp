@@ -23,8 +23,7 @@ class LossFunction
     virtual void apply_transformation( std::vector<Float>* yhat_ ) const = 0;
 
     /// Calculates first and second derivatives.
-    virtual void calc_gradients(
-        const std::shared_ptr<const std::vector<Float>>& _yhat_old ) = 0;
+    virtual void calc_gradients() = 0;
 
     /// Calculates an index that contains all non-zero samples.
     virtual void calc_sample_index(
@@ -35,7 +34,6 @@ class LossFunction
 
     /// Calculates the update rate.
     virtual Float calc_update_rate(
-        const std::vector<Float>& _yhat_old,
         const std::vector<Float>& _predictions ) = 0;
 
     /// Calculates weights given the matches.
@@ -70,7 +68,7 @@ class LossFunction
     virtual std::shared_ptr<const lossfunctions::LossFunction> child()
         const = 0;
 
-    /// Commits the values for _yhat_old.
+    /// Commits the values for yhat_old_.
     virtual void commit() = 0;
 
     /// Commits the split described by the iterators.
@@ -113,7 +111,11 @@ class LossFunction
         const std::array<Float, 3>& _weights ) = 0;
 
     /// Evaluates and entire tree.
-    virtual Float evaluate_tree( const std::vector<Float>& _yhat_new ) = 0;
+    virtual Float evaluate_tree(
+        const Float _update_rate, const std::vector<Float>& _yhat_new ) = 0;
+
+    /// Initializes yhat_old_ by setting it to the initial prediction.
+    virtual void init_yhat_old( const Float _initial_prediction ) = 0;
 
     /// Resets the critical resources to zero.
     virtual void reset() = 0;
@@ -141,6 +143,10 @@ class LossFunction
     /// Describes the type of the loss function (SquareLoss, CrossEntropyLoss,
     /// etc.)
     virtual std::string type() const = 0;
+
+    /// Updates yhat_old_ by adding the predictions.
+    virtual void update_yhat_old(
+        const Float _update_rate, const std::vector<Float>& _predictions ) = 0;
 };
 
 // ------------------------------------------------------------------------

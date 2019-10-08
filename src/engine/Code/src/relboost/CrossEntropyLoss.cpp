@@ -6,15 +6,11 @@ namespace lossfunctions
 {
 // ----------------------------------------------------------------------------
 
-void CrossEntropyLoss::calc_gradients(
-    const std::shared_ptr<const std::vector<Float>>& _yhat_old )
+void CrossEntropyLoss::calc_gradients()
 {
     // ------------------------------------------------------------------------
 
-    assert_true( _yhat_old );
-    assert_true( _yhat_old->size() == targets().size() );
-
-    yhat_old_ = _yhat_old;
+    assert_true( yhat_old().size() == targets().size() );
 
     // ------------------------------------------------------------------------
     // Resize, if necessary
@@ -163,15 +159,30 @@ Float CrossEntropyLoss::evaluate_split(
 
 // ----------------------------------------------------------------------------
 
-Float CrossEntropyLoss::evaluate_tree( const std::vector<Float>& _yhat_new )
+Float CrossEntropyLoss::evaluate_tree(
+    const Float _update_rate, const std::vector<Float>& _predictions )
 {
-    assert_true( _yhat_new.size() == targets().size() );
+    assert_true( _predictions.size() == targets().size() );
+
+    std::vector<Float> yhat_new( targets().size() );
+
+    const auto update_function = [_update_rate](
+                                     const Float y_old, const Float y_new ) {
+        return y_old + y_new * _update_rate;
+    };
+
+    std::transform(
+        yhat_old().begin(),
+        yhat_old().end(),
+        _predictions.begin(),
+        yhat_new.begin(),
+        update_function );
 
     Float loss = 0.0;
 
     for ( size_t ix : sample_index_ )
         {
-            const auto sigma_yhat = logistic_function( _yhat_new[ix] );
+            const auto sigma_yhat = logistic_function( yhat_new[ix] );
 
             loss += log_loss( sigma_yhat, targets()[ix] ) *
                     ( *sample_weights_ )[ix];

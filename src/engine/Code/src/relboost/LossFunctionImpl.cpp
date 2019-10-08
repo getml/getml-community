@@ -685,5 +685,23 @@ void LossFunctionImpl::transform(
 }
 
 // ----------------------------------------------------------------------------
+
+void LossFunctionImpl::update_yhat_old(
+    const Float _update_rate,
+    const std::vector<Float>& _predictions,
+    std::vector<Float>* _yhat_old ) const
+{
+    assert_true( _predictions.size() == _yhat_old->size() );
+    std::transform(
+        _yhat_old->begin(),
+        _yhat_old->end(),
+        _predictions.begin(),
+        _yhat_old->begin(),
+        [_update_rate]( const Float yhat, const Float pred ) {
+            return yhat + pred * _update_rate;
+        } );
+}
+
+// ----------------------------------------------------------------------------
 }  // namespace lossfunctions
 }  // namespace relboost

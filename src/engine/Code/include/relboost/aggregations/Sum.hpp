@@ -33,6 +33,16 @@ class Sum : public lossfunctions::LossFunction
         resize( _output.nrows() );
     }
 
+    Sum( const std::shared_ptr<AggregationIndex>& _agg_index,
+         const std::shared_ptr<lossfunctions::LossFunction>& _child,
+         const containers::DataFrame& _input,
+         const containers::DataFrameView& _output,
+         multithreading::Communicator* _comm )
+        : Sum( _child, _input, _output, _comm )
+    {
+        agg_index_ = _agg_index;
+    }
+
     Sum( const std::shared_ptr<lossfunctions::LossFunction>& _child )
         : child_( _child ),
           comm_( nullptr ),
@@ -45,6 +55,13 @@ class Sum : public lossfunctions::LossFunction
               _child.get(), &eta1_, &eta2_, &indices_, &indices_current_ ) )
 
     {
+    }
+
+    Sum( const std::shared_ptr<AggregationIndex>& _agg_index,
+         const std::shared_ptr<lossfunctions::LossFunction>& _child )
+        : Sum( _child )
+    {
+        agg_index_ = _agg_index;
     }
 
     ~Sum() = default;
@@ -125,11 +142,7 @@ class Sum : public lossfunctions::LossFunction
     void apply_transformation( std::vector<Float>* yhat_ ) const final {}
 
     /// Aggregations do not calculate gradients, only real loss functions do.
-    void calc_gradients(
-        const std::shared_ptr<const std::vector<Float>>& _yhat_old ) final
-    {
-        child_->calc_gradients( _yhat_old );
-    }
+    void calc_gradients() final { child_->calc_gradients(); }
 
     /// Calculates an index that contains all non-zero samples.
     void calc_sample_index(
@@ -142,11 +155,9 @@ class Sum : public lossfunctions::LossFunction
     void calc_sums() { child_->calc_sums(); }
 
     /// Calculates the update rate.
-    Float calc_update_rate(
-        const std::vector<Float>& _yhat_old,
-        const std::vector<Float>& _predictions ) final
+    Float calc_update_rate( const std::vector<Float>& _predictions ) final
     {
-        return child_->calc_update_rate( _yhat_old, _predictions );
+        return child_->calc_update_rate( _predictions );
     }
 
     /// Calculates the new yhat given eta, indices and the new weights.
@@ -176,17 +187,25 @@ class Sum : public lossfunctions::LossFunction
     /// Deletes all resources.
     void clear() final { resize( 0 ); }
 
-    /// Commits _yhat_old.
+    /// Commits yhat_old_.
     void commit() final { child_->commit(); }
 
     /// Evaluates an entire tree.
-    Float evaluate_tree( const std::vector<Float>& _yhat_new ) final
+    Float evaluate_tree(
+        const Float _update_rate, const std::vector<Float>& _yhat_new ) final
     {
-        return child_->evaluate_tree( _yhat_new );
+        assert_true( false && "ToDO" );
+        return child_->evaluate_tree( _update_rate, _yhat_new );
     }
 
     /// Trivial getter
     size_t depth() const final { return depth_; };
+
+    /// Initializes yhat_old_ by setting it to the initial prediction.
+    void init_yhat_old( const Float _initial_prediction ) final
+    {
+        assert_true( false && "ToDO" );
+    }
 
     /// Resets the critical resources to zero.
     void reset() final { impl_.reset(); }
@@ -212,6 +231,13 @@ class Sum : public lossfunctions::LossFunction
 
     /// Describes the type of the aggregation.
     std::string type() const final { return "SUM"; }
+
+    /// Updates yhat_old_ by adding the predictions.
+    void update_yhat_old(
+        const Float _update_rate, const std::vector<Float>& _predictions ) final
+    {
+        assert_true( false && "ToDO" );
+    }
 
     // -----------------------------------------------------------------
 
@@ -251,6 +277,9 @@ class Sum : public lossfunctions::LossFunction
     // -----------------------------------------------------------------
 
    private:
+    /// The aggregation index is needed by the intermediate aggregation.
+    std::shared_ptr<AggregationIndex> agg_index_;
+
     /// Either The next higher level of aggregation or the loss function.
     const std::shared_ptr<lossfunctions::LossFunction>& child_;
 

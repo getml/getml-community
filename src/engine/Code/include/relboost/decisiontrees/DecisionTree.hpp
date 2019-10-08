@@ -51,12 +51,9 @@ class DecisionTree
     // -----------------------------------------------------------------
 
     /// Calculates the update rate.
-    void calc_update_rate(
-        const std::vector<Float>& _yhat_old,
-        const std::vector<Float>& _predictions )
+    void calc_update_rate( const std::vector<Float>& _predictions )
     {
-        update_rate_ =
-            loss_function().calc_update_rate( _yhat_old, _predictions );
+        update_rate_ = loss_function().calc_update_rate( _predictions );
     }
 
     /// Clears data no longer needed.

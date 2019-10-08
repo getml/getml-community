@@ -162,7 +162,6 @@ class DecisionTreeEnsemble
     // candidate.
     Float calc_loss_reduction(
         const decisiontrees::DecisionTree& _decision_tree,
-        const std::vector<Float>& _yhat_old,
         const std::vector<Float>& _predictions ) const;
 
     // Makes sure that the target values are well-behaved.
@@ -290,13 +289,6 @@ class DecisionTreeEnsemble
             } );
     }
 
-    /// Trivial (private) accessor
-    std::vector<Float>& yhat_old()
-    {
-        assert_true( yhat_old_ );
-        return *yhat_old_;
-    }
-
     // -----------------------------------------------------------------
 
    private:
@@ -311,9 +303,6 @@ class DecisionTreeEnsemble
 
     /// Target variables (previous trees already substracted).
     std::shared_ptr<std::vector<Float>> targets_;
-
-    /// The sum of all previous features.
-    std::shared_ptr<std::vector<Float>> yhat_old_;
 
     // -----------------------------------------------------------------
 };

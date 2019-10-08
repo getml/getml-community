@@ -87,8 +87,7 @@ class CrossEntropyLoss : public LossFunction
 
    public:
     /// Calculates first and second derivatives.
-    void calc_gradients(
-        const std::shared_ptr<const std::vector<Float>>& _yhat_old ) final;
+    void calc_gradients() final;
 
     /// Evaluates split given matches. In this case, the loss function effective
     /// turns into XGBoost.
@@ -98,7 +97,8 @@ class CrossEntropyLoss : public LossFunction
         const std::array<Float, 3>& _weights ) final;
 
     /// Evaluates and entire tree.
-    Float evaluate_tree( const std::vector<Float>& _yhat_new ) final;
+    Float evaluate_tree(
+        const Float _update_rate, const std::vector<Float>& _yhat_new ) final;
 
     // -----------------------------------------------------------------
 
@@ -142,11 +142,9 @@ class CrossEntropyLoss : public LossFunction
     }
 
     /// Calculates the update rate.
-    Float calc_update_rate(
-        const std::vector<Float>& _yhat_old,
-        const std::vector<Float>& _predictions ) final
+    Float calc_update_rate( const std::vector<Float>& _predictions ) final
     {
-        return impl_.calc_update_rate( _yhat_old, _predictions, &comm() );
+        return impl_.calc_update_rate( yhat_old_, _predictions, &comm() );
     }
 
     /// Calculates two new weights given matches. This just reduces to the
@@ -224,7 +222,7 @@ class CrossEntropyLoss : public LossFunction
         sample_weights_.reset();
     }
 
-    /// Commits _yhat_old.
+    /// Commits yhat_old_.
     void commit() final
     {
         assert_true( yhat_old().size() == targets().size() );
@@ -277,6 +275,12 @@ class CrossEntropyLoss : public LossFunction
                    _weights,
                    sum_sample_weights_,
                    &comm() );
+    }
+
+    /// Initializes yhat_old_ by setting it to the initial prediction.
+    void init_yhat_old( const Float _initial_prediction ) final
+    {
+        yhat_old_ = std::vector<Float>( targets().size(), _initial_prediction );
     }
 
     /// Resets critical resources to zero.
@@ -333,6 +337,13 @@ class CrossEntropyLoss : public LossFunction
     /// Describes the type of the loss function (SquareLoss, CrossEntropyLoss,
     /// etc.)
     std::string type() const final { return "CrossEntropyLoss"; }
+
+    /// Updates yhat_old_ by adding the predictions.
+    void update_yhat_old(
+        const Float _update_rate, const std::vector<Float>& _predictions ) final
+    {
+        impl_.update_yhat_old( _update_rate, _predictions, &yhat_old_ );
+    }
 
     // -----------------------------------------------------------------
 
@@ -425,11 +436,7 @@ class CrossEntropyLoss : public LossFunction
     }
 
     /// Trivial accessor
-    const std::vector<Float>& yhat_old() const
-    {
-        assert_true( yhat_old_ );
-        return *yhat_old_;
-    }
+    const std::vector<Float>& yhat_old() const { return yhat_old_; }
 
     // -----------------------------------------------------------------
 
@@ -477,7 +484,7 @@ class CrossEntropyLoss : public LossFunction
     std::vector<Float> yhat_committed_;
 
     /// Sum of all previous trees.
-    std::shared_ptr<const std::vector<Float>> yhat_old_;
+    std::vector<Float> yhat_old_;
 
     /// Implementation class. Because impl_ depends on some other variables, it
     /// is the last member variable.

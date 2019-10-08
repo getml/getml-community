@@ -95,6 +95,9 @@ struct Hyperparameters
     /// Number of features (number of trees in boosted ensemble)
     const Int num_features_;
 
+    /// Number of subfeatures
+    const Int num_subfeatures_;
+
     /// ...
     // const Int num_parallel_tree;
 

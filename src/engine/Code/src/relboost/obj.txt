@@ -1,5 +1,6 @@
 set(
     RELBOOST_OBJ 
+    ${RELBOOST_SOURCE_DIRECTORY}/AggregationIndex.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/AggregationParser.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/Avg.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/AggregationImpl.cpp
@@ -21,6 +22,7 @@ set(
     ${RELBOOST_SOURCE_DIRECTORY}/Placeholder.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/Sampler.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/SquareLoss.cpp
+    ${RELBOOST_SOURCE_DIRECTORY}/SubtreeHelper.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/Sum.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/TableHolder.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/Threadutils.cpp

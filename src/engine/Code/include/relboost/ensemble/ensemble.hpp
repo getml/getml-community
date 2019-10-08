@@ -6,6 +6,7 @@
 
 #include <fstream>
 #include <memory>
+#include <optional>
 #include <tuple>
 #include <vector>
 
@@ -39,6 +40,8 @@
 #include "relboost/ensemble/DecisionTreeEnsembleImpl.hpp"
 
 #include "relboost/ensemble/DecisionTreeEnsemble.hpp"
+
+#include "relboost/ensemble/SubtreeHelper.hpp"
 
 #include "relboost/ensemble/Threadutils.hpp"
 

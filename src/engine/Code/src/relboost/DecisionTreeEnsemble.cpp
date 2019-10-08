@@ -127,30 +127,14 @@ void DecisionTreeEnsemble::calc_initial_prediction()
 
 Float DecisionTreeEnsemble::calc_loss_reduction(
     const decisiontrees::DecisionTree &_decision_tree,
-    const std::vector<Float> &_yhat_old,
     const std::vector<Float> &_predictions ) const
 {
-    assert_true( _yhat_old.size() == targets().size() );
     assert_true( _predictions.size() == targets().size() );
 
-    std::vector<Float> yhat_new( _yhat_old.size() );
-
-    const auto update_rate = _decision_tree.update_rate();
-
-    const auto update_function = [update_rate](
-                                     const Float y_old, const Float y_new ) {
-        return y_old + y_new * update_rate;
-    };
-
-    std::transform(
-        _yhat_old.begin(),
-        _yhat_old.end(),
-        _predictions.begin(),
-        yhat_new.begin(),
-        update_function );
-
-    return loss_function_->evaluate_tree( yhat_new );
+    return loss_function_->evaluate_tree(
+        _decision_tree.update_rate(), _predictions );
 }
+
 // ----------------------------------------------------------------------------
 
 void DecisionTreeEnsemble::check_plausibility_of_targets(
@@ -438,11 +422,10 @@ void DecisionTreeEnsemble::fit_new_feature()
                     const auto new_predictions = candidates.back().transform(
                         output_table, input_table );
 
-                    candidates.back().calc_update_rate(
-                        yhat_old(), new_predictions );
+                    candidates.back().calc_update_rate( new_predictions );
 
                     auto loss_reduction = calc_loss_reduction(
-                        candidates.back(), yhat_old(), new_predictions );
+                        candidates.back(), new_predictions );
 
                     loss.push_back( loss_reduction );
 
@@ -467,12 +450,11 @@ void DecisionTreeEnsemble::fit_new_feature()
     // ------------------------------------------------------------------------
     // Update yhat_old_.
 
-    assert_true( yhat_old_ );
+    loss_function().update_yhat_old(
+        candidates[dist].update_rate() * hyperparameters().eta_,
+        best_predictions );
 
-    update_predictions(
-        candidates[dist].update_rate(), best_predictions, &yhat_old() );
-
-    loss_function().calc_gradients( yhat_old_ );
+    loss_function().calc_gradients();
 
     loss_function().commit();
 
@@ -531,10 +513,9 @@ void DecisionTreeEnsemble::init(
     // ------------------------------------------------------------------------
     // Calculate gradient.
 
-    yhat_old_ = std::make_shared<std::vector<Float>>(
-        _population.nrows(), initial_prediction() );
+    loss_function().init_yhat_old( initial_prediction() );
 
-    loss_function().calc_gradients( yhat_old_ );
+    loss_function().calc_gradients();
 
     // ------------------------------------------------------------------------
     // Build table holder.

@@ -18,8 +18,7 @@ class LossFunctionImpl
         const std::vector<Float>& _g,
         const std::vector<Float>& _h,
         const std::shared_ptr<const Hyperparameters>& _hyperparameters,
-        const std::shared_ptr<const std::vector<Float>>&
-            _sample_weights,
+        const std::shared_ptr<const std::vector<Float>>& _sample_weights,
         const Float& _sum_g,
         const Float& _sum_h,
         const Float& _sum_h_yhat,
@@ -54,8 +53,8 @@ class LossFunctionImpl
     /// Calculates the sample index (which contains the indices of all samples
     /// with non-zero sample weight).
     std::vector<size_t> calc_sample_index(
-        const std::shared_ptr<const std::vector<Float>>&
-            _sample_weights ) const;
+        const std::shared_ptr<const std::vector<Float>>& _sample_weights )
+        const;
 
     /// Calculates _sum_g and _sum_h.
     void calc_sums(
@@ -101,6 +100,12 @@ class LossFunctionImpl
         const std::vector<const containers::Match*>::iterator _end,
         const std::vector<Float>& _weights,
         std::vector<Float>* _predictions ) const;
+
+    /// Updates _yhat_old by adding the predictions.
+    void update_yhat_old(
+        const Float _update_rate,
+        const std::vector<Float>& _predictions,
+        std::vector<Float>* _yhat_old ) const;
 
     // -----------------------------------------------------------------
 
