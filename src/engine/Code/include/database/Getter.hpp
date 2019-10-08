@@ -30,7 +30,14 @@ struct Getter
     /// Returns an intger.
     static Int get_int( const std::string& _str )
     {
-        const auto [val, success] = csv::Parser::to_int( _str );
+        auto [val, success] = csv::Parser::to_int( _str );
+
+        if ( !success )
+            {
+                Float fval = 0.0;
+                std::tie( fval, success ) = csv::Parser::to_double( _str );
+                val = static_cast<Int>( fval );
+            }
 
         if ( !success )
             {
