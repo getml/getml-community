@@ -22,8 +22,7 @@ struct DecisionTreeEnsembleImpl
           hyperparameters_( _hyperparameters ),
           initial_prediction_( 0.0 ),
           peripheral_names_( _peripheral_names ),
-          placeholder_( _placeholder ),
-          sampler_( utils::Sampler( _hyperparameters->seed_ ) )
+          placeholder_( _placeholder )
     {
         check_placeholder( *placeholder_ );
     }
@@ -62,9 +61,6 @@ struct DecisionTreeEnsembleImpl
 
     /// Schema of the population table.
     std::shared_ptr<const containers::Schema> population_schema_;
-
-    /// The sampler used for making the sample weights.
-    utils::Sampler sampler_;
 
     /// Trees underlying the model.
     std::vector<decisiontrees::DecisionTree> trees_;

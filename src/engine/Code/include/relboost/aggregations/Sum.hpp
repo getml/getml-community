@@ -144,11 +144,14 @@ class Sum : public lossfunctions::LossFunction
     /// Aggregations do not calculate gradients, only real loss functions do.
     void calc_gradients() final { child_->calc_gradients(); }
 
-    /// Calculates an index that contains all non-zero samples.
-    void calc_sample_index(
-        const std::shared_ptr<const std::vector<Float>>& _sample_weights )
+    /// Calculates the sampling rate (the share of samples that will be
+    /// drawn for each feature).
+    void calc_sampling_rate(
+        const unsigned int _seed,
+        const Float _sampling_factor,
+        multithreading::Communicator* _comm ) final
     {
-        child_->calc_sample_index( _sample_weights );
+        child_->calc_sampling_rate( _seed, _sampling_factor, _comm );
     }
 
     /// Calculates sum_g_ and sum_h_.
@@ -205,6 +208,13 @@ class Sum : public lossfunctions::LossFunction
     void init_yhat_old( const Float _initial_prediction ) final
     {
         assert_true( false && "ToDO" );
+    }
+
+    /// Generates the sample weights.
+    const std::shared_ptr<const std::vector<Float>> make_sample_weights() final
+    {
+        assert_true( false && "ToDO" );
+        return child_->make_sample_weights();
     }
 
     /// Resets the critical resources to zero.

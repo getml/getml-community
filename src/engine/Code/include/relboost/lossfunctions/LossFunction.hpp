@@ -25,9 +25,12 @@ class LossFunction
     /// Calculates first and second derivatives.
     virtual void calc_gradients() = 0;
 
-    /// Calculates an index that contains all non-zero samples.
-    virtual void calc_sample_index(
-        const std::shared_ptr<const std::vector<Float>>& _sample_weights ) = 0;
+    /// Calculates the sampling rate (the share of samples that will be
+    /// drawn for each feature).
+    virtual void calc_sampling_rate(
+        const unsigned int _seed,
+        const Float _sampling_factor,
+        multithreading::Communicator* _comm ) = 0;
 
     /// Calculates sum_g_ and sum_h_.
     virtual void calc_sums() = 0;
@@ -116,6 +119,10 @@ class LossFunction
 
     /// Initializes yhat_old_ by setting it to the initial prediction.
     virtual void init_yhat_old( const Float _initial_prediction ) = 0;
+
+    /// Generates the sample weights.
+    virtual const std::shared_ptr<const std::vector<Float>>
+    make_sample_weights() = 0;
 
     /// Resets the critical resources to zero.
     virtual void reset() = 0;

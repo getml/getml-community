@@ -121,12 +121,16 @@ class CrossEntropyLoss : public LossFunction
         } );
     }
 
-    /// Calculates an index that contains all non-zero samples.
-    void calc_sample_index(
-        const std::shared_ptr<const std::vector<Float>>& _sample_weights )
+    /// Calculates the sampling rate (the share of samples that will be
+    /// drawn for each feature).
+    void calc_sampling_rate(
+        const unsigned int _seed,
+        const Float _sampling_factor,
+        multithreading::Communicator* _comm ) final
     {
-        sample_weights_ = _sample_weights;
-        sample_index_ = impl_.calc_sample_index( _sample_weights );
+        sampler_ = std::make_unique<utils::Sampler>( _seed );
+        sampler().calc_sampling_rate(
+            targets().size(), _sampling_factor, _comm );
     }
 
     /// Calculates sum_g_ and sum_h_.
@@ -283,6 +287,14 @@ class CrossEntropyLoss : public LossFunction
         yhat_old_ = std::vector<Float>( targets().size(), _initial_prediction );
     }
 
+    /// Generates the sample weights.
+    const std::shared_ptr<const std::vector<Float>> make_sample_weights() final
+    {
+        sample_weights_ = sampler().make_sample_weights( targets().size() );
+        sample_index_ = impl_.calc_sample_index( sample_weights_ );
+        return sample_weights_;
+    }
+
     /// Resets critical resources to zero.
     void reset() final
     {
@@ -429,6 +441,13 @@ class CrossEntropyLoss : public LossFunction
     }
 
     /// Trivial accessor
+    utils::Sampler& sampler()
+    {
+        assert_true( sampler_ );
+        return *sampler_;
+    }
+
+    /// Trivial accessor
     const std::vector<Float>& targets() const
     {
         assert_true( targets_ );
@@ -461,6 +480,9 @@ class CrossEntropyLoss : public LossFunction
 
     /// The weights used for the samples.
     std::shared_ptr<const std::vector<Float>> sample_weights_;
+
+    /// The sampler used to determine the sample weights.
+    std::unique_ptr<utils::Sampler> sampler_;
 
     /// Sum of g_, needed for the intercept.
     Float sum_g_;

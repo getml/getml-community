@@ -222,9 +222,6 @@ class DecisionTreeEnsemble
         return *loss_function_;
     }
 
-    /// Trivial (private) accessor
-    utils::Sampler& sampler() { return impl().sampler_; }
-
     /// Trivial (const) accessor
     const std::string& session_name() const
     {

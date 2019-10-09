@@ -334,11 +334,7 @@ void DecisionTreeEnsemble::fit_new_feature()
     // ------------------------------------------------------------------------
     // Create new loss function.
 
-    const auto nrows = table_holder().main_tables_[0].nrows();
-
-    const auto sample_weights = sampler().make_sample_weights( nrows );
-
-    loss_function().calc_sample_index( sample_weights );
+    const auto sample_weights = loss_function().make_sample_weights();
 
     loss_function().calc_sums();
 
@@ -461,7 +457,7 @@ void DecisionTreeEnsemble::fit_new_feature()
     // ------------------------------------------------------------------------
     // Add best candidate to trees
 
-    trees().push_back( std::move( candidates[dist] ) );
+    trees().emplace_back( std::move( candidates[dist] ) );
 
     // ------------------------------------------------------------------------
     // Get rid of data no longer needed.
@@ -511,26 +507,20 @@ void DecisionTreeEnsemble::init(
     calc_initial_prediction();
 
     // ------------------------------------------------------------------------
-    // Calculate gradient.
+    // Initialize the loss function.
 
     loss_function().init_yhat_old( initial_prediction() );
 
     loss_function().calc_gradients();
+
+    loss_function().calc_sampling_rate(
+        hyperparameters().seed_, hyperparameters().sampling_factor_, &comm() );
 
     // ------------------------------------------------------------------------
     // Build table holder.
 
     table_holder_ = std::make_shared<const TableHolder>(
         placeholder(), _population, _peripheral, peripheral_names() );
-
-    // ------------------------------------------------------------------------
-    // The sampling rate is used to determine the share of subsamples from the
-    // population table.
-
-    const auto nrows = table_holder().main_tables_[0].nrows();
-
-    sampler().calc_sampling_rate(
-        nrows, hyperparameters().sampling_factor_, &comm() );
 
     // ------------------------------------------------------------------------
 }
