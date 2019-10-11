@@ -50,7 +50,9 @@ class DecisionTreeEnsemble
             std::shared_ptr<const logging::AbstractLogger>() );
 
     /// Fits one more feature.
-    void fit_new_feature();
+    void fit_new_feature(
+        const std::shared_ptr<lossfunctions::LossFunction>& _loss_function =
+            nullptr );
 
     /// Initializes the fitting process.
     void init(
@@ -98,7 +100,13 @@ class DecisionTreeEnsemble
     // -----------------------------------------------------------------
 
    public:
-    /// Trivial accessor
+    /// Trivial (const) accessor
+    const std::shared_ptr<const std::vector<std::string>>& encoding() const
+    {
+        return impl().encoding_;
+    }
+
+    /// Trivial (const) accessor
     const Hyperparameters& hyperparameters() const
     {
         throw_unless(

@@ -19,6 +19,7 @@ set(
     ${RELBOOST_SOURCE_DIRECTORY}/LossFunctionImpl.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/LossFunctionParser.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/Matchmaker.cpp
+    ${RELBOOST_SOURCE_DIRECTORY}/Mapper.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/Placeholder.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/Sampler.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/SquareLoss.cpp

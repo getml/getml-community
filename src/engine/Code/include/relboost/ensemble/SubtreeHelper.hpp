@@ -48,7 +48,7 @@ class SubtreeHelper
         const size_t _ix_perip_used,
         const std::shared_ptr<lossfunctions::LossFunction>& _loss_function,
         multithreading::Communicator* _comm,
-        DecisionTreeEnsemble* _subfeature );
+        std::optional<DecisionTreeEnsemble>* _subensemble );
 };
 
 // ------------------------------------------------------------------------

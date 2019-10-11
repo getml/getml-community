@@ -321,7 +321,8 @@ void DecisionTreeEnsemble::fit(
 
 // ----------------------------------------------------------------------------
 
-void DecisionTreeEnsemble::fit_new_feature()
+void DecisionTreeEnsemble::fit_new_feature(
+    const std::shared_ptr<lossfunctions::LossFunction> &_loss_function )
 {
     // ------------------------------------------------------------------------
 
@@ -332,13 +333,19 @@ void DecisionTreeEnsemble::fit_new_feature()
     assert_true( table_holder().main_tables_.size() > 0 );
 
     // ------------------------------------------------------------------------
-    // Create new loss function.
+    // If no loss function has been passed, use your own.
 
-    const auto sample_weights = loss_function().make_sample_weights();
+    const auto loss_function_ptr =
+        ( _loss_function ? _loss_function : loss_function_ );
 
-    loss_function().calc_sums();
+    // ------------------------------------------------------------------------
+    // Recreate sample weights.
 
-    loss_function().commit();
+    const auto sample_weights = loss_function_ptr->make_sample_weights();
+
+    loss_function_ptr->calc_sums();
+
+    loss_function_ptr->commit();
 
     // ------------------------------------------------------------------------
 
@@ -388,14 +395,14 @@ void DecisionTreeEnsemble::fit_new_feature()
                 aggregations;
 
             aggregations.push_back( std::make_shared<aggregations::Avg>(
-                loss_function_,
+                loss_function_ptr,
                 matches_ptr,
                 input_table,
                 output_table,
                 &comm() ) );
 
             aggregations.push_back( std::make_shared<aggregations::Sum>(
-                loss_function_, input_table, output_table, &comm() ) );
+                loss_function_ptr, input_table, output_table, &comm() ) );
 
             // ------------------------------------------------------------------------
             // Iterate through aggregations.
@@ -446,13 +453,13 @@ void DecisionTreeEnsemble::fit_new_feature()
     // ------------------------------------------------------------------------
     // Update yhat_old_.
 
-    loss_function().update_yhat_old(
+    loss_function_ptr->update_yhat_old(
         candidates[dist].update_rate() * hyperparameters().eta_,
         best_predictions );
 
-    loss_function().calc_gradients();
+    loss_function_ptr->calc_gradients();
 
-    loss_function().commit();
+    loss_function_ptr->commit();
 
     // ------------------------------------------------------------------------
     // Add best candidate to trees

@@ -16,17 +16,16 @@ class ColumnView
     ColumnView() {}
 
     ColumnView( const Column<T>& _col )
-        : rows_( std::shared_ptr<const ContainerType>() )
+        : col_( std::make_optional<Column<T>>( _col ) ),
+          rows_( std::shared_ptr<const ContainerType>() )
     {
-        col_.reset( new Column<T>( _col ) );
     }
 
     ColumnView(
         const Column<T>& _col,
         const std::shared_ptr<const ContainerType>& _rows )
-        : rows_( _rows )
+        : col_( std::make_optional<Column<T>>( _col ) ), rows_( _rows )
     {
-        col_.reset( new Column<T>( _col ) );
     }
 
     ~ColumnView() = default;
@@ -76,11 +75,11 @@ class ColumnView
     // -------------------------------
 
    private:
-    /// Indices indicating all of the rows that are part of this view
-    std::shared_ptr<const ContainerType> rows_;
-
     /// Shallow copy of the column in which we are interested.
     std::optional<Column<T>> col_;
+
+    /// Indices indicating all of the rows that are part of this view
+    std::shared_ptr<const ContainerType> rows_;
 
     // -------------------------------
 };
