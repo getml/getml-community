@@ -19,7 +19,7 @@ struct TableHolder
           peripheral_tables_( TableHolder::parse_peripheral_tables(
               _placeholder, _peripheral, _peripheral_names ) ),
           subtables_( TableHolder::parse_subtables(
-              _placeholder, _peripheral, _peripheral_names ) )
+              _placeholder, _population, _peripheral, _peripheral_names ) )
 
     {
         assert_true( main_tables_.size() == peripheral_tables_.size() );
@@ -29,6 +29,11 @@ struct TableHolder
     ~TableHolder() = default;
 
     // ------------------------------
+
+    /// Creates the row indices for the subtables.
+    static std::shared_ptr<const std::vector<size_t>> make_subrows(
+        const containers::DataFrameView& _population_subview,
+        const containers::DataFrame& _peripheral_subview );
 
     /// Creates the main tables during construction.
     static std::vector<containers::DataFrameView> parse_main_tables(
@@ -42,8 +47,9 @@ struct TableHolder
         const std::vector<std::string>& _peripheral_names );
 
     /// Creates the subtables during construction.
-    static std::vector<containers::Optional<TableHolder>> parse_subtables(
+    static std::vector<std::optional<TableHolder>> parse_subtables(
         const Placeholder& _placeholder,
+        const containers::DataFrameView& _population,
         const std::vector<containers::DataFrame>& _peripheral,
         const std::vector<std::string>& _peripheral_names );
 
@@ -57,7 +63,7 @@ struct TableHolder
     const std::vector<containers::DataFrame> peripheral_tables_;
 
     /// The TableHolder may or may not have subtables.
-    const std::vector<containers::Optional<TableHolder>> subtables_;
+    const std::vector<std::optional<TableHolder>> subtables_;
 };
 
 // ----------------------------------------------------------------------------
