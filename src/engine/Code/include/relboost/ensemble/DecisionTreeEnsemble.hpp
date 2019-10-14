@@ -54,6 +54,12 @@ class DecisionTreeEnsemble
         const std::shared_ptr<lossfunctions::LossFunction>& _loss_function =
             nullptr );
 
+    /// Fits the subensembles.
+    void fit_subensembles(
+        const std::shared_ptr<const TableHolder>& _table_holder,
+        const std::shared_ptr<const logging::AbstractLogger> _logger,
+        const std::shared_ptr<lossfunctions::LossFunction>& _loss_function );
+
     /// Initializes the fitting process.
     void init(
         const containers::DataFrameView& _population,
@@ -112,6 +118,16 @@ class DecisionTreeEnsemble
         throw_unless(
             impl().hyperparameters_, "Model has no hyperparameters." );
         return *impl().hyperparameters_;
+    }
+
+    /// Initializes the fitting process with this being a
+    /// a subensemble.
+    void init_as_subensemble(
+        const TableHolder& _table_holder, multithreading::Communicator* _comm )
+    {
+        table_holder_ = std::make_shared<const TableHolder>( _table_holder );
+
+        set_comm( _comm );
     }
 
     /// Whether this is a classification problem
@@ -241,10 +257,11 @@ class DecisionTreeEnsemble
     {
         impl().comm_ = _comm;
         loss_function().set_comm( _comm );
-        for ( auto& tree : trees() )
-            {
-                tree.set_comm( _comm );
-            }
+        for ( auto& tree : trees() ) tree.set_comm( _comm );
+        for ( auto& subensemble : subensembles_avg_ )
+            if ( subensemble ) subensemble->set_comm( _comm );
+        for ( auto& subensemble : subensembles_sum_ )
+            if ( subensemble ) subensemble->set_comm( _comm );
     }
 
     /// Trivial (private) accessor
@@ -302,6 +319,14 @@ class DecisionTreeEnsemble
 
     /// The loss function to be minimized.
     std::shared_ptr<lossfunctions::LossFunction> loss_function_;
+
+    /// Contains the ensembles for the subfeatures trained with the intermediate
+    /// aggregation AVG.
+    std::vector<std::optional<DecisionTreeEnsemble>> subensembles_avg_;
+
+    /// Contains the ensembles for the subfeatures trained with the intermediate
+    /// aggregation SUM.
+    std::vector<std::optional<DecisionTreeEnsemble>> subensembles_sum_;
 
     /// Keeps the structures of the tables for fitting.
     std::shared_ptr<const TableHolder> table_holder_;

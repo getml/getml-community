@@ -321,6 +321,23 @@ void DecisionTreeEnsemble::fit(
 
 // ----------------------------------------------------------------------------
 
+void DecisionTreeEnsemble::fit_subensembles(
+    const std::shared_ptr<const TableHolder> &_table_holder,
+    const std::shared_ptr<const logging::AbstractLogger> _logger,
+    const std::shared_ptr<lossfunctions::LossFunction> &_loss_function )
+{
+    SubtreeHelper::fit_subensembles(
+        ( _table_holder ? _table_holder : table_holder_ ),
+        _logger,
+        *this,
+        ( _loss_function ? _loss_function : loss_function_ ),
+        &comm(),
+        &subensembles_avg_,
+        &subensembles_sum_ );
+}
+
+// ----------------------------------------------------------------------------
+
 void DecisionTreeEnsemble::fit_new_feature(
     const std::shared_ptr<lossfunctions::LossFunction> &_loss_function )
 {

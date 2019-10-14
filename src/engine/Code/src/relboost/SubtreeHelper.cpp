@@ -65,6 +65,11 @@ void SubtreeHelper::fit_subensemble(
             assert_true( false && "agg_type not known!" );
         }
 
+    ( *_subensemble )->init_as_subensemble( *subtable_holder, _comm );
+
+    ( *_subensemble )
+        ->fit_subensembles( subtable_holder, _logger, intermediate_agg );
+
     for ( size_t i = 0; i < _hyperparameters.num_subfeatures_; ++i )
         {
             ( *_subensemble )->fit_new_feature( intermediate_agg );
@@ -108,7 +113,7 @@ void SubtreeHelper::fit_subensembles(
         _table_holder->subtables_.size() == placeholder.joined_tables_.size() );
 
     // ----------------------------------------------------------------
-    // Set up the subfeatures.
+    // Set up the subensembles.
 
     const auto num_tables = _table_holder->subtables_.size();
 

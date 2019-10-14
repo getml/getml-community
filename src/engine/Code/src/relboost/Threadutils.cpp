@@ -39,6 +39,8 @@ void Threadutils::fit_ensemble(
 
             _ensemble->init( population_subview, _peripheral );
 
+            _ensemble->fit_subensembles( nullptr, _logger, nullptr );
+
             const auto num_features =
                 _ensemble->hyperparameters().num_features_;
 
