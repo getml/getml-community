@@ -8,7 +8,7 @@ namespace aggregations
 // -------------------------------------------------------------------------
 
 /// Note that an aggregation implements the LossFunction trait - thus
-/// aggregations just like loss functions to the tree.
+/// aggregations look just like loss functions to the tree.
 class Avg : public lossfunctions::LossFunction
 {
     // -----------------------------------------------------------------
@@ -29,7 +29,13 @@ class Avg : public lossfunctions::LossFunction
           num_samples_2_( 0.0 ),
           output_indices_( _output.indices() ),
           impl_( AggregationImpl(
-              _child.get(), &eta1_, &eta2_, &indices_, &indices_current_ ) )
+              _child.get(),
+              &eta1_,
+              &eta1_old_,
+              &eta2_,
+              &eta2_old_,
+              &indices_,
+              &indices_current_ ) )
     {
         resize( _output.nrows() );
 
@@ -57,7 +63,13 @@ class Avg : public lossfunctions::LossFunction
           indices_( 0 ),
           indices_current_( 0 ),
           impl_( AggregationImpl(
-              _child.get(), &eta1_, &eta2_, &indices_, &indices_current_ ) )
+              _child.get(),
+              &eta1_,
+              &eta1_old_,
+              &eta2_,
+              &eta2_old_,
+              &indices_,
+              &indices_current_ ) )
     {
     }
 
@@ -99,8 +111,11 @@ class Avg : public lossfunctions::LossFunction
         const enums::Aggregation _agg,
         const Float _old_weight,
         const std::vector<size_t>& _indices,
+        const std::vector<size_t>& _indices_current,
         const std::vector<Float>& _eta1,
-        const std::vector<Float>& _eta2 ) final;
+        const std::vector<Float>& _eta1_old,
+        const std::vector<Float>& _eta2,
+        const std::vector<Float>& _eta2_old ) final;
 
     /// Commits the values described by the _indices.
     void commit(
@@ -198,8 +213,12 @@ class Avg : public lossfunctions::LossFunction
     Float evaluate_tree(
         const Float _update_rate, const std::vector<Float>& _yhat_new ) final
     {
-        assert_true( false && "ToDO" );
-        return child_->evaluate_tree( _update_rate, _yhat_new );
+        auto predictions = impl_.make_sum_predictions( agg_index(), _yhat_new );
+        assert_true( predictions.size() == count_committed_.size() );
+        for ( size_t i = 0; i < predictions.size(); ++i )
+            if ( count_committed_[i] > 0.0 )
+                predictions[i] /= count_committed_[i];
+        return child_->evaluate_tree( _update_rate, predictions );
     }
 
     /// Trivial getter
@@ -214,8 +233,8 @@ class Avg : public lossfunctions::LossFunction
     /// Generates the sample weights.
     const std::shared_ptr<const std::vector<Float>> make_sample_weights() final
     {
-        assert_true( false && "ToDO" );
-        return child_->make_sample_weights();
+        const auto sample_weights_parent = child_->make_sample_weights();
+        return agg_index().make_sample_weights( sample_weights_parent );
     }
 
     /// Resets the critical resources to zero.
@@ -241,7 +260,13 @@ class Avg : public lossfunctions::LossFunction
     void update_yhat_old(
         const Float _update_rate, const std::vector<Float>& _predictions ) final
     {
-        assert_true( false && "ToDO" );
+        auto predictions =
+            impl_.make_sum_predictions( agg_index(), _predictions );
+        assert_true( predictions.size() == count_committed_.size() );
+        for ( size_t i = 0; i < predictions.size(); ++i )
+            if ( count_committed_[i] > 0.0 )
+                predictions[i] /= count_committed_[i];
+        child_->update_yhat_old( _update_rate, predictions );
     }
 
     // -----------------------------------------------------------------
@@ -286,6 +311,16 @@ class Avg : public lossfunctions::LossFunction
     // -----------------------------------------------------------------
 
    private:
+    /// Trivial (private) accessor
+    AggregationIndex& agg_index()
+    {
+        assert_true( agg_index_ );
+        return *agg_index_;
+    }
+
+    // -----------------------------------------------------------------
+
+   private:
     /// The aggregation index is needed by the intermediate aggregation.
     std::shared_ptr<AggregationIndex> agg_index_;
 
@@ -320,11 +355,23 @@ class Avg : public lossfunctions::LossFunction
     /// Parameters for weight 1 when weight 2 is NULL.
     std::vector<Float> eta1_2_null_;
 
+    /// Parameters for weight 1 when weight 2 is NULL as of the last split.
+    std::vector<Float> eta1_2_null_old_;
+
+    /// Parameters for weight 1 as of the last split.
+    std::vector<Float> eta1_old_;
+
     /// Parameters for weight 2.
     std::vector<Float> eta2_;
 
     /// Parameters for weight 2 when weight 1 is NULL.
     std::vector<Float> eta2_1_null_;
+
+    /// Parameters for weight 1 when weight 2 is NULL as of the last split.
+    std::vector<Float> eta2_1_null_old_;
+
+    /// Parameters for weight 2 as of the last split.
+    std::vector<Float> eta2_old_;
 
     /// Eta used by the old weight - needed for calculating the regularization.
     std::vector<Float> eta_old_;
@@ -350,8 +397,14 @@ class Avg : public lossfunctions::LossFunction
     /// The fixed weights when weight 2 is NULL.
     std::vector<Float> w_fixed_1_;
 
+    /// The fixed weights when weight 2 is NULL as of the last split.
+    std::vector<Float> w_fixed_1_old_;
+
     /// The fixed weights when weight 1 is NULL.
     std::vector<Float> w_fixed_2_;
+
+    /// The fixed weights when weight 1 is NULL as of the last split.
+    std::vector<Float> w_fixed_2_old_;
 
     /// The fixed that have been committed. In cases of a simple star schema,
     /// this is identical to yhat_committed_.

@@ -8,7 +8,7 @@ namespace aggregations
 // -------------------------------------------------------------------------
 
 /// Note that an aggregation implements the LossFunction trait - thus
-/// aggregations just like loss functions to the tree.
+/// aggregations look just like loss functions to the tree.
 class Sum : public lossfunctions::LossFunction
 {
     // -----------------------------------------------------------------
@@ -28,7 +28,13 @@ class Sum : public lossfunctions::LossFunction
           num_samples_2_( 0.0 ),
           output_indices_( _output.indices() ),
           impl_( AggregationImpl(
-              _child.get(), &eta1_, &eta2_, &indices_, &indices_current_ ) )
+              _child.get(),
+              &eta1_,
+              &eta1_old_,
+              &eta2_,
+              &eta2_old_,
+              &indices_,
+              &indices_current_ ) )
     {
         resize( _output.nrows() );
     }
@@ -52,8 +58,13 @@ class Sum : public lossfunctions::LossFunction
           num_samples_1_( 0.0 ),
           num_samples_2_( 0.0 ),
           impl_( AggregationImpl(
-              _child.get(), &eta1_, &eta2_, &indices_, &indices_current_ ) )
-
+              _child.get(),
+              &eta1_,
+              &eta1_old_,
+              &eta2_,
+              &eta2_old_,
+              &indices_,
+              &indices_current_ ) )
     {
     }
 
@@ -102,8 +113,11 @@ class Sum : public lossfunctions::LossFunction
         const enums::Aggregation _agg,
         const Float _old_weight,
         const std::vector<size_t>& _indices,
+        const std::vector<size_t>& _indices_current,
         const std::vector<Float>& _eta1,
-        const std::vector<Float>& _eta2 ) final;
+        const std::vector<Float>& _eta1_old,
+        const std::vector<Float>& _eta2,
+        const std::vector<Float>& _eta2_old ) final;
 
     /// Returns the loss reduction associated with a split.
     Float evaluate_split(
@@ -197,8 +211,9 @@ class Sum : public lossfunctions::LossFunction
     Float evaluate_tree(
         const Float _update_rate, const std::vector<Float>& _yhat_new ) final
     {
-        assert_true( false && "ToDO" );
-        return child_->evaluate_tree( _update_rate, _yhat_new );
+        const auto predictions =
+            impl_.make_sum_predictions( agg_index(), _yhat_new );
+        return child_->evaluate_tree( _update_rate, predictions );
     }
 
     /// Trivial getter
@@ -213,8 +228,8 @@ class Sum : public lossfunctions::LossFunction
     /// Generates the sample weights.
     const std::shared_ptr<const std::vector<Float>> make_sample_weights() final
     {
-        assert_true( false && "ToDO" );
-        return child_->make_sample_weights();
+        const auto sample_weights_parent = child_->make_sample_weights();
+        return agg_index().make_sample_weights( sample_weights_parent );
     }
 
     /// Resets the critical resources to zero.
@@ -246,7 +261,9 @@ class Sum : public lossfunctions::LossFunction
     void update_yhat_old(
         const Float _update_rate, const std::vector<Float>& _predictions ) final
     {
-        assert_true( false && "ToDO" );
+        const auto predictions =
+            impl_.make_sum_predictions( agg_index(), _predictions );
+        child_->update_yhat_old( _update_rate, predictions );
     }
 
     // -----------------------------------------------------------------
@@ -270,6 +287,13 @@ class Sum : public lossfunctions::LossFunction
     // -----------------------------------------------------------------
 
    private:
+    /// Trivial (private) accessor
+    AggregationIndex& agg_index()
+    {
+        assert_true( agg_index_ );
+        return *agg_index_;
+    }
+
     /// Calculates the new yhat assuming that this is the
     /// lowest aggregation.
     void calc_yhat(
@@ -302,8 +326,14 @@ class Sum : public lossfunctions::LossFunction
     /// Parameters for weight 1.
     std::vector<Float> eta1_;
 
+    /// Parameters for weight 1 as of the last split.
+    std::vector<Float> eta1_old_;
+
     /// Parameters for weight 2.
     std::vector<Float> eta2_;
+
+    /// Parameters for weight 2 as of the last split.
+    std::vector<Float> eta2_old_;
 
     /// Keeps track of the samples that have been altered.
     containers::IntSet indices_;

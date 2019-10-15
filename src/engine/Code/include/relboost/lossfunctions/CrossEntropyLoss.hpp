@@ -178,8 +178,11 @@ class CrossEntropyLoss : public LossFunction
         const enums::Aggregation _agg,
         const Float _old_weight,
         const std::vector<size_t>& _indices,
+        const std::vector<size_t>& _indices_current,
         const std::vector<Float>& _eta1,
-        const std::vector<Float>& _eta2 ) final
+        const std::vector<Float>& _eta1_old,
+        const std::vector<Float>& _eta2,
+        const std::vector<Float>& _eta2_old ) final
     {
         return impl_.calc_weights(
             _agg,
