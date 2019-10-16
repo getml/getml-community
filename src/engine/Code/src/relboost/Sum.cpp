@@ -190,39 +190,29 @@ std::array<Float, 3> Sum::calc_weights(
     const std::vector<Float>& _eta2_old )
 
 {
-    for ( auto ix_input : _indices )
-        {
-            // -----------------------------------------------------------------
-            // Figure out whether there are any matches in the output table.
-
-            const auto output_indices = agg_index().transform( ix_input );
-
-            // -----------------------------------------------------------------
-            // If yes, update them.
-
-            for ( auto ix_output : output_indices )
-                {
-                    assert_true( ix_input < _eta1.size() );
-                    assert_true( ix_output < eta1_.size() );
-
-                    eta1_[ix_output] += _eta1[ix_input];
-                    eta2_[ix_output] += _eta2[ix_input];
-
-                    indices_.insert( ix_output );
-                }
-
-            // -----------------------------------------------------------------
-        }
-
-    return child_->calc_weights(
+    const auto [eta1, eta1_old, eta2, eta2_old] = intermediate_agg().calc_etas(
         _agg,
         _old_weight,
-        indices_.unique_integers(),
-        indices_current_.unique_integers(),
-        eta1_,
-        eta1_old_,
-        eta2_,
-        eta2_old_ );
+        _indices,
+        _indices_current,
+        _eta1,
+        _eta1_old,
+        _eta2,
+        _eta2_old );
+
+    const auto weights = child_->calc_weights(
+        _agg,
+        _old_weight,
+        intermediate_agg().indices(),
+        intermediate_agg().indices_current(),
+        *eta1,
+        *eta1_old,
+        *eta2,
+        *eta2_old );
+
+    intermediate_agg().update_etas_old( _agg );
+
+    return weights;
 }
 
 // ----------------------------------------------------------------------------

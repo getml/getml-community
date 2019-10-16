@@ -51,6 +51,12 @@ class AggregationIndex
 
     // ------------------------------------------------------------
 
+   public:
+    /// Returns the number of rows in the output table.
+    size_t nrows() const { return output_table_.nrows(); }
+
+    // ------------------------------------------------------------
+
    private:
     /// Checks whether _time_stamp_output is within the range defined by
     /// _time_stamp_input and _upper_time_stamp.

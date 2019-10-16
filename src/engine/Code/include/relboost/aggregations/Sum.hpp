@@ -47,6 +47,8 @@ class Sum : public lossfunctions::LossFunction
         : Sum( _child, _input, _output, _comm )
     {
         agg_index_ = _agg_index;
+        intermediate_agg_ =
+            std::make_shared<IntermediateAggregationImpl>( agg_index_ );
     }
 
     Sum( const std::shared_ptr<lossfunctions::LossFunction>& _child )
@@ -73,6 +75,8 @@ class Sum : public lossfunctions::LossFunction
         : Sum( _child )
     {
         agg_index_ = _agg_index;
+        intermediate_agg_ =
+            std::make_shared<IntermediateAggregationImpl>( agg_index_ );
     }
 
     ~Sum() = default;
@@ -308,6 +312,13 @@ class Sum : public lossfunctions::LossFunction
             eta2_ );
     }
 
+    /// Trivial (private) accessor
+    IntermediateAggregationImpl& intermediate_agg()
+    {
+        assert_true( intermediate_agg_ );
+        return *intermediate_agg_;
+    }
+
     // -----------------------------------------------------------------
 
    private:
@@ -340,6 +351,9 @@ class Sum : public lossfunctions::LossFunction
 
     /// Keeps track of the samples that have been altered since the last split.
     containers::IntSet indices_current_;
+
+    /// The implementation of the intermediate aggregation.
+    std::shared_ptr<IntermediateAggregationImpl> intermediate_agg_;
 
     /// The join keys of the input table.
     std::vector<containers::Column<Int>> input_join_keys_;
