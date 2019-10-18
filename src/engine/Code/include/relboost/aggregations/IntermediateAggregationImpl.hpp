@@ -15,8 +15,10 @@ class IntermediateAggregationImpl
 
    public:
     IntermediateAggregationImpl(
-        const std::shared_ptr<AggregationIndex>& _agg_index )
+        const std::shared_ptr<AggregationIndex>& _agg_index,
+        const std::shared_ptr<lossfunctions::LossFunction>& _child )
         : agg_index_( _agg_index ),
+          child_( _child ),
           indices_( containers::IntSet( 0 ) ),
           indices_current_( containers::IntSet( 0 ) )
     {
@@ -51,14 +53,16 @@ class IntermediateAggregationImpl
         const std::vector<Float>*,
         const std::vector<Float>*>
     calc_etas(
+        const bool _divide_by_count,
         const enums::Aggregation _agg,
-        const Float _old_weight,
-        const std::vector<size_t>& _indices,
         const std::vector<size_t>& _indices_current,
         const std::vector<Float>& _eta1,
         const std::vector<Float>& _eta1_old,
         const std::vector<Float>& _eta2,
         const std::vector<Float>& _eta2_old );
+
+    /// Resets everything to zero.
+    void reset();
 
     /// Update the "old" values.
     void update_etas_old( const enums::Aggregation _agg );
@@ -83,6 +87,7 @@ class IntermediateAggregationImpl
    private:
     /// Update the output.
     void update_etas(
+        const bool _divide_by_count,
         const std::vector<size_t>& _indices_current,
         const std::vector<Float>& _eta1_input,
         const std::vector<Float>& _eta1_input_old,
@@ -104,7 +109,12 @@ class IntermediateAggregationImpl
     // -----------------------------------------------------------------
 
    private:
+    /// The aggregation index, which is needed for
+    /// intermediate aggregations.
     std::shared_ptr<AggregationIndex> agg_index_;
+
+    /// The child of this loss function.
+    std::shared_ptr<lossfunctions::LossFunction> child_;
 
     /// Parameters for weight 1.
     std::vector<Float> eta1_;

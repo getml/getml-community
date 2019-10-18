@@ -191,14 +191,7 @@ std::array<Float, 3> Sum::calc_weights(
 
 {
     const auto [eta1, eta1_old, eta2, eta2_old] = intermediate_agg().calc_etas(
-        _agg,
-        _old_weight,
-        _indices,
-        _indices_current,
-        _eta1,
-        _eta1_old,
-        _eta2,
-        _eta2_old );
+        false, _agg, _indices_current, _eta1, _eta1_old, _eta2, _eta2_old );
 
     const auto weights = child_->calc_weights(
         _agg,
@@ -217,13 +210,30 @@ std::array<Float, 3> Sum::calc_weights(
 
 // ----------------------------------------------------------------------------
 
-void Sum::commit(
-    const std::vector<Float>& _eta1,
-    const std::vector<Float>& _eta2,
+void Sum::calc_yhat(
+    const enums::Aggregation _agg,
+    const Float _old_weight,
+    const std::array<Float, 3>& _new_weights,
     const std::vector<size_t>& _indices,
-    const std::array<Float, 3>& _weights )
+    const std::vector<Float>& _eta1,
+    const std::vector<Float>& _eta1_old,
+    const std::vector<Float>& _eta2,
+    const std::vector<Float>& _eta2_old )
 {
-    // TODO
+    assert_true( !std::isnan( std::get<0>( _new_weights ) ) );
+
+    const auto [eta1, eta1_old, eta2, eta2_old] = intermediate_agg().calc_etas(
+        false, _agg, _indices, _eta1, _eta1_old, _eta2, _eta2_old );
+
+    child_->calc_yhat(
+        _agg,
+        _old_weight,
+        _new_weights,
+        intermediate_agg().indices(),
+        *eta1,
+        *eta1_old,
+        *eta2,
+        *eta2_old );
 }
 
 // ----------------------------------------------------------------------------

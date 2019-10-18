@@ -48,7 +48,7 @@ class Sum : public lossfunctions::LossFunction
     {
         agg_index_ = _agg_index;
         intermediate_agg_ =
-            std::make_shared<IntermediateAggregationImpl>( agg_index_ );
+            std::make_shared<IntermediateAggregationImpl>( agg_index_, _child );
     }
 
     Sum( const std::shared_ptr<lossfunctions::LossFunction>& _child )
@@ -76,7 +76,7 @@ class Sum : public lossfunctions::LossFunction
     {
         agg_index_ = _agg_index;
         intermediate_agg_ =
-            std::make_shared<IntermediateAggregationImpl>( agg_index_ );
+            std::make_shared<IntermediateAggregationImpl>( agg_index_, _child );
     }
 
     ~Sum() = default;
@@ -84,13 +84,6 @@ class Sum : public lossfunctions::LossFunction
     // -----------------------------------------------------------------
 
    public:
-    /// Commits the values described by the _indices.
-    void commit(
-        const std::vector<Float>& _eta1,
-        const std::vector<Float>& _eta2,
-        const std::vector<size_t>& _indices,
-        const std::array<Float, 3>& _weights ) final;
-
     /// Commits the split described by the iterators and the weights.
     void commit(
         const Float _old_intercept,
@@ -110,6 +103,17 @@ class Sum : public lossfunctions::LossFunction
         const std::vector<const containers::Match*>::iterator _split_begin,
         const std::vector<const containers::Match*>::iterator _split_end,
         const std::vector<const containers::Match*>::iterator _end ) final;
+
+    /// Calculates the new yhat given eta, indices and the new weights.
+    void calc_yhat(
+        const enums::Aggregation _agg,
+        const Float _old_weight,
+        const std::array<Float, 3>& _new_weights,
+        const std::vector<size_t>& _indices,
+        const std::vector<Float>& _eta1,
+        const std::vector<Float>& _eta1_old,
+        const std::vector<Float>& _eta2,
+        const std::vector<Float>& _eta2_old ) final;
 
     /// Calculates _indices, _eta1 and _eta2  given the previous
     /// iteration's variables.
@@ -181,24 +185,6 @@ class Sum : public lossfunctions::LossFunction
         return child_->calc_update_rate( _predictions );
     }
 
-    /// Calculates the new yhat given eta, indices and the new weights.
-    void calc_yhat(
-        const enums::Aggregation _agg,
-        const Float _old_weight,
-        const std::array<Float, 3>& _new_weights,
-        const std::vector<size_t>& _indices,
-        const std::vector<Float>& _eta1,
-        const std::vector<Float>& _eta2 ) final
-    {
-        child_->calc_yhat(
-            _agg,
-            _old_weight,
-            _new_weights,
-            indices_.unique_integers(),
-            eta1_,
-            eta2_ );
-    }
-
     /// Returns a const shared pointer to the child.
     std::shared_ptr<const lossfunctions::LossFunction> child() const final
     {
@@ -210,6 +196,15 @@ class Sum : public lossfunctions::LossFunction
 
     /// Commits yhat_old_.
     void commit() final { child_->commit(); }
+
+    /// Commits the values described by the _indices.
+    void commit(
+        const std::vector<size_t>& _indices,
+        const std::array<Float, 3>& _weights ) final
+    {
+        child_->commit( intermediate_agg().indices(), _weights );
+        intermediate_agg().reset();
+    }
 
     /// Evaluates an entire tree.
     Float evaluate_tree(
@@ -226,7 +221,7 @@ class Sum : public lossfunctions::LossFunction
     /// Initializes yhat_old_ by setting it to the initial prediction.
     void init_yhat_old( const Float _initial_prediction ) final
     {
-        assert_true( false && "ToDO" );
+        assert_true( false && "TODO" );
     }
 
     /// Generates the sample weights.
@@ -237,7 +232,13 @@ class Sum : public lossfunctions::LossFunction
     }
 
     /// Resets the critical resources to zero.
-    void reset() final { impl_.reset(); }
+    void reset() final
+    {
+        if ( intermediate_agg_ )
+            intermediate_agg().reset();
+        else
+            impl_.reset();
+    }
 
     /// Resizes critical resources.
     void resize( size_t _size ) final { impl_.resize( _size ); }
@@ -248,8 +249,9 @@ class Sum : public lossfunctions::LossFunction
     /// Reverts the weights to the last time commit has been called.
     void revert_to_commit( const std::vector<size_t>& _indices ) final
     {
-        revert_to_commit();
-    };
+        child_->revert_to_commit( intermediate_agg().indices() );
+        intermediate_agg().reset();
+    }
 
     /// Trivial setter.
     void set_comm( multithreading::Communicator* _comm ) final
@@ -309,7 +311,9 @@ class Sum : public lossfunctions::LossFunction
             _new_weights,
             indices_.unique_integers(),
             eta1_,
-            eta2_ );
+            eta1_old_,
+            eta2_,
+            eta2_old_ );
     }
 
     /// Trivial (private) accessor
@@ -370,7 +374,7 @@ class Sum : public lossfunctions::LossFunction
     /// Implementation class. Because impl_ depends on some other variables, it
     /// is the last member variable.
     AggregationImpl impl_;
-};
+};  // namespace aggregations
 
 // -------------------------------------------------------------------------
 }  // namespace aggregations

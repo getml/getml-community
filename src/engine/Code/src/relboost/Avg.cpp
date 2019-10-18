@@ -414,61 +414,24 @@ std::array<Float, 3> Avg::calc_weights(
     const std::vector<Float>& _eta1_old,
     const std::vector<Float>& _eta2,
     const std::vector<Float>& _eta2_old )
+
 {
-    indices_.clear();
+    const auto [eta1, eta1_old, eta2, eta2_old] = intermediate_agg().calc_etas(
+        true, _agg, _indices_current, _eta1, _eta1_old, _eta2, _eta2_old );
 
-    for ( auto ix_input : _indices )
-        {
-            // -----------------------------------------------------------------
-            // Figure out whether there are any matches in output table.
-
-            assert_true( _eta1.size() == _eta2.size() );
-
-            assert_true( eta1_.size() == count_committed_.size() );
-            assert_true( eta2_.size() == count_committed_.size() );
-
-            assert_true( output_indices_.size() > 0 );
-            assert_true( input_join_keys_.size() > 0 );
-            assert_true( input_join_keys_[0].nrows_ > ix_input );
-
-            auto it = output_indices_[0]->find( input_join_keys_[0][ix_input] );
-
-            if ( it == output_indices_[0]->end() )
-                {
-                    continue;
-                }
-
-            // -----------------------------------------------------------------
-            // If yes, update eta1_ and eta2_.
-
-            for ( auto ix_output : it->second )
-                {
-                    assert_true( ix_input < _eta1.size() );
-                    assert_true( ix_output < eta1_.size() );
-
-                    assert_true( count_committed_[ix_output] > 0.0 );
-
-                    eta1_[ix_output] +=
-                        _eta1[ix_input] / count_committed_[ix_output];
-
-                    eta2_[ix_output] +=
-                        _eta2[ix_input] / count_committed_[ix_output];
-
-                    indices_.insert( ix_output );
-                }
-
-            // -----------------------------------------------------------------
-        }
-
-    return child_->calc_weights(
+    const auto weights = child_->calc_weights(
         _agg,
         _old_weight,
-        indices_.unique_integers(),
-        indices_current_.unique_integers(),
-        eta1_,
-        eta1_old_,
-        eta2_,
-        eta2_old_ );
+        intermediate_agg().indices(),
+        intermediate_agg().indices_current(),
+        *eta1,
+        *eta1_old,
+        *eta2,
+        *eta2_old );
+
+    intermediate_agg().update_etas_old( _agg );
+
+    return weights;
 }
 
 // ----------------------------------------------------------------------------
@@ -488,7 +451,9 @@ void Avg::calc_yhat(
                 _new_weights,
                 indices_.unique_integers(),
                 eta1_2_null_,
-                w_fixed_1_ );
+                eta1_2_null_old_,
+                w_fixed_1_,
+                w_fixed_1_old_ );
         }
     else if ( std::isnan( std::get<1>( _new_weights ) ) )
         {
@@ -500,7 +465,9 @@ void Avg::calc_yhat(
                 _new_weights,
                 indices_.unique_integers(),
                 eta2_1_null_,
-                w_fixed_2_ );
+                eta2_1_null_old_,
+                w_fixed_2_,
+                w_fixed_2_old_ );
         }
     else
         {
@@ -510,7 +477,9 @@ void Avg::calc_yhat(
                 _new_weights,
                 indices_.unique_integers(),
                 eta1_,
-                eta2_ );
+                eta1_old_,
+                eta2_,
+                eta2_old_ );
         }
 }
 
@@ -522,58 +491,24 @@ void Avg::calc_yhat(
     const std::array<Float, 3>& _new_weights,
     const std::vector<size_t>& _indices,
     const std::vector<Float>& _eta1,
-    const std::vector<Float>& _eta2 )
+    const std::vector<Float>& _eta1_old,
+    const std::vector<Float>& _eta2,
+    const std::vector<Float>& _eta2_old )
 {
     assert_true( !std::isnan( std::get<0>( _new_weights ) ) );
 
-    switch ( _agg )
-        {
-            case enums::Aggregation::avg_second_null:
-                assert_true( !std::isnan( std::get<1>( _new_weights ) ) );
-                child_->calc_yhat(
-                    _agg,
-                    _old_weight,
-                    _new_weights,
-                    indices_.unique_integers(),
-                    eta1_2_null_,
-                    w_fixed_1_ );
-                break;
+    const auto [eta1, eta1_old, eta2, eta2_old] = intermediate_agg().calc_etas(
+        true, _agg, _indices, _eta1, _eta1_old, _eta2, _eta2_old );
 
-            case enums::Aggregation::avg_first_null:
-                assert_true( !std::isnan( std::get<2>( _new_weights ) ) );
-                child_->calc_yhat(
-                    _agg,
-                    _old_weight,
-                    _new_weights,
-                    indices_.unique_integers(),
-                    eta2_1_null_,
-                    w_fixed_2_ );
-                break;
-
-            case enums::Aggregation::avg:
-                child_->calc_yhat(
-                    _agg,
-                    _old_weight,
-                    _new_weights,
-                    indices_.unique_integers(),
-                    eta1_,
-                    eta2_ );
-                break;
-
-            default:
-                assert_true( false && "Unknown aggregation!" );
-        }
-}
-
-// ----------------------------------------------------------------------------
-
-void Avg::commit(
-    const std::vector<Float>& _eta1,
-    const std::vector<Float>& _eta2,
-    const std::vector<size_t>& _indices,
-    const std::array<Float, 3>& _weights )
-{
-    // TODO
+    child_->calc_yhat(
+        _agg,
+        _old_weight,
+        _new_weights,
+        intermediate_agg().indices(),
+        *eta1,
+        *eta1_old,
+        *eta2,
+        *eta2_old );
 }
 
 // ----------------------------------------------------------------------------

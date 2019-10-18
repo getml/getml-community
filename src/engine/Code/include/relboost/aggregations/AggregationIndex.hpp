@@ -31,6 +31,7 @@ class AggregationIndex
 
     // ------------------------------------------------------------
 
+   public:
     /// Returns the number of elements in input_table_ that are
     /// linked to the element of the output_table_ designated by
     /// _ix_agg

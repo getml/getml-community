@@ -54,6 +54,8 @@ class Avg : public lossfunctions::LossFunction
                _comm )
     {
         agg_index_ = _agg_index;
+        intermediate_agg_ =
+            std::make_shared<IntermediateAggregationImpl>( agg_index_, _child );
     }
 
     Avg( const std::shared_ptr<lossfunctions::LossFunction>& _child )
@@ -78,6 +80,8 @@ class Avg : public lossfunctions::LossFunction
         : Avg( _child )
     {
         agg_index_ = _agg_index;
+        intermediate_agg_ =
+            std::make_shared<IntermediateAggregationImpl>( agg_index_, _child );
     }
 
     ~Avg() = default;
@@ -92,7 +96,9 @@ class Avg : public lossfunctions::LossFunction
         const std::array<Float, 3>& _new_weights,
         const std::vector<size_t>& _indices,
         const std::vector<Float>& _eta1,
-        const std::vector<Float>& _eta2 ) final;
+        const std::vector<Float>& _eta1_old,
+        const std::vector<Float>& _eta2,
+        const std::vector<Float>& _eta2_old ) final;
 
     /// Calculates _indices, _eta1 and _eta2 given matches.
     std::vector<std::array<Float, 3>> calc_weights(
@@ -116,13 +122,6 @@ class Avg : public lossfunctions::LossFunction
         const std::vector<Float>& _eta1_old,
         const std::vector<Float>& _eta2,
         const std::vector<Float>& _eta2_old ) final;
-
-    /// Commits the values described by the _indices.
-    void commit(
-        const std::vector<Float>& _eta1,
-        const std::vector<Float>& _eta2,
-        const std::vector<size_t>& _indices,
-        const std::array<Float, 3>& _weights ) final;
 
     /// Commits the split described by the iterators and the weights.
     void commit(
@@ -209,6 +208,15 @@ class Avg : public lossfunctions::LossFunction
     /// Commits yhat_old_.
     void commit() final { child_->commit(); }
 
+    /// Commits the values described by the _indices.
+    void commit(
+        const std::vector<size_t>& _indices,
+        const std::array<Float, 3>& _weights ) final
+    {
+        child_->commit( intermediate_agg().indices(), _weights );
+        intermediate_agg().reset();
+    }
+
     /// Evaluates an entire tree.
     Float evaluate_tree(
         const Float _update_rate, const std::vector<Float>& _yhat_new ) final
@@ -227,7 +235,7 @@ class Avg : public lossfunctions::LossFunction
     /// Initializes yhat_old_ by setting it to the initial prediction.
     void init_yhat_old( const Float _initial_prediction ) final
     {
-        assert_true( false && "ToDO" );
+        assert_true( false && "TODO" );
     }
 
     /// Generates the sample weights.
@@ -238,12 +246,19 @@ class Avg : public lossfunctions::LossFunction
     }
 
     /// Resets the critical resources to zero.
-    void reset() final { impl_.reset(); }
+    void reset() final
+    {
+        if ( intermediate_agg_ )
+            intermediate_agg().reset();
+        else
+            impl_.reset();
+    }
 
     /// Reverts the weights to the last time commit has been called.
     void revert_to_commit( const std::vector<size_t>& _indices ) final
     {
-        revert_to_commit();
+        child_->revert_to_commit( intermediate_agg().indices() );
+        intermediate_agg().reset();
     };
 
     /// Trivial setter.
@@ -318,6 +333,13 @@ class Avg : public lossfunctions::LossFunction
         return *agg_index_;
     }
 
+    /// Trivial (private) accessor
+    IntermediateAggregationImpl& intermediate_agg()
+    {
+        assert_true( intermediate_agg_ );
+        return *intermediate_agg_;
+    }
+
     // -----------------------------------------------------------------
 
    private:
@@ -384,6 +406,9 @@ class Avg : public lossfunctions::LossFunction
 
     /// The join keys of the input table.
     std::vector<containers::Column<Int>> input_join_keys_;
+
+    /// The implementation of the intermediate aggregation.
+    std::shared_ptr<IntermediateAggregationImpl> intermediate_agg_;
 
     /// Total number of samples for eta1_.
     Float num_samples_1_;

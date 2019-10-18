@@ -68,7 +68,9 @@ class LossFunction
         const std::array<Float, 3>& _new_weights,
         const std::vector<size_t>& _indices,
         const std::vector<Float>& _eta1,
-        const std::vector<Float>& _eta2 ) = 0;
+        const std::vector<Float>& _eta1_old,
+        const std::vector<Float>& _eta2,
+        const std::vector<Float>& _eta2_old ) = 0;
 
     /// Returns a const shared ptr to the child of the LossFunction object
     virtual std::shared_ptr<const lossfunctions::LossFunction> child()
@@ -88,8 +90,6 @@ class LossFunction
 
     /// Commits the values described by the indices and yhat.
     virtual void commit(
-        const std::vector<Float>& _eta1,
-        const std::vector<Float>& _eta2,
         const std::vector<size_t>& _indices,
         const std::array<Float, 3>& _weights ) = 0;
 

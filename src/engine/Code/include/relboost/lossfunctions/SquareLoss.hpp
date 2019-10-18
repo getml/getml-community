@@ -149,7 +149,9 @@ class SquareLoss : public LossFunction
         const std::array<Float, 3>& _new_weights,
         const std::vector<size_t>& _indices,
         const std::vector<Float>& _eta1,
-        const std::vector<Float>& _eta2 ) final
+        const std::vector<Float>& _eta1_old,
+        const std::vector<Float>& _eta2,
+        const std::vector<Float>& _eta2_old ) final
     {
         impl_.calc_yhat(
             _agg,
@@ -181,16 +183,13 @@ class SquareLoss : public LossFunction
     void commit() final
     {
         assert_true( yhat_old().size() == targets().size() );
-        auto zeros = std::vector<Float>( targets().size() );
         auto weights = std::array<Float, 3>( {0.0, 0.0, 0.0} );
         auto indices = std::vector<size_t>( 0 );
-        commit( zeros, zeros, indices, weights );
+        commit( indices, weights );
     }
 
     /// Recalculates sum_h_yhat_committed_ and loss_committed_.
     void commit(
-        const std::vector<Float>& _eta1,
-        const std::vector<Float>& _eta2,
         const std::vector<size_t>& _indices,
         const std::array<Float, 3>& _weights ) final
     {
@@ -275,7 +274,7 @@ class SquareLoss : public LossFunction
     void revert_to_commit() final
     {
         assert_true( false );
-        // ToDO
+        // TODO
     };
 
     /// Reverts the weights to the last time commit has been called.
@@ -293,7 +292,7 @@ class SquareLoss : public LossFunction
     /// Generates the predictions.
     Float transform( const std::vector<Float>& _weights ) const final
     {
-        assert_true( false && "ToDO" );
+        assert_true( false && "TODO" );
         return 0.0;
     }
 

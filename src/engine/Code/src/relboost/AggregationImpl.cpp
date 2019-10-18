@@ -12,7 +12,7 @@ void AggregationImpl::commit( const std::array<Float, 3>& _weights )
     assert_true( eta1_.size() == eta1_old_.size() );
     assert_true( eta1_.size() == eta2_old_.size() );
 
-    child_->commit( eta1_, eta2_, indices_.unique_integers(), _weights );
+    child_->commit( indices_.unique_integers(), _weights );
 
     for ( auto ix : indices_ )
         {

@@ -243,7 +243,7 @@ void DecisionTreeNode::fit(
 
     const auto best_split = *it;
 
-    candidates.clear();
+    candidates = std::vector<containers::CandidateSplit>();
 
     // ------------------------------------------------------------------------
     // If the loss reduction is sufficient, then take this split.

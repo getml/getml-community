@@ -261,6 +261,12 @@ std::vector<containers::Predictions> SubtreeHelper::make_predictions(
                     predictions[i].emplace_back(
                         _subensembles_avg[i]->transform( _table_holder, j ) );
                 }
+
+            for ( size_t j = 0; j < _subensembles_sum[i]->num_features(); ++j )
+                {
+                    predictions[i].emplace_back(
+                        _subensembles_sum[i]->transform( _table_holder, j ) );
+                }
         }
 
     return predictions;

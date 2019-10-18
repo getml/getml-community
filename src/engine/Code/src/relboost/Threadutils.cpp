@@ -64,8 +64,6 @@ void Threadutils::fit_ensemble(
                 {
                     throw std::runtime_error( e.what() );
                 }
-
-            std::cout << e.what() << std::endl;  // ToDO: remove this line
         }
 }
 

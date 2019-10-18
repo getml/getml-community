@@ -12,9 +12,8 @@ std::tuple<
     const std::vector<Float>*,
     const std::vector<Float>*>
 IntermediateAggregationImpl::calc_etas(
+    const bool _divide_by_count,
     const enums::Aggregation _agg,
-    const Float _old_weight,
-    const std::vector<size_t>& _indices,
     const std::vector<size_t>& _indices_current,
     const std::vector<Float>& _eta1,
     const std::vector<Float>& _eta1_old,
@@ -25,6 +24,7 @@ IntermediateAggregationImpl::calc_etas(
     if ( _agg == enums::Aggregation::avg_first_null )
         {
             update_etas(
+                _divide_by_count,
                 _indices_current,
                 _eta1,
                 _eta1_old,
@@ -42,6 +42,7 @@ IntermediateAggregationImpl::calc_etas(
     else if ( _agg == enums::Aggregation::avg_second_null )
         {
             update_etas(
+                _divide_by_count,
                 _indices_current,
                 _eta1,
                 _eta1_old,
@@ -59,6 +60,7 @@ IntermediateAggregationImpl::calc_etas(
     else
         {
             update_etas(
+                _divide_by_count,
                 _indices_current,
                 _eta1,
                 _eta1_old,
@@ -73,7 +75,37 @@ IntermediateAggregationImpl::calc_etas(
 
 // ----------------------------------------------------------------------------
 
+void IntermediateAggregationImpl::reset()
+{
+    for ( auto ix : indices_ )
+        {
+            assert_true( ix < eta1_.size() );
+
+            eta1_[ix] = 0.0;
+            eta1_2_null_[ix] = 0.0;
+            eta1_2_null_old_[ix] = 0.0;
+            eta1_old_[ix] = 0.0;
+            eta2_[ix] = 0.0;
+            eta2_1_null_[ix] = 0.0;
+            eta2_1_null_old_[ix] = 0.0;
+            eta2_old_[ix] = 0.0;
+            w_fixed_1_[ix] = 0.0;
+            w_fixed_1_old_[ix] = 0.0;
+            w_fixed_2_[ix] = 0.0;
+            w_fixed_2_old_[ix] = 0.0;
+        }
+
+    indices_.clear();
+    indices_current_.clear();
+
+    assert_true( child_ );
+    child_->reset();
+}
+
+// ----------------------------------------------------------------------------
+
 void IntermediateAggregationImpl::update_etas(
+    const bool _divide_by_count,
     const std::vector<size_t>& _indices_current,
     const std::vector<Float>& _eta1_input,
     const std::vector<Float>& _eta1_input_old,
@@ -84,23 +116,56 @@ void IntermediateAggregationImpl::update_etas(
 {
     indices_current_.clear();
 
-    for ( auto ix_input : _indices_current )
+    if ( _divide_by_count )
         {
-            const auto output_indices = agg_index().transform( ix_input );
-
-            for ( auto ix_output : output_indices )
+            for ( auto ix_input : _indices_current )
                 {
-                    assert_true( ix_input < _eta1_input_old.size() );
-                    assert_true( ix_output < _eta1_output->size() );
+                    const auto output_indices =
+                        agg_index().transform( ix_input );
 
-                    ( *_eta1_output )[ix_output] +=
-                        _eta1_input[ix_input] - _eta1_input_old[ix_input];
+                    for ( auto ix_output : output_indices )
+                        {
+                            assert_true( ix_input < _eta1_input_old.size() );
+                            assert_true( ix_output < _eta1_output->size() );
 
-                    ( *_eta2_output )[ix_output] +=
-                        _eta2_input[ix_input] - _eta2_input_old[ix_input];
+                            ( *_eta1_output )[ix_output] +=
+                                ( _eta1_input[ix_input] -
+                                  _eta1_input_old[ix_input] ) /
+                                agg_index().get_count( ix_output );
 
-                    indices_.insert( ix_output );
-                    indices_current_.insert( ix_output );
+                            ( *_eta2_output )[ix_output] +=
+                                ( _eta2_input[ix_input] -
+                                  _eta2_input_old[ix_input] ) /
+                                agg_index().get_count( ix_output );
+
+                            indices_.insert( ix_output );
+                            indices_current_.insert( ix_output );
+                        }
+                }
+        }
+    else
+        {
+            for ( auto ix_input : _indices_current )
+                {
+                    const auto output_indices =
+                        agg_index().transform( ix_input );
+
+                    for ( auto ix_output : output_indices )
+                        {
+                            assert_true( ix_input < _eta1_input_old.size() );
+                            assert_true( ix_output < _eta1_output->size() );
+
+                            ( *_eta1_output )[ix_output] +=
+                                _eta1_input[ix_input] -
+                                _eta1_input_old[ix_input];
+
+                            ( *_eta2_output )[ix_output] +=
+                                _eta2_input[ix_input] -
+                                _eta2_input_old[ix_input];
+
+                            indices_.insert( ix_output );
+                            indices_current_.insert( ix_output );
+                        }
                 }
         }
 }
