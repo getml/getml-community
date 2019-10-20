@@ -166,8 +166,8 @@ void test1_sum()
 
     for ( size_t i = 0; i < predictions.size(); ++i )
         {
-            /*  std::cout << "target: " << population_df.target( i, 0 )
-                        << ", prediction: " << predictions[i] << std::endl;*/
+            /* std::cout << "target: " << population_df.target( i, 0 )
+                       << ", prediction: " << predictions[i] << std::endl;*/
 
             assert_true(
                 std::abs( population_df.target( i, 0 ) - predictions[i] ) <

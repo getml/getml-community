@@ -52,7 +52,8 @@ class DecisionTreeEnsemble
     /// Fits one more feature.
     void fit_new_feature(
         const std::shared_ptr<lossfunctions::LossFunction>& _loss_function,
-        const std::shared_ptr<const TableHolder>& _table_holder );
+        const std::shared_ptr<const TableHolder>& _table_holder,
+        const std::vector<containers::Subfeatures>& _subfeatures );
 
     /// Fits the subensembles.
     void fit_subensembles(
@@ -81,13 +82,11 @@ class DecisionTreeEnsemble
 
     /// Prepares the subfeatures for this prediction (if any).
     std::pair<
-        const std::vector<containers::Predictions>,
-        const std::vector<containers::Subfeatures>>
+        std::vector<containers::Predictions>,
+        std::vector<containers::Subfeatures>>
     prepare_subfeatures(
-        const std::shared_ptr<const TableHolder>& _table_holder,
-        const std::shared_ptr<const logging::AbstractLogger> _logger,
-        const std::shared_ptr<lossfunctions::LossFunction>& _loss_function )
-        const;
+        const TableHolder& _table_holder,
+        const std::shared_ptr<const logging::AbstractLogger> _logger ) const;
 
     /// Saves the DecisionTreeEnsemble into a JSON file.
     void save( const std::string& _fname ) const;
@@ -108,7 +107,9 @@ class DecisionTreeEnsemble
 
     /// Returns one feature.
     std::vector<Float> transform(
-        const TableHolder& _table_holder, size_t _n_feature ) const;
+        const TableHolder& _table_holder,
+        const std::vector<containers::Subfeatures>& _subfeatures,
+        size_t _n_feature ) const;
 
     /// Expresses DecisionTreeEnsemble as Poco::JSON::Object.
     Poco::JSON::Object to_json_obj( const bool _schema_only = false ) const;
@@ -210,7 +211,8 @@ class DecisionTreeEnsemble
     /// Generates a new slate of predictions.
     std::vector<Float> generate_predictions(
         const decisiontrees::DecisionTree& _decision_tree,
-        const TableHolder& _table_holder ) const;
+        const TableHolder& _table_holder,
+        const std::vector<containers::Subfeatures>& _subfeatures ) const;
 
     /// Returns the number of matches for each element of the population table.
     std::shared_ptr<std::vector<Float>> make_counts(

@@ -70,10 +70,14 @@ void SubtreeHelper::fit_subensemble(
     ( *_subensemble )
         ->fit_subensembles( subtable_holder, _logger, intermediate_agg );
 
+    const auto [predictions, subfeatures] =
+        ( *_subensemble )->prepare_subfeatures( *subtable_holder, _logger );
+
     for ( size_t i = 0; i < _hyperparameters.num_subfeatures_; ++i )
         {
             ( *_subensemble )
-                ->fit_new_feature( intermediate_agg, subtable_holder );
+                ->fit_new_feature(
+                    intermediate_agg, subtable_holder, subfeatures );
         }
 }
 
@@ -257,16 +261,26 @@ std::vector<containers::Predictions> SubtreeHelper::make_predictions(
 
             assert_true( _subensembles_sum[i] );
 
+            auto [subpredictions, subsubfeatures] =
+                _subensembles_avg[i]->prepare_subfeatures(
+                    _table_holder, nullptr );
+
             for ( size_t j = 0; j < _subensembles_avg[i]->num_features(); ++j )
                 {
                     predictions[i].emplace_back(
-                        _subensembles_avg[i]->transform( _table_holder, j ) );
+                        _subensembles_avg[i]->transform(
+                            _table_holder, subsubfeatures, j ) );
                 }
+
+            std::tie( subpredictions, subsubfeatures ) =
+                _subensembles_sum[i]->prepare_subfeatures(
+                    _table_holder, nullptr );
 
             for ( size_t j = 0; j < _subensembles_sum[i]->num_features(); ++j )
                 {
                     predictions[i].emplace_back(
-                        _subensembles_sum[i]->transform( _table_holder, j ) );
+                        _subensembles_sum[i]->transform(
+                            _table_holder, subsubfeatures, j ) );
                 }
         }
 
