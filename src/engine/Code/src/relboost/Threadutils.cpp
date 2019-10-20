@@ -37,9 +37,10 @@ void Threadutils::fit_ensemble(
                 relboost::utils::DataFrameScatterer::scatter_data_frame(
                     _population, _thread_nums, _this_thread_num );
 
-            _ensemble->init( population_subview, _peripheral );
+            const auto [loss_function, table_holder] =
+                _ensemble->init( population_subview, _peripheral );
 
-            _ensemble->fit_subensembles( nullptr, _logger, nullptr );
+            _ensemble->fit_subensembles( table_holder, _logger, loss_function );
 
             const auto num_features =
                 _ensemble->hyperparameters().num_features_;
@@ -48,7 +49,7 @@ void Threadutils::fit_ensemble(
 
             for ( size_t i = 0; i < num_features; ++i )
                 {
-                    _ensemble->fit_new_feature();
+                    _ensemble->fit_new_feature( loss_function, table_holder );
 
                     if ( !silent && _logger )
                         {

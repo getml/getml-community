@@ -321,48 +321,30 @@ void DecisionTreeEnsemble::fit(
 
 // ----------------------------------------------------------------------------
 
-void DecisionTreeEnsemble::fit_subensembles(
-    const std::shared_ptr<const TableHolder> &_table_holder,
-    const std::shared_ptr<const logging::AbstractLogger> _logger,
-    const std::shared_ptr<lossfunctions::LossFunction> &_loss_function )
-{
-    SubtreeHelper::fit_subensembles(
-        ( _table_holder ? _table_holder : table_holder_ ),
-        _logger,
-        *this,
-        ( _loss_function ? _loss_function : loss_function_ ),
-        &comm(),
-        &subensembles_avg_,
-        &subensembles_sum_ );
-}
-
-// ----------------------------------------------------------------------------
-
 void DecisionTreeEnsemble::fit_new_feature(
-    const std::shared_ptr<lossfunctions::LossFunction> &_loss_function )
+    const std::shared_ptr<lossfunctions::LossFunction> &_loss_function,
+    const std::shared_ptr<const TableHolder> &_table_holder )
 {
     // ------------------------------------------------------------------------
+
+    assert_true( _loss_function );
+
+    assert_true( _table_holder );
 
     assert_true(
-        table_holder().main_tables_.size() ==
-        table_holder().peripheral_tables_.size() );
+        _table_holder->main_tables_.size() ==
+        _table_holder->peripheral_tables_.size() );
 
-    assert_true( table_holder().main_tables_.size() > 0 );
-
-    // ------------------------------------------------------------------------
-    // If no loss function has been passed, use your own.
-
-    const auto loss_function_ptr =
-        ( _loss_function ? _loss_function : loss_function_ );
+    assert_true( _table_holder->main_tables_.size() > 0 );
 
     // ------------------------------------------------------------------------
     // Recreate sample weights.
 
-    const auto sample_weights = loss_function_ptr->make_sample_weights();
+    const auto sample_weights = _loss_function->make_sample_weights();
 
-    loss_function_ptr->calc_sums();
+    _loss_function->calc_sums();
 
-    loss_function_ptr->commit();
+    _loss_function->commit();
 
     // ------------------------------------------------------------------------
 
@@ -373,16 +355,16 @@ void DecisionTreeEnsemble::fit_new_feature(
     std::vector<std::vector<Float>> predictions;
 
     for ( size_t ix_table_used = 0;
-          ix_table_used < table_holder().main_tables_.size();
+          ix_table_used < _table_holder->main_tables_.size();
           ++ix_table_used )
         {
             // ------------------------------------------------------------------------
 
             const auto &output_table =
-                table_holder().main_tables_[ix_table_used];
+                _table_holder->main_tables_[ix_table_used];
 
             const auto &input_table =
-                table_holder().peripheral_tables_[ix_table_used];
+                _table_holder->peripheral_tables_[ix_table_used];
 
             // ------------------------------------------------------------------------
 
@@ -412,14 +394,14 @@ void DecisionTreeEnsemble::fit_new_feature(
                 aggregations;
 
             aggregations.push_back( std::make_shared<aggregations::Avg>(
-                loss_function_ptr,
+                _loss_function,
                 matches_ptr,
                 input_table,
                 output_table,
                 &comm() ) );
 
             aggregations.push_back( std::make_shared<aggregations::Sum>(
-                loss_function_ptr, input_table, output_table, &comm() ) );
+                _loss_function, input_table, output_table, &comm() ) );
 
             // ------------------------------------------------------------------------
             // Iterate through aggregations.
@@ -470,13 +452,13 @@ void DecisionTreeEnsemble::fit_new_feature(
     // ------------------------------------------------------------------------
     // Update yhat_old_.
 
-    loss_function_ptr->update_yhat_old(
+    _loss_function->update_yhat_old(
         candidates[dist].update_rate() * hyperparameters().eta_,
         best_predictions );
 
-    loss_function_ptr->calc_gradients();
+    _loss_function->calc_gradients();
 
-    loss_function_ptr->commit();
+    _loss_function->commit();
 
     // ------------------------------------------------------------------------
     // Add best candidate to trees
@@ -489,6 +471,27 @@ void DecisionTreeEnsemble::fit_new_feature(
     trees().back().clear();
 
     // ------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+void DecisionTreeEnsemble::fit_subensembles(
+    const std::shared_ptr<const TableHolder> &_table_holder,
+    const std::shared_ptr<const logging::AbstractLogger> _logger,
+    const std::shared_ptr<lossfunctions::LossFunction> &_loss_function )
+{
+    assert_true( _table_holder );
+
+    assert_true( _loss_function );
+
+    SubtreeHelper::fit_subensembles(
+        _table_holder,
+        _logger,
+        *this,
+        _loss_function,
+        &comm(),
+        &subensembles_avg_,
+        &subensembles_sum_ );
 }
 
 // ----------------------------------------------------------------------------
@@ -506,7 +509,10 @@ std::vector<Float> DecisionTreeEnsemble::generate_predictions(
 
 // ----------------------------------------------------------------------------
 
-void DecisionTreeEnsemble::init(
+std::pair<
+    const std::shared_ptr<lossfunctions::LossFunction>,
+    const std::shared_ptr<const TableHolder>>
+DecisionTreeEnsemble::init(
     const containers::DataFrameView &_population,
     const std::vector<containers::DataFrame> &_peripheral )
 {
@@ -543,10 +549,12 @@ void DecisionTreeEnsemble::init(
     // ------------------------------------------------------------------------
     // Build table holder.
 
-    table_holder_ = std::make_shared<const TableHolder>(
+    const auto table_holder = std::make_shared<const TableHolder>(
         placeholder(), _population, _peripheral, peripheral_names() );
 
     // ------------------------------------------------------------------------
+
+    return std::make_pair( loss_function_, table_holder );
 }
 
 // ----------------------------------------------------------------------------
@@ -615,6 +623,27 @@ std::vector<Float> DecisionTreeEnsemble::predict(
         }
 
     return predictions;
+}
+
+// ----------------------------------------------------------------------------
+
+std::pair<
+    const std::vector<containers::Predictions>,
+    const std::vector<containers::Subfeatures>>
+DecisionTreeEnsemble::prepare_subfeatures(
+    const std::shared_ptr<const TableHolder> &_table_holder,
+    const std::shared_ptr<const logging::AbstractLogger> _logger,
+    const std::shared_ptr<lossfunctions::LossFunction> &_loss_function ) const
+{
+    assert_true( _table_holder );
+
+    const auto subpredictions = SubtreeHelper::make_predictions(
+        *_table_holder, subensembles_avg_, subensembles_sum_ );
+
+    const auto subfeatures =
+        SubtreeHelper::make_subfeatures( *_table_holder, subpredictions );
+
+    return std::make_pair( subpredictions, subfeatures );
 }
 
 // ----------------------------------------------------------------------------

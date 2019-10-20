@@ -51,8 +51,8 @@ class DecisionTreeEnsemble
 
     /// Fits one more feature.
     void fit_new_feature(
-        const std::shared_ptr<lossfunctions::LossFunction>& _loss_function =
-            nullptr );
+        const std::shared_ptr<lossfunctions::LossFunction>& _loss_function,
+        const std::shared_ptr<const TableHolder>& _table_holder );
 
     /// Fits the subensembles.
     void fit_subensembles(
@@ -61,7 +61,10 @@ class DecisionTreeEnsemble
         const std::shared_ptr<lossfunctions::LossFunction>& _loss_function );
 
     /// Initializes the fitting process.
-    void init(
+    std::pair<
+        const std::shared_ptr<lossfunctions::LossFunction>,
+        const std::shared_ptr<const TableHolder>>
+    init(
         const containers::DataFrameView& _population,
         const std::vector<containers::DataFrame>& _peripheral );
 
@@ -75,6 +78,16 @@ class DecisionTreeEnsemble
     std::vector<Float> predict(
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral ) const;
+
+    /// Prepares the subfeatures for this prediction (if any).
+    std::pair<
+        const std::vector<containers::Predictions>,
+        const std::vector<containers::Subfeatures>>
+    prepare_subfeatures(
+        const std::shared_ptr<const TableHolder>& _table_holder,
+        const std::shared_ptr<const logging::AbstractLogger> _logger,
+        const std::shared_ptr<lossfunctions::LossFunction>& _loss_function )
+        const;
 
     /// Saves the DecisionTreeEnsemble into a JSON file.
     void save( const std::string& _fname ) const;
@@ -122,11 +135,8 @@ class DecisionTreeEnsemble
 
     /// Initializes the fitting process with this being a
     /// a subensemble.
-    void init_as_subensemble(
-        const TableHolder& _table_holder, multithreading::Communicator* _comm )
+    void init_as_subensemble( multithreading::Communicator* _comm )
     {
-        table_holder_ = std::make_shared<const TableHolder>( _table_holder );
-
         set_comm( _comm );
     }
 
@@ -265,13 +275,6 @@ class DecisionTreeEnsemble
     }
 
     /// Trivial (private) accessor
-    const TableHolder& table_holder() const
-    {
-        assert_true( table_holder_ );
-        return *table_holder_;
-    }
-
-    /// Trivial (private) accessor
     std::vector<Float>& targets()
     {
         assert_true( targets_ );
@@ -327,9 +330,6 @@ class DecisionTreeEnsemble
     /// Contains the ensembles for the subfeatures trained with the intermediate
     /// aggregation SUM.
     std::vector<std::optional<DecisionTreeEnsemble>> subensembles_sum_;
-
-    /// Keeps the structures of the tables for fitting.
-    std::shared_ptr<const TableHolder> table_holder_;
 
     /// Target variables (previous trees already substracted).
     std::shared_ptr<std::vector<Float>> targets_;
