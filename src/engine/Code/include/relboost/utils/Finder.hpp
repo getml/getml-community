@@ -172,6 +172,31 @@ struct Finder<enums::DataUsed::same_units_numerical>
 // ----------------------------------------------------------------------------
 
 template <>
+struct Finder<enums::DataUsed::subfeatures>
+{
+    static std::vector<const containers::Match*>::iterator next_split(
+        const Float _cv,
+        const size_t _num_column,
+        const containers::Subfeatures& _subfeatures,
+        const std::vector<const containers::Match*>::iterator _begin,
+        const std::vector<const containers::Match*>::iterator _end )
+    {
+        assert_true( _num_column < _subfeatures.size() );
+
+        const auto& subfeature = _subfeatures[_num_column];
+
+        const auto smaller_than_cv = [&subfeature,
+                                      _cv]( const containers::Match* m ) {
+            return subfeature[m->ix_input] <= _cv;
+        };
+
+        return std::find_if( _begin, _end, smaller_than_cv );
+    }
+};
+
+// ----------------------------------------------------------------------------
+
+template <>
 struct Finder<enums::DataUsed::time_stamps_diff>
 {
     static std::vector<const containers::Match*>::iterator next_split(

@@ -42,5 +42,6 @@
 
 #include "relboost/tests/test20_saving_and_loading.hpp"
 #include "relboost/tests/test21_time_windows.hpp"
+#include "relboost/tests/test22_snowflake_model.hpp"
 
 // ---------------------------------------------------------------------------

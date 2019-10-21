@@ -293,6 +293,35 @@ struct Sorter<enums::DataUsed::same_units_numerical>
 // ----------------------------------------------------------------------------
 
 template <>
+struct Sorter<enums::DataUsed::subfeatures>
+{
+    static void sort(
+        const size_t _num_column,
+        const containers::Subfeatures& _subfeatures,
+        const std::vector<const containers::Match*>::iterator _begin,
+        const std::vector<const containers::Match*>::iterator _end )
+    {
+        assert_true( _end >= _begin );
+
+        assert_true( _num_column < _subfeatures.size() );
+
+        // Note that we are sorting in DESCENDING order!
+
+        const auto& subfeature = _subfeatures[_num_column];
+
+        std::sort(
+            _begin,
+            _end,
+            [&subfeature](
+                const containers::Match* m1, const containers::Match* m2 ) {
+                return subfeature[m1->ix_input] > subfeature[m2->ix_input];
+            } );
+    }
+};
+
+// ----------------------------------------------------------------------------
+
+template <>
 struct Sorter<enums::DataUsed::time_stamps_diff>
 {
     static void sort(

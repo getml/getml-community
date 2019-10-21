@@ -276,6 +276,74 @@ std::vector<Float> CriticalValues::calc_numerical(
 
 // ----------------------------------------------------------------------------
 
+std::vector<Float> CriticalValues::calc_subfeatures(
+    const size_t _col,
+    const containers::Subfeatures& _subfeatures,
+    const std::vector<const containers::Match*>::iterator _begin,
+    const std::vector<const containers::Match*>::iterator _end,
+    multithreading::Communicator* _comm )
+{
+    // ---------------------------------------------------------------------------
+
+    assert_true( _col < _subfeatures.size() );
+
+    const auto& subfeature = _subfeatures[_col];
+
+    // ---------------------------------------------------------------------------
+    // In parallel versions, it is possible that there are no sample sizes
+    // left in this process rank. In that case we effectively pass plus infinity
+    // to min and minus infinity to max, ensuring that they not will be the
+    // chosen minimum or maximum.
+
+    Float min = std::numeric_limits<Float>::max();
+
+    Float max = std::numeric_limits<Float>::lowest();
+
+    auto dist = static_cast<Int>( std::distance( _begin, _end ) );
+
+    if ( dist > 0 )
+        {
+            max = subfeature[( *( _begin ) )->ix_input];
+
+            min = subfeature[( *( _end - 1 ) )->ix_input];
+        }
+
+    utils::Reducer::reduce( multithreading::minimum<Float>(), &min, _comm );
+
+    utils::Reducer::reduce( multithreading::maximum<Float>(), &max, _comm );
+
+    // ---------------------------------------------------------------------------
+    // There is a possibility that all critical values are NAN in all processes.
+    // This accounts for this edge case.
+
+    if ( min > max )
+        {
+            return std::vector<Float>( 0 );
+        }
+
+    // ---------------------------------------------------------------------------
+
+    utils::Reducer::reduce( std::plus<Int>(), &dist, _comm );
+
+    size_t num_critical_values = calc_num_critical_values( dist );
+
+    Float step_size =
+        ( max - min ) / static_cast<Float>( num_critical_values + 1 );
+
+    std::vector<Float> critical_values( num_critical_values );
+
+    for ( size_t i = 0; i < num_critical_values; ++i )
+        {
+            critical_values[i] = max - static_cast<Float>( i + 1 ) * step_size;
+        }
+
+    return critical_values;
+
+    // ---------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
 std::vector<Float> CriticalValues::calc_time_window(
     const Float _delta_t,
     const containers::DataFrame& _input,

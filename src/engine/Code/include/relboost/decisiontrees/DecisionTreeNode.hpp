@@ -36,6 +36,7 @@ class DecisionTreeNode
     void fit(
         const containers::DataFrameView& _output,
         const containers::DataFrame& _input,
+        const containers::Subfeatures& _subfeatures,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end,
         Float* _intercept );
@@ -53,6 +54,7 @@ class DecisionTreeNode
     Float transform(
         const containers::DataFrameView& _output,
         const containers::DataFrame& _input,
+        const containers::Subfeatures& _subfeatures,
         const containers::Match& _match ) const;
 
     /// Multiplies all weights on the nodes with _update_rate. This is how
@@ -106,6 +108,7 @@ class DecisionTreeNode
     std::vector<const containers::Match*>::iterator partition(
         const containers::DataFrameView& _output,
         const containers::DataFrame& _input,
+        const containers::Subfeatures& _subfeatures,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end );
 
@@ -114,6 +117,7 @@ class DecisionTreeNode
         const Float _old_intercept,
         const containers::DataFrameView& _output,
         const containers::DataFrame& _input,
+        const containers::Subfeatures& _subfeatures,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end );
 
@@ -200,6 +204,14 @@ class DecisionTreeNode
         const Float _old_intercept,
         const containers::DataFrame& _input,
         const containers::DataFrameView& _output,
+        const std::vector<const containers::Match*>::iterator _begin,
+        const std::vector<const containers::Match*>::iterator _end,
+        std::vector<containers::CandidateSplit>* _candidates );
+
+    /// Try subfeatures as splits.
+    void try_subfeatures(
+        const Float _old_intercept,
+        const containers::Subfeatures& _subfeatures,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end,
         std::vector<containers::CandidateSplit>* _candidates );

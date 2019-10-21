@@ -60,6 +60,7 @@ DecisionTree::DecisionTree(
 void DecisionTree::fit(
     const containers::DataFrameView& _output,
     const containers::DataFrame& _input,
+    const containers::Subfeatures& _subfeatures,
     const std::vector<const containers::Match*>::iterator _begin,
     const std::vector<const containers::Match*>::iterator _end )
 {
@@ -85,7 +86,7 @@ void DecisionTree::fit(
         0.0,
         &comm() ) );
 
-    root_->fit( _output, _input, _begin, _end, &intercept_ );
+    root_->fit( _output, _input, _subfeatures, _begin, _end, &intercept_ );
 
     // ------------------------------------------------------------------------
     // Reset the loss function, so that it can be used for the next tree.
@@ -237,7 +238,8 @@ std::string DecisionTree::to_sql(
 
 std::vector<Float> DecisionTree::transform(
     const containers::DataFrameView& _output,
-    const containers::DataFrame& _input ) const
+    const containers::DataFrame& _input,
+    const containers::Subfeatures& _subfeatures ) const
 {
     // ------------------------------------------------------------------------
 
@@ -270,8 +272,8 @@ std::vector<Float> DecisionTree::transform(
 
             for ( size_t i = 0; i < matches.size(); ++i )
                 {
-                    weights[i] =
-                        root_->transform( _output, _input, matches[i] );
+                    weights[i] = root_->transform(
+                        _output, _input, _subfeatures, matches[i] );
                 }
 
             // ------------------------------------------------------------------------

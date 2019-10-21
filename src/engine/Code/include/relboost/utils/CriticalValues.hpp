@@ -46,6 +46,14 @@ class CriticalValues
         const std::vector<const containers::Match*>::iterator _end,
         multithreading::Communicator* _comm );
 
+    /// Calculates the critical values for subfeatures.
+    static std::vector<Float> calc_subfeatures(
+        const size_t _col,
+        const containers::Subfeatures& _subfeatures,
+        const std::vector<const containers::Match*>::iterator _begin,
+        const std::vector<const containers::Match*>::iterator _end,
+        multithreading::Communicator* _comm );
+
     /// Calculate the critical values necessary for the moving time window.
     static std::vector<Float> calc_time_window(
         const Float _delta_t,

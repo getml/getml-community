@@ -75,6 +75,10 @@ void SubtreeHelper::fit_subensemble(
 
     for ( size_t i = 0; i < _hyperparameters.num_subfeatures_; ++i )
         {
+            // TODO: Remove this line.
+            std::cout << "_agg_type: " << _agg_type << ", FEATURE_" << i + 1
+                      << std::endl;
+
             ( *_subensemble )
                 ->fit_new_feature(
                     intermediate_agg, subtable_holder, subfeatures );

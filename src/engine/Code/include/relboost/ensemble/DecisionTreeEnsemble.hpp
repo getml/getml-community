@@ -63,8 +63,8 @@ class DecisionTreeEnsemble
 
     /// Initializes the fitting process.
     std::pair<
-        const std::shared_ptr<lossfunctions::LossFunction>,
-        const std::shared_ptr<const TableHolder>>
+        std::shared_ptr<lossfunctions::LossFunction>,
+        std::shared_ptr<const TableHolder>>
     init(
         const containers::DataFrameView& _population,
         const std::vector<containers::DataFrame>& _peripheral );

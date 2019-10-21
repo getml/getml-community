@@ -386,6 +386,8 @@ void DecisionTreeEnsemble::fit_new_feature(
         _table_holder->main_tables_.size() ==
         _table_holder->peripheral_tables_.size() );
 
+    assert_true( _table_holder->main_tables_.size() == _subfeatures.size() );
+
     assert_true( _table_holder->main_tables_.size() > 0 );
 
     // ------------------------------------------------------------------------
@@ -416,6 +418,8 @@ void DecisionTreeEnsemble::fit_new_feature(
 
             const auto &input_table =
                 _table_holder->peripheral_tables_[ix_table_used];
+
+            const auto &subfeatures = _subfeatures[ix_table_used];
 
             // ------------------------------------------------------------------------
 
@@ -469,11 +473,12 @@ void DecisionTreeEnsemble::fit_new_feature(
                     candidates.back().fit(
                         output_table,
                         input_table,
+                        subfeatures,
                         matches_ptr.begin(),
                         matches_ptr.end() );
 
                     const auto new_predictions = candidates.back().transform(
-                        output_table, input_table );
+                        output_table, input_table, subfeatures );
 
                     candidates.back().calc_update_rate( new_predictions );
 
@@ -554,20 +559,23 @@ std::vector<Float> DecisionTreeEnsemble::generate_predictions(
 {
     const auto peripheral_used = _decision_tree.peripheral_used();
 
-    /*assert_true( peripheral_used < _table_holder.main_tables_.size() );
+    assert_true( peripheral_used < _table_holder.main_tables_.size() );
+
     assert_true( peripheral_used < _table_holder.peripheral_tables_.size() );
-    assert_true( peripheral_used < _subfeatures.size() );*/
+
+    assert_true( peripheral_used < _subfeatures.size() );
 
     return _decision_tree.transform(
         _table_holder.main_tables_[peripheral_used],
-        _table_holder.peripheral_tables_[peripheral_used] );
+        _table_holder.peripheral_tables_[peripheral_used],
+        _subfeatures[peripheral_used] );
 }
 
 // ----------------------------------------------------------------------------
 
 std::pair<
-    const std::shared_ptr<lossfunctions::LossFunction>,
-    const std::shared_ptr<const TableHolder>>
+    std::shared_ptr<lossfunctions::LossFunction>,
+    std::shared_ptr<const TableHolder>>
 DecisionTreeEnsemble::init(
     const containers::DataFrameView &_population,
     const std::vector<containers::DataFrame> &_peripheral )
