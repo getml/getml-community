@@ -232,9 +232,9 @@ void SubtreeHelper::fit_subensembles(
     // ----------------------------------------------------------------
     // Store the subensembles.
 
-    *_subensembles_avg = subensembles_avg;
+    *_subensembles_avg = std::move( subensembles_avg );
 
-    *_subensembles_sum = subensembles_sum;
+    *_subensembles_sum = std::move( subensembles_sum );
 
     // ----------------------------------------------------------------
 }

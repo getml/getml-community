@@ -114,8 +114,10 @@ std::string ConditionMaker::condition_greater(
                        " IS NOT NULL )";
 
             case enums::DataUsed::subfeatures:
-                return "( t2.feature_" + std::to_string( _split.column_ + 1 ) +
-                       " > " + std::to_string( _split.critical_value_ ) + " )";
+                return "( t2.feature_" +
+                       std::to_string( peripheral_used_ + 1 ) + "_" +
+                       std::to_string( _split.column_ + 1 ) + " > " +
+                       std::to_string( _split.critical_value_ ) + " )";
 
             case enums::DataUsed::time_stamps_diff:
                 return "( t1." + _output.time_stamps_name() + " - t2." +
@@ -262,7 +264,9 @@ std::string ConditionMaker::condition_smaller(
                        " IS NULL )";
 
             case enums::DataUsed::subfeatures:
-                return "( t2.feature_" + std::to_string( _split.column_ + 1 ) +
+                return "( t2.feature_" +
+                       std::to_string( peripheral_used_ + 1 ) + "_" +
+                       std::to_string( _split.column_ + 1 ) +
                        " <= " + std::to_string( _split.critical_value_ ) + " )";
 
             case enums::DataUsed::time_stamps_diff:

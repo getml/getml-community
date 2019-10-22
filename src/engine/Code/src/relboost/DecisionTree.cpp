@@ -48,7 +48,8 @@ DecisionTree::DecisionTree(
     update_rate_ = JSON::get_value<Float>( _obj, "update_rate_" );
 
     root_.reset( new DecisionTreeNode(
-        utils::ConditionMaker( encoding_, hyperparameters().delta_t_ ),
+        utils::ConditionMaker(
+            encoding_, hyperparameters().delta_t_, peripheral_used() ),
         0,  // _depth
         hyperparameters_,
         loss_function_,
@@ -79,7 +80,8 @@ void DecisionTree::fit(
     assert_true( encoding_ );
 
     root_.reset( new DecisionTreeNode(
-        utils::ConditionMaker( encoding_, hyperparameters().delta_t_ ),
+        utils::ConditionMaker(
+            encoding_, hyperparameters().delta_t_, peripheral_used() ),
         0,
         hyperparameters_,
         loss_function_,
@@ -129,14 +131,6 @@ std::string DecisionTree::to_sql(
     // -------------------------------------------------------------------
 
     std::stringstream sql;
-
-    // -------------------------------------------------------------------
-
-    /*for ( size_t i = 0; i < subtrees().size(); ++i )
-        {
-            sql << subtrees()[i].to_sql(
-                _feature_num + "_" + std::to_string( i + 1 ), _use_timestamps );
-        }*/
 
     // -------------------------------------------------------------------
 
