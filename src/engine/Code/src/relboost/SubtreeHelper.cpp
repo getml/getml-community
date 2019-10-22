@@ -19,6 +19,8 @@ void SubtreeHelper::fit_subensemble(
 {
     assert_true( _table_holder );
 
+    assert_true( _table_holder->subtables_[_ix_perip_used] );
+
     const auto subtable_holder = std::make_shared<const TableHolder>(
         *_table_holder->subtables_[_ix_perip_used] );
 
@@ -70,15 +72,14 @@ void SubtreeHelper::fit_subensemble(
     ( *_subensemble )
         ->fit_subensembles( subtable_holder, _logger, intermediate_agg );
 
-    const auto [predictions, subfeatures] =
-        ( *_subensemble )->prepare_subfeatures( *subtable_holder, _logger );
+    auto predictions =
+        ( *_subensemble )->make_subpredictions( *subtable_holder );
+
+    auto subfeatures =
+        SubtreeHelper::make_subfeatures( *subtable_holder, predictions );
 
     for ( size_t i = 0; i < _hyperparameters.num_subfeatures_; ++i )
         {
-            // TODO: Remove this line.
-            std::cout << "_agg_type: " << _agg_type << ", FEATURE_" << i + 1
-                      << std::endl;
-
             ( *_subensemble )
                 ->fit_new_feature(
                     intermediate_agg, subtable_holder, subfeatures );
@@ -229,11 +230,11 @@ void SubtreeHelper::fit_subensembles(
         }
 
     // ----------------------------------------------------------------
-    // Store the subfeatures.
+    // Store the subensembles.
 
-    *_subensembles_avg = std::move( subensembles_avg );
+    *_subensembles_avg = subensembles_avg;
 
-    *_subensembles_sum = std::move( subensembles_sum );
+    *_subensembles_sum = subensembles_sum;
 
     // ----------------------------------------------------------------
 }
@@ -259,32 +260,54 @@ std::vector<containers::Predictions> SubtreeHelper::make_predictions(
                     continue;
                 }
 
-            assert_true( _table_holder.subtables_[i]->main_tables_.size() > 0 );
+            assert_true( _table_holder.subtables_[i] );
+
+            const auto& subtable_holder = *_table_holder.subtables_[i];
+
+            assert_true( subtable_holder.main_tables_.size() > 0 );
 
             assert_true( _subensembles_avg[i] );
 
             assert_true( _subensembles_sum[i] );
 
-            auto [subpredictions, subsubfeatures] =
-                _subensembles_avg[i]->prepare_subfeatures(
-                    _table_holder, nullptr );
+            auto subpredictions =
+                _subensembles_avg[i]->make_subpredictions( subtable_holder );
+
+            auto subsubfeatures = SubtreeHelper::make_subfeatures(
+                subtable_holder, subpredictions );
 
             for ( size_t j = 0; j < _subensembles_avg[i]->num_features(); ++j )
                 {
                     predictions[i].emplace_back(
                         _subensembles_avg[i]->transform(
-                            _table_holder, subsubfeatures, j ) );
+                            subtable_holder, subsubfeatures, j ) );
+
+                    assert_true( std::all_of(
+                        predictions[i].back().begin(),
+                        predictions[i].back().end(),
+                        []( Float val ) {
+                            return !std::isnan( val ) && !std::isinf( val );
+                        } ) );
                 }
 
-            std::tie( subpredictions, subsubfeatures ) =
-                _subensembles_sum[i]->prepare_subfeatures(
-                    _table_holder, nullptr );
+            subpredictions =
+                _subensembles_sum[i]->make_subpredictions( subtable_holder );
+
+            subsubfeatures = SubtreeHelper::make_subfeatures(
+                subtable_holder, subpredictions );
 
             for ( size_t j = 0; j < _subensembles_sum[i]->num_features(); ++j )
                 {
                     predictions[i].emplace_back(
                         _subensembles_sum[i]->transform(
-                            _table_holder, subsubfeatures, j ) );
+                            subtable_holder, subsubfeatures, j ) );
+
+                    assert_true( std::all_of(
+                        predictions[i].back().begin(),
+                        predictions[i].back().end(),
+                        []( Float val ) {
+                            return !std::isnan( val ) && !std::isinf( val );
+                        } ) );
                 }
         }
 
@@ -310,7 +333,12 @@ std::vector<containers::Subfeatures> SubtreeHelper::make_subfeatures(
                     continue;
                 }
 
+            assert_true( _table_holder.subtables_[i] );
+
             assert_true( _table_holder.subtables_[i]->main_tables_.size() > 0 );
+
+            assert_true(
+                _table_holder.subtables_[i]->main_tables_[0].rows_ptr() );
 
             const auto rows_map = utils::Mapper::create_rows_map(
                 _table_holder.subtables_[i]->main_tables_[0].rows_ptr() );
@@ -319,14 +347,37 @@ std::vector<containers::Subfeatures> SubtreeHelper::make_subfeatures(
 
             for ( size_t j = 0; j < p.size(); ++j )
                 {
+                    assert_true(
+                        _table_holder.subtables_[i]
+                            ->main_tables_[0]
+                            .rows_ptr()
+                            ->size() == p[j].size() );
+
+                    assert_true( std::all_of(
+                        p[j].begin(), p[j].end(), []( const Float val ) {
+                            return !std::isnan( val ) && !std::isinf( val );
+                        } ) );
+
                     const auto column = containers::Column<Float>(
                         p[j].data(),
                         "FEATURE_" + std::to_string( j + 1 ),
                         p[j].size() );
 
+                    assert_true( std::all_of(
+                        column.begin(), column.end(), []( const Float val ) {
+                            return !std::isnan( val ) && !std::isinf( val );
+                        } ) );
+
                     const auto view =
                         containers::ColumnView<Float, std::map<Int, Int>>(
                             column, rows_map );
+
+                    assert_true( std::all_of(
+                        view.col().begin(),
+                        view.col().end(),
+                        []( const Float val ) {
+                            return !std::isnan( val ) && !std::isinf( val );
+                        } ) );
 
                     subfeatures[i].push_back( view );
                 }

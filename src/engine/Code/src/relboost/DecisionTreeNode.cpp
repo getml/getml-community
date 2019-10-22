@@ -613,6 +613,11 @@ Float DecisionTreeNode::transform(
                         _match );
                 break;
 
+            case enums::DataUsed::subfeatures:
+                is_greater = utils::Partitioner<enums::DataUsed::subfeatures>::
+                    is_greater( split_, _subfeatures, _match );
+                break;
+
             case enums::DataUsed::time_stamps_diff:
                 is_greater =
                     utils::Partitioner<enums::DataUsed::time_stamps_diff>::
@@ -1569,6 +1574,13 @@ void DecisionTreeNode::try_subfeatures(
 {
     for ( size_t j = 0; j < _subfeatures.size(); ++j )
         {
+            assert_true( std::all_of(
+                _subfeatures[j].col().begin(),
+                _subfeatures[j].col().end(),
+                []( const Float val ) {
+                    return !std::isnan( val ) && !std::isinf( val );
+                } ) );
+
             // Note that this sorts in DESCENDING order.
             utils::Sorter<enums::DataUsed::subfeatures>::sort(
                 j, _subfeatures, _begin, _end );
@@ -1582,6 +1594,13 @@ void DecisionTreeNode::try_subfeatures(
                 {
                     continue;
                 }
+
+            assert_true( std::all_of(
+                critical_values.begin(),
+                critical_values.end(),
+                []( const Float cv ) {
+                    return !std::isnan( cv ) && !std::isinf( cv );
+                } ) );
 
             auto it = _begin;
 

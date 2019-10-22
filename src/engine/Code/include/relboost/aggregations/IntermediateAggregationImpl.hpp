@@ -61,6 +61,11 @@ class IntermediateAggregationImpl
         const std::vector<Float>& _eta2,
         const std::vector<Float>& _eta2_old );
 
+    /// Applies the aggregation on the predictions.
+    std::vector<Float> reduce_predictions(
+        const bool _divide_by_count,
+        const std::vector<Float>& _input_predictions );
+
     /// Resets everything to zero.
     void reset();
 

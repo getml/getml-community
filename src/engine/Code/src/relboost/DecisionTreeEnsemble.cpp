@@ -44,24 +44,34 @@ DecisionTreeEnsemble::DecisionTreeEnsemble(
         hyperparameters().loss_function_, impl().hyperparameters_, targets_ );
 
     // ------------------------------------------------------------------------
+    // Note that subensembles do not have schemata.
 
-    impl().population_schema_.reset( new containers::Schema(
-        *JSON::get_object( _obj, "population_schema_" ) ) );
-
-    // ------------------------------------------------------------------------
-
-    std::vector<containers::Schema> peripheral;
-
-    const auto peripheral_arr = *JSON::get_array( _obj, "peripheral_schema_" );
-
-    for ( size_t i = 0; i < peripheral_arr.size(); ++i )
+    if ( _obj.has( "population_schema_" ) )
         {
-            peripheral.push_back( containers::Schema(
-                *peripheral_arr.getObject( static_cast<unsigned int>( i ) ) ) );
+            impl().population_schema_.reset( new containers::Schema(
+                *JSON::get_object( _obj, "population_schema_" ) ) );
         }
 
-    impl().peripheral_schema_.reset(
-        new std::vector<containers::Schema>( peripheral ) );
+    // ------------------------------------------------------------------------
+    // Note that subensembles do not have schemata.
+
+    if ( _obj.has( "peripheral_schema_" ) )
+        {
+            std::vector<containers::Schema> peripheral;
+
+            const auto peripheral_arr =
+                *JSON::get_array( _obj, "peripheral_schema_" );
+
+            for ( size_t i = 0; i < peripheral_arr.size(); ++i )
+                {
+                    peripheral.push_back(
+                        containers::Schema( *peripheral_arr.getObject(
+                            static_cast<unsigned int>( i ) ) ) );
+                }
+
+            impl().peripheral_schema_.reset(
+                new std::vector<containers::Schema>( peripheral ) );
+        }
 
     // ------------------------------------------------------------------------
 
@@ -171,18 +181,6 @@ void DecisionTreeEnsemble::calc_initial_prediction()
     initial_prediction() = sum / count;
 
     loss_function().apply_inverse( &initial_prediction() );
-}
-
-// ----------------------------------------------------------------------------
-
-Float DecisionTreeEnsemble::calc_loss_reduction(
-    const decisiontrees::DecisionTree &_decision_tree,
-    const std::vector<Float> &_predictions ) const
-{
-    assert_true( _predictions.size() == targets().size() );
-
-    return loss_function_->evaluate_tree(
-        _decision_tree.update_rate(), _predictions );
 }
 
 // ----------------------------------------------------------------------------
@@ -477,13 +475,15 @@ void DecisionTreeEnsemble::fit_new_feature(
                         matches_ptr.begin(),
                         matches_ptr.end() );
 
-                    const auto new_predictions = candidates.back().transform(
+                    auto new_predictions = candidates.back().transform(
                         output_table, input_table, subfeatures );
+
+                    _loss_function->reduce_predictions( &new_predictions );
 
                     candidates.back().calc_update_rate( new_predictions );
 
-                    auto loss_reduction = calc_loss_reduction(
-                        candidates.back(), new_predictions );
+                    const auto loss_reduction = _loss_function->evaluate_tree(
+                        candidates.back().update_rate(), new_predictions );
 
                     loss.push_back( loss_reduction );
 
@@ -623,6 +623,15 @@ DecisionTreeEnsemble::init(
 
 // ----------------------------------------------------------------------------
 
+std::vector<containers::Predictions> DecisionTreeEnsemble::make_subpredictions(
+    const TableHolder &_table_holder ) const
+{
+    return SubtreeHelper::make_predictions(
+        _table_holder, subensembles_avg_, subensembles_sum_ );
+}
+
+// ----------------------------------------------------------------------------
+
 DecisionTreeEnsemble &DecisionTreeEnsemble::operator=(
     const DecisionTreeEnsemble &_other )
 {
@@ -691,24 +700,6 @@ std::vector<Float> DecisionTreeEnsemble::predict(
         }
 
     return predictions;
-}
-
-// ----------------------------------------------------------------------------
-
-std::pair<
-    std::vector<containers::Predictions>,
-    std::vector<containers::Subfeatures>>
-DecisionTreeEnsemble::prepare_subfeatures(
-    const TableHolder &_table_holder,
-    const std::shared_ptr<const logging::AbstractLogger> _logger ) const
-{
-    auto subpredictions = SubtreeHelper::make_predictions(
-        _table_holder, subensembles_avg_, subensembles_sum_ );
-
-    auto subfeatures =
-        SubtreeHelper::make_subfeatures( _table_holder, subpredictions );
-
-    return std::make_pair( subpredictions, subfeatures );
 }
 
 // ----------------------------------------------------------------------------
@@ -1020,7 +1011,9 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json_obj(
         {
             if ( sub )
                 {
-                    features_avg->add( sub->to_json_obj() );
+                    auto obj = Poco::JSON::Object::Ptr(
+                        new Poco::JSON::Object( sub->to_json_obj() ) );
+                    features_avg->add( obj );
                 }
             else
                 {
@@ -1039,7 +1032,9 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json_obj(
         {
             if ( sub )
                 {
-                    features_sum->add( sub->to_json_obj() );
+                    auto obj = Poco::JSON::Object::Ptr(
+                        new Poco::JSON::Object( sub->to_json_obj() ) );
+                    features_sum->add( obj );
                 }
             else
                 {

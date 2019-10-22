@@ -210,14 +210,6 @@ Float LossFunctionImpl::calc_update_rate(
 {
     // ------------------------------------------------------------------------
 
-    // TODO: Remove this!
-    if ( _yhat_old.size() != _predictions.size() )
-        {
-            std::cout << "_yhat_old.size(): " << _yhat_old.size() << std::endl;
-            std::cout << "_predictions.size(): " << _predictions.size()
-                      << std::endl;
-        }
-
     assert_true( _yhat_old.size() == _predictions.size() );
     assert_true( _yhat_old.size() == targets().size() );
 

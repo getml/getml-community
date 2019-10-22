@@ -42,8 +42,10 @@ void Threadutils::fit_ensemble(
 
             _ensemble->fit_subensembles( table_holder, _logger, loss_function );
 
-            const auto [predictions, subfeatures] =
-                _ensemble->prepare_subfeatures( *table_holder, _logger );
+            auto predictions = _ensemble->make_subpredictions( *table_holder );
+
+            auto subfeatures =
+                SubtreeHelper::make_subfeatures( *table_holder, predictions );
 
             const auto num_features =
                 _ensemble->hyperparameters().num_features_;
@@ -113,8 +115,10 @@ void Threadutils::transform_ensemble(
                 _peripheral,
                 _ensemble.peripheral_names() );
 
-            const auto [predictions, subfeatures] =
-                _ensemble.prepare_subfeatures( table_holder, _logger );
+            auto predictions = _ensemble.make_subpredictions( table_holder );
+
+            auto subfeatures =
+                SubtreeHelper::make_subfeatures( table_holder, predictions );
 
             const auto silent = _ensemble.hyperparameters().silent_;
 

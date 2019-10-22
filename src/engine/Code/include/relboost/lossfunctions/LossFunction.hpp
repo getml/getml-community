@@ -127,6 +127,9 @@ class LossFunction
     virtual const std::shared_ptr<const std::vector<Float>>
     make_sample_weights() = 0;
 
+    /// Reduces the predictions.
+    virtual void reduce_predictions( std::vector<Float>* _predictions ) = 0;
+
     /// Resets the critical resources to zero.
     virtual void reset() = 0;
 

@@ -208,11 +208,9 @@ class Sum : public lossfunctions::LossFunction
 
     /// Evaluates an entire tree.
     Float evaluate_tree(
-        const Float _update_rate, const std::vector<Float>& _yhat_new ) final
+        const Float _update_rate, const std::vector<Float>& _predictions ) final
     {
-        const auto predictions =
-            impl_.make_sum_predictions( agg_index(), _yhat_new );
-        return child_->evaluate_tree( _update_rate, predictions );
+        return child_->evaluate_tree( _update_rate, _predictions );
     }
 
     /// Trivial getter
@@ -229,6 +227,14 @@ class Sum : public lossfunctions::LossFunction
     {
         const auto sample_weights_parent = child_->make_sample_weights();
         return agg_index().make_sample_weights( sample_weights_parent );
+    }
+
+    /// Reduces the predictions - this is called by the decision tree.
+    void reduce_predictions( std::vector<Float>* _predictions ) final
+    {
+        *_predictions =
+            intermediate_agg().reduce_predictions( false, *_predictions );
+        child_->reduce_predictions( _predictions );
     }
 
     /// Resets the critical resources to zero.
@@ -267,9 +273,7 @@ class Sum : public lossfunctions::LossFunction
     void update_yhat_old(
         const Float _update_rate, const std::vector<Float>& _predictions ) final
     {
-        const auto predictions =
-            impl_.make_sum_predictions( agg_index(), _predictions );
-        child_->update_yhat_old( _update_rate, predictions );
+        child_->update_yhat_old( _update_rate, _predictions );
     }
 
     // -----------------------------------------------------------------

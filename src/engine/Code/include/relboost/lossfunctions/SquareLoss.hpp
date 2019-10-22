@@ -245,6 +245,10 @@ class SquareLoss : public LossFunction
         return sample_weights_;
     }
 
+    /// Reduces the predictions - since this is a loss function, there is
+    /// nothing to reduce.
+    void reduce_predictions( std::vector<Float>* _predictions ) final {}
+
     /// Resets critical resources to zero.
     void reset() final
     {

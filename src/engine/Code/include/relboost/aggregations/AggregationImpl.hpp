@@ -54,11 +54,6 @@ class AggregationImpl
         const Float _min_num_samples,
         multithreading::Communicator* _comm ) const;
 
-    /// Reverts the weights to the last time commit has been called.
-    std::vector<Float> make_sum_predictions(
-        const AggregationIndex& _agg_index,
-        const std::vector<Float>& _input_predictions );
-
     /// Resets the critical resources to zero.
     void reset();
 

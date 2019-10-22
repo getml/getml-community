@@ -54,33 +54,6 @@ bool AggregationImpl::is_balanced(
 
 // ----------------------------------------------------------------------------
 
-std::vector<Float> AggregationImpl::make_sum_predictions(
-    const AggregationIndex& _agg_index,
-    const std::vector<Float>& _input_predictions )
-{
-    assert_true( eta1_.size() > 0 );
-
-    auto predictions = std::vector<Float>( eta1_.size() );
-
-    for ( size_t i = 0; i < _input_predictions.size(); ++i )
-        {
-            const auto indices = _agg_index.transform( i );
-
-            for ( const auto ix : indices )
-                {
-                    assert_true( ix > 0 );
-                    assert_true(
-                        static_cast<size_t>( ix ) < predictions.size() );
-
-                    predictions[ix] += _input_predictions[i];
-                }
-        }
-
-    return predictions;
-}
-
-// ----------------------------------------------------------------------------
-
 void AggregationImpl::reset()
 {
     indices_.clear();

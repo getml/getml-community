@@ -39,7 +39,6 @@ class ColumnView
     const Column<T>& col() const
     {
         assert_true( col_ );
-        assert_true( !rows_ );
         return *col_;
     }
 
