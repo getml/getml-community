@@ -2,12 +2,12 @@
 
 // ---------------------------------------------------------------------------
 
-void test22_snowflake_model()
+void test23_snowflake_model2()
 {
     // ------------------------------------------------------------------------
 
     std::cout << std::endl
-              << "Test 22 (snowflake model, SUM of SUM): " << std::endl
+              << "Test 23 (snowflake model, AVG of SUM): " << std::endl
               << std::endl;
 
     // ------------------------------------------------------------------------
@@ -169,6 +169,8 @@ void test22_snowflake_model()
     // ---------------------------------------------
     // Define targets.
 
+    auto counts = std::vector<double>( targets_population.size() );
+
     for ( size_t i = 0; i < peripheral1_df.nrows(); ++i )
         {
             const auto jk = join_key1_peripheral1[i];
@@ -177,7 +179,19 @@ void test22_snowflake_model()
 
             if ( time_stamp1_peripheral1[i] <= time_stamps_population[jk] )
                 {
-                    targets_population[jk] += subtargets[i];
+                    ++counts[jk];
+                }
+        }
+
+    for ( size_t i = 0; i < peripheral1_df.nrows(); ++i )
+        {
+            const auto jk = join_key1_peripheral1[i];
+
+            assert_true( jk < 500 );
+
+            if ( time_stamp1_peripheral1[i] <= time_stamps_population[jk] )
+                {
+                    targets_population[jk] += subtargets[i] / counts[jk];
                 }
         }
 
@@ -185,7 +199,7 @@ void test22_snowflake_model()
     // Build data model.
 
     const auto population_json =
-        load_json( "../../tests/relboost/test22/schema.json" );
+        load_json( "../../tests/relboost/test23/schema.json" );
 
     const auto population =
         std::make_shared<const relboost::ensemble::Placeholder>(
@@ -198,7 +212,7 @@ void test22_snowflake_model()
     // Load hyperparameters.
 
     const auto hyperparameters_json =
-        load_json( "../../tests/relboost/test22/hyperparameters.json" );
+        load_json( "../../tests/relboost/test23/hyperparameters.json" );
 
     std::cout << relboost::JSON::stringify( *hyperparameters_json ) << std::endl
               << std::endl;
@@ -221,12 +235,12 @@ void test22_snowflake_model()
 
     model.fit( population_df, {peripheral1_df, peripheral2_df} );
 
-    model.save( "../../tests/relboost/test22/Model.json" );
+    model.save( "../../tests/relboost/test23/Model.json" );
 
     // ------------------------------------------------------------------------
     // Express as SQL code.
 
-    std::ofstream sql( "../../tests/relboost/test22/Model.sql" );
+    std::ofstream sql( "../../tests/relboost/test23/Model.sql" );
     sql << model.to_sql();
     sql.close();
 
@@ -243,7 +257,7 @@ void test22_snowflake_model()
 
             assert_true(
                 std::abs( population_df.target( i, 0 ) - predictions[i] ) <
-                10.0 );
+                2.0 );
         }
 
     std::cout << std::endl << std::endl;
