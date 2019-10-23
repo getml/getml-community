@@ -257,6 +257,9 @@ class Avg : public lossfunctions::LossFunction
             impl_.reset();
     }
 
+    /// Resets yhat_old to the initial prediction.
+    void reset_yhat_old() final { child_->reset_yhat_old(); }
+
     /// Reverts the weights to the last time commit has been called.
     void revert_to_commit( const std::vector<size_t>& _indices ) final
     {

@@ -19,6 +19,8 @@ void SubtreeHelper::fit_subensemble(
 {
     assert_true( _table_holder );
 
+    assert_true( _loss_function );
+
     assert_true( _table_holder->subtables_[_ix_perip_used] );
 
     const auto subtable_holder = std::make_shared<const TableHolder>(
@@ -84,6 +86,12 @@ void SubtreeHelper::fit_subensemble(
                 ->fit_new_feature(
                     intermediate_agg, subtable_holder, subfeatures );
         }
+
+    _loss_function->reset_yhat_old();
+
+    _loss_function->calc_gradients();
+
+    _loss_function->commit();
 }
 
 // ----------------------------------------------------------------------------

@@ -286,6 +286,7 @@ class CrossEntropyLoss : public LossFunction
     /// Initializes yhat_old_ by setting it to the initial prediction.
     void init_yhat_old( const Float _initial_prediction ) final
     {
+        initial_prediction_ = _initial_prediction;
         yhat_old_ = std::vector<Float>( targets().size(), _initial_prediction );
     }
 
@@ -308,6 +309,9 @@ class CrossEntropyLoss : public LossFunction
         std::fill( yhat_.begin(), yhat_.end(), 0.0 );
         std::fill( yhat_committed_.begin(), yhat_committed_.end(), 0.0 );
     }
+
+    /// Resets yhat_old to the initial prediction.
+    void reset_yhat_old() final { init_yhat_old( initial_prediction_ ); }
 
     /// Resizes critical resources.
     void resize( size_t _size ) final
@@ -477,6 +481,9 @@ class CrossEntropyLoss : public LossFunction
 
     /// Shared pointer to hyperparameters
     const std::shared_ptr<const Hyperparameters> hyperparameters_;
+
+    /// The initial prediction (average of the target values).
+    Float initial_prediction_;
 
     /// The committed loss, needed for calculating the loss reduction.
     Float loss_committed_;

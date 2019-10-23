@@ -133,6 +133,9 @@ class LossFunction
     /// Resets the critical resources to zero.
     virtual void reset() = 0;
 
+    /// Resets yhat_old to the initial prediction.
+    virtual void reset_yhat_old() = 0;
+
     /// Resizes critical values.
     virtual void resize( const size_t _size ) = 0;
 

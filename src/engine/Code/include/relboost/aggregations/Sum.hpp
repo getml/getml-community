@@ -246,6 +246,9 @@ class Sum : public lossfunctions::LossFunction
             impl_.reset();
     }
 
+    /// Resets yhat_old to the initial prediction.
+    void reset_yhat_old() final { child_->reset_yhat_old(); }
+
     /// Resizes critical resources.
     void resize( size_t _size ) final { impl_.resize( _size ); }
 
