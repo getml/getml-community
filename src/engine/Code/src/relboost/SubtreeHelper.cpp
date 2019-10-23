@@ -80,7 +80,11 @@ void SubtreeHelper::fit_subensemble(
     auto subfeatures =
         SubtreeHelper::make_subfeatures( *subtable_holder, predictions );
 
-    for ( size_t i = 0; i < _hyperparameters.num_subfeatures_; ++i )
+    const auto num_features = std::max(
+        static_cast<size_t>( 1 ),
+        static_cast<size_t>( _hyperparameters.num_subfeatures_ ) / 2 );
+
+    for ( size_t i = 0; i < num_features; ++i )
         {
             ( *_subensemble )
                 ->fit_new_feature(
