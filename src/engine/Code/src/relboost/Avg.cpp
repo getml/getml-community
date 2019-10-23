@@ -231,8 +231,6 @@ void Avg::calc_diff(
 
     assert_true( _split_end >= _split_begin );
 
-    indices_current_.clear();
-
     // ------------------------------------------------------------------------
 
     if ( !std::isnan( _old_weight ) )
@@ -347,40 +345,46 @@ std::vector<std::array<Float, 3>> Avg::calc_weights(
 
     // -------------------------------------------------------------
 
-    if ( impl_.is_balanced(
+    if ( !impl_.is_balanced(
              num_samples_1_, num_samples_2_, _min_num_samples, comm_ ) )
         {
-            if ( !std::isnan( _old_weight ) )
-                results.push_back( child_->calc_weights(
-                    enums::Aggregation::avg,
-                    _old_weight,
-                    indices_.unique_integers(),
-                    indices_current_.unique_integers(),
-                    eta1_,
-                    eta1_old_,
-                    eta2_,
-                    eta2_old_ ) );
-
-            results.push_back( child_->calc_weights(
-                enums::Aggregation::avg_second_null,
-                _old_weight,
-                indices_.unique_integers(),
-                indices_current_.unique_integers(),
-                eta1_2_null_,
-                eta1_2_null_old_,
-                w_fixed_1_,
-                w_fixed_1_old_ ) );
-
-            results.push_back( child_->calc_weights(
-                enums::Aggregation::avg_first_null,
-                _old_weight,
-                indices_.unique_integers(),
-                indices_current_.unique_integers(),
-                eta2_1_null_,
-                eta2_1_null_old_,
-                w_fixed_2_,
-                w_fixed_2_old_ ) );
+            return results;
         }
+
+    // -------------------------------------------------------------
+
+    if ( !std::isnan( _old_weight ) )
+        {
+            results.push_back( child_->calc_weights(
+                enums::Aggregation::avg,
+                _old_weight,
+                indices_.unique_integers(),
+                indices_current_.unique_integers(),
+                eta1_,
+                eta1_old_,
+                eta2_,
+                eta2_old_ ) );
+        }
+
+    results.push_back( child_->calc_weights(
+        enums::Aggregation::avg_second_null,
+        _old_weight,
+        indices_.unique_integers(),
+        indices_current_.unique_integers(),
+        eta1_2_null_,
+        eta1_2_null_old_,
+        w_fixed_1_,
+        w_fixed_1_old_ ) );
+
+    results.push_back( child_->calc_weights(
+        enums::Aggregation::avg_first_null,
+        _old_weight,
+        indices_.unique_integers(),
+        indices_current_.unique_integers(),
+        eta2_1_null_,
+        eta2_1_null_old_,
+        w_fixed_2_,
+        w_fixed_2_old_ ) );
 
     // -------------------------------------------------------------
 
@@ -394,6 +398,13 @@ std::vector<std::array<Float, 3>> Avg::calc_weights(
 
             w_fixed_1_old_[ix] = w_fixed_1_[ix];
             w_fixed_2_old_[ix] = w_fixed_2_[ix];
+        }
+
+    // -------------------------------------------------------------
+
+    if ( _revert == enums::Revert::False )
+        {
+            indices_current_.clear();
         }
 
     // -------------------------------------------------------------

@@ -66,12 +66,12 @@ void Sum::calc_diff(
     const std::vector<const containers::Match*>::iterator _split_begin,
     const std::vector<const containers::Match*>::iterator _split_end )
 {
+    // ------------------------------------------------------------------------
+
     assert_true( _split_end >= _split_begin );
 
     // ------------------------------------------------------------------------
     // Incremental updates imply that we move samples from eta2_ to eta1_.
-
-    indices_current_.clear();
 
     for ( auto it = _split_begin; it != _split_end; ++it )
         {
@@ -148,19 +148,23 @@ std::vector<std::array<Float, 3>> Sum::calc_weights(
 
     // -------------------------------------------------------------
 
-    if ( impl_.is_balanced(
+    if ( !impl_.is_balanced(
              num_samples_1_, num_samples_2_, _min_num_samples, comm_ ) )
         {
-            results = {child_->calc_weights(
-                enums::Aggregation::sum,
-                _old_weight,
-                indices_.unique_integers(),
-                indices_current_.unique_integers(),
-                eta1_,
-                eta1_old_,
-                eta2_,
-                eta2_old_ )};
+            return results;
         }
+
+    // -------------------------------------------------------------
+
+    results = {child_->calc_weights(
+        enums::Aggregation::sum,
+        _old_weight,
+        indices_.unique_integers(),
+        indices_current_.unique_integers(),
+        eta1_,
+        eta1_old_,
+        eta2_,
+        eta2_old_ )};
 
     // -------------------------------------------------------------
 
@@ -168,6 +172,13 @@ std::vector<std::array<Float, 3>> Sum::calc_weights(
         {
             eta1_old_[ix] = eta1_[ix];
             eta2_old_[ix] = eta2_[ix];
+        }
+
+    // -------------------------------------------------------------
+
+    if ( _revert == enums::Revert::False )
+        {
+            indices_current_.clear();
         }
 
     // -------------------------------------------------------------
