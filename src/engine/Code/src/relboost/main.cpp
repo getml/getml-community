@@ -45,6 +45,7 @@ int main( int argc, char* argv[] )
 
     test22_snowflake_model();
     test23_snowflake_model2();
+    test24_snowflake_model3();
 
     return 0;
 }
