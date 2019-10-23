@@ -234,23 +234,18 @@ void test22_snowflake_model()
     // Generate predictions.
 
     const auto predictions =
-        model.transform( population_df, {peripheral1_df, peripheral2_df} );
+        model.predict( population_df, {peripheral1_df, peripheral2_df} );
 
-    for ( size_t j = 0; j < predictions.size(); ++j )
+    for ( size_t i = 0; i < predictions.size(); ++i )
         {
-            for ( size_t i = 0; i < predictions[j]->size(); ++i )
-                {
-                    /*std::cout << "target: "
-                               << population_df.target( i , 0 )
-                               << ", prediction: " << predictions[j][i] <<
-                       std::endl;*/
+            std::cout << i << " target: " << population_df.target( i, 0 )
+                      << ", prediction: " << predictions[i] << std::endl;
 
-                    assert_true(
-                        std::abs(
-                            population_df.target( i, 0 ) -
-                            ( *predictions[j] )[i] ) < 10.0 );
-                }
+            assert_true(
+                std::abs( population_df.target( i, 0 ) - predictions[i] ) <
+                10.0 );
         }
+
     std::cout << std::endl << std::endl;
 
     // ------------------------------------------------------------------------
