@@ -246,8 +246,8 @@ void test24_snowflake_model3()
 
     for ( size_t i = 0; i < predictions.size(); ++i )
         {
-            std::cout << i << " target: " << population_df.target( i, 0 )
-                      << ", prediction: " << predictions[i] << std::endl;
+            /*std::cout << i << " target: " << population_df.target( i, 0 )
+                      << ", prediction: " << predictions[i] << std::endl;*/
 
             assert_true(
                 std::abs( population_df.target( i, 0 ) - predictions[i] ) <
