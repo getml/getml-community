@@ -22,6 +22,8 @@ class IntermediateAggregationImpl
           indices_( containers::IntSet( 0 ) ),
           indices_current_( containers::IntSet( 0 ) )
     {
+        counts_ = std::vector<Float>( agg_index().nrows(), NAN );
+
         eta1_ = std::vector<Float>( agg_index().nrows() );
         eta1_2_null_ = std::vector<Float>( agg_index().nrows() );
         eta1_2_null_old_ = std::vector<Float>( agg_index().nrows() );
@@ -111,6 +113,18 @@ class IntermediateAggregationImpl
         return *agg_index_;
     }
 
+    /// If the counts were already calculated, we can retrieve them.
+    Float get_count( const Int _ix_output )
+    {
+        assert_true( _ix_output >= 0 );
+        assert_true( static_cast<size_t>( _ix_output ) < counts_.size() );
+
+        if ( std::isnan( counts_[_ix_output] ) )
+            counts_[_ix_output] = agg_index().get_count( _ix_output );
+
+        return counts_[_ix_output];
+    }
+
     // -----------------------------------------------------------------
 
    private:
@@ -120,6 +134,9 @@ class IntermediateAggregationImpl
 
     /// The child of this loss function.
     std::shared_ptr<lossfunctions::LossFunction> child_;
+
+    /// Counts the number of instances for each ix_output.
+    std::vector<Float> counts_;
 
     /// Parameters for weight 1.
     std::vector<Float> eta1_;

@@ -171,12 +171,12 @@ void IntermediateAggregationImpl::update_etas(
                             ( *_eta1_output )[ix_output] +=
                                 ( _eta1_input[ix_input] -
                                   _eta1_input_old[ix_input] ) /
-                                agg_index().get_count( ix_output );
+                                get_count( ix_output );
 
                             ( *_eta2_output )[ix_output] +=
                                 ( _eta2_input[ix_input] -
                                   _eta2_input_old[ix_input] ) /
-                                agg_index().get_count( ix_output );
+                                get_count( ix_output );
 
                             indices_.insert( ix_output );
                             indices_current_.insert( ix_output );
