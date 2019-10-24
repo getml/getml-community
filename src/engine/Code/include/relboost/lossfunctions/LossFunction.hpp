@@ -22,6 +22,17 @@ class LossFunction
     // all.
     virtual void apply_transformation( std::vector<Float>* yhat_ ) const = 0;
 
+    /// Only calculates the etas given values from a parent aggregation
+    /// without calculating the weights.
+    /// This is needed for reverting the last split.
+    virtual void calc_etas(
+        const enums::Aggregation _agg,
+        const std::vector<size_t>& _indices_current,
+        const std::vector<Float>& _eta1,
+        const std::vector<Float>& _eta1_old,
+        const std::vector<Float>& _eta2,
+        const std::vector<Float>& _eta2_old ) = 0;
+
     /// Calculates first and second derivatives.
     virtual void calc_gradients() = 0;
 
@@ -39,17 +50,6 @@ class LossFunction
     virtual Float calc_update_rate(
         const std::vector<Float>& _predictions ) = 0;
 
-    /// Calculates weights given the matches.
-    virtual std::vector<std::array<Float, 3>> calc_weights(
-        const enums::Revert _revert,
-        const enums::Update _update,
-        const Float _min_num_samples,
-        const Float _old_weight,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _split_begin,
-        const std::vector<const containers::Match*>::iterator _split_end,
-        const std::vector<const containers::Match*>::iterator _end ) = 0;
-
     /// Calculates the weights given values from a parent aggregation.
     virtual std::array<Float, 3> calc_weights(
         const enums::Aggregation _agg,
@@ -60,6 +60,17 @@ class LossFunction
         const std::vector<Float>& _eta1_old,
         const std::vector<Float>& _eta2,
         const std::vector<Float>& _eta2_old ) = 0;
+
+    /// Calculates weights given the matches.
+    virtual std::vector<std::array<Float, 3>> calc_weights(
+        const enums::Revert _revert,
+        const enums::Update _update,
+        const Float _min_num_samples,
+        const Float _old_weight,
+        const std::vector<const containers::Match*>::iterator _begin,
+        const std::vector<const containers::Match*>::iterator _split_begin,
+        const std::vector<const containers::Match*>::iterator _split_end,
+        const std::vector<const containers::Match*>::iterator _end ) = 0;
 
     /// Calculates the new yhat given eta, indices and the new weights.
     virtual void calc_yhat(

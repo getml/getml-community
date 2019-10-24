@@ -296,6 +296,61 @@ void Avg::calc_diff(
 
 // ----------------------------------------------------------------------------
 
+void Avg::calc_etas(
+    const enums::Aggregation _agg,
+    const std::vector<size_t>& _indices_current,
+    const std::vector<Float>& _eta1,
+    const std::vector<Float>& _eta1_old,
+    const std::vector<Float>& _eta2,
+    const std::vector<Float>& _eta2_old )
+{
+    const auto [eta1, eta1_old, eta2, eta2_old] = intermediate_agg().calc_etas(
+        true, _agg, _indices_current, _eta1, _eta1_old, _eta2, _eta2_old );
+
+    child_->calc_etas(
+        _agg,
+        intermediate_agg().indices_current(),
+        *eta1,
+        *eta1_old,
+        *eta2,
+        *eta2_old );
+
+    intermediate_agg().update_etas_old( _agg );
+}
+
+// ----------------------------------------------------------------------------
+
+std::array<Float, 3> Avg::calc_weights(
+    const enums::Aggregation _agg,
+    const Float _old_weight,
+    const std::vector<size_t>& _indices,
+    const std::vector<size_t>& _indices_current,
+    const std::vector<Float>& _eta1,
+    const std::vector<Float>& _eta1_old,
+    const std::vector<Float>& _eta2,
+    const std::vector<Float>& _eta2_old )
+
+{
+    const auto [eta1, eta1_old, eta2, eta2_old] = intermediate_agg().calc_etas(
+        true, _agg, _indices_current, _eta1, _eta1_old, _eta2, _eta2_old );
+
+    const auto weights = child_->calc_weights(
+        _agg,
+        _old_weight,
+        intermediate_agg().indices(),
+        intermediate_agg().indices_current(),
+        *eta1,
+        *eta1_old,
+        *eta2,
+        *eta2_old );
+
+    intermediate_agg().update_etas_old( _agg );
+
+    return weights;
+}
+
+// ----------------------------------------------------------------------------
+
 std::vector<std::array<Float, 3>> Avg::calc_weights(
     const enums::Revert _revert,
     const enums::Update _update,
@@ -386,19 +441,7 @@ std::vector<std::array<Float, 3>> Avg::calc_weights(
         w_fixed_2_,
         w_fixed_2_old_ ) );
 
-    // -------------------------------------------------------------
-
-    for ( auto ix : indices_current_ )
-        {
-            eta1_old_[ix] = eta1_[ix];
-            eta2_old_[ix] = eta2_[ix];
-
-            eta1_2_null_old_[ix] = eta1_2_null_[ix];
-            eta2_1_null_old_[ix] = eta2_1_null_[ix];
-
-            w_fixed_1_old_[ix] = w_fixed_1_[ix];
-            w_fixed_2_old_[ix] = w_fixed_2_[ix];
-        }
+    update_etas_old( _old_weight );
 
     // -------------------------------------------------------------
 
@@ -412,37 +455,6 @@ std::vector<std::array<Float, 3>> Avg::calc_weights(
     return results;
 
     // -------------------------------------------------------------
-}
-
-// ----------------------------------------------------------------------------
-
-std::array<Float, 3> Avg::calc_weights(
-    const enums::Aggregation _agg,
-    const Float _old_weight,
-    const std::vector<size_t>& _indices,
-    const std::vector<size_t>& _indices_current,
-    const std::vector<Float>& _eta1,
-    const std::vector<Float>& _eta1_old,
-    const std::vector<Float>& _eta2,
-    const std::vector<Float>& _eta2_old )
-
-{
-    const auto [eta1, eta1_old, eta2, eta2_old] = intermediate_agg().calc_etas(
-        true, _agg, _indices_current, _eta1, _eta1_old, _eta2, _eta2_old );
-
-    const auto weights = child_->calc_weights(
-        _agg,
-        _old_weight,
-        intermediate_agg().indices(),
-        intermediate_agg().indices_current(),
-        *eta1,
-        *eta1_old,
-        *eta2,
-        *eta2_old );
-
-    intermediate_agg().update_etas_old( _agg );
-
-    return weights;
 }
 
 // ----------------------------------------------------------------------------
@@ -520,6 +532,8 @@ void Avg::calc_yhat(
         *eta1_old,
         *eta2,
         *eta2_old );
+
+    intermediate_agg().update_etas_old( enums::Aggregation::avg );
 }
 
 // ----------------------------------------------------------------------------
@@ -849,6 +863,8 @@ void Avg::resize( size_t _size )
 
 void Avg::revert( const Float _old_weight )
 {
+    // -------------------------------------------------------------
+
     if ( !std::isnan( _old_weight ) )
         {
             for ( auto ix : indices_current_ )
@@ -874,11 +890,48 @@ void Avg::revert( const Float _old_weight )
                 _old_weight, indices_current_.begin(), indices_current_.end() );
         }
 
+    // -------------------------------------------------------------
+
+    if ( !std::isnan( _old_weight ) )
+        {
+            child_->calc_etas(
+                enums::Aggregation::avg,
+                indices_current_.unique_integers(),
+                eta1_,
+                eta1_old_,
+                eta2_,
+                eta2_old_ );
+        }
+
+    child_->calc_etas(
+        enums::Aggregation::avg_second_null,
+        indices_current_.unique_integers(),
+        eta1_2_null_,
+        eta1_2_null_old_,
+        w_fixed_1_,
+        w_fixed_1_old_ );
+
+    child_->calc_etas(
+        enums::Aggregation::avg_first_null,
+        indices_current_.unique_integers(),
+        eta2_1_null_,
+        eta2_1_null_old_,
+        w_fixed_2_,
+        w_fixed_2_old_ );
+
+    update_etas_old( _old_weight );
+
+    // -------------------------------------------------------------
+
     num_samples_2_ += num_samples_1_;
 
     num_samples_1_ = 0.0;
 
+    // -------------------------------------------------------------
+
     indices_current_.clear();
+
+    // -------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -948,6 +1001,28 @@ Float Avg::transform( const std::vector<Float>& _weights ) const
         }
 
     return result;
+}
+// ----------------------------------------------------------------------------
+
+void Avg::update_etas_old( const Float _old_weight )
+{
+    if ( !std::isnan( _old_weight ) )
+        {
+            for ( auto ix : indices_current_ )
+                {
+                    eta1_old_[ix] = eta1_[ix];
+                    eta2_old_[ix] = eta2_[ix];
+                }
+        }
+
+    for ( auto ix : indices_current_ )
+        {
+            eta1_2_null_old_[ix] = eta1_2_null_[ix];
+            eta2_1_null_old_[ix] = eta2_1_null_[ix];
+
+            w_fixed_1_old_[ix] = w_fixed_1_[ix];
+            w_fixed_2_old_[ix] = w_fixed_2_[ix];
+        }
 }
 
 // ----------------------------------------------------------------------------

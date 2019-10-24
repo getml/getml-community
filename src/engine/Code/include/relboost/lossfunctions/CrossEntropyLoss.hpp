@@ -151,7 +151,39 @@ class CrossEntropyLoss : public LossFunction
         return impl_.calc_update_rate( yhat_old_, _predictions, &comm() );
     }
 
-    /// Calculates two new weights given matches. This just reduces to the
+    /// Loss functions have no etas - nothing to do here.
+    void calc_etas(
+        const enums::Aggregation _agg,
+        const std::vector<size_t>& _indices_current,
+        const std::vector<Float>& _eta1,
+        const std::vector<Float>& _eta1_old,
+        const std::vector<Float>& _eta2,
+        const std::vector<Float>& _eta2_old ) final
+    {
+    }
+
+    /// Calculates new weights given eta and indices.
+    std::array<Float, 3> calc_weights(
+        const enums::Aggregation _agg,
+        const Float _old_weight,
+        const std::vector<size_t>& _indices,
+        const std::vector<size_t>& _indices_current,
+        const std::vector<Float>& _eta1,
+        const std::vector<Float>& _eta1_old,
+        const std::vector<Float>& _eta2,
+        const std::vector<Float>& _eta2_old ) final
+    {
+        return impl_.calc_weights(
+            _agg,
+            _old_weight,
+            _indices,
+            _eta1,
+            _eta2,
+            yhat_committed_,
+            &comm() );
+    }
+
+    /// Calculates new weights given matches. This just reduces to the
     /// normal XGBoost approach.
     std::vector<std::array<Float, 3>> calc_weights(
         const enums::Revert _revert,
@@ -170,27 +202,6 @@ class CrossEntropyLoss : public LossFunction
             _split_begin,
             _split_end,
             _end,
-            &comm() );
-    }
-
-    /// Calculates two new weights given eta and indices.
-    std::array<Float, 3> calc_weights(
-        const enums::Aggregation _agg,
-        const Float _old_weight,
-        const std::vector<size_t>& _indices,
-        const std::vector<size_t>& _indices_current,
-        const std::vector<Float>& _eta1,
-        const std::vector<Float>& _eta1_old,
-        const std::vector<Float>& _eta2,
-        const std::vector<Float>& _eta2_old ) final
-    {
-        return impl_.calc_weights(
-            _agg,
-            _old_weight,
-            _indices,
-            _eta1,
-            _eta2,
-            yhat_committed_,
             &comm() );
     }
 
@@ -221,7 +232,7 @@ class CrossEntropyLoss : public LossFunction
     std::shared_ptr<const lossfunctions::LossFunction> child() const final
     {
         return std::shared_ptr<const lossfunctions::LossFunction>();
-    };
+    }
 
     /// Deletes all resources.
     void clear() final

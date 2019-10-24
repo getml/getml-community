@@ -99,26 +99,15 @@ class SquareLoss : public LossFunction
         return impl_.calc_update_rate( yhat_old_, _predictions, &comm() );
     }
 
-    /// Calculates two new weights given matches. This just reduces to the
-    /// normal XGBoost approach.
-    std::vector<std::array<Float, 3>> calc_weights(
-        const enums::Revert _revert,
-        const enums::Update _update,
-        const Float _min_num_samples,
-        const Float _old_weight,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _split_begin,
-        const std::vector<const containers::Match*>::iterator _split_end,
-        const std::vector<const containers::Match*>::iterator _end ) final
+    /// Loss functions have no etas - nothing to do here.
+    void calc_etas(
+        const enums::Aggregation _agg,
+        const std::vector<size_t>& _indices_current,
+        const std::vector<Float>& _eta1,
+        const std::vector<Float>& _eta1_old,
+        const std::vector<Float>& _eta2,
+        const std::vector<Float>& _eta2_old ) final
     {
-        return impl_.calc_weights(
-            _update,
-            _old_weight,
-            _begin,
-            _split_begin,
-            _split_end,
-            _end,
-            &comm() );
     }
 
     /// Calculates two new weights given eta and indices.
@@ -139,6 +128,28 @@ class SquareLoss : public LossFunction
             _eta1,
             _eta2,
             yhat_committed_,
+            &comm() );
+    }
+
+    /// Calculates two new weights given matches. This just reduces to the
+    /// normal XGBoost approach.
+    std::vector<std::array<Float, 3>> calc_weights(
+        const enums::Revert _revert,
+        const enums::Update _update,
+        const Float _min_num_samples,
+        const Float _old_weight,
+        const std::vector<const containers::Match*>::iterator _begin,
+        const std::vector<const containers::Match*>::iterator _split_begin,
+        const std::vector<const containers::Match*>::iterator _split_end,
+        const std::vector<const containers::Match*>::iterator _end ) final
+    {
+        return impl_.calc_weights(
+            _update,
+            _old_weight,
+            _begin,
+            _split_begin,
+            _split_end,
+            _end,
             &comm() );
     }
 
@@ -169,7 +180,7 @@ class SquareLoss : public LossFunction
     std::shared_ptr<const lossfunctions::LossFunction> child() const final
     {
         return std::shared_ptr<const lossfunctions::LossFunction>();
-    };
+    }
 
     /// Deletes all resources.
     void clear() final

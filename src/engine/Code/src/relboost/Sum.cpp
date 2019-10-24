@@ -19,8 +19,8 @@ void Sum::calc_all(
     assert_true( indices_current_.size() == 0 );
 
     // ------------------------------------------------------------------------
-    // All matches between _split_begin and _split_end are allocated to _eta1.
-    // All others are allocated to eta1_.
+    // All matches between _split_begin and _split_end are allocated to
+    // _eta1. All others are allocated to eta1_.
 
     num_samples_1_ = 0.0;
 
@@ -99,6 +99,61 @@ void Sum::calc_diff(
 
 // ----------------------------------------------------------------------------
 
+void Sum::calc_etas(
+    const enums::Aggregation _agg,
+    const std::vector<size_t>& _indices_current,
+    const std::vector<Float>& _eta1,
+    const std::vector<Float>& _eta1_old,
+    const std::vector<Float>& _eta2,
+    const std::vector<Float>& _eta2_old )
+{
+    const auto [eta1, eta1_old, eta2, eta2_old] = intermediate_agg().calc_etas(
+        false, _agg, _indices_current, _eta1, _eta1_old, _eta2, _eta2_old );
+
+    child_->calc_etas(
+        _agg,
+        intermediate_agg().indices_current(),
+        *eta1,
+        *eta1_old,
+        *eta2,
+        *eta2_old );
+
+    intermediate_agg().update_etas_old( _agg );
+}
+
+// ----------------------------------------------------------------------------
+
+std::array<Float, 3> Sum::calc_weights(
+    const enums::Aggregation _agg,
+    const Float _old_weight,
+    const std::vector<size_t>& _indices,
+    const std::vector<size_t>& _indices_current,
+    const std::vector<Float>& _eta1,
+    const std::vector<Float>& _eta1_old,
+    const std::vector<Float>& _eta2,
+    const std::vector<Float>& _eta2_old )
+
+{
+    const auto [eta1, eta1_old, eta2, eta2_old] = intermediate_agg().calc_etas(
+        false, _agg, _indices_current, _eta1, _eta1_old, _eta2, _eta2_old );
+
+    const auto weights = child_->calc_weights(
+        _agg,
+        _old_weight,
+        intermediate_agg().indices(),
+        intermediate_agg().indices_current(),
+        *eta1,
+        *eta1_old,
+        *eta2,
+        *eta2_old );
+
+    intermediate_agg().update_etas_old( _agg );
+
+    return weights;
+}
+
+// ----------------------------------------------------------------------------
+
 std::vector<std::array<Float, 3>> Sum::calc_weights(
     const enums::Revert _revert,
     const enums::Update _update,
@@ -115,6 +170,8 @@ std::vector<std::array<Float, 3>> Sum::calc_weights(
 
     // -------------------------------------------------------------
 
+    debug_log( "Sum::calc_weights" );
+
     debug_log(
         "std::distance(_begin, _split_begin): " +
         std::to_string( std::distance( _begin, _split_begin ) ) );
@@ -124,7 +181,7 @@ std::vector<std::array<Float, 3>> Sum::calc_weights(
         std::to_string( std::distance( _split_begin, _split_end ) ) );
 
     debug_log(
-        "std::distance(_split_begin, _split_end): " +
+        "std::distance(_split_end, _end): " +
         std::to_string( std::distance( _split_end, _end ) ) );
 
     // -------------------------------------------------------------
@@ -166,13 +223,7 @@ std::vector<std::array<Float, 3>> Sum::calc_weights(
         eta2_,
         eta2_old_ )};
 
-    // -------------------------------------------------------------
-
-    for ( auto ix : indices_current_ )
-        {
-            eta1_old_[ix] = eta1_[ix];
-            eta2_old_[ix] = eta2_[ix];
-        }
+    update_etas_old();
 
     // -------------------------------------------------------------
 
@@ -186,37 +237,6 @@ std::vector<std::array<Float, 3>> Sum::calc_weights(
     return results;
 
     // -------------------------------------------------------------
-}
-
-// ----------------------------------------------------------------------------
-
-std::array<Float, 3> Sum::calc_weights(
-    const enums::Aggregation _agg,
-    const Float _old_weight,
-    const std::vector<size_t>& _indices,
-    const std::vector<size_t>& _indices_current,
-    const std::vector<Float>& _eta1,
-    const std::vector<Float>& _eta1_old,
-    const std::vector<Float>& _eta2,
-    const std::vector<Float>& _eta2_old )
-
-{
-    const auto [eta1, eta1_old, eta2, eta2_old] = intermediate_agg().calc_etas(
-        false, _agg, _indices_current, _eta1, _eta1_old, _eta2, _eta2_old );
-
-    const auto weights = child_->calc_weights(
-        _agg,
-        _old_weight,
-        intermediate_agg().indices(),
-        intermediate_agg().indices_current(),
-        *eta1,
-        *eta1_old,
-        *eta2,
-        *eta2_old );
-
-    intermediate_agg().update_etas_old( _agg );
-
-    return weights;
 }
 
 // ----------------------------------------------------------------------------
@@ -245,6 +265,8 @@ void Sum::calc_yhat(
         *eta1_old,
         *eta2,
         *eta2_old );
+
+    intermediate_agg().update_etas_old( _agg );
 }
 
 // ----------------------------------------------------------------------------
@@ -258,6 +280,8 @@ void Sum::commit(
     const std::vector<const containers::Match*>::iterator _end )
 {
     assert_true( eta1_.size() == eta2_.size() );
+
+    debug_log( "Sum::commit" );
 
     // When we are committing, the weight1 and weight2 matches are clearly
     // partitioned, so _begin == _split_begin.
@@ -322,6 +346,16 @@ void Sum::revert( const Float _old_weight )
             eta1_[ix] = 0.0;
         }
 
+    child_->calc_etas(
+        enums::Aggregation::sum,
+        indices_current_.unique_integers(),
+        eta1_,
+        eta1_old_,
+        eta2_,
+        eta2_old_ );
+
+    update_etas_old();
+
     num_samples_2_ += num_samples_1_;
 
     num_samples_1_ = 0.0;
@@ -334,6 +368,17 @@ void Sum::revert( const Float _old_weight )
 Float Sum::transform( const std::vector<Float>& _weights ) const
 {
     return std::accumulate( _weights.begin(), _weights.end(), 0.0 );
+}
+
+// ----------------------------------------------------------------------------
+
+void Sum::update_etas_old()
+{
+    for ( auto ix : indices_current_ )
+        {
+            eta1_old_[ix] = eta1_[ix];
+            eta2_old_[ix] = eta2_[ix];
+        }
 }
 
 // ----------------------------------------------------------------------------

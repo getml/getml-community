@@ -89,12 +89,23 @@ class Avg : public lossfunctions::LossFunction
     // -----------------------------------------------------------------
 
    public:
-    /// Calculates the new yhat given eta, indices and the new weights.
-    void calc_yhat(
+    /// Calculates indices_, eta1_ and eta2_ given the previous
+    /// iteration's variables without calculating the weights.
+    void calc_etas(
+        const enums::Aggregation _agg,
+        const std::vector<size_t>& _indices_current,
+        const std::vector<Float>& _eta1,
+        const std::vector<Float>& _eta1_old,
+        const std::vector<Float>& _eta2,
+        const std::vector<Float>& _eta2_old ) final;
+
+    /// Calculates indices_, eta1_ and eta2_ given the previous
+    /// iteration's variables.
+    std::array<Float, 3> calc_weights(
         const enums::Aggregation _agg,
         const Float _old_weight,
-        const std::array<Float, 3>& _new_weights,
         const std::vector<size_t>& _indices,
+        const std::vector<size_t>& _indices_current,
         const std::vector<Float>& _eta1,
         const std::vector<Float>& _eta1_old,
         const std::vector<Float>& _eta2,
@@ -111,13 +122,12 @@ class Avg : public lossfunctions::LossFunction
         const std::vector<const containers::Match*>::iterator _split_end,
         const std::vector<const containers::Match*>::iterator _end ) final;
 
-    /// Calculates _indices, _eta1 and _eta2  given the previous
-    /// iteration's variables.
-    std::array<Float, 3> calc_weights(
+    /// Calculates the new yhat given eta, indices and the new weights.
+    void calc_yhat(
         const enums::Aggregation _agg,
         const Float _old_weight,
+        const std::array<Float, 3>& _new_weights,
         const std::vector<size_t>& _indices,
-        const std::vector<size_t>& _indices_current,
         const std::vector<Float>& _eta1,
         const std::vector<Float>& _eta1_old,
         const std::vector<Float>& _eta2,
@@ -322,6 +332,9 @@ class Avg : public lossfunctions::LossFunction
     /// Initialized count_committed_ by calculating the total count.
     void init_count_committed(
         const std::vector<const containers::Match*>& _matches_ptr );
+
+    /// Adapts the etas_old_ to the etas.
+    void update_etas_old( const Float _old_weight );
 
     // -----------------------------------------------------------------
 
