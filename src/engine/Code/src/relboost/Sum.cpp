@@ -16,10 +16,11 @@ void Sum::calc_all(
     // ------------------------------------------------------------------------
 
     assert_true( indices_.size() == 0 );
+    assert_true( indices_current_.size() == 0 );
 
     // ------------------------------------------------------------------------
-    // All matches between _split_begin and _split_end are allocated to _eta1.
-    // All others are allocated to eta1_.
+    // All matches between _split_begin and _split_end are allocated to
+    // _eta1. All others are allocated to eta1_.
 
     num_samples_1_ = 0.0;
 
@@ -32,6 +33,7 @@ void Sum::calc_all(
             ++num_samples_2_;
 
             indices_.insert( ( *it )->ix_output );
+            indices_current_.insert( ( *it )->ix_output );
         }
 
     for ( auto it = _split_begin; it != _split_end; ++it )
@@ -41,6 +43,7 @@ void Sum::calc_all(
             ++num_samples_1_;
 
             indices_.insert( ( *it )->ix_output );
+            indices_current_.insert( ( *it )->ix_output );
         }
 
     for ( auto it = _split_end; it != _end; ++it )
@@ -50,22 +53,7 @@ void Sum::calc_all(
             ++num_samples_2_;
 
             indices_.insert( ( *it )->ix_output );
-        }
-
-    // ------------------------------------------------------------------------
-    // If we need to be able to revert this, we have to keep track of all
-    // ix for which eta1_[ix] != 0.0.
-
-    if ( _revert == enums::Revert::True )
-        {
-            indices_current_.clear();
-
-            for ( auto it = _split_begin; it != _split_end; ++it )
-                {
-                    const auto ix = ( *it )->ix_output;
-
-                    indices_current_.insert( ix );
-                }
+            indices_current_.insert( ( *it )->ix_output );
         }
 
     // ------------------------------------------------------------------------
@@ -78,6 +66,8 @@ void Sum::calc_diff(
     const std::vector<const containers::Match*>::iterator _split_begin,
     const std::vector<const containers::Match*>::iterator _split_end )
 {
+    // ------------------------------------------------------------------------
+
     assert_true( _split_end >= _split_begin );
 
     // ------------------------------------------------------------------------
@@ -91,6 +81,8 @@ void Sum::calc_diff(
 
             --eta2_[( *it )->ix_output];
 
+            indices_current_.insert( ( *it )->ix_output );
+
             assert_true( eta2_[( *it )->ix_output] >= 0.0 );
         }
 
@@ -103,22 +95,61 @@ void Sum::calc_diff(
     num_samples_2_ -= dist;
 
     // ------------------------------------------------------------------------
-    // If we need to be able to revert this, we have to keep track of all
-    // ix which we have just changed.
+}
 
-    if ( _revert == enums::Revert::True )
-        {
-            indices_current_.clear();
+// ----------------------------------------------------------------------------
 
-            for ( auto it = _split_begin; it != _split_end; ++it )
-                {
-                    const auto ix = ( *it )->ix_output;
+void Sum::calc_etas(
+    const enums::Aggregation _agg,
+    const std::vector<size_t>& _indices_current,
+    const std::vector<Float>& _eta1,
+    const std::vector<Float>& _eta1_old,
+    const std::vector<Float>& _eta2,
+    const std::vector<Float>& _eta2_old )
+{
+    const auto [eta1, eta1_old, eta2, eta2_old] = intermediate_agg().calc_etas(
+        false, _agg, _indices_current, _eta1, _eta1_old, _eta2, _eta2_old );
 
-                    indices_current_.insert( ix );
-                }
-        }
+    child_->calc_etas(
+        _agg,
+        intermediate_agg().indices_current(),
+        *eta1,
+        *eta1_old,
+        *eta2,
+        *eta2_old );
 
-    // ------------------------------------------------------------------------
+    intermediate_agg().update_etas_old( _agg );
+}
+
+// ----------------------------------------------------------------------------
+
+std::array<Float, 3> Sum::calc_weights(
+    const enums::Aggregation _agg,
+    const Float _old_weight,
+    const std::vector<size_t>& _indices,
+    const std::vector<size_t>& _indices_current,
+    const std::vector<Float>& _eta1,
+    const std::vector<Float>& _eta1_old,
+    const std::vector<Float>& _eta2,
+    const std::vector<Float>& _eta2_old )
+
+{
+    const auto [eta1, eta1_old, eta2, eta2_old] = intermediate_agg().calc_etas(
+        false, _agg, _indices_current, _eta1, _eta1_old, _eta2, _eta2_old );
+
+    const auto weights = child_->calc_weights(
+        _agg,
+        _old_weight,
+        intermediate_agg().indices(),
+        intermediate_agg().indices_current(),
+        *eta1,
+        *eta1_old,
+        *eta2,
+        *eta2_old );
+
+    intermediate_agg().update_etas_old( _agg );
+
+    return weights;
 }
 
 // ----------------------------------------------------------------------------
@@ -139,6 +170,8 @@ std::vector<std::array<Float, 3>> Sum::calc_weights(
 
     // -------------------------------------------------------------
 
+    debug_log( "Sum::calc_weights" );
+
     debug_log(
         "std::distance(_begin, _split_begin): " +
         std::to_string( std::distance( _begin, _split_begin ) ) );
@@ -148,7 +181,7 @@ std::vector<std::array<Float, 3>> Sum::calc_weights(
         std::to_string( std::distance( _split_begin, _split_end ) ) );
 
     debug_log(
-        "std::distance(_split_begin, _split_end): " +
+        "std::distance(_split_end, _end): " +
         std::to_string( std::distance( _split_end, _end ) ) );
 
     // -------------------------------------------------------------
@@ -184,8 +217,20 @@ std::vector<std::array<Float, 3>> Sum::calc_weights(
         enums::Aggregation::sum,
         _old_weight,
         indices_.unique_integers(),
+        indices_current_.unique_integers(),
         eta1_,
-        eta2_ )};
+        eta1_old_,
+        eta2_,
+        eta2_old_ )};
+
+    update_etas_old();
+
+    // -------------------------------------------------------------
+
+    if ( _revert == enums::Revert::False )
+        {
+            indices_current_.clear();
+        }
 
     // -------------------------------------------------------------
 
@@ -196,61 +241,32 @@ std::vector<std::array<Float, 3>> Sum::calc_weights(
 
 // ----------------------------------------------------------------------------
 
-std::array<Float, 3> Sum::calc_weights(
+void Sum::calc_yhat(
     const enums::Aggregation _agg,
     const Float _old_weight,
+    const std::array<Float, 3>& _new_weights,
     const std::vector<size_t>& _indices,
     const std::vector<Float>& _eta1,
-    const std::vector<Float>& _eta2 )
-{
-    for ( auto ix_input : _indices )
-        {
-            // -----------------------------------------------------------------
-            // Figure out whether there are any matches in output table.
-
-            assert_true( _eta1.size() == _eta2.size() );
-
-            assert_true( output_indices_.size() > 0 );
-            assert_true( input_join_keys_.size() > 0 );
-            assert_true( input_join_keys_[0].nrows_ > ix_input );
-
-            auto it = output_indices_[0]->find( input_join_keys_[0][ix_input] );
-
-            if ( it == output_indices_[0]->end() )
-                {
-                    continue;
-                }
-
-            // -----------------------------------------------------------------
-            // If yes, update them.
-
-            for ( auto ix_output : it->second )
-                {
-                    assert_true( ix_input < _eta1.size() );
-                    assert_true( ix_output < eta1_.size() );
-
-                    eta1_[ix_output] += _eta1[ix_input];
-                    eta2_[ix_output] += _eta2[ix_input];
-
-                    indices_.insert( ix_output );
-                }
-
-            // -----------------------------------------------------------------
-        }
-
-    return child_->calc_weights(
-        _agg, _old_weight, indices_.unique_integers(), eta1_, eta2_ );
-}
-
-// ----------------------------------------------------------------------------
-
-void Sum::commit(
-    const std::vector<Float>& _eta1,
+    const std::vector<Float>& _eta1_old,
     const std::vector<Float>& _eta2,
-    const std::vector<size_t>& _indices,
-    const std::array<Float, 3>& _weights )
+    const std::vector<Float>& _eta2_old )
 {
-    // TODO
+    assert_true( !std::isnan( std::get<0>( _new_weights ) ) );
+
+    const auto [eta1, eta1_old, eta2, eta2_old] = intermediate_agg().calc_etas(
+        false, _agg, _indices, _eta1, _eta1_old, _eta2, _eta2_old );
+
+    child_->calc_yhat(
+        _agg,
+        _old_weight,
+        _new_weights,
+        intermediate_agg().indices(),
+        *eta1,
+        *eta1_old,
+        *eta2,
+        *eta2_old );
+
+    intermediate_agg().update_etas_old( _agg );
 }
 
 // ----------------------------------------------------------------------------
@@ -264,6 +280,8 @@ void Sum::commit(
     const std::vector<const containers::Match*>::iterator _end )
 {
     assert_true( eta1_.size() == eta2_.size() );
+
+    debug_log( "Sum::commit" );
 
     // When we are committing, the weight1 and weight2 matches are clearly
     // partitioned, so _begin == _split_begin.
@@ -282,12 +300,10 @@ Float Sum::evaluate_split(
     const std::array<Float, 3>& _weights )
 {
     // -----------------------------------------------------------------
-    // Calculate yhat.
 
     calc_yhat( _old_weight, _weights );
 
     // -----------------------------------------------------------------
-    // Pass on to next higher level
 
     return child_->evaluate_split(
         _old_intercept,
@@ -330,6 +346,16 @@ void Sum::revert( const Float _old_weight )
             eta1_[ix] = 0.0;
         }
 
+    child_->calc_etas(
+        enums::Aggregation::sum,
+        indices_current_.unique_integers(),
+        eta1_,
+        eta1_old_,
+        eta2_,
+        eta2_old_ );
+
+    update_etas_old();
+
     num_samples_2_ += num_samples_1_;
 
     num_samples_1_ = 0.0;
@@ -342,6 +368,17 @@ void Sum::revert( const Float _old_weight )
 Float Sum::transform( const std::vector<Float>& _weights ) const
 {
     return std::accumulate( _weights.begin(), _weights.end(), 0.0 );
+}
+
+// ----------------------------------------------------------------------------
+
+void Sum::update_etas_old()
+{
+    for ( auto ix : indices_current_ )
+        {
+            eta1_old_[ix] = eta1_[ix];
+            eta2_old_[ix] = eta2_[ix];
+        }
 }
 
 // ----------------------------------------------------------------------------

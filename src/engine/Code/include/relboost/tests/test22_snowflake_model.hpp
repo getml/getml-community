@@ -1,11 +1,13 @@
+
+
 // ---------------------------------------------------------------------------
 
-void test21_snowflake_model()
+void test22_snowflake_model()
 {
     // ------------------------------------------------------------------------
 
     std::cout << std::endl
-              << "Test 21 (snowflake model): " << std::endl
+              << "Test 22 (snowflake model, SUM of SUM): " << std::endl
               << std::endl;
 
     // ------------------------------------------------------------------------
@@ -19,14 +21,14 @@ void test21_snowflake_model()
     const auto join_key2_peripheral2 = make_column<std::int32_t>( 5000, rng );
 
     const auto join_key2_peripheral2_col =
-        multirel::containers::Column<std::int32_t>(
+        relboost::containers::Column<std::int32_t>(
             join_key2_peripheral2.data(),
             "join_key2",
             join_key2_peripheral2.size() );
 
     auto numerical_peripheral2 = make_column<double>( 5000, rng );
 
-    const auto numerical_peripheral2_col = multirel::containers::Column<double>(
+    const auto numerical_peripheral2_col = relboost::containers::Column<double>(
         numerical_peripheral2.data(),
         "column_01",
         numerical_peripheral2.size() );
@@ -34,12 +36,12 @@ void test21_snowflake_model()
     const auto time_stamp2_peripheral2 = make_column<double>( 5000, rng );
 
     const auto time_stamp2_peripheral2_col =
-        multirel::containers::Column<double>(
+        relboost::containers::Column<double>(
             time_stamp2_peripheral2.data(),
             "time_stamp2",
             time_stamp2_peripheral2.size() );
 
-    const auto peripheral2_df = multirel::containers::DataFrame(
+    const auto peripheral2_df = relboost::containers::DataFrame(
         {},
         {},
         {join_key2_peripheral2_col},
@@ -54,7 +56,7 @@ void test21_snowflake_model()
     const auto join_key1_peripheral1 = make_column<std::int32_t>( 5000, rng );
 
     const auto join_key1_peripheral1_col =
-        multirel::containers::Column<std::int32_t>(
+        relboost::containers::Column<std::int32_t>(
             join_key1_peripheral1.data(),
             "join_key1",
             join_key1_peripheral1.size() );
@@ -62,14 +64,14 @@ void test21_snowflake_model()
     const auto join_key2_peripheral1 = make_column<std::int32_t>( 5000, rng );
 
     const auto join_key2_peripheral1_col =
-        multirel::containers::Column<std::int32_t>(
+        relboost::containers::Column<std::int32_t>(
             join_key2_peripheral1.data(),
             "join_key2",
             join_key2_peripheral1.size() );
 
     auto numerical_peripheral1 = make_column<double>( 5000, rng );
 
-    const auto numerical_peripheral1_col = multirel::containers::Column<double>(
+    const auto numerical_peripheral1_col = relboost::containers::Column<double>(
         numerical_peripheral1.data(),
         "column_01",
         numerical_peripheral1.size() );
@@ -77,7 +79,7 @@ void test21_snowflake_model()
     const auto time_stamp1_peripheral1 = make_column<double>( 5000, rng );
 
     const auto time_stamp1_peripheral1_col =
-        multirel::containers::Column<double>(
+        relboost::containers::Column<double>(
             time_stamp1_peripheral1.data(),
             "time_stamp1",
             time_stamp1_peripheral1.size() );
@@ -85,12 +87,12 @@ void test21_snowflake_model()
     const auto time_stamp2_peripheral1 = make_column<double>( 5000, rng );
 
     const auto time_stamp2_peripheral1_col =
-        multirel::containers::Column<double>(
+        relboost::containers::Column<double>(
             time_stamp2_peripheral1.data(),
             "time_stamp2",
             time_stamp2_peripheral1.size() );
 
-    const auto peripheral1_df = multirel::containers::DataFrame(
+    const auto peripheral1_df = relboost::containers::DataFrame(
         {},
         {},
         {join_key1_peripheral1_col, join_key2_peripheral1_col},
@@ -110,30 +112,30 @@ void test21_snowflake_model()
         }
 
     const auto join_keys_population_col =
-        multirel::containers::Column<std::int32_t>(
+        relboost::containers::Column<std::int32_t>(
             join_keys_population.data(),
             "join_key1",
             join_keys_population.size() );
 
     auto numerical_population = make_column<double>( 500, rng );
 
-    const auto numerical_population_col = multirel::containers::Column<double>(
+    const auto numerical_population_col = relboost::containers::Column<double>(
         numerical_population.data(), "column_01", numerical_population.size() );
 
     const auto time_stamps_population = make_column<double>( 500, rng );
 
     const auto time_stamps_population_col =
-        multirel::containers::Column<double>(
+        relboost::containers::Column<double>(
             time_stamps_population.data(),
             "time_stamp1",
             time_stamps_population.size() );
 
     auto targets_population = std::vector<double>( 500 );
 
-    const auto target_population_col = multirel::containers::Column<double>(
+    const auto target_population_col = relboost::containers::Column<double>(
         targets_population.data(), "target", targets_population.size() );
 
-    const auto population_df = multirel::containers::DataFrame(
+    const auto population_df = relboost::containers::DataFrame(
         {},
         {},
         {join_keys_population_col},
@@ -183,10 +185,10 @@ void test21_snowflake_model()
     // Build data model.
 
     const auto population_json =
-        load_json( "../../tests/multirel/test21/schema.json" );
+        load_json( "../../tests/relboost/test22/schema.json" );
 
     const auto population =
-        std::make_shared<const multirel::decisiontrees::Placeholder>(
+        std::make_shared<const relboost::ensemble::Placeholder>(
             *population_json );
 
     const auto peripheral = std::make_shared<std::vector<std::string>>(
@@ -196,14 +198,13 @@ void test21_snowflake_model()
     // Load hyperparameters.
 
     const auto hyperparameters_json =
-        load_json( "../../tests/multirel/test21/hyperparameters.json" );
+        load_json( "../../tests/relboost/test22/hyperparameters.json" );
 
-    std::cout << multirel::JSON::stringify( *hyperparameters_json ) << std::endl
+    std::cout << relboost::JSON::stringify( *hyperparameters_json ) << std::endl
               << std::endl;
 
     const auto hyperparameters =
-        std::make_shared<multirel::descriptors::Hyperparameters>(
-            *hyperparameters_json );
+        std::make_shared<relboost::Hyperparameters>( *hyperparameters_json );
 
     // ------------------------------------------------------------------------
     // Build model
@@ -212,7 +213,7 @@ void test21_snowflake_model()
         std::vector<std::string>(
             {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"} ) );
 
-    auto model = multirel::ensemble::DecisionTreeEnsemble(
+    auto model = relboost::ensemble::DecisionTreeEnsemble(
         encoding, hyperparameters, peripheral, population );
 
     // ------------------------------------------------------------------------
@@ -220,12 +221,12 @@ void test21_snowflake_model()
 
     model.fit( population_df, {peripheral1_df, peripheral2_df} );
 
-    model.save( "../../tests/multirel/test21/Model.json" );
+    model.save( "../../tests/relboost/test22/Model.json" );
 
     // ------------------------------------------------------------------------
     // Express as SQL code.
 
-    std::ofstream sql( "../../tests/multirel/test21/Model.sql" );
+    std::ofstream sql( "../../tests/relboost/test22/Model.sql" );
     sql << model.to_sql();
     sql.close();
 
@@ -233,23 +234,18 @@ void test21_snowflake_model()
     // Generate predictions.
 
     const auto predictions =
-        model.transform( population_df, {peripheral1_df, peripheral2_df} );
+        model.predict( population_df, {peripheral1_df, peripheral2_df} );
 
-    for ( size_t j = 0; j < predictions.size(); ++j )
+    for ( size_t i = 0; i < predictions.size(); ++i )
         {
-            for ( size_t i = 0; i < predictions[j]->size(); ++i )
-                {
-                    /*std::cout << "target: "
-                               << population_df.target( i , 0 )
-                               << ", prediction: " << predictions[j][i] <<
-                       std::endl;*/
+            /*std::cout << i << " target: " << population_df.target( i, 0 )
+                      << ", prediction: " << predictions[i] << std::endl;*/
 
-                    assert_true(
-                        std::abs(
-                            population_df.target( i, 0 ) -
-                            ( *predictions[j] )[i] ) < 10.0 );
-                }
+            assert_true(
+                std::abs( population_df.target( i, 0 ) - predictions[i] ) <
+                10.0 );
         }
+
     std::cout << std::endl << std::endl;
 
     // ------------------------------------------------------------------------

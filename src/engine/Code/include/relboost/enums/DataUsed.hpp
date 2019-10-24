@@ -26,6 +26,7 @@ enum class DataUsed
     same_units_discrete_is_nan,
     same_units_numerical,
     same_units_numerical_is_nan,
+    subfeatures,
     time_stamps_diff,
     time_stamps_window
 };

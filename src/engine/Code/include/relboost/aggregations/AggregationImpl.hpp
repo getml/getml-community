@@ -17,12 +17,16 @@ class AggregationImpl
     AggregationImpl(
         lossfunctions::LossFunction* _child,
         std::vector<Float>* _eta1,
+        std::vector<Float>* _eta1_old,
         std::vector<Float>* _eta2,
+        std::vector<Float>* _eta2_old,
         containers::IntSet* _indices,
         containers::IntSet* _indices_current )
         : child_( _child ),
           eta1_( *_eta1 ),
+          eta1_old_( *_eta1_old ),
           eta2_( *_eta2 ),
+          eta2_old_( *_eta2_old ),
           indices_( *_indices ),
           indices_current_( *_indices_current )
     {
@@ -68,8 +72,14 @@ class AggregationImpl
     /// Parameters for weight 1.
     std::vector<Float>& eta1_;
 
+    /// Parameters for weight 1 as of the last split.
+    std::vector<Float>& eta1_old_;
+
     /// Parameters for weight 2.
     std::vector<Float>& eta2_;
+
+    /// Parameters for weight 2 as of the last split.
+    std::vector<Float>& eta2_old_;
 
     /// Keeps track of the samples that have been altered.
     containers::IntSet& indices_;

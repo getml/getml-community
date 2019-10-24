@@ -111,7 +111,10 @@ void test7_categorical()
             if ( peripheral_df.time_stamp( i ) <=
                  time_stamps_population_col[jk] )
                 {
-                    counts[jk]++;
+                    if ( peripheral_df.categorical( i, 0 ) == 3 )
+                        {
+                            ++counts[jk];
+                        }
                 }
         }
 
@@ -134,7 +137,8 @@ void test7_categorical()
     // ---------------------------------------------
     // Build data model.
 
-    const auto population_json = load_json( "../../tests/relboost/test7/schema.json" );
+    const auto population_json =
+        load_json( "../../tests/relboost/test7/schema.json" );
 
     const auto population =
         std::make_shared<const relboost::ensemble::Placeholder>(

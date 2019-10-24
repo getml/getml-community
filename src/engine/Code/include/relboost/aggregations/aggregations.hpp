@@ -12,7 +12,10 @@
 
 // ----------------------------------------------------------------------------
 
+#include "relboost/aggregations/AggregationIndex.hpp"
+
 #include "relboost/aggregations/AggregationImpl.hpp"
+#include "relboost/aggregations/IntermediateAggregationImpl.hpp"
 
 #include "relboost/aggregations/Avg.hpp"
 

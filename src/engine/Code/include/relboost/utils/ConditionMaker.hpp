@@ -14,8 +14,11 @@ class ConditionMaker
    public:
     ConditionMaker(
         const std::shared_ptr<const std::vector<std::string>>& _encoding,
-        const Float _lag )
-        : encoding_( _encoding ), lag_( _lag )
+        const Float _lag,
+        const size_t _peripheral_used )
+        : encoding_( _encoding ),
+          lag_( _lag ),
+          peripheral_used_( _peripheral_used )
     {
         assert_true( encoding_ );
     }
@@ -60,6 +63,9 @@ class ConditionMaker
 
     /// The lag variable used for the moving time window.
     const Float lag_;
+
+    /// The number of the peripheral table used.
+    const size_t peripheral_used_;
 };
 
 // ------------------------------------------------------------------------

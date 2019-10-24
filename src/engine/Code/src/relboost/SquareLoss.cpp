@@ -6,15 +6,11 @@ namespace lossfunctions
 {
 // ----------------------------------------------------------------------------
 
-void SquareLoss::calc_gradients(
-    const std::shared_ptr<const std::vector<Float>>& _yhat_old )
+void SquareLoss::calc_gradients()
 {
     // ------------------------------------------------------------------------
 
-    assert_true( _yhat_old );
-    assert_true( _yhat_old->size() == targets().size() );
-
-    yhat_old_ = _yhat_old;
+    assert_true( yhat_old().size() == targets().size() );
 
     // ------------------------------------------------------------------------
     // Resize, if necessary
@@ -32,9 +28,7 @@ void SquareLoss::calc_gradients(
         yhat_old().end(),
         targets().begin(),
         g_.begin(),
-        []( const Float& yhat, const Float& y ) {
-            return yhat - y;
-        } );
+        []( const Float& yhat, const Float& y ) { return yhat - y; } );
 
     // ------------------------------------------------------------------------
     // Calculate h_.
@@ -46,8 +40,7 @@ void SquareLoss::calc_gradients(
 
 // ----------------------------------------------------------------------------
 
-Float SquareLoss::calc_loss(
-    const std::array<Float, 3>& _weights )
+Float SquareLoss::calc_loss( const std::array<Float, 3>& _weights )
 {
     // ------------------------------------------------------------------------
 
@@ -83,9 +76,7 @@ Float SquareLoss::calc_loss(
     auto global_sum_sample_weights = sum_sample_weights_;
 
     utils::Reducer::reduce(
-        multithreading::maximum<Float>(),
-        &global_sum_sample_weights,
-        &comm() );
+        multithreading::maximum<Float>(), &global_sum_sample_weights, &comm() );
 
     assert_true( global_sum_sample_weights == sum_sample_weights_ );
 
@@ -172,15 +163,29 @@ Float SquareLoss::evaluate_split(
 // ----------------------------------------------------------------------------
 
 Float SquareLoss::evaluate_tree(
-    const std::vector<Float>& _yhat_new )
+    const Float _update_rate, const std::vector<Float>& _predictions )
 {
-    assert_true( _yhat_new.size() == targets().size() );
+    assert_true( _predictions.size() == targets().size() );
+
+    std::vector<Float> yhat_new( targets().size() );
+
+    const auto update_function = [_update_rate](
+                                     const Float y_old, const Float y_new ) {
+        return y_old + y_new * _update_rate;
+    };
+
+    std::transform(
+        yhat_old().begin(),
+        yhat_old().end(),
+        _predictions.begin(),
+        yhat_new.begin(),
+        update_function );
 
     Float loss = 0.0;
 
     for ( size_t ix : sample_index_ )
         {
-            const auto diff = _yhat_new[ix] - targets()[ix];
+            const auto diff = yhat_new[ix] - targets()[ix];
 
             loss += diff * diff * ( *sample_weights_ )[ix];
         }

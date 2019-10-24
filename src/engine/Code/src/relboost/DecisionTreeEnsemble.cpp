@@ -44,24 +44,34 @@ DecisionTreeEnsemble::DecisionTreeEnsemble(
         hyperparameters().loss_function_, impl().hyperparameters_, targets_ );
 
     // ------------------------------------------------------------------------
+    // Note that subensembles do not have schemata.
 
-    impl().population_schema_.reset( new containers::Schema(
-        *JSON::get_object( _obj, "population_schema_" ) ) );
-
-    // ------------------------------------------------------------------------
-
-    std::vector<containers::Schema> peripheral;
-
-    const auto peripheral_arr = *JSON::get_array( _obj, "peripheral_schema_" );
-
-    for ( size_t i = 0; i < peripheral_arr.size(); ++i )
+    if ( _obj.has( "population_schema_" ) )
         {
-            peripheral.push_back( containers::Schema(
-                *peripheral_arr.getObject( static_cast<unsigned int>( i ) ) ) );
+            impl().population_schema_.reset( new containers::Schema(
+                *JSON::get_object( _obj, "population_schema_" ) ) );
         }
 
-    impl().peripheral_schema_.reset(
-        new std::vector<containers::Schema>( peripheral ) );
+    // ------------------------------------------------------------------------
+    // Note that subensembles do not have schemata.
+
+    if ( _obj.has( "peripheral_schema_" ) )
+        {
+            std::vector<containers::Schema> peripheral;
+
+            const auto peripheral_arr =
+                *JSON::get_array( _obj, "peripheral_schema_" );
+
+            for ( size_t i = 0; i < peripheral_arr.size(); ++i )
+                {
+                    peripheral.push_back(
+                        containers::Schema( *peripheral_arr.getObject(
+                            static_cast<unsigned int>( i ) ) ) );
+                }
+
+            impl().peripheral_schema_.reset(
+                new std::vector<containers::Schema>( peripheral ) );
+        }
 
     // ------------------------------------------------------------------------
 
@@ -74,6 +84,48 @@ DecisionTreeEnsemble::DecisionTreeEnsemble(
                 impl().hyperparameters_,
                 loss_function_,
                 *trees_objects.getObject( static_cast<unsigned int>( i ) ) ) );
+        }
+
+    // ----------------------------------------
+    // Extract subensembles_avg_
+
+    auto features_avg = JSON::get_array( _obj, "subfeatures1_" );
+
+    subensembles_avg_ = std::vector<std::optional<DecisionTreeEnsemble>>(
+        features_avg->size() );
+
+    for ( size_t i = 0; i < features_avg->size(); ++i )
+        {
+            auto obj =
+                features_avg->getObject( static_cast<unsigned int>( i ) );
+
+            if ( obj )
+                {
+                    subensembles_avg_[i] =
+                        std::make_optional<DecisionTreeEnsemble>(
+                            encoding(), *obj );
+                }
+        }
+
+    // ----------------------------------------
+    // Extract subensembles_sum_
+
+    auto features_sum = JSON::get_array( _obj, "subfeatures2_" );
+
+    subensembles_sum_ = std::vector<std::optional<DecisionTreeEnsemble>>(
+        features_sum->size() );
+
+    for ( size_t i = 0; i < features_sum->size(); ++i )
+        {
+            auto obj =
+                features_sum->getObject( static_cast<unsigned int>( i ) );
+
+            if ( obj )
+                {
+                    subensembles_sum_[i] =
+                        std::make_optional<DecisionTreeEnsemble>(
+                            encoding(), *obj );
+                }
         }
 
     // ------------------------------------------------------------------------
@@ -89,6 +141,10 @@ DecisionTreeEnsemble::DecisionTreeEnsemble( const DecisionTreeEnsemble &_other )
     loss_function_ = lossfunctions::LossFunctionParser::parse(
         _other.loss_function().type(), impl().hyperparameters_, targets_ );
 
+    subensembles_avg_ = _other.subensembles_avg_;
+
+    subensembles_sum_ = _other.subensembles_sum_;
+
     set_comm( impl_.comm_ );
 }
 
@@ -101,6 +157,10 @@ DecisionTreeEnsemble::DecisionTreeEnsemble(
 {
     loss_function_ = lossfunctions::LossFunctionParser::parse(
         _other.loss_function().type(), impl().hyperparameters_, targets_ );
+
+    subensembles_avg_ = std::move( _other.subensembles_avg_ );
+
+    subensembles_sum_ = std::move( _other.subensembles_sum_ );
 
     set_comm( impl_.comm_ );
 }
@@ -123,34 +183,6 @@ void DecisionTreeEnsemble::calc_initial_prediction()
     loss_function().apply_inverse( &initial_prediction() );
 }
 
-// ----------------------------------------------------------------------------
-
-Float DecisionTreeEnsemble::calc_loss_reduction(
-    const decisiontrees::DecisionTree &_decision_tree,
-    const std::vector<Float> &_yhat_old,
-    const std::vector<Float> &_predictions ) const
-{
-    assert_true( _yhat_old.size() == targets().size() );
-    assert_true( _predictions.size() == targets().size() );
-
-    std::vector<Float> yhat_new( _yhat_old.size() );
-
-    const auto update_rate = _decision_tree.update_rate();
-
-    const auto update_function = [update_rate](
-                                     const Float y_old, const Float y_new ) {
-        return y_old + y_new * update_rate;
-    };
-
-    std::transform(
-        _yhat_old.begin(),
-        _yhat_old.end(),
-        _predictions.begin(),
-        yhat_new.begin(),
-        update_function );
-
-    return loss_function_->evaluate_tree( yhat_new );
-}
 // ----------------------------------------------------------------------------
 
 void DecisionTreeEnsemble::check_plausibility_of_targets(
@@ -337,28 +369,33 @@ void DecisionTreeEnsemble::fit(
 
 // ----------------------------------------------------------------------------
 
-void DecisionTreeEnsemble::fit_new_feature()
+void DecisionTreeEnsemble::fit_new_feature(
+    const std::shared_ptr<lossfunctions::LossFunction> &_loss_function,
+    const std::shared_ptr<const TableHolder> &_table_holder,
+    const std::vector<containers::Subfeatures> &_subfeatures )
 {
     // ------------------------------------------------------------------------
 
-    assert_true(
-        table_holder().main_tables_.size() ==
-        table_holder().peripheral_tables_.size() );
+    assert_true( _loss_function );
 
-    assert_true( table_holder().main_tables_.size() > 0 );
+    assert_true( _table_holder );
+
+    assert_true(
+        _table_holder->main_tables_.size() ==
+        _table_holder->peripheral_tables_.size() );
+
+    assert_true( _table_holder->main_tables_.size() == _subfeatures.size() );
+
+    assert_true( _table_holder->main_tables_.size() > 0 );
 
     // ------------------------------------------------------------------------
-    // Create new loss function.
+    // Recreate sample weights.
 
-    const auto nrows = table_holder().main_tables_[0].nrows();
+    const auto sample_weights = _loss_function->make_sample_weights();
 
-    const auto sample_weights = sampler().make_sample_weights( nrows );
+    _loss_function->calc_sums();
 
-    loss_function().calc_sample_index( sample_weights );
-
-    loss_function().calc_sums();
-
-    loss_function().commit();
+    _loss_function->commit();
 
     // ------------------------------------------------------------------------
 
@@ -369,16 +406,18 @@ void DecisionTreeEnsemble::fit_new_feature()
     std::vector<std::vector<Float>> predictions;
 
     for ( size_t ix_table_used = 0;
-          ix_table_used < table_holder().main_tables_.size();
+          ix_table_used < _table_holder->main_tables_.size();
           ++ix_table_used )
         {
             // ------------------------------------------------------------------------
 
             const auto &output_table =
-                table_holder().main_tables_[ix_table_used];
+                _table_holder->main_tables_[ix_table_used];
 
             const auto &input_table =
-                table_holder().peripheral_tables_[ix_table_used];
+                _table_holder->peripheral_tables_[ix_table_used];
+
+            const auto &subfeatures = _subfeatures[ix_table_used];
 
             // ------------------------------------------------------------------------
 
@@ -408,14 +447,14 @@ void DecisionTreeEnsemble::fit_new_feature()
                 aggregations;
 
             aggregations.push_back( std::make_shared<aggregations::Avg>(
-                loss_function_,
+                _loss_function,
                 matches_ptr,
                 input_table,
                 output_table,
                 &comm() ) );
 
             aggregations.push_back( std::make_shared<aggregations::Sum>(
-                loss_function_, input_table, output_table, &comm() ) );
+                _loss_function, input_table, output_table, &comm() ) );
 
             // ------------------------------------------------------------------------
             // Iterate through aggregations.
@@ -432,17 +471,19 @@ void DecisionTreeEnsemble::fit_new_feature()
                     candidates.back().fit(
                         output_table,
                         input_table,
+                        subfeatures,
                         matches_ptr.begin(),
                         matches_ptr.end() );
 
-                    const auto new_predictions = candidates.back().transform(
-                        output_table, input_table );
+                    auto new_predictions = candidates.back().transform(
+                        output_table, input_table, subfeatures );
 
-                    candidates.back().calc_update_rate(
-                        yhat_old(), new_predictions );
+                    _loss_function->reduce_predictions( &new_predictions );
 
-                    auto loss_reduction = calc_loss_reduction(
-                        candidates.back(), yhat_old(), new_predictions );
+                    candidates.back().calc_update_rate( new_predictions );
+
+                    const auto loss_reduction = _loss_function->evaluate_tree(
+                        candidates.back().update_rate(), new_predictions );
 
                     loss.push_back( loss_reduction );
 
@@ -467,19 +508,18 @@ void DecisionTreeEnsemble::fit_new_feature()
     // ------------------------------------------------------------------------
     // Update yhat_old_.
 
-    assert_true( yhat_old_ );
+    _loss_function->update_yhat_old(
+        candidates[dist].update_rate() * hyperparameters().eta_,
+        best_predictions );
 
-    update_predictions(
-        candidates[dist].update_rate(), best_predictions, &yhat_old() );
+    _loss_function->calc_gradients();
 
-    loss_function().calc_gradients( yhat_old_ );
-
-    loss_function().commit();
+    _loss_function->commit();
 
     // ------------------------------------------------------------------------
     // Add best candidate to trees
 
-    trees().push_back( std::move( candidates[dist] ) );
+    trees().emplace_back( std::move( candidates[dist] ) );
 
     // ------------------------------------------------------------------------
     // Get rid of data no longer needed.
@@ -491,20 +531,52 @@ void DecisionTreeEnsemble::fit_new_feature()
 
 // ----------------------------------------------------------------------------
 
-std::vector<Float> DecisionTreeEnsemble::generate_predictions(
-    const decisiontrees::DecisionTree &_decision_tree,
-    const TableHolder &_table_holder ) const
+void DecisionTreeEnsemble::fit_subensembles(
+    const std::shared_ptr<const TableHolder> &_table_holder,
+    const std::shared_ptr<const logging::AbstractLogger> _logger,
+    const std::shared_ptr<lossfunctions::LossFunction> &_loss_function )
 {
-    const auto peripheral_used = _decision_tree.peripheral_used();
+    assert_true( _table_holder );
 
-    return _decision_tree.transform(
-        _table_holder.main_tables_[peripheral_used],
-        _table_holder.peripheral_tables_[peripheral_used] );
+    assert_true( _loss_function );
+
+    SubtreeHelper::fit_subensembles(
+        _table_holder,
+        _logger,
+        *this,
+        _loss_function,
+        &comm(),
+        &subensembles_avg_,
+        &subensembles_sum_ );
 }
 
 // ----------------------------------------------------------------------------
 
-void DecisionTreeEnsemble::init(
+std::vector<Float> DecisionTreeEnsemble::generate_predictions(
+    const decisiontrees::DecisionTree &_decision_tree,
+    const TableHolder &_table_holder,
+    const std::vector<containers::Subfeatures> &_subfeatures ) const
+{
+    const auto peripheral_used = _decision_tree.peripheral_used();
+
+    assert_true( peripheral_used < _table_holder.main_tables_.size() );
+
+    assert_true( peripheral_used < _table_holder.peripheral_tables_.size() );
+
+    assert_true( peripheral_used < _subfeatures.size() );
+
+    return _decision_tree.transform(
+        _table_holder.main_tables_[peripheral_used],
+        _table_holder.peripheral_tables_[peripheral_used],
+        _subfeatures[peripheral_used] );
+}
+
+// ----------------------------------------------------------------------------
+
+std::pair<
+    std::shared_ptr<lossfunctions::LossFunction>,
+    std::shared_ptr<const TableHolder>>
+DecisionTreeEnsemble::init(
     const containers::DataFrameView &_population,
     const std::vector<containers::DataFrame> &_peripheral )
 {
@@ -529,29 +601,33 @@ void DecisionTreeEnsemble::init(
     calc_initial_prediction();
 
     // ------------------------------------------------------------------------
-    // Calculate gradient.
+    // Initialize the loss function.
 
-    yhat_old_ = std::make_shared<std::vector<Float>>(
-        _population.nrows(), initial_prediction() );
+    loss_function().init_yhat_old( initial_prediction() );
 
-    loss_function().calc_gradients( yhat_old_ );
+    loss_function().calc_gradients();
+
+    loss_function().calc_sampling_rate(
+        hyperparameters().seed_, hyperparameters().sampling_factor_, &comm() );
 
     // ------------------------------------------------------------------------
     // Build table holder.
 
-    table_holder_ = std::make_shared<const TableHolder>(
+    const auto table_holder = std::make_shared<const TableHolder>(
         placeholder(), _population, _peripheral, peripheral_names() );
 
     // ------------------------------------------------------------------------
-    // The sampling rate is used to determine the share of subsamples from the
-    // population table.
 
-    const auto nrows = table_holder().main_tables_[0].nrows();
+    return std::make_pair( loss_function_, table_holder );
+}
 
-    sampler().calc_sampling_rate(
-        nrows, hyperparameters().sampling_factor_, &comm() );
+// ----------------------------------------------------------------------------
 
-    // ------------------------------------------------------------------------
+std::vector<containers::Predictions> DecisionTreeEnsemble::make_subpredictions(
+    const TableHolder &_table_holder ) const
+{
+    return SubtreeHelper::make_predictions(
+        _table_holder, subensembles_avg_, subensembles_sum_ );
 }
 
 // ----------------------------------------------------------------------------
@@ -588,6 +664,10 @@ DecisionTreeEnsemble &DecisionTreeEnsemble::operator=(
 
     loss_function_ = lossfunctions::LossFunctionParser::parse(
         _other.loss_function().type(), impl().hyperparameters_, targets_ );
+
+    subensembles_avg_ = std::move( _other.subensembles_avg_ );
+
+    subensembles_sum_ = std::move( _other.subensembles_sum_ );
 
     set_comm( impl_.comm_ );
 
@@ -841,11 +921,14 @@ containers::Features DecisionTreeEnsemble::transform(
 // ----------------------------------------------------------------------------
 
 std::vector<Float> DecisionTreeEnsemble::transform(
-    const TableHolder &_table_holder, size_t _n_feature ) const
+    const TableHolder &_table_holder,
+    const std::vector<containers::Subfeatures> &_subfeatures,
+    size_t _n_feature ) const
 {
     assert_true( _n_feature < num_features() );
 
-    return generate_predictions( trees()[_n_feature], _table_holder );
+    return generate_predictions(
+        trees()[_n_feature], _table_holder, _subfeatures );
 }
 
 // ----------------------------------------------------------------------------
@@ -919,6 +1002,48 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json_obj(
 
     obj.set( "trees_", trees_arr );
 
+    // ----------------------------------------
+    // Extract subensembles_avg_
+
+    Poco::JSON::Array::Ptr features_avg( new Poco::JSON::Array() );
+
+    for ( const auto &sub : subensembles_avg_ )
+        {
+            if ( sub )
+                {
+                    auto obj = Poco::JSON::Object::Ptr(
+                        new Poco::JSON::Object( sub->to_json_obj() ) );
+                    features_avg->add( obj );
+                }
+            else
+                {
+                    features_avg->add( Poco::Dynamic::Var() );
+                }
+        }
+
+    obj.set( "subfeatures1_", features_avg );
+
+    // ----------------------------------------
+    // Extract subensembles_sum_
+
+    Poco::JSON::Array::Ptr features_sum( new Poco::JSON::Array() );
+
+    for ( const auto &sub : subensembles_sum_ )
+        {
+            if ( sub )
+                {
+                    auto obj = Poco::JSON::Object::Ptr(
+                        new Poco::JSON::Object( sub->to_json_obj() ) );
+                    features_sum->add( obj );
+                }
+            else
+                {
+                    features_sum->add( Poco::Dynamic::Var() );
+                }
+        }
+
+    obj.set( "subfeatures2_", features_sum );
+
     // ------------------------------------------------------------------------
 
     return obj;
@@ -926,14 +1051,31 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json_obj(
 
 // ----------------------------------------------------------------------------
 
-std::string DecisionTreeEnsemble::to_sql() const
+std::string DecisionTreeEnsemble::to_sql(
+    const std::string &_feature_prefix, const size_t _offset ) const
 {
     std::stringstream sql;
+
+    for ( size_t i = 0; i < subensembles_avg_.size(); ++i )
+        {
+            if ( subensembles_avg_[i] )
+                {
+                    sql << subensembles_avg_[i]->to_sql(
+                        std::to_string( i + 1 ) + "_", 0 );
+
+                    assert_true( subensembles_sum_[i] );
+
+                    sql << subensembles_sum_[i]->to_sql(
+                        std::to_string( i + 1 ) + "_",
+                        subensembles_avg_[i]->num_features() );
+                }
+        }
 
     for ( size_t i = 0; i < trees().size(); ++i )
         {
             sql << trees()[i].to_sql(
-                std::to_string( i + 1 ), hyperparameters().use_timestamps_ );
+                _feature_prefix + std::to_string( _offset + i + 1 ),
+                hyperparameters().use_timestamps_ );
         }
 
     return sql.str();

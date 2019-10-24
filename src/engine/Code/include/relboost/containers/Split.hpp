@@ -63,6 +63,7 @@ struct Split
             _data_used == enums::DataUsed::numerical_input_is_nan ||
             _data_used == enums::DataUsed::numerical_output ||
             _data_used == enums::DataUsed::numerical_output_is_nan ||
+            _data_used == enums::DataUsed::subfeatures ||
             _data_used == enums::DataUsed::time_stamps_diff ||
             _data_used == enums::DataUsed::time_stamps_window );
 

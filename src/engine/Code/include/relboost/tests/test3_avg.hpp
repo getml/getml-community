@@ -104,7 +104,10 @@ void test3_avg()
             if ( peripheral_df.time_stamp( i ) <=
                  time_stamps_population_col[jk] )
                 {
-                    counts[jk]++;
+                    if ( peripheral_df.numerical( i, 0 ) < 50.0 )
+                        {
+                            ++counts[jk];
+                        }
                 }
         }
 
@@ -127,7 +130,8 @@ void test3_avg()
     // ---------------------------------------------
     // Build data model.
 
-    const auto population_json = load_json( "../../tests/relboost/test3/schema.json" );
+    const auto population_json =
+        load_json( "../../tests/relboost/test3/schema.json" );
 
     const auto population =
         std::make_shared<const relboost::ensemble::Placeholder>(

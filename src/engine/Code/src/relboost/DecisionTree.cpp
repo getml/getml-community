@@ -48,7 +48,8 @@ DecisionTree::DecisionTree(
     update_rate_ = JSON::get_value<Float>( _obj, "update_rate_" );
 
     root_.reset( new DecisionTreeNode(
-        utils::ConditionMaker( encoding_, hyperparameters().delta_t_ ),
+        utils::ConditionMaker(
+            encoding_, hyperparameters().delta_t_, peripheral_used() ),
         0,  // _depth
         hyperparameters_,
         loss_function_,
@@ -60,6 +61,7 @@ DecisionTree::DecisionTree(
 void DecisionTree::fit(
     const containers::DataFrameView& _output,
     const containers::DataFrame& _input,
+    const containers::Subfeatures& _subfeatures,
     const std::vector<const containers::Match*>::iterator _begin,
     const std::vector<const containers::Match*>::iterator _end )
 {
@@ -78,14 +80,15 @@ void DecisionTree::fit(
     assert_true( encoding_ );
 
     root_.reset( new DecisionTreeNode(
-        utils::ConditionMaker( encoding_, hyperparameters().delta_t_ ),
+        utils::ConditionMaker(
+            encoding_, hyperparameters().delta_t_, peripheral_used() ),
         0,
         hyperparameters_,
         loss_function_,
         0.0,
         &comm() ) );
 
-    root_->fit( _output, _input, _begin, _end, &intercept_ );
+    root_->fit( _output, _input, _subfeatures, _begin, _end, &intercept_ );
 
     // ------------------------------------------------------------------------
     // Reset the loss function, so that it can be used for the next tree.
@@ -128,14 +131,6 @@ std::string DecisionTree::to_sql(
     // -------------------------------------------------------------------
 
     std::stringstream sql;
-
-    // -------------------------------------------------------------------
-
-    /*for ( size_t i = 0; i < subtrees().size(); ++i )
-        {
-            sql << subtrees()[i].to_sql(
-                _feature_num + "_" + std::to_string( i + 1 ), _use_timestamps );
-        }*/
 
     // -------------------------------------------------------------------
 
@@ -237,7 +232,8 @@ std::string DecisionTree::to_sql(
 
 std::vector<Float> DecisionTree::transform(
     const containers::DataFrameView& _output,
-    const containers::DataFrame& _input ) const
+    const containers::DataFrame& _input,
+    const containers::Subfeatures& _subfeatures ) const
 {
     // ------------------------------------------------------------------------
 
@@ -270,8 +266,8 @@ std::vector<Float> DecisionTree::transform(
 
             for ( size_t i = 0; i < matches.size(); ++i )
                 {
-                    weights[i] =
-                        root_->transform( _output, _input, matches[i] );
+                    weights[i] = root_->transform(
+                        _output, _input, _subfeatures, matches[i] );
                 }
 
             // ------------------------------------------------------------------------

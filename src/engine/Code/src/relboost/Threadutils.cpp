@@ -37,7 +37,15 @@ void Threadutils::fit_ensemble(
                 relboost::utils::DataFrameScatterer::scatter_data_frame(
                     _population, _thread_nums, _this_thread_num );
 
-            _ensemble->init( population_subview, _peripheral );
+            const auto [loss_function, table_holder] =
+                _ensemble->init( population_subview, _peripheral );
+
+            _ensemble->fit_subensembles( table_holder, _logger, loss_function );
+
+            auto predictions = _ensemble->make_subpredictions( *table_holder );
+
+            auto subfeatures =
+                SubtreeHelper::make_subfeatures( *table_holder, predictions );
 
             const auto num_features =
                 _ensemble->hyperparameters().num_features_;
@@ -46,7 +54,8 @@ void Threadutils::fit_ensemble(
 
             for ( size_t i = 0; i < num_features; ++i )
                 {
-                    _ensemble->fit_new_feature();
+                    _ensemble->fit_new_feature(
+                        loss_function, table_holder, subfeatures );
 
                     if ( !silent && _logger )
                         {
@@ -62,6 +71,8 @@ void Threadutils::fit_ensemble(
                 {
                     throw std::runtime_error( e.what() );
                 }
+
+            std::cout << e.what() << std::endl;  // TODO: Remove this line!
         }
 }
 
@@ -104,12 +115,17 @@ void Threadutils::transform_ensemble(
                 _peripheral,
                 _ensemble.peripheral_names() );
 
+            auto predictions = _ensemble.make_subpredictions( table_holder );
+
+            auto subfeatures =
+                SubtreeHelper::make_subfeatures( table_holder, predictions );
+
             const auto silent = _ensemble.hyperparameters().silent_;
 
             for ( size_t i = 0; i < _ensemble.num_features(); ++i )
                 {
                     const auto new_feature =
-                        _ensemble.transform( table_holder, i );
+                        _ensemble.transform( table_holder, subfeatures, i );
 
                     copy(
                         population_subview.rows(),
@@ -130,6 +146,8 @@ void Threadutils::transform_ensemble(
                 {
                     throw std::runtime_error( e.what() );
                 }
+
+            std::cout << e.what() << std::endl;  // TODO: Remove this line!
         }
 }
 

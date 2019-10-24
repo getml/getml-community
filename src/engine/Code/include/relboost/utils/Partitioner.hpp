@@ -662,6 +662,45 @@ struct Partitioner<enums::DataUsed::same_units_numerical_is_nan>
 // ----------------------------------------------------------------------------
 
 template <>
+struct Partitioner<enums::DataUsed::subfeatures>
+{
+    // --------------------------------------------------------------------
+
+    static std::vector<const containers::Match*>::iterator partition(
+        const containers::Split& _split,
+        const containers::Subfeatures& _subfeatures,
+        const std::vector<const containers::Match*>::iterator _begin,
+        const std::vector<const containers::Match*>::iterator _end )
+    {
+        const auto partition_function =
+            [&_split, &_subfeatures]( const containers::Match* ptr ) {
+                return is_greater( _split, _subfeatures, *ptr );
+            };
+
+        return std::partition( _begin, _end, partition_function );
+    }
+
+    // --------------------------------------------------------------------
+
+    static bool is_greater(
+        const containers::Split& _split,
+        const containers::Subfeatures& _subfeatures,
+        const containers::Match& _match )
+    {
+        const auto i = _match.ix_input;
+        const auto j = _split.column_;
+
+        assert_true( j < _subfeatures.size() );
+
+        return _subfeatures[j][i] > _split.critical_value_;
+    }
+
+    // --------------------------------------------------------------------
+};
+
+// ----------------------------------------------------------------------------
+
+template <>
 struct Partitioner<enums::DataUsed::time_stamps_diff>
 {
     // --------------------------------------------------------------------

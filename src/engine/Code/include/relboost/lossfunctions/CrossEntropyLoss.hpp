@@ -87,25 +87,25 @@ class CrossEntropyLoss : public LossFunction
 
    public:
     /// Calculates first and second derivatives.
-    void calc_gradients(
-        const std::shared_ptr<const std::vector<Float>>& _yhat_old ) final;
+    void calc_gradients() final;
 
-    /// Evaluates split given matches. In this case, the loss function effective
-    /// turns into XGBoost.
+    /// Evaluates split given matches. In this case, the loss function
+    /// effective turns into XGBoost.
     Float evaluate_split(
         const Float _old_intercept,
         const Float _old_weight,
         const std::array<Float, 3>& _weights ) final;
 
     /// Evaluates and entire tree.
-    Float evaluate_tree( const std::vector<Float>& _yhat_new ) final;
+    Float evaluate_tree(
+        const Float _update_rate, const std::vector<Float>& _yhat_new ) final;
 
     // -----------------------------------------------------------------
 
    public:
     // Applies the inverse of the transformation function below. Some loss
-    // functions (such as CrossEntropyLoss) require this. For others, this won't
-    // do anything at all.
+    // functions (such as CrossEntropyLoss) require this. For others, this
+    // won't do anything at all.
     void apply_inverse( Float* yhat_ ) const final
     {
         *yhat_ = inverse_logistic_function( *yhat_ );
@@ -121,12 +121,16 @@ class CrossEntropyLoss : public LossFunction
         } );
     }
 
-    /// Calculates an index that contains all non-zero samples.
-    void calc_sample_index(
-        const std::shared_ptr<const std::vector<Float>>& _sample_weights )
+    /// Calculates the sampling rate (the share of samples that will be
+    /// drawn for each feature).
+    void calc_sampling_rate(
+        const unsigned int _seed,
+        const Float _sampling_factor,
+        multithreading::Communicator* _comm ) final
     {
-        sample_weights_ = _sample_weights;
-        sample_index_ = impl_.calc_sample_index( _sample_weights );
+        sampler_ = std::make_unique<utils::Sampler>( _seed );
+        sampler().calc_sampling_rate(
+            targets().size(), _sampling_factor, _comm );
     }
 
     /// Calculates sum_g_ and sum_h_.
@@ -142,14 +146,44 @@ class CrossEntropyLoss : public LossFunction
     }
 
     /// Calculates the update rate.
-    Float calc_update_rate(
-        const std::vector<Float>& _yhat_old,
-        const std::vector<Float>& _predictions ) final
+    Float calc_update_rate( const std::vector<Float>& _predictions ) final
     {
-        return impl_.calc_update_rate( _yhat_old, _predictions, &comm() );
+        return impl_.calc_update_rate( yhat_old_, _predictions, &comm() );
     }
 
-    /// Calculates two new weights given matches. This just reduces to the
+    /// Loss functions have no etas - nothing to do here.
+    void calc_etas(
+        const enums::Aggregation _agg,
+        const std::vector<size_t>& _indices_current,
+        const std::vector<Float>& _eta1,
+        const std::vector<Float>& _eta1_old,
+        const std::vector<Float>& _eta2,
+        const std::vector<Float>& _eta2_old ) final
+    {
+    }
+
+    /// Calculates new weights given eta and indices.
+    std::array<Float, 3> calc_weights(
+        const enums::Aggregation _agg,
+        const Float _old_weight,
+        const std::vector<size_t>& _indices,
+        const std::vector<size_t>& _indices_current,
+        const std::vector<Float>& _eta1,
+        const std::vector<Float>& _eta1_old,
+        const std::vector<Float>& _eta2,
+        const std::vector<Float>& _eta2_old ) final
+    {
+        return impl_.calc_weights(
+            _agg,
+            _old_weight,
+            _indices,
+            _eta1,
+            _eta2,
+            yhat_committed_,
+            &comm() );
+    }
+
+    /// Calculates new weights given matches. This just reduces to the
     /// normal XGBoost approach.
     std::vector<std::array<Float, 3>> calc_weights(
         const enums::Revert _revert,
@@ -171,24 +205,6 @@ class CrossEntropyLoss : public LossFunction
             &comm() );
     }
 
-    /// Calculates two new weights given eta and indices.
-    std::array<Float, 3> calc_weights(
-        const enums::Aggregation _agg,
-        const Float _old_weight,
-        const std::vector<size_t>& _indices,
-        const std::vector<Float>& _eta1,
-        const std::vector<Float>& _eta2 ) final
-    {
-        return impl_.calc_weights(
-            _agg,
-            _old_weight,
-            _indices,
-            _eta1,
-            _eta2,
-            yhat_committed_,
-            &comm() );
-    }
-
     /// Calculates the new yhat given eta, indices and the new weights.
     void calc_yhat(
         const enums::Aggregation _agg,
@@ -196,7 +212,9 @@ class CrossEntropyLoss : public LossFunction
         const std::array<Float, 3>& _new_weights,
         const std::vector<size_t>& _indices,
         const std::vector<Float>& _eta1,
-        const std::vector<Float>& _eta2 ) final
+        const std::vector<Float>& _eta1_old,
+        const std::vector<Float>& _eta2,
+        const std::vector<Float>& _eta2_old ) final
     {
         impl_.calc_yhat(
             _agg,
@@ -214,7 +232,7 @@ class CrossEntropyLoss : public LossFunction
     std::shared_ptr<const lossfunctions::LossFunction> child() const final
     {
         return std::shared_ptr<const lossfunctions::LossFunction>();
-    };
+    }
 
     /// Deletes all resources.
     void clear() final
@@ -224,20 +242,17 @@ class CrossEntropyLoss : public LossFunction
         sample_weights_.reset();
     }
 
-    /// Commits _yhat_old.
+    /// Commits yhat_old_.
     void commit() final
     {
         assert_true( yhat_old().size() == targets().size() );
-        auto zeros = std::vector<Float>( targets().size() );
         auto weights = std::array<Float, 3>( {0.0, 0.0, 0.0} );
         auto indices = std::vector<size_t>( 0 );
-        commit( zeros, zeros, indices, weights );
+        commit( indices, weights );
     }
 
     /// Recalculates sum_h_yhat_committed_ and loss_committed_.
     void commit(
-        const std::vector<Float>& _eta1,
-        const std::vector<Float>& _eta2,
         const std::vector<size_t>& _indices,
         const std::array<Float, 3>& _weights ) final
     {
@@ -279,6 +294,25 @@ class CrossEntropyLoss : public LossFunction
                    &comm() );
     }
 
+    /// Initializes yhat_old_ by setting it to the initial prediction.
+    void init_yhat_old( const Float _initial_prediction ) final
+    {
+        initial_prediction_ = _initial_prediction;
+        yhat_old_ = std::vector<Float>( targets().size(), _initial_prediction );
+    }
+
+    /// Generates the sample weights.
+    const std::shared_ptr<const std::vector<Float>> make_sample_weights() final
+    {
+        sample_weights_ = sampler().make_sample_weights( targets().size() );
+        sample_index_ = impl_.calc_sample_index( sample_weights_ );
+        return sample_weights_;
+    }
+
+    /// Reduces the predictions - since this is a loss function, there is
+    /// nothing to reduce.
+    void reduce_predictions( std::vector<Float>* _predictions ) final {}
+
     /// Resets critical resources to zero.
     void reset() final
     {
@@ -286,6 +320,9 @@ class CrossEntropyLoss : public LossFunction
         std::fill( yhat_.begin(), yhat_.end(), 0.0 );
         std::fill( yhat_committed_.begin(), yhat_committed_.end(), 0.0 );
     }
+
+    /// Resets yhat_old to the initial prediction.
+    void reset_yhat_old() final { init_yhat_old( initial_prediction_ ); }
 
     /// Resizes critical resources.
     void resize( size_t _size ) final
@@ -308,7 +345,7 @@ class CrossEntropyLoss : public LossFunction
     void revert_to_commit() final
     {
         assert_true( false );
-        // ToDO
+        // TODO
     };
 
     /// Reverts the weights to the last time commit has been called.
@@ -326,13 +363,20 @@ class CrossEntropyLoss : public LossFunction
     /// Generates the predictions.
     Float transform( const std::vector<Float>& _weights ) const final
     {
-        assert_true( false && "ToDO" );
+        assert_true( false && "TODO" );
         return 0.0;
     }
 
-    /// Describes the type of the loss function (SquareLoss, CrossEntropyLoss,
-    /// etc.)
+    /// Describes the type of the loss function (SquareLoss,
+    /// CrossEntropyLoss, etc.)
     std::string type() const final { return "CrossEntropyLoss"; }
+
+    /// Updates yhat_old_ by adding the predictions.
+    void update_yhat_old(
+        const Float _update_rate, const std::vector<Float>& _predictions ) final
+    {
+        impl_.update_yhat_old( _update_rate, _predictions, &yhat_old_ );
+    }
 
     // -----------------------------------------------------------------
 
@@ -418,6 +462,13 @@ class CrossEntropyLoss : public LossFunction
     }
 
     /// Trivial accessor
+    utils::Sampler& sampler()
+    {
+        assert_true( sampler_ );
+        return *sampler_;
+    }
+
+    /// Trivial accessor
     const std::vector<Float>& targets() const
     {
         assert_true( targets_ );
@@ -425,11 +476,7 @@ class CrossEntropyLoss : public LossFunction
     }
 
     /// Trivial accessor
-    const std::vector<Float>& yhat_old() const
-    {
-        assert_true( yhat_old_ );
-        return *yhat_old_;
-    }
+    const std::vector<Float>& yhat_old() const { return yhat_old_; }
 
     // -----------------------------------------------------------------
 
@@ -446,6 +493,9 @@ class CrossEntropyLoss : public LossFunction
     /// Shared pointer to hyperparameters
     const std::shared_ptr<const Hyperparameters> hyperparameters_;
 
+    /// The initial prediction (average of the target values).
+    Float initial_prediction_;
+
     /// The committed loss, needed for calculating the loss reduction.
     Float loss_committed_;
 
@@ -454,6 +504,9 @@ class CrossEntropyLoss : public LossFunction
 
     /// The weights used for the samples.
     std::shared_ptr<const std::vector<Float>> sample_weights_;
+
+    /// The sampler used to determine the sample weights.
+    std::unique_ptr<utils::Sampler> sampler_;
 
     /// Sum of g_, needed for the intercept.
     Float sum_g_;
@@ -464,7 +517,8 @@ class CrossEntropyLoss : public LossFunction
     /// Dot product of h_ and yhat_, needed for the intercept.
     Float sum_h_yhat_committed_;
 
-    /// The sum of the sample weights, which is needed for calculating the loss.
+    /// The sum of the sample weights, which is needed for calculating the
+    /// loss.
     Float sum_sample_weights_;
 
     /// The target variables.
@@ -477,10 +531,10 @@ class CrossEntropyLoss : public LossFunction
     std::vector<Float> yhat_committed_;
 
     /// Sum of all previous trees.
-    std::shared_ptr<const std::vector<Float>> yhat_old_;
+    std::vector<Float> yhat_old_;
 
-    /// Implementation class. Because impl_ depends on some other variables, it
-    /// is the last member variable.
+    /// Implementation class. Because impl_ depends on some other variables,
+    /// it is the last member variable.
     const LossFunctionImpl impl_;
 
     // -----------------------------------------------------------------

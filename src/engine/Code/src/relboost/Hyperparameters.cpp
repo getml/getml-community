@@ -13,6 +13,7 @@ Hyperparameters::Hyperparameters()
       max_depth_( 1 ),
       min_num_samples_( 200 ),
       num_features_( 10 ),
+      num_subfeatures_( 10 ),
       num_threads_( 0 ),
       reg_lambda_( 0.0 ),
       sampling_factor_( 1.0 ),
@@ -37,6 +38,7 @@ Hyperparameters::Hyperparameters( const Poco::JSON::Object& _obj )
       max_depth_( JSON::get_value<Int>( _obj, "max_depth_" ) ),
       min_num_samples_( JSON::get_value<Int>( _obj, "min_num_samples_" ) ),
       num_features_( JSON::get_value<Int>( _obj, "num_features_" ) ),
+      num_subfeatures_( JSON::get_value<Int>( _obj, "num_subfeatures_" ) ),
       num_threads_( JSON::get_value<Int>( _obj, "num_threads_" ) ),
       predictor_( _obj.getObject( "predictor_" ) ),
       reg_lambda_( JSON::get_value<Float>( _obj, "reg_lambda_" ) ),
@@ -107,6 +109,8 @@ Poco::JSON::Object::Ptr Hyperparameters::to_json_obj() const
     obj->set( "min_num_samples_", min_num_samples_ );
 
     obj->set( "num_features_", num_features_ );
+
+    obj->set( "num_subfeatures_", num_subfeatures_ );
 
     obj->set( "num_threads_", num_threads_ );
 

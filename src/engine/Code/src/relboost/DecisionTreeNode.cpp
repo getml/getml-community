@@ -191,6 +191,7 @@ void DecisionTreeNode::assert_aligned(
 void DecisionTreeNode::fit(
     const containers::DataFrameView& _output,
     const containers::DataFrame& _input,
+    const containers::Subfeatures& _subfeatures,
     const std::vector<const containers::Match*>::iterator _begin,
     const std::vector<const containers::Match*>::iterator _end,
     Float* _intercept )
@@ -216,7 +217,8 @@ void DecisionTreeNode::fit(
     // ------------------------------------------------------------------------
     // Try all possible splits.
 
-    auto candidates = try_all( *_intercept, _output, _input, _begin, _end );
+    auto candidates =
+        try_all( *_intercept, _output, _input, _subfeatures, _begin, _end );
 
     debug_log( "candidates.size(): " + std::to_string( candidates.size() ) );
 
@@ -243,7 +245,7 @@ void DecisionTreeNode::fit(
 
     const auto best_split = *it;
 
-    candidates.clear();
+    candidates = std::vector<containers::CandidateSplit>();
 
     // ------------------------------------------------------------------------
     // If the loss reduction is sufficient, then take this split.
@@ -259,7 +261,8 @@ void DecisionTreeNode::fit(
 
     split_ = best_split.split_.deep_copy();
 
-    const auto it_split = partition( _output, _input, _begin, _end );
+    const auto it_split =
+        partition( _output, _input, _subfeatures, _begin, _end );
 
     loss_function().commit(
         *_intercept, weight_, best_split.weights_, _begin, it_split, _end );
@@ -285,9 +288,11 @@ void DecisionTreeNode::fit(
         std::get<2>( best_split.weights_ ),
         &comm() ) );
 
-    child_greater_->fit( _output, _input, _begin, it_split, _intercept );
+    child_greater_->fit(
+        _output, _input, _subfeatures, _begin, it_split, _intercept );
 
-    child_smaller_->fit( _output, _input, it_split, _end, _intercept );
+    child_smaller_->fit(
+        _output, _input, _subfeatures, it_split, _end, _intercept );
 
     // ------------------------------------------------------------------------
 }
@@ -297,6 +302,7 @@ void DecisionTreeNode::fit(
 std::vector<const containers::Match*>::iterator DecisionTreeNode::partition(
     const containers::DataFrameView& _output,
     const containers::DataFrame& _input,
+    const containers::Subfeatures& _subfeatures,
     const std::vector<const containers::Match*>::iterator _begin,
     const std::vector<const containers::Match*>::iterator _end )
 {
@@ -382,6 +388,10 @@ std::vector<const containers::Match*>::iterator DecisionTreeNode::partition(
                         _output,
                         _begin,
                         _end );
+
+            case enums::DataUsed::subfeatures:
+                return utils::Partitioner<enums::DataUsed::subfeatures>::
+                    partition( split_, _subfeatures, _begin, _end );
 
             case enums::DataUsed::time_stamps_diff:
                 return utils::Partitioner<enums::DataUsed::time_stamps_diff>::
@@ -483,6 +493,7 @@ void DecisionTreeNode::to_sql(
 Float DecisionTreeNode::transform(
     const containers::DataFrameView& _output,
     const containers::DataFrame& _input,
+    const containers::Subfeatures& _subfeatures,
     const containers::Match& _match ) const
 {
     // ------------------------------------------------------------------------
@@ -602,6 +613,11 @@ Float DecisionTreeNode::transform(
                         _match );
                 break;
 
+            case enums::DataUsed::subfeatures:
+                is_greater = utils::Partitioner<enums::DataUsed::subfeatures>::
+                    is_greater( split_, _subfeatures, _match );
+                break;
+
             case enums::DataUsed::time_stamps_diff:
                 is_greater =
                     utils::Partitioner<enums::DataUsed::time_stamps_diff>::
@@ -628,11 +644,13 @@ Float DecisionTreeNode::transform(
 
     if ( is_greater )
         {
-            return child_greater_->transform( _output, _input, _match );
+            return child_greater_->transform(
+                _output, _input, _subfeatures, _match );
         }
     else
         {
-            return child_smaller_->transform( _output, _input, _match );
+            return child_smaller_->transform(
+                _output, _input, _subfeatures, _match );
         }
 
     // ------------------------------------------------------------------------
@@ -644,6 +662,7 @@ std::vector<containers::CandidateSplit> DecisionTreeNode::try_all(
     const Float _old_intercept,
     const containers::DataFrameView& _output,
     const containers::DataFrame& _input,
+    const containers::Subfeatures& _subfeatures,
     const std::vector<const containers::Match*>::iterator _begin,
     const std::vector<const containers::Match*>::iterator _end )
 {
@@ -661,6 +680,8 @@ std::vector<containers::CandidateSplit> DecisionTreeNode::try_all(
     try_numerical_input( _old_intercept, _input, _begin, _end, &candidates );
 
     try_numerical_output( _old_intercept, _output, _begin, _end, &candidates );
+
+    try_subfeatures( _old_intercept, _subfeatures, _begin, _end, &candidates );
 
     try_same_units_categorical(
         _old_intercept, _input, _output, _begin, _end, &candidates );
@@ -690,6 +711,8 @@ void DecisionTreeNode::try_categorical(
     const std::vector<const containers::Match*>::iterator _end,
     std::vector<containers::CandidateSplit>* _candidates )
 {
+    debug_log( "try_categorical." );
+
     auto critical_values_begin = _critical_values->begin();
 
     for ( size_t i = 0; i < _critical_values->size(); ++i )
@@ -697,8 +720,7 @@ void DecisionTreeNode::try_categorical(
             const auto cv = ( *_critical_values )[i];
 
             const auto update =
-                ( cv == ( *_critical_values )[0] ? enums::Update::calc_all
-                                                 : enums::Update::calc_diff );
+                ( i == 0 ? enums::Update::calc_all : enums::Update::calc_diff );
 
             if ( _revert == enums::Revert::True )
                 {
@@ -734,6 +756,8 @@ void DecisionTreeNode::try_categorical_input(
     const std::vector<const containers::Match*>::iterator _end,
     std::vector<containers::CandidateSplit>* _candidates )
 {
+    debug_log( "try_categorical_input." );
+
     for ( size_t j = 0; j < _input.num_categoricals(); ++j )
         {
             // ----------------------------------------------------------------
@@ -826,6 +850,8 @@ void DecisionTreeNode::try_categorical_output(
     const std::vector<const containers::Match*>::iterator _end,
     std::vector<containers::CandidateSplit>* _candidates )
 {
+    debug_log( "try_categorical_output." );
+
     for ( size_t j = 0; j < _output.num_categoricals(); ++j )
         {
             // ----------------------------------------------------------------
@@ -914,6 +940,8 @@ void DecisionTreeNode::try_discrete_input(
     const std::vector<const containers::Match*>::iterator _end,
     std::vector<containers::CandidateSplit>* _candidates )
 {
+    debug_log( "try_discrete_input." );
+
     for ( size_t j = 0; j < _input.num_discretes(); ++j )
         {
             // Moves all matches for which the critical value is NAN to the
@@ -949,21 +977,24 @@ void DecisionTreeNode::try_discrete_input(
 
             auto last_it = _begin;
 
-            for ( auto& cv : critical_values )
+            for ( auto cv = critical_values.begin();
+                  cv != critical_values.end();
+                  ++cv )
                 {
                     it = utils::Finder<enums::DataUsed::discrete_input>::
-                        next_split( cv, j, _input, it, nan_begin );
+                        next_split( *cv, j, _input, it, nan_begin );
 
                     const auto update =
-                        ( cv == critical_values[0] ? enums::Update::calc_all
-                                                   : enums::Update::calc_diff );
+                        ( cv == critical_values.begin()
+                              ? enums::Update::calc_all
+                              : enums::Update::calc_diff );
 
                     add_candidates(
                         enums::Revert::False,
                         update,
                         _old_intercept,
                         containers::Split(
-                            j, cv, enums::DataUsed::discrete_input ),
+                            j, *cv, enums::DataUsed::discrete_input ),
                         _begin,
                         last_it,
                         it,
@@ -998,6 +1029,8 @@ void DecisionTreeNode::try_discrete_output(
     const std::vector<const containers::Match*>::iterator _end,
     std::vector<containers::CandidateSplit>* _candidates )
 {
+    debug_log( "try_discrete_output." );
+
     for ( size_t j = 0; j < _output.num_discretes(); ++j )
         {
             // Moves all matches for which the critical value is NAN to the
@@ -1029,21 +1062,24 @@ void DecisionTreeNode::try_discrete_output(
 
             auto last_it = _begin;
 
-            for ( auto& cv : critical_values )
+            for ( auto cv = critical_values.begin();
+                  cv != critical_values.end();
+                  ++cv )
                 {
                     it = utils::Finder<enums::DataUsed::discrete_output>::
-                        next_split( cv, j, _output, it, nan_begin );
+                        next_split( *cv, j, _output, it, nan_begin );
 
                     const auto update =
-                        ( cv == critical_values[0] ? enums::Update::calc_all
-                                                   : enums::Update::calc_diff );
+                        ( cv == critical_values.begin()
+                              ? enums::Update::calc_all
+                              : enums::Update::calc_diff );
 
                     add_candidates(
                         enums::Revert::False,
                         update,
                         _old_intercept,
                         containers::Split(
-                            j, cv, enums::DataUsed::discrete_output ),
+                            j, *cv, enums::DataUsed::discrete_output ),
                         _begin,
                         last_it,
                         it,
@@ -1078,6 +1114,8 @@ void DecisionTreeNode::try_numerical_input(
     const std::vector<const containers::Match*>::iterator _end,
     std::vector<containers::CandidateSplit>* _candidates )
 {
+    debug_log( "try_numerical_input." );
+
     for ( size_t j = 0; j < _input.num_numericals(); ++j )
         {
             // Moves all matches for which the critical value is NAN to the
@@ -1113,21 +1151,24 @@ void DecisionTreeNode::try_numerical_input(
 
             auto last_it = _begin;
 
-            for ( auto& cv : critical_values )
+            for ( auto cv = critical_values.begin();
+                  cv != critical_values.end();
+                  ++cv )
                 {
                     it = utils::Finder<enums::DataUsed::numerical_input>::
-                        next_split( cv, j, _input, it, nan_begin );
+                        next_split( *cv, j, _input, it, nan_begin );
 
                     const auto update =
-                        ( cv == critical_values[0] ? enums::Update::calc_all
-                                                   : enums::Update::calc_diff );
+                        ( cv == critical_values.begin()
+                              ? enums::Update::calc_all
+                              : enums::Update::calc_diff );
 
                     add_candidates(
                         enums::Revert::False,
                         update,
                         _old_intercept,
                         containers::Split(
-                            j, cv, enums::DataUsed::numerical_input ),
+                            j, *cv, enums::DataUsed::numerical_input ),
                         _begin,
                         last_it,
                         it,
@@ -1162,6 +1203,8 @@ void DecisionTreeNode::try_numerical_output(
     const std::vector<const containers::Match*>::iterator _end,
     std::vector<containers::CandidateSplit>* _candidates )
 {
+    debug_log( "try_numerical_output." );
+
     for ( size_t j = 0; j < _output.num_numericals(); ++j )
         {
             // Moves all matches for which the critical value is NAN to the
@@ -1197,23 +1240,26 @@ void DecisionTreeNode::try_numerical_output(
 
             auto last_it = _begin;
 
-            for ( auto& cv : critical_values )
+            for ( auto cv = critical_values.begin();
+                  cv != critical_values.end();
+                  ++cv )
                 {
-                    debug_log( "cv: " + std::to_string( cv ) );
+                    debug_log( "cv: " + std::to_string( *cv ) );
 
                     it = utils::Finder<enums::DataUsed::numerical_output>::
-                        next_split( cv, j, _output, it, nan_begin );
+                        next_split( *cv, j, _output, it, nan_begin );
 
                     const auto update =
-                        ( cv == critical_values[0] ? enums::Update::calc_all
-                                                   : enums::Update::calc_diff );
+                        ( cv == critical_values.begin()
+                              ? enums::Update::calc_all
+                              : enums::Update::calc_diff );
 
                     add_candidates(
                         enums::Revert::False,
                         update,
                         _old_intercept,
                         containers::Split(
-                            j, cv, enums::DataUsed::numerical_output ),
+                            j, *cv, enums::DataUsed::numerical_output ),
                         _begin,
                         last_it,
                         it,
@@ -1249,6 +1295,8 @@ void DecisionTreeNode::try_same_units_categorical(
     const std::vector<const containers::Match*>::iterator _end,
     std::vector<containers::CandidateSplit>* _candidates )
 {
+    debug_log( "try_same_units_categorical." );
+
     for ( size_t output_col = 0; output_col < _output.num_categoricals();
           ++output_col )
         {
@@ -1306,6 +1354,8 @@ void DecisionTreeNode::try_same_units_discrete(
     const std::vector<const containers::Match*>::iterator _end,
     std::vector<containers::CandidateSplit>* _candidates )
 {
+    debug_log( "try_same_units_discrete." );
+
     for ( size_t output_col = 0; output_col < _output.num_discretes();
           ++output_col )
         {
@@ -1361,14 +1411,16 @@ void DecisionTreeNode::try_same_units_discrete(
 
                     auto last_it = _begin;
 
-                    for ( auto& cv : critical_values )
+                    for ( auto cv = critical_values.begin();
+                          cv != critical_values.end();
+                          ++cv )
                         {
-                            debug_log( "cv: " + std::to_string( cv ) );
+                            debug_log( "cv: " + std::to_string( *cv ) );
 
                             it = utils::Finder<
                                 enums::DataUsed::same_units_discrete>::
                                 next_split(
-                                    cv,
+                                    *cv,
                                     input_col,
                                     output_col,
                                     _input,
@@ -1377,7 +1429,7 @@ void DecisionTreeNode::try_same_units_discrete(
                                     nan_begin );
 
                             const auto update =
-                                ( cv == critical_values[0]
+                                ( cv == critical_values.begin()
                                       ? enums::Update::calc_all
                                       : enums::Update::calc_diff );
 
@@ -1388,7 +1440,7 @@ void DecisionTreeNode::try_same_units_discrete(
                                 containers::Split(
                                     output_col,
                                     input_col,
-                                    cv,
+                                    *cv,
                                     enums::DataUsed::same_units_discrete ),
                                 _begin,
                                 last_it,
@@ -1429,6 +1481,8 @@ void DecisionTreeNode::try_same_units_numerical(
     const std::vector<const containers::Match*>::iterator _end,
     std::vector<containers::CandidateSplit>* _candidates )
 {
+    debug_log( "try_same_units_numerical." );
+
     for ( size_t output_col = 0; output_col < _output.num_numericals();
           ++output_col )
         {
@@ -1484,14 +1538,16 @@ void DecisionTreeNode::try_same_units_numerical(
 
                     auto last_it = _begin;
 
-                    for ( auto& cv : critical_values )
+                    for ( auto cv = critical_values.begin();
+                          cv != critical_values.end();
+                          ++cv )
                         {
-                            debug_log( "cv: " + std::to_string( cv ) );
+                            debug_log( "cv: " + std::to_string( *cv ) );
 
                             it = utils::Finder<
                                 enums::DataUsed::same_units_numerical>::
                                 next_split(
-                                    cv,
+                                    *cv,
                                     input_col,
                                     output_col,
                                     _input,
@@ -1500,7 +1556,7 @@ void DecisionTreeNode::try_same_units_numerical(
                                     nan_begin );
 
                             const auto update =
-                                ( cv == critical_values[0]
+                                ( cv == critical_values.begin()
                                       ? enums::Update::calc_all
                                       : enums::Update::calc_diff );
 
@@ -1511,7 +1567,7 @@ void DecisionTreeNode::try_same_units_numerical(
                                 containers::Split(
                                     output_col,
                                     input_col,
-                                    cv,
+                                    *cv,
                                     enums::DataUsed::same_units_numerical ),
                                 _begin,
                                 last_it,
@@ -1542,6 +1598,84 @@ void DecisionTreeNode::try_same_units_numerical(
         }
 }
 
+// ----------------------------------------------------------------------------
+
+void DecisionTreeNode::try_subfeatures(
+    const Float _old_intercept,
+    const containers::Subfeatures& _subfeatures,
+    const std::vector<const containers::Match*>::iterator _begin,
+    const std::vector<const containers::Match*>::iterator _end,
+    std::vector<containers::CandidateSplit>* _candidates )
+{
+    debug_log( "try_subfeatures." );
+
+    for ( size_t j = 0; j < _subfeatures.size(); ++j )
+        {
+            assert_true( std::all_of(
+                _subfeatures[j].col().begin(),
+                _subfeatures[j].col().end(),
+                []( const Float val ) {
+                    return !std::isnan( val ) && !std::isinf( val );
+                } ) );
+
+            // Note that this sorts in DESCENDING order.
+            utils::Sorter<enums::DataUsed::subfeatures>::sort(
+                j, _subfeatures, _begin, _end );
+
+            const auto critical_values =
+                utils::CriticalValues::calc_subfeatures(
+                    j, _subfeatures, _begin, _end, &comm() );
+
+            if ( critical_values.size() == 0 ||
+                 critical_values.front() == critical_values.back() )
+                {
+                    continue;
+                }
+
+            assert_true( std::all_of(
+                critical_values.begin(),
+                critical_values.end(),
+                []( const Float cv ) {
+                    return !std::isnan( cv ) && !std::isinf( cv );
+                } ) );
+
+            auto it = _begin;
+
+            auto last_it = _begin;
+
+            for ( auto cv = critical_values.begin();
+                  cv != critical_values.end();
+                  ++cv )
+                {
+                    debug_log( "cv:" + std::to_string( *cv ) );
+
+                    it =
+                        utils::Finder<enums::DataUsed::subfeatures>::next_split(
+                            *cv, j, _subfeatures, it, _end );
+
+                    const auto update =
+                        ( cv == critical_values.begin()
+                              ? enums::Update::calc_all
+                              : enums::Update::calc_diff );
+
+                    add_candidates(
+                        enums::Revert::False,
+                        update,
+                        _old_intercept,
+                        containers::Split(
+                            j, *cv, enums::DataUsed::subfeatures ),
+                        _begin,
+                        last_it,
+                        it,
+                        _end,
+                        _candidates );
+
+                    last_it = it;
+                }
+
+            loss_function().revert_to_commit();
+        }
+}
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_time_stamps_diff(
@@ -1580,22 +1714,22 @@ void DecisionTreeNode::try_time_stamps_diff(
 
     auto last_it = _begin;
 
-    for ( auto& cv : critical_values )
+    for ( auto cv = critical_values.begin(); cv != critical_values.end(); ++cv )
         {
-            debug_log( "cv: " + std::to_string( cv ) );
+            debug_log( "cv: " + std::to_string( *cv ) );
 
             it = utils::Finder<enums::DataUsed::time_stamps_diff>::next_split(
-                cv, _input, _output, it, _end );
+                *cv, _input, _output, it, _end );
 
             const auto update =
-                ( cv == critical_values[0] ? enums::Update::calc_all
-                                           : enums::Update::calc_diff );
+                ( cv == critical_values.begin() ? enums::Update::calc_all
+                                                : enums::Update::calc_diff );
 
             add_candidates(
                 enums::Revert::False,
                 update,
                 _old_intercept,
-                containers::Split( 0, cv, enums::DataUsed::time_stamps_diff ),
+                containers::Split( 0, *cv, enums::DataUsed::time_stamps_diff ),
                 _begin,
                 last_it,
                 it,
@@ -1667,22 +1801,23 @@ void DecisionTreeNode::try_window(
 
     auto last_it = _begin;
 
-    for ( auto& cv : critical_values )
+    for ( auto cv = critical_values.begin(); cv != critical_values.end(); ++cv )
         {
-            debug_log( "cv: " + std::to_string( cv ) );
+            debug_log( "cv: " + std::to_string( *cv ) );
 
             it = utils::Finder<enums::DataUsed::time_stamps_diff>::next_split(
-                cv, _input, _output, it, _end );
+                *cv, _input, _output, it, _end );
 
             const auto update =
-                ( cv == critical_values[0] ? enums::Update::calc_all
-                                           : enums::Update::calc_diff );
+                ( cv == critical_values.begin() ? enums::Update::calc_all
+                                                : enums::Update::calc_diff );
 
             add_candidates(
                 enums::Revert::True,
                 update,
                 _old_intercept,
-                containers::Split( 0, cv, enums::DataUsed::time_stamps_window ),
+                containers::Split(
+                    0, *cv, enums::DataUsed::time_stamps_window ),
                 _begin,
                 last_it,
                 it,

@@ -102,10 +102,7 @@ class DataFrameView
     }
 
     /// Getter for a join key.
-    Int join_key( size_t _i ) const
-    {
-        return df_.join_key( row( _i ) );
-    }
+    Int join_key( size_t _i ) const { return df_.join_key( row( _i ) ); }
 
     /// Getter for a join keys.
     const std::vector<Column<Int>>& join_keys() const
@@ -171,6 +168,12 @@ class DataFrameView
     /// Returns the indices of the rows that this view points to.
     const std::vector<size_t>& rows() const { return *rows_; }
 
+    /// Returns the indices of the rows that this view points to.
+    const std::shared_ptr<const std::vector<size_t>>& rows_ptr() const
+    {
+        return rows_;
+    }
+
     /// Getter for a target value.
     Float target( size_t _i, size_t _j ) const
     {
@@ -196,10 +199,7 @@ class DataFrameView
     }
 
     /// Trivial getter
-    Float time_stamp( size_t _i ) const
-    {
-        return df_.time_stamp( row( _i ) );
-    }
+    Float time_stamp( size_t _i ) const { return df_.time_stamp( row( _i ) ); }
 
     /// Getter for the time stamps name.
     const std::string& time_stamps_name() const

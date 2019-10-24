@@ -66,6 +66,10 @@ enums::DataUsed JSON::destringify( const std::string& _data_used )
         {
             return enums::DataUsed::same_units_numerical_is_nan;
         }
+    else if ( _data_used == "subfeatures" )
+        {
+            return enums::DataUsed::subfeatures;
+        }
     else if ( _data_used == "time_stamps_diff" )
         {
             return enums::DataUsed::time_stamps_diff;
@@ -175,6 +179,9 @@ std::string JSON::stringify( const enums::DataUsed& _data_used )
             case enums::DataUsed::same_units_numerical_is_nan:
                 return "same_units_numerical_is_nan";
 
+            case enums::DataUsed::subfeatures:
+                return "subfeatures";
+
             case enums::DataUsed::time_stamps_diff:
                 return "time_stamps_diff";
 
@@ -182,7 +189,7 @@ std::string JSON::stringify( const enums::DataUsed& _data_used )
                 return "time_stamps_window";
 
             default:
-                assert_true( false && "Unknown data_used_" );
+                assert_true( false && "Unknown _data_used" );
                 return "";
         }
 }

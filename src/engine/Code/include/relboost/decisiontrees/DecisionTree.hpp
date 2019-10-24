@@ -33,6 +33,7 @@ class DecisionTree
     void fit(
         const containers::DataFrameView& _output,
         const containers::DataFrame& _input,
+        const containers::Subfeatures& _subfeatures,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end );
 
@@ -42,7 +43,8 @@ class DecisionTree
     /// Transforms the data to form a prediction.
     std::vector<Float> transform(
         const containers::DataFrameView& _output,
-        const containers::DataFrame& _input ) const;
+        const containers::DataFrame& _input,
+        const containers::Subfeatures& _subfeatures ) const;
 
     /// Expresses the decision tree as SQL code.
     std::string to_sql(
@@ -51,12 +53,9 @@ class DecisionTree
     // -----------------------------------------------------------------
 
     /// Calculates the update rate.
-    void calc_update_rate(
-        const std::vector<Float>& _yhat_old,
-        const std::vector<Float>& _predictions )
+    void calc_update_rate( const std::vector<Float>& _predictions )
     {
-        update_rate_ =
-            loss_function().calc_update_rate( _yhat_old, _predictions );
+        update_rate_ = loss_function().calc_update_rate( _predictions );
     }
 
     /// Clears data no longer needed.
