@@ -50,5 +50,7 @@ int main( int argc, char* argv[] )
     test26_snowflake_model5();
     test27_snowflake_model6();
 
+    test28_multiple_targets();
+
     return 0;
 }

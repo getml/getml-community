@@ -48,5 +48,6 @@
 #include "relboost/tests/test25_snowflake_model4.hpp"
 #include "relboost/tests/test26_snowflake_model5.hpp"
 #include "relboost/tests/test27_snowflake_model6.hpp"
+#include "relboost/tests/test28_multiple_targets.hpp"
 
 // ---------------------------------------------------------------------------

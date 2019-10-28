@@ -583,17 +583,28 @@ DecisionTreeEnsemble::init(
     // ------------------------------------------------------------------------
     // Prepare targets.
 
-    if ( _population.num_targets() != 1 )
+    if ( hyperparameters().target_num_ < 0 )
+        {
+            throw std::runtime_error( "target_num cannot be negative!" );
+        }
+
+    const auto target_num =
+        static_cast<size_t>( hyperparameters().target_num_ );
+
+    if ( _population.num_targets() <= target_num )
         {
             throw std::runtime_error(
-                "The population table needs to define exactly one target!" );
+                "target_num out of bounds! The target_num was " +
+                std::to_string( target_num ) +
+                ", but the population table only contains " +
+                std::to_string( _population.num_targets() ) + " targets!" );
         }
 
     targets().resize( _population.nrows() );
 
     for ( size_t i = 0; i < _population.nrows(); ++i )
         {
-            targets()[i] = _population.target( i, 0 );
+            targets()[i] = _population.target( i, target_num );
         }
 
     // ------------------------------------------------------------------------

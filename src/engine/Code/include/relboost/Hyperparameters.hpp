@@ -129,6 +129,9 @@ struct Hyperparameters
     /// Whether to print messages while running boosting
     const bool silent_;
 
+    /// The target on which to train.
+    const Int target_num_;
+
     /// Whether to use timestamps,
     const bool use_timestamps_;
 };
