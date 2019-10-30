@@ -306,7 +306,8 @@ class DecisionTreeEnsemble
             _predictions.begin(),
             _yhat_old->begin(),
             [this, _update_rate]( const Float yhat, const Float pred ) {
-                return yhat + pred * hyperparameters().eta_ * _update_rate;
+                return yhat +
+                       pred * hyperparameters().shrinkage_ * _update_rate;
             } );
     }
 

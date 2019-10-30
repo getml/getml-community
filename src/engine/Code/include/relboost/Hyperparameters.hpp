@@ -65,9 +65,6 @@ struct Hyperparameters
     /// to 0.0 or negative value, moving time windows will be omitted.
     const Float delta_t_;
 
-    /// Boosting learning rate
-    const Float eta_;
-
     /// Stores the hyperparameters of the feature selector - needed for .refresh
     /// to work properly.
     const Poco::JSON::Object::Ptr feature_selector_;
@@ -125,6 +122,9 @@ struct Hyperparameters
     /// The share of features to be selected.
     /// When set to 0, then there is no feature selection.
     const Float share_selected_features_;
+
+    /// Boosting learning rate
+    const Float shrinkage_;
 
     /// Whether to print messages while running boosting
     const bool silent_;

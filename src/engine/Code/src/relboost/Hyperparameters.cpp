@@ -6,7 +6,6 @@ namespace relboost
 
 Hyperparameters::Hyperparameters()
     : delta_t_( 0.3 ),
-      eta_( 0.3 ),
       gamma_( 1.0 ),
       include_categorical_( true ),
       loss_function_( "SquareLoss" ),
@@ -20,6 +19,7 @@ Hyperparameters::Hyperparameters()
       seed_( 5843 ),
       session_name_( "" ),
       share_selected_features_( 0.0 ),
+      shrinkage_( 0.3 ),
       silent_( true ),
       target_num_( 0 ),
       use_timestamps_( true )
@@ -30,7 +30,6 @@ Hyperparameters::Hyperparameters()
 
 Hyperparameters::Hyperparameters( const Poco::JSON::Object& _obj )
     : delta_t_( JSON::get_value<Float>( _obj, "delta_t_" ) ),
-      eta_( JSON::get_value<Float>( _obj, "eta_" ) ),
       feature_selector_( _obj.getObject( "feature_selector_" ) ),
       gamma_( JSON::get_value<Float>( _obj, "gamma_" ) ),
       include_categorical_(
@@ -51,6 +50,7 @@ Hyperparameters::Hyperparameters( const Poco::JSON::Object& _obj )
               : "" ),
       share_selected_features_(
           JSON::get_value<Float>( _obj, "share_selected_features_" ) ),
+      shrinkage_( JSON::get_value<Float>( _obj, "shrinkage_" ) ),
       silent_( JSON::get_value<bool>( _obj, "silent_" ) ),
       target_num_( JSON::get_value<Int>( _obj, "target_num_" ) ),
       use_timestamps_( JSON::get_value<bool>( _obj, "use_timestamps_" ) )
@@ -93,8 +93,6 @@ Poco::JSON::Object::Ptr Hyperparameters::to_json_obj() const
 
     obj->set( "delta_t_", delta_t_ );
 
-    obj->set( "eta_", eta_ );
-
     if ( feature_selector_ )
         {
             obj->set( "feature_selector_", feature_selector_ );
@@ -130,6 +128,8 @@ Poco::JSON::Object::Ptr Hyperparameters::to_json_obj() const
     obj->set( "session_name_", session_name_ );
 
     obj->set( "share_selected_features_", share_selected_features_ );
+
+    obj->set( "shrinkage_", shrinkage_ );
 
     obj->set( "silent_", silent_ );
 

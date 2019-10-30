@@ -509,7 +509,7 @@ void DecisionTreeEnsemble::fit_new_feature(
     // Update yhat_old_.
 
     _loss_function->update_yhat_old(
-        candidates[dist].update_rate() * hyperparameters().eta_,
+        candidates[dist].update_rate() * hyperparameters().shrinkage_,
         best_predictions );
 
     _loss_function->calc_gradients();
@@ -705,7 +705,7 @@ std::vector<Float> DecisionTreeEnsemble::predict(
             for ( size_t i = 0; i < _population.nrows(); ++i )
                 {
                     predictions[i] += ( *features[j] )[i] *
-                                      hyperparameters().eta_ *
+                                      hyperparameters().shrinkage_ *
                                       trees()[j].update_rate();
                 }
         }
