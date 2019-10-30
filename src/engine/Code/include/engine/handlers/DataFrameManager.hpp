@@ -122,6 +122,10 @@ class DataFrameManager
     void get_nbytes(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
 
+    /// Get the number of rows in a data frame
+    void get_nrows(
+        const std::string& _name, Poco::Net::StreamSocket* _socket );
+
     /// Undertakes a GROUP BY operation
     void group_by(
         const std::string& _name,

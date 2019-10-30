@@ -901,6 +901,20 @@ void DataFrameManager::get_nbytes(
 
 // ------------------------------------------------------------------------
 
+void DataFrameManager::get_nrows(
+    const std::string& _name, Poco::Net::StreamSocket* _socket )
+{
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    auto& df = utils::Getter::get( _name, &data_frames() );
+
+    communication::Sender::send_string( "Found!", _socket );
+
+    communication::Sender::send_string( std::to_string( df.nrows() ), _socket );
+}
+
+// ------------------------------------------------------------------------
+
 void DataFrameManager::group_by(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,
