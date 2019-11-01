@@ -903,14 +903,31 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json_obj(
 
 // ----------------------------------------------------------------------------
 
-std::string DecisionTreeEnsemble::to_sql() const
+std::string DecisionTreeEnsemble::to_sql(
+    const std::string &_feature_prefix, const size_t _offset ) const
 {
     std::stringstream sql;
+
+    for ( size_t i = 0; i < subensembles_avg_.size(); ++i )
+        {
+            if ( subensembles_avg_[i] )
+                {
+                    sql << subensembles_avg_[i]->to_sql(
+                        std::to_string( i + 1 ) + "_", 0 );
+
+                    assert_true( subensembles_sum_[i] );
+
+                    sql << subensembles_sum_[i]->to_sql(
+                        std::to_string( i + 1 ) + "_",
+                        subensembles_avg_[i]->num_features() );
+                }
+        }
 
     for ( size_t i = 0; i < trees().size(); ++i )
         {
             sql << trees()[i].to_sql(
-                std::to_string( i + 1 ), hyperparameters().use_timestamps_ );
+                _feature_prefix + std::to_string( _offset + i + 1 ),
+                hyperparameters().use_timestamps_ );
         }
 
     return sql.str();

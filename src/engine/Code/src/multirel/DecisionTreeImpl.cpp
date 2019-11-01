@@ -125,7 +125,8 @@ std::string DecisionTreeImpl::get_colname(
 
             case enums::DataUsed::x_subfeature:
 
-                colname = "t2.feature_" + _feature_num + "_" +
+                colname = "t2.feature_" +
+                          std::to_string( ix_perip_used() + 1 ) + "_" +
                           std::to_string( _ix_column_used + 1 );
 
                 break;
