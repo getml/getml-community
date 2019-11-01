@@ -69,7 +69,7 @@ class IntermediateAggregationImpl
         const std::vector<Float>& _input_predictions );
 
     /// Resets everything to zero.
-    void reset();
+    void reset( const bool _reset_child );
 
     /// Update the "old" values.
     void update_etas_old( const enums::Aggregation _agg );

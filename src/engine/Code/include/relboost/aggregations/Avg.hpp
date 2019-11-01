@@ -224,7 +224,7 @@ class Avg : public lossfunctions::LossFunction
         const std::array<Float, 3>& _weights ) final
     {
         child_->commit( intermediate_agg().indices(), _weights );
-        intermediate_agg().reset();
+        intermediate_agg().reset( false );
     }
 
     /// Evaluates an entire tree.
@@ -262,7 +262,7 @@ class Avg : public lossfunctions::LossFunction
     void reset() final
     {
         if ( intermediate_agg_ )
-            intermediate_agg().reset();
+            intermediate_agg().reset( true );
         else
             impl_.reset();
     }
@@ -274,7 +274,7 @@ class Avg : public lossfunctions::LossFunction
     void revert_to_commit( const std::vector<size_t>& _indices ) final
     {
         child_->revert_to_commit( intermediate_agg().indices() );
-        intermediate_agg().reset();
+        intermediate_agg().reset( false );
     };
 
     /// Trivial setter.

@@ -115,7 +115,7 @@ std::vector<Float> IntermediateAggregationImpl::reduce_predictions(
 
 // ----------------------------------------------------------------------------
 
-void IntermediateAggregationImpl::reset()
+void IntermediateAggregationImpl::reset( const bool _reset_child )
 {
     for ( auto ix : indices_ )
         {
@@ -135,11 +135,35 @@ void IntermediateAggregationImpl::reset()
             w_fixed_2_old_[ix] = 0.0;
         }
 
+#ifndef NDEBUG
+
+    for ( size_t i = 0; i < eta1_.size(); ++i )
+        {
+            assert_true( eta1_[i] == 0.0 );
+            assert_true( eta1_2_null_[i] == 0.0 );
+            assert_true( eta1_2_null_old_[i] == 0.0 );
+            assert_true( eta1_old_[i] == 0.0 );
+            assert_true( eta2_[i] == 0.0 );
+            assert_true( eta2_1_null_[i] == 0.0 );
+            assert_true( eta2_1_null_old_[i] == 0.0 );
+            assert_true( eta2_old_[i] == 0.0 );
+            assert_true( w_fixed_1_[i] == 0.0 );
+            assert_true( w_fixed_1_old_[i] == 0.0 );
+            assert_true( w_fixed_2_[i] == 0.0 );
+            assert_true( w_fixed_2_old_[i] == 0.0 );
+        }
+
+#endif
+
     indices_.clear();
     indices_current_.clear();
 
     assert_true( child_ );
-    child_->reset();
+
+    if ( _reset_child )
+        {
+            child_->reset();
+        }
 }
 
 // ----------------------------------------------------------------------------

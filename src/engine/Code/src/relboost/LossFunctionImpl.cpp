@@ -60,16 +60,16 @@ Float LossFunctionImpl::calc_regularization_reduction(
 
     if ( std::isnan( std::get<1>( _weights ) ) )
         {
-            // In the case of of the weights being nan, _eta2 plays the role of
-            // _eta_old and _eta1 plays _eta_new.
+            // In the case of of the weights being nan, _eta2 plays the role
+            // of _eta_old and _eta1 plays _eta_new.
 
             regularization += calc_regularization_reduction(
                 _eta2, _eta1, _indices, _old_weight, std::get<2>( _weights ) );
         }
     else if ( std::isnan( std::get<2>( _weights ) ) )
         {
-            // In the case of of the weights being nan, _eta2 plays the role of
-            // _eta_old and _eta1 plays _eta_new.
+            // In the case of of the weights being nan, _eta2 plays the role
+            // of _eta_old and _eta1 plays _eta_new.
 
             regularization += calc_regularization_reduction(
                 _eta2, _eta1, _indices, _old_weight, std::get<1>( _weights ) );
