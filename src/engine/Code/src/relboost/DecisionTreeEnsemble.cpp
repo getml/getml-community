@@ -478,7 +478,8 @@ void DecisionTreeEnsemble::fit_new_feature(
                     auto new_predictions = candidates.back().transform(
                         output_table, input_table, subfeatures );
 
-                    _loss_function->reduce_predictions( &new_predictions );
+                    _loss_function->reduce_predictions(
+                        candidates.back().intercept(), &new_predictions );
 
                     candidates.back().calc_update_rate( new_predictions );
 
@@ -704,8 +705,9 @@ std::vector<Float> DecisionTreeEnsemble::predict(
 
             for ( size_t i = 0; i < _population.nrows(); ++i )
                 {
-                    predictions[i] += ( *features[j] )[i] *
-                                      hyperparameters().shrinkage_ *
+                    const auto p = ( *features[j] )[i] + trees()[j].intercept();
+
+                    predictions[i] += p * hyperparameters().shrinkage_ *
                                       trees()[j].update_rate();
                 }
         }

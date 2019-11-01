@@ -692,6 +692,7 @@ void LossFunctionImpl::update_yhat_old(
     std::vector<Float>* _yhat_old ) const
 {
     assert_true( _predictions.size() == _yhat_old->size() );
+
     std::transform(
         _yhat_old->begin(),
         _yhat_old->end(),

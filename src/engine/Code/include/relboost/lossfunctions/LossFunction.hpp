@@ -139,7 +139,8 @@ class LossFunction
     make_sample_weights() = 0;
 
     /// Reduces the predictions.
-    virtual void reduce_predictions( std::vector<Float>* _predictions ) = 0;
+    virtual void reduce_predictions(
+        const Float _intercept, std::vector<Float>* _predictions ) = 0;
 
     /// Resets the critical resources to zero.
     virtual void reset() = 0;

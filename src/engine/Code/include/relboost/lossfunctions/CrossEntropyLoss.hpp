@@ -310,8 +310,12 @@ class CrossEntropyLoss : public LossFunction
     }
 
     /// Reduces the predictions - since this is a loss function, there is
-    /// nothing to reduce.
-    void reduce_predictions( std::vector<Float>* _predictions ) final {}
+    /// nothing to reduce, but we do have to intercept.
+    void reduce_predictions(
+        const Float _intercept, std::vector<Float>* _predictions ) final
+    {
+        for ( auto& val : *_predictions ) val += _intercept;
+    }
 
     /// Resets critical resources to zero.
     void reset() final

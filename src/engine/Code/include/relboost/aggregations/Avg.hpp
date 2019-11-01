@@ -251,11 +251,12 @@ class Avg : public lossfunctions::LossFunction
     }
 
     /// Reduces the predictions - this is called by the decision tree.
-    void reduce_predictions( std::vector<Float>* _predictions ) final
+    void reduce_predictions(
+        const Float _intercept, std::vector<Float>* _predictions ) final
     {
         *_predictions =
             intermediate_agg().reduce_predictions( true, *_predictions );
-        child_->reduce_predictions( _predictions );
+        child_->reduce_predictions( _intercept, _predictions );
     }
 
     /// Resets the critical resources to zero.

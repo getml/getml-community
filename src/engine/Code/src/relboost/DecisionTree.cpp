@@ -139,7 +139,7 @@ std::string DecisionTree::to_sql(
     // -------------------------------------------------------------------
     // First part of SELECT statement
 
-    sql << "SELECT " << intercept() << " + ";
+    sql << "SELECT ";
 
     sql << loss_function().type() << "( " << std::endl;
 
@@ -276,14 +276,6 @@ std::vector<Float> DecisionTree::transform(
             predictions[ix_output] = loss_function_->transform( weights );
 
             // ------------------------------------------------------------------------
-        }
-
-    // ------------------------------------------------------------------------
-    // Add intercept.
-
-    for ( size_t ix_output = 0; ix_output < predictions.size(); ++ix_output )
-        {
-            predictions[ix_output] += intercept();
         }
 
     // ------------------------------------------------------------------------
