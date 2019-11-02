@@ -145,7 +145,7 @@ std::string DecisionTree::to_sql(
 
     sql << loss_function().type() << "( " << std::endl;
 
-    sql << tab << " CASE" << std::endl;
+    sql << tab << "CASE" << std::endl;
 
     // -------------------------------------------------------------------
     // Conditions for the feature
@@ -166,7 +166,7 @@ std::string DecisionTree::to_sql(
     // -------------------------------------------------------------------
     // Second part of SELECT statement
 
-    sql << tab << " END" << std::endl
+    sql << tab << "END" << std::endl
         << ") AS feature_" << _feature_num << "," << std::endl;
 
     sql << tab << " t1." << output().join_keys_name() << "," << std::endl;
