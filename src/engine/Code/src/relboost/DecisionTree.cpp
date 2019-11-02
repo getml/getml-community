@@ -132,6 +132,8 @@ std::string DecisionTree::to_sql(
 
     std::stringstream sql;
 
+    const std::string tab = "    ";
+
     // -------------------------------------------------------------------
 
     sql << "CREATE TABLE FEATURE_" << _feature_num << " AS" << std::endl;
@@ -143,7 +145,7 @@ std::string DecisionTree::to_sql(
 
     sql << loss_function().type() << "( " << std::endl;
 
-    sql << "CASE" << std::endl;
+    sql << tab << " CASE" << std::endl;
 
     // -------------------------------------------------------------------
     // Conditions for the feature
@@ -156,33 +158,33 @@ std::string DecisionTree::to_sql(
 
     for ( size_t i = 0; i < conditions.size(); ++i )
         {
-            sql << "     " << conditions[i] << std::endl;
+            sql << tab << tab << conditions[i] << std::endl;
         }
 
-    sql << "     ELSE NULL" << std::endl;
+    sql << tab << tab << "ELSE NULL" << std::endl;
 
     // -------------------------------------------------------------------
     // Second part of SELECT statement
 
-    sql << "END" << std::endl
+    sql << tab << " END" << std::endl
         << ") AS feature_" << _feature_num << "," << std::endl;
 
-    sql << "     t1." << output().join_keys_name() << "," << std::endl;
+    sql << tab << " t1." << output().join_keys_name() << "," << std::endl;
 
-    sql << "     t1." << output().time_stamps_name() << std::endl;
+    sql << tab << " t1." << output().time_stamps_name() << std::endl;
 
     // -------------------------------------------------------------------
     // JOIN statement
 
     sql << "FROM (" << std::endl;
 
-    sql << "     SELECT *," << std::endl;
+    sql << tab << "SELECT *," << std::endl;
 
-    sql << "            ROW_NUMBER() OVER ( ORDER BY "
+    sql << tab << tab << "ROW_NUMBER() OVER ( ORDER BY "
         << output().join_keys_name() << ", " << output().time_stamps_name()
         << " ASC ) AS rownum" << std::endl;
 
-    sql << "     FROM " << output().name() << std::endl;
+    sql << tab << "FROM " << output().name() << std::endl;
 
     sql << ") t1" << std::endl;
 
@@ -215,9 +217,11 @@ std::string DecisionTree::to_sql(
 
     sql << "GROUP BY t1.rownum," << std::endl;
 
-    sql << "         t1." << output().join_keys_name() << "," << std::endl;
+    sql << tab << tab << " t1." << output().join_keys_name() << ","
+        << std::endl;
 
-    sql << "         t1." << output().time_stamps_name() << ";" << std::endl
+    sql << tab << tab << " t1." << output().time_stamps_name() << ";"
+        << std::endl
         << std::endl
         << std::endl;
 
