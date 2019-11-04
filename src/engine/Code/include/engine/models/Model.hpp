@@ -799,8 +799,6 @@ void Model<FeatureEngineererType>::fit(
 
     if ( _predictors->size() > 0 )
         {
-            assert_true( _predictors->size() == population_df.num_targets() );
-
             auto categorical_features =
                 get_categorical_features( _cmd, _data_frames );
 
@@ -812,13 +810,45 @@ void Model<FeatureEngineererType>::fit(
             auto numerical_features =
                 transform( _cmd, _logger, _data_frames, _socket );
 
-            for ( size_t i = 0; i < _predictors->size(); ++i )
+            if constexpr ( FeatureEngineererType::supports_multiple_targets_ )
                 {
-                    ( *_predictors )[i]->fit(
+                    assert_true(
+                        _predictors->size() == population_df.num_targets() );
+
+                    for ( size_t i = 0; i < _predictors->size(); ++i )
+                        {
+                            ( *_predictors )[i]->fit(
+                                _logger,
+                                categorical_features,
+                                numerical_features,
+                                population_df.target( i ).data_ptr() );
+                        }
+                }
+            else
+                {
+                    throw_unless(
+                        feature_engineerer().target_num() >= 0,
+                        "target_num cannot be negative!" );
+
+                    const auto target_num = static_cast<size_t>(
+                        feature_engineerer().target_num() );
+
+                    throw_unless(
+                        target_num < population_df.num_targets(),
+                        "target_num must be smaller than number of targets! "
+                        "target_num: " +
+                            std::to_string( target_num ) +
+                            ", number of targets: " +
+                            std::to_string( population_df.num_targets() ) +
+                            "." );
+
+                    assert_true( _predictors->size() == 1 );
+
+                    ( *_predictors )[0]->fit(
                         _logger,
                         categorical_features,
                         numerical_features,
-                        population_df.target( i ).data_ptr() );
+                        population_df.target( target_num ).data_ptr() );
                 }
         }
 }
@@ -872,7 +902,16 @@ void Model<FeatureEngineererType>::init_feature_selectors(
 
     assert_true( predictor_impl_ );
 
-    for ( size_t i = 0; i < _num_targets; ++i )
+    if constexpr ( FeatureEngineererType::supports_multiple_targets_ )
+        {
+            for ( size_t i = 0; i < _num_targets; ++i )
+                {
+                    _feature_selectors->push_back(
+                        predictors::PredictorParser::parse(
+                            obj, predictor_impl_ ) );
+                }
+        }
+    else
         {
             _feature_selectors->push_back(
                 predictors::PredictorParser::parse( obj, predictor_impl_ ) );
@@ -897,7 +936,15 @@ void Model<FeatureEngineererType>::init_predictors(
 
     assert_true( predictor_impl_ );
 
-    for ( size_t i = 0; i < _num_targets; ++i )
+    if constexpr ( FeatureEngineererType::supports_multiple_targets_ )
+        {
+            for ( size_t i = 0; i < _num_targets; ++i )
+                {
+                    _predictors->push_back( predictors::PredictorParser::parse(
+                        obj, predictor_impl_ ) );
+                }
+        }
+    else
         {
             _predictors->push_back(
                 predictors::PredictorParser::parse( obj, predictor_impl_ ) );

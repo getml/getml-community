@@ -17,6 +17,8 @@ class DecisionTreeEnsemble
     typedef relboost::containers::DataFrame DataFrameType;
     typedef relboost::containers::DataFrameView DataFrameViewType;
 
+    constexpr static bool supports_multiple_targets_ = false;
+
     // ------------------------------------------------------------------------
 
    public:
@@ -186,6 +188,9 @@ class DecisionTreeEnsemble
             "it?" );
         return *impl().population_schema_;
     }
+
+    /// Trivial (const) accessor
+    const Int target_num() const { return hyperparameters().target_num_; }
 
     // -----------------------------------------------------------------
 
