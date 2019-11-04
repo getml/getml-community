@@ -15,6 +15,7 @@ class DecisionTreeEnsemble
     typedef multirel::containers::DataFrame DataFrameType;
     typedef multirel::containers::DataFrameView DataFrameViewType;
 
+    constexpr static bool premium_only_ = false;
     constexpr static bool supports_multiple_targets_ = true;
 
     // -----------------------------------------------------------------

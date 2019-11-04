@@ -15,6 +15,11 @@ class Model : public AbstractModel
     // --------------------------------------------------------
 
    public:
+    constexpr static bool premium_only_ = FeatureEngineererType::premium_only_;
+
+    // --------------------------------------------------------
+
+   public:
     Model(
         const FeatureEngineererType& _feature_engineerer,
         const Poco::JSON::Object& _hyperparameters );

@@ -286,6 +286,14 @@ void ModelManager<ModelType>::fit_model(
     Poco::Net::StreamSocket* _socket )
 {
     // -------------------------------------------------------
+    // Some models are only supported by the premium version.
+
+    if constexpr ( ModelType::premium_only_ )
+        {
+            license_checker().check_enterprise();
+        }
+
+    // -------------------------------------------------------
     // Find the model.
 
     auto model = get_model( _name );
@@ -414,6 +422,14 @@ template <typename ModelType>
 void ModelManager<ModelType>::launch_hyperopt(
     const std::string& _name, Poco::Net::StreamSocket* _socket )
 {
+    // -------------------------------------------------------
+    // Some models are only supported by the premium version.
+
+    if constexpr ( ModelType::premium_only_ )
+        {
+            license_checker().check_enterprise();
+        }
+
     // -------------------------------------------------------
     // Find the reference model.
 
@@ -796,6 +812,14 @@ void ModelManager<ModelType>::transform(
     const Poco::JSON::Object& _cmd,
     Poco::Net::StreamSocket* _socket )
 {
+    // -------------------------------------------------------
+    // Some models are only supported by the premium version.
+
+    if constexpr ( ModelType::premium_only_ )
+        {
+            license_checker().check_enterprise();
+        }
+
     // -------------------------------------------------------
     // Find the model.
 

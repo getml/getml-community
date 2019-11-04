@@ -17,6 +17,7 @@ class DecisionTreeEnsemble
     typedef relboost::containers::DataFrame DataFrameType;
     typedef relboost::containers::DataFrameView DataFrameViewType;
 
+    constexpr static bool premium_only_ = true;
     constexpr static bool supports_multiple_targets_ = false;
 
     // ------------------------------------------------------------------------
