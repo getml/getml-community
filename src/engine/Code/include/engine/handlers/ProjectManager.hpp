@@ -166,6 +166,11 @@ class ProjectManager
     /// Loads a JSON object from a file.
     Poco::JSON::Object load_json_obj( const std::string& _fname ) const;
 
+    /// If a model of this name exists anywhere, it will be deleted.
+    /// This is to ensure that duplicate model names are not possible,
+    /// even for models of different types.
+    void purge_model( const std::string& _name );
+
     // ------------------------------------------------------------------------
 
    private:
@@ -236,21 +241,10 @@ class ProjectManager
     void set_multirel_model(
         const std::string& _name, const models::MultirelModel& _model )
     {
-        multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
-
-        auto it = multirel_models().find( _name );
-
-        weak_write_lock.upgrade();
-
-        if ( it == multirel_models().end() )
-            {
-                multirel_models()[_name] =
-                    std::make_shared<models::MultirelModel>( _model );
-            }
-        else
-            {
-                it->second = std::make_shared<models::MultirelModel>( _model );
-            }
+        multithreading::WriteLock write_lock( read_write_lock_ );
+        purge_model( _name );
+        multirel_models()[_name] =
+            std::make_shared<models::MultirelModel>( _model );
     }
 
     /// Sets a model.
@@ -258,21 +252,10 @@ class ProjectManager
         const std::string& _name,
         const models::Model<relboost::ensemble::DecisionTreeEnsemble>& _model )
     {
-        multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
-
-        auto it = relboost_models().find( _name );
-
-        weak_write_lock.upgrade();
-
-        if ( it == relboost_models().end() )
-            {
-                relboost_models()[_name] =
-                    std::make_shared<models::RelboostModel>( _model );
-            }
-        else
-            {
-                it->second = std::make_shared<models::RelboostModel>( _model );
-            }
+        multithreading::WriteLock write_lock( read_write_lock_ );
+        purge_model( _name );
+        relboost_models()[_name] =
+            std::make_shared<models::RelboostModel>( _model );
     }
 
     // ------------------------------------------------------------------------

@@ -490,6 +490,43 @@ void ProjectManager::load_relboost_model(
 
 // ------------------------------------------------------------------------
 
+void ProjectManager::purge_model( const std::string& _name )
+{
+    // --------------------------------------------------------------------
+
+    Poco::JSON::Object cmd;
+
+    cmd.set( "mem_only_", false );
+
+    // --------------------------------------------------------------------
+
+    const auto itm = multirel_models().find( _name );
+
+    if ( itm != multirel_models().end() )
+        {
+            FileHandler::remove(
+                _name, project_directory_, cmd, &multirel_models() );
+            monitor_->send(
+                "removemultirelmodel", "{\"name\":\"" + _name + "\"}" );
+        }
+
+    // --------------------------------------------------------------------
+
+    const auto itr = relboost_models().find( _name );
+
+    if ( itr != relboost_models().end() )
+        {
+            FileHandler::remove(
+                _name, project_directory_, cmd, &relboost_models() );
+            monitor_->send(
+                "removerelboostmodel", "{\"name\":\"" + _name + "\"}" );
+        }
+
+    // --------------------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
 void ProjectManager::refresh( Poco::Net::StreamSocket* _socket )
 {
     multithreading::ReadLock read_lock( read_write_lock_ );
