@@ -185,7 +185,7 @@ class ProjectManager
     /// If a model of this name exists anywhere, it will be deleted.
     /// This is to ensure that duplicate model names are not possible,
     /// even for models of different types.
-    void purge_model( const std::string& _name );
+    void purge_model( const std::string& _name, const bool _mem_only );
 
     // ------------------------------------------------------------------------
 
@@ -255,10 +255,12 @@ class ProjectManager
 
     /// Sets a model.
     void set_multirel_model(
-        const std::string& _name, const models::MultirelModel& _model )
+        const std::string& _name,
+        const models::MultirelModel& _model,
+        const bool _mem_only )
     {
         multithreading::WriteLock write_lock( read_write_lock_ );
-        purge_model( _name );
+        purge_model( _name, _mem_only );
         multirel_models()[_name] =
             std::make_shared<models::MultirelModel>( _model );
     }
@@ -266,10 +268,11 @@ class ProjectManager
     /// Sets a model.
     void set_relboost_model(
         const std::string& _name,
-        const models::Model<relboost::ensemble::DecisionTreeEnsemble>& _model )
+        const models::Model<relboost::ensemble::DecisionTreeEnsemble>& _model,
+        const bool _mem_only )
     {
         multithreading::WriteLock write_lock( read_write_lock_ );
-        purge_model( _name );
+        purge_model( _name, _mem_only );
         relboost_models()[_name] =
             std::make_shared<models::RelboostModel>( _model );
     }

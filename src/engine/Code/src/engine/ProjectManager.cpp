@@ -36,7 +36,7 @@ void ProjectManager::add_multirel_model(
             categories_->vector(), hyperparameters, peripheral, placeholder ),
         *hyperparameters_obj );
 
-    set_multirel_model( _name, model );
+    set_multirel_model( _name, model, false );
 
     monitor_->send( "postmultirelmodel", model.to_monitor( _name ) );
 
@@ -173,7 +173,7 @@ void ProjectManager::add_relboost_model(
             categories_->vector(), hyperparameters, peripheral, placeholder ),
         *hyperparameters_obj );
 
-    set_relboost_model( _name, model );
+    set_relboost_model( _name, model, false );
 
     monitor_->send( "postrelboostmodel", model.to_monitor( _name ) );
 
@@ -191,7 +191,7 @@ void ProjectManager::copy_multirel_model(
 
     auto other_model = get_multirel_model( other );
 
-    set_multirel_model( _name, other_model );
+    set_multirel_model( _name, other_model, false );
 
     monitor_->send( "postmultirelmodel", other_model.to_monitor( _name ) );
 
@@ -209,7 +209,7 @@ void ProjectManager::copy_relboost_model(
 
     auto other_model = get_relboost_model( other );
 
-    set_relboost_model( _name, other_model );
+    set_relboost_model( _name, other_model, false );
 
     monitor_->send( "postrelboostmodel", other_model.to_monitor( _name ) );
 
@@ -455,7 +455,7 @@ void ProjectManager::load_all_models()
             auto model = models::MultirelModel(
                 categories().vector(), it->path() + "/" );
 
-            set_multirel_model( it.name(), model );
+            set_multirel_model( it.name(), model, true );
 
             monitor_->send(
                 "postmultirelmodel", model.to_monitor( it.name() ) );
@@ -473,7 +473,7 @@ void ProjectManager::load_all_models()
             auto model = models::RelboostModel(
                 categories().vector(), it->path() + "/" );
 
-            set_relboost_model( it.name(), model );
+            set_relboost_model( it.name(), model, true );
 
             monitor_->send(
                 "postrelboostmodel", model.to_monitor( it.name() ) );
@@ -494,7 +494,7 @@ void ProjectManager::load_multirel_model(
 
     auto model = models::MultirelModel( categories().vector(), path );
 
-    set_multirel_model( _name, model );
+    set_multirel_model( _name, model, true );
 
     monitor_->send( "postmultirelmodel", model.to_monitor( _name ) );
 
@@ -554,7 +554,7 @@ void ProjectManager::load_relboost_model(
 
     auto model = models::RelboostModel( categories().vector(), path );
 
-    set_relboost_model( _name, model );
+    set_relboost_model( _name, model, true );
 
     monitor_->send( "postrelboostmodel", model.to_monitor( _name ) );
 
@@ -563,13 +563,14 @@ void ProjectManager::load_relboost_model(
 
 // ------------------------------------------------------------------------
 
-void ProjectManager::purge_model( const std::string& _name )
+void ProjectManager::purge_model(
+    const std::string& _name, const bool _mem_only )
 {
     // --------------------------------------------------------------------
 
     Poco::JSON::Object cmd;
 
-    cmd.set( "mem_only_", false );
+    cmd.set( "mem_only_", _mem_only );
 
     // --------------------------------------------------------------------
 
