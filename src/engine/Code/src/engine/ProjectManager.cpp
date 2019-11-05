@@ -329,6 +329,38 @@ void ProjectManager::list_models( Poco::Net::StreamSocket* _socket )
 
 // ------------------------------------------------------------------------
 
+void ProjectManager::list_projects( Poco::Net::StreamSocket* _socket )
+{
+    Poco::JSON::Object obj;
+
+    Poco::JSON::Array project_names;
+
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    Poco::DirectoryIterator end;
+
+    for ( Poco::DirectoryIterator it( options_.all_projects_directory_ );
+          it != end;
+          ++it )
+        {
+            if ( it->isDirectory() )
+                {
+                    project_names.add( it.name() );
+                }
+        }
+
+    read_lock.unlock();
+
+    obj.set( "projects", project_names );
+
+    engine::communication::Sender::send_string( "Success!", _socket );
+
+    engine::communication::Sender::send_string(
+        JSON::stringify( obj ), _socket );
+}
+
+// ------------------------------------------------------------------------
+
 void ProjectManager::load_all_models()
 {
     if ( project_directory_ == "" )

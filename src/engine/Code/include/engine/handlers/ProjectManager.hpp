@@ -110,8 +110,11 @@ class ProjectManager
     void delete_project(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
 
-    /// Returns a list of all models.
+    /// Returns a list of all models currently held in memory.
     void list_models( Poco::Net::StreamSocket* _socket );
+
+    /// Returns a list of all projects.
+    void list_projects( Poco::Net::StreamSocket* _socket );
 
     /// Loads an Multirel model
     void load_multirel_model(

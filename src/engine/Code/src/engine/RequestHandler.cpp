@@ -196,6 +196,10 @@ void RequestHandler::run()
                 {
                     project_manager().list_models( &socket() );
                 }
+            else if ( type == "list_projects" )
+                {
+                    project_manager().list_projects( &socket() );
+                }
             else if ( type == "is_alive" )
                 {
                     return;
