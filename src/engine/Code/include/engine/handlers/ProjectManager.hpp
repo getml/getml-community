@@ -122,6 +122,10 @@ class ProjectManager
     void delete_project(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
 
+    /// Retrieves the type of a model.
+    void get_model(
+        const std::string& _name, Poco::Net::StreamSocket* _socket ) const;
+
     /// Returns a list of all models currently held in memory.
     void list_models( Poco::Net::StreamSocket* _socket );
 

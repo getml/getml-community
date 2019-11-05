@@ -331,6 +331,43 @@ void ProjectManager::delete_project(
 
 // ------------------------------------------------------------------------
 
+void ProjectManager::get_model(
+    const std::string& _name, Poco::Net::StreamSocket* _socket ) const
+{
+    // --------------------------------------------------------------------
+
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    // --------------------------------------------------------------------
+
+    const auto itm = multirel_models().find( _name );
+
+    if ( itm != multirel_models().end() )
+        {
+            communication::Sender::send_string( "MultirelModel", _socket );
+            return;
+        }
+
+    // --------------------------------------------------------------------
+
+    const auto itr = relboost_models().find( _name );
+
+    if ( itr != relboost_models().end() )
+        {
+            communication::Sender::send_string( "RelboostModel", _socket );
+            return;
+        }
+
+    // --------------------------------------------------------------------
+
+    throw std::invalid_argument(
+        "Model named '" + _name + "' does not exist!" );
+
+    // --------------------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
 void ProjectManager::list_models( Poco::Net::StreamSocket* _socket )
 {
     Poco::JSON::Object obj;
