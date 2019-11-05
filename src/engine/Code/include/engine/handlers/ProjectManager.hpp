@@ -88,6 +88,18 @@ class ProjectManager
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
+    /// Duplicates a multirel model.
+    void copy_multirel_model(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
+    /// Duplicates a multirel model.
+    void copy_relboost_model(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
     /// Deletes an Multirel model
     void delete_multirel_model(
         const std::string& _name,

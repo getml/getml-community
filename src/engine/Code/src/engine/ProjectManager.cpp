@@ -182,6 +182,42 @@ void ProjectManager::add_relboost_model(
 
 // ------------------------------------------------------------------------
 
+void ProjectManager::copy_multirel_model(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    const std::string other = JSON::get_value<std::string>( _cmd, "other_" );
+
+    auto other_model = get_multirel_model( other );
+
+    set_multirel_model( _name, other_model );
+
+    monitor_->send( "postmultirelmodel", other_model.to_monitor( _name ) );
+
+    communication::Sender::send_string( "Success!", _socket );
+}
+
+// ------------------------------------------------------------------------
+
+void ProjectManager::copy_relboost_model(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    const std::string other = JSON::get_value<std::string>( _cmd, "other_" );
+
+    auto other_model = get_relboost_model( other );
+
+    set_relboost_model( _name, other_model );
+
+    monitor_->send( "postrelboostmodel", other_model.to_monitor( _name ) );
+
+    communication::Sender::send_string( "Success!", _socket );
+}
+
+// ------------------------------------------------------------------------
+
 void ProjectManager::clear()
 {
     // --------------------------------
