@@ -110,6 +110,9 @@ class ProjectManager
     void delete_project(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
 
+    /// Returns a list of all models.
+    void list_models( Poco::Net::StreamSocket* _socket );
+
     /// Loads an Multirel model
     void load_multirel_model(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
