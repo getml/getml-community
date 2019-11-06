@@ -368,7 +368,68 @@ void ProjectManager::get_model(
 
 // ------------------------------------------------------------------------
 
-void ProjectManager::list_models( Poco::Net::StreamSocket* _socket )
+void ProjectManager::list_data_frames( Poco::Net::StreamSocket* _socket ) const
+{
+    // ----------------------------------------------------------------
+
+    if ( project_directory_ == "" )
+        {
+            throw std::invalid_argument( "You have not set a project!" );
+        }
+
+    // ----------------------------------------------------------------
+
+    Poco::JSON::Object obj;
+
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    // ----------------------------------------------------------------
+
+    Poco::JSON::Array in_memory;
+
+    for ( const auto& [key, value] : data_frames() )
+        {
+            in_memory.add( key );
+        }
+
+    // ----------------------------------------------------------------
+
+    Poco::JSON::Array in_project_folder;
+
+    Poco::DirectoryIterator end;
+
+    for ( Poco::DirectoryIterator it( project_directory_ + "data/" ); it != end;
+          ++it )
+        {
+            if ( it->isDirectory() )
+                {
+                    in_project_folder.add( it.name() );
+                }
+        }
+
+    // ----------------------------------------------------------------
+
+    read_lock.unlock();
+
+    // ----------------------------------------------------------------
+
+    obj.set( "in_memory", in_memory );
+
+    obj.set( "in_project_folder", in_project_folder );
+
+    // ----------------------------------------------------------------
+
+    engine::communication::Sender::send_string( "Success!", _socket );
+
+    engine::communication::Sender::send_string(
+        JSON::stringify( obj ), _socket );
+
+    // ----------------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
+void ProjectManager::list_models( Poco::Net::StreamSocket* _socket ) const
 {
     Poco::JSON::Object obj;
 
@@ -402,7 +463,7 @@ void ProjectManager::list_models( Poco::Net::StreamSocket* _socket )
 
 // ------------------------------------------------------------------------
 
-void ProjectManager::list_projects( Poco::Net::StreamSocket* _socket )
+void ProjectManager::list_projects( Poco::Net::StreamSocket* _socket ) const
 {
     Poco::JSON::Object obj;
 
@@ -508,6 +569,13 @@ void ProjectManager::load_data_frame(
 {
     // --------------------------------------------------------------------
 
+    if ( project_directory_ == "" )
+        {
+            throw std::invalid_argument( "You have not set a project!" );
+        }
+
+    // --------------------------------------------------------------------
+
     multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
 
     // --------------------------------------------------------------------
@@ -601,7 +669,7 @@ void ProjectManager::purge_model(
 
 // ------------------------------------------------------------------------
 
-void ProjectManager::refresh( Poco::Net::StreamSocket* _socket )
+void ProjectManager::refresh( Poco::Net::StreamSocket* _socket ) const
 {
     multithreading::ReadLock read_lock( read_write_lock_ );
 

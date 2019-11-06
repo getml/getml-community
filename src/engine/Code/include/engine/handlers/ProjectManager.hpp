@@ -126,11 +126,15 @@ class ProjectManager
     void get_model(
         const std::string& _name, Poco::Net::StreamSocket* _socket ) const;
 
+    /// Returns a list of all data_frames currently held in memory and held
+    /// in the project directory.
+    void list_data_frames( Poco::Net::StreamSocket* _socket ) const;
+
     /// Returns a list of all models currently held in memory.
-    void list_models( Poco::Net::StreamSocket* _socket );
+    void list_models( Poco::Net::StreamSocket* _socket ) const;
 
     /// Returns a list of all projects.
-    void list_projects( Poco::Net::StreamSocket* _socket );
+    void list_projects( Poco::Net::StreamSocket* _socket ) const;
 
     /// Loads an Multirel model
     void load_multirel_model(
@@ -145,7 +149,7 @@ class ProjectManager
         const std::string& _name, Poco::Net::StreamSocket* _socket );
 
     /// Updates the encodings in the client
-    void refresh( Poco::Net::StreamSocket* _socket );
+    void refresh( Poco::Net::StreamSocket* _socket ) const;
 
     /// Saves an Multirel model to disc.
     void save_multirel_model(
@@ -208,7 +212,16 @@ class ProjectManager
     containers::Encoding& categories() { return *categories_; }
 
     /// Trivial accessor
+    const containers::Encoding& categories() const { return *categories_; }
+
+    /// Trivial accessor
     std::map<std::string, containers::DataFrame>& data_frames()
+    {
+        return *data_frames_;
+    }
+
+    /// Trivial (const) accessor
+    const std::map<std::string, containers::DataFrame>& data_frames() const
     {
         return *data_frames_;
     }
@@ -231,6 +244,12 @@ class ProjectManager
 
     /// Trivial accessor
     containers::Encoding& join_keys_encoding() { return *join_keys_encoding_; }
+
+    /// Trivial accessor
+    const containers::Encoding& join_keys_encoding() const
+    {
+        return *join_keys_encoding_;
+    }
 
     /// Trivial accessor
     engine::licensing::LicenseChecker& license_checker()
