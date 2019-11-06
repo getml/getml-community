@@ -257,10 +257,10 @@ class ProjectManager
     void set_multirel_model(
         const std::string& _name,
         const models::MultirelModel& _model,
-        const bool _mem_only )
+        const bool _purge_from_mem_only )
     {
         multithreading::WriteLock write_lock( read_write_lock_ );
-        purge_model( _name, _mem_only );
+        purge_model( _name, _purge_from_mem_only );
         multirel_models()[_name] =
             std::make_shared<models::MultirelModel>( _model );
     }
@@ -268,11 +268,11 @@ class ProjectManager
     /// Sets a model.
     void set_relboost_model(
         const std::string& _name,
-        const models::Model<relboost::ensemble::DecisionTreeEnsemble>& _model,
-        const bool _mem_only )
+        const models::RelboostModel& _model,
+        const bool _purge_from_mem_only )
     {
         multithreading::WriteLock write_lock( read_write_lock_ );
-        purge_model( _name, _mem_only );
+        purge_model( _name, _purge_from_mem_only );
         relboost_models()[_name] =
             std::make_shared<models::RelboostModel>( _model );
     }
