@@ -688,7 +688,7 @@ Poco::JSON::Object DecisionTreeEnsemble::to_monitor(
 
     // ----------------------------------------
 
-    if ( has_been_fitted() )
+    if ( has_population_schema() )
         {
             // ----------------------------------------
             // Express model as JSON string
@@ -833,13 +833,6 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json_obj(
         }
 
     // ----------------------------------------
-
-    if ( !has_been_fitted() )
-        {
-            throw std::runtime_error( "Model has not been fitted!" );
-        }
-
-    // ----------------------------------------
     // Extract features
 
     Poco::JSON::Array features;
@@ -947,11 +940,6 @@ containers::Features DecisionTreeEnsemble::transform(
         {
             throw std::runtime_error(
                 "Population table needs to contain at least some data!" );
-        }
-
-    if ( num_features() == 0 )
-        {
-            throw std::runtime_error( "Multirel model has not been fitted!" );
         }
 
     // ------------------------------------------------------

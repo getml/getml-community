@@ -766,7 +766,7 @@ Poco::JSON::Object DecisionTreeEnsemble::to_monitor(
 
     // ----------------------------------------
 
-    if ( trees().size() > 0 )
+    if ( has_population_schema() )
         {
             // ----------------------------------------
             // Insert placeholders
@@ -837,11 +837,6 @@ containers::Features DecisionTreeEnsemble::transform(
 {
     // ------------------------------------------------------
     // Check plausibility.
-
-    if ( num_features() == 0 )
-        {
-            throw std::runtime_error( "Relboost model has not been fitted!" );
-        }
 
     if ( _population.nrows() == 0 )
         {
@@ -990,21 +985,9 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json_obj(
 
     // ------------------------------------------------------------------------
 
-    if ( trees().size() == 0 )
-        {
-            throw std::runtime_error( "Model has not been fitted!" );
-        }
-
-    // ------------------------------------------------------------------------
-
     obj.set( "initial_prediction_", initial_prediction() );
 
     // ------------------------------------------------------------------------
-
-    if ( trees().size() == 0 )
-        {
-            throw std::runtime_error( "Model has not been fitted!" );
-        }
 
     Poco::JSON::Array::Ptr trees_arr( new Poco::JSON::Array() );
 

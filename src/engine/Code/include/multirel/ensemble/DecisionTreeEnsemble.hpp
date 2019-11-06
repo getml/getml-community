@@ -106,9 +106,6 @@ class DecisionTreeEnsemble
     /// Trivial getter
     inline multithreading::Communicator *comm() { return impl().comm_; }
 
-    /// Whether the ensemble has been fitted
-    inline bool has_been_fitted() const { return trees().size() > 0; }
-
     /// Trivial accessor
     const descriptors::Hyperparameters &hyperparameters() const
     {
@@ -230,6 +227,12 @@ class DecisionTreeEnsemble
         &aggregation_impl()
     {
         return impl().aggregation_impl_;
+    }
+
+    /// Whether the ensemble has a population schema
+    inline bool has_population_schema() const
+    {
+        return ( impl().population_schema_ && true );
     }
 
     /// Trivial accessor
