@@ -519,102 +519,124 @@ DataFrameType Model<FeatureEngineererType>::extract_df_by_colnames(
 
     // ------------------------------------------------------------------------
 
-    std::vector<typename DataFrameType::IntColumnType> categoricals;
-
-    for ( size_t i = 0; i < _schema.num_categoricals(); ++i )
+    try
         {
-            const auto& name = _schema.categorical_name( i );
+            // ------------------------------------------------------------------------
 
-            const auto& mat = df.categorical( name );
+            std::vector<typename DataFrameType::IntColumnType> categoricals;
 
-            categoricals.push_back( typename DataFrameType::IntColumnType(
-                mat.data(), name, mat.nrows(), mat.unit() ) );
-        }
-
-    // ------------------------------------------------------------------------
-
-    std::vector<typename DataFrameType::FloatColumnType> discretes;
-
-    for ( size_t i = 0; i < _schema.num_discretes(); ++i )
-        {
-            const auto& name = _schema.discrete_name( i );
-
-            const auto& mat = df.discrete( name );
-
-            discretes.push_back( typename DataFrameType::FloatColumnType(
-                mat.data(), name, mat.nrows(), mat.unit() ) );
-        }
-
-    // ------------------------------------------------------------------------
-
-    std::vector<typename DataFrameType::IntColumnType> join_keys;
-
-    for ( size_t i = 0; i < _schema.num_join_keys(); ++i )
-        {
-            const auto& name = _schema.join_keys_name( i );
-
-            const auto& mat = df.join_key( name );
-
-            join_keys.push_back( typename DataFrameType::IntColumnType(
-                mat.data(), name, mat.nrows(), mat.unit() ) );
-        }
-
-    // ------------------------------------------------------------------------
-
-    std::vector<typename DataFrameType::FloatColumnType> numericals;
-
-    for ( size_t i = 0; i < _schema.num_numericals(); ++i )
-        {
-            const auto& name = _schema.numerical_name( i );
-
-            const auto& mat = df.numerical( name );
-
-            numericals.push_back( typename DataFrameType::FloatColumnType(
-                mat.data(), name, mat.nrows(), mat.unit() ) );
-        }
-
-    // ------------------------------------------------------------------------
-
-    std::vector<typename DataFrameType::FloatColumnType> targets;
-
-    for ( size_t i = 0; i < _schema.num_targets(); ++i )
-        {
-            const auto& name = _schema.target_name( i );
-
-            if ( df.has_target( name ) )
+            for ( size_t i = 0; i < _schema.num_categoricals(); ++i )
                 {
-                    const auto& mat = df.target( name );
+                    const auto& name = _schema.categorical_name( i );
 
-                    targets.push_back( typename DataFrameType::FloatColumnType(
+                    const auto& mat = df.categorical( name );
+
+                    categoricals.push_back(
+                        typename DataFrameType::IntColumnType(
+                            mat.data(), name, mat.nrows(), mat.unit() ) );
+                }
+
+            // ------------------------------------------------------------------------
+
+            std::vector<typename DataFrameType::FloatColumnType> discretes;
+
+            for ( size_t i = 0; i < _schema.num_discretes(); ++i )
+                {
+                    const auto& name = _schema.discrete_name( i );
+
+                    const auto& mat = df.discrete( name );
+
+                    discretes.push_back(
+                        typename DataFrameType::FloatColumnType(
+                            mat.data(), name, mat.nrows(), mat.unit() ) );
+                }
+
+            // ------------------------------------------------------------------------
+
+            std::vector<typename DataFrameType::IntColumnType> join_keys;
+
+            for ( size_t i = 0; i < _schema.num_join_keys(); ++i )
+                {
+                    const auto& name = _schema.join_keys_name( i );
+
+                    const auto& mat = df.join_key( name );
+
+                    join_keys.push_back( typename DataFrameType::IntColumnType(
                         mat.data(), name, mat.nrows(), mat.unit() ) );
                 }
+
+            // ------------------------------------------------------------------------
+
+            std::vector<typename DataFrameType::FloatColumnType> numericals;
+
+            for ( size_t i = 0; i < _schema.num_numericals(); ++i )
+                {
+                    const auto& name = _schema.numerical_name( i );
+
+                    const auto& mat = df.numerical( name );
+
+                    numericals.push_back(
+                        typename DataFrameType::FloatColumnType(
+                            mat.data(), name, mat.nrows(), mat.unit() ) );
+                }
+
+            // ------------------------------------------------------------------------
+
+            std::vector<typename DataFrameType::FloatColumnType> targets;
+
+            for ( size_t i = 0; i < _schema.num_targets(); ++i )
+                {
+                    const auto& name = _schema.target_name( i );
+
+                    if ( df.has_target( name ) )
+                        {
+                            const auto& mat = df.target( name );
+
+                            targets.push_back(
+                                typename DataFrameType::FloatColumnType(
+                                    mat.data(),
+                                    name,
+                                    mat.nrows(),
+                                    mat.unit() ) );
+                        }
+                }
+
+            // ------------------------------------------------------------------------
+
+            std::vector<typename DataFrameType::FloatColumnType> time_stamps;
+
+            for ( size_t i = 0; i < _schema.num_time_stamps(); ++i )
+                {
+                    const auto& name = _schema.time_stamps_name( i );
+
+                    const auto& mat = df.time_stamp( name );
+
+                    time_stamps.push_back(
+                        typename DataFrameType::FloatColumnType(
+                            mat.data(), name, mat.nrows(), mat.unit() ) );
+                }
+
+            // ------------------------------------------------------------------------
+
+            return DataFrameType(
+                categoricals,
+                discretes,
+                df.maps(),
+                join_keys,
+                _name,
+                numericals,
+                targets,
+                time_stamps );
+
+            // ------------------------------------------------------------------------
         }
-
-    // ------------------------------------------------------------------------
-
-    std::vector<typename DataFrameType::FloatColumnType> time_stamps;
-
-    for ( size_t i = 0; i < _schema.num_time_stamps(); ++i )
+    catch ( std::exception& e )
         {
-            const auto& name = _schema.time_stamps_name( i );
-
-            const auto& mat = df.time_stamp( name );
-
-            time_stamps.push_back( typename DataFrameType::FloatColumnType(
-                mat.data(), name, mat.nrows(), mat.unit() ) );
+            throw std::invalid_argument(
+                std::string( e.what() ) +
+                " Is it possible that your peripheral tables are in the wrong "
+                "order?" );
         }
-
-    // ------------------------------------------------------------------------
-
-    return DataFrameType(
-        categoricals,
-        discretes,
-        df.maps(),
-        join_keys,
-        _name,
-        numericals,
-        targets,
-        time_stamps );
 
     // ------------------------------------------------------------------------
 }
