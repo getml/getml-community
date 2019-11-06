@@ -33,6 +33,8 @@ class Threadutils
     static void transform_ensemble(
         const size_t _this_thread_num,
         const std::vector<size_t> _thread_nums,
+        const std::shared_ptr<const descriptors::Hyperparameters>&
+            _hyperparameters,
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral,
         const std::shared_ptr<const logging::AbstractLogger> _logger,

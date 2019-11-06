@@ -494,7 +494,7 @@ void DecisionTreeEnsemble::fit(
             debug_log(
                 "Trained FEATURE_" + std::to_string( ix_feature + 1 ) + "." );
 
-            if ( _logger )
+            if ( _logger && !hyperparameters().silent_ )
                 {
                     _logger->log(
                         "Trained FEATURE_" + std::to_string( ix_feature + 1 ) +
@@ -984,6 +984,7 @@ containers::Features DecisionTreeEnsemble::transform(
                 Threadutils::transform_ensemble,
                 i + 1,
                 thread_nums,
+                impl().hyperparameters_,
                 _population,
                 _peripheral,
                 std::shared_ptr<const logging::AbstractLogger>(),
@@ -999,6 +1000,7 @@ containers::Features DecisionTreeEnsemble::transform(
             Threadutils::transform_ensemble(
                 0,
                 thread_nums,
+                impl().hyperparameters_,
                 _population,
                 _peripheral,
                 _logger,

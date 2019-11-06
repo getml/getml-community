@@ -32,6 +32,10 @@ Hyperparameters::Hyperparameters( const Poco::JSON::Object& _json_obj )
       share_selected_features_(
           JSON::get_value<Float>( _json_obj, "share_selected_features_" ) ),
       shrinkage_( JSON::get_value<Float>( _json_obj, "shrinkage_" ) ),
+      silent_(
+          _json_obj.has( "silent_" )  // for backwards compatability
+              ? JSON::get_value<bool>( _json_obj, "silent_" )
+              : false ),
       tree_hyperparameters_(
           std::make_shared<const TreeHyperparameters>( _json_obj ) ),
       use_timestamps_( JSON::get_value<bool>( _json_obj, "use_timestamps_" ) )
@@ -113,6 +117,8 @@ Poco::JSON::Object Hyperparameters::to_json_obj() const
     obj.set( "share_conditions_", tree_hyperparameters_->share_conditions_ );
 
     obj.set( "share_selected_features_", share_selected_features_ );
+
+    obj.set( "silent_", seed_ );
 
     obj.set( "grid_factor_", tree_hyperparameters_->grid_factor_ );
 
