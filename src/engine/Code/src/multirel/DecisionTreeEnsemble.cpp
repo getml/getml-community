@@ -796,13 +796,15 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json_obj(
 
     Poco::JSON::Object obj;
 
+    // ------------------------------------------------------------------------
+
+    obj.set( "type_", "MultirelModel" );
+
     // ----------------------------------------
-    // Extract hyperparameters
 
     obj.set( "hyperparameters_", hyperparameters().to_json_obj() );
 
     // ----------------------------------------
-    // Extract placeholders
 
     obj.set( "peripheral_", JSON::vector_to_array( peripheral_names() ) );
 
