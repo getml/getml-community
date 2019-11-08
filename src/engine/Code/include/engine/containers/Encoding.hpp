@@ -16,7 +16,7 @@ class Encoding
         : null_value_( "" ),
           subencoding_( _subencoding ),
           subsize_( _subencoding ? _subencoding->size() : 0 ),
-          vector_( std::make_shared<std::vector<std::string>>( 0 ) )
+          vector_( std::make_shared<std::vector<strings::String>>( 0 ) )
     {
     }
 
@@ -29,7 +29,7 @@ class Encoding
 
     /// Returns the string mapped to an integer.
     template <typename T>
-    const std::string& operator[]( const T _i ) const;
+    std::string operator[]( const T _i ) const;
 
     /// Returns the integer mapped to a string.
     Int operator[]( const std::string& _val );
@@ -43,7 +43,7 @@ class Encoding
     // -------------------------------
 
     /// Returns beginning of unique integers
-    std::vector<std::string>::const_iterator begin() const
+    std::vector<strings::String>::const_iterator begin() const
     {
         return vector_->cbegin();
     }
@@ -51,12 +51,12 @@ class Encoding
     /// Deletes all entries
     void clear()
     {
-        map_ = std::unordered_map<std::string, Int>();
-        *vector_ = std::vector<std::string>();
+        map_ = std::map<strings::String, Int>();
+        *vector_ = std::vector<strings::String>();
     }
 
     /// Returns end of unique integers
-    std::vector<std::string>::const_iterator end() const
+    std::vector<strings::String>::const_iterator end() const
     {
         return vector_->cend();
     }
@@ -65,7 +65,8 @@ class Encoding
     size_t size() const { return subsize_ + vector_->size(); }
 
     /// Get the vector containing the names.
-    inline const std::shared_ptr<const std::vector<std::string>> vector() const
+    inline const std::shared_ptr<const std::vector<strings::String>> vector()
+        const
     {
         return vector_;
     }
@@ -80,7 +81,7 @@ class Encoding
 
    private:
     /// For fast lookup
-    std::unordered_map<std::string, Int> map_;
+    std::map<strings::String, Int> map_;
 
     /// The null value (needed because strings are returned by reference).
     const std::string null_value_;
@@ -94,14 +95,14 @@ class Encoding
     const size_t subsize_;
 
     /// Maps integers to strings
-    const std::shared_ptr<std::vector<std::string>> vector_;
+    const std::shared_ptr<std::vector<strings::String>> vector_;
 };
 
 // -------------------------------------------------------------------------
 // -------------------------------------------------------------------------
 
 template <typename T>
-const std::string& Encoding::operator[]( const T _i ) const
+std::string Encoding::operator[]( const T _i ) const
 {
     assert_true( size() > 0 );
 
@@ -120,12 +121,12 @@ const std::string& Encoding::operator[]( const T _i ) const
                 }
             else
                 {
-                    return ( *vector_ )[_i - subsize_];
+                    return ( *vector_ )[_i - subsize_].str();
                 }
         }
     else
         {
-            return ( *vector_ )[_i];
+            return ( *vector_ )[_i].str();
         }
 }
 

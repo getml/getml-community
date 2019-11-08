@@ -11,14 +11,14 @@ class DecisionTree
 {
    public:
     DecisionTree(
-        const std::shared_ptr<const std::vector<std::string>> &_categories,
+        const std::shared_ptr<const std::vector<strings::String>> &_categories,
         const std::shared_ptr<const descriptors::TreeHyperparameters>
             &_tree_hyperparameters,
         const Poco::JSON::Object &_json_obj );
 
     DecisionTree(
         const std::string &_agg,
-        const std::shared_ptr<const std::vector<std::string>> &_categories,
+        const std::shared_ptr<const std::vector<strings::String>> &_categories,
         const std::shared_ptr<const descriptors::TreeHyperparameters>
             &_tree_hyperparameters,
         const size_t _ix_perip_used,

@@ -10,7 +10,7 @@ void Encoding::append( const Encoding& _other, bool _include_subencoding )
 {
     for ( auto& elem : *_other.vector_ )
         {
-            ( *this )[elem];
+            ( *this )[elem.str()];
         }
 
     if ( _include_subencoding && _other.subencoding_ )
@@ -27,9 +27,11 @@ Int Encoding::insert( const std::string& _val )
 
     const auto ix = static_cast<Int>( vector_->size() + subsize_ );
 
-    map_[_val] = ix;
+    const auto str = strings::String( _val );
 
-    vector_->push_back( _val );
+    map_[str] = ix;
+
+    vector_->push_back( str );
 
     return ix;
 }
@@ -65,7 +67,9 @@ Int Encoding::operator[]( const std::string& _val )
     // If it cannot be found in the subencoding,
     // check/update your own values.
 
-    const auto it = map_.find( _val );
+    const auto str = strings::String( _val );
+
+    const auto it = map_.find( str );
 
     if ( it == map_.end() )
         {
@@ -108,7 +112,9 @@ Int Encoding::operator[]( const std::string& _val ) const
     // If it cannot be found in the subencoding,
     // check your own values.
 
-    const auto it = map_.find( _val );
+    const auto str = strings::String( _val );
+
+    const auto it = map_.find( str );
 
     if ( it == map_.end() )
         {
@@ -126,17 +132,11 @@ Encoding& Encoding::operator=( std::vector<std::string>&& _vector ) noexcept
 {
     assert_true( !subencoding_ );
 
-    *vector_ = _vector;
+    clear();
 
-    map_.clear();
-
-    for ( Int ix = 0; ix < static_cast<Int>( vector_->size() ); ++ix )
+    for ( const auto& val : _vector )
         {
-            auto& val = ( *vector_ )[ix];
-
-            assert_true( map_.find( val ) == map_.end() );
-
-            map_[val] = ix;
+            insert( val );
         }
 
     return *this;

@@ -307,7 +307,7 @@ std::string ConditionMaker::list_categories(
           it != _split.categories_used_end_;
           ++it )
         {
-            categories += "'" + encoding( *it ) + "'";
+            categories += "'" + encoding( *it ).str() + "'";
 
             if ( std::next( it, 1 ) != _split.categories_used_end_ )
                 {

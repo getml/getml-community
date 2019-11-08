@@ -183,7 +183,7 @@ class DataFrame
     const Encoding &categories() const { return *categories_.get(); }
 
     /// Trivial accessor
-    std::string const &category( const size_t _i ) const
+    std::string category( const size_t _i ) const
     {
         assert_true( _i < categories().size() );
 

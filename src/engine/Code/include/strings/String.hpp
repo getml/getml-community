@@ -34,8 +34,6 @@ class String
 
     ~String() = default;
 
-    // -------------------------------------------------------
-
    public:
     /// Returns a pointer to the underlying C-String.
     const char* c_str() const
@@ -96,4 +94,15 @@ class String
 // ----------------------------------------------------------------------------
 }  // namespace strings
 
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+
+inline std::ostream& operator<<(
+    std::ostream& _os, const strings::String& _str )
+{
+    _os << _str.c_str();
+    return _os;
+}
+
+// ----------------------------------------------------------------------------
 #endif  // STRINGS_STRING_HPP_

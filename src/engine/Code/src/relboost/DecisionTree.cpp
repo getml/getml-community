@@ -7,7 +7,7 @@ namespace decisiontrees
 // ----------------------------------------------------------------------------
 
 DecisionTree::DecisionTree(
-    const std::shared_ptr<const std::vector<std::string>>& _encoding,
+    const std::shared_ptr<const std::vector<strings::String>>& _encoding,
     const std::shared_ptr<const Hyperparameters>& _hyperparameters,
     const std::shared_ptr<lossfunctions::LossFunction>& _loss_function,
     const size_t _peripheral_used,
@@ -25,7 +25,7 @@ DecisionTree::DecisionTree(
 // ----------------------------------------------------------------------------
 
 DecisionTree::DecisionTree(
-    const std::shared_ptr<const std::vector<std::string>>& _encoding,
+    const std::shared_ptr<const std::vector<strings::String>>& _encoding,
     const std::shared_ptr<const Hyperparameters>& _hyperparameters,
     const std::shared_ptr<lossfunctions::LossFunction>& _loss_function,
     const Poco::JSON::Object& _obj )

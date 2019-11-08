@@ -8,7 +8,7 @@ namespace ensemble
 
 void CandidateTreeBuilder::add_counts(
     const decisiontrees::TableHolder &_table_holder,
-    const std::shared_ptr<const std::vector<std::string>> &_categories,
+    const std::shared_ptr<const std::vector<strings::String>> &_categories,
     const std::vector<descriptors::SameUnits> &_same_units,
     const descriptors::Hyperparameters &_hyperparameters,
     const Int _ix_perip_used,
@@ -42,7 +42,7 @@ void CandidateTreeBuilder::add_counts(
 
 void CandidateTreeBuilder::add_count_distincts(
     const decisiontrees::TableHolder &_table_holder,
-    const std::shared_ptr<const std::vector<std::string>> &_categories,
+    const std::shared_ptr<const std::vector<strings::String>> &_categories,
     const std::vector<descriptors::SameUnits> &_same_units,
     const descriptors::Hyperparameters &_hyperparameters,
     const Int _ix_perip_used,
@@ -93,7 +93,7 @@ void CandidateTreeBuilder::add_count_distincts(
 
 void CandidateTreeBuilder::add_other_aggs(
     const decisiontrees::TableHolder &_table_holder,
-    const std::shared_ptr<const std::vector<std::string>> &_categories,
+    const std::shared_ptr<const std::vector<strings::String>> &_categories,
     const std::vector<descriptors::SameUnits> &_same_units,
     const descriptors::Hyperparameters &_hyperparameters,
     const Int _ix_perip_used,
@@ -163,7 +163,7 @@ void CandidateTreeBuilder::add_other_aggs(
 
 void CandidateTreeBuilder::add_subfeature_aggs(
     const decisiontrees::TableHolder &_table_holder,
-    const std::shared_ptr<const std::vector<std::string>> &_categories,
+    const std::shared_ptr<const std::vector<strings::String>> &_categories,
     const std::vector<descriptors::SameUnits> &_same_units,
     const descriptors::Hyperparameters &_hyperparameters,
     const Int _ix_perip_used,
@@ -205,7 +205,7 @@ void CandidateTreeBuilder::add_subfeature_aggs(
 
 std::list<decisiontrees::DecisionTree> CandidateTreeBuilder::build_candidates(
     const decisiontrees::TableHolder &_table_holder,
-    const std::shared_ptr<const std::vector<std::string>> &_categories,
+    const std::shared_ptr<const std::vector<strings::String>> &_categories,
     const std::vector<descriptors::SameUnits> &_same_units,
     const size_t _ix_feature,
     const descriptors::Hyperparameters &_hyperparameters,
@@ -266,7 +266,7 @@ std::list<decisiontrees::DecisionTree> CandidateTreeBuilder::build_candidates(
 std::list<decisiontrees::DecisionTree>
 CandidateTreeBuilder::build_candidate_trees(
     const decisiontrees::TableHolder &_table_holder,
-    const std::shared_ptr<const std::vector<std::string>> &_categories,
+    const std::shared_ptr<const std::vector<strings::String>> &_categories,
     const std::vector<descriptors::SameUnits> &_same_units,
     const descriptors::Hyperparameters _hyperparameters,
     std::mt19937 *_random_number_generator,
@@ -383,7 +383,8 @@ size_t CandidateTreeBuilder::get_ncols(
                     _same_units[_ix_perip_used].same_units_discrete_->size() );
 
             case enums::DataUsed::same_unit_numerical:
-                assert_true( _same_units[_ix_perip_used].same_units_numerical_ );
+                assert_true(
+                    _same_units[_ix_perip_used].same_units_numerical_ );
                 return static_cast<Int>(
                     _same_units[_ix_perip_used].same_units_numerical_->size() );
 

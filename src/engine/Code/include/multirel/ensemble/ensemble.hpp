@@ -10,6 +10,8 @@
 
 #include "logging/logging.hpp"
 
+#include "strings/strings.hpp"
+
 #include "multirel/decisiontrees/decisiontrees.hpp"
 
 // ----------------------------------------------------

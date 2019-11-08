@@ -24,13 +24,13 @@ class DecisionTreeEnsemble
 
    public:
     DecisionTreeEnsemble(
-        const std::shared_ptr<const std::vector<std::string>>& _encoding,
+        const std::shared_ptr<const std::vector<strings::String>>& _encoding,
         const std::shared_ptr<const Hyperparameters>& _hyperparameters,
         const std::shared_ptr<const std::vector<std::string>>& _peripheral,
         const std::shared_ptr<const Placeholder>& _placeholder );
 
     DecisionTreeEnsemble(
-        const std::shared_ptr<const std::vector<std::string>>& _encoding,
+        const std::shared_ptr<const std::vector<strings::String>>& _encoding,
         const Poco::JSON::Object& _obj );
 
     DecisionTreeEnsemble( const DecisionTreeEnsemble& _other );
@@ -124,7 +124,7 @@ class DecisionTreeEnsemble
 
    public:
     /// Trivial (const) accessor
-    const std::shared_ptr<const std::vector<std::string>>& encoding() const
+    const std::shared_ptr<const std::vector<strings::String>>& encoding() const
     {
         return impl().encoding_;
     }

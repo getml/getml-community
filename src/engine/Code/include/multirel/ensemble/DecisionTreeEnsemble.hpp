@@ -22,14 +22,14 @@ class DecisionTreeEnsemble
 
    public:
     DecisionTreeEnsemble(
-        const std::shared_ptr<const std::vector<std::string>> &_categories,
+        const std::shared_ptr<const std::vector<strings::String>> &_categories,
         const std::shared_ptr<const descriptors::Hyperparameters>
             &_hyperparameters,
         const std::shared_ptr<const std::vector<std::string>> &_peripheral,
         const std::shared_ptr<const decisiontrees::Placeholder> &_placeholder );
 
     DecisionTreeEnsemble(
-        const std::shared_ptr<const std::vector<std::string>> &_categories,
+        const std::shared_ptr<const std::vector<strings::String>> &_categories,
         const Poco::JSON::Object &_obj );
 
     ~DecisionTreeEnsemble() = default;
@@ -97,8 +97,8 @@ class DecisionTreeEnsemble
 
    public:
     /// Trivial accessor
-    inline const std::shared_ptr<const std::vector<std::string>> &categories()
-        const
+    inline const std::shared_ptr<const std::vector<strings::String>>
+        &categories() const
     {
         return impl().categories_;
     }

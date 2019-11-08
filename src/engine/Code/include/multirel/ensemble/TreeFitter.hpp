@@ -13,7 +13,7 @@ class TreeFitter
 
    public:
     TreeFitter(
-        const std::shared_ptr<const std::vector<std::string>> &_categories,
+        const std::shared_ptr<const std::vector<strings::String>> &_categories,
         const std::shared_ptr<const descriptors::Hyperparameters>
             &_hyperparameters,
         std::mt19937 *_random_number_generator,
@@ -79,7 +79,7 @@ class TreeFitter
 
    private:
     /// Trivial accessor
-    std::shared_ptr<const std::vector<std::string>> &categories()
+    std::shared_ptr<const std::vector<strings::String>> &categories()
     {
         assert_true( categories_ );
         return categories_;
@@ -120,7 +120,7 @@ class TreeFitter
 
    private:
     /// List of categories mapping category names to integers
-    std::shared_ptr<const std::vector<std::string>> categories_;
+    std::shared_ptr<const std::vector<strings::String>> categories_;
 
     /// Communicator
     multithreading::Communicator *comm_;

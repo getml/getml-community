@@ -13,7 +13,7 @@ class ConditionMaker
 {
    public:
     ConditionMaker(
-        const std::shared_ptr<const std::vector<std::string>>& _encoding,
+        const std::shared_ptr<const std::vector<strings::String>>& _encoding,
         const Float _lag,
         const size_t _peripheral_used )
         : encoding_( _encoding ),
@@ -42,7 +42,7 @@ class ConditionMaker
 
    private:
     /// Trivial accessor.
-    std::string encoding( size_t _i ) const
+    strings::String encoding( size_t _i ) const
     {
         assert_true( encoding_ );
 
@@ -53,13 +53,13 @@ class ConditionMaker
         else
             {
                 assert_true( false && "Encoding out of range!" );
-                return "";
+                return strings::String( "" );
             }
     }
 
    private:
     /// Encoding for the categorical data, maps integers to underlying category.
-    const std::shared_ptr<const std::vector<std::string>> encoding_;
+    const std::shared_ptr<const std::vector<strings::String>> encoding_;
 
     /// The lag variable used for the moving time window.
     const Float lag_;
