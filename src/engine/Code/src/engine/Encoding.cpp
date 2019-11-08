@@ -21,24 +21,22 @@ void Encoding::append( const Encoding& _other, bool _include_subencoding )
 
 // ----------------------------------------------------------------------------
 
-Int Encoding::insert( const std::string& _val )
+Int Encoding::insert( const strings::String& _val )
 {
     assert_true( map_.find( _val ) == map_.end() );
 
     const auto ix = static_cast<Int>( vector_->size() + subsize_ );
 
-    const auto str = strings::String( _val );
+    map_[_val] = ix;
 
-    map_[str] = ix;
-
-    vector_->push_back( str );
+    vector_->push_back( _val );
 
     return ix;
 }
 
 // ----------------------------------------------------------------------------
 
-Int Encoding::operator[]( const std::string& _val )
+Int Encoding::operator[]( const strings::String& _val )
 {
     // -----------------------------------
     // If this is a NULL value, return -1.
@@ -67,9 +65,7 @@ Int Encoding::operator[]( const std::string& _val )
     // If it cannot be found in the subencoding,
     // check/update your own values.
 
-    const auto str = strings::String( _val );
-
-    const auto it = map_.find( str );
+    const auto it = map_.find( _val );
 
     if ( it == map_.end() )
         {
@@ -83,7 +79,7 @@ Int Encoding::operator[]( const std::string& _val )
 
 // ----------------------------------------------------------------------------
 
-Int Encoding::operator[]( const std::string& _val ) const
+Int Encoding::operator[]( const strings::String& _val ) const
 {
     // -----------------------------------
     // If this is a NULL value, return -1.
@@ -128,7 +124,7 @@ Int Encoding::operator[]( const std::string& _val ) const
 
 // ----------------------------------------------------------------------------
 
-Encoding& Encoding::operator=( std::vector<std::string>&& _vector ) noexcept
+Encoding& Encoding::operator=( const std::vector<std::string>& _vector )
 {
     assert_true( !subencoding_ );
 
@@ -136,7 +132,7 @@ Encoding& Encoding::operator=( std::vector<std::string>&& _vector ) noexcept
 
     for ( const auto& val : _vector )
         {
-            insert( val );
+            ( *this )[val];
         }
 
     return *this;

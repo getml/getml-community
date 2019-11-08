@@ -64,6 +64,12 @@ class String
         return ( strcmp( c_str(), _other.c_str() ) == 0 );
     }
 
+    /// Equal to operator
+    bool operator==( const char* _other ) const
+    {
+        return ( strcmp( c_str(), _other ) == 0 );
+    }
+
     /// Less than operator
     bool operator<( const String& _other ) const
     {

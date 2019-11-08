@@ -29,16 +29,16 @@ class Encoding
 
     /// Returns the string mapped to an integer.
     template <typename T>
-    std::string operator[]( const T _i ) const;
+    strings::String operator[]( const T _i ) const;
 
     /// Returns the integer mapped to a string.
-    Int operator[]( const std::string& _val );
+    Int operator[]( const strings::String& _val );
 
     /// Returns the integer mapped to a string (const version).
-    Int operator[]( const std::string& _val ) const;
+    Int operator[]( const strings::String& _val ) const;
 
     /// Copies a vector
-    Encoding& operator=( std::vector<std::string>&& _vector ) noexcept;
+    Encoding& operator=( const std::vector<std::string>& _vector );
 
     // -------------------------------
 
@@ -61,6 +61,18 @@ class Encoding
         return vector_->cend();
     }
 
+    /// Returns the integer mapped to a string.
+    Int operator[]( const std::string& _val )
+    {
+        return ( *this )[strings::String( _val )];
+    }
+
+    /// Returns the integer mapped to a string (const version).
+    Int operator[]( const std::string& _val ) const
+    {
+        return ( *this )[strings::String( _val )];
+    }
+
     /// Number of encoded elements
     size_t size() const { return subsize_ + vector_->size(); }
 
@@ -75,7 +87,7 @@ class Encoding
 
    private:
     /// Adds an integer to map_ and vector_, assuming it is not already included
-    Int insert( const std::string& _val );
+    Int insert( const strings::String& _val );
 
     // -------------------------------
 
@@ -102,8 +114,10 @@ class Encoding
 // -------------------------------------------------------------------------
 
 template <typename T>
-std::string Encoding::operator[]( const T _i ) const
+strings::String Encoding::operator[]( const T _i ) const
 {
+    static_assert( std::is_integral<T>::value, "Integral required." );
+
     assert_true( size() > 0 );
 
     assert_true( _i < 0 || static_cast<size_t>( _i ) < size() );
@@ -121,12 +135,12 @@ std::string Encoding::operator[]( const T _i ) const
                 }
             else
                 {
-                    return ( *vector_ )[_i - subsize_].str();
+                    return ( *vector_ )[_i - subsize_];
                 }
         }
     else
         {
-            return ( *vector_ )[_i].str();
+            return ( *vector_ )[_i];
         }
 }
 

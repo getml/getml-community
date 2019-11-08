@@ -203,7 +203,7 @@ std::vector<std::string> DataFrameReader::next_line()
     for ( size_t i = 0; i < df_.num_categoricals(); ++i )
         {
             const auto& val = df_.categorical( i )[rownum_];
-            result[col++] = categories()[val];
+            result[col++] = categories()[val].str();
         }
 
     for ( size_t i = 0; i < df_.num_discretes(); ++i )
@@ -218,7 +218,7 @@ std::vector<std::string> DataFrameReader::next_line()
     for ( size_t i = 0; i < df_.num_join_keys(); ++i )
         {
             const auto& val = df_.join_key( i )[rownum_];
-            result[col++] = join_keys_encoding()[val];
+            result[col++] = join_keys_encoding()[val].str();
         }
 
     for ( size_t i = 0; i < df_.num_numericals(); ++i )

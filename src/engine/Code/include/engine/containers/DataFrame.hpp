@@ -187,7 +187,7 @@ class DataFrame
     {
         assert_true( _i < categories().size() );
 
-        return categories()[_i];
+        return categories()[_i].str();
     }
 
     /// Trivial accessor

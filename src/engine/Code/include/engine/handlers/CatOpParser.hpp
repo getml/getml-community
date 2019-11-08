@@ -129,7 +129,7 @@ class CatOpParser
             _col.begin(),
             _col.end(),
             result.begin(),
-            [_encoding]( const Int val ) { return _encoding[val]; } );
+            [_encoding]( const Int val ) { return _encoding[val].str(); } );
 
         return result;
     }

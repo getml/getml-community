@@ -715,8 +715,10 @@ void DataFrame::from_json(
 
             for ( size_t j = 0; j < arr->size(); ++j )
                 {
-                    column[j] = ( *_encoding )[arr->getElement<std::string>(
-                        static_cast<unsigned int>( j ) )];
+                    const auto str = arr->getElement<std::string>(
+                        static_cast<unsigned int>( j ) );
+
+                    column[j] = ( *_encoding )[str];
                 }
 
             column.set_name( _names[i] );
