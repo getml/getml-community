@@ -14,6 +14,8 @@
 
 #include "multithreading/multithreading.hpp"
 
+#include "strings/strings.hpp"
+
 // ----------------------------------------------------------------------------
 
 #include "engine/monitoring/monitoring.hpp"
