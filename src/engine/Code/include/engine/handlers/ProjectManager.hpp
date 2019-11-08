@@ -88,6 +88,18 @@ class ProjectManager
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
+    /// Duplicates a multirel model.
+    void copy_multirel_model(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
+    /// Duplicates a multirel model.
+    void copy_relboost_model(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
     /// Deletes an Multirel model
     void delete_multirel_model(
         const std::string& _name,
@@ -110,6 +122,20 @@ class ProjectManager
     void delete_project(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
 
+    /// Retrieves the type of a model.
+    void get_model(
+        const std::string& _name, Poco::Net::StreamSocket* _socket ) const;
+
+    /// Returns a list of all data_frames currently held in memory and held
+    /// in the project directory.
+    void list_data_frames( Poco::Net::StreamSocket* _socket ) const;
+
+    /// Returns a list of all models currently held in memory.
+    void list_models( Poco::Net::StreamSocket* _socket ) const;
+
+    /// Returns a list of all projects.
+    void list_projects( Poco::Net::StreamSocket* _socket ) const;
+
     /// Loads an Multirel model
     void load_multirel_model(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
@@ -123,7 +149,7 @@ class ProjectManager
         const std::string& _name, Poco::Net::StreamSocket* _socket );
 
     /// Updates the encodings in the client
-    void refresh( Poco::Net::StreamSocket* _socket );
+    void refresh( Poco::Net::StreamSocket* _socket ) const;
 
     /// Saves an Multirel model to disc.
     void save_multirel_model(
@@ -160,6 +186,11 @@ class ProjectManager
     /// Loads a JSON object from a file.
     Poco::JSON::Object load_json_obj( const std::string& _fname ) const;
 
+    /// If a model of this name exists anywhere, it will be deleted.
+    /// This is to ensure that duplicate model names are not possible,
+    /// even for models of different types.
+    void purge_model( const std::string& _name, const bool _mem_only );
+
     // ------------------------------------------------------------------------
 
    private:
@@ -181,7 +212,16 @@ class ProjectManager
     containers::Encoding& categories() { return *categories_; }
 
     /// Trivial accessor
+    const containers::Encoding& categories() const { return *categories_; }
+
+    /// Trivial accessor
     std::map<std::string, containers::DataFrame>& data_frames()
+    {
+        return *data_frames_;
+    }
+
+    /// Trivial (const) accessor
+    const std::map<std::string, containers::DataFrame>& data_frames() const
     {
         return *data_frames_;
     }
@@ -206,6 +246,12 @@ class ProjectManager
     containers::Encoding& join_keys_encoding() { return *join_keys_encoding_; }
 
     /// Trivial accessor
+    const containers::Encoding& join_keys_encoding() const
+    {
+        return *join_keys_encoding_;
+    }
+
+    /// Trivial accessor
     engine::licensing::LicenseChecker& license_checker()
     {
         assert_true( license_checker_ );
@@ -228,45 +274,26 @@ class ProjectManager
 
     /// Sets a model.
     void set_multirel_model(
-        const std::string& _name, const models::MultirelModel& _model )
+        const std::string& _name,
+        const models::MultirelModel& _model,
+        const bool _purge_from_mem_only )
     {
-        multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
-
-        auto it = multirel_models().find( _name );
-
-        weak_write_lock.upgrade();
-
-        if ( it == multirel_models().end() )
-            {
-                multirel_models()[_name] =
-                    std::make_shared<models::MultirelModel>( _model );
-            }
-        else
-            {
-                it->second = std::make_shared<models::MultirelModel>( _model );
-            }
+        multithreading::WriteLock write_lock( read_write_lock_ );
+        purge_model( _name, _purge_from_mem_only );
+        multirel_models()[_name] =
+            std::make_shared<models::MultirelModel>( _model );
     }
 
     /// Sets a model.
     void set_relboost_model(
         const std::string& _name,
-        const models::Model<relboost::ensemble::DecisionTreeEnsemble>& _model )
+        const models::RelboostModel& _model,
+        const bool _purge_from_mem_only )
     {
-        multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
-
-        auto it = relboost_models().find( _name );
-
-        weak_write_lock.upgrade();
-
-        if ( it == relboost_models().end() )
-            {
-                relboost_models()[_name] =
-                    std::make_shared<models::RelboostModel>( _model );
-            }
-        else
-            {
-                it->second = std::make_shared<models::RelboostModel>( _model );
-            }
+        multithreading::WriteLock write_lock( read_write_lock_ );
+        purge_model( _name, _purge_from_mem_only );
+        relboost_models()[_name] =
+            std::make_shared<models::RelboostModel>( _model );
     }
 
     // ------------------------------------------------------------------------

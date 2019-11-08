@@ -192,6 +192,22 @@ void RequestHandler::run()
                 {
                     project_manager().delete_project( name, &socket() );
                 }
+            else if ( type == "get_model" )
+                {
+                    project_manager().get_model( name, &socket() );
+                }
+            else if ( type == "list_data_frames" )
+                {
+                    project_manager().list_data_frames( &socket() );
+                }
+            else if ( type == "list_models" )
+                {
+                    project_manager().list_models( &socket() );
+                }
+            else if ( type == "list_projects" )
+                {
+                    project_manager().list_projects( &socket() );
+                }
             else if ( type == "is_alive" )
                 {
                     return;
@@ -199,6 +215,11 @@ void RequestHandler::run()
             else if ( type == "MultirelModel" )
                 {
                     project_manager().add_multirel_model(
+                        name, cmd, &socket() );
+                }
+            else if ( type == "MultirelModel.copy" )
+                {
+                    project_manager().copy_multirel_model(
                         name, cmd, &socket() );
                 }
             else if ( type == "MultirelModel.delete" )
@@ -259,7 +280,8 @@ void RequestHandler::run()
                 }
             else if ( type == "RelboostModel.copy" )
                 {
-                    relboost_model_manager().copy_model( name, cmd, &socket() );
+                    project_manager().copy_relboost_model(
+                        name, cmd, &socket() );
                 }
             else if ( type == "RelboostModel.delete" )
                 {

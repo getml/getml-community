@@ -23,8 +23,9 @@ int main( int argc, char *argv[] )
 
     std::cout << "getML - Automated Machine Learning and Automated Feature"
               << " Engineering for Relational Data and Time Series."
-              << std::endl
               << std::endl;
+
+    std::cout << "version: " << GETML_VERSION << std::endl << std::endl;
 
     std::cout << "Please open a web browser (like Firefox, Chrome or Safari) "
               << "and go to http://localhost:" << options.monitor_.http_port_

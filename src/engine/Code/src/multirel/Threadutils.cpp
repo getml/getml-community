@@ -105,7 +105,8 @@ size_t Threadutils::get_num_threads( const size_t _num_threads )
         {
             num_threads = std::max(
                 static_cast<size_t>( 2 ),
-                static_cast<size_t>( std::thread::hardware_concurrency() ) - 2 );
+                static_cast<size_t>( std::thread::hardware_concurrency() ) -
+                    2 );
         }
 
     return num_threads;
@@ -116,6 +117,7 @@ size_t Threadutils::get_num_threads( const size_t _num_threads )
 void Threadutils::transform_ensemble(
     const size_t _this_thread_num,
     const std::vector<size_t> _thread_nums,
+    const std::shared_ptr<const descriptors::Hyperparameters>& _hyperparameters,
     const containers::DataFrame& _population,
     const std::vector<containers::DataFrame>& _peripheral,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
@@ -175,7 +177,7 @@ void Threadutils::transform_ensemble(
                         new_feature,
                         ( *_features )[i].get() );
 
-                    if ( _logger /*&& !silent */ )
+                    if ( _logger && !_hyperparameters->silent_ )
                         {
                             _logger->log(
                                 "Built FEATURE_" + std::to_string( i + 1 ) +

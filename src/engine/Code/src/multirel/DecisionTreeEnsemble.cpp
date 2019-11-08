@@ -494,7 +494,7 @@ void DecisionTreeEnsemble::fit(
             debug_log(
                 "Trained FEATURE_" + std::to_string( ix_feature + 1 ) + "." );
 
-            if ( _logger )
+            if ( _logger && !hyperparameters().silent_ )
                 {
                     _logger->log(
                         "Trained FEATURE_" + std::to_string( ix_feature + 1 ) +
@@ -688,7 +688,7 @@ Poco::JSON::Object DecisionTreeEnsemble::to_monitor(
 
     // ----------------------------------------
 
-    if ( has_been_fitted() )
+    if ( has_population_schema() )
         {
             // ----------------------------------------
             // Express model as JSON string
@@ -796,13 +796,15 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json_obj(
 
     Poco::JSON::Object obj;
 
+    // ------------------------------------------------------------------------
+
+    obj.set( "type_", "MultirelModel" );
+
     // ----------------------------------------
-    // Extract hyperparameters
 
     obj.set( "hyperparameters_", hyperparameters().to_json_obj() );
 
     // ----------------------------------------
-    // Extract placeholders
 
     obj.set( "peripheral_", JSON::vector_to_array( peripheral_names() ) );
 
@@ -830,13 +832,6 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json_obj(
     if ( _schema_only )
         {
             return obj;
-        }
-
-    // ----------------------------------------
-
-    if ( !has_been_fitted() )
-        {
-            throw std::runtime_error( "Model has not been fitted!" );
         }
 
     // ----------------------------------------
@@ -949,11 +944,6 @@ containers::Features DecisionTreeEnsemble::transform(
                 "Population table needs to contain at least some data!" );
         }
 
-    if ( num_features() == 0 )
-        {
-            throw std::runtime_error( "Multirel model has not been fitted!" );
-        }
-
     // ------------------------------------------------------
     // thread_nums signify the thread number that a particular row belongs to.
     // The idea is to separate the join keys as clearly as possible.
@@ -996,6 +986,7 @@ containers::Features DecisionTreeEnsemble::transform(
                 Threadutils::transform_ensemble,
                 i + 1,
                 thread_nums,
+                impl().hyperparameters_,
                 _population,
                 _peripheral,
                 std::shared_ptr<const logging::AbstractLogger>(),
@@ -1011,6 +1002,7 @@ containers::Features DecisionTreeEnsemble::transform(
             Threadutils::transform_ensemble(
                 0,
                 thread_nums,
+                impl().hyperparameters_,
                 _population,
                 _peripheral,
                 _logger,

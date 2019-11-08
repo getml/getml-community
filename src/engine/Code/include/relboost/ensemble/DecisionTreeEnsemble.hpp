@@ -229,6 +229,12 @@ class DecisionTreeEnsemble
         return *impl().comm_;
     }
 
+    /// Whether the model has a population schema.
+    const bool has_population_schema() const
+    {
+        return ( impl().population_schema_ && true );
+    }
+
     /// Trivial (private) accessor
     DecisionTreeEnsembleImpl& impl() { return impl_; }
 

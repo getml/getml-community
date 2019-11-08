@@ -83,6 +83,9 @@ struct Hyperparameters
     /// Shrinkage of learning rate
     const Float shrinkage_;
 
+    /// Whether we want to print out the "Trained FEATURE_..." message
+    const bool silent_;
+
     /// Hyperparameters necessary for training the tree
     const std::shared_ptr<const TreeHyperparameters> tree_hyperparameters_;
 

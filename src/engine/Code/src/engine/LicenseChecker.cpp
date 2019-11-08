@@ -71,22 +71,27 @@ void LicenseChecker::receive_token( const std::string& _caller_id )
     logger_->log( "Attempting to receive a token..." );
 
     // -------------------------------------------------------------
-    // Make request
 
 #ifdef _WIN32
 
-    const std::string request =
-        "{\"caller_id_\":\"" + _caller_id +
-        "\",\"product_id_\":\"getml-0.8-beta-windows\"}";
+    const std::string os = "windows";
+
 #elif __APPLE__
 
-    const std::string request = "{\"caller_id_\":\"" + _caller_id +
-                                "\",\"product_id_\":\"getml-0.8-beta-macos\"}";
+    const std::string os = "macOS";
+
 #else
 
-    const std::string request = "{\"caller_id_\":\"" + _caller_id +
-                                "\",\"product_id_\":\"getml-0.8-beta-linux\"}";
+    const std::string os = "linux";
+
 #endif
+
+    // -------------------------------------------------------------
+    // Make request
+
+    const std::string request = "{\"caller_id_\":\"" + _caller_id +
+                                "\",\"product_id_\":\"" + GETML_VERSION +
+                                "\",\"os_\":\"" + os + "\"}";
 
     // -------------------------------------------------------------
     // Get token
@@ -146,7 +151,7 @@ void LicenseChecker::receive_token( const std::string& _caller_id )
         }
 
     // --------------------------------------------------------------
-}
+}  // namespace licensing
 
 // ------------------------------------------------------------------------
 

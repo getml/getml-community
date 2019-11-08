@@ -48,12 +48,6 @@ class ModelManager
     // ------------------------------------------------------------------------
 
    public:
-    /// Copies a model
-    void copy_model(
-        const std::string& _name,
-        const Poco::JSON::Object& _cmd,
-        Poco::Net::StreamSocket* _socket );
-
     /// Fits a model
     void fit_model(
         const std::string& _name,
@@ -201,16 +195,15 @@ class ModelManager
 
         auto it = models().find( _name );
 
-        weak_write_lock.upgrade();
-
         if ( it == models().end() )
             {
-                models()[_name] = std::make_shared<ModelType>( _model );
+                throw std::runtime_error(
+                    "Model '" + _name + "' does not exist!" );
             }
-        else
-            {
-                it->second = std::make_shared<ModelType>( _model );
-            }
+
+        weak_write_lock.upgrade();
+
+        it->second = std::make_shared<ModelType>( _model );
     }
 
     // ------------------------------------------------------------------------
@@ -258,25 +251,6 @@ namespace engine
 {
 namespace handlers
 {
-// ------------------------------------------------------------------------
-
-template <typename ModelType>
-void ModelManager<ModelType>::copy_model(
-    const std::string& _name,
-    const Poco::JSON::Object& _cmd,
-    Poco::Net::StreamSocket* _socket )
-{
-    const std::string other = JSON::get_value<std::string>( _cmd, "other_" );
-
-    auto other_model = get_model( other );
-
-    post_model( other_model.to_monitor( _name ) );
-
-    set_model( _name, other_model );
-
-    communication::Sender::send_string( "Success!", _socket );
-}
-
 // ------------------------------------------------------------------------
 
 template <typename ModelType>
@@ -335,12 +309,11 @@ void ModelManager<ModelType>::fit_model(
 
     if ( it == models().end() )
         {
-            models()[_name] = std::make_shared<ModelType>( model );
+            throw std::runtime_error(
+                "Model named '" + _name + "' does not exist!" );
         }
-    else
-        {
-            it->second = std::make_shared<ModelType>( model );
-        }
+
+    it->second = std::make_shared<ModelType>( model );
 
     assert_true( categories_ );
 
