@@ -30,7 +30,7 @@ class String
         strcpy( chars_.get(), _other.c_str() );
     }
 
-    String( String&& _other ) : chars_( std::move( _other.chars_ ) ) {}
+    String( String&& _other ) noexcept : chars_( std::move( _other.chars_ ) ) {}
 
     ~String() = default;
 
