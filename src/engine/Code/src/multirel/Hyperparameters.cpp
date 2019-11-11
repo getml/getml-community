@@ -118,7 +118,7 @@ Poco::JSON::Object Hyperparameters::to_json_obj() const
 
     obj.set( "share_selected_features_", share_selected_features_ );
 
-    obj.set( "silent_", seed_ );
+    obj.set( "silent_", silent_ );
 
     obj.set( "grid_factor_", tree_hyperparameters_->grid_factor_ );
 
