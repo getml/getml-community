@@ -1038,7 +1038,7 @@ Poco::JSON::Object DataFrame::get_content(
 
             for ( size_t j = 0; j < num_join_keys(); ++j )
                 {
-                    row.add( join_keys_encoding()[join_key( j )[i]] );
+                    row.add( join_keys_encoding()[join_key( j )[i]].str() );
                 }
 
             for ( size_t j = 0; j < num_targets(); ++j )
@@ -1048,7 +1048,7 @@ Poco::JSON::Object DataFrame::get_content(
 
             for ( size_t j = 0; j < num_categoricals(); ++j )
                 {
-                    row.add( categories()[categorical( j )[i]] );
+                    row.add( categories()[categorical( j )[i]].str() );
                 }
 
             for ( size_t j = 0; j < num_discretes(); ++j )
