@@ -37,7 +37,7 @@
 
 #include "multithreading/multithreading.hpp"
 
-#include "strings/String.hpp"
+#include "strings/strings.hpp"
 
 #include "engine/Float.hpp"
 #include "engine/Int.hpp"

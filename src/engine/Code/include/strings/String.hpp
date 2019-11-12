@@ -42,6 +42,14 @@ class String
         return chars_.get();
     }
 
+    /// Calculates the hash function of this string.
+    /// This is useful for std::unordered_map.
+    size_t hash() const
+    {
+        return std::hash<std::string_view>()(
+            std::string_view( c_str(), size() ) );
+    }
+
     /// Copy assignment operator.
     String& operator=( const String& _other )
     {

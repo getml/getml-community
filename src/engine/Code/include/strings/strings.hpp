@@ -9,12 +9,15 @@
 #include <memory>
 #include <ostream>
 #include <string>
+#include <string_view>
 
 #include "debug/debug.hpp"
 
 // ----------------------------------------------------------------------------
 
 #include "strings/String.hpp"
+
+#include "strings/StringHasher.hpp"
 
 // ----------------------------------------------------------------------------
 

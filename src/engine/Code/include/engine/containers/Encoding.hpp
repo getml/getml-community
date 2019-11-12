@@ -29,7 +29,7 @@ class Encoding
 
     /// Returns the string mapped to an integer.
     template <typename T>
-    strings::String operator[]( const T _i ) const;
+    const strings::String& operator[]( const T _i ) const;
 
     /// Returns the integer mapped to a string.
     Int operator[]( const strings::String& _val );
@@ -51,7 +51,8 @@ class Encoding
     /// Deletes all entries
     void clear()
     {
-        map_ = std::map<strings::String, Int>();
+        map_ =
+            std::unordered_map<strings::String, Int, strings::StringHasher>();
         *vector_ = std::vector<strings::String>();
     }
 
@@ -93,10 +94,10 @@ class Encoding
 
    private:
     /// For fast lookup
-    std::map<strings::String, Int> map_;
+    std::unordered_map<strings::String, Int, strings::StringHasher> map_;
 
     /// The null value (needed because strings are returned by reference).
-    const std::string null_value_;
+    const strings::String null_value_;
 
     /// A subencoding can be used to separate the existing encoding from new
     /// data. Under some circumstance, we want to avoid the global encoding
@@ -114,7 +115,7 @@ class Encoding
 // -------------------------------------------------------------------------
 
 template <typename T>
-strings::String Encoding::operator[]( const T _i ) const
+const strings::String& Encoding::operator[]( const T _i ) const
 {
     static_assert( std::is_integral<T>::value, "Integral required." );
 
