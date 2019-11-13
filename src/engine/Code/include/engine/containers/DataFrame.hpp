@@ -37,6 +37,9 @@ class DataFrame
     /// Setter for an int_column
     void add_int_column( const Column<Int> &_col, const std::string _role );
 
+    /// Setter for a string_column
+    void add_string_column( const Column<strings::String> &_col );
+
     /// Appends another data frame to this data frame.
     void append( const DataFrame &_other );
 
@@ -401,6 +404,24 @@ class DataFrame
     /// Returns number of the time stamps.
     size_t const num_time_stamps() const { return time_stamps_.size(); }
 
+    /// Returns number of undefined float columns.
+    size_t const num_undefined_floats() const
+    {
+        return undefined_floats_.size();
+    }
+
+    /// Returns number of undefined integer columns.
+    size_t const num_undefined_integers() const
+    {
+        return undefined_integers_.size();
+    }
+
+    /// Returns number of undefined string columns.
+    size_t const num_undefined_strings() const
+    {
+        return undefined_strings_.size();
+    }
+
     /// Trivial accessor
     template <
         typename T,
@@ -511,6 +532,97 @@ class DataFrame
     const std::vector<Column<Float>> &time_stamps() const
     {
         return time_stamps_;
+    }
+
+    /// Trivial accessor
+    template <
+        typename T,
+        typename std::enable_if<!std::is_same<T, std::string>::value, int>::
+            type = 0>
+    const Column<Float> &undefined_float( const T _i ) const
+    {
+        assert_true( undefined_floats_.size() > 0 );
+        assert_true( _i >= 0 );
+        assert_true( _i < static_cast<T>( undefined_floats_.size() ) );
+
+        return undefined_floats_[_i];
+    }
+
+    /// Trivial accessor
+    const Column<Float> &undefined_float( const std::string &_name ) const
+    {
+        for ( size_t i = 0; i < num_undefined_floats(); ++i )
+            {
+                if ( undefined_float( i ).name() == _name )
+                    {
+                        return undefined_float( i );
+                    }
+            }
+
+        throw std::invalid_argument(
+            "Data frame '" + name_ +
+            "' contains no undefined float column named '" + _name + "'!" );
+    }
+
+    /// Trivial accessor
+    template <
+        typename T,
+        typename std::enable_if<!std::is_same<T, std::string>::value, int>::
+            type = 0>
+    const Column<Int> &undefined_integer( const T _i ) const
+    {
+        assert_true( undefined_integers_.size() > 0 );
+        assert_true( _i >= 0 );
+        assert_true( _i < static_cast<T>( undefined_integers_.size() ) );
+
+        return undefined_integers_[_i];
+    }
+
+    /// Trivial accessor
+    const Column<Int> &undefined_integer( const std::string &_name ) const
+    {
+        for ( size_t i = 0; i < num_undefined_integers(); ++i )
+            {
+                if ( undefined_integer( i ).name() == _name )
+                    {
+                        return undefined_integer( i );
+                    }
+            }
+
+        throw std::invalid_argument(
+            "Data frame '" + name_ +
+            "' contains no undefined integer column named '" + _name + "'!" );
+    }
+
+    /// Trivial accessor
+    template <
+        typename T,
+        typename std::enable_if<!std::is_same<T, std::string>::value, int>::
+            type = 0>
+    const Column<strings::String> &undefined_string( const T _i ) const
+    {
+        assert_true( undefined_strings_.size() > 0 );
+        assert_true( _i >= 0 );
+        assert_true( _i < static_cast<T>( undefined_strings_.size() ) );
+
+        return undefined_strings_[_i];
+    }
+
+    /// Trivial accessor
+    const Column<strings::String> &undefined_string(
+        const std::string &_name ) const
+    {
+        for ( size_t i = 0; i < num_undefined_strings(); ++i )
+            {
+                if ( undefined_string( i ).name() == _name )
+                    {
+                        return undefined_string( i );
+                    }
+            }
+
+        throw std::invalid_argument(
+            "Data frame '" + name_ +
+            "' contains no undefined string column named '" + _name + "'!" );
     }
 
     // -------------------------------
@@ -636,7 +748,7 @@ class DataFrame
     /// Performs the role of an "index" over the join keys
     std::vector<DataFrameIndex> indices_;
 
-    /// Join keys - note that their might be several
+    /// Join keys - note that there might be several
     std::vector<Column<Int>> join_keys_;
 
     /// Maps integers to names of join keys
@@ -647,6 +759,18 @@ class DataFrame
 
     /// Numerical data
     std::vector<Column<Float>> numericals_;
+
+    /// "Undefined" floats - undefined means that
+    /// no explicit role has been set yet.
+    std::vector<Column<Float>> undefined_floats_;
+
+    /// "Undefined" integers - undefined means that
+    /// no explicit role has been set yet.
+    std::vector<Column<Int>> undefined_integers_;
+
+    /// "Undefined" strings - undefined means that
+    /// no explicit role has been set yet.
+    std::vector<Column<strings::String>> undefined_strings_;
 
     /// Targets - only exists for population tables
     std::vector<Column<Float>> targets_;
