@@ -116,7 +116,8 @@ void test14_categorical_output()
     // ---------------------------------------------
     // Build data model.
 
-    const auto population_json = load_json( "../../tests/relboost/test14/schema.json" );
+    const auto population_json =
+        load_json( "../../tests/relboost/test14/schema.json" );
 
     const auto population =
         std::make_shared<const relboost::ensemble::Placeholder>(
@@ -141,8 +142,8 @@ void test14_categorical_output()
     // ------------------------------------------------------------------------
     // Build model
 
-    const auto encoding = std::make_shared<const std::vector<std::string>>(
-        std::vector<std::string>(
+    const auto encoding = std::make_shared<const std::vector<strings::String>>(
+        std::vector<strings::String>(
             {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"} ) );
 
     auto model = relboost::ensemble::DecisionTreeEnsemble(

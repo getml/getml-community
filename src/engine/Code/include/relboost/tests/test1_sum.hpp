@@ -136,8 +136,8 @@ void test1_sum()
     // ------------------------------------------------------------------------
     // Build model
 
-    const auto encoding = std::make_shared<const std::vector<std::string>>(
-        std::vector<std::string>(
+    const auto encoding = std::make_shared<const std::vector<strings::String>>(
+        std::vector<strings::String>(
             {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"} ) );
 
     auto model = relboost::ensemble::DecisionTreeEnsemble(

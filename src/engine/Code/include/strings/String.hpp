@@ -24,6 +24,12 @@ class String
         chars_.get()[_str.size()] = '\0';
     }
 
+    String( const char* _str )
+        : chars_( std::make_unique<char[]>( strlen( _str ) + 1 ) )
+    {
+        strcpy( chars_.get(), _str );
+    }
+
     String( const String& _other )
         : chars_( std::make_unique<char[]>( _other.size() + 1 ) )
     {
