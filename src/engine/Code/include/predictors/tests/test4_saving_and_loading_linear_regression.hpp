@@ -1,13 +1,19 @@
 
 // -----------------------------------------------------------------------------
 
-void test4_saving_and_loading_linear_regression()
+void test4_saving_and_loading_linear_regression( std::filesystem::path _test_path )
 {
     // -------------------------------------------------------------------------
 
     std::cout << std::endl
               << "Test 4 (Saving and loading linear regression): " << std::endl
               << std::endl;
+
+    // Append all subfolders to reach the required file. This 
+    // appending will have a persistent effect of _test_path which
+    // is stored on the heap. After setting it once to the correct
+    // folder only the filename has to be replaced.
+    _test_path.append( "predictors" ).append( "test4" ).append( "LinearRegression" );
 
     // -------------------------------------------------------------------------
 
@@ -62,17 +68,17 @@ void test4_saving_and_loading_linear_regression()
 
     // ------------------------------------------------------------------------
 
-    lin_reg.save( "../../tests/predictors/test4/LinearRegression" );
+    lin_reg.save( _test_path.string() );
 
     auto lin_reg2 = predictors::LinearRegression( hyperparams, impl );
 
-    lin_reg2.load( "../../tests/predictors/test4/LinearRegression" );
+    lin_reg2.load( _test_path.string() );
 
-    lin_reg2.save( "../../tests/predictors/test4/LinearRegression2" );
+    lin_reg2.save( _test_path.replace_filename( "LinearRegression2" ).string() );
 
     auto lin_reg3 = predictors::LinearRegression( hyperparams, impl );
 
-    lin_reg3.load( "../../tests/predictors/test4/LinearRegression2" );
+    lin_reg3.load( _test_path.string() );
 
     // ------------------------------------------------------------------------
 
