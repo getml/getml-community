@@ -134,6 +134,21 @@ class CatOpParser
         return result;
     }
 
+    /// Transforms an undefined string column to a vector of equal length.
+    static std::vector<std::string> to_vec(
+        const containers::Column<strings::String>& _col )
+    {
+        auto result = std::vector<std::string>( _col.nrows() );
+
+        std::transform(
+            _col.begin(),
+            _col.end(),
+            result.begin(),
+            []( const strings::String& val ) { return val.str(); } );
+
+        return result;
+    }
+
     // ------------------------------------------------------------------------
 };
 

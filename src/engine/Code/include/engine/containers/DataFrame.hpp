@@ -125,7 +125,7 @@ class DataFrame
     const Column<Int> &int_column(
         const std::string &_role, const size_t _num ) const;
 
-    /// Getter for a float column.
+    /// Getter for an int_column.
     const Column<Int> &int_column(
         const std::string &_name, const std::string &_role ) const;
 

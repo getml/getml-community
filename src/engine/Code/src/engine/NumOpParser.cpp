@@ -109,7 +109,14 @@ containers::Column<Float> NumOpParser::parse(
                         "'." );
                 }
 
-            return it->float_column( name, role );
+            if ( role == "undefined_integer" )
+                {
+                    return to_float_column( it->int_column( name, role ) );
+                }
+            else
+                {
+                    return it->float_column( name, role );
+                }
         }
     else if ( type == "Value" )
         {
