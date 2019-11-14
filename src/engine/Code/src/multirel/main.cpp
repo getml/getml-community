@@ -3,13 +3,36 @@
 
 int main( int argc, char* argv[] )
 {
-    std::cout << std::endl
+
+	// ---------------------------------------------------------------
+	
+	// Checking the input arguments. A path to the tests folder
+	// containing folders distros, multirel, predictors, and relboost
+	// has to be provided.
+	if ( argc == 2 ) {
+		std::filesystem::path test_path = argv[1];
+	} else {
+		std::cout << std::endl
+				  << "-----------------------------------------------"
+			"--------------------------------"
+				  << std::endl;
+		std::cout << "ERROR: Please provide a path to the test folder!" 
+				  << std::endl << std::endl;
+		return 1;
+	}
+	
+	// ---------------------------------------------------------------
+	
+	std::cout << std::endl
               << "-------------------------------------------------------------"
                  "------------------"
               << std::endl;
-    std::cout << "TESTS FOR MODULE 'MULTIREL':" << std::endl << std::endl;
-
-    test1_count();
+    std::cout << "TESTS FOR MODULE 'MULTIREL' IN " << test_path.string()
+			  << ":" << std::endl << std::endl;
+	
+	// ---------------------------------------------------------------
+	
+    test1_count( test_path );
     test2_avg();
     test3_sum();
     test4_max();
