@@ -1,7 +1,7 @@
 
 // ---------------------------------------------------------------------------
 
-void test1_count( const std::filesystem::path _test_path)
+void test1_count( std::filesystem::path _test_path)
 {
     // ------------------------------------------------------------------------
 
@@ -107,13 +107,13 @@ void test1_count( const std::filesystem::path _test_path)
 
     // ---------------------------------------------
     // Build data model.
-
-    const auto population_json =
-        load_json( _test_path
-				   .append( "multirel" )
-				   .append( "test1" )
-				   .append( "schema.json" )
-				   .string() );
+    
+    // Append all subfolders to reach the required file. This 
+    // appending will have a persistent effect of _test_path which
+    // is stored on the heap. After setting it once to the correct
+    // folder only the filename has to be replaced.
+    _test_path.append( "multirel" ).append( "test1" ).append( "schema.json" );
+    const auto population_json = load_json( _test_path.string() );
 
     const auto population =
         std::make_shared<const multirel::decisiontrees::Placeholder>(
@@ -126,11 +126,7 @@ void test1_count( const std::filesystem::path _test_path)
     // Load hyperparameters.
 
     const auto hyperparameters_json =
-        load_json( _test_path
-				   .append( "multirel" )
-				   .append( "test1" )
-				   .append( "hyperparameters.json" )
-				   .string() );
+	    load_json( _test_path.replace_filename( "hyperparameters.json" ).string() );
 
     std::cout << multirel::JSON::stringify( *hyperparameters_json ) << std::endl
               << std::endl;
@@ -154,20 +150,12 @@ void test1_count( const std::filesystem::path _test_path)
 
     model.fit( population_df, {peripheral_df} );
 
-    model.save( _test_path
-				.append( "multirel" )
-				.append( "test1" )
-				.append(" Model.json" )
-				.string() );
+    model.save( _test_path.replace_filename( "Model.json" ).string() );
 
     // ------------------------------------------------------------------------
     // Express as SQL code.
 
-    std::ofstream sql( _test_path.
-					   .append( "multirel" )
-					   .append( "test1" )
-					   .append(" Model.sql" )
-					   .string() );
+    std::ofstream sql( _test_path.replace_filename( "Model.sql" ).string() );
     sql << model.to_sql();
     sql.close();
 

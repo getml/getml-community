@@ -9,8 +9,10 @@ int main( int argc, char* argv[] )
 	// Checking the input arguments. A path to the tests folder
 	// containing folders distros, multirel, predictors, and relboost
 	// has to be provided.
+	std::filesystem::path test_path;
+	
 	if ( argc == 2 ) {
-		std::filesystem::path test_path = argv[1];
+		test_path = argv[1];
 	} else {
 		std::cout << std::endl
 				  << "-----------------------------------------------"
