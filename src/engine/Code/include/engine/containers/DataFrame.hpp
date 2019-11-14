@@ -70,18 +70,24 @@ class DataFrame
         const std::vector<std::string> &_join_key_names,
         const std::vector<std::string> &_numerical_names,
         const std::vector<std::string> &_target_names,
-        const std::vector<std::string> &_time_stamp_names );
+        const std::vector<std::string> &_time_stamp_names,
+        const std::vector<std::string> &_undefined_float_names,
+        const std::vector<std::string> &_undefined_integer_names,
+        const std::vector<std::string> &_undefined_string_names );
 
     /// Builds a dataframe from a table in the data base.
     void from_db(
         const std::shared_ptr<database::Connector> _connector,
         const std::string &_tname,
-        const std::vector<std::string> &_categoricals,
-        const std::vector<std::string> &_discretes,
-        const std::vector<std::string> &_join_keys,
-        const std::vector<std::string> &_numericals,
-        const std::vector<std::string> &_targets,
-        const std::vector<std::string> &_time_stamps );
+        const std::vector<std::string> &_categorical_names,
+        const std::vector<std::string> &_discrete_names,
+        const std::vector<std::string> &_join_key_names,
+        const std::vector<std::string> &_numerical_names,
+        const std::vector<std::string> &_target_names,
+        const std::vector<std::string> &_time_stamp_names,
+        const std::vector<std::string> &_undefined_float_names,
+        const std::vector<std::string> &_undefined_integer_names,
+        const std::vector<std::string> &_undefined_string_names );
 
     /// Builds a dataframe from a query.
     void from_query(
@@ -645,6 +651,12 @@ class DataFrame
         const std::vector<std::shared_ptr<std::vector<Int>>> &_vectors,
         const std::string &_role );
 
+    /// Adds a vector of string vectors.
+    void add_string_vectors(
+        const std::vector<std::string> &_names,
+        const std::vector<std::shared_ptr<std::vector<strings::String>>>
+            &_vectors );
+
     /// Calculate the number of bytes.
     template <class T>
     ULong calc_nbytes( const std::vector<Column<T>> &_columns ) const;
@@ -656,7 +668,10 @@ class DataFrame
         const std::vector<std::string> &_join_key_names,
         const std::vector<std::string> &_numerical_names,
         const std::vector<std::string> &_target_names,
-        const std::vector<std::string> &_time_stamp_names ) const;
+        const std::vector<std::string> &_time_stamp_names,
+        const std::vector<std::string> &_undefined_float_names,
+        const std::vector<std::string> &_undefined_integer_names,
+        const std::vector<std::string> &_undefined_string_names ) const;
 
     /// Builds a dataframe from a CSV file.
     void from_csv(
@@ -669,7 +684,10 @@ class DataFrame
         const std::vector<std::string> &_join_key_names,
         const std::vector<std::string> &_numerical_names,
         const std::vector<std::string> &_target_names,
-        const std::vector<std::string> &_time_stamp_names );
+        const std::vector<std::string> &_time_stamp_names,
+        const std::vector<std::string> &_undefined_float_names,
+        const std::vector<std::string> &_undefined_integer_names,
+        const std::vector<std::string> &_undefined_string_names );
 
     /// Parses int columns.
     void from_json(

@@ -1,4 +1,3 @@
-
 #include "engine/containers/containers.hpp"
 
 namespace engine
@@ -80,7 +79,7 @@ void DataFrame::add_int_column(
                     create_indices();
                 }
         }
-    else if ( _role == "undefined_int" )
+    else if ( _role == "undefined_integer" )
         {
             add_column( _col, &undefined_integers_ );
         }
@@ -89,13 +88,6 @@ void DataFrame::add_int_column(
             throw std::invalid_argument(
                 "Role '" + _role + "' for int column not known!" );
         }
-}
-
-// ----------------------------------------------------------------------------
-
-void DataFrame::add_string_column( const Column<strings::String> &_col )
-{
-    add_column( _col, &undefined_strings_ );
 }
 
 // ----------------------------------------------------------------------------
@@ -116,6 +108,33 @@ void DataFrame::add_int_vectors(
             col.set_name( _names[i] );
 
             add_int_column( col, _role );
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+void DataFrame::add_string_column( const Column<strings::String> &_col )
+{
+    add_column( _col, &undefined_strings_ );
+}
+
+// ----------------------------------------------------------------------------
+
+void DataFrame::add_string_vectors(
+    const std::vector<std::string> &_names,
+    const std::vector<std::shared_ptr<std::vector<strings::String>>> &_vectors )
+{
+    assert_true( _names.size() == _vectors.size() );
+
+    for ( size_t i = 0; i < _vectors.size(); ++i )
+        {
+            assert_true( _vectors[i] );
+
+            auto col = Column<strings::String>( _vectors[i] );
+
+            col.set_name( _names[i] );
+
+            add_string_column( col );
         }
 }
 
@@ -324,15 +343,16 @@ void DataFrame::check_plausibility() const
 
 // ----------------------------------------------------------------------------
 
-// TODO: Include undefined strings
-
 std::vector<std::string> DataFrame::concat_colnames(
     const std::vector<std::string> &_categorical_names,
     const std::vector<std::string> &_discrete_names,
     const std::vector<std::string> &_join_key_names,
     const std::vector<std::string> &_numerical_names,
     const std::vector<std::string> &_target_names,
-    const std::vector<std::string> &_time_stamp_names ) const
+    const std::vector<std::string> &_time_stamp_names,
+    const std::vector<std::string> &_undefined_float_names,
+    const std::vector<std::string> &_undefined_integer_names,
+    const std::vector<std::string> &_undefined_string_names ) const
 {
     auto all_colnames = std::vector<std::string>( 0 );
 
@@ -357,6 +377,21 @@ std::vector<std::string> DataFrame::concat_colnames(
         all_colnames.end(),
         _time_stamp_names.begin(),
         _time_stamp_names.end() );
+
+    all_colnames.insert(
+        all_colnames.end(),
+        _undefined_float_names.begin(),
+        _undefined_float_names.end() );
+
+    all_colnames.insert(
+        all_colnames.end(),
+        _undefined_integer_names.begin(),
+        _undefined_integer_names.end() );
+
+    all_colnames.insert(
+        all_colnames.end(),
+        _undefined_string_names.begin(),
+        _undefined_string_names.end() );
 
     return all_colnames;
 }
@@ -436,8 +471,6 @@ const Column<Float> &DataFrame::float_column(
 
 // ----------------------------------------------------------------------------
 
-// TODO: Include undefined columns
-
 void DataFrame::from_csv(
     const std::string &_fname,
     const std::string &_quotechar,
@@ -448,7 +481,10 @@ void DataFrame::from_csv(
     const std::vector<std::string> &_join_key_names,
     const std::vector<std::string> &_numerical_names,
     const std::vector<std::string> &_target_names,
-    const std::vector<std::string> &_time_stamp_names )
+    const std::vector<std::string> &_time_stamp_names,
+    const std::vector<std::string> &_undefined_float_names,
+    const std::vector<std::string> &_undefined_integer_names,
+    const std::vector<std::string> &_undefined_string_names )
 {
     // ------------------------------------------------------------------------
 
@@ -482,6 +518,15 @@ void DataFrame::from_csv(
 
     auto time_stamps = make_vectors<Float>( _time_stamp_names.size() );
 
+    auto undefined_floats =
+        make_vectors<Float>( _undefined_float_names.size() );
+
+    auto undefined_integers =
+        make_vectors<Int>( _undefined_integer_names.size() );
+
+    auto undefined_strings =
+        make_vectors<strings::String>( _undefined_string_names.size() );
+
     // ------------------------------------------------------------------------
     // Define column_indices.
 
@@ -491,7 +536,10 @@ void DataFrame::from_csv(
         _join_key_names,
         _numerical_names,
         _target_names,
-        _time_stamp_names );
+        _time_stamp_names,
+        _undefined_float_names,
+        _undefined_integer_names,
+        _undefined_string_names );
 
     auto colname_indices = std::vector<size_t>( 0 );
 
@@ -512,7 +560,7 @@ void DataFrame::from_csv(
         }
 
     // ------------------------------------------------------------------------
-    // Define lambda expressions.
+    // Define lambda expressions for parsing doubles.
 
     const auto to_double = [_time_formats]( const std::string &_str ) {
         auto [val, success] = csv::Parser::to_double( _str );
@@ -531,6 +579,20 @@ void DataFrame::from_csv(
             }
 
         return static_cast<Float>( NAN );
+    };
+
+    // ------------------------------------------------------------------------
+    // Define lambda expressions for parsing integers.
+
+    const auto to_int = []( const std::string &_str ) {
+        auto [val, success] = csv::Parser::to_int( _str );
+
+        if ( success )
+            {
+                return val;
+            }
+
+        return static_cast<Int>( 0 );
     };
 
     // ------------------------------------------------------------------------
@@ -578,6 +640,18 @@ void DataFrame::from_csv(
 
             for ( auto &vec : time_stamps )
                 vec->push_back( to_double( line[colname_indices[col++]] ) );
+
+            for ( auto &vec : undefined_floats )
+                vec->push_back( to_double( line[colname_indices[col++]] ) );
+
+            for ( auto &vec : undefined_integers )
+                vec->push_back( to_int( line[colname_indices[col++]] ) );
+
+            for ( auto &vec : undefined_strings )
+                vec->emplace_back(
+                    strings::String( line[colname_indices[col++]] ) );
+
+            assert_true( col == colname_indices.size() );
         }
 
     // ------------------------------------------------------------------------
@@ -595,6 +669,14 @@ void DataFrame::from_csv(
     df.add_float_vectors( _target_names, targets, "target" );
 
     df.add_float_vectors( _time_stamp_names, time_stamps, "time_stamp" );
+
+    df.add_float_vectors(
+        _undefined_float_names, undefined_floats, "undefined_float" );
+
+    df.add_int_vectors(
+        _undefined_integer_names, undefined_integers, "undefined_integer" );
+
+    df.add_string_vectors( _undefined_string_names, undefined_strings );
 
     // ------------------------------------------------------------------------
 
@@ -619,7 +701,10 @@ void DataFrame::from_csv(
     const std::vector<std::string> &_join_key_names,
     const std::vector<std::string> &_numerical_names,
     const std::vector<std::string> &_target_names,
-    const std::vector<std::string> &_time_stamp_names )
+    const std::vector<std::string> &_time_stamp_names,
+    const std::vector<std::string> &_undefined_floats,
+    const std::vector<std::string> &_undefined_integers,
+    const std::vector<std::string> &_undefined_strings )
 {
     auto df = containers::DataFrame( name(), categories_, join_keys_encoding_ );
 
@@ -638,7 +723,10 @@ void DataFrame::from_csv(
                 _join_key_names,
                 _numerical_names,
                 _target_names,
-                _time_stamp_names );
+                _time_stamp_names,
+                _undefined_floats,
+                _undefined_integers,
+                _undefined_strings );
 
             if ( i == 0 )
                 {
@@ -655,8 +743,6 @@ void DataFrame::from_csv(
 
 // ----------------------------------------------------------------------------
 
-// TODO: Include undefined columns.
-
 void DataFrame::from_db(
     const std::shared_ptr<database::Connector> _connector,
     const std::string &_tname,
@@ -665,7 +751,10 @@ void DataFrame::from_db(
     const std::vector<std::string> &_join_key_names,
     const std::vector<std::string> &_numerical_names,
     const std::vector<std::string> &_target_names,
-    const std::vector<std::string> &_time_stamp_names )
+    const std::vector<std::string> &_time_stamp_names,
+    const std::vector<std::string> &_undefined_float_names,
+    const std::vector<std::string> &_undefined_integer_names,
+    const std::vector<std::string> &_undefined_string_names )
 {
     // ----------------------------------------
 
@@ -681,6 +770,15 @@ void DataFrame::from_db(
 
     auto time_stamps = make_vectors<Float>( _time_stamp_names.size() );
 
+    auto undefined_floats =
+        make_vectors<Float>( _undefined_float_names.size() );
+
+    auto undefined_integers =
+        make_vectors<Int>( _undefined_integer_names.size() );
+
+    auto undefined_strings =
+        make_vectors<strings::String>( _undefined_string_names.size() );
+
     // ----------------------------------------
 
     const auto all_colnames = concat_colnames(
@@ -689,7 +787,10 @@ void DataFrame::from_db(
         _join_key_names,
         _numerical_names,
         _target_names,
-        _time_stamp_names );
+        _time_stamp_names,
+        _undefined_float_names,
+        _undefined_integer_names,
+        _undefined_string_names );
 
     // ----------------------------------------
 
@@ -715,6 +816,15 @@ void DataFrame::from_db(
 
             for ( auto &vec : time_stamps )
                 vec->push_back( iterator->get_time_stamp() );
+
+            for ( auto &vec : undefined_floats )
+                vec->push_back( iterator->get_double() );
+
+            for ( auto &vec : undefined_integers )
+                vec->push_back( iterator->get_int() );
+
+            for ( auto &vec : undefined_strings )
+                vec->emplace_back( strings::String( iterator->get_string() ) );
         }
 
     // ----------------------------------------
@@ -732,6 +842,14 @@ void DataFrame::from_db(
     df.add_float_vectors( _target_names, targets, "target" );
 
     df.add_float_vectors( _time_stamp_names, time_stamps, "time_stamp" );
+
+    df.add_float_vectors(
+        _undefined_float_names, undefined_floats, "undefined_float" );
+
+    df.add_int_vectors(
+        _undefined_integer_names, undefined_integers, "undefined_integer" );
+
+    df.add_string_vectors( _undefined_string_names, undefined_strings );
 
     // ----------------------------------------
 

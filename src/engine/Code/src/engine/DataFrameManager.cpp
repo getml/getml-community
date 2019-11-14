@@ -395,6 +395,15 @@ void DataFrameManager::from_csv(
     const auto time_stamps = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "time_stamps_" ) );
 
+    const auto undefined_floats = JSON::array_to_vector<std::string>(
+        JSON::get_array( _cmd, "undefined_floats_" ) );
+
+    const auto undefined_integers = JSON::array_to_vector<std::string>(
+        JSON::get_array( _cmd, "undefined_integers_" ) );
+
+    const auto undefined_strings = JSON::array_to_vector<std::string>(
+        JSON::get_array( _cmd, "undefined_strings_" ) );
+
     // --------------------------------------------------------------------
     // We need the weak write lock for the categories and join keys encoding.
 
@@ -423,7 +432,10 @@ void DataFrameManager::from_csv(
         join_keys,
         numericals,
         targets,
-        time_stamps );
+        time_stamps,
+        undefined_floats,
+        undefined_integers,
+        undefined_strings );
 
     license_checker().check_mem_size( data_frames(), df.nbytes() );
 
@@ -492,6 +504,15 @@ void DataFrameManager::from_db(
     const auto time_stamps = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "time_stamps_" ) );
 
+    const auto undefined_floats = JSON::array_to_vector<std::string>(
+        JSON::get_array( _cmd, "undefined_floats_" ) );
+
+    const auto undefined_integers = JSON::array_to_vector<std::string>(
+        JSON::get_array( _cmd, "undefined_integers_" ) );
+
+    const auto undefined_strings = JSON::array_to_vector<std::string>(
+        JSON::get_array( _cmd, "undefined_strings_" ) );
+
     // --------------------------------------------------------------------
     // We need the weak write lock for the categories and join keys encoding.
 
@@ -520,7 +541,10 @@ void DataFrameManager::from_db(
         join_keys,
         numericals,
         targets,
-        time_stamps );
+        time_stamps,
+        undefined_floats,
+        undefined_integers,
+        undefined_strings );
 
     license_checker().check_mem_size( data_frames(), df.nbytes() );
 
