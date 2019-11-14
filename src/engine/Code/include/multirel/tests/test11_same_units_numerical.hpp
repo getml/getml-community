@@ -1,7 +1,7 @@
 
 // ---------------------------------------------------------------------------
 
-void test11_same_units_numerical()
+void test11_same_units_numerical( std::filesystem::path _test_path )
 {
     // ------------------------------------------------------------------------
 
@@ -117,9 +117,13 @@ void test11_same_units_numerical()
 
     // ---------------------------------------------
     // Build data model.
-
-    const auto population_json =
-        load_json( "../../tests/multirel/test11/schema.json" );
+    
+    // Append all subfolders to reach the required file. This 
+    // appending will have a persistent effect of _test_path which
+    // is stored on the heap. After setting it once to the correct
+    // folder only the filename has to be replaced.
+    _test_path.append( "multirel" ).append( "test11" ).append( "schema.json" );
+    const auto population_json = load_json( _test_path.string() );
 
     const auto population =
         std::make_shared<const multirel::decisiontrees::Placeholder>(
@@ -132,7 +136,7 @@ void test11_same_units_numerical()
     // Load hyperparameters.
 
     const auto hyperparameters_json =
-        load_json( "../../tests/multirel/test11/hyperparameters.json" );
+        load_json( _test_path.replace_filename( "hyperparameters.json" ).string() );
 
     const auto hyperparameters =
         std::make_shared<multirel::descriptors::Hyperparameters>(
@@ -153,12 +157,12 @@ void test11_same_units_numerical()
 
     model.fit( population_df, {peripheral_df} );
 
-    model.save( "../../tests/multirel/test11/Model.json" );
+    model.save( _test_path.replace_filename( "Model.json" ).string() );
 
     // ------------------------------------------------------------------------
     // Express as SQL code.
 
-    std::ofstream sql( "../../tests/multirel/test11/Model.sql" );
+    std::ofstream sql( _test_path.replace_filename( "Model.sql" ).string() );
     sql << model.to_sql();
     sql.close();
 

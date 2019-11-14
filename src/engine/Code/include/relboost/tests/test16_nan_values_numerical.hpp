@@ -1,7 +1,7 @@
 
 // ---------------------------------------------------------------------------
 
-void test16_nan_values_numerical()
+void test16_nan_values_numerical( std::filesystem::path _test_path )
 {
     // ------------------------------------------------------------------------
 
@@ -122,8 +122,12 @@ void test16_nan_values_numerical()
     // ---------------------------------------------
     // Build data model.
 
-    const auto population_json =
-        load_json( "../../tests/relboost/test16/schema.json" );
+    // Append all subfolders to reach the required file. This 
+    // appending will have a persistent effect of _test_path which
+    // is stored on the heap. After setting it once to the correct
+    // folder only the filename has to be replaced.
+    _test_path.append( "relboost" ).append( "test16" ).append( "schema.json" );
+    const auto population_json = load_json( _test_path.string() );
 
     const auto population =
         std::make_shared<const relboost::ensemble::Placeholder>(
@@ -136,7 +140,7 @@ void test16_nan_values_numerical()
     // Load hyperparameters.
 
     const auto hyperparameters_json =
-        load_json( "../../tests/relboost/test16/hyperparameters.json" );
+        load_json( _test_path.replace_filename( "hyperparameters.json" ).string() );
 
     std::cout << relboost::JSON::stringify( *hyperparameters_json ) << std::endl
               << std::endl;
@@ -160,12 +164,12 @@ void test16_nan_values_numerical()
 
     model.fit( population_df, {peripheral_df} );
 
-    model.save( "../../tests/relboost/test16/Model.json" );
+    model.save( _test_path.replace_filename( "Model.json" ).string() );
 
     // ------------------------------------------------------------------------
     // Express as SQL code.
 
-    std::ofstream sql( "../../tests/relboost/test16/Model.sql" );
+    std::ofstream sql( _test_path.replace_filename( "Model.sql" ).string() );
     sql << model.to_sql();
     sql.close();
 

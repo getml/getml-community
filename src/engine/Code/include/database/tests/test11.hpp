@@ -1,17 +1,23 @@
 #ifndef DATABASE_TESTS_TEST11_HPP_
 #define DATABASE_TESTS_TEST11_HPP_
 
-void test11()
+void test11( std::filesystem::path _test_path )
 {
     std::cout << "Test 11: Parsing time stamps in postgrexs." << std::endl
               << std::endl;
+
+    // Append all subfolders to reach the required file. This 
+    // appending will have a persistent effect of _test_path which
+    // is stored on the heap. After setting it once to the correct
+    // folder only the filename has to be replaced.
+    _test_path.append( "database" ).append( "POPULATION2.CSV" );
 
     auto postgres_db =
         database::Postgres( {"%Y/%m/%d %H:%M:%S", "%Y-%m-%d %H:%M:%S"} );
 
     auto population_sniffer = csv::Sniffer(
         "postgres",
-        {"POPULATION2.CSV", "POPULATION2.CSV"},
+        {_test_path.string(), _test_path.string()},
         true,
         100,
         '\"',
@@ -25,7 +31,7 @@ void test11()
 
     postgres_db.execute( population_statement );
 
-    auto reader = csv::CSVReader( "POPULATION2.CSV", '\"', ',' );
+    auto reader = csv::CSVReader( _test_path.string(), '\"', ',' );
 
     postgres_db.read( "POPULATION", true, 0, &reader );
 

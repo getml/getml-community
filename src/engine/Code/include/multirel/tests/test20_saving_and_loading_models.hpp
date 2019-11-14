@@ -1,7 +1,7 @@
 
 // ---------------------------------------------------------------------------
 
-void test20_saving_and_loading_models()
+void test20_saving_and_loading_models( std::filesystem::path _test_path )
 {
     // ------------------------------------------------------------------------
 
@@ -108,8 +108,12 @@ void test20_saving_and_loading_models()
     // ---------------------------------------------
     // Build data model.
 
-    const auto population_json =
-        load_json( "../../tests/multirel/test20/schema.json" );
+    // Append all subfolders to reach the required file. This 
+    // appending will have a persistent effect of _test_path which
+    // is stored on the heap. After setting it once to the correct
+    // folder only the filename has to be replaced.
+    _test_path.append( "multirel" ).append( "test20" ).append( "schema.json" );
+    const auto population_json = load_json( _test_path.string() );
 
     const auto population =
         std::make_shared<const multirel::decisiontrees::Placeholder>(
@@ -122,7 +126,7 @@ void test20_saving_and_loading_models()
     // Load hyperparameters.
 
     const auto hyperparameters_json =
-        load_json( "../../tests/multirel/test20/hyperparameters.json" );
+        load_json( _test_path.replace_filename( "hyperparameters.json" ).string() );
 
     std::cout << multirel::JSON::stringify( *hyperparameters_json ) << std::endl
               << std::endl;
@@ -149,34 +153,34 @@ void test20_saving_and_loading_models()
     // ------------------------------------------------------------------------
     // Express as SQL code.
 
-    std::ofstream sql( "../../tests/multirel/test20/Model.sql" );
+    std::ofstream sql( _test_path.replace_filename( "Model.sql" ).string() );
     sql << model.to_sql();
     sql.close();
 
-    model.save( "../../tests/multirel/test20/Model.json" );
+    model.save( _test_path.replace_filename( "Model.json" ).string() );
 
     // ------------------------------------------------------------------------
     // Reload model.
 
     const auto model_json =
-        load_json( "../../tests/multirel/test20/Model.json" );
+        load_json( _test_path.replace_filename( "Model.json" ).string() );
 
     auto model2 =
         multirel::ensemble::DecisionTreeEnsemble( encoding, *model_json );
 
-    model2.save( "../../tests/multirel/test20/Model2.json" );
+    model2.save( _test_path.replace_filename( "Model2.json" ).string() );
 
-    std::ofstream sql2( "../../tests/multirel/test20/Model2.sql" );
+    std::ofstream sql2( _test_path.replace_filename( "Model2.sql" ).string() );
     sql2 << model2.to_sql();
     sql2.close();
 
     const auto model2_json =
-        load_json( "../../tests/multirel/test20/Model2.json" );
+        load_json( _test_path.replace_filename( "Model2.json" ).string() );
 
     auto model3 =
         multirel::ensemble::DecisionTreeEnsemble( encoding, *model2_json );
 
-    std::ofstream sql3( "../../tests/multirel/test20/Model3.sql" );
+    std::ofstream sql3( _test_path.replace_filename( "Model3.sql" ).string() );
     sql3 << model3.to_sql();
     sql3.close();
 

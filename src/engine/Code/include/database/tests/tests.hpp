@@ -1,6 +1,7 @@
 #ifndef DATABASE_TESTS_TESTS_HPP_
 #define DATABASE_TESTS_TESTS_HPP_
 
+#include <filesystem>
 #include <Poco/JSON/Stringifier.h>
 
 #include "database/database.hpp"
