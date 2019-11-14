@@ -196,6 +196,16 @@ class DataFrameManager
         containers::DataFrame* _df,
         Poco::Net::StreamSocket* _socket );
 
+    /// Adds a string column to the data frame.
+    /// This could only be an undefined string,
+    /// because all others are encoded.
+    void add_string_column(
+        const std::string& _name,
+        const std::vector<std::string>& _vec,
+        containers::DataFrame* _df,
+        multithreading::WeakWriteLock* _weak_write_lock,
+        Poco::Net::StreamSocket* _socket );
+
     /// Tells the receive_data(...) method to no longer receive data and checks
     /// the memory size.
     void close(

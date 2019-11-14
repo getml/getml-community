@@ -38,6 +38,14 @@ void DataFrameManager::add_categorical_column(
 
     // ------------------------------------------------------------------------
 
+    if ( role == "undefined_string" )
+        {
+            add_string_column( name, vec, &df, &weak_write_lock, _socket );
+            return;
+        }
+
+    // ------------------------------------------------------------------------
+
     auto local_categories =
         std::make_shared<containers::Encoding>( categories_ );
 
@@ -84,9 +92,13 @@ void DataFrameManager::add_categorical_column(
         {
             categories_->append( *local_categories );
         }
-    else
+    else if ( role == "join_key" )
         {
             join_keys_encoding_->append( *local_join_keys_encoding );
+        }
+    else
+        {
+            assert_true( false );
         }
 
     // ------------------------------------------------------------------------
@@ -148,7 +160,11 @@ void DataFrameManager::add_column(
     const Poco::JSON::Object& _cmd,
     Poco::Net::StreamSocket* _socket )
 {
+    // ------------------------------------------------------------------------
+
     multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
+
+    // ------------------------------------------------------------------------
 
     const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
 
@@ -162,22 +178,51 @@ void DataFrameManager::add_column(
 
     const auto json_col = *JSON::get_object( _cmd, "col_" );
 
+    // ------------------------------------------------------------------------
+
     auto col = NumOpParser::parse(
         *categories_, *join_keys_encoding_, {df}, json_col );
+
+    // ------------------------------------------------------------------------
 
     col.set_name( name );
 
     col.set_unit( unit );
 
-    license_checker().check_mem_size( data_frames(), col.nbytes() );
+    // ------------------------------------------------------------------------
 
-    weak_write_lock.upgrade();
+    if ( role == "undefined_integer" )
+        {
+            auto int_col = containers::Column<Int>( col.nrows() );
 
-    df.add_float_column( col, role );
+            for ( size_t i = 0; i < col.nrows(); ++i )
+                if ( !std::isnan( col[i] ) && !std::isinf( col[i] ) )
+                    int_col[i] = static_cast<Int>( col[i] );
+
+            int_col.set_name( name );
+
+            license_checker().check_mem_size( data_frames(), int_col.nbytes() );
+
+            weak_write_lock.upgrade();
+
+            df.add_int_column( int_col, role );
+        }
+    else
+        {
+            license_checker().check_mem_size( data_frames(), col.nbytes() );
+
+            weak_write_lock.upgrade();
+
+            df.add_float_column( col, role );
+        }
+
+    // ------------------------------------------------------------------------
 
     monitor_->send( "postdataframe", df.to_monitor() );
 
     communication::Sender::send_string( "Success!", _socket );
+
+    // ------------------------------------------------------------------------
 }
 
 // ------------------------------------------------------------------------
@@ -204,6 +249,48 @@ void DataFrameManager::add_column(
     _df->add_float_column( col, role );
 
     communication::Sender::send_string( "Success!", _socket );
+}
+
+// ------------------------------------------------------------------------
+
+void DataFrameManager::add_string_column(
+    const std::string& _name,
+    const std::vector<std::string>& _vec,
+    containers::DataFrame* _df,
+    multithreading::WeakWriteLock* _weak_write_lock,
+    Poco::Net::StreamSocket* _socket )
+{
+    // ------------------------------------------------------------------------
+
+    auto col = containers::Column<strings::String>( _vec.size() );
+
+    for ( size_t i = 0; i < _vec.size(); ++i )
+        {
+            col[i] = strings::String( _vec[i] );
+        }
+
+    col.set_name( _name );
+
+    // ------------------------------------------------------------------------
+
+    // TODO
+    // license_checker().check_mem_size( data_frames(), col.nbytes() );
+
+    // ------------------------------------------------------------------------
+
+    _weak_write_lock->upgrade();
+
+    // ------------------------------------------------------------------------
+
+    _df->add_string_column( col );
+
+    // ------------------------------------------------------------------------
+
+    monitor_->send( "postdataframe", _df->to_monitor() );
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    // ------------------------------------------------------------------------
 }
 
 // ------------------------------------------------------------------------
