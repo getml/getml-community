@@ -168,11 +168,15 @@ class Column
 
         _input->read( reinterpret_cast<char *>( &str_size ), sizeof( size_t ) );
 
-        std::string str( ' ', str_size );
+        std::string str;
 
-        _input->read( &( str )[0], str_size );
+        // Using resize is important, otherwise
+        // the result is weird behaviour!
+        str.resize( str_size );
 
-        *_str = StringType( std::move( str ) );
+        _input->read( &( str[0] ), str_size );
+
+        *_str = std::move( str );
     };
 
     /// Called by load_little_endian(...).
@@ -186,11 +190,15 @@ class Column
 
         utils::Endianness::reverse_byte_order( &str_size );
 
-        std::string str( ' ', str_size );
+        std::string str;
 
-        _input->read( &( str )[0], str_size );
+        // Using resize is important, otherwise
+        // the result is weird behaviour!
+        str.resize( str_size );
 
-        *_str = StringType( std::move( str ) );
+        _input->read( &( str[0] ), str_size );
+
+        *_str = std::move( str );
     };
 
     /// Called by save_big_endian(...).
