@@ -1,17 +1,23 @@
 #ifndef DATABASE_TESTS_TEST10_HPP_
 #define DATABASE_TESTS_TEST10_HPP_
 
-void test10()
+void test10( std::filesystem::path _test_path )
 {
     std::cout << "Test 10: Parsing columns encoded as text in postgres."
               << std::endl
               << std::endl;
 
+    // Append all subfolders to reach the required file. This 
+    // appending will have a persistent effect of _test_path which
+    // is stored on the heap. After setting it once to the correct
+    // folder only the filename has to be replaced.
+    _test_path.append( "database" ).append( "POPULATION.CSV" );
+
     auto postgres_db = database::Postgres( {"%Y-%m-%d %H:%M:%S"} );
 
     auto population_sniffer = csv::Sniffer(
         "postgres",
-        {"POPULATION.CSV", "POPULATION.CSV"},
+        {_test_path.string(), _test_path.string()},
         false,
         100,
         '\"',
@@ -25,7 +31,7 @@ void test10()
 
     postgres_db.execute( population_statement );
 
-    auto reader = csv::CSVReader( "POPULATION.CSV", '\"', ',' );
+    auto reader = csv::CSVReader( _test_path.string(), '\"', ',' );
 
     postgres_db.read( "POPULATION", false, 0, &reader );
 

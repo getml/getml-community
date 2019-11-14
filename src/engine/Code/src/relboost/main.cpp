@@ -27,7 +27,8 @@ int main( int argc, char* argv[] )
               << "-------------------------------------------------------------"
                  "------------------"
               << std::endl;
-    std::cout << "TESTS FOR MODULE 'RELBOOST':" << std::endl << std::endl;
+    std::cout << "TESTS FOR MODULE 'RELBOOST' IN " << test_path.string()
+			  << ":" << std::endl << std::endl;
 
     test1_sum( test_path );
 
