@@ -295,8 +295,7 @@ void DataFrameManager::add_string_column(
 
     // ------------------------------------------------------------------------
 
-    // TODO
-    // license_checker().check_mem_size( data_frames(), col.nbytes() );
+    license_checker().check_mem_size( data_frames(), col.nbytes() );
 
     // ------------------------------------------------------------------------
 

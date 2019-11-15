@@ -100,7 +100,20 @@ class Column
     /// Returns number of bytes occupied by the data
     const ULong nbytes() const
     {
-        return static_cast<ULong>( nrows() ) * sizeof( T );
+        if constexpr ( std::is_same<T, strings::String>() )
+            {
+                return std::accumulate(
+                    begin(),
+                    end(),
+                    static_cast<size_t>( nrows() * ( sizeof( T ) + 1 ) ),
+                    []( const size_t init, const T &_str ) {
+                        return init + _str.size();
+                    } );
+            }
+        else
+            {
+                return static_cast<ULong>( nrows() ) * sizeof( T );
+            }
     }
 
     /// Accessor to data

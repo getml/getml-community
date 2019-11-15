@@ -1044,8 +1044,6 @@ void DataFrame::from_json(
 
 // ----------------------------------------------------------------------------
 
-// TODO: Include undefined columns (?)
-
 void DataFrame::from_query(
     const std::shared_ptr<database::Connector> _connector,
     const std::string &_query,
@@ -1482,7 +1480,7 @@ ULong DataFrame::nbytes() const
 
     nbytes += calc_nbytes( undefined_integers_ );
 
-    // TODO: nbytes += calc_nbytes( undefined_strings_ );
+    nbytes += calc_nbytes( undefined_strings_ );
 
     return nbytes;
 }
