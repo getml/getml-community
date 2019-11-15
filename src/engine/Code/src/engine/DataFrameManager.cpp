@@ -135,6 +135,13 @@ void DataFrameManager::add_categorical_column(
             col = communication::Receiver::recv_categorical_column(
                 join_keys_encoding_.get(), _socket );
         }
+    else if ( role == "undefined_string" )
+        {
+            const auto str_col =
+                communication::Receiver::recv_string_column( _socket );
+            add_string_column( name, str_col, _df, nullptr, _socket );
+            return;
+        }
     else
         {
             throw std::runtime_error(
@@ -183,38 +190,13 @@ void DataFrameManager::add_column(
     auto col = NumOpParser::parse(
         *categories_, *join_keys_encoding_, {df}, json_col );
 
-    // ------------------------------------------------------------------------
-
     col.set_name( name );
 
     col.set_unit( unit );
 
     // ------------------------------------------------------------------------
 
-    if ( role == "undefined_integer" )
-        {
-            auto int_col = containers::Column<Int>( col.nrows() );
-
-            for ( size_t i = 0; i < col.nrows(); ++i )
-                if ( !std::isnan( col[i] ) && !std::isinf( col[i] ) )
-                    int_col[i] = static_cast<Int>( col[i] );
-
-            int_col.set_name( name );
-
-            license_checker().check_mem_size( data_frames(), int_col.nbytes() );
-
-            weak_write_lock.upgrade();
-
-            df.add_int_column( int_col, role );
-        }
-    else
-        {
-            license_checker().check_mem_size( data_frames(), col.nbytes() );
-
-            weak_write_lock.upgrade();
-
-            df.add_float_column( col, role );
-        }
+    add_column_to_df( role, col, &df, &weak_write_lock );
 
     // ------------------------------------------------------------------------
 
@@ -244,11 +226,51 @@ void DataFrameManager::add_column(
 
     col.set_unit( unit );
 
-    license_checker().check_mem_size( data_frames(), col.nbytes() );
-
-    _df->add_float_column( col, role );
+    add_column_to_df( role, col, _df, nullptr );
 
     communication::Sender::send_string( "Success!", _socket );
+}
+
+// ------------------------------------------------------------------------
+
+void DataFrameManager::add_column_to_df(
+    const std::string& _role,
+    const containers::Column<Float>& _col,
+    containers::DataFrame* _df,
+    multithreading::WeakWriteLock* _weak_write_lock )
+{
+    if ( _role == "undefined_integer" )
+        {
+            // ---------------------------------------------------------
+
+            auto int_col = containers::Column<Int>( _col.nrows() );
+
+            for ( size_t i = 0; i < _col.nrows(); ++i )
+                if ( !std::isnan( _col[i] ) && !std::isinf( _col[i] ) )
+                    int_col[i] = static_cast<Int>( _col[i] );
+
+            int_col.set_name( _col.name() );
+
+            // ---------------------------------------------------------
+
+            license_checker().check_mem_size( data_frames(), int_col.nbytes() );
+
+            // ---------------------------------------------------------
+
+            if ( _weak_write_lock ) _weak_write_lock->upgrade();
+
+            _df->add_int_column( int_col, _role );
+
+            // ---------------------------------------------------------
+        }
+    else
+        {
+            license_checker().check_mem_size( data_frames(), _col.nbytes() );
+
+            if ( _weak_write_lock ) _weak_write_lock->upgrade();
+
+            _df->add_float_column( _col, _role );
+        }
 }
 
 // ------------------------------------------------------------------------
@@ -278,7 +300,7 @@ void DataFrameManager::add_string_column(
 
     // ------------------------------------------------------------------------
 
-    _weak_write_lock->upgrade();
+    if ( _weak_write_lock ) _weak_write_lock->upgrade();
 
     // ------------------------------------------------------------------------
 

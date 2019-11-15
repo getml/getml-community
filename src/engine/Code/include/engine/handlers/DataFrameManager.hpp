@@ -196,6 +196,14 @@ class DataFrameManager
         containers::DataFrame* _df,
         Poco::Net::StreamSocket* _socket );
 
+    /// Takes care of the process of actually adding the column.
+    /// Called by botht the public and the private "add_column".
+    void add_column_to_df(
+        const std::string& _role,
+        const containers::Column<Float>& _col,
+        containers::DataFrame* _df,
+        multithreading::WeakWriteLock* _weak_write_lock );
+
     /// Adds a string column to the data frame.
     /// This could only be an undefined string,
     /// because all others are encoded.
