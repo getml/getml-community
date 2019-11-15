@@ -19,6 +19,11 @@ class StatementMaker
     /// Finds the maximum size of the colnames.
     static size_t find_max_size( const std::vector<std::string>& _colnames );
 
+    /// Produces the kwargs for an engine.DataFrame.
+    static std::string make_statement_python(
+        const std::vector<std::string>& _colnames,
+        const std::vector<Datatype>& _datatypes );
+
     /// Produces the CREATE TABLE statement for postgres.
     static std::string make_statement_postgres(
         const std::string& _table_name,

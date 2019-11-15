@@ -19,8 +19,12 @@
 #include <Poco/DateTime.h>
 #include <Poco/DateTimeFormatter.h>
 #include <Poco/DateTimeParser.h>
+#include <Poco/JSON/Array.h>
+#include <Poco/JSON/Object.h>
 
 #include "debug/debug.hpp"
+
+#include "jsonutils/jsonutils.hpp"
 
 // ----------------------------------------------------------------------------
 

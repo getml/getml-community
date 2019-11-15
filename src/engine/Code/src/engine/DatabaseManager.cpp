@@ -202,6 +202,10 @@ void DatabaseManager::sniff_csv(
 
     const auto skip = JSON::get_value<size_t>( _cmd, "skip_" );
 
+    const auto dialect = _cmd.has( "dialect_" )
+                             ? JSON::get_value<std::string>( _cmd, "dialect_" )
+                             : connector()->dialect();
+
     // --------------------------------------------------------------------
 
     if ( quotechar.size() != 1 )
@@ -219,7 +223,7 @@ void DatabaseManager::sniff_csv(
     // --------------------------------------------------------------------
 
     auto sniffer = csv::Sniffer(
-        connector()->dialect(),
+        dialect,
         fnames,
         header,
         num_lines_sniffed,
