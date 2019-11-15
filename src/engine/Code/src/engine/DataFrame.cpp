@@ -864,8 +864,6 @@ void DataFrame::from_db(
 
 // ----------------------------------------------------------------------------
 
-// TODO: Include undefined columns
-
 void DataFrame::from_json(
     const Poco::JSON::Object &_obj,
     const std::vector<std::string> _time_formats,
@@ -874,7 +872,10 @@ void DataFrame::from_json(
     const std::vector<std::string> &_join_key_names,
     const std::vector<std::string> &_numerical_names,
     const std::vector<std::string> &_target_names,
-    const std::vector<std::string> &_time_stamp_names )
+    const std::vector<std::string> &_time_stamp_names,
+    const std::vector<std::string> &_undefined_float_names,
+    const std::vector<std::string> &_undefined_integer_names,
+    const std::vector<std::string> &_undefined_string_names )
 {
     // ----------------------------------------
 
@@ -893,6 +894,12 @@ void DataFrame::from_json(
 
     df.from_json( _obj, _time_stamp_names, _time_formats );
 
+    df.from_json( _obj, _undefined_float_names, "undefined_float" );
+
+    df.from_json( _obj, _undefined_integer_names, "undefined_integer" );
+
+    df.from_json( _obj, _undefined_string_names, "undefined_string" );
+
     // ----------------------------------------
 
     df.check_plausibility();
@@ -909,7 +916,7 @@ void DataFrame::from_json(
 void DataFrame::from_json(
     const Poco::JSON::Object &_obj,
     const std::vector<std::string> &_names,
-    const std::string &_type,
+    const std::string &_role,
     Encoding *_encoding )
 {
     for ( size_t i = 0; i < _names.size(); ++i )
@@ -918,19 +925,34 @@ void DataFrame::from_json(
 
             const auto arr = JSON::get_array( _obj, name );
 
-            auto column = Column<Int>( arr->size() );
-
-            for ( size_t j = 0; j < arr->size(); ++j )
+            if ( _encoding )
                 {
-                    const auto str = arr->getElement<std::string>(
-                        static_cast<unsigned int>( j ) );
+                    auto column = Column<Int>( arr->size() );
 
-                    column[j] = ( *_encoding )[str];
+                    for ( size_t j = 0; j < arr->size(); ++j )
+                        {
+                            const auto str = arr->getElement<std::string>(
+                                static_cast<unsigned int>( j ) );
+
+                            column[j] = ( *_encoding )[str];
+                        }
+
+                    column.set_name( _names[i] );
+
+                    add_int_column( column, _role );
                 }
+            else
+                {
+                    auto column = Column<strings::String>( arr->size() );
 
-            column.set_name( _names[i] );
+                    for ( size_t j = 0; j < arr->size(); ++j )
+                        column[j] = arr->getElement<std::string>(
+                            static_cast<unsigned int>( j ) );
 
-            add_int_column( column, _type );
+                    column.set_name( _names[i] );
+
+                    add_string_column( column );
+                }
         }
 }
 
@@ -939,30 +961,47 @@ void DataFrame::from_json(
 void DataFrame::from_json(
     const Poco::JSON::Object &_obj,
     const std::vector<std::string> &_names,
-    const std::string &_type )
+    const std::string &_role )
 {
     for ( size_t i = 0; i < _names.size(); ++i )
         {
             const auto &name = _names[i];
 
-            if ( _type == "target" && !_obj.has( name ) )
+            if ( _role == "target" && !_obj.has( name ) )
                 {
                     continue;
                 }
 
             const auto arr = JSON::get_array( _obj, name );
 
-            auto column = Column<Float>( arr->size() );
-
-            for ( size_t j = 0; j < arr->size(); ++j )
+            if ( _role == "undefined_integer" )
                 {
-                    column[j] = arr->getElement<Float>(
-                        static_cast<unsigned int>( j ) );
+                    auto column = Column<Int>( arr->size() );
+
+                    for ( size_t j = 0; j < arr->size(); ++j )
+                        {
+                            column[j] = arr->getElement<Int>(
+                                static_cast<unsigned int>( j ) );
+                        }
+
+                    column.set_name( _names[i] );
+
+                    add_int_column( column, _role );
                 }
+            else
+                {
+                    auto column = Column<Float>( arr->size() );
 
-            column.set_name( _names[i] );
+                    for ( size_t j = 0; j < arr->size(); ++j )
+                        {
+                            column[j] = arr->getElement<Float>(
+                                static_cast<unsigned int>( j ) );
+                        }
 
-            add_float_column( column, _type );
+                    column.set_name( _names[i] );
+
+                    add_float_column( column, _role );
+                }
         }
 }
 

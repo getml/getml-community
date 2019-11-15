@@ -109,7 +109,10 @@ class DataFrame
         const std::vector<std::string> &_join_keys,
         const std::vector<std::string> &_numericals,
         const std::vector<std::string> &_targets,
-        const std::vector<std::string> &_time_stamps );
+        const std::vector<std::string> &_time_stamps,
+        const std::vector<std::string> &_undefined_float_names,
+        const std::vector<std::string> &_undefined_integer_names,
+        const std::vector<std::string> &_undefined_string_names );
 
     /// Returns the encodings as a property tree
     Poco::JSON::Object get_colnames();
@@ -735,14 +738,14 @@ class DataFrame
     void from_json(
         const Poco::JSON::Object &_obj,
         const std::vector<std::string> &_names,
-        const std::string &_type,
+        const std::string &_role,
         Encoding *_encoding );
 
     /// Parses float columns.
     void from_json(
         const Poco::JSON::Object &_obj,
         const std::vector<std::string> &_names,
-        const std::string &_type );
+        const std::string &_role );
 
     /// Parses time stamp columns.
     void from_json(
