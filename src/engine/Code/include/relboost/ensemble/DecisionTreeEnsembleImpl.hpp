@@ -12,7 +12,7 @@ namespace ensemble
 struct DecisionTreeEnsembleImpl
 {
     DecisionTreeEnsembleImpl(
-        const std::shared_ptr<const std::vector<std::string>>& _encoding,
+        const std::shared_ptr<const std::vector<strings::String>>& _encoding,
         const std::shared_ptr<const Hyperparameters>& _hyperparameters,
         const std::shared_ptr<const std::vector<std::string>>&
             _peripheral_names,
@@ -41,7 +41,7 @@ struct DecisionTreeEnsembleImpl
 
     /// Encoding for the categorical data, maps integers to underlying
     /// category.
-    std::shared_ptr<const std::vector<std::string>> encoding_;
+    std::shared_ptr<const std::vector<strings::String>> encoding_;
 
     /// Hyperparameters used to train the relboost model.
     std::shared_ptr<const Hyperparameters> hyperparameters_;

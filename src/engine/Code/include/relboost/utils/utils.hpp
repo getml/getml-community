@@ -15,6 +15,8 @@
 
 #include "multithreading/multithreading.hpp"
 
+#include "strings/strings.hpp"
+
 #include "relboost/enums/enums.hpp"
 
 #include "relboost/containers/containers.hpp"

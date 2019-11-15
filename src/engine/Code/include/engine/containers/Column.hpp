@@ -20,8 +20,10 @@ class Column
           unit_( "" )
     {
         static_assert(
-            std::is_arithmetic<T>::value,
-            "Only arithmetic types allowed for Column<T>(...)!" );
+            std::is_arithmetic<T>::value ||
+                std::is_same<T, strings::String>::value,
+            "Only arithmetic types or strings::String allowed for "
+            "Column<T>(...)!" );
     }
 
     Column( const std::shared_ptr<std::vector<T>> &_data_ptr )
@@ -98,7 +100,20 @@ class Column
     /// Returns number of bytes occupied by the data
     const ULong nbytes() const
     {
-        return static_cast<ULong>( nrows() ) * sizeof( T );
+        if constexpr ( std::is_same<T, strings::String>() )
+            {
+                return std::accumulate(
+                    begin(),
+                    end(),
+                    static_cast<size_t>( nrows() * ( sizeof( T ) + 1 ) ),
+                    []( const size_t init, const T &_str ) {
+                        return init + _str.size();
+                    } );
+            }
+        else
+            {
+                return static_cast<ULong>( nrows() ) * sizeof( T );
+            }
     }
 
     /// Accessor to data
@@ -159,21 +174,28 @@ class Column
 
    private:
     /// Called by load_big_endian(...).
-    void read_string_big_endian(
-        std::string *_str, std::ifstream *_input ) const
+    template <class StringType>
+    void read_string_big_endian( StringType *_str, std::ifstream *_input ) const
     {
         size_t str_size = 0;
 
         _input->read( reinterpret_cast<char *>( &str_size ), sizeof( size_t ) );
 
-        _str->resize( str_size );
+        std::string str;
 
-        _input->read( &( *_str )[0], str_size );
+        // Using resize is important, otherwise
+        // the result is weird behaviour!
+        str.resize( str_size );
+
+        _input->read( &( str[0] ), str_size );
+
+        *_str = std::move( str );
     };
 
     /// Called by load_little_endian(...).
+    template <class StringType>
     void read_string_little_endian(
-        std::string *_str, std::ifstream *_input ) const
+        StringType *_str, std::ifstream *_input ) const
     {
         size_t str_size = 0;
 
@@ -181,26 +203,34 @@ class Column
 
         utils::Endianness::reverse_byte_order( &str_size );
 
-        _str->resize( str_size );
+        std::string str;
 
-        _input->read( &( *_str )[0], str_size );
+        // Using resize is important, otherwise
+        // the result is weird behaviour!
+        str.resize( str_size );
+
+        _input->read( &( str[0] ), str_size );
+
+        *_str = std::move( str );
     };
 
     /// Called by save_big_endian(...).
+    template <class StringType>
     void write_string_big_endian(
-        const std::string &_str, std::ofstream *_output ) const
+        const StringType &_str, std::ofstream *_output ) const
     {
         size_t str_size = _str.size();
 
         _output->write(
             reinterpret_cast<const char *>( &str_size ), sizeof( size_t ) );
 
-        _output->write( &_str[0], _str.size() );
+        _output->write( _str.c_str(), _str.size() );
     };
 
     /// Called by save_little_endian(...).
+    template <class StringType>
     void write_string_little_endian(
-        const std::string &_str, std::ofstream *_output ) const
+        const StringType &_str, std::ofstream *_output ) const
     {
         size_t str_size = _str.size();
 
@@ -209,7 +239,7 @@ class Column
         _output->write(
             reinterpret_cast<const char *>( &str_size ), sizeof( size_t ) );
 
-        _output->write( &_str[0], _str.size() );
+        _output->write( _str.c_str(), _str.size() );
     };
 
     // -------------------------------
@@ -297,8 +327,16 @@ Column<T> Column<T>::load_big_endian( const std::string &_fname ) const
 
     debug_log( "Column.load: Read data..." );
 
-    input.read(
-        reinterpret_cast<char *>( col.data() ), col.nrows() * sizeof( T ) );
+    if constexpr ( std::is_same<T, strings::String>() )
+        {
+            for ( auto &str : col ) read_string_big_endian( &str, &input );
+        }
+    else
+        {
+            input.read(
+                reinterpret_cast<char *>( col.data() ),
+                col.nrows() * sizeof( T ) );
+        }
 
     // -------------------------------------------------------------------------
     // Read name and unit
@@ -349,19 +387,30 @@ Column<T> Column<T>::load_little_endian( const std::string &_fname ) const
 
     debug_log( "Column.load: Read data..." );
 
-    input.read(
-        reinterpret_cast<char *>( col.data() ), col.nrows() * sizeof( T ) );
+    if constexpr ( std::is_same<T, strings::String>() )
+        {
+            for ( auto &str : col ) read_string_little_endian( &str, &input );
+        }
+    else
+        {
+            input.read(
+                reinterpret_cast<char *>( col.data() ),
+                col.nrows() * sizeof( T ) );
+        }
 
     // -------------------------------------------------------------------------
     // Reverse byte order.
 
-    debug_log( "Column.load: Reverse byte order of data..." );
+    if constexpr ( !std::is_same<T, strings::String>() )
+        {
+            debug_log( "Column.load: Reverse byte order of data..." );
 
-    auto reverse_data = []( T &_val ) {
-        utils::Endianness::reverse_byte_order( &_val );
-    };
+            auto reverse_data = []( T &_val ) {
+                utils::Endianness::reverse_byte_order( &_val );
+            };
 
-    std::for_each( col.begin(), col.end(), reverse_data );
+            std::for_each( col.begin(), col.end(), reverse_data );
+        }
 
     // -------------------------------------------------------------------------
     // Read colnames and units.
@@ -416,8 +465,17 @@ void Column<T>::save_big_endian( const std::string &_fname ) const
 
     debug_log( "Column.save: Write data..." );
 
-    output.write(
-        reinterpret_cast<const char *>( data() ), nrows() * sizeof( T ) );
+    if constexpr ( std::is_same<T, strings::String>() )
+        {
+            for ( auto it = begin(); it != end(); ++it )
+                write_string_big_endian( *it, &output );
+        }
+    else
+        {
+            output.write(
+                reinterpret_cast<const char *>( data() ),
+                nrows() * sizeof( T ) );
+        }
 
     // -----------------------------------------------------------------
     // Write colnames and units
@@ -458,16 +516,25 @@ void Column<T>::save_little_endian( const std::string &_fname ) const
 
     debug_log( "Column.save: Write data..." );
 
-    auto write_reversed_data = [&output]( T &_val ) {
-        T val_reversed = _val;
+    if constexpr ( std::is_same<T, strings::String>() )
+        {
+            for ( auto it = begin(); it != end(); ++it )
+                write_string_little_endian( *it, &output );
+        }
+    else
+        {
+            auto write_reversed_data = [&output]( T &_val ) {
+                T val_reversed = _val;
 
-        utils::Endianness::reverse_byte_order( &val_reversed );
+                utils::Endianness::reverse_byte_order( &val_reversed );
 
-        output.write(
-            reinterpret_cast<const char *>( &val_reversed ), sizeof( T ) );
-    };
+                output.write(
+                    reinterpret_cast<const char *>( &val_reversed ),
+                    sizeof( T ) );
+            };
 
-    std::for_each( begin(), end(), write_reversed_data );
+            std::for_each( begin(), end(), write_reversed_data );
+        }
 
     // -----------------------------------------------------------------
     // Write name and unit
@@ -503,6 +570,10 @@ Column<T> Column<T>::sort_by_key( const std::vector<size_t> &_key ) const
                     if constexpr ( std::is_same<T, Float>() )
                         {
                             sorted[i] = static_cast<Float>( NAN );
+                        }
+                    else if constexpr ( std::is_same<T, strings::String>() )
+                        {
+                            sorted[i] = "";
                         }
                     else if ( std::is_same<T, Int>() )
                         {

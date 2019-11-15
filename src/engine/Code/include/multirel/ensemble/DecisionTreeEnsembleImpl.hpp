@@ -12,7 +12,7 @@ namespace ensemble
 struct DecisionTreeEnsembleImpl
 {
     DecisionTreeEnsembleImpl(
-        const std::shared_ptr<const std::vector<std::string>> &_categories,
+        const std::shared_ptr<const std::vector<strings::String>> &_categories,
         const std::shared_ptr<const descriptors::Hyperparameters>
             &_hyperparameters,
         const std::vector<std::string> &_placeholder_peripheral,
@@ -35,7 +35,7 @@ struct DecisionTreeEnsembleImpl
     /// for generating the SQL code, because categorical data is
     /// stored in the form of integers, whereas we want actual categories
     /// in our code.
-    std::shared_ptr<const std::vector<std::string>> categories_;
+    std::shared_ptr<const std::vector<strings::String>> categories_;
 
     /// MPI Communicator or self-defined communicator object (for
     /// multithreading)

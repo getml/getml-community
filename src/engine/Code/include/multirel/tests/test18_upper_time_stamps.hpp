@@ -32,10 +32,11 @@ void test18_upper_time_stamps( std::filesystem::path _test_path )
 
     const auto time_stamps_peripheral = make_column<double>( 250000, rng );
 
-    const auto time_stamps_peripheral_col = multirel::containers::Column<double>(
-        time_stamps_peripheral.data(),
-        "time_stamp",
-        time_stamps_peripheral.size() );
+    const auto time_stamps_peripheral_col =
+        multirel::containers::Column<double>(
+            time_stamps_peripheral.data(),
+            "time_stamp",
+            time_stamps_peripheral.size() );
 
     auto upper_time_stamps_peripheral = make_column<double>( 250000, rng );
 
@@ -77,10 +78,11 @@ void test18_upper_time_stamps( std::filesystem::path _test_path )
 
     const auto time_stamps_population = make_column<double>( 500, rng );
 
-    const auto time_stamps_population_col = multirel::containers::Column<double>(
-        time_stamps_population.data(),
-        "time_stamp",
-        time_stamps_population.size() );
+    const auto time_stamps_population_col =
+        multirel::containers::Column<double>(
+            time_stamps_population.data(),
+            "time_stamp",
+            time_stamps_population.size() );
 
     auto targets_population = std::vector<double>( 500 );
 
@@ -148,8 +150,8 @@ void test18_upper_time_stamps( std::filesystem::path _test_path )
     // ------------------------------------------------------------------------
     // Build model
 
-    const auto encoding = std::make_shared<const std::vector<std::string>>(
-        std::vector<std::string>(
+    const auto encoding = std::make_shared<const std::vector<strings::String>>(
+        std::vector<strings::String>(
             {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"} ) );
 
     auto model = multirel::ensemble::DecisionTreeEnsemble(

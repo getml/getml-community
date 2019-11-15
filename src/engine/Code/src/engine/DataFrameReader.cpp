@@ -50,6 +50,24 @@ std::vector<std::string> DataFrameReader::make_colnames(
             update_counts( colname, &counts );
         }
 
+    for ( size_t i = 0; i < _df.num_undefined_floats(); ++i )
+        {
+            const auto& colname = _df.undefined_float( i ).name();
+            update_counts( colname, &counts );
+        }
+
+    for ( size_t i = 0; i < _df.num_undefined_integers(); ++i )
+        {
+            const auto& colname = _df.undefined_integer( i ).name();
+            update_counts( colname, &counts );
+        }
+
+    for ( size_t i = 0; i < _df.num_undefined_strings(); ++i )
+        {
+            const auto& colname = _df.undefined_string( i ).name();
+            update_counts( colname, &counts );
+        }
+
     // ------------------------------------------------------------------------
 
     std::vector<std::string> colnames;
@@ -106,6 +124,33 @@ std::vector<std::string> DataFrameReader::make_colnames(
                 colnames.push_back( colname );
             else
                 colnames.push_back( "time_stamp_" + colname );
+        }
+
+    for ( size_t i = 0; i < _df.num_undefined_floats(); ++i )
+        {
+            const auto& colname = _df.undefined_float( i ).name();
+            if ( counts[colname] == 1 )
+                colnames.push_back( colname );
+            else
+                colnames.push_back( "undefined_float_" + colname );
+        }
+
+    for ( size_t i = 0; i < _df.num_undefined_integers(); ++i )
+        {
+            const auto& colname = _df.undefined_integer( i ).name();
+            if ( counts[colname] == 1 )
+                colnames.push_back( colname );
+            else
+                colnames.push_back( "undefined_integer_" + colname );
+        }
+
+    for ( size_t i = 0; i < _df.num_undefined_strings(); ++i )
+        {
+            const auto& colname = _df.undefined_string( i ).name();
+            if ( counts[colname] == 1 )
+                colnames.push_back( colname );
+            else
+                colnames.push_back( "undefined_string_" + colname );
         }
 
     // ------------------------------------------------------------------------
@@ -175,6 +220,29 @@ std::vector<csv::Datatype> DataFrameReader::make_coltypes(
             coltypes.push_back( csv::Datatype::string );
         }
 
+    for ( size_t i = 0; i < _df.num_undefined_floats(); ++i )
+        {
+            if ( _df.numerical( i ).unit().find( "time stamp" ) !=
+                 std::string::npos )
+                {
+                    coltypes.push_back( csv::Datatype::string );
+                }
+            else
+                {
+                    coltypes.push_back( csv::Datatype::double_precision );
+                }
+        }
+
+    for ( size_t i = 0; i < _df.num_undefined_integers(); ++i )
+        {
+            coltypes.push_back( csv::Datatype::integer );
+        }
+
+    for ( size_t i = 0; i < _df.num_undefined_strings(); ++i )
+        {
+            coltypes.push_back( csv::Datatype::string );
+        }
+
     return coltypes;
 }
 
@@ -203,7 +271,7 @@ std::vector<std::string> DataFrameReader::next_line()
     for ( size_t i = 0; i < df_.num_categoricals(); ++i )
         {
             const auto& val = df_.categorical( i )[rownum_];
-            result[col++] = categories()[val];
+            result[col++] = categories()[val].str();
         }
 
     for ( size_t i = 0; i < df_.num_discretes(); ++i )
@@ -218,7 +286,7 @@ std::vector<std::string> DataFrameReader::next_line()
     for ( size_t i = 0; i < df_.num_join_keys(); ++i )
         {
             const auto& val = df_.join_key( i )[rownum_];
-            result[col++] = join_keys_encoding()[val];
+            result[col++] = join_keys_encoding()[val].str();
         }
 
     for ( size_t i = 0; i < df_.num_numericals(); ++i )
@@ -241,6 +309,29 @@ std::vector<std::string> DataFrameReader::next_line()
             const auto& val = df_.time_stamp( i )[rownum_];
             result[col++] = df_.to_time_stamp( val );
         }
+
+    for ( size_t i = 0; i < df_.num_undefined_floats(); ++i )
+        {
+            const auto& val = df_.undefined_float( i )[rownum_];
+            if ( coltypes()[col] == csv::Datatype::string )
+                result[col++] = df_.to_time_stamp( val );
+            else
+                result[col++] = std::to_string( val );
+        }
+
+    for ( size_t i = 0; i < df_.num_undefined_integers(); ++i )
+        {
+            const auto& val = df_.undefined_integer( i )[rownum_];
+            result[col++] = std::to_string( val );
+        }
+
+    for ( size_t i = 0; i < df_.num_undefined_strings(); ++i )
+        {
+            const auto& val = df_.undefined_string( i )[rownum_];
+            result[col++] = val.str();
+        }
+
+    assert_true( col == result.size() );
 
     // ------------------------------------------------------------------------
 

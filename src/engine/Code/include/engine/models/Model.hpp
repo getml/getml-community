@@ -25,7 +25,7 @@ class Model : public AbstractModel
         const Poco::JSON::Object& _hyperparameters );
 
     Model(
-        const std::shared_ptr<const std::vector<std::string>>& _encoding,
+        const std::shared_ptr<const std::vector<strings::String>>& _encoding,
         const std::string& _path );
 
     ~Model() = default;
@@ -278,7 +278,7 @@ Model<FeatureEngineererType>::Model(
 
 template <typename FeatureEngineererType>
 Model<FeatureEngineererType>::Model(
-    const std::shared_ptr<const std::vector<std::string>>& _encoding,
+    const std::shared_ptr<const std::vector<strings::String>>& _encoding,
     const std::string& _path )
     : feature_engineerer_(
           _encoding, load_json_obj( _path + "feature_engineerer.json" ) ),

@@ -17,7 +17,7 @@ struct DecisionTreeImpl
     // ----------------------------------------
 
     DecisionTreeImpl(
-        const std::shared_ptr<const std::vector<std::string>>& _categories,
+        const std::shared_ptr<const std::vector<strings::String>>& _categories,
         const std::shared_ptr<const descriptors::TreeHyperparameters>&
             _tree_hyperparameters )
         : categories_( _categories ),
@@ -39,7 +39,7 @@ struct DecisionTreeImpl
     }
 
     /// Trivial accessor
-    inline const std::vector<std::string>& categories() const
+    inline const std::vector<strings::String>& categories() const
     {
         assert_true( categories_ );
         return *categories_;
@@ -167,7 +167,7 @@ struct DecisionTreeImpl
     std::string aggregation_type_;
 
     /// Pointer to the vector that maps the integers to categories
-    std::shared_ptr<const std::vector<std::string>> categories_;
+    std::shared_ptr<const std::vector<strings::String>> categories_;
 
     /// Pointer to the structure that contains information
     /// about the column aggregated by this tree

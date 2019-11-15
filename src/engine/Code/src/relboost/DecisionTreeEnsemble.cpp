@@ -7,7 +7,7 @@ namespace ensemble
 // ----------------------------------------------------------------------------
 
 DecisionTreeEnsemble::DecisionTreeEnsemble(
-    const std::shared_ptr<const std::vector<std::string>> &_encoding,
+    const std::shared_ptr<const std::vector<strings::String>> &_encoding,
     const std::shared_ptr<const Hyperparameters> &_hyperparameters,
     const std::shared_ptr<const std::vector<std::string>> &_peripheral,
     const std::shared_ptr<const Placeholder> &_placeholder )
@@ -22,7 +22,7 @@ DecisionTreeEnsemble::DecisionTreeEnsemble(
 // ----------------------------------------------------------------------------
 
 DecisionTreeEnsemble::DecisionTreeEnsemble(
-    const std::shared_ptr<const std::vector<std::string>> &_encoding,
+    const std::shared_ptr<const std::vector<strings::String>> &_encoding,
     const Poco::JSON::Object &_obj )
     : impl_( DecisionTreeEnsembleImpl(
           _encoding,

@@ -39,6 +39,10 @@ std::string StatementMaker::make_statement(
             return make_statement_postgres(
                 _table_name, _colnames, _datatypes );
         }
+    else if ( _dialect == "python" )
+        {
+            return make_statement_python( _colnames, _datatypes );
+        }
     if ( _dialect == "sqlite" )
         {
             return make_statement_sqlite( _table_name, _colnames, _datatypes );
@@ -86,6 +90,45 @@ std::string StatementMaker::make_statement_postgres(
         }
 
     return statement.str();
+}
+
+// ----------------------------------------------------------------------------
+
+std::string StatementMaker::make_statement_python(
+    const std::vector<std::string>& _colnames,
+    const std::vector<Datatype>& _datatypes )
+{
+    assert_true( _colnames.size() == _datatypes.size() );
+
+    Poco::JSON::Array udef_floats;
+    Poco::JSON::Array udef_ints;
+    Poco::JSON::Array udef_strings;
+
+    for ( size_t i = 0; i < _colnames.size(); ++i )
+        {
+            switch ( _datatypes[i] )
+                {
+                    case Datatype::double_precision:
+                        udef_floats.add( _colnames[i] );
+                        break;
+
+                    case Datatype::integer:
+                        udef_ints.add( _colnames[i] );
+                        break;
+
+                    default:
+                        udef_strings.add( _colnames[i] );
+                        break;
+                }
+        }
+
+    Poco::JSON::Object obj;
+
+    obj.set( "udef_floats", udef_floats );
+    obj.set( "udef_ints", udef_ints );
+    obj.set( "udef_strings", udef_strings );
+
+    return jsonutils::JSON::stringify( obj );
 }
 
 // ----------------------------------------------------------------------------

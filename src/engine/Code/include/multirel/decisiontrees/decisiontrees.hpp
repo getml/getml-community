@@ -39,6 +39,8 @@
 
 #include "multithreading/multithreading.hpp"
 
+#include "strings/strings.hpp"
+
 #include "multirel/Float.hpp"
 #include "multirel/Int.hpp"
 

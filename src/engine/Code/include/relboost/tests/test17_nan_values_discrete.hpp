@@ -132,7 +132,7 @@ void test17_nan_values_discrete( std::filesystem::path _test_path )
     // ---------------------------------------------
     // Build data model.
 
-    // Append all subfolders to reach the required file. This 
+    // Append all subfolders to reach the required file. This
     // appending will have a persistent effect of _test_path which
     // is stored on the heap. After setting it once to the correct
     // folder only the filename has to be replaced.
@@ -149,8 +149,8 @@ void test17_nan_values_discrete( std::filesystem::path _test_path )
     // ------------------------------------------------------------------------
     // Load hyperparameters.
 
-    const auto hyperparameters_json =
-        load_json( _test_path.replace_filename( "hyperparameters.json" ).string() );
+    const auto hyperparameters_json = load_json(
+        _test_path.replace_filename( "hyperparameters.json" ).string() );
 
     std::cout << relboost::JSON::stringify( *hyperparameters_json ) << std::endl
               << std::endl;
@@ -162,8 +162,8 @@ void test17_nan_values_discrete( std::filesystem::path _test_path )
     // ------------------------------------------------------------------------
     // Build model
 
-    const auto encoding = std::make_shared<const std::vector<std::string>>(
-        std::vector<std::string>(
+    const auto encoding = std::make_shared<const std::vector<strings::String>>(
+        std::vector<strings::String>(
             {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"} ) );
 
     auto model = relboost::ensemble::DecisionTreeEnsemble(

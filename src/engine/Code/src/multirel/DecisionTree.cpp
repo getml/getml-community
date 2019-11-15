@@ -7,7 +7,7 @@ namespace decisiontrees
 // ----------------------------------------------------------------------------
 
 DecisionTree::DecisionTree(
-    const std::shared_ptr<const std::vector<std::string>> &_categories,
+    const std::shared_ptr<const std::vector<strings::String>> &_categories,
     const std::shared_ptr<const descriptors::TreeHyperparameters>
         &_tree_hyperparameters,
     const Poco::JSON::Object &_json_obj )
@@ -24,7 +24,7 @@ DecisionTree::DecisionTree(
 
 DecisionTree::DecisionTree(
     const std::string &_agg,
-    const std::shared_ptr<const std::vector<std::string>> &_categories,
+    const std::shared_ptr<const std::vector<strings::String>> &_categories,
     const std::shared_ptr<const descriptors::TreeHyperparameters>
         &_tree_hyperparameters,
     const size_t _ix_perip_used,
@@ -201,7 +201,8 @@ void DecisionTree::create_value_to_be_aggregated(
 
             case enums::DataUsed::same_unit_discrete:
 
-                assert_true( impl()->same_units_discrete().size() > ix_column_used );
+                assert_true(
+                    impl()->same_units_discrete().size() > ix_column_used );
 
                 {
                     const enums::DataUsed data_used1 =

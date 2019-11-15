@@ -38,6 +38,14 @@ void DataFrameManager::add_categorical_column(
 
     // ------------------------------------------------------------------------
 
+    if ( role == "undefined_string" )
+        {
+            add_string_column( name, vec, &df, &weak_write_lock, _socket );
+            return;
+        }
+
+    // ------------------------------------------------------------------------
+
     auto local_categories =
         std::make_shared<containers::Encoding>( categories_ );
 
@@ -84,9 +92,13 @@ void DataFrameManager::add_categorical_column(
         {
             categories_->append( *local_categories );
         }
-    else
+    else if ( role == "join_key" )
         {
             join_keys_encoding_->append( *local_join_keys_encoding );
+        }
+    else
+        {
+            assert_true( false );
         }
 
     // ------------------------------------------------------------------------
@@ -123,6 +135,13 @@ void DataFrameManager::add_categorical_column(
             col = communication::Receiver::recv_categorical_column(
                 join_keys_encoding_.get(), _socket );
         }
+    else if ( role == "undefined_string" )
+        {
+            const auto str_col =
+                communication::Receiver::recv_string_column( _socket );
+            add_string_column( name, str_col, _df, nullptr, _socket );
+            return;
+        }
     else
         {
             throw std::runtime_error(
@@ -148,7 +167,11 @@ void DataFrameManager::add_column(
     const Poco::JSON::Object& _cmd,
     Poco::Net::StreamSocket* _socket )
 {
+    // ------------------------------------------------------------------------
+
     multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
+
+    // ------------------------------------------------------------------------
 
     const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
 
@@ -162,6 +185,8 @@ void DataFrameManager::add_column(
 
     const auto json_col = *JSON::get_object( _cmd, "col_" );
 
+    // ------------------------------------------------------------------------
+
     auto col = NumOpParser::parse(
         *categories_, *join_keys_encoding_, {df}, json_col );
 
@@ -169,15 +194,17 @@ void DataFrameManager::add_column(
 
     col.set_unit( unit );
 
-    license_checker().check_mem_size( data_frames(), col.nbytes() );
+    // ------------------------------------------------------------------------
 
-    weak_write_lock.upgrade();
+    add_column_to_df( role, col, &df, &weak_write_lock );
 
-    df.add_float_column( col, role );
+    // ------------------------------------------------------------------------
 
     monitor_->send( "postdataframe", df.to_monitor() );
 
     communication::Sender::send_string( "Success!", _socket );
+
+    // ------------------------------------------------------------------------
 }
 
 // ------------------------------------------------------------------------
@@ -199,11 +226,92 @@ void DataFrameManager::add_column(
 
     col.set_unit( unit );
 
-    license_checker().check_mem_size( data_frames(), col.nbytes() );
-
-    _df->add_float_column( col, role );
+    add_column_to_df( role, col, _df, nullptr );
 
     communication::Sender::send_string( "Success!", _socket );
+}
+
+// ------------------------------------------------------------------------
+
+void DataFrameManager::add_column_to_df(
+    const std::string& _role,
+    const containers::Column<Float>& _col,
+    containers::DataFrame* _df,
+    multithreading::WeakWriteLock* _weak_write_lock )
+{
+    if ( _role == "undefined_integer" )
+        {
+            // ---------------------------------------------------------
+
+            auto int_col = containers::Column<Int>( _col.nrows() );
+
+            for ( size_t i = 0; i < _col.nrows(); ++i )
+                if ( !std::isnan( _col[i] ) && !std::isinf( _col[i] ) )
+                    int_col[i] = static_cast<Int>( _col[i] );
+
+            int_col.set_name( _col.name() );
+
+            // ---------------------------------------------------------
+
+            license_checker().check_mem_size( data_frames(), int_col.nbytes() );
+
+            // ---------------------------------------------------------
+
+            if ( _weak_write_lock ) _weak_write_lock->upgrade();
+
+            _df->add_int_column( int_col, _role );
+
+            // ---------------------------------------------------------
+        }
+    else
+        {
+            license_checker().check_mem_size( data_frames(), _col.nbytes() );
+
+            if ( _weak_write_lock ) _weak_write_lock->upgrade();
+
+            _df->add_float_column( _col, _role );
+        }
+}
+
+// ------------------------------------------------------------------------
+
+void DataFrameManager::add_string_column(
+    const std::string& _name,
+    const std::vector<std::string>& _vec,
+    containers::DataFrame* _df,
+    multithreading::WeakWriteLock* _weak_write_lock,
+    Poco::Net::StreamSocket* _socket )
+{
+    // ------------------------------------------------------------------------
+
+    auto col = containers::Column<strings::String>( _vec.size() );
+
+    for ( size_t i = 0; i < _vec.size(); ++i )
+        {
+            col[i] = strings::String( _vec[i] );
+        }
+
+    col.set_name( _name );
+
+    // ------------------------------------------------------------------------
+
+    license_checker().check_mem_size( data_frames(), col.nbytes() );
+
+    // ------------------------------------------------------------------------
+
+    if ( _weak_write_lock ) _weak_write_lock->upgrade();
+
+    // ------------------------------------------------------------------------
+
+    _df->add_string_column( col );
+
+    // ------------------------------------------------------------------------
+
+    monitor_->send( "postdataframe", _df->to_monitor() );
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    // ------------------------------------------------------------------------
 }
 
 // ------------------------------------------------------------------------
@@ -395,6 +503,15 @@ void DataFrameManager::from_csv(
     const auto time_stamps = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "time_stamps_" ) );
 
+    const auto undefined_floats = JSON::array_to_vector<std::string>(
+        JSON::get_array( _cmd, "undefined_floats_" ) );
+
+    const auto undefined_integers = JSON::array_to_vector<std::string>(
+        JSON::get_array( _cmd, "undefined_integers_" ) );
+
+    const auto undefined_strings = JSON::array_to_vector<std::string>(
+        JSON::get_array( _cmd, "undefined_strings_" ) );
+
     // --------------------------------------------------------------------
     // We need the weak write lock for the categories and join keys encoding.
 
@@ -423,7 +540,10 @@ void DataFrameManager::from_csv(
         join_keys,
         numericals,
         targets,
-        time_stamps );
+        time_stamps,
+        undefined_floats,
+        undefined_integers,
+        undefined_strings );
 
     license_checker().check_mem_size( data_frames(), df.nbytes() );
 
@@ -492,6 +612,15 @@ void DataFrameManager::from_db(
     const auto time_stamps = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "time_stamps_" ) );
 
+    const auto undefined_floats = JSON::array_to_vector<std::string>(
+        JSON::get_array( _cmd, "undefined_floats_" ) );
+
+    const auto undefined_integers = JSON::array_to_vector<std::string>(
+        JSON::get_array( _cmd, "undefined_integers_" ) );
+
+    const auto undefined_strings = JSON::array_to_vector<std::string>(
+        JSON::get_array( _cmd, "undefined_strings_" ) );
+
     // --------------------------------------------------------------------
     // We need the weak write lock for the categories and join keys encoding.
 
@@ -520,7 +649,10 @@ void DataFrameManager::from_db(
         join_keys,
         numericals,
         targets,
-        time_stamps );
+        time_stamps,
+        undefined_floats,
+        undefined_integers,
+        undefined_strings );
 
     license_checker().check_mem_size( data_frames(), df.nbytes() );
 
@@ -599,6 +731,15 @@ void DataFrameManager::from_json(
     const auto time_formats = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "time_formats_" ) );
 
+    const auto undefined_floats = JSON::array_to_vector<std::string>(
+        JSON::get_array( _cmd, "undefined_floats_" ) );
+
+    const auto undefined_integers = JSON::array_to_vector<std::string>(
+        JSON::get_array( _cmd, "undefined_integers_" ) );
+
+    const auto undefined_strings = JSON::array_to_vector<std::string>(
+        JSON::get_array( _cmd, "undefined_strings_" ) );
+
     // --------------------------------------------------------------------
     // We need the weak write lock for the categories and join keys encoding.
 
@@ -627,7 +768,10 @@ void DataFrameManager::from_json(
         join_keys,
         numericals,
         targets,
-        time_stamps );
+        time_stamps,
+        undefined_floats,
+        undefined_integers,
+        undefined_strings );
 
     license_checker().check_mem_size( data_frames(), df.nbytes() );
 

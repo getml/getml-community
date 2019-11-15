@@ -6,6 +6,7 @@
 #include <chrono>
 #include <memory>
 #include <thread>
+#include <type_traits>
 #include <vector>
 
 #include "debug/debug.hpp"
@@ -13,6 +14,8 @@
 #include "database/database.hpp"
 
 #include "multithreading/multithreading.hpp"
+
+#include "strings/strings.hpp"
 
 // ----------------------------------------------------------------------------
 

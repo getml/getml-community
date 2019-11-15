@@ -253,13 +253,13 @@ void FileHandler::write_string_big_endian(
 {
     std::ofstream output( _fname, std::ios::binary );
 
-    auto write_string = [&output]( const std::string& _str ) {
+    auto write_string = [&output]( const strings::String& _str ) {
         size_t str_size = _str.size();
 
         output.write(
             reinterpret_cast<const char*>( &str_size ), sizeof( size_t ) );
 
-        output.write( &( _str[0] ), _str.size() );
+        output.write( _str.c_str(), _str.size() );
     };
 
     std::for_each( _strings.begin(), _strings.end(), write_string );
@@ -272,7 +272,7 @@ void FileHandler::write_string_little_endian(
 {
     std::ofstream output( _fname, std::ios::binary );
 
-    auto write_string = [&output]( const std::string& _str ) {
+    auto write_string = [&output]( const strings::String& _str ) {
         size_t str_size = _str.size();
 
         utils::Endianness::reverse_byte_order( &str_size );
@@ -280,7 +280,7 @@ void FileHandler::write_string_little_endian(
         output.write(
             reinterpret_cast<const char*>( &str_size ), sizeof( size_t ) );
 
-        output.write( &( _str[0] ), _str.size() );
+        output.write( _str.c_str(), _str.size() );
     };
 
     std::for_each( _strings.begin(), _strings.end(), write_string );
