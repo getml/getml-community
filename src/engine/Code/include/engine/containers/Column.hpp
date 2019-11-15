@@ -558,6 +558,10 @@ Column<T> Column<T>::sort_by_key( const std::vector<size_t> &_key ) const
                         {
                             sorted[i] = static_cast<Float>( NAN );
                         }
+                    else if constexpr ( std::is_same<T, strings::String>() )
+                        {
+                            sorted[i] = "";
+                        }
                     else if ( std::is_same<T, Int>() )
                         {
                             sorted[i] = -1;

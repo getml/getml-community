@@ -229,7 +229,7 @@ class DataFrame
     }
 
     /// Whether the DataFrame has a categorical column named _name.
-    const bool has_categorical( const std::string &_name ) const
+    bool has_categorical( const std::string &_name ) const
     {
         for ( size_t i = 0; i < num_categoricals(); ++i )
             {
@@ -243,7 +243,7 @@ class DataFrame
     }
 
     /// Whether the DataFrame has a discrete column named _name.
-    const bool has_discrete( const std::string &_name ) const
+    bool has_discrete( const std::string &_name ) const
     {
         for ( size_t i = 0; i < num_discretes(); ++i )
             {
@@ -257,7 +257,7 @@ class DataFrame
     }
 
     /// Whether the DataFrame has a join_key named _name.
-    const bool has_join_key( const std::string &_name ) const
+    bool has_join_key( const std::string &_name ) const
     {
         for ( size_t i = 0; i < num_join_keys(); ++i )
             {
@@ -271,7 +271,7 @@ class DataFrame
     }
 
     /// Whether the DataFrame has a numerical column named _name.
-    const bool has_numerical( const std::string &_name ) const
+    bool has_numerical( const std::string &_name ) const
     {
         for ( size_t i = 0; i < num_numericals(); ++i )
             {
@@ -285,7 +285,7 @@ class DataFrame
     }
 
     /// Whether the DataFrame has a target column of named _name.
-    const bool has_target( const std::string &_name ) const
+    bool has_target( const std::string &_name ) const
     {
         for ( size_t i = 0; i < num_targets(); ++i )
             {
@@ -299,11 +299,53 @@ class DataFrame
     }
 
     /// Whether the DataFrame has a time_stamp column of named _name.
-    const bool has_time_stamp( const std::string &_name ) const
+    bool has_time_stamp( const std::string &_name ) const
     {
         for ( size_t i = 0; i < num_time_stamps(); ++i )
             {
                 if ( time_stamp( i ).name() == _name )
+                    {
+                        return true;
+                    }
+            }
+
+        return false;
+    }
+
+    /// Whether the DataFrame has an undefined float column name _name.
+    bool has_undefined_float( const std::string &_name ) const
+    {
+        for ( size_t i = 0; i < num_undefined_floats(); ++i )
+            {
+                if ( undefined_float( i ).name() == _name )
+                    {
+                        return true;
+                    }
+            }
+
+        return false;
+    }
+
+    /// Whether the DataFrame has an undefined int column named _name.
+    bool has_undefined_integer( const std::string &_name ) const
+    {
+        for ( size_t i = 0; i < num_undefined_integers(); ++i )
+            {
+                if ( undefined_integer( i ).name() == _name )
+                    {
+                        return true;
+                    }
+            }
+
+        return false;
+    }
+
+    /// Whether the DataFrame has an undefined string column named _name.
+    bool has_undefined_string( const std::string &_name ) const
+    {
+        for ( size_t i = 0; i < num_undefined_strings(); ++i )
+            {
+                if ( undefined_string( i ).name() == _name )
                     {
                         return true;
                     }

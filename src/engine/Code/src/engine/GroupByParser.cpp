@@ -126,7 +126,7 @@ containers::DataFrame GroupByParser::group_by(
                         unique,
                         index );
 
-                    result.add_float_column( col, "numerical" );
+                    result.add_float_column( col, "undefined_float" );
                 }
             else
                 {
@@ -140,7 +140,7 @@ containers::DataFrame GroupByParser::group_by(
                         unique,
                         index );
 
-                    result.add_float_column( col, "numerical" );
+                    result.add_float_column( col, "undefined_float" );
                 }
         }
 
