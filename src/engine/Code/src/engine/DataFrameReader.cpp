@@ -12,145 +12,60 @@ std::vector<std::string> DataFrameReader::make_colnames(
 {
     // ------------------------------------------------------------------------
 
-    std::map<std::string, Int> counts;
-
-    for ( size_t i = 0; i < _df.num_categoricals(); ++i )
-        {
-            const auto& colname = _df.categorical( i ).name();
-            update_counts( colname, &counts );
-        }
-
-    for ( size_t i = 0; i < _df.num_discretes(); ++i )
-        {
-            const auto& colname = _df.discrete( i ).name();
-            update_counts( colname, &counts );
-        }
-
-    for ( size_t i = 0; i < _df.num_join_keys(); ++i )
-        {
-            const auto& colname = _df.join_key( i ).name();
-            update_counts( colname, &counts );
-        }
-
-    for ( size_t i = 0; i < _df.num_numericals(); ++i )
-        {
-            const auto& colname = _df.numerical( i ).name();
-            update_counts( colname, &counts );
-        }
-
-    for ( size_t i = 0; i < _df.num_targets(); ++i )
-        {
-            const auto& colname = _df.target( i ).name();
-            update_counts( colname, &counts );
-        }
-
-    for ( size_t i = 0; i < _df.num_time_stamps(); ++i )
-        {
-            const auto& colname = _df.time_stamp( i ).name();
-            update_counts( colname, &counts );
-        }
-
-    for ( size_t i = 0; i < _df.num_undefined_floats(); ++i )
-        {
-            const auto& colname = _df.undefined_float( i ).name();
-            update_counts( colname, &counts );
-        }
-
-    for ( size_t i = 0; i < _df.num_undefined_integers(); ++i )
-        {
-            const auto& colname = _df.undefined_integer( i ).name();
-            update_counts( colname, &counts );
-        }
-
-    for ( size_t i = 0; i < _df.num_undefined_strings(); ++i )
-        {
-            const auto& colname = _df.undefined_string( i ).name();
-            update_counts( colname, &counts );
-        }
-
-    // ------------------------------------------------------------------------
-
     std::vector<std::string> colnames;
 
     for ( size_t i = 0; i < _df.num_categoricals(); ++i )
         {
             const auto& colname = _df.categorical( i ).name();
-            if ( counts[colname] == 1 )
-                colnames.push_back( colname );
-            else
-                colnames.push_back( "categorical_" + colname );
+            colnames.push_back( colname );
         }
 
     for ( size_t i = 0; i < _df.num_discretes(); ++i )
         {
             const auto& colname = _df.discrete( i ).name();
-            if ( counts[colname] == 1 )
-                colnames.push_back( colname );
-            else
-                colnames.push_back( "discrete_" + colname );
+            colnames.push_back( colname );
         }
 
     for ( size_t i = 0; i < _df.num_join_keys(); ++i )
         {
             const auto& colname = _df.join_key( i ).name();
-            if ( counts[colname] == 1 )
-                colnames.push_back( colname );
-            else
-                colnames.push_back( "join_key_" + colname );
+            colnames.push_back( colname );
         }
 
     for ( size_t i = 0; i < _df.num_numericals(); ++i )
         {
             const auto& colname = _df.numerical( i ).name();
-            if ( counts[colname] == 1 )
-                colnames.push_back( colname );
-            else
-                colnames.push_back( "numerical_" + colname );
+            colnames.push_back( colname );
         }
 
     for ( size_t i = 0; i < _df.num_targets(); ++i )
         {
             const auto& colname = _df.target( i ).name();
-            if ( counts[colname] == 1 )
-                colnames.push_back( colname );
-            else
-                colnames.push_back( "target_" + colname );
+            colnames.push_back( colname );
         }
 
     for ( size_t i = 0; i < _df.num_time_stamps(); ++i )
         {
             const auto& colname = _df.time_stamp( i ).name();
-            if ( counts[colname] == 1 )
-                colnames.push_back( colname );
-            else
-                colnames.push_back( "time_stamp_" + colname );
+            colnames.push_back( colname );
         }
 
     for ( size_t i = 0; i < _df.num_undefined_floats(); ++i )
         {
             const auto& colname = _df.undefined_float( i ).name();
-            if ( counts[colname] == 1 )
-                colnames.push_back( colname );
-            else
-                colnames.push_back( "undefined_float_" + colname );
+            colnames.push_back( colname );
         }
 
     for ( size_t i = 0; i < _df.num_undefined_integers(); ++i )
         {
             const auto& colname = _df.undefined_integer( i ).name();
-            if ( counts[colname] == 1 )
-                colnames.push_back( colname );
-            else
-                colnames.push_back( "undefined_integer_" + colname );
+            colnames.push_back( colname );
         }
 
     for ( size_t i = 0; i < _df.num_undefined_strings(); ++i )
         {
             const auto& colname = _df.undefined_string( i ).name();
-            if ( counts[colname] == 1 )
-                colnames.push_back( colname );
-            else
-                colnames.push_back( "undefined_string_" + colname );
+            colnames.push_back( colname );
         }
 
     // ------------------------------------------------------------------------
