@@ -143,7 +143,7 @@ class DataFrame
     const size_t nrows() const;
 
     /// Removes a column.
-    void remove_column( const std::string &_name, const std::string &_role );
+    bool remove_column( const std::string &_name );
 
     /// Saves the data on the engine
     void save( const std::string &_path );
@@ -681,8 +681,7 @@ class DataFrame
    private:
     /// Adds a column to _columns.
     template <class ColType>
-    void add_column(
-        const ColType &_col, std::vector<ColType> *_columns ) const;
+    void add_column( const ColType &_col, std::vector<ColType> *_columns );
 
     /// Adds a vector of float vectors.
     void add_float_vectors(
@@ -774,7 +773,7 @@ class DataFrame
 
     /// Returns the colnames of a vector of columns
     template <class T>
-    void rm_col(
+    bool rm_col(
         const std::string &_name,
         std::vector<Column<T>> *_columns,
         std::vector<DataFrameIndex> *_indices = nullptr ) const;
@@ -857,7 +856,7 @@ namespace containers
 
 template <class ColType>
 void DataFrame::add_column(
-    const ColType &_col, std::vector<ColType> *_columns ) const
+    const ColType &_col, std::vector<ColType> *_columns )
 {
     if ( _col.nrows() == 0 )
         {
@@ -873,21 +872,9 @@ void DataFrame::add_column(
                 std::to_string( nrows() ) + "." );
         }
 
-    const auto has_same_name = [_col]( const ColType &c ) {
-        return c.name() == _col.name();
-    };
+    remove_column( _col.name() );
 
-    const auto it =
-        std::find_if( _columns->begin(), _columns->end(), has_same_name );
-
-    if ( it == _columns->end() )
-        {
-            _columns->push_back( _col );
-        }
-    else
-        {
-            *it = _col;
-        }
+    _columns->push_back( _col );
 }
 
 // -------------------------------------------------------------------------
@@ -979,7 +966,7 @@ std::vector<std::shared_ptr<std::vector<T>>> DataFrame::make_vectors(
 // ----------------------------------------------------------------------------
 
 template <class T>
-void DataFrame::rm_col(
+bool DataFrame::rm_col(
     const std::string &_name,
     std::vector<Column<T>> *_columns,
     std::vector<DataFrameIndex> *_indices ) const
@@ -993,9 +980,7 @@ void DataFrame::rm_col(
 
     if ( it == _columns->end() )
         {
-            throw std::invalid_argument(
-                "Could not remove column. Column named '" + _name +
-                "' not found." );
+            return false;
         }
 
     if ( _indices )
@@ -1008,6 +993,8 @@ void DataFrame::rm_col(
         }
 
     _columns->erase( it );
+
+    return true;
 }
 
 // ----------------------------------------------------------------------------

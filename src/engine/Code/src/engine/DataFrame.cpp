@@ -1533,49 +1533,45 @@ const size_t DataFrame::nrows() const
 
 // ----------------------------------------------------------------------------
 
-void DataFrame::remove_column(
-    const std::string &_name, const std::string &_role )
+bool DataFrame::remove_column( const std::string &_name )
 {
-    if ( _role == "categorical" )
-        {
-            rm_col( _name, &categoricals_ );
-        }
-    else if ( _role == "discrete" )
-        {
-            rm_col( _name, &discretes_ );
-        }
-    else if ( _role == "join_key" )
-        {
-            rm_col( _name, &join_keys_, &indices_ );
-        }
-    else if ( _role == "numerical" )
-        {
-            rm_col( _name, &numericals_ );
-        }
-    else if ( _role == "target" )
-        {
-            rm_col( _name, &targets_ );
-        }
-    else if ( _role == "time_stamp" )
-        {
-            rm_col( _name, &time_stamps_ );
-        }
-    else if ( _role == "undefined_float" )
-        {
-            rm_col( _name, &undefined_floats_ );
-        }
-    else if ( _role == "undefined_integer" )
-        {
-            rm_col( _name, &undefined_integers_ );
-        }
-    else if ( _role == "undefined_string" )
-        {
-            rm_col( _name, &undefined_strings_ );
-        }
-    else
-        {
-            throw std::invalid_argument( "Role '" + _role + "' not known!" );
-        }
+    bool success = rm_col( _name, &categoricals_ );
+
+    if ( success ) return true;
+
+    success = rm_col( _name, &discretes_ );
+
+    if ( success ) return true;
+
+    success = rm_col( _name, &join_keys_, &indices_ );
+
+    if ( success ) return true;
+
+    success = rm_col( _name, &numericals_ );
+
+    if ( success ) return true;
+
+    success = rm_col( _name, &targets_ );
+
+    if ( success ) return true;
+
+    success = rm_col( _name, &time_stamps_ );
+
+    if ( success ) return true;
+
+    success = rm_col( _name, &undefined_floats_ );
+
+    if ( success ) return true;
+
+    success = rm_col( _name, &undefined_integers_ );
+
+    if ( success ) return true;
+
+    success = rm_col( _name, &undefined_strings_ );
+
+    if ( success ) return true;
+
+    return false;
 }
 
 // ----------------------------------------------------------------------------

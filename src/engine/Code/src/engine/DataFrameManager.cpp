@@ -1216,15 +1216,20 @@ void DataFrameManager::remove_column(
 {
     const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
 
-    const auto role = JSON::get_value<std::string>( _cmd, "role_" );
-
     const auto name = JSON::get_value<std::string>( _cmd, "name_" );
 
     multithreading::WriteLock write_lock( read_write_lock_ );
 
     auto& df = utils::Getter::get( df_name, &data_frames() );
 
-    df.remove_column( name, role );
+    const bool success = df.remove_column( name );
+
+    if ( !success )
+        {
+            throw std::invalid_argument(
+                "Could not remove column. Column named '" + _name +
+                "' not found." );
+        }
 
     monitor_->send( "postdataframe", df.to_monitor() );
 
