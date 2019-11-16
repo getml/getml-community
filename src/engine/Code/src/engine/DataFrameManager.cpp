@@ -708,7 +708,8 @@ void DataFrameManager::from_json(
                           .extract<Poco::JSON::Object::Ptr>();
 
     // --------------------------------------------------------------------
-    // Parse the command.
+    // Parse the command. Note that the JSON column from the HTTP endpoint
+    // does not necessarily include undefined columns - so we make the optional.
 
     const auto categoricals = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "categoricals_" ) );
@@ -731,14 +732,23 @@ void DataFrameManager::from_json(
     const auto time_formats = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "time_formats_" ) );
 
-    const auto undefined_floats = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "undefined_floats_" ) );
+    const auto undefined_floats =
+        _cmd.has( "undefined_floats_" )
+            ? JSON::array_to_vector<std::string>(
+                  JSON::get_array( _cmd, "undefined_floats_" ) )
+            : std::vector<std::string>();
 
-    const auto undefined_integers = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "undefined_integers_" ) );
+    const auto undefined_integers =
+        _cmd.has( "undefined_integers_" )
+            ? JSON::array_to_vector<std::string>(
+                  JSON::get_array( _cmd, "undefined_integers_" ) )
+            : std::vector<std::string>();
 
-    const auto undefined_strings = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "undefined_strings_" ) );
+    const auto undefined_strings =
+        _cmd.has( "undefined_strings_" )
+            ? JSON::array_to_vector<std::string>(
+                  JSON::get_array( _cmd, "undefined_strings_" ) )
+            : std::vector<std::string>();
 
     // --------------------------------------------------------------------
     // We need the weak write lock for the categories and join keys encoding.
