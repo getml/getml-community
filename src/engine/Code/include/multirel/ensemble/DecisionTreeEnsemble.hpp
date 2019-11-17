@@ -97,6 +97,12 @@ class DecisionTreeEnsemble
 
    public:
     /// Trivial accessor
+    bool &allow_http() { return impl().allow_http_; }
+
+    /// Trivial accessor
+    bool allow_http() const { return impl().allow_http_; }
+
+    /// Trivial accessor
     inline const std::shared_ptr<const std::vector<strings::String>>
         &categories() const
     {
@@ -295,7 +301,7 @@ class DecisionTreeEnsemble
     // -----------------------------------------------------------------
 
    private:
-    /// Contains all variables other than the DecisionTreeEnsemble.
+    /// Contains all variables other than the subensembles.
     DecisionTreeEnsembleImpl impl_;
 
     /// Contains the ensembles for the subfeatures trained with the intermediate

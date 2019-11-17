@@ -17,7 +17,8 @@ struct DecisionTreeEnsembleImpl
         const std::shared_ptr<const std::vector<std::string>>&
             _peripheral_names,
         const std::shared_ptr<const Placeholder>& _placeholder )
-        : comm_( nullptr ),
+        : allow_http_( false ),
+          comm_( nullptr ),
           encoding_( _encoding ),
           hyperparameters_( _hyperparameters ),
           initial_prediction_( 0.0 ),
@@ -35,6 +36,9 @@ struct DecisionTreeEnsembleImpl
     void check_placeholder( const Placeholder& _placeholder ) const;
 
     // ------------------------------------------------------------------------
+
+    /// Whether we want to allow this model to be used as an http endpoint.
+    bool allow_http_;
 
     /// raw pointer to the communicator.
     multithreading::Communicator* comm_;

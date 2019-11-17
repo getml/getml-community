@@ -123,6 +123,12 @@ class DecisionTreeEnsemble
     // -----------------------------------------------------------------
 
    public:
+    /// Trivial accessor
+    bool& allow_http() { return impl().allow_http_; }
+
+    /// Trivial accessor
+    bool allow_http() const { return impl().allow_http_; }
+
     /// Trivial (const) accessor
     const std::shared_ptr<const std::vector<strings::String>>& encoding() const
     {

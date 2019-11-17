@@ -217,6 +217,10 @@ void RequestHandler::run()
                     project_manager().add_multirel_model(
                         name, cmd, &socket() );
                 }
+            else if ( type == "MultirelModel.allow_http" )
+                {
+                    multirel_model_manager().allow_http( name, cmd, &socket() );
+                }
             else if ( type == "MultirelModel.copy" )
                 {
                     project_manager().copy_multirel_model(
@@ -277,6 +281,10 @@ void RequestHandler::run()
                 {
                     project_manager().add_relboost_model(
                         name, cmd, &socket() );
+                }
+            else if ( type == "RelboostModel.allow_http" )
+                {
+                    relboost_model_manager().allow_http( name, cmd, &socket() );
                 }
             else if ( type == "RelboostModel.copy" )
                 {

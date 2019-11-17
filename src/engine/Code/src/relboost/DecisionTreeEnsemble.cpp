@@ -75,6 +75,12 @@ DecisionTreeEnsemble::DecisionTreeEnsemble(
 
     // ------------------------------------------------------------------------
 
+    allow_http() = _obj.has( "allow_http_" )
+                       ? JSON::get_value<bool>( _obj, "allow_http_" )
+                       : false;
+
+    // ------------------------------------------------------------------------
+
     const auto trees_objects = *JSON::get_array( _obj, "trees_" );
 
     for ( size_t i = 0; i < trees_objects.size(); ++i )
@@ -764,6 +770,8 @@ Poco::JSON::Object DecisionTreeEnsemble::to_monitor(
 
     obj.set( "name_", _name );
 
+    obj.set( "allow_http_", allow_http() );
+
     // ----------------------------------------
 
     if ( has_population_schema() )
@@ -986,6 +994,10 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json_obj(
         {
             return obj;
         }
+
+    // ------------------------------------------------------------------------
+
+    obj.set( "allow_http_", allow_http() );
 
     // ------------------------------------------------------------------------
 
