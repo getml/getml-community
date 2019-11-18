@@ -389,7 +389,7 @@ void Model<FeatureEngineererType>::calculate_feature_stats(
     const size_t _ncols,
     const typename FeatureEngineererType::DataFrameType& _df )
 {
-    const size_t num_bins = 50;
+    const size_t num_bins = 200;
 
     std::vector<const Float*> targets;
 
