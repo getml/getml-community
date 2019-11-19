@@ -15,6 +15,13 @@ Poco::JSON::Array::Ptr Summarizer::calculate_average_targets(
     const std::vector<const Float*>& _targets )
 {
     // ------------------------------------------------------------------------
+
+    if ( _targets.size() == 0 )
+        {
+            return Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
+        }
+
+    // ------------------------------------------------------------------------
     // Init average_targets.
 
     assert_true( _actual_num_bins.size() == _step_sizes.size() );

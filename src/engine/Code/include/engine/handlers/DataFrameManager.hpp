@@ -62,6 +62,12 @@ class DataFrameManager
     void append_to_data_frame(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
 
+    /// Calculates the plots for a column.
+    void calc_column_plots(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
     /// Creates a new data frame from a set of CSV files.
     void from_csv(
         const std::string& _name,

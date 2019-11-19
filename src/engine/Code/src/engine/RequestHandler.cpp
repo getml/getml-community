@@ -107,6 +107,11 @@ void RequestHandler::run()
                     data_frame_manager().append_to_data_frame(
                         name, &socket() );
                 }
+            else if ( type == "DataFrame.calc_column_plots" )
+                {
+                    data_frame_manager().calc_column_plots(
+                        name, cmd, &socket() );
+                }
             else if ( type == "DataFrame.delete" )
                 {
                     project_manager().delete_data_frame( name, cmd, &socket() );

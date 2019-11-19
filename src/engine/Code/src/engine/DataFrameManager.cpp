@@ -456,6 +456,45 @@ void DataFrameManager::append_to_data_frame(
 
 // ------------------------------------------------------------------------
 
+void DataFrameManager::calc_column_plots(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    // --------------------------------------------------------------------
+
+    const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
+
+    const auto num_bins = JSON::get_value<size_t>( _cmd, "num_bins_" );
+
+    const auto role = JSON::get_value<std::string>( _cmd, "role_" );
+
+    // --------------------------------------------------------------------
+
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    // --------------------------------------------------------------------
+
+    const auto& df = utils::Getter::get( df_name, data_frames() );
+
+    const auto& col = df.float_column( _name, role );
+
+    const containers::Features features = {col.data_ptr()};
+
+    const auto obj = metrics::Summarizer::calculate_feature_plots(
+        features, col.nrows(), 1, num_bins, {} );
+
+    // --------------------------------------------------------------------
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    communication::Sender::send_string( JSON::stringify( obj ), _socket );
+
+    // --------------------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
 void DataFrameManager::close(
     const containers::DataFrame& _df, Poco::Net::StreamSocket* _socket )
 {
