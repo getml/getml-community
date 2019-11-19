@@ -48,6 +48,13 @@ class ModelManager
     // ------------------------------------------------------------------------
 
    public:
+    /// Determines whether the model should
+    /// allow HTTP requests.
+    void allow_http(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
     /// Fits a model
     void fit_model(
         const std::string& _name,
@@ -251,6 +258,27 @@ namespace engine
 {
 namespace handlers
 {
+// ------------------------------------------------------------------------
+
+template <typename ModelType>
+void ModelManager<ModelType>::allow_http(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    const bool allow_http = JSON::get_value<bool>( _cmd, "allow_http_" );
+
+    auto model = get_model( _name );
+
+    model.allow_http() = allow_http;
+
+    set_model( _name, model );
+
+    post_model( model.to_monitor( _name ) );
+
+    communication::Sender::send_string( "Success!", _socket );
+}
+
 // ------------------------------------------------------------------------
 
 template <typename ModelType>
@@ -481,14 +509,12 @@ Poco::JSON::Object ModelManager<ModelType>::receive_data(
             else if ( type == "DataFrame.from_query" )
                 {
                     license_checker().check_enterprise();
-
                     local_data_frame_manager.from_query(
                         name, cmd, false, _socket );
                 }
             else if ( type == "DataFrame.from_json" )
                 {
                     license_checker().check_enterprise();
-
                     local_data_frame_manager.from_json(
                         name, cmd, false, _socket );
                 }
@@ -797,6 +823,22 @@ void ModelManager<ModelType>::transform(
     // Find the model.
 
     auto model = get_model( _name );
+
+    if ( JSON::get_value<bool>( _cmd, "http_request_" ) )
+        {
+            if ( !model.allow_http() )
+                {
+                    throw std::invalid_argument(
+                        "Model '" + _name +
+                        "' does not allow HTTP requests. You can activate this "
+                        "via the API or the getML monitor!" );
+                }
+
+            if constexpr ( !ModelType::premium_only_ )
+                {
+                    license_checker().check_enterprise();
+                }
+        }
 
     communication::Sender::send_string( "Found!", _socket );
 

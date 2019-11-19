@@ -17,7 +17,8 @@ struct DecisionTreeEnsembleImpl
             &_hyperparameters,
         const std::vector<std::string> &_placeholder_peripheral,
         const decisiontrees::Placeholder &_placeholder_population )
-        : categories_( _categories ),
+        : allow_http_( false ),
+          categories_( _categories ),
           comm_( nullptr ),
           hyperparameters_( _hyperparameters ),
           placeholder_peripheral_( _placeholder_peripheral ),
@@ -30,6 +31,9 @@ struct DecisionTreeEnsembleImpl
 
     /// Pimpl for aggregation
     containers::Optional<aggregations::AggregationImpl> aggregation_impl_;
+
+    /// Whether we want to allow this model to be used as an http endpoint.
+    bool allow_http_;
 
     /// Vector containing the names of the categories. It is used
     /// for generating the SQL code, because categorical data is

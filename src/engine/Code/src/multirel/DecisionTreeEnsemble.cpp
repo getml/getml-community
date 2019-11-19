@@ -542,6 +542,13 @@ DecisionTreeEnsemble DecisionTreeEnsemble::from_json_obj(
         *JSON::get_object( _json_obj, "placeholder_" ) ) );
 
     // ----------------------------------------
+
+    // TODO: For backwards compatability.
+    model.allow_http() = _json_obj.has( "allow_http_" )
+                             ? JSON::get_value<bool>( _json_obj, "allow_http_" )
+                             : false;
+
+    // ----------------------------------------
     // Extract features.
 
     auto features = JSON::get_array( _json_obj, "features_" );
@@ -685,6 +692,8 @@ Poco::JSON::Object DecisionTreeEnsemble::to_monitor(
     Poco::JSON::Object obj;
 
     obj.set( "name_", _name );
+
+    obj.set( "allow_http_", allow_http() );
 
     // ----------------------------------------
 
@@ -833,6 +842,10 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json_obj(
         {
             return obj;
         }
+
+    // ----------------------------------------
+
+    obj.set( "allow_http_", allow_http() );
 
     // ----------------------------------------
     // Extract features

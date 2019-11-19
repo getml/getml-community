@@ -66,6 +66,12 @@ class Model : public AbstractModel
     // --------------------------------------------------------
 
    public:
+    /// Trivial accessor
+    bool& allow_http() { return feature_engineerer().allow_http(); }
+
+    /// Trivial accessor
+    bool allow_http() const { return feature_engineerer().allow_http(); }
+
     /// Returns model as JSON Object.
     Poco::JSON::Object to_json_obj(
         const bool _schema_only = false ) const final
