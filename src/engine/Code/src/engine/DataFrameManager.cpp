@@ -452,6 +452,84 @@ void DataFrameManager::append_to_data_frame(
 
 // ------------------------------------------------------------------------
 
+void DataFrameManager::calc_categorical_column_plots(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    // --------------------------------------------------------------------
+
+    const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
+
+    const auto role = JSON::get_value<std::string>( _cmd, "role_" );
+
+    // --------------------------------------------------------------------
+
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    // --------------------------------------------------------------------
+
+    const auto& df = utils::Getter::get( df_name, data_frames() );
+
+    auto vec = std::vector<strings::String>();
+
+    if ( role == "categorical" )
+        {
+            const auto col = df.int_column( _name, role );
+
+            vec.resize( col.nrows() );
+
+            for ( size_t i = 0; i < col.nrows(); ++i )
+                {
+                    vec[i] = categories()[col[i]];
+                }
+        }
+    else if ( role == "join_key" )
+        {
+            const auto col = df.int_column( _name, role );
+
+            vec.resize( col.nrows() );
+
+            for ( size_t i = 0; i < col.nrows(); ++i )
+                {
+                    vec[i] = join_keys_encoding()[col[i]];
+                }
+        }
+    else if ( role == "undefined_string" )
+        {
+            const auto col = df.undefined_string( _name );
+
+            vec.resize( col.nrows() );
+
+            for ( size_t i = 0; i < col.nrows(); ++i )
+                {
+                    vec[i] = col[i];
+                }
+        }
+    else
+        {
+            throw std::invalid_argument( "Role '" + role + "' not known!" );
+        }
+
+    // --------------------------------------------------------------------
+
+    read_lock.unlock();
+
+    // --------------------------------------------------------------------
+
+    const auto obj = metrics::Summarizer::calc_categorical_column_plot( vec );
+
+    // --------------------------------------------------------------------
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    communication::Sender::send_string( JSON::stringify( obj ), _socket );
+
+    // --------------------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
 void DataFrameManager::calc_column_plots(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,

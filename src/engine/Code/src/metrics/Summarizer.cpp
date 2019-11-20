@@ -4,6 +4,67 @@ namespace metrics
 {
 // ----------------------------------------------------------------------------
 
+Poco::JSON::Object Summarizer::calc_categorical_column_plot(
+    const std::vector<strings::String>& _vec )
+{
+    // ------------------------------------------------------------------------
+
+    auto str_map =
+        std::unordered_map<strings::String, Int, strings::StringHasher>();
+
+    for ( const auto& str : _vec )
+        {
+            auto it = str_map.find( str );
+
+            if ( it == str_map.end() )
+                {
+                    str_map[str] = 1;
+                }
+            else
+                {
+                    ++( it->second );
+                }
+        }
+
+    // ------------------------------------------------------------------------
+
+    auto counts = std::vector<std::pair<strings::String, Int>>(
+        str_map.begin(), str_map.end() );
+
+    const auto comp = []( const std::pair<strings::String, Int>& p1,
+                          const std::pair<strings::String, Int>& p2 ) {
+        return p1.second > p2.second;
+    };
+
+    std::sort( counts.begin(), counts.end(), comp );
+
+    // ------------------------------------------------------------------------
+
+    Poco::JSON::Array::Ptr labels( new Poco::JSON::Array() );
+
+    Poco::JSON::Array::Ptr data( new Poco::JSON::Array() );
+
+    for ( const auto& p : counts )
+        {
+            labels->add( p.first.str() );
+            data->add( p.second );
+        }
+
+    Poco::JSON::Object obj;
+
+    obj.set( "labels_", labels );
+
+    obj.set( "data_", data );
+
+    // ------------------------------------------------------------------------
+
+    return obj;
+
+    // ------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
 Poco::JSON::Array::Ptr Summarizer::calculate_average_targets(
     const std::vector<Float>& _minima,
     const std::vector<Float>& _step_sizes,

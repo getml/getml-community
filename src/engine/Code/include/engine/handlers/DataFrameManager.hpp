@@ -62,6 +62,12 @@ class DataFrameManager
     void append_to_data_frame(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
 
+    /// Calculates the plots for a categorical column.
+    void calc_categorical_column_plots(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
     /// Calculates the plots for a column.
     void calc_column_plots(
         const std::string& _name,
@@ -233,6 +239,13 @@ class DataFrameManager
 
    private:
     /// Trivial accessor
+    containers::Encoding& categories()
+    {
+        assert_true( categories_ );
+        return *categories_;
+    }
+
+    /// Trivial accessor
     std::shared_ptr<database::Connector> connector()
     {
         assert_true( database_manager_ );
@@ -244,6 +257,13 @@ class DataFrameManager
     {
         assert_true( data_frames_ );
         return *data_frames_;
+    }
+
+    /// Trivial accessor
+    containers::Encoding& join_keys_encoding()
+    {
+        assert_true( join_keys_encoding_ );
+        return *join_keys_encoding_;
     }
 
     /// Trivial accessor

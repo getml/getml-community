@@ -10,6 +10,10 @@ class Summarizer
     // ---------------------------------------------------------------------
 
    public:
+    /// Calculates the plots needed to analyze a categorical column.
+    static Poco::JSON::Object calc_categorical_column_plot(
+        const std::vector<strings::String>& _vec );
+
     /// Calculates the pearson r between features and
     /// a set of targets.
     static Poco::JSON::Object calculate_feature_correlations(
