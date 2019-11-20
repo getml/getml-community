@@ -137,7 +137,7 @@ std::vector<csv::Datatype> DataFrameReader::make_coltypes(
 
     for ( size_t i = 0; i < _df.num_undefined_floats(); ++i )
         {
-            if ( _df.numerical( i ).unit().find( "time stamp" ) !=
+            if ( _df.undefined_float( i ).unit().find( "time stamp" ) !=
                  std::string::npos )
                 {
                     coltypes.push_back( csv::Datatype::string );

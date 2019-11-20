@@ -988,6 +988,20 @@ void DataFrame::from_json(
 
                     add_int_column( column, _role );
                 }
+            else if ( _role == "undefined_string" )
+                {
+                    auto column = Column<strings::String>( arr->size() );
+
+                    for ( size_t j = 0; j < arr->size(); ++j )
+                        {
+                            column[j] = arr->getElement<std::string>(
+                                static_cast<unsigned int>( j ) );
+                        }
+
+                    column.set_name( _names[i] );
+
+                    add_string_column( column );
+                }
             else
                 {
                     auto column = Column<Float>( arr->size() );
