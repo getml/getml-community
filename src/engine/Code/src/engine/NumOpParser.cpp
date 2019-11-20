@@ -111,7 +111,7 @@ containers::Column<Float> NumOpParser::parse(
 
             if ( role == "undefined_integer" )
                 {
-                    return to_float_column( it->int_column( name, role ) );
+                    return it->int_column( name, role ).to_float_column();
                 }
             else
                 {

@@ -243,11 +243,7 @@ void DataFrameManager::add_column_to_df(
         {
             // ---------------------------------------------------------
 
-            auto int_col = containers::Column<Int>( _col.nrows() );
-
-            for ( size_t i = 0; i < _col.nrows(); ++i )
-                if ( !std::isnan( _col[i] ) && !std::isinf( _col[i] ) )
-                    int_col[i] = static_cast<Int>( _col[i] );
+            auto int_col = _col.to_int_column();
 
             int_col.set_name( _col.name() );
 
@@ -483,10 +479,7 @@ void DataFrameManager::calc_column_plots(
         {
             const auto int_col = df.int_column( _name, role );
 
-            col = containers::Column<Float>( int_col.nrows() );
-
-            for ( size_t i = 0; i < col.nrows(); ++i )
-                col[i] = static_cast<Float>( int_col[i] );
+            col = int_col.to_float_column();
         }
     else
         {

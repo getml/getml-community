@@ -1358,7 +1358,17 @@ Poco::JSON::Object DataFrame::get_content(
 
             for ( size_t j = 0; j < num_undefined_integers(); ++j )
                 {
-                    row.add( to_string( undefined_integer( j )[i] ) );
+                    const auto val = undefined_integer( j )[i];
+
+                    if ( val == std::numeric_limits<Int>::lowest() )
+                        {
+                            row.add( std::string( "NULL" ) );
+                        }
+                    else
+                        {
+                            row.add( to_string( static_cast<Float>(
+                                undefined_integer( j )[i] ) ) );
+                        }
                 }
 
             for ( size_t j = 0; j < num_undefined_strings(); ++j )

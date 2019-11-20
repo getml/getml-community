@@ -786,7 +786,7 @@ class DataFrame
         const std::string &_prefix ) const;
 
    private:
-    /// Custom string conversions (produces to beautiful numbers than
+    /// Custom string conversions (produces more beautiful numbers than
     /// std::to_string)
     std::string to_string( const Float &_val ) const
     {

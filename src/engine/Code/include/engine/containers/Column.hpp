@@ -148,6 +148,54 @@ class Column
     /// Trivial getter.
     const size_t size() const { return nrows(); }
 
+    /// For int types only: Transforms to a float column.
+    template <
+        typename T2 = T,
+        typename std::enable_if<std::is_same<T2, Int>::value, int>::type = 0>
+    Column<Float> to_float_column() const
+    {
+        auto float_col = Column<Float>( nrows() );
+
+        for ( size_t i = 0; i < nrows(); ++i )
+            {
+                const auto val = ( *this )[i];
+                if ( val == std::numeric_limits<Int>::lowest() )
+                    {
+                        float_col[i] = NAN;
+                    }
+                else
+                    {
+                        float_col[i] = static_cast<Float>( val );
+                    }
+            }
+
+        return float_col;
+    }
+
+    /// For float types only: Transforms to a Int column.
+    template <
+        typename T2 = T,
+        typename std::enable_if<std::is_same<T2, Float>::value, int>::type = 0>
+    Column<Int> to_int_column() const
+    {
+        auto int_col = Column<Int>( nrows() );
+
+        for ( size_t i = 0; i < nrows(); ++i )
+            {
+                const auto val = ( *this )[i];
+                if ( std::isnan( val ) || std::isinf( val ) )
+                    {
+                        int_col[i] = std::numeric_limits<Int>::lowest();
+                    }
+                else
+                    {
+                        int_col[i] = static_cast<Int>( val );
+                    }
+            }
+
+        return int_col;
+    }
+
     /// Trivial getter
     const std::string &unit() const { return unit_; }
 

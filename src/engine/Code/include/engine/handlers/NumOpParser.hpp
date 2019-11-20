@@ -157,20 +157,6 @@ class NumOpParser
         return result;
     }
 
-    /// Transforms an int_column to a float_column.
-    static containers::Column<Float> to_float_column(
-        const containers::Column<Int>& _col )
-    {
-        containers::Column<Float> float_col( _col.nrows() );
-
-        std::transform(
-            _col.begin(), _col.end(), float_col.begin(), []( const Int val ) {
-                return static_cast<Float>( val );
-            } );
-
-        return float_col;
-    }
-
     // ------------------------------------------------------------------------
 };
 
