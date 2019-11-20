@@ -477,7 +477,21 @@ void DataFrameManager::calc_column_plots(
 
     const auto& df = utils::Getter::get( df_name, data_frames() );
 
-    const auto& col = df.float_column( _name, role );
+    auto col = containers::Column<Float>();
+
+    if ( role == "undefined_integer" )
+        {
+            const auto int_col = df.int_column( _name, role );
+
+            col = containers::Column<Float>( int_col.nrows() );
+
+            for ( size_t i = 0; i < col.nrows(); ++i )
+                col[i] = static_cast<Float>( int_col[i] );
+        }
+    else
+        {
+            col = df.float_column( _name, role );
+        }
 
     const containers::Features features = {col.data_ptr()};
 
