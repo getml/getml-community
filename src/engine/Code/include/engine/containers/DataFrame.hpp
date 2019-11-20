@@ -231,6 +231,16 @@ class DataFrame
             _name + "'!" );
     }
 
+    /// Whether the DataFrame has any column named _name.
+    bool has( const std::string &_name ) const
+    {
+        return has_categorical( _name ) || has_discrete( _name ) ||
+               has_join_key( _name ) || has_numerical( _name ) ||
+               has_target( _name ) || has_time_stamp( _name ) ||
+               has_undefined_float( _name ) || has_undefined_integer( _name ) ||
+               has_undefined_string( _name );
+    }
+
     /// Whether the DataFrame has a categorical column named _name.
     bool has_categorical( const std::string &_name ) const
     {

@@ -13,11 +13,11 @@ void DataFrameJoiner::add_all(
 {
     for ( size_t i = 0; i < _df.num_categoricals(); ++i )
         {
-            if ( _joined_df->has_categorical( _df.categorical( i ).name() ) )
+            if ( _joined_df->has( _df.categorical( i ).name() ) )
                 {
                     throw std::invalid_argument(
-                        "Duplicate categorical column: '" +
-                        _df.categorical( i ).name() + "'." );
+                        "Duplicate column: '" + _df.categorical( i ).name() +
+                        "'." );
                 }
 
             _joined_df->add_int_column(
@@ -26,11 +26,11 @@ void DataFrameJoiner::add_all(
 
     for ( size_t i = 0; i < _df.num_discretes(); ++i )
         {
-            if ( _joined_df->has_discrete( _df.discrete( i ).name() ) )
+            if ( _joined_df->has( _df.discrete( i ).name() ) )
                 {
                     throw std::invalid_argument(
-                        "Duplicate discrete column: '" +
-                        _df.discrete( i ).name() + "'." );
+                        "Duplicate column: '" + _df.discrete( i ).name() +
+                        "'." );
                 }
 
             _joined_df->add_float_column(
@@ -39,10 +39,10 @@ void DataFrameJoiner::add_all(
 
     for ( size_t i = 0; i < _df.num_join_keys(); ++i )
         {
-            if ( _joined_df->has_join_key( _df.join_key( i ).name() ) )
+            if ( _joined_df->has( _df.join_key( i ).name() ) )
                 {
                     throw std::invalid_argument(
-                        "Duplicate join key: '" + _df.join_key( i ).name() +
+                        "Duplicate column: '" + _df.join_key( i ).name() +
                         "'." );
                 }
 
@@ -52,11 +52,11 @@ void DataFrameJoiner::add_all(
 
     for ( size_t i = 0; i < _df.num_numericals(); ++i )
         {
-            if ( _joined_df->has_numerical( _df.numerical( i ).name() ) )
+            if ( _joined_df->has( _df.numerical( i ).name() ) )
                 {
                     throw std::invalid_argument(
-                        "Duplicate numerical column: '" +
-                        _df.numerical( i ).name() + "'." );
+                        "Duplicate column: '" + _df.numerical( i ).name() +
+                        "'." );
                 }
 
             _joined_df->add_float_column(
@@ -65,11 +65,10 @@ void DataFrameJoiner::add_all(
 
     for ( size_t i = 0; i < _df.num_targets(); ++i )
         {
-            if ( _joined_df->has_target( _df.target( i ).name() ) )
+            if ( _joined_df->has( _df.target( i ).name() ) )
                 {
                     throw std::invalid_argument(
-                        "Duplicate target column: '" + _df.target( i ).name() +
-                        "'." );
+                        "Duplicate column: '" + _df.target( i ).name() + "'." );
                 }
 
             _joined_df->add_float_column(
@@ -78,11 +77,11 @@ void DataFrameJoiner::add_all(
 
     for ( size_t i = 0; i < _df.num_time_stamps(); ++i )
         {
-            if ( _joined_df->has_time_stamp( _df.time_stamp( i ).name() ) )
+            if ( _joined_df->has( _df.time_stamp( i ).name() ) )
                 {
                     throw std::invalid_argument(
-                        "Duplicate time stamp column: '" +
-                        _df.time_stamp( i ).name() + "'." );
+                        "Duplicate column: '" + _df.time_stamp( i ).name() +
+                        "'." );
                 }
 
             _joined_df->add_float_column(
@@ -91,11 +90,10 @@ void DataFrameJoiner::add_all(
 
     for ( size_t i = 0; i < _df.num_undefined_floats(); ++i )
         {
-            if ( _joined_df->has_undefined_float(
-                     _df.undefined_float( i ).name() ) )
+            if ( _joined_df->has( _df.undefined_float( i ).name() ) )
                 {
                     throw std::invalid_argument(
-                        "Duplicate undefined float column: '" +
+                        "Duplicate column: '" +
                         _df.undefined_float( i ).name() + "'." );
                 }
 
@@ -106,11 +104,10 @@ void DataFrameJoiner::add_all(
 
     for ( size_t i = 0; i < _df.num_undefined_integers(); ++i )
         {
-            if ( _joined_df->has_undefined_integer(
-                     _df.undefined_integer( i ).name() ) )
+            if ( _joined_df->has( _df.undefined_integer( i ).name() ) )
                 {
                     throw std::invalid_argument(
-                        "Duplicate undefined integer column: '" +
+                        "Duplicate column: '" +
                         _df.undefined_integer( i ).name() + "'." );
                 }
 
@@ -121,11 +118,10 @@ void DataFrameJoiner::add_all(
 
     for ( size_t i = 0; i < _df.num_undefined_strings(); ++i )
         {
-            if ( _joined_df->has_undefined_string(
-                     _df.undefined_string( i ).name() ) )
+            if ( _joined_df->has( _df.undefined_string( i ).name() ) )
                 {
                     throw std::invalid_argument(
-                        "Duplicate undefined string column: '" +
+                        "Duplicate column: '" +
                         _df.undefined_string( i ).name() + "'." );
                 }
 
@@ -146,10 +142,10 @@ void DataFrameJoiner::add_col(
 {
     if ( _role == "categorical" )
         {
-            if ( _joined_df->has_categorical( _as ) )
+            if ( _joined_df->has( _as ) )
                 {
                     throw std::invalid_argument(
-                        "Duplicate categorical column: '" + _name + "'." );
+                        "Duplicate column: '" + _name + "'." );
                 }
             auto col = _df.categorical( _name ).sort_by_key( _rindices );
             col.set_name( _as );
@@ -157,10 +153,10 @@ void DataFrameJoiner::add_col(
         }
     else if ( _role == "discrete" )
         {
-            if ( _joined_df->has_discrete( _as ) )
+            if ( _joined_df->has( _as ) )
                 {
                     throw std::invalid_argument(
-                        "Duplicate discrete column: '" + _name + "'." );
+                        "Duplicate column: '" + _name + "'." );
                 }
             auto col = _df.discrete( _name ).sort_by_key( _rindices );
             col.set_name( _as );
@@ -168,10 +164,10 @@ void DataFrameJoiner::add_col(
         }
     else if ( _role == "join_key" )
         {
-            if ( _joined_df->has_join_key( _as ) )
+            if ( _joined_df->has( _as ) )
                 {
                     throw std::invalid_argument(
-                        "Duplicate join key: '" + _name + "'." );
+                        "Duplicate column: '" + _name + "'." );
                 }
             auto col = _df.join_key( _name ).sort_by_key( _rindices );
             col.set_name( _as );
@@ -179,10 +175,10 @@ void DataFrameJoiner::add_col(
         }
     else if ( _role == "numerical" )
         {
-            if ( _joined_df->has_numerical( _as ) )
+            if ( _joined_df->has( _as ) )
                 {
                     throw std::invalid_argument(
-                        "Duplicate numerical: '" + _name + "'." );
+                        "Duplicate column: '" + _name + "'." );
                 }
             auto col = _df.numerical( _name ).sort_by_key( _rindices );
             col.set_name( _as );
@@ -190,10 +186,10 @@ void DataFrameJoiner::add_col(
         }
     else if ( _role == "target" )
         {
-            if ( _joined_df->has_target( _as ) )
+            if ( _joined_df->has( _as ) )
                 {
                     throw std::invalid_argument(
-                        "Duplicate target: '" + _name + "'." );
+                        "Duplicate column: '" + _name + "'." );
                 }
             auto col = _df.target( _name ).sort_by_key( _rindices );
             col.set_name( _as );
@@ -201,10 +197,10 @@ void DataFrameJoiner::add_col(
         }
     else if ( _role == "time_stamp" )
         {
-            if ( _joined_df->has_time_stamp( _as ) )
+            if ( _joined_df->has( _as ) )
                 {
                     throw std::invalid_argument(
-                        "Duplicate time_stamp: '" + _name + "'." );
+                        "Duplicate column: '" + _name + "'." );
                 }
             auto col = _df.time_stamp( _name ).sort_by_key( _rindices );
             col.set_name( _as );
@@ -212,10 +208,10 @@ void DataFrameJoiner::add_col(
         }
     else if ( _role == "undefined_float" )
         {
-            if ( _joined_df->has_undefined_float( _as ) )
+            if ( _joined_df->has( _as ) )
                 {
                     throw std::invalid_argument(
-                        "Duplicate undefined float: '" + _name + "'." );
+                        "Duplicate column: '" + _name + "'." );
                 }
             auto col = _df.undefined_float( _name ).sort_by_key( _rindices );
             col.set_name( _as );
@@ -223,10 +219,10 @@ void DataFrameJoiner::add_col(
         }
     else if ( _role == "undefined_integer" )
         {
-            if ( _joined_df->has_undefined_integer( _as ) )
+            if ( _joined_df->has( _as ) )
                 {
                     throw std::invalid_argument(
-                        "Duplicate undefined integer: '" + _name + "'." );
+                        "Duplicate column: '" + _name + "'." );
                 }
             auto col = _df.undefined_integer( _name ).sort_by_key( _rindices );
             col.set_name( _as );
@@ -234,10 +230,10 @@ void DataFrameJoiner::add_col(
         }
     else if ( _role == "undefined_string" )
         {
-            if ( _joined_df->has_undefined_string( _as ) )
+            if ( _joined_df->has( _as ) )
                 {
                     throw std::invalid_argument(
-                        "Duplicate undefined string: '" + _name + "'." );
+                        "Duplicate column: '" + _name + "'." );
                 }
             auto col = _df.undefined_string( _name ).sort_by_key( _rindices );
             col.set_name( _as );
