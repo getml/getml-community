@@ -536,9 +536,9 @@ Poco::JSON::Object DecisionTree::to_monitor(
             obj.set( "upper_time_stamps_", input().upper_time_stamps_name() );
         }
 
-    obj.set( "population_", output().name() );
-
     obj.set( "peripheral_", input().name() );
+
+    obj.set( "placeholder_", output().name() );
 
     // -------------------------------------------------------------------
 

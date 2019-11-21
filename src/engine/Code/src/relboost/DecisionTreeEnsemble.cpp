@@ -783,7 +783,7 @@ Poco::JSON::Object DecisionTreeEnsemble::to_monitor(
                 "peripheral_",
                 JSON::vector_to_array_ptr( peripheral_names() ) );
 
-            obj.set( "population_", placeholder().to_json_obj() );
+            obj.set( "placeholder_", placeholder().to_json_obj() );
 
             // ----------------------------------------
             // Insert schema

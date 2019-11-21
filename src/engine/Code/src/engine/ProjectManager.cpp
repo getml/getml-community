@@ -29,7 +29,7 @@ void ProjectManager::add_multirel_model(
 
     const auto placeholder =
         std::make_shared<multirel::decisiontrees::Placeholder>(
-            JSON::get_object( _cmd, "population_" ) );
+            JSON::get_object( _cmd, "placeholder_" ) );
 
     const auto model = models::MultirelModel(
         multirel::ensemble::DecisionTreeEnsemble(
@@ -166,7 +166,7 @@ void ProjectManager::add_relboost_model(
             JSON::get_array( _cmd, "peripheral_" ) ) );
 
     const auto placeholder = std::make_shared<relboost::ensemble::Placeholder>(
-        JSON::get_object( _cmd, "population_" ) );
+        JSON::get_object( _cmd, "placeholder_" ) );
 
     const auto model = models::RelboostModel(
         relboost::ensemble::DecisionTreeEnsemble(
