@@ -65,6 +65,92 @@ Poco::JSON::Object Summarizer::calc_categorical_column_plot(
 
 // ----------------------------------------------------------------------------
 
+Poco::JSON::Object Summarizer::calc_categorical_column_plot(
+    const std::vector<strings::String>& _vec,
+    const std::vector<Float>& _target )
+{
+    // ------------------------------------------------------------------------
+
+    assert_true( _vec.size() == _target.size() );
+
+    // ------------------------------------------------------------------------
+
+    auto str_map = std::unordered_map<
+        strings::String,
+        std::pair<Float, Float>,
+        strings::StringHasher>();
+
+    for ( size_t i = 0; i < _vec.size(); ++i )
+        {
+            const auto& str = _vec[i];
+
+            const auto val = _target[i];
+
+            if ( std::isnan( val ) || std::isinf( val ) )
+                {
+                    continue;
+                }
+
+            auto it = str_map.find( str );
+
+            if ( it == str_map.end() )
+                {
+                    str_map[str] = std::make_pair( 1.0, val );
+                }
+            else
+                {
+                    std::get<0>( it->second ) += 1.0;
+                    std::get<1>( it->second ) += val;
+                }
+        }
+
+    // ------------------------------------------------------------------------
+
+    auto pairs = std::vector<std::pair<Float, Float>>();
+
+    for ( const auto& p : str_map )
+        {
+            const auto avg = std::get<1>( p.second ) / std::get<0>( p.second );
+            pairs.emplace_back(
+                std::make_pair( std::get<0>( p.second ), avg ) );
+        }
+
+    const auto comp = []( const std::pair<Float, Float>& p1,
+                          const std::pair<Float, Float>& p2 ) {
+        return std::get<1>( p1 ) > std::get<1>( p2 );
+    };
+
+    std::sort( pairs.begin(), pairs.end(), comp );
+
+    // ------------------------------------------------------------------------
+
+    Poco::JSON::Array::Ptr labels( new Poco::JSON::Array() );
+
+    Poco::JSON::Array::Ptr data( new Poco::JSON::Array() );
+
+    Float cumul = 0.0;
+
+    for ( const auto& p : pairs )
+        {
+            labels->add( std::to_string( static_cast<Int>( cumul ) ) );
+            data->add( p.second );
+            cumul += p.first;
+        }
+
+    Poco::JSON::Object obj;
+
+    obj.set( "labels_", labels );
+
+    obj.set( "data_", data );
+
+    // ------------------------------------------------------------------------
+
+    return obj;
+
+    // ------------------------------------------------------------------------
+}
+// ----------------------------------------------------------------------------
+
 Poco::JSON::Array::Ptr Summarizer::calculate_average_targets(
     const std::vector<Float>& _minima,
     const std::vector<Float>& _step_sizes,

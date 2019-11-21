@@ -463,6 +463,12 @@ void DataFrameManager::calc_categorical_column_plots(
 
     const auto role = JSON::get_value<std::string>( _cmd, "role_" );
 
+    const auto target_name =
+        JSON::get_value<std::string>( _cmd, "target_name_" );
+
+    const auto target_role =
+        JSON::get_value<std::string>( _cmd, "target_role_" );
+
     // --------------------------------------------------------------------
 
     multithreading::ReadLock read_lock( read_write_lock_ );
@@ -513,11 +519,46 @@ void DataFrameManager::calc_categorical_column_plots(
 
     // --------------------------------------------------------------------
 
+    std::vector<Float> targets;
+
+    if ( target_name != "" )
+        {
+            if ( target_role == "undefined_integer" )
+                {
+                    const auto target_col =
+                        df.int_column( target_name, target_role )
+                            .to_float_column();
+
+                    targets = std::vector<Float>(
+                        target_col.begin(), target_col.end() );
+                }
+            else
+                {
+                    const auto target_col =
+                        df.float_column( target_name, target_role );
+
+                    targets = std::vector<Float>(
+                        target_col.begin(), target_col.end() );
+                }
+        }
+
+    // --------------------------------------------------------------------
+
     read_lock.unlock();
 
     // --------------------------------------------------------------------
 
-    const auto obj = metrics::Summarizer::calc_categorical_column_plot( vec );
+    Poco::JSON::Object obj;
+
+    if ( targets.size() == vec.size() )
+        {
+            obj = metrics::Summarizer::calc_categorical_column_plot(
+                vec, targets );
+        }
+    else
+        {
+            obj = metrics::Summarizer::calc_categorical_column_plot( vec );
+        }
 
     // --------------------------------------------------------------------
 
