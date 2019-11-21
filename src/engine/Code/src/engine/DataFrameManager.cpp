@@ -543,6 +543,12 @@ void DataFrameManager::calc_column_plots(
 
     const auto role = JSON::get_value<std::string>( _cmd, "role_" );
 
+    const auto target_name =
+        JSON::get_value<std::string>( _cmd, "target_name_" );
+
+    const auto target_role =
+        JSON::get_value<std::string>( _cmd, "target_role_" );
+
     // --------------------------------------------------------------------
 
     multithreading::ReadLock read_lock( read_write_lock_ );
@@ -564,10 +570,35 @@ void DataFrameManager::calc_column_plots(
             col = df.float_column( _name, role );
         }
 
+    // --------------------------------------------------------------------
+
+    std::vector<const Float*> targets;
+
+    auto target_col = containers::Column<Float>();
+
+    if ( target_name != "" )
+        {
+            if ( target_role == "undefined_integer" )
+                {
+                    const auto int_col =
+                        df.int_column( target_name, target_role );
+
+                    target_col = int_col.to_float_column();
+                }
+            else
+                {
+                    target_col = df.float_column( target_name, target_role );
+                }
+
+            targets.push_back( target_col.data() );
+        }
+
+    // --------------------------------------------------------------------
+
     const containers::Features features = {col.data_ptr()};
 
     const auto obj = metrics::Summarizer::calculate_feature_plots(
-        features, col.nrows(), 1, num_bins, {} );
+        features, col.nrows(), 1, num_bins, targets );
 
     // --------------------------------------------------------------------
 
