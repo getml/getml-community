@@ -132,14 +132,14 @@ Poco::JSON::Object Summarizer::calc_categorical_column_plot(
 
     for ( const auto& p : pairs )
         {
-            labels->add( std::to_string( static_cast<Int>( cumul ) ) );
-            data->add( p.second );
             cumul += p.first;
+            labels->add( static_cast<Int>( cumul ) );
+            data->add( p.second );
         }
 
     Poco::JSON::Object obj;
 
-    obj.set( "labels_", labels );
+    obj.set( "accumulated_frequencies_", labels );
 
     obj.set( "data_", data );
 
