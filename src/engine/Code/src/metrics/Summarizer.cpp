@@ -195,25 +195,31 @@ Poco::JSON::Array::Ptr Summarizer::calculate_average_targets(
                 }
         }
 
+    auto counts = average_targets;
+
     // ------------------------------------------------------------------------
     // Calculate sums.
 
     assert_true( _feature_densities.size() == _ncols );
 
-    for ( size_t i = 0; i < _nrows; ++i )
+    for ( size_t j = 0; j < _ncols; ++j )
         {
-            for ( size_t j = 0; j < _ncols; ++j )
+            if ( _actual_num_bins[j] == 0 )
                 {
-                    const auto val = get( i, j, _features );
+                    continue;
+                }
 
-                    if ( _actual_num_bins[j] == 0 || std::isinf( val ) ||
-                         std::isnan( val ) )
+            for ( size_t i = 0; i < _nrows; ++i )
+                {
+                    const auto feat = get( i, j, _features );
+
+                    if ( std::isinf( feat ) || std::isnan( feat ) )
                         {
                             continue;
                         }
 
                     const auto bin = identify_bin(
-                        _actual_num_bins[j], _step_sizes[j], val, _minima[j] );
+                        _actual_num_bins[j], _step_sizes[j], feat, _minima[j] );
 
                     assert_true( bin < _feature_densities[j].size() );
 
@@ -221,7 +227,16 @@ Poco::JSON::Array::Ptr Summarizer::calculate_average_targets(
                         {
                             assert_true( bin < average_targets[j][k].size() );
 
-                            average_targets[j][k][bin] += _targets[k][i];
+                            const auto tar = _targets[k][i];
+
+                            if ( std::isinf( tar ) || std::isnan( tar ) )
+                                {
+                                    continue;
+                                }
+
+                            average_targets[j][k][bin] += tar;
+
+                            ++counts[j][k][bin];
                         }
                 }
         }
@@ -231,16 +246,15 @@ Poco::JSON::Array::Ptr Summarizer::calculate_average_targets(
 
     for ( size_t j = 0; j < _ncols; ++j )
         {
-            for ( size_t bin = 0; bin < _feature_densities[j].size(); ++bin )
+            for ( size_t k = 0; k < average_targets[j].size(); ++k )
                 {
-                    if ( _feature_densities[j][bin] > 0 )
+                    for ( size_t bin = 0; bin < average_targets[j][k].size();
+                          ++bin )
                         {
-                            for ( size_t k = 0; k < average_targets[j].size();
-                                  ++k )
+                            if ( counts[j][k][bin] > 0 )
                                 {
                                     average_targets[j][k][bin] /=
-                                        static_cast<Float>(
-                                            _feature_densities[j][bin] );
+                                        counts[j][k][bin];
                                 }
                         }
                 }
