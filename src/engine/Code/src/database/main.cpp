@@ -14,11 +14,11 @@ int main( int argc, char* argv[] )
 		test_path = argv[1];
 	} else {
 		std::cout << std::endl
-				  << "-----------------------------------------------"
+			  << "-----------------------------------------------"
 			"--------------------------------"
-				  << std::endl;
+			  << std::endl;
 		std::cout << "ERROR: Please provide a path to the test folder!" 
-				  << std::endl << std::endl;
+			  << std::endl << std::endl;
 		return 1;
 	}
 	

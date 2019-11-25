@@ -12,8 +12,26 @@ void test11( std::filesystem::path _test_path )
     // folder only the filename has to be replaced.
     _test_path.append( "database" ).append( "POPULATION2.CSV" );
 
-    auto postgres_db =
-        database::Postgres( {"%Y/%m/%d %H:%M:%S", "%Y-%m-%d %H:%M:%S"} );
+        // ---------------------------------------------------------------
+    
+    // Configure PostgreSQL to connect using the user and database
+    // created just for this unit test.
+    Poco::JSON::Object connectionObject;
+    connectionObject.set( "dbname_", "testbertsTestBase" );
+    connectionObject.set( "host_", "localhost" );
+    connectionObject.set( "hostaddr_", "127.0.0.1" );
+    connectionObject.set( "password_", "" );
+    connectionObject.set( "port_", 5432 );
+    connectionObject.set( "user_", "testbert" );
+    
+    // Customized time format used within the database.
+    const std::vector<std::string> timeFormats = 
+	    {"%Y/%m/%d %H:%M:%S", "%Y-%m-%d %H:%M:%S"};
+    
+    // ---------------------------------------------------------------
+
+    auto postgres_db = database::Postgres( connectionObject, 
+    					   timeFormats);
 
     auto population_sniffer = csv::Sniffer(
         "postgres",
