@@ -1,6 +1,6 @@
 {
     "delta_t_": 50.0,
-    "eta_": 0.4,
+    "shrinkage_": 0.4,
     "gamma_": 1.0,
     "include_categorical_": false,
     "reg_lambda_": 1e-20,
@@ -14,5 +14,6 @@
     "seed_": 5849,
     "silent_": true,
     "sampling_factor_": 1.0,
+    "target_num_": 0,
     "use_timestamps_": true
 }
