@@ -29,6 +29,13 @@ class NumOpParser
         const std::vector<containers::DataFrame>& _df,
         const Poco::JSON::Object& _col );
 
+    /// Transforms a boolean column to a float column.
+    static containers::Column<Float> boolean_to_num(
+        const containers::Encoding& _categories,
+        const containers::Encoding& _join_keys_encoding,
+        const std::vector<containers::DataFrame>& _df,
+        const Poco::JSON::Object& _col );
+
     /// Transforms a string column to a float.
     static containers::Column<Float> to_num(
         const containers::Encoding& _categories,

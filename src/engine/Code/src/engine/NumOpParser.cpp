@@ -76,6 +76,38 @@ containers::Column<Float> NumOpParser::binary_operation(
             return containers::Column<Float>( 0 );
         }
 }
+
+// ----------------------------------------------------------------------------
+
+containers::Column<Float> NumOpParser::boolean_to_num(
+    const containers::Encoding& _categories,
+    const containers::Encoding& _join_keys_encoding,
+    const std::vector<containers::DataFrame>& _df,
+    const Poco::JSON::Object& _col )
+{
+    const auto obj = *JSON::get_object( _col, "operand1_" );
+
+    const auto operand1 =
+        BoolOpParser::parse( _categories, _join_keys_encoding, _df, obj );
+
+    auto result = containers::Column<Float>( operand1.size() );
+
+    const auto to_num = []( const bool val ) {
+        if ( val )
+            {
+                return 1.0;
+            }
+        else
+            {
+                return 0.0;
+            }
+    };
+
+    std::transform( operand1.begin(), operand1.end(), result.begin(), to_num );
+
+    return result;
+}
+
 // ----------------------------------------------------------------------------
 
 containers::Column<Float> NumOpParser::parse(
@@ -260,6 +292,11 @@ containers::Column<Float> NumOpParser::unary_operation(
                 return std::atan( val );
             };
             return un_op( _categories, _join_keys_encoding, _df, _col, atan );
+        }
+    else if ( op == "boolean_to_num" )
+        {
+            return boolean_to_num(
+                _categories, _join_keys_encoding, _df, _col );
         }
     else if ( op == "cbrt" )
         {
