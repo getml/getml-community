@@ -3,10 +3,10 @@
 
 void test13( std::filesystem::path _test_path )
 {
-    std::cout << "Test 13: Getting the content from a postgres database."
-              << std::endl
-              << std::endl;
+    std::cout << "Test 13 | Getting the content from a postgres database\t";
 
+    // ---------------------------------------------------------------
+	
     // Append all subfolders to reach the required file. This 
     // appending will have a persistent effect of _test_path which
     // is stored on the heap. After setting it once to the correct
@@ -45,7 +45,7 @@ void test13( std::filesystem::path _test_path )
 
     const auto population_statement = population_sniffer.sniff();
 
-    std::cout << population_statement << std::endl;
+    // std::cout << population_statement << std::endl;
 
     postgres_db.execute( population_statement );
 
@@ -55,18 +55,19 @@ void test13( std::filesystem::path _test_path )
 
     const auto colnames = postgres_db.get_colnames( "POPULATION" );
 
-    for ( auto cname : colnames )
-        {
-            std::cout << cname << " ";
-        }
-    std::cout << std::endl;
+    // for ( auto cname : colnames )
+    //     {
+    //         std::cout << cname << " ";
+    //     }
+    // std::cout << std::endl;
 
-    const auto obj = postgres_db.get_content( "POPULATION", 0, 99, 20 );
+    // const auto obj = postgres_db.get_content( "POPULATION", 0, 99, 20 );
 
-    Poco::JSON::Stringifier::stringify( obj, std::cout );
+    // Poco::JSON::Stringifier::stringify( obj, std::cout );
 
-    std::cout << std::endl << std::endl;
-    std::cout << "OK." << std::endl << std::endl;
+    // ---------------------------------------------------------------
+	
+    std::cout << "| OK" << std::endl;
 }
 
 #endif  // DATABASE_TESTS_TEST13_HPP_

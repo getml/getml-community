@@ -3,8 +3,7 @@
 
 void test11( std::filesystem::path _test_path )
 {
-    std::cout << "Test 11: Parsing time stamps in postgrexs." << std::endl
-              << std::endl;
+    std::cout << "Test 11 | Parsing time stamps in postgrexs\t\t";
 
     // Append all subfolders to reach the required file. This 
     // appending will have a persistent effect of _test_path which
@@ -45,7 +44,7 @@ void test11( std::filesystem::path _test_path )
 
     const auto population_statement = population_sniffer.sniff();
 
-    std::cout << population_statement << std::endl;
+    // std::cout << population_statement << std::endl;
 
     postgres_db.execute( population_statement );
 
@@ -63,8 +62,9 @@ void test11( std::filesystem::path _test_path )
     assert_true( std::abs( it->get_time_stamp() - 6647.85 ) < 1.0 );
     assert_true( it->get_int() == 113 );
 
-    std::cout << std::endl << std::endl;
-    std::cout << "OK." << std::endl << std::endl;
+    // ---------------------------------------------------------------
+	
+    std::cout << "| OK" << std::endl;
 }
 
 #endif  // DATABASE_TESTS_TEST11_HPP_

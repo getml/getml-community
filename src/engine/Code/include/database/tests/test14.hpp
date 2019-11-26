@@ -3,9 +3,7 @@
 
 void test14()
 {
-    std::cout << "Test 14: Getting the tables from a postgres database."
-              << std::endl
-              << std::endl;
+    std::cout << "Test 14 | Getting the tables from a postgres database\t";
 
     // ---------------------------------------------------------------
     
@@ -29,13 +27,14 @@ void test14()
 
     const auto table_names = postgres_db.list_tables();
 
-    for ( const auto& table : table_names )
-        {
-            std::cout << table << " ";
-        }
+    // for ( const auto& table : table_names )
+    //     {
+    //         std::cout << table << " ";
+    //     }
 
-    std::cout << std::endl << std::endl;
-    std::cout << "OK." << std::endl << std::endl;
+    // ---------------------------------------------------------------
+	
+    std::cout << "| OK" << std::endl;
 }
 
 #endif  // DATABASE_TESTS_TEST14_HPP_

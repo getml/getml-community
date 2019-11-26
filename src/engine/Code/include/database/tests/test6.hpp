@@ -3,8 +3,10 @@
 
 void test6( std::filesystem::path _test_path )
 {
-    std::cout << "Test 6: Dropping a table." << std::endl << std::endl;
+    std::cout << "Test 6 | Dropping a table\t\t\t\t";
 
+    // ---------------------------------------------------------------
+	
     // Append all subfolders to reach the required file. This 
     // appending will have a persistent effect of _test_path which
     // is stored on the heap. After setting it once to the correct
@@ -25,7 +27,7 @@ void test6( std::filesystem::path _test_path )
 
     const auto population_statement = population_sniffer.sniff();
 
-    std::cout << population_statement << std::endl;
+    // std::cout << population_statement << std::endl;
 
     sqlite_db.execute( population_statement );
 
@@ -35,8 +37,9 @@ void test6( std::filesystem::path _test_path )
 
     sqlite_db.drop_table( "POPULATION" );
 
-    std::cout << std::endl << std::endl;
-    std::cout << "OK." << std::endl << std::endl;
+    // ---------------------------------------------------------------
+	
+    std::cout << "| OK" << std::endl;
 }
 
 #endif  // DATABASE_TESTS_TEST6_HPP_

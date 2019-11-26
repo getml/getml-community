@@ -14,23 +14,22 @@ int main( int argc, char* argv[] )
 		test_path = argv[1];
 	} else {
 		std::cout << std::endl
-			  << "-----------------------------------------------"
-			"--------------------------------"
-			  << std::endl;
-		std::cout << "ERROR: Please provide a path to the test folder!" 
-			  << std::endl << std::endl;
+				  << "-----------------------------------------------------------"
+				  << std::endl
+				  << "ERROR: Please provide a path to the test folder!" 
+				  << std::endl << std::endl;
 		return 1;
 	}
 	
 	// ---------------------------------------------------------------
 	
 	std::cout << std::endl
-              << "-------------------------------------------------------------"
-                 "------------------"
-              << std::endl;
-    std::cout << "TESTS FOR MODULE 'DATABASE' IN " << test_path.string()
-			  << ":" << std::endl << std::endl;
-	
+		  << "-----------------------------------------------------------"
+		  << std::endl
+		  << "Tests for the module 'DATABASE'"
+		  << std::endl
+		  << "-----------------------------------------------------------"
+		  << std::endl;
 
     // Tests for sqlite
     test1( test_path );

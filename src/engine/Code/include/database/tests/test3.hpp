@@ -3,9 +3,10 @@
 
 void test3( std::filesystem::path _test_path )
 {
-    std::cout << "Test 3: Parsing columns encoded as text." << std::endl
-              << std::endl;
+    std::cout << "Test 3 | Parsing columns encoded as text\t\t";
 
+    // ---------------------------------------------------------------
+	
     // Append all subfolders to reach the required file. This 
     // appending will have a persistent effect of _test_path which
     // is stored on the heap. After setting it once to the correct
@@ -26,7 +27,7 @@ void test3( std::filesystem::path _test_path )
 
     const auto population_statement = population_sniffer.sniff();
 
-    std::cout << population_statement << std::endl;
+    // std::cout << population_statement << std::endl;
 
     sqlite_db.execute( population_statement );
 
@@ -50,8 +51,9 @@ void test3( std::filesystem::path _test_path )
     assert_true( std::abs( it->get_time_stamp() - 0.738654 ) < 1e-4 );
     assert_true( it->get_int() == 113 );
 
-    std::cout << std::endl << std::endl;
-    std::cout << "OK." << std::endl << std::endl;
+    // ---------------------------------------------------------------
+	
+    std::cout << "| OK" << std::endl;
 }
 
 #endif  // DATABASE_TESTS_TEST3_HPP_

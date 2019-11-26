@@ -3,17 +3,20 @@
 
 void test5( std::filesystem::path _test_path )
 {
-    std::cout << "Test 5: Make sure that opening a file that doesn't exist "
-                 "results in failure."
-              << std::endl
-              << std::endl;
+    std::cout << "Test 5 | Make sure that opening a file that doesn't"
+			  << std::endl
+			  << "       | exist results in failure\t\t\t";
 
+    // ---------------------------------------------------------------
+	
     // Append all subfolders to reach the required file. This 
     // appending will have a persistent effect of _test_path which
     // is stored on the heap. After setting it once to the correct
     // folder only the filename has to be replaced.
     _test_path.append( "database" ).append( "POPULATION2.CSV" );
 
+    // ---------------------------------------------------------------
+	
     try
         {
             auto population_sniffer = csv::Sniffer(
@@ -32,7 +35,7 @@ void test5( std::filesystem::path _test_path )
         }
     catch ( std::exception &e )
         {
-            std::cout << e.what() << std::endl;
+            // std::cout << e.what() << std::endl;
         }
 
     try
@@ -43,13 +46,15 @@ void test5( std::filesystem::path _test_path )
         }
     catch ( std::exception &e )
         {
-            std::cout << e.what() << std::endl;
+            // std::cout << e.what() << std::endl;
         }
 
     auto reader = csv::CSVReader( _test_path.string(), '\"', ',' );
 
-    std::cout << std::endl << std::endl;
-    std::cout << "OK." << std::endl << std::endl;
+    // ---------------------------------------------------------------
+	
+	std::cout << "| OK" << std::endl;
+	
 }
 
 #endif  // DATABASE_TESTS_TEST5_HPP_
