@@ -3,39 +3,65 @@
     "discrete_": [],
     "join_keys_": [],
     "join_keys_used_": [
-        "join_key"
+        "join_key1"
     ],
     "joined_tables_": [
         {
             "categorical_": [],
             "discrete_": [],
             "join_keys_": [],
-            "join_keys_used_": [],
-            "joined_tables_": [],
-            "name_": "PERIPHERAL",
+            "join_keys_used_": [
+                "join_key2"
+            ],
+            "joined_tables_": [
+                {
+                    "categorical_": [],
+                    "discrete_": [],
+                    "join_keys_": [],
+                    "join_keys_used_": [],
+                    "joined_tables_": [],
+                    "name_": "PERIPHERAL2",
+                    "numerical_": [],
+                    "other_join_keys_used_": [],
+                    "other_time_stamps_used_": [],
+                    "targets_": [],
+                    "time_stamps_": [],
+                    "time_stamps_used_": [],
+                    "upper_time_stamps_used_": []
+                }
+            ],
+            "name_": "PERIPHERAL1",
             "numerical_": [],
-            "other_join_keys_used_": [],
-            "other_time_stamps_used_": [],
+            "other_join_keys_used_": [
+                "join_key2"
+            ],
+            "other_time_stamps_used_": [
+                "time_stamp2"
+            ],
             "targets_": [],
             "time_stamps_": [],
-            "time_stamps_used_": [],
-            "upper_time_stamps_used_": []
+            "time_stamps_used_": [
+                "time_stamp2"
+            ],
+            "upper_time_stamps_used_": [
+                ""
+            ]
         }
     ],
     "name_": "POPULATION",
     "numerical_": [],
     "other_join_keys_used_": [
-        "join_key"
+        "join_key1"
     ],
     "other_time_stamps_used_": [
-        "time_stamp"
+        "time_stamp1"
     ],
     "targets_": [
-        "targets"
+        "targets1"
     ],
     "time_stamps_": [],
     "time_stamps_used_": [
-        "time_stamp"
+        "time_stamp1"
     ],
     "upper_time_stamps_used_": [
         ""

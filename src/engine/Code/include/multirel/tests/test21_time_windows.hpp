@@ -1,13 +1,19 @@
 
 // ---------------------------------------------------------------------------
 
-void test20_saving_and_loading_models( std::filesystem::path _test_path )
+void test21_time_windows( std::filesystem::path _test_path )
 {
     // ------------------------------------------------------------------------
 
-    std::cout << std::endl
-              << "Test 20 (saving and loading models): " << std::endl
-              << std::endl;
+    std::cout << "Test 21 | time windows\t\t\t\t";
+
+    // ---------------------------------------------------------------
+	
+    // The resulting Model.json and Model.sql will be written to file
+    // but never read. To assure that all of this works, we write them
+    // to temporary files.
+	std::string tmp_filename_json = Poco::TemporaryFile::tempName();
+	std::string tmp_filename_sql = Poco::TemporaryFile::tempName();
 
     // ------------------------------------------------------------------------
     // Build artificial data set.
@@ -99,9 +105,12 @@ void test20_saving_and_loading_models( std::filesystem::path _test_path )
 
             assert_true( jk < 500 );
 
-            if ( peripheral_df.time_stamp( i ) <=
-                     time_stamps_population_col[jk] &&
-                 peripheral_df.numerical( i, 0 ) < 250.0 )
+            if ( ( time_stamps_population_col[jk] -
+                       peripheral_df.time_stamp( i ) >
+                   30.0 ) &&
+                 ( time_stamps_population_col[jk] -
+                       peripheral_df.time_stamp( i ) <=
+                   60.0 ) )
                 {
                     targets_population[jk]++;
                 }
@@ -114,7 +123,7 @@ void test20_saving_and_loading_models( std::filesystem::path _test_path )
     // appending will have a persistent effect of _test_path which
     // is stored on the heap. After setting it once to the correct
     // folder only the filename has to be replaced.
-    _test_path.append( "multirel" ).append( "test20" ).append( "schema.json" );
+    _test_path.append( "multirel" ).append( "test21" ).append( "schema.json" );
     const auto population_json = load_json( _test_path.string() );
 
     const auto population =
@@ -130,8 +139,8 @@ void test20_saving_and_loading_models( std::filesystem::path _test_path )
     const auto hyperparameters_json =
         load_json( _test_path.replace_filename( "hyperparameters.json" ).string() );
 
-    std::cout << multirel::JSON::stringify( *hyperparameters_json ) << std::endl
-              << std::endl;
+    // std::cout << multirel::JSON::stringify( *hyperparameters_json ) << std::endl
+    //           << std::endl;
 
     const auto hyperparameters =
         std::make_shared<multirel::descriptors::Hyperparameters>(
@@ -152,70 +161,27 @@ void test20_saving_and_loading_models( std::filesystem::path _test_path )
 
     model.fit( population_df, {peripheral_df} );
 
+    model.save( tmp_filename_json );
+
     // ------------------------------------------------------------------------
     // Express as SQL code.
 
-    std::ofstream sql( _test_path.replace_filename( "Model.sql" ).string() );
+    std::ofstream sql( tmp_filename_sql );
     sql << model.to_sql();
     sql.close();
 
-    model.save( _test_path.replace_filename( "Model.json" ).string() );
-
     // ------------------------------------------------------------------------
-    // Reload model.
-
-    const auto model_json =
-        load_json( _test_path.replace_filename( "Model.json" ).string() );
-
-    auto model2 =
-        multirel::ensemble::DecisionTreeEnsemble( encoding, *model_json );
-
-    model2.save( _test_path.replace_filename( "Model2.json" ).string() );
-
-    std::ofstream sql2( _test_path.replace_filename( "Model2.sql" ).string() );
-    sql2 << model2.to_sql();
-    sql2.close();
-
-    const auto model2_json =
-        load_json( _test_path.replace_filename( "Model2.json" ).string() );
-
-    auto model3 =
-        multirel::ensemble::DecisionTreeEnsemble( encoding, *model2_json );
-
-    std::ofstream sql3( _test_path.replace_filename( "Model3.sql" ).string() );
-    sql3 << model3.to_sql();
-    sql3.close();
-
-    // ------------------------------------------------------------------------
-    // Generate predictions.
+    // Generate and evaluate predictions.
 
     const auto predictions = model.transform( population_df, {peripheral_df} );
 
-    const auto predictions2 =
-        model2.transform( population_df, {peripheral_df} );
-
-    const auto predictions3 =
-        model3.transform( population_df, {peripheral_df} );
-
-    assert_true( predictions.size() == predictions2.size() );
-    assert_true( predictions.size() == predictions3.size() );
-
     for ( size_t j = 0; j < predictions.size(); ++j )
         {
-            assert_true( predictions[j]->size() == predictions2[j]->size() );
-            assert_true( predictions[j]->size() == predictions3[j]->size() );
-
             for ( size_t i = 0; i < predictions[j]->size(); ++i )
                 {
-                    assert_true(
-                        std::abs(
-                            ( *predictions[j] )[i] - ( *predictions2[j] )[i] ) <
-                        1e-07 );
-
-                    assert_true(
-                        std::abs(
-                            ( *predictions[j] )[i] - ( *predictions3[j] )[i] ) <
-                        1e-07 );
+                    /*std::cout << "target: " << population_df.target( i, 0 )
+                              << ", prediction: " << ( *predictions[j] )[i]
+                              << std::endl;*/
 
                     assert_true(
                         std::abs(
@@ -223,13 +189,13 @@ void test20_saving_and_loading_models( std::filesystem::path _test_path )
                             ( *predictions[j] )[i] ) < 5.0 );
                 }
         }
-    std::cout << std::endl << std::endl;
 
     // ------------------------------------------------------------------------
 
-    std::cout << "OK." << std::endl << std::endl;
+    std::cout << "| OK" << std::endl;
 
     // ------------------------------------------------------------------------
 }
 
 // -----------------------------------------------------------------------------
+

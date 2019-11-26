@@ -15,10 +15,9 @@ int main( int argc, char* argv[] )
 		test_path = argv[1];
 	} else {
 		std::cout << std::endl
-				  << "-----------------------------------------------"
-			"--------------------------------"
-				  << std::endl;
-		std::cout << "ERROR: Please provide a path to the test folder!" 
+				  << "-----------------------------------------------------------"
+				  << std::endl
+				  << "ERROR: Please provide a path to the test folder!" 
 				  << std::endl << std::endl;
 		return 1;
 	}
@@ -26,11 +25,12 @@ int main( int argc, char* argv[] )
 	// ---------------------------------------------------------------
 	
 	std::cout << std::endl
-              << "-------------------------------------------------------------"
-                 "------------------"
-              << std::endl;
-    std::cout << "TESTS FOR MODULE 'MULTIREL' IN " << test_path.string()
-			  << ":" << std::endl << std::endl;
+		  << "-----------------------------------------------------------"
+		  << std::endl
+		  << "Tests for the module 'MULTIREL'"
+		  << std::endl
+		  << "-----------------------------------------------------------"
+		  << std::endl;
 	
 	// ---------------------------------------------------------------
 	
@@ -58,11 +58,11 @@ int main( int argc, char* argv[] )
 
     test18_upper_time_stamps( test_path );
 
-    test20_saving_and_loading_models( test_path );
+    test19_saving_and_loading_models( test_path );
 
-    test21_snowflake_model( test_path );
+    test20_snowflake_model( test_path );
 
-    test22_time_windows( test_path );
+    test21_time_windows( test_path );
 
     return 0;
 }

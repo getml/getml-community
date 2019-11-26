@@ -1,11 +1,8 @@
 {
-    "aggregation_": [
-        "COUNT",
-        "SUM"
-    ],
+    "aggregation_": ["SUM", "COUNT"],
     "fast_training_": false,
     "include_categorical_": false,
-    "delta_t_": 30.0,
+    "delta_t_": 0.0,
     "loss_function_": "SquareLoss",
     "num_features_": 10,
     "share_selected_features_": 1.0,
@@ -15,12 +12,12 @@
     "sampling_factor_": 1.0,
     "seed_": 5849,
     "share_aggregations_": 1.0,
-    "shrinkage_": 0.1,
+    "shrinkage_": 0.05,
     "use_timestamps_": true,
     "allow_sets_": true,
     "grid_factor_": 1.0,
-    "max_length_": 2,
-    "min_num_samples_": 5,
+    "max_length_": 1,
+    "min_num_samples_": 20,
     "regularization_": 0.0,
     "share_conditions_": 1.0
 }
