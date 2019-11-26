@@ -6,9 +6,15 @@ void test23_snowflake_model2( std::filesystem::path _test_path )
 {
     // ------------------------------------------------------------------------
 
-    std::cout << std::endl
-              << "Test 23 (snowflake model, AVG of SUM): " << std::endl
-              << std::endl;
+    std::cout << "Test 23 | snowflake model, AVG of SUM\t\t\t";
+
+    // ---------------------------------------------------------------
+	
+    // The resulting Model.json and Model.sql will be written to file
+    // but never read. To assure that all of this works, we write them
+    // to temporary files.
+	std::string tmp_filename_json = Poco::TemporaryFile::tempName();
+	std::string tmp_filename_sql = Poco::TemporaryFile::tempName();
 
     // ------------------------------------------------------------------------
     // Build artificial data set.
@@ -218,8 +224,8 @@ void test23_snowflake_model2( std::filesystem::path _test_path )
     const auto hyperparameters_json =
         load_json( _test_path.replace_filename( "hyperparameters.json" ).string() );
 
-    std::cout << relboost::JSON::stringify( *hyperparameters_json ) << std::endl
-              << std::endl;
+    // std::cout << relboost::JSON::stringify( *hyperparameters_json ) << std::endl
+    //           << std::endl;
 
     const auto hyperparameters =
         std::make_shared<relboost::Hyperparameters>( *hyperparameters_json );
@@ -239,12 +245,12 @@ void test23_snowflake_model2( std::filesystem::path _test_path )
 
     model.fit( population_df, {peripheral1_df, peripheral2_df} );
 
-    model.save( _test_path.replace_filename( "Model.json" ).string() );
+    model.save( tmp_filename_json );
 
     // ------------------------------------------------------------------------
     // Express as SQL code.
 
-    std::ofstream sql( _test_path.replace_filename( "Model.sql" ).string() );
+    std::ofstream sql( tmp_filename_sql );
     sql << model.to_sql();
     sql.close();
 
@@ -264,11 +270,9 @@ void test23_snowflake_model2( std::filesystem::path _test_path )
                 2.0 );
         }
 
-    std::cout << std::endl << std::endl;
-
     // ------------------------------------------------------------------------
 
-    std::cout << "OK." << std::endl << std::endl;
+    std::cout << "| OK" << std::endl;
 
     // ------------------------------------------------------------------------
 }

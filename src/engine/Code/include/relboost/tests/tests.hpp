@@ -7,6 +7,7 @@
 #include <random>
 
 #include <Poco/JSON/Parser.h>
+#include "Poco/Temporaryfile.h"
 
 #include "relboost/Hyperparameters.hpp"
 #include "relboost/JSON.hpp"

@@ -9,27 +9,30 @@ int main( int argc, char* argv[] )
 	// containing folders distros, multirel, predictors, and relboost
 	// has to be provided.
 	std::filesystem::path test_path;
-	
+
 	if ( argc == 2 ) {
 		test_path = argv[1];
 	} else {
 		std::cout << std::endl
-				  << "-----------------------------------------------"
-			"--------------------------------"
-				  << std::endl;
-		std::cout << "ERROR: Please provide a path to the test folder!" 
+				  << "-----------------------------------------------------------"
+				  << std::endl
+				  << "ERROR: Please provide a path to the test folder!" 
 				  << std::endl << std::endl;
 		return 1;
 	}
 	
 	// ---------------------------------------------------------------
-    std::cout << std::endl
-              << "-------------------------------------------------------------"
-                 "------------------"
-              << std::endl;
-    std::cout << "TESTS FOR MODULE 'RELBOOST' IN " << test_path.string()
-			  << ":" << std::endl << std::endl;
+	
+	std::cout << std::endl
+		  << "-----------------------------------------------------------"
+		  << std::endl
+		  << "Tests for the module 'RELBOOST'"
+		  << std::endl
+		  << "-----------------------------------------------------------"
+		  << std::endl;
 
+    // ---------------------------------------------------------------
+	
     test1_sum( test_path );
 
     test2_avg( test_path );

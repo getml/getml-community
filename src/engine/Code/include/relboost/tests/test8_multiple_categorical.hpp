@@ -5,10 +5,15 @@ void test8_multiple_categorical( std::filesystem::path _test_path )
 {
     // ------------------------------------------------------------------------
 
-    std::cout << std::endl
-              << "Test 8 (SUM aggregation, multiple categorical values): "
-              << std::endl
-              << std::endl;
+    std::cout << "Test 8 | SUM aggregation, multiple categorical values\t";
+
+    // ---------------------------------------------------------------
+	
+    // The resulting Model.json and Model.sql will be written to file
+    // but never read. To assure that all of this works, we write them
+    // to temporary files.
+	std::string tmp_filename_json = Poco::TemporaryFile::tempName();
+	std::string tmp_filename_sql = Poco::TemporaryFile::tempName();
 
     // ------------------------------------------------------------------------
     // Build artificial data set.
@@ -154,8 +159,8 @@ void test8_multiple_categorical( std::filesystem::path _test_path )
     const auto hyperparameters_json = load_json(
         _test_path.replace_filename( "hyperparameters.json" ).string() );
 
-    std::cout << relboost::JSON::stringify( *hyperparameters_json ) << std::endl
-              << std::endl;
+    // std::cout << relboost::JSON::stringify( *hyperparameters_json ) << std::endl
+    //           << std::endl;
 
     const auto hyperparameters =
         std::make_shared<const relboost::Hyperparameters>(
@@ -176,12 +181,12 @@ void test8_multiple_categorical( std::filesystem::path _test_path )
 
     model.fit( population_df, {peripheral_df} );
 
-    model.save( _test_path.replace_filename( "Model.json" ).string() );
+    model.save( tmp_filename_json );
 
     // ------------------------------------------------------------------------
     // Express as SQL code.
 
-    std::ofstream sql( _test_path.replace_filename( "Model.sql" ).string() );
+    std::ofstream sql( tmp_filename_json );
     sql << model.to_sql();
     sql.close();
 
@@ -201,11 +206,10 @@ void test8_multiple_categorical( std::filesystem::path _test_path )
                 std::abs( population_df.target( i, 0 ) - predictions[i] ) <
                 5.0 );
         }
-    std::cout << std::endl << std::endl;
 
     // ------------------------------------------------------------------------
 
-    std::cout << "OK." << std::endl << std::endl;
+    std::cout << "| OK" << std::endl;
 
     // ------------------------------------------------------------------------
 }
