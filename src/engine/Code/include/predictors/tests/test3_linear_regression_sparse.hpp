@@ -5,9 +5,7 @@ void test3_linear_regression_sparse()
 {
     // -------------------------------------------------------------------------
 
-    std::cout << std::endl
-              << "Test 3 (Linear regression, sparse): " << std::endl
-              << std::endl;
+    std::cout << "Test 3 | Linear regression, sparse\t\t";
 
     // -------------------------------------------------------------------------
 
@@ -70,11 +68,9 @@ void test3_linear_regression_sparse()
             assert_true( std::abs( y->at( i ) - yhat->at( i ) < 10.0 ) );
         }
 
-    std::cout << std::endl << std::endl;
-
     // ------------------------------------------------------------------------
 
-    std::cout << "OK." << std::endl << std::endl;
+    std::cout << "| OK" << std::endl;
 
     // ------------------------------------------------------------------------
 }

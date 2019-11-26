@@ -1,19 +1,16 @@
 
 // -----------------------------------------------------------------------------
 
-void test4_saving_and_loading_linear_regression( std::filesystem::path _test_path )
+void test4_saving_and_loading_linear_regression()
 {
     // -------------------------------------------------------------------------
 
-    std::cout << std::endl
-              << "Test 4 (Saving and loading linear regression): " << std::endl
-              << std::endl;
+    std::cout << "Test 4 | Saving and loading linear regression\t";
 
-    // Append all subfolders to reach the required file. This 
-    // appending will have a persistent effect of _test_path which
-    // is stored on the heap. After setting it once to the correct
-    // folder only the filename has to be replaced.
-    _test_path.append( "predictors" ).append( "test4" ).append( "LinearRegression" );
+    // This script only needs to write out data and read it in
+    // again. This will be done by temporary files.
+	std::string tmp_filename_1 = Poco::TemporaryFile::tempName();
+	std::string tmp_filename_2 = Poco::TemporaryFile::tempName();
 
     // -------------------------------------------------------------------------
 
@@ -68,17 +65,17 @@ void test4_saving_and_loading_linear_regression( std::filesystem::path _test_pat
 
     // ------------------------------------------------------------------------
 
-    lin_reg.save( _test_path.string() );
+    lin_reg.save( tmp_filename_1 );
 
     auto lin_reg2 = predictors::LinearRegression( hyperparams, impl );
 
-    lin_reg2.load( _test_path.string() );
+    lin_reg2.load( tmp_filename_1 );
 
-    lin_reg2.save( _test_path.replace_filename( "LinearRegression2" ).string() );
+    lin_reg2.save( tmp_filename_2 );
 
     auto lin_reg3 = predictors::LinearRegression( hyperparams, impl );
 
-    lin_reg3.load( _test_path.string() );
+    lin_reg3.load( tmp_filename_2 );
 
     // ------------------------------------------------------------------------
 
@@ -92,11 +89,9 @@ void test4_saving_and_loading_linear_regression( std::filesystem::path _test_pat
             assert_true( std::abs( yhat->at( i ) - yhat3->at( i ) ) < 1e-4 );
         }
 
-    std::cout << std::endl << std::endl;
-
     // ------------------------------------------------------------------------
 
-    std::cout << "OK." << std::endl << std::endl;
+    std::cout << "| OK" << std::endl;
 
     // ------------------------------------------------------------------------
 }
