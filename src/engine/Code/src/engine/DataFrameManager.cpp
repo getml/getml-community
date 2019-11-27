@@ -463,6 +463,8 @@ void DataFrameManager::calc_categorical_column_plots(
 
     const auto role = JSON::get_value<std::string>( _cmd, "role_" );
 
+    const auto num_bins = JSON::get_value<size_t>( _cmd, "num_bins_" );
+
     const auto target_name =
         JSON::get_value<std::string>( _cmd, "target_name_" );
 
@@ -553,11 +555,12 @@ void DataFrameManager::calc_categorical_column_plots(
     if ( targets.size() == vec.size() )
         {
             obj = metrics::Summarizer::calc_categorical_column_plot(
-                vec, targets );
+                num_bins, vec, targets );
         }
     else
         {
-            obj = metrics::Summarizer::calc_categorical_column_plot( vec );
+            obj = metrics::Summarizer::calc_categorical_column_plot(
+                num_bins, vec );
         }
 
     // --------------------------------------------------------------------

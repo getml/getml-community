@@ -12,10 +12,11 @@ class Summarizer
    public:
     /// Calculates the plots needed to analyze a categorical column.
     static Poco::JSON::Object calc_categorical_column_plot(
-        const std::vector<strings::String>& _vec );
+        const size_t _num_bins, const std::vector<strings::String>& _vec );
 
     /// Calculates the plots needed to analyze a categorical column.
     static Poco::JSON::Object calc_categorical_column_plot(
+        const size_t _num_bins,
         const std::vector<strings::String>& _vec,
         const std::vector<Float>& _target );
 
@@ -85,6 +86,16 @@ class Summarizer
         const Float _step_size,
         const Float _val,
         const Float _min );
+
+    /// Applies the binning strategy for the categorical frequency counts.
+    static Poco::JSON::Object make_object(
+        const size_t _num_bins,
+        const std::vector<std::pair<strings::String, Int>>& _counts );
+
+    /// Applies the binning strategy for the categorical correlation plots.
+    static Poco::JSON::Object make_object(
+        const size_t _num_bins,
+        const std::vector<std::pair<Float, Float>>& _pairs );
 
     // ---------------------------------------------------------------------
 
