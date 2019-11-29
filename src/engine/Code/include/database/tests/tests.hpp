@@ -1,8 +1,8 @@
 #ifndef DATABASE_TESTS_TESTS_HPP_
 #define DATABASE_TESTS_TESTS_HPP_
 
-#include <filesystem>
 #include <Poco/JSON/Stringifier.h>
+#include <filesystem>
 
 #include "database/database.hpp"
 
@@ -23,11 +23,15 @@
 #else
 #include "database/tests/test8.hpp"
 #include "database/tests/test9.hpp"
+
 #include "database/tests/test10.hpp"
 #include "database/tests/test11.hpp"
 #include "database/tests/test12.hpp"
 #include "database/tests/test13.hpp"
 #include "database/tests/test14.hpp"
 #endif
+
+// Tests for MySQL
+#include "database/tests/test15.hpp"
 
 #endif  // DATABASE_TESTS_TESTS_HPP_
