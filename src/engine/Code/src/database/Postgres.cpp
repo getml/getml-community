@@ -210,35 +210,6 @@ std::vector<std::string> Postgres::list_tables()
 
 // ----------------------------------------------------------------------------
 
-std::string Postgres::make_buffer(
-    const std::vector<std::string>& _line,
-    const std::vector<csv::Datatype>& _coltypes,
-    const char _sep,
-    const char _quotechar )
-{
-    std::string buffer;
-
-    assert_true( _line.size() == _coltypes.size() );
-
-    for ( size_t i = 0; i < _line.size(); ++i )
-        {
-            buffer += parse_field( _line[i], _coltypes[i], _sep, _quotechar );
-
-            if ( i < _line.size() - 1 )
-                {
-                    buffer += _sep;
-                }
-            else
-                {
-                    buffer += '\n';
-                }
-        }
-
-    return buffer;
-}
-
-// ----------------------------------------------------------------------------
-
 std::string Postgres::make_connection_string( const Poco::JSON::Object& _obj )
 {
     const auto host = jsonutils::JSON::get_value<std::string>( _obj, "host_" );
@@ -273,65 +244,6 @@ std::string Postgres::make_connection_string( const Poco::JSON::Object& _obj )
 
 // ----------------------------------------------------------------------------
 
-std::string Postgres::parse_field(
-    const std::string& _raw_field,
-    const csv::Datatype _datatype,
-    const char _sep,
-    const char _quotechar ) const
-{
-    switch ( _datatype )
-        {
-            case csv::Datatype::double_precision:
-                {
-                    const auto [val, success] =
-                        csv::Parser::to_double( _raw_field );
-
-                    if ( success )
-                        {
-                            return std::to_string( val );
-                        }
-                    else
-                        {
-                            return "";
-                        }
-                }
-
-                // ------------------------------------------------------------
-
-            case csv::Datatype::integer:
-                {
-                    const auto [val, success] =
-                        csv::Parser::to_int( _raw_field );
-
-                    if ( success )
-                        {
-                            return std::to_string( val );
-                        }
-                    else
-                        {
-                            return "";
-                        }
-                }
-
-                // ------------------------------------------------------------
-
-            default:
-                auto field =
-                    csv::Parser::remove_quotechars( _raw_field, _quotechar );
-
-                if ( field.find( _sep ) != std::string::npos )
-                    {
-                        field = _quotechar + field + _quotechar;
-                    }
-
-                return field;
-
-                // ------------------------------------------------------------
-        }
-}
-
-// ----------------------------------------------------------------------------
-
 void Postgres::read(
     const std::string& _table,
     const bool _header,
@@ -345,6 +257,8 @@ void Postgres::read(
 
     const std::vector<csv::Datatype> coltypes =
         get_coltypes( _table, colnames );
+
+    assert_true( colnames.size() == coltypes.size() );
 
     // ------------------------------------------------------------------------
     // Skip lines, if necessary.
@@ -362,7 +276,7 @@ void Postgres::read(
 
     if ( _header )
         {
-            // check_colnames( colnames, _reader ); // ToDo
+            // check_colnames( colnames, _reader ); // TODO
             _reader->next_line();
             ++line_count;
         }
@@ -409,7 +323,7 @@ void Postgres::read(
                             continue;
                         }
 
-                    const std::string buffer = make_buffer(
+                    const std::string buffer = CSVBuffer::make_buffer(
                         line, coltypes, _reader->sep(), _reader->quotechar() );
 
                     const auto success = PQputCopyData(

@@ -2,34 +2,37 @@
 
 int main( int argc, char* argv[] )
 {
+    // ---------------------------------------------------------------
 
-	// ---------------------------------------------------------------
-	
-	// Checking the input arguments. A path to the tests folder
-	// containing folders distros, multirel, predictors, and relboost
-	// has to be provided.
-	std::filesystem::path test_path;
-	
-	if ( argc == 2 ) {
-		test_path = argv[1];
-	} else {
-		std::cout << std::endl
-				  << "-----------------------------------------------------------"
-				  << std::endl
-				  << "ERROR: Please provide a path to the test folder!" 
-				  << std::endl << std::endl;
-		return 1;
-	}
-	
-	// ---------------------------------------------------------------
-	
-	std::cout << std::endl
-		  << "-----------------------------------------------------------"
-		  << std::endl
-		  << "Tests for the module 'DATABASE'"
-		  << std::endl
-		  << "-----------------------------------------------------------"
-		  << std::endl;
+    // Checking the input arguments. A path to the tests folder
+    // containing folders distros, multirel, predictors, and relboost
+    // has to be provided.
+    std::filesystem::path test_path;
+
+    if ( argc == 2 )
+        {
+            test_path = argv[1];
+        }
+    else
+        {
+            std::cout
+                << std::endl
+                << "-----------------------------------------------------------"
+                << std::endl
+                << "ERROR: Please provide a path to the test folder!"
+                << std::endl
+                << std::endl;
+            return 1;
+        }
+
+    // ---------------------------------------------------------------
+
+    std::cout << std::endl
+              << "-----------------------------------------------------------"
+              << std::endl
+              << "Tests for the module 'DATABASE'" << std::endl
+              << "-----------------------------------------------------------"
+              << std::endl;
 
     // Tests for sqlite
     test1( test_path );
@@ -52,4 +55,7 @@ int main( int argc, char* argv[] )
     test13( test_path );
     test14();
 #endif
+
+    // Tests for MySQL
+    test15( test_path );
 }

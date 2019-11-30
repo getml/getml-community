@@ -122,20 +122,6 @@ class Postgres : public Connector
     /// Called by the constructor.
     static std::string make_connection_string( const Poco::JSON::Object& _obj );
 
-    /// Turns a line into a buffer to be read by PQputCopyData.
-    std::string make_buffer(
-        const std::vector<std::string>& _line,
-        const std::vector<csv::Datatype>& _coltypes,
-        const char _sep,
-        const char _quotechar );
-
-    /// Parses a raw field according to its datatype.
-    std::string parse_field(
-        const std::string& _raw_field,
-        const csv::Datatype _datatype,
-        const char _sep,
-        const char _quotechar ) const;
-
     // -------------------------------
 
    private:

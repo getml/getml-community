@@ -19,8 +19,9 @@ class StatementMaker
     /// Finds the maximum size of the colnames.
     static size_t find_max_size( const std::vector<std::string>& _colnames );
 
-    /// Produces the kwargs for an engine.DataFrame.
-    static std::string make_statement_python(
+    /// Produces the CREATE TABLE statement for MySQL.
+    static std::string make_statement_mysql(
+        const std::string& _table_name,
         const std::vector<std::string>& _colnames,
         const std::vector<Datatype>& _datatypes );
 
@@ -30,11 +31,19 @@ class StatementMaker
         const std::vector<std::string>& _colnames,
         const std::vector<Datatype>& _datatypes );
 
+    /// Produces the kwargs for an engine.DataFrame.
+    static std::string make_statement_python(
+        const std::vector<std::string>& _colnames,
+        const std::vector<Datatype>& _datatypes );
+
     /// Produces the CREATE TABLE statement for sqlite.
     static std::string make_statement_sqlite(
         const std::string& _table_name,
         const std::vector<std::string>& _colnames,
         const std::vector<Datatype>& _datatypes );
+
+    /// Transforms a datatype to the string required for the mysql dialect.
+    static std::string to_string_mysql( const Datatype _type );
 
     /// Transforms a datatype to the string required for the postgres dialect.
     static std::string to_string_postgres( const Datatype _type );
