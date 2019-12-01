@@ -3,6 +3,7 @@ set(
     ${DATABASE_SOURCE_DIRECTORY}/CSVBuffer.cpp
     ${DATABASE_SOURCE_DIRECTORY}/DatabaseParser.cpp
     ${DATABASE_SOURCE_DIRECTORY}/MySQL.cpp
+    ${DATABASE_SOURCE_DIRECTORY}/MySQLIterator.cpp
     ${DATABASE_SOURCE_DIRECTORY}/Postgres.cpp
     ${DATABASE_SOURCE_DIRECTORY}/PostgresIterator.cpp    
     ${DATABASE_SOURCE_DIRECTORY}/Sqlite3.cpp

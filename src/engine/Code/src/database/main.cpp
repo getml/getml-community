@@ -58,4 +58,10 @@ int main( int argc, char* argv[] )
 
     // Tests for MySQL
     test15( test_path );
+    test16( test_path );
+    test17( test_path );
+    test18( test_path );
+    test19( test_path );
+    test20( test_path );
+    test21();
 }

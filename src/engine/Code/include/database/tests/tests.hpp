@@ -33,5 +33,11 @@
 
 // Tests for MySQL
 #include "database/tests/test15.hpp"
+#include "database/tests/test16.hpp"
+#include "database/tests/test17.hpp"
+#include "database/tests/test18.hpp"
+#include "database/tests/test19.hpp"
+#include "database/tests/test20.hpp"
+#include "database/tests/test21.hpp"
 
 #endif  // DATABASE_TESTS_TESTS_HPP_

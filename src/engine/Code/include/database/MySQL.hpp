@@ -62,19 +62,10 @@ class MySQL : public Connector
         const std::string& _tname,
         const std::int32_t _draw,
         const std::int32_t _start,
-        const std::int32_t _length ) final
-    {
-        // TODO
-        Poco::JSON::Object obj;
-        return obj;
-    }
+        const std::int32_t _length ) final;
 
     /// Lists the name of the tables held in the database.
-    std::vector<std::string> list_tables() final
-    {
-        // TODO
-        return std::vector<std::string>();
-    }
+    std::vector<std::string> list_tables() final;
 
     /// Reads a CSV file or another data source into a table.
     void read(
@@ -110,25 +101,24 @@ class MySQL : public Connector
     /// Returns the number of rows in the table signified by _tname.
     std::int32_t get_nrows( const std::string& _tname ) final
     {
-        // TODO
-        return 0;
+        return select( {"COUNT(*)"}, _tname, "" )->get_int();
     }
 
-    /// Returns a shared_ptr containing a PostgresIterator.
+    /// Returns a shared_ptr containing a MySQLIterator.
     std::shared_ptr<Iterator> select(
         const std::vector<std::string>& _colnames,
         const std::string& _tname,
         const std::string& _where ) final
     {
-        // TODO
-        return std::shared_ptr<Iterator>();
+        return std::make_shared<MySQLIterator>(
+            make_connection(), _colnames, time_formats_, _tname, _where );
     }
 
-    /// Returns a shared_ptr containing a PostgresIterator.
+    /// Returns a shared_ptr containing a MySQLIterator.
     std::shared_ptr<Iterator> select( const std::string& _sql ) final
     {
-        // TODO
-        return std::shared_ptr<Iterator>();
+        return std::make_shared<MySQLIterator>(
+            make_connection(), _sql, time_formats_ );
     }
 
     /// Returns the time formats used.
@@ -142,6 +132,13 @@ class MySQL : public Connector
    private:
     /// Parses a field for the CSV reader.
     csv::Datatype interpret_field_type( const enum_field_types _type ) const;
+
+    /// Prepares a query to get the content of a table.
+    std::string make_get_content_query(
+        const std::string& _table,
+        const std::vector<std::string>& _colnames,
+        const std::int32_t _begin,
+        const std::int32_t _end ) const;
 
     /// Prepares a LOAD DATA LOCAL INFILE query to load the data
     /// into the data base from a temporary file.

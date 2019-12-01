@@ -1,21 +1,19 @@
-#ifndef DATABASE_TESTS_TEST15_HPP_
-#define DATABASE_TESTS_TEST15_HPP_
+#ifndef DATABASE_TESTS_TEST18_HPP_
+#define DATABASE_TESTS_TEST18_HPP_
 
-void test15( std::filesystem::path _test_path )
+void test18( std::filesystem::path _test_path )
 {
-    std::cout << "Test 15 | Parsing and inserting a CSV file into MySQL\t";
-
-    // ---------------------------------------------------------------
+    std::cout << "Test 18 | Parsing time stamps in MySQL\t\t";
 
     // Append all subfolders to reach the required file. This
     // appending will have a persistent effect of _test_path which
     // is stored on the heap. After setting it once to the correct
     // folder only the filename has to be replaced.
-    _test_path.append( "database" ).append( "POPULATION.CSV" );
+    _test_path.append( "database" ).append( "POPULATION2.CSV" );
 
     // ---------------------------------------------------------------
 
-    // Configure MySQL to connect using the user and database
+    // Configure PostgreSQL to connect using the user and database
     // created just for this unit test.
     Poco::JSON::Object connectionObject;
     connectionObject.set( "db_", "testbertstestbase" );
@@ -26,7 +24,8 @@ void test15( std::filesystem::path _test_path )
     connectionObject.set( "user_", "testbert" );
 
     // Customized time format used within the database.
-    const std::vector<std::string> timeFormats = {"%Y-%m-%d %H:%M:%S"};
+    const std::vector<std::string> timeFormats = {"%Y/%m/%d %H:%M:%S",
+                                                  "%Y-%m-%d %H:%M:%S"};
 
     // ---------------------------------------------------------------
 
@@ -44,6 +43,8 @@ void test15( std::filesystem::path _test_path )
 
     const auto population_statement = population_sniffer.sniff();
 
+    // std::cout << population_statement << std::endl;
+
     mysql_db.execute( population_statement );
 
     auto reader = csv::CSVReader( _test_path.string(), '\"', ',' );
@@ -57,7 +58,7 @@ void test15( std::filesystem::path _test_path )
     // 0.09902457667435494, 0, 0.7386545235592108, 113.0
     assert_true( std::abs( it->get_double() - 0.099024 ) < 1e-4 );
     assert_true( it->get_string() == "0" );
-    assert_true( std::abs( it->get_time_stamp() - 0.738654 ) < 1e-4 );
+    assert_true( std::abs( it->get_time_stamp() - 6647.85 ) < 1.0 );
     assert_true( it->get_int() == 113 );
 
     // ---------------------------------------------------------------
@@ -65,4 +66,4 @@ void test15( std::filesystem::path _test_path )
     std::cout << "| OK" << std::endl;
 }
 
-#endif  // DATABASE_TESTS_TEST15_HPP_
+#endif  // DATABASE_TESTS_TEST18_HPP_

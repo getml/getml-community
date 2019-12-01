@@ -1,11 +1,9 @@
-#ifndef DATABASE_TESTS_TEST15_HPP_
-#define DATABASE_TESTS_TEST15_HPP_
+#ifndef DATABASE_TESTS_TEST17_HPP_
+#define DATABASE_TESTS_TEST17_HPP_
 
-void test15( std::filesystem::path _test_path )
+void test17( std::filesystem::path _test_path )
 {
-    std::cout << "Test 15 | Parsing and inserting a CSV file into MySQL\t";
-
-    // ---------------------------------------------------------------
+    std::cout << "Test 17 | Parsing columns encoded as text in MySQL.\t";
 
     // Append all subfolders to reach the required file. This
     // appending will have a persistent effect of _test_path which
@@ -35,7 +33,7 @@ void test15( std::filesystem::path _test_path )
     auto population_sniffer = csv::Sniffer(
         "mysql",
         {_test_path.string(), _test_path.string()},
-        true,
+        false,
         100,
         '\"',
         ',',
@@ -44,19 +42,27 @@ void test15( std::filesystem::path _test_path )
 
     const auto population_statement = population_sniffer.sniff();
 
+    // std::cout << population_statement << std::endl;
+
     mysql_db.execute( population_statement );
 
     auto reader = csv::CSVReader( _test_path.string(), '\"', ',' );
 
-    mysql_db.read( "POPULATION", true, 0, &reader );
+    mysql_db.read( "POPULATION", false, 0, &reader );
 
     auto it = mysql_db.select(
-        {"column_01", "join_key", "time_stamp", "targets"}, "POPULATION", "" );
+        {"COLUMN_1", "COLUMN_2", "COLUMN_3", "COLUMN_4"}, "POPULATION", "" );
 
-    // First line:
+    // Header line (read in and formatted):
+    assert_true( std::isnan( it->get_double() ) );
+    assert_true( std::isnan( it->get_double() ) );
+    assert_true( std::isnan( it->get_double() ) );
+    assert_true( std::isnan( it->get_double() ) );
+
+    // First line (pay special attention to column 2 - it should not be NULL!):
     // 0.09902457667435494, 0, 0.7386545235592108, 113.0
     assert_true( std::abs( it->get_double() - 0.099024 ) < 1e-4 );
-    assert_true( it->get_string() == "0" );
+    assert_true( it->get_double() == 0.0 );
     assert_true( std::abs( it->get_time_stamp() - 0.738654 ) < 1e-4 );
     assert_true( it->get_int() == 113 );
 
@@ -65,4 +71,4 @@ void test15( std::filesystem::path _test_path )
     std::cout << "| OK" << std::endl;
 }
 
-#endif  // DATABASE_TESTS_TEST15_HPP_
+#endif  // DATABASE_TESTS_TEST17_HPP_

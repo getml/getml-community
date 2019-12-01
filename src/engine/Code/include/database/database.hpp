@@ -50,6 +50,8 @@ extern "C"
 
 #include "database/Sqlite3.hpp"
 
+#include "database/MySQLIterator.hpp"
+
 #include "database/MySQL.hpp"
 
 #if ( defined( _WIN32 ) || defined( _WIN64 ) )

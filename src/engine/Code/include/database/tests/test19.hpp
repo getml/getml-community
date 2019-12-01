@@ -1,11 +1,9 @@
-#ifndef DATABASE_TESTS_TEST13_HPP_
-#define DATABASE_TESTS_TEST13_HPP_
+#ifndef DATABASE_TESTS_TEST19_HPP_
+#define DATABASE_TESTS_TEST19_HPP_
 
-void test13( std::filesystem::path _test_path )
+void test19( std::filesystem::path _test_path )
 {
-    std::cout << "Test 13 | Getting the content from a postgres database\t";
-
-    // ---------------------------------------------------------------
+    std::cout << "Test 19 | Dropping a table in MySQL\t\t\t";
 
     // Append all subfolders to reach the required file. This
     // appending will have a persistent effect of _test_path which
@@ -15,14 +13,14 @@ void test13( std::filesystem::path _test_path )
 
     // ---------------------------------------------------------------
 
-    // Configure PostgreSQL to connect using the user and database
+    // Configure MySQL to connect using the user and database
     // created just for this unit test.
     Poco::JSON::Object connectionObject;
-    connectionObject.set( "dbname_", "testbertstestbase" );
+    connectionObject.set( "db_", "testbertstestbase" );
     connectionObject.set( "host_", "localhost" );
-    connectionObject.set( "hostaddr_", "127.0.0.1" );
-    connectionObject.set( "password_", "testbert" );
-    connectionObject.set( "port_", 5432 );
+    connectionObject.set( "passwd_", "testbert" );
+    connectionObject.set( "port_", 3306 );
+    connectionObject.set( "unix_socket_", "/var/run/mysqld/mysqld.sock" );
     connectionObject.set( "user_", "testbert" );
 
     // Customized time format used within the database.
@@ -30,10 +28,10 @@ void test13( std::filesystem::path _test_path )
 
     // ---------------------------------------------------------------
 
-    auto postgres_db = database::Postgres( connectionObject, timeFormats );
+    auto mysql_db = database::MySQL( connectionObject, timeFormats );
 
     auto population_sniffer = csv::Sniffer(
-        "postgres",
+        "mysql",
         {_test_path.string(), _test_path.string()},
         true,
         100,
@@ -46,26 +44,17 @@ void test13( std::filesystem::path _test_path )
 
     // std::cout << population_statement << std::endl;
 
-    postgres_db.execute( population_statement );
+    mysql_db.execute( population_statement );
 
     auto reader = csv::CSVReader( _test_path.string(), '\"', ',' );
 
-    postgres_db.read( "POPULATION", true, 0, &reader );
+    mysql_db.read( "POPULATION", true, 0, &reader );
 
-    const auto colnames = postgres_db.get_colnames( "POPULATION" );
-
-    for ( auto cname : colnames )
-        {
-            std::cout << cname << " ";
-        }
-
-    const auto obj = postgres_db.get_content( "POPULATION", 0, 99, 20 );
-
-    Poco::JSON::Stringifier::stringify( obj, std::cout );
+    mysql_db.drop_table( "POPULATION" );
 
     // ---------------------------------------------------------------
 
     std::cout << "| OK" << std::endl;
 }
 
-#endif  // DATABASE_TESTS_TEST13_HPP_
+#endif  // DATABASE_TESTS_TEST19_HPP_

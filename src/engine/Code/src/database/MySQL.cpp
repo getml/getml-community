@@ -51,7 +51,7 @@ std::vector<csv::Datatype> MySQL::get_coltypes(
 
 // ----------------------------------------------------------------------------
 
-/*Poco::JSON::Object Postgres::get_content(
+Poco::JSON::Object MySQL::get_content(
     const std::string& _tname,
     const std::int32_t _draw,
     const std::int32_t _start,
@@ -101,10 +101,12 @@ std::vector<csv::Datatype> MySQL::get_coltypes(
 
     const auto end = ( _start + _length > nrows ) ? nrows : _start + _length;
 
+    const auto query = make_get_content_query( _tname, colnames, begin, end );
+
     // ----------------------------------------
 
-    auto iterator = std::make_shared<PostgresIterator>(
-        make_connection(), colnames, time_formats_, _tname, "", begin, end );
+    auto iterator = std::make_shared<MySQLIterator>(
+        make_connection(), query, time_formats_ );
 
     // ----------------------------------------
 
@@ -131,7 +133,7 @@ std::vector<csv::Datatype> MySQL::get_coltypes(
     return obj;
 
     // ----------------------------------------
-}*/
+}
 
 // ----------------------------------------------------------------------------
 
@@ -157,14 +159,10 @@ csv::Datatype MySQL::interpret_field_type( const enum_field_types _type ) const
 
 // ----------------------------------------------------------------------------
 
-/*std::vector<std::string> Postgres::list_tables()
+std::vector<std::string> MySQL::list_tables()
 {
-    auto iterator = std::make_shared<PostgresIterator>(
-        make_connection(),
-        std::vector<std::string>( {"table_name"} ),
-        time_formats_,
-        "information_schema.tables",
-        "table_schema='public'" );
+    auto iterator = std::make_shared<MySQLIterator>(
+        make_connection(), "SHOW TABLES;", time_formats_ );
 
     auto tnames = std::vector<std::string>( 0 );
 
@@ -174,7 +172,44 @@ csv::Datatype MySQL::interpret_field_type( const enum_field_types _type ) const
         }
 
     return tnames;
-}*/
+}
+
+// ----------------------------------------------------------------------------
+
+std::string MySQL::make_get_content_query(
+    const std::string& _table,
+    const std::vector<std::string>& _colnames,
+    const std::int32_t _begin,
+    const std::int32_t _end ) const
+{
+    assert_true( _end >= _begin );
+
+    std::string query = "SELECT ";
+
+    for ( size_t i = 0; i < _colnames.size(); ++i )
+        {
+            query += _colnames[i];
+
+            if ( i != _colnames.size() - 1 )
+                {
+                    query += ",";
+                }
+
+            query += " ";
+        }
+
+    query += "FROM ";
+
+    query += _table;
+
+    query += " LIMIT " + std::to_string( _begin );
+
+    query += "," + std::to_string( _end - _begin );
+
+    query += ";";
+
+    return query;
+}
 
 // ----------------------------------------------------------------------------
 
