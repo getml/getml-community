@@ -17,7 +17,10 @@ MySQLIterator::MySQLIterator(
 {
     result_ = execute( _sql );
 
-    assert_true( result_ );
+    if ( !result_ )
+        {
+            throw std::runtime_error( "Query returned no result!" );
+        }
 
     num_cols_ = mysql_field_count( connection() );
 
@@ -81,9 +84,41 @@ std::shared_ptr<MYSQL_RES> MySQLIterator::execute(
             throw_error( connection() );
         }
 
-    auto raw_ptr = mysql_store_result( connection() );
+    auto result = std::shared_ptr<MYSQL_RES>();
 
-    auto result = std::shared_ptr<MYSQL_RES>( raw_ptr, mysql_free_result );
+    while ( true )
+        {
+            const auto raw_ptr = mysql_store_result( connection() );
+
+            if ( raw_ptr )
+                {
+                    result = std::shared_ptr<MYSQL_RES>(
+                        raw_ptr, mysql_free_result );
+                }
+            else
+                {
+                    result = std::shared_ptr<MYSQL_RES>();
+
+                    // if raw_ptr is null, that means that either some error
+                    // occurred, or there is no result.
+                    if ( mysql_field_count( connection() ) != 0 )
+                        {
+                            throw_error( connection() );
+                        }
+                }
+
+            const auto status = mysql_next_result( connection() );
+
+            // more results? -1 = no, > 0 = error, 0 = yes (keep looping)
+            if ( status < 0 )
+                {
+                    break;
+                }
+            else if ( status > 0 )
+                {
+                    throw_error( connection() );
+                }
+        }
 
     return result;
 }

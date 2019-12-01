@@ -16,7 +16,7 @@ void test18( std::filesystem::path _test_path )
     // Configure PostgreSQL to connect using the user and database
     // created just for this unit test.
     Poco::JSON::Object connectionObject;
-    connectionObject.set( "db_", "testbertstestbase" );
+    connectionObject.set( "dbname_", "testbertstestbase" );
     connectionObject.set( "host_", "localhost" );
     connectionObject.set( "passwd_", "testbert" );
     connectionObject.set( "port_", 3306 );

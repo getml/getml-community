@@ -13,7 +13,7 @@ class MySQL : public Connector
     MySQL(
         const Poco::JSON::Object& _obj,
         const std::vector<std::string>& _time_formats )
-        : db_( jsonutils::JSON::get_value<std::string>( _obj, "db_" ) ),
+        : dbname_( jsonutils::JSON::get_value<std::string>( _obj, "dbname_" ) ),
           host_( jsonutils::JSON::get_value<std::string>( _obj, "host_" ) ),
           passwd_( jsonutils::JSON::get_value<std::string>( _obj, "passwd_" ) ),
           port_( jsonutils::JSON::get_value<unsigned int>( _obj, "port_" ) ),
@@ -25,14 +25,14 @@ class MySQL : public Connector
     }
 
     MySQL(
-        const std::string& _db,
+        const std::string& _dbname,
         const std::string& _host,
         const std::string& _passwd,
         const unsigned int _port,
         const std::string& _unix_socket,
         const std::string& _user,
         const std::vector<std::string>& _time_formats )
-        : db_( _db ),
+        : dbname_( _dbname ),
           host_( _host ),
           passwd_( _passwd ),
           port_( _port ),
@@ -90,12 +90,7 @@ class MySQL : public Connector
     void execute( const std::string& _sql ) final
     {
         const auto conn = make_connection();
-        const auto len = static_cast<int>( _sql.size() );
-        const auto err = mysql_real_query( conn.get(), _sql.c_str(), len );
-        if ( err )
-            {
-                throw_error( conn );
-            }
+        exec( _sql, conn );
     }
 
     /// Returns the number of rows in the table signified by _tname.
@@ -130,6 +125,10 @@ class MySQL : public Connector
     // -------------------------------
 
    private:
+    /// Executes and SQL command given a connection.
+    std::shared_ptr<MYSQL_RES> exec(
+        const std::string& _sql, const std::shared_ptr<MYSQL>& _conn ) const;
+
     /// Parses a field for the CSV reader.
     csv::Datatype interpret_field_type( const enum_field_types _type ) const;
 
@@ -151,27 +150,6 @@ class MySQL : public Connector
     // -------------------------------
 
    private:
-    /// Executes and SQL command given a connection.
-    std::shared_ptr<MYSQL_RES> exec(
-        const std::string& _sql, const std::shared_ptr<MYSQL>& _conn ) const
-    {
-        const auto len = static_cast<int>( _sql.size() );
-
-        const auto err = mysql_real_query( _conn.get(), _sql.c_str(), len );
-
-        if ( err )
-            {
-                throw_error( _conn );
-            }
-
-        auto raw_ptr = mysql_store_result( _conn.get() );
-
-        const auto result =
-            std::shared_ptr<MYSQL_RES>( raw_ptr, mysql_free_result );
-
-        return result;
-    }
-
     /// Returns a new connection based on the connection_string_
     std::shared_ptr<MYSQL> make_connection() const
     {
@@ -184,7 +162,7 @@ class MySQL : public Connector
             host_.c_str(),
             user_.c_str(),
             passwd_.c_str(),
-            db_.c_str(),
+            dbname_.c_str(),
             port_,
             unix_socket_.c_str(),
             CLIENT_MULTI_STATEMENTS | CLIENT_LOCAL_FILES );
@@ -212,7 +190,7 @@ class MySQL : public Connector
 
    private:
     /// The database to be accessed.
-    const std::string db_;
+    const std::string dbname_;
 
     /// The host address.
     const std::string host_;

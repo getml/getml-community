@@ -5,6 +5,57 @@ namespace database
 {
 // ----------------------------------------------------------------------------
 
+std::shared_ptr<MYSQL_RES> MySQL::exec(
+    const std::string& _sql, const std::shared_ptr<MYSQL>& _conn ) const
+{
+    const auto len = static_cast<int>( _sql.size() );
+
+    const auto err = mysql_real_query( _conn.get(), _sql.c_str(), len );
+
+    if ( err )
+        {
+            throw_error( _conn );
+        }
+
+    auto result = std::shared_ptr<MYSQL_RES>();
+
+    while ( true )
+        {
+            const auto raw_ptr = mysql_store_result( _conn.get() );
+
+            if ( raw_ptr )
+                {
+                    result = std::shared_ptr<MYSQL_RES>(
+                        raw_ptr, mysql_free_result );
+                }
+            else
+                {
+                    result = std::shared_ptr<MYSQL_RES>();
+
+                    if ( mysql_field_count( _conn.get() ) != 0 )
+                        {
+                            throw_error( _conn );
+                        }
+                }
+
+            const auto status = mysql_next_result( _conn.get() );
+
+            // more results? -1 = no, > 0 = error, 0 = yes (keep looping)
+            if ( status < 0 )
+                {
+                    break;
+                }
+            else if ( status > 0 )
+                {
+                    throw_error( _conn );
+                }
+        }
+
+    return result;
+}
+
+// ----------------------------------------------------------------------------
+
 std::vector<std::string> MySQL::get_colnames( const std::string& _table ) const
 {
     const std::string sql = "SELECT * FROM " + _table + " LIMIT 0;";
@@ -12,6 +63,11 @@ std::vector<std::string> MySQL::get_colnames( const std::string& _table ) const
     const auto conn = make_connection();
 
     const auto result = exec( sql, conn );
+
+    if ( !result )
+        {
+            throw std::runtime_error( "Query returned no result!" );
+        }
 
     const auto num_cols = mysql_num_fields( result.get() );
 
@@ -35,6 +91,11 @@ std::vector<csv::Datatype> MySQL::get_coltypes(
     const auto conn = make_connection();
 
     const auto result = exec( sql, conn );
+
+    if ( !result )
+        {
+            throw std::runtime_error( "Query returned no result!" );
+        }
 
     const auto num_cols = mysql_num_fields( result.get() );
 
