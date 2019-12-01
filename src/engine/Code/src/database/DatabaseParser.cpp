@@ -20,6 +20,10 @@ std::shared_ptr<Connector> DatabaseParser::parse(
 
             return std::make_shared<Sqlite3>( name, time_formats );
         }
+    else if ( db == "mysql" || db == "mariadb" )
+        {
+            return std::make_shared<MySQL>( _obj, time_formats );
+        }
     else if ( db == "postgres" )
         {
 #if ( defined( _WIN32 ) || defined( _WIN64 ) )
