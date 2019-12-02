@@ -274,47 +274,21 @@ std::string MySQL::make_get_content_query(
 
 // ----------------------------------------------------------------------------
 
-std::string MySQL::make_load_data_query(
-    const std::string& _table,
-    const std::string& _fname,
-    const std::vector<std::string>& _colnames,
-    const csv::Reader* _reader ) const
+std::string MySQL::make_bulk_insert_query(
+    const std::string& _table, const std::vector<std::string>& _colnames ) const
 {
-    std::string query = "LOAD DATA LOCAL INFILE '" + _fname + "' INTO TABLE " +
-                        _table + " FIELDS TERMINATED BY '" + _reader->sep() +
-                        "' ENCLOSED BY '" + _reader->quotechar() +
-                        "' LINES TERMINATED BY '\n' IGNORE 0 LINES (";
+    std::string query = "INSERT INTO " + _table + "(";
 
-    for ( size_t i = 0; i < _colnames.size(); ++i )
+    for ( const auto name : _colnames )
         {
-            query += "@y" + _colnames[i];
+            query += name;
 
-            if ( i == _colnames.size() - 1 )
-                {
-                    query += ") ";
-                }
-            else
-                {
-                    query += ", ";
-                }
+            query += ',';
         }
 
-    query += "SET ";
+    query.back() = ')';
 
-    for ( size_t i = 0; i < _colnames.size(); ++i )
-        {
-            query +=
-                _colnames[i] + " = nullif( " + "@y" + _colnames[i] + ", '')";
-
-            if ( i == _colnames.size() - 1 )
-                {
-                    query += ";";
-                }
-            else
-                {
-                    query += ", ";
-                }
-        }
+    query += " VALUES ";
 
     return query;
 }
@@ -361,45 +335,59 @@ void MySQL::read(
     // ----------------------------------------------------------------
     // Create a temporary file and insert the parsed CSV, line by line.
 
-    const auto tempfile = Poco::TemporaryFile();
+    const auto query = make_bulk_insert_query( _table, colnames );
 
-    std::ofstream ofs( tempfile.path(), std::ofstream::out );
+    execute( "START TRANSACTION;" );
 
     while ( !_reader->eof() )
         {
-            const std::vector<std::string> line = _reader->next_line();
+            const size_t bulk_size = 100000;
 
-            ++line_count;
+            auto current_query = query;
 
-            if ( line.size() == 0 )
+            for ( size_t i = 0; i < bulk_size; ++i )
                 {
-                    continue;
+                    const std::vector<std::string> line = _reader->next_line();
+
+                    ++line_count;
+
+                    if ( line.size() == 0 )
+                        {
+                            continue;
+                        }
+                    else if ( line.size() != coltypes.size() )
+                        {
+                            std::cout << "Corrupted line: " << line_count
+                                      << ". Expected " << colnames.size()
+                                      << " fields, saw " << line.size() << "."
+                                      << std::endl;
+
+                            continue;
+                        }
+
+                    const std::string buffer = CSVBuffer::make_buffer(
+                        line, coltypes, ',', '"', true, true );
+
+                    current_query += '(' + buffer;
+
+                    // The last line of the buffer
+                    // is always a newline character.
+                    current_query.back() = ')';
+
+                    current_query += ',';
+
+                    if ( _reader->eof() )
+                        {
+                            break;
+                        }
                 }
-            else if ( line.size() != coltypes.size() )
-                {
-                    std::cout << "Corrupted line: " << line_count
-                              << ". Expected " << colnames.size()
-                              << " fields, saw " << line.size() << "."
-                              << std::endl;
 
-                    continue;
-                }
+            current_query.back() = ';';
 
-            const std::string buffer = CSVBuffer::make_buffer(
-                line, coltypes, _reader->sep(), _reader->quotechar() );
-
-            ofs << buffer;
+            execute( current_query );
         }
 
-    ofs.close();
-
-    // ----------------------------------------------------------------
-    // Read the temporary file into MySQL.
-
-    const auto query =
-        make_load_data_query( _table, tempfile.path(), colnames, _reader );
-
-    execute( query );
+    execute( "COMMIT;" );
 
     // ----------------------------------------------------------------
 }

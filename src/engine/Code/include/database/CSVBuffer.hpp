@@ -13,7 +13,9 @@ class CSVBuffer
         const std::vector<std::string>& _line,
         const std::vector<csv::Datatype>& _coltypes,
         const char _sep,
-        const char _quotechar );
+        const char _quotechar,
+        const bool _always_enclose_str,
+        const bool _explicit_null );
 
    private:
     /// Parses a raw field according to its datatype.
@@ -21,7 +23,9 @@ class CSVBuffer
         const std::string& _raw_field,
         const csv::Datatype _datatype,
         const char _sep,
-        const char _quotechar );
+        const char _quotechar,
+        const bool _always_enclose_str,
+        const bool _explicit_null );
 
     // -------------------------------
 };

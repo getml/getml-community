@@ -324,7 +324,12 @@ void Postgres::read(
                         }
 
                     const std::string buffer = CSVBuffer::make_buffer(
-                        line, coltypes, _reader->sep(), _reader->quotechar() );
+                        line,
+                        coltypes,
+                        _reader->sep(),
+                        _reader->quotechar(),
+                        false,
+                        false );
 
                     const auto success = PQputCopyData(
                         conn.get(),

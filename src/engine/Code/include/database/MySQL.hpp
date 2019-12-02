@@ -132,20 +132,18 @@ class MySQL : public Connector
     /// Parses a field for the CSV reader.
     csv::Datatype interpret_field_type( const enum_field_types _type ) const;
 
+    /// Prepares a INSERT INTO .. VALUES ... query
+    /// to insert a large CSV file.
+    std::string make_bulk_insert_query(
+        const std::string& _table,
+        const std::vector<std::string>& _colnames ) const;
+
     /// Prepares a query to get the content of a table.
     std::string make_get_content_query(
         const std::string& _table,
         const std::vector<std::string>& _colnames,
         const std::int32_t _begin,
         const std::int32_t _end ) const;
-
-    /// Prepares a LOAD DATA LOCAL INFILE query to load the data
-    /// into the data base from a temporary file.
-    std::string make_load_data_query(
-        const std::string& _table,
-        const std::string& _fname,
-        const std::vector<std::string>& _colnames,
-        const csv::Reader* _reader ) const;
 
     // -------------------------------
 
@@ -165,7 +163,7 @@ class MySQL : public Connector
             dbname_.c_str(),
             port_,
             unix_socket_.c_str(),
-            CLIENT_MULTI_STATEMENTS | CLIENT_LOCAL_FILES );
+            CLIENT_MULTI_STATEMENTS );
 
         if ( !res )
             {
