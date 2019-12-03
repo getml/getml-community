@@ -20,7 +20,8 @@ std::shared_ptr<Predictor> PredictorParser::parse(
             return std::make_shared<LogisticRegression>(
                 std::make_shared<LinearHyperparams>( _json_obj ), _impl );
         }
-    else if ( type == "XGBoostPredictor" )
+    else if ( type == "XGBoostPredictor" || type == "XGBoostClassifier" || 
+	      type == "XGBoostRegressor" )
         {
             return std::make_shared<XGBoostPredictor>(
                 XGBoostHyperparams( _json_obj ), _impl );
