@@ -24,11 +24,11 @@ std::shared_ptr<Connector> DatabaseParser::parse(
         {
             return std::make_shared<MySQL>( _obj, time_formats );
         }
-    else if ( db == "postgres" )
+    else if ( db == "postgres" || db == "greenplum" )
         {
 #if ( defined( _WIN32 ) || defined( _WIN64 ) )
             throw std::invalid_argument(
-                "PostgreSQL is not supported on Windows!" );
+                "PostgreSQL and Greenplum are not supported on Windows!" );
 
             return std::shared_ptr<Connector>();
 #else
