@@ -31,6 +31,39 @@ void DatabaseManager::execute( Poco::Net::StreamSocket* _socket )
 
 // ------------------------------------------------------------------------
 
+void DatabaseManager::get(
+    const std::string& _name, Poco::Net::StreamSocket* _socket )
+{
+    const auto query = communication::Receiver::recv_string( _socket );
+
+    auto db_iterator = connector()->select( query );
+
+    const auto colnames = db_iterator->colnames();
+
+    std::vector<Poco::JSON::Array> columns( colnames.size() );
+
+    while ( !db_iterator->end() )
+        {
+            for ( auto& col : columns )
+                {
+                    col.add( db_iterator->get_string() );
+                }
+        }
+
+    Poco::JSON::Object obj;
+
+    for ( size_t i = 0; i < columns.size(); ++i )
+        {
+            obj.set( colnames[i], columns[i] );
+        }
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    communication::Sender::send_string( JSON::stringify( obj ), _socket );
+}
+
+// ------------------------------------------------------------------------
+
 void DatabaseManager::get_colnames(
     const std::string& _name, Poco::Net::StreamSocket* _socket )
 {

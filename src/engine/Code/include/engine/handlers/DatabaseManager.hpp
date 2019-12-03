@@ -37,6 +37,9 @@ class DatabaseManager
     /// Runs a query on the database.
     void execute( Poco::Net::StreamSocket* _socket );
 
+    /// Returns the contents of an SQL query in JSON format.
+    void get( const std::string& _name, Poco::Net::StreamSocket* _socket );
+
     /// Lists the column names of the table signified by _name.
     void get_colnames(
         const std::string& _name, Poco::Net::StreamSocket* _socket );

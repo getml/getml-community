@@ -61,6 +61,10 @@ void RequestHandler::run()
                 {
                     database_manager().execute( &socket() );
                 }
+            else if ( type == "Database.get" )
+                {
+                    database_manager().get( name, &socket() );
+                }
             else if ( type == "Database.get_colnames" )
                 {
                     database_manager().get_colnames( name, &socket() );
