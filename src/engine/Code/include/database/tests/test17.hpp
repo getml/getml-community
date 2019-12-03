@@ -28,7 +28,8 @@ void test17( std::filesystem::path _test_path )
 
     // ---------------------------------------------------------------
 
-    auto mysql_db = database::MySQL( connectionObject, timeFormats );
+    auto mysql_db =
+        database::MySQL( connectionObject, "testbert", timeFormats );
 
     auto population_sniffer = csv::Sniffer(
         "mysql",

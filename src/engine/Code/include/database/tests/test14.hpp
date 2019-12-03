@@ -22,7 +22,8 @@ void test14()
 
     // ---------------------------------------------------------------
 
-    auto postgres_db = database::Postgres( connectionObject, timeFormats );
+    auto postgres_db =
+        database::Postgres( connectionObject, "testbert", timeFormats );
 
     const auto table_names = postgres_db.list_tables();
 

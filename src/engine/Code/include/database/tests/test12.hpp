@@ -28,7 +28,8 @@ void test12( std::filesystem::path _test_path )
 
     // ---------------------------------------------------------------
 
-    auto postgres_db = database::Postgres( connectionObject, timeFormats );
+    auto postgres_db =
+        database::Postgres( connectionObject, "testbert", timeFormats );
 
     auto population_sniffer = csv::Sniffer(
         "postgres",

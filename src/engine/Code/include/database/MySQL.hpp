@@ -12,10 +12,11 @@ class MySQL : public Connector
    public:
     MySQL(
         const Poco::JSON::Object& _obj,
+        const std::string& _passwd,
         const std::vector<std::string>& _time_formats )
         : dbname_( jsonutils::JSON::get_value<std::string>( _obj, "dbname_" ) ),
           host_( jsonutils::JSON::get_value<std::string>( _obj, "host_" ) ),
-          passwd_( jsonutils::JSON::get_value<std::string>( _obj, "passwd_" ) ),
+          passwd_( _passwd ),
           port_( jsonutils::JSON::get_value<unsigned int>( _obj, "port_" ) ),
           time_formats_( _time_formats ),
           unix_socket_(

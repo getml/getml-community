@@ -6,7 +6,7 @@ namespace database
 // ----------------------------------------------------------------------------
 
 std::shared_ptr<Connector> DatabaseParser::parse(
-    const Poco::JSON::Object& _obj )
+    const Poco::JSON::Object& _obj, const std::string& _password )
 {
     const auto db = jsonutils::JSON::get_value<std::string>( _obj, "db_" );
 
@@ -22,7 +22,7 @@ std::shared_ptr<Connector> DatabaseParser::parse(
         }
     else if ( db == "mysql" || db == "mariadb" )
         {
-            return std::make_shared<MySQL>( _obj, time_formats );
+            return std::make_shared<MySQL>( _obj, _password, time_formats );
         }
     else if ( db == "postgres" || db == "greenplum" )
         {
@@ -32,7 +32,7 @@ std::shared_ptr<Connector> DatabaseParser::parse(
 
             return std::shared_ptr<Connector>();
 #else
-            return std::make_shared<Postgres>( _obj, time_formats );
+            return std::make_shared<Postgres>( _obj, _password, time_formats );
 #endif
         }
     else

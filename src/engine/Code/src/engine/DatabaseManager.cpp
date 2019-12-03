@@ -135,6 +135,24 @@ void DatabaseManager::list_tables( Poco::Net::StreamSocket* _socket )
 
 // ----------------------------------------------------------------------------
 
+void DatabaseManager::new_db(
+    const Poco::JSON::Object& _cmd, Poco::Net::StreamSocket* _socket )
+{
+    const auto password = communication::Receiver::recv_string( _socket );
+
+    multithreading::WriteLock write_lock( read_write_lock_ );
+
+    connector_ = database::DatabaseParser::parse( _cmd, password );
+
+    write_lock.unlock();
+
+    post_tables();
+
+    communication::Sender::send_string( "Success!", _socket );
+}
+
+// ----------------------------------------------------------------------------
+
 std::string DatabaseManager::post_tables()
 {
     const auto tables = connector()->list_tables();

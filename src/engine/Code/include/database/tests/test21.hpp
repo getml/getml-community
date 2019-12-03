@@ -22,7 +22,8 @@ void test21()
 
     // ---------------------------------------------------------------
 
-    auto mysql_db = database::MySQL( connectionObject, timeFormats );
+    auto mysql_db =
+        database::MySQL( connectionObject, "testbert", timeFormats );
 
     const auto table_names = mysql_db.list_tables();
 

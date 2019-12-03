@@ -19,7 +19,6 @@ void test11( std::filesystem::path _test_path )
     connectionObject.set( "dbname_", "testbertstestbase" );
     connectionObject.set( "host_", "localhost" );
     connectionObject.set( "hostaddr_", "127.0.0.1" );
-    connectionObject.set( "password_", "testbert" );
     connectionObject.set( "port_", 5432 );
     connectionObject.set( "user_", "testbert" );
 
@@ -29,7 +28,8 @@ void test11( std::filesystem::path _test_path )
 
     // ---------------------------------------------------------------
 
-    auto postgres_db = database::Postgres( connectionObject, timeFormats );
+    auto postgres_db =
+        database::Postgres( connectionObject, "testbert", timeFormats );
 
     auto population_sniffer = csv::Sniffer(
         "postgres",

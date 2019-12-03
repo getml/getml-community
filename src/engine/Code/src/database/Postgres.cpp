@@ -210,7 +210,8 @@ std::vector<std::string> Postgres::list_tables()
 
 // ----------------------------------------------------------------------------
 
-std::string Postgres::make_connection_string( const Poco::JSON::Object& _obj )
+std::string Postgres::make_connection_string(
+    const Poco::JSON::Object& _obj, const std::string& _passwd )
 {
     const auto host = jsonutils::JSON::get_value<std::string>( _obj, "host_" );
 
@@ -224,9 +225,6 @@ std::string Postgres::make_connection_string( const Poco::JSON::Object& _obj )
 
     const auto user = jsonutils::JSON::get_value<std::string>( _obj, "user_" );
 
-    const auto password =
-        jsonutils::JSON::get_value<std::string>( _obj, "password_" );
-
     auto connection_string = std::string( "host=" ) + host + " ";
 
     connection_string += std::string( "hostaddr=" ) + hostaddr + " ";
@@ -237,7 +235,7 @@ std::string Postgres::make_connection_string( const Poco::JSON::Object& _obj )
 
     connection_string += std::string( "user=" ) + user + " ";
 
-    connection_string += std::string( "password=" ) + password;
+    connection_string += std::string( "password=" ) + _passwd;
 
     return connection_string;
 }
