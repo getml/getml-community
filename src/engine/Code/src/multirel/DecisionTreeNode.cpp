@@ -256,12 +256,36 @@ std::vector<Float> DecisionTreeNode::calculate_critical_values_discrete(
 
     if ( min > max )
         {
-            return std::vector<Float>( 0, 1 );
+            return std::vector<Float>( 0.0, 1 );
         }
 
     // ---------------------------------------------------------------------------
+    // If the number of critical values is too large, then use the numerical
+    // algorithm instead.
 
-    Int num_critical_values = static_cast<Int>( max - min + 1 );
+    const auto num_critical_values = static_cast<Int>( max - min + 1 );
+
+    const auto num_critical_values_numerical =
+        calculate_num_critical_values( _sample_size );
+
+    if ( num_critical_values_numerical < num_critical_values )
+        {
+            auto critical_values = calculate_critical_values_numerical(
+                num_critical_values_numerical, min, max );
+
+            for ( auto &c : critical_values )
+                {
+                    c = std::floor( c );
+                }
+
+            debug_log(
+                "calculate_critical_values_discrete (using numerical "
+                "approach)...done" );
+
+            return critical_values;
+        }
+
+    // ---------------------------------------------------------------------------
 
     debug_log(
         "num_critical_values: " + std::to_string( num_critical_values ) );
@@ -323,7 +347,8 @@ std::vector<Float> DecisionTreeNode::calculate_critical_values_numerical(
     if ( min > max )
         {
             debug_log(
-                "calculate_critical_values_discrete...done (edge case)." );
+                "calculate_critical_values_numerical.distance..done (edge "
+                "case)." );
 
             return std::vector<Float>( 0 );
         }
@@ -332,21 +357,27 @@ std::vector<Float> DecisionTreeNode::calculate_critical_values_numerical(
 
     Int num_critical_values = calculate_num_critical_values( _sample_size );
 
-    Float step_size =
-        ( max - min ) / static_cast<Float>( num_critical_values + 1 );
-
-    std::vector<Float> critical_values( num_critical_values );
-
-    for ( Int i = 0; i < num_critical_values; ++i )
-        {
-            critical_values[i] = min + static_cast<Float>( i + 1 ) * step_size;
-        }
-
-    debug_log( "calculate_critical_values_discrete...done." );
-
-    return critical_values;
+    return calculate_critical_values_numerical( num_critical_values, min, max );
 
     // ---------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<Float> DecisionTreeNode::calculate_critical_values_numerical(
+    const Int _num_critical_values, const Float _min, const Float _max )
+{
+    Float step_size =
+        ( _max - _min ) / static_cast<Float>( _num_critical_values + 1 );
+
+    std::vector<Float> critical_values( _num_critical_values );
+
+    for ( Int i = 0; i < _num_critical_values; ++i )
+        {
+            critical_values[i] = _min + static_cast<Float>( i + 1 ) * step_size;
+        }
+
+    return critical_values;
 }
 
 // ----------------------------------------------------------------------------

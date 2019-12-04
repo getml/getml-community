@@ -491,6 +491,10 @@ class DecisionTreeNode
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end );
 
+    /// Does the actual job of calculating the critical values.
+    std::vector<Float> calculate_critical_values_numerical(
+        const Int _num_critical_values, const Float _min, const Float _max );
+
     /// Given the sorted sample containers, this returns the critical_values
     /// for the moving time windows (lag variables).
     std::vector<Float> calculate_critical_values_window(
