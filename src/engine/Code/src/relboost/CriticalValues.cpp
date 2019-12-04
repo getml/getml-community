@@ -177,8 +177,33 @@ std::vector<Float> CriticalValues::calc_discrete(
         }
 
     // ---------------------------------------------------------------------------
+    // We want to prevent there being to many critical values.
 
-    std::vector<Float> critical_values( static_cast<int>( max - min ) );
+    auto dist = static_cast<Int>( std::distance( _begin, _end ) );
+
+    utils::Reducer::reduce( std::plus<Int>(), &dist, _comm );
+
+    const size_t num_critical_values_numerical =
+        calc_num_critical_values( dist );
+
+    const auto num_critical_values = static_cast<size_t>( max - min );
+
+    if ( num_critical_values_numerical < num_critical_values )
+        {
+            auto critical_values =
+                calc_numerical( num_critical_values_numerical, min, max );
+
+            for ( auto& c : critical_values )
+                {
+                    c = std::floor( c );
+                }
+
+            return critical_values;
+        }
+
+    // ---------------------------------------------------------------------------
+
+    std::vector<Float> critical_values( num_critical_values );
 
     for ( size_t i = 0; i < critical_values.size(); ++i )
         {
@@ -257,21 +282,29 @@ std::vector<Float> CriticalValues::calc_numerical(
 
     utils::Reducer::reduce( std::plus<Int>(), &dist, _comm );
 
-    size_t num_critical_values = calc_num_critical_values( dist );
+    const size_t num_critical_values = calc_num_critical_values( dist );
 
+    return calc_numerical( num_critical_values, min, max );
+
+    // ---------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<Float> CriticalValues::calc_numerical(
+    const size_t _num_critical_values, const Float _min, const Float _max )
+{
     Float step_size =
-        ( max - min ) / static_cast<Float>( num_critical_values + 1 );
+        ( _max - _min ) / static_cast<Float>( _num_critical_values + 1 );
 
-    std::vector<Float> critical_values( num_critical_values );
+    std::vector<Float> critical_values( _num_critical_values );
 
-    for ( size_t i = 0; i < num_critical_values; ++i )
+    for ( size_t i = 0; i < _num_critical_values; ++i )
         {
-            critical_values[i] = max - static_cast<Float>( i + 1 ) * step_size;
+            critical_values[i] = _max - static_cast<Float>( i + 1 ) * step_size;
         }
 
     return critical_values;
-
-    // ---------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -327,17 +360,7 @@ std::vector<Float> CriticalValues::calc_subfeatures(
 
     size_t num_critical_values = calc_num_critical_values( dist );
 
-    Float step_size =
-        ( max - min ) / static_cast<Float>( num_critical_values + 1 );
-
-    std::vector<Float> critical_values( num_critical_values );
-
-    for ( size_t i = 0; i < num_critical_values; ++i )
-        {
-            critical_values[i] = max - static_cast<Float>( i + 1 ) * step_size;
-        }
-
-    return critical_values;
+    return calc_numerical( num_critical_values, min, max );
 
     // ---------------------------------------------------------------------------
 }

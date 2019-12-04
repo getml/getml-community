@@ -117,6 +117,10 @@ class CriticalValues
     // --------------------------------------------------------------------
 
    private:
+    /// Does the actual job of calculating the numerical values.
+    static std::vector<Float> calc_numerical(
+        const size_t _num_critical_values, const Float _min, const Float _max );
+
     /// Finds the minimum and the maximum needed for calculating the
     /// critical values (categorical).
     static void find_min_max(
