@@ -1305,7 +1305,7 @@ void DecisionTreeNode::try_same_units_categorical(
                 {
                     if ( _output.categorical_unit( output_col ) == "" ||
                          _output.categorical_unit( output_col ) !=
-                             _output.categorical_unit( input_col ) )
+                             _input.categorical_unit( input_col ) )
                         {
                             continue;
                         }
@@ -1364,7 +1364,7 @@ void DecisionTreeNode::try_same_units_discrete(
                 {
                     if ( _output.discrete_unit( output_col ) == "" ||
                          _output.discrete_unit( output_col ) !=
-                             _output.discrete_unit( input_col ) )
+                             _input.discrete_unit( input_col ) )
                         {
                             continue;
                         }
@@ -1491,7 +1491,7 @@ void DecisionTreeNode::try_same_units_numerical(
                 {
                     if ( _output.numerical_unit( output_col ) == "" ||
                          _output.numerical_unit( output_col ) !=
-                             _output.numerical_unit( input_col ) )
+                             _input.numerical_unit( input_col ) )
                         {
                             continue;
                         }
