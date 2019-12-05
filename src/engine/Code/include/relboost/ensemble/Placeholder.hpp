@@ -45,6 +45,11 @@ struct Placeholder
 
     // --------------------------------------------------------
 
+    /// Makes sure that all joined tables are found in the peripheral names.
+    void check_data_model(
+        const std::vector<std::string>& _peripheral_names,
+        const bool _is_population ) const;
+
     /// Checks the length of the vectors.
     void check_vector_length();
 

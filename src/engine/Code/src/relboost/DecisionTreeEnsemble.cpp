@@ -17,6 +17,8 @@ DecisionTreeEnsemble::DecisionTreeEnsemble(
 {
     loss_function_ = lossfunctions::LossFunctionParser::parse(
         _hyperparameters->loss_function_, impl().hyperparameters_, targets_ );
+
+    placeholder().check_data_model( peripheral_names(), true );
 }
 
 // ----------------------------------------------------------------------------

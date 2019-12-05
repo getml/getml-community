@@ -13,6 +13,7 @@ DecisionTreeEnsemble::DecisionTreeEnsemble(
     const std::shared_ptr<const decisiontrees::Placeholder> &_placeholder )
     : impl_( _categories, _hyperparameters, *_peripheral, *_placeholder )
 {
+    placeholder().check_data_model( peripheral_names(), true );
 }
 
 // ----------------------------------------------------------------------------
@@ -30,6 +31,7 @@ DecisionTreeEnsemble::DecisionTreeEnsemble(
               *JSON::get_object( _json_obj, "placeholder_" ) ) )
 {
     *this = from_json_obj( _json_obj );
+    placeholder().check_data_model( peripheral_names(), true );
 }
 
 // ----------------------------------------------------------------------------

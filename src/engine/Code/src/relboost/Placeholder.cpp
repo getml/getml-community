@@ -6,6 +6,37 @@ namespace ensemble
 {
 // ----------------------------------------------------------------------------
 
+void Placeholder::check_data_model(
+    const std::vector<std::string>& _peripheral_names,
+    const bool _is_population ) const
+{
+    if ( _is_population && joined_tables_.size() == 0 )
+        {
+            throw std::invalid_argument(
+                "The population placeholder contains no joined tables!" );
+        }
+
+    for ( const auto& joined_table : joined_tables_ )
+        {
+            const auto it = std::find(
+                _peripheral_names.begin(),
+                _peripheral_names.end(),
+                joined_table.name_ );
+
+            if ( it == _peripheral_names.end() )
+                {
+                    throw std::invalid_argument(
+                        "Placeholder '" + joined_table.name_ +
+                        "' is contained in the relational tree, but not among "
+                        "the peripheral placeholders!" );
+                }
+
+            joined_table.check_data_model( _peripheral_names, false );
+        }
+}
+
+// ----------------------------------------------------------------------------
+
 void Placeholder::check_vector_length()
 {
     const size_t expected = joined_tables_.size();
