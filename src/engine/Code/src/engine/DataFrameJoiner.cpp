@@ -11,6 +11,11 @@ void DataFrameJoiner::add_all(
     const std::vector<size_t>& _rindices,
     containers::DataFrame* _joined_df )
 {
+    if ( _rindices.size() == 0 )
+        {
+            return;
+        }
+
     for ( size_t i = 0; i < _df.num_categoricals(); ++i )
         {
             if ( _joined_df->has( _df.categorical( i ).name() ) )
@@ -140,6 +145,11 @@ void DataFrameJoiner::add_col(
     const std::string& _as,
     containers::DataFrame* _joined_df )
 {
+    if ( _rindices.size() == 0 )
+        {
+            return;
+        }
+
     if ( _role == "categorical" )
         {
             if ( _joined_df->has( _as ) )
@@ -475,6 +485,8 @@ containers::DataFrame DataFrameJoiner::join(
                 _how,
                 &begin );
 
+            assert_true( rindices1.size() == rindices2.size() );
+
             auto temp_df = containers::DataFrame(
                 _name, _categories, _join_keys_encoding );
 
@@ -521,6 +533,8 @@ containers::DataFrame DataFrameJoiner::join(
         }
 
     // ------------------------------------------------------------------------
+
+    assert_true( joined_df );
 
     joined_df->create_indices();
 
@@ -572,7 +586,7 @@ DataFrameJoiner::make_row_indices(
 
     std::vector<size_t> rindices1, rindices2;
 
-    for ( size_t& ix1 = *_begin; ix1 < _df1.nrows(); ++ix1 )
+    for ( size_t ix1 = *_begin; ix1 < _df1.nrows(); ++ix1, ++( *_begin ) )
         {
             assert_true( rindices1.size() == rindices2.size() );
 
@@ -611,7 +625,7 @@ DataFrameJoiner::make_row_indices(
                 }
         }
 
-    return std::pair( rindices1, rindices2 );
+    return std::make_pair( rindices1, rindices2 );
 }
 
 // ----------------------------------------------------------------------------
