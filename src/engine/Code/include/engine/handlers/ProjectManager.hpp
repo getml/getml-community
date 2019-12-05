@@ -48,12 +48,6 @@ class ProjectManager
     // ------------------------------------------------------------------------
 
    public:
-    /// Adds a new Multirel model to the project.
-    void add_multirel_model(
-        const std::string& _name,
-        const Poco::JSON::Object& _cmd,
-        Poco::Net::StreamSocket* _socket );
-
     /// Adds a new data frame
     void add_data_frame(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
@@ -78,6 +72,12 @@ class ProjectManager
 
     /// Adds a new data frame generated from a query.
     void add_data_frame_from_query(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
+    /// Adds a new Multirel model to the project.
+    void add_multirel_model(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );

@@ -6,45 +6,6 @@ namespace handlers
 {
 // ------------------------------------------------------------------------
 
-void ProjectManager::add_multirel_model(
-    const std::string& _name,
-    const Poco::JSON::Object& _cmd,
-    Poco::Net::StreamSocket* _socket )
-{
-    if ( project_directory_ == "" )
-        {
-            throw std::invalid_argument( "You have not set a project!" );
-        }
-
-    const auto hyperparameters_obj =
-        JSON::get_object( _cmd, "hyperparameters_" );
-
-    const auto hyperparameters =
-        std::make_shared<multirel::descriptors::Hyperparameters>(
-            *hyperparameters_obj );
-
-    const auto peripheral = std::make_shared<std::vector<std::string>>(
-        JSON::array_to_vector<std::string>(
-            JSON::get_array( _cmd, "peripheral_" ) ) );
-
-    const auto placeholder =
-        std::make_shared<multirel::decisiontrees::Placeholder>(
-            JSON::get_object( _cmd, "placeholder_" ) );
-
-    const auto model = models::MultirelModel(
-        multirel::ensemble::DecisionTreeEnsemble(
-            categories_->vector(), hyperparameters, peripheral, placeholder ),
-        *hyperparameters_obj );
-
-    set_multirel_model( _name, model, false );
-
-    monitor_->send( "postmultirelmodel", model.to_monitor( _name ) );
-
-    engine::communication::Sender::send_string( "Success!", _socket );
-}
-
-// ------------------------------------------------------------------------
-
 void ProjectManager::add_data_frame(
     const std::string& _name, Poco::Net::StreamSocket* _socket )
 {
@@ -143,6 +104,46 @@ void ProjectManager::add_data_frame_from_query(
 
     monitor_->send( "postdataframe", data_frames()[_name].to_monitor() );
 }
+
+// ------------------------------------------------------------------------
+
+void ProjectManager::add_multirel_model(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    if ( project_directory_ == "" )
+        {
+            throw std::invalid_argument( "You have not set a project!" );
+        }
+
+    const auto hyperparameters_obj =
+        JSON::get_object( _cmd, "hyperparameters_" );
+
+    const auto hyperparameters =
+        std::make_shared<multirel::descriptors::Hyperparameters>(
+            *hyperparameters_obj );
+
+    const auto peripheral = std::make_shared<std::vector<std::string>>(
+        JSON::array_to_vector<std::string>(
+            JSON::get_array( _cmd, "peripheral_" ) ) );
+
+    const auto placeholder =
+        std::make_shared<multirel::decisiontrees::Placeholder>(
+            JSON::get_object( _cmd, "placeholder_" ) );
+
+    const auto model = models::MultirelModel(
+        multirel::ensemble::DecisionTreeEnsemble(
+            categories_->vector(), hyperparameters, peripheral, placeholder ),
+        *hyperparameters_obj );
+
+    set_multirel_model( _name, model, false );
+
+    monitor_->send( "postmultirelmodel", model.to_monitor( _name ) );
+
+    engine::communication::Sender::send_string( "Success!", _socket );
+}
+
 // ------------------------------------------------------------------------
 
 void ProjectManager::add_relboost_model(
