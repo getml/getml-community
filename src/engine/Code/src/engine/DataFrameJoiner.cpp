@@ -11,11 +11,6 @@ void DataFrameJoiner::add_all(
     const std::vector<size_t>& _rindices,
     containers::DataFrame* _joined_df )
 {
-    if ( _rindices.size() == 0 )
-        {
-            return;
-        }
-
     for ( size_t i = 0; i < _df.num_categoricals(); ++i )
         {
             if ( _joined_df->has( _df.categorical( i ).name() ) )
@@ -145,11 +140,6 @@ void DataFrameJoiner::add_col(
     const std::string& _as,
     containers::DataFrame* _joined_df )
 {
-    if ( _rindices.size() == 0 )
-        {
-            return;
-        }
-
     if ( _role == "categorical" )
         {
             if ( _joined_df->has( _as ) )
@@ -461,15 +451,8 @@ containers::DataFrame DataFrameJoiner::join(
 
     // ------------------------------------------------------------------------
 
-    auto joined_df = std::optional<containers::DataFrame>();
-
-    // ------------------------------------------------------------------------
-
-    if ( _df1.nrows() == 0 )
-        {
-            throw std::invalid_argument(
-                "DataFrame '" + _df1.name() + "' contains no rows!" );
-        }
+    auto joined_df =
+        containers::DataFrame( _name, _categories, _join_keys_encoding );
 
     // ------------------------------------------------------------------------
 
@@ -521,26 +504,23 @@ containers::DataFrame DataFrameJoiner::join(
                         &temp_df );
                 }
 
-            if ( joined_df )
+            if ( joined_df.nrows() > 0 )
                 {
-                    joined_df->append( temp_df );
+                    joined_df.append( temp_df );
                 }
             else
                 {
-                    joined_df = std::make_optional<containers::DataFrame>(
-                        std::move( temp_df ) );
+                    joined_df = std::move( temp_df );
                 }
         }
 
     // ------------------------------------------------------------------------
 
-    assert_true( joined_df );
-
-    joined_df->create_indices();
+    joined_df.create_indices();
 
     // ------------------------------------------------------------------------
 
-    return *joined_df;
+    return joined_df;
 
     // ------------------------------------------------------------------------
 }
@@ -586,7 +566,7 @@ DataFrameJoiner::make_row_indices(
 
     std::vector<size_t> rindices1, rindices2;
 
-    for ( size_t ix1 = *_begin; ix1 < _df1.nrows(); ++ix1, ++( *_begin ) )
+    for ( size_t& ix1 = *_begin; ix1 < _df1.nrows(); ++ix1 )
         {
             assert_true( rindices1.size() == rindices2.size() );
 

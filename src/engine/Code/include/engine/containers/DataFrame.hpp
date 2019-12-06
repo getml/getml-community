@@ -447,6 +447,15 @@ class DataFrame
     /// Primitive abstraction for member name_
     const std::string &name() const { return name_; }
 
+    /// Get the number of columns.
+    const size_t ncols() const
+    {
+        return undefined_floats_.size() + undefined_integers_.size() +
+               undefined_strings_.size() + join_keys_.size() +
+               time_stamps_.size() + categoricals_.size() + discretes_.size() +
+               numericals_.size() + targets_.size();
+    }
+
     /// Returns number of categorical columns.
     size_t const num_categoricals() const { return categoricals_.size(); }
 
@@ -868,15 +877,9 @@ template <class ColType>
 void DataFrame::add_column(
     const ColType &_col, std::vector<ColType> *_columns )
 {
-    if ( _col.nrows() == 0 )
+    if ( _col.nrows() != nrows() && ncols() != 0 )
         {
-            throw std::invalid_argument(
-                "Column '" + _col.name() + "' is of length 0." );
-        }
-
-    if ( _col.nrows() != nrows() && nrows() != 0 )
-        {
-            throw std::invalid_argument(
+            throw std::runtime_error(
                 "Column '" + _col.name() + "' is of length " +
                 std::to_string( _col.nrows() ) + ", expected " +
                 std::to_string( nrows() ) + "." );
