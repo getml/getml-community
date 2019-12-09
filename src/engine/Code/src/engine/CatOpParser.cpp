@@ -230,7 +230,15 @@ std::vector<std::string> CatOpParser::unary_operation(
     const auto is_boolean = ( operand_type == "BooleanValue" ) ||
                             ( operand_type == "VirtualBooleanColumn" );
 
-    if ( op == "substr" )
+    if ( op == "categorical_value" )
+        {
+            return parse(
+                _categories,
+                _join_keys_encoding,
+                _df,
+                *JSON::get_object( _col, "operand1_" ) );
+        }
+    else if ( op == "substr" )
         {
             const auto begin = JSON::get_value<size_t>( _col, "begin_" );
 

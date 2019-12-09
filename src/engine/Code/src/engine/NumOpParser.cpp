@@ -501,6 +501,14 @@ containers::Column<Float> NumOpParser::unary_operation(
         {
             return to_ts( _categories, _join_keys_encoding, _df, _col );
         }
+    else if ( op == "value" )
+        {
+            return parse(
+                _categories,
+                _join_keys_encoding,
+                _df,
+                *JSON::get_object( _col, "operand1_" ) );
+        }
     else if ( op == "weekday" )
         {
             const std::chrono::time_point<std::chrono::system_clock>
