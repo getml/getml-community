@@ -41,12 +41,12 @@ XGBoostHyperparams::XGBoostHyperparams( const Poco::JSON::Object &_json_obj )
 
     if ( objective_ != "reg:linear" && objective_ != "reg:squarederror" &&
          objective_ != "reg:logistic" && objective_ != "binary:logistic" &&
-         objective_ != "binary:logitraw" )
+         objective_ != "binary:logitraw" && objective_ != "reg:tweedie" )
         {
             throw std::invalid_argument(
                 "Objective of type '" + objective_ +
                 "' not known! Please use 'reg:squarederror', 'reg:linear', 'reg:logistic', "
-                "'binary:logistic' or 'binary:logitraw'!" );
+                "'binary:logistic', 'binary:logitraw' or 'reg:tweedie'!" );
         }
 
     if ( normalize_type_ != "tree" && normalize_type_ != "forest" )
