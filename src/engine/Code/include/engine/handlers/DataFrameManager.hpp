@@ -123,6 +123,10 @@ class DataFrameManager
     /// Sends a data frame back to the client, column-by-column.
     void get_data_frame( Poco::Net::StreamSocket* _socket );
 
+    /// Expresses the data frame as a string.
+    void get_data_frame_string(
+        const std::string& _name, Poco::Net::StreamSocket* _socket );
+
     /// Sends the content of a data frame in a format that is compatible with
     /// DataTables.js server-side processing.
     void get_data_frame_content(

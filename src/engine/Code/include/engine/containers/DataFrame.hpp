@@ -124,6 +124,9 @@ class DataFrame
         const std::int32_t _start,
         const std::int32_t _length ) const;
 
+    /// Returns the first _n rows as a formatted string.
+    std::string get_string( const std::int32_t _n ) const;
+
     /// Getter for an int_column (either join keys or categorical)
     const Column<Int> &int_column(
         const std::string &_role, const size_t _num ) const;

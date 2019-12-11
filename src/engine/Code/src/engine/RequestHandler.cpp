@@ -153,6 +153,11 @@ void RequestHandler::run()
                     data_frame_manager().get_data_frame_content(
                         name, cmd, &socket() );
                 }
+            else if ( type == "DataFrame.get_string" )
+                {
+                    data_frame_manager().get_data_frame_string(
+                        name, &socket() );
+                }
             else if ( type == "DataFrame.group_by" )
                 {
                     data_frame_manager().group_by( name, cmd, &socket() );

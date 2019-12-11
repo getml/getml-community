@@ -1204,6 +1204,22 @@ void DataFrameManager::get_data_frame_content(
 
 // ------------------------------------------------------------------------
 
+void DataFrameManager::get_data_frame_string(
+    const std::string& _name, Poco::Net::StreamSocket* _socket )
+{
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    const auto& df = utils::Getter::get( _name, &data_frames() );
+
+    const auto str = df.get_string( 20 );
+
+    read_lock.unlock();
+
+    communication::Sender::send_string( str, _socket );
+}
+
+// ------------------------------------------------------------------------
+
 void DataFrameManager::get_data_frame( Poco::Net::StreamSocket* _socket )
 {
     multithreading::ReadLock read_lock( read_write_lock_ );

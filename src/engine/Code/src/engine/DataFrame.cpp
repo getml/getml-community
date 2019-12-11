@@ -331,7 +331,8 @@ void DataFrame::check_plausibility() const
     if ( any_mismatch )
         {
             throw std::runtime_error(
-                "Something went very wrong during data loading: The number of "
+                "Something went very wrong during data loading: The number "
+                "of "
                 "rows in different elements of " +
                 name() +
                 " do not "
@@ -1285,7 +1286,7 @@ Poco::JSON::Object DataFrame::get_content(
 
     // ----------------------------------------
 
-    Poco::JSON::Array data;
+    auto data = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
 
     const auto begin = static_cast<unsigned int>( _start );
 
@@ -1295,26 +1296,26 @@ Poco::JSON::Object DataFrame::get_content(
 
     for ( auto i = begin; i < end; ++i )
         {
-            Poco::JSON::Array row;
+            auto row = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
 
             for ( size_t j = 0; j < num_time_stamps(); ++j )
                 {
-                    row.add( to_time_stamp( time_stamp( j )[i] ) );
+                    row->add( to_time_stamp( time_stamp( j )[i] ) );
                 }
 
             for ( size_t j = 0; j < num_join_keys(); ++j )
                 {
-                    row.add( join_keys_encoding()[join_key( j )[i]].str() );
+                    row->add( join_keys_encoding()[join_key( j )[i]].str() );
                 }
 
             for ( size_t j = 0; j < num_targets(); ++j )
                 {
-                    row.add( to_string( target( j )[i] ) );
+                    row->add( to_string( target( j )[i] ) );
                 }
 
             for ( size_t j = 0; j < num_categoricals(); ++j )
                 {
-                    row.add( categories()[categorical( j )[i]].str() );
+                    row->add( categories()[categorical( j )[i]].str() );
                 }
 
             for ( size_t j = 0; j < num_discretes(); ++j )
@@ -1322,11 +1323,11 @@ Poco::JSON::Object DataFrame::get_content(
                     if ( discrete( j ).unit().find( "time stamp" ) !=
                          std::string::npos )
                         {
-                            row.add( to_time_stamp( discrete( j )[i] ) );
+                            row->add( to_time_stamp( discrete( j )[i] ) );
                         }
                     else
                         {
-                            row.add( to_string( discrete( j )[i] ) );
+                            row->add( to_string( discrete( j )[i] ) );
                         }
                 }
 
@@ -1335,11 +1336,11 @@ Poco::JSON::Object DataFrame::get_content(
                     if ( numerical( j ).unit().find( "time stamp" ) !=
                          std::string::npos )
                         {
-                            row.add( to_time_stamp( numerical( j )[i] ) );
+                            row->add( to_time_stamp( numerical( j )[i] ) );
                         }
                     else
                         {
-                            row.add( to_string( numerical( j )[i] ) );
+                            row->add( to_string( numerical( j )[i] ) );
                         }
                 }
 
@@ -1348,11 +1349,12 @@ Poco::JSON::Object DataFrame::get_content(
                     if ( undefined_float( j ).unit().find( "time stamp" ) !=
                          std::string::npos )
                         {
-                            row.add( to_time_stamp( undefined_float( j )[i] ) );
+                            row->add(
+                                to_time_stamp( undefined_float( j )[i] ) );
                         }
                     else
                         {
-                            row.add( to_string( undefined_float( j )[i] ) );
+                            row->add( to_string( undefined_float( j )[i] ) );
                         }
                 }
 
@@ -1362,21 +1364,21 @@ Poco::JSON::Object DataFrame::get_content(
 
                     if ( val == std::numeric_limits<Int>::lowest() )
                         {
-                            row.add( std::string( "NULL" ) );
+                            row->add( std::string( "NULL" ) );
                         }
                     else
                         {
-                            row.add( to_string( static_cast<Float>(
+                            row->add( to_string( static_cast<Float>(
                                 undefined_integer( j )[i] ) ) );
                         }
                 }
 
             for ( size_t j = 0; j < num_undefined_strings(); ++j )
                 {
-                    row.add( undefined_string( j )[i].str() );
+                    row->add( undefined_string( j )[i].str() );
                 }
 
-            data.add( row );
+            data->add( row );
         }
 
     obj.set( "data", data );
@@ -1386,6 +1388,160 @@ Poco::JSON::Object DataFrame::get_content(
     return obj;
 
     // ----------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+std::string DataFrame::get_string( const std::int32_t _n ) const
+{
+    // ------------------------------------------------------------------------
+
+    std::vector<std::vector<std::string>> rows;
+
+    // ------------------------------------------------------------------------
+
+    std::vector<std::string> colnames;
+
+    std::vector<std::string> roles;
+
+    for ( size_t j = 0; j < num_time_stamps(); ++j )
+        {
+            colnames.push_back( time_stamp( j ).name() );
+            roles.push_back( "time stamp" );
+        }
+
+    for ( size_t j = 0; j < num_join_keys(); ++j )
+        {
+            colnames.push_back( join_key( j ).name() );
+            roles.push_back( "join key" );
+        }
+
+    for ( size_t j = 0; j < num_targets(); ++j )
+        {
+            colnames.push_back( target( j ).name() );
+            roles.push_back( "target" );
+        }
+
+    for ( size_t j = 0; j < num_categoricals(); ++j )
+        {
+            colnames.push_back( categorical( j ).name() );
+            roles.push_back( "categorical" );
+        }
+
+    for ( size_t j = 0; j < num_discretes(); ++j )
+        {
+            colnames.push_back( discrete( j ).name() );
+            roles.push_back( "discrete" );
+        }
+
+    for ( size_t j = 0; j < num_numericals(); ++j )
+        {
+            colnames.push_back( numerical( j ).name() );
+            roles.push_back( "numerical" );
+        }
+
+    for ( size_t j = 0; j < num_undefined_floats(); ++j )
+        {
+            colnames.push_back( undefined_float( j ).name() );
+            roles.push_back( "undefined float" );
+        }
+
+    for ( size_t j = 0; j < num_undefined_integers(); ++j )
+        {
+            colnames.push_back( undefined_integer( j ).name() );
+            roles.push_back( "undefined integer" );
+        }
+
+    for ( size_t j = 0; j < num_undefined_strings(); ++j )
+        {
+            colnames.push_back( undefined_string( j ).name() );
+            roles.push_back( "undefined string" );
+        }
+
+    assert_true( colnames.size() == roles.size() );
+    assert_true( colnames.size() == ncols() );
+
+    rows.push_back( colnames );
+
+    rows.push_back( roles );
+
+    // ------------------------------------------------------------------------
+
+    if ( nrows() > 0 )
+        {
+            const auto obj = get_content( 1, 0, 20 );
+
+            const auto data = JSON::get_array( obj, "data" );
+
+            assert_true( data );
+
+            for ( size_t i = 0; i < data->size(); ++i )
+                {
+                    const auto json_row =
+                        data->getArray( static_cast<unsigned int>( i ) );
+
+                    assert_true( json_row );
+
+                    assert_true( json_row->size() == ncols() );
+
+                    auto row = std::vector<std::string>( json_row->size() );
+
+                    for ( size_t j = 0; j < row.size(); ++j )
+                        {
+                            row[j] = json_row->getElement<std::string>( j );
+                        }
+
+                    rows.emplace_back( std::move( row ) );
+                }
+        }
+
+    // ------------------------------------------------------------------------
+
+    auto max_sizes = std::vector<size_t>( ncols() );
+
+    for ( const auto &row : rows )
+        {
+            for ( size_t j = 0; j < row.size(); ++j )
+                {
+                    if ( row[j].size() > max_sizes[j] )
+                        {
+                            max_sizes[j] = row[j].size();
+                        }
+                }
+        }
+
+    // ------------------------------------------------------------------------
+
+    std::string result;
+
+    for ( const auto &row : rows )
+        {
+            for ( size_t j = 0; j < row.size(); ++j )
+                {
+                    result += row[j];
+
+                    assert_true( max_sizes[j] >= row[j].size() );
+
+                    const auto n_fill = max_sizes[j] - row[j].size() + 1;
+
+                    result += std::string( n_fill, ' ' );
+                }
+
+            result += "\n";
+        }
+
+    // ------------------------------------------------------------------------
+
+    if ( _n < nrows() )
+        {
+            result += "...\n";
+        }
+
+    // ------------------------------------------------------------------------
+
+    return result;
+
+    // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
