@@ -1497,6 +1497,20 @@ std::string DataFrame::get_string( const std::int32_t _n ) const
 
     // ------------------------------------------------------------------------
 
+    if ( _n < nrows() )
+        {
+            auto row = std::vector<std::string>( colnames.size() );
+
+            for ( auto &r : row )
+                {
+                    r = "...";
+                }
+
+            rows.emplace_back( std::move( row ) );
+        }
+
+    // ------------------------------------------------------------------------
+
     auto max_sizes = std::vector<size_t>( ncols() );
 
     for ( const auto &row : rows )
@@ -1514,8 +1528,12 @@ std::string DataFrame::get_string( const std::int32_t _n ) const
 
     std::string result;
 
-    for ( const auto &row : rows )
+    for ( size_t i = 0; i < rows.size(); ++i )
         {
+            const auto &row = rows[i];
+
+            result += "| ";
+
             for ( size_t j = 0; j < row.size(); ++j )
                 {
                     result += row[j];
@@ -1525,16 +1543,23 @@ std::string DataFrame::get_string( const std::int32_t _n ) const
                     const auto n_fill = max_sizes[j] - row[j].size() + 1;
 
                     result += std::string( n_fill, ' ' );
+
+                    result += "| ";
                 }
 
             result += "\n";
-        }
 
-    // ------------------------------------------------------------------------
+            if ( i == 1 )
+                {
+                    const auto length =
+                        std::accumulate(
+                            max_sizes.begin(), max_sizes.end(), 0 ) +
+                        max_sizes.size() * 3 + 1;
 
-    if ( _n < nrows() )
-        {
-            result += "...\n";
+                    result += std::string( length, '-' );
+
+                    result += "\n";
+                }
         }
 
     // ------------------------------------------------------------------------
