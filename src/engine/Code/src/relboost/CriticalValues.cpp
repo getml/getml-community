@@ -406,11 +406,24 @@ std::vector<Float> CriticalValues::calc_time_window(
         }
 
     // ---------------------------------------------------------------------------
+    // The input value for delta_t could be stupid...we want to avoid memory
+    // overflow.
 
     assert_true( _delta_t > 0.0 );
 
     const auto num_critical_values =
         static_cast<size_t>( ( max - min ) / _delta_t ) + 1;
+
+    if ( num_critical_values > 100000 )
+        {
+            debug_log(
+                "calculate_critical_values_window...done (delta_t too "
+                "small)." );
+
+            return std::vector<Float>( 0 );
+        }
+
+    // ---------------------------------------------------------------------------
 
     std::vector<Float> critical_values( num_critical_values );
 
