@@ -27,7 +27,11 @@ class DecisionTreeEnsemble
         const std::shared_ptr<const std::vector<strings::String>>& _encoding,
         const std::shared_ptr<const Hyperparameters>& _hyperparameters,
         const std::shared_ptr<const std::vector<std::string>>& _peripheral,
-        const std::shared_ptr<const Placeholder>& _placeholder );
+        const std::shared_ptr<const Placeholder>& _placeholder,
+        const std::shared_ptr<const std::vector<containers::Schema>>&
+            _peripheral_schema = nullptr,
+        const std::shared_ptr<const containers::Schema>& _population_schema =
+            nullptr );
 
     DecisionTreeEnsemble(
         const std::shared_ptr<const std::vector<strings::String>>& _encoding,

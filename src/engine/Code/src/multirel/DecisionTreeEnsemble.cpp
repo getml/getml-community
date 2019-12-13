@@ -10,8 +10,17 @@ DecisionTreeEnsemble::DecisionTreeEnsemble(
     const std::shared_ptr<const std::vector<strings::String>> &_categories,
     const std::shared_ptr<const descriptors::Hyperparameters> &_hyperparameters,
     const std::shared_ptr<const std::vector<std::string>> &_peripheral,
-    const std::shared_ptr<const decisiontrees::Placeholder> &_placeholder )
-    : impl_( _categories, _hyperparameters, *_peripheral, *_placeholder )
+    const std::shared_ptr<const decisiontrees::Placeholder> &_placeholder,
+    const std::shared_ptr<const std::vector<containers::Schema>>
+        &_peripheral_schema,
+    const std::shared_ptr<const containers::Schema> &_population_schema )
+    : impl_(
+          _categories,
+          _hyperparameters,
+          *_peripheral,
+          *_placeholder,
+          _peripheral_schema,
+          _population_schema )
 {
     placeholder().check_data_model( peripheral_names(), true );
 }
@@ -28,7 +37,9 @@ DecisionTreeEnsemble::DecisionTreeEnsemble(
           JSON::array_to_vector<std::string>(
               JSON::get_array( _json_obj, "peripheral_" ) ),
           decisiontrees::Placeholder(
-              *JSON::get_object( _json_obj, "placeholder_" ) ) )
+              *JSON::get_object( _json_obj, "placeholder_" ) ),
+          nullptr,
+          nullptr )
 {
     *this = from_json_obj( _json_obj );
     placeholder().check_data_model( peripheral_names(), true );
@@ -62,7 +73,8 @@ void DecisionTreeEnsemble::check_plausibility_of_targets(
     if ( _population_table.num_targets() < 1 )
         {
             throw std::invalid_argument(
-                "The population table must have at least one target column!" );
+                "The population table must have at least one target "
+                "column!" );
         }
 
     for ( size_t j = 0; j < _population_table.num_targets(); ++j )
@@ -73,7 +85,8 @@ void DecisionTreeEnsemble::check_plausibility_of_targets(
                          std::isinf( _population_table.target( i, j ) ) )
                         {
                             throw std::invalid_argument(
-                                "Target values can not be NULL or infinite!" );
+                                "Target values can not be NULL or "
+                                "infinite!" );
                         }
                 }
         }
@@ -88,7 +101,8 @@ void DecisionTreeEnsemble::check_plausibility_of_targets(
                                  _population_table.target( i, j ) != 1.0 )
                                 {
                                     throw std::invalid_argument(
-                                        "Target values for a classification "
+                                        "Target values for a "
+                                        "classification "
                                         "problem have to be 0.0 or 1.0!" );
                                 }
                         }
@@ -280,7 +294,8 @@ void DecisionTreeEnsemble::fit(
     if ( _table_holder->main_tables_[0].nrows() == 0 )
         {
             throw std::invalid_argument(
-                "Your population table needs to contain at least one row!" );
+                "Your population table needs to contain at least one "
+                "row!" );
         }
 
     // ----------------------------------------------------------------
@@ -373,8 +388,8 @@ void DecisionTreeEnsemble::fit(
 
     // ----------------------------------------------------------------
     // containers::Match containers are pointers to simple structs, which
-    // represent a match between a key in the peripheral table and a key in the
-    // population table.
+    // represent a match between a key in the peripheral table and a key in
+    // the population table.
 
     debug_log( "fit: Creating matches..." );
 
@@ -471,8 +486,8 @@ void DecisionTreeEnsemble::fit(
                 &trees() );
 
             // -------------------------------------------------------------
-            // Recalculate residuals, which is needed for the gradient boosting
-            // algorithm.
+            // Recalculate residuals, which is needed for the gradient
+            // boosting algorithm.
 
             debug_log( "fit: Recalculating residuals..." );
 
@@ -960,8 +975,8 @@ containers::Features DecisionTreeEnsemble::transform(
         }
 
     // ------------------------------------------------------
-    // thread_nums signify the thread number that a particular row belongs to.
-    // The idea is to separate the join keys as clearly as possible.
+    // thread_nums signify the thread number that a particular row belongs
+    // to. The idea is to separate the join keys as clearly as possible.
 
     auto num_threads =
         Threadutils::get_num_threads( hyperparameters().num_threads_ );

@@ -10,9 +10,17 @@ DecisionTreeEnsemble::DecisionTreeEnsemble(
     const std::shared_ptr<const std::vector<strings::String>> &_encoding,
     const std::shared_ptr<const Hyperparameters> &_hyperparameters,
     const std::shared_ptr<const std::vector<std::string>> &_peripheral,
-    const std::shared_ptr<const Placeholder> &_placeholder )
+    const std::shared_ptr<const Placeholder> &_placeholder,
+    const std::shared_ptr<const std::vector<containers::Schema>>
+        &_peripheral_schema,
+    const std::shared_ptr<const containers::Schema> &_population_schema )
     : impl_( DecisionTreeEnsembleImpl(
-          _encoding, _hyperparameters, _peripheral, _placeholder ) ),
+          _encoding,
+          _hyperparameters,
+          _peripheral,
+          _placeholder,
+          _peripheral_schema,
+          _population_schema ) ),
       targets_( std::make_shared<std::vector<Float>>( 0 ) )
 {
     loss_function_ = lossfunctions::LossFunctionParser::parse(
@@ -34,7 +42,9 @@ DecisionTreeEnsemble::DecisionTreeEnsemble(
               JSON::array_to_vector<std::string>(
                   JSON::get_array( _obj, "peripheral_" ) ) ),
           std::make_shared<const Placeholder>(
-              *JSON::get_object( _obj, "placeholder_" ) ) ) ),
+              *JSON::get_object( _obj, "placeholder_" ) ),
+          nullptr,
+          nullptr ) ),
       targets_( std::make_shared<std::vector<Float>>( 0 ) )
 {
     // ------------------------------------------------------------------------

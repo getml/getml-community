@@ -132,9 +132,54 @@ void ProjectManager::add_multirel_model(
         std::make_shared<multirel::decisiontrees::Placeholder>(
             JSON::get_object( _cmd, "placeholder_" ) );
 
+    auto population_schema =
+        std::shared_ptr<const multirel::containers::Schema>();
+
+    if ( _cmd.has( "population_schema_" ) )
+        {
+            population_schema =
+                std::make_shared<const multirel::containers::Schema>(
+                    *JSON::get_object( _cmd, "population_schema_" ) );
+        }
+
+    auto peripheral_schema =
+        std::shared_ptr<const std::vector<multirel::containers::Schema>>();
+
+    if ( _cmd.has( "peripheral_schema_" ) )
+        {
+            std::vector<multirel::containers::Schema> peripheral;
+
+            const auto peripheral_arr =
+                *JSON::get_array( _cmd, "peripheral_schema_" );
+
+            for ( size_t i = 0; i < peripheral_arr.size(); ++i )
+                {
+                    const auto ptr = peripheral_arr.getObject(
+                        static_cast<unsigned int>( i ) );
+
+                    if ( !ptr )
+                        {
+                            throw std::invalid_argument(
+                                "peripheral_schema_, element " +
+                                std::to_string( i ) + " is not an Object!" );
+                        }
+
+                    peripheral.push_back(
+                        multirel::containers::Schema( *ptr ) );
+                }
+
+            peripheral_schema = std::make_shared<
+                const std::vector<multirel::containers::Schema>>( peripheral );
+        }
+
     const auto model = models::MultirelModel(
         multirel::ensemble::DecisionTreeEnsemble(
-            categories_->vector(), hyperparameters, peripheral, placeholder ),
+            categories_->vector(),
+            hyperparameters,
+            peripheral,
+            placeholder,
+            peripheral_schema,
+            population_schema ),
         *hyperparameters_obj );
 
     set_multirel_model( _name, model, false );
@@ -169,9 +214,54 @@ void ProjectManager::add_relboost_model(
     const auto placeholder = std::make_shared<relboost::ensemble::Placeholder>(
         JSON::get_object( _cmd, "placeholder_" ) );
 
+    auto population_schema =
+        std::shared_ptr<const relboost::containers::Schema>();
+
+    if ( _cmd.has( "population_schema_" ) )
+        {
+            population_schema =
+                std::make_shared<const relboost::containers::Schema>(
+                    *JSON::get_object( _cmd, "population_schema_" ) );
+        }
+
+    auto peripheral_schema =
+        std::shared_ptr<const std::vector<relboost::containers::Schema>>();
+
+    if ( _cmd.has( "peripheral_schema_" ) )
+        {
+            std::vector<relboost::containers::Schema> peripheral;
+
+            const auto peripheral_arr =
+                *JSON::get_array( _cmd, "peripheral_schema_" );
+
+            for ( size_t i = 0; i < peripheral_arr.size(); ++i )
+                {
+                    const auto ptr = peripheral_arr.getObject(
+                        static_cast<unsigned int>( i ) );
+
+                    if ( !ptr )
+                        {
+                            throw std::invalid_argument(
+                                "peripheral_schema_, element " +
+                                std::to_string( i ) + " is not an Object!" );
+                        }
+
+                    peripheral.push_back(
+                        relboost::containers::Schema( *ptr ) );
+                }
+
+            peripheral_schema = std::make_shared<
+                const std::vector<relboost::containers::Schema>>( peripheral );
+        }
+
     const auto model = models::RelboostModel(
         relboost::ensemble::DecisionTreeEnsemble(
-            categories_->vector(), hyperparameters, peripheral, placeholder ),
+            categories_->vector(),
+            hyperparameters,
+            peripheral,
+            placeholder,
+            peripheral_schema,
+            population_schema ),
         *hyperparameters_obj );
 
     set_relboost_model( _name, model, false );

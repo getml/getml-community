@@ -16,14 +16,19 @@ struct DecisionTreeEnsembleImpl
         const std::shared_ptr<const descriptors::Hyperparameters>
             &_hyperparameters,
         const std::vector<std::string> &_placeholder_peripheral,
-        const decisiontrees::Placeholder &_placeholder_population )
+        const decisiontrees::Placeholder &_placeholder_population,
+        const std::shared_ptr<const std::vector<containers::Schema>>
+            &_peripheral_schema,
+        const std::shared_ptr<const containers::Schema> &_population_schema )
         : allow_http_( false ),
           categories_( _categories ),
           comm_( nullptr ),
           hyperparameters_( _hyperparameters ),
+          peripheral_schema_( _peripheral_schema ),
           placeholder_peripheral_( _placeholder_peripheral ),
           placeholder_population_(
-              new decisiontrees::Placeholder( _placeholder_population ) ){};
+              new decisiontrees::Placeholder( _placeholder_population ) ),
+          population_schema_( _population_schema ){};
 
     ~DecisionTreeEnsembleImpl() = default;
 
