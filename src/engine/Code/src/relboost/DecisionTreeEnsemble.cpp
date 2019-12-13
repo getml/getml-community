@@ -76,9 +76,17 @@ DecisionTreeEnsemble::DecisionTreeEnsemble(
 
             for ( size_t i = 0; i < peripheral_arr.size(); ++i )
                 {
-                    peripheral.push_back(
-                        containers::Schema( *peripheral_arr.getObject(
-                            static_cast<unsigned int>( i ) ) ) );
+                    const auto ptr = peripheral_arr.getObject(
+                        static_cast<unsigned int>( i ) );
+
+                    if ( !ptr )
+                        {
+                            throw std::invalid_argument(
+                                "peripheral_schema_, element " +
+                                std::to_string( i ) + " is not an Object!" );
+                        }
+
+                    peripheral.push_back( containers::Schema( *ptr ) );
                 }
 
             impl().peripheral_schema_.reset(
