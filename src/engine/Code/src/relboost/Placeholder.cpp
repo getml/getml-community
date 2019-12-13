@@ -152,6 +152,20 @@ Poco::JSON::Object::Ptr Placeholder::to_json_obj() const
 
     // ---------------------------------------------------------
 
+    obj->set( "categoricals_", JSON::vector_to_array_ptr( categoricals_ ) );
+
+    obj->set( "discretes_", JSON::vector_to_array_ptr( discretes_ ) );
+
+    obj->set( "join_keys_", JSON::vector_to_array_ptr( join_keys_ ) );
+
+    obj->set( "numericals_", JSON::vector_to_array_ptr( numericals_ ) );
+
+    obj->set( "targets_", JSON::vector_to_array_ptr( targets_ ) );
+
+    obj->set( "time_stamps_", JSON::vector_to_array_ptr( time_stamps_ ) );
+
+    // ---------------------------------------------------------
+
     return obj;
 }
 

@@ -19,15 +19,23 @@ struct Placeholder
     // --------------------------------------------------------
 
     Placeholder( const Poco::JSON::Object& _json_obj )
-        : joined_tables_( Placeholder::parse_joined_tables(
+        : categoricals_(
+              Placeholder::parse_columns( _json_obj, "categoricals_" ) ),
+          discretes_( Placeholder::parse_columns( _json_obj, "discretes_" ) ),
+          joined_tables_( Placeholder::parse_joined_tables(
               JSON::get_array( _json_obj, "joined_tables_" ) ) ),
+          join_keys_( Placeholder::parse_columns( _json_obj, "join_keys_" ) ),
           join_keys_used_( JSON::array_to_vector<std::string>(
               JSON::get_array( _json_obj, "join_keys_used_" ) ) ),
+          numericals_( Placeholder::parse_columns( _json_obj, "numericals_" ) ),
           other_join_keys_used_( JSON::array_to_vector<std::string>(
               JSON::get_array( _json_obj, "other_join_keys_used_" ) ) ),
           other_time_stamps_used_( JSON::array_to_vector<std::string>(
               JSON::get_array( _json_obj, "other_time_stamps_used_" ) ) ),
           name_( _json_obj.getValue<std::string>( "name_" ) ),
+          targets_( Placeholder::parse_columns( _json_obj, "targets_" ) ),
+          time_stamps_(
+              Placeholder::parse_columns( _json_obj, "time_stamps_" ) ),
           time_stamps_used_( JSON::array_to_vector<std::string>(
               JSON::get_array( _json_obj, "time_stamps_used_" ) ) ),
           upper_time_stamps_used_( JSON::array_to_vector<std::string>(
@@ -66,18 +74,50 @@ struct Placeholder
 
     // --------------------------------------------------------
 
+    /// Checks whether an array exists (because only the Python API has one),
+    /// and returns and empty array, if it doesn't.
+    static std::vector<std::string> parse_columns(
+        const Poco::JSON::Object& _json_obj, const std::string& _name )
+    {
+        if ( _json_obj.has( _name ) )
+            {
+                return JSON::array_to_vector<std::string>(
+                    JSON::get_array( _json_obj, _name ) );
+            }
+        else
+            {
+                return std::vector<std::string>();
+            }
+    }
+
     /// Transforms the placeholder into a JSON string
     std::string to_json() const { return JSON::stringify( to_json_obj() ); }
 
     // --------------------------------------------------------
 
+    /// The name of the categorical columns
+    /// (this is only required for the Python API).
+    const std::vector<std::string> categoricals_;
+
+    /// The name of the discrete columns
+    /// (this is only required for the Python API).
+    const std::vector<std::string> discretes_;
+
     /// Placeholders that are LEFT JOINED
     /// to this placeholder
     const std::vector<Placeholder> joined_tables_;
 
+    /// The name of the join keys
+    /// (this is only required for the Python API).
+    const std::vector<std::string> join_keys_;
+
     /// Names of the join keys used (LEFT) - should have
     /// same length as joined_tables_
     const std::vector<std::string> join_keys_used_;
+
+    /// The name of the numerical columns
+    /// (this is only required for the Python API).
+    const std::vector<std::string> numericals_;
 
     /// Names of the join keys used (RIGHT) - should have
     /// same length as joined_tables_
@@ -89,6 +129,14 @@ struct Placeholder
 
     /// Name of the Placeholder object
     const std::string name_;
+
+    /// The name of the target columns
+    /// (this is only required for the Python API).
+    const std::vector<std::string> targets_;
+
+    /// The name of the time stamp columns
+    /// (this is only required for the Python API).
+    const std::vector<std::string> time_stamps_;
 
     /// Names of the time stamps used (LEFT) - should have
     /// same length as joined_tables_
