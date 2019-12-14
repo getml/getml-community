@@ -60,7 +60,7 @@ DecisionTree::DecisionTree(
 
 void DecisionTree::fit(
     const containers::DataFrameView& _output,
-    const containers::DataFrame& _input,
+    const std::optional<containers::DataFrame>& _input,
     const containers::Subfeatures& _subfeatures,
     const std::vector<const containers::Match*>::iterator _begin,
     const std::vector<const containers::Match*>::iterator _end )
@@ -68,7 +68,10 @@ void DecisionTree::fit(
     // ------------------------------------------------------------------------
     // Store input and output (we need the column names).
 
-    input_.reset( new containers::Schema( _input.to_schema() ) );
+    if ( _input )
+        {
+            input_.reset( new containers::Schema( _input->to_schema() ) );
+        }
 
     output_.reset( new containers::Schema( _output.df().to_schema() ) );
 
@@ -106,7 +109,10 @@ Poco::JSON::Object::Ptr DecisionTree::to_json_obj() const
 
     assert_true( root_ );
 
-    obj->set( "input_", input().to_json_obj() );
+    if ( input_ )
+        {
+            obj->set( "input_", input().to_json_obj() );
+        }
 
     obj->set( "intercept_", intercept_ );
 
@@ -236,7 +242,7 @@ std::string DecisionTree::to_sql(
 
 std::vector<Float> DecisionTree::transform(
     const containers::DataFrameView& _output,
-    const containers::DataFrame& _input,
+    const std::optional<containers::DataFrame>& _input,
     const containers::Subfeatures& _subfeatures ) const
 {
     // ------------------------------------------------------------------------
@@ -256,12 +262,19 @@ std::vector<Float> DecisionTree::transform(
 
             std::vector<containers::Match> matches;
 
-            utils::Matchmaker::make_matches(
-                _output,
-                _input,
-                hyperparameters_->use_timestamps_,
-                ix_output,
-                &matches );
+            if ( _input )
+                {
+                    utils::Matchmaker::make_matches(
+                        _output,
+                        *_input,
+                        hyperparameters_->use_timestamps_,
+                        ix_output,
+                        &matches );
+                }
+            else
+                {
+                    // TODO
+                }
 
             // ------------------------------------------------------------------------
             // Calculate weights for each match.

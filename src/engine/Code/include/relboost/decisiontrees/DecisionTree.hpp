@@ -32,7 +32,7 @@ class DecisionTree
     /// Fits the decision tree.
     void fit(
         const containers::DataFrameView& _output,
-        const containers::DataFrame& _input,
+        const std::optional<containers::DataFrame>& _input,
         const containers::Subfeatures& _subfeatures,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end );
@@ -43,7 +43,7 @@ class DecisionTree
     /// Transforms the data to form a prediction.
     std::vector<Float> transform(
         const containers::DataFrameView& _output,
-        const containers::DataFrame& _input,
+        const std::optional<containers::DataFrame>& _input,
         const containers::Subfeatures& _subfeatures ) const;
 
     /// Expresses the decision tree as SQL code.

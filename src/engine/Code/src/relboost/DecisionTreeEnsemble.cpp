@@ -444,8 +444,8 @@ void DecisionTreeEnsemble::fit_new_feature(
             const auto &output_table =
                 _table_holder->main_tables_[ix_table_used];
 
-            const auto &input_table =
-                _table_holder->peripheral_tables_[ix_table_used];
+            const auto input_table = std::make_optional<containers::DataFrame>(
+                _table_holder->peripheral_tables_[ix_table_used] );
 
             const auto &subfeatures = _subfeatures[ix_table_used];
 
@@ -459,7 +459,7 @@ void DecisionTreeEnsemble::fit_new_feature(
 
             const auto matches = utils::Matchmaker::make_matches(
                 output_table,
-                input_table,
+                *input_table,
                 sample_weights,
                 hyperparameters().use_timestamps_ );
 
@@ -479,12 +479,12 @@ void DecisionTreeEnsemble::fit_new_feature(
             aggregations.push_back( std::make_shared<aggregations::Avg>(
                 _loss_function,
                 matches_ptr,
-                input_table,
+                *input_table,
                 output_table,
                 &comm() ) );
 
             aggregations.push_back( std::make_shared<aggregations::Sum>(
-                _loss_function, input_table, output_table, &comm() ) );
+                _loss_function, *input_table, output_table, &comm() ) );
 
             // ------------------------------------------------------------------------
             // Iterate through aggregations.

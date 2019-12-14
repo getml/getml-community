@@ -35,7 +35,7 @@ class DecisionTreeNode
     /// Fits the decision tree node.
     void fit(
         const containers::DataFrameView& _output,
-        const containers::DataFrame& _input,
+        const std::optional<containers::DataFrame>& _input,
         const containers::Subfeatures& _subfeatures,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end,
@@ -53,7 +53,7 @@ class DecisionTreeNode
     /// Transforms the data to form a prediction.
     Float transform(
         const containers::DataFrameView& _output,
-        const containers::DataFrame& _input,
+        const std::optional<containers::DataFrame>& _input,
         const containers::Subfeatures& _subfeatures,
         const containers::Match& _match ) const;
 
@@ -107,7 +107,7 @@ class DecisionTreeNode
     /// Partitions a set of matches according to the split.
     std::vector<const containers::Match*>::iterator partition(
         const containers::DataFrameView& _output,
-        const containers::DataFrame& _input,
+        const std::optional<containers::DataFrame>& _input,
         const containers::Subfeatures& _subfeatures,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end );
@@ -116,7 +116,7 @@ class DecisionTreeNode
     std::vector<containers::CandidateSplit> try_all(
         const Float _old_intercept,
         const containers::DataFrameView& _output,
-        const containers::DataFrame& _input,
+        const std::optional<containers::DataFrame>& _input,
         const containers::Subfeatures& _subfeatures,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _end );

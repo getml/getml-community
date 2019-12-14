@@ -190,7 +190,7 @@ void DecisionTreeNode::assert_aligned(
 
 void DecisionTreeNode::fit(
     const containers::DataFrameView& _output,
-    const containers::DataFrame& _input,
+    const std::optional<containers::DataFrame>& _input,
     const containers::Subfeatures& _subfeatures,
     const std::vector<const containers::Match*>::iterator _begin,
     const std::vector<const containers::Match*>::iterator _end,
@@ -199,7 +199,10 @@ void DecisionTreeNode::fit(
     // ------------------------------------------------------------------------
     // Store input and output (we need the column names).
 
-    input_.reset( new containers::Schema( _input.to_schema() ) );
+    if ( _input )
+        {
+            input_.reset( new containers::Schema( _input->to_schema() ) );
+        }
 
     output_.reset( new containers::Schema( _output.df().to_schema() ) );
 
@@ -301,7 +304,7 @@ void DecisionTreeNode::fit(
 
 std::vector<const containers::Match*>::iterator DecisionTreeNode::partition(
     const containers::DataFrameView& _output,
-    const containers::DataFrame& _input,
+    const std::optional<containers::DataFrame>& _input,
     const containers::Subfeatures& _subfeatures,
     const std::vector<const containers::Match*>::iterator _begin,
     const std::vector<const containers::Match*>::iterator _end )
@@ -309,21 +312,24 @@ std::vector<const containers::Match*>::iterator DecisionTreeNode::partition(
     switch ( split_.data_used_ )
         {
             case enums::DataUsed::categorical_input:
+                assert_true( _input );
                 return utils::Partitioner<enums::DataUsed::categorical_input>::
-                    partition( split_, _input, _begin, _end );
+                    partition( split_, *_input, _begin, _end );
 
             case enums::DataUsed::categorical_output:
                 return utils::Partitioner<enums::DataUsed::categorical_output>::
                     partition( split_, _output, _begin, _end );
 
             case enums::DataUsed::discrete_input:
+                assert_true( _input );
                 return utils::Partitioner<enums::DataUsed::discrete_input>::
-                    partition( split_, _input, _begin, _end );
+                    partition( split_, *_input, _begin, _end );
 
             case enums::DataUsed::discrete_input_is_nan:
+                assert_true( _input );
                 return utils::Partitioner<
                     enums::DataUsed::discrete_input_is_nan>::
-                    partition( split_.column_, _input, _begin, _end );
+                    partition( split_.column_, *_input, _begin, _end );
 
             case enums::DataUsed::discrete_output:
                 return utils::Partitioner<enums::DataUsed::discrete_output>::
@@ -335,13 +341,15 @@ std::vector<const containers::Match*>::iterator DecisionTreeNode::partition(
                     partition( split_.column_, _output, _begin, _end );
 
             case enums::DataUsed::numerical_input:
+                assert_true( _input );
                 return utils::Partitioner<enums::DataUsed::numerical_input>::
-                    partition( split_, _input, _begin, _end );
+                    partition( split_, *_input, _begin, _end );
 
             case enums::DataUsed::numerical_input_is_nan:
+                assert_true( _input );
                 return utils::Partitioner<
                     enums::DataUsed::numerical_input_is_nan>::
-                    partition( split_.column_, _input, _begin, _end );
+                    partition( split_.column_, *_input, _begin, _end );
 
             case enums::DataUsed::numerical_output:
                 return utils::Partitioner<enums::DataUsed::numerical_output>::
@@ -353,56 +361,64 @@ std::vector<const containers::Match*>::iterator DecisionTreeNode::partition(
                     partition( split_.column_, _output, _begin, _end );
 
             case enums::DataUsed::same_units_categorical:
+                assert_true( _input );
                 return utils::Partitioner<
                     enums::DataUsed::same_units_categorical>::
-                    partition( split_, _input, _output, _begin, _end );
+                    partition( split_, *_input, _output, _begin, _end );
 
             case enums::DataUsed::same_units_discrete:
+                assert_true( _input );
                 return utils::Partitioner<
                     enums::DataUsed::same_units_discrete>::
-                    partition( split_, _input, _output, _begin, _end );
+                    partition( split_, *_input, _output, _begin, _end );
 
             case enums::DataUsed::same_units_discrete_is_nan:
+                assert_true( _input );
                 return utils::Partitioner<
                     enums::DataUsed::same_units_discrete_is_nan>::
                     partition(
                         split_.column_input_,
                         split_.column_,
-                        _input,
+                        *_input,
                         _output,
                         _begin,
                         _end );
 
             case enums::DataUsed::same_units_numerical:
+                assert_true( _input );
                 return utils::Partitioner<
                     enums::DataUsed::same_units_numerical>::
-                    partition( split_, _input, _output, _begin, _end );
+                    partition( split_, *_input, _output, _begin, _end );
 
             case enums::DataUsed::same_units_numerical_is_nan:
+                assert_true( _input );
                 return utils::Partitioner<
                     enums::DataUsed::same_units_numerical_is_nan>::
                     partition(
                         split_.column_input_,
                         split_.column_,
-                        _input,
+                        *_input,
                         _output,
                         _begin,
                         _end );
 
             case enums::DataUsed::subfeatures:
+                assert_true( _input );
                 return utils::Partitioner<enums::DataUsed::subfeatures>::
                     partition( split_, _subfeatures, _begin, _end );
 
             case enums::DataUsed::time_stamps_diff:
+                assert_true( _input );
                 return utils::Partitioner<enums::DataUsed::time_stamps_diff>::
-                    partition( split_, _input, _output, _begin, _end );
+                    partition( split_, *_input, _output, _begin, _end );
 
             case enums::DataUsed::time_stamps_window:
+                assert_true( _input );
                 return utils::Partitioner<enums::DataUsed::time_stamps_window>::
                     partition(
                         split_,
                         hyperparameters().delta_t_,
-                        _input,
+                        *_input,
                         _output,
                         _begin,
                         _end );
@@ -419,7 +435,10 @@ Poco::JSON::Object::Ptr DecisionTreeNode::to_json_obj() const
 {
     Poco::JSON::Object::Ptr obj( new Poco::JSON::Object() );
 
-    obj->set( "input_", input().to_json_obj() );
+    if ( input_ )
+        {
+            obj->set( "input_", input().to_json_obj() );
+        }
 
     obj->set( "output_", output().to_json_obj() );
 
@@ -492,7 +511,7 @@ void DecisionTreeNode::to_sql(
 
 Float DecisionTreeNode::transform(
     const containers::DataFrameView& _output,
-    const containers::DataFrame& _input,
+    const std::optional<containers::DataFrame>& _input,
     const containers::Subfeatures& _subfeatures,
     const containers::Match& _match ) const
 {
@@ -514,9 +533,10 @@ Float DecisionTreeNode::transform(
     switch ( split_.data_used_ )
         {
             case enums::DataUsed::categorical_input:
+                assert_true( _input );
                 is_greater =
                     utils::Partitioner<enums::DataUsed::categorical_input>::
-                        is_greater( split_, _input, _match );
+                        is_greater( split_, *_input, _match );
                 break;
 
             case enums::DataUsed::categorical_output:
@@ -526,15 +546,17 @@ Float DecisionTreeNode::transform(
                 break;
 
             case enums::DataUsed::discrete_input:
+                assert_true( _input );
                 is_greater =
                     utils::Partitioner<enums::DataUsed::discrete_input>::
-                        is_greater( split_, _input, _match );
+                        is_greater( split_, *_input, _match );
                 break;
 
             case enums::DataUsed::discrete_input_is_nan:
+                assert_true( _input );
                 is_greater =
                     utils::Partitioner<enums::DataUsed::discrete_input_is_nan>::
-                        is_greater( split_.column_, _input, _match );
+                        is_greater( split_.column_, *_input, _match );
                 break;
 
             case enums::DataUsed::discrete_output:
@@ -550,15 +572,17 @@ Float DecisionTreeNode::transform(
                 break;
 
             case enums::DataUsed::numerical_input:
+                assert_true( _input );
                 is_greater =
                     utils::Partitioner<enums::DataUsed::numerical_input>::
-                        is_greater( split_, _input, _match );
+                        is_greater( split_, *_input, _match );
                 break;
 
             case enums::DataUsed::numerical_input_is_nan:
+                assert_true( _input );
                 is_greater = utils::Partitioner<
                     enums::DataUsed::numerical_input_is_nan>::
-                    is_greater( split_.column_, _input, _match );
+                    is_greater( split_.column_, *_input, _match );
                 break;
 
             case enums::DataUsed::numerical_output:
@@ -574,63 +598,71 @@ Float DecisionTreeNode::transform(
                 break;
 
             case enums::DataUsed::same_units_categorical:
+                assert_true( _input );
                 is_greater = utils::Partitioner<
                     enums::DataUsed::same_units_categorical>::
-                    is_greater( split_, _input, _output, _match );
+                    is_greater( split_, *_input, _output, _match );
                 break;
 
             case enums::DataUsed::same_units_discrete:
+                assert_true( _input );
                 is_greater =
                     utils::Partitioner<enums::DataUsed::same_units_discrete>::
-                        is_greater( split_, _input, _output, _match );
+                        is_greater( split_, *_input, _output, _match );
                 break;
 
             case enums::DataUsed::same_units_discrete_is_nan:
+                assert_true( _input );
                 is_greater = utils::Partitioner<
                     enums::DataUsed::same_units_discrete_is_nan>::
                     is_greater(
                         split_.column_input_,
                         split_.column_,
-                        _input,
+                        *_input,
                         _output,
                         _match );
                 break;
 
             case enums::DataUsed::same_units_numerical:
+                assert_true( _input );
                 is_greater =
                     utils::Partitioner<enums::DataUsed::same_units_numerical>::
-                        is_greater( split_, _input, _output, _match );
+                        is_greater( split_, *_input, _output, _match );
                 break;
 
             case enums::DataUsed::same_units_numerical_is_nan:
+                assert_true( _input );
                 is_greater = utils::Partitioner<
                     enums::DataUsed::same_units_numerical_is_nan>::
                     is_greater(
                         split_.column_input_,
                         split_.column_,
-                        _input,
+                        *_input,
                         _output,
                         _match );
                 break;
 
             case enums::DataUsed::subfeatures:
+                assert_true( _input );
                 is_greater = utils::Partitioner<enums::DataUsed::subfeatures>::
                     is_greater( split_, _subfeatures, _match );
                 break;
 
             case enums::DataUsed::time_stamps_diff:
+                assert_true( _input );
                 is_greater =
                     utils::Partitioner<enums::DataUsed::time_stamps_diff>::
-                        is_greater( split_, _input, _output, _match );
+                        is_greater( split_, *_input, _output, _match );
                 break;
 
             case enums::DataUsed::time_stamps_window:
+                assert_true( _input );
                 is_greater =
                     utils::Partitioner<enums::DataUsed::time_stamps_window>::
                         is_greater(
                             split_,
                             hyperparameters().delta_t_,
-                            _input,
+                            *_input,
                             _output,
                             _match );
                 break;
@@ -661,39 +693,46 @@ Float DecisionTreeNode::transform(
 std::vector<containers::CandidateSplit> DecisionTreeNode::try_all(
     const Float _old_intercept,
     const containers::DataFrameView& _output,
-    const containers::DataFrame& _input,
+    const std::optional<containers::DataFrame>& _input,
     const containers::Subfeatures& _subfeatures,
     const std::vector<const containers::Match*>::iterator _begin,
     const std::vector<const containers::Match*>::iterator _end )
 {
     std::vector<containers::CandidateSplit> candidates;
 
-    try_categorical_input( _old_intercept, _input, _begin, _end, &candidates );
+    if ( _input )
+        {
+            try_categorical_input(
+                _old_intercept, *_input, _begin, _end, &candidates );
+
+            try_discrete_input(
+                _old_intercept, *_input, _begin, _end, &candidates );
+
+            try_numerical_input(
+                _old_intercept, *_input, _begin, _end, &candidates );
+
+            try_subfeatures(
+                _old_intercept, _subfeatures, _begin, _end, &candidates );
+
+            try_same_units_categorical(
+                _old_intercept, *_input, _output, _begin, _end, &candidates );
+
+            try_same_units_discrete(
+                _old_intercept, *_input, _output, _begin, _end, &candidates );
+
+            try_same_units_numerical(
+                _old_intercept, *_input, _output, _begin, _end, &candidates );
+
+            try_time_stamps_diff(
+                _old_intercept, *_input, _output, _begin, _end, &candidates );
+        }
 
     try_categorical_output(
         _old_intercept, _output, _begin, _end, &candidates );
 
-    try_discrete_input( _old_intercept, _input, _begin, _end, &candidates );
-
     try_discrete_output( _old_intercept, _output, _begin, _end, &candidates );
 
-    try_numerical_input( _old_intercept, _input, _begin, _end, &candidates );
-
     try_numerical_output( _old_intercept, _output, _begin, _end, &candidates );
-
-    try_subfeatures( _old_intercept, _subfeatures, _begin, _end, &candidates );
-
-    try_same_units_categorical(
-        _old_intercept, _input, _output, _begin, _end, &candidates );
-
-    try_same_units_discrete(
-        _old_intercept, _input, _output, _begin, _end, &candidates );
-
-    try_same_units_numerical(
-        _old_intercept, _input, _output, _begin, _end, &candidates );
-
-    try_time_stamps_diff(
-        _old_intercept, _input, _output, _begin, _end, &candidates );
 
     return candidates;
 }
