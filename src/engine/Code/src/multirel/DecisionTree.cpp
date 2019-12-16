@@ -302,10 +302,11 @@ void DecisionTree::fit(
 {
     // ------------------------------------------------------------
 
-    impl()->input_.reset( new containers::Schema( _peripheral.to_schema() ) );
+    impl()->input_.reset(
+        new containers::Placeholder( _peripheral.to_schema() ) );
 
     impl()->output_.reset(
-        new containers::Schema( _population.df().to_schema() ) );
+        new containers::Placeholder( _population.df().to_schema() ) );
 
     // ------------------------------------------------------------
     // Prepare the root, the aggregation and the optimization criterion
@@ -350,11 +351,11 @@ void DecisionTree::from_json_obj( const Poco::JSON::Object &_json_obj )
 {
     // -----------------------------------
 
-    impl()->input_.reset(
-        new containers::Schema( *JSON::get_object( _json_obj, "input_" ) ) );
+    impl()->input_.reset( new containers::Placeholder(
+        *JSON::get_object( _json_obj, "input_" ) ) );
 
-    impl()->output_.reset(
-        new containers::Schema( *JSON::get_object( _json_obj, "output_" ) ) );
+    impl()->output_.reset( new containers::Placeholder(
+        *JSON::get_object( _json_obj, "output_" ) ) );
 
     column_to_be_aggregated() = descriptors::ColumnToBeAggregated(
         *JSON::get_object( _json_obj, "column_" ) );

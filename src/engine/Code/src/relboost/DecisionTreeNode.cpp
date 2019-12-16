@@ -40,10 +40,10 @@ DecisionTreeNode::DecisionTreeNode(
                                 : NAN )
 {
     input_.reset(
-        new containers::Schema( *JSON::get_object( _obj, "input_" ) ) );
+        new containers::Placeholder( *JSON::get_object( _obj, "input_" ) ) );
 
     output_.reset(
-        new containers::Schema( *JSON::get_object( _obj, "output_" ) ) );
+        new containers::Placeholder( *JSON::get_object( _obj, "output_" ) ) );
 
     if ( _obj.has( "child_greater_" ) )
         {
@@ -199,10 +199,10 @@ void DecisionTreeNode::fit(
 
     if ( _input )
         {
-            input_.reset( new containers::Schema( _input->to_schema() ) );
+            input_.reset( new containers::Placeholder( _input->to_schema() ) );
         }
 
-    output_.reset( new containers::Schema( _output.df().to_schema() ) );
+    output_.reset( new containers::Placeholder( _output.df().to_schema() ) );
 
     // ------------------------------------------------------------------------
     // If the maximum depth is reached or there are no samples to fit, don't

@@ -14,18 +14,18 @@ struct DecisionTreeEnsembleImpl
     DecisionTreeEnsembleImpl(
         const std::shared_ptr<const std::vector<strings::String>>& _encoding,
         const std::shared_ptr<const Hyperparameters>& _hyperparameters,
-        const std::shared_ptr<const std::vector<std::string>>&
-            _peripheral_names,
-        const std::shared_ptr<const Placeholder>& _placeholder,
-        const std::shared_ptr<const std::vector<containers::Schema>>&
+        const std::shared_ptr<const std::vector<std::string>>& _peripheral,
+        const std::shared_ptr<const containers::Placeholder>& _placeholder,
+        const std::shared_ptr<const std::vector<containers::Placeholder>>&
             _peripheral_schema,
-        const std::shared_ptr<const containers::Schema>& _population_schema )
+        const std::shared_ptr<const containers::Placeholder>&
+            _population_schema )
         : allow_http_( false ),
           comm_( nullptr ),
           encoding_( _encoding ),
           hyperparameters_( _hyperparameters ),
           initial_prediction_( 0.0 ),
-          peripheral_names_( _peripheral_names ),
+          peripheral_( _peripheral ),
           peripheral_schema_( _peripheral_schema ),
           placeholder_( _placeholder ),
           population_schema_( _population_schema )
@@ -38,7 +38,7 @@ struct DecisionTreeEnsembleImpl
     // ------------------------------------------------------------------------
 
     /// Makes sure that all peripheral tables exist.
-    void check_placeholder( const Placeholder& _placeholder ) const;
+    void check_placeholder( const containers::Placeholder& _placeholder ) const;
 
     // ------------------------------------------------------------------------
 
@@ -60,16 +60,17 @@ struct DecisionTreeEnsembleImpl
     Float initial_prediction_;
 
     /// Names of the peripheral tables, as they are referred in placeholder
-    std::shared_ptr<const std::vector<std::string>> peripheral_names_;
+    std::shared_ptr<const std::vector<std::string>> peripheral_;
 
     /// Schema of the peripheral tables.
-    std::shared_ptr<const std::vector<containers::Schema>> peripheral_schema_;
+    std::shared_ptr<const std::vector<containers::Placeholder>>
+        peripheral_schema_;
 
     /// Placeholder object used to define the data schema.
-    std::shared_ptr<const Placeholder> placeholder_;
+    std::shared_ptr<const containers::Placeholder> placeholder_;
 
     /// Schema of the population table.
-    std::shared_ptr<const containers::Schema> population_schema_;
+    std::shared_ptr<const containers::Placeholder> population_schema_;
 
     /// Trees underlying the model.
     std::vector<decisiontrees::DecisionTree> trees_;

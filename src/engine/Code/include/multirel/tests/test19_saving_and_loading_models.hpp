@@ -8,15 +8,15 @@ void test19_saving_and_loading_models( std::filesystem::path _test_path )
     std::cout << "Test 19 | saving and loading models\t\t";
 
     // ---------------------------------------------------------------
-	
+
     // The resulting Model.json and Model.sql will be written to file
     // but never read. To assure that all of this works, we write them
     // to temporary files.
-	std::string tmp_filename_json = Poco::TemporaryFile::tempName();
-	std::string tmp_filename_sql = Poco::TemporaryFile::tempName();
-	std::string tmp_filename_json_2 = Poco::TemporaryFile::tempName();
-	std::string tmp_filename_sql_2 = Poco::TemporaryFile::tempName();
-	std::string tmp_filename_sql_3 = Poco::TemporaryFile::tempName();
+    std::string tmp_filename_json = Poco::TemporaryFile::tempName();
+    std::string tmp_filename_sql = Poco::TemporaryFile::tempName();
+    std::string tmp_filename_json_2 = Poco::TemporaryFile::tempName();
+    std::string tmp_filename_sql_2 = Poco::TemporaryFile::tempName();
+    std::string tmp_filename_sql_3 = Poco::TemporaryFile::tempName();
 
     // ------------------------------------------------------------------------
     // Build artificial data set.
@@ -119,7 +119,7 @@ void test19_saving_and_loading_models( std::filesystem::path _test_path )
     // ---------------------------------------------
     // Build data model.
 
-    // Append all subfolders to reach the required file. This 
+    // Append all subfolders to reach the required file. This
     // appending will have a persistent effect of _test_path which
     // is stored on the heap. After setting it once to the correct
     // folder only the filename has to be replaced.
@@ -127,7 +127,7 @@ void test19_saving_and_loading_models( std::filesystem::path _test_path )
     const auto population_json = load_json( _test_path.string() );
 
     const auto population =
-        std::make_shared<const multirel::decisiontrees::Placeholder>(
+        std::make_shared<const multirel::containers::Placeholder>(
             *population_json );
 
     const auto peripheral = std::make_shared<std::vector<std::string>>(
@@ -136,10 +136,11 @@ void test19_saving_and_loading_models( std::filesystem::path _test_path )
     // ------------------------------------------------------------------------
     // Load hyperparameters.
 
-    const auto hyperparameters_json =
-        load_json( _test_path.replace_filename( "hyperparameters.json" ).string() );
+    const auto hyperparameters_json = load_json(
+        _test_path.replace_filename( "hyperparameters.json" ).string() );
 
-    // std::cout << multirel::JSON::stringify( *hyperparameters_json ) << std::endl
+    // std::cout << multirel::JSON::stringify( *hyperparameters_json ) <<
+    // std::endl
     //           << std::endl;
 
     const auto hyperparameters =
@@ -173,8 +174,7 @@ void test19_saving_and_loading_models( std::filesystem::path _test_path )
     // ------------------------------------------------------------------------
     // Reload model.
 
-    const auto model_json =
-        load_json( tmp_filename_json );
+    const auto model_json = load_json( tmp_filename_json );
 
     auto model2 =
         multirel::ensemble::DecisionTreeEnsemble( encoding, *model_json );
@@ -185,8 +185,7 @@ void test19_saving_and_loading_models( std::filesystem::path _test_path )
     sql2 << model2.to_sql();
     sql2.close();
 
-    const auto model2_json =
-        load_json( tmp_filename_json_2 );
+    const auto model2_json = load_json( tmp_filename_json_2 );
 
     auto model3 =
         multirel::ensemble::DecisionTreeEnsemble( encoding, *model2_json );

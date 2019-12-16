@@ -10,7 +10,7 @@ namespace decisiontrees
 struct TableHolder
 {
     TableHolder(
-        const Placeholder& _placeholder,
+        const containers::Placeholder& _placeholder,
         const containers::DataFrameView& _population,
         const std::vector<containers::DataFrame>& _peripheral,
         const std::vector<std::string>& _peripheral_names )
@@ -37,18 +37,18 @@ struct TableHolder
 
     /// Creates the main tables during construction.
     static std::vector<containers::DataFrameView> parse_main_tables(
-        const Placeholder& _placeholder,
+        const containers::Placeholder& _placeholder,
         const containers::DataFrameView& _population );
 
     /// Creates the peripheral tables during construction.
     static std::vector<containers::DataFrame> parse_peripheral_tables(
-        const Placeholder& _placeholder,
+        const containers::Placeholder& _placeholder,
         const std::vector<containers::DataFrame>& _peripheral,
         const std::vector<std::string>& _peripheral_names );
 
     /// Creates the subtables during construction.
     static std::vector<containers::Optional<TableHolder>> parse_subtables(
-        const Placeholder& _placeholder,
+        const containers::Placeholder& _placeholder,
         const containers::DataFrameView& _population,
         const std::vector<containers::DataFrame>& _peripheral,
         const std::vector<std::string>& _peripheral_names );

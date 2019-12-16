@@ -299,7 +299,7 @@ class DecisionTree
     inline const DecisionTreeImpl *impl() const { return &impl_; }
 
     /// Trivial accessor
-    inline const containers::Schema &input() const
+    inline const containers::Placeholder &input() const
     {
         assert_true( impl()->input_ );
         return *impl()->input_;
@@ -322,7 +322,7 @@ class DecisionTree
     }
 
     /// Trivial accessor
-    inline const containers::Schema &output() const
+    inline const containers::Placeholder &output() const
     {
         assert_true( impl()->output_ );
         return *impl()->output_;

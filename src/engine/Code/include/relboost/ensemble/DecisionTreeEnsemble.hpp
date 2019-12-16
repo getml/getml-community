@@ -27,11 +27,11 @@ class DecisionTreeEnsemble
         const std::shared_ptr<const std::vector<strings::String>>& _encoding,
         const std::shared_ptr<const Hyperparameters>& _hyperparameters,
         const std::shared_ptr<const std::vector<std::string>>& _peripheral,
-        const std::shared_ptr<const Placeholder>& _placeholder,
-        const std::shared_ptr<const std::vector<containers::Schema>>&
+        const std::shared_ptr<const containers::Placeholder>& _placeholder,
+        const std::shared_ptr<const std::vector<containers::Placeholder>>&
             _peripheral_schema = nullptr,
-        const std::shared_ptr<const containers::Schema>& _population_schema =
-            nullptr );
+        const std::shared_ptr<const containers::Placeholder>&
+            _population_schema = nullptr );
 
     DecisionTreeEnsemble(
         const std::shared_ptr<const std::vector<strings::String>>& _encoding,
@@ -164,17 +164,17 @@ class DecisionTreeEnsemble
     size_t num_features() const { return trees().size(); }
 
     /// Trivial  accessor.
-    const std::vector<std::string>& peripheral_names() const
+    const std::vector<std::string>& peripheral() const
     {
         throw_unless(
-            impl().peripheral_names_,
-            "Model has no peripheral names - did you maybe forget to fit "
+            impl().peripheral_,
+            "Model has no peripheral - did you maybe forget to fit "
             "it?" );
-        return *impl().peripheral_names_;
+        return *impl().peripheral_;
     }
 
     /// Trivial (const) accessor
-    const std::vector<containers::Schema>& peripheral_schema() const
+    const std::vector<containers::Placeholder>& peripheral_schema() const
     {
         throw_unless(
             impl().peripheral_schema_,
@@ -184,14 +184,14 @@ class DecisionTreeEnsemble
     }
 
     /// Trivial accessor.
-    const Placeholder& placeholder() const
+    const containers::Placeholder& placeholder() const
     {
         throw_unless( impl().placeholder_, "Model has no placeholder." );
         return *impl().placeholder_;
     }
 
     /// Trivial (const) accessor
-    const containers::Schema& population_schema() const
+    const containers::Placeholder& population_schema() const
     {
         throw_unless(
             impl().population_schema_,

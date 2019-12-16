@@ -59,8 +59,6 @@
 // ----------------------------------------------------
 // Module files
 
-#include "multirel/decisiontrees/Placeholder.hpp"
-
 #include "multirel/decisiontrees/TableHolder.hpp"
 
 #include "multirel/decisiontrees/DecisionTreeImpl.hpp"

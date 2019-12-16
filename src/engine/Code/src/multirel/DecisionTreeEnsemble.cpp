@@ -10,10 +10,10 @@ DecisionTreeEnsemble::DecisionTreeEnsemble(
     const std::shared_ptr<const std::vector<strings::String>> &_categories,
     const std::shared_ptr<const descriptors::Hyperparameters> &_hyperparameters,
     const std::shared_ptr<const std::vector<std::string>> &_peripheral,
-    const std::shared_ptr<const decisiontrees::Placeholder> &_placeholder,
-    const std::shared_ptr<const std::vector<containers::Schema>>
+    const std::shared_ptr<const containers::Placeholder> &_placeholder,
+    const std::shared_ptr<const std::vector<containers::Placeholder>>
         &_peripheral_schema,
-    const std::shared_ptr<const containers::Schema> &_population_schema )
+    const std::shared_ptr<const containers::Placeholder> &_population_schema )
     : impl_(
           _categories,
           _hyperparameters,
@@ -22,7 +22,7 @@ DecisionTreeEnsemble::DecisionTreeEnsemble(
           _peripheral_schema,
           _population_schema )
 {
-    placeholder().check_data_model( peripheral_names(), true );
+    placeholder().check_data_model( peripheral(), true );
 }
 
 // ----------------------------------------------------------------------------
@@ -36,13 +36,13 @@ DecisionTreeEnsemble::DecisionTreeEnsemble(
               *JSON::get_object( _json_obj, "hyperparameters_" ) ),
           JSON::array_to_vector<std::string>(
               JSON::get_array( _json_obj, "peripheral_" ) ),
-          decisiontrees::Placeholder(
+          containers::Placeholder(
               *JSON::get_object( _json_obj, "placeholder_" ) ),
           nullptr,
           nullptr )
 {
     *this = from_json_obj( _json_obj );
-    placeholder().check_data_model( peripheral_names(), true );
+    placeholder().check_data_model( peripheral(), true );
 }
 
 // ----------------------------------------------------------------------------
@@ -116,18 +116,18 @@ void DecisionTreeEnsemble::extract_schemas(
     const containers::DataFrame &_population,
     const std::vector<containers::DataFrame> &_peripheral )
 {
-    impl().population_schema_.reset(
-        new containers::Schema( _population.to_schema() ) );
+    impl().population_schema_ = std::make_shared<const containers::Placeholder>(
+        _population.to_schema() );
 
-    std::vector<containers::Schema> peripheral;
+    auto peripheral_schema =
+        std::make_shared<std::vector<containers::Placeholder>>();
 
     for ( auto &df : _peripheral )
         {
-            peripheral.push_back( df.to_schema() );
+            peripheral_schema->push_back( df.to_schema() );
         }
 
-    impl().peripheral_schema_.reset(
-        new std::vector<containers::Schema>( peripheral ) );
+    impl().peripheral_schema_ = peripheral_schema;
 }
 
 // ----------------------------------------------------------------------------
@@ -218,7 +218,7 @@ void DecisionTreeEnsemble::fit(
                 _population,
                 _peripheral,
                 placeholder(),
-                peripheral_names(),
+                peripheral(),
                 std::shared_ptr<const logging::AbstractLogger>(),
                 &comm,
                 &ensembles[i] ) );
@@ -238,7 +238,7 @@ void DecisionTreeEnsemble::fit(
                 _population,
                 _peripheral,
                 placeholder(),
-                peripheral_names(),
+                peripheral(),
                 _logger,
                 &comm,
                 this );
@@ -552,10 +552,11 @@ DecisionTreeEnsemble DecisionTreeEnsemble::from_json_obj(
     // ----------------------------------------
     // Extract placeholders.
 
-    model.peripheral_names() = JSON::array_to_vector<std::string>(
-        JSON::get_array( _json_obj, "peripheral_" ) );
+    model.impl().peripheral_ =
+        std::vector<std::string>( JSON::array_to_vector<std::string>(
+            JSON::get_array( _json_obj, "peripheral_" ) ) );
 
-    model.impl().placeholder_population_.reset( new decisiontrees::Placeholder(
+    model.impl().placeholder_.reset( new containers::Placeholder(
         *JSON::get_object( _json_obj, "placeholder_" ) ) );
 
     // ----------------------------------------
@@ -634,10 +635,10 @@ DecisionTreeEnsemble DecisionTreeEnsemble::from_json_obj(
     if ( _json_obj.has( "population_schema_" ) )
         {
             model.impl().population_schema_ =
-                std::make_shared<const containers::Schema>(
+                std::make_shared<const containers::Placeholder>(
                     *JSON::get_object( _json_obj, "population_schema_" ) );
 
-            std::vector<containers::Schema> peripheral;
+            std::vector<containers::Placeholder> peripheral_schema;
 
             const auto peripheral_arr =
                 *JSON::get_array( _json_obj, "peripheral_schema_" );
@@ -654,12 +655,13 @@ DecisionTreeEnsemble DecisionTreeEnsemble::from_json_obj(
                                 std::to_string( i ) + " is not an Object!" );
                         }
 
-                    peripheral.push_back( containers::Schema( *ptr ) );
+                    peripheral_schema.push_back(
+                        containers::Placeholder( *ptr ) );
                 }
 
             model.impl().peripheral_schema_ =
-                std::make_shared<const std::vector<containers::Schema>>(
-                    peripheral );
+                std::make_shared<const std::vector<containers::Placeholder>>(
+                    peripheral_schema );
         }
 
     // ----------------------------------------
@@ -732,9 +734,7 @@ Poco::JSON::Object DecisionTreeEnsemble::to_monitor(
                 // ----------------------------------------
                 // Extract placeholders
 
-                obj.set(
-                    "peripheral_",
-                    JSON::vector_to_array( peripheral_names() ) );
+                obj.set( "peripheral_", JSON::vector_to_array( peripheral() ) );
 
                 obj.set( "placeholder_", placeholder().to_json_obj() );
 
@@ -786,8 +786,7 @@ Poco::JSON::Object DecisionTreeEnsemble::to_monitor(
             // ----------------------------------------
             // Insert placeholders
 
-            obj.set(
-                "peripheral_", JSON::vector_to_array( peripheral_names() ) );
+            obj.set( "peripheral_", JSON::vector_to_array( peripheral() ) );
 
             obj.set( "placeholder_", placeholder().to_json_obj() );
 
@@ -840,13 +839,12 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json_obj(
 
     // ----------------------------------------
 
-    obj.set( "peripheral_", JSON::vector_to_array( peripheral_names() ) );
+    obj.set( "peripheral_", JSON::vector_to_array( peripheral() ) );
 
     obj.set( "placeholder_", placeholder().to_json_obj() );
 
     // ----------------------------------------
 
-    // Subensembles in a snowflake model do not have schemata.
     if ( impl().population_schema_ )
         {
             Poco::JSON::Array peripheral_schema_arr;

@@ -115,7 +115,7 @@ void SubtreeHelper::fit_subensembles(
         std::make_shared<const Hyperparameters>( _ensemble.hyperparameters() );
 
     const auto peripheral = std::make_shared<const std::vector<std::string>>(
-        _ensemble.peripheral_names() );
+        _ensemble.peripheral() );
 
     const auto placeholder = _ensemble.placeholder();
 
@@ -150,7 +150,7 @@ void SubtreeHelper::fit_subensembles(
             if ( _table_holder->subtables_[i] )
                 {
                     const auto joined_table =
-                        std::make_shared<const Placeholder>(
+                        std::make_shared<const containers::Placeholder>(
                             placeholder.joined_tables_[i] );
 
                     assert_true( joined_table->joined_tables_.size() > 0 );

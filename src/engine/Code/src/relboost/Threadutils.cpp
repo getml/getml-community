@@ -113,7 +113,7 @@ void Threadutils::transform_ensemble(
                 _ensemble.placeholder(),
                 population_subview,
                 _peripheral,
-                _ensemble.peripheral_names() );
+                _ensemble.peripheral() );
 
             auto predictions = _ensemble.make_subpredictions( table_holder );
 

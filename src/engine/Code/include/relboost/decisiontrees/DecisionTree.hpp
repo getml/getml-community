@@ -98,7 +98,7 @@ class DecisionTree
     }
 
     /// Trivial (private) accessor
-    const containers::Schema& input() const
+    const containers::Placeholder& input() const
     {
         assert_true( input_ );
         return *input_;
@@ -119,7 +119,7 @@ class DecisionTree
     }
 
     /// Trivial (private) accessor
-    const containers::Schema& output() const
+    const containers::Placeholder& output() const
     {
         assert_true( output_ );
         return *output_;
@@ -137,7 +137,7 @@ class DecisionTree
     std::shared_ptr<const Hyperparameters> hyperparameters_;
 
     /// The input table used (we keep it, because we need the colnames)
-    containers::Optional<containers::Schema> input_;
+    containers::Optional<containers::Placeholder> input_;
 
     /// The intercept term that is added after aggregation.
     Float intercept_;
@@ -146,7 +146,7 @@ class DecisionTree
     std::shared_ptr<lossfunctions::LossFunction> loss_function_;
 
     /// The output table used (we keep it, because we need the colnames)
-    containers::Optional<containers::Schema> output_;
+    containers::Optional<containers::Placeholder> output_;
 
     /// The peripheral table used.
     size_t peripheral_used_;

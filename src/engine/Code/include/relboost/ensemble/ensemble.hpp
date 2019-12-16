@@ -35,8 +35,6 @@
 
 // ----------------------------------------------------------------------------
 
-#include "relboost/ensemble/Placeholder.hpp"
-
 #include "relboost/ensemble/TableHolder.hpp"
 
 #include "relboost/ensemble/DecisionTreeEnsembleImpl.hpp"
