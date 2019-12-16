@@ -1781,38 +1781,50 @@ bool DataFrame::remove_column( const std::string &_name )
 
 // ----------------------------------------------------------------------------
 
-void DataFrame::save( const std::string &_path )
+void DataFrame::save( const std::string &_path, const std::string &_name )
 {
+    // ---------------------------------------------------------------------
+
+    auto tfile = Poco::TemporaryFile();
+
+    tfile.createDirectories();
+
+    const auto tpath = tfile.path() + "/";
+
+    // ---------------------------------------------------------------------
+
+    save_matrices( categoricals_, tpath, "categorical_" );
+
+    save_matrices( discretes_, tpath, "discrete_" );
+
+    save_matrices( join_keys_, tpath, "join_key_" );
+
+    save_matrices( numericals_, tpath, "numerical_" );
+
+    save_matrices( targets_, tpath, "target_" );
+
+    save_matrices( time_stamps_, tpath, "time_stamp_" );
+
+    save_matrices( undefined_floats_, tpath, "undefined_float_" );
+
+    save_matrices( undefined_integers_, tpath, "undefined_integer_" );
+
+    save_matrices( undefined_strings_, tpath, "undefined_string_" );
+
     // ---------------------------------------------------------------------
     // If the path already exists, delete it to avoid
     // conflicts with already existing files.
 
-    if ( Poco::File( _path ).exists() )
+    auto file = Poco::File( _path + _name );
+
+    if ( file.exists() )
         {
-            Poco::File( _path ).remove( true );
+            file.remove( true );
         }
 
-    Poco::File( _path ).createDirectories();
+    tfile.renameTo( file.path() );
 
-    // ---------------------------------------------------------------------
-
-    save_matrices( categoricals_, _path, "categorical_" );
-
-    save_matrices( discretes_, _path, "discrete_" );
-
-    save_matrices( join_keys_, _path, "join_key_" );
-
-    save_matrices( numericals_, _path, "numerical_" );
-
-    save_matrices( targets_, _path, "target_" );
-
-    save_matrices( time_stamps_, _path, "time_stamp_" );
-
-    save_matrices( undefined_floats_, _path, "undefined_float_" );
-
-    save_matrices( undefined_integers_, _path, "undefined_integer_" );
-
-    save_matrices( undefined_strings_, _path, "undefined_string_" );
+    tfile.keep();
 
     // ---------------------------------------------------------------------
 }

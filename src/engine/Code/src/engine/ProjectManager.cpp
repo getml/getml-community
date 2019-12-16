@@ -212,8 +212,9 @@ void ProjectManager::add_relboost_model(
         JSON::array_to_vector<std::string>(
             JSON::get_array( _cmd, "peripheral_" ) ) );
 
-    const auto placeholder = std::make_shared<relboost::containers::Placeholder>(
-        JSON::get_object( _cmd, "placeholder_" ) );
+    const auto placeholder =
+        std::make_shared<relboost::containers::Placeholder>(
+            JSON::get_object( _cmd, "placeholder_" ) );
 
     auto population_schema =
         std::shared_ptr<const relboost::containers::Placeholder>();
@@ -252,7 +253,8 @@ void ProjectManager::add_relboost_model(
                 }
 
             peripheral_schema = std::make_shared<
-                const std::vector<relboost::containers::Placeholder>>( peripheral );
+                const std::vector<relboost::containers::Placeholder>>(
+                peripheral );
         }
 
     const auto model = models::RelboostModel(
@@ -779,32 +781,6 @@ void ProjectManager::refresh( Poco::Net::StreamSocket* _socket ) const
 
 // ------------------------------------------------------------------------
 
-void ProjectManager::save_multirel_model(
-    const std::string& _name, Poco::Net::StreamSocket* _socket )
-{
-    if ( project_directory_ == "" )
-        {
-            throw std::invalid_argument( "You have not set a project!" );
-        }
-
-    multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
-
-    auto model = get_multirel_model( _name );
-
-    const auto path = project_directory_ + "multirel-models/" + _name + "/";
-
-    model.save( path );
-
-    // Note that the join keys encoding will be unaffected by models,
-    // passing a zero-length-encoding means that it will not be saved.
-    FileHandler::save_encodings(
-        project_directory_, categories(), containers::Encoding() );
-
-    engine::communication::Sender::send_string( "Success!", _socket );
-}
-
-// ------------------------------------------------------------------------
-
 void ProjectManager::save_data_frame(
     const std::string& _name, Poco::Net::StreamSocket* _socket )
 {
@@ -817,12 +793,38 @@ void ProjectManager::save_data_frame(
 
     auto& df = utils::Getter::get( _name, &data_frames() );
 
-    df.save( project_directory_ + "data/" + _name + "/" );
+    df.save( project_directory_ + "data/", _name );
 
     FileHandler::save_encodings(
         project_directory_, categories(), join_keys_encoding() );
 
     communication::Sender::send_string( "Success!", _socket );
+}
+
+// ------------------------------------------------------------------------
+
+void ProjectManager::save_multirel_model(
+    const std::string& _name, Poco::Net::StreamSocket* _socket )
+{
+    if ( project_directory_ == "" )
+        {
+            throw std::invalid_argument( "You have not set a project!" );
+        }
+
+    multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
+
+    auto model = get_multirel_model( _name );
+
+    const auto path = project_directory_ + "multirel-models/";
+
+    model.save( path, _name );
+
+    // Note that the join keys encoding will be unaffected by models,
+    // passing a zero-length-encoding means that it will not be saved.
+    FileHandler::save_encodings(
+        project_directory_, categories(), containers::Encoding() );
+
+    engine::communication::Sender::send_string( "Success!", _socket );
 }
 
 // ------------------------------------------------------------------------
@@ -839,9 +841,9 @@ void ProjectManager::save_relboost_model(
 
     auto model = get_relboost_model( _name );
 
-    const auto path = project_directory_ + "relboost-models/" + _name + "/";
+    const auto path = project_directory_ + "relboost-models/";
 
-    model.save( path );
+    model.save( path, _name );
 
     // Note that the join keys encoding will be unaffected by models,
     // passing a zero-length-encoding means that it will not be saved.

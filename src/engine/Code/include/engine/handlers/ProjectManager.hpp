@@ -151,12 +151,12 @@ class ProjectManager
     /// Updates the encodings in the client
     void refresh( Poco::Net::StreamSocket* _socket ) const;
 
-    /// Saves an Multirel model to disc.
-    void save_multirel_model(
-        const std::string& _name, Poco::Net::StreamSocket* _socket );
-
     /// Saves a data frame
     void save_data_frame(
+        const std::string& _name, Poco::Net::StreamSocket* _socket );
+
+    /// Saves an Multirel model to disc.
+    void save_multirel_model(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
 
     /// Saves a relboost model to disc.

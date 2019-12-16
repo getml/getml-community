@@ -49,7 +49,7 @@ class Model : public AbstractModel
         Poco::Net::StreamSocket* _socket ) final;
 
     /// Save the model.
-    void save( const std::string& _path ) const final;
+    void save( const std::string& _path, const std::string& _name ) const final;
 
     /// Score predictions.
     Poco::JSON::Object score(
@@ -229,14 +229,14 @@ class Model : public AbstractModel
     /// Trivial (private) accessor
     predictors::PredictorImpl& predictor_impl()
     {
-        assert_true( predictor_impl_ );
+        throw_unless( predictor_impl_, "Model has not been fitted." );
         return *predictor_impl_;
     }
 
     /// Trivial (private) accessor
     const predictors::PredictorImpl& predictor_impl() const
     {
-        assert_true( predictor_impl_ );
+        throw_unless( predictor_impl_, "Model has not been fitted." );
         return *predictor_impl_;
     }
 
@@ -1156,30 +1156,38 @@ void Model<FeatureEngineererType>::make_predictor_impl(
     // --------------------------------------------------------------------
 }
 
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------
 
 template <typename FeatureEngineererType>
-void Model<FeatureEngineererType>::save( const std::string& _path ) const
+void Model<FeatureEngineererType>::save(
+    const std::string& _path, const std::string& _name ) const
 {
-    auto file = Poco::File( _path );
+    auto tfile = Poco::TemporaryFile();
+
+    tfile.createDirectories();
+
+    feature_engineerer().save( tfile.path() + "/feature_engineerer.json" );
+
+    scores().save( tfile.path() + "/scores.json" );
+
+    predictor_impl().save( tfile.path() + "/impl.json" );
+
+    for ( size_t i = 0; i < num_predictors(); ++i )
+        {
+            predictor( i )->save(
+                tfile.path() + "/predictor-" + std::to_string( i ) );
+        }
+
+    auto file = Poco::File( _path + _name );
 
     if ( file.exists() )
         {
             file.remove( true );
         }
 
-    file.createDirectories();
+    tfile.renameTo( file.path() );
 
-    feature_engineerer().save( _path + "feature_engineerer.json" );
-
-    scores().save( _path + "scores.json" );
-
-    predictor_impl().save( _path + "impl.json" );
-
-    for ( size_t i = 0; i < num_predictors(); ++i )
-        {
-            predictor( i )->save( _path + "predictor-" + std::to_string( i ) );
-        }
+    tfile.keep();
 }
 
 // ----------------------------------------------------------------------------
