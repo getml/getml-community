@@ -112,10 +112,11 @@ class Avg : public lossfunctions::LossFunction
         const std::vector<Float>& _eta2_old ) final;
 
     /// Calculates _indices, _eta1 and _eta2 given matches.
-    std::vector<std::array<Float, 3>> calc_weights(
+    virtual std::vector<std::pair<Float, std::array<Float, 3>>> calc_pairs(
         const enums::Revert _revert,
         const enums::Update _update,
         const Float _min_num_samples,
+        const Float _old_intercept,
         const Float _old_weight,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _split_begin,
@@ -141,12 +142,6 @@ class Avg : public lossfunctions::LossFunction
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _split,
         const std::vector<const containers::Match*>::iterator _end ) final;
-
-    /// Returns the loss reduction associated with a split.
-    Float evaluate_split(
-        const Float _old_intercept,
-        const Float _old_weight,
-        const std::array<Float, 3>& _weights ) final;
 
     /// Returns the loss reduction associated with a split.
     Float evaluate_split(
@@ -329,6 +324,12 @@ class Avg : public lossfunctions::LossFunction
         const Float _old_weight,
         const containers::IntSet::Iterator _begin,
         const containers::IntSet::Iterator _end );
+
+    /// Evaluates a split and returns the loss reduction (called by calc_pairs).
+    Float evaluate_split(
+        const Float _old_intercept,
+        const Float _old_weight,
+        const std::array<Float, 3>& _weights );
 
     /// Initialized count_committed_ by calculating the total count.
     void init_count_committed(

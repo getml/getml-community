@@ -61,11 +61,12 @@ class LossFunction
         const std::vector<Float>& _eta2,
         const std::vector<Float>& _eta2_old ) = 0;
 
-    /// Calculates weights given the matches.
-    virtual std::vector<std::array<Float, 3>> calc_weights(
+    /// Calculates the loss_reduction-weight-pairs given the matches.
+    virtual std::vector<std::pair<Float, std::array<Float, 3>>> calc_pairs(
         const enums::Revert _revert,
         const enums::Update _update,
         const Float _min_num_samples,
+        const Float _old_intercept,
         const Float _old_weight,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _split_begin,
@@ -120,12 +121,6 @@ class LossFunction
         const std::vector<size_t>& _indices,
         const std::vector<Float>& _eta1,
         const std::vector<Float>& _eta2 ) = 0;
-
-    /// Evaluates split given matches.
-    virtual Float evaluate_split(
-        const Float _old_intercept,
-        const Float _old_weight,
-        const std::array<Float, 3>& _weights ) = 0;
 
     /// Evaluates and entire tree.
     virtual Float evaluate_tree(

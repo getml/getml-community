@@ -102,10 +102,11 @@ void DecisionTreeNode::add_candidates(
     // -----------------------------------------------------------------
     // Calculate weights.
 
-    auto all_new_weights = loss_function().calc_weights(
+    auto pairs = loss_function().calc_pairs(
         _revert,
         _update,
         hyperparameters().min_num_samples_,
+        _old_intercept,
         weight_,
         _begin,
         _last_it,
@@ -115,7 +116,7 @@ void DecisionTreeNode::add_candidates(
     // -----------------------------------------------------------------
     // Calculate and store loss reduction.
 
-    for ( const auto& new_weights : all_new_weights )
+    for ( const auto& [loss_reduction, new_weights] : pairs )
         {
             assert_true( !std::isinf( std::get<0>( new_weights ) ) );
             assert_true( !std::isinf( std::get<1>( new_weights ) ) );
@@ -129,9 +130,6 @@ void DecisionTreeNode::add_candidates(
             assert_true(
                 !std::isnan( std::get<1>( new_weights ) ) ||
                 !std::isnan( std::get<2>( new_weights ) ) );
-
-            auto loss_reduction = loss_function().evaluate_split(
-                _old_intercept, weight_, new_weights );
 
             _candidates->push_back( containers::CandidateSplit(
                 loss_reduction, _split, new_weights ) );

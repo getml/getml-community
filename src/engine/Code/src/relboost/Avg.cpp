@@ -351,10 +351,11 @@ std::array<Float, 3> Avg::calc_weights(
 
 // ----------------------------------------------------------------------------
 
-std::vector<std::array<Float, 3>> Avg::calc_weights(
+std::vector<std::pair<Float, std::array<Float, 3>>> Avg::calc_pairs(
     const enums::Revert _revert,
     const enums::Update _update,
     const Float _min_num_samples,
+    const Float _old_intercept,
     const Float _old_weight,
     const std::vector<const containers::Match*>::iterator _begin,
     const std::vector<const containers::Match*>::iterator _split_begin,
@@ -396,7 +397,7 @@ std::vector<std::array<Float, 3>> Avg::calc_weights(
 
     // -------------------------------------------------------------
 
-    std::vector<std::array<Float, 3>> results;
+    auto results = std::vector<std::pair<Float, std::array<Float, 3>>>();
 
     // -------------------------------------------------------------
 
@@ -408,9 +409,11 @@ std::vector<std::array<Float, 3>> Avg::calc_weights(
 
     // -------------------------------------------------------------
 
+    std::vector<std::array<Float, 3>> weights;
+
     if ( !std::isnan( _old_weight ) )
         {
-            results.push_back( child_->calc_weights(
+            weights.push_back( child_->calc_weights(
                 enums::Aggregation::avg,
                 _old_weight,
                 indices_.unique_integers(),
@@ -421,7 +424,7 @@ std::vector<std::array<Float, 3>> Avg::calc_weights(
                 eta2_old_ ) );
         }
 
-    results.push_back( child_->calc_weights(
+    weights.push_back( child_->calc_weights(
         enums::Aggregation::avg_second_null,
         _old_weight,
         indices_.unique_integers(),
@@ -431,7 +434,7 @@ std::vector<std::array<Float, 3>> Avg::calc_weights(
         w_fixed_1_,
         w_fixed_1_old_ ) );
 
-    results.push_back( child_->calc_weights(
+    weights.push_back( child_->calc_weights(
         enums::Aggregation::avg_first_null,
         _old_weight,
         indices_.unique_integers(),
@@ -449,6 +452,33 @@ std::vector<std::array<Float, 3>> Avg::calc_weights(
         {
             indices_current_.clear();
         }
+
+    // -----------------------------------------------------------------
+
+    for ( const auto& w : weights )
+        {
+            assert_true( !std::isinf( std::get<0>( w ) ) );
+            assert_true( !std::isinf( std::get<1>( w ) ) );
+            assert_true( !std::isinf( std::get<2>( w ) ) );
+
+            if ( std::isnan( std::get<0>( w ) ) )
+                {
+                    continue;
+                }
+
+            assert_true(
+                !std::isnan( std::get<1>( w ) ) ||
+                !std::isnan( std::get<2>( w ) ) );
+
+            const auto loss_reduction =
+                evaluate_split( _old_intercept, _old_weight, w );
+
+            results.push_back( std::make_pair( loss_reduction, w ) );
+        }
+
+    // -------------------------------------------------------------
+
+    return results;
 
     // -------------------------------------------------------------
 

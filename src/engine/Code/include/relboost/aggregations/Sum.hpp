@@ -116,10 +116,11 @@ class Sum : public lossfunctions::LossFunction
         const std::vector<Float>& _eta2_old ) final;
 
     /// Calculates _indices, _eta1 and _eta2 given matches.
-    std::vector<std::array<Float, 3>> calc_weights(
+    std::vector<std::pair<Float, std::array<Float, 3>>> calc_pairs(
         const enums::Revert _revert,
         const enums::Update _update,
         const Float _min_num_samples,
+        const Float _old_intercept,
         const Float _old_weight,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _split_begin,
@@ -136,12 +137,6 @@ class Sum : public lossfunctions::LossFunction
         const std::vector<Float>& _eta1_old,
         const std::vector<Float>& _eta2,
         const std::vector<Float>& _eta2_old ) final;
-
-    /// Returns the loss reduction associated with a split.
-    Float evaluate_split(
-        const Float _old_intercept,
-        const Float _old_weight,
-        const std::array<Float, 3>& _weights ) final;
 
     /// Returns the loss reduction associated with a split.
     Float evaluate_split(

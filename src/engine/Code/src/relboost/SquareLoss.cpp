@@ -113,55 +113,6 @@ Float SquareLoss::calc_loss( const std::array<Float, 3>& _weights )
 
 // ----------------------------------------------------------------------------
 
-Float SquareLoss::evaluate_split(
-    const Float _old_intercept,
-    const Float _old_weight,
-    const std::array<Float, 3>& _weights )
-{
-    /*  //
-      ------------------------------------------------------------------------
-
-      auto new_weight = std::get<1>( _weights );
-
-      //
-      ------------------------------------------------------------------------
-
-      const auto loss_function = [this, &new_weight, _old_weight](
-                                     Float init,
-                                     const containers::Match* ptr ) {
-          const auto ix = ptr->ix_output;
-
-          assert_true( ix < targets().size() );
-
-          const auto diff_old = _old_weight - targets()[ix];
-
-          const auto diff_new = new_weight - targets()[ix];
-
-          return init + diff_old * diff_old - diff_new * diff_new;
-      };
-
-      //
-      ------------------------------------------------------------------------
-
-      auto result = std::accumulate( _split, _end, 0.0, loss_function );
-
-      //
-      ------------------------------------------------------------------------
-
-      new_weight = std::get<2>( _weights );
-
-      result += std::accumulate( _split, _end, 0.0, loss_function );
-
-      //
-      ------------------------------------------------------------------------
-
-      return result;*/
-
-    return 0.0;
-}
-
-// ----------------------------------------------------------------------------
-
 Float SquareLoss::evaluate_tree(
     const Float _update_rate, const std::vector<Float>& _predictions )
 {

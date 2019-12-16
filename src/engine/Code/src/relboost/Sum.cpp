@@ -154,10 +154,11 @@ std::array<Float, 3> Sum::calc_weights(
 
 // ----------------------------------------------------------------------------
 
-std::vector<std::array<Float, 3>> Sum::calc_weights(
+std::vector<std::pair<Float, std::array<Float, 3>>> Sum::calc_pairs(
     const enums::Revert _revert,
     const enums::Update _update,
     const Float _min_num_samples,
+    const Float _old_intercept,
     const Float _old_weight,
     const std::vector<const containers::Match*>::iterator _begin,
     const std::vector<const containers::Match*>::iterator _split_begin,
@@ -201,7 +202,7 @@ std::vector<std::array<Float, 3>> Sum::calc_weights(
 
     // -------------------------------------------------------------
 
-    std::vector<std::array<Float, 3>> results;
+    auto results = std::vector<std::pair<Float, std::array<Float, 3>>>();
 
     // -------------------------------------------------------------
 
@@ -213,7 +214,7 @@ std::vector<std::array<Float, 3>> Sum::calc_weights(
 
     // -------------------------------------------------------------
 
-    results = {child_->calc_weights(
+    const auto weights = std::vector<std::array<Float, 3>>{child_->calc_weights(
         enums::Aggregation::sum,
         _old_weight,
         indices_.unique_integers(),
@@ -230,6 +231,36 @@ std::vector<std::array<Float, 3>> Sum::calc_weights(
     if ( _revert == enums::Revert::False )
         {
             indices_current_.clear();
+        }
+
+    // -----------------------------------------------------------------
+
+    for ( const auto& w : weights )
+        {
+            assert_true( !std::isinf( std::get<0>( w ) ) );
+            assert_true( !std::isinf( std::get<1>( w ) ) );
+            assert_true( !std::isinf( std::get<2>( w ) ) );
+
+            if ( std::isnan( std::get<0>( w ) ) )
+                {
+                    continue;
+                }
+
+            assert_true(
+                !std::isnan( std::get<1>( w ) ) ||
+                !std::isnan( std::get<2>( w ) ) );
+
+            calc_yhat( _old_weight, w );
+
+            const auto loss_reduction = child_->evaluate_split(
+                _old_intercept,
+                _old_weight,
+                w,
+                indices_.unique_integers(),
+                eta1_,
+                eta2_ );
+
+            results.push_back( std::make_pair( loss_reduction, w ) );
         }
 
     // -------------------------------------------------------------
@@ -291,30 +322,6 @@ void Sum::commit(
 
     impl_.commit( _weights );
 };
-
-// ----------------------------------------------------------------------------
-
-Float Sum::evaluate_split(
-    const Float _old_intercept,
-    const Float _old_weight,
-    const std::array<Float, 3>& _weights )
-{
-    // -----------------------------------------------------------------
-
-    calc_yhat( _old_weight, _weights );
-
-    // -----------------------------------------------------------------
-
-    return child_->evaluate_split(
-        _old_intercept,
-        _old_weight,
-        _weights,
-        indices_.unique_integers(),
-        eta1_,
-        eta2_ );
-
-    // -----------------------------------------------------------------
-}
 
 // ----------------------------------------------------------------------------
 

@@ -45,13 +45,6 @@ class SquareLoss : public LossFunction
     /// Calculates first and second derivatives.
     void calc_gradients() final;
 
-    /// Evaluates split given matches. In this case, the loss function effective
-    /// turns into XGBoost.
-    Float evaluate_split(
-        const Float _old_intercept,
-        const Float _old_weight,
-        const std::array<Float, 3>& _weights ) final;
-
     /// Evaluates and entire tree.
     Float evaluate_tree(
         const Float _update_rate, const std::vector<Float>& _yhat_new ) final;
@@ -133,24 +126,19 @@ class SquareLoss : public LossFunction
 
     /// Calculates two new weights given matches. This just reduces to the
     /// normal XGBoost approach.
-    std::vector<std::array<Float, 3>> calc_weights(
+    std::vector<std::pair<Float, std::array<Float, 3>>> calc_pairs(
         const enums::Revert _revert,
         const enums::Update _update,
         const Float _min_num_samples,
+        const Float _old_intercept,
         const Float _old_weight,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _split_begin,
         const std::vector<const containers::Match*>::iterator _split_end,
         const std::vector<const containers::Match*>::iterator _end ) final
     {
-        return impl_.calc_weights(
-            _update,
-            _old_weight,
-            _begin,
-            _split_begin,
-            _split_end,
-            _end,
-            &comm() );
+        // TODO
+        return std::vector<std::pair<Float, std::array<Float, 3>>>();
     }
 
     /// Calculates the new yhat given eta, indices and the new weights.
