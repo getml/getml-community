@@ -1,8 +1,8 @@
-#include "relboost/ensemble/ensemble.hpp"
+#include "relboost/containers/containers.hpp"
 
 namespace relboost
 {
-namespace ensemble
+namespace containers
 {
 // ----------------------------------------------------------------------------
 
@@ -101,14 +101,12 @@ Poco::JSON::Array::Ptr Placeholder::joined_tables_to_array(
 std::vector<Placeholder> Placeholder::parse_joined_tables(
     const Poco::JSON::Array::Ptr _array )
 {
+    std::vector<Placeholder> vec;
+
     if ( _array.isNull() )
         {
-            std::runtime_error(
-                "Error while parsing Placeholder: Array does not exist or "
-                "is not an array!" );
+            return vec;
         }
-
-    std::vector<Placeholder> vec;
 
     for ( size_t i = 0; i < _array->size(); ++i )
         {
@@ -170,5 +168,5 @@ Poco::JSON::Object::Ptr Placeholder::to_json_obj() const
 }
 
 // ----------------------------------------------------------------------------
-}  // namespace ensemble
+}  // namespace containers
 }  // namespace relboost

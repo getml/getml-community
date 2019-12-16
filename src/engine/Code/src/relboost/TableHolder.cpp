@@ -34,7 +34,7 @@ std::shared_ptr<const std::vector<size_t>> TableHolder::make_subrows(
 // ----------------------------------------------------------------------------
 
 std::vector<containers::DataFrameView> TableHolder::parse_main_tables(
-    const Placeholder& _placeholder,
+    const containers::Placeholder& _placeholder,
     const containers::DataFrameView& _population )
 {
     assert_true(
@@ -61,7 +61,7 @@ std::vector<containers::DataFrameView> TableHolder::parse_main_tables(
 // ----------------------------------------------------------------------------
 
 std::vector<containers::DataFrame> TableHolder::parse_peripheral_tables(
-    const Placeholder& _placeholder,
+    const containers::Placeholder& _placeholder,
     const std::vector<containers::DataFrame>& _peripheral,
     const std::vector<std::string>& _peripheral_names )
 {
@@ -100,7 +100,7 @@ std::vector<containers::DataFrame> TableHolder::parse_peripheral_tables(
 // ----------------------------------------------------------------------------
 
 std::vector<std::optional<TableHolder>> TableHolder::parse_subtables(
-    const Placeholder& _placeholder,
+    const containers::Placeholder& _placeholder,
     const containers::DataFrameView& _population,
     const std::vector<containers::DataFrame>& _peripheral,
     const std::vector<std::string>& _peripheral_names )

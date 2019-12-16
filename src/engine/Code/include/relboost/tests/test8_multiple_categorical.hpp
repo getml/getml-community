@@ -8,12 +8,12 @@ void test8_multiple_categorical( std::filesystem::path _test_path )
     std::cout << "Test 8 | SUM aggregation, multiple categorical values\t";
 
     // ---------------------------------------------------------------
-	
+
     // The resulting Model.json and Model.sql will be written to file
     // but never read. To assure that all of this works, we write them
     // to temporary files.
-	std::string tmp_filename_json = Poco::TemporaryFile::tempName();
-	std::string tmp_filename_sql = Poco::TemporaryFile::tempName();
+    std::string tmp_filename_json = Poco::TemporaryFile::tempName();
+    std::string tmp_filename_sql = Poco::TemporaryFile::tempName();
 
     // ------------------------------------------------------------------------
     // Build artificial data set.
@@ -147,7 +147,7 @@ void test8_multiple_categorical( std::filesystem::path _test_path )
     const auto population_json = load_json( _test_path.string() );
 
     const auto population =
-        std::make_shared<const relboost::ensemble::Placeholder>(
+        std::make_shared<const relboost::containers::Placeholder>(
             *population_json );
 
     const auto peripheral = std::make_shared<std::vector<std::string>>(
@@ -159,7 +159,8 @@ void test8_multiple_categorical( std::filesystem::path _test_path )
     const auto hyperparameters_json = load_json(
         _test_path.replace_filename( "hyperparameters.json" ).string() );
 
-    // std::cout << relboost::JSON::stringify( *hyperparameters_json ) << std::endl
+    // std::cout << relboost::JSON::stringify( *hyperparameters_json ) <<
+    // std::endl
     //           << std::endl;
 
     const auto hyperparameters =

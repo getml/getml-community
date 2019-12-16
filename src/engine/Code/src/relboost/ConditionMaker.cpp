@@ -7,8 +7,8 @@ namespace utils
 // ----------------------------------------------------------------------------
 
 std::string ConditionMaker::condition_greater(
-    const containers::Schema& _input,
-    const containers::Schema& _output,
+    const containers::Placeholder& _input,
+    const containers::Placeholder& _output,
     const containers::Split& _split ) const
 {
     switch ( _split.data_used_ )
@@ -141,8 +141,8 @@ std::string ConditionMaker::condition_greater(
 // ----------------------------------------------------------------------------
 
 std::string ConditionMaker::condition_smaller(
-    const containers::Schema& _input,
-    const containers::Schema& _output,
+    const containers::Placeholder& _input,
+    const containers::Placeholder& _output,
     const containers::Split& _split ) const
 {
     switch ( _split.data_used_ )
