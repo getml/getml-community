@@ -129,25 +129,25 @@ void ProjectManager::add_multirel_model(
             JSON::get_array( _cmd, "peripheral_" ) ) );
 
     const auto placeholder =
-        std::make_shared<multirel::decisiontrees::Placeholder>(
+        std::make_shared<multirel::containers::Placeholder>(
             JSON::get_object( _cmd, "placeholder_" ) );
 
     auto population_schema =
-        std::shared_ptr<const multirel::containers::Schema>();
+        std::shared_ptr<const multirel::containers::Placeholder>();
 
     if ( _cmd.has( "population_schema_" ) )
         {
             population_schema =
-                std::make_shared<const multirel::containers::Schema>(
+                std::make_shared<const multirel::containers::Placeholder>(
                     *JSON::get_object( _cmd, "population_schema_" ) );
         }
 
     auto peripheral_schema =
-        std::shared_ptr<const std::vector<multirel::containers::Schema>>();
+        std::shared_ptr<const std::vector<multirel::containers::Placeholder>>();
 
     if ( _cmd.has( "peripheral_schema_" ) )
         {
-            std::vector<multirel::containers::Schema> peripheral;
+            std::vector<multirel::containers::Placeholder> peripheral;
 
             const auto peripheral_arr =
                 *JSON::get_array( _cmd, "peripheral_schema_" );
@@ -165,11 +165,12 @@ void ProjectManager::add_multirel_model(
                         }
 
                     peripheral.push_back(
-                        multirel::containers::Schema( *ptr ) );
+                        multirel::containers::Placeholder( *ptr ) );
                 }
 
             peripheral_schema = std::make_shared<
-                const std::vector<multirel::containers::Schema>>( peripheral );
+                const std::vector<multirel::containers::Placeholder>>(
+                peripheral );
         }
 
     const auto model = models::MultirelModel(
