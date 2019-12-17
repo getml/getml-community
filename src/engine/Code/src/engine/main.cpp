@@ -132,6 +132,7 @@ int main( int argc, char *argv[] )
             data_frames,
             join_keys_encoding,
             license_checker,
+            logger,
             relboost_models,
             monitor,
             options,

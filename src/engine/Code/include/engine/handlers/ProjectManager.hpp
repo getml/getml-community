@@ -26,6 +26,7 @@ class ProjectManager
             _data_frames,
         const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
         const std::shared_ptr<licensing::LicenseChecker>& _license_checker,
+        const std::shared_ptr<const monitoring::Logger>& _logger,
         const std::shared_ptr<RelboostModelMapType>& _relboost_models,
         const std::shared_ptr<const monitoring::Monitor>& _monitor,
         const config::Options& _options,
@@ -36,6 +37,7 @@ class ProjectManager
           data_frames_( _data_frames ),
           join_keys_encoding_( _join_keys_encoding ),
           license_checker_( _license_checker ),
+          logger_( _logger ),
           monitor_( _monitor ),
           options_( _options ),
           read_write_lock_( _read_write_lock ),
@@ -259,6 +261,13 @@ class ProjectManager
     }
 
     /// Trivial (private) accessor
+    const monitoring::Logger& logger()
+    {
+        assert_true( logger_ );
+        return *logger_;
+    }
+
+    /// Trivial (private) accessor
     RelboostModelMapType& relboost_models()
     {
         assert_true( relboost_models_ );
@@ -317,6 +326,9 @@ class ProjectManager
 
     /// For checking the license and memory usage
     const std::shared_ptr<licensing::LicenseChecker> license_checker_;
+
+    /// For logging
+    const std::shared_ptr<const monitoring::Logger> logger_;
 
     /// For communication with the monitor
     const std::shared_ptr<const monitoring::Monitor> monitor_;

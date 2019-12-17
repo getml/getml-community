@@ -591,12 +591,16 @@ void ProjectManager::list_projects( Poco::Net::StreamSocket* _socket ) const
 
 void ProjectManager::load_all_models()
 {
+    // --------------------------------------------------------------------
+
     if ( project_directory_ == "" )
         {
             throw std::invalid_argument( "You have not set a project!" );
         }
 
     Poco::DirectoryIterator end;
+
+    // --------------------------------------------------------------------
 
     for ( Poco::DirectoryIterator it( project_directory_ + "multirel-models/" );
           it != end;
@@ -607,14 +611,24 @@ void ProjectManager::load_all_models()
                     continue;
                 }
 
-            auto model = models::MultirelModel(
-                categories().vector(), it->path() + "/" );
+            try
+                {
+                    auto model = models::MultirelModel(
+                        categories().vector(), it->path() + "/" );
 
-            set_multirel_model( it.name(), model, true );
+                    set_multirel_model( it.name(), model, true );
 
-            monitor_->send(
-                "postmultirelmodel", model.to_monitor( it.name() ) );
+                    monitor_->send(
+                        "postmultirelmodel", model.to_monitor( it.name() ) );
+                }
+            catch ( std::exception& e )
+                {
+                    logger().log(
+                        "Error loading " + it.name() + ": " + e.what() );
+                }
         }
+
+    // --------------------------------------------------------------------
 
     for ( Poco::DirectoryIterator it( project_directory_ + "relboost-models/" );
           it != end;
@@ -625,14 +639,24 @@ void ProjectManager::load_all_models()
                     continue;
                 }
 
-            auto model = models::RelboostModel(
-                categories().vector(), it->path() + "/" );
+            try
+                {
+                    auto model = models::RelboostModel(
+                        categories().vector(), it->path() + "/" );
 
-            set_relboost_model( it.name(), model, true );
+                    set_relboost_model( it.name(), model, true );
 
-            monitor_->send(
-                "postrelboostmodel", model.to_monitor( it.name() ) );
+                    monitor_->send(
+                        "postrelboostmodel", model.to_monitor( it.name() ) );
+                }
+            catch ( std::exception& e )
+                {
+                    logger().log(
+                        "Error loading " + it.name() + ": " + e.what() );
+                }
         }
+
+    // --------------------------------------------------------------------
 }
 
 // ------------------------------------------------------------------------
