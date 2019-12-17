@@ -157,7 +157,11 @@ class ModelManager
     }
 
     /// Trivial (private) accessor
-    const monitoring::Logger& logger() { return *logger_; }
+    const monitoring::Logger& logger()
+    {
+        assert_true( logger_ );
+        return *logger_;
+    }
 
     /// Trivial (private) accessor
     ModelMapType& models()

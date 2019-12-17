@@ -29,6 +29,7 @@
 #include <Poco/JSON/Object.h>
 #include <Poco/JSON/Parser.h>
 #include <Poco/Path.h>
+#include <Poco/TemporaryFile.h>
 #include <Poco/Timestamp.h>
 
 #include "debug/debug.hpp"
