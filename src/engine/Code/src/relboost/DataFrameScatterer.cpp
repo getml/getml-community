@@ -6,8 +6,7 @@ namespace utils
 {
 // ----------------------------------------------------------------------------
 
-const std::pair<std::vector<size_t>, size_t>
-DataFrameScatterer::build_thread_nums(
+std::pair<std::vector<size_t>, size_t> DataFrameScatterer::build_thread_nums(
     const std::map<Int, size_t>& _min_keys_map,
     const containers::Column<Int>& _min_join_key )
 {
@@ -28,20 +27,55 @@ DataFrameScatterer::build_thread_nums(
 
 // ----------------------------------------------------------------------------
 
-const std::pair<std::vector<size_t>, size_t>
-DataFrameScatterer::build_thread_nums(
+std::pair<std::vector<size_t>, size_t> DataFrameScatterer::build_thread_nums(
+    const size_t _nrows, const size_t _num_threads )
+{
+    assert_true( _num_threads > 0 );
+
+    auto thread_nums = std::vector<size_t>( _nrows );
+
+    for ( size_t i = 0; i < _nrows; ++i )
+        {
+            thread_nums[i] = i % _num_threads;
+        }
+
+    std::sort( thread_nums.begin(), thread_nums.end() );
+
+    const auto n_unique = std::min( _num_threads, _nrows );
+
+    return std::make_pair( thread_nums, n_unique );
+}
+
+// ----------------------------------------------------------------------------
+
+std::pair<std::vector<size_t>, size_t> DataFrameScatterer::build_thread_nums(
+    const bool _has_peripheral,
+    const size_t _nrows,
     const std::vector<containers::Column<Int>>& _keys,
     const size_t _num_threads )
 {
-    check_plausibility( _keys, _num_threads );
+    if ( _num_threads <= 0 )
+        {
+            throw std::invalid_argument(
+                "Number of threads must be positive!" );
+        }
 
-    size_t ix_min_keys = 0;
+    if ( _has_peripheral )
+        {
+            check_plausibility( _keys, _num_threads );
 
-    std::map<Int, size_t> min_keys_map;
+            size_t ix_min_keys = 0;
 
-    scatter_keys( _keys, _num_threads, &ix_min_keys, &min_keys_map );
+            std::map<Int, size_t> min_keys_map;
 
-    return build_thread_nums( min_keys_map, _keys[ix_min_keys] );
+            scatter_keys( _keys, _num_threads, &ix_min_keys, &min_keys_map );
+
+            return build_thread_nums( min_keys_map, _keys[ix_min_keys] );
+        }
+    else
+        {
+            return build_thread_nums( _nrows, _num_threads );
+        }
 }
 
 // ----------------------------------------------------------------------------
@@ -63,12 +97,6 @@ void DataFrameScatterer::check_plausibility(
                     throw std::invalid_argument(
                         "All keys must have the same number of rows!" );
                 }
-        }
-
-    if ( _num_threads <= 0 )
-        {
-            throw std::invalid_argument(
-                "Number of threads must be positive!" );
         }
 }
 

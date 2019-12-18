@@ -12,7 +12,7 @@ class Threadutils
     // ------------------------------------------------------------------------
 
    public:
-    /// Fits a feature engineerer  or throws an exception.
+    /// Fits an ensemble or throws an exception.
     static void fit_ensemble(
         const size_t _this_thread_num,
         const std::vector<size_t> _thread_nums,
@@ -42,6 +42,23 @@ class Threadutils
         const std::vector<size_t> _rows,
         const std::vector<Float>& _local_feature,
         std::vector<Float>* _global_feature );
+
+    /// Fits the relboost ensemble as a feature engineerer.
+    static void fit_as_feature_engineerer(
+        const size_t _this_thread_num,
+        const std::vector<size_t>& _thread_nums,
+        const containers::DataFrame& _population,
+        const std::vector<containers::DataFrame>& _peripheral,
+        const std::shared_ptr<const logging::AbstractLogger> _logger,
+        ensemble::DecisionTreeEnsemble* _ensemble );
+
+    /// Fits the relboost ensemble as a predictor.
+    static void fit_as_predictor(
+        const size_t _this_thread_num,
+        const std::vector<size_t>& _thread_nums,
+        const containers::DataFrame& _population,
+        const std::shared_ptr<const logging::AbstractLogger> _logger,
+        ensemble::DecisionTreeEnsemble* _ensemble );
 
     // ------------------------------------------------------------------------
 };

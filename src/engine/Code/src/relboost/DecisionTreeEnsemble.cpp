@@ -319,9 +319,14 @@ void DecisionTreeEnsemble::fit(
     // ------------------------------------------------------
     // Build thread_nums
 
+    const bool has_peripheral = ( _peripheral.size() > 0 );
+
     const auto [thread_nums, n_unique] =
         utils::DataFrameScatterer::build_thread_nums(
-            _population.join_keys(), num_threads );
+            has_peripheral,
+            _population.nrows(),
+            _population.join_keys(),
+            num_threads );
 
     // ------------------------------------------------------
     // Take care of an edge case.
@@ -1001,9 +1006,14 @@ containers::Features DecisionTreeEnsemble::transform(
     auto num_threads =
         Threadutils::get_num_threads( hyperparameters().num_threads_ );
 
+    const bool has_peripheral = ( _peripheral.size() > 0 );
+
     const auto [thread_nums, n_unique] =
         utils::DataFrameScatterer::build_thread_nums(
-            _population.join_keys(), num_threads );
+            has_peripheral,
+            _population.nrows(),
+            _population.join_keys(),
+            num_threads );
 
     // ------------------------------------------------------
     // Take care of an edge case.

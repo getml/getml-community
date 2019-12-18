@@ -23,6 +23,80 @@ void Threadutils::copy(
 
 // ----------------------------------------------------------------------------
 
+void Threadutils::fit_as_feature_engineerer(
+    const size_t _this_thread_num,
+    const std::vector<size_t>& _thread_nums,
+    const containers::DataFrame& _population,
+    const std::vector<containers::DataFrame>& _peripheral,
+    const std::shared_ptr<const logging::AbstractLogger> _logger,
+    ensemble::DecisionTreeEnsemble* _ensemble )
+{
+    const auto population_subview =
+        relboost::utils::DataFrameScatterer::scatter_data_frame(
+            _population, _thread_nums, _this_thread_num );
+
+    const auto [loss_function, table_holder] =
+        _ensemble->init_as_feature_engineerer(
+            population_subview, _peripheral );
+
+    _ensemble->fit_subensembles( table_holder, _logger, loss_function );
+
+    auto predictions = _ensemble->make_subpredictions( *table_holder );
+
+    auto subfeatures =
+        SubtreeHelper::make_subfeatures( *table_holder, predictions );
+
+    const auto num_features = _ensemble->hyperparameters().num_features_;
+
+    const auto silent = _ensemble->hyperparameters().silent_;
+
+    for ( size_t i = 0; i < num_features; ++i )
+        {
+            _ensemble->fit_new_feature(
+                loss_function, table_holder, subfeatures );
+
+            if ( !silent && _logger )
+                {
+                    _logger->log(
+                        "Trained FEATURE_" + std::to_string( i + 1 ) + "." );
+                }
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+void Threadutils::fit_as_predictor(
+    const size_t _this_thread_num,
+    const std::vector<size_t>& _thread_nums,
+    const containers::DataFrame& _population,
+    const std::shared_ptr<const logging::AbstractLogger> _logger,
+    ensemble::DecisionTreeEnsemble* _ensemble )
+{
+    const auto population_subview =
+        relboost::utils::DataFrameScatterer::scatter_data_frame(
+            _population, _thread_nums, _this_thread_num );
+
+    const auto loss_function =
+        _ensemble->init_as_predictor( population_subview );
+
+    const auto num_features = _ensemble->hyperparameters().num_features_;
+
+    const auto silent = _ensemble->hyperparameters().silent_;
+
+    for ( size_t i = 0; i < num_features; ++i )
+        {
+            _ensemble->fit_new_tree( loss_function, population_subview );
+
+            if ( !silent && _logger )
+                {
+                    _logger->log(
+                        "Trained tree " + std::to_string( i + 1 ) + "." );
+                }
+        }
+}
+
+// ----------------------------------------------------------------------------
+
 void Threadutils::fit_ensemble(
     const size_t _this_thread_num,
     const std::vector<size_t> _thread_nums,
@@ -33,37 +107,24 @@ void Threadutils::fit_ensemble(
 {
     try
         {
-            const auto population_subview =
-                relboost::utils::DataFrameScatterer::scatter_data_frame(
-                    _population, _thread_nums, _this_thread_num );
-
-            const auto [loss_function, table_holder] =
-                _ensemble->init_as_feature_engineerer(
-                    population_subview, _peripheral );
-
-            _ensemble->fit_subensembles( table_holder, _logger, loss_function );
-
-            auto predictions = _ensemble->make_subpredictions( *table_holder );
-
-            auto subfeatures =
-                SubtreeHelper::make_subfeatures( *table_holder, predictions );
-
-            const auto num_features =
-                _ensemble->hyperparameters().num_features_;
-
-            const auto silent = _ensemble->hyperparameters().silent_;
-
-            for ( size_t i = 0; i < num_features; ++i )
+            if ( _peripheral.size() > 0 )
                 {
-                    _ensemble->fit_new_feature(
-                        loss_function, table_holder, subfeatures );
-
-                    if ( !silent && _logger )
-                        {
-                            _logger->log(
-                                "Trained FEATURE_" + std::to_string( i + 1 ) +
-                                "." );
-                        }
+                    fit_as_feature_engineerer(
+                        _this_thread_num,
+                        _thread_nums,
+                        _population,
+                        _peripheral,
+                        _logger,
+                        _ensemble );
+                }
+            else
+                {
+                    fit_as_predictor(
+                        _this_thread_num,
+                        _thread_nums,
+                        _population,
+                        _logger,
+                        _ensemble );
                 }
         }
     catch ( std::exception& e )

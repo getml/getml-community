@@ -14,7 +14,9 @@ class DataFrameScatterer
    public:
     /// Returns a vector of the same length as the keys that signifies
     /// the thread to which each row belongs.
-    static const std::pair<std::vector<size_t>, size_t> build_thread_nums(
+    static std::pair<std::vector<size_t>, size_t> build_thread_nums(
+        const bool _has_peripheral,
+        const size_t _nrows,
         const std::vector<containers::Column<Int> >& _keys,
         const size_t _num_threads );
 
@@ -28,10 +30,15 @@ class DataFrameScatterer
 
    private:
     /// Returns a vector of the same length as the keys that signifies
-    /// the thread to which each row belongs.
-    static const std::pair<std::vector<size_t>, size_t> build_thread_nums(
+    /// the thread to which each row belongs - for feature engineerers.
+    static std::pair<std::vector<size_t>, size_t> build_thread_nums(
         const std::map<Int, size_t>& _min_keys_map,
         const containers::Column<Int>& min_join_key );
+
+    /// Returns a vector of the same length as the keys that signifies
+    /// the thread to which each row belongs - for predictors.
+    static std::pair<std::vector<size_t>, size_t> build_thread_nums(
+        const size_t _nrows, const size_t _num_threads );
 
     /// Checks the plausibility of the input.
     static void check_plausibility(
