@@ -672,7 +672,7 @@ std::vector<Float> DecisionTreeEnsemble::generate_predictions(
 std::pair<
     std::shared_ptr<lossfunctions::LossFunction>,
     std::shared_ptr<const TableHolder>>
-DecisionTreeEnsemble::init(
+DecisionTreeEnsemble::init_as_feature_engineerer(
     const containers::DataFrameView &_population,
     const std::vector<containers::DataFrame> &_peripheral )
 {
@@ -715,7 +715,7 @@ DecisionTreeEnsemble::init(
     loss_function().calc_gradients();
 
     loss_function().calc_sampling_rate(
-        hyperparameters().seed_, hyperparameters().sampling_factor_, &comm() );
+        false, hyperparameters().sampling_factor_, &comm() );
 
     // ------------------------------------------------------------------------
     // Build table holder.
@@ -726,6 +726,60 @@ DecisionTreeEnsemble::init(
     // ------------------------------------------------------------------------
 
     return std::make_pair( loss_function_, table_holder );
+}
+
+// ----------------------------------------------------------------------------
+
+std::shared_ptr<lossfunctions::LossFunction>
+DecisionTreeEnsemble::init_as_predictor(
+    const containers::DataFrameView &_population )
+{
+    // ------------------------------------------------------------------------
+    // Prepare targets.
+
+    if ( hyperparameters().target_num_ < 0 )
+        {
+            throw std::runtime_error( "target_num cannot be negative!" );
+        }
+
+    const auto target_num =
+        static_cast<size_t>( hyperparameters().target_num_ );
+
+    if ( _population.num_targets() <= target_num )
+        {
+            throw std::runtime_error(
+                "target_num out of bounds! The target_num was " +
+                std::to_string( target_num ) +
+                ", but the population table only contains " +
+                std::to_string( _population.num_targets() ) + " targets!" );
+        }
+
+    targets().resize( _population.nrows() );
+
+    for ( size_t i = 0; i < _population.nrows(); ++i )
+        {
+            targets()[i] = _population.target( i, target_num );
+        }
+
+    // ------------------------------------------------------------------------
+
+    calc_initial_prediction();
+
+    // ------------------------------------------------------------------------
+    // Initialize the loss function.
+
+    loss_function().init_yhat_old( initial_prediction() );
+
+    loss_function().calc_gradients();
+
+    loss_function().calc_sampling_rate(
+        true, hyperparameters().sampling_factor_, &comm() );
+
+    // ------------------------------------------------------------------------
+
+    return loss_function_;
+
+    // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -799,6 +853,7 @@ std::vector<Float> DecisionTreeEnsemble::predict(
             assert_true( features[j]->size() == _population.nrows() );
 
             for ( size_t i = 0; i < _population.nrows(); ++i )
+
                 {
                     const auto p = ( *features[j] )[i] + trees()[j].intercept();
 

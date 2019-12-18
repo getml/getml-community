@@ -38,7 +38,8 @@ void Threadutils::fit_ensemble(
                     _population, _thread_nums, _this_thread_num );
 
             const auto [loss_function, table_holder] =
-                _ensemble->init( population_subview, _peripheral );
+                _ensemble->init_as_feature_engineerer(
+                    population_subview, _peripheral );
 
             _ensemble->fit_subensembles( table_holder, _logger, loss_function );
 
@@ -71,8 +72,6 @@ void Threadutils::fit_ensemble(
                 {
                     throw std::runtime_error( e.what() );
                 }
-
-            std::cout << e.what() << std::endl;  // TODO: Remove this line!
         }
 }
 

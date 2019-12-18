@@ -39,7 +39,7 @@ class LossFunction
     /// Calculates the sampling rate (the share of samples that will be
     /// drawn for each feature).
     virtual void calc_sampling_rate(
-        const unsigned int _seed,
+        const bool _set_rate,
         const Float _sampling_factor,
         multithreading::Communicator* _comm ) = 0;
 

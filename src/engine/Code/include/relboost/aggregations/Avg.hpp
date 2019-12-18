@@ -185,11 +185,11 @@ class Avg : public lossfunctions::LossFunction
     /// Calculates the sampling rate (the share of samples that will be
     /// drawn for each feature).
     void calc_sampling_rate(
-        const unsigned int _seed,
+        const bool _set_rate,
         const Float _sampling_factor,
         multithreading::Communicator* _comm ) final
     {
-        child_->calc_sampling_rate( _seed, _sampling_factor, _comm );
+        child_->calc_sampling_rate( _set_rate, _sampling_factor, _comm );
     }
 
     /// Calculates sum_g_ and sum_h_.
