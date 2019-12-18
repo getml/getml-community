@@ -20,6 +20,9 @@ class CrossEntropyLoss : public LossFunction
         : comm_( nullptr ),
           hyperparameters_( _hyperparameters ),
           loss_committed_( 0.0 ),
+          loss_old_( 0.0 ),
+          sufficient_stats_(
+              std::array<Float, 6>{0.0, 0.0, 0.0, 0.0, 0.0, 0.0} ),
           sum_h_yhat_committed_( 0.0 ),
           sum_sample_weights_( 0.0 ),
           targets_( _targets ),
@@ -189,8 +192,25 @@ class CrossEntropyLoss : public LossFunction
         const std::vector<const containers::Match*>::iterator _split_end,
         const std::vector<const containers::Match*>::iterator _end ) final
     {
-        // TODO
-        return std::vector<std::pair<Float, std::array<Float, 3>>>();
+        const auto p = impl_.calc_pair(
+            _revert,
+            _update,
+            _begin,
+            _split_begin,
+            _split_end,
+            _end,
+            &loss_old_,
+            &sufficient_stats_,
+            &comm() );
+
+        if ( std::isnan( p.first ) )
+            {
+                return std::vector<std::pair<Float, std::array<Float, 3>>>( 0 );
+            }
+        else
+            {
+                return {p};
+            }
     }
 
     /// Calculates the new yhat given eta, indices and the new weights.
@@ -249,7 +269,9 @@ class CrossEntropyLoss : public LossFunction
             impl_.commit( _indices, yhat_, &yhat_committed_ );
     }
 
-    /// Keeps the current weights.
+    /// Keeps the current weights - this is directly called by
+    /// DecisionTreeNode, meaning that this is used as a predictor.
+    /// In this case, there is nothing to commit.
     void commit(
         const Float _old_intercept,
         const Float _old_weight,
@@ -355,8 +377,8 @@ class CrossEntropyLoss : public LossFunction
     /// Generates the predictions.
     Float transform( const std::vector<Float>& _weights ) const final
     {
-        assert_true( false && "TODO" );
-        return 0.0;
+        assert_true( _weights.size() == 1 );
+        return _weights[0];
     }
 
     /// Describes the type of the loss function (SquareLoss,
@@ -491,6 +513,9 @@ class CrossEntropyLoss : public LossFunction
     /// The committed loss, needed for calculating the loss reduction.
     Float loss_committed_;
 
+    /// The loss calculated using the old weight (needed for calc_pairs)
+    Float loss_old_;
+
     /// Indices of all non-zero sample weights.
     std::vector<size_t> sample_index_;
 
@@ -499,6 +524,10 @@ class CrossEntropyLoss : public LossFunction
 
     /// The sampler used to determine the sample weights.
     std::unique_ptr<utils::Sampler> sampler_;
+
+    /// The sufficient statistics needed to apply the xgboost formula
+    /// (needed for calc_pairs).
+    std::array<Float, 6> sufficient_stats_;
 
     /// Sum of g_, needed for the intercept.
     Float sum_g_;

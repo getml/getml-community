@@ -562,6 +562,71 @@ void DecisionTreeEnsemble::fit_new_feature(
 
 // ----------------------------------------------------------------------------
 
+void DecisionTreeEnsemble::fit_new_tree(
+    const std::shared_ptr<lossfunctions::LossFunction> &_loss_function,
+    const containers::DataFrameView &_population )
+{
+    // ------------------------------------------------------------------------
+
+    assert_true( _loss_function );
+
+    // ------------------------------------------------------------------------
+
+    const auto sample_weights = _loss_function->make_sample_weights();
+
+    // ------------------------------------------------------------------------
+
+    const auto matches =
+        utils::Matchmaker::make_matches( _population, sample_weights );
+
+    auto matches_ptr = utils::Matchmaker::make_pointers( matches );
+
+    assert_true( matches.size() == matches_ptr.size() );
+
+    debug_log( "Number of matches: " + std::to_string( matches.size() ) );
+
+    // ------------------------------------------------------------------------
+
+    auto new_tree = decisiontrees::DecisionTree(
+        impl().encoding_, impl().hyperparameters_, _loss_function, 0, &comm() );
+
+    new_tree.fit(
+        _population,
+        std::optional<containers::DataFrame>(),
+        containers::Subfeatures(),
+        matches_ptr.begin(),
+        matches_ptr.end() );
+
+    const auto new_predictions = new_tree.transform(
+        _population,
+        std::optional<containers::DataFrame>(),
+        containers::Subfeatures() );
+
+    new_tree.calc_update_rate( new_predictions );
+
+    // ------------------------------------------------------------------------
+
+    _loss_function->update_yhat_old(
+        new_tree.update_rate() * hyperparameters().shrinkage_,
+        new_predictions );
+
+    _loss_function->calc_gradients();
+
+    _loss_function->commit();
+
+    // ------------------------------------------------------------------------
+
+    trees().emplace_back( std::move( new_tree ) );
+
+    // ------------------------------------------------------------------------
+
+    trees().back().clear();
+
+    // ------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
 void DecisionTreeEnsemble::fit_subensembles(
     const std::shared_ptr<const TableHolder> &_table_holder,
     const std::shared_ptr<const logging::AbstractLogger> _logger,

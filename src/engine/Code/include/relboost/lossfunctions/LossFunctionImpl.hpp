@@ -71,15 +71,17 @@ class LossFunctionImpl
         const std::vector<Float>& _predictions,
         multithreading::Communicator* _comm ) const;
 
-    /// Calculates two new weights given matches. This just reduces to the
-    /// normal XGBoost approach.
-    std::vector<std::array<Float, 3>> calc_weights(
+    /// Calculates two new weights and the loss given matches. This just reduces
+    /// to the normal XGBoost approach.
+    std::pair<Float, std::array<Float, 3>> calc_pair(
+        const enums::Revert _revert,
         const enums::Update _update,
-        const Float _old_weight,
         const std::vector<const containers::Match*>::iterator _begin,
         const std::vector<const containers::Match*>::iterator _split_begin,
         const std::vector<const containers::Match*>::iterator _split_end,
         const std::vector<const containers::Match*>::iterator _end,
+        Float* _loss_old,
+        std::array<Float, 6>* _sufficient_stats,
         multithreading::Communicator* _comm ) const;
 
     /// Commits yhat.
@@ -192,6 +194,27 @@ class LossFunctionImpl
     // -----------------------------------------------------------------
 
    private:
+    /// Calculate all matches, meaning that we are at the first split.
+    std::pair<Float, std::array<Float, 3>> calc_all(
+        const std::vector<const containers::Match*>::iterator _begin,
+        const std::vector<const containers::Match*>::iterator _split_begin,
+        const std::vector<const containers::Match*>::iterator _split_end,
+        const std::vector<const containers::Match*>::iterator _end,
+        Float* _loss_old,
+        std::array<Float, 6>* _sufficient_stats,
+        multithreading::Communicator* _comm ) const;
+
+    /// Calculate only the difference to the last split.
+    std::pair<Float, std::array<Float, 3>> calc_diff(
+        const enums::Revert _revert,
+        const std::vector<const containers::Match*>::iterator _begin,
+        const std::vector<const containers::Match*>::iterator _split_begin,
+        const std::vector<const containers::Match*>::iterator _split_end,
+        const std::vector<const containers::Match*>::iterator _end,
+        const Float _loss_old,
+        std::array<Float, 6>* _sufficient_stats,
+        multithreading::Communicator* _comm ) const;
+
     /// Calculate the regularization reduction when one of the weights is nan.
     Float calc_regularization_reduction(
         const std::vector<Float>& _eta_old,
@@ -246,6 +269,17 @@ class LossFunctionImpl
     // -----------------------------------------------------------------
 
    private:
+    /// Applies the XGBoost formula to calculate the weight and loss.
+    /// See Chen and Guestrin, 2016, XGBoost: A Scalable Tree Boosting System
+    std::pair<Float, Float> apply_xgboost(
+        const Float _sum_g, const Float _sum_h, const Float _n ) const
+    {
+        const auto weight =
+            _sum_g / ( _sum_h + _n * hyperparameters().reg_lambda_ );
+        const auto loss = _sum_g * weight;
+        return std::make_pair( loss, weight );
+    }
+
     /// Trivial accessor
     const Hyperparameters& hyperparameters() const { return *hyperparameters_; }
 

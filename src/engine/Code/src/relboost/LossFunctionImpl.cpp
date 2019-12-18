@@ -6,22 +6,259 @@ namespace lossfunctions
 {
 // ----------------------------------------------------------------------------
 
-std::vector<size_t> LossFunctionImpl::calc_sample_index(
-    const std::shared_ptr<const std::vector<Float>>& _sample_weights ) const
+std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_all(
+    const std::vector<const containers::Match*>::iterator _begin,
+    const std::vector<const containers::Match*>::iterator _split_begin,
+    const std::vector<const containers::Match*>::iterator _split_end,
+    const std::vector<const containers::Match*>::iterator _end,
+    Float* _loss_old,
+    std::array<Float, 6>* _sufficient_stats,
+    multithreading::Communicator* _comm ) const
 {
-    assert_true( _sample_weights );
+    // ------------------------------------------------------------------------
 
-    auto sample_index = std::vector<size_t>( 0 );
+    assert_true( _begin <= _split_begin );
+    assert_true( _split_begin <= _split_end );
+    assert_true( _split_end <= _end );
 
-    for ( size_t i = 0; i < _sample_weights->size(); ++i )
+    assert_true( g_.size() == h_.size() );
+
+    auto& sum_g1 = std::get<0>( *_sufficient_stats );
+    auto& sum_h1 = std::get<1>( *_sufficient_stats );
+    auto& sum_g2 = std::get<2>( *_sufficient_stats );
+    auto& sum_h2 = std::get<3>( *_sufficient_stats );
+    auto& n1 = std::get<4>( *_sufficient_stats );
+    auto& n2 = std::get<5>( *_sufficient_stats );
+
+    // ------------------------------------------------------------------------
+
+    for ( auto it = _begin; it != _split_begin; ++it )
         {
-            if ( ( *_sample_weights )[i] > 0.0 )
+            const auto ix = ( *it )->ix_output;
+
+            assert_true( ix < g_.size() );
+
+            sum_g1 += g_[ix];
+            sum_h1 += h_[ix];
+        }
+
+    for ( auto it = _split_begin; it != _split_end; ++it )
+        {
+            const auto ix = ( *it )->ix_output;
+
+            assert_true( ix < g_.size() );
+
+            sum_g2 += g_[ix];
+            sum_h2 += h_[ix];
+        }
+
+    for ( auto it = _split_end; it != _end; ++it )
+        {
+            const auto ix = ( *it )->ix_output;
+
+            assert_true( ix < g_.size() );
+
+            sum_g1 += g_[ix];
+            sum_h1 += h_[ix];
+        }
+
+    // ------------------------------------------------------------------------
+
+    n2 = static_cast<Float>( std::distance( _split_begin, _split_end ) );
+
+    n1 = static_cast<Float>( std::distance( _begin, _end ) ) - n2;
+
+    // ------------------------------------------------------------------------
+
+    utils::Reducer::reduce<6>( std::plus<Float>(), _sufficient_stats, _comm );
+
+    *_loss_old =
+        apply_xgboost( sum_g1 + sum_g2, sum_h1 + sum_h2, n1 + n2 ).first;
+
+    // ------------------------------------------------------------------------
+
+    const auto m = static_cast<Float>( hyperparameters().min_num_samples_ );
+
+    if ( n1 < m || n2 < m )
+        {
+            return std::make_pair(
+                static_cast<Float>( NAN ),
+                std::array<Float, 3>{0.0, 0.0, 0.0} );
+        }
+
+    // ------------------------------------------------------------------------
+
+    const auto [loss1, weight1] = apply_xgboost( sum_g1, sum_h1, n1 );
+
+    const auto [loss2, weight2] = apply_xgboost( sum_g2, sum_h2, n2 );
+
+    const auto loss_reduction = *_loss_old - loss1 - loss2;
+
+    const auto weights = std::array<Float, 3>{0.0, weight1, weight2};
+
+    // ------------------------------------------------------------------------
+
+    return std::make_pair( loss_reduction, weights );
+
+    // ------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_diff(
+    const enums::Revert _revert,
+    const std::vector<const containers::Match*>::iterator _begin,
+    const std::vector<const containers::Match*>::iterator _split_begin,
+    const std::vector<const containers::Match*>::iterator _split_end,
+    const std::vector<const containers::Match*>::iterator _end,
+    const Float _loss_old,
+    std::array<Float, 6>* _sufficient_stats,
+    multithreading::Communicator* _comm ) const
+{
+    // ------------------------------------------------------------------------
+
+    assert_true( _begin <= _split_begin );
+    assert_true( _split_begin <= _split_end );
+    assert_true( _split_end <= _end );
+
+    assert_true( g_.size() == h_.size() );
+
+    auto& sum_g1 = std::get<0>( *_sufficient_stats );
+    auto& sum_h1 = std::get<1>( *_sufficient_stats );
+    auto& sum_g2 = std::get<2>( *_sufficient_stats );
+    auto& sum_h2 = std::get<3>( *_sufficient_stats );
+    auto& n1 = std::get<4>( *_sufficient_stats );
+    auto& n2 = std::get<5>( *_sufficient_stats );
+
+    // ------------------------------------------------------------------------
+
+    auto n2_diff =
+        static_cast<Float>( std::distance( _split_begin, _split_end ) );
+
+    utils::Reducer::reduce( std::plus<Float>(), &n2_diff, _comm );
+
+    assert_true( n2_diff <= n1 );
+
+    n1 -= n2_diff;
+
+    n2 += n2_diff;
+
+    // ------------------------------------------------------------------------
+
+    if ( _revert == enums::Revert::True )
+        {
+            const auto m =
+                static_cast<Float>( hyperparameters().min_num_samples_ );
+
+            if ( n1 < m || n2 < m )
                 {
-                    sample_index.push_back( i );
+                    return std::make_pair(
+                        static_cast<Float>( NAN ),
+                        std::array<Float, 3>{0.0, 0.0, 0.0} );
                 }
         }
 
-    return sample_index;
+    // ------------------------------------------------------------------------
+
+    auto g_h_diff = std::array<Float, 2>{0.0, 0.0};
+
+    auto& g_diff = std::get<0>( g_h_diff );
+    auto& h_diff = std::get<1>( g_h_diff );
+
+    for ( auto it = _split_begin; it != _split_end; ++it )
+        {
+            const auto ix = ( *it )->ix_output;
+
+            assert_true( ix < g_.size() );
+
+            g_diff += g_[ix];
+            h_diff += h_[ix];
+        }
+
+    utils::Reducer::reduce<2>( std::plus<Float>(), &g_h_diff, _comm );
+
+    sum_g1 -= g_diff;
+    sum_g2 += g_diff;
+
+    sum_h1 -= h_diff;
+    sum_h2 += h_diff;
+
+    // ------------------------------------------------------------------------
+
+    if ( _revert == enums::Revert::False )
+        {
+            const auto m =
+                static_cast<Float>( hyperparameters().min_num_samples_ );
+
+            if ( n1 < m || n2 < m )
+                {
+                    return std::make_pair(
+                        static_cast<Float>( NAN ),
+                        std::array<Float, 3>{0.0, 0.0, 0.0} );
+                }
+        }
+
+    // ------------------------------------------------------------------------
+
+    const auto [loss1, weight1] = apply_xgboost( sum_g1, sum_h1, n1 );
+
+    const auto [loss2, weight2] = apply_xgboost( sum_g2, sum_h2, n2 );
+
+    // ------------------------------------------------------------------------
+
+    const auto loss_reduction = _loss_old - loss1 - loss2;
+
+    const auto weights = std::array<Float, 3>{0.0, weight1, weight2};
+
+    // ------------------------------------------------------------------------
+
+    return std::make_pair( loss_reduction, weights );
+
+    // ------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_pair(
+    const enums::Revert _revert,
+    const enums::Update _update,
+    const std::vector<const containers::Match*>::iterator _begin,
+    const std::vector<const containers::Match*>::iterator _split_begin,
+    const std::vector<const containers::Match*>::iterator _split_end,
+    const std::vector<const containers::Match*>::iterator _end,
+    Float* _loss_old,
+    std::array<Float, 6>* _sufficient_stats,
+    multithreading::Communicator* _comm ) const
+{
+    switch ( _update )
+        {
+            case enums::Update::calc_all:
+                return calc_all(
+                    _begin,
+                    _split_begin,
+                    _split_end,
+                    _end,
+                    _loss_old,
+                    _sufficient_stats,
+                    _comm );
+                break;
+
+            case enums::Update::calc_diff:
+                return calc_diff(
+                    _revert,
+                    _begin,
+                    _split_begin,
+                    _split_end,
+                    _end,
+                    *_loss_old,
+                    _sufficient_stats,
+                    _comm );
+                break;
+
+            default:
+                assert_true( false && "Unknown update!" );
+                return std::make_pair( 0.0, std::array<Float, 3>() );
+        }
 }
 
 // ----------------------------------------------------------------------------
@@ -151,6 +388,26 @@ Float LossFunctionImpl::calc_regularization_reduction(
 
 // ----------------------------------------------------------------------------
 
+std::vector<size_t> LossFunctionImpl::calc_sample_index(
+    const std::shared_ptr<const std::vector<Float>>& _sample_weights ) const
+{
+    assert_true( _sample_weights );
+
+    auto sample_index = std::vector<size_t>( 0 );
+
+    for ( size_t i = 0; i < _sample_weights->size(); ++i )
+        {
+            if ( ( *_sample_weights )[i] > 0.0 )
+                {
+                    sample_index.push_back( i );
+                }
+        }
+
+    return sample_index;
+}
+
+// ----------------------------------------------------------------------------
+
 void LossFunctionImpl::calc_sums(
     const std::vector<size_t>& _sample_index,
     const std::vector<Float>& _sample_weights,
@@ -250,55 +507,6 @@ Float LossFunctionImpl::calc_update_rate(
         {
             return -sum_g_predictions / sum_h_predictions;
         }
-
-    // ------------------------------------------------------------------------
-}
-
-// ----------------------------------------------------------------------------
-
-std::vector<std::array<Float, 3>> LossFunctionImpl::calc_weights(
-    const enums::Update _update,
-    const Float _old_weight,
-    const std::vector<const containers::Match*>::iterator _begin,
-    const std::vector<const containers::Match*>::iterator _split_begin,
-    const std::vector<const containers::Match*>::iterator _split_end,
-    const std::vector<const containers::Match*>::iterator _end,
-    multithreading::Communicator* _comm ) const
-{
-    // ------------------------------------------------------------------------
-    // Note the minus!
-
-    const auto calc_g = [this](
-                            const Float init, const containers::Match* ptr ) {
-        return init - g_[ptr->ix_output];
-    };
-
-    auto g2 = std::accumulate( _begin, _split_begin, 0.0, calc_g );
-
-    const auto g1 = std::accumulate( _split_begin, _split_end, 0.0, calc_g );
-
-    g2 += std::accumulate( _split_end, _end, 0.0, calc_g );
-
-    // ------------------------------------------------------------------------
-
-    const auto calc_h = [this](
-                            const Float init, const containers::Match* ptr ) {
-        return init +
-               h_[ptr->ix_output] * ( 1.0 + hyperparameters().reg_lambda_ );
-    };
-
-    auto h2 = std::accumulate( _begin, _split_begin, 0.0, calc_h );
-
-    const auto h1 = std::accumulate( _split_begin, _split_end, 0.0, calc_h );
-
-    h2 += std::accumulate( _split_end, _end, 0.0, calc_h );
-
-    // ------------------------------------------------------------------------
-    // In this case, it is impossible for the weights to be NAN.
-
-    const auto arr = std::array<Float, 3>( {0.0, g1 / h1, g2 / h2} );
-
-    return std::vector<std::array<Float, 3>>( {arr} );
 
     // ------------------------------------------------------------------------
 }

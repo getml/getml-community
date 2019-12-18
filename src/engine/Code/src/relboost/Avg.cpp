@@ -381,18 +381,24 @@ std::vector<std::pair<Float, std::array<Float, 3>>> Avg::calc_pairs(
 
     // -------------------------------------------------------------
 
-    if ( _update == enums::Update::calc_all )
+    switch ( _update )
         {
-            calc_all(
-                _revert, _old_weight, _begin, _split_begin, _split_end, _end );
-        }
-    else if ( _update == enums::Update::calc_diff )
-        {
-            calc_diff( _old_weight, _split_begin, _split_end );
-        }
-    else
-        {
-            assert_true( false && "Unknown Update!" );
+            case enums::Update::calc_all:
+                calc_all(
+                    _revert,
+                    _old_weight,
+                    _begin,
+                    _split_begin,
+                    _split_end,
+                    _end );
+                break;
+
+            case enums::Update::calc_diff:
+                calc_diff( _old_weight, _split_begin, _split_end );
+                break;
+
+            default:
+                assert_true( false && "Unknown Update!" );
         }
 
     // -------------------------------------------------------------

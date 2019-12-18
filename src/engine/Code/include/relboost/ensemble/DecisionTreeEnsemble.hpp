@@ -56,11 +56,17 @@ class DecisionTreeEnsemble
         const std::shared_ptr<const logging::AbstractLogger> _logger =
             std::shared_ptr<const logging::AbstractLogger>() );
 
-    /// Fits one more feature.
+    /// Fits one more feature - implies that this is used as a feature
+    /// engineerer.
     void fit_new_feature(
         const std::shared_ptr<lossfunctions::LossFunction>& _loss_function,
         const std::shared_ptr<const TableHolder>& _table_holder,
         const std::vector<containers::Subfeatures>& _subfeatures );
+
+    /// Fits one more tree - implies that this is used as a predictor.
+    void fit_new_tree(
+        const std::shared_ptr<lossfunctions::LossFunction>& _loss_function,
+        const containers::DataFrameView& _population );
 
     /// Fits the subensembles.
     void fit_subensembles(

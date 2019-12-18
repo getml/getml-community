@@ -273,7 +273,7 @@ std::vector<Float> DecisionTree::transform(
                 }
             else
                 {
-                    // TODO
+                    matches = {containers::Match{0, ix_output}};
                 }
 
             // ------------------------------------------------------------------------
