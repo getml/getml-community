@@ -363,11 +363,7 @@ class CrossEntropyLoss : public LossFunction
     void revert( const Float _old_weight ) final{};
 
     /// Keeps the current weights.
-    void revert_to_commit() final
-    {
-        assert_true( false );
-        // TODO
-    };
+    void revert_to_commit() final{};
 
     /// Reverts the weights to the last time commit has been called.
     void revert_to_commit( const std::vector<size_t>& _indices ) final

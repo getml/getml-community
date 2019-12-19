@@ -12,7 +12,7 @@ namespace ensemble
 struct DecisionTreeEnsembleImpl
 {
     DecisionTreeEnsembleImpl(
-        const std::shared_ptr<const std::vector<strings::String>>& _encoding,
+        const std::shared_ptr<const std::vector<strings::String>>& _categories,
         const std::shared_ptr<const Hyperparameters>& _hyperparameters,
         const std::shared_ptr<const std::vector<std::string>>& _peripheral,
         const std::shared_ptr<const containers::Placeholder>& _placeholder,
@@ -22,7 +22,7 @@ struct DecisionTreeEnsembleImpl
             _population_schema )
         : allow_http_( false ),
           comm_( nullptr ),
-          encoding_( _encoding ),
+          categories_( _categories ),
           hyperparameters_( _hyperparameters ),
           initial_prediction_( 0.0 ),
           peripheral_( _peripheral ),
@@ -30,7 +30,10 @@ struct DecisionTreeEnsembleImpl
           placeholder_( _placeholder ),
           population_schema_( _population_schema )
     {
-        check_placeholder( *placeholder_ );
+        if ( placeholder_ )
+            {
+                check_placeholder( *placeholder_ );
+            }
     }
 
     ~DecisionTreeEnsembleImpl() = default;
@@ -50,7 +53,7 @@ struct DecisionTreeEnsembleImpl
 
     /// Encoding for the categorical data, maps integers to underlying
     /// category.
-    std::shared_ptr<const std::vector<strings::String>> encoding_;
+    std::shared_ptr<const std::vector<strings::String>> categories_;
 
     /// Hyperparameters used to train the relboost model.
     std::shared_ptr<const Hyperparameters> hyperparameters_;

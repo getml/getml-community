@@ -39,8 +39,11 @@ DecisionTreeNode::DecisionTreeNode(
           _obj.has( "weight_" ) ? JSON::get_value<Float>( _obj, "weight_" )
                                 : NAN )
 {
-    input_.reset(
-        new containers::Placeholder( *JSON::get_object( _obj, "input_" ) ) );
+    if ( _obj.has( "input_" ) )
+        {
+            input_.reset( new containers::Placeholder(
+                *JSON::get_object( _obj, "input_" ) ) );
+        }
 
     output_.reset(
         new containers::Placeholder( *JSON::get_object( _obj, "output_" ) ) );
@@ -221,7 +224,8 @@ void DecisionTreeNode::fit(
     auto candidates =
         try_all( *_intercept, _output, _input, _subfeatures, _begin, _end );
 
-    debug_log( "candidates.size(): " + std::to_string( candidates.size() ) );
+    std::cout << "candidates.size(): " << std::to_string( candidates.size() )
+              << std::endl;
 
     if ( candidates.size() == 0 )
         {
@@ -251,9 +255,8 @@ void DecisionTreeNode::fit(
     // ------------------------------------------------------------------------
     // If the loss reduction is sufficient, then take this split.
 
-    debug_log(
-        "best_split.loss_reduction_: " +
-        std::to_string( best_split.loss_reduction_ ) );
+    std::cout << "best_split.loss_reduction_: "
+              << std::to_string( best_split.loss_reduction_ ) << std::endl;
 
     if ( best_split.loss_reduction_ < hyperparameters().gamma_ )
         {
@@ -1269,9 +1272,9 @@ void DecisionTreeNode::try_numerical_output(
                     continue;
                 }
 
-            debug_log(
-                "critical_values.size(): " +
-                std::to_string( critical_values.size() ) );
+            std::cout << "critical_values.size(): " +
+                             std::to_string( critical_values.size() )
+                      << std::endl;
 
             auto it = _begin;
 

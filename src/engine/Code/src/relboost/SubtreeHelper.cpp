@@ -157,14 +157,14 @@ void SubtreeHelper::fit_subensembles(
 
                     subensembles_avg[i] =
                         std::make_optional<DecisionTreeEnsemble>(
-                            _ensemble.encoding(),
+                            _ensemble.categories(),
                             hyperparameters,
                             peripheral,
                             joined_table );
 
                     subensembles_sum[i] =
                         std::make_optional<DecisionTreeEnsemble>(
-                            _ensemble.encoding(),
+                            _ensemble.categories(),
                             hyperparameters,
                             peripheral,
                             joined_table );

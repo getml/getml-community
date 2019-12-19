@@ -27,6 +27,8 @@
 
 #include "optimizers/optimizers.hpp"
 
+#include "relboost/ensemble/ensemble.hpp"
+
 // ----------------------------------------------------
 // Module files
 
@@ -47,6 +49,8 @@
 
 #include "predictors/Predictor.hpp"
 #include "predictors/PredictorImpl.hpp"
+
+#include "predictors/GradientBoostingPredictor.hpp"
 
 #include "predictors/LinearHyperparams.hpp"
 

@@ -24,7 +24,7 @@ class DecisionTreeEnsemble
 
    public:
     DecisionTreeEnsemble(
-        const std::shared_ptr<const std::vector<strings::String>>& _encoding,
+        const std::shared_ptr<const std::vector<strings::String>>& _categories,
         const std::shared_ptr<const Hyperparameters>& _hyperparameters,
         const std::shared_ptr<const std::vector<std::string>>& _peripheral,
         const std::shared_ptr<const containers::Placeholder>& _placeholder,
@@ -34,7 +34,7 @@ class DecisionTreeEnsemble
             _population_schema = nullptr );
 
     DecisionTreeEnsemble(
-        const std::shared_ptr<const std::vector<strings::String>>& _encoding,
+        const std::shared_ptr<const std::vector<strings::String>>& _categories,
         const Poco::JSON::Object& _obj );
 
     DecisionTreeEnsemble( const DecisionTreeEnsemble& _other );
@@ -149,9 +149,10 @@ class DecisionTreeEnsemble
     bool allow_http() const { return impl().allow_http_; }
 
     /// Trivial (const) accessor
-    const std::shared_ptr<const std::vector<strings::String>>& encoding() const
+    const std::shared_ptr<const std::vector<strings::String>>& categories()
+        const
     {
-        return impl().encoding_;
+        return impl().categories_;
     }
 
     /// Trivial (const) accessor

@@ -327,9 +327,16 @@ Poco::JSON::Object LogisticRegression::load_json_obj(
             throw std::invalid_argument( "File '" + _fname + "' not found!" );
         }
 
-    return *Poco::JSON::Parser()
-                .parse( json.str() )
-                .extract<Poco::JSON::Object::Ptr>();
+    const auto ptr = Poco::JSON::Parser()
+                         .parse( json.str() )
+                         .extract<Poco::JSON::Object::Ptr>();
+
+    if ( !ptr )
+        {
+            throw std::runtime_error( "JSON file did not contain an object!" );
+        }
+
+    return *ptr;
 }
 
 // -----------------------------------------------------------------------------

@@ -24,8 +24,6 @@ DataFrame::DataFrame(
       targets_( _targets ),
       time_stamps_( _time_stamps )
 {
-    assert_true( _join_keys.size() > 0 );
-    assert_true( _time_stamps.size() > 0 );
     assert_true( _indices.size() == _join_keys.size() );
 
     for ( auto& col : _categoricals )
@@ -114,7 +112,8 @@ std::vector<std::shared_ptr<containers::Index>> DataFrame::create_indices(
                         }
                 }
 
-            indices.push_back( std::make_shared<containers::Index>( new_index ) );
+            indices.push_back(
+                std::make_shared<containers::Index>( new_index ) );
         }
 
     return indices;

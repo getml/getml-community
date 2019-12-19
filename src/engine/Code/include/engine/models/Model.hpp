@@ -365,7 +365,8 @@ bool Model<FeatureEngineererType>::allow_null_values() const
                 *feature_engineerer().hyperparameters().feature_selector_;
 
             allow_null =
-                predictors::PredictorParser::parse( obj, predictor_impl_ )
+                predictors::PredictorParser::parse(
+                    obj, predictor_impl_, feature_engineerer().categories() )
                     ->accepts_null();
         }
 
@@ -379,7 +380,8 @@ bool Model<FeatureEngineererType>::allow_null_values() const
             const auto obj = *feature_engineerer().hyperparameters().predictor_;
 
             allow_null =
-                predictors::PredictorParser::parse( obj, predictor_impl_ )
+                predictors::PredictorParser::parse(
+                    obj, predictor_impl_, feature_engineerer().categories() )
                     ->accepts_null();
         }
 
@@ -941,13 +943,15 @@ void Model<FeatureEngineererType>::init_feature_selectors(
                 {
                     _feature_selectors->push_back(
                         predictors::PredictorParser::parse(
-                            obj, predictor_impl_ ) );
+                            obj,
+                            predictor_impl_,
+                            feature_engineerer().categories() ) );
                 }
         }
     else
         {
-            _feature_selectors->push_back(
-                predictors::PredictorParser::parse( obj, predictor_impl_ ) );
+            _feature_selectors->push_back( predictors::PredictorParser::parse(
+                obj, predictor_impl_, feature_engineerer().categories() ) );
         }
 }
 
@@ -974,13 +978,15 @@ void Model<FeatureEngineererType>::init_predictors(
             for ( size_t i = 0; i < _num_targets; ++i )
                 {
                     _predictors->push_back( predictors::PredictorParser::parse(
-                        obj, predictor_impl_ ) );
+                        obj,
+                        predictor_impl_,
+                        feature_engineerer().categories() ) );
                 }
         }
     else
         {
-            _predictors->push_back(
-                predictors::PredictorParser::parse( obj, predictor_impl_ ) );
+            _predictors->push_back( predictors::PredictorParser::parse(
+                obj, predictor_impl_, feature_engineerer().categories() ) );
         }
 }
 
@@ -1010,9 +1016,16 @@ Poco::JSON::Object Model<FeatureEngineererType>::load_json_obj(
             throw std::invalid_argument( "File '" + _fname + "' not found!" );
         }
 
-    return *Poco::JSON::Parser()
-                .parse( json.str() )
-                .extract<Poco::JSON::Object::Ptr>();
+    const auto ptr = Poco::JSON::Parser()
+                         .parse( json.str() )
+                         .extract<Poco::JSON::Object::Ptr>();
+
+    if ( !ptr )
+        {
+            throw std::runtime_error( "JSON file did not contain an object!" );
+        }
+
+    return *ptr;
 }
 
 // ----------------------------------------------------------------------------

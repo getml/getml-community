@@ -84,7 +84,7 @@ Float SquareLoss::calc_loss( const std::array<Float, 3>& _weights )
 
     // ------------------------------------------------------------------------
 
-    assert_true( sum_sample_weights_ > 0.0 || sample_index_.size() == 0.0 );
+    // assert_true( sum_sample_weights_ > 0.0 || sample_index_.size() == 0.0 );
 
     if ( sum_sample_weights_ > 0.0 )
         {

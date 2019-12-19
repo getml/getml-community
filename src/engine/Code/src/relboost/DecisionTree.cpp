@@ -31,12 +31,23 @@ DecisionTree::DecisionTree(
     const Poco::JSON::Object& _obj )
     : comm_( nullptr ),
       encoding_( _encoding ),
-      hyperparameters_( _hyperparameters ),
-      loss_function_( aggregations::AggregationParser::parse(
-          JSON::get_value<std::string>( _obj, "loss_" ), _loss_function ) )
+      hyperparameters_( _hyperparameters )
 {
-    input_.reset(
-        new containers::Placeholder( *JSON::get_object( _obj, "input_" ) ) );
+    if ( _obj.has( "input_" ) )
+        {
+            loss_function_ = aggregations::AggregationParser::parse(
+                JSON::get_value<std::string>( _obj, "loss_" ), _loss_function );
+        }
+    else
+        {
+            loss_function_ = _loss_function;
+        }
+
+    if ( _obj.has( "input_" ) )
+        {
+            input_.reset( new containers::Placeholder(
+                *JSON::get_object( _obj, "input_" ) ) );
+        }
 
     intercept_ = JSON::get_value<Float>( _obj, "intercept_" );
 

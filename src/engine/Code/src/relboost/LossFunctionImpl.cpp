@@ -23,12 +23,18 @@ std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_all(
 
     assert_true( g_.size() == h_.size() );
 
+    assert_true( _begin == _end || g_.size() > 0 );
+
     auto& sum_g1 = std::get<0>( *_sufficient_stats );
     auto& sum_h1 = std::get<1>( *_sufficient_stats );
     auto& sum_g2 = std::get<2>( *_sufficient_stats );
     auto& sum_h2 = std::get<3>( *_sufficient_stats );
     auto& n1 = std::get<4>( *_sufficient_stats );
     auto& n2 = std::get<5>( *_sufficient_stats );
+
+    // ------------------------------------------------------------------------
+
+    *_sufficient_stats = std::array<Float, 6>{0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
     // ------------------------------------------------------------------------
 

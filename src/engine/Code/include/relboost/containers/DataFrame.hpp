@@ -154,8 +154,27 @@ class DataFrame
     /// Trivial getter
     size_t nrows() const
     {
-        assert_true( join_keys_.size() > 0 );
-        return join_keys_[0].nrows_;
+        if ( join_keys_.size() > 0 )
+            {
+                return join_keys_[0].nrows_;
+            }
+        else if ( categoricals_.size() > 0 )
+            {
+                return categoricals_[0].nrows_;
+            }
+        else if ( numericals_.size() > 0 )
+            {
+                return numericals_[0].nrows_;
+            }
+        else if ( targets_.size() > 0 )
+            {
+                return targets_[0].nrows_;
+            }
+        else
+            {
+                assert_true( false && "DataFrame has no columns." );
+                return 0;
+            }
     }
 
     /// Trivial getter
