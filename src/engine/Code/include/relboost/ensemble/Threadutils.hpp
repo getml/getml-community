@@ -12,7 +12,7 @@ class Threadutils
     // ------------------------------------------------------------------------
 
    public:
-    /// Fits an ensemble or throws an exception.
+    /// Fits an ensemble.
     static void fit_ensemble(
         const size_t _this_thread_num,
         const std::vector<size_t> _thread_nums,
@@ -24,7 +24,7 @@ class Threadutils
     /// Number of threads.
     static Int get_num_threads( const Int _num_threads );
 
-    /// Generates features.
+    /// Generates features or predictions.
     static void transform_ensemble(
         const size_t _this_thread_num,
         const std::vector<size_t> _thread_nums,
@@ -59,6 +59,24 @@ class Threadutils
         const containers::DataFrame& _population,
         const std::shared_ptr<const logging::AbstractLogger> _logger,
         ensemble::DecisionTreeEnsemble* _ensemble );
+
+    /// Generates features.
+    static void transform_as_feature_engineerer(
+        const size_t _this_thread_num,
+        const std::vector<size_t> _thread_nums,
+        const containers::DataFrame& _population,
+        const std::vector<containers::DataFrame>& _peripheral,
+        const std::shared_ptr<const logging::AbstractLogger> _logger,
+        const ensemble::DecisionTreeEnsemble& _ensemble,
+        containers::Features* _features );
+
+    /// Generates predictions.
+    static void transform_as_predictor(
+        const size_t _this_thread_num,
+        const std::vector<size_t> _thread_nums,
+        const containers::DataFrame& _population,
+        const ensemble::DecisionTreeEnsemble& _ensemble,
+        containers::Features* _features );
 
     // ------------------------------------------------------------------------
 };

@@ -154,6 +154,74 @@ Int Threadutils::get_num_threads( const Int _num_threads )
 
 // ----------------------------------------------------------------------------
 
+void Threadutils::transform_as_feature_engineerer(
+    const size_t _this_thread_num,
+    const std::vector<size_t> _thread_nums,
+    const containers::DataFrame& _population,
+    const std::vector<containers::DataFrame>& _peripheral,
+    const std::shared_ptr<const logging::AbstractLogger> _logger,
+    const ensemble::DecisionTreeEnsemble& _ensemble,
+    containers::Features* _features )
+{
+    auto population_subview =
+        utils::DataFrameScatterer::DataFrameScatterer::scatter_data_frame(
+            _population, _thread_nums, _this_thread_num );
+
+    const auto table_holder = TableHolder(
+        _ensemble.placeholder(),
+        population_subview,
+        _peripheral,
+        _ensemble.peripheral() );
+
+    auto predictions = _ensemble.make_subpredictions( table_holder );
+
+    auto subfeatures =
+        SubtreeHelper::make_subfeatures( table_holder, predictions );
+
+    const auto silent = _ensemble.hyperparameters().silent_;
+
+    assert_true( _features->size() >= _ensemble.num_features() );
+
+    for ( size_t i = 0; i < _ensemble.num_features(); ++i )
+        {
+            const auto new_feature =
+                _ensemble.transform( table_holder, subfeatures, i );
+
+            copy(
+                population_subview.rows(),
+                new_feature,
+                ( *_features )[i].get() );
+
+            if ( !silent && _logger )
+                {
+                    _logger->log(
+                        "Built FEATURE_" + std::to_string( i + 1 ) + "." );
+                }
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+void Threadutils::transform_as_predictor(
+    const size_t _this_thread_num,
+    const std::vector<size_t> _thread_nums,
+    const containers::DataFrame& _population,
+    const ensemble::DecisionTreeEnsemble& _ensemble,
+    containers::Features* _features )
+{
+    const auto population_subview =
+        relboost::utils::DataFrameScatterer::scatter_data_frame(
+            _population, _thread_nums, _this_thread_num );
+
+    assert_true( _features->size() == 1 );
+
+    const auto predictions = _ensemble.predict( population_subview );
+
+    copy( population_subview.rows(), predictions, ( *_features )[0].get() );
+}
+
+// ----------------------------------------------------------------------------
+
 void Threadutils::transform_ensemble(
     const size_t _this_thread_num,
     const std::vector<size_t> _thread_nums,
@@ -165,39 +233,25 @@ void Threadutils::transform_ensemble(
 {
     try
         {
-            auto population_subview = utils::DataFrameScatterer::
-                DataFrameScatterer::scatter_data_frame(
-                    _population, _thread_nums, _this_thread_num );
-
-            const auto table_holder = TableHolder(
-                _ensemble.placeholder(),
-                population_subview,
-                _peripheral,
-                _ensemble.peripheral() );
-
-            auto predictions = _ensemble.make_subpredictions( table_holder );
-
-            auto subfeatures =
-                SubtreeHelper::make_subfeatures( table_holder, predictions );
-
-            const auto silent = _ensemble.hyperparameters().silent_;
-
-            for ( size_t i = 0; i < _ensemble.num_features(); ++i )
+            if ( _peripheral.size() > 0 )
                 {
-                    const auto new_feature =
-                        _ensemble.transform( table_holder, subfeatures, i );
-
-                    copy(
-                        population_subview.rows(),
-                        new_feature,
-                        ( *_features )[i].get() );
-
-                    if ( !silent && _logger )
-                        {
-                            _logger->log(
-                                "Built FEATURE_" + std::to_string( i + 1 ) +
-                                "." );
-                        }
+                    transform_as_feature_engineerer(
+                        _this_thread_num,
+                        _thread_nums,
+                        _population,
+                        _peripheral,
+                        _logger,
+                        _ensemble,
+                        _features );
+                }
+            else
+                {
+                    transform_as_predictor(
+                        _this_thread_num,
+                        _thread_nums,
+                        _population,
+                        _ensemble,
+                        _features );
                 }
         }
     catch ( std::exception& e )

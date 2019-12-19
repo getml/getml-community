@@ -653,27 +653,6 @@ void DecisionTreeEnsemble::fit_subensembles(
 
 // ----------------------------------------------------------------------------
 
-std::vector<Float> DecisionTreeEnsemble::generate_predictions(
-    const decisiontrees::DecisionTree &_decision_tree,
-    const TableHolder &_table_holder,
-    const std::vector<containers::Subfeatures> &_subfeatures ) const
-{
-    const auto peripheral_used = _decision_tree.peripheral_used();
-
-    assert_true( peripheral_used < _table_holder.main_tables_.size() );
-
-    assert_true( peripheral_used < _table_holder.peripheral_tables_.size() );
-
-    assert_true( peripheral_used < _subfeatures.size() );
-
-    return _decision_tree.transform(
-        _table_holder.main_tables_[peripheral_used],
-        _table_holder.peripheral_tables_[peripheral_used],
-        _subfeatures[peripheral_used] );
-}
-
-// ----------------------------------------------------------------------------
-
 std::pair<
     std::shared_ptr<lossfunctions::LossFunction>,
     std::shared_ptr<const TableHolder>>
@@ -864,6 +843,36 @@ std::vector<Float> DecisionTreeEnsemble::predict(
 
                     predictions[i] += p * hyperparameters().shrinkage_ *
                                       trees()[j].update_rate();
+                }
+        }
+
+    return predictions;
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<Float> DecisionTreeEnsemble::predict(
+    const containers::DataFrameView &_population ) const
+{
+    auto predictions =
+        std::vector<Float>( _population.nrows(), initial_prediction() );
+
+    for ( const auto &tree : trees() )
+        {
+            const auto new_predictions = tree.transform(
+                _population,
+                std::optional<containers::DataFrame>(),
+                containers::Subfeatures() );
+
+            assert_true( new_predictions.size() == predictions.size() );
+
+            for ( size_t i = 0; i < predictions.size(); ++i )
+
+                {
+                    const auto p = new_predictions[i];
+
+                    predictions[i] +=
+                        p * hyperparameters().shrinkage_ * tree.update_rate();
                 }
         }
 
@@ -1095,8 +1104,20 @@ std::vector<Float> DecisionTreeEnsemble::transform(
 {
     assert_true( _n_feature < num_features() );
 
-    return generate_predictions(
-        trees()[_n_feature], _table_holder, _subfeatures );
+    const auto &decision_tree = trees()[_n_feature];
+
+    const auto peripheral_used = decision_tree.peripheral_used();
+
+    assert_true( peripheral_used < _table_holder.main_tables_.size() );
+
+    assert_true( peripheral_used < _table_holder.peripheral_tables_.size() );
+
+    assert_true( peripheral_used < _subfeatures.size() );
+
+    return decision_tree.transform(
+        _table_holder.main_tables_[peripheral_used],
+        _table_holder.peripheral_tables_[peripheral_used],
+        _subfeatures[peripheral_used] );
 }
 
 // ----------------------------------------------------------------------------

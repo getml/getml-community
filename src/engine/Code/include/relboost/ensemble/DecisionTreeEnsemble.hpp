@@ -98,10 +98,15 @@ class DecisionTreeEnsemble
     /// Copy assignment constructor
     DecisionTreeEnsemble& operator=( DecisionTreeEnsemble&& _other ) noexcept;
 
-    /// Generates predictions.
+    /// Generates predictions when this is a feature engineerer. Mainly used
+    /// for testing.
     std::vector<Float> predict(
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral ) const;
+
+    /// Generates predictions when this is a predictor. Called by Threadutils.
+    std::vector<Float> predict(
+        const containers::DataFrameView& _population ) const;
 
     /// Saves the DecisionTreeEnsemble into a JSON file.
     void save( const std::string& _fname ) const;
@@ -227,12 +232,6 @@ class DecisionTreeEnsemble
     void extract_schemas(
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral );
-
-    /// Generates a new slate of predictions.
-    std::vector<Float> generate_predictions(
-        const decisiontrees::DecisionTree& _decision_tree,
-        const TableHolder& _table_holder,
-        const std::vector<containers::Subfeatures>& _subfeatures ) const;
 
     /// Returns the number of matches for each element of the population table.
     std::shared_ptr<std::vector<Float>> make_counts(

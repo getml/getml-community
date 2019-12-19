@@ -276,7 +276,7 @@ class LossFunctionImpl
     {
         const auto weight =
             _sum_g / ( _sum_h + _n * hyperparameters().reg_lambda_ );
-        const auto loss = _sum_g * weight;
+        const auto loss = -0.5 * _sum_g * weight;
         return std::make_pair( loss, weight );
     }
 
