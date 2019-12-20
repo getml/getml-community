@@ -224,8 +224,7 @@ void DecisionTreeNode::fit(
     auto candidates =
         try_all( *_intercept, _output, _input, _subfeatures, _begin, _end );
 
-    std::cout << "candidates.size(): " << std::to_string( candidates.size() )
-              << std::endl;
+    debug_log( "candidates.size(): " + std::to_string( candidates.size() ) );
 
     if ( candidates.size() == 0 )
         {
@@ -255,8 +254,9 @@ void DecisionTreeNode::fit(
     // ------------------------------------------------------------------------
     // If the loss reduction is sufficient, then take this split.
 
-    std::cout << "best_split.loss_reduction_: "
-              << std::to_string( best_split.loss_reduction_ ) << std::endl;
+    debug_log(
+        "best_split.loss_reduction_: " +
+        std::to_string( best_split.loss_reduction_ ) );
 
     if ( best_split.loss_reduction_ < hyperparameters().gamma_ )
         {
@@ -1272,9 +1272,9 @@ void DecisionTreeNode::try_numerical_output(
                     continue;
                 }
 
-            std::cout << "critical_values.size(): " +
-                             std::to_string( critical_values.size() )
-                      << std::endl;
+            debug_log(
+                "critical_values.size(): " +
+                std::to_string( critical_values.size() ) );
 
             auto it = _begin;
 

@@ -21,17 +21,8 @@ class GradientBoostingPredictor : public Predictor
     GradientBoostingPredictor(
         const Poco::JSON::Object& _hyperparams,
         const std::shared_ptr<const PredictorImpl>& _impl,
-        const std::shared_ptr<const std::vector<strings::String>>& _categories )
-        : impl_( _impl ),
-          model_( relboost::ensemble::DecisionTreeEnsemble(
-              _categories,
-              std::make_shared<const relboost::Hyperparameters>( _hyperparams ),
-              nullptr,
-              nullptr,
-              nullptr,
-              nullptr ) )
-    {
-    }
+        const std::shared_ptr<const std::vector<strings::String>>&
+            _categories );
 
     ~GradientBoostingPredictor() = default;
 
@@ -90,12 +81,17 @@ class GradientBoostingPredictor : public Predictor
     }
 
     /// Trivial (private) accessor.
-    relboost::ensemble::DecisionTreeEnsemble& model() { return model_; }
+    relboost::ensemble::DecisionTreeEnsemble& model()
+    {
+        assert_true( model_ );
+        return *model_;
+    }
 
     /// Trivial (private) accessor.
     const relboost::ensemble::DecisionTreeEnsemble& model() const
     {
-        return model_;
+        assert_true( model_ );
+        return *model_;
     }
 
     // -----------------------------------------
@@ -105,7 +101,7 @@ class GradientBoostingPredictor : public Predictor
     std::shared_ptr<const PredictorImpl> impl_;
 
     /// The underlying relboost model
-    relboost::ensemble::DecisionTreeEnsemble model_;
+    std::optional<relboost::ensemble::DecisionTreeEnsemble> model_;
 };
 
 // ------------------------------------------------------------------------

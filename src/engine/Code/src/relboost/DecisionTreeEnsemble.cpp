@@ -631,15 +631,9 @@ void DecisionTreeEnsemble::fit_new_tree(
 
     _loss_function->calc_gradients();
 
-    // _loss_function->commit();
-
     // ------------------------------------------------------------------------
 
     trees().emplace_back( std::move( new_tree ) );
-
-    // ------------------------------------------------------------------------
-
-    // trees().back().clear();
 
     // ------------------------------------------------------------------------
 }
@@ -758,8 +752,6 @@ DecisionTreeEnsemble::init_as_predictor(
         {
             targets()[i] = _population.target( i, target_num );
         }
-
-    std::cout << "targets().size(): " << targets().size() << std::endl;
 
     // ------------------------------------------------------------------------
 

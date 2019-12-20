@@ -4,6 +4,32 @@ namespace predictors
 {
 // -----------------------------------------------------------------------------
 
+GradientBoostingPredictor::GradientBoostingPredictor(
+    const Poco::JSON::Object& _hyperparams,
+    const std::shared_ptr<const PredictorImpl>& _impl,
+    const std::shared_ptr<const std::vector<strings::String>>& _categories )
+    : impl_( _impl )
+{
+    auto hyperparams = _hyperparams;
+
+    hyperparams.set( "delta_t_", 0.0 );
+    hyperparams.set( "include_categorical_", false );
+    hyperparams.set( "num_subfeatures_", 100 );
+    hyperparams.set( "session_name_", "" );
+    hyperparams.set( "share_selected_features_", 0.0 );
+    hyperparams.set( "use_timestamps_", true );
+
+    model_ = relboost::ensemble::DecisionTreeEnsemble(
+        _categories,
+        std::make_shared<const relboost::Hyperparameters>( hyperparams ),
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr );
+}
+
+// -----------------------------------------------------------------------------
+
 GradientBoostingPredictor::DataFrameType GradientBoostingPredictor::extract_df(
     const std::vector<CIntColumn>& _X_categorical,
     const std::vector<CFloatColumn>& _X_numerical,
@@ -76,7 +102,7 @@ void GradientBoostingPredictor::load( const std::string& _fname )
 {
     const auto obj = load_json_obj( _fname );
     model_ =
-        relboost::ensemble::DecisionTreeEnsemble( model_.categories(), obj );
+        relboost::ensemble::DecisionTreeEnsemble( model().categories(), obj );
 }
 
 // -----------------------------------------------------------------------------
