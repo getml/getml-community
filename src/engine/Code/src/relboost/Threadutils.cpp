@@ -83,9 +83,17 @@ void Threadutils::fit_as_predictor(
 
     const auto silent = _ensemble->hyperparameters().silent_;
 
+    auto matches = utils::Matchmaker::make_matches( population_subview );
+
+    auto matches_ptr = utils::Matchmaker::make_pointers( matches );
+
     for ( size_t i = 0; i < num_features; ++i )
         {
-            _ensemble->fit_new_tree( loss_function, population_subview );
+            _ensemble->fit_new_tree(
+                loss_function,
+                population_subview,
+                matches_ptr.begin(),
+                matches_ptr.end() );
 
             if ( !silent && _logger )
                 {

@@ -40,24 +40,12 @@ std::vector<containers::Match> Matchmaker::make_matches(
 // ----------------------------------------------------------------------------
 
 std::vector<containers::Match> Matchmaker::make_matches(
-    const containers::DataFrameView& _population,
-    const std::shared_ptr<const std::vector<Float>>& _sample_weights )
+    const containers::DataFrameView& _population )
 {
     std::vector<containers::Match> matches;
 
     for ( size_t ix_output = 0; ix_output < _population.nrows(); ++ix_output )
         {
-            if ( _sample_weights )
-                {
-                    assert_true(
-                        _sample_weights->size() == _population.nrows() );
-
-                    if ( ( *_sample_weights )[ix_output] <= 0.0 )
-                        {
-                            continue;
-                        }
-                }
-
             matches.emplace_back( containers::Match{0, ix_output} );
         }
 
