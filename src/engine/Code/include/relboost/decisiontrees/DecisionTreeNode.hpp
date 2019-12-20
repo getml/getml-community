@@ -37,8 +37,8 @@ class DecisionTreeNode
         const containers::DataFrameView& _output,
         const std::optional<containers::DataFrame>& _input,
         const containers::Subfeatures& _subfeatures,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _end,
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _end,
         Float* _intercept );
 
     /// Expresses the DecisionTreeNode as a Poco::JSON::Object.
@@ -85,10 +85,10 @@ class DecisionTreeNode
         const enums::Update _update,
         const Float _old_intercept,
         const containers::Split& _split,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _last_it,
-        const std::vector<const containers::Match*>::iterator _it,
-        const std::vector<const containers::Match*>::iterator _end,
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _last_it,
+        const std::vector<containers::Match>::iterator _it,
+        const std::vector<containers::Match>::iterator _end,
         std::vector<containers::CandidateSplit>* _candidates );
 
     /// DEBUG ONLY:Makes sure that the candidates and the max element are
@@ -105,12 +105,12 @@ class DecisionTreeNode
     std::string condition_smaller() const;
 
     /// Partitions a set of matches according to the split.
-    std::vector<const containers::Match*>::iterator partition(
+    std::vector<containers::Match>::iterator partition(
         const containers::DataFrameView& _output,
         const std::optional<containers::DataFrame>& _input,
         const containers::Subfeatures& _subfeatures,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _end );
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _end );
 
     /// Try all possible splits.
     std::vector<containers::CandidateSplit> try_all(
@@ -118,8 +118,8 @@ class DecisionTreeNode
         const containers::DataFrameView& _output,
         const std::optional<containers::DataFrame>& _input,
         const containers::Subfeatures& _subfeatures,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _end );
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _end );
 
     /// Helper function for all functions that try categorical inputs.
     void try_categorical(
@@ -129,56 +129,56 @@ class DecisionTreeNode
         const Float _old_intercept,
         const enums::DataUsed _data_used,
         const containers::CategoryIndex& _category_index,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _end,
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _end,
         std::vector<containers::CandidateSplit>* _candidates );
 
     /// Try categorical input columns as splits.
     void try_categorical_input(
         const Float _old_intercept,
         const containers::DataFrame& _input,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _end,
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _end,
         std::vector<containers::CandidateSplit>* _candidates );
 
     /// Try categorical output columns as splits.
     void try_categorical_output(
         const Float _old_intercept,
         const containers::DataFrameView& _output,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _end,
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _end,
         std::vector<containers::CandidateSplit>* _candidates );
 
     /// Try discrete input columns as splits.
     void try_discrete_input(
         const Float _old_intercept,
         const containers::DataFrame& _input,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _end,
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _end,
         std::vector<containers::CandidateSplit>* _candidates );
 
     /// Try discrete output columns as splits.
     void try_discrete_output(
         const Float _old_intercept,
         const containers::DataFrameView& _output,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _end,
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _end,
         std::vector<containers::CandidateSplit>* _candidates );
 
     /// Try numerical input columns as splits.
     void try_numerical_input(
         const Float _old_intercept,
         const containers::DataFrame& _peripheral,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _end,
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _end,
         std::vector<containers::CandidateSplit>* _candidates );
 
     /// Try numerical output columns as splits.
     void try_numerical_output(
         const Float _old_intercept,
         const containers::DataFrameView& _output,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _end,
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _end,
         std::vector<containers::CandidateSplit>* _candidates );
 
     /// Try splitting on whether columns are the same.
@@ -186,8 +186,8 @@ class DecisionTreeNode
         const Float _old_intercept,
         const containers::DataFrame& _input,
         const containers::DataFrameView& _output,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _end,
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _end,
         std::vector<containers::CandidateSplit>* _candidates );
 
     /// Try splitting on same units discrete.
@@ -195,8 +195,8 @@ class DecisionTreeNode
         const Float _old_intercept,
         const containers::DataFrame& _input,
         const containers::DataFrameView& _output,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _end,
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _end,
         std::vector<containers::CandidateSplit>* _candidates );
 
     /// Try splitting on same units numerical.
@@ -204,16 +204,16 @@ class DecisionTreeNode
         const Float _old_intercept,
         const containers::DataFrame& _input,
         const containers::DataFrameView& _output,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _end,
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _end,
         std::vector<containers::CandidateSplit>* _candidates );
 
     /// Try subfeatures as splits.
     void try_subfeatures(
         const Float _old_intercept,
         const containers::Subfeatures& _subfeatures,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _end,
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _end,
         std::vector<containers::CandidateSplit>* _candidates );
 
     /// Try the difference between time stamps in input and output as splits.
@@ -221,8 +221,8 @@ class DecisionTreeNode
         const Float _old_intercept,
         const containers::DataFrame& _input,
         const containers::DataFrameView& _output,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _end,
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _end,
         std::vector<containers::CandidateSplit>* _candidates );
 
     /// Try the difference between time stamps in input and output as splits.
@@ -230,8 +230,8 @@ class DecisionTreeNode
         const Float _old_intercept,
         const containers::DataFrame& _input,
         const containers::DataFrameView& _output,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _end,
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _end,
         std::vector<containers::CandidateSplit>* _candidates );
 
     // -----------------------------------------------------------------

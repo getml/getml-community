@@ -15,7 +15,7 @@ class Avg : public lossfunctions::LossFunction
 
    public:
     Avg( const std::shared_ptr<lossfunctions::LossFunction>& _child,
-         const std::vector<const containers::Match*>& _matches_ptr,
+         const std::vector<containers::Match>& _matches,
          const containers::DataFrame& _input,
          const containers::DataFrameView& _output,
          multithreading::Communicator* _comm )
@@ -39,7 +39,7 @@ class Avg : public lossfunctions::LossFunction
     {
         resize( _output.nrows() );
 
-        init_count_committed( _matches_ptr );
+        init_count_committed( _matches );
     }
 
     Avg( const std::shared_ptr<AggregationIndex>& _agg_index,
@@ -48,7 +48,7 @@ class Avg : public lossfunctions::LossFunction
          const containers::DataFrameView& _output,
          multithreading::Communicator* _comm )
         : Avg( _child,
-               std::vector<const containers::Match*>( 0 ),
+               std::vector<containers::Match>( 0 ),
                _input,
                _output,
                _comm )
@@ -118,10 +118,10 @@ class Avg : public lossfunctions::LossFunction
         const Float _min_num_samples,
         const Float _old_intercept,
         const Float _old_weight,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _split_begin,
-        const std::vector<const containers::Match*>::iterator _split_end,
-        const std::vector<const containers::Match*>::iterator _end ) final;
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _split_begin,
+        const std::vector<containers::Match>::iterator _split_end,
+        const std::vector<containers::Match>::iterator _end ) final;
 
     /// Calculates the new yhat given eta, indices and the new weights.
     void calc_yhat(
@@ -139,9 +139,9 @@ class Avg : public lossfunctions::LossFunction
         const Float _old_intercept,
         const Float _old_weight,
         const std::array<Float, 3>& _weights,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _split,
-        const std::vector<const containers::Match*>::iterator _end ) final;
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _split,
+        const std::vector<containers::Match>::iterator _end ) final;
 
     /// Returns the loss reduction associated with a split.
     Float evaluate_split(
@@ -303,16 +303,16 @@ class Avg : public lossfunctions::LossFunction
     void calc_all(
         const enums::Revert _revert,
         const Float _old_weight,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _split_begin,
-        const std::vector<const containers::Match*>::iterator _split_end,
-        const std::vector<const containers::Match*>::iterator _end );
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _split_begin,
+        const std::vector<containers::Match>::iterator _split_end,
+        const std::vector<containers::Match>::iterator _end );
 
     /// Calculates eta1_ and eta2_ for only the difference to the last split.
     void calc_diff(
         const Float _old_weight,
-        const std::vector<const containers::Match*>::iterator _split_begin,
-        const std::vector<const containers::Match*>::iterator _split_end );
+        const std::vector<containers::Match>::iterator _split_begin,
+        const std::vector<containers::Match>::iterator _split_end );
 
     /// Calculates the new yhat assuming that this is the
     /// lowest aggregation.
@@ -332,8 +332,7 @@ class Avg : public lossfunctions::LossFunction
         const std::array<Float, 3>& _weights );
 
     /// Initialized count_committed_ by calculating the total count.
-    void init_count_committed(
-        const std::vector<const containers::Match*>& _matches_ptr );
+    void init_count_committed( const std::vector<containers::Match>& _matches );
 
     /// Adapts the etas_old_ to the etas.
     void update_etas_old( const Float _old_weight );

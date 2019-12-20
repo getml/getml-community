@@ -89,9 +89,9 @@ class Sum : public lossfunctions::LossFunction
         const Float _old_intercept,
         const Float _old_weight,
         const std::array<Float, 3>& _weights,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _split,
-        const std::vector<const containers::Match*>::iterator _end ) final;
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _split,
+        const std::vector<containers::Match>::iterator _end ) final;
 
     /// Calculates indices_, eta1_ and eta2_ given the previous
     /// iteration's variables without calculating the weights.
@@ -122,10 +122,10 @@ class Sum : public lossfunctions::LossFunction
         const Float _min_num_samples,
         const Float _old_intercept,
         const Float _old_weight,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _split_begin,
-        const std::vector<const containers::Match*>::iterator _split_end,
-        const std::vector<const containers::Match*>::iterator _end ) final;
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _split_begin,
+        const std::vector<containers::Match>::iterator _split_end,
+        const std::vector<containers::Match>::iterator _end ) final;
 
     /// Calculates the new yhat given eta, indices and the new weights.
     void calc_yhat(
@@ -292,16 +292,16 @@ class Sum : public lossfunctions::LossFunction
     /// the last split.
     void calc_all(
         const enums::Revert _revert,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _split_begin,
-        const std::vector<const containers::Match*>::iterator _split_end,
-        const std::vector<const containers::Match*>::iterator _end );
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _split_begin,
+        const std::vector<containers::Match>::iterator _split_end,
+        const std::vector<containers::Match>::iterator _end );
 
     /// Calculates eta1_ and eta2_ for only the difference to the last split.
     void calc_diff(
         const enums::Revert _revert,
-        const std::vector<const containers::Match*>::iterator _split_begin,
-        const std::vector<const containers::Match*>::iterator _split_end );
+        const std::vector<containers::Match>::iterator _split_begin,
+        const std::vector<containers::Match>::iterator _split_end );
 
     /// Adapts the etas_old_ to the etas.
     void update_etas_old();

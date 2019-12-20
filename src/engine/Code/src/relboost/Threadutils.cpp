@@ -85,15 +85,13 @@ void Threadutils::fit_as_predictor(
 
     auto matches = utils::Matchmaker::make_matches( population_subview );
 
-    auto matches_ptr = utils::Matchmaker::make_pointers( matches );
-
     for ( size_t i = 0; i < num_features; ++i )
         {
             _ensemble->fit_new_tree(
                 loss_function,
                 population_subview,
-                matches_ptr.begin(),
-                matches_ptr.end() );
+                matches.begin(),
+                matches.end() );
 
             if ( !silent && _logger )
                 {

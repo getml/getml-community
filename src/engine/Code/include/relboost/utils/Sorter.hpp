@@ -24,8 +24,8 @@ struct Sorter<enums::DataUsed::categorical_input>
     static void sort(
         const size_t _num_column,
         const containers::DataFrame& _df,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _end )
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _end )
     {
         assert_true( _end >= _begin );
 
@@ -36,13 +36,12 @@ struct Sorter<enums::DataUsed::categorical_input>
         std::sort(
             _begin,
             _end,
-            [_num_column, &_df](
-                const containers::Match* m1, const containers::Match* m2 ) {
-                assert_true( m1->ix_input < _df.nrows() );
-                assert_true( m2->ix_input < _df.nrows() );
+            [_num_column, &_df]( containers::Match m1, containers::Match m2 ) {
+                assert_true( m1.ix_input < _df.nrows() );
+                assert_true( m2.ix_input < _df.nrows() );
 
-                return _df.categorical( m1->ix_input, _num_column ) <
-                       _df.categorical( m2->ix_input, _num_column );
+                return _df.categorical( m1.ix_input, _num_column ) <
+                       _df.categorical( m2.ix_input, _num_column );
             } );
     }
 };
@@ -55,8 +54,8 @@ struct Sorter<enums::DataUsed::categorical_output>
     static void sort(
         const size_t _num_column,
         const containers::DataFrameView& _df,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _end )
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _end )
     {
         assert_true( _end >= _begin );
 
@@ -67,13 +66,12 @@ struct Sorter<enums::DataUsed::categorical_output>
         std::sort(
             _begin,
             _end,
-            [_num_column, &_df](
-                const containers::Match* m1, const containers::Match* m2 ) {
-                assert_true( m1->ix_output < _df.nrows() );
-                assert_true( m2->ix_output < _df.nrows() );
+            [_num_column, &_df]( containers::Match m1, containers::Match m2 ) {
+                assert_true( m1.ix_output < _df.nrows() );
+                assert_true( m2.ix_output < _df.nrows() );
 
-                return _df.categorical( m1->ix_output, _num_column ) <
-                       _df.categorical( m2->ix_output, _num_column );
+                return _df.categorical( m1.ix_output, _num_column ) <
+                       _df.categorical( m2.ix_output, _num_column );
             } );
     }
 };
@@ -86,8 +84,8 @@ struct Sorter<enums::DataUsed::discrete_input>
     static void sort(
         const size_t _num_column,
         const containers::DataFrame& _df,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _end )
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _end )
     {
         assert_true( _end >= _begin );
 
@@ -98,13 +96,12 @@ struct Sorter<enums::DataUsed::discrete_input>
         std::sort(
             _begin,
             _end,
-            [_num_column, &_df](
-                const containers::Match* m1, const containers::Match* m2 ) {
-                assert_true( m1->ix_input < _df.nrows() );
-                assert_true( m2->ix_input < _df.nrows() );
+            [_num_column, &_df]( containers::Match m1, containers::Match m2 ) {
+                assert_true( m1.ix_input < _df.nrows() );
+                assert_true( m2.ix_input < _df.nrows() );
 
-                return _df.discrete( m1->ix_input, _num_column ) >
-                       _df.discrete( m2->ix_input, _num_column );
+                return _df.discrete( m1.ix_input, _num_column ) >
+                       _df.discrete( m2.ix_input, _num_column );
             } );
     }
 };
@@ -117,8 +114,8 @@ struct Sorter<enums::DataUsed::discrete_output>
     static void sort(
         const size_t _num_column,
         const containers::DataFrameView& _df,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _end )
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _end )
     {
         assert_true( _end >= _begin );
 
@@ -129,13 +126,12 @@ struct Sorter<enums::DataUsed::discrete_output>
         std::sort(
             _begin,
             _end,
-            [_num_column, &_df](
-                const containers::Match* m1, const containers::Match* m2 ) {
-                assert_true( m1->ix_output < _df.nrows() );
-                assert_true( m2->ix_output < _df.nrows() );
+            [_num_column, &_df]( containers::Match m1, containers::Match m2 ) {
+                assert_true( m1.ix_output < _df.nrows() );
+                assert_true( m2.ix_output < _df.nrows() );
 
-                return _df.discrete( m1->ix_output, _num_column ) >
-                       _df.discrete( m2->ix_output, _num_column );
+                return _df.discrete( m1.ix_output, _num_column ) >
+                       _df.discrete( m2.ix_output, _num_column );
             } );
     }
 };
@@ -148,8 +144,8 @@ struct Sorter<enums::DataUsed::numerical_input>
     static void sort(
         const size_t _num_column,
         const containers::DataFrame& _df,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _end )
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _end )
     {
         assert_true( _end >= _begin );
 
@@ -160,13 +156,12 @@ struct Sorter<enums::DataUsed::numerical_input>
         std::sort(
             _begin,
             _end,
-            [_num_column, &_df](
-                const containers::Match* m1, const containers::Match* m2 ) {
-                assert_true( m1->ix_input < _df.nrows() );
-                assert_true( m2->ix_input < _df.nrows() );
+            [_num_column, &_df]( containers::Match m1, containers::Match m2 ) {
+                assert_true( m1.ix_input < _df.nrows() );
+                assert_true( m2.ix_input < _df.nrows() );
 
-                return _df.numerical( m1->ix_input, _num_column ) >
-                       _df.numerical( m2->ix_input, _num_column );
+                return _df.numerical( m1.ix_input, _num_column ) >
+                       _df.numerical( m2.ix_input, _num_column );
             } );
     }
 };
@@ -179,8 +174,8 @@ struct Sorter<enums::DataUsed::numerical_output>
     static void sort(
         const size_t _num_column,
         const containers::DataFrameView& _df,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _end )
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _end )
     {
         assert_true( _end >= _begin );
 
@@ -191,13 +186,12 @@ struct Sorter<enums::DataUsed::numerical_output>
         std::sort(
             _begin,
             _end,
-            [_num_column, &_df](
-                const containers::Match* m1, const containers::Match* m2 ) {
-                assert_true( m1->ix_output < _df.nrows() );
-                assert_true( m2->ix_output < _df.nrows() );
+            [_num_column, &_df]( containers::Match m1, containers::Match m2 ) {
+                assert_true( m1.ix_output < _df.nrows() );
+                assert_true( m2.ix_output < _df.nrows() );
 
-                return _df.numerical( m1->ix_output, _num_column ) >
-                       _df.numerical( m2->ix_output, _num_column );
+                return _df.numerical( m1.ix_output, _num_column ) >
+                       _df.numerical( m2.ix_output, _num_column );
             } );
     }
 };
@@ -212,8 +206,8 @@ struct Sorter<enums::DataUsed::same_units_discrete>
         const size_t _output_col,
         const containers::DataFrame& _input,
         const containers::DataFrameView& _output,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _end )
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _end )
     {
         // Note that we are sorting in DESCENDING order!
 
@@ -226,20 +220,20 @@ struct Sorter<enums::DataUsed::same_units_discrete>
             _begin,
             _end,
             [_input_col, _output_col, &_input, &_output](
-                const containers::Match* m1, const containers::Match* m2 ) {
-                assert_true( m1->ix_input < _input.nrows() );
-                assert_true( m2->ix_input < _input.nrows() );
+                containers::Match m1, containers::Match m2 ) {
+                assert_true( m1.ix_input < _input.nrows() );
+                assert_true( m2.ix_input < _input.nrows() );
 
-                assert_true( m1->ix_output < _output.nrows() );
-                assert_true( m2->ix_output < _output.nrows() );
+                assert_true( m1.ix_output < _output.nrows() );
+                assert_true( m2.ix_output < _output.nrows() );
 
                 const auto diff1 =
-                    _output.discrete( m1->ix_output, _output_col ) -
-                    _input.discrete( m1->ix_input, _input_col );
+                    _output.discrete( m1.ix_output, _output_col ) -
+                    _input.discrete( m1.ix_input, _input_col );
 
                 const auto diff2 =
-                    _output.discrete( m2->ix_output, _output_col ) -
-                    _input.discrete( m2->ix_input, _input_col );
+                    _output.discrete( m2.ix_output, _output_col ) -
+                    _input.discrete( m2.ix_input, _input_col );
 
                 return diff1 > diff2;
             } );
@@ -256,8 +250,8 @@ struct Sorter<enums::DataUsed::same_units_numerical>
         const size_t _output_col,
         const containers::DataFrame& _input,
         const containers::DataFrameView& _output,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _end )
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _end )
     {
         assert_true( _end >= _begin );
 
@@ -270,20 +264,20 @@ struct Sorter<enums::DataUsed::same_units_numerical>
             _begin,
             _end,
             [_input_col, _output_col, &_input, &_output](
-                const containers::Match* m1, const containers::Match* m2 ) {
-                assert_true( m1->ix_input < _input.nrows() );
-                assert_true( m2->ix_input < _input.nrows() );
+                containers::Match m1, containers::Match m2 ) {
+                assert_true( m1.ix_input < _input.nrows() );
+                assert_true( m2.ix_input < _input.nrows() );
 
-                assert_true( m1->ix_output < _output.nrows() );
-                assert_true( m2->ix_output < _output.nrows() );
+                assert_true( m1.ix_output < _output.nrows() );
+                assert_true( m2.ix_output < _output.nrows() );
 
                 const auto diff1 =
-                    _output.numerical( m1->ix_output, _output_col ) -
-                    _input.numerical( m1->ix_input, _input_col );
+                    _output.numerical( m1.ix_output, _output_col ) -
+                    _input.numerical( m1.ix_input, _input_col );
 
                 const auto diff2 =
-                    _output.numerical( m2->ix_output, _output_col ) -
-                    _input.numerical( m2->ix_input, _input_col );
+                    _output.numerical( m2.ix_output, _output_col ) -
+                    _input.numerical( m2.ix_input, _input_col );
 
                 return diff1 > diff2;
             } );
@@ -298,8 +292,8 @@ struct Sorter<enums::DataUsed::subfeatures>
     static void sort(
         const size_t _num_column,
         const containers::Subfeatures& _subfeatures,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _end )
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _end )
     {
         assert_true( _end >= _begin );
 
@@ -312,9 +306,8 @@ struct Sorter<enums::DataUsed::subfeatures>
         std::sort(
             _begin,
             _end,
-            [&subfeature](
-                const containers::Match* m1, const containers::Match* m2 ) {
-                return subfeature[m1->ix_input] > subfeature[m2->ix_input];
+            [&subfeature]( containers::Match m1, containers::Match m2 ) {
+                return subfeature[m1.ix_input] > subfeature[m2.ix_input];
             } );
     }
 };
@@ -327,8 +320,8 @@ struct Sorter<enums::DataUsed::time_stamps_diff>
     static void sort(
         const containers::DataFrame& _input,
         const containers::DataFrameView& _output,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _end )
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _end )
     {
         assert_true( _end >= _begin );
 
@@ -337,18 +330,17 @@ struct Sorter<enums::DataUsed::time_stamps_diff>
         std::sort(
             _begin,
             _end,
-            [&_input, &_output](
-                const containers::Match* m1, const containers::Match* m2 ) {
-                assert_true( m1->ix_input < _input.nrows() );
-                assert_true( m2->ix_input < _input.nrows() );
+            [&_input, &_output]( containers::Match m1, containers::Match m2 ) {
+                assert_true( m1.ix_input < _input.nrows() );
+                assert_true( m2.ix_input < _input.nrows() );
 
-                assert_true( m1->ix_output < _output.nrows() );
-                assert_true( m2->ix_output < _output.nrows() );
+                assert_true( m1.ix_output < _output.nrows() );
+                assert_true( m2.ix_output < _output.nrows() );
 
-                return ( _output.time_stamp( m1->ix_output ) -
-                         _input.time_stamp( m1->ix_input ) ) >
-                       ( _output.time_stamp( m2->ix_output ) -
-                         _input.time_stamp( m2->ix_input ) );
+                return ( _output.time_stamp( m1.ix_output ) -
+                         _input.time_stamp( m1.ix_input ) ) >
+                       ( _output.time_stamp( m2.ix_output ) -
+                         _input.time_stamp( m2.ix_input ) );
             } );
     }
 };

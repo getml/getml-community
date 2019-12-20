@@ -142,10 +142,10 @@ class SquareLoss : public LossFunction
         const Float _min_num_samples,
         const Float _old_intercept,
         const Float _old_weight,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _split_begin,
-        const std::vector<const containers::Match*>::iterator _split_end,
-        const std::vector<const containers::Match*>::iterator _end ) final
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _split_begin,
+        const std::vector<containers::Match>::iterator _split_end,
+        const std::vector<containers::Match>::iterator _end ) final
     {
         const auto p = impl_.calc_pair(
             _revert,
@@ -231,9 +231,9 @@ class SquareLoss : public LossFunction
         const Float _old_intercept,
         const Float _old_weight,
         const std::array<Float, 3>& _weights,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _split,
-        const std::vector<const containers::Match*>::iterator _end ) final{};
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _split,
+        const std::vector<containers::Match>::iterator _end ) final{};
 
     /// Actual loss functions always have depth 0.
     size_t depth() const final { return 0; }

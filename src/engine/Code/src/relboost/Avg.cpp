@@ -65,10 +65,10 @@ void Avg::activate(
 void Avg::calc_all(
     const enums::Revert _revert,
     const Float _old_weight,
-    const std::vector<const containers::Match*>::iterator _begin,
-    const std::vector<const containers::Match*>::iterator _split_begin,
-    const std::vector<const containers::Match*>::iterator _split_end,
-    const std::vector<const containers::Match*>::iterator _end )
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _split_begin,
+    const std::vector<containers::Match>::iterator _split_end,
+    const std::vector<containers::Match>::iterator _end )
 {
     // ------------------------------------------------------------------------
 
@@ -110,7 +110,7 @@ void Avg::calc_all(
         {
             for ( auto it = _begin; it != _split_begin; ++it )
                 {
-                    const auto ix = ( *it )->ix_output;
+                    const auto ix = it->ix_output;
 
                     assert_true( count_committed_[ix] > 0.0 );
 
@@ -126,7 +126,7 @@ void Avg::calc_all(
 
             for ( auto it = _split_begin; it != _split_end; ++it )
                 {
-                    const auto ix = ( *it )->ix_output;
+                    const auto ix = it->ix_output;
 
                     assert_true( count_committed_[ix] > 0.0 );
 
@@ -142,7 +142,7 @@ void Avg::calc_all(
 
             for ( auto it = _split_end; it != _end; ++it )
                 {
-                    const auto ix = ( *it )->ix_output;
+                    const auto ix = it->ix_output;
 
                     assert_true( count_committed_[ix] > 0.0 );
 
@@ -165,7 +165,7 @@ void Avg::calc_all(
         {
             for ( auto it = _begin; it != _split_begin; ++it )
                 {
-                    const auto ix = ( *it )->ix_output;
+                    const auto ix = it->ix_output;
 
                     ++count2_[ix];
 
@@ -177,7 +177,7 @@ void Avg::calc_all(
 
             for ( auto it = _split_begin; it != _split_end; ++it )
                 {
-                    const auto ix = ( *it )->ix_output;
+                    const auto ix = it->ix_output;
 
                     ++count1_[ix];
 
@@ -189,7 +189,7 @@ void Avg::calc_all(
 
             for ( auto it = _split_end; it != _end; ++it )
                 {
-                    const auto ix = ( *it )->ix_output;
+                    const auto ix = it->ix_output;
 
                     ++count2_[ix];
 
@@ -224,8 +224,8 @@ void Avg::calc_all(
 
 void Avg::calc_diff(
     const Float _old_weight,
-    const std::vector<const containers::Match*>::iterator _split_begin,
-    const std::vector<const containers::Match*>::iterator _split_end )
+    const std::vector<containers::Match>::iterator _split_begin,
+    const std::vector<containers::Match>::iterator _split_end )
 {
     // ------------------------------------------------------------------------
 
@@ -237,7 +237,7 @@ void Avg::calc_diff(
         {
             for ( auto it = _split_begin; it != _split_end; ++it )
                 {
-                    const auto ix = ( *it )->ix_output;
+                    const auto ix = it->ix_output;
 
                     assert_true( ix < eta1_.size() );
 
@@ -258,7 +258,7 @@ void Avg::calc_diff(
         {
             for ( auto it = _split_begin; it != _split_end; ++it )
                 {
-                    const auto ix = ( *it )->ix_output;
+                    const auto ix = it->ix_output;
 
                     assert_true( ix < eta1_.size() );
 
@@ -357,10 +357,10 @@ std::vector<std::pair<Float, std::array<Float, 3>>> Avg::calc_pairs(
     const Float _min_num_samples,
     const Float _old_intercept,
     const Float _old_weight,
-    const std::vector<const containers::Match*>::iterator _begin,
-    const std::vector<const containers::Match*>::iterator _split_begin,
-    const std::vector<const containers::Match*>::iterator _split_end,
-    const std::vector<const containers::Match*>::iterator _end )
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _split_begin,
+    const std::vector<containers::Match>::iterator _split_end,
+    const std::vector<containers::Match>::iterator _end )
 {
     // -------------------------------------------------------------
 
@@ -578,9 +578,9 @@ void Avg::commit(
     const Float _old_intercept,
     const Float _old_weight,
     const std::array<Float, 3>& _weights,
-    const std::vector<const containers::Match*>::iterator _begin,
-    const std::vector<const containers::Match*>::iterator _split,
-    const std::vector<const containers::Match*>::iterator _end )
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _split,
+    const std::vector<containers::Match>::iterator _end )
 {
     // ------------------------------------------------------------------------
 
@@ -854,14 +854,13 @@ Float Avg::evaluate_split(
 
 // ----------------------------------------------------------------------------
 
-void Avg::init_count_committed(
-    const std::vector<const containers::Match*>& _matches_ptr )
+void Avg::init_count_committed( const std::vector<containers::Match>& _matches )
 {
-    for ( auto m : _matches_ptr )
+    for ( auto m : _matches )
         {
-            assert_true( m->ix_output < count_committed_.size() );
+            assert_true( m.ix_output < count_committed_.size() );
 
-            ++count_committed_[m->ix_output];
+            ++count_committed_[m.ix_output];
         }
 }
 

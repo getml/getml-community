@@ -73,8 +73,8 @@ void DecisionTree::fit(
     const containers::DataFrameView& _output,
     const std::optional<containers::DataFrame>& _input,
     const containers::Subfeatures& _subfeatures,
-    const std::vector<const containers::Match*>::iterator _begin,
-    const std::vector<const containers::Match*>::iterator _end )
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _end )
 {
     // ------------------------------------------------------------------------
     // Store input and output (we need the column names).

@@ -66,7 +66,9 @@ class DecisionTreeEnsemble
     /// Fits one more tree - implies that this is used as a predictor.
     void fit_new_tree(
         const std::shared_ptr<lossfunctions::LossFunction>& _loss_function,
-        const containers::DataFrameView& _population );
+        const containers::DataFrameView& _population,
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _end );
 
     /// Fits the subensembles.
     void fit_subensembles(

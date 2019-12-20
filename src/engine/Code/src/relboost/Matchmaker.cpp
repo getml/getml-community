@@ -89,20 +89,5 @@ void Matchmaker::make_matches(
 }
 
 // ----------------------------------------------------------------------------
-
-std::vector<const containers::Match*> Matchmaker::make_pointers(
-    const std::vector<containers::Match>& _matches )
-{
-    auto pointers = std::vector<const containers::Match*>( _matches.size() );
-
-    for ( size_t i = 0; i < _matches.size(); ++i )
-        {
-            pointers[i] = _matches.data() + i;
-        }
-
-    return pointers;
-}
-
-// ----------------------------------------------------------------------------
 }  // namespace utils
 }  // namespace relboost

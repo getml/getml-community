@@ -76,10 +76,10 @@ class LossFunctionImpl
     std::pair<Float, std::array<Float, 3>> calc_pair(
         const enums::Revert _revert,
         const enums::Update _update,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _split_begin,
-        const std::vector<const containers::Match*>::iterator _split_end,
-        const std::vector<const containers::Match*>::iterator _end,
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _split_begin,
+        const std::vector<containers::Match>::iterator _split_end,
+        const std::vector<containers::Match>::iterator _end,
         Float* _loss_old,
         std::array<Float, 6>* _sufficient_stats,
         multithreading::Communicator* _comm ) const;
@@ -98,8 +98,8 @@ class LossFunctionImpl
 
     /// Generates the predictions.
     void transform(
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _end,
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _end,
         const std::vector<Float>& _weights,
         std::vector<Float>* _predictions ) const;
 
@@ -196,10 +196,10 @@ class LossFunctionImpl
    private:
     /// Calculate all matches, meaning that we are at the first split.
     std::pair<Float, std::array<Float, 3>> calc_all(
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _split_begin,
-        const std::vector<const containers::Match*>::iterator _split_end,
-        const std::vector<const containers::Match*>::iterator _end,
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _split_begin,
+        const std::vector<containers::Match>::iterator _split_end,
+        const std::vector<containers::Match>::iterator _end,
         Float* _loss_old,
         std::array<Float, 6>* _sufficient_stats,
         multithreading::Communicator* _comm ) const;
@@ -207,10 +207,10 @@ class LossFunctionImpl
     /// Calculate only the difference to the last split.
     std::pair<Float, std::array<Float, 3>> calc_diff(
         const enums::Revert _revert,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _split_begin,
-        const std::vector<const containers::Match*>::iterator _split_end,
-        const std::vector<const containers::Match*>::iterator _end,
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _split_begin,
+        const std::vector<containers::Match>::iterator _split_end,
+        const std::vector<containers::Match>::iterator _end,
         const Float _loss_old,
         std::array<Float, 6>* _sufficient_stats,
         multithreading::Communicator* _comm ) const;

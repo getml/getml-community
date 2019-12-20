@@ -472,15 +472,11 @@ void DecisionTreeEnsemble::fit_new_feature(
             // Matches can potentially use a lot of memory - better to create
             // them anew when needed.
 
-            const auto matches = utils::Matchmaker::make_matches(
+            auto matches = utils::Matchmaker::make_matches(
                 output_table,
                 *input_table,
                 sample_weights,
                 hyperparameters().use_timestamps_ );
-
-            auto matches_ptr = utils::Matchmaker::make_pointers( matches );
-
-            assert_true( matches.size() == matches_ptr.size() );
 
             debug_log(
                 "Number of matches: " + std::to_string( matches.size() ) );
@@ -493,7 +489,7 @@ void DecisionTreeEnsemble::fit_new_feature(
 
             aggregations.push_back( std::make_shared<aggregations::Avg>(
                 _loss_function,
-                matches_ptr,
+                matches,
                 *input_table,
                 output_table,
                 &comm() ) );
@@ -517,8 +513,8 @@ void DecisionTreeEnsemble::fit_new_feature(
                         output_table,
                         input_table,
                         subfeatures,
-                        matches_ptr.begin(),
-                        matches_ptr.end() );
+                        matches.begin(),
+                        matches.end() );
 
                     auto new_predictions = candidates.back().transform(
                         output_table, input_table, subfeatures );
@@ -579,7 +575,9 @@ void DecisionTreeEnsemble::fit_new_feature(
 
 void DecisionTreeEnsemble::fit_new_tree(
     const std::shared_ptr<lossfunctions::LossFunction> &_loss_function,
-    const containers::DataFrameView &_population )
+    const containers::DataFrameView &_population,
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _end )
 {
     // ------------------------------------------------------------------------
 
@@ -591,14 +589,14 @@ void DecisionTreeEnsemble::fit_new_tree(
 
     // ------------------------------------------------------------------------
 
-    const auto matches =
-        utils::Matchmaker::make_matches( _population, sample_weights );
+    const auto sample_weights_greater_zero =
+        [sample_weights]( const containers::Match &m ) {
+            assert_true( m.ix_output < sample_weights->size() );
+            return ( *sample_weights )[m.ix_output] > 0.0;
+        };
 
-    auto matches_ptr = utils::Matchmaker::make_pointers( matches );
-
-    assert_true( matches.size() == matches_ptr.size() );
-
-    debug_log( "Number of matches: " + std::to_string( matches.size() ) );
+    const auto sample_weights_greater_zero_end =
+        std::partition( _begin, _end, sample_weights_greater_zero );
 
     // ------------------------------------------------------------------------
 
@@ -613,8 +611,8 @@ void DecisionTreeEnsemble::fit_new_tree(
         _population,
         std::optional<containers::DataFrame>(),
         containers::Subfeatures(),
-        matches_ptr.begin(),
-        matches_ptr.end() );
+        _begin,
+        sample_weights_greater_zero_end );
 
     const auto new_predictions = new_tree.transform(
         _population,

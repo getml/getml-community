@@ -7,10 +7,10 @@ namespace lossfunctions
 // ----------------------------------------------------------------------------
 
 std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_all(
-    const std::vector<const containers::Match*>::iterator _begin,
-    const std::vector<const containers::Match*>::iterator _split_begin,
-    const std::vector<const containers::Match*>::iterator _split_end,
-    const std::vector<const containers::Match*>::iterator _end,
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _split_begin,
+    const std::vector<containers::Match>::iterator _split_end,
+    const std::vector<containers::Match>::iterator _end,
     Float* _loss_old,
     std::array<Float, 6>* _sufficient_stats,
     multithreading::Communicator* _comm ) const
@@ -40,7 +40,7 @@ std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_all(
 
     for ( auto it = _begin; it != _split_begin; ++it )
         {
-            const auto ix = ( *it )->ix_output;
+            const auto ix = it->ix_output;
 
             assert_true( ix < g_.size() );
 
@@ -50,7 +50,7 @@ std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_all(
 
     for ( auto it = _split_begin; it != _split_end; ++it )
         {
-            const auto ix = ( *it )->ix_output;
+            const auto ix = it->ix_output;
 
             assert_true( ix < g_.size() );
 
@@ -60,7 +60,7 @@ std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_all(
 
     for ( auto it = _split_end; it != _end; ++it )
         {
-            const auto ix = ( *it )->ix_output;
+            const auto ix = it->ix_output;
 
             assert_true( ix < g_.size() );
 
@@ -113,10 +113,10 @@ std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_all(
 
 std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_diff(
     const enums::Revert _revert,
-    const std::vector<const containers::Match*>::iterator _begin,
-    const std::vector<const containers::Match*>::iterator _split_begin,
-    const std::vector<const containers::Match*>::iterator _split_end,
-    const std::vector<const containers::Match*>::iterator _end,
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _split_begin,
+    const std::vector<containers::Match>::iterator _split_end,
+    const std::vector<containers::Match>::iterator _end,
     const Float _loss_old,
     std::array<Float, 6>* _sufficient_stats,
     multithreading::Communicator* _comm ) const
@@ -173,7 +173,7 @@ std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_diff(
 
     for ( auto it = _split_begin; it != _split_end; ++it )
         {
-            const auto ix = ( *it )->ix_output;
+            const auto ix = it->ix_output;
 
             assert_true( ix < g_.size() );
 
@@ -228,10 +228,10 @@ std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_diff(
 std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_pair(
     const enums::Revert _revert,
     const enums::Update _update,
-    const std::vector<const containers::Match*>::iterator _begin,
-    const std::vector<const containers::Match*>::iterator _split_begin,
-    const std::vector<const containers::Match*>::iterator _split_end,
-    const std::vector<const containers::Match*>::iterator _end,
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _split_begin,
+    const std::vector<containers::Match>::iterator _split_end,
+    const std::vector<containers::Match>::iterator _end,
     Float* _loss_old,
     std::array<Float, 6>* _sufficient_stats,
     multithreading::Communicator* _comm ) const
@@ -878,8 +878,8 @@ void LossFunctionImpl::revert_to_commit(
 // ----------------------------------------------------------------------------
 
 void LossFunctionImpl::transform(
-    const std::vector<const containers::Match*>::iterator _begin,
-    const std::vector<const containers::Match*>::iterator _end,
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _end,
     const std::vector<Float>& _weights,
     std::vector<Float>* _predictions ) const
 {
@@ -890,11 +890,11 @@ void LossFunctionImpl::transform(
         {
             const auto it = _begin + i;
 
-            assert_true( ( *it )->ix_output < _predictions->size() );
+            assert_true( it->ix_output < _predictions->size() );
 
-            assert_true( ( *_predictions )[( *it )->ix_output] == 0.0 );
+            assert_true( ( *_predictions )[it->ix_output] == 0.0 );
 
-            ( *_predictions )[( *it )->ix_output] = _weights[i];
+            ( *_predictions )[it->ix_output] = _weights[i];
         }
 }
 

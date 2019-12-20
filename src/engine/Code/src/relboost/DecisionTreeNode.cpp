@@ -96,10 +96,10 @@ void DecisionTreeNode::add_candidates(
     const enums::Update _update,
     const Float _old_intercept,
     const containers::Split& _split,
-    const std::vector<const containers::Match*>::iterator _begin,
-    const std::vector<const containers::Match*>::iterator _last_it,
-    const std::vector<const containers::Match*>::iterator _it,
-    const std::vector<const containers::Match*>::iterator _end,
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _last_it,
+    const std::vector<containers::Match>::iterator _it,
+    const std::vector<containers::Match>::iterator _end,
     std::vector<containers::CandidateSplit>* _candidates )
 {
     // -----------------------------------------------------------------
@@ -193,8 +193,8 @@ void DecisionTreeNode::fit(
     const containers::DataFrameView& _output,
     const std::optional<containers::DataFrame>& _input,
     const containers::Subfeatures& _subfeatures,
-    const std::vector<const containers::Match*>::iterator _begin,
-    const std::vector<const containers::Match*>::iterator _end,
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _end,
     Float* _intercept )
 {
     // ------------------------------------------------------------------------
@@ -303,12 +303,12 @@ void DecisionTreeNode::fit(
 
 // ----------------------------------------------------------------------------
 
-std::vector<const containers::Match*>::iterator DecisionTreeNode::partition(
+std::vector<containers::Match>::iterator DecisionTreeNode::partition(
     const containers::DataFrameView& _output,
     const std::optional<containers::DataFrame>& _input,
     const containers::Subfeatures& _subfeatures,
-    const std::vector<const containers::Match*>::iterator _begin,
-    const std::vector<const containers::Match*>::iterator _end )
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _end )
 {
     switch ( split_.data_used_ )
         {
@@ -696,8 +696,8 @@ std::vector<containers::CandidateSplit> DecisionTreeNode::try_all(
     const containers::DataFrameView& _output,
     const std::optional<containers::DataFrame>& _input,
     const containers::Subfeatures& _subfeatures,
-    const std::vector<const containers::Match*>::iterator _begin,
-    const std::vector<const containers::Match*>::iterator _end )
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _end )
 {
     std::vector<containers::CandidateSplit> candidates;
 
@@ -747,8 +747,8 @@ void DecisionTreeNode::try_categorical(
     const Float _old_intercept,
     const enums::DataUsed _data_used,
     const containers::CategoryIndex& _category_index,
-    const std::vector<const containers::Match*>::iterator _begin,
-    const std::vector<const containers::Match*>::iterator _end,
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _end,
     std::vector<containers::CandidateSplit>* _candidates )
 {
     debug_log( "try_categorical." );
@@ -792,8 +792,8 @@ void DecisionTreeNode::try_categorical(
 void DecisionTreeNode::try_categorical_input(
     const Float _old_intercept,
     const containers::DataFrame& _input,
-    const std::vector<const containers::Match*>::iterator _begin,
-    const std::vector<const containers::Match*>::iterator _end,
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _end,
     std::vector<containers::CandidateSplit>* _candidates )
 {
     debug_log( "try_categorical_input." );
@@ -886,8 +886,8 @@ void DecisionTreeNode::try_categorical_input(
 void DecisionTreeNode::try_categorical_output(
     const Float _old_intercept,
     const containers::DataFrameView& _output,
-    const std::vector<const containers::Match*>::iterator _begin,
-    const std::vector<const containers::Match*>::iterator _end,
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _end,
     std::vector<containers::CandidateSplit>* _candidates )
 {
     debug_log( "try_categorical_output." );
@@ -976,8 +976,8 @@ void DecisionTreeNode::try_categorical_output(
 void DecisionTreeNode::try_discrete_input(
     const Float _old_intercept,
     const containers::DataFrame& _input,
-    const std::vector<const containers::Match*>::iterator _begin,
-    const std::vector<const containers::Match*>::iterator _end,
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _end,
     std::vector<containers::CandidateSplit>* _candidates )
 {
     debug_log( "try_discrete_input." );
@@ -1065,8 +1065,8 @@ void DecisionTreeNode::try_discrete_input(
 void DecisionTreeNode::try_discrete_output(
     const Float _old_intercept,
     const containers::DataFrameView& _output,
-    const std::vector<const containers::Match*>::iterator _begin,
-    const std::vector<const containers::Match*>::iterator _end,
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _end,
     std::vector<containers::CandidateSplit>* _candidates )
 {
     debug_log( "try_discrete_output." );
@@ -1150,8 +1150,8 @@ void DecisionTreeNode::try_discrete_output(
 void DecisionTreeNode::try_numerical_input(
     const Float _old_intercept,
     const containers::DataFrame& _input,
-    const std::vector<const containers::Match*>::iterator _begin,
-    const std::vector<const containers::Match*>::iterator _end,
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _end,
     std::vector<containers::CandidateSplit>* _candidates )
 {
     debug_log( "try_numerical_input." );
@@ -1239,8 +1239,8 @@ void DecisionTreeNode::try_numerical_input(
 void DecisionTreeNode::try_numerical_output(
     const Float _old_intercept,
     const containers::DataFrameView& _output,
-    const std::vector<const containers::Match*>::iterator _begin,
-    const std::vector<const containers::Match*>::iterator _end,
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _end,
     std::vector<containers::CandidateSplit>* _candidates )
 {
     debug_log( "try_numerical_output." );
@@ -1331,8 +1331,8 @@ void DecisionTreeNode::try_same_units_categorical(
     const Float _old_intercept,
     const containers::DataFrame& _input,
     const containers::DataFrameView& _output,
-    const std::vector<const containers::Match*>::iterator _begin,
-    const std::vector<const containers::Match*>::iterator _end,
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _end,
     std::vector<containers::CandidateSplit>* _candidates )
 {
     debug_log( "try_same_units_categorical." );
@@ -1350,20 +1350,20 @@ void DecisionTreeNode::try_same_units_categorical(
                             continue;
                         }
 
-                    const auto partition_function =
-                        [input_col, output_col, &_input, &_output](
-                            const containers::Match* m ) {
-                            assert_true( m->ix_input < _input.nrows() );
-                            assert_true( m->ix_output < _output.nrows() );
+                    const auto partition_function = [input_col,
+                                                     output_col,
+                                                     &_input,
+                                                     &_output](
+                                                        containers::Match m ) {
+                        assert_true( m.ix_input < _input.nrows() );
+                        assert_true( m.ix_output < _output.nrows() );
 
-                            const bool is_same =
-                                ( _input.categorical(
-                                      m->ix_input, input_col ) ==
-                                  _output.categorical(
-                                      m->ix_output, output_col ) );
+                        const bool is_same =
+                            ( _input.categorical( m.ix_input, input_col ) ==
+                              _output.categorical( m.ix_output, output_col ) );
 
-                            return is_same;
-                        };
+                        return is_same;
+                    };
 
                     const auto it =
                         std::partition( _begin, _end, partition_function );
@@ -1390,8 +1390,8 @@ void DecisionTreeNode::try_same_units_discrete(
     const Float _old_intercept,
     const containers::DataFrame& _input,
     const containers::DataFrameView& _output,
-    const std::vector<const containers::Match*>::iterator _begin,
-    const std::vector<const containers::Match*>::iterator _end,
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _end,
     std::vector<containers::CandidateSplit>* _candidates )
 {
     debug_log( "try_same_units_discrete." );
@@ -1517,8 +1517,8 @@ void DecisionTreeNode::try_same_units_numerical(
     const Float _old_intercept,
     const containers::DataFrame& _input,
     const containers::DataFrameView& _output,
-    const std::vector<const containers::Match*>::iterator _begin,
-    const std::vector<const containers::Match*>::iterator _end,
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _end,
     std::vector<containers::CandidateSplit>* _candidates )
 {
     debug_log( "try_same_units_numerical." );
@@ -1643,8 +1643,8 @@ void DecisionTreeNode::try_same_units_numerical(
 void DecisionTreeNode::try_subfeatures(
     const Float _old_intercept,
     const containers::Subfeatures& _subfeatures,
-    const std::vector<const containers::Match*>::iterator _begin,
-    const std::vector<const containers::Match*>::iterator _end,
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _end,
     std::vector<containers::CandidateSplit>* _candidates )
 {
     debug_log( "try_subfeatures." );
@@ -1722,8 +1722,8 @@ void DecisionTreeNode::try_time_stamps_diff(
     const Float _old_intercept,
     const containers::DataFrame& _input,
     const containers::DataFrameView& _output,
-    const std::vector<const containers::Match*>::iterator _begin,
-    const std::vector<const containers::Match*>::iterator _end,
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _end,
     std::vector<containers::CandidateSplit>* _candidates )
 {
     debug_log( "Time stamps diff." );
@@ -1794,8 +1794,8 @@ void DecisionTreeNode::try_window(
     const Float _old_intercept,
     const containers::DataFrame& _input,
     const containers::DataFrameView& _output,
-    const std::vector<const containers::Match*>::iterator _begin,
-    const std::vector<const containers::Match*>::iterator _end,
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _end,
     std::vector<containers::CandidateSplit>* _candidates )
 {
     // ------------------------------------------------------------------------
@@ -1809,17 +1809,17 @@ void DecisionTreeNode::try_window(
         _begin,
         _end,
         [&_input, &_output](
-            const containers::Match* m1, const containers::Match* m2 ) {
-            assert_true( m1->ix_input < _input.nrows() );
-            assert_true( m2->ix_input < _input.nrows() );
+            const containers::Match m1, const containers::Match m2 ) {
+            assert_true( m1.ix_input < _input.nrows() );
+            assert_true( m2.ix_input < _input.nrows() );
 
-            assert_true( m1->ix_output < _output.nrows() );
-            assert_true( m2->ix_output < _output.nrows() );
+            assert_true( m1.ix_output < _output.nrows() );
+            assert_true( m2.ix_output < _output.nrows() );
 
-            return ( _output.time_stamp( m1->ix_output ) -
-                     _input.time_stamp( m1->ix_input ) ) >
-                   ( _output.time_stamp( m2->ix_output ) -
-                     _input.time_stamp( m2->ix_input ) );
+            return ( _output.time_stamp( m1.ix_output ) -
+                     _input.time_stamp( m1.ix_input ) ) >
+                   ( _output.time_stamp( m2.ix_output ) -
+                     _input.time_stamp( m2.ix_input ) );
         } );
 
     assert_true( is_sorted );

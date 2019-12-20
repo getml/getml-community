@@ -11,8 +11,8 @@ const std::shared_ptr<const std::vector<Int>> CriticalValues::calc_categorical(
     const size_t _num_column,
     const containers::DataFrame& _input,
     const containers::DataFrameView& _output,
-    const std::vector<const containers::Match*>::iterator _begin,
-    const std::vector<const containers::Match*>::iterator _end,
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _end,
     multithreading::Communicator* _comm )
 {
     // ---------------------------------------------------------------------------
@@ -59,13 +59,11 @@ const std::shared_ptr<const std::vector<Int>> CriticalValues::calc_categorical(
             switch ( _data_used )
                 {
                     case enums::DataUsed::categorical_input:
-                        cat = _input.categorical(
-                            ( *it )->ix_input, _num_column );
+                        cat = _input.categorical( it->ix_input, _num_column );
                         break;
 
                     case enums::DataUsed::categorical_output:
-                        cat = _output.categorical(
-                            ( *it )->ix_output, _num_column );
+                        cat = _output.categorical( it->ix_output, _num_column );
                         break;
 
                     default:
@@ -117,8 +115,8 @@ std::vector<Float> CriticalValues::calc_discrete(
     const size_t _output_col,
     const containers::DataFrame& _input,
     const containers::DataFrameView& _output,
-    const std::vector<const containers::Match*>::iterator _begin,
-    const std::vector<const containers::Match*>::iterator _end,
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _end,
     multithreading::Communicator* _comm )
 {
     // ---------------------------------------------------------------------------
@@ -223,8 +221,8 @@ std::vector<Float> CriticalValues::calc_numerical(
     const size_t _output_col,
     const containers::DataFrame& _input,
     const containers::DataFrameView& _output,
-    const std::vector<const containers::Match*>::iterator _begin,
-    const std::vector<const containers::Match*>::iterator _end,
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _end,
     multithreading::Communicator* _comm )
 {
     // ---------------------------------------------------------------------------
@@ -312,8 +310,8 @@ std::vector<Float> CriticalValues::calc_numerical(
 std::vector<Float> CriticalValues::calc_subfeatures(
     const size_t _col,
     const containers::Subfeatures& _subfeatures,
-    const std::vector<const containers::Match*>::iterator _begin,
-    const std::vector<const containers::Match*>::iterator _end,
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _end,
     multithreading::Communicator* _comm )
 {
     // ---------------------------------------------------------------------------
@@ -336,9 +334,9 @@ std::vector<Float> CriticalValues::calc_subfeatures(
 
     if ( dist > 0 )
         {
-            max = subfeature[( *( _begin ) )->ix_input];
+            max = subfeature[( _begin )->ix_input];
 
-            min = subfeature[( *( _end - 1 ) )->ix_input];
+            min = subfeature[( _end - 1 )->ix_input];
         }
 
     utils::Reducer::reduce( multithreading::minimum<Float>(), &min, _comm );
@@ -371,8 +369,8 @@ std::vector<Float> CriticalValues::calc_time_window(
     const Float _delta_t,
     const containers::DataFrame& _input,
     const containers::DataFrameView& _output,
-    const std::vector<const containers::Match*>::iterator _begin,
-    const std::vector<const containers::Match*>::iterator _end,
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _end,
     multithreading::Communicator* _comm )
 {
     // ---------------------------------------------------------------------------
@@ -444,8 +442,8 @@ void CriticalValues::find_min_max(
     const size_t _num_column,
     const containers::DataFrame& _input,
     const containers::DataFrameView& _output,
-    const std::vector<const containers::Match*>::iterator _begin,
-    const std::vector<const containers::Match*>::iterator _end,
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _end,
     Int* _min,
     Int* _max,
     multithreading::Communicator* _comm )
@@ -455,22 +453,21 @@ void CriticalValues::find_min_max(
             switch ( _data_used )
                 {
                     case enums::DataUsed::categorical_input:
-                        *_min = _input.categorical(
-                            ( *_begin )->ix_input, _num_column );
+                        *_min =
+                            _input.categorical( _begin->ix_input, _num_column );
 
                         *_max = _input.categorical(
-                                    ( *( _end - 1 ) )->ix_input, _num_column ) +
+                                    ( _end - 1 )->ix_input, _num_column ) +
                                 1;
                         break;
 
                     case enums::DataUsed::categorical_output:
                         *_min = _output.categorical(
-                            ( *_begin )->ix_output, _num_column );
+                            _begin->ix_output, _num_column );
 
-                        *_max =
-                            _output.categorical(
-                                ( *( _end - 1 ) )->ix_output, _num_column ) +
-                            1;
+                        *_max = _output.categorical(
+                                    ( _end - 1 )->ix_output, _num_column ) +
+                                1;
                         break;
 
                     default:
@@ -504,8 +501,8 @@ void CriticalValues::find_min_max(
     const size_t _output_col,
     const containers::DataFrame& _input,
     const containers::DataFrameView& _output,
-    const std::vector<const containers::Match*>::iterator _begin,
-    const std::vector<const containers::Match*>::iterator _end,
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _end,
     Float* _min,
     Float* _max,
     multithreading::Communicator* _comm )
@@ -516,31 +513,28 @@ void CriticalValues::find_min_max(
                 {
                     case enums::DataUsed::same_units_discrete:
 
-                        *_max = _output.discrete(
-                                    ( *_begin )->ix_output, _output_col ) -
-                                _input.discrete(
-                                    ( *_begin )->ix_input, _input_col );
+                        *_max =
+                            _output.discrete( _begin->ix_output, _output_col ) -
+                            _input.discrete( _begin->ix_input, _input_col );
 
-                        *_min =
-                            _output.discrete(
-                                ( *( _end - 1 ) )->ix_output, _output_col ) -
-                            _input.discrete(
-                                ( *( _end - 1 ) )->ix_input, _input_col );
+                        *_min = _output.discrete(
+                                    ( _end - 1 )->ix_output, _output_col ) -
+                                _input.discrete(
+                                    ( _end - 1 )->ix_input, _input_col );
 
                         break;
 
                     case enums::DataUsed::same_units_numerical:
 
-                        *_max = _output.numerical(
-                                    ( *_begin )->ix_output, _output_col ) -
-                                _input.numerical(
-                                    ( *_begin )->ix_input, _input_col );
-
-                        *_min =
+                        *_max =
                             _output.numerical(
-                                ( *( _end - 1 ) )->ix_output, _output_col ) -
-                            _input.numerical(
-                                ( *( _end - 1 ) )->ix_input, _input_col );
+                                _begin->ix_output, _output_col ) -
+                            _input.numerical( _begin->ix_input, _input_col );
+
+                        *_min = _output.numerical(
+                                    ( _end - 1 )->ix_output, _output_col ) -
+                                _input.numerical(
+                                    ( _end - 1 )->ix_input, _input_col );
 
                         break;
 
@@ -564,8 +558,8 @@ void CriticalValues::find_min_max(
     const size_t _num_column,
     const containers::DataFrame& _input,
     const containers::DataFrameView& _output,
-    const std::vector<const containers::Match*>::iterator _begin,
-    const std::vector<const containers::Match*>::iterator _end,
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _end,
     Float* _min,
     Float* _max,
     multithreading::Communicator* _comm )
@@ -576,52 +570,51 @@ void CriticalValues::find_min_max(
                 {
                     case enums::DataUsed::discrete_output:
 
-                        *_max = _output.discrete(
-                            ( *_begin )->ix_output, _num_column );
+                        *_max =
+                            _output.discrete( _begin->ix_output, _num_column );
 
                         *_min = _output.discrete(
-                            ( *( _end - 1 ) )->ix_output, _num_column );
+                            ( _end - 1 )->ix_output, _num_column );
 
                         break;
 
                     case enums::DataUsed::discrete_input:
 
-                        *_max = _input.discrete(
-                            ( *_begin )->ix_input, _num_column );
+                        *_max =
+                            _input.discrete( _begin->ix_input, _num_column );
 
                         *_min = _input.discrete(
-                            ( *( _end - 1 ) )->ix_input, _num_column );
+                            ( _end - 1 )->ix_input, _num_column );
 
                         break;
 
                     case enums::DataUsed::numerical_output:
 
-                        *_max = _output.numerical(
-                            ( *_begin )->ix_output, _num_column );
+                        *_max =
+                            _output.numerical( _begin->ix_output, _num_column );
 
                         *_min = _output.numerical(
-                            ( *( _end - 1 ) )->ix_output, _num_column );
+                            ( _end - 1 )->ix_output, _num_column );
 
                         break;
 
                     case enums::DataUsed::numerical_input:
 
-                        *_max = _input.numerical(
-                            ( *_begin )->ix_input, _num_column );
+                        *_max =
+                            _input.numerical( _begin->ix_input, _num_column );
 
                         *_min = _input.numerical(
-                            ( *( _end - 1 ) )->ix_input, _num_column );
+                            ( _end - 1 )->ix_input, _num_column );
 
                         break;
 
                     case enums::DataUsed::time_stamps_diff:
 
-                        *_max = _output.time_stamp( ( *_begin )->ix_output ) -
-                                _input.time_stamp( ( *_begin )->ix_input );
+                        *_max = _output.time_stamp( _begin->ix_output ) -
+                                _input.time_stamp( _begin->ix_input );
 
-                        *_min =
-                            _output.time_stamp( ( *( _end - 1 ) )->ix_output ) -
-                            _input.time_stamp( ( *( _end - 1 ) )->ix_input );
+                        *_min = _output.time_stamp( ( _end - 1 )->ix_output ) -
+                                _input.time_stamp( ( _end - 1 )->ix_input );
 
                         break;
 

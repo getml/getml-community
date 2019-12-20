@@ -8,10 +8,10 @@ namespace aggregations
 
 void Sum::calc_all(
     const enums::Revert _revert,
-    const std::vector<const containers::Match*>::iterator _begin,
-    const std::vector<const containers::Match*>::iterator _split_begin,
-    const std::vector<const containers::Match*>::iterator _split_end,
-    const std::vector<const containers::Match*>::iterator _end )
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _split_begin,
+    const std::vector<containers::Match>::iterator _split_end,
+    const std::vector<containers::Match>::iterator _end )
 {
     // ------------------------------------------------------------------------
 
@@ -28,32 +28,32 @@ void Sum::calc_all(
 
     for ( auto it = _begin; it != _split_begin; ++it )
         {
-            ++eta2_[( *it )->ix_output];
+            ++eta2_[it->ix_output];
 
             ++num_samples_2_;
 
-            indices_.insert( ( *it )->ix_output );
-            indices_current_.insert( ( *it )->ix_output );
+            indices_.insert( it->ix_output );
+            indices_current_.insert( it->ix_output );
         }
 
     for ( auto it = _split_begin; it != _split_end; ++it )
         {
-            ++eta1_[( *it )->ix_output];
+            ++eta1_[it->ix_output];
 
             ++num_samples_1_;
 
-            indices_.insert( ( *it )->ix_output );
-            indices_current_.insert( ( *it )->ix_output );
+            indices_.insert( it->ix_output );
+            indices_current_.insert( it->ix_output );
         }
 
     for ( auto it = _split_end; it != _end; ++it )
         {
-            ++eta2_[( *it )->ix_output];
+            ++eta2_[it->ix_output];
 
             ++num_samples_2_;
 
-            indices_.insert( ( *it )->ix_output );
-            indices_current_.insert( ( *it )->ix_output );
+            indices_.insert( it->ix_output );
+            indices_current_.insert( it->ix_output );
         }
 
     // ------------------------------------------------------------------------
@@ -63,8 +63,8 @@ void Sum::calc_all(
 
 void Sum::calc_diff(
     const enums::Revert _revert,
-    const std::vector<const containers::Match*>::iterator _split_begin,
-    const std::vector<const containers::Match*>::iterator _split_end )
+    const std::vector<containers::Match>::iterator _split_begin,
+    const std::vector<containers::Match>::iterator _split_end )
 {
     // ------------------------------------------------------------------------
 
@@ -75,15 +75,15 @@ void Sum::calc_diff(
 
     for ( auto it = _split_begin; it != _split_end; ++it )
         {
-            assert_true( ( *it )->ix_output < eta1_.size() );
+            assert_true( it->ix_output < eta1_.size() );
 
-            ++eta1_[( *it )->ix_output];
+            ++eta1_[it->ix_output];
 
-            --eta2_[( *it )->ix_output];
+            --eta2_[it->ix_output];
 
-            indices_current_.insert( ( *it )->ix_output );
+            indices_current_.insert( it->ix_output );
 
-            assert_true( eta2_[( *it )->ix_output] >= 0.0 );
+            assert_true( eta2_[it->ix_output] >= 0.0 );
         }
 
     // ------------------------------------------------------------------------
@@ -160,10 +160,10 @@ std::vector<std::pair<Float, std::array<Float, 3>>> Sum::calc_pairs(
     const Float _min_num_samples,
     const Float _old_intercept,
     const Float _old_weight,
-    const std::vector<const containers::Match*>::iterator _begin,
-    const std::vector<const containers::Match*>::iterator _split_begin,
-    const std::vector<const containers::Match*>::iterator _split_end,
-    const std::vector<const containers::Match*>::iterator _end )
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _split_begin,
+    const std::vector<containers::Match>::iterator _split_end,
+    const std::vector<containers::Match>::iterator _end )
 {
     // -------------------------------------------------------------
 
@@ -307,9 +307,9 @@ void Sum::commit(
     const Float _old_intercept,
     const Float _old_weight,
     const std::array<Float, 3>& _weights,
-    const std::vector<const containers::Match*>::iterator _begin,
-    const std::vector<const containers::Match*>::iterator _split,
-    const std::vector<const containers::Match*>::iterator _end )
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _split,
+    const std::vector<containers::Match>::iterator _end )
 {
     assert_true( eta1_.size() == eta2_.size() );
 

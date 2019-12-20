@@ -30,10 +30,6 @@ struct Matchmaker
         const bool _use_timestamps,
         const size_t _ix_output,
         std::vector<containers::Match>* _matches );
-
-    /// Creates pointers to the matches.
-    static std::vector<const containers::Match*> make_pointers(
-        const std::vector<containers::Match>& _matches );
 };
 
 // ------------------------------------------------------------------------
