@@ -519,7 +519,7 @@ Float LossFunctionImpl::calc_update_rate(
 
 // ----------------------------------------------------------------------------
 
-std::array<Float, 3> LossFunctionImpl::calc_weights_avg_null(
+std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_weights_avg_null(
     const enums::Aggregation _agg,
     const Float _old_weight,
     const std::vector<size_t>& _indices,
@@ -626,29 +626,37 @@ std::array<Float, 3> LossFunctionImpl::calc_weights_avg_null(
 
     Eigen::Matrix<Float, 2, 1> weights = A.fullPivLu().solve( b );
 
+    // TODO: Missing loss of old weight!
+    const auto loss_reduction = 0.5 * weights.dot( b );
+
     // ------------------------------------------------------------------------
+
+    auto weights_arr = std::array<Float, 3>{0.0, 0.0, 0.0};
 
     if ( _agg == enums::Aggregation::avg_first_null )
         {
-            return std::array<Float, 3>( {weights[0], NAN, weights[1]} );
+            weights_arr = std::array<Float, 3>( {weights[0], NAN, weights[1]} );
         }
     else if ( _agg == enums::Aggregation::avg_second_null )
         {
-            return std::array<Float, 3>( {weights[0], weights[1], NAN} );
+            weights_arr = std::array<Float, 3>( {weights[0], weights[1], NAN} );
         }
     else
         {
             assert_true( false && "Aggregation type not known!" );
-
-            return std::array<Float, 3>( {NAN, NAN, NAN} );
         }
+
+    // ------------------------------------------------------------------------
+
+    return std::make_pair( loss_reduction, weights_arr );
 
     // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
 
-std::array<Float, 3> LossFunctionImpl::calc_weights(
+std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_weights(
+    const Float _old_intercept,
     const Float _old_weight,
     const std::vector<size_t>& _indices,
     const std::vector<Float>& _eta1,
@@ -774,7 +782,19 @@ std::array<Float, 3> LossFunctionImpl::calc_weights(
 
     // ------------------------------------------------------------------------
 
-    return std::array<Float, 3>( {weights[0], weights[1], weights[2]} );
+    const Float loss_old =
+        -0.5 * ( _old_intercept * b[0] + _old_weight * ( b[1] + b[2] ) );
+
+    const Float loss_new = -0.5 * b.dot( weights );
+
+    const auto loss_reduction = loss_old - loss_new;
+
+    const auto weights_arr =
+        std::array<Float, 3>( {weights[0], weights[1], weights[2]} );
+
+    // ------------------------------------------------------------------------
+
+    return std::make_pair( loss_reduction, weights_arr );
 
     // ------------------------------------------------------------------------
 }

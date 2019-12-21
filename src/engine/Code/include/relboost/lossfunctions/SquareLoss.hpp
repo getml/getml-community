@@ -114,8 +114,9 @@ class SquareLoss : public LossFunction
     }
 
     /// Calculates two new weights given eta and indices.
-    std::array<Float, 3> calc_weights(
+    std::pair<Float, std::array<Float, 3>> calc_weights(
         const enums::Aggregation _agg,
+        const Float _old_intercept,
         const Float _old_weight,
         const std::vector<size_t>& _indices,
         const std::vector<size_t>& _indices_current,
@@ -126,6 +127,7 @@ class SquareLoss : public LossFunction
     {
         return impl_.calc_weights(
             _agg,
+            _old_intercept,
             _old_weight,
             _indices,
             _eta1,

@@ -487,13 +487,15 @@ void DecisionTreeEnsemble::fit_new_feature(
             std::vector<std::shared_ptr<lossfunctions::LossFunction>>
                 aggregations;
 
+            // TODO: Reinsert
+            /*
             aggregations.push_back( std::make_shared<aggregations::Avg>(
                 _loss_function,
                 matches,
                 *input_table,
                 output_table,
                 &comm() ) );
-
+*/
             aggregations.push_back( std::make_shared<aggregations::Sum>(
                 _loss_function, *input_table, output_table, &comm() ) );
 

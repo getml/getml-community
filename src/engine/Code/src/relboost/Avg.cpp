@@ -320,8 +320,9 @@ void Avg::calc_etas(
 
 // ----------------------------------------------------------------------------
 
-std::array<Float, 3> Avg::calc_weights(
+std::pair<Float, std::array<Float, 3>> Avg::calc_weights(
     const enums::Aggregation _agg,
+    const Float _old_intercept,
     const Float _old_weight,
     const std::vector<size_t>& _indices,
     const std::vector<size_t>& _indices_current,
@@ -336,6 +337,7 @@ std::array<Float, 3> Avg::calc_weights(
 
     const auto weights = child_->calc_weights(
         _agg,
+        _old_intercept,
         _old_weight,
         intermediate_agg().indices(),
         intermediate_agg().indices_current(),
@@ -415,12 +417,11 @@ std::vector<std::pair<Float, std::array<Float, 3>>> Avg::calc_pairs(
 
     // -------------------------------------------------------------
 
-    std::vector<std::array<Float, 3>> weights;
-
     if ( !std::isnan( _old_weight ) )
         {
-            weights.push_back( child_->calc_weights(
+            results.push_back( child_->calc_weights(
                 enums::Aggregation::avg,
+                _old_intercept,
                 _old_weight,
                 indices_.unique_integers(),
                 indices_current_.unique_integers(),
@@ -430,25 +431,26 @@ std::vector<std::pair<Float, std::array<Float, 3>>> Avg::calc_pairs(
                 eta2_old_ ) );
         }
 
-    weights.push_back( child_->calc_weights(
-        enums::Aggregation::avg_second_null,
-        _old_weight,
-        indices_.unique_integers(),
-        indices_current_.unique_integers(),
-        eta1_2_null_,
-        eta1_2_null_old_,
-        w_fixed_1_,
-        w_fixed_1_old_ ) );
+    // TODO: Reinsert after solution has been found.
+    /*    results.push_back( child_->calc_weights(
+            enums::Aggregation::avg_second_null,
+            _old_weight,
+            indices_.unique_integers(),
+            indices_current_.unique_integers(),
+            eta1_2_null_,
+            eta1_2_null_old_,
+            w_fixed_1_,
+            w_fixed_1_old_ ) );
 
-    weights.push_back( child_->calc_weights(
-        enums::Aggregation::avg_first_null,
-        _old_weight,
-        indices_.unique_integers(),
-        indices_current_.unique_integers(),
-        eta2_1_null_,
-        eta2_1_null_old_,
-        w_fixed_2_,
-        w_fixed_2_old_ ) );
+        results.push_back( child_->calc_weights(
+            enums::Aggregation::avg_first_null,
+            _old_weight,
+            indices_.unique_integers(),
+            indices_current_.unique_integers(),
+            eta2_1_null_,
+            eta2_1_null_old_,
+            w_fixed_2_,
+            w_fixed_2_old_ ) );*/
 
     update_etas_old( _old_weight );
 
@@ -461,7 +463,7 @@ std::vector<std::pair<Float, std::array<Float, 3>>> Avg::calc_pairs(
 
     // -----------------------------------------------------------------
 
-    for ( const auto& w : weights )
+    /*for ( const auto& w : weights )
         {
             assert_true( !std::isinf( std::get<0>( w ) ) );
             assert_true( !std::isinf( std::get<1>( w ) ) );
@@ -480,11 +482,7 @@ std::vector<std::pair<Float, std::array<Float, 3>>> Avg::calc_pairs(
                 evaluate_split( _old_intercept, _old_weight, w );
 
             results.push_back( std::make_pair( loss_reduction, w ) );
-        }
-
-    // -------------------------------------------------------------
-
-    return results;
+        }*/
 
     // -------------------------------------------------------------
 

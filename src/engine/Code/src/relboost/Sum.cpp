@@ -123,8 +123,9 @@ void Sum::calc_etas(
 
 // ----------------------------------------------------------------------------
 
-std::array<Float, 3> Sum::calc_weights(
+std::pair<Float, std::array<Float, 3>> Sum::calc_weights(
     const enums::Aggregation _agg,
+    const Float _old_intercept,
     const Float _old_weight,
     const std::vector<size_t>& _indices,
     const std::vector<size_t>& _indices_current,
@@ -139,6 +140,7 @@ std::array<Float, 3> Sum::calc_weights(
 
     const auto weights = child_->calc_weights(
         _agg,
+        _old_intercept,
         _old_weight,
         intermediate_agg().indices(),
         intermediate_agg().indices_current(),
@@ -215,15 +217,16 @@ std::vector<std::pair<Float, std::array<Float, 3>>> Sum::calc_pairs(
 
     // -------------------------------------------------------------
 
-    const auto weights = std::vector<std::array<Float, 3>>{child_->calc_weights(
+    results.emplace_back( child_->calc_weights(
         enums::Aggregation::sum,
+        _old_intercept,
         _old_weight,
         indices_.unique_integers(),
         indices_current_.unique_integers(),
         eta1_,
         eta1_old_,
         eta2_,
-        eta2_old_ )};
+        eta2_old_ ) );
 
     update_etas_old();
 
@@ -235,35 +238,35 @@ std::vector<std::pair<Float, std::array<Float, 3>>> Sum::calc_pairs(
         }
 
     // -----------------------------------------------------------------
+    /*
+        for ( const auto& w : weights )
+            {
+                assert_true( !std::isinf( std::get<0>( w ) ) );
+                assert_true( !std::isinf( std::get<1>( w ) ) );
+                assert_true( !std::isinf( std::get<2>( w ) ) );
 
-    for ( const auto& w : weights )
-        {
-            assert_true( !std::isinf( std::get<0>( w ) ) );
-            assert_true( !std::isinf( std::get<1>( w ) ) );
-            assert_true( !std::isinf( std::get<2>( w ) ) );
+                if ( std::isnan( std::get<0>( w ) ) )
+                    {
+                        continue;
+                    }
 
-            if ( std::isnan( std::get<0>( w ) ) )
-                {
-                    continue;
-                }
+                assert_true(
+                    !std::isnan( std::get<1>( w ) ) ||
+                    !std::isnan( std::get<2>( w ) ) );
 
-            assert_true(
-                !std::isnan( std::get<1>( w ) ) ||
-                !std::isnan( std::get<2>( w ) ) );
+                calc_yhat( _old_weight, w );
 
-            calc_yhat( _old_weight, w );
+                const auto loss_reduction = child_->evaluate_split(
+                    _old_intercept,
+                    _old_weight,
+                    w,
+                    indices_.unique_integers(),
+                    eta1_,
+                    eta2_ );
 
-            const auto loss_reduction = child_->evaluate_split(
-                _old_intercept,
-                _old_weight,
-                w,
-                indices_.unique_integers(),
-                eta1_,
-                eta2_ );
-
-            results.push_back( std::make_pair( loss_reduction, w ) );
-        }
-
+                results.push_back( std::make_pair( loss_reduction, w ) );
+            }
+    */
     // -------------------------------------------------------------
 
     return results;

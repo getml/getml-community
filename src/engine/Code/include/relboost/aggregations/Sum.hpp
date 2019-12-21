@@ -105,8 +105,9 @@ class Sum : public lossfunctions::LossFunction
 
     /// Calculates indices_, eta1_ and eta2_ given the previous
     /// iteration's variables.
-    std::array<Float, 3> calc_weights(
+    std::pair<Float, std::array<Float, 3>> calc_weights(
         const enums::Aggregation _agg,
+        const Float _old_intercept,
         const Float _old_weight,
         const std::vector<size_t>& _indices,
         const std::vector<size_t>& _indices_current,

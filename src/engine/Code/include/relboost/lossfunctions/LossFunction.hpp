@@ -51,8 +51,9 @@ class LossFunction
         const std::vector<Float>& _predictions ) = 0;
 
     /// Calculates the weights given values from a parent aggregation.
-    virtual std::array<Float, 3> calc_weights(
+    virtual std::pair<Float, std::array<Float, 3>> calc_weights(
         const enums::Aggregation _agg,
+        const Float _old_intercept,
         const Float _old_weight,
         const std::vector<size_t>& _indices,
         const std::vector<size_t>& _indices_current,

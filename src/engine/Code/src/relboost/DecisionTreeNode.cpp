@@ -212,7 +212,7 @@ void DecisionTreeNode::fit(
     // bother fitting the node.
 
     if ( hyperparameters().max_depth_ > 0 &&
-         depth_ > hyperparameters().max_depth_ )
+         depth_ == hyperparameters().max_depth_ )
         {
             debug_log( "Max depth reached." );
             return;

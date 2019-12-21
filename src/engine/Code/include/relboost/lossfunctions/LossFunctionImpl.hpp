@@ -113,8 +113,9 @@ class LossFunctionImpl
 
    public:
     /// Calculates two new weights given eta and indices.
-    std::array<Float, 3> calc_weights(
+    std::pair<Float, std::array<Float, 3>> calc_weights(
         const enums::Aggregation _agg,
+        const Float _old_intercept,
         const Float _old_weight,
         const std::vector<size_t>& _indices,
         const std::vector<Float>& _eta1,
@@ -126,6 +127,7 @@ class LossFunctionImpl
              _agg == enums::Aggregation::sum )
             {
                 return calc_weights(
+                    _old_intercept,
                     _old_weight,
                     _indices,
                     _eta1,
@@ -149,7 +151,7 @@ class LossFunctionImpl
         else
             {
                 assert_true( false && "Aggregation not known!" );
-                return std::array<Float, 3>();
+                return std::make_pair( 0.0, std::array<Float, 3>() );
             }
     }
     // -----------------------------------------------------------------
@@ -225,7 +227,8 @@ class LossFunctionImpl
 
     /// Calculates two new weights given eta and indices when the aggregation at
     /// the lowest level is AVG or SUM and there are no NULL values.
-    std::array<Float, 3> calc_weights(
+    std::pair<Float, std::array<Float, 3>> calc_weights(
+        const Float _old_intercept,
         const Float _old_weight,
         const std::vector<size_t>& _indices,
         const std::vector<Float>& _eta1,
@@ -235,7 +238,7 @@ class LossFunctionImpl
 
     /// Calculates a new weight given eta and indices when the aggregation at
     /// the lowest level is AVG and the other weight is NULL.
-    std::array<Float, 3> calc_weights_avg_null(
+    std::pair<Float, std::array<Float, 3>> calc_weights_avg_null(
         const enums::Aggregation _agg,
         const Float _old_weight,
         const std::vector<size_t>& _indices,
