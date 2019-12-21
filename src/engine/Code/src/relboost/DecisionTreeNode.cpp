@@ -258,7 +258,7 @@ void DecisionTreeNode::fit(
         "best_split.loss_reduction_: " +
         std::to_string( best_split.loss_reduction_ ) );
 
-    if ( best_split.loss_reduction_ < hyperparameters().gamma_ )
+    if ( best_split.loss_reduction_ < hyperparameters().gamma_ + 1e-04 )
         {
             return;
         }

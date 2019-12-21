@@ -703,7 +703,6 @@ std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_weights(
 
             assert_true( sample_weights( ix ) > 0.0 );
 
-            assert_true( ix < targets().size() );
             h_w_const_arr[0] += h_[ix] * w_old * sample_weights( ix );
             h_w_const_arr[1] -=
                 h_[ix] * w_fixed * _eta1[ix] * sample_weights( ix );
@@ -778,7 +777,7 @@ std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_weights(
     // ------------------------------------------------------------------------
     // Calculate weights by solving A*weights = b.
 
-    auto weights = A.fullPivLu().solve( b );
+    const auto weights = A.fullPivLu().solve( b );
 
     // ------------------------------------------------------------------------
 
@@ -872,7 +871,8 @@ Float LossFunctionImpl::commit(
         {
             assert_true( ix < _yhat.size() );
 
-            sum_h_yhat += ( _yhat[ix] - ( *_yhat_committed )[ix] ) * h_[ix];
+            sum_h_yhat += sample_weights( ix ) *
+                          ( _yhat[ix] - ( *_yhat_committed )[ix] ) * h_[ix];
         }
 
     for ( auto ix : _indices )
