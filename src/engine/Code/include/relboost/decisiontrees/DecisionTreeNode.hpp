@@ -109,8 +109,9 @@ class DecisionTreeNode
         const containers::DataFrameView& _output,
         const std::optional<containers::DataFrame>& _input,
         const containers::Subfeatures& _subfeatures,
+        const containers::Split& _split,
         const std::vector<containers::Match>::iterator _begin,
-        const std::vector<containers::Match>::iterator _end );
+        const std::vector<containers::Match>::iterator _end ) const;
 
     /// Try all possible splits.
     std::vector<containers::CandidateSplit> try_all(

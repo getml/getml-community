@@ -84,15 +84,6 @@ class Sum : public lossfunctions::LossFunction
     // -----------------------------------------------------------------
 
    public:
-    /// Commits the split described by the iterators and the weights.
-    void commit(
-        const Float _old_intercept,
-        const Float _old_weight,
-        const std::array<Float, 3>& _weights,
-        const std::vector<containers::Match>::iterator _begin,
-        const std::vector<containers::Match>::iterator _split,
-        const std::vector<containers::Match>::iterator _end ) final;
-
     /// Calculates indices_, eta1_ and eta2_ given the previous
     /// iteration's variables without calculating the weights.
     void calc_etas(
@@ -105,9 +96,8 @@ class Sum : public lossfunctions::LossFunction
 
     /// Calculates indices_, eta1_ and eta2_ given the previous
     /// iteration's variables.
-    std::pair<Float, std::array<Float, 3>> calc_weights(
+    std::pair<Float, std::array<Float, 3>> calc_pair(
         const enums::Aggregation _agg,
-        const Float _old_intercept,
         const Float _old_weight,
         const std::vector<size_t>& _indices,
         const std::vector<size_t>& _indices_current,
@@ -139,6 +129,12 @@ class Sum : public lossfunctions::LossFunction
         const std::vector<Float>& _eta2,
         const std::vector<Float>& _eta2_old ) final;
 
+    /// Commits the split described by the iterators and the weights.
+    void commit(
+        const Float _old_intercept,
+        const Float _old_weight,
+        const std::array<Float, 3>& _weights ) final;
+
     /// Returns the loss reduction associated with a split.
     Float evaluate_split(
         const Float _old_intercept,
@@ -147,6 +143,15 @@ class Sum : public lossfunctions::LossFunction
         const std::vector<size_t>& _indices,
         const std::vector<Float>& _eta1,
         const std::vector<Float>& _eta2 ) final;
+
+    /// Returns the loss reduction associated with a split.
+    Float evaluate_split(
+        const Float _old_intercept,
+        const Float _old_weight,
+        const std::array<Float, 3>& _weights,
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _split,
+        const std::vector<containers::Match>::iterator _end ) final;
 
     /// Reverts the effects of calc_diff (or the part in calc_all the
     /// corresponds to calc_diff). This is needed for supporting categorical

@@ -101,9 +101,8 @@ class Avg : public lossfunctions::LossFunction
 
     /// Calculates indices_, eta1_ and eta2_ given the previous
     /// iteration's variables.
-    std::pair<Float, std::array<Float, 3>> calc_weights(
+    std::pair<Float, std::array<Float, 3>> calc_pair(
         const enums::Aggregation _agg,
-        const Float _old_intercept,
         const Float _old_weight,
         const std::vector<size_t>& _indices,
         const std::vector<size_t>& _indices_current,
@@ -139,10 +138,7 @@ class Avg : public lossfunctions::LossFunction
     void commit(
         const Float _old_intercept,
         const Float _old_weight,
-        const std::array<Float, 3>& _weights,
-        const std::vector<containers::Match>::iterator _begin,
-        const std::vector<containers::Match>::iterator _split,
-        const std::vector<containers::Match>::iterator _end ) final;
+        const std::array<Float, 3>& _weights ) final;
 
     /// Returns the loss reduction associated with a split.
     Float evaluate_split(
@@ -152,6 +148,15 @@ class Avg : public lossfunctions::LossFunction
         const std::vector<size_t>& _indices,
         const std::vector<Float>& _eta1,
         const std::vector<Float>& _eta2 ) final;
+
+    /// Returns the loss reduction associated with a split.
+    Float evaluate_split(
+        const Float _old_intercept,
+        const Float _old_weight,
+        const std::array<Float, 3>& _weights,
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _split,
+        const std::vector<containers::Match>::iterator _end ) final;
 
     /// Resizes critical resources.
     void resize( size_t _size ) final;
@@ -325,12 +330,6 @@ class Avg : public lossfunctions::LossFunction
         const Float _old_weight,
         const containers::IntSet::Iterator _begin,
         const containers::IntSet::Iterator _end );
-
-    /// Evaluates a split and returns the loss reduction (called by calc_pairs).
-    Float evaluate_split(
-        const Float _old_intercept,
-        const Float _old_weight,
-        const std::array<Float, 3>& _weights );
 
     /// Initialized count_committed_ by calculating the total count.
     void init_count_committed( const std::vector<containers::Match>& _matches );

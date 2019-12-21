@@ -71,19 +71,6 @@ class LossFunctionImpl
         const std::vector<Float>& _predictions,
         multithreading::Communicator* _comm ) const;
 
-    /// Calculates two new weights and the loss given matches. This just reduces
-    /// to the normal XGBoost approach.
-    std::pair<Float, std::array<Float, 3>> calc_pair(
-        const enums::Revert _revert,
-        const enums::Update _update,
-        const std::vector<containers::Match>::iterator _begin,
-        const std::vector<containers::Match>::iterator _split_begin,
-        const std::vector<containers::Match>::iterator _split_end,
-        const std::vector<containers::Match>::iterator _end,
-        Float* _loss_old,
-        std::array<Float, 6>* _sufficient_stats,
-        multithreading::Communicator* _comm ) const;
-
     /// Commits yhat.
     Float commit(
         const std::vector<size_t>& _indices,
@@ -112,10 +99,10 @@ class LossFunctionImpl
     // -----------------------------------------------------------------
 
    public:
-    /// Calculates two new weights given eta and indices.
-    std::pair<Float, std::array<Float, 3>> calc_weights(
+    /// Calculates two new weights and the corresponding partial loss
+    /// given eta and indices.
+    std::pair<Float, std::array<Float, 3>> calc_pair(
         const enums::Aggregation _agg,
-        const Float _old_intercept,
         const Float _old_weight,
         const std::vector<size_t>& _indices,
         const std::vector<Float>& _eta1,
@@ -123,37 +110,79 @@ class LossFunctionImpl
         const std::vector<Float>& _yhat_committed,
         multithreading::Communicator* _comm ) const
     {
-        if ( _agg == enums::Aggregation::avg ||
-             _agg == enums::Aggregation::sum )
+        switch ( _agg )
             {
-                return calc_weights(
-                    _old_intercept,
-                    _old_weight,
-                    _indices,
-                    _eta1,
-                    _eta2,
-                    _yhat_committed,
-                    _comm );
-            }
-        else if (
-            _agg == enums::Aggregation::avg_first_null ||
-            _agg == enums::Aggregation::avg_second_null )
-            {
-                return calc_weights_avg_null(
-                    _agg,
-                    _old_weight,
-                    _indices,
-                    _eta1,
-                    _eta2,
-                    _yhat_committed,
-                    _comm );
-            }
-        else
-            {
-                assert_true( false && "Aggregation not known!" );
-                return std::make_pair( 0.0, std::array<Float, 3>() );
+                case enums::Aggregation::avg:
+                case enums::Aggregation::sum:
+                    return calc_pair_non_null(
+                        _old_weight,
+                        _indices,
+                        _eta1,
+                        _eta2,
+                        _yhat_committed,
+                        _comm );
+
+                case enums::Aggregation::avg_first_null:
+                case enums::Aggregation::avg_second_null:
+                    return calc_pair_avg_null(
+                        _agg,
+                        _old_weight,
+                        _indices,
+                        _eta1,
+                        _eta2,
+                        _yhat_committed,
+                        _comm );
+
+                default:
+                    assert_true( false && "Unknown agg" );
+                    return std::make_pair( 0.0, std::array<Float, 3>() );
             }
     }
+
+    /// Calculates two new weights and the loss given matches. This just reduces
+    /// to the normal XGBoost approach.
+    std::pair<Float, std::array<Float, 3>> calc_pair(
+        const enums::Revert _revert,
+        const enums::Update _update,
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _split_begin,
+        const std::vector<containers::Match>::iterator _split_end,
+        const std::vector<containers::Match>::iterator _end,
+        Float* _loss_old,
+        std::array<Float, 6>* _sufficient_stats,
+        multithreading::Communicator* _comm ) const
+    {
+        switch ( _update )
+            {
+                case enums::Update::calc_all:
+                    return calc_all(
+                        _begin,
+                        _split_begin,
+                        _split_end,
+                        _end,
+                        _loss_old,
+                        _sufficient_stats,
+                        _comm );
+                    break;
+
+                case enums::Update::calc_diff:
+                    return calc_diff(
+                        _revert,
+                        _begin,
+                        _split_begin,
+                        _split_end,
+                        _end,
+                        *_loss_old,
+                        _sufficient_stats,
+                        _comm );
+                    break;
+
+                default:
+                    assert_true( false && "Unknown update!" );
+                    return std::make_pair( 0.0, std::array<Float, 3>() );
+            }
+    }
+
     // -----------------------------------------------------------------
 
     /// Calculates the new yhat given eta, indices and the new weights.
@@ -227,8 +256,7 @@ class LossFunctionImpl
 
     /// Calculates two new weights given eta and indices when the aggregation at
     /// the lowest level is AVG or SUM and there are no NULL values.
-    std::pair<Float, std::array<Float, 3>> calc_weights(
-        const Float _old_intercept,
+    std::pair<Float, std::array<Float, 3>> calc_pair_non_null(
         const Float _old_weight,
         const std::vector<size_t>& _indices,
         const std::vector<Float>& _eta1,
@@ -238,7 +266,7 @@ class LossFunctionImpl
 
     /// Calculates a new weight given eta and indices when the aggregation at
     /// the lowest level is AVG and the other weight is NULL.
-    std::pair<Float, std::array<Float, 3>> calc_weights_avg_null(
+    std::pair<Float, std::array<Float, 3>> calc_pair_avg_null(
         const enums::Aggregation _agg,
         const Float _old_weight,
         const std::vector<size_t>& _indices,

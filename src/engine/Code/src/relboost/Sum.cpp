@@ -123,9 +123,8 @@ void Sum::calc_etas(
 
 // ----------------------------------------------------------------------------
 
-std::pair<Float, std::array<Float, 3>> Sum::calc_weights(
+std::pair<Float, std::array<Float, 3>> Sum::calc_pair(
     const enums::Aggregation _agg,
-    const Float _old_intercept,
     const Float _old_weight,
     const std::vector<size_t>& _indices,
     const std::vector<size_t>& _indices_current,
@@ -138,9 +137,8 @@ std::pair<Float, std::array<Float, 3>> Sum::calc_weights(
     const auto [eta1, eta1_old, eta2, eta2_old] = intermediate_agg().calc_etas(
         false, _agg, _indices_current, _eta1, _eta1_old, _eta2, _eta2_old );
 
-    const auto weights = child_->calc_weights(
+    const auto weights = child_->calc_pair(
         _agg,
-        _old_intercept,
         _old_weight,
         intermediate_agg().indices(),
         intermediate_agg().indices_current(),
@@ -217,9 +215,8 @@ std::vector<std::pair<Float, std::array<Float, 3>>> Sum::calc_pairs(
 
     // -------------------------------------------------------------
 
-    results.emplace_back( child_->calc_weights(
+    results.emplace_back( child_->calc_pair(
         enums::Aggregation::sum,
-        _old_intercept,
         _old_weight,
         indices_.unique_integers(),
         indices_current_.unique_integers(),
@@ -309,23 +306,45 @@ void Sum::calc_yhat(
 void Sum::commit(
     const Float _old_intercept,
     const Float _old_weight,
-    const std::array<Float, 3>& _weights,
-    const std::vector<containers::Match>::iterator _begin,
-    const std::vector<containers::Match>::iterator _split,
-    const std::vector<containers::Match>::iterator _end )
+    const std::array<Float, 3>& _weights )
 {
     assert_true( eta1_.size() == eta2_.size() );
 
     debug_log( "Sum::commit" );
 
-    // When we are committing, the weight1 and weight2 matches are clearly
-    // partitioned, so _begin == _split_begin.
+    impl_.commit( _weights );
+};
+
+// ----------------------------------------------------------------------------
+
+Float Sum::evaluate_split(
+    const Float _old_intercept,
+    const Float _old_weight,
+    const std::array<Float, 3>& _weights,
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _split,
+    const std::vector<containers::Match>::iterator _end )
+{
+    assert_true( !std::isinf( std::get<0>( _weights ) ) );
+    assert_true( !std::isinf( std::get<1>( _weights ) ) );
+    assert_true( !std::isinf( std::get<2>( _weights ) ) );
+
+    assert_true(
+        !std::isnan( std::get<1>( _weights ) ) ||
+        !std::isnan( std::get<2>( _weights ) ) );
+
     calc_all( enums::Revert::False, _begin, _begin, _split, _end );
 
     calc_yhat( _old_weight, _weights );
 
-    impl_.commit( _weights );
-};
+    return child_->evaluate_split(
+        _old_intercept,
+        _old_weight,
+        _weights,
+        indices_.unique_integers(),
+        eta1_,
+        eta2_ );
+}
 
 // ----------------------------------------------------------------------------
 

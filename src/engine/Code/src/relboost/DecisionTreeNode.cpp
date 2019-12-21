@@ -159,11 +159,11 @@ void DecisionTreeNode::assert_aligned(
 #ifndef NDEBUG
     const auto num_candidates = std::distance( _begin, _end );
     const auto ix_best = std::distance( _begin, _it );
-    const auto loss_reduction = _it->loss_reduction_;
+    const auto partial_loss = _it->partial_loss_;
 
     auto global_num_candidates = num_candidates;
     auto global_ix_best = ix_best;
-    auto global_loss_reduction = loss_reduction;
+    auto global_partial_loss = partial_loss;
 
     utils::Reducer::reduce(
         multithreading::maximum<decltype( global_num_candidates )>(),
@@ -176,13 +176,13 @@ void DecisionTreeNode::assert_aligned(
         &comm() );
 
     utils::Reducer::reduce(
-        multithreading::maximum<decltype( global_loss_reduction )>(),
-        &global_loss_reduction,
+        multithreading::maximum<decltype( global_partial_loss )>(),
+        &global_partial_loss,
         &comm() );
 
     assert_true( global_num_candidates == num_candidates );
     assert_true( global_ix_best == ix_best );
-    assert_true( global_loss_reduction == loss_reduction );
+    assert_true( global_partial_loss == partial_loss );
 
 #endif  /// NDEBUG
 }
@@ -233,17 +233,17 @@ void DecisionTreeNode::fit(
         }
 
     // ------------------------------------------------------------------------
-    // Identify best candidate split (the one with the maximum loss reduction)
+    // Identify best candidate split (the one with the minimal partial loss)
 
     const auto cmp = []( const containers::CandidateSplit& c1,
                          const containers::CandidateSplit& c2 ) {
-        return c1.loss_reduction_ < c2.loss_reduction_;
+        return c1.partial_loss_ < c2.partial_loss_;
     };
 
     const auto it =
-        std::max_element( candidates.begin(), candidates.end(), cmp );
+        std::min_element( candidates.begin(), candidates.end(), cmp );
 
-    // DEBUG ONLY: Makes sure that the candidates and max element are aligned
+    // DEBUG ONLY: Makes sure that the candidates and min element are aligned
     // over all threads.
     assert_aligned( candidates.begin(), candidates.end(), it );
 
@@ -252,24 +252,29 @@ void DecisionTreeNode::fit(
     candidates = std::vector<containers::CandidateSplit>();
 
     // ------------------------------------------------------------------------
+    // So far, we only calculated the partial loss. But we need to evaluate
+    // it properly.
+
+    const auto it_split = partition(
+        _output, _input, _subfeatures, best_split.split_, _begin, _end );
+
+    const auto loss_reduction = loss_function().evaluate_split(
+        *_intercept, weight_, best_split.weights_, _begin, it_split, _end );
+
+    // ------------------------------------------------------------------------
     // If the loss reduction is sufficient, then take this split.
 
-    debug_log(
-        "best_split.loss_reduction_: " +
-        std::to_string( best_split.loss_reduction_ ) );
+    debug_log( "loss_reduction: " + std::to_string( loss_reduction ) );
 
-    if ( best_split.loss_reduction_ < hyperparameters().gamma_ + 1e-04 )
+    if ( loss_reduction < hyperparameters().gamma_ + 1e-07 )
         {
+            loss_function().revert_to_commit();
             return;
         }
 
     split_ = best_split.split_.deep_copy();
 
-    const auto it_split =
-        partition( _output, _input, _subfeatures, _begin, _end );
-
-    loss_function().commit(
-        *_intercept, weight_, best_split.weights_, _begin, it_split, _end );
+    loss_function().commit( *_intercept, weight_, best_split.weights_ );
 
     *_intercept = std::get<0>( best_split.weights_ );
 
@@ -307,79 +312,80 @@ std::vector<containers::Match>::iterator DecisionTreeNode::partition(
     const containers::DataFrameView& _output,
     const std::optional<containers::DataFrame>& _input,
     const containers::Subfeatures& _subfeatures,
+    const containers::Split& _split,
     const std::vector<containers::Match>::iterator _begin,
-    const std::vector<containers::Match>::iterator _end )
+    const std::vector<containers::Match>::iterator _end ) const
 {
-    switch ( split_.data_used_ )
+    switch ( _split.data_used_ )
         {
             case enums::DataUsed::categorical_input:
                 assert_true( _input );
                 return utils::Partitioner<enums::DataUsed::categorical_input>::
-                    partition( split_, *_input, _begin, _end );
+                    partition( _split, *_input, _begin, _end );
 
             case enums::DataUsed::categorical_output:
                 return utils::Partitioner<enums::DataUsed::categorical_output>::
-                    partition( split_, _output, _begin, _end );
+                    partition( _split, _output, _begin, _end );
 
             case enums::DataUsed::discrete_input:
                 assert_true( _input );
                 return utils::Partitioner<enums::DataUsed::discrete_input>::
-                    partition( split_, *_input, _begin, _end );
+                    partition( _split, *_input, _begin, _end );
 
             case enums::DataUsed::discrete_input_is_nan:
                 assert_true( _input );
                 return utils::Partitioner<
                     enums::DataUsed::discrete_input_is_nan>::
-                    partition( split_.column_, *_input, _begin, _end );
+                    partition( _split.column_, *_input, _begin, _end );
 
             case enums::DataUsed::discrete_output:
                 return utils::Partitioner<enums::DataUsed::discrete_output>::
-                    partition( split_, _output, _begin, _end );
+                    partition( _split, _output, _begin, _end );
 
             case enums::DataUsed::discrete_output_is_nan:
                 return utils::Partitioner<
                     enums::DataUsed::discrete_output_is_nan>::
-                    partition( split_.column_, _output, _begin, _end );
+                    partition( _split.column_, _output, _begin, _end );
 
             case enums::DataUsed::numerical_input:
                 assert_true( _input );
                 return utils::Partitioner<enums::DataUsed::numerical_input>::
-                    partition( split_, *_input, _begin, _end );
+                    partition( _split, *_input, _begin, _end );
 
             case enums::DataUsed::numerical_input_is_nan:
                 assert_true( _input );
                 return utils::Partitioner<
                     enums::DataUsed::numerical_input_is_nan>::
-                    partition( split_.column_, *_input, _begin, _end );
+                    partition( _split.column_, *_input, _begin, _end );
 
             case enums::DataUsed::numerical_output:
                 return utils::Partitioner<enums::DataUsed::numerical_output>::
-                    partition( split_, _output, _begin, _end );
+                    partition( _split, _output, _begin, _end );
 
             case enums::DataUsed::numerical_output_is_nan:
                 return utils::Partitioner<
                     enums::DataUsed::numerical_output_is_nan>::
-                    partition( split_.column_, _output, _begin, _end );
+                    partition( _split.column_, _output, _begin, _end );
 
             case enums::DataUsed::same_units_categorical:
                 assert_true( _input );
                 return utils::Partitioner<
                     enums::DataUsed::same_units_categorical>::
-                    partition( split_, *_input, _output, _begin, _end );
+                    partition( _split, *_input, _output, _begin, _end );
 
             case enums::DataUsed::same_units_discrete:
                 assert_true( _input );
                 return utils::Partitioner<
                     enums::DataUsed::same_units_discrete>::
-                    partition( split_, *_input, _output, _begin, _end );
+                    partition( _split, *_input, _output, _begin, _end );
 
             case enums::DataUsed::same_units_discrete_is_nan:
                 assert_true( _input );
                 return utils::Partitioner<
                     enums::DataUsed::same_units_discrete_is_nan>::
                     partition(
-                        split_.column_input_,
-                        split_.column_,
+                        _split.column_input_,
+                        _split.column_,
                         *_input,
                         _output,
                         _begin,
@@ -389,15 +395,15 @@ std::vector<containers::Match>::iterator DecisionTreeNode::partition(
                 assert_true( _input );
                 return utils::Partitioner<
                     enums::DataUsed::same_units_numerical>::
-                    partition( split_, *_input, _output, _begin, _end );
+                    partition( _split, *_input, _output, _begin, _end );
 
             case enums::DataUsed::same_units_numerical_is_nan:
                 assert_true( _input );
                 return utils::Partitioner<
                     enums::DataUsed::same_units_numerical_is_nan>::
                     partition(
-                        split_.column_input_,
-                        split_.column_,
+                        _split.column_input_,
+                        _split.column_,
                         *_input,
                         _output,
                         _begin,
@@ -406,18 +412,18 @@ std::vector<containers::Match>::iterator DecisionTreeNode::partition(
             case enums::DataUsed::subfeatures:
                 assert_true( _input );
                 return utils::Partitioner<enums::DataUsed::subfeatures>::
-                    partition( split_, _subfeatures, _begin, _end );
+                    partition( _split, _subfeatures, _begin, _end );
 
             case enums::DataUsed::time_stamps_diff:
                 assert_true( _input );
                 return utils::Partitioner<enums::DataUsed::time_stamps_diff>::
-                    partition( split_, *_input, _output, _begin, _end );
+                    partition( _split, *_input, _output, _begin, _end );
 
             case enums::DataUsed::time_stamps_window:
                 assert_true( _input );
                 return utils::Partitioner<enums::DataUsed::time_stamps_window>::
                     partition(
-                        split_,
+                        _split,
                         hyperparameters().delta_t_,
                         *_input,
                         _output,

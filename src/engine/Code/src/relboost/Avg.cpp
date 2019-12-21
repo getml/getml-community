@@ -320,9 +320,8 @@ void Avg::calc_etas(
 
 // ----------------------------------------------------------------------------
 
-std::pair<Float, std::array<Float, 3>> Avg::calc_weights(
+std::pair<Float, std::array<Float, 3>> Avg::calc_pair(
     const enums::Aggregation _agg,
-    const Float _old_intercept,
     const Float _old_weight,
     const std::vector<size_t>& _indices,
     const std::vector<size_t>& _indices_current,
@@ -335,9 +334,8 @@ std::pair<Float, std::array<Float, 3>> Avg::calc_weights(
     const auto [eta1, eta1_old, eta2, eta2_old] = intermediate_agg().calc_etas(
         true, _agg, _indices_current, _eta1, _eta1_old, _eta2, _eta2_old );
 
-    const auto weights = child_->calc_weights(
+    const auto weights = child_->calc_pair(
         _agg,
-        _old_intercept,
         _old_weight,
         intermediate_agg().indices(),
         intermediate_agg().indices_current(),
@@ -419,9 +417,8 @@ std::vector<std::pair<Float, std::array<Float, 3>>> Avg::calc_pairs(
 
     if ( !std::isnan( _old_weight ) )
         {
-            results.push_back( child_->calc_weights(
+            results.push_back( child_->calc_pair(
                 enums::Aggregation::avg,
-                _old_intercept,
                 _old_weight,
                 indices_.unique_integers(),
                 indices_current_.unique_integers(),
@@ -430,27 +427,6 @@ std::vector<std::pair<Float, std::array<Float, 3>>> Avg::calc_pairs(
                 eta2_,
                 eta2_old_ ) );
         }
-
-    // TODO: Reinsert after solution has been found.
-    /*    results.push_back( child_->calc_weights(
-            enums::Aggregation::avg_second_null,
-            _old_weight,
-            indices_.unique_integers(),
-            indices_current_.unique_integers(),
-            eta1_2_null_,
-            eta1_2_null_old_,
-            w_fixed_1_,
-            w_fixed_1_old_ ) );
-
-        results.push_back( child_->calc_weights(
-            enums::Aggregation::avg_first_null,
-            _old_weight,
-            indices_.unique_integers(),
-            indices_current_.unique_integers(),
-            eta2_1_null_,
-            eta2_1_null_old_,
-            w_fixed_2_,
-            w_fixed_2_old_ ) );*/
 
     update_etas_old( _old_weight );
 
@@ -575,10 +551,7 @@ void Avg::calc_yhat(
 void Avg::commit(
     const Float _old_intercept,
     const Float _old_weight,
-    const std::array<Float, 3>& _weights,
-    const std::vector<containers::Match>::iterator _begin,
-    const std::vector<containers::Match>::iterator _split,
-    const std::vector<containers::Match>::iterator _end )
+    const std::array<Float, 3>& _weights )
 {
     // ------------------------------------------------------------------------
 
@@ -593,14 +566,6 @@ void Avg::commit(
     assert_true( eta1_.size() == w_fixed_1_.size() );
     assert_true( eta1_.size() == w_fixed_2_.size() );
     assert_true( eta1_.size() == w_fixed_committed_.size() );
-
-    // ------------------------------------------------------------------------
-
-    // When we are committing, the weight1 and weight2 matches are clearly
-    // partitioned, so _begin == _split_begin.
-    calc_all( enums::Revert::False, _old_weight, _begin, _begin, _split, _end );
-
-    calc_yhat( _old_weight, _weights );
 
     // ------------------------------------------------------------------------
 
@@ -779,17 +744,28 @@ void Avg::deactivate(
 Float Avg::evaluate_split(
     const Float _old_intercept,
     const Float _old_weight,
-    const std::array<Float, 3>& _weights )
+    const std::array<Float, 3>& _weights,
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _split,
+    const std::vector<containers::Match>::iterator _end )
 {
     // -----------------------------------------------------------------
 
-    Float loss_reduction = 0.0;
+    assert_true( !std::isinf( std::get<0>( _weights ) ) );
+    assert_true( !std::isinf( std::get<1>( _weights ) ) );
+    assert_true( !std::isinf( std::get<2>( _weights ) ) );
 
-    // -----------------------------------------------------------------
+    assert_true(
+        !std::isnan( std::get<1>( _weights ) ) ||
+        !std::isnan( std::get<2>( _weights ) ) );
+
+    calc_all( enums::Revert::False, _old_weight, _begin, _begin, _split, _end );
 
     calc_yhat( _old_weight, _weights );
 
     // -----------------------------------------------------------------
+
+    Float loss_reduction = 0.0;
 
     if ( std::isnan( std::get<2>( _weights ) ) )
         {
@@ -829,6 +805,8 @@ Float Avg::evaluate_split(
     // -----------------------------------------------------------------
 
     return loss_reduction;
+
+    // -----------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------

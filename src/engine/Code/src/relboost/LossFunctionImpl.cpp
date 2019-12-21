@@ -225,46 +225,276 @@ std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_diff(
 
 // ----------------------------------------------------------------------------
 
-std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_pair(
-    const enums::Revert _revert,
-    const enums::Update _update,
-    const std::vector<containers::Match>::iterator _begin,
-    const std::vector<containers::Match>::iterator _split_begin,
-    const std::vector<containers::Match>::iterator _split_end,
-    const std::vector<containers::Match>::iterator _end,
-    Float* _loss_old,
-    std::array<Float, 6>* _sufficient_stats,
+std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_pair_avg_null(
+    const enums::Aggregation _agg,
+    const Float _old_weight,
+    const std::vector<size_t>& _indices,
+    const std::vector<Float>& _eta,
+    const std::vector<Float>& _w_fixed,
+    const std::vector<Float>& _yhat_committed,
     multithreading::Communicator* _comm ) const
 {
-    switch ( _update )
+    // ------------------------------------------------------------------------
+
+    assert_true( _eta.size() == targets().size() );
+    assert_true( _w_fixed.size() == targets().size() );
+    assert_true( g_.size() == targets().size() );
+    assert_true( h_.size() == targets().size() );
+
+    assert_true( sample_weights_ );
+    assert_true( sample_weights_->size() == targets().size() );
+
+    // ------------------------------------------------------------------------
+    // Calculate g_eta.
+
+    std::array<Float, 2> g_eta_arr = {0.0, 0.0};
+
+    // The intercept term.
+    g_eta_arr[0] = -sum_g_;
+
+    for ( const auto ix : _indices )
         {
-            case enums::Update::calc_all:
-                return calc_all(
-                    _begin,
-                    _split_begin,
-                    _split_end,
-                    _end,
-                    _loss_old,
-                    _sufficient_stats,
-                    _comm );
-                break;
-
-            case enums::Update::calc_diff:
-                return calc_diff(
-                    _revert,
-                    _begin,
-                    _split_begin,
-                    _split_end,
-                    _end,
-                    *_loss_old,
-                    _sufficient_stats,
-                    _comm );
-                break;
-
-            default:
-                assert_true( false && "Unknown update!" );
-                return std::make_pair( 0.0, std::array<Float, 3>() );
+            assert_true( ix < targets().size() );
+            g_eta_arr[1] -= g_[ix] * _eta[ix] * sample_weights( ix );
         }
+
+    // ------------------------------------------------------------------------
+    // Calculate h_w_const.
+
+    std::array<Float, 2> h_w_const_arr = {0.0, 0.0};
+
+    h_w_const_arr[0] = -sum_h_yhat_committed_;
+
+    for ( const auto ix : _indices )
+        {
+            assert_true( !std::isnan( _w_fixed[ix] ) );
+            assert_true( ix < targets().size() );
+
+            h_w_const_arr[0] -= h_[ix] *
+                                ( _w_fixed[ix] - _yhat_committed[ix] ) *
+                                sample_weights( ix );
+            h_w_const_arr[1] -=
+                h_[ix] * _w_fixed[ix] * _eta[ix] * sample_weights( ix );
+        }
+
+    // ------------------------------------------------------------------------
+    // Calculate A.
+
+    std::array<Float, 3> A_arr = {0.0, 0.0, 0.0};
+
+    // The intercept term.
+    A_arr[0] =
+        sum_h_ + hyperparameters().reg_lambda_ *
+                     static_cast<Float>( targets().size() );  // A( 0, 0 )
+
+    for ( const auto ix : _indices )
+        {
+            assert_true( ix < targets().size() );
+
+            A_arr[1] += h_[ix] * _eta[ix] * sample_weights( ix );  // A( 0, 1 )
+
+            A_arr[2] += ( h_[ix] * _eta[ix] + hyperparameters().reg_lambda_ ) *
+                        _eta[ix] * sample_weights( ix );  // A( 1, 1 )
+        }
+
+    // ------------------------------------------------------------------------
+    // Reduce.
+
+    utils::Reducer::reduce<2>( std::plus<Float>(), &g_eta_arr, _comm );
+
+    utils::Reducer::reduce<2>( std::plus<Float>(), &h_w_const_arr, _comm );
+
+    utils::Reducer::reduce<3>( std::plus<Float>(), &A_arr, _comm );
+
+    // ------------------------------------------------------------------------
+    // Transfer data to Eigen::Matrix.
+
+    Eigen::Matrix<Float, 2, 1> g_eta;
+    g_eta[0] = g_eta_arr[0];
+    g_eta[1] = g_eta_arr[1];
+
+    Eigen::Matrix<Float, 2, 1> h_w_const;
+    h_w_const[0] = h_w_const_arr[0];
+    h_w_const[1] = h_w_const_arr[1];
+
+    Eigen::Matrix<Float, 2, 2> A;
+    A( 0, 0 ) = A_arr[0];
+    A( 1, 1 ) = A_arr[2];
+    A( 1, 0 ) = A( 0, 1 ) = A_arr[1];
+
+    // ------------------------------------------------------------------------
+    // Calculate b.
+
+    const auto b = g_eta + h_w_const;
+
+    // ------------------------------------------------------------------------
+    // Calculate weight by solving A*weight = b.
+
+    Eigen::Matrix<Float, 2, 1> weights = A.fullPivLu().solve( b );
+
+    const auto partial_loss = -0.5 * weights.dot( b );
+
+    // ------------------------------------------------------------------------
+
+    auto weights_arr = std::array<Float, 3>{0.0, 0.0, 0.0};
+
+    if ( _agg == enums::Aggregation::avg_first_null )
+        {
+            weights_arr = std::array<Float, 3>( {weights[0], NAN, weights[1]} );
+        }
+    else if ( _agg == enums::Aggregation::avg_second_null )
+        {
+            weights_arr = std::array<Float, 3>( {weights[0], weights[1], NAN} );
+        }
+    else
+        {
+            assert_true( false && "Aggregation type not known!" );
+        }
+
+    // ------------------------------------------------------------------------
+
+    return std::make_pair( partial_loss, weights_arr );
+
+    // ------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_pair_non_null(
+    const Float _old_weight,
+    const std::vector<size_t>& _indices,
+    const std::vector<Float>& _eta1,
+    const std::vector<Float>& _eta2,
+    const std::vector<Float>& _yhat_committed,
+    multithreading::Communicator* _comm ) const
+{
+    // ------------------------------------------------------------------------
+
+    assert_true( _eta1.size() == targets().size() );
+    assert_true( _eta2.size() == targets().size() );
+    assert_true( g_.size() == targets().size() );
+    assert_true( h_.size() == targets().size() );
+
+    assert_true( sample_weights_ );
+    assert_true( sample_weights_->size() == targets().size() );
+
+    // ------------------------------------------------------------------------
+    // Calculate g_eta_arr.
+
+    std::array<Float, 3> g_eta_arr = {0.0, 0.0, 0.0};
+
+    // The intercept term.
+    g_eta_arr[0] = -sum_g_;
+
+    for ( const auto ix : _indices )
+        {
+            assert_true( ix < targets().size() );
+            g_eta_arr[1] -= g_[ix] * _eta1[ix] * sample_weights( ix );
+            g_eta_arr[2] -= g_[ix] * _eta2[ix] * sample_weights( ix );
+        }
+
+    // ------------------------------------------------------------------------
+    // Calculate h_w_const_arr.
+
+    std::array<Float, 3> h_w_const_arr = {0.0, 0.0, 0.0};
+
+    h_w_const_arr[0] = -sum_h_yhat_committed_;
+
+    for ( const auto ix : _indices )
+        {
+            const auto w_old = _old_weight * ( _eta1[ix] + _eta2[ix] );
+            const auto w_fixed = _yhat_committed[ix] - w_old;
+
+            assert_true( sample_weights( ix ) > 0.0 );
+
+            h_w_const_arr[0] += h_[ix] * w_old * sample_weights( ix );
+            h_w_const_arr[1] -=
+                h_[ix] * w_fixed * _eta1[ix] * sample_weights( ix );
+            h_w_const_arr[2] -=
+                h_[ix] * w_fixed * _eta2[ix] * sample_weights( ix );
+        }
+
+    // ------------------------------------------------------------------------
+    // Calculate A_arr.
+
+    std::array<Float, 6> A_arr = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+
+    // The intercept term.
+    A_arr[0] =
+        sum_h_ + hyperparameters().reg_lambda_ *
+                     static_cast<Float>( targets().size() );  // A( 0, 0 )
+
+    for ( const auto ix : _indices )
+        {
+            assert_true( ix < targets().size() );
+
+            A_arr[1] += h_[ix] * _eta1[ix] * sample_weights( ix );  // A( 0, 1 )
+
+            A_arr[2] +=
+                h_[ix] * _eta2[ix] * sample_weights( ix );  //  A( 0, 2 )
+
+            A_arr[3] += ( h_[ix] * _eta1[ix] + hyperparameters().reg_lambda_ ) *
+                        _eta1[ix] * sample_weights( ix );  // A( 1, 1 )
+
+            A_arr[4] += h_[ix] * _eta1[ix] * _eta2[ix] *
+                        sample_weights( ix );  // A( 1, 2 )
+
+            A_arr[5] += ( h_[ix] * _eta2[ix] + hyperparameters().reg_lambda_ ) *
+                        _eta2[ix] * sample_weights( ix );  // A( 2, 2 )
+        }
+
+    // ------------------------------------------------------------------------
+    // Reduce.
+
+    utils::Reducer::reduce<3>( std::plus<Float>(), &g_eta_arr, _comm );
+
+    utils::Reducer::reduce<3>( std::plus<Float>(), &h_w_const_arr, _comm );
+
+    utils::Reducer::reduce<6>( std::plus<Float>(), &A_arr, _comm );
+
+    // ------------------------------------------------------------------------
+    // Transfer data to Eigen::Matrix.
+
+    Eigen::Matrix<Float, 3, 1> g_eta;
+    g_eta[0] = g_eta_arr[0];
+    g_eta[1] = g_eta_arr[1];
+    g_eta[2] = g_eta_arr[2];
+
+    Eigen::Matrix<Float, 3, 1> h_w_const;
+    h_w_const[0] = h_w_const_arr[0];
+    h_w_const[1] = h_w_const_arr[1];
+    h_w_const[2] = h_w_const_arr[2];
+
+    Eigen::Matrix<Float, 3, 3> A;
+    A( 0, 0 ) = A_arr[0];
+    A( 1, 1 ) = A_arr[3];
+    A( 2, 2 ) = A_arr[5];
+    A( 1, 0 ) = A( 0, 1 ) = A_arr[1];
+    A( 2, 0 ) = A( 0, 2 ) = A_arr[2];
+    A( 2, 1 ) = A( 1, 2 ) = A_arr[4];
+
+    // ------------------------------------------------------------------------
+    // Calculate b.
+
+    auto b = g_eta + h_w_const;
+
+    // ------------------------------------------------------------------------
+    // Calculate weights by solving A*weights = b.
+
+    const auto weights = A.fullPivLu().solve( b );
+
+    // ------------------------------------------------------------------------
+
+    const Float partial_loss = -0.5 * b.dot( weights );
+
+    const auto weights_arr =
+        std::array<Float, 3>( {weights[0], weights[1], weights[2]} );
+
+    // ------------------------------------------------------------------------
+
+    return std::make_pair( partial_loss, weights_arr );
+
+    // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -513,287 +743,6 @@ Float LossFunctionImpl::calc_update_rate(
         {
             return -sum_g_predictions / sum_h_predictions;
         }
-
-    // ------------------------------------------------------------------------
-}
-
-// ----------------------------------------------------------------------------
-
-std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_weights_avg_null(
-    const enums::Aggregation _agg,
-    const Float _old_weight,
-    const std::vector<size_t>& _indices,
-    const std::vector<Float>& _eta,
-    const std::vector<Float>& _w_fixed,
-    const std::vector<Float>& _yhat_committed,
-    multithreading::Communicator* _comm ) const
-{
-    // ------------------------------------------------------------------------
-
-    assert_true( _eta.size() == targets().size() );
-    assert_true( _w_fixed.size() == targets().size() );
-    assert_true( g_.size() == targets().size() );
-    assert_true( h_.size() == targets().size() );
-
-    assert_true( sample_weights_ );
-    assert_true( sample_weights_->size() == targets().size() );
-
-    // ------------------------------------------------------------------------
-    // Calculate g_eta.
-
-    std::array<Float, 2> g_eta_arr = {0.0, 0.0};
-
-    // The intercept term.
-    g_eta_arr[0] = -sum_g_;
-
-    for ( const auto ix : _indices )
-        {
-            assert_true( ix < targets().size() );
-            g_eta_arr[1] -= g_[ix] * _eta[ix] * sample_weights( ix );
-        }
-
-    // ------------------------------------------------------------------------
-    // Calculate h_w_const.
-
-    std::array<Float, 2> h_w_const_arr = {0.0, 0.0};
-
-    h_w_const_arr[0] = -sum_h_yhat_committed_;
-
-    for ( const auto ix : _indices )
-        {
-            assert_true( !std::isnan( _w_fixed[ix] ) );
-            assert_true( ix < targets().size() );
-
-            h_w_const_arr[0] -= h_[ix] *
-                                ( _w_fixed[ix] - _yhat_committed[ix] ) *
-                                sample_weights( ix );
-            h_w_const_arr[1] -=
-                h_[ix] * _w_fixed[ix] * _eta[ix] * sample_weights( ix );
-        }
-
-    // ------------------------------------------------------------------------
-    // Calculate A.
-
-    std::array<Float, 3> A_arr = {0.0, 0.0, 0.0};
-
-    // The intercept term.
-    A_arr[0] =
-        sum_h_ + hyperparameters().reg_lambda_ *
-                     static_cast<Float>( targets().size() );  // A( 0, 0 )
-
-    for ( const auto ix : _indices )
-        {
-            assert_true( ix < targets().size() );
-
-            A_arr[1] += h_[ix] * _eta[ix] * sample_weights( ix );  // A( 0, 1 )
-
-            A_arr[2] += ( h_[ix] * _eta[ix] + hyperparameters().reg_lambda_ ) *
-                        _eta[ix] * sample_weights( ix );  // A( 1, 1 )
-        }
-
-    // ------------------------------------------------------------------------
-    // Reduce.
-
-    utils::Reducer::reduce<2>( std::plus<Float>(), &g_eta_arr, _comm );
-
-    utils::Reducer::reduce<2>( std::plus<Float>(), &h_w_const_arr, _comm );
-
-    utils::Reducer::reduce<3>( std::plus<Float>(), &A_arr, _comm );
-
-    // ------------------------------------------------------------------------
-    // Transfer data to Eigen::Matrix.
-
-    Eigen::Matrix<Float, 2, 1> g_eta;
-    g_eta[0] = g_eta_arr[0];
-    g_eta[1] = g_eta_arr[1];
-
-    Eigen::Matrix<Float, 2, 1> h_w_const;
-    h_w_const[0] = h_w_const_arr[0];
-    h_w_const[1] = h_w_const_arr[1];
-
-    Eigen::Matrix<Float, 2, 2> A;
-    A( 0, 0 ) = A_arr[0];
-    A( 1, 1 ) = A_arr[2];
-    A( 1, 0 ) = A( 0, 1 ) = A_arr[1];
-
-    // ------------------------------------------------------------------------
-    // Calculate b.
-
-    const auto b = g_eta + h_w_const;
-
-    // ------------------------------------------------------------------------
-    // Calculate weight by solving A*weight = b.
-
-    Eigen::Matrix<Float, 2, 1> weights = A.fullPivLu().solve( b );
-
-    // TODO: Missing loss of old weight!
-    const auto loss_reduction = 0.5 * weights.dot( b );
-
-    // ------------------------------------------------------------------------
-
-    auto weights_arr = std::array<Float, 3>{0.0, 0.0, 0.0};
-
-    if ( _agg == enums::Aggregation::avg_first_null )
-        {
-            weights_arr = std::array<Float, 3>( {weights[0], NAN, weights[1]} );
-        }
-    else if ( _agg == enums::Aggregation::avg_second_null )
-        {
-            weights_arr = std::array<Float, 3>( {weights[0], weights[1], NAN} );
-        }
-    else
-        {
-            assert_true( false && "Aggregation type not known!" );
-        }
-
-    // ------------------------------------------------------------------------
-
-    return std::make_pair( loss_reduction, weights_arr );
-
-    // ------------------------------------------------------------------------
-}
-
-// ----------------------------------------------------------------------------
-
-std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_weights(
-    const Float _old_intercept,
-    const Float _old_weight,
-    const std::vector<size_t>& _indices,
-    const std::vector<Float>& _eta1,
-    const std::vector<Float>& _eta2,
-    const std::vector<Float>& _yhat_committed,
-    multithreading::Communicator* _comm ) const
-{
-    // ------------------------------------------------------------------------
-
-    assert_true( _eta1.size() == targets().size() );
-    assert_true( _eta2.size() == targets().size() );
-    assert_true( g_.size() == targets().size() );
-    assert_true( h_.size() == targets().size() );
-
-    assert_true( sample_weights_ );
-    assert_true( sample_weights_->size() == targets().size() );
-
-    // ------------------------------------------------------------------------
-    // Calculate g_eta_arr.
-
-    std::array<Float, 3> g_eta_arr = {0.0, 0.0, 0.0};
-
-    // The intercept term.
-    g_eta_arr[0] = -sum_g_;
-
-    for ( const auto ix : _indices )
-        {
-            assert_true( ix < targets().size() );
-            g_eta_arr[1] -= g_[ix] * _eta1[ix] * sample_weights( ix );
-            g_eta_arr[2] -= g_[ix] * _eta2[ix] * sample_weights( ix );
-        }
-
-    // ------------------------------------------------------------------------
-    // Calculate h_w_const_arr.
-
-    std::array<Float, 3> h_w_const_arr = {0.0, 0.0, 0.0};
-
-    h_w_const_arr[0] = -sum_h_yhat_committed_;
-
-    for ( const auto ix : _indices )
-        {
-            const auto w_old = _old_weight * ( _eta1[ix] + _eta2[ix] );
-            const auto w_fixed = _yhat_committed[ix] - w_old;
-
-            assert_true( sample_weights( ix ) > 0.0 );
-
-            h_w_const_arr[0] += h_[ix] * w_old * sample_weights( ix );
-            h_w_const_arr[1] -=
-                h_[ix] * w_fixed * _eta1[ix] * sample_weights( ix );
-            h_w_const_arr[2] -=
-                h_[ix] * w_fixed * _eta2[ix] * sample_weights( ix );
-        }
-
-    // ------------------------------------------------------------------------
-    // Calculate A_arr.
-
-    std::array<Float, 6> A_arr = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-
-    // The intercept term.
-    A_arr[0] =
-        sum_h_ + hyperparameters().reg_lambda_ *
-                     static_cast<Float>( targets().size() );  // A( 0, 0 )
-
-    for ( const auto ix : _indices )
-        {
-            assert_true( ix < targets().size() );
-
-            A_arr[1] += h_[ix] * _eta1[ix] * sample_weights( ix );  // A( 0, 1 )
-
-            A_arr[2] +=
-                h_[ix] * _eta2[ix] * sample_weights( ix );  //  A( 0, 2 )
-
-            A_arr[3] += ( h_[ix] * _eta1[ix] + hyperparameters().reg_lambda_ ) *
-                        _eta1[ix] * sample_weights( ix );  // A( 1, 1 )
-
-            A_arr[4] += h_[ix] * _eta1[ix] * _eta2[ix] *
-                        sample_weights( ix );  // A( 1, 2 )
-
-            A_arr[5] += ( h_[ix] * _eta2[ix] + hyperparameters().reg_lambda_ ) *
-                        _eta2[ix] * sample_weights( ix );  // A( 2, 2 )
-        }
-
-    // ------------------------------------------------------------------------
-    // Reduce.
-
-    utils::Reducer::reduce<3>( std::plus<Float>(), &g_eta_arr, _comm );
-
-    utils::Reducer::reduce<3>( std::plus<Float>(), &h_w_const_arr, _comm );
-
-    utils::Reducer::reduce<6>( std::plus<Float>(), &A_arr, _comm );
-
-    // ------------------------------------------------------------------------
-    // Transfer data to Eigen::Matrix.
-
-    Eigen::Matrix<Float, 3, 1> g_eta;
-    g_eta[0] = g_eta_arr[0];
-    g_eta[1] = g_eta_arr[1];
-    g_eta[2] = g_eta_arr[2];
-
-    Eigen::Matrix<Float, 3, 1> h_w_const;
-    h_w_const[0] = h_w_const_arr[0];
-    h_w_const[1] = h_w_const_arr[1];
-    h_w_const[2] = h_w_const_arr[2];
-
-    Eigen::Matrix<Float, 3, 3> A;
-    A( 0, 0 ) = A_arr[0];
-    A( 1, 1 ) = A_arr[3];
-    A( 2, 2 ) = A_arr[5];
-    A( 1, 0 ) = A( 0, 1 ) = A_arr[1];
-    A( 2, 0 ) = A( 0, 2 ) = A_arr[2];
-    A( 2, 1 ) = A( 1, 2 ) = A_arr[4];
-
-    // ------------------------------------------------------------------------
-    // Calculate b.
-
-    auto b = g_eta + h_w_const;
-
-    // ------------------------------------------------------------------------
-    // Calculate weights by solving A*weights = b.
-
-    const auto weights = A.fullPivLu().solve( b );
-
-    // ------------------------------------------------------------------------
-
-    const Float loss_old =
-        -0.5 * ( _old_intercept * b[0] + _old_weight * ( b[1] + b[2] ) );
-
-    const Float loss_new = -0.5 * b.dot( weights );
-
-    const auto loss_reduction = loss_old - loss_new;
-
-    const auto weights_arr =
-        std::array<Float, 3>( {weights[0], weights[1], weights[2]} );
-
-    // ------------------------------------------------------------------------
-
-    return std::make_pair( loss_reduction, weights_arr );
 
     // ------------------------------------------------------------------------
 }

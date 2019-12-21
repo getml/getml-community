@@ -114,9 +114,8 @@ class SquareLoss : public LossFunction
     }
 
     /// Calculates two new weights given eta and indices.
-    std::pair<Float, std::array<Float, 3>> calc_weights(
+    std::pair<Float, std::array<Float, 3>> calc_pair(
         const enums::Aggregation _agg,
-        const Float _old_intercept,
         const Float _old_weight,
         const std::vector<size_t>& _indices,
         const std::vector<size_t>& _indices_current,
@@ -125,9 +124,8 @@ class SquareLoss : public LossFunction
         const std::vector<Float>& _eta2,
         const std::vector<Float>& _eta2_old ) final
     {
-        return impl_.calc_weights(
+        return impl_.calc_pair(
             _agg,
-            _old_intercept,
             _old_weight,
             _indices,
             _eta1,
@@ -135,7 +133,6 @@ class SquareLoss : public LossFunction
             yhat_committed_,
             &comm() );
     }
-
     /// Calculates two new weights given matches. This just reduces to the
     /// normal XGBoost approach.
     std::vector<std::pair<Float, std::array<Float, 3>>> calc_pairs(
@@ -216,6 +213,15 @@ class SquareLoss : public LossFunction
         commit( indices, weights );
     }
 
+    /// Commits the current values - should not ever be called.
+    void commit(
+        const Float _old_intercept,
+        const Float _old_weight,
+        const std::array<Float, 3>& _weights ) final
+    {
+        assert_true( false );
+    }
+
     /// Recalculates sum_h_yhat_committed_ and loss_committed_.
     void commit(
         const std::vector<size_t>& _indices,
@@ -225,17 +231,6 @@ class SquareLoss : public LossFunction
         sum_h_yhat_committed_ =
             impl_.commit( _indices, yhat_, &yhat_committed_ );
     }
-
-    /// Keeps the current weights - this is directly called by
-    /// DecisionTreeNode, meaning that this is used as a predictor.
-    /// In this case, there is nothing to commit.
-    void commit(
-        const Float _old_intercept,
-        const Float _old_weight,
-        const std::array<Float, 3>& _weights,
-        const std::vector<containers::Match>::iterator _begin,
-        const std::vector<containers::Match>::iterator _split,
-        const std::vector<containers::Match>::iterator _end ) final{};
 
     /// Actual loss functions always have depth 0.
     size_t depth() const final { return 0; }
@@ -259,6 +254,20 @@ class SquareLoss : public LossFunction
                    _weights,
                    sum_sample_weights_,
                    &comm() );
+    }
+
+    /// Returns the loss reduction associated with a split.
+    /// Should not ever be called.
+    Float evaluate_split(
+        const Float _old_intercept,
+        const Float _old_weight,
+        const std::array<Float, 3>& _weights,
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _split,
+        const std::vector<containers::Match>::iterator _end ) final
+    {
+        assert_true( false );
+        return 0.0;
     }
 
     /// Initializes yhat_old_ by setting it to the initial prediction.

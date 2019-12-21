@@ -50,10 +50,10 @@ class LossFunction
     virtual Float calc_update_rate(
         const std::vector<Float>& _predictions ) = 0;
 
-    /// Calculates the weights given values from a parent aggregation.
-    virtual std::pair<Float, std::array<Float, 3>> calc_weights(
+    /// Calculates the weights and the associated partial loss given values from
+    /// a parent aggregation.
+    virtual std::pair<Float, std::array<Float, 3>> calc_pair(
         const enums::Aggregation _agg,
-        const Float _old_intercept,
         const Float _old_weight,
         const std::vector<size_t>& _indices,
         const std::vector<size_t>& _indices_current,
@@ -62,7 +62,7 @@ class LossFunction
         const std::vector<Float>& _eta2,
         const std::vector<Float>& _eta2_old ) = 0;
 
-    /// Calculates the loss_reduction-weight-pairs given the matches.
+    /// Calculates the partial_loss-weight-pairs given the matches.
     virtual std::vector<std::pair<Float, std::array<Float, 3>>> calc_pairs(
         const enums::Revert _revert,
         const enums::Update _update,
@@ -92,14 +92,11 @@ class LossFunction
     /// Commits the values for yhat_old_.
     virtual void commit() = 0;
 
-    /// Commits the split described by the iterators.
+    /// Commits the current values.
     virtual void commit(
         const Float _old_intercept,
         const Float _old_weight,
-        const std::array<Float, 3>& _weights,
-        const std::vector<containers::Match>::iterator _begin,
-        const std::vector<containers::Match>::iterator _split,
-        const std::vector<containers::Match>::iterator _end ) = 0;
+        const std::array<Float, 3>& _weights ) = 0;
 
     /// Commits the values described by the indices and yhat.
     virtual void commit(
@@ -122,6 +119,15 @@ class LossFunction
         const std::vector<size_t>& _indices,
         const std::vector<Float>& _eta1,
         const std::vector<Float>& _eta2 ) = 0;
+
+    /// Returns the loss reduction associated with a split.
+    virtual Float evaluate_split(
+        const Float _old_intercept,
+        const Float _old_weight,
+        const std::array<Float, 3>& _weights,
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _split,
+        const std::vector<containers::Match>::iterator _end ) = 0;
 
     /// Evaluates and entire tree.
     virtual Float evaluate_tree(

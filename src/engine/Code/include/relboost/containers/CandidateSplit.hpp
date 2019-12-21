@@ -10,18 +10,16 @@ namespace containers
 struct CandidateSplit
 {
     CandidateSplit(
-        const Float _loss_reduction,
+        const Float _partial_loss,
         const Split& _split,
         const std::array<Float, 3>& _weights )
-        : loss_reduction_( _loss_reduction ),
-          split_( _split ),
-          weights_( _weights )
+        : partial_loss_( _partial_loss ), split_( _split ), weights_( _weights )
     {
     }
 
     ~CandidateSplit() = default;
 
-    const Float loss_reduction_;
+    const Float partial_loss_;
 
     const Split split_;
 
