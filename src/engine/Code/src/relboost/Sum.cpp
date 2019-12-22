@@ -18,6 +18,8 @@ void Sum::calc_all(
     assert_true( indices_.size() == 0 );
     assert_true( indices_current_.size() == 0 );
 
+    update_ = enums::Update::calc_all;
+
     // ------------------------------------------------------------------------
     // All matches between _split_begin and _split_end are allocated to
     // _eta1. All others are allocated to eta1_.
@@ -101,6 +103,8 @@ void Sum::calc_diff(
 
 void Sum::calc_etas(
     const enums::Aggregation _agg,
+    const enums::Update _update,
+    const Float _old_weight,
     const std::vector<size_t>& _indices_current,
     const std::vector<Float>& _eta1,
     const std::vector<Float>& _eta1_old,
@@ -112,6 +116,8 @@ void Sum::calc_etas(
 
     child_->calc_etas(
         _agg,
+        _update,
+        _old_weight,
         intermediate_agg().indices_current(),
         *eta1,
         *eta1_old,
@@ -125,6 +131,8 @@ void Sum::calc_etas(
 
 std::pair<Float, std::array<Float, 3>> Sum::calc_pair(
     const enums::Aggregation _agg,
+    const enums::Revert _revert,
+    const enums::Update _update,
     const Float _old_weight,
     const std::vector<size_t>& _indices,
     const std::vector<size_t>& _indices_current,
@@ -139,6 +147,8 @@ std::pair<Float, std::array<Float, 3>> Sum::calc_pair(
 
     const auto weights = child_->calc_pair(
         _agg,
+        _revert,
+        _update,
         _old_weight,
         intermediate_agg().indices(),
         intermediate_agg().indices_current(),
@@ -217,6 +227,8 @@ std::vector<std::pair<Float, std::array<Float, 3>>> Sum::calc_pairs(
 
     results.emplace_back( child_->calc_pair(
         enums::Aggregation::sum,
+        _revert,
+        update_,
         _old_weight,
         indices_.unique_integers(),
         indices_current_.unique_integers(),
@@ -227,6 +239,8 @@ std::vector<std::pair<Float, std::array<Float, 3>>> Sum::calc_pairs(
 
     update_etas_old();
 
+    update_ = enums::Update::calc_diff;
+
     // -------------------------------------------------------------
 
     if ( _revert == enums::Revert::False )
@@ -234,36 +248,6 @@ std::vector<std::pair<Float, std::array<Float, 3>>> Sum::calc_pairs(
             indices_current_.clear();
         }
 
-    // -----------------------------------------------------------------
-    /*
-        for ( const auto& w : weights )
-            {
-                assert_true( !std::isinf( std::get<0>( w ) ) );
-                assert_true( !std::isinf( std::get<1>( w ) ) );
-                assert_true( !std::isinf( std::get<2>( w ) ) );
-
-                if ( std::isnan( std::get<0>( w ) ) )
-                    {
-                        continue;
-                    }
-
-                assert_true(
-                    !std::isnan( std::get<1>( w ) ) ||
-                    !std::isnan( std::get<2>( w ) ) );
-
-                calc_yhat( _old_weight, w );
-
-                const auto loss_reduction = child_->evaluate_split(
-                    _old_intercept,
-                    _old_weight,
-                    w,
-                    indices_.unique_integers(),
-                    eta1_,
-                    eta2_ );
-
-                results.push_back( std::make_pair( loss_reduction, w ) );
-            }
-    */
     // -------------------------------------------------------------
 
     return results;
@@ -378,6 +362,8 @@ void Sum::revert( const Float _old_weight )
 
     child_->calc_etas(
         enums::Aggregation::sum,
+        update_,
+        _old_weight,
         indices_current_.unique_integers(),
         eta1_,
         eta1_old_,
@@ -385,6 +371,8 @@ void Sum::revert( const Float _old_weight )
         eta2_old_ );
 
     update_etas_old();
+
+    update_ = enums::Update::calc_diff;
 
     num_samples_2_ += num_samples_1_;
 

@@ -81,6 +81,8 @@ void Avg::calc_all(
     assert_true( indices_.size() == 0 );
     assert_true( indices_current_.size() == 0 );
 
+    update_ = enums::Update::calc_all;
+
     // ------------------------------------------------------------------------
 
 #ifndef NDEBUG
@@ -298,6 +300,8 @@ void Avg::calc_diff(
 
 void Avg::calc_etas(
     const enums::Aggregation _agg,
+    const enums::Update _update,
+    const Float _old_weight,
     const std::vector<size_t>& _indices_current,
     const std::vector<Float>& _eta1,
     const std::vector<Float>& _eta1_old,
@@ -309,6 +313,8 @@ void Avg::calc_etas(
 
     child_->calc_etas(
         _agg,
+        _update,
+        _old_weight,
         intermediate_agg().indices_current(),
         *eta1,
         *eta1_old,
@@ -322,6 +328,8 @@ void Avg::calc_etas(
 
 std::pair<Float, std::array<Float, 3>> Avg::calc_pair(
     const enums::Aggregation _agg,
+    const enums::Revert _revert,
+    const enums::Update _update,
     const Float _old_weight,
     const std::vector<size_t>& _indices,
     const std::vector<size_t>& _indices_current,
@@ -336,6 +344,8 @@ std::pair<Float, std::array<Float, 3>> Avg::calc_pair(
 
     const auto weights = child_->calc_pair(
         _agg,
+        _revert,
+        _update,
         _old_weight,
         intermediate_agg().indices(),
         intermediate_agg().indices_current(),
@@ -384,6 +394,7 @@ std::vector<std::pair<Float, std::array<Float, 3>>> Avg::calc_pairs(
     switch ( _update )
         {
             case enums::Update::calc_all:
+                update_ = enums::Update::calc_all;
                 calc_all(
                     _revert,
                     _old_weight,
@@ -419,6 +430,8 @@ std::vector<std::pair<Float, std::array<Float, 3>>> Avg::calc_pairs(
         {
             results.push_back( child_->calc_pair(
                 enums::Aggregation::avg,
+                _revert,
+                update_,
                 _old_weight,
                 indices_.unique_integers(),
                 indices_current_.unique_integers(),
@@ -428,7 +441,11 @@ std::vector<std::pair<Float, std::array<Float, 3>>> Avg::calc_pairs(
                 eta2_old_ ) );
         }
 
+    // TODO: Reinsert avg_null.
+
     update_etas_old( _old_weight );
+
+    update_ = enums::Update::calc_diff;
 
     // -------------------------------------------------------------
 
@@ -436,29 +453,6 @@ std::vector<std::pair<Float, std::array<Float, 3>>> Avg::calc_pairs(
         {
             indices_current_.clear();
         }
-
-    // -----------------------------------------------------------------
-
-    /*for ( const auto& w : weights )
-        {
-            assert_true( !std::isinf( std::get<0>( w ) ) );
-            assert_true( !std::isinf( std::get<1>( w ) ) );
-            assert_true( !std::isinf( std::get<2>( w ) ) );
-
-            if ( std::isnan( std::get<0>( w ) ) )
-                {
-                    continue;
-                }
-
-            assert_true(
-                !std::isnan( std::get<1>( w ) ) ||
-                !std::isnan( std::get<2>( w ) ) );
-
-            const auto loss_reduction =
-                evaluate_split( _old_intercept, _old_weight, w );
-
-            results.push_back( std::make_pair( loss_reduction, w ) );
-        }*/
 
     // -------------------------------------------------------------
 
@@ -907,6 +901,8 @@ void Avg::revert( const Float _old_weight )
         {
             child_->calc_etas(
                 enums::Aggregation::avg,
+                update_,
+                _old_weight,
                 indices_current_.unique_integers(),
                 eta1_,
                 eta1_old_,
@@ -916,6 +912,8 @@ void Avg::revert( const Float _old_weight )
 
     child_->calc_etas(
         enums::Aggregation::avg_second_null,
+        update_,
+        _old_weight,
         indices_current_.unique_integers(),
         eta1_2_null_,
         eta1_2_null_old_,
@@ -924,6 +922,8 @@ void Avg::revert( const Float _old_weight )
 
     child_->calc_etas(
         enums::Aggregation::avg_first_null,
+        update_,
+        _old_weight,
         indices_current_.unique_integers(),
         eta2_1_null_,
         eta2_1_null_old_,
@@ -931,6 +931,8 @@ void Avg::revert( const Float _old_weight )
         w_fixed_2_old_ );
 
     update_etas_old( _old_weight );
+
+    update_ = enums::Update::calc_diff;
 
     // -------------------------------------------------------------
 

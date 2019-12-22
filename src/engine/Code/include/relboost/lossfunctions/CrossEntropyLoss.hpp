@@ -21,8 +21,6 @@ class CrossEntropyLoss : public LossFunction
           hyperparameters_( _hyperparameters ),
           loss_committed_( 0.0 ),
           loss_old_( 0.0 ),
-          sufficient_stats_(
-              std::array<Float, 6>{0.0, 0.0, 0.0, 0.0, 0.0, 0.0} ),
           sum_h_yhat_committed_( 0.0 ),
           sum_sample_weights_( 0.0 ),
           targets_( _targets ),
@@ -154,21 +152,36 @@ class CrossEntropyLoss : public LossFunction
         return impl_.calc_update_rate( yhat_old_, _predictions, &comm() );
     }
 
-    /// Loss functions have no etas - nothing to do here.
+    /// Calculates the sufficient statistics.
     void calc_etas(
         const enums::Aggregation _agg,
+        const enums::Update _update,
+        const Float _old_weight,
         const std::vector<size_t>& _indices_current,
         const std::vector<Float>& _eta1,
         const std::vector<Float>& _eta1_old,
         const std::vector<Float>& _eta2,
         const std::vector<Float>& _eta2_old ) final
     {
+        impl_.calc_sufficient_stats(
+            _agg,
+            _update,
+            _old_weight,
+            _indices_current,
+            _eta1,
+            _eta1_old,
+            _eta2,
+            _eta2_old,
+            yhat_committed_,
+            &sufficient_stats_relboost_ );
     }
 
     /// Calculates new pair of weights and the associated partial_loss
     /// given eta and indices.
     std::pair<Float, std::array<Float, 3>> calc_pair(
         const enums::Aggregation _agg,
+        const enums::Revert _revert,
+        const enums::Update _update,
         const Float _old_weight,
         const std::vector<size_t>& _indices,
         const std::vector<size_t>& _indices_current,
@@ -177,13 +190,22 @@ class CrossEntropyLoss : public LossFunction
         const std::vector<Float>& _eta2,
         const std::vector<Float>& _eta2_old ) final
     {
+        assert_true(
+            _update != enums::Update::calc_all ||
+            _indices_current.size() == _indices.size() );
+
         return impl_.calc_pair(
             _agg,
+            _revert,
+            _update,
             _old_weight,
-            _indices,
+            _indices_current,
             _eta1,
+            _eta1_old,
             _eta2,
+            _eta2_old,
             yhat_committed_,
+            &sufficient_stats_relboost_,
             &comm() );
     }
 
@@ -208,7 +230,7 @@ class CrossEntropyLoss : public LossFunction
             _split_end,
             _end,
             &loss_old_,
-            &sufficient_stats_,
+            &sufficient_stats_xgboost_,
             &comm() );
 
         if ( std::isnan( p.first ) )
@@ -541,9 +563,13 @@ class CrossEntropyLoss : public LossFunction
     /// The sampler used to determine the sample weights.
     std::unique_ptr<utils::Sampler> sampler_;
 
+    /// The sufficient statistics needed to apply the relboost formula
+    /// (needed for calc_pair).
+    std::array<Float, 12> sufficient_stats_relboost_;
+
     /// The sufficient statistics needed to apply the xgboost formula
     /// (needed for calc_pairs).
-    std::array<Float, 6> sufficient_stats_;
+    std::array<Float, 6> sufficient_stats_xgboost_;
 
     /// Sum of g_, needed for the intercept.
     Float sum_g_;

@@ -24,9 +24,12 @@ class LossFunction
 
     /// Only calculates the etas given values from a parent aggregation
     /// without calculating the weights.
+    /// The loss functions then calculate the sufficient statistics.
     /// This is needed for reverting the last split.
     virtual void calc_etas(
         const enums::Aggregation _agg,
+        const enums::Update _update,
+        const Float _old_weight,
         const std::vector<size_t>& _indices_current,
         const std::vector<Float>& _eta1,
         const std::vector<Float>& _eta1_old,
@@ -54,6 +57,8 @@ class LossFunction
     /// a parent aggregation.
     virtual std::pair<Float, std::array<Float, 3>> calc_pair(
         const enums::Aggregation _agg,
+        const enums::Revert _revert,
+        const enums::Update _update,
         const Float _old_weight,
         const std::vector<size_t>& _indices,
         const std::vector<size_t>& _indices_current,

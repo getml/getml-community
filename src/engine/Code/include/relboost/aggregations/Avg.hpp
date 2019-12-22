@@ -93,6 +93,8 @@ class Avg : public lossfunctions::LossFunction
     /// iteration's variables without calculating the weights.
     void calc_etas(
         const enums::Aggregation _agg,
+        const enums::Update _update,
+        const Float _old_weight,
         const std::vector<size_t>& _indices_current,
         const std::vector<Float>& _eta1,
         const std::vector<Float>& _eta1_old,
@@ -103,6 +105,8 @@ class Avg : public lossfunctions::LossFunction
     /// iteration's variables.
     std::pair<Float, std::array<Float, 3>> calc_pair(
         const enums::Aggregation _agg,
+        const enums::Revert _revert,
+        const enums::Update _update,
         const Float _old_weight,
         const std::vector<size_t>& _indices,
         const std::vector<size_t>& _indices_current,
@@ -432,6 +436,10 @@ class Avg : public lossfunctions::LossFunction
 
     /// The indices of the output table.
     std::vector<std::shared_ptr<containers::Index>> output_indices_;
+
+    // Indicates whether all sufficient statistics need to be updated by the
+    // loss function.
+    enums::Update update_;
 
     /// The fixed weights when weight 2 is NULL.
     std::vector<Float> w_fixed_1_;

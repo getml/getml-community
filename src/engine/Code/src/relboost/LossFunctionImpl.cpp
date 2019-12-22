@@ -361,96 +361,41 @@ std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_pair_avg_null(
 // ----------------------------------------------------------------------------
 
 std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_pair_non_null(
+    const enums::Update _update,
     const Float _old_weight,
-    const std::vector<size_t>& _indices,
+    const std::vector<size_t>& _indices_current,
     const std::vector<Float>& _eta1,
+    const std::vector<Float>& _eta1_old,
     const std::vector<Float>& _eta2,
+    const std::vector<Float>& _eta2_old,
     const std::vector<Float>& _yhat_committed,
+    std::array<Float, 12>* _sufficient_stats,
     multithreading::Communicator* _comm ) const
 {
     // ------------------------------------------------------------------------
 
-    assert_true( _eta1.size() == targets().size() );
-    assert_true( _eta2.size() == targets().size() );
-    assert_true( g_.size() == targets().size() );
-    assert_true( h_.size() == targets().size() );
-
-    assert_true( sample_weights_ );
-    assert_true( sample_weights_->size() == targets().size() );
-
-    // ------------------------------------------------------------------------
-    // Calculate g_eta_arr.
-
-    std::array<Float, 3> g_eta_arr = {0.0, 0.0, 0.0};
-
-    // The intercept term.
-    g_eta_arr[0] = -sum_g_;
-
-    for ( const auto ix : _indices )
-        {
-            assert_true( ix < targets().size() );
-            g_eta_arr[1] -= g_[ix] * _eta1[ix] * sample_weights( ix );
-            g_eta_arr[2] -= g_[ix] * _eta2[ix] * sample_weights( ix );
-        }
+    calc_sufficient_stats_non_null(
+        _update,
+        _old_weight,
+        _indices_current,
+        _eta1,
+        _eta1_old,
+        _eta2,
+        _eta2_old,
+        _yhat_committed,
+        _sufficient_stats );
 
     // ------------------------------------------------------------------------
-    // Calculate h_w_const_arr.
+    // Reduce sufficient stats.
 
-    std::array<Float, 3> h_w_const_arr = {0.0, 0.0, 0.0};
+    auto sufficient_stats_global = *_sufficient_stats;
 
-    h_w_const_arr[0] = -sum_h_yhat_committed_;
+    utils::Reducer::reduce<12>(
+        std::plus<Float>(), &sufficient_stats_global, _comm );
 
-    for ( const auto ix : _indices )
-        {
-            const auto w_old = _old_weight * ( _eta1[ix] + _eta2[ix] );
-            const auto w_fixed = _yhat_committed[ix] - w_old;
-
-            assert_true( sample_weights( ix ) > 0.0 );
-
-            h_w_const_arr[0] += h_[ix] * w_old * sample_weights( ix );
-            h_w_const_arr[1] -=
-                h_[ix] * w_fixed * _eta1[ix] * sample_weights( ix );
-            h_w_const_arr[2] -=
-                h_[ix] * w_fixed * _eta2[ix] * sample_weights( ix );
-        }
-
-    // ------------------------------------------------------------------------
-    // Calculate A_arr.
-
-    std::array<Float, 6> A_arr = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-
-    // The intercept term.
-    A_arr[0] =
-        sum_h_ + hyperparameters().reg_lambda_ *
-                     static_cast<Float>( targets().size() );  // A( 0, 0 )
-
-    for ( const auto ix : _indices )
-        {
-            assert_true( ix < targets().size() );
-
-            A_arr[1] += h_[ix] * _eta1[ix] * sample_weights( ix );  // A( 0, 1 )
-
-            A_arr[2] +=
-                h_[ix] * _eta2[ix] * sample_weights( ix );  //  A( 0, 2 )
-
-            A_arr[3] += ( h_[ix] * _eta1[ix] + hyperparameters().reg_lambda_ ) *
-                        _eta1[ix] * sample_weights( ix );  // A( 1, 1 )
-
-            A_arr[4] += h_[ix] * _eta1[ix] * _eta2[ix] *
-                        sample_weights( ix );  // A( 1, 2 )
-
-            A_arr[5] += ( h_[ix] * _eta2[ix] + hyperparameters().reg_lambda_ ) *
-                        _eta2[ix] * sample_weights( ix );  // A( 2, 2 )
-        }
-
-    // ------------------------------------------------------------------------
-    // Reduce.
-
-    utils::Reducer::reduce<3>( std::plus<Float>(), &g_eta_arr, _comm );
-
-    utils::Reducer::reduce<3>( std::plus<Float>(), &h_w_const_arr, _comm );
-
-    utils::Reducer::reduce<6>( std::plus<Float>(), &A_arr, _comm );
+    const auto g_eta_arr = sufficient_stats_global.data();
+    const auto h_w_const_arr = sufficient_stats_global.data() + 3;
+    const auto A_arr = sufficient_stats_global.data() + 6;
 
     // ------------------------------------------------------------------------
     // Transfer data to Eigen::Matrix.
@@ -640,6 +585,138 @@ std::vector<size_t> LossFunctionImpl::calc_sample_index(
         }
 
     return sample_index;
+}
+
+// ----------------------------------------------------------------------------
+
+void LossFunctionImpl::calc_sufficient_stats_non_null(
+    const enums::Update _update,
+    const Float _old_weight,
+    const std::vector<size_t>& _indices_current,
+    const std::vector<Float>& _eta1,
+    const std::vector<Float>& _eta1_old,
+    const std::vector<Float>& _eta2,
+    const std::vector<Float>& _eta2_old,
+    const std::vector<Float>& _yhat_committed,
+    std::array<Float, 12>* _sufficient_stats ) const
+{
+    // ------------------------------------------------------------------------
+
+    assert_true( _eta1.size() == targets().size() );
+    assert_true( _eta2.size() == targets().size() );
+    assert_true( _eta1_old.size() == targets().size() );
+    assert_true( _eta2_old.size() == targets().size() );
+    assert_true( g_.size() == targets().size() );
+    assert_true( h_.size() == targets().size() );
+
+    assert_true( sample_weights_ );
+    assert_true( sample_weights_->size() == targets().size() );
+
+    // ------------------------------------------------------------------------
+
+    if ( _update == enums::Update::calc_all )
+        {
+            std::fill(
+                _sufficient_stats->begin(), _sufficient_stats->end(), 0.0 );
+        }
+
+    // ------------------------------------------------------------------------
+
+    auto g_eta_arr = _sufficient_stats->data();
+    auto h_w_const_arr = _sufficient_stats->data() + 3;
+    auto A_arr = _sufficient_stats->data() + 6;
+
+    // ------------------------------------------------------------------------
+    // Calculate g_eta_arr.
+
+    // The intercept term.
+    g_eta_arr[0] = -sum_g_;
+
+    for ( const auto ix : _indices_current )
+        {
+            assert_true( ix < targets().size() );
+
+            const auto d_eta1 = _eta1[ix] - _eta1_old[ix];
+            const auto d_eta2 = _eta2[ix] - _eta2_old[ix];
+
+            g_eta_arr[1] -= g_[ix] * d_eta1 * sample_weights( ix );
+            g_eta_arr[2] -= g_[ix] * d_eta2 * sample_weights( ix );
+        }
+
+    // ------------------------------------------------------------------------
+    // Calculate h_w_const_arr.
+    // NOTE: w_fixed = yhat_committed - impact of old weight.
+
+    // The intercept term
+    if ( _update == enums::Update::calc_all )
+        {
+            h_w_const_arr[0] = -sum_h_yhat_committed_;
+
+            for ( const auto ix : _indices_current )
+                {
+                    assert_true( _eta1_old[ix] == 0.0 );
+                    assert_true( _eta2_old[ix] == 0.0 );
+
+                    const auto w_old = _old_weight * ( _eta1[ix] + _eta2[ix] );
+
+                    h_w_const_arr[0] += h_[ix] * w_old * sample_weights( ix );
+                }
+        }
+
+    for ( const auto ix : _indices_current )
+        {
+            const auto w_old = _old_weight * ( _eta1[ix] + _eta2[ix] );
+            const auto w_fixed = _yhat_committed[ix] - w_old;
+
+            const auto d_eta1 = _eta1[ix] - _eta1_old[ix];
+            const auto d_eta2 = _eta2[ix] - _eta2_old[ix];
+
+            h_w_const_arr[1] -=
+                h_[ix] * w_fixed * d_eta1 * sample_weights( ix );
+            h_w_const_arr[2] -=
+                h_[ix] * w_fixed * d_eta2 * sample_weights( ix );
+        }
+
+    // ------------------------------------------------------------------------
+    // Calculate A_arr.
+
+    // The intercept term.
+    // TODO: Fix regularization parameter.
+    A_arr[0] =
+        sum_h_ + hyperparameters().reg_lambda_ *
+                     static_cast<Float>( targets().size() );  // A( 0, 0 )
+
+    for ( const auto ix : _indices_current )
+        {
+            assert_true( ix < targets().size() );
+
+            const auto d_eta1 = _eta1[ix] - _eta1_old[ix];
+            const auto d_eta2 = _eta2[ix] - _eta2_old[ix];
+
+            A_arr[1] += h_[ix] * d_eta1 * sample_weights( ix );  // A( 0, 1 )
+
+            A_arr[2] += h_[ix] * d_eta2 * sample_weights( ix );  //  A( 0, 2 )
+
+            A_arr[3] += ( h_[ix] * _eta1[ix] + hyperparameters().reg_lambda_ ) *
+                        _eta1[ix] * sample_weights( ix );  // A( 1, 1 )
+
+            A_arr[3] -=
+                ( h_[ix] * _eta1_old[ix] + hyperparameters().reg_lambda_ ) *
+                _eta1_old[ix] * sample_weights( ix );  // A( 1, 1 )
+
+            A_arr[4] += h_[ix] * _eta1[ix] * _eta2[ix] *
+                        sample_weights( ix );  // A( 1, 2 )
+
+            A_arr[4] -= h_[ix] * _eta1_old[ix] * _eta2_old[ix] *
+                        sample_weights( ix );  // A( 1, 2 )
+
+            A_arr[5] += ( h_[ix] * _eta2[ix] + hyperparameters().reg_lambda_ ) *
+                        _eta2[ix] * sample_weights( ix );  // A( 2, 2 )
+
+            A_arr[5] -=
+                ( h_[ix] * _eta2_old[ix] + hyperparameters().reg_lambda_ ) *
+                _eta2_old[ix] * sample_weights( ix );  // A( 2, 2 )
+        }
 }
 
 // ----------------------------------------------------------------------------

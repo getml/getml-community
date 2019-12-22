@@ -266,7 +266,7 @@ void DecisionTreeNode::fit(
 
     debug_log( "loss_reduction: " + std::to_string( loss_reduction ) );
 
-    if ( loss_reduction < hyperparameters().gamma_ + 1e-07 )
+    if ( loss_reduction < hyperparameters().gamma_ )
         {
             loss_function().revert_to_commit();
             return;
