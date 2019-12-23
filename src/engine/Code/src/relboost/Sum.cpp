@@ -321,32 +321,7 @@ Float Sum::evaluate_split(
 
     calc_yhat( _old_weight, _weights );
 
-    return child_->evaluate_split(
-        _old_intercept,
-        _old_weight,
-        _weights,
-        indices_.unique_integers(),
-        eta1_,
-        eta2_ );
-}
-
-// ----------------------------------------------------------------------------
-
-Float Sum::evaluate_split(
-    const Float _old_intercept,
-    const Float _old_weight,
-    const std::array<Float, 3>& _weights,
-    const std::vector<size_t>& _indices,
-    const std::vector<Float>& _eta1,
-    const std::vector<Float>& _eta2 )
-{
-    return child_->evaluate_split(
-        _old_intercept,
-        _old_weight,
-        _weights,
-        indices_.unique_integers(),
-        eta1_,
-        eta2_ );
+    return child_->evaluate_split( _old_intercept, _old_weight, _weights );
 }
 
 // ----------------------------------------------------------------------------

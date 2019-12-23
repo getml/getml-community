@@ -115,15 +115,11 @@ class LossFunction
     /// aggregation, will be able to calculate its own depth.
     virtual size_t depth() const = 0;
 
-    /// _indices refer to the values in _yhat_committed and _yhat
-    /// that have actually changed.
+    // Returns the loss functions assiciated with a split.
     virtual Float evaluate_split(
         const Float _old_intercept,
         const Float _old_weight,
-        const std::array<Float, 3>& _weights,
-        const std::vector<size_t>& _indices,
-        const std::vector<Float>& _eta1,
-        const std::vector<Float>& _eta2 ) = 0;
+        const std::array<Float, 3>& _weights ) = 0;
 
     /// Returns the loss reduction associated with a split.
     virtual Float evaluate_split(

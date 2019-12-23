@@ -41,14 +41,9 @@ class LossFunctionImpl
    public:
     /// Calculates the regularization of the weights.
     Float calc_regularization_reduction(
-        const std::vector<Float>& _eta1,
-        const std::vector<Float>& _eta2,
-        const std::vector<size_t>& _indices,
         const Float _old_intercept,
         const Float _old_weight,
-        const std::array<Float, 3>& _weights,
-        const Float _sum_sample_weights,
-        multithreading::Communicator* _comm ) const;
+        const std::array<Float, 3>& _weights ) const;
 
     /// Calculates the sample index (which contains the indices of all samples
     /// with non-zero sample weight).
@@ -294,14 +289,6 @@ class LossFunctionImpl
         std::array<Float, 6>* _sufficient_stats,
         multithreading::Communicator* _comm ) const;
 
-    /// Calculate the regularization reduction when one of the weights is nan.
-    Float calc_regularization_reduction(
-        const std::vector<Float>& _eta_old,
-        const std::vector<Float>& _eta_new,
-        const std::vector<size_t>& _indices,
-        const Float _old_weight,
-        const Float _new_weight ) const;
-
     /// Calculates two new weights given eta and indices when the aggregation at
     /// the lowest level is AVG or SUM and there are no NULL values.
     std::pair<Float, std::array<Float, 3>> calc_pair_non_null(
@@ -368,10 +355,9 @@ class LossFunctionImpl
     /// Applies the XGBoost formula to calculate the weight and loss.
     /// See Chen and Guestrin, 2016, XGBoost: A Scalable Tree Boosting System
     std::pair<Float, Float> apply_xgboost(
-        const Float _sum_g, const Float _sum_h, const Float _n ) const
+        const Float _sum_g, const Float _sum_h ) const
     {
-        const auto weight =
-            _sum_g / ( _sum_h + _n * hyperparameters().reg_lambda_ );
+        const auto weight = _sum_g / ( _sum_h + hyperparameters().reg_lambda_ );
         const auto loss = -0.5 * _sum_g * weight;
         return std::make_pair( loss, weight );
     }

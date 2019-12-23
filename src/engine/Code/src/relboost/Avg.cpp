@@ -765,35 +765,20 @@ Float Avg::evaluate_split(
         {
             assert_true( !std::isnan( std::get<1>( _weights ) ) );
 
-            loss_reduction = child_->evaluate_split(
-                _old_intercept,
-                _old_weight,
-                _weights,
-                indices_.unique_integers(),
-                eta1_2_null_,
-                eta_old_ );
+            loss_reduction =
+                child_->evaluate_split( _old_intercept, _old_weight, _weights );
         }
     else if ( std::isnan( std::get<1>( _weights ) ) )
         {
             assert_true( !std::isnan( std::get<2>( _weights ) ) );
 
-            loss_reduction = child_->evaluate_split(
-                _old_intercept,
-                _old_weight,
-                _weights,
-                indices_.unique_integers(),
-                eta2_1_null_,
-                eta_old_ );
+            loss_reduction =
+                child_->evaluate_split( _old_intercept, _old_weight, _weights );
         }
     else
         {
-            loss_reduction = child_->evaluate_split(
-                _old_intercept,
-                _old_weight,
-                _weights,
-                indices_.unique_integers(),
-                eta1_,
-                eta2_ );
+            loss_reduction =
+                child_->evaluate_split( _old_intercept, _old_weight, _weights );
         }
 
     // -----------------------------------------------------------------
@@ -801,25 +786,6 @@ Float Avg::evaluate_split(
     return loss_reduction;
 
     // -----------------------------------------------------------------
-}
-
-// ----------------------------------------------------------------------------
-
-Float Avg::evaluate_split(
-    const Float _old_intercept,
-    const Float _old_weight,
-    const std::array<Float, 3>& _weights,
-    const std::vector<size_t>& _indices,
-    const std::vector<Float>& _eta1,
-    const std::vector<Float>& _eta2 )
-{
-    return child_->evaluate_split(
-        _old_intercept,
-        _old_weight,
-        _weights,
-        indices_.unique_integers(),
-        eta1_,
-        eta2_ );
 }
 
 // ----------------------------------------------------------------------------

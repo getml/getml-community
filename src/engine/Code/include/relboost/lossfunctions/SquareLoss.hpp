@@ -263,21 +263,11 @@ class SquareLoss : public LossFunction
     Float evaluate_split(
         const Float _old_intercept,
         const Float _old_weight,
-        const std::array<Float, 3>& _weights,
-        const std::vector<size_t>& _indices,
-        const std::vector<Float>& _eta1,
-        const std::vector<Float>& _eta2 )
+        const std::array<Float, 3>& _weights ) final
     {
         return loss_committed_ - calc_loss( _weights ) +
                impl_.calc_regularization_reduction(
-                   _eta1,
-                   _eta2,
-                   _indices,
-                   _old_intercept,
-                   _old_weight,
-                   _weights,
-                   sum_sample_weights_,
-                   &comm() );
+                   _old_intercept, _old_weight, _weights );
     }
 
     /// Returns the loss reduction associated with a split.

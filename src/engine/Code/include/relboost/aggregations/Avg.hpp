@@ -149,15 +149,6 @@ class Avg : public lossfunctions::LossFunction
         const Float _old_intercept,
         const Float _old_weight,
         const std::array<Float, 3>& _weights,
-        const std::vector<size_t>& _indices,
-        const std::vector<Float>& _eta1,
-        const std::vector<Float>& _eta2 ) final;
-
-    /// Returns the loss reduction associated with a split.
-    Float evaluate_split(
-        const Float _old_intercept,
-        const Float _old_weight,
-        const std::array<Float, 3>& _weights,
         const std::vector<containers::Match>::iterator _begin,
         const std::vector<containers::Match>::iterator _split,
         const std::vector<containers::Match>::iterator _end ) final;
@@ -230,6 +221,15 @@ class Avg : public lossfunctions::LossFunction
     {
         child_->commit( intermediate_agg().indices(), _weights );
         intermediate_agg().reset( false );
+    }
+
+    /// Returns the loss reduction associated with a split.
+    Float evaluate_split(
+        const Float _old_intercept,
+        const Float _old_weight,
+        const std::array<Float, 3>& _weights ) final
+    {
+        return child_->evaluate_split( _old_intercept, _old_weight, _weights );
     }
 
     /// Evaluates an entire tree.

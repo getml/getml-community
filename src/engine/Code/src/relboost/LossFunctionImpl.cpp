@@ -78,8 +78,7 @@ std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_all(
 
     utils::Reducer::reduce<6>( std::plus<Float>(), _sufficient_stats, _comm );
 
-    *_loss_old =
-        apply_xgboost( sum_g1 + sum_g2, sum_h1 + sum_h2, n1 + n2 ).first;
+    *_loss_old = apply_xgboost( sum_g1 + sum_g2, sum_h1 + sum_h2 ).first;
 
     // ------------------------------------------------------------------------
 
@@ -94,9 +93,9 @@ std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_all(
 
     // ------------------------------------------------------------------------
 
-    const auto [loss1, weight1] = apply_xgboost( sum_g1, sum_h1, n1 );
+    const auto [loss1, weight1] = apply_xgboost( sum_g1, sum_h1 );
 
-    const auto [loss2, weight2] = apply_xgboost( sum_g2, sum_h2, n2 );
+    const auto [loss2, weight2] = apply_xgboost( sum_g2, sum_h2 );
 
     const auto loss_reduction = *_loss_old - loss1 - loss2;
 
@@ -206,9 +205,9 @@ std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_diff(
 
     // ------------------------------------------------------------------------
 
-    const auto [loss1, weight1] = apply_xgboost( sum_g1, sum_h1, n1 );
+    const auto [loss1, weight1] = apply_xgboost( sum_g1, sum_h1 );
 
-    const auto [loss2, weight2] = apply_xgboost( sum_g2, sum_h2, n2 );
+    const auto [loss2, weight2] = apply_xgboost( sum_g2, sum_h2 );
 
     // ------------------------------------------------------------------------
 
@@ -445,25 +444,14 @@ std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_pair_non_null(
 // ----------------------------------------------------------------------------
 
 Float LossFunctionImpl::calc_regularization_reduction(
-    const std::vector<Float>& _eta1,
-    const std::vector<Float>& _eta2,
-    const std::vector<size_t>& _indices,
     const Float _old_intercept,
     const Float _old_weight,
-    const std::array<Float, 3>& _weights,
-    const Float _sum_sample_weights,
-    multithreading::Communicator* _comm ) const
+    const std::array<Float, 3>& _weights ) const
 {
     // ------------------------------------------------------------------------
 
     assert_true( !std::isnan( std::get<0>( _weights ) ) );
     assert_true( !std::isnan( _old_intercept ) );
-
-    assert_true( _eta1.size() == _eta2.size() );
-    assert_true( _eta1.size() == targets().size() );
-
-    assert_true( sample_weights_ );
-    assert_true( _eta1.size() == sample_weights_->size() );
 
     // ------------------------------------------------------------------------
 
@@ -474,97 +462,35 @@ Float LossFunctionImpl::calc_regularization_reduction(
 
     // ------------------------------------------------------------------------
 
-    Float regularization = 0.0;
+    const auto new_intercept = std::get<0>( _weights );
+    const auto new_weight1 = std::get<1>( _weights );
+    const auto new_weight2 = std::get<2>( _weights );
 
-    if ( std::isnan( std::get<1>( _weights ) ) )
+    Float regularization =
+        _old_intercept * _old_intercept - new_intercept * new_intercept;
+
+    if ( std::isnan( new_weight1 ) )
         {
-            // In the case of of the weights being nan, _eta2 plays the role
-            // of _eta_old and _eta1 plays _eta_new.
-
-            regularization += calc_regularization_reduction(
-                _eta2, _eta1, _indices, _old_weight, std::get<2>( _weights ) );
+            regularization +=
+                _old_weight * _old_weight - new_weight2 * new_weight2;
         }
-    else if ( std::isnan( std::get<2>( _weights ) ) )
+    else if ( std::isnan( new_weight2 ) )
         {
-            // In the case of of the weights being nan, _eta2 plays the role
-            // of _eta_old and _eta1 plays _eta_new.
-
-            regularization += calc_regularization_reduction(
-                _eta2, _eta1, _indices, _old_weight, std::get<1>( _weights ) );
+            regularization +=
+                _old_weight * _old_weight - new_weight1 * new_weight1;
         }
     else
         {
-            for ( size_t ix : _indices )
-                {
-                    assert_true( ix < targets().size() );
-                    regularization +=
-                        sample_weights( ix ) *
-                        ( _old_weight * _old_weight *
-                              ( _eta1[ix] + _eta2[ix] ) -
-                          std::get<1>( _weights ) * std::get<1>( _weights ) *
-                              _eta1[ix] +
-                          std::get<2>( _weights ) * std::get<2>( _weights ) *
-                              _eta2[ix] );
-                }
+            regularization += _old_weight * _old_weight -
+                              new_weight1 * new_weight1 -
+                              new_weight2 * new_weight2;
         }
-
-    // ------------------------------------------------------------------------
-
-    utils::Reducer::reduce( std::plus<Float>(), &regularization, _comm );
-
-    // ------------------------------------------------------------------------
-
-    regularization /= _sum_sample_weights;
-
-    regularization +=
-        ( _old_intercept * _old_intercept -
-          std::get<0>( _weights ) * std::get<0>( _weights ) );
 
     // ------------------------------------------------------------------------
 
     return 0.5 * hyperparameters().reg_lambda_ * regularization;
-}
 
-// ----------------------------------------------------------------------------
-
-Float LossFunctionImpl::calc_regularization_reduction(
-    const std::vector<Float>& _eta_old,
-    const std::vector<Float>& _eta_new,
-    const std::vector<size_t>& _indices,
-    const Float _old_weight,
-    const Float _new_weight ) const
-{
-    assert_true( _eta_old.size() == targets().size() );
-    assert_true( _eta_new.size() == targets().size() );
-
-    assert_true( sample_weights_ );
-    assert_true( sample_weights_->size() == targets().size() );
-
-    Float regularization = 0.0;
-
-    if ( std::isnan( _old_weight ) )
-        {
-            for ( size_t ix : _indices )
-                {
-                    assert_true( ix < targets().size() );
-                    regularization -=
-                        sample_weights( ix ) *
-                        ( _new_weight * _new_weight * _eta_new[ix] );
-                }
-        }
-    else
-        {
-            for ( size_t ix : _indices )
-                {
-                    assert_true( ix < targets().size() );
-                    regularization +=
-                        sample_weights( ix ) *
-                        ( _old_weight * _old_weight * _eta_old[ix] -
-                          _new_weight * _new_weight * _eta_new[ix] );
-                }
-        }
-
-    return regularization;
+    // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -680,42 +606,39 @@ void LossFunctionImpl::calc_sufficient_stats_non_null(
     // ------------------------------------------------------------------------
     // Calculate A_arr.
 
-    // The intercept term.
-    // TODO: Fix regularization parameter.
-    A_arr[0] =
-        sum_h_ + hyperparameters().reg_lambda_ *
-                     static_cast<Float>( targets().size() );  // A( 0, 0 )
+    if ( _update == enums::Update::calc_all )
+        {
+            A_arr[0] = sum_h_ + hyperparameters().reg_lambda_;  // A( 0, 0 )
+            A_arr[3] = hyperparameters().reg_lambda_;           // A( 1, 1 )
+            A_arr[5] = hyperparameters().reg_lambda_;           // A( 2, 2 )
+        }
 
     for ( const auto ix : _indices_current )
         {
             assert_true( ix < targets().size() );
 
             const auto d_eta1 = _eta1[ix] - _eta1_old[ix];
+
             const auto d_eta2 = _eta2[ix] - _eta2_old[ix];
+
+            const auto d_eta11 =
+                _eta1[ix] * _eta1[ix] - _eta1_old[ix] * _eta1_old[ix];
+
+            const auto d_eta22 =
+                _eta2[ix] * _eta2[ix] - _eta2_old[ix] * _eta2_old[ix];
+
+            const auto d_eta12 =
+                _eta1[ix] * _eta2[ix] - _eta1_old[ix] * _eta2_old[ix];
 
             A_arr[1] += h_[ix] * d_eta1 * sample_weights( ix );  // A( 0, 1 )
 
             A_arr[2] += h_[ix] * d_eta2 * sample_weights( ix );  //  A( 0, 2 )
 
-            A_arr[3] += ( h_[ix] * _eta1[ix] + hyperparameters().reg_lambda_ ) *
-                        _eta1[ix] * sample_weights( ix );  // A( 1, 1 )
+            A_arr[3] += h_[ix] * d_eta11 * sample_weights( ix );  // A( 1, 1 )
 
-            A_arr[3] -=
-                ( h_[ix] * _eta1_old[ix] + hyperparameters().reg_lambda_ ) *
-                _eta1_old[ix] * sample_weights( ix );  // A( 1, 1 )
+            A_arr[4] += h_[ix] * d_eta12 * sample_weights( ix );  // A( 1, 2 )
 
-            A_arr[4] += h_[ix] * _eta1[ix] * _eta2[ix] *
-                        sample_weights( ix );  // A( 1, 2 )
-
-            A_arr[4] -= h_[ix] * _eta1_old[ix] * _eta2_old[ix] *
-                        sample_weights( ix );  // A( 1, 2 )
-
-            A_arr[5] += ( h_[ix] * _eta2[ix] + hyperparameters().reg_lambda_ ) *
-                        _eta2[ix] * sample_weights( ix );  // A( 2, 2 )
-
-            A_arr[5] -=
-                ( h_[ix] * _eta2_old[ix] + hyperparameters().reg_lambda_ ) *
-                _eta2_old[ix] * sample_weights( ix );  // A( 2, 2 )
+            A_arr[5] += h_[ix] * d_eta22 * sample_weights( ix );  // A( 2, 2 )
         }
 }
 
