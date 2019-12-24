@@ -492,6 +492,7 @@ void DecisionTreeEnsemble::fit_new_feature(
                 matches,
                 *input_table,
                 output_table,
+                hyperparameters().allow_null_weights_,
                 &comm() ) );
 
             aggregations.push_back( std::make_shared<aggregations::Sum>(

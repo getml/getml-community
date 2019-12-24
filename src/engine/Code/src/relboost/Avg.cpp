@@ -210,13 +210,16 @@ void Avg::calc_all(
     // ------------------------------------------------------------------------
     // Calculate eta1_2_null_, eta2_1_null_, w_fixed_1_ and w_fixed_2_.
 
-    if ( std::isnan( _old_weight ) )
+    if ( allow_null_weights_ )
         {
-            activate( indices_.begin(), indices_.end() );
-        }
-    else
-        {
-            deactivate( _old_weight, indices_.begin(), indices_.end() );
+            if ( std::isnan( _old_weight ) )
+                {
+                    activate( indices_.begin(), indices_.end() );
+                }
+            else
+                {
+                    deactivate( _old_weight, indices_.begin(), indices_.end() );
+                }
         }
 
     // ------------------------------------------------------------------------
@@ -283,14 +286,20 @@ void Avg::calc_diff(
 
     // ------------------------------------------------------------------------
 
-    if ( std::isnan( _old_weight ) )
+    if ( allow_null_weights_ )
         {
-            activate( indices_current_.begin(), indices_current_.end() );
-        }
-    else
-        {
-            deactivate(
-                _old_weight, indices_current_.begin(), indices_current_.end() );
+            if ( std::isnan( _old_weight ) )
+                {
+                    activate(
+                        indices_current_.begin(), indices_current_.end() );
+                }
+            else
+                {
+                    deactivate(
+                        _old_weight,
+                        indices_current_.begin(),
+                        indices_current_.end() );
+                }
         }
 
     // ------------------------------------------------------------------------
@@ -426,6 +435,8 @@ std::vector<std::pair<Float, std::array<Float, 3>>> Avg::calc_pairs(
 
     // -------------------------------------------------------------
 
+    assert_true( !allow_null_weights_ || !std::isnan( _old_weight ) );
+
     if ( !std::isnan( _old_weight ) )
         {
             results.push_back( child_->calc_pair(
@@ -441,7 +452,32 @@ std::vector<std::pair<Float, std::array<Float, 3>>> Avg::calc_pairs(
                 eta2_old_ ) );
         }
 
-    // TODO: Reinsert avg_null.
+    if ( allow_null_weights_ )
+        {
+            results.push_back( child_->calc_pair(
+                enums::Aggregation::avg_second_null,
+                _revert,
+                update_,
+                _old_weight,
+                indices_.unique_integers(),
+                indices_current_.unique_integers(),
+                eta1_2_null_,
+                eta1_2_null_old_,
+                w_fixed_1_,
+                w_fixed_2_old_ ) );
+
+            results.push_back( child_->calc_pair(
+                enums::Aggregation::avg_first_null,
+                _revert,
+                update_,
+                _old_weight,
+                indices_.unique_integers(),
+                indices_current_.unique_integers(),
+                eta2_1_null_,
+                eta2_1_null_old_,
+                w_fixed_2_,
+                w_fixed_2_old_ ) );
+        }
 
     update_etas_old( _old_weight );
 
@@ -641,8 +677,15 @@ void Avg::commit(
     for ( auto ix : indices_ )
         {
             assert_true( ix < count1_.size() );
+
             count1_[ix] = 0.0;
             count2_[ix] = 0.0;
+
+            eta1_2_null_old_[ix] = 0.0;
+            eta2_1_null_old_[ix] = 0.0;
+
+            w_fixed_1_old_[ix] = 0.0;
+            w_fixed_2_old_[ix] = 0.0;
         }
 
         // ------------------------------------------------------------------------
@@ -851,17 +894,25 @@ void Avg::revert( const Float _old_weight )
             count1_[ix] = 0.0;
         }
 
-    if ( std::isnan( _old_weight ) )
+    if ( allow_null_weights_ )
         {
-            activate( indices_current_.begin(), indices_current_.end() );
-        }
-    else
-        {
-            deactivate(
-                _old_weight, indices_current_.begin(), indices_current_.end() );
+            if ( std::isnan( _old_weight ) )
+                {
+                    activate(
+                        indices_current_.begin(), indices_current_.end() );
+                }
+            else
+                {
+                    deactivate(
+                        _old_weight,
+                        indices_current_.begin(),
+                        indices_current_.end() );
+                }
         }
 
     // -------------------------------------------------------------
+
+    assert_true( !allow_null_weights_ || !std::isnan( _old_weight ) );
 
     if ( !std::isnan( _old_weight ) )
         {
@@ -876,25 +927,28 @@ void Avg::revert( const Float _old_weight )
                 eta2_old_ );
         }
 
-    child_->calc_etas(
-        enums::Aggregation::avg_second_null,
-        update_,
-        _old_weight,
-        indices_current_.unique_integers(),
-        eta1_2_null_,
-        eta1_2_null_old_,
-        w_fixed_1_,
-        w_fixed_1_old_ );
+    if ( allow_null_weights_ )
+        {
+            child_->calc_etas(
+                enums::Aggregation::avg_second_null,
+                update_,
+                _old_weight,
+                indices_current_.unique_integers(),
+                eta1_2_null_,
+                eta1_2_null_old_,
+                w_fixed_1_,
+                w_fixed_1_old_ );
 
-    child_->calc_etas(
-        enums::Aggregation::avg_first_null,
-        update_,
-        _old_weight,
-        indices_current_.unique_integers(),
-        eta2_1_null_,
-        eta2_1_null_old_,
-        w_fixed_2_,
-        w_fixed_2_old_ );
+            child_->calc_etas(
+                enums::Aggregation::avg_first_null,
+                update_,
+                _old_weight,
+                indices_current_.unique_integers(),
+                eta2_1_null_,
+                eta2_1_null_old_,
+                w_fixed_2_,
+                w_fixed_2_old_ );
+        }
 
     update_etas_old( _old_weight );
 
@@ -928,23 +982,13 @@ void Avg::revert_to_commit()
             assert_true( ix < count1_.size() );
             count1_[ix] = 0.0;
             count2_[ix] = 0.0;
+
+            eta1_2_null_old_[ix] = 0.0;
+            eta2_1_null_old_[ix] = 0.0;
+
+            w_fixed_1_old_[ix] = 0.0;
+            w_fixed_2_old_[ix] = 0.0;
         }
-
-        // ------------------------------------------------------------------------
-
-#ifndef NDEBUG
-
-    for ( auto val : count1_ )
-        {
-            assert_true( val == 0.0 );
-        }
-
-    for ( auto val : count2_ )
-        {
-            assert_true( val == 0.0 );
-        }
-
-#endif  // NDEBUG
 
     // ------------------------------------------------------------------------
 

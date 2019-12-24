@@ -121,7 +121,9 @@ class SquareLoss : public LossFunction
             _eta2,
             _eta2_old,
             yhat_committed_,
-            &sufficient_stats_relboost_ );
+            &sufficient_stats_non_null_,
+            &sufficient_stats_first_null_,
+            &sufficient_stats_second_null_ );
     }
 
     /// Calculates new pair of weights and the associated partial_loss
@@ -147,13 +149,15 @@ class SquareLoss : public LossFunction
             _revert,
             _update,
             _old_weight,
-            _indices,  // TODO: _indices_current,
+            _indices_current,
             _eta1,
             _eta1_old,
             _eta2,
             _eta2_old,
             yhat_committed_,
-            &sufficient_stats_relboost_,
+            &sufficient_stats_non_null_,
+            &sufficient_stats_first_null_,
+            &sufficient_stats_second_null_,
             &comm() );
     }
 
@@ -443,7 +447,15 @@ class SquareLoss : public LossFunction
 
     /// The sufficient statistics needed to apply the relboost formula
     /// (needed for calc_pair).
-    std::array<Float, 12> sufficient_stats_relboost_;
+    std::array<Float, 8> sufficient_stats_first_null_;
+
+    /// The sufficient statistics needed to apply the relboost formula
+    /// (needed for calc_pair).
+    std::array<Float, 13> sufficient_stats_non_null_;
+
+    /// The sufficient statistics needed to apply the relboost formula
+    /// (needed for calc_pair).
+    std::array<Float, 8> sufficient_stats_second_null_;
 
     /// The sufficient statistics needed to apply the xgboost formula
     /// (needed for calc_pairs).

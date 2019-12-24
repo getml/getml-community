@@ -226,84 +226,46 @@ std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_diff(
 
 std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_pair_avg_null(
     const enums::Aggregation _agg,
+    const enums::Update _update,
     const Float _old_weight,
-    const std::vector<size_t>& _indices,
+    const std::vector<size_t>& _indices_current,
     const std::vector<Float>& _eta,
+    const std::vector<Float>& _eta_old,
     const std::vector<Float>& _w_fixed,
+    const std::vector<Float>& _w_fixed_old,
     const std::vector<Float>& _yhat_committed,
+    std::array<Float, 8>* _sufficient_stats,
     multithreading::Communicator* _comm ) const
 {
     // ------------------------------------------------------------------------
 
-    assert_true( _eta.size() == targets().size() );
-    assert_true( _w_fixed.size() == targets().size() );
-    assert_true( g_.size() == targets().size() );
-    assert_true( h_.size() == targets().size() );
-
-    assert_true( sample_weights_ );
-    assert_true( sample_weights_->size() == targets().size() );
-
-    // ------------------------------------------------------------------------
-    // Calculate g_eta.
-
-    std::array<Float, 2> g_eta_arr = {0.0, 0.0};
-
-    // The intercept term.
-    g_eta_arr[0] = -sum_g_;
-
-    for ( const auto ix : _indices )
-        {
-            assert_true( ix < targets().size() );
-            g_eta_arr[1] -= g_[ix] * _eta[ix] * sample_weights( ix );
-        }
+    calc_sufficient_stats_avg_null(
+        _update,
+        _old_weight,
+        _indices_current,
+        _eta,
+        _eta_old,
+        _w_fixed,
+        _w_fixed_old,
+        _yhat_committed,
+        _sufficient_stats );
 
     // ------------------------------------------------------------------------
-    // Calculate h_w_const.
+    // Reduce sufficient stats.
 
-    std::array<Float, 2> h_w_const_arr = {0.0, 0.0};
+    auto sufficient_stats_global = *_sufficient_stats;
 
-    h_w_const_arr[0] = -sum_h_yhat_committed_;
+    utils::Reducer::reduce<8>(
+        std::plus<Float>(), &sufficient_stats_global, _comm );
 
-    for ( const auto ix : _indices )
-        {
-            assert_true( !std::isnan( _w_fixed[ix] ) );
-            assert_true( ix < targets().size() );
+    const auto g_eta_arr = sufficient_stats_global.data();
+    const auto h_w_const_arr = sufficient_stats_global.data() + 2;
+    const auto A_arr = sufficient_stats_global.data() + 4;
 
-            h_w_const_arr[0] -= h_[ix] *
-                                ( _w_fixed[ix] - _yhat_committed[ix] ) *
-                                sample_weights( ix );
-            h_w_const_arr[1] -=
-                h_[ix] * _w_fixed[ix] * _eta[ix] * sample_weights( ix );
-        }
-
-    // ------------------------------------------------------------------------
-    // Calculate A.
-
-    std::array<Float, 3> A_arr = {0.0, 0.0, 0.0};
-
-    // The intercept term.
-    A_arr[0] =
-        sum_h_ + hyperparameters().reg_lambda_ *
-                     static_cast<Float>( targets().size() );  // A( 0, 0 )
-
-    for ( const auto ix : _indices )
-        {
-            assert_true( ix < targets().size() );
-
-            A_arr[1] += h_[ix] * _eta[ix] * sample_weights( ix );  // A( 0, 1 )
-
-            A_arr[2] += ( h_[ix] * _eta[ix] + hyperparameters().reg_lambda_ ) *
-                        _eta[ix] * sample_weights( ix );  // A( 1, 1 )
-        }
-
-    // ------------------------------------------------------------------------
-    // Reduce.
-
-    utils::Reducer::reduce<2>( std::plus<Float>(), &g_eta_arr, _comm );
-
-    utils::Reducer::reduce<2>( std::plus<Float>(), &h_w_const_arr, _comm );
-
-    utils::Reducer::reduce<3>( std::plus<Float>(), &A_arr, _comm );
+    // loss_w_fixed is the partial loss incurred by the fixed weights.
+    // It can change when weights are set to NULL and is necessary for a
+    // fair comparison.
+    const auto& loss_w_fixed = *( sufficient_stats_global.data() + 7 );
 
     // ------------------------------------------------------------------------
     // Transfer data to Eigen::Matrix.
@@ -324,30 +286,33 @@ std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_pair_avg_null(
     // ------------------------------------------------------------------------
     // Calculate b.
 
-    const auto b = g_eta + h_w_const;
+    auto b = g_eta + h_w_const;
 
     // ------------------------------------------------------------------------
     // Calculate weight by solving A*weight = b.
 
     Eigen::Matrix<Float, 2, 1> weights = A.fullPivLu().solve( b );
 
-    const auto partial_loss = -0.5 * weights.dot( b );
+    const auto partial_loss = -0.5 * weights.dot( b ) + loss_w_fixed;
 
     // ------------------------------------------------------------------------
 
     auto weights_arr = std::array<Float, 3>{0.0, 0.0, 0.0};
 
-    if ( _agg == enums::Aggregation::avg_first_null )
+    switch ( _agg )
         {
-            weights_arr = std::array<Float, 3>( {weights[0], NAN, weights[1]} );
-        }
-    else if ( _agg == enums::Aggregation::avg_second_null )
-        {
-            weights_arr = std::array<Float, 3>( {weights[0], weights[1], NAN} );
-        }
-    else
-        {
-            assert_true( false && "Aggregation type not known!" );
+            case enums::Aggregation::avg_first_null:
+                weights_arr =
+                    std::array<Float, 3>( {weights[0], NAN, weights[1]} );
+                break;
+
+            case enums::Aggregation::avg_second_null:
+                weights_arr =
+                    std::array<Float, 3>( {weights[0], weights[1], NAN} );
+                break;
+
+            default:
+                assert_true( false && "Aggregation type not known!" );
         }
 
     // ------------------------------------------------------------------------
@@ -368,7 +333,7 @@ std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_pair_non_null(
     const std::vector<Float>& _eta2,
     const std::vector<Float>& _eta2_old,
     const std::vector<Float>& _yhat_committed,
-    std::array<Float, 12>* _sufficient_stats,
+    std::array<Float, 13>* _sufficient_stats,
     multithreading::Communicator* _comm ) const
 {
     // ------------------------------------------------------------------------
@@ -389,12 +354,17 @@ std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_pair_non_null(
 
     auto sufficient_stats_global = *_sufficient_stats;
 
-    utils::Reducer::reduce<12>(
+    utils::Reducer::reduce<13>(
         std::plus<Float>(), &sufficient_stats_global, _comm );
 
     const auto g_eta_arr = sufficient_stats_global.data();
     const auto h_w_const_arr = sufficient_stats_global.data() + 3;
     const auto A_arr = sufficient_stats_global.data() + 6;
+
+    // loss_w_fixed is the partial loss incurred by the fixed weights.
+    // It can change when weights are set to NULL and is necessary for a
+    // fair comparison.
+    const auto& loss_w_fixed = *( sufficient_stats_global.data() + 12 );
 
     // ------------------------------------------------------------------------
     // Transfer data to Eigen::Matrix.
@@ -429,7 +399,7 @@ std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_pair_non_null(
 
     // ------------------------------------------------------------------------
 
-    const Float partial_loss = -0.5 * b.dot( weights );
+    const Float partial_loss = -0.5 * b.dot( weights ) + loss_w_fixed;
 
     const auto weights_arr =
         std::array<Float, 3>( {weights[0], weights[1], weights[2]} );
@@ -515,6 +485,128 @@ std::vector<size_t> LossFunctionImpl::calc_sample_index(
 
 // ----------------------------------------------------------------------------
 
+void LossFunctionImpl::calc_sufficient_stats_avg_null(
+    const enums::Update _update,
+    const Float _old_weight,
+    const std::vector<size_t>& _indices_current,
+    const std::vector<Float>& _eta,
+    const std::vector<Float>& _eta_old,
+    const std::vector<Float>& _w_fixed,
+    const std::vector<Float>& _w_fixed_old,
+    const std::vector<Float>& _yhat_committed,
+    std::array<Float, 8>* _sufficient_stats ) const
+{
+    // ------------------------------------------------------------------------
+
+    assert_true( _eta.size() == targets().size() );
+    assert_true( _w_fixed.size() == targets().size() );
+    assert_true( _eta_old.size() == targets().size() );
+    assert_true( _w_fixed_old.size() == targets().size() );
+    assert_true( g_.size() == targets().size() );
+    assert_true( h_.size() == targets().size() );
+
+    assert_true( sample_weights_ );
+    assert_true( sample_weights_->size() == targets().size() );
+
+    // ------------------------------------------------------------------------
+
+    if ( _update == enums::Update::calc_all )
+        {
+            std::fill(
+                _sufficient_stats->begin(), _sufficient_stats->end(), 0.0 );
+        }
+
+    // ------------------------------------------------------------------------
+
+    auto g_eta_arr = _sufficient_stats->data();
+    auto h_w_const_arr = _sufficient_stats->data() + 2;
+    auto A_arr = _sufficient_stats->data() + 4;
+
+    // loss_w_fixed is the partial loss incurred by the fixed weights.
+    // It can change when weights are set to NULL and is necessary for a
+    // fair comparison.
+    auto& loss_w_fixed = *( _sufficient_stats->data() + 7 );
+
+    // ------------------------------------------------------------------------
+    // Calculate g_eta.
+
+    // The intercept term.
+    g_eta_arr[0] = -sum_g_;
+
+    for ( const auto ix : _indices_current )
+        {
+            assert_true( ix < targets().size() );
+            assert_true(
+                _update != enums::Update::calc_all || _eta_old[ix] == 0.0 );
+
+            const auto d_eta = _eta[ix] - _eta_old[ix];
+
+            g_eta_arr[1] -= g_[ix] * d_eta * sample_weights( ix );
+        }
+
+    // ------------------------------------------------------------------------
+    // Calculate h_w_const.
+
+    if ( _update == enums::Update::calc_all )
+        {
+            h_w_const_arr[0] = -sum_h_yhat_committed_;
+
+            for ( const auto ix : _indices_current )
+                {
+                    h_w_const_arr[0] -= h_[ix] *
+                                        ( _w_fixed[ix] - _yhat_committed[ix] ) *
+                                        sample_weights( ix );
+                }
+        }
+
+    for ( const auto ix : _indices_current )
+        {
+            assert_true( !std::isnan( _w_fixed[ix] ) );
+            assert_true( ix < targets().size() );
+
+            const auto d_eta = _eta[ix] - _eta_old[ix];
+
+            const auto d_w_fixed = _w_fixed[ix] - _w_fixed_old[ix];
+
+            const auto d_w_fixed2 = _w_fixed[ix] * _w_fixed[ix] -
+                                    _w_fixed_old[ix] * _w_fixed_old[ix];
+
+            h_w_const_arr[1] -=
+                h_[ix] * d_w_fixed * d_eta * sample_weights( ix );
+
+            loss_w_fixed += ( g_[ix] * d_w_fixed + 0.5 * h_[ix] * d_w_fixed2 ) *
+                            sample_weights( ix );
+        }
+
+    // ------------------------------------------------------------------------
+    // Calculate A.
+
+    if ( _update == enums::Update::calc_all )
+        {
+            A_arr[0] = sum_h_ + hyperparameters().reg_lambda_;  // A( 0, 0 )
+
+            A_arr[2] = hyperparameters().reg_lambda_;  // A( 1, 1 )
+        }
+
+    for ( const auto ix : _indices_current )
+        {
+            assert_true( ix < targets().size() );
+
+            const auto d_eta = _eta[ix] - _eta_old[ix];
+
+            const auto d_eta2 =
+                _eta[ix] * _eta[ix] - _eta_old[ix] * _eta_old[ix];
+
+            A_arr[1] += h_[ix] * d_eta * sample_weights( ix );  // A( 0, 1 )
+
+            A_arr[2] += h_[ix] * d_eta2 * sample_weights( ix );  // A( 1, 1 )
+        }
+
+    // ------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
 void LossFunctionImpl::calc_sufficient_stats_non_null(
     const enums::Update _update,
     const Float _old_weight,
@@ -524,7 +616,7 @@ void LossFunctionImpl::calc_sufficient_stats_non_null(
     const std::vector<Float>& _eta2,
     const std::vector<Float>& _eta2_old,
     const std::vector<Float>& _yhat_committed,
-    std::array<Float, 12>* _sufficient_stats ) const
+    std::array<Float, 13>* _sufficient_stats ) const
 {
     // ------------------------------------------------------------------------
 
@@ -552,6 +644,11 @@ void LossFunctionImpl::calc_sufficient_stats_non_null(
     auto h_w_const_arr = _sufficient_stats->data() + 3;
     auto A_arr = _sufficient_stats->data() + 6;
 
+    // loss_w_fixed is the partial loss incurred by the fixed weights.
+    // It can change when weights are set to NULL and is necessary for a
+    // fair comparison.
+    auto& loss_w_fixed = *( _sufficient_stats->data() + 12 );
+
     // ------------------------------------------------------------------------
     // Calculate g_eta_arr.
 
@@ -570,7 +667,7 @@ void LossFunctionImpl::calc_sufficient_stats_non_null(
         }
 
     // ------------------------------------------------------------------------
-    // Calculate h_w_const_arr.
+    // Calculate h_w_const_arr and loss_w_fixed.
     // NOTE: w_fixed = yhat_committed - impact of old weight.
 
     // The intercept term
@@ -584,8 +681,12 @@ void LossFunctionImpl::calc_sufficient_stats_non_null(
                     assert_true( _eta2_old[ix] == 0.0 );
 
                     const auto w_old = _old_weight * ( _eta1[ix] + _eta2[ix] );
+                    const auto w_fixed = _yhat_committed[ix] - w_old;
 
                     h_w_const_arr[0] += h_[ix] * w_old * sample_weights( ix );
+
+                    loss_w_fixed += ( g_[ix] + 0.5 * h_[ix] * w_fixed ) *
+                                    w_fixed * sample_weights( ix );
                 }
         }
 

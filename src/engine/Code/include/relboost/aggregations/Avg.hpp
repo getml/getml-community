@@ -14,12 +14,15 @@ class Avg : public lossfunctions::LossFunction
     // -----------------------------------------------------------------
 
    public:
+    /// Constructor for the lowest level.
     Avg( const std::shared_ptr<lossfunctions::LossFunction>& _child,
          const std::vector<containers::Match>& _matches,
          const containers::DataFrame& _input,
          const containers::DataFrameView& _output,
+         const bool _allow_null_weights,
          multithreading::Communicator* _comm )
-        : child_( _child ),
+        : allow_null_weights_( _allow_null_weights ),
+          child_( _child ),
           comm_( _comm ),
           depth_( _child->depth() + 1 ),
           indices_( _output.nrows() ),
@@ -42,6 +45,7 @@ class Avg : public lossfunctions::LossFunction
         init_count_committed( _matches );
     }
 
+    /// Constructor for an intermediate aggregation.
     Avg( const std::shared_ptr<AggregationIndex>& _agg_index,
          const std::shared_ptr<lossfunctions::LossFunction>& _child,
          const containers::DataFrame& _input,
@@ -51,6 +55,7 @@ class Avg : public lossfunctions::LossFunction
                std::vector<containers::Match>( 0 ),
                _input,
                _output,
+               false,
                _comm )
     {
         agg_index_ = _agg_index;
@@ -58,8 +63,11 @@ class Avg : public lossfunctions::LossFunction
             std::make_shared<IntermediateAggregationImpl>( agg_index_, _child );
     }
 
+    /// Constructor for prediction.
     Avg( const std::shared_ptr<lossfunctions::LossFunction>& _child )
-        : child_( _child ),
+        : allow_null_weights_( false ),  // actually irrelevant, but we don't to
+                                         // leave it uninitialized.
+          child_( _child ),
           comm_( nullptr ),
           depth_( _child->depth() + 1 ),
           indices_( 0 ),
@@ -361,6 +369,9 @@ class Avg : public lossfunctions::LossFunction
     // -----------------------------------------------------------------
 
    private:
+    /// Whether to allow null weights.
+    const bool allow_null_weights_;
+
     /// The aggregation index is needed by the intermediate aggregation.
     std::shared_ptr<AggregationIndex> agg_index_;
 

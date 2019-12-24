@@ -107,7 +107,9 @@ class LossFunctionImpl
         const std::vector<Float>& _eta2,
         const std::vector<Float>& _eta2_old,
         const std::vector<Float>& _yhat_committed,
-        std::array<Float, 12>* _sufficient_stats,
+        std::array<Float, 13>* _sufficient_stats_non_null,
+        std::array<Float, 8>* _sufficient_stats_first_null,
+        std::array<Float, 8>* _sufficient_stats_second_null,
         multithreading::Communicator* _comm ) const
     {
         switch ( _agg )
@@ -123,18 +125,35 @@ class LossFunctionImpl
                         _eta2,
                         _eta2_old,
                         _yhat_committed,
-                        _sufficient_stats,
+                        _sufficient_stats_non_null,
                         _comm );
 
                 case enums::Aggregation::avg_first_null:
-                case enums::Aggregation::avg_second_null:
                     return calc_pair_avg_null(
                         _agg,
+                        _update,
                         _old_weight,
                         _indices_current,
                         _eta1,
+                        _eta1_old,
                         _eta2,
+                        _eta2_old,
                         _yhat_committed,
+                        _sufficient_stats_first_null,
+                        _comm );
+
+                case enums::Aggregation::avg_second_null:
+                    return calc_pair_avg_null(
+                        _agg,
+                        _update,
+                        _old_weight,
+                        _indices_current,
+                        _eta1,
+                        _eta1_old,
+                        _eta2,
+                        _eta2_old,
+                        _yhat_committed,
+                        _sufficient_stats_second_null,
                         _comm );
 
                 default:
@@ -199,7 +218,9 @@ class LossFunctionImpl
         const std::vector<Float>& _eta2,
         const std::vector<Float>& _eta2_old,
         const std::vector<Float>& _yhat_committed,
-        std::array<Float, 12>* _sufficient_stats ) const
+        std::array<Float, 13>* _sufficient_stats_non_null,
+        std::array<Float, 8>* _sufficient_stats_first_null,
+        std::array<Float, 8>* _sufficient_stats_second_null ) const
     {
         switch ( _agg )
             {
@@ -214,18 +235,40 @@ class LossFunctionImpl
                         _eta2,
                         _eta2_old,
                         _yhat_committed,
-                        _sufficient_stats );
+                        _sufficient_stats_non_null );
                     break;
 
                 case enums::Aggregation::avg_first_null:
+                    calc_sufficient_stats_avg_null(
+                        _update,
+                        _old_weight,
+                        _indices_current,
+                        _eta1,
+                        _eta1_old,
+                        _eta2,
+                        _eta2_old,
+                        _yhat_committed,
+                        _sufficient_stats_first_null );
+                    break;
+
                 case enums::Aggregation::avg_second_null:
-                    // TODO
+                    calc_sufficient_stats_avg_null(
+                        _update,
+                        _old_weight,
+                        _indices_current,
+                        _eta1,
+                        _eta1_old,
+                        _eta2,
+                        _eta2_old,
+                        _yhat_committed,
+                        _sufficient_stats_second_null );
                     break;
 
                 default:
                     assert_true( false && "Unknown agg" );
             }
     }
+
     // -----------------------------------------------------------------
 
     /// Calculates the new yhat given eta, indices and the new weights.
@@ -289,6 +332,21 @@ class LossFunctionImpl
         std::array<Float, 6>* _sufficient_stats,
         multithreading::Communicator* _comm ) const;
 
+    /// Calculates a new weight given eta and indices when the aggregation at
+    /// the lowest level is AVG and the other weight is NULL.
+    std::pair<Float, std::array<Float, 3>> calc_pair_avg_null(
+        const enums::Aggregation _agg,
+        const enums::Update _update,
+        const Float _old_weight,
+        const std::vector<size_t>& _indices_current,
+        const std::vector<Float>& _eta,
+        const std::vector<Float>& _eta_old,
+        const std::vector<Float>& _w_fixed,
+        const std::vector<Float>& _w_fixed_old,
+        const std::vector<Float>& _yhat_committed,
+        std::array<Float, 8>* _sufficient_stats,
+        multithreading::Communicator* _comm ) const;
+
     /// Calculates two new weights given eta and indices when the aggregation at
     /// the lowest level is AVG or SUM and there are no NULL values.
     std::pair<Float, std::array<Float, 3>> calc_pair_non_null(
@@ -300,22 +358,24 @@ class LossFunctionImpl
         const std::vector<Float>& _eta2,
         const std::vector<Float>& _eta2_old,
         const std::vector<Float>& _yhat_committed,
-        std::array<Float, 12>* _sufficient_stats,
-        multithreading::Communicator* _comm ) const;
-
-    /// Calculates a new weight given eta and indices when the aggregation at
-    /// the lowest level is AVG and the other weight is NULL.
-    std::pair<Float, std::array<Float, 3>> calc_pair_avg_null(
-        const enums::Aggregation _agg,
-        const Float _old_weight,
-        const std::vector<size_t>& _indices,
-        const std::vector<Float>& _eta,
-        const std::vector<Float>& _w_fixed,
-        const std::vector<Float>& _yhat_committed,
+        std::array<Float, 13>* _sufficient_stats,
         multithreading::Communicator* _comm ) const;
 
     /// Calculates the sufficient stats for the case
-    /// when none of the new weights is NULL.
+    /// when one of the new weights is NULL.
+    void calc_sufficient_stats_avg_null(
+        const enums::Update _update,
+        const Float _old_weight,
+        const std::vector<size_t>& _indices_current,
+        const std::vector<Float>& _eta,
+        const std::vector<Float>& _eta_old,
+        const std::vector<Float>& _w_fixed,
+        const std::vector<Float>& _w_fixed_old,
+        const std::vector<Float>& _yhat_committed,
+        std::array<Float, 8>* _sufficient_stats ) const;
+
+    /// Calculates the sufficient stats for the case
+    /// when one of the new weights is NULL.
     void calc_sufficient_stats_non_null(
         const enums::Update _update,
         const Float _old_weight,
@@ -325,7 +385,7 @@ class LossFunctionImpl
         const std::vector<Float>& _eta2,
         const std::vector<Float>& _eta2_old,
         const std::vector<Float>& _yhat_committed,
-        std::array<Float, 12>* _sufficient_stats ) const;
+        std::array<Float, 13>* _sufficient_stats ) const;
 
     /// Calculates new yhat given the new_weights, eta and indices when
     /// the aggregation at the lowest level is AVG or SUM and there are no

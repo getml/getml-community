@@ -252,14 +252,25 @@ void DecisionTreeNode::fit(
     candidates = std::vector<containers::CandidateSplit>();
 
     // ------------------------------------------------------------------------
-    // So far, we only calculated the partial loss. But we need to evaluate
-    // it properly.
+    // For the relational version, we calculate a partial loss, which cannot be
+    // used to evaluate gamma.
+    // For the "flat" version, the partial loss is a proper loss reduction.
 
     const auto it_split = partition(
         _output, _input, _subfeatures, best_split.split_, _begin, _end );
 
-    const auto loss_reduction = loss_function().evaluate_split(
-        *_intercept, weight_, best_split.weights_, _begin, it_split, _end );
+    auto loss_reduction = best_split.partial_loss_;
+
+    if ( _input )
+        {
+            loss_reduction = loss_function().evaluate_split(
+                *_intercept,
+                weight_,
+                best_split.weights_,
+                _begin,
+                it_split,
+                _end );
+        }
 
     // ------------------------------------------------------------------------
     // If the loss reduction is sufficient, then take this split.
