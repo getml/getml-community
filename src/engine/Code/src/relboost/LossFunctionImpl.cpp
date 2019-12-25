@@ -939,6 +939,28 @@ Float LossFunctionImpl::commit(
 
     return sum_h_yhat;
 }
+
+// ----------------------------------------------------------------------------
+
+void LossFunctionImpl::revert( std::array<Float, 6>* _sufficient_stats ) const
+{
+    auto& sum_g1 = std::get<0>( *_sufficient_stats );
+    auto& sum_h1 = std::get<1>( *_sufficient_stats );
+    auto& sum_g2 = std::get<2>( *_sufficient_stats );
+    auto& sum_h2 = std::get<3>( *_sufficient_stats );
+    auto& n1 = std::get<4>( *_sufficient_stats );
+    auto& n2 = std::get<5>( *_sufficient_stats );
+
+    sum_g2 += sum_g1;
+    sum_g1 = 0.0;
+
+    sum_h2 += sum_h1;
+    sum_h1 = 0.0;
+
+    n2 += n1;
+    n1 = 0.0;
+}
+
 // ----------------------------------------------------------------------------
 
 void LossFunctionImpl::revert_to_commit(

@@ -72,6 +72,9 @@ class LossFunctionImpl
         const std::vector<Float>& _yhat,
         std::vector<Float>* _yhat_committed ) const;
 
+    /// Reverts the last split - only called when this is a predictor.
+    void revert( std::array<Float, 6>* _sufficient_stats ) const;
+
     /// Resets _yhat to _yhat_committed.
     void revert_to_commit(
         const std::vector<size_t>& _indices,
@@ -268,8 +271,6 @@ class LossFunctionImpl
                     assert_true( false && "Unknown agg" );
             }
     }
-
-    // -----------------------------------------------------------------
 
     /// Calculates the new yhat given eta, indices and the new weights.
     void calc_yhat(

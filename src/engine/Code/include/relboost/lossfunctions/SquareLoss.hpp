@@ -337,7 +337,10 @@ class SquareLoss : public LossFunction
     /// Reverts the effects of calc_diff (or the part in calc_all the
     /// corresponds to calc_diff). This is needed for supporting categorical
     /// columns.
-    void revert( const Float _old_weight ) final{};
+    void revert( const Float _old_weight ) final
+    {
+        impl_.revert( &sufficient_stats_xgboost_ );
+    }
 
     /// Keeps the current weights.
     void revert_to_commit() final{};
