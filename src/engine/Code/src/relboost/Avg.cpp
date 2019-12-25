@@ -114,6 +114,7 @@ void Avg::calc_all(
                 {
                     const auto ix = it->ix_output;
 
+                    assert_true( ix < count_committed_.size() );
                     assert_true( count_committed_[ix] > 0.0 );
 
                     eta2_[ix] += 1.0 / count_committed_[ix];
@@ -130,6 +131,7 @@ void Avg::calc_all(
                 {
                     const auto ix = it->ix_output;
 
+                    assert_true( ix < count_committed_.size() );
                     assert_true( count_committed_[ix] > 0.0 );
 
                     eta1_[ix] += 1.0 / count_committed_[ix];
@@ -146,6 +148,7 @@ void Avg::calc_all(
                 {
                     const auto ix = it->ix_output;
 
+                    assert_true( ix < count_committed_.size() );
                     assert_true( count_committed_[ix] > 0.0 );
 
                     eta2_[ix] += 1.0 / count_committed_[ix];

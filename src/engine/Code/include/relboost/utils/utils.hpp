@@ -36,6 +36,8 @@
 #include "relboost/utils/Reducer.hpp"
 #include "relboost/utils/Sorter.hpp"
 
+#include "relboost/utils/NumericalBinner.hpp"
+
 #include "relboost/utils/Sampler.hpp"
 
 // ----------------------------------------------------------------------------

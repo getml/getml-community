@@ -293,13 +293,12 @@ class CrossEntropyLoss : public LossFunction
         commit( indices, weights );
     }
 
-    /// Commits the current values - should not ever be called.
+    /// Commits the current values - but doesn't do anything here.
     void commit(
         const Float _old_intercept,
         const Float _old_weight,
         const std::array<Float, 3>& _weights ) final
     {
-        assert_true( false );
     }
 
     /// Recalculates sum_h_yhat_committed_ and loss_committed_.

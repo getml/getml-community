@@ -54,8 +54,8 @@ class SquareLoss : public LossFunction
 
    public:
     // Applies the inverse of the transformation function below. Some loss
-    // functions (such as CrossEntropyLoss) require this. For others, this won't
-    // do anything at all.
+    // functions (such as CrossEntropyLoss) require this. For others, this
+    // won't do anything at all.
     void apply_inverse( Float* yhat_ ) const final {}
 
     // Applies a transformation function. Some loss functions (such as
@@ -241,13 +241,13 @@ class SquareLoss : public LossFunction
         commit( indices, weights );
     }
 
-    /// Commits the current values - should not ever be called.
+    /// Commits the current values - but doesn't do anything at all in this
+    /// case.
     void commit(
         const Float _old_intercept,
         const Float _old_weight,
         const std::array<Float, 3>& _weights ) final
     {
-        assert_true( false );
     }
 
     /// Recalculates sum_h_yhat_committed_ and loss_committed_.
@@ -361,8 +361,8 @@ class SquareLoss : public LossFunction
         return _weights[0];
     }
 
-    /// Describes the type of the loss function (SquareLoss, CrossEntropyLoss,
-    /// etc.)
+    /// Describes the type of the loss function (SquareLoss,
+    /// CrossEntropyLoss, etc.)
     std::string type() const final { return "SquareLoss"; }
 
     /// Updates yhat_old_ by adding the predictions.
@@ -470,7 +470,8 @@ class SquareLoss : public LossFunction
     /// Dot product of h_ and yhat_, needed for the intercept.
     Float sum_h_yhat_committed_;
 
-    /// The sum of the sample weights, which is needed for calculating the loss.
+    /// The sum of the sample weights, which is needed for calculating the
+    /// loss.
     Float sum_sample_weights_;
 
     /// The target variables.
@@ -485,8 +486,8 @@ class SquareLoss : public LossFunction
     /// Sum of all previous trees.
     std::vector<Float> yhat_old_;
 
-    /// Implementation class. Because impl_ depends on some other variables, it
-    /// is the last member variable.
+    /// Implementation class. Because impl_ depends on some other variables,
+    /// it is the last member variable.
     const LossFunctionImpl impl_;
 
     // -----------------------------------------------------------------

@@ -180,6 +180,7 @@ class DecisionTreeNode
         const containers::DataFrameView& _output,
         const std::vector<containers::Match>::iterator _begin,
         const std::vector<containers::Match>::iterator _end,
+        std::vector<containers::Match>* _bins,
         std::vector<containers::CandidateSplit>* _candidates );
 
     /// Try splitting on whether columns are the same.
@@ -238,6 +239,20 @@ class DecisionTreeNode
     // -----------------------------------------------------------------
 
    private:
+    /// Calculates the appropriate number of bins for a numerical column.
+    size_t calc_num_bins(
+        const std::vector<containers::Match>::const_iterator _begin,
+        const std::vector<containers::Match>::const_iterator _end )
+    {
+        assert_true( _end >= _begin );
+        auto num_matches = static_cast<size_t>( std::distance( _begin, _end ) );
+        utils::Reducer::reduce( std::plus<size_t>(), &num_matches, &comm() );
+        return std::max(
+            static_cast<size_t>(
+                std::sqrt( static_cast<Float>( num_matches ) ) ),
+            static_cast<size_t>( 1 ) );
+    }
+
     /// Trivial (private) accessor.
     multithreading::Communicator& comm()
     {
