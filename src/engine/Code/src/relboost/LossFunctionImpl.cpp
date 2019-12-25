@@ -44,11 +44,21 @@ std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_all(
 
             assert_true( ix < g_.size() );
 
+            sum_g2 += g_[ix];
+            sum_h2 += h_[ix];
+        }
+
+    for ( auto it = _split_begin; it != _split_end; ++it )
+        {
+            const auto ix = it->ix_output;
+
+            assert_true( ix < g_.size() );
+
             sum_g1 += g_[ix];
             sum_h1 += h_[ix];
         }
 
-    for ( auto it = _split_begin; it != _split_end; ++it )
+    for ( auto it = _split_end; it != _end; ++it )
         {
             const auto ix = it->ix_output;
 
@@ -58,21 +68,11 @@ std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_all(
             sum_h2 += h_[ix];
         }
 
-    for ( auto it = _split_end; it != _end; ++it )
-        {
-            const auto ix = it->ix_output;
-
-            assert_true( ix < g_.size() );
-
-            sum_g1 += g_[ix];
-            sum_h1 += h_[ix];
-        }
-
     // ------------------------------------------------------------------------
 
-    n2 = static_cast<Float>( std::distance( _split_begin, _split_end ) );
+    n1 = static_cast<Float>( std::distance( _split_begin, _split_end ) );
 
-    n1 = static_cast<Float>( std::distance( _begin, _end ) ) - n2;
+    n2 = static_cast<Float>( std::distance( _begin, _end ) ) - n1;
 
     // ------------------------------------------------------------------------
 
@@ -137,16 +137,23 @@ std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_diff(
 
     // ------------------------------------------------------------------------
 
-    auto n2_diff =
+    auto n_diff =
         static_cast<Float>( std::distance( _split_begin, _split_end ) );
 
-    utils::Reducer::reduce( std::plus<Float>(), &n2_diff, _comm );
+    utils::Reducer::reduce( std::plus<Float>(), &n_diff, _comm );
 
-    assert_true( n2_diff <= n1 );
+    if ( n_diff == 0.0 )
+        {
+            return std::make_pair(
+                static_cast<Float>( NAN ),
+                std::array<Float, 3>{0.0, 0.0, 0.0} );
+        }
 
-    n1 -= n2_diff;
+    assert_true( n_diff <= n2 );
 
-    n2 += n2_diff;
+    n2 -= n_diff;
+
+    n1 += n_diff;
 
     // ------------------------------------------------------------------------
 
@@ -182,11 +189,11 @@ std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_diff(
 
     utils::Reducer::reduce<2>( std::plus<Float>(), &g_h_diff, _comm );
 
-    sum_g1 -= g_diff;
-    sum_g2 += g_diff;
+    sum_g2 -= g_diff;
+    sum_g1 += g_diff;
 
-    sum_h1 -= h_diff;
-    sum_h2 += h_diff;
+    sum_h2 -= h_diff;
+    sum_h1 += h_diff;
 
     // ------------------------------------------------------------------------
 
