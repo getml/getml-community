@@ -211,7 +211,7 @@ void DecisionTreeNode::fit(
     // bother fitting the node.
 
     if ( hyperparameters().max_depth_ > 0 &&
-         depth_ > hyperparameters().max_depth_ )
+         depth_ == hyperparameters().max_depth_ )
         {
             debug_log( "Max depth reached." );
             return;
@@ -257,7 +257,7 @@ void DecisionTreeNode::fit(
         "best_split.loss_reduction_: " +
         std::to_string( best_split.loss_reduction_ ) );
 
-    if ( best_split.loss_reduction_ < hyperparameters().gamma_ )
+    if ( best_split.loss_reduction_ < hyperparameters().gamma_ + 1e-04 )
         {
             return;
         }
