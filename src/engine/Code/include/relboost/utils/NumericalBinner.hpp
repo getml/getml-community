@@ -23,8 +23,9 @@ class NumericalBinner
         const GetValueType& _get_value,
         const size_t _num_bins,
         const std::vector<containers::Match>::const_iterator _begin,
+        const std::vector<containers::Match>::const_iterator _nan_begin,
         const std::vector<containers::Match>::const_iterator _end,
-        std::vector<containers::Match>::iterator _bins_begin );
+        std::vector<containers::Match>* _bins );
 
     /// Finds the minimum and the maximum value that is produced by
     /// _get_value.
@@ -55,12 +56,17 @@ std::pair<std::vector<size_t>, Float> NumericalBinner<GetValueType>::bin(
     const GetValueType& _get_value,
     const size_t _num_bins,
     const std::vector<containers::Match>::const_iterator _begin,
+    const std::vector<containers::Match>::const_iterator _nan_begin,
     const std::vector<containers::Match>::const_iterator _end,
-    std::vector<containers::Match>::iterator _bins_begin )
+    std::vector<containers::Match>* _bins )
 {
     // ---------------------------------------------------------------------------
 
-    assert_true( _end >= _begin );
+    assert_true( _nan_begin >= _begin );
+    assert_true( _end >= _nan_begin );
+
+    assert_true(
+        _bins->size() >= static_cast<size_t>( std::distance( _begin, _end ) ) );
 
     // ---------------------------------------------------------------------------
     // There is a possibility that all critical values are NAN in all processes.
@@ -78,9 +84,11 @@ std::pair<std::vector<size_t>, Float> NumericalBinner<GetValueType>::bin(
 
     // ---------------------------------------------------------------------------
 
+    assert_true( indptr.size() == _num_bins + 1 );
+
     std::vector<size_t> counts( _num_bins );
 
-    for ( auto it = _begin; it != _end; ++it )
+    for ( auto it = _begin; it != _nan_begin; ++it )
         {
             const auto val = _get_value( *it );
 
@@ -90,10 +98,16 @@ std::pair<std::vector<size_t>, Float> NumericalBinner<GetValueType>::bin(
 
             assert_true( indptr[ix] + counts[ix] < indptr[ix + 1] );
 
-            *( _bins_begin + indptr[ix] + counts[ix] ) = *it;
+            *( _bins->begin() + indptr[ix] + counts[ix] ) = *it;
 
             ++counts[ix];
         }
+
+    // ---------------------------------------------------------------------------
+
+    assert_true( indptr.size() > 0 );
+
+    std::copy( _nan_begin, _end, _bins->begin() + indptr.back() );
 
     // ---------------------------------------------------------------------------
 

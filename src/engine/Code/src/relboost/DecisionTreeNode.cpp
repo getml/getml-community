@@ -733,7 +733,7 @@ std::vector<containers::CandidateSplit> DecisionTreeNode::try_all(
                 _old_intercept, *_input, _begin, _end, &candidates );
 
             try_numerical_input(
-                _old_intercept, *_input, _begin, _end, &candidates );
+                _old_intercept, *_input, _begin, _end, &bins, &candidates );
 
             try_subfeatures(
                 _old_intercept, _subfeatures, _begin, _end, &candidates );
@@ -748,7 +748,13 @@ std::vector<containers::CandidateSplit> DecisionTreeNode::try_all(
                 _old_intercept, *_input, _output, _begin, _end, &candidates );
 
             try_time_stamps_diff(
-                _old_intercept, *_input, _output, _begin, _end, &candidates );
+                _old_intercept,
+                *_input,
+                _output,
+                _begin,
+                _end,
+                &bins,
+                &candidates );
         }
 
     try_categorical_output(
@@ -1176,6 +1182,7 @@ void DecisionTreeNode::try_numerical_input(
     const containers::DataFrame& _input,
     const std::vector<containers::Match>::iterator _begin,
     const std::vector<containers::Match>::iterator _end,
+    std::vector<containers::Match>* _bins,
     std::vector<containers::CandidateSplit>* _candidates )
 {
     debug_log( "try_numerical_input." );
@@ -1188,61 +1195,67 @@ void DecisionTreeNode::try_numerical_input(
                 utils::Partitioner<enums::DataUsed::numerical_input_is_nan>::
                     partition( j, _input, _begin, _end );
 
-            // Note that this sorts in DESCENDING order.
-            utils::Sorter<enums::DataUsed::numerical_input>::sort(
-                j, _input, _begin, nan_begin );
+            const auto get_value = [j, &_input]( const containers::Match& m ) {
+                const auto i = m.ix_input;
+                assert_true( i < _input.nrows() );
+                return _input.numerical( i, j );
+            };
 
-            // Used as placeholder.
-            const auto output = containers::DataFrameView(
-                _input, std::shared_ptr<const std::vector<size_t>>() );
+            const auto [min, max] =
+                utils::NumericalBinner<decltype( get_value )>::find_min_max(
+                    get_value, _begin, nan_begin, &comm() );
 
-            const auto critical_values = utils::CriticalValues::calc_numerical(
-                enums::DataUsed::numerical_input,
-                j,
-                _input,
-                output,
-                _begin,
-                nan_begin,
-                &comm() );
+            const auto num_bins = calc_num_bins( _begin, nan_begin );
 
-            if ( critical_values.size() == 0 ||
-                 critical_values.front() == critical_values.back() )
+            // Note that this bins in DESCENDING order.
+            const auto [indptr, step_size] =
+                utils::NumericalBinner<decltype( get_value )>::bin(
+                    min,
+                    max,
+                    get_value,
+                    num_bins,
+                    _begin,
+                    nan_begin,
+                    _end,
+                    _bins );
+
+            if ( indptr.size() == 0 )
                 {
                     continue;
                 }
 
-            auto it = _begin;
-
-            auto last_it = _begin;
-
-            for ( auto cv = critical_values.begin();
-                  cv != critical_values.end();
-                  ++cv )
+            for ( size_t i = 1; i < indptr.size(); ++i )
                 {
-                    it = utils::Finder<enums::DataUsed::numerical_input>::
-                        next_split( *cv, j, _input, it, nan_begin );
+                    assert_true( indptr[i - 1] <= indptr[i] );
+                    assert_true( indptr[i] <= _bins->size() );
+
+                    const auto split_begin = _bins->begin() + indptr[i - 1];
+
+                    const auto split_end = _bins->begin() + indptr[i];
 
                     const auto update =
-                        ( cv == critical_values.begin()
-                              ? enums::Update::calc_all
-                              : enums::Update::calc_diff );
+                        ( i == 1 ? enums::Update::calc_all
+                                 : enums::Update::calc_diff );
+
+                    const auto critical_value =
+                        max - static_cast<Float>( i ) * step_size;
 
                     add_candidates(
                         enums::Revert::False,
                         update,
                         _old_intercept,
                         containers::Split(
-                            j, *cv, enums::DataUsed::numerical_input ),
-                        _begin,
-                        last_it,
-                        it,
-                        _end,
+                            j,
+                            critical_value,
+                            enums::DataUsed::numerical_input ),
+                        _bins->begin(),
+                        split_begin,
+                        split_end,
+                        _bins->end(),
                         _candidates );
-
-                    last_it = it;
                 }
 
-            add_candidates(
+            /*add_candidates(
                 enums::Revert::False,
                 enums::Update::calc_diff,
                 _old_intercept,
@@ -1252,7 +1265,7 @@ void DecisionTreeNode::try_numerical_input(
                 last_it,
                 nan_begin,
                 _end,
-                _candidates );
+                _candidates );*/
 
             loss_function().revert_to_commit();
         }
@@ -1299,19 +1312,17 @@ void DecisionTreeNode::try_numerical_output(
                     num_bins,
                     _begin,
                     nan_begin,
-                    _bins->begin() );
+                    _end,
+                    _bins );
 
             if ( indptr.size() == 0 )
                 {
                     continue;
                 }
 
-            std::copy( nan_begin, _end, _bins->begin() + indptr.back() );
-
             for ( size_t i = 1; i < indptr.size(); ++i )
                 {
                     assert_true( indptr[i - 1] <= indptr[i] );
-                    assert_true( indptr[i - 1] <= _bins->size() );
                     assert_true( indptr[i] <= _bins->size() );
 
                     const auto split_begin = _bins->begin() + indptr[i - 1];
@@ -1755,65 +1766,68 @@ void DecisionTreeNode::try_time_stamps_diff(
     const containers::DataFrameView& _output,
     const std::vector<containers::Match>::iterator _begin,
     const std::vector<containers::Match>::iterator _end,
+    std::vector<containers::Match>* _bins,
     std::vector<containers::CandidateSplit>* _candidates )
 {
     debug_log( "Time stamps diff." );
 
-    // Note that this sorts in DESCENDING order.
-    utils::Sorter<enums::DataUsed::time_stamps_diff>::sort(
-        _input, _output, _begin, _end );
+    const auto get_value = [&_input, &_output]( const containers::Match& m ) {
+        const auto i1 = m.ix_output;
+        const auto i2 = m.ix_input;
+        assert_true( i1 < _output.nrows() );
+        assert_true( i2 < _input.nrows() );
+        return _output.time_stamp( i1 ) - _input.time_stamp( i2 );
+    };
 
-    const auto critical_values = utils::CriticalValues::calc_numerical(
-        enums::DataUsed::time_stamps_diff,
-        0,
-        _input,
-        _output,
-        _begin,
-        _end,
-        &comm() );
+    const auto [min, max] =
+        utils::NumericalBinner<decltype( get_value )>::find_min_max(
+            get_value, _begin, _end, &comm() );
 
-    if ( critical_values.size() == 0 ||
-         critical_values.front() == critical_values.back() )
+    const auto num_bins = calc_num_bins( _begin, _end );
+
+    // Note that this bins in DESCENDING order.
+    const auto [indptr, step_size] =
+        utils::NumericalBinner<decltype( get_value )>::bin(
+            min, max, get_value, num_bins, _begin, _end, _end, _bins );
+
+    if ( indptr.size() == 0 )
         {
             return;
         }
 
-    debug_log(
-        "critical_values.size(): " + std::to_string( critical_values.size() ) );
-
-    auto it = _begin;
-
-    auto last_it = _begin;
-
-    for ( auto cv = critical_values.begin(); cv != critical_values.end(); ++cv )
+    for ( size_t i = 1; i < indptr.size(); ++i )
         {
-            debug_log( "cv: " + std::to_string( *cv ) );
+            assert_true( indptr[i - 1] <= indptr[i] );
+            assert_true( indptr[i] <= _bins->size() );
 
-            it = utils::Finder<enums::DataUsed::time_stamps_diff>::next_split(
-                *cv, _input, _output, it, _end );
+            const auto split_begin = _bins->begin() + indptr[i - 1];
+
+            const auto split_end = _bins->begin() + indptr[i];
 
             const auto update =
-                ( cv == critical_values.begin() ? enums::Update::calc_all
-                                                : enums::Update::calc_diff );
+                ( i == 1 ? enums::Update::calc_all : enums::Update::calc_diff );
+
+            const auto critical_value =
+                max - static_cast<Float>( i ) * step_size;
 
             add_candidates(
                 enums::Revert::False,
                 update,
                 _old_intercept,
-                containers::Split( 0, *cv, enums::DataUsed::time_stamps_diff ),
-                _begin,
-                last_it,
-                it,
-                _end,
+                containers::Split(
+                    0, critical_value, enums::DataUsed::time_stamps_diff ),
+                _bins->begin(),
+                split_begin,
+                split_end,
+                _bins->end(),
                 _candidates );
-
-            last_it = it;
         }
 
     loss_function().revert_to_commit();
 
     if ( hyperparameters().delta_t_ > 0.0 )
         {
+            assert_true( false && "TODO" );
             try_window(
                 _old_intercept, _input, _output, _begin, _end, _candidates );
         }

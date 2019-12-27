@@ -172,6 +172,7 @@ class DecisionTreeNode
         const containers::DataFrame& _peripheral,
         const std::vector<containers::Match>::iterator _begin,
         const std::vector<containers::Match>::iterator _end,
+        std::vector<containers::Match>* _bins,
         std::vector<containers::CandidateSplit>* _candidates );
 
     /// Try numerical output columns as splits.
@@ -225,6 +226,7 @@ class DecisionTreeNode
         const containers::DataFrameView& _output,
         const std::vector<containers::Match>::iterator _begin,
         const std::vector<containers::Match>::iterator _end,
+        std::vector<containers::Match>* _bins,
         std::vector<containers::CandidateSplit>* _candidates );
 
     /// Try the difference between time stamps in input and output as splits.
