@@ -227,7 +227,10 @@ std::string Postgres::make_connection_string(
 
     auto connection_string = std::string( "host=" ) + host + " ";
 
-    connection_string += std::string( "hostaddr=" ) + hostaddr + " ";
+    if ( hostaddr.size() > 0 )
+        {
+            connection_string += std::string( "hostaddr=" ) + hostaddr + " ";
+        }
 
     connection_string += std::string( "port=" ) + std::to_string( port ) + " ";
 
