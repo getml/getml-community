@@ -27,14 +27,6 @@ class NumericalBinner
         const std::vector<containers::Match>::const_iterator _end,
         std::vector<containers::Match>* _bins );
 
-    /// Finds the minimum and the maximum value that is produced by
-    /// _get_value.
-    static std::pair<Float, Float> find_min_max(
-        const GetValueType& _get_value,
-        const std::vector<containers::Match>::const_iterator _begin,
-        const std::vector<containers::Match>::const_iterator _end,
-        multithreading::Communicator* _comm );
-
    private:
     /// Generates the indptr, which indicates the beginning and end of
     /// each bin.
@@ -114,43 +106,6 @@ std::pair<std::vector<size_t>, Float> NumericalBinner<GetValueType>::bin(
     return std::make_pair( indptr, step_size );
 
     // ---------------------------------------------------------------------------
-}
-
-// ----------------------------------------------------------------------------
-
-template <class GetValueType>
-std::pair<Float, Float> NumericalBinner<GetValueType>::find_min_max(
-    const GetValueType& _get_value,
-    const std::vector<containers::Match>::const_iterator _begin,
-    const std::vector<containers::Match>::const_iterator _end,
-    multithreading::Communicator* _comm )
-{
-    assert_true( _end >= _begin );
-
-    Float min = std::numeric_limits<Float>::max();
-
-    Float max = std::numeric_limits<Float>::lowest();
-
-    for ( auto it = _begin; it != _end; ++it )
-        {
-            const auto val = _get_value( *it );
-
-            if ( val < min )
-                {
-                    min = val;
-                }
-
-            if ( val > max )
-                {
-                    max = val;
-                }
-        }
-
-    utils::Reducer::reduce( multithreading::minimum<Float>(), &min, _comm );
-
-    utils::Reducer::reduce( multithreading::maximum<Float>(), &max, _comm );
-
-    return std::make_pair( min, max );
 }
 
 // ----------------------------------------------------------------------------

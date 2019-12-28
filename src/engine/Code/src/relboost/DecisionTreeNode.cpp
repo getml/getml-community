@@ -727,7 +727,7 @@ std::vector<containers::CandidateSplit> DecisionTreeNode::try_all(
     if ( _input )
         {
             try_categorical_input(
-                _old_intercept, *_input, _begin, _end, &candidates );
+                _old_intercept, *_input, _begin, _end, &bins, &candidates );
 
             try_discrete_input(
                 _old_intercept, *_input, _begin, _end, &candidates );
@@ -758,7 +758,7 @@ std::vector<containers::CandidateSplit> DecisionTreeNode::try_all(
         }
 
     try_categorical_output(
-        _old_intercept, _output, _begin, _end, &candidates );
+        _old_intercept, _output, _begin, _end, &bins, &candidates );
 
     try_discrete_output( _old_intercept, _output, _begin, _end, &candidates );
 
@@ -772,16 +772,20 @@ std::vector<containers::CandidateSplit> DecisionTreeNode::try_all(
 
 void DecisionTreeNode::try_categorical(
     const enums::Revert _revert,
+    const Int _min,
     const std::shared_ptr<const std::vector<Int>> _critical_values,
-    const size_t num_column,
+    const size_t _num_column,
     const Float _old_intercept,
     const enums::DataUsed _data_used,
-    const containers::CategoryIndex& _category_index,
-    const std::vector<containers::Match>::iterator _begin,
-    const std::vector<containers::Match>::iterator _end,
+    const std::vector<size_t>& _indptr,
+    std::vector<containers::Match>* _bins,
     std::vector<containers::CandidateSplit>* _candidates )
 {
     debug_log( "try_categorical." );
+
+    assert_true( _min >= 0 );
+
+    assert_true( _critical_values );
 
     auto critical_values_begin = _critical_values->begin();
 
@@ -797,6 +801,15 @@ void DecisionTreeNode::try_categorical(
                     critical_values_begin = _critical_values->begin() + i;
                 }
 
+            assert_true( cv >= _min );
+
+            assert_true(
+                static_cast<size_t>( cv - _min ) < _indptr.size() - 1 );
+
+            const auto split_begin = _bins->begin() + _indptr[cv - _min];
+
+            const auto split_end = _bins->begin() + _indptr[cv - _min + 1];
+
             add_candidates(
                 _revert,
                 update,
@@ -805,12 +818,12 @@ void DecisionTreeNode::try_categorical(
                     _critical_values,
                     critical_values_begin,
                     _critical_values->begin() + i + 1,
-                    num_column,
+                    _num_column,
                     _data_used ),
-                _begin,
-                _category_index.begin( cv ),
-                _category_index.end( cv ),
-                _end,
+                _bins->begin(),
+                split_begin,
+                split_end,
+                _bins->end(),
                 _candidates );
         }
 
@@ -824,6 +837,7 @@ void DecisionTreeNode::try_categorical_input(
     const containers::DataFrame& _input,
     const std::vector<containers::Match>::iterator _begin,
     const std::vector<containers::Match>::iterator _end,
+    std::vector<containers::Match>* _bins,
     std::vector<containers::CandidateSplit>* _candidates )
 {
     debug_log( "try_categorical_input." );
@@ -831,58 +845,63 @@ void DecisionTreeNode::try_categorical_input(
     for ( size_t j = 0; j < _input.num_categoricals(); ++j )
         {
             // ----------------------------------------------------------------
-            // Record the current size of _candidates - we will need it later.
+            // First, we bin by category.
 
-            const auto begin_ix = _candidates->size();
+            const auto is_nan = [j, &_input]( const containers::Match& m ) {
+                const auto i = m.ix_input;
+                assert_true( i < _input.nrows() );
+                return ( _input.categorical( i, j ) >= 0 );
+            };
 
-            // ----------------------------------------------------------------
-            // Sort the matches by their categorical value.
+            // Moves all NULL values to the end.
+            const auto nan_begin = std::partition( _begin, _end, is_nan );
 
-            utils::Sorter<enums::DataUsed::categorical_input>::sort(
-                j, _input, _begin, _end );
+            const auto get_value = [j, &_input]( const containers::Match& m ) {
+                const auto i = m.ix_input;
+                assert_true( i < _input.nrows() );
+                return _input.categorical( i, j );
+            };
 
-            // ----------------------------------------------------------------
-            // Identify all unique categorical values.
+            const auto [min, max] =
+                utils::MinMaxFinder<decltype( get_value ), Int>::find_min_max(
+                    get_value, _begin, nan_begin, &comm() );
 
-            // Used as placeholder.
-            const auto output = containers::DataFrameView(
-                _input, std::shared_ptr<const std::vector<size_t>>() );
-
-            const auto critical_values =
-                utils::CriticalValues::calc_categorical(
-                    enums::DataUsed::categorical_input,
-                    j,
-                    _input,
-                    output,
+            // Note that this bins in ASCENDING order.
+            const auto [indptr, critical_values] =
+                utils::CategoricalBinner<decltype( get_value )>::bin(
+                    min,
+                    max,
+                    get_value,
                     _begin,
+                    nan_begin,
                     _end,
+                    _bins,
                     &comm() );
 
-            if ( critical_values->size() <= 1 )
+            assert_true( indptr.size() == 0 || critical_values );
+
+            if ( indptr.size() == 0 || critical_values->size() <= 1 )
                 {
                     continue;
                 }
 
             // ----------------------------------------------------------------
-            // Build an index over the categories, so we can find them faster.
+            // Record the current size of _candidates - we will need it later.
 
-            auto category_index = containers::CategoryIndex( _begin, _end );
-
-            category_index.build_indptr<enums::DataUsed::categorical_input>(
-                _input, j, *critical_values.get() );
+            const auto begin_ix = _candidates->size();
 
             // ----------------------------------------------------------------
             // Try individual categorical values.
 
             try_categorical(
                 enums::Revert::True,
+                min,
                 critical_values,
                 j,
                 _old_intercept,
                 enums::DataUsed::categorical_input,
-                category_index,
-                _begin,
-                _end,
+                indptr,
+                _bins,
                 _candidates );
 
             // ----------------------------------------------------------------
@@ -898,13 +917,13 @@ void DecisionTreeNode::try_categorical_input(
 
             try_categorical(
                 enums::Revert::False,
+                min,
                 sorted_critical_values,
                 j,
                 _old_intercept,
                 enums::DataUsed::categorical_input,
-                category_index,
-                _begin,
-                _end,
+                indptr,
+                _bins,
                 _candidates );
 
             // ----------------------------------------------------------------
@@ -918,6 +937,7 @@ void DecisionTreeNode::try_categorical_output(
     const containers::DataFrameView& _output,
     const std::vector<containers::Match>::iterator _begin,
     const std::vector<containers::Match>::iterator _end,
+    std::vector<containers::Match>* _bins,
     std::vector<containers::CandidateSplit>* _candidates )
 {
     debug_log( "try_categorical_output." );
@@ -925,54 +945,63 @@ void DecisionTreeNode::try_categorical_output(
     for ( size_t j = 0; j < _output.num_categoricals(); ++j )
         {
             // ----------------------------------------------------------------
-            // Record the current size of _candidates - we will need it later.
+            // First, we bin by category.
 
-            const auto begin_ix = _candidates->size();
+            const auto is_nan = [j, &_output]( const containers::Match& m ) {
+                const auto i = m.ix_output;
+                assert_true( i < _output.nrows() );
+                return ( _output.categorical( i, j ) >= 0 );
+            };
 
-            // ----------------------------------------------------------------
-            // Sort the matches by their categorical value.
+            // Moves all NULL values to the end.
+            const auto nan_begin = std::partition( _begin, _end, is_nan );
 
-            utils::Sorter<enums::DataUsed::categorical_output>::sort(
-                j, _output, _begin, _end );
+            const auto get_value = [j, &_output]( const containers::Match& m ) {
+                const auto i = m.ix_output;
+                assert_true( i < _output.nrows() );
+                return _output.categorical( i, j );
+            };
 
-            // ----------------------------------------------------------------
-            // Identify all unique categorical values.
+            const auto [min, max] =
+                utils::MinMaxFinder<decltype( get_value ), Int>::find_min_max(
+                    get_value, _begin, nan_begin, &comm() );
 
-            const auto critical_values =
-                utils::CriticalValues::calc_categorical(
-                    enums::DataUsed::categorical_output,
-                    j,
-                    _output.df(),  // just as a placeholder
-                    _output,
+            // Note that this bins in ASCENDING order.
+            const auto [indptr, critical_values] =
+                utils::CategoricalBinner<decltype( get_value )>::bin(
+                    min,
+                    max,
+                    get_value,
                     _begin,
+                    nan_begin,
                     _end,
+                    _bins,
                     &comm() );
 
-            if ( critical_values->size() <= 1 )
+            assert_true( indptr.size() == 0 || critical_values );
+
+            if ( indptr.size() == 0 || critical_values->size() <= 1 )
                 {
                     continue;
                 }
 
             // ----------------------------------------------------------------
-            // Build an index over the categories, so we can find them faster.
+            // Record the current size of _candidates - we will need it later.
 
-            auto category_index = containers::CategoryIndex( _begin, _end );
-
-            category_index.build_indptr<enums::DataUsed::categorical_output>(
-                _output, j, *critical_values.get() );
+            const auto begin_ix = _candidates->size();
 
             // ----------------------------------------------------------------
             // Try individual categorical values.
 
             try_categorical(
                 enums::Revert::True,
+                min,
                 critical_values,
                 j,
                 _old_intercept,
                 enums::DataUsed::categorical_output,
-                category_index,
-                _begin,
-                _end,
+                indptr,
+                _bins,
                 _candidates );
 
             // ----------------------------------------------------------------
@@ -988,13 +1017,13 @@ void DecisionTreeNode::try_categorical_output(
 
             try_categorical(
                 enums::Revert::False,
+                min,
                 sorted_critical_values,
                 j,
                 _old_intercept,
                 enums::DataUsed::categorical_output,
-                category_index,
-                _begin,
-                _end,
+                indptr,
+                _bins,
                 _candidates );
 
             // ----------------------------------------------------------------
@@ -1202,7 +1231,7 @@ void DecisionTreeNode::try_numerical_input(
             };
 
             const auto [min, max] =
-                utils::NumericalBinner<decltype( get_value )>::find_min_max(
+                utils::MinMaxFinder<decltype( get_value ), Float>::find_min_max(
                     get_value, _begin, nan_begin, &comm() );
 
             const auto num_bins = calc_num_bins( _begin, nan_begin );
@@ -1298,7 +1327,7 @@ void DecisionTreeNode::try_numerical_output(
             };
 
             const auto [min, max] =
-                utils::NumericalBinner<decltype( get_value )>::find_min_max(
+                utils::MinMaxFinder<decltype( get_value ), Float>::find_min_max(
                     get_value, _begin, nan_begin, &comm() );
 
             const auto num_bins = calc_num_bins( _begin, nan_begin );
@@ -1780,7 +1809,7 @@ void DecisionTreeNode::try_time_stamps_diff(
     };
 
     const auto [min, max] =
-        utils::NumericalBinner<decltype( get_value )>::find_min_max(
+        utils::MinMaxFinder<decltype( get_value ), Float>::find_min_max(
             get_value, _begin, _end, &comm() );
 
     const auto num_bins = calc_num_bins( _begin, _end );

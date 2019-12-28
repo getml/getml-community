@@ -122,16 +122,16 @@ class DecisionTreeNode
         const std::vector<containers::Match>::iterator _begin,
         const std::vector<containers::Match>::iterator _end );
 
-    /// Helper function for all functions that try categorical inputs.
+    /// Helper function for all functions that try categorical columns.
     void try_categorical(
         const enums::Revert _revert,
+        const Int _min,
         const std::shared_ptr<const std::vector<Int>> _critical_values,
-        const size_t num_column,
+        const size_t _num_column,
         const Float _old_intercept,
         const enums::DataUsed _data_used,
-        const containers::CategoryIndex& _category_index,
-        const std::vector<containers::Match>::iterator _begin,
-        const std::vector<containers::Match>::iterator _end,
+        const std::vector<size_t>& _indptr,
+        std::vector<containers::Match>* _bins,
         std::vector<containers::CandidateSplit>* _candidates );
 
     /// Try categorical input columns as splits.
@@ -140,6 +140,7 @@ class DecisionTreeNode
         const containers::DataFrame& _input,
         const std::vector<containers::Match>::iterator _begin,
         const std::vector<containers::Match>::iterator _end,
+        std::vector<containers::Match>* _bins,
         std::vector<containers::CandidateSplit>* _candidates );
 
     /// Try categorical output columns as splits.
@@ -148,6 +149,7 @@ class DecisionTreeNode
         const containers::DataFrameView& _output,
         const std::vector<containers::Match>::iterator _begin,
         const std::vector<containers::Match>::iterator _end,
+        std::vector<containers::Match>* _bins,
         std::vector<containers::CandidateSplit>* _candidates );
 
     /// Try discrete input columns as splits.
