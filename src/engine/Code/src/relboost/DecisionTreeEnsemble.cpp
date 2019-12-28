@@ -440,8 +440,6 @@ void DecisionTreeEnsemble::fit_new_feature(
 
     _loss_function->calc_sums();
 
-    _loss_function->commit();
-
     // ------------------------------------------------------------------------
 
     std::vector<decisiontrees::DecisionTree> candidates;
@@ -503,6 +501,9 @@ void DecisionTreeEnsemble::fit_new_feature(
 
             for ( auto &agg : aggregations )
                 {
+                    // Reset loss_function_committed_.
+                    loss_function_->commit();
+
                     candidates.push_back( decisiontrees::DecisionTree(
                         impl().categories_,
                         impl().hyperparameters_,
