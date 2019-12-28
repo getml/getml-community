@@ -177,7 +177,9 @@ struct Partitioner<enums::DataUsed::discrete_input_is_nan>
         assert_true( i < _input.nrows() );
         assert_true( _num_column < _input.num_discretes() );
 
-        return !std::isnan( _input.discrete( _match.ix_input, _num_column ) );
+        const auto val = _input.discrete( _match.ix_input, _num_column );
+
+        return !std::isnan( val ) && !std::isinf( val );
     }
 
     // --------------------------------------------------------------------
@@ -254,7 +256,9 @@ struct Partitioner<enums::DataUsed::discrete_output_is_nan>
         assert_true( i < _output.nrows() );
         assert_true( _num_column < _output.num_discretes() );
 
-        return !std::isnan( _output.discrete( _match.ix_output, _num_column ) );
+        const auto val = _output.discrete( _match.ix_output, _num_column );
+
+        return !std::isnan( val ) && !std::isinf( val );
     }
 
     // --------------------------------------------------------------------
@@ -331,7 +335,9 @@ struct Partitioner<enums::DataUsed::numerical_input_is_nan>
         assert_true( i < _input.nrows() );
         assert_true( _num_column < _input.num_numericals() );
 
-        return !std::isnan( _input.numerical( _match.ix_input, _num_column ) );
+        const auto val = _input.numerical( _match.ix_input, _num_column );
+
+        return !std::isnan( val ) && !std::isinf( val );
     }
 
     // --------------------------------------------------------------------
@@ -408,8 +414,9 @@ struct Partitioner<enums::DataUsed::numerical_output_is_nan>
         assert_true( i < _output.nrows() );
         assert_true( _num_column < _output.num_numericals() );
 
-        return !std::isnan(
-            _output.numerical( _match.ix_output, _num_column ) );
+        const auto val = _output.numerical( _match.ix_output, _num_column );
+
+        return !std::isnan( val ) && !std::isinf( val );
     }
 
     // --------------------------------------------------------------------
@@ -550,7 +557,8 @@ struct Partitioner<enums::DataUsed::same_units_discrete_is_nan>
         const auto val1 = _input.discrete( _match.ix_input, _input_col );
         const auto val2 = _output.discrete( _match.ix_output, _output_col );
 
-        return !std::isnan( val1 ) && !std::isnan( val2 );
+        return !std::isnan( val1 ) && !std::isnan( val2 ) &&
+               !std::isinf( val1 ) && !std::isinf( val2 );
     }
 
     // --------------------------------------------------------------------
@@ -645,7 +653,8 @@ struct Partitioner<enums::DataUsed::same_units_numerical_is_nan>
         const auto val1 = _input.numerical( _match.ix_input, _input_col );
         const auto val2 = _output.numerical( _match.ix_output, _output_col );
 
-        return !std::isnan( val1 ) && !std::isnan( val2 );
+        return !std::isnan( val1 ) && !std::isnan( val2 ) &&
+               !std::isinf( val1 ) && !std::isinf( val2 );
     }
 
     // --------------------------------------------------------------------

@@ -36,7 +36,7 @@ class NumericalBinner
         const GetValueType& _get_value,
         const size_t _num_bins,
         const std::vector<containers::Match>::const_iterator _begin,
-        const std::vector<containers::Match>::const_iterator _end );
+        const std::vector<containers::Match>::const_iterator _nan_begin );
 };
 
 // ----------------------------------------------------------------------------
@@ -72,7 +72,7 @@ std::pair<std::vector<size_t>, Float> NumericalBinner<GetValueType>::bin(
     // ---------------------------------------------------------------------------
 
     const auto [indptr, step_size] =
-        make_indptr( _min, _max, _get_value, _num_bins, _begin, _end );
+        make_indptr( _min, _max, _get_value, _num_bins, _begin, _nan_begin );
 
     // ---------------------------------------------------------------------------
 
@@ -118,7 +118,7 @@ NumericalBinner<GetValueType>::make_indptr(
     const GetValueType& _get_value,
     const size_t _num_bins,
     const std::vector<containers::Match>::const_iterator _begin,
-    const std::vector<containers::Match>::const_iterator _end )
+    const std::vector<containers::Match>::const_iterator _nan_begin )
 {
     assert_true( _num_bins > 0 );
 
@@ -129,9 +129,11 @@ NumericalBinner<GetValueType>::make_indptr(
     const Float step_size =
         ( _max - _min ) / ( static_cast<Float>( _num_bins ) - 0.001 );
 
-    for ( auto it = _begin; it != _end; ++it )
+    for ( auto it = _begin; it != _nan_begin; ++it )
         {
             const auto val = _get_value( *it );
+
+            assert_true( !std::isnan( val ) && !std::isinf( val ) );
 
             const auto ix = static_cast<size_t>( ( _max - val ) / step_size );
 
@@ -145,7 +147,8 @@ NumericalBinner<GetValueType>::make_indptr(
     assert_true( indptr.front() == 0 );
 
     assert_true(
-        indptr.back() == static_cast<size_t>( std::distance( _begin, _end ) ) );
+        indptr.back() ==
+        static_cast<size_t>( std::distance( _begin, _nan_begin ) ) );
 
     return std::make_pair( indptr, step_size );
 }

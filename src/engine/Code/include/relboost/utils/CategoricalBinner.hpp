@@ -42,7 +42,7 @@ class CategoricalBinner
         const Int _max,
         const GetValueType& _get_value,
         const std::vector<containers::Match>::const_iterator _begin,
-        const std::vector<containers::Match>::const_iterator _end );
+        const std::vector<containers::Match>::const_iterator _nan_begin );
 };
 
 // ----------------------------------------------------------------------------
@@ -82,7 +82,8 @@ CategoricalBinner<GetValueType>::bin(
 
     const auto num_bins = _max - _min + 1;
 
-    const auto indptr = make_indptr( _min, _max, _get_value, _begin, _end );
+    const auto indptr =
+        make_indptr( _min, _max, _get_value, _begin, _nan_begin );
 
     // ---------------------------------------------------------------------------
 
@@ -187,7 +188,7 @@ std::vector<size_t> CategoricalBinner<GetValueType>::make_indptr(
     const Int _max,
     const GetValueType& _get_value,
     const std::vector<containers::Match>::const_iterator _begin,
-    const std::vector<containers::Match>::const_iterator _end )
+    const std::vector<containers::Match>::const_iterator _nan_begin )
 {
     assert_true( _max > _min );
 
@@ -195,7 +196,7 @@ std::vector<size_t> CategoricalBinner<GetValueType>::make_indptr(
 
     std::vector<size_t> indptr( num_bins + 1 );
 
-    for ( auto it = _begin; it != _end; ++it )
+    for ( auto it = _begin; it != _nan_begin; ++it )
         {
             const auto val = _get_value( *it );
 
@@ -212,7 +213,8 @@ std::vector<size_t> CategoricalBinner<GetValueType>::make_indptr(
     assert_true( indptr.front() == 0 );
 
     assert_true(
-        indptr.back() == static_cast<size_t>( std::distance( _begin, _end ) ) );
+        indptr.back() ==
+        static_cast<size_t>( std::distance( _begin, _nan_begin ) ) );
 
     return indptr;
 }

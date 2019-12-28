@@ -40,6 +40,8 @@ std::pair<VType, VType> MinMaxFinder<GetValueType, VType>::find_min_max(
         {
             const VType val = _get_value( *it );
 
+            assert_true( !std::isnan( val ) && !std::isinf( val ) );
+
             if ( val < min )
                 {
                     min = val;
