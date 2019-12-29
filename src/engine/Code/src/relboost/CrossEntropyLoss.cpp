@@ -74,12 +74,6 @@ Float CrossEntropyLoss::calc_loss( const std::array<Float, 3>& _weights )
 
             loss += ( g_[ix] * p + 0.5 * h_[ix] * p * p ) *
                     ( *sample_weights_ )[ix];
-
-            /*    const auto sigma_yhat = logistic_function(
-                    std::get<0>( _weights ) + yhat_old()[ix] + yhat_[ix] );
-
-                loss += log_loss( sigma_yhat, targets()[ix] ) *
-                        ( *sample_weights_ )[ix];*/
         }
 
     // ------------------------------------------------------------------------
@@ -120,21 +114,11 @@ Float CrossEntropyLoss::calc_loss( const std::array<Float, 3>& _weights )
 Float CrossEntropyLoss::evaluate_tree(
     const Float _update_rate, const std::vector<Float>& _predictions )
 {
+    // ------------------------------------------------------------------------
+
     assert_true( _predictions.size() == targets().size() );
 
-    /*std::vector<Float> yhat_new( targets().size() );
-
-    const auto update_function = [_update_rate](
-                                     const Float y_old, const Float y_new ) {
-        return y_old + y_new * _update_rate;
-    };
-
-    std::transform(
-        yhat_old().begin(),
-        yhat_old().end(),
-        _predictions.begin(),
-        yhat_new.begin(),
-        update_function );*/
+    // ------------------------------------------------------------------------
 
     Float loss = 0.0;
 
@@ -148,17 +132,24 @@ Float CrossEntropyLoss::evaluate_tree(
                     ( *sample_weights_ )[ix];
         }
 
-    /*for ( size_t ix : sample_index_ )
-        {
-            const auto sigma_yhat = logistic_function( yhat_new[ix] );
-
-            loss += log_loss( sigma_yhat, targets()[ix] ) *
-                    ( *sample_weights_ )[ix];
-        }*/
+    // ------------------------------------------------------------------------
 
     utils::Reducer::reduce( std::plus<Float>(), &loss, &comm() );
 
+    // ------------------------------------------------------------------------
+
+    assert_true( sum_sample_weights_ > 0.0 || sample_index_.size() == 0.0 );
+
+    if ( sum_sample_weights_ > 0.0 )
+        {
+            loss /= sum_sample_weights_;
+        }
+
+    // ------------------------------------------------------------------------
+
     return loss;
+
+    // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
