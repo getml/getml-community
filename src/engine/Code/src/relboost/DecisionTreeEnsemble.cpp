@@ -502,7 +502,7 @@ void DecisionTreeEnsemble::fit_new_feature(
             for ( auto &agg : aggregations )
                 {
                     // Reset loss_function_committed_.
-                    loss_function_->commit();
+                    _loss_function->commit();
 
                     candidates.push_back( decisiontrees::DecisionTree(
                         impl().categories_,

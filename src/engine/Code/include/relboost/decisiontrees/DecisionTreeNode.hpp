@@ -168,6 +168,17 @@ class DecisionTreeNode
         const std::vector<containers::Match>::iterator _end,
         std::vector<containers::CandidateSplit>* _candidates );
 
+    /// Called by all methods dealing with numerical columns.
+    void try_numerical(
+        const enums::DataUsed _data_used,
+        const size_t _col,
+        const Float _old_intercept,
+        const Float _max,
+        const Float _step_size,
+        const std::vector<size_t>& _indptr,
+        std::vector<containers::Match>* _bins,
+        std::vector<containers::CandidateSplit>* _candidates );
+
     /// Try numerical input columns as splits.
     void try_numerical_input(
         const Float _old_intercept,
@@ -219,6 +230,7 @@ class DecisionTreeNode
         const containers::Subfeatures& _subfeatures,
         const std::vector<containers::Match>::iterator _begin,
         const std::vector<containers::Match>::iterator _end,
+        std::vector<containers::Match>* _bins,
         std::vector<containers::CandidateSplit>* _candidates );
 
     /// Try the difference between time stamps in input and output as splits.
