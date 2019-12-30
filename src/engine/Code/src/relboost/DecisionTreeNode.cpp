@@ -730,7 +730,7 @@ std::vector<containers::CandidateSplit> DecisionTreeNode::try_all(
                 _old_intercept, *_input, _begin, _end, &bins, &candidates );
 
             try_discrete_input(
-                _old_intercept, *_input, _begin, _end, &candidates );
+                _old_intercept, *_input, _begin, _end, &bins, &candidates );
 
             try_numerical_input(
                 _old_intercept, *_input, _begin, _end, &bins, &candidates );
@@ -765,7 +765,8 @@ std::vector<containers::CandidateSplit> DecisionTreeNode::try_all(
     try_categorical_output(
         _old_intercept, _output, _begin, _end, &bins, &candidates );
 
-    try_discrete_output( _old_intercept, _output, _begin, _end, &candidates );
+    try_discrete_output(
+        _old_intercept, _output, _begin, _end, &bins, &candidates );
 
     try_numerical_output(
         _old_intercept, _output, _begin, _end, &bins, &candidates );
@@ -1042,6 +1043,7 @@ void DecisionTreeNode::try_discrete_input(
     const containers::DataFrame& _input,
     const std::vector<containers::Match>::iterator _begin,
     const std::vector<containers::Match>::iterator _end,
+    std::vector<containers::Match>* _bins,
     std::vector<containers::CandidateSplit>* _candidates )
 {
     debug_log( "try_discrete_input." );
@@ -1054,73 +1056,44 @@ void DecisionTreeNode::try_discrete_input(
                 utils::Partitioner<enums::DataUsed::discrete_input_is_nan>::
                     partition( j, _input, _begin, _end );
 
-            // Note that this sorts in DESCENDING order.
-            utils::Sorter<enums::DataUsed::discrete_input>::sort(
-                j, _input, _begin, nan_begin );
+            const auto get_value = [j, &_input]( const containers::Match& m ) {
+                const auto i = m.ix_input;
+                assert_true( i < _input.nrows() );
+                return _input.discrete( i, j );
+            };
 
-            // Used as placeholder.
-            const auto output = containers::DataFrameView(
-                _input, std::shared_ptr<const std::vector<size_t>>() );
+            const auto [min, max] =
+                utils::MinMaxFinder<decltype( get_value ), Float>::find_min_max(
+                    get_value, _begin, nan_begin, &comm() );
 
-            const auto critical_values = utils::CriticalValues::calc_discrete(
-                enums::DataUsed::discrete_input,
-                j,
-                _input,
-                output,
-                _begin,
-                nan_begin,
-                &comm() );
+            const auto num_bins_numerical = calc_num_bins( _begin, nan_begin );
 
-            if ( critical_values.size() == 0 ||
-                 critical_values.front() == critical_values.back() )
+            // Note that this bins in DESCENDING order.
+            const auto [indptr, step_size] =
+                utils::DiscreteBinner<decltype( get_value )>::bin(
+                    min,
+                    max,
+                    get_value,
+                    num_bins_numerical,
+                    _begin,
+                    nan_begin,
+                    _end,
+                    _bins );
+
+            if ( indptr.size() == 0 )
                 {
                     continue;
                 }
 
-            auto it = _begin;
-
-            auto last_it = _begin;
-
-            for ( auto cv = critical_values.begin();
-                  cv != critical_values.end();
-                  ++cv )
-                {
-                    it = utils::Finder<enums::DataUsed::discrete_input>::
-                        next_split( *cv, j, _input, it, nan_begin );
-
-                    const auto update =
-                        ( cv == critical_values.begin()
-                              ? enums::Update::calc_all
-                              : enums::Update::calc_diff );
-
-                    add_candidates(
-                        enums::Revert::False,
-                        update,
-                        _old_intercept,
-                        containers::Split(
-                            j, *cv, enums::DataUsed::discrete_input ),
-                        _begin,
-                        last_it,
-                        it,
-                        _end,
-                        _candidates );
-
-                    last_it = it;
-                }
-
-            add_candidates(
-                enums::Revert::False,
-                enums::Update::calc_diff,
+            try_numerical_or_discrete(
+                enums::DataUsed::discrete_input,
+                j,
                 _old_intercept,
-                containers::Split(
-                    j, 0.0, enums::DataUsed::discrete_input_is_nan ),
-                _begin,
-                last_it,
-                nan_begin,
-                _end,
+                max,
+                step_size,
+                indptr,
+                _bins,
                 _candidates );
-
-            loss_function().revert_to_commit();
         }
 }
 
@@ -1131,6 +1104,7 @@ void DecisionTreeNode::try_discrete_output(
     const containers::DataFrameView& _output,
     const std::vector<containers::Match>::iterator _begin,
     const std::vector<containers::Match>::iterator _end,
+    std::vector<containers::Match>* _bins,
     std::vector<containers::CandidateSplit>* _candidates )
 {
     debug_log( "try_discrete_output." );
@@ -1143,75 +1117,50 @@ void DecisionTreeNode::try_discrete_output(
                 utils::Partitioner<enums::DataUsed::discrete_output_is_nan>::
                     partition( j, _output, _begin, _end );
 
-            // Note that this sorts in DESCENDING order.
-            utils::Sorter<enums::DataUsed::discrete_output>::sort(
-                j, _output, _begin, nan_begin );
+            const auto get_value = [j, &_output]( const containers::Match& m ) {
+                const auto i = m.ix_output;
+                assert_true( i < _output.nrows() );
+                return _output.discrete( i, j );
+            };
 
-            const auto critical_values = utils::CriticalValues::calc_discrete(
-                enums::DataUsed::discrete_output,
-                j,
-                _output.df(),  // just as a placeholder
-                _output,
-                _begin,
-                nan_begin,
-                &comm() );
+            const auto [min, max] =
+                utils::MinMaxFinder<decltype( get_value ), Float>::find_min_max(
+                    get_value, _begin, nan_begin, &comm() );
 
-            if ( critical_values.size() == 0 ||
-                 critical_values.front() == critical_values.back() )
+            const auto num_bins_numerical = calc_num_bins( _begin, nan_begin );
+
+            // Note that this bins in DESCENDING order.
+            const auto [indptr, step_size] =
+                utils::DiscreteBinner<decltype( get_value )>::bin(
+                    min,
+                    max,
+                    get_value,
+                    num_bins_numerical,
+                    _begin,
+                    nan_begin,
+                    _end,
+                    _bins );
+
+            if ( indptr.size() == 0 )
                 {
                     continue;
                 }
 
-            auto it = _begin;
-
-            auto last_it = _begin;
-
-            for ( auto cv = critical_values.begin();
-                  cv != critical_values.end();
-                  ++cv )
-                {
-                    it = utils::Finder<enums::DataUsed::discrete_output>::
-                        next_split( *cv, j, _output, it, nan_begin );
-
-                    const auto update =
-                        ( cv == critical_values.begin()
-                              ? enums::Update::calc_all
-                              : enums::Update::calc_diff );
-
-                    add_candidates(
-                        enums::Revert::False,
-                        update,
-                        _old_intercept,
-                        containers::Split(
-                            j, *cv, enums::DataUsed::discrete_output ),
-                        _begin,
-                        last_it,
-                        it,
-                        _end,
-                        _candidates );
-
-                    last_it = it;
-                }
-
-            add_candidates(
-                enums::Revert::False,
-                enums::Update::calc_diff,
+            try_numerical_or_discrete(
+                enums::DataUsed::discrete_output,
+                j,
                 _old_intercept,
-                containers::Split(
-                    j, 0.0, enums::DataUsed::discrete_output_is_nan ),
-                _begin,
-                last_it,
-                nan_begin,
-                _end,
+                max,
+                step_size,
+                indptr,
+                _bins,
                 _candidates );
-
-            loss_function().revert_to_commit();
         }
 }
 
 // ----------------------------------------------------------------------------
 
-void DecisionTreeNode::try_numerical(
+void DecisionTreeNode::try_numerical_or_discrete(
     const enums::DataUsed _data_used,
     const size_t _col,
     const Float _old_intercept,
@@ -1312,7 +1261,7 @@ void DecisionTreeNode::try_numerical_input(
                     continue;
                 }
 
-            try_numerical(
+            try_numerical_or_discrete(
                 enums::DataUsed::numerical_input,
                 j,
                 _old_intercept,
@@ -1373,7 +1322,7 @@ void DecisionTreeNode::try_numerical_output(
                     continue;
                 }
 
-            try_numerical(
+            try_numerical_or_discrete(
                 enums::DataUsed::numerical_output,
                 j,
                 _old_intercept,
@@ -1741,7 +1690,7 @@ void DecisionTreeNode::try_subfeatures(
                     continue;
                 }
 
-            try_numerical(
+            try_numerical_or_discrete(
                 enums::DataUsed::subfeatures,
                 j,
                 _old_intercept,

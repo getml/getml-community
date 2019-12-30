@@ -38,6 +38,7 @@
 #include "relboost/utils/Sorter.hpp"
 
 #include "relboost/utils/CategoricalBinner.hpp"
+#include "relboost/utils/DiscreteBinner.hpp"
 #include "relboost/utils/MinMaxFinder.hpp"
 
 #include "relboost/utils/Sampler.hpp"

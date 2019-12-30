@@ -158,6 +158,7 @@ class DecisionTreeNode
         const containers::DataFrame& _input,
         const std::vector<containers::Match>::iterator _begin,
         const std::vector<containers::Match>::iterator _end,
+        std::vector<containers::Match>* _bins,
         std::vector<containers::CandidateSplit>* _candidates );
 
     /// Try discrete output columns as splits.
@@ -166,10 +167,11 @@ class DecisionTreeNode
         const containers::DataFrameView& _output,
         const std::vector<containers::Match>::iterator _begin,
         const std::vector<containers::Match>::iterator _end,
+        std::vector<containers::Match>* _bins,
         std::vector<containers::CandidateSplit>* _candidates );
 
-    /// Called by all methods dealing with numerical columns.
-    void try_numerical(
+    /// Called by all methods dealing with numerical or discrete columns.
+    void try_numerical_or_discrete(
         const enums::DataUsed _data_used,
         const size_t _col,
         const Float _old_intercept,
