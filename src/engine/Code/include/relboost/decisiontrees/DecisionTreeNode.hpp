@@ -173,7 +173,8 @@ class DecisionTreeNode
     /// Called by all methods dealing with numerical or discrete columns.
     void try_numerical_or_discrete(
         const enums::DataUsed _data_used,
-        const size_t _col,
+        const size_t _col1,
+        const size_t _col2,
         const Float _old_intercept,
         const Float _max,
         const Float _step_size,
@@ -224,6 +225,7 @@ class DecisionTreeNode
         const containers::DataFrameView& _output,
         const std::vector<containers::Match>::iterator _begin,
         const std::vector<containers::Match>::iterator _end,
+        std::vector<containers::Match>* _bins,
         std::vector<containers::CandidateSplit>* _candidates );
 
     /// Try subfeatures as splits.
@@ -290,6 +292,15 @@ class DecisionTreeNode
     {
         assert_true( input_ );
         return *input_;
+    }
+
+    /// Whether a DataUsed is same units.
+    bool is_same_units( const enums::DataUsed _data_used ) const
+    {
+        return (
+            _data_used == enums::DataUsed::same_units_categorical ||
+            _data_used == enums::DataUsed::same_units_discrete ||
+            _data_used == enums::DataUsed::same_units_numerical );
     }
 
     /// Trivial accessor.
