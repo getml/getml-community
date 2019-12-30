@@ -216,6 +216,7 @@ class DecisionTreeNode
         const containers::DataFrameView& _output,
         const std::vector<containers::Match>::iterator _begin,
         const std::vector<containers::Match>::iterator _end,
+        std::vector<containers::Match>* _bins,
         std::vector<containers::CandidateSplit>* _candidates );
 
     /// Try splitting on same units numerical.
