@@ -35,7 +35,6 @@
 #include "relboost/utils/NumericalBinner.hpp"
 #include "relboost/utils/Partitioner.hpp"
 #include "relboost/utils/Reducer.hpp"
-#include "relboost/utils/Sorter.hpp"
 
 #include "relboost/utils/CategoricalBinner.hpp"
 #include "relboost/utils/DiscreteBinner.hpp"
