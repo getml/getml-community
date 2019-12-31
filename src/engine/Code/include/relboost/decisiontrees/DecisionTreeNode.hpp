@@ -251,10 +251,13 @@ class DecisionTreeNode
     /// Try the difference between time stamps in input and output as splits.
     void try_window(
         const Float _old_intercept,
+        const Float _min,
+        const Float _max,
         const containers::DataFrame& _input,
         const containers::DataFrameView& _output,
         const std::vector<containers::Match>::iterator _begin,
         const std::vector<containers::Match>::iterator _end,
+        std::vector<containers::Match>* _bins,
         std::vector<containers::CandidateSplit>* _candidates );
 
     // -----------------------------------------------------------------

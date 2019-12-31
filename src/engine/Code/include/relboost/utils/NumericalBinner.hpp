@@ -15,8 +15,8 @@ class NumericalBinner
    public:
     /// Bins the matches into _num_bins equal-width bins.
     /// The bins will be written into _bins_begin and the
-    /// method returns and indptr to them.
-    /// This assumes that min and max are known.
+    /// method returns and indptr to them as well as the
+    /// calculated step size.
     static std::pair<std::vector<size_t>, Float> bin(
         const Float _min,
         const Float _max,
@@ -27,14 +27,25 @@ class NumericalBinner
         const std::vector<containers::Match>::const_iterator _end,
         std::vector<containers::Match>* _bins );
 
-   private:
-    /// Generates the indptr, which indicates the beginning and end of
-    /// each bin.
-    static std::pair<std::vector<size_t>, Float> make_indptr(
+    /// Bins under the assumption that the step size is known.
+    static std::vector<size_t> bin_given_step_size(
         const Float _min,
         const Float _max,
         const GetValueType& _get_value,
-        const size_t _num_bins,
+        const Float _step_size,
+        const std::vector<containers::Match>::const_iterator _begin,
+        const std::vector<containers::Match>::const_iterator _nan_begin,
+        const std::vector<containers::Match>::const_iterator _end,
+        std::vector<containers::Match>* _bins );
+
+   private:
+    /// Generates the indptr, which indicates the beginning and end of
+    /// each bin.
+    static std::vector<size_t> make_indptr(
+        const Float _min,
+        const Float _max,
+        const GetValueType& _get_value,
+        const Float _step_size,
         const std::vector<containers::Match>::const_iterator _begin,
         const std::vector<containers::Match>::const_iterator _nan_begin );
 };
@@ -54,6 +65,56 @@ std::pair<std::vector<size_t>, Float> NumericalBinner<GetValueType>::bin(
 {
     // ---------------------------------------------------------------------------
 
+    assert_true( !std::isnan( _max ) );
+    assert_true( !std::isnan( _max ) );
+    assert_true( !std::isinf( _min ) );
+    assert_true( !std::isinf( _min ) );
+
+    // ---------------------------------------------------------------------------
+    // There is a possibility that all critical values are NAN in all processes.
+    // This accounts for this edge case.
+
+    if ( _min >= _max || _num_bins == 0 )
+        {
+            return std::make_pair( std::vector<size_t>( 0 ), 0.0 );
+        }
+
+    // ---------------------------------------------------------------------------
+
+    const auto step_size = ( _max - _min ) / static_cast<size_t>( _num_bins );
+
+    // ---------------------------------------------------------------------------
+
+    const auto indptr = bin_given_step_size(
+        _min, _max, _get_value, step_size, _begin, _nan_begin, _end, _bins );
+
+    // ---------------------------------------------------------------------------
+
+    return std::make_pair( indptr, step_size );
+
+    // ---------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+template <class GetValueType>
+std::vector<size_t> NumericalBinner<GetValueType>::bin_given_step_size(
+    const Float _min,
+    const Float _max,
+    const GetValueType& _get_value,
+    const Float _step_size,
+    const std::vector<containers::Match>::const_iterator _begin,
+    const std::vector<containers::Match>::const_iterator _nan_begin,
+    const std::vector<containers::Match>::const_iterator _end,
+    std::vector<containers::Match>* _bins )
+{
+    // ---------------------------------------------------------------------------
+
+    assert_true( !std::isnan( _max ) );
+    assert_true( !std::isnan( _max ) );
+    assert_true( !std::isinf( _min ) );
+    assert_true( !std::isinf( _min ) );
+
     assert_true( _nan_begin >= _begin );
     assert_true( _end >= _nan_begin );
 
@@ -64,29 +125,35 @@ std::pair<std::vector<size_t>, Float> NumericalBinner<GetValueType>::bin(
     // There is a possibility that all critical values are NAN in all processes.
     // This accounts for this edge case.
 
-    if ( _min >= _max )
+    if ( _min >= _max || _step_size <= 0.0 )
         {
-            return std::make_pair( std::vector<size_t>( 0 ), 0.0 );
+            return std::vector<size_t>( 0 );
         }
 
     // ---------------------------------------------------------------------------
 
-    const auto [indptr, step_size] =
-        make_indptr( _min, _max, _get_value, _num_bins, _begin, _nan_begin );
+    const auto indptr =
+        make_indptr( _min, _max, _get_value, _step_size, _begin, _nan_begin );
 
     // ---------------------------------------------------------------------------
 
-    assert_true( indptr.size() == _num_bins + 1 );
+    assert_true( indptr.size() > 0 );
 
-    std::vector<size_t> counts( _num_bins );
+    std::vector<size_t> counts( indptr.size() - 1 );
 
     for ( auto it = _begin; it != _nan_begin; ++it )
         {
             const auto val = _get_value( *it );
 
-            const auto ix = static_cast<size_t>( ( _max - val ) / step_size );
+            assert_true( !std::isnan( val ) && !std::isinf( val ) );
 
-            assert_true( ix < _num_bins );
+            assert_true( val <= _max );
+
+            assert_true( val >= _min );
+
+            const auto ix = static_cast<size_t>( ( _max - val ) / _step_size );
+
+            assert_true( ix < counts.size() );
 
             assert_true( indptr[ix] + counts[ix] < indptr[ix + 1] );
 
@@ -103,7 +170,7 @@ std::pair<std::vector<size_t>, Float> NumericalBinner<GetValueType>::bin(
 
     // ---------------------------------------------------------------------------
 
-    return std::make_pair( indptr, step_size );
+    return indptr;
 
     // ---------------------------------------------------------------------------
 }
@@ -111,23 +178,22 @@ std::pair<std::vector<size_t>, Float> NumericalBinner<GetValueType>::bin(
 // ----------------------------------------------------------------------------
 
 template <class GetValueType>
-std::pair<std::vector<size_t>, Float>
-NumericalBinner<GetValueType>::make_indptr(
+std::vector<size_t> NumericalBinner<GetValueType>::make_indptr(
     const Float _min,
     const Float _max,
     const GetValueType& _get_value,
-    const size_t _num_bins,
+    const Float _step_size,
     const std::vector<containers::Match>::const_iterator _begin,
     const std::vector<containers::Match>::const_iterator _nan_begin )
 {
-    assert_true( _num_bins > 0 );
+    assert_true( _max >= _min );
 
-    std::vector<size_t> indptr( _num_bins + 1 );
+    assert_true( _step_size > 0.0 );
 
-    // Note: The 0.001 is substracted to make sure that min value
-    // does not lead to an overflow.
-    const Float step_size =
-        ( _max - _min ) / ( static_cast<Float>( _num_bins ) - 0.001 );
+    const auto num_bins =
+        static_cast<size_t>( ( _max - _min ) / _step_size ) + 1;
+
+    std::vector<size_t> indptr( num_bins + 1 );
 
     for ( auto it = _begin; it != _nan_begin; ++it )
         {
@@ -135,9 +201,13 @@ NumericalBinner<GetValueType>::make_indptr(
 
             assert_true( !std::isnan( val ) && !std::isinf( val ) );
 
-            const auto ix = static_cast<size_t>( ( _max - val ) / step_size );
+            assert_true( val <= _max );
 
-            assert_true( ix < _num_bins );
+            assert_true( val >= _min );
+
+            const auto ix = static_cast<size_t>( ( _max - val ) / _step_size );
+
+            assert_true( ix < num_bins );
 
             ++indptr[ix + 1];
         }
@@ -150,7 +220,7 @@ NumericalBinner<GetValueType>::make_indptr(
         indptr.back() ==
         static_cast<size_t>( std::distance( _begin, _nan_begin ) ) );
 
-    return std::make_pair( indptr, step_size );
+    return indptr;
 }
 
 // ----------------------------------------------------------------------------

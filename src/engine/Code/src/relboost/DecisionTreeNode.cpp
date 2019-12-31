@@ -1714,9 +1714,9 @@ void DecisionTreeNode::try_time_stamps_diff(
 
     if ( hyperparameters().delta_t_ > 0.0 )
         {
-            assert_true( false && "TODO" );
-            try_window(
+            /*try_window(
                 _old_intercept, _input, _output, _begin, _end, _candidates );
+        */
         }
 }
 
@@ -1724,56 +1724,56 @@ void DecisionTreeNode::try_time_stamps_diff(
 
 void DecisionTreeNode::try_window(
     const Float _old_intercept,
+    const Float _min,
+    const Float _max,
     const containers::DataFrame& _input,
     const containers::DataFrameView& _output,
     const std::vector<containers::Match>::iterator _begin,
     const std::vector<containers::Match>::iterator _end,
+    std::vector<containers::Match>* _bins,
     std::vector<containers::CandidateSplit>* _candidates )
 {
     // ------------------------------------------------------------------------
 
     debug_log( "Time windows." );
 
-#ifndef NDEBUG
+    assert_true( hyperparameters().delta_t_ > 0.0 );
 
-    // Should already be sorted by time stamps.
-    const bool is_sorted = std::is_sorted(
-        _begin,
-        _end,
-        [&_input, &_output](
-            const containers::Match m1, const containers::Match m2 ) {
-            assert_true( m1.ix_input < _input.nrows() );
-            assert_true( m2.ix_input < _input.nrows() );
-
-            assert_true( m1.ix_output < _output.nrows() );
-            assert_true( m2.ix_output < _output.nrows() );
-
-            return ( _output.time_stamp( m1.ix_output ) -
-                     _input.time_stamp( m1.ix_input ) ) >
-                   ( _output.time_stamp( m2.ix_output ) -
-                     _input.time_stamp( m2.ix_input ) );
-        } );
-
-    assert_true( is_sorted );
-
-#endif  // NDEBUG
+    const auto step_size = hyperparameters().delta_t_;
 
     // ------------------------------------------------------------------------
 
-    const auto critical_values = utils::CriticalValues::calc_time_window(
-        hyperparameters().delta_t_, _input, _output, _begin, _end, &comm() );
+    const auto get_value = [&_input, &_output]( const containers::Match& m ) {
+        const auto i1 = m.ix_output;
+        const auto i2 = m.ix_input;
+        assert_true( i1 < _output.nrows() );
+        assert_true( i2 < _input.nrows() );
+        return _output.time_stamp( i1 ) - _input.time_stamp( i2 );
+    };
 
-    if ( critical_values.size() == 0 ||
-         critical_values.front() == critical_values.back() )
+    assert_true( _max >= _min );
+
+    const auto num_bins =
+        static_cast<size_t>( ( _max - _min ) / step_size ) + 1;
+
+    // Be reasonable - avoid memory overflow.
+    if ( num_bins > 1000000 )
         {
             return;
         }
 
-    auto it = _begin;
+    // Note that this bins in DESCENDING order.
+    /*const auto [indptr, step_size] =
+        utils::NumericalBinner<decltype( get_value )>::bin(
+            _min, _max, get_value, num_bins, _begin, _end, _end, _bins );
 
-    auto last_it = _begin;
+    if ( indptr.size() == 0 )
+        {
+            return;
+        }*/
 
-    for ( auto cv = critical_values.begin(); cv != critical_values.end(); ++cv )
+    /*for ( auto cv = critical_values.begin(); cv != critical_values.end(); ++cv
+    )
         {
             debug_log( "cv: " + std::to_string( *cv ) );
 
@@ -1799,7 +1799,7 @@ void DecisionTreeNode::try_window(
             last_it = it;
         }
 
-    loss_function().revert_to_commit();
+    loss_function().revert_to_commit();*/
 
     // ------------------------------------------------------------------------
 }
