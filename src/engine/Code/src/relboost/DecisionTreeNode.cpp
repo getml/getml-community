@@ -1714,9 +1714,16 @@ void DecisionTreeNode::try_time_stamps_diff(
 
     if ( hyperparameters().delta_t_ > 0.0 )
         {
-            /*try_window(
-                _old_intercept, _input, _output, _begin, _end, _candidates );
-        */
+            try_window(
+                _old_intercept,
+                min,
+                max,
+                _input,
+                _output,
+                _begin,
+                _end,
+                _bins,
+                _candidates );
         }
 }
 
@@ -1762,44 +1769,49 @@ void DecisionTreeNode::try_window(
             return;
         }
 
+    // ------------------------------------------------------------------------
+
     // Note that this bins in DESCENDING order.
-    /*const auto [indptr, step_size] =
-        utils::NumericalBinner<decltype( get_value )>::bin(
-            _min, _max, get_value, num_bins, _begin, _end, _end, _bins );
+    const auto indptr =
+        utils::NumericalBinner<decltype( get_value )>::bin_given_step_size(
+            _min, _max, get_value, step_size, _begin, _end, _end, _bins );
 
     if ( indptr.size() == 0 )
         {
             return;
-        }*/
+        }
 
-    /*for ( auto cv = critical_values.begin(); cv != critical_values.end(); ++cv
-    )
+    // ------------------------------------------------------------------------
+
+    for ( size_t i = 1; i < indptr.size(); ++i )
         {
-            debug_log( "cv: " + std::to_string( *cv ) );
+            assert_true( indptr[i - 1] <= indptr[i] );
+            assert_true( indptr[i] <= _bins->size() );
 
-            it = utils::Finder<enums::DataUsed::time_stamps_diff>::next_split(
-                *cv, _input, _output, it, _end );
+            const auto split_begin = _bins->begin() + indptr[i - 1];
+
+            const auto split_end = _bins->begin() + indptr[i];
 
             const auto update =
-                ( cv == critical_values.begin() ? enums::Update::calc_all
-                                                : enums::Update::calc_diff );
+                ( i == 1 ? enums::Update::calc_all : enums::Update::calc_diff );
+
+            const auto critical_value =
+                _max - static_cast<Float>( i ) * step_size;
 
             add_candidates(
                 enums::Revert::True,
                 update,
                 _old_intercept,
                 containers::Split(
-                    0, *cv, enums::DataUsed::time_stamps_window ),
-                _begin,
-                last_it,
-                it,
-                _end,
+                    0, critical_value, enums::DataUsed::time_stamps_window ),
+                _bins->begin(),
+                split_begin,
+                split_end,
+                _bins->end(),
                 _candidates );
-
-            last_it = it;
         }
 
-    loss_function().revert_to_commit();*/
+    loss_function().revert_to_commit();
 
     // ------------------------------------------------------------------------
 }
