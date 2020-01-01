@@ -231,6 +231,52 @@ std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_diff(
 
 // ----------------------------------------------------------------------------
 
+// ----------------------------------------------------------------------------
+
+Float LossFunctionImpl::calc_loss(
+    const Float _update_rate,
+    const Float _intercept,
+    const std::vector<Float>& _predictions,
+    multithreading::Communicator* _comm ) const
+{
+    // ------------------------------------------------------------------------
+
+    assert_true( _predictions.size() == targets().size() );
+
+    // ------------------------------------------------------------------------
+
+    Float loss = 0.0;
+
+    for ( size_t ix : sample_index_ )
+        {
+            assert_true( ix < _predictions.size() );
+
+            const auto p = _update_rate * ( _intercept + _predictions[ix] );
+
+            loss += ( g_[ix] * p + 0.5 * h_[ix] * p * p ) *
+                    ( *sample_weights_ )[ix];
+        }
+
+    // ------------------------------------------------------------------------
+
+    utils::Reducer::reduce( std::plus<Float>(), &loss, _comm );
+
+    // ------------------------------------------------------------------------
+
+    if ( sum_sample_weights_ > 0.0 )
+        {
+            loss /= sum_sample_weights_;
+        }
+
+    // ------------------------------------------------------------------------
+
+    return loss;
+
+    // ------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
 std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_pair_avg_null(
     const enums::Aggregation _agg,
     const enums::Update _update,

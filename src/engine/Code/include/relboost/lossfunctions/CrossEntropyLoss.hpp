@@ -30,10 +30,12 @@ class CrossEntropyLoss : public LossFunction
               g_,
               h_,
               hyperparameters_,
+              sample_index_,
               sample_weights_,
               sum_g_,
               sum_h_,
               sum_h_yhat_committed_,
+              sum_sample_weights_,
               targets_ ) )
     {
         assert_true(
@@ -89,10 +91,6 @@ class CrossEntropyLoss : public LossFunction
    public:
     /// Calculates first and second derivatives.
     void calc_gradients() final;
-
-    /// Evaluates and entire tree.
-    Float evaluate_tree(
-        const Float _update_rate, const std::vector<Float>& _yhat_new ) final;
 
     // -----------------------------------------------------------------
 
@@ -339,6 +337,14 @@ class CrossEntropyLoss : public LossFunction
         return 0.0;
     }
 
+    /// Evaluates an entire tree.
+    Float evaluate_tree(
+        const Float _update_rate, const std::vector<Float>& _predictions ) final
+    {
+        assert_true( sample_weights_ );
+        return impl_.calc_loss( _update_rate, 0.0, _predictions, &comm() );
+    }
+
     /// Initializes yhat_old_ by setting it to the initial prediction.
     void init_yhat_old( const Float _initial_prediction ) final
     {
@@ -429,12 +435,13 @@ class CrossEntropyLoss : public LossFunction
     // -----------------------------------------------------------------
 
    private:
-    /// Calculates the loss given a set of predictions.
-    Float calc_loss( const std::array<Float, 3>& _weights );
+    /// Calculates the loss given yhat_.
+    Float calc_loss( const std::array<Float, 3>& _weights )
+    {
+        assert_true( sample_weights_ );
+        return impl_.calc_loss( 1.0, _weights[0], yhat_, &comm() );
+    }
 
-    // -----------------------------------------------------------------
-
-   private:
     /// Trivial (private) accessor
     multithreading::Communicator& comm() const
     {
