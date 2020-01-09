@@ -4,13 +4,13 @@ namespace predictors
 {
 // -----------------------------------------------------------------------------
 
-std::unique_ptr<BoosterHandle, LightGBMPredictor::BoosterDestructor>
-LightGBMPredictor::allocate_booster(
-    const DatasetHandle &_training_set, bst_ulong _len ) const
+std::shared_ptr<BoosterHandle> LightGBMPredictor::allocate_booster(
+    const DatasetHandle &_training_set ) const
 {
     BoosterHandle *raw_ptr = new BoosterHandle;
 
-    const auto res = LGBM_BoosterCreate( _training_set, "TODO", raw_ptr );
+    const auto res =
+        LGBM_BoosterCreate( _training_set, hyperparam_string_.data(), raw_ptr );
 
     if ( res != 0 )
         {
@@ -21,31 +21,30 @@ LightGBMPredictor::allocate_booster(
                 LastErrorMsg() );
         }
 
-    return std::unique_ptr<BoosterHandle, LightGBMPredictor::BoosterDestructor>(
+    return std::shared_ptr<BoosterHandle>(
         raw_ptr, &LightGBMPredictor::delete_booster );
 }
 
 // -----------------------------------------------------------------------------
-
+/*
 std::unique_ptr<DatasetHandle, LightGBMPredictor::DatasetDestructor>
-LightGBMPredictor::convert_to_dmatrix(
+LightGBMPredictor::convert_to_dataset(
     const std::vector<CIntColumn> &_X_categorical,
     const std::vector<CFloatColumn> &_X_numerical ) const
 {
     if ( _X_categorical.size() > 0 )
         {
-            return convert_to_dmatrix_sparse( _X_categorical, _X_numerical );
+            return convert_to_dataset_sparse( _X_categorical, _X_numerical );
         }
     else
         {
-            return convert_to_dmatrix_dense( _X_numerical );
+            return convert_to_dataset_dense( _X_numerical );
         }
-}
+}*/
 
 // -----------------------------------------------------------------------------
 
-std::unique_ptr<DatasetHandle, LightGBMPredictor::DatasetDestructor>
-LightGBMPredictor::convert_to_dmatrix_dense(
+std::vector<float> LightGBMPredictor::convert_to_dense_matrix(
     const std::vector<CFloatColumn> &_X_numerical ) const
 {
     if ( _X_numerical.size() == 0 )
@@ -65,23 +64,43 @@ LightGBMPredictor::convert_to_dmatrix_dense(
                 }
         }
 
-    auto mats = std::vector<Float *>();
+    auto mat =
+        std::vector<float>( _X_numerical.size() * _X_numerical[0]->size() );
 
     for ( size_t j = 0; j < _X_numerical.size(); ++j )
         {
-            mats.push_back( _X_numerical[i]->data() );
+            std::transform(
+                _X_numerical[j]->begin(),
+                _X_numerical[j]->end(),
+                mat.begin() + j * _X_numerical[0]->size(),
+                []( const Float val ) { return static_cast<float>( val ); } );
         }
 
+    return mat;
+}
+
+// -----------------------------------------------------------------------------
+
+std::unique_ptr<DatasetHandle, LightGBMPredictor::DatasetDestructor>
+LightGBMPredictor::convert_to_dataset_dense(
+    const std::vector<CFloatColumn> &_X_numerical,
+    const std::vector<float> &_mat ) const
+{
     DatasetHandle *raw_ptr = new DatasetHandle;
 
-    const auto res = LGBM_DatasetCreateFromMats(
-        static_cast<std::int32_t>(
-            mats.size() ),    // nmat: Number of dense matrices
-        mats.data(),          // data: Pointer to the data space
-        C_API_DTYPE_FLOAT64,  // data_type: Type of data pointer
-        static_cast<std::int32_t>(
-            _X_numerical[0]->size() ),  // nrow: Number of rows
-        1,                              // ncol: Number of columns
+    assert_true( _X_numerical.size() > 0 );
+
+    assert_true( _X_numerical.size() * _X_numerical[0]->size() == _mat.size() );
+
+    const auto nrow = static_cast<std::int32_t>( _X_numerical[0]->size() );
+
+    const auto ncol = static_cast<std::int32_t>( _X_numerical.size() );
+
+    const auto res = LGBM_DatasetCreateFromMat(
+        _mat.data(),          // data: Pointer to the data space
+        C_API_DTYPE_FLOAT32,  // data_type: Type of data pointer
+        nrow,                 // nrow: Number of rows
+        ncol,                 // ncol: Number of columns
         0,       // is_row_major: 1 for row-major, 0 for column-major
         "",      // parameters: Additional parameters
         NULL,    // reference: Used to align bin mapper with other dataset,
@@ -94,9 +113,7 @@ LightGBMPredictor::convert_to_dmatrix_dense(
             delete raw_ptr;
 
             throw std::runtime_error(
-                std::string(
-                    "Creating LightGBM Dataset from Matrix failed: " ) +
-                LastErrorMsg() );
+                std::string( "Creating dataset failed: " ) + LastErrorMsg() );
         }
 
     return std::unique_ptr<DatasetHandle, LightGBMPredictor::DatasetDestructor>(
@@ -106,10 +123,12 @@ LightGBMPredictor::convert_to_dmatrix_dense(
 // -----------------------------------------------------------------------------
 
 std::unique_ptr<DatasetHandle, LightGBMPredictor::DatasetDestructor>
-LightGBMPredictor::convert_to_dmatrix_sparse(
+LightGBMPredictor::convert_to_dataset_sparse(
     const std::vector<CIntColumn> &_X_categorical,
     const std::vector<CFloatColumn> &_X_numerical ) const
 {
+    assert_true( false && "TODO" );
+
     if ( impl().n_encodings() != _X_categorical.size() )
         {
             throw std::invalid_argument(
@@ -151,7 +170,7 @@ std::vector<Float> LightGBMPredictor::feature_importances(
     // --------------------------------------------------------------------
     // Reload the booster
 
-    auto handle = allocate_booster( NULL, 0 );
+    /*auto handle = allocate_booster( NULL, 0 );
 
     if ( XGBoosterLoadModelFromBuffer( *handle, model(), len() ) != 0 )
         {
@@ -195,9 +214,12 @@ std::vector<Float> LightGBMPredictor::feature_importances(
                 {
                     val = 0.0;
                 }
-        }
+        }*/
 
     // --------------------------------------------------------------------
+
+    // TODO
+    auto feature_importances = std::vector<Float>( _num_features, 1.0 );
 
     return feature_importances;
 }
@@ -221,9 +243,12 @@ std::string LightGBMPredictor::fit(
     // --------------------------------------------------------------------
     // Build Dataset
 
-    auto d_matrix = convert_to_dataset( _X_categorical, _X_numerical );
+    auto mat = convert_to_dense_matrix( _X_numerical );
 
-    // convert_to_dmatrix(...) should make sure of this.
+    auto dataset = convert_to_dataset_dense( _X_numerical, mat );
+
+    assert_true( dataset );
+
     assert_true( _X_numerical.size() > 0 );
 
     std::vector<float> y_float( _y->size() );
@@ -233,147 +258,52 @@ std::string LightGBMPredictor::fit(
             return static_cast<float>( val );
         } );
 
-    if ( XGDatasetSetFloatInfo(
-             *d_matrix, "label", y_float.data(), y_float.size() ) != 0 )
+    auto res = LGBM_DatasetSetField(
+        *dataset,  // handle: Handle of dataset
+        "label",   // field_name: Field name, can be label, weight, init_score,
+                   // group
+        y_float.data(),  // field_data: Pointer to data vector
+        static_cast<int>(
+            y_float.size() ),  // num_elements: Number of elements in field_data
+        C_API_DTYPE_FLOAT32    // type: Type of field_data pointer, can be
+                               // C_API_DTYPE_INT32, C_API_DTYPE_FLOAT32 or
+                               // C_API_DTYPE_FLOAT64
+    );
+
+    if ( res != 0 )
         {
-            std::runtime_error( "Setting XGBoost labels failed!" );
+            throw std::runtime_error(
+                std::string( "Setting LightGBM labels failed: " ) +
+                LastErrorMsg() );
         }
 
     // --------------------------------------------------------------------
     // Allocate the booster
 
-    auto handle = allocate_booster( d_matrix.get(), 1 );
+    auto booster = allocate_booster( *dataset );
 
-    // --------------------------------------------------------------------
-    // Set the hyperparameters
-
-    XGBoosterSetParam(
-        *handle, "alpha", std::to_string( hyperparams_.alpha_ ).c_str() );
-
-    XGBoosterSetParam( *handle, "booster", hyperparams_.booster_.c_str() );
-
-    XGBoosterSetParam(
-        *handle,
-        "colsample_bytree",
-        std::to_string( hyperparams_.colsample_bytree_ ).c_str() );
-
-    XGBoosterSetParam(
-        *handle,
-        "colsample_bylevel",
-        std::to_string( hyperparams_.colsample_bylevel_ ).c_str() );
-
-    XGBoosterSetParam(
-        *handle, "eta", std::to_string( hyperparams_.eta_ ).c_str() );
-
-    XGBoosterSetParam(
-        *handle, "gamma", std::to_string( hyperparams_.gamma_ ).c_str() );
-
-    XGBoosterSetParam(
-        *handle, "lambda", std::to_string( hyperparams_.lambda_ ).c_str() );
-
-    XGBoosterSetParam(
-        *handle,
-        "max_delta_step",
-        std::to_string( hyperparams_.max_delta_step_ ).c_str() );
-
-    XGBoosterSetParam(
-        *handle,
-        "max_depth",
-        std::to_string( hyperparams_.max_depth_ ).c_str() );
-
-    XGBoosterSetParam(
-        *handle,
-        "min_child_weight",
-        std::to_string( hyperparams_.min_child_weights_ ).c_str() );
-
-    XGBoosterSetParam(
-        *handle,
-        "num_parallel_tree",
-        std::to_string( hyperparams_.num_parallel_tree_ ).c_str() );
-
-    XGBoosterSetParam(
-        *handle, "normalize_type", hyperparams_.normalize_type_.c_str() );
-
-    XGBoosterSetParam(
-        *handle, "nthread", std::to_string( hyperparams_.nthread_ ).c_str() );
-
-    // XGBoost has deprecated reg::linear, but we will continue to support it.
-    // Strangely enough, its exactly the other way around for windows.
-#if ( defined( _WIN32 ) || defined( _WIN64 ) )
-    if ( hyperparams_.objective_ == "reg:squarederror" )
-        {
-            XGBoosterSetParam( *handle, "objective", "reg:linear" );
-        }
-#else
-    if ( hyperparams_.objective_ == "reg:linear" )
-        {
-            XGBoosterSetParam( *handle, "objective", "reg:squarederror" );
-        }
-#endif
-    else
-        {
-            XGBoosterSetParam(
-                *handle, "objective", hyperparams_.objective_.c_str() );
-        }
-
-    if ( hyperparams_.one_drop_ )
-        {
-            XGBoosterSetParam( *handle, "one_drop", "1" );
-        }
-    else
-        {
-            XGBoosterSetParam( *handle, "one_drop", "0" );
-        }
-
-    XGBoosterSetParam(
-        *handle,
-        "rate_drop",
-        std::to_string( hyperparams_.rate_drop_ ).c_str() );
-
-    XGBoosterSetParam(
-        *handle, "sample_type", hyperparams_.sample_type_.c_str() );
-
-    if ( hyperparams_.silent_ )
-        {
-            XGBoosterSetParam( *handle, "silent", "1" );
-        }
-    else
-        {
-            XGBoosterSetParam( *handle, "silent", "0" );
-        }
-
-    XGBoosterSetParam(
-        *handle,
-        "skip_drop",
-        std::to_string( hyperparams_.skip_drop_ ).c_str() );
-
-    XGBoosterSetParam(
-        *handle,
-        "subsample",
-        std::to_string( hyperparams_.subsample_ ).c_str() );
+    assert_true( booster );
 
     // --------------------------------------------------------------------
     // Do the actual fitting
 
-    for ( int i = 0; i < static_cast<int>( hyperparams_.n_iter_ ); ++i )
+    for ( int i = 0; i < static_cast<int>( hyperparams_.n_estimators_ ); ++i )
         {
-            if ( XGBoosterUpdateOneIter( *handle, i, *d_matrix ) != 0 )
+            int is_finished = 0;
+
+            res = LGBM_BoosterUpdateOneIter( *booster, &is_finished );
+
+            if ( res != 0 )
                 {
                     std::runtime_error(
-                        "XGBoost: Fitting tree or linear model " +
-                        std::to_string( i + 1 ) + " failed!" );
+                        "LightGBM: Fitting tree " + std::to_string( i + 1 ) +
+                        " failed: " + LastErrorMsg() );
                 }
 
-            if ( hyperparams_.booster_ == "gblinear" )
+            if ( _logger )
                 {
                     _logger->log(
-                        "XGBoost: Trained linear model " +
-                        std::to_string( i + 1 ) + "." );
-                }
-            else
-                {
-                    _logger->log(
-                        "XGBoost: Trained tree " + std::to_string( i + 1 ) +
+                        "LightGBM: Trained tree " + std::to_string( i + 1 ) +
                         "." );
                 }
         }
@@ -381,41 +311,32 @@ std::string LightGBMPredictor::fit(
     // ----------------------------------------------------------------
     // Dump booster
 
-    const char *out_dptr;
+    model_ = booster;
 
-    bst_ulong len = 0;
+    save( "test" );
 
-    if ( XGBoosterGetModelRaw( *handle, &len, &out_dptr ) != 0 )
-        {
-            throw std::invalid_argument( "Storing of booster failed!" );
-        }
-
-    model_ = std::vector<char>( out_dptr, out_dptr + len );
+    std::cout << "Saved." << std::endl;
 
     // ----------------------------------------------------------------
     // Return message
 
     std::stringstream msg;
 
-    if ( hyperparams_.booster_ == "gblinear" )
-        {
-            msg << std::endl
-                << "XGBoost: Trained " << hyperparams_.n_iter_
-                << " linear models.";
-        }
-    else
-        {
-            msg << std::endl
-                << "XGBoost: Trained " << hyperparams_.n_iter_ << " trees.";
-        }
+    msg << std::endl
+        << "LightGBM: Trained " << hyperparams_.n_estimators_ << " trees.";
 
     return msg.str();
+
+    // ----------------------------------------------------------------
 }
 
 // -----------------------------------------------------------------------------
 
 void LightGBMPredictor::load( const std::string &_fname )
 {
+    assert_true( false && "TODO" );
+
+    /*
     // --------------------------------------------------------------------
     // Allocate the booster
 
@@ -442,8 +363,47 @@ void LightGBMPredictor::load( const std::string &_fname )
         }
 
     model_ = std::vector<char>( out_dptr, out_dptr + len );
-
+*/
     // --------------------------------------------------------------------
+}
+
+// -----------------------------------------------------------------------------
+/*
+std::unique_ptr<BoosterHandle, LightGBMPredictor::BoosterDestructor>
+LightGBMPredictor::load_booster_from_string() const
+{
+    if ( model_ )
+        {
+            throw std::runtime_error(
+                "Failed to load LightGBM predictor from string: LightGBM "
+                "predictor has not been fitted." );
+        }
+
+    int num_iterations = 0;
+
+    auto booster =
+        std::unique_ptr<BoosterHandle, LightGBMPredictor::BoosterDestructor>(
+            new BoosterHandle, &LightGBMPredictor::delete_booster );
+
+    const auto res = LGBM_BoosterLoadModelFromString(
+        model_.data(), &num_iterations, booster.get() );
+
+    if ( res != 0 )
+        {
+            throw std::runtime_error(
+                std::string(
+                    "Failed to load LightGBM predictor from string: " ) +
+                LastErrorMsg() );
+        }
+
+    return booster;
+}*/
+
+// -----------------------------------------------------------------------------
+
+std::string LightGBMPredictor::make_hyperparam_string() const
+{  // TODO
+    return "    ";
 }
 
 // -----------------------------------------------------------------------------
@@ -458,48 +418,60 @@ CFloatColumn LightGBMPredictor::predict(
 
     // --------------------------------------------------------------------
 
-    if ( len() == 0 )
+    if ( !model_ )
         {
             throw std::runtime_error(
                 "LightGBMPredictor has not been fitted!" );
         }
 
     // --------------------------------------------------------------------
-    // Build Dataset
 
-    auto d_matrix = convert_to_dmatrix( _X_categorical, _X_numerical );
-
-    // --------------------------------------------------------------------
-    // Reload the booster
-
-    auto handle = allocate_booster( d_matrix.get(), 1 );
-
-    if ( XGBoosterLoadModelFromBuffer( *handle, model(), len() ) != 0 )
-        {
-            std::runtime_error( "Could not reload booster!" );
-        }
+    auto booster = model_;
 
     // --------------------------------------------------------------------
     // Generate predictions
 
+    assert_true( _X_numerical.size() > 0 );
+
     auto yhat = std::make_shared<std::vector<Float>>( _X_numerical[0]->size() );
 
-    bst_ulong nrows = 0;
+    auto out_len = static_cast<std::int64_t>( yhat->size() );
 
-    const float *yhat_float = nullptr;
+    auto mat = convert_to_dense_matrix( _X_numerical );
 
-    if ( XGBoosterPredict( *handle, *d_matrix, 0, 0, &nrows, &yhat_float ) !=
-         0 )
+    assert_true( _X_numerical.size() * _X_numerical[0]->size() == mat.size() );
+
+    const auto nrow = static_cast<std::int32_t>( _X_numerical[0]->size() );
+
+    const auto ncol = static_cast<std::int32_t>( _X_numerical.size() );
+
+    const auto res = LGBM_BoosterPredictForMat(
+        *booster,             // handle: Handle of booster
+        mat.data(),           // data: Pointer to the data space
+        C_API_DTYPE_FLOAT32,  // data_type: Type of data pointer, can be
+                              // C_API_DTYPE_FLOAT32 or C_API_DTYPE_FLOAT64
+        nrow,                 // nrow: Number of rows
+        ncol,                 // ncol: Number of columns
+        0,  // is_row_major: 1 for row-major, 0 for column-major
+        C_API_PREDICT_NORMAL,  // predict_type: What should be predicted
+        // C_API_PREDICT_NORMAL: normal prediction, with transform (if
+        // needed);
+        // C_API_PREDICT_RAW_SCORE: raw score;
+        // C_API_PREDICT_LEAF_INDEX: leaf index;
+        // C_API_PREDICT_CONTRIB: feature contributions (SHAP values)
+        0,  // num_iteration: Number of iteration for prediction, <= 0 means no
+        // limit,
+        "",  // parameter: Other parameters for prediction, e.g. early stopping
+             // for prediction
+        &out_len,
+        yhat->data() );
+
+    if ( res != 0 )
         {
-            std::runtime_error( "Generating XGBoost predictions failed!" );
+            throw std::runtime_error(
+                std::string( "Failed to generate predictions: " ) +
+                LastErrorMsg() );
         }
-
-    assert_true( static_cast<size_t>( nrows ) == yhat->size() );
-
-    std::transform(
-        yhat_float, yhat_float + nrows, yhat->begin(), []( const float val ) {
-            return static_cast<Float>( val );
-        } );
 
     // --------------------------------------------------------------------
 
@@ -510,32 +482,33 @@ CFloatColumn LightGBMPredictor::predict(
 
 // -----------------------------------------------------------------------------
 
+// -----------------------------------------------------------------------------
+
 void LightGBMPredictor::save( const std::string &_fname ) const
 {
     // --------------------------------------------------------------------
 
-    if ( len() == 0 )
+    if ( !model_ )
         {
             throw std::runtime_error(
-                "LightGBMPredictor has not been fitted!" );
+                "Could not save LightGBM predictor: LightGBM predictor has not "
+                "been fitted!" );
         }
 
     // --------------------------------------------------------------------
-    // Load booster
 
-    auto handle = allocate_booster( NULL, 0 );
+    const auto res = LGBM_BoosterSaveModel(
+        *model_,  // handle: Handle of booster
+        0,  // start_iteration: Start index of the iteration that should be
+            // saved
+        0,  // num_iteration: Index of the iteration that should be saved, <= 0
+            // means save all
+        _fname.c_str()  // filename: The name of the file
+    );
 
-    if ( XGBoosterLoadModelFromBuffer( *handle, model(), len() ) != 0 )
+    if ( res != 0 )
         {
-            std::runtime_error( "Could not reload booster!" );
-        }
-
-    // --------------------------------------------------------------------
-    // Save model
-
-    if ( XGBoosterSaveModel( *handle, _fname.c_str() ) != 0 )
-        {
-            throw std::runtime_error( "Could not save LightGBMPredictor!" );
+            throw std::runtime_error( "Saving LightGBM predictor failed!" );
         }
 
     // --------------------------------------------------------------------

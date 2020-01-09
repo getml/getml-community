@@ -11,11 +11,9 @@ std::shared_ptr<Predictor> PredictorParser::parse(
 {
     const auto type = JSON::get_value<std::string>( _json_obj, "type_" );
 
-    if ( type == "GradientBoostingClassifier" ||
-         type == "GradientBoostingRegressor" )
+    if ( type == "LGBMClassifier" || type == "LGBMRegressor" )
         {
-            return std::make_shared<GradientBoostingPredictor>(
-                _json_obj, _impl, _categories );
+            return std::make_shared<LightGBMPredictor>( _json_obj, _impl );
         }
     else if ( type == "LinearRegression" )
         {

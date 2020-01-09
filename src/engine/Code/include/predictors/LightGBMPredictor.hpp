@@ -24,8 +24,9 @@ class LightGBMPredictor : public Predictor
     LightGBMPredictor(
         const Poco::JSON::Object& _hyperparams,
         const std::shared_ptr<const PredictorImpl>& _impl )
-        : /*hyperparams_( XGBoostHyperparams( _hyperparams ) ),*/ impl_( _impl )
+        : hyperparams_( LightGBMHyperparams( _hyperparams ) ), impl_( _impl )
     {
+        hyperparam_string_ = make_hyperparam_string();
     }
 
     ~LightGBMPredictor() = default;
@@ -85,36 +86,28 @@ class LightGBMPredictor : public Predictor
         return *impl_;
     }
 
-    /// Returns size of the underlying model
-    const bst_ulong len() const
-    {
-        return static_cast<bst_ulong>( model_.size() );
-    }
-
-    /// Returns reference to the underlying model
-    const char* model() const
-    {
-        assert_true( model_.size() > 0 );
-        return model_.data();
-    }
-
     // -----------------------------------------
 
+   private:
     /// Allocates the booster
-    std::unique_ptr<BoosterHandle, LightGBMPredictor::BoosterDestructor>
-    allocate_booster(
+    std::shared_ptr<BoosterHandle> allocate_booster(
         const DatasetHandle& _training_set, bst_ulong _len ) const;
 
+    /// Converts the dataset to a set of dense matrices.
+    std::vector<float> convert_to_dense_matrix(
+        const std::vector<CFloatColumn>& _X_numerical ) const;
+
     /// Convert matrix _mat to a DatasetHandle
-    std::unique_ptr<DatasetHandle, LightGBMPredictor::DatasetDestructor>
+    /*std::unique_ptr<DatasetHandle, LightGBMPredictor::DatasetDestructor>
     convert_to_dataset(
         const std::vector<CIntColumn>& _X_categorical,
-        const std::vector<CFloatColumn>& _X_numerical ) const;
+        const std::vector<CFloatColumn>& _X_numerical ) const;*/
 
     /// Convert matrix _mat to a dense DatasetHandle
     std::unique_ptr<DatasetHandle, LightGBMPredictor::DatasetDestructor>
     convert_to_dataset_dense(
-        const std::vector<CFloatColumn>& _X_numerical ) const;
+        const std::vector<CFloatColumn>& _X_numerical,
+        const std::vector<float>& mat ) const;
 
     /// Convert matrix _mat to a sparse DatasetHandle
     std::unique_ptr<DatasetHandle, LightGBMPredictor::DatasetDestructor>
@@ -122,17 +115,28 @@ class LightGBMPredictor : public Predictor
         const std::vector<CIntColumn>& _X_categorical,
         const std::vector<CFloatColumn>& _X_numerical ) const;
 
+    /// Recreates an actual booster from model_.
+    std::unique_ptr<BoosterHandle, LightGBMPredictor::BoosterDestructor>
+    load_booster_from_string() const;
+
+    /// Turns the hyperparameters into a string that can be read by the LightGBM
+    /// model.
+    std::string make_hyperparam_string() const;
+
     // -----------------------------------------
 
    private:
     /// Hyperparameters for LightGBMPredictor
-    // const XGBoostHyperparams hyperparams_;
+    const LightGBMHyperparams hyperparams_;
+
+    /// The hyperparameters expressed as a string.
+    std::string hyperparam_string_;
 
     /// Implementation class for member functions common to most predictors.
     std::shared_ptr<const PredictorImpl> impl_;
 
-    /// The underlying XGBoost model, expressed in bytes
-    std::vector<char> model_;
+    /// The underlying LightGBM model.
+    std::shared_ptr<BoosterHandle> model_;
 };
 
 // ------------------------------------------------------------------------
