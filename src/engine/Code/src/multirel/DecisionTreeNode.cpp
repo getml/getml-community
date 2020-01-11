@@ -2319,13 +2319,14 @@ void DecisionTreeNode::try_discrete_values(
     const auto [min, max] = utils::MinMaxFinder<Float>::find_min_max(
         _sample_container_begin, nan_begin, comm() );
 
-    const auto num_bins = calc_num_bins( _sample_container_begin, nan_begin );
+    const auto num_bins_numerical =
+        calc_num_bins( _sample_container_begin, nan_begin );
 
     // Note that this bins in ASCENDING order.
-    const auto [indptr, step_size] = utils::NumericalBinner::bin(
+    const auto [indptr, step_size] = utils::DiscreteBinner::bin(
         min,
         max,
-        num_bins,
+        num_bins_numerical,
         _sample_container_begin,
         nan_begin,
         _sample_container_end,

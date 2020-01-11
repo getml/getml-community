@@ -29,6 +29,7 @@
 #include "multirel/utils/Reducer.hpp"
 #include "multirel/utils/Sampler.hpp"
 
+#include "multirel/utils/DiscreteBinner.hpp"
 #include "multirel/utils/LinearRegression.hpp"
 #include "multirel/utils/Mapper.hpp"
 #include "multirel/utils/Matchmaker.hpp"
