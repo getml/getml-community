@@ -21,7 +21,6 @@
 
 #include <Eigen/Dense>
 
-#include <LightGBM/c_api.h>
 #include <xgboost/c_api.h>
 
 #include "logging/logging.hpp"
@@ -52,9 +51,6 @@
 #include "predictors/PredictorImpl.hpp"
 
 #include "predictors/GradientBoostingPredictor.hpp"
-
-#include "predictors/LightGBMHyperparams.hpp"
-#include "predictors/LightGBMPredictor.hpp"
 
 #include "predictors/LinearHyperparams.hpp"
 

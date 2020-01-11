@@ -11,11 +11,7 @@ std::shared_ptr<Predictor> PredictorParser::parse(
 {
     const auto type = JSON::get_value<std::string>( _json_obj, "type_" );
 
-    if ( type == "LGBMClassifier" || type == "LGBMRegressor" )
-        {
-            return std::make_shared<LightGBMPredictor>( _json_obj, _impl );
-        }
-    else if ( type == "LinearRegression" )
+    if ( type == "LinearRegression" )
         {
             return std::make_shared<LinearRegression>(
                 std::make_shared<LinearHyperparams>( _json_obj ), _impl );
