@@ -17,6 +17,7 @@ set(
     ${MULTIREL_SOURCE_DIRECTORY}/LossFunctionParser.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/Mapper.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/Matchmaker.cpp 
+    ${MULTIREL_SOURCE_DIRECTORY}/NumericalBinner.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/OptimizationCriterionImpl.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/Placeholder.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/RSquaredCriterion.cpp 

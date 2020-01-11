@@ -97,6 +97,21 @@ class DecisionTreeNode
         return split_->apply_from_above;
     }
 
+    /// Calculates the appropriate number of bins for a numerical column.
+    size_t calc_num_bins(
+        const containers::MatchPtrs::const_iterator _begin,
+        const containers::MatchPtrs::const_iterator _end )
+    {
+        assert_true( _end >= _begin );
+        auto num_matches = static_cast<size_t>( std::distance( _begin, _end ) );
+        utils::Reducer::reduce( std::plus<size_t>(), &num_matches, comm() );
+        return std::max(
+            static_cast<size_t>(
+                tree_->grid_factor() *
+                std::sqrt( static_cast<Float>( num_matches ) ) ),
+            static_cast<size_t>( 1 ) );
+    }
+
     /// Calculates the appropriate number of critical values
     inline Int calculate_num_critical_values( size_t _num_samples_on_node )
     {
@@ -661,10 +676,10 @@ class DecisionTreeNode
         const size_t _column_used,
         const enums::DataUsed _data_used,
         const size_t _sample_size,
-        const std::vector<Float> _critical_values,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _null_values_separator,
-        containers::MatchPtrs::iterator _sample_container_end,
+        const Float _min,
+        const Float _step_size,
+        const std::vector<size_t> &_indptr,
+        containers::MatchPtrs &_bins,  // TODO: Make const.
         std::vector<descriptors::Split> *_candidate_splits );
 
     /// Tries whether the numerical values might constitute a good split
