@@ -540,6 +540,14 @@ class DecisionTreeNode
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end );
 
+    /// Returns the index necessary for catagorical data as well as the
+    /// associated categories.
+    std::
+        pair<containers::CategoryIndex, std::shared_ptr<const std::vector<Int>>>
+        make_index_and_categories(
+            containers::MatchPtrs::iterator _sample_container_begin,
+            containers::MatchPtrs::iterator _sample_container_end );
+
     /// Partitions the iterators according by the categories.
     containers::MatchPtrs::iterator partition_by_categories_used(
         containers::MatchPtrs::iterator _sample_container_begin,

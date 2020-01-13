@@ -3,7 +3,7 @@ set(
     ${MULTIREL_SOURCE_DIRECTORY}/AggregationIndex.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/AggregationParser.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/CandidateTreeBuilder.cpp 
-    ${MULTIREL_SOURCE_DIRECTORY}/CategoryIndex.cpp 
+    ${MULTIREL_SOURCE_DIRECTORY}/CategoricalBinner.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/CrossEntropyLoss.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/DataFrame.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/DataFrameScatterer.cpp 

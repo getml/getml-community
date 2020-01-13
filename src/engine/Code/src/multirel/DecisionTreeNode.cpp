@@ -68,12 +68,13 @@ void DecisionTreeNode::apply_by_categories_used_and_commit(
     containers::MatchPtrs::iterator _sample_container_begin,
     containers::MatchPtrs::iterator _sample_container_end )
 {
+    const auto index = make_index_and_categories(
+                           _sample_container_begin, _sample_container_end )
+                           .first;
+
     if ( std::distance( _sample_container_begin, _sample_container_end ) > 0 )
         {
-            const auto index = containers::CategoryIndex(
-                categories_used(),
-                _sample_container_begin,
-                _sample_container_end );
+            assert_true( index.size() > 0 );
 
             if ( apply_from_above() )
                 {
@@ -857,6 +858,42 @@ containers::MatchPtrs::iterator DecisionTreeNode::identify_parameters(
     // --------------------------------------------------------------
 
     return null_values_separator;
+}
+
+// ----------------------------------------------------------------------------
+
+std::pair<containers::CategoryIndex, std::shared_ptr<const std::vector<Int>>>
+DecisionTreeNode::make_index_and_categories(
+    containers::MatchPtrs::iterator _sample_container_begin,
+    containers::MatchPtrs::iterator _sample_container_end )
+{
+    const auto is_null = []( const containers::Match *m ) {
+        return m->categorical_value >= 0;
+    };
+
+    const auto nan_begin = std::partition(
+        _sample_container_begin, _sample_container_end, is_null );
+
+    const auto [min, max] = utils::MinMaxFinder<Int>::find_min_max(
+        _sample_container_begin, nan_begin, comm() );
+
+    auto bins =
+        containers::MatchPtrs( _sample_container_begin, _sample_container_end );
+
+    // Note that this bins in ASCENDING order.
+    auto [indptr, categories] = utils::CategoricalBinner::bin(
+        min,
+        max,
+        _sample_container_begin,
+        nan_begin,
+        _sample_container_end,
+        &bins,
+        comm() );
+
+    auto index = containers::CategoryIndex(
+        std::move( bins ), std::move( indptr ), min );
+
+    return std::make_pair( index, categories );
 }
 
 // ----------------------------------------------------------------------------
@@ -1926,13 +1963,15 @@ void DecisionTreeNode::try_categorical_values(
 {
     // -----------------------------------------------------------------------
 
-    sort_by_categorical_value( _sample_container_begin, _sample_container_end );
+    const auto [index, categories] = make_index_and_categories(
+        _sample_container_begin, _sample_container_end );
 
-    const auto categories = calculate_categories(
-        _sample_size, _sample_container_begin, _sample_container_end );
+    if ( index.size() == 0 )
+        {
+            return;
+        }
 
-    const auto index = containers::CategoryIndex(
-        *categories, _sample_container_begin, _sample_container_end );
+    assert_true( categories );
 
     const auto num_categories = categories->size();
 

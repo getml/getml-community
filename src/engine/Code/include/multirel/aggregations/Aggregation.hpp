@@ -1802,7 +1802,7 @@ void Aggregation<AggType, data_used_, is_population_>::
 
     Float num_samples_smaller = 0.0;
 
-    auto sample_size =
+    const auto sample_size =
         static_cast<Float>( std::distance( _index.begin(), _index.end() ) );
 
     // ------------------------------------------------------------------
@@ -2918,7 +2918,7 @@ void Aggregation<AggType, data_used_, is_population_>::
     // Selectively activate those samples that are not of the
     // particular category
 
-    auto sample_size =
+    const auto sample_size =
         static_cast<Float>( std::distance( _index.begin(), _index.end() ) );
 
     Float num_samples_smaller = 0.0;
