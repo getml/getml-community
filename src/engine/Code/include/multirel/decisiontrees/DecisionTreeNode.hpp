@@ -687,7 +687,7 @@ class DecisionTreeNode
         const Float _min,
         const Float _step_size,
         const std::vector<size_t> &_indptr,
-        containers::MatchPtrs &_bins,  // TODO: Make const.
+        containers::MatchPtrs *_bins,
         std::vector<descriptors::Split> *_candidate_splits );
 
     /// Tries whether the numerical values might constitute a good split

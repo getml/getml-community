@@ -2380,7 +2380,7 @@ void DecisionTreeNode::try_discrete_values(
         min,
         step_size,
         indptr,
-        bins,
+        &bins,
         _candidate_splits );
 
     // -----------------------------------------------------------------------
@@ -2397,7 +2397,7 @@ void DecisionTreeNode::try_non_categorical_values(
     const Float _min,
     const Float _step_size,
     const std::vector<size_t> &_indptr,
-    containers::MatchPtrs &_bins,  // TODO: Make const.
+    containers::MatchPtrs *_bins,
     std::vector<descriptors::Split> *_candidate_splits )
 {
     // -----------------------------------------------------------------------
@@ -2412,7 +2412,7 @@ void DecisionTreeNode::try_non_categorical_values(
         }
 
     // -----------------------------------------------------------------------
-    // Temporary solution.
+    // Build critical values.
 
     auto critical_values = std::vector<Float>( _indptr.size() - 1 );
 
@@ -2449,7 +2449,7 @@ void DecisionTreeNode::try_non_categorical_values(
     if ( is_activated_ )
         {
             aggregation()->deactivate_samples_with_null_values(
-                _bins.begin() + _indptr.back(), _bins.end() );
+                _bins->begin() + _indptr.back(), _bins->end() );
         }
 
     // -----------------------------------------------------------------------
@@ -2490,8 +2490,8 @@ void DecisionTreeNode::try_non_categorical_values(
 
             aggregation()->deactivate_samples_from_above(
                 critical_values,
-                _bins.begin(),
-                _bins.begin() + _indptr.back() );
+                _bins->begin(),
+                _bins->begin() + _indptr.back() );
         }
     else
         {
@@ -2499,8 +2499,8 @@ void DecisionTreeNode::try_non_categorical_values(
 
             aggregation()->activate_samples_from_above(
                 critical_values,
-                _bins.begin(),
-                _bins.begin() + _indptr.back() );
+                _bins->begin(),
+                _bins->begin() + _indptr.back() );
         }
 
     debug_log( "Revert to commit..." );
@@ -2518,7 +2518,7 @@ void DecisionTreeNode::try_non_categorical_values(
     if ( is_activated_ )
         {
             aggregation()->deactivate_samples_with_null_values(
-                _bins.begin() + _indptr.back(), _bins.end() );
+                _bins->begin() + _indptr.back(), _bins->end() );
         }
 
     // -----------------------------------------------------------------------
@@ -2531,15 +2531,15 @@ void DecisionTreeNode::try_non_categorical_values(
         {
             aggregation()->deactivate_samples_from_below(
                 critical_values,
-                _bins.begin(),
-                _bins.begin() + _indptr.back() );
+                _bins->begin(),
+                _bins->begin() + _indptr.back() );
         }
     else
         {
             aggregation()->activate_samples_from_below(
                 critical_values,
-                _bins.begin(),
-                _bins.begin() + _indptr.back() );
+                _bins->begin(),
+                _bins->begin() + _indptr.back() );
         }
 
     // -----------------------------------------------------------------------
@@ -2600,7 +2600,7 @@ void DecisionTreeNode::try_numerical_values(
         min,
         step_size,
         indptr,
-        bins,
+        &bins,
         _candidate_splits );
 
     // -----------------------------------------------------------------------
