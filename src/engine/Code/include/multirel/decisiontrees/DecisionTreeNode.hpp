@@ -583,16 +583,6 @@ class DecisionTreeNode
     /// or the == condition (for categorical variables)
     std::string smaller_or_equal_to( const std::string &_colname ) const;
 
-    /// Sorts the sample by the previously set categorical_value
-    void sort_by_categorical_value(
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end );
-
-    /// Sorts the sample by the previously set numerical_value
-    void sort_by_numerical_value(
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end );
-
     /// Spawns two new child nodes in the fit(...) function
     void spawn_child_nodes(
         const containers::DataFrameView &_population,

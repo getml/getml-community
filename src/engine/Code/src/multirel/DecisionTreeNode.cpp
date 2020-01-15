@@ -782,7 +782,7 @@ containers::MatchPtrs::iterator DecisionTreeNode::identify_parameters(
         {
             debug_log( "Identify_parameters: Sort.." );
 
-            sort_by_categorical_value(
+            partition_by_categories_used(
                 _sample_container_begin, _sample_container_end );
 
             debug_log( "Identify_parameters: apply..." );
@@ -803,20 +803,20 @@ containers::MatchPtrs::iterator DecisionTreeNode::identify_parameters(
 
             // --------------------------------------------------------------
 
-            debug_log( "Identify_parameters: Sort.." );
+            debug_log( "Identify_parameters: Partition..." );
 
             null_values_separator = separate_null_values(
                 _sample_container_begin,
                 _sample_container_end,
                 null_values_to_beginning );
 
+            partition_by_critical_value(
+                _sample_container_begin, _sample_container_end );
+
             // --------------------------------------------------------------
 
             if ( null_values_to_beginning )
                 {
-                    sort_by_numerical_value(
-                        null_values_separator, _sample_container_end );
-
                     debug_log( "Identify_parameters: apply..." );
 
                     if ( is_activated_ )
@@ -834,9 +834,6 @@ containers::MatchPtrs::iterator DecisionTreeNode::identify_parameters(
                 }
             else
                 {
-                    sort_by_numerical_value(
-                        _sample_container_begin, null_values_separator );
-
                     debug_log( "Identify_parameters: apply..." );
 
                     if ( is_activated_ )
@@ -858,6 +855,8 @@ containers::MatchPtrs::iterator DecisionTreeNode::identify_parameters(
     // --------------------------------------------------------------
 
     return null_values_separator;
+
+    // --------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -1205,34 +1204,6 @@ void DecisionTreeNode::set_samples(
 
                 assert_true( false && "Unknown enums::DataUsed!" );
         }
-}
-
-// ----------------------------------------------------------------------------
-
-void DecisionTreeNode::sort_by_categorical_value(
-    containers::MatchPtrs::iterator _sample_container_begin,
-    containers::MatchPtrs::iterator _sample_container_end )
-{
-    auto compare_op = []( const containers::Match *sample1,
-                          const containers::Match *sample2 ) {
-        return sample1->categorical_value < sample2->categorical_value;
-    };
-
-    std::sort( _sample_container_begin, _sample_container_end, compare_op );
-}
-
-// ----------------------------------------------------------------------------
-
-void DecisionTreeNode::sort_by_numerical_value(
-    containers::MatchPtrs::iterator _sample_container_begin,
-    containers::MatchPtrs::iterator _sample_container_end )
-{
-    auto compare_op = []( const containers::Match *sample1,
-                          const containers::Match *sample2 ) {
-        return sample1->numerical_value < sample2->numerical_value;
-    };
-
-    std::sort( _sample_container_begin, _sample_container_end, compare_op );
 }
 
 // ----------------------------------------------------------------------------
