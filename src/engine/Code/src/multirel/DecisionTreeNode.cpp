@@ -2797,10 +2797,6 @@ void DecisionTreeNode::try_time_stamps_diff(
             debug_log( "try time_stamps_window..." );
 
             try_window(
-                0,
-                enums::DataUsed::time_stamps_window,
-                _sample_size,
-                tree_->delta_t(),
                 _sample_container_begin,
                 _sample_container_end,
                 _candidate_splits );
@@ -2812,10 +2808,6 @@ void DecisionTreeNode::try_time_stamps_diff(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::try_window(
-    const size_t _column_used,
-    const enums::DataUsed _data_used,
-    const size_t _sample_size,
-    const Float _delta_t,
     containers::MatchPtrs::iterator _sample_container_begin,
     containers::MatchPtrs::iterator _sample_container_end,
     std::vector<descriptors::Split> *_candidate_splits )
@@ -2824,18 +2816,51 @@ void DecisionTreeNode::try_window(
 
     debug_log( "try_window..." );
 
+    assert_true( tree_->delta_t() > 0.0 );
+
+    const auto step_size = tree_->delta_t();
+
     // -----------------------------------------------------------------------
 
-    containers::MatchPtrs::iterator null_values_separator =
-        separate_null_values( _sample_container_begin, _sample_container_end );
+    const auto [min, max] = utils::MinMaxFinder<Float>::find_min_max(
+        _sample_container_begin, _sample_container_end, comm() );
 
-    assert_true(
-        std::distance( _sample_container_begin, null_values_separator ) == 0 );
+    const auto num_bins = static_cast<size_t>( ( max - min ) / step_size ) + 1;
 
-    sort_by_numerical_value( null_values_separator, _sample_container_end );
+    // Be reasonable - avoid memory overflow.
+    if ( num_bins > 1000000 )
+        {
+            return;
+        }
 
-    auto critical_values = calculate_critical_values_window(
-        _delta_t, null_values_separator, _sample_container_end );
+    // ------------------------------------------------------------------------
+
+    auto bins =
+        containers::MatchPtrs( _sample_container_begin, _sample_container_end );
+
+    // Note that this bins in ASCENDING order.
+    const auto indptr = utils::NumericalBinner::bin_given_step_size(
+        min,
+        max,
+        step_size,
+        _sample_container_begin,
+        _sample_container_end,
+        _sample_container_end,
+        &bins );
+
+    if ( indptr.size() == 0 )
+        {
+            return;
+        }
+
+    // ---------------------------------------------------------------------------
+
+    std::vector<Float> critical_values( num_bins );
+
+    for ( size_t i = 0; i < num_bins; ++i )
+        {
+            critical_values[i] = min + static_cast<Float>( i + 1 ) * step_size;
+        }
 
     // -----------------------------------------------------------------------
     // Add new splits to the candidate splits
@@ -2845,13 +2870,19 @@ void DecisionTreeNode::try_window(
     for ( auto &critical_value : critical_values )
         {
             _candidate_splits->push_back( descriptors::Split(
-                true, critical_value, _column_used, _data_used ) );
+                true,
+                critical_value,
+                0,
+                enums::DataUsed::time_stamps_window ) );
         }
 
     for ( auto &critical_value : critical_values )
         {
             _candidate_splits->push_back( descriptors::Split(
-                false, critical_value, _column_used, _data_used ) );
+                false,
+                critical_value,
+                0,
+                enums::DataUsed::time_stamps_window ) );
         }
 
     // -----------------------------------------------------------------------
@@ -2862,7 +2893,7 @@ void DecisionTreeNode::try_window(
     // calculate_critical_values_discrete contains barriers and we want to
     // avoid a livelock.
 
-    if ( std::distance( null_values_separator, _sample_container_end ) == 0 )
+    if ( std::distance( _sample_container_begin, _sample_container_end ) == 0 )
         {
             for ( size_t i = 0; i < critical_values.size() * 2; ++i )
                 {
@@ -2888,10 +2919,10 @@ void DecisionTreeNode::try_window(
 
             aggregation()->deactivate_samples_outside_window(
                 critical_values,
-                _delta_t,
+                step_size,
                 aggregations::Revert::after_each_category,
-                null_values_separator,
-                _sample_container_end );
+                bins.begin(),
+                bins.end() );
         }
     else
         {
@@ -2899,10 +2930,10 @@ void DecisionTreeNode::try_window(
 
             aggregation()->activate_samples_outside_window(
                 critical_values,
-                _delta_t,
+                step_size,
                 aggregations::Revert::after_each_category,
-                null_values_separator,
-                _sample_container_end );
+                bins.begin(),
+                bins.end() );
         }
 
     // -----------------------------------------------------------------------
@@ -2917,10 +2948,10 @@ void DecisionTreeNode::try_window(
 
             aggregation()->deactivate_samples_in_window(
                 critical_values,
-                _delta_t,
+                step_size,
                 aggregations::Revert::after_each_category,
-                null_values_separator,
-                _sample_container_end );
+                bins.begin(),
+                bins.end() );
         }
     else
         {
@@ -2928,10 +2959,10 @@ void DecisionTreeNode::try_window(
 
             aggregation()->activate_samples_in_window(
                 critical_values,
-                _delta_t,
+                step_size,
                 aggregations::Revert::after_each_category,
-                null_values_separator,
-                _sample_container_end );
+                bins.begin(),
+                bins.end() );
         }
 
     // -----------------------------------------------------------------------

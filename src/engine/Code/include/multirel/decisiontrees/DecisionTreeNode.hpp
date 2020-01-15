@@ -746,10 +746,6 @@ class DecisionTreeNode
 
     /// Tries to apply a moving time window, simulating a lag variable.
     void try_window(
-        const size_t _column_used,
-        const enums::DataUsed _data_used,
-        const size_t _sample_size,
-        const Float _lag,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end,
         std::vector<descriptors::Split> *_candidate_splits );
