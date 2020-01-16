@@ -102,9 +102,9 @@ class AbstractAggregation
     /// Iterates through the samples and activates them
     /// starting with the greatest
     virtual void activate_samples_from_above(
-        const std::vector<Float> &_critical_values,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end ) = 0;
+        const std::vector<size_t> &_indptr,
+        const containers::MatchPtrs::const_iterator &_matches_begin,
+        const containers::MatchPtrs::const_iterator &_matches_end ) = 0;
 
     /// Iterates through the samples and activates those
     /// samples that smaller than or equal to the critical value
@@ -116,9 +116,9 @@ class AbstractAggregation
     /// Iterates through the samples and activates them
     /// starting with the smallest
     virtual void activate_samples_from_below(
-        const std::vector<Float> &_critical_values,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end ) = 0;
+        const std::vector<size_t> &_indptr,
+        const containers::MatchPtrs::const_iterator &_matches_begin,
+        const containers::MatchPtrs::const_iterator &_matches_end ) = 0;
 
     /// Gets rid of data that is no longer needed.
     virtual void clear() = 0;
@@ -159,9 +159,9 @@ class AbstractAggregation
     /// Iterates through the samples and deactivates them
     /// starting with the greatest
     virtual void deactivate_samples_from_above(
-        const std::vector<Float> &_critical_values,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end ) = 0;
+        const std::vector<size_t> &_indptr,
+        const containers::MatchPtrs::const_iterator &_matches_begin,
+        const containers::MatchPtrs::const_iterator &_matches_end ) = 0;
 
     /// Iterates through the samples and deactivates those
     /// samples that smaller than or equal to the critical value
@@ -173,9 +173,9 @@ class AbstractAggregation
     /// Iterates through the samples and deactivates them
     /// starting with the smallest
     virtual void deactivate_samples_from_below(
-        const std::vector<Float> &_critical_values,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end ) = 0;
+        const std::vector<size_t> &_indptr,
+        const containers::MatchPtrs::const_iterator &_matches_begin,
+        const containers::MatchPtrs::const_iterator &_matches_end ) = 0;
 
     /// Implements a lag functionality through moving time windows - used by
     /// transform.

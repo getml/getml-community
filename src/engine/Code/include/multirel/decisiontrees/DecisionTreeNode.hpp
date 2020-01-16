@@ -470,17 +470,29 @@ class DecisionTreeNode
         containers::MatchPtrs::iterator _sample_container_end );
 
     /// Apply changes based on the critical value
-    template <typename T>
     void apply_by_critical_value(
-        const T &_critical_value,
+        containers::MatchPtrs::const_iterator _sample_container_begin,
+        containers::MatchPtrs::const_iterator _separator,
+        containers::MatchPtrs::const_iterator _sample_container_end,
+        aggregations::AbstractAggregation *_aggregation ) const;
+
+    /// Apply changes based on the critical value
+    void apply_by_critical_value(
+        const Float _critical_value,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end,
         aggregations::AbstractAggregation *_aggregation ) const;
 
     /// Apply changes based on the lag operator
-    template <typename T>
     void apply_by_lag(
-        const T &_critical_value,
+        const std::vector<Float> &_critical_value,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end,
+        aggregations::AbstractAggregation *_aggregation ) const;
+
+    /// Apply changes based on the lag operator
+    void apply_by_lag(
+        const Float _critical_value,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end,
         aggregations::AbstractAggregation *_aggregation ) const;
@@ -767,153 +779,6 @@ class DecisionTreeNode
     /// Pointer to tree impl of the tree that contains this node
     DecisionTreeImpl const *tree_;
 };
-
-// ----------------------------------------------------------------------------
-// ----------------------------------------------------------------------------
-
-// This is templated, because it makes a difference whether _critical_value
-// is of type Float or or type std::vector<Float>
-
-template <typename T>
-void DecisionTreeNode::apply_by_critical_value(
-    const T &_critical_value,
-    containers::MatchPtrs::iterator _sample_container_begin,
-    containers::MatchPtrs::iterator _sample_container_end,
-    aggregations::AbstractAggregation *_aggregation ) const
-{
-    if ( std::distance( _sample_container_begin, _sample_container_end ) == 0 )
-        {
-            debug_log( "Distance is zero..." );
-            return;
-        }
-
-    if ( lag_used() )
-        {
-            apply_by_lag(
-                _critical_value,
-                _sample_container_begin,
-                _sample_container_end,
-                _aggregation );
-
-            return;
-        }
-
-    debug_log( "Apply by critical value..." );
-
-    if ( apply_from_above() )
-        {
-            if ( is_activated_ )
-                {
-                    debug_log( "deactivate_samples_from_above..." );
-
-                    _aggregation->deactivate_samples_from_above(
-                        _critical_value,
-                        _sample_container_begin,
-                        _sample_container_end );
-                }
-            else
-                {
-                    debug_log( "activate_samples_from_above..." );
-
-                    _aggregation->activate_samples_from_above(
-                        _critical_value,
-                        _sample_container_begin,
-                        _sample_container_end );
-                }
-        }
-    else
-        {
-            if ( is_activated_ )
-                {
-                    debug_log( "deactivate_samples_from_below..." );
-
-                    _aggregation->deactivate_samples_from_below(
-                        _critical_value,
-                        _sample_container_begin,
-                        _sample_container_end );
-                }
-            else
-                {
-                    debug_log( "activate_samples_from_below..." );
-
-                    _aggregation->activate_samples_from_below(
-                        _critical_value,
-                        _sample_container_begin,
-                        _sample_container_end );
-                }
-        }
-}
-
-// ----------------------------------------------------------------------------
-
-// This is templated, because it makes a difference whether _critical_value
-// is of type Float or or type std::vector<Float>
-
-template <typename T>
-void DecisionTreeNode::apply_by_lag(
-    const T &_critical_value,
-    containers::MatchPtrs::iterator _sample_container_begin,
-    containers::MatchPtrs::iterator _sample_container_end,
-    aggregations::AbstractAggregation *_aggregation ) const
-{
-    if ( std::distance( _sample_container_begin, _sample_container_end ) == 0 )
-        {
-            return;
-        }
-
-    debug_log( "Apply by lag..." );
-
-    if ( apply_from_above() )
-        {
-            if ( is_activated_ )
-                {
-                    debug_log( "deactivate_samples_outside_window..." );
-
-                    _aggregation->deactivate_samples_outside_window(
-                        _critical_value,
-                        tree_->delta_t(),
-                        aggregations::Revert::not_at_all,
-                        _sample_container_begin,
-                        _sample_container_end );
-                }
-            else
-                {
-                    debug_log( "activate_samples_outside_window..." );
-
-                    _aggregation->activate_samples_outside_window(
-                        _critical_value,
-                        tree_->delta_t(),
-                        aggregations::Revert::not_at_all,
-                        _sample_container_begin,
-                        _sample_container_end );
-                }
-        }
-    else
-        {
-            if ( is_activated_ )
-                {
-                    debug_log( "deactivate_samples_in_window..." );
-
-                    _aggregation->deactivate_samples_in_window(
-                        _critical_value,
-                        tree_->delta_t(),
-                        aggregations::Revert::not_at_all,
-                        _sample_container_begin,
-                        _sample_container_end );
-                }
-            else
-                {
-                    debug_log( "activate_samples_in_window..." );
-
-                    _aggregation->activate_samples_in_window(
-                        _critical_value,
-                        tree_->delta_t(),
-                        aggregations::Revert::not_at_all,
-                        _sample_container_begin,
-                        _sample_container_end );
-                }
-        }
-}
 
 // ----------------------------------------------------------------------------
 

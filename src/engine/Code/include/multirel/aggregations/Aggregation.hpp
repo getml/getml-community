@@ -50,9 +50,9 @@ class Aggregation : public AbstractAggregation
     /// Iterates through the samples and activates them
     /// starting with the greatest.
     void activate_samples_from_above(
-        const std::vector<Float> &_critical_values,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end ) final;
+        const std::vector<size_t> &_indptr,
+        const containers::MatchPtrs::const_iterator &_matches_begin,
+        const containers::MatchPtrs::const_iterator &_matches_end ) final;
 
     /// Iterates through the samples and activates those
     /// samples that smaller than or equal to the critical value.
@@ -64,9 +64,9 @@ class Aggregation : public AbstractAggregation
     /// Iterates through the samples and activates them
     /// starting with the smallest.
     void activate_samples_from_below(
-        const std::vector<Float> &_critical_values,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end ) final;
+        const std::vector<size_t> &_indptr,
+        const containers::MatchPtrs::const_iterator &_matches_begin,
+        const containers::MatchPtrs::const_iterator &_matches_end ) final;
 
     /// Implements a lag functionality through moving time windows - used by
     /// transform.
@@ -155,9 +155,9 @@ class Aggregation : public AbstractAggregation
     /// Iterates through the samples and deactivates them
     /// starting with the greatest.
     void deactivate_samples_from_above(
-        const std::vector<Float> &_critical_values,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end ) final;
+        const std::vector<size_t> &_indptr,
+        const containers::MatchPtrs::const_iterator &_matches_begin,
+        const containers::MatchPtrs::const_iterator &_matches_end ) final;
 
     /// Iterates through the samples and deactivates those
     /// samples that smaller than or equal to the critical value.
@@ -169,9 +169,9 @@ class Aggregation : public AbstractAggregation
     /// Iterates through the samples and deactivates them
     /// starting with the smallest.
     void deactivate_samples_from_below(
-        const std::vector<Float> &_critical_values,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end ) final;
+        const std::vector<size_t> &_indptr,
+        const containers::MatchPtrs::const_iterator &_matches_begin,
+        const containers::MatchPtrs::const_iterator &_matches_end ) final;
 
     /// Implements a lag functionality through moving time windows - used by
     /// transform.
@@ -1875,38 +1875,39 @@ void Aggregation<AggType, data_used_, is_population_>::
 template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     activate_samples_from_above(
-        const std::vector<Float> &_critical_values,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end )
+        const std::vector<size_t> &_indptr,
+        const containers::MatchPtrs::const_iterator &_matches_begin,
+        const containers::MatchPtrs::const_iterator &_matches_end )
 {
-    assert_true( _sample_container_end > _sample_container_begin );
-    assert_true( _critical_values.size() > 0 );
-
-    auto it = _sample_container_end - 1;
-
-    for ( auto c = _critical_values.rbegin(); c != _critical_values.rend();
-          ++c )
+    if ( _indptr.size() == 0 )
         {
-            while ( it >= _sample_container_begin )
-                {
-                    if ( ( *it )->numerical_value <= *c )
-                        {
-                            break;
-                        }
+            return;
+        }
 
+    for ( size_t i = _indptr.size() - 1; i > 0; --i )
+        {
+            assert_true( _indptr[i - 1] <= _indptr[i] );
+            assert_true( _matches_begin <= _matches_end );
+            assert_true(
+                _indptr[i] <= static_cast<size_t>( std::distance(
+                                  _matches_begin, _matches_end ) ) );
+            assert_true( _indptr[i] <= _indptr.back() );
+
+            const auto begin = _matches_begin + _indptr[i - 1];
+            const auto end = _matches_begin + _indptr[i];
+
+            for ( auto it = begin; it != end; ++it )
+                {
                     activate_sample( *it );
 
                     updates_stored().insert( ( *it )->ix_x_popul );
                     updates_current().insert( ( *it )->ix_x_popul );
-
-                    --it;
                 }
 
-            auto num_samples_smaller = static_cast<Float>(
-                std::distance( _sample_container_begin, it ) );
+            auto num_samples_smaller = static_cast<Float>( _indptr[i] );
 
-            auto num_samples_greater = static_cast<Float>(
-                std::distance( it, _sample_container_end ) );
+            auto num_samples_greater =
+                static_cast<Float>( _indptr.back() - _indptr[i] );
 
             update_optimization_criterion_and_clear_updates_current(
                 num_samples_smaller, num_samples_greater );
@@ -1936,34 +1937,34 @@ void Aggregation<AggType, data_used_, is_population_>::
 template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     activate_samples_from_below(
-        const std::vector<Float> &_critical_values,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end )
+        const std::vector<size_t> &_indptr,
+        const containers::MatchPtrs::const_iterator &_matches_begin,
+        const containers::MatchPtrs::const_iterator &_matches_end )
 {
-    auto it = _sample_container_begin;
-
-    for ( size_t i = 0; i < _critical_values.size(); ++i )
+    for ( size_t i = 1; i < _indptr.size(); ++i )
         {
-            while ( it != _sample_container_end )
-                {
-                    if ( ( *it )->numerical_value > _critical_values[i] )
-                        {
-                            break;
-                        }
+            assert_true( _indptr[i - 1] <= _indptr[i] );
+            assert_true( _matches_begin <= _matches_end );
+            assert_true(
+                _indptr[i] <= static_cast<size_t>( std::distance(
+                                  _matches_begin, _matches_end ) ) );
+            assert_true( _indptr[i] <= _indptr.back() );
 
+            const auto begin = _matches_begin + _indptr[i - 1];
+            const auto end = _matches_begin + _indptr[i];
+
+            for ( auto it = begin; it != end; ++it )
+                {
                     activate_sample( *it );
 
                     updates_stored().insert( ( *it )->ix_x_popul );
                     updates_current().insert( ( *it )->ix_x_popul );
-
-                    ++it;
                 }
 
-            auto num_samples_smaller = static_cast<Float>(
-                std::distance( _sample_container_begin, it ) );
+            auto num_samples_smaller = static_cast<Float>( _indptr[i] );
 
-            auto num_samples_greater = static_cast<Float>(
-                std::distance( it, _sample_container_end ) );
+            auto num_samples_greater =
+                static_cast<Float>( _indptr.back() - _indptr[i] );
 
             update_optimization_criterion_and_clear_updates_current(
                 num_samples_smaller, num_samples_greater );
@@ -2534,38 +2535,39 @@ void Aggregation<AggType, data_used_, is_population_>::
 template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     deactivate_samples_from_above(
-        const std::vector<Float> &_critical_values,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end )
+        const std::vector<size_t> &_indptr,
+        const containers::MatchPtrs::const_iterator &_matches_begin,
+        const containers::MatchPtrs::const_iterator &_matches_end )
 {
-    assert_true( _sample_container_end > _sample_container_begin );
-    assert_true( _critical_values.size() > 0 );
-
-    auto it = _sample_container_end - 1;
-
-    for ( auto c = _critical_values.rbegin(); c != _critical_values.rend();
-          ++c )
+    if ( _indptr.size() == 0 )
         {
-            while ( it >= _sample_container_begin )
-                {
-                    if ( ( *it )->numerical_value <= *c )
-                        {
-                            break;
-                        }
+            return;
+        }
 
+    for ( size_t i = _indptr.size() - 1; i > 0; --i )
+        {
+            assert_true( _indptr[i - 1] <= _indptr[i] );
+            assert_true( _matches_begin <= _matches_end );
+            assert_true(
+                _indptr[i] <= static_cast<size_t>( std::distance(
+                                  _matches_begin, _matches_end ) ) );
+            assert_true( _indptr[i] <= _indptr.back() );
+
+            const auto begin = _matches_begin + _indptr[i - 1];
+            const auto end = _matches_begin + _indptr[i];
+
+            for ( auto it = begin; it != end; ++it )
+                {
                     deactivate_sample( *it );
 
                     updates_stored().insert( ( *it )->ix_x_popul );
                     updates_current().insert( ( *it )->ix_x_popul );
-
-                    --it;
                 }
 
-            auto num_samples_smaller = static_cast<Float>(
-                std::distance( _sample_container_begin, it ) );
+            const auto num_samples_smaller = static_cast<Float>( _indptr[i] );
 
-            auto num_samples_greater = static_cast<Float>(
-                std::distance( it, _sample_container_end ) );
+            const auto num_samples_greater =
+                static_cast<Float>( _indptr.back() - _indptr[i] );
 
             update_optimization_criterion_and_clear_updates_current(
                 num_samples_smaller, num_samples_greater );
@@ -2597,39 +2599,40 @@ void Aggregation<AggType, data_used_, is_population_>::
 template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     deactivate_samples_from_below(
-        const std::vector<Float> &_critical_values,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end )
+        const std::vector<size_t> &_indptr,
+        const containers::MatchPtrs::const_iterator &_matches_begin,
+        const containers::MatchPtrs::const_iterator &_matches_end )
 {
-    auto it = _sample_container_begin;
-
-    for ( size_t i = 0; i < _critical_values.size(); ++i )
+    for ( size_t i = 1; i < _indptr.size(); ++i )
         {
-            while ( it != _sample_container_end )
-                {
-                    if ( ( *it )->numerical_value > _critical_values[i] )
-                        {
-                            break;
-                        }
+            assert_true( _indptr[i - 1] <= _indptr[i] );
+            assert_true( _matches_begin <= _matches_end );
+            assert_true(
+                _indptr[i] <= static_cast<size_t>( std::distance(
+                                  _matches_begin, _matches_end ) ) );
+            assert_true( _indptr[i] <= _indptr.back() );
 
+            const auto begin = _matches_begin + _indptr[i - 1];
+            const auto end = _matches_begin + _indptr[i];
+
+            for ( auto it = begin; it != end; ++it )
+                {
                     deactivate_sample( *it );
 
                     updates_stored().insert( ( *it )->ix_x_popul );
                     updates_current().insert( ( *it )->ix_x_popul );
-
-                    ++it;
                 }
 
-            auto num_samples_smaller = static_cast<Float>(
-                std::distance( _sample_container_begin, it ) );
+            const auto num_samples_smaller = static_cast<Float>( _indptr[i] );
 
-            auto num_samples_greater = static_cast<Float>(
-                std::distance( it, _sample_container_end ) );
+            const auto num_samples_greater =
+                static_cast<Float>( _indptr.back() - _indptr[i] );
 
             update_optimization_criterion_and_clear_updates_current(
                 num_samples_smaller, num_samples_greater );
         }
 }
+
 // ----------------------------------------------------------------------------
 
 template <typename AggType, enums::DataUsed data_used_, bool is_population_>

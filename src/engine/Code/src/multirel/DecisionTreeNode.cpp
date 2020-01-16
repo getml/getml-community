@@ -123,6 +123,299 @@ void DecisionTreeNode::apply_by_categories_used_and_commit(
 
 // ----------------------------------------------------------------------------
 
+void DecisionTreeNode::apply_by_critical_value(
+    containers::MatchPtrs::const_iterator _sample_container_begin,
+    containers::MatchPtrs::const_iterator _separator,
+    containers::MatchPtrs::const_iterator _sample_container_end,
+    aggregations::AbstractAggregation *_aggregation ) const
+{
+    assert_true( _sample_container_begin <= _separator );
+    assert_true( _separator <= _sample_container_end );
+
+    if ( std::distance( _sample_container_begin, _sample_container_end ) == 0 )
+        {
+            debug_log( "Distance is zero..." );
+            return;
+        }
+
+    // TODO: Uncomment.
+    /*if ( lag_used() )
+        {
+            apply_by_lag(
+                _critical_value,
+                _sample_container_begin,
+                _sample_container_end,
+                _aggregation );
+
+            return;
+        }*/
+
+    debug_log( "Apply by critical value..." );
+
+    auto indptr = std::vector<size_t>( 2 );
+
+    if ( apply_from_above() )
+        {
+            indptr[0] = static_cast<size_t>(
+                std::distance( _sample_container_begin, _separator ) );
+
+            indptr[1] = static_cast<size_t>( std::distance(
+                _sample_container_begin, _sample_container_end ) );
+
+            if ( is_activated_ )
+                {
+                    debug_log( "deactivate_samples_from_above..." );
+
+                    _aggregation->deactivate_samples_from_above(
+                        indptr,
+                        _sample_container_begin,
+                        _sample_container_end );
+                }
+            else
+                {
+                    debug_log( "activate_samples_from_above..." );
+
+                    _aggregation->activate_samples_from_above(
+                        indptr,
+                        _sample_container_begin,
+                        _sample_container_end );
+                }
+        }
+    else
+        {
+            indptr[0] = 0;
+
+            indptr[1] = static_cast<size_t>(
+                std::distance( _sample_container_begin, _separator ) );
+
+            if ( is_activated_ )
+                {
+                    debug_log( "deactivate_samples_from_below..." );
+
+                    _aggregation->deactivate_samples_from_below(
+                        indptr,
+                        _sample_container_begin,
+                        _sample_container_end );
+                }
+            else
+                {
+                    debug_log( "activate_samples_from_below..." );
+
+                    _aggregation->activate_samples_from_below(
+                        indptr,
+                        _sample_container_begin,
+                        _sample_container_end );
+                }
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+void DecisionTreeNode::apply_by_critical_value(
+    const Float _critical_value,
+    containers::MatchPtrs::iterator _sample_container_begin,
+    containers::MatchPtrs::iterator _sample_container_end,
+    aggregations::AbstractAggregation *_aggregation ) const
+{
+    if ( std::distance( _sample_container_begin, _sample_container_end ) == 0 )
+        {
+            debug_log( "Distance is zero..." );
+            return;
+        }
+
+    if ( lag_used() )
+        {
+            apply_by_lag(
+                _critical_value,
+                _sample_container_begin,
+                _sample_container_end,
+                _aggregation );
+
+            return;
+        }
+
+    debug_log( "Apply by critical value..." );
+
+    if ( apply_from_above() )
+        {
+            if ( is_activated_ )
+                {
+                    debug_log( "deactivate_samples_from_above..." );
+
+                    _aggregation->deactivate_samples_from_above(
+                        _critical_value,
+                        _sample_container_begin,
+                        _sample_container_end );
+                }
+            else
+                {
+                    debug_log( "activate_samples_from_above..." );
+
+                    _aggregation->activate_samples_from_above(
+                        _critical_value,
+                        _sample_container_begin,
+                        _sample_container_end );
+                }
+        }
+    else
+        {
+            if ( is_activated_ )
+                {
+                    debug_log( "deactivate_samples_from_below..." );
+
+                    _aggregation->deactivate_samples_from_below(
+                        _critical_value,
+                        _sample_container_begin,
+                        _sample_container_end );
+                }
+            else
+                {
+                    debug_log( "activate_samples_from_below..." );
+
+                    _aggregation->activate_samples_from_below(
+                        _critical_value,
+                        _sample_container_begin,
+                        _sample_container_end );
+                }
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+void DecisionTreeNode::apply_by_lag(
+    const std::vector<Float> &_critical_value,
+    containers::MatchPtrs::iterator _sample_container_begin,
+    containers::MatchPtrs::iterator _sample_container_end,
+    aggregations::AbstractAggregation *_aggregation ) const
+{
+    if ( std::distance( _sample_container_begin, _sample_container_end ) == 0 )
+        {
+            return;
+        }
+
+    debug_log( "Apply by lag..." );
+
+    if ( apply_from_above() )
+        {
+            if ( is_activated_ )
+                {
+                    debug_log( "deactivate_samples_outside_window..." );
+
+                    _aggregation->deactivate_samples_outside_window(
+                        _critical_value,
+                        tree_->delta_t(),
+                        aggregations::Revert::not_at_all,
+                        _sample_container_begin,
+                        _sample_container_end );
+                }
+            else
+                {
+                    debug_log( "activate_samples_outside_window..." );
+
+                    _aggregation->activate_samples_outside_window(
+                        _critical_value,
+                        tree_->delta_t(),
+                        aggregations::Revert::not_at_all,
+                        _sample_container_begin,
+                        _sample_container_end );
+                }
+        }
+    else
+        {
+            if ( is_activated_ )
+                {
+                    debug_log( "deactivate_samples_in_window..." );
+
+                    _aggregation->deactivate_samples_in_window(
+                        _critical_value,
+                        tree_->delta_t(),
+                        aggregations::Revert::not_at_all,
+                        _sample_container_begin,
+                        _sample_container_end );
+                }
+            else
+                {
+                    debug_log( "activate_samples_in_window..." );
+
+                    _aggregation->activate_samples_in_window(
+                        _critical_value,
+                        tree_->delta_t(),
+                        aggregations::Revert::not_at_all,
+                        _sample_container_begin,
+                        _sample_container_end );
+                }
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+void DecisionTreeNode::apply_by_lag(
+    const Float _critical_value,
+    containers::MatchPtrs::iterator _sample_container_begin,
+    containers::MatchPtrs::iterator _sample_container_end,
+    aggregations::AbstractAggregation *_aggregation ) const
+{
+    if ( std::distance( _sample_container_begin, _sample_container_end ) == 0 )
+        {
+            return;
+        }
+
+    debug_log( "Apply by lag..." );
+
+    if ( apply_from_above() )
+        {
+            if ( is_activated_ )
+                {
+                    debug_log( "deactivate_samples_outside_window..." );
+
+                    _aggregation->deactivate_samples_outside_window(
+                        _critical_value,
+                        tree_->delta_t(),
+                        aggregations::Revert::not_at_all,
+                        _sample_container_begin,
+                        _sample_container_end );
+                }
+            else
+                {
+                    debug_log( "activate_samples_outside_window..." );
+
+                    _aggregation->activate_samples_outside_window(
+                        _critical_value,
+                        tree_->delta_t(),
+                        aggregations::Revert::not_at_all,
+                        _sample_container_begin,
+                        _sample_container_end );
+                }
+        }
+    else
+        {
+            if ( is_activated_ )
+                {
+                    debug_log( "deactivate_samples_in_window..." );
+
+                    _aggregation->deactivate_samples_in_window(
+                        _critical_value,
+                        tree_->delta_t(),
+                        aggregations::Revert::not_at_all,
+                        _sample_container_begin,
+                        _sample_container_end );
+                }
+            else
+                {
+                    debug_log( "activate_samples_in_window..." );
+
+                    _aggregation->activate_samples_in_window(
+                        _critical_value,
+                        tree_->delta_t(),
+                        aggregations::Revert::not_at_all,
+                        _sample_container_begin,
+                        _sample_container_end );
+                }
+        }
+}
+
+// ----------------------------------------------------------------------------
+
 std::shared_ptr<const std::vector<Int>> DecisionTreeNode::calculate_categories(
     const size_t _sample_size,
     containers::MatchPtrs::iterator _sample_container_begin,
@@ -794,10 +1087,6 @@ containers::MatchPtrs::iterator DecisionTreeNode::identify_parameters(
         {
             // --------------------------------------------------------------
 
-            std::vector<Float> critical_values( 1 );
-
-            critical_values[0] = critical_value();
-
             const bool null_values_to_beginning =
                 ( apply_from_above() != is_activated_ );
 
@@ -810,7 +1099,7 @@ containers::MatchPtrs::iterator DecisionTreeNode::identify_parameters(
                 _sample_container_end,
                 null_values_to_beginning );
 
-            partition_by_critical_value(
+            const auto match_separator = partition_by_critical_value(
                 _sample_container_begin, _sample_container_end );
 
             // --------------------------------------------------------------
@@ -827,8 +1116,8 @@ containers::MatchPtrs::iterator DecisionTreeNode::identify_parameters(
                         }
 
                     apply_by_critical_value(
-                        critical_values,
                         null_values_separator,
+                        match_separator,
                         _sample_container_end,
                         aggregation() );
                 }
@@ -843,8 +1132,8 @@ containers::MatchPtrs::iterator DecisionTreeNode::identify_parameters(
                         }
 
                     apply_by_critical_value(
-                        critical_values,
                         _sample_container_begin,
+                        match_separator,
                         null_values_separator,
                         aggregation() );
                 }
@@ -2383,30 +2672,22 @@ void DecisionTreeNode::try_non_categorical_values(
         }
 
     // -----------------------------------------------------------------------
-    // Build critical values.
-
-    auto critical_values = std::vector<Float>( _indptr.size() - 1 );
-
-    for ( size_t i = 1; i < _indptr.size(); ++i )
-        {
-            critical_values[i - 1] =
-                _min + static_cast<Float>( i ) * _step_size;
-        }
-
-    // -----------------------------------------------------------------------
     // Add new splits to the candidate splits
 
     debug_log( "try_non_categorical_values: Add new splits." );
 
-    for ( auto it = critical_values.rbegin(); it != critical_values.rend();
-          ++it )
+    for ( size_t i = _indptr.size() - 1; i > 0; --i )
         {
+            const auto cv = _min + static_cast<Float>( i ) * _step_size;
+
             _candidate_splits->push_back(
-                descriptors::Split( true, *it, _column_used, _data_used ) );
+                descriptors::Split( true, cv, _column_used, _data_used ) );
         }
 
-    for ( auto &cv : critical_values )
+    for ( size_t i = 1; i < _indptr.size(); ++i )
         {
+            const auto cv = _min + static_cast<Float>( i ) * _step_size;
+
             _candidate_splits->push_back(
                 descriptors::Split( false, cv, _column_used, _data_used ) );
         }
@@ -2433,7 +2714,7 @@ void DecisionTreeNode::try_non_categorical_values(
 
     if ( _indptr.back() == 0 )
         {
-            for ( size_t i = 0; i < critical_values.size() * 2; ++i )
+            for ( size_t i = 0; i < ( _indptr.size() - 1 ) * 2; ++i )
                 {
                     aggregation()
                         ->update_optimization_criterion_and_clear_updates_current(
@@ -2460,18 +2741,14 @@ void DecisionTreeNode::try_non_categorical_values(
             debug_log( "Deactivate..." );
 
             aggregation()->deactivate_samples_from_above(
-                critical_values,
-                _bins->begin(),
-                _bins->begin() + _indptr.back() );
+                _indptr, _bins->begin(), _bins->end() );
         }
     else
         {
             debug_log( "Activate..." );
 
             aggregation()->activate_samples_from_above(
-                critical_values,
-                _bins->begin(),
-                _bins->begin() + _indptr.back() );
+                _indptr, _bins->begin(), _bins->end() );
         }
 
     debug_log( "Revert to commit..." );
@@ -2501,16 +2778,12 @@ void DecisionTreeNode::try_non_categorical_values(
     if ( is_activated_ )
         {
             aggregation()->deactivate_samples_from_below(
-                critical_values,
-                _bins->begin(),
-                _bins->begin() + _indptr.back() );
+                _indptr, _bins->begin(), _bins->end() );
         }
     else
         {
             aggregation()->activate_samples_from_below(
-                critical_values,
-                _bins->begin(),
-                _bins->begin() + _indptr.back() );
+                _indptr, _bins->begin(), _bins->end() );
         }
 
     // -----------------------------------------------------------------------
