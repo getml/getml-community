@@ -22,6 +22,7 @@ struct DecisionTreeImpl
             _tree_hyperparameters )
         : categories_( _categories ),
           comm_( nullptr ),
+          optimization_criterion_( nullptr ),
           random_number_generator_( nullptr ),
           tree_hyperparameters_( _tree_hyperparameters )
     {

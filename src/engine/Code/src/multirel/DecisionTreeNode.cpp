@@ -152,22 +152,22 @@ void DecisionTreeNode::apply_by_critical_value(
 
     debug_log( "Apply by critical value..." );
 
-    auto indptr = std::vector<size_t>( 2 );
+    // auto indptr = std::vector<size_t>( 2 );
 
     if ( apply_from_above() )
         {
-            indptr[0] = static_cast<size_t>(
+            /*indptr[0] = static_cast<size_t>(
                 std::distance( _sample_container_begin, _separator ) );
 
             indptr[1] = static_cast<size_t>( std::distance(
-                _sample_container_begin, _sample_container_end ) );
+                _sample_container_begin, _sample_container_end ) );*/
 
             if ( is_activated_ )
                 {
                     debug_log( "deactivate_samples_from_above..." );
 
                     _aggregation->deactivate_samples_from_above(
-                        indptr,
+                        critical_value(),
                         _sample_container_begin,
                         _sample_container_end );
                 }
@@ -176,24 +176,24 @@ void DecisionTreeNode::apply_by_critical_value(
                     debug_log( "activate_samples_from_above..." );
 
                     _aggregation->activate_samples_from_above(
-                        indptr,
+                        critical_value(),
                         _sample_container_begin,
                         _sample_container_end );
                 }
         }
     else
         {
-            indptr[0] = 0;
+            /*indptr[0] = 0;
 
             indptr[1] = static_cast<size_t>(
-                std::distance( _sample_container_begin, _separator ) );
+                std::distance( _sample_container_begin, _separator ) );*/
 
             if ( is_activated_ )
                 {
                     debug_log( "deactivate_samples_from_below..." );
 
                     _aggregation->deactivate_samples_from_below(
-                        indptr,
+                        critical_value(),
                         _sample_container_begin,
                         _sample_container_end );
                 }
@@ -202,7 +202,7 @@ void DecisionTreeNode::apply_by_critical_value(
                     debug_log( "activate_samples_from_below..." );
 
                     _aggregation->activate_samples_from_below(
-                        indptr,
+                        critical_value(),
                         _sample_container_begin,
                         _sample_container_end );
                 }
@@ -1073,11 +1073,6 @@ containers::MatchPtrs::iterator DecisionTreeNode::identify_parameters(
 
     if ( categorical_data_used() )
         {
-            debug_log( "Identify_parameters: Sort.." );
-
-            partition_by_categories_used(
-                _sample_container_begin, _sample_container_end );
-
             debug_log( "Identify_parameters: apply..." );
 
             apply_by_categories_used_and_commit(
@@ -1087,7 +1082,15 @@ containers::MatchPtrs::iterator DecisionTreeNode::identify_parameters(
         {
             // --------------------------------------------------------------
 
-            const bool null_values_to_beginning =
+            apply_by_critical_value(
+                _sample_container_begin,
+                _sample_container_end,
+                _sample_container_end,
+                aggregation() );
+
+            // --------------------------------------------------------------
+
+            /*const bool null_values_to_beginning =
                 ( apply_from_above() != is_activated_ );
 
             // --------------------------------------------------------------
@@ -1136,7 +1139,7 @@ containers::MatchPtrs::iterator DecisionTreeNode::identify_parameters(
                         match_separator,
                         null_values_separator,
                         aggregation() );
-                }
+                }*/
 
             // --------------------------------------------------------------
         }
@@ -1227,6 +1230,10 @@ containers::MatchPtrs::iterator DecisionTreeNode::partition_by_critical_value(
 
     if ( lag_used() )
         {
+            assert_true(
+                null_values_separator == _sample_container_begin ||
+                null_values_separator == _sample_container_end );
+
             return std::partition(
                 _sample_container_begin,
                 _sample_container_end,
@@ -1466,17 +1473,6 @@ void DecisionTreeNode::set_samples(
                 break;
 
             case enums::DataUsed::time_stamps_diff:
-
-                for ( auto it = _sample_container_begin;
-                      it != _sample_container_end;
-                      ++it )
-                    {
-                        ( *it )->numerical_value = get_time_stamps_diff(
-                            _population, _peripheral, *it );
-                    }
-
-                break;
-
             case enums::DataUsed::time_stamps_window:
 
                 for ( auto it = _sample_container_begin;
@@ -1583,60 +1579,17 @@ void DecisionTreeNode::spawn_child_nodes(
     const bool child_node_greater_is_activated =
         ( apply_from_above() != is_activated_ );
 
-    // If child_node_greater_is_activated, then the NULL samples
-    // are allocated to the beginning, since they must always be
-    // deactivated.
-    /*  if ( child_node_greater_is_activated )
-          {
-              it = _null_values_separator;
-          }*/
-
     // -------------------------------------------------------------------------
 
     if ( categorical_data_used() )
         {
             it = partition_by_categories_used(
                 _sample_container_begin, _sample_container_end );
-
-            // The samples where the category equals any of categories_used()
-            // are copied into samples_smaller. This makes sense, because
-            // for the numerical values, samples_smaller contains all values
-            // <= critical_value()
-
-            /* const auto is_contained =
-                 [this]( const containers::Match *_sample ) {
-                     return std::any_of(
-                         categories_used_begin(),
-                         categories_used_end(),
-                         [_sample]( Int cat ) {
-                             return cat == _sample->categorical_value;
-                         } );
-                 };
-
-             it = std::partition(
-                 _sample_container_begin, _sample_container_end, is_contained
-             );*/
         }
     else
         {
             it = partition_by_critical_value(
                 _sample_container_begin, _sample_container_end );
-
-            /*  while ( it < _sample_container_end )
-                  {
-                      const Float val = ( *it )->numerical_value;
-
-                      // If val != val, then all samples but the NULL samples
-                      // are activated. This is a corner case that can only
-                      // happen when the user has defined a min_num_samples
-                      // of 0.
-                      if ( val > critical_value() || val != val )
-                          {
-                              break;
-                          }
-
-                      ++it;
-                  }*/
         }
 
     // -------------------------------------------------------------------------
@@ -2511,7 +2464,7 @@ void DecisionTreeNode::try_conditions(
     containers::MatchPtrs::iterator _sample_container_end,
     std::vector<descriptors::Split> *_candidate_splits )
 {
-    try_same_units_categorical(
+    /*try_same_units_categorical(
         _population,
         _peripheral,
         _sample_size,
@@ -2525,7 +2478,7 @@ void DecisionTreeNode::try_conditions(
         _sample_size,
         _sample_container_begin,
         _sample_container_end,
-        _candidate_splits );
+        _candidate_splits );*/
 
     try_same_units_numerical(
         _population,
@@ -2541,48 +2494,48 @@ void DecisionTreeNode::try_conditions(
         _sample_container_begin,
         _sample_container_end,
         _candidate_splits );
+    /*
+        try_discrete_peripheral(
+            _peripheral,
+            _sample_size,
+            _sample_container_begin,
+            _sample_container_end,
+            _candidate_splits );
 
-    try_discrete_peripheral(
-        _peripheral,
-        _sample_size,
-        _sample_container_begin,
-        _sample_container_end,
-        _candidate_splits );
+        try_numerical_peripheral(
+            _peripheral,
+            _sample_size,
+            _sample_container_begin,
+            _sample_container_end,
+            _candidate_splits );
 
-    try_numerical_peripheral(
-        _peripheral,
-        _sample_size,
-        _sample_container_begin,
-        _sample_container_end,
-        _candidate_splits );
+        try_categorical_population(
+            _population,
+            _sample_size,
+            _sample_container_begin,
+            _sample_container_end,
+            _candidate_splits );
 
-    try_categorical_population(
-        _population,
-        _sample_size,
-        _sample_container_begin,
-        _sample_container_end,
-        _candidate_splits );
+        try_discrete_population(
+            _population,
+            _sample_size,
+            _sample_container_begin,
+            _sample_container_end,
+            _candidate_splits );
 
-    try_discrete_population(
-        _population,
-        _sample_size,
-        _sample_container_begin,
-        _sample_container_end,
-        _candidate_splits );
+        try_numerical_population(
+            _population,
+            _sample_size,
+            _sample_container_begin,
+            _sample_container_end,
+            _candidate_splits );
 
-    try_numerical_population(
-        _population,
-        _sample_size,
-        _sample_container_begin,
-        _sample_container_end,
-        _candidate_splits );
-
-    try_subfeatures(
-        _subfeatures,
-        _sample_size,
-        _sample_container_begin,
-        _sample_container_end,
-        _candidate_splits );
+        try_subfeatures(
+            _subfeatures,
+            _sample_size,
+            _sample_container_begin,
+            _sample_container_end,
+            _candidate_splits );
 
     try_time_stamps_diff(
         _population,
@@ -2590,7 +2543,7 @@ void DecisionTreeNode::try_conditions(
         _sample_size,
         _sample_container_begin,
         _sample_container_end,
-        _candidate_splits );
+        _candidate_splits );*/
 }
 
 // ----------------------------------------------------------------------------
@@ -2676,20 +2629,20 @@ void DecisionTreeNode::try_non_categorical_values(
 
     debug_log( "try_non_categorical_values: Add new splits." );
 
-    for ( size_t i = _indptr.size() - 1; i > 0; --i )
-        {
-            const auto cv = _min + static_cast<Float>( i ) * _step_size;
-
-            _candidate_splits->push_back(
-                descriptors::Split( true, cv, _column_used, _data_used ) );
-        }
-
     for ( size_t i = 1; i < _indptr.size(); ++i )
         {
             const auto cv = _min + static_cast<Float>( i ) * _step_size;
 
             _candidate_splits->push_back(
                 descriptors::Split( false, cv, _column_used, _data_used ) );
+        }
+
+    for ( size_t i = _indptr.size() - 1; i > 0; --i )
+        {
+            const auto cv = _min + static_cast<Float>( i ) * _step_size;
+
+            _candidate_splits->push_back(
+                descriptors::Split( true, cv, _column_used, _data_used ) );
         }
 
     // -----------------------------------------------------------------------
@@ -2731,29 +2684,25 @@ void DecisionTreeNode::try_non_categorical_values(
         }
 
     // -----------------------------------------------------------------------
-    // Try applying from above
+    // Try applying from below.
 
-    debug_log( "try_non_categorical_values: Apply from above..." );
+    debug_log( "try_non_categorical_values: Apply from below..." );
 
     // Apply changes and store resulting value of optimization criterion
     if ( is_activated_ )
         {
-            debug_log( "Deactivate..." );
-
-            aggregation()->deactivate_samples_from_above(
+            aggregation()->deactivate_samples_from_below(
                 _indptr, _bins->begin(), _bins->end() );
         }
     else
         {
-            debug_log( "Activate..." );
-
-            aggregation()->activate_samples_from_above(
+            aggregation()->activate_samples_from_below(
                 _indptr, _bins->begin(), _bins->end() );
         }
 
-    debug_log( "Revert to commit..." );
-
+    // -----------------------------------------------------------------------
     // Revert to original situation
+
     aggregation()->revert_to_commit();
 
     optimization_criterion()->revert_to_commit();
@@ -2770,19 +2719,23 @@ void DecisionTreeNode::try_non_categorical_values(
         }
 
     // -----------------------------------------------------------------------
-    // Try applying from below
+    // Try applying from above.
 
-    debug_log( "try_non_categorical_values: Apply from below..." );
+    debug_log( "try_non_categorical_values: Apply from above..." );
 
     // Apply changes and store resulting value of optimization criterion
     if ( is_activated_ )
         {
-            aggregation()->deactivate_samples_from_below(
+            debug_log( "Deactivate..." );
+
+            aggregation()->deactivate_samples_from_above(
                 _indptr, _bins->begin(), _bins->end() );
         }
     else
         {
-            aggregation()->activate_samples_from_below(
+            debug_log( "Activate..." );
+
+            aggregation()->activate_samples_from_above(
                 _indptr, _bins->begin(), _bins->end() );
         }
 
@@ -3036,7 +2989,7 @@ void DecisionTreeNode::try_time_stamps_diff(
         _sample_container_end,
         _candidate_splits );
 
-    if ( tree_->delta_t() > 0.0 )
+    /*if ( tree_->delta_t() > 0.0 )
         {
             debug_log( "try time_stamps_window..." );
 
@@ -3044,7 +2997,7 @@ void DecisionTreeNode::try_time_stamps_diff(
                 _sample_container_begin,
                 _sample_container_end,
                 _candidate_splits );
-        }
+        }*/
 
     debug_log( "try_time_stamps_diff...done" );
 }

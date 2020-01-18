@@ -96,8 +96,8 @@ class AbstractAggregation
     /// samples that are greater than the critical value
     virtual void activate_samples_from_above(
         const Float _critical_value,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end ) = 0;
+        containers::MatchPtrs::const_iterator _sample_container_begin,
+        containers::MatchPtrs::const_iterator _sample_container_end ) = 0;
 
     /// Iterates through the samples and activates them
     /// starting with the greatest
@@ -110,8 +110,8 @@ class AbstractAggregation
     /// samples that smaller than or equal to the critical value
     virtual void activate_samples_from_below(
         const Float _critical_value,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end ) = 0;
+        containers::MatchPtrs::const_iterator _sample_container_begin,
+        containers::MatchPtrs::const_iterator _sample_container_end ) = 0;
 
     /// Iterates through the samples and activates them
     /// starting with the smallest
@@ -153,8 +153,8 @@ class AbstractAggregation
     /// samples that are greater than the critical value
     virtual void deactivate_samples_from_above(
         const Float _critical_value,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end ) = 0;
+        containers::MatchPtrs::const_iterator _sample_container_begin,
+        containers::MatchPtrs::const_iterator _sample_container_end ) = 0;
 
     /// Iterates through the samples and deactivates them
     /// starting with the greatest
@@ -167,8 +167,8 @@ class AbstractAggregation
     /// samples that smaller than or equal to the critical value
     virtual void deactivate_samples_from_below(
         const Float _critical_value,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end ) = 0;
+        containers::MatchPtrs::const_iterator _sample_container_begin,
+        containers::MatchPtrs::const_iterator _sample_container_end ) = 0;
 
     /// Iterates through the samples and deactivates them
     /// starting with the smallest

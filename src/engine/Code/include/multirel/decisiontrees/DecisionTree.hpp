@@ -315,9 +315,9 @@ class DecisionTree
     inline size_t min_num_samples() const { return impl_.min_num_samples(); }
 
     /// Trivial accessor
-    inline optimizationcriteria::OptimizationCriterion *&
-    optimization_criterion()
+    inline optimizationcriteria::OptimizationCriterion *optimization_criterion()
     {
+        assert_true( impl_.optimization_criterion_ );
         return impl_.optimization_criterion_;
     }
 

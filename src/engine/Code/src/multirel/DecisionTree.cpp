@@ -321,7 +321,7 @@ void DecisionTree::fit(
 
     aggregation()->reset();
 
-    optimization_criterion() = _optimization_criterion;
+    impl()->optimization_criterion_ = _optimization_criterion;
 
     aggregation()->set_optimization_criterion( optimization_criterion() );
 
@@ -683,6 +683,8 @@ std::vector<Float> DecisionTree::transform(
     // Prepare the aggregation
 
     _aggregation->reset();
+
+    _aggregation->set_optimization_criterion( nullptr );
 
     // ------------------------------------------------------
     // This is put in a loop to avoid the sample containers

@@ -87,6 +87,7 @@ class DecisionTreeNode
     /// Trivial accessor
     inline aggregations::AbstractAggregation *aggregation()
     {
+        assert_true( tree_->aggregation_ );
         return tree_->aggregation_.get();
     }
 
@@ -417,6 +418,7 @@ class DecisionTreeNode
     /// Trivial accessor
     inline optimizationcriteria::OptimizationCriterion *optimization_criterion()
     {
+        assert_true( tree_->optimization_criterion_ );
         return tree_->optimization_criterion_;
     }
 

@@ -44,8 +44,8 @@ class Aggregation : public AbstractAggregation
     /// samples that are greater than the critical value.
     void activate_samples_from_above(
         const Float _critical_value,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end ) final;
+        containers::MatchPtrs::const_iterator _sample_container_begin,
+        containers::MatchPtrs::const_iterator _sample_container_end ) final;
 
     /// Iterates through the samples and activates them
     /// starting with the greatest.
@@ -58,8 +58,8 @@ class Aggregation : public AbstractAggregation
     /// samples that smaller than or equal to the critical value.
     void activate_samples_from_below(
         const Float _critical_value,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end ) final;
+        containers::MatchPtrs::const_iterator _sample_container_begin,
+        containers::MatchPtrs::const_iterator _sample_container_end ) final;
 
     /// Iterates through the samples and activates them
     /// starting with the smallest.
@@ -149,8 +149,8 @@ class Aggregation : public AbstractAggregation
     /// samples that are greater than the critical value.
     void deactivate_samples_from_above(
         const Float _critical_value,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end ) final;
+        containers::MatchPtrs::const_iterator _sample_container_begin,
+        containers::MatchPtrs::const_iterator _sample_container_end ) final;
 
     /// Iterates through the samples and deactivates them
     /// starting with the greatest.
@@ -163,8 +163,8 @@ class Aggregation : public AbstractAggregation
     /// samples that smaller than or equal to the critical value.
     void deactivate_samples_from_below(
         const Float _critical_value,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end ) final;
+        containers::MatchPtrs::const_iterator _sample_container_begin,
+        containers::MatchPtrs::const_iterator _sample_container_end ) final;
 
     /// Iterates through the samples and deactivates them
     /// starting with the smallest.
@@ -1858,16 +1858,36 @@ template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     activate_samples_from_above(
         const Float _critical_value,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end )
+        containers::MatchPtrs::const_iterator _sample_container_begin,
+        containers::MatchPtrs::const_iterator _sample_container_end )
 {
+    Float num_samples_smaller = 0.0;
+
+    Float num_samples_greater = 0.0;
+
     for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
         {
             if ( ( *it )->numerical_value > _critical_value )
                 {
                     activate_sample( *it );
+
+                    if ( optimization_criterion_ )
+                        {
+                            updates_stored().insert( ( *it )->ix_x_popul );
+                            updates_current().insert( ( *it )->ix_x_popul );
+
+                            ++num_samples_greater;
+                        }
+                }
+            else if ( optimization_criterion_ )
+                {
+                    ++num_samples_smaller;
                 }
         }
+
+    if ( optimization_criterion_ )
+        update_optimization_criterion_and_clear_updates_current(
+            num_samples_smaller, num_samples_greater );
 }
 
 // ----------------------------------------------------------------------------
@@ -1920,16 +1940,36 @@ template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     activate_samples_from_below(
         const Float _critical_value,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end )
+        containers::MatchPtrs::const_iterator _sample_container_begin,
+        containers::MatchPtrs::const_iterator _sample_container_end )
 {
+    Float num_samples_smaller = 0.0;
+
+    Float num_samples_greater = 0.0;
+
     for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
         {
             if ( ( *it )->numerical_value <= _critical_value )
                 {
                     activate_sample( *it );
+
+                    if ( optimization_criterion_ )
+                        {
+                            updates_stored().insert( ( *it )->ix_x_popul );
+                            updates_current().insert( ( *it )->ix_x_popul );
+
+                            ++num_samples_smaller;
+                        }
+                }
+            else if ( optimization_criterion_ )
+                {
+                    ++num_samples_greater;
                 }
         }
+
+    if ( optimization_criterion_ )
+        update_optimization_criterion_and_clear_updates_current(
+            num_samples_smaller, num_samples_greater );
 }
 
 // ----------------------------------------------------------------------------
@@ -2516,18 +2556,39 @@ template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     deactivate_samples_from_above(
         const Float _critical_value,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end )
+        containers::MatchPtrs::const_iterator _sample_container_begin,
+        containers::MatchPtrs::const_iterator _sample_container_end )
 {
+    Float num_samples_smaller = 0.0;
+
+    Float num_samples_greater = 0.0;
+
     for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
         {
             const Float val = ( *it )->numerical_value;
 
-            if ( val > _critical_value || val != val )
+            if ( val > _critical_value || std::isnan( val ) ||
+                 std::isinf( val ) )
                 {
                     deactivate_sample( *it );
+
+                    if ( optimization_criterion_ )
+                        {
+                            updates_stored().insert( ( *it )->ix_x_popul );
+                            updates_current().insert( ( *it )->ix_x_popul );
+
+                            ++num_samples_greater;
+                        }
+                }
+            else if ( optimization_criterion_ )
+                {
+                    ++num_samples_smaller;
                 }
         }
+
+    if ( optimization_criterion_ )
+        update_optimization_criterion_and_clear_updates_current(
+            num_samples_smaller, num_samples_greater );
 }
 
 // ----------------------------------------------------------------------------
@@ -2580,18 +2641,39 @@ template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 void Aggregation<AggType, data_used_, is_population_>::
     deactivate_samples_from_below(
         const Float _critical_value,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end )
+        containers::MatchPtrs::const_iterator _sample_container_begin,
+        containers::MatchPtrs::const_iterator _sample_container_end )
 {
+    Float num_samples_smaller = 0.0;
+
+    Float num_samples_greater = 0.0;
+
     for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
         {
             const Float val = ( *it )->numerical_value;
 
-            if ( val <= _critical_value || val != val )
+            if ( val <= _critical_value || std::isnan( val ) ||
+                 std::isinf( val ) )
                 {
                     deactivate_sample( *it );
+
+                    if ( optimization_criterion_ )
+                        {
+                            updates_stored().insert( ( *it )->ix_x_popul );
+                            updates_current().insert( ( *it )->ix_x_popul );
+
+                            ++num_samples_smaller;
+                        }
+                }
+            else if ( optimization_criterion_ )
+                {
+                    ++num_samples_greater;
                 }
         }
+
+    if ( optimization_criterion_ )
+        update_optimization_criterion_and_clear_updates_current(
+            num_samples_smaller, num_samples_greater );
 }
 
 // ----------------------------------------------------------------------------
