@@ -688,7 +688,7 @@ class DecisionTreeNode
         const size_t _column_used,
         const enums::DataUsed _data_used,
         const size_t _sample_size,
-        const Float _min,
+        const Float _max,
         const Float _step_size,
         const std::vector<size_t> &_indptr,
         containers::MatchPtrs *_bins,

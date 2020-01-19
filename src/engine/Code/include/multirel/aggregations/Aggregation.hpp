@@ -1899,12 +1899,7 @@ void Aggregation<AggType, data_used_, is_population_>::
         const containers::MatchPtrs::const_iterator &_matches_begin,
         const containers::MatchPtrs::const_iterator &_matches_end )
 {
-    if ( _indptr.size() == 0 )
-        {
-            return;
-        }
-
-    for ( size_t i = _indptr.size() - 1; i > 0; --i )
+    for ( size_t i = 1; i < _indptr.size(); ++i )
         {
             assert_true( _indptr[i - 1] <= _indptr[i] );
             assert_true( _matches_begin <= _matches_end );
@@ -1981,7 +1976,9 @@ void Aggregation<AggType, data_used_, is_population_>::
         const containers::MatchPtrs::const_iterator &_matches_begin,
         const containers::MatchPtrs::const_iterator &_matches_end )
 {
-    for ( size_t i = 1; i < _indptr.size(); ++i )
+    assert_true( _indptr.size() > 0 );
+
+    for ( size_t i = _indptr.size() - 1; i > 0; --i )
         {
             assert_true( _indptr[i - 1] <= _indptr[i] );
             assert_true( _matches_begin <= _matches_end );
@@ -2600,12 +2597,7 @@ void Aggregation<AggType, data_used_, is_population_>::
         const containers::MatchPtrs::const_iterator &_matches_begin,
         const containers::MatchPtrs::const_iterator &_matches_end )
 {
-    if ( _indptr.size() == 0 )
-        {
-            return;
-        }
-
-    for ( size_t i = _indptr.size() - 1; i > 0; --i )
+    for ( size_t i = 1; i < _indptr.size(); ++i )
         {
             assert_true( _indptr[i - 1] <= _indptr[i] );
             assert_true( _matches_begin <= _matches_end );
@@ -2685,7 +2677,9 @@ void Aggregation<AggType, data_used_, is_population_>::
         const containers::MatchPtrs::const_iterator &_matches_begin,
         const containers::MatchPtrs::const_iterator &_matches_end )
 {
-    for ( size_t i = 1; i < _indptr.size(); ++i )
+    assert_true( _indptr.size() > 0 );
+
+    for ( size_t i = _indptr.size() - 1; i > 0; --i )
         {
             assert_true( _indptr[i - 1] <= _indptr[i] );
             assert_true( _matches_begin <= _matches_end );

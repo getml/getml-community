@@ -152,16 +152,8 @@ void DecisionTreeNode::apply_by_critical_value(
 
     debug_log( "Apply by critical value..." );
 
-    // auto indptr = std::vector<size_t>( 2 );
-
     if ( apply_from_above() )
         {
-            /*indptr[0] = static_cast<size_t>(
-                std::distance( _sample_container_begin, _separator ) );
-
-            indptr[1] = static_cast<size_t>( std::distance(
-                _sample_container_begin, _sample_container_end ) );*/
-
             if ( is_activated_ )
                 {
                     debug_log( "deactivate_samples_from_above..." );
@@ -183,11 +175,6 @@ void DecisionTreeNode::apply_by_critical_value(
         }
     else
         {
-            /*indptr[0] = 0;
-
-            indptr[1] = static_cast<size_t>(
-                std::distance( _sample_container_begin, _separator ) );*/
-
             if ( is_activated_ )
                 {
                     debug_log( "deactivate_samples_from_below..." );
@@ -1301,43 +1288,13 @@ containers::MatchPtrs::iterator DecisionTreeNode::separate_null_values(
 
     if ( _null_values_to_beginning )
         {
-            if ( std::is_partitioned(
-                     _sample_container_begin, _sample_container_end, is_null ) )
-
-                {
-                    return std::partition_point(
-                        _sample_container_begin,
-                        _sample_container_end,
-                        is_null );
-                }
-            else
-                {
-                    return std::stable_partition(
-                        _sample_container_begin,
-                        _sample_container_end,
-                        is_null );
-                }
+            return std::partition(
+                _sample_container_begin, _sample_container_end, is_null );
         }
     else
         {
-            if ( std::is_partitioned(
-                     _sample_container_begin,
-                     _sample_container_end,
-                     is_not_null ) )
-
-                {
-                    return std::partition_point(
-                        _sample_container_begin,
-                        _sample_container_end,
-                        is_not_null );
-                }
-            else
-                {
-                    return std::stable_partition(
-                        _sample_container_begin,
-                        _sample_container_end,
-                        is_not_null );
-                }
+            return std::partition(
+                _sample_container_begin, _sample_container_end, is_not_null );
         }
 }
 
@@ -1593,18 +1550,6 @@ void DecisionTreeNode::spawn_child_nodes(
         }
 
     // -------------------------------------------------------------------------
-    // Set up and fit child_node_greater_
-
-    child_node_greater_.reset( new DecisionTreeNode(
-        child_node_greater_is_activated,  // _is_activated
-        depth_ + 1,                       // _depth
-        tree_                             // _tree
-        ) );
-
-    child_node_greater_->fit(
-        _population, _peripheral, _subfeatures, it, _sample_container_end );
-
-    // -------------------------------------------------------------------------
     // Set up and fit child_node_smaller_
 
     child_node_smaller_.reset( new DecisionTreeNode(
@@ -1615,6 +1560,18 @@ void DecisionTreeNode::spawn_child_nodes(
 
     child_node_smaller_->fit(
         _population, _peripheral, _subfeatures, _sample_container_begin, it );
+
+    // -------------------------------------------------------------------------
+    // Set up and fit child_node_greater_
+
+    child_node_greater_.reset( new DecisionTreeNode(
+        child_node_greater_is_activated,  // _is_activated
+        depth_ + 1,                       // _depth
+        tree_                             // _tree
+        ) );
+
+    child_node_greater_->fit(
+        _population, _peripheral, _subfeatures, it, _sample_container_end );
 
     // -------------------------------------------------------------------------
 }
@@ -2464,7 +2421,7 @@ void DecisionTreeNode::try_conditions(
     containers::MatchPtrs::iterator _sample_container_end,
     std::vector<descriptors::Split> *_candidate_splits )
 {
-    /*try_same_units_categorical(
+    try_same_units_categorical(
         _population,
         _peripheral,
         _sample_size,
@@ -2478,7 +2435,7 @@ void DecisionTreeNode::try_conditions(
         _sample_size,
         _sample_container_begin,
         _sample_container_end,
-        _candidate_splits );*/
+        _candidate_splits );
 
     try_same_units_numerical(
         _population,
@@ -2494,48 +2451,48 @@ void DecisionTreeNode::try_conditions(
         _sample_container_begin,
         _sample_container_end,
         _candidate_splits );
-    /*
-        try_discrete_peripheral(
-            _peripheral,
-            _sample_size,
-            _sample_container_begin,
-            _sample_container_end,
-            _candidate_splits );
 
-        try_numerical_peripheral(
-            _peripheral,
-            _sample_size,
-            _sample_container_begin,
-            _sample_container_end,
-            _candidate_splits );
+    try_discrete_peripheral(
+        _peripheral,
+        _sample_size,
+        _sample_container_begin,
+        _sample_container_end,
+        _candidate_splits );
 
-        try_categorical_population(
-            _population,
-            _sample_size,
-            _sample_container_begin,
-            _sample_container_end,
-            _candidate_splits );
+    try_numerical_peripheral(
+        _peripheral,
+        _sample_size,
+        _sample_container_begin,
+        _sample_container_end,
+        _candidate_splits );
 
-        try_discrete_population(
-            _population,
-            _sample_size,
-            _sample_container_begin,
-            _sample_container_end,
-            _candidate_splits );
+    try_categorical_population(
+        _population,
+        _sample_size,
+        _sample_container_begin,
+        _sample_container_end,
+        _candidate_splits );
 
-        try_numerical_population(
-            _population,
-            _sample_size,
-            _sample_container_begin,
-            _sample_container_end,
-            _candidate_splits );
+    try_discrete_population(
+        _population,
+        _sample_size,
+        _sample_container_begin,
+        _sample_container_end,
+        _candidate_splits );
 
-        try_subfeatures(
-            _subfeatures,
-            _sample_size,
-            _sample_container_begin,
-            _sample_container_end,
-            _candidate_splits );
+    try_numerical_population(
+        _population,
+        _sample_size,
+        _sample_container_begin,
+        _sample_container_end,
+        _candidate_splits );
+
+    try_subfeatures(
+        _subfeatures,
+        _sample_size,
+        _sample_container_begin,
+        _sample_container_end,
+        _candidate_splits );
 
     try_time_stamps_diff(
         _population,
@@ -2543,7 +2500,7 @@ void DecisionTreeNode::try_conditions(
         _sample_size,
         _sample_container_begin,
         _sample_container_end,
-        _candidate_splits );*/
+        _candidate_splits );
 }
 
 // ----------------------------------------------------------------------------
@@ -2574,7 +2531,7 @@ void DecisionTreeNode::try_discrete_values(
     const auto num_bins_numerical =
         calc_num_bins( _sample_container_begin, nan_begin );
 
-    // Note that this bins in ASCENDING order.
+    // Note that this bins in DESCENDING order.
     const auto [indptr, step_size] = utils::DiscreteBinner::bin(
         min,
         max,
@@ -2590,7 +2547,7 @@ void DecisionTreeNode::try_discrete_values(
         _column_used,
         _data_used,
         _sample_size,
-        min,
+        max,
         step_size,
         indptr,
         &bins,
@@ -2607,7 +2564,7 @@ void DecisionTreeNode::try_non_categorical_values(
     const size_t _column_used,
     const enums::DataUsed _data_used,
     const size_t _sample_size,
-    const Float _min,
+    const Float _max,
     const Float _step_size,
     const std::vector<size_t> &_indptr,
     containers::MatchPtrs *_bins,
@@ -2619,7 +2576,7 @@ void DecisionTreeNode::try_non_categorical_values(
 
     // -----------------------------------------------------------------------
 
-    if ( _indptr.size() == 0 )
+    if ( _indptr.size() < 2 )
         {
             return;
         }
@@ -2631,18 +2588,18 @@ void DecisionTreeNode::try_non_categorical_values(
 
     for ( size_t i = 1; i < _indptr.size(); ++i )
         {
-            const auto cv = _min + static_cast<Float>( i ) * _step_size;
+            const auto cv = _max - static_cast<Float>( i ) * _step_size;
 
             _candidate_splits->push_back(
-                descriptors::Split( false, cv, _column_used, _data_used ) );
+                descriptors::Split( true, cv, _column_used, _data_used ) );
         }
 
     for ( size_t i = _indptr.size() - 1; i > 0; --i )
         {
-            const auto cv = _min + static_cast<Float>( i ) * _step_size;
+            const auto cv = _max - static_cast<Float>( i - 1 ) * _step_size;
 
             _candidate_splits->push_back(
-                descriptors::Split( true, cv, _column_used, _data_used ) );
+                descriptors::Split( false, cv, _column_used, _data_used ) );
         }
 
     // -----------------------------------------------------------------------
@@ -2684,19 +2641,23 @@ void DecisionTreeNode::try_non_categorical_values(
         }
 
     // -----------------------------------------------------------------------
-    // Try applying from below.
+    // Try applying from above.
 
-    debug_log( "try_non_categorical_values: Apply from below..." );
+    debug_log( "try_non_categorical_values: Apply from above..." );
 
     // Apply changes and store resulting value of optimization criterion
     if ( is_activated_ )
         {
-            aggregation()->deactivate_samples_from_below(
+            debug_log( "Deactivate..." );
+
+            aggregation()->deactivate_samples_from_above(
                 _indptr, _bins->begin(), _bins->end() );
         }
     else
         {
-            aggregation()->activate_samples_from_below(
+            debug_log( "Activate..." );
+
+            aggregation()->activate_samples_from_above(
                 _indptr, _bins->begin(), _bins->end() );
         }
 
@@ -2719,23 +2680,19 @@ void DecisionTreeNode::try_non_categorical_values(
         }
 
     // -----------------------------------------------------------------------
-    // Try applying from above.
+    // Try applying from below.
 
-    debug_log( "try_non_categorical_values: Apply from above..." );
+    debug_log( "try_non_categorical_values: Apply from below..." );
 
     // Apply changes and store resulting value of optimization criterion
     if ( is_activated_ )
         {
-            debug_log( "Deactivate..." );
-
-            aggregation()->deactivate_samples_from_above(
+            aggregation()->deactivate_samples_from_below(
                 _indptr, _bins->begin(), _bins->end() );
         }
     else
         {
-            debug_log( "Activate..." );
-
-            aggregation()->activate_samples_from_above(
+            aggregation()->activate_samples_from_below(
                 _indptr, _bins->begin(), _bins->end() );
         }
 
@@ -2778,7 +2735,7 @@ void DecisionTreeNode::try_numerical_values(
 
     const auto num_bins = calc_num_bins( _sample_container_begin, nan_begin );
 
-    // Note that this bins in ASCENDING order.
+    // Note that this bins in DESCENDING order.
     const auto [indptr, step_size] = utils::NumericalBinner::bin(
         min,
         max,
@@ -2794,7 +2751,7 @@ void DecisionTreeNode::try_numerical_values(
         _column_used,
         _data_used,
         _sample_size,
-        min,
+        max,
         step_size,
         indptr,
         &bins,

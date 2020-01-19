@@ -101,7 +101,7 @@ std::vector<size_t> NumericalBinner::bin_given_step_size(
 
             assert_true( val >= _min );
 
-            const auto ix = static_cast<size_t>( ( val - _min ) / _step_size );
+            const auto ix = static_cast<size_t>( ( _max - val ) / _step_size );
 
             assert_true( ix < counts.size() );
 
@@ -153,7 +153,7 @@ std::vector<size_t> NumericalBinner::make_indptr(
 
             assert_true( val >= _min );
 
-            const auto ix = static_cast<size_t>( ( val - _min ) / _step_size );
+            const auto ix = static_cast<size_t>( ( _max - val ) / _step_size );
 
             assert_true( ix < num_bins );
 
