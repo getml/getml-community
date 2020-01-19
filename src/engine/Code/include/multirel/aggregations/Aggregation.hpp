@@ -1425,6 +1425,7 @@ class Aggregation : public AbstractAggregation
     /// Trivial accessor
     inline optimizationcriteria::OptimizationCriterion *optimization_criterion()
     {
+        assert_true( optimization_criterion_ );
         return optimization_criterion_;
     }
 

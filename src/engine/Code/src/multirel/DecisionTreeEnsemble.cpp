@@ -495,11 +495,17 @@ void DecisionTreeEnsemble::fit(
                 {
                     const auto ix = last_tree()->ix_perip_used();
 
+                    const auto agg =
+                        last_tree()->make_aggregation( enums::Mode::transform );
+
+                    agg->set_aggregation_impl( &aggregation_impl() );
+
                     std::vector<Float> new_feature = last_tree()->transform(
                         _table_holder->main_tables_[ix],
                         _table_holder->peripheral_tables_[ix],
                         subfeatures[ix],
-                        hyperparameters().use_timestamps_ );
+                        hyperparameters().use_timestamps_,
+                        agg.get() );
 
                     _opt->update_yhat_old( *sample_weights, new_feature );
 
