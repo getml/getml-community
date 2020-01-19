@@ -65,21 +65,16 @@ void DecisionTreeNode::apply_by_categories_used(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::apply_by_critical_value(
-    containers::MatchPtrs::const_iterator _sample_container_begin,
-    containers::MatchPtrs::const_iterator _separator,
-    containers::MatchPtrs::const_iterator _sample_container_end,
+    containers::MatchPtrs::iterator _sample_container_begin,
+    containers::MatchPtrs::iterator _sample_container_end,
     aggregations::AbstractAggregation *_aggregation ) const
 {
-    assert_true( _sample_container_begin <= _separator );
-    assert_true( _separator <= _sample_container_end );
-
     if ( std::distance( _sample_container_begin, _sample_container_end ) == 0 )
         {
             debug_log( "Distance is zero..." );
             return;
         }
 
-    // TODO: Uncomment.
     /*if ( lag_used() )
         {
             apply_by_lag(
@@ -131,77 +126,6 @@ void DecisionTreeNode::apply_by_critical_value(
 
                     _aggregation->activate_samples_from_below(
                         critical_value(),
-                        _sample_container_begin,
-                        _sample_container_end );
-                }
-        }
-}
-
-// ----------------------------------------------------------------------------
-
-void DecisionTreeNode::apply_by_critical_value(
-    const Float _critical_value,
-    containers::MatchPtrs::iterator _sample_container_begin,
-    containers::MatchPtrs::iterator _sample_container_end,
-    aggregations::AbstractAggregation *_aggregation ) const
-{
-    if ( std::distance( _sample_container_begin, _sample_container_end ) == 0 )
-        {
-            debug_log( "Distance is zero..." );
-            return;
-        }
-
-    if ( lag_used() )
-        {
-            apply_by_lag(
-                _critical_value,
-                _sample_container_begin,
-                _sample_container_end,
-                _aggregation );
-
-            return;
-        }
-
-    debug_log( "Apply by critical value..." );
-
-    if ( apply_from_above() )
-        {
-            if ( is_activated_ )
-                {
-                    debug_log( "deactivate_samples_from_above..." );
-
-                    _aggregation->deactivate_samples_from_above(
-                        _critical_value,
-                        _sample_container_begin,
-                        _sample_container_end );
-                }
-            else
-                {
-                    debug_log( "activate_samples_from_above..." );
-
-                    _aggregation->activate_samples_from_above(
-                        _critical_value,
-                        _sample_container_begin,
-                        _sample_container_end );
-                }
-        }
-    else
-        {
-            if ( is_activated_ )
-                {
-                    debug_log( "deactivate_samples_from_below..." );
-
-                    _aggregation->deactivate_samples_from_below(
-                        _critical_value,
-                        _sample_container_begin,
-                        _sample_container_end );
-                }
-            else
-                {
-                    debug_log( "activate_samples_from_below..." );
-
-                    _aggregation->activate_samples_from_below(
-                        _critical_value,
                         _sample_container_begin,
                         _sample_container_end );
                 }
@@ -693,7 +617,7 @@ void DecisionTreeNode::commit(
 {
     debug_log( "fit: Improvement possible..." );
 
-    auto null_values_separator = identify_parameters(
+    update(
         _population,
         _peripheral,
         _subfeatures,
@@ -710,19 +634,6 @@ void DecisionTreeNode::commit(
     debug_log(
         "commit: optimization_criterion()->value(): " +
         std::to_string( optimization_criterion()->value() ) );
-
-    if ( depth_ < tree_->max_length() )
-        {
-            debug_log( "fit: Max length not reached..." );
-
-            spawn_child_nodes(
-                _population,
-                _peripheral,
-                _subfeatures,
-                _sample_container_begin,
-                null_values_separator,
-                _sample_container_end );
-        }
 }
 
 // ----------------------------------------------------------------------------
@@ -819,6 +730,18 @@ void DecisionTreeNode::fit(
                 candidate_splits[ix_max].deep_copy(),
                 _sample_container_begin,
                 _sample_container_end );
+
+            if ( depth_ < tree_->max_length() )
+                {
+                    debug_log( "fit: Max length not reached..." );
+
+                    spawn_child_nodes(
+                        _population,
+                        _peripheral,
+                        _subfeatures,
+                        _sample_container_begin,
+                        _sample_container_end );
+                }
         }
     else
         {
@@ -959,124 +882,6 @@ std::string DecisionTreeNode::greater_or_not_equal_to(
         }
 
     return sql.str();
-}
-
-// ----------------------------------------------------------------------------
-
-containers::MatchPtrs::iterator DecisionTreeNode::identify_parameters(
-    const containers::DataFrameView &_population,
-    const containers::DataFrame &_peripheral,
-    const containers::Subfeatures &_subfeatures,
-    const descriptors::Split &_split,
-    containers::MatchPtrs::iterator _sample_container_begin,
-    containers::MatchPtrs::iterator _sample_container_end )
-{
-    // --------------------------------------------------------------
-    // Transfer parameters from split descriptor
-
-    split_.reset( new descriptors::Split( _split ) );
-
-    // --------------------------------------------------------------
-
-    debug_log( "Identify parameters..." );
-
-    // --------------------------------------------------------------
-    // Restore the optimal split
-
-    set_samples(
-        _population,
-        _peripheral,
-        _subfeatures,
-        _sample_container_begin,
-        _sample_container_end );
-
-    // --------------------------------------------------------------
-    // Change stage of aggregation to optimal split
-
-    auto null_values_separator = _sample_container_begin;
-
-    debug_log(
-        "Data used: " +
-        std::to_string( JSON::data_used_to_int( split_->data_used ) ) );
-
-    if ( categorical_data_used() )
-        {
-            debug_log( "Identify_parameters: apply..." );
-
-            apply_by_categories_used(
-                _sample_container_begin, _sample_container_end, aggregation() );
-        }
-    else
-        {
-            // --------------------------------------------------------------
-
-            apply_by_critical_value(
-                _sample_container_begin,
-                _sample_container_end,
-                _sample_container_end,
-                aggregation() );
-
-            // --------------------------------------------------------------
-
-            /*const bool null_values_to_beginning =
-                ( apply_from_above() != is_activated_ );
-
-            // --------------------------------------------------------------
-
-            debug_log( "Identify_parameters: Partition..." );
-
-            null_values_separator = separate_null_values(
-                _sample_container_begin,
-                _sample_container_end,
-                null_values_to_beginning );
-
-            const auto match_separator = partition_by_critical_value(
-                _sample_container_begin, _sample_container_end );
-
-            // --------------------------------------------------------------
-
-            if ( null_values_to_beginning )
-                {
-                    debug_log( "Identify_parameters: apply..." );
-
-                    if ( is_activated_ )
-                        {
-                            aggregation()->deactivate_samples_with_null_values(
-                                _sample_container_begin,
-                                null_values_separator );
-                        }
-
-                    apply_by_critical_value(
-                        null_values_separator,
-                        match_separator,
-                        _sample_container_end,
-                        aggregation() );
-                }
-            else
-                {
-                    debug_log( "Identify_parameters: apply..." );
-
-                    if ( is_activated_ )
-                        {
-                            aggregation()->deactivate_samples_with_null_values(
-                                null_values_separator, _sample_container_end );
-                        }
-
-                    apply_by_critical_value(
-                        _sample_container_begin,
-                        match_separator,
-                        null_values_separator,
-                        aggregation() );
-                }*/
-
-            // --------------------------------------------------------------
-        }
-
-    // --------------------------------------------------------------
-
-    return null_values_separator;
-
-    // --------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -1467,7 +1272,6 @@ void DecisionTreeNode::spawn_child_nodes(
     const containers::DataFrame &_peripheral,
     const containers::Subfeatures &_subfeatures,
     containers::MatchPtrs::iterator _sample_container_begin,
-    containers::MatchPtrs::iterator _null_values_separator,
     containers::MatchPtrs::iterator _sample_container_end )
 {
     // -------------------------------------------------------------------------
@@ -1746,10 +1550,7 @@ void DecisionTreeNode::transform(
     else
         {
             apply_by_critical_value(
-                critical_value(),
-                _sample_container_begin,
-                _sample_container_end,
-                _aggregation );
+                _sample_container_begin, _sample_container_end, _aggregation );
         }
 
     // -----------------------------------------------------------
@@ -3065,6 +2866,56 @@ void DecisionTreeNode::try_window(
     debug_log( "try_window...done." );
 
     // -----------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+void DecisionTreeNode::update(
+    const containers::DataFrameView &_population,
+    const containers::DataFrame &_peripheral,
+    const containers::Subfeatures &_subfeatures,
+    const descriptors::Split &_split,
+    containers::MatchPtrs::iterator _sample_container_begin,
+    containers::MatchPtrs::iterator _sample_container_end )
+{
+    // --------------------------------------------------------------
+    // Transfer parameters from split descriptor
+
+    split_.reset( new descriptors::Split( _split ) );
+
+    // --------------------------------------------------------------
+
+    debug_log( "Identify parameters..." );
+
+    // --------------------------------------------------------------
+    // Restore the optimal split
+
+    set_samples(
+        _population,
+        _peripheral,
+        _subfeatures,
+        _sample_container_begin,
+        _sample_container_end );
+
+    // --------------------------------------------------------------
+    // Change stage of aggregation to optimal split
+
+    debug_log(
+        "Data used: " +
+        std::to_string( JSON::data_used_to_int( split_->data_used ) ) );
+
+    if ( categorical_data_used() )
+        {
+            apply_by_categories_used(
+                _sample_container_begin, _sample_container_end, aggregation() );
+        }
+    else
+        {
+            apply_by_critical_value(
+                _sample_container_begin, _sample_container_end, aggregation() );
+        }
+
+    // --------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------

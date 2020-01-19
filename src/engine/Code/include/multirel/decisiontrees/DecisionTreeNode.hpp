@@ -468,14 +468,6 @@ class DecisionTreeNode
 
     /// Apply changes based on the critical value
     void apply_by_critical_value(
-        containers::MatchPtrs::const_iterator _sample_container_begin,
-        containers::MatchPtrs::const_iterator _separator,
-        containers::MatchPtrs::const_iterator _sample_container_end,
-        aggregations::AbstractAggregation *_aggregation ) const;
-
-    /// Apply changes based on the critical value
-    void apply_by_critical_value(
-        const Float _critical_value,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end,
         aggregations::AbstractAggregation *_aggregation ) const;
@@ -540,15 +532,6 @@ class DecisionTreeNode
     /// or the != condition (for categorical variables)
     std::string greater_or_not_equal_to( const std::string &_colname ) const;
 
-    /// Copies the split give ix_max.
-    containers::MatchPtrs::iterator identify_parameters(
-        const containers::DataFrameView &_population,
-        const containers::DataFrame &_peripheral,
-        const containers::Subfeatures &_subfeatures,
-        const descriptors::Split &_column,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end );
-
     /// Returns the index necessary for catagorical data as well as the
     /// associated categories.
     std::
@@ -598,7 +581,6 @@ class DecisionTreeNode
         const containers::DataFrame &_peripheral,
         const containers::Subfeatures &_subfeatures,
         containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _null_values_separator,
         containers::MatchPtrs::iterator _sample_container_end );
 
     /// Tries to impose the peripheral categorical columns as a condition
@@ -748,6 +730,15 @@ class DecisionTreeNode
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end,
         std::vector<descriptors::Split> *_candidate_splits );
+
+    /// Updates the aggregations and the optimization criterion.
+    void update(
+        const containers::DataFrameView &_population,
+        const containers::DataFrame &_peripheral,
+        const containers::Subfeatures &_subfeatures,
+        const descriptors::Split &_column,
+        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _sample_container_end );
 
     // --------------------------------------
 
