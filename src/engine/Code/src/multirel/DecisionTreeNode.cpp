@@ -64,65 +64,6 @@ void DecisionTreeNode::apply_by_categories_used(
 
 // ----------------------------------------------------------------------------
 
-void DecisionTreeNode::apply_by_categories_used_and_commit(
-    containers::MatchPtrs::iterator _sample_container_begin,
-    containers::MatchPtrs::iterator _sample_container_end )
-{
-    const auto index = make_index_and_categories(
-                           _sample_container_begin, _sample_container_end )
-                           .first;
-
-    if ( std::distance( _sample_container_begin, _sample_container_end ) > 0 )
-        {
-            assert_true( index.size() > 0 );
-
-            if ( apply_from_above() )
-                {
-                    if ( is_activated_ )
-                        {
-                            aggregation()
-                                ->deactivate_samples_not_containing_categories(
-                                    categories_used_begin(),
-                                    categories_used_end(),
-                                    aggregations::Revert::not_at_all,
-                                    index );
-                        }
-                    else
-                        {
-                            aggregation()
-                                ->activate_samples_not_containing_categories(
-                                    categories_used_begin(),
-                                    categories_used_end(),
-                                    aggregations::Revert::not_at_all,
-                                    index );
-                        }
-                }
-            else
-                {
-                    if ( is_activated_ )
-                        {
-                            aggregation()
-                                ->deactivate_samples_containing_categories(
-                                    categories_used_begin(),
-                                    categories_used_end(),
-                                    aggregations::Revert::not_at_all,
-                                    index );
-                        }
-                    else
-                        {
-                            aggregation()
-                                ->activate_samples_containing_categories(
-                                    categories_used_begin(),
-                                    categories_used_end(),
-                                    aggregations::Revert::not_at_all,
-                                    index );
-                        }
-                }
-        }
-}
-
-// ----------------------------------------------------------------------------
-
 void DecisionTreeNode::apply_by_critical_value(
     containers::MatchPtrs::const_iterator _sample_container_begin,
     containers::MatchPtrs::const_iterator _separator,
@@ -1062,8 +1003,8 @@ containers::MatchPtrs::iterator DecisionTreeNode::identify_parameters(
         {
             debug_log( "Identify_parameters: apply..." );
 
-            apply_by_categories_used_and_commit(
-                _sample_container_begin, _sample_container_end );
+            apply_by_categories_used(
+                _sample_container_begin, _sample_container_end, aggregation() );
         }
     else
         {

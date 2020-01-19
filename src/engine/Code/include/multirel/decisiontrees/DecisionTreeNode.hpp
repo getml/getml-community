@@ -466,11 +466,6 @@ class DecisionTreeNode
         containers::MatchPtrs::iterator _sample_container_end,
         aggregations::AbstractAggregation *_aggregation ) const;
 
-    /// Apply changes based on the category used - used for training
-    void apply_by_categories_used_and_commit(
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end );
-
     /// Apply changes based on the critical value
     void apply_by_critical_value(
         containers::MatchPtrs::const_iterator _sample_container_begin,

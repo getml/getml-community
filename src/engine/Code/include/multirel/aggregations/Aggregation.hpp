@@ -1784,8 +1784,14 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end )
 {
+    Float num_samples_smaller = 0.0;
+
+    Float num_samples_greater = 0.0;
+
     for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
         {
+            bool activate = false;
+
             for ( auto cat = _categories_begin; cat < _categories_end; ++cat )
                 {
                     assert_true(
@@ -1793,7 +1799,7 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
 
                     if ( ( *it )->categorical_value == *cat )
                         {
-                            activate_sample( *it );
+                            activate = true;
                             break;
                         }
                     else if ( ( *it )->categorical_value < *cat )
@@ -1801,6 +1807,32 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
                             break;
                         }
                 }
+
+            if ( activate )
+                {
+                    activate_sample( *it );
+
+                    if constexpr ( mode_ == enums::Mode::fit )
+                        {
+                            updates_stored().insert( ( *it )->ix_x_popul );
+                            updates_current().insert( ( *it )->ix_x_popul );
+
+                            ++num_samples_smaller;
+                        }
+                }
+            else
+                {
+                    if constexpr ( mode_ == enums::Mode::fit )
+                        {
+                            ++num_samples_greater;
+                        }
+                }
+        }
+
+    if constexpr ( mode_ == enums::Mode::fit )
+        {
+            update_optimization_criterion_and_clear_updates_current(
+                num_samples_smaller, num_samples_greater );
         }
 }
 
@@ -2310,6 +2342,10 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end )
 {
+    Float num_samples_smaller = 0.0;
+
+    Float num_samples_greater = 0.0;
+
     for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
         {
             auto activate = true;
@@ -2333,7 +2369,28 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
             if ( activate )
                 {
                     activate_sample( *it );
+
+                    if constexpr ( mode_ == enums::Mode::fit )
+                        {
+                            updates_stored().insert( ( *it )->ix_x_popul );
+                            updates_current().insert( ( *it )->ix_x_popul );
+
+                            ++num_samples_greater;
+                        }
                 }
+            else
+                {
+                    if constexpr ( mode_ == enums::Mode::fit )
+                        {
+                            ++num_samples_smaller;
+                        }
+                }
+        }
+
+    if constexpr ( mode_ == enums::Mode::fit )
+        {
+            update_optimization_criterion_and_clear_updates_current(
+                num_samples_smaller, num_samples_greater );
         }
 }
 
@@ -2544,8 +2601,14 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end )
 {
+    Float num_samples_smaller = 0.0;
+
+    Float num_samples_greater = 0.0;
+
     for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
         {
+            bool deactivate = false;
+
             for ( auto cat = _categories_begin; cat < _categories_end; ++cat )
                 {
                     assert_true(
@@ -2553,7 +2616,7 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
 
                     if ( ( *it )->categorical_value == *cat )
                         {
-                            deactivate_sample( *it );
+                            deactivate = true;
                             break;
                         }
 
@@ -2562,6 +2625,32 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
                             break;
                         }
                 }
+
+            if ( deactivate )
+                {
+                    deactivate_sample( *it );
+
+                    if constexpr ( mode_ == enums::Mode::fit )
+                        {
+                            updates_stored().insert( ( *it )->ix_x_popul );
+                            updates_current().insert( ( *it )->ix_x_popul );
+
+                            ++num_samples_smaller;
+                        }
+                }
+            else
+                {
+                    if constexpr ( mode_ == enums::Mode::fit )
+                        {
+                            ++num_samples_greater;
+                        }
+                }
+        }
+
+    if constexpr ( mode_ == enums::Mode::fit )
+        {
+            update_optimization_criterion_and_clear_updates_current(
+                num_samples_smaller, num_samples_greater );
         }
 }
 
@@ -3077,6 +3166,10 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end )
 {
+    Float num_samples_smaller = 0.0;
+
+    Float num_samples_greater = 0.0;
+
     for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
         {
             auto deactivate = true;
@@ -3100,7 +3193,28 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
             if ( deactivate )
                 {
                     deactivate_sample( *it );
+
+                    if constexpr ( mode_ == enums::Mode::fit )
+                        {
+                            updates_stored().insert( ( *it )->ix_x_popul );
+                            updates_current().insert( ( *it )->ix_x_popul );
+
+                            ++num_samples_greater;
+                        }
                 }
+            else
+                {
+                    if constexpr ( mode_ == enums::Mode::fit )
+                        {
+                            ++num_samples_smaller;
+                        }
+                }
+        }
+
+    if constexpr ( mode_ == enums::Mode::fit )
+        {
+            update_optimization_criterion_and_clear_updates_current(
+                num_samples_smaller, num_samples_greater );
         }
 }
 
