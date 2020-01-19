@@ -48,7 +48,7 @@ DecisionTree::DecisionTree(
 
     impl_.aggregation_type_ = _agg;
 
-    aggregation_ptr() = make_aggregation();
+    aggregation_ptr() = make_aggregation( enums::Mode::fit );
 
     impl_.tree_hyperparameters_ = _tree_hyperparameters;
 
@@ -70,7 +70,7 @@ DecisionTree::DecisionTree( const DecisionTree &_other )
 
     assert_true( _other.impl_.aggregation_type_ != "" );
 
-    aggregation_ptr() = _other.make_aggregation();
+    aggregation_ptr() = _other.make_aggregation( enums::Mode::fit );
 
     if ( root() )
         {
@@ -371,7 +371,7 @@ void DecisionTree::from_json_obj( const Poco::JSON::Object &_json_obj )
 
     impl_.aggregation_type_ = agg;
 
-    aggregation_ptr() = make_aggregation();
+    aggregation_ptr() = make_aggregation( enums::Mode::fit );
 
     // -----------------------------------
 

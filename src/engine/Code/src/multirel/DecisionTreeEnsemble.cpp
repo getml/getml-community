@@ -1131,7 +1131,8 @@ std::vector<Float> DecisionTreeEnsemble::transform(
 
     assert_true( ix < _table_holder.main_tables_.size() );
 
-    auto aggregation = trees()[_num_feature].make_aggregation();
+    auto aggregation =
+        trees()[_num_feature].make_aggregation( enums::Mode::transform );
 
     aggregation->set_aggregation_impl( _impl );
 

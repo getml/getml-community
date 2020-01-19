@@ -245,6 +245,9 @@ class AbstractAggregation
     make_intermediate(
         std::shared_ptr<IntermediateAggregationImpl> _impl ) const = 0;
 
+    /// Returns the mode (enums::Mode::fit or enums::Mode::transform).
+    virtual enums::Mode mode() const = 0;
+
     /// Whether the aggregation requires the samples to be sorted
     /// by value_to_be_aggregated
     virtual bool needs_sorting() const = 0;

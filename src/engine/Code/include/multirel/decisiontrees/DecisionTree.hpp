@@ -149,10 +149,11 @@ class DecisionTree
 
     /// Creates the aggregation used by this tree or a clone thereof.
     inline std::shared_ptr<aggregations::AbstractAggregation> const
-    make_aggregation() const
+    make_aggregation( const enums::Mode _mode ) const
     {
         return aggregations::AggregationParser::parse_aggregation(
             impl()->aggregation_type_,
+            _mode,
             column_to_be_aggregated().data_used,
             column_to_be_aggregated().ix_column_used,
             same_units_numerical(),
