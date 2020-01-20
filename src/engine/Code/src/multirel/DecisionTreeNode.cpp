@@ -75,16 +75,13 @@ void DecisionTreeNode::apply_by_critical_value(
             return;
         }
 
-    /*if ( lag_used() )
+    if ( lag_used() )
         {
             apply_by_lag(
-                _critical_value,
-                _sample_container_begin,
-                _sample_container_end,
-                _aggregation );
+                _sample_container_begin, _sample_container_end, _aggregation );
 
             return;
-        }*/
+        }
 
     debug_log( "Apply by critical value..." );
 
@@ -135,7 +132,6 @@ void DecisionTreeNode::apply_by_critical_value(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::apply_by_lag(
-    const std::vector<Float> &_critical_value,
     containers::MatchPtrs::iterator _sample_container_begin,
     containers::MatchPtrs::iterator _sample_container_end,
     aggregations::AbstractAggregation *_aggregation ) const
@@ -154,9 +150,8 @@ void DecisionTreeNode::apply_by_lag(
                     debug_log( "deactivate_samples_outside_window..." );
 
                     _aggregation->deactivate_samples_outside_window(
-                        _critical_value,
+                        critical_value(),
                         tree_->delta_t(),
-                        aggregations::Revert::not_at_all,
                         _sample_container_begin,
                         _sample_container_end );
                 }
@@ -165,9 +160,8 @@ void DecisionTreeNode::apply_by_lag(
                     debug_log( "activate_samples_outside_window..." );
 
                     _aggregation->activate_samples_outside_window(
-                        _critical_value,
+                        critical_value(),
                         tree_->delta_t(),
-                        aggregations::Revert::not_at_all,
                         _sample_container_begin,
                         _sample_container_end );
                 }
@@ -179,9 +173,8 @@ void DecisionTreeNode::apply_by_lag(
                     debug_log( "deactivate_samples_in_window..." );
 
                     _aggregation->deactivate_samples_in_window(
-                        _critical_value,
+                        critical_value(),
                         tree_->delta_t(),
-                        aggregations::Revert::not_at_all,
                         _sample_container_begin,
                         _sample_container_end );
                 }
@@ -190,76 +183,8 @@ void DecisionTreeNode::apply_by_lag(
                     debug_log( "activate_samples_in_window..." );
 
                     _aggregation->activate_samples_in_window(
-                        _critical_value,
+                        critical_value(),
                         tree_->delta_t(),
-                        aggregations::Revert::not_at_all,
-                        _sample_container_begin,
-                        _sample_container_end );
-                }
-        }
-}
-
-// ----------------------------------------------------------------------------
-
-void DecisionTreeNode::apply_by_lag(
-    const Float _critical_value,
-    containers::MatchPtrs::iterator _sample_container_begin,
-    containers::MatchPtrs::iterator _sample_container_end,
-    aggregations::AbstractAggregation *_aggregation ) const
-{
-    if ( std::distance( _sample_container_begin, _sample_container_end ) == 0 )
-        {
-            return;
-        }
-
-    debug_log( "Apply by lag..." );
-
-    if ( apply_from_above() )
-        {
-            if ( is_activated_ )
-                {
-                    debug_log( "deactivate_samples_outside_window..." );
-
-                    _aggregation->deactivate_samples_outside_window(
-                        _critical_value,
-                        tree_->delta_t(),
-                        aggregations::Revert::not_at_all,
-                        _sample_container_begin,
-                        _sample_container_end );
-                }
-            else
-                {
-                    debug_log( "activate_samples_outside_window..." );
-
-                    _aggregation->activate_samples_outside_window(
-                        _critical_value,
-                        tree_->delta_t(),
-                        aggregations::Revert::not_at_all,
-                        _sample_container_begin,
-                        _sample_container_end );
-                }
-        }
-    else
-        {
-            if ( is_activated_ )
-                {
-                    debug_log( "deactivate_samples_in_window..." );
-
-                    _aggregation->deactivate_samples_in_window(
-                        _critical_value,
-                        tree_->delta_t(),
-                        aggregations::Revert::not_at_all,
-                        _sample_container_begin,
-                        _sample_container_end );
-                }
-            else
-                {
-                    debug_log( "activate_samples_in_window..." );
-
-                    _aggregation->activate_samples_in_window(
-                        _critical_value,
-                        tree_->delta_t(),
-                        aggregations::Revert::not_at_all,
                         _sample_container_begin,
                         _sample_container_end );
                 }
@@ -2352,6 +2277,9 @@ void DecisionTreeNode::try_non_categorical_values(
 
     if ( is_activated_ )
         {
+            debug_log( "_indptr.back(): " + std::to_string( _indptr.back() ) );
+            debug_log( "_bins->size(): " + std::to_string( _bins->size() ) );
+
             aggregation()->deactivate_samples_with_null_values(
                 _bins->begin() + _indptr.back(), _bins->end() );
         }
@@ -2385,19 +2313,17 @@ void DecisionTreeNode::try_non_categorical_values(
     // -----------------------------------------------------------------------
     // Try applying from above.
 
-    debug_log( "try_non_categorical_values: Apply from above..." );
-
     // Apply changes and store resulting value of optimization criterion
     if ( is_activated_ )
         {
-            debug_log( "Deactivate..." );
+            debug_log( "Deactivate from above..." );
 
             aggregation()->deactivate_samples_from_above(
                 _indptr, _bins->begin(), _bins->end() );
         }
     else
         {
-            debug_log( "Activate..." );
+            debug_log( "Activate from below..." );
 
             aggregation()->activate_samples_from_above(
                 _indptr, _bins->begin(), _bins->end() );
@@ -2417,6 +2343,9 @@ void DecisionTreeNode::try_non_categorical_values(
 
     if ( is_activated_ )
         {
+            debug_log( "_indptr.back(): " + std::to_string( _indptr.back() ) );
+            debug_log( "_bins->size(): " + std::to_string( _bins->size() ) );
+
             aggregation()->deactivate_samples_with_null_values(
                 _bins->begin() + _indptr.back(), _bins->end() );
         }
@@ -2429,11 +2358,15 @@ void DecisionTreeNode::try_non_categorical_values(
     // Apply changes and store resulting value of optimization criterion
     if ( is_activated_ )
         {
+            debug_log( "Deactivate from below..." );
+
             aggregation()->deactivate_samples_from_below(
                 _indptr, _bins->begin(), _bins->end() );
         }
     else
         {
+            debug_log( "Activate from below..." );
+
             aggregation()->activate_samples_from_below(
                 _indptr, _bins->begin(), _bins->end() );
         }
@@ -2688,7 +2621,7 @@ void DecisionTreeNode::try_time_stamps_diff(
         _sample_container_end,
         _candidate_splits );
 
-    /*if ( tree_->delta_t() > 0.0 )
+    if ( tree_->delta_t() > 0.0 )
         {
             debug_log( "try time_stamps_window..." );
 
@@ -2696,7 +2629,7 @@ void DecisionTreeNode::try_time_stamps_diff(
                 _sample_container_begin,
                 _sample_container_end,
                 _candidate_splits );
-        }*/
+        }
 
     debug_log( "try_time_stamps_diff...done" );
 }
@@ -2734,7 +2667,7 @@ void DecisionTreeNode::try_window(
     auto bins =
         containers::MatchPtrs( _sample_container_begin, _sample_container_end );
 
-    // Note that this bins in ASCENDING order.
+    // Note that this bins in DESCENDING order.
     const auto indptr = utils::NumericalBinner::bin_given_step_size(
         min,
         max,
@@ -2749,36 +2682,25 @@ void DecisionTreeNode::try_window(
             return;
         }
 
-    // ---------------------------------------------------------------------------
-
-    std::vector<Float> critical_values( num_bins );
-
-    for ( size_t i = 0; i < num_bins; ++i )
-        {
-            critical_values[i] = min + static_cast<Float>( i + 1 ) * step_size;
-        }
-
     // -----------------------------------------------------------------------
     // Add new splits to the candidate splits
 
     debug_log( "try_window: Add new splits." );
 
-    for ( auto &critical_value : critical_values )
+    for ( size_t i = 1; i < indptr.size(); ++i )
         {
+            const auto cv = max - static_cast<Float>( i - 1 ) * step_size;
+
             _candidate_splits->push_back( descriptors::Split(
-                true,
-                critical_value,
-                0,
-                enums::DataUsed::time_stamps_window ) );
+                true, cv, 0, enums::DataUsed::time_stamps_window ) );
         }
 
-    for ( auto &critical_value : critical_values )
+    for ( size_t i = 1; i < indptr.size(); ++i )
         {
+            const auto cv = max - static_cast<Float>( i - 1 ) * step_size;
+
             _candidate_splits->push_back( descriptors::Split(
-                false,
-                critical_value,
-                0,
-                enums::DataUsed::time_stamps_window ) );
+                false, cv, 0, enums::DataUsed::time_stamps_window ) );
         }
 
     // -----------------------------------------------------------------------
@@ -2791,7 +2713,7 @@ void DecisionTreeNode::try_window(
 
     if ( std::distance( _sample_container_begin, _sample_container_end ) == 0 )
         {
-            for ( size_t i = 0; i < critical_values.size() * 2; ++i )
+            for ( size_t i = 0; i < ( indptr.size() - 1 ) * 2; ++i )
                 {
                     aggregation()
                         ->update_optimization_criterion_and_clear_updates_current(
@@ -2811,25 +2733,13 @@ void DecisionTreeNode::try_window(
     // Apply changes and store resulting value of optimization criterion
     if ( is_activated_ )
         {
-            debug_log( "Deactivate..." );
-
             aggregation()->deactivate_samples_outside_window(
-                critical_values,
-                step_size,
-                aggregations::Revert::after_each_category,
-                bins.begin(),
-                bins.end() );
+                indptr, bins.begin(), bins.end() );
         }
     else
         {
-            debug_log( "Activate..." );
-
             aggregation()->activate_samples_outside_window(
-                critical_values,
-                step_size,
-                aggregations::Revert::after_each_category,
-                bins.begin(),
-                bins.end() );
+                indptr, bins.begin(), bins.end() );
         }
 
     // -----------------------------------------------------------------------
@@ -2840,25 +2750,13 @@ void DecisionTreeNode::try_window(
     // Apply changes and store resulting value of optimization criterion
     if ( is_activated_ )
         {
-            debug_log( "try_window: Deactivate..." );
-
             aggregation()->deactivate_samples_in_window(
-                critical_values,
-                step_size,
-                aggregations::Revert::after_each_category,
-                bins.begin(),
-                bins.end() );
+                indptr, bins.begin(), bins.end() );
         }
     else
         {
-            debug_log( "try_window: Activate..." );
-
             aggregation()->activate_samples_in_window(
-                critical_values,
-                step_size,
-                aggregations::Revert::after_each_category,
-                bins.begin(),
-                bins.end() );
+                indptr, bins.begin(), bins.end() );
         }
 
     // -----------------------------------------------------------------------

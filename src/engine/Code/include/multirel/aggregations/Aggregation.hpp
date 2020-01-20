@@ -77,16 +77,13 @@ class Aggregation : public AbstractAggregation
     void activate_samples_in_window(
         const Float _critical_value,
         const Float _delta_t,
-        const Revert _revert,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) final;
 
     /// Implements a lag functionality through moving time windows - used by
     /// fit.
     void activate_samples_in_window(
-        const std::vector<Float> &_critical_values,
-        const Float _delta_t,
-        const Revert _revert,
+        const std::vector<size_t> &_indptr,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) final;
 
@@ -95,16 +92,13 @@ class Aggregation : public AbstractAggregation
     void activate_samples_outside_window(
         const Float _critical_value,
         const Float _delta_t,
-        const Revert _revert,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) final;
 
     /// Implements a lag functionality through moving time windows - used by
     /// fit.
     void activate_samples_outside_window(
-        const std::vector<Float> &_critical_values,
-        const Float _delta_t,
-        const Revert _revert,
+        const std::vector<size_t> &_indptr,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) final;
 
@@ -182,16 +176,13 @@ class Aggregation : public AbstractAggregation
     void deactivate_samples_in_window(
         const Float _critical_value,
         const Float _delta_t,
-        const Revert _revert,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) final;
 
     /// Implements a lag functionality through moving time windows - used by
     /// fit.
     void deactivate_samples_in_window(
-        const std::vector<Float> &_critical_values,
-        const Float _delta_t,
-        const Revert _revert,
+        const std::vector<size_t> &_indptr,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) final;
 
@@ -200,16 +191,13 @@ class Aggregation : public AbstractAggregation
     void deactivate_samples_outside_window(
         const Float _critical_value,
         const Float _delta_t,
-        const Revert _revert,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) final;
 
     /// Implements a lag functionality through moving time windows - used by
     /// fit.
     void deactivate_samples_outside_window(
-        const std::vector<Float> &_critical_values,
-        const Float _delta_t,
-        const Revert _revert,
+        const std::vector<size_t> &_indptr,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) final;
 
@@ -1985,9 +1973,9 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
                     updates_current().insert( ( *it )->ix_x_popul );
                 }
 
-            auto num_samples_smaller = static_cast<Float>( _indptr[i] );
+            auto num_samples_greater = static_cast<Float>( _indptr[i] );
 
-            auto num_samples_greater =
+            auto num_samples_smaller =
                 static_cast<Float>( _indptr.back() - _indptr[i] );
 
             update_optimization_criterion_and_clear_updates_current(
@@ -2026,7 +2014,7 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
                             ++num_samples_smaller;
                         }
                 }
-            else if ( optimization_criterion_ )
+            else
                 {
                     if constexpr ( mode_ == enums::Mode::fit )
                         {
@@ -2077,9 +2065,9 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
                     updates_current().insert( ( *it )->ix_x_popul );
                 }
 
-            auto num_samples_smaller = static_cast<Float>( _indptr[i] );
+            auto num_samples_greater = static_cast<Float>( _indptr[i] );
 
-            auto num_samples_greater =
+            auto num_samples_smaller =
                 static_cast<Float>( _indptr.back() - _indptr[i] );
 
             update_optimization_criterion_and_clear_updates_current(
@@ -2098,17 +2086,41 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
     activate_samples_in_window(
         const Float _critical_value,
         const Float _delta_t,
-        const Revert _revert,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end )
 {
+    Float num_samples_smaller = 0.0;
+
+    Float num_samples_greater = 0.0;
+
     for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
         {
-            if ( ( *it )->numerical_value >= _critical_value - _delta_t &&
-                 ( *it )->numerical_value < _critical_value )
+            if ( ( *it )->numerical_value > _critical_value - _delta_t &&
+                 ( *it )->numerical_value <= _critical_value )
                 {
                     activate_sample( *it );
+
+                    if constexpr ( mode_ == enums::Mode::fit )
+                        {
+                            updates_stored().insert( ( *it )->ix_x_popul );
+                            updates_current().insert( ( *it )->ix_x_popul );
+
+                            ++num_samples_smaller;
+                        }
                 }
+            else
+                {
+                    if constexpr ( mode_ == enums::Mode::fit )
+                        {
+                            ++num_samples_greater;
+                        }
+                }
+        }
+
+    if constexpr ( mode_ == enums::Mode::fit )
+        {
+            update_optimization_criterion_and_clear_updates_current(
+                num_samples_smaller, num_samples_greater );
         }
 }
 
@@ -2121,46 +2133,37 @@ template <
     bool is_population_>
 void Aggregation<AggType, data_used_, mode_, is_population_>::
     activate_samples_in_window(
-        const std::vector<Float> &_critical_values,
-        const Float _delta_t,
-        const Revert _revert,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end )
+        const std::vector<size_t> &_indptr,
+        containers::MatchPtrs::iterator _matches_begin,
+        containers::MatchPtrs::iterator _matches_end )
 {
     // ------------------------------------------------------------------
 
-    assert_true( _sample_container_end > _sample_container_begin );
+    assert_true( _indptr.size() > 0 );
 
-    const Float sample_size = static_cast<Float>(
-        std::distance( _sample_container_begin, _sample_container_end ) );
+    assert_true( _matches_end > _matches_begin );
+
+    const Float sample_size =
+        static_cast<Float>( std::distance( _matches_begin, _matches_end ) );
 
     Float num_samples_smaller = 0.0;
 
     // ------------------------------------------------------------------
 
-    auto wbegin = _sample_container_begin;
-
-    auto wend = _sample_container_begin;
-
-    for ( const auto c : _critical_values )
+    for ( size_t i = 1; i < _indptr.size(); ++i )
         {
-            const auto at_begin = [c, _delta_t]( containers::Match *m ) {
-                return m->numerical_value > c - _delta_t;
-            };
+            assert_true( _indptr[i - 1] <= _indptr[i] );
+            assert_true( _matches_begin <= _matches_end );
+            assert_true(
+                _indptr[i] <= static_cast<size_t>( std::distance(
+                                  _matches_begin, _matches_end ) ) );
+            assert_true( _indptr[i] <= _indptr.back() );
 
-            const auto at_end = [c]( containers::Match *m ) {
-                return m->numerical_value > c;
-            };
+            const auto begin = _matches_begin + _indptr[i - 1];
+            const auto end = _matches_begin + _indptr[i];
 
-            wbegin = std::find_if( wbegin, _sample_container_end, at_begin );
-
-            wend = std::find_if( wend, _sample_container_end, at_end );
-
-            for ( auto it = wbegin; it != wend; ++it )
+            for ( auto it = begin; it != end; ++it )
                 {
-                    assert_true( ( *it )->numerical_value > c - _delta_t );
-                    assert_true( ( *it )->numerical_value <= c );
-
                     activate_sample( *it );
 
                     updates_stored().insert( ( *it )->ix_x_popul );
@@ -2169,26 +2172,14 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
                     ++num_samples_smaller;
                 }
 
-            if ( _revert != Revert::not_at_all )
-                {
-                    update_optimization_criterion_and_clear_updates_current(
-                        num_samples_smaller,
-                        sample_size - num_samples_smaller );
-
-                    revert_to_commit();
-
-                    optimization_criterion()->revert_to_commit();
-
-                    num_samples_smaller = 0.0;
-                }
-        }
-
-    // ------------------------------------------------------------------
-
-    if ( _revert == Revert::not_at_all )
-        {
             update_optimization_criterion_and_clear_updates_current(
                 num_samples_smaller, sample_size - num_samples_smaller );
+
+            revert_to_commit();
+
+            optimization_criterion()->revert_to_commit();
+
+            num_samples_smaller = 0.0;
         }
 
     // ------------------------------------------------------------------
@@ -2205,17 +2196,41 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
     activate_samples_outside_window(
         const Float _critical_value,
         const Float _delta_t,
-        const Revert _revert,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end )
 {
+    Float num_samples_smaller = 0.0;
+
+    Float num_samples_greater = 0.0;
+
     for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
         {
-            if ( ( *it )->numerical_value < _critical_value - _delta_t ||
-                 ( *it )->numerical_value >= _critical_value )
+            if ( ( *it )->numerical_value <= _critical_value - _delta_t ||
+                 ( *it )->numerical_value > _critical_value )
                 {
                     activate_sample( *it );
+
+                    if constexpr ( mode_ == enums::Mode::fit )
+                        {
+                            updates_stored().insert( ( *it )->ix_x_popul );
+                            updates_current().insert( ( *it )->ix_x_popul );
+
+                            ++num_samples_greater;
+                        }
                 }
+            else
+                {
+                    if constexpr ( mode_ == enums::Mode::fit )
+                        {
+                            ++num_samples_smaller;
+                        }
+                }
+        }
+
+    if constexpr ( mode_ == enums::Mode::fit )
+        {
+            update_optimization_criterion_and_clear_updates_current(
+                num_samples_smaller, num_samples_greater );
         }
 }
 
@@ -2228,30 +2243,26 @@ template <
     bool is_population_>
 void Aggregation<AggType, data_used_, mode_, is_population_>::
     activate_samples_outside_window(
-        const std::vector<Float> &_critical_values,
-        const Float _delta_t,
-        const Revert _revert,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end )
+        const std::vector<size_t> &_indptr,
+        containers::MatchPtrs::iterator _matches_begin,
+        containers::MatchPtrs::iterator _matches_end )
 {
     // ------------------------------------------------------------------
 
-    assert_true( _sample_container_end > _sample_container_begin );
+    assert_true( _indptr.size() > 0 );
 
-    const Float sample_size = static_cast<Float>(
-        std::distance( _sample_container_begin, _sample_container_end ) );
+    assert_true( _matches_end > _matches_begin );
+
+    const Float sample_size =
+        static_cast<Float>( std::distance( _matches_begin, _matches_end ) );
 
     Float num_samples_smaller = 0.0;
 
     // ------------------------------------------------------------------
     // Activate all samples
 
-    for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
+    for ( auto it = _matches_begin; it != _matches_end; ++it )
         {
-            assert_true(
-                it == _sample_container_begin ||
-                ( *it )->numerical_value >= ( *( it - 1 ) )->numerical_value );
-
             activate_sample( *it );
 
             updates_stored().insert( ( *it )->ix_x_popul );
@@ -2261,29 +2272,20 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
     // ------------------------------------------------------------------
     // Selectively deactivate those samples that are inside the window.
 
-    auto wbegin = _sample_container_begin;
-
-    auto wend = _sample_container_begin;
-
-    for ( const auto c : _critical_values )
+    for ( size_t i = 1; i < _indptr.size(); ++i )
         {
-            const auto at_begin = [c, _delta_t]( containers::Match *m ) {
-                return m->numerical_value > c - _delta_t;
-            };
+            assert_true( _indptr[i - 1] <= _indptr[i] );
+            assert_true( _matches_begin <= _matches_end );
+            assert_true(
+                _indptr[i] <= static_cast<size_t>( std::distance(
+                                  _matches_begin, _matches_end ) ) );
+            assert_true( _indptr[i] <= _indptr.back() );
 
-            const auto at_end = [c]( containers::Match *m ) {
-                return m->numerical_value > c;
-            };
+            const auto begin = _matches_begin + _indptr[i - 1];
+            const auto end = _matches_begin + _indptr[i];
 
-            wbegin = std::find_if( wbegin, _sample_container_end, at_begin );
-
-            wend = std::find_if( wend, _sample_container_end, at_end );
-
-            for ( auto it = wbegin; it != wend; ++it )
+            for ( auto it = begin; it != end; ++it )
                 {
-                    assert_true( ( *it )->numerical_value > c - _delta_t );
-                    assert_true( ( *it )->numerical_value <= c );
-
                     deactivate_sample( *it );
 
                     updates_current().insert( ( *it )->ix_x_popul );
@@ -2291,40 +2293,25 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
                     ++num_samples_smaller;
                 }
 
-            if ( _revert != Revert::not_at_all )
+            update_optimization_criterion_and_clear_updates_current(
+                num_samples_smaller, sample_size - num_samples_smaller );
+
+            for ( auto it = begin; it != end; ++it )
                 {
-                    update_optimization_criterion_and_clear_updates_current(
-                        num_samples_smaller,
-                        sample_size - num_samples_smaller );
+                    activate_sample( *it );
 
-                    for ( auto it = wbegin; it != wend; ++it )
-                        {
-                            assert_true(
-                                ( *it )->numerical_value > c - _delta_t );
-                            assert_true( ( *it )->numerical_value <= c );
-
-                            activate_sample( *it );
-
-                            updates_current().insert( ( *it )->ix_x_popul );
-                        }
-
-                    num_samples_smaller = 0.0;
+                    updates_current().insert( ( *it )->ix_x_popul );
                 }
+
+            num_samples_smaller = 0.0;
         }
 
     // ------------------------------------------------------------------
     // Revert to the original commit
 
-    if ( _revert != Revert::not_at_all )
-        {
-            revert_to_commit();
-            optimization_criterion()->revert_to_commit();
-        }
-    else
-        {
-            update_optimization_criterion_and_clear_updates_current(
-                num_samples_smaller, sample_size - num_samples_smaller );
-        }
+    revert_to_commit();
+
+    optimization_criterion()->revert_to_commit();
 
     // ------------------------------------------------------------------
 }
@@ -2806,9 +2793,9 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
                     updates_current().insert( ( *it )->ix_x_popul );
                 }
 
-            const auto num_samples_smaller = static_cast<Float>( _indptr[i] );
+            const auto num_samples_greater = static_cast<Float>( _indptr[i] );
 
-            const auto num_samples_greater =
+            const auto num_samples_smaller =
                 static_cast<Float>( _indptr.back() - _indptr[i] );
 
             update_optimization_criterion_and_clear_updates_current(
@@ -2901,9 +2888,9 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
                     updates_current().insert( ( *it )->ix_x_popul );
                 }
 
-            const auto num_samples_smaller = static_cast<Float>( _indptr[i] );
+            const auto num_samples_greater = static_cast<Float>( _indptr[i] );
 
-            const auto num_samples_greater =
+            const auto num_samples_smaller =
                 static_cast<Float>( _indptr.back() - _indptr[i] );
 
             update_optimization_criterion_and_clear_updates_current(
@@ -2922,17 +2909,41 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
     deactivate_samples_in_window(
         const Float _critical_value,
         const Float _delta_t,
-        const Revert _revert,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end )
 {
+    Float num_samples_smaller = 0.0;
+
+    Float num_samples_greater = 0.0;
+
     for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
         {
-            if ( ( *it )->numerical_value >= _critical_value - _delta_t &&
-                 ( *it )->numerical_value < _critical_value )
+            if ( ( *it )->numerical_value > _critical_value - _delta_t &&
+                 ( *it )->numerical_value <= _critical_value )
                 {
                     deactivate_sample( *it );
+
+                    if constexpr ( mode_ == enums::Mode::fit )
+                        {
+                            updates_stored().insert( ( *it )->ix_x_popul );
+                            updates_current().insert( ( *it )->ix_x_popul );
+
+                            ++num_samples_smaller;
+                        }
                 }
+            else
+                {
+                    if constexpr ( mode_ == enums::Mode::fit )
+                        {
+                            ++num_samples_greater;
+                        }
+                }
+        }
+
+    if constexpr ( mode_ == enums::Mode::fit )
+        {
+            update_optimization_criterion_and_clear_updates_current(
+                num_samples_smaller, num_samples_greater );
         }
 }
 
@@ -2945,46 +2956,37 @@ template <
     bool is_population_>
 void Aggregation<AggType, data_used_, mode_, is_population_>::
     deactivate_samples_in_window(
-        const std::vector<Float> &_critical_values,
-        const Float _delta_t,
-        const Revert _revert,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end )
+        const std::vector<size_t> &_indptr,
+        containers::MatchPtrs::iterator _matches_begin,
+        containers::MatchPtrs::iterator _matches_end )
 {
     // ------------------------------------------------------------------
 
-    assert_true( _sample_container_end > _sample_container_begin );
+    assert_true( _indptr.size() > 0 );
 
-    const Float sample_size = static_cast<Float>(
-        std::distance( _sample_container_begin, _sample_container_end ) );
+    assert_true( _matches_end > _matches_begin );
+
+    const Float sample_size =
+        static_cast<Float>( std::distance( _matches_begin, _matches_end ) );
 
     Float num_samples_smaller = 0.0;
 
     // ------------------------------------------------------------------
 
-    auto wbegin = _sample_container_begin;
-
-    auto wend = _sample_container_begin;
-
-    for ( const auto c : _critical_values )
+    for ( size_t i = 1; i < _indptr.size(); ++i )
         {
-            const auto at_begin = [c, _delta_t]( containers::Match *m ) {
-                return m->numerical_value > c - _delta_t;
-            };
+            assert_true( _indptr[i - 1] <= _indptr[i] );
+            assert_true( _matches_begin <= _matches_end );
+            assert_true(
+                _indptr[i] <= static_cast<size_t>( std::distance(
+                                  _matches_begin, _matches_end ) ) );
+            assert_true( _indptr[i] <= _indptr.back() );
 
-            const auto at_end = [c]( containers::Match *m ) {
-                return m->numerical_value > c;
-            };
+            const auto begin = _matches_begin + _indptr[i - 1];
+            const auto end = _matches_begin + _indptr[i];
 
-            wbegin = std::find_if( wbegin, _sample_container_end, at_begin );
-
-            wend = std::find_if( wend, _sample_container_end, at_end );
-
-            for ( auto it = wbegin; it != wend; ++it )
+            for ( auto it = begin; it != end; ++it )
                 {
-                    assert_true( ( *it )->numerical_value > c - _delta_t );
-                    assert_true( ( *it )->numerical_value <= c );
-
                     deactivate_sample( *it );
 
                     updates_stored().insert( ( *it )->ix_x_popul );
@@ -2993,26 +2995,14 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
                     ++num_samples_smaller;
                 }
 
-            if ( _revert != Revert::not_at_all )
-                {
-                    update_optimization_criterion_and_clear_updates_current(
-                        num_samples_smaller,
-                        sample_size - num_samples_smaller );
-
-                    revert_to_commit();
-
-                    optimization_criterion()->revert_to_commit();
-
-                    num_samples_smaller = 0.0;
-                }
-        }
-
-    // ------------------------------------------------------------------
-
-    if ( _revert == Revert::not_at_all )
-        {
             update_optimization_criterion_and_clear_updates_current(
                 num_samples_smaller, sample_size - num_samples_smaller );
+
+            revert_to_commit();
+
+            optimization_criterion()->revert_to_commit();
+
+            num_samples_smaller = 0.0;
         }
 
     // ------------------------------------------------------------------
@@ -3029,17 +3019,41 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
     deactivate_samples_outside_window(
         const Float _critical_value,
         const Float _delta_t,
-        const Revert _revert,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end )
 {
+    Float num_samples_smaller = 0.0;
+
+    Float num_samples_greater = 0.0;
+
     for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
         {
-            if ( ( *it )->numerical_value < _critical_value - _delta_t ||
-                 ( *it )->numerical_value >= _critical_value )
+            if ( ( *it )->numerical_value <= _critical_value - _delta_t ||
+                 ( *it )->numerical_value > _critical_value )
                 {
                     deactivate_sample( *it );
+
+                    if constexpr ( mode_ == enums::Mode::fit )
+                        {
+                            updates_stored().insert( ( *it )->ix_x_popul );
+                            updates_current().insert( ( *it )->ix_x_popul );
+
+                            ++num_samples_greater;
+                        }
                 }
+            else
+                {
+                    if constexpr ( mode_ == enums::Mode::fit )
+                        {
+                            ++num_samples_smaller;
+                        }
+                }
+        }
+
+    if constexpr ( mode_ == enums::Mode::fit )
+        {
+            update_optimization_criterion_and_clear_updates_current(
+                num_samples_smaller, num_samples_greater );
         }
 }
 
@@ -3052,30 +3066,26 @@ template <
     bool is_population_>
 void Aggregation<AggType, data_used_, mode_, is_population_>::
     deactivate_samples_outside_window(
-        const std::vector<Float> &_critical_values,
-        const Float _delta_t,
-        const Revert _revert,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end )
+        const std::vector<size_t> &_indptr,
+        containers::MatchPtrs::iterator _matches_begin,
+        containers::MatchPtrs::iterator _matches_end )
 {
     // ------------------------------------------------------------------
 
-    assert_true( _sample_container_end > _sample_container_begin );
+    assert_true( _indptr.size() > 0 );
 
-    const Float sample_size = static_cast<Float>(
-        std::distance( _sample_container_begin, _sample_container_end ) );
+    assert_true( _matches_end > _matches_begin );
+
+    const Float sample_size =
+        static_cast<Float>( std::distance( _matches_begin, _matches_end ) );
 
     Float num_samples_smaller = 0.0;
 
     // ------------------------------------------------------------------
     // Deactivate all samples
 
-    for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
+    for ( auto it = _matches_begin; it != _matches_end; ++it )
         {
-            assert_true(
-                it == _sample_container_begin ||
-                ( *it )->numerical_value >= ( *( it - 1 ) )->numerical_value );
-
             deactivate_sample( *it );
 
             updates_stored().insert( ( *it )->ix_x_popul );
@@ -3085,29 +3095,20 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
     // ------------------------------------------------------------------
     // Selectively activate those samples that are inside the window.
 
-    auto wbegin = _sample_container_begin;
-
-    auto wend = _sample_container_begin;
-
-    for ( const auto c : _critical_values )
+    for ( size_t i = 1; i < _indptr.size(); ++i )
         {
-            const auto at_begin = [c, _delta_t]( containers::Match *m ) {
-                return m->numerical_value > c - _delta_t;
-            };
+            assert_true( _indptr[i - 1] <= _indptr[i] );
+            assert_true( _matches_begin <= _matches_end );
+            assert_true(
+                _indptr[i] <= static_cast<size_t>( std::distance(
+                                  _matches_begin, _matches_end ) ) );
+            assert_true( _indptr[i] <= _indptr.back() );
 
-            const auto at_end = [c]( containers::Match *m ) {
-                return m->numerical_value > c;
-            };
+            const auto begin = _matches_begin + _indptr[i - 1];
+            const auto end = _matches_begin + _indptr[i];
 
-            wbegin = std::find_if( wbegin, _sample_container_end, at_begin );
-
-            wend = std::find_if( wend, _sample_container_end, at_end );
-
-            for ( auto it = wbegin; it != wend; ++it )
+            for ( auto it = begin; it != end; ++it )
                 {
-                    assert_true( ( *it )->numerical_value > c - _delta_t );
-                    assert_true( ( *it )->numerical_value <= c );
-
                     activate_sample( *it );
 
                     updates_current().insert( ( *it )->ix_x_popul );
@@ -3115,40 +3116,25 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
                     ++num_samples_smaller;
                 }
 
-            if ( _revert != Revert::not_at_all )
+            update_optimization_criterion_and_clear_updates_current(
+                num_samples_smaller, sample_size - num_samples_smaller );
+
+            for ( auto it = begin; it != end; ++it )
                 {
-                    update_optimization_criterion_and_clear_updates_current(
-                        num_samples_smaller,
-                        sample_size - num_samples_smaller );
+                    deactivate_sample( *it );
 
-                    for ( auto it = wbegin; it != wend; ++it )
-                        {
-                            assert_true(
-                                ( *it )->numerical_value > c - _delta_t );
-                            assert_true( ( *it )->numerical_value <= c );
-
-                            deactivate_sample( *it );
-
-                            updates_current().insert( ( *it )->ix_x_popul );
-                        }
-
-                    num_samples_smaller = 0.0;
+                    updates_current().insert( ( *it )->ix_x_popul );
                 }
+
+            num_samples_smaller = 0.0;
         }
 
     // ------------------------------------------------------------------
     // Revert to the original commit
 
-    if ( _revert != Revert::not_at_all )
-        {
-            revert_to_commit();
-            optimization_criterion()->revert_to_commit();
-        }
-    else
-        {
-            update_optimization_criterion_and_clear_updates_current(
-                num_samples_smaller, sample_size - num_samples_smaller );
-        }
+    revert_to_commit();
+
+    optimization_criterion()->revert_to_commit();
 
     // ------------------------------------------------------------------
 }

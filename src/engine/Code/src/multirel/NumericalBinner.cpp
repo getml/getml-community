@@ -112,6 +112,17 @@ std::vector<size_t> NumericalBinner::bin_given_step_size(
             ++counts[ix];
         }
 
+        // ---------------------------------------------------------------------------
+
+#ifndef NDEBUG
+
+    for ( size_t i = 0; i < counts.size(); ++i )
+        {
+            assert_true( indptr[i] + counts[i] == indptr[i + 1] );
+        }
+
+#endif  // NDEBUG
+
     // ---------------------------------------------------------------------------
 
     assert_true( indptr.size() > 0 );

@@ -474,14 +474,6 @@ class DecisionTreeNode
 
     /// Apply changes based on the lag operator
     void apply_by_lag(
-        const std::vector<Float> &_critical_value,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end,
-        aggregations::AbstractAggregation *_aggregation ) const;
-
-    /// Apply changes based on the lag operator
-    void apply_by_lag(
-        const Float _critical_value,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end,
         aggregations::AbstractAggregation *_aggregation ) const;

@@ -44,16 +44,13 @@ class AbstractAggregation
     virtual void activate_samples_in_window(
         const Float _critical_value,
         const Float _lag,
-        const Revert _revert,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) = 0;
 
     /// Implements a lag functionality through moving time windows - used by
     /// fit.
     virtual void activate_samples_in_window(
-        const std::vector<Float> &_critical_values,
-        const Float _lag,
-        const Revert _revert,
+        const std::vector<size_t> &_indptr,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) = 0;
 
@@ -62,16 +59,13 @@ class AbstractAggregation
     virtual void activate_samples_outside_window(
         const Float _critical_value,
         const Float _lag,
-        const Revert _revert,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) = 0;
 
     /// Implements a lag functionality through moving time windows - used by
     /// fit.
     virtual void activate_samples_outside_window(
-        const std::vector<Float> &_critical_values,
-        const Float _lag,
-        const Revert _revert,
+        const std::vector<size_t> &_indptr,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) = 0;
 
@@ -182,16 +176,13 @@ class AbstractAggregation
     virtual void deactivate_samples_in_window(
         const Float _critical_value,
         const Float _lag,
-        const Revert _revert,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) = 0;
 
     /// Implements a lag functionality through moving time windows - used by
     /// fit.
     virtual void deactivate_samples_in_window(
-        const std::vector<Float> &_critical_values,
-        const Float _lag,
-        const Revert _revert,
+        const std::vector<size_t> &_indptr,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) = 0;
 
@@ -200,16 +191,13 @@ class AbstractAggregation
     virtual void deactivate_samples_outside_window(
         const Float _critical_value,
         const Float _lag,
-        const Revert _revert,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) = 0;
 
     /// Implements a lag functionality through moving time windows - used by
     /// fit.
     virtual void deactivate_samples_outside_window(
-        const std::vector<Float> &_critical_values,
-        const Float _lag,
-        const Revert _revert,
+        const std::vector<size_t> &_indptr,
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end ) = 0;
 

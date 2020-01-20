@@ -113,13 +113,15 @@ Float RSquaredCriterion::calculate_r_squared(
 
             result += sum_sample_weights_ * ( sum_y_centered_yhat / var_yhat ) *
                       ( sum_y_centered_yhat / sum_y_centered_y_centered_[j] );
+
+            debug_log(
+                "result: " + std::to_string( result ) +
+                ", sum_y_centered_yhat: " +
+                std::to_string( sum_y_centered_yhat ) +
+                ", var_yhat: " + std::to_string( var_yhat ) );
         }
 
     assert_true( sample_weights_.size() == y_centered_[0].size() );
-
-    assert_true( result > -0.1 * static_cast<Float>( y_.size() ) );
-
-    assert_true( result < 1.1 * static_cast<Float>( y_.size() ) );
 
     return result;
 }
@@ -164,6 +166,14 @@ Int RSquaredCriterion::find_maximum()
 
             const Float num_samples_greater =
                 sufficient_statistics[i][sufficient_statistics[i].size() - 1];
+
+            debug_log(
+                "num_samples_smaller: " +
+                std::to_string( num_samples_smaller ) );
+
+            debug_log(
+                "num_samples_greater: " +
+                std::to_string( num_samples_greater ) );
 
             assert_true( hyperparameters_ );
 
