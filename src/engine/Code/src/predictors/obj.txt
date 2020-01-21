@@ -1,7 +1,6 @@
 set(
     PREDICTORS_OBJ
     ${PREDICTORS_SOURCE_DIRECTORY}/Encoding.cpp
-    ${PREDICTORS_SOURCE_DIRECTORY}/GradientBoostingPredictor.cpp
     ${PREDICTORS_SOURCE_DIRECTORY}/LinearRegression.cpp
     ${PREDICTORS_SOURCE_DIRECTORY}/LogisticRegression.cpp
     ${PREDICTORS_SOURCE_DIRECTORY}/JSON.cpp
