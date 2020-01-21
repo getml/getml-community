@@ -28,7 +28,7 @@ CategoricalBinner::bin(
     // There is a possibility that all critical values are NAN in all processes.
     // This accounts for this edge case.
 
-    if ( _min >= _max )
+    if ( _min > _max )
         {
             return std::make_pair(
                 std::vector<size_t>( 0 ),
@@ -141,7 +141,7 @@ std::vector<size_t> CategoricalBinner::make_indptr(
     const std::vector<containers::Match*>::const_iterator _begin,
     const std::vector<containers::Match*>::const_iterator _nan_begin )
 {
-    assert_true( _max > _min );
+    assert_true( _max >= _min );
 
     const auto num_bins = _max - _min + 1;
 
