@@ -1953,13 +1953,18 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
         const containers::MatchPtrs::const_iterator &_matches_begin,
         const containers::MatchPtrs::const_iterator &_matches_end )
 {
+    assert_true( _matches_begin <= _matches_end );
+
+    const auto sample_size =
+        static_cast<size_t>( std::distance( _matches_begin, _matches_end ) );
+
+    assert_true( _indptr.back() <= sample_size );
+
+    const auto num_nans = static_cast<Float>( sample_size - _indptr.back() );
+
     for ( size_t i = 1; i < _indptr.size(); ++i )
         {
             assert_true( _indptr[i - 1] <= _indptr[i] );
-            assert_true( _matches_begin <= _matches_end );
-            assert_true(
-                _indptr[i] <= static_cast<size_t>( std::distance(
-                                  _matches_begin, _matches_end ) ) );
             assert_true( _indptr[i] <= _indptr.back() );
 
             const auto begin = _matches_begin + _indptr[i - 1];
@@ -1973,10 +1978,10 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
                     updates_current().insert( ( *it )->ix_x_popul );
                 }
 
-            auto num_samples_greater = static_cast<Float>( _indptr[i] );
+            const auto num_samples_greater = static_cast<Float>( _indptr[i] );
 
-            auto num_samples_smaller =
-                static_cast<Float>( _indptr.back() - _indptr[i] );
+            const auto num_samples_smaller =
+                static_cast<Float>( _indptr.back() - _indptr[i] ) + num_nans;
 
             update_optimization_criterion_and_clear_updates_current(
                 num_samples_smaller, num_samples_greater );
@@ -2045,13 +2050,18 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
 {
     assert_true( _indptr.size() > 0 );
 
+    assert_true( _matches_begin <= _matches_end );
+
+    const auto sample_size =
+        static_cast<size_t>( std::distance( _matches_begin, _matches_end ) );
+
+    assert_true( _indptr.back() <= sample_size );
+
+    const auto num_nans = static_cast<Float>( sample_size - _indptr.back() );
+
     for ( size_t i = _indptr.size() - 1; i > 0; --i )
         {
             assert_true( _indptr[i - 1] <= _indptr[i] );
-            assert_true( _matches_begin <= _matches_end );
-            assert_true(
-                _indptr[i] <= static_cast<size_t>( std::distance(
-                                  _matches_begin, _matches_end ) ) );
             assert_true( _indptr[i] <= _indptr.back() );
 
             const auto begin = _matches_begin + _indptr[i - 1];
@@ -2065,9 +2075,10 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
                     updates_current().insert( ( *it )->ix_x_popul );
                 }
 
-            auto num_samples_greater = static_cast<Float>( _indptr[i] );
+            const auto num_samples_greater =
+                static_cast<Float>( _indptr[i] ) + num_nans;
 
-            auto num_samples_smaller =
+            const auto num_samples_smaller =
                 static_cast<Float>( _indptr.back() - _indptr[i] );
 
             update_optimization_criterion_and_clear_updates_current(
@@ -2773,13 +2784,18 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
         const containers::MatchPtrs::const_iterator &_matches_begin,
         const containers::MatchPtrs::const_iterator &_matches_end )
 {
+    assert_true( _matches_begin <= _matches_end );
+
+    const auto sample_size =
+        static_cast<size_t>( std::distance( _matches_begin, _matches_end ) );
+
+    assert_true( _indptr.back() <= sample_size );
+
+    const auto num_nans = static_cast<Float>( sample_size - _indptr.back() );
+
     for ( size_t i = 1; i < _indptr.size(); ++i )
         {
             assert_true( _indptr[i - 1] <= _indptr[i] );
-            assert_true( _matches_begin <= _matches_end );
-            assert_true(
-                _indptr[i] <= static_cast<size_t>( std::distance(
-                                  _matches_begin, _matches_end ) ) );
             assert_true( _indptr[i] <= _indptr.back() );
 
             const auto begin = _matches_begin + _indptr[i - 1];
@@ -2793,7 +2809,8 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
                     updates_current().insert( ( *it )->ix_x_popul );
                 }
 
-            const auto num_samples_greater = static_cast<Float>( _indptr[i] );
+            const auto num_samples_greater =
+                static_cast<Float>( _indptr[i] ) + num_nans;
 
             const auto num_samples_smaller =
                 static_cast<Float>( _indptr.back() - _indptr[i] );
@@ -2868,13 +2885,18 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
 {
     assert_true( _indptr.size() > 0 );
 
+    assert_true( _matches_begin <= _matches_end );
+
+    const auto sample_size =
+        static_cast<size_t>( std::distance( _matches_begin, _matches_end ) );
+
+    assert_true( _indptr.back() <= sample_size );
+
+    const auto num_nans = static_cast<Float>( sample_size - _indptr.back() );
+
     for ( size_t i = _indptr.size() - 1; i > 0; --i )
         {
             assert_true( _indptr[i - 1] <= _indptr[i] );
-            assert_true( _matches_begin <= _matches_end );
-            assert_true(
-                _indptr[i] <= static_cast<size_t>( std::distance(
-                                  _matches_begin, _matches_end ) ) );
             assert_true( _indptr[i] <= _indptr.back() );
 
             const auto begin = _matches_begin + _indptr[i - 1];
@@ -2891,7 +2913,7 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
             const auto num_samples_greater = static_cast<Float>( _indptr[i] );
 
             const auto num_samples_smaller =
-                static_cast<Float>( _indptr.back() - _indptr[i] );
+                static_cast<Float>( _indptr.back() - _indptr[i] ) + num_nans;
 
             update_optimization_criterion_and_clear_updates_current(
                 num_samples_smaller, num_samples_greater );
