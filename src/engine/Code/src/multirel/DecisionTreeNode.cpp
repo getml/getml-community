@@ -816,15 +816,15 @@ DecisionTreeNode::make_index_and_categories(
     containers::MatchPtrs::iterator _sample_container_begin,
     containers::MatchPtrs::iterator _sample_container_end )
 {
+    const auto [min, max] = utils::MinMaxFinder<Int>::find_min_max(
+        _sample_container_begin, _sample_container_end, comm() );
+
     const auto is_null = []( const containers::Match *m ) {
         return m->categorical_value >= 0;
     };
 
     const auto nan_begin = std::partition(
         _sample_container_begin, _sample_container_end, is_null );
-
-    const auto [min, max] = utils::MinMaxFinder<Int>::find_min_max(
-        _sample_container_begin, nan_begin, comm() );
 
     auto bins =
         containers::MatchPtrs( _sample_container_begin, _sample_container_end );

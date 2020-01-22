@@ -54,6 +54,13 @@ class CategoryIndex
         return bins_.cbegin() + indptr_[ix + 1];
     }
 
+    /// Returns the number of null values.
+    size_t num_null() const
+    {
+        assert_true( bins_.size() >= indptr_.back() );
+        return bins_.size() - indptr_.back();
+    }
+
     /// Returns the size of the underlying indptr.
     size_t size() const { return indptr_.size(); }
 

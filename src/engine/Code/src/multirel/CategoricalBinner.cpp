@@ -39,7 +39,7 @@ CategoricalBinner::bin(
 
     const auto num_bins = _max - _min + 1;
 
-    const auto indptr = make_indptr( _min, _max, _begin, _nan_begin );
+    const auto indptr = make_indptr( _min, _max, _begin, _end );
 
     // ---------------------------------------------------------------------------
 
@@ -47,7 +47,7 @@ CategoricalBinner::bin(
 
     std::vector<size_t> counts( num_bins );
 
-    for ( auto it = _begin; it != _nan_begin; ++it )
+    for ( auto it = _begin; it != _end; ++it )
         {
             const auto val = ( *it )->categorical_value;
 
@@ -62,12 +62,6 @@ CategoricalBinner::bin(
 
             ++counts[ix];
         }
-
-    // ---------------------------------------------------------------------------
-
-    assert_true( indptr.size() > 0 );
-
-    std::copy( _nan_begin, _end, _bins->begin() + indptr.back() );
 
     // ---------------------------------------------------------------------------
 

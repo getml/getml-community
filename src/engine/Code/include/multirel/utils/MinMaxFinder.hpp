@@ -52,7 +52,10 @@ std::pair<VType, VType> MinMaxFinder<VType>::find_min_max(
                     assert_true( false && "Unknown VType!" );
                 }
 
-            assert_true( !std::isnan( val ) && !std::isinf( val ) );
+            if constexpr ( std::is_same<VType, Float>() )
+                {
+                    assert_true( !std::isnan( val ) && !std::isinf( val ) );
+                }
 
             if ( val < min )
                 {
