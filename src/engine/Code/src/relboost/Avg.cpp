@@ -438,7 +438,7 @@ std::vector<std::pair<Float, std::array<Float, 3>>> Avg::calc_pairs(
 
     // -------------------------------------------------------------
 
-    assert_true( !allow_null_weights_ || !std::isnan( _old_weight ) );
+    assert_true( allow_null_weights_ || !std::isnan( _old_weight ) );
 
     if ( !std::isnan( _old_weight ) )
         {
