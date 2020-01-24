@@ -764,7 +764,7 @@ std::vector<containers::CandidateSplit> DecisionTreeNode::try_all(
                 &bins,
                 &candidates );
 
-            try_time_stamps_diff(
+            try_time_stamps_window(
                 _old_intercept,
                 *_input,
                 _output,
@@ -862,6 +862,14 @@ void DecisionTreeNode::try_categorical_input(
 
     for ( size_t j = 0; j < _input.num_categoricals(); ++j )
         {
+            // ----------------------------------------------------------------
+
+            if ( _input.categorical_unit( j ).find( "comparison only" ) !=
+                 std::string::npos )
+                {
+                    continue;
+                }
+
             // ----------------------------------------------------------------
             // First, we bin by category.
 
@@ -963,6 +971,14 @@ void DecisionTreeNode::try_categorical_output(
     for ( size_t j = 0; j < _output.num_categoricals(); ++j )
         {
             // ----------------------------------------------------------------
+
+            if ( _output.categorical_unit( j ).find( "comparison only" ) !=
+                 std::string::npos )
+                {
+                    continue;
+                }
+
+            // ----------------------------------------------------------------
             // First, we bin by category.
 
             const auto is_nan = [j, &_output]( const containers::Match& m ) {
@@ -1062,6 +1078,12 @@ void DecisionTreeNode::try_discrete_input(
 
     for ( size_t j = 0; j < _input.num_discretes(); ++j )
         {
+            if ( _input.discrete_unit( j ).find( "comparison only" ) !=
+                 std::string::npos )
+                {
+                    continue;
+                }
+
             // Moves all matches for which the critical value is NAN to the
             // very end.
             const auto nan_begin =
@@ -1124,6 +1146,12 @@ void DecisionTreeNode::try_discrete_output(
 
     for ( size_t j = 0; j < _output.num_discretes(); ++j )
         {
+            if ( _output.discrete_unit( j ).find( "comparison only" ) !=
+                 std::string::npos )
+                {
+                    continue;
+                }
+
             // Moves all matches for which the critical value is NAN to the
             // very end.
             const auto nan_begin =
@@ -1218,18 +1246,6 @@ void DecisionTreeNode::try_numerical_or_discrete(
                 _candidates );
         }
 
-    /*add_candidates(
-        enums::Revert::False,
-        enums::Update::calc_diff,
-        _old_intercept,
-        containers::Split(
-            j, 0.0, enums::DataUsed::numerical_input_is_nan ),
-        _begin,
-        last_it,
-        nan_begin,
-        _end,
-        _candidates );*/
-
     loss_function().revert_to_commit();
 }
 
@@ -1247,6 +1263,12 @@ void DecisionTreeNode::try_numerical_input(
 
     for ( size_t j = 0; j < _input.num_numericals(); ++j )
         {
+            if ( _input.numerical_unit( j ).find( "comparison only" ) !=
+                 std::string::npos )
+                {
+                    continue;
+                }
+
             // Moves all matches for which the critical value is NAN to the
             // very end.
             const auto nan_begin =
@@ -1309,6 +1331,12 @@ void DecisionTreeNode::try_numerical_output(
 
     for ( size_t j = 0; j < _output.num_numericals(); ++j )
         {
+            if ( _output.numerical_unit( j ).find( "comparison only" ) !=
+                 std::string::npos )
+                {
+                    continue;
+                }
+
             // Moves all matches for which the critical value is NAN to the
             // very end.
             const auto nan_begin =
@@ -1645,9 +1673,10 @@ void DecisionTreeNode::try_subfeatures(
                 _candidates );
         }
 }
+
 // ----------------------------------------------------------------------------
 
-void DecisionTreeNode::try_time_stamps_diff(
+void DecisionTreeNode::try_time_stamps_window(
     const Float _old_intercept,
     const containers::DataFrame& _input,
     const containers::DataFrameView& _output,
@@ -1656,7 +1685,18 @@ void DecisionTreeNode::try_time_stamps_diff(
     std::vector<containers::Match>* _bins,
     std::vector<containers::CandidateSplit>* _candidates )
 {
-    debug_log( "Time stamps diff." );
+    // ------------------------------------------------------------------------
+
+    if ( hyperparameters().delta_t_ <= 0.0 )
+        {
+            return;
+        }
+
+    // ------------------------------------------------------------------------
+
+    debug_log( "Time windows." );
+
+    // ------------------------------------------------------------------------
 
     const auto get_value = [&_input, &_output]( const containers::Match& m ) {
         const auto i1 = m.ix_output;
@@ -1670,17 +1710,34 @@ void DecisionTreeNode::try_time_stamps_diff(
         utils::MinMaxFinder<decltype( get_value ), Float>::find_min_max(
             get_value, _begin, _end, &comm() );
 
-    const auto num_bins = calc_num_bins( _begin, _end );
+    if ( max <= min )
+        {
+            return;
+        }
+
+    const auto step_size = hyperparameters().delta_t_;
+
+    const auto num_bins = static_cast<size_t>( ( max - min ) / step_size ) + 1;
+
+    // Be reasonable - avoid memory overflow.
+    if ( num_bins > 1000000 )
+        {
+            return;
+        }
+
+    // ------------------------------------------------------------------------
 
     // Note that this bins in DESCENDING order.
-    const auto [indptr, step_size] =
-        utils::NumericalBinner<decltype( get_value )>::bin(
-            min, max, get_value, num_bins, _begin, _end, _end, _bins );
+    const auto indptr =
+        utils::NumericalBinner<decltype( get_value )>::bin_given_step_size(
+            min, max, get_value, step_size, _begin, _end, _end, _bins );
 
     if ( indptr.size() == 0 )
         {
             return;
         }
+
+    // ------------------------------------------------------------------------
 
     for ( size_t i = 1; i < indptr.size(); ++i )
         {
@@ -1696,107 +1753,6 @@ void DecisionTreeNode::try_time_stamps_diff(
 
             const auto critical_value =
                 max - static_cast<Float>( i ) * step_size;
-
-            add_candidates(
-                enums::Revert::False,
-                update,
-                _old_intercept,
-                containers::Split(
-                    0, critical_value, enums::DataUsed::time_stamps_diff ),
-                _bins->begin(),
-                split_begin,
-                split_end,
-                _bins->end(),
-                _candidates );
-        }
-
-    loss_function().revert_to_commit();
-
-    if ( hyperparameters().delta_t_ > 0.0 )
-        {
-            try_window(
-                _old_intercept,
-                min,
-                max,
-                _input,
-                _output,
-                _begin,
-                _end,
-                _bins,
-                _candidates );
-        }
-}
-
-// ----------------------------------------------------------------------------
-
-void DecisionTreeNode::try_window(
-    const Float _old_intercept,
-    const Float _min,
-    const Float _max,
-    const containers::DataFrame& _input,
-    const containers::DataFrameView& _output,
-    const std::vector<containers::Match>::iterator _begin,
-    const std::vector<containers::Match>::iterator _end,
-    std::vector<containers::Match>* _bins,
-    std::vector<containers::CandidateSplit>* _candidates )
-{
-    // ------------------------------------------------------------------------
-
-    debug_log( "Time windows." );
-
-    assert_true( hyperparameters().delta_t_ > 0.0 );
-
-    const auto step_size = hyperparameters().delta_t_;
-
-    // ------------------------------------------------------------------------
-
-    const auto get_value = [&_input, &_output]( const containers::Match& m ) {
-        const auto i1 = m.ix_output;
-        const auto i2 = m.ix_input;
-        assert_true( i1 < _output.nrows() );
-        assert_true( i2 < _input.nrows() );
-        return _output.time_stamp( i1 ) - _input.time_stamp( i2 );
-    };
-
-    assert_true( _max >= _min );
-
-    const auto num_bins =
-        static_cast<size_t>( ( _max - _min ) / step_size ) + 1;
-
-    // Be reasonable - avoid memory overflow.
-    if ( num_bins > 1000000 )
-        {
-            return;
-        }
-
-    // ------------------------------------------------------------------------
-
-    // Note that this bins in DESCENDING order.
-    const auto indptr =
-        utils::NumericalBinner<decltype( get_value )>::bin_given_step_size(
-            _min, _max, get_value, step_size, _begin, _end, _end, _bins );
-
-    if ( indptr.size() == 0 )
-        {
-            return;
-        }
-
-    // ------------------------------------------------------------------------
-
-    for ( size_t i = 1; i < indptr.size(); ++i )
-        {
-            assert_true( indptr[i - 1] <= indptr[i] );
-            assert_true( indptr[i] <= _bins->size() );
-
-            const auto split_begin = _bins->begin() + indptr[i - 1];
-
-            const auto split_end = _bins->begin() + indptr[i];
-
-            const auto update =
-                ( i == 1 ? enums::Update::calc_all : enums::Update::calc_diff );
-
-            const auto critical_value =
-                _max - static_cast<Float>( i ) * step_size;
 
             add_candidates(
                 enums::Revert::True,
