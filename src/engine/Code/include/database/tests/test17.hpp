@@ -13,6 +13,18 @@ void test17( std::filesystem::path _test_path )
 
     // ---------------------------------------------------------------
 
+#ifdef __APPLE__
+    const auto unix_socket = "/tmp/mysql.sock";
+#else
+    const auto unix_socket = "/var/run/mysqld/mysqld.sock";
+#endif
+
+    /*
+    CREATE USER 'testbert'@'localhost' IDENTIFIED BY 'testbert';
+    GRANT ALL PRIVILEGES ON * . * TO 'testbert'@'localhost';
+    CREATE DATABASE IF NOT EXISTS testbertstestbase;
+    */
+
     // Configure MySQL to connect using the user and database
     // created just for this unit test.
     Poco::JSON::Object connectionObject;
@@ -20,7 +32,7 @@ void test17( std::filesystem::path _test_path )
     connectionObject.set( "host_", "localhost" );
     connectionObject.set( "passwd_", "testbert" );
     connectionObject.set( "port_", 3306 );
-    connectionObject.set( "unix_socket_", "/var/run/mysqld/mysqld.sock" );
+    connectionObject.set( "unix_socket_", unix_socket );
     connectionObject.set( "user_", "testbert" );
 
     // Customized time format used within the database.
