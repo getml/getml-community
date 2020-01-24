@@ -708,8 +708,8 @@ class DecisionTreeNode
         std::vector<descriptors::Split> *_candidate_splits );
 
     /// Tries to impose the difference between the time stamps as a
-    /// condition
-    void try_time_stamps_diff(
+    /// window condition, if delta_t is greater than 0.
+    void try_time_stamps_window(
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
         const size_t _sample_size,
@@ -717,7 +717,7 @@ class DecisionTreeNode
         containers::MatchPtrs::iterator _sample_container_end,
         std::vector<descriptors::Split> *_candidate_splits );
 
-    /// Tries to apply a moving time window, simulating a lag variable.
+    /// Tries to apply a moving window, simulating a lag variable.
     void try_window(
         containers::MatchPtrs::iterator _sample_container_begin,
         containers::MatchPtrs::iterator _sample_container_end,

@@ -2161,7 +2161,7 @@ void DecisionTreeNode::try_conditions(
         _sample_container_end,
         _candidate_splits );
 
-    try_time_stamps_diff(
+    try_time_stamps_window(
         _population,
         _peripheral,
         _sample_size,
@@ -2592,7 +2592,7 @@ void DecisionTreeNode::try_subfeatures(
 
 // ----------------------------------------------------------------------------
 
-void DecisionTreeNode::try_time_stamps_diff(
+void DecisionTreeNode::try_time_stamps_window(
     const containers::DataFrameView &_population,
     const containers::DataFrame &_peripheral,
     const size_t _sample_size,
@@ -2600,38 +2600,30 @@ void DecisionTreeNode::try_time_stamps_diff(
     containers::MatchPtrs::iterator _sample_container_end,
     std::vector<descriptors::Split> *_candidate_splits )
 {
-    debug_log( "try_time_stamps_diff..." );
-
-    if ( skip_condition() )
-        {
-            return;
-        }
-
-    for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
-        {
-            ( *it )->numerical_value =
-                get_time_stamps_diff( _population, _peripheral, *it );
-        }
-
-    try_numerical_values(
-        0,
-        enums::DataUsed::time_stamps_diff,
-        _sample_size,
-        _sample_container_begin,
-        _sample_container_end,
-        _candidate_splits );
-
     if ( tree_->delta_t() > 0.0 )
         {
             debug_log( "try time_stamps_window..." );
+
+            if ( skip_condition() )
+                {
+                    return;
+                }
+
+            for ( auto it = _sample_container_begin;
+                  it != _sample_container_end;
+                  ++it )
+                {
+                    ( *it )->numerical_value =
+                        get_time_stamps_diff( _population, _peripheral, *it );
+                }
 
             try_window(
                 _sample_container_begin,
                 _sample_container_end,
                 _candidate_splits );
-        }
 
-    debug_log( "try_time_stamps_diff...done" );
+            debug_log( "try_time_stamps_window...done" );
+        }
 }
 
 // ----------------------------------------------------------------------------
