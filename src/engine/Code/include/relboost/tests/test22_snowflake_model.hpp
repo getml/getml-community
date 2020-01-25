@@ -241,6 +241,8 @@ void test22_snowflake_model( std::filesystem::path _test_path )
     sql << model.to_sql();
     sql.close();
 
+    // std::cout << model.to_sql() << std::endl;
+
     // ------------------------------------------------------------------------
     // Generate predictions.
 

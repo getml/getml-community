@@ -2,37 +2,40 @@
 
 int main( int argc, char* argv[] )
 {
-		
-	// ---------------------------------------------------------------
-	
-	// Checking the input arguments. A path to the tests folder
-	// containing folders distros, multirel, predictors, and relboost
-	// has to be provided.
-	std::filesystem::path test_path;
+    // ---------------------------------------------------------------
 
-	if ( argc == 2 ) {
-		test_path = argv[1];
-	} else {
-		std::cout << std::endl
-				  << "-----------------------------------------------------------"
-				  << std::endl
-				  << "ERROR: Please provide a path to the test folder!" 
-				  << std::endl << std::endl;
-		return 1;
-	}
-	
-	// ---------------------------------------------------------------
-	
-	std::cout << std::endl
-		  << "-----------------------------------------------------------"
-		  << std::endl
-		  << "Tests for the module 'RELBOOST'"
-		  << std::endl
-		  << "-----------------------------------------------------------"
-		  << std::endl;
+    // Checking the input arguments. A path to the tests folder
+    // containing folders distros, multirel, predictors, and relboost
+    // has to be provided.
+    std::filesystem::path test_path;
+
+    if ( argc == 2 )
+        {
+            test_path = argv[1];
+        }
+    else
+        {
+            std::cout
+                << std::endl
+                << "-----------------------------------------------------------"
+                << std::endl
+                << "ERROR: Please provide a path to the test folder!"
+                << std::endl
+                << std::endl;
+            return 1;
+        }
 
     // ---------------------------------------------------------------
-	
+
+    std::cout << std::endl
+              << "-----------------------------------------------------------"
+              << std::endl
+              << "Tests for the module 'RELBOOST'" << std::endl
+              << "-----------------------------------------------------------"
+              << std::endl;
+
+    // ---------------------------------------------------------------
+
     test1_sum( test_path );
 
     test2_avg( test_path );
@@ -55,7 +58,7 @@ int main( int argc, char* argv[] )
 
     // test13_numerical_output( test_path );
     test14_categorical_output( test_path );
-    test15_discrete_output( test_path );
+    // test15_discrete_output( test_path );
 
     test16_nan_values_numerical( test_path );
     test17_nan_values_discrete( test_path );

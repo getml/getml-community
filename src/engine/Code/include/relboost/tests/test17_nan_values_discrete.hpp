@@ -26,7 +26,10 @@ void test17_nan_values_discrete( std::filesystem::path _test_path )
     auto discrete_peripheral = make_column<double>( 250000, rng );
 
     const auto discrete_peripheral_col = relboost::containers::Column<double>(
-        discrete_peripheral.data(), "column_01", discrete_peripheral.size() );
+        discrete_peripheral.data(),
+        "column_01",
+        discrete_peripheral.size(),
+        "unit_01" );
 
     const auto join_keys_peripheral = make_column<std::int32_t>( 250000, rng );
 
@@ -59,7 +62,10 @@ void test17_nan_values_discrete( std::filesystem::path _test_path )
     auto discrete_population = make_column<double>( 500, rng );
 
     const auto discrete_population_col = relboost::containers::Column<double>(
-        discrete_population.data(), "column_01", discrete_population.size() );
+        discrete_population.data(),
+        "column_01",
+        discrete_population.size(),
+        "unit_01" );
 
     auto join_keys_population = std::vector<std::int32_t>( 500 );
 
@@ -190,6 +196,8 @@ void test17_nan_values_discrete( std::filesystem::path _test_path )
     sql << model.to_sql();
     sql.close();
 
+    // std::cout << model.to_sql() << std::endl;
+
     // ------------------------------------------------------------------------
     // Generate predictions.
 
@@ -199,12 +207,12 @@ void test17_nan_values_discrete( std::filesystem::path _test_path )
 
     for ( size_t i = 0; i < predictions.size(); ++i )
         {
-            // std::cout << "target: " << population_df.target_[i]
-            //         << ", prediction: " << predictions[i] << std::endl;
+            /*std::cout << "target: " << population_df.target( i, 0 )
+                      << ", prediction: " << predictions[i] << std::endl;*/
 
             assert_true(
                 std::abs( population_df.target( i, 0 ) - predictions[i] ) <
-                7.0 );
+                10.0 );
         }
 
     // ------------------------------------------------------------------------

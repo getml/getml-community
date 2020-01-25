@@ -243,6 +243,8 @@ void test25_snowflake_model4( std::filesystem::path _test_path )
     sql << model.to_sql();
     sql.close();
 
+    // std::cout << model.to_sql() << std::endl;
+
     // ------------------------------------------------------------------------
     // Generate predictions.
 
@@ -251,8 +253,8 @@ void test25_snowflake_model4( std::filesystem::path _test_path )
 
     for ( size_t i = 0; i < predictions.size(); ++i )
         {
-            /* std::cout << i << " target: " << population_df.target( i, 0 )
-                       << ", prediction: " << predictions[i] << std::endl;*/
+            /*std::cout << i << " target: " << population_df.target( i, 0 )
+                      << ", prediction: " << predictions[i] << std::endl;*/
 
             assert_true(
                 std::abs( population_df.target( i, 0 ) - predictions[i] ) <
