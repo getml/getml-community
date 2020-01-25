@@ -179,10 +179,9 @@ void test6_time_stamps_diff( std::filesystem::path _test_path )
         {
             for ( size_t i = 0; i < predictions[j]->size(); ++i )
                 {
-                    /*std::cout << "target: "
-                               << population_df.target( i , 0 )
-                               << ", prediction: " << predictions[j][i] <<
-                       std::endl;*/
+                    /*std::cout << "target: " << population_df.target( i, 0 )
+                              << ", prediction: " << ( *predictions[j] )[i]
+                              << std::endl;*/
 
                     assert_true(
                         std::abs(

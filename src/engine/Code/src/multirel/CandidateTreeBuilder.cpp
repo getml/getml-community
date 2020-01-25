@@ -183,7 +183,7 @@ void CandidateTreeBuilder::add_subfeature_aggs(
                 }
 
             for ( Int ix_column_used = 0;
-                  ix_column_used < _hyperparameters.num_subfeatures_;
+                  ix_column_used < _hyperparameters.num_subfeatures_ * 2;
                   ++ix_column_used )
                 {
                     _candidate_trees->push_back( decisiontrees::DecisionTree(

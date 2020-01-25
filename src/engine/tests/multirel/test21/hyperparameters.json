@@ -1,7 +1,6 @@
 {
     "aggregation_": [
-        "COUNT",
-        "SUM"
+        "COUNT"
     ],
     "fast_training_": false,
     "include_categorical_": false,

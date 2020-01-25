@@ -1,5 +1,6 @@
 {
     "aggregation_": [
+        "AVG",
         "SUM",
         "COUNT"
     ],

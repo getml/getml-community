@@ -171,6 +171,8 @@ void test21_time_windows( std::filesystem::path _test_path )
     sql << model.to_sql();
     sql.close();
 
+    // std::cout << model.to_sql() << std::endl;
+
     // ------------------------------------------------------------------------
     // Generate and evaluate predictions.
 
@@ -187,7 +189,7 @@ void test21_time_windows( std::filesystem::path _test_path )
                     assert_true(
                         std::abs(
                             population_df.target( i, 0 ) -
-                            ( *predictions[j] )[i] ) < 5.0 );
+                            ( *predictions[j] )[i] ) < 20.0 );
                 }
         }
 

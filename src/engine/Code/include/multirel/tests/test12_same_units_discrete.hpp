@@ -25,6 +25,11 @@ void test12_same_units_discrete( std::filesystem::path _test_path )
 
     auto discrete_peripheral = make_column<double>( 250000, rng );
 
+    for ( auto& val : discrete_peripheral )
+        {
+            val = std::floor( val );
+        }
+
     const auto discrete_peripheral_col = multirel::containers::Column<double>(
         discrete_peripheral.data(),
         "column_01",
@@ -60,6 +65,11 @@ void test12_same_units_discrete( std::filesystem::path _test_path )
     // Build population table.
 
     auto discrete_population = make_column<double>( 500, rng );
+
+    for ( auto& val : discrete_population )
+        {
+            val = std::floor( val );
+        }
 
     const auto discrete_population_col = multirel::containers::Column<double>(
         discrete_population.data(),
