@@ -9,11 +9,7 @@ namespace containers
 void DataFrame::add_float_column(
     const Column<Float> &_col, const std::string &_role )
 {
-    if ( _role == "discrete" )
-        {
-            add_column( _col, &discretes_ );
-        }
-    else if ( _role == "numerical" )
+    if ( _role == "numerical" )
         {
             add_column( _col, &numericals_ );
         }
@@ -150,12 +146,6 @@ void DataFrame::append( const DataFrame &_other )
                 "Append: Number of categorical columns does not match!" );
         }
 
-    if ( discretes_.size() != _other.discretes_.size() )
-        {
-            throw std::invalid_argument(
-                "Append: Number of discrete columns does not match!" );
-        }
-
     if ( join_keys_.size() != _other.join_keys_.size() )
         {
             throw std::invalid_argument(
@@ -203,11 +193,6 @@ void DataFrame::append( const DataFrame &_other )
     for ( size_t i = 0; i < categoricals_.size(); ++i )
         {
             categoricals_[i].append( _other.categorical( i ) );
-        }
-
-    for ( size_t i = 0; i < discretes_.size(); ++i )
-        {
-            discretes_[i].append( _other.discrete( i ) );
         }
 
     for ( size_t i = 0; i < join_keys_.size(); ++i )
@@ -263,13 +248,6 @@ void DataFrame::check_plausibility() const
             return mat.nrows() != expected_nrows;
         } );
 
-    const bool any_discrete_does_not_match = std::any_of(
-        discretes_.begin(),
-        discretes_.end(),
-        [expected_nrows]( const Column<Float> &mat ) {
-            return mat.nrows() != expected_nrows;
-        } );
-
     const bool any_join_key_does_not_match = std::any_of(
         join_keys_.begin(),
         join_keys_.end(),
@@ -322,11 +300,10 @@ void DataFrame::check_plausibility() const
     // -------------------------------------------------------------------------
 
     const bool any_mismatch =
-        any_categorical_does_not_match || any_discrete_does_not_match ||
-        any_join_key_does_not_match || any_numerical_does_not_match ||
-        any_target_does_not_match || any_time_stamp_does_not_match ||
-        any_undef_float_does_not_match || any_undef_int_does_not_match ||
-        any_undef_string_does_not_match;
+        any_categorical_does_not_match || any_join_key_does_not_match ||
+        any_numerical_does_not_match || any_target_does_not_match ||
+        any_time_stamp_does_not_match || any_undef_float_does_not_match ||
+        any_undef_int_does_not_match || any_undef_string_does_not_match;
 
     if ( any_mismatch )
         {
@@ -346,7 +323,6 @@ void DataFrame::check_plausibility() const
 
 std::vector<std::string> DataFrame::concat_colnames(
     const std::vector<std::string> &_categorical_names,
-    const std::vector<std::string> &_discrete_names,
     const std::vector<std::string> &_join_key_names,
     const std::vector<std::string> &_numerical_names,
     const std::vector<std::string> &_target_names,
@@ -361,9 +337,6 @@ std::vector<std::string> DataFrame::concat_colnames(
         all_colnames.end(),
         _categorical_names.begin(),
         _categorical_names.end() );
-
-    all_colnames.insert(
-        all_colnames.end(), _discrete_names.begin(), _discrete_names.end() );
 
     all_colnames.insert(
         all_colnames.end(), _join_key_names.begin(), _join_key_names.end() );
@@ -417,11 +390,7 @@ void DataFrame::create_indices()
 const Column<Float> &DataFrame::float_column(
     const std::string &_role, const size_t _num ) const
 {
-    if ( _role == "discrete" )
-        {
-            return discrete( _num );
-        }
-    else if ( _role == "numerical" )
+    if ( _role == "numerical" )
         {
             return numerical( _num );
         }
@@ -446,11 +415,7 @@ const Column<Float> &DataFrame::float_column(
 const Column<Float> &DataFrame::float_column(
     const std::string &_name, const std::string &_role ) const
 {
-    if ( _role == "discrete" )
-        {
-            return discrete( _name );
-        }
-    else if ( _role == "numerical" )
+    if ( _role == "numerical" )
         {
             return numerical( _name );
         }
@@ -478,7 +443,6 @@ void DataFrame::from_csv(
     const std::string &_sep,
     const std::vector<std::string> &_time_formats,
     const std::vector<std::string> &_categorical_names,
-    const std::vector<std::string> &_discrete_names,
     const std::vector<std::string> &_join_key_names,
     const std::vector<std::string> &_numerical_names,
     const std::vector<std::string> &_target_names,
@@ -509,8 +473,6 @@ void DataFrame::from_csv(
 
     auto categoricals = make_vectors<Int>( _categorical_names.size() );
 
-    auto discretes = make_vectors<Float>( _discrete_names.size() );
-
     auto join_keys = make_vectors<Int>( _join_key_names.size() );
 
     auto numericals = make_vectors<Float>( _numerical_names.size() );
@@ -533,7 +495,6 @@ void DataFrame::from_csv(
 
     const auto df_colnames = concat_colnames(
         _categorical_names,
-        _discrete_names,
         _join_key_names,
         _numerical_names,
         _target_names,
@@ -626,9 +587,6 @@ void DataFrame::from_csv(
                 vec->push_back(
                     ( *categories_ )[line[colname_indices[col++]]] );
 
-            for ( auto &vec : discretes )
-                vec->push_back( to_double( line[colname_indices[col++]] ) );
-
             for ( auto &vec : join_keys )
                 vec->push_back(
                     ( *join_keys_encoding_ )[line[colname_indices[col++]]] );
@@ -660,8 +618,6 @@ void DataFrame::from_csv(
     auto df = DataFrame( name(), categories_, join_keys_encoding_ );
 
     df.add_int_vectors( _categorical_names, categoricals, "categorical" );
-
-    df.add_float_vectors( _discrete_names, discretes, "discrete" );
 
     df.add_int_vectors( _join_key_names, join_keys, "join_key" );
 
@@ -698,7 +654,6 @@ void DataFrame::from_csv(
     const std::string &_sep,
     const std::vector<std::string> &_time_formats,
     const std::vector<std::string> &_categorical_names,
-    const std::vector<std::string> &_discrete_names,
     const std::vector<std::string> &_join_key_names,
     const std::vector<std::string> &_numerical_names,
     const std::vector<std::string> &_target_names,
@@ -720,7 +675,6 @@ void DataFrame::from_csv(
                 _sep,
                 _time_formats,
                 _categorical_names,
-                _discrete_names,
                 _join_key_names,
                 _numerical_names,
                 _target_names,
@@ -748,7 +702,6 @@ void DataFrame::from_db(
     const std::shared_ptr<database::Connector> _connector,
     const std::string &_tname,
     const std::vector<std::string> &_categorical_names,
-    const std::vector<std::string> &_discrete_names,
     const std::vector<std::string> &_join_key_names,
     const std::vector<std::string> &_numerical_names,
     const std::vector<std::string> &_target_names,
@@ -760,8 +713,6 @@ void DataFrame::from_db(
     // ----------------------------------------
 
     auto categoricals = make_vectors<Int>( _categorical_names.size() );
-
-    auto discretes = make_vectors<Float>( _discrete_names.size() );
 
     auto join_keys = make_vectors<Int>( _join_key_names.size() );
 
@@ -784,7 +735,6 @@ void DataFrame::from_db(
 
     const auto all_colnames = concat_colnames(
         _categorical_names,
-        _discrete_names,
         _join_key_names,
         _numerical_names,
         _target_names,
@@ -801,9 +751,6 @@ void DataFrame::from_db(
         {
             for ( auto &vec : categoricals )
                 vec->push_back( ( *categories_ )[iterator->get_string()] );
-
-            for ( auto &vec : discretes )
-                vec->push_back( iterator->get_double() );
 
             for ( auto &vec : join_keys )
                 vec->push_back(
@@ -833,8 +780,6 @@ void DataFrame::from_db(
     auto df = DataFrame( name(), categories_, join_keys_encoding_ );
 
     df.add_int_vectors( _categorical_names, categoricals, "categorical" );
-
-    df.add_float_vectors( _discrete_names, discretes, "discrete" );
 
     df.add_int_vectors( _join_key_names, join_keys, "join_key" );
 
@@ -869,7 +814,6 @@ void DataFrame::from_json(
     const Poco::JSON::Object &_obj,
     const std::vector<std::string> _time_formats,
     const std::vector<std::string> &_categorical_names,
-    const std::vector<std::string> &_discrete_names,
     const std::vector<std::string> &_join_key_names,
     const std::vector<std::string> &_numerical_names,
     const std::vector<std::string> &_target_names,
@@ -883,8 +827,6 @@ void DataFrame::from_json(
     auto df = DataFrame( name(), categories_, join_keys_encoding_ );
 
     df.from_json( _obj, _categorical_names, "categorical", categories_.get() );
-
-    df.from_json( _obj, _discrete_names, "discrete" );
 
     df.from_json(
         _obj, _join_key_names, "join_key", join_keys_encoding_.get() );
@@ -1063,7 +1005,6 @@ void DataFrame::from_query(
     const std::shared_ptr<database::Connector> _connector,
     const std::string &_query,
     const std::vector<std::string> &_categorical_names,
-    const std::vector<std::string> &_discrete_names,
     const std::vector<std::string> &_join_key_names,
     const std::vector<std::string> &_numerical_names,
     const std::vector<std::string> &_target_names,
@@ -1072,8 +1013,6 @@ void DataFrame::from_query(
     // ----------------------------------------
 
     auto categoricals = make_vectors<Int>( _categorical_names.size() );
-
-    auto discretes = make_vectors<Float>( _discrete_names.size() );
 
     auto join_keys = make_vectors<Int>( _join_key_names.size() );
 
@@ -1117,8 +1056,6 @@ void DataFrame::from_query(
 
     const auto categorical_ix = make_column_indices( _categorical_names );
 
-    const auto discrete_ix = make_column_indices( _discrete_names );
-
     const auto join_key_ix = make_column_indices( _join_key_names );
 
     const auto numerical_ix = make_column_indices( _numerical_names );
@@ -1144,13 +1081,6 @@ void DataFrame::from_query(
                 {
                     const auto &str = line[categorical_ix[i]];
                     categoricals[i]->push_back( ( *categories_ )[str] );
-                }
-
-            for ( size_t i = 0; i < discretes.size(); ++i )
-                {
-                    const auto &str = line[discrete_ix[i]];
-                    discretes[i]->push_back(
-                        database::Getter::get_double( str, time_formats ) );
                 }
 
             for ( size_t i = 0; i < join_keys.size(); ++i )
@@ -1187,8 +1117,6 @@ void DataFrame::from_query(
 
     df.add_int_vectors( _categorical_names, categoricals, "categorical" );
 
-    df.add_float_vectors( _discrete_names, discretes, "discrete" );
-
     df.add_int_vectors( _join_key_names, join_keys, "join_key" );
 
     df.add_float_vectors( _numerical_names, numericals, "numerical" );
@@ -1219,8 +1147,6 @@ Poco::JSON::Object DataFrame::get_colnames()
     // ----------------------------------------
 
     obj.set( "categorical_", get_colnames( categoricals_ ) );
-
-    obj.set( "discrete_", get_colnames( discretes_ ) );
 
     obj.set( "join_keys_", get_colnames( join_keys_ ) );
 
@@ -1318,19 +1244,6 @@ Poco::JSON::Object DataFrame::get_content(
                     row->add( categories()[categorical( j )[i]].str() );
                 }
 
-            for ( size_t j = 0; j < num_discretes(); ++j )
-                {
-                    if ( discrete( j ).unit().find( "time stamp" ) !=
-                         std::string::npos )
-                        {
-                            row->add( to_time_stamp( discrete( j )[i] ) );
-                        }
-                    else
-                        {
-                            row->add( to_string( discrete( j )[i] ) );
-                        }
-                }
-
             for ( size_t j = 0; j < num_numericals(); ++j )
                 {
                     if ( numerical( j ).unit().find( "time stamp" ) !=
@@ -1426,12 +1339,6 @@ std::string DataFrame::get_string( const std::int32_t _n ) const
         {
             colnames.push_back( categorical( j ).name() );
             roles.push_back( "categorical" );
-        }
-
-    for ( size_t j = 0; j < num_discretes(); ++j )
-        {
-            colnames.push_back( discrete( j ).name() );
-            roles.push_back( "discrete" );
         }
 
     for ( size_t j = 0; j < num_numericals(); ++j )
@@ -1639,8 +1546,6 @@ void DataFrame::load( const std::string &_path )
 
     categoricals_ = load_matrices<Int>( _path, "categorical_" );
 
-    discretes_ = load_matrices<Float>( _path, "discrete_" );
-
     join_keys_ = load_matrices<Int>( _path, "join_key_" );
 
     numericals_ = load_matrices<Float>( _path, "numerical_" );
@@ -1670,8 +1575,6 @@ ULong DataFrame::nbytes() const
     ULong nbytes = 0;
 
     nbytes += calc_nbytes( categoricals_ );
-
-    nbytes += calc_nbytes( discretes_ );
 
     nbytes += calc_nbytes( join_keys_ );
 
@@ -1718,10 +1621,6 @@ const size_t DataFrame::nrows() const
         {
             return categoricals_[0].nrows();
         }
-    else if ( discretes_.size() > 0 )
-        {
-            return discretes_[0].nrows();
-        }
     else if ( numericals_.size() > 0 )
         {
             return numericals_[0].nrows();
@@ -1741,10 +1640,6 @@ const size_t DataFrame::nrows() const
 bool DataFrame::remove_column( const std::string &_name )
 {
     bool success = rm_col( _name, &categoricals_ );
-
-    if ( success ) return true;
-
-    success = rm_col( _name, &discretes_ );
 
     if ( success ) return true;
 
@@ -1795,8 +1690,6 @@ void DataFrame::save( const std::string &_path, const std::string &_name )
 
     save_matrices( categoricals_, tpath, "categorical_" );
 
-    save_matrices( discretes_, tpath, "discrete_" );
-
     save_matrices( join_keys_, tpath, "join_key_" );
 
     save_matrices( numericals_, tpath, "numerical_" );
@@ -1843,17 +1736,11 @@ Poco::JSON::Object DataFrame::to_monitor() const
 
     obj.set( "categorical_units_", get_units( categoricals_ ) );
 
-    obj.set( "discrete_", get_colnames( discretes_ ) );
-
-    obj.set( "discrete_units_", get_units( discretes_ ) );
-
     obj.set( "join_keys_", get_colnames( join_keys_ ) );
 
     obj.set( "name_", name_ );
 
     obj.set( "num_categorical_", num_categoricals() );
-
-    obj.set( "num_discrete_", num_discretes() );
 
     obj.set( "num_join_keys_", num_join_keys() );
 
@@ -1922,12 +1809,6 @@ void DataFrame::where( const std::vector<bool> &_condition )
         {
             df.add_int_column(
                 categorical( i ).where( _condition ), "categorical" );
-        }
-
-    for ( size_t i = 0; i < num_discretes(); ++i )
-        {
-            df.add_float_column(
-                discrete( i ).where( _condition ), "discrete" );
         }
 
     for ( size_t i = 0; i < num_join_keys(); ++i )

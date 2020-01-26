@@ -699,12 +699,11 @@ void ModelManager<ModelType>::to_db(
         }
     else
         {
-            const auto [autofeatures, categorical, discrete, numerical] =
+            const auto [autofeatures, categorical, numerical] =
                 _model.feature_names();
 
             assert_true(
-                autofeatures.size() + discrete.size() + numerical.size() ==
-                _yhat.size() );
+                autofeatures.size() + numerical.size() == _yhat.size() );
 
             size_t j = 0;
 
@@ -713,13 +712,6 @@ void ModelManager<ModelType>::to_db(
                     auto col = containers::Column( _yhat[j++] );
                     col.set_name( autofeatures[i] );
                     df.add_float_column( col, "numerical" );
-                }
-
-            for ( size_t i = 0; i < discrete.size(); ++i )
-                {
-                    auto col = containers::Column( _yhat[j++] );
-                    col.set_name( discrete[i] );
-                    df.add_float_column( col, "discrete" );
                 }
 
             for ( size_t i = 0; i < numerical.size(); ++i )

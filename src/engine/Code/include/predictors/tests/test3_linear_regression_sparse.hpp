@@ -40,7 +40,6 @@ void test3_linear_regression_sparse()
     const auto impl = std::make_shared<predictors::PredictorImpl>(
         std::vector<std::string>( {"categorical"} ),
         std::vector<std::string>(),
-        std::vector<std::string>(),
         3 );
 
     impl->fit_encodings( X_categorical );

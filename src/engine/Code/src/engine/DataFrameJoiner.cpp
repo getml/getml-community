@@ -24,19 +24,6 @@ void DataFrameJoiner::add_all(
                 _df.categorical( i ).sort_by_key( _rindices ), "categorical" );
         }
 
-    for ( size_t i = 0; i < _df.num_discretes(); ++i )
-        {
-            if ( _joined_df->has( _df.discrete( i ).name() ) )
-                {
-                    throw std::invalid_argument(
-                        "Duplicate column: '" + _df.discrete( i ).name() +
-                        "'." );
-                }
-
-            _joined_df->add_float_column(
-                _df.discrete( i ).sort_by_key( _rindices ), "discrete" );
-        }
-
     for ( size_t i = 0; i < _df.num_join_keys(); ++i )
         {
             if ( _joined_df->has( _df.join_key( i ).name() ) )
@@ -150,17 +137,6 @@ void DataFrameJoiner::add_col(
             auto col = _df.categorical( _name ).sort_by_key( _rindices );
             col.set_name( _as );
             _joined_df->add_int_column( col, _role );
-        }
-    else if ( _role == "discrete" )
-        {
-            if ( _joined_df->has( _as ) )
-                {
-                    throw std::invalid_argument(
-                        "Duplicate column: '" + _name + "'." );
-                }
-            auto col = _df.discrete( _name ).sort_by_key( _rindices );
-            col.set_name( _as );
-            _joined_df->add_float_column( col, _role );
         }
     else if ( _role == "join_key" )
         {

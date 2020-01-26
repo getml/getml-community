@@ -687,9 +687,6 @@ void DataFrameManager::from_csv(
     const auto categoricals = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "categoricals_" ) );
 
-    const auto discretes = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "discretes_" ) );
-
     const auto join_keys = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "join_keys_" ) );
 
@@ -735,7 +732,6 @@ void DataFrameManager::from_csv(
         sep,
         time_formats,
         categoricals,
-        discretes,
         join_keys,
         numericals,
         targets,
@@ -796,9 +792,6 @@ void DataFrameManager::from_db(
     const auto categoricals = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "categoricals_" ) );
 
-    const auto discretes = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "discretes_" ) );
-
     const auto join_keys = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "join_keys_" ) );
 
@@ -844,7 +837,6 @@ void DataFrameManager::from_db(
         connector(),
         table_name,
         categoricals,
-        discretes,
         join_keys,
         numericals,
         targets,
@@ -913,9 +905,6 @@ void DataFrameManager::from_json(
     const auto categoricals = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "categoricals_" ) );
 
-    const auto discretes = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "discretes_" ) );
-
     const auto join_keys = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "join_keys_" ) );
 
@@ -973,7 +962,6 @@ void DataFrameManager::from_json(
         obj,
         time_formats,
         categoricals,
-        discretes,
         join_keys,
         numericals,
         targets,
@@ -1034,9 +1022,6 @@ void DataFrameManager::from_query(
     const auto categoricals = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "categoricals_" ) );
 
-    const auto discretes = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "discretes_" ) );
-
     const auto join_keys = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "join_keys_" ) );
 
@@ -1073,7 +1058,6 @@ void DataFrameManager::from_query(
         connector(),
         query,
         categoricals,
-        discretes,
         join_keys,
         numericals,
         targets,

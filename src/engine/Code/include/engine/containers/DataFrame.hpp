@@ -66,7 +66,6 @@ class DataFrame
         const std::string &_sep,
         const std::vector<std::string> &_time_formats,
         const std::vector<std::string> &_categorical_names,
-        const std::vector<std::string> &_discrete_names,
         const std::vector<std::string> &_join_key_names,
         const std::vector<std::string> &_numerical_names,
         const std::vector<std::string> &_target_names,
@@ -80,7 +79,6 @@ class DataFrame
         const std::shared_ptr<database::Connector> _connector,
         const std::string &_tname,
         const std::vector<std::string> &_categorical_names,
-        const std::vector<std::string> &_discrete_names,
         const std::vector<std::string> &_join_key_names,
         const std::vector<std::string> &_numerical_names,
         const std::vector<std::string> &_target_names,
@@ -94,7 +92,6 @@ class DataFrame
         const std::shared_ptr<database::Connector> _connector,
         const std::string &_query,
         const std::vector<std::string> &_categoricals,
-        const std::vector<std::string> &_discretes,
         const std::vector<std::string> &_join_keys,
         const std::vector<std::string> &_numericals,
         const std::vector<std::string> &_targets,
@@ -105,7 +102,6 @@ class DataFrame
         const Poco::JSON::Object &_obj,
         const std::vector<std::string> _time_formats,
         const std::vector<std::string> &_categoricals,
-        const std::vector<std::string> &_discretes,
         const std::vector<std::string> &_join_keys,
         const std::vector<std::string> &_numericals,
         const std::vector<std::string> &_targets,
@@ -205,43 +201,13 @@ class DataFrame
         return categories()[_i].str();
     }
 
-    /// Trivial accessor
-    template <
-        typename T,
-        typename std::enable_if<!std::is_same<T, std::string>::value, int>::
-            type = 0>
-    const Column<Float> &discrete( const T _i ) const
-    {
-        assert_true( _i >= 0 );
-        assert_true( _i < static_cast<T>( discretes_.size() ) );
-
-        return discretes_[_i];
-    }
-
-    /// Trivial accessor
-    const Column<Float> &discrete( const std::string &_name ) const
-    {
-        for ( size_t i = 0; i < num_discretes(); ++i )
-            {
-                if ( discrete( i ).name() == _name )
-                    {
-                        return discrete( i );
-                    }
-            }
-
-        throw std::invalid_argument(
-            "Data frame '" + name_ + "' contains no discrete column named '" +
-            _name + "'!" );
-    }
-
     /// Whether the DataFrame has any column named _name.
     bool has( const std::string &_name ) const
     {
-        return has_categorical( _name ) || has_discrete( _name ) ||
-               has_join_key( _name ) || has_numerical( _name ) ||
-               has_target( _name ) || has_time_stamp( _name ) ||
-               has_undefined_float( _name ) || has_undefined_integer( _name ) ||
-               has_undefined_string( _name );
+        return has_categorical( _name ) || has_join_key( _name ) ||
+               has_numerical( _name ) || has_target( _name ) ||
+               has_time_stamp( _name ) || has_undefined_float( _name ) ||
+               has_undefined_integer( _name ) || has_undefined_string( _name );
     }
 
     /// Whether the DataFrame has a categorical column named _name.
@@ -250,20 +216,6 @@ class DataFrame
         for ( size_t i = 0; i < num_categoricals(); ++i )
             {
                 if ( categorical( i ).name() == _name )
-                    {
-                        return true;
-                    }
-            }
-
-        return false;
-    }
-
-    /// Whether the DataFrame has a discrete column named _name.
-    bool has_discrete( const std::string &_name ) const
-    {
-        for ( size_t i = 0; i < num_discretes(); ++i )
-            {
-                if ( discrete( i ).name() == _name )
                     {
                         return true;
                     }
@@ -455,15 +407,12 @@ class DataFrame
     {
         return undefined_floats_.size() + undefined_integers_.size() +
                undefined_strings_.size() + join_keys_.size() +
-               time_stamps_.size() + categoricals_.size() + discretes_.size() +
-               numericals_.size() + targets_.size();
+               time_stamps_.size() + categoricals_.size() + numericals_.size() +
+               targets_.size();
     }
 
     /// Returns number of categorical columns.
     size_t const num_categoricals() const { return categoricals_.size(); }
-
-    /// Returns number of discrete columns.
-    size_t const num_discretes() const { return discretes_.size(); }
 
     /// Returns number of join keys.
     size_t const num_join_keys() const { return join_keys_.size(); }
@@ -730,7 +679,6 @@ class DataFrame
     /// Concatenate a set of colnames.
     std::vector<std::string> concat_colnames(
         const std::vector<std::string> &_categorical_names,
-        const std::vector<std::string> &_discrete_names,
         const std::vector<std::string> &_join_key_names,
         const std::vector<std::string> &_numerical_names,
         const std::vector<std::string> &_target_names,
@@ -746,7 +694,6 @@ class DataFrame
         const std::string &_sep,
         const std::vector<std::string> &_time_formats,
         const std::vector<std::string> &_categorical_names,
-        const std::vector<std::string> &_discrete_names,
         const std::vector<std::string> &_join_key_names,
         const std::vector<std::string> &_numerical_names,
         const std::vector<std::string> &_target_names,
@@ -825,9 +772,6 @@ class DataFrame
 
     /// Maps integers to names of categories
     std::shared_ptr<Encoding> categories_;
-
-    /// Discrete data
-    std::vector<Column<Float>> discretes_;
 
     /// Performs the role of an "index" over the join keys
     std::vector<DataFrameIndex> indices_;

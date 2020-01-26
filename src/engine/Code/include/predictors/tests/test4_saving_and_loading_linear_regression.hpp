@@ -9,8 +9,8 @@ void test4_saving_and_loading_linear_regression()
 
     // This script only needs to write out data and read it in
     // again. This will be done by temporary files.
-	std::string tmp_filename_1 = Poco::TemporaryFile::tempName();
-	std::string tmp_filename_2 = Poco::TemporaryFile::tempName();
+    std::string tmp_filename_1 = Poco::TemporaryFile::tempName();
+    std::string tmp_filename_2 = Poco::TemporaryFile::tempName();
 
     // -------------------------------------------------------------------------
 
@@ -44,7 +44,6 @@ void test4_saving_and_loading_linear_regression()
 
     const auto impl = std::make_shared<predictors::PredictorImpl>(
         std::vector<std::string>( {"categorical"} ),
-        std::vector<std::string>(),
         std::vector<std::string>(),
         3 );
 
