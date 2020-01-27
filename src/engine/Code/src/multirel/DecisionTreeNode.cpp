@@ -26,7 +26,7 @@ void DecisionTreeNode::apply_by_categories_used(
         {
             if ( is_activated_ )
                 {
-                    _aggregation->deactivate_samples_not_containing_categories(
+                    _aggregation->deactivate_matches_not_containing_categories(
                         categories_used_begin(),
                         categories_used_end(),
                         _match_container_begin,
@@ -34,7 +34,7 @@ void DecisionTreeNode::apply_by_categories_used(
                 }
             else
                 {
-                    _aggregation->activate_samples_not_containing_categories(
+                    _aggregation->activate_matches_not_containing_categories(
                         categories_used_begin(),
                         categories_used_end(),
                         _match_container_begin,
@@ -45,7 +45,7 @@ void DecisionTreeNode::apply_by_categories_used(
         {
             if ( is_activated_ )
                 {
-                    _aggregation->deactivate_samples_containing_categories(
+                    _aggregation->deactivate_matches_containing_categories(
                         categories_used_begin(),
                         categories_used_end(),
                         _match_container_begin,
@@ -53,7 +53,7 @@ void DecisionTreeNode::apply_by_categories_used(
                 }
             else
                 {
-                    _aggregation->activate_samples_containing_categories(
+                    _aggregation->activate_matches_containing_categories(
                         categories_used_begin(),
                         categories_used_end(),
                         _match_container_begin,
@@ -89,18 +89,18 @@ void DecisionTreeNode::apply_by_critical_value(
         {
             if ( is_activated_ )
                 {
-                    debug_log( "deactivate_samples_from_above..." );
+                    debug_log( "deactivate_matches_from_above..." );
 
-                    _aggregation->deactivate_samples_from_above(
+                    _aggregation->deactivate_matches_from_above(
                         critical_value(),
                         _match_container_begin,
                         _match_container_end );
                 }
             else
                 {
-                    debug_log( "activate_samples_from_above..." );
+                    debug_log( "activate_matches_from_above..." );
 
-                    _aggregation->activate_samples_from_above(
+                    _aggregation->activate_matches_from_above(
                         critical_value(),
                         _match_container_begin,
                         _match_container_end );
@@ -110,18 +110,18 @@ void DecisionTreeNode::apply_by_critical_value(
         {
             if ( is_activated_ )
                 {
-                    debug_log( "deactivate_samples_from_below..." );
+                    debug_log( "deactivate_matches_from_below..." );
 
-                    _aggregation->deactivate_samples_from_below(
+                    _aggregation->deactivate_matches_from_below(
                         critical_value(),
                         _match_container_begin,
                         _match_container_end );
                 }
             else
                 {
-                    debug_log( "activate_samples_from_below..." );
+                    debug_log( "activate_matches_from_below..." );
 
-                    _aggregation->activate_samples_from_below(
+                    _aggregation->activate_matches_from_below(
                         critical_value(),
                         _match_container_begin,
                         _match_container_end );
@@ -147,9 +147,9 @@ void DecisionTreeNode::apply_by_lag(
         {
             if ( is_activated_ )
                 {
-                    debug_log( "deactivate_samples_outside_window..." );
+                    debug_log( "deactivate_matches_outside_window..." );
 
-                    _aggregation->deactivate_samples_outside_window(
+                    _aggregation->deactivate_matches_outside_window(
                         critical_value(),
                         tree_->delta_t(),
                         _match_container_begin,
@@ -157,9 +157,9 @@ void DecisionTreeNode::apply_by_lag(
                 }
             else
                 {
-                    debug_log( "activate_samples_outside_window..." );
+                    debug_log( "activate_matches_outside_window..." );
 
-                    _aggregation->activate_samples_outside_window(
+                    _aggregation->activate_matches_outside_window(
                         critical_value(),
                         tree_->delta_t(),
                         _match_container_begin,
@@ -170,9 +170,9 @@ void DecisionTreeNode::apply_by_lag(
         {
             if ( is_activated_ )
                 {
-                    debug_log( "deactivate_samples_in_window..." );
+                    debug_log( "deactivate_matches_in_window..." );
 
-                    _aggregation->deactivate_samples_in_window(
+                    _aggregation->deactivate_matches_in_window(
                         critical_value(),
                         tree_->delta_t(),
                         _match_container_begin,
@@ -180,9 +180,9 @@ void DecisionTreeNode::apply_by_lag(
                 }
             else
                 {
-                    debug_log( "activate_samples_in_window..." );
+                    debug_log( "activate_matches_in_window..." );
 
-                    _aggregation->activate_samples_in_window(
+                    _aggregation->activate_matches_in_window(
                         critical_value(),
                         tree_->delta_t(),
                         _match_container_begin,
@@ -1864,7 +1864,7 @@ void DecisionTreeNode::try_categorical_values(
 
             if ( is_activated_ )
                 {
-                    aggregation()->deactivate_samples_containing_categories(
+                    aggregation()->deactivate_matches_containing_categories(
                         categories->cbegin(),
                         categories->cend(),
                         aggregations::Revert::after_each_category,
@@ -1872,7 +1872,7 @@ void DecisionTreeNode::try_categorical_values(
                 }
             else
                 {
-                    aggregation()->activate_samples_containing_categories(
+                    aggregation()->activate_matches_containing_categories(
                         categories->cbegin(),
                         categories->cend(),
                         aggregations::Revert::after_each_category,
@@ -1885,7 +1885,7 @@ void DecisionTreeNode::try_categorical_values(
 
             if ( is_activated_ )
                 {
-                    aggregation()->deactivate_samples_not_containing_categories(
+                    aggregation()->deactivate_matches_not_containing_categories(
                         categories->cbegin(),
                         categories->cend(),
                         aggregations::Revert::after_each_category,
@@ -1893,7 +1893,7 @@ void DecisionTreeNode::try_categorical_values(
                 }
             else
                 {
-                    aggregation()->activate_samples_not_containing_categories(
+                    aggregation()->activate_matches_not_containing_categories(
                         categories->cbegin(),
                         categories->cend(),
                         aggregations::Revert::after_each_category,
@@ -2031,7 +2031,7 @@ void DecisionTreeNode::try_categorical_values(
 
             if ( is_activated_ )
                 {
-                    aggregation()->deactivate_samples_containing_categories(
+                    aggregation()->deactivate_matches_containing_categories(
                         sorted_by_containing->cbegin(),
                         sorted_by_containing->cend(),
                         aggregations::Revert::after_all_categories,
@@ -2039,7 +2039,7 @@ void DecisionTreeNode::try_categorical_values(
                 }
             else
                 {
-                    aggregation()->activate_samples_containing_categories(
+                    aggregation()->activate_matches_containing_categories(
                         sorted_by_containing->cbegin(),
                         sorted_by_containing->cend(),
                         aggregations::Revert::after_all_categories,
@@ -2052,7 +2052,7 @@ void DecisionTreeNode::try_categorical_values(
 
             if ( is_activated_ )
                 {
-                    aggregation()->deactivate_samples_not_containing_categories(
+                    aggregation()->deactivate_matches_not_containing_categories(
                         sorted_by_not_containing->cbegin(),
                         sorted_by_not_containing->cend(),
                         aggregations::Revert::after_all_categories,
@@ -2060,7 +2060,7 @@ void DecisionTreeNode::try_categorical_values(
                 }
             else
                 {
-                    aggregation()->activate_samples_not_containing_categories(
+                    aggregation()->activate_matches_not_containing_categories(
                         sorted_by_not_containing->cbegin(),
                         sorted_by_not_containing->cend(),
                         aggregations::Revert::after_all_categories,
@@ -2274,7 +2274,7 @@ void DecisionTreeNode::try_non_categorical_values(
             debug_log( "_indptr.back(): " + std::to_string( _indptr.back() ) );
             debug_log( "_bins->size(): " + std::to_string( _bins->size() ) );
 
-            aggregation()->deactivate_samples_with_null_values(
+            aggregation()->deactivate_matches_with_null_values(
                 _bins->begin() + _indptr.back(), _bins->end() );
         }
 
@@ -2312,14 +2312,14 @@ void DecisionTreeNode::try_non_categorical_values(
         {
             debug_log( "Deactivate from above..." );
 
-            aggregation()->deactivate_samples_from_above(
+            aggregation()->deactivate_matches_from_above(
                 _indptr, _bins->begin(), _bins->end() );
         }
     else
         {
             debug_log( "Activate from below..." );
 
-            aggregation()->activate_samples_from_above(
+            aggregation()->activate_matches_from_above(
                 _indptr, _bins->begin(), _bins->end() );
         }
 
@@ -2340,7 +2340,7 @@ void DecisionTreeNode::try_non_categorical_values(
             debug_log( "_indptr.back(): " + std::to_string( _indptr.back() ) );
             debug_log( "_bins->size(): " + std::to_string( _bins->size() ) );
 
-            aggregation()->deactivate_samples_with_null_values(
+            aggregation()->deactivate_matches_with_null_values(
                 _bins->begin() + _indptr.back(), _bins->end() );
         }
 
@@ -2354,14 +2354,14 @@ void DecisionTreeNode::try_non_categorical_values(
         {
             debug_log( "Deactivate from below..." );
 
-            aggregation()->deactivate_samples_from_below(
+            aggregation()->deactivate_matches_from_below(
                 _indptr, _bins->begin(), _bins->end() );
         }
     else
         {
             debug_log( "Activate from below..." );
 
-            aggregation()->activate_samples_from_below(
+            aggregation()->activate_matches_from_below(
                 _indptr, _bins->begin(), _bins->end() );
         }
 
@@ -2714,12 +2714,12 @@ void DecisionTreeNode::try_window(
     // Apply changes and store resulting value of optimization criterion
     if ( is_activated_ )
         {
-            aggregation()->deactivate_samples_outside_window(
+            aggregation()->deactivate_matches_outside_window(
                 indptr, bins.begin(), bins.end() );
         }
     else
         {
-            aggregation()->activate_samples_outside_window(
+            aggregation()->activate_matches_outside_window(
                 indptr, bins.begin(), bins.end() );
         }
 
@@ -2731,12 +2731,12 @@ void DecisionTreeNode::try_window(
     // Apply changes and store resulting value of optimization criterion
     if ( is_activated_ )
         {
-            aggregation()->deactivate_samples_in_window(
+            aggregation()->deactivate_matches_in_window(
                 indptr, bins.begin(), bins.end() );
         }
     else
         {
-            aggregation()->activate_samples_in_window(
+            aggregation()->activate_matches_in_window(
                 indptr, bins.begin(), bins.end() );
         }
 

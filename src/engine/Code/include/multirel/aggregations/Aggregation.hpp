@@ -21,60 +21,60 @@ class Aggregation : public AbstractAggregation
 
     // --------------------------------------
 
-    /// Activates all samples
+    /// Activates all matches
     void activate_all(
         const bool _init_opt,
         containers::MatchPtrs::iterator _match_container_begin,
         containers::MatchPtrs::iterator _match_container_end ) final;
 
-    /// Activates all samples that contain any category between
+    /// Activates all matches that contain any category between
     /// _categories_begin and _categories_end. Used for prediction.
-    void activate_samples_containing_categories(
+    void activate_matches_containing_categories(
         const std::vector<Int>::const_iterator _categories_begin,
         const std::vector<Int>::const_iterator _categories_end,
         containers::MatchPtrs::iterator _match_container_begin,
         containers::MatchPtrs::iterator _match_container_end ) final;
 
     /// Iterates through the categories and selectively
-    /// activates samples.
+    /// activates matches.
     /// Used for training.
-    void activate_samples_containing_categories(
+    void activate_matches_containing_categories(
         const std::vector<Int>::const_iterator _categories_begin,
         const std::vector<Int>::const_iterator _categories_end,
         const Revert _revert,
         const containers::CategoryIndex &_index ) final;
 
-    /// Iterates through the samples and activates those.
-    /// samples that are greater than the critical value.
-    void activate_samples_from_above(
+    /// Iterates through the matches and activates those.
+    /// matches that are greater than the critical value.
+    void activate_matches_from_above(
         const Float _critical_value,
         containers::MatchPtrs::const_iterator _match_container_begin,
         containers::MatchPtrs::const_iterator _match_container_end ) final;
 
-    /// Iterates through the samples and activates them
+    /// Iterates through the matches and activates them
     /// starting with the greatest.
-    void activate_samples_from_above(
+    void activate_matches_from_above(
         const std::vector<size_t> &_indptr,
         const containers::MatchPtrs::const_iterator &_matches_begin,
         const containers::MatchPtrs::const_iterator &_matches_end ) final;
 
-    /// Iterates through the samples and activates those
-    /// samples that smaller than or equal to the critical value.
-    void activate_samples_from_below(
+    /// Iterates through the matches and activates those
+    /// matches that smaller than or equal to the critical value.
+    void activate_matches_from_below(
         const Float _critical_value,
         containers::MatchPtrs::const_iterator _match_container_begin,
         containers::MatchPtrs::const_iterator _match_container_end ) final;
 
-    /// Iterates through the samples and activates them
+    /// Iterates through the matches and activates them
     /// starting with the smallest.
-    void activate_samples_from_below(
+    void activate_matches_from_below(
         const std::vector<size_t> &_indptr,
         const containers::MatchPtrs::const_iterator &_matches_begin,
         const containers::MatchPtrs::const_iterator &_matches_end ) final;
 
     /// Implements a lag functionality through moving time windows - used by
     /// transform.
-    void activate_samples_in_window(
+    void activate_matches_in_window(
         const Float _critical_value,
         const Float _delta_t,
         containers::MatchPtrs::iterator _match_container_begin,
@@ -82,14 +82,14 @@ class Aggregation : public AbstractAggregation
 
     /// Implements a lag functionality through moving time windows - used by
     /// fit.
-    void activate_samples_in_window(
+    void activate_matches_in_window(
         const std::vector<size_t> &_indptr,
         containers::MatchPtrs::iterator _match_container_begin,
         containers::MatchPtrs::iterator _match_container_end ) final;
 
     /// Implements a lag functionality through moving time windows - used by
     /// transform.
-    void activate_samples_outside_window(
+    void activate_matches_outside_window(
         const Float _critical_value,
         const Float _delta_t,
         containers::MatchPtrs::iterator _match_container_begin,
@@ -97,23 +97,23 @@ class Aggregation : public AbstractAggregation
 
     /// Implements a lag functionality through moving time windows - used by
     /// fit.
-    void activate_samples_outside_window(
+    void activate_matches_outside_window(
         const std::vector<size_t> &_indptr,
         containers::MatchPtrs::iterator _match_container_begin,
         containers::MatchPtrs::iterator _match_container_end ) final;
 
-    /// Activates all samples that do not contain any category between
+    /// Activates all matches that do not contain any category between
     /// _categories_begin and _categories_end. Used for prediction.
-    void activate_samples_not_containing_categories(
+    void activate_matches_not_containing_categories(
         const std::vector<Int>::const_iterator _categories_begin,
         const std::vector<Int>::const_iterator _categories_end,
         containers::MatchPtrs::iterator _match_container_begin,
         containers::MatchPtrs::iterator _match_container_end ) final;
 
     /// Iterates through the categories and selectively
-    /// activates samples.
+    /// activates matches.
     /// Used for training.
-    void activate_samples_not_containing_categories(
+    void activate_matches_not_containing_categories(
         const std::vector<Int>::const_iterator _categories_begin,
         const std::vector<Int>::const_iterator _categories_end,
         const Revert _revert,
@@ -126,54 +126,54 @@ class Aggregation : public AbstractAggregation
     /// updates_stored.
     void commit() final;
 
-    /// Deactivates all samples that contain any category between
+    /// Deactivates all matches that contain any category between
     /// _categories_begin and _categories_end. Used for prediction.
-    void deactivate_samples_containing_categories(
+    void deactivate_matches_containing_categories(
         const std::vector<Int>::const_iterator _categories_begin,
         const std::vector<Int>::const_iterator _categories_end,
         containers::MatchPtrs::iterator _match_container_begin,
         containers::MatchPtrs::iterator _match_container_end ) final;
 
     /// Iteratres through the categories and selectively
-    /// deactivates samples.
+    /// deactivates matches.
     /// Used for training.
-    void deactivate_samples_containing_categories(
+    void deactivate_matches_containing_categories(
         const std::vector<Int>::const_iterator _categories_begin,
         const std::vector<Int>::const_iterator _categories_end,
         const Revert _revert,
         const containers::CategoryIndex &_index ) final;
 
-    /// Iterates through the samples and deactivates those
-    /// samples that are greater than the critical value.
-    void deactivate_samples_from_above(
+    /// Iterates through the matches and deactivates those
+    /// matches that are greater than the critical value.
+    void deactivate_matches_from_above(
         const Float _critical_value,
         containers::MatchPtrs::const_iterator _match_container_begin,
         containers::MatchPtrs::const_iterator _match_container_end ) final;
 
-    /// Iterates through the samples and deactivates them
+    /// Iterates through the matches and deactivates them
     /// starting with the greatest.
-    void deactivate_samples_from_above(
+    void deactivate_matches_from_above(
         const std::vector<size_t> &_indptr,
         const containers::MatchPtrs::const_iterator &_matches_begin,
         const containers::MatchPtrs::const_iterator &_matches_end ) final;
 
-    /// Iterates through the samples and deactivates those
-    /// samples that smaller than or equal to the critical value.
-    void deactivate_samples_from_below(
+    /// Iterates through the matches and deactivates those
+    /// matches that smaller than or equal to the critical value.
+    void deactivate_matches_from_below(
         const Float _critical_value,
         containers::MatchPtrs::const_iterator _match_container_begin,
         containers::MatchPtrs::const_iterator _match_container_end ) final;
 
-    /// Iterates through the samples and deactivates them
+    /// Iterates through the matches and deactivates them
     /// starting with the smallest.
-    void deactivate_samples_from_below(
+    void deactivate_matches_from_below(
         const std::vector<size_t> &_indptr,
         const containers::MatchPtrs::const_iterator &_matches_begin,
         const containers::MatchPtrs::const_iterator &_matches_end ) final;
 
     /// Implements a lag functionality through moving time windows - used by
     /// transform.
-    void deactivate_samples_in_window(
+    void deactivate_matches_in_window(
         const Float _critical_value,
         const Float _delta_t,
         containers::MatchPtrs::iterator _match_container_begin,
@@ -181,14 +181,14 @@ class Aggregation : public AbstractAggregation
 
     /// Implements a lag functionality through moving time windows - used by
     /// fit.
-    void deactivate_samples_in_window(
+    void deactivate_matches_in_window(
         const std::vector<size_t> &_indptr,
         containers::MatchPtrs::iterator _match_container_begin,
         containers::MatchPtrs::iterator _match_container_end ) final;
 
     /// Implements a lag functionality through moving time windows - used by
     /// transform.
-    void deactivate_samples_outside_window(
+    void deactivate_matches_outside_window(
         const Float _critical_value,
         const Float _delta_t,
         containers::MatchPtrs::iterator _match_container_begin,
@@ -196,35 +196,35 @@ class Aggregation : public AbstractAggregation
 
     /// Implements a lag functionality through moving time windows - used by
     /// fit.
-    void deactivate_samples_outside_window(
+    void deactivate_matches_outside_window(
         const std::vector<size_t> &_indptr,
         containers::MatchPtrs::iterator _match_container_begin,
         containers::MatchPtrs::iterator _match_container_end ) final;
 
-    /// Deactivates all samples that do not contain any category between
+    /// Deactivates all matches that do not contain any category between
     /// _categories_begin and _categories_end. Used for prediction.
-    void deactivate_samples_not_containing_categories(
+    void deactivate_matches_not_containing_categories(
         const std::vector<Int>::const_iterator _categories_begin,
         const std::vector<Int>::const_iterator _categories_end,
         containers::MatchPtrs::iterator _match_container_begin,
         containers::MatchPtrs::iterator _match_container_end ) final;
 
     /// Iterates through the categories and selectively
-    /// deactivates samples.
+    /// deactivates matches.
     /// Used for training.
-    void deactivate_samples_not_containing_categories(
+    void deactivate_matches_not_containing_categories(
         const std::vector<Int>::const_iterator _categories_begin,
         const std::vector<Int>::const_iterator _categories_end,
         const Revert _revert,
         const containers::CategoryIndex &_index ) final;
 
-    /// Deactivates all samples where the numerical_value contains null values.
-    /// Such samples must always be deactivated.
-    void deactivate_samples_with_null_values(
+    /// Deactivates all matches where the numerical_value contains null values.
+    /// Such matches must always be deactivated.
+    void deactivate_matches_with_null_values(
         containers::MatchPtrs::iterator _match_container_begin,
         containers::MatchPtrs::iterator _null_values_separator ) final;
 
-    /// Initializes optimization criterion after all samples have been
+    /// Initializes optimization criterion after all matches have been
     /// activated.
     void init_optimization_criterion(
         containers::MatchPtrs::iterator _match_container_begin,
@@ -247,16 +247,16 @@ class Aggregation : public AbstractAggregation
     /// had been called.
     void revert_to_commit() final;
 
-    /// Separates the samples for which the value to be aggregated is NULL
+    /// Separates the matches for which the value to be aggregated is NULL
     containers::Matches::iterator separate_null_values(
         containers::Matches *_matches );
 
-    /// Separates the pointers to samples for which the value to be aggregated
+    /// Separates the pointers to matches for which the value to be aggregated
     /// is NULL
     containers::MatchPtrs::iterator separate_null_values(
         containers::MatchPtrs *_match_ptrs );
 
-    /// Sorts the samples by value to be aggregated (within the element in
+    /// Sorts the matches by value to be aggregated (within the element in
     /// population table)
     void sort_matches(
         containers::Matches::iterator _matches_begin,
@@ -265,8 +265,8 @@ class Aggregation : public AbstractAggregation
     /// Updates the optimization criterion, makes it store its
     /// current stage and clears updates_current()
     void update_optimization_criterion_and_clear_updates_current(
-        const Float _num_samples_smaller,
-        const Float _num_samples_greater ) final;
+        const Float _num_matches_smaller,
+        const Float _num_matches_greater ) final;
 
     // --------------------------------------
     // Here we break with our usual convention
@@ -285,30 +285,30 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             std::is_same<Agg, AggregationType::Avg>::value,
             int>::type = 0>
-    inline void activate_sample( containers::Match *_sample )
+    inline void activate_match( containers::Match *_match )
     {
-        assert_true( _sample->ix_x_popul >= 0 );
+        assert_true( _match->ix_x_popul >= 0 );
         assert_true(
-            static_cast<size_t>( _sample->ix_x_popul ) < yhat_inline().size() );
+            static_cast<size_t>( _match->ix_x_popul ) < yhat_inline().size() );
 
-        assert_true( _sample->ix_x_popul < static_cast<Int>( sum().size() ) );
-        assert_true( _sample->ix_x_popul < static_cast<Int>( count().size() ) );
+        assert_true( _match->ix_x_popul < static_cast<Int>( sum().size() ) );
+        assert_true( _match->ix_x_popul < static_cast<Int>( count().size() ) );
 
         assert_true(
-            value_to_be_aggregated( _sample ) ==
-            value_to_be_aggregated( _sample ) );
+            value_to_be_aggregated( _match ) ==
+            value_to_be_aggregated( _match ) );
 
         static_assert( needs_sum_, "sum needed" );
         static_assert( needs_count_, "count needed" );
 
-        sum()[_sample->ix_x_popul] += value_to_be_aggregated( _sample );
+        sum()[_match->ix_x_popul] += value_to_be_aggregated( _match );
 
-        count()[_sample->ix_x_popul] += 1.0;
+        count()[_match->ix_x_popul] += 1.0;
 
-        assert_true( count()[_sample->ix_x_popul] > 0.0 );
+        assert_true( count()[_match->ix_x_popul] > 0.0 );
 
-        yhat_inline()[_sample->ix_x_popul] =
-            sum()[_sample->ix_x_popul] / count()[_sample->ix_x_popul];
+        yhat_inline()[_match->ix_x_popul] =
+            sum()[_match->ix_x_popul] / count()[_match->ix_x_popul];
     }
 
     /// AVG aggregation:
@@ -320,25 +320,24 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             std::is_same<Agg, AggregationType::Avg>::value,
             int>::type = 0>
-    inline void deactivate_sample( containers::Match *_sample )
+    inline void deactivate_match( containers::Match *_match )
     {
-        assert_true( _sample->ix_x_popul >= 0 );
+        assert_true( _match->ix_x_popul >= 0 );
         assert_true(
-            static_cast<size_t>( _sample->ix_x_popul ) < yhat_inline().size() );
+            static_cast<size_t>( _match->ix_x_popul ) < yhat_inline().size() );
 
-        assert_true( _sample->ix_x_popul < static_cast<Int>( sum().size() ) );
-        assert_true( _sample->ix_x_popul < static_cast<Int>( count().size() ) );
+        assert_true( _match->ix_x_popul < static_cast<Int>( sum().size() ) );
+        assert_true( _match->ix_x_popul < static_cast<Int>( count().size() ) );
 
-        assert_true( count()[_sample->ix_x_popul] > 0.0 );
+        assert_true( count()[_match->ix_x_popul] > 0.0 );
 
-        sum()[_sample->ix_x_popul] -= value_to_be_aggregated( _sample );
+        sum()[_match->ix_x_popul] -= value_to_be_aggregated( _match );
 
-        count()[_sample->ix_x_popul] -= 1.0;
+        count()[_match->ix_x_popul] -= 1.0;
 
-        yhat_inline()[_sample->ix_x_popul] =
-            ( ( count()[_sample->ix_x_popul] > 0.5 )
-                  ? ( sum()[_sample->ix_x_popul] /
-                      count()[_sample->ix_x_popul] )
+        yhat_inline()[_match->ix_x_popul] =
+            ( ( count()[_match->ix_x_popul] > 0.5 )
+                  ? ( sum()[_match->ix_x_popul] / count()[_match->ix_x_popul] )
                   : ( 0.0 ) );
     }
 
@@ -354,11 +353,11 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             std::is_same<Agg, AggregationType::Count>::value,
             int>::type = 0>
-    inline void activate_sample( containers::Match *_sample )
+    inline void activate_match( containers::Match *_match )
     {
-        yhat_inline()[_sample->ix_x_popul] += 1.0;
+        yhat_inline()[_match->ix_x_popul] += 1.0;
 
-        assert_true( yhat_inline()[_sample->ix_x_popul] > 0.0 );
+        assert_true( yhat_inline()[_match->ix_x_popul] > 0.0 );
     }
 
     /// COUNT aggregation:
@@ -370,11 +369,11 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             std::is_same<Agg, AggregationType::Count>::value,
             int>::type = 0>
-    inline void deactivate_sample( containers::Match *_sample )
+    inline void deactivate_match( containers::Match *_match )
     {
-        assert_true( yhat_inline()[_sample->ix_x_popul] > 0.0 );
+        assert_true( yhat_inline()[_match->ix_x_popul] > 0.0 );
 
-        yhat_inline()[_sample->ix_x_popul] -= 1.0;
+        yhat_inline()[_match->ix_x_popul] -= 1.0;
     }
 
     // --------------------------------------
@@ -389,30 +388,30 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             std::is_same<Agg, AggregationType::CountDistinct>::value,
             int>::type = 0>
-    inline void activate_sample( containers::Match *_sample )
+    inline void activate_match( containers::Match *_match )
     {
-        assert_true( _sample->activated == false );
+        assert_true( _match->activated == false );
 
-        assert_true( yhat_inline()[_sample->ix_x_popul] > -0.5 );
+        assert_true( yhat_inline()[_match->ix_x_popul] > -0.5 );
 
-        static_assert( needs_altered_samples_, "altered samples needed" );
+        static_assert( needs_altered_matches_, "altered matches needed" );
 
-        _sample->activated = true;
+        _match->activated = true;
 
-        altered_samples().push_back( _sample );
+        altered_matches().push_back( _match );
 
         // We need to figure out if there is another sample
-        // that has the same value as _sample. If there is
+        // that has the same value as _match. If there is
         // in fact another one, we should not increase the count.
 
-        // Note that the samples are already ordered.
+        // Note that the matches are already ordered.
 
-        const Float val = value_to_be_aggregated( _sample );
+        const Float val = value_to_be_aggregated( _match );
 
-        for ( auto it = _sample - 1; it >= samples_begin_; --it )
+        for ( auto it = _match - 1; it >= samples_begin_; --it )
             {
                 if ( value_to_be_aggregated( it ) != val ||
-                     it->ix_x_popul != _sample->ix_x_popul )
+                     it->ix_x_popul != _match->ix_x_popul )
                     {
                         break;
                     }
@@ -423,10 +422,10 @@ class Aggregation : public AbstractAggregation
                     }
             }
 
-        for ( auto it = _sample + 1; it < samples_end_; ++it )
+        for ( auto it = _match + 1; it < samples_end_; ++it )
             {
                 if ( value_to_be_aggregated( it ) != val ||
-                     it->ix_x_popul != _sample->ix_x_popul )
+                     it->ix_x_popul != _match->ix_x_popul )
                     {
                         break;
                     }
@@ -438,7 +437,7 @@ class Aggregation : public AbstractAggregation
             }
 
         // No matches have been found - we can increase the count!
-        yhat_inline()[_sample->ix_x_popul] += 1.0;
+        yhat_inline()[_match->ix_x_popul] += 1.0;
     }
 
     /// COUNT DISTINCT aggregation:
@@ -450,28 +449,28 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             std::is_same<Agg, AggregationType::CountDistinct>::value,
             int>::type = 0>
-    inline void deactivate_sample( containers::Match *_sample )
+    inline void deactivate_match( containers::Match *_match )
     {
-        assert_true( _sample->activated );
+        assert_true( _match->activated );
 
-        assert_true( yhat_inline()[_sample->ix_x_popul] > 0.5 );
+        assert_true( yhat_inline()[_match->ix_x_popul] > 0.5 );
 
-        _sample->activated = false;
+        _match->activated = false;
 
-        altered_samples().push_back( _sample );
+        altered_matches().push_back( _match );
 
         // We need to figure out if there is another sample
-        // that has the same value as _sample. If there is
+        // that has the same value as _match. If there is
         // in fact another one, we should not decrease the count.
 
-        // Note that the samples are already ordered.
+        // Note that the matches are already ordered.
 
-        const Float val = value_to_be_aggregated( _sample );
+        const Float val = value_to_be_aggregated( _match );
 
-        for ( auto it = _sample - 1; it >= samples_begin_; --it )
+        for ( auto it = _match - 1; it >= samples_begin_; --it )
             {
                 if ( value_to_be_aggregated( it ) != val ||
-                     it->ix_x_popul != _sample->ix_x_popul )
+                     it->ix_x_popul != _match->ix_x_popul )
                     {
                         break;
                     }
@@ -482,10 +481,10 @@ class Aggregation : public AbstractAggregation
                     }
             }
 
-        for ( auto it = _sample + 1; it < samples_end_; ++it )
+        for ( auto it = _match + 1; it < samples_end_; ++it )
             {
                 if ( value_to_be_aggregated( it ) != val ||
-                     it->ix_x_popul != _sample->ix_x_popul )
+                     it->ix_x_popul != _match->ix_x_popul )
                     {
                         break;
                     }
@@ -497,7 +496,7 @@ class Aggregation : public AbstractAggregation
             }
 
         // No matches have been found - we can decrease the count!
-        yhat_inline()[_sample->ix_x_popul] -= 1.0;
+        yhat_inline()[_match->ix_x_popul] -= 1.0;
     }
 
     // --------------------------------------
@@ -512,52 +511,52 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             std::is_same<Agg, AggregationType::CountMinusCountDistinct>::value,
             int>::type = 0>
-    inline void activate_sample( containers::Match *_sample )
+    inline void activate_match( containers::Match *_match )
     {
-        assert_true( _sample->activated == false );
+        assert_true( _match->activated == false );
 
-        assert_true( yhat_inline()[_sample->ix_x_popul] > -0.5 );
+        assert_true( yhat_inline()[_match->ix_x_popul] > -0.5 );
 
-        static_assert( needs_altered_samples_, "altered samples needed" );
+        static_assert( needs_altered_matches_, "altered matches needed" );
 
-        _sample->activated = true;
+        _match->activated = true;
 
-        altered_samples().push_back( _sample );
+        altered_matches().push_back( _match );
 
         // We need to figure out if there is another sample
-        // that has the same value as _sample. If there is
+        // that has the same value as _match. If there is
         // in fact another one, we should not increase the count.
 
-        // Note that the samples are already ordered.
+        // Note that the matches are already ordered.
 
-        const Float val = value_to_be_aggregated( _sample );
+        const Float val = value_to_be_aggregated( _match );
 
-        for ( auto it = _sample - 1; it >= samples_begin_; --it )
+        for ( auto it = _match - 1; it >= samples_begin_; --it )
             {
                 if ( value_to_be_aggregated( it ) != val ||
-                     it->ix_x_popul != _sample->ix_x_popul )
+                     it->ix_x_popul != _match->ix_x_popul )
                     {
                         break;
                     }
 
                 if ( it->activated )
                     {
-                        yhat_inline()[_sample->ix_x_popul] += 1.0;
+                        yhat_inline()[_match->ix_x_popul] += 1.0;
                         return;
                     }
             }
 
-        for ( auto it = _sample + 1; it < samples_end_; ++it )
+        for ( auto it = _match + 1; it < samples_end_; ++it )
             {
                 if ( value_to_be_aggregated( it ) != val ||
-                     it->ix_x_popul != _sample->ix_x_popul )
+                     it->ix_x_popul != _match->ix_x_popul )
                     {
                         break;
                     }
 
                 if ( it->activated )
                     {
-                        yhat_inline()[_sample->ix_x_popul] += 1.0;
+                        yhat_inline()[_match->ix_x_popul] += 1.0;
                         return;
                     }
             }
@@ -572,50 +571,50 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             std::is_same<Agg, AggregationType::CountMinusCountDistinct>::value,
             int>::type = 0>
-    inline void deactivate_sample( containers::Match *_sample )
+    inline void deactivate_match( containers::Match *_match )
     {
-        assert_true( _sample->activated );
+        assert_true( _match->activated );
 
-        assert_true( yhat_inline()[_sample->ix_x_popul] > -0.5 );
+        assert_true( yhat_inline()[_match->ix_x_popul] > -0.5 );
 
-        _sample->activated = false;
+        _match->activated = false;
 
-        altered_samples_.push_back( _sample );
+        altered_matches_.push_back( _match );
 
         // We need to figure out if there is another sample
-        // that has the same value as _sample. If there is
+        // that has the same value as _match. If there is
         // in fact another one, we should not decrease the count.
 
-        // Note that the samples are already ordered.
+        // Note that the matches are already ordered.
 
-        const Float val = value_to_be_aggregated( _sample );
+        const Float val = value_to_be_aggregated( _match );
 
-        for ( auto it = _sample - 1; it >= samples_begin_; --it )
+        for ( auto it = _match - 1; it >= samples_begin_; --it )
             {
                 if ( value_to_be_aggregated( it ) != val ||
-                     it->ix_x_popul != _sample->ix_x_popul )
+                     it->ix_x_popul != _match->ix_x_popul )
                     {
                         break;
                     }
 
                 if ( it->activated )
                     {
-                        yhat_inline()[_sample->ix_x_popul] -= 1.0;
+                        yhat_inline()[_match->ix_x_popul] -= 1.0;
                         return;
                     }
             }
 
-        for ( auto it = _sample + 1; it < samples_end_; ++it )
+        for ( auto it = _match + 1; it < samples_end_; ++it )
             {
                 if ( value_to_be_aggregated( it ) != val ||
-                     it->ix_x_popul != _sample->ix_x_popul )
+                     it->ix_x_popul != _match->ix_x_popul )
                     {
                         break;
                     }
 
                 if ( it->activated )
                     {
-                        yhat_inline()[_sample->ix_x_popul] -= 1.0;
+                        yhat_inline()[_match->ix_x_popul] -= 1.0;
                         return;
                     }
             }
@@ -633,29 +632,29 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             std::is_same<Agg, AggregationType::Max>::value,
             int>::type = 0>
-    inline void activate_sample( containers::Match *_sample )
+    inline void activate_match( containers::Match *_match )
     {
-        assert_true( _sample->activated == false );
+        assert_true( _match->activated == false );
 
-        ++( count()[_sample->ix_x_popul] );
+        ++( count()[_match->ix_x_popul] );
 
-        assert_true( count()[_sample->ix_x_popul] > 0.0 );
+        assert_true( count()[_match->ix_x_popul] > 0.0 );
 
-        static_assert( needs_sample_ptr_, "sample_ptr needed" );
+        static_assert( needs_match_ptr_, "match_ptr needed" );
         static_assert( needs_count_, "count needed" );
-        static_assert( needs_altered_samples_, "altered samples needed" );
+        static_assert( needs_altered_matches_, "altered matches needed" );
 
-        _sample->activated = true;
+        _match->activated = true;
 
-        altered_samples().push_back( _sample );
+        altered_matches().push_back( _match );
 
-        if ( count()[_sample->ix_x_popul] < 1.5 ||
-             _sample > sample_ptr()[_sample->ix_x_popul] )
+        if ( count()[_match->ix_x_popul] < 1.5 ||
+             _match > match_ptr()[_match->ix_x_popul] )
             {
-                sample_ptr()[_sample->ix_x_popul] = _sample;
+                match_ptr()[_match->ix_x_popul] = _match;
 
-                yhat_inline()[_sample->ix_x_popul] =
-                    value_to_be_aggregated( _sample );
+                yhat_inline()[_match->ix_x_popul] =
+                    value_to_be_aggregated( _match );
             }
     }
 
@@ -668,36 +667,36 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             std::is_same<Agg, AggregationType::Max>::value,
             int>::type = 0>
-    void deactivate_sample( containers::Match *_sample )
+    void deactivate_match( containers::Match *_match )
     {
-        assert_true( _sample->activated );
+        assert_true( _match->activated );
 
-        assert_true( count()[_sample->ix_x_popul] > 0.0 );
+        assert_true( count()[_match->ix_x_popul] > 0.0 );
 
-        --( count()[_sample->ix_x_popul] );
+        --( count()[_match->ix_x_popul] );
 
-        _sample->activated = false;
+        _match->activated = false;
 
-        altered_samples_.push_back( _sample );
+        altered_matches_.push_back( _match );
 
-        // If there are no activated samples left, then
+        // If there are no activated matches left, then
         // set to zero
-        if ( count()[_sample->ix_x_popul] < 0.5 )
+        if ( count()[_match->ix_x_popul] < 0.5 )
             {
-                yhat_inline()[_sample->ix_x_popul] = 0.0;
+                yhat_inline()[_match->ix_x_popul] = 0.0;
 
                 return;
             }
 
         // If the deactivated sample was the max value, find the
         // second biggest value
-        if ( _sample == sample_ptr()[_sample->ix_x_popul] )
+        if ( _match == match_ptr()[_match->ix_x_popul] )
             {
                 // The first sample that has the same ix_popul it finds
-                // must be the second biggest, because samples have been sorted
-                auto it = find_next_smaller( _sample );
+                // must be the second biggest, because matches have been sorted
+                auto it = find_next_smaller( _match );
 
-                sample_ptr()[it->ix_x_popul] = it;
+                match_ptr()[it->ix_x_popul] = it;
 
                 yhat_inline()[it->ix_x_popul] = value_to_be_aggregated( it );
             }
@@ -715,95 +714,95 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             std::is_same<Agg, AggregationType::Median>::value,
             int>::type = 0>
-    inline void activate_sample( containers::Match *_sample )
+    inline void activate_match( containers::Match *_match )
     {
-        assert_true( _sample->activated == false );
+        assert_true( _match->activated == false );
 
-        ++( count()[_sample->ix_x_popul] );
+        ++( count()[_match->ix_x_popul] );
 
-        assert_true( count()[_sample->ix_x_popul] > 0.0 );
+        assert_true( count()[_match->ix_x_popul] > 0.0 );
 
-        assert_true( _sample->activated == false );
+        assert_true( _match->activated == false );
 
-        static_assert( needs_sample_ptr_, "sample_ptr needed" );
+        static_assert( needs_match_ptr_, "match_ptr needed" );
         static_assert( needs_count_, "count needed" );
-        static_assert( needs_altered_samples_, "altered samples needed" );
+        static_assert( needs_altered_matches_, "altered matches needed" );
 
-        _sample->activated = true;
+        _match->activated = true;
 
-        altered_samples().push_back( _sample );
+        altered_matches().push_back( _match );
 
         // If this is the only activated sample, just take
         // this as the value and return.
-        if ( count()[_sample->ix_x_popul] < 1.5 )
+        if ( count()[_match->ix_x_popul] < 1.5 )
             {
-                sample_ptr()[_sample->ix_x_popul] = _sample;
+                match_ptr()[_match->ix_x_popul] = _match;
 
-                yhat_inline()[_sample->ix_x_popul] =
-                    value_to_be_aggregated( _sample );
+                yhat_inline()[_match->ix_x_popul] =
+                    value_to_be_aggregated( _match );
 
                 return;
             }
 
         const auto count =
-            static_cast<Int>( this->count()[_sample->ix_x_popul] );
+            static_cast<Int>( this->count()[_match->ix_x_popul] );
 
         if ( count % 2 == 0 )
             {
-                // Number of activated samples is now even,)
+                // Number of activated matches is now even,)
                 // used to be odd.
 
-                auto it_greater = sample_ptr()[_sample->ix_x_popul];
+                auto it_greater = match_ptr()[_match->ix_x_popul];
 
                 auto it_smaller = it_greater;
 
                 // Because we cannot take the average of two containers::Match*,
                 // we always store the GREATER one by convention when
                 // there is an even number of samples.
-                if ( _sample > it_greater )
+                if ( _match > it_greater )
                     {
                         it_greater = find_next_greater( it_greater );
 
-                        sample_ptr()[_sample->ix_x_popul] = it_greater;
+                        match_ptr()[_match->ix_x_popul] = it_greater;
                     }
                 else
                     {
                         it_smaller = find_next_smaller( it_smaller );
 
-                        // If _sample < sample_ptr()[_sample->ix_x_popul],
+                        // If _match < match_ptr()[_match->ix_x_popul],
                         // then the new pair consists of the previous sample and
                         // the new one. But, by convention,
-                        // sample_ptr()[_sample->ix_x_popul] must point to
+                        // match_ptr()[_match->ix_x_popul] must point to
                         // the greater one, so
-                        // sample_ptr()[_sample->ix_x_popul] does not
+                        // match_ptr()[_match->ix_x_popul] does not
                         // change.
                     }
 
-                yhat_inline()[_sample->ix_x_popul] =
+                yhat_inline()[_match->ix_x_popul] =
                     ( value_to_be_aggregated( it_greater ) +
                       value_to_be_aggregated( it_smaller ) ) /
                     2.0;
             }
         else
             {
-                // Number of activated samples is now odd,
+                // Number of activated matches is now odd,
                 // used to be even.
 
-                auto it = sample_ptr()[_sample->ix_x_popul];
+                auto it = match_ptr()[_match->ix_x_popul];
 
-                if ( _sample < it )
+                if ( _match < it )
                     {
                         it = find_next_smaller( it );
 
-                        sample_ptr()[_sample->ix_x_popul] = it;
+                        match_ptr()[_match->ix_x_popul] = it;
                     }
 
                 // We always store the greater containers::Match*. So when the
-                // _sample > sample_ptr()[_sample->ix_x_popul],
-                // just leave sample_ptr()[_sample->ix_x_popul]
+                // _match > match_ptr()[_match->ix_x_popul],
+                // just leave match_ptr()[_match->ix_x_popul]
                 // as it is.
 
-                yhat_inline()[_sample->ix_x_popul] =
+                yhat_inline()[_match->ix_x_popul] =
                     value_to_be_aggregated( it );
             }
     }
@@ -817,50 +816,50 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             std::is_same<Agg, AggregationType::Median>::value,
             int>::type = 0>
-    void deactivate_sample( containers::Match *_sample )
+    void deactivate_match( containers::Match *_match )
     {
-        assert_true( _sample->activated );
+        assert_true( _match->activated );
 
-        assert_true( count()[_sample->ix_x_popul] > 0.0 );
+        assert_true( count()[_match->ix_x_popul] > 0.0 );
 
-        assert_true( _sample->activated );
+        assert_true( _match->activated );
 
-        --( count()[_sample->ix_x_popul] );
+        --( count()[_match->ix_x_popul] );
 
-        _sample->activated = false;
+        _match->activated = false;
 
-        altered_samples().push_back( _sample );
+        altered_matches().push_back( _match );
 
         // If there is no sample left, set to zero
-        if ( count()[_sample->ix_x_popul] < 0.5 )
+        if ( count()[_match->ix_x_popul] < 0.5 )
             {
-                yhat_inline()[_sample->ix_x_popul] = 0.0;
+                yhat_inline()[_match->ix_x_popul] = 0.0;
 
                 return;
             }
 
         const auto count =
-            static_cast<Int>( this->count()[_sample->ix_x_popul] );
+            static_cast<Int>( this->count()[_match->ix_x_popul] );
 
         if ( count % 2 == 0 )
             {
-                // Number of activated samples is now even,
+                // Number of activated matches is now even,
                 // used to be odd.
 
-                auto it_greater = sample_ptr()[_sample->ix_x_popul];
+                auto it_greater = match_ptr()[_match->ix_x_popul];
 
                 auto it_smaller = it_greater;
 
                 // Because we cannot take the average of two containers::Match*,
                 // we always store the GREATER one by convention when
                 // there is an even number of samples.
-                if ( _sample < it_greater )
+                if ( _match < it_greater )
                     {
                         it_greater = find_next_greater( it_greater );
 
-                        sample_ptr()[_sample->ix_x_popul] = it_greater;
+                        match_ptr()[_match->ix_x_popul] = it_greater;
                     }
-                else if ( _sample > it_greater )
+                else if ( _match > it_greater )
                     {
                         it_smaller = find_next_smaller( it_smaller );
                     }
@@ -870,32 +869,32 @@ class Aggregation : public AbstractAggregation
 
                         it_smaller = find_next_smaller( it_smaller );
 
-                        sample_ptr()[_sample->ix_x_popul] = it_greater;
+                        match_ptr()[_match->ix_x_popul] = it_greater;
                     }
 
-                yhat_inline()[_sample->ix_x_popul] =
+                yhat_inline()[_match->ix_x_popul] =
                     ( value_to_be_aggregated( it_greater ) +
                       value_to_be_aggregated( it_smaller ) ) /
                     2.0;
             }
         else
             {
-                // Number of activated samples is now odd,
+                // Number of activated matches is now odd,
                 // used to be even.
 
-                auto it = sample_ptr()[_sample->ix_x_popul];
+                auto it = match_ptr()[_match->ix_x_popul];
 
-                if ( _sample >= it )
+                if ( _match >= it )
                     {
                         it = find_next_smaller( it );
 
-                        sample_ptr()[_sample->ix_x_popul] = it;
+                        match_ptr()[_match->ix_x_popul] = it;
                     }
 
-                // If _sample < it, just leave
-                // sample_ptr()[_sample->ix_x_popul] as it is.
+                // If _match < it, just leave
+                // match_ptr()[_match->ix_x_popul] as it is.
 
-                yhat_inline()[_sample->ix_x_popul] =
+                yhat_inline()[_match->ix_x_popul] =
                     value_to_be_aggregated( it );
             }
     }
@@ -912,29 +911,29 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             std::is_same<Agg, AggregationType::Min>::value,
             int>::type = 0>
-    inline void activate_sample( containers::Match *_sample )
+    inline void activate_match( containers::Match *_match )
     {
-        assert_true( _sample->activated == false );
+        assert_true( _match->activated == false );
 
-        ++( count()[_sample->ix_x_popul] );
+        ++( count()[_match->ix_x_popul] );
 
-        assert_true( count()[_sample->ix_x_popul] > 0.0 );
+        assert_true( count()[_match->ix_x_popul] > 0.0 );
 
-        static_assert( needs_sample_ptr_, "sample_ptr needed" );
+        static_assert( needs_match_ptr_, "match_ptr needed" );
         static_assert( needs_count_, "count needed" );
-        static_assert( needs_altered_samples_, "altered samples needed" );
+        static_assert( needs_altered_matches_, "altered matches needed" );
 
-        _sample->activated = true;
+        _match->activated = true;
 
-        altered_samples().push_back( _sample );
+        altered_matches().push_back( _match );
 
-        if ( count()[_sample->ix_x_popul] < 1.5 ||
-             _sample < sample_ptr()[_sample->ix_x_popul] )
+        if ( count()[_match->ix_x_popul] < 1.5 ||
+             _match < match_ptr()[_match->ix_x_popul] )
             {
-                sample_ptr()[_sample->ix_x_popul] = _sample;
+                match_ptr()[_match->ix_x_popul] = _match;
 
-                yhat_inline()[_sample->ix_x_popul] =
-                    value_to_be_aggregated( _sample );
+                yhat_inline()[_match->ix_x_popul] =
+                    value_to_be_aggregated( _match );
             }
     }
 
@@ -947,36 +946,36 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             std::is_same<Agg, AggregationType::Min>::value,
             int>::type = 0>
-    void deactivate_sample( containers::Match *_sample )
+    void deactivate_match( containers::Match *_match )
     {
-        assert_true( _sample->activated );
+        assert_true( _match->activated );
 
-        assert_true( count()[_sample->ix_x_popul] > 0.0 );
+        assert_true( count()[_match->ix_x_popul] > 0.0 );
 
-        --( count()[_sample->ix_x_popul] );
+        --( count()[_match->ix_x_popul] );
 
-        _sample->activated = false;
+        _match->activated = false;
 
-        altered_samples().push_back( _sample );
+        altered_matches().push_back( _match );
 
-        // If there are no activated samples left, then
+        // If there are no activated matches left, then
         // set to zero
-        if ( count()[_sample->ix_x_popul] < 0.5 )
+        if ( count()[_match->ix_x_popul] < 0.5 )
             {
-                yhat_inline()[_sample->ix_x_popul] = 0.0;
+                yhat_inline()[_match->ix_x_popul] = 0.0;
 
                 return;
             }
 
         // If the deactivated sample was the min value, find the
         // second smallest value
-        if ( _sample == sample_ptr()[_sample->ix_x_popul] )
+        if ( _match == match_ptr()[_match->ix_x_popul] )
             {
                 // The first sample that has the same ix_popul it finds
                 // must be the second smallest, because sample have been sorted
-                auto it = find_next_greater( _sample );
+                auto it = find_next_greater( _match );
 
-                sample_ptr()[it->ix_x_popul] = it;
+                match_ptr()[it->ix_x_popul] = it;
 
                 yhat_inline()[it->ix_x_popul] = value_to_be_aggregated( it );
             }
@@ -994,26 +993,26 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             std::is_same<Agg, AggregationType::Skewness>::value,
             int>::type = 0>
-    inline void activate_sample( containers::Match *_sample )
+    inline void activate_match( containers::Match *_match )
     {
-        const Float val = value_to_be_aggregated( _sample );
+        const Float val = value_to_be_aggregated( _match );
 
         static_assert( needs_sum_, "sum needed" );
         static_assert( needs_sum_squared_, "sum_squared needed" );
         static_assert( needs_sum_cubed_, "sum_cubed needed" );
         static_assert( needs_count_, "count needed" );
 
-        sum()[_sample->ix_x_popul] += val;
+        sum()[_match->ix_x_popul] += val;
 
-        sum_squared()[_sample->ix_x_popul] += val * val;
+        sum_squared()[_match->ix_x_popul] += val * val;
 
-        sum_cubed()[_sample->ix_x_popul] += val * val * val;
+        sum_cubed()[_match->ix_x_popul] += val * val * val;
 
-        count()[_sample->ix_x_popul] += 1.0;
+        count()[_match->ix_x_popul] += 1.0;
 
-        assert_true( count()[_sample->ix_x_popul] > 0.0 );
+        assert_true( count()[_match->ix_x_popul] > 0.0 );
 
-        calculate_skewness( _sample );
+        calculate_skewness( _match );
     }
 
     /// SKEWNESS aggregation:
@@ -1023,29 +1022,29 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             std::is_same<Agg, AggregationType::Skewness>::value,
             int>::type = 0>
-    inline void calculate_skewness( containers::Match *_sample )
+    inline void calculate_skewness( containers::Match *_match )
     {
-        if ( count()[_sample->ix_x_popul] == 0.0 )
+        if ( count()[_match->ix_x_popul] == 0.0 )
             {
-                yhat_inline()[_sample->ix_x_popul] = 0.0;
+                yhat_inline()[_match->ix_x_popul] = 0.0;
             }
         else
             {
                 const Float mean =
-                    sum()[_sample->ix_x_popul] / count()[_sample->ix_x_popul];
+                    sum()[_match->ix_x_popul] / count()[_match->ix_x_popul];
 
                 const Float stddev = std::sqrt(
-                    sum_squared()[_sample->ix_x_popul] /
-                        count()[_sample->ix_x_popul] -
+                    sum_squared()[_match->ix_x_popul] /
+                        count()[_match->ix_x_popul] -
                     mean * mean );
 
-                const Float skewness = ( ( sum_cubed()[_sample->ix_x_popul] /
-                                           count()[_sample->ix_x_popul] ) -
+                const Float skewness = ( ( sum_cubed()[_match->ix_x_popul] /
+                                           count()[_match->ix_x_popul] ) -
                                          ( 3.0 * mean * stddev * stddev ) -
                                          ( mean * mean * mean ) ) /
                                        ( stddev * stddev * stddev );
 
-                yhat_inline()[_sample->ix_x_popul] =
+                yhat_inline()[_match->ix_x_popul] =
                     ( skewness != skewness ) ? ( 0.0 ) : ( skewness );
             }
     }
@@ -1059,21 +1058,21 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             std::is_same<Agg, AggregationType::Skewness>::value,
             int>::type = 0>
-    inline void deactivate_sample( containers::Match *_sample )
+    inline void deactivate_match( containers::Match *_match )
     {
-        const Float val = value_to_be_aggregated( _sample );
+        const Float val = value_to_be_aggregated( _match );
 
-        sum()[_sample->ix_x_popul] -= val;
+        sum()[_match->ix_x_popul] -= val;
 
-        sum_squared()[_sample->ix_x_popul] -= val * val;
+        sum_squared()[_match->ix_x_popul] -= val * val;
 
-        sum_cubed()[_sample->ix_x_popul] -= val * val * val;
+        sum_cubed()[_match->ix_x_popul] -= val * val * val;
 
-        assert_true( count()[_sample->ix_x_popul] > 0.0 );
+        assert_true( count()[_match->ix_x_popul] > 0.0 );
 
-        count()[_sample->ix_x_popul] -= 1.0;
+        count()[_match->ix_x_popul] -= 1.0;
 
-        calculate_skewness( _sample );
+        calculate_skewness( _match );
     }
 
     // --------------------------------------
@@ -1088,34 +1087,34 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             std::is_same<Agg, AggregationType::Stddev>::value,
             int>::type = 0>
-    inline void activate_sample( containers::Match *_sample )
+    inline void activate_match( containers::Match *_match )
     {
-        const Float val = value_to_be_aggregated( _sample );
+        const Float val = value_to_be_aggregated( _match );
 
         static_assert( needs_sum_, "sum needed" );
         static_assert( needs_sum_squared_, "sum_squared needed" );
         static_assert( needs_count_, "count needed" );
 
-        sum()[_sample->ix_x_popul] += val;
+        sum()[_match->ix_x_popul] += val;
 
-        sum_squared()[_sample->ix_x_popul] += val * val;
+        sum_squared()[_match->ix_x_popul] += val * val;
 
-        count()[_sample->ix_x_popul] += 1.0;
+        count()[_match->ix_x_popul] += 1.0;
 
-        assert_true( count()[_sample->ix_x_popul] > 0.0 );
+        assert_true( count()[_match->ix_x_popul] > 0.0 );
 
         const Float mean =
-            sum()[_sample->ix_x_popul] / count()[_sample->ix_x_popul];
+            sum()[_match->ix_x_popul] / count()[_match->ix_x_popul];
 
-        yhat_inline()[_sample->ix_x_popul] = std::sqrt(
-            sum_squared()[_sample->ix_x_popul] / count()[_sample->ix_x_popul] -
+        yhat_inline()[_match->ix_x_popul] = std::sqrt(
+            sum_squared()[_match->ix_x_popul] / count()[_match->ix_x_popul] -
             mean * mean );
 
-        yhat_inline()[_sample->ix_x_popul] =
-            ( yhat_inline()[_sample->ix_x_popul] !=
-              yhat_inline()[_sample->ix_x_popul] )
+        yhat_inline()[_match->ix_x_popul] =
+            ( yhat_inline()[_match->ix_x_popul] !=
+              yhat_inline()[_match->ix_x_popul] )
                 ? ( 0.0 )
-                : ( yhat_inline()[_sample->ix_x_popul] );
+                : ( yhat_inline()[_match->ix_x_popul] );
     }
 
     /// STDDEV aggregation:
@@ -1127,37 +1126,37 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             std::is_same<Agg, AggregationType::Stddev>::value,
             int>::type = 0>
-    inline void deactivate_sample( containers::Match *_sample )
+    inline void deactivate_match( containers::Match *_match )
     {
-        const Float val = value_to_be_aggregated( _sample );
+        const Float val = value_to_be_aggregated( _match );
 
-        sum()[_sample->ix_x_popul] -= val;
+        sum()[_match->ix_x_popul] -= val;
 
-        sum_squared()[_sample->ix_x_popul] -= val * val;
+        sum_squared()[_match->ix_x_popul] -= val * val;
 
-        assert_true( count()[_sample->ix_x_popul] > 0.0 );
+        assert_true( count()[_match->ix_x_popul] > 0.0 );
 
-        count()[_sample->ix_x_popul] -= 1.0;
+        count()[_match->ix_x_popul] -= 1.0;
 
-        if ( count()[_sample->ix_x_popul] == 0.0 )
+        if ( count()[_match->ix_x_popul] == 0.0 )
             {
-                yhat_inline()[_sample->ix_x_popul] = 0.0;
+                yhat_inline()[_match->ix_x_popul] = 0.0;
             }
         else
             {
                 const Float mean =
-                    sum()[_sample->ix_x_popul] / count()[_sample->ix_x_popul];
+                    sum()[_match->ix_x_popul] / count()[_match->ix_x_popul];
 
-                yhat_inline()[_sample->ix_x_popul] = std::sqrt(
-                    sum_squared()[_sample->ix_x_popul] /
-                        count()[_sample->ix_x_popul] -
+                yhat_inline()[_match->ix_x_popul] = std::sqrt(
+                    sum_squared()[_match->ix_x_popul] /
+                        count()[_match->ix_x_popul] -
                     mean * mean );
 
-                yhat_inline()[_sample->ix_x_popul] =
-                    ( yhat_inline()[_sample->ix_x_popul] !=
-                      yhat_inline()[_sample->ix_x_popul] )
+                yhat_inline()[_match->ix_x_popul] =
+                    ( yhat_inline()[_match->ix_x_popul] !=
+                      yhat_inline()[_match->ix_x_popul] )
                         ? ( 0.0 )
-                        : ( yhat_inline()[_sample->ix_x_popul] );
+                        : ( yhat_inline()[_match->ix_x_popul] );
             }
     }
 
@@ -1173,9 +1172,9 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             std::is_same<Agg, AggregationType::Sum>::value,
             int>::type = 0>
-    inline void activate_sample( containers::Match *_sample )
+    inline void activate_match( containers::Match *_match )
     {
-        yhat_inline()[_sample->ix_x_popul] += value_to_be_aggregated( _sample );
+        yhat_inline()[_match->ix_x_popul] += value_to_be_aggregated( _match );
     }
 
     /// SUM aggregation:
@@ -1187,9 +1186,9 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             std::is_same<Agg, AggregationType::Sum>::value,
             int>::type = 0>
-    inline void deactivate_sample( containers::Match *_sample )
+    inline void deactivate_match( containers::Match *_match )
     {
-        yhat_inline()[_sample->ix_x_popul] -= value_to_be_aggregated( _sample );
+        yhat_inline()[_match->ix_x_popul] -= value_to_be_aggregated( _match );
     }
 
     // --------------------------------------
@@ -1204,27 +1203,27 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             std::is_same<Agg, AggregationType::Var>::value,
             int>::type = 0>
-    inline void activate_sample( containers::Match *_sample )
+    inline void activate_match( containers::Match *_match )
     {
-        const Float val = value_to_be_aggregated( _sample );
+        const Float val = value_to_be_aggregated( _match );
 
         static_assert( needs_sum_, "sum needed" );
         static_assert( needs_sum_squared_, "sum_squared needed" );
         static_assert( needs_count_, "count needed" );
 
-        sum()[_sample->ix_x_popul] += val;
+        sum()[_match->ix_x_popul] += val;
 
-        sum_squared()[_sample->ix_x_popul] += val * val;
+        sum_squared()[_match->ix_x_popul] += val * val;
 
-        count()[_sample->ix_x_popul] += 1.0;
+        count()[_match->ix_x_popul] += 1.0;
 
-        assert_true( count()[_sample->ix_x_popul] > 0.0 );
+        assert_true( count()[_match->ix_x_popul] > 0.0 );
 
         const Float mean =
-            sum()[_sample->ix_x_popul] / count()[_sample->ix_x_popul];
+            sum()[_match->ix_x_popul] / count()[_match->ix_x_popul];
 
-        yhat_inline()[_sample->ix_x_popul] =
-            sum_squared()[_sample->ix_x_popul] / count()[_sample->ix_x_popul] -
+        yhat_inline()[_match->ix_x_popul] =
+            sum_squared()[_match->ix_x_popul] / count()[_match->ix_x_popul] -
             mean * mean;
     }
 
@@ -1237,30 +1236,30 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             std::is_same<Agg, AggregationType::Var>::value,
             int>::type = 0>
-    inline void deactivate_sample( containers::Match *_sample )
+    inline void deactivate_match( containers::Match *_match )
     {
-        const Float val = value_to_be_aggregated( _sample );
+        const Float val = value_to_be_aggregated( _match );
 
-        sum()[_sample->ix_x_popul] -= val;
+        sum()[_match->ix_x_popul] -= val;
 
-        sum_squared()[_sample->ix_x_popul] -= val * val;
+        sum_squared()[_match->ix_x_popul] -= val * val;
 
-        assert_true( count()[_sample->ix_x_popul] > 0.0 );
+        assert_true( count()[_match->ix_x_popul] > 0.0 );
 
-        count()[_sample->ix_x_popul] -= 1.0;
+        count()[_match->ix_x_popul] -= 1.0;
 
-        if ( count()[_sample->ix_x_popul] == 0.0 )
+        if ( count()[_match->ix_x_popul] == 0.0 )
             {
-                yhat_inline()[_sample->ix_x_popul] = 0.0;
+                yhat_inline()[_match->ix_x_popul] = 0.0;
             }
         else
             {
                 const Float mean =
-                    sum()[_sample->ix_x_popul] / count()[_sample->ix_x_popul];
+                    sum()[_match->ix_x_popul] / count()[_match->ix_x_popul];
 
-                yhat_inline()[_sample->ix_x_popul] =
-                    sum_squared()[_sample->ix_x_popul] /
-                        count()[_sample->ix_x_popul] -
+                yhat_inline()[_match->ix_x_popul] =
+                    sum_squared()[_match->ix_x_popul] /
+                        count()[_match->ix_x_popul] -
                     mean * mean;
             }
     }
@@ -1269,12 +1268,12 @@ class Aggregation : public AbstractAggregation
 
    public:
     /// Clear all extras
-    void clear_extras() final { altered_samples().clear(); }
+    void clear_extras() final { altered_matches().clear(); }
 
     /// Returns the mode (enums::Mode::fit or enums::Mode::transform).
     enums::Mode mode() const final { return mode_; }
 
-    /// Whether this is an aggregation that requires the samples to be sorted
+    /// Whether this is an aggregation that requires the matches to be sorted
     bool needs_sorting() const final { return needs_sorting_; }
 
     /// Trivial setter
@@ -1357,9 +1356,9 @@ class Aggregation : public AbstractAggregation
 
    private:
     /// Trivial accessor
-    std::vector<containers::Match *> &altered_samples()
+    std::vector<containers::Match *> &altered_matches()
     {
-        return altered_samples_;
+        return altered_matches_;
     }
 
     /// Trivial accessor
@@ -1418,17 +1417,17 @@ class Aggregation : public AbstractAggregation
     }
 
     /// Trivial accessor
-    inline std::vector<containers::Match *> &sample_ptr()
+    inline std::vector<containers::Match *> &match_ptr()
     {
         assert_true( aggregation_impl_ != nullptr );
-        return aggregation_impl_->sample_ptr_;
+        return aggregation_impl_->match_ptr_;
     }
 
     /// Trivial accessor
-    inline std::vector<containers::Match *> &sample_ptr_committed()
+    inline std::vector<containers::Match *> &match_ptr_committed()
     {
         assert_true( aggregation_impl_ != nullptr );
-        return aggregation_impl_->sample_ptr_committed_;
+        return aggregation_impl_->match_ptr_committed_;
     }
 
     /// Trivial accessor
@@ -1516,11 +1515,10 @@ class Aggregation : public AbstractAggregation
                 AggregationType::IsComparison<data_used>::value &&
                 is_population,
             int>::type = 0>
-    inline const Float value_to_be_aggregated(
-        const containers::Match *_sample )
+    inline const Float value_to_be_aggregated( const containers::Match *_match )
     {
-        return value_to_be_compared()[_sample->ix_x_popul] -
-               value_to_be_aggregated().col()[_sample->ix_x_perip];
+        return value_to_be_compared()[_match->ix_x_popul] -
+               value_to_be_aggregated().col()[_match->ix_x_perip];
     }
 
     /// Accessor for the value to be aggregated to be used for all
@@ -1536,11 +1534,10 @@ class Aggregation : public AbstractAggregation
                 AggregationType::IsComparison<data_used>::value &&
                 !is_population,
             int>::type = 0>
-    inline const Float value_to_be_aggregated(
-        const containers::Match *_sample )
+    inline const Float value_to_be_aggregated( const containers::Match *_match )
     {
-        return value_to_be_compared().col()[_sample->ix_x_perip] -
-               value_to_be_aggregated().col()[_sample->ix_x_perip];
+        return value_to_be_compared().col()[_match->ix_x_perip] -
+               value_to_be_aggregated().col()[_match->ix_x_perip];
     }
 
     /// Accessor for the value to be aggregated to be used for all
@@ -1555,10 +1552,9 @@ class Aggregation : public AbstractAggregation
                 !AggregationType::IsComparison<data_used>::value &&
                 data_used != enums::DataUsed::x_subfeature,
             int>::type = 0>
-    inline const Float value_to_be_aggregated(
-        const containers::Match *_sample )
+    inline const Float value_to_be_aggregated( const containers::Match *_match )
     {
-        return value_to_be_aggregated().col()[_sample->ix_x_perip];
+        return value_to_be_aggregated().col()[_match->ix_x_perip];
     }
 
     /// Accessor for the value to be aggregated to be used for all
@@ -1573,11 +1569,9 @@ class Aggregation : public AbstractAggregation
                 !AggregationType::IsComparison<data_used>::value &&
                 data_used == enums::DataUsed::x_subfeature,
             int>::type = 0>
-    inline const Float value_to_be_aggregated(
-        const containers::Match *_sample )
+    inline const Float value_to_be_aggregated( const containers::Match *_match )
     {
-        return value_to_be_aggregated()[static_cast<Int>(
-            _sample->ix_x_perip )];
+        return value_to_be_aggregated()[static_cast<Int>( _match->ix_x_perip )];
     }
 
     /// Accessor for the value to be aggregated to be used for all
@@ -1588,11 +1582,10 @@ class Aggregation : public AbstractAggregation
         typename std::enable_if<
             AggregationType::IsCategorical<data_used>::value,
             int>::type = 0>
-    inline const Float value_to_be_aggregated(
-        const containers::Match *_sample )
+    inline const Float value_to_be_aggregated( const containers::Match *_match )
     {
         return static_cast<Float>(
-            value_to_be_aggregated_categorical().col()[_sample->ix_x_perip] );
+            value_to_be_aggregated_categorical().col()[_match->ix_x_perip] );
     }
 
     /// Accessor for the value to be compared - this is needed for the
@@ -1632,9 +1625,9 @@ class Aggregation : public AbstractAggregation
     /// Pimpl for aggregation
     AggregationImpl *aggregation_impl_;
 
-    /// Contains pointers to samples that have been changed
+    /// Contains pointers to matches that have been changed
     /// since the last commit
-    std::vector<containers::Match *> altered_samples_;
+    std::vector<containers::Match *> altered_matches_;
 
     /// Whether the appropriate intermediate aggregation is AVG.
     constexpr static bool avg_intermediate_ =
@@ -1646,9 +1639,9 @@ class Aggregation : public AbstractAggregation
     /// Pointer to the optimization criterion used
     optimizationcriteria::OptimizationCriterion *optimization_criterion_;
 
-    /// Whether the aggregation requires recording which samples have been
+    /// Whether the aggregation requires recording which matches have been
     /// altered.
-    constexpr static bool needs_altered_samples_ =
+    constexpr static bool needs_altered_matches_ =
         std::is_same<AggType, AggregationType::CountDistinct>() ||
         std::is_same<AggType, AggregationType::CountMinusCountDistinct>() ||
         std::is_same<AggType, AggregationType::Max>() ||
@@ -1666,7 +1659,7 @@ class Aggregation : public AbstractAggregation
         std::is_same<AggType, AggregationType::Var>();
 
     /// Whether the aggregation relies on sum()
-    constexpr static bool needs_sample_ptr_ =
+    constexpr static bool needs_match_ptr_ =
         std::is_same<AggType, AggregationType::Max>() ||
         std::is_same<AggType, AggregationType::Median>() ||
         std::is_same<AggType, AggregationType::Min>();
@@ -1702,11 +1695,11 @@ class Aggregation : public AbstractAggregation
         std::is_same<AggType, AggregationType::CountDistinct>() ||
         std::is_same<AggType, AggregationType::CountMinusCountDistinct>();
 
-    /// Pointer to the first element in samples - some aggregations
+    /// Pointer to the first element in matches - some aggregations
     /// like min and max need to know this
     containers::Match *samples_begin_;
 
-    /// Pointer to the element behind the last element in samples -
+    /// Pointer to the element behind the last element in matches -
     /// some aggregations like min and max need to know this
     containers::Match *samples_end_;
 
@@ -1738,7 +1731,7 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::activate_all(
 
     for ( auto it = _match_container_begin; it != _match_container_end; ++it )
         {
-            activate_sample( *it );
+            activate_match( *it );
         }
 
     if ( _init_opt )
@@ -1766,7 +1759,7 @@ template <
     enums::Mode mode_,
     bool is_population_>
 void Aggregation<AggType, data_used_, mode_, is_population_>::
-    activate_samples_containing_categories(
+    activate_matches_containing_categories(
         const std::vector<Int>::const_iterator _categories_begin,
         const std::vector<Int>::const_iterator _categories_end,
         containers::MatchPtrs::iterator _match_container_begin,
@@ -1798,7 +1791,7 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
 
             if ( activate )
                 {
-                    activate_sample( *it );
+                    activate_match( *it );
 
                     if constexpr ( mode_ == enums::Mode::fit )
                         {
@@ -1832,7 +1825,7 @@ template <
     enums::Mode mode_,
     bool is_population_>
 void Aggregation<AggType, data_used_, mode_, is_population_>::
-    activate_samples_containing_categories(
+    activate_matches_containing_categories(
         const std::vector<Int>::const_iterator _categories_begin,
         const std::vector<Int>::const_iterator _categories_end,
         const Revert _revert,
@@ -1853,7 +1846,7 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
                   ++it )
                 {
                     assert_true( ( *it )->categorical_value == *cat );
-                    activate_sample( *it );
+                    activate_match( *it );
 
                     updates_stored().insert( ( *it )->ix_x_popul );
                     updates_current().insert( ( *it )->ix_x_popul );
@@ -1900,7 +1893,7 @@ template <
     enums::Mode mode_,
     bool is_population_>
 void Aggregation<AggType, data_used_, mode_, is_population_>::
-    activate_samples_from_above(
+    activate_matches_from_above(
         const Float _critical_value,
         containers::MatchPtrs::const_iterator _match_container_begin,
         containers::MatchPtrs::const_iterator _match_container_end )
@@ -1913,7 +1906,7 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
         {
             if ( ( *it )->numerical_value > _critical_value )
                 {
-                    activate_sample( *it );
+                    activate_match( *it );
 
                     if constexpr ( mode_ == enums::Mode::fit )
                         {
@@ -1947,7 +1940,7 @@ template <
     enums::Mode mode_,
     bool is_population_>
 void Aggregation<AggType, data_used_, mode_, is_population_>::
-    activate_samples_from_above(
+    activate_matches_from_above(
         const std::vector<size_t> &_indptr,
         const containers::MatchPtrs::const_iterator &_matches_begin,
         const containers::MatchPtrs::const_iterator &_matches_end )
@@ -1971,7 +1964,7 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
 
             for ( auto it = begin; it != end; ++it )
                 {
-                    activate_sample( *it );
+                    activate_match( *it );
 
                     updates_stored().insert( ( *it )->ix_x_popul );
                     updates_current().insert( ( *it )->ix_x_popul );
@@ -1995,7 +1988,7 @@ template <
     enums::Mode mode_,
     bool is_population_>
 void Aggregation<AggType, data_used_, mode_, is_population_>::
-    activate_samples_from_below(
+    activate_matches_from_below(
         const Float _critical_value,
         containers::MatchPtrs::const_iterator _match_container_begin,
         containers::MatchPtrs::const_iterator _match_container_end )
@@ -2008,7 +2001,7 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
         {
             if ( ( *it )->numerical_value <= _critical_value )
                 {
-                    activate_sample( *it );
+                    activate_match( *it );
 
                     if constexpr ( mode_ == enums::Mode::fit )
                         {
@@ -2042,7 +2035,7 @@ template <
     enums::Mode mode_,
     bool is_population_>
 void Aggregation<AggType, data_used_, mode_, is_population_>::
-    activate_samples_from_below(
+    activate_matches_from_below(
         const std::vector<size_t> &_indptr,
         const containers::MatchPtrs::const_iterator &_matches_begin,
         const containers::MatchPtrs::const_iterator &_matches_end )
@@ -2068,7 +2061,7 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
 
             for ( auto it = begin; it != end; ++it )
                 {
-                    activate_sample( *it );
+                    activate_match( *it );
 
                     updates_stored().insert( ( *it )->ix_x_popul );
                     updates_current().insert( ( *it )->ix_x_popul );
@@ -2093,7 +2086,7 @@ template <
     enums::Mode mode_,
     bool is_population_>
 void Aggregation<AggType, data_used_, mode_, is_population_>::
-    activate_samples_in_window(
+    activate_matches_in_window(
         const Float _critical_value,
         const Float _delta_t,
         containers::MatchPtrs::iterator _match_container_begin,
@@ -2108,7 +2101,7 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
             if ( ( *it )->numerical_value > _critical_value - _delta_t &&
                  ( *it )->numerical_value <= _critical_value )
                 {
-                    activate_sample( *it );
+                    activate_match( *it );
 
                     if constexpr ( mode_ == enums::Mode::fit )
                         {
@@ -2142,7 +2135,7 @@ template <
     enums::Mode mode_,
     bool is_population_>
 void Aggregation<AggType, data_used_, mode_, is_population_>::
-    activate_samples_in_window(
+    activate_matches_in_window(
         const std::vector<size_t> &_indptr,
         containers::MatchPtrs::iterator _matches_begin,
         containers::MatchPtrs::iterator _matches_end )
@@ -2174,7 +2167,7 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
 
             for ( auto it = begin; it != end; ++it )
                 {
-                    activate_sample( *it );
+                    activate_match( *it );
 
                     updates_stored().insert( ( *it )->ix_x_popul );
                     updates_current().insert( ( *it )->ix_x_popul );
@@ -2203,7 +2196,7 @@ template <
     enums::Mode mode_,
     bool is_population_>
 void Aggregation<AggType, data_used_, mode_, is_population_>::
-    activate_samples_outside_window(
+    activate_matches_outside_window(
         const Float _critical_value,
         const Float _delta_t,
         containers::MatchPtrs::iterator _match_container_begin,
@@ -2218,7 +2211,7 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
             if ( ( *it )->numerical_value <= _critical_value - _delta_t ||
                  ( *it )->numerical_value > _critical_value )
                 {
-                    activate_sample( *it );
+                    activate_match( *it );
 
                     if constexpr ( mode_ == enums::Mode::fit )
                         {
@@ -2252,7 +2245,7 @@ template <
     enums::Mode mode_,
     bool is_population_>
 void Aggregation<AggType, data_used_, mode_, is_population_>::
-    activate_samples_outside_window(
+    activate_matches_outside_window(
         const std::vector<size_t> &_indptr,
         containers::MatchPtrs::iterator _matches_begin,
         containers::MatchPtrs::iterator _matches_end )
@@ -2273,14 +2266,14 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
 
     for ( auto it = _matches_begin; it != _matches_end; ++it )
         {
-            activate_sample( *it );
+            activate_match( *it );
 
             updates_stored().insert( ( *it )->ix_x_popul );
             updates_current().insert( ( *it )->ix_x_popul );
         }
 
     // ------------------------------------------------------------------
-    // Selectively deactivate those samples that are inside the window.
+    // Selectively deactivate those matches that are inside the window.
 
     for ( size_t i = 1; i < _indptr.size(); ++i )
         {
@@ -2296,7 +2289,7 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
 
             for ( auto it = begin; it != end; ++it )
                 {
-                    deactivate_sample( *it );
+                    deactivate_match( *it );
 
                     updates_current().insert( ( *it )->ix_x_popul );
 
@@ -2308,7 +2301,7 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
 
             for ( auto it = begin; it != end; ++it )
                 {
-                    activate_sample( *it );
+                    activate_match( *it );
 
                     updates_current().insert( ( *it )->ix_x_popul );
                 }
@@ -2334,7 +2327,7 @@ template <
     enums::Mode mode_,
     bool is_population_>
 void Aggregation<AggType, data_used_, mode_, is_population_>::
-    activate_samples_not_containing_categories(
+    activate_matches_not_containing_categories(
         const std::vector<Int>::const_iterator _categories_begin,
         const std::vector<Int>::const_iterator _categories_end,
         containers::MatchPtrs::iterator _match_container_begin,
@@ -2366,7 +2359,7 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
 
             if ( activate )
                 {
-                    activate_sample( *it );
+                    activate_match( *it );
 
                     if constexpr ( mode_ == enums::Mode::fit )
                         {
@@ -2400,7 +2393,7 @@ template <
     enums::Mode mode_,
     bool is_population_>
 void Aggregation<AggType, data_used_, mode_, is_population_>::
-    activate_samples_not_containing_categories(
+    activate_matches_not_containing_categories(
         const std::vector<Int>::const_iterator _categories_begin,
         const std::vector<Int>::const_iterator _categories_end,
         const Revert _revert,
@@ -2411,14 +2404,14 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
 
     for ( auto it = _index.begin(); it != _index.end(); ++it )
         {
-            activate_sample( *it );
+            activate_match( *it );
 
             updates_stored().insert( ( *it )->ix_x_popul );
             updates_current().insert( ( *it )->ix_x_popul );
         }
 
     // ------------------------------------------------------------------
-    // Selectively deactivate those samples that are not of the
+    // Selectively deactivate those matches that are not of the
     // particular category
 
     Float num_samples_smaller = 0.0;
@@ -2433,7 +2426,7 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
                 {
                     assert_true( ( *it )->categorical_value == *cat );
 
-                    deactivate_sample( *it );
+                    deactivate_match( *it );
 
                     updates_current().insert( ( *it )->ix_x_popul );
 
@@ -2455,7 +2448,7 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
                         {
                             assert_true( ( *it )->categorical_value == *cat );
 
-                            activate_sample( *it );
+                            activate_match( *it );
 
                             updates_current().insert( ( *it )->ix_x_popul );
                         }
@@ -2490,7 +2483,7 @@ template <
     bool is_population_>
 void Aggregation<AggType, data_used_, mode_, is_population_>::clear()
 {
-    altered_samples().clear();
+    altered_matches().clear();
 
     value_to_be_aggregated().clear();
 
@@ -2514,9 +2507,9 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::commit()
 {
     // --------------------------------------------------
 
-    if constexpr ( needs_altered_samples_ )
+    if constexpr ( needs_altered_matches_ )
         {
-            altered_samples().clear();
+            altered_matches().clear();
         }
 
     // --------------------------------------------------
@@ -2531,11 +2524,11 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::commit()
 
     // --------------------------------------------------
 
-    if constexpr ( needs_sample_ptr_ )
+    if constexpr ( needs_match_ptr_ )
         {
             for ( auto i : updates_stored() )
                 {
-                    sample_ptr_committed()[i] = sample_ptr()[i];
+                    match_ptr_committed()[i] = match_ptr()[i];
                 }
         }
 
@@ -2593,7 +2586,7 @@ template <
     enums::Mode mode_,
     bool is_population_>
 void Aggregation<AggType, data_used_, mode_, is_population_>::
-    deactivate_samples_containing_categories(
+    deactivate_matches_containing_categories(
         const std::vector<Int>::const_iterator _categories_begin,
         const std::vector<Int>::const_iterator _categories_end,
         containers::MatchPtrs::iterator _match_container_begin,
@@ -2626,7 +2619,7 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
 
             if ( deactivate )
                 {
-                    deactivate_sample( *it );
+                    deactivate_match( *it );
 
                     if constexpr ( mode_ == enums::Mode::fit )
                         {
@@ -2660,7 +2653,7 @@ template <
     enums::Mode mode_,
     bool is_population_>
 void Aggregation<AggType, data_used_, mode_, is_population_>::
-    deactivate_samples_containing_categories(
+    deactivate_matches_containing_categories(
         const std::vector<Int>::const_iterator _categories_begin,
         const std::vector<Int>::const_iterator _categories_end,
         const Revert _revert,
@@ -2681,7 +2674,7 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
                   ++it )
                 {
                     assert_true( ( *it )->categorical_value == *cat );
-                    deactivate_sample( *it );
+                    deactivate_match( *it );
 
                     updates_stored().insert( ( *it )->ix_x_popul );
                     updates_current().insert( ( *it )->ix_x_popul );
@@ -2728,7 +2721,7 @@ template <
     enums::Mode mode_,
     bool is_population_>
 void Aggregation<AggType, data_used_, mode_, is_population_>::
-    deactivate_samples_from_above(
+    deactivate_matches_from_above(
         const Float _critical_value,
         containers::MatchPtrs::const_iterator _match_container_begin,
         containers::MatchPtrs::const_iterator _match_container_end )
@@ -2744,7 +2737,7 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
             if ( val > _critical_value || std::isnan( val ) ||
                  std::isinf( val ) )
                 {
-                    deactivate_sample( *it );
+                    deactivate_match( *it );
 
                     if constexpr ( mode_ == enums::Mode::fit )
                         {
@@ -2778,7 +2771,7 @@ template <
     enums::Mode mode_,
     bool is_population_>
 void Aggregation<AggType, data_used_, mode_, is_population_>::
-    deactivate_samples_from_above(
+    deactivate_matches_from_above(
         const std::vector<size_t> &_indptr,
         const containers::MatchPtrs::const_iterator &_matches_begin,
         const containers::MatchPtrs::const_iterator &_matches_end )
@@ -2802,7 +2795,7 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
 
             for ( auto it = begin; it != end; ++it )
                 {
-                    deactivate_sample( *it );
+                    deactivate_match( *it );
 
                     updates_stored().insert( ( *it )->ix_x_popul );
                     updates_current().insert( ( *it )->ix_x_popul );
@@ -2827,7 +2820,7 @@ template <
     enums::Mode mode_,
     bool is_population_>
 void Aggregation<AggType, data_used_, mode_, is_population_>::
-    deactivate_samples_from_below(
+    deactivate_matches_from_below(
         const Float _critical_value,
         containers::MatchPtrs::const_iterator _match_container_begin,
         containers::MatchPtrs::const_iterator _match_container_end )
@@ -2843,7 +2836,7 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
             if ( val <= _critical_value || std::isnan( val ) ||
                  std::isinf( val ) )
                 {
-                    deactivate_sample( *it );
+                    deactivate_match( *it );
 
                     if constexpr ( mode_ == enums::Mode::fit )
                         {
@@ -2877,7 +2870,7 @@ template <
     enums::Mode mode_,
     bool is_population_>
 void Aggregation<AggType, data_used_, mode_, is_population_>::
-    deactivate_samples_from_below(
+    deactivate_matches_from_below(
         const std::vector<size_t> &_indptr,
         const containers::MatchPtrs::const_iterator &_matches_begin,
         const containers::MatchPtrs::const_iterator &_matches_end )
@@ -2903,7 +2896,7 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
 
             for ( auto it = begin; it != end; ++it )
                 {
-                    deactivate_sample( *it );
+                    deactivate_match( *it );
 
                     updates_stored().insert( ( *it )->ix_x_popul );
                     updates_current().insert( ( *it )->ix_x_popul );
@@ -2927,7 +2920,7 @@ template <
     enums::Mode mode_,
     bool is_population_>
 void Aggregation<AggType, data_used_, mode_, is_population_>::
-    deactivate_samples_in_window(
+    deactivate_matches_in_window(
         const Float _critical_value,
         const Float _delta_t,
         containers::MatchPtrs::iterator _match_container_begin,
@@ -2942,7 +2935,7 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
             if ( ( *it )->numerical_value > _critical_value - _delta_t &&
                  ( *it )->numerical_value <= _critical_value )
                 {
-                    deactivate_sample( *it );
+                    deactivate_match( *it );
 
                     if constexpr ( mode_ == enums::Mode::fit )
                         {
@@ -2976,7 +2969,7 @@ template <
     enums::Mode mode_,
     bool is_population_>
 void Aggregation<AggType, data_used_, mode_, is_population_>::
-    deactivate_samples_in_window(
+    deactivate_matches_in_window(
         const std::vector<size_t> &_indptr,
         containers::MatchPtrs::iterator _matches_begin,
         containers::MatchPtrs::iterator _matches_end )
@@ -3008,7 +3001,7 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
 
             for ( auto it = begin; it != end; ++it )
                 {
-                    deactivate_sample( *it );
+                    deactivate_match( *it );
 
                     updates_stored().insert( ( *it )->ix_x_popul );
                     updates_current().insert( ( *it )->ix_x_popul );
@@ -3037,7 +3030,7 @@ template <
     enums::Mode mode_,
     bool is_population_>
 void Aggregation<AggType, data_used_, mode_, is_population_>::
-    deactivate_samples_outside_window(
+    deactivate_matches_outside_window(
         const Float _critical_value,
         const Float _delta_t,
         containers::MatchPtrs::iterator _match_container_begin,
@@ -3052,7 +3045,7 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
             if ( ( *it )->numerical_value <= _critical_value - _delta_t ||
                  ( *it )->numerical_value > _critical_value )
                 {
-                    deactivate_sample( *it );
+                    deactivate_match( *it );
 
                     if constexpr ( mode_ == enums::Mode::fit )
                         {
@@ -3086,7 +3079,7 @@ template <
     enums::Mode mode_,
     bool is_population_>
 void Aggregation<AggType, data_used_, mode_, is_population_>::
-    deactivate_samples_outside_window(
+    deactivate_matches_outside_window(
         const std::vector<size_t> &_indptr,
         containers::MatchPtrs::iterator _matches_begin,
         containers::MatchPtrs::iterator _matches_end )
@@ -3107,14 +3100,14 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
 
     for ( auto it = _matches_begin; it != _matches_end; ++it )
         {
-            deactivate_sample( *it );
+            deactivate_match( *it );
 
             updates_stored().insert( ( *it )->ix_x_popul );
             updates_current().insert( ( *it )->ix_x_popul );
         }
 
     // ------------------------------------------------------------------
-    // Selectively activate those samples that are inside the window.
+    // Selectively activate those matches that are inside the window.
 
     for ( size_t i = 1; i < _indptr.size(); ++i )
         {
@@ -3130,7 +3123,7 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
 
             for ( auto it = begin; it != end; ++it )
                 {
-                    activate_sample( *it );
+                    activate_match( *it );
 
                     updates_current().insert( ( *it )->ix_x_popul );
 
@@ -3142,7 +3135,7 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
 
             for ( auto it = begin; it != end; ++it )
                 {
-                    deactivate_sample( *it );
+                    deactivate_match( *it );
 
                     updates_current().insert( ( *it )->ix_x_popul );
                 }
@@ -3168,7 +3161,7 @@ template <
     enums::Mode mode_,
     bool is_population_>
 void Aggregation<AggType, data_used_, mode_, is_population_>::
-    deactivate_samples_not_containing_categories(
+    deactivate_matches_not_containing_categories(
         const std::vector<Int>::const_iterator _categories_begin,
         const std::vector<Int>::const_iterator _categories_end,
         containers::MatchPtrs::iterator _match_container_begin,
@@ -3200,7 +3193,7 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
 
             if ( deactivate )
                 {
-                    deactivate_sample( *it );
+                    deactivate_match( *it );
 
                     if constexpr ( mode_ == enums::Mode::fit )
                         {
@@ -3234,7 +3227,7 @@ template <
     enums::Mode mode_,
     bool is_population_>
 void Aggregation<AggType, data_used_, mode_, is_population_>::
-    deactivate_samples_not_containing_categories(
+    deactivate_matches_not_containing_categories(
         const std::vector<Int>::const_iterator _categories_begin,
         const std::vector<Int>::const_iterator _categories_end,
         const Revert _revert,
@@ -3245,14 +3238,14 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
 
     for ( auto it = _index.begin(); it != _index.end(); ++it )
         {
-            deactivate_sample( *it );
+            deactivate_match( *it );
 
             updates_stored().insert( ( *it )->ix_x_popul );
             updates_current().insert( ( *it )->ix_x_popul );
         }
 
     // ------------------------------------------------------------------
-    // Selectively activate those samples that are not of the
+    // Selectively activate those matches that are not of the
     // particular category
 
     const auto sample_size =
@@ -3267,7 +3260,7 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
                 {
                     assert_true( ( *it )->categorical_value == *cat );
 
-                    activate_sample( *it );
+                    activate_match( *it );
 
                     updates_current().insert( ( *it )->ix_x_popul );
 
@@ -3289,7 +3282,7 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
                         {
                             assert_true( ( *it )->categorical_value == *cat );
 
-                            deactivate_sample( *it );
+                            deactivate_match( *it );
 
                             updates_current().insert( ( *it )->ix_x_popul );
                         }
@@ -3323,7 +3316,7 @@ template <
     enums::Mode mode_,
     bool is_population_>
 void Aggregation<AggType, data_used_, mode_, is_population_>::
-    deactivate_samples_with_null_values(
+    deactivate_matches_with_null_values(
         containers::MatchPtrs::iterator _match_container_begin,
         containers::MatchPtrs::iterator _null_values_separator )
 {
@@ -3331,7 +3324,7 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
 
     for ( auto it = _match_container_begin; it != _null_values_separator; ++it )
         {
-            deactivate_sample( *it );
+            deactivate_match( *it );
 
             updates_stored().insert( ( *it )->ix_x_popul );
             updates_current().insert( ( *it )->ix_x_popul );
@@ -3486,14 +3479,14 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::revert_to_commit()
 {
     // --------------------------------------------------
 
-    if constexpr ( needs_altered_samples_ )
+    if constexpr ( needs_altered_matches_ )
         {
-            for ( containers::Match *sample : altered_samples() )
+            for ( containers::Match *sample : altered_matches() )
                 {
                     sample->activated = !( sample->activated );
                 }
 
-            altered_samples().clear();
+            altered_matches().clear();
         }
 
     // --------------------------------------------------
@@ -3508,11 +3501,11 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::revert_to_commit()
 
     // --------------------------------------------------
 
-    if constexpr ( needs_sample_ptr_ )
+    if constexpr ( needs_match_ptr_ )
         {
             for ( auto i : updates_stored() )
                 {
-                    sample_ptr()[i] = sample_ptr_committed()[i];
+                    match_ptr()[i] = match_ptr_committed()[i];
                 }
         }
 
@@ -3677,9 +3670,9 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::reset()
 {
     // --------------------------------------------------
 
-    if constexpr ( needs_altered_samples_ )
+    if constexpr ( needs_altered_matches_ )
         {
-            altered_samples().clear();
+            altered_matches().clear();
         }
 
     // --------------------------------------------------

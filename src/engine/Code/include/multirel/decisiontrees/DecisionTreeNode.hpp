@@ -114,12 +114,13 @@ class DecisionTreeNode
     }
 
     /// Calculates the appropriate number of critical values
-    inline Int calculate_num_critical_values( size_t _num_samples_on_node )
+    inline Int calculate_num_critical_values(
+        const size_t _num_matches_on_node )
     {
         return std::max(
             static_cast<Int>(
                 tree_->grid_factor() *
-                std::sqrt( static_cast<Float>( _num_samples_on_node ) ) ),
+                std::sqrt( static_cast<Float>( _num_matches_on_node ) ) ),
             1 );
     }
 
