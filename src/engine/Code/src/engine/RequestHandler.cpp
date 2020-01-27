@@ -31,28 +31,6 @@ void RequestHandler::run()
                     data_frame_manager().get_boolean_column(
                         name, cmd, &socket() );
                 }
-            else if ( type == "StringColumn.get" )
-                {
-                    data_frame_manager().get_categorical_column(
-                        name, cmd, &socket() );
-                }
-            else if ( type == "FloatColumn.aggregate" )
-                {
-                    data_frame_manager().aggregate( name, cmd, &socket() );
-                }
-            else if ( type == "FloatColumn.get" )
-                {
-                    data_frame_manager().get_column( name, cmd, &socket() );
-                }
-            else if ( type == "StringColumn.set_unit" )
-                {
-                    data_frame_manager().set_unit_categorical(
-                        name, cmd, &socket() );
-                }
-            else if ( type == "FloatColumn.set_unit" )
-                {
-                    data_frame_manager().set_unit( name, cmd, &socket() );
-                }
             else if ( type == "Database.drop_table" )
                 {
                     database_manager().drop_table( name, &socket() );
@@ -206,6 +184,18 @@ void RequestHandler::run()
             else if ( type == "DataFrame.where" )
                 {
                     data_frame_manager().where( name, cmd, &socket() );
+                }
+            else if ( type == "FloatColumn.aggregate" )
+                {
+                    data_frame_manager().aggregate( name, cmd, &socket() );
+                }
+            else if ( type == "FloatColumn.get" )
+                {
+                    data_frame_manager().get_column( name, cmd, &socket() );
+                }
+            else if ( type == "FloatColumn.set_unit" )
+                {
+                    data_frame_manager().set_unit( name, cmd, &socket() );
                 }
             else if ( type == "delete_project" )
                 {
@@ -369,6 +359,16 @@ void RequestHandler::run()
                 {
                     //    monitor().shutdown();
                     *shutdown_ = true;
+                }
+            else if ( type == "StringColumn.get" )
+                {
+                    data_frame_manager().get_categorical_column(
+                        name, cmd, &socket() );
+                }
+            else if ( type == "StringColumn.set_unit" )
+                {
+                    data_frame_manager().set_unit_categorical(
+                        name, cmd, &socket() );
                 }
         }
     catch ( std::exception& e )
