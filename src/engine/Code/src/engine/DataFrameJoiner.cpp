@@ -252,7 +252,7 @@ void DataFrameJoiner::build_temp_dfs(
 
     // ------------------------------------------------------------------------
 
-    if ( type == "Column" || type == "CategoricalColumn" )
+    if ( type == "FloatColumn" || type == "StringColumn" )
         {
             const auto name = JSON::get_value<std::string>( _col, "name_" );
 

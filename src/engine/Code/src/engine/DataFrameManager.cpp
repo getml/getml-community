@@ -1145,11 +1145,11 @@ void DataFrameManager::get_data_frame( Poco::Net::StreamSocket* _socket )
 
             const auto type = JSON::get_value<std::string>( cmd, "type_" );
 
-            if ( type == "CategoricalColumn.get" )
+            if ( type == "StringColumn.get" )
                 {
                     get_categorical_column( name, cmd, _socket );
                 }
-            else if ( type == "Column.get" )
+            else if ( type == "FloatColumn.get" )
                 {
                     get_column( name, cmd, _socket );
                 }
@@ -1308,11 +1308,11 @@ void DataFrameManager::receive_data(
 
             const auto name = JSON::get_value<std::string>( cmd, "name_" );
 
-            if ( type == "CategoricalColumn" )
+            if ( type == "StringColumn" )
                 {
                     add_categorical_column( cmd, _df, _socket );
                 }
-            else if ( type == "Column" )
+            else if ( type == "FloatColumn" )
                 {
                     add_column( cmd, _df, _socket );
                 }

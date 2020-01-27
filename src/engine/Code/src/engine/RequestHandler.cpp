@@ -31,25 +31,25 @@ void RequestHandler::run()
                     data_frame_manager().get_boolean_column(
                         name, cmd, &socket() );
                 }
-            else if ( type == "CategoricalColumn.get" )
+            else if ( type == "StringColumn.get" )
                 {
                     data_frame_manager().get_categorical_column(
                         name, cmd, &socket() );
                 }
-            else if ( type == "Column.aggregate" )
+            else if ( type == "FloatColumn.aggregate" )
                 {
                     data_frame_manager().aggregate( name, cmd, &socket() );
                 }
-            else if ( type == "Column.get" )
+            else if ( type == "FloatColumn.get" )
                 {
                     data_frame_manager().get_column( name, cmd, &socket() );
                 }
-            else if ( type == "CategoricalColumn.set_unit" )
+            else if ( type == "StringColumn.set_unit" )
                 {
                     data_frame_manager().set_unit_categorical(
                         name, cmd, &socket() );
                 }
-            else if ( type == "Column.set_unit" )
+            else if ( type == "FloatColumn.set_unit" )
                 {
                     data_frame_manager().set_unit( name, cmd, &socket() );
                 }

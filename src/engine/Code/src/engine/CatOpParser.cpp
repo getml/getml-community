@@ -135,7 +135,7 @@ std::vector<std::string> CatOpParser::parse(
 {
     const auto type = JSON::get_value<std::string>( _col, "type_" );
 
-    if ( type == "CategoricalColumn" )
+    if ( type == "StringColumn" )
         {
             const auto name = JSON::get_value<std::string>( _col, "name_" );
 
@@ -191,7 +191,7 @@ std::vector<std::string> CatOpParser::parse(
 
             return vec;
         }
-    else if ( type == "VirtualCategoricalColumn" )
+    else if ( type == "VirtualStringColumn" )
         {
             if ( _col.has( "operand2_" ) )
                 {

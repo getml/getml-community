@@ -118,7 +118,7 @@ containers::Column<Float> NumOpParser::parse(
 {
     const auto type = JSON::get_value<std::string>( _col, "type_" );
 
-    if ( type == "Column" )
+    if ( type == "FloatColumn" )
         {
             const auto name = JSON::get_value<std::string>( _col, "name_" );
 
@@ -162,12 +162,12 @@ containers::Column<Float> NumOpParser::parse(
 
             return col;
         }
-    else if ( type == "VirtualColumn" && _col.has( "operand2_" ) )
+    else if ( type == "VirtualFloatColumn" && _col.has( "operand2_" ) )
         {
             return binary_operation(
                 _categories, _join_keys_encoding, _df, _col );
         }
-    else if ( type == "VirtualColumn" && !_col.has( "operand2_" ) )
+    else if ( type == "VirtualFloatColumn" && !_col.has( "operand2_" ) )
         {
             return unary_operation(
                 _categories, _join_keys_encoding, _df, _col );

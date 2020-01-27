@@ -20,13 +20,13 @@ std::vector<bool> BoolOpParser::binary_operation(
     const auto is_boolean = ( operand_type == "BooleanValue" ) ||
                             ( operand_type == "VirtualBooleanColumn" );
 
-    const auto is_categorical = ( operand_type == "CategoricalColumn" ) ||
+    const auto is_categorical = ( operand_type == "StringColumn" ) ||
                                 ( operand_type == "CategoricalValue" ) ||
-                                ( operand_type == "VirtualCategoricalColumn" );
+                                ( operand_type == "VirtualStringColumn" );
 
-    const auto is_numerical = ( operand_type == "Column" ) ||
+    const auto is_numerical = ( operand_type == "FloatColumn" ) ||
                               ( operand_type == "Value" ) ||
-                              ( operand_type == "VirtualColumn" );
+                              ( operand_type == "VirtualFloatColumn" );
 
     if ( op == "and" )
         {
