@@ -24,16 +24,16 @@ class Aggregation : public AbstractAggregation
     /// Activates all samples
     void activate_all(
         const bool _init_opt,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end ) final;
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end ) final;
 
     /// Activates all samples that contain any category between
     /// _categories_begin and _categories_end. Used for prediction.
     void activate_samples_containing_categories(
         const std::vector<Int>::const_iterator _categories_begin,
         const std::vector<Int>::const_iterator _categories_end,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end ) final;
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end ) final;
 
     /// Iterates through the categories and selectively
     /// activates samples.
@@ -48,8 +48,8 @@ class Aggregation : public AbstractAggregation
     /// samples that are greater than the critical value.
     void activate_samples_from_above(
         const Float _critical_value,
-        containers::MatchPtrs::const_iterator _sample_container_begin,
-        containers::MatchPtrs::const_iterator _sample_container_end ) final;
+        containers::MatchPtrs::const_iterator _match_container_begin,
+        containers::MatchPtrs::const_iterator _match_container_end ) final;
 
     /// Iterates through the samples and activates them
     /// starting with the greatest.
@@ -62,8 +62,8 @@ class Aggregation : public AbstractAggregation
     /// samples that smaller than or equal to the critical value.
     void activate_samples_from_below(
         const Float _critical_value,
-        containers::MatchPtrs::const_iterator _sample_container_begin,
-        containers::MatchPtrs::const_iterator _sample_container_end ) final;
+        containers::MatchPtrs::const_iterator _match_container_begin,
+        containers::MatchPtrs::const_iterator _match_container_end ) final;
 
     /// Iterates through the samples and activates them
     /// starting with the smallest.
@@ -77,38 +77,38 @@ class Aggregation : public AbstractAggregation
     void activate_samples_in_window(
         const Float _critical_value,
         const Float _delta_t,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end ) final;
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end ) final;
 
     /// Implements a lag functionality through moving time windows - used by
     /// fit.
     void activate_samples_in_window(
         const std::vector<size_t> &_indptr,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end ) final;
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end ) final;
 
     /// Implements a lag functionality through moving time windows - used by
     /// transform.
     void activate_samples_outside_window(
         const Float _critical_value,
         const Float _delta_t,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end ) final;
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end ) final;
 
     /// Implements a lag functionality through moving time windows - used by
     /// fit.
     void activate_samples_outside_window(
         const std::vector<size_t> &_indptr,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end ) final;
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end ) final;
 
     /// Activates all samples that do not contain any category between
     /// _categories_begin and _categories_end. Used for prediction.
     void activate_samples_not_containing_categories(
         const std::vector<Int>::const_iterator _categories_begin,
         const std::vector<Int>::const_iterator _categories_end,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end ) final;
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end ) final;
 
     /// Iterates through the categories and selectively
     /// activates samples.
@@ -131,8 +131,8 @@ class Aggregation : public AbstractAggregation
     void deactivate_samples_containing_categories(
         const std::vector<Int>::const_iterator _categories_begin,
         const std::vector<Int>::const_iterator _categories_end,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end ) final;
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end ) final;
 
     /// Iteratres through the categories and selectively
     /// deactivates samples.
@@ -147,8 +147,8 @@ class Aggregation : public AbstractAggregation
     /// samples that are greater than the critical value.
     void deactivate_samples_from_above(
         const Float _critical_value,
-        containers::MatchPtrs::const_iterator _sample_container_begin,
-        containers::MatchPtrs::const_iterator _sample_container_end ) final;
+        containers::MatchPtrs::const_iterator _match_container_begin,
+        containers::MatchPtrs::const_iterator _match_container_end ) final;
 
     /// Iterates through the samples and deactivates them
     /// starting with the greatest.
@@ -161,8 +161,8 @@ class Aggregation : public AbstractAggregation
     /// samples that smaller than or equal to the critical value.
     void deactivate_samples_from_below(
         const Float _critical_value,
-        containers::MatchPtrs::const_iterator _sample_container_begin,
-        containers::MatchPtrs::const_iterator _sample_container_end ) final;
+        containers::MatchPtrs::const_iterator _match_container_begin,
+        containers::MatchPtrs::const_iterator _match_container_end ) final;
 
     /// Iterates through the samples and deactivates them
     /// starting with the smallest.
@@ -176,38 +176,38 @@ class Aggregation : public AbstractAggregation
     void deactivate_samples_in_window(
         const Float _critical_value,
         const Float _delta_t,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end ) final;
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end ) final;
 
     /// Implements a lag functionality through moving time windows - used by
     /// fit.
     void deactivate_samples_in_window(
         const std::vector<size_t> &_indptr,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end ) final;
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end ) final;
 
     /// Implements a lag functionality through moving time windows - used by
     /// transform.
     void deactivate_samples_outside_window(
         const Float _critical_value,
         const Float _delta_t,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end ) final;
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end ) final;
 
     /// Implements a lag functionality through moving time windows - used by
     /// fit.
     void deactivate_samples_outside_window(
         const std::vector<size_t> &_indptr,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end ) final;
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end ) final;
 
     /// Deactivates all samples that do not contain any category between
     /// _categories_begin and _categories_end. Used for prediction.
     void deactivate_samples_not_containing_categories(
         const std::vector<Int>::const_iterator _categories_begin,
         const std::vector<Int>::const_iterator _categories_end,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end ) final;
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end ) final;
 
     /// Iterates through the categories and selectively
     /// deactivates samples.
@@ -221,14 +221,14 @@ class Aggregation : public AbstractAggregation
     /// Deactivates all samples where the numerical_value contains null values.
     /// Such samples must always be deactivated.
     void deactivate_samples_with_null_values(
-        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _match_container_begin,
         containers::MatchPtrs::iterator _null_values_separator ) final;
 
     /// Initializes optimization criterion after all samples have been
     /// activated.
     void init_optimization_criterion(
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end );
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end );
 
     /// Returns a string describing the type of the intermediate aggregation
     /// needed
@@ -1726,17 +1726,17 @@ template <
     bool is_population_>
 void Aggregation<AggType, data_used_, mode_, is_population_>::activate_all(
     const bool _init_opt,
-    containers::MatchPtrs::iterator _sample_container_begin,
-    containers::MatchPtrs::iterator _sample_container_end )
+    containers::MatchPtrs::iterator _match_container_begin,
+    containers::MatchPtrs::iterator _match_container_end )
 {
     debug_log( "activate_all..." );
 
-    for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
+    for ( auto it = _match_container_begin; it != _match_container_end; ++it )
         {
             ( *it )->activated = false;
         }
 
-    for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
+    for ( auto it = _match_container_begin; it != _match_container_end; ++it )
         {
             activate_sample( *it );
         }
@@ -1745,15 +1745,14 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::activate_all(
         {
             updates_stored().clear();
 
-            for ( auto it = _sample_container_begin;
-                  it != _sample_container_end;
+            for ( auto it = _match_container_begin; it != _match_container_end;
                   ++it )
                 {
                     updates_stored().insert( ( *it )->ix_x_popul );
                 }
 
             init_optimization_criterion(
-                _sample_container_begin, _sample_container_end );
+                _match_container_begin, _match_container_end );
         }
 
     debug_log( "activate_all...done" );
@@ -1770,14 +1769,14 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
     activate_samples_containing_categories(
         const std::vector<Int>::const_iterator _categories_begin,
         const std::vector<Int>::const_iterator _categories_end,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end )
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end )
 {
     Float num_samples_smaller = 0.0;
 
     Float num_samples_greater = 0.0;
 
-    for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
+    for ( auto it = _match_container_begin; it != _match_container_end; ++it )
         {
             bool activate = false;
 
@@ -1903,14 +1902,14 @@ template <
 void Aggregation<AggType, data_used_, mode_, is_population_>::
     activate_samples_from_above(
         const Float _critical_value,
-        containers::MatchPtrs::const_iterator _sample_container_begin,
-        containers::MatchPtrs::const_iterator _sample_container_end )
+        containers::MatchPtrs::const_iterator _match_container_begin,
+        containers::MatchPtrs::const_iterator _match_container_end )
 {
     Float num_samples_smaller = 0.0;
 
     Float num_samples_greater = 0.0;
 
-    for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
+    for ( auto it = _match_container_begin; it != _match_container_end; ++it )
         {
             if ( ( *it )->numerical_value > _critical_value )
                 {
@@ -1998,14 +1997,14 @@ template <
 void Aggregation<AggType, data_used_, mode_, is_population_>::
     activate_samples_from_below(
         const Float _critical_value,
-        containers::MatchPtrs::const_iterator _sample_container_begin,
-        containers::MatchPtrs::const_iterator _sample_container_end )
+        containers::MatchPtrs::const_iterator _match_container_begin,
+        containers::MatchPtrs::const_iterator _match_container_end )
 {
     Float num_samples_smaller = 0.0;
 
     Float num_samples_greater = 0.0;
 
-    for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
+    for ( auto it = _match_container_begin; it != _match_container_end; ++it )
         {
             if ( ( *it )->numerical_value <= _critical_value )
                 {
@@ -2097,14 +2096,14 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
     activate_samples_in_window(
         const Float _critical_value,
         const Float _delta_t,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end )
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end )
 {
     Float num_samples_smaller = 0.0;
 
     Float num_samples_greater = 0.0;
 
-    for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
+    for ( auto it = _match_container_begin; it != _match_container_end; ++it )
         {
             if ( ( *it )->numerical_value > _critical_value - _delta_t &&
                  ( *it )->numerical_value <= _critical_value )
@@ -2207,14 +2206,14 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
     activate_samples_outside_window(
         const Float _critical_value,
         const Float _delta_t,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end )
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end )
 {
     Float num_samples_smaller = 0.0;
 
     Float num_samples_greater = 0.0;
 
-    for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
+    for ( auto it = _match_container_begin; it != _match_container_end; ++it )
         {
             if ( ( *it )->numerical_value <= _critical_value - _delta_t ||
                  ( *it )->numerical_value > _critical_value )
@@ -2338,14 +2337,14 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
     activate_samples_not_containing_categories(
         const std::vector<Int>::const_iterator _categories_begin,
         const std::vector<Int>::const_iterator _categories_end,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end )
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end )
 {
     Float num_samples_smaller = 0.0;
 
     Float num_samples_greater = 0.0;
 
-    for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
+    for ( auto it = _match_container_begin; it != _match_container_end; ++it )
         {
             auto activate = true;
 
@@ -2597,14 +2596,14 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
     deactivate_samples_containing_categories(
         const std::vector<Int>::const_iterator _categories_begin,
         const std::vector<Int>::const_iterator _categories_end,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end )
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end )
 {
     Float num_samples_smaller = 0.0;
 
     Float num_samples_greater = 0.0;
 
-    for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
+    for ( auto it = _match_container_begin; it != _match_container_end; ++it )
         {
             bool deactivate = false;
 
@@ -2731,14 +2730,14 @@ template <
 void Aggregation<AggType, data_used_, mode_, is_population_>::
     deactivate_samples_from_above(
         const Float _critical_value,
-        containers::MatchPtrs::const_iterator _sample_container_begin,
-        containers::MatchPtrs::const_iterator _sample_container_end )
+        containers::MatchPtrs::const_iterator _match_container_begin,
+        containers::MatchPtrs::const_iterator _match_container_end )
 {
     Float num_samples_smaller = 0.0;
 
     Float num_samples_greater = 0.0;
 
-    for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
+    for ( auto it = _match_container_begin; it != _match_container_end; ++it )
         {
             const Float val = ( *it )->numerical_value;
 
@@ -2830,14 +2829,14 @@ template <
 void Aggregation<AggType, data_used_, mode_, is_population_>::
     deactivate_samples_from_below(
         const Float _critical_value,
-        containers::MatchPtrs::const_iterator _sample_container_begin,
-        containers::MatchPtrs::const_iterator _sample_container_end )
+        containers::MatchPtrs::const_iterator _match_container_begin,
+        containers::MatchPtrs::const_iterator _match_container_end )
 {
     Float num_samples_smaller = 0.0;
 
     Float num_samples_greater = 0.0;
 
-    for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
+    for ( auto it = _match_container_begin; it != _match_container_end; ++it )
         {
             const Float val = ( *it )->numerical_value;
 
@@ -2931,14 +2930,14 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
     deactivate_samples_in_window(
         const Float _critical_value,
         const Float _delta_t,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end )
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end )
 {
     Float num_samples_smaller = 0.0;
 
     Float num_samples_greater = 0.0;
 
-    for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
+    for ( auto it = _match_container_begin; it != _match_container_end; ++it )
         {
             if ( ( *it )->numerical_value > _critical_value - _delta_t &&
                  ( *it )->numerical_value <= _critical_value )
@@ -3041,14 +3040,14 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
     deactivate_samples_outside_window(
         const Float _critical_value,
         const Float _delta_t,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end )
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end )
 {
     Float num_samples_smaller = 0.0;
 
     Float num_samples_greater = 0.0;
 
-    for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
+    for ( auto it = _match_container_begin; it != _match_container_end; ++it )
         {
             if ( ( *it )->numerical_value <= _critical_value - _delta_t ||
                  ( *it )->numerical_value > _critical_value )
@@ -3172,14 +3171,14 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
     deactivate_samples_not_containing_categories(
         const std::vector<Int>::const_iterator _categories_begin,
         const std::vector<Int>::const_iterator _categories_end,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end )
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end )
 {
     Float num_samples_smaller = 0.0;
 
     Float num_samples_greater = 0.0;
 
-    for ( auto it = _sample_container_begin; it != _sample_container_end; ++it )
+    for ( auto it = _match_container_begin; it != _match_container_end; ++it )
         {
             auto deactivate = true;
 
@@ -3325,13 +3324,12 @@ template <
     bool is_population_>
 void Aggregation<AggType, data_used_, mode_, is_population_>::
     deactivate_samples_with_null_values(
-        containers::MatchPtrs::iterator _sample_container_begin,
+        containers::MatchPtrs::iterator _match_container_begin,
         containers::MatchPtrs::iterator _null_values_separator )
 {
-    assert_true( _null_values_separator >= _sample_container_begin );
+    assert_true( _null_values_separator >= _match_container_begin );
 
-    for ( auto it = _sample_container_begin; it != _null_values_separator;
-          ++it )
+    for ( auto it = _match_container_begin; it != _null_values_separator; ++it )
         {
             deactivate_sample( *it );
 
@@ -3349,15 +3347,15 @@ template <
     bool is_population_>
 void Aggregation<AggType, data_used_, mode_, is_population_>::
     init_optimization_criterion(
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end )
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end )
 {
     debug_log( "init_optimization_criterion..." );
 
     optimization_criterion()->init_yhat( yhat_inline(), updates_stored() );
 
     auto num_samples = static_cast<Float>(
-        std::distance( _sample_container_begin, _sample_container_end ) );
+        std::distance( _match_container_begin, _match_container_end ) );
 
     optimization_criterion()->store_current_stage( num_samples, num_samples );
 

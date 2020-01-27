@@ -22,8 +22,8 @@ class DecisionTreeNode
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
         const containers::Subfeatures &_subfeatures,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end );
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end );
 
     /// Calling this member functions means that this node is a root
     /// and must undertake the necessary steps: It removes all samples
@@ -34,8 +34,8 @@ class DecisionTreeNode
         const containers::DataFrame &_peripheral,
         const std::vector<containers::ColumnView<Float, std::map<Int, Int>>>
             &_subfeatures,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end );
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end );
 
     /// Builds the node from a Poco::JSON::Object.
     void from_json_obj( const Poco::JSON::Object &_json_obj );
@@ -62,8 +62,8 @@ class DecisionTreeNode
         const containers::DataFrame &_peripheral,
         const std::vector<containers::ColumnView<Float, std::map<Int, Int>>>
             &_subfeatures,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end,
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end,
         aggregations::AbstractAggregation *_aggregation ) const;
 
     // --------------------------------------
@@ -462,42 +462,42 @@ class DecisionTreeNode
    private:
     /// Apply changes based on the category used - used for prediction
     void apply_by_categories_used(
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end,
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end,
         aggregations::AbstractAggregation *_aggregation ) const;
 
     /// Apply changes based on the critical value
     void apply_by_critical_value(
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end,
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end,
         aggregations::AbstractAggregation *_aggregation ) const;
 
     /// Apply changes based on the lag operator
     void apply_by_lag(
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end,
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end,
         aggregations::AbstractAggregation *_aggregation ) const;
 
     /// Calculates the beginning and end of the categorical
     /// values considered
     std::shared_ptr<const std::vector<Int>> calculate_categories(
         const size_t _sample_size,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end );
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end );
 
     /// Given the sorted sample containers, this returns the critical_values
     /// for discrete values
     std::vector<Float> calculate_critical_values_discrete(
         const size_t _sample_size,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end );
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end );
 
     /// Given the sorted sample containers, this returns the critical_values
     /// for numerical values
     std::vector<Float> calculate_critical_values_numerical(
         const size_t _sample_size,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end );
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end );
 
     /// Does the actual job of calculating the critical values.
     std::vector<Float> calculate_critical_values_numerical(
@@ -507,8 +507,8 @@ class DecisionTreeNode
     /// for the moving time windows (lag variables).
     std::vector<Float> calculate_critical_values_window(
         const Float _lag,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end );
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end );
 
     /// Commits the split and spawns child nodes
     void commit(
@@ -517,8 +517,8 @@ class DecisionTreeNode
         const std::vector<containers::ColumnView<Float, std::map<Int, Int>>>
             &_subfeatures,
         const descriptors::Split &_split,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end );
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end );
 
     /// Returns the > condition (for numerical variables)
     /// or the != condition (for categorical variables)
@@ -529,18 +529,18 @@ class DecisionTreeNode
     std::
         pair<containers::CategoryIndex, std::shared_ptr<const std::vector<Int>>>
         make_index_and_categories(
-            containers::MatchPtrs::iterator _sample_container_begin,
-            containers::MatchPtrs::iterator _sample_container_end );
+            containers::MatchPtrs::iterator _match_container_begin,
+            containers::MatchPtrs::iterator _match_container_end );
 
     /// Partitions the iterators according by the categories.
     containers::MatchPtrs::iterator partition_by_categories_used(
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end ) const;
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end ) const;
 
     /// Partitions the iterators according by the categories.
     containers::MatchPtrs::iterator partition_by_critical_value(
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end ) const;
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end ) const;
 
     /// Returns the sum of the sample sizes of all processes
     size_t reduce_sample_size( const size_t _sample_size );
@@ -551,8 +551,8 @@ class DecisionTreeNode
     /// whereas DecisionTree/Aggregation separates by the value to be
     /// aggregated!
     containers::MatchPtrs::iterator separate_null_values(
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end,
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end,
         bool _null_values_to_beginning = true ) const;
 
     /// Assigns a the right values to the samples for faster lookup.
@@ -560,8 +560,8 @@ class DecisionTreeNode
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
         const containers::Subfeatures &_subfeatures,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end ) const;
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end ) const;
 
     /// Appends the <= condition (for numerical variables)
     /// or the == condition (for categorical variables)
@@ -572,23 +572,23 @@ class DecisionTreeNode
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
         const containers::Subfeatures &_subfeatures,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end );
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end );
 
     /// Tries to impose the peripheral categorical columns as a condition
     void try_categorical_peripheral(
         const containers::DataFrame &_peripheral,
         const size_t _sample_size,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end,
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end,
         std::vector<descriptors::Split> *_candidate_splits );
 
     /// Tries to impose the population categorical columns as a condition
     void try_categorical_population(
         const containers::DataFrameView &_population,
         const size_t _sample_size,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end,
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end,
         std::vector<descriptors::Split> *_candidate_splits );
 
     /// Tries whether the categorical values might constitute a good split
@@ -596,8 +596,8 @@ class DecisionTreeNode
         const size_t _column_used,
         const enums::DataUsed _data_used,
         const size_t _sample_size,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end,
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end,
         std::vector<descriptors::Split> *_candidate_splits );
 
     /// Tries to impose different conditions
@@ -607,40 +607,40 @@ class DecisionTreeNode
         const std::vector<containers::ColumnView<Float, std::map<Int, Int>>>
             &_subfeatures,
         const size_t _sample_size,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end,
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end,
         std::vector<descriptors::Split> *_candidate_splits );
 
     /// Tries to impose the peripheral discrete columns as a condition
     void try_discrete_peripheral(
         const containers::DataFrame &_peripheral,
         const size_t _sample_size,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end,
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end,
         std::vector<descriptors::Split> *_candidate_splits );
 
     /// Tries to impose the population discrete columns as a condition
     void try_discrete_population(
         const containers::DataFrameView &_population,
         const size_t _sample_size,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end,
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end,
         std::vector<descriptors::Split> *_candidate_splits );
 
     /// Tries to impose the peripheral numerical columns as a condition
     void try_numerical_peripheral(
         const containers::DataFrame &_peripheral,
         const size_t _sample_size,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end,
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end,
         std::vector<descriptors::Split> *_candidate_splits );
 
     /// Tries to impose the population numerical columns as a condition
     void try_numerical_population(
         const containers::DataFrameView &_population,
         const size_t _sample_size,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end,
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end,
         std::vector<descriptors::Split> *_candidate_splits );
 
     /// Tries whether the discrete values might constitute a good split
@@ -648,8 +648,8 @@ class DecisionTreeNode
         const size_t _column_used,
         const enums::DataUsed _data_used,
         const size_t _sample_size,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end,
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end,
         std::vector<descriptors::Split> *_candidate_splits );
 
     /// Called by try_discrete_values(...) and try_numerical_values(...)
@@ -668,8 +668,8 @@ class DecisionTreeNode
         const size_t _column_used,
         const enums::DataUsed _data_used,
         const size_t _sample_size,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end,
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end,
         std::vector<descriptors::Split> *_candidate_splits );
 
     /// Tries to impose the same units categorical as a condition
@@ -677,8 +677,8 @@ class DecisionTreeNode
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
         const size_t _sample_size,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end,
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end,
         std::vector<descriptors::Split> *_candidate_splits );
 
     /// Tries to impose the same units discrete as a condition
@@ -686,8 +686,8 @@ class DecisionTreeNode
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
         const size_t _sample_size,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end,
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end,
         std::vector<descriptors::Split> *_candidate_splits );
 
     /// Tries to impose the same units numerical as a condition
@@ -695,16 +695,16 @@ class DecisionTreeNode
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
         const size_t _sample_size,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end,
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end,
         std::vector<descriptors::Split> *_candidate_splits );
 
     /// Tries to impose the subfeatures as a condition
     void try_subfeatures(
         const containers::Subfeatures &_subfeatures,
         const size_t _sample_size,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end,
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end,
         std::vector<descriptors::Split> *_candidate_splits );
 
     /// Tries to impose the difference between the time stamps as a
@@ -713,14 +713,14 @@ class DecisionTreeNode
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
         const size_t _sample_size,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end,
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end,
         std::vector<descriptors::Split> *_candidate_splits );
 
     /// Tries to apply a moving window, simulating a lag variable.
     void try_window(
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end,
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end,
         std::vector<descriptors::Split> *_candidate_splits );
 
     /// Updates the aggregations and the optimization criterion.
@@ -729,8 +729,8 @@ class DecisionTreeNode
         const containers::DataFrame &_peripheral,
         const containers::Subfeatures &_subfeatures,
         const descriptors::Split &_column,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end );
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end );
 
     // --------------------------------------
 

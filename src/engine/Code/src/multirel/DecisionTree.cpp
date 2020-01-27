@@ -99,7 +99,7 @@ void DecisionTree::create_value_to_be_aggregated(
     const containers::DataFrameView &_population,
     const containers::DataFrame &_peripheral,
     const containers::Subfeatures &_subfeatures,
-    const containers::MatchPtrs &_sample_container,
+    const containers::MatchPtrs &_match_container,
     aggregations::AbstractAggregation *_aggregation ) const
 {
     // ------------------------------------------------------------------------
@@ -296,8 +296,8 @@ void DecisionTree::fit(
     const containers::DataFrameView &_population,
     const containers::DataFrame &_peripheral,
     const containers::Subfeatures &_subfeatures,
-    containers::MatchPtrs::iterator _sample_container_begin,
-    containers::MatchPtrs::iterator _sample_container_end,
+    containers::MatchPtrs::iterator _match_container_begin,
+    containers::MatchPtrs::iterator _match_container_end,
     optimizationcriteria::OptimizationCriterion *_optimization_criterion )
 {
     // ------------------------------------------------------------
@@ -334,8 +334,8 @@ void DecisionTree::fit(
         _population,
         _peripheral,
         _subfeatures,
-        _sample_container_begin,
-        _sample_container_end );
+        _match_container_begin,
+        _match_container_end );
 
     // ------------------------------------------------------------
     // Clean up
@@ -745,7 +745,7 @@ std::vector<Float> DecisionTree::transform(
                                 null_values_separator, matches.end() );
                         }
 
-                    // Because keep on generating matches and sample_container,
+                    // Because keep on generating matches and match_container,
                     // we do not have to explicitly sort the sample containers!
                 }
             else

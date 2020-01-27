@@ -43,7 +43,7 @@ class DecisionTree
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
         const containers::Subfeatures &_subfeatures,
-        const containers::MatchPtrs &_sample_container,
+        const containers::MatchPtrs &_match_container,
         aggregations::AbstractAggregation *_aggregation ) const;
 
     /// Fits the decision tree
@@ -51,8 +51,8 @@ class DecisionTree
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
         const containers::Subfeatures &_subfeatures,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end,
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end,
         optimizationcriteria::OptimizationCriterion *_optimization_criterion );
 
     /// Rebuilds the tree from a Poco::JSON::Object
@@ -123,13 +123,13 @@ class DecisionTree
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
         const containers::Subfeatures &_subfeatures,
-        const containers::MatchPtrs &_sample_container )
+        const containers::MatchPtrs &_match_container )
     {
         create_value_to_be_aggregated(
             _population,
             _peripheral,
             _subfeatures,
-            _sample_container,
+            _match_container,
             aggregation() );
     }
 
