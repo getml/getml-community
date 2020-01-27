@@ -75,10 +75,6 @@ void DataFrame::add_int_column(
                     create_indices();
                 }
         }
-    else if ( _role == "undefined_integer" )
-        {
-            add_column( _col, &undefined_integers_ );
-        }
     else
         {
             throw std::invalid_argument(
@@ -176,12 +172,6 @@ void DataFrame::append( const DataFrame &_other )
                 "Append: Number of undefined floats does not match!" );
         }
 
-    if ( undefined_integers_.size() != _other.undefined_integers_.size() )
-        {
-            throw std::invalid_argument(
-                "Append: Number of undefined integers does not match!" );
-        }
-
     if ( undefined_strings_.size() != _other.undefined_strings_.size() )
         {
             throw std::invalid_argument(
@@ -218,11 +208,6 @@ void DataFrame::append( const DataFrame &_other )
     for ( size_t i = 0; i < undefined_floats_.size(); ++i )
         {
             undefined_floats_[i].append( _other.undefined_float( i ) );
-        }
-
-    for ( size_t i = 0; i < undefined_integers_.size(); ++i )
-        {
-            undefined_integers_[i].append( _other.undefined_integer( i ) );
         }
 
     for ( size_t i = 0; i < undefined_strings_.size(); ++i )
@@ -283,13 +268,6 @@ void DataFrame::check_plausibility() const
             return mat.nrows() != expected_nrows;
         } );
 
-    const bool any_undef_int_does_not_match = std::any_of(
-        undefined_integers_.begin(),
-        undefined_integers_.end(),
-        [expected_nrows]( const Column<Int> &mat ) {
-            return mat.nrows() != expected_nrows;
-        } );
-
     const bool any_undef_string_does_not_match = std::any_of(
         undefined_strings_.begin(),
         undefined_strings_.end(),
@@ -303,7 +281,7 @@ void DataFrame::check_plausibility() const
         any_categorical_does_not_match || any_join_key_does_not_match ||
         any_numerical_does_not_match || any_target_does_not_match ||
         any_time_stamp_does_not_match || any_undef_float_does_not_match ||
-        any_undef_int_does_not_match || any_undef_string_does_not_match;
+        any_undef_string_does_not_match;
 
     if ( any_mismatch )
         {
@@ -328,7 +306,6 @@ std::vector<std::string> DataFrame::concat_colnames(
     const std::vector<std::string> &_target_names,
     const std::vector<std::string> &_time_stamp_names,
     const std::vector<std::string> &_undefined_float_names,
-    const std::vector<std::string> &_undefined_integer_names,
     const std::vector<std::string> &_undefined_string_names ) const
 {
     auto all_colnames = std::vector<std::string>( 0 );
@@ -356,11 +333,6 @@ std::vector<std::string> DataFrame::concat_colnames(
         all_colnames.end(),
         _undefined_float_names.begin(),
         _undefined_float_names.end() );
-
-    all_colnames.insert(
-        all_colnames.end(),
-        _undefined_integer_names.begin(),
-        _undefined_integer_names.end() );
 
     all_colnames.insert(
         all_colnames.end(),
@@ -448,7 +420,6 @@ void DataFrame::from_csv(
     const std::vector<std::string> &_target_names,
     const std::vector<std::string> &_time_stamp_names,
     const std::vector<std::string> &_undefined_float_names,
-    const std::vector<std::string> &_undefined_integer_names,
     const std::vector<std::string> &_undefined_string_names )
 {
     // ------------------------------------------------------------------------
@@ -484,9 +455,6 @@ void DataFrame::from_csv(
     auto undefined_floats =
         make_vectors<Float>( _undefined_float_names.size() );
 
-    auto undefined_integers =
-        make_vectors<Int>( _undefined_integer_names.size() );
-
     auto undefined_strings =
         make_vectors<strings::String>( _undefined_string_names.size() );
 
@@ -500,7 +468,6 @@ void DataFrame::from_csv(
         _target_names,
         _time_stamp_names,
         _undefined_float_names,
-        _undefined_integer_names,
         _undefined_string_names );
 
     auto colname_indices = std::vector<size_t>( 0 );
@@ -541,20 +508,6 @@ void DataFrame::from_csv(
             }
 
         return static_cast<Float>( NAN );
-    };
-
-    // ------------------------------------------------------------------------
-    // Define lambda expressions for parsing integers.
-
-    const auto to_int = []( const std::string &_str ) {
-        auto [val, success] = csv::Parser::to_int( _str );
-
-        if ( success )
-            {
-                return val;
-            }
-
-        return static_cast<Int>( 0 );
     };
 
     // ------------------------------------------------------------------------
@@ -603,9 +556,6 @@ void DataFrame::from_csv(
             for ( auto &vec : undefined_floats )
                 vec->push_back( to_double( line[colname_indices[col++]] ) );
 
-            for ( auto &vec : undefined_integers )
-                vec->push_back( to_int( line[colname_indices[col++]] ) );
-
             for ( auto &vec : undefined_strings )
                 vec->emplace_back(
                     strings::String( line[colname_indices[col++]] ) );
@@ -629,9 +579,6 @@ void DataFrame::from_csv(
 
     df.add_float_vectors(
         _undefined_float_names, undefined_floats, "undefined_float" );
-
-    df.add_int_vectors(
-        _undefined_integer_names, undefined_integers, "undefined_integer" );
 
     df.add_string_vectors( _undefined_string_names, undefined_strings );
 
@@ -659,7 +606,6 @@ void DataFrame::from_csv(
     const std::vector<std::string> &_target_names,
     const std::vector<std::string> &_time_stamp_names,
     const std::vector<std::string> &_undefined_floats,
-    const std::vector<std::string> &_undefined_integers,
     const std::vector<std::string> &_undefined_strings )
 {
     auto df = containers::DataFrame( name(), categories_, join_keys_encoding_ );
@@ -680,7 +626,6 @@ void DataFrame::from_csv(
                 _target_names,
                 _time_stamp_names,
                 _undefined_floats,
-                _undefined_integers,
                 _undefined_strings );
 
             if ( i == 0 )
@@ -707,7 +652,6 @@ void DataFrame::from_db(
     const std::vector<std::string> &_target_names,
     const std::vector<std::string> &_time_stamp_names,
     const std::vector<std::string> &_undefined_float_names,
-    const std::vector<std::string> &_undefined_integer_names,
     const std::vector<std::string> &_undefined_string_names )
 {
     // ----------------------------------------
@@ -725,9 +669,6 @@ void DataFrame::from_db(
     auto undefined_floats =
         make_vectors<Float>( _undefined_float_names.size() );
 
-    auto undefined_integers =
-        make_vectors<Int>( _undefined_integer_names.size() );
-
     auto undefined_strings =
         make_vectors<strings::String>( _undefined_string_names.size() );
 
@@ -740,7 +681,6 @@ void DataFrame::from_db(
         _target_names,
         _time_stamp_names,
         _undefined_float_names,
-        _undefined_integer_names,
         _undefined_string_names );
 
     // ----------------------------------------
@@ -768,9 +708,6 @@ void DataFrame::from_db(
             for ( auto &vec : undefined_floats )
                 vec->push_back( iterator->get_double() );
 
-            for ( auto &vec : undefined_integers )
-                vec->push_back( iterator->get_int() );
-
             for ( auto &vec : undefined_strings )
                 vec->emplace_back( strings::String( iterator->get_string() ) );
         }
@@ -791,9 +728,6 @@ void DataFrame::from_db(
 
     df.add_float_vectors(
         _undefined_float_names, undefined_floats, "undefined_float" );
-
-    df.add_int_vectors(
-        _undefined_integer_names, undefined_integers, "undefined_integer" );
 
     df.add_string_vectors( _undefined_string_names, undefined_strings );
 
@@ -819,7 +753,6 @@ void DataFrame::from_json(
     const std::vector<std::string> &_target_names,
     const std::vector<std::string> &_time_stamp_names,
     const std::vector<std::string> &_undefined_float_names,
-    const std::vector<std::string> &_undefined_integer_names,
     const std::vector<std::string> &_undefined_string_names )
 {
     // ----------------------------------------
@@ -838,8 +771,6 @@ void DataFrame::from_json(
     df.from_json( _obj, _time_stamp_names, _time_formats );
 
     df.from_json( _obj, _undefined_float_names, "undefined_float" );
-
-    df.from_json( _obj, _undefined_integer_names, "undefined_integer" );
 
     df.from_json( _obj, _undefined_string_names, "undefined_string" );
 
@@ -917,21 +848,7 @@ void DataFrame::from_json(
 
             const auto arr = JSON::get_array( _obj, name );
 
-            if ( _role == "undefined_integer" )
-                {
-                    auto column = Column<Int>( arr->size() );
-
-                    for ( size_t j = 0; j < arr->size(); ++j )
-                        {
-                            column[j] = arr->getElement<Int>(
-                                static_cast<unsigned int>( j ) );
-                        }
-
-                    column.set_name( _names[i] );
-
-                    add_int_column( column, _role );
-                }
-            else if ( _role == "undefined_string" )
+            if ( _role == "undefined_string" )
                 {
                     auto column = Column<strings::String>( arr->size() );
 
@@ -1158,8 +1075,6 @@ Poco::JSON::Object DataFrame::get_colnames()
 
     obj.set( "undefined_floats_", get_colnames( undefined_floats_ ) );
 
-    obj.set( "undefined_integers_", get_colnames( undefined_integers_ ) );
-
     obj.set( "undefined_strings_", get_colnames( undefined_strings_ ) );
 
     // ----------------------------------------
@@ -1271,21 +1186,6 @@ Poco::JSON::Object DataFrame::get_content(
                         }
                 }
 
-            for ( size_t j = 0; j < num_undefined_integers(); ++j )
-                {
-                    const auto val = undefined_integer( j )[i];
-
-                    if ( val == std::numeric_limits<Int>::lowest() )
-                        {
-                            row->add( std::string( "NULL" ) );
-                        }
-                    else
-                        {
-                            row->add( to_string( static_cast<Float>(
-                                undefined_integer( j )[i] ) ) );
-                        }
-                }
-
             for ( size_t j = 0; j < num_undefined_strings(); ++j )
                 {
                     row->add( undefined_string( j )[i].str() );
@@ -1351,12 +1251,6 @@ std::string DataFrame::get_string( const std::int32_t _n ) const
         {
             colnames.push_back( undefined_float( j ).name() );
             roles.push_back( "undefined float" );
-        }
-
-    for ( size_t j = 0; j < num_undefined_integers(); ++j )
-        {
-            colnames.push_back( undefined_integer( j ).name() );
-            roles.push_back( "undefined integer" );
         }
 
     for ( size_t j = 0; j < num_undefined_strings(); ++j )
@@ -1489,10 +1383,6 @@ const Column<Int> &DataFrame::int_column(
         {
             return join_key( _num );
         }
-    else if ( _role == "undefined_integer" )
-        {
-            return undefined_integer( _num );
-        }
 
     throw std::invalid_argument( "Role '" + _role + "' not known!" );
 }
@@ -1509,10 +1399,6 @@ const Column<Int> &DataFrame::int_column(
     else if ( _role == "join_key" )
         {
             return join_key( _name );
-        }
-    else if ( _role == "undefined_integer" )
-        {
-            return undefined_integer( _name );
         }
 
     throw std::invalid_argument( "Role '" + _role + "' not known!" );
@@ -1556,8 +1442,6 @@ void DataFrame::load( const std::string &_path )
 
     undefined_floats_ = load_matrices<Float>( _path, "undefined_float_" );
 
-    undefined_integers_ = load_matrices<Int>( _path, "undefined_integer_" );
-
     undefined_strings_ =
         load_matrices<strings::String>( _path, "undefined_string_" );
 
@@ -1586,8 +1470,6 @@ ULong DataFrame::nbytes() const
 
     nbytes += calc_nbytes( undefined_floats_ );
 
-    nbytes += calc_nbytes( undefined_integers_ );
-
     nbytes += calc_nbytes( undefined_strings_ );
 
     return nbytes;
@@ -1600,10 +1482,6 @@ const size_t DataFrame::nrows() const
     if ( undefined_floats_.size() > 0 )
         {
             return undefined_floats_[0].nrows();
-        }
-    else if ( undefined_integers_.size() > 0 )
-        {
-            return undefined_integers_[0].nrows();
         }
     else if ( undefined_strings_.size() > 0 )
         {
@@ -1663,10 +1541,6 @@ bool DataFrame::remove_column( const std::string &_name )
 
     if ( success ) return true;
 
-    success = rm_col( _name, &undefined_integers_ );
-
-    if ( success ) return true;
-
     success = rm_col( _name, &undefined_strings_ );
 
     if ( success ) return true;
@@ -1699,8 +1573,6 @@ void DataFrame::save( const std::string &_path, const std::string &_name )
     save_matrices( time_stamps_, tpath, "time_stamp_" );
 
     save_matrices( undefined_floats_, tpath, "undefined_float_" );
-
-    save_matrices( undefined_integers_, tpath, "undefined_integer_" );
 
     save_matrices( undefined_strings_, tpath, "undefined_string_" );
 
@@ -1754,8 +1626,6 @@ Poco::JSON::Object DataFrame::to_monitor() const
 
     obj.set( "num_undefined_floats_", num_undefined_floats() );
 
-    obj.set( "num_undefined_integers_", num_undefined_integers() );
-
     obj.set( "num_undefined_strings_", num_undefined_strings() );
 
     obj.set( "numerical_", get_colnames( numericals_ ) );
@@ -1769,8 +1639,6 @@ Poco::JSON::Object DataFrame::to_monitor() const
     obj.set( "time_stamps_", get_colnames( time_stamps_ ) );
 
     obj.set( "undefined_floats_", get_colnames( undefined_floats_ ) );
-
-    obj.set( "undefined_integers_", get_colnames( undefined_integers_ ) );
 
     obj.set( "undefined_strings_", get_colnames( undefined_strings_ ) );
 
@@ -1837,13 +1705,6 @@ void DataFrame::where( const std::vector<bool> &_condition )
         {
             df.add_float_column(
                 undefined_float( i ).where( _condition ), "undefined_float" );
-        }
-
-    for ( size_t i = 0; i < num_undefined_integers(); ++i )
-        {
-            df.add_int_column(
-                undefined_integer( i ).where( _condition ),
-                "undefined_integer" );
         }
 
     for ( size_t i = 0; i < num_undefined_strings(); ++i )

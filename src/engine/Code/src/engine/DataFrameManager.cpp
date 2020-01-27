@@ -239,34 +239,11 @@ void DataFrameManager::add_column_to_df(
     containers::DataFrame* _df,
     multithreading::WeakWriteLock* _weak_write_lock )
 {
-    if ( _role == "undefined_integer" )
-        {
-            // ---------------------------------------------------------
+    license_checker().check_mem_size( data_frames(), _col.nbytes() );
 
-            auto int_col = _col.to_int_column();
+    if ( _weak_write_lock ) _weak_write_lock->upgrade();
 
-            int_col.set_name( _col.name() );
-
-            // ---------------------------------------------------------
-
-            license_checker().check_mem_size( data_frames(), int_col.nbytes() );
-
-            // ---------------------------------------------------------
-
-            if ( _weak_write_lock ) _weak_write_lock->upgrade();
-
-            _df->add_int_column( int_col, _role );
-
-            // ---------------------------------------------------------
-        }
-    else
-        {
-            license_checker().check_mem_size( data_frames(), _col.nbytes() );
-
-            if ( _weak_write_lock ) _weak_write_lock->upgrade();
-
-            _df->add_float_column( _col, _role );
-        }
+    _df->add_float_column( _col, _role );
 }
 
 // ------------------------------------------------------------------------
@@ -525,23 +502,10 @@ void DataFrameManager::calc_categorical_column_plots(
 
     if ( target_name != "" )
         {
-            if ( target_role == "undefined_integer" )
-                {
-                    const auto target_col =
-                        df.int_column( target_name, target_role )
-                            .to_float_column();
+            const auto target_col = df.float_column( target_name, target_role );
 
-                    targets = std::vector<Float>(
-                        target_col.begin(), target_col.end() );
-                }
-            else
-                {
-                    const auto target_col =
-                        df.float_column( target_name, target_role );
-
-                    targets = std::vector<Float>(
-                        target_col.begin(), target_col.end() );
-                }
+            targets =
+                std::vector<Float>( target_col.begin(), target_col.end() );
         }
 
     // --------------------------------------------------------------------
@@ -601,18 +565,7 @@ void DataFrameManager::calc_column_plots(
 
     const auto& df = utils::Getter::get( df_name, data_frames() );
 
-    auto col = containers::Column<Float>();
-
-    if ( role == "undefined_integer" )
-        {
-            const auto int_col = df.int_column( _name, role );
-
-            col = int_col.to_float_column();
-        }
-    else
-        {
-            col = df.float_column( _name, role );
-        }
+    const auto col = df.float_column( _name, role );
 
     // --------------------------------------------------------------------
 
@@ -622,17 +575,7 @@ void DataFrameManager::calc_column_plots(
 
     if ( target_name != "" )
         {
-            if ( target_role == "undefined_integer" )
-                {
-                    const auto int_col =
-                        df.int_column( target_name, target_role );
-
-                    target_col = int_col.to_float_column();
-                }
-            else
-                {
-                    target_col = df.float_column( target_name, target_role );
-                }
+            target_col = df.float_column( target_name, target_role );
 
             targets.push_back( target_col.data() );
         }
@@ -702,9 +645,6 @@ void DataFrameManager::from_csv(
     const auto undefined_floats = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "undefined_floats_" ) );
 
-    const auto undefined_integers = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "undefined_integers_" ) );
-
     const auto undefined_strings = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "undefined_strings_" ) );
 
@@ -737,7 +677,6 @@ void DataFrameManager::from_csv(
         targets,
         time_stamps,
         undefined_floats,
-        undefined_integers,
         undefined_strings );
 
     license_checker().check_mem_size( data_frames(), df.nbytes() );
@@ -807,9 +746,6 @@ void DataFrameManager::from_db(
     const auto undefined_floats = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "undefined_floats_" ) );
 
-    const auto undefined_integers = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "undefined_integers_" ) );
-
     const auto undefined_strings = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "undefined_strings_" ) );
 
@@ -842,7 +778,6 @@ void DataFrameManager::from_db(
         targets,
         time_stamps,
         undefined_floats,
-        undefined_integers,
         undefined_strings );
 
     license_checker().check_mem_size( data_frames(), df.nbytes() );
@@ -926,12 +861,6 @@ void DataFrameManager::from_json(
                   JSON::get_array( _cmd, "undefined_floats_" ) )
             : std::vector<std::string>();
 
-    const auto undefined_integers =
-        _cmd.has( "undefined_integers_" )
-            ? JSON::array_to_vector<std::string>(
-                  JSON::get_array( _cmd, "undefined_integers_" ) )
-            : std::vector<std::string>();
-
     const auto undefined_strings =
         _cmd.has( "undefined_strings_" )
             ? JSON::array_to_vector<std::string>(
@@ -967,7 +896,6 @@ void DataFrameManager::from_json(
         targets,
         time_stamps,
         undefined_floats,
-        undefined_integers,
         undefined_strings );
 
     license_checker().check_mem_size( data_frames(), df.nbytes() );

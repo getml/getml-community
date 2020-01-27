@@ -50,12 +50,6 @@ std::vector<std::string> DataFrameReader::make_colnames(
             colnames.push_back( colname );
         }
 
-    for ( size_t i = 0; i < _df.num_undefined_integers(); ++i )
-        {
-            const auto& colname = _df.undefined_integer( i ).name();
-            colnames.push_back( colname );
-        }
-
     for ( size_t i = 0; i < _df.num_undefined_strings(); ++i )
         {
             const auto& colname = _df.undefined_string( i ).name();
@@ -129,11 +123,6 @@ std::vector<csv::Datatype> DataFrameReader::make_coltypes(
                 }
         }
 
-    for ( size_t i = 0; i < _df.num_undefined_integers(); ++i )
-        {
-            coltypes.push_back( csv::Datatype::integer );
-        }
-
     for ( size_t i = 0; i < _df.num_undefined_strings(); ++i )
         {
             coltypes.push_back( csv::Datatype::string );
@@ -204,12 +193,6 @@ std::vector<std::string> DataFrameReader::next_line()
                 result[col++] = df_.to_time_stamp( val );
             else
                 result[col++] = std::to_string( val );
-        }
-
-    for ( size_t i = 0; i < df_.num_undefined_integers(); ++i )
-        {
-            const auto& val = df_.undefined_integer( i )[rownum_];
-            result[col++] = std::to_string( val );
         }
 
     for ( size_t i = 0; i < df_.num_undefined_strings(); ++i )

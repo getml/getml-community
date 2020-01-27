@@ -89,20 +89,6 @@ void DataFrameJoiner::add_all(
                 "undefined_float" );
         }
 
-    for ( size_t i = 0; i < _df.num_undefined_integers(); ++i )
-        {
-            if ( _joined_df->has( _df.undefined_integer( i ).name() ) )
-                {
-                    throw std::invalid_argument(
-                        "Duplicate column: '" +
-                        _df.undefined_integer( i ).name() + "'." );
-                }
-
-            _joined_df->add_int_column(
-                _df.undefined_integer( i ).sort_by_key( _rindices ),
-                "undefined_integer" );
-        }
-
     for ( size_t i = 0; i < _df.num_undefined_strings(); ++i )
         {
             if ( _joined_df->has( _df.undefined_string( i ).name() ) )
@@ -192,17 +178,6 @@ void DataFrameJoiner::add_col(
             auto col = _df.undefined_float( _name ).sort_by_key( _rindices );
             col.set_name( _as );
             _joined_df->add_float_column( col, _role );
-        }
-    else if ( _role == "undefined_integer" )
-        {
-            if ( _joined_df->has( _as ) )
-                {
-                    throw std::invalid_argument(
-                        "Duplicate column: '" + _name + "'." );
-                }
-            auto col = _df.undefined_integer( _name ).sort_by_key( _rindices );
-            col.set_name( _as );
-            _joined_df->add_int_column( col, _role );
         }
     else if ( _role == "undefined_string" )
         {

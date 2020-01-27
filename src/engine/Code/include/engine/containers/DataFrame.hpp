@@ -71,7 +71,6 @@ class DataFrame
         const std::vector<std::string> &_target_names,
         const std::vector<std::string> &_time_stamp_names,
         const std::vector<std::string> &_undefined_float_names,
-        const std::vector<std::string> &_undefined_integer_names,
         const std::vector<std::string> &_undefined_string_names );
 
     /// Builds a dataframe from a table in the data base.
@@ -84,7 +83,6 @@ class DataFrame
         const std::vector<std::string> &_target_names,
         const std::vector<std::string> &_time_stamp_names,
         const std::vector<std::string> &_undefined_float_names,
-        const std::vector<std::string> &_undefined_integer_names,
         const std::vector<std::string> &_undefined_string_names );
 
     /// Builds a dataframe from a query.
@@ -107,7 +105,6 @@ class DataFrame
         const std::vector<std::string> &_targets,
         const std::vector<std::string> &_time_stamps,
         const std::vector<std::string> &_undefined_float_names,
-        const std::vector<std::string> &_undefined_integer_names,
         const std::vector<std::string> &_undefined_string_names );
 
     /// Returns the encodings as a property tree
@@ -207,7 +204,7 @@ class DataFrame
         return has_categorical( _name ) || has_join_key( _name ) ||
                has_numerical( _name ) || has_target( _name ) ||
                has_time_stamp( _name ) || has_undefined_float( _name ) ||
-               has_undefined_integer( _name ) || has_undefined_string( _name );
+               has_undefined_string( _name );
     }
 
     /// Whether the DataFrame has a categorical column named _name.
@@ -286,20 +283,6 @@ class DataFrame
         for ( size_t i = 0; i < num_undefined_floats(); ++i )
             {
                 if ( undefined_float( i ).name() == _name )
-                    {
-                        return true;
-                    }
-            }
-
-        return false;
-    }
-
-    /// Whether the DataFrame has an undefined int column named _name.
-    bool has_undefined_integer( const std::string &_name ) const
-    {
-        for ( size_t i = 0; i < num_undefined_integers(); ++i )
-            {
-                if ( undefined_integer( i ).name() == _name )
                     {
                         return true;
                     }
@@ -405,10 +388,9 @@ class DataFrame
     /// Get the number of columns.
     const size_t ncols() const
     {
-        return undefined_floats_.size() + undefined_integers_.size() +
-               undefined_strings_.size() + join_keys_.size() +
-               time_stamps_.size() + categoricals_.size() + numericals_.size() +
-               targets_.size();
+        return undefined_floats_.size() + undefined_strings_.size() +
+               join_keys_.size() + time_stamps_.size() + categoricals_.size() +
+               numericals_.size() + targets_.size();
     }
 
     /// Returns number of categorical columns.
@@ -430,12 +412,6 @@ class DataFrame
     size_t const num_undefined_floats() const
     {
         return undefined_floats_.size();
-    }
-
-    /// Returns number of undefined integer columns.
-    size_t const num_undefined_integers() const
-    {
-        return undefined_integers_.size();
     }
 
     /// Returns number of undefined string columns.
@@ -591,36 +567,6 @@ class DataFrame
         typename T,
         typename std::enable_if<!std::is_same<T, std::string>::value, int>::
             type = 0>
-    const Column<Int> &undefined_integer( const T _i ) const
-    {
-        assert_true( undefined_integers_.size() > 0 );
-        assert_true( _i >= 0 );
-        assert_true( _i < static_cast<T>( undefined_integers_.size() ) );
-
-        return undefined_integers_[_i];
-    }
-
-    /// Trivial accessor
-    const Column<Int> &undefined_integer( const std::string &_name ) const
-    {
-        for ( size_t i = 0; i < num_undefined_integers(); ++i )
-            {
-                if ( undefined_integer( i ).name() == _name )
-                    {
-                        return undefined_integer( i );
-                    }
-            }
-
-        throw std::invalid_argument(
-            "Data frame '" + name_ +
-            "' contains no undefined integer column named '" + _name + "'!" );
-    }
-
-    /// Trivial accessor
-    template <
-        typename T,
-        typename std::enable_if<!std::is_same<T, std::string>::value, int>::
-            type = 0>
     const Column<strings::String> &undefined_string( const T _i ) const
     {
         assert_true( undefined_strings_.size() > 0 );
@@ -684,7 +630,6 @@ class DataFrame
         const std::vector<std::string> &_target_names,
         const std::vector<std::string> &_time_stamp_names,
         const std::vector<std::string> &_undefined_float_names,
-        const std::vector<std::string> &_undefined_integer_names,
         const std::vector<std::string> &_undefined_string_names ) const;
 
     /// Builds a dataframe from a CSV file.
@@ -699,7 +644,6 @@ class DataFrame
         const std::vector<std::string> &_target_names,
         const std::vector<std::string> &_time_stamp_names,
         const std::vector<std::string> &_undefined_float_names,
-        const std::vector<std::string> &_undefined_integer_names,
         const std::vector<std::string> &_undefined_string_names );
 
     /// Parses int columns.
@@ -791,10 +735,6 @@ class DataFrame
     /// "Undefined" floats - undefined means that
     /// no explicit role has been set yet.
     std::vector<Column<Float>> undefined_floats_;
-
-    /// "Undefined" integers - undefined means that
-    /// no explicit role has been set yet.
-    std::vector<Column<Int>> undefined_integers_;
 
     /// "Undefined" strings - undefined means that
     /// no explicit role has been set yet.
