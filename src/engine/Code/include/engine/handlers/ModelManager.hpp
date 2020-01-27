@@ -608,7 +608,7 @@ void ModelManager<ModelType>::send_data(
 
             const auto type = JSON::get_value<std::string>( cmd, "type_" );
 
-            if ( type == "Column.get" )
+            if ( type == "FloatColumn.get" )
                 {
                     local_data_frame_manager.get_column( name, cmd, _socket );
                 }
