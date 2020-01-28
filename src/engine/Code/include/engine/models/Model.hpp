@@ -453,7 +453,7 @@ DataFrameType Model<FeatureEngineererType>::extract_df(
     std::vector<typename DataFrameType::FloatColumnType> numericals;
 
     const auto is_int = []( const Float val ) {
-        return val == std::round( val );
+        return std::isnan( val ) || val == std::round( val );
     };
 
     for ( size_t i = 0; i < df.num_numericals(); ++i )
