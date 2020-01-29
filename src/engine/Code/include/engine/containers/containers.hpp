@@ -51,6 +51,8 @@
 // ----------------------------------------------------
 // Module files
 
+#include "engine/containers/Optional.hpp"
+
 #include "engine/containers/CategoricalFeatures.hpp"
 #include "engine/containers/Features.hpp"
 

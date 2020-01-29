@@ -12,7 +12,7 @@ namespace featureengineerers
 struct FeatureEngineererParser
 {
     /// Returns the correct feature engineerer
-    static std::shared_ptr<AbstractFeatureEngineerer> parse(
+    static containers::Optional<AbstractFeatureEngineerer> parse(
         const Poco::JSON::Object& _cmd,
         const std::shared_ptr<const std::vector<strings::String>>&
             _categories );
