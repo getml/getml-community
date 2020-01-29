@@ -25,6 +25,8 @@
 
 #include "engine/containers/containers.hpp"
 
+#include "engine/featureengineerers/featureengineerers.hpp"
+
 #include "engine/handlers/handlers.hpp"
 
 #include "engine/srv/srv.hpp"
