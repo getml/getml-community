@@ -141,8 +141,8 @@ std::string StatementMaker::make_statement_python(
 {
     assert_true( _colnames.size() == _datatypes.size() );
 
-    Poco::JSON::Array udef_floats;
-    Poco::JSON::Array udef_strings;
+    Poco::JSON::Array float_cols;
+    Poco::JSON::Array string_cols;
 
     for ( size_t i = 0; i < _colnames.size(); ++i )
         {
@@ -150,19 +150,19 @@ std::string StatementMaker::make_statement_python(
                 {
                     case Datatype::double_precision:
                     case Datatype::integer:
-                        udef_floats.add( _colnames[i] );
+                        float_cols.add( _colnames[i] );
                         break;
 
                     default:
-                        udef_strings.add( _colnames[i] );
+                        string_cols.add( _colnames[i] );
                         break;
                 }
         }
 
     Poco::JSON::Object obj;
 
-    obj.set( "udef_floats", udef_floats );
-    obj.set( "udef_strings", udef_strings );
+    obj.set( "float_cols", float_cols );
+    obj.set( "string_cols", string_cols );
 
     return jsonutils::JSON::stringify( obj );
 }
