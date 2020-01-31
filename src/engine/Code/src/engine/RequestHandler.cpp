@@ -71,6 +71,10 @@ void RequestHandler::run()
                 {
                     database_manager().sniff_csv( name, cmd, &socket() );
                 }
+            else if ( type == "Database.sniff_table" )
+                {
+                    database_manager().sniff_table( name, &socket() );
+                }
             else if ( type == "DataFrame" )
                 {
                     project_manager().add_data_frame( name, &socket() );

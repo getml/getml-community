@@ -36,7 +36,7 @@ class Postgres : public Connector
     /// Returns the types of the table columns.
     std::vector<csv::Datatype> get_coltypes(
         const std::string& _table,
-        const std::vector<std::string>& _colnames ) const;
+        const std::vector<std::string>& _colnames ) const final;
 
     /// Returns the content of a table in a format that is compatible
     /// with the DataTables.js server-side processing API.
