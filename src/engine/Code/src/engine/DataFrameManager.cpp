@@ -38,7 +38,7 @@ void DataFrameManager::add_categorical_column(
 
     // ------------------------------------------------------------------------
 
-    if ( role == "undefined_string" )
+    if ( role == "unused" )
         {
             add_string_column( name, vec, &df, &weak_write_lock, _socket );
             return;
@@ -135,7 +135,7 @@ void DataFrameManager::add_categorical_column(
             col = communication::Receiver::recv_categorical_column(
                 join_keys_encoding_.get(), _socket );
         }
-    else if ( role == "undefined_string" )
+    else if ( role == "unused" )
         {
             const auto str_col =
                 communication::Receiver::recv_string_column( _socket );
@@ -145,8 +145,8 @@ void DataFrameManager::add_categorical_column(
     else
         {
             throw std::runtime_error(
-                "A categorical column must either have the role categorical or "
-                "join key" );
+                "A categorical column must have the role categorical, "
+                "join key or unused." );
         }
 
     col.set_name( name );
@@ -480,7 +480,7 @@ void DataFrameManager::calc_categorical_column_plots(
                     vec[i] = join_keys_encoding()[col[i]];
                 }
         }
-    else if ( role == "undefined_string" )
+    else if ( role == "unused" )
         {
             const auto col = df.undefined_string( _name );
 

@@ -21,7 +21,7 @@ void DataFrame::add_float_column(
         {
             add_column( _col, &time_stamps_ );
         }
-    else if ( _role == "undefined_float" )
+    else if ( _role == "unused" )
         {
             add_column( _col, &undefined_floats_ );
         }
@@ -374,7 +374,7 @@ const Column<Float> &DataFrame::float_column(
         {
             return time_stamp( _num );
         }
-    else if ( _role == "undefined_float" )
+    else if ( _role == "unused" )
         {
             return undefined_float( _num );
         }
@@ -399,7 +399,7 @@ const Column<Float> &DataFrame::float_column(
         {
             return time_stamp( _name );
         }
-    else if ( _role == "undefined_float" )
+    else if ( _role == "unused" )
         {
             return undefined_float( _name );
         }
@@ -577,8 +577,7 @@ void DataFrame::from_csv(
 
     df.add_float_vectors( _time_stamp_names, time_stamps, "time_stamp" );
 
-    df.add_float_vectors(
-        _undefined_float_names, undefined_floats, "undefined_float" );
+    df.add_float_vectors( _undefined_float_names, undefined_floats, "unused" );
 
     df.add_string_vectors( _undefined_string_names, undefined_strings );
 
@@ -726,8 +725,7 @@ void DataFrame::from_db(
 
     df.add_float_vectors( _time_stamp_names, time_stamps, "time_stamp" );
 
-    df.add_float_vectors(
-        _undefined_float_names, undefined_floats, "undefined_float" );
+    df.add_float_vectors( _undefined_float_names, undefined_floats, "unused" );
 
     df.add_string_vectors( _undefined_string_names, undefined_strings );
 
@@ -770,9 +768,9 @@ void DataFrame::from_json(
 
     df.from_json( _obj, _time_stamp_names, _time_formats );
 
-    df.from_json( _obj, _undefined_float_names, "undefined_float" );
+    df.from_json( _obj, _undefined_float_names, "unused" );
 
-    df.from_json( _obj, _undefined_string_names, "undefined_string" );
+    df.from_json( _obj, _undefined_string_names, "unused" );
 
     // ----------------------------------------
 
@@ -848,7 +846,7 @@ void DataFrame::from_json(
 
             const auto arr = JSON::get_array( _obj, name );
 
-            if ( _role == "undefined_string" )
+            if ( _role == "unused" )
                 {
                     auto column = Column<strings::String>( arr->size() );
 
@@ -1250,13 +1248,13 @@ std::string DataFrame::get_string( const std::int32_t _n ) const
     for ( size_t j = 0; j < num_undefined_floats(); ++j )
         {
             colnames.push_back( undefined_float( j ).name() );
-            roles.push_back( "undefined float" );
+            roles.push_back( "unused" );
         }
 
     for ( size_t j = 0; j < num_undefined_strings(); ++j )
         {
             colnames.push_back( undefined_string( j ).name() );
-            roles.push_back( "undefined string" );
+            roles.push_back( "unused" );
         }
 
     assert_true( colnames.size() == roles.size() );
