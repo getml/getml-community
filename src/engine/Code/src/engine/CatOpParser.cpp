@@ -167,7 +167,7 @@ std::vector<std::string> CatOpParser::parse(
                     return to_vec(
                         _join_keys_encoding, it->int_column( name, role ) );
                 }
-            else if ( role == "undefined_string" )
+            else if ( role == "unused" )
                 {
                     return to_vec( it->undefined_string( name ) );
                 }

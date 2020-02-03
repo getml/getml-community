@@ -1702,7 +1702,7 @@ void DataFrame::where( const std::vector<bool> &_condition )
     for ( size_t i = 0; i < num_undefined_floats(); ++i )
         {
             df.add_float_column(
-                undefined_float( i ).where( _condition ), "undefined_float" );
+                undefined_float( i ).where( _condition ), "unused" );
         }
 
     for ( size_t i = 0; i < num_undefined_strings(); ++i )
