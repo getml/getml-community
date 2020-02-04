@@ -221,7 +221,7 @@ class DataFrameManager
         multithreading::WeakWriteLock* _weak_write_lock );
 
     /// Adds a string column to the data frame.
-    /// This could only be an undefined string,
+    /// This could only be an unused string,
     /// because all others are encoded.
     void add_string_column(
         const std::string& _name,
