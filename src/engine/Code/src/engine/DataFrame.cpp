@@ -766,9 +766,9 @@ void DataFrame::from_json(
 
     df.from_json( _obj, _time_stamp_names, _time_formats );
 
-    df.from_json( _obj, _unused_float_names, "unused" );
+    df.from_json( _obj, _unused_float_names, "unused_float" );
 
-    df.from_json( _obj, _unused_string_names, "unused" );
+    df.from_json( _obj, _unused_string_names, "unused_string" );
 
     // ----------------------------------------
 
@@ -844,7 +844,7 @@ void DataFrame::from_json(
 
             const auto arr = JSON::get_array( _obj, name );
 
-            if ( _role == "unused" )
+            if ( _role == "unused_string" )
                 {
                     auto column = Column<strings::String>( arr->size() );
 
