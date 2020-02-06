@@ -1071,6 +1071,50 @@ void DataFrameManager::get_categorical_column(
 
 // ------------------------------------------------------------------------
 
+void DataFrameManager::get_categorical_column_string(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    const auto json_col = *JSON::get_object( _cmd, "col_" );
+
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    const auto df = utils::Getter::get( _name, &data_frames() );
+
+    const auto col = CatOpParser::parse(
+        *categories_, *join_keys_encoding_, {df}, json_col );
+
+    std::string col_str = "StringColumn([";
+
+    const auto length = std::min( col.size(), static_cast<size_t>( 20 ) );
+
+    for ( size_t i = 0; i < length; ++i )
+        {
+            col_str += "'";
+            col_str += col[i];
+            col_str += "'";
+
+            if ( i < length - 1 )
+                {
+                    col_str += ", ";
+                }
+        }
+
+    if ( length != col.size() )
+        {
+            col_str += ",...";
+        }
+
+    col_str += "])";
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    communication::Sender::send_string( col_str, _socket );
+}
+
+// ------------------------------------------------------------------------
+
 void DataFrameManager::get_column(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,

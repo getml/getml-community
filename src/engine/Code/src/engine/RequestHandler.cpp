@@ -374,6 +374,11 @@ void RequestHandler::run()
                     data_frame_manager().get_categorical_column(
                         name, cmd, &socket() );
                 }
+            else if ( type == "StringColumn.get_string" )
+                {
+                    data_frame_manager().get_categorical_column_string(
+                        name, cmd, &socket() );
+                }
             else if ( type == "StringColumn.set_unit" )
                 {
                     data_frame_manager().set_unit_categorical(
