@@ -31,6 +31,11 @@ void RequestHandler::run()
                     data_frame_manager().get_boolean_column(
                         name, cmd, &socket() );
                 }
+            if ( type == "BooleanColumn.get_string" )
+                {
+                    data_frame_manager().get_boolean_column_string(
+                        name, cmd, &socket() );
+                }
             else if ( type == "Database.drop_table" )
                 {
                     database_manager().drop_table( name, &socket() );
