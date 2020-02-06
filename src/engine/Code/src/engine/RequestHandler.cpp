@@ -197,6 +197,11 @@ void RequestHandler::run()
                 {
                     data_frame_manager().get_column( name, cmd, &socket() );
                 }
+            else if ( type == "FloatColumn.get_string" )
+                {
+                    data_frame_manager().get_column_string(
+                        name, cmd, &socket() );
+                }
             else if ( type == "FloatColumn.set_unit" )
                 {
                     data_frame_manager().set_unit( name, cmd, &socket() );
