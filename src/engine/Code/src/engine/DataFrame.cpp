@@ -21,9 +21,9 @@ void DataFrame::add_float_column(
         {
             add_column( _col, &time_stamps_ );
         }
-    else if ( _role == "undefined_float" )
+    else if ( _role == "unused" || _role == "unused_float" )
         {
-            add_column( _col, &undefined_floats_ );
+            add_column( _col, &unused_floats_ );
         }
     else
         {
@@ -107,7 +107,7 @@ void DataFrame::add_int_vectors(
 
 void DataFrame::add_string_column( const Column<strings::String> &_col )
 {
-    add_column( _col, &undefined_strings_ );
+    add_column( _col, &unused_strings_ );
 }
 
 // ----------------------------------------------------------------------------
@@ -166,16 +166,16 @@ void DataFrame::append( const DataFrame &_other )
                 "Append: Number of time stamps does not match!" );
         }
 
-    if ( undefined_floats_.size() != _other.undefined_floats_.size() )
+    if ( unused_floats_.size() != _other.unused_floats_.size() )
         {
             throw std::invalid_argument(
-                "Append: Number of undefined floats does not match!" );
+                "Append: Number of unused floats does not match!" );
         }
 
-    if ( undefined_strings_.size() != _other.undefined_strings_.size() )
+    if ( unused_strings_.size() != _other.unused_strings_.size() )
         {
             throw std::invalid_argument(
-                "Append: Number of undefined integers does not match!" );
+                "Append: Number of unused integers does not match!" );
         }
 
     // -------------------------------------------------------------------------
@@ -205,14 +205,14 @@ void DataFrame::append( const DataFrame &_other )
             time_stamps_[i].append( _other.time_stamp( i ) );
         }
 
-    for ( size_t i = 0; i < undefined_floats_.size(); ++i )
+    for ( size_t i = 0; i < unused_floats_.size(); ++i )
         {
-            undefined_floats_[i].append( _other.undefined_float( i ) );
+            unused_floats_[i].append( _other.unused_float( i ) );
         }
 
-    for ( size_t i = 0; i < undefined_strings_.size(); ++i )
+    for ( size_t i = 0; i < unused_strings_.size(); ++i )
         {
-            undefined_strings_[i].append( _other.undefined_string( i ) );
+            unused_strings_[i].append( _other.unused_string( i ) );
         }
 
     // -------------------------------------------------------------------------
@@ -262,15 +262,15 @@ void DataFrame::check_plausibility() const
         } );
 
     const bool any_undef_float_does_not_match = std::any_of(
-        undefined_floats_.begin(),
-        undefined_floats_.end(),
+        unused_floats_.begin(),
+        unused_floats_.end(),
         [expected_nrows]( const Column<Float> &mat ) {
             return mat.nrows() != expected_nrows;
         } );
 
     const bool any_undef_string_does_not_match = std::any_of(
-        undefined_strings_.begin(),
-        undefined_strings_.end(),
+        unused_strings_.begin(),
+        unused_strings_.end(),
         [expected_nrows]( const Column<strings::String> &mat ) {
             return mat.nrows() != expected_nrows;
         } );
@@ -305,8 +305,8 @@ std::vector<std::string> DataFrame::concat_colnames(
     const std::vector<std::string> &_numerical_names,
     const std::vector<std::string> &_target_names,
     const std::vector<std::string> &_time_stamp_names,
-    const std::vector<std::string> &_undefined_float_names,
-    const std::vector<std::string> &_undefined_string_names ) const
+    const std::vector<std::string> &_unused_float_names,
+    const std::vector<std::string> &_unused_string_names ) const
 {
     auto all_colnames = std::vector<std::string>( 0 );
 
@@ -331,13 +331,13 @@ std::vector<std::string> DataFrame::concat_colnames(
 
     all_colnames.insert(
         all_colnames.end(),
-        _undefined_float_names.begin(),
-        _undefined_float_names.end() );
+        _unused_float_names.begin(),
+        _unused_float_names.end() );
 
     all_colnames.insert(
         all_colnames.end(),
-        _undefined_string_names.begin(),
-        _undefined_string_names.end() );
+        _unused_string_names.begin(),
+        _unused_string_names.end() );
 
     return all_colnames;
 }
@@ -374,9 +374,9 @@ const Column<Float> &DataFrame::float_column(
         {
             return time_stamp( _num );
         }
-    else if ( _role == "undefined_float" )
+    else if ( _role == "unused" || _role == "unused_float" )
         {
-            return undefined_float( _num );
+            return unused_float( _num );
         }
 
     throw std::invalid_argument( "Role '" + _role + "' not known!" );
@@ -399,9 +399,9 @@ const Column<Float> &DataFrame::float_column(
         {
             return time_stamp( _name );
         }
-    else if ( _role == "undefined_float" )
+    else if ( _role == "unused" || _role == "unused_float" )
         {
-            return undefined_float( _name );
+            return unused_float( _name );
         }
 
     throw std::invalid_argument( "Role '" + _role + "' not known!" );
@@ -419,8 +419,8 @@ void DataFrame::from_csv(
     const std::vector<std::string> &_numerical_names,
     const std::vector<std::string> &_target_names,
     const std::vector<std::string> &_time_stamp_names,
-    const std::vector<std::string> &_undefined_float_names,
-    const std::vector<std::string> &_undefined_string_names )
+    const std::vector<std::string> &_unused_float_names,
+    const std::vector<std::string> &_unused_string_names )
 {
     // ------------------------------------------------------------------------
 
@@ -452,11 +452,10 @@ void DataFrame::from_csv(
 
     auto time_stamps = make_vectors<Float>( _time_stamp_names.size() );
 
-    auto undefined_floats =
-        make_vectors<Float>( _undefined_float_names.size() );
+    auto unused_floats = make_vectors<Float>( _unused_float_names.size() );
 
-    auto undefined_strings =
-        make_vectors<strings::String>( _undefined_string_names.size() );
+    auto unused_strings =
+        make_vectors<strings::String>( _unused_string_names.size() );
 
     // ------------------------------------------------------------------------
     // Define column_indices.
@@ -467,8 +466,8 @@ void DataFrame::from_csv(
         _numerical_names,
         _target_names,
         _time_stamp_names,
-        _undefined_float_names,
-        _undefined_string_names );
+        _unused_float_names,
+        _unused_string_names );
 
     auto colname_indices = std::vector<size_t>( 0 );
 
@@ -553,10 +552,10 @@ void DataFrame::from_csv(
             for ( auto &vec : time_stamps )
                 vec->push_back( to_double( line[colname_indices[col++]] ) );
 
-            for ( auto &vec : undefined_floats )
+            for ( auto &vec : unused_floats )
                 vec->push_back( to_double( line[colname_indices[col++]] ) );
 
-            for ( auto &vec : undefined_strings )
+            for ( auto &vec : unused_strings )
                 vec->emplace_back(
                     strings::String( line[colname_indices[col++]] ) );
 
@@ -577,10 +576,9 @@ void DataFrame::from_csv(
 
     df.add_float_vectors( _time_stamp_names, time_stamps, "time_stamp" );
 
-    df.add_float_vectors(
-        _undefined_float_names, undefined_floats, "undefined_float" );
+    df.add_float_vectors( _unused_float_names, unused_floats, "unused" );
 
-    df.add_string_vectors( _undefined_string_names, undefined_strings );
+    df.add_string_vectors( _unused_string_names, unused_strings );
 
     // ------------------------------------------------------------------------
 
@@ -605,8 +603,8 @@ void DataFrame::from_csv(
     const std::vector<std::string> &_numerical_names,
     const std::vector<std::string> &_target_names,
     const std::vector<std::string> &_time_stamp_names,
-    const std::vector<std::string> &_undefined_floats,
-    const std::vector<std::string> &_undefined_strings )
+    const std::vector<std::string> &_unused_floats,
+    const std::vector<std::string> &_unused_strings )
 {
     auto df = containers::DataFrame( name(), categories_, join_keys_encoding_ );
 
@@ -625,8 +623,8 @@ void DataFrame::from_csv(
                 _numerical_names,
                 _target_names,
                 _time_stamp_names,
-                _undefined_floats,
-                _undefined_strings );
+                _unused_floats,
+                _unused_strings );
 
             if ( i == 0 )
                 {
@@ -651,8 +649,8 @@ void DataFrame::from_db(
     const std::vector<std::string> &_numerical_names,
     const std::vector<std::string> &_target_names,
     const std::vector<std::string> &_time_stamp_names,
-    const std::vector<std::string> &_undefined_float_names,
-    const std::vector<std::string> &_undefined_string_names )
+    const std::vector<std::string> &_unused_float_names,
+    const std::vector<std::string> &_unused_string_names )
 {
     // ----------------------------------------
 
@@ -666,11 +664,10 @@ void DataFrame::from_db(
 
     auto time_stamps = make_vectors<Float>( _time_stamp_names.size() );
 
-    auto undefined_floats =
-        make_vectors<Float>( _undefined_float_names.size() );
+    auto unused_floats = make_vectors<Float>( _unused_float_names.size() );
 
-    auto undefined_strings =
-        make_vectors<strings::String>( _undefined_string_names.size() );
+    auto unused_strings =
+        make_vectors<strings::String>( _unused_string_names.size() );
 
     // ----------------------------------------
 
@@ -680,8 +677,8 @@ void DataFrame::from_db(
         _numerical_names,
         _target_names,
         _time_stamp_names,
-        _undefined_float_names,
-        _undefined_string_names );
+        _unused_float_names,
+        _unused_string_names );
 
     // ----------------------------------------
 
@@ -705,10 +702,10 @@ void DataFrame::from_db(
             for ( auto &vec : time_stamps )
                 vec->push_back( iterator->get_time_stamp() );
 
-            for ( auto &vec : undefined_floats )
+            for ( auto &vec : unused_floats )
                 vec->push_back( iterator->get_double() );
 
-            for ( auto &vec : undefined_strings )
+            for ( auto &vec : unused_strings )
                 vec->emplace_back( strings::String( iterator->get_string() ) );
         }
 
@@ -726,10 +723,9 @@ void DataFrame::from_db(
 
     df.add_float_vectors( _time_stamp_names, time_stamps, "time_stamp" );
 
-    df.add_float_vectors(
-        _undefined_float_names, undefined_floats, "undefined_float" );
+    df.add_float_vectors( _unused_float_names, unused_floats, "unused" );
 
-    df.add_string_vectors( _undefined_string_names, undefined_strings );
+    df.add_string_vectors( _unused_string_names, unused_strings );
 
     // ----------------------------------------
 
@@ -752,8 +748,8 @@ void DataFrame::from_json(
     const std::vector<std::string> &_numerical_names,
     const std::vector<std::string> &_target_names,
     const std::vector<std::string> &_time_stamp_names,
-    const std::vector<std::string> &_undefined_float_names,
-    const std::vector<std::string> &_undefined_string_names )
+    const std::vector<std::string> &_unused_float_names,
+    const std::vector<std::string> &_unused_string_names )
 {
     // ----------------------------------------
 
@@ -770,9 +766,9 @@ void DataFrame::from_json(
 
     df.from_json( _obj, _time_stamp_names, _time_formats );
 
-    df.from_json( _obj, _undefined_float_names, "undefined_float" );
+    df.from_json( _obj, _unused_float_names, "unused_float" );
 
-    df.from_json( _obj, _undefined_string_names, "undefined_string" );
+    df.from_json( _obj, _unused_string_names, "unused_string" );
 
     // ----------------------------------------
 
@@ -848,7 +844,7 @@ void DataFrame::from_json(
 
             const auto arr = JSON::get_array( _obj, name );
 
-            if ( _role == "undefined_string" )
+            if ( _role == "unused_string" )
                 {
                     auto column = Column<strings::String>( arr->size() );
 
@@ -1073,9 +1069,9 @@ Poco::JSON::Object DataFrame::get_colnames()
 
     obj.set( "time_stamps_", get_colnames( time_stamps_ ) );
 
-    obj.set( "undefined_floats_", get_colnames( undefined_floats_ ) );
+    obj.set( "unused_floats_", get_colnames( unused_floats_ ) );
 
-    obj.set( "undefined_strings_", get_colnames( undefined_strings_ ) );
+    obj.set( "unused_strings_", get_colnames( unused_strings_ ) );
 
     // ----------------------------------------
 
@@ -1172,23 +1168,22 @@ Poco::JSON::Object DataFrame::get_content(
                         }
                 }
 
-            for ( size_t j = 0; j < num_undefined_floats(); ++j )
+            for ( size_t j = 0; j < num_unused_floats(); ++j )
                 {
-                    if ( undefined_float( j ).unit().find( "time stamp" ) !=
+                    if ( unused_float( j ).unit().find( "time stamp" ) !=
                          std::string::npos )
                         {
-                            row->add(
-                                to_time_stamp( undefined_float( j )[i] ) );
+                            row->add( to_time_stamp( unused_float( j )[i] ) );
                         }
                     else
                         {
-                            row->add( to_string( undefined_float( j )[i] ) );
+                            row->add( to_string( unused_float( j )[i] ) );
                         }
                 }
 
-            for ( size_t j = 0; j < num_undefined_strings(); ++j )
+            for ( size_t j = 0; j < num_unused_strings(); ++j )
                 {
-                    row->add( undefined_string( j )[i].str() );
+                    row->add( unused_string( j )[i].str() );
                 }
 
             data->add( row );
@@ -1247,16 +1242,16 @@ std::string DataFrame::get_string( const std::int32_t _n ) const
             roles.push_back( "numerical" );
         }
 
-    for ( size_t j = 0; j < num_undefined_floats(); ++j )
+    for ( size_t j = 0; j < num_unused_floats(); ++j )
         {
-            colnames.push_back( undefined_float( j ).name() );
-            roles.push_back( "undefined float" );
+            colnames.push_back( unused_float( j ).name() );
+            roles.push_back( "unused" );
         }
 
-    for ( size_t j = 0; j < num_undefined_strings(); ++j )
+    for ( size_t j = 0; j < num_unused_strings(); ++j )
         {
-            colnames.push_back( undefined_string( j ).name() );
-            roles.push_back( "undefined string" );
+            colnames.push_back( unused_string( j ).name() );
+            roles.push_back( "unused" );
         }
 
     assert_true( colnames.size() == roles.size() );
@@ -1440,10 +1435,9 @@ void DataFrame::load( const std::string &_path )
 
     time_stamps_ = load_matrices<Float>( _path, "time_stamp_" );
 
-    undefined_floats_ = load_matrices<Float>( _path, "undefined_float_" );
+    unused_floats_ = load_matrices<Float>( _path, "unused_float_" );
 
-    undefined_strings_ =
-        load_matrices<strings::String>( _path, "undefined_string_" );
+    unused_strings_ = load_matrices<strings::String>( _path, "unused_string_" );
 
     // ---------------------------------------------------------------------
 
@@ -1468,9 +1462,9 @@ ULong DataFrame::nbytes() const
 
     nbytes += calc_nbytes( time_stamps_ );
 
-    nbytes += calc_nbytes( undefined_floats_ );
+    nbytes += calc_nbytes( unused_floats_ );
 
-    nbytes += calc_nbytes( undefined_strings_ );
+    nbytes += calc_nbytes( unused_strings_ );
 
     return nbytes;
 }
@@ -1479,13 +1473,13 @@ ULong DataFrame::nbytes() const
 
 const size_t DataFrame::nrows() const
 {
-    if ( undefined_floats_.size() > 0 )
+    if ( unused_floats_.size() > 0 )
         {
-            return undefined_floats_[0].nrows();
+            return unused_floats_[0].nrows();
         }
-    else if ( undefined_strings_.size() > 0 )
+    else if ( unused_strings_.size() > 0 )
         {
-            return undefined_strings_[0].nrows();
+            return unused_strings_[0].nrows();
         }
     else if ( join_keys_.size() > 0 )
         {
@@ -1537,11 +1531,11 @@ bool DataFrame::remove_column( const std::string &_name )
 
     if ( success ) return true;
 
-    success = rm_col( _name, &undefined_floats_ );
+    success = rm_col( _name, &unused_floats_ );
 
     if ( success ) return true;
 
-    success = rm_col( _name, &undefined_strings_ );
+    success = rm_col( _name, &unused_strings_ );
 
     if ( success ) return true;
 
@@ -1572,9 +1566,9 @@ void DataFrame::save( const std::string &_path, const std::string &_name )
 
     save_matrices( time_stamps_, tpath, "time_stamp_" );
 
-    save_matrices( undefined_floats_, tpath, "undefined_float_" );
+    save_matrices( unused_floats_, tpath, "unused_float_" );
 
-    save_matrices( undefined_strings_, tpath, "undefined_string_" );
+    save_matrices( unused_strings_, tpath, "unused_string_" );
 
     // ---------------------------------------------------------------------
     // If the path already exists, delete it to avoid
@@ -1624,9 +1618,9 @@ Poco::JSON::Object DataFrame::to_monitor() const
 
     obj.set( "num_time_stamps_", num_time_stamps() );
 
-    obj.set( "num_undefined_floats_", num_undefined_floats() );
+    obj.set( "num_unused_floats_", num_unused_floats() );
 
-    obj.set( "num_undefined_strings_", num_undefined_strings() );
+    obj.set( "num_unused_strings_", num_unused_strings() );
 
     obj.set( "numerical_", get_colnames( numericals_ ) );
 
@@ -1638,9 +1632,9 @@ Poco::JSON::Object DataFrame::to_monitor() const
 
     obj.set( "time_stamps_", get_colnames( time_stamps_ ) );
 
-    obj.set( "undefined_floats_", get_colnames( undefined_floats_ ) );
+    obj.set( "unused_floats_", get_colnames( unused_floats_ ) );
 
-    obj.set( "undefined_strings_", get_colnames( undefined_strings_ ) );
+    obj.set( "unused_strings_", get_colnames( unused_strings_ ) );
 
     // ---------------------------------------------------------------------
 
@@ -1701,15 +1695,15 @@ void DataFrame::where( const std::vector<bool> &_condition )
                 time_stamp( i ).where( _condition ), "time_stamp" );
         }
 
-    for ( size_t i = 0; i < num_undefined_floats(); ++i )
+    for ( size_t i = 0; i < num_unused_floats(); ++i )
         {
             df.add_float_column(
-                undefined_float( i ).where( _condition ), "undefined_float" );
+                unused_float( i ).where( _condition ), "unused" );
         }
 
-    for ( size_t i = 0; i < num_undefined_strings(); ++i )
+    for ( size_t i = 0; i < num_unused_strings(); ++i )
         {
-            df.add_string_column( undefined_string( i ).where( _condition ) );
+            df.add_string_column( unused_string( i ).where( _condition ) );
         }
 
     df.create_indices();
