@@ -20,6 +20,9 @@ class AggOpParser
           df_( _df ),
           join_keys_encoding_( _join_keys_encoding )
     {
+        assert_true( categories_ );
+        assert_true( df_ );
+        assert_true( join_keys_encoding_ );
     }
 
     AggOpParser(
@@ -30,7 +33,11 @@ class AggOpParser
           df_( std::make_shared<const std::vector<containers::DataFrame>>(
               _df ) ),
           join_keys_encoding_( _join_keys_encoding )
+
     {
+        assert_true( categories_ );
+        assert_true( df_ );
+        assert_true( join_keys_encoding_ );
     }
 
     ~AggOpParser() = default;

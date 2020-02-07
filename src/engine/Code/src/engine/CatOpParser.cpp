@@ -37,7 +37,8 @@ std::vector<std::string> CatOpParser::boolean_to_string(
     const auto obj = *JSON::get_object( _col, "operand1_" );
 
     const auto operand1 =
-        BoolOpParser( categories_, join_keys_encoding_, df_ ).parse( obj );
+        BoolOpParser( categories_, join_keys_encoding_, df_, num_elem_ )
+            .parse( obj );
 
     auto result = std::vector<std::string>( operand1.size() );
 
@@ -65,7 +66,8 @@ std::vector<std::string> CatOpParser::numerical_to_string(
     const auto obj = *JSON::get_object( _col, "operand1_" );
 
     const auto operand1 =
-        NumOpParser( categories_, join_keys_encoding_, df_ ).parse( obj );
+        NumOpParser( categories_, join_keys_encoding_, df_, num_elem_ )
+            .parse( obj );
 
     const auto role = obj.has( "role_" )
                           ? JSON::get_value<std::string>( obj, "role_" )
@@ -166,9 +168,7 @@ std::vector<std::string> CatOpParser::parse( const Poco::JSON::Object& _col )
         {
             const auto val = JSON::get_value<std::string>( _col, "value_" );
 
-            assert_true( df_->size() > 0 );
-
-            auto vec = std::vector<std::string>( ( *df_ )[0].nrows() );
+            auto vec = std::vector<std::string>( num_elem_ );
 
             std::fill( vec.begin(), vec.end(), val );
 
@@ -251,7 +251,7 @@ std::vector<std::string> CatOpParser::update( const Poco::JSON::Object& _col )
     const auto operand2 = parse( *JSON::get_object( _col, "operand2_" ) );
 
     const auto condition =
-        BoolOpParser( categories_, join_keys_encoding_, df_ )
+        BoolOpParser( categories_, join_keys_encoding_, df_, num_elem_ )
             .parse( *JSON::get_object( _col, "condition_" ) );
 
     assert_true( operand1.size() == operand2.size() );

@@ -15,22 +15,32 @@ class NumOpParser
     NumOpParser(
         const std::shared_ptr<const containers::Encoding>& _categories,
         const std::shared_ptr<const containers::Encoding>& _join_keys_encoding,
-        const std::shared_ptr<const std::vector<containers::DataFrame>>& _df )
+        const std::shared_ptr<const std::vector<containers::DataFrame>>& _df,
+        const size_t _num_elem )
         : categories_( _categories ),
           df_( _df ),
-          join_keys_encoding_( _join_keys_encoding )
+          join_keys_encoding_( _join_keys_encoding ),
+          num_elem_( _num_elem )
     {
+        assert_true( categories_ );
+        assert_true( df_ );
+        assert_true( join_keys_encoding_ );
     }
 
     NumOpParser(
         const std::shared_ptr<const containers::Encoding>& _categories,
         const std::shared_ptr<const containers::Encoding>& _join_keys_encoding,
-        const std::vector<containers::DataFrame>& _df )
+        const std::vector<containers::DataFrame>& _df,
+        const size_t _num_elem )
         : categories_( _categories ),
           df_( std::make_shared<const std::vector<containers::DataFrame>>(
               _df ) ),
-          join_keys_encoding_( _join_keys_encoding )
+          join_keys_encoding_( _join_keys_encoding ),
+          num_elem_( _num_elem )
     {
+        assert_true( categories_ );
+        assert_true( df_ );
+        assert_true( join_keys_encoding_ );
     }
 
     ~NumOpParser() = default;
@@ -50,6 +60,9 @@ class NumOpParser
 
     /// Transforms a boolean column to a float column.
     containers::Column<Float> boolean_to_num( const Poco::JSON::Object& _col );
+
+    /// Returns an actual column.
+    containers::Column<Float> get_column( const Poco::JSON::Object& _col );
 
     /// Transforms a string column to a float.
     containers::Column<Float> to_num( const Poco::JSON::Object& _col );
@@ -151,6 +164,10 @@ class NumOpParser
 
     /// Encodes the join keys used.
     const std::shared_ptr<const containers::Encoding> join_keys_encoding_;
+
+    /// The number of elements required (must not be greater than the number of
+    /// rows in df)
+    const size_t num_elem_;
 
     // ------------------------------------------------------------------------
 };

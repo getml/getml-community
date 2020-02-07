@@ -15,22 +15,32 @@ class CatOpParser
     CatOpParser(
         const std::shared_ptr<const containers::Encoding>& _categories,
         const std::shared_ptr<const containers::Encoding>& _join_keys_encoding,
-        const std::shared_ptr<const std::vector<containers::DataFrame>>& _df )
+        const std::shared_ptr<const std::vector<containers::DataFrame>>& _df,
+        const size_t _num_elem )
         : categories_( _categories ),
           df_( _df ),
-          join_keys_encoding_( _join_keys_encoding )
+          join_keys_encoding_( _join_keys_encoding ),
+          num_elem_( _num_elem )
     {
+        assert_true( categories_ );
+        assert_true( df_ );
+        assert_true( join_keys_encoding_ );
     }
 
     CatOpParser(
         const std::shared_ptr<const containers::Encoding>& _categories,
         const std::shared_ptr<const containers::Encoding>& _join_keys_encoding,
-        const std::vector<containers::DataFrame>& _df )
+        const std::vector<containers::DataFrame>& _df,
+        const size_t _num_elem )
         : categories_( _categories ),
           df_( std::make_shared<const std::vector<containers::DataFrame>>(
               _df ) ),
-          join_keys_encoding_( _join_keys_encoding )
+          join_keys_encoding_( _join_keys_encoding ),
+          num_elem_( _num_elem )
     {
+        assert_true( categories_ );
+        assert_true( df_ );
+        assert_true( join_keys_encoding_ );
     }
 
     ~CatOpParser() = default;
@@ -107,11 +117,13 @@ class CatOpParser
         const containers::Column<Int>& _col,
         const containers::Encoding& _encoding )
     {
-        auto result = std::vector<std::string>( _col.nrows() );
+        assert_true( _col.size() >= num_elem_ );
+
+        auto result = std::vector<std::string>( num_elem_ );
 
         std::transform(
             _col.begin(),
-            _col.end(),
+            _col.begin() + num_elem_,
             result.begin(),
             [_encoding]( const Int val ) { return _encoding[val].str(); } );
 
@@ -122,11 +134,13 @@ class CatOpParser
     std::vector<std::string> to_vec(
         const containers::Column<strings::String>& _col )
     {
-        auto result = std::vector<std::string>( _col.nrows() );
+        assert_true( _col.size() >= num_elem_ );
+
+        auto result = std::vector<std::string>( num_elem_ );
 
         std::transform(
             _col.begin(),
-            _col.end(),
+            _col.begin() + num_elem_,
             result.begin(),
             []( const strings::String& val ) { return val.str(); } );
 
@@ -144,6 +158,10 @@ class CatOpParser
 
     /// Encodes the join keys used.
     const std::shared_ptr<const containers::Encoding> join_keys_encoding_;
+
+    /// The number of elements required (must not be greater than the number of
+    /// rows in df)
+    const size_t num_elem_;
 
     // ------------------------------------------------------------------------
 };

@@ -62,7 +62,8 @@ containers::Column<Float> NumOpParser::boolean_to_num(
     const auto obj = *JSON::get_object( _col, "operand1_" );
 
     const auto operand1 =
-        BoolOpParser( categories_, join_keys_encoding_, df_ ).parse( obj );
+        BoolOpParser( categories_, join_keys_encoding_, df_, num_elem_ )
+            .parse( obj );
 
     auto result = containers::Column<Float>( operand1.size() );
 
@@ -84,43 +85,64 @@ containers::Column<Float> NumOpParser::boolean_to_num(
 
 // ----------------------------------------------------------------------------
 
+containers::Column<Float> NumOpParser::get_column(
+    const Poco::JSON::Object& _col )
+{
+    const auto name = JSON::get_value<std::string>( _col, "name_" );
+
+    const auto role = JSON::get_value<std::string>( _col, "role_" );
+
+    const auto df_name = JSON::get_value<std::string>( _col, "df_name_" );
+
+    const auto has_df_name = [df_name]( const containers::DataFrame& df ) {
+        return df.name() == df_name;
+    };
+
+    const auto it = std::find_if( df_->begin(), df_->end(), has_df_name );
+
+    if ( it == df_->end() )
+        {
+            throw std::invalid_argument(
+                "Column '" + name + "' is from DataFrame '" + df_name + "'." );
+        }
+
+    if ( it->nrows() == num_elem_ )
+        {
+            return it->float_column( name, role );
+        }
+    else if ( it->nrows() >= num_elem_ )
+        {
+            const auto long_col = it->float_column( name, role );
+
+            auto col = containers::Column<Float>( num_elem_ );
+
+            std::copy(
+                long_col.begin(), long_col.begin() + num_elem_, col.begin() );
+
+            return col;
+        }
+    else
+        {
+            assert_true( false );
+            return containers::Column<Float>( 0 );
+        }
+}
+
+// ----------------------------------------------------------------------------
+
 containers::Column<Float> NumOpParser::parse( const Poco::JSON::Object& _col )
 {
     const auto type = JSON::get_value<std::string>( _col, "type_" );
 
     if ( type == "FloatColumn" )
         {
-            const auto name = JSON::get_value<std::string>( _col, "name_" );
-
-            const auto role = JSON::get_value<std::string>( _col, "role_" );
-
-            const auto df_name =
-                JSON::get_value<std::string>( _col, "df_name_" );
-
-            const auto has_df_name =
-                [df_name]( const containers::DataFrame& df ) {
-                    return df.name() == df_name;
-                };
-
-            const auto it =
-                std::find_if( df_->begin(), df_->end(), has_df_name );
-
-            if ( it == df_->end() )
-                {
-                    throw std::invalid_argument(
-                        "Column '" + name + "' is from DataFrame '" + df_name +
-                        "'." );
-                }
-
-            return it->float_column( name, role );
+            return get_column( _col );
         }
     else if ( type == "Value" )
         {
             const auto val = JSON::get_value<Float>( _col, "value_" );
 
-            assert_true( df_->size() > 0 );
-
-            auto col = containers::Column<Float>( ( *df_ )[0].nrows() );
+            auto col = containers::Column<Float>( num_elem_ );
 
             std::fill( col.begin(), col.end(), val );
 
@@ -146,8 +168,9 @@ containers::Column<Float> NumOpParser::parse( const Poco::JSON::Object& _col )
 
 containers::Column<Float> NumOpParser::to_num( const Poco::JSON::Object& _col )
 {
-    const auto operand1 = CatOpParser( categories_, join_keys_encoding_, df_ )
-                              .parse( *JSON::get_object( _col, "operand1_" ) );
+    const auto operand1 =
+        CatOpParser( categories_, join_keys_encoding_, df_, num_elem_ )
+            .parse( *JSON::get_object( _col, "operand1_" ) );
 
     auto result = containers::Column<Float>( operand1.size() );
 
@@ -176,8 +199,9 @@ containers::Column<Float> NumOpParser::to_ts( const Poco::JSON::Object& _col )
     const auto time_formats = JSON::array_to_vector<std::string>(
         JSON::get_array( _col, "time_formats_" ) );
 
-    const auto operand1 = CatOpParser( categories_, join_keys_encoding_, df_ )
-                              .parse( *JSON::get_object( _col, "operand1_" ) );
+    const auto operand1 =
+        CatOpParser( categories_, join_keys_encoding_, df_, num_elem_ )
+            .parse( *JSON::get_object( _col, "operand1_" ) );
 
     auto result = containers::Column<Float>( operand1.size() );
 
@@ -533,7 +557,7 @@ containers::Column<Float> NumOpParser::update( const Poco::JSON::Object& _col )
     const auto operand2 = parse( *JSON::get_object( _col, "operand2_" ) );
 
     const auto condition =
-        BoolOpParser( categories_, join_keys_encoding_, df_ )
+        BoolOpParser( categories_, join_keys_encoding_, df_, num_elem_ )
             .parse( *JSON::get_object( _col, "condition_" ) );
 
     assert_true( operand1.size() == operand2.size() );

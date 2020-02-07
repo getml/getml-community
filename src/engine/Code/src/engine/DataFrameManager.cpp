@@ -34,7 +34,8 @@ void DataFrameManager::add_categorical_column(
     // ------------------------------------------------------------------------
 
     const auto vec =
-        CatOpParser( categories_, join_keys_encoding_, {df} ).parse( json_col );
+        CatOpParser( categories_, join_keys_encoding_, {df}, df.nrows() )
+            .parse( json_col );
 
     // ------------------------------------------------------------------------
 
@@ -189,8 +190,8 @@ void DataFrameManager::add_column(
 
     // ------------------------------------------------------------------------
 
-    auto col =
-        NumOpParser( categories_, join_keys_encoding_, {df} ).parse( json_col );
+    auto col = NumOpParser( categories_, join_keys_encoding_, {df}, df.nrows() )
+                   .parse( json_col );
 
     col.set_name( name );
 
@@ -1042,8 +1043,9 @@ void DataFrameManager::get_boolean_column(
 
     const auto df = utils::Getter::get( _name, &data_frames() );
 
-    const auto col = BoolOpParser( categories_, join_keys_encoding_, {df} )
-                         .parse( json_col );
+    const auto col =
+        BoolOpParser( categories_, join_keys_encoding_, {df}, df.nrows() )
+            .parse( json_col );
 
     communication::Sender::send_string( "Found!", _socket );
 
@@ -1063,12 +1065,13 @@ void DataFrameManager::get_boolean_column_string(
 
     const auto df = utils::Getter::get( _name, &data_frames() );
 
-    const auto col = BoolOpParser( categories_, join_keys_encoding_, {df} )
-                         .parse( json_col );
+    const auto length = std::min( df.nrows(), static_cast<size_t>( 20 ) );
+
+    const auto col =
+        BoolOpParser( categories_, join_keys_encoding_, {df}, length )
+            .parse( json_col );
 
     std::string col_str = "BooleanColumn([";
-
-    const auto length = std::min( col.size(), static_cast<size_t>( 20 ) );
 
     for ( size_t i = 0; i < length; ++i )
         {
@@ -1087,7 +1090,7 @@ void DataFrameManager::get_boolean_column_string(
                 }
         }
 
-    if ( length != col.size() )
+    if ( length < df.nrows() )
         {
             col_str += ",...";
         }
@@ -1115,7 +1118,8 @@ void DataFrameManager::get_categorical_column(
     const auto df = utils::Getter::get( df_name, data_frames() );
 
     const auto col =
-        CatOpParser( categories_, join_keys_encoding_, {df} ).parse( json_col );
+        CatOpParser( categories_, join_keys_encoding_, {df}, df.nrows() )
+            .parse( json_col );
 
     communication::Sender::send_string( "Found!", _socket );
 
@@ -1135,12 +1139,13 @@ void DataFrameManager::get_categorical_column_string(
 
     const auto df = utils::Getter::get( _name, data_frames() );
 
+    const auto length = std::min( df.nrows(), static_cast<size_t>( 20 ) );
+
     const auto col =
-        CatOpParser( categories_, join_keys_encoding_, {df} ).parse( json_col );
+        CatOpParser( categories_, join_keys_encoding_, {df}, length )
+            .parse( json_col );
 
     std::string col_str = "StringColumn([";
-
-    const auto length = std::min( col.size(), static_cast<size_t>( 20 ) );
 
     for ( size_t i = 0; i < length; ++i )
         {
@@ -1154,7 +1159,7 @@ void DataFrameManager::get_categorical_column_string(
                 }
         }
 
-    if ( length != col.size() )
+    if ( length < df.nrows() )
         {
             col_str += ",...";
         }
@@ -1180,7 +1185,8 @@ void DataFrameManager::get_column(
     auto df = utils::Getter::get( _name, data_frames() );
 
     const auto col =
-        NumOpParser( categories_, join_keys_encoding_, {df} ).parse( json_col );
+        NumOpParser( categories_, join_keys_encoding_, {df}, df.nrows() )
+            .parse( json_col );
 
     communication::Sender::send_string( "Found!", _socket );
 
@@ -1200,12 +1206,13 @@ void DataFrameManager::get_column_string(
 
     auto df = utils::Getter::get( _name, data_frames() );
 
+    const auto length = std::min( df.nrows(), static_cast<size_t>( 20 ) );
+
     const auto col =
-        NumOpParser( categories_, join_keys_encoding_, {df} ).parse( json_col );
+        NumOpParser( categories_, join_keys_encoding_, {df}, length )
+            .parse( json_col );
 
     std::string col_str = "FloatColumn([";
-
-    const auto length = std::min( col.size(), static_cast<size_t>( 20 ) );
 
     for ( size_t i = 0; i < length; ++i )
         {
@@ -1217,7 +1224,7 @@ void DataFrameManager::get_column_string(
                 }
         }
 
-    if ( length != col.size() )
+    if ( length < df.nrows() )
         {
             col_str += ",...";
         }
@@ -1703,7 +1710,7 @@ void DataFrameManager::where(
     auto df = utils::Getter::get( _name, data_frames() );
 
     const auto condition =
-        BoolOpParser( categories_, join_keys_encoding_, {df} )
+        BoolOpParser( categories_, join_keys_encoding_, {df}, df.nrows() )
             .parse( condition_json );
 
     // --------------------------------------------------------------------
