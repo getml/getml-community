@@ -70,8 +70,8 @@ class DataFrame
         const std::vector<std::string> &_numerical_names,
         const std::vector<std::string> &_target_names,
         const std::vector<std::string> &_time_stamp_names,
-        const std::vector<std::string> &_undefined_float_names,
-        const std::vector<std::string> &_undefined_string_names );
+        const std::vector<std::string> &_unused_float_names,
+        const std::vector<std::string> &_unused_string_names );
 
     /// Builds a dataframe from a table in the data base.
     void from_db(
@@ -82,8 +82,8 @@ class DataFrame
         const std::vector<std::string> &_numerical_names,
         const std::vector<std::string> &_target_names,
         const std::vector<std::string> &_time_stamp_names,
-        const std::vector<std::string> &_undefined_float_names,
-        const std::vector<std::string> &_undefined_string_names );
+        const std::vector<std::string> &_unused_float_names,
+        const std::vector<std::string> &_unused_string_names );
 
     /// Builds a dataframe from a query.
     void from_query(
@@ -104,8 +104,8 @@ class DataFrame
         const std::vector<std::string> &_numericals,
         const std::vector<std::string> &_targets,
         const std::vector<std::string> &_time_stamps,
-        const std::vector<std::string> &_undefined_float_names,
-        const std::vector<std::string> &_undefined_string_names );
+        const std::vector<std::string> &_unused_float_names,
+        const std::vector<std::string> &_unused_string_names );
 
     /// Returns the encodings as a property tree
     Poco::JSON::Object get_colnames();
@@ -203,8 +203,8 @@ class DataFrame
     {
         return has_categorical( _name ) || has_join_key( _name ) ||
                has_numerical( _name ) || has_target( _name ) ||
-               has_time_stamp( _name ) || has_undefined_float( _name ) ||
-               has_undefined_string( _name );
+               has_time_stamp( _name ) || has_unused_float( _name ) ||
+               has_unused_string( _name );
     }
 
     /// Whether the DataFrame has a categorical column named _name.
@@ -277,12 +277,12 @@ class DataFrame
         return false;
     }
 
-    /// Whether the DataFrame has an undefined float column name _name.
-    bool has_undefined_float( const std::string &_name ) const
+    /// Whether the DataFrame has an unused float column name _name.
+    bool has_unused_float( const std::string &_name ) const
     {
-        for ( size_t i = 0; i < num_undefined_floats(); ++i )
+        for ( size_t i = 0; i < num_unused_floats(); ++i )
             {
-                if ( undefined_float( i ).name() == _name )
+                if ( unused_float( i ).name() == _name )
                     {
                         return true;
                     }
@@ -291,12 +291,12 @@ class DataFrame
         return false;
     }
 
-    /// Whether the DataFrame has an undefined string column named _name.
-    bool has_undefined_string( const std::string &_name ) const
+    /// Whether the DataFrame has an unused string column named _name.
+    bool has_unused_string( const std::string &_name ) const
     {
-        for ( size_t i = 0; i < num_undefined_strings(); ++i )
+        for ( size_t i = 0; i < num_unused_strings(); ++i )
             {
-                if ( undefined_string( i ).name() == _name )
+                if ( unused_string( i ).name() == _name )
                     {
                         return true;
                     }
@@ -388,7 +388,7 @@ class DataFrame
     /// Get the number of columns.
     const size_t ncols() const
     {
-        return undefined_floats_.size() + undefined_strings_.size() +
+        return unused_floats_.size() + unused_strings_.size() +
                join_keys_.size() + time_stamps_.size() + categoricals_.size() +
                numericals_.size() + targets_.size();
     }
@@ -408,17 +408,11 @@ class DataFrame
     /// Returns number of the time stamps.
     size_t const num_time_stamps() const { return time_stamps_.size(); }
 
-    /// Returns number of undefined float columns.
-    size_t const num_undefined_floats() const
-    {
-        return undefined_floats_.size();
-    }
+    /// Returns number of unused float columns.
+    size_t const num_unused_floats() const { return unused_floats_.size(); }
 
-    /// Returns number of undefined string columns.
-    size_t const num_undefined_strings() const
-    {
-        return undefined_strings_.size();
-    }
+    /// Returns number of unused string columns.
+    size_t const num_unused_strings() const { return unused_strings_.size(); }
 
     /// Trivial accessor
     template <
@@ -537,29 +531,29 @@ class DataFrame
         typename T,
         typename std::enable_if<!std::is_same<T, std::string>::value, int>::
             type = 0>
-    const Column<Float> &undefined_float( const T _i ) const
+    const Column<Float> &unused_float( const T _i ) const
     {
-        assert_true( undefined_floats_.size() > 0 );
+        assert_true( unused_floats_.size() > 0 );
         assert_true( _i >= 0 );
-        assert_true( _i < static_cast<T>( undefined_floats_.size() ) );
+        assert_true( _i < static_cast<T>( unused_floats_.size() ) );
 
-        return undefined_floats_[_i];
+        return unused_floats_[_i];
     }
 
     /// Trivial accessor
-    const Column<Float> &undefined_float( const std::string &_name ) const
+    const Column<Float> &unused_float( const std::string &_name ) const
     {
-        for ( size_t i = 0; i < num_undefined_floats(); ++i )
+        for ( size_t i = 0; i < num_unused_floats(); ++i )
             {
-                if ( undefined_float( i ).name() == _name )
+                if ( unused_float( i ).name() == _name )
                     {
-                        return undefined_float( i );
+                        return unused_float( i );
                     }
             }
 
         throw std::invalid_argument(
             "Data frame '" + name_ +
-            "' contains no undefined float column named '" + _name + "'!" );
+            "' contains no unused float column named '" + _name + "'!" );
     }
 
     /// Trivial accessor
@@ -567,30 +561,30 @@ class DataFrame
         typename T,
         typename std::enable_if<!std::is_same<T, std::string>::value, int>::
             type = 0>
-    const Column<strings::String> &undefined_string( const T _i ) const
+    const Column<strings::String> &unused_string( const T _i ) const
     {
-        assert_true( undefined_strings_.size() > 0 );
+        assert_true( unused_strings_.size() > 0 );
         assert_true( _i >= 0 );
-        assert_true( _i < static_cast<T>( undefined_strings_.size() ) );
+        assert_true( _i < static_cast<T>( unused_strings_.size() ) );
 
-        return undefined_strings_[_i];
+        return unused_strings_[_i];
     }
 
     /// Trivial accessor
-    const Column<strings::String> &undefined_string(
+    const Column<strings::String> &unused_string(
         const std::string &_name ) const
     {
-        for ( size_t i = 0; i < num_undefined_strings(); ++i )
+        for ( size_t i = 0; i < num_unused_strings(); ++i )
             {
-                if ( undefined_string( i ).name() == _name )
+                if ( unused_string( i ).name() == _name )
                     {
-                        return undefined_string( i );
+                        return unused_string( i );
                     }
             }
 
         throw std::invalid_argument(
             "Data frame '" + name_ +
-            "' contains no undefined string column named '" + _name + "'!" );
+            "' contains no unused string column named '" + _name + "'!" );
     }
 
     // -------------------------------
@@ -629,8 +623,8 @@ class DataFrame
         const std::vector<std::string> &_numerical_names,
         const std::vector<std::string> &_target_names,
         const std::vector<std::string> &_time_stamp_names,
-        const std::vector<std::string> &_undefined_float_names,
-        const std::vector<std::string> &_undefined_string_names ) const;
+        const std::vector<std::string> &_unused_float_names,
+        const std::vector<std::string> &_unused_string_names ) const;
 
     /// Builds a dataframe from a CSV file.
     void from_csv(
@@ -643,8 +637,8 @@ class DataFrame
         const std::vector<std::string> &_numerical_names,
         const std::vector<std::string> &_target_names,
         const std::vector<std::string> &_time_stamp_names,
-        const std::vector<std::string> &_undefined_float_names,
-        const std::vector<std::string> &_undefined_string_names );
+        const std::vector<std::string> &_unused_float_names,
+        const std::vector<std::string> &_unused_string_names );
 
     /// Parses int columns.
     void from_json(
@@ -732,13 +726,13 @@ class DataFrame
     /// Numerical data
     std::vector<Column<Float>> numericals_;
 
-    /// "Undefined" floats - undefined means that
+    /// "Undefined" floats - unused means that
     /// no explicit role has been set yet.
-    std::vector<Column<Float>> undefined_floats_;
+    std::vector<Column<Float>> unused_floats_;
 
-    /// "Undefined" strings - undefined means that
+    /// "Undefined" strings - unused means that
     /// no explicit role has been set yet.
-    std::vector<Column<strings::String>> undefined_strings_;
+    std::vector<Column<strings::String>> unused_strings_;
 
     /// Targets - only exists for population tables
     std::vector<Column<Float>> targets_;

@@ -75,6 +75,12 @@ class DatabaseManager
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket ) const;
 
+    /// Sniffs a table and generates suitable keyword arguments
+    /// to build a DataFrame.
+    void sniff_table(
+        const std::string& _table_name,
+        Poco::Net::StreamSocket* _socket ) const;
+
     // ------------------------------------------------------------------------
 
    public:

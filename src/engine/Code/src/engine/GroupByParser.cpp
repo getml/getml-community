@@ -126,7 +126,7 @@ containers::DataFrame GroupByParser::group_by(
                         unique,
                         index );
 
-                    result.add_float_column( col, "undefined_float" );
+                    result.add_float_column( col, "unused" );
                 }
             else
                 {
@@ -140,7 +140,7 @@ containers::DataFrame GroupByParser::group_by(
                         unique,
                         index );
 
-                    result.add_float_column( col, "undefined_float" );
+                    result.add_float_column( col, "unused" );
                 }
         }
 

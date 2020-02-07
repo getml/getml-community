@@ -295,5 +295,23 @@ void DatabaseManager::sniff_csv(
 }
 
 // ----------------------------------------------------------------------------
+
+void DatabaseManager::sniff_table(
+    const std::string& _table_name, Poco::Net::StreamSocket* _socket ) const
+{
+    if ( !connector_ )
+        {
+            throw std::invalid_argument( "No connector set!" );
+        }
+
+    const auto kwargs =
+        database::DatabaseSniffer::sniff( connector_, _table_name );
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    communication::Sender::send_string( kwargs, _socket );
+}
+
+// ----------------------------------------------------------------------------
 }  // namespace handlers
 }  // namespace engine

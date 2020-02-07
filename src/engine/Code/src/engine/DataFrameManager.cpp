@@ -38,7 +38,7 @@ void DataFrameManager::add_categorical_column(
 
     // ------------------------------------------------------------------------
 
-    if ( role == "undefined_string" )
+    if ( role == "unused" || role == "unused_string" )
         {
             add_string_column( name, vec, &df, &weak_write_lock, _socket );
             return;
@@ -135,7 +135,7 @@ void DataFrameManager::add_categorical_column(
             col = communication::Receiver::recv_categorical_column(
                 join_keys_encoding_.get(), _socket );
         }
-    else if ( role == "undefined_string" )
+    else if ( role == "unused" || role == "unused_string" )
         {
             const auto str_col =
                 communication::Receiver::recv_string_column( _socket );
@@ -145,8 +145,8 @@ void DataFrameManager::add_categorical_column(
     else
         {
             throw std::runtime_error(
-                "A categorical column must either have the role categorical or "
-                "join key" );
+                "A categorical column must have the role categorical, "
+                "join key or unused." );
         }
 
     col.set_name( name );
@@ -480,9 +480,9 @@ void DataFrameManager::calc_categorical_column_plots(
                     vec[i] = join_keys_encoding()[col[i]];
                 }
         }
-    else if ( role == "undefined_string" )
+    else if ( role == "unused" || role == "unused_string" )
         {
-            const auto col = df.undefined_string( _name );
+            const auto col = df.unused_string( _name );
 
             vec.resize( col.nrows() );
 
@@ -642,11 +642,11 @@ void DataFrameManager::from_csv(
     const auto time_stamps = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "time_stamps_" ) );
 
-    const auto undefined_floats = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "undefined_floats_" ) );
+    const auto unused_floats = JSON::array_to_vector<std::string>(
+        JSON::get_array( _cmd, "unused_floats_" ) );
 
-    const auto undefined_strings = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "undefined_strings_" ) );
+    const auto unused_strings = JSON::array_to_vector<std::string>(
+        JSON::get_array( _cmd, "unused_strings_" ) );
 
     // --------------------------------------------------------------------
     // We need the weak write lock for the categories and join keys encoding.
@@ -676,8 +676,8 @@ void DataFrameManager::from_csv(
         numericals,
         targets,
         time_stamps,
-        undefined_floats,
-        undefined_strings );
+        unused_floats,
+        unused_strings );
 
     license_checker().check_mem_size( data_frames(), df.nbytes() );
 
@@ -743,11 +743,11 @@ void DataFrameManager::from_db(
     const auto time_stamps = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "time_stamps_" ) );
 
-    const auto undefined_floats = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "undefined_floats_" ) );
+    const auto unused_floats = JSON::array_to_vector<std::string>(
+        JSON::get_array( _cmd, "unused_floats_" ) );
 
-    const auto undefined_strings = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "undefined_strings_" ) );
+    const auto unused_strings = JSON::array_to_vector<std::string>(
+        JSON::get_array( _cmd, "unused_strings_" ) );
 
     // --------------------------------------------------------------------
     // We need the weak write lock for the categories and join keys encoding.
@@ -777,8 +777,8 @@ void DataFrameManager::from_db(
         numericals,
         targets,
         time_stamps,
-        undefined_floats,
-        undefined_strings );
+        unused_floats,
+        unused_strings );
 
     license_checker().check_mem_size( data_frames(), df.nbytes() );
 
@@ -835,7 +835,7 @@ void DataFrameManager::from_json(
 
     // --------------------------------------------------------------------
     // Parse the command. Note that the JSON column from the HTTP endpoint
-    // does not necessarily include undefined columns - so we make the optional.
+    // does not necessarily include unused columns - so we make the optional.
 
     const auto categoricals = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "categoricals_" ) );
@@ -855,16 +855,16 @@ void DataFrameManager::from_json(
     const auto time_formats = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "time_formats_" ) );
 
-    const auto undefined_floats =
-        _cmd.has( "undefined_floats_" )
+    const auto unused_floats =
+        _cmd.has( "unused_floats_" )
             ? JSON::array_to_vector<std::string>(
-                  JSON::get_array( _cmd, "undefined_floats_" ) )
+                  JSON::get_array( _cmd, "unused_floats_" ) )
             : std::vector<std::string>();
 
-    const auto undefined_strings =
-        _cmd.has( "undefined_strings_" )
+    const auto unused_strings =
+        _cmd.has( "unused_strings_" )
             ? JSON::array_to_vector<std::string>(
-                  JSON::get_array( _cmd, "undefined_strings_" ) )
+                  JSON::get_array( _cmd, "unused_strings_" ) )
             : std::vector<std::string>();
 
     // --------------------------------------------------------------------
@@ -895,8 +895,8 @@ void DataFrameManager::from_json(
         numericals,
         targets,
         time_stamps,
-        undefined_floats,
-        undefined_strings );
+        unused_floats,
+        unused_strings );
 
     license_checker().check_mem_size( data_frames(), df.nbytes() );
 
