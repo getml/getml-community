@@ -7,14 +7,10 @@ namespace handlers
 // ----------------------------------------------------------------------------
 
 Float AggOpParser::categorical_aggregation(
-    const containers::Encoding& _categories,
-    const containers::Encoding& _join_keys_encoding,
-    const containers::DataFrame& _df,
-    const std::string& _type,
-    const Poco::JSON::Object& _json_col )
+    const std::string& _type, const Poco::JSON::Object& _json_col )
 {
-    const auto vec = CatOpParser::parse(
-        _categories, _join_keys_encoding, {_df}, _json_col );
+    const auto vec =
+        CatOpParser( categories_, join_keys_encoding_, df_ ).parse( _json_col );
 
     if ( _type == "count_categorical" )
         {
@@ -36,11 +32,7 @@ Float AggOpParser::categorical_aggregation(
 
 // ----------------------------------------------------------------------------
 
-Float AggOpParser::aggregate(
-    const std::shared_ptr<containers::Encoding>& _categories,
-    const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
-    const containers::DataFrame& _df,
-    const Poco::JSON::Object& _aggregation )
+Float AggOpParser::aggregate( const Poco::JSON::Object& _aggregation )
 {
     const auto type = JSON::get_value<std::string>( _aggregation, "type_" );
 
@@ -48,27 +40,21 @@ Float AggOpParser::aggregate(
 
     if ( type == "count_categorical" || type == "count_distinct" )
         {
-            return categorical_aggregation(
-                *_categories, *_join_keys_encoding, _df, type, json_col );
+            return categorical_aggregation( type, json_col );
         }
     else
         {
-            return numerical_aggregation(
-                *_categories, *_join_keys_encoding, _df, type, json_col );
+            return numerical_aggregation( type, json_col );
         }
 }
 
 // ----------------------------------------------------------------------------
 
 Float AggOpParser::numerical_aggregation(
-    const containers::Encoding& _categories,
-    const containers::Encoding& _join_keys_encoding,
-    const containers::DataFrame& _df,
-    const std::string& _type,
-    const Poco::JSON::Object& _json_col )
+    const std::string& _type, const Poco::JSON::Object& _json_col )
 {
-    const auto col = NumOpParser::parse(
-        _categories, _join_keys_encoding, {_df}, _json_col );
+    const auto col =
+        NumOpParser( categories_, join_keys_encoding_, df_ ).parse( _json_col );
 
     if ( _type == "assert_equal" )
         {

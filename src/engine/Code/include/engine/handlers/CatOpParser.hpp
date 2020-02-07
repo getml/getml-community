@@ -12,74 +12,66 @@ class CatOpParser
     // ------------------------------------------------------------------------
 
    public:
+    CatOpParser(
+        const std::shared_ptr<const containers::Encoding>& _categories,
+        const std::shared_ptr<const containers::Encoding>& _join_keys_encoding,
+        const std::shared_ptr<const std::vector<containers::DataFrame>>& _df )
+        : categories_( _categories ),
+          df_( _df ),
+          join_keys_encoding_( _join_keys_encoding )
+    {
+    }
+
+    CatOpParser(
+        const std::shared_ptr<const containers::Encoding>& _categories,
+        const std::shared_ptr<const containers::Encoding>& _join_keys_encoding,
+        const std::vector<containers::DataFrame>& _df )
+        : categories_( _categories ),
+          df_( std::make_shared<const std::vector<containers::DataFrame>>(
+              _df ) ),
+          join_keys_encoding_( _join_keys_encoding )
+    {
+    }
+
+    ~CatOpParser() = default;
+
+    // ------------------------------------------------------------------------
+
+   public:
     /// Parses a numerical column.
-    static std::vector<std::string> parse(
-        const containers::Encoding& _categories,
-        const containers::Encoding& _join_keys_encoding,
-        const std::vector<containers::DataFrame>& _df,
-        const Poco::JSON::Object& _col );
+    std::vector<std::string> parse( const Poco::JSON::Object& _col );
 
     // ------------------------------------------------------------------------
 
    private:
     /// Parses the operator and undertakes a binary operation.
-    static std::vector<std::string> binary_operation(
-        const containers::Encoding& _categories,
-        const containers::Encoding& _join_keys_encoding,
-        const std::vector<containers::DataFrame>& _df,
-        const Poco::JSON::Object& _col );
+    std::vector<std::string> binary_operation( const Poco::JSON::Object& _col );
 
     /// Transforms a boolean column to a string.
-    static std::vector<std::string> boolean_to_string(
-        const containers::Encoding& _categories,
-        const containers::Encoding& _join_keys_encoding,
-        const std::vector<containers::DataFrame>& _df,
+    std::vector<std::string> boolean_to_string(
         const Poco::JSON::Object& _col );
 
     /// Transforms a float column to a string.
-    static std::vector<std::string> numerical_to_string(
-        const containers::Encoding& _categories,
-        const containers::Encoding& _join_keys_encoding,
-        const std::vector<containers::DataFrame>& _df,
+    std::vector<std::string> numerical_to_string(
         const Poco::JSON::Object& _col );
 
     /// Parses the operator and undertakes a unary operation.
-    static std::vector<std::string> unary_operation(
-        const containers::Encoding& _categories,
-        const containers::Encoding& _join_keys_encoding,
-        const std::vector<containers::DataFrame>& _df,
-        const Poco::JSON::Object& _col );
+    std::vector<std::string> unary_operation( const Poco::JSON::Object& _col );
 
     /// Returns an updated version of the column.
-    static std::vector<std::string> update(
-        const containers::Encoding& _categories,
-        const containers::Encoding& _join_keys_encoding,
-        const std::vector<containers::DataFrame>& _df,
-        const Poco::JSON::Object& _col );
+    std::vector<std::string> update( const Poco::JSON::Object& _col );
 
     // ------------------------------------------------------------------------
 
     /// Undertakes a binary operation based on template class
     /// Operator.
     template <class Operator>
-    static std::vector<std::string> bin_op(
-        const containers::Encoding& _categories,
-        const containers::Encoding& _join_keys_encoding,
-        const std::vector<containers::DataFrame>& _df,
-        const Poco::JSON::Object& _col,
-        const Operator& _op )
+    std::vector<std::string> bin_op(
+        const Poco::JSON::Object& _col, const Operator& _op )
     {
-        const auto operand1 = parse(
-            _categories,
-            _join_keys_encoding,
-            _df,
-            *JSON::get_object( _col, "operand1_" ) );
+        const auto operand1 = parse( *JSON::get_object( _col, "operand1_" ) );
 
-        const auto operand2 = parse(
-            _categories,
-            _join_keys_encoding,
-            _df,
-            *JSON::get_object( _col, "operand2_" ) );
+        const auto operand2 = parse( *JSON::get_object( _col, "operand2_" ) );
 
         assert_true( operand1.size() == operand2.size() );
 
@@ -98,18 +90,10 @@ class CatOpParser
     /// Undertakes a unary operation based on template class
     /// Operator.
     template <class Operator>
-    static std::vector<std::string> un_op(
-        const containers::Encoding& _categories,
-        const containers::Encoding& _join_keys_encoding,
-        const std::vector<containers::DataFrame>& _df,
-        const Poco::JSON::Object& _col,
-        const Operator& _op )
+    std::vector<std::string> un_op(
+        const Poco::JSON::Object& _col, const Operator& _op )
     {
-        const auto operand1 = parse(
-            _categories,
-            _join_keys_encoding,
-            _df,
-            *JSON::get_object( _col, "operand1_" ) );
+        const auto operand1 = parse( *JSON::get_object( _col, "operand1_" ) );
 
         auto result = std::vector<std::string>( operand1.size() );
 
@@ -119,9 +103,9 @@ class CatOpParser
     }
 
     /// Transforms a column to vector of equal length.
-    static std::vector<std::string> to_vec(
-        const containers::Encoding& _encoding,
-        const containers::Column<Int>& _col )
+    std::vector<std::string> to_vec(
+        const containers::Column<Int>& _col,
+        const containers::Encoding& _encoding )
     {
         auto result = std::vector<std::string>( _col.nrows() );
 
@@ -135,7 +119,7 @@ class CatOpParser
     }
 
     /// Transforms an unused string column to a vector of equal length.
-    static std::vector<std::string> to_vec(
+    std::vector<std::string> to_vec(
         const containers::Column<strings::String>& _col )
     {
         auto result = std::vector<std::string>( _col.nrows() );
@@ -148,6 +132,18 @@ class CatOpParser
 
         return result;
     }
+
+    // ------------------------------------------------------------------------
+
+   private:
+    /// Encodes the categories used.
+    const std::shared_ptr<const containers::Encoding> categories_;
+
+    /// The DataFrames this is based on.
+    const std::shared_ptr<const std::vector<containers::DataFrame>> df_;
+
+    /// Encodes the join keys used.
+    const std::shared_ptr<const containers::Encoding> join_keys_encoding_;
 
     // ------------------------------------------------------------------------
 };

@@ -357,8 +357,9 @@ void DataFrameJoiner::filter(
 
     // ------------------------------------------------------------------------
 
-    const auto condition = BoolOpParser::parse(
-        *_categories, *_join_keys_encoding, {temp_df1, temp_df2}, _where );
+    const auto condition =
+        BoolOpParser( _categories, _join_keys_encoding, {temp_df1, temp_df2} )
+            .parse( _where );
 
     // ------------------------------------------------------------------------
 

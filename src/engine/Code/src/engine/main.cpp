@@ -43,7 +43,7 @@ int main( int argc, char *argv[] )
         std::make_shared<engine::licensing::LicenseChecker>(
             logger, monitor, options );
 
-    license_checker->receive_token( "main" );
+    // license_checker->receive_token( "main" );
 
     // -------------------------------------------
     // Tell the monitor the process ID of the engine.
