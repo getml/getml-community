@@ -31,6 +31,11 @@ void RequestHandler::run()
                     data_frame_manager().get_boolean_column(
                         name, cmd, &socket() );
                 }
+            if ( type == "BooleanColumn.get_string" )
+                {
+                    data_frame_manager().get_boolean_column_string(
+                        name, cmd, &socket() );
+                }
             else if ( type == "Database.drop_table" )
                 {
                     database_manager().drop_table( name, &socket() );
@@ -196,6 +201,11 @@ void RequestHandler::run()
             else if ( type == "FloatColumn.get" )
                 {
                     data_frame_manager().get_column( name, cmd, &socket() );
+                }
+            else if ( type == "FloatColumn.get_string" )
+                {
+                    data_frame_manager().get_column_string(
+                        name, cmd, &socket() );
                 }
             else if ( type == "FloatColumn.set_unit" )
                 {
@@ -367,6 +377,11 @@ void RequestHandler::run()
             else if ( type == "StringColumn.get" )
                 {
                     data_frame_manager().get_categorical_column(
+                        name, cmd, &socket() );
+                }
+            else if ( type == "StringColumn.get_string" )
+                {
+                    data_frame_manager().get_categorical_column_string(
                         name, cmd, &socket() );
                 }
             else if ( type == "StringColumn.set_unit" )

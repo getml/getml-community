@@ -7,25 +7,17 @@ namespace handlers
 // ----------------------------------------------------------------------------
 
 std::vector<std::string> CatOpParser::binary_operation(
-    const containers::Encoding& _categories,
-    const containers::Encoding& _join_keys_encoding,
-    const std::vector<containers::DataFrame>& _df,
     const Poco::JSON::Object& _col )
 {
     const auto op = JSON::get_value<std::string>( _col, "operator_" );
 
     if ( op == "concat" )
         {
-            return bin_op(
-                _categories,
-                _join_keys_encoding,
-                _df,
-                _col,
-                std::plus<std::string>() );
+            return bin_op( _col, std::plus<std::string>() );
         }
     else if ( op == "update" )
         {
-            return update( _categories, _join_keys_encoding, _df, _col );
+            return update( _col );
         }
     else
         {
@@ -40,15 +32,13 @@ std::vector<std::string> CatOpParser::binary_operation(
 // ----------------------------------------------------------------------------
 
 std::vector<std::string> CatOpParser::boolean_to_string(
-    const containers::Encoding& _categories,
-    const containers::Encoding& _join_keys_encoding,
-    const std::vector<containers::DataFrame>& _df,
     const Poco::JSON::Object& _col )
 {
     const auto obj = *JSON::get_object( _col, "operand1_" );
 
     const auto operand1 =
-        BoolOpParser::parse( _categories, _join_keys_encoding, _df, obj );
+        BoolOpParser( categories_, join_keys_encoding_, df_, num_elem_ )
+            .parse( obj );
 
     auto result = std::vector<std::string>( operand1.size() );
 
@@ -71,15 +61,13 @@ std::vector<std::string> CatOpParser::boolean_to_string(
 // ----------------------------------------------------------------------------
 
 std::vector<std::string> CatOpParser::numerical_to_string(
-    const containers::Encoding& _categories,
-    const containers::Encoding& _join_keys_encoding,
-    const std::vector<containers::DataFrame>& _df,
     const Poco::JSON::Object& _col )
 {
     const auto obj = *JSON::get_object( _col, "operand1_" );
 
     const auto operand1 =
-        NumOpParser::parse( _categories, _join_keys_encoding, _df, obj );
+        NumOpParser( categories_, join_keys_encoding_, df_, num_elem_ )
+            .parse( obj );
 
     const auto role = obj.has( "role_" )
                           ? JSON::get_value<std::string>( obj, "role_" )
@@ -127,11 +115,7 @@ std::vector<std::string> CatOpParser::numerical_to_string(
 
 // ----------------------------------------------------------------------------
 
-std::vector<std::string> CatOpParser::parse(
-    const containers::Encoding& _categories,
-    const containers::Encoding& _join_keys_encoding,
-    const std::vector<containers::DataFrame>& _df,
-    const Poco::JSON::Object& _col )
+std::vector<std::string> CatOpParser::parse( const Poco::JSON::Object& _col )
 {
     const auto type = JSON::get_value<std::string>( _col, "type_" );
 
@@ -149,9 +133,10 @@ std::vector<std::string> CatOpParser::parse(
                     return df.name() == df_name;
                 };
 
-            const auto it = std::find_if( _df.begin(), _df.end(), has_df_name );
+            const auto it =
+                std::find_if( df_->begin(), df_->end(), has_df_name );
 
-            if ( it == _df.end() )
+            if ( it == df_->end() )
                 {
                     throw std::invalid_argument(
                         "Column '" + name + "' is from DataFrame '" + df_name +
@@ -160,12 +145,12 @@ std::vector<std::string> CatOpParser::parse(
 
             if ( role == "categorical" )
                 {
-                    return to_vec( _categories, it->int_column( name, role ) );
+                    return to_vec( it->int_column( name, role ), categories_ );
                 }
             else if ( role == "join_key" )
                 {
                     return to_vec(
-                        _join_keys_encoding, it->int_column( name, role ) );
+                        it->int_column( name, role ), join_keys_encoding_ );
                 }
             else if ( role == "unused" || role == "unused_string" )
                 {
@@ -183,9 +168,7 @@ std::vector<std::string> CatOpParser::parse(
         {
             const auto val = JSON::get_value<std::string>( _col, "value_" );
 
-            assert_true( _df.size() > 0 );
-
-            auto vec = std::vector<std::string>( _df[0].nrows() );
+            auto vec = std::vector<std::string>( num_elem_ );
 
             std::fill( vec.begin(), vec.end(), val );
 
@@ -195,13 +178,11 @@ std::vector<std::string> CatOpParser::parse(
         {
             if ( _col.has( "operand2_" ) )
                 {
-                    return binary_operation(
-                        _categories, _join_keys_encoding, _df, _col );
+                    return binary_operation( _col );
                 }
             else
                 {
-                    return unary_operation(
-                        _categories, _join_keys_encoding, _df, _col );
+                    return unary_operation( _col );
                 }
         }
     else
@@ -217,9 +198,6 @@ std::vector<std::string> CatOpParser::parse(
 // ----------------------------------------------------------------------------
 
 std::vector<std::string> CatOpParser::unary_operation(
-    const containers::Encoding& _categories,
-    const containers::Encoding& _join_keys_encoding,
-    const std::vector<containers::DataFrame>& _df,
     const Poco::JSON::Object& _col )
 {
     const auto op = JSON::get_value<std::string>( _col, "operator_" );
@@ -232,11 +210,7 @@ std::vector<std::string> CatOpParser::unary_operation(
 
     if ( op == "categorical_value" )
         {
-            return parse(
-                _categories,
-                _join_keys_encoding,
-                _df,
-                *JSON::get_object( _col, "operand1_" ) );
+            return parse( *JSON::get_object( _col, "operand1_" ) );
         }
     else if ( op == "substr" )
         {
@@ -248,17 +222,15 @@ std::vector<std::string> CatOpParser::unary_operation(
                 return val.substr( begin, len );
             };
 
-            return un_op( _categories, _join_keys_encoding, _df, _col, substr );
+            return un_op( _col, substr );
         }
     else if ( is_boolean && op == "to_str" )
         {
-            return boolean_to_string(
-                _categories, _join_keys_encoding, _df, _col );
+            return boolean_to_string( _col );
         }
     else if ( !is_boolean && op == "to_str" )
         {
-            return numerical_to_string(
-                _categories, _join_keys_encoding, _df, _col );
+            return numerical_to_string( _col );
         }
     else
         {
@@ -272,29 +244,15 @@ std::vector<std::string> CatOpParser::unary_operation(
 
 // ----------------------------------------------------------------------------
 
-std::vector<std::string> CatOpParser::update(
-    const containers::Encoding& _categories,
-    const containers::Encoding& _join_keys_encoding,
-    const std::vector<containers::DataFrame>& _df,
-    const Poco::JSON::Object& _col )
+std::vector<std::string> CatOpParser::update( const Poco::JSON::Object& _col )
 {
-    const auto operand1 = parse(
-        _categories,
-        _join_keys_encoding,
-        _df,
-        *JSON::get_object( _col, "operand1_" ) );
+    const auto operand1 = parse( *JSON::get_object( _col, "operand1_" ) );
 
-    const auto operand2 = parse(
-        _categories,
-        _join_keys_encoding,
-        _df,
-        *JSON::get_object( _col, "operand2_" ) );
+    const auto operand2 = parse( *JSON::get_object( _col, "operand2_" ) );
 
-    const auto condition = BoolOpParser::parse(
-        _categories,
-        _join_keys_encoding,
-        _df,
-        *JSON::get_object( _col, "condition_" ) );
+    const auto condition =
+        BoolOpParser( categories_, join_keys_encoding_, df_, num_elem_ )
+            .parse( *JSON::get_object( _col, "condition_" ) );
 
     assert_true( operand1.size() == operand2.size() );
 

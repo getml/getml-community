@@ -7,66 +7,43 @@ namespace handlers
 // ----------------------------------------------------------------------------
 
 containers::Column<Float> NumOpParser::binary_operation(
-    const containers::Encoding& _categories,
-    const containers::Encoding& _join_keys_encoding,
-    const std::vector<containers::DataFrame>& _df,
     const Poco::JSON::Object& _col )
 {
     const auto op = JSON::get_value<std::string>( _col, "operator_" );
 
     if ( op == "divides" )
         {
-            return bin_op(
-                _categories,
-                _join_keys_encoding,
-                _df,
-                _col,
-                std::divides<Float>() );
+            return bin_op( _col, std::divides<Float>() );
         }
     else if ( op == "fmod" )
         {
             const auto fmod = []( const Float val1, const Float val2 ) {
                 return std::fmod( val1, val2 );
             };
-            return bin_op( _categories, _join_keys_encoding, _df, _col, fmod );
+            return bin_op( _col, fmod );
         }
     else if ( op == "minus" )
         {
-            return bin_op(
-                _categories,
-                _join_keys_encoding,
-                _df,
-                _col,
-                std::minus<Float>() );
+            return bin_op( _col, std::minus<Float>() );
         }
     else if ( op == "multiplies" )
         {
-            return bin_op(
-                _categories,
-                _join_keys_encoding,
-                _df,
-                _col,
-                std::multiplies<Float>() );
+            return bin_op( _col, std::multiplies<Float>() );
         }
     else if ( op == "plus" )
         {
-            return bin_op(
-                _categories,
-                _join_keys_encoding,
-                _df,
-                _col,
-                std::plus<Float>() );
+            return bin_op( _col, std::plus<Float>() );
         }
     else if ( op == "pow" )
         {
             const auto pow = []( const Float val1, const Float val2 ) {
                 return std::pow( val1, val2 );
             };
-            return bin_op( _categories, _join_keys_encoding, _df, _col, pow );
+            return bin_op( _col, pow );
         }
     else if ( op == "update" )
         {
-            return update( _categories, _join_keys_encoding, _df, _col );
+            return update( _col );
         }
     else
         {
@@ -80,15 +57,13 @@ containers::Column<Float> NumOpParser::binary_operation(
 // ----------------------------------------------------------------------------
 
 containers::Column<Float> NumOpParser::boolean_to_num(
-    const containers::Encoding& _categories,
-    const containers::Encoding& _join_keys_encoding,
-    const std::vector<containers::DataFrame>& _df,
     const Poco::JSON::Object& _col )
 {
     const auto obj = *JSON::get_object( _col, "operand1_" );
 
     const auto operand1 =
-        BoolOpParser::parse( _categories, _join_keys_encoding, _df, obj );
+        BoolOpParser( categories_, join_keys_encoding_, df_, num_elem_ )
+            .parse( obj );
 
     auto result = containers::Column<Float>( operand1.size() );
 
@@ -110,46 +85,64 @@ containers::Column<Float> NumOpParser::boolean_to_num(
 
 // ----------------------------------------------------------------------------
 
-containers::Column<Float> NumOpParser::parse(
-    const containers::Encoding& _categories,
-    const containers::Encoding& _join_keys_encoding,
-    const std::vector<containers::DataFrame>& _df,
+containers::Column<Float> NumOpParser::get_column(
     const Poco::JSON::Object& _col )
+{
+    const auto name = JSON::get_value<std::string>( _col, "name_" );
+
+    const auto role = JSON::get_value<std::string>( _col, "role_" );
+
+    const auto df_name = JSON::get_value<std::string>( _col, "df_name_" );
+
+    const auto has_df_name = [df_name]( const containers::DataFrame& df ) {
+        return df.name() == df_name;
+    };
+
+    const auto it = std::find_if( df_->begin(), df_->end(), has_df_name );
+
+    if ( it == df_->end() )
+        {
+            throw std::invalid_argument(
+                "Column '" + name + "' is from DataFrame '" + df_name + "'." );
+        }
+
+    if ( it->nrows() == num_elem_ )
+        {
+            return it->float_column( name, role );
+        }
+    else if ( it->nrows() >= num_elem_ )
+        {
+            const auto long_col = it->float_column( name, role );
+
+            auto col = containers::Column<Float>( num_elem_ );
+
+            std::copy(
+                long_col.begin(), long_col.begin() + num_elem_, col.begin() );
+
+            return col;
+        }
+    else
+        {
+            assert_true( false );
+            return containers::Column<Float>( 0 );
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+containers::Column<Float> NumOpParser::parse( const Poco::JSON::Object& _col )
 {
     const auto type = JSON::get_value<std::string>( _col, "type_" );
 
     if ( type == "FloatColumn" )
         {
-            const auto name = JSON::get_value<std::string>( _col, "name_" );
-
-            const auto role = JSON::get_value<std::string>( _col, "role_" );
-
-            const auto df_name =
-                JSON::get_value<std::string>( _col, "df_name_" );
-
-            const auto has_df_name =
-                [df_name]( const containers::DataFrame& df ) {
-                    return df.name() == df_name;
-                };
-
-            const auto it = std::find_if( _df.begin(), _df.end(), has_df_name );
-
-            if ( it == _df.end() )
-                {
-                    throw std::invalid_argument(
-                        "Column '" + name + "' is from DataFrame '" + df_name +
-                        "'." );
-                }
-
-            return it->float_column( name, role );
+            return get_column( _col );
         }
     else if ( type == "Value" )
         {
             const auto val = JSON::get_value<Float>( _col, "value_" );
 
-            assert_true( _df.size() > 0 );
-
-            auto col = containers::Column<Float>( _df[0].nrows() );
+            auto col = containers::Column<Float>( num_elem_ );
 
             std::fill( col.begin(), col.end(), val );
 
@@ -157,13 +150,11 @@ containers::Column<Float> NumOpParser::parse(
         }
     else if ( type == "VirtualFloatColumn" && _col.has( "operand2_" ) )
         {
-            return binary_operation(
-                _categories, _join_keys_encoding, _df, _col );
+            return binary_operation( _col );
         }
     else if ( type == "VirtualFloatColumn" && !_col.has( "operand2_" ) )
         {
-            return unary_operation(
-                _categories, _join_keys_encoding, _df, _col );
+            return unary_operation( _col );
         }
     else
         {
@@ -175,17 +166,11 @@ containers::Column<Float> NumOpParser::parse(
 
 // ----------------------------------------------------------------------------
 
-containers::Column<Float> NumOpParser::to_num(
-    const containers::Encoding& _categories,
-    const containers::Encoding& _join_keys_encoding,
-    const std::vector<containers::DataFrame>& _df,
-    const Poco::JSON::Object& _col )
+containers::Column<Float> NumOpParser::to_num( const Poco::JSON::Object& _col )
 {
-    const auto operand1 = CatOpParser::parse(
-        _categories,
-        _join_keys_encoding,
-        _df,
-        *JSON::get_object( _col, "operand1_" ) );
+    const auto operand1 =
+        CatOpParser( categories_, join_keys_encoding_, df_, num_elem_ )
+            .parse( *JSON::get_object( _col, "operand1_" ) );
 
     auto result = containers::Column<Float>( operand1.size() );
 
@@ -209,20 +194,14 @@ containers::Column<Float> NumOpParser::to_num(
 
 // ----------------------------------------------------------------------------
 
-containers::Column<Float> NumOpParser::to_ts(
-    const containers::Encoding& _categories,
-    const containers::Encoding& _join_keys_encoding,
-    const std::vector<containers::DataFrame>& _df,
-    const Poco::JSON::Object& _col )
+containers::Column<Float> NumOpParser::to_ts( const Poco::JSON::Object& _col )
 {
     const auto time_formats = JSON::array_to_vector<std::string>(
         JSON::get_array( _col, "time_formats_" ) );
 
-    const auto operand1 = CatOpParser::parse(
-        _categories,
-        _join_keys_encoding,
-        _df,
-        *JSON::get_object( _col, "operand1_" ) );
+    const auto operand1 =
+        CatOpParser( categories_, join_keys_encoding_, df_, num_elem_ )
+            .parse( *JSON::get_object( _col, "operand1_" ) );
 
     auto result = containers::Column<Float>( operand1.size() );
 
@@ -253,9 +232,6 @@ containers::Column<Float> NumOpParser::to_ts(
 // ----------------------------------------------------------------------------
 
 containers::Column<Float> NumOpParser::unary_operation(
-    const containers::Encoding& _categories,
-    const containers::Encoding& _join_keys_encoding,
-    const std::vector<containers::DataFrame>& _df,
     const Poco::JSON::Object& _col )
 {
     const auto op = JSON::get_value<std::string>( _col, "operator_" );
@@ -263,52 +239,51 @@ containers::Column<Float> NumOpParser::unary_operation(
     if ( op == "abs" )
         {
             const auto abs = []( const Float val ) { return std::abs( val ); };
-            return un_op( _categories, _join_keys_encoding, _df, _col, abs );
+            return un_op( _col, abs );
         }
     else if ( op == "acos" )
         {
             const auto acos = []( const Float val ) {
                 return std::acos( val );
             };
-            return un_op( _categories, _join_keys_encoding, _df, _col, acos );
+            return un_op( _col, acos );
         }
     else if ( op == "asin" )
         {
             const auto asin = []( const Float val ) {
                 return std::asin( val );
             };
-            return un_op( _categories, _join_keys_encoding, _df, _col, asin );
+            return un_op( _col, asin );
         }
     else if ( op == "atan" )
         {
             const auto atan = []( const Float val ) {
                 return std::atan( val );
             };
-            return un_op( _categories, _join_keys_encoding, _df, _col, atan );
+            return un_op( _col, atan );
         }
     else if ( op == "boolean_to_num" )
         {
-            return boolean_to_num(
-                _categories, _join_keys_encoding, _df, _col );
+            return boolean_to_num( _col );
         }
     else if ( op == "cbrt" )
         {
             const auto cbrt = []( const Float val ) {
                 return std::cbrt( val );
             };
-            return un_op( _categories, _join_keys_encoding, _df, _col, cbrt );
+            return un_op( _col, cbrt );
         }
     else if ( op == "ceil" )
         {
             const auto ceil = []( const Float val ) {
                 return std::ceil( val );
             };
-            return un_op( _categories, _join_keys_encoding, _df, _col, ceil );
+            return un_op( _col, ceil );
         }
     else if ( op == "cos" )
         {
             const auto cos = []( const Float val ) { return std::cos( val ); };
-            return un_op( _categories, _join_keys_encoding, _df, _col, cos );
+            return un_op( _col, cos );
         }
     else if ( op == "day" )
         {
@@ -330,24 +305,24 @@ containers::Column<Float> NumOpParser::unary_operation(
                 return static_cast<Float>(
                     std::gmtime( &time_stamp )->tm_mday );
             };
-            return un_op( _categories, _join_keys_encoding, _df, _col, day );
+            return un_op( _col, day );
         }
     else if ( op == "erf" )
         {
             const auto erf = []( const Float val ) { return std::erf( val ); };
-            return un_op( _categories, _join_keys_encoding, _df, _col, erf );
+            return un_op( _col, erf );
         }
     else if ( op == "exp" )
         {
             const auto exp = []( const Float val ) { return std::exp( val ); };
-            return un_op( _categories, _join_keys_encoding, _df, _col, exp );
+            return un_op( _col, exp );
         }
     else if ( op == "floor" )
         {
             const auto floor = []( const Float val ) {
                 return std::floor( val );
             };
-            return un_op( _categories, _join_keys_encoding, _df, _col, floor );
+            return un_op( _col, floor );
         }
     else if ( op == "hour" )
         {
@@ -369,19 +344,19 @@ containers::Column<Float> NumOpParser::unary_operation(
                 return static_cast<Float>(
                     std::gmtime( &time_stamp )->tm_hour );
             };
-            return un_op( _categories, _join_keys_encoding, _df, _col, hour );
+            return un_op( _col, hour );
         }
     else if ( op == "lgamma" )
         {
             const auto lgamma = []( const Float val ) {
                 return std::lgamma( val );
             };
-            return un_op( _categories, _join_keys_encoding, _df, _col, lgamma );
+            return un_op( _col, lgamma );
         }
     else if ( op == "log" )
         {
             const auto log = []( const Float val ) { return std::log( val ); };
-            return un_op( _categories, _join_keys_encoding, _df, _col, log );
+            return un_op( _col, log );
         }
     else if ( op == "minute" )
         {
@@ -402,7 +377,7 @@ containers::Column<Float> NumOpParser::unary_operation(
 
                 return static_cast<Float>( std::gmtime( &time_stamp )->tm_min );
             };
-            return un_op( _categories, _join_keys_encoding, _df, _col, minute );
+            return un_op( _col, minute );
         }
     else if ( op == "month" )
         {
@@ -424,22 +399,22 @@ containers::Column<Float> NumOpParser::unary_operation(
                 return static_cast<Float>(
                     std::gmtime( &time_stamp )->tm_mon + 1 );
             };
-            return un_op( _categories, _join_keys_encoding, _df, _col, month );
+            return un_op( _col, month );
         }
     else if ( op == "random" )
         {
-            return random( _df, _col );
+            return random( _col );
         }
     else if ( op == "round" )
         {
             const auto round = []( const Float val ) {
                 return std::round( val );
             };
-            return un_op( _categories, _join_keys_encoding, _df, _col, round );
+            return un_op( _col, round );
         }
     else if ( op == "rowid" )
         {
-            return rowid( _df );
+            return rowid();
         }
     else if ( op == "second" )
         {
@@ -460,47 +435,43 @@ containers::Column<Float> NumOpParser::unary_operation(
 
                 return static_cast<Float>( std::gmtime( &time_stamp )->tm_sec );
             };
-            return un_op( _categories, _join_keys_encoding, _df, _col, second );
+            return un_op( _col, second );
         }
     else if ( op == "sin" )
         {
             const auto sin = []( const Float val ) { return std::sin( val ); };
-            return un_op( _categories, _join_keys_encoding, _df, _col, sin );
+            return un_op( _col, sin );
         }
     else if ( op == "sqrt" )
         {
             const auto sqrt = []( const Float val ) {
                 return std::sqrt( val );
             };
-            return un_op( _categories, _join_keys_encoding, _df, _col, sqrt );
+            return un_op( _col, sqrt );
         }
     else if ( op == "tan" )
         {
             const auto tan = []( const Float val ) { return std::tan( val ); };
-            return un_op( _categories, _join_keys_encoding, _df, _col, tan );
+            return un_op( _col, tan );
         }
     else if ( op == "tgamma" )
         {
             const auto tgamma = []( const Float val ) {
                 return std::tgamma( val );
             };
-            return un_op( _categories, _join_keys_encoding, _df, _col, tgamma );
+            return un_op( _col, tgamma );
         }
     else if ( op == "to_num" )
         {
-            return to_num( _categories, _join_keys_encoding, _df, _col );
+            return to_num( _col );
         }
     else if ( op == "to_ts" )
         {
-            return to_ts( _categories, _join_keys_encoding, _df, _col );
+            return to_ts( _col );
         }
     else if ( op == "value" )
         {
-            return parse(
-                _categories,
-                _join_keys_encoding,
-                _df,
-                *JSON::get_object( _col, "operand1_" ) );
+            return parse( *JSON::get_object( _col, "operand1_" ) );
         }
     else if ( op == "weekday" )
         {
@@ -522,8 +493,7 @@ containers::Column<Float> NumOpParser::unary_operation(
                 return static_cast<Float>(
                     std::gmtime( &time_stamp )->tm_wday );
             };
-            return un_op(
-                _categories, _join_keys_encoding, _df, _col, weekday );
+            return un_op( _col, weekday );
         }
     else if ( op == "year" )
         {
@@ -545,7 +515,7 @@ containers::Column<Float> NumOpParser::unary_operation(
                 return static_cast<Float>(
                     std::gmtime( &time_stamp )->tm_year + 1900 );
             };
-            return un_op( _categories, _join_keys_encoding, _df, _col, year );
+            return un_op( _col, year );
         }
     else if ( op == "yearday" )
         {
@@ -567,8 +537,7 @@ containers::Column<Float> NumOpParser::unary_operation(
                 return static_cast<Float>(
                     std::gmtime( &time_stamp )->tm_yday + 1 );
             };
-            return un_op(
-                _categories, _join_keys_encoding, _df, _col, yearday );
+            return un_op( _col, yearday );
         }
     else
         {
@@ -581,29 +550,15 @@ containers::Column<Float> NumOpParser::unary_operation(
 
 // ----------------------------------------------------------------------------
 
-containers::Column<Float> NumOpParser::update(
-    const containers::Encoding& _categories,
-    const containers::Encoding& _join_keys_encoding,
-    const std::vector<containers::DataFrame>& _df,
-    const Poco::JSON::Object& _col )
+containers::Column<Float> NumOpParser::update( const Poco::JSON::Object& _col )
 {
-    const auto operand1 = parse(
-        _categories,
-        _join_keys_encoding,
-        _df,
-        *JSON::get_object( _col, "operand1_" ) );
+    const auto operand1 = parse( *JSON::get_object( _col, "operand1_" ) );
 
-    const auto operand2 = parse(
-        _categories,
-        _join_keys_encoding,
-        _df,
-        *JSON::get_object( _col, "operand2_" ) );
+    const auto operand2 = parse( *JSON::get_object( _col, "operand2_" ) );
 
-    const auto condition = BoolOpParser::parse(
-        _categories,
-        _join_keys_encoding,
-        _df,
-        *JSON::get_object( _col, "condition_" ) );
+    const auto condition =
+        BoolOpParser( categories_, join_keys_encoding_, df_, num_elem_ )
+            .parse( *JSON::get_object( _col, "condition_" ) );
 
     assert_true( operand1.size() == operand2.size() );
 
