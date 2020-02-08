@@ -63,6 +63,44 @@ void Pipeline::calculate_feature_stats(
 
 // ----------------------------------------------------------------------------
 
+containers::Features Pipeline::generate_numerical_features(
+    const Poco::JSON::Object& _cmd,
+    const std::shared_ptr<const monitoring::Logger>& _logger,
+    const std::map<std::string, containers::DataFrame>& _data_frames,
+    Poco::Net::StreamSocket* _socket )
+{
+    // -------------------------------------------------------------------------
+    // Generate the features.
+
+    auto numerical_features = containers::Features();
+
+    for ( const auto& fe : feature_engineerers_ )
+        {
+            assert_true( fe );
+
+            auto new_features =
+                fe->transform( _cmd, _logger, _data_frames, _socket );
+
+            numerical_features.insert(
+                numerical_features.end(),
+                new_features.begin(),
+                new_features.end() );
+        }
+
+    // -------------------------------------------------------------------------
+    // Add the numerical columns from the population table.
+
+    add_population_cols( _cmd, _data_frames, &numerical_features );
+
+    // -------------------------------------------------------------------------
+
+    return numerical_features;
+
+    // -------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
 containers::Features Pipeline::generate_predictions(
     const containers::CategoricalFeatures& _categorical_features,
     const containers::Features& _numerical_features ) const
@@ -131,6 +169,36 @@ containers::Features Pipeline::generate_predictions(
 
 // ----------------------------------------------------------------------------
 
+void Pipeline::fit(
+    const Poco::JSON::Object& _cmd,
+    const std::shared_ptr<const monitoring::Logger>& _logger,
+    const std::map<std::string, containers::DataFrame>& _data_frames,
+    Poco::Net::StreamSocket* _socket )
+{
+    // -------------------------------------------------------------------------
+    // Fit the feature engineering algorithms.
+
+    for ( auto& fe : feature_engineerers_ )
+        {
+            assert_true( fe );
+
+            fe->fit( _cmd, _logger, _data_frames, _socket );
+        }
+
+    // -------------------------------------------------------------------------
+    // Fit the predictors.
+
+    make_predictor_impl( _cmd, _data_frames );
+
+    // init predictors(...);
+
+    // fit_predictors(...);
+
+    // -------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
 containers::CategoricalFeatures Pipeline::get_categorical_features(
     const Poco::JSON::Object& _cmd,
     const std::map<std::string, containers::DataFrame>& _data_frames ) const
@@ -189,6 +257,94 @@ Pipeline::make_feature_engineerers() const
     return feature_engineerers;
 }
 
+// ------------------------------------------------------------------------
+
+void Pipeline::make_predictor_impl(
+    const Poco::JSON::Object& _cmd,
+    const std::map<std::string, containers::DataFrame>& _data_frames )
+{
+    // --------------------------------------------------------------------
+
+    const auto population_name =
+        JSON::get_value<std::string>( _cmd, "population_name_" );
+
+    const auto population_df =
+        utils::Getter::get( population_name, _data_frames );
+
+    // TODO
+    const auto allow_null = false;
+
+    const auto is_null = []( const Float val ) {
+        return ( std::isnan( val ) || std::isinf( val ) );
+    };
+
+    // --------------------------------------------------------------------
+
+    auto categorical_colnames = std::vector<std::string>();
+
+    // TODO
+    /*if ( feature_engineerer().hyperparameters().include_categorical_ )
+        {*/
+    for ( size_t i = 0; i < population_df.num_categoricals(); ++i )
+        {
+            if ( population_df.categorical( i ).unit().find(
+                     "comparison only" ) != std::string::npos )
+                {
+                    continue;
+                }
+
+            categorical_colnames.push_back(
+                population_df.categorical( i ).name() );
+        }
+    //}
+
+    // --------------------------------------------------------------------
+
+    auto numerical_colnames = std::vector<std::string>();
+
+    for ( size_t i = 0; i < population_df.num_numericals(); ++i )
+        {
+            if ( population_df.numerical( i ).unit().find(
+                     "comparison only" ) != std::string::npos )
+                {
+                    continue;
+                }
+
+            if ( !allow_null )
+                {
+                    const auto contains_null = std::any_of(
+                        population_df.numerical( i ).begin(),
+                        population_df.numerical( i ).end(),
+                        is_null );
+
+                    if ( contains_null )
+                        {
+                            continue;
+                        }
+                }
+
+            numerical_colnames.push_back( population_df.numerical( i ).name() );
+        }
+
+    // --------------------------------------------------------------------
+
+    size_t num_autofeatures = 0;
+
+    for ( const auto& fe : feature_engineerers_ )
+        {
+            assert_true( fe );
+
+            num_autofeatures += fe->num_features();
+        }
+
+    // --------------------------------------------------------------------
+
+    predictor_impl_ = std::make_shared<predictors::PredictorImpl>(
+        categorical_colnames, numerical_colnames, num_autofeatures );
+
+    // --------------------------------------------------------------------
+}
+
 // ----------------------------------------------------------------------------
 
 containers::Features Pipeline::transform(
@@ -198,27 +354,10 @@ containers::Features Pipeline::transform(
     Poco::Net::StreamSocket* _socket )
 {
     // -------------------------------------------------------------------------
-    // Generate the features.
+    // Generate the numerical features.
 
-    auto numerical_features = containers::Features();
-
-    for ( auto& fe : feature_engineerers_ )
-        {
-            assert_true( fe );
-
-            auto new_features =
-                fe->transform( _cmd, _logger, _data_frames, _socket );
-
-            numerical_features.insert(
-                numerical_features.end(),
-                new_features.begin(),
-                new_features.end() );
-        }
-
-    // -------------------------------------------------------------------------
-    // Add the numerical columns from the population table.
-
-    add_population_cols( _cmd, _data_frames, &numerical_features );
+    const auto numerical_features =
+        generate_numerical_features( _cmd, _logger, _data_frames, _socket );
 
     // -------------------------------------------------------------------------
     // If we do not want to score or predict, then we can stop here.

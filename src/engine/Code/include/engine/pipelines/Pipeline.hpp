@@ -27,6 +27,13 @@ class Pipeline
     // --------------------------------------------------------
 
    public:
+    /// Fit the pipeline.
+    void fit(
+        const Poco::JSON::Object& _cmd,
+        const std::shared_ptr<const monitoring::Logger>& _logger,
+        const std::map<std::string, containers::DataFrame>& _data_frames,
+        Poco::Net::StreamSocket* _socket );
+
     /// Generate features.
     containers::Features transform(
         const Poco::JSON::Object& _cmd,
@@ -52,6 +59,14 @@ class Pipeline
         const Poco::JSON::Object& _cmd,
         const std::map<std::string, containers::DataFrame>& _data_frames );
 
+    /// Generates the numerical features (which also includes numerical columns
+    /// from the population table)..
+    containers::Features generate_numerical_features(
+        const Poco::JSON::Object& _cmd,
+        const std::shared_ptr<const monitoring::Logger>& _logger,
+        const std::map<std::string, containers::DataFrame>& _data_frames,
+        Poco::Net::StreamSocket* _socket );
+
     /// Generates the predictions based on the features.
     containers::Features generate_predictions(
         const containers::CategoricalFeatures& _categorical_features,
@@ -69,20 +84,15 @@ class Pipeline
         containers::Optional<featureengineerers::AbstractFeatureEngineerer>>
     make_feature_engineerers() const;
 
-    /// Trivial (private) accessor
-    predictors::PredictorImpl& predictor_impl()
-    {
-        throw_unless( predictor_impl_, "Pipeline has not been fitted." );
-        return *predictor_impl_;
-    }
+    /// Figures out which columns from the population table we would like to
+    /// add.
+    void make_predictor_impl(
+        const Poco::JSON::Object& _cmd,
+        const std::map<std::string, containers::DataFrame>& _data_frames );
 
-    /// Trivial (private) accessor
-    const predictors::PredictorImpl& predictor_impl() const
-    {
-        throw_unless( predictor_impl_, "Pipeline has not been fitted." );
-        return *predictor_impl_;
-    }
+    // --------------------------------------------------------
 
+   private:
     /// Trivial (private) accessor
     size_t num_predictors_per_set() const
     {
@@ -120,6 +130,20 @@ class Pipeline
         assert_true( _j < predictors_[_j].size() );
         assert_true( predictors_[_i][_j] );
         return predictors_[_i][_j].get();
+    }
+
+    /// Trivial (private) accessor
+    predictors::PredictorImpl& predictor_impl()
+    {
+        throw_unless( predictor_impl_, "Pipeline has not been fitted." );
+        return *predictor_impl_;
+    }
+
+    /// Trivial (private) accessor
+    const predictors::PredictorImpl& predictor_impl() const
+    {
+        throw_unless( predictor_impl_, "Pipeline has not been fitted." );
+        return *predictor_impl_;
     }
 
     // --------------------------------------------------------

@@ -31,6 +31,9 @@ class AbstractFeatureEngineerer
     /// Loads the feature engineerer from a file designated by _fname.
     virtual void load( const std::string& _fname ) = 0;
 
+    /// Returns the number of features in the feature engineerer.
+    virtual size_t num_features() const = 0;
+
     /// Saves the Model in JSON format, if applicable
     virtual void save( const std::string& _fname ) const = 0;
 

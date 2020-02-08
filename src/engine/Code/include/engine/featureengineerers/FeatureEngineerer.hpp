@@ -53,6 +53,12 @@ class FeatureEngineerer : public AbstractFeatureEngineerer
             std::make_optional<FeatureEngineererType>( categories_, obj );
     }
 
+    /// Returns the number of features in the feature engineerer.
+    size_t num_features() const final
+    {
+        return feature_engineerer().num_features();
+    }
+
     /// Saves the feature engineerer in JSON format, if applicable
     void save( const std::string& _fname ) const final
     {
