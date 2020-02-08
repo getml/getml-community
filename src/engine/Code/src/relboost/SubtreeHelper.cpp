@@ -84,11 +84,24 @@ void SubtreeHelper::fit_subensemble(
         static_cast<size_t>( 1 ),
         static_cast<size_t>( _hyperparameters.num_subfeatures_ ) / 2 );
 
+    const auto silent = _hyperparameters.silent_;
+
+    if ( !silent && _logger )
+        {
+            _logger->log( "Training subfeatures..." );
+        }
+
     for ( size_t i = 0; i < num_features; ++i )
         {
             ( *_subensemble )
                 ->fit_new_feature(
                     intermediate_agg, subtable_holder, subfeatures );
+
+            if ( !silent && _logger )
+                {
+                    _logger->log(
+                        "Trained FEATURE_" + std::to_string( i + 1 ) + "." );
+                }
         }
 
     _loss_function->reset_yhat_old();

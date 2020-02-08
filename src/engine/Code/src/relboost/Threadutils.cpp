@@ -50,6 +50,11 @@ void Threadutils::fit_as_feature_engineerer(
 
     const auto silent = _ensemble->hyperparameters().silent_;
 
+    if ( !silent && _logger )
+        {
+            _logger->log( "Training features..." );
+        }
+
     for ( size_t i = 0; i < num_features; ++i )
         {
             _ensemble->fit_new_feature(
