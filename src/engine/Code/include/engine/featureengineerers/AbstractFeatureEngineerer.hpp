@@ -52,7 +52,7 @@ class AbstractFeatureEngineerer
         const Poco::JSON::Object& _cmd,
         const std::shared_ptr<const monitoring::Logger>& _logger,
         const std::map<std::string, containers::DataFrame>& _data_frames,
-        Poco::Net::StreamSocket* _socket ) = 0;
+        Poco::Net::StreamSocket* _socket ) const = 0;
 
     // --------------------------------------------------------
 };

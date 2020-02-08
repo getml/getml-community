@@ -40,7 +40,7 @@ class FeatureEngineerer : public AbstractFeatureEngineerer
         const Poco::JSON::Object& _cmd,
         const std::shared_ptr<const monitoring::Logger>& _logger,
         const std::map<std::string, containers::DataFrame>& _data_frames,
-        Poco::Net::StreamSocket* _socket ) final;
+        Poco::Net::StreamSocket* _socket ) const final;
 
     // --------------------------------------------------------
 
@@ -89,7 +89,8 @@ class FeatureEngineerer : public AbstractFeatureEngineerer
     template <typename DataFrameType>
     DataFrameType extract_df(
         const std::string& _name,
-        const std::map<std::string, containers::DataFrame>& _data_frames );
+        const std::map<std::string, containers::DataFrame>& _data_frames )
+        const;
 
     /// Extract a data frame of type FeatureEngineererType::DataFrameType from
     /// an engine::containers::DataFrame using the pre-stored schema.
@@ -97,7 +98,8 @@ class FeatureEngineerer : public AbstractFeatureEngineerer
     DataFrameType extract_df_by_colnames(
         const std::string& _name,
         const SchemaType& _schema,
-        const std::map<std::string, containers::DataFrame>& _data_frames );
+        const std::map<std::string, containers::DataFrame>& _data_frames )
+        const;
 
     /// Helper function for loading a json object.
     Poco::JSON::Object load_json_obj( const std::string& _fname ) const;
@@ -312,7 +314,7 @@ template <typename FeatureEngineererType>
 template <typename DataFrameType>
 DataFrameType FeatureEngineerer<FeatureEngineererType>::extract_df(
     const std::string& _name,
-    const std::map<std::string, containers::DataFrame>& _data_frames )
+    const std::map<std::string, containers::DataFrame>& _data_frames ) const
 {
     // ------------------------------------------------------------------------
 
@@ -422,7 +424,7 @@ template <typename DataFrameType, typename SchemaType>
 DataFrameType FeatureEngineerer<FeatureEngineererType>::extract_df_by_colnames(
     const std::string& _name,
     const SchemaType& _schema,
-    const std::map<std::string, containers::DataFrame>& _data_frames )
+    const std::map<std::string, containers::DataFrame>& _data_frames ) const
 {
     // ------------------------------------------------------------------------
 
@@ -655,7 +657,7 @@ containers::Features FeatureEngineerer<FeatureEngineererType>::transform(
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<const monitoring::Logger>& _logger,
     const std::map<std::string, containers::DataFrame>& _data_frames,
-    Poco::Net::StreamSocket* _socket )
+    Poco::Net::StreamSocket* _socket ) const
 {
     // -------------------------------------------------------------------------
     // Extract the peripheral tables
