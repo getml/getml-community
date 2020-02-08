@@ -40,6 +40,9 @@ class AbstractFeatureEngineerer
     /// Selects the features according to the index given.
     virtual void select_features( const std::vector<size_t>& _index ) = 0;
 
+    /// Whether the feature engineerer supports multiple targets.
+    virtual bool supports_multiple_targets() const = 0;
+
     /// Return model as a JSON Object.
     virtual Poco::JSON::Object to_json_obj( const bool _schema_only ) const = 0;
 

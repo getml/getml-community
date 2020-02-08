@@ -19,7 +19,11 @@ class Pipeline
         const Poco::JSON::Object& _obj )
         : categories_( _categories ), obj_( _obj )
     {
-        feature_engineerers_ = make_feature_engineerers();
+        // This won't to anything - the point it to make sure that it can be
+        // parsed correctly.
+        init_feature_engineerers( 1 );
+        init_predictors( "feature_selectors_", 1 );
+        init_predictors( "predictors_", 1 );
     }
 
     ~Pipeline() = default;
@@ -59,13 +63,22 @@ class Pipeline
         const Poco::JSON::Object& _cmd,
         const std::map<std::string, containers::DataFrame>& _data_frames );
 
+    /// Fits the predictors.
+    void fit_predictors(
+        const Poco::JSON::Object& _cmd,
+        const std::shared_ptr<const monitoring::Logger>& _logger,
+        const std::map<std::string, containers::DataFrame>& _data_frames,
+        std::vector<std::vector<std::shared_ptr<predictors::Predictor>>>*
+            _predictors,
+        Poco::Net::StreamSocket* _socket ) const;
+
     /// Generates the numerical features (which also includes numerical columns
-    /// from the population table)..
+    /// from the population table).
     containers::Features generate_numerical_features(
         const Poco::JSON::Object& _cmd,
         const std::shared_ptr<const monitoring::Logger>& _logger,
         const std::map<std::string, containers::DataFrame>& _data_frames,
-        Poco::Net::StreamSocket* _socket );
+        Poco::Net::StreamSocket* _socket ) const;
 
     /// Generates the predictions based on the features.
     containers::Features generate_predictions(
@@ -79,10 +92,31 @@ class Pipeline
         const std::map<std::string, containers::DataFrame>& _data_frames )
         const;
 
-    /// Prepares the feature engineerers from
+    /// Prepares the feature engineerers from the JSON object.
     std::vector<
         containers::Optional<featureengineerers::AbstractFeatureEngineerer>>
-    make_feature_engineerers() const;
+    init_feature_engineerers( const size_t _num_targets ) const;
+
+    /// Prepares the feature engineerers from the JSON object.
+    std::vector<
+        containers::Optional<featureengineerers::AbstractFeatureEngineerer>>
+    init_feature_engineerers(
+        const Poco::JSON::Object& _cmd,
+        const std::map<std::string, containers::DataFrame>& _data_frames )
+        const;
+
+    /// Prepares the predictors or feature engineerers from the JSON object.
+    std::vector<std::vector<std::shared_ptr<predictors::Predictor>>>
+    init_predictors(
+        const std::string& _elem, const size_t _num_targets ) const;
+
+    /// Prepares the predictors or feature engineerers from the JSON object.
+    std::vector<std::vector<std::shared_ptr<predictors::Predictor>>>
+    init_predictors(
+        const std::string& _elem,
+        const Poco::JSON::Object& _cmd,
+        const std::map<std::string, containers::DataFrame>& _data_frames )
+        const;
 
     /// Figures out which columns from the population table we would like to
     /// add.
@@ -165,7 +199,8 @@ class Pipeline
 
     /// The predictors used in this pipeline (every target has its own set of
     /// predictors).
-    std::vector<std::vector<containers::Optional<predictors::Predictor>>>
+    /// TODO: Change to Optional instead of shared_ptr!
+    std::vector<std::vector<std::shared_ptr<predictors::Predictor>>>
         predictors_;
 
     /// The scores used to evaluate this pipeline

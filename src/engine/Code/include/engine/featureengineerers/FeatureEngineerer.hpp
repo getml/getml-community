@@ -71,6 +71,12 @@ class FeatureEngineerer : public AbstractFeatureEngineerer
         feature_engineerer().select_features( _index );
     }
 
+    /// Whether the feature engineerer supports multiple targets.
+    bool supports_multiple_targets() const final
+    {
+        return FeatureEngineererType::supports_multiple_targets_;
+    }
+
     /// Return model as a JSON Object.
     Poco::JSON::Object to_json_obj( const bool _schema_only ) const final
     {
