@@ -75,6 +75,15 @@ void Threadutils::fit_ensemble(
             opt->calc_residuals();
 
             // ----------------------------------------------------------------
+
+            const auto silent = _ensemble->hyperparameters().silent_;
+
+            if ( !silent && _logger )
+                {
+                    _logger->log( "Training features..." );
+                }
+
+            // ----------------------------------------------------------------
             // Start fitting
 
             _ensemble->fit(
