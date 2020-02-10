@@ -83,6 +83,8 @@ int main( int argc, char *argv[] )
 
     // -------------------------------------------
 
+    const auto project_mtx = std::make_shared<std::mutex>();
+
     const auto read_write_lock =
         std::make_shared<multithreading::ReadWriteLock>();
 
@@ -99,6 +101,7 @@ int main( int argc, char *argv[] )
             logger,
             multirel_models,
             monitor,
+            project_mtx,
             read_write_lock );
 
     const auto data_frame_manager =
@@ -122,6 +125,7 @@ int main( int argc, char *argv[] )
             logger,
             relboost_models,
             monitor,
+            project_mtx,
             read_write_lock );
 
     const auto project_manager =
@@ -133,10 +137,11 @@ int main( int argc, char *argv[] )
             join_keys_encoding,
             license_checker,
             logger,
-            relboost_models,
             monitor,
             options,
-            read_write_lock );
+            project_mtx,
+            read_write_lock,
+            relboost_models );
 
     // -------------------------------------------
     // This is where the actual communication begins

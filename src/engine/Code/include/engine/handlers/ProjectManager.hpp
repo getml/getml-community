@@ -27,10 +27,11 @@ class ProjectManager
         const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
         const std::shared_ptr<licensing::LicenseChecker>& _license_checker,
         const std::shared_ptr<const monitoring::Logger>& _logger,
-        const std::shared_ptr<RelboostModelMapType>& _relboost_models,
         const std::shared_ptr<const monitoring::Monitor>& _monitor,
         const config::Options& _options,
-        const std::shared_ptr<multithreading::ReadWriteLock>& _read_write_lock )
+        const std::shared_ptr<std::mutex>& _project_mtx,
+        const std::shared_ptr<multithreading::ReadWriteLock>& _read_write_lock,
+        const std::shared_ptr<RelboostModelMapType>& _relboost_models )
         : multirel_models_( _multirel_models ),
           categories_( _categories ),
           data_frame_manager_( _data_frame_manager ),
@@ -40,6 +41,7 @@ class ProjectManager
           logger_( _logger ),
           monitor_( _monitor ),
           options_( _options ),
+          project_mtx_( _project_mtx ),
           read_write_lock_( _read_write_lock ),
           relboost_models_( _relboost_models )
     {
@@ -268,6 +270,13 @@ class ProjectManager
     }
 
     /// Trivial (private) accessor
+    std::mutex& project_mtx()
+    {
+        assert_true( project_mtx_ );
+        return *project_mtx_;
+    }
+
+    /// Trivial (private) accessor
     RelboostModelMapType& relboost_models()
     {
         assert_true( relboost_models_ );
@@ -335,6 +344,9 @@ class ProjectManager
 
     /// Settings for the engine
     const config::Options options_;
+
+    /// It is sometimes necessary to prevent us from changing the project.
+    const std::shared_ptr<std::mutex> project_mtx_;
 
     /// The current project directory
     std::string project_directory_;

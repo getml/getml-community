@@ -29,6 +29,7 @@ class ModelManager
         const std::shared_ptr<const monitoring::Logger>& _logger,
         const std::shared_ptr<ModelMapType>& _models,
         const std::shared_ptr<const monitoring::Monitor>& _monitor,
+        const std::shared_ptr<std::mutex>& _project_mtx,
         const std::shared_ptr<multithreading::ReadWriteLock>& _read_write_lock )
         : categories_( _categories ),
           database_manager_( _database_manager ),
@@ -38,8 +39,8 @@ class ModelManager
           logger_( _logger ),
           models_( _models ),
           monitor_( _monitor ),
+          project_mtx_( _project_mtx ),
           read_write_lock_( _read_write_lock )
-
     {
     }
 
@@ -199,6 +200,13 @@ class ModelManager
         monitor_->send( "postrelboostmodel", _obj );
     }
 
+    /// Trivial (private) accessor
+    std::mutex& project_mtx()
+    {
+        assert_true( project_mtx_ );
+        return *project_mtx_;
+    }
+
     /// Sets a model.
     void set_model( const std::string& _name, const ModelType& _model )
     {
@@ -244,6 +252,9 @@ class ModelManager
 
     /// For communication with the monitor
     const std::shared_ptr<const monitoring::Monitor> monitor_;
+
+    /// It is sometimes necessary to prevent us from changing the project.
+    const std::shared_ptr<std::mutex> project_mtx_;
 
     /// For coordinating the read and write process of the data
     const std::shared_ptr<multithreading::ReadWriteLock> read_write_lock_;
@@ -447,6 +458,8 @@ void ModelManager<ModelType>::launch_hyperopt(
 
     const auto json_str = communication::Receiver::recv_string( _socket );
 
+    std::lock_guard<std::mutex> project_guard( project_mtx() );
+
     const auto [status, response] =
         monitor_->send( "launchhyperopt", json_str );
 
@@ -594,6 +607,7 @@ void ModelManager<ModelType>::send_data(
         logger_,
         models_,
         monitor_,
+        project_mtx_,
         local_read_write_lock );
 
     // -------------------------------------------------------
