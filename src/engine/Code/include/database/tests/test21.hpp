@@ -39,10 +39,10 @@ void test21()
 
     const auto table_names = mysql_db.list_tables();
 
-    for ( const auto& table : table_names )
-        {
-            std::cout << table << " ";
-        }
+    // for ( const auto& table : table_names )
+    //     {
+    //         std::cout << table << " ";
+    //     }
 
     // ---------------------------------------------------------------
 

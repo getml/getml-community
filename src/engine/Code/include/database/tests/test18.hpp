@@ -3,7 +3,7 @@
 
 void test18( std::filesystem::path _test_path )
 {
-    std::cout << "Test 18 | Parsing time stamps in MySQL\t\t";
+    std::cout << "Test 18 | Parsing time stamps in MySQL\t\t\t";
 
     // Append all subfolders to reach the required file. This
     // appending will have a persistent effect of _test_path which
