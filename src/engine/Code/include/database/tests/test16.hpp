@@ -3,7 +3,7 @@
 
 void test16( std::filesystem::path _test_path )
 {
-    std::cout << "Test 16 | NULL values in MySQL\t\t\t";
+    std::cout << "Test 16 | NULL values in MySQL\t\t\t\t";
 
     // ---------------------------------------------------------------
 

@@ -55,14 +55,14 @@ void test13( std::filesystem::path _test_path )
 
     const auto colnames = postgres_db.get_colnames( "POPULATION" );
 
-    for ( auto cname : colnames )
-        {
-            std::cout << cname << " ";
-        }
+    // for ( auto cname : colnames )
+    //     {
+    //         std::cout << cname << " ";
+    //     }
 
     const auto obj = postgres_db.get_content( "POPULATION", 0, 99, 20 );
 
-    Poco::JSON::Stringifier::stringify( obj, std::cout );
+    // Poco::JSON::Stringifier::stringify( obj, std::cout );
 
     // ---------------------------------------------------------------
 
