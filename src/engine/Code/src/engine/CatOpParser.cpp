@@ -37,7 +37,8 @@ std::vector<std::string> CatOpParser::boolean_to_string(
     const auto obj = *JSON::get_object( _col, "operand1_" );
 
     const auto operand1 =
-        BoolOpParser( categories_, join_keys_encoding_, df_, num_elem_ )
+        BoolOpParser(
+            categories_, join_keys_encoding_, data_frames_, num_elem_ )
             .parse( obj );
 
     auto result = std::vector<std::string>( operand1.size() );
@@ -66,7 +67,7 @@ std::vector<std::string> CatOpParser::numerical_to_string(
     const auto obj = *JSON::get_object( _col, "operand1_" );
 
     const auto operand1 =
-        NumOpParser( categories_, join_keys_encoding_, df_, num_elem_ )
+        NumOpParser( categories_, join_keys_encoding_, data_frames_, num_elem_ )
             .parse( obj );
 
     const auto role = obj.has( "role_" )
@@ -128,33 +129,29 @@ std::vector<std::string> CatOpParser::parse( const Poco::JSON::Object& _col )
             const auto df_name =
                 JSON::get_value<std::string>( _col, "df_name_" );
 
-            const auto has_df_name =
-                [df_name]( const containers::DataFrame& df ) {
-                    return df.name() == df_name;
-                };
+            const auto it = data_frames_->find( df_name );
 
-            const auto it =
-                std::find_if( df_->begin(), df_->end(), has_df_name );
-
-            if ( it == df_->end() )
+            if ( it == data_frames_->end() )
                 {
                     throw std::invalid_argument(
                         "Column '" + name + "' is from DataFrame '" + df_name +
-                        "'." );
+                        "', but such a DataFrame is not known." );
                 }
 
             if ( role == "categorical" )
                 {
-                    return to_vec( it->int_column( name, role ), categories_ );
+                    return to_vec(
+                        it->second.int_column( name, role ), categories_ );
                 }
             else if ( role == "join_key" )
                 {
                     return to_vec(
-                        it->int_column( name, role ), join_keys_encoding_ );
+                        it->second.int_column( name, role ),
+                        join_keys_encoding_ );
                 }
             else if ( role == "unused" || role == "unused_string" )
                 {
-                    return to_vec( it->unused_string( name ) );
+                    return to_vec( it->second.unused_string( name ) );
                 }
             else
                 {
@@ -251,7 +248,8 @@ std::vector<std::string> CatOpParser::update( const Poco::JSON::Object& _col )
     const auto operand2 = parse( *JSON::get_object( _col, "operand2_" ) );
 
     const auto condition =
-        BoolOpParser( categories_, join_keys_encoding_, df_, num_elem_ )
+        BoolOpParser(
+            categories_, join_keys_encoding_, data_frames_, num_elem_ )
             .parse( *JSON::get_object( _col, "condition_" ) );
 
     assert_true( operand1.size() == operand2.size() );

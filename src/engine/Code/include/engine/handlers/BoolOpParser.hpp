@@ -15,31 +15,16 @@ class BoolOpParser
     BoolOpParser(
         const std::shared_ptr<const containers::Encoding>& _categories,
         const std::shared_ptr<const containers::Encoding>& _join_keys_encoding,
-        const std::shared_ptr<const std::vector<containers::DataFrame>>& _df,
+        const std::shared_ptr<
+            const std::map<std::string, containers::DataFrame>>& _data_frames,
         const size_t _num_elem )
         : categories_( _categories ),
-          df_( _df ),
+          data_frames_( _data_frames ),
           join_keys_encoding_( _join_keys_encoding ),
           num_elem_( _num_elem )
     {
         assert_true( categories_ );
-        assert_true( df_ );
-        assert_true( join_keys_encoding_ );
-    }
-
-    BoolOpParser(
-        const std::shared_ptr<const containers::Encoding>& _categories,
-        const std::shared_ptr<const containers::Encoding>& _join_keys_encoding,
-        const std::vector<containers::DataFrame>& _df,
-        const size_t _num_elem )
-        : categories_( _categories ),
-          df_( std::make_shared<const std::vector<containers::DataFrame>>(
-              _df ) ),
-          join_keys_encoding_( _join_keys_encoding ),
-          num_elem_( _num_elem )
-    {
-        assert_true( categories_ );
-        assert_true( df_ );
+        assert_true( data_frames_ );
         assert_true( join_keys_encoding_ );
     }
 
@@ -93,14 +78,21 @@ class BoolOpParser
         const Poco::JSON::Object& _col, const Operator& _op )
     {
         const auto operand1 =
-            CatOpParser( categories_, join_keys_encoding_, df_, num_elem_ )
+            CatOpParser(
+                categories_, join_keys_encoding_, data_frames_, num_elem_ )
                 .parse( *JSON::get_object( _col, "operand1_" ) );
 
         const auto operand2 =
-            CatOpParser( categories_, join_keys_encoding_, df_, num_elem_ )
+            CatOpParser(
+                categories_, join_keys_encoding_, data_frames_, num_elem_ )
                 .parse( *JSON::get_object( _col, "operand2_" ) );
 
-        assert_true( operand1.size() == operand2.size() );
+        if ( operand1.size() != operand2.size() )
+            {
+                throw std::invalid_argument(
+                    "Columns must have the same length for binary operations "
+                    "to be possible!" );
+            }
 
         auto result = std::vector<bool>( operand1.size() );
 
@@ -121,14 +113,21 @@ class BoolOpParser
         const Poco::JSON::Object& _col, const Operator& _op )
     {
         const auto operand1 =
-            NumOpParser( categories_, join_keys_encoding_, df_, num_elem_ )
+            NumOpParser(
+                categories_, join_keys_encoding_, data_frames_, num_elem_ )
                 .parse( *JSON::get_object( _col, "operand1_" ) );
 
         const auto operand2 =
-            NumOpParser( categories_, join_keys_encoding_, df_, num_elem_ )
+            NumOpParser(
+                categories_, join_keys_encoding_, data_frames_, num_elem_ )
                 .parse( *JSON::get_object( _col, "operand2_" ) );
 
-        assert_true( operand1.size() == operand2.size() );
+        if ( operand1.size() != operand2.size() )
+            {
+                throw std::invalid_argument(
+                    "Columns must have the same length for binary operations "
+                    "to be possible!" );
+            }
 
         auto result = std::vector<bool>( operand1.size() );
 
@@ -149,7 +148,8 @@ class BoolOpParser
         const Poco::JSON::Object& _col, const Operator& _op )
     {
         const auto operand1 =
-            NumOpParser( categories_, join_keys_encoding_, df_, num_elem_ )
+            NumOpParser(
+                categories_, join_keys_encoding_, data_frames_, num_elem_ )
                 .parse( *JSON::get_object( _col, "operand1_" ) );
 
         auto result = std::vector<bool>( operand1.size() );
@@ -181,7 +181,8 @@ class BoolOpParser
     const std::shared_ptr<const containers::Encoding> categories_;
 
     /// The DataFrames this is based on.
-    const std::shared_ptr<const std::vector<containers::DataFrame>> df_;
+    const std::shared_ptr<const std::map<std::string, containers::DataFrame>>
+        data_frames_;
 
     /// Encodes the join keys used.
     const std::shared_ptr<const containers::Encoding> join_keys_encoding_;

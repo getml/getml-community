@@ -13,8 +13,14 @@ containers::Column<Float> GroupByParser::categorical_aggregation(
     const containers::Column<Int>& _unique,
     const containers::DataFrameIndex& _index )
 {
+    const auto data_frames =
+        std::make_shared<std::map<std::string, containers::DataFrame>>();
+
+    ( *data_frames )[df().name()] = df();
+
     const auto vec =
-        CatOpParser( categories_, join_keys_encoding_, {df()}, df().nrows() )
+        CatOpParser(
+            categories_, join_keys_encoding_, data_frames, df().nrows() )
             .parse( _json_col );
 
     if ( _type == "count_categorical" )
@@ -136,8 +142,14 @@ containers::Column<Float> GroupByParser::numerical_aggregation(
     const containers::Column<Int>& _unique,
     const containers::DataFrameIndex& _index )
 {
+    const auto data_frames =
+        std::make_shared<std::map<std::string, containers::DataFrame>>();
+
+    ( *data_frames )[df().name()] = df();
+
     const auto col =
-        NumOpParser( categories_, join_keys_encoding_, {df()}, df().nrows() )
+        NumOpParser(
+            categories_, join_keys_encoding_, data_frames, df().nrows() )
             .parse( _json_col );
 
     if ( _type == "assert_equal" )

@@ -15,28 +15,16 @@ class AggOpParser
     AggOpParser(
         const std::shared_ptr<const containers::Encoding>& _categories,
         const std::shared_ptr<const containers::Encoding>& _join_keys_encoding,
-        const std::shared_ptr<const std::vector<containers::DataFrame>>& _df )
+        const std::shared_ptr<
+            const std::map<std::string, containers::DataFrame>>& _data_frames,
+        const size_t _num_elem )
         : categories_( _categories ),
-          df_( _df ),
-          join_keys_encoding_( _join_keys_encoding )
+          data_frames_( _data_frames ),
+          join_keys_encoding_( _join_keys_encoding ),
+          num_elem_( _num_elem )
     {
         assert_true( categories_ );
-        assert_true( df_ );
-        assert_true( join_keys_encoding_ );
-    }
-
-    AggOpParser(
-        const std::shared_ptr<const containers::Encoding>& _categories,
-        const std::shared_ptr<const containers::Encoding>& _join_keys_encoding,
-        const std::vector<containers::DataFrame>& _df )
-        : categories_( _categories ),
-          df_( std::make_shared<const std::vector<containers::DataFrame>>(
-              _df ) ),
-          join_keys_encoding_( _join_keys_encoding )
-
-    {
-        assert_true( categories_ );
-        assert_true( df_ );
+        assert_true( data_frames_ );
         assert_true( join_keys_encoding_ );
     }
 
@@ -66,10 +54,15 @@ class AggOpParser
     const std::shared_ptr<const containers::Encoding> categories_;
 
     /// The DataFrames this is based on.
-    const std::shared_ptr<const std::vector<containers::DataFrame>> df_;
+    const std::shared_ptr<const std::map<std::string, containers::DataFrame>>
+        data_frames_;
 
     /// Encodes the join keys used.
     const std::shared_ptr<const containers::Encoding> join_keys_encoding_;
+
+    /// The number of elements required (must not be greater than the number of
+    /// rows in df)
+    const size_t num_elem_;
 
     // ------------------------------------------------------------------------
 };

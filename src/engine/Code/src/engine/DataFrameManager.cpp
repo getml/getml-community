@@ -34,7 +34,8 @@ void DataFrameManager::add_categorical_column(
     // ------------------------------------------------------------------------
 
     const auto vec =
-        CatOpParser( categories_, join_keys_encoding_, {df}, df.nrows() )
+        CatOpParser(
+            categories_, join_keys_encoding_, data_frames_, df.nrows() )
             .parse( json_col );
 
     // ------------------------------------------------------------------------
@@ -190,7 +191,8 @@ void DataFrameManager::add_column(
 
     // ------------------------------------------------------------------------
 
-    auto col = NumOpParser( categories_, join_keys_encoding_, {df}, df.nrows() )
+    auto col = NumOpParser(
+                   categories_, join_keys_encoding_, data_frames_, df.nrows() )
                    .parse( json_col );
 
     col.set_name( name );
@@ -360,8 +362,10 @@ void DataFrameManager::aggregate(
 
     auto response = containers::Column<Float>( 1 );
 
-    response[0] = AggOpParser( categories_, join_keys_encoding_, {df} )
-                      .aggregate( aggregation );
+    response[0] =
+        AggOpParser(
+            categories_, join_keys_encoding_, data_frames_, df.nrows() )
+            .aggregate( aggregation );
 
     read_lock.unlock();
 
@@ -1044,7 +1048,8 @@ void DataFrameManager::get_boolean_column(
     const auto df = utils::Getter::get( _name, &data_frames() );
 
     const auto col =
-        BoolOpParser( categories_, join_keys_encoding_, {df}, df.nrows() )
+        BoolOpParser(
+            categories_, join_keys_encoding_, data_frames_, df.nrows() )
             .parse( json_col );
 
     communication::Sender::send_string( "Found!", _socket );
@@ -1068,7 +1073,7 @@ void DataFrameManager::get_boolean_column_string(
     const auto length = std::min( df.nrows(), static_cast<size_t>( 20 ) );
 
     const auto col =
-        BoolOpParser( categories_, join_keys_encoding_, {df}, length )
+        BoolOpParser( categories_, join_keys_encoding_, data_frames_, length )
             .parse( json_col );
 
     std::string col_str = "BooleanColumn([";
@@ -1118,7 +1123,8 @@ void DataFrameManager::get_categorical_column(
     const auto df = utils::Getter::get( df_name, data_frames() );
 
     const auto col =
-        CatOpParser( categories_, join_keys_encoding_, {df}, df.nrows() )
+        CatOpParser(
+            categories_, join_keys_encoding_, data_frames_, df.nrows() )
             .parse( json_col );
 
     communication::Sender::send_string( "Found!", _socket );
@@ -1142,7 +1148,7 @@ void DataFrameManager::get_categorical_column_string(
     const auto length = std::min( df.nrows(), static_cast<size_t>( 20 ) );
 
     const auto col =
-        CatOpParser( categories_, join_keys_encoding_, {df}, length )
+        CatOpParser( categories_, join_keys_encoding_, data_frames_, length )
             .parse( json_col );
 
     std::string col_str = "StringColumn([";
@@ -1185,7 +1191,8 @@ void DataFrameManager::get_column(
     auto df = utils::Getter::get( _name, data_frames() );
 
     const auto col =
-        NumOpParser( categories_, join_keys_encoding_, {df}, df.nrows() )
+        NumOpParser(
+            categories_, join_keys_encoding_, data_frames_, df.nrows() )
             .parse( json_col );
 
     communication::Sender::send_string( "Found!", _socket );
@@ -1209,7 +1216,7 @@ void DataFrameManager::get_column_string(
     const auto length = std::min( df.nrows(), static_cast<size_t>( 20 ) );
 
     const auto col =
-        NumOpParser( categories_, join_keys_encoding_, {df}, length )
+        NumOpParser( categories_, join_keys_encoding_, data_frames_, length )
             .parse( json_col );
 
     std::string col_str = "FloatColumn([";
@@ -1710,7 +1717,8 @@ void DataFrameManager::where(
     auto df = utils::Getter::get( _name, data_frames() );
 
     const auto condition =
-        BoolOpParser( categories_, join_keys_encoding_, {df}, df.nrows() )
+        BoolOpParser(
+            categories_, join_keys_encoding_, data_frames_, df.nrows() )
             .parse( condition_json );
 
     // --------------------------------------------------------------------

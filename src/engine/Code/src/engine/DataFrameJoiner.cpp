@@ -359,12 +359,17 @@ void DataFrameJoiner::filter(
 
     assert_true( temp_df1.nrows() == temp_df2.nrows() );
 
-    const auto condition = BoolOpParser(
-                               _categories,
-                               _join_keys_encoding,
-                               {temp_df1, temp_df2},
-                               temp_df1.nrows() )
-                               .parse( _where );
+    const auto data_frames =
+        std::make_shared<std::map<std::string, containers::DataFrame>>();
+
+    ( *data_frames )[temp_df1.name()] = temp_df1;
+
+    ( *data_frames )[temp_df2.name()] = temp_df2;
+
+    const auto condition =
+        BoolOpParser(
+            _categories, _join_keys_encoding, data_frames, temp_df1.nrows() )
+            .parse( _where );
 
     // ------------------------------------------------------------------------
 

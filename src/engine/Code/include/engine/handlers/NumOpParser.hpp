@@ -15,31 +15,16 @@ class NumOpParser
     NumOpParser(
         const std::shared_ptr<const containers::Encoding>& _categories,
         const std::shared_ptr<const containers::Encoding>& _join_keys_encoding,
-        const std::shared_ptr<const std::vector<containers::DataFrame>>& _df,
+        const std::shared_ptr<
+            const std::map<std::string, containers::DataFrame>>& _data_frames,
         const size_t _num_elem )
         : categories_( _categories ),
-          df_( _df ),
+          data_frames_( _data_frames ),
           join_keys_encoding_( _join_keys_encoding ),
           num_elem_( _num_elem )
     {
         assert_true( categories_ );
-        assert_true( df_ );
-        assert_true( join_keys_encoding_ );
-    }
-
-    NumOpParser(
-        const std::shared_ptr<const containers::Encoding>& _categories,
-        const std::shared_ptr<const containers::Encoding>& _join_keys_encoding,
-        const std::vector<containers::DataFrame>& _df,
-        const size_t _num_elem )
-        : categories_( _categories ),
-          df_( std::make_shared<const std::vector<containers::DataFrame>>(
-              _df ) ),
-          join_keys_encoding_( _join_keys_encoding ),
-          num_elem_( _num_elem )
-    {
-        assert_true( categories_ );
-        assert_true( df_ );
+        assert_true( data_frames_ );
         assert_true( join_keys_encoding_ );
     }
 
@@ -88,7 +73,12 @@ class NumOpParser
 
         const auto operand2 = parse( *JSON::get_object( _col, "operand2_" ) );
 
-        assert_true( operand1.nrows() == operand2.nrows() );
+        if ( operand1.size() != operand2.size() )
+            {
+                throw std::invalid_argument(
+                    "Columns must have the same length for binary operations "
+                    "to be possible!" );
+            }
 
         auto result = containers::Column<Float>( operand1.nrows() );
 
@@ -111,9 +101,7 @@ class NumOpParser
 
         std::uniform_real_distribution<Float> dis( 0.0, 1.0 );
 
-        assert_true( df_->size() > 0 );
-
-        auto result = containers::Column<Float>( ( *df_ )[0].nrows() );
+        auto result = containers::Column<Float>( num_elem_ );
 
         for ( auto& val : result )
             {
@@ -126,9 +114,7 @@ class NumOpParser
     /// Returns a columns containing the rowids.
     containers::Column<Float> rowid()
     {
-        assert_true( df_->size() > 0 );
-
-        auto result = containers::Column<Float>( ( *df_ )[0].nrows() );
+        auto result = containers::Column<Float>( num_elem_ );
 
         for ( size_t i = 0; i < result.size(); ++i )
             {
@@ -160,7 +146,8 @@ class NumOpParser
     const std::shared_ptr<const containers::Encoding> categories_;
 
     /// The DataFrames this is based on.
-    const std::shared_ptr<const std::vector<containers::DataFrame>> df_;
+    const std::shared_ptr<const std::map<std::string, containers::DataFrame>>
+        data_frames_;
 
     /// Encodes the join keys used.
     const std::shared_ptr<const containers::Encoding> join_keys_encoding_;
