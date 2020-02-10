@@ -1118,9 +1118,7 @@ void DataFrameManager::get_categorical_column(
 
     multithreading::ReadLock read_lock( read_write_lock_ );
 
-    const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
-
-    const auto df = utils::Getter::get( df_name, data_frames() );
+    const auto df = utils::Getter::get( _name, data_frames() );
 
     const auto col =
         CatOpParser(
