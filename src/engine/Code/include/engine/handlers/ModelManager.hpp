@@ -439,6 +439,13 @@ void ModelManager<ModelType>::launch_hyperopt(
     const std::string& _name, Poco::Net::StreamSocket* _socket )
 {
     // -------------------------------------------------------
+    // The project guard will prevent any attempts to
+    // change or delete the project while the hyperparameter
+    // optimization is running.
+
+    std::lock_guard<std::mutex> project_guard( project_mtx() );
+
+    // -------------------------------------------------------
     // Some models are only supported by the premium version.
 
     if constexpr ( ModelType::premium_only_ )
@@ -457,8 +464,6 @@ void ModelManager<ModelType>::launch_hyperopt(
     // Receive the complete command and send to engine.
 
     const auto json_str = communication::Receiver::recv_string( _socket );
-
-    std::lock_guard<std::mutex> project_guard( project_mtx() );
 
     const auto [status, response] =
         monitor_->send( "launchhyperopt", json_str );

@@ -404,6 +404,8 @@ void ProjectManager::delete_relboost_model(
 void ProjectManager::delete_project(
     const std::string& _name, Poco::Net::StreamSocket* _socket )
 {
+    // Some methods, particularly the hyperparameter optimization,
+    // require us to keep the project fixed while they run.
     std::lock_guard<std::mutex> project_guard( project_mtx() );
 
     multithreading::WriteLock write_lock( read_write_lock_ );
