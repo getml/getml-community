@@ -535,6 +535,15 @@ Poco::JSON::Object ModelManager<ModelType>::receive_data(
                     local_data_frame_manager.from_json(
                         name, cmd, false, _socket );
                 }
+            else if ( type == "FloatColumn.set_unit" )
+                {
+                    local_data_frame_manager.set_unit( name, cmd, _socket );
+                }
+            else if ( type == "StringColumn.set_unit" )
+                {
+                    local_data_frame_manager.set_unit_categorical(
+                        name, cmd, _socket );
+                }
             else
                 {
                     break;

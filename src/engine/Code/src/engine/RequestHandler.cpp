@@ -207,6 +207,10 @@ void RequestHandler::run()
                     data_frame_manager().get_column_string(
                         name, cmd, &socket() );
                 }
+            else if ( type == "FloatColumn.get_unit" )
+                {
+                    data_frame_manager().get_unit( name, cmd, &socket() );
+                }
             else if ( type == "FloatColumn.set_unit" )
                 {
                     data_frame_manager().set_unit( name, cmd, &socket() );
@@ -382,6 +386,11 @@ void RequestHandler::run()
             else if ( type == "StringColumn.get_string" )
                 {
                     data_frame_manager().get_categorical_column_string(
+                        name, cmd, &socket() );
+                }
+            else if ( type == "StringColumn.get_unit" )
+                {
+                    data_frame_manager().get_unit_categorical(
                         name, cmd, &socket() );
                 }
             else if ( type == "StringColumn.set_unit" )

@@ -123,8 +123,6 @@ void DataFrameManager::add_categorical_column(
 
     const auto name = JSON::get_value<std::string>( _cmd, "name_" );
 
-    const auto unit = JSON::get_value<std::string>( _cmd, "unit_" );
-
     containers::Column<Int> col;
 
     if ( role == "categorical" )
@@ -152,8 +150,6 @@ void DataFrameManager::add_categorical_column(
         }
 
     col.set_name( name );
-
-    col.set_unit( unit );
 
     license_checker().check_mem_size( data_frames(), col.nbytes() );
 
@@ -223,13 +219,9 @@ void DataFrameManager::add_column(
 
     const auto name = JSON::get_value<std::string>( _cmd, "name_" );
 
-    const auto unit = JSON::get_value<std::string>( _cmd, "unit_" );
-
     auto col = communication::Receiver::recv_column( _socket );
 
     col.set_name( name );
-
-    col.set_unit( unit );
 
     add_column_to_df( role, col, _df, nullptr );
 
@@ -1347,6 +1339,63 @@ void DataFrameManager::get_nrows(
 
 // ------------------------------------------------------------------------
 
+void DataFrameManager::get_unit(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    const auto role = JSON::get_value<std::string>( _cmd, "role_" );
+
+    const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
+
+    const auto df = utils::Getter::get( df_name, data_frames() );
+
+    const auto unit = df.float_column( _name, role ).unit();
+
+    read_lock.unlock();
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    communication::Sender::send_string( unit, _socket );
+}
+
+// ------------------------------------------------------------------------
+
+void DataFrameManager::get_unit_categorical(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    const auto role = JSON::get_value<std::string>( _cmd, "role_" );
+
+    const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
+
+    const auto df = utils::Getter::get( df_name, data_frames() );
+
+    std::string unit;
+
+    if ( role == "unused" || role == "unused_string" )
+        {
+            unit = df.unused_string( _name ).unit();
+        }
+    else
+        {
+            unit = df.int_column( _name, role ).unit();
+        }
+
+    read_lock.unlock();
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    communication::Sender::send_string( unit, _socket );
+}
+
+// ------------------------------------------------------------------------
+
 void DataFrameManager::group_by(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,
@@ -1455,13 +1504,13 @@ void DataFrameManager::receive_data(
 
             const auto name = JSON::get_value<std::string>( cmd, "name_" );
 
-            if ( type == "StringColumn" )
-                {
-                    add_categorical_column( cmd, _df, _socket );
-                }
-            else if ( type == "FloatColumn" )
+            if ( type == "FloatColumn" )
                 {
                     add_column( cmd, _df, _socket );
+                }
+            else if ( type == "StringColumn" )
+                {
+                    add_categorical_column( cmd, _df, _socket );
                 }
             else if ( type == "DataFrame.close" )
                 {
@@ -1527,13 +1576,13 @@ void DataFrameManager::set_unit(
     const Poco::JSON::Object& _cmd,
     Poco::Net::StreamSocket* _socket )
 {
-    multithreading::WriteLock write_lock( read_write_lock_ );
-
     const auto role = JSON::get_value<std::string>( _cmd, "role_" );
 
     const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
 
     const auto unit = JSON::get_value<std::string>( _cmd, "unit_" );
+
+    multithreading::WriteLock write_lock( read_write_lock_ );
 
     auto& df = utils::Getter::get( df_name, &data_frames() );
 
@@ -1557,13 +1606,13 @@ void DataFrameManager::set_unit_categorical(
     const Poco::JSON::Object& _cmd,
     Poco::Net::StreamSocket* _socket )
 {
-    multithreading::WriteLock write_lock( read_write_lock_ );
-
     const auto role = JSON::get_value<std::string>( _cmd, "role_" );
 
     const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
 
     const auto unit = JSON::get_value<std::string>( _cmd, "unit_" );
+
+    multithreading::WriteLock write_lock( read_write_lock_ );
 
     auto& df = utils::Getter::get( df_name, &data_frames() );
 
@@ -1620,8 +1669,8 @@ void DataFrameManager::to_csv(
 
     const auto& df = utils::Getter::get( _name, data_frames() );
 
-    // We are using the bell character (\a) as the quotechar. It is least likely
-    // to appear in any field.
+    // We are using the bell character (\a) as the quotechar. It is least
+    // likely to appear in any field.
     auto reader = containers::DataFrameReader(
         df, categories_, join_keys_encoding_, '\a', '|' );
 
@@ -1663,8 +1712,8 @@ void DataFrameManager::to_db(
 
     const auto& df = utils::Getter::get( _name, data_frames() );
 
-    // We are using the bell character (\a) as the quotechar. It is least likely
-    // to appear in any field.
+    // We are using the bell character (\a) as the quotechar. It is least
+    // likely to appear in any field.
     auto reader = containers::DataFrameReader(
         df, categories_, join_keys_encoding_, '\a', '|' );
 
