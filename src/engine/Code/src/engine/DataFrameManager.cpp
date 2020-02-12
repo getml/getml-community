@@ -115,6 +115,22 @@ void DataFrameManager::add_categorical_column(
 // ------------------------------------------------------------------------
 
 void DataFrameManager::add_categorical_column(
+    const Poco::JSON::Object& _cmd, Poco::Net::StreamSocket* _socket )
+{
+    const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
+
+    multithreading::WriteLock write_lock( read_write_lock_ );
+
+    auto& df = utils::Getter::get( df_name, &data_frames() );
+
+    add_categorical_column( _cmd, &df, _socket );
+
+    monitor_->send( "postdataframe", df.to_monitor() );
+}
+
+// ------------------------------------------------------------------------
+
+void DataFrameManager::add_categorical_column(
     const Poco::JSON::Object& _cmd,
     containers::DataFrame* _df,
     Poco::Net::StreamSocket* _socket )
@@ -206,6 +222,22 @@ void DataFrameManager::add_column(
     communication::Sender::send_string( "Success!", _socket );
 
     // ------------------------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
+void DataFrameManager::add_column(
+    const Poco::JSON::Object& _cmd, Poco::Net::StreamSocket* _socket )
+{
+    const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
+
+    multithreading::WriteLock write_lock( read_write_lock_ );
+
+    auto& df = utils::Getter::get( df_name, &data_frames() );
+
+    add_column( _cmd, &df, _socket );
+
+    monitor_->send( "postdataframe", df.to_monitor() );
 }
 
 // ------------------------------------------------------------------------

@@ -427,13 +427,13 @@ void DataFrame::from_csv(
     if ( _quotechar.size() != 1 )
         {
             throw std::invalid_argument(
-                "The quotechar must contain exactly one characeter!" );
+                "The quotechar must contain exactly one character!" );
         }
 
     if ( _sep.size() != 1 )
         {
             throw std::invalid_argument(
-                "The separator must contain exactly one characeter!" );
+                "The separator must contain exactly one character!" );
         }
 
     auto reader = csv::CSVReader( _fname, _quotechar[0], _sep[0] );

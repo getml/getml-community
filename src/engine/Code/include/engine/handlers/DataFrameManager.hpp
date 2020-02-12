@@ -36,17 +36,29 @@ class DataFrameManager
     // ------------------------------------------------------------------------
 
    public:
-    /// Adds a new categorical column to an existing data frame.
+    /// Adds a string categorical column to an existing data frame (parsed by
+    /// the column operators).
     void add_categorical_column(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
-    /// Adds a new column to an existing data frame.
+    /// Adds a new string column to an existing data frame (sent by the user,
+    /// for instance as a numpy array).
+    void add_categorical_column(
+        const Poco::JSON::Object& _cmd, Poco::Net::StreamSocket* _socket );
+
+    /// Adds a new float column to an existing data frame (parsed by the column
+    /// operators).
     void add_column(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
+
+    /// Adds a new float column to an existing data frame (sent by the user, for
+    /// instance as a numpy array).
+    void add_column(
+        const Poco::JSON::Object& _cmd, Poco::Net::StreamSocket* _socket );
 
     /// Creates a new data frame and adds it to the map of data frames.
     void add_data_frame(

@@ -194,6 +194,10 @@ void RequestHandler::run()
                 {
                     data_frame_manager().where( name, cmd, &socket() );
                 }
+            else if ( type == "FloatColumn" )
+                {
+                    data_frame_manager().add_column( cmd, &socket() );
+                }
             else if ( type == "FloatColumn.aggregate" )
                 {
                     data_frame_manager().aggregate( name, cmd, &socket() );
@@ -377,6 +381,11 @@ void RequestHandler::run()
                 {
                     //    monitor().shutdown();
                     *shutdown_ = true;
+                }
+            else if ( type == "StringColumn" )
+                {
+                    data_frame_manager().add_categorical_column(
+                        cmd, &socket() );
                 }
             else if ( type == "StringColumn.get" )
                 {

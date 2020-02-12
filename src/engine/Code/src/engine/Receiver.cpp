@@ -22,7 +22,7 @@ containers::Column<Int> Receiver::recv_categorical_column(
     if ( std::get<0>( shape ) <= 0 )
         {
             throw std::runtime_error(
-                "Your data frame must contain at least one row!" );
+                "Your data must contain at least one row!" );
         }
 
     if ( std::get<1>( shape ) != 1 )
@@ -64,7 +64,7 @@ std::vector<std::string> Receiver::recv_string_column(
     if ( std::get<0>( shape ) <= 0 )
         {
             throw std::runtime_error(
-                "Your data frame must contain at least one row!" );
+                "Your data must contain at least one row!" );
         }
 
     if ( std::get<1>( shape ) != 1 )
