@@ -85,7 +85,8 @@ void DataFrameJoiner::add_all(
                 }
 
             _joined_df->add_float_column(
-                _df.unused_float( i ).sort_by_key( _rindices ), "unused" );
+                _df.unused_float( i ).sort_by_key( _rindices ),
+                "unused_float" );
         }
 
     for ( size_t i = 0; i < _df.num_unused_strings(); ++i )

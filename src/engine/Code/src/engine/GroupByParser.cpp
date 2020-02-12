@@ -119,14 +119,14 @@ containers::DataFrame GroupByParser::group_by(
                     const auto col = categorical_aggregation(
                         type, as, json_col, unique, index );
 
-                    result.add_float_column( col, "unused" );
+                    result.add_float_column( col, "unused_float" );
                 }
             else
                 {
                     const auto col = numerical_aggregation(
                         type, as, json_col, unique, index );
 
-                    result.add_float_column( col, "unused" );
+                    result.add_float_column( col, "unused_float" );
                 }
         }
 

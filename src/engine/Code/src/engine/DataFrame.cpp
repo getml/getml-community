@@ -576,7 +576,7 @@ void DataFrame::from_csv(
 
     df.add_float_vectors( _time_stamp_names, time_stamps, "time_stamp" );
 
-    df.add_float_vectors( _unused_float_names, unused_floats, "unused" );
+    df.add_float_vectors( _unused_float_names, unused_floats, "unused_float" );
 
     df.add_string_vectors( _unused_string_names, unused_strings );
 
@@ -844,7 +844,7 @@ void DataFrame::from_json(
 
             const auto arr = JSON::get_array( _obj, name );
 
-            if ( _role == "unused_string" )
+            if ( _role == "unused" || _role == "unused_string" )
                 {
                     auto column = Column<strings::String>( arr->size() );
 
@@ -1698,7 +1698,7 @@ void DataFrame::where( const std::vector<bool> &_condition )
     for ( size_t i = 0; i < num_unused_floats(); ++i )
         {
             df.add_float_column(
-                unused_float( i ).where( _condition ), "unused" );
+                unused_float( i ).where( _condition ), "unused_float" );
         }
 
     for ( size_t i = 0; i < num_unused_strings(); ++i )
