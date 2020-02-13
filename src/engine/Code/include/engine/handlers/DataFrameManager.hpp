@@ -260,6 +260,15 @@ class DataFrameManager
         multithreading::WeakWriteLock* _weak_write_lock,
         Poco::Net::StreamSocket* _socket );
 
+    /// Makes sure that all referenced DataFrames exist, that they
+    /// have the same number of rows.
+    /// Returns the inferred number of rows and whether any df has
+    /// been found.
+    std::pair<size_t, bool> check_nrows(
+        const Poco::JSON::Object& _obj,
+        const std::string& _cmp_df_name = "",
+        const size_t _cmp_nrows = 0 );
+
     /// Tells the receive_data(...) method to no longer receive data and
     /// checks the memory size.
     void close(

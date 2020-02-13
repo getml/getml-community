@@ -104,11 +104,12 @@ containers::Column<Float> NumOpParser::get_column(
         {
             throw std::invalid_argument(
                 "Column '" + name + "' is from DataFrame '" + df_name +
-                "', but such a DataFrame is not known." );
+                "', but no such DataFrame is known." );
         }
 
-    const bool wrong_length = ( !subselection_ && _col.size() != num_elem_ ) ||
-                              _col.size() < num_elem_;
+    const bool wrong_length =
+        ( !subselection_ && it->second.nrows() != num_elem_ ) ||
+        it->second.nrows() < num_elem_;
 
     if ( wrong_length )
         {

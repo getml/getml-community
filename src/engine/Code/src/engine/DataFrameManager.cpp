@@ -25,18 +25,27 @@ void DataFrameManager::add_categorical_column(
 
     const auto json_col = *JSON::get_object( _cmd, "col_" );
 
-    // ------------------------------------------------------------------------
-
     const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
 
-    auto& df = utils::Getter::get( df_name, &data_frames() );
-
     // ------------------------------------------------------------------------
+
+    const auto [nrows, any_df_found] = check_nrows( json_col );
+
+    if ( !any_df_found )
+        {
+            throw std::invalid_argument(
+                "Could not infer the number of rows, because no DataFrame "
+                "has been referred." );
+        }
 
     const auto vec =
         CatOpParser(
-            categories_, join_keys_encoding_, data_frames_, df.nrows(), false )
+            categories_, join_keys_encoding_, data_frames_, nrows, false )
             .parse( json_col );
+
+    // ------------------------------------------------------------------------
+
+    auto& df = utils::Getter::get( df_name, &data_frames() );
 
     // ------------------------------------------------------------------------
 
@@ -167,17 +176,22 @@ void DataFrameManager::add_column(
 
     const auto json_col = *JSON::get_object( _cmd, "col_" );
 
-    // ------------------------------------------------------------------------
-
     const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
 
-    auto& df = utils::Getter::get( df_name, &data_frames() );
-
     // ------------------------------------------------------------------------
+
+    const auto [nrows, any_df_found] = check_nrows( json_col );
+
+    if ( !any_df_found )
+        {
+            throw std::invalid_argument(
+                "Could not infer the number of rows, because no DataFrame "
+                "has been referred." );
+        }
 
     auto col =
         NumOpParser(
-            categories_, join_keys_encoding_, data_frames_, df.nrows(), false )
+            categories_, join_keys_encoding_, data_frames_, nrows, false )
             .parse( json_col );
 
     col.set_name( name );
@@ -185,6 +199,8 @@ void DataFrameManager::add_column(
     col.set_unit( unit );
 
     // ------------------------------------------------------------------------
+
+    auto& df = utils::Getter::get( df_name, &data_frames() );
 
     add_column_to_df( role, col, &df, &weak_write_lock );
 
@@ -353,6 +369,8 @@ void DataFrameManager::aggregate(
     multithreading::ReadLock read_lock( read_write_lock_ );
 
     const auto df = utils::Getter::get( df_name, data_frames() );
+
+    check_nrows( aggregation, df_name, df.nrows() );
 
     auto response = containers::Column<Float>( 1 );
 
@@ -595,6 +613,103 @@ void DataFrameManager::calc_column_plots(
     communication::Sender::send_string( JSON::stringify( obj ), _socket );
 
     // --------------------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
+std::pair<size_t, bool> DataFrameManager::check_nrows(
+    const Poco::JSON::Object& _obj,
+    const std::string& _cmp_df_name,
+    const size_t _cmp_nrows )
+{
+    // ------------------------------------------------------------------------
+
+    auto df_name = _cmp_df_name;
+
+    auto nrows = _cmp_nrows;
+
+    auto any_df_found = ( _cmp_df_name != "" );
+
+    // ------------------------------------------------------------------------
+
+    if ( _obj.has( "df_name_" ) )
+        {
+            df_name = JSON::get_value<std::string>( _obj, "df_name_" );
+
+            if ( df_name == "" )
+                {
+                    throw std::invalid_argument(
+                        "df_name_ cannot be an empty string!" );
+                }
+
+            if ( df_name != _cmp_df_name )
+                {
+                    const auto df =
+                        utils::Getter::get( df_name, data_frames() );
+
+                    nrows = df.nrows();
+
+                    any_df_found = true;
+
+                    if ( _cmp_df_name != "" && _cmp_nrows != nrows )
+                        {
+                            throw std::invalid_argument(
+                                "Cannot execute binary operation: '" +
+                                _cmp_df_name + "' has " +
+                                std::to_string( _cmp_nrows ) + " rows, but '" +
+                                df_name + "' has " + std::to_string( nrows ) +
+                                " rows." );
+                        }
+                }
+        }
+
+    // ------------------------------------------------------------------------
+
+    if ( _obj.has( "operand1_" ) )
+        {
+            std::tie( nrows, any_df_found ) = check_nrows(
+                *JSON::get_object( _obj, "operand1_" ), df_name, nrows );
+        }
+
+    if ( _obj.has( "operand2_" ) )
+        {
+            std::tie( nrows, any_df_found ) = check_nrows(
+                *JSON::get_object( _obj, "operand2_" ), df_name, nrows );
+        }
+
+    if ( _obj.has( "col_" ) )
+        {
+            std::tie( nrows, any_df_found ) = check_nrows(
+                *JSON::get_object( _obj, "col_" ), df_name, nrows );
+        }
+
+    // ------------------------------------------------------------------------
+
+    if ( _obj.has( "aggregations_" ) )
+        {
+            assert_true( any_df_found );
+
+            const auto arr = JSON::get_array( _obj, "aggregations_" );
+
+            for ( size_t i = 0; i < arr->size(); ++i )
+                {
+                    const auto ptr = arr->getObject( i );
+
+                    if ( !ptr )
+                        {
+                            throw std::invalid_argument(
+                                "Could not parse aggregations!" );
+                        }
+
+                    check_nrows( *ptr, df_name, nrows );
+                }
+        }
+
+    // ------------------------------------------------------------------------
+
+    return std::make_pair( nrows, any_df_found );
+
+    // ------------------------------------------------------------------------
 }
 
 // ------------------------------------------------------------------------
@@ -1041,6 +1156,8 @@ void DataFrameManager::get_boolean_column(
 
     const auto df = utils::Getter::get( _name, &data_frames() );
 
+    check_nrows( json_col, _name, df.nrows() );
+
     const auto col =
         BoolOpParser(
             categories_, join_keys_encoding_, data_frames_, df.nrows(), false )
@@ -1063,6 +1180,8 @@ void DataFrameManager::get_boolean_column_string(
     multithreading::ReadLock read_lock( read_write_lock_ );
 
     const auto df = utils::Getter::get( _name, &data_frames() );
+
+    check_nrows( json_col, _name, df.nrows() );
 
     const auto length = std::min( df.nrows(), static_cast<size_t>( 20 ) );
 
@@ -1115,6 +1234,8 @@ void DataFrameManager::get_categorical_column(
 
     const auto df = utils::Getter::get( _name, data_frames() );
 
+    check_nrows( json_col, _name, df.nrows() );
+
     const auto col =
         CatOpParser(
             categories_, join_keys_encoding_, data_frames_, df.nrows(), false )
@@ -1137,6 +1258,8 @@ void DataFrameManager::get_categorical_column_string(
     multithreading::ReadLock read_lock( read_write_lock_ );
 
     const auto df = utils::Getter::get( _name, data_frames() );
+
+    check_nrows( json_col, _name, df.nrows() );
 
     const auto length = std::min( df.nrows(), static_cast<size_t>( 20 ) );
 
@@ -1184,6 +1307,8 @@ void DataFrameManager::get_column(
 
     auto df = utils::Getter::get( _name, data_frames() );
 
+    check_nrows( json_col, _name, df.nrows() );
+
     const auto col =
         NumOpParser(
             categories_, join_keys_encoding_, data_frames_, df.nrows(), false )
@@ -1206,6 +1331,8 @@ void DataFrameManager::get_column_string(
     multithreading::ReadLock read_lock( read_write_lock_ );
 
     auto df = utils::Getter::get( _name, data_frames() );
+
+    check_nrows( json_col, _name, df.nrows() );
 
     const auto length = std::min( df.nrows(), static_cast<size_t>( 20 ) );
 
@@ -1416,6 +1543,8 @@ void DataFrameManager::group_by(
     multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
 
     const auto df = utils::Getter::get( df_name, data_frames() );
+
+    check_nrows( _cmd, df_name, df.nrows() );
 
     const auto grouped_df =
         GroupByParser( categories_, join_keys_encoding_, {df} )
@@ -1838,6 +1967,8 @@ void DataFrameManager::where(
     const auto condition_json = *JSON::get_object( _cmd, "condition_" );
 
     auto df = utils::Getter::get( _name, data_frames() );
+
+    check_nrows( condition_json, _name, df.nrows() );
 
     const auto condition =
         BoolOpParser(
