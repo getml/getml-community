@@ -509,16 +509,6 @@ void DataFrameManager::append_to_data_frame(
     multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
 
     // --------------------------------------------------------------------
-    // Make sure a data frame of this name exists.
-
-    if ( data_frames().find( _name ) == data_frames().end() )
-        {
-            throw std::invalid_argument(
-                "No data frame named '" + _name +
-                "' is currently loaded in memory." );
-        }
-
-    // --------------------------------------------------------------------
     // Create the data frame itself.
 
     auto local_categories =
@@ -543,15 +533,29 @@ void DataFrameManager::append_to_data_frame(
     weak_write_lock.upgrade();
 
     // --------------------------------------------------------------------
-    // Append to data frame
+
+    auto [old_df, exists] =
+        utils::Getter::get_if_exists( _name, &data_frames() );
+
+    if ( exists )
+        {
+            old_df->append( df );
+        }
+    else
+        {
+            data_frames()[_name] = df;
+        }
+
+    data_frames()[_name].create_indices();
+
+    // --------------------------------------------------------------------
+    // Update categories
 
     categories_->append( *local_categories );
 
     join_keys_encoding_->append( *local_join_keys_encoding );
 
-    data_frames()[_name].append( df );
-
-    data_frames()[_name].create_indices();
+    // --------------------------------------------------------------------
 
     monitor_->send( "postdataframe", data_frames()[_name].to_monitor() );
 

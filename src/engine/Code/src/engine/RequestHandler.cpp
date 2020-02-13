@@ -414,7 +414,7 @@ void RequestHandler::run()
 
             communication::Sender::send_string( e.what(), &socket() );
         }
-}  // namespace srv
+}
 
 // ------------------------------------------------------------------------
 }  // namespace srv
