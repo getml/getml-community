@@ -86,12 +86,13 @@ void RequestHandler::run()
                 }
             else if ( type == "DataFrame.add_categorical_column" )
                 {
-                    data_frame_manager().add_categorical_column(
+                    data_frame_manager().add_string_column(
                         name, cmd, &socket() );
                 }
             else if ( type == "DataFrame.add_column" )
                 {
-                    data_frame_manager().add_column( name, cmd, &socket() );
+                    data_frame_manager().add_float_column(
+                        name, cmd, &socket() );
                 }
             else if ( type == "DataFrame.append" )
                 {
