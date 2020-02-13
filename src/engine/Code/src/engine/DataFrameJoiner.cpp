@@ -347,6 +347,8 @@ void DataFrameJoiner::filter(
 {
     // ------------------------------------------------------------------------
 
+    assert_true( _rindices1.size() == _rindices2.size() );
+
     auto temp_df1 =
         containers::DataFrame( _df1.name(), _categories, _join_keys_encoding );
 
@@ -358,22 +360,31 @@ void DataFrameJoiner::filter(
 
     // ------------------------------------------------------------------------
 
-    assert_true( temp_df1.nrows() == temp_df2.nrows() );
+    assert_true(
+        temp_df1.nrows() == temp_df2.nrows() || temp_df1.ncols() == 0 ||
+        temp_df2.ncols() == 0 );
+
+    assert_true( temp_df1.ncols() != 0 || temp_df2.ncols() != 0 );
 
     const auto data_frames =
         std::make_shared<std::map<std::string, containers::DataFrame>>();
 
-    ( *data_frames )[temp_df1.name()] = temp_df1;
+    if ( temp_df1.ncols() != 0 )
+        {
+            ( *data_frames )[temp_df1.name()] = temp_df1;
+        }
 
-    ( *data_frames )[temp_df2.name()] = temp_df2;
+    if ( temp_df2.ncols() != 0 )
+        {
+            ( *data_frames )[temp_df2.name()] = temp_df2;
+        }
 
-    const auto condition = BoolOpParser(
-                               _categories,
-                               _join_keys_encoding,
-                               data_frames,
-                               temp_df1.nrows(),
-                               false )
-                               .parse( _where );
+    const auto nrows = std::max( temp_df1.nrows(), temp_df2.nrows() );
+
+    const auto condition =
+        BoolOpParser(
+            _categories, _join_keys_encoding, data_frames, nrows, false )
+            .parse( _where );
 
     // ------------------------------------------------------------------------
 
