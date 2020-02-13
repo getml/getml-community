@@ -20,7 +20,7 @@ containers::Column<Float> GroupByParser::categorical_aggregation(
 
     const auto vec =
         CatOpParser(
-            categories_, join_keys_encoding_, data_frames, df().nrows() )
+            categories_, join_keys_encoding_, data_frames, df().nrows(), false )
             .parse( _json_col );
 
     if ( _type == "count_categorical" )
@@ -149,7 +149,7 @@ containers::Column<Float> GroupByParser::numerical_aggregation(
 
     const auto col =
         NumOpParser(
-            categories_, join_keys_encoding_, data_frames, df().nrows() )
+            categories_, join_keys_encoding_, data_frames, df().nrows(), false )
             .parse( _json_col );
 
     if ( _type == "assert_equal" )

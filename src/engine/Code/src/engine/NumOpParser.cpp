@@ -61,10 +61,13 @@ containers::Column<Float> NumOpParser::boolean_to_num(
 {
     const auto obj = *JSON::get_object( _col, "operand1_" );
 
-    const auto operand1 =
-        BoolOpParser(
-            categories_, join_keys_encoding_, data_frames_, num_elem_ )
-            .parse( obj );
+    const auto operand1 = BoolOpParser(
+                              categories_,
+                              join_keys_encoding_,
+                              data_frames_,
+                              num_elem_,
+                              subselection_ )
+                              .parse( obj );
 
     auto result = containers::Column<Float>( operand1.size() );
 
@@ -104,11 +107,23 @@ containers::Column<Float> NumOpParser::get_column(
                 "', but such a DataFrame is not known." );
         }
 
+    const bool wrong_length = ( !subselection_ && _col.size() != num_elem_ ) ||
+                              _col.size() < num_elem_;
+
+    if ( wrong_length )
+        {
+            throw std::invalid_argument(
+                "Columns must have the same length for binary operations "
+                "to be possible!" );
+
+            return containers::Column<Float>( 0 );
+        }
+
     if ( it->second.nrows() == num_elem_ )
         {
             return it->second.float_column( name, role );
         }
-    else if ( it->second.nrows() >= num_elem_ )
+    else
         {
             const auto long_col = it->second.float_column( name, role );
 
@@ -118,15 +133,6 @@ containers::Column<Float> NumOpParser::get_column(
                 long_col.begin(), long_col.begin() + num_elem_, col.begin() );
 
             return col;
-        }
-    else
-        {
-            throw std::invalid_argument(
-                "Number of extracted elements greater than DataFrame. "
-                "Columns must have the same length for binary operations "
-                "to be possible!" );
-
-            return containers::Column<Float>( 0 );
         }
 }
 
@@ -170,9 +176,13 @@ containers::Column<Float> NumOpParser::parse( const Poco::JSON::Object& _col )
 
 containers::Column<Float> NumOpParser::to_num( const Poco::JSON::Object& _col )
 {
-    const auto operand1 =
-        CatOpParser( categories_, join_keys_encoding_, data_frames_, num_elem_ )
-            .parse( *JSON::get_object( _col, "operand1_" ) );
+    const auto operand1 = CatOpParser(
+                              categories_,
+                              join_keys_encoding_,
+                              data_frames_,
+                              num_elem_,
+                              subselection_ )
+                              .parse( *JSON::get_object( _col, "operand1_" ) );
 
     auto result = containers::Column<Float>( operand1.size() );
 
@@ -201,9 +211,13 @@ containers::Column<Float> NumOpParser::to_ts( const Poco::JSON::Object& _col )
     const auto time_formats = JSON::array_to_vector<std::string>(
         JSON::get_array( _col, "time_formats_" ) );
 
-    const auto operand1 =
-        CatOpParser( categories_, join_keys_encoding_, data_frames_, num_elem_ )
-            .parse( *JSON::get_object( _col, "operand1_" ) );
+    const auto operand1 = CatOpParser(
+                              categories_,
+                              join_keys_encoding_,
+                              data_frames_,
+                              num_elem_,
+                              subselection_ )
+                              .parse( *JSON::get_object( _col, "operand1_" ) );
 
     auto result = containers::Column<Float>( operand1.size() );
 
@@ -560,7 +574,11 @@ containers::Column<Float> NumOpParser::update( const Poco::JSON::Object& _col )
 
     const auto condition =
         BoolOpParser(
-            categories_, join_keys_encoding_, data_frames_, num_elem_ )
+            categories_,
+            join_keys_encoding_,
+            data_frames_,
+            num_elem_,
+            subselection_ )
             .parse( *JSON::get_object( _col, "condition_" ) );
 
     assert_true( operand1.size() == operand2.size() );

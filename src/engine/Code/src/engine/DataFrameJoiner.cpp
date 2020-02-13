@@ -367,10 +367,13 @@ void DataFrameJoiner::filter(
 
     ( *data_frames )[temp_df2.name()] = temp_df2;
 
-    const auto condition =
-        BoolOpParser(
-            _categories, _join_keys_encoding, data_frames, temp_df1.nrows() )
-            .parse( _where );
+    const auto condition = BoolOpParser(
+                               _categories,
+                               _join_keys_encoding,
+                               data_frames,
+                               temp_df1.nrows(),
+                               false )
+                               .parse( _where );
 
     // ------------------------------------------------------------------------
 
