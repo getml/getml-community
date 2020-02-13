@@ -196,7 +196,7 @@ void RequestHandler::run()
                 }
             else if ( type == "FloatColumn" )
                 {
-                    data_frame_manager().add_column( cmd, &socket() );
+                    data_frame_manager().add_float_column( cmd, &socket() );
                 }
             else if ( type == "FloatColumn.aggregate" )
                 {
@@ -384,8 +384,7 @@ void RequestHandler::run()
                 }
             else if ( type == "StringColumn" )
                 {
-                    data_frame_manager().add_categorical_column(
-                        cmd, &socket() );
+                    data_frame_manager().add_string_column( cmd, &socket() );
                 }
             else if ( type == "StringColumn.get" )
                 {

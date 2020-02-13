@@ -36,17 +36,12 @@ class DataFrameManager
     // ------------------------------------------------------------------------
 
    public:
-    /// Adds a string categorical column to an existing data frame (parsed by
+    /// Adds a string column to an existing data frame (parsed by
     /// the column operators).
     void add_categorical_column(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
-
-    /// Adds a new string column to an existing data frame (sent by the user,
-    /// for instance as a numpy array).
-    void add_categorical_column(
-        const Poco::JSON::Object& _cmd, Poco::Net::StreamSocket* _socket );
 
     /// Adds a new float column to an existing data frame (parsed by the column
     /// operators).
@@ -57,12 +52,17 @@ class DataFrameManager
 
     /// Adds a new float column to an existing data frame (sent by the user, for
     /// instance as a numpy array).
-    void add_column(
+    void add_float_column(
         const Poco::JSON::Object& _cmd, Poco::Net::StreamSocket* _socket );
 
     /// Creates a new data frame and adds it to the map of data frames.
     void add_data_frame(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
+
+    /// Adds a new string column to an existing data frame (sent by the user,
+    /// for instance as a numpy array).
+    void add_string_column(
+        const Poco::JSON::Object& _cmd, Poco::Net::StreamSocket* _socket );
 
     /// Undertakes an aggregation on an entire column.
     void aggregate(
@@ -242,18 +242,6 @@ class DataFrameManager
     // ------------------------------------------------------------------------
 
    private:
-    /// Adds a categorical matrix to a data frame.
-    void add_categorical_column(
-        const Poco::JSON::Object& _cmd,
-        containers::DataFrame* _df,
-        Poco::Net::StreamSocket* _socket );
-
-    /// Adds a matrix to a data frame.
-    void add_column(
-        const Poco::JSON::Object& _cmd,
-        containers::DataFrame* _df,
-        Poco::Net::StreamSocket* _socket );
-
     /// Takes care of the process of actually adding the column.
     /// Called by botht the public and the private "add_column".
     void add_column_to_df(
@@ -265,21 +253,35 @@ class DataFrameManager
     /// Adds a string column to the data frame.
     /// This could only be an unused string,
     /// because all others are encoded.
-    void add_string_column(
+    void add_string_column_to_df(
         const std::string& _name,
         const std::vector<std::string>& _vec,
         containers::DataFrame* _df,
         multithreading::WeakWriteLock* _weak_write_lock,
         Poco::Net::StreamSocket* _socket );
 
-    /// Tells the receive_data(...) method to no longer receive data and checks
-    /// the memory size.
+    /// Tells the receive_data(...) method to no longer receive data and
+    /// checks the memory size.
     void close(
         const containers::DataFrame& _df, Poco::Net::StreamSocket* _socket );
 
     /// Receives the actual data contained in a DataFrame
     void receive_data(
         containers::DataFrame* _df, Poco::Net::StreamSocket* _socket );
+
+    /// Receives a FloatColumn and adds it to the DataFrame.
+    void recv_and_add_float_column(
+        const Poco::JSON::Object& _cmd,
+        containers::DataFrame* _df,
+        multithreading::WeakWriteLock* _weak_write_lock,
+        Poco::Net::StreamSocket* _socket );
+
+    /// Adds a categorical matrix to a data frame.
+    void recv_and_add_string_column(
+        const Poco::JSON::Object& _cmd,
+        containers::DataFrame* _df,
+        multithreading::WeakWriteLock* _weak_write_lock,
+        Poco::Net::StreamSocket* _socket );
 
     // ------------------------------------------------------------------------
 
@@ -303,6 +305,13 @@ class DataFrameManager
     {
         assert_true( data_frames_ );
         return *data_frames_;
+    }
+
+    /// Checks whether a data frame of a certain name exists
+    bool df_exists( const std::string& _name )
+    {
+        const auto it = data_frames().find( _name );
+        return ( it == data_frames().end() );
     }
 
     /// Trivial accessor
