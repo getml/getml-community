@@ -93,7 +93,9 @@ class DataFrame
         const std::vector<std::string> &_join_keys,
         const std::vector<std::string> &_numericals,
         const std::vector<std::string> &_targets,
-        const std::vector<std::string> &_time_stamps );
+        const std::vector<std::string> &_time_stamp_names,
+        const std::vector<std::string> &_unused_float_names,
+        const std::vector<std::string> &_unused_string_names );
 
     /// Builds a dataframe from a JSON Object.
     void from_json(

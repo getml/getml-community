@@ -1184,6 +1184,18 @@ void DataFrameManager::from_query(
     const auto time_stamps = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "time_stamps_" ) );
 
+    const auto unused_floats =
+        _cmd.has( "unused_floats_" )
+            ? JSON::array_to_vector<std::string>(
+                  JSON::get_array( _cmd, "unused_floats_" ) )
+            : std::vector<std::string>();
+
+    const auto unused_strings =
+        _cmd.has( "unused_strings_" )
+            ? JSON::array_to_vector<std::string>(
+                  JSON::get_array( _cmd, "unused_strings_" ) )
+            : std::vector<std::string>();
+
     // --------------------------------------------------------------------
     // We need the weak write lock for the categories and join keys encoding.
 
@@ -1211,7 +1223,9 @@ void DataFrameManager::from_query(
         join_keys,
         numericals,
         targets,
-        time_stamps );
+        time_stamps,
+        unused_floats,
+        unused_strings );
 
     license_checker().check_mem_size( data_frames(), df.nbytes() );
 

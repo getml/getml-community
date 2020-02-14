@@ -921,7 +921,9 @@ void DataFrame::from_query(
     const std::vector<std::string> &_join_key_names,
     const std::vector<std::string> &_numerical_names,
     const std::vector<std::string> &_target_names,
-    const std::vector<std::string> &_time_stamp_names )
+    const std::vector<std::string> &_time_stamp_names,
+    const std::vector<std::string> &_unused_float_names,
+    const std::vector<std::string> &_unused_string_names )
 {
     // ----------------------------------------
 
@@ -934,6 +936,11 @@ void DataFrame::from_query(
     auto targets = make_vectors<Float>( _target_names.size() );
 
     auto time_stamps = make_vectors<Float>( _time_stamp_names.size() );
+
+    auto unused_floats = make_vectors<Float>( _unused_float_names.size() );
+
+    auto unused_strings =
+        make_vectors<strings::String>( _unused_string_names.size() );
 
     // ----------------------------------------
 
@@ -976,6 +983,10 @@ void DataFrame::from_query(
     const auto target_ix = make_column_indices( _target_names );
 
     const auto time_stamp_ix = make_column_indices( _time_stamp_names );
+
+    const auto unused_float_ix = make_column_indices( _unused_float_names );
+
+    const auto unused_string_ix = make_column_indices( _unused_string_names );
 
     // ----------------------------------------
 
@@ -1022,6 +1033,19 @@ void DataFrame::from_query(
                     time_stamps[i]->push_back(
                         database::Getter::get_time_stamp( str, time_formats ) );
                 }
+
+            for ( size_t i = 0; i < unused_floats.size(); ++i )
+                {
+                    const auto &str = line[unused_float_ix[i]];
+                    unused_floats[i]->push_back(
+                        database::Getter::get_double( str, time_formats ) );
+                }
+
+            for ( size_t i = 0; i < unused_strings.size(); ++i )
+                {
+                    const auto &str = line[unused_string_ix[i]];
+                    unused_strings[i]->emplace_back( strings::String( str ) );
+                }
         }
 
     // ----------------------------------------
@@ -1037,6 +1061,10 @@ void DataFrame::from_query(
     df.add_float_vectors( _target_names, targets, "target" );
 
     df.add_float_vectors( _time_stamp_names, time_stamps, "time_stamp" );
+
+    df.add_float_vectors( _unused_float_names, unused_floats, "unused" );
+
+    df.add_string_vectors( _unused_string_names, unused_strings );
 
     // ----------------------------------------
 
