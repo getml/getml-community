@@ -12,6 +12,7 @@ struct EngineOptions
 {
     // ------------------------------------------------------
 
+   public:
     EngineOptions( const Poco::JSON::Object& _json_obj )
         : port_( JSON::get_value<size_t>( _json_obj, "port" ) )
     {
@@ -23,8 +24,13 @@ struct EngineOptions
 
     // ------------------------------------------------------
 
+    /// Trivial accessor
+    const size_t port() const { return port_; }
+
+    // ------------------------------------------------------
+
     /// The port of the engine
-    const size_t port_;
+    size_t port_;
 
     // ------------------------------------------------------
 };

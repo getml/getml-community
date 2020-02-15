@@ -17,7 +17,7 @@ std::string FileHandler::create_project_directory(
         }
 
     auto project_directory =
-        _options.all_projects_directory_ + _project_name + "/";
+        _options.all_projects_directory() + _project_name + "/";
 
     Poco::File( project_directory ).createDirectories();
 

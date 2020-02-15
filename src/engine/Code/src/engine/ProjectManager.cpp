@@ -417,12 +417,13 @@ void ProjectManager::delete_project(
                 "empty string!" );
         }
 
-    if ( project_directory_ == options_.all_projects_directory_ + _name + "/" )
+    if ( project_directory_ == options_.all_projects_directory() + _name + "/" )
         {
             project_directory_ = "";
         }
 
-    Poco::File( options_.all_projects_directory_ + _name + "/" ).remove( true );
+    Poco::File( options_.all_projects_directory() + _name + "/" )
+        .remove( true );
 
     engine::communication::Sender::send_string( "Success!", _socket );
 }
@@ -571,7 +572,7 @@ void ProjectManager::list_projects( Poco::Net::StreamSocket* _socket ) const
 
     Poco::DirectoryIterator end;
 
-    for ( Poco::DirectoryIterator it( options_.all_projects_directory_ );
+    for ( Poco::DirectoryIterator it( options_.all_projects_directory() );
           it != end;
           ++it )
         {
