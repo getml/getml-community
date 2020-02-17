@@ -117,73 +117,54 @@ std::vector<std::string> Sqlite3::get_colnames(
 std::vector<csv::Datatype> Sqlite3::get_coltypes(
     const std::string& _table, const std::vector<std::string>& _colnames ) const
 {
-    // ------------------------------------------------------------------------
-
     multithreading::ReadLock read_lock( read_write_lock_ );
-
-    // ------------------------------------------------------------------------
-    // Prepare statement.
-
-    const std::string sql = "SELECT * FROM " + _table + " LIMIT 0";
-
-    // ------------------------------------------------------------------------
-
-    // We set this to nullptr, so it will not be deleted if doesn't point to
-    // anything.
-    // https://en.cppreference.com/w/cpp/memory/unique_ptr/operator_bool
-    sqlite3_stmt* stmt = nullptr;
-
-    int rc = sqlite3_prepare_v2(
-        db(),                            // Database handle.
-        sql.c_str(),                     // SQL statement, UTF-8 encoded.
-        static_cast<int>( sql.size() ),  // Maximum length of zSql in bytes.
-        &stmt,                           // OUT: Statement handle.
-        NULL  // OUT: Pointer to unused portion of zSql
-    );
-
-    // The unique_ptr takes ownership of stmt and finalizes it when
-    // necessary.
-    const std::unique_ptr<sqlite3_stmt, int ( * )( sqlite3_stmt* )> ptr(
-        stmt, sqlite3_finalize );
-
-    if ( rc != SQLITE_OK )
-        {
-            throw std::runtime_error( sqlite3_errmsg( db() ) );
-        }
-
-    // ------------------------------------------------------------------------
-    // Fill coltypes.
 
     std::vector<csv::Datatype> datatypes;
 
-    const int num_cols = sqlite3_column_count( stmt );
-
-    for ( int i = 0; i < num_cols; ++i )
+    for ( size_t i = 0; i < _colnames.size(); ++i )
         {
-            const auto ctype = sqlite3_column_type( stmt, i );
+            int pNotNull = 0, pPrimaryKey = 0, pAutoinc = 0;
 
-            switch ( ctype )
+            char const* data_type = nullptr;
+
+            char const* pzCollSeq = nullptr;
+
+            int rc = sqlite3_table_column_metadata(
+                db(),                  // Connection handle
+                NULL,                  // Database name or NULL
+                _table.c_str(),        // Table name
+                _colnames[i].c_str(),  // Column name
+                &data_type,            // OUTPUT: Declared data type
+                &pzCollSeq,            // OUTPUT: Collation sequence name
+                &pNotNull,     // OUTPUT: True if NOT NULL constraint exists
+                &pPrimaryKey,  // OUTPUT: True if column part of PK
+                &pAutoinc      // OUTPUT: True if column is auto-increment
+            );
+
+            if ( rc != SQLITE_OK )
                 {
-                    case SQLITE_FLOAT:
-                        datatypes.push_back( csv::Datatype::double_precision );
-                        break;
+                    throw std::runtime_error( sqlite3_errmsg( db() ) );
+                }
 
-                    case SQLITE_INTEGER:
-                        datatypes.push_back( csv::Datatype::integer );
-                        break;
+            assert_true( data_type != nullptr );
 
-                    default:
-                        datatypes.push_back( csv::Datatype::string );
+            const auto str = std::string( data_type );
+
+            if ( str == "REAL" )
+                {
+                    datatypes.push_back( csv::Datatype::double_precision );
+                }
+            else if ( str == "INTEGER" )
+                {
+                    datatypes.push_back( csv::Datatype::integer );
+                }
+            else
+                {
+                    datatypes.push_back( csv::Datatype::string );
                 }
         }
 
-    // ------------------------------------------------------------------------
-
-    assert_true( datatypes.size() == _colnames.size() );
-
     return datatypes;
-
-    // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
