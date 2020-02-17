@@ -384,20 +384,6 @@ void DecisionTree::from_json_obj( const Poco::JSON::Object &_json_obj )
     root()->from_json_obj( *JSON::get_object( _json_obj, "conditions_" ) );
 
     // -----------------------------------
-
-    /*const auto subtrees_arr = JSON::get_array( _json_obj, "subfeatures_" );
-
-    subtrees().clear();
-
-    for ( size_t i = 0; i < subtrees_arr->size(); ++i )
-        {
-            subtrees().push_back( DecisionTree(
-                impl()->categories_,
-                impl()->tree_hyperparameters_,
-                *subtrees_arr->getObject( static_cast<unsigned int>( i ) ) ) );
-        }*/
-
-    // -----------------------------------
 }
 
 // ---------------------------------------------------------------------------
@@ -526,11 +512,17 @@ Poco::JSON::Object DecisionTree::to_monitor(
 
     obj.set( "join_keys_popul_", output().join_keys_name() );
 
-    obj.set( "time_stamps_popul_", output().time_stamps_name() );
+    if ( output().num_time_stamps() > 0 )
+        {
+            obj.set( "time_stamps_popul_", output().time_stamps_name() );
+        }
 
     obj.set( "join_keys_perip_", input().join_keys_name() );
 
-    obj.set( "time_stamps_perip_", input().time_stamps_name() );
+    if ( input().num_time_stamps() > 0 )
+        {
+            obj.set( "time_stamps_perip_", input().time_stamps_name() );
+        }
 
     if ( input().num_time_stamps() == 2 )
         {
@@ -583,9 +575,15 @@ std::string DecisionTree::to_sql(
 
     sql << " AS feature_" << _feature_num << "," << std::endl;
 
-    sql << "       t1." << output().join_keys_name() << "," << std::endl;
+    sql << "       t1." << output().join_keys_name();
 
-    sql << "       t1." << output().time_stamps_name() << std::endl;
+    if ( output().num_time_stamps() > 0 )
+        {
+            sql << "," << std::endl;
+            sql << "       t1." << output().time_stamps_name();
+        }
+
+    sql << std::endl;
 
     // -------------------------------------------------------------------
 
@@ -594,8 +592,14 @@ std::string DecisionTree::to_sql(
     sql << "     SELECT *," << std::endl;
 
     sql << "            ROW_NUMBER() OVER ( ORDER BY "
-        << output().join_keys_name() << ", " << output().time_stamps_name()
-        << " ASC ) AS rownum" << std::endl;
+        << output().join_keys_name();
+
+    if ( output().num_time_stamps() > 0 )
+        {
+            sql << ", " << output().time_stamps_name();
+        }
+
+    sql << " ASC ) AS rownum" << std::endl;
 
     sql << "     FROM " << output().name() << std::endl;
 
@@ -627,7 +631,8 @@ std::string DecisionTree::to_sql(
 
     // -------------------------------------------------------------------
 
-    if ( _use_timestamps )
+    if ( _use_timestamps && input().num_time_stamps() > 0 &&
+         output().num_time_stamps() > 0 )
         {
             if ( conditions.size() > 0 )
                 {
@@ -659,11 +664,15 @@ std::string DecisionTree::to_sql(
 
     sql << "GROUP BY t1.rownum," << std::endl;
 
-    sql << "         t1." << output().join_keys_name() << "," << std::endl;
+    sql << "         t1." << output().join_keys_name();
 
-    sql << "         t1." << output().time_stamps_name() << ";" << std::endl
-        << std::endl
-        << std::endl;
+    if ( output().num_time_stamps() > 0 )
+        {
+            sql << "," << std::endl;
+            sql << "         t1." << output().time_stamps_name();
+        }
+
+    sql << ";" << std::endl << std::endl << std::endl;
 
     // -------------------------------------------------------------------
 

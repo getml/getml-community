@@ -235,7 +235,13 @@ class DataFrame
     /// Trivial getter
     Float time_stamp( size_t _i ) const
     {
-        assert_true( time_stamps_.size() == 1 || time_stamps_.size() == 2 );
+        assert_true( time_stamps_.size() <= 2 );
+
+        if ( time_stamps_.size() == 0 )
+            {
+                return 0.0;
+            }
+
         assert_true( _i < time_stamps_[0].nrows_ );
 
         return time_stamps_[0][_i];
@@ -272,9 +278,9 @@ class DataFrame
     /// Trivial getter
     Float upper_time_stamp( size_t _i ) const
     {
-        assert_true( time_stamps_.size() == 1 || time_stamps_.size() == 2 );
+        assert_true( time_stamps_.size() <= 2 );
 
-        if ( time_stamps_.size() == 1 )
+        if ( time_stamps_.size() <= 1 )
             {
                 return NAN;
             }
