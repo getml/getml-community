@@ -147,25 +147,6 @@ DataFrame DataFrame::create_subview(
         }
 
     // ---------------------------------------------------------------------------
-
-    size_t ix_time_stamp = 0;
-
-    for ( ; ix_time_stamp < time_stamps_.size(); ++ix_time_stamp )
-        {
-            if ( time_stamps_[ix_time_stamp].name_ == _time_stamp )
-                {
-                    break;
-                }
-        }
-
-    if ( ix_time_stamp == time_stamps_.size() )
-        {
-            throw std::runtime_error(
-                "Time stamp named '" + _time_stamp + "' not found in table '" +
-                name_ + "'!" );
-        }
-
-    // ---------------------------------------------------------------------------
     // All time stamps that are not upper time stamp are added to numerical
     // and given the unit time stamp - this is so the end users do not have
     // to understand the difference between time stamps as a type and
@@ -192,6 +173,40 @@ DataFrame DataFrame::create_subview(
                 "unit: getml_time_stamp, comparison only" );
 
             numericals_and_time_stamps.push_back( ts );
+        }
+
+    // ---------------------------------------------------------------------------
+
+    if ( _time_stamp == "" )
+        {
+            return DataFrame(
+                categoricals_,
+                discretes_,
+                {indices_[ix_join_key]},
+                {join_keys_[ix_join_key]},
+                _name,
+                numericals_and_time_stamps,
+                targets_,
+                {} );
+        }
+
+    // ---------------------------------------------------------------------------
+
+    size_t ix_time_stamp = 0;
+
+    for ( ; ix_time_stamp < time_stamps_.size(); ++ix_time_stamp )
+        {
+            if ( time_stamps_[ix_time_stamp].name_ == _time_stamp )
+                {
+                    break;
+                }
+        }
+
+    if ( ix_time_stamp == time_stamps_.size() )
+        {
+            throw std::runtime_error(
+                "Time stamp named '" + _time_stamp + "' not found in table '" +
+                name_ + "'!" );
         }
 
     // ---------------------------------------------------------------------------

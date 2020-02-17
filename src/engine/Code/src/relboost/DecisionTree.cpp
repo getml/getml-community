@@ -186,9 +186,15 @@ std::string DecisionTree::to_sql(
     sql << tab << "END" << std::endl
         << ") AS feature_" << _feature_num << "," << std::endl;
 
-    sql << tab << " t1." << output().join_keys_name() << "," << std::endl;
+    sql << tab << " t1." << output().join_keys_name();
 
-    sql << tab << " t1." << output().time_stamps_name() << std::endl;
+    if ( output().num_time_stamps() > 0 )
+        {
+            sql << "," << std::endl;
+            sql << tab << " t1." << output().time_stamps_name();
+        }
+
+    sql << std::endl;
 
     // -------------------------------------------------------------------
     // JOIN statement
@@ -198,8 +204,14 @@ std::string DecisionTree::to_sql(
     sql << tab << "SELECT *," << std::endl;
 
     sql << tab << tab << "ROW_NUMBER() OVER ( ORDER BY "
-        << output().join_keys_name() << ", " << output().time_stamps_name()
-        << " ASC ) AS rownum" << std::endl;
+        << output().join_keys_name();
+
+    if ( output().num_time_stamps() > 0 )
+        {
+            sql << ", " << output().time_stamps_name();
+        }
+
+    sql << " ASC ) AS rownum" << std::endl;
 
     sql << tab << "FROM " << output().name() << std::endl;
 
@@ -213,7 +225,8 @@ std::string DecisionTree::to_sql(
     // -------------------------------------------------------------------
     // WHERE statement
 
-    if ( _use_timestamps )
+    if ( _use_timestamps && input().num_time_stamps() > 0 &&
+         output().num_time_stamps() > 0 )
         {
             sql << "WHERE ";
 
@@ -234,13 +247,15 @@ std::string DecisionTree::to_sql(
 
     sql << "GROUP BY t1.rownum," << std::endl;
 
-    sql << tab << tab << " t1." << output().join_keys_name() << ","
-        << std::endl;
+    sql << tab << tab << " t1." << output().join_keys_name();
 
-    sql << tab << tab << " t1." << output().time_stamps_name() << ";"
-        << std::endl
-        << std::endl
-        << std::endl;
+    if ( output().num_time_stamps() > 0 )
+        {
+            sql << "," << std::endl;
+            sql << tab << tab << " t1." << output().time_stamps_name();
+        }
+
+    sql << ";" << std::endl << std::endl << std::endl;
 
     // -------------------------------------------------------------------
 
