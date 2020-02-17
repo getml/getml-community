@@ -6,8 +6,8 @@ void test2( std::filesystem::path _test_path )
     std::cout << "Test 2  | NULL values\t\t\t\t\t";
 
     // ---------------------------------------------------------------
-	
-    // Append all subfolders to reach the required file. This 
+
+    // Append all subfolders to reach the required file. This
     // appending will have a persistent effect of _test_path which
     // is stored on the heap. After setting it once to the correct
     // folder only the filename has to be replaced.
@@ -52,7 +52,7 @@ void test2( std::filesystem::path _test_path )
     assert_true( it->get_int() == 113 );
 
     // ---------------------------------------------------------------
-	
+
     std::cout << "| OK" << std::endl;
 }
 
