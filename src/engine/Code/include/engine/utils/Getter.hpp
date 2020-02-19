@@ -48,7 +48,6 @@ T &Getter::get( const std::string &_name, std::map<std::string, T> *_map )
             std::string warning_message = "'";
             warning_message.append( _name );
             warning_message.append( "' not found. " );
-            warning_message.append( "Did you maybe forget to call .send()?" );
 
             throw std::invalid_argument( warning_message );
         }
@@ -68,7 +67,6 @@ T Getter::get( const std::string &_name, const std::map<std::string, T> &_map )
             std::string warning_message = "'";
             warning_message.append( _name );
             warning_message.append( "' not found. " );
-            warning_message.append( "Did you maybe forget to call .send()?" );
 
             throw std::invalid_argument( warning_message );
         }
