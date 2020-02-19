@@ -407,6 +407,11 @@ void RequestHandler::run()
                     data_frame_manager().set_unit_categorical(
                         name, cmd, &socket() );
                 }
+            else
+                {
+                    throw std::invalid_argument(
+                        "Unknown command: '" + type + "'" );
+                }
         }
     catch ( std::exception& e )
         {

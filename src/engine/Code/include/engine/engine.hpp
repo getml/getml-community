@@ -5,6 +5,7 @@
 
 #include <chrono>
 #include <memory>
+#include <stdexcept>
 #include <thread>
 #include <type_traits>
 #include <vector>
