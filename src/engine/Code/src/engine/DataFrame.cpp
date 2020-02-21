@@ -1079,37 +1079,6 @@ void DataFrame::from_query(
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object DataFrame::get_colnames()
-{
-    // ----------------------------------------
-
-    Poco::JSON::Object obj;
-
-    // ----------------------------------------
-
-    obj.set( "categorical_", get_colnames( categoricals_ ) );
-
-    obj.set( "join_keys_", get_colnames( join_keys_ ) );
-
-    obj.set( "numerical_", get_colnames( numericals_ ) );
-
-    obj.set( "targets_", get_colnames( targets_ ) );
-
-    obj.set( "time_stamps_", get_colnames( time_stamps_ ) );
-
-    obj.set( "unused_floats_", get_colnames( unused_floats_ ) );
-
-    obj.set( "unused_strings_", get_colnames( unused_strings_ ) );
-
-    // ----------------------------------------
-
-    return obj;
-
-    // ----------------------------------------
-}
-
-// ----------------------------------------------------------------------------
-
 Poco::JSON::Object DataFrame::get_content(
     const std::int32_t _draw,
     const std::int32_t _start,
@@ -1533,6 +1502,37 @@ const size_t DataFrame::nrows() const
         {
             return 0;
         }
+}
+
+// ----------------------------------------------------------------------------
+
+Poco::JSON::Object DataFrame::refresh() const
+{
+    // ----------------------------------------
+
+    Poco::JSON::Object obj;
+
+    // ----------------------------------------
+
+    obj.set( "categorical", get_colnames( categoricals_ ) );
+
+    obj.set( "join_key", get_colnames( join_keys_ ) );
+
+    obj.set( "numerical", get_colnames( numericals_ ) );
+
+    obj.set( "target", get_colnames( targets_ ) );
+
+    obj.set( "time_stamp", get_colnames( time_stamps_ ) );
+
+    obj.set( "unused_float", get_colnames( unused_floats_ ) );
+
+    obj.set( "unused_string", get_colnames( unused_strings_ ) );
+
+    // ----------------------------------------
+
+    return obj;
+
+    // ----------------------------------------
 }
 
 // ----------------------------------------------------------------------------

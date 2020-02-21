@@ -1879,9 +1879,9 @@ void DataFrameManager::refresh(
 {
     multithreading::ReadLock read_lock( read_write_lock_ );
 
-    auto& df = utils::Getter::get( _name, &data_frames() );
+    const auto df = utils::Getter::get( _name, data_frames() );
 
-    Poco::JSON::Object encodings = df.get_colnames();
+    Poco::JSON::Object encodings = df.refresh();
 
     read_lock.unlock();
 

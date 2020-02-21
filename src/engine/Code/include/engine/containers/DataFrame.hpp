@@ -109,9 +109,6 @@ class DataFrame
         const std::vector<std::string> &_unused_float_names,
         const std::vector<std::string> &_unused_string_names );
 
-    /// Returns the encodings as a property tree
-    Poco::JSON::Object get_colnames();
-
     /// Returns the content of the data frame in a format that is compatible
     /// with the DataTables.js server-side processing API.
     Poco::JSON::Object get_content(
@@ -139,6 +136,9 @@ class DataFrame
     /// Get the number of rows or return 0, if the DataFrame contains no
     /// columns.
     const size_t nrows() const;
+
+    /// Returns the colnames expressed as their respective roles
+    Poco::JSON::Object refresh() const;
 
     /// Removes a column.
     bool remove_column( const std::string &_name );
