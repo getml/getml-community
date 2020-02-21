@@ -72,14 +72,14 @@ std::string StatementMaker::make_statement_mysql(
 
     std::stringstream statement;
 
-    statement << "DROP TABLE IF EXISTS " << _table_name << ";" << std::endl
+    statement << "DROP TABLE IF EXISTS `" << _table_name << "`;" << std::endl
               << std::endl;
 
-    statement << "CREATE TABLE " << _table_name << "(" << std::endl;
+    statement << "CREATE TABLE `" << _table_name << "`(" << std::endl;
 
     for ( size_t i = 0; i < _colnames.size(); ++i )
         {
-            statement << "    " << _colnames[i] << " "
+            statement << "    `" << _colnames[i] << "` "
                       << make_gap( _colnames[i], max_size )
                       << to_string_mysql( _datatypes[i] );
 
@@ -161,8 +161,8 @@ std::string StatementMaker::make_statement_python(
 
     Poco::JSON::Object obj;
 
-    obj.set( "unused_floats", unused_floats );
-    obj.set( "unused_strings", unused_strings );
+    obj.set( "unused_float", unused_floats );
+    obj.set( "unused_string", unused_strings );
 
     return jsonutils::JSON::stringify( obj );
 }
