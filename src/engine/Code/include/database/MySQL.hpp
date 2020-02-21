@@ -84,7 +84,7 @@ class MySQL : public Connector
     /// Drops a table and cleans up, if necessary.
     void drop_table( const std::string& _tname ) final
     {
-        execute( "DROP TABLE " + _tname + ";" );
+        execute( "DROP TABLE `" + _tname + "`;" );
     }
 
     /// Executes an SQL query.

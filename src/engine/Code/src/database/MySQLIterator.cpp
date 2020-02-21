@@ -190,7 +190,21 @@ std::string MySQLIterator::make_sql(
 
     for ( size_t i = 0; i < _colnames.size(); ++i )
         {
-            sql += _colnames[i];
+            const auto& cname = _colnames[i];
+
+            const bool is_not_count = ( cname != "COUNT(*)" );
+
+            if ( is_not_count )
+                {
+                    sql += "`";
+                }
+
+            sql += cname;
+
+            if ( is_not_count )
+                {
+                    sql += "`";
+                }
 
             if ( i + 1 < _colnames.size() )
                 {
@@ -207,11 +221,11 @@ std::string MySQLIterator::make_sql(
 
             const auto table_name = _tname.substr( pos + 1 );
 
-            sql += " FROM " + schema + "." + table_name + "";
+            sql += " FROM `" + schema + "`.`" + table_name + "`";
         }
     else
         {
-            sql += " FROM " + _tname;
+            sql += " FROM `" + _tname + "`";
         }
 
     if ( _where != "" )

@@ -58,7 +58,7 @@ std::shared_ptr<MYSQL_RES> MySQL::exec(
 
 std::vector<std::string> MySQL::get_colnames( const std::string& _table ) const
 {
-    const std::string sql = "SELECT * FROM " + _table + " LIMIT 0;";
+    const std::string sql = "SELECT * FROM `" + _table + "` LIMIT 0;";
 
     const auto conn = make_connection();
 
@@ -86,7 +86,7 @@ std::vector<std::string> MySQL::get_colnames( const std::string& _table ) const
 std::vector<csv::Datatype> MySQL::get_coltypes(
     const std::string& _table, const std::vector<std::string>& _colnames ) const
 {
-    const std::string sql = "SELECT * FROM " + _table + " LIMIT 0;";
+    const std::string sql = "SELECT * FROM `" + _table + "` LIMIT 0;";
 
     const auto conn = make_connection();
 
@@ -249,7 +249,9 @@ std::string MySQL::make_get_content_query(
 
     for ( size_t i = 0; i < _colnames.size(); ++i )
         {
+            query += "`";
             query += _colnames[i];
+            query += "`";
 
             if ( i != _colnames.size() - 1 )
                 {
@@ -259,11 +261,11 @@ std::string MySQL::make_get_content_query(
             query += " ";
         }
 
-    query += "FROM ";
+    query += "FROM `";
 
     query += _table;
 
-    query += " LIMIT " + std::to_string( _begin );
+    query += "` LIMIT " + std::to_string( _begin );
 
     query += "," + std::to_string( _end - _begin );
 
@@ -277,16 +279,21 @@ std::string MySQL::make_get_content_query(
 std::string MySQL::make_bulk_insert_query(
     const std::string& _table, const std::vector<std::string>& _colnames ) const
 {
-    std::string query = "INSERT INTO " + _table + "(";
+    std::string query = "INSERT INTO `" + _table + "` (";
 
-    for ( const auto name : _colnames )
+    for ( size_t i = 0; i < _colnames.size(); ++i )
         {
-            query += name;
+            query += "`";
+            query += _colnames[i];
+            query += "`";
 
-            query += ',';
+            if ( i + 1 < _colnames.size() )
+                {
+                    query += ",";
+                }
         }
 
-    query.back() = ')';
+    query += ")";
 
     query += " VALUES ";
 
