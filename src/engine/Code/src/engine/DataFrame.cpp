@@ -1273,13 +1273,13 @@ std::string DataFrame::get_string( const std::int32_t _n ) const
     for ( size_t j = 0; j < num_unused_floats(); ++j )
         {
             colnames.push_back( unused_float( j ).name() );
-            roles.push_back( "unused" );
+            roles.push_back( "unused float" );
         }
 
     for ( size_t j = 0; j < num_unused_strings(); ++j )
         {
             colnames.push_back( unused_string( j ).name() );
-            roles.push_back( "unused" );
+            roles.push_back( "unused string" );
         }
 
     assert_true( colnames.size() == roles.size() );
