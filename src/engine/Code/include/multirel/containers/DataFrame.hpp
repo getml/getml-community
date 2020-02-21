@@ -43,6 +43,11 @@ class DataFrame
     // ---------------------------------------------------------------------
 
    public:
+    /// Creates a version of the table that can be used for self joining
+    /// in a time series model.
+    DataFrame create_self_join(
+        const std::vector<Column<Float>>& _modified_time_stamps ) const;
+
     /// Creates a subview.
     DataFrame create_subview(
         const std::string& _name,
@@ -252,6 +257,13 @@ class DataFrame
     {
         assert_true( time_stamps_.size() == 1 || time_stamps_.size() == 2 );
         return time_stamps_[0];
+    }
+
+    /// Getter for the time stamps column.
+    const Column<Float>& time_stamp_col( const size_t _i ) const
+    {
+        assert_true( _i < time_stamps_.size() );
+        return time_stamps_[_i];
     }
 
     /// Getter for the time stamps name.

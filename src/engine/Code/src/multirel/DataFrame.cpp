@@ -121,6 +121,46 @@ std::vector<std::shared_ptr<Index>> DataFrame::create_indices(
 
 // ----------------------------------------------------------------------------
 
+DataFrame DataFrame::create_self_join(
+    const std::vector<Column<Float>>& _modified_time_stamps ) const
+{
+    // ---------------------------------------------------------------------------
+
+    std::vector<containers::Column<Float>> numericals_and_targets;
+
+    for ( const auto& col : numericals_ )
+        {
+            numericals_and_targets.push_back( col );
+        }
+
+    for ( const auto& col : targets_ )
+        {
+            numericals_and_targets.push_back( col );
+        }
+
+    // ---------------------------------------------------------------------------
+
+    assert_true(
+        _modified_time_stamps.size() == 1 ||
+        _modified_time_stamps.size() == 2 );
+
+    // ---------------------------------------------------------------------------
+
+    return DataFrame(
+        categoricals_,
+        discretes_,
+        indices_,
+        join_keys_,
+        name_,
+        numericals_and_targets,
+        {},
+        _modified_time_stamps );
+
+    // ---------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
 DataFrame DataFrame::create_subview(
     const std::string& _name,
     const std::string& _join_key,
