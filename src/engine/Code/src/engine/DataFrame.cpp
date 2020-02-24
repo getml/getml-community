@@ -1248,8 +1248,31 @@ std::string DataFrame::get_string( const std::int32_t _n ) const
             roles.push_back( "unused string" );
         }
 
+    // ------------------------------------------------------------------------
+
+    const auto truncate_row = []( const std::vector<std::string> &row ) {
+        if ( row.size() < 9 )
+            {
+                return row;
+            }
+        else
+            {
+                auto truncated =
+                    std::vector<std::string>( row.begin(), row.begin() + 8 );
+                truncated.push_back( "..." );
+                return truncated;
+            }
+    };
+
+    // ------------------------------------------------------------------------
+
+    colnames = truncate_row( colnames );
+
+    roles = truncate_row( roles );
+
+    // ------------------------------------------------------------------------
+
     assert_true( colnames.size() == roles.size() );
-    assert_true( colnames.size() == ncols() );
 
     rows.push_back( colnames );
 
@@ -1281,7 +1304,7 @@ std::string DataFrame::get_string( const std::int32_t _n ) const
                             row[j] = json_row->getElement<std::string>( j );
                         }
 
-                    rows.emplace_back( std::move( row ) );
+                    rows.emplace_back( truncate_row( row ) );
                 }
         }
 
@@ -1301,7 +1324,7 @@ std::string DataFrame::get_string( const std::int32_t _n ) const
 
     // ------------------------------------------------------------------------
 
-    auto max_sizes = std::vector<size_t>( ncols() );
+    auto max_sizes = std::vector<size_t>( colnames.size() );
 
     for ( const auto &row : rows )
         {
@@ -1334,7 +1357,10 @@ std::string DataFrame::get_string( const std::int32_t _n ) const
 
                     result += std::string( n_fill, ' ' );
 
-                    result += "| ";
+                    if ( j < row.size() - 1 || row.size() == ncols() )
+                        {
+                            result += "| ";
+                        }
                 }
 
             result += "\n";
