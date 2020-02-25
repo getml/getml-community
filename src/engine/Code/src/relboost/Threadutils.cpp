@@ -157,7 +157,7 @@ Int Threadutils::get_num_threads( const Int _num_threads )
         {
             num_threads = std::max(
                 2,
-                static_cast<Int>( std::thread::hardware_concurrency() ) - 2 );
+                static_cast<Int>( std::thread::hardware_concurrency() ) / 2 );
         }
 
     return num_threads;
