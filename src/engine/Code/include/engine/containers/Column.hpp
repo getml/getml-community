@@ -46,6 +46,9 @@ class Column
     /// data_ with an empty vector
     void clear();
 
+    /// Generates a deep copy of the column itself.
+    Column<T> clone() const;
+
     /// Loads the Column from binary format
     void load( const std::string &_fname );
 
@@ -325,6 +328,29 @@ template <class T>
 void Column<T>::clear()
 {
     *this = Column<T>( 0, 0 );
+}
+
+// -------------------------------------------------------------------------
+
+template <class T>
+Column<T> Column<T>::clone() const
+{
+    if ( !data_ptr_ )
+        {
+            throw std::invalid_argument(
+                "Column cannot be cloned! It contains no data!" );
+        }
+
+    const auto vec = std::make_shared<std::vector<T>>(
+        data_ptr_->begin(), data_ptr_->end() );
+
+    auto col = Column<T>( vec );
+
+    col.set_name( name_ );
+
+    col.set_unit( unit_ );
+
+    return col;
 }
 
 // -----------------------------------------------------------------------------
