@@ -7,6 +7,8 @@
 
 #include "predictors/predictors.hpp"
 
+#include "Poco/TemporaryFile.h"
+
 // ---------------------------------------------------------------------------
 
 #include "predictors/tests/make_column.hpp"

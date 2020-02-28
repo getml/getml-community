@@ -15,6 +15,8 @@
 
 #include "multithreading/multithreading.hpp"
 
+#include "strings/strings.hpp"
+
 #include "relboost/enums/enums.hpp"
 
 #include "relboost/containers/containers.hpp"
@@ -30,9 +32,13 @@
 #include "relboost/utils/Finder.hpp"
 #include "relboost/utils/Mapper.hpp"
 #include "relboost/utils/Matchmaker.hpp"
+#include "relboost/utils/NumericalBinner.hpp"
 #include "relboost/utils/Partitioner.hpp"
 #include "relboost/utils/Reducer.hpp"
-#include "relboost/utils/Sorter.hpp"
+
+#include "relboost/utils/CategoricalBinner.hpp"
+#include "relboost/utils/DiscreteBinner.hpp"
+#include "relboost/utils/MinMaxFinder.hpp"
 
 #include "relboost/utils/Sampler.hpp"
 

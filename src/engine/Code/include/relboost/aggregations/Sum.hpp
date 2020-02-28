@@ -84,19 +84,12 @@ class Sum : public lossfunctions::LossFunction
     // -----------------------------------------------------------------
 
    public:
-    /// Commits the split described by the iterators and the weights.
-    void commit(
-        const Float _old_intercept,
-        const Float _old_weight,
-        const std::array<Float, 3>& _weights,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _split,
-        const std::vector<const containers::Match*>::iterator _end ) final;
-
     /// Calculates indices_, eta1_ and eta2_ given the previous
     /// iteration's variables without calculating the weights.
     void calc_etas(
         const enums::Aggregation _agg,
+        const enums::Update _update,
+        const Float _old_weight,
         const std::vector<size_t>& _indices_current,
         const std::vector<Float>& _eta1,
         const std::vector<Float>& _eta1_old,
@@ -105,8 +98,10 @@ class Sum : public lossfunctions::LossFunction
 
     /// Calculates indices_, eta1_ and eta2_ given the previous
     /// iteration's variables.
-    std::array<Float, 3> calc_weights(
+    std::pair<Float, std::array<Float, 3>> calc_pair(
         const enums::Aggregation _agg,
+        const enums::Revert _revert,
+        const enums::Update _update,
         const Float _old_weight,
         const std::vector<size_t>& _indices,
         const std::vector<size_t>& _indices_current,
@@ -116,15 +111,16 @@ class Sum : public lossfunctions::LossFunction
         const std::vector<Float>& _eta2_old ) final;
 
     /// Calculates _indices, _eta1 and _eta2 given matches.
-    std::vector<std::array<Float, 3>> calc_weights(
+    std::vector<std::pair<Float, std::array<Float, 3>>> calc_pairs(
         const enums::Revert _revert,
         const enums::Update _update,
         const Float _min_num_samples,
+        const Float _old_intercept,
         const Float _old_weight,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _split_begin,
-        const std::vector<const containers::Match*>::iterator _split_end,
-        const std::vector<const containers::Match*>::iterator _end ) final;
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _split_begin,
+        const std::vector<containers::Match>::iterator _split_end,
+        const std::vector<containers::Match>::iterator _end ) final;
 
     /// Calculates the new yhat given eta, indices and the new weights.
     void calc_yhat(
@@ -137,8 +133,8 @@ class Sum : public lossfunctions::LossFunction
         const std::vector<Float>& _eta2,
         const std::vector<Float>& _eta2_old ) final;
 
-    /// Returns the loss reduction associated with a split.
-    Float evaluate_split(
+    /// Commits the split described by the iterators and the weights.
+    void commit(
         const Float _old_intercept,
         const Float _old_weight,
         const std::array<Float, 3>& _weights ) final;
@@ -148,9 +144,9 @@ class Sum : public lossfunctions::LossFunction
         const Float _old_intercept,
         const Float _old_weight,
         const std::array<Float, 3>& _weights,
-        const std::vector<size_t>& _indices,
-        const std::vector<Float>& _eta1,
-        const std::vector<Float>& _eta2 ) final;
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _split,
+        const std::vector<containers::Match>::iterator _end ) final;
 
     /// Reverts the effects of calc_diff (or the part in calc_all the
     /// corresponds to calc_diff). This is needed for supporting categorical
@@ -179,11 +175,11 @@ class Sum : public lossfunctions::LossFunction
     /// Calculates the sampling rate (the share of samples that will be
     /// drawn for each feature).
     void calc_sampling_rate(
-        const unsigned int _seed,
+        const bool _set_rate,
         const Float _sampling_factor,
         multithreading::Communicator* _comm ) final
     {
-        child_->calc_sampling_rate( _seed, _sampling_factor, _comm );
+        child_->calc_sampling_rate( _set_rate, _sampling_factor, _comm );
     }
 
     /// Calculates sum_g_ and sum_h_.
@@ -214,6 +210,15 @@ class Sum : public lossfunctions::LossFunction
     {
         child_->commit( intermediate_agg().indices(), _weights );
         intermediate_agg().reset( false );
+    }
+
+    /// Returns the loss reduction associated with a split.
+    Float evaluate_split(
+        const Float _old_intercept,
+        const Float _old_weight,
+        const std::array<Float, 3>& _weights ) final
+    {
+        return child_->evaluate_split( _old_intercept, _old_weight, _weights );
     }
 
     /// Evaluates an entire tree.
@@ -297,16 +302,16 @@ class Sum : public lossfunctions::LossFunction
     /// the last split.
     void calc_all(
         const enums::Revert _revert,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _split_begin,
-        const std::vector<const containers::Match*>::iterator _split_end,
-        const std::vector<const containers::Match*>::iterator _end );
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _split_begin,
+        const std::vector<containers::Match>::iterator _split_end,
+        const std::vector<containers::Match>::iterator _end );
 
     /// Calculates eta1_ and eta2_ for only the difference to the last split.
     void calc_diff(
         const enums::Revert _revert,
-        const std::vector<const containers::Match*>::iterator _split_begin,
-        const std::vector<const containers::Match*>::iterator _split_end );
+        const std::vector<containers::Match>::iterator _split_begin,
+        const std::vector<containers::Match>::iterator _split_end );
 
     /// Adapts the etas_old_ to the etas.
     void update_etas_old();
@@ -391,6 +396,10 @@ class Sum : public lossfunctions::LossFunction
 
     /// The indices of the output table.
     std::vector<std::shared_ptr<containers::Index>> output_indices_;
+
+    // Indicates whether all sufficient statistics need to be updated by the
+    // loss function.
+    enums::Update update_;
 
     /// Implementation class. Because impl_ depends on some other variables, it
     /// is the last member variable.

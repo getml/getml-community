@@ -5,7 +5,7 @@ namespace predictors
 {
 // ----------------------------------------------------------------------
 
-/// Abstract base class for a predictor
+/// Implements the XGBoostPredictors
 class XGBoostPredictor : public Predictor
 {
     // -----------------------------------------
@@ -22,9 +22,9 @@ class XGBoostPredictor : public Predictor
 
    public:
     XGBoostPredictor(
-        const XGBoostHyperparams& _hyperparams,
+        const Poco::JSON::Object& _hyperparams,
         const std::shared_ptr<const PredictorImpl>& _impl )
-        : hyperparams_( _hyperparams ), impl_( _impl )
+        : hyperparams_( XGBoostHyperparams( _hyperparams ) ), impl_( _impl )
     {
     }
 
@@ -59,7 +59,7 @@ class XGBoostPredictor : public Predictor
 
    public:
     /// Whether the predictor accepts null values.
-    bool accepts_null() const { return false; }
+    bool accepts_null() const final { return false; }
 
     // -----------------------------------------
 

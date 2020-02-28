@@ -95,12 +95,11 @@ Float RSquaredCriterion::calculate_r_squared(
 
     assert_true( sum_yhat_yhat == sum_yhat_yhat );
 
-    Float r_squared = 0.0;
+    Float result = 0.0;
 
     for ( size_t j = 0; j < y_.size(); ++j )
         {
-            const Float sum_y_centered_yhat =
-                _sufficient_statistics[_i][2 + j];
+            const Float sum_y_centered_yhat = _sufficient_statistics[_i][2 + j];
 
             assert_true( !std::isnan( sum_y_centered_yhat ) );
 
@@ -112,14 +111,19 @@ Float RSquaredCriterion::calculate_r_squared(
                     continue;
                 }
 
-            r_squared +=
-                sum_sample_weights_ * ( sum_y_centered_yhat / var_yhat ) *
-                ( sum_y_centered_yhat / sum_y_centered_y_centered_[j] );
+            result += sum_sample_weights_ * ( sum_y_centered_yhat / var_yhat ) *
+                      ( sum_y_centered_yhat / sum_y_centered_y_centered_[j] );
+
+            debug_log(
+                "result: " + std::to_string( result ) +
+                ", sum_y_centered_yhat: " +
+                std::to_string( sum_y_centered_yhat ) +
+                ", var_yhat: " + std::to_string( var_yhat ) );
         }
 
     assert_true( sample_weights_.size() == y_centered_[0].size() );
 
-    return r_squared;
+    return result;
 }
 
 // ----------------------------------------------------------------------------
@@ -163,6 +167,14 @@ Int RSquaredCriterion::find_maximum()
             const Float num_samples_greater =
                 sufficient_statistics[i][sufficient_statistics[i].size() - 1];
 
+            debug_log(
+                "num_samples_smaller: " +
+                std::to_string( num_samples_smaller ) );
+
+            debug_log(
+                "num_samples_greater: " +
+                std::to_string( num_samples_greater ) );
+
             assert_true( hyperparameters_ );
 
             assert_true( hyperparameters_->tree_hyperparameters_ );
@@ -198,8 +210,7 @@ Int RSquaredCriterion::find_maximum()
 
 // ----------------------------------------------------------------------------
 
-void RSquaredCriterion::init(
-    const std::vector<Float>& _sample_weights )
+void RSquaredCriterion::init( const std::vector<Float>& _sample_weights )
 {
     // ---------------------------------------------------------------------
 
@@ -214,11 +225,9 @@ void RSquaredCriterion::init(
 
     sample_weights_ = _sample_weights;
 
-    sufficient_statistics_committed_ =
-        std::vector<Float>( y_.size() + 2 );
+    sufficient_statistics_committed_ = std::vector<Float>( y_.size() + 2 );
 
-    sufficient_statistics_current_ =
-        std::vector<Float>( y_.size() + 2 );
+    sufficient_statistics_current_ = std::vector<Float>( y_.size() + 2 );
 
     sum_yhat_committed_ = sufficient_statistics_committed_.data();
     sum_yhat_current_ = sufficient_statistics_current_.data();
@@ -242,8 +251,7 @@ void RSquaredCriterion::init(
     sum_sample_weights_ =
         std::accumulate( sample_weights_.begin(), sample_weights_.end(), 0.0 );
 
-    utils::Reducer::reduce(
-        std::plus<Float>(), &sum_sample_weights_, comm_ );
+    utils::Reducer::reduce( std::plus<Float>(), &sum_sample_weights_, comm_ );
 
     // ---------------------------------------------------------------------
     // Calculate y_mean
@@ -335,8 +343,7 @@ void RSquaredCriterion::init(
 // ----------------------------------------------------------------------------
 
 void RSquaredCriterion::init_yhat(
-    const std::vector<Float>& _yhat,
-    const containers::IntSet& _indices )
+    const std::vector<Float>& _yhat, const containers::IntSet& _indices )
 {
     // ---------------------------------------------------------------------
 

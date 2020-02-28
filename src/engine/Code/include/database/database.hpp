@@ -10,13 +10,16 @@
 #include <stdexcept>
 #include <string>
 
+#include <mysql.h>
+
 #if ( defined( _WIN32 ) || defined( _WIN64 ) )
 // postgres is not supported in windows
 #else
 #include <libpq-fe.h>
 #endif
 
-#include "Poco/JSON/Object.h"
+#include <Poco/JSON/Object.h>
+#include <Poco/TemporaryFile.h>
 
 extern "C"
 {
@@ -36,6 +39,7 @@ extern "C"
 #include "database/Float.hpp"
 #include "database/Int.hpp"
 
+#include "database/CSVBuffer.hpp"
 #include "database/Getter.hpp"
 
 #include "database/Iterator.hpp"
@@ -46,6 +50,10 @@ extern "C"
 
 #include "database/Sqlite3.hpp"
 
+#include "database/MySQLIterator.hpp"
+
+#include "database/MySQL.hpp"
+
 #if ( defined( _WIN32 ) || defined( _WIN64 ) )
 // postgres is not supported in windows
 #else
@@ -55,6 +63,7 @@ extern "C"
 #endif
 
 #include "database/DatabaseParser.hpp"
+#include "database/DatabaseSniffer.hpp"
 
 // ----------------------------------------------------------------------------
 

@@ -20,7 +20,7 @@ class Threadutils
             _hyperparameters,
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral,
-        const decisiontrees::Placeholder& _placeholder,
+        const containers::Placeholder& _placeholder,
         const std::vector<std::string>& _peripheral_names,
         const std::shared_ptr<const logging::AbstractLogger> _logger,
         multithreading::Communicator* _comm,

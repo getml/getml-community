@@ -29,6 +29,7 @@ class ModelManager
         const std::shared_ptr<const monitoring::Logger>& _logger,
         const std::shared_ptr<ModelMapType>& _models,
         const std::shared_ptr<const monitoring::Monitor>& _monitor,
+        const std::shared_ptr<std::mutex>& _project_mtx,
         const std::shared_ptr<multithreading::ReadWriteLock>& _read_write_lock )
         : categories_( _categories ),
           database_manager_( _database_manager ),
@@ -38,8 +39,8 @@ class ModelManager
           logger_( _logger ),
           models_( _models ),
           monitor_( _monitor ),
+          project_mtx_( _project_mtx ),
           read_write_lock_( _read_write_lock )
-
     {
     }
 
@@ -48,6 +49,13 @@ class ModelManager
     // ------------------------------------------------------------------------
 
    public:
+    /// Determines whether the model should
+    /// allow HTTP requests.
+    void allow_http(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
     /// Fits a model
     void fit_model(
         const std::string& _name,
@@ -97,6 +105,7 @@ class ModelManager
     Poco::JSON::Object receive_data(
         const Poco::JSON::Object& _cmd,
         const std::shared_ptr<containers::Encoding>& _categories,
+        const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
         const std::shared_ptr<std::map<std::string, containers::DataFrame>>&
             _data_frames,
         Poco::Net::StreamSocket* _socket );
@@ -114,6 +123,19 @@ class ModelManager
         const ModelType& _model,
         const Poco::JSON::Object& _cmd,
         const containers::Features& _yhat,
+        const std::shared_ptr<containers::Encoding>& _categories,
+        const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
+        const std::shared_ptr<std::map<std::string, containers::DataFrame>>&
+            _local_data_frames,
+        Poco::Net::StreamSocket* _socket );
+
+    /// Writes a set of features to a DataFrame.
+    containers::DataFrame to_df(
+        const ModelType& _model,
+        const Poco::JSON::Object& _cmd,
+        const containers::Features& _yhat,
+        const std::shared_ptr<containers::Encoding>& _categories,
+        const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
         const std::shared_ptr<std::map<std::string, containers::DataFrame>>&
             _local_data_frames,
         Poco::Net::StreamSocket* _socket );
@@ -150,7 +172,11 @@ class ModelManager
     }
 
     /// Trivial (private) accessor
-    const monitoring::Logger& logger() { return *logger_; }
+    const monitoring::Logger& logger()
+    {
+        assert_true( logger_ );
+        return *logger_;
+    }
 
     /// Trivial (private) accessor
     ModelMapType& models()
@@ -186,6 +212,13 @@ class ModelManager
     void post_model( const Poco::JSON::Object& _obj )
     {
         monitor_->send( "postrelboostmodel", _obj );
+    }
+
+    /// Trivial (private) accessor
+    std::mutex& project_mtx()
+    {
+        assert_true( project_mtx_ );
+        return *project_mtx_;
     }
 
     /// Sets a model.
@@ -234,6 +267,9 @@ class ModelManager
     /// For communication with the monitor
     const std::shared_ptr<const monitoring::Monitor> monitor_;
 
+    /// It is sometimes necessary to prevent us from changing the project.
+    const std::shared_ptr<std::mutex> project_mtx_;
+
     /// For coordinating the read and write process of the data
     const std::shared_ptr<multithreading::ReadWriteLock> read_write_lock_;
 
@@ -251,6 +287,27 @@ namespace engine
 {
 namespace handlers
 {
+// ------------------------------------------------------------------------
+
+template <typename ModelType>
+void ModelManager<ModelType>::allow_http(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    const bool allow_http = JSON::get_value<bool>( _cmd, "allow_http_" );
+
+    auto model = get_model( _name );
+
+    model.allow_http() = allow_http;
+
+    set_model( _name, model );
+
+    post_model( model.to_monitor( _name ) );
+
+    communication::Sender::send_string( "Success!", _socket );
+}
+
 // ------------------------------------------------------------------------
 
 template <typename ModelType>
@@ -285,13 +342,21 @@ void ModelManager<ModelType>::fit_model(
     auto local_categories =
         std::make_shared<containers::Encoding>( categories_ );
 
+    auto local_join_keys_encoding =
+        std::make_shared<containers::Encoding>( join_keys_encoding_ );
+
     auto local_data_frames =
         std::make_shared<std::map<std::string, containers::DataFrame>>(
             data_frames() );
 
     auto cmd = communication::Receiver::recv_cmd( logger_, _socket );
 
-    cmd = receive_data( cmd, local_categories, local_data_frames, _socket );
+    cmd = receive_data(
+        cmd,
+        local_categories,
+        local_join_keys_encoding,
+        local_data_frames,
+        _socket );
 
     // -------------------------------------------------------
     // Do the actual fitting
@@ -330,6 +395,8 @@ void ModelManager<ModelType>::fit_model(
     post_model( model.to_monitor( _name ) );
 
     communication::Sender::send_string( "Trained model.", _socket );
+
+    multithreading::ReadLock read_lock( read_write_lock_ );
 
     send_data( categories_, local_data_frames, _socket );
 
@@ -396,6 +463,13 @@ void ModelManager<ModelType>::launch_hyperopt(
     const std::string& _name, Poco::Net::StreamSocket* _socket )
 {
     // -------------------------------------------------------
+    // The project guard will prevent any attempts to
+    // change or delete the project while the hyperparameter
+    // optimization is running.
+
+    std::lock_guard<std::mutex> project_guard( project_mtx() );
+
+    // -------------------------------------------------------
     // Some models are only supported by the premium version.
 
     if constexpr ( ModelType::premium_only_ )
@@ -436,6 +510,7 @@ template <typename ModelType>
 Poco::JSON::Object ModelManager<ModelType>::receive_data(
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<containers::Encoding>& _categories,
+    const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
     const std::shared_ptr<std::map<std::string, containers::DataFrame>>&
         _data_frames,
     Poco::Net::StreamSocket* _socket )
@@ -450,14 +525,11 @@ Poco::JSON::Object ModelManager<ModelType>::receive_data(
     const auto local_read_write_lock =
         std::make_shared<multithreading::ReadWriteLock>();
 
-    auto local_join_keys_encoding =
-        std::make_shared<containers::Encoding>( join_keys_encoding_ );
-
     auto local_data_frame_manager = DataFrameManager(
         _categories,
         database_manager_,
         _data_frames,
-        local_join_keys_encoding,
+        _join_keys_encoding,
         license_checker_,
         logger_,
         monitor_,
@@ -481,16 +553,23 @@ Poco::JSON::Object ModelManager<ModelType>::receive_data(
             else if ( type == "DataFrame.from_query" )
                 {
                     license_checker().check_enterprise();
-
                     local_data_frame_manager.from_query(
                         name, cmd, false, _socket );
                 }
             else if ( type == "DataFrame.from_json" )
                 {
                     license_checker().check_enterprise();
-
                     local_data_frame_manager.from_json(
                         name, cmd, false, _socket );
+                }
+            else if ( type == "FloatColumn.set_unit" )
+                {
+                    local_data_frame_manager.set_unit( name, cmd, _socket );
+                }
+            else if ( type == "StringColumn.set_unit" )
+                {
+                    local_data_frame_manager.set_unit_categorical(
+                        name, cmd, _socket );
                 }
             else
                 {
@@ -537,8 +616,6 @@ void ModelManager<ModelType>::send_data(
     // is to prevent the global variables from being affected
     // by local data frames.
 
-    multithreading::ReadLock read_lock( read_write_lock_ );
-
     const auto local_read_write_lock =
         std::make_shared<multithreading::ReadWriteLock>();
 
@@ -564,6 +641,7 @@ void ModelManager<ModelType>::send_data(
         logger_,
         models_,
         monitor_,
+        project_mtx_,
         local_read_write_lock );
 
     // -------------------------------------------------------
@@ -578,7 +656,7 @@ void ModelManager<ModelType>::send_data(
 
             const auto type = JSON::get_value<std::string>( cmd, "type_" );
 
-            if ( type == "Column.get" )
+            if ( type == "FloatColumn.get" )
                 {
                     local_data_frame_manager.get_column( name, cmd, _socket );
                 }
@@ -636,12 +714,68 @@ void ModelManager<ModelType>::to_db(
     const ModelType& _model,
     const Poco::JSON::Object& _cmd,
     const containers::Features& _yhat,
+    const std::shared_ptr<containers::Encoding>& _categories,
+    const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
+    const std::shared_ptr<std::map<std::string, containers::DataFrame>>&
+        _local_data_frames,
+    Poco::Net::StreamSocket* _socket )
+{
+    // -------------------------------------------------------
+    // Transforms the features into a data frame.
+
+    const auto df = to_df(
+        _model,
+        _cmd,
+        _yhat,
+        _categories,
+        _join_keys_encoding,
+        _local_data_frames,
+        _socket );
+
+    // -------------------------------------------------------
+    // Write data frame to data base.
+
+    const auto table_name = JSON::get_value<std::string>( _cmd, "table_name_" );
+
+    // We are using the bell character (\a) as the quotechar. It is least likely
+    // to appear in any field.
+    auto reader = containers::DataFrameReader(
+        df, _categories, _join_keys_encoding, '\a', '|' );
+
+    const auto statement = csv::StatementMaker::make_statement(
+        table_name,
+        connector()->dialect(),
+        reader.colnames(),
+        reader.coltypes() );
+
+    logger().log( statement );
+
+    connector()->execute( statement );
+
+    connector()->read( table_name, false, 0, &reader );
+
+    database_manager_->post_tables();
+
+    // -------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
+template <typename ModelType>
+containers::DataFrame ModelManager<ModelType>::to_df(
+    const ModelType& _model,
+    const Poco::JSON::Object& _cmd,
+    const containers::Features& _yhat,
+    const std::shared_ptr<containers::Encoding>& _categories,
+    const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
     const std::shared_ptr<std::map<std::string, containers::DataFrame>>&
         _local_data_frames,
     Poco::Net::StreamSocket* _socket )
 {
     // -------------------------------------------------------
     // Get population table.
+
+    const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
 
     const auto population_name =
         JSON::get_value<std::string>( _cmd, "population_name_" );
@@ -652,7 +786,7 @@ void ModelManager<ModelType>::to_db(
     // -------------------------------------------------------
     // Build data frame.
 
-    containers::DataFrame df;
+    containers::DataFrame df( df_name, _categories, _join_keys_encoding );
 
     if ( _cmd.has( "predict_" ) && JSON::get_value<bool>( _cmd, "predict_" ) )
         {
@@ -669,12 +803,11 @@ void ModelManager<ModelType>::to_db(
         }
     else
         {
-            const auto [autofeatures, categorical, discrete, numerical] =
+            const auto [autofeatures, categorical, numerical] =
                 _model.feature_names();
 
             assert_true(
-                autofeatures.size() + discrete.size() + numerical.size() ==
-                _yhat.size() );
+                autofeatures.size() + numerical.size() == _yhat.size() );
 
             size_t j = 0;
 
@@ -683,13 +816,6 @@ void ModelManager<ModelType>::to_db(
                     auto col = containers::Column( _yhat[j++] );
                     col.set_name( autofeatures[i] );
                     df.add_float_column( col, "numerical" );
-                }
-
-            for ( size_t i = 0; i < discrete.size(); ++i )
-                {
-                    auto col = containers::Column( _yhat[j++] );
-                    col.set_name( discrete[i] );
-                    df.add_float_column( col, "discrete" );
                 }
 
             for ( size_t i = 0; i < numerical.size(); ++i )
@@ -701,49 +827,35 @@ void ModelManager<ModelType>::to_db(
 
             for ( const auto& colname : categorical )
                 {
-                    auto col = population_table.categorical( colname );
+                    auto col = population_table.categorical( colname ).clone();
                     df.add_int_column( col, "categorical" );
                 }
         }
 
     // -------------------------------------------------------
-    // Add join keys and time stamps.
+    // Add join keys, time stamps and targets.
 
     for ( size_t i = 0; i < population_table.num_join_keys(); ++i )
         {
-            const auto col = population_table.join_key( i );
+            const auto col = population_table.join_key( i ).clone();
             df.add_int_column( col, "join_key" );
         }
 
     for ( size_t i = 0; i < population_table.num_time_stamps(); ++i )
         {
-            const auto col = population_table.time_stamp( i );
+            const auto col = population_table.time_stamp( i ).clone();
             df.add_float_column( col, "time_stamp" );
         }
 
+    for ( size_t i = 0; i < population_table.num_targets(); ++i )
+        {
+            const auto col = population_table.target( i ).clone();
+            df.add_float_column( col, "target" );
+        }
+
     // -------------------------------------------------------
-    // Write data frame to data base.
 
-    const auto table_name = JSON::get_value<std::string>( _cmd, "table_name_" );
-
-    // We are using the bell character (\a) as the quotechar. It is least likely
-    // to appear in any field.
-    auto reader = containers::DataFrameReader(
-        df, categories_, join_keys_encoding_, '\a', '|' );
-
-    const auto statement = csv::StatementMaker::make_statement(
-        table_name,
-        connector()->dialect(),
-        reader.colnames(),
-        reader.coltypes() );
-
-    logger().log( statement );
-
-    connector()->execute( statement );
-
-    connector()->read( table_name, false, 0, &reader );
-
-    database_manager_->post_tables();
+    return df;
 
     // -------------------------------------------------------
 }
@@ -798,15 +910,35 @@ void ModelManager<ModelType>::transform(
 
     auto model = get_model( _name );
 
+    if ( JSON::get_value<bool>( _cmd, "http_request_" ) )
+        {
+            if ( !model.allow_http() )
+                {
+                    throw std::invalid_argument(
+                        "Model '" + _name +
+                        "' does not allow HTTP requests. You can activate "
+                        "this "
+                        "via the API or the getML monitor!" );
+                }
+
+            if constexpr ( !ModelType::premium_only_ )
+                {
+                    license_checker().check_enterprise();
+                }
+        }
+
     communication::Sender::send_string( "Found!", _socket );
 
     // -------------------------------------------------------
     // Receive data
 
-    multithreading::ReadLock read_lock( read_write_lock_ );
+    multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
 
     auto local_categories =
         std::make_shared<containers::Encoding>( categories_ );
+
+    auto local_join_keys_encoding =
+        std::make_shared<containers::Encoding>( join_keys_encoding_ );
 
     auto local_data_frames =
         std::make_shared<std::map<std::string, containers::DataFrame>>(
@@ -814,7 +946,12 @@ void ModelManager<ModelType>::transform(
 
     auto cmd = communication::Receiver::recv_cmd( logger_, _socket );
 
-    cmd = receive_data( cmd, local_categories, local_data_frames, _socket );
+    cmd = receive_data(
+        cmd,
+        local_categories,
+        local_join_keys_encoding,
+        local_data_frames,
+        _socket );
 
     // -------------------------------------------------------
     // Do the actual transformation
@@ -826,22 +963,67 @@ void ModelManager<ModelType>::transform(
     // -------------------------------------------------------
     // Send data to client or write to data base
 
-    if ( JSON::get_value<std::string>( cmd, "table_name_" ) == "" )
+    const auto table_name = JSON::get_value<std::string>( cmd, "table_name_" );
+
+    const auto df_name = JSON::get_value<std::string>( cmd, "df_name_" );
+
+    if ( table_name == "" && df_name == "" )
         {
             communication::Sender::send_features( yhat, _socket );
         }
-    else
+    else if ( table_name != "" )
         {
             license_checker().check_enterprise();
-            to_db( model, cmd, yhat, local_data_frames, _socket );
+
+            to_db(
+                model,
+                cmd,
+                yhat,
+                local_categories,
+                local_join_keys_encoding,
+                local_data_frames,
+                _socket );
         }
+
+    // -------------------------------------------------------
+    // Write to DataFrame.
+
+    if ( df_name != "" )
+        {
+            license_checker().check_enterprise();
+
+            auto df = to_df(
+                model,
+                cmd,
+                yhat,
+                local_categories,
+                local_join_keys_encoding,
+                local_data_frames,
+                _socket );
+
+            weak_write_lock.upgrade();
+
+            categories_->append( *local_categories );
+
+            join_keys_encoding_->append( *local_join_keys_encoding );
+
+            df.set_categories( categories_ );
+
+            df.set_join_keys_encoding( join_keys_encoding_ );
+
+            data_frames()[df_name] = df;
+
+            monitor_->send( "postdataframe", df.to_monitor() );
+        }
+
+    // -------------------------------------------------------
 
     send_data( categories_, local_data_frames, _socket );
 
     // -------------------------------------------------------
     // Store model, if necessary.
 
-    read_lock.unlock();
+    weak_write_lock.unlock();
 
     if ( JSON::get_value<bool>( cmd, "score_" ) )
         {

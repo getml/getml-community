@@ -11,14 +11,14 @@ class DecisionTree
 {
    public:
     DecisionTree(
-        const std::shared_ptr<const std::vector<std::string>> &_categories,
+        const std::shared_ptr<const std::vector<strings::String>> &_categories,
         const std::shared_ptr<const descriptors::TreeHyperparameters>
             &_tree_hyperparameters,
         const Poco::JSON::Object &_json_obj );
 
     DecisionTree(
         const std::string &_agg,
-        const std::shared_ptr<const std::vector<std::string>> &_categories,
+        const std::shared_ptr<const std::vector<strings::String>> &_categories,
         const std::shared_ptr<const descriptors::TreeHyperparameters>
             &_tree_hyperparameters,
         const size_t _ix_perip_used,
@@ -43,7 +43,7 @@ class DecisionTree
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
         const containers::Subfeatures &_subfeatures,
-        const containers::MatchPtrs &_sample_container,
+        const containers::MatchPtrs &_match_container,
         aggregations::AbstractAggregation *_aggregation ) const;
 
     /// Fits the decision tree
@@ -51,8 +51,8 @@ class DecisionTree
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
         const containers::Subfeatures &_subfeatures,
-        containers::MatchPtrs::iterator _sample_container_begin,
-        containers::MatchPtrs::iterator _sample_container_end,
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end,
         optimizationcriteria::OptimizationCriterion *_optimization_criterion );
 
     /// Rebuilds the tree from a Poco::JSON::Object
@@ -123,13 +123,13 @@ class DecisionTree
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
         const containers::Subfeatures &_subfeatures,
-        const containers::MatchPtrs &_sample_container )
+        const containers::MatchPtrs &_match_container )
     {
         create_value_to_be_aggregated(
             _population,
             _peripheral,
             _subfeatures,
-            _sample_container,
+            _match_container,
             aggregation() );
     }
 
@@ -149,10 +149,11 @@ class DecisionTree
 
     /// Creates the aggregation used by this tree or a clone thereof.
     inline std::shared_ptr<aggregations::AbstractAggregation> const
-    make_aggregation() const
+    make_aggregation( const enums::Mode _mode ) const
     {
         return aggregations::AggregationParser::parse_aggregation(
             impl()->aggregation_type_,
+            _mode,
             column_to_be_aggregated().data_used,
             column_to_be_aggregated().ix_column_used,
             same_units_numerical(),
@@ -244,21 +245,6 @@ class DecisionTree
             _num_samples_smaller, _num_samples_greater );
     }
 
-    /// Calls transform(...) using the tree's own aggregation.
-    std::vector<Float> transform(
-        const containers::DataFrameView &_population,
-        const containers::DataFrame &_peripheral,
-        const containers::Subfeatures &_subfeatures,
-        const bool _use_timestamps )
-    {
-        return transform(
-            _population,
-            _peripheral,
-            _subfeatures,
-            _use_timestamps,
-            aggregation() );
-    }
-
     // --------------------------------------
 
    private:
@@ -299,7 +285,7 @@ class DecisionTree
     inline const DecisionTreeImpl *impl() const { return &impl_; }
 
     /// Trivial accessor
-    inline const containers::Schema &input() const
+    inline const containers::Placeholder &input() const
     {
         assert_true( impl()->input_ );
         return *impl()->input_;
@@ -315,14 +301,14 @@ class DecisionTree
     inline size_t min_num_samples() const { return impl_.min_num_samples(); }
 
     /// Trivial accessor
-    inline optimizationcriteria::OptimizationCriterion *&
-    optimization_criterion()
+    inline optimizationcriteria::OptimizationCriterion *optimization_criterion()
     {
+        assert_true( impl_.optimization_criterion_ );
         return impl_.optimization_criterion_;
     }
 
     /// Trivial accessor
-    inline const containers::Schema &output() const
+    inline const containers::Placeholder &output() const
     {
         assert_true( impl()->output_ );
         return *impl()->output_;

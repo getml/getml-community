@@ -7,17 +7,21 @@ namespace handlers
 // ----------------------------------------------------------------------------
 
 containers::Column<Float> GroupByParser::categorical_aggregation(
-    const containers::Encoding& _categories,
-    const containers::Encoding& _join_keys_encoding,
-    const containers::DataFrame& _df,
     const std::string& _type,
     const std::string& _as,
     const Poco::JSON::Object& _json_col,
     const containers::Column<Int>& _unique,
     const containers::DataFrameIndex& _index )
 {
-    const auto vec = CatOpParser::parse(
-        _categories, _join_keys_encoding, {_df}, _json_col );
+    const auto data_frames =
+        std::make_shared<std::map<std::string, containers::DataFrame>>();
+
+    ( *data_frames )[df().name()] = df();
+
+    const auto vec =
+        CatOpParser(
+            categories_, join_keys_encoding_, data_frames, df().nrows(), false )
+            .parse( _json_col );
 
     if ( _type == "count_categorical" )
         {
@@ -50,14 +54,13 @@ containers::Column<Float> GroupByParser::categorical_aggregation(
 // ----------------------------------------------------------------------------
 
 std::pair<const containers::DataFrameIndex, const containers::Column<Int>>
-GroupByParser::find_index(
-    const containers::DataFrame& _df, const std::string& _join_key_name )
+GroupByParser::find_index( const std::string& _join_key_name )
 {
-    for ( size_t i = 0; i < _df.num_join_keys(); ++i )
+    for ( size_t i = 0; i < df().num_join_keys(); ++i )
         {
-            if ( _df.join_key( i ).name() == _join_key_name )
+            if ( df().join_key( i ).name() == _join_key_name )
                 {
-                    const auto index = _df.index( i );
+                    const auto index = df().index( i );
 
                     auto unique =
                         containers::Column<Int>( index.map()->size() );
@@ -76,24 +79,21 @@ GroupByParser::find_index(
         }
 
     throw std::invalid_argument(
-        "DataFrame '" + _df.name() + "' has no join key named '" +
+        "DataFrame '" + df().name() + "' has no join key named '" +
         _join_key_name + "'." );
 }
 
 // ----------------------------------------------------------------------------
 
 containers::DataFrame GroupByParser::group_by(
-    const std::shared_ptr<containers::Encoding>& _categories,
-    const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
-    const containers::DataFrame& _df,
     const std::string& _name,
     const std::string& _join_key_name,
     const Poco::JSON::Array& _aggregations )
 {
     auto result =
-        containers::DataFrame( _name, _categories, _join_keys_encoding );
+        containers::DataFrame( _name, categories_, join_keys_encoding_ );
 
-    const auto [index, unique] = find_index( _df, _join_key_name );
+    const auto [index, unique] = find_index( _join_key_name );
 
     result.add_int_column( unique, "join_key" );
 
@@ -117,30 +117,16 @@ containers::DataFrame GroupByParser::group_by(
             if ( type == "count_categorical" || type == "count_distinct" )
                 {
                     const auto col = categorical_aggregation(
-                        *_categories,
-                        *_join_keys_encoding,
-                        _df,
-                        type,
-                        as,
-                        json_col,
-                        unique,
-                        index );
+                        type, as, json_col, unique, index );
 
-                    result.add_float_column( col, "numerical" );
+                    result.add_float_column( col, "unused_float" );
                 }
             else
                 {
                     const auto col = numerical_aggregation(
-                        *_categories,
-                        *_join_keys_encoding,
-                        _df,
-                        type,
-                        as,
-                        json_col,
-                        unique,
-                        index );
+                        type, as, json_col, unique, index );
 
-                    result.add_float_column( col, "numerical" );
+                    result.add_float_column( col, "unused_float" );
                 }
         }
 
@@ -150,17 +136,21 @@ containers::DataFrame GroupByParser::group_by(
 // ----------------------------------------------------------------------------
 
 containers::Column<Float> GroupByParser::numerical_aggregation(
-    const containers::Encoding& _categories,
-    const containers::Encoding& _join_keys_encoding,
-    const containers::DataFrame& _df,
     const std::string& _type,
     const std::string& _as,
     const Poco::JSON::Object& _json_col,
     const containers::Column<Int>& _unique,
     const containers::DataFrameIndex& _index )
 {
-    const auto col = NumOpParser::parse(
-        _categories, _join_keys_encoding, {_df}, _json_col );
+    const auto data_frames =
+        std::make_shared<std::map<std::string, containers::DataFrame>>();
+
+    ( *data_frames )[df().name()] = df();
+
+    const auto col =
+        NumOpParser(
+            categories_, join_keys_encoding_, data_frames, df().nrows(), false )
+            .parse( _json_col );
 
     if ( _type == "assert_equal" )
         {

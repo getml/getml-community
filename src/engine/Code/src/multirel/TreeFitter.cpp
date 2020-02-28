@@ -12,7 +12,7 @@ void TreeFitter::find_best_trees(
     const std::vector<containers::Subfeatures> &_subfeatures,
     const std::vector<Float> &_values,
     std::vector<containers::Matches> *_samples,
-    std::vector<containers::MatchPtrs> *_sample_containers,
+    std::vector<containers::MatchPtrs> *_match_containers,
     optimizationcriteria::OptimizationCriterion *_optimization_criterion,
     std::list<decisiontrees::DecisionTree> *_candidate_trees,
     std::vector<decisiontrees::DecisionTree> *_trees )
@@ -65,7 +65,7 @@ void TreeFitter::fit(
     const decisiontrees::TableHolder &_table_holder,
     const std::vector<containers::Subfeatures> &_subfeatures,
     std::vector<containers::Matches> *_samples,
-    std::vector<containers::MatchPtrs> *_sample_containers,
+    std::vector<containers::MatchPtrs> *_match_containers,
     optimizationcriteria::OptimizationCriterion *_optimization_criterion,
     std::list<decisiontrees::DecisionTree> *_candidate_trees,
     std::vector<decisiontrees::DecisionTree> *_trees )
@@ -83,7 +83,7 @@ void TreeFitter::fit(
         _table_holder,
         _subfeatures,
         _samples,
-        _sample_containers,
+        _match_containers,
         _optimization_criterion,
         _candidate_trees,
         &values );
@@ -100,7 +100,7 @@ void TreeFitter::fit(
         _subfeatures,
         values,
         _samples,
-        _sample_containers,
+        _match_containers,
         _optimization_criterion,
         _candidate_trees,
         _trees );
@@ -115,20 +115,20 @@ void TreeFitter::fit_tree(
     const containers::DataFrame &_peripheral,
     const containers::Subfeatures &_subfeatures,
     std::vector<containers::Matches> *_samples,
-    std::vector<containers::MatchPtrs> *_sample_containers,
+    std::vector<containers::MatchPtrs> *_match_containers,
     optimizationcriteria::OptimizationCriterion *_optimization_criterion,
     decisiontrees::DecisionTree *_tree )
 {
-    assert_true( _sample_containers->size() == _samples->size() );
+    assert_true( _match_containers->size() == _samples->size() );
 
     const auto ix_perip_used = _tree->column_to_be_aggregated().ix_perip_used;
 
     assert_true(
-        ix_perip_used < static_cast<Int>( _sample_containers->size() ) );
+        ix_perip_used < static_cast<Int>( _match_containers->size() ) );
 
     auto &matches = ( *_samples )[ix_perip_used];
 
-    auto &match_ptrs = ( *_sample_containers )[ix_perip_used];
+    auto &match_ptrs = ( *_match_containers )[ix_perip_used];
 
     debug_log( "matches.size(): " + std::to_string( matches.size() ) );
 
@@ -204,7 +204,7 @@ void TreeFitter::probe(
     const decisiontrees::TableHolder &_table_holder,
     const std::vector<containers::Subfeatures> &_subfeatures,
     std::vector<containers::Matches> *_samples,
-    std::vector<containers::MatchPtrs> *_sample_containers,
+    std::vector<containers::MatchPtrs> *_match_containers,
     optimizationcriteria::OptimizationCriterion *_optimization_criterion,
     std::list<decisiontrees::DecisionTree> *_candidate_trees,
     std::vector<Float> *_values )
@@ -225,7 +225,7 @@ void TreeFitter::probe(
                 _table_holder.peripheral_tables_[ix],
                 _subfeatures[ix],
                 _samples,
-                _sample_containers,
+                _match_containers,
                 _optimization_criterion,
                 &tree );
 

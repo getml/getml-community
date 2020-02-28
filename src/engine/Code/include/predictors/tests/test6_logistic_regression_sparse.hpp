@@ -5,9 +5,7 @@ void test6_logistic_regression_sparse()
 {
     // -------------------------------------------------------------------------
 
-    std::cout << std::endl
-              << "Test 6 (Logistic regression, sparse): " << std::endl
-              << std::endl;
+    std::cout << "Test 6 | Logistic regression, sparse\t\t";
 
     // -------------------------------------------------------------------------
 
@@ -51,7 +49,6 @@ void test6_logistic_regression_sparse()
     const auto impl = std::make_shared<predictors::PredictorImpl>(
         std::vector<std::string>( {"categorical"} ),
         std::vector<std::string>(),
-        std::vector<std::string>(),
         3 );
 
     impl->fit_encodings( X_categorical );
@@ -84,14 +81,12 @@ void test6_logistic_regression_sparse()
                 };
         }
 
-    std::cout << "Accuracy: " << accuracy << std::endl;
+    // std::cout << "Accuracy: " << accuracy << std::endl;
     assert_true( accuracy > 0.99 );
-
-    std::cout << std::endl << std::endl;
 
     // ------------------------------------------------------------------------
 
-    std::cout << "OK." << std::endl << std::endl;
+    std::cout << "| OK" << std::endl;
 
     // ------------------------------------------------------------------------
 }

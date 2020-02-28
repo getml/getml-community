@@ -4,6 +4,8 @@
 // ----------------------------------------------------------------------------
 // Dependencies
 
+#include "multirel/enums/enums.hpp"
+
 #include "multirel/descriptors/descriptors.hpp"
 
 #include "multirel/containers/containers.hpp"

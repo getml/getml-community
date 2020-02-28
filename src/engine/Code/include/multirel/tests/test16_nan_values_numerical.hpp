@@ -1,13 +1,19 @@
 
 // ---------------------------------------------------------------------------
 
-void test16_nan_values_numerical()
+void test16_nan_values_numerical( std::filesystem::path _test_path )
 {
     // ------------------------------------------------------------------------
 
-    std::cout << std::endl
-              << "Test 16 (NAN values numerical): " << std::endl
-              << std::endl;
+    std::cout << "Test 16 | NAN values numerical\t\t\t";
+
+    // ---------------------------------------------------------------
+
+    // The resulting Model.json and Model.sql will be written to file
+    // but never read. To assure that all of this works, we write them
+    // to temporary files.
+    std::string tmp_filename_json = Poco::TemporaryFile::tempName();
+    std::string tmp_filename_sql = Poco::TemporaryFile::tempName();
 
     // ------------------------------------------------------------------------
     // Build artificial data set.
@@ -32,10 +38,11 @@ void test16_nan_values_numerical()
 
     const auto time_stamps_peripheral = make_column<double>( 250000, rng );
 
-    const auto time_stamps_peripheral_col = multirel::containers::Column<double>(
-        time_stamps_peripheral.data(),
-        "time_stamp",
-        time_stamps_peripheral.size() );
+    const auto time_stamps_peripheral_col =
+        multirel::containers::Column<double>(
+            time_stamps_peripheral.data(),
+            "time_stamp",
+            time_stamps_peripheral.size() );
 
     const auto peripheral_df = multirel::containers::DataFrame(
         {},
@@ -69,10 +76,11 @@ void test16_nan_values_numerical()
 
     const auto time_stamps_population = make_column<double>( 500, rng );
 
-    const auto time_stamps_population_col = multirel::containers::Column<double>(
-        time_stamps_population.data(),
-        "time_stamp",
-        time_stamps_population.size() );
+    const auto time_stamps_population_col =
+        multirel::containers::Column<double>(
+            time_stamps_population.data(),
+            "time_stamp",
+            time_stamps_population.size() );
 
     auto targets_population = std::vector<double>( 500 );
 
@@ -118,11 +126,15 @@ void test16_nan_values_numerical()
     // ---------------------------------------------
     // Build data model.
 
-    const auto population_json =
-        load_json( "../../tests/multirel/test16/schema.json" );
+    // Append all subfolders to reach the required file. This
+    // appending will have a persistent effect of _test_path which
+    // is stored on the heap. After setting it once to the correct
+    // folder only the filename has to be replaced.
+    _test_path.append( "multirel" ).append( "test16" ).append( "schema.json" );
+    const auto population_json = load_json( _test_path.string() );
 
     const auto population =
-        std::make_shared<const multirel::decisiontrees::Placeholder>(
+        std::make_shared<const multirel::containers::Placeholder>(
             *population_json );
 
     const auto peripheral = std::make_shared<std::vector<std::string>>(
@@ -131,11 +143,12 @@ void test16_nan_values_numerical()
     // ------------------------------------------------------------------------
     // Load hyperparameters.
 
-    const auto hyperparameters_json =
-        load_json( "../../tests/multirel/test16/hyperparameters.json" );
+    const auto hyperparameters_json = load_json(
+        _test_path.replace_filename( "hyperparameters.json" ).string() );
 
-    std::cout << multirel::JSON::stringify( *hyperparameters_json ) << std::endl
-              << std::endl;
+    // std::cout << multirel::JSON::stringify( *hyperparameters_json ) <<
+    // std::endl
+    //           << std::endl;
 
     const auto hyperparameters =
         std::make_shared<multirel::descriptors::Hyperparameters>(
@@ -144,8 +157,8 @@ void test16_nan_values_numerical()
     // ------------------------------------------------------------------------
     // Build model
 
-    const auto encoding = std::make_shared<const std::vector<std::string>>(
-        std::vector<std::string>(
+    const auto encoding = std::make_shared<const std::vector<strings::String>>(
+        std::vector<strings::String>(
             {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"} ) );
 
     auto model = multirel::ensemble::DecisionTreeEnsemble(
@@ -156,12 +169,12 @@ void test16_nan_values_numerical()
 
     model.fit( population_df, {peripheral_df} );
 
-    model.save( "../../tests/multirel/test16/Model.json" );
+    model.save( tmp_filename_json );
 
     // ------------------------------------------------------------------------
     // Express as SQL code.
 
-    std::ofstream sql( "../../tests/multirel/test16/Model.sql" );
+    std::ofstream sql( tmp_filename_sql );
     sql << model.to_sql();
     sql.close();
 
@@ -185,11 +198,10 @@ void test16_nan_values_numerical()
                             ( *predictions[j] )[i] ) < 5.0 );
                 }
         }
-    std::cout << std::endl << std::endl;
 
     // ------------------------------------------------------------------------
 
-    std::cout << "OK." << std::endl << std::endl;
+    std::cout << "| OK" << std::endl;
 
     // ------------------------------------------------------------------------
 }

@@ -1,13 +1,19 @@
 
 // ---------------------------------------------------------------------------
 
-void test17_nan_values_discrete()
+void test17_nan_values_discrete( std::filesystem::path _test_path )
 {
     // ------------------------------------------------------------------------
 
-    std::cout << std::endl
-              << "Test 17 (NAN values, discrete): " << std::endl
-              << std::endl;
+    std::cout << "Test 17 | NAN values, discrete\t\t\t\t";
+
+    // ---------------------------------------------------------------
+
+    // The resulting Model.json and Model.sql will be written to file
+    // but never read. To assure that all of this works, we write them
+    // to temporary files.
+    std::string tmp_filename_json = Poco::TemporaryFile::tempName();
+    std::string tmp_filename_sql = Poco::TemporaryFile::tempName();
 
     // ------------------------------------------------------------------------
     // Build artificial data set.
@@ -20,7 +26,10 @@ void test17_nan_values_discrete()
     auto discrete_peripheral = make_column<double>( 250000, rng );
 
     const auto discrete_peripheral_col = relboost::containers::Column<double>(
-        discrete_peripheral.data(), "column_01", discrete_peripheral.size() );
+        discrete_peripheral.data(),
+        "column_01",
+        discrete_peripheral.size(),
+        "unit_01" );
 
     const auto join_keys_peripheral = make_column<std::int32_t>( 250000, rng );
 
@@ -53,7 +62,10 @@ void test17_nan_values_discrete()
     auto discrete_population = make_column<double>( 500, rng );
 
     const auto discrete_population_col = relboost::containers::Column<double>(
-        discrete_population.data(), "column_01", discrete_population.size() );
+        discrete_population.data(),
+        "column_01",
+        discrete_population.size(),
+        "unit_01" );
 
     auto join_keys_population = std::vector<std::int32_t>( 500 );
 
@@ -132,10 +144,15 @@ void test17_nan_values_discrete()
     // ---------------------------------------------
     // Build data model.
 
-    const auto population_json = load_json( "../../tests/relboost/test17/schema.json" );
+    // Append all subfolders to reach the required file. This
+    // appending will have a persistent effect of _test_path which
+    // is stored on the heap. After setting it once to the correct
+    // folder only the filename has to be replaced.
+    _test_path.append( "relboost" ).append( "test17" ).append( "schema.json" );
+    const auto population_json = load_json( _test_path.string() );
 
     const auto population =
-        std::make_shared<const relboost::ensemble::Placeholder>(
+        std::make_shared<const relboost::containers::Placeholder>(
             *population_json );
 
     const auto peripheral = std::make_shared<std::vector<std::string>>(
@@ -144,11 +161,12 @@ void test17_nan_values_discrete()
     // ------------------------------------------------------------------------
     // Load hyperparameters.
 
-    const auto hyperparameters_json =
-        load_json( "../../tests/relboost/test17/hyperparameters.json" );
+    const auto hyperparameters_json = load_json(
+        _test_path.replace_filename( "hyperparameters.json" ).string() );
 
-    std::cout << relboost::JSON::stringify( *hyperparameters_json ) << std::endl
-              << std::endl;
+    // std::cout << relboost::JSON::stringify( *hyperparameters_json ) <<
+    // std::endl
+    //           << std::endl;
 
     const auto hyperparameters =
         std::make_shared<const relboost::Hyperparameters>(
@@ -157,8 +175,8 @@ void test17_nan_values_discrete()
     // ------------------------------------------------------------------------
     // Build model
 
-    const auto encoding = std::make_shared<const std::vector<std::string>>(
-        std::vector<std::string>(
+    const auto encoding = std::make_shared<const std::vector<strings::String>>(
+        std::vector<strings::String>(
             {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"} ) );
 
     auto model = relboost::ensemble::DecisionTreeEnsemble(
@@ -169,14 +187,16 @@ void test17_nan_values_discrete()
 
     model.fit( population_df, {peripheral_df} );
 
-    model.save( "../../tests/relboost/test17/Model.json" );
+    model.save( tmp_filename_json );
 
     // ------------------------------------------------------------------------
     // Express as SQL code.
 
-    std::ofstream sql( "../../tests/relboost/test17/Model.sql" );
+    std::ofstream sql( tmp_filename_sql );
     sql << model.to_sql();
     sql.close();
+
+    // std::cout << model.to_sql() << std::endl;
 
     // ------------------------------------------------------------------------
     // Generate predictions.
@@ -187,18 +207,17 @@ void test17_nan_values_discrete()
 
     for ( size_t i = 0; i < predictions.size(); ++i )
         {
-            // std::cout << "target: " << population_df.target_[i]
-            //         << ", prediction: " << predictions[i] << std::endl;
+            /*std::cout << "target: " << population_df.target( i, 0 )
+                      << ", prediction: " << predictions[i] << std::endl;*/
 
             assert_true(
                 std::abs( population_df.target( i, 0 ) - predictions[i] ) <
-                7.0 );
+                10.0 );
         }
-    std::cout << std::endl << std::endl;
 
     // ------------------------------------------------------------------------
 
-    std::cout << "OK." << std::endl << std::endl;
+    std::cout << "| OK" << std::endl;
 
     // ------------------------------------------------------------------------
 }

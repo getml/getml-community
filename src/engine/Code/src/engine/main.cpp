@@ -4,11 +4,11 @@ int main( int argc, char *argv[] )
 {
     // -------------------------------------------
 
-    const auto options = engine::config::Options::make_options();
+    const auto options = engine::config::Options::make_options( argc, argv );
 
     // -------------------------------------------
 
-    Poco::File( options.all_projects_directory_ ).createDirectories();
+    Poco::File( options.all_projects_directory() ).createDirectories();
 
     // -------------------------------------------
 
@@ -28,13 +28,14 @@ int main( int argc, char *argv[] )
     std::cout << "version: " << GETML_VERSION << std::endl << std::endl;
 
     std::cout << "Please open a web browser (like Firefox, Chrome or Safari) "
-              << "and go to http://localhost:" << options.monitor_.http_port_
+              << "and go to http://localhost:" << options.monitor().http_port()
               << "/ to log in." << std::endl
               << std::endl;
 
     std::cout << "An HTTPS server that accepts remote connections has "
                  "been launched "
-              << "on port " << options.monitor_.https_port_ << "." << std::endl
+              << "on port " << options.monitor().https_port() << "."
+              << std::endl
               << std::endl;
 
     std::this_thread::sleep_for( std::chrono::seconds( 1 ) );
@@ -83,6 +84,8 @@ int main( int argc, char *argv[] )
 
     // -------------------------------------------
 
+    const auto project_mtx = std::make_shared<std::mutex>();
+
     const auto read_write_lock =
         std::make_shared<multithreading::ReadWriteLock>();
 
@@ -99,6 +102,7 @@ int main( int argc, char *argv[] )
             logger,
             multirel_models,
             monitor,
+            project_mtx,
             read_write_lock );
 
     const auto data_frame_manager =
@@ -122,6 +126,7 @@ int main( int argc, char *argv[] )
             logger,
             relboost_models,
             monitor,
+            project_mtx,
             read_write_lock );
 
     const auto project_manager =
@@ -132,10 +137,12 @@ int main( int argc, char *argv[] )
             data_frames,
             join_keys_encoding,
             license_checker,
-            relboost_models,
+            logger,
             monitor,
             options,
-            read_write_lock );
+            project_mtx,
+            read_write_lock,
+            relboost_models );
 
     // -------------------------------------------
     // This is where the actual communication begins
@@ -143,7 +150,7 @@ int main( int argc, char *argv[] )
     const auto shutdown = std::make_shared<std::atomic<bool>>( false );
 
     Poco::Net::ServerSocket server_socket(
-        static_cast<Poco::UInt16>( options.engine_.port_ ), 64 );
+        static_cast<Poco::UInt16>( options.engine().port() ), 64 );
 
     server_socket.setReceiveTimeout( Poco::Timespan( 600, 0 ) );
 
@@ -165,7 +172,7 @@ int main( int argc, char *argv[] )
 
     monitor->log(
         "The getML engine launched successfully on port " +
-        std::to_string( options.engine_.port_ ) + "." );
+        std::to_string( options.engine().port() ) + "." );
 
     while ( *shutdown == false )
         {

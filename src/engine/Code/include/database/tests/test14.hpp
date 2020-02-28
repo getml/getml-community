@@ -3,21 +3,38 @@
 
 void test14()
 {
-    std::cout << "Test 14: Getting the tables from a postgres database."
-              << std::endl
-              << std::endl;
+    std::cout << "Test 14 | Getting the tables from a postgres database\t";
 
-    auto postgres_db = database::Postgres( {"%Y-%m-%d %H:%M:%S"} );
+    // ---------------------------------------------------------------
+
+    // Configure PostgreSQL to connect using the user and database
+    // created just for this unit test.
+    Poco::JSON::Object connectionObject;
+    connectionObject.set( "dbname_", "testbertstestbase" );
+    connectionObject.set( "host_", "localhost" );
+    connectionObject.set( "hostaddr_", "127.0.0.1" );
+    connectionObject.set( "password_", "testbert" );
+    connectionObject.set( "port_", 5432 );
+    connectionObject.set( "user_", "testbert" );
+
+    // Customized time format used within the database.
+    const std::vector<std::string> timeFormats = {"%Y-%m-%d %H:%M:%S"};
+
+    // ---------------------------------------------------------------
+
+    auto postgres_db =
+        database::Postgres( connectionObject, "testbert", timeFormats );
 
     const auto table_names = postgres_db.list_tables();
 
-    for ( const auto& table : table_names )
-        {
-            std::cout << table << " ";
-        }
+    // for ( const auto& table : table_names )
+    //     {
+    //         std::cout << table << " ";
+    //     }
 
-    std::cout << std::endl << std::endl;
-    std::cout << "OK." << std::endl << std::endl;
+    // ---------------------------------------------------------------
+
+    std::cout << "| OK" << std::endl;
 }
 
 #endif  // DATABASE_TESTS_TEST14_HPP_

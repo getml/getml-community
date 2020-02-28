@@ -6,8 +6,11 @@
 
 #include <algorithm>
 #include <memory>
+#include <optional>
 
 #include <Poco/JSON/Object.h>
+
+#include "strings/strings.hpp"
 
 #include "relboost/Float.hpp"
 #include "relboost/Int.hpp"

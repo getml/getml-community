@@ -1,9 +1,40 @@
-#include "multirel/decisiontrees/decisiontrees.hpp"
+#include "multirel/containers/containers.hpp"
 
 namespace multirel
 {
-namespace decisiontrees
+namespace containers
 {
+// ----------------------------------------------------------------------------
+
+void Placeholder::check_data_model(
+    const std::vector<std::string>& _peripheral_names,
+    const bool _is_population ) const
+{
+    if ( _is_population && joined_tables_.size() == 0 )
+        {
+            throw std::invalid_argument(
+                "The population placeholder contains no joined tables!" );
+        }
+
+    for ( const auto& joined_table : joined_tables_ )
+        {
+            const auto it = std::find(
+                _peripheral_names.begin(),
+                _peripheral_names.end(),
+                joined_table.name_ );
+
+            if ( it == _peripheral_names.end() )
+                {
+                    throw std::invalid_argument(
+                        "Placeholder '" + joined_table.name_ +
+                        "' is contained in the relational tree, but not among "
+                        "the peripheral placeholders!" );
+                }
+
+            joined_table.check_data_model( _peripheral_names, false );
+        }
+}
+
 // ----------------------------------------------------------------------------
 
 void Placeholder::check_vector_length()
@@ -70,19 +101,26 @@ Poco::JSON::Array Placeholder::joined_tables_to_array(
 std::vector<Placeholder> Placeholder::parse_joined_tables(
     const Poco::JSON::Array::Ptr _array )
 {
+    std::vector<Placeholder> vec;
+
     if ( _array.isNull() )
         {
-            std::runtime_error(
-                "Error while parsing Placeholder: Array does not exist or "
-                "is not an array!" );
+            return vec;
         }
-
-    std::vector<Placeholder> vec;
 
     for ( size_t i = 0; i < _array->size(); ++i )
         {
-            vec.push_back( Placeholder(
-                *_array->getObject( static_cast<unsigned int>( i ) ) ) );
+            const auto ptr =
+                _array->getObject( static_cast<unsigned int>( i ) );
+
+            if ( !ptr )
+                {
+                    throw std::invalid_argument(
+                        "Element " + std::to_string( i ) +
+                        " in joined_tables_ is not an Object!" );
+                }
+
+            vec.push_back( Placeholder( *ptr ) );
         }
 
     return vec;
@@ -114,9 +152,25 @@ Poco::JSON::Object Placeholder::to_json_obj() const
 
     // ---------------------------------------------------------
 
+    obj.set( "categoricals_", categoricals_ );
+
+    obj.set( "discretes_", discretes_ );
+
+    obj.set( "join_keys_", join_keys_ );
+
+    obj.set( "numericals_", numericals_ );
+
+    obj.set( "targets_", targets_ );
+
+    obj.set( "time_stamps_", time_stamps_ );
+
+    // ---------------------------------------------------------
+
     return obj;
+
+    // ---------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
-}  // namespace decisiontrees
+}  // namespace containers
 }  // namespace multirel

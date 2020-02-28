@@ -6,208 +6,6 @@ namespace handlers
 {
 // ------------------------------------------------------------------------
 
-void DataFrameManager::add_categorical_column(
-    const std::string& _name,
-    const Poco::JSON::Object& _cmd,
-    Poco::Net::StreamSocket* _socket )
-{
-    // ------------------------------------------------------------------------
-
-    multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
-
-    // ------------------------------------------------------------------------
-
-    const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
-
-    auto& df = utils::Getter::get( df_name, &data_frames() );
-
-    // ------------------------------------------------------------------------
-
-    const auto role = JSON::get_value<std::string>( _cmd, "role_" );
-
-    const auto name = JSON::get_value<std::string>( _cmd, "name_" );
-
-    const auto unit = JSON::get_value<std::string>( _cmd, "unit_" );
-
-    const auto json_col = *JSON::get_object( _cmd, "col_" );
-
-    // ------------------------------------------------------------------------
-
-    const auto vec = CatOpParser::parse(
-        *categories_, *join_keys_encoding_, {df}, json_col );
-
-    // ------------------------------------------------------------------------
-
-    auto local_categories =
-        std::make_shared<containers::Encoding>( categories_ );
-
-    auto local_join_keys_encoding =
-        std::make_shared<containers::Encoding>( join_keys_encoding_ );
-
-    // ------------------------------------------------------------------------
-
-    auto col = containers::Column<Int>( vec.size() );
-
-    auto encoding = local_join_keys_encoding;
-
-    if ( role == "categorical" )
-        {
-            encoding = local_categories;
-        }
-
-    for ( size_t i = 0; i < vec.size(); ++i )
-        {
-            col[i] = ( *encoding )[vec[i]];
-        }
-
-    // ------------------------------------------------------------------------
-
-    col.set_name( name );
-
-    col.set_unit( unit );
-
-    // ------------------------------------------------------------------------
-
-    license_checker().check_mem_size( data_frames(), col.nbytes() );
-
-    // ------------------------------------------------------------------------
-
-    weak_write_lock.upgrade();
-
-    // ------------------------------------------------------------------------
-
-    df.add_int_column( col, role );
-
-    // ------------------------------------------------------------------------
-
-    if ( role == "categorical" )
-        {
-            categories_->append( *local_categories );
-        }
-    else
-        {
-            join_keys_encoding_->append( *local_join_keys_encoding );
-        }
-
-    // ------------------------------------------------------------------------
-
-    monitor_->send( "postdataframe", df.to_monitor() );
-
-    communication::Sender::send_string( "Success!", _socket );
-
-    // ------------------------------------------------------------------------
-}
-
-// ------------------------------------------------------------------------
-
-void DataFrameManager::add_categorical_column(
-    const Poco::JSON::Object& _cmd,
-    containers::DataFrame* _df,
-    Poco::Net::StreamSocket* _socket )
-{
-    const auto role = JSON::get_value<std::string>( _cmd, "role_" );
-
-    const auto name = JSON::get_value<std::string>( _cmd, "name_" );
-
-    const auto unit = JSON::get_value<std::string>( _cmd, "unit_" );
-
-    containers::Column<Int> col;
-
-    if ( role == "categorical" )
-        {
-            col = communication::Receiver::recv_categorical_column(
-                categories_.get(), _socket );
-        }
-    else if ( role == "join_key" )
-        {
-            col = communication::Receiver::recv_categorical_column(
-                join_keys_encoding_.get(), _socket );
-        }
-    else
-        {
-            throw std::runtime_error(
-                "A categorical column must either have the role categorical or "
-                "join key" );
-        }
-
-    col.set_name( name );
-
-    col.set_unit( unit );
-
-    license_checker().check_mem_size( data_frames(), col.nbytes() );
-
-    _df->add_int_column( col, role );
-
-    communication::Sender::send_string( "Success!", _socket );
-}
-
-// ------------------------------------------------------------------------
-
-void DataFrameManager::add_column(
-    const std::string& _name,
-    const Poco::JSON::Object& _cmd,
-    Poco::Net::StreamSocket* _socket )
-{
-    multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
-
-    const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
-
-    auto& df = utils::Getter::get( df_name, &data_frames() );
-
-    const auto role = JSON::get_value<std::string>( _cmd, "role_" );
-
-    const auto name = JSON::get_value<std::string>( _cmd, "name_" );
-
-    const auto unit = JSON::get_value<std::string>( _cmd, "unit_" );
-
-    const auto json_col = *JSON::get_object( _cmd, "col_" );
-
-    auto col = NumOpParser::parse(
-        *categories_, *join_keys_encoding_, {df}, json_col );
-
-    col.set_name( name );
-
-    col.set_unit( unit );
-
-    license_checker().check_mem_size( data_frames(), col.nbytes() );
-
-    weak_write_lock.upgrade();
-
-    df.add_float_column( col, role );
-
-    monitor_->send( "postdataframe", df.to_monitor() );
-
-    communication::Sender::send_string( "Success!", _socket );
-}
-
-// ------------------------------------------------------------------------
-
-void DataFrameManager::add_column(
-    const Poco::JSON::Object& _cmd,
-    containers::DataFrame* _df,
-    Poco::Net::StreamSocket* _socket )
-{
-    const auto role = JSON::get_value<std::string>( _cmd, "role_" );
-
-    const auto name = JSON::get_value<std::string>( _cmd, "name_" );
-
-    const auto unit = JSON::get_value<std::string>( _cmd, "unit_" );
-
-    auto col = communication::Receiver::recv_column( _socket );
-
-    col.set_name( name );
-
-    col.set_unit( unit );
-
-    license_checker().check_mem_size( data_frames(), col.nbytes() );
-
-    _df->add_float_column( col, role );
-
-    communication::Sender::send_string( "Success!", _socket );
-}
-
-// ------------------------------------------------------------------------
-
 void DataFrameManager::add_data_frame(
     const std::string& _name, Poco::Net::StreamSocket* _socket )
 {
@@ -234,7 +32,7 @@ void DataFrameManager::add_data_frame(
     // Fill the data frame with data. Note that this does not close the socket
     // connection.
 
-    receive_data( &df, _socket );
+    receive_data( local_categories, local_join_keys_encoding, &df, _socket );
 
     // --------------------------------------------------------------------
     // Now we upgrade the weak write lock to a strong write lock to commit
@@ -261,6 +59,416 @@ void DataFrameManager::add_data_frame(
 
 // ------------------------------------------------------------------------
 
+void DataFrameManager::add_float_column(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    // ------------------------------------------------------------------------
+
+    multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
+
+    // ------------------------------------------------------------------------
+
+    const auto role = JSON::get_value<std::string>( _cmd, "role_" );
+
+    const auto name = JSON::get_value<std::string>( _cmd, "name_" );
+
+    const auto unit = JSON::get_value<std::string>( _cmd, "unit_" );
+
+    const auto json_col = *JSON::get_object( _cmd, "col_" );
+
+    const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
+
+    // ------------------------------------------------------------------------
+
+    const auto [nrows, any_df_found] = check_nrows( json_col );
+
+    if ( !any_df_found )
+        {
+            throw std::invalid_argument(
+                "Could not infer the number of rows, because no DataFrame "
+                "has been referred." );
+        }
+
+    auto col =
+        NumOpParser(
+            categories_, join_keys_encoding_, data_frames_, nrows, false )
+            .parse( json_col );
+
+    col.set_name( name );
+
+    col.set_unit( unit );
+
+    // ------------------------------------------------------------------------
+
+    auto [df, exists] = utils::Getter::get_if_exists( df_name, &data_frames() );
+
+    if ( exists )
+        {
+            add_float_column_to_df( role, col, df, &weak_write_lock );
+
+            monitor_->send( "postdataframe", df->to_monitor() );
+        }
+    else
+        {
+            auto new_df = containers::DataFrame(
+                df_name, categories_, join_keys_encoding_ );
+
+            add_float_column_to_df( role, col, &new_df, &weak_write_lock );
+
+            data_frames()[df_name] = new_df;
+
+            data_frames()[df_name].create_indices();
+
+            monitor_->send( "postdataframe", new_df.to_monitor() );
+        }
+
+    // ------------------------------------------------------------------------
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    // ------------------------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
+void DataFrameManager::add_float_column(
+    const Poco::JSON::Object& _cmd, Poco::Net::StreamSocket* _socket )
+{
+    // ------------------------------------------------------------------------
+
+    const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
+
+    // ------------------------------------------------------------------------
+
+    multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
+
+    // ------------------------------------------------------------------------
+
+    auto [df, exists] = utils::Getter::get_if_exists( df_name, &data_frames() );
+
+    // ------------------------------------------------------------------------
+
+    if ( exists )
+        {
+            recv_and_add_float_column( _cmd, df, &weak_write_lock, _socket );
+
+            monitor_->send( "postdataframe", df->to_monitor() );
+        }
+    else
+        {
+            auto new_df = containers::DataFrame(
+                df_name, categories_, join_keys_encoding_ );
+
+            recv_and_add_float_column(
+                _cmd, &new_df, &weak_write_lock, _socket );
+
+            data_frames()[df_name] = new_df;
+
+            data_frames()[df_name].create_indices();
+
+            monitor_->send( "postdataframe", new_df.to_monitor() );
+        }
+
+    // ------------------------------------------------------------------------
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    // ------------------------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
+void DataFrameManager::add_float_column_to_df(
+    const std::string& _role,
+    const containers::Column<Float>& _col,
+    containers::DataFrame* _df,
+    multithreading::WeakWriteLock* _weak_write_lock ) const
+{
+    license_checker().check_mem_size( data_frames(), _col.nbytes() );
+
+    if ( _weak_write_lock ) _weak_write_lock->upgrade();
+
+    _df->add_float_column( _col, _role );
+}
+
+// ------------------------------------------------------------------------
+
+void DataFrameManager::add_int_column_to_df(
+    const std::string& _name,
+    const std::string& _role,
+    const std::string& _unit,
+    const std::vector<std::string>& _vec,
+    containers::DataFrame* _df,
+    multithreading::WeakWriteLock* _weak_write_lock,
+    Poco::Net::StreamSocket* _socket )
+{
+    // ------------------------------------------------------------------------
+
+    auto local_categories =
+        std::make_shared<containers::Encoding>( categories_ );
+
+    auto local_join_keys_encoding =
+        std::make_shared<containers::Encoding>( join_keys_encoding_ );
+
+    // ------------------------------------------------------------------------
+
+    auto col = containers::Column<Int>( _vec.size() );
+
+    auto encoding = local_join_keys_encoding;
+
+    if ( _role == "categorical" )
+        {
+            encoding = local_categories;
+        }
+
+    for ( size_t i = 0; i < _vec.size(); ++i )
+        {
+            col[i] = ( *encoding )[_vec[i]];
+        }
+
+    // ------------------------------------------------------------------------
+
+    col.set_name( _name );
+
+    col.set_unit( _unit );
+
+    // ------------------------------------------------------------------------
+
+    license_checker().check_mem_size( data_frames(), col.nbytes() );
+
+    // ------------------------------------------------------------------------
+
+    assert_true( _weak_write_lock );
+
+    _weak_write_lock->upgrade();
+
+    // ------------------------------------------------------------------------
+
+    _df->add_int_column( col, _role );
+
+    // ------------------------------------------------------------------------
+
+    if ( _role == "categorical" )
+        {
+            categories_->append( *local_categories );
+        }
+    else if ( _role == "join_key" )
+        {
+            join_keys_encoding_->append( *local_join_keys_encoding );
+        }
+    else
+        {
+            assert_true( false );
+        }
+
+    // ------------------------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
+void DataFrameManager::add_int_column_to_df(
+    const std::string& _name,
+    const std::string& _role,
+    const std::string& _unit,
+    const std::vector<std::string>& _vec,
+    const std::shared_ptr<containers::Encoding>& _local_categories,
+    const std::shared_ptr<containers::Encoding>& _local_join_keys_encoding,
+    containers::DataFrame* _df ) const
+{
+    // ------------------------------------------------------------------------
+
+    auto col = containers::Column<Int>( _vec.size() );
+
+    auto encoding = _local_join_keys_encoding;
+
+    if ( _role == "categorical" )
+        {
+            encoding = _local_categories;
+        }
+
+    for ( size_t i = 0; i < _vec.size(); ++i )
+        {
+            col[i] = ( *encoding )[_vec[i]];
+        }
+
+    // ------------------------------------------------------------------------
+
+    col.set_name( _name );
+
+    col.set_unit( _unit );
+
+    // ------------------------------------------------------------------------
+
+    _df->add_int_column( col, _role );
+
+    // ------------------------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
+void DataFrameManager::add_string_column(
+    const Poco::JSON::Object& _cmd, Poco::Net::StreamSocket* _socket )
+{
+    // ------------------------------------------------------------------------
+
+    const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
+
+    multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
+
+    auto [df, exists] = utils::Getter::get_if_exists( df_name, &data_frames() );
+
+    // ------------------------------------------------------------------------
+
+    if ( exists )
+        {
+            recv_and_add_string_column( _cmd, df, &weak_write_lock, _socket );
+
+            monitor_->send( "postdataframe", df->to_monitor() );
+        }
+    else
+        {
+            auto new_df = containers::DataFrame(
+                df_name, categories_, join_keys_encoding_ );
+
+            recv_and_add_string_column(
+                _cmd, &new_df, &weak_write_lock, _socket );
+
+            data_frames()[df_name] = new_df;
+
+            data_frames()[df_name].create_indices();
+
+            monitor_->send( "postdataframe", new_df.to_monitor() );
+        }
+
+    // ------------------------------------------------------------------------
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    // ------------------------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
+void DataFrameManager::add_string_column(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    // ------------------------------------------------------------------------
+
+    multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
+
+    // ------------------------------------------------------------------------
+
+    const auto role = JSON::get_value<std::string>( _cmd, "role_" );
+
+    const auto name = JSON::get_value<std::string>( _cmd, "name_" );
+
+    const auto unit = JSON::get_value<std::string>( _cmd, "unit_" );
+
+    const auto json_col = *JSON::get_object( _cmd, "col_" );
+
+    const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
+
+    // ------------------------------------------------------------------------
+
+    const auto [nrows, any_df_found] = check_nrows( json_col );
+
+    if ( !any_df_found )
+        {
+            throw std::invalid_argument(
+                "Could not infer the number of rows, because no DataFrame "
+                "has been referred." );
+        }
+
+    const auto vec =
+        CatOpParser(
+            categories_, join_keys_encoding_, data_frames_, nrows, false )
+            .parse( json_col );
+
+    // ------------------------------------------------------------------------
+
+    auto new_df =
+        containers::DataFrame( df_name, categories_, join_keys_encoding_ );
+
+    auto [df, exists] = utils::Getter::get_if_exists( df_name, &data_frames() );
+
+    if ( !exists )
+        {
+            df = &new_df;
+        }
+
+    // ------------------------------------------------------------------------
+
+    if ( role == "unused" || role == "unused_string" )
+        {
+            add_string_column_to_df( name, unit, vec, df, &weak_write_lock );
+        }
+    else
+        {
+            add_int_column_to_df(
+                name, role, unit, vec, df, &weak_write_lock, _socket );
+        }
+
+    // ------------------------------------------------------------------------
+
+    if ( !exists )
+        {
+            data_frames()[df_name] = new_df;
+
+            data_frames()[df_name].create_indices();
+        }
+
+    // ------------------------------------------------------------------------
+
+    monitor_->send( "postdataframe", df->to_monitor() );
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    // ------------------------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
+void DataFrameManager::add_string_column_to_df(
+    const std::string& _name,
+    const std::string& _unit,
+    const std::vector<std::string>& _vec,
+    containers::DataFrame* _df,
+    multithreading::WeakWriteLock* _weak_write_lock ) const
+{
+    // ------------------------------------------------------------------------
+
+    auto col = containers::Column<strings::String>( _vec.size() );
+
+    for ( size_t i = 0; i < _vec.size(); ++i )
+        {
+            col[i] = strings::String( _vec[i] );
+        }
+
+    col.set_name( _name );
+
+    col.set_unit( _unit );
+
+    // ------------------------------------------------------------------------
+
+    license_checker().check_mem_size( data_frames(), col.nbytes() );
+
+    // ------------------------------------------------------------------------
+
+    if ( _weak_write_lock ) _weak_write_lock->upgrade();
+
+    // ------------------------------------------------------------------------
+
+    _df->add_string_column( col );
+
+    // ------------------------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
 void DataFrameManager::aggregate(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,
@@ -274,10 +482,14 @@ void DataFrameManager::aggregate(
 
     const auto df = utils::Getter::get( df_name, data_frames() );
 
+    check_nrows( aggregation, df_name, df.nrows() );
+
     auto response = containers::Column<Float>( 1 );
 
-    response[0] = AggOpParser::aggregate(
-        categories_, join_keys_encoding_, df, aggregation );
+    response[0] =
+        AggOpParser(
+            categories_, join_keys_encoding_, data_frames_, df.nrows() )
+            .aggregate( aggregation );
 
     read_lock.unlock();
 
@@ -297,16 +509,6 @@ void DataFrameManager::append_to_data_frame(
     multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
 
     // --------------------------------------------------------------------
-    // Make sure a data frame of this name exists.
-
-    if ( data_frames().find( _name ) == data_frames().end() )
-        {
-            throw std::invalid_argument(
-                "No data frame named '" + _name +
-                "' is currently loaded in memory." );
-        }
-
-    // --------------------------------------------------------------------
     // Create the data frame itself.
 
     auto local_categories =
@@ -322,7 +524,7 @@ void DataFrameManager::append_to_data_frame(
     // Fill the data frame with data. Note that this does not close the socket
     // connection.
 
-    receive_data( &df, _socket );
+    receive_data( local_categories, local_join_keys_encoding, &df, _socket );
 
     // --------------------------------------------------------------------
     // Now we upgrade the weak write lock to a strong write lock to commit
@@ -331,15 +533,29 @@ void DataFrameManager::append_to_data_frame(
     weak_write_lock.upgrade();
 
     // --------------------------------------------------------------------
-    // Append to data frame
+
+    auto [old_df, exists] =
+        utils::Getter::get_if_exists( _name, &data_frames() );
+
+    if ( exists )
+        {
+            old_df->append( df );
+        }
+    else
+        {
+            data_frames()[_name] = df;
+        }
+
+    data_frames()[_name].create_indices();
+
+    // --------------------------------------------------------------------
+    // Update categories
 
     categories_->append( *local_categories );
 
     join_keys_encoding_->append( *local_join_keys_encoding );
 
-    data_frames()[_name].append( df );
-
-    data_frames()[_name].create_indices();
+    // --------------------------------------------------------------------
 
     monitor_->send( "postdataframe", data_frames()[_name].to_monitor() );
 
@@ -348,12 +564,268 @@ void DataFrameManager::append_to_data_frame(
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::close(
-    const containers::DataFrame& _df, Poco::Net::StreamSocket* _socket )
+void DataFrameManager::calc_categorical_column_plots(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
 {
-    license_checker().check_mem_size( data_frames(), _df.nbytes() );
+    // --------------------------------------------------------------------
+
+    const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
+
+    const auto role = JSON::get_value<std::string>( _cmd, "role_" );
+
+    const auto num_bins = JSON::get_value<size_t>( _cmd, "num_bins_" );
+
+    const auto target_name =
+        JSON::get_value<std::string>( _cmd, "target_name_" );
+
+    const auto target_role =
+        JSON::get_value<std::string>( _cmd, "target_role_" );
+
+    // --------------------------------------------------------------------
+
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    // --------------------------------------------------------------------
+
+    const auto& df = utils::Getter::get( df_name, data_frames() );
+
+    auto vec = std::vector<strings::String>();
+
+    if ( role == "categorical" )
+        {
+            const auto col = df.int_column( _name, role );
+
+            vec.resize( col.nrows() );
+
+            for ( size_t i = 0; i < col.nrows(); ++i )
+                {
+                    vec[i] = categories()[col[i]];
+                }
+        }
+    else if ( role == "join_key" )
+        {
+            const auto col = df.int_column( _name, role );
+
+            vec.resize( col.nrows() );
+
+            for ( size_t i = 0; i < col.nrows(); ++i )
+                {
+                    vec[i] = join_keys_encoding()[col[i]];
+                }
+        }
+    else if ( role == "unused" || role == "unused_string" )
+        {
+            const auto col = df.unused_string( _name );
+
+            vec.resize( col.nrows() );
+
+            for ( size_t i = 0; i < col.nrows(); ++i )
+                {
+                    vec[i] = col[i];
+                }
+        }
+    else
+        {
+            throw std::invalid_argument( "Role '" + role + "' not known!" );
+        }
+
+    // --------------------------------------------------------------------
+
+    std::vector<Float> targets;
+
+    if ( target_name != "" )
+        {
+            const auto target_col = df.float_column( target_name, target_role );
+
+            targets =
+                std::vector<Float>( target_col.begin(), target_col.end() );
+        }
+
+    // --------------------------------------------------------------------
+
+    read_lock.unlock();
+
+    // --------------------------------------------------------------------
+
+    Poco::JSON::Object obj;
+
+    if ( targets.size() == vec.size() )
+        {
+            obj = metrics::Summarizer::calc_categorical_column_plot(
+                num_bins, vec, targets );
+        }
+    else
+        {
+            obj = metrics::Summarizer::calc_categorical_column_plot(
+                num_bins, vec );
+        }
+
+    // --------------------------------------------------------------------
 
     communication::Sender::send_string( "Success!", _socket );
+
+    communication::Sender::send_string( JSON::stringify( obj ), _socket );
+
+    // --------------------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
+void DataFrameManager::calc_column_plots(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    // --------------------------------------------------------------------
+
+    const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
+
+    const auto num_bins = JSON::get_value<size_t>( _cmd, "num_bins_" );
+
+    const auto role = JSON::get_value<std::string>( _cmd, "role_" );
+
+    const auto target_name =
+        JSON::get_value<std::string>( _cmd, "target_name_" );
+
+    const auto target_role =
+        JSON::get_value<std::string>( _cmd, "target_role_" );
+
+    // --------------------------------------------------------------------
+
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    // --------------------------------------------------------------------
+
+    const auto& df = utils::Getter::get( df_name, data_frames() );
+
+    const auto col = df.float_column( _name, role );
+
+    // --------------------------------------------------------------------
+
+    std::vector<const Float*> targets;
+
+    auto target_col = containers::Column<Float>();
+
+    if ( target_name != "" )
+        {
+            target_col = df.float_column( target_name, target_role );
+
+            targets.push_back( target_col.data() );
+        }
+
+    // --------------------------------------------------------------------
+
+    const containers::Features features = {col.data_ptr()};
+
+    const auto obj = metrics::Summarizer::calculate_feature_plots(
+        features, col.nrows(), 1, num_bins, targets );
+
+    // --------------------------------------------------------------------
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    communication::Sender::send_string( JSON::stringify( obj ), _socket );
+
+    // --------------------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
+std::pair<size_t, bool> DataFrameManager::check_nrows(
+    const Poco::JSON::Object& _obj,
+    const std::string& _cmp_df_name,
+    const size_t _cmp_nrows ) const
+{
+    // ------------------------------------------------------------------------
+
+    auto df_name = _cmp_df_name;
+
+    auto nrows = _cmp_nrows;
+
+    auto any_df_found = ( _cmp_df_name != "" );
+
+    // ------------------------------------------------------------------------
+
+    if ( _obj.has( "df_name_" ) )
+        {
+            df_name = JSON::get_value<std::string>( _obj, "df_name_" );
+
+            if ( df_name == "" )
+                {
+                    throw std::invalid_argument(
+                        "df_name_ cannot be an empty string!" );
+                }
+
+            if ( df_name != _cmp_df_name )
+                {
+                    const auto df =
+                        utils::Getter::get( df_name, data_frames() );
+
+                    nrows = df.nrows();
+
+                    any_df_found = true;
+
+                    if ( _cmp_df_name != "" && _cmp_nrows != nrows )
+                        {
+                            throw std::invalid_argument(
+                                "Cannot execute binary operation: '" +
+                                _cmp_df_name + "' has " +
+                                std::to_string( _cmp_nrows ) + " rows, but '" +
+                                df_name + "' has " + std::to_string( nrows ) +
+                                " rows." );
+                        }
+                }
+        }
+
+    // ------------------------------------------------------------------------
+
+    if ( _obj.has( "operand1_" ) )
+        {
+            std::tie( nrows, any_df_found ) = check_nrows(
+                *JSON::get_object( _obj, "operand1_" ), df_name, nrows );
+        }
+
+    if ( _obj.has( "operand2_" ) )
+        {
+            std::tie( nrows, any_df_found ) = check_nrows(
+                *JSON::get_object( _obj, "operand2_" ), df_name, nrows );
+        }
+
+    if ( _obj.has( "col_" ) )
+        {
+            std::tie( nrows, any_df_found ) = check_nrows(
+                *JSON::get_object( _obj, "col_" ), df_name, nrows );
+        }
+
+    // ------------------------------------------------------------------------
+
+    if ( _obj.has( "aggregations_" ) )
+        {
+            assert_true( any_df_found );
+
+            const auto arr = JSON::get_array( _obj, "aggregations_" );
+
+            for ( size_t i = 0; i < arr->size(); ++i )
+                {
+                    const auto ptr = arr->getObject( i );
+
+                    if ( !ptr )
+                        {
+                            throw std::invalid_argument(
+                                "Could not parse aggregations!" );
+                        }
+
+                    check_nrows( *ptr, df_name, nrows );
+                }
+        }
+
+    // ------------------------------------------------------------------------
+
+    return std::make_pair( nrows, any_df_found );
+
+    // ------------------------------------------------------------------------
 }
 
 // ------------------------------------------------------------------------
@@ -380,9 +852,6 @@ void DataFrameManager::from_csv(
     const auto categoricals = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "categoricals_" ) );
 
-    const auto discretes = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "discretes_" ) );
-
     const auto join_keys = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "join_keys_" ) );
 
@@ -394,6 +863,12 @@ void DataFrameManager::from_csv(
 
     const auto time_stamps = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "time_stamps_" ) );
+
+    const auto unused_floats = JSON::array_to_vector<std::string>(
+        JSON::get_array( _cmd, "unused_floats_" ) );
+
+    const auto unused_strings = JSON::array_to_vector<std::string>(
+        JSON::get_array( _cmd, "unused_strings_" ) );
 
     // --------------------------------------------------------------------
     // We need the weak write lock for the categories and join keys encoding.
@@ -419,11 +894,12 @@ void DataFrameManager::from_csv(
         sep,
         time_formats,
         categoricals,
-        discretes,
         join_keys,
         numericals,
         targets,
-        time_stamps );
+        time_stamps,
+        unused_floats,
+        unused_strings );
 
     license_checker().check_mem_size( data_frames(), df.nbytes() );
 
@@ -477,9 +953,6 @@ void DataFrameManager::from_db(
     const auto categoricals = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "categoricals_" ) );
 
-    const auto discretes = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "discretes_" ) );
-
     const auto join_keys = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "join_keys_" ) );
 
@@ -491,6 +964,12 @@ void DataFrameManager::from_db(
 
     const auto time_stamps = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "time_stamps_" ) );
+
+    const auto unused_floats = JSON::array_to_vector<std::string>(
+        JSON::get_array( _cmd, "unused_floats_" ) );
+
+    const auto unused_strings = JSON::array_to_vector<std::string>(
+        JSON::get_array( _cmd, "unused_strings_" ) );
 
     // --------------------------------------------------------------------
     // We need the weak write lock for the categories and join keys encoding.
@@ -516,11 +995,12 @@ void DataFrameManager::from_db(
         connector(),
         table_name,
         categoricals,
-        discretes,
         join_keys,
         numericals,
         targets,
-        time_stamps );
+        time_stamps,
+        unused_floats,
+        unused_strings );
 
     license_checker().check_mem_size( data_frames(), df.nbytes() );
 
@@ -576,13 +1056,11 @@ void DataFrameManager::from_json(
                           .extract<Poco::JSON::Object::Ptr>();
 
     // --------------------------------------------------------------------
-    // Parse the command.
+    // Parse the command. Note that the JSON column from the HTTP endpoint
+    // does not necessarily include unused columns - so we make the optional.
 
     const auto categoricals = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "categoricals_" ) );
-
-    const auto discretes = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "discretes_" ) );
 
     const auto join_keys = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "join_keys_" ) );
@@ -598,6 +1076,18 @@ void DataFrameManager::from_json(
 
     const auto time_formats = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "time_formats_" ) );
+
+    const auto unused_floats =
+        _cmd.has( "unused_floats_" )
+            ? JSON::array_to_vector<std::string>(
+                  JSON::get_array( _cmd, "unused_floats_" ) )
+            : std::vector<std::string>();
+
+    const auto unused_strings =
+        _cmd.has( "unused_strings_" )
+            ? JSON::array_to_vector<std::string>(
+                  JSON::get_array( _cmd, "unused_strings_" ) )
+            : std::vector<std::string>();
 
     // --------------------------------------------------------------------
     // We need the weak write lock for the categories and join keys encoding.
@@ -623,11 +1113,12 @@ void DataFrameManager::from_json(
         obj,
         time_formats,
         categoricals,
-        discretes,
         join_keys,
         numericals,
         targets,
-        time_stamps );
+        time_stamps,
+        unused_floats,
+        unused_strings );
 
     license_checker().check_mem_size( data_frames(), df.nbytes() );
 
@@ -681,9 +1172,6 @@ void DataFrameManager::from_query(
     const auto categoricals = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "categoricals_" ) );
 
-    const auto discretes = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "discretes_" ) );
-
     const auto join_keys = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "join_keys_" ) );
 
@@ -695,6 +1183,18 @@ void DataFrameManager::from_query(
 
     const auto time_stamps = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "time_stamps_" ) );
+
+    const auto unused_floats =
+        _cmd.has( "unused_floats_" )
+            ? JSON::array_to_vector<std::string>(
+                  JSON::get_array( _cmd, "unused_floats_" ) )
+            : std::vector<std::string>();
+
+    const auto unused_strings =
+        _cmd.has( "unused_strings_" )
+            ? JSON::array_to_vector<std::string>(
+                  JSON::get_array( _cmd, "unused_strings_" ) )
+            : std::vector<std::string>();
 
     // --------------------------------------------------------------------
     // We need the weak write lock for the categories and join keys encoding.
@@ -720,11 +1220,12 @@ void DataFrameManager::from_query(
         connector(),
         query,
         categoricals,
-        discretes,
         join_keys,
         numericals,
         targets,
-        time_stamps );
+        time_stamps,
+        unused_floats,
+        unused_strings );
 
     license_checker().check_mem_size( data_frames(), df.nbytes() );
 
@@ -775,12 +1276,69 @@ void DataFrameManager::get_boolean_column(
 
     const auto df = utils::Getter::get( _name, &data_frames() );
 
-    const auto col = BoolOpParser::parse(
-        *categories_, *join_keys_encoding_, {df}, json_col );
+    check_nrows( json_col, _name, df.nrows() );
+
+    const auto col =
+        BoolOpParser(
+            categories_, join_keys_encoding_, data_frames_, df.nrows(), false )
+            .parse( json_col );
 
     communication::Sender::send_string( "Found!", _socket );
 
     communication::Sender::send_boolean_column( col, _socket );
+}
+
+// ------------------------------------------------------------------------
+
+void DataFrameManager::get_boolean_column_string(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    const auto json_col = *JSON::get_object( _cmd, "col_" );
+
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    const auto df = utils::Getter::get( _name, &data_frames() );
+
+    check_nrows( json_col, _name, df.nrows() );
+
+    const auto length = std::min( df.nrows(), static_cast<size_t>( 20 ) );
+
+    const auto col =
+        BoolOpParser(
+            categories_, join_keys_encoding_, data_frames_, length, true )
+            .parse( json_col );
+
+    std::string col_str = "BooleanColumn([";
+
+    for ( size_t i = 0; i < length; ++i )
+        {
+            if ( col[i] )
+                {
+                    col_str += "True";
+                }
+            else
+                {
+                    col_str += "False";
+                }
+
+            if ( i < length - 1 )
+                {
+                    col_str += ", ";
+                }
+        }
+
+    if ( length < df.nrows() )
+        {
+            col_str += ",...";
+        }
+
+    col_str += "])";
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    communication::Sender::send_string( col_str, _socket );
 }
 
 // ------------------------------------------------------------------------
@@ -794,14 +1352,66 @@ void DataFrameManager::get_categorical_column(
 
     multithreading::ReadLock read_lock( read_write_lock_ );
 
-    const auto df = utils::Getter::get( _name, &data_frames() );
+    const auto df = utils::Getter::get( _name, data_frames() );
 
-    const auto col = CatOpParser::parse(
-        *categories_, *join_keys_encoding_, {df}, json_col );
+    check_nrows( json_col, _name, df.nrows() );
+
+    const auto col =
+        CatOpParser(
+            categories_, join_keys_encoding_, data_frames_, df.nrows(), false )
+            .parse( json_col );
 
     communication::Sender::send_string( "Found!", _socket );
 
     communication::Sender::send_categorical_column( col, _socket );
+}
+
+// ------------------------------------------------------------------------
+
+void DataFrameManager::get_categorical_column_string(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    const auto json_col = *JSON::get_object( _cmd, "col_" );
+
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    const auto df = utils::Getter::get( _name, data_frames() );
+
+    check_nrows( json_col, _name, df.nrows() );
+
+    const auto length = std::min( df.nrows(), static_cast<size_t>( 20 ) );
+
+    const auto col =
+        CatOpParser(
+            categories_, join_keys_encoding_, data_frames_, length, true )
+            .parse( json_col );
+
+    std::string col_str = "StringColumn([";
+
+    for ( size_t i = 0; i < length; ++i )
+        {
+            col_str += "'";
+            col_str += col[i];
+            col_str += "'";
+
+            if ( i < length - 1 )
+                {
+                    col_str += ", ";
+                }
+        }
+
+    if ( length < df.nrows() )
+        {
+            col_str += ",...";
+        }
+
+    col_str += "])";
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    communication::Sender::send_string( col_str, _socket );
 }
 
 // ------------------------------------------------------------------------
@@ -815,14 +1425,64 @@ void DataFrameManager::get_column(
 
     multithreading::ReadLock read_lock( read_write_lock_ );
 
-    const auto df = utils::Getter::get( _name, &data_frames() );
+    auto df = utils::Getter::get( _name, data_frames() );
 
-    const auto col = NumOpParser::parse(
-        *categories_, *join_keys_encoding_, {df}, json_col );
+    check_nrows( json_col, _name, df.nrows() );
+
+    const auto col =
+        NumOpParser(
+            categories_, join_keys_encoding_, data_frames_, df.nrows(), false )
+            .parse( json_col );
 
     communication::Sender::send_string( "Found!", _socket );
 
     communication::Sender::send_column( col, _socket );
+}
+
+// ------------------------------------------------------------------------
+
+void DataFrameManager::get_column_string(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    const auto json_col = *JSON::get_object( _cmd, "col_" );
+
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    auto df = utils::Getter::get( _name, data_frames() );
+
+    check_nrows( json_col, _name, df.nrows() );
+
+    const auto length = std::min( df.nrows(), static_cast<size_t>( 20 ) );
+
+    const auto col =
+        NumOpParser(
+            categories_, join_keys_encoding_, data_frames_, length, true )
+            .parse( json_col );
+
+    std::string col_str = "FloatColumn([";
+
+    for ( size_t i = 0; i < length; ++i )
+        {
+            col_str += std::to_string( col[i] );
+
+            if ( i < length - 1 )
+                {
+                    col_str += ", ";
+                }
+        }
+
+    if ( length < df.nrows() )
+        {
+            col_str += ",...";
+        }
+
+    col_str += "])";
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    communication::Sender::send_string( col_str, _socket );
 }
 
 // ------------------------------------------------------------------------
@@ -851,6 +1511,22 @@ void DataFrameManager::get_data_frame_content(
 
 // ------------------------------------------------------------------------
 
+void DataFrameManager::get_data_frame_string(
+    const std::string& _name, Poco::Net::StreamSocket* _socket )
+{
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    const auto& df = utils::Getter::get( _name, &data_frames() );
+
+    const auto str = df.get_string( 20 );
+
+    read_lock.unlock();
+
+    communication::Sender::send_string( str, _socket );
+}
+
+// ------------------------------------------------------------------------
+
 void DataFrameManager::get_data_frame( Poco::Net::StreamSocket* _socket )
 {
     multithreading::ReadLock read_lock( read_write_lock_ );
@@ -864,11 +1540,11 @@ void DataFrameManager::get_data_frame( Poco::Net::StreamSocket* _socket )
 
             const auto type = JSON::get_value<std::string>( cmd, "type_" );
 
-            if ( type == "CategoricalColumn.get" )
+            if ( type == "StringColumn.get" )
                 {
                     get_categorical_column( name, cmd, _socket );
                 }
-            else if ( type == "Column.get" )
+            else if ( type == "FloatColumn.get" )
                 {
                     get_column( name, cmd, _socket );
                 }
@@ -915,6 +1591,63 @@ void DataFrameManager::get_nrows(
 
 // ------------------------------------------------------------------------
 
+void DataFrameManager::get_unit(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    const auto role = JSON::get_value<std::string>( _cmd, "role_" );
+
+    const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
+
+    const auto df = utils::Getter::get( df_name, data_frames() );
+
+    const auto unit = df.float_column( _name, role ).unit();
+
+    read_lock.unlock();
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    communication::Sender::send_string( unit, _socket );
+}
+
+// ------------------------------------------------------------------------
+
+void DataFrameManager::get_unit_categorical(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    const auto role = JSON::get_value<std::string>( _cmd, "role_" );
+
+    const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
+
+    const auto df = utils::Getter::get( df_name, data_frames() );
+
+    std::string unit;
+
+    if ( role == "unused" || role == "unused_string" )
+        {
+            unit = df.unused_string( _name ).unit();
+        }
+    else
+        {
+            unit = df.int_column( _name, role ).unit();
+        }
+
+    read_lock.unlock();
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    communication::Sender::send_string( unit, _socket );
+}
+
+// ------------------------------------------------------------------------
+
 void DataFrameManager::group_by(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,
@@ -931,13 +1664,11 @@ void DataFrameManager::group_by(
 
     const auto df = utils::Getter::get( df_name, data_frames() );
 
-    const auto grouped_df = GroupByParser::group_by(
-        categories_,
-        join_keys_encoding_,
-        df,
-        _name,
-        join_key_name,
-        aggregations );
+    check_nrows( _cmd, df_name, df.nrows() );
+
+    const auto grouped_df =
+        GroupByParser( categories_, join_keys_encoding_, {df} )
+            .group_by( _name, join_key_name, aggregations );
 
     weak_write_lock.upgrade();
 
@@ -1016,7 +1747,10 @@ void DataFrameManager::join(
 // ------------------------------------------------------------------------
 
 void DataFrameManager::receive_data(
-    containers::DataFrame* _df, Poco::Net::StreamSocket* _socket )
+    const std::shared_ptr<containers::Encoding>& _local_categories,
+    const std::shared_ptr<containers::Encoding>& _local_join_keys_encoding,
+    containers::DataFrame* _df,
+    Poco::Net::StreamSocket* _socket ) const
 {
     while ( true )
         {
@@ -1027,17 +1761,30 @@ void DataFrameManager::receive_data(
 
             const auto name = JSON::get_value<std::string>( cmd, "name_" );
 
-            if ( type == "CategoricalColumn" )
+            if ( type == "FloatColumn" )
                 {
-                    add_categorical_column( cmd, _df, _socket );
+                    recv_and_add_float_column( cmd, _df, nullptr, _socket );
+
+                    communication::Sender::send_string( "Success!", _socket );
                 }
-            else if ( type == "Column" )
+            else if ( type == "StringColumn" )
                 {
-                    add_column( cmd, _df, _socket );
+                    recv_and_add_string_column(
+                        cmd,
+                        _local_categories,
+                        _local_join_keys_encoding,
+                        _df,
+                        _socket );
+
+                    communication::Sender::send_string( "Success!", _socket );
                 }
             else if ( type == "DataFrame.close" )
                 {
-                    close( *_df, _socket );
+                    license_checker().check_mem_size(
+                        data_frames(), _df->nbytes() );
+
+                    communication::Sender::send_string( "Success!", _socket );
+
                     break;
                 }
             else
@@ -1049,14 +1796,92 @@ void DataFrameManager::receive_data(
 
 // ------------------------------------------------------------------------
 
+void DataFrameManager::recv_and_add_float_column(
+    const Poco::JSON::Object& _cmd,
+    containers::DataFrame* _df,
+    multithreading::WeakWriteLock* _weak_write_lock,
+    Poco::Net::StreamSocket* _socket ) const
+{
+    const auto role = JSON::get_value<std::string>( _cmd, "role_" );
+
+    const auto name = JSON::get_value<std::string>( _cmd, "name_" );
+
+    auto col = communication::Receiver::recv_column( _socket );
+
+    col.set_name( name );
+
+    add_float_column_to_df( role, col, _df, _weak_write_lock );
+}
+
+// ------------------------------------------------------------------------
+
+void DataFrameManager::recv_and_add_string_column(
+    const Poco::JSON::Object& _cmd,
+    containers::DataFrame* _df,
+    multithreading::WeakWriteLock* _weak_write_lock,
+    Poco::Net::StreamSocket* _socket )
+{
+    assert_true( _weak_write_lock );
+
+    const auto role = JSON::get_value<std::string>( _cmd, "role_" );
+
+    const auto name = JSON::get_value<std::string>( _cmd, "name_" );
+
+    const auto str_col = communication::Receiver::recv_string_column( _socket );
+
+    if ( role == "unused" || role == "unused_string" )
+        {
+            add_string_column_to_df( name, "", str_col, _df, _weak_write_lock );
+        }
+    else
+        {
+            add_int_column_to_df(
+                name, role, "", str_col, _df, _weak_write_lock, _socket );
+        }
+}
+
+// ------------------------------------------------------------------------
+
+void DataFrameManager::recv_and_add_string_column(
+    const Poco::JSON::Object& _cmd,
+    const std::shared_ptr<containers::Encoding>& _local_categories,
+    const std::shared_ptr<containers::Encoding>& _local_join_keys_encoding,
+    containers::DataFrame* _df,
+    Poco::Net::StreamSocket* _socket ) const
+{
+    const auto role = JSON::get_value<std::string>( _cmd, "role_" );
+
+    const auto name = JSON::get_value<std::string>( _cmd, "name_" );
+
+    const auto str_col = communication::Receiver::recv_string_column( _socket );
+
+    if ( role == "unused" || role == "unused_string" )
+        {
+            add_string_column_to_df( name, "", str_col, _df, nullptr );
+        }
+    else
+        {
+            add_int_column_to_df(
+                name,
+                role,
+                "",
+                str_col,
+                _local_categories,
+                _local_join_keys_encoding,
+                _df );
+        }
+}
+
+// ------------------------------------------------------------------------
+
 void DataFrameManager::refresh(
     const std::string& _name, Poco::Net::StreamSocket* _socket )
 {
     multithreading::ReadLock read_lock( read_write_lock_ );
 
-    auto& df = utils::Getter::get( _name, &data_frames() );
+    const auto df = utils::Getter::get( _name, data_frames() );
 
-    Poco::JSON::Object encodings = df.get_colnames();
+    Poco::JSON::Object encodings = df.refresh();
 
     read_lock.unlock();
 
@@ -1072,15 +1897,20 @@ void DataFrameManager::remove_column(
 {
     const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
 
-    const auto role = JSON::get_value<std::string>( _cmd, "role_" );
-
     const auto name = JSON::get_value<std::string>( _cmd, "name_" );
 
     multithreading::WriteLock write_lock( read_write_lock_ );
 
     auto& df = utils::Getter::get( df_name, &data_frames() );
 
-    df.remove_column( name, role );
+    const bool success = df.remove_column( name );
+
+    if ( !success )
+        {
+            throw std::invalid_argument(
+                "Could not remove column. Column named '" + _name +
+                "' not found." );
+        }
 
     monitor_->send( "postdataframe", df.to_monitor() );
 
@@ -1094,13 +1924,13 @@ void DataFrameManager::set_unit(
     const Poco::JSON::Object& _cmd,
     Poco::Net::StreamSocket* _socket )
 {
-    multithreading::WriteLock write_lock( read_write_lock_ );
-
     const auto role = JSON::get_value<std::string>( _cmd, "role_" );
 
     const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
 
     const auto unit = JSON::get_value<std::string>( _cmd, "unit_" );
+
+    multithreading::WriteLock write_lock( read_write_lock_ );
 
     auto& df = utils::Getter::get( df_name, &data_frames() );
 
@@ -1124,13 +1954,13 @@ void DataFrameManager::set_unit_categorical(
     const Poco::JSON::Object& _cmd,
     Poco::Net::StreamSocket* _socket )
 {
-    multithreading::WriteLock write_lock( read_write_lock_ );
-
     const auto role = JSON::get_value<std::string>( _cmd, "role_" );
 
     const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
 
     const auto unit = JSON::get_value<std::string>( _cmd, "unit_" );
+
+    multithreading::WriteLock write_lock( read_write_lock_ );
 
     auto& df = utils::Getter::get( df_name, &data_frames() );
 
@@ -1187,8 +2017,8 @@ void DataFrameManager::to_csv(
 
     const auto& df = utils::Getter::get( _name, data_frames() );
 
-    // We are using the bell character (\a) as the quotechar. It is least likely
-    // to appear in any field.
+    // We are using the bell character (\a) as the quotechar. It is least
+    // likely to appear in any field.
     auto reader = containers::DataFrameReader(
         df, categories_, join_keys_encoding_, '\a', '|' );
 
@@ -1230,8 +2060,8 @@ void DataFrameManager::to_db(
 
     const auto& df = utils::Getter::get( _name, data_frames() );
 
-    // We are using the bell character (\a) as the quotechar. It is least likely
-    // to appear in any field.
+    // We are using the bell character (\a) as the quotechar. It is least
+    // likely to appear in any field.
     auto reader = containers::DataFrameReader(
         df, categories_, join_keys_encoding_, '\a', '|' );
 
@@ -1281,8 +2111,12 @@ void DataFrameManager::where(
 
     auto df = utils::Getter::get( _name, data_frames() );
 
-    const auto condition = BoolOpParser::parse(
-        *categories_, *join_keys_encoding_, {df}, condition_json );
+    check_nrows( condition_json, _name, df.nrows() );
+
+    const auto condition =
+        BoolOpParser(
+            categories_, join_keys_encoding_, data_frames_, df.nrows(), false )
+            .parse( condition_json );
 
     // --------------------------------------------------------------------
 

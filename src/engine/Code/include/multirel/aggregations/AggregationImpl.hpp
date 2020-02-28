@@ -12,16 +12,19 @@ struct AggregationImpl
     AggregationImpl( size_t _sample_size )
         : count_( std::vector<Float>( _sample_size ) ),
           count_committed_( std::vector<Float>( _sample_size ) ),
-          sample_ptr_( std::vector<containers::Match*>( _sample_size ) ),
-          sample_ptr_committed_( std::vector<containers::Match*>( _sample_size ) ),
+          match_ptr_( std::vector<containers::Match*>( _sample_size ) ),
+          match_ptr_committed_(
+              std::vector<containers::Match*>( _sample_size ) ),
           sum_( std::vector<Float>( _sample_size ) ),
           sum_committed_( std::vector<Float>( _sample_size ) ),
           sum_cubed_( std::vector<Float>( _sample_size ) ),
           sum_cubed_committed_( std::vector<Float>( _sample_size ) ),
           sum_squared_( std::vector<Float>( _sample_size ) ),
           sum_squared_committed_( std::vector<Float>( _sample_size ) ),
-          updates_current_( containers::IntSet( static_cast<Int>( _sample_size ) ) ),
-          updates_stored_( containers::IntSet( static_cast<Int>( _sample_size ) ) ),
+          updates_current_(
+              containers::IntSet( static_cast<Int>( _sample_size ) ) ),
+          updates_stored_(
+              containers::IntSet( static_cast<Int>( _sample_size ) ) ),
           yhat_( std::vector<Float>( _sample_size ) ),
           yhat_committed_( std::vector<Float>( _sample_size ) ),
           yhat_stored_( std::vector<Float>( _sample_size ) )
@@ -41,10 +44,10 @@ struct AggregationImpl
 
     /// Vector of pointers to the sample currently in place - needed
     /// by some aggregation like MIN or MAX
-    std::vector<containers::Match*> sample_ptr_;
+    std::vector<containers::Match*> match_ptr_;
 
     /// Vector of pointers to the sample currently in place (committed)
-    std::vector<containers::Match*> sample_ptr_committed_;
+    std::vector<containers::Match*> match_ptr_committed_;
 
     /// Vector sums
     std::vector<Float> sum_;
@@ -80,8 +83,7 @@ struct AggregationImpl
 
     /// Value to be aggregated - note the the length is usually different
     /// from yhat
-    containers::ColumnView<Float, std::map<Int, Int>>
-        value_to_be_aggregated_;
+    containers::ColumnView<Float, std::map<Int, Int>> value_to_be_aggregated_;
 
     /// Value to be aggregated to be used for aggregations that can be
     /// categorical
@@ -92,8 +94,7 @@ struct AggregationImpl
     /// is a timestamp difference or same unit numerical
     /// Note the the length is usually different from value_to_be_aggregated_,
     /// but always equal to the length of yhat_.
-    containers::ColumnView<Float, std::vector<size_t>>
-        value_to_be_compared_;
+    containers::ColumnView<Float, std::vector<size_t>> value_to_be_compared_;
 
     /// Vector containing predictions
     std::vector<Float> yhat_;

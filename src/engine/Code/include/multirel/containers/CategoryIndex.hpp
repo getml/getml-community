@@ -12,9 +12,12 @@ class CategoryIndex
 {
    public:
     CategoryIndex(
-        const std::vector<Int>& _categories,
-        const containers::MatchPtrs::iterator _begin,
-        const containers::MatchPtrs::iterator _end );
+        containers::MatchPtrs&& _bins,
+        std::vector<size_t>&& _indptr,
+        const Int _minimum )
+        : bins_( _bins ), indptr_( _indptr ), minimum_( _minimum )
+    {
+    }
 
     ~CategoryIndex() = default;
 
@@ -22,52 +25,58 @@ class CategoryIndex
 
    public:
     /// Trivial accessor.
-    containers::MatchPtrs::iterator begin() const { return begin_; }
+    containers::MatchPtrs::const_iterator begin() const
+    {
+        return bins_.cbegin();
+    }
 
     /// Returns iterator to the beginning of a set of categories.
-    containers::MatchPtrs::iterator begin( const Int _category ) const
+    containers::MatchPtrs::const_iterator begin( const Int _cat ) const
     {
-        assert_true( _category - minimum_ >= 0 );
-        assert_true(
-            _category - minimum_ + 1 < static_cast<Int>( indptr_.size() ) );
-        return begin_ + indptr_[_category - minimum_];
+        assert_true( _cat >= minimum_ );
+        const auto ix = static_cast<size_t>( _cat - minimum_ );
+        assert_true( ix < indptr_.size() );
+        assert_true( indptr_[ix] <= bins_.size() );
+        return bins_.cbegin() + indptr_[ix];
     }
 
     /// Trivial accessor.
-    containers::MatchPtrs::iterator end() const { return end_; }
+    containers::MatchPtrs::const_iterator end() const { return bins_.cend(); }
 
     /// Returns iterator to the end of a set of categories.
-    containers::MatchPtrs::iterator end( const Int _category ) const
+    containers::MatchPtrs::const_iterator end( const Int _cat ) const
     {
-        assert_true( _category - minimum_ >= 0 );
-        assert_true(
-            _category - minimum_ + 1 < static_cast<Int>( indptr_.size() ) );
-        return begin_ + indptr_[_category - minimum_ + 1];
+        assert_true( _cat >= minimum_ );
+        const auto ix = static_cast<size_t>( _cat - minimum_ );
+        assert_true( ix + 1 < indptr_.size() );
+        assert_true( indptr_[ix + 1] >= indptr_[ix] );
+        assert_true( indptr_[ix + 1] <= bins_.size() );
+        return bins_.cbegin() + indptr_[ix + 1];
     }
 
+    /// Returns the number of null values.
+    size_t num_null() const
+    {
+        assert_true( bins_.size() >= indptr_.back() );
+        return bins_.size() - indptr_.back();
+    }
+
+    /// Returns the size of the underlying indptr.
+    size_t size() const { return indptr_.size(); }
+
     // -------------------------------
 
    private:
-    /// Builds the indptr during construction of the CategoryIndex.
-    static std::vector<Int> build_indptr(
-        const std::vector<Int>& _categories,
-        const containers::MatchPtrs::iterator _begin,
-        const containers::MatchPtrs::iterator _end );
+    /// The bins themselves.
+    const containers::MatchPtrs bins_;
 
-    // -------------------------------
+    /// Indptr to the bins.
+    const std::vector<size_t> indptr_;
 
-   private:
-    /// Points to the first sample.
-    const containers::MatchPtrs::iterator begin_;
-
-    /// Points to the first sample.
-    const containers::MatchPtrs::iterator end_;
-
-    /// Contains all categories that have been included.
-    const std::vector<Int> indptr_;
-
-    /// Minimum values of the samples.
+    /// Minimum values of the categories.
     const Int minimum_;
+
+    // -------------------------------
 };
 
 // -------------------------------------------------------------------------

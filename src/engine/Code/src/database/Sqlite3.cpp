@@ -66,6 +66,8 @@ std::vector<std::string> Sqlite3::get_colnames(
 
     const std::string sql = "SELECT * FROM " + _table + " LIMIT 0";
 
+    // ------------------------------------------------------------------------
+
     // We set this to nullptr, so it will not be deleted if doesn't point to
     // anything.
     // https://en.cppreference.com/w/cpp/memory/unique_ptr/operator_bool
@@ -432,8 +434,8 @@ Sqlite3::make_insert_statement(
     // ------------------------------------------------------------------------
     // Make actual sqlite statement.
 
-    // We set this to nullptr, so it will not be deleted if doesn't point to
-    // anything.
+    // We set this to nullptr, so it will not be deleted if doesn't
+    // point to anything.
     // https://en.cppreference.com/w/cpp/memory/unique_ptr/operator_bool
     sqlite3_stmt* raw_ptr = nullptr;
 

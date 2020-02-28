@@ -229,7 +229,7 @@ std::string XGBoostPredictor::fit(
     if ( XGDMatrixSetFloatInfo(
              *d_matrix, "label", y_float.data(), y_float.size() ) != 0 )
         {
-            std::runtime_error( "Setting XGBoost labels failed!" );
+            throw std::runtime_error( "Setting XGBoost labels failed!" );
         }
 
     // --------------------------------------------------------------------
@@ -357,17 +357,20 @@ std::string XGBoostPredictor::fit(
                         std::to_string( i + 1 ) + " failed!" );
                 }
 
-            if ( hyperparams_.booster_ == "gblinear" )
+            if ( _logger )
                 {
-                    _logger->log(
-                        "XGBoost: Trained linear model " +
-                        std::to_string( i + 1 ) + "." );
-                }
-            else
-                {
-                    _logger->log(
-                        "XGBoost: Trained tree " + std::to_string( i + 1 ) +
-                        "." );
+                    if ( hyperparams_.booster_ == "gblinear" )
+                        {
+                            _logger->log(
+                                "XGBoost: Trained linear model " +
+                                std::to_string( i + 1 ) + "." );
+                        }
+                    else
+                        {
+                            _logger->log(
+                                "XGBoost: Trained tree " +
+                                std::to_string( i + 1 ) + "." );
+                        }
                 }
         }
 

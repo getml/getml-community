@@ -36,21 +36,33 @@ class DataFrameManager
     // ------------------------------------------------------------------------
 
    public:
-    /// Adds a new categorical column to an existing data frame.
-    void add_categorical_column(
-        const std::string& _name,
-        const Poco::JSON::Object& _cmd,
-        Poco::Net::StreamSocket* _socket );
-
-    /// Adds a new column to an existing data frame.
-    void add_column(
-        const std::string& _name,
-        const Poco::JSON::Object& _cmd,
-        Poco::Net::StreamSocket* _socket );
-
     /// Creates a new data frame and adds it to the map of data frames.
     void add_data_frame(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
+
+    /// Adds a new float column to an existing data frame (parsed by the column
+    /// operators).
+    void add_float_column(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
+    /// Adds a new float column to an existing data frame (sent by the user, for
+    /// instance as a numpy array).
+    void add_float_column(
+        const Poco::JSON::Object& _cmd, Poco::Net::StreamSocket* _socket );
+
+    /// Adds a string column to an existing data frame (parsed by
+    /// the column operators).
+    void add_string_column(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
+    /// Adds a new string column to an existing data frame (sent by the user,
+    /// for instance as a numpy array).
+    void add_string_column(
+        const Poco::JSON::Object& _cmd, Poco::Net::StreamSocket* _socket );
 
     /// Undertakes an aggregation on an entire column.
     void aggregate(
@@ -61,6 +73,18 @@ class DataFrameManager
     /// Appends data to an existing data frame.
     void append_to_data_frame(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
+
+    /// Calculates the plots for a categorical column.
+    void calc_categorical_column_plots(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
+    /// Calculates the plots for a column.
+    void calc_column_plots(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
 
     /// Creates a new data frame from a set of CSV files.
     void from_csv(
@@ -96,8 +120,20 @@ class DataFrameManager
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
+    /// Sends a string representing the column to the client.
+    void get_boolean_column_string(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
     /// Sends a categorical columm to the client
     void get_categorical_column(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
+    /// Sends a string representing the column to the client.
+    void get_categorical_column_string(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
@@ -108,8 +144,18 @@ class DataFrameManager
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
+    /// Sends a string representing the column to the client.
+    void get_column_string(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
     /// Sends a data frame back to the client, column-by-column.
     void get_data_frame( Poco::Net::StreamSocket* _socket );
+
+    /// Expresses the data frame as a string.
+    void get_data_frame_string(
+        const std::string& _name, Poco::Net::StreamSocket* _socket );
 
     /// Sends the content of a data frame in a format that is compatible with
     /// DataTables.js server-side processing.
@@ -125,6 +171,18 @@ class DataFrameManager
     /// Get the number of rows in a data frame
     void get_nrows(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
+
+    /// Get the unit for a float column.
+    void get_unit(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
+    /// Get the unit for a string column.
+    void get_unit_categorical(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
 
     /// Undertakes a GROUP BY operation
     void group_by(
@@ -184,30 +242,91 @@ class DataFrameManager
     // ------------------------------------------------------------------------
 
    private:
-    /// Adds a categorical matrix to a data frame.
-    void add_categorical_column(
-        const Poco::JSON::Object& _cmd,
+    /// Takes care of the process of actually adding the column.
+    void add_float_column_to_df(
+        const std::string& _role,
+        const containers::Column<Float>& _col,
         containers::DataFrame* _df,
+        multithreading::WeakWriteLock* _weak_write_lock ) const;
+
+    /// Adds an integer column to the data frame.
+    void add_int_column_to_df(
+        const std::string& _name,
+        const std::string& _role,
+        const std::string& _unit,
+        const std::vector<std::string>& _vec,
+        containers::DataFrame* _df,
+        multithreading::WeakWriteLock* _weak_write_lock,
         Poco::Net::StreamSocket* _socket );
 
-    /// Adds a matrix to a data frame.
-    void add_column(
-        const Poco::JSON::Object& _cmd,
-        containers::DataFrame* _df,
-        Poco::Net::StreamSocket* _socket );
+    /// Adds an integer column to the data frame.
+    void add_int_column_to_df(
+        const std::string& _name,
+        const std::string& _role,
+        const std::string& _unit,
+        const std::vector<std::string>& _vec,
+        const std::shared_ptr<containers::Encoding>& _local_categories,
+        const std::shared_ptr<containers::Encoding>& _local_join_keys_encoding,
+        containers::DataFrame* _df ) const;
 
-    /// Tells the receive_data(...) method to no longer receive data and checks
-    /// the memory size.
-    void close(
-        const containers::DataFrame& _df, Poco::Net::StreamSocket* _socket );
+    /// Adds a string column to the data frame.
+    /// This could only be an unused string,
+    /// because all others are encoded.
+    void add_string_column_to_df(
+        const std::string& _name,
+        const std::string& _unit,
+        const std::vector<std::string>& _vec,
+        containers::DataFrame* _df,
+        multithreading::WeakWriteLock* _weak_write_lock ) const;
+
+    /// Makes sure that all referenced DataFrames exist, that they
+    /// have the same number of rows.
+    /// Returns the inferred number of rows and whether any df has
+    /// been found.
+    std::pair<size_t, bool> check_nrows(
+        const Poco::JSON::Object& _obj,
+        const std::string& _cmp_df_name = "",
+        const size_t _cmp_nrows = 0 ) const;
 
     /// Receives the actual data contained in a DataFrame
     void receive_data(
-        containers::DataFrame* _df, Poco::Net::StreamSocket* _socket );
+        const std::shared_ptr<containers::Encoding>& _local_categories,
+        const std::shared_ptr<containers::Encoding>& _local_join_keys_encoding,
+        containers::DataFrame* _df,
+        Poco::Net::StreamSocket* _socket ) const;
+
+    /// Receives a FloatColumn and adds it to the DataFrame.
+    void recv_and_add_float_column(
+        const Poco::JSON::Object& _cmd,
+        containers::DataFrame* _df,
+        multithreading::WeakWriteLock* _weak_write_lock,
+        Poco::Net::StreamSocket* _socket ) const;
+
+    /// Adds a string column to a data frame.
+    void recv_and_add_string_column(
+        const Poco::JSON::Object& _cmd,
+        containers::DataFrame* _df,
+        multithreading::WeakWriteLock* _weak_write_lock,
+        Poco::Net::StreamSocket* _socket );
+
+    /// Adds a string column to a data frame.
+    void recv_and_add_string_column(
+        const Poco::JSON::Object& _cmd,
+        const std::shared_ptr<containers::Encoding>& _local_categories,
+        const std::shared_ptr<containers::Encoding>& _local_join_keys_encoding,
+        containers::DataFrame* _df,
+        Poco::Net::StreamSocket* _socket ) const;
 
     // ------------------------------------------------------------------------
 
    private:
+    /// Trivial accessor
+    containers::Encoding& categories()
+    {
+        assert_true( categories_ );
+        return *categories_;
+    }
+
     /// Trivial accessor
     std::shared_ptr<database::Connector> connector()
     {
@@ -223,7 +342,35 @@ class DataFrameManager
     }
 
     /// Trivial accessor
+    const std::map<std::string, containers::DataFrame>& data_frames() const
+    {
+        assert_true( data_frames_ );
+        return *data_frames_;
+    }
+
+    /// Checks whether a data frame of a certain name exists
+    bool df_exists( const std::string& _name )
+    {
+        const auto it = data_frames().find( _name );
+        return ( it == data_frames().end() );
+    }
+
+    /// Trivial accessor
+    containers::Encoding& join_keys_encoding()
+    {
+        assert_true( join_keys_encoding_ );
+        return *join_keys_encoding_;
+    }
+
+    /// Trivial accessor
     licensing::LicenseChecker& license_checker()
+    {
+        assert_true( license_checker_ );
+        return *license_checker_;
+    }
+
+    /// Trivial accessor
+    const licensing::LicenseChecker& license_checker() const
     {
         assert_true( license_checker_ );
         return *license_checker_;

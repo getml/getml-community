@@ -24,9 +24,12 @@ class LossFunction
 
     /// Only calculates the etas given values from a parent aggregation
     /// without calculating the weights.
+    /// The loss functions then calculate the sufficient statistics.
     /// This is needed for reverting the last split.
     virtual void calc_etas(
         const enums::Aggregation _agg,
+        const enums::Update _update,
+        const Float _old_weight,
         const std::vector<size_t>& _indices_current,
         const std::vector<Float>& _eta1,
         const std::vector<Float>& _eta1_old,
@@ -39,7 +42,7 @@ class LossFunction
     /// Calculates the sampling rate (the share of samples that will be
     /// drawn for each feature).
     virtual void calc_sampling_rate(
-        const unsigned int _seed,
+        const bool _set_rate,
         const Float _sampling_factor,
         multithreading::Communicator* _comm ) = 0;
 
@@ -50,9 +53,12 @@ class LossFunction
     virtual Float calc_update_rate(
         const std::vector<Float>& _predictions ) = 0;
 
-    /// Calculates the weights given values from a parent aggregation.
-    virtual std::array<Float, 3> calc_weights(
+    /// Calculates the weights and the associated partial loss given values from
+    /// a parent aggregation.
+    virtual std::pair<Float, std::array<Float, 3>> calc_pair(
         const enums::Aggregation _agg,
+        const enums::Revert _revert,
+        const enums::Update _update,
         const Float _old_weight,
         const std::vector<size_t>& _indices,
         const std::vector<size_t>& _indices_current,
@@ -61,16 +67,17 @@ class LossFunction
         const std::vector<Float>& _eta2,
         const std::vector<Float>& _eta2_old ) = 0;
 
-    /// Calculates weights given the matches.
-    virtual std::vector<std::array<Float, 3>> calc_weights(
+    /// Calculates the partial_loss-weight-pairs given the matches.
+    virtual std::vector<std::pair<Float, std::array<Float, 3>>> calc_pairs(
         const enums::Revert _revert,
         const enums::Update _update,
         const Float _min_num_samples,
+        const Float _old_intercept,
         const Float _old_weight,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _split_begin,
-        const std::vector<const containers::Match*>::iterator _split_end,
-        const std::vector<const containers::Match*>::iterator _end ) = 0;
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _split_begin,
+        const std::vector<containers::Match>::iterator _split_end,
+        const std::vector<containers::Match>::iterator _end ) = 0;
 
     /// Calculates the new yhat given eta, indices and the new weights.
     virtual void calc_yhat(
@@ -90,14 +97,11 @@ class LossFunction
     /// Commits the values for yhat_old_.
     virtual void commit() = 0;
 
-    /// Commits the split described by the iterators.
+    /// Commits the current values.
     virtual void commit(
         const Float _old_intercept,
         const Float _old_weight,
-        const std::array<Float, 3>& _weights,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _split,
-        const std::vector<const containers::Match*>::iterator _end ) = 0;
+        const std::array<Float, 3>& _weights ) = 0;
 
     /// Commits the values described by the indices and yhat.
     virtual void commit(
@@ -111,21 +115,20 @@ class LossFunction
     /// aggregation, will be able to calculate its own depth.
     virtual size_t depth() const = 0;
 
-    /// _indices refer to the values in _yhat_committed and _yhat
-    /// that have actually changed.
-    virtual Float evaluate_split(
-        const Float _old_intercept,
-        const Float _old_weight,
-        const std::array<Float, 3>& _weights,
-        const std::vector<size_t>& _indices,
-        const std::vector<Float>& _eta1,
-        const std::vector<Float>& _eta2 ) = 0;
-
-    /// Evaluates split given matches.
+    // Returns the loss functions assiciated with a split.
     virtual Float evaluate_split(
         const Float _old_intercept,
         const Float _old_weight,
         const std::array<Float, 3>& _weights ) = 0;
+
+    /// Returns the loss reduction associated with a split.
+    virtual Float evaluate_split(
+        const Float _old_intercept,
+        const Float _old_weight,
+        const std::array<Float, 3>& _weights,
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _split,
+        const std::vector<containers::Match>::iterator _end ) = 0;
 
     /// Evaluates and entire tree.
     virtual Float evaluate_tree(

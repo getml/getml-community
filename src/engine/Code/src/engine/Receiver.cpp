@@ -22,7 +22,7 @@ containers::Column<Int> Receiver::recv_categorical_column(
     if ( std::get<0>( shape ) <= 0 )
         {
             throw std::runtime_error(
-                "Your data frame must contain at least one row!" );
+                "Your data must contain at least one row!" );
         }
 
     if ( std::get<1>( shape ) != 1 )
@@ -39,6 +39,47 @@ containers::Column<Int> Receiver::recv_categorical_column(
     for ( size_t i = 0; i < col.nrows(); ++i )
         {
             col[i] = ( *_encoding )[Receiver::recv_string( _socket )];
+        }
+
+    // ------------------------------------------------
+
+    return col;
+
+    // ------------------------------------------------
+}
+
+// -----------------------------------------------------------------------------
+
+std::vector<std::string> Receiver::recv_string_column(
+    Poco::Net::StreamSocket *_socket )
+{
+    // ------------------------------------------------
+
+    std::array<Int, 2> shape;
+
+    recv<Int>( sizeof( Int ) * 2, _socket, shape.data() );
+
+    // ------------------------------------------------
+
+    if ( std::get<0>( shape ) <= 0 )
+        {
+            throw std::runtime_error(
+                "Your data must contain at least one row!" );
+        }
+
+    if ( std::get<1>( shape ) != 1 )
+        {
+            throw std::runtime_error(
+                "Data must contain only a single column!" );
+        }
+
+    std::vector<std::string> col( std::get<0>( shape ) );
+
+    // ------------------------------------------------
+
+    for ( size_t i = 0; i < col.size(); ++i )
+        {
+            col[i] = Receiver::recv_string( _socket );
         }
 
     // ------------------------------------------------

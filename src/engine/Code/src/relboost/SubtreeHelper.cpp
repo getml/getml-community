@@ -80,15 +80,27 @@ void SubtreeHelper::fit_subensemble(
     auto subfeatures =
         SubtreeHelper::make_subfeatures( *subtable_holder, predictions );
 
-    const auto num_features = std::max(
-        static_cast<size_t>( 1 ),
-        static_cast<size_t>( _hyperparameters.num_subfeatures_ ) / 2 );
+    const auto num_features =
+        static_cast<size_t>( _hyperparameters.num_subfeatures_ );
+
+    const auto silent = _hyperparameters.silent_;
+
+    if ( !silent && _logger )
+        {
+            _logger->log( "Training subfeatures..." );
+        }
 
     for ( size_t i = 0; i < num_features; ++i )
         {
             ( *_subensemble )
                 ->fit_new_feature(
                     intermediate_agg, subtable_holder, subfeatures );
+
+            if ( !silent && _logger )
+                {
+                    _logger->log(
+                        "Trained FEATURE_" + std::to_string( i + 1 ) + "." );
+                }
         }
 
     _loss_function->reset_yhat_old();
@@ -115,7 +127,7 @@ void SubtreeHelper::fit_subensembles(
         std::make_shared<const Hyperparameters>( _ensemble.hyperparameters() );
 
     const auto peripheral = std::make_shared<const std::vector<std::string>>(
-        _ensemble.peripheral_names() );
+        _ensemble.peripheral() );
 
     const auto placeholder = _ensemble.placeholder();
 
@@ -150,21 +162,21 @@ void SubtreeHelper::fit_subensembles(
             if ( _table_holder->subtables_[i] )
                 {
                     const auto joined_table =
-                        std::make_shared<const Placeholder>(
+                        std::make_shared<const containers::Placeholder>(
                             placeholder.joined_tables_[i] );
 
                     assert_true( joined_table->joined_tables_.size() > 0 );
 
                     subensembles_avg[i] =
                         std::make_optional<DecisionTreeEnsemble>(
-                            _ensemble.encoding(),
+                            _ensemble.categories(),
                             hyperparameters,
                             peripheral,
                             joined_table );
 
                     subensembles_sum[i] =
                         std::make_optional<DecisionTreeEnsemble>(
-                            _ensemble.encoding(),
+                            _ensemble.categories(),
                             hyperparameters,
                             peripheral,
                             joined_table );

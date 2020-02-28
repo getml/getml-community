@@ -7,7 +7,7 @@ namespace decisiontrees
 // ----------------------------------------------------------------------------
 
 DecisionTree::DecisionTree(
-    const std::shared_ptr<const std::vector<std::string>> &_categories,
+    const std::shared_ptr<const std::vector<strings::String>> &_categories,
     const std::shared_ptr<const descriptors::TreeHyperparameters>
         &_tree_hyperparameters,
     const Poco::JSON::Object &_json_obj )
@@ -24,7 +24,7 @@ DecisionTree::DecisionTree(
 
 DecisionTree::DecisionTree(
     const std::string &_agg,
-    const std::shared_ptr<const std::vector<std::string>> &_categories,
+    const std::shared_ptr<const std::vector<strings::String>> &_categories,
     const std::shared_ptr<const descriptors::TreeHyperparameters>
         &_tree_hyperparameters,
     const size_t _ix_perip_used,
@@ -48,7 +48,7 @@ DecisionTree::DecisionTree(
 
     impl_.aggregation_type_ = _agg;
 
-    aggregation_ptr() = make_aggregation();
+    aggregation_ptr() = make_aggregation( enums::Mode::fit );
 
     impl_.tree_hyperparameters_ = _tree_hyperparameters;
 
@@ -70,7 +70,7 @@ DecisionTree::DecisionTree( const DecisionTree &_other )
 
     assert_true( _other.impl_.aggregation_type_ != "" );
 
-    aggregation_ptr() = _other.make_aggregation();
+    aggregation_ptr() = _other.make_aggregation( enums::Mode::fit );
 
     if ( root() )
         {
@@ -99,7 +99,7 @@ void DecisionTree::create_value_to_be_aggregated(
     const containers::DataFrameView &_population,
     const containers::DataFrame &_peripheral,
     const containers::Subfeatures &_subfeatures,
-    const containers::MatchPtrs &_sample_container,
+    const containers::MatchPtrs &_match_container,
     aggregations::AbstractAggregation *_aggregation ) const
 {
     // ------------------------------------------------------------------------
@@ -201,7 +201,8 @@ void DecisionTree::create_value_to_be_aggregated(
 
             case enums::DataUsed::same_unit_discrete:
 
-                assert_true( impl()->same_units_discrete().size() > ix_column_used );
+                assert_true(
+                    impl()->same_units_discrete().size() > ix_column_used );
 
                 {
                     const enums::DataUsed data_used1 =
@@ -295,16 +296,17 @@ void DecisionTree::fit(
     const containers::DataFrameView &_population,
     const containers::DataFrame &_peripheral,
     const containers::Subfeatures &_subfeatures,
-    containers::MatchPtrs::iterator _sample_container_begin,
-    containers::MatchPtrs::iterator _sample_container_end,
+    containers::MatchPtrs::iterator _match_container_begin,
+    containers::MatchPtrs::iterator _match_container_end,
     optimizationcriteria::OptimizationCriterion *_optimization_criterion )
 {
     // ------------------------------------------------------------
 
-    impl()->input_.reset( new containers::Schema( _peripheral.to_schema() ) );
+    impl()->input_.reset(
+        new containers::Placeholder( _peripheral.to_schema() ) );
 
     impl()->output_.reset(
-        new containers::Schema( _population.df().to_schema() ) );
+        new containers::Placeholder( _population.df().to_schema() ) );
 
     // ------------------------------------------------------------
     // Prepare the root, the aggregation and the optimization criterion
@@ -319,7 +321,7 @@ void DecisionTree::fit(
 
     aggregation()->reset();
 
-    optimization_criterion() = _optimization_criterion;
+    impl()->optimization_criterion_ = _optimization_criterion;
 
     aggregation()->set_optimization_criterion( optimization_criterion() );
 
@@ -332,8 +334,8 @@ void DecisionTree::fit(
         _population,
         _peripheral,
         _subfeatures,
-        _sample_container_begin,
-        _sample_container_end );
+        _match_container_begin,
+        _match_container_end );
 
     // ------------------------------------------------------------
     // Clean up
@@ -349,11 +351,11 @@ void DecisionTree::from_json_obj( const Poco::JSON::Object &_json_obj )
 {
     // -----------------------------------
 
-    impl()->input_.reset(
-        new containers::Schema( *JSON::get_object( _json_obj, "input_" ) ) );
+    impl()->input_.reset( new containers::Placeholder(
+        *JSON::get_object( _json_obj, "input_" ) ) );
 
-    impl()->output_.reset(
-        new containers::Schema( *JSON::get_object( _json_obj, "output_" ) ) );
+    impl()->output_.reset( new containers::Placeholder(
+        *JSON::get_object( _json_obj, "output_" ) ) );
 
     column_to_be_aggregated() = descriptors::ColumnToBeAggregated(
         *JSON::get_object( _json_obj, "column_" ) );
@@ -369,7 +371,7 @@ void DecisionTree::from_json_obj( const Poco::JSON::Object &_json_obj )
 
     impl_.aggregation_type_ = agg;
 
-    aggregation_ptr() = make_aggregation();
+    aggregation_ptr() = make_aggregation( enums::Mode::fit );
 
     // -----------------------------------
 
@@ -380,20 +382,6 @@ void DecisionTree::from_json_obj( const Poco::JSON::Object &_json_obj )
         ) );
 
     root()->from_json_obj( *JSON::get_object( _json_obj, "conditions_" ) );
-
-    // -----------------------------------
-
-    /*const auto subtrees_arr = JSON::get_array( _json_obj, "subfeatures_" );
-
-    subtrees().clear();
-
-    for ( size_t i = 0; i < subtrees_arr->size(); ++i )
-        {
-            subtrees().push_back( DecisionTree(
-                impl()->categories_,
-                impl()->tree_hyperparameters_,
-                *subtrees_arr->getObject( static_cast<unsigned int>( i ) ) ) );
-        }*/
 
     // -----------------------------------
 }
@@ -524,20 +512,26 @@ Poco::JSON::Object DecisionTree::to_monitor(
 
     obj.set( "join_keys_popul_", output().join_keys_name() );
 
-    obj.set( "time_stamps_popul_", output().time_stamps_name() );
+    if ( output().num_time_stamps() > 0 )
+        {
+            obj.set( "time_stamps_popul_", output().time_stamps_name() );
+        }
 
     obj.set( "join_keys_perip_", input().join_keys_name() );
 
-    obj.set( "time_stamps_perip_", input().time_stamps_name() );
+    if ( input().num_time_stamps() > 0 )
+        {
+            obj.set( "time_stamps_perip_", input().time_stamps_name() );
+        }
 
     if ( input().num_time_stamps() == 2 )
         {
             obj.set( "upper_time_stamps_", input().upper_time_stamps_name() );
         }
 
-    obj.set( "population_", output().name() );
-
     obj.set( "peripheral_", input().name() );
+
+    obj.set( "placeholder_", output().name() );
 
     // -------------------------------------------------------------------
 
@@ -581,9 +575,15 @@ std::string DecisionTree::to_sql(
 
     sql << " AS feature_" << _feature_num << "," << std::endl;
 
-    sql << "       t1." << output().join_keys_name() << "," << std::endl;
+    sql << "       t1." << output().join_keys_name();
 
-    sql << "       t1." << output().time_stamps_name() << std::endl;
+    if ( output().num_time_stamps() > 0 )
+        {
+            sql << "," << std::endl;
+            sql << "       t1." << output().time_stamps_name();
+        }
+
+    sql << std::endl;
 
     // -------------------------------------------------------------------
 
@@ -592,8 +592,14 @@ std::string DecisionTree::to_sql(
     sql << "     SELECT *," << std::endl;
 
     sql << "            ROW_NUMBER() OVER ( ORDER BY "
-        << output().join_keys_name() << ", " << output().time_stamps_name()
-        << " ASC ) AS rownum" << std::endl;
+        << output().join_keys_name();
+
+    if ( output().num_time_stamps() > 0 )
+        {
+            sql << ", " << output().time_stamps_name();
+        }
+
+    sql << " ASC ) AS rownum" << std::endl;
 
     sql << "     FROM " << output().name() << std::endl;
 
@@ -625,7 +631,8 @@ std::string DecisionTree::to_sql(
 
     // -------------------------------------------------------------------
 
-    if ( _use_timestamps )
+    if ( _use_timestamps && input().num_time_stamps() > 0 &&
+         output().num_time_stamps() > 0 )
         {
             if ( conditions.size() > 0 )
                 {
@@ -657,11 +664,15 @@ std::string DecisionTree::to_sql(
 
     sql << "GROUP BY t1.rownum," << std::endl;
 
-    sql << "         t1." << output().join_keys_name() << "," << std::endl;
+    sql << "         t1." << output().join_keys_name();
 
-    sql << "         t1." << output().time_stamps_name() << ";" << std::endl
-        << std::endl
-        << std::endl;
+    if ( output().num_time_stamps() > 0 )
+        {
+            sql << "," << std::endl;
+            sql << "         t1." << output().time_stamps_name();
+        }
+
+    sql << ";" << std::endl << std::endl << std::endl;
 
     // -------------------------------------------------------------------
 
@@ -681,6 +692,8 @@ std::vector<Float> DecisionTree::transform(
     // Prepare the aggregation
 
     _aggregation->reset();
+
+    _aggregation->set_optimization_criterion( nullptr );
 
     // ------------------------------------------------------
     // This is put in a loop to avoid the sample containers
@@ -741,7 +754,7 @@ std::vector<Float> DecisionTree::transform(
                                 null_values_separator, matches.end() );
                         }
 
-                    // Because keep on generating matches and sample_container,
+                    // Because keep on generating matches and match_container,
                     // we do not have to explicitly sort the sample containers!
                 }
             else

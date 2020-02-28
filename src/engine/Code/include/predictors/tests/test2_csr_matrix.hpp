@@ -5,7 +5,7 @@ void test2_csr_matrix()
 {
     // -------------------------------------------------------------------------
 
-    std::cout << std::endl << "Test 2 (CSR Matrix): " << std::endl << std::endl;
+	std::cout << "Test 2 | CSR Matrix\t\t\t\t";
 
     // -------------------------------------------------------------------------
 
@@ -30,18 +30,18 @@ void test2_csr_matrix()
 
     csr_matrix.add( X_categorical2, 500 );
 
-    std::cout << "indptr: ";
+    // std::cout << "indptr: "; 
     for ( size_t i = 0; i < 21; ++i )
         {
-            std::cout << csr_matrix.indptr()[i] << " ";
+            // std::cout << csr_matrix.indptr()[i] << " ";
             assert_true( csr_matrix.indptr()[i] == i * 4 );
         }
-    std::cout << std::endl << std::endl;
+    // std::cout << std::endl << std::endl;
 
-    std::cout << "indices: ";
+    // std::cout << "indices: ";
     for ( size_t i = 0; i < 80; ++i )
         {
-            std::cout << csr_matrix.indices()[i] << " ";
+            // std::cout << csr_matrix.indices()[i] << " ";
             assert_true( i % 4 != 0 || csr_matrix.indices()[i] == 0 );
             assert_true( i % 4 != 1 || csr_matrix.indices()[i] == 1 );
             assert_true(
@@ -49,20 +49,20 @@ void test2_csr_matrix()
                                 csr_matrix.indices()[i] < 502 ) );
             assert_true( i % 4 != 3 || ( csr_matrix.indices()[i] > 501 ) );
         }
-    std::cout << std::endl << std::endl;
+    // std::cout << std::endl << std::endl;
 
-    std::cout << "data: ";
+    // std::cout << "data: ";
     for ( size_t i = 0; i < 80; ++i )
         {
-            std::cout << csr_matrix.data()[i] << " ";
+            // std::cout << csr_matrix.data()[i] << " ";
             assert_true( i % 4 != 2 || csr_matrix.data()[i] == 1.0 );
             assert_true( i % 4 != 3 || csr_matrix.data()[i] == 1.0 );
         }
-    std::cout << std::endl << std::endl;
+    // std::cout << std::endl << std::endl;
 
     // ------------------------------------------------------------------------
 
-    std::cout << "OK." << std::endl << std::endl;
+    std::cout << "| OK" << std::endl;
 
     // ------------------------------------------------------------------------
 }

@@ -26,18 +26,22 @@ class ProjectManager
             _data_frames,
         const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
         const std::shared_ptr<licensing::LicenseChecker>& _license_checker,
-        const std::shared_ptr<RelboostModelMapType>& _relboost_models,
+        const std::shared_ptr<const monitoring::Logger>& _logger,
         const std::shared_ptr<const monitoring::Monitor>& _monitor,
         const config::Options& _options,
-        const std::shared_ptr<multithreading::ReadWriteLock>& _read_write_lock )
+        const std::shared_ptr<std::mutex>& _project_mtx,
+        const std::shared_ptr<multithreading::ReadWriteLock>& _read_write_lock,
+        const std::shared_ptr<RelboostModelMapType>& _relboost_models )
         : multirel_models_( _multirel_models ),
           categories_( _categories ),
           data_frame_manager_( _data_frame_manager ),
           data_frames_( _data_frames ),
           join_keys_encoding_( _join_keys_encoding ),
           license_checker_( _license_checker ),
+          logger_( _logger ),
           monitor_( _monitor ),
           options_( _options ),
+          project_mtx_( _project_mtx ),
           read_write_lock_( _read_write_lock ),
           relboost_models_( _relboost_models )
     {
@@ -48,12 +52,6 @@ class ProjectManager
     // ------------------------------------------------------------------------
 
    public:
-    /// Adds a new Multirel model to the project.
-    void add_multirel_model(
-        const std::string& _name,
-        const Poco::JSON::Object& _cmd,
-        Poco::Net::StreamSocket* _socket );
-
     /// Adds a new data frame
     void add_data_frame(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
@@ -78,6 +76,12 @@ class ProjectManager
 
     /// Adds a new data frame generated from a query.
     void add_data_frame_from_query(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
+    /// Adds a new Multirel model to the project.
+    void add_multirel_model(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
@@ -151,12 +155,12 @@ class ProjectManager
     /// Updates the encodings in the client
     void refresh( Poco::Net::StreamSocket* _socket ) const;
 
-    /// Saves an Multirel model to disc.
-    void save_multirel_model(
-        const std::string& _name, Poco::Net::StreamSocket* _socket );
-
     /// Saves a data frame
     void save_data_frame(
+        const std::string& _name, Poco::Net::StreamSocket* _socket );
+
+    /// Saves an Multirel model to disc.
+    void save_multirel_model(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
 
     /// Saves a relboost model to disc.
@@ -259,6 +263,20 @@ class ProjectManager
     }
 
     /// Trivial (private) accessor
+    const monitoring::Logger& logger()
+    {
+        assert_true( logger_ );
+        return *logger_;
+    }
+
+    /// Trivial (private) accessor
+    std::mutex& project_mtx()
+    {
+        assert_true( project_mtx_ );
+        return *project_mtx_;
+    }
+
+    /// Trivial (private) accessor
     RelboostModelMapType& relboost_models()
     {
         assert_true( relboost_models_ );
@@ -318,11 +336,17 @@ class ProjectManager
     /// For checking the license and memory usage
     const std::shared_ptr<licensing::LicenseChecker> license_checker_;
 
+    /// For logging
+    const std::shared_ptr<const monitoring::Logger> logger_;
+
     /// For communication with the monitor
     const std::shared_ptr<const monitoring::Monitor> monitor_;
 
     /// Settings for the engine
     const config::Options options_;
+
+    /// It is sometimes necessary to prevent us from changing the project.
+    const std::shared_ptr<std::mutex> project_mtx_;
 
     /// The current project directory
     std::string project_directory_;

@@ -20,6 +20,7 @@ class SquareLoss : public LossFunction
         : comm_( nullptr ),
           hyperparameters_( _hyperparameters ),
           loss_committed_( 0.0 ),
+          loss_old_( 0.0 ),
           sum_h_yhat_committed_( 0.0 ),
           sum_sample_weights_( 0.0 ),
           targets_( _targets ),
@@ -29,10 +30,12 @@ class SquareLoss : public LossFunction
               g_,
               h_,
               hyperparameters_,
+              sample_index_,
               sample_weights_,
               sum_g_,
               sum_h_,
               sum_h_yhat_committed_,
+              sum_sample_weights_,
               targets_ ) )
     {
     }
@@ -45,23 +48,12 @@ class SquareLoss : public LossFunction
     /// Calculates first and second derivatives.
     void calc_gradients() final;
 
-    /// Evaluates split given matches. In this case, the loss function effective
-    /// turns into XGBoost.
-    Float evaluate_split(
-        const Float _old_intercept,
-        const Float _old_weight,
-        const std::array<Float, 3>& _weights ) final;
-
-    /// Evaluates and entire tree.
-    Float evaluate_tree(
-        const Float _update_rate, const std::vector<Float>& _yhat_new ) final;
-
     // -----------------------------------------------------------------
 
    public:
     // Applies the inverse of the transformation function below. Some loss
-    // functions (such as CrossEntropyLoss) require this. For others, this won't
-    // do anything at all.
+    // functions (such as CrossEntropyLoss) require this. For others, this
+    // won't do anything at all.
     void apply_inverse( Float* yhat_ ) const final {}
 
     // Applies a transformation function. Some loss functions (such as
@@ -72,13 +64,20 @@ class SquareLoss : public LossFunction
     /// Calculates the sampling rate (the share of samples that will be
     /// drawn for each feature).
     void calc_sampling_rate(
-        const unsigned int _seed,
+        const bool _set_rate,
         const Float _sampling_factor,
         multithreading::Communicator* _comm ) final
     {
-        sampler_ = std::make_unique<utils::Sampler>( _seed );
-        sampler().calc_sampling_rate(
-            targets().size(), _sampling_factor, _comm );
+        sampler_ = std::make_unique<utils::Sampler>( hyperparameters().seed_ );
+        if ( _set_rate )
+            {
+                sampler().set_sampling_rate( _sampling_factor );
+            }
+        else
+            {
+                sampler().calc_sampling_rate(
+                    targets().size(), _sampling_factor, _comm );
+            }
     }
 
     /// Calculates sum_g_ and sum_h_.
@@ -99,20 +98,38 @@ class SquareLoss : public LossFunction
         return impl_.calc_update_rate( yhat_old_, _predictions, &comm() );
     }
 
-    /// Loss functions have no etas - nothing to do here.
+    /// Calculates the sufficient statistics.
     void calc_etas(
         const enums::Aggregation _agg,
+        const enums::Update _update,
+        const Float _old_weight,
         const std::vector<size_t>& _indices_current,
         const std::vector<Float>& _eta1,
         const std::vector<Float>& _eta1_old,
         const std::vector<Float>& _eta2,
         const std::vector<Float>& _eta2_old ) final
     {
+        impl_.calc_sufficient_stats(
+            _agg,
+            _update,
+            _old_weight,
+            _indices_current,
+            _eta1,
+            _eta1_old,
+            _eta2,
+            _eta2_old,
+            yhat_committed_,
+            &sufficient_stats_non_null_,
+            &sufficient_stats_first_null_,
+            &sufficient_stats_second_null_ );
     }
 
-    /// Calculates two new weights given eta and indices.
-    std::array<Float, 3> calc_weights(
+    /// Calculates new pair of weights and the associated partial_loss
+    /// given eta and indices.
+    std::pair<Float, std::array<Float, 3>> calc_pair(
         const enums::Aggregation _agg,
+        const enums::Revert _revert,
+        const enums::Update _update,
         const Float _old_weight,
         const std::vector<size_t>& _indices,
         const std::vector<size_t>& _indices_current,
@@ -121,36 +138,59 @@ class SquareLoss : public LossFunction
         const std::vector<Float>& _eta2,
         const std::vector<Float>& _eta2_old ) final
     {
-        return impl_.calc_weights(
+        assert_true(
+            _update != enums::Update::calc_all ||
+            _indices_current.size() == _indices.size() );
+
+        return impl_.calc_pair(
             _agg,
+            _revert,
+            _update,
             _old_weight,
-            _indices,
+            _indices_current,
             _eta1,
+            _eta1_old,
             _eta2,
+            _eta2_old,
             yhat_committed_,
+            &sufficient_stats_non_null_,
+            &sufficient_stats_first_null_,
+            &sufficient_stats_second_null_,
             &comm() );
     }
 
     /// Calculates two new weights given matches. This just reduces to the
     /// normal XGBoost approach.
-    std::vector<std::array<Float, 3>> calc_weights(
+    std::vector<std::pair<Float, std::array<Float, 3>>> calc_pairs(
         const enums::Revert _revert,
         const enums::Update _update,
         const Float _min_num_samples,
+        const Float _old_intercept,
         const Float _old_weight,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _split_begin,
-        const std::vector<const containers::Match*>::iterator _split_end,
-        const std::vector<const containers::Match*>::iterator _end ) final
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _split_begin,
+        const std::vector<containers::Match>::iterator _split_end,
+        const std::vector<containers::Match>::iterator _end ) final
     {
-        return impl_.calc_weights(
+        const auto p = impl_.calc_pair(
+            _revert,
             _update,
-            _old_weight,
             _begin,
             _split_begin,
             _split_end,
             _end,
+            &loss_old_,
+            &sufficient_stats_xgboost_,
             &comm() );
+
+        if ( std::isnan( p.first ) )
+            {
+                return std::vector<std::pair<Float, std::array<Float, 3>>>( 0 );
+            }
+        else
+            {
+                return {p};
+            }
     }
 
     /// Calculates the new yhat given eta, indices and the new weights.
@@ -199,6 +239,15 @@ class SquareLoss : public LossFunction
         commit( indices, weights );
     }
 
+    /// Commits the current values - but doesn't do anything at all in this
+    /// case.
+    void commit(
+        const Float _old_intercept,
+        const Float _old_weight,
+        const std::array<Float, 3>& _weights ) final
+    {
+    }
+
     /// Recalculates sum_h_yhat_committed_ and loss_committed_.
     void commit(
         const std::vector<size_t>& _indices,
@@ -209,15 +258,6 @@ class SquareLoss : public LossFunction
             impl_.commit( _indices, yhat_, &yhat_committed_ );
     }
 
-    /// Keeps the current weights.
-    void commit(
-        const Float _old_intercept,
-        const Float _old_weight,
-        const std::array<Float, 3>& _weights,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _split,
-        const std::vector<const containers::Match*>::iterator _end ) final{};
-
     /// Actual loss functions always have depth 0.
     size_t depth() const final { return 0; }
 
@@ -225,21 +265,33 @@ class SquareLoss : public LossFunction
     Float evaluate_split(
         const Float _old_intercept,
         const Float _old_weight,
-        const std::array<Float, 3>& _weights,
-        const std::vector<size_t>& _indices,
-        const std::vector<Float>& _eta1,
-        const std::vector<Float>& _eta2 )
+        const std::array<Float, 3>& _weights ) final
     {
         return loss_committed_ - calc_loss( _weights ) +
                impl_.calc_regularization_reduction(
-                   _eta1,
-                   _eta2,
-                   _indices,
-                   _old_intercept,
-                   _old_weight,
-                   _weights,
-                   sum_sample_weights_,
-                   &comm() );
+                   _old_intercept, _old_weight, _weights );
+    }
+
+    /// Returns the loss reduction associated with a split.
+    /// Should not ever be called.
+    Float evaluate_split(
+        const Float _old_intercept,
+        const Float _old_weight,
+        const std::array<Float, 3>& _weights,
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _split,
+        const std::vector<containers::Match>::iterator _end ) final
+    {
+        assert_true( false );
+        return 0.0;
+    }
+
+    /// Evaluates an entire tree.
+    Float evaluate_tree(
+        const Float _update_rate, const std::vector<Float>& _predictions ) final
+    {
+        assert_true( sample_weights_ );
+        return impl_.calc_loss( _update_rate, 0.0, _predictions, &comm() );
     }
 
     /// Initializes yhat_old_ by setting it to the initial prediction.
@@ -291,14 +343,13 @@ class SquareLoss : public LossFunction
     /// Reverts the effects of calc_diff (or the part in calc_all the
     /// corresponds to calc_diff). This is needed for supporting categorical
     /// columns.
-    void revert( const Float _old_weight ) final{};
+    void revert( const Float _old_weight ) final
+    {
+        impl_.revert( &sufficient_stats_xgboost_ );
+    }
 
     /// Keeps the current weights.
-    void revert_to_commit() final
-    {
-        assert_true( false );
-        // TODO
-    };
+    void revert_to_commit() final{};
 
     /// Reverts the weights to the last time commit has been called.
     void revert_to_commit( const std::vector<size_t>& _indices ) final
@@ -315,12 +366,12 @@ class SquareLoss : public LossFunction
     /// Generates the predictions.
     Float transform( const std::vector<Float>& _weights ) const final
     {
-        assert_true( false && "TODO" );
-        return 0.0;
+        assert_true( _weights.size() == 1 );
+        return _weights[0];
     }
 
-    /// Describes the type of the loss function (SquareLoss, CrossEntropyLoss,
-    /// etc.)
+    /// Describes the type of the loss function (SquareLoss,
+    /// CrossEntropyLoss, etc.)
     std::string type() const final { return "SquareLoss"; }
 
     /// Updates yhat_old_ by adding the predictions.
@@ -333,12 +384,13 @@ class SquareLoss : public LossFunction
     // -----------------------------------------------------------------
 
    private:
-    /// Calculates the loss given a set of predictions.
-    Float calc_loss( const std::array<Float, 3>& _weights );
+    /// Calculates the loss given yhat_.
+    Float calc_loss( const std::array<Float, 3>& _weights )
+    {
+        assert_true( sample_weights_ );
+        return impl_.calc_loss( 1.0, _weights[0], yhat_, &comm() );
+    }
 
-    // -----------------------------------------------------------------
-
-   private:
     /// Trivial (private) accessor
     multithreading::Communicator& comm() const
     {
@@ -391,6 +443,9 @@ class SquareLoss : public LossFunction
     /// The committed loss, needed for calculating the loss reduction.
     Float loss_committed_;
 
+    /// The loss calculated using the old weight (needed for calc_pairs)
+    Float loss_old_;
+
     /// Indices of all non-zero sample weights.
     std::vector<size_t> sample_index_;
 
@@ -399,6 +454,22 @@ class SquareLoss : public LossFunction
 
     /// The sampler used to determine the sample weights.
     std::unique_ptr<utils::Sampler> sampler_;
+
+    /// The sufficient statistics needed to apply the relboost formula
+    /// (needed for calc_pair).
+    std::array<Float, 8> sufficient_stats_first_null_;
+
+    /// The sufficient statistics needed to apply the relboost formula
+    /// (needed for calc_pair).
+    std::array<Float, 13> sufficient_stats_non_null_;
+
+    /// The sufficient statistics needed to apply the relboost formula
+    /// (needed for calc_pair).
+    std::array<Float, 8> sufficient_stats_second_null_;
+
+    /// The sufficient statistics needed to apply the xgboost formula
+    /// (needed for calc_pairs).
+    std::array<Float, 6> sufficient_stats_xgboost_;
 
     /// Sum of g_, needed for the intercept.
     Float sum_g_;
@@ -409,7 +480,8 @@ class SquareLoss : public LossFunction
     /// Dot product of h_ and yhat_, needed for the intercept.
     Float sum_h_yhat_committed_;
 
-    /// The sum of the sample weights, which is needed for calculating the loss.
+    /// The sum of the sample weights, which is needed for calculating the
+    /// loss.
     Float sum_sample_weights_;
 
     /// The target variables.
@@ -424,8 +496,8 @@ class SquareLoss : public LossFunction
     /// Sum of all previous trees.
     std::vector<Float> yhat_old_;
 
-    /// Implementation class. Because impl_ depends on some other variables, it
-    /// is the last member variable.
+    /// Implementation class. Because impl_ depends on some other variables,
+    /// it is the last member variable.
     const LossFunctionImpl impl_;
 
     // -----------------------------------------------------------------

@@ -4,6 +4,115 @@ namespace metrics
 {
 // ----------------------------------------------------------------------------
 
+Poco::JSON::Object Summarizer::calc_categorical_column_plot(
+    const size_t _num_bins, const std::vector<strings::String>& _vec )
+{
+    // ------------------------------------------------------------------------
+
+    auto str_map =
+        std::unordered_map<strings::String, Int, strings::StringHasher>();
+
+    for ( const auto& str : _vec )
+        {
+            auto it = str_map.find( str );
+
+            if ( it == str_map.end() )
+                {
+                    str_map[str] = 1;
+                }
+            else
+                {
+                    ++( it->second );
+                }
+        }
+
+    // ------------------------------------------------------------------------
+
+    auto counts = std::vector<std::pair<strings::String, Int>>(
+        str_map.begin(), str_map.end() );
+
+    const auto comp = []( const std::pair<strings::String, Int>& p1,
+                          const std::pair<strings::String, Int>& p2 ) {
+        return p1.second > p2.second;
+    };
+
+    std::sort( counts.begin(), counts.end(), comp );
+
+    // ------------------------------------------------------------------------
+
+    return make_object( _num_bins, counts );
+
+    // ------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+Poco::JSON::Object Summarizer::calc_categorical_column_plot(
+    const size_t _num_bins,
+    const std::vector<strings::String>& _vec,
+    const std::vector<Float>& _target )
+{
+    // ------------------------------------------------------------------------
+
+    assert_true( _vec.size() == _target.size() );
+
+    // ------------------------------------------------------------------------
+
+    auto str_map = std::unordered_map<
+        strings::String,
+        std::pair<Float, Float>,
+        strings::StringHasher>();
+
+    for ( size_t i = 0; i < _vec.size(); ++i )
+        {
+            const auto& str = _vec[i];
+
+            const auto val = _target[i];
+
+            if ( std::isnan( val ) || std::isinf( val ) )
+                {
+                    continue;
+                }
+
+            auto it = str_map.find( str );
+
+            if ( it == str_map.end() )
+                {
+                    str_map[str] = std::make_pair( 1.0, val );
+                }
+            else
+                {
+                    std::get<0>( it->second ) += 1.0;
+                    std::get<1>( it->second ) += val;
+                }
+        }
+
+    // ------------------------------------------------------------------------
+
+    auto pairs = std::vector<std::pair<Float, Float>>();
+
+    for ( const auto& p : str_map )
+        {
+            const auto avg = std::get<1>( p.second ) / std::get<0>( p.second );
+            pairs.emplace_back(
+                std::make_pair( std::get<0>( p.second ), avg ) );
+        }
+
+    const auto comp = []( const std::pair<Float, Float>& p1,
+                          const std::pair<Float, Float>& p2 ) {
+        return std::get<1>( p1 ) > std::get<1>( p2 );
+    };
+
+    std::sort( pairs.begin(), pairs.end(), comp );
+
+    // ------------------------------------------------------------------------
+
+    return make_object( _num_bins, pairs );
+
+    // ------------------------------------------------------------------------
+}
+// ----------------------------------------------------------------------------
+
 Poco::JSON::Array::Ptr Summarizer::calculate_average_targets(
     const std::vector<Float>& _minima,
     const std::vector<Float>& _step_sizes,
@@ -14,6 +123,13 @@ Poco::JSON::Array::Ptr Summarizer::calculate_average_targets(
     const size_t _ncols,
     const std::vector<const Float*>& _targets )
 {
+    // ------------------------------------------------------------------------
+
+    if ( _targets.size() == 0 )
+        {
+            return Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
+        }
+
     // ------------------------------------------------------------------------
     // Init average_targets.
 
@@ -41,25 +157,31 @@ Poco::JSON::Array::Ptr Summarizer::calculate_average_targets(
                 }
         }
 
+    auto counts = average_targets;
+
     // ------------------------------------------------------------------------
     // Calculate sums.
 
     assert_true( _feature_densities.size() == _ncols );
 
-    for ( size_t i = 0; i < _nrows; ++i )
+    for ( size_t j = 0; j < _ncols; ++j )
         {
-            for ( size_t j = 0; j < _ncols; ++j )
+            if ( _actual_num_bins[j] == 0 )
                 {
-                    const auto val = get( i, j, _features );
+                    continue;
+                }
 
-                    if ( _actual_num_bins[j] == 0 || std::isinf( val ) ||
-                         std::isnan( val ) )
+            for ( size_t i = 0; i < _nrows; ++i )
+                {
+                    const auto feat = get( i, j, _features );
+
+                    if ( std::isinf( feat ) || std::isnan( feat ) )
                         {
                             continue;
                         }
 
                     const auto bin = identify_bin(
-                        _actual_num_bins[j], _step_sizes[j], val, _minima[j] );
+                        _actual_num_bins[j], _step_sizes[j], feat, _minima[j] );
 
                     assert_true( bin < _feature_densities[j].size() );
 
@@ -67,7 +189,16 @@ Poco::JSON::Array::Ptr Summarizer::calculate_average_targets(
                         {
                             assert_true( bin < average_targets[j][k].size() );
 
-                            average_targets[j][k][bin] += _targets[k][i];
+                            const auto tar = _targets[k][i];
+
+                            if ( std::isinf( tar ) || std::isnan( tar ) )
+                                {
+                                    continue;
+                                }
+
+                            average_targets[j][k][bin] += tar;
+
+                            ++counts[j][k][bin];
                         }
                 }
         }
@@ -77,16 +208,15 @@ Poco::JSON::Array::Ptr Summarizer::calculate_average_targets(
 
     for ( size_t j = 0; j < _ncols; ++j )
         {
-            for ( size_t bin = 0; bin < _feature_densities[j].size(); ++bin )
+            for ( size_t k = 0; k < average_targets[j].size(); ++k )
                 {
-                    if ( _feature_densities[j][bin] > 0 )
+                    for ( size_t bin = 0; bin < average_targets[j][k].size();
+                          ++bin )
                         {
-                            for ( size_t k = 0; k < average_targets[j].size();
-                                  ++k )
+                            if ( counts[j][k][bin] > 0 )
                                 {
                                     average_targets[j][k][bin] /=
-                                        static_cast<Float>(
-                                            _feature_densities[j][bin] );
+                                        counts[j][k][bin];
                                 }
                         }
                 }
@@ -512,6 +642,209 @@ size_t Summarizer::identify_bin(
         }
 
     return bin;
+}
+
+// ----------------------------------------------------------------------------
+
+Poco::JSON::Object Summarizer::make_object(
+    const size_t _num_bins,
+    const std::vector<std::pair<strings::String, Int>>& _counts )
+{
+    // ------------------------------------------------------------------------
+
+    if ( _num_bins == 0 )
+        {
+            throw std::invalid_argument( "Number of bins cannot be 0!" );
+        }
+
+    // ------------------------------------------------------------------------
+
+    Poco::JSON::Array::Ptr labels( new Poco::JSON::Array() );
+
+    Poco::JSON::Array::Ptr data( new Poco::JSON::Array() );
+
+    // ------------------------------------------------------------------------
+
+    if ( _counts.size() < _num_bins )
+        {
+            for ( const auto& p : _counts )
+                {
+                    labels->add( p.first.str() );
+                    data->add( p.second );
+                }
+        }
+    else
+        {
+            const auto entries_per_bin2 = _counts.size() / _num_bins;
+
+            const auto entries_per_bin1 = entries_per_bin2 + 1;
+
+            const auto entries_per_bin1_f =
+                static_cast<Float>( entries_per_bin1 );
+
+            const auto entries_per_bin2_f =
+                static_cast<Float>( entries_per_bin2 );
+
+            const auto remaining = _counts.size() % _num_bins;
+
+            const auto add = []( const Int init,
+                                 const std::pair<strings::String, Int>& p ) {
+                return init + p.second;
+            };
+
+            for ( size_t j = 0; j < remaining * entries_per_bin1;
+                  j += entries_per_bin1 )
+                {
+                    const auto sum = std::accumulate(
+                        _counts.begin() + j,
+                        _counts.begin() + j + entries_per_bin1,
+                        0.0,
+                        add );
+
+                    labels->add( std::string( "" ) );
+
+                    data->add( static_cast<Float>( sum ) / entries_per_bin1_f );
+                }
+
+            for ( size_t j = remaining * entries_per_bin1; j < _counts.size();
+                  j += entries_per_bin2 )
+                {
+                    const auto sum = std::accumulate(
+                        _counts.begin() + j,
+                        _counts.begin() + j + entries_per_bin2,
+                        0.0,
+                        add );
+
+                    labels->add( std::string( "" ) );
+
+                    data->add( static_cast<Float>( sum ) / entries_per_bin2_f );
+                }
+        }
+
+    // ------------------------
+
+    Poco::JSON::Object obj;
+
+    obj.set( "labels_", labels );
+
+    obj.set( "data_", data );
+
+    // ------------------------------------------------------------------------
+
+    return obj;
+
+    // ------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+Poco::JSON::Object Summarizer::make_object(
+    const size_t _num_bins, const std::vector<std::pair<Float, Float>>& _pairs )
+{
+    // ------------------------------------------------------------------------
+
+    if ( _num_bins == 0 )
+        {
+            throw std::invalid_argument( "Number of bins cannot be 0!" );
+        }
+
+    // ------------------------------------------------------------------------
+
+    Poco::JSON::Array::Ptr labels( new Poco::JSON::Array() );
+
+    Poco::JSON::Array::Ptr data( new Poco::JSON::Array() );
+
+    // ------------------------------------------------------------------------
+
+    if ( _pairs.size() < _num_bins )
+        {
+            Float cumul = 0.0;
+
+            for ( const auto& p : _pairs )
+                {
+                    cumul += p.first;
+                    labels->add( static_cast<Int>( cumul ) );
+                    data->add( p.second );
+                }
+        }
+    else
+        {
+            const auto entries_per_bin2 = _pairs.size() / _num_bins;
+
+            const auto entries_per_bin1 = entries_per_bin2 + 1;
+
+            const auto remaining = _pairs.size() % _num_bins;
+
+            const auto add_counts = []( const Float init,
+                                        const std::pair<Float, Float>& p ) {
+                return init + p.first;
+            };
+
+            const auto add_targets = []( const Float init,
+                                         const std::pair<Float, Float>& p ) {
+                return init + p.first * p.second;
+            };
+
+            Float cumul = 0.0;
+
+            for ( size_t j = 0; j < remaining * entries_per_bin1;
+                  j += entries_per_bin1 )
+                {
+                    const auto sum_counts = std::accumulate(
+                        _pairs.begin() + j,
+                        _pairs.begin() + j + entries_per_bin1,
+                        0.0,
+                        add_counts );
+
+                    const auto sum_targets = std::accumulate(
+                        _pairs.begin() + j,
+                        _pairs.begin() + j + entries_per_bin1,
+                        0.0,
+                        add_targets );
+
+                    cumul += sum_counts;
+
+                    labels->add( cumul );
+
+                    data->add( sum_targets / sum_counts );
+                }
+
+            for ( size_t j = remaining * entries_per_bin1; j < _pairs.size();
+                  j += entries_per_bin2 )
+                {
+                    const auto sum_counts = std::accumulate(
+                        _pairs.begin() + j,
+                        _pairs.begin() + j + entries_per_bin2,
+                        0.0,
+                        add_counts );
+
+                    const auto sum_targets = std::accumulate(
+                        _pairs.begin() + j,
+                        _pairs.begin() + j + entries_per_bin2,
+                        0.0,
+                        add_targets );
+
+                    cumul += sum_counts;
+
+                    labels->add( cumul );
+
+                    data->add( sum_targets / sum_counts );
+                }
+        }
+
+    // ------------------------------------------------------------------------
+
+    Poco::JSON::Object obj;
+
+    obj.set( "accumulated_frequencies_", labels );
+
+    obj.set( "data_", data );
+
+    // ------------------------------------------------------------------------
+
+    return obj;
+
+    // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------

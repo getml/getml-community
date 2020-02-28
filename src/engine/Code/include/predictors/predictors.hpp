@@ -27,6 +27,8 @@
 
 #include "optimizers/optimizers.hpp"
 
+#include "relboost/ensemble/ensemble.hpp"
+
 // ----------------------------------------------------
 // Module files
 

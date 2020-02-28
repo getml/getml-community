@@ -18,7 +18,8 @@ std::vector<containers::Match> Matchmaker::make_matches(
         {
             if ( _sample_weights )
                 {
-                    assert_true( _sample_weights->size() == _population.nrows() );
+                    assert_true(
+                        _sample_weights->size() == _population.nrows() );
                     if ( ( *_sample_weights )[ix_output] <= 0.0 )
                         {
                             continue;
@@ -31,6 +32,21 @@ std::vector<containers::Match> Matchmaker::make_matches(
                 _use_timestamps,
                 ix_output,
                 &matches );
+        }
+
+    return matches;
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<containers::Match> Matchmaker::make_matches(
+    const containers::DataFrameView& _population )
+{
+    std::vector<containers::Match> matches;
+
+    for ( size_t ix_output = 0; ix_output < _population.nrows(); ++ix_output )
+        {
+            matches.emplace_back( containers::Match{0, ix_output} );
         }
 
     return matches;
@@ -70,21 +86,6 @@ void Matchmaker::make_matches(
                         }
                 }
         }
-}
-
-// ----------------------------------------------------------------------------
-
-std::vector<const containers::Match*> Matchmaker::make_pointers(
-    const std::vector<containers::Match>& _matches )
-{
-    auto pointers = std::vector<const containers::Match*>( _matches.size() );
-
-    for ( size_t i = 0; i < _matches.size(); ++i )
-        {
-            pointers[i] = _matches.data() + i;
-        }
-
-    return pointers;
 }
 
 // ----------------------------------------------------------------------------

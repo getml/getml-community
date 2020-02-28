@@ -22,14 +22,18 @@ class DecisionTreeEnsemble
 
    public:
     DecisionTreeEnsemble(
-        const std::shared_ptr<const std::vector<std::string>> &_categories,
+        const std::shared_ptr<const std::vector<strings::String>> &_categories,
         const std::shared_ptr<const descriptors::Hyperparameters>
             &_hyperparameters,
         const std::shared_ptr<const std::vector<std::string>> &_peripheral,
-        const std::shared_ptr<const decisiontrees::Placeholder> &_placeholder );
+        const std::shared_ptr<const containers::Placeholder> &_placeholder,
+        const std::shared_ptr<const std::vector<containers::Placeholder>>
+            &_peripheral_schema = nullptr,
+        const std::shared_ptr<const containers::Placeholder>
+            &_population_schema = nullptr );
 
     DecisionTreeEnsemble(
-        const std::shared_ptr<const std::vector<std::string>> &_categories,
+        const std::shared_ptr<const std::vector<strings::String>> &_categories,
         const Poco::JSON::Object &_obj );
 
     ~DecisionTreeEnsemble() = default;
@@ -97,8 +101,14 @@ class DecisionTreeEnsemble
 
    public:
     /// Trivial accessor
-    inline const std::shared_ptr<const std::vector<std::string>> &categories()
-        const
+    bool &allow_http() { return impl().allow_http_; }
+
+    /// Trivial accessor
+    bool allow_http() const { return impl().allow_http_; }
+
+    /// Trivial accessor
+    inline const std::shared_ptr<const std::vector<strings::String>>
+        &categories() const
     {
         return impl().categories_;
     }
@@ -124,13 +134,13 @@ class DecisionTreeEnsemble
     const size_t num_features() const { return trees().size(); }
 
     /// Trivial accessor
-    inline const std::vector<std::string> &peripheral_names() const
+    inline const std::vector<std::string> &peripheral() const
     {
-        return impl().placeholder_peripheral_;
+        return impl().peripheral_;
     }
 
     /// Trivial (const) accessor
-    const std::vector<containers::Schema> &peripheral_schema() const
+    const std::vector<containers::Placeholder> &peripheral_schema() const
     {
         throw_unless(
             impl().peripheral_schema_,
@@ -140,15 +150,14 @@ class DecisionTreeEnsemble
     }
 
     /// Trivial accessor
-    inline const decisiontrees::Placeholder &placeholder() const
+    inline const containers::Placeholder &placeholder() const
     {
-        throw_unless(
-            impl().placeholder_population_, "Model has no placeholder." );
-        return *impl().placeholder_population_;
+        throw_unless( impl().placeholder_, "Model has no placeholder." );
+        return *impl().placeholder_;
     }
 
     /// Trivial (const) accessor
-    const containers::Schema &population_schema() const
+    const containers::Placeholder &population_schema() const
     {
         throw_unless(
             impl().population_schema_,
@@ -250,19 +259,6 @@ class DecisionTreeEnsemble
     }
 
     /// Trivial accessor
-    inline std::vector<std::string> &peripheral_names()
-    {
-        return impl().placeholder_peripheral_;
-    }
-
-    /// Trivial accessor
-    inline decisiontrees::Placeholder &placeholder()
-    {
-        assert_true( impl().placeholder_population_ );
-        return *impl().placeholder_population_;
-    }
-
-    /// Trivial accessor
     inline containers::Optional<std::mt19937> &random_number_generator()
     {
         return impl().random_number_generator_;
@@ -295,7 +291,7 @@ class DecisionTreeEnsemble
     // -----------------------------------------------------------------
 
    private:
-    /// Contains all variables other than the DecisionTreeEnsemble.
+    /// Contains all variables other than the subensembles.
     DecisionTreeEnsembleImpl impl_;
 
     /// Contains the ensembles for the subfeatures trained with the intermediate

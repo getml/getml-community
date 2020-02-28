@@ -2,31 +2,66 @@
 
 int main( int argc, char* argv[] )
 {
+    // ---------------------------------------------------------------
+
+    // Checking the input arguments. A path to the tests folder
+    // containing folders distros, multirel, predictors, and relboost
+    // has to be provided.
+    std::filesystem::path test_path;
+
+    if ( argc == 2 )
+        {
+            test_path = argv[1];
+        }
+    else
+        {
+            std::cout
+                << std::endl
+                << "-----------------------------------------------------------"
+                << std::endl
+                << "ERROR: Please provide a path to the test folder!"
+                << std::endl
+                << std::endl;
+            return 1;
+        }
+
+    // ---------------------------------------------------------------
+
     std::cout << std::endl
-              << "-------------------------------------------------------------"
-                 "------------------"
+              << "-----------------------------------------------------------"
+              << std::endl
+              << "Tests for the module 'DATABASE'" << std::endl
+              << "-----------------------------------------------------------"
               << std::endl;
-    std::cout << "TESTS FOR MODULE 'DATABASE':" << std::endl << std::endl;
 
     // Tests for sqlite
-    test1();
-    test2();
-    test3();
-    test4();
-    test5();
-    test6();
-    test7();
+    test1( test_path );
+    test2( test_path );
+    test3( test_path );
+    test4( test_path );
+    test5( test_path );
+    test6( test_path );
+    test7( test_path );
 
     // Tests for postgres
 #if ( defined( _WIN32 ) || defined( _WIN64 ) )
     // postgres is not supported on windows
 #else
-    test8();
-    test9();
-    test10();
-    test11();
-    test12();
-    test13();
+    test8( test_path );
+    test9( test_path );
+    test10( test_path );
+    test11( test_path );
+    test12( test_path );
+    test13( test_path );
     test14();
 #endif
+
+    // Tests for MySQL
+    test15( test_path );
+    test16( test_path );
+    test17( test_path );
+    test18( test_path );
+    test19( test_path );
+    test20( test_path );
+    test21();
 }

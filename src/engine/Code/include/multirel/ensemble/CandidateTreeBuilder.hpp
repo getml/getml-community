@@ -19,7 +19,7 @@ class CandidateTreeBuilder
     /// round robin approach is applied.
     static std::list<decisiontrees::DecisionTree> build_candidates(
         const decisiontrees::TableHolder &_table_holder,
-        const std::shared_ptr<const std::vector<std::string>> &_categories,
+        const std::shared_ptr<const std::vector<strings::String>> &_categories,
         const std::vector<descriptors::SameUnits> &_same_units,
         const size_t _ix_feature,
         const descriptors::Hyperparameters &_hyperparameters,
@@ -33,7 +33,7 @@ class CandidateTreeBuilder
     /// Adds trees with COUNT aggregations
     static void add_counts(
         const decisiontrees::TableHolder &_table_holder,
-        const std::shared_ptr<const std::vector<std::string>> &_categories,
+        const std::shared_ptr<const std::vector<strings::String>> &_categories,
         const std::vector<descriptors::SameUnits> &_same_units,
         const descriptors::Hyperparameters &_hyperparameters,
         const Int _ix_perip_used,
@@ -46,7 +46,7 @@ class CandidateTreeBuilder
     /// aggregations
     static void add_count_distincts(
         const decisiontrees::TableHolder &_table_holder,
-        const std::shared_ptr<const std::vector<std::string>> &_categories,
+        const std::shared_ptr<const std::vector<strings::String>> &_categories,
         const std::vector<descriptors::SameUnits> &_same_units,
         const descriptors::Hyperparameters &_hyperparameters,
         const Int _ix_perip_used,
@@ -58,7 +58,7 @@ class CandidateTreeBuilder
     /// Adds trees with all other aggregations
     static void add_other_aggs(
         const decisiontrees::TableHolder &_table_holder,
-        const std::shared_ptr<const std::vector<std::string>> &_categories,
+        const std::shared_ptr<const std::vector<strings::String>> &_categories,
         const std::vector<descriptors::SameUnits> &_same_units,
         const descriptors::Hyperparameters &_hyperparameters,
         const Int _ix_perip_used,
@@ -70,7 +70,7 @@ class CandidateTreeBuilder
     /// Adds aggregations over the subfeatures
     static void add_subfeature_aggs(
         const decisiontrees::TableHolder &_table_holder,
-        const std::shared_ptr<const std::vector<std::string>> &_categories,
+        const std::shared_ptr<const std::vector<strings::String>> &_categories,
         const std::vector<descriptors::SameUnits> &_same_units,
         const descriptors::Hyperparameters &_hyperparameters,
         const Int _ix_perip_used,
@@ -83,7 +83,7 @@ class CandidateTreeBuilder
     /// data and aggregations
     static std::list<decisiontrees::DecisionTree> build_candidate_trees(
         const decisiontrees::TableHolder &_table_holder,
-        const std::shared_ptr<const std::vector<std::string>> &_categories,
+        const std::shared_ptr<const std::vector<strings::String>> &_categories,
         const std::vector<descriptors::SameUnits> &_same_units,
         const descriptors::Hyperparameters _hyperparameters,
         std::mt19937 *_random_number_generator,

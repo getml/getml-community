@@ -12,7 +12,7 @@ bool Monitor::get_start_message() const
     // Create HTTPRequest
 
     const std::string url =
-        "127.0.0.1:" + std::to_string( options_.monitor_.http_port_ );
+        "127.0.0.1:" + std::to_string( options_.monitor().http_port() );
 
     const std::string path = "/getstartmessage/";
 
@@ -74,7 +74,7 @@ std::pair<Poco::Net::HTTPResponse::HTTPStatus, std::string> Monitor::send(
     // Create HTTPRequest
 
     const std::string url =
-        "127.0.0.1:" + std::to_string( options_.monitor_.http_port_ );
+        "127.0.0.1:" + std::to_string( options_.monitor().http_port() );
 
     const std::string path = "/" + _type + "/";
 
@@ -126,7 +126,7 @@ void Monitor::send_and_receive(
 {
     Poco::Net::HTTPClientSession session(
         "127.0.0.1",
-        static_cast<Poco::UInt16>( options_.monitor_.http_port_ ) );
+        static_cast<Poco::UInt16>( options_.monitor().http_port() ) );
 
     const auto one_year = Poco::Timespan( 365, 0, 0, 0, 0 );
 
@@ -162,7 +162,7 @@ bool Monitor::shutdown() const
         {
             Poco::Net::HTTPClientSession session(
                 "127.0.0.1",
-                static_cast<Poco::UInt16>( options_.monitor_.http_port_ ) );
+                static_cast<Poco::UInt16>( options_.monitor().http_port() ) );
 
             session.sendRequest( req );
         }

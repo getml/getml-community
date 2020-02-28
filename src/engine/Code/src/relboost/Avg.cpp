@@ -65,10 +65,10 @@ void Avg::activate(
 void Avg::calc_all(
     const enums::Revert _revert,
     const Float _old_weight,
-    const std::vector<const containers::Match*>::iterator _begin,
-    const std::vector<const containers::Match*>::iterator _split_begin,
-    const std::vector<const containers::Match*>::iterator _split_end,
-    const std::vector<const containers::Match*>::iterator _end )
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _split_begin,
+    const std::vector<containers::Match>::iterator _split_end,
+    const std::vector<containers::Match>::iterator _end )
 {
     // ------------------------------------------------------------------------
 
@@ -80,6 +80,8 @@ void Avg::calc_all(
 
     assert_true( indices_.size() == 0 );
     assert_true( indices_current_.size() == 0 );
+
+    update_ = enums::Update::calc_all;
 
     // ------------------------------------------------------------------------
 
@@ -110,8 +112,9 @@ void Avg::calc_all(
         {
             for ( auto it = _begin; it != _split_begin; ++it )
                 {
-                    const auto ix = ( *it )->ix_output;
+                    const auto ix = it->ix_output;
 
+                    assert_true( ix < count_committed_.size() );
                     assert_true( count_committed_[ix] > 0.0 );
 
                     eta2_[ix] += 1.0 / count_committed_[ix];
@@ -126,8 +129,9 @@ void Avg::calc_all(
 
             for ( auto it = _split_begin; it != _split_end; ++it )
                 {
-                    const auto ix = ( *it )->ix_output;
+                    const auto ix = it->ix_output;
 
+                    assert_true( ix < count_committed_.size() );
                     assert_true( count_committed_[ix] > 0.0 );
 
                     eta1_[ix] += 1.0 / count_committed_[ix];
@@ -142,8 +146,9 @@ void Avg::calc_all(
 
             for ( auto it = _split_end; it != _end; ++it )
                 {
-                    const auto ix = ( *it )->ix_output;
+                    const auto ix = it->ix_output;
 
+                    assert_true( ix < count_committed_.size() );
                     assert_true( count_committed_[ix] > 0.0 );
 
                     eta2_[ix] += 1.0 / count_committed_[ix];
@@ -165,7 +170,7 @@ void Avg::calc_all(
         {
             for ( auto it = _begin; it != _split_begin; ++it )
                 {
-                    const auto ix = ( *it )->ix_output;
+                    const auto ix = it->ix_output;
 
                     ++count2_[ix];
 
@@ -177,7 +182,7 @@ void Avg::calc_all(
 
             for ( auto it = _split_begin; it != _split_end; ++it )
                 {
-                    const auto ix = ( *it )->ix_output;
+                    const auto ix = it->ix_output;
 
                     ++count1_[ix];
 
@@ -189,7 +194,7 @@ void Avg::calc_all(
 
             for ( auto it = _split_end; it != _end; ++it )
                 {
-                    const auto ix = ( *it )->ix_output;
+                    const auto ix = it->ix_output;
 
                     ++count2_[ix];
 
@@ -208,13 +213,16 @@ void Avg::calc_all(
     // ------------------------------------------------------------------------
     // Calculate eta1_2_null_, eta2_1_null_, w_fixed_1_ and w_fixed_2_.
 
-    if ( std::isnan( _old_weight ) )
+    if ( allow_null_weights_ )
         {
-            activate( indices_.begin(), indices_.end() );
-        }
-    else
-        {
-            deactivate( _old_weight, indices_.begin(), indices_.end() );
+            if ( std::isnan( _old_weight ) )
+                {
+                    activate( indices_.begin(), indices_.end() );
+                }
+            else
+                {
+                    deactivate( _old_weight, indices_.begin(), indices_.end() );
+                }
         }
 
     // ------------------------------------------------------------------------
@@ -224,8 +232,8 @@ void Avg::calc_all(
 
 void Avg::calc_diff(
     const Float _old_weight,
-    const std::vector<const containers::Match*>::iterator _split_begin,
-    const std::vector<const containers::Match*>::iterator _split_end )
+    const std::vector<containers::Match>::iterator _split_begin,
+    const std::vector<containers::Match>::iterator _split_end )
 {
     // ------------------------------------------------------------------------
 
@@ -237,7 +245,7 @@ void Avg::calc_diff(
         {
             for ( auto it = _split_begin; it != _split_end; ++it )
                 {
-                    const auto ix = ( *it )->ix_output;
+                    const auto ix = it->ix_output;
 
                     assert_true( ix < eta1_.size() );
 
@@ -258,7 +266,7 @@ void Avg::calc_diff(
         {
             for ( auto it = _split_begin; it != _split_end; ++it )
                 {
-                    const auto ix = ( *it )->ix_output;
+                    const auto ix = it->ix_output;
 
                     assert_true( ix < eta1_.size() );
 
@@ -281,14 +289,20 @@ void Avg::calc_diff(
 
     // ------------------------------------------------------------------------
 
-    if ( std::isnan( _old_weight ) )
+    if ( allow_null_weights_ )
         {
-            activate( indices_current_.begin(), indices_current_.end() );
-        }
-    else
-        {
-            deactivate(
-                _old_weight, indices_current_.begin(), indices_current_.end() );
+            if ( std::isnan( _old_weight ) )
+                {
+                    activate(
+                        indices_current_.begin(), indices_current_.end() );
+                }
+            else
+                {
+                    deactivate(
+                        _old_weight,
+                        indices_current_.begin(),
+                        indices_current_.end() );
+                }
         }
 
     // ------------------------------------------------------------------------
@@ -298,6 +312,8 @@ void Avg::calc_diff(
 
 void Avg::calc_etas(
     const enums::Aggregation _agg,
+    const enums::Update _update,
+    const Float _old_weight,
     const std::vector<size_t>& _indices_current,
     const std::vector<Float>& _eta1,
     const std::vector<Float>& _eta1_old,
@@ -309,6 +325,8 @@ void Avg::calc_etas(
 
     child_->calc_etas(
         _agg,
+        _update,
+        _old_weight,
         intermediate_agg().indices_current(),
         *eta1,
         *eta1_old,
@@ -320,8 +338,10 @@ void Avg::calc_etas(
 
 // ----------------------------------------------------------------------------
 
-std::array<Float, 3> Avg::calc_weights(
+std::pair<Float, std::array<Float, 3>> Avg::calc_pair(
     const enums::Aggregation _agg,
+    const enums::Revert _revert,
+    const enums::Update _update,
     const Float _old_weight,
     const std::vector<size_t>& _indices,
     const std::vector<size_t>& _indices_current,
@@ -334,8 +354,10 @@ std::array<Float, 3> Avg::calc_weights(
     const auto [eta1, eta1_old, eta2, eta2_old] = intermediate_agg().calc_etas(
         true, _agg, _indices_current, _eta1, _eta1_old, _eta2, _eta2_old );
 
-    const auto weights = child_->calc_weights(
+    const auto weights = child_->calc_pair(
         _agg,
+        _revert,
+        _update,
         _old_weight,
         intermediate_agg().indices(),
         intermediate_agg().indices_current(),
@@ -351,15 +373,16 @@ std::array<Float, 3> Avg::calc_weights(
 
 // ----------------------------------------------------------------------------
 
-std::vector<std::array<Float, 3>> Avg::calc_weights(
+std::vector<std::pair<Float, std::array<Float, 3>>> Avg::calc_pairs(
     const enums::Revert _revert,
     const enums::Update _update,
     const Float _min_num_samples,
+    const Float _old_intercept,
     const Float _old_weight,
-    const std::vector<const containers::Match*>::iterator _begin,
-    const std::vector<const containers::Match*>::iterator _split_begin,
-    const std::vector<const containers::Match*>::iterator _split_end,
-    const std::vector<const containers::Match*>::iterator _end )
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _split_begin,
+    const std::vector<containers::Match>::iterator _split_end,
+    const std::vector<containers::Match>::iterator _end )
 {
     // -------------------------------------------------------------
 
@@ -380,23 +403,30 @@ std::vector<std::array<Float, 3>> Avg::calc_weights(
 
     // -------------------------------------------------------------
 
-    if ( _update == enums::Update::calc_all )
+    switch ( _update )
         {
-            calc_all(
-                _revert, _old_weight, _begin, _split_begin, _split_end, _end );
-        }
-    else if ( _update == enums::Update::calc_diff )
-        {
-            calc_diff( _old_weight, _split_begin, _split_end );
-        }
-    else
-        {
-            assert_true( false && "Unknown Update!" );
+            case enums::Update::calc_all:
+                update_ = enums::Update::calc_all;
+                calc_all(
+                    _revert,
+                    _old_weight,
+                    _begin,
+                    _split_begin,
+                    _split_end,
+                    _end );
+                break;
+
+            case enums::Update::calc_diff:
+                calc_diff( _old_weight, _split_begin, _split_end );
+                break;
+
+            default:
+                assert_true( false && "Unknown Update!" );
         }
 
     // -------------------------------------------------------------
 
-    std::vector<std::array<Float, 3>> results;
+    auto results = std::vector<std::pair<Float, std::array<Float, 3>>>();
 
     // -------------------------------------------------------------
 
@@ -408,10 +438,14 @@ std::vector<std::array<Float, 3>> Avg::calc_weights(
 
     // -------------------------------------------------------------
 
+    assert_true( allow_null_weights_ || !std::isnan( _old_weight ) );
+
     if ( !std::isnan( _old_weight ) )
         {
-            results.push_back( child_->calc_weights(
+            results.push_back( child_->calc_pair(
                 enums::Aggregation::avg,
+                _revert,
+                update_,
                 _old_weight,
                 indices_.unique_integers(),
                 indices_current_.unique_integers(),
@@ -421,27 +455,36 @@ std::vector<std::array<Float, 3>> Avg::calc_weights(
                 eta2_old_ ) );
         }
 
-    results.push_back( child_->calc_weights(
-        enums::Aggregation::avg_second_null,
-        _old_weight,
-        indices_.unique_integers(),
-        indices_current_.unique_integers(),
-        eta1_2_null_,
-        eta1_2_null_old_,
-        w_fixed_1_,
-        w_fixed_1_old_ ) );
+    if ( allow_null_weights_ )
+        {
+            results.push_back( child_->calc_pair(
+                enums::Aggregation::avg_second_null,
+                _revert,
+                update_,
+                _old_weight,
+                indices_.unique_integers(),
+                indices_current_.unique_integers(),
+                eta1_2_null_,
+                eta1_2_null_old_,
+                w_fixed_1_,
+                w_fixed_2_old_ ) );
 
-    results.push_back( child_->calc_weights(
-        enums::Aggregation::avg_first_null,
-        _old_weight,
-        indices_.unique_integers(),
-        indices_current_.unique_integers(),
-        eta2_1_null_,
-        eta2_1_null_old_,
-        w_fixed_2_,
-        w_fixed_2_old_ ) );
+            results.push_back( child_->calc_pair(
+                enums::Aggregation::avg_first_null,
+                _revert,
+                update_,
+                _old_weight,
+                indices_.unique_integers(),
+                indices_current_.unique_integers(),
+                eta2_1_null_,
+                eta2_1_null_old_,
+                w_fixed_2_,
+                w_fixed_2_old_ ) );
+        }
 
     update_etas_old( _old_weight );
+
+    update_ = enums::Update::calc_diff;
 
     // -------------------------------------------------------------
 
@@ -541,10 +584,7 @@ void Avg::calc_yhat(
 void Avg::commit(
     const Float _old_intercept,
     const Float _old_weight,
-    const std::array<Float, 3>& _weights,
-    const std::vector<const containers::Match*>::iterator _begin,
-    const std::vector<const containers::Match*>::iterator _split,
-    const std::vector<const containers::Match*>::iterator _end )
+    const std::array<Float, 3>& _weights )
 {
     // ------------------------------------------------------------------------
 
@@ -559,14 +599,6 @@ void Avg::commit(
     assert_true( eta1_.size() == w_fixed_1_.size() );
     assert_true( eta1_.size() == w_fixed_2_.size() );
     assert_true( eta1_.size() == w_fixed_committed_.size() );
-
-    // ------------------------------------------------------------------------
-
-    // When we are committing, the weight1 and weight2 matches are clearly
-    // partitioned, so _begin == _split_begin.
-    calc_all( enums::Revert::False, _old_weight, _begin, _begin, _split, _end );
-
-    calc_yhat( _old_weight, _weights );
 
     // ------------------------------------------------------------------------
 
@@ -648,8 +680,15 @@ void Avg::commit(
     for ( auto ix : indices_ )
         {
             assert_true( ix < count1_.size() );
+
             count1_[ix] = 0.0;
             count2_[ix] = 0.0;
+
+            eta1_2_null_old_[ix] = 0.0;
+            eta2_1_null_old_[ix] = 0.0;
+
+            w_fixed_1_old_[ix] = 0.0;
+            w_fixed_2_old_[ix] = 0.0;
         }
 
         // ------------------------------------------------------------------------
@@ -745,87 +784,65 @@ void Avg::deactivate(
 Float Avg::evaluate_split(
     const Float _old_intercept,
     const Float _old_weight,
-    const std::array<Float, 3>& _weights )
+    const std::array<Float, 3>& _weights,
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _split,
+    const std::vector<containers::Match>::iterator _end )
 {
     // -----------------------------------------------------------------
 
-    Float loss_reduction = 0.0;
+    assert_true( !std::isinf( std::get<0>( _weights ) ) );
+    assert_true( !std::isinf( std::get<1>( _weights ) ) );
+    assert_true( !std::isinf( std::get<2>( _weights ) ) );
 
-    // -----------------------------------------------------------------
+    assert_true(
+        !std::isnan( std::get<1>( _weights ) ) ||
+        !std::isnan( std::get<2>( _weights ) ) );
+
+    calc_all( enums::Revert::False, _old_weight, _begin, _begin, _split, _end );
 
     calc_yhat( _old_weight, _weights );
 
     // -----------------------------------------------------------------
 
+    Float loss_reduction = 0.0;
+
     if ( std::isnan( std::get<2>( _weights ) ) )
         {
             assert_true( !std::isnan( std::get<1>( _weights ) ) );
 
-            loss_reduction = child_->evaluate_split(
-                _old_intercept,
-                _old_weight,
-                _weights,
-                indices_.unique_integers(),
-                eta1_2_null_,
-                eta_old_ );
+            loss_reduction =
+                child_->evaluate_split( _old_intercept, _old_weight, _weights );
         }
     else if ( std::isnan( std::get<1>( _weights ) ) )
         {
             assert_true( !std::isnan( std::get<2>( _weights ) ) );
 
-            loss_reduction = child_->evaluate_split(
-                _old_intercept,
-                _old_weight,
-                _weights,
-                indices_.unique_integers(),
-                eta2_1_null_,
-                eta_old_ );
+            loss_reduction =
+                child_->evaluate_split( _old_intercept, _old_weight, _weights );
         }
     else
         {
-            loss_reduction = child_->evaluate_split(
-                _old_intercept,
-                _old_weight,
-                _weights,
-                indices_.unique_integers(),
-                eta1_,
-                eta2_ );
+            loss_reduction =
+                child_->evaluate_split( _old_intercept, _old_weight, _weights );
         }
 
     // -----------------------------------------------------------------
 
     return loss_reduction;
+
+    // -----------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
 
-Float Avg::evaluate_split(
-    const Float _old_intercept,
-    const Float _old_weight,
-    const std::array<Float, 3>& _weights,
-    const std::vector<size_t>& _indices,
-    const std::vector<Float>& _eta1,
-    const std::vector<Float>& _eta2 )
+void Avg::init_count_committed( const std::vector<containers::Match>& _matches )
 {
-    return child_->evaluate_split(
-        _old_intercept,
-        _old_weight,
-        _weights,
-        indices_.unique_integers(),
-        eta1_,
-        eta2_ );
-}
-
-// ----------------------------------------------------------------------------
-
-void Avg::init_count_committed(
-    const std::vector<const containers::Match*>& _matches_ptr )
-{
-    for ( auto m : _matches_ptr )
+    for ( auto m : _matches )
         {
-            assert_true( m->ix_output < count_committed_.size() );
+            assert_true( m.ix_output < count_committed_.size() );
 
-            ++count_committed_[m->ix_output];
+            ++count_committed_[m.ix_output];
         }
 }
 
@@ -880,22 +897,32 @@ void Avg::revert( const Float _old_weight )
             count1_[ix] = 0.0;
         }
 
-    if ( std::isnan( _old_weight ) )
+    if ( allow_null_weights_ )
         {
-            activate( indices_current_.begin(), indices_current_.end() );
-        }
-    else
-        {
-            deactivate(
-                _old_weight, indices_current_.begin(), indices_current_.end() );
+            if ( std::isnan( _old_weight ) )
+                {
+                    activate(
+                        indices_current_.begin(), indices_current_.end() );
+                }
+            else
+                {
+                    deactivate(
+                        _old_weight,
+                        indices_current_.begin(),
+                        indices_current_.end() );
+                }
         }
 
     // -------------------------------------------------------------
+
+    assert_true( allow_null_weights_ || !std::isnan( _old_weight ) );
 
     if ( !std::isnan( _old_weight ) )
         {
             child_->calc_etas(
                 enums::Aggregation::avg,
+                update_,
+                _old_weight,
                 indices_current_.unique_integers(),
                 eta1_,
                 eta1_old_,
@@ -903,23 +930,32 @@ void Avg::revert( const Float _old_weight )
                 eta2_old_ );
         }
 
-    child_->calc_etas(
-        enums::Aggregation::avg_second_null,
-        indices_current_.unique_integers(),
-        eta1_2_null_,
-        eta1_2_null_old_,
-        w_fixed_1_,
-        w_fixed_1_old_ );
+    if ( allow_null_weights_ )
+        {
+            child_->calc_etas(
+                enums::Aggregation::avg_second_null,
+                update_,
+                _old_weight,
+                indices_current_.unique_integers(),
+                eta1_2_null_,
+                eta1_2_null_old_,
+                w_fixed_1_,
+                w_fixed_1_old_ );
 
-    child_->calc_etas(
-        enums::Aggregation::avg_first_null,
-        indices_current_.unique_integers(),
-        eta2_1_null_,
-        eta2_1_null_old_,
-        w_fixed_2_,
-        w_fixed_2_old_ );
+            child_->calc_etas(
+                enums::Aggregation::avg_first_null,
+                update_,
+                _old_weight,
+                indices_current_.unique_integers(),
+                eta2_1_null_,
+                eta2_1_null_old_,
+                w_fixed_2_,
+                w_fixed_2_old_ );
+        }
 
     update_etas_old( _old_weight );
+
+    update_ = enums::Update::calc_diff;
 
     // -------------------------------------------------------------
 
@@ -949,23 +985,13 @@ void Avg::revert_to_commit()
             assert_true( ix < count1_.size() );
             count1_[ix] = 0.0;
             count2_[ix] = 0.0;
+
+            eta1_2_null_old_[ix] = 0.0;
+            eta2_1_null_old_[ix] = 0.0;
+
+            w_fixed_1_old_[ix] = 0.0;
+            w_fixed_2_old_[ix] = 0.0;
         }
-
-        // ------------------------------------------------------------------------
-
-#ifndef NDEBUG
-
-    for ( auto val : count1_ )
-        {
-            assert_true( val == 0.0 );
-        }
-
-    for ( auto val : count2_ )
-        {
-            assert_true( val == 0.0 );
-        }
-
-#endif  // NDEBUG
 
     // ------------------------------------------------------------------------
 

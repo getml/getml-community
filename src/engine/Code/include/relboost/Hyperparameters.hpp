@@ -49,6 +49,9 @@ struct Hyperparameters
 
     // -----------------------------------------------------------------
 
+    /// Whether we want to allow null weights.
+    const bool allow_null_weights_;
+
     /// L1 regularization term on weights
     // const Float alpha;
 

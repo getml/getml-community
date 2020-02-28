@@ -6,45 +6,6 @@ namespace handlers
 {
 // ------------------------------------------------------------------------
 
-void ProjectManager::add_multirel_model(
-    const std::string& _name,
-    const Poco::JSON::Object& _cmd,
-    Poco::Net::StreamSocket* _socket )
-{
-    if ( project_directory_ == "" )
-        {
-            throw std::invalid_argument( "You have not set a project!" );
-        }
-
-    const auto hyperparameters_obj =
-        JSON::get_object( _cmd, "hyperparameters_" );
-
-    const auto hyperparameters =
-        std::make_shared<multirel::descriptors::Hyperparameters>(
-            *hyperparameters_obj );
-
-    const auto peripheral = std::make_shared<std::vector<std::string>>(
-        JSON::array_to_vector<std::string>(
-            JSON::get_array( _cmd, "peripheral_" ) ) );
-
-    const auto placeholder =
-        std::make_shared<multirel::decisiontrees::Placeholder>(
-            JSON::get_object( _cmd, "population_" ) );
-
-    const auto model = models::MultirelModel(
-        multirel::ensemble::DecisionTreeEnsemble(
-            categories_->vector(), hyperparameters, peripheral, placeholder ),
-        *hyperparameters_obj );
-
-    set_multirel_model( _name, model, false );
-
-    monitor_->send( "postmultirelmodel", model.to_monitor( _name ) );
-
-    engine::communication::Sender::send_string( "Success!", _socket );
-}
-
-// ------------------------------------------------------------------------
-
 void ProjectManager::add_data_frame(
     const std::string& _name, Poco::Net::StreamSocket* _socket )
 {
@@ -143,6 +104,92 @@ void ProjectManager::add_data_frame_from_query(
 
     monitor_->send( "postdataframe", data_frames()[_name].to_monitor() );
 }
+
+// ------------------------------------------------------------------------
+
+void ProjectManager::add_multirel_model(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    if ( project_directory_ == "" )
+        {
+            throw std::invalid_argument( "You have not set a project!" );
+        }
+
+    const auto hyperparameters_obj =
+        JSON::get_object( _cmd, "hyperparameters_" );
+
+    const auto hyperparameters =
+        std::make_shared<multirel::descriptors::Hyperparameters>(
+            *hyperparameters_obj );
+
+    const auto peripheral = std::make_shared<std::vector<std::string>>(
+        JSON::array_to_vector<std::string>(
+            JSON::get_array( _cmd, "peripheral_" ) ) );
+
+    const auto placeholder =
+        std::make_shared<multirel::containers::Placeholder>(
+            JSON::get_object( _cmd, "placeholder_" ) );
+
+    auto population_schema =
+        std::shared_ptr<const multirel::containers::Placeholder>();
+
+    if ( _cmd.has( "population_schema_" ) )
+        {
+            population_schema =
+                std::make_shared<const multirel::containers::Placeholder>(
+                    *JSON::get_object( _cmd, "population_schema_" ) );
+        }
+
+    auto peripheral_schema =
+        std::shared_ptr<const std::vector<multirel::containers::Placeholder>>();
+
+    if ( _cmd.has( "peripheral_schema_" ) )
+        {
+            std::vector<multirel::containers::Placeholder> peripheral;
+
+            const auto peripheral_arr =
+                *JSON::get_array( _cmd, "peripheral_schema_" );
+
+            for ( size_t i = 0; i < peripheral_arr.size(); ++i )
+                {
+                    const auto ptr = peripheral_arr.getObject(
+                        static_cast<unsigned int>( i ) );
+
+                    if ( !ptr )
+                        {
+                            throw std::invalid_argument(
+                                "peripheral_schema_, element " +
+                                std::to_string( i ) + " is not an Object!" );
+                        }
+
+                    peripheral.push_back(
+                        multirel::containers::Placeholder( *ptr ) );
+                }
+
+            peripheral_schema = std::make_shared<
+                const std::vector<multirel::containers::Placeholder>>(
+                peripheral );
+        }
+
+    const auto model = models::MultirelModel(
+        multirel::ensemble::DecisionTreeEnsemble(
+            categories_->vector(),
+            hyperparameters,
+            peripheral,
+            placeholder,
+            peripheral_schema,
+            population_schema ),
+        *hyperparameters_obj );
+
+    set_multirel_model( _name, model, false );
+
+    monitor_->send( "postmultirelmodel", model.to_monitor( _name ) );
+
+    engine::communication::Sender::send_string( "Success!", _socket );
+}
+
 // ------------------------------------------------------------------------
 
 void ProjectManager::add_relboost_model(
@@ -165,12 +212,59 @@ void ProjectManager::add_relboost_model(
         JSON::array_to_vector<std::string>(
             JSON::get_array( _cmd, "peripheral_" ) ) );
 
-    const auto placeholder = std::make_shared<relboost::ensemble::Placeholder>(
-        JSON::get_object( _cmd, "population_" ) );
+    const auto placeholder =
+        std::make_shared<relboost::containers::Placeholder>(
+            JSON::get_object( _cmd, "placeholder_" ) );
+
+    auto population_schema =
+        std::shared_ptr<const relboost::containers::Placeholder>();
+
+    if ( _cmd.has( "population_schema_" ) )
+        {
+            population_schema =
+                std::make_shared<const relboost::containers::Placeholder>(
+                    *JSON::get_object( _cmd, "population_schema_" ) );
+        }
+
+    auto peripheral_schema =
+        std::shared_ptr<const std::vector<relboost::containers::Placeholder>>();
+
+    if ( _cmd.has( "peripheral_schema_" ) )
+        {
+            std::vector<relboost::containers::Placeholder> peripheral;
+
+            const auto peripheral_arr =
+                *JSON::get_array( _cmd, "peripheral_schema_" );
+
+            for ( size_t i = 0; i < peripheral_arr.size(); ++i )
+                {
+                    const auto ptr = peripheral_arr.getObject(
+                        static_cast<unsigned int>( i ) );
+
+                    if ( !ptr )
+                        {
+                            throw std::invalid_argument(
+                                "peripheral_schema_, element " +
+                                std::to_string( i ) + " is not an Object!" );
+                        }
+
+                    peripheral.push_back(
+                        relboost::containers::Placeholder( *ptr ) );
+                }
+
+            peripheral_schema = std::make_shared<
+                const std::vector<relboost::containers::Placeholder>>(
+                peripheral );
+        }
 
     const auto model = models::RelboostModel(
         relboost::ensemble::DecisionTreeEnsemble(
-            categories_->vector(), hyperparameters, peripheral, placeholder ),
+            categories_->vector(),
+            hyperparameters,
+            peripheral,
+            placeholder,
+            peripheral_schema,
+            population_schema ),
         *hyperparameters_obj );
 
     set_relboost_model( _name, model, false );
@@ -310,6 +404,10 @@ void ProjectManager::delete_relboost_model(
 void ProjectManager::delete_project(
     const std::string& _name, Poco::Net::StreamSocket* _socket )
 {
+    // Some methods, particularly the hyperparameter optimization,
+    // require us to keep the project fixed while they run.
+    std::lock_guard<std::mutex> project_guard( project_mtx() );
+
     multithreading::WriteLock write_lock( read_write_lock_ );
 
     if ( _name == "" )
@@ -319,12 +417,13 @@ void ProjectManager::delete_project(
                 "empty string!" );
         }
 
-    if ( project_directory_ == options_.all_projects_directory_ + _name + "/" )
+    if ( project_directory_ == options_.all_projects_directory() + _name + "/" )
         {
             project_directory_ = "";
         }
 
-    Poco::File( options_.all_projects_directory_ + _name + "/" ).remove( true );
+    Poco::File( options_.all_projects_directory() + _name + "/" )
+        .remove( true );
 
     engine::communication::Sender::send_string( "Success!", _socket );
 }
@@ -473,7 +572,7 @@ void ProjectManager::list_projects( Poco::Net::StreamSocket* _socket ) const
 
     Poco::DirectoryIterator end;
 
-    for ( Poco::DirectoryIterator it( options_.all_projects_directory_ );
+    for ( Poco::DirectoryIterator it( options_.all_projects_directory() );
           it != end;
           ++it )
         {
@@ -497,12 +596,16 @@ void ProjectManager::list_projects( Poco::Net::StreamSocket* _socket ) const
 
 void ProjectManager::load_all_models()
 {
+    // --------------------------------------------------------------------
+
     if ( project_directory_ == "" )
         {
             throw std::invalid_argument( "You have not set a project!" );
         }
 
     Poco::DirectoryIterator end;
+
+    // --------------------------------------------------------------------
 
     for ( Poco::DirectoryIterator it( project_directory_ + "multirel-models/" );
           it != end;
@@ -513,14 +616,24 @@ void ProjectManager::load_all_models()
                     continue;
                 }
 
-            auto model = models::MultirelModel(
-                categories().vector(), it->path() + "/" );
+            try
+                {
+                    auto model = models::MultirelModel(
+                        categories().vector(), it->path() + "/" );
 
-            set_multirel_model( it.name(), model, true );
+                    set_multirel_model( it.name(), model, true );
 
-            monitor_->send(
-                "postmultirelmodel", model.to_monitor( it.name() ) );
+                    monitor_->send(
+                        "postmultirelmodel", model.to_monitor( it.name() ) );
+                }
+            catch ( std::exception& e )
+                {
+                    logger().log(
+                        "Error loading " + it.name() + ": " + e.what() );
+                }
         }
+
+    // --------------------------------------------------------------------
 
     for ( Poco::DirectoryIterator it( project_directory_ + "relboost-models/" );
           it != end;
@@ -531,14 +644,24 @@ void ProjectManager::load_all_models()
                     continue;
                 }
 
-            auto model = models::RelboostModel(
-                categories().vector(), it->path() + "/" );
+            try
+                {
+                    auto model = models::RelboostModel(
+                        categories().vector(), it->path() + "/" );
 
-            set_relboost_model( it.name(), model, true );
+                    set_relboost_model( it.name(), model, true );
 
-            monitor_->send(
-                "postrelboostmodel", model.to_monitor( it.name() ) );
+                    monitor_->send(
+                        "postrelboostmodel", model.to_monitor( it.name() ) );
+                }
+            catch ( std::exception& e )
+                {
+                    logger().log(
+                        "Error loading " + it.name() + ": " + e.what() );
+                }
         }
+
+    // --------------------------------------------------------------------
 }
 
 // ------------------------------------------------------------------------
@@ -687,32 +810,6 @@ void ProjectManager::refresh( Poco::Net::StreamSocket* _socket ) const
 
 // ------------------------------------------------------------------------
 
-void ProjectManager::save_multirel_model(
-    const std::string& _name, Poco::Net::StreamSocket* _socket )
-{
-    if ( project_directory_ == "" )
-        {
-            throw std::invalid_argument( "You have not set a project!" );
-        }
-
-    multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
-
-    auto model = get_multirel_model( _name );
-
-    const auto path = project_directory_ + "multirel-models/" + _name + "/";
-
-    model.save( path );
-
-    // Note that the join keys encoding will be unaffected by models,
-    // passing a zero-length-encoding means that it will not be saved.
-    FileHandler::save_encodings(
-        project_directory_, categories(), containers::Encoding() );
-
-    engine::communication::Sender::send_string( "Success!", _socket );
-}
-
-// ------------------------------------------------------------------------
-
 void ProjectManager::save_data_frame(
     const std::string& _name, Poco::Net::StreamSocket* _socket )
 {
@@ -725,12 +822,38 @@ void ProjectManager::save_data_frame(
 
     auto& df = utils::Getter::get( _name, &data_frames() );
 
-    df.save( project_directory_ + "data/" + _name + "/" );
+    df.save( project_directory_ + "data/", _name );
 
     FileHandler::save_encodings(
         project_directory_, categories(), join_keys_encoding() );
 
     communication::Sender::send_string( "Success!", _socket );
+}
+
+// ------------------------------------------------------------------------
+
+void ProjectManager::save_multirel_model(
+    const std::string& _name, Poco::Net::StreamSocket* _socket )
+{
+    if ( project_directory_ == "" )
+        {
+            throw std::invalid_argument( "You have not set a project!" );
+        }
+
+    multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
+
+    auto model = get_multirel_model( _name );
+
+    const auto path = project_directory_ + "multirel-models/";
+
+    model.save( path, _name );
+
+    // Note that the join keys encoding will be unaffected by models,
+    // passing a zero-length-encoding means that it will not be saved.
+    FileHandler::save_encodings(
+        project_directory_, categories(), containers::Encoding() );
+
+    engine::communication::Sender::send_string( "Success!", _socket );
 }
 
 // ------------------------------------------------------------------------
@@ -747,9 +870,9 @@ void ProjectManager::save_relboost_model(
 
     auto model = get_relboost_model( _name );
 
-    const auto path = project_directory_ + "relboost-models/" + _name + "/";
+    const auto path = project_directory_ + "relboost-models/";
 
-    model.save( path );
+    model.save( path, _name );
 
     // Note that the join keys encoding will be unaffected by models,
     // passing a zero-length-encoding means that it will not be saved.
@@ -764,6 +887,10 @@ void ProjectManager::save_relboost_model(
 void ProjectManager::set_project(
     const std::string& _name, Poco::Net::StreamSocket* _socket )
 {
+    // Some methods, particularly the hyperparameter optimization,
+    // require us to keep the project fixed while they run.
+    std::lock_guard<std::mutex> project_guard( project_mtx() );
+
     auto absolute_path =
         handlers::FileHandler::create_project_directory( _name, options_ );
 

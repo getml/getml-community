@@ -26,6 +26,12 @@ struct Getter
         const std::vector<std::string> &_names,
         std::map<std::string, T> *&_map );
 
+    /// Gets object _name from map, if it exists
+    /// and returns a boolean indicating whether it does.
+    template <class T>
+    static std::pair<T *, bool> get_if_exists(
+        const std::string &_name, std::map<std::string, T> *_map );
+
     // ------------------------------------------------------------------------
 };
 
@@ -42,7 +48,6 @@ T &Getter::get( const std::string &_name, std::map<std::string, T> *_map )
             std::string warning_message = "'";
             warning_message.append( _name );
             warning_message.append( "' not found. " );
-            warning_message.append( "Did you maybe forget to call .send()?" );
 
             throw std::invalid_argument( warning_message );
         }
@@ -62,7 +67,6 @@ T Getter::get( const std::string &_name, const std::map<std::string, T> &_map )
             std::string warning_message = "'";
             warning_message.append( _name );
             warning_message.append( "' not found. " );
-            warning_message.append( "Did you maybe forget to call .send()?" );
 
             throw std::invalid_argument( warning_message );
         }
@@ -86,6 +90,22 @@ std::vector<T> Getter::get(
         }
 
     return vec;
+}
+
+// ------------------------------------------------------------------------
+
+template <class T>
+std::pair<T *, bool> Getter::get_if_exists(
+    const std::string &_name, std::map<std::string, T> *_map )
+{
+    auto it = _map->find( _name );
+
+    if ( it == _map->end() )
+        {
+            return std::make_pair( nullptr, false );
+        }
+
+    return std::make_pair( &it->second, true );
 }
 
 // ------------------------------------------------------------------------

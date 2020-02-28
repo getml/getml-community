@@ -143,7 +143,8 @@ Poco::JSON::Object AUC::score( const Features _yhat, const Features _y )
                         static_cast<size_t>( std::distance( it1, it2 ) );
 
                     assert_true( dist > 0 );
-                    assert_true( i + dist - 1 < true_positives_uncompressed.size() );
+                    assert_true(
+                        i + dist - 1 < true_positives_uncompressed.size() );
 
                     true_positives.push_back(
                         true_positives_uncompressed[i + dist - 1] );
@@ -212,7 +213,8 @@ Poco::JSON::Object AUC::score( const Features _yhat, const Features _y )
             // Downsample true_postive_rate and false_positive_rate to be
             // displayed.
 
-            const auto step_size = true_positives.size() / 100;
+            const auto step_size = std::max(
+                true_positives.size() / 100, static_cast<size_t>( 1 ) );
 
             auto tpr_downsampled = std::vector<Float>( 0 );
 

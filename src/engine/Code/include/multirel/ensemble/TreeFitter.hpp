@@ -13,7 +13,7 @@ class TreeFitter
 
    public:
     TreeFitter(
-        const std::shared_ptr<const std::vector<std::string>> &_categories,
+        const std::shared_ptr<const std::vector<strings::String>> &_categories,
         const std::shared_ptr<const descriptors::Hyperparameters>
             &_hyperparameters,
         std::mt19937 *_random_number_generator,
@@ -35,7 +35,7 @@ class TreeFitter
         const decisiontrees::TableHolder &_table_holder,
         const std::vector<containers::Subfeatures> &_subfeatures,
         std::vector<containers::Matches> *_samples,
-        std::vector<containers::MatchPtrs> *_sample_containers,
+        std::vector<containers::MatchPtrs> *_match_containers,
         optimizationcriteria::OptimizationCriterion *_optimization_criterion,
         std::list<decisiontrees::DecisionTree> *_candidate_trees,
         std::vector<decisiontrees::DecisionTree> *_trees );
@@ -50,7 +50,7 @@ class TreeFitter
         const std::vector<containers::Subfeatures> &_subfeatures,
         const std::vector<Float> &_values,
         std::vector<containers::Matches> *_samples,
-        std::vector<containers::MatchPtrs> *_sample_containers,
+        std::vector<containers::MatchPtrs> *_match_containers,
         optimizationcriteria::OptimizationCriterion *_optimization_criterion,
         std::list<decisiontrees::DecisionTree> *_candidate_trees,
         std::vector<decisiontrees::DecisionTree> *_trees );
@@ -61,7 +61,7 @@ class TreeFitter
         const containers::DataFrame &_peripheral,
         const containers::Subfeatures &_subfeatures,
         std::vector<containers::Matches> *_samples,
-        std::vector<containers::MatchPtrs> *_sample_containers,
+        std::vector<containers::MatchPtrs> *_match_containers,
         optimizationcriteria::OptimizationCriterion *_optimization_criterion,
         decisiontrees::DecisionTree *_tree );
 
@@ -70,7 +70,7 @@ class TreeFitter
         const decisiontrees::TableHolder &_table_holder,
         const std::vector<containers::Subfeatures> &_subfeatures,
         std::vector<containers::Matches> *_samples,
-        std::vector<containers::MatchPtrs> *_sample_containers,
+        std::vector<containers::MatchPtrs> *_match_containers,
         optimizationcriteria::OptimizationCriterion *_optimization_criterion,
         std::list<decisiontrees::DecisionTree> *_candidate_trees,
         std::vector<Float> *_values );
@@ -79,7 +79,7 @@ class TreeFitter
 
    private:
     /// Trivial accessor
-    std::shared_ptr<const std::vector<std::string>> &categories()
+    std::shared_ptr<const std::vector<strings::String>> &categories()
     {
         assert_true( categories_ );
         return categories_;
@@ -120,7 +120,7 @@ class TreeFitter
 
    private:
     /// List of categories mapping category names to integers
-    std::shared_ptr<const std::vector<std::string>> categories_;
+    std::shared_ptr<const std::vector<strings::String>> categories_;
 
     /// Communicator
     multithreading::Communicator *comm_;

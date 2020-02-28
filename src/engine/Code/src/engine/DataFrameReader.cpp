@@ -1,4 +1,3 @@
-
 #include "engine/containers/containers.hpp"
 
 namespace engine
@@ -12,100 +11,48 @@ std::vector<std::string> DataFrameReader::make_colnames(
 {
     // ------------------------------------------------------------------------
 
-    std::map<std::string, Int> counts;
-
-    for ( size_t i = 0; i < _df.num_categoricals(); ++i )
-        {
-            const auto& colname = _df.categorical( i ).name();
-            update_counts( colname, &counts );
-        }
-
-    for ( size_t i = 0; i < _df.num_discretes(); ++i )
-        {
-            const auto& colname = _df.discrete( i ).name();
-            update_counts( colname, &counts );
-        }
-
-    for ( size_t i = 0; i < _df.num_join_keys(); ++i )
-        {
-            const auto& colname = _df.join_key( i ).name();
-            update_counts( colname, &counts );
-        }
-
-    for ( size_t i = 0; i < _df.num_numericals(); ++i )
-        {
-            const auto& colname = _df.numerical( i ).name();
-            update_counts( colname, &counts );
-        }
-
-    for ( size_t i = 0; i < _df.num_targets(); ++i )
-        {
-            const auto& colname = _df.target( i ).name();
-            update_counts( colname, &counts );
-        }
-
-    for ( size_t i = 0; i < _df.num_time_stamps(); ++i )
-        {
-            const auto& colname = _df.time_stamp( i ).name();
-            update_counts( colname, &counts );
-        }
-
-    // ------------------------------------------------------------------------
-
     std::vector<std::string> colnames;
 
     for ( size_t i = 0; i < _df.num_categoricals(); ++i )
         {
             const auto& colname = _df.categorical( i ).name();
-            if ( counts[colname] == 1 )
-                colnames.push_back( colname );
-            else
-                colnames.push_back( "categorical_" + colname );
-        }
-
-    for ( size_t i = 0; i < _df.num_discretes(); ++i )
-        {
-            const auto& colname = _df.discrete( i ).name();
-            if ( counts[colname] == 1 )
-                colnames.push_back( colname );
-            else
-                colnames.push_back( "discrete_" + colname );
+            colnames.push_back( colname );
         }
 
     for ( size_t i = 0; i < _df.num_join_keys(); ++i )
         {
             const auto& colname = _df.join_key( i ).name();
-            if ( counts[colname] == 1 )
-                colnames.push_back( colname );
-            else
-                colnames.push_back( "join_key_" + colname );
+            colnames.push_back( colname );
         }
 
     for ( size_t i = 0; i < _df.num_numericals(); ++i )
         {
             const auto& colname = _df.numerical( i ).name();
-            if ( counts[colname] == 1 )
-                colnames.push_back( colname );
-            else
-                colnames.push_back( "numerical_" + colname );
+            colnames.push_back( colname );
         }
 
     for ( size_t i = 0; i < _df.num_targets(); ++i )
         {
             const auto& colname = _df.target( i ).name();
-            if ( counts[colname] == 1 )
-                colnames.push_back( colname );
-            else
-                colnames.push_back( "target_" + colname );
+            colnames.push_back( colname );
         }
 
     for ( size_t i = 0; i < _df.num_time_stamps(); ++i )
         {
             const auto& colname = _df.time_stamp( i ).name();
-            if ( counts[colname] == 1 )
-                colnames.push_back( colname );
-            else
-                colnames.push_back( "time_stamp_" + colname );
+            colnames.push_back( colname );
+        }
+
+    for ( size_t i = 0; i < _df.num_unused_floats(); ++i )
+        {
+            const auto& colname = _df.unused_float( i ).name();
+            colnames.push_back( colname );
+        }
+
+    for ( size_t i = 0; i < _df.num_unused_strings(); ++i )
+        {
+            const auto& colname = _df.unused_string( i ).name();
+            colnames.push_back( colname );
         }
 
     // ------------------------------------------------------------------------
@@ -134,19 +81,6 @@ std::vector<csv::Datatype> DataFrameReader::make_coltypes(
             coltypes.push_back( csv::Datatype::string );
         }
 
-    for ( size_t i = 0; i < _df.num_discretes(); ++i )
-        {
-            if ( _df.discrete( i ).unit().find( "time stamp" ) !=
-                 std::string::npos )
-                {
-                    coltypes.push_back( csv::Datatype::string );
-                }
-            else
-                {
-                    coltypes.push_back( csv::Datatype::double_precision );
-                }
-        }
-
     for ( size_t i = 0; i < _df.num_join_keys(); ++i )
         {
             coltypes.push_back( csv::Datatype::string );
@@ -171,6 +105,24 @@ std::vector<csv::Datatype> DataFrameReader::make_coltypes(
         }
 
     for ( size_t i = 0; i < _df.num_time_stamps(); ++i )
+        {
+            coltypes.push_back( csv::Datatype::string );
+        }
+
+    for ( size_t i = 0; i < _df.num_unused_floats(); ++i )
+        {
+            if ( _df.unused_float( i ).unit().find( "time stamp" ) !=
+                 std::string::npos )
+                {
+                    coltypes.push_back( csv::Datatype::string );
+                }
+            else
+                {
+                    coltypes.push_back( csv::Datatype::double_precision );
+                }
+        }
+
+    for ( size_t i = 0; i < _df.num_unused_strings(); ++i )
         {
             coltypes.push_back( csv::Datatype::string );
         }
@@ -203,22 +155,13 @@ std::vector<std::string> DataFrameReader::next_line()
     for ( size_t i = 0; i < df_.num_categoricals(); ++i )
         {
             const auto& val = df_.categorical( i )[rownum_];
-            result[col++] = categories()[val];
-        }
-
-    for ( size_t i = 0; i < df_.num_discretes(); ++i )
-        {
-            const auto& val = df_.discrete( i )[rownum_];
-            if ( coltypes()[col] == csv::Datatype::string )
-                result[col++] = df_.to_time_stamp( val );
-            else
-                result[col++] = std::to_string( val );
+            result[col++] = categories()[val].str();
         }
 
     for ( size_t i = 0; i < df_.num_join_keys(); ++i )
         {
             const auto& val = df_.join_key( i )[rownum_];
-            result[col++] = join_keys_encoding()[val];
+            result[col++] = join_keys_encoding()[val].str();
         }
 
     for ( size_t i = 0; i < df_.num_numericals(); ++i )
@@ -241,6 +184,23 @@ std::vector<std::string> DataFrameReader::next_line()
             const auto& val = df_.time_stamp( i )[rownum_];
             result[col++] = df_.to_time_stamp( val );
         }
+
+    for ( size_t i = 0; i < df_.num_unused_floats(); ++i )
+        {
+            const auto& val = df_.unused_float( i )[rownum_];
+            if ( coltypes()[col] == csv::Datatype::string )
+                result[col++] = df_.to_time_stamp( val );
+            else
+                result[col++] = std::to_string( val );
+        }
+
+    for ( size_t i = 0; i < df_.num_unused_strings(); ++i )
+        {
+            const auto& val = df_.unused_string( i )[rownum_];
+            result[col++] = val.str();
+        }
+
+    assert_true( col == result.size() );
 
     // ------------------------------------------------------------------------
 

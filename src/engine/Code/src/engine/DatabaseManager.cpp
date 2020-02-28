@@ -31,6 +31,39 @@ void DatabaseManager::execute( Poco::Net::StreamSocket* _socket )
 
 // ------------------------------------------------------------------------
 
+void DatabaseManager::get(
+    const std::string& _name, Poco::Net::StreamSocket* _socket )
+{
+    const auto query = communication::Receiver::recv_string( _socket );
+
+    auto db_iterator = connector()->select( query );
+
+    const auto colnames = db_iterator->colnames();
+
+    std::vector<Poco::JSON::Array> columns( colnames.size() );
+
+    while ( !db_iterator->end() )
+        {
+            for ( auto& col : columns )
+                {
+                    col.add( db_iterator->get_string() );
+                }
+        }
+
+    Poco::JSON::Object obj;
+
+    for ( size_t i = 0; i < columns.size(); ++i )
+        {
+            obj.set( colnames[i], columns[i] );
+        }
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    communication::Sender::send_string( JSON::stringify( obj ), _socket );
+}
+
+// ------------------------------------------------------------------------
+
 void DatabaseManager::get_colnames(
     const std::string& _name, Poco::Net::StreamSocket* _socket )
 {
@@ -98,6 +131,24 @@ void DatabaseManager::list_tables( Poco::Net::StreamSocket* _socket )
     communication::Sender::send_string( "Success!", _socket );
 
     communication::Sender::send_string( array, _socket );
+}
+
+// ----------------------------------------------------------------------------
+
+void DatabaseManager::new_db(
+    const Poco::JSON::Object& _cmd, Poco::Net::StreamSocket* _socket )
+{
+    const auto password = communication::Receiver::recv_string( _socket );
+
+    multithreading::WriteLock write_lock( read_write_lock_ );
+
+    connector_ = database::DatabaseParser::parse( _cmd, password );
+
+    write_lock.unlock();
+
+    post_tables();
+
+    communication::Sender::send_string( "Success!", _socket );
 }
 
 // ----------------------------------------------------------------------------
@@ -202,6 +253,10 @@ void DatabaseManager::sniff_csv(
 
     const auto skip = JSON::get_value<size_t>( _cmd, "skip_" );
 
+    const auto dialect = _cmd.has( "dialect_" )
+                             ? JSON::get_value<std::string>( _cmd, "dialect_" )
+                             : connector()->dialect();
+
     // --------------------------------------------------------------------
 
     if ( quotechar.size() != 1 )
@@ -219,7 +274,7 @@ void DatabaseManager::sniff_csv(
     // --------------------------------------------------------------------
 
     auto sniffer = csv::Sniffer(
-        connector()->dialect(),
+        dialect,
         fnames,
         header,
         num_lines_sniffed,
@@ -237,6 +292,24 @@ void DatabaseManager::sniff_csv(
     communication::Sender::send_string( create_table_statement, _socket );
 
     // --------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+void DatabaseManager::sniff_table(
+    const std::string& _table_name, Poco::Net::StreamSocket* _socket ) const
+{
+    if ( !connector_ )
+        {
+            throw std::invalid_argument( "No connector set!" );
+        }
+
+    const auto kwargs =
+        database::DatabaseSniffer::sniff( connector_, _table_name );
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    communication::Sender::send_string( kwargs, _socket );
 }
 
 // ----------------------------------------------------------------------------

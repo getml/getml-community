@@ -31,27 +31,10 @@ void RequestHandler::run()
                     data_frame_manager().get_boolean_column(
                         name, cmd, &socket() );
                 }
-            else if ( type == "CategoricalColumn.get" )
+            if ( type == "BooleanColumn.get_string" )
                 {
-                    data_frame_manager().get_categorical_column(
+                    data_frame_manager().get_boolean_column_string(
                         name, cmd, &socket() );
-                }
-            else if ( type == "Column.aggregate" )
-                {
-                    data_frame_manager().aggregate( name, cmd, &socket() );
-                }
-            else if ( type == "Column.get" )
-                {
-                    data_frame_manager().get_column( name, cmd, &socket() );
-                }
-            else if ( type == "CategoricalColumn.set_unit" )
-                {
-                    data_frame_manager().set_unit_categorical(
-                        name, cmd, &socket() );
-                }
-            else if ( type == "Column.set_unit" )
-                {
-                    data_frame_manager().set_unit( name, cmd, &socket() );
                 }
             else if ( type == "Database.drop_table" )
                 {
@@ -60,6 +43,10 @@ void RequestHandler::run()
             else if ( type == "Database.execute" )
                 {
                     database_manager().execute( &socket() );
+                }
+            else if ( type == "Database.get" )
+                {
+                    database_manager().get( name, &socket() );
                 }
             else if ( type == "Database.get_colnames" )
                 {
@@ -89,23 +76,38 @@ void RequestHandler::run()
                 {
                     database_manager().sniff_csv( name, cmd, &socket() );
                 }
+            else if ( type == "Database.sniff_table" )
+                {
+                    database_manager().sniff_table( name, &socket() );
+                }
             else if ( type == "DataFrame" )
                 {
                     project_manager().add_data_frame( name, &socket() );
                 }
             else if ( type == "DataFrame.add_categorical_column" )
                 {
-                    data_frame_manager().add_categorical_column(
+                    data_frame_manager().add_string_column(
                         name, cmd, &socket() );
                 }
             else if ( type == "DataFrame.add_column" )
                 {
-                    data_frame_manager().add_column( name, cmd, &socket() );
+                    data_frame_manager().add_float_column(
+                        name, cmd, &socket() );
                 }
             else if ( type == "DataFrame.append" )
                 {
                     data_frame_manager().append_to_data_frame(
                         name, &socket() );
+                }
+            else if ( type == "DataFrame.calc_categorical_column_plots" )
+                {
+                    data_frame_manager().calc_categorical_column_plots(
+                        name, cmd, &socket() );
+                }
+            else if ( type == "DataFrame.calc_column_plots" )
+                {
+                    data_frame_manager().calc_column_plots(
+                        name, cmd, &socket() );
                 }
             else if ( type == "DataFrame.delete" )
                 {
@@ -138,6 +140,11 @@ void RequestHandler::run()
                 {
                     data_frame_manager().get_data_frame_content(
                         name, cmd, &socket() );
+                }
+            else if ( type == "DataFrame.get_string" )
+                {
+                    data_frame_manager().get_data_frame_string(
+                        name, &socket() );
                 }
             else if ( type == "DataFrame.group_by" )
                 {
@@ -188,6 +195,31 @@ void RequestHandler::run()
                 {
                     data_frame_manager().where( name, cmd, &socket() );
                 }
+            else if ( type == "FloatColumn" )
+                {
+                    data_frame_manager().add_float_column( cmd, &socket() );
+                }
+            else if ( type == "FloatColumn.aggregate" )
+                {
+                    data_frame_manager().aggregate( name, cmd, &socket() );
+                }
+            else if ( type == "FloatColumn.get" )
+                {
+                    data_frame_manager().get_column( name, cmd, &socket() );
+                }
+            else if ( type == "FloatColumn.get_string" )
+                {
+                    data_frame_manager().get_column_string(
+                        name, cmd, &socket() );
+                }
+            else if ( type == "FloatColumn.get_unit" )
+                {
+                    data_frame_manager().get_unit( name, cmd, &socket() );
+                }
+            else if ( type == "FloatColumn.set_unit" )
+                {
+                    data_frame_manager().set_unit( name, cmd, &socket() );
+                }
             else if ( type == "delete_project" )
                 {
                     project_manager().delete_project( name, &socket() );
@@ -216,6 +248,10 @@ void RequestHandler::run()
                 {
                     project_manager().add_multirel_model(
                         name, cmd, &socket() );
+                }
+            else if ( type == "MultirelModel.allow_http" )
+                {
+                    multirel_model_manager().allow_http( name, cmd, &socket() );
                 }
             else if ( type == "MultirelModel.copy" )
                 {
@@ -277,6 +313,10 @@ void RequestHandler::run()
                 {
                     project_manager().add_relboost_model(
                         name, cmd, &socket() );
+                }
+            else if ( type == "RelboostModel.allow_http" )
+                {
+                    relboost_model_manager().allow_http( name, cmd, &socket() );
                 }
             else if ( type == "RelboostModel.copy" )
                 {
@@ -343,6 +383,35 @@ void RequestHandler::run()
                     //    monitor().shutdown();
                     *shutdown_ = true;
                 }
+            else if ( type == "StringColumn" )
+                {
+                    data_frame_manager().add_string_column( cmd, &socket() );
+                }
+            else if ( type == "StringColumn.get" )
+                {
+                    data_frame_manager().get_categorical_column(
+                        name, cmd, &socket() );
+                }
+            else if ( type == "StringColumn.get_string" )
+                {
+                    data_frame_manager().get_categorical_column_string(
+                        name, cmd, &socket() );
+                }
+            else if ( type == "StringColumn.get_unit" )
+                {
+                    data_frame_manager().get_unit_categorical(
+                        name, cmd, &socket() );
+                }
+            else if ( type == "StringColumn.set_unit" )
+                {
+                    data_frame_manager().set_unit_categorical(
+                        name, cmd, &socket() );
+                }
+            else
+                {
+                    throw std::invalid_argument(
+                        "Unknown command: '" + type + "'" );
+                }
         }
     catch ( std::exception& e )
         {
@@ -350,7 +419,7 @@ void RequestHandler::run()
 
             communication::Sender::send_string( e.what(), &socket() );
         }
-}  // namespace srv
+}
 
 // ------------------------------------------------------------------------
 }  // namespace srv

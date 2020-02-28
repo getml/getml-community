@@ -14,12 +14,15 @@ class Avg : public lossfunctions::LossFunction
     // -----------------------------------------------------------------
 
    public:
+    /// Constructor for the lowest level.
     Avg( const std::shared_ptr<lossfunctions::LossFunction>& _child,
-         const std::vector<const containers::Match*>& _matches_ptr,
+         const std::vector<containers::Match>& _matches,
          const containers::DataFrame& _input,
          const containers::DataFrameView& _output,
+         const bool _allow_null_weights,
          multithreading::Communicator* _comm )
-        : child_( _child ),
+        : allow_null_weights_( _allow_null_weights ),
+          child_( _child ),
           comm_( _comm ),
           depth_( _child->depth() + 1 ),
           indices_( _output.nrows() ),
@@ -39,18 +42,20 @@ class Avg : public lossfunctions::LossFunction
     {
         resize( _output.nrows() );
 
-        init_count_committed( _matches_ptr );
+        init_count_committed( _matches );
     }
 
+    /// Constructor for an intermediate aggregation.
     Avg( const std::shared_ptr<AggregationIndex>& _agg_index,
          const std::shared_ptr<lossfunctions::LossFunction>& _child,
          const containers::DataFrame& _input,
          const containers::DataFrameView& _output,
          multithreading::Communicator* _comm )
         : Avg( _child,
-               std::vector<const containers::Match*>( 0 ),
+               std::vector<containers::Match>( 0 ),
                _input,
                _output,
+               false,
                _comm )
     {
         agg_index_ = _agg_index;
@@ -58,8 +63,11 @@ class Avg : public lossfunctions::LossFunction
             std::make_shared<IntermediateAggregationImpl>( agg_index_, _child );
     }
 
+    /// Constructor for prediction.
     Avg( const std::shared_ptr<lossfunctions::LossFunction>& _child )
-        : child_( _child ),
+        : allow_null_weights_( false ),  // actually irrelevant, but we don't to
+                                         // leave it uninitialized.
+          child_( _child ),
           comm_( nullptr ),
           depth_( _child->depth() + 1 ),
           indices_( 0 ),
@@ -93,6 +101,8 @@ class Avg : public lossfunctions::LossFunction
     /// iteration's variables without calculating the weights.
     void calc_etas(
         const enums::Aggregation _agg,
+        const enums::Update _update,
+        const Float _old_weight,
         const std::vector<size_t>& _indices_current,
         const std::vector<Float>& _eta1,
         const std::vector<Float>& _eta1_old,
@@ -101,8 +111,10 @@ class Avg : public lossfunctions::LossFunction
 
     /// Calculates indices_, eta1_ and eta2_ given the previous
     /// iteration's variables.
-    std::array<Float, 3> calc_weights(
+    std::pair<Float, std::array<Float, 3>> calc_pair(
         const enums::Aggregation _agg,
+        const enums::Revert _revert,
+        const enums::Update _update,
         const Float _old_weight,
         const std::vector<size_t>& _indices,
         const std::vector<size_t>& _indices_current,
@@ -112,15 +124,16 @@ class Avg : public lossfunctions::LossFunction
         const std::vector<Float>& _eta2_old ) final;
 
     /// Calculates _indices, _eta1 and _eta2 given matches.
-    std::vector<std::array<Float, 3>> calc_weights(
+    std::vector<std::pair<Float, std::array<Float, 3>>> calc_pairs(
         const enums::Revert _revert,
         const enums::Update _update,
         const Float _min_num_samples,
+        const Float _old_intercept,
         const Float _old_weight,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _split_begin,
-        const std::vector<const containers::Match*>::iterator _split_end,
-        const std::vector<const containers::Match*>::iterator _end ) final;
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _split_begin,
+        const std::vector<containers::Match>::iterator _split_end,
+        const std::vector<containers::Match>::iterator _end ) final;
 
     /// Calculates the new yhat given eta, indices and the new weights.
     void calc_yhat(
@@ -137,15 +150,6 @@ class Avg : public lossfunctions::LossFunction
     void commit(
         const Float _old_intercept,
         const Float _old_weight,
-        const std::array<Float, 3>& _weights,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _split,
-        const std::vector<const containers::Match*>::iterator _end ) final;
-
-    /// Returns the loss reduction associated with a split.
-    Float evaluate_split(
-        const Float _old_intercept,
-        const Float _old_weight,
         const std::array<Float, 3>& _weights ) final;
 
     /// Returns the loss reduction associated with a split.
@@ -153,9 +157,9 @@ class Avg : public lossfunctions::LossFunction
         const Float _old_intercept,
         const Float _old_weight,
         const std::array<Float, 3>& _weights,
-        const std::vector<size_t>& _indices,
-        const std::vector<Float>& _eta1,
-        const std::vector<Float>& _eta2 ) final;
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _split,
+        const std::vector<containers::Match>::iterator _end ) final;
 
     /// Resizes critical resources.
     void resize( size_t _size ) final;
@@ -190,11 +194,11 @@ class Avg : public lossfunctions::LossFunction
     /// Calculates the sampling rate (the share of samples that will be
     /// drawn for each feature).
     void calc_sampling_rate(
-        const unsigned int _seed,
+        const bool _set_rate,
         const Float _sampling_factor,
         multithreading::Communicator* _comm ) final
     {
-        child_->calc_sampling_rate( _seed, _sampling_factor, _comm );
+        child_->calc_sampling_rate( _set_rate, _sampling_factor, _comm );
     }
 
     /// Calculates sum_g_ and sum_h_.
@@ -225,6 +229,15 @@ class Avg : public lossfunctions::LossFunction
     {
         child_->commit( intermediate_agg().indices(), _weights );
         intermediate_agg().reset( false );
+    }
+
+    /// Returns the loss reduction associated with a split.
+    Float evaluate_split(
+        const Float _old_intercept,
+        const Float _old_weight,
+        const std::array<Float, 3>& _weights ) final
+    {
+        return child_->evaluate_split( _old_intercept, _old_weight, _weights );
     }
 
     /// Evaluates an entire tree.
@@ -308,16 +321,16 @@ class Avg : public lossfunctions::LossFunction
     void calc_all(
         const enums::Revert _revert,
         const Float _old_weight,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _split_begin,
-        const std::vector<const containers::Match*>::iterator _split_end,
-        const std::vector<const containers::Match*>::iterator _end );
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _split_begin,
+        const std::vector<containers::Match>::iterator _split_end,
+        const std::vector<containers::Match>::iterator _end );
 
     /// Calculates eta1_ and eta2_ for only the difference to the last split.
     void calc_diff(
         const Float _old_weight,
-        const std::vector<const containers::Match*>::iterator _split_begin,
-        const std::vector<const containers::Match*>::iterator _split_end );
+        const std::vector<containers::Match>::iterator _split_begin,
+        const std::vector<containers::Match>::iterator _split_end );
 
     /// Calculates the new yhat assuming that this is the
     /// lowest aggregation.
@@ -331,8 +344,7 @@ class Avg : public lossfunctions::LossFunction
         const containers::IntSet::Iterator _end );
 
     /// Initialized count_committed_ by calculating the total count.
-    void init_count_committed(
-        const std::vector<const containers::Match*>& _matches_ptr );
+    void init_count_committed( const std::vector<containers::Match>& _matches );
 
     /// Adapts the etas_old_ to the etas.
     void update_etas_old( const Float _old_weight );
@@ -357,6 +369,9 @@ class Avg : public lossfunctions::LossFunction
     // -----------------------------------------------------------------
 
    private:
+    /// Whether to allow null weights.
+    const bool allow_null_weights_;
+
     /// The aggregation index is needed by the intermediate aggregation.
     std::shared_ptr<AggregationIndex> agg_index_;
 
@@ -432,6 +447,10 @@ class Avg : public lossfunctions::LossFunction
 
     /// The indices of the output table.
     std::vector<std::shared_ptr<containers::Index>> output_indices_;
+
+    // Indicates whether all sufficient statistics need to be updated by the
+    // loss function.
+    enums::Update update_;
 
     /// The fixed weights when weight 2 is NULL.
     std::vector<Float> w_fixed_1_;

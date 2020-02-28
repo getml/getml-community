@@ -29,7 +29,7 @@ void Threadutils::fit_ensemble(
     const std::shared_ptr<const descriptors::Hyperparameters>& _hyperparameters,
     const containers::DataFrame& _population,
     const std::vector<containers::DataFrame>& _peripheral,
-    const decisiontrees::Placeholder& _placeholder,
+    const containers::Placeholder& _placeholder,
     const std::vector<std::string>& _peripheral_names,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
     multithreading::Communicator* _comm,
@@ -105,7 +105,7 @@ size_t Threadutils::get_num_threads( const size_t _num_threads )
         {
             num_threads = std::max(
                 static_cast<size_t>( 2 ),
-                static_cast<size_t>( std::thread::hardware_concurrency() ) -
+                static_cast<size_t>( std::thread::hardware_concurrency() ) /
                     2 );
         }
 
@@ -141,7 +141,7 @@ void Threadutils::transform_ensemble(
                 _ensemble.placeholder(),
                 population_subview,
                 _peripheral,
-                _ensemble.peripheral_names() );
+                _ensemble.peripheral() );
 
             // ----------------------------------------------------------------
             // If there are any subfeatures, create them.

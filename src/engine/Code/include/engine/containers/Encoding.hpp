@@ -16,7 +16,7 @@ class Encoding
         : null_value_( "" ),
           subencoding_( _subencoding ),
           subsize_( _subencoding ? _subencoding->size() : 0 ),
-          vector_( std::make_shared<std::vector<std::string>>( 0 ) )
+          vector_( std::make_shared<std::vector<strings::String>>( 0 ) )
     {
     }
 
@@ -29,21 +29,21 @@ class Encoding
 
     /// Returns the string mapped to an integer.
     template <typename T>
-    const std::string& operator[]( const T _i ) const;
+    const strings::String& operator[]( const T _i ) const;
 
     /// Returns the integer mapped to a string.
-    Int operator[]( const std::string& _val );
+    Int operator[]( const strings::String& _val );
 
     /// Returns the integer mapped to a string (const version).
-    Int operator[]( const std::string& _val ) const;
+    Int operator[]( const strings::String& _val ) const;
 
     /// Copies a vector
-    Encoding& operator=( std::vector<std::string>&& _vector ) noexcept;
+    Encoding& operator=( const std::vector<std::string>& _vector );
 
     // -------------------------------
 
     /// Returns beginning of unique integers
-    std::vector<std::string>::const_iterator begin() const
+    std::vector<strings::String>::const_iterator begin() const
     {
         return vector_->cbegin();
     }
@@ -51,21 +51,35 @@ class Encoding
     /// Deletes all entries
     void clear()
     {
-        map_ = std::unordered_map<std::string, Int>();
-        *vector_ = std::vector<std::string>();
+        map_ =
+            std::unordered_map<strings::String, Int, strings::StringHasher>();
+        *vector_ = std::vector<strings::String>();
     }
 
     /// Returns end of unique integers
-    std::vector<std::string>::const_iterator end() const
+    std::vector<strings::String>::const_iterator end() const
     {
         return vector_->cend();
+    }
+
+    /// Returns the integer mapped to a string.
+    Int operator[]( const std::string& _val )
+    {
+        return ( *this )[strings::String( _val )];
+    }
+
+    /// Returns the integer mapped to a string (const version).
+    Int operator[]( const std::string& _val ) const
+    {
+        return ( *this )[strings::String( _val )];
     }
 
     /// Number of encoded elements
     size_t size() const { return subsize_ + vector_->size(); }
 
     /// Get the vector containing the names.
-    inline const std::shared_ptr<const std::vector<std::string>> vector() const
+    inline const std::shared_ptr<const std::vector<strings::String>> vector()
+        const
     {
         return vector_;
     }
@@ -74,16 +88,16 @@ class Encoding
 
    private:
     /// Adds an integer to map_ and vector_, assuming it is not already included
-    Int insert( const std::string& _val );
+    Int insert( const strings::String& _val );
 
     // -------------------------------
 
    private:
     /// For fast lookup
-    std::unordered_map<std::string, Int> map_;
+    std::unordered_map<strings::String, Int, strings::StringHasher> map_;
 
     /// The null value (needed because strings are returned by reference).
-    const std::string null_value_;
+    const strings::String null_value_;
 
     /// A subencoding can be used to separate the existing encoding from new
     /// data. Under some circumstance, we want to avoid the global encoding
@@ -94,15 +108,17 @@ class Encoding
     const size_t subsize_;
 
     /// Maps integers to strings
-    const std::shared_ptr<std::vector<std::string>> vector_;
+    const std::shared_ptr<std::vector<strings::String>> vector_;
 };
 
 // -------------------------------------------------------------------------
 // -------------------------------------------------------------------------
 
 template <typename T>
-const std::string& Encoding::operator[]( const T _i ) const
+const strings::String& Encoding::operator[]( const T _i ) const
 {
+    static_assert( std::is_integral<T>::value, "Integral required." );
+
     assert_true( size() > 0 );
 
     assert_true( _i < 0 || static_cast<size_t>( _i ) < size() );
