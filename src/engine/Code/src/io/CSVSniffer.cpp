@@ -1,11 +1,11 @@
 
-#include "csv/csv.hpp"
+#include "io/io.hpp"
 
-namespace csv
+namespace io
 {
 // ----------------------------------------------------------------------------
 
-void Sniffer::check(
+void CSVSniffer::check(
     const std::vector<std::string>& _line,
     const std::vector<std::string>& _colnames,
     const std::string& _fname ) const
@@ -35,7 +35,7 @@ void Sniffer::check(
 
 // ----------------------------------------------------------------------------
 
-Datatype Sniffer::infer_datatype(
+Datatype CSVSniffer::infer_datatype(
     const Datatype _type, const std::string& _str ) const
 {
     if ( ( _type == Datatype::integer || _type == Datatype::unknown ) &&
@@ -58,7 +58,7 @@ Datatype Sniffer::infer_datatype(
 
 // ----------------------------------------------------------------------------
 
-void Sniffer::init(
+void CSVSniffer::init(
     const std::vector<std::string>& _line,
     std::vector<std::string>* _colnames,
     std::vector<Datatype>* _datatypes ) const
@@ -80,7 +80,7 @@ void Sniffer::init(
 
 // ----------------------------------------------------------------------------
 
-std::string Sniffer::sniff() const
+std::string CSVSniffer::sniff() const
 {
     // ------------------------------------------------------------------------
 
@@ -159,4 +159,4 @@ std::string Sniffer::sniff() const
 }
 
 // ----------------------------------------------------------------------------
-}  // namespace csv
+}  // namespace io

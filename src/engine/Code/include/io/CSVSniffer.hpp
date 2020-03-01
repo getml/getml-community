@@ -1,16 +1,16 @@
-#ifndef CSV_SNIFFER_HPP_
-#define CSV_SNIFFER_HPP_
+#ifndef IO_CSVSNIFFER_HPP_
+#define IO_CSVSNIFFER_HPP_
 
-namespace csv
+namespace io
 {
 // ----------------------------------------------------------------------------
 
-class Sniffer
+class CSVSniffer
 {
     // -------------------------------
 
    public:
-    Sniffer(
+    CSVSniffer(
         const std::string& _dialect,
         const std::vector<std::string>& _files,
         const bool _header,
@@ -35,7 +35,7 @@ class Sniffer
             }
     }
 
-    ~Sniffer() = default;
+    ~CSVSniffer() = default;
 
     // -------------------------------
 
@@ -107,9 +107,9 @@ class Sniffer
     const std::string table_name_;
 
     // -------------------------------
-};  // namespace csv
+};
 
 // ----------------------------------------------------------------------------
-}  // namespace csv
+}  // namespace io
 
-#endif  // CSV_SNIFFER_HPP_
+#endif  // IO_CSVSNIFFER_HPP_

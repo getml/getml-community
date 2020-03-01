@@ -1,7 +1,7 @@
-#ifndef CSV_CSVREADER_HPP_
-#define CSV_CSVREADER_HPP_
+#ifndef IO_CSVREADER_HPP_
+#define IO_CSVREADER_HPP_
 
-namespace csv
+namespace io
 {
 // ----------------------------------------------------------------------------
 
@@ -60,6 +60,6 @@ class CSVReader : public Reader
 };
 
 // ----------------------------------------------------------------------------
-}  // namespace csv
+}  // namespace io
 
-#endif  // CSV_CSVREADER_HPP_
+#endif  // IO_CSVREADER_HPP_

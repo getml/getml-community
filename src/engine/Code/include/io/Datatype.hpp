@@ -1,7 +1,7 @@
-#ifndef CSV_DATATYPE_HPP_
-#define CSV_DATATYPE_HPP_
+#ifndef IO_DATATYPE_HPP_
+#define IO_DATATYPE_HPP_
 
-namespace csv
+namespace io
 {
 // ----------------------------------------------------------------------------
 
@@ -14,6 +14,6 @@ enum Datatype
 };
 
 // ----------------------------------------------------------------------------
-}  // namespace csv
+}  // namespace io
 
-#endif  // CSV_DATATYPE_HPP_
+#endif  // IO_DATATYPE_HPP_

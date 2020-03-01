@@ -742,7 +742,7 @@ void ModelManager<ModelType>::to_db(
     auto reader = containers::DataFrameReader(
         df, _categories, _join_keys_encoding, '\a', '|' );
 
-    const auto statement = csv::StatementMaker::make_statement(
+    const auto statement = io::StatementMaker::make_statement(
         table_name,
         connector()->dialect(),
         reader.colnames(),

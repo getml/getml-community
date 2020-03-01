@@ -2025,7 +2025,7 @@ void DataFrameManager::to_csv(
     // --------------------------------------------------------------------
     // Set up the CSVWriter.
 
-    auto writer = csv::CSVWriter( fname, reader.colnames(), quotechar, sep );
+    auto writer = io::CSVWriter( fname, reader.colnames(), quotechar, sep );
 
     // --------------------------------------------------------------------
     // Write data to the file.
@@ -2068,7 +2068,7 @@ void DataFrameManager::to_db(
     // --------------------------------------------------------------------
     // Create the table.
 
-    const auto statement = csv::StatementMaker::make_statement(
+    const auto statement = io::StatementMaker::make_statement(
         table_name,
         connector()->dialect(),
         reader.colnames(),

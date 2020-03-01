@@ -188,7 +188,7 @@ containers::Column<Float> NumOpParser::to_num( const Poco::JSON::Object& _col )
     auto result = containers::Column<Float>( operand1.size() );
 
     const auto to_double = []( const std::string& _str ) {
-        const auto [val, success] = csv::Parser::to_double( _str );
+        const auto [val, success] = io::Parser::to_double( _str );
         if ( success )
             {
                 return val;
@@ -223,14 +223,14 @@ containers::Column<Float> NumOpParser::to_ts( const Poco::JSON::Object& _col )
     auto result = containers::Column<Float>( operand1.size() );
 
     const auto to_time_stamp = [time_formats]( const std::string& _str ) {
-        auto [val, success] = csv::Parser::to_time_stamp( _str, time_formats );
+        auto [val, success] = io::Parser::to_time_stamp( _str, time_formats );
 
         if ( success )
             {
                 return val;
             }
 
-        std::tie( val, success ) = csv::Parser::to_double( _str );
+        std::tie( val, success ) = io::Parser::to_double( _str );
 
         if ( success )
             {

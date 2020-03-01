@@ -41,14 +41,14 @@ class Sqlite3 : public Connector
         const std::string& _table,
         const bool _header,
         const size_t _skip,
-        csv::Reader* _reader ) final;
+        io::Reader* _reader ) final;
 
     /// Returns the names of the table columns.
     std::vector<std::string> get_colnames(
         const std::string& _table ) const final;
 
     /// Returns the types of the table columns.
-    std::vector<csv::Datatype> get_coltypes(
+    std::vector<io::Datatype> get_coltypes(
         const std::string& _table,
         const std::vector<std::string>& _colnames ) const final;
 
@@ -102,12 +102,12 @@ class Sqlite3 : public Connector
     /// Makes sure that the colnames of the CSV file match the colnames of the
     /// target table.
     void check_colnames(
-        const std::vector<std::string>& _colnames, csv::Reader* _reader );
+        const std::vector<std::string>& _colnames, io::Reader* _reader );
 
     /// Inserts a single line from a CSV file into a table.
     void insert_line(
         const std::vector<std::string>& _line,
-        const std::vector<csv::Datatype>& _coltypes,
+        const std::vector<io::Datatype>& _coltypes,
         sqlite3_stmt* stmt ) const;
 
     /// Inserts a column in double format.

@@ -7,7 +7,7 @@ namespace containers
 {
 // ----------------------------------------------------------------------------
 
-class DataFrameReader : public csv::Reader
+class DataFrameReader : public io::Reader
 {
     // -------------------------------
 
@@ -46,7 +46,7 @@ class DataFrameReader : public csv::Reader
     const std::vector<std::string>& colnames() const { return colnames_; }
 
     /// Trivial accessor.
-    const std::vector<csv::Datatype>& coltypes() const { return coltypes_; }
+    const std::vector<io::Datatype>& coltypes() const { return coltypes_; }
 
     /// Whether the end of the file has been reached.
     bool eof() const final { return ( rownum_ >= df_.nrows() ); }
@@ -65,7 +65,7 @@ class DataFrameReader : public csv::Reader
         const DataFrame& _df, char _quotechar );
 
     /// Generates the column types.
-    static std::vector<csv::Datatype> make_coltypes( const DataFrame& _df );
+    static std::vector<io::Datatype> make_coltypes( const DataFrame& _df );
 
     /// Updates the counts of the colnames.
     static void update_counts(
@@ -98,7 +98,7 @@ class DataFrameReader : public csv::Reader
     const std::vector<std::string> colnames_;
 
     /// The coltypes of table to be generated.
-    const std::vector<csv::Datatype> coltypes_;
+    const std::vector<io::Datatype> coltypes_;
 
     /// The filestream of the CSV source file.
     const DataFrame df_;

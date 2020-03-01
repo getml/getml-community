@@ -16,7 +16,7 @@ std::string DatabaseSniffer::sniff(
 
     assert_true( colnames.size() == coltypes.size() );
 
-    return csv::StatementMaker::make_statement(
+    return io::StatementMaker::make_statement(
         _table_name, "python", colnames, coltypes );
 }
 

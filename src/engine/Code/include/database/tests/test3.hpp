@@ -6,8 +6,8 @@ void test3( std::filesystem::path _test_path )
     std::cout << "Test 3 | Parsing columns encoded as text\t\t";
 
     // ---------------------------------------------------------------
-	
-    // Append all subfolders to reach the required file. This 
+
+    // Append all subfolders to reach the required file. This
     // appending will have a persistent effect of _test_path which
     // is stored on the heap. After setting it once to the correct
     // folder only the filename has to be replaced.
@@ -15,7 +15,7 @@ void test3( std::filesystem::path _test_path )
 
     auto sqlite_db = database::Sqlite3( ":memory:", {"%Y-%m-%d %H:%M:%S"} );
 
-    auto population_sniffer = csv::Sniffer(
+    auto population_sniffer = io::CSVSniffer(
         "sqlite",
         {_test_path.string(), _test_path.string()},
         false,
@@ -31,7 +31,7 @@ void test3( std::filesystem::path _test_path )
 
     sqlite_db.execute( population_statement );
 
-    auto reader = csv::CSVReader( _test_path.string(), '\"', ',' );
+    auto reader = io::CSVReader( _test_path.string(), '\"', ',' );
 
     sqlite_db.read( "POPULATION", false, 0, &reader );
 
@@ -52,7 +52,7 @@ void test3( std::filesystem::path _test_path )
     assert_true( it->get_int() == 113 );
 
     // ---------------------------------------------------------------
-	
+
     std::cout << "| OK" << std::endl;
 }
 

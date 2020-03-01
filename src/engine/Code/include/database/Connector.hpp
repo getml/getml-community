@@ -39,7 +39,7 @@ class Connector
         const std::string& _table ) const = 0;
 
     /// Returns the types of the table columns.
-    virtual std::vector<csv::Datatype> get_coltypes(
+    virtual std::vector<io::Datatype> get_coltypes(
         const std::string& _table,
         const std::vector<std::string>& _colnames ) const = 0;
 
@@ -54,7 +54,7 @@ class Connector
         const std::string& _table,
         const bool _header,
         const size_t _skip,
-        csv::Reader* _reader ) = 0;
+        io::Reader* _reader ) = 0;
 
     /// Returns a shared_ptr containing the corresponding iterator.
     virtual std::shared_ptr<Iterator> select(

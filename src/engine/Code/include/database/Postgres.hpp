@@ -34,7 +34,7 @@ class Postgres : public Connector
         const std::string& _table ) const final;
 
     /// Returns the types of the table columns.
-    std::vector<csv::Datatype> get_coltypes(
+    std::vector<io::Datatype> get_coltypes(
         const std::string& _table,
         const std::vector<std::string>& _colnames ) const final;
 
@@ -54,7 +54,7 @@ class Postgres : public Connector
         const std::string& _table,
         const bool _header,
         const size_t _skip,
-        csv::Reader* _reader ) final;
+        io::Reader* _reader ) final;
 
     // -------------------------------
 
@@ -114,10 +114,10 @@ class Postgres : public Connector
     /// Makes sure that the colnames of the CSV file match the colnames of the
     /// target table.
     /*    void check_colnames(
-            const std::vector<std::string>& _colnames, csv::Reader* _reader );*/
+            const std::vector<std::string>& _colnames, io::Reader* _reader );*/
 
-    /// Returns the csv::Datatype associated with a oid.
-    csv::Datatype interpret_oid( Oid _oid ) const;
+    /// Returns the io::Datatype associated with a oid.
+    io::Datatype interpret_oid( Oid _oid ) const;
 
     /// Prepares a shared ptr to the connection object
     /// Called by the constructor.

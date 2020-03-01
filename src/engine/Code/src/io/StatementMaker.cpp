@@ -1,7 +1,7 @@
 
-#include "csv/csv.hpp"
+#include "io/io.hpp"
 
-namespace csv
+namespace io
 {
 // ----------------------------------------------------------------------------
 
@@ -268,4 +268,4 @@ std::string StatementMaker::to_string_sqlite( const Datatype _type )
 }
 
 // ----------------------------------------------------------------------------
-}  // namespace csv
+}  // namespace io

@@ -5,15 +5,15 @@ void test1( std::filesystem::path _test_path )
 {
     std::cout << "Test 1 | Parsing and inserting a CSV file\t\t";
 
-    // Append all subfolders to reach the required file. This 
+    // Append all subfolders to reach the required file. This
     // appending will have a persistent effect of _test_path which
     // is stored on the heap. After setting it once to the correct
     // folder only the filename has to be replaced.
     _test_path.append( "database" ).append( "POPULATION.CSV" );
-    
+
     auto sqlite_db = database::Sqlite3( ":memory:", {"%Y-%m-%d %H:%M:%S"} );
 
-    auto population_sniffer = csv::Sniffer(
+    auto population_sniffer = io::CSVSniffer(
         "sqlite",
         {_test_path.string(), _test_path.string()},
         true,
@@ -29,7 +29,7 @@ void test1( std::filesystem::path _test_path )
 
     sqlite_db.execute( population_statement );
 
-    auto reader = csv::CSVReader( _test_path.string(), '\"', ',' );
+    auto reader = io::CSVReader( _test_path.string(), '\"', ',' );
 
     sqlite_db.read( "POPULATION", true, 0, &reader );
 
@@ -42,9 +42,9 @@ void test1( std::filesystem::path _test_path )
     assert_true( it->get_string() == "0" );
     assert_true( std::abs( it->get_time_stamp() - 0.738654 ) < 1e-4 );
     assert_true( std::abs( it->get_double() - 113.0 ) < 1e-4 );
-	
+
     // ---------------------------------------------------------------
-	
+
     std::cout << "| OK" << std::endl;
 }
 

@@ -44,7 +44,7 @@ void test18( std::filesystem::path _test_path )
     auto mysql_db =
         database::MySQL( connectionObject, "testbert", timeFormats );
 
-    auto population_sniffer = csv::Sniffer(
+    auto population_sniffer = io::CSVSniffer(
         "mysql",
         {_test_path.string(), _test_path.string()},
         true,
@@ -60,7 +60,7 @@ void test18( std::filesystem::path _test_path )
 
     mysql_db.execute( population_statement );
 
-    auto reader = csv::CSVReader( _test_path.string(), '\"', ',' );
+    auto reader = io::CSVReader( _test_path.string(), '\"', ',' );
 
     mysql_db.read( "POPULATION", true, 0, &reader );
 

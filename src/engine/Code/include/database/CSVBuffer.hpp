@@ -11,7 +11,7 @@ class CSVBuffer
     /// Turns a line into a buffer to be send to the server.
     static std::string make_buffer(
         const std::vector<std::string>& _line,
-        const std::vector<csv::Datatype>& _coltypes,
+        const std::vector<io::Datatype>& _coltypes,
         const char _sep,
         const char _quotechar,
         const bool _always_enclose_str,
@@ -21,7 +21,7 @@ class CSVBuffer
     /// Parses a raw field according to its datatype.
     static std::string parse_field(
         const std::string& _raw_field,
-        const csv::Datatype _datatype,
+        const io::Datatype _datatype,
         const char _sep,
         const char _quotechar,
         const bool _always_enclose_str,

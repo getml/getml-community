@@ -83,7 +83,7 @@ std::vector<std::string> MySQL::get_colnames( const std::string& _table ) const
 
 // ----------------------------------------------------------------------------
 
-std::vector<csv::Datatype> MySQL::get_coltypes(
+std::vector<io::Datatype> MySQL::get_coltypes(
     const std::string& _table, const std::vector<std::string>& _colnames ) const
 {
     const std::string sql = "SELECT * FROM `" + _table + "` LIMIT 0;";
@@ -99,7 +99,7 @@ std::vector<csv::Datatype> MySQL::get_coltypes(
 
     const auto num_cols = mysql_num_fields( result.get() );
 
-    auto coltypes = std::vector<csv::Datatype>( num_cols );
+    auto coltypes = std::vector<io::Datatype>( num_cols );
 
     for ( unsigned int i = 0; i < num_cols; ++i )
         {
@@ -198,23 +198,23 @@ Poco::JSON::Object MySQL::get_content(
 
 // ----------------------------------------------------------------------------
 
-csv::Datatype MySQL::interpret_field_type( const enum_field_types _type ) const
+io::Datatype MySQL::interpret_field_type( const enum_field_types _type ) const
 {
     // https://dev.mysql.com/doc/refman/5.7/en/c-api-prepared-statement-type-codes.html
     switch ( _type )
         {
             case MYSQL_TYPE_FLOAT:
             case MYSQL_TYPE_DOUBLE:
-                return csv::Datatype::double_precision;
+                return io::Datatype::double_precision;
 
             case MYSQL_TYPE_TINY:
             case MYSQL_TYPE_SHORT:
             case MYSQL_TYPE_LONG:
             case MYSQL_TYPE_LONGLONG:
-                return csv::Datatype::integer;
+                return io::Datatype::integer;
 
             default:
-                return csv::Datatype::string;
+                return io::Datatype::string;
         }
 }
 
@@ -306,15 +306,14 @@ void MySQL::read(
     const std::string& _table,
     const bool _header,
     const size_t _skip,
-    csv::Reader* _reader )
+    io::Reader* _reader )
 {
     // ------------------------------------------------------------------------
     // Get colnames and coltypes
 
     const std::vector<std::string> colnames = get_colnames( _table );
 
-    const std::vector<csv::Datatype> coltypes =
-        get_coltypes( _table, colnames );
+    const std::vector<io::Datatype> coltypes = get_coltypes( _table, colnames );
 
     assert_true( colnames.size() == coltypes.size() );
 

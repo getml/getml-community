@@ -1,7 +1,7 @@
 
-#include "csv/csv.hpp"
+#include "io/io.hpp"
 
-namespace csv
+namespace io
 {
 // ----------------------------------------------------------------------------
 
@@ -33,7 +33,7 @@ std::string CSVWriter::make_buffer(
 
 std::string CSVWriter::parse_field( const std::string& _raw_field ) const
 {
-    auto field = csv::Parser::remove_quotechars( _raw_field, quotechar() );
+    auto field = io::Parser::remove_quotechars( _raw_field, quotechar() );
 
     if ( field.find( sep() ) != std::string::npos )
         {
@@ -45,7 +45,7 @@ std::string CSVWriter::parse_field( const std::string& _raw_field ) const
 
 // ----------------------------------------------------------------------------
 
-void CSVWriter::write( csv::Reader* _reader )
+void CSVWriter::write( io::Reader* _reader )
 {
     //  ------------------------------------------------------------------------
     // Check headers, if necessary.
@@ -82,5 +82,5 @@ void CSVWriter::write( csv::Reader* _reader )
 }
 
 // ------------------------------------------------------------------------
-}  // namespace csv
+}  // namespace io
 

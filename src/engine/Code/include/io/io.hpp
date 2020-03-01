@@ -1,5 +1,5 @@
-#ifndef CSV_CSV_HPP_
-#define CSV_CSV_HPP_
+#ifndef IO_IO_HPP_
+#define IO_IO_HPP_
 
 // ----------------------------------------------------------------------------
 // Dependencies
@@ -28,19 +28,19 @@
 
 // ----------------------------------------------------------------------------
 
-#include "csv/Float.hpp"
-#include "csv/Int.hpp"
+#include "io/Float.hpp"
+#include "io/Int.hpp"
 
-#include "csv/Datatype.hpp"
-#include "csv/Parser.hpp"
-#include "csv/Reader.hpp"
-#include "csv/StatementMaker.hpp"
+#include "io/Datatype.hpp"
+#include "io/Parser.hpp"
+#include "io/Reader.hpp"
+#include "io/StatementMaker.hpp"
 
-#include "csv/CSVReader.hpp"
-#include "csv/CSVWriter.hpp"
+#include "io/CSVReader.hpp"
+#include "io/CSVWriter.hpp"
 
-#include "csv/Sniffer.hpp"
+#include "io/CSVSniffer.hpp"
 
 // ----------------------------------------------------------------------------
 
-#endif  // CSV_CSV_HPP_
+#endif  // IO_IO_HPP_

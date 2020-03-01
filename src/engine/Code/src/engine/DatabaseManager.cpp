@@ -216,7 +216,7 @@ void DatabaseManager::read_csv(
 
     for ( const auto& fname : fnames )
         {
-            auto reader = csv::CSVReader( fname, quotechar[0], sep[0] );
+            auto reader = io::CSVReader( fname, quotechar[0], sep[0] );
 
             connector()->read( _name, header, skip, &reader );
 
@@ -273,7 +273,7 @@ void DatabaseManager::sniff_csv(
 
     // --------------------------------------------------------------------
 
-    auto sniffer = csv::Sniffer(
+    auto sniffer = io::CSVSniffer(
         dialect,
         fnames,
         header,

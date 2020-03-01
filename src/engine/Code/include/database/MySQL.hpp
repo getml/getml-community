@@ -53,7 +53,7 @@ class MySQL : public Connector
         const std::string& _table ) const final;
 
     /// Returns the types of the table columns.
-    std::vector<csv::Datatype> get_coltypes(
+    std::vector<io::Datatype> get_coltypes(
         const std::string& _table,
         const std::vector<std::string>& _colnames ) const final;
 
@@ -73,7 +73,7 @@ class MySQL : public Connector
         const std::string& _table,
         const bool _header,
         const size_t _skip,
-        csv::Reader* _reader ) final;
+        io::Reader* _reader ) final;
 
     // -------------------------------
 
@@ -131,7 +131,7 @@ class MySQL : public Connector
         const std::string& _sql, const std::shared_ptr<MYSQL>& _conn ) const;
 
     /// Parses a field for the CSV reader.
-    csv::Datatype interpret_field_type( const enum_field_types _type ) const;
+    io::Datatype interpret_field_type( const enum_field_types _type ) const;
 
     /// Prepares a INSERT INTO .. VALUES ... query
     /// to insert a large CSV file.

@@ -1,7 +1,7 @@
-#ifndef CSV_STATEMENTMAKER_HPP_
-#define CSV_STATEMENTMAKER_HPP_
+#ifndef IO_STATEMENTMAKER_HPP_
+#define IO_STATEMENTMAKER_HPP_
 
-namespace csv
+namespace io
 {
 // ----------------------------------------------------------------------------
 
@@ -66,6 +66,6 @@ class StatementMaker
 };
 
 // ----------------------------------------------------------------------------
-}  // namespace csv
+}  // namespace io
 
-#endif  // CSV_STATEMENTMAKER_HPP_
+#endif  // IO_STATEMENTMAKER_HPP_

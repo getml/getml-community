@@ -7,7 +7,7 @@ namespace database
 
 std::string CSVBuffer::make_buffer(
     const std::vector<std::string>& _line,
-    const std::vector<csv::Datatype>& _coltypes,
+    const std::vector<io::Datatype>& _coltypes,
     const char _sep,
     const char _quotechar,
     const bool _always_enclose_str,
@@ -44,7 +44,7 @@ std::string CSVBuffer::make_buffer(
 
 std::string CSVBuffer::parse_field(
     const std::string& _raw_field,
-    const csv::Datatype _datatype,
+    const io::Datatype _datatype,
     const char _sep,
     const char _quotechar,
     const bool _always_enclose_str,
@@ -52,10 +52,10 @@ std::string CSVBuffer::parse_field(
 {
     switch ( _datatype )
         {
-            case csv::Datatype::double_precision:
+            case io::Datatype::double_precision:
                 {
                     const auto [val, success] =
-                        csv::Parser::to_double( _raw_field );
+                        io::Parser::to_double( _raw_field );
 
                     if ( success )
                         {
@@ -69,10 +69,10 @@ std::string CSVBuffer::parse_field(
 
                 // ------------------------------------------------------------
 
-            case csv::Datatype::integer:
+            case io::Datatype::integer:
                 {
                     const auto [val, success] =
-                        csv::Parser::to_int( _raw_field );
+                        io::Parser::to_int( _raw_field );
 
                     if ( success )
                         {
@@ -88,7 +88,7 @@ std::string CSVBuffer::parse_field(
 
             default:
                 auto field =
-                    csv::Parser::remove_quotechars( _raw_field, _quotechar );
+                    io::Parser::remove_quotechars( _raw_field, _quotechar );
 
                 if ( _always_enclose_str ||
                      field.find( _sep ) != std::string::npos )

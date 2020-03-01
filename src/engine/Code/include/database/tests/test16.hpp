@@ -45,7 +45,7 @@ void test16( std::filesystem::path _test_path )
     auto mysql_db =
         database::MySQL( connectionObject, "testbert", timeFormats );
 
-    auto population_sniffer = csv::Sniffer(
+    auto population_sniffer = io::CSVSniffer(
         "mysql",
         {_test_path.string(), _test_path.string()},
         true,
@@ -61,7 +61,7 @@ void test16( std::filesystem::path _test_path )
 
     mysql_db.execute( population_statement );
 
-    auto reader = csv::CSVReader( _test_path.string(), '\"', ',' );
+    auto reader = io::CSVReader( _test_path.string(), '\"', ',' );
 
     // We read in the header, which should be parsed as NULL values.
     mysql_db.read( "POPULATION", false, 0, &reader );

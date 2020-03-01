@@ -6,7 +6,7 @@ namespace database
 // ----------------------------------------------------------------------------
 
 void Sqlite3::check_colnames(
-    const std::vector<std::string>& _colnames, csv::Reader* _reader )
+    const std::vector<std::string>& _colnames, io::Reader* _reader )
 {
     std::vector<std::string> csv_colnames = _reader->next_line();
 
@@ -114,12 +114,12 @@ std::vector<std::string> Sqlite3::get_colnames(
 
 // ----------------------------------------------------------------------------
 
-std::vector<csv::Datatype> Sqlite3::get_coltypes(
+std::vector<io::Datatype> Sqlite3::get_coltypes(
     const std::string& _table, const std::vector<std::string>& _colnames ) const
 {
     multithreading::ReadLock read_lock( read_write_lock_ );
 
-    std::vector<csv::Datatype> datatypes;
+    std::vector<io::Datatype> datatypes;
 
     for ( size_t i = 0; i < _colnames.size(); ++i )
         {
@@ -152,15 +152,15 @@ std::vector<csv::Datatype> Sqlite3::get_coltypes(
 
             if ( str == "REAL" )
                 {
-                    datatypes.push_back( csv::Datatype::double_precision );
+                    datatypes.push_back( io::Datatype::double_precision );
                 }
             else if ( str == "INTEGER" )
                 {
-                    datatypes.push_back( csv::Datatype::integer );
+                    datatypes.push_back( io::Datatype::integer );
                 }
             else
                 {
-                    datatypes.push_back( csv::Datatype::string );
+                    datatypes.push_back( io::Datatype::string );
                 }
         }
 
@@ -257,7 +257,7 @@ Poco::JSON::Object Sqlite3::get_content(
 
 void Sqlite3::insert_line(
     const std::vector<std::string>& _line,
-    const std::vector<csv::Datatype>& _coltypes,
+    const std::vector<io::Datatype>& _coltypes,
     sqlite3_stmt* _stmt ) const
 {
     const int num_cols = static_cast<int>( _line.size() );
@@ -266,11 +266,11 @@ void Sqlite3::insert_line(
         {
             switch ( _coltypes[i] )
                 {
-                    case csv::Datatype::double_precision:
+                    case io::Datatype::double_precision:
                         insert_double( _line, i, _stmt );
                         break;
 
-                    case csv::Datatype::integer:
+                    case io::Datatype::integer:
                         insert_int( _line, i, _stmt );
                         break;
 
@@ -303,7 +303,7 @@ void Sqlite3::insert_double(
 {
     int rc = 0;
 
-    const auto [val, success] = csv::Parser::to_double( _line[_colnum] );
+    const auto [val, success] = io::Parser::to_double( _line[_colnum] );
 
     if ( success )
         {
@@ -330,7 +330,7 @@ void Sqlite3::insert_int(
 {
     int rc = 0;
 
-    const auto [val, success] = csv::Parser::to_int( _line[_colnum] );
+    const auto [val, success] = io::Parser::to_int( _line[_colnum] );
 
     if ( success )
         {
@@ -470,15 +470,14 @@ void Sqlite3::read(
     const std::string& _table,
     const bool _header,
     const size_t _skip,
-    csv::Reader* _reader )
+    io::Reader* _reader )
 {
     // ------------------------------------------------------------------------
     // Get colnames and coltypes
 
     const std::vector<std::string> colnames = get_colnames( _table );
 
-    const std::vector<csv::Datatype> coltypes =
-        get_coltypes( _table, colnames );
+    const std::vector<io::Datatype> coltypes = get_coltypes( _table, colnames );
 
     if ( colnames.size() != coltypes.size() )
         {

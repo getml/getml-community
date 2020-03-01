@@ -59,7 +59,7 @@ std::vector<std::string> DataFrameReader::make_colnames(
 
     for ( auto& name : colnames )
         {
-            name = csv::Parser::remove_quotechars( name, _quotechar );
+            name = io::Parser::remove_quotechars( name, _quotechar );
         }
 
     // ------------------------------------------------------------------------
@@ -71,19 +71,18 @@ std::vector<std::string> DataFrameReader::make_colnames(
 
 // ----------------------------------------------------------------------------
 
-std::vector<csv::Datatype> DataFrameReader::make_coltypes(
-    const DataFrame& _df )
+std::vector<io::Datatype> DataFrameReader::make_coltypes( const DataFrame& _df )
 {
-    std::vector<csv::Datatype> coltypes;
+    std::vector<io::Datatype> coltypes;
 
     for ( size_t i = 0; i < _df.num_categoricals(); ++i )
         {
-            coltypes.push_back( csv::Datatype::string );
+            coltypes.push_back( io::Datatype::string );
         }
 
     for ( size_t i = 0; i < _df.num_join_keys(); ++i )
         {
-            coltypes.push_back( csv::Datatype::string );
+            coltypes.push_back( io::Datatype::string );
         }
 
     for ( size_t i = 0; i < _df.num_numericals(); ++i )
@@ -91,22 +90,22 @@ std::vector<csv::Datatype> DataFrameReader::make_coltypes(
             if ( _df.numerical( i ).unit().find( "time stamp" ) !=
                  std::string::npos )
                 {
-                    coltypes.push_back( csv::Datatype::string );
+                    coltypes.push_back( io::Datatype::string );
                 }
             else
                 {
-                    coltypes.push_back( csv::Datatype::double_precision );
+                    coltypes.push_back( io::Datatype::double_precision );
                 }
         }
 
     for ( size_t i = 0; i < _df.num_targets(); ++i )
         {
-            coltypes.push_back( csv::Datatype::double_precision );
+            coltypes.push_back( io::Datatype::double_precision );
         }
 
     for ( size_t i = 0; i < _df.num_time_stamps(); ++i )
         {
-            coltypes.push_back( csv::Datatype::string );
+            coltypes.push_back( io::Datatype::string );
         }
 
     for ( size_t i = 0; i < _df.num_unused_floats(); ++i )
@@ -114,17 +113,17 @@ std::vector<csv::Datatype> DataFrameReader::make_coltypes(
             if ( _df.unused_float( i ).unit().find( "time stamp" ) !=
                  std::string::npos )
                 {
-                    coltypes.push_back( csv::Datatype::string );
+                    coltypes.push_back( io::Datatype::string );
                 }
             else
                 {
-                    coltypes.push_back( csv::Datatype::double_precision );
+                    coltypes.push_back( io::Datatype::double_precision );
                 }
         }
 
     for ( size_t i = 0; i < _df.num_unused_strings(); ++i )
         {
-            coltypes.push_back( csv::Datatype::string );
+            coltypes.push_back( io::Datatype::string );
         }
 
     return coltypes;
@@ -167,7 +166,7 @@ std::vector<std::string> DataFrameReader::next_line()
     for ( size_t i = 0; i < df_.num_numericals(); ++i )
         {
             const auto& val = df_.numerical( i )[rownum_];
-            if ( coltypes()[col] == csv::Datatype::string )
+            if ( coltypes()[col] == io::Datatype::string )
                 result[col++] = df_.to_time_stamp( val );
             else
                 result[col++] = std::to_string( val );
@@ -188,7 +187,7 @@ std::vector<std::string> DataFrameReader::next_line()
     for ( size_t i = 0; i < df_.num_unused_floats(); ++i )
         {
             const auto& val = df_.unused_float( i )[rownum_];
-            if ( coltypes()[col] == csv::Datatype::string )
+            if ( coltypes()[col] == io::Datatype::string )
                 result[col++] = df_.to_time_stamp( val );
             else
                 result[col++] = std::to_string( val );

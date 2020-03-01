@@ -1,7 +1,6 @@
+#include "io/io.hpp"
 
-#include "csv/csv.hpp"
-
-namespace csv
+namespace io
 {
 // ----------------------------------------------------------------------------
 
@@ -65,4 +64,4 @@ std::vector<std::string> CSVReader::next_line()
 }
 
 // ----------------------------------------------------------------------------
-}  // namespace csv
+}  // namespace io

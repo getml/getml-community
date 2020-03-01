@@ -1,7 +1,7 @@
-#ifndef CSV_PARSER_HPP_
-#define CSV_PARSER_HPP_
+#ifndef IO_PARSER_HPP_
+#define IO_PARSER_HPP_
 
-namespace csv
+namespace io
 {
 // ----------------------------------------------------------------------------
 
@@ -125,6 +125,6 @@ class Parser
 };
 
 // ----------------------------------------------------------------------------
-}  // namespace csv
+}  // namespace io
 
-#endif  // CSV_PARSER_HPP_
+#endif  // IO_PARSER_HPP_

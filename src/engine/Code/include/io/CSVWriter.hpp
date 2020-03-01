@@ -1,7 +1,7 @@
-#ifndef CSV_CSVWRITER_HPP_
-#define CSV_CSVWRITER_HPP_
+#ifndef IO_CSVWRITER_HPP_
+#define IO_CSVWRITER_HPP_
 
-namespace csv
+namespace io
 {
 // ----------------------------------------------------------------------------
 
@@ -101,6 +101,6 @@ class CSVWriter
 };
 
 // ----------------------------------------------------------------------------
-}  // namespace csv
+}  // namespace io
 
-#endif  // CSV_CSVWRITER_HPP_
+#endif  // IO_CSVWRITER_HPP_

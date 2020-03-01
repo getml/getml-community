@@ -433,7 +433,7 @@ void DataFrame::from_csv(
                 "The separator must contain exactly one character!" );
         }
 
-    auto reader = csv::CSVReader( _fname, _quotechar[0], _sep[0] );
+    auto reader = io::CSVReader( _fname, _quotechar[0], _sep[0] );
 
     const auto csv_colnames = reader.next_line();
 
@@ -488,7 +488,7 @@ void DataFrame::from_csv(
     // Define lambda expressions for parsing doubles.
 
     const auto to_double = [_time_formats]( const std::string &_str ) {
-        auto [val, success] = csv::Parser::to_double( _str );
+        auto [val, success] = io::Parser::to_double( _str );
 
         if ( success )
             {
@@ -496,7 +496,7 @@ void DataFrame::from_csv(
             }
 
         std::tie( val, success ) =
-            csv::Parser::to_time_stamp( _str, _time_formats );
+            io::Parser::to_time_stamp( _str, _time_formats );
 
         if ( success )
             {
@@ -891,7 +891,7 @@ void DataFrame::from_json(
                 {
                     bool success = true;
 
-                    std::tie( column[j], success ) = csv::Parser::to_time_stamp(
+                    std::tie( column[j], success ) = io::Parser::to_time_stamp(
                         arr->getElement<std::string>(
                             static_cast<unsigned int>( j ) ),
                         _time_formats );

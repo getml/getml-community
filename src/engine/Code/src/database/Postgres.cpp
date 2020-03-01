@@ -28,7 +28,7 @@ std::vector<std::string> Postgres::get_colnames(
 
 // ----------------------------------------------------------------------------
 
-std::vector<csv::Datatype> Postgres::get_coltypes(
+std::vector<io::Datatype> Postgres::get_coltypes(
     const std::string& _table, const std::vector<std::string>& _colnames ) const
 {
     const std::string sql = "SELECT * FROM \"" + _table + "\" LIMIT 0";
@@ -39,7 +39,7 @@ std::vector<csv::Datatype> Postgres::get_coltypes(
 
     const int num_cols = PQnfields( result.get() );
 
-    auto coltypes = std::vector<csv::Datatype>( num_cols );
+    auto coltypes = std::vector<io::Datatype>( num_cols );
 
     for ( int i = 0; i < num_cols; ++i )
         {
@@ -137,7 +137,7 @@ Poco::JSON::Object Postgres::get_content(
 
 // ----------------------------------------------------------------------------
 
-csv::Datatype Postgres::interpret_oid( Oid _oid ) const
+io::Datatype Postgres::interpret_oid( Oid _oid ) const
 {
     // ------------------------------------------------------------------------
     // Get the typname associated with the oid
@@ -165,7 +165,7 @@ csv::Datatype Postgres::interpret_oid( Oid _oid ) const
     if ( std::find( typnames.begin(), typnames.end(), typname ) !=
          typnames.end() )
         {
-            return csv::Datatype::double_precision;
+            return io::Datatype::double_precision;
         }
 
     // ------------------------------------------------------------------------
@@ -176,13 +176,13 @@ csv::Datatype Postgres::interpret_oid( Oid _oid ) const
     if ( std::find( typnames.begin(), typnames.end(), typname ) !=
          typnames.end() )
         {
-            return csv::Datatype::integer;
+            return io::Datatype::integer;
         }
 
     // ------------------------------------------------------------------------
     // Otherwise, interpret it as a string.
 
-    return csv::Datatype::string;
+    return io::Datatype::string;
 
     // ------------------------------------------------------------------------
 }
@@ -249,15 +249,14 @@ void Postgres::read(
     const std::string& _table,
     const bool _header,
     const size_t _skip,
-    csv::Reader* _reader )
+    io::Reader* _reader )
 {
     // ------------------------------------------------------------------------
     // Get colnames and coltypes
 
     const std::vector<std::string> colnames = get_colnames( _table );
 
-    const std::vector<csv::Datatype> coltypes =
-        get_coltypes( _table, colnames );
+    const std::vector<io::Datatype> coltypes = get_coltypes( _table, colnames );
 
     assert_true( colnames.size() == coltypes.size() );
 
