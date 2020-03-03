@@ -38,6 +38,12 @@ class Receiver
     /// Receives a Column from the client
     static containers::Column<Float> recv_column(
         Poco::Net::StreamSocket *_socket );
+
+   private:
+    /// Receives the encoding from the API, which is used to map an array of
+    /// integers back to strings.
+    static std::vector<std::string> recv_encoding(
+        Poco::Net::StreamSocket *_socket );
 };
 
 // ------------------------------------------------------------------------
