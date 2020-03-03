@@ -41,21 +41,21 @@ class NumOpParser
     // ------------------------------------------------------------------------
 
    private:
+    /// Transforms a string column to a float.
+    containers::Column<Float> as_num( const Poco::JSON::Object& _col );
+
+    /// Transforms a string column to a time stamp.
+    containers::Column<Float> as_ts( const Poco::JSON::Object& _col );
+
     /// Parses the operator and undertakes a binary operation.
     containers::Column<Float> binary_operation(
         const Poco::JSON::Object& _col );
 
     /// Transforms a boolean column to a float column.
-    containers::Column<Float> boolean_to_num( const Poco::JSON::Object& _col );
+    containers::Column<Float> boolean_as_num( const Poco::JSON::Object& _col );
 
     /// Returns an actual column.
     containers::Column<Float> get_column( const Poco::JSON::Object& _col );
-
-    /// Transforms a string column to a float.
-    containers::Column<Float> to_num( const Poco::JSON::Object& _col );
-
-    /// Transforms a string column to a time stamp.
-    containers::Column<Float> to_ts( const Poco::JSON::Object& _col );
 
     /// Parses the operator and undertakes a unary operation.
     containers::Column<Float> unary_operation( const Poco::JSON::Object& _col );

@@ -31,7 +31,7 @@ std::vector<std::string> CatOpParser::binary_operation(
 
 // ----------------------------------------------------------------------------
 
-std::vector<std::string> CatOpParser::boolean_to_string(
+std::vector<std::string> CatOpParser::boolean_as_string(
     const Poco::JSON::Object& _col )
 {
     const auto obj = *JSON::get_object( _col, "operand1_" );
@@ -64,7 +64,7 @@ std::vector<std::string> CatOpParser::boolean_to_string(
 
 // ----------------------------------------------------------------------------
 
-std::vector<std::string> CatOpParser::numerical_to_string(
+std::vector<std::string> CatOpParser::numerical_as_string(
     const Poco::JSON::Object& _col )
 {
     const auto obj = *JSON::get_object( _col, "operand1_" );
@@ -212,7 +212,15 @@ std::vector<std::string> CatOpParser::unary_operation(
     const auto is_boolean = ( operand_type == "BooleanValue" ) ||
                             ( operand_type == "VirtualBooleanColumn" );
 
-    if ( op == "categorical_value" )
+    if ( is_boolean && op == "as_str" )
+        {
+            return boolean_as_string( _col );
+        }
+    else if ( !is_boolean && op == "as_str" )
+        {
+            return numerical_as_string( _col );
+        }
+    else if ( op == "categorical_value" )
         {
             return parse( *JSON::get_object( _col, "operand1_" ) );
         }
@@ -227,14 +235,6 @@ std::vector<std::string> CatOpParser::unary_operation(
             };
 
             return un_op( _col, substr );
-        }
-    else if ( is_boolean && op == "to_str" )
-        {
-            return boolean_to_string( _col );
-        }
-    else if ( !is_boolean && op == "to_str" )
-        {
-            return numerical_to_string( _col );
         }
     else
         {

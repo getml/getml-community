@@ -6,6 +6,79 @@ namespace handlers
 {
 // ----------------------------------------------------------------------------
 
+containers::Column<Float> NumOpParser::as_num( const Poco::JSON::Object& _col )
+{
+    const auto operand1 = CatOpParser(
+                              categories_,
+                              join_keys_encoding_,
+                              data_frames_,
+                              num_elem_,
+                              subselection_ )
+                              .parse( *JSON::get_object( _col, "operand1_" ) );
+
+    auto result = containers::Column<Float>( operand1.size() );
+
+    const auto to_double = []( const std::string& _str ) {
+        const auto [val, success] = io::Parser::to_double( _str );
+        if ( success )
+            {
+                return val;
+            }
+        else
+            {
+                return static_cast<Float>( NAN );
+            }
+    };
+
+    std::transform(
+        operand1.begin(), operand1.end(), result.begin(), to_double );
+
+    return result;
+}
+
+// ----------------------------------------------------------------------------
+
+containers::Column<Float> NumOpParser::as_ts( const Poco::JSON::Object& _col )
+{
+    const auto time_formats = JSON::array_to_vector<std::string>(
+        JSON::get_array( _col, "time_formats_" ) );
+
+    const auto operand1 = CatOpParser(
+                              categories_,
+                              join_keys_encoding_,
+                              data_frames_,
+                              num_elem_,
+                              subselection_ )
+                              .parse( *JSON::get_object( _col, "operand1_" ) );
+
+    auto result = containers::Column<Float>( operand1.size() );
+
+    const auto to_time_stamp = [time_formats]( const std::string& _str ) {
+        auto [val, success] = io::Parser::to_time_stamp( _str, time_formats );
+
+        if ( success )
+            {
+                return val;
+            }
+
+        std::tie( val, success ) = io::Parser::to_double( _str );
+
+        if ( success )
+            {
+                return val;
+            }
+
+        return static_cast<Float>( NAN );
+    };
+
+    std::transform(
+        operand1.begin(), operand1.end(), result.begin(), to_time_stamp );
+
+    return result;
+}
+
+// ----------------------------------------------------------------------------
+
 containers::Column<Float> NumOpParser::binary_operation(
     const Poco::JSON::Object& _col )
 {
@@ -56,7 +129,7 @@ containers::Column<Float> NumOpParser::binary_operation(
 
 // ----------------------------------------------------------------------------
 
-containers::Column<Float> NumOpParser::boolean_to_num(
+containers::Column<Float> NumOpParser::boolean_as_num(
     const Poco::JSON::Object& _col )
 {
     const auto obj = *JSON::get_object( _col, "operand1_" );
@@ -71,7 +144,7 @@ containers::Column<Float> NumOpParser::boolean_to_num(
 
     auto result = containers::Column<Float>( operand1.size() );
 
-    const auto to_num = []( const bool val ) {
+    const auto as_num = []( const bool val ) {
         if ( val )
             {
                 return 1.0;
@@ -82,7 +155,7 @@ containers::Column<Float> NumOpParser::boolean_to_num(
             }
     };
 
-    std::transform( operand1.begin(), operand1.end(), result.begin(), to_num );
+    std::transform( operand1.begin(), operand1.end(), result.begin(), as_num );
 
     return result;
 }
@@ -175,79 +248,6 @@ containers::Column<Float> NumOpParser::parse( const Poco::JSON::Object& _col )
 
 // ----------------------------------------------------------------------------
 
-containers::Column<Float> NumOpParser::to_num( const Poco::JSON::Object& _col )
-{
-    const auto operand1 = CatOpParser(
-                              categories_,
-                              join_keys_encoding_,
-                              data_frames_,
-                              num_elem_,
-                              subselection_ )
-                              .parse( *JSON::get_object( _col, "operand1_" ) );
-
-    auto result = containers::Column<Float>( operand1.size() );
-
-    const auto to_double = []( const std::string& _str ) {
-        const auto [val, success] = io::Parser::to_double( _str );
-        if ( success )
-            {
-                return val;
-            }
-        else
-            {
-                return static_cast<Float>( NAN );
-            }
-    };
-
-    std::transform(
-        operand1.begin(), operand1.end(), result.begin(), to_double );
-
-    return result;
-}
-
-// ----------------------------------------------------------------------------
-
-containers::Column<Float> NumOpParser::to_ts( const Poco::JSON::Object& _col )
-{
-    const auto time_formats = JSON::array_to_vector<std::string>(
-        JSON::get_array( _col, "time_formats_" ) );
-
-    const auto operand1 = CatOpParser(
-                              categories_,
-                              join_keys_encoding_,
-                              data_frames_,
-                              num_elem_,
-                              subselection_ )
-                              .parse( *JSON::get_object( _col, "operand1_" ) );
-
-    auto result = containers::Column<Float>( operand1.size() );
-
-    const auto to_time_stamp = [time_formats]( const std::string& _str ) {
-        auto [val, success] = io::Parser::to_time_stamp( _str, time_formats );
-
-        if ( success )
-            {
-                return val;
-            }
-
-        std::tie( val, success ) = io::Parser::to_double( _str );
-
-        if ( success )
-            {
-                return val;
-            }
-
-        return static_cast<Float>( NAN );
-    };
-
-    std::transform(
-        operand1.begin(), operand1.end(), result.begin(), to_time_stamp );
-
-    return result;
-}
-
-// ----------------------------------------------------------------------------
-
 containers::Column<Float> NumOpParser::unary_operation(
     const Poco::JSON::Object& _col )
 {
@@ -265,6 +265,14 @@ containers::Column<Float> NumOpParser::unary_operation(
             };
             return un_op( _col, acos );
         }
+    else if ( op == "as_num" )
+        {
+            return as_num( _col );
+        }
+    else if ( op == "as_ts" )
+        {
+            return as_ts( _col );
+        }
     else if ( op == "asin" )
         {
             const auto asin = []( const Float val ) {
@@ -279,9 +287,9 @@ containers::Column<Float> NumOpParser::unary_operation(
             };
             return un_op( _col, atan );
         }
-    else if ( op == "boolean_to_num" )
+    else if ( op == "boolean_as_num" )
         {
-            return boolean_to_num( _col );
+            return boolean_as_num( _col );
         }
     else if ( op == "cbrt" )
         {
@@ -477,14 +485,6 @@ containers::Column<Float> NumOpParser::unary_operation(
                 return std::tgamma( val );
             };
             return un_op( _col, tgamma );
-        }
-    else if ( op == "to_num" )
-        {
-            return to_num( _col );
-        }
-    else if ( op == "to_ts" )
-        {
-            return to_ts( _col );
         }
     else if ( op == "value" )
         {

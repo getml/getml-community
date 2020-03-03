@@ -45,11 +45,11 @@ class CatOpParser
     std::vector<std::string> binary_operation( const Poco::JSON::Object& _col );
 
     /// Transforms a boolean column to a string.
-    std::vector<std::string> boolean_to_string(
+    std::vector<std::string> boolean_as_string(
         const Poco::JSON::Object& _col );
 
     /// Transforms a float column to a string.
-    std::vector<std::string> numerical_to_string(
+    std::vector<std::string> numerical_as_string(
         const Poco::JSON::Object& _col );
 
     /// Parses the operator and undertakes a unary operation.
