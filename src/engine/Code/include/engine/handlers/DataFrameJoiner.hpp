@@ -33,6 +33,8 @@ class DataFrameJoiner
     static void add_all(
         const containers::DataFrame& _df,
         const std::vector<size_t>& _rindices,
+        const std::string& _join_key_used,
+        const std::string& _other_join_key_used,
         containers::DataFrame* _joined_df );
 
     /// Adds column _col from _df to _joined_df, sorted by _rindices.
@@ -49,6 +51,8 @@ class DataFrameJoiner
         const containers::DataFrame& _df,
         const std::vector<size_t>& _rindices,
         const Poco::JSON::Array& _cols,
+        const std::string& _join_key_used,
+        const std::string& _other_join_key_used,
         containers::DataFrame* _joined_df );
 
     static void build_temp_dfs(

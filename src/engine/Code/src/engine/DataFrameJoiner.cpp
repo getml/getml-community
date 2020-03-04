@@ -9,6 +9,8 @@ namespace handlers
 void DataFrameJoiner::add_all(
     const containers::DataFrame& _df,
     const std::vector<size_t>& _rindices,
+    const std::string& _join_key_used,
+    const std::string& _other_join_key_used,
     containers::DataFrame* _joined_df )
 {
     for ( size_t i = 0; i < _df.num_categoricals(); ++i )
@@ -28,6 +30,12 @@ void DataFrameJoiner::add_all(
         {
             if ( _joined_df->has( _df.join_key( i ).name() ) )
                 {
+                    if ( _join_key_used == _other_join_key_used &&
+                         _df.join_key( i ).name() == _join_key_used )
+                        {
+                            return;
+                        }
+
                     throw std::invalid_argument(
                         "Duplicate column: '" + _df.join_key( i ).name() +
                         "'." );
@@ -204,6 +212,8 @@ void DataFrameJoiner::add_cols(
     const containers::DataFrame& _df,
     const std::vector<size_t>& _rindices,
     const Poco::JSON::Array& _cols,
+    const std::string& _join_key_used,
+    const std::string& _other_join_key_used,
     containers::DataFrame* _joined_df )
 {
     for ( size_t i = 0; i < _cols.size(); ++i )
@@ -231,6 +241,13 @@ void DataFrameJoiner::add_cols(
                 obj.has( "as_" )
                     ? jsonutils::JSON::get_value<std::string>( obj, "as_" )
                     : name;
+
+            if ( role == "join_key" && _join_key_used == _other_join_key_used &&
+                 as == name && name == _join_key_used &&
+                 _joined_df->has( name ) )
+                {
+                    continue;
+                }
 
             add_col( _df, _rindices, name, role, as, _joined_df );
         }
@@ -452,20 +469,42 @@ containers::DataFrame DataFrameJoiner::join(
 
             if ( _cols1.size() > 0 )
                 {
-                    add_cols( _df1, rindices1, _cols1, &temp_df );
+                    add_cols(
+                        _df1,
+                        rindices1,
+                        _cols1,
+                        _join_key_used,
+                        _other_join_key_used,
+                        &temp_df );
                 }
             else
                 {
-                    add_all( _df1, rindices1, &temp_df );
+                    add_all(
+                        _df1,
+                        rindices1,
+                        _join_key_used,
+                        _other_join_key_used,
+                        &temp_df );
                 }
 
             if ( _cols2.size() > 0 )
                 {
-                    add_cols( _df2, rindices2, _cols2, &temp_df );
+                    add_cols(
+                        _df2,
+                        rindices2,
+                        _cols2,
+                        _join_key_used,
+                        _other_join_key_used,
+                        &temp_df );
                 }
             else
                 {
-                    add_all( _df2, rindices2, &temp_df );
+                    add_all(
+                        _df2,
+                        rindices2,
+                        _join_key_used,
+                        _other_join_key_used,
+                        &temp_df );
                 }
 
             if ( _where )
