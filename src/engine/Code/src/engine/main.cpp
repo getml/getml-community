@@ -1,6 +1,6 @@
 #include "engine/engine.hpp"
 
-int main( int argc, char *argv[] )
+int main( int argc, char* argv[] )
 {
     // -------------------------------------------
 
@@ -8,7 +8,17 @@ int main( int argc, char *argv[] )
 
     // -------------------------------------------
 
-    Poco::File( options.all_projects_directory() ).createDirectories();
+    try
+        {
+            Poco::File( options.all_projects_directory() ).createDirectories();
+        }
+    catch ( std::exception& e )
+        {
+            throw std::runtime_error(
+                "Unable to create the project directory. Please check the "
+                "projectDirectory "
+                "you have provided in your config.json." );
+        }
 
     // -------------------------------------------
 
