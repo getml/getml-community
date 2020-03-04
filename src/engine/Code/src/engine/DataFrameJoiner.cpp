@@ -33,7 +33,7 @@ void DataFrameJoiner::add_all(
                     if ( _join_key_used == _other_join_key_used &&
                          _df.join_key( i ).name() == _join_key_used )
                         {
-                            return;
+                            continue;
                         }
 
                     throw std::invalid_argument(
@@ -499,6 +499,9 @@ containers::DataFrame DataFrameJoiner::join(
                 }
             else
                 {
+                    std::cout
+                        << "_df2.num_numericals: " << _df2.num_numericals()
+                        << std::endl;
                     add_all(
                         _df2,
                         rindices2,
