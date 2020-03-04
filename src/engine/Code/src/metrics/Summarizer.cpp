@@ -9,6 +9,14 @@ Poco::JSON::Object Summarizer::calc_categorical_column_plot(
 {
     // ------------------------------------------------------------------------
 
+    if ( _num_bins > 100000 )
+        {
+            throw std::invalid_argument(
+                "Number of bins cannot be greater than 100000!" );
+        }
+
+    // ------------------------------------------------------------------------
+
     auto str_map =
         std::unordered_map<strings::String, Int, strings::StringHasher>();
 
@@ -52,6 +60,14 @@ Poco::JSON::Object Summarizer::calc_categorical_column_plot(
     const std::vector<strings::String>& _vec,
     const std::vector<Float>& _target )
 {
+    // ------------------------------------------------------------------------
+
+    if ( _num_bins > 100000 )
+        {
+            throw std::invalid_argument(
+                "Number of bins cannot be greater than 100000!" );
+        }
+
     // ------------------------------------------------------------------------
 
     assert_true( _vec.size() == _target.size() );
@@ -255,6 +271,14 @@ Poco::JSON::Object Summarizer::calculate_feature_plots(
     const size_t _num_bins,
     const std::vector<const Float*>& _targets )
 {
+    // ------------------------------------------------------------------------
+
+    if ( _num_bins > 100000 )
+        {
+            throw std::invalid_argument(
+                "Number of bins cannot be greater than 100000!" );
+        }
+
     // ------------------------------------------------------------------------
     // Find minima and maxima
 
