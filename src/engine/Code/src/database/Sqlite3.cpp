@@ -146,7 +146,11 @@ std::vector<io::Datatype> Sqlite3::get_coltypes(
                     throw std::runtime_error( sqlite3_errmsg( db() ) );
                 }
 
-            assert_true( data_type != nullptr );
+            if ( !data_type )
+                {
+                    datatypes.push_back( io::Datatype::string );
+                    continue;
+                }
 
             const auto str = std::string( data_type );
 
