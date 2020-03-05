@@ -182,5 +182,36 @@ bool Monitor::shutdown() const
 };
 
 // ------------------------------------------------------------------------
+
+void Monitor::shutdown_when_monitor_dies( const Monitor _monitor )
+{
+    std::int32_t num_failed = 0;
+
+    while ( true )
+        {
+            std::this_thread::sleep_for( std::chrono::seconds( 3 ) );
+
+            const auto [status, res] = _monitor.send( "isalive", "" );
+
+            if ( status == Poco::Net::HTTPResponse::HTTP_OK && res == "yes" )
+                {
+                    num_failed = 0;
+                }
+            else
+                {
+                    ++num_failed;
+
+                    if ( num_failed > 2 )
+                        {
+                            std::cout << "Monitor seems to have to died. "
+                                         "Shutting down..."
+                                      << std::endl;
+                            std::exit( 0 );
+                        }
+                }
+        }
+}
+
+// ------------------------------------------------------------------------
 }  // namespace monitoring
 }  // namespace engine
