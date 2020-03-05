@@ -51,7 +51,7 @@ class ModelManager
    public:
     /// Determines whether the model should
     /// allow HTTP requests.
-    void allow_http(
+    void deploy(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
@@ -290,16 +290,16 @@ namespace handlers
 // ------------------------------------------------------------------------
 
 template <typename ModelType>
-void ModelManager<ModelType>::allow_http(
+void ModelManager<ModelType>::deploy(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,
     Poco::Net::StreamSocket* _socket )
 {
-    const bool allow_http = JSON::get_value<bool>( _cmd, "allow_http_" );
+    const bool deploy = JSON::get_value<bool>( _cmd, "deploy_" );
 
     auto model = get_model( _name );
 
-    model.allow_http() = allow_http;
+    model.allow_http() = deploy;
 
     set_model( _name, model );
 
