@@ -1,5 +1,5 @@
 # Define docker image name
-export DOCKER_IMAGE_NAME=debian:latest
+export DOCKER_IMAGE_NAME=debian:testing
 
 # Build docker image, if necessary.
 sudo docker image build -t ${DOCKER_IMAGE_NAME} .

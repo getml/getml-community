@@ -1,18 +1,17 @@
-# Get user name
-export USER_NAME=$USER
-
 # Define docker image name
-export DOCKER_IMAGE_NAME=ubuntu:19.04
+export DOCKER_IMAGE_NAME=ubuntu:testing
 
-# Define home directory
-if [[ "$OSTYPE" == "linux-gnu" ]]; then
-export HOMEDIR=/home/$USER_NAME
-elif [[ "$OSTYPE" == "darwin"* ]]; then
-export HOMEDIR=/Users/$USER_NAME
-fi
+# Build docker image, if necessary.
+sudo docker image build -t ${DOCKER_IMAGE_NAME} .
 
-# Rebuild docker container, if necessary.
-sudo docker build --tag=ubuntu1904 .
-
-# Start docker container and execute script
-sudo docker run -it --rm -v "${HOMEDIR}":"/home/autosql/homedir/" ${DOCKER_IMAGE_NAME} bash
+# Start docker container and execute script. It also maps the port
+# 1709 within the container to the port 7709 at the Docker host (the
+# OS on your laptop).
+#
+# Since these tests are intended to run within the `package-pipelines`
+# git repository containing this repo as a submodule, we can work with
+# relative paths while being still device independent.
+sudo docker run --publish 7710:1710 -it --rm \
+	 --mount type=bind,source="$(pwd)"/../../../../../linux/build/,destination=/home/getml/build/,readonly \
+	 --mount type=bind,source="$(pwd)"/../../../../private-getml-python-api,destination=/home/getml/python_api/,readonly \
+	 ${DOCKER_IMAGE_NAME} /home/getml/test_script.sh
