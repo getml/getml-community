@@ -10,6 +10,7 @@ set(
     ${ENGINE_SOURCE_DIRECTORY}/DataFrameManager.cpp
     ${ENGINE_SOURCE_DIRECTORY}/DataFrameReader.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Encoding.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/FeatureEngineererParser.cpp
     ${ENGINE_SOURCE_DIRECTORY}/FileHandler.cpp
     ${ENGINE_SOURCE_DIRECTORY}/GroupByParser.cpp
     ${ENGINE_SOURCE_DIRECTORY}/JSON.cpp
@@ -17,6 +18,7 @@ set(
     ${ENGINE_SOURCE_DIRECTORY}/Monitor.cpp
     ${ENGINE_SOURCE_DIRECTORY}/NumOpParser.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Options.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/Pipeline.cpp
     ${ENGINE_SOURCE_DIRECTORY}/ProjectManager.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Receiver.cpp
     ${ENGINE_SOURCE_DIRECTORY}/RequestHandler.cpp

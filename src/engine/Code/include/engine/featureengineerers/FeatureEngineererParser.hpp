@@ -1,0 +1,29 @@
+#ifndef ENGINE_FEATUREENGINEERERS_FEATUREENGINEERERPARSER_HPP_
+#define ENGINE_FEATUREENGINEERERS_FEATUREENGINEERERPARSER_HPP_
+
+// ----------------------------------------------------------------------------
+
+namespace engine
+{
+namespace featureengineerers
+{
+// ----------------------------------------------------------------------------
+
+struct FeatureEngineererParser
+{
+    /// Returns the correct feature engineerer
+    static containers::Optional<AbstractFeatureEngineerer> parse(
+        const Poco::JSON::Object& _cmd,
+        const std::shared_ptr<const std::vector<strings::String>>&
+            _categories );
+};
+
+// ----------------------------------------------------------------------------
+
+}  // namespace featureengineerers
+}  // namespace engine
+
+// ----------------------------------------------------------------------------
+
+#endif  // ENGINE_FEATUREENGINEERERS_FEATUREENGINEERERPARSER_HPP_
+
