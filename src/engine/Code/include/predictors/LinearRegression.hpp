@@ -47,7 +47,7 @@ class LinearRegression : public Predictor
 
    public:
     /// Whether the predictor accepts null values.
-    bool accepts_null() const { return false; }
+    bool accepts_null() const final { return false; }
 
     // -------------------------------------------------------------------------
 

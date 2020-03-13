@@ -29,7 +29,8 @@ class AbstractModel
         Poco::Net::StreamSocket* _socket ) = 0;
 
     /// Saves the model.
-    virtual void save( const std::string& _fname ) const = 0;
+    virtual void save(
+        const std::string& _path, const std::string& _name ) const = 0;
 
     /// Score predictions.
     virtual Poco::JSON::Object score(

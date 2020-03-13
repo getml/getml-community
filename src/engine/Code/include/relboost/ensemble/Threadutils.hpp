@@ -12,7 +12,7 @@ class Threadutils
     // ------------------------------------------------------------------------
 
    public:
-    /// Fits a feature engineerer  or throws an exception.
+    /// Fits an ensemble.
     static void fit_ensemble(
         const size_t _this_thread_num,
         const std::vector<size_t> _thread_nums,
@@ -24,7 +24,7 @@ class Threadutils
     /// Number of threads.
     static Int get_num_threads( const Int _num_threads );
 
-    /// Generates features.
+    /// Generates features or predictions.
     static void transform_ensemble(
         const size_t _this_thread_num,
         const std::vector<size_t> _thread_nums,
@@ -42,6 +42,41 @@ class Threadutils
         const std::vector<size_t> _rows,
         const std::vector<Float>& _local_feature,
         std::vector<Float>* _global_feature );
+
+    /// Fits the relboost ensemble as a feature engineerer.
+    static void fit_as_feature_engineerer(
+        const size_t _this_thread_num,
+        const std::vector<size_t>& _thread_nums,
+        const containers::DataFrame& _population,
+        const std::vector<containers::DataFrame>& _peripheral,
+        const std::shared_ptr<const logging::AbstractLogger> _logger,
+        ensemble::DecisionTreeEnsemble* _ensemble );
+
+    /// Fits the relboost ensemble as a predictor.
+    static void fit_as_predictor(
+        const size_t _this_thread_num,
+        const std::vector<size_t>& _thread_nums,
+        const containers::DataFrame& _population,
+        const std::shared_ptr<const logging::AbstractLogger> _logger,
+        ensemble::DecisionTreeEnsemble* _ensemble );
+
+    /// Generates features.
+    static void transform_as_feature_engineerer(
+        const size_t _this_thread_num,
+        const std::vector<size_t> _thread_nums,
+        const containers::DataFrame& _population,
+        const std::vector<containers::DataFrame>& _peripheral,
+        const std::shared_ptr<const logging::AbstractLogger> _logger,
+        const ensemble::DecisionTreeEnsemble& _ensemble,
+        containers::Features* _features );
+
+    /// Generates predictions.
+    static void transform_as_predictor(
+        const size_t _this_thread_num,
+        const std::vector<size_t> _thread_nums,
+        const containers::DataFrame& _population,
+        const ensemble::DecisionTreeEnsemble& _ensemble,
+        containers::Features* _features );
 
     // ------------------------------------------------------------------------
 };

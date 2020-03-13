@@ -12,8 +12,9 @@ class Postgres : public Connector
    public:
     Postgres(
         const Poco::JSON::Object& _obj,
+        const std::string& _passwd,
         const std::vector<std::string>& _time_formats )
-        : connection_string_( make_connection_string( _obj ) ),
+        : connection_string_( make_connection_string( _obj, _passwd ) ),
           time_formats_( _time_formats )
     {
     }
@@ -33,9 +34,9 @@ class Postgres : public Connector
         const std::string& _table ) const final;
 
     /// Returns the types of the table columns.
-    std::vector<csv::Datatype> get_coltypes(
+    std::vector<io::Datatype> get_coltypes(
         const std::string& _table,
-        const std::vector<std::string>& _colnames ) const;
+        const std::vector<std::string>& _colnames ) const final;
 
     /// Returns the content of a table in a format that is compatible
     /// with the DataTables.js server-side processing API.
@@ -53,7 +54,7 @@ class Postgres : public Connector
         const std::string& _table,
         const bool _header,
         const size_t _skip,
-        csv::Reader* _reader ) final;
+        io::Reader* _reader ) final;
 
     // -------------------------------
 
@@ -113,28 +114,15 @@ class Postgres : public Connector
     /// Makes sure that the colnames of the CSV file match the colnames of the
     /// target table.
     /*    void check_colnames(
-            const std::vector<std::string>& _colnames, csv::Reader* _reader );*/
+            const std::vector<std::string>& _colnames, io::Reader* _reader );*/
 
-    /// Returns the csv::Datatype associated with a oid.
-    csv::Datatype interpret_oid( Oid _oid ) const;
+    /// Returns the io::Datatype associated with a oid.
+    io::Datatype interpret_oid( Oid _oid ) const;
 
     /// Prepares a shared ptr to the connection object
     /// Called by the constructor.
-    static std::string make_connection_string( const Poco::JSON::Object& _obj );
-
-    /// Turns a line into a buffer to be read by PQputCopyData.
-    std::string make_buffer(
-        const std::vector<std::string>& _line,
-        const std::vector<csv::Datatype>& _coltypes,
-        const char _sep,
-        const char _quotechar );
-
-    /// Parses a raw field according to its datatype.
-    std::string parse_field(
-        const std::string& _raw_field,
-        const csv::Datatype _datatype,
-        const char _sep,
-        const char _quotechar ) const;
+    static std::string make_connection_string(
+        const Poco::JSON::Object& _obj, const std::string& _passwd );
 
     // -------------------------------
 

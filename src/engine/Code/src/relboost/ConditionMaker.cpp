@@ -7,8 +7,8 @@ namespace utils
 // ----------------------------------------------------------------------------
 
 std::string ConditionMaker::condition_greater(
-    const containers::Schema& _input,
-    const containers::Schema& _output,
+    const containers::Placeholder& _input,
+    const containers::Placeholder& _output,
     const containers::Split& _split ) const
 {
     switch ( _split.data_used_ )
@@ -19,7 +19,7 @@ std::string ConditionMaker::condition_greater(
 
                     const std::string condition =
                         "( t2." + _input.categorical_name( _split.column_ ) +
-                        " NOT IN " + list_categories( _split ) + " )";
+                        " IN " + list_categories( _split ) + " )";
 
                     return condition;
                 }
@@ -30,7 +30,7 @@ std::string ConditionMaker::condition_greater(
 
                     const std::string condition =
                         "( t1." + _output.categorical_name( _split.column_ ) +
-                        " NOT IN " + list_categories( _split ) + " )";
+                        " IN " + list_categories( _split ) + " )";
 
                     return condition;
                 }
@@ -141,8 +141,8 @@ std::string ConditionMaker::condition_greater(
 // ----------------------------------------------------------------------------
 
 std::string ConditionMaker::condition_smaller(
-    const containers::Schema& _input,
-    const containers::Schema& _output,
+    const containers::Placeholder& _input,
+    const containers::Placeholder& _output,
     const containers::Split& _split ) const
 {
     switch ( _split.data_used_ )
@@ -153,7 +153,7 @@ std::string ConditionMaker::condition_smaller(
 
                     const std::string condition =
                         "( t2." + _input.categorical_name( _split.column_ ) +
-                        " IN " + list_categories( _split ) + " )";
+                        " NOT IN " + list_categories( _split ) + " )";
 
                     return condition;
                 }
@@ -164,7 +164,7 @@ std::string ConditionMaker::condition_smaller(
 
                     const std::string condition =
                         "( t1." + _output.categorical_name( _split.column_ ) +
-                        " IN " + list_categories( _split ) + " )";
+                        " NOT IN " + list_categories( _split ) + " )";
 
                     return condition;
                 }
@@ -307,7 +307,7 @@ std::string ConditionMaker::list_categories(
           it != _split.categories_used_end_;
           ++it )
         {
-            categories += "'" + encoding( *it ) + "'";
+            categories += "'" + encoding( *it ).str() + "'";
 
             if ( std::next( it, 1 ) != _split.categories_used_end_ )
                 {

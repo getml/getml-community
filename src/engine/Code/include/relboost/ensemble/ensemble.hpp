@@ -20,6 +20,8 @@
 
 #include "metrics/metrics.hpp"
 
+#include "strings/strings.hpp"
+
 #include "relboost/Float.hpp"
 #include "relboost/Int.hpp"
 
@@ -32,8 +34,6 @@
 #include "relboost/decisiontrees/decisiontrees.hpp"
 
 // ----------------------------------------------------------------------------
-
-#include "relboost/ensemble/Placeholder.hpp"
 
 #include "relboost/ensemble/TableHolder.hpp"
 

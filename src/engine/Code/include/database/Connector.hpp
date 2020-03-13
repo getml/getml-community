@@ -38,6 +38,11 @@ class Connector
     virtual std::vector<std::string> get_colnames(
         const std::string& _table ) const = 0;
 
+    /// Returns the types of the table columns.
+    virtual std::vector<io::Datatype> get_coltypes(
+        const std::string& _table,
+        const std::vector<std::string>& _colnames ) const = 0;
+
     /// Returns the number of rows in the table signified by _tname.
     virtual std::int32_t get_nrows( const std::string& _tname ) = 0;
 
@@ -49,7 +54,7 @@ class Connector
         const std::string& _table,
         const bool _header,
         const size_t _skip,
-        csv::Reader* _reader ) = 0;
+        io::Reader* _reader ) = 0;
 
     /// Returns a shared_ptr containing the corresponding iterator.
     virtual std::shared_ptr<Iterator> select(

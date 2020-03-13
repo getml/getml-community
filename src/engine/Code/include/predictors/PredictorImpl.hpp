@@ -13,19 +13,15 @@ class PredictorImpl
    public:
     PredictorImpl(
         const std::vector<std::string>& _categorical_colnames,
-        const std::vector<std::string>& _discrete_colnames,
         const std::vector<std::string>& _numerical_colnames,
         const size_t _num_autofeatures )
         : categorical_colnames_( _categorical_colnames ),
-          discrete_colnames_( _discrete_colnames ),
           numerical_colnames_( _numerical_colnames ),
           num_autofeatures_( _num_autofeatures ){};
 
     PredictorImpl( const Poco::JSON::Object& _obj )
         : categorical_colnames_( JSON::array_to_vector<std::string>(
               JSON::get_array( _obj, "categorical_colnames_" ) ) ),
-          discrete_colnames_( JSON::array_to_vector<std::string>(
-              JSON::get_array( _obj, "discrete_colnames_" ) ) ),
           numerical_colnames_( JSON::array_to_vector<std::string>(
               JSON::get_array( _obj, "numerical_colnames_" ) ) ),
           num_autofeatures_(
@@ -97,12 +93,6 @@ class PredictorImpl
     }
 
     /// Trivial (const) getter.
-    const std::vector<std::string>& discrete_colnames() const
-    {
-        return discrete_colnames_;
-    }
-
-    /// Trivial (const) getter.
     const std::vector<std::string>& numerical_colnames() const
     {
         return numerical_colnames_;
@@ -121,8 +111,7 @@ class PredictorImpl
     /// The number of columns in CSR Matrix resulting from this Impl.
     size_t ncols_csr() const
     {
-        size_t ncols = num_autofeatures_ + discrete_colnames_.size() +
-                       numerical_colnames_.size();
+        size_t ncols = num_autofeatures_ + numerical_colnames_.size();
 
         for ( const auto& enc : encodings_ )
             {
@@ -138,8 +127,7 @@ class PredictorImpl
     /// Trivial (const) getter.
     const size_t num_columns() const
     {
-        return categorical_colnames_.size() + discrete_colnames_.size() +
-               numerical_colnames_.size();
+        return categorical_colnames_.size() + numerical_colnames_.size();
     }
 
     // -----------------------------------------
@@ -164,10 +152,6 @@ class PredictorImpl
 
     /// Encodings used for the categorical columns.
     std::vector<Encoding> encodings_;
-
-    /// Names of the discrete columns taken from the population table as
-    /// features.
-    std::vector<std::string> discrete_colnames_;
 
     /// Names of the numerical columns taken from the population table as
     /// features.

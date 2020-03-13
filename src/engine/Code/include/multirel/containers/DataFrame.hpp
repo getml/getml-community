@@ -43,6 +43,11 @@ class DataFrame
     // ---------------------------------------------------------------------
 
    public:
+    /// Creates a version of the table that can be used for self joining
+    /// in a time series model.
+    DataFrame create_self_join(
+        const std::vector<Column<Float>>& _modified_time_stamps ) const;
+
     /// Creates a subview.
     DataFrame create_subview(
         const std::string& _name,
@@ -138,10 +143,7 @@ class DataFrame
     }
 
     /// Getter for a join keys.
-    const std::vector<Column<Int>>& join_keys() const
-    {
-        return join_keys_;
-    }
+    const std::vector<Column<Int>>& join_keys() const { return join_keys_; }
 
     /// Getter for the join key name.
     const std::string& join_keys_name() const
@@ -238,7 +240,13 @@ class DataFrame
     /// Trivial getter
     Float time_stamp( size_t _i ) const
     {
-        assert_true( time_stamps_.size() == 1 || time_stamps_.size() == 2 );
+        assert_true( time_stamps_.size() <= 2 );
+
+        if ( time_stamps_.size() == 0 )
+            {
+                return 0.0;
+            }
+
         assert_true( _i < time_stamps_[0].nrows_ );
 
         return time_stamps_[0][_i];
@@ -251,6 +259,13 @@ class DataFrame
         return time_stamps_[0];
     }
 
+    /// Getter for the time stamps column.
+    const Column<Float>& time_stamp_col( const size_t _i ) const
+    {
+        assert_true( _i < time_stamps_.size() );
+        return time_stamps_[_i];
+    }
+
     /// Getter for the time stamps name.
     const std::string& time_stamps_name() const
     {
@@ -260,9 +275,9 @@ class DataFrame
     }
 
     /// Returns the schema.
-    Schema to_schema() const
+    Placeholder to_schema() const
     {
-        return Schema(
+        return Placeholder(
             get_colnames( categoricals_ ),
             get_colnames( discretes_ ),
             get_colnames( join_keys_ ),
@@ -275,9 +290,9 @@ class DataFrame
     /// Trivial getter
     Float upper_time_stamp( size_t _i ) const
     {
-        assert_true( time_stamps_.size() == 1 || time_stamps_.size() == 2 );
+        assert_true( time_stamps_.size() <= 2 );
 
-        if ( time_stamps_.size() == 1 )
+        if ( time_stamps_.size() <= 1 )
             {
                 return NAN;
             }

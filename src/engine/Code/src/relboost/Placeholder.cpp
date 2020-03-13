@@ -1,9 +1,40 @@
-#include "relboost/ensemble/ensemble.hpp"
+#include "relboost/containers/containers.hpp"
 
 namespace relboost
 {
-namespace ensemble
+namespace containers
 {
+// ----------------------------------------------------------------------------
+
+void Placeholder::check_data_model(
+    const std::vector<std::string>& _peripheral_names,
+    const bool _is_population ) const
+{
+    if ( _is_population && joined_tables_.size() == 0 )
+        {
+            throw std::invalid_argument(
+                "The population placeholder contains no joined tables!" );
+        }
+
+    for ( const auto& joined_table : joined_tables_ )
+        {
+            const auto it = std::find(
+                _peripheral_names.begin(),
+                _peripheral_names.end(),
+                joined_table.name_ );
+
+            if ( it == _peripheral_names.end() )
+                {
+                    throw std::invalid_argument(
+                        "Placeholder '" + joined_table.name_ +
+                        "' is contained in the relational tree, but not among "
+                        "the peripheral placeholders!" );
+                }
+
+            joined_table.check_data_model( _peripheral_names, false );
+        }
+}
+
 // ----------------------------------------------------------------------------
 
 void Placeholder::check_vector_length()
@@ -70,14 +101,12 @@ Poco::JSON::Array::Ptr Placeholder::joined_tables_to_array(
 std::vector<Placeholder> Placeholder::parse_joined_tables(
     const Poco::JSON::Array::Ptr _array )
 {
+    std::vector<Placeholder> vec;
+
     if ( _array.isNull() )
         {
-            std::runtime_error(
-                "Error while parsing Placeholder: Array does not exist or "
-                "is not an array!" );
+            return vec;
         }
-
-    std::vector<Placeholder> vec;
 
     for ( size_t i = 0; i < _array->size(); ++i )
         {
@@ -121,9 +150,23 @@ Poco::JSON::Object::Ptr Placeholder::to_json_obj() const
 
     // ---------------------------------------------------------
 
+    obj->set( "categoricals_", JSON::vector_to_array_ptr( categoricals_ ) );
+
+    obj->set( "discretes_", JSON::vector_to_array_ptr( discretes_ ) );
+
+    obj->set( "join_keys_", JSON::vector_to_array_ptr( join_keys_ ) );
+
+    obj->set( "numericals_", JSON::vector_to_array_ptr( numericals_ ) );
+
+    obj->set( "targets_", JSON::vector_to_array_ptr( targets_ ) );
+
+    obj->set( "time_stamps_", JSON::vector_to_array_ptr( time_stamps_ ) );
+
+    // ---------------------------------------------------------
+
     return obj;
 }
 
 // ----------------------------------------------------------------------------
-}  // namespace ensemble
+}  // namespace containers
 }  // namespace relboost

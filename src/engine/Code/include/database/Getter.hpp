@@ -11,12 +11,12 @@ struct Getter
     static Float get_double(
         const std::string& _str, const std::vector<std::string>& _time_formats )
     {
-        auto [val, success] = csv::Parser::to_double( _str );
+        auto [val, success] = io::Parser::to_double( _str );
 
         if ( !success )
             {
                 std::tie( val, success ) =
-                    csv::Parser::to_time_stamp( _str, _time_formats );
+                    io::Parser::to_time_stamp( _str, _time_formats );
             }
 
         if ( !success )
@@ -30,12 +30,12 @@ struct Getter
     /// Returns an intger.
     static Int get_int( const std::string& _str )
     {
-        auto [val, success] = csv::Parser::to_int( _str );
+        auto [val, success] = io::Parser::to_int( _str );
 
         if ( !success )
             {
                 Float fval = 0.0;
-                std::tie( fval, success ) = csv::Parser::to_double( _str );
+                std::tie( fval, success ) = io::Parser::to_double( _str );
                 val = static_cast<Int>( fval );
             }
 
@@ -51,12 +51,12 @@ struct Getter
     static Float get_time_stamp(
         const std::string& _str, const std::vector<std::string>& _time_formats )
     {
-        auto [val, success] = csv::Parser::to_time_stamp( _str, _time_formats );
+        auto [val, success] = io::Parser::to_time_stamp( _str, _time_formats );
 
         if ( !success )
             {
                 std::tie( val, success ) =
-                    csv::Parser::to_double( std::string( _str ) );
+                    io::Parser::to_double( std::string( _str ) );
             }
 
         if ( !success )

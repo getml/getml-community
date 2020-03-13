@@ -7,11 +7,12 @@ namespace predictors
 
 struct PredictorParser
 {
-    /// Given the _tree, return a shared pointer containing the appropriate
-    /// metric.
+    /// Parses the predictor.
     static std::shared_ptr<Predictor> parse(
         const Poco::JSON::Object& _json_obj,
-        const std::shared_ptr<const PredictorImpl>& _impl );
+        const std::shared_ptr<const PredictorImpl>& _impl,
+        const std::shared_ptr<const std::vector<strings::String>>&
+            _categories );
 };
 
 // ----------------------------------------------------------------------

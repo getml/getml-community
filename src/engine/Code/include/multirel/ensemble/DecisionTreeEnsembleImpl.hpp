@@ -12,17 +12,23 @@ namespace ensemble
 struct DecisionTreeEnsembleImpl
 {
     DecisionTreeEnsembleImpl(
-        const std::shared_ptr<const std::vector<std::string>> &_categories,
+        const std::shared_ptr<const std::vector<strings::String>> &_categories,
         const std::shared_ptr<const descriptors::Hyperparameters>
             &_hyperparameters,
-        const std::vector<std::string> &_placeholder_peripheral,
-        const decisiontrees::Placeholder &_placeholder_population )
-        : categories_( _categories ),
+        const std::vector<std::string> &_peripheral,
+        const containers::Placeholder &_placeholder,
+        const std::shared_ptr<const std::vector<containers::Placeholder>>
+            &_peripheral_schema,
+        const std::shared_ptr<const containers::Placeholder>
+            &_population_schema )
+        : allow_http_( false ),
+          categories_( _categories ),
           comm_( nullptr ),
           hyperparameters_( _hyperparameters ),
-          placeholder_peripheral_( _placeholder_peripheral ),
-          placeholder_population_(
-              new decisiontrees::Placeholder( _placeholder_population ) ){};
+          peripheral_( _peripheral ),
+          peripheral_schema_( _peripheral_schema ),
+          placeholder_( new containers::Placeholder( _placeholder ) ),
+          population_schema_( _population_schema ){};
 
     ~DecisionTreeEnsembleImpl() = default;
 
@@ -31,11 +37,14 @@ struct DecisionTreeEnsembleImpl
     /// Pimpl for aggregation
     containers::Optional<aggregations::AggregationImpl> aggregation_impl_;
 
+    /// Whether we want to allow this model to be used as an http endpoint.
+    bool allow_http_;
+
     /// Vector containing the names of the categories. It is used
     /// for generating the SQL code, because categorical data is
     /// stored in the form of integers, whereas we want actual categories
     /// in our code.
-    std::shared_ptr<const std::vector<std::string>> categories_;
+    std::shared_ptr<const std::vector<strings::String>> categories_;
 
     /// MPI Communicator or self-defined communicator object (for
     /// multithreading)
@@ -44,17 +53,20 @@ struct DecisionTreeEnsembleImpl
     /// The hyperparameters used in this ensemble
     std::shared_ptr<const descriptors::Hyperparameters> hyperparameters_;
 
-    /// Schema of the peripheral tables.
-    std::shared_ptr<const std::vector<containers::Schema>> peripheral_schema_;
+    /// Names of the peripheral tables.
+    std::vector<std::string> peripheral_;
 
-    /// decisiontrees::Placeholder for the peripheral tables
-    std::vector<std::string> placeholder_peripheral_;
+    /// containers::Placeholder for the peripheral tables (only used
+    /// for the schema)
+    std::shared_ptr<const std::vector<containers::Placeholder>>
+        peripheral_schema_;
 
-    /// decisiontrees::Placeholder for the population table
-    containers::Optional<decisiontrees::Placeholder> placeholder_population_;
+    /// containers::Placeholder for the population table (contains the
+    /// relational tree)
+    std::shared_ptr<const containers::Placeholder> placeholder_;
 
-    /// Schema of the population table.
-    std::shared_ptr<const containers::Schema> population_schema_;
+    /// The schema of the population table.
+    std::shared_ptr<const containers::Placeholder> population_schema_;
 
     /// Random number generator for creating sample weights and
     /// the like.

@@ -7,15 +7,17 @@ namespace ensemble
 // ----------------------------------------------------------------------------
 
 void DecisionTreeEnsembleImpl::check_placeholder(
-    const Placeholder& _placeholder ) const
+    const containers::Placeholder& _placeholder ) const
 {
+    assert_true( peripheral_ );
+
     for ( auto& joined : _placeholder.joined_tables_ )
         {
             const bool not_found =
                 ( std::find(
-                      peripheral_names_->begin(),
-                      peripheral_names_->end(),
-                      joined.name_ ) == peripheral_names_->end() );
+                      peripheral_->begin(),
+                      peripheral_->end(),
+                      joined.name_ ) == peripheral_->end() );
 
             if ( not_found )
                 {

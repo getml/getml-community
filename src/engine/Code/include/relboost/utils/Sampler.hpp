@@ -37,6 +37,15 @@ class Sampler
 
     // --------------------------------------------------------------------
 
+   public:
+    /// Sets the sampling rate
+    void set_sampling_rate( const Float _sampling_rate )
+    {
+        sampling_rate_ = _sampling_rate;
+    }
+
+    // --------------------------------------------------------------------
+
    private:
     /// The random number generator used for sampling.
     std::mt19937 random_number_generator_;

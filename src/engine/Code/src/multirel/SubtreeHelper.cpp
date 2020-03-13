@@ -22,7 +22,7 @@ void SubtreeHelper::fit_subensembles(
             _ensemble.hyperparameters() );
 
     const auto peripheral = std::make_shared<const std::vector<std::string>>(
-        _ensemble.peripheral_names() );
+        _ensemble.peripheral() );
 
     const auto placeholder = _ensemble.placeholder();
 
@@ -57,7 +57,7 @@ void SubtreeHelper::fit_subensembles(
             if ( _table_holder->subtables_[i] )
                 {
                     const auto joined_table =
-                        std::make_shared<const decisiontrees::Placeholder>(
+                        std::make_shared<const containers::Placeholder>(
                             placeholder.joined_tables_[i] );
 
                     assert_true( joined_table->joined_tables_.size() > 0 );
@@ -240,9 +240,9 @@ std::vector<containers::Subfeatures> SubtreeHelper::make_subfeatures(
                         "FEATURE_" + std::to_string( j + 1 ),
                         p[j].size() );
 
-                    const auto view = containers::ColumnView<
-                        Float,
-                        std::map<Int, Int>>( column, rows_map );
+                    const auto view =
+                        containers::ColumnView<Float, std::map<Int, Int>>(
+                            column, rows_map );
 
                     subfeatures[i].push_back( view );
                 }

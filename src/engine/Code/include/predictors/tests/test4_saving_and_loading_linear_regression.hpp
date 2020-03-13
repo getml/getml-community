@@ -5,9 +5,12 @@ void test4_saving_and_loading_linear_regression()
 {
     // -------------------------------------------------------------------------
 
-    std::cout << std::endl
-              << "Test 4 (Saving and loading linear regression): " << std::endl
-              << std::endl;
+    std::cout << "Test 4 | Saving and loading linear regression\t";
+
+    // This script only needs to write out data and read it in
+    // again. This will be done by temporary files.
+    std::string tmp_filename_1 = Poco::TemporaryFile::tempName();
+    std::string tmp_filename_2 = Poco::TemporaryFile::tempName();
 
     // -------------------------------------------------------------------------
 
@@ -42,7 +45,6 @@ void test4_saving_and_loading_linear_regression()
     const auto impl = std::make_shared<predictors::PredictorImpl>(
         std::vector<std::string>( {"categorical"} ),
         std::vector<std::string>(),
-        std::vector<std::string>(),
         3 );
 
     impl->fit_encodings( X_categorical );
@@ -62,17 +64,17 @@ void test4_saving_and_loading_linear_regression()
 
     // ------------------------------------------------------------------------
 
-    lin_reg.save( "../../tests/predictors/test4/LinearRegression" );
+    lin_reg.save( tmp_filename_1 );
 
     auto lin_reg2 = predictors::LinearRegression( hyperparams, impl );
 
-    lin_reg2.load( "../../tests/predictors/test4/LinearRegression" );
+    lin_reg2.load( tmp_filename_1 );
 
-    lin_reg2.save( "../../tests/predictors/test4/LinearRegression2" );
+    lin_reg2.save( tmp_filename_2 );
 
     auto lin_reg3 = predictors::LinearRegression( hyperparams, impl );
 
-    lin_reg3.load( "../../tests/predictors/test4/LinearRegression2" );
+    lin_reg3.load( tmp_filename_2 );
 
     // ------------------------------------------------------------------------
 
@@ -86,11 +88,9 @@ void test4_saving_and_loading_linear_regression()
             assert_true( std::abs( yhat->at( i ) - yhat3->at( i ) ) < 1e-4 );
         }
 
-    std::cout << std::endl << std::endl;
-
     // ------------------------------------------------------------------------
 
-    std::cout << "OK." << std::endl << std::endl;
+    std::cout << "| OK" << std::endl;
 
     // ------------------------------------------------------------------------
 }

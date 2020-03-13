@@ -1,11 +1,13 @@
 
 // ---------------------------------------------------------------------------
 
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <random>
 
 #include <Poco/JSON/Parser.h>
+#include <Poco/TemporaryFile.h>
 
 #include "relboost/Hyperparameters.hpp"
 #include "relboost/JSON.hpp"

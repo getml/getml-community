@@ -17,11 +17,12 @@ struct DecisionTreeImpl
     // ----------------------------------------
 
     DecisionTreeImpl(
-        const std::shared_ptr<const std::vector<std::string>>& _categories,
+        const std::shared_ptr<const std::vector<strings::String>>& _categories,
         const std::shared_ptr<const descriptors::TreeHyperparameters>&
             _tree_hyperparameters )
         : categories_( _categories ),
           comm_( nullptr ),
+          optimization_criterion_( nullptr ),
           random_number_generator_( nullptr ),
           tree_hyperparameters_( _tree_hyperparameters )
     {
@@ -39,7 +40,7 @@ struct DecisionTreeImpl
     }
 
     /// Trivial accessor
-    inline const std::vector<std::string>& categories() const
+    inline const std::vector<strings::String>& categories() const
     {
         assert_true( categories_ );
         return *categories_;
@@ -66,7 +67,7 @@ struct DecisionTreeImpl
     }
 
     /// Trivial getter
-    inline const containers::Schema& input() const
+    inline const containers::Placeholder& input() const
     {
         assert_true( input_ );
         return *input_;
@@ -93,7 +94,7 @@ struct DecisionTreeImpl
     }
 
     /// Trivial getter
-    inline const containers::Schema& output() const
+    inline const containers::Placeholder& output() const
     {
         assert_true( output_ );
         return *output_;
@@ -167,7 +168,7 @@ struct DecisionTreeImpl
     std::string aggregation_type_;
 
     /// Pointer to the vector that maps the integers to categories
-    std::shared_ptr<const std::vector<std::string>> categories_;
+    std::shared_ptr<const std::vector<strings::String>> categories_;
 
     /// Pointer to the structure that contains information
     /// about the column aggregated by this tree
@@ -177,14 +178,14 @@ struct DecisionTreeImpl
     multithreading::Communicator* comm_;
 
     /// The input table used (we keep it, because we need the colnames)
-    containers::Optional<containers::Schema> input_;
+    containers::Optional<containers::Placeholder> input_;
 
     /// The optimization criterion is what we want to maximize -
     /// using it we can determine the optimal splits
     optimizationcriteria::OptimizationCriterion* optimization_criterion_;
 
     /// The output table used (we keep it, because we need the colnames)
-    containers::Optional<containers::Schema> output_;
+    containers::Optional<containers::Placeholder> output_;
 
     /// Random number generator
     std::mt19937* random_number_generator_;

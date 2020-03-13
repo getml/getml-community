@@ -45,8 +45,7 @@ class SubtreeHelper
     static void fit_subensemble(
         const std::shared_ptr<const decisiontrees::TableHolder>& _table_holder,
         const std::shared_ptr<const logging::AbstractLogger> _logger,
-        const std::shared_ptr<const std::map<Int, Int>>&
-            _output_map,
+        const std::shared_ptr<const std::map<Int, Int>>& _output_map,
         const descriptors::Hyperparameters& _hyperparameters,
         const size_t _ix_perip_used,
         optimizationcriteria::OptimizationCriterion* _opt,
@@ -71,8 +70,7 @@ template <typename AggType>
 void SubtreeHelper::fit_subensemble(
     const std::shared_ptr<const decisiontrees::TableHolder>& _table_holder,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
-    const std::shared_ptr<const std::map<Int, Int>>&
-        _output_map,
+    const std::shared_ptr<const std::map<Int, Int>>& _output_map,
     const descriptors::Hyperparameters& _hyperparameters,
     const size_t _ix_perip_used,
     optimizationcriteria::OptimizationCriterion* _opt,
@@ -107,6 +105,13 @@ void SubtreeHelper::fit_subensemble(
     const auto intermediate_agg =
         std::unique_ptr<optimizationcriteria::OptimizationCriterion>(
             new aggregations::IntermediateAggregation<AggType>( opt_impl ) );
+
+    const auto silent = _hyperparameters.silent_;
+
+    if ( !silent && _logger )
+        {
+            _logger->log( "Training subfeatures..." );
+        }
 
     _subensemble->fit(
         subtable_holder,

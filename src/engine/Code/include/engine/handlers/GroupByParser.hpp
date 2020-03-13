@@ -12,11 +12,37 @@ class GroupByParser
     // ------------------------------------------------------------------------
 
    public:
-    /// Executes a group_by operation.
-    static containers::DataFrame group_by(
+    GroupByParser(
         const std::shared_ptr<containers::Encoding>& _categories,
         const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
-        const containers::DataFrame& _df,
+        const std::shared_ptr<const std::vector<containers::DataFrame>>& _df )
+        : categories_( _categories ),
+          df_( _df ),
+          join_keys_encoding_( _join_keys_encoding )
+    {
+        assert_true( categories_ );
+        assert_true( df_ );
+        assert_true( join_keys_encoding_ );
+    }
+
+    GroupByParser(
+        const std::shared_ptr<containers::Encoding>& _categories,
+        const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
+        const std::vector<containers::DataFrame>& _df )
+        : categories_( _categories ),
+          df_( std::make_shared<const std::vector<containers::DataFrame>>(
+              _df ) ),
+          join_keys_encoding_( _join_keys_encoding )
+    {
+    }
+
+    ~GroupByParser() = default;
+
+    // ------------------------------------------------------------------------
+
+   public:
+    /// Executes a group_by operation.
+    containers::DataFrame group_by(
         const std::string& _name,
         const std::string& _join_key_name,
         const Poco::JSON::Array& _aggregations );
@@ -25,34 +51,25 @@ class GroupByParser
 
    private:
     /// Aggregates over a categorical column.
-    static containers::Column<Float> categorical_aggregation(
-        const containers::Encoding& _categories,
-        const containers::Encoding& _join_keys_encoding,
-        const containers::DataFrame& _df,
+    containers::Column<Float> categorical_aggregation(
         const std::string& _type,
         const std::string& _as,
         const Poco::JSON::Object& _json_col,
         const containers::Column<Int>& _unique,
         const containers::DataFrameIndex& _index );
 
-    static containers::Column<Float> count_distinct(
+    containers::Column<Float> count_distinct(
         const containers::Column<Int>& _unique,
         const containers::DataFrameIndex& _index,
         const std::vector<std::string>& _vec,
         const std::string& _as );
 
     /// Finds the correct index.
-    static std::
-        pair<const containers::DataFrameIndex, const containers::Column<Int>>
-        find_index(
-            const containers::DataFrame& _df,
-            const std::string& _join_key_name );
+    std::pair<const containers::DataFrameIndex, const containers::Column<Int>>
+    find_index( const std::string& _join_key_name );
 
     /// Parses a particular numerical aggregation.
-    static containers::Column<Float> numerical_aggregation(
-        const containers::Encoding& _categories,
-        const containers::Encoding& _join_keys_encoding,
-        const containers::DataFrame& _df,
+    containers::Column<Float> numerical_aggregation(
         const std::string& _type,
         const std::string& _as,
         const Poco::JSON::Object& _json_col,
@@ -65,7 +82,7 @@ class GroupByParser
     /// Undertakes a numerical aggregation based on template class
     /// Aggreagation.
     template <class Aggregation, class ColumnType>
-    static containers::Column<Float> aggregate(
+    containers::Column<Float> aggregate(
         const containers::Column<Int>& _unique,
         const containers::DataFrameIndex& _index,
         const ColumnType& _col,
@@ -101,6 +118,26 @@ class GroupByParser
 
         return result;
     }
+
+    /// Trivial (private) accessor
+    const containers::DataFrame& df() const
+    {
+        assert_true( df_ );
+        assert_true( df_->size() == 1 );
+        return ( *df_ )[0];
+    }
+
+    // ------------------------------------------------------------------------
+
+   private:
+    /// Encodes the categories used.
+    const std::shared_ptr<containers::Encoding> categories_;
+
+    /// The DataFrames this is based on.
+    const std::shared_ptr<const std::vector<containers::DataFrame>> df_;
+
+    /// Encodes the join keys used.
+    const std::shared_ptr<containers::Encoding> join_keys_encoding_;
 
     // ------------------------------------------------------------------------
 };

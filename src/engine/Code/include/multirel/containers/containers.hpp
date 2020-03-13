@@ -38,7 +38,7 @@
 #include "multirel/containers/Optional.hpp"
 
 #include "multirel/containers/Column.hpp"
-#include "multirel/containers/Schema.hpp"
+#include "multirel/containers/Placeholder.hpp"
 
 #include "multirel/containers/ColumnView.hpp"
 

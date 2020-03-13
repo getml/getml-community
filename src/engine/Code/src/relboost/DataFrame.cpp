@@ -24,8 +24,6 @@ DataFrame::DataFrame(
       targets_( _targets ),
       time_stamps_( _time_stamps )
 {
-    assert_true( _join_keys.size() > 0 );
-    assert_true( _time_stamps.size() > 0 );
     assert_true( _indices.size() == _join_keys.size() );
 
     for ( auto& col : _categoricals )
@@ -114,7 +112,8 @@ std::vector<std::shared_ptr<containers::Index>> DataFrame::create_indices(
                         }
                 }
 
-            indices.push_back( std::make_shared<containers::Index>( new_index ) );
+            indices.push_back(
+                std::make_shared<containers::Index>( new_index ) );
         }
 
     return indices;
@@ -148,6 +147,50 @@ DataFrame DataFrame::create_subview(
         }
 
     // ---------------------------------------------------------------------------
+    // All time stamps that are not upper time stamp are added to numerical
+    // and given the unit time stamp - this is so the end users do not have
+    // to understand the difference between time stamps as a type and
+    // time stamps as a role.
+
+    auto numericals_and_time_stamps = std::vector<containers::Column<Float>>();
+
+    for ( const auto& col : numericals_ )
+        {
+            numericals_and_time_stamps.push_back( col );
+        }
+
+    for ( const auto& col : time_stamps_ )
+        {
+            if ( _upper_time_stamp != "" && col.name_ == _upper_time_stamp )
+                {
+                    continue;
+                }
+
+            const auto ts = containers::Column<Float>(
+                col.data_,
+                col.name_,
+                col.nrows_,
+                "unit: getml_time_stamp, comparison only" );
+
+            numericals_and_time_stamps.push_back( ts );
+        }
+
+    // ---------------------------------------------------------------------------
+
+    if ( _time_stamp == "" )
+        {
+            return DataFrame(
+                categoricals_,
+                discretes_,
+                {indices_[ix_join_key]},
+                {join_keys_[ix_join_key]},
+                _name,
+                numericals_and_time_stamps,
+                targets_,
+                {} );
+        }
+
+    // ---------------------------------------------------------------------------
 
     size_t ix_time_stamp = 0;
 
@@ -176,7 +219,7 @@ DataFrame DataFrame::create_subview(
                 {indices_[ix_join_key]},
                 {join_keys_[ix_join_key]},
                 _name,
-                numericals_,
+                numericals_and_time_stamps,
                 targets_,
                 {time_stamps_[ix_time_stamp]} );
         }
@@ -208,7 +251,7 @@ DataFrame DataFrame::create_subview(
         {indices_[ix_join_key]},
         {join_keys_[ix_join_key]},
         _name,
-        numericals_,
+        numericals_and_time_stamps,
         targets_,
         {time_stamps_[ix_time_stamp], time_stamps_[ix_upper_time_stamp]} );
 

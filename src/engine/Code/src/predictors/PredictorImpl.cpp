@@ -13,8 +13,7 @@ void PredictorImpl::compress_importances(
     assert_true(
         _feature_importances->size() == num_autofeatures() + num_columns() );
 
-    const auto n_dense = num_autofeatures_ + discrete_colnames_.size() +
-                         numerical_colnames_.size();
+    const auto n_dense = num_autofeatures_ + numerical_colnames_.size();
 
     std::copy(
         _all_feature_importances.begin(),
@@ -140,17 +139,10 @@ void PredictorImpl::select_cols(
     select_cols(
         _n_selected,
         _index,
-        _n_autofeatures + discrete_colnames_.size() +
-            numerical_colnames_.size(),
+        _n_autofeatures + numerical_colnames_.size(),
         &categorical_colnames_ );
 
-    select_cols(
-        _n_selected,
-        _index,
-        _n_autofeatures + discrete_colnames_.size(),
-        &numerical_colnames_ );
-
-    select_cols( _n_selected, _index, _n_autofeatures, &discrete_colnames_ );
+    select_cols( _n_selected, _index, _n_autofeatures, &numerical_colnames_ );
 
     assert_true( _n_selected >= num_columns() );
 
@@ -201,9 +193,6 @@ Poco::JSON::Object PredictorImpl::to_json_obj() const
     obj.set(
         "categorical_colnames_",
         JSON::vector_to_array( categorical_colnames_ ) );
-
-    obj.set(
-        "discrete_colnames_", JSON::vector_to_array( discrete_colnames_ ) );
 
     obj.set(
         "numerical_colnames_", JSON::vector_to_array( numerical_colnames_ ) );

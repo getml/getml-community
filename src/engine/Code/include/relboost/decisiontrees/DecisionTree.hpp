@@ -13,14 +13,14 @@ class DecisionTree
 {
    public:
     DecisionTree(
-        const std::shared_ptr<const std::vector<std::string>>& _encoding,
+        const std::shared_ptr<const std::vector<strings::String>>& _encoding,
         const std::shared_ptr<const Hyperparameters>& _hyperparameters,
         const std::shared_ptr<lossfunctions::LossFunction>& _loss_function,
         const size_t _peripheral_used,
         multithreading::Communicator* _comm );
 
     DecisionTree(
-        const std::shared_ptr<const std::vector<std::string>>& _encoding,
+        const std::shared_ptr<const std::vector<strings::String>>& _encoding,
         const std::shared_ptr<const Hyperparameters>& _hyperparameters,
         const std::shared_ptr<lossfunctions::LossFunction>& _loss_function,
         const Poco::JSON::Object& _obj );
@@ -32,10 +32,10 @@ class DecisionTree
     /// Fits the decision tree.
     void fit(
         const containers::DataFrameView& _output,
-        const containers::DataFrame& _input,
+        const std::optional<containers::DataFrame>& _input,
         const containers::Subfeatures& _subfeatures,
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _end );
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _end );
 
     /// Expresses DecisionTree as Poco::JSON::Object.
     Poco::JSON::Object::Ptr to_json_obj() const;
@@ -43,7 +43,7 @@ class DecisionTree
     /// Transforms the data to form a prediction.
     std::vector<Float> transform(
         const containers::DataFrameView& _output,
-        const containers::DataFrame& _input,
+        const std::optional<containers::DataFrame>& _input,
         const containers::Subfeatures& _subfeatures ) const;
 
     /// Expresses the decision tree as SQL code.
@@ -98,7 +98,7 @@ class DecisionTree
     }
 
     /// Trivial (private) accessor
-    const containers::Schema& input() const
+    const containers::Placeholder& input() const
     {
         assert_true( input_ );
         return *input_;
@@ -119,7 +119,7 @@ class DecisionTree
     }
 
     /// Trivial (private) accessor
-    const containers::Schema& output() const
+    const containers::Placeholder& output() const
     {
         assert_true( output_ );
         return *output_;
@@ -131,13 +131,13 @@ class DecisionTree
     multithreading::Communicator* comm_;
 
     /// Encoding for the categorical data, maps integers to underlying category.
-    std::shared_ptr<const std::vector<std::string>> encoding_;
+    std::shared_ptr<const std::vector<strings::String>> encoding_;
 
     /// Hyperparameters used to train the relboost model
     std::shared_ptr<const Hyperparameters> hyperparameters_;
 
     /// The input table used (we keep it, because we need the colnames)
-    containers::Optional<containers::Schema> input_;
+    containers::Optional<containers::Placeholder> input_;
 
     /// The intercept term that is added after aggregation.
     Float intercept_;
@@ -146,7 +146,7 @@ class DecisionTree
     std::shared_ptr<lossfunctions::LossFunction> loss_function_;
 
     /// The output table used (we keep it, because we need the colnames)
-    containers::Optional<containers::Schema> output_;
+    containers::Optional<containers::Placeholder> output_;
 
     /// The peripheral table used.
     size_t peripheral_used_;

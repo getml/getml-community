@@ -6,7 +6,8 @@ namespace predictors
 
 std::shared_ptr<Predictor> PredictorParser::parse(
     const Poco::JSON::Object& _json_obj,
-    const std::shared_ptr<const PredictorImpl>& _impl )
+    const std::shared_ptr<const PredictorImpl>& _impl,
+    const std::shared_ptr<const std::vector<strings::String>>& _categories )
 {
     const auto type = JSON::get_value<std::string>( _json_obj, "type_" );
 
@@ -20,10 +21,11 @@ std::shared_ptr<Predictor> PredictorParser::parse(
             return std::make_shared<LogisticRegression>(
                 std::make_shared<LinearHyperparams>( _json_obj ), _impl );
         }
-    else if ( type == "XGBoostPredictor" )
+    else if (
+        type == "XGBoostPredictor" || type == "XGBoostClassifier" ||
+        type == "XGBoostRegressor" )
         {
-            return std::make_shared<XGBoostPredictor>(
-                XGBoostHyperparams( _json_obj ), _impl );
+            return std::make_shared<XGBoostPredictor>( _json_obj, _impl );
         }
     else
         {

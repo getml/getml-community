@@ -15,9 +15,12 @@ struct Matchmaker
     static std::vector<containers::Match> make_matches(
         const containers::DataFrameView& _population,
         const containers::DataFrame& _peripheral,
-        const std::shared_ptr<const std::vector<Float>>&
-            _sample_weights,
+        const std::shared_ptr<const std::vector<Float>>& _sample_weights,
         const bool _use_timestamps );
+
+    /// Makes "matches" for when RelboostModel is used as a predictor.
+    static std::vector<containers::Match> make_matches(
+        const containers::DataFrameView& _population );
 
     /// Identifies matches between a specific sample in the population table
     /// (signified by _ix_output and peripheral tables.
@@ -27,10 +30,6 @@ struct Matchmaker
         const bool _use_timestamps,
         const size_t _ix_output,
         std::vector<containers::Match>* _matches );
-
-    /// Creates pointers to the matches.
-    static std::vector<const containers::Match*> make_pointers(
-        const std::vector<containers::Match>& _matches );
 };
 
 // ------------------------------------------------------------------------

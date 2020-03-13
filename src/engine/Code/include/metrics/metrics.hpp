@@ -8,9 +8,11 @@
 #include <fstream>
 #include <memory>
 #include <numeric>
+#include <unordered_map>
 
 #include "jsonutils/jsonutils.hpp"
 #include "multithreading/multithreading.hpp"
+#include "strings/strings.hpp"
 
 // ----------------------------------------------------
 // Module files

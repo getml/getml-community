@@ -12,7 +12,11 @@ class Monitor
     // ------------------------------------------------------------------------
 
    public:
-    Monitor( const engine::config::Options& _options ) : options_( _options ) {}
+    Monitor( const engine::config::Options& _options ) : options_( _options )
+    {
+        std::thread t( shutdown_when_monitor_dies, *this );
+        t.detach();
+    }
 
     ~Monitor() {}
 
@@ -57,6 +61,10 @@ class Monitor
         Poco::Net::HTTPRequest* _req,
         Poco::Net::HTTPResponse* _res,
         std::string* _response_content ) const;
+
+    /// Regularly checks whether the monitor is still alive and shuts down the
+    /// engine, if necessary.
+    static void shutdown_when_monitor_dies( const Monitor _monitor );
 
     // -----------------------------------------------------------------------
 

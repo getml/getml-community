@@ -12,8 +12,8 @@ class CategoryIndex
 {
    public:
     CategoryIndex(
-        const std::vector<const containers::Match*>::iterator _begin,
-        const std::vector<const containers::Match*>::iterator _end )
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _end )
         : begin_( _begin ), end_( _end ), minimum_( 0 )
     {
         assert_true( end_ >= begin_ );
@@ -35,14 +35,10 @@ class CategoryIndex
 
    public:
     /// Trivial accessor.
-    std::vector<const containers::Match*>::iterator begin() const
-    {
-        return begin_;
-    }
+    std::vector<containers::Match>::iterator begin() const { return begin_; }
 
     /// Returns iterator to the beginning of a set of categories.
-    std::vector<const containers::Match*>::iterator begin(
-        const Int _category ) const
+    std::vector<containers::Match>::iterator begin( const Int _category ) const
     {
         if ( indptr_.size() == 0 )
             {
@@ -51,18 +47,16 @@ class CategoryIndex
 
         assert_true( _category - minimum_ >= 0 );
         assert_true(
-            _category - minimum_ + 1 <
-            static_cast<Int>( indptr_.size() ) );
+            _category - minimum_ + 1 < static_cast<Int>( indptr_.size() ) );
 
         return begin_ + indptr_[_category - minimum_];
     }
 
     /// Trivial accessor.
-    std::vector<const containers::Match*>::iterator end() const { return end_; }
+    std::vector<containers::Match>::iterator end() const { return end_; }
 
     /// Returns iterator to the end of a set of categories.
-    std::vector<const containers::Match*>::iterator end(
-        const Int _category ) const
+    std::vector<containers::Match>::iterator end( const Int _category ) const
     {
         if ( indptr_.size() == 0 )
             {
@@ -71,8 +65,7 @@ class CategoryIndex
 
         assert_true( _category - minimum_ >= 0 );
         assert_true(
-            _category - minimum_ + 1 <
-            static_cast<Int>( indptr_.size() ) );
+            _category - minimum_ + 1 < static_cast<Int>( indptr_.size() ) );
 
         return begin_ + indptr_[_category - minimum_ + 1];
     }
@@ -86,9 +79,9 @@ class CategoryIndex
         typename std::enable_if<
             _data_used == enums::DataUsed::categorical_input,
             int>::type = 0>
-    static size_t get_num_row( const containers::Match* _m )
+    static size_t get_num_row( containers::Match _m )
     {
-        return _m->ix_input;
+        return _m.ix_input;
     }
 
     /// Gets the number of row (for categorical_output)
@@ -97,19 +90,19 @@ class CategoryIndex
         typename std::enable_if<
             _data_used == enums::DataUsed::categorical_output,
             int>::type = 0>
-    static size_t get_num_row( const containers::Match* _m )
+    static size_t get_num_row( containers::Match _m )
     {
-        return _m->ix_output;
+        return _m.ix_output;
     }
 
     // -------------------------------
 
    private:
     /// Points to the first sample.
-    const std::vector<const containers::Match*>::iterator begin_;
+    const std::vector<containers::Match>::iterator begin_;
 
     /// Points to the first sample.
-    const std::vector<const containers::Match*>::iterator end_;
+    const std::vector<containers::Match>::iterator end_;
 
     /// Contains all categories that have been included.
     std::vector<Int> indptr_;
@@ -154,8 +147,7 @@ void CategoryIndex::build_indptr(
 
     assert_true( maximum >= minimum );
 
-    const auto dist =
-        static_cast<Int>( std::distance( begin_, end_ ) );
+    const auto dist = static_cast<Int>( std::distance( begin_, end_ ) );
 
     indptr_ = std::vector<Int>( maximum - minimum + 2 );
 

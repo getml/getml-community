@@ -80,6 +80,9 @@ class RSquaredCriterion : public OptimizationCriterion
     /// Reverts to the committed version
     void revert_to_commit() final
     {
+        assert_true(
+            sufficient_statistics_current_.size() ==
+            sufficient_statistics_committed_.size() );
         std::copy(
             sufficient_statistics_committed_.begin(),
             sufficient_statistics_committed_.end(),

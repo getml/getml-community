@@ -25,7 +25,6 @@ DataFrame::DataFrame(
       time_stamps_( _time_stamps )
 {
     assert_true( _join_keys.size() > 0 );
-    assert_true( _time_stamps.size() > 0 );
     assert_true( _indices.size() == _join_keys.size() );
 
     for ( auto& col : _categoricals )
@@ -122,6 +121,46 @@ std::vector<std::shared_ptr<Index>> DataFrame::create_indices(
 
 // ----------------------------------------------------------------------------
 
+DataFrame DataFrame::create_self_join(
+    const std::vector<Column<Float>>& _modified_time_stamps ) const
+{
+    // ---------------------------------------------------------------------------
+
+    std::vector<containers::Column<Float>> numericals_and_targets;
+
+    for ( const auto& col : numericals_ )
+        {
+            numericals_and_targets.push_back( col );
+        }
+
+    for ( const auto& col : targets_ )
+        {
+            numericals_and_targets.push_back( col );
+        }
+
+    // ---------------------------------------------------------------------------
+
+    assert_true(
+        _modified_time_stamps.size() == 1 ||
+        _modified_time_stamps.size() == 2 );
+
+    // ---------------------------------------------------------------------------
+
+    return DataFrame(
+        categoricals_,
+        discretes_,
+        indices_,
+        join_keys_,
+        name_,
+        numericals_and_targets,
+        {},
+        _modified_time_stamps );
+
+    // ---------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
 DataFrame DataFrame::create_subview(
     const std::string& _name,
     const std::string& _join_key,
@@ -145,6 +184,50 @@ DataFrame DataFrame::create_subview(
             throw std::runtime_error(
                 "Join key named '" + _join_key + "' not found in table '" +
                 name_ + "'!" );
+        }
+
+    // ---------------------------------------------------------------------------
+    // All time stamps that are not upper time stamp are added to numerical
+    // and given the unit time stamp - this is so the end users do not have
+    // to understand the difference between time stamps as a type and
+    // time stamps as a role.
+
+    auto numericals_and_time_stamps = std::vector<containers::Column<Float>>();
+
+    for ( const auto& col : numericals_ )
+        {
+            numericals_and_time_stamps.push_back( col );
+        }
+
+    for ( const auto& col : time_stamps_ )
+        {
+            if ( _upper_time_stamp != "" && col.name_ == _upper_time_stamp )
+                {
+                    continue;
+                }
+
+            const auto ts = containers::Column<Float>(
+                col.data_,
+                col.name_,
+                col.nrows_,
+                "unit: getml_time_stamp, comparison only" );
+
+            numericals_and_time_stamps.push_back( ts );
+        }
+
+    // ---------------------------------------------------------------------------
+
+    if ( _time_stamp == "" )
+        {
+            return DataFrame(
+                categoricals_,
+                discretes_,
+                {indices_[ix_join_key]},
+                {join_keys_[ix_join_key]},
+                _name,
+                numericals_and_time_stamps,
+                targets_,
+                {} );
         }
 
     // ---------------------------------------------------------------------------
@@ -176,7 +259,7 @@ DataFrame DataFrame::create_subview(
                 {indices_[ix_join_key]},
                 {join_keys_[ix_join_key]},
                 _name,
-                numericals_,
+                numericals_and_time_stamps,
                 targets_,
                 {time_stamps_[ix_time_stamp]} );
         }
@@ -208,7 +291,7 @@ DataFrame DataFrame::create_subview(
         {indices_[ix_join_key]},
         {join_keys_[ix_join_key]},
         _name,
-        numericals_,
+        numericals_and_time_stamps,
         targets_,
         {time_stamps_[ix_time_stamp], time_stamps_[ix_upper_time_stamp]} );
 

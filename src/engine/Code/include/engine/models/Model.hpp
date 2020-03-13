@@ -25,7 +25,7 @@ class Model : public AbstractModel
         const Poco::JSON::Object& _hyperparameters );
 
     Model(
-        const std::shared_ptr<const std::vector<std::string>>& _encoding,
+        const std::shared_ptr<const std::vector<strings::String>>& _encoding,
         const std::string& _path );
 
     ~Model() = default;
@@ -35,7 +35,6 @@ class Model : public AbstractModel
    public:
     /// Returns the feature names.
     std::tuple<
-        std::vector<std::string>,
         std::vector<std::string>,
         std::vector<std::string>,
         std::vector<std::string>>
@@ -49,7 +48,7 @@ class Model : public AbstractModel
         Poco::Net::StreamSocket* _socket ) final;
 
     /// Save the model.
-    void save( const std::string& _path ) const final;
+    void save( const std::string& _path, const std::string& _name ) const final;
 
     /// Score predictions.
     Poco::JSON::Object score(
@@ -66,6 +65,12 @@ class Model : public AbstractModel
     // --------------------------------------------------------
 
    public:
+    /// Trivial accessor
+    bool& allow_http() { return feature_engineerer().allow_http(); }
+
+    /// Trivial accessor
+    bool allow_http() const { return feature_engineerer().allow_http(); }
+
     /// Returns model as JSON Object.
     Poco::JSON::Object to_json_obj(
         const bool _schema_only = false ) const final
@@ -102,7 +107,7 @@ class Model : public AbstractModel
     // --------------------------------------------------------
 
    private:
-    /// Add all discrete and numerical columns in the population table that
+    /// Add all numerical columns in the population table that
     /// haven't been explicitly marked "comparison only".
     void add_population_cols(
         const Poco::JSON::Object& _cmd,
@@ -223,14 +228,14 @@ class Model : public AbstractModel
     /// Trivial (private) accessor
     predictors::PredictorImpl& predictor_impl()
     {
-        assert_true( predictor_impl_ );
+        throw_unless( predictor_impl_, "Model has not been fitted." );
         return *predictor_impl_;
     }
 
     /// Trivial (private) accessor
     const predictors::PredictorImpl& predictor_impl() const
     {
-        assert_true( predictor_impl_ );
+        throw_unless( predictor_impl_, "Model has not been fitted." );
         return *predictor_impl_;
     }
 
@@ -278,7 +283,7 @@ Model<FeatureEngineererType>::Model(
 
 template <typename FeatureEngineererType>
 Model<FeatureEngineererType>::Model(
-    const std::shared_ptr<const std::vector<std::string>>& _encoding,
+    const std::shared_ptr<const std::vector<strings::String>>& _encoding,
     const std::string& _path )
     : feature_engineerer_(
           _encoding, load_json_obj( _path + "feature_engineerer.json" ) ),
@@ -333,11 +338,6 @@ void Model<FeatureEngineererType>::add_population_cols(
     const auto population_df =
         utils::Getter::get( population_name, _data_frames );
 
-    for ( const auto& col : predictor_impl().discrete_colnames() )
-        {
-            _features->push_back( population_df.discrete( col ).data_ptr() );
-        }
-
     for ( const auto& col : predictor_impl().numerical_colnames() )
         {
             _features->push_back( population_df.numerical( col ).data_ptr() );
@@ -359,7 +359,8 @@ bool Model<FeatureEngineererType>::allow_null_values() const
                 *feature_engineerer().hyperparameters().feature_selector_;
 
             allow_null =
-                predictors::PredictorParser::parse( obj, predictor_impl_ )
+                predictors::PredictorParser::parse(
+                    obj, predictor_impl_, feature_engineerer().categories() )
                     ->accepts_null();
         }
 
@@ -373,7 +374,8 @@ bool Model<FeatureEngineererType>::allow_null_values() const
             const auto obj = *feature_engineerer().hyperparameters().predictor_;
 
             allow_null =
-                predictors::PredictorParser::parse( obj, predictor_impl_ )
+                predictors::PredictorParser::parse(
+                    obj, predictor_impl_, feature_engineerer().categories() )
                     ->accepts_null();
         }
 
@@ -389,7 +391,7 @@ void Model<FeatureEngineererType>::calculate_feature_stats(
     const size_t _ncols,
     const typename FeatureEngineererType::DataFrameType& _df )
 {
-    const size_t num_bins = 50;
+    const size_t num_bins = 200;
 
     std::vector<const Float*> targets;
 
@@ -431,18 +433,6 @@ DataFrameType Model<FeatureEngineererType>::extract_df(
 
     // ------------------------------------------------------------------------
 
-    std::vector<typename DataFrameType::FloatColumnType> discretes;
-
-    for ( size_t i = 0; i < df.num_discretes(); ++i )
-        {
-            const auto& mat = df.discrete( i );
-
-            discretes.push_back( typename DataFrameType::FloatColumnType(
-                mat.data(), mat.name(), mat.nrows(), mat.unit() ) );
-        }
-
-    // ------------------------------------------------------------------------
-
     std::vector<typename DataFrameType::IntColumnType> join_keys;
 
     for ( size_t i = 0; i < df.num_join_keys(); ++i )
@@ -454,15 +444,37 @@ DataFrameType Model<FeatureEngineererType>::extract_df(
         }
 
     // ------------------------------------------------------------------------
+    // The numerical/discrete binning strategy exists, but
+    // the user does not have to think about it. Instead, this will make
+    // the decision for him/her.
+
+    std::vector<typename DataFrameType::FloatColumnType> discretes;
 
     std::vector<typename DataFrameType::FloatColumnType> numericals;
+
+    const auto is_int = []( const Float val ) {
+        return std::isnan( val ) || val == std::round( val );
+    };
 
     for ( size_t i = 0; i < df.num_numericals(); ++i )
         {
             const auto& mat = df.numerical( i );
 
-            numericals.push_back( typename DataFrameType::FloatColumnType(
-                mat.data(), mat.name(), mat.nrows(), mat.unit() ) );
+            const bool is_discrete =
+                std::all_of( mat.begin(), mat.end(), is_int );
+
+            if ( is_discrete )
+                {
+                    discretes.push_back(
+                        typename DataFrameType::FloatColumnType(
+                            mat.data(), mat.name(), mat.nrows(), mat.unit() ) );
+                }
+            else
+                {
+                    numericals.push_back(
+                        typename DataFrameType::FloatColumnType(
+                            mat.data(), mat.name(), mat.nrows(), mat.unit() ) );
+                }
         }
 
     // ------------------------------------------------------------------------
@@ -544,7 +556,10 @@ DataFrameType Model<FeatureEngineererType>::extract_df_by_colnames(
                 {
                     const auto& name = _schema.discrete_name( i );
 
-                    const auto& mat = df.discrete( name );
+                    // Note that discrete columns actually do not exist
+                    // in the DataFrame - they are taken from numerical
+                    // instead.
+                    const auto& mat = df.numerical( name );
 
                     discretes.push_back(
                         typename DataFrameType::FloatColumnType(
@@ -703,7 +718,6 @@ template <typename FeatureEngineererType>
 std::tuple<
     std::vector<std::string>,
     std::vector<std::string>,
-    std::vector<std::string>,
     std::vector<std::string>>
 Model<FeatureEngineererType>::feature_names() const
 {
@@ -719,14 +733,12 @@ Model<FeatureEngineererType>::feature_names() const
             return std::make_tuple(
                 autofeatures,
                 predictor_impl().categorical_colnames(),
-                predictor_impl().discrete_colnames(),
                 predictor_impl().numerical_colnames() );
         }
     else
         {
             return std::make_tuple(
                 autofeatures,
-                std::vector<std::string>(),
                 std::vector<std::string>(),
                 std::vector<std::string>() );
         }
@@ -935,13 +947,15 @@ void Model<FeatureEngineererType>::init_feature_selectors(
                 {
                     _feature_selectors->push_back(
                         predictors::PredictorParser::parse(
-                            obj, predictor_impl_ ) );
+                            obj,
+                            predictor_impl_,
+                            feature_engineerer().categories() ) );
                 }
         }
     else
         {
-            _feature_selectors->push_back(
-                predictors::PredictorParser::parse( obj, predictor_impl_ ) );
+            _feature_selectors->push_back( predictors::PredictorParser::parse(
+                obj, predictor_impl_, feature_engineerer().categories() ) );
         }
 }
 
@@ -968,13 +982,15 @@ void Model<FeatureEngineererType>::init_predictors(
             for ( size_t i = 0; i < _num_targets; ++i )
                 {
                     _predictors->push_back( predictors::PredictorParser::parse(
-                        obj, predictor_impl_ ) );
+                        obj,
+                        predictor_impl_,
+                        feature_engineerer().categories() ) );
                 }
         }
     else
         {
-            _predictors->push_back(
-                predictors::PredictorParser::parse( obj, predictor_impl_ ) );
+            _predictors->push_back( predictors::PredictorParser::parse(
+                obj, predictor_impl_, feature_engineerer().categories() ) );
         }
 }
 
@@ -1004,9 +1020,16 @@ Poco::JSON::Object Model<FeatureEngineererType>::load_json_obj(
             throw std::invalid_argument( "File '" + _fname + "' not found!" );
         }
 
-    return *Poco::JSON::Parser()
-                .parse( json.str() )
-                .extract<Poco::JSON::Object::Ptr>();
+    const auto ptr = Poco::JSON::Parser()
+                         .parse( json.str() )
+                         .extract<Poco::JSON::Object::Ptr>();
+
+    if ( !ptr )
+        {
+            throw std::runtime_error( "JSON file did not contain an object!" );
+        }
+
+    return *ptr;
 }
 
 // ----------------------------------------------------------------------------
@@ -1017,12 +1040,9 @@ std::vector<std::string> Model<FeatureEngineererType>::concat_feature_names()
 {
     std::vector<std::string> names;
 
-    const auto [autofeatures, categorical, discrete, numerical] =
-        feature_names();
+    const auto [autofeatures, categorical, numerical] = feature_names();
 
     names.insert( names.end(), autofeatures.begin(), autofeatures.end() );
-
-    names.insert( names.end(), discrete.begin(), discrete.end() );
 
     names.insert( names.end(), numerical.begin(), numerical.end() );
 
@@ -1045,7 +1065,6 @@ void Model<FeatureEngineererType>::make_predictor_impl(
     // Temporary impl, needed by allow_null_values.
 
     predictor_impl_ = std::make_shared<predictors::PredictorImpl>(
-        std::vector<std::string>(),
         std::vector<std::string>(),
         std::vector<std::string>(),
         feature_engineerer().num_features() );
@@ -1085,34 +1104,6 @@ void Model<FeatureEngineererType>::make_predictor_impl(
 
     // --------------------------------------------------------------------
 
-    auto discrete_colnames = std::vector<std::string>();
-
-    for ( size_t i = 0; i < population_df.num_discretes(); ++i )
-        {
-            if ( population_df.discrete( i ).unit().find( "comparison only" ) !=
-                 std::string::npos )
-                {
-                    continue;
-                }
-
-            if ( !allow_null )
-                {
-                    const auto contains_null = std::any_of(
-                        population_df.discrete( i ).begin(),
-                        population_df.discrete( i ).end(),
-                        is_null );
-
-                    if ( contains_null )
-                        {
-                            continue;
-                        }
-                }
-
-            discrete_colnames.push_back( population_df.discrete( i ).name() );
-        }
-
-    // --------------------------------------------------------------------
-
     auto numerical_colnames = std::vector<std::string>();
 
     for ( size_t i = 0; i < population_df.num_numericals(); ++i )
@@ -1143,37 +1134,44 @@ void Model<FeatureEngineererType>::make_predictor_impl(
 
     predictor_impl_ = std::make_shared<predictors::PredictorImpl>(
         categorical_colnames,
-        discrete_colnames,
         numerical_colnames,
         feature_engineerer().num_features() );
 
     // --------------------------------------------------------------------
 }
 
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------
 
 template <typename FeatureEngineererType>
-void Model<FeatureEngineererType>::save( const std::string& _path ) const
+void Model<FeatureEngineererType>::save(
+    const std::string& _path, const std::string& _name ) const
 {
-    auto file = Poco::File( _path );
+    auto tfile = Poco::TemporaryFile();
+
+    tfile.createDirectories();
+
+    feature_engineerer().save( tfile.path() + "/feature_engineerer.json" );
+
+    scores().save( tfile.path() + "/scores.json" );
+
+    predictor_impl().save( tfile.path() + "/impl.json" );
+
+    for ( size_t i = 0; i < num_predictors(); ++i )
+        {
+            predictor( i )->save(
+                tfile.path() + "/predictor-" + std::to_string( i ) );
+        }
+
+    auto file = Poco::File( _path + _name );
 
     if ( file.exists() )
         {
             file.remove( true );
         }
 
-    file.createDirectories();
+    tfile.renameTo( file.path() );
 
-    feature_engineerer().save( _path + "feature_engineerer.json" );
-
-    scores().save( _path + "scores.json" );
-
-    predictor_impl().save( _path + "impl.json" );
-
-    for ( size_t i = 0; i < num_predictors(); ++i )
-        {
-            predictor( i )->save( _path + "predictor-" + std::to_string( i ) );
-        }
+    tfile.keep();
 }
 
 // ----------------------------------------------------------------------------

@@ -10,7 +10,7 @@ void Encoding::append( const Encoding& _other, bool _include_subencoding )
 {
     for ( auto& elem : *_other.vector_ )
         {
-            ( *this )[elem];
+            ( *this )[elem.str()];
         }
 
     if ( _include_subencoding && _other.subencoding_ )
@@ -21,7 +21,7 @@ void Encoding::append( const Encoding& _other, bool _include_subencoding )
 
 // ----------------------------------------------------------------------------
 
-Int Encoding::insert( const std::string& _val )
+Int Encoding::insert( const strings::String& _val )
 {
     assert_true( map_.find( _val ) == map_.end() );
 
@@ -36,7 +36,7 @@ Int Encoding::insert( const std::string& _val )
 
 // ----------------------------------------------------------------------------
 
-Int Encoding::operator[]( const std::string& _val )
+Int Encoding::operator[]( const strings::String& _val )
 {
     // -----------------------------------
     // If this is a NULL value, return -1.
@@ -79,7 +79,7 @@ Int Encoding::operator[]( const std::string& _val )
 
 // ----------------------------------------------------------------------------
 
-Int Encoding::operator[]( const std::string& _val ) const
+Int Encoding::operator[]( const strings::String& _val ) const
 {
     // -----------------------------------
     // If this is a NULL value, return -1.
@@ -108,7 +108,9 @@ Int Encoding::operator[]( const std::string& _val ) const
     // If it cannot be found in the subencoding,
     // check your own values.
 
-    const auto it = map_.find( _val );
+    const auto str = strings::String( _val );
+
+    const auto it = map_.find( str );
 
     if ( it == map_.end() )
         {
@@ -122,21 +124,15 @@ Int Encoding::operator[]( const std::string& _val ) const
 
 // ----------------------------------------------------------------------------
 
-Encoding& Encoding::operator=( std::vector<std::string>&& _vector ) noexcept
+Encoding& Encoding::operator=( const std::vector<std::string>& _vector )
 {
     assert_true( !subencoding_ );
 
-    *vector_ = _vector;
+    clear();
 
-    map_.clear();
-
-    for ( Int ix = 0; ix < static_cast<Int>( vector_->size() ); ++ix )
+    for ( const auto& val : _vector )
         {
-            auto& val = ( *vector_ )[ix];
-
-            assert_true( map_.find( val ) == map_.end() );
-
-            map_[val] = ix;
+            ( *this )[val];
         }
 
     return *this;

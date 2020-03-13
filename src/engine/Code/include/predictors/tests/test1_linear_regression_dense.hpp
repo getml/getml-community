@@ -5,9 +5,7 @@ void test1_linear_regression_dense()
 {
     // -------------------------------------------------------------------------
 
-    std::cout << std::endl
-              << "Test 1 (Linear regression, dense): " << std::endl
-              << std::endl;
+    std::cout << "Test 1 | Linear regression, dense\t\t";
 
     // -------------------------------------------------------------------------
 
@@ -33,10 +31,7 @@ void test1_linear_regression_dense()
         }
 
     const auto impl = std::make_shared<predictors::PredictorImpl>(
-        std::vector<std::string>(),
-        std::vector<std::string>(),
-        std::vector<std::string>(),
-        3 );
+        std::vector<std::string>(), std::vector<std::string>(), 3 );
 
     const auto hyperparams =
         std::make_shared<predictors::LinearHyperparams>( 1e-10, 0.9 );
@@ -59,11 +54,9 @@ void test1_linear_regression_dense()
             assert_true( std::abs( y->at( i ) - yhat->at( i ) < 1.0 ) );
         }
 
-    std::cout << std::endl << std::endl;
-
     // ------------------------------------------------------------------------
 
-    std::cout << "OK." << std::endl << std::endl;
+    std::cout << "| OK" << std::endl;
 
     // ------------------------------------------------------------------------
 }

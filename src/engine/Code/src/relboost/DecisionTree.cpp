@@ -7,7 +7,7 @@ namespace decisiontrees
 // ----------------------------------------------------------------------------
 
 DecisionTree::DecisionTree(
-    const std::shared_ptr<const std::vector<std::string>>& _encoding,
+    const std::shared_ptr<const std::vector<strings::String>>& _encoding,
     const std::shared_ptr<const Hyperparameters>& _hyperparameters,
     const std::shared_ptr<lossfunctions::LossFunction>& _loss_function,
     const size_t _peripheral_used,
@@ -25,23 +25,34 @@ DecisionTree::DecisionTree(
 // ----------------------------------------------------------------------------
 
 DecisionTree::DecisionTree(
-    const std::shared_ptr<const std::vector<std::string>>& _encoding,
+    const std::shared_ptr<const std::vector<strings::String>>& _encoding,
     const std::shared_ptr<const Hyperparameters>& _hyperparameters,
     const std::shared_ptr<lossfunctions::LossFunction>& _loss_function,
     const Poco::JSON::Object& _obj )
     : comm_( nullptr ),
       encoding_( _encoding ),
-      hyperparameters_( _hyperparameters ),
-      loss_function_( aggregations::AggregationParser::parse(
-          JSON::get_value<std::string>( _obj, "loss_" ), _loss_function ) )
+      hyperparameters_( _hyperparameters )
 {
-    input_.reset(
-        new containers::Schema( *JSON::get_object( _obj, "input_" ) ) );
+    if ( _obj.has( "input_" ) )
+        {
+            loss_function_ = aggregations::AggregationParser::parse(
+                JSON::get_value<std::string>( _obj, "loss_" ), _loss_function );
+        }
+    else
+        {
+            loss_function_ = _loss_function;
+        }
+
+    if ( _obj.has( "input_" ) )
+        {
+            input_.reset( new containers::Placeholder(
+                *JSON::get_object( _obj, "input_" ) ) );
+        }
 
     intercept_ = JSON::get_value<Float>( _obj, "intercept_" );
 
     output_.reset(
-        new containers::Schema( *JSON::get_object( _obj, "output_" ) ) );
+        new containers::Placeholder( *JSON::get_object( _obj, "output_" ) ) );
 
     peripheral_used_ = JSON::get_value<size_t>( _obj, "peripheral_used_" );
 
@@ -60,17 +71,20 @@ DecisionTree::DecisionTree(
 
 void DecisionTree::fit(
     const containers::DataFrameView& _output,
-    const containers::DataFrame& _input,
+    const std::optional<containers::DataFrame>& _input,
     const containers::Subfeatures& _subfeatures,
-    const std::vector<const containers::Match*>::iterator _begin,
-    const std::vector<const containers::Match*>::iterator _end )
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _end )
 {
     // ------------------------------------------------------------------------
     // Store input and output (we need the column names).
 
-    input_.reset( new containers::Schema( _input.to_schema() ) );
+    if ( _input )
+        {
+            input_.reset( new containers::Placeholder( _input->to_schema() ) );
+        }
 
-    output_.reset( new containers::Schema( _output.df().to_schema() ) );
+    output_.reset( new containers::Placeholder( _output.df().to_schema() ) );
 
     // ------------------------------------------------------------------------
     // Set up and fit root node
@@ -106,7 +120,10 @@ Poco::JSON::Object::Ptr DecisionTree::to_json_obj() const
 
     assert_true( root_ );
 
-    obj->set( "input_", input().to_json_obj() );
+    if ( input_ )
+        {
+            obj->set( "input_", input().to_json_obj() );
+        }
 
     obj->set( "intercept_", intercept_ );
 
@@ -169,9 +186,15 @@ std::string DecisionTree::to_sql(
     sql << tab << "END" << std::endl
         << ") AS feature_" << _feature_num << "," << std::endl;
 
-    sql << tab << " t1." << output().join_keys_name() << "," << std::endl;
+    sql << tab << " t1." << output().join_keys_name();
 
-    sql << tab << " t1." << output().time_stamps_name() << std::endl;
+    if ( output().num_time_stamps() > 0 )
+        {
+            sql << "," << std::endl;
+            sql << tab << " t1." << output().time_stamps_name();
+        }
+
+    sql << std::endl;
 
     // -------------------------------------------------------------------
     // JOIN statement
@@ -181,8 +204,14 @@ std::string DecisionTree::to_sql(
     sql << tab << "SELECT *," << std::endl;
 
     sql << tab << tab << "ROW_NUMBER() OVER ( ORDER BY "
-        << output().join_keys_name() << ", " << output().time_stamps_name()
-        << " ASC ) AS rownum" << std::endl;
+        << output().join_keys_name();
+
+    if ( output().num_time_stamps() > 0 )
+        {
+            sql << ", " << output().time_stamps_name();
+        }
+
+    sql << " ASC ) AS rownum" << std::endl;
 
     sql << tab << "FROM " << output().name() << std::endl;
 
@@ -196,7 +225,8 @@ std::string DecisionTree::to_sql(
     // -------------------------------------------------------------------
     // WHERE statement
 
-    if ( _use_timestamps )
+    if ( _use_timestamps && input().num_time_stamps() > 0 &&
+         output().num_time_stamps() > 0 )
         {
             sql << "WHERE ";
 
@@ -217,13 +247,15 @@ std::string DecisionTree::to_sql(
 
     sql << "GROUP BY t1.rownum," << std::endl;
 
-    sql << tab << tab << " t1." << output().join_keys_name() << ","
-        << std::endl;
+    sql << tab << tab << " t1." << output().join_keys_name();
 
-    sql << tab << tab << " t1." << output().time_stamps_name() << ";"
-        << std::endl
-        << std::endl
-        << std::endl;
+    if ( output().num_time_stamps() > 0 )
+        {
+            sql << "," << std::endl;
+            sql << tab << tab << " t1." << output().time_stamps_name();
+        }
+
+    sql << ";" << std::endl << std::endl << std::endl;
 
     // -------------------------------------------------------------------
 
@@ -236,7 +268,7 @@ std::string DecisionTree::to_sql(
 
 std::vector<Float> DecisionTree::transform(
     const containers::DataFrameView& _output,
-    const containers::DataFrame& _input,
+    const std::optional<containers::DataFrame>& _input,
     const containers::Subfeatures& _subfeatures ) const
 {
     // ------------------------------------------------------------------------
@@ -256,12 +288,19 @@ std::vector<Float> DecisionTree::transform(
 
             std::vector<containers::Match> matches;
 
-            utils::Matchmaker::make_matches(
-                _output,
-                _input,
-                hyperparameters_->use_timestamps_,
-                ix_output,
-                &matches );
+            if ( _input )
+                {
+                    utils::Matchmaker::make_matches(
+                        _output,
+                        *_input,
+                        hyperparameters_->use_timestamps_,
+                        ix_output,
+                        &matches );
+                }
+            else
+                {
+                    matches = {containers::Match{0, ix_output}};
+                }
 
             // ------------------------------------------------------------------------
             // Calculate weights for each match.

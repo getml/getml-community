@@ -7,18 +7,28 @@ namespace ensemble
 // ----------------------------------------------------------------------------
 
 DecisionTreeEnsemble::DecisionTreeEnsemble(
-    const std::shared_ptr<const std::vector<std::string>> &_categories,
+    const std::shared_ptr<const std::vector<strings::String>> &_categories,
     const std::shared_ptr<const descriptors::Hyperparameters> &_hyperparameters,
     const std::shared_ptr<const std::vector<std::string>> &_peripheral,
-    const std::shared_ptr<const decisiontrees::Placeholder> &_placeholder )
-    : impl_( _categories, _hyperparameters, *_peripheral, *_placeholder )
+    const std::shared_ptr<const containers::Placeholder> &_placeholder,
+    const std::shared_ptr<const std::vector<containers::Placeholder>>
+        &_peripheral_schema,
+    const std::shared_ptr<const containers::Placeholder> &_population_schema )
+    : impl_(
+          _categories,
+          _hyperparameters,
+          *_peripheral,
+          *_placeholder,
+          _peripheral_schema,
+          _population_schema )
 {
+    placeholder().check_data_model( peripheral(), true );
 }
 
 // ----------------------------------------------------------------------------
 
 DecisionTreeEnsemble::DecisionTreeEnsemble(
-    const std::shared_ptr<const std::vector<std::string>> &_categories,
+    const std::shared_ptr<const std::vector<strings::String>> &_categories,
     const Poco::JSON::Object &_json_obj )
     : impl_(
           _categories,
@@ -26,10 +36,13 @@ DecisionTreeEnsemble::DecisionTreeEnsemble(
               *JSON::get_object( _json_obj, "hyperparameters_" ) ),
           JSON::array_to_vector<std::string>(
               JSON::get_array( _json_obj, "peripheral_" ) ),
-          decisiontrees::Placeholder(
-              *JSON::get_object( _json_obj, "placeholder_" ) ) )
+          containers::Placeholder(
+              *JSON::get_object( _json_obj, "placeholder_" ) ),
+          nullptr,
+          nullptr )
 {
     *this = from_json_obj( _json_obj );
+    placeholder().check_data_model( peripheral(), true );
 }
 
 // ----------------------------------------------------------------------------
@@ -60,7 +73,8 @@ void DecisionTreeEnsemble::check_plausibility_of_targets(
     if ( _population_table.num_targets() < 1 )
         {
             throw std::invalid_argument(
-                "The population table must have at least one target column!" );
+                "The population table must have at least one target "
+                "column!" );
         }
 
     for ( size_t j = 0; j < _population_table.num_targets(); ++j )
@@ -71,7 +85,8 @@ void DecisionTreeEnsemble::check_plausibility_of_targets(
                          std::isinf( _population_table.target( i, j ) ) )
                         {
                             throw std::invalid_argument(
-                                "Target values can not be NULL or infinite!" );
+                                "Target values can not be NULL or "
+                                "infinite!" );
                         }
                 }
         }
@@ -86,7 +101,8 @@ void DecisionTreeEnsemble::check_plausibility_of_targets(
                                  _population_table.target( i, j ) != 1.0 )
                                 {
                                     throw std::invalid_argument(
-                                        "Target values for a classification "
+                                        "Target values for a "
+                                        "classification "
                                         "problem have to be 0.0 or 1.0!" );
                                 }
                         }
@@ -100,18 +116,18 @@ void DecisionTreeEnsemble::extract_schemas(
     const containers::DataFrame &_population,
     const std::vector<containers::DataFrame> &_peripheral )
 {
-    impl().population_schema_.reset(
-        new containers::Schema( _population.to_schema() ) );
+    impl().population_schema_ = std::make_shared<const containers::Placeholder>(
+        _population.to_schema() );
 
-    std::vector<containers::Schema> peripheral;
+    auto peripheral_schema =
+        std::make_shared<std::vector<containers::Placeholder>>();
 
     for ( auto &df : _peripheral )
         {
-            peripheral.push_back( df.to_schema() );
+            peripheral_schema->push_back( df.to_schema() );
         }
 
-    impl().peripheral_schema_.reset(
-        new std::vector<containers::Schema>( peripheral ) );
+    impl().peripheral_schema_ = peripheral_schema;
 }
 
 // ----------------------------------------------------------------------------
@@ -202,7 +218,7 @@ void DecisionTreeEnsemble::fit(
                 _population,
                 _peripheral,
                 placeholder(),
-                peripheral_names(),
+                peripheral(),
                 std::shared_ptr<const logging::AbstractLogger>(),
                 &comm,
                 &ensembles[i] ) );
@@ -222,7 +238,7 @@ void DecisionTreeEnsemble::fit(
                 _population,
                 _peripheral,
                 placeholder(),
-                peripheral_names(),
+                peripheral(),
                 _logger,
                 &comm,
                 this );
@@ -278,7 +294,8 @@ void DecisionTreeEnsemble::fit(
     if ( _table_holder->main_tables_[0].nrows() == 0 )
         {
             throw std::invalid_argument(
-                "Your population table needs to contain at least one row!" );
+                "Your population table needs to contain at least one "
+                "row!" );
         }
 
     // ----------------------------------------------------------------
@@ -371,8 +388,8 @@ void DecisionTreeEnsemble::fit(
 
     // ----------------------------------------------------------------
     // containers::Match containers are pointers to simple structs, which
-    // represent a match between a key in the peripheral table and a key in the
-    // population table.
+    // represent a match between a key in the peripheral table and a key in
+    // the population table.
 
     debug_log( "fit: Creating matches..." );
 
@@ -469,8 +486,8 @@ void DecisionTreeEnsemble::fit(
                 &trees() );
 
             // -------------------------------------------------------------
-            // Recalculate residuals, which is needed for the gradient boosting
-            // algorithm.
+            // Recalculate residuals, which is needed for the gradient
+            // boosting algorithm.
 
             debug_log( "fit: Recalculating residuals..." );
 
@@ -478,11 +495,17 @@ void DecisionTreeEnsemble::fit(
                 {
                     const auto ix = last_tree()->ix_perip_used();
 
+                    const auto agg =
+                        last_tree()->make_aggregation( enums::Mode::transform );
+
+                    agg->set_aggregation_impl( &aggregation_impl() );
+
                     std::vector<Float> new_feature = last_tree()->transform(
                         _table_holder->main_tables_[ix],
                         _table_holder->peripheral_tables_[ix],
                         subfeatures[ix],
-                        hyperparameters().use_timestamps_ );
+                        hyperparameters().use_timestamps_,
+                        agg.get() );
 
                     _opt->update_yhat_old( *sample_weights, new_feature );
 
@@ -535,11 +558,19 @@ DecisionTreeEnsemble DecisionTreeEnsemble::from_json_obj(
     // ----------------------------------------
     // Extract placeholders.
 
-    model.peripheral_names() = JSON::array_to_vector<std::string>(
-        JSON::get_array( _json_obj, "peripheral_" ) );
+    model.impl().peripheral_ =
+        std::vector<std::string>( JSON::array_to_vector<std::string>(
+            JSON::get_array( _json_obj, "peripheral_" ) ) );
 
-    model.impl().placeholder_population_.reset( new decisiontrees::Placeholder(
+    model.impl().placeholder_.reset( new containers::Placeholder(
         *JSON::get_object( _json_obj, "placeholder_" ) ) );
+
+    // ----------------------------------------
+
+    // TODO: For backwards compatability.
+    model.allow_http() = _json_obj.has( "allow_http_" )
+                             ? JSON::get_value<bool>( _json_obj, "allow_http_" )
+                             : false;
 
     // ----------------------------------------
     // Extract features.
@@ -610,24 +641,33 @@ DecisionTreeEnsemble DecisionTreeEnsemble::from_json_obj(
     if ( _json_obj.has( "population_schema_" ) )
         {
             model.impl().population_schema_ =
-                std::make_shared<const containers::Schema>(
+                std::make_shared<const containers::Placeholder>(
                     *JSON::get_object( _json_obj, "population_schema_" ) );
 
-            std::vector<containers::Schema> peripheral;
+            std::vector<containers::Placeholder> peripheral_schema;
 
             const auto peripheral_arr =
                 *JSON::get_array( _json_obj, "peripheral_schema_" );
 
             for ( size_t i = 0; i < peripheral_arr.size(); ++i )
                 {
-                    peripheral.push_back(
-                        containers::Schema( *peripheral_arr.getObject(
-                            static_cast<unsigned int>( i ) ) ) );
+                    const auto ptr = peripheral_arr.getObject(
+                        static_cast<unsigned int>( i ) );
+
+                    if ( !ptr )
+                        {
+                            throw std::invalid_argument(
+                                "peripheral_schema_, element " +
+                                std::to_string( i ) + " is not an Object!" );
+                        }
+
+                    peripheral_schema.push_back(
+                        containers::Placeholder( *ptr ) );
                 }
 
             model.impl().peripheral_schema_ =
-                std::make_shared<const std::vector<containers::Schema>>(
-                    peripheral );
+                std::make_shared<const std::vector<containers::Placeholder>>(
+                    peripheral_schema );
         }
 
     // ----------------------------------------
@@ -686,6 +726,8 @@ Poco::JSON::Object DecisionTreeEnsemble::to_monitor(
 
     obj.set( "name_", _name );
 
+    obj.set( "allow_http_", allow_http() );
+
     // ----------------------------------------
 
     if ( has_population_schema() )
@@ -698,11 +740,9 @@ Poco::JSON::Object DecisionTreeEnsemble::to_monitor(
                 // ----------------------------------------
                 // Extract placeholders
 
-                obj.set(
-                    "peripheral_",
-                    JSON::vector_to_array( peripheral_names() ) );
+                obj.set( "peripheral_", JSON::vector_to_array( peripheral() ) );
 
-                obj.set( "population_", placeholder().to_json_obj() );
+                obj.set( "placeholder_", placeholder().to_json_obj() );
 
                 // ----------------------------------------
                 // Insert schema
@@ -752,10 +792,9 @@ Poco::JSON::Object DecisionTreeEnsemble::to_monitor(
             // ----------------------------------------
             // Insert placeholders
 
-            obj.set(
-                "peripheral_", JSON::vector_to_array( peripheral_names() ) );
+            obj.set( "peripheral_", JSON::vector_to_array( peripheral() ) );
 
-            obj.set( "population_", placeholder().to_json_obj() );
+            obj.set( "placeholder_", placeholder().to_json_obj() );
 
             // ----------------------------------------
             // Insert hyperparameters
@@ -806,13 +845,12 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json_obj(
 
     // ----------------------------------------
 
-    obj.set( "peripheral_", JSON::vector_to_array( peripheral_names() ) );
+    obj.set( "peripheral_", JSON::vector_to_array( peripheral() ) );
 
     obj.set( "placeholder_", placeholder().to_json_obj() );
 
     // ----------------------------------------
 
-    // Subensembles in a snowflake model do not have schemata.
     if ( impl().population_schema_ )
         {
             Poco::JSON::Array peripheral_schema_arr;
@@ -833,6 +871,10 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json_obj(
         {
             return obj;
         }
+
+    // ----------------------------------------
+
+    obj.set( "allow_http_", allow_http() );
 
     // ----------------------------------------
     // Extract features
@@ -945,8 +987,8 @@ containers::Features DecisionTreeEnsemble::transform(
         }
 
     // ------------------------------------------------------
-    // thread_nums signify the thread number that a particular row belongs to.
-    // The idea is to separate the join keys as clearly as possible.
+    // thread_nums signify the thread number that a particular row belongs
+    // to. The idea is to separate the join keys as clearly as possible.
 
     auto num_threads =
         Threadutils::get_num_threads( hyperparameters().num_threads_ );
@@ -1095,7 +1137,8 @@ std::vector<Float> DecisionTreeEnsemble::transform(
 
     assert_true( ix < _table_holder.main_tables_.size() );
 
-    auto aggregation = trees()[_num_feature].make_aggregation();
+    auto aggregation =
+        trees()[_num_feature].make_aggregation( enums::Mode::transform );
 
     aggregation->set_aggregation_impl( _impl );
 

@@ -25,7 +25,7 @@ std::shared_ptr<const std::vector<Int>> CriticalValueSorter::sort(
                     continue;
                 }
 
-            const auto weight = std::get<1>( it->weights_ );
+            const auto weight = std::get<2>( it->weights_ );
 
             assert_true(
                 std::distance(
@@ -41,19 +41,17 @@ std::shared_ptr<const std::vector<Int>> CriticalValueSorter::sort(
     // Sort the tuples by descending order of the
     // weights.
 
-    const auto sort_tuples =
-        []( const std::tuple<Float, Int>& t1,
-            const std::tuple<Float, Int>& t2 ) {
-            return std::get<0>( t1 ) > std::get<0>( t2 );
-        };
+    const auto sort_tuples = []( const std::tuple<Float, Int>& t1,
+                                 const std::tuple<Float, Int>& t2 ) {
+        return std::get<0>( t1 ) > std::get<0>( t2 );
+    };
 
     std::sort( tuples.begin(), tuples.end(), sort_tuples );
 
     // ------------------------------------------------------------------------
     // Copy into critical values.
 
-    const auto sorted =
-        std::make_shared<std::vector<Int>>( tuples.size() );
+    const auto sorted = std::make_shared<std::vector<Int>>( tuples.size() );
 
     for ( size_t i = 0; i < tuples.size(); ++i )
         {

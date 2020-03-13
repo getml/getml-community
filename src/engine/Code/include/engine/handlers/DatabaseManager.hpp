@@ -37,6 +37,9 @@ class DatabaseManager
     /// Runs a query on the database.
     void execute( Poco::Net::StreamSocket* _socket );
 
+    /// Returns the contents of an SQL query in JSON format.
+    void get( const std::string& _name, Poco::Net::StreamSocket* _socket );
+
     /// Lists the column names of the table signified by _name.
     void get_colnames(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
@@ -55,6 +58,10 @@ class DatabaseManager
     /// Lists all tables contained in the database.
     void list_tables( Poco::Net::StreamSocket* _socket );
 
+    /// Creates a new database connector.
+    void new_db(
+        const Poco::JSON::Object& _cmd, Poco::Net::StreamSocket* _socket );
+
     /// Reads a CSV file into the database.
     void read_csv(
         const std::string& _name,
@@ -66,6 +73,12 @@ class DatabaseManager
     void sniff_csv(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket ) const;
+
+    /// Sniffs a table and generates suitable keyword arguments
+    /// to build a DataFrame.
+    void sniff_table(
+        const std::string& _table_name,
         Poco::Net::StreamSocket* _socket ) const;
 
     // ------------------------------------------------------------------------
@@ -85,17 +98,6 @@ class DatabaseManager
         multithreading::ReadLock read_lock( read_write_lock_ );
         assert_true( connector_ );
         return connector_;
-    }
-
-    /// Creates a new database connector.
-    void new_db(
-        const Poco::JSON::Object& _cmd, Poco::Net::StreamSocket* _socket )
-    {
-        multithreading::WriteLock write_lock( read_write_lock_ );
-        connector_ = database::DatabaseParser::parse( _cmd );
-        write_lock.unlock();
-        post_tables();
-        communication::Sender::send_string( "Success!", _socket );
     }
 
     /// Sends the name of all tables currently held in the database to the

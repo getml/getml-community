@@ -5,7 +5,8 @@ namespace relboost
 // ----------------------------------------------------------------------------
 
 Hyperparameters::Hyperparameters()
-    : delta_t_( 0.3 ),
+    : allow_null_weights_( false ),
+      delta_t_( 0.3 ),
       gamma_( 1.0 ),
       include_categorical_( true ),
       loss_function_( "SquareLoss" ),
@@ -29,7 +30,12 @@ Hyperparameters::Hyperparameters()
 // ----------------------------------------------------------------------------
 
 Hyperparameters::Hyperparameters( const Poco::JSON::Object& _obj )
-    : delta_t_( JSON::get_value<Float>( _obj, "delta_t_" ) ),
+    : allow_null_weights_(
+          _obj.has( "allow_null_weights_" )
+              ? JSON::get_value<bool>( _obj, "allow_null_weights_" )
+              : true ),  // TODO: Check inserted for backwards compatability.
+                         // Remove later.
+      delta_t_( JSON::get_value<Float>( _obj, "delta_t_" ) ),
       feature_selector_( _obj.getObject( "feature_selector_" ) ),
       gamma_( JSON::get_value<Float>( _obj, "gamma_" ) ),
       include_categorical_(
@@ -47,7 +53,8 @@ Hyperparameters::Hyperparameters( const Poco::JSON::Object& _obj )
       session_name_(
           _obj.has( "session_name_" )
               ? JSON::get_value<std::string>( _obj, "session_name_" )
-              : "" ),
+              : "" ),  // TODO: Check inserted for backwards compatability.
+                       // Remove later.
       share_selected_features_(
           JSON::get_value<Float>( _obj, "share_selected_features_" ) ),
       shrinkage_( JSON::get_value<Float>( _obj, "shrinkage_" ) ),
@@ -90,6 +97,8 @@ Poco::JSON::Object::Ptr Hyperparameters::to_json_obj() const
     Poco::JSON::Object::Ptr obj( new Poco::JSON::Object() );
 
     // ---------------------------------------------------------
+
+    obj->set( "allow_null_weights_", allow_null_weights_ );
 
     obj->set( "delta_t_", delta_t_ );
 

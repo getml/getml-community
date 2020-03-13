@@ -6,7 +6,7 @@ namespace database
 // ----------------------------------------------------------------------------
 
 std::shared_ptr<Connector> DatabaseParser::parse(
-    const Poco::JSON::Object& _obj )
+    const Poco::JSON::Object& _obj, const std::string& _password )
 {
     const auto db = jsonutils::JSON::get_value<std::string>( _obj, "db_" );
 
@@ -20,15 +20,19 @@ std::shared_ptr<Connector> DatabaseParser::parse(
 
             return std::make_shared<Sqlite3>( name, time_formats );
         }
-    else if ( db == "postgres" )
+    else if ( db == "mysql" || db == "mariadb" )
+        {
+            return std::make_shared<MySQL>( _obj, _password, time_formats );
+        }
+    else if ( db == "postgres" || db == "greenplum" )
         {
 #if ( defined( _WIN32 ) || defined( _WIN64 ) )
             throw std::invalid_argument(
-                "PostgreSQL is not supported on Windows!" );
+                "PostgreSQL and Greenplum are not supported on Windows!" );
 
             return std::shared_ptr<Connector>();
 #else
-            return std::make_shared<Postgres>( _obj, time_formats );
+            return std::make_shared<Postgres>( _obj, _password, time_formats );
 #endif
         }
     else
