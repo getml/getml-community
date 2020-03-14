@@ -17,7 +17,10 @@ class Pipeline
     Pipeline(
         const std::shared_ptr<const std::vector<strings::String>>& _categories,
         const Poco::JSON::Object& _obj )
-        : categories_( _categories ), obj_( _obj )
+        : allow_http_( false ),
+          categories_( _categories ),
+          obj_( _obj ),
+          session_name_( JSON::get_value<std::string>( _obj, "session_name_" ) )
     {
         // This won't to anything - the point it to make sure that it can be
         // parsed correctly.
@@ -31,6 +34,13 @@ class Pipeline
     // --------------------------------------------------------
 
    public:
+    /// Returns the feature names.
+    std::tuple<
+        std::vector<std::string>,
+        std::vector<std::string>,
+        std::vector<std::string>>
+    feature_names() const;
+
     /// Fit the pipeline.
     void fit(
         const Poco::JSON::Object& _cmd,
@@ -44,6 +54,21 @@ class Pipeline
         const std::shared_ptr<const monitoring::Logger>& _logger,
         const std::map<std::string, containers::DataFrame>& _data_frames,
         Poco::Net::StreamSocket* _socket );
+
+    // --------------------------------------------------------
+
+   public:
+    /// Trivial accessor
+    bool& allow_http() { return allow_http_; }
+
+    /// Trivial (const) accessor
+    bool allow_http() const { return allow_http_; }
+
+    /// Trivial (const) accessor
+    const std::string& session_name() const { return session_name_; }
+
+    /// Trivial (const) accessor
+    const metrics::Scores& scores() const { return scores_; }
 
     // --------------------------------------------------------
 
@@ -93,13 +118,11 @@ class Pipeline
         const;
 
     /// Prepares the feature engineerers from the JSON object.
-    std::vector<
-        containers::Optional<featureengineerers::AbstractFeatureEngineerer>>
+    std::vector<std::shared_ptr<featureengineerers::AbstractFeatureEngineerer>>
     init_feature_engineerers( const size_t _num_targets ) const;
 
     /// Prepares the feature engineerers from the JSON object.
-    std::vector<
-        containers::Optional<featureengineerers::AbstractFeatureEngineerer>>
+    std::vector<std::shared_ptr<featureengineerers::AbstractFeatureEngineerer>>
     init_feature_engineerers(
         const Poco::JSON::Object& _cmd,
         const std::map<std::string, containers::DataFrame>& _data_frames )
@@ -183,12 +206,14 @@ class Pipeline
     // --------------------------------------------------------
 
    private:
+    /// Whether the pipeline is allowed to handle HTTP requests.
+    bool allow_http_;
+
     /// The categories used for the mapping - needed by the feature engineerers.
     std::shared_ptr<const std::vector<strings::String>> categories_;
 
     /// The feature engineerers used in this pipeline.
-    std::vector<
-        containers::Optional<featureengineerers::AbstractFeatureEngineerer>>
+    std::vector<std::shared_ptr<featureengineerers::AbstractFeatureEngineerer>>
         feature_engineerers_;
 
     /// The JSON Object used to construct the pipeline.
@@ -199,12 +224,14 @@ class Pipeline
 
     /// The predictors used in this pipeline (every target has its own set of
     /// predictors).
-    /// TODO: Change to Optional instead of shared_ptr!
     std::vector<std::vector<std::shared_ptr<predictors::Predictor>>>
         predictors_;
 
     /// The scores used to evaluate this pipeline
     metrics::Scores scores_;
+
+    /// The name of the session used.
+    std::string session_name_;
 
     // -----------------------------------------------
 };

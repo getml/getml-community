@@ -56,6 +56,8 @@
 
 #include "engine/licensing/licensing.hpp"
 
+#include "engine/pipelines/pipelines.hpp"
+
 // ----------------------------------------------------
 // Module files
 
@@ -77,6 +79,8 @@
 
 #include "engine/handlers/MultirelModelManager.hpp"
 #include "engine/handlers/RelboostModelManager.hpp"
+
+#include "engine/handlers/PipelineManager.hpp"
 
 #include "engine/handlers/ProjectManager.hpp"
 

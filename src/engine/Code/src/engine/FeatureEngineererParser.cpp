@@ -6,7 +6,7 @@ namespace featureengineerers
 {
 // ----------------------------------------------------------------------
 
-containers::Optional<AbstractFeatureEngineerer> FeatureEngineererParser::parse(
+std::shared_ptr<AbstractFeatureEngineerer> FeatureEngineererParser::parse(
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<const std::vector<strings::String>>& _categories )
 {
@@ -14,15 +14,15 @@ containers::Optional<AbstractFeatureEngineerer> FeatureEngineererParser::parse(
 
     if ( type == "MultirelModel" )
         {
-            return containers::Optional<AbstractFeatureEngineerer>(
-                new FeatureEngineerer<multirel::ensemble::DecisionTreeEnsemble>(
-                    _categories, _cmd ) );
+            return std::make_shared<
+                FeatureEngineerer<multirel::ensemble::DecisionTreeEnsemble>>(
+                _categories, _cmd );
         }
     else if ( type == "RelboostModel" )
         {
-            return containers::Optional<AbstractFeatureEngineerer>(
-                new FeatureEngineerer<relboost::ensemble::DecisionTreeEnsemble>(
-                    _categories, _cmd ) );
+            return std::make_shared<
+                FeatureEngineerer<multirel::ensemble::DecisionTreeEnsemble>>(
+                _categories, _cmd );
         }
     else
         {
@@ -30,7 +30,7 @@ containers::Optional<AbstractFeatureEngineerer> FeatureEngineererParser::parse(
                 "Feature engineering algorithm of type '" + type +
                 "' not known!" );
 
-            return containers::Optional<AbstractFeatureEngineerer>();
+            return std::shared_ptr<AbstractFeatureEngineerer>();
         }
 }
 

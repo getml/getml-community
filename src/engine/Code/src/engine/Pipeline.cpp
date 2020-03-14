@@ -63,6 +63,43 @@ void Pipeline::calculate_feature_stats(
 
 // ----------------------------------------------------------------------------
 
+std::tuple<
+    std::vector<std::string>,
+    std::vector<std::string>,
+    std::vector<std::string>>
+Pipeline::feature_names() const
+{
+    std::vector<std::string> autofeatures;
+
+    size_t i = 0;
+
+    for ( const auto& fe : feature_engineerers_ )
+        {
+            for ( size_t j = 0; j < fe->num_features(); ++j )
+                {
+                    autofeatures.push_back(
+                        "feature_" + std::to_string( ++i ) );
+                }
+        }
+
+    if ( predictor_impl_ )
+        {
+            return std::make_tuple(
+                autofeatures,
+                predictor_impl().categorical_colnames(),
+                predictor_impl().numerical_colnames() );
+        }
+    else
+        {
+            return std::make_tuple(
+                autofeatures,
+                std::vector<std::string>(),
+                std::vector<std::string>() );
+        }
+}
+
+// ----------------------------------------------------------------------------
+
 containers::Features Pipeline::generate_numerical_features(
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<const monitoring::Logger>& _logger,
@@ -293,7 +330,7 @@ containers::CategoricalFeatures Pipeline::get_categorical_features(
 
 // ----------------------------------------------------------------------
 
-std::vector<containers::Optional<featureengineerers::AbstractFeatureEngineerer>>
+std::vector<std::shared_ptr<featureengineerers::AbstractFeatureEngineerer>>
 Pipeline::init_feature_engineerers( const size_t _num_targets ) const
 {
     // ----------------------------------------------------------------------
@@ -302,8 +339,7 @@ Pipeline::init_feature_engineerers( const size_t _num_targets ) const
 
     // ----------------------------------------------------------------------
 
-    std::vector<
-        containers::Optional<featureengineerers::AbstractFeatureEngineerer>>
+    std::vector<std::shared_ptr<featureengineerers::AbstractFeatureEngineerer>>
         feature_engineerers;
 
     for ( size_t i = 0; i < arr->size(); ++i )
@@ -358,7 +394,7 @@ Pipeline::init_feature_engineerers( const size_t _num_targets ) const
 
 // ----------------------------------------------------------------------
 
-std::vector<containers::Optional<featureengineerers::AbstractFeatureEngineerer>>
+std::vector<std::shared_ptr<featureengineerers::AbstractFeatureEngineerer>>
 Pipeline::init_feature_engineerers(
     const Poco::JSON::Object& _cmd,
     const std::map<std::string, containers::DataFrame>& _data_frames ) const
@@ -384,8 +420,6 @@ Pipeline::init_predictors(
 
     std::vector<std::vector<std::shared_ptr<predictors::Predictor>>> predictors;
 
-    // TODO: Once this is replaced by Optional, we can use a more beautiful
-    // approach for this.
     for ( size_t t = 0; t < _num_targets; ++t )
         {
             std::vector<std::shared_ptr<predictors::Predictor>>

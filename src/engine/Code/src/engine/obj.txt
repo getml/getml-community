@@ -19,6 +19,7 @@ set(
     ${ENGINE_SOURCE_DIRECTORY}/NumOpParser.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Options.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Pipeline.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/PipelineManager.cpp
     ${ENGINE_SOURCE_DIRECTORY}/ProjectManager.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Receiver.cpp
     ${ENGINE_SOURCE_DIRECTORY}/RequestHandler.cpp
