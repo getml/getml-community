@@ -32,19 +32,17 @@ void PipelineManager::fit(
     Poco::Net::StreamSocket* _socket )
 {
     // -------------------------------------------------------
-    // Some models are only supported by the premium version.
-
-    // TODO
-    /*
-    if constexpr ( ModelType::premium_only_ )
-        {
-            license_checker().check_enterprise();
-        }*/
-
-    // -------------------------------------------------------
     // Find the pipeline.
 
     auto pipeline = get_pipeline( _name );
+
+    // -------------------------------------------------------
+    // Some models are only supported by the premium version.
+
+    if ( pipeline.premium_only() )
+        {
+            license_checker().check_enterprise();
+        }
 
     communication::Sender::send_string( "Found!", _socket );
 
@@ -140,18 +138,14 @@ void PipelineManager::launch_hyperopt(
     std::lock_guard<std::mutex> project_guard( project_mtx() );
 
     // -------------------------------------------------------
-    // Some models are only supported by the premium version.
-
-    // TODO
-    /*if constexpr ( ModelType::premium_only_ )
-        {
-            license_checker().check_enterprise();
-        }*/
-
-    // -------------------------------------------------------
     // Find the reference pipeline.
 
     auto pipeline = get_pipeline( _name );
+
+    if ( pipeline.premium_only() )
+        {
+            license_checker().check_enterprise();
+        }
 
     communication::Sender::send_string( "Found!", _socket );
 
@@ -563,18 +557,14 @@ void PipelineManager::transform(
     Poco::Net::StreamSocket* _socket )
 {
     // -------------------------------------------------------
-    // Some models are only supported by the premium version.
-
-    // TODO
-    /*if constexpr ( ModelType::premium_only_ )
-        {
-            license_checker().check_enterprise();
-        }*/
-
-    // -------------------------------------------------------
     // Find the model.
 
     auto pipeline = get_pipeline( _name );
+
+    if ( pipeline.premium_only() )
+        {
+            license_checker().check_enterprise();
+        }
 
     if ( JSON::get_value<bool>( _cmd, "http_request_" ) )
         {
@@ -587,11 +577,10 @@ void PipelineManager::transform(
                         "via the API or the getML monitor!" );
                 }
 
-            // TODO
-            /*if constexpr ( !ModelType::premium_only_ )
+            if ( !pipeline.premium_only() )
                 {
                     license_checker().check_enterprise();
-                }*/
+                }
         }
 
     communication::Sender::send_string( "Found!", _socket );

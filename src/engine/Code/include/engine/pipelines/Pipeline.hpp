@@ -73,6 +73,19 @@ class Pipeline
     /// Trivial (const) accessor
     bool allow_http() const { return allow_http_; }
 
+    /// Whether the pipeline contains any premium_only feature engineerers
+    bool premium_only() const
+    {
+        return std::any_of(
+            feature_engineerers_.begin(),
+            feature_engineerers_.end(),
+            []( const std::shared_ptr<
+                featureengineerers::AbstractFeatureEngineerer>& fe ) {
+                assert_true( fe );
+                return fe->premium_only();
+            } );
+    }
+
     /// Trivial (const) accessor
     const std::string& session_name() const { return session_name_; }
 

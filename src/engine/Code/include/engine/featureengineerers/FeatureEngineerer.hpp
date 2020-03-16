@@ -59,6 +59,12 @@ class FeatureEngineerer : public AbstractFeatureEngineerer
         return feature_engineerer().num_features();
     }
 
+    /// Whether the feature engineerer is for the premium version only.
+    bool premium_only() const final
+    {
+        return FeatureEngineererType::premium_only_;
+    }
+
     /// Saves the feature engineerer in JSON format, if applicable
     void save( const std::string& _fname ) const final
     {

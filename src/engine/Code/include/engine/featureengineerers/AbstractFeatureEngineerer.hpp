@@ -34,6 +34,9 @@ class AbstractFeatureEngineerer
     /// Returns the number of features in the feature engineerer.
     virtual size_t num_features() const = 0;
 
+    /// Whether the feature engineerer is for the premium version only.
+    virtual bool premium_only() const = 0;
+
     /// Saves the Model in JSON format, if applicable
     virtual void save( const std::string& _fname ) const = 0;
 
