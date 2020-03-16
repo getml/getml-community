@@ -89,6 +89,9 @@ int main( int argc, char* argv[] )
     const auto data_frames = std::make_shared<
         std::map<std::string, engine::containers::DataFrame>>();
 
+    const auto pipelines =
+        std::make_shared<engine::handlers::PipelineManager::PipelineMapType>();
+
     const auto relboost_models = std::make_shared<
         engine::handlers::RelboostModelManager::ModelMapType>();
 
@@ -126,6 +129,19 @@ int main( int argc, char* argv[] )
             monitor,
             read_write_lock );
 
+    const auto pipeline_manager =
+        std::make_shared<engine::handlers::PipelineManager>(
+            categories,
+            database_manager,
+            data_frames,
+            join_keys_encoding,
+            license_checker,
+            logger,
+            monitor,
+            pipelines,
+            project_mtx,
+            read_write_lock );
+
     const auto relboost_model_manager =
         std::make_shared<engine::handlers::RelboostModelManager>(
             categories,
@@ -150,6 +166,7 @@ int main( int argc, char* argv[] )
             logger,
             monitor,
             options,
+            pipelines,
             project_mtx,
             read_write_lock,
             relboost_models );
@@ -174,6 +191,7 @@ int main( int argc, char* argv[] )
             logger,
             relboost_model_manager,
             options,
+            pipeline_manager,
             project_manager,
             shutdown ),
         server_socket );

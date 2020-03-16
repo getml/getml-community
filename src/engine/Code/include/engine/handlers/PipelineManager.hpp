@@ -11,7 +11,7 @@ class PipelineManager
 {
     // ------------------------------------------------------------------------
 
-   private:
+   public:
     typedef std::map<std::string, std::shared_ptr<pipelines::Pipeline>>
         PipelineMapType;
 

@@ -13,6 +13,7 @@ class ProjectManager
 
    public:
     typedef MultirelModelManager::ModelMapType MultirelModelMapType;
+    typedef PipelineManager::PipelineMapType PipelineMapType;
     typedef RelboostModelManager::ModelMapType RelboostModelMapType;
 
     // ------------------------------------------------------------------------
@@ -29,6 +30,7 @@ class ProjectManager
         const std::shared_ptr<const monitoring::Logger>& _logger,
         const std::shared_ptr<const monitoring::Monitor>& _monitor,
         const config::Options& _options,
+        const std::shared_ptr<PipelineMapType>& _pipelines,
         const std::shared_ptr<std::mutex>& _project_mtx,
         const std::shared_ptr<multithreading::ReadWriteLock>& _read_write_lock,
         const std::shared_ptr<RelboostModelMapType>& _relboost_models )
@@ -41,6 +43,7 @@ class ProjectManager
           logger_( _logger ),
           monitor_( _monitor ),
           options_( _options ),
+          pipelines_( _pipelines ),
           project_mtx_( _project_mtx ),
           read_write_lock_( _read_write_lock ),
           relboost_models_( _relboost_models )
@@ -227,6 +230,7 @@ class ProjectManager
     /// Trivial (const) accessor
     const std::map<std::string, containers::DataFrame>& data_frames() const
     {
+        assert_true( data_frames_ );
         return *data_frames_;
     }
 
@@ -235,6 +239,14 @@ class ProjectManager
     {
         multithreading::ReadLock read_lock( read_write_lock_ );
         auto ptr = utils::Getter::get( _name, &multirel_models() );
+        return *ptr;
+    }
+
+    /// Returns a deep copy of a pipeline.
+    pipelines::Pipeline get_pipeline( const std::string& _name )
+    {
+        multithreading::ReadLock read_lock( read_write_lock_ );
+        auto ptr = utils::Getter::get( _name, &pipelines() );
         return *ptr;
     }
 
@@ -267,6 +279,13 @@ class ProjectManager
     {
         assert_true( logger_ );
         return *logger_;
+    }
+
+    /// Trivial (private) accessor
+    PipelineMapType& pipelines()
+    {
+        assert_true( pipelines_ );
+        return *pipelines_;
     }
 
     /// Trivial (private) accessor
@@ -344,6 +363,9 @@ class ProjectManager
 
     /// Settings for the engine
     const config::Options options_;
+
+    /// The pipelines currently held in memory
+    const std::shared_ptr<PipelineMapType> pipelines_;
 
     /// It is sometimes necessary to prevent us from changing the project.
     const std::shared_ptr<std::mutex> project_mtx_;

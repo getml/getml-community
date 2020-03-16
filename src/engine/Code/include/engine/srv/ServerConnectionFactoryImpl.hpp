@@ -20,8 +20,8 @@ class ServerConnectionFactoryImpl : public Poco::Net::TCPServerConnectionFactory
         const std::shared_ptr<const monitoring::Logger>& _logger,
         const std::shared_ptr<handlers::RelboostModelManager>&
             _relboost_model_manager,
-        // const std::shared_ptr<const monitoring::Monitor>& _monitor,*/
         const config::Options& _options,
+        const std::shared_ptr<handlers::PipelineManager>& _pipeline_manager,
         const std::shared_ptr<handlers::ProjectManager>& _project_manager,
         const std::shared_ptr<std::atomic<bool>>& _shutdown )
         : multirel_model_manager_( _multirel_model_manager ),
@@ -29,8 +29,8 @@ class ServerConnectionFactoryImpl : public Poco::Net::TCPServerConnectionFactory
           data_frame_manager_( _data_frame_manager ),
           logger_( _logger ),
           relboost_model_manager_( _relboost_model_manager ),
-          // monitor_( _monitor ),
           options_( _options ),
+          pipeline_manager_( _pipeline_manager ),
           project_manager_( _project_manager ),
           shutdown_( _shutdown )
     {
@@ -47,8 +47,8 @@ class ServerConnectionFactoryImpl : public Poco::Net::TCPServerConnectionFactory
             database_manager_,
             data_frame_manager_,
             logger_,
+            pipeline_manager_,
             relboost_model_manager_,
-            // monitor_,
             options_,
             project_manager_,
             shutdown_ );
@@ -57,8 +57,10 @@ class ServerConnectionFactoryImpl : public Poco::Net::TCPServerConnectionFactory
     // -------------------------------------------------------------
 
    private:
-    /// Handles requests related to the Multirel models such as fit or transform.
-    const std::shared_ptr<handlers::MultirelModelManager> multirel_model_manager_;
+    /// Handles requests related to the Multirel models such as fit or
+    /// transform.
+    const std::shared_ptr<handlers::MultirelModelManager>
+        multirel_model_manager_;
 
     /// Handles requests related to the database.
     const std::shared_ptr<handlers::DatabaseManager> database_manager_;
@@ -79,6 +81,9 @@ class ServerConnectionFactoryImpl : public Poco::Net::TCPServerConnectionFactory
 
     /// Contains information on the port of the monitor process
     const config::Options options_;
+
+    /// Handles requests related to pipelines.
+    const std::shared_ptr<handlers::PipelineManager> pipeline_manager_;
 
     /// Handles requests related to the project as a whole, such as save or
     /// load.

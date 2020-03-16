@@ -309,6 +309,70 @@ void RequestHandler::run()
                 {
                     multirel_model_manager().transform( name, cmd, &socket() );
                 }
+            else if ( type == "Pipeline" )
+                {
+                    // TODO
+                    // project_manager().add_multirel_model(
+                    //    name, cmd, &socket() );
+                }
+            else if ( type == "Pipeline.copy" )
+                {
+                    // TODO
+                    // project_manager().copy_multirel_model(
+                    //    name, cmd, &socket() );
+                }
+            else if ( type == "Pipeline.delete" )
+                {
+                    // TODO
+                    // project_manager().delete_multirel_model(
+                    //    name, cmd, &socket() );
+                }
+            else if ( type == "Pipeline.deploy" )
+                {
+                    pipeline_manager().deploy( name, cmd, &socket() );
+                }
+            else if ( type == "Pipeline.fit" )
+                {
+                    pipeline_manager().fit( name, cmd, &socket() );
+                }
+            else if ( type == "Pipeline.get_hyperopt_names" )
+                {
+                    pipeline_manager().get_hyperopt_names( name, &socket() );
+                }
+            else if ( type == "Pipeline.get_hyperopt_scores" )
+                {
+                    pipeline_manager().get_hyperopt_scores( name, &socket() );
+                }
+            else if ( type == "Pipeline.launch_hyperopt" )
+                {
+                    pipeline_manager().launch_hyperopt( name, &socket() );
+                }
+            else if ( type == "Pipeline.load" )
+                {
+                    // TODO
+                    // project_manager().load_multirel_model( name, &socket() );
+                }
+            else if ( type == "Pipeline.refresh" )
+                {
+                    pipeline_manager().refresh( name, &socket() );
+                }
+            else if ( type == "Pipeline.save" )
+                {
+                    // TODO
+                    // project_manager().save_multirel_model( name, &socket() );
+                }
+            else if ( type == "Pipeline.to_json" )
+                {
+                    pipeline_manager().to_json( name, &socket() );
+                }
+            else if ( type == "Pipeline.to_sql" )
+                {
+                    pipeline_manager().to_sql( name, &socket() );
+                }
+            else if ( type == "Pipeline.transform" )
+                {
+                    pipeline_manager().transform( name, cmd, &socket() );
+                }
             else if ( type == "RelboostModel" )
                 {
                     project_manager().add_relboost_model(
