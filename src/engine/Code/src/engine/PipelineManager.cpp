@@ -19,8 +19,7 @@ void PipelineManager::deploy(
 
     set_pipeline( _name, pipeline );
 
-    // TODO
-    // post_pipeline( pipeline.to_monitor( _name ) );
+    post_pipeline( pipeline.to_monitor( _name ) );
 
     communication::Sender::send_string( "Success!", _socket );
 }
@@ -65,8 +64,7 @@ void PipelineManager::fit(
 
     // -------------------------------------------------------
 
-    // TODO
-    // post_model( model.to_monitor( _name ) );
+    post_pipeline( pipeline.to_monitor( _name ) );
 
     communication::Sender::send_string( "Trained model.", _socket );
 
@@ -370,8 +368,7 @@ void PipelineManager::score(
 
     set_pipeline( _name, pipeline );
 
-    // TODO
-    // post_model( model.to_monitor( _name ) );
+    post_pipeline( pipeline.to_monitor( _name ) );
 
     // TODO
     // communication::Sender::send_string( JSON::stringify( scores ), _socket );

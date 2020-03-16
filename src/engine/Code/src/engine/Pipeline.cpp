@@ -583,6 +583,31 @@ Poco::JSON::Object Pipeline::to_json_obj( const bool _schema_only ) const
 
 // ----------------------------------------------------------------------------
 
+Poco::JSON::Object Pipeline::to_monitor( const std::string& _name ) const
+{
+    auto feature_engineerers =
+        Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
+
+    for ( const auto& fe : feature_engineerers_ )
+        {
+            auto obj = fe->to_monitor( _name );
+
+            feature_engineerers->add( obj );
+        }
+
+    Poco::JSON::Object json_obj;
+
+    json_obj.set( "name_", _name );
+
+    json_obj.set( "allow_http_", allow_http() );
+
+    json_obj.set( "feature_engineerers_", feature_engineerers );
+
+    return json_obj;
+}
+
+// ----------------------------------------------------------------------------
+
 std::string Pipeline::to_sql() const
 {
     std::string sql;

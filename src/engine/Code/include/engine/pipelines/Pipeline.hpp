@@ -58,6 +58,9 @@ class Pipeline
     /// Return the pipeline as a JSON Object.
     Poco::JSON::Object to_json_obj( const bool _schema_only ) const;
 
+    /// Expresses the Pipeline in a form the monitor can understand.
+    Poco::JSON::Object to_monitor( const std::string& _name ) const;
+
     /// Express features as SQL code
     std::string to_sql() const;
 
