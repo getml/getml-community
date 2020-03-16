@@ -267,11 +267,10 @@ void PipelineManager::refresh(
 
     const auto pipeline = get_pipeline( _name );
 
-    // TODO
     // true refers to _schema_only.
-    // const auto obj = pipeline.to_json_obj( true );
+    const auto obj = pipeline.to_json_obj( true );
 
-    // communication::Sender::send_string( JSON::stringify( obj ), _socket );
+    communication::Sender::send_string( JSON::stringify( obj ), _socket );
 }
 
 // ------------------------------------------------------------------------
@@ -541,9 +540,8 @@ void PipelineManager::to_json(
 
     communication::Sender::send_string( "Found!", _socket );
 
-    // TODO
-    // communication::Sender::send_string(
-    //    JSON::stringify( model.to_json_obj() ), _socket );
+    communication::Sender::send_string(
+        JSON::stringify( pipeline.to_json_obj( false ) ), _socket );
 }
 
 // ------------------------------------------------------------------------

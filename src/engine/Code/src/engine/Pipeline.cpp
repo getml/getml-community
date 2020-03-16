@@ -562,6 +562,27 @@ void Pipeline::make_predictor_impl(
 
 // ----------------------------------------------------------------------------
 
+Poco::JSON::Object Pipeline::to_json_obj( const bool _schema_only ) const
+{
+    auto feature_engineerers =
+        Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
+
+    for ( const auto& fe : feature_engineerers_ )
+        {
+            auto obj = fe->to_json_obj( _schema_only );
+
+            feature_engineerers->add( obj );
+        }
+
+    Poco::JSON::Object json_obj;
+
+    json_obj.set( "feature_engineerers_", feature_engineerers );
+
+    return json_obj;
+}
+
+// ----------------------------------------------------------------------------
+
 std::string Pipeline::to_sql() const
 {
     std::string sql;

@@ -55,6 +55,9 @@ class Pipeline
         const std::map<std::string, containers::DataFrame>& _data_frames,
         Poco::Net::StreamSocket* _socket );
 
+    /// Return the pipeline as a JSON Object.
+    Poco::JSON::Object to_json_obj( const bool _schema_only ) const;
+
     /// Express features as SQL code
     std::string to_sql() const;
 
