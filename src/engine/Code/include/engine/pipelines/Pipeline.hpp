@@ -55,6 +55,9 @@ class Pipeline
         const std::map<std::string, containers::DataFrame>& _data_frames,
         Poco::Net::StreamSocket* _socket );
 
+    /// Express features as SQL code
+    std::string to_sql() const;
+
     // --------------------------------------------------------
 
    public:

@@ -333,8 +333,7 @@ void PipelineManager::send_data(
                 }
             else if ( type == "transform" )
                 {
-                    // TODO
-                    // local_pipeline_manager.transform( name, cmd, _socket );
+                    local_pipeline_manager.transform( name, cmd, _socket );
                 }
             else
                 {
@@ -554,12 +553,11 @@ void PipelineManager::to_sql(
 {
     multithreading::ReadLock read_lock( read_write_lock_ );
 
-    auto pipeline = get_pipeline( _name );
+    const auto pipeline = get_pipeline( _name );
 
     communication::Sender::send_string( "Found!", _socket );
 
-    // TODO
-    // communication::Sender::send_string( pipeline.to_sql(), _socket );
+    communication::Sender::send_string( pipeline.to_sql(), _socket );
 }
 
 // ------------------------------------------------------------------------

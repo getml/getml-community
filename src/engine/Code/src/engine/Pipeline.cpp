@@ -562,6 +562,24 @@ void Pipeline::make_predictor_impl(
 
 // ----------------------------------------------------------------------------
 
+std::string Pipeline::to_sql() const
+{
+    std::string sql;
+
+    size_t offset = 0;
+
+    for ( const auto& fe : feature_engineerers_ )
+        {
+            sql += fe->to_sql( offset );
+
+            offset += fe->num_features();
+        }
+
+    return sql;
+}
+
+// ----------------------------------------------------------------------------
+
 containers::Features Pipeline::transform(
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<const monitoring::Logger>& _logger,
