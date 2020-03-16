@@ -442,21 +442,7 @@ containers::DataFrame PipelineManager::to_df(
 
     containers::DataFrame df( df_name, _categories, _join_keys_encoding );
 
-    if ( _cmd.has( "predict_" ) && JSON::get_value<bool>( _cmd, "predict_" ) )
-        {
-            // TODO
-            /*const auto target_names = _pipeline.target_names();
-
-            assert_true( target_names.size() == _yhat.size() );
-
-            for ( size_t i = 0; i < target_names.size(); ++i )
-                {
-                    auto col = containers::Column( _yhat[i] );
-                    col.set_name( target_names[i] + "_prediction" );
-                    df.add_float_column( col, "target" );
-                }*/
-        }
-    else
+    if ( !_cmd.has( "predict_" ) || !JSON::get_value<bool>( _cmd, "predict_" ) )
         {
             const auto [autofeatures, categorical, numerical] =
                 _pipeline.feature_names();
