@@ -77,12 +77,6 @@ class PipelineManager
     /// Refreshes a pipeline in the target language
     void refresh( const std::string& _name, Poco::Net::StreamSocket* _socket );
 
-    /// Scores a pipeline
-    void score(
-        const std::string& _name,
-        const Poco::JSON::Object& _cmd,
-        Poco::Net::StreamSocket* _socket );
-
     /// Transform a pipeline to a JSON string
     void to_json( const std::string& _name, Poco::Net::StreamSocket* _socket );
 
@@ -115,6 +109,15 @@ class PipelineManager
         const std::shared_ptr<containers::Encoding>& _categories,
         const std::shared_ptr<std::map<std::string, containers::DataFrame>>&
             _local_data_frames,
+        Poco::Net::StreamSocket* _socket );
+
+    /// Scores a pipeline
+    void score(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        const std::map<std::string, containers::DataFrame>& _data_frames,
+        const containers::Features& _yhat,
+        pipelines::Pipeline* _pipeline,
         Poco::Net::StreamSocket* _socket );
 
     /// Writes a set of features to the data base.

@@ -48,6 +48,12 @@ class Pipeline
         const std::map<std::string, containers::DataFrame>& _data_frames,
         Poco::Net::StreamSocket* _socket );
 
+    /// Score the pipeline.
+    Poco::JSON::Object score(
+        const Poco::JSON::Object& _cmd,
+        const std::map<std::string, containers::DataFrame>& _data_frames,
+        const containers::Features& _yhat );
+
     /// Generate features.
     containers::Features transform(
         const Poco::JSON::Object& _cmd,
@@ -172,6 +178,13 @@ class Pipeline
     // --------------------------------------------------------
 
    private:
+    /// Whether the pipeline is used for classification problems
+    bool is_classification() const
+    {
+        // TODO
+        return false;
+    }
+
     /// Trivial (private) accessor
     size_t num_predictors_per_set() const
     {

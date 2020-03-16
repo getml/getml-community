@@ -562,6 +562,76 @@ void Pipeline::make_predictor_impl(
 
 // ----------------------------------------------------------------------------
 
+Poco::JSON::Object Pipeline::score(
+    const Poco::JSON::Object& _cmd,
+    const std::map<std::string, containers::DataFrame>& _data_frames,
+    const containers::Features& _yhat )
+{
+    // ------------------------------------------------
+    // Get population table.
+
+    const auto population_name =
+        JSON::get_value<std::string>( _cmd, "population_name_" );
+
+    const auto population_df =
+        utils::Getter::get( population_name, _data_frames );
+
+    containers::Features y;
+
+    for ( size_t i = 0; i < population_df.num_targets(); ++i )
+        {
+            y.push_back( population_df.target( i ).data_ptr() );
+        }
+
+    // ------------------------------------------------
+    // Make sure input is plausible
+
+    if ( _yhat.size() != y.size() )
+        {
+            throw std::invalid_argument(
+                "Number of columns in predictions and targets do not "
+                "match! "
+                "Number of columns in predictions: " +
+                std::to_string( _yhat.size() ) +
+                ". Number of columns in targets: " +
+                std::to_string( y.size() ) + "." );
+        }
+
+    for ( size_t i = 0; i < y.size(); ++i )
+        {
+            assert_true( y[i] );
+            assert_true( _yhat[i] );
+
+            if ( _yhat[i]->size() != y[i]->size() )
+                {
+                    throw std::invalid_argument(
+                        "Number of rows in predictions and targets do not "
+                        "match! "
+                        "Number of rows in predictions: " +
+                        std::to_string( _yhat[i]->size() ) +
+                        ". Number of rows in targets: " +
+                        std::to_string( y[i]->size() ) + "." );
+                }
+        }
+
+    // ------------------------------------------------
+    // Calculate the score
+
+    debug_log( "Calculating score..." );
+
+    auto obj = metrics::Scorer::score( is_classification(), _yhat, y );
+
+    scores_.from_json_obj( obj );
+
+    // ------------------------------------------------
+
+    return metrics::Scorer::get_metrics( obj );
+
+    // ------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
 Poco::JSON::Object Pipeline::to_json_obj( const bool _schema_only ) const
 {
     auto feature_engineerers =

@@ -64,11 +64,10 @@ void PipelineManager::fit(
 
     post_pipeline( pipeline.to_monitor( _name ) );
 
-    communication::Sender::send_string( "Trained model.", _socket );
+    communication::Sender::send_string( "Trained pipeline.", _socket );
 
-    read_lock.lock();
+    // read_lock.lock();
 
-    // TODO
     // send_data( categories_, data_frames_, _socket );
 
     // -------------------------------------------------------
@@ -267,7 +266,7 @@ void PipelineManager::refresh(
 
 // ------------------------------------------------------------------------
 
-void PipelineManager::send_data(
+/*void PipelineManager::send_data(
     const std::shared_ptr<containers::Encoding>& _categories,
     const std::shared_ptr<std::map<std::string, containers::DataFrame>>&
         _local_data_frames,
@@ -334,38 +333,32 @@ void PipelineManager::send_data(
         }
 
     // -------------------------------------------------------
-}
+}*/
 
 // ------------------------------------------------------------------------
 
 void PipelineManager::score(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,
+    const std::map<std::string, containers::DataFrame>& _data_frames,
+    const containers::Features& _yhat,
+    pipelines::Pipeline* _pipeline,
     Poco::Net::StreamSocket* _socket )
 {
     // -------------------------------------------------------
-    // Find the model.
-
-    auto pipeline = get_pipeline( _name );
-
-    communication::Sender::send_string( "Found!", _socket );
-
-    // -------------------------------------------------------
     // Do the actual scoring.
 
-    // TODO
-    // auto scores = pipeline.score( _cmd, _socket );
+    auto scores = _pipeline->score( _cmd, _data_frames, _yhat );
 
     communication::Sender::send_string( "Success!", _socket );
 
     // -------------------------------------------------------
 
-    set_pipeline( _name, pipeline );
+    set_pipeline( _name, *_pipeline );
 
-    post_pipeline( pipeline.to_monitor( _name ) );
+    post_pipeline( _pipeline->to_monitor( _name ) );
 
-    // TODO
-    // communication::Sender::send_string( JSON::stringify( scores ), _socket );
+    communication::Sender::send_string( JSON::stringify( scores ), _socket );
 
     // -------------------------------------------------------
 }
@@ -674,16 +667,17 @@ void PipelineManager::transform(
 
     // -------------------------------------------------------
 
-    send_data( categories_, local_data_frames, _socket );
+    // send_data( categories_, local_data_frames, _socket );
 
     // -------------------------------------------------------
-    // Store model, if necessary.
+    // Score model, if necessary.
 
     weak_write_lock.unlock();
 
     if ( JSON::get_value<bool>( cmd, "score_" ) )
         {
-            set_pipeline( _name, pipeline );
+            assert_true( local_data_frames );
+            score( _name, _cmd, *local_data_frames, yhat, &pipeline, _socket );
         }
 
     // -------------------------------------------------------
