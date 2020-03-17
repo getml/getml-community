@@ -101,6 +101,18 @@ struct FileHandler
         return _project_directory + "data/" + _name;
     }
 
+    /// Makes the filename for a pipeline.
+    template <
+        typename RType,
+        typename std::enable_if<
+            std::is_same<RType, std::shared_ptr<pipelines::Pipeline>>::value,
+            int>::type = 0>
+    static std::string make_fname(
+        const std::string& _project_directory, const std::string& _name )
+    {
+        return _project_directory + "pipelines/" + _name;
+    }
+
     /// Makes the filename for a relboost model.
     template <
         typename RType,

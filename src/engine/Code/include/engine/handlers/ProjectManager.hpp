@@ -89,6 +89,12 @@ class ProjectManager
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
+    /// Adds a new Pipeline to the project.
+    void add_pipeline(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
     /// Adds a new relboost model to the project.
     void add_relboost_model(
         const std::string& _name,
@@ -97,6 +103,12 @@ class ProjectManager
 
     /// Duplicates a multirel model.
     void copy_multirel_model(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
+    /// Duplicates a pipeline.
+    void copy_pipeline(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
@@ -115,6 +127,12 @@ class ProjectManager
 
     /// Deletes a data frame
     void delete_data_frame(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
+    /// Deletes a pipeline
+    void delete_pipeline(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
@@ -319,6 +337,14 @@ class ProjectManager
         purge_model( _name, _purge_from_mem_only );
         multirel_models()[_name] =
             std::make_shared<models::MultirelModel>( _model );
+    }
+
+    /// Sets a pipeline.
+    void set_pipeline(
+        const std::string& _name, const pipelines::Pipeline& _pipeline )
+    {
+        multithreading::WriteLock write_lock( read_write_lock_ );
+        pipelines()[_name] = std::make_shared<pipelines::Pipeline>( _pipeline );
     }
 
     /// Sets a model.

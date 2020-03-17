@@ -311,21 +311,15 @@ void RequestHandler::run()
                 }
             else if ( type == "Pipeline" )
                 {
-                    // TODO
-                    // project_manager().add_multirel_model(
-                    //    name, cmd, &socket() );
+                    project_manager().add_pipeline( name, cmd, &socket() );
                 }
             else if ( type == "Pipeline.copy" )
                 {
-                    // TODO
-                    // project_manager().copy_multirel_model(
-                    //    name, cmd, &socket() );
+                    project_manager().copy_pipeline( name, cmd, &socket() );
                 }
             else if ( type == "Pipeline.delete" )
                 {
-                    // TODO
-                    // project_manager().delete_multirel_model(
-                    //    name, cmd, &socket() );
+                    project_manager().delete_pipeline( name, cmd, &socket() );
                 }
             else if ( type == "Pipeline.deploy" )
                 {

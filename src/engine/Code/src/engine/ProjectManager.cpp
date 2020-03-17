@@ -192,6 +192,22 @@ void ProjectManager::add_multirel_model(
 
 // ------------------------------------------------------------------------
 
+void ProjectManager::add_pipeline(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    const auto pipeline = pipelines::Pipeline( categories().vector(), _cmd );
+
+    set_pipeline( _name, pipeline );
+
+    monitor_->send( "postpipeline", pipeline.to_monitor( _name ) );
+
+    engine::communication::Sender::send_string( "Success!", _socket );
+}
+
+// ------------------------------------------------------------------------
+
 void ProjectManager::add_relboost_model(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,
@@ -294,6 +310,24 @@ void ProjectManager::copy_multirel_model(
 
 // ------------------------------------------------------------------------
 
+void ProjectManager::copy_pipeline(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    const std::string other = JSON::get_value<std::string>( _cmd, "other_" );
+
+    const auto other_pipeline = get_pipeline( other );
+
+    set_pipeline( _name, other_pipeline );
+
+    monitor_->send( "postpipeline", other_pipeline.to_monitor( _name ) );
+
+    communication::Sender::send_string( "Success!", _socket );
+}
+
+// ------------------------------------------------------------------------
+
 void ProjectManager::copy_relboost_model(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,
@@ -381,6 +415,22 @@ void ProjectManager::delete_data_frame(
     monitor_->send( "removedataframe", "{\"name\":\"" + _name + "\"}" );
 
     engine::communication::Sender::send_string( "Success!", _socket );
+}
+
+// ------------------------------------------------------------------------
+
+void ProjectManager::delete_pipeline(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    multithreading::WriteLock write_lock( read_write_lock_ );
+
+    FileHandler::remove( _name, project_directory_, _cmd, &pipelines() );
+
+    monitor_->send( "removepipeline", "{\"name\":\"" + _name + "\"}" );
+
+    communication::Sender::send_string( "Success!", _socket );
 }
 
 // ------------------------------------------------------------------------
