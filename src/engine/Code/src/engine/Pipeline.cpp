@@ -217,6 +217,9 @@ void Pipeline::fit(
 
     auto feature_engineerers = init_feature_engineerers( _cmd, _data_frames );
 
+    std::cout << "feature_engineerers.size(): " << feature_engineerers.size()
+              << std::endl;
+
     for ( auto& fe : feature_engineerers )
         {
             assert_true( fe );

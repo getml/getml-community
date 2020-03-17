@@ -287,9 +287,9 @@ class DecisionTreeEnsemble
     }
 
     /// Trivial (const) accessor
-    const std::string& session_name() const
+    const std::string session_name() const
     {
-        return hyperparameters().session_name_;
+        return hyperparameters().session_name_;  // TODO
     }
 
     /// Trivial (private) setter.

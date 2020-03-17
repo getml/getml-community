@@ -21,7 +21,7 @@ std::shared_ptr<AbstractFeatureEngineerer> FeatureEngineererParser::parse(
     else if ( type == "RelboostModel" )
         {
             return std::make_shared<
-                FeatureEngineerer<multirel::ensemble::DecisionTreeEnsemble>>(
+                FeatureEngineerer<relboost::ensemble::DecisionTreeEnsemble>>(
                 _categories, _cmd );
         }
     else

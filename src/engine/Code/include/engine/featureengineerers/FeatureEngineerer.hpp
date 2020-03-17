@@ -162,12 +162,8 @@ class FeatureEngineerer : public AbstractFeatureEngineerer
     std::optional<FeatureEngineererType> make_feature_engineerer(
         const Poco::JSON::Object& _cmd ) const
     {
-        const auto hyperparameters_obj =
-            JSON::get_object( _cmd, "hyperparameters_" );
-
         const auto hyperparameters =
-            std::make_shared<multirel::descriptors::Hyperparameters>(
-                *hyperparameters_obj );
+            std::make_shared<multirel::descriptors::Hyperparameters>( _cmd );
 
         const auto peripheral = std::make_shared<std::vector<std::string>>(
             JSON::array_to_vector<std::string>(
@@ -238,11 +234,12 @@ class FeatureEngineerer : public AbstractFeatureEngineerer
     std::optional<FeatureEngineererType> make_feature_engineerer(
         const Poco::JSON::Object& _cmd ) const
     {
-        const auto hyperparameters_obj =
-            JSON::get_object( _cmd, "hyperparameters_" );
+        std::cout << 1 << std::endl;
 
         const auto hyperparameters =
-            std::make_shared<relboost::Hyperparameters>( hyperparameters_obj );
+            std::make_shared<relboost::Hyperparameters>( _cmd );
+
+        std::cout << 2 << std::endl;
 
         const auto peripheral = std::make_shared<std::vector<std::string>>(
             JSON::array_to_vector<std::string>(
@@ -293,6 +290,8 @@ class FeatureEngineerer : public AbstractFeatureEngineerer
                     const std::vector<relboost::containers::Placeholder>>(
                     peripheral );
             }
+
+        std::cout << 3 << std::endl;
 
         return std::make_optional<relboost::ensemble::DecisionTreeEnsemble>(
             categories_,
@@ -590,6 +589,8 @@ void FeatureEngineerer<FeatureEngineererType>::fit(
     // ------------------------------------------------
     // Extract the peripheral tables.
 
+    std::cout << "fit1" << std::endl;
+
     auto peripheral_names = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "peripheral_names_" ) );
 
@@ -608,6 +609,8 @@ void FeatureEngineerer<FeatureEngineererType>::fit(
     // ------------------------------------------------
     // Extract the population table.
 
+    std::cout << "fit2" << std::endl;
+
     const auto population_name =
         JSON::get_value<std::string>( _cmd, "population_name_" );
 
@@ -621,12 +624,18 @@ void FeatureEngineerer<FeatureEngineererType>::fit(
     // ------------------------------------------------
     // Fit the feature engineerer.
 
+    std::cout << "fit3" << std::endl;
+
     auto new_feature_engineerer = make_feature_engineerer( cmd_ );
+
+    std::cout << "fit3.1" << std::endl;
 
     new_feature_engineerer->fit( population_table, peripheral_tables, _logger );
 
     // ------------------------------------------------
     // Fitting ran through without any problems - let's store the result.
+
+    std::cout << "fit4" << std::endl;
 
     feature_engineerer_ = std::move( new_feature_engineerer );
 

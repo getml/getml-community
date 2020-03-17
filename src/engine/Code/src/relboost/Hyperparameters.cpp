@@ -36,17 +36,23 @@ Hyperparameters::Hyperparameters( const Poco::JSON::Object& _obj )
               : true ),  // TODO: Check inserted for backwards compatability.
                          // Remove later.
       delta_t_( JSON::get_value<Float>( _obj, "delta_t_" ) ),
-      feature_selector_( _obj.getObject( "feature_selector_" ) ),
+      /*feature_selector_(
+          _obj.has( "feature_selector_" )
+              ? _obj.getObject( "feature_selector_" )
+              : nullptr ),*/  // TODO: Remove
       gamma_( JSON::get_value<Float>( _obj, "gamma_" ) ),
       include_categorical_(
-          JSON::get_value<bool>( _obj, "include_categorical_" ) ),
+          _obj.has( "include_categorical_" )
+              ? JSON::get_value<bool>( _obj, "include_categorical_" )
+              : true ),  // TODO: Remove
       loss_function_( JSON::get_value<std::string>( _obj, "loss_function_" ) ),
       max_depth_( JSON::get_value<Int>( _obj, "max_depth_" ) ),
       min_num_samples_( JSON::get_value<Int>( _obj, "min_num_samples_" ) ),
       num_features_( JSON::get_value<Int>( _obj, "num_features_" ) ),
       num_subfeatures_( JSON::get_value<Int>( _obj, "num_subfeatures_" ) ),
       num_threads_( JSON::get_value<Int>( _obj, "num_threads_" ) ),
-      predictor_( _obj.getObject( "predictor_" ) ),
+      /*predictor_(
+          _obj.has( "predictor_" ) ? _obj.getObject( "predictor_" ) : nullptr ),*/ //TODO: Remove 
       reg_lambda_( JSON::get_value<Float>( _obj, "reg_lambda_" ) ),
       sampling_factor_( JSON::get_value<Float>( _obj, "sampling_factor_" ) ),
       seed_( JSON::get_value<unsigned int>( _obj, "seed_" ) ),
@@ -56,10 +62,12 @@ Hyperparameters::Hyperparameters( const Poco::JSON::Object& _obj )
               : "" ),  // TODO: Check inserted for backwards compatability.
                        // Remove later.
       share_selected_features_(
-          JSON::get_value<Float>( _obj, "share_selected_features_" ) ),
+          _obj.has( "share_selected_features_" )
+              ? JSON::get_value<Float>( _obj, "share_selected_features_" )
+              : 1.0 ),  // TODO: Remove
       shrinkage_( JSON::get_value<Float>( _obj, "shrinkage_" ) ),
       silent_( JSON::get_value<bool>( _obj, "silent_" ) ),
-      target_num_( JSON::get_value<Int>( _obj, "target_num_" ) ),
+      target_num_( /*JSON::get_value<Int>( _obj, "target_num_" )*/ 0 ), // TODO
       use_timestamps_( JSON::get_value<bool>( _obj, "use_timestamps_" ) )
 {
 }
