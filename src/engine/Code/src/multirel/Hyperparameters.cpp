@@ -10,15 +10,22 @@ Hyperparameters::Hyperparameters( const Poco::JSON::Object& _json_obj )
     : aggregations_( JSON::array_to_vector<std::string>(
           JSON::get_array( _json_obj, "aggregation_" ) ) ),
       include_categorical_(
-          JSON::get_value<bool>( _json_obj, "include_categorical_" ) ),
-      feature_selector_( _json_obj.getObject( "feature_selector_" ) ),
+          _json_obj.has( "include_categorical_" )
+              ? JSON::get_value<bool>( _json_obj, "include_categorical_" )
+              : true ),  // TODO: Remove
+      feature_selector_(
+          _json_obj.has( "feature_selector_" )
+              ? _json_obj.getObject( "feature_selector_" )
+              : nullptr ),  // TODO: Remove
       loss_function_(
           JSON::get_value<std::string>( _json_obj, "loss_function_" ) ),
       num_features_( JSON::get_value<size_t>( _json_obj, "num_features_" ) ),
       num_subfeatures_(
           JSON::get_value<size_t>( _json_obj, "num_subfeatures_" ) ),
       num_threads_( JSON::get_value<size_t>( _json_obj, "num_threads_" ) ),
-      predictor_( _json_obj.getObject( "predictor_" ) ),
+      predictor_(
+          _json_obj.has( "predictor_" ) ? _json_obj.getObject( "predictor_" )
+                                        : nullptr ),  // TODO: Remove
       round_robin_( JSON::get_value<bool>( _json_obj, "round_robin_" ) ),
       sampling_factor_(
           JSON::get_value<Float>( _json_obj, "sampling_factor_" ) ),
@@ -30,7 +37,9 @@ Hyperparameters::Hyperparameters( const Poco::JSON::Object& _json_obj )
       share_aggregations_(
           JSON::get_value<Float>( _json_obj, "share_aggregations_" ) ),
       share_selected_features_(
-          JSON::get_value<Float>( _json_obj, "share_selected_features_" ) ),
+          _json_obj.has( "share_selected_features_" )
+              ? JSON::get_value<Float>( _json_obj, "share_selected_features_" )
+              : 1.0 ),  // TODO: Remove
       shrinkage_( JSON::get_value<Float>( _json_obj, "shrinkage_" ) ),
       silent_(
           _json_obj.has( "silent_" )  // for backwards compatability
