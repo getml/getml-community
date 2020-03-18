@@ -61,6 +61,14 @@ class XGBoostPredictor : public Predictor
     /// Whether the predictor accepts null values.
     bool accepts_null() const final { return false; }
 
+    /// Whether the predictor is used for classification;
+    bool is_classification() const final
+    {
+        return hyperparams_.objective_ == "reg:logistic" ||
+               hyperparams_.objective_ == "binary:logistic" ||
+               hyperparams_.objective_ == "binary:logitraw";
+    }
+
     // -----------------------------------------
 
    private:

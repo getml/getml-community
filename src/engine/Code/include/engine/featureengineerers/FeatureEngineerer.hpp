@@ -50,6 +50,14 @@ class FeatureEngineerer : public AbstractFeatureEngineerer
     // --------------------------------------------------------
 
    public:
+    /// Whether the feature engineerer is used for classification.
+    bool is_classification() const final
+    {
+        const auto loss_function =
+            JSON::get_value<std::string>( cmd_, "loss_function_" );
+        return ( loss_function != "SquareLoss" );
+    }
+
     /// Loads the feature engineerer from a file designated by _fname.
     void load( const std::string& _fname ) final
     {

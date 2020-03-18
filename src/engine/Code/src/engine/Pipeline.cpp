@@ -260,13 +260,15 @@ void Pipeline::fit_predictors(
 {
     // --------------------------------------------------------------------
 
-    const auto numerical_features =
-        generate_numerical_features( _cmd, _logger, _data_frames, _socket );
-
     auto categorical_features = get_categorical_features( _cmd, _data_frames );
 
     categorical_features =
         predictor_impl().transform_encodings( categorical_features );
+
+    // --------------------------------------------------------------------
+
+    const auto numerical_features =
+        generate_numerical_features( _cmd, _logger, _data_frames, _socket );
 
     // --------------------------------------------------------------------
 
@@ -567,6 +569,12 @@ void Pipeline::make_predictor_impl(
 
     predictor_impl_ = std::make_shared<predictors::PredictorImpl>(
         categorical_colnames, numerical_colnames, num_autofeatures );
+
+    // --------------------------------------------------------------------
+
+    auto categorical_features = get_categorical_features( _cmd, _data_frames );
+
+    predictor_impl().fit_encodings( categorical_features );
 
     // --------------------------------------------------------------------
 }

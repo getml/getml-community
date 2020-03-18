@@ -28,6 +28,9 @@ class AbstractFeatureEngineerer
         const std::map<std::string, containers::DataFrame>& _data_frames,
         Poco::Net::StreamSocket* _socket ) = 0;
 
+    /// Whether this is a classification problem.
+    virtual bool is_classification() const = 0;
+
     /// Loads the feature engineerer from a file designated by _fname.
     virtual void load( const std::string& _fname ) = 0;
 

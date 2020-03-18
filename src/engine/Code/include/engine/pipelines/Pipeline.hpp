@@ -181,11 +181,18 @@ class Pipeline
     // --------------------------------------------------------
 
    private:
+    // TODO: This needs to be implemented more consistently.
     /// Whether the pipeline is used for classification problems
     bool is_classification() const
     {
-        // TODO
-        return false;
+        const auto is_cl =
+            []( const std::shared_ptr<
+                featureengineerers::AbstractFeatureEngineerer>& fe ) {
+                assert_true( fe );
+                return fe->is_classification();
+            };
+        return std::all_of(
+            feature_engineerers_.begin(), feature_engineerers_.end(), is_cl );
     }
 
     /// Trivial (private) accessor
