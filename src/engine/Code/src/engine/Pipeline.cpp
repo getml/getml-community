@@ -241,7 +241,7 @@ void Pipeline::fit(
 
     auto predictors = init_predictors( "predictors_", _cmd, _data_frames );
 
-    // fit_predictors(...);
+    fit_predictors( _cmd, _logger, _data_frames, &predictors, _socket );
 
     predictors_ = std::move( predictors );
 
