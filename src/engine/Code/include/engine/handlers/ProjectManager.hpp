@@ -184,6 +184,10 @@ class ProjectManager
     void save_multirel_model(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
 
+    /// Saves a pipeline to disc.
+    void save_pipeline(
+        const std::string& _name, Poco::Net::StreamSocket* _socket );
+
     /// Saves a relboost model to disc.
     void save_relboost_model(
         const std::string& _name, Poco::Net::StreamSocket* _socket );

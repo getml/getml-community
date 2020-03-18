@@ -48,6 +48,9 @@ class Pipeline
         const std::map<std::string, containers::DataFrame>& _data_frames,
         Poco::Net::StreamSocket* _socket );
 
+    /// Save the pipeline to disk.
+    void save( const std::string& _path, const std::string& _name ) const;
+
     /// Score the pipeline.
     Poco::JSON::Object score(
         const Poco::JSON::Object& _cmd,

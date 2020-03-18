@@ -573,6 +573,66 @@ void Pipeline::make_predictor_impl(
 
 // ----------------------------------------------------------------------------
 
+void Pipeline::save( const std::string& _path, const std::string& _name ) const
+{
+    auto tfile = Poco::TemporaryFile();
+
+    tfile.createDirectories();
+
+    for ( size_t i = 0; i < feature_engineerers_.size(); ++i )
+        {
+            const auto& fe = feature_engineerers_[i];
+
+            if ( !fe )
+                {
+                    throw std::invalid_argument(
+                        "Feature engineering algorithm #" +
+                        std::to_string( i ) + " has not been fitted!" );
+                }
+
+            fe->save(
+                tfile.path() + "/feature_engineerer-" + std::to_string( i ) +
+                ".json" );
+        }
+
+    scores_.save( tfile.path() + "/scores.json" );
+
+    predictor_impl().save( tfile.path() + "/impl.json" );
+
+    for ( size_t i = 0; i < predictors_.size(); ++i )
+        {
+            for ( size_t j = 0; j < predictors_[i].size(); ++j )
+                {
+                    const auto& p = predictors_[i][j];
+
+                    if ( !p )
+                        {
+                            throw std::invalid_argument(
+                                "Predictor " + std::to_string( i ) + "-" +
+                                std::to_string( j ) + " has not been fitted!" );
+                        }
+
+                    p->save(
+                        tfile.path() + "/predictor-" + std::to_string( i ) +
+                        "-" + std::to_string( j ) );
+                }
+        }
+
+    auto file = Poco::File( _path + _name );
+
+    // Create all parent directories, if necessary.
+    file.createDirectories();
+
+    // If the actual folder already exists, delete it.
+    file.remove( true );
+
+    tfile.renameTo( file.path() );
+
+    tfile.keep();
+}
+
+// ----------------------------------------------------------------------------
+
 Poco::JSON::Object Pipeline::score(
     const Poco::JSON::Object& _cmd,
     const std::map<std::string, containers::DataFrame>& _data_frames,

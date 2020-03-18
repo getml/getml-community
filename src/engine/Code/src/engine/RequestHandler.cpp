@@ -352,8 +352,7 @@ void RequestHandler::run()
                 }
             else if ( type == "Pipeline.save" )
                 {
-                    // TODO
-                    // project_manager().save_multirel_model( name, &socket() );
+                    project_manager().save_pipeline( name, &socket() );
                 }
             else if ( type == "Pipeline.to_json" )
                 {

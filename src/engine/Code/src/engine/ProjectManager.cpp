@@ -908,6 +908,27 @@ void ProjectManager::save_multirel_model(
 
 // ------------------------------------------------------------------------
 
+void ProjectManager::save_pipeline(
+    const std::string& _name, Poco::Net::StreamSocket* _socket )
+{
+    if ( project_directory_ == "" )
+        {
+            throw std::invalid_argument( "You have not set a project!" );
+        }
+
+    multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
+
+    const auto pipeline = get_pipeline( _name );
+
+    const auto path = project_directory_ + "pipelines/";
+
+    pipeline.save( path, _name );
+
+    engine::communication::Sender::send_string( "Success!", _socket );
+}
+
+// ------------------------------------------------------------------------
+
 void ProjectManager::save_relboost_model(
     const std::string& _name, Poco::Net::StreamSocket* _socket )
 {
