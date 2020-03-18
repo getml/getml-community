@@ -663,7 +663,7 @@ void PipelineManager::transform(
     if ( JSON::get_value<bool>( cmd, "score_" ) )
         {
             assert_true( local_data_frames );
-            score( _name, _cmd, *local_data_frames, yhat, &pipeline, _socket );
+            score( _name, cmd, *local_data_frames, yhat, &pipeline, _socket );
         }
 
     // -------------------------------------------------------
