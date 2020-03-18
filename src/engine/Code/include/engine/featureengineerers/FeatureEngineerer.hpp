@@ -17,8 +17,13 @@ class FeatureEngineerer : public AbstractFeatureEngineerer
    public:
     FeatureEngineerer(
         const std::shared_ptr<const std::vector<strings::String>>& _categories,
-        const Poco::JSON::Object& _cmd )
-        : categories_( _categories ), cmd_( _cmd )
+        const Poco::JSON::Object& _cmd,
+        const std::shared_ptr<const Poco::JSON::Object>& _placeholder,
+        const std::shared_ptr<const std::vector<std::string>>& _peripheral )
+        : categories_( _categories ),
+          cmd_( _cmd ),
+          placeholder_( _placeholder ),
+          peripheral_( _peripheral )
     {
     }
 
@@ -165,28 +170,26 @@ class FeatureEngineerer : public AbstractFeatureEngineerer
         const auto hyperparameters =
             std::make_shared<multirel::descriptors::Hyperparameters>( _cmd );
 
-        const auto peripheral = std::make_shared<std::vector<std::string>>(
-            JSON::array_to_vector<std::string>(
-                JSON::get_array( _cmd, "peripheral_" ) ) );
-
         const auto placeholder =
-            std::make_shared<multirel::containers::Placeholder>(
-                JSON::get_object( _cmd, "placeholder_" ) );
+            std::make_shared<const multirel::containers::Placeholder>(
+                *placeholder_ );
 
+        // TODO
         auto population_schema =
             std::shared_ptr<const multirel::containers::Placeholder>();
 
-        if ( _cmd.has( "population_schema_" ) )
+        /*if ( _cmd.has( "population_schema_" ) )
             {
                 population_schema =
                     std::make_shared<const multirel::containers::Placeholder>(
                         *JSON::get_object( _cmd, "population_schema_" ) );
-            }
+            }*/
 
         auto peripheral_schema = std::shared_ptr<
             const std::vector<multirel::containers::Placeholder>>();
 
-        if ( _cmd.has( "peripheral_schema_" ) )
+        // TODO
+        /*if ( _cmd.has( "peripheral_schema_" ) )
             {
                 std::vector<multirel::containers::Placeholder> peripheral;
 
@@ -213,12 +216,12 @@ class FeatureEngineerer : public AbstractFeatureEngineerer
                 peripheral_schema = std::make_shared<
                     const std::vector<multirel::containers::Placeholder>>(
                     peripheral );
-            }
+            }*/
 
         return std::make_optional<multirel::ensemble::DecisionTreeEnsemble>(
             categories_,
             hyperparameters,
-            peripheral,
+            peripheral_,
             placeholder,
             peripheral_schema,
             population_schema );
@@ -234,35 +237,31 @@ class FeatureEngineerer : public AbstractFeatureEngineerer
     std::optional<FeatureEngineererType> make_feature_engineerer(
         const Poco::JSON::Object& _cmd ) const
     {
-        std::cout << 1 << std::endl;
-
         const auto hyperparameters =
             std::make_shared<relboost::Hyperparameters>( _cmd );
 
-        std::cout << 2 << std::endl;
-
-        const auto peripheral = std::make_shared<std::vector<std::string>>(
-            JSON::array_to_vector<std::string>(
-                JSON::get_array( _cmd, "peripheral_" ) ) );
+        assert_true( placeholder_ );
 
         const auto placeholder =
-            std::make_shared<relboost::containers::Placeholder>(
-                JSON::get_object( _cmd, "placeholder_" ) );
+            std::make_shared<const relboost::containers::Placeholder>(
+                *placeholder_ );
 
         auto population_schema =
             std::shared_ptr<const relboost::containers::Placeholder>();
 
-        if ( _cmd.has( "population_schema_" ) )
+        // TODO
+        /*if ( _cmd.has( "population_schema_" ) )
             {
                 population_schema =
                     std::make_shared<const relboost::containers::Placeholder>(
                         *JSON::get_object( _cmd, "population_schema_" ) );
-            }
+            }*/
 
         auto peripheral_schema = std::shared_ptr<
             const std::vector<relboost::containers::Placeholder>>();
 
-        if ( _cmd.has( "peripheral_schema_" ) )
+        // TODO
+        /*if ( _cmd.has( "peripheral_schema_" ) )
             {
                 std::vector<relboost::containers::Placeholder> peripheral;
 
@@ -289,14 +288,12 @@ class FeatureEngineerer : public AbstractFeatureEngineerer
                 peripheral_schema = std::make_shared<
                     const std::vector<relboost::containers::Placeholder>>(
                     peripheral );
-            }
-
-        std::cout << 3 << std::endl;
+            }*/
 
         return std::make_optional<relboost::ensemble::DecisionTreeEnsemble>(
             categories_,
             hyperparameters,
-            peripheral,
+            peripheral_,
             placeholder,
             peripheral_schema,
             population_schema );
@@ -313,6 +310,12 @@ class FeatureEngineerer : public AbstractFeatureEngineerer
 
     /// The underlying feature engineering algorithm.
     std::optional<FeatureEngineererType> feature_engineerer_;
+
+    /// The placeholder describing the data schema.
+    std::shared_ptr<const Poco::JSON::Object> placeholder_;
+
+    /// The names of the peripheral tables
+    std::shared_ptr<const std::vector<std::string>> peripheral_;
 
     // --------------------------------------------------------
 };
@@ -589,8 +592,6 @@ void FeatureEngineerer<FeatureEngineererType>::fit(
     // ------------------------------------------------
     // Extract the peripheral tables.
 
-    std::cout << "fit1" << std::endl;
-
     auto peripheral_names = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "peripheral_names_" ) );
 
@@ -609,8 +610,6 @@ void FeatureEngineerer<FeatureEngineererType>::fit(
     // ------------------------------------------------
     // Extract the population table.
 
-    std::cout << "fit2" << std::endl;
-
     const auto population_name =
         JSON::get_value<std::string>( _cmd, "population_name_" );
 
@@ -624,18 +623,12 @@ void FeatureEngineerer<FeatureEngineererType>::fit(
     // ------------------------------------------------
     // Fit the feature engineerer.
 
-    std::cout << "fit3" << std::endl;
-
     auto new_feature_engineerer = make_feature_engineerer( cmd_ );
-
-    std::cout << "fit3.1" << std::endl;
 
     new_feature_engineerer->fit( population_table, peripheral_tables, _logger );
 
     // ------------------------------------------------
     // Fitting ran through without any problems - let's store the result.
-
-    std::cout << "fit4" << std::endl;
 
     feature_engineerer_ = std::move( new_feature_engineerer );
 

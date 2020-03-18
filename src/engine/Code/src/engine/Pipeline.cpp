@@ -217,9 +217,6 @@ void Pipeline::fit(
 
     auto feature_engineerers = init_feature_engineerers( _cmd, _data_frames );
 
-    std::cout << "feature_engineerers.size(): " << feature_engineerers.size()
-              << std::endl;
-
     for ( auto& fe : feature_engineerers )
         {
             assert_true( fe );
@@ -338,6 +335,13 @@ Pipeline::init_feature_engineerers( const size_t _num_targets ) const
 {
     // ----------------------------------------------------------------------
 
+    const auto placeholder = std::make_shared<Poco::JSON::Object>(
+        *JSON::get_object( obj_, "placeholder_" ) );
+
+    const auto peripheral = std::make_shared<std::vector<std::string>>(
+        JSON::array_to_vector<std::string>(
+            JSON::get_array( obj_, "peripheral_" ) ) );
+
     const auto arr = JSON::get_array( obj_, "feature_engineerers_" );
 
     // ----------------------------------------------------------------------
@@ -363,7 +367,7 @@ Pipeline::init_feature_engineerers( const size_t _num_targets ) const
 
             auto new_feature_engineerer =
                 featureengineerers::FeatureEngineererParser::parse(
-                    *ptr, categories_ );
+                    *ptr, placeholder, peripheral, categories_ );
 
             // --------------------------------------------------------------
 
@@ -381,7 +385,11 @@ Pipeline::init_feature_engineerers( const size_t _num_targets ) const
 
                             feature_engineerers.emplace_back(
                                 featureengineerers::FeatureEngineererParser::
-                                    parse( *ptr, categories_ ) );
+                                    parse(
+                                        *ptr,
+                                        placeholder,
+                                        peripheral,
+                                        categories_ ) );
                         }
                 }
 
