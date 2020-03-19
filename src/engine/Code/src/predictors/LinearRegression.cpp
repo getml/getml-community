@@ -280,9 +280,9 @@ void LinearRegression::save( const std::string& _fname ) const
 {
     Poco::JSON::Object obj;
 
-    obj.set( "lambda_", hyperparams().lambda_ );
-
     obj.set( "learning_rate_", hyperparams().learning_rate_ );
+
+    obj.set( "reg_lambda_", hyperparams().reg_lambda_ );
 
     obj.set( "scaler_", scaler_.to_json_obj() );
 
@@ -334,11 +334,11 @@ void LinearRegression::solve_arithmetically(
 
     XtX( X.size(), X.size() ) = n;
 
-    if ( hyperparams().lambda_ > 0.0 )
+    if ( hyperparams().reg_lambda_ > 0.0 )
         {
             for ( size_t i = 0; i < X.size(); ++i )
                 {
-                    XtX( i, i ) += hyperparams().lambda_ * n;
+                    XtX( i, i ) += hyperparams().reg_lambda_ * n;
                 }
         }
 

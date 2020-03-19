@@ -135,12 +135,12 @@ class LogisticRegression : public Predictor
     const void calculate_regularization(
         const Float _bsize_float, std::vector<Float>* _gradients )
     {
-        if ( hyperparams().lambda_ > 0.0 )
+        if ( hyperparams().reg_lambda_ > 0.0 )
             {
                 for ( size_t i = 0; i < weights_.size(); ++i )
                     {
-                        ( *_gradients )[i] +=
-                            hyperparams().lambda_ * weights_[i] * _bsize_float;
+                        ( *_gradients )[i] += hyperparams().reg_lambda_ *
+                                              weights_[i] * _bsize_float;
                     }
             }
     }

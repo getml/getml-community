@@ -293,7 +293,7 @@ void LogisticRegression::load( const std::string& _fname )
     const auto obj = load_json_obj( _fname + ".json" );
 
     hyperparams_ = std::make_shared<LinearHyperparams>(
-        JSON::get_value<Float>( obj, "lambda_" ),
+        JSON::get_value<Float>( obj, "reg_lambda_" ),
         JSON::get_value<Float>( obj, "learning_rate_" ) );
 
     scaler_ = StandardScaler( *JSON::get_object( obj, "scaler_" ) );
@@ -480,9 +480,9 @@ void LogisticRegression::save( const std::string& _fname ) const
 {
     Poco::JSON::Object obj;
 
-    obj.set( "lambda_", hyperparams().lambda_ );
-
     obj.set( "learning_rate_", hyperparams().learning_rate_ );
+
+    obj.set( "reg_lambda_", hyperparams().reg_lambda_ );
 
     obj.set( "scaler_", scaler_.to_json_obj() );
 
