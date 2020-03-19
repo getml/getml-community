@@ -95,7 +95,7 @@ void LinearRegression::load( const std::string& _fname )
     const auto obj = load_json_obj( _fname + ".json" );
 
     hyperparams_ = std::make_shared<LinearHyperparams>(
-        JSON::get_value<Float>( obj, "lambda_" ),
+        JSON::get_value<Float>( obj, "reg_lambda_" ),
         JSON::get_value<Float>( obj, "learning_rate_" ) );
 
     scaler_ = StandardScaler( *JSON::get_object( obj, "scaler_" ) );
