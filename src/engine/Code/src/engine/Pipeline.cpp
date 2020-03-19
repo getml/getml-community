@@ -213,9 +213,13 @@ void Pipeline::fit(
     Poco::Net::StreamSocket* _socket )
 {
     // -------------------------------------------------------------------------
+
+    num_targets_ = infer_num_targets( _cmd, _data_frames );
+
+    // -------------------------------------------------------------------------
     // Fit the feature engineering algorithms.
 
-    auto feature_engineerers = init_feature_engineerers( _cmd, _data_frames );
+    auto feature_engineerers = init_feature_engineerers( num_targets_ );
 
     for ( auto& fe : feature_engineerers )
         {
@@ -239,7 +243,7 @@ void Pipeline::fit(
     // -------------------------------------------------------------------------
     // Fit the predictors.
 
-    auto predictors = init_predictors( "predictors_", _cmd, _data_frames );
+    auto predictors = init_predictors( "predictors_", num_targets_ );
 
     fit_predictors( _cmd, _logger, _data_frames, &predictors, _socket );
 
@@ -407,22 +411,6 @@ Pipeline::init_feature_engineerers( const size_t _num_targets ) const
 
 // ----------------------------------------------------------------------
 
-std::vector<std::shared_ptr<featureengineerers::AbstractFeatureEngineerer>>
-Pipeline::init_feature_engineerers(
-    const Poco::JSON::Object& _cmd,
-    const std::map<std::string, containers::DataFrame>& _data_frames ) const
-{
-    const auto population_name =
-        JSON::get_value<std::string>( _cmd, "population_name_" );
-
-    const auto population_df =
-        utils::Getter::get( population_name, _data_frames );
-
-    return init_feature_engineerers( population_df.num_targets() );
-}
-
-// ----------------------------------------------------------------------
-
 std::vector<std::vector<std::shared_ptr<predictors::Predictor>>>
 Pipeline::init_predictors(
     const std::string& _elem, const size_t _num_targets ) const
@@ -468,21 +456,133 @@ Pipeline::init_predictors(
     // --------------------------------------------------------------------
 }
 
-// ----------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
-std::vector<std::vector<std::shared_ptr<predictors::Predictor>>>
-Pipeline::init_predictors(
-    const std::string& _elem,
-    const Poco::JSON::Object& _cmd,
-    const std::map<std::string, containers::DataFrame>& _data_frames ) const
+Pipeline Pipeline::load(
+    const std::shared_ptr<const std::vector<strings::String>>& _categories,
+    const std::string& _path ) const
 {
-    const auto population_name =
-        JSON::get_value<std::string>( _cmd, "population_name_" );
+    // ------------------------------------------------------------------
 
-    const auto population_df =
-        utils::Getter::get( population_name, _data_frames );
+    const auto obj = load_json_obj( _path + "obj.json" );
 
-    return init_predictors( _elem, population_df.num_targets() );
+    const auto pipeline_json = load_json_obj( _path + "pipeline.json" );
+
+    const auto scores =
+        metrics::Scores( load_json_obj( _path + "scores.json" ) );
+
+    auto predictor_impl = std::shared_ptr<predictors::PredictorImpl>();
+
+    try
+        {
+            predictor_impl = std::make_shared<predictors::PredictorImpl>(
+                load_json_obj( _path + "impl.json" ) );
+        }
+    catch ( std::exception& e )
+        {
+        }
+
+    // ------------------------------------------------------------
+
+    const auto num_targets =
+        JSON::get_value<size_t>( pipeline_json, "num_targets_" );
+
+    // ------------------------------------------------------------------
+
+    auto pipeline = Pipeline( _categories, obj );
+
+    pipeline.allow_http_ =
+        JSON::get_value<bool>( pipeline_json, "allow_http_" );
+
+    pipeline.num_targets_ = num_targets;
+
+    pipeline.obj_ = obj;
+
+    pipeline.predictor_impl_ = predictor_impl;
+
+    pipeline.scores_ = scores;
+
+    // ------------------------------------------------------------
+    // Load feature engineerers
+
+    pipeline.feature_engineerers_ =
+        pipeline.init_feature_engineerers( num_targets );
+
+    for ( size_t i = 0; i < pipeline.feature_engineerers_.size(); ++i )
+        {
+            auto& fe = pipeline.feature_engineerers_[i];
+
+            assert_true( fe );
+
+            fe->load(
+                _path + "feature-engineerer-" + std::to_string( i ) + ".json" );
+        }
+
+    // ------------------------------------------------------------
+    // Load feature selectors
+
+    // TODO
+
+    // ------------------------------------------------------------
+    // Load predictors
+
+    pipeline.init_predictors( "predictors_", num_targets );
+
+    for ( size_t i = 0; i < num_targets; ++i )
+        {
+            for ( size_t j = 0; j < pipeline.predictors_[i].size(); ++i )
+                {
+                    auto& p = pipeline.predictors_[i][j];
+
+                    assert_true( p );
+
+                    p->load(
+                        _path + "predictor" + std::to_string( i ) + "-" +
+                        std::to_string( j ) );
+                }
+        }
+
+    // ------------------------------------------------------------
+
+    return pipeline;
+
+    // ------------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
+Poco::JSON::Object Pipeline::load_json_obj( const std::string& _fname ) const
+{
+    std::ifstream input( _fname );
+
+    std::stringstream json;
+
+    std::string line;
+
+    if ( input.is_open() )
+        {
+            while ( std::getline( input, line ) )
+                {
+                    json << line;
+                }
+
+            input.close();
+        }
+    else
+        {
+            throw std::invalid_argument( "File '" + _fname + "' not found!" );
+        }
+
+    const auto ptr = Poco::JSON::Parser()
+                         .parse( json.str() )
+                         .extract<Poco::JSON::Object::Ptr>();
+
+    if ( !ptr )
+        {
+            throw std::runtime_error( "JSON file did not contain an object!" );
+        }
+
+    return *ptr;
 }
 
 // ------------------------------------------------------------------------
@@ -583,9 +683,13 @@ void Pipeline::make_predictor_impl(
 
 void Pipeline::save( const std::string& _path, const std::string& _name ) const
 {
+    // ------------------------------------------------------------------
+
     auto tfile = Poco::TemporaryFile();
 
     tfile.createDirectories();
+
+    // ------------------------------------------------------------------
 
     for ( size_t i = 0; i < feature_engineerers_.size(); ++i )
         {
@@ -599,13 +703,33 @@ void Pipeline::save( const std::string& _path, const std::string& _name ) const
                 }
 
             fe->save(
-                tfile.path() + "/feature_engineerer-" + std::to_string( i ) +
+                tfile.path() + "/feature-engineerer-" + std::to_string( i ) +
                 ".json" );
         }
 
+    // ------------------------------------------------------------------
+
+    Poco::JSON::Object pipeline_json;
+
+    pipeline_json.set( "allow_http_", allow_http_ );
+
+    pipeline_json.set( "num_targets_", num_targets_ );
+
+    save_json_obj( pipeline_json, tfile.path() + "/pipeline.json" );
+
+    // ------------------------------------------------------------------
+
+    save_json_obj( obj_, tfile.path() + "/obj.json" );
+
+    // ------------------------------------------------------------------
+
     scores_.save( tfile.path() + "/scores.json" );
 
+    // ------------------------------------------------------------------
+
     predictor_impl().save( tfile.path() + "/impl.json" );
+
+    // ------------------------------------------------------------------
 
     for ( size_t i = 0; i < predictors_.size(); ++i )
         {
@@ -626,6 +750,8 @@ void Pipeline::save( const std::string& _path, const std::string& _name ) const
                 }
         }
 
+    // ------------------------------------------------------------------
+
     auto file = Poco::File( _path + _name );
 
     // Create all parent directories, if necessary.
@@ -637,6 +763,8 @@ void Pipeline::save( const std::string& _path, const std::string& _name ) const
     tfile.renameTo( file.path() );
 
     tfile.keep();
+
+    // ------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------

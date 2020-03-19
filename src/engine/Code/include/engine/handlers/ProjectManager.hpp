@@ -169,6 +169,10 @@ class ProjectManager
     void load_data_frame(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
 
+    /// Loads a pipeline
+    void load_pipeline(
+        const std::string& _name, Poco::Net::StreamSocket* _socket );
+
     /// Loads a relboost model
     void load_relboost_model(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
@@ -211,6 +215,9 @@ class ProjectManager
 
     /// Loads all models.
     void load_all_models();
+
+    /// Loads all pipelines.
+    void load_all_pipelines();
 
     /// Loads a JSON object from a file.
     Poco::JSON::Object load_json_obj( const std::string& _fname ) const;

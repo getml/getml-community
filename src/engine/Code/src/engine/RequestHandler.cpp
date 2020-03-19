@@ -343,8 +343,7 @@ void RequestHandler::run()
                 }
             else if ( type == "Pipeline.load" )
                 {
-                    // TODO
-                    // project_manager().load_multirel_model( name, &socket() );
+                    project_manager().load_pipeline( name, &socket() );
                 }
             else if ( type == "Pipeline.refresh" )
                 {

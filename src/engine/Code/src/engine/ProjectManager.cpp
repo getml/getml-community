@@ -716,6 +716,50 @@ void ProjectManager::load_all_models()
 
 // ------------------------------------------------------------------------
 
+void ProjectManager::load_all_pipelines()
+{
+    // --------------------------------------------------------------------
+
+    if ( project_directory_ == "" )
+        {
+            throw std::invalid_argument( "You have not set a project!" );
+        }
+
+    Poco::DirectoryIterator end;
+
+    // --------------------------------------------------------------------
+
+    for ( Poco::DirectoryIterator it( project_directory_ + "pipelines/" );
+          it != end;
+          ++it )
+        {
+            if ( !it->isDirectory() )
+                {
+                    continue;
+                }
+
+            try
+                {
+                    const auto pipeline = pipelines::Pipeline(
+                        categories().vector(), it->path() + "/" );
+
+                    set_pipeline( it.name(), pipeline );
+
+                    monitor_->send(
+                        "postpipeline", pipeline.to_monitor( it.name() ) );
+                }
+            catch ( std::exception& e )
+                {
+                    logger().log(
+                        "Error loading " + it.name() + ": " + e.what() );
+                }
+        }
+
+    // --------------------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
 void ProjectManager::load_multirel_model(
     const std::string& _name, Poco::Net::StreamSocket* _socket )
 {
@@ -779,6 +823,27 @@ void ProjectManager::load_data_frame(
     engine::communication::Sender::send_string( "Success!", _socket );
 
     // --------------------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
+void ProjectManager::load_pipeline(
+    const std::string& _name, Poco::Net::StreamSocket* _socket )
+{
+    if ( project_directory_ == "" )
+        {
+            throw std::invalid_argument( "You have not set a project!" );
+        }
+
+    const auto path = project_directory_ + "pipelines/" + _name + "/";
+
+    auto pipeline = pipelines::Pipeline( categories().vector(), path );
+
+    set_pipeline( _name, pipeline );
+
+    monitor_->send( "postpipeline", pipeline.to_monitor( _name ) );
+
+    engine::communication::Sender::send_string( "Success!", _socket );
 }
 
 // ------------------------------------------------------------------------
@@ -985,6 +1050,8 @@ void ProjectManager::set_project(
     write_lock.unlock();
 
     load_all_models();
+
+    load_all_pipelines();
 
     engine::communication::Sender::send_string( "Success!", _socket );
 }

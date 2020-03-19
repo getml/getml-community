@@ -25,6 +25,8 @@ std::string FileHandler::create_project_directory(
 
     Poco::File( project_directory + "data/" ).createDirectories();
 
+    Poco::File( project_directory + "pipelines/" ).createDirectories();
+
     Poco::File( project_directory + "relboost-models/" ).createDirectories();
 
     return project_directory;

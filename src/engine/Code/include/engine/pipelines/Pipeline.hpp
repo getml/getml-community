@@ -19,14 +19,23 @@ class Pipeline
         const Poco::JSON::Object& _obj )
         : allow_http_( false ),
           categories_( _categories ),
+          num_targets_( 0 ),
           obj_( _obj ),
           session_name_( JSON::get_value<std::string>( _obj, "session_name_" ) )
+
     {
         // This won't to anything - the point it to make sure that it can be
         // parsed correctly.
         init_feature_engineerers( 1 );
         init_predictors( "feature_selectors_", 1 );
         init_predictors( "predictors_", 1 );
+    }
+
+    Pipeline(
+        const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const std::string& _path )
+    {
+        *this = load( _categories, _path );
     }
 
     ~Pipeline() = default;
@@ -95,11 +104,20 @@ class Pipeline
             } );
     }
 
-    /// Trivial (const) accessor
-    const std::string& session_name() const { return session_name_; }
+    /// Writes a JSON object to disc.
+    void save_json_obj(
+        const Poco::JSON::Object& _obj, const std::string& _path ) const
+    {
+        std::ofstream fs( _path, std::ofstream::out );
+        Poco::JSON::Stringifier::stringify( _obj, fs );
+        fs.close();
+    }
 
     /// Trivial (const) accessor
     const metrics::Scores& scores() const { return scores_; }
+
+    /// Trivial (const) accessor
+    const std::string& session_name() const { return session_name_; }
 
     // --------------------------------------------------------
 
@@ -152,25 +170,18 @@ class Pipeline
     std::vector<std::shared_ptr<featureengineerers::AbstractFeatureEngineerer>>
     init_feature_engineerers( const size_t _num_targets ) const;
 
-    /// Prepares the feature engineerers from the JSON object.
-    std::vector<std::shared_ptr<featureengineerers::AbstractFeatureEngineerer>>
-    init_feature_engineerers(
-        const Poco::JSON::Object& _cmd,
-        const std::map<std::string, containers::DataFrame>& _data_frames )
-        const;
-
-    /// Prepares the predictors or feature engineerers from the JSON object.
+    /// Prepares the predictors.
     std::vector<std::vector<std::shared_ptr<predictors::Predictor>>>
     init_predictors(
         const std::string& _elem, const size_t _num_targets ) const;
 
-    /// Prepares the predictors or feature engineerers from the JSON object.
-    std::vector<std::vector<std::shared_ptr<predictors::Predictor>>>
-    init_predictors(
-        const std::string& _elem,
-        const Poco::JSON::Object& _cmd,
-        const std::map<std::string, containers::DataFrame>& _data_frames )
-        const;
+    /// Loads a new Pipeline from disc.
+    Pipeline load(
+        const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const std::string& _path ) const;
+
+    /// Loads a JSON object from disc.
+    Poco::JSON::Object load_json_obj( const std::string& _fname ) const;
 
     /// Figures out which columns from the population table we would like to
     /// add.
@@ -181,6 +192,18 @@ class Pipeline
     // --------------------------------------------------------
 
    private:
+    /// Infers the number of targets from the population table.
+    size_t infer_num_targets(
+        const Poco::JSON::Object& _cmd,
+        const std::map<std::string, containers::DataFrame>& _data_frames ) const
+    {
+        const auto population_name =
+            JSON::get_value<std::string>( _cmd, "population_name_" );
+        const auto population_df =
+            utils::Getter::get( population_name, _data_frames );
+        return population_df.num_targets();
+    }
+
     // TODO: This needs to be implemented more consistently.
     /// Whether the pipeline is used for classification problems
     bool is_classification() const
@@ -261,6 +284,9 @@ class Pipeline
     std::vector<std::shared_ptr<featureengineerers::AbstractFeatureEngineerer>>
         feature_engineerers_;
 
+    /// The number of targets.
+    size_t num_targets_;
+
     /// The JSON Object used to construct the pipeline.
     Poco::JSON::Object obj_;
 
@@ -275,7 +301,8 @@ class Pipeline
     /// The scores used to evaluate this pipeline
     metrics::Scores scores_;
 
-    /// The name of the session used.
+    /// Allows us to associate the pipeline with a hyperparameter optimization
+    /// routine.
     std::string session_name_;
 
     // -----------------------------------------------
