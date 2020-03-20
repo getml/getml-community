@@ -15,15 +15,15 @@ struct Placeholder
 
     Placeholder( const Poco::JSON::Object& _json_obj )
         : categoricals_(
-              Placeholder::parse_columns( _json_obj, "categoricals_" ) ),
-          discretes_( Placeholder::parse_columns( _json_obj, "discretes_" ) ),
+              Placeholder::parse_columns( _json_obj, "categorical_" ) ),
+          discretes_( Placeholder::parse_columns( _json_obj, "discrete_" ) ),
           joined_tables_( Placeholder::parse_joined_tables(
               _json_obj.getArray( "joined_tables_" ) ) ),
           join_keys_( Placeholder::parse_columns( _json_obj, "join_keys_" ) ),
           join_keys_used_(
               Placeholder::parse_columns( _json_obj, "join_keys_used_" ) ),
           name_( JSON::get_value<std::string>( _json_obj, "name_" ) ),
-          numericals_( Placeholder::parse_columns( _json_obj, "numericals_" ) ),
+          numericals_( Placeholder::parse_columns( _json_obj, "numerical_" ) ),
           other_join_keys_used_( Placeholder::parse_columns(
               _json_obj, "other_join_keys_used_" ) ),
           other_time_stamps_used_( Placeholder::parse_columns(
