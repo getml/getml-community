@@ -341,12 +341,10 @@ Pipeline::init_feature_engineerers( const size_t _num_targets ) const
 {
     // ----------------------------------------------------------------------
 
-    const auto placeholder = std::make_shared<Poco::JSON::Object>(
-        *JSON::get_object( obj_, "placeholder_" ) );
+    const auto population = std::make_shared<Poco::JSON::Object>(
+        *JSON::get_object( obj_, "population_" ) );
 
-    const auto peripheral = std::make_shared<std::vector<std::string>>(
-        JSON::array_to_vector<std::string>(
-            JSON::get_array( obj_, "peripheral_" ) ) );
+    const auto peripheral = parse_peripheral();
 
     const auto arr = JSON::get_array( obj_, "feature_engineerers_" );
 
@@ -373,7 +371,7 @@ Pipeline::init_feature_engineerers( const size_t _num_targets ) const
 
             auto new_feature_engineerer =
                 featureengineerers::FeatureEngineererParser::parse(
-                    *ptr, placeholder, peripheral, categories_ );
+                    *ptr, population, peripheral, categories_ );
 
             // --------------------------------------------------------------
 
@@ -393,7 +391,7 @@ Pipeline::init_feature_engineerers( const size_t _num_targets ) const
                                 featureengineerers::FeatureEngineererParser::
                                     parse(
                                         *ptr,
-                                        placeholder,
+                                        population,
                                         peripheral,
                                         categories_ ) );
                         }
@@ -480,6 +478,7 @@ Pipeline Pipeline::load(
         }
     catch ( std::exception& e )
         {
+            std::cout << "no impl" << std::endl;
         }
 
     // ------------------------------------------------------------
@@ -526,18 +525,21 @@ Pipeline Pipeline::load(
     // ------------------------------------------------------------
     // Load predictors
 
-    pipeline.init_predictors( "predictors_", num_targets );
+    pipeline.predictors_ =
+        pipeline.init_predictors( "predictors_", num_targets );
+
+    assert_true( num_targets == pipeline.predictors_.size() );
 
     for ( size_t i = 0; i < num_targets; ++i )
         {
-            for ( size_t j = 0; j < pipeline.predictors_[i].size(); ++i )
+            for ( size_t j = 0; j < pipeline.predictors_[i].size(); ++j )
                 {
                     auto& p = pipeline.predictors_[i][j];
 
                     assert_true( p );
 
                     p->load(
-                        _path + "predictor" + std::to_string( i ) + "-" +
+                        _path + "predictor-" + std::to_string( i ) + "-" +
                         std::to_string( j ) );
                 }
         }
@@ -677,6 +679,36 @@ void Pipeline::make_predictor_impl(
     predictor_impl().fit_encodings( categorical_features );
 
     // --------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------
+
+std::shared_ptr<std::vector<std::string>> Pipeline::parse_peripheral() const
+{
+    auto peripheral = std::make_shared<std::vector<std::string>>();
+
+    const auto arr = JSON::get_array( obj_, "peripheral_" );
+
+    assert_true( arr );
+
+    for ( size_t i = 0; i < arr->size(); ++i )
+        {
+            const auto ptr = arr->getObject( i );
+
+            if ( !ptr )
+                {
+                    throw std::invalid_argument(
+                        "Element " + std::to_string( i ) +
+                        " in peripheral_ is not a proper JSON "
+                        "object." );
+                }
+
+            const auto name = JSON::get_value<std::string>( *ptr, "name_" );
+
+            peripheral->push_back( name );
+        }
+
+    return peripheral;
 }
 
 // ----------------------------------------------------------------------------
@@ -835,27 +867,6 @@ Poco::JSON::Object Pipeline::score(
     return metrics::Scorer::get_metrics( obj );
 
     // ------------------------------------------------
-}
-
-// ----------------------------------------------------------------------------
-
-Poco::JSON::Object Pipeline::to_json_obj( const bool _schema_only ) const
-{
-    auto feature_engineerers =
-        Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
-
-    for ( const auto& fe : feature_engineerers_ )
-        {
-            auto obj = fe->to_json_obj( _schema_only );
-
-            feature_engineerers->add( obj );
-        }
-
-    Poco::JSON::Object json_obj;
-
-    json_obj.set( "feature_engineerers_", feature_engineerers );
-
-    return json_obj;
 }
 
 // ----------------------------------------------------------------------------

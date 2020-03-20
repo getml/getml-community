@@ -254,12 +254,7 @@ Poco::JSON::Object PipelineManager::receive_data(
 void PipelineManager::refresh(
     const std::string& _name, Poco::Net::StreamSocket* _socket )
 {
-    multithreading::ReadLock read_lock( read_write_lock_ );
-
-    const auto pipeline = get_pipeline( _name );
-
-    // true refers to _schema_only.
-    const auto obj = pipeline.to_json_obj( true );
+    const auto obj = get_pipeline( _name ).obj();
 
     communication::Sender::send_string( JSON::stringify( obj ), _socket );
 }
@@ -499,19 +494,6 @@ containers::DataFrame PipelineManager::to_df(
     return df;
 
     // -------------------------------------------------------
-}
-
-// ------------------------------------------------------------------------
-
-void PipelineManager::to_json(
-    const std::string& _name, Poco::Net::StreamSocket* _socket )
-{
-    auto pipeline = get_pipeline( _name );
-
-    communication::Sender::send_string( "Found!", _socket );
-
-    communication::Sender::send_string(
-        JSON::stringify( pipeline.to_json_obj( false ) ), _socket );
 }
 
 // ------------------------------------------------------------------------

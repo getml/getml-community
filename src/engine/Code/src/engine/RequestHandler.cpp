@@ -353,10 +353,6 @@ void RequestHandler::run()
                 {
                     project_manager().save_pipeline( name, &socket() );
                 }
-            else if ( type == "Pipeline.to_json" )
-                {
-                    pipeline_manager().to_json( name, &socket() );
-                }
             else if ( type == "Pipeline.to_sql" )
                 {
                     pipeline_manager().to_sql( name, &socket() );

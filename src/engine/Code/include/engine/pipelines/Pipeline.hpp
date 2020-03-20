@@ -73,9 +73,6 @@ class Pipeline
         const std::map<std::string, containers::DataFrame>& _data_frames,
         Poco::Net::StreamSocket* _socket );
 
-    /// Return the pipeline as a JSON Object.
-    Poco::JSON::Object to_json_obj( const bool _schema_only ) const;
-
     /// Expresses the Pipeline in a form the monitor can understand.
     Poco::JSON::Object to_monitor( const std::string& _name ) const;
 
@@ -90,6 +87,9 @@ class Pipeline
 
     /// Trivial (const) accessor
     bool allow_http() const { return allow_http_; }
+
+    /// Trivial (const) accessor
+    Poco::JSON::Object obj() const { return obj_; }
 
     /// Whether the pipeline contains any premium_only feature engineerers
     bool premium_only() const
@@ -188,6 +188,9 @@ class Pipeline
     void make_predictor_impl(
         const Poco::JSON::Object& _cmd,
         const std::map<std::string, containers::DataFrame>& _data_frames );
+
+    /// Parses the peripheral names.
+    std::shared_ptr<std::vector<std::string>> parse_peripheral() const;
 
     // --------------------------------------------------------
 
