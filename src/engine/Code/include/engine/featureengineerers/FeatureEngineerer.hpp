@@ -50,6 +50,13 @@ class FeatureEngineerer : public AbstractFeatureEngineerer
     // --------------------------------------------------------
 
    public:
+    /// Creates a deep copy.
+    std::shared_ptr<AbstractFeatureEngineerer> clone() final
+    {
+        return std::make_shared<FeatureEngineerer<FeatureEngineererType>>(
+            *this );
+    }
+
     /// Whether the feature engineerer is used for classification.
     bool is_classification() const final
     {

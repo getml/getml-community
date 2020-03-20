@@ -49,6 +49,12 @@ class LinearRegression : public Predictor
     /// Whether the predictor accepts null values.
     bool accepts_null() const final { return false; }
 
+    /// Returns a deep copy.
+    std::shared_ptr<Predictor> clone() const final
+    {
+        return std::make_shared<LinearRegression>( *this );
+    }
+
     /// Whether the predictor is used for classification;
     bool is_classification() const final { return false; }
 

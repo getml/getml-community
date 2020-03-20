@@ -93,7 +93,7 @@ struct FileHandler
     template <
         typename RType,
         typename std::enable_if<
-            std::is_same<RType, std::shared_ptr<pipelines::Pipeline>>::value,
+            std::is_same<RType, pipelines::Pipeline>::value,
             int>::type = 0>
     static std::string make_fname(
         const std::string& _project_directory, const std::string& _name )

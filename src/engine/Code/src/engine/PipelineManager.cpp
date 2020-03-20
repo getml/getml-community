@@ -84,7 +84,7 @@ void PipelineManager::get_hyperopt_names(
 
     for ( const auto& [key, pipeline] : pipelines() )
         {
-            if ( pipeline->session_name() == _name )
+            if ( pipeline.session_name() == _name )
                 {
                     names.add( key );
                 }
@@ -110,10 +110,10 @@ void PipelineManager::get_hyperopt_scores(
 
     for ( const auto& [key, pipeline] : pipelines() )
         {
-            if ( pipeline->session_name() == _name )
+            if ( pipeline.session_name() == _name )
                 {
                     const auto new_scores = metrics::Scorer::get_metrics(
-                        pipeline->scores().to_json_obj() );
+                        pipeline.scores().to_json_obj() );
 
                     scores.set( key, new_scores );
                 }
@@ -254,7 +254,9 @@ Poco::JSON::Object PipelineManager::receive_data(
 void PipelineManager::refresh(
     const std::string& _name, Poco::Net::StreamSocket* _socket )
 {
-    const auto obj = get_pipeline( _name ).obj();
+    const auto pipeline = get_pipeline( _name );
+
+    const auto obj = pipeline.obj();
 
     communication::Sender::send_string( JSON::stringify( obj ), _socket );
 }

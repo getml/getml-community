@@ -26,6 +26,8 @@
 // ----------------------------------------------------
 // Module files
 
+#include "engine/pipelines/PipelineImpl.hpp"
+
 #include "engine/pipelines/Pipeline.hpp"
 
 // ----------------------------------------------------

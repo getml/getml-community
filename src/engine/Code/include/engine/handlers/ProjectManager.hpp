@@ -180,11 +180,11 @@ class ProjectManager
     }
 
     /// Returns a deep copy of a pipeline.
-    pipelines::Pipeline get_pipeline( const std::string& _name )
+    pipelines::Pipeline get_pipeline( const std::string& _name ) const
     {
         multithreading::ReadLock read_lock( read_write_lock_ );
-        auto ptr = utils::Getter::get( _name, &pipelines() );
-        return *ptr;
+        auto p = utils::Getter::get( _name, pipelines() );
+        return p;
     }
 
     /// Trivial accessor
@@ -236,7 +236,7 @@ class ProjectManager
         const std::string& _name, const pipelines::Pipeline& _pipeline )
     {
         multithreading::WriteLock write_lock( read_write_lock_ );
-        pipelines()[_name] = std::make_shared<pipelines::Pipeline>( _pipeline );
+        pipelines().insert_or_assign( _name, _pipeline );
     }
 
     // ------------------------------------------------------------------------

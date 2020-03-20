@@ -1,6 +1,5 @@
 #ifndef ENGINE_PIPELINES_PIPELINE_HPP_
 #define ENGINE_PIPELINES_PIPELINE_HPP_
-
 // ----------------------------------------------------------------------------
 
 namespace engine
@@ -16,29 +15,17 @@ class Pipeline
    public:
     Pipeline(
         const std::shared_ptr<const std::vector<strings::String>>& _categories,
-        const Poco::JSON::Object& _obj )
-        : allow_http_( false ),
-          categories_( _categories ),
-          num_targets_( 0 ),
-          obj_( _obj ),
-          session_name_( JSON::get_value<std::string>( _obj, "session_name_" ) )
-
-    {
-        // This won't to anything - the point it to make sure that it can be
-        // parsed correctly.
-        init_feature_engineerers( 1 );
-        init_predictors( "feature_selectors_", 1 );
-        init_predictors( "predictors_", 1 );
-    }
+        const Poco::JSON::Object& _obj );
 
     Pipeline(
         const std::shared_ptr<const std::vector<strings::String>>& _categories,
-        const std::string& _path )
-    {
-        *this = load( _categories, _path );
-    }
+        const std::string& _path );
 
-    ~Pipeline() = default;
+    Pipeline( const Pipeline& _other );
+
+    Pipeline( Pipeline&& _other ) noexcept;
+
+    ~Pipeline();
 
     // --------------------------------------------------------
 
@@ -56,6 +43,12 @@ class Pipeline
         const std::shared_ptr<const monitoring::Logger>& _logger,
         const std::map<std::string, containers::DataFrame>& _data_frames,
         Poco::Net::StreamSocket* _socket );
+
+    /// Copy assignment operator.
+    Pipeline& operator=( const Pipeline& _other );
+
+    /// Move assignment operator.
+    Pipeline& operator=( Pipeline&& _other ) noexcept;
 
     /// Save the pipeline to disk.
     void save( const std::string& _path, const std::string& _name ) const;
@@ -83,13 +76,13 @@ class Pipeline
 
    public:
     /// Trivial accessor
-    bool& allow_http() { return allow_http_; }
+    bool& allow_http() { return impl_.allow_http_; }
 
     /// Trivial (const) accessor
-    bool allow_http() const { return allow_http_; }
+    bool allow_http() const { return impl_.allow_http_; }
 
     /// Trivial (const) accessor
-    Poco::JSON::Object obj() const { return obj_; }
+    const Poco::JSON::Object& obj() const { return impl_.obj_; }
 
     /// Whether the pipeline contains any premium_only feature engineerers
     bool premium_only() const
@@ -104,6 +97,9 @@ class Pipeline
             } );
     }
 
+    /// Trivial (const) accessor
+    const metrics::Scores& scores() const { return impl_.scores_; }
+
     /// Writes a JSON object to disc.
     void save_json_obj(
         const Poco::JSON::Object& _obj, const std::string& _path ) const
@@ -114,10 +110,7 @@ class Pipeline
     }
 
     /// Trivial (const) accessor
-    const metrics::Scores& scores() const { return scores_; }
-
-    /// Trivial (const) accessor
-    const std::string& session_name() const { return session_name_; }
+    const std::string& session_name() const { return impl_.session_name_; }
 
     // --------------------------------------------------------
 
@@ -195,6 +188,47 @@ class Pipeline
     // --------------------------------------------------------
 
    private:
+    /// Trivial accessor
+    std::shared_ptr<const std::vector<strings::String>>& categories()
+    {
+        return impl_.categories_;
+    }
+
+    /// Trivial accessor
+    std::shared_ptr<const std::vector<strings::String>> categories() const
+    {
+        return impl_.categories_;
+    }
+
+    /// Helper class used to clone the feature engineerers, selectors
+    /// and predictors.
+    template <class T>
+    std::vector<std::shared_ptr<T>> clone(
+        const std::vector<std::shared_ptr<T>>& _vec ) const
+    {
+        auto out = std::vector<std::shared_ptr<T>>();
+        for ( const auto& elem : _vec )
+            {
+                assert_true( elem );
+                out.push_back( elem->clone() );
+            }
+        return out;
+    }
+
+    /// Helper class used to clone the feature engineerers, selectors
+    /// and predictors.
+    template <class T>
+    std::vector<std::vector<std::shared_ptr<T>>> clone(
+        const std::vector<std::vector<std::shared_ptr<T>>>& _vec ) const
+    {
+        auto out = std::vector<std::vector<std::shared_ptr<T>>>();
+        for ( const auto& elem : _vec )
+            {
+                out.push_back( clone( elem ) );
+            }
+        return out;
+    }
+
     /// Infers the number of targets from the population table.
     size_t infer_num_targets(
         const Poco::JSON::Object& _cmd,
@@ -242,6 +276,15 @@ class Pipeline
     /// Trivial (private) accessor
     size_t num_predictor_sets() const { return predictors_.size(); }
 
+    /// Trivial accessor
+    size_t& num_targets() { return impl_.num_targets_; }
+
+    /// Trivial (const) accessor
+    size_t num_targets() const { return impl_.num_targets_; }
+
+    /// Trivial (const) accessor
+    Poco::JSON::Object& obj() { return impl_.obj_; }
+
     /// Trivial (private) accessor
     predictors::Predictor* predictor( size_t _i, size_t _j )
     {
@@ -261,52 +304,35 @@ class Pipeline
     }
 
     /// Trivial (private) accessor
-    predictors::PredictorImpl& predictor_impl()
-    {
-        throw_unless( predictor_impl_, "Pipeline has not been fitted." );
-        return *predictor_impl_;
-    }
-
-    /// Trivial (private) accessor
     const predictors::PredictorImpl& predictor_impl() const
     {
-        throw_unless( predictor_impl_, "Pipeline has not been fitted." );
-        return *predictor_impl_;
+        throw_unless( impl_.predictor_impl_, "Pipeline has not been fitted." );
+        return *impl_.predictor_impl_;
     }
+
+    /// Trivial accessor
+    metrics::Scores& scores() { return impl_.scores_; }
 
     // --------------------------------------------------------
 
    private:
-    /// Whether the pipeline is allowed to handle HTTP requests.
-    bool allow_http_;
-
-    /// The categories used for the mapping - needed by the feature engineerers.
-    std::shared_ptr<const std::vector<strings::String>> categories_;
-
     /// The feature engineerers used in this pipeline.
     std::vector<std::shared_ptr<featureengineerers::AbstractFeatureEngineerer>>
         feature_engineerers_;
 
-    /// The number of targets.
-    size_t num_targets_;
+    // TODO: Implement feature selectors
+    /// The feature selectors used in this pipeline (every target has its own
+    /// set of feature selectors).
+    std::vector<std::vector<std::shared_ptr<predictors::Predictor>>>
+        feature_selectors_;
 
-    /// The JSON Object used to construct the pipeline.
-    Poco::JSON::Object obj_;
-
-    /// Pimpl for the predictors.
-    std::shared_ptr<predictors::PredictorImpl> predictor_impl_;
+    /// Impl for the pipeline
+    PipelineImpl impl_;
 
     /// The predictors used in this pipeline (every target has its own set of
     /// predictors).
     std::vector<std::vector<std::shared_ptr<predictors::Predictor>>>
         predictors_;
-
-    /// The scores used to evaluate this pipeline
-    metrics::Scores scores_;
-
-    /// Allows us to associate the pipeline with a hyperparameter optimization
-    /// routine.
-    std::string session_name_;
 
     // -----------------------------------------------
 };

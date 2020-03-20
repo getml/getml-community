@@ -4,6 +4,58 @@ namespace engine
 {
 namespace pipelines
 {
+// ----------------------------------------------------------------------------
+
+Pipeline::Pipeline(
+    const std::shared_ptr<const std::vector<strings::String>>& _categories,
+    const Poco::JSON::Object& _obj )
+    : impl_( PipelineImpl( _categories, _obj ) )
+
+{
+    // This won't to anything - the point it to make sure that it can be
+    // parsed correctly.
+    init_feature_engineerers( 1 );
+    init_predictors( "feature_selectors_", 1 );
+    init_predictors( "predictors_", 1 );
+}
+
+// ----------------------------------------------------------------------------
+
+Pipeline::Pipeline(
+    const std::shared_ptr<const std::vector<strings::String>>& _categories,
+    const std::string& _path )
+    : impl_( PipelineImpl( _categories ) )
+{
+    *this = load( _categories, _path );
+}
+
+// ----------------------------------------------------------------------------
+
+Pipeline::Pipeline( const Pipeline& _other ) : impl_( _other.impl_ )
+{
+    feature_engineerers_ = clone( _other.feature_engineerers_ );
+
+    feature_selectors_ = clone( _other.feature_selectors_ );
+
+    predictors_ = clone( _other.predictors_ );
+}
+
+// ----------------------------------------------------------------------------
+
+Pipeline::Pipeline( Pipeline&& _other ) noexcept
+    : impl_( std::move( _other.impl_ ) )
+{
+    feature_engineerers_ = std::move( _other.feature_engineerers_ );
+
+    feature_selectors_ = std::move( _other.feature_selectors_ );
+
+    predictors_ = std::move( _other.predictors_ );
+}
+
+// ----------------------------------------------------------------------------
+
+Pipeline::~Pipeline() = default;
+
 // ----------------------------------------------------------------------
 
 void Pipeline::add_population_cols(
@@ -52,10 +104,10 @@ void Pipeline::calculate_feature_stats(
 
     const size_t num_bins = 200;
 
-    scores_.from_json_obj( metrics::Summarizer::calculate_feature_correlations(
+    scores().from_json_obj( metrics::Summarizer::calculate_feature_correlations(
         _features, _nrows, _ncols, targets ) );
 
-    scores_.from_json_obj( metrics::Summarizer::calculate_feature_plots(
+    scores().from_json_obj( metrics::Summarizer::calculate_feature_plots(
         _features, _nrows, _ncols, num_bins, targets ) );
 
     // ------------------------------------------------------------------------
@@ -82,7 +134,7 @@ Pipeline::feature_names() const
                 }
         }
 
-    if ( predictor_impl_ )
+    if ( impl_.predictor_impl_ )
         {
             return std::make_tuple(
                 autofeatures,
@@ -214,12 +266,12 @@ void Pipeline::fit(
 {
     // -------------------------------------------------------------------------
 
-    num_targets_ = infer_num_targets( _cmd, _data_frames );
+    num_targets() = infer_num_targets( _cmd, _data_frames );
 
     // -------------------------------------------------------------------------
     // Fit the feature engineering algorithms.
 
-    auto feature_engineerers = init_feature_engineerers( num_targets_ );
+    auto feature_engineerers = init_feature_engineerers( num_targets() );
 
     for ( auto& fe : feature_engineerers )
         {
@@ -243,7 +295,7 @@ void Pipeline::fit(
     // -------------------------------------------------------------------------
     // Fit the predictors.
 
-    auto predictors = init_predictors( "predictors_", num_targets_ );
+    auto predictors = init_predictors( "predictors_", num_targets() );
 
     fit_predictors( _cmd, _logger, _data_frames, &predictors, _socket );
 
@@ -342,11 +394,11 @@ Pipeline::init_feature_engineerers( const size_t _num_targets ) const
     // ----------------------------------------------------------------------
 
     const auto population = std::make_shared<Poco::JSON::Object>(
-        *JSON::get_object( obj_, "population_" ) );
+        *JSON::get_object( obj(), "population_" ) );
 
     const auto peripheral = parse_peripheral();
 
-    const auto arr = JSON::get_array( obj_, "feature_engineerers_" );
+    const auto arr = JSON::get_array( obj(), "feature_engineerers_" );
 
     // ----------------------------------------------------------------------
 
@@ -371,7 +423,7 @@ Pipeline::init_feature_engineerers( const size_t _num_targets ) const
 
             auto new_feature_engineerer =
                 featureengineerers::FeatureEngineererParser::parse(
-                    *ptr, population, peripheral, categories_ );
+                    *ptr, population, peripheral, categories() );
 
             // --------------------------------------------------------------
 
@@ -393,7 +445,7 @@ Pipeline::init_feature_engineerers( const size_t _num_targets ) const
                                         *ptr,
                                         population,
                                         peripheral,
-                                        categories_ ) );
+                                        categories() ) );
                         }
                 }
 
@@ -415,7 +467,7 @@ Pipeline::init_predictors(
 {
     // --------------------------------------------------------------------
 
-    const auto arr = JSON::get_array( obj_, _elem );
+    const auto arr = JSON::get_array( obj(), _elem );
 
     std::vector<std::vector<std::shared_ptr<predictors::Predictor>>> predictors;
 
@@ -438,7 +490,7 @@ Pipeline::init_predictors(
                         }
 
                     auto new_predictor = predictors::PredictorParser::parse(
-                        *ptr, predictor_impl_, categories_ );
+                        *ptr, impl_.predictor_impl_, categories() );
 
                     predictors_for_target.emplace_back(
                         std::move( new_predictor ) );
@@ -490,16 +542,16 @@ Pipeline Pipeline::load(
 
     auto pipeline = Pipeline( _categories, obj );
 
-    pipeline.allow_http_ =
+    pipeline.allow_http() =
         JSON::get_value<bool>( pipeline_json, "allow_http_" );
 
-    pipeline.num_targets_ = num_targets;
+    pipeline.num_targets() = num_targets;
 
-    pipeline.obj_ = obj;
+    pipeline.obj() = obj;
 
-    pipeline.predictor_impl_ = predictor_impl;
+    pipeline.impl_.predictor_impl_ = predictor_impl;
 
-    pipeline.scores_ = scores;
+    pipeline.scores() = scores;
 
     // ------------------------------------------------------------
     // Load feature engineerers
@@ -669,16 +721,50 @@ void Pipeline::make_predictor_impl(
 
     // --------------------------------------------------------------------
 
-    predictor_impl_ = std::make_shared<predictors::PredictorImpl>(
-        categorical_colnames, numerical_colnames, num_autofeatures );
+    const auto local_predictor_impl =
+        std::make_shared<predictors::PredictorImpl>(
+            categorical_colnames, numerical_colnames, num_autofeatures );
+
+    impl_.predictor_impl_ = local_predictor_impl;
 
     // --------------------------------------------------------------------
 
     auto categorical_features = get_categorical_features( _cmd, _data_frames );
 
-    predictor_impl().fit_encodings( categorical_features );
+    local_predictor_impl->fit_encodings( categorical_features );
 
     // --------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+Pipeline& Pipeline::operator=( const Pipeline& _other )
+{
+    Pipeline temp( _other );
+
+    *this = std::move( temp );
+
+    return *this;
+}
+
+// ----------------------------------------------------------------------------
+
+Pipeline& Pipeline::operator=( Pipeline&& _other ) noexcept
+{
+    if ( this == &_other )
+        {
+            return *this;
+        }
+
+    impl_ = std::move( _other.impl_ );
+
+    feature_engineerers_ = std::move( _other.feature_engineerers_ );
+
+    feature_selectors_ = std::move( _other.feature_selectors_ );
+
+    predictors_ = std::move( _other.predictors_ );
+
+    return *this;
 }
 
 // ----------------------------------------------------------------------
@@ -687,7 +773,7 @@ std::shared_ptr<std::vector<std::string>> Pipeline::parse_peripheral() const
 {
     auto peripheral = std::make_shared<std::vector<std::string>>();
 
-    const auto arr = JSON::get_array( obj_, "peripheral_" );
+    const auto arr = JSON::get_array( obj(), "peripheral_" );
 
     assert_true( arr );
 
@@ -743,19 +829,19 @@ void Pipeline::save( const std::string& _path, const std::string& _name ) const
 
     Poco::JSON::Object pipeline_json;
 
-    pipeline_json.set( "allow_http_", allow_http_ );
+    pipeline_json.set( "allow_http_", allow_http() );
 
-    pipeline_json.set( "num_targets_", num_targets_ );
+    pipeline_json.set( "num_targets_", num_targets() );
 
     save_json_obj( pipeline_json, tfile.path() + "/pipeline.json" );
 
     // ------------------------------------------------------------------
 
-    save_json_obj( obj_, tfile.path() + "/obj.json" );
+    save_json_obj( obj(), tfile.path() + "/obj.json" );
 
     // ------------------------------------------------------------------
 
-    scores_.save( tfile.path() + "/scores.json" );
+    scores().save( tfile.path() + "/scores.json" );
 
     // ------------------------------------------------------------------
 
@@ -860,7 +946,7 @@ Poco::JSON::Object Pipeline::score(
 
     auto obj = metrics::Scorer::score( is_classification(), _yhat, y );
 
-    scores_.from_json_obj( obj );
+    scores().from_json_obj( obj );
 
     // ------------------------------------------------
 

@@ -21,6 +21,9 @@ class AbstractFeatureEngineerer
     // --------------------------------------------------------
 
    public:
+    /// Creates a deep copy.
+    virtual std::shared_ptr<AbstractFeatureEngineerer> clone() = 0;
+
     /// Fits the model.
     virtual void fit(
         const Poco::JSON::Object& _cmd,

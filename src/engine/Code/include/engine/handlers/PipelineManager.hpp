@@ -12,8 +12,7 @@ class PipelineManager
     // ------------------------------------------------------------------------
 
    public:
-    typedef std::map<std::string, std::shared_ptr<pipelines::Pipeline>>
-        PipelineMapType;
+    typedef std::map<std::string, pipelines::Pipeline> PipelineMapType;
 
     // ------------------------------------------------------------------------
 
@@ -163,8 +162,8 @@ class PipelineManager
     pipelines::Pipeline get_pipeline( const std::string& _name )
     {
         multithreading::ReadLock read_lock( read_write_lock_ );
-        auto ptr = utils::Getter::get( _name, &pipelines() );
-        return *ptr;
+        const auto& p = utils::Getter::get( _name, &pipelines() );
+        return p;
     }
 
     /// Trivial accessor
@@ -192,6 +191,7 @@ class PipelineManager
     const PipelineMapType& pipelines() const
     {
         assert_true( pipelines_ );
+        multithreading::ReadLock read_lock( read_write_lock_ );
         return *pipelines_;
     }
 
@@ -224,7 +224,7 @@ class PipelineManager
 
         weak_write_lock.upgrade();
 
-        it->second = std::make_shared<pipelines::Pipeline>( _pipeline );
+        it->second = _pipeline;
     }
 
     // ------------------------------------------------------------------------

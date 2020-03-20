@@ -20,6 +20,9 @@ class Predictor
     /// Whether the predictor accepts null values.
     virtual bool accepts_null() const = 0;
 
+    /// Returns a deep copy.
+    virtual std::shared_ptr<Predictor> clone() const = 0;
+
     /// Returns an importance measure for the individual features
     virtual std::vector<Float> feature_importances(
         const size_t _num_features ) const = 0;
