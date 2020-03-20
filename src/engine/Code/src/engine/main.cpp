@@ -83,17 +83,11 @@ int main( int argc, char* argv[] )
 
     // -------------------------------------------
 
-    const auto multirel_models = std::make_shared<
-        engine::handlers::MultirelModelManager::ModelMapType>();
-
     const auto data_frames = std::make_shared<
         std::map<std::string, engine::containers::DataFrame>>();
 
     const auto pipelines =
         std::make_shared<engine::handlers::PipelineManager::PipelineMapType>();
-
-    const auto relboost_models = std::make_shared<
-        engine::handlers::RelboostModelManager::ModelMapType>();
 
     // -------------------------------------------
 
@@ -104,19 +98,6 @@ int main( int argc, char* argv[] )
 
     const auto database_manager =
         std::make_shared<engine::handlers::DatabaseManager>( logger, monitor );
-
-    const auto multirel_model_manager =
-        std::make_shared<engine::handlers::MultirelModelManager>(
-            categories,
-            database_manager,
-            data_frames,
-            join_keys_encoding,
-            license_checker,
-            logger,
-            multirel_models,
-            monitor,
-            project_mtx,
-            read_write_lock );
 
     const auto data_frame_manager =
         std::make_shared<engine::handlers::DataFrameManager>(
@@ -142,22 +123,8 @@ int main( int argc, char* argv[] )
             project_mtx,
             read_write_lock );
 
-    const auto relboost_model_manager =
-        std::make_shared<engine::handlers::RelboostModelManager>(
-            categories,
-            database_manager,
-            data_frames,
-            join_keys_encoding,
-            license_checker,
-            logger,
-            relboost_models,
-            monitor,
-            project_mtx,
-            read_write_lock );
-
     const auto project_manager =
         std::make_shared<engine::handlers::ProjectManager>(
-            multirel_models,
             categories,
             data_frame_manager,
             data_frames,
@@ -168,8 +135,7 @@ int main( int argc, char* argv[] )
             options,
             pipelines,
             project_mtx,
-            read_write_lock,
-            relboost_models );
+            read_write_lock );
 
     // -------------------------------------------
     // This is where the actual communication begins
@@ -185,11 +151,9 @@ int main( int argc, char* argv[] )
 
     Poco::Net::TCPServer srv(
         new engine::srv::ServerConnectionFactoryImpl(
-            multirel_model_manager,
             database_manager,
             data_frame_manager,
             logger,
-            relboost_model_manager,
             options,
             pipeline_manager,
             project_manager,

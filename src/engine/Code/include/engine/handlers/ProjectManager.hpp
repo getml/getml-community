@@ -12,15 +12,12 @@ class ProjectManager
     // ------------------------------------------------------------------------
 
    public:
-    typedef MultirelModelManager::ModelMapType MultirelModelMapType;
     typedef PipelineManager::PipelineMapType PipelineMapType;
-    typedef RelboostModelManager::ModelMapType RelboostModelMapType;
 
     // ------------------------------------------------------------------------
 
    public:
     ProjectManager(
-        const std::shared_ptr<MultirelModelMapType>& _multirel_models,
         const std::shared_ptr<containers::Encoding>& _categories,
         const std::shared_ptr<DataFrameManager>& _data_frame_manager,
         const std::shared_ptr<std::map<std::string, containers::DataFrame>>
@@ -32,10 +29,8 @@ class ProjectManager
         const config::Options& _options,
         const std::shared_ptr<PipelineMapType>& _pipelines,
         const std::shared_ptr<std::mutex>& _project_mtx,
-        const std::shared_ptr<multithreading::ReadWriteLock>& _read_write_lock,
-        const std::shared_ptr<RelboostModelMapType>& _relboost_models )
-        : multirel_models_( _multirel_models ),
-          categories_( _categories ),
+        const std::shared_ptr<multithreading::ReadWriteLock>& _read_write_lock )
+        : categories_( _categories ),
           data_frame_manager_( _data_frame_manager ),
           data_frames_( _data_frames ),
           join_keys_encoding_( _join_keys_encoding ),
@@ -45,8 +40,7 @@ class ProjectManager
           options_( _options ),
           pipelines_( _pipelines ),
           project_mtx_( _project_mtx ),
-          read_write_lock_( _read_write_lock ),
-          relboost_models_( _relboost_models )
+          read_write_lock_( _read_write_lock )
     {
     }
 
@@ -83,44 +77,14 @@ class ProjectManager
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
-    /// Adds a new Multirel model to the project.
-    void add_multirel_model(
-        const std::string& _name,
-        const Poco::JSON::Object& _cmd,
-        Poco::Net::StreamSocket* _socket );
-
     /// Adds a new Pipeline to the project.
     void add_pipeline(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
-    /// Adds a new relboost model to the project.
-    void add_relboost_model(
-        const std::string& _name,
-        const Poco::JSON::Object& _cmd,
-        Poco::Net::StreamSocket* _socket );
-
-    /// Duplicates a multirel model.
-    void copy_multirel_model(
-        const std::string& _name,
-        const Poco::JSON::Object& _cmd,
-        Poco::Net::StreamSocket* _socket );
-
     /// Duplicates a pipeline.
     void copy_pipeline(
-        const std::string& _name,
-        const Poco::JSON::Object& _cmd,
-        Poco::Net::StreamSocket* _socket );
-
-    /// Duplicates a multirel model.
-    void copy_relboost_model(
-        const std::string& _name,
-        const Poco::JSON::Object& _cmd,
-        Poco::Net::StreamSocket* _socket );
-
-    /// Deletes an Multirel model
-    void delete_multirel_model(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
@@ -137,33 +101,19 @@ class ProjectManager
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
-    /// Deletes a relboost model
-    void delete_relboost_model(
-        const std::string& _name,
-        const Poco::JSON::Object& _cmd,
-        Poco::Net::StreamSocket* _socket );
-
     /// Deletes a project
     void delete_project(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
-
-    /// Retrieves the type of a model.
-    void get_model(
-        const std::string& _name, Poco::Net::StreamSocket* _socket ) const;
 
     /// Returns a list of all data_frames currently held in memory and held
     /// in the project directory.
     void list_data_frames( Poco::Net::StreamSocket* _socket ) const;
 
-    /// Returns a list of all models currently held in memory.
-    void list_models( Poco::Net::StreamSocket* _socket ) const;
+    /// Returns a list of all pipelines currently held in memory.
+    void list_pipelines( Poco::Net::StreamSocket* _socket ) const;
 
     /// Returns a list of all projects.
     void list_projects( Poco::Net::StreamSocket* _socket ) const;
-
-    /// Loads an Multirel model
-    void load_multirel_model(
-        const std::string& _name, Poco::Net::StreamSocket* _socket );
 
     /// Loads a data frame
     void load_data_frame(
@@ -173,10 +123,6 @@ class ProjectManager
     void load_pipeline(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
 
-    /// Loads a relboost model
-    void load_relboost_model(
-        const std::string& _name, Poco::Net::StreamSocket* _socket );
-
     /// Updates the encodings in the client
     void refresh( Poco::Net::StreamSocket* _socket ) const;
 
@@ -184,16 +130,8 @@ class ProjectManager
     void save_data_frame(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
 
-    /// Saves an Multirel model to disc.
-    void save_multirel_model(
-        const std::string& _name, Poco::Net::StreamSocket* _socket );
-
     /// Saves a pipeline to disc.
     void save_pipeline(
-        const std::string& _name, Poco::Net::StreamSocket* _socket );
-
-    /// Saves a relboost model to disc.
-    void save_relboost_model(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
 
     /// Sets the current project
@@ -209,12 +147,9 @@ class ProjectManager
     // ------------------------------------------------------------------------
 
    private:
-    /// Deletes all models and data frames (from memory only) and clears all
+    /// Deletes all pipelines and data frames (from memory only) and clears all
     /// encodings.
     void clear();
-
-    /// Loads all models.
-    void load_all_models();
 
     /// Loads all pipelines.
     void load_all_pipelines();
@@ -222,28 +157,9 @@ class ProjectManager
     /// Loads a JSON object from a file.
     Poco::JSON::Object load_json_obj( const std::string& _fname ) const;
 
-    /// If a model of this name exists anywhere, it will be deleted.
-    /// This is to ensure that duplicate model names are not possible,
-    /// even for models of different types.
-    void purge_model( const std::string& _name, const bool _mem_only );
-
     // ------------------------------------------------------------------------
 
    private:
-    /// Trivial (private) accessor
-    MultirelModelMapType& multirel_models()
-    {
-        assert_true( multirel_models_ );
-        return *multirel_models_;
-    }
-
-    /// Trivial (private) accessor
-    const MultirelModelMapType& multirel_models() const
-    {
-        assert_true( multirel_models_ );
-        return *multirel_models_;
-    }
-
     /// Trivial accessor
     containers::Encoding& categories() { return *categories_; }
 
@@ -263,27 +179,11 @@ class ProjectManager
         return *data_frames_;
     }
 
-    /// Returns a deep copy of a model.
-    models::MultirelModel get_multirel_model( const std::string& _name )
-    {
-        multithreading::ReadLock read_lock( read_write_lock_ );
-        auto ptr = utils::Getter::get( _name, &multirel_models() );
-        return *ptr;
-    }
-
     /// Returns a deep copy of a pipeline.
     pipelines::Pipeline get_pipeline( const std::string& _name )
     {
         multithreading::ReadLock read_lock( read_write_lock_ );
         auto ptr = utils::Getter::get( _name, &pipelines() );
-        return *ptr;
-    }
-
-    /// Returns a deep copy of a model.
-    models::RelboostModel get_relboost_model( const std::string& _name )
-    {
-        multithreading::ReadLock read_lock( read_write_lock_ );
-        auto ptr = utils::Getter::get( _name, &relboost_models() );
         return *ptr;
     }
 
@@ -317,37 +217,18 @@ class ProjectManager
         return *pipelines_;
     }
 
+    /// Trivial (const private) accessor
+    const PipelineMapType& pipelines() const
+    {
+        assert_true( pipelines_ );
+        return *pipelines_;
+    }
+
     /// Trivial (private) accessor
     std::mutex& project_mtx()
     {
         assert_true( project_mtx_ );
         return *project_mtx_;
-    }
-
-    /// Trivial (private) accessor
-    RelboostModelMapType& relboost_models()
-    {
-        assert_true( relboost_models_ );
-        return *relboost_models_;
-    }
-
-    /// Trivial (private) accessor
-    const RelboostModelMapType& relboost_models() const
-    {
-        assert_true( relboost_models_ );
-        return *relboost_models_;
-    }
-
-    /// Sets a model.
-    void set_multirel_model(
-        const std::string& _name,
-        const models::MultirelModel& _model,
-        const bool _purge_from_mem_only )
-    {
-        multithreading::WriteLock write_lock( read_write_lock_ );
-        purge_model( _name, _purge_from_mem_only );
-        multirel_models()[_name] =
-            std::make_shared<models::MultirelModel>( _model );
     }
 
     /// Sets a pipeline.
@@ -358,24 +239,9 @@ class ProjectManager
         pipelines()[_name] = std::make_shared<pipelines::Pipeline>( _pipeline );
     }
 
-    /// Sets a model.
-    void set_relboost_model(
-        const std::string& _name,
-        const models::RelboostModel& _model,
-        const bool _purge_from_mem_only )
-    {
-        multithreading::WriteLock write_lock( read_write_lock_ );
-        purge_model( _name, _purge_from_mem_only );
-        relboost_models()[_name] =
-            std::make_shared<models::RelboostModel>( _model );
-    }
-
     // ------------------------------------------------------------------------
 
    private:
-    /// The Multirel models currently held in memory
-    const std::shared_ptr<MultirelModelMapType> multirel_models_;
-
     /// Maps integeres to category names
     const std::shared_ptr<containers::Encoding> categories_;
 
@@ -412,9 +278,6 @@ class ProjectManager
 
     /// For synchronization
     const std::shared_ptr<multithreading::ReadWriteLock>& read_write_lock_;
-
-    /// The relboost models currently held in memory
-    const std::shared_ptr<RelboostModelMapType> relboost_models_;
 
     // ------------------------------------------------------------------------
 };

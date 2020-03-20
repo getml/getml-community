@@ -15,24 +15,18 @@ class RequestHandler : public Poco::Net::TCPServerConnection
    public:
     RequestHandler(
         const Poco::Net::StreamSocket& _socket,
-        const std::shared_ptr<handlers::MultirelModelManager>&
-            _multirel_model_manager,
         const std::shared_ptr<handlers::DatabaseManager>& _database_manager,
         const std::shared_ptr<handlers::DataFrameManager>& _data_frame_manager,
         const std::shared_ptr<const monitoring::Logger>& _logger,
         const std::shared_ptr<handlers::PipelineManager>& _pipeline_manager,
-        const std::shared_ptr<handlers::RelboostModelManager>&
-            _relboost_model_manager,
         const config::Options& _options,
         const std::shared_ptr<handlers::ProjectManager>& _project_manager,
         const std::shared_ptr<std::atomic<bool>>& _shutdown )
         : Poco::Net::TCPServerConnection( _socket ),
-          multirel_model_manager_( _multirel_model_manager ),
           database_manager_( _database_manager ),
           data_frame_manager_( _data_frame_manager ),
           logger_( _logger ),
           pipeline_manager_( _pipeline_manager ),
-          relboost_model_manager_( _relboost_model_manager ),
           options_( _options ),
           project_manager_( _project_manager ),
           shutdown_( _shutdown )
@@ -47,13 +41,6 @@ class RequestHandler : public Poco::Net::TCPServerConnection
     // -------------------------------------------------------------
 
    private:
-    /// Trivial accessor
-    handlers::MultirelModelManager& multirel_model_manager()
-    {
-        assert_true( multirel_model_manager_ );
-        return *multirel_model_manager_;
-    }
-
     /// Trivial accessor
     handlers::DatabaseManager& database_manager()
     {
@@ -79,13 +66,6 @@ class RequestHandler : public Poco::Net::TCPServerConnection
     }
 
     /// Trivial accessor
-    handlers::RelboostModelManager& relboost_model_manager()
-    {
-        assert_true( relboost_model_manager_ );
-        return *relboost_model_manager_;
-    }
-
-    /// Trivial accessor
     handlers::ProjectManager& project_manager()
     {
         assert_true( project_manager_ );
@@ -95,11 +75,6 @@ class RequestHandler : public Poco::Net::TCPServerConnection
     // -------------------------------------------------------------
 
    private:
-    /// Handles requests related to the multirel models such as fit or
-    /// transform.
-    const std::shared_ptr<handlers::MultirelModelManager>
-        multirel_model_manager_;
-
     /// Handles requests related to the database.
     const std::shared_ptr<handlers::DatabaseManager> database_manager_;
 
@@ -111,11 +86,6 @@ class RequestHandler : public Poco::Net::TCPServerConnection
 
     /// Handles requests related to a pipeline
     const std::shared_ptr<handlers::PipelineManager> pipeline_manager_;
-
-    /// Handles requests related to the relboost models such as fit or
-    /// transform.
-    const std::shared_ptr<handlers::RelboostModelManager>
-        relboost_model_manager_;
 
     /// Contains information on the port of the monitor process
     const config::Options options_;

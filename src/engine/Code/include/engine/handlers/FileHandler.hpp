@@ -77,18 +77,6 @@ struct FileHandler
 
     // ------------------------------------------------------------------------
 
-    /// Makes the filename for an Multirel model.
-    template <
-        typename RType,
-        typename std::enable_if<
-            std::is_same<RType, std::shared_ptr<models::MultirelModel>>::value,
-            int>::type = 0>
-    static std::string make_fname(
-        const std::string& _project_directory, const std::string& _name )
-    {
-        return _project_directory + "multirel-models/" + _name;
-    }
-
     /// Makes the filename for a data frame.
     template <
         typename RType,
@@ -111,18 +99,6 @@ struct FileHandler
         const std::string& _project_directory, const std::string& _name )
     {
         return _project_directory + "pipelines/" + _name;
-    }
-
-    /// Makes the filename for a relboost model.
-    template <
-        typename RType,
-        typename std::enable_if<
-            std::is_same<RType, std::shared_ptr<models::RelboostModel>>::value,
-            int>::type = 0>
-    static std::string make_fname(
-        const std::string& _project_directory, const std::string& _name )
-    {
-        return _project_directory + "relboost-models/" + _name;
     }
 
     // ------------------------------------------------------------------------

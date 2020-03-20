@@ -224,17 +224,13 @@ void RequestHandler::run()
                 {
                     project_manager().delete_project( name, &socket() );
                 }
-            else if ( type == "get_model" )
-                {
-                    project_manager().get_model( name, &socket() );
-                }
             else if ( type == "list_data_frames" )
                 {
                     project_manager().list_data_frames( &socket() );
                 }
-            else if ( type == "list_models" )
+            else if ( type == "list_pipelines" )
                 {
-                    project_manager().list_models( &socket() );
+                    project_manager().list_pipelines( &socket() );
                 }
             else if ( type == "list_projects" )
                 {
@@ -243,71 +239,6 @@ void RequestHandler::run()
             else if ( type == "is_alive" )
                 {
                     return;
-                }
-            else if ( type == "MultirelModel" )
-                {
-                    project_manager().add_multirel_model(
-                        name, cmd, &socket() );
-                }
-            else if ( type == "MultirelModel.copy" )
-                {
-                    project_manager().copy_multirel_model(
-                        name, cmd, &socket() );
-                }
-            else if ( type == "MultirelModel.delete" )
-                {
-                    project_manager().delete_multirel_model(
-                        name, cmd, &socket() );
-                }
-            else if ( type == "MultirelModel.deploy" )
-                {
-                    multirel_model_manager().deploy( name, cmd, &socket() );
-                }
-            else if ( type == "MultirelModel.fit" )
-                {
-                    multirel_model_manager().fit_model( name, cmd, &socket() );
-                }
-            else if ( type == "MultirelModel.get_hyperopt_names" )
-                {
-                    multirel_model_manager().get_hyperopt_names(
-                        name, &socket() );
-                }
-            else if ( type == "MultirelModel.get_hyperopt_scores" )
-                {
-                    multirel_model_manager().get_hyperopt_scores(
-                        name, &socket() );
-                }
-            else if ( type == "MultirelModel.launch_hyperopt" )
-                {
-                    multirel_model_manager().launch_hyperopt( name, &socket() );
-                }
-            else if ( type == "MultirelModel.load" )
-                {
-                    project_manager().load_multirel_model( name, &socket() );
-                }
-            else if ( type == "MultirelModel.refresh" )
-                {
-                    multirel_model_manager().refresh_model( name, &socket() );
-                }
-            else if ( type == "MultirelModel.save" )
-                {
-                    project_manager().save_multirel_model( name, &socket() );
-                }
-            else if ( type == "MultirelModel.score" )
-                {
-                    multirel_model_manager().score( name, cmd, &socket() );
-                }
-            else if ( type == "MultirelModel.to_json" )
-                {
-                    multirel_model_manager().to_json( name, &socket() );
-                }
-            else if ( type == "MultirelModel.to_sql" )
-                {
-                    multirel_model_manager().to_sql( name, &socket() );
-                }
-            else if ( type == "MultirelModel.transform" )
-                {
-                    multirel_model_manager().transform( name, cmd, &socket() );
                 }
             else if ( type == "Pipeline" )
                 {
@@ -361,78 +292,12 @@ void RequestHandler::run()
                 {
                     pipeline_manager().transform( name, cmd, &socket() );
                 }
-            else if ( type == "RelboostModel" )
-                {
-                    project_manager().add_relboost_model(
-                        name, cmd, &socket() );
-                }
-            else if ( type == "RelboostModel.copy" )
-                {
-                    project_manager().copy_relboost_model(
-                        name, cmd, &socket() );
-                }
-            else if ( type == "RelboostModel.delete" )
-                {
-                    project_manager().delete_relboost_model(
-                        name, cmd, &socket() );
-                }
-            else if ( type == "RelboostModel.deploy" )
-                {
-                    relboost_model_manager().deploy( name, cmd, &socket() );
-                }
-            else if ( type == "RelboostModel.fit" )
-                {
-                    relboost_model_manager().fit_model( name, cmd, &socket() );
-                }
-            else if ( type == "RelboostModel.get_hyperopt_names" )
-                {
-                    relboost_model_manager().get_hyperopt_names(
-                        name, &socket() );
-                }
-            else if ( type == "RelboostModel.get_hyperopt_scores" )
-                {
-                    relboost_model_manager().get_hyperopt_scores(
-                        name, &socket() );
-                }
-            else if ( type == "RelboostModel.launch_hyperopt" )
-                {
-                    relboost_model_manager().launch_hyperopt( name, &socket() );
-                }
-            else if ( type == "RelboostModel.load" )
-                {
-                    project_manager().load_relboost_model( name, &socket() );
-                }
-            else if ( type == "RelboostModel.refresh" )
-                {
-                    relboost_model_manager().refresh_model( name, &socket() );
-                }
-            else if ( type == "RelboostModel.save" )
-                {
-                    project_manager().save_relboost_model( name, &socket() );
-                }
-            else if ( type == "RelboostModel.score" )
-                {
-                    relboost_model_manager().score( name, cmd, &socket() );
-                }
-            else if ( type == "RelboostModel.to_json" )
-                {
-                    relboost_model_manager().to_json( name, &socket() );
-                }
-            else if ( type == "RelboostModel.to_sql" )
-                {
-                    relboost_model_manager().to_sql( name, &socket() );
-                }
-            else if ( type == "RelboostModel.transform" )
-                {
-                    relboost_model_manager().transform( name, cmd, &socket() );
-                }
             else if ( type == "set_project" )
                 {
                     project_manager().set_project( name, &socket() );
                 }
             else if ( type == "shutdown" )
                 {
-                    //    monitor().shutdown();
                     *shutdown_ = true;
                 }
             else if ( type == "StringColumn" )
