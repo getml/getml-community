@@ -586,7 +586,9 @@ void PipelineManager::transform(
 
     const auto df_name = JSON::get_value<std::string>( cmd, "df_name_" );
 
-    if ( table_name == "" && df_name == "" )
+    const auto score = JSON::get_value<bool>( cmd, "score_" );
+
+    if ( table_name == "" && df_name == "" && !score )
         {
             communication::Sender::send_features( yhat, _socket );
         }
@@ -636,18 +638,15 @@ void PipelineManager::transform(
         }
 
     // -------------------------------------------------------
-
-    // send_data( categories_, local_data_frames, _socket );
-
-    // -------------------------------------------------------
     // Score model, if necessary.
 
     weak_write_lock.unlock();
 
-    if ( JSON::get_value<bool>( cmd, "score_" ) )
+    if ( score )
         {
             assert_true( local_data_frames );
-            score( _name, cmd, *local_data_frames, yhat, &pipeline, _socket );
+            this->score(
+                _name, cmd, *local_data_frames, yhat, &pipeline, _socket );
         }
 
     // -------------------------------------------------------
