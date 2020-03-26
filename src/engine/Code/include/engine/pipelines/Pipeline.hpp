@@ -112,6 +112,9 @@ class Pipeline
     /// Trivial (const) accessor
     const std::string& session_name() const { return impl_.session_name_; }
 
+    /// Trivial (const) accessor
+    const std::vector<std::string>& targets() const { return impl_.targets_; }
+
     // --------------------------------------------------------
 
    private:
@@ -139,6 +142,17 @@ class Pipeline
             _predictors,
         Poco::Net::StreamSocket* _socket ) const;
 
+    /// Calculates the feature importances vis-a-vis each target.
+    std::vector<std::vector<Float>> feature_importances(
+        const std::vector<std::vector<std::shared_ptr<predictors::Predictor>>>
+            _predictors ) const;
+
+    /// Returns a JSON object containing all feature importances.
+    Poco::JSON::Object feature_importances_as_obj() const;
+
+    /// Returns a JSON object containing all feature names.
+    Poco::JSON::Object feature_names_as_obj() const;
+
     /// Generates the numerical features (which also includes numerical columns
     /// from the population table).
     containers::Features generate_numerical_features(
@@ -155,6 +169,12 @@ class Pipeline
     /// Gets the categorical columns in the population table that are to be
     /// included in the predictor.
     containers::CategoricalFeatures get_categorical_features(
+        const Poco::JSON::Object& _cmd,
+        const std::map<std::string, containers::DataFrame>& _data_frames )
+        const;
+
+    /// Get the targets from the population table.
+    std::vector<std::string> get_targets(
         const Poco::JSON::Object& _cmd,
         const std::map<std::string, containers::DataFrame>& _data_frames )
         const;
@@ -229,18 +249,6 @@ class Pipeline
         return out;
     }
 
-    /// Infers the number of targets from the population table.
-    size_t infer_num_targets(
-        const Poco::JSON::Object& _cmd,
-        const std::map<std::string, containers::DataFrame>& _data_frames ) const
-    {
-        const auto population_name =
-            JSON::get_value<std::string>( _cmd, "population_name_" );
-        const auto population_df =
-            utils::Getter::get( population_name, _data_frames );
-        return population_df.num_targets();
-    }
-
     // TODO: This needs to be implemented more consistently.
     /// Whether the pipeline is used for classification problems
     bool is_classification() const
@@ -255,7 +263,14 @@ class Pipeline
             feature_engineerers_.begin(), feature_engineerers_.end(), is_cl );
     }
 
-    /// Trivial (private) accessor
+    /// Calculates the number of automated and manual features used.
+    size_t num_features() const
+    {
+        const auto [autofeatures, manual1, manual2] = feature_names();
+        return autofeatures.size() + manual1.size() + manual2.size();
+    }
+
+    /// Calculates the number of predictors per set.
     size_t num_predictors_per_set() const
     {
         if ( predictors_.size() == 0 )
@@ -276,11 +291,8 @@ class Pipeline
     /// Trivial (private) accessor
     size_t num_predictor_sets() const { return predictors_.size(); }
 
-    /// Trivial accessor
-    size_t& num_targets() { return impl_.num_targets_; }
-
     /// Trivial (const) accessor
-    size_t num_targets() const { return impl_.num_targets_; }
+    size_t num_targets() const { return impl_.targets_.size(); }
 
     /// Trivial (const) accessor
     Poco::JSON::Object& obj() { return impl_.obj_; }
@@ -312,6 +324,9 @@ class Pipeline
 
     /// Trivial accessor
     metrics::Scores& scores() { return impl_.scores_; }
+
+    /// Trivial accessor
+    std::vector<std::string>& targets() { return impl_.targets_; }
 
     // --------------------------------------------------------
 

@@ -110,7 +110,125 @@ void Pipeline::calculate_feature_stats(
     scores().from_json_obj( metrics::Summarizer::calculate_feature_plots(
         _features, _nrows, _ncols, num_bins, targets ) );
 
+    scores().from_json_obj( feature_names_as_obj() );
+
     // ------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<std::vector<Float>> Pipeline::feature_importances(
+    const std::vector<std::vector<std::shared_ptr<predictors::Predictor>>>
+        _predictors ) const
+{
+    // ----------------------------------------------------------------
+
+    assert_true( _predictors.size() == num_targets() );
+
+    // ----------------------------------------------------------------
+
+    const auto n_features = num_features();
+
+    // ----------------------------------------------------------------
+
+    std::vector<std::vector<Float>> fi;
+
+    for ( size_t t = 0; t < _predictors.size(); ++t )
+        {
+            auto current_fi = std::vector<Float>( n_features );
+
+            if ( _predictors[t].size() == 0 )
+                {
+                    fi.push_back( current_fi );
+                    continue;
+                }
+
+            for ( auto& p : _predictors[t] )
+                {
+                    assert_true( p );
+
+                    const auto fi_for_this_target =
+                        p->feature_importances( n_features );
+
+                    assert_true(
+                        current_fi.size() == fi_for_this_target.size() );
+
+                    std::transform(
+                        current_fi.begin(),
+                        current_fi.end(),
+                        fi_for_this_target.begin(),
+                        current_fi.begin(),
+                        std::plus<Float>() );
+                }
+
+            const auto n = static_cast<Float>( _predictors[t].size() );
+
+            for ( auto& val : current_fi )
+                {
+                    val /= n;
+                }
+
+            fi.push_back( current_fi );
+        }
+
+    // ----------------------------------------------------------------
+
+    assert_true( fi.size() == num_targets() );
+
+    return fi;
+
+    // ----------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+Poco::JSON::Object Pipeline::feature_importances_as_obj() const
+{
+    // ----------------------------------------------------------------
+
+    const auto n_features = num_features();
+
+    // ----------------------------------------------------------------
+    // Extract feature importances
+
+    const auto feature_importances_transposed =
+        feature_importances( predictors_ );
+
+    assert_true( feature_importances_transposed.size() == num_targets() );
+
+    // ----------------------------------------------------------------
+    // Transpose feature importances and transform to arrays.
+
+    if ( feature_importances_transposed.size() == 0 )
+        {
+            return Poco::JSON::Object();
+        }
+
+    Poco::JSON::Array::Ptr feature_importances( new Poco::JSON::Array() );
+
+    for ( std::size_t i = 0; i < n_features; ++i )
+        {
+            Poco::JSON::Array::Ptr temp( new Poco::JSON::Array() );
+
+            for ( const auto& feat : feature_importances_transposed )
+                {
+                    assert_true( feat.size() == n_features );
+                    temp->add( feat[i] );
+                }
+
+            feature_importances->add( temp );
+        }
+
+    // ----------------------------------------------------------------
+    // Insert array into object and return.
+
+    Poco::JSON::Object obj;
+
+    obj.set( "feature_importances_", feature_importances );
+
+    return obj;
+
+    // ----------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -149,6 +267,38 @@ Pipeline::feature_names() const
                 std::vector<std::string>() );
         }
 }
+
+// ----------------------------------------------------------------------------
+
+Poco::JSON::Object Pipeline::feature_names_as_obj() const
+{
+    const auto fn = feature_names();
+
+    Poco::JSON::Array::Ptr all_names( new Poco::JSON::Array() );
+
+    for ( const auto& name : std::get<0>( fn ) )
+        {
+            all_names->add( name );
+        }
+
+    for ( const auto& name : std::get<1>( fn ) )
+        {
+            all_names->add( name );
+        }
+
+    for ( const auto& name : std::get<2>( fn ) )
+        {
+            all_names->add( name );
+        }
+
+    Poco::JSON::Object obj;
+
+    obj.set( "feature_names_", all_names );
+
+    return obj;
+}
+
+// ----------------------------------------------------------------------------
 
 // ----------------------------------------------------------------------------
 
@@ -266,7 +416,7 @@ void Pipeline::fit(
 {
     // -------------------------------------------------------------------------
 
-    num_targets() = infer_num_targets( _cmd, _data_frames );
+    targets() = get_targets( _cmd, _data_frames );
 
     // -------------------------------------------------------------------------
     // Fit the feature engineering algorithms.
@@ -300,6 +450,11 @@ void Pipeline::fit(
     fit_predictors( _cmd, _logger, _data_frames, &predictors, _socket );
 
     predictors_ = std::move( predictors );
+
+    // -------------------------------------------------------------------------
+    // Store the feature importances.
+
+    scores().from_json_obj( feature_importances_as_obj() );
 
     // -------------------------------------------------------------------------
 }
@@ -384,6 +539,28 @@ containers::CategoricalFeatures Pipeline::get_categorical_features(
         }
 
     return categorical_features;
+}
+
+// ----------------------------------------------------------------------
+
+std::vector<std::string> Pipeline::get_targets(
+    const Poco::JSON::Object& _cmd,
+    const std::map<std::string, containers::DataFrame>& _data_frames ) const
+{
+    const auto population_name =
+        JSON::get_value<std::string>( _cmd, "population_name_" );
+
+    const auto population_df =
+        utils::Getter::get( population_name, _data_frames );
+
+    auto target_names = std::vector<std::string>( population_df.num_targets() );
+
+    for ( size_t i = 0; i < population_df.num_targets(); ++i )
+        {
+            target_names[i] = population_df.target( i ).name();
+        }
+
+    return target_names;
 }
 
 // ----------------------------------------------------------------------
@@ -535,8 +712,8 @@ Pipeline Pipeline::load(
 
     // ------------------------------------------------------------
 
-    const auto num_targets =
-        JSON::get_value<size_t>( pipeline_json, "num_targets_" );
+    const auto target_names = JSON::array_to_vector<std::string>(
+        JSON::get_array( pipeline_json, "targets_" ) );
 
     // ------------------------------------------------------------------
 
@@ -545,7 +722,7 @@ Pipeline Pipeline::load(
     pipeline.allow_http() =
         JSON::get_value<bool>( pipeline_json, "allow_http_" );
 
-    pipeline.num_targets() = num_targets;
+    pipeline.targets() = target_names;
 
     pipeline.obj() = obj;
 
@@ -557,7 +734,7 @@ Pipeline Pipeline::load(
     // Load feature engineerers
 
     pipeline.feature_engineerers_ =
-        pipeline.init_feature_engineerers( num_targets );
+        pipeline.init_feature_engineerers( pipeline.num_targets() );
 
     for ( size_t i = 0; i < pipeline.feature_engineerers_.size(); ++i )
         {
@@ -578,11 +755,11 @@ Pipeline Pipeline::load(
     // Load predictors
 
     pipeline.predictors_ =
-        pipeline.init_predictors( "predictors_", num_targets );
+        pipeline.init_predictors( "predictors_", pipeline.num_targets() );
 
-    assert_true( num_targets == pipeline.predictors_.size() );
+    assert_true( pipeline.num_targets() == pipeline.predictors_.size() );
 
-    for ( size_t i = 0; i < num_targets; ++i )
+    for ( size_t i = 0; i < pipeline.num_targets(); ++i )
         {
             for ( size_t j = 0; j < pipeline.predictors_[i].size(); ++j )
                 {
@@ -831,7 +1008,7 @@ void Pipeline::save( const std::string& _path, const std::string& _name ) const
 
     pipeline_json.set( "allow_http_", allow_http() );
 
-    pipeline_json.set( "num_targets_", num_targets() );
+    pipeline_json.set( "targets_", JSON::vector_to_array( targets() ) );
 
     save_json_obj( pipeline_json, tfile.path() + "/pipeline.json" );
 
@@ -976,6 +1153,14 @@ Poco::JSON::Object Pipeline::to_monitor( const std::string& _name ) const
     json_obj.set( "allow_http_", allow_http() );
 
     json_obj.set( "feature_engineerers_", feature_engineerers );
+
+    json_obj.set( "num_features_", num_features() );
+
+    json_obj.set( "population_", JSON::get_object( obj(), "population_" ) );
+
+    json_obj.set( "scores_", scores().to_json_obj() );
+
+    json_obj.set( "targets_", JSON::vector_to_array( targets() ) );
 
     return json_obj;
 }
