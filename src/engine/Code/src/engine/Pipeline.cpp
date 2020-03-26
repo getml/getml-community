@@ -1139,24 +1139,24 @@ Poco::JSON::Object Pipeline::to_monitor( const std::string& _name ) const
     auto feature_engineerers =
         Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
 
-    for ( const auto& fe : feature_engineerers_ )
-        {
-            auto obj = fe->to_monitor( _name );
-
-            feature_engineerers->add( obj );
-        }
-
     Poco::JSON::Object json_obj;
 
     json_obj.set( "name_", _name );
 
     json_obj.set( "allow_http_", allow_http() );
 
-    json_obj.set( "feature_engineerers_", feature_engineerers );
+    json_obj.set(
+        "feature_engineerers_",
+        JSON::get_array( obj(), "feature_engineerers_" ) );
+
+    json_obj.set(
+        "feature_selectors_", JSON::get_array( obj(), "feature_selectors_" ) );
 
     json_obj.set( "num_features_", num_features() );
 
     json_obj.set( "population_", JSON::get_object( obj(), "population_" ) );
+
+    json_obj.set( "predictors_", JSON::get_array( obj(), "predictors_" ) );
 
     json_obj.set( "scores_", scores().to_json_obj() );
 
