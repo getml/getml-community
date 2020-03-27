@@ -116,8 +116,6 @@ void ProjectManager::add_pipeline(
 
     set_pipeline( _name, pipeline );
 
-    monitor_->send( "postpipeline", pipeline.to_monitor( _name ) );
-
     engine::communication::Sender::send_string( "Success!", _socket );
 }
 

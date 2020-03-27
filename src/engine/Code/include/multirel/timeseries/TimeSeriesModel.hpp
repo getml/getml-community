@@ -99,11 +99,12 @@ class TimeSeriesModel
     }
 
     /// Expresses DecisionTreeEnsemble as SQL code.
-    std::string to_sql(
+    std::vector<std::string> to_sql(
         const std::string &_feature_prefix = "",
-        const size_t _offset = 0 ) const
+        const size_t _offset = 0,
+        const bool _subfeatures = true ) const
     {
-        return model_.to_sql( _feature_prefix, _offset );
+        return model_.to_sql( _feature_prefix, _offset, _subfeatures );
     }
 
     // -----------------------------------------------------------------

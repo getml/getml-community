@@ -137,9 +137,10 @@ class DecisionTreeEnsemble
     Poco::JSON::Object to_json_obj( const bool _schema_only = false ) const;
 
     /// Expresses DecisionTreeEnsemble as SQL code.
-    std::string to_sql(
+    std::vector<std::string> to_sql(
         const std::string& _feature_prefix = "",
-        const size_t _offset = 0 ) const;
+        const size_t _offset = 0,
+        const bool _subfeatures = true ) const;
 
     // -----------------------------------------------------------------
 

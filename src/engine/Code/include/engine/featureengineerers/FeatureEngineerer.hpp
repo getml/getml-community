@@ -117,9 +117,10 @@ class FeatureEngineerer : public AbstractFeatureEngineerer
     }
 
     /// Return feature engineerer as SQL code.
-    std::string to_sql( const size_t _offset ) const final
+    std::vector<std::string> to_sql(
+        const size_t _offset, const bool _subfeatures ) const final
     {
-        return feature_engineerer().to_sql( "", _offset );
+        return feature_engineerer().to_sql( "", _offset, _subfeatures );
     }
 
     // --------------------------------------------------------

@@ -166,7 +166,8 @@ void test19_saving_and_loading_models( std::filesystem::path _test_path )
     // Express as SQL code.
 
     std::ofstream sql( tmp_filename_sql );
-    sql << model.to_sql();
+    const auto vec = model.to_sql();
+    for ( const auto& str : vec ) sql << str;
     sql.close();
 
     model.save( tmp_filename_json );
@@ -181,8 +182,9 @@ void test19_saving_and_loading_models( std::filesystem::path _test_path )
 
     model2.save( tmp_filename_json_2 );
 
-    std::ofstream sql2( tmp_filename_sql_2 );
-    sql2 << model2.to_sql();
+    std::ofstream sql2( tmp_filename_sql );
+    const auto vec2 = model.to_sql();
+    for ( const auto& str : vec2 ) sql2 << str;
     sql2.close();
 
     const auto model2_json = load_json( tmp_filename_json_2 );
@@ -190,8 +192,9 @@ void test19_saving_and_loading_models( std::filesystem::path _test_path )
     auto model3 =
         multirel::ensemble::DecisionTreeEnsemble( encoding, *model2_json );
 
-    std::ofstream sql3( tmp_filename_sql_3 );
-    sql3 << model3.to_sql();
+    std::ofstream sql3( tmp_filename_sql );
+    const auto vec3 = model3.to_sql();
+    for ( const auto& str : vec3 ) sql3 << str;
     sql3.close();
 
     // ------------------------------------------------------------------------

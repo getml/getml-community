@@ -205,6 +205,9 @@ class Pipeline
     /// Parses the peripheral names.
     std::shared_ptr<std::vector<std::string>> parse_peripheral() const;
 
+    /// Returns a the SQL features.
+    Poco::JSON::Array::Ptr to_sql_arr() const;
+
     // --------------------------------------------------------
 
    private:

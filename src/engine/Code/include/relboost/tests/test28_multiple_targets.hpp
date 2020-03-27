@@ -197,11 +197,13 @@ void test28_multiple_targets( std::filesystem::path _test_path )
     // Express as SQL code.
 
     std::ofstream sql( tmp_filename_sql );
-    sql << model.to_sql();
+    const auto vec = model.to_sql();
+    for ( const auto& str : vec ) sql << str;
     sql.close();
 
-    std::ofstream sql2( tmp_filename_sql_2 );
-    sql2 << model2.to_sql();
+    std::ofstream sql2( tmp_filename_sql );
+    const auto vec2 = model2.to_sql();
+    for ( const auto& str : vec2 ) sql2 << str;
     sql2.close();
 
     // ------------------------------------------------------------------------

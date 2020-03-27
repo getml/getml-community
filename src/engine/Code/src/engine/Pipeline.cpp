@@ -1160,6 +1160,8 @@ Poco::JSON::Object Pipeline::to_monitor( const std::string& _name ) const
 
     json_obj.set( "scores_", scores().to_json_obj() );
 
+    json_obj.set( "sql_", to_sql_arr() );
+
     json_obj.set( "targets_", JSON::vector_to_array( targets() ) );
 
     return json_obj;
@@ -1175,7 +1177,35 @@ std::string Pipeline::to_sql() const
 
     for ( const auto& fe : feature_engineerers_ )
         {
-            sql += fe->to_sql( offset );
+            const auto vec = fe->to_sql( offset, true );
+
+            for ( const auto& str : vec )
+                {
+                    sql += str;
+                }
+
+            offset += fe->num_features();
+        }
+
+    return sql;
+}
+
+// ----------------------------------------------------------------------------
+
+Poco::JSON::Array::Ptr Pipeline::to_sql_arr() const
+{
+    auto sql = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
+
+    size_t offset = 0;
+
+    for ( const auto& fe : feature_engineerers_ )
+        {
+            const auto vec = fe->to_sql( offset, false );
+
+            for ( const auto& str : vec )
+                {
+                    sql->add( str );
+                }
 
             offset += fe->num_features();
         }

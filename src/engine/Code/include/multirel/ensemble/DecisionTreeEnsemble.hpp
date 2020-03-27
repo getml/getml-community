@@ -73,9 +73,10 @@ class DecisionTreeEnsemble
     Poco::JSON::Object to_monitor( const std::string _name ) const;
 
     /// Expresses DecisionTreeEnsemble as SQL code.
-    std::string to_sql(
+    std::vector<std::string> to_sql(
         const std::string &_feature_prefix = "",
-        const size_t _offset = 0 ) const;
+        const size_t _offset = 0,
+        const bool _subfeatures = true ) const;
 
     /// Transforms a set of raw data into extracted features.
     containers::Features transform(

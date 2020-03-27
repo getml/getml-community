@@ -1257,34 +1257,48 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json_obj(
 
 // ----------------------------------------------------------------------------
 
-std::string DecisionTreeEnsemble::to_sql(
-    const std::string &_feature_prefix, const size_t _offset ) const
+std::vector<std::string> DecisionTreeEnsemble::to_sql(
+    const std::string &_feature_prefix,
+    const size_t _offset,
+    const bool _subfeatures ) const
 {
-    std::stringstream sql;
+    std::vector<std::string> sql;
 
-    for ( size_t i = 0; i < subensembles_avg_.size(); ++i )
+    if ( _subfeatures )
         {
-            if ( subensembles_avg_[i] )
+            assert_true( subensembles_avg_.size() == subensembles_sum_.size() );
+
+            for ( size_t i = 0; i < subensembles_avg_.size(); ++i )
                 {
-                    sql << subensembles_avg_[i]->to_sql(
-                        std::to_string( i + 1 ) + "_", 0 );
+                    if ( subensembles_avg_[i] )
+                        {
+                            const auto sub_avg = subensembles_avg_[i]->to_sql(
+                                std::to_string( i + 1 ) + "_", 0, true );
 
-                    assert_true( subensembles_sum_[i] );
+                            sql.insert(
+                                sql.end(), sub_avg.begin(), sub_avg.end() );
 
-                    sql << subensembles_sum_[i]->to_sql(
-                        std::to_string( i + 1 ) + "_",
-                        subensembles_avg_[i]->num_features() );
+                            assert_true( subensembles_sum_[i] );
+
+                            const auto sub_sum = subensembles_sum_[i]->to_sql(
+                                std::to_string( i + 1 ) + "_",
+                                subensembles_avg_[i]->num_features(),
+                                true );
+
+                            sql.insert(
+                                sql.end(), sub_sum.begin(), sub_sum.end() );
+                        }
                 }
         }
 
     for ( size_t i = 0; i < trees().size(); ++i )
         {
-            sql << trees()[i].to_sql(
+            sql.push_back( trees()[i].to_sql(
                 _feature_prefix + std::to_string( _offset + i + 1 ),
-                hyperparameters().use_timestamps_ );
+                hyperparameters().use_timestamps_ ) );
         }
 
-    return sql.str();
+    return sql;
 }
 
 // ----------------------------------------------------------------------------

@@ -175,7 +175,8 @@ void test7_categorical( std::filesystem::path _test_path )
     // Express as SQL code.
 
     std::ofstream sql( tmp_filename_sql );
-    sql << model.to_sql();
+    const auto vec = model.to_sql();
+    for ( const auto& str : vec ) sql << str;
     sql.close();
 
     // ------------------------------------------------------------------------
