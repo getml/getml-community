@@ -108,6 +108,8 @@ void Pipeline::calculate_feature_stats(
 
     num_bins = std::max( num_bins, static_cast<size_t>( 10 ) );
 
+    // ------------------------------------------------------------------------
+
     scores().from_json_obj( metrics::Summarizer::calculate_feature_correlations(
         _features, _nrows, _ncols, targets ) );
 
@@ -260,8 +262,8 @@ Pipeline::feature_names() const
         {
             return std::make_tuple(
                 autofeatures,
-                predictor_impl().categorical_colnames(),
-                predictor_impl().numerical_colnames() );
+                predictor_impl().numerical_colnames(),
+                predictor_impl().categorical_colnames() );
         }
     else
         {
@@ -301,8 +303,6 @@ Poco::JSON::Object Pipeline::feature_names_as_obj() const
 
     return obj;
 }
-
-// ----------------------------------------------------------------------------
 
 // ----------------------------------------------------------------------------
 
@@ -1212,6 +1212,22 @@ Poco::JSON::Array::Ptr Pipeline::to_sql_arr() const
                 }
 
             offset += fe->num_features();
+        }
+
+    const auto population = JSON::get_object( obj(), "population_" );
+
+    const auto tname = JSON::get_value<std::string>( *population, "name_" );
+
+    const auto [autofeature, numerical, categorical] = feature_names();
+
+    for ( const auto& cname : numerical )
+        {
+            sql->add( "SELECT " + cname + " FROM " + tname + ";" );
+        }
+
+    for ( const auto& cname : categorical )
+        {
+            sql->add( "SELECT " + cname + " FROM " + tname + ";" );
         }
 
     return sql;
