@@ -102,7 +102,11 @@ void Pipeline::calculate_feature_stats(
 
     // ------------------------------------------------------------------------
 
-    const size_t num_bins = 200;
+    size_t num_bins = 200;
+
+    num_bins = std::min( num_bins, _nrows / 30 );
+
+    num_bins = std::max( num_bins, static_cast<size_t>( 10 ) );
 
     scores().from_json_obj( metrics::Summarizer::calculate_feature_correlations(
         _features, _nrows, _ncols, targets ) );
