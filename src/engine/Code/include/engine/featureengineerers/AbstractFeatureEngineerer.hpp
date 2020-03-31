@@ -22,7 +22,11 @@ class AbstractFeatureEngineerer
 
    public:
     /// Creates a deep copy.
-    virtual std::shared_ptr<AbstractFeatureEngineerer> clone() = 0;
+    virtual std::shared_ptr<AbstractFeatureEngineerer> clone() const = 0;
+
+    /// Returns the fingerprint of the feature engineerer (necessary to build
+    /// the dependency graphs).
+    virtual Poco::JSON::Object::Ptr fingerprint() const = 0;
 
     /// Fits the model.
     virtual void fit(

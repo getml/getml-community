@@ -19,6 +19,8 @@
 
 #include "metrics/metrics.hpp"
 
+#include "engine/dependency/dependency.hpp"
+
 #include "engine/featureengineerers/featureengineerers.hpp"
 
 #include "predictors/predictors.hpp"

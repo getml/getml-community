@@ -19,7 +19,8 @@ class Pipeline
 
     Pipeline(
         const std::shared_ptr<const std::vector<strings::String>>& _categories,
-        const std::string& _path );
+        const std::string& _path,
+        const std::shared_ptr<dependency::FETracker> _fe_tracker );
 
     Pipeline( const Pipeline& _other );
 
@@ -42,6 +43,7 @@ class Pipeline
         const Poco::JSON::Object& _cmd,
         const std::shared_ptr<const monitoring::Logger>& _logger,
         const std::map<std::string, containers::DataFrame>& _data_frames,
+        const std::shared_ptr<dependency::FETracker> _fe_tracker,
         Poco::Net::StreamSocket* _socket );
 
     /// Copy assignment operator.
@@ -133,6 +135,19 @@ class Pipeline
         const Poco::JSON::Object& _cmd,
         const std::map<std::string, containers::DataFrame>& _data_frames );
 
+    /// Extracts the fingerprints of all data frames that are inserted into
+    /// this.
+    std::vector<Poco::JSON::Object::Ptr> extract_df_fingerprints(
+        const Poco::JSON::Object& _cmd,
+        const std::map<std::string, containers::DataFrame>& _data_frames )
+        const;
+
+    /// Extracts the schemata from the data frame used for training.
+    std::pair<Poco::JSON::Object::Ptr, Poco::JSON::Array::Ptr> extract_schemata(
+        const Poco::JSON::Object& _cmd,
+        const std::map<std::string, containers::DataFrame>& _data_frames )
+        const;
+
     /// Fits the predictors.
     void fit_predictors(
         const Poco::JSON::Object& _cmd,
@@ -181,7 +196,9 @@ class Pipeline
 
     /// Prepares the feature engineerers from the JSON object.
     std::vector<std::shared_ptr<featureengineerers::AbstractFeatureEngineerer>>
-    init_feature_engineerers( const size_t _num_targets ) const;
+    init_feature_engineerers(
+        const size_t _num_targets,
+        const std::vector<Poco::JSON::Object::Ptr>& _df_fingerprints ) const;
 
     /// Prepares the predictors.
     std::vector<std::vector<std::shared_ptr<predictors::Predictor>>>
@@ -191,7 +208,8 @@ class Pipeline
     /// Loads a new Pipeline from disc.
     Pipeline load(
         const std::shared_ptr<const std::vector<strings::String>>& _categories,
-        const std::string& _path ) const;
+        const std::string& _path,
+        const std::shared_ptr<dependency::FETracker> _fe_tracker ) const;
 
     /// Loads a JSON object from disc.
     Poco::JSON::Object load_json_obj( const std::string& _fname ) const;
@@ -252,6 +270,18 @@ class Pipeline
         return out;
     }
 
+    /// Trivial accessor
+    std::vector<Poco::JSON::Object::Ptr>& df_fingerprints()
+    {
+        return impl_.df_fingerprints_;
+    }
+
+    /// Trivial (const) accessor
+    const std::vector<Poco::JSON::Object::Ptr>& df_fingerprints() const
+    {
+        return impl_.df_fingerprints_;
+    }
+
     // TODO: This needs to be implemented more consistently.
     /// Whether the pipeline is used for classification problems
     bool is_classification() const
@@ -299,6 +329,32 @@ class Pipeline
 
     /// Trivial (const) accessor
     Poco::JSON::Object& obj() { return impl_.obj_; }
+
+    /// Trivial (private) accessor
+    Poco::JSON::Array::Ptr& peripheral_schema()
+    {
+        return impl_.peripheral_schema_;
+    }
+
+    /// Trivial (const) accessor
+    const Poco::JSON::Array::Ptr& peripheral_schema() const
+    {
+        assert_true( impl_.peripheral_schema_ );
+        return impl_.peripheral_schema_;
+    }
+
+    /// Trivial (private) accessor
+    Poco::JSON::Object::Ptr& population_schema()
+    {
+        return impl_.population_schema_;
+    }
+
+    /// Trivial (const) accessor
+    const Poco::JSON::Object::Ptr& population_schema() const
+    {
+        assert_true( impl_.population_schema_ );
+        return impl_.population_schema_;
+    }
 
     /// Trivial (private) accessor
     predictors::Predictor* predictor( size_t _i, size_t _j )

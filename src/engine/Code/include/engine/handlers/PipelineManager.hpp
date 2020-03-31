@@ -22,6 +22,7 @@ class PipelineManager
         const std::shared_ptr<DatabaseManager>& _database_manager,
         const std::shared_ptr<std::map<std::string, containers::DataFrame>>
             _data_frames,
+        const std::shared_ptr<dependency::FETracker>& _fe_tracker,
         const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
         const std::shared_ptr<engine::licensing::LicenseChecker>&
             _license_checker,
@@ -33,6 +34,7 @@ class PipelineManager
         : categories_( _categories ),
           database_manager_( _database_manager ),
           data_frames_( _data_frames ),
+          fe_tracker_( _fe_tracker ),
           join_keys_encoding_( _join_keys_encoding ),
           license_checker_( _license_checker ),
           logger_( _logger ),
@@ -239,6 +241,9 @@ class PipelineManager
     /// The data frames currently held in memory
     const std::shared_ptr<std::map<std::string, containers::DataFrame>>
         data_frames_;
+
+    /// Keeps track of all feature engineerers.
+    const std::shared_ptr<dependency::FETracker> fe_tracker_;
 
     /// Maps integers to join key names
     const std::shared_ptr<containers::Encoding> join_keys_encoding_;

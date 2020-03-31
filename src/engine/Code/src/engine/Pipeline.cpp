@@ -14,7 +14,7 @@ Pipeline::Pipeline(
 {
     // This won't to anything - the point it to make sure that it can be
     // parsed correctly.
-    init_feature_engineerers( 1 );
+    init_feature_engineerers( 1, df_fingerprints() );
     init_predictors( "feature_selectors_", 1 );
     init_predictors( "predictors_", 1 );
 }
@@ -23,10 +23,11 @@ Pipeline::Pipeline(
 
 Pipeline::Pipeline(
     const std::shared_ptr<const std::vector<strings::String>>& _categories,
-    const std::string& _path )
+    const std::string& _path,
+    const std::shared_ptr<dependency::FETracker> _fe_tracker )
     : impl_( PipelineImpl( _categories ) )
 {
-    *this = load( _categories, _path );
+    *this = load( _categories, _path, _fe_tracker );
 }
 
 // ----------------------------------------------------------------------------
@@ -119,6 +120,66 @@ void Pipeline::calculate_feature_stats(
     scores().from_json_obj( feature_names_as_obj() );
 
     // ------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------
+
+std::vector<Poco::JSON::Object::Ptr> Pipeline::extract_df_fingerprints(
+    const Poco::JSON::Object& _cmd,
+    const std::map<std::string, containers::DataFrame>& _data_frames ) const
+{
+    const auto peripheral_names = JSON::array_to_vector<std::string>(
+        JSON::get_array( _cmd, "peripheral_names_" ) );
+
+    const auto population_name =
+        JSON::get_value<std::string>( _cmd, "population_name_" );
+
+    std::vector<Poco::JSON::Object::Ptr> df_fingerprints;
+
+    const auto population_fingerprint =
+        utils::Getter::get( population_name, _data_frames ).fingerprint();
+
+    df_fingerprints.push_back( population_fingerprint );
+
+    for ( const auto& name : peripheral_names )
+        {
+            const auto fingerprint =
+                utils::Getter::get( name, _data_frames ).fingerprint();
+
+            df_fingerprints.push_back( fingerprint );
+        }
+
+    return df_fingerprints;
+}
+
+// ----------------------------------------------------------------------
+
+std::pair<Poco::JSON::Object::Ptr, Poco::JSON::Array::Ptr>
+Pipeline::extract_schemata(
+    const Poco::JSON::Object& _cmd,
+    const std::map<std::string, containers::DataFrame>& _data_frames ) const
+{
+    const auto population_name =
+        JSON::get_value<std::string>( _cmd, "population_name_" );
+
+    const auto peripheral_names = JSON::array_to_vector<std::string>(
+        JSON::get_array( _cmd, "peripheral_names_" ) );
+
+    const auto population_df =
+        utils::Getter::get( population_name, _data_frames );
+
+    const auto population_schema = population_df.to_schema();
+
+    auto peripheral_schema = Poco::JSON::Array::Ptr( new Poco::JSON::Array );
+
+    for ( const auto& df_name : peripheral_names )
+        {
+            const auto df = utils::Getter::get( df_name, _data_frames );
+
+            peripheral_schema->add( df.to_schema() );
+        }
+
+    return std::make_pair( population_schema, peripheral_schema );
 }
 
 // ----------------------------------------------------------------------------
@@ -416,22 +477,45 @@ void Pipeline::fit(
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<const monitoring::Logger>& _logger,
     const std::map<std::string, containers::DataFrame>& _data_frames,
+    const std::shared_ptr<dependency::FETracker> _fe_tracker,
     Poco::Net::StreamSocket* _socket )
 {
     // -------------------------------------------------------------------------
 
+    assert_true( _fe_tracker );
+
+    // -------------------------------------------------------------------------
+
     targets() = get_targets( _cmd, _data_frames );
+
+    std::tie( population_schema(), peripheral_schema() ) =
+        extract_schemata( _cmd, _data_frames );
+
+    df_fingerprints() = extract_df_fingerprints( _cmd, _data_frames );
 
     // -------------------------------------------------------------------------
     // Fit the feature engineering algorithms.
 
-    auto feature_engineerers = init_feature_engineerers( num_targets() );
+    auto feature_engineerers =
+        init_feature_engineerers( num_targets(), df_fingerprints() );
 
     for ( auto& fe : feature_engineerers )
         {
             assert_true( fe );
 
+            const auto fingerprint = fe->fingerprint();
+
+            const auto retrieved_fe = _fe_tracker->retrieve( fingerprint );
+
+            if ( retrieved_fe )
+                {
+                    fe = retrieved_fe;
+                    continue;
+                }
+
             fe->fit( _cmd, _logger, _data_frames, _socket );
+
+            _fe_tracker->add( fe );
         }
 
     feature_engineerers_ = std::move( feature_engineerers );
@@ -570,7 +654,9 @@ std::vector<std::string> Pipeline::get_targets(
 // ----------------------------------------------------------------------
 
 std::vector<std::shared_ptr<featureengineerers::AbstractFeatureEngineerer>>
-Pipeline::init_feature_engineerers( const size_t _num_targets ) const
+Pipeline::init_feature_engineerers(
+    const size_t _num_targets,
+    const std::vector<Poco::JSON::Object::Ptr>& _df_fingerprints ) const
 {
     // ----------------------------------------------------------------------
 
@@ -579,32 +665,29 @@ Pipeline::init_feature_engineerers( const size_t _num_targets ) const
 
     const auto peripheral = parse_peripheral();
 
-    const auto arr = JSON::get_array( obj(), "feature_engineerers_" );
+    const auto obj_vector = JSON::array_to_obj_vector(
+        JSON::get_array( obj(), "feature_engineerers_" ) );
 
     // ----------------------------------------------------------------------
 
     std::vector<std::shared_ptr<featureengineerers::AbstractFeatureEngineerer>>
         feature_engineerers;
 
-    for ( size_t i = 0; i < arr->size(); ++i )
+    for ( auto ptr : obj_vector )
         {
             // --------------------------------------------------------------
 
-            const auto ptr = arr->getObject( i );
-
-            if ( !ptr )
-                {
-                    throw std::invalid_argument(
-                        "Element " + std::to_string( i ) +
-                        " in feature_engineerers_ is not a proper JSON "
-                        "object." );
-                }
+            assert_true( ptr );
 
             // --------------------------------------------------------------
 
             auto new_feature_engineerer =
                 featureengineerers::FeatureEngineererParser::parse(
-                    *ptr, population, peripheral, categories() );
+                    *ptr,
+                    population,
+                    peripheral,
+                    categories(),
+                    _df_fingerprints );
 
             // --------------------------------------------------------------
 
@@ -626,7 +709,8 @@ Pipeline::init_feature_engineerers( const size_t _num_targets ) const
                                         *ptr,
                                         population,
                                         peripheral,
-                                        categories() ) );
+                                        categories(),
+                                        _df_fingerprints ) );
                         }
                 }
 
@@ -691,7 +775,8 @@ Pipeline::init_predictors(
 
 Pipeline Pipeline::load(
     const std::shared_ptr<const std::vector<strings::String>>& _categories,
-    const std::string& _path ) const
+    const std::string& _path,
+    const std::shared_ptr<dependency::FETracker> _fe_tracker ) const
 {
     // ------------------------------------------------------------------
 
@@ -716,6 +801,9 @@ Pipeline Pipeline::load(
 
     // ------------------------------------------------------------
 
+    const auto df_fingerprints = JSON::array_to_obj_vector(
+        JSON::get_array( pipeline_json, "df_fingerprints_" ) );
+
     const auto target_names = JSON::array_to_vector<std::string>(
         JSON::get_array( pipeline_json, "targets_" ) );
 
@@ -725,6 +813,14 @@ Pipeline Pipeline::load(
 
     pipeline.allow_http() =
         JSON::get_value<bool>( pipeline_json, "allow_http_" );
+
+    pipeline.df_fingerprints() = df_fingerprints;
+
+    pipeline.peripheral_schema() =
+        JSON::get_array( pipeline_json, "peripheral_schema_" );
+
+    pipeline.population_schema() =
+        JSON::get_object( pipeline_json, "population_schema_" );
 
     pipeline.targets() = target_names;
 
@@ -737,8 +833,10 @@ Pipeline Pipeline::load(
     // ------------------------------------------------------------
     // Load feature engineerers
 
-    pipeline.feature_engineerers_ =
-        pipeline.init_feature_engineerers( pipeline.num_targets() );
+    assert_true( _fe_tracker );
+
+    pipeline.feature_engineerers_ = pipeline.init_feature_engineerers(
+        pipeline.num_targets(), pipeline.df_fingerprints() );
 
     for ( size_t i = 0; i < pipeline.feature_engineerers_.size(); ++i )
         {
@@ -748,6 +846,8 @@ Pipeline Pipeline::load(
 
             fe->load(
                 _path + "feature-engineerer-" + std::to_string( i ) + ".json" );
+
+            _fe_tracker->add( fe );
         }
 
     // ------------------------------------------------------------
@@ -1012,7 +1112,14 @@ void Pipeline::save( const std::string& _path, const std::string& _name ) const
 
     pipeline_json.set( "allow_http_", allow_http() );
 
+    pipeline_json.set(
+        "df_fingerprints_", JSON::vector_to_array( df_fingerprints() ) );
+
     pipeline_json.set( "targets_", JSON::vector_to_array( targets() ) );
+
+    pipeline_json.set( "peripheral_schema_", peripheral_schema() );
+
+    pipeline_json.set( "population_schema_", population_schema() );
 
     save_json_obj( pipeline_json, tfile.path() + "/pipeline.json" );
 
@@ -1157,6 +1264,10 @@ Poco::JSON::Object Pipeline::to_monitor( const std::string& _name ) const
         "feature_selectors_", JSON::get_array( obj(), "feature_selectors_" ) );
 
     json_obj.set( "num_features_", num_features() );
+
+    json_obj.set( "peripheral_schema_", peripheral_schema() );
+
+    json_obj.set( "population_schema_", population_schema() );
 
     json_obj.set( "population_", JSON::get_object( obj(), "population_" ) );
 

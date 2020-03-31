@@ -4,6 +4,36 @@ namespace engine
 {
 // ------------------------------------------------------------------------
 
+std::vector<Poco::JSON::Object::Ptr> JSON::array_to_obj_vector(
+    const Poco::JSON::Array::Ptr _arr )
+{
+    if ( !_arr )
+        {
+            throw std::invalid_argument( "_arr is a nullptr!" );
+        }
+
+    std::vector<Poco::JSON::Object::Ptr> vec;
+
+    for ( size_t i = 0; i < _arr->size(); ++i )
+        {
+            const auto ptr = _arr->getObject( i );
+
+            if ( !ptr )
+                {
+                    throw std::invalid_argument(
+                        "Element " + std::to_string( i ) +
+                        " in array is not a proper JSON "
+                        "object." );
+                }
+
+            vec.push_back( ptr );
+        }
+
+    return vec;
+}
+
+// ------------------------------------------------------------------------
+
 /// Gets an array from a JSON object or throws.
 Poco::JSON::Array::Ptr JSON::get_array(
     const Poco::JSON::Object& _obj, const std::string& _key )

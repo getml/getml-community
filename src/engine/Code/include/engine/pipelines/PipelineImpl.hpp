@@ -41,8 +41,17 @@ struct PipelineImpl
     /// The categories used for the mapping - needed by the feature engineerers.
     std::shared_ptr<const std::vector<strings::String>> categories_;
 
+    /// The fingerprints of the data frames used for fitting.
+    std::vector<Poco::JSON::Object::Ptr> df_fingerprints_;
+
     /// The JSON Object used to construct the pipeline.
     Poco::JSON::Object obj_;
+
+    /// The schema of the peripheral tables.
+    Poco::JSON::Array::Ptr peripheral_schema_;
+
+    /// The schema of the population.
+    Poco::JSON::Object::Ptr population_schema_;
 
     /// Pimpl for the predictors.
     std::shared_ptr<const predictors::PredictorImpl> predictor_impl_;

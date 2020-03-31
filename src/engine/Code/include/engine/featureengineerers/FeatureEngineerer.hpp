@@ -19,9 +19,11 @@ class FeatureEngineerer : public AbstractFeatureEngineerer
         const std::shared_ptr<const std::vector<strings::String>>& _categories,
         const Poco::JSON::Object& _cmd,
         const std::shared_ptr<const Poco::JSON::Object>& _placeholder,
-        const std::shared_ptr<const std::vector<std::string>>& _peripheral )
+        const std::shared_ptr<const std::vector<std::string>>& _peripheral,
+        const std::vector<Poco::JSON::Object::Ptr>& _dependencies )
         : categories_( _categories ),
           cmd_( _cmd ),
+          dependencies_( _dependencies ),
           placeholder_( _placeholder ),
           peripheral_( _peripheral )
     {
@@ -33,6 +35,10 @@ class FeatureEngineerer : public AbstractFeatureEngineerer
     // --------------------------------------------------------
 
    public:
+    /// Returns the fingerprint of the feature engineerer (necessary to build
+    /// the dependency graphs).
+    Poco::JSON::Object::Ptr fingerprint() const final;
+
     /// Fits the model.
     void fit(
         const Poco::JSON::Object& _cmd,
@@ -51,7 +57,7 @@ class FeatureEngineerer : public AbstractFeatureEngineerer
 
    public:
     /// Creates a deep copy.
-    std::shared_ptr<AbstractFeatureEngineerer> clone() final
+    std::shared_ptr<AbstractFeatureEngineerer> clone() const final
     {
         return std::make_shared<FeatureEngineerer<FeatureEngineererType>>(
             *this );
@@ -323,6 +329,9 @@ class FeatureEngineerer : public AbstractFeatureEngineerer
 
     /// The command used to create the feature engineerer.
     Poco::JSON::Object cmd_;
+
+    /// The dependencies used to build the fingerprint.
+    std::vector<Poco::JSON::Object::Ptr> dependencies_;
 
     /// The underlying feature engineering algorithm.
     std::optional<FeatureEngineererType> feature_engineerer_;
@@ -599,6 +608,20 @@ DataFrameType FeatureEngineerer<FeatureEngineererType>::extract_df_by_colnames(
 // ----------------------------------------------------------------------------
 
 template <typename FeatureEngineererType>
+Poco::JSON::Object::Ptr FeatureEngineerer<FeatureEngineererType>::fingerprint()
+    const
+{
+    auto obj = Poco::JSON::Object::Ptr( new Poco::JSON::Object() );
+
+    obj->set( "cmd_", cmd_ );
+    obj->set( "dependencies_", JSON::vector_to_array_ptr( dependencies_ ) );
+
+    return obj;
+}
+
+// ----------------------------------------------------------------------------
+
+template <typename FeatureEngineererType>
 void FeatureEngineerer<FeatureEngineererType>::fit(
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<const monitoring::Logger>& _logger,
@@ -608,7 +631,7 @@ void FeatureEngineerer<FeatureEngineererType>::fit(
     // ------------------------------------------------
     // Extract the peripheral tables.
 
-    auto peripheral_names = JSON::array_to_vector<std::string>(
+    const auto peripheral_names = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "peripheral_names_" ) );
 
     std::vector<typename FeatureEngineererType::DataFrameType>

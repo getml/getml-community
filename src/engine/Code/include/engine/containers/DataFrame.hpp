@@ -14,6 +14,7 @@ class DataFrame
         : categories_( std::make_shared<Encoding>() ),
           join_keys_encoding_( std::make_shared<Encoding>() )
     {
+        update_last_change();
     }
 
     DataFrame(
@@ -24,6 +25,7 @@ class DataFrame
           join_keys_encoding_( _join_keys_encoding ),
           name_( _name )
     {
+        update_last_change();
     }
 
     ~DataFrame() = default;
@@ -150,6 +152,9 @@ class DataFrame
     /// understand
     Poco::JSON::Object to_monitor() const;
 
+    /// Expresses the schema of the DataFrame as a JSON object.
+    Poco::JSON::Object::Ptr to_schema() const;
+
     /// Transforms a float to a time stamp
     std::string to_time_stamp( const Float &_time_stamp_float ) const;
 
@@ -198,6 +203,16 @@ class DataFrame
         assert_true( _i < categories().size() );
 
         return categories()[_i].str();
+    }
+
+    /// Returns the fingerprint of the data frame (necessary to build the
+    /// dependency graphs).
+    Poco::JSON::Object::Ptr fingerprint() const
+    {
+        auto obj = Poco::JSON::Object::Ptr( new Poco::JSON::Object() );
+        obj->set( "name_", name_ );
+        obj->set( "last_change_", last_change_ );
+        return obj;
     }
 
     /// Whether the DataFrame has any column named _name.
@@ -663,7 +678,7 @@ class DataFrame
 
     /// Returns the colnames of a vector of columns
     template <class T>
-    Poco::JSON::Array get_colnames(
+    Poco::JSON::Array::Ptr get_colnames(
         const std::vector<Column<T>> &_columns ) const;
 
     /// Returns the units of a vector of columns
@@ -672,7 +687,7 @@ class DataFrame
 
     /// Loads columns.
     template <class T>
-    std::vector<Column<T>> load_matrices(
+    std::vector<Column<T>> load_columns(
         const std::string &_path, const std::string &_prefix ) const;
 
     /// Creates a vector of vectors of type T.
@@ -704,6 +719,14 @@ class DataFrame
         return stream.str();
     }
 
+    /// Records the current time as the last time something was changed.
+    void update_last_change()
+    {
+        const auto now = Poco::Timestamp();
+        last_change_ = Poco::DateTimeFormatter::format(
+            now, Poco::DateTimeFormat::ISO8601_FRAC_FORMAT );
+    }
+
     // -------------------------------
 
    private:
@@ -721,6 +744,9 @@ class DataFrame
 
     /// Maps integers to names of join keys
     std::shared_ptr<Encoding> join_keys_encoding_;
+
+    /// The last time something was changed that is relevant to the pipeline.
+    std::string last_change_;
 
     /// Name of the data frame
     std::string name_;
@@ -790,7 +816,7 @@ ULong DataFrame::calc_nbytes( const std::vector<Column<T>> &_columns ) const
 // -------------------------------------------------------------------------
 
 template <class T>
-Poco::JSON::Array DataFrame::get_colnames(
+Poco::JSON::Array::Ptr DataFrame::get_colnames(
     const std::vector<Column<T>> &_columns ) const
 {
     std::vector<std::string> colnames;
@@ -800,7 +826,7 @@ Poco::JSON::Array DataFrame::get_colnames(
             colnames.push_back( col.name() );
         } );
 
-    return JSON::vector_to_array( colnames );
+    return JSON::vector_to_array_ptr( colnames );
 }
 
 // -------------------------------------------------------------------------
@@ -822,10 +848,10 @@ Poco::JSON::Array DataFrame::get_units(
 // ----------------------------------------------------------------------------
 
 template <class T>
-std::vector<Column<T>> DataFrame::load_matrices(
+std::vector<Column<T>> DataFrame::load_columns(
     const std::string &_path, const std::string &_prefix ) const
 {
-    std::vector<Column<T>> matrices;
+    std::vector<Column<T>> columns;
 
     for ( size_t i = 0; true; ++i )
         {
@@ -840,10 +866,10 @@ std::vector<Column<T>> DataFrame::load_matrices(
 
             col.load( fname );
 
-            matrices.push_back( col );
+            columns.push_back( col );
         }
 
-    return matrices;
+    return columns;
 }
 
 // ----------------------------------------------------------------------------

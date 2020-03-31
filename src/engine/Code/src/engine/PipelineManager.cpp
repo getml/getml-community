@@ -51,7 +51,7 @@ void PipelineManager::fit(
 
     multithreading::ReadLock read_lock( read_write_lock_ );
 
-    pipeline.fit( _cmd, logger_, data_frames(), _socket );
+    pipeline.fit( _cmd, logger_, data_frames(), fe_tracker_, _socket );
 
     // -------------------------------------------------------
     // Fitting has been a success - store the pipeline.

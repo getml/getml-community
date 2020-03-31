@@ -157,15 +157,20 @@ void ProjectManager::clear()
         }
 
     // --------------------------------
-    // Remove from engine.
 
     data_frames() = std::map<std::string, engine::containers::DataFrame>();
 
     pipelines() = engine::handlers::PipelineManager::PipelineMapType();
 
+    // --------------------------------
+
     categories().clear();
 
     join_keys_encoding().clear();
+
+    // --------------------------------
+
+    fe_tracker().clear();
 
     // --------------------------------
 }
@@ -376,7 +381,7 @@ void ProjectManager::load_all_pipelines()
             try
                 {
                     const auto pipeline = pipelines::Pipeline(
-                        categories().vector(), it->path() + "/" );
+                        categories().vector(), it->path() + "/", fe_tracker_ );
 
                     set_pipeline( it.name(), pipeline );
 
@@ -451,7 +456,8 @@ void ProjectManager::load_pipeline(
 
     const auto path = project_directory_ + "pipelines/" + _name + "/";
 
-    auto pipeline = pipelines::Pipeline( categories().vector(), path );
+    auto pipeline =
+        pipelines::Pipeline( categories().vector(), path, fe_tracker_ );
 
     set_pipeline( _name, pipeline );
 

@@ -12,14 +12,17 @@ void DataFrame::add_float_column(
     if ( _role == "numerical" )
         {
             add_column( _col, &numericals_ );
+            update_last_change();
         }
     else if ( _role == "target" )
         {
             add_column( _col, &targets_ );
+            update_last_change();
         }
     else if ( _role == "time_stamp" )
         {
             add_column( _col, &time_stamps_ );
+            update_last_change();
         }
     else if ( _role == "unused" || _role == "unused_float" )
         {
@@ -61,6 +64,7 @@ void DataFrame::add_int_column(
     if ( _role == "categorical" )
         {
             add_column( _col, &categoricals_ );
+            update_last_change();
         }
     else if ( _role == "join_key" )
         {
@@ -71,6 +75,8 @@ void DataFrame::add_int_column(
             indices_.push_back( DataFrameIndex() );
 
             create_indices();
+
+            update_last_change();
         }
     else
         {
@@ -211,6 +217,10 @@ void DataFrame::append( const DataFrame &_other )
         {
             unused_strings_[i].append( _other.unused_string( i ) );
         }
+
+    // -------------------------------------------------------------------------
+
+    update_last_change();
 
     // -------------------------------------------------------------------------
 }
@@ -1443,21 +1453,38 @@ void DataFrame::load( const std::string &_path )
         }
 
     // ---------------------------------------------------------------------
+
+    std::ifstream lfile( _path + "last_change.txt" );
+
+    if ( lfile.is_open() )
+        {
+            std::getline( lfile, last_change_ );
+
+            lfile.close();
+        }
+    else
+        {
+            throw std::runtime_error(
+                "Could not open '" +
+                Poco::Path( _path ).makeAbsolute().toString() + "'!" );
+        }
+
+    // ---------------------------------------------------------------------
     // Load contents.
 
-    categoricals_ = load_matrices<Int>( _path, "categorical_" );
+    categoricals_ = load_columns<Int>( _path, "categorical_" );
 
-    join_keys_ = load_matrices<Int>( _path, "join_key_" );
+    join_keys_ = load_columns<Int>( _path, "join_key_" );
 
-    numericals_ = load_matrices<Float>( _path, "numerical_" );
+    numericals_ = load_columns<Float>( _path, "numerical_" );
 
-    targets_ = load_matrices<Float>( _path, "target_" );
+    targets_ = load_columns<Float>( _path, "target_" );
 
-    time_stamps_ = load_matrices<Float>( _path, "time_stamp_" );
+    time_stamps_ = load_columns<Float>( _path, "time_stamp_" );
 
-    unused_floats_ = load_matrices<Float>( _path, "unused_float_" );
+    unused_floats_ = load_columns<Float>( _path, "unused_float_" );
 
-    unused_strings_ = load_matrices<strings::String>( _path, "unused_string_" );
+    unused_strings_ = load_columns<strings::String>( _path, "unused_string_" );
 
     // ---------------------------------------------------------------------
 
@@ -1564,31 +1591,57 @@ bool DataFrame::remove_column( const std::string &_name )
 {
     bool success = rm_col( _name, &categoricals_ );
 
-    if ( success ) return true;
+    if ( success )
+        {
+            update_last_change();
+            return true;
+        }
 
     success = rm_col( _name, &join_keys_, &indices_ );
 
-    if ( success ) return true;
+    if ( success )
+        {
+            update_last_change();
+            return true;
+        }
 
     success = rm_col( _name, &numericals_ );
 
-    if ( success ) return true;
+    if ( success )
+        {
+            update_last_change();
+            return true;
+        }
 
     success = rm_col( _name, &targets_ );
 
-    if ( success ) return true;
+    if ( success )
+        {
+            update_last_change();
+            return true;
+        }
 
     success = rm_col( _name, &time_stamps_ );
 
-    if ( success ) return true;
+    if ( success )
+        {
+            update_last_change();
+            return true;
+        }
 
     success = rm_col( _name, &unused_floats_ );
 
-    if ( success ) return true;
+    if ( success )
+        {
+            return true;
+        }
 
     success = rm_col( _name, &unused_strings_ );
 
-    if ( success ) return true;
+    if ( success )
+        {
+            return true;
+        }
 
     return false;
 }
@@ -1620,6 +1673,13 @@ void DataFrame::save( const std::string &_path, const std::string &_name )
     save_matrices( unused_floats_, tpath, "unused_float_" );
 
     save_matrices( unused_strings_, tpath, "unused_string_" );
+
+    // ---------------------------------------------------------------------
+
+    std::ofstream lfile;
+    lfile.open( tpath + "last_change.txt" );
+    lfile << last_change_;
+    lfile.close();
 
     // ---------------------------------------------------------------------
     // If the path already exists, delete it to avoid
@@ -1691,7 +1751,31 @@ Poco::JSON::Object DataFrame::to_monitor() const
 
     return obj;
 
-    // ---------------------------------------------------------------------*/
+    // ---------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+/// Expresses the schema of the DataFrame as a JSON object.
+Poco::JSON::Object::Ptr DataFrame::to_schema() const
+{
+    auto obj = Poco::JSON::Object::Ptr( new Poco::JSON::Object() );
+
+    obj->set( "categorical_", get_colnames( categoricals_ ) );
+
+    obj->set( "join_key_", get_colnames( join_keys_ ) );
+
+    obj->set( "numerical_", get_colnames( numericals_ ) );
+
+    obj->set( "target_", get_colnames( targets_ ) );
+
+    obj->set( "time_stamp_", get_colnames( time_stamps_ ) );
+
+    obj->set( "unused_float_", get_colnames( unused_floats_ ) );
+
+    obj->set( "unused_string_", get_colnames( unused_strings_ ) );
+
+    return obj;
 }
 
 // ----------------------------------------------------------------------------

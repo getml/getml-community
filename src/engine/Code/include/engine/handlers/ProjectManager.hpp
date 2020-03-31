@@ -22,6 +22,7 @@ class ProjectManager
         const std::shared_ptr<DataFrameManager>& _data_frame_manager,
         const std::shared_ptr<std::map<std::string, containers::DataFrame>>
             _data_frames,
+        const std::shared_ptr<dependency::FETracker>& _fe_tracker,
         const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
         const std::shared_ptr<licensing::LicenseChecker>& _license_checker,
         const std::shared_ptr<const monitoring::Logger>& _logger,
@@ -33,6 +34,7 @@ class ProjectManager
         : categories_( _categories ),
           data_frame_manager_( _data_frame_manager ),
           data_frames_( _data_frames ),
+          fe_tracker_( _fe_tracker ),
           join_keys_encoding_( _join_keys_encoding ),
           license_checker_( _license_checker ),
           logger_( _logger ),
@@ -179,6 +181,13 @@ class ProjectManager
         return *data_frames_;
     }
 
+    /// Trivial accessor
+    dependency::FETracker& fe_tracker()
+    {
+        assert_true( fe_tracker_ );
+        return *fe_tracker_;
+    }
+
     /// Returns a deep copy of a pipeline.
     pipelines::Pipeline get_pipeline( const std::string& _name ) const
     {
@@ -251,6 +260,9 @@ class ProjectManager
     /// The data frames currently held in memory
     const std::shared_ptr<std::map<std::string, containers::DataFrame>>
         data_frames_;
+
+    /// Keeps track of all feature engineerers.
+    const std::shared_ptr<dependency::FETracker> fe_tracker_;
 
     /// Maps integers to join key names
     const std::shared_ptr<containers::Encoding> join_keys_encoding_;

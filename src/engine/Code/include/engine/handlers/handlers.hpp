@@ -44,6 +44,8 @@
 
 #include "engine/config/config.hpp"
 
+#include "engine/dependency/dependency.hpp"
+
 #include "engine/utils/utils.hpp"
 
 #include "engine/JSON.hpp"

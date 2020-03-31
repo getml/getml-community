@@ -91,6 +91,10 @@ int main( int argc, char* argv[] )
 
     // -------------------------------------------
 
+    const auto fe_tracker = std::make_shared<engine::dependency::FETracker>();
+
+    // -------------------------------------------
+
     const auto project_mtx = std::make_shared<std::mutex>();
 
     const auto read_write_lock =
@@ -115,6 +119,7 @@ int main( int argc, char* argv[] )
             categories,
             database_manager,
             data_frames,
+            fe_tracker,
             join_keys_encoding,
             license_checker,
             logger,
@@ -128,6 +133,7 @@ int main( int argc, char* argv[] )
             categories,
             data_frame_manager,
             data_frames,
+            fe_tracker,
             join_keys_encoding,
             license_checker,
             logger,
