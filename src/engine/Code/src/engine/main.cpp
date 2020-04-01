@@ -57,13 +57,6 @@ int main( int argc, char* argv[] )
     license_checker->receive_token( "main" );
 
     // -------------------------------------------
-    // Tell the monitor the process ID of the engine.
-    // This is necessary so the monitor can check whether the engine is still
-    // alive.
-
-    monitor->send( "postpid", engine::Process::get_process_id() );
-
-    // -------------------------------------------
     // Check whether the port is currently occupied
 
     const auto [status, response] = monitor->send( "checkengineport", "" );
