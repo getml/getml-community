@@ -16,6 +16,7 @@ void DataFrame::add_float_column(
         }
     else if ( _role == "target" )
         {
+            check_null( _col );
             add_column( _col, &targets_ );
             update_last_change();
         }
@@ -223,6 +224,25 @@ void DataFrame::append( const DataFrame &_other )
     update_last_change();
 
     // -------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+void DataFrame::check_null( const Column<Float> &_col ) const
+{
+    const auto is_nan_or_inf = []( const Float val ) {
+        return std::isnan( val ) || std::isinf( val );
+    };
+
+    const bool any_null =
+        std::any_of( _col.begin(), _col.end(), is_nan_or_inf );
+
+    if ( any_null )
+        {
+            throw std::invalid_argument(
+                "Values in the target column cannot be NULL or "
+                "infinite!" );
+        }
 }
 
 // ----------------------------------------------------------------------------

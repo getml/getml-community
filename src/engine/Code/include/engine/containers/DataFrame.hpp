@@ -633,6 +633,10 @@ class DataFrame
     template <class T>
     ULong calc_nbytes( const std::vector<Column<T>> &_columns ) const;
 
+    /// Makes sure that the values contained in _col are all positive and
+    /// finite.
+    void check_null( const Column<Float> &_col ) const;
+
     /// Concatenate a set of colnames.
     std::vector<std::string> concat_colnames(
         const std::vector<std::string> &_categorical_names,
