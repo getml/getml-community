@@ -1958,7 +1958,7 @@ void DecisionTreeNode::try_categorical_values(
     // Add new splits to the candidate splits.
 
     for ( auto cat = sorted_by_containing->cbegin();
-          cat < sorted_by_containing->cbegin() + num_categories / 2;
+          cat < sorted_by_containing->cend();
           ++cat )
         {
             _candidate_splits->push_back( descriptors::Split(
@@ -1971,22 +1971,8 @@ void DecisionTreeNode::try_categorical_values(
                 ) );
         }
 
-    for ( auto cat = sorted_by_containing->cbegin() + num_categories / 2;
-          cat < sorted_by_containing->cend();
-          ++cat )
-        {
-            _candidate_splits->push_back( descriptors::Split(
-                true,                          // _apply_from_above
-                sorted_by_containing,          // _categories_used
-                cat + 1,                       // _categories_used_begin
-                sorted_by_containing->cend(),  // _categories_used_end
-                _column_used,                  // _column_used
-                _data_used                     // _data_used
-                ) );
-        }
-
     for ( auto cat = sorted_by_not_containing->cbegin();
-          cat < sorted_by_not_containing->cbegin() + num_categories / 2;
+          cat < sorted_by_not_containing->cend();
           ++cat )
         {
             _candidate_splits->push_back( descriptors::Split(
@@ -1996,20 +1982,6 @@ void DecisionTreeNode::try_categorical_values(
                 cat + 1,                             // _categories_used_end
                 _column_used,                        // _column_used
                 _data_used                           // _data_used
-                ) );
-        }
-
-    for ( auto cat = sorted_by_not_containing->cbegin() + num_categories / 2;
-          cat < sorted_by_not_containing->cend();
-          ++cat )
-        {
-            _candidate_splits->push_back( descriptors::Split(
-                false,                             // _apply_from_above
-                sorted_by_not_containing,          // _categories_used
-                cat + 1,                           // _categories_used_begin
-                sorted_by_not_containing->cend(),  // _categories_used_end
-                _column_used,                      // _column_used
-                _data_used                         // _data_used
                 ) );
         }
 
