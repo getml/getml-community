@@ -27,6 +27,10 @@ class Predictor
     virtual std::vector<Float> feature_importances(
         const size_t _num_features ) const = 0;
 
+    /// Returns the fingerprint of the predictor (necessary to build
+    /// the dependency graphs).
+    virtual Poco::JSON::Object::Ptr fingerprint() const = 0;
+
     /// Implements the fit(...) method in scikit-learn style
     virtual std::string fit(
         const std::shared_ptr<const logging::AbstractLogger> _logger,

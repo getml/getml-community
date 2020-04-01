@@ -15,8 +15,8 @@ Pipeline::Pipeline(
     // This won't to anything - the point it to make sure that it can be
     // parsed correctly.
     init_feature_engineerers( 1, df_fingerprints() );
-    init_predictors( "feature_selectors_", 1 );
-    init_predictors( "predictors_", 1 );
+    init_predictors( "feature_selectors_", 1, fe_fingerprints() );
+    init_predictors( "predictors_", 1, fe_fingerprints() );
 }
 
 // ----------------------------------------------------------------------------
@@ -24,10 +24,11 @@ Pipeline::Pipeline(
 Pipeline::Pipeline(
     const std::shared_ptr<const std::vector<strings::String>>& _categories,
     const std::string& _path,
-    const std::shared_ptr<dependency::FETracker> _fe_tracker )
+    const std::shared_ptr<dependency::FETracker> _fe_tracker,
+    const std::shared_ptr<dependency::PredTracker> _pred_tracker )
     : impl_( PipelineImpl( _categories ) )
 {
-    *this = load( _categories, _path, _fe_tracker );
+    *this = load( _categories, _path, _fe_tracker, _pred_tracker );
 }
 
 // ----------------------------------------------------------------------------
@@ -150,6 +151,26 @@ std::vector<Poco::JSON::Object::Ptr> Pipeline::extract_df_fingerprints(
         }
 
     return df_fingerprints;
+}
+
+// ----------------------------------------------------------------------
+
+std::vector<Poco::JSON::Object::Ptr> Pipeline::extract_fe_fingerprints() const
+{
+    if ( feature_engineerers_.size() == 0 )
+        {
+            return df_fingerprints();
+        }
+
+    std::vector<Poco::JSON::Object::Ptr> fe_fingerprints;
+
+    for ( const auto& fe : feature_engineerers_ )
+        {
+            assert_true( fe );
+            fe_fingerprints.push_back( fe->fingerprint() );
+        }
+
+    return fe_fingerprints;
 }
 
 // ----------------------------------------------------------------------
@@ -478,11 +499,13 @@ void Pipeline::fit(
     const std::shared_ptr<const monitoring::Logger>& _logger,
     const std::map<std::string, containers::DataFrame>& _data_frames,
     const std::shared_ptr<dependency::FETracker> _fe_tracker,
+    const std::shared_ptr<dependency::PredTracker> _pred_tracker,
     Poco::Net::StreamSocket* _socket )
 {
     // -------------------------------------------------------------------------
 
     assert_true( _fe_tracker );
+    assert_true( _pred_tracker );
 
     // -------------------------------------------------------------------------
 
@@ -520,6 +543,8 @@ void Pipeline::fit(
 
     feature_engineerers_ = std::move( feature_engineerers );
 
+    fe_fingerprints() = extract_fe_fingerprints();
+
     // -------------------------------------------------------------------------
 
     make_predictor_impl( _cmd, _data_frames );
@@ -533,9 +558,11 @@ void Pipeline::fit(
     // -------------------------------------------------------------------------
     // Fit the predictors.
 
-    auto predictors = init_predictors( "predictors_", num_targets() );
+    auto predictors =
+        init_predictors( "predictors_", num_targets(), fe_fingerprints() );
 
-    fit_predictors( _cmd, _logger, _data_frames, &predictors, _socket );
+    fit_predictors(
+        _cmd, _logger, _data_frames, _pred_tracker, &predictors, _socket );
 
     predictors_ = std::move( predictors );
 
@@ -553,6 +580,7 @@ void Pipeline::fit_predictors(
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<const monitoring::Logger>& _logger,
     const std::map<std::string, containers::DataFrame>& _data_frames,
+    const std::shared_ptr<dependency::PredTracker> _pred_tracker,
     std::vector<std::vector<std::shared_ptr<predictors::Predictor>>>*
         _predictors,
     Poco::Net::StreamSocket* _socket ) const
@@ -589,11 +617,22 @@ void Pipeline::fit_predictors(
                 {
                     assert_true( p );
 
+                    const auto ptr =
+                        _pred_tracker->retrieve( p->fingerprint() );
+
+                    if ( ptr )
+                        {
+                            p = ptr;
+                            continue;
+                        }
+
                     p->fit(
                         _logger,
                         categorical_features,
                         numerical_features,
                         target_col );
+
+                    _pred_tracker->add( p );
                 }
         }
 
@@ -728,7 +767,9 @@ Pipeline::init_feature_engineerers(
 
 std::vector<std::vector<std::shared_ptr<predictors::Predictor>>>
 Pipeline::init_predictors(
-    const std::string& _elem, const size_t _num_targets ) const
+    const std::string& _elem,
+    const size_t _num_targets,
+    const std::vector<Poco::JSON::Object::Ptr>& _dependencies ) const
 {
     // --------------------------------------------------------------------
 
@@ -755,7 +796,10 @@ Pipeline::init_predictors(
                         }
 
                     auto new_predictor = predictors::PredictorParser::parse(
-                        *ptr, impl_.predictor_impl_, categories() );
+                        *ptr,
+                        impl_.predictor_impl_,
+                        categories(),
+                        _dependencies );
 
                     predictors_for_target.emplace_back(
                         std::move( new_predictor ) );
@@ -776,8 +820,15 @@ Pipeline::init_predictors(
 Pipeline Pipeline::load(
     const std::shared_ptr<const std::vector<strings::String>>& _categories,
     const std::string& _path,
-    const std::shared_ptr<dependency::FETracker> _fe_tracker ) const
+    const std::shared_ptr<dependency::FETracker> _fe_tracker,
+    const std::shared_ptr<dependency::PredTracker> _pred_tracker ) const
 {
+    // ------------------------------------------------------------------
+
+    assert_true( _fe_tracker );
+
+    assert_true( _pred_tracker );
+
     // ------------------------------------------------------------------
 
     const auto obj = load_json_obj( _path + "obj.json" );
@@ -804,6 +855,9 @@ Pipeline Pipeline::load(
     const auto df_fingerprints = JSON::array_to_obj_vector(
         JSON::get_array( pipeline_json, "df_fingerprints_" ) );
 
+    const auto fe_fingerprints = JSON::array_to_obj_vector(
+        JSON::get_array( pipeline_json, "fe_fingerprints_" ) );
+
     const auto target_names = JSON::array_to_vector<std::string>(
         JSON::get_array( pipeline_json, "targets_" ) );
 
@@ -815,6 +869,8 @@ Pipeline Pipeline::load(
         JSON::get_value<bool>( pipeline_json, "allow_http_" );
 
     pipeline.df_fingerprints() = df_fingerprints;
+
+    pipeline.fe_fingerprints() = fe_fingerprints;
 
     pipeline.peripheral_schema() =
         JSON::get_array( pipeline_json, "peripheral_schema_" );
@@ -858,8 +914,8 @@ Pipeline Pipeline::load(
     // ------------------------------------------------------------
     // Load predictors
 
-    pipeline.predictors_ =
-        pipeline.init_predictors( "predictors_", pipeline.num_targets() );
+    pipeline.predictors_ = pipeline.init_predictors(
+        "predictors_", pipeline.num_targets(), pipeline.fe_fingerprints() );
 
     assert_true( pipeline.num_targets() == pipeline.predictors_.size() );
 
@@ -874,6 +930,8 @@ Pipeline Pipeline::load(
                     p->load(
                         _path + "predictor-" + std::to_string( i ) + "-" +
                         std::to_string( j ) );
+
+                    _pred_tracker->add( p );
                 }
         }
 
@@ -1114,6 +1172,9 @@ void Pipeline::save( const std::string& _path, const std::string& _name ) const
 
     pipeline_json.set(
         "df_fingerprints_", JSON::vector_to_array( df_fingerprints() ) );
+
+    pipeline_json.set(
+        "fe_fingerprints_", JSON::vector_to_array( fe_fingerprints() ) );
 
     pipeline_json.set( "targets_", JSON::vector_to_array( targets() ) );
 

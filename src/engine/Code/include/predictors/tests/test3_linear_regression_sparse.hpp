@@ -46,10 +46,11 @@ void test3_linear_regression_sparse()
 
     X_categorical = impl->transform_encodings( X_categorical );
 
-    const auto hyperparams =
-        std::make_shared<predictors::LinearHyperparams>( 1e-12, 0.9 );
+    auto hyperparams = Poco::JSON::Object();
+    hyperparams.set( "reg_lambda_", 1e-10 );
+    hyperparams.set( "learning_rate_", 0.9 );
 
-    auto lin_reg = predictors::LinearRegression( hyperparams, impl );
+    auto lin_reg = predictors::LinearRegression( hyperparams, impl, {} );
 
     lin_reg.fit(
         std::shared_ptr<const logging::AbstractLogger>(),

@@ -31,6 +31,7 @@ struct PipelineImpl
           session_name_( "" )
     {
     }
+
     ~PipelineImpl() = default;
 
     // -----------------------------------------------
@@ -43,6 +44,9 @@ struct PipelineImpl
 
     /// The fingerprints of the data frames used for fitting.
     std::vector<Poco::JSON::Object::Ptr> df_fingerprints_;
+
+    /// The fingerprints of the feature engineerers used for fitting.
+    std::vector<Poco::JSON::Object::Ptr> fe_fingerprints_;
 
     /// The JSON Object used to construct the pipeline.
     Poco::JSON::Object obj_;

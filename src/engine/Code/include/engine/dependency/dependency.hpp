@@ -10,6 +10,8 @@
 
 #include "engine/featureengineerers/featureengineerers.hpp"
 
+#include "predictors/predictors.hpp"
+
 #include "engine/JSON.hpp"
 
 // ----------------------------------------------------
@@ -18,6 +20,8 @@
 #include "engine/dependency/Tracker.hpp"
 
 #include "engine/dependency/FETracker.hpp"
+
+#include "engine/dependency/PredTracker.hpp"
 
 // ----------------------------------------------------
 

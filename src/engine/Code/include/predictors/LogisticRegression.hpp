@@ -12,9 +12,13 @@ class LogisticRegression : public Predictor
 
    public:
     LogisticRegression(
-        const std::shared_ptr<LinearHyperparams>& _hyperparams,
-        const std::shared_ptr<const PredictorImpl>& _impl )
-        : hyperparams_( _hyperparams ), impl_( _impl ){};
+        const Poco::JSON::Object& _cmd,
+        const std::shared_ptr<const PredictorImpl>& _impl,
+        const std::vector<Poco::JSON::Object::Ptr>& _dependencies )
+        : cmd_( _cmd ),
+          dependencies_( _dependencies ),
+          hyperparams_( std::make_shared<LinearHyperparams>( _cmd ) ),
+          impl_( _impl ){};
 
     ~LogisticRegression() = default;
 
@@ -24,6 +28,10 @@ class LogisticRegression : public Predictor
     /// Returns an importance measure for the individual features.
     std::vector<Float> feature_importances(
         const size_t _num_features ) const final;
+
+    /// Returns the fingerprint of the predictor (necessary to build
+    /// the dependency graphs).
+    Poco::JSON::Object::Ptr fingerprint() const final;
 
     /// Implements the fit(...) method in scikit-learn style
     std::string fit(
@@ -198,6 +206,12 @@ class LogisticRegression : public Predictor
     // -------------------------------------------------------------------------
 
    private:
+    /// The JSON command used to construct this predictor.
+    const Poco::JSON::Object cmd_;
+
+    /// The dependencies used to build the fingerprint.
+    const std::vector<Poco::JSON::Object::Ptr> dependencies_;
+
     /// The hyperparameters used for the LinearRegression.
     std::shared_ptr<const LinearHyperparams> hyperparams_;
 

@@ -20,7 +20,8 @@ class Pipeline
     Pipeline(
         const std::shared_ptr<const std::vector<strings::String>>& _categories,
         const std::string& _path,
-        const std::shared_ptr<dependency::FETracker> _fe_tracker );
+        const std::shared_ptr<dependency::FETracker> _fe_tracker,
+        const std::shared_ptr<dependency::PredTracker> _pred_tracker );
 
     Pipeline( const Pipeline& _other );
 
@@ -44,6 +45,7 @@ class Pipeline
         const std::shared_ptr<const monitoring::Logger>& _logger,
         const std::map<std::string, containers::DataFrame>& _data_frames,
         const std::shared_ptr<dependency::FETracker> _fe_tracker,
+        const std::shared_ptr<dependency::PredTracker> _pred_tracker,
         Poco::Net::StreamSocket* _socket );
 
     /// Copy assignment operator.
@@ -142,6 +144,9 @@ class Pipeline
         const std::map<std::string, containers::DataFrame>& _data_frames )
         const;
 
+    /// Extracts the fingerprints of the feature engineerers.
+    std::vector<Poco::JSON::Object::Ptr> extract_fe_fingerprints() const;
+
     /// Extracts the schemata from the data frame used for training.
     std::pair<Poco::JSON::Object::Ptr, Poco::JSON::Array::Ptr> extract_schemata(
         const Poco::JSON::Object& _cmd,
@@ -153,6 +158,7 @@ class Pipeline
         const Poco::JSON::Object& _cmd,
         const std::shared_ptr<const monitoring::Logger>& _logger,
         const std::map<std::string, containers::DataFrame>& _data_frames,
+        const std::shared_ptr<dependency::PredTracker> _pred_tracker,
         std::vector<std::vector<std::shared_ptr<predictors::Predictor>>>*
             _predictors,
         Poco::Net::StreamSocket* _socket ) const;
@@ -203,13 +209,16 @@ class Pipeline
     /// Prepares the predictors.
     std::vector<std::vector<std::shared_ptr<predictors::Predictor>>>
     init_predictors(
-        const std::string& _elem, const size_t _num_targets ) const;
+        const std::string& _elem,
+        const size_t _num_targets,
+        const std::vector<Poco::JSON::Object::Ptr>& _dependencies ) const;
 
     /// Loads a new Pipeline from disc.
     Pipeline load(
         const std::shared_ptr<const std::vector<strings::String>>& _categories,
         const std::string& _path,
-        const std::shared_ptr<dependency::FETracker> _fe_tracker ) const;
+        const std::shared_ptr<dependency::FETracker> _fe_tracker,
+        const std::shared_ptr<dependency::PredTracker> _pred_tracker ) const;
 
     /// Loads a JSON object from disc.
     Poco::JSON::Object load_json_obj( const std::string& _fname ) const;
@@ -280,6 +289,18 @@ class Pipeline
     const std::vector<Poco::JSON::Object::Ptr>& df_fingerprints() const
     {
         return impl_.df_fingerprints_;
+    }
+
+    /// Trivial accessor
+    std::vector<Poco::JSON::Object::Ptr>& fe_fingerprints()
+    {
+        return impl_.fe_fingerprints_;
+    }
+
+    /// Trivial (const) accessor
+    const std::vector<Poco::JSON::Object::Ptr>& fe_fingerprints() const
+    {
+        return impl_.fe_fingerprints_;
     }
 
     // TODO: This needs to be implemented more consistently.

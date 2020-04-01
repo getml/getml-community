@@ -22,9 +22,13 @@ class XGBoostPredictor : public Predictor
 
    public:
     XGBoostPredictor(
-        const Poco::JSON::Object& _hyperparams,
-        const std::shared_ptr<const PredictorImpl>& _impl )
-        : hyperparams_( XGBoostHyperparams( _hyperparams ) ), impl_( _impl )
+        const Poco::JSON::Object& _cmd,
+        const std::shared_ptr<const PredictorImpl>& _impl,
+        const std::vector<Poco::JSON::Object::Ptr>& _dependencies )
+        : cmd_( _cmd ),
+          dependencies_( _dependencies ),
+          hyperparams_( XGBoostHyperparams( _cmd ) ),
+          impl_( _impl )
     {
     }
 
@@ -39,6 +43,10 @@ class XGBoostPredictor : public Predictor
 
     /// Loads the predictor
     void load( const std::string& _fname ) final;
+
+    /// Returns the fingerprint of the predictor (necessary to build
+    /// the dependency graphs).
+    Poco::JSON::Object::Ptr fingerprint() const final;
 
     /// Implements the fit(...) method in scikit-learn style
     std::string fit(
@@ -140,6 +148,12 @@ class XGBoostPredictor : public Predictor
     // -----------------------------------------
 
    private:
+    /// The JSON command used to construct this predictor.
+    const Poco::JSON::Object cmd_;
+
+    /// The dependencies used to build the fingerprint.
+    std::vector<Poco::JSON::Object::Ptr> dependencies_;
+
     /// Hyperparameters for XGBoostPredictor
     const XGBoostHyperparams hyperparams_;
 

@@ -51,10 +51,11 @@ void test4_saving_and_loading_linear_regression()
 
     X_categorical = impl->transform_encodings( X_categorical );
 
-    const auto hyperparams =
-        std::make_shared<predictors::LinearHyperparams>( 1e-12, 0.9 );
+    auto hyperparams = Poco::JSON::Object();
+    hyperparams.set( "reg_lambda_", 1e-10 );
+    hyperparams.set( "learning_rate_", 0.9 );
 
-    auto lin_reg = predictors::LinearRegression( hyperparams, impl );
+    auto lin_reg = predictors::LinearRegression( hyperparams, impl, {} );
 
     lin_reg.fit(
         std::shared_ptr<const logging::AbstractLogger>(),
@@ -66,13 +67,13 @@ void test4_saving_and_loading_linear_regression()
 
     lin_reg.save( tmp_filename_1 );
 
-    auto lin_reg2 = predictors::LinearRegression( hyperparams, impl );
+    auto lin_reg2 = predictors::LinearRegression( hyperparams, impl, {} );
 
     lin_reg2.load( tmp_filename_1 );
 
     lin_reg2.save( tmp_filename_2 );
 
-    auto lin_reg3 = predictors::LinearRegression( hyperparams, impl );
+    auto lin_reg3 = predictors::LinearRegression( hyperparams, impl, {} );
 
     lin_reg3.load( tmp_filename_2 );
 

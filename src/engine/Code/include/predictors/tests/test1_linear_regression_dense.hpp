@@ -33,10 +33,11 @@ void test1_linear_regression_dense()
     const auto impl = std::make_shared<predictors::PredictorImpl>(
         std::vector<std::string>(), std::vector<std::string>(), 3 );
 
-    const auto hyperparams =
-        std::make_shared<predictors::LinearHyperparams>( 1e-10, 0.9 );
+    auto hyperparams = Poco::JSON::Object();
+    hyperparams.set( "reg_lambda_", 1e-10 );
+    hyperparams.set( "learning_rate_", 0.9 );
 
-    auto lin_reg = predictors::LinearRegression( hyperparams, impl );
+    auto lin_reg = predictors::LinearRegression( hyperparams, impl, {} );
 
     lin_reg.fit(
         std::shared_ptr<const logging::AbstractLogger>(),

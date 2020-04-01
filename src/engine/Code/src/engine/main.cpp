@@ -93,6 +93,9 @@ int main( int argc, char* argv[] )
 
     const auto fe_tracker = std::make_shared<engine::dependency::FETracker>();
 
+    const auto pred_tracker =
+        std::make_shared<engine::dependency::PredTracker>();
+
     // -------------------------------------------
 
     const auto project_mtx = std::make_shared<std::mutex>();
@@ -125,6 +128,7 @@ int main( int argc, char* argv[] )
             logger,
             monitor,
             pipelines,
+            pred_tracker,
             project_mtx,
             read_write_lock );
 
@@ -140,6 +144,7 @@ int main( int argc, char* argv[] )
             monitor,
             options,
             pipelines,
+            pred_tracker,
             project_mtx,
             read_write_lock );
 

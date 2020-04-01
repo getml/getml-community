@@ -29,6 +29,7 @@ class PipelineManager
         const std::shared_ptr<const monitoring::Logger>& _logger,
         const std::shared_ptr<const monitoring::Monitor>& _monitor,
         const std::shared_ptr<PipelineMapType>& _pipelines,
+        const std::shared_ptr<dependency::PredTracker>& _pred_tracker,
         const std::shared_ptr<std::mutex>& _project_mtx,
         const std::shared_ptr<multithreading::ReadWriteLock>& _read_write_lock )
         : categories_( _categories ),
@@ -40,6 +41,7 @@ class PipelineManager
           logger_( _logger ),
           monitor_( _monitor ),
           pipelines_( _pipelines ),
+          pred_tracker_( _pred_tracker ),
           project_mtx_( _project_mtx ),
           read_write_lock_( _read_write_lock )
     {
@@ -259,6 +261,9 @@ class PipelineManager
 
     /// The pipelines currently held in memory
     const std::shared_ptr<PipelineMapType> pipelines_;
+
+    /// Keeps track of all predictors.
+    const std::shared_ptr<dependency::PredTracker> pred_tracker_;
 
     /// It is sometimes necessary to prevent us from changing the project.
     const std::shared_ptr<std::mutex> project_mtx_;

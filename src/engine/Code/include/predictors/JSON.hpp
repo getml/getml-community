@@ -82,6 +82,21 @@ struct JSON
         return arr;
     }
 
+    /// Transforms a vector to a Poco array
+    template <typename T>
+    static Poco::JSON::Array::Ptr vector_to_array_ptr(
+        const std::vector<T>& _vector )
+    {
+        auto arr = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
+
+        for ( auto& elem : _vector )
+            {
+                arr->add( elem );
+            }
+
+        return arr;
+    }
+
     // ------------------------------------------------------------------------
 };
 
