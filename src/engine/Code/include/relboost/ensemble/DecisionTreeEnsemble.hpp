@@ -21,6 +21,7 @@ class DecisionTreeEnsemble
     typedef relboost::Hyperparameters HypType;
     typedef relboost::containers::Placeholder PlaceholderType;
 
+    constexpr static bool is_time_series_ = false;
     constexpr static bool premium_only_ = true;
     constexpr static bool supports_multiple_targets_ = false;
 

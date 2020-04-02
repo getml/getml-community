@@ -658,12 +658,29 @@ containers::Features FeatureEngineerer<FeatureEngineererType>::transform(
     const auto peripheral_names = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "peripheral_names_" ) );
 
-    if ( peripheral_schema.size() != peripheral_names.size() )
+    if constexpr ( FeatureEngineererType::is_time_series_ )
         {
-            throw std::invalid_argument(
-                "Expected " + std::to_string( peripheral_schema.size() ) +
-                " peripheral tables, got " +
-                std::to_string( peripheral_names.size() ) + "." );
+            assert_true( peripheral_schema.size() > 0 );
+
+            if ( peripheral_schema.size() != peripheral_names.size() + 1 )
+                {
+                    throw std::invalid_argument(
+                        "Expected " +
+                        std::to_string( peripheral_schema.size() - 1 ) +
+                        " peripheral tables, got " +
+                        std::to_string( peripheral_names.size() ) + "." );
+                }
+        }
+    else
+        {
+            if ( peripheral_schema.size() != peripheral_names.size() )
+                {
+                    throw std::invalid_argument(
+                        "Expected " +
+                        std::to_string( peripheral_schema.size() ) +
+                        " peripheral tables, got " +
+                        std::to_string( peripheral_names.size() ) + "." );
+                }
         }
 
     std::vector<typename FeatureEngineererType::DataFrameType>

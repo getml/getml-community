@@ -19,6 +19,7 @@ class DecisionTreeEnsemble
     typedef multirel::descriptors::Hyperparameters HypType;
     typedef multirel::containers::Placeholder PlaceholderType;
 
+    constexpr static bool is_time_series_ = false;
     constexpr static bool premium_only_ = false;
     constexpr static bool supports_multiple_targets_ = true;
 

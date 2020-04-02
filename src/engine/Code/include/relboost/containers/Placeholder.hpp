@@ -45,6 +45,24 @@ struct Placeholder
     }
 
     Placeholder(
+        const std::vector<Placeholder>& _joined_tables,
+        const std::vector<std::string>& _join_keys_used,
+        const std::string& _name,
+        const std::vector<std::string>& _other_join_keys_used,
+        const std::vector<std::string>& _other_time_stamps_used,
+        const std::vector<std::string>& _time_stamps_used,
+        const std::vector<std::string>& _upper_time_stamps_used )
+        : joined_tables_( _joined_tables ),
+          join_keys_used_( _join_keys_used ),
+          name_( _name ),
+          other_join_keys_used_( _other_join_keys_used ),
+          other_time_stamps_used_( _other_time_stamps_used ),
+          time_stamps_used_( _time_stamps_used ),
+          upper_time_stamps_used_( _upper_time_stamps_used )
+    {
+    }
+
+    Placeholder(
         const std::vector<std::string>& _categoricals,
         const std::vector<std::string>& _discretes,
         const std::vector<std::string>& _join_keys,

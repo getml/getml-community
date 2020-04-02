@@ -7,7 +7,7 @@ namespace containers
 {
 // -------------------------------------------------------------------------
 
-class DataFrame
+struct DataFrame
 {
     // ---------------------------------------------------------------------
 
@@ -324,7 +324,7 @@ class DataFrame
 
     // ---------------------------------------------------------------------
 
-   private:
+   public:
     /// Pointer to categorical columns.
     const std::vector<Column<Int>> categoricals_;
 

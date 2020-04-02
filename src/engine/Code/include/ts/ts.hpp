@@ -4,9 +4,11 @@
 // ----------------------------------------------------
 // Dependencies
 
+#include <memory>
 #include <vector>
 
 #include "jsonutils/jsonutils.hpp"
+#include "logging/logging.hpp"
 
 #include "multirel/ensemble/ensemble.hpp"
 
