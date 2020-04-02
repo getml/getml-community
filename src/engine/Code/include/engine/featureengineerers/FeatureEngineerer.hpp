@@ -149,6 +149,10 @@ class FeatureEngineerer : public AbstractFeatureEngineerer
         const std::map<std::string, containers::DataFrame>& _data_frames )
         const;
 
+    /// Initializes the feature engineerer.
+    std::optional<FeatureEngineererType> make_feature_engineerer(
+        const Poco::JSON::Object& _cmd ) const;
+
     /// Helper function for loading a json object.
     Poco::JSON::Object load_json_obj( const std::string& _fname ) const;
 
@@ -177,148 +181,6 @@ class FeatureEngineerer : public AbstractFeatureEngineerer
             }
 
         return *feature_engineerer_;
-    }
-
-    /// Constructs and unfitted feature engineeerer from the cmd
-    /// - for MultirelModel
-    template <
-        typename Feat = FeatureEngineererType,
-        typename std::enable_if<
-            std::is_same<Feat, multirel::ensemble::DecisionTreeEnsemble>::value,
-            int>::type = 0>
-    std::optional<FeatureEngineererType> make_feature_engineerer(
-        const Poco::JSON::Object& _cmd ) const
-    {
-        const auto hyperparameters =
-            std::make_shared<multirel::descriptors::Hyperparameters>( _cmd );
-
-        const auto placeholder =
-            std::make_shared<const multirel::containers::Placeholder>(
-                *placeholder_ );
-
-        // TODO
-        auto population_schema =
-            std::shared_ptr<const multirel::containers::Placeholder>();
-
-        /*if ( _cmd.has( "population_schema_" ) )
-            {
-                population_schema =
-                    std::make_shared<const multirel::containers::Placeholder>(
-                        *JSON::get_object( _cmd, "population_schema_" ) );
-            }*/
-
-        auto peripheral_schema = std::shared_ptr<
-            const std::vector<multirel::containers::Placeholder>>();
-
-        // TODO
-        /*if ( _cmd.has( "peripheral_schema_" ) )
-            {
-                std::vector<multirel::containers::Placeholder> peripheral;
-
-                const auto peripheral_arr =
-                    *JSON::get_array( _cmd, "peripheral_schema_" );
-
-                for ( size_t i = 0; i < peripheral_arr.size(); ++i )
-                    {
-                        const auto ptr = peripheral_arr.getObject(
-                            static_cast<unsigned int>( i ) );
-
-                        if ( !ptr )
-                            {
-                                throw std::invalid_argument(
-                                    "peripheral_schema_, element " +
-                                    std::to_string( i ) +
-                                    " is not an Object!" );
-                            }
-
-                        peripheral.push_back(
-                            multirel::containers::Placeholder( *ptr ) );
-                    }
-
-                peripheral_schema = std::make_shared<
-                    const std::vector<multirel::containers::Placeholder>>(
-                    peripheral );
-            }*/
-
-        return std::make_optional<multirel::ensemble::DecisionTreeEnsemble>(
-            categories_,
-            hyperparameters,
-            peripheral_,
-            placeholder,
-            peripheral_schema,
-            population_schema );
-    }
-
-    /// Constructs and unfitted feature engineeerer from the cmd
-    /// - for RelboostModel
-    template <
-        typename Feat = FeatureEngineererType,
-        typename std::enable_if<
-            std::is_same<Feat, relboost::ensemble::DecisionTreeEnsemble>::value,
-            int>::type = 0>
-    std::optional<FeatureEngineererType> make_feature_engineerer(
-        const Poco::JSON::Object& _cmd ) const
-    {
-        const auto hyperparameters =
-            std::make_shared<relboost::Hyperparameters>( _cmd );
-
-        assert_true( placeholder_ );
-
-        const auto placeholder =
-            std::make_shared<const relboost::containers::Placeholder>(
-                *placeholder_ );
-
-        auto population_schema =
-            std::shared_ptr<const relboost::containers::Placeholder>();
-
-        // TODO
-        /*if ( _cmd.has( "population_schema_" ) )
-            {
-                population_schema =
-                    std::make_shared<const relboost::containers::Placeholder>(
-                        *JSON::get_object( _cmd, "population_schema_" ) );
-            }*/
-
-        auto peripheral_schema = std::shared_ptr<
-            const std::vector<relboost::containers::Placeholder>>();
-
-        // TODO
-        /*if ( _cmd.has( "peripheral_schema_" ) )
-            {
-                std::vector<relboost::containers::Placeholder> peripheral;
-
-                const auto peripheral_arr =
-                    *JSON::get_array( _cmd, "peripheral_schema_" );
-
-                for ( size_t i = 0; i < peripheral_arr.size(); ++i )
-                    {
-                        const auto ptr = peripheral_arr.getObject(
-                            static_cast<unsigned int>( i ) );
-
-                        if ( !ptr )
-                            {
-                                throw std::invalid_argument(
-                                    "peripheral_schema_, element " +
-                                    std::to_string( i ) +
-                                    " is not an Object!" );
-                            }
-
-                        peripheral.push_back(
-                            relboost::containers::Placeholder( *ptr ) );
-                    }
-
-                peripheral_schema = std::make_shared<
-                    const std::vector<relboost::containers::Placeholder>>(
-                    peripheral );
-            }*/
-
-        return std::make_optional<relboost::ensemble::DecisionTreeEnsemble>(
-            categories_,
-            hyperparameters,
-            peripheral_,
-            placeholder,
-            peripheral_schema,
-            population_schema );
     }
 
     // --------------------------------------------------------
@@ -710,6 +572,73 @@ Poco::JSON::Object FeatureEngineerer<FeatureEngineererType>::load_json_obj(
         }
 
     return *ptr;
+}
+
+// ----------------------------------------------------------------------------
+
+template <typename FeatureEngineererType>
+std::optional<FeatureEngineererType>
+FeatureEngineerer<FeatureEngineererType>::make_feature_engineerer(
+    const Poco::JSON::Object& _cmd ) const
+{
+    const auto hyperparameters =
+        std::make_shared<typename FeatureEngineererType::HypType>( _cmd );
+
+    const auto placeholder =
+        std::make_shared<const typename FeatureEngineererType::PlaceholderType>(
+            *placeholder_ );
+
+    // TODO
+    auto population_schema = std::shared_ptr<
+        const typename FeatureEngineererType::PlaceholderType>();
+
+    /*if ( _cmd.has( "population_schema_" ) )
+        {
+            population_schema =
+                std::make_shared<const multirel::containers::Placeholder>(
+                    *JSON::get_object( _cmd, "population_schema_" ) );
+        }*/
+
+    auto peripheral_schema = std::shared_ptr<
+        const std::vector<typename FeatureEngineererType::PlaceholderType>>();
+
+    // TODO
+    /*if ( _cmd.has( "peripheral_schema_" ) )
+        {
+            std::vector<multirel::containers::Placeholder> peripheral;
+
+            const auto peripheral_arr =
+                *JSON::get_array( _cmd, "peripheral_schema_" );
+
+            for ( size_t i = 0; i < peripheral_arr.size(); ++i )
+                {
+                    const auto ptr = peripheral_arr.getObject(
+                        static_cast<unsigned int>( i ) );
+
+                    if ( !ptr )
+                        {
+                            throw std::invalid_argument(
+                                "peripheral_schema_, element " +
+                                std::to_string( i ) +
+                                " is not an Object!" );
+                        }
+
+                    peripheral.push_back(
+                        multirel::containers::Placeholder( *ptr ) );
+                }
+
+            peripheral_schema = std::make_shared<
+                const std::vector<multirel::containers::Placeholder>>(
+                peripheral );
+        }*/
+
+    return std::make_optional<FeatureEngineererType>(
+        categories_,
+        hyperparameters,
+        peripheral_,
+        placeholder,
+        peripheral_schema,
+        population_schema );
 }
 
 // ----------------------------------------------------------------------------

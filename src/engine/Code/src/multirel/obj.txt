@@ -29,7 +29,6 @@ set(
     ${MULTIREL_SOURCE_DIRECTORY}/SubtreeHelper.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/TableHolder.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/Threadutils.cpp 
-    ${MULTIREL_SOURCE_DIRECTORY}/TimeSeriesModel.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/TreeFitter.cpp 
 )
 

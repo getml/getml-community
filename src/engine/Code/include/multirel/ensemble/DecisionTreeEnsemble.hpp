@@ -14,6 +14,10 @@ class DecisionTreeEnsemble
    public:
     typedef multirel::containers::DataFrame DataFrameType;
     typedef multirel::containers::DataFrameView DataFrameViewType;
+    typedef multirel::containers::Features FeaturesType;
+    typedef multirel::containers::Column<Float> FloatColumnType;
+    typedef multirel::descriptors::Hyperparameters HypType;
+    typedef multirel::containers::Placeholder PlaceholderType;
 
     constexpr static bool premium_only_ = false;
     constexpr static bool supports_multiple_targets_ = true;

@@ -21,10 +21,20 @@ std::shared_ptr<AbstractFeatureEngineerer> FeatureEngineererParser::parse(
                 FeatureEngineerer<multirel::ensemble::DecisionTreeEnsemble>>(
                 _categories, _cmd, _placeholder, _peripheral, _dependencies );
         }
+    else if ( type == "MultirelTimeSeries" )
+        {
+            return std::make_shared<FeatureEngineerer<ts::MultirelTimeSeries>>(
+                _categories, _cmd, _placeholder, _peripheral, _dependencies );
+        }
     else if ( type == "RelboostModel" )
         {
             return std::make_shared<
                 FeatureEngineerer<relboost::ensemble::DecisionTreeEnsemble>>(
+                _categories, _cmd, _placeholder, _peripheral, _dependencies );
+        }
+    else if ( type == "RelboostTimeSeries" )
+        {
+            return std::make_shared<FeatureEngineerer<ts::RelboostTimeSeries>>(
                 _categories, _cmd, _placeholder, _peripheral, _dependencies );
         }
     else

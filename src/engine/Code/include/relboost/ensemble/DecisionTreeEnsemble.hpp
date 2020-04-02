@@ -16,6 +16,10 @@ class DecisionTreeEnsemble
    public:
     typedef relboost::containers::DataFrame DataFrameType;
     typedef relboost::containers::DataFrameView DataFrameViewType;
+    typedef relboost::containers::Features FeaturesType;
+    typedef relboost::containers::Column<Float> FloatColumnType;
+    typedef relboost::Hyperparameters HypType;
+    typedef relboost::containers::Placeholder PlaceholderType;
 
     constexpr static bool premium_only_ = true;
     constexpr static bool supports_multiple_targets_ = false;

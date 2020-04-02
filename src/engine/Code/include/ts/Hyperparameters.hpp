@@ -1,22 +1,21 @@
-#ifndef MULTIREL_TIMESERIES_HYPERPARAMETERS_HPP_
-#define MULTIREL_TIMESERIES_HYPERPARAMETERS_HPP_
+#ifndef TS_HYPERPARAMETERS_HPP_
+#define TS_HYPERPARAMETERS_HPP_
 
-namespace multirel
-{
-namespace timeseries
+namespace ts
 {
 // ----------------------------------------------------------------------------
 
+template <class HypType>
 struct Hyperparameters
 {
     // ------------------------------------------------------
 
     Hyperparameters( const Poco::JSON::Object& _json_obj )
-        : lag_( JSON::get_value<Float>( _json_obj, "lag_" ) ),
-          memory_( JSON::get_value<Float>( _json_obj, "memory_" ) ),
-          multirel_hyperparameters_(
-              descriptors::Hyperparameters( _json_obj ) ),
-          ts_name_( JSON::get_value<std::string>( _json_obj, "ts_name_" ) )
+        : lag_( jsonutils::JSON::get_value<Float>( _json_obj, "lag_" ) ),
+          memory_( jsonutils::JSON::get_value<Float>( _json_obj, "memory_" ) ),
+          model_hyperparams_( HypType( _json_obj ) ),
+          ts_name_(
+              jsonutils::JSON::get_value<std::string>( _json_obj, "ts_name_" ) )
     {
     }
 
@@ -30,15 +29,14 @@ struct Hyperparameters
     /// The length of the memory used for the time series prediction.
     const Float memory_;
 
-    /// The hyperparameters for the underlying MultirelModel.
-    const descriptors::Hyperparameters multirel_hyperparameters_;
+    /// The hyperparameters for the underlying feature engineerer.
+    const HypType model_hyperparams_;
 
     /// The name of the time stamp used for the time series.
     const std::string ts_name_;
 };
 
 // ----------------------------------------------------------------------------
-}  // namespace timeseries
-}  // namespace multirel
+}  // namespace ts
 
-#endif  // MULTIREL_TIMESERIES_HYPERPARAMETERS_HPP_
+#endif  // TS_HYPERPARAMETERS_HPP_
