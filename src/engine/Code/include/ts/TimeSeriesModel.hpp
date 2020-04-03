@@ -120,7 +120,7 @@ class TimeSeriesModel
         std::vector<std::shared_ptr<std::vector<Float>>>>
     create_modified_time_stamps(
         const std::string &_ts_name,
-        const Float _lag,
+        const Float _horizon,
         const Float _memory,
         const DataFrameType &_population ) const;
 
@@ -293,15 +293,15 @@ std::pair<
     std::vector<std::shared_ptr<std::vector<Float>>>>
 TimeSeriesModel<FEType>::create_modified_time_stamps(
     const std::string &_ts_name,
-    const Float _lag,
+    const Float _horizon,
     const Float _memory,
     const DataFrameType &_population ) const
 {
     // -----------------------------------------------------------------
 
-    if ( _lag < 0.0 )
+    if ( _horizon < 0.0 )
         {
-            throw std::invalid_argument( "'lag' cannot be negative!" );
+            throw std::invalid_argument( "'horizon' cannot be negative!" );
         }
 
     if ( _memory < 0.0 )
@@ -311,10 +311,12 @@ TimeSeriesModel<FEType>::create_modified_time_stamps(
 
     // -----------------------------------------------------------------
 
-    const auto lag_op = [_lag]( const Float val ) { return val + _lag; };
+    const auto horizon_op = [_horizon]( const Float val ) {
+        return val + _horizon;
+    };
 
-    const auto mem_op = [_lag, _memory]( const Float val ) {
-        return val + _lag + _memory;
+    const auto mem_op = [_horizon, _memory]( const Float val ) {
+        return val + _horizon + _memory;
     };
 
     // -----------------------------------------------------------------
@@ -371,7 +373,7 @@ TimeSeriesModel<FEType>::create_modified_time_stamps(
     data.emplace_back( std::make_shared<std::vector<Float>>( ts.nrows_ ) );
 
     std::transform(
-        ts.data_, ts.data_ + ts.nrows_, data.back()->begin(), lag_op );
+        ts.data_, ts.data_ + ts.nrows_, data.back()->begin(), horizon_op );
 
     cols.emplace_back( FloatColumnType(
         data.back()->data(), ts.name_ + "$GETML_LOWER_TS", ts.nrows_, "" ) );
@@ -410,9 +412,23 @@ TimeSeriesModel<FEType>::create_peripheral(
     const DataFrameType &_population,
     const std::vector<DataFrameType> &_peripheral ) const
 {
+    // ------------------------------------------------------------
+
+    auto numericals = _population.numericals_;
+
+    if ( hyperparameters().allow_lagged_targets_ )
+        {
+            for ( const auto &col : _population.targets_ )
+                {
+                    numericals.push_back( col );
+                }
+        }
+
+    // ------------------------------------------------------------
+
     const auto [ts_cols, ts_data] = create_modified_time_stamps(
         hyperparameters().ts_name_,
-        hyperparameters().lag_,
+        hyperparameters().horizon_,
         hyperparameters().memory_,
         _population );
 
@@ -429,15 +445,21 @@ TimeSeriesModel<FEType>::create_peripheral(
         _population.indices_,
         _population.join_keys_,
         _population.name_ + "$GETML_PERIPHERAL",
-        _population.numericals_,
+        numericals,
         {},
         new_ts );
+
+    // ------------------------------------------------------------
 
     auto new_peripheral = _peripheral;
 
     new_peripheral.push_back( new_table );
 
+    // ------------------------------------------------------------
+
     return std::make_pair( new_peripheral, ts_data );
+
+    // ------------------------------------------------------------
 }
 
 // -----------------------------------------------------------------------------
