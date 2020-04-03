@@ -19,7 +19,7 @@ struct Hyperparameters
     // ------------------------------------------------------
 
     /// Transforms the hyperparameters into a JSON object
-    Poco::JSON::Object to_json_obj() const;
+    Poco::JSON::Object::Ptr to_json_obj() const;
 
     // ------------------------------------------------------
 
@@ -27,7 +27,7 @@ struct Hyperparameters
     size_t num_selected_features() const;
 
     /// Transforms the hyperparameters into a JSON string
-    std::string to_json() const { return JSON::stringify( to_json_obj() ); }
+    std::string to_json() const { return JSON::stringify( *to_json_obj() ); }
 
     // ------------------------------------------------------
 

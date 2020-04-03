@@ -77,67 +77,67 @@ size_t Hyperparameters::num_selected_features() const
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object Hyperparameters::to_json_obj() const
+Poco::JSON::Object::Ptr Hyperparameters::to_json_obj() const
 {
     // -------------------------
 
-    Poco::JSON::Object obj;
+    auto obj = Poco::JSON::Object::Ptr( new Poco::JSON::Object() );
 
     // -------------------------
 
-    obj.set( "aggregation_", aggregations_ );
+    obj->set( "aggregation_", aggregations_ );
 
-    obj.set( "allow_sets_", tree_hyperparameters_->allow_sets_ );
+    obj->set( "allow_sets_", tree_hyperparameters_->allow_sets_ );
 
-    obj.set( "delta_t_", tree_hyperparameters_->delta_t_ );
+    obj->set( "delta_t_", tree_hyperparameters_->delta_t_ );
 
     if ( feature_selector_ )
         {
-            obj.set( "feature_selector_", *feature_selector_ );
+            obj->set( "feature_selector_", *feature_selector_ );
         }
 
-    obj.set( "include_categorical_", include_categorical_ );
+    obj->set( "include_categorical_", include_categorical_ );
 
-    obj.set( "loss_function_", loss_function_ );
+    obj->set( "loss_function_", loss_function_ );
 
-    obj.set( "use_timestamps_", use_timestamps_ );
+    obj->set( "use_timestamps_", use_timestamps_ );
 
-    obj.set( "num_features_", num_features_ );
+    obj->set( "num_features_", num_features_ );
 
-    obj.set( "num_subfeatures_", num_subfeatures_ );
+    obj->set( "num_subfeatures_", num_subfeatures_ );
 
-    obj.set( "max_length_", tree_hyperparameters_->max_length_ );
+    obj->set( "max_length_", tree_hyperparameters_->max_length_ );
 
-    obj.set( "min_num_samples_", tree_hyperparameters_->min_num_samples_ );
+    obj->set( "min_num_samples_", tree_hyperparameters_->min_num_samples_ );
 
     if ( predictor_ )
         {
-            obj.set( "predictor_", *predictor_ );
+            obj->set( "predictor_", *predictor_ );
         }
 
-    obj.set( "shrinkage_", shrinkage_ );
+    obj->set( "shrinkage_", shrinkage_ );
 
-    obj.set( "sampling_factor_", sampling_factor_ );
+    obj->set( "sampling_factor_", sampling_factor_ );
 
-    obj.set( "round_robin_", round_robin_ );
+    obj->set( "round_robin_", round_robin_ );
 
-    obj.set( "share_aggregations_", share_aggregations_ );
+    obj->set( "share_aggregations_", share_aggregations_ );
 
-    obj.set( "share_conditions_", tree_hyperparameters_->share_conditions_ );
+    obj->set( "share_conditions_", tree_hyperparameters_->share_conditions_ );
 
-    obj.set( "share_selected_features_", share_selected_features_ );
+    obj->set( "share_selected_features_", share_selected_features_ );
 
-    obj.set( "silent_", silent_ );
+    obj->set( "silent_", silent_ );
 
-    obj.set( "grid_factor_", tree_hyperparameters_->grid_factor_ );
+    obj->set( "grid_factor_", tree_hyperparameters_->grid_factor_ );
 
-    obj.set( "regularization_", tree_hyperparameters_->regularization_ );
+    obj->set( "regularization_", tree_hyperparameters_->regularization_ );
 
-    obj.set( "seed_", seed_ );
+    obj->set( "seed_", seed_ );
 
-    obj.set( "session_name_", session_name_ );
+    obj->set( "session_name_", session_name_ );
 
-    obj.set( "num_threads_", num_threads_ );
+    obj->set( "num_threads_", num_threads_ );
 
     // -------------------------
 

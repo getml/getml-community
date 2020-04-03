@@ -54,6 +54,12 @@ class TimeSeriesModel
         const std::shared_ptr<const logging::AbstractLogger> _logger =
             std::shared_ptr<const logging::AbstractLogger>() );
 
+    /// Saves the Model in JSON format, if applicable
+    void save( const std::string &_fname ) const;
+
+    /// Extracts the ensemble as a Poco::JSON object
+    Poco::JSON::Object to_json_obj( const bool _schema_only = false ) const;
+
     /// Transforms a set of raw data into extracted features.
     FeaturesType transform(
         const DataFrameType &_population,
@@ -79,20 +85,11 @@ class TimeSeriesModel
         return model().population_schema();
     }
 
-    /// Saves the Model in JSON format, if applicable
-    void save( const std::string &_fname ) const { model().save( _fname ); }
-
     /// Selects the features according to the index given.
     /// TODO: Remove.
     void select_features( const std::vector<size_t> &_index )
     {
         model().select_features( _index );
-    }
-
-    /// Extracts the ensemble as a Poco::JSON object
-    Poco::JSON::Object to_json_obj( const bool _schema_only = false ) const
-    {
-        return model().to_json_obj( _schema_only );
     }
 
     /// Extracts the ensemble as a Boost property tree the monitor process can
@@ -708,6 +705,45 @@ std::string TimeSeriesModel<FEType>::replace_macros(
     return new_query;
 
     // --------------------------------------------------------------
+}
+
+// -----------------------------------------------------------------------------
+
+template <class FEType>
+void TimeSeriesModel<FEType>::save( const std::string &_fname ) const
+{
+    std::ofstream output( _fname );
+
+    output << jsonutils::JSON::stringify( to_json_obj() );
+
+    output.close();
+}
+
+// -----------------------------------------------------------------------------
+
+template <class FEType>
+Poco::JSON::Object TimeSeriesModel<FEType>::to_json_obj(
+    const bool _schema_only ) const
+{
+    auto obj = model().to_json_obj( _schema_only );
+
+    auto hyp_obj = jsonutils::JSON::get_object( obj, "hyperparameters_" );
+
+    hyp_obj->set(
+        "allow_lagged_targets_", hyperparameters().allow_lagged_targets_ );
+
+    hyp_obj->set( "horizon_", hyperparameters().horizon_ );
+
+    hyp_obj->set( "memory_", hyperparameters().memory_ );
+
+    hyp_obj->set(
+        "self_join_keys_",
+        jsonutils::JSON::vector_to_array_ptr(
+            hyperparameters().self_join_keys_ ) );
+
+    hyp_obj->set( "ts_name_", hyperparameters().ts_name_ );
+
+    return obj;
 }
 
 // -----------------------------------------------------------------------------
