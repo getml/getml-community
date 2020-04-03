@@ -108,7 +108,12 @@ class TimeSeriesModel
         const size_t _offset = 0,
         const bool _subfeatures = true ) const
     {
-        return model().to_sql( _feature_prefix, _offset, _subfeatures );
+        auto queries = model().to_sql( _feature_prefix, _offset, _subfeatures );
+        for ( auto &query : queries )
+            {
+                query = replace_macros( query );
+            }
+        return queries;
     }
 
     // -----------------------------------------------------------------
@@ -140,6 +145,16 @@ class TimeSeriesModel
         const std::string &_ts_name,
         const std::string &_lower_time_stamp_used,
         const std::string &_upper_time_stamp_used ) const;
+
+    /// Little helper function. Replaces all occurences of _from with _to.
+    std::string replace_all(
+        const std::string &_str,
+        const std::string &_from,
+        const std::string &_to ) const;
+
+    /// Replaces all of occurences of temporary names in an SQL query with
+    /// something more meaningful.
+    std::string replace_macros( const std::string &_query ) const;
 
     /// Creates a modified version of the population table that contains an
     /// additional join key and an additional time stamp, if necessary.
@@ -619,6 +634,80 @@ void TimeSeriesModel<FEType>::fit(
         create_peripheral( new_population, _peripheral );
 
     model().fit( new_population, new_peripheral, _logger );
+}
+
+// -----------------------------------------------------------------------------
+
+template <class FEType>
+std::string TimeSeriesModel<FEType>::replace_all(
+    const std::string &_str,
+    const std::string &_from,
+    const std::string &_to ) const
+{
+    if ( _from.empty() )
+        {
+            return _str;
+        }
+
+    auto modified = _str;
+
+    size_t pos = 0;
+
+    while ( ( pos = modified.find( _from, pos ) ) != std::string::npos )
+        {
+            modified.replace( pos, _from.length(), _to );
+            pos += _to.length();
+        }
+
+    return modified;
+}
+
+// -----------------------------------------------------------------------------
+
+template <class FEType>
+std::string TimeSeriesModel<FEType>::replace_macros(
+    const std::string &_query ) const
+{
+    // --------------------------------------------------------------
+
+    const auto getml_lower_ts =
+        hyperparameters().horizon_ > 0.0
+            ? " + " + std::to_string( hyperparameters().horizon_ )
+            : std::string( "" );
+
+    const auto getml_upper_ts =
+        " + " + std::to_string(
+                    hyperparameters().horizon_ + hyperparameters().memory_ );
+
+    std::stringstream one;
+
+    one << "       1," << std::endl;
+
+    // --------------------------------------------------------------
+
+    auto new_query = replace_all( _query, "$GETML_LOWER_TS", getml_lower_ts );
+
+    new_query = replace_all( new_query, "$GETML_UPPER_TS", getml_upper_ts );
+
+    new_query = replace_all( new_query, "$GETML_PERIPHERAL", "" );
+
+    new_query = replace_all( new_query, "t1.$GETML_SELF_JOIN_KEY", "1" );
+
+    new_query = replace_all( new_query, "t2.$GETML_SELF_JOIN_KEY", "1" );
+
+    new_query = replace_all( new_query, "  " + one.str(), "" );
+
+    new_query = replace_all( new_query, one.str(), "" );
+
+    new_query = replace_all( new_query, "$GETML_SELF_JOIN_KEY, ", "" );
+
+    new_query = replace_all( new_query, "$GETML_TS_USED, ", "rowid" );
+
+    // --------------------------------------------------------------
+
+    return new_query;
+
+    // --------------------------------------------------------------
 }
 
 // -----------------------------------------------------------------------------
