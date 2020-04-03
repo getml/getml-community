@@ -14,9 +14,11 @@ class TimeSeriesModel
     typedef typename FEType::DataFrameType DataFrameType;
     typedef typename FEType::DataFrameViewType DataFrameViewType;
     typedef typename FEType::FeaturesType FeaturesType;
-    typedef typename FEType::FloatColumnType FloatColumnType;
     typedef Hyperparameters<typename FEType::HypType> HypType;
     typedef typename FEType::PlaceholderType PlaceholderType;
+
+    typedef typename FEType::FloatColumnType FloatColumnType;
+    typedef typename FEType::IntColumnType IntColumnType;
 
     constexpr static bool is_time_series_ = true;
     constexpr static bool premium_only_ = FEType::premium_only_;
@@ -122,7 +124,7 @@ class TimeSeriesModel
         const Float _memory,
         const DataFrameType &_population ) const;
 
-    /// Creates a modefied version of the peripheral tables that includes a
+    /// Creates a modified version of the peripheral tables that includes a
     /// modified version of the population table.
     std::pair<
         std::vector<DataFrameType>,
@@ -138,6 +140,12 @@ class TimeSeriesModel
         const std::string &_ts_name,
         const std::string &_lower_time_stamp_used,
         const std::string &_upper_time_stamp_used ) const;
+
+    /// Creates a modified version of the population table that contains an
+    /// additional join key, if necessary. Otherwise, it just returns the
+    /// original population table.
+    std::pair<typename FEType::DataFrameType, std::shared_ptr<std::vector<Int>>>
+    create_population( const DataFrameType &_population ) const;
 
     // -----------------------------------------------------------------
 
@@ -206,30 +214,44 @@ TimeSeriesModel<FEType>::TimeSeriesModel(
     const std::shared_ptr<const PlaceholderType> &_population_schema )
     : hyperparameters_( _hyperparameters )
 {
+    // --------------------------------------------------------------------
+
     assert_true( hyperparameters().model_hyperparams_ );
     assert_true( _placeholder );
     assert_true( _peripheral );
 
-    const auto lower_ts_name = hyperparameters().ts_name_ + "$GETML_LOWER_TS";
+    // --------------------------------------------------------------------
 
-    std::string upper_ts_name = "";
+    auto self_join_keys = hyperparameters().self_join_keys_;
 
-    if ( hyperparameters().memory_ > 0.0 )
+    if ( self_join_keys.size() == 0 )
         {
-            upper_ts_name = hyperparameters().ts_name_ + "$GETML_UPPER_TS";
+            self_join_keys.push_back( "$GETML_SELF_JOIN_KEY" );
         }
 
+    // --------------------------------------------------------------------
+
+    const auto ts_name = hyperparameters().ts_name_ == ""
+                             ? "$GETML_TIME_STAMP_USED"
+                             : hyperparameters().ts_name_;
+
+    const auto lower_ts_name = ts_name + "$GETML_LOWER_TS";
+
+    const auto upper_ts_name = hyperparameters().memory_ > 0.0
+                                   ? ts_name + "$GETML_UPPER_TS"
+                                   : std::string( "" );
+
+    // --------------------------------------------------------------------
+
     const auto new_placeholder = create_placeholder(
-        *_placeholder,
-        hyperparameters().self_join_keys_,
-        hyperparameters().ts_name_,
-        lower_ts_name,
-        upper_ts_name );
+        *_placeholder, self_join_keys, ts_name, lower_ts_name, upper_ts_name );
 
     const auto new_peripheral =
         std::make_shared<std::vector<std::string>>( *_peripheral );
 
     new_peripheral->push_back( _placeholder->name() + "$GETML_PERIPHERAL" );
+
+    // --------------------------------------------------------------------
 
     model_ = std::make_optional<FEType>(
         _categories,
@@ -238,6 +260,8 @@ TimeSeriesModel<FEType>::TimeSeriesModel(
         new_placeholder,
         _peripheral_schema,
         _population_schema );
+
+    // --------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -416,6 +440,57 @@ TimeSeriesModel<FEType>::create_peripheral(
 // -----------------------------------------------------------------------------
 
 template <class FEType>
+std::pair<typename FEType::DataFrameType, std::shared_ptr<std::vector<Int>>>
+TimeSeriesModel<FEType>::create_population(
+    const DataFrameType &_population ) const
+{
+    // -----------------------------------------------------------------
+
+    if ( hyperparameters().self_join_keys_.size() > 0 )
+        {
+            return std::make_pair(
+                _population, std::shared_ptr<std::vector<Int>>() );
+        }
+
+    // -----------------------------------------------------------------
+
+    auto join_keys = _population.join_keys_;
+
+    auto indices = _population.indices_;
+
+    // -----------------------------------------------------------------
+
+    const auto data = std::make_shared<std::vector<Int>>( _population.nrows() );
+
+    const auto new_join_key =
+        IntColumnType( data->data(), "$GETML_SELF_JOIN_KEY", data->size(), "" );
+
+    join_keys.push_back( new_join_key );
+
+    indices.push_back( DataFrameType::create_index( new_join_key ) );
+
+    // -----------------------------------------------------------------
+
+    const auto new_table = DataFrameType(
+        _population.categoricals_,
+        _population.discretes_,
+        indices,
+        join_keys,
+        _population.name_,
+        _population.numericals_,
+        _population.targets_,
+        _population.time_stamps_ );
+
+    // -----------------------------------------------------------------
+
+    return std::make_pair( new_table, data );
+
+    // -----------------------------------------------------------------
+}
+
+// -----------------------------------------------------------------------------
+
+template <class FEType>
 std::shared_ptr<typename TimeSeriesModel<FEType>::PlaceholderType>
 TimeSeriesModel<FEType>::create_placeholder(
     const PlaceholderType &_placeholder,
@@ -488,10 +563,12 @@ void TimeSeriesModel<FEType>::fit(
     const std::vector<DataFrameType> &_peripheral,
     const std::shared_ptr<const logging::AbstractLogger> _logger )
 {
-    const auto [new_peripheral, ts_data] =
-        create_peripheral( _population, _peripheral );
+    const auto [new_population, jk_data] = create_population( _population );
 
-    model().fit( _population, new_peripheral, _logger );
+    const auto [new_peripheral, ts_data] =
+        create_peripheral( new_population, _peripheral );
+
+    model().fit( new_population, new_peripheral, _logger );
 }
 
 // -----------------------------------------------------------------------------
@@ -502,10 +579,12 @@ typename FEType::FeaturesType TimeSeriesModel<FEType>::transform(
     const std::vector<DataFrameType> &_peripheral,
     const std::shared_ptr<const logging::AbstractLogger> _logger ) const
 {
-    const auto [new_peripheral, ts_data] =
-        create_peripheral( _population, _peripheral );
+    const auto [new_population, jk_data] = create_population( _population );
 
-    return model().transform( _population, new_peripheral, _logger );
+    const auto [new_peripheral, ts_data] =
+        create_peripheral( new_population, _peripheral );
+
+    return model().transform( new_population, new_peripheral, _logger );
 }
 
 // ----------------------------------------------------------------------------

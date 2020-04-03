@@ -385,6 +385,12 @@ DataFrameType FeatureEngineerer<FeatureEngineererType>::extract_df_by_colnames(
                 {
                     const auto& name = _schema.join_keys_name( i );
 
+                    if ( FEType::is_time_series_ &&
+                         name == "$GETML_SELF_JOIN_KEY" )
+                        {
+                            continue;
+                        }
+
                     const auto& mat = df.join_key( name );
 
                     join_keys.push_back( typename DataFrameType::IntColumnType(

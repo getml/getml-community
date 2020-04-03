@@ -4,6 +4,8 @@
 // ----------------------------------------------------
 // Dependencies
 
+#include <cstdint>
+
 #include <memory>
 #include <vector>
 
@@ -17,6 +19,7 @@
 // ----------------------------------------------------
 
 #include "ts/Float.hpp"
+#include "ts/Int.hpp"
 
 #include "ts/Hyperparameters.hpp"
 
