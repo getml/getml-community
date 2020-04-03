@@ -385,7 +385,7 @@ DataFrameType FeatureEngineerer<FeatureEngineererType>::extract_df_by_colnames(
                 {
                     const auto& name = _schema.join_keys_name( i );
 
-                    if ( FEType::is_time_series_ &&
+                    if ( FeatureEngineererType::is_time_series_ &&
                          name == "$GETML_SELF_JOIN_KEY" )
                         {
                             continue;
@@ -440,6 +440,12 @@ DataFrameType FeatureEngineerer<FeatureEngineererType>::extract_df_by_colnames(
             for ( size_t i = 0; i < _schema.num_time_stamps(); ++i )
                 {
                     const auto& name = _schema.time_stamps_name( i );
+
+                    if ( FeatureEngineererType::is_time_series_ &&
+                         name == "$GETML_TS_USED" )
+                        {
+                            continue;
+                        }
 
                     const auto& mat = df.time_stamp( name );
 

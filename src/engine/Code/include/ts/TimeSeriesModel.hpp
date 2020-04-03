@@ -142,9 +142,12 @@ class TimeSeriesModel
         const std::string &_upper_time_stamp_used ) const;
 
     /// Creates a modified version of the population table that contains an
-    /// additional join key, if necessary. Otherwise, it just returns the
-    /// original population table.
-    std::pair<typename FEType::DataFrameType, std::shared_ptr<std::vector<Int>>>
+    /// additional join key and an additional time stamp, if necessary.
+    /// Otherwise, it just returns the original population table.
+    std::tuple<
+        typename FEType::DataFrameType,
+        std::shared_ptr<std::vector<Int>>,
+        std::shared_ptr<std::vector<Float>>>
     create_population( const DataFrameType &_population ) const;
 
     // -----------------------------------------------------------------
@@ -232,7 +235,7 @@ TimeSeriesModel<FEType>::TimeSeriesModel(
     // --------------------------------------------------------------------
 
     const auto ts_name = hyperparameters().ts_name_ == ""
-                             ? "$GETML_TIME_STAMP_USED"
+                             ? "$GETML_TS_USED"
                              : hyperparameters().ts_name_;
 
     const auto lower_ts_name = ts_name + "$GETML_LOWER_TS";
@@ -440,17 +443,18 @@ TimeSeriesModel<FEType>::create_peripheral(
 // -----------------------------------------------------------------------------
 
 template <class FEType>
-std::pair<typename FEType::DataFrameType, std::shared_ptr<std::vector<Int>>>
+std::tuple<
+    typename FEType::DataFrameType,
+    std::shared_ptr<std::vector<Int>>,
+    std::shared_ptr<std::vector<Float>>>
 TimeSeriesModel<FEType>::create_population(
     const DataFrameType &_population ) const
 {
     // -----------------------------------------------------------------
 
-    if ( hyperparameters().self_join_keys_.size() > 0 )
-        {
-            return std::make_pair(
-                _population, std::shared_ptr<std::vector<Int>>() );
-        }
+    auto jk_data = std::shared_ptr<std::vector<Int>>();
+
+    auto ts_data = std::shared_ptr<std::vector<Float>>();
 
     // -----------------------------------------------------------------
 
@@ -458,16 +462,39 @@ TimeSeriesModel<FEType>::create_population(
 
     auto indices = _population.indices_;
 
+    auto time_stamps = _population.time_stamps_;
+
     // -----------------------------------------------------------------
 
-    const auto data = std::make_shared<std::vector<Int>>( _population.nrows() );
+    if ( hyperparameters().self_join_keys_.size() == 0 )
+        {
+            jk_data = std::make_shared<std::vector<Int>>( _population.nrows() );
 
-    const auto new_join_key =
-        IntColumnType( data->data(), "$GETML_SELF_JOIN_KEY", data->size(), "" );
+            const auto new_join_key = IntColumnType(
+                jk_data->data(), "$GETML_SELF_JOIN_KEY", jk_data->size(), "" );
 
-    join_keys.push_back( new_join_key );
+            join_keys.push_back( new_join_key );
 
-    indices.push_back( DataFrameType::create_index( new_join_key ) );
+            indices.push_back( DataFrameType::create_index( new_join_key ) );
+        }
+
+    // -----------------------------------------------------------------
+
+    if ( hyperparameters().ts_name_ == "" )
+        {
+            ts_data =
+                std::make_shared<std::vector<Float>>( _population.nrows() );
+
+            for ( size_t i = 0; i < ts_data->size(); ++i )
+                {
+                    ( *ts_data )[i] = static_cast<Float>( i );
+                }
+
+            const auto new_ts = FloatColumnType(
+                ts_data->data(), "$GETML_TS_USED", ts_data->size(), "" );
+
+            time_stamps.push_back( new_ts );
+        }
 
     // -----------------------------------------------------------------
 
@@ -479,11 +506,11 @@ TimeSeriesModel<FEType>::create_population(
         _population.name_,
         _population.numericals_,
         _population.targets_,
-        _population.time_stamps_ );
+        time_stamps );
 
     // -----------------------------------------------------------------
 
-    return std::make_pair( new_table, data );
+    return std::make_tuple( new_table, jk_data, ts_data );
 
     // -----------------------------------------------------------------
 }
@@ -563,9 +590,10 @@ void TimeSeriesModel<FEType>::fit(
     const std::vector<DataFrameType> &_peripheral,
     const std::shared_ptr<const logging::AbstractLogger> _logger )
 {
-    const auto [new_population, jk_data] = create_population( _population );
+    const auto [new_population, jk_data, ts_data1] =
+        create_population( _population );
 
-    const auto [new_peripheral, ts_data] =
+    const auto [new_peripheral, ts_data2] =
         create_peripheral( new_population, _peripheral );
 
     model().fit( new_population, new_peripheral, _logger );
@@ -579,9 +607,10 @@ typename FEType::FeaturesType TimeSeriesModel<FEType>::transform(
     const std::vector<DataFrameType> &_peripheral,
     const std::shared_ptr<const logging::AbstractLogger> _logger ) const
 {
-    const auto [new_population, jk_data] = create_population( _population );
+    const auto [new_population, jk_data, ts_data1] =
+        create_population( _population );
 
-    const auto [new_peripheral, ts_data] =
+    const auto [new_peripheral, ts_data2] =
         create_peripheral( new_population, _peripheral );
 
     return model().transform( new_population, new_peripheral, _logger );
