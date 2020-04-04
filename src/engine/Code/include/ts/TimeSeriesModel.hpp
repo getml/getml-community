@@ -311,14 +311,10 @@ TimeSeriesModel<FEType>::create_modified_time_stamps(
 {
     // -----------------------------------------------------------------
 
-    if ( _horizon < 0.0 )
+    if ( _population.num_time_stamps() == 0 )
         {
-            throw std::invalid_argument( "'horizon' cannot be negative!" );
-        }
-
-    if ( _memory < 0.0 )
-        {
-            throw std::invalid_argument( "'memory' cannot be negative!" );
+            throw std::invalid_argument(
+                "DataFrame '" + _population.name() + "' has no time stamps!" );
         }
 
     // -----------------------------------------------------------------
@@ -333,44 +329,25 @@ TimeSeriesModel<FEType>::create_modified_time_stamps(
 
     // -----------------------------------------------------------------
 
+    const auto ts_name =
+        _ts_name == "" ? std::string( "$GETML_TS_USED" ) : _ts_name;
+
     size_t ix = 0;
 
-    for ( ; ix < _population.time_stamps_.size(); ++ix )
+    for ( ; ix < _population.num_time_stamps(); ++ix )
         {
-            if ( _population.time_stamps_[ix].name_ == _ts_name )
+            if ( _population.time_stamps_[ix].name_ == ts_name )
                 {
                     break;
                 }
         }
 
-    if ( _ts_name == "" )
-        {
-            ix = 0;
-        }
-
-    if ( _population.num_time_stamps() == 0 )
-        {
-            throw std::invalid_argument(
-                "DataFrame '" + _population.name() + "' has no time stamps!" );
-        }
-
-    if ( _population.num_time_stamps() > 1 && _ts_name == "" )
-        {
-            throw std::invalid_argument(
-                "DataFrame '" + _population.name() +
-                "' has more than one time stamp, but no identifying time stamp "
-                "has been passed!" );
-        }
-
-    if ( ix == _population.num_time_stamps() &&
-         _population.num_time_stamps() > 1 )
+    if ( ix == _population.num_time_stamps() )
         {
             throw std::invalid_argument(
                 "DataFrame '" + _population.name() +
                 "' has no time stamps named '" + _ts_name + "'!" );
         }
-
-    assert_true( ix < _population.time_stamps_.size() );
 
     const auto &ts = _population.time_stamps_[ix];
 
@@ -698,7 +675,7 @@ std::string TimeSeriesModel<FEType>::replace_macros(
 
     new_query = replace_all( new_query, "$GETML_SELF_JOIN_KEY, ", "" );
 
-    new_query = replace_all( new_query, "$GETML_TS_USED, ", "rowid" );
+    new_query = replace_all( new_query, "$GETML_TS_USED", "rowid" );
 
     // --------------------------------------------------------------
 
