@@ -1765,6 +1765,8 @@ Poco::JSON::Object DataFrame::to_monitor() const
 
     obj.set( "time_stamps_", get_colnames( time_stamps_ ) );
 
+    obj.set( "time_stamp_units_", get_units( time_stamps_ ) );
+
     obj.set( "unused_floats_", get_colnames( unused_floats_ ) );
 
     obj.set( "unused_strings_", get_colnames( unused_strings_ ) );
