@@ -160,10 +160,9 @@ CFloatColumn LinearRegression::predict(
     const std::vector<CIntColumn>& _X_categorical,
     const std::vector<CFloatColumn>& _X_numerical ) const
 {
-    if ( weights_.size() == 0 )
+    if ( !is_fitted() )
         {
-            throw std::runtime_error(
-                "LinearRegression has not been trained!" );
+            throw std::runtime_error( "LinearRegression has not been fitted!" );
         }
 
     impl().check_plausibility( _X_categorical, _X_numerical );

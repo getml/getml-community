@@ -232,6 +232,13 @@ class Pipeline
     /// Parses the peripheral names.
     std::shared_ptr<std::vector<std::string>> parse_peripheral() const;
 
+    /// Retrieves the predictors from the pred_tracker, if possible.
+    /// Returns true if all predictors could be retrieved.
+    bool retrieve_predictors(
+        const std::shared_ptr<dependency::PredTracker> _pred_tracker,
+        std::vector<std::vector<std::shared_ptr<predictors::Predictor>>>*
+            _predictors ) const;
+
     /// Returns a the SQL features.
     Poco::JSON::Array::Ptr to_sql_arr() const;
 

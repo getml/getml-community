@@ -552,8 +552,16 @@ void Pipeline::fit(
     // -------------------------------------------------------------------------
     // Select features
 
-    // auto feature_selectors = init_predictors( "feature_selectors_",
-    // _cmd, _data_frames );
+    /*auto feature_selectors =
+        init_predictors( "feature_selectors_", _cmd, _data_frames );
+
+    fit_predictors(
+        _cmd,
+        _logger,
+        _data_frames,
+        _pred_tracker,
+        &feature_selectors,
+        _socket );*/
 
     // -------------------------------------------------------------------------
     // Fit the predictors.
@@ -587,6 +595,16 @@ void Pipeline::fit_predictors(
 {
     // --------------------------------------------------------------------
 
+    const auto all_retrieved =
+        retrieve_predictors( _pred_tracker, _predictors );
+
+    if ( all_retrieved )
+        {
+            return;
+        }
+
+    // --------------------------------------------------------------------
+
     auto categorical_features = get_categorical_features( _cmd, _data_frames );
 
     categorical_features =
@@ -617,12 +635,10 @@ void Pipeline::fit_predictors(
                 {
                     assert_true( p );
 
-                    const auto ptr =
-                        _pred_tracker->retrieve( p->fingerprint() );
-
-                    if ( ptr )
+                    // If p is already fitted, that is because it has been
+                    // retrieved.
+                    if ( p->is_fitted() )
                         {
-                            p = ptr;
                             continue;
                         }
 
@@ -1134,6 +1150,38 @@ std::shared_ptr<std::vector<std::string>> Pipeline::parse_peripheral() const
         }
 
     return peripheral;
+}
+
+// ----------------------------------------------------------------------------
+
+bool Pipeline::retrieve_predictors(
+    const std::shared_ptr<dependency::PredTracker> _pred_tracker,
+    std::vector<std::vector<std::shared_ptr<predictors::Predictor>>>*
+        _predictors ) const
+{
+    bool all_retrieved = true;
+
+    for ( auto& vec : *_predictors )
+        {
+            for ( auto& p : vec )
+                {
+                    assert_true( p );
+
+                    const auto ptr =
+                        _pred_tracker->retrieve( p->fingerprint() );
+
+                    if ( ptr )
+                        {
+                            p = ptr;
+                        }
+                    else
+                        {
+                            all_retrieved = false;
+                        }
+                }
+        }
+
+    return all_retrieved;
 }
 
 // ----------------------------------------------------------------------------

@@ -83,6 +83,9 @@ class XGBoostPredictor : public Predictor
                hyperparams_.objective_ == "binary:logitraw";
     }
 
+    /// Whether the predictor has been fitted.
+    bool is_fitted() const final { return len() > 0; }
+
     // -----------------------------------------
 
    private:

@@ -38,8 +38,11 @@ class Predictor
         const std::vector<CFloatColumn>& _X_numerical,
         const CFloatColumn& _y ) = 0;
 
-    /// Whether the predictor is used for classification;
+    /// Whether the predictor is used for classification.
     virtual bool is_classification() const = 0;
+
+    /// Whether the predictor has already been fitted.
+    virtual bool is_fitted() const = 0;
 
     /// Loads the predictor
     virtual void load( const std::string& _fname ) = 0;

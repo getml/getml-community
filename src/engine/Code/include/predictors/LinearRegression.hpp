@@ -66,6 +66,9 @@ class LinearRegression : public Predictor
     /// Whether the predictor is used for classification;
     bool is_classification() const final { return false; }
 
+    /// Whether the predictor has been fitted.
+    bool is_fitted() const final { return weights_.size() > 0; }
+
     // -------------------------------------------------------------------------
 
    private:

@@ -557,7 +557,7 @@ CFloatColumn XGBoostPredictor::predict(
 
     // --------------------------------------------------------------------
 
-    if ( len() == 0 )
+    if ( !is_fitted() )
         {
             throw std::runtime_error( "XGBoostPredictor has not been fitted!" );
         }
