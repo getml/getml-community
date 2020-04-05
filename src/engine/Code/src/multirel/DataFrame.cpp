@@ -169,10 +169,7 @@ DataFrame DataFrame::create_subview(
                 }
 
             const auto ts = containers::Column<Float>(
-                col.data_,
-                col.name_,
-                col.nrows_,
-                "unit: getml_time_stamp, comparison only" );
+                col.data_, col.name_, col.nrows_, col.unit_ );
 
             numericals_and_time_stamps.push_back( ts );
         }

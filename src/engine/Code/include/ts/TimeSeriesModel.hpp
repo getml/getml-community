@@ -365,7 +365,10 @@ TimeSeriesModel<FEType>::create_modified_time_stamps(
         ts.data_, ts.data_ + ts.nrows_, data.back()->begin(), horizon_op );
 
     cols.emplace_back( FloatColumnType(
-        data.back()->data(), ts.name_ + "$GETML_LOWER_TS", ts.nrows_, "" ) );
+        data.back()->data(),
+        ts.name_ + "$GETML_LOWER_TS",
+        ts.nrows_,
+        ts.unit_ ) );
 
     // -----------------------------------------------------------------
 
@@ -381,7 +384,7 @@ TimeSeriesModel<FEType>::create_modified_time_stamps(
                 data.back()->data(),
                 ts.name_ + "$GETML_UPPER_TS",
                 ts.nrows_,
-                "" ) );
+                ts.unit_ ) );
         }
 
     // -----------------------------------------------------------------
@@ -502,7 +505,10 @@ TimeSeriesModel<FEType>::create_population(
                 }
 
             const auto new_ts = FloatColumnType(
-                ts_data->data(), "$GETML_TS_USED", ts_data->size(), "" );
+                ts_data->data(),
+                "$GETML_TS_USED",
+                ts_data->size(),
+                "$GETML_ROWID, comparison only" );
 
             time_stamps.push_back( new_ts );
         }
