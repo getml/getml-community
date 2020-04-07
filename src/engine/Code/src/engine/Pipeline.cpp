@@ -362,15 +362,28 @@ Pipeline::feature_names() const
 
     if ( impl_.predictor_impl_ )
         {
-            size_t i = 0;
+            size_t offset = 0;
 
-            for ( const auto& index : predictor_impl().autofeatures() )
+            assert_true(
+                feature_engineerers_.size() ==
+                predictor_impl().autofeatures().size() );
+
+            for ( size_t i = 0; i < feature_engineerers_.size(); ++i )
                 {
-                    for ( size_t j = 0; j < index.size(); ++j )
+                    const auto& fe = feature_engineerers_.at( i );
+
+                    const auto& index = predictor_impl().autofeatures().at( i );
+
+                    for ( const auto ix : index )
                         {
                             autofeatures.push_back(
-                                "feature_" + std::to_string( ++i ) );
+                                "feature_" +
+                                std::to_string( offset + ix + 1 ) );
                         }
+
+                    assert_true( fe );
+
+                    offset += fe->num_features();
                 }
 
             return std::make_tuple(
@@ -1649,13 +1662,21 @@ Poco::JSON::Array::Ptr Pipeline::to_sql_arr() const
 
     size_t offset = 0;
 
-    for ( const auto& fe : feature_engineerers_ )
+    assert_true(
+        feature_engineerers_.size() == predictor_impl().autofeatures().size() );
+
+    for ( size_t i = 0; i < feature_engineerers_.size(); ++i )
         {
+            const auto& fe = feature_engineerers_.at( i );
+
+            const auto& index = predictor_impl().autofeatures().at( i );
+
             const auto vec = fe->to_sql( offset, false );
 
-            for ( const auto& str : vec )
+            for ( const auto ix : index )
                 {
-                    sql->add( str );
+                    assert_true( ix < vec.size() );
+                    sql->add( vec.at( ix ) );
                 }
 
             offset += fe->num_features();
