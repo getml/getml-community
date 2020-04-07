@@ -14,37 +14,11 @@ class PredictorImpl
     PredictorImpl(
         const std::vector<size_t>& _num_autofeatures,
         const std::vector<std::string>& _categorical_colnames,
-        const std::vector<std::string>& _numerical_colnames )
-        : categorical_colnames_( _categorical_colnames ),
-          numerical_colnames_( _numerical_colnames )
-    {
-        for ( const auto n : _num_autofeatures )
-            {
-                autofeatures_.emplace_back( std::vector<size_t>( n ) );
+        const std::vector<std::string>& _numerical_colnames );
 
-                for ( size_t i = 0; i < n; ++i )
-                    {
-                        autofeatures_.back().at( i ) = i;
-                    }
-            }
-    };
+    PredictorImpl( const Poco::JSON::Object& _obj );
 
-    PredictorImpl( const Poco::JSON::Object& _obj )
-        : categorical_colnames_( JSON::array_to_vector<std::string>(
-              JSON::get_array( _obj, "categorical_colnames_" ) ) ),
-          numerical_colnames_( JSON::array_to_vector<std::string>(
-              JSON::get_array( _obj, "numerical_colnames_" ) ) )
-    {
-        auto arr = JSON::get_array( _obj, "encodings_" );
-
-        for ( size_t i = 0; i < arr->size(); ++i )
-            {
-                encodings_.push_back( Encoding(
-                    *arr->getObject( static_cast<unsigned int>( i ) ) ) );
-            }
-    };
-
-    ~PredictorImpl() = default;
+    ~PredictorImpl();
 
     // -----------------------------------------
 

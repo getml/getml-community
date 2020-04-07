@@ -4,6 +4,78 @@ namespace predictors
 {
 // -----------------------------------------------------------------------------
 
+PredictorImpl::PredictorImpl(
+    const std::vector<size_t>& _num_autofeatures,
+    const std::vector<std::string>& _categorical_colnames,
+    const std::vector<std::string>& _numerical_colnames )
+    : categorical_colnames_( _categorical_colnames ),
+      numerical_colnames_( _numerical_colnames )
+{
+    for ( const auto n : _num_autofeatures )
+        {
+            autofeatures_.emplace_back( std::vector<size_t>( n ) );
+
+            for ( size_t i = 0; i < n; ++i )
+                {
+                    autofeatures_.back().at( i ) = i;
+                }
+        }
+};
+
+// -----------------------------------------------------------------------------
+
+PredictorImpl::PredictorImpl( const Poco::JSON::Object& _obj )
+    : categorical_colnames_( JSON::array_to_vector<std::string>(
+          JSON::get_array( _obj, "categorical_colnames_" ) ) ),
+      numerical_colnames_( JSON::array_to_vector<std::string>(
+          JSON::get_array( _obj, "numerical_colnames_" ) ) )
+{
+    // -----------------------------------------------
+
+    auto arr = JSON::get_array( _obj, "encodings_" );
+
+    for ( size_t i = 0; i < arr->size(); ++i )
+        {
+            auto ptr = arr->getObject( static_cast<unsigned int>( i ) );
+
+            if ( !ptr )
+                {
+                    throw std::runtime_error(
+                        "Element " + std::to_string( i + 1 ) +
+                        " of 'encodings_' is not a proper JSON object." );
+                }
+
+            encodings_.push_back( Encoding( *ptr ) );
+        }
+
+    // -----------------------------------------------
+
+    arr = JSON::get_array( _obj, "autofeatures_" );
+
+    for ( size_t i = 0; i < arr->size(); ++i )
+        {
+            auto ptr = arr->getArray( static_cast<unsigned int>( i ) );
+
+            if ( !ptr )
+                {
+                    throw std::runtime_error(
+                        "Element " + std::to_string( i + 1 ) +
+                        " of 'autofeatures_' is not a proper JSON "
+                        "array." );
+                }
+
+            autofeatures_.push_back( JSON::array_to_vector<size_t>( ptr ) );
+        }
+
+    // -----------------------------------------------
+};
+
+// -----------------------------------------------------------------------------
+
+PredictorImpl::~PredictorImpl() = default;
+
+// -----------------------------------------------------------------------------
+
 void PredictorImpl::compress_importances(
     const std::vector<Float>& _all_feature_importances,
     std::vector<Float>* _feature_importances ) const
@@ -183,19 +255,25 @@ Poco::JSON::Object PredictorImpl::to_json_obj() const
 
     // -------------------------------------------------------------------------
 
-    auto arr = Poco::JSON::Array();
+    auto enc_arr = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
 
     for ( auto& enc : encodings_ )
         {
-            arr.add( enc.to_json_obj() );
+            enc_arr->add( enc.to_json_obj() );
         }
 
-    obj.set( "encodings_", arr );
+    obj.set( "encodings_", enc_arr );
 
     // -------------------------------------------------------------------------
 
-    // TODO
-    // obj.set( "num_autofeatures_", num_autofeatures_ );
+    auto auto_arr = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
+
+    for ( auto& auto_f : autofeatures() )
+        {
+            auto_arr->add( JSON::vector_to_array( auto_f ) );
+        }
+
+    obj.set( "autofeatures_", auto_arr );
 
     // -------------------------------------------------------------------------
 
