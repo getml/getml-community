@@ -47,9 +47,9 @@ void test6_logistic_regression_sparse()
         }
 
     const auto impl = std::make_shared<predictors::PredictorImpl>(
+        std::vector<size_t>( {3} ),
         std::vector<std::string>( {"categorical"} ),
-        std::vector<std::string>(),
-        3 );
+        std::vector<std::string>() );
 
     impl->fit_encodings( X_categorical );
 

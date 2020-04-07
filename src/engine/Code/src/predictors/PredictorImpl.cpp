@@ -11,9 +11,10 @@ void PredictorImpl::compress_importances(
     assert_true( _all_feature_importances.size() == ncols_csr() );
 
     assert_true(
-        _feature_importances->size() == num_autofeatures() + num_columns() );
+        _feature_importances->size() ==
+        num_autofeatures() + num_manual_features() );
 
-    const auto n_dense = num_autofeatures_ + numerical_colnames_.size();
+    const auto n_dense = num_autofeatures() + numerical_colnames_.size();
 
     std::copy(
         _all_feature_importances.begin(),
@@ -129,55 +130,38 @@ void PredictorImpl::save( const std::string& _fname ) const
 
 // ----------------------------------------------------------------------------
 
-void PredictorImpl::select_cols(
-    const size_t _n_selected,
-    const size_t _n_autofeatures,
-    const std::vector<size_t>& _index )
+void PredictorImpl::select_features(
+    const size_t _n_selected, const std::vector<size_t>& _index )
 {
     encodings_.clear();
 
-    select_cols(
-        _n_selected,
-        _index,
-        _n_autofeatures + numerical_colnames_.size(),
-        &categorical_colnames_ );
+    auto num_preceding = num_autofeatures() + numerical_colnames_.size();
 
-    select_cols( _n_selected, _index, _n_autofeatures, &numerical_colnames_ );
+    categorical_colnames_ = select_cols(
+        _n_selected, _index, num_preceding, categorical_colnames_ );
 
-    assert_true( _n_selected >= num_columns() );
+    num_preceding -= numerical_colnames_.size();
 
-    num_autofeatures_ = _n_selected - num_columns();
-}
+    numerical_colnames_ =
+        select_cols( _n_selected, _index, num_preceding, numerical_colnames_ );
 
-// ----------------------------------------------------------------------------
+    const auto size = autofeatures_.size();
 
-void PredictorImpl::select_cols(
-    const size_t _n_selected,
-    const std::vector<size_t>& _index,
-    const size_t _ix_begin,
-    std::vector<std::string>* _colnames ) const
-{
-    std::vector<std::string> selected;
-
-    const auto begin = _index.begin();
-
-    const auto end = _index.begin() + _n_selected;
-
-    for ( size_t i = 0; i < _colnames->size(); ++i )
+    if ( size == 0 )
         {
-            const auto is_included = [_ix_begin, i]( size_t ix ) {
-                return ix == _ix_begin + i;
-            };
-
-            const auto it = std::find_if( begin, end, is_included );
-
-            if ( it != end )
-                {
-                    selected.push_back( ( *_colnames )[i] );
-                }
+            return;
         }
 
-    *_colnames = selected;
+    for ( size_t i = 0; i < size; ++i )
+        {
+            auto& vec = autofeatures_[size - 1 - i];
+
+            assert_true( vec.size() >= num_preceding );
+
+            num_preceding -= vec.size();
+
+            vec = select_cols( _n_selected, _index, num_preceding, vec );
+        }
 }
 
 // ----------------------------------------------------------------------------
@@ -210,7 +194,8 @@ Poco::JSON::Object PredictorImpl::to_json_obj() const
 
     // -------------------------------------------------------------------------
 
-    obj.set( "num_autofeatures_", num_autofeatures_ );
+    // TODO
+    // obj.set( "num_autofeatures_", num_autofeatures_ );
 
     // -------------------------------------------------------------------------
 

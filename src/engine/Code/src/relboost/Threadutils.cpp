@@ -170,6 +170,7 @@ void Threadutils::transform_as_feature_engineerer(
     const std::vector<size_t> _thread_nums,
     const containers::DataFrame& _population,
     const std::vector<containers::DataFrame>& _peripheral,
+    const std::vector<size_t>& _index,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
     const ensemble::DecisionTreeEnsemble& _ensemble,
     containers::Features* _features )
@@ -191,22 +192,24 @@ void Threadutils::transform_as_feature_engineerer(
 
     const auto silent = _ensemble.hyperparameters().silent_;
 
-    assert_true( _features->size() >= _ensemble.num_features() );
+    assert_true( _features->size() == _index.size() );
 
-    for ( size_t i = 0; i < _ensemble.num_features(); ++i )
+    for ( size_t i = 0; i < _index.size(); ++i )
         {
+            const auto ix = _index.at( i );
+
             const auto new_feature =
-                _ensemble.transform( table_holder, subfeatures, i );
+                _ensemble.transform( table_holder, subfeatures, ix );
 
             copy(
                 population_subview.rows(),
                 new_feature,
-                ( *_features )[i].get() );
+                _features->at( i ).get() );
 
             if ( !silent && _logger )
                 {
                     _logger->log(
-                        "Built FEATURE_" + std::to_string( i + 1 ) + "." );
+                        "Built FEATURE_" + std::to_string( ix + 1 ) + "." );
                 }
         }
 }
@@ -238,6 +241,7 @@ void Threadutils::transform_ensemble(
     const std::vector<size_t> _thread_nums,
     const containers::DataFrame& _population,
     const std::vector<containers::DataFrame>& _peripheral,
+    const std::vector<size_t>& _index,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
     const ensemble::DecisionTreeEnsemble& _ensemble,
     containers::Features* _features )
@@ -251,6 +255,7 @@ void Threadutils::transform_ensemble(
                         _thread_nums,
                         _population,
                         _peripheral,
+                        _index,
                         _logger,
                         _ensemble,
                         _features );

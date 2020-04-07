@@ -14,13 +14,14 @@ std::vector<Float> LinearRegression::feature_importances(
                 "not been trained!" );
         }
 
-    if ( _num_features != impl().num_autofeatures() + impl().num_columns() )
+    if ( _num_features !=
+         impl().num_autofeatures() + impl().num_manual_features() )
         {
             throw std::invalid_argument(
                 "Incorrect number of features when retrieving in feature "
                 "importances! Expected " +
                 std::to_string(
-                    impl().num_autofeatures() + impl().num_columns() ) +
+                    impl().num_autofeatures() + impl().num_manual_features() ) +
                 ", got " + std::to_string( _num_features ) + "." );
         }
 

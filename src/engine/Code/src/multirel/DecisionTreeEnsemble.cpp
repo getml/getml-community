@@ -989,6 +989,7 @@ std::vector<std::string> DecisionTreeEnsemble::to_sql(
 containers::Features DecisionTreeEnsemble::transform(
     const containers::DataFrame &_population,
     const std::vector<containers::DataFrame> &_peripheral,
+    const std::optional<std::vector<size_t>> &_index,
     const std::shared_ptr<const logging::AbstractLogger> _logger ) const
 {
     // ------------------------------------------------------
@@ -998,6 +999,25 @@ containers::Features DecisionTreeEnsemble::transform(
         {
             throw std::runtime_error(
                 "Population table needs to contain at least some data!" );
+        }
+
+    // ------------------------------------------------------
+    // If no index is passed, take all features.
+
+    std::vector<size_t> index;
+
+    if ( _index )
+        {
+            index = *_index;
+        }
+    else
+        {
+            index = std::vector<size_t>( num_features() );
+
+            for ( size_t i = 0; i < index.size(); ++i )
+                {
+                    index[i] = i;
+                }
         }
 
     // ------------------------------------------------------
@@ -1027,7 +1047,7 @@ containers::Features DecisionTreeEnsemble::transform(
     // -------------------------------------------------------
     // Launch threads and generate predictions on the subviews.
 
-    auto features = containers::Features( num_features() );
+    auto features = containers::Features( index.size() );
 
     for ( auto &f : features )
         {
@@ -1045,6 +1065,7 @@ containers::Features DecisionTreeEnsemble::transform(
                 impl().hyperparameters_,
                 _population,
                 _peripheral,
+                index,
                 std::shared_ptr<const logging::AbstractLogger>(),
                 *this,
                 &features ) );
@@ -1061,6 +1082,7 @@ containers::Features DecisionTreeEnsemble::transform(
                 impl().hyperparameters_,
                 _population,
                 _peripheral,
+                index,
                 _logger,
                 *this,
                 &features );

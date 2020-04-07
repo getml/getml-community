@@ -131,6 +131,7 @@ class DecisionTreeEnsemble
     containers::Features transform(
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral,
+        const std::optional<std::vector<size_t>>& _index = std::nullopt,
         const std::shared_ptr<const logging::AbstractLogger> _logger =
             std::shared_ptr<const logging::AbstractLogger>() ) const;
 

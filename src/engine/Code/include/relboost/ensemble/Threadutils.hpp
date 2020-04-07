@@ -30,6 +30,7 @@ class Threadutils
         const std::vector<size_t> _thread_nums,
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral,
+        const std::vector<size_t>& _index,
         const std::shared_ptr<const logging::AbstractLogger> _logger,
         const ensemble::DecisionTreeEnsemble& _ensemble,
         containers::Features* _features );
@@ -66,6 +67,7 @@ class Threadutils
         const std::vector<size_t> _thread_nums,
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral,
+        const std::vector<size_t>& _index,
         const std::shared_ptr<const logging::AbstractLogger> _logger,
         const ensemble::DecisionTreeEnsemble& _ensemble,
         containers::Features* _features );

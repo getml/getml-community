@@ -37,6 +37,7 @@ class Threadutils
             _hyperparameters,
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral,
+        const std::vector<size_t>& _index,
         const std::shared_ptr<const logging::AbstractLogger> _logger,
         const DecisionTreeEnsemble& _ensemble,
         containers::Features* _features );

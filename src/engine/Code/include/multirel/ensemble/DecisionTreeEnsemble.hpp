@@ -86,9 +86,12 @@ class DecisionTreeEnsemble
         const bool _subfeatures = true ) const;
 
     /// Transforms a set of raw data into extracted features.
+    /// Only the features signified by _index will be used, if such an index is
+    /// passed.
     containers::Features transform(
         const containers::DataFrame &_population,
         const std::vector<containers::DataFrame> &_peripheral,
+        const std::optional<std::vector<size_t>> &_index = std::nullopt,
         const std::shared_ptr<const logging::AbstractLogger> _logger =
             std::shared_ptr<const logging::AbstractLogger>() ) const;
 

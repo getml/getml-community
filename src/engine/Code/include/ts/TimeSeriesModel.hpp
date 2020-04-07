@@ -64,6 +64,7 @@ class TimeSeriesModel
     FeaturesType transform(
         const DataFrameType &_population,
         const std::vector<DataFrameType> &_peripheral,
+        const std::vector<size_t> &_index,
         const std::shared_ptr<const logging::AbstractLogger> _logger =
             std::shared_ptr<const logging::AbstractLogger>() ) const;
 
@@ -735,6 +736,7 @@ template <class FEType>
 typename FEType::FeaturesType TimeSeriesModel<FEType>::transform(
     const DataFrameType &_population,
     const std::vector<DataFrameType> &_peripheral,
+    const std::vector<size_t> &_index,
     const std::shared_ptr<const logging::AbstractLogger> _logger ) const
 {
     const auto [new_population, jk_data, ts_data1] =
@@ -743,7 +745,7 @@ typename FEType::FeaturesType TimeSeriesModel<FEType>::transform(
     const auto [new_peripheral, ts_data2] =
         create_peripheral( new_population, _peripheral );
 
-    return model().transform( new_population, new_peripheral, _logger );
+    return model().transform( new_population, new_peripheral, _index, _logger );
 }
 
 // ----------------------------------------------------------------------------

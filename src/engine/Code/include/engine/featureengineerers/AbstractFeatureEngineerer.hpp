@@ -70,6 +70,7 @@ class AbstractFeatureEngineerer
     /// Generate features.
     virtual containers::Features transform(
         const Poco::JSON::Object& _cmd,
+        const std::vector<size_t>& _index,
         const std::shared_ptr<const monitoring::Logger>& _logger,
         const std::map<std::string, containers::DataFrame>& _data_frames,
         Poco::Net::StreamSocket* _socket ) const = 0;

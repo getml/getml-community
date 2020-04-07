@@ -120,6 +120,7 @@ void Threadutils::transform_ensemble(
     const std::shared_ptr<const descriptors::Hyperparameters>& _hyperparameters,
     const containers::DataFrame& _population,
     const std::vector<containers::DataFrame>& _peripheral,
+    const std::vector<size_t>& _index,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
     const ensemble::DecisionTreeEnsemble& _ensemble,
     containers::Features* _features )
@@ -165,22 +166,26 @@ void Threadutils::transform_ensemble(
             // ----------------------------------------------------------------
             // Build the actual features.
 
-            assert_true( _ensemble.trees().size() == _features->size() );
+            assert_true( _index.size() == _features->size() );
 
-            for ( size_t i = 0; i < _ensemble.trees().size(); ++i )
+            for ( size_t i = 0; i < _index.size(); ++i )
                 {
+                    const auto ix = _index.at( i );
+
+                    assert_true( ix < _ensemble.num_features() );
+
                     const auto new_feature = _ensemble.transform(
-                        table_holder, subfeatures, i, &impl );
+                        table_holder, subfeatures, ix, &impl );
 
                     copy(
                         population_subview.rows(),
                         new_feature,
-                        ( *_features )[i].get() );
+                        _features->at( i ).get() );
 
                     if ( _logger && !_hyperparameters->silent_ )
                         {
                             _logger->log(
-                                "Built FEATURE_" + std::to_string( i + 1 ) +
+                                "Built FEATURE_" + std::to_string( ix + 1 ) +
                                 "." );
                         }
                 }

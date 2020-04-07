@@ -49,6 +49,7 @@ class FeatureEngineerer : public AbstractFeatureEngineerer
     /// Generate features.
     containers::Features transform(
         const Poco::JSON::Object& _cmd,
+        const std::vector<size_t>& _index,
         const std::shared_ptr<const monitoring::Logger>& _logger,
         const std::map<std::string, containers::DataFrame>& _data_frames,
         Poco::Net::StreamSocket* _socket ) const final;
@@ -658,6 +659,7 @@ FeatureEngineerer<FeatureEngineererType>::make_feature_engineerer(
 template <typename FeatureEngineererType>
 containers::Features FeatureEngineerer<FeatureEngineererType>::transform(
     const Poco::JSON::Object& _cmd,
+    const std::vector<size_t>& _index,
     const std::shared_ptr<const monitoring::Logger>& _logger,
     const std::map<std::string, containers::DataFrame>& _data_frames,
     Poco::Net::StreamSocket* _socket ) const
@@ -723,7 +725,7 @@ containers::Features FeatureEngineerer<FeatureEngineererType>::transform(
     // Generate the features.
 
     return feature_engineerer().transform(
-        population_table, peripheral_tables, _logger );
+        population_table, peripheral_tables, _index, _logger );
 
     // -------------------------------------------------------------------------
 }
