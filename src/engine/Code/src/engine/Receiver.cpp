@@ -6,66 +6,6 @@ namespace communication
 {
 // -----------------------------------------------------------------------------
 
-containers::Column<Int> Receiver::recv_categorical_column(
-    containers::Encoding *_encoding, Poco::Net::StreamSocket *_socket )
-{
-    // ------------------------------------------------
-    // Receive shape
-
-    std::array<Int, 2> shape;
-
-    recv<Int>( sizeof( Int ) * 2, _socket, shape.data() );
-
-    // ------------------------------------------------
-    // Check shape
-
-    if ( std::get<0>( shape ) <= 0 )
-        {
-            throw std::runtime_error(
-                "Your data must contain at least one row!" );
-        }
-
-    if ( std::get<1>( shape ) != 1 )
-        {
-            throw std::runtime_error( "Must be a column!" );
-        }
-
-    // ------------------------------------------------
-    // Recv integers
-
-    containers::Column<Int> col( static_cast<size_t>( std::get<0>( shape ) ) );
-
-    recv<Int>(
-        sizeof( Int ) * static_cast<ULong>( col.nrows() ),
-        _socket,
-        col.data() );
-
-    // ------------------------------------------------
-    // Recv local_encoding
-
-    const auto local_encoding = recv_encoding( _socket );
-
-    // ------------------------------------------------
-    // Decode, then encode again
-
-    for ( size_t i = 0; i < col.nrows(); ++i )
-        {
-            assert_true( col[i] >= 0 );
-            assert_true(
-                static_cast<size_t>( col[i] ) < local_encoding.size() );
-
-            col[i] = ( *_encoding )[local_encoding[col[i]]];
-        }
-
-    // ------------------------------------------------
-
-    return col;
-
-    // ------------------------------------------------
-}
-
-// -----------------------------------------------------------------------------
-
 Poco::JSON::Object Receiver::recv_cmd(
     const std::shared_ptr<const monitoring::Logger> &_logger,
     Poco::Net::StreamSocket *_socket )

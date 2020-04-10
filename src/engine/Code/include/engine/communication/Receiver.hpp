@@ -15,10 +15,6 @@ class Receiver
     static void recv(
         const ULong _size, Poco::Net::StreamSocket *_socket, T *_data );
 
-    /// Receives a categorical Column from the client
-    static containers::Column<Int> recv_categorical_column(
-        containers::Encoding *_encoding, Poco::Net::StreamSocket *_socket );
-
     /// Receives a string column from the client
     static std::vector<std::string> recv_string_column(
         Poco::Net::StreamSocket *_socket );
