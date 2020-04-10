@@ -22,6 +22,8 @@
 #include <Poco/JSON/Array.h>
 #include <Poco/JSON/Object.h>
 
+#include <goutils.hpp>
+
 #include "debug/debug.hpp"
 
 #include "jsonutils/jsonutils.hpp"
@@ -38,6 +40,7 @@
 
 #include "io/CSVReader.hpp"
 #include "io/CSVWriter.hpp"
+#include "io/S3Reader.hpp"
 
 #include "io/CSVSniffer.hpp"
 
