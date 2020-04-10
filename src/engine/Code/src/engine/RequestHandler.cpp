@@ -76,6 +76,10 @@ void RequestHandler::run()
                 {
                     database_manager().sniff_csv( name, cmd, &socket() );
                 }
+            else if ( type == "Database.sniff_s3" )
+                {
+                    database_manager().sniff_s3( name, cmd, &socket() );
+                }
             else if ( type == "Database.sniff_table" )
                 {
                     database_manager().sniff_table( name, &socket() );
@@ -165,6 +169,11 @@ void RequestHandler::run()
             else if ( type == "DataFrame.read_csv" )
                 {
                     project_manager().add_data_frame_from_csv(
+                        name, cmd, &socket() );
+                }
+            else if ( type == "DataFrame.read_s3" )
+                {
+                    project_manager().add_data_frame_from_s3(
                         name, cmd, &socket() );
                 }
             else if ( type == "DataFrame.refresh" )
@@ -295,6 +304,14 @@ void RequestHandler::run()
             else if ( type == "set_project" )
                 {
                     project_manager().set_project( name, &socket() );
+                }
+            else if ( type == "set_s3_access_key_id" )
+                {
+                    database_manager().set_s3_access_key_id( &socket() );
+                }
+            else if ( type == "set_s3_secret_access_key" )
+                {
+                    database_manager().set_s3_secret_access_key( &socket() );
                 }
             else if ( type == "shutdown" )
                 {

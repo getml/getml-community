@@ -42,7 +42,10 @@
 #include "io/CSVWriter.hpp"
 #include "io/S3Reader.hpp"
 
+#include "io/Sniffer.hpp"
+
 #include "io/CSVSniffer.hpp"
+#include "io/S3Sniffer.hpp"
 
 // ----------------------------------------------------------------------------
 

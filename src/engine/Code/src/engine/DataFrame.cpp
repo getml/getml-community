@@ -440,7 +440,7 @@ const Column<Float> &DataFrame::float_column(
 // ----------------------------------------------------------------------------
 
 void DataFrame::from_csv(
-    const std::string &_fname,
+    const std::vector<std::string> &_fnames,
     const std::string &_quotechar,
     const std::string &_sep,
     const std::vector<std::string> &_time_formats,
@@ -449,8 +449,8 @@ void DataFrame::from_csv(
     const std::vector<std::string> &_numerical_names,
     const std::vector<std::string> &_target_names,
     const std::vector<std::string> &_time_stamp_names,
-    const std::vector<std::string> &_unused_float_names,
-    const std::vector<std::string> &_unused_string_names )
+    const std::vector<std::string> &_unused_floats,
+    const std::vector<std::string> &_unused_strings )
 {
     // ------------------------------------------------------------------------
 
@@ -466,176 +466,8 @@ void DataFrame::from_csv(
                 "The separator must contain exactly one character!" );
         }
 
-    auto reader = io::CSVReader( _fname, _quotechar[0], _sep[0] );
-
-    const auto csv_colnames = reader.next_line();
-
     // ------------------------------------------------------------------------
 
-    auto categoricals = make_vectors<Int>( _categorical_names.size() );
-
-    auto join_keys = make_vectors<Int>( _join_key_names.size() );
-
-    auto numericals = make_vectors<Float>( _numerical_names.size() );
-
-    auto targets = make_vectors<Float>( _target_names.size() );
-
-    auto time_stamps = make_vectors<Float>( _time_stamp_names.size() );
-
-    auto unused_floats = make_vectors<Float>( _unused_float_names.size() );
-
-    auto unused_strings =
-        make_vectors<strings::String>( _unused_string_names.size() );
-
-    // ------------------------------------------------------------------------
-    // Define column_indices.
-
-    const auto df_colnames = concat_colnames(
-        _categorical_names,
-        _join_key_names,
-        _numerical_names,
-        _target_names,
-        _time_stamp_names,
-        _unused_float_names,
-        _unused_string_names );
-
-    auto colname_indices = std::vector<size_t>( 0 );
-
-    for ( const auto &colname : df_colnames )
-        {
-            const auto it =
-                std::find( csv_colnames.begin(), csv_colnames.end(), colname );
-
-            if ( it == csv_colnames.end() )
-                {
-                    throw std::runtime_error(
-                        "'" + _fname + "' contains no column named '" +
-                        colname + "'." );
-                }
-
-            colname_indices.push_back( static_cast<size_t>(
-                std::distance( csv_colnames.begin(), it ) ) );
-        }
-
-    // ------------------------------------------------------------------------
-    // Define lambda expressions for parsing doubles.
-
-    const auto to_double = [_time_formats]( const std::string &_str ) {
-        auto [val, success] = io::Parser::to_double( _str );
-
-        if ( success )
-            {
-                return val;
-            }
-
-        std::tie( val, success ) =
-            io::Parser::to_time_stamp( _str, _time_formats );
-
-        if ( success )
-            {
-                return val;
-            }
-
-        return static_cast<Float>( NAN );
-    };
-
-    // ------------------------------------------------------------------------
-    // Read CSV file content into the vectors
-
-    size_t line_count = 1;
-
-    while ( !reader.eof() )
-        {
-            const auto line = reader.next_line();
-
-            ++line_count;
-
-            if ( line.size() == 0 )
-                {
-                    continue;
-                }
-            else if ( line.size() != csv_colnames.size() )
-                {
-                    std::cout << "Corrupted line: " << line_count
-                              << ". Expected " << csv_colnames.size()
-                              << " fields, saw " << line.size() << "."
-                              << std::endl;
-                    continue;
-                }
-
-            size_t col = 0;
-
-            for ( auto &vec : categoricals )
-                vec->push_back(
-                    ( *categories_ )[line[colname_indices[col++]]] );
-
-            for ( auto &vec : join_keys )
-                vec->push_back(
-                    ( *join_keys_encoding_ )[line[colname_indices[col++]]] );
-
-            for ( auto &vec : numericals )
-                vec->push_back( to_double( line[colname_indices[col++]] ) );
-
-            for ( auto &vec : targets )
-                vec->push_back( to_double( line[colname_indices[col++]] ) );
-
-            for ( auto &vec : time_stamps )
-                vec->push_back( to_double( line[colname_indices[col++]] ) );
-
-            for ( auto &vec : unused_floats )
-                vec->push_back( to_double( line[colname_indices[col++]] ) );
-
-            for ( auto &vec : unused_strings )
-                vec->emplace_back(
-                    strings::String( line[colname_indices[col++]] ) );
-
-            assert_true( col == colname_indices.size() );
-        }
-
-    // ------------------------------------------------------------------------
-
-    auto df = DataFrame( name(), categories_, join_keys_encoding_ );
-
-    df.add_int_vectors( _categorical_names, categoricals, "categorical" );
-
-    df.add_int_vectors( _join_key_names, join_keys, "join_key" );
-
-    df.add_float_vectors( _numerical_names, numericals, "numerical" );
-
-    df.add_float_vectors( _target_names, targets, "target" );
-
-    df.add_float_vectors( _time_stamp_names, time_stamps, "time_stamp" );
-
-    df.add_float_vectors( _unused_float_names, unused_floats, "unused_float" );
-
-    df.add_string_vectors( _unused_string_names, unused_strings );
-
-    // ------------------------------------------------------------------------
-
-    df.check_plausibility();
-
-    // ------------------------------------------------------------------------
-
-    *this = std::move( df );
-
-    // ------------------------------------------------------------------------
-}
-
-// ----------------------------------------------------------------------------
-
-void DataFrame::from_csv(
-    const std::vector<std::string> &_fnames,
-    const std::string &_quotechar,
-    const std::string &_sep,
-    const std::vector<std::string> &_time_formats,
-    const std::vector<std::string> &_categorical_names,
-    const std::vector<std::string> &_join_key_names,
-    const std::vector<std::string> &_numerical_names,
-    const std::vector<std::string> &_target_names,
-    const std::vector<std::string> &_time_stamp_names,
-    const std::vector<std::string> &_unused_floats,
-    const std::vector<std::string> &_unused_strings )
-{
     auto df = containers::DataFrame( name(), categories_, join_keys_encoding_ );
 
     for ( size_t i = 0; i < _fnames.size(); ++i )
@@ -643,10 +475,13 @@ void DataFrame::from_csv(
             auto local_df = containers::DataFrame(
                 name(), categories_, join_keys_encoding_ );
 
-            local_df.from_csv(
+            const std::shared_ptr<io::Reader> reader =
+                std::make_shared<io::CSVReader>(
+                    _fnames[i], _quotechar[0], _sep[0] );
+
+            local_df.from_reader(
+                reader,
                 _fnames[i],
-                _quotechar,
-                _sep,
                 _time_formats,
                 _categorical_names,
                 _join_key_names,
@@ -666,7 +501,11 @@ void DataFrame::from_csv(
                 }
         }
 
+    // ------------------------------------------------------------------------
+
     *this = std::move( df );
+
+    // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -1105,6 +944,243 @@ void DataFrame::from_query(
     *this = std::move( df );
 
     // ----------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+void DataFrame::from_reader(
+    const std::shared_ptr<io::Reader> &_reader,
+    const std::string &_fname,
+    const std::vector<std::string> &_time_formats,
+    const std::vector<std::string> &_categorical_names,
+    const std::vector<std::string> &_join_key_names,
+    const std::vector<std::string> &_numerical_names,
+    const std::vector<std::string> &_target_names,
+    const std::vector<std::string> &_time_stamp_names,
+    const std::vector<std::string> &_unused_float_names,
+    const std::vector<std::string> &_unused_string_names )
+{
+    // ------------------------------------------------------------------------
+
+    assert_true( _reader );
+
+    const auto csv_colnames = _reader->next_line();
+
+    // ------------------------------------------------------------------------
+
+    auto categoricals = make_vectors<Int>( _categorical_names.size() );
+
+    auto join_keys = make_vectors<Int>( _join_key_names.size() );
+
+    auto numericals = make_vectors<Float>( _numerical_names.size() );
+
+    auto targets = make_vectors<Float>( _target_names.size() );
+
+    auto time_stamps = make_vectors<Float>( _time_stamp_names.size() );
+
+    auto unused_floats = make_vectors<Float>( _unused_float_names.size() );
+
+    auto unused_strings =
+        make_vectors<strings::String>( _unused_string_names.size() );
+
+    // ------------------------------------------------------------------------
+    // Define column_indices.
+
+    const auto df_colnames = concat_colnames(
+        _categorical_names,
+        _join_key_names,
+        _numerical_names,
+        _target_names,
+        _time_stamp_names,
+        _unused_float_names,
+        _unused_string_names );
+
+    auto colname_indices = std::vector<size_t>( 0 );
+
+    for ( const auto &colname : df_colnames )
+        {
+            const auto it =
+                std::find( csv_colnames.begin(), csv_colnames.end(), colname );
+
+            if ( it == csv_colnames.end() )
+                {
+                    throw std::runtime_error(
+                        "'" + _fname + "' contains no column named '" +
+                        colname + "'." );
+                }
+
+            colname_indices.push_back( static_cast<size_t>(
+                std::distance( csv_colnames.begin(), it ) ) );
+        }
+
+    // ------------------------------------------------------------------------
+    // Define lambda expressions for parsing doubles.
+
+    const auto to_double = [_time_formats]( const std::string &_str ) {
+        auto [val, success] = io::Parser::to_double( _str );
+
+        if ( success )
+            {
+                return val;
+            }
+
+        std::tie( val, success ) =
+            io::Parser::to_time_stamp( _str, _time_formats );
+
+        if ( success )
+            {
+                return val;
+            }
+
+        return static_cast<Float>( NAN );
+    };
+
+    // ------------------------------------------------------------------------
+    // Read CSV file content into the vectors
+
+    size_t line_count = 1;
+
+    while ( !_reader->eof() )
+        {
+            const auto line = _reader->next_line();
+
+            ++line_count;
+
+            if ( line.size() == 0 )
+                {
+                    continue;
+                }
+            else if ( line.size() != csv_colnames.size() )
+                {
+                    std::cout << "Corrupted line: " << line_count
+                              << ". Expected " << csv_colnames.size()
+                              << " fields, saw " << line.size() << "."
+                              << std::endl;
+                    continue;
+                }
+
+            size_t col = 0;
+
+            for ( auto &vec : categoricals )
+                vec->push_back(
+                    ( *categories_ )[line[colname_indices[col++]]] );
+
+            for ( auto &vec : join_keys )
+                vec->push_back(
+                    ( *join_keys_encoding_ )[line[colname_indices[col++]]] );
+
+            for ( auto &vec : numericals )
+                vec->push_back( to_double( line[colname_indices[col++]] ) );
+
+            for ( auto &vec : targets )
+                vec->push_back( to_double( line[colname_indices[col++]] ) );
+
+            for ( auto &vec : time_stamps )
+                vec->push_back( to_double( line[colname_indices[col++]] ) );
+
+            for ( auto &vec : unused_floats )
+                vec->push_back( to_double( line[colname_indices[col++]] ) );
+
+            for ( auto &vec : unused_strings )
+                vec->emplace_back(
+                    strings::String( line[colname_indices[col++]] ) );
+
+            assert_true( col == colname_indices.size() );
+        }
+
+    // ------------------------------------------------------------------------
+
+    auto df = DataFrame( name(), categories_, join_keys_encoding_ );
+
+    df.add_int_vectors( _categorical_names, categoricals, "categorical" );
+
+    df.add_int_vectors( _join_key_names, join_keys, "join_key" );
+
+    df.add_float_vectors( _numerical_names, numericals, "numerical" );
+
+    df.add_float_vectors( _target_names, targets, "target" );
+
+    df.add_float_vectors( _time_stamp_names, time_stamps, "time_stamp" );
+
+    df.add_float_vectors( _unused_float_names, unused_floats, "unused_float" );
+
+    df.add_string_vectors( _unused_string_names, unused_strings );
+
+    // ------------------------------------------------------------------------
+
+    df.check_plausibility();
+
+    // ------------------------------------------------------------------------
+
+    *this = std::move( df );
+
+    // ------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+void DataFrame::from_s3(
+    const std::string &_bucket,
+    const std::vector<std::string> &_fnames,
+    const std::string &_region,
+    const std::string &_sep,
+    const std::vector<std::string> &_time_formats,
+    const std::vector<std::string> &_categorical_names,
+    const std::vector<std::string> &_join_key_names,
+    const std::vector<std::string> &_numerical_names,
+    const std::vector<std::string> &_target_names,
+    const std::vector<std::string> &_time_stamp_names,
+    const std::vector<std::string> &_unused_floats,
+    const std::vector<std::string> &_unused_strings )
+{
+    // ------------------------------------------------------------------------
+
+    if ( _sep.size() != 1 )
+        {
+            throw std::invalid_argument(
+                "The separator must contain exactly one character!" );
+        }
+
+    // ------------------------------------------------------------------------
+
+    auto df = containers::DataFrame( name(), categories_, join_keys_encoding_ );
+
+    for ( size_t i = 0; i < _fnames.size(); ++i )
+        {
+            auto local_df = containers::DataFrame(
+                name(), categories_, join_keys_encoding_ );
+
+            const std::shared_ptr<io::Reader> reader =
+                std::make_shared<io::S3Reader>(
+                    _bucket, _fnames[i], 0, _region, _sep[0] );
+
+            local_df.from_reader(
+                reader,
+                _fnames[i],
+                _time_formats,
+                _categorical_names,
+                _join_key_names,
+                _numerical_names,
+                _target_names,
+                _time_stamp_names,
+                _unused_floats,
+                _unused_strings );
+
+            if ( i == 0 )
+                {
+                    df = std::move( local_df );
+                }
+            else
+                {
+                    df.append( local_df );
+                }
+        }
+
+    // ------------------------------------------------------------------------
+
+    *this = std::move( df );
+
+    // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------

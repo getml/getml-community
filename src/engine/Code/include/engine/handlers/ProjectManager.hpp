@@ -63,6 +63,13 @@ class ProjectManager
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
+    /// Creates a new data frame from one or several CSV files located in an S3
+    /// bucket.
+    void add_data_frame_from_s3(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
     /// Adds a new data frame taken from the database.
     void add_data_frame_from_db(
         const std::string& _name,
@@ -181,6 +188,20 @@ class ProjectManager
     {
         assert_true( data_frames_ );
         return *data_frames_;
+    }
+
+    /// Trivial accessor
+    DataFrameManager& data_frame_manager()
+    {
+        assert_true( data_frame_manager_ );
+        return *data_frame_manager_;
+    }
+
+    /// Trivial (const) accessor
+    const DataFrameManager& data_frame_manager() const
+    {
+        assert_true( data_frame_manager_ );
+        return *data_frame_manager_;
     }
 
     /// Trivial accessor

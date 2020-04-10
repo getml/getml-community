@@ -296,6 +296,57 @@ void DatabaseManager::sniff_csv(
 
 // ----------------------------------------------------------------------------
 
+void DatabaseManager::sniff_s3(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket ) const
+{
+    // --------------------------------------------------------------------
+
+    const auto bucket = JSON::get_value<std::string>( _cmd, "bucket_" );
+
+    const auto keys =
+        JSON::array_to_vector<std::string>( JSON::get_array( _cmd, "keys_" ) );
+
+    const auto num_lines_sniffed =
+        JSON::get_value<size_t>( _cmd, "num_lines_sniffed_" );
+
+    const auto region = JSON::get_value<std::string>( _cmd, "region_" );
+
+    const auto sep = JSON::get_value<std::string>( _cmd, "sep_" );
+
+    const auto skip = JSON::get_value<size_t>( _cmd, "skip_" );
+
+    const auto dialect = _cmd.has( "dialect_" )
+                             ? JSON::get_value<std::string>( _cmd, "dialect_" )
+                             : connector()->dialect();
+
+    // --------------------------------------------------------------------
+
+    if ( sep.size() != 1 )
+        {
+            throw std::invalid_argument(
+                "The separator (sep) must consist of exactly one character!" );
+        }
+
+    // --------------------------------------------------------------------
+
+    auto sniffer = io::S3Sniffer(
+        bucket, dialect, keys, num_lines_sniffed, region, sep[0], skip, _name );
+
+    const auto create_table_statement = sniffer.sniff();
+
+    // --------------------------------------------------------------------
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    communication::Sender::send_string( create_table_statement, _socket );
+
+    // --------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
 void DatabaseManager::sniff_table(
     const std::string& _table_name, Poco::Net::StreamSocket* _socket ) const
 {

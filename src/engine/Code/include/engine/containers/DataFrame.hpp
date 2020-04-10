@@ -87,6 +87,18 @@ class DataFrame
         const std::vector<std::string> &_unused_float_names,
         const std::vector<std::string> &_unused_string_names );
 
+    /// Builds a dataframe from a JSON Object.
+    void from_json(
+        const Poco::JSON::Object &_obj,
+        const std::vector<std::string> _time_formats,
+        const std::vector<std::string> &_categoricals,
+        const std::vector<std::string> &_join_keys,
+        const std::vector<std::string> &_numericals,
+        const std::vector<std::string> &_targets,
+        const std::vector<std::string> &_time_stamps,
+        const std::vector<std::string> &_unused_float_names,
+        const std::vector<std::string> &_unused_string_names );
+
     /// Builds a dataframe from a query.
     void from_query(
         const std::shared_ptr<database::Connector> _connector,
@@ -99,17 +111,21 @@ class DataFrame
         const std::vector<std::string> &_unused_float_names,
         const std::vector<std::string> &_unused_string_names );
 
-    /// Builds a dataframe from a JSON Object.
-    void from_json(
-        const Poco::JSON::Object &_obj,
-        const std::vector<std::string> _time_formats,
-        const std::vector<std::string> &_categoricals,
-        const std::vector<std::string> &_join_keys,
-        const std::vector<std::string> &_numericals,
-        const std::vector<std::string> &_targets,
-        const std::vector<std::string> &_time_stamps,
-        const std::vector<std::string> &_unused_float_names,
-        const std::vector<std::string> &_unused_string_names );
+    /// Builds a dataframe from one or several CSV files located in an S3
+    /// bucket.
+    void from_s3(
+        const std::string &_bucket,
+        const std::vector<std::string> &_fnames,
+        const std::string &_region,
+        const std::string &_sep,
+        const std::vector<std::string> &_time_formats,
+        const std::vector<std::string> &_categorical_names,
+        const std::vector<std::string> &_join_key_names,
+        const std::vector<std::string> &_numerical_names,
+        const std::vector<std::string> &_target_names,
+        const std::vector<std::string> &_time_stamp_names,
+        const std::vector<std::string> &_unused_floats,
+        const std::vector<std::string> &_unused_strings );
 
     /// Returns the content of the data frame in a format that is compatible
     /// with the DataTables.js server-side processing API.
@@ -647,20 +663,6 @@ class DataFrame
         const std::vector<std::string> &_unused_float_names,
         const std::vector<std::string> &_unused_string_names ) const;
 
-    /// Builds a dataframe from a CSV file.
-    void from_csv(
-        const std::string &_fname,
-        const std::string &_quotechar,
-        const std::string &_sep,
-        const std::vector<std::string> &_time_formats,
-        const std::vector<std::string> &_categorical_names,
-        const std::vector<std::string> &_join_key_names,
-        const std::vector<std::string> &_numerical_names,
-        const std::vector<std::string> &_target_names,
-        const std::vector<std::string> &_time_stamp_names,
-        const std::vector<std::string> &_unused_float_names,
-        const std::vector<std::string> &_unused_string_names );
-
     /// Parses int columns.
     void from_json(
         const Poco::JSON::Object &_obj,
@@ -679,6 +681,19 @@ class DataFrame
         const Poco::JSON::Object &_obj,
         const std::vector<std::string> &_names,
         const std::vector<std::string> &_time_formats );
+
+    /// Builds a dataframe from a reader.
+    void from_reader(
+        const std::shared_ptr<io::Reader> &_reader,
+        const std::string &_fname,
+        const std::vector<std::string> &_time_formats,
+        const std::vector<std::string> &_categorical_names,
+        const std::vector<std::string> &_join_key_names,
+        const std::vector<std::string> &_numerical_names,
+        const std::vector<std::string> &_target_names,
+        const std::vector<std::string> &_time_stamp_names,
+        const std::vector<std::string> &_unused_float_names,
+        const std::vector<std::string> &_unused_string_names );
 
     /// Returns the colnames of a vector of columns
     template <class T>

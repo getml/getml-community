@@ -62,6 +62,10 @@ class DatabaseManager
     void new_db(
         const Poco::JSON::Object& _cmd, Poco::Net::StreamSocket* _socket );
 
+    /// Sends the name of all tables currently held in the database to the
+    /// monitor.
+    std::string post_tables();
+
     /// Reads a CSV file into the database.
     void read_csv(
         const std::string& _name,
@@ -71,6 +75,13 @@ class DatabaseManager
     /// Sniffs one or several CSV files and returns the CREATE TABLE statement
     /// to the client.
     void sniff_csv(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket ) const;
+
+    /// Sniffs one or several CSV files in an S3 bucket and returns the CREATE
+    /// TABLE statement to the client.
+    void sniff_s3(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket ) const;
@@ -100,9 +111,21 @@ class DatabaseManager
         return connector_;
     }
 
-    /// Sends the name of all tables currently held in the database to the
-    /// monitor.
-    std::string post_tables();
+    /// Sets the S3 Access Key ID
+    void set_s3_access_key_id( Poco::Net::StreamSocket* _socket ) const
+    {
+        const auto value = communication::Receiver::recv_string( _socket );
+        goutils::S3::set_access_key_id( value );
+        communication::Sender::send_string( "Success!", _socket );
+    }
+
+    /// Sets the S3 Access Key ID
+    void set_s3_secret_access_key( Poco::Net::StreamSocket* _socket ) const
+    {
+        const auto value = communication::Receiver::recv_string( _socket );
+        goutils::S3::set_secret_access_key( value );
+        communication::Sender::send_string( "Success!", _socket );
+    }
 
     // ------------------------------------------------------------------------
 

@@ -1265,6 +1265,118 @@ void DataFrameManager::from_query(
 
 // ------------------------------------------------------------------------
 
+void DataFrameManager::from_s3(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    const bool _append,
+    Poco::Net::StreamSocket* _socket )
+{
+    // --------------------------------------------------------------------
+    // Parse the command.
+
+    const auto bucket = JSON::get_value<std::string>( _cmd, "bucket_" );
+
+    const auto keys =
+        JSON::array_to_vector<std::string>( JSON::get_array( _cmd, "keys_" ) );
+
+    const auto region = JSON::get_value<std::string>( _cmd, "region_" );
+
+    const auto sep = JSON::get_value<std::string>( _cmd, "sep_" );
+
+    const auto time_formats = JSON::array_to_vector<std::string>(
+        JSON::get_array( _cmd, "time_formats_" ) );
+
+    const auto categoricals = JSON::array_to_vector<std::string>(
+        JSON::get_array( _cmd, "categoricals_" ) );
+
+    const auto join_keys = JSON::array_to_vector<std::string>(
+        JSON::get_array( _cmd, "join_keys_" ) );
+
+    const auto numericals = JSON::array_to_vector<std::string>(
+        JSON::get_array( _cmd, "numericals_" ) );
+
+    const auto targets = JSON::array_to_vector<std::string>(
+        JSON::get_array( _cmd, "targets_" ) );
+
+    const auto time_stamps = JSON::array_to_vector<std::string>(
+        JSON::get_array( _cmd, "time_stamps_" ) );
+
+    const auto unused_floats = JSON::array_to_vector<std::string>(
+        JSON::get_array( _cmd, "unused_floats_" ) );
+
+    const auto unused_strings = JSON::array_to_vector<std::string>(
+        JSON::get_array( _cmd, "unused_strings_" ) );
+
+    // --------------------------------------------------------------------
+    // We need the weak write lock for the categories and join keys encoding.
+
+    multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
+
+    // --------------------------------------------------------------------
+
+    auto local_categories =
+        std::make_shared<containers::Encoding>( categories_ );
+
+    auto local_join_keys_encoding =
+        std::make_shared<containers::Encoding>( join_keys_encoding_ );
+
+    // --------------------------------------------------------------------
+
+    auto df = containers::DataFrame(
+        _name, local_categories, local_join_keys_encoding );
+
+    df.from_s3(
+        bucket,
+        keys,
+        region,
+        sep,
+        time_formats,
+        categoricals,
+        join_keys,
+        numericals,
+        targets,
+        time_stamps,
+        unused_floats,
+        unused_strings );
+
+    license_checker().check_mem_size( data_frames(), df.nbytes() );
+
+    // --------------------------------------------------------------------
+    // Now we upgrade the weak write lock to a strong write lock to commit
+    // the changes.
+
+    weak_write_lock.upgrade();
+
+    // --------------------------------------------------------------------
+
+    categories_->append( *local_categories );
+
+    join_keys_encoding_->append( *local_join_keys_encoding );
+
+    df.set_categories( categories_ );
+
+    df.set_join_keys_encoding( join_keys_encoding_ );
+
+    if ( !_append || data_frames().find( _name ) == data_frames().end() )
+        {
+            data_frames()[_name] = df;
+        }
+    else
+        {
+            data_frames()[_name].append( df );
+        }
+
+    data_frames()[_name].create_indices();
+
+    // --------------------------------------------------------------------
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    // --------------------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
 void DataFrameManager::get_boolean_column(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,
