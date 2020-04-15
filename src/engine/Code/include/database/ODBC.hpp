@@ -45,18 +45,17 @@ class ODBC : public Connector
     std::vector<std::string> get_colnames(
         const std::string& _table ) const final
     {
-        // TODO
-        return std::vector<std::string>();
+        const auto query =
+            std::string( "SELECT * FROM `" + _table + "` LIMIT 1;" );
+        const auto iter =
+            ODBCIterator( make_connection(), query, time_formats_ );
+        return iter.colnames();
     }
 
     /// Returns the types of the table columns.
     std::vector<io::Datatype> get_coltypes(
         const std::string& _table,
-        const std::vector<std::string>& _colnames ) const final
-    {
-        // TODO
-        return std::vector<io::Datatype>();
-    }
+        const std::vector<std::string>& _colnames ) const final;
 
     /// Returns the content of a table in a format that is compatible
     /// with the DataTables.js server-side processing API.
@@ -147,20 +146,20 @@ class ODBC : public Connector
         const std::string& _sql, const std::shared_ptr<MYSQL>& _conn ) const;
 
     /// Parses a field for the CSV reader.
-    io::Datatype interpret_field_type( const enum_field_types _type ) const;
+    io::Datatype interpret_field_type( const SQLSMALLINT _type ) const;
 
     /// Prepares a INSERT INTO .. VALUES ... query
     /// to insert a large CSV file.
-    std::string make_bulk_insert_query(
-        const std::string& _table,
-        const std::vector<std::string>& _colnames ) const;
+    /*    std::string make_bulk_insert_query(
+            const std::string& _table,
+            const std::vector<std::string>& _colnames ) const;
 
-    /// Prepares a query to get the content of a table.
-    std::string make_get_content_query(
-        const std::string& _table,
-        const std::vector<std::string>& _colnames,
-        const std::int32_t _begin,
-        const std::int32_t _end ) const;
+        /// Prepares a query to get the content of a table.
+        std::string make_get_content_query(
+            const std::string& _table,
+            const std::vector<std::string>& _colnames,
+            const std::int32_t _begin,
+            const std::int32_t _end ) const;*/
 
     // -------------------------------
 

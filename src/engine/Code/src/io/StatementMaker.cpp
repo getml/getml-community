@@ -38,6 +38,10 @@ std::string StatementMaker::make_statement(
         {
             return make_statement_mysql( _table_name, _colnames, _datatypes );
         }
+    else if ( _dialect == "odbc" )
+        {
+            return make_statement_odbc( _table_name, _colnames, _datatypes );
+        }
     else if ( _dialect == "postgres" )
         {
             return make_statement_postgres(
@@ -96,6 +100,39 @@ std::string StatementMaker::make_statement_mysql(
     return statement.str();
 }
 
+// ----------------------------------------------------------------------------
+
+std::string StatementMaker::make_statement_odbc(
+    const std::string& _table_name,
+    const std::vector<std::string>& _colnames,
+    const std::vector<Datatype>& _datatypes )
+{
+    assert_true( _colnames.size() == _datatypes.size() );
+
+    const auto max_size = find_max_size( _colnames );
+
+    std::stringstream statement;
+
+    statement << "CREATE TABLE `" << _table_name << "`(" << std::endl;
+
+    for ( size_t i = 0; i < _colnames.size(); ++i )
+        {
+            statement << "    `" << _colnames[i] << "` "
+                      << make_gap( _colnames[i], max_size )
+                      << to_string_mysql( _datatypes[i] );
+
+            if ( i < _colnames.size() - 1 )
+                {
+                    statement << "," << std::endl;
+                }
+            else
+                {
+                    statement << ");" << std::endl;
+                }
+        }
+
+    return statement.str();
+}
 // ----------------------------------------------------------------------------
 
 std::string StatementMaker::make_statement_postgres(
