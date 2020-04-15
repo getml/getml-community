@@ -63,18 +63,10 @@ class ODBC : public Connector
         const std::string& _tname,
         const std::int32_t _draw,
         const std::int32_t _start,
-        const std::int32_t _length ) final
-    {
-        // TODO
-        return Poco::JSON::Object();
-    }
+        const std::int32_t _length ) final;
 
     /// Lists the name of the tables held in the database.
-    std::vector<std::string> list_tables() final
-    {
-        // TODO
-        return std::vector<std::string>();
-    }
+    std::vector<std::string> list_tables() final;
 
     /// Reads a CSV file or another data source into a table.
     void read(
@@ -110,9 +102,7 @@ class ODBC : public Connector
     /// Returns the number of rows in the table signified by _tname.
     std::int32_t get_nrows( const std::string& _tname ) final
     {
-        // TODO
-        return 0;
-        // return select( {"COUNT(*)"}, _tname, "" )->get_int();
+        return select( {"COUNT(*)"}, _tname, "" )->get_int();
     }
 
     /// Returns a shared_ptr containing a MySQLIterator.
@@ -145,6 +135,16 @@ class ODBC : public Connector
     std::shared_ptr<MYSQL_RES> exec(
         const std::string& _sql, const std::shared_ptr<MYSQL>& _conn ) const;
 
+    /// Returns the catalogs.
+    std::vector<std::string> get_catalogs() const;
+
+    /// Returns a list of all schemas, given the catalog
+    std::vector<std::string> get_schemas( const std::string& _catalog ) const;
+
+    /// Returns a list of all schemas, given the catalog and the schema.
+    std::vector<std::string> get_tables(
+        const std::string& _catalog, const std::string& _schema ) const;
+
     /// Parses a field for the CSV reader.
     io::Datatype interpret_field_type( const SQLSMALLINT _type ) const;
 
@@ -153,13 +153,13 @@ class ODBC : public Connector
     /*    std::string make_bulk_insert_query(
             const std::string& _table,
             const std::vector<std::string>& _colnames ) const;
-
-        /// Prepares a query to get the content of a table.
-        std::string make_get_content_query(
-            const std::string& _table,
-            const std::vector<std::string>& _colnames,
-            const std::int32_t _begin,
-            const std::int32_t _end ) const;*/
+*/
+    /// Prepares a query to get the content of a table.
+    std::string make_get_content_query(
+        const std::string& _table,
+        const std::vector<std::string>& _colnames,
+        const std::int32_t _begin,
+        const std::int32_t _end ) const;
 
     // -------------------------------
 
@@ -183,6 +183,19 @@ class ODBC : public Connector
     {
         return std::make_shared<ODBCConn>(
             env(), server_name_, user_, passwd_ );
+    }
+
+    /// Helper function to turn a string into a ptr that can be passed to ODBC
+    std::unique_ptr<SQLCHAR[]> to_ptr( const std::string& _str ) const
+    {
+        auto ptr = std::make_unique<SQLCHAR[]>( _str.size() + 1 );
+
+        std::copy(
+            reinterpret_cast<const SQLCHAR*>( _str.c_str() ),
+            reinterpret_cast<const SQLCHAR*>( _str.c_str() ) + _str.size(),
+            ptr.get() );
+
+        return ptr;
     }
 
     // -------------------------------

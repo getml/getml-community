@@ -13,14 +13,17 @@ ODBCIterator::ODBCIterator(
       end_( false ),
       time_formats_( _time_formats )
 {
-    stmt_ = std::make_unique<ODBCStmt>( connection(), _query );
+    stmt_ = std::make_shared<ODBCStmt>( connection(), _query );
 
     SQLSMALLINT ncols = 0;
 
     auto ret = SQLNumResultCols( stmt().handle_, &ncols );
 
     ODBCError::check(
-        ret, "SQLNumResultCols", stmt().handle_, SQL_HANDLE_STMT );
+        ret,
+        "SQLNumResultCols in ODBCIterator",
+        stmt().handle_,
+        SQL_HANDLE_STMT );
 
     row_ = std::vector<std::unique_ptr<SQLCHAR[]>>( ncols );
 
@@ -39,8 +42,13 @@ ODBCIterator::ODBCIterator(
                 &flen_[i] );
 
             ODBCError::check(
-                ret, "SQLBindCol", stmt().handle_, SQL_HANDLE_STMT );
+                ret,
+                "SQLBindCol in ODBCIterator",
+                stmt().handle_,
+                SQL_HANDLE_STMT );
         }
+
+    fetch();
 }
 
 // ----------------------------------------------------------------------------
@@ -80,7 +88,7 @@ std::vector<std::string> ODBCIterator::colnames() const
         {
             const auto ret = SQLDescribeCol(
                 stmt().handle_,
-                static_cast<SQLUSMALLINT>( i ) + 1,
+                static_cast<SQLUSMALLINT>( i + 1 ),
                 buffer.get(),
                 1024,
                 &name_length,
@@ -90,7 +98,10 @@ std::vector<std::string> ODBCIterator::colnames() const
                 &nullable );
 
             ODBCError::check(
-                ret, "SQLDescribeCol", stmt().handle_, SQL_HANDLE_STMT );
+                ret,
+                "SQLDescribeCol in colnames",
+                stmt().handle_,
+                SQL_HANDLE_STMT );
 
             if ( name_length >= 1023 )
                 {

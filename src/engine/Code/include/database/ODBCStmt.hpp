@@ -7,7 +7,7 @@ namespace database
 
 struct ODBCStmt
 {
-    ODBCStmt( const ODBCConn& _conn, const std::string& _query )
+    ODBCStmt( const ODBCConn& _conn, const std::string& _query = "" )
         : handle_( SQL_NULL_HSTMT )
     {
         auto ret = SQLAllocHandle( SQL_HANDLE_STMT, _conn.handle_, &handle_ );
@@ -15,11 +15,15 @@ struct ODBCStmt
         ODBCError::check(
             ret, "SQLAllocHandle(SQL_HANDLE_STMT)", handle_, SQL_HANDLE_STMT );
 
-        auto query = to_ptr( _query );
+        if ( _query != "" )
+            {
+                auto query = to_ptr( _query );
 
-        ret = SQLExecDirect( handle_, query.get(), SQL_NTS );
+                ret = SQLExecDirect( handle_, query.get(), SQL_NTS );
 
-        ODBCError::check( ret, "SQLExecDirect()", handle_, SQL_HANDLE_STMT );
+                ODBCError::check(
+                    ret, "SQLExecDirect()", handle_, SQL_HANDLE_STMT );
+            }
     }
 
     ~ODBCStmt()

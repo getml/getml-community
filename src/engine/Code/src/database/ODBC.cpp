@@ -17,7 +17,11 @@ std::vector<io::Datatype> ODBC::get_coltypes(
 
     auto ret = SQLNumResultCols( stmt.handle_, &ncols );
 
-    ODBCError::check( ret, "SQLNumResultCols", stmt.handle_, SQL_HANDLE_STMT );
+    ODBCError::check(
+        ret,
+        "SQLNumResultCols in get_coltypes",
+        stmt.handle_,
+        SQL_HANDLE_STMT );
 
     SQLSMALLINT name_length = 0;
     SQLSMALLINT data_type = 0;
@@ -43,12 +47,301 @@ std::vector<io::Datatype> ODBC::get_coltypes(
                 &nullable );
 
             ODBCError::check(
-                ret, "SQLDescribeCol", stmt.handle_, SQL_HANDLE_STMT );
+                ret,
+                "SQLDescribeCol in get_coltypes",
+                stmt.handle_,
+                SQL_HANDLE_STMT );
 
             coltypes.at( i ) = interpret_field_type( data_type );
         }
 
     return coltypes;
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<std::string> ODBC::get_catalogs() const
+{
+    constexpr SQLSMALLINT ncols = 5;
+
+    const auto conn = ODBCConn( env(), server_name_, user_, passwd_ );
+
+    auto stmt = ODBCStmt( conn );
+
+    auto ret = SQLTables(
+        stmt.handle_,
+        (SQLCHAR*)SQL_ALL_CATALOGS,
+        SQL_NTS,
+        (SQLCHAR*)"",
+        SQL_NTS,
+        (SQLCHAR*)"",
+        SQL_NTS,
+        (SQLCHAR*)"",
+        SQL_NTS );
+
+    ODBCError::check(
+        ret, "SQLTables in get_catalogs", stmt.handle_, SQL_HANDLE_STMT );
+
+    auto data = std::array<std::unique_ptr<SQLCHAR[]>, ncols>();
+
+    auto lens = std::array<SQLLEN, ncols>();
+
+    for ( SQLSMALLINT i = 0; i < ncols; ++i )
+        {
+            data[i] = std::make_unique<SQLCHAR[]>( 1024 );
+
+            ret = SQLBindCol(
+                stmt.handle_,
+                i + 1,
+                SQL_C_CHAR,
+                data[i].get(),
+                1024,
+                &lens[i] );
+
+            ODBCError::check(
+                ret,
+                "SQLBindCol in get_catalogs",
+                stmt.handle_,
+                SQL_HANDLE_STMT );
+        }
+
+    auto vec = std::vector<std::string>( {""} );
+
+    while ( true )
+        {
+            ret = SQLFetch( stmt.handle_ );
+
+            if ( ret == SQL_NO_DATA )
+                {
+                    return vec;
+                }
+
+            ODBCError::check(
+                ret,
+                "SQLFetch in get_catalogs",
+                stmt.handle_,
+                SQL_HANDLE_STMT );
+
+            if ( std::get<0>( lens ) != SQL_NULL_DATA )
+                {
+                    vec.push_back( std::string( reinterpret_cast<const char*>(
+                        std::get<0>( data ).get() ) ) );
+                }
+        }
+
+    return vec;
+}
+
+// ----------------------------------------------------------------------------
+
+Poco::JSON::Object ODBC::get_content(
+    const std::string& _tname,
+    const std::int32_t _draw,
+    const std::int32_t _start,
+    const std::int32_t _length )
+{
+    // ----------------------------------------
+
+    const auto nrows = get_nrows( _tname );
+
+    const auto colnames = get_colnames( _tname );
+
+    const auto ncols = colnames.size();
+
+    // ----------------------------------------
+
+    if ( _length < 0 )
+        {
+            throw std::invalid_argument( "length must be positive!" );
+        }
+
+    if ( _start < 0 )
+        {
+            throw std::invalid_argument( "start must be positive!" );
+        }
+
+    if ( _start >= nrows )
+        {
+            throw std::invalid_argument(
+                "start must be smaller than number of rows!" );
+        }
+
+    // ----------------------------------------
+
+    Poco::JSON::Object obj;
+
+    // ----------------------------------------
+
+    obj.set( "draw", _draw );
+
+    obj.set( "recordsTotal", nrows );
+
+    obj.set( "recordsFiltered", nrows );
+
+    // ----------------------------------------
+
+    const auto begin = _start;
+
+    const auto end = ( _start + _length > nrows ) ? nrows : _start + _length;
+
+    const auto query = make_get_content_query( _tname, colnames, begin, end );
+
+    // ----------------------------------------
+
+    auto iterator = std::make_shared<ODBCIterator>(
+        make_connection(), query, time_formats_ );
+
+    // ----------------------------------------
+
+    Poco::JSON::Array data;
+
+    for ( auto i = begin; i < end; ++i )
+        {
+            Poco::JSON::Array row;
+
+            for ( size_t j = 0; j < ncols; ++j )
+                {
+                    row.add( iterator->get_string() );
+                }
+
+            data.add( row );
+        }
+
+    // ----------------------------------------
+
+    obj.set( "data", data );
+
+    // ----------------------------------------
+
+    return obj;
+
+    // ----------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<std::string> ODBC::get_schemas( const std::string& _catalog ) const
+{
+    constexpr SQLSMALLINT ncols = 5;
+
+    const auto catalog = to_ptr( _catalog );
+
+    const auto conn = ODBCConn( env(), server_name_, user_, passwd_ );
+
+    auto stmt = ODBCStmt( conn );
+
+    auto ret = SQLTables(
+        stmt.handle_,
+        (SQLCHAR*)"",
+        SQL_NTS,
+        (SQLCHAR*)SQL_ALL_SCHEMAS,
+        SQL_NTS,
+        (SQLCHAR*)"",
+        SQL_NTS,
+        (SQLCHAR*)"",
+        SQL_NTS );
+
+    ODBCError::check(
+        ret, "SQLTables in get_schemas", stmt.handle_, SQL_HANDLE_STMT );
+
+    auto data = std::array<std::unique_ptr<SQLCHAR[]>, ncols>();
+
+    auto lens = std::array<SQLLEN, ncols>();
+
+    for ( SQLSMALLINT i = 0; i < ncols; ++i )
+        {
+            data[i] = std::make_unique<SQLCHAR[]>( 1024 );
+
+            ret = SQLBindCol(
+                stmt.handle_,
+                i + 1,
+                SQL_C_CHAR,
+                data[i].get(),
+                1024,
+                &lens[i] );
+
+            ODBCError::check(
+                ret,
+                "SQLBindCol in get_schemas",
+                stmt.handle_,
+                SQL_HANDLE_STMT );
+        }
+
+    auto vec = std::vector<std::string>( {""} );
+
+    while ( true )
+        {
+            ret = SQLFetch( stmt.handle_ );
+
+            if ( ret == SQL_NO_DATA )
+                {
+                    return vec;
+                }
+
+            ODBCError::check(
+                ret, "SQLFetch in get_schemas", stmt.handle_, SQL_HANDLE_STMT );
+
+            if ( std::get<1>( lens ) != SQL_NULL_DATA )
+                {
+                    vec.push_back( std::string( reinterpret_cast<const char*>(
+                        std::get<1>( data ).get() ) ) );
+                }
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<std::string> ODBC::get_tables(
+    const std::string& _catalog, const std::string& _schema ) const
+{
+    constexpr SQLSMALLINT ncols = 5;
+
+    const auto catalog = to_ptr( _catalog );
+
+    const auto schema = to_ptr( _catalog );
+
+    const auto conn = ODBCConn( env(), server_name_, user_, passwd_ );
+
+    auto stmt = ODBCStmt( conn );
+
+    auto ret = SQLTables(
+        stmt.handle_,
+        catalog.get(),
+        SQL_NTS,
+        schema.get(),
+        SQL_NTS,
+        (SQLCHAR*)SQL_ALL_TABLE_TYPES,
+        SQL_NTS,
+        (SQLCHAR*)"'TABLE'",
+        SQL_NTS );
+
+    ODBCError::check(
+        ret, "SQLTables in get_tables", stmt.handle_, SQL_HANDLE_STMT );
+
+    auto data = std::array<std::unique_ptr<SQLCHAR[]>, ncols>();
+
+    auto lens = std::array<SQLLEN, ncols>();
+
+    auto vec = std::vector<std::string>();
+
+    while ( true )
+        {
+            ret = SQLFetch( stmt.handle_ );
+
+            if ( ret == SQL_NO_DATA )
+                {
+                    return vec;
+                }
+
+            ODBCError::check(
+                ret, "SQLFetch in get_tables", stmt.handle_, SQL_HANDLE_STMT );
+
+            if ( std::get<0>( lens ) != SQL_NULL_DATA )
+                {
+                    vec.push_back( std::string( reinterpret_cast<const char*>(
+                        std::get<0>( data ).get() ) ) );
+                }
+        }
 }
 
 // ----------------------------------------------------------------------------
@@ -77,5 +370,112 @@ io::Datatype ODBC::interpret_field_type( const SQLSMALLINT _type ) const
 
 // ----------------------------------------------------------------------------
 
+std::vector<std::string> ODBC::list_tables()
+{
+    // ------------------------------------------------------
+
+    auto all_tables = std::vector<std::string>();
+
+    // ------------------------------------------------------
+
+    const auto catalogs = get_catalogs();
+
+    for ( const auto& cat : catalogs )
+        {
+            const auto schemas = get_schemas( cat );
+
+            for ( const auto& sch : schemas )
+                {
+                    const auto tables = get_tables( cat, sch );
+
+                    for ( const auto& table : tables )
+                        {
+                            std::string tname;
+
+                            if ( cat != "" )
+                                {
+                                    tname += cat + ".";
+                                }
+
+                            if ( sch != "" )
+                                {
+                                    tname += sch + ".";
+                                }
+
+                            tname += table;
+
+                            all_tables.push_back( tname );
+                        }
+                }
+        }
+
+    // ------------------------------------------------------
+
+    if ( all_tables.size() > 0 )
+        {
+            return all_tables;
+        }
+
+    // ------------------------------------------------------
+
+    try
+        {
+            auto iter = ODBCIterator(
+                make_connection(), "SHOW TABLES;", time_formats_ );
+
+            while ( !iter.end() )
+                {
+                    all_tables.push_back( iter.get_string() );
+                }
+        }
+    catch ( std::exception& e )
+        {
+        }
+
+    // ------------------------------------------------------
+
+    return all_tables;
+
+    // ------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+std::string ODBC::make_get_content_query(
+    const std::string& _table,
+    const std::vector<std::string>& _colnames,
+    const std::int32_t _begin,
+    const std::int32_t _end ) const
+{
+    assert_true( _end >= _begin );
+
+    std::string query = "SELECT ";
+
+    for ( size_t i = 0; i < _colnames.size(); ++i )
+        {
+            query += "`";
+            query += _colnames[i];
+            query += "`";
+
+            if ( i != _colnames.size() - 1 )
+                {
+                    query += ",";
+                }
+
+            query += " ";
+        }
+
+    query += "FROM `";
+
+    query += _table;
+
+    query += "` LIMIT " + std::to_string( _end - _begin );
+
+    query += " OFFSET " + std::to_string( _begin );
+
+    query += ";";
+
+    return query;
+}
 // ----------------------------------------------------------------------------
 }  // namespace database

@@ -17,13 +17,45 @@ class ODBCError
     {
         if ( _ret != SQL_SUCCESS && _ret != SQL_SUCCESS_WITH_INFO )
             {
-                throw_error( _activity, _handle, _type );
+                throw_error( _ret, _activity, _handle, _type );
             }
     }
 
    private:
+    /// Returns the string corresponding to the return code.
+    static std::string interpret_return_code( const SQLRETURN _ret )
+    {
+        switch ( _ret )
+            {
+                case SQL_SUCCESS:
+                    return "SQL_SUCCESS";
+
+                case SQL_SUCCESS_WITH_INFO:
+                    return "SQL_SUCCESS_WITH_INFO";
+
+                case SQL_ERROR:
+                    return "SQL_ERROR";
+
+                case SQL_INVALID_HANDLE:
+                    return "SQL_INVALID_HANDLE";
+
+                case SQL_NO_DATA:
+                    return "SQL_NO_DATA";
+
+                case SQL_NEED_DATA:
+                    return "SQL_NEED_DATA";
+
+                case SQL_STILL_EXECUTING:
+                    return "SQL_STILL_EXECUTING";
+
+                default:
+                    return "unknown return code";
+            }
+    }
+
     /// Throws an error
     static void throw_error(
+        const SQLRETURN _ret,
         const std::string& _activity,
         const SQLHANDLE _handle,
         const SQLSMALLINT _type )
@@ -34,6 +66,16 @@ class ODBCError
         err_msg += _activity;
 
         err_msg += ": ";
+
+        err_msg += "Return code ";
+
+        err_msg += std::to_string( _ret );
+
+        err_msg += " (";
+
+        err_msg += interpret_return_code( _ret );
+
+        err_msg += "). ";
 
         for ( SQLINTEGER i = 1; true; ++i )
             {

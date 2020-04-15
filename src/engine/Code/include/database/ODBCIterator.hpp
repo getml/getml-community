@@ -92,7 +92,7 @@ class ODBCIterator : public Iterator
                     {
                         ODBCError::check(
                             ret,
-                            "SQLFetch()",
+                            "SQLFetch in fetch",
                             stmt().handle_,
                             SQL_HANDLE_STMT );
                     }
@@ -130,6 +130,13 @@ class ODBCIterator : public Iterator
     }
 
     /// Trivial accessor.
+    ODBCStmt& stmt()
+    {
+        assert_true( stmt_ );
+        return *stmt_;
+    }
+
+    /// Trivial accessor.
     const ODBCStmt& stmt() const
     {
         assert_true( stmt_ );
@@ -143,7 +150,7 @@ class ODBCIterator : public Iterator
     size_t colnum_;
 
     /// The connection used.
-    const std::shared_ptr<ODBCConn>& connection_;
+    const std::shared_ptr<ODBCConn> connection_;
 
     /// Bool whether the end is reached.
     bool end_;
@@ -155,7 +162,7 @@ class ODBCIterator : public Iterator
     std::vector<std::unique_ptr<SQLCHAR[]>> row_;
 
     /// SQL statement handle.
-    std::unique_ptr<ODBCStmt> stmt_;
+    std::shared_ptr<ODBCStmt> stmt_;
 
     /// Vector containing the time formats.
     const std::vector<std::string> time_formats_;
