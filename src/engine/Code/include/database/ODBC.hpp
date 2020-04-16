@@ -130,6 +130,41 @@ class ODBC : public Connector
     // -------------------------------
 
    private:
+    /// Generate an iterator that is limited, trying different SQL statements.
+    std::optional<ODBCIterator> make_limited_iterator(
+        const std::string& _table,
+        const size_t _begin,
+        const size_t _end ) const;
+
+    /// Make a simple limited SELECT query following the SQL standard.
+    std::string simple_limit_standard(
+        const std::string& _table, const size_t _end ) const;
+
+    /// Make a simple limited SELECT query using the LIMIT syntax supported by
+    /// most databases, included IBM DB2.
+    std::string simple_limit_most(
+        const std::string& _table,
+        const size_t _begin,
+        const size_t _end ) const;
+
+    /// Make a simple limited SELECT query using a syntax supported by Oracle.
+    std::string simple_limit_oracle(
+        const std::string& _table,
+        const size_t _begin,
+        const size_t _end ) const;
+
+    /// Make a simple limited SELECT query using a syntax supported by MSSQL.
+    std::string simple_limit_mssql(
+        const std::string& _table,
+        const size_t _begin,
+        const size_t _end ) const;
+
+    /// Make a simple SELECT.
+    std::string simple_select( const std::string& _table ) const;
+
+    // -------------------------------
+
+   private:
     /// Extract the escapte characters.
     std::pair<char, char> extract_escape_chars(
         const Poco::JSON::Object& _obj ) const;
@@ -144,21 +179,12 @@ class ODBC : public Connector
     std::vector<std::string> get_tables(
         const std::string& _catalog, const std::string& _schema ) const;
 
-    /// Parses a field for the CSV reader.
-    io::Datatype interpret_field_type( const SQLSMALLINT _type ) const;
-
     /// Prepares a INSERT INTO .. VALUES ... query
     /// to insert a large CSV file.
     /*    std::string make_bulk_insert_query(
             const std::string& _table,
             const std::vector<std::string>& _colnames ) const;
 */
-    /// Prepares a query to get the content of a table.
-    std::string make_get_content_query(
-        const std::string& _table,
-        const std::vector<std::string>& _colnames,
-        const std::int32_t _begin,
-        const std::int32_t _end ) const;
 
     // -------------------------------
 

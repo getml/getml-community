@@ -126,6 +126,45 @@ std::vector<std::string> ODBCIterator::colnames() const
 
 // ----------------------------------------------------------------------------
 
+std::vector<io::Datatype> ODBCIterator::coltypes() const
+{
+    SQLSMALLINT name_length = 0;
+    SQLSMALLINT data_type = 0;
+    SQLULEN column_size = 0;
+    SQLSMALLINT decimal_digits = 0;
+    SQLSMALLINT nullable = 0;
+
+    auto buffer = std::make_unique<SQLCHAR[]>( 1024 );
+
+    auto coltypes = std::vector<io::Datatype>( row_.size() );
+
+    for ( size_t i = 0; i < coltypes.size(); ++i )
+        {
+            const auto ret = SQLDescribeCol(
+                stmt().handle_,
+                static_cast<SQLSMALLINT>( i + 1 ),
+                buffer.get(),
+                1024,
+                &name_length,
+                &data_type,
+                &column_size,
+                &decimal_digits,
+                &nullable );
+
+            ODBCError::check(
+                ret,
+                "SQLDescribeCol in get_coltypes",
+                stmt().handle_,
+                SQL_HANDLE_STMT );
+
+            coltypes.at( i ) = interpret_field_type( data_type );
+        }
+
+    return coltypes;
+}
+
+// ----------------------------------------------------------------------------
+
 Float ODBCIterator::get_double()
 {
     const auto [str, is_null] = get_value();
@@ -178,6 +217,30 @@ Float ODBCIterator::get_time_stamp()
         }
 
     return Getter::get_time_stamp( str, time_formats_ );
+}
+
+// ----------------------------------------------------------------------------
+
+io::Datatype ODBCIterator::interpret_field_type( const SQLSMALLINT _type ) const
+{
+    switch ( _type )
+        {
+            case SQL_DECIMAL:
+            case SQL_NUMERIC:
+            case SQL_REAL:
+            case SQL_FLOAT:
+            case SQL_DOUBLE:
+                return io::Datatype::double_precision;
+
+            case SQL_SMALLINT:
+            case SQL_INTEGER:
+            case SQL_TINYINT:
+            case SQL_BIGINT:
+                return io::Datatype::integer;
+
+            default:
+                return io::Datatype::string;
+        }
 }
 
 // ----------------------------------------------------------------------------

@@ -32,6 +32,9 @@ class ODBCIterator : public Iterator
     /// Returns the column names of the query.
     std::vector<std::string> colnames() const final;
 
+    /// Returns the column types of the query.
+    std::vector<io::Datatype> coltypes() const;
+
     /// Returns a double.
     Float get_double() final;
 
@@ -60,6 +63,9 @@ class ODBCIterator : public Iterator
     // -------------------------------------------------------------------------
 
    private:
+    /// Parses a field for the CSV reader.
+    io::Datatype interpret_field_type( const SQLSMALLINT _type ) const;
+
     /// Generates an SQL statement from the colnames, the table name and an
     /// optional _where.
     static std::string make_query(

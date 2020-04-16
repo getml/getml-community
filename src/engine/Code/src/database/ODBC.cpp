@@ -57,23 +57,15 @@ std::pair<char, char> ODBC::extract_escape_chars(
 
 std::vector<std::string> ODBC::get_colnames( const std::string& _table ) const
 {
-    auto query = std::string( "SELECT * FROM " );
+    const auto opt = make_limited_iterator( _table, 0, 2 );
 
-    if ( escape_char1_ != ' ' )
+    if ( opt )
         {
-            query += escape_char1_;
+            return opt->colnames();
         }
 
-    query += _table;
-
-    if ( escape_char2_ != ' ' )
-        {
-            query += escape_char2_;
-        }
-
-    query += ';';
-
-    const auto iter = ODBCIterator( make_connection(), query, time_formats_ );
+    const auto iter = ODBCIterator(
+        make_connection(), simple_select( _table ), time_formats_ );
 
     return iter.colnames();
 }
@@ -83,69 +75,17 @@ std::vector<std::string> ODBC::get_colnames( const std::string& _table ) const
 std::vector<io::Datatype> ODBC::get_coltypes(
     const std::string& _table, const std::vector<std::string>& _colnames ) const
 {
-    const auto conn = ODBCConn( env(), server_name_, user_, passwd_ );
+    const auto opt = make_limited_iterator( _table, 0, 2 );
 
-    auto query = std::string( "SELECT * FROM " );
-
-    if ( escape_char1_ != ' ' )
+    if ( opt )
         {
-            query += escape_char1_;
+            return opt->coltypes();
         }
 
-    query += _table;
+    const auto iter = ODBCIterator(
+        make_connection(), simple_select( _table ), time_formats_ );
 
-    if ( escape_char2_ != ' ' )
-        {
-            query += escape_char2_;
-        }
-
-    query += ';';
-
-    const auto stmt = ODBCStmt( conn, query );
-
-    SQLSMALLINT ncols = 0;
-
-    auto ret = SQLNumResultCols( stmt.handle_, &ncols );
-
-    ODBCError::check(
-        ret,
-        "SQLNumResultCols in get_coltypes",
-        stmt.handle_,
-        SQL_HANDLE_STMT );
-
-    SQLSMALLINT name_length = 0;
-    SQLSMALLINT data_type = 0;
-    SQLULEN column_size = 0;
-    SQLSMALLINT decimal_digits = 0;
-    SQLSMALLINT nullable = 0;
-
-    auto buffer = std::make_unique<SQLCHAR[]>( 1024 );
-
-    auto coltypes = std::vector<io::Datatype>( ncols );
-
-    for ( SQLSMALLINT i = 0; i < ncols; ++i )
-        {
-            ret = SQLDescribeCol(
-                stmt.handle_,
-                i + 1,
-                buffer.get(),
-                1024,
-                &name_length,
-                &data_type,
-                &column_size,
-                &decimal_digits,
-                &nullable );
-
-            ODBCError::check(
-                ret,
-                "SQLDescribeCol in get_coltypes",
-                stmt.handle_,
-                SQL_HANDLE_STMT );
-
-            coltypes.at( i ) = interpret_field_type( data_type );
-        }
-
-    return coltypes;
+    return iter.coltypes();
 }
 
 // ----------------------------------------------------------------------------
@@ -274,12 +214,17 @@ Poco::JSON::Object ODBC::get_content(
 
     const auto end = ( _start + _length > nrows ) ? nrows : _start + _length;
 
-    const auto query = make_get_content_query( _tname, colnames, begin, end );
+    auto iterator = make_limited_iterator( _tname, begin, end );
 
-    // ----------------------------------------
-
-    auto iterator = std::make_shared<ODBCIterator>(
-        make_connection(), query, time_formats_ );
+    if ( !iterator )
+        {
+            throw std::runtime_error(
+                "Unable to select a limited subset from table '" + _tname +
+                "'. This might be because the table does not exist, because "
+                "your escape_chars are not properly set or because you are "
+                "using an ODBC driver that does not support this kind of SQL "
+                "syntax." );
+        }
 
     // ----------------------------------------
 
@@ -436,30 +381,6 @@ std::vector<std::string> ODBC::get_tables(
 
 // ----------------------------------------------------------------------------
 
-io::Datatype ODBC::interpret_field_type( const SQLSMALLINT _type ) const
-{
-    switch ( _type )
-        {
-            case SQL_DECIMAL:
-            case SQL_NUMERIC:
-            case SQL_REAL:
-            case SQL_FLOAT:
-            case SQL_DOUBLE:
-                return io::Datatype::double_precision;
-
-            case SQL_SMALLINT:
-            case SQL_INTEGER:
-            case SQL_TINYINT:
-            case SQL_BIGINT:
-                return io::Datatype::integer;
-
-            default:
-                return io::Datatype::string;
-        }
-}
-
-// ----------------------------------------------------------------------------
-
 std::vector<std::string> ODBC::list_tables()
 {
     // ------------------------------------------------------
@@ -531,41 +452,236 @@ std::vector<std::string> ODBC::list_tables()
 
 // ----------------------------------------------------------------------------
 
-std::string ODBC::make_get_content_query(
-    const std::string& _table,
-    const std::vector<std::string>& _colnames,
-    const std::int32_t _begin,
-    const std::int32_t _end ) const
+std::optional<ODBCIterator> ODBC::make_limited_iterator(
+    const std::string& _table, const size_t _begin, const size_t _end ) const
 {
-    assert_true( _end >= _begin );
-
-    std::string query = "SELECT ";
-
-    for ( size_t i = 0; i < _colnames.size(); ++i )
+    if ( _begin == 0 )
         {
-            query += "`";
-            query += _colnames[i];
-            query += "`";
-
-            if ( i != _colnames.size() - 1 )
+            try
                 {
-                    query += ",";
+                    return std::make_optional<ODBCIterator>(
+                        make_connection(),
+                        simple_limit_standard( _table, _end ),
+                        time_formats_ );
                 }
-
-            query += " ";
+            catch ( std::exception& e )
+                {
+                    if ( std::string( e.what() ).find( "(SQL_ERROR)" ) ==
+                         std::string::npos )
+                        {
+                            throw std::runtime_error( e.what() );
+                        }
+                }
         }
 
-    query += "FROM `";
+    try
+        {
+            return std::make_optional<ODBCIterator>(
+                make_connection(),
+                simple_limit_most( _table, _begin, _end ),
+                time_formats_ );
+        }
+    catch ( std::exception& e )
+        {
+            if ( std::string( e.what() ).find( "(SQL_ERROR)" ) ==
+                 std::string::npos )
+                {
+                    throw std::runtime_error( e.what() );
+                }
+        }
+
+    try
+        {
+            return std::make_optional<ODBCIterator>(
+                make_connection(),
+                simple_limit_oracle( _table, _begin, _end ),
+                time_formats_ );
+        }
+    catch ( std::exception& e )
+        {
+            if ( std::string( e.what() ).find( "(SQL_ERROR)" ) ==
+                 std::string::npos )
+                {
+                    throw std::runtime_error( e.what() );
+                }
+        }
+
+    try
+        {
+            return std::make_optional<ODBCIterator>(
+                make_connection(),
+                simple_limit_mssql( _table, _begin, _end ),
+                time_formats_ );
+        }
+    catch ( std::exception& e )
+        {
+            if ( std::string( e.what() ).find( "(SQL_ERROR)" ) ==
+                 std::string::npos )
+                {
+                    throw std::runtime_error( e.what() );
+                }
+        }
+
+    return std::optional<ODBCIterator>();
+}
+
+// ----------------------------------------------------------------------------
+
+std::string ODBC::simple_limit_standard(
+    const std::string& _table, const size_t _end ) const
+{
+    auto query = std::string( "SELECT * FROM " );
+
+    if ( escape_char1_ != ' ' )
+        {
+            query += escape_char1_;
+        }
 
     query += _table;
 
-    query += "` LIMIT " + std::to_string( _end - _begin );
+    if ( escape_char2_ != ' ' )
+        {
+            query += escape_char2_;
+        }
 
-    query += " OFFSET " + std::to_string( _begin );
+    query += " FETCH FIRST ";
+
+    query += std::to_string( _end );
+
+    query += " ROWS ONLY;";
+
+    return query;
+}
+
+// ----------------------------------------------------------------------------
+
+std::string ODBC::simple_limit_most(
+    const std::string& _table, const size_t _begin, const size_t _end ) const
+{
+    auto query = std::string( "SELECT * FROM " );
+
+    if ( escape_char1_ != ' ' )
+        {
+            query += escape_char1_;
+        }
+
+    query += _table;
+
+    if ( escape_char2_ != ' ' )
+        {
+            query += escape_char2_;
+        }
+
+    query += " LIMIT ";
+
+    query += std::to_string( _end - _begin );
+
+    if ( _begin > 0 )
+        {
+            query += " OFFSET ";
+
+            query += std::to_string( _begin );
+        }
 
     query += ";";
 
     return query;
 }
+
+// ----------------------------------------------------------------------------
+
+std::string ODBC::simple_limit_oracle(
+    const std::string& _table, const size_t _begin, const size_t _end ) const
+{
+    auto query = std::string( "SELECT * FROM " );
+
+    if ( escape_char1_ != ' ' )
+        {
+            query += escape_char1_;
+        }
+
+    query += _table;
+
+    if ( escape_char2_ != ' ' )
+        {
+            query += escape_char2_;
+        }
+
+    query += " WHERE ROWNUM <= ";
+
+    query += std::to_string( _end );
+
+    if ( _begin > 0 )
+        {
+            query += " AND ROWNUM > ";
+
+            query += std::to_string( _begin );
+        }
+
+    query += ";";
+
+    return query;
+}
+
+// ----------------------------------------------------------------------------
+
+std::string ODBC::simple_limit_mssql(
+    const std::string& _table, const size_t _begin, const size_t _end ) const
+{
+    std::string query = "SELECT * FROM ";
+
+    if ( escape_char1_ != ' ' )
+        {
+            query += escape_char1_;
+        }
+
+    query += _table;
+
+    if ( escape_char2_ != ' ' )
+        {
+            query += escape_char2_;
+        }
+
+    query += " ORDER BY NEWID()";
+
+    if ( _begin > 0 )
+        {
+            query += " OFFSET ";
+            query += std::to_string( _begin );
+            query += " ROWS";
+        }
+
+    query += " FETCH FIRST ";
+
+    query += std::to_string( _end - _begin );
+
+    query += " ROWS ONLY;";
+
+    return query;
+}
+
+// ----------------------------------------------------------------------------
+
+std::string ODBC::simple_select( const std::string& _table ) const
+{
+    auto query = std::string( "SELECT * FROM " );
+
+    if ( escape_char1_ != ' ' )
+        {
+            query += escape_char1_;
+        }
+
+    query += _table;
+
+    if ( escape_char2_ != ' ' )
+        {
+            query += escape_char2_;
+        }
+
+    query += ";";
+
+    return query;
+}
+
 // ----------------------------------------------------------------------------
 }  // namespace database
