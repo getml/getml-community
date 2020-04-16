@@ -4,12 +4,102 @@ namespace database
 {
 // ----------------------------------------------------------------------------
 
+void ODBC::drop_table( const std::string& _tname )
+{
+    std::string query = "DROP TABLE ";
+
+    if ( escape_char1_ != ' ' )
+        {
+            query += escape_char1_;
+        }
+
+    query += _tname;
+
+    if ( escape_char2_ != ' ' )
+        {
+            query += escape_char2_;
+        }
+
+    query += ";";
+
+    execute( query );
+}
+
+// ----------------------------------------------------------------------------
+
+std::pair<char, char> ODBC::extract_escape_chars(
+    const Poco::JSON::Object& _obj ) const
+{
+    const auto escape_chars =
+        jsonutils::JSON::get_value<std::string>( _obj, "escape_chars_" );
+
+    switch ( escape_chars.size() )
+        {
+            case 0:
+                return std::make_pair( ' ', ' ' );
+
+            case 1:
+                return std::make_pair( escape_chars[0], escape_chars[0] );
+
+            case 2:
+                return std::make_pair( escape_chars[0], escape_chars[1] );
+
+            default:
+                throw std::invalid_argument(
+                    "escape_chars cannot contain more than two "
+                    "characters." );
+        }
+
+    return std::make_pair( ' ', ' ' );
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<std::string> ODBC::get_colnames( const std::string& _table ) const
+{
+    auto query = std::string( "SELECT * FROM " );
+
+    if ( escape_char1_ != ' ' )
+        {
+            query += escape_char1_;
+        }
+
+    query += _table;
+
+    if ( escape_char2_ != ' ' )
+        {
+            query += escape_char2_;
+        }
+
+    query += ';';
+
+    const auto iter = ODBCIterator( make_connection(), query, time_formats_ );
+
+    return iter.colnames();
+}
+
+// ----------------------------------------------------------------------------
+
 std::vector<io::Datatype> ODBC::get_coltypes(
     const std::string& _table, const std::vector<std::string>& _colnames ) const
 {
     const auto conn = ODBCConn( env(), server_name_, user_, passwd_ );
 
-    const auto query = std::string( "SELECT * FROM `" + _table + "` LIMIT 1;" );
+    auto query = std::string( "SELECT * FROM " );
+
+    if ( escape_char1_ != ' ' )
+        {
+            query += escape_char1_;
+        }
+
+    query += _table;
+
+    if ( escape_char2_ != ' ' )
+        {
+            query += escape_char2_;
+        }
+
+    query += ';';
 
     const auto stmt = ODBCStmt( conn, query );
 

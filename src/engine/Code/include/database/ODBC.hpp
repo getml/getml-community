@@ -21,14 +21,19 @@ class ODBC : public Connector
           time_formats_( _time_formats ),
           user_( jsonutils::JSON::get_value<std::string>( _obj, "user_" ) )
     {
+        std::tie( escape_char1_, escape_char2_ ) = extract_escape_chars( _obj );
     }
 
     ODBC(
         const std::string& _passwd,
         const std::string& _server_name,
         const std::string& _user,
-        const std::vector<std::string>& _time_formats )
+        const std::vector<std::string>& _time_formats,
+        const char _escape_char1,
+        const char _escape_char2 )
         : env_( std::make_shared<ODBCEnv>() ),
+          escape_char1_( _escape_char1 ),
+          escape_char2_( _escape_char2 ),
           passwd_( _passwd ),
           server_name_( _server_name ),
           time_formats_( _time_formats ),
@@ -41,16 +46,12 @@ class ODBC : public Connector
     // -------------------------------
 
    public:
+    /// Drops a table from the data base.
+    void drop_table( const std::string& _tname ) final;
+
     /// Returns the names of the table columns.
     std::vector<std::string> get_colnames(
-        const std::string& _table ) const final
-    {
-        const auto query =
-            std::string( "SELECT * FROM `" + _table + "` LIMIT 1;" );
-        const auto iter =
-            ODBCIterator( make_connection(), query, time_formats_ );
-        return iter.colnames();
-    }
+        const std::string& _table ) const final;
 
     /// Returns the types of the table columns.
     std::vector<io::Datatype> get_coltypes(
@@ -84,19 +85,11 @@ class ODBC : public Connector
     /// Returns the dialect of the connector.
     std::string dialect() const final { return "odbc"; }
 
-    /// Drops a table and cleans up, if necessary.
-    void drop_table( const std::string& _tname ) final
-    {
-        // TODO
-        // execute( "DROP TABLE `" + _tname + "`;" );
-    }
-
     /// Executes an SQL query.
-    void execute( const std::string& _sql ) final
+    void execute( const std::string& _query ) final
     {
-        // TODO
-        /*const auto conn = make_connection();
-        exec( _sql, conn );*/
+        const auto conn = make_connection();
+        ODBCStmt( *conn, _query );
     }
 
     /// Returns the number of rows in the table signified by _tname.
@@ -112,7 +105,13 @@ class ODBC : public Connector
         const std::string& _where ) final
     {
         return std::make_shared<ODBCIterator>(
-            make_connection(), _colnames, time_formats_, _tname, _where );
+            make_connection(),
+            _colnames,
+            time_formats_,
+            _tname,
+            _where,
+            escape_char1_,
+            escape_char2_ );
     }
 
     /// Returns a shared_ptr containing an ORBCIterator.
@@ -131,9 +130,9 @@ class ODBC : public Connector
     // -------------------------------
 
    private:
-    /// Executes and SQL command given a connection.
-    std::shared_ptr<MYSQL_RES> exec(
-        const std::string& _sql, const std::shared_ptr<MYSQL>& _conn ) const;
+    /// Extract the escapte characters.
+    std::pair<char, char> extract_escape_chars(
+        const Poco::JSON::Object& _obj ) const;
 
     /// Returns the catalogs.
     std::vector<std::string> get_catalogs() const;
@@ -203,6 +202,16 @@ class ODBC : public Connector
    private:
     /// The environment handle.
     const std::shared_ptr<ODBCEnv> env_;
+
+    /// The first escape character - used to envelop table, schema, column
+    /// names. According to ANSI SQL this should be '"', but we don't rely on
+    /// that.
+    char escape_char1_;
+
+    /// The second escape character - used to envelop table, schema, column
+    /// names. According to ANSI SQL this should be '"', but we don't rely on
+    /// that.
+    char escape_char2_;
 
     /// The password used.
     const std::string passwd_;

@@ -20,7 +20,9 @@ class ODBCIterator : public Iterator
         const std::vector<std::string>& _colnames,
         const std::vector<std::string>& _time_formats,
         const std::string& _tname,
-        const std::string& _where );
+        const std::string& _where,
+        const char _escape_char1,
+        const char _escape_char2 );
 
     ~ODBCIterator();
 
@@ -63,7 +65,9 @@ class ODBCIterator : public Iterator
     static std::string make_query(
         const std::vector<std::string>& _colnames,
         const std::string& _tname,
-        const std::string& _where );
+        const std::string& _where,
+        const char _escape_char1,
+        const char _escape_char2 );
 
     // -------------------------------------------------------------------------
 

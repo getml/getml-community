@@ -58,9 +58,13 @@ ODBCIterator::ODBCIterator(
     const std::vector<std::string>& _colnames,
     const std::vector<std::string>& _time_formats,
     const std::string& _tname,
-    const std::string& _where )
+    const std::string& _where,
+    const char _escape_char1,
+    const char _escape_char2 )
     : ODBCIterator(
-          _connection, make_query( _colnames, _tname, _where ), _time_formats )
+          _connection,
+          make_query( _colnames, _tname, _where, _escape_char1, _escape_char2 ),
+          _time_formats )
 {
 }
 
@@ -181,9 +185,15 @@ Float ODBCIterator::get_time_stamp()
 std::string ODBCIterator::make_query(
     const std::vector<std::string>& _colnames,
     const std::string& _tname,
-    const std::string& _where )
+    const std::string& _where,
+    const char _escape_char1,
+    const char _escape_char2 )
 {
+    // ---------------------------------------------------
+
     std::string query = "SELECT ";
+
+    // ---------------------------------------------------
 
     for ( size_t i = 0; i < _colnames.size(); ++i )
         {
@@ -191,16 +201,16 @@ std::string ODBCIterator::make_query(
 
             const bool is_not_count = ( cname != "COUNT(*)" );
 
-            if ( is_not_count )
+            if ( is_not_count && _escape_char1 != ' ' )
                 {
-                    query += "`";
+                    query += _escape_char1;
                 }
 
             query += cname;
 
-            if ( is_not_count )
+            if ( is_not_count && _escape_char2 != ' ' )
                 {
-                    query += "`";
+                    query += _escape_char2;
                 }
 
             if ( i + 1 < _colnames.size() )
@@ -208,6 +218,8 @@ std::string ODBCIterator::make_query(
                     query += ", ";
                 }
         }
+
+    // ---------------------------------------------------
 
     // Note that the user might want to pass information on the schema.
     const auto pos = _tname.find( "." );
@@ -218,21 +230,65 @@ std::string ODBCIterator::make_query(
 
             const auto table_name = _tname.substr( pos + 1 );
 
-            query += " FROM `" + schema + "`.`" + table_name + "`";
+            query += std::string( " FROM " );
+
+            if ( _escape_char1 != ' ' )
+                {
+                    query += _escape_char1;
+                }
+
+            query += schema;
+
+            if ( _escape_char2 != ' ' )
+                {
+                    query += _escape_char2;
+                }
+
+            query += ".";
+
+            if ( _escape_char1 != ' ' )
+                {
+                    query += _escape_char1;
+                }
+
+            query += table_name;
+
+            if ( _escape_char2 != ' ' )
+                {
+                    query += _escape_char2;
+                }
         }
     else
         {
-            query += " FROM `" + _tname + "`";
+            query += std::string( " FROM " );
+
+            if ( _escape_char1 != ' ' )
+                {
+                    query += _escape_char1;
+                }
+
+            query += _tname;
+
+            if ( _escape_char2 != ' ' )
+                {
+                    query += _escape_char2;
+                }
         }
+
+    // ---------------------------------------------------
 
     if ( _where != "" )
         {
-            query += " WHERE " + _where;
+            query += std::string( " WHERE " ) + _where;
         }
 
     query += ";";
 
+    // ---------------------------------------------------
+
     return query;
+
+    // ---------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
