@@ -1,34 +1,44 @@
-#ifndef DATABASE_MYSQLITERATOR_HPP_
-#define DATABASE_MYSQLITERATOR_HPP_
+#ifndef DATABASE_ODBCITERATOR_HPP_
+#define DATABASE_ODBCITERATOR_HPP_
 
 namespace database
 {
 // -----------------------------------------------------------------------------
 
-class MySQLIterator : public Iterator
+class ODBCIterator : public Iterator
 {
     // -------------------------------------------------------------------------
 
    public:
-    MySQLIterator(
-        const std::shared_ptr<MYSQL>& _connection,
-        const std::string& _sql,
+    ODBCIterator(
+        const std::shared_ptr<ODBCConn>& _connection,
+        const std::string& _query,
         const std::vector<std::string>& _time_formats );
 
-    MySQLIterator(
-        const std::shared_ptr<MYSQL>& _connection,
+    ODBCIterator(
+        const std::shared_ptr<ODBCConn>& _connection,
         const std::vector<std::string>& _colnames,
         const std::vector<std::string>& _time_formats,
         const std::string& _tname,
-        const std::string& _where );
+        const std::string& _where,
+        const char _escape_char1,
+        const char _escape_char2 );
 
-    ~MySQLIterator();
+    ~ODBCIterator();
 
     // -------------------------------------------------------------------------
 
    public:
+    /// Returns the column descriptions of the query.
+    std::vector<
+        std::tuple<SQLSMALLINT, SQLSMALLINT, SQLULEN, SQLSMALLINT, SQLSMALLINT>>
+    coldescriptions() const;
+
     /// Returns the column names of the query.
     std::vector<std::string> colnames() const final;
+
+    /// Returns the column types of the query.
+    std::vector<io::Datatype> coltypes() const;
 
     /// Returns a double.
     Float get_double() final;
@@ -39,44 +49,36 @@ class MySQLIterator : public Iterator
     /// Returns a time stamp.
     Float get_time_stamp() final;
 
-    /// Returns a string .
+    /// Returns a string.
     std::string get_string() final;
 
     // -------------------------------------------------------------------------
 
    public:
-    /// Trivial (private) accessor.
-    MYSQL* connection() const
+    /// Trivial accessor.
+    const ODBCConn& connection() const
     {
         assert_true( connection_ );
-        return connection_.get();
+        return *connection_;
     }
 
     /// Whether the end is reached.
-    bool end() const final { return ( row_ == NULL ); }
-
-    /// Throws an error.
-    void throw_error( MYSQL* _conn ) const
-    {
-        const std::string msg =
-            "MySQL error (" + std::to_string( mysql_errno( _conn ) ) + ") [" +
-            mysql_sqlstate( _conn ) + "] " + mysql_error( _conn );
-
-        throw std::runtime_error( msg );
-    }
+    bool end() const final { return end_; }
 
     // -------------------------------------------------------------------------
 
    private:
-    /// Executes a command and returns a result set.
-    std::shared_ptr<MYSQL_RES> execute( const std::string& _sql ) const;
+    /// Parses a field for the CSV reader.
+    io::Datatype interpret_field_type( const SQLSMALLINT _type ) const;
 
     /// Generates an SQL statement from the colnames, the table name and an
     /// optional _where.
-    static std::string make_sql(
+    static std::string make_query(
         const std::vector<std::string>& _colnames,
         const std::string& _tname,
-        const std::string& _where );
+        const std::string& _where,
+        const char _escape_char1,
+        const char _escape_char2 );
 
     // -------------------------------------------------------------------------
 
@@ -88,10 +90,27 @@ class MySQLIterator : public Iterator
             {
                 throw std::invalid_argument( "End of query is reached." );
             }
+    }
 
-        if ( colnum_ >= num_cols_ )
+    /// Fetches the next row.
+    void fetch()
+    {
+        const auto ret = SQLFetch( stmt().handle_ );
+
+        if ( ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO )
             {
-                throw std::invalid_argument( "Row number out of bounds." );
+                if ( ret == SQL_NO_DATA )
+                    {
+                        end_ = true;
+                    }
+                else
+                    {
+                        ODBCError::check(
+                            ret,
+                            "SQLFetch in fetch",
+                            stmt().handle_,
+                            SQL_HANDLE_STMT );
+                    }
             }
     }
 
@@ -100,13 +119,13 @@ class MySQLIterator : public Iterator
     {
         check();
 
-        char* val = row_[colnum_];
-
-        if ( !val )
+        if ( flen_.at( colnum_ ) == SQL_NULL_DATA )
             {
                 increment();
                 return std::pair<std::string, bool>( "", true );
             }
+
+        auto val = reinterpret_cast<const char*>( row_.at( colnum_ ).get() );
 
         auto str = std::string( val );
 
@@ -118,33 +137,47 @@ class MySQLIterator : public Iterator
     /// Increments the iterator.
     void increment()
     {
-        if ( ++colnum_ == num_cols_ )
+        if ( ++colnum_ == row_.size() )
             {
                 colnum_ = 0;
-
-                row_ = mysql_fetch_row( result_.get() );
+                fetch();
             }
+    }
+
+    /// Trivial accessor.
+    ODBCStmt& stmt()
+    {
+        assert_true( stmt_ );
+        return *stmt_;
+    }
+
+    /// Trivial accessor.
+    const ODBCStmt& stmt() const
+    {
+        assert_true( stmt_ );
+        return *stmt_;
     }
 
     // -------------------------------------------------------------------------
 
    private:
     /// The current colnum.
-    unsigned int colnum_;
+    size_t colnum_;
 
     /// The connection used.
-    const std::shared_ptr<MYSQL> connection_;
+    const std::shared_ptr<ODBCConn> connection_;
 
-    /// The total number of columns.
-    unsigned int num_cols_;
+    /// Bool whether the end is reached.
+    bool end_;
 
-    /// Result of the query.
-    std::shared_ptr<MYSQL_RES> result_;
+    /// The respective length of each field
+    std::vector<SQLLEN> flen_;
 
     /// The current row.
-    /// Will be free'd when result_ is free'd:
-    /// https://mariadb.com/kb/en/library/mysql_fetch_row/
-    MYSQL_ROW row_;
+    std::vector<std::unique_ptr<SQLCHAR[]>> row_;
+
+    /// SQL statement handle.
+    std::shared_ptr<ODBCStmt> stmt_;
 
     /// Vector containing the time formats.
     const std::vector<std::string> time_formats_;
@@ -156,4 +189,4 @@ class MySQLIterator : public Iterator
 
 }  // namespace database
 
-#endif  // DATABASE_MYSQLITERATOR_HPP_
+#endif  // DATABASE_ODBCITERATOR_HPP_

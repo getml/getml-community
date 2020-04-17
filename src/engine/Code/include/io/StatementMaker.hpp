@@ -25,6 +25,14 @@ class StatementMaker
         const std::vector<std::string>& _colnames,
         const std::vector<Datatype>& _datatypes );
 
+    /// Produces the CREATE TABLE statement for ODBC.
+    static std::string make_statement_odbc(
+        const std::string& _table_name,
+        const std::vector<std::string>& _colnames,
+        const std::vector<Datatype>& _datatypes,
+        const char _escape_char1,
+        const char _escape_char2 );
+
     /// Produces the CREATE TABLE statement for postgres.
     static std::string make_statement_postgres(
         const std::string& _table_name,

@@ -12,6 +12,9 @@
 
 #include <mysql.h>
 
+#include <sql.h>
+#include <sqlext.h>
+
 #if ( defined( _WIN32 ) || defined( _WIN64 ) )
 // postgres is not supported in windows
 #else
@@ -53,6 +56,18 @@ extern "C"
 #include "database/MySQLIterator.hpp"
 
 #include "database/MySQL.hpp"
+
+#include "database/ODBCError.hpp"
+
+#include "database/ODBCEnv.hpp"
+
+#include "database/ODBCConn.hpp"
+
+#include "database/ODBCStmt.hpp"
+
+#include "database/ODBCIterator.hpp"
+
+#include "database/ODBC.hpp"
 
 #if ( defined( _WIN32 ) || defined( _WIN64 ) )
 // postgres is not supported in windows

@@ -1,4 +1,3 @@
-
 #include "io/io.hpp"
 
 namespace io
@@ -37,6 +36,12 @@ std::string StatementMaker::make_statement(
     if ( _dialect == "mysql" )
         {
             return make_statement_mysql( _table_name, _colnames, _datatypes );
+        }
+    else if (
+        _dialect.find( "odbc" ) != std::string::npos && _dialect.size() == 6 )
+        {
+            return make_statement_odbc(
+                _table_name, _colnames, _datatypes, _dialect[4], _dialect[5] );
         }
     else if ( _dialect == "postgres" )
         {
@@ -82,6 +87,69 @@ std::string StatementMaker::make_statement_mysql(
             statement << "    `" << _colnames[i] << "` "
                       << make_gap( _colnames[i], max_size )
                       << to_string_mysql( _datatypes[i] );
+
+            if ( i < _colnames.size() - 1 )
+                {
+                    statement << "," << std::endl;
+                }
+            else
+                {
+                    statement << ");" << std::endl;
+                }
+        }
+
+    return statement.str();
+}
+
+// ----------------------------------------------------------------------------
+
+std::string StatementMaker::make_statement_odbc(
+    const std::string& _table_name,
+    const std::vector<std::string>& _colnames,
+    const std::vector<Datatype>& _datatypes,
+    const char _escape_char1,
+    const char _escape_char2 )
+{
+    assert_true( _colnames.size() == _datatypes.size() );
+
+    const auto max_size = find_max_size( _colnames );
+
+    std::stringstream statement;
+
+    statement << "CREATE TABLE ";
+
+    if ( _escape_char1 != ' ' )
+        {
+            statement << _escape_char1;
+        }
+
+    statement << _table_name;
+
+    if ( _escape_char2 != ' ' )
+        {
+            statement << _escape_char2;
+        }
+
+    statement << "(" << std::endl;
+
+    for ( size_t i = 0; i < _colnames.size(); ++i )
+        {
+            statement << "    ";
+
+            if ( _escape_char1 != ' ' )
+                {
+                    statement << _escape_char1;
+                }
+
+            statement << _colnames[i];
+
+            if ( _escape_char2 != ' ' )
+                {
+                    statement << _escape_char2;
+                }
+
+            statement << " " << make_gap( _colnames[i], max_size )
+                      << to_string_postgres( _datatypes[i] );
 
             if ( i < _colnames.size() - 1 )
                 {
