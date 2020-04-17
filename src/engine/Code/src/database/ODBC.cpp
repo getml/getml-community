@@ -499,6 +499,11 @@ std::vector<std::string> ODBC::list_tables()
         }
     catch ( std::exception& e )
         {
+            if ( std::string( e.what() ).find( "(SQL_ERROR)" ) ==
+                 std::string::npos )
+                {
+                    throw std::runtime_error( e.what() );
+                }
         }
 
     // ------------------------------------------------------
