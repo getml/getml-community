@@ -486,6 +486,7 @@ std::vector<std::string> ODBC::list_tables()
         }
 
     // ------------------------------------------------------
+    // MySQL / MariaDB style
 
     try
         {
@@ -504,6 +505,37 @@ std::vector<std::string> ODBC::list_tables()
                 {
                     throw std::runtime_error( e.what() );
                 }
+        }
+
+    // ------------------------------------------------------
+    // MSSQL style
+
+    try
+        {
+            auto iter = ODBCIterator(
+                make_connection(),
+                "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES;",
+                time_formats_ );
+
+            while ( !iter.end() )
+                {
+                    all_tables.push_back( iter.get_string() );
+                }
+        }
+    catch ( std::exception& e )
+        {
+            if ( std::string( e.what() ).find( "(SQL_ERROR)" ) ==
+                 std::string::npos )
+                {
+                    throw std::runtime_error( e.what() );
+                }
+        }
+
+    // ------------------------------------------------------
+
+    if ( all_tables.size() > 0 )
+        {
+            return all_tables;
         }
 
     // ------------------------------------------------------
@@ -889,36 +921,96 @@ std::string ODBC::simple_limit_oracle(
 std::string ODBC::simple_limit_mssql(
     const std::string& _table, const size_t _begin, const size_t _end ) const
 {
-    std::string query = "SELECT * FROM ";
-
-    if ( escape_char1_ != ' ' )
+    if ( _begin == 0 )
         {
-            query += escape_char1_;
+            std::string query = "SELECT TOP ";
+
+            query += std::to_string( _end );
+
+            query += " * FROM ";
+
+            if ( escape_char1_ != ' ' )
+                {
+                    query += escape_char1_;
+                }
+
+            query += _table;
+
+            if ( escape_char2_ != ' ' )
+                {
+                    query += escape_char2_;
+                }
+
+            query += ";";
+
+            return query;
         }
-
-    query += _table;
-
-    if ( escape_char2_ != ' ' )
+    else
         {
-            query += escape_char2_;
-        }
+            const auto colnames = get_colnames( _table );
 
-    query += " ORDER BY NEWID()";
+            std::string all_colnames;
 
-    if ( _begin > 0 )
-        {
-            query += " OFFSET ";
+            for ( size_t i = 0; i < colnames.size(); ++i )
+                {
+                    if ( escape_char1_ != ' ' )
+                        {
+                            all_colnames += escape_char1_;
+                        }
+
+                    all_colnames += colnames[i];
+
+                    if ( escape_char2_ != ' ' )
+                        {
+                            all_colnames += escape_char2_;
+                        }
+
+                    if ( i < colnames.size() - 1 )
+                        {
+                            all_colnames += ",";
+                        }
+                }
+
+            std::string query = "SELECT ";
+
+            query += all_colnames;
+
+            query += " FROM( SELECT ";
+
+            query += all_colnames;
+
+            query +=
+                ", ROW_NUMBER() OVER( ORDER BY getml_sort ) AS getml_rownum "
+                "FROM( SELECT ";
+
+            query += all_colnames;
+
+            query += ",0 AS getml_sort FROM ";
+
+            if ( escape_char1_ != ' ' )
+                {
+                    query += escape_char1_;
+                }
+
+            query += _table;
+
+            if ( escape_char2_ != ' ' )
+                {
+                    query += escape_char2_;
+                }
+
+            query += " ) a ) b WHERE getml_rownum > ";
+
             query += std::to_string( _begin );
-            query += " ROWS";
+
+            query += " AND getml_rownum <= ";
+
+            query += std::to_string( _end );
+
+            query += ";";
+
+            return query;
         }
-
-    query += " FETCH FIRST ";
-
-    query += std::to_string( _end - _begin );
-
-    query += " ROWS ONLY;";
-
-    return query;
 }
 
 // ----------------------------------------------------------------------------
