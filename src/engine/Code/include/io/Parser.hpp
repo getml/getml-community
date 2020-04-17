@@ -1,3 +1,4 @@
+;
 #ifndef IO_PARSER_HPP_
 #define IO_PARSER_HPP_
 
@@ -109,14 +110,14 @@ class Parser
     /// Removes all whitespaces at the beginning and end of the string.
     static std::string trim( const std::string& _str )
     {
-        const auto pos = _str.find_first_not_of( "\t\v\f\r " );
+        const auto pos = _str.find_first_not_of( "\t\v\f\r\n " );
 
         if ( pos == std::string::npos )
             {
                 return "";
             }
 
-        const auto len = _str.find_last_not_of( "\t\v\f\r " ) - pos + 1;
+        const auto len = _str.find_last_not_of( "\t\v\f\r\n " ) - pos + 1;
 
         return _str.substr( pos, len );
     }

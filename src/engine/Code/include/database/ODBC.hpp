@@ -49,6 +49,14 @@ class ODBC : public Connector
     /// Drops a table from the data base.
     void drop_table( const std::string& _tname ) final;
 
+    /// Executes an SQL query.
+    void execute( const std::string& _query ) final;
+
+    /// Returns the descriptions of the columns.
+    std::vector<
+        std::tuple<SQLSMALLINT, SQLSMALLINT, SQLULEN, SQLSMALLINT, SQLSMALLINT>>
+    get_coldescriptions( const std::string& _table ) const;
+
     /// Returns the names of the table columns.
     std::vector<std::string> get_colnames(
         const std::string& _table ) const final;
@@ -74,22 +82,18 @@ class ODBC : public Connector
         const std::string& _table,
         const bool _header,
         const size_t _skip,
-        io::Reader* _reader ) final
-    {
-        // TODO
-    }
+        io::Reader* _reader ) final;
 
     // -------------------------------
 
    public:
     /// Returns the dialect of the connector.
-    std::string dialect() const final { return "odbc"; }
-
-    /// Executes an SQL query.
-    void execute( const std::string& _query ) final
+    std::string dialect() const final
     {
-        const auto conn = make_connection();
-        ODBCStmt( *conn, _query );
+        auto d = std::string( "odbc" );
+        d += escape_char1_;
+        d += escape_char2_;
+        return d;
     }
 
     /// Returns the number of rows in the table signified by _tname.
@@ -181,10 +185,9 @@ class ODBC : public Connector
 
     /// Prepares a INSERT INTO .. VALUES ... query
     /// to insert a large CSV file.
-    /*    std::string make_bulk_insert_query(
-            const std::string& _table,
-            const std::vector<std::string>& _colnames ) const;
-*/
+    std::string make_bulk_insert_query(
+        const std::string& _table,
+        const std::vector<std::string>& _colnames ) const;
 
     // -------------------------------
 
@@ -203,11 +206,13 @@ class ODBC : public Connector
         return *env_;
     }
 
-    /// Returns a new connection.
-    std::shared_ptr<ODBCConn> make_connection() const
+    /// Returns a new connection. If the connection is meant for WRITING data,
+    /// be sure to explicitly turn of the AUTOCOMMIT.
+    std::shared_ptr<ODBCConn> make_connection(
+        const bool _no_autocommit = false ) const
     {
         return std::make_shared<ODBCConn>(
-            env(), server_name_, user_, passwd_ );
+            env(), server_name_, user_, passwd_, _no_autocommit );
     }
 
     /// Helper function to turn a string into a ptr that can be passed to ODBC

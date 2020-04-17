@@ -74,6 +74,57 @@ ODBCIterator::~ODBCIterator() = default;
 
 // ----------------------------------------------------------------------------
 
+std::vector<
+    std::tuple<SQLSMALLINT, SQLSMALLINT, SQLULEN, SQLSMALLINT, SQLSMALLINT>>
+ODBCIterator::coldescriptions() const
+{
+    SQLSMALLINT name_length = 0;
+    SQLSMALLINT data_type = 0;
+    SQLULEN column_size = 0;
+    SQLSMALLINT decimal_digits = 0;
+    SQLSMALLINT nullable = 0;
+
+    auto buffer = std::make_unique<SQLCHAR[]>( 1024 );
+
+    auto coldesc = std::vector<std::tuple<
+        SQLSMALLINT,
+        SQLSMALLINT,
+        SQLULEN,
+        SQLSMALLINT,
+        SQLSMALLINT>>();
+
+    for ( size_t i = 0; i < row_.size(); ++i )
+        {
+            const auto ret = SQLDescribeCol(
+                stmt().handle_,
+                static_cast<SQLSMALLINT>( i + 1 ),
+                buffer.get(),
+                1024,
+                &name_length,
+                &data_type,
+                &column_size,
+                &decimal_digits,
+                &nullable );
+
+            ODBCError::check(
+                ret,
+                "SQLDescribeCol in get_coltypes",
+                stmt().handle_,
+                SQL_HANDLE_STMT );
+
+            coldesc.push_back( std::make_tuple(
+                name_length,
+                data_type,
+                column_size,
+                decimal_digits,
+                nullable ) );
+        }
+
+    return coldesc;
+}
+
+// ----------------------------------------------------------------------------
+
 std::vector<std::string> ODBCIterator::colnames() const
 {
     SQLSMALLINT name_length = 0;
@@ -128,36 +179,16 @@ std::vector<std::string> ODBCIterator::colnames() const
 
 std::vector<io::Datatype> ODBCIterator::coltypes() const
 {
-    SQLSMALLINT name_length = 0;
-    SQLSMALLINT data_type = 0;
-    SQLULEN column_size = 0;
-    SQLSMALLINT decimal_digits = 0;
-    SQLSMALLINT nullable = 0;
+    const auto coldesc = coldescriptions();
 
-    auto buffer = std::make_unique<SQLCHAR[]>( 1024 );
+    assert_true( coldesc.size() == row_.size() );
 
     auto coltypes = std::vector<io::Datatype>( row_.size() );
 
     for ( size_t i = 0; i < coltypes.size(); ++i )
         {
-            const auto ret = SQLDescribeCol(
-                stmt().handle_,
-                static_cast<SQLSMALLINT>( i + 1 ),
-                buffer.get(),
-                1024,
-                &name_length,
-                &data_type,
-                &column_size,
-                &decimal_digits,
-                &nullable );
-
-            ODBCError::check(
-                ret,
-                "SQLDescribeCol in get_coltypes",
-                stmt().handle_,
-                SQL_HANDLE_STMT );
-
-            coltypes.at( i ) = interpret_field_type( data_type );
+            coltypes.at( i ) =
+                interpret_field_type( std::get<1>( coldesc.at( i ) ) );
         }
 
     return coltypes;

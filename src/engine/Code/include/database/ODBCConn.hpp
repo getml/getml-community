@@ -11,7 +11,8 @@ struct ODBCConn
         const ODBCEnv& _env,
         const std::string& _server_name,
         const std::string& _user,
-        const std::string& _passwd )
+        const std::string& _passwd,
+        const bool _no_autocommit = false )
         : handle_( SQL_NULL_HDBC )
     {
         auto ret = SQLAllocHandle( SQL_HANDLE_DBC, _env.handle_, &handle_ );
@@ -26,6 +27,18 @@ struct ODBCConn
             "SQLSetConnectAttr(SQL_LOGIN_TIMEOUT)",
             handle_,
             SQL_HANDLE_DBC );
+
+        if ( _no_autocommit )
+            {
+                ret = SQLSetConnectAttr(
+                    handle_, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)0, 0 );
+
+                ODBCError::check(
+                    ret,
+                    "SQLSetConnectAttr(SQL_ATTR_AUTOCOMMIT)",
+                    handle_,
+                    SQL_HANDLE_DBC );
+            }
 
         auto server_name = to_ptr( _server_name );
         auto user = to_ptr( _user );

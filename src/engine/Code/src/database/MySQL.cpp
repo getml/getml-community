@@ -1,4 +1,3 @@
-
 #include "database/database.hpp"
 
 namespace database

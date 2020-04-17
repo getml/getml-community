@@ -29,6 +29,11 @@ class ODBCIterator : public Iterator
     // -------------------------------------------------------------------------
 
    public:
+    /// Returns the column descriptions of the query.
+    std::vector<
+        std::tuple<SQLSMALLINT, SQLSMALLINT, SQLULEN, SQLSMALLINT, SQLSMALLINT>>
+    coldescriptions() const;
+
     /// Returns the column names of the query.
     std::vector<std::string> colnames() const final;
 

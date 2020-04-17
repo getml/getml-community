@@ -27,6 +27,45 @@ void ODBC::drop_table( const std::string& _tname )
 
 // ----------------------------------------------------------------------------
 
+void ODBC::execute( const std::string& _queries )
+{
+    const auto conn = make_connection();
+
+    assert_true( conn );
+
+    std::string query;
+
+    for ( char c : _queries )
+        {
+            if ( c == ';' )
+                {
+                    query = io::Parser::trim( query );
+
+                    if ( query.size() > 0 )
+                        {
+                            query += ';';
+                            ODBCStmt( *conn, query );
+                        }
+
+                    query.clear();
+                }
+            else
+                {
+                    query += c;
+                }
+        }
+
+    query = io::Parser::trim( query );
+
+    if ( query.size() > 0 )
+        {
+            query += ';';
+            ODBCStmt( *conn, query );
+        }
+}
+
+// ----------------------------------------------------------------------------
+
 std::pair<char, char> ODBC::extract_escape_chars(
     const Poco::JSON::Object& _obj ) const
 {
@@ -51,6 +90,25 @@ std::pair<char, char> ODBC::extract_escape_chars(
         }
 
     return std::make_pair( ' ', ' ' );
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<
+    std::tuple<SQLSMALLINT, SQLSMALLINT, SQLULEN, SQLSMALLINT, SQLSMALLINT>>
+ODBC::get_coldescriptions( const std::string& _table ) const
+{
+    const auto opt = make_limited_iterator( _table, 0, 2 );
+
+    if ( opt )
+        {
+            return opt->coldescriptions();
+        }
+
+    const auto iter = ODBCIterator(
+        make_connection(), simple_select( _table ), time_formats_ );
+
+    return iter.coldescriptions();
 }
 
 // ----------------------------------------------------------------------------
@@ -452,6 +510,68 @@ std::vector<std::string> ODBC::list_tables()
 
 // ----------------------------------------------------------------------------
 
+std::string ODBC::make_bulk_insert_query(
+    const std::string& _table, const std::vector<std::string>& _colnames ) const
+{
+    std::string query = "INSERT INTO ";
+
+    if ( escape_char1_ != ' ' )
+        {
+            query += escape_char1_;
+        }
+
+    query += _table;
+
+    if ( escape_char2_ != ' ' )
+        {
+            query += escape_char2_;
+        }
+
+    query += " (";
+
+    for ( size_t i = 0; i < _colnames.size(); ++i )
+        {
+            if ( escape_char1_ != ' ' )
+                {
+                    query += escape_char1_;
+                }
+
+            query += _colnames[i];
+
+            if ( escape_char2_ != ' ' )
+                {
+                    query += escape_char2_;
+                }
+
+            if ( i + 1 < _colnames.size() )
+                {
+                    query += ",";
+                }
+        }
+
+    query += ")";
+
+    query += " VALUES ";
+
+    query += " (";
+
+    for ( size_t i = 0; i < _colnames.size(); ++i )
+        {
+            query += "?";
+
+            if ( i + 1 < _colnames.size() )
+                {
+                    query += ",";
+                }
+        }
+
+    query += ");";
+
+    return query;
+}
+
+// ----------------------------------------------------------------------------
+
 std::optional<ODBCIterator> ODBC::make_limited_iterator(
     const std::string& _table, const size_t _begin, const size_t _end ) const
 {
@@ -523,6 +643,142 @@ std::optional<ODBCIterator> ODBC::make_limited_iterator(
         }
 
     return std::optional<ODBCIterator>();
+}
+
+// ----------------------------------------------------------------------------
+
+void ODBC::read(
+    const std::string& _table,
+    const bool _header,
+    const size_t _skip,
+    io::Reader* _reader )
+{
+    // ------------------------------------------------------------------------
+
+    const auto colnames = get_colnames( _table );
+
+    const auto coldesc = get_coldescriptions( _table );
+
+    if ( colnames.size() != coldesc.size() )
+        {
+            throw std::runtime_error(
+                "The number of retrieved column names does not match the "
+                "number of retrieved column descriptions." );
+        }
+
+    // ------------------------------------------------------------------------
+    // Skip lines, if necessary.
+
+    size_t line_count = 0;
+
+    for ( size_t i = 0; i < _skip; ++i )
+        {
+            _reader->next_line();
+            ++line_count;
+        }
+
+    //  ------------------------------------------------------------------------
+    // Check headers, if necessary.
+
+    if ( _header )
+        {
+            // check_colnames( colnames, _reader ); // TODO
+            _reader->next_line();
+            ++line_count;
+        }
+
+    // ------------------------------------------------------------------------
+
+    // true means that we want to explicitly turn of the AUTOCOMMIT.
+    auto conn = make_connection( true );
+
+    assert_true( conn );
+
+    auto stmt = ODBCStmt( *conn );
+
+    auto fields = std::vector<std::unique_ptr<SQLCHAR[]>>( colnames.size() );
+
+    auto flen = std::vector<SQLLEN>( colnames.size() );
+
+    constexpr SQLLEN buffer_length = 1024;
+
+    for ( size_t i = 0; i < colnames.size(); ++i )
+        {
+            fields.at( i ) = std::make_unique<SQLCHAR[]>( buffer_length );
+
+            // https://docs.microsoft.com/en-us/sql/odbc/reference/syntax/sqlbindparameter-function?view=sql-server-ver15
+            const auto ret = SQLBindParameter(
+                stmt.handle_,
+                static_cast<SQLUSMALLINT>( i + 1 ),
+                SQL_PARAM_INPUT,
+                SQL_C_CHAR,
+                std::get<1>( coldesc.at( i ) ),
+                std::get<2>( coldesc.at( i ) ),
+                std::get<3>( coldesc.at( i ) ),
+                fields.at( i ).get(),
+                buffer_length,
+                &flen.at( i ) );
+
+            ODBCError::check(
+                ret, "SQLBindParameter in read", stmt.handle_, SQL_HANDLE_DBC );
+        }
+
+    // ----------------------------------------------------------------
+
+    const auto query = to_ptr( make_bulk_insert_query( _table, colnames ) );
+
+    auto ret = SQLPrepare( stmt.handle_, query.get(), SQL_NTS );
+
+    ODBCError::check( ret, "SQLPrepare in read", stmt.handle_, SQL_HANDLE_DBC );
+
+    // ----------------------------------------------------------------
+
+    while ( !_reader->eof() )
+        {
+            const std::vector<std::string> line = _reader->next_line();
+
+            ++line_count;
+
+            if ( line.size() == 0 )
+                {
+                    continue;
+                }
+            else if ( line.size() != fields.size() )
+                {
+                    std::cout << "Corrupted line: " << line_count
+                              << ". Expected " << fields.size()
+                              << " fields, saw " << line.size() << "."
+                              << std::endl;
+
+                    continue;
+                }
+
+            for ( size_t i = 0; i < fields.size(); ++i )
+                {
+                    flen[i] = std::min(
+                        buffer_length - 1,
+                        static_cast<SQLLEN>( line[i].size() ) );
+
+                    std::copy(
+                        line[i].begin(),
+                        line[i].begin() + flen[i],
+                        reinterpret_cast<char*>( fields[i].get() ) );
+                }
+
+            ret = SQLExecute( stmt.handle_ );
+
+            ODBCError::check(
+                ret, "SQLExecute in read", stmt.handle_, SQL_HANDLE_DBC );
+        }
+
+    // ----------------------------------------------------------------
+
+    ret = SQLEndTran( SQL_HANDLE_DBC, conn->handle_, SQL_COMMIT );
+
+    ODBCError::check(
+        ret, "SQLEndTran(SQL_COMMIT) in read", conn->handle_, SQL_HANDLE_DBC );
+
+    // ----------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
