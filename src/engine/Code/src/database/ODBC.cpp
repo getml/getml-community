@@ -508,7 +508,38 @@ std::vector<std::string> ODBC::list_tables()
         }
 
     // ------------------------------------------------------
-    // MSSQL style
+    // Oracle style
+
+    try
+        {
+            auto iter = ODBCIterator(
+                make_connection(),
+                "SELECT table_name FROM all_tables;",
+                time_formats_ );
+
+            while ( !iter.end() )
+                {
+                    all_tables.push_back( iter.get_string() );
+                }
+        }
+    catch ( std::exception& e )
+        {
+            if ( std::string( e.what() ).find( "(SQL_ERROR)" ) ==
+                 std::string::npos )
+                {
+                    throw std::runtime_error( e.what() );
+                }
+        }
+
+    // ------------------------------------------------------
+
+    if ( all_tables.size() > 0 )
+        {
+            return all_tables;
+        }
+
+    // ------------------------------------------------------
+    // Postgres, MSSQL style
 
     try
         {
@@ -538,6 +569,29 @@ std::vector<std::string> ODBC::list_tables()
             return all_tables;
         }
 
+    // ------------------------------------------------------
+    // IBM DB2 style (untested)
+
+    try
+        {
+            auto iter = ODBCIterator(
+                make_connection(), "LIST TABLES;", time_formats_ );
+
+            while ( !iter.end() )
+                {
+                    iter.get_string();                          // TABLE_SCHEM
+                    all_tables.push_back( iter.get_string() );  // TABLE_NAME
+                    iter.get_string();                          // TABLE_TYPE
+                }
+        }
+    catch ( std::exception& e )
+        {
+            if ( std::string( e.what() ).find( "(SQL_ERROR)" ) ==
+                 std::string::npos )
+                {
+                    throw std::runtime_error( e.what() );
+                }
+        }
     // ------------------------------------------------------
 
     return all_tables;
