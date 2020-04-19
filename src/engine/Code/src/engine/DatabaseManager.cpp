@@ -221,8 +221,12 @@ void DatabaseManager::read_csv(
                 "The separator (sep) must consist of exactly one character!" );
         }
 
-    const auto limit =
-        num_lines_read > 0 ? num_lines_read + skip : num_lines_read;
+    auto limit = num_lines_read > 0 ? num_lines_read + skip : num_lines_read;
+
+    if ( !colnames && limit > 0 )
+        {
+            ++limit;
+        }
 
     // --------------------------------------------------------------------
 
