@@ -4,6 +4,33 @@ namespace database
 {
 // ----------------------------------------------------------------------------
 
+void ODBC::check_colnames(
+    const std::vector<std::string>& _colnames, io::Reader* _reader )
+{
+    const auto csv_colnames = _reader->colnames();
+
+    if ( csv_colnames.size() != _colnames.size() )
+        {
+            throw std::runtime_error(
+                "Wrong number of columns. Expected " +
+                std::to_string( _colnames.size() ) + ", saw " +
+                std::to_string( csv_colnames.size() ) + "." );
+        }
+
+    for ( size_t i = 0; i < _colnames.size(); ++i )
+        {
+            if ( csv_colnames.at( i ) != _colnames.at( i ) )
+                {
+                    throw std::runtime_error(
+                        "Column " + std::to_string( i + 1 ) +
+                        " has wrong name. Expected '" + _colnames.at( i ) +
+                        "', saw '" + csv_colnames.at( i ) + "'." );
+                }
+        }
+}
+
+// ----------------------------------------------------------------------------
+
 void ODBC::drop_table( const std::string& _tname )
 {
     std::string query = "DROP TABLE ";
@@ -755,6 +782,10 @@ void ODBC::read(
         }
 
     // ------------------------------------------------------------------------
+
+    check_colnames( colnames, _reader );
+
+    // ------------------------------------------------------------------------
     // Skip lines, if necessary.
 
     size_t line_count = 0;
@@ -764,19 +795,6 @@ void ODBC::read(
             _reader->next_line();
             ++line_count;
         }
-
-    //  ------------------------------------------------------------------------
-    // Check headers, if necessary.
-
-    // TODO: Check colnames
-    _reader->colnames();
-
-    /*if ( _header )
-        {
-            // check_colnames( colnames, _reader ); // TODO
-            _reader->next_line();
-            ++line_count;
-        }*/
 
     // ------------------------------------------------------------------------
 

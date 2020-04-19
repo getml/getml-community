@@ -133,6 +133,11 @@ class ODBC : public Connector
     // -------------------------------
 
    private:
+    /// Makes sure that the colnames of the CSV file match the colnames of the
+    /// target table.
+    void check_colnames(
+        const std::vector<std::string>& _colnames, io::Reader* _reader );
+
     /// Generate an iterator that is limited, trying different SQL statements.
     std::optional<ODBCIterator> make_limited_iterator(
         const std::string& _table,

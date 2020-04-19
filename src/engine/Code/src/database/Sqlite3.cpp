@@ -20,12 +20,12 @@ void Sqlite3::check_colnames(
 
     for ( size_t i = 0; i < _colnames.size(); ++i )
         {
-            if ( csv_colnames[i] != _colnames[i] )
+            if ( csv_colnames.at( i ) != _colnames.at( i ) )
                 {
                     throw std::runtime_error(
                         "Column " + std::to_string( i + 1 ) +
-                        " has wrong name. Expected '" + _colnames[i] +
-                        "', saw '" + csv_colnames[i] + "'." );
+                        " has wrong name. Expected '" + _colnames.at( i ) +
+                        "', saw '" + csv_colnames.at( i ) + "'." );
                 }
         }
 }
@@ -492,6 +492,10 @@ void Sqlite3::read(
     const auto stmt = make_insert_statement( _table, colnames );
 
     // ------------------------------------------------------------------------
+
+    check_colnames( colnames, _reader );
+
+    // ------------------------------------------------------------------------
     // Skip lines, if necessary.
 
     size_t line_count = 0;
@@ -501,11 +505,6 @@ void Sqlite3::read(
             _reader->next_line();
             ++line_count;
         }
-
-    // ------------------------------------------------------------------------
-    // Check colnames.
-
-    check_colnames( colnames, _reader );
 
     // ------------------------------------------------------------------------
 

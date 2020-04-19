@@ -112,8 +112,8 @@ class Postgres : public Connector
    private:
     /// Makes sure that the colnames of the CSV file match the colnames of the
     /// target table.
-    /*    void check_colnames(
-            const std::vector<std::string>& _colnames, io::Reader* _reader );*/
+    void check_colnames(
+        const std::vector<std::string>& _colnames, io::Reader* _reader );
 
     /// Returns the io::Datatype associated with a oid.
     io::Datatype interpret_oid( Oid _oid ) const;

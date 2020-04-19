@@ -125,6 +125,11 @@ class MySQL : public Connector
     // -------------------------------
 
    private:
+    /// Makes sure that the colnames of the CSV file match the colnames of the
+    /// target table.
+    void check_colnames(
+        const std::vector<std::string>& _colnames, io::Reader* _reader );
+
     /// Executes and SQL command given a connection.
     std::shared_ptr<MYSQL_RES> exec(
         const std::string& _sql, const std::shared_ptr<MYSQL>& _conn ) const;
