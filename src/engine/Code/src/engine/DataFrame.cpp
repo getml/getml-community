@@ -444,6 +444,8 @@ void DataFrame::from_csv(
     const std::vector<std::string> &_fnames,
     const std::string &_quotechar,
     const std::string &_sep,
+    const size_t _num_lines_read,
+    const size_t _skip,
     const std::vector<std::string> &_time_formats,
     const std::vector<std::string> &_categorical_names,
     const std::vector<std::string> &_join_key_names,
@@ -467,6 +469,14 @@ void DataFrame::from_csv(
                 "The separator must contain exactly one character!" );
         }
 
+    auto limit =
+        ( _num_lines_read > 0 ) ? ( _num_lines_read + _skip ) : _num_lines_read;
+
+    if ( !_colnames && limit > 0 )
+        {
+            ++limit;
+        }
+
     // ------------------------------------------------------------------------
 
     auto df = containers::DataFrame( name(), categories_, join_keys_encoding_ );
@@ -478,11 +488,12 @@ void DataFrame::from_csv(
 
             const std::shared_ptr<io::Reader> reader =
                 std::make_shared<io::CSVReader>(
-                    _colnames, _fnames[i], _quotechar[0], _sep[0] );
+                    _colnames, _fnames[i], limit, _quotechar[0], _sep[0] );
 
             local_df.from_reader(
                 reader,
                 _fnames[i],
+                _skip,
                 _time_formats,
                 _categorical_names,
                 _join_key_names,
@@ -952,6 +963,7 @@ void DataFrame::from_query(
 void DataFrame::from_reader(
     const std::shared_ptr<io::Reader> &_reader,
     const std::string &_fname,
+    const size_t _skip,
     const std::vector<std::string> &_time_formats,
     const std::vector<std::string> &_categorical_names,
     const std::vector<std::string> &_join_key_names,
@@ -1039,7 +1051,12 @@ void DataFrame::from_reader(
     // ------------------------------------------------------------------------
     // Read CSV file content into the vectors
 
-    size_t line_count = 1;
+    size_t line_count = 0;
+
+    for ( size_t i = 0; i < _skip; ++i )
+        {
+            _reader->next_line();
+        }
 
     while ( !_reader->eof() )
         {
@@ -1126,6 +1143,8 @@ void DataFrame::from_s3(
     const std::vector<std::string> &_fnames,
     const std::string &_region,
     const std::string &_sep,
+    const size_t _num_lines_read,
+    const size_t _skip,
     const std::vector<std::string> &_time_formats,
     const std::vector<std::string> &_categorical_names,
     const std::vector<std::string> &_join_key_names,
@@ -1143,6 +1162,15 @@ void DataFrame::from_s3(
                 "The separator must contain exactly one character!" );
         }
 
+    auto limit = ( _num_lines_read > 0 )
+                     ? static_cast<Int>( _num_lines_read + _skip )
+                     : static_cast<Int>( 0 );
+
+    if ( !_colnames && limit > 0 )
+        {
+            ++limit;
+        }
+
     // ------------------------------------------------------------------------
 
     auto df = containers::DataFrame( name(), categories_, join_keys_encoding_ );
@@ -1154,11 +1182,12 @@ void DataFrame::from_s3(
 
             const std::shared_ptr<io::Reader> reader =
                 std::make_shared<io::S3Reader>(
-                    _bucket, _colnames, _fnames[i], 0, _region, _sep[0] );
+                    _bucket, _colnames, _fnames[i], limit, _region, _sep[0] );
 
             local_df.from_reader(
                 reader,
                 _fnames[i],
+                _skip,
                 _time_formats,
                 _categorical_names,
                 _join_key_names,

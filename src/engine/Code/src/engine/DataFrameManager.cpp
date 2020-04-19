@@ -850,9 +850,14 @@ void DataFrameManager::from_csv(
     const auto fnames = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "fnames_" ) );
 
+    const auto num_lines_read =
+        JSON::get_value<size_t>( _cmd, "num_lines_read_" );
+
     const auto quotechar = JSON::get_value<std::string>( _cmd, "quotechar_" );
 
     const auto sep = JSON::get_value<std::string>( _cmd, "sep_" );
+
+    const auto skip = JSON::get_value<size_t>( _cmd, "skip_" );
 
     const auto time_formats = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "time_formats_" ) );
@@ -901,6 +906,8 @@ void DataFrameManager::from_csv(
         fnames,
         quotechar,
         sep,
+        num_lines_read,
+        skip,
         time_formats,
         categoricals,
         join_keys,
@@ -1298,7 +1305,12 @@ void DataFrameManager::from_s3(
 
     const auto region = JSON::get_value<std::string>( _cmd, "region_" );
 
+    const auto num_lines_read =
+        JSON::get_value<size_t>( _cmd, "num_lines_read_" );
+
     const auto sep = JSON::get_value<std::string>( _cmd, "sep_" );
+
+    const auto skip = JSON::get_value<size_t>( _cmd, "skip_" );
 
     const auto time_formats = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "time_formats_" ) );
@@ -1348,6 +1360,8 @@ void DataFrameManager::from_s3(
         keys,
         region,
         sep,
+        num_lines_read,
+        skip,
         time_formats,
         categoricals,
         join_keys,

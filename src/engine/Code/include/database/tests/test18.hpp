@@ -60,7 +60,8 @@ void test18( std::filesystem::path _test_path )
 
     mysql_db.execute( population_statement );
 
-    auto reader = io::CSVReader( std::nullopt, _test_path.string(), '\"', ',' );
+    auto reader =
+        io::CSVReader( std::nullopt, _test_path.string(), 0, '\"', ',' );
 
     mysql_db.read( "POPULATION", 0, &reader );
 

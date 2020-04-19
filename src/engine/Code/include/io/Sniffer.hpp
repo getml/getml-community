@@ -117,7 +117,8 @@ class Sniffer
             0>
     CSVReader make_reader( const std::string& _fname ) const
     {
-        return CSVReader( colnames_, _fname, quotechar_, sep_ );
+        const auto limit = num_lines_sniffed_ + skip_;
+        return CSVReader( colnames_, _fname, limit, quotechar_, sep_ );
     }
 
     /// Makes a S3Reader, when this is the required type for the reader.
@@ -127,13 +128,8 @@ class Sniffer
             0>
     S3Reader make_reader( const std::string& _fname ) const
     {
-        return S3Reader(
-            bucket_,
-            colnames_,
-            _fname,
-            static_cast<Int>( num_lines_sniffed_ + 1 ),
-            region_,
-            sep_ );
+        const auto limit = static_cast<Int>( num_lines_sniffed_ + skip_ );
+        return S3Reader( bucket_, colnames_, _fname, limit, region_, sep_ );
     }
 
     // -------------------------------
@@ -256,7 +252,7 @@ std::string Sniffer<ReaderType>::sniff() const
                     check( reader.colnames(), colnames, fname );
                 }
 
-            while ( !reader.eof() && line_count < num_lines_sniffed_ )
+            while ( !reader.eof() )
                 {
                     // --------------------------------------------------------
                     // Read the next line.

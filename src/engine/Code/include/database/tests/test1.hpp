@@ -29,7 +29,8 @@ void test1( std::filesystem::path _test_path )
 
     sqlite_db.execute( population_statement );
 
-    auto reader = io::CSVReader( std::nullopt, _test_path.string(), '\"', ',' );
+    auto reader =
+        io::CSVReader( std::nullopt, _test_path.string(), 0, '\"', ',' );
 
     sqlite_db.read( "POPULATION", 0, &reader );
 

@@ -198,6 +198,9 @@ void DatabaseManager::read_csv(
     const auto fnames = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "fnames_" ) );
 
+    const auto num_lines_read =
+        JSON::get_value<size_t>( _cmd, "num_lines_read_" );
+
     const auto quotechar = JSON::get_value<std::string>( _cmd, "quotechar_" );
 
     const auto sep = JSON::get_value<std::string>( _cmd, "sep_" );
@@ -218,12 +221,15 @@ void DatabaseManager::read_csv(
                 "The separator (sep) must consist of exactly one character!" );
         }
 
+    const auto limit =
+        num_lines_read > 0 ? num_lines_read + skip : num_lines_read;
+
     // --------------------------------------------------------------------
 
     for ( const auto& fname : fnames )
         {
             auto reader =
-                io::CSVReader( colnames, fname, quotechar[0], sep[0] );
+                io::CSVReader( colnames, fname, limit, quotechar[0], sep[0] );
 
             connector()->read( _name, skip, &reader );
 

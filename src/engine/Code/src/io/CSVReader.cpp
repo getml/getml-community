@@ -23,6 +23,8 @@ std::vector<std::string> CSVReader::next_line()
 
     std::getline( *filestream_, line );
 
+    num_lines_read_++;
+
     if ( line.size() == 0 )
         {
             return std::vector<std::string>();

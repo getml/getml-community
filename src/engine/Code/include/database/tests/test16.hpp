@@ -65,6 +65,7 @@ void test16( std::filesystem::path _test_path )
         std::vector<std::string>(
             {"column_01", "join_key", "time_stamp", "targets"} ),
         _test_path.string(),
+        0,
         '\"',
         ',' );
 
