@@ -2178,10 +2178,10 @@ void DataFrameManager::to_csv(
         {
             auto fnum_str = std::to_string( ++fnum );
 
-            if ( fnum_str.size() < 4 )
+            if ( fnum_str.size() < 5 )
                 {
                     fnum_str =
-                        std::string( 4 - fnum_str.size(), '0' ) + fnum_str;
+                        std::string( 5 - fnum_str.size(), '0' ) + fnum_str;
                 }
 
             const auto current_fname = batch_size == 0
@@ -2246,6 +2246,76 @@ void DataFrameManager::to_db(
     connector()->read( table_name, 0, &reader );
 
     database_manager_->post_tables();
+
+    // --------------------------------------------------------------------
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    // --------------------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
+void DataFrameManager::to_s3(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    // --------------------------------------------------------------------
+
+    const auto batch_size = JSON::get_value<size_t>( _cmd, "batch_size_" );
+
+    const auto bucket = JSON::get_value<std::string>( _cmd, "bucket_" );
+
+    const auto key = JSON::get_value<std::string>( _cmd, "key_" );
+
+    const auto region = JSON::get_value<std::string>( _cmd, "region_" );
+
+    const auto sep = JSON::get_value<std::string>( _cmd, "sep_" );
+
+    // --------------------------------------------------------------------
+
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    // --------------------------------------------------------------------
+    // Set up the DataFrameReader.
+
+    const auto& df = utils::Getter::get( _name, data_frames() );
+
+    // We are using the bell character (\a) as the quotechar. It is least
+    // likely to appear in any field.
+    auto reader = containers::DataFrameReader(
+        df, categories_, join_keys_encoding_, '\a', '|' );
+
+    const auto colnames = reader.colnames();
+
+    // --------------------------------------------------------------------
+
+    size_t fnum = 0;
+
+    while ( !reader.eof() )
+        {
+            auto tfile = Poco::TemporaryFile();
+
+            auto writer =
+                io::CSVWriter( tfile.path(), batch_size, colnames, "\"", sep );
+
+            writer.write( &reader );
+
+            auto fnum_str = std::to_string( ++fnum );
+
+            if ( fnum_str.size() < 5 )
+                {
+                    fnum_str =
+                        std::string( 5 - fnum_str.size(), '0' ) + fnum_str;
+                }
+
+            const auto current_key =
+                batch_size == 0 ? key + ".csv" : key + "-" + fnum_str + ".csv";
+
+            goutils::S3::upload_file(
+                tfile.path(), bucket, current_key, region );
+        }
 
     // --------------------------------------------------------------------
 

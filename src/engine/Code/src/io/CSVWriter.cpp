@@ -79,6 +79,8 @@ void CSVWriter::write( io::Reader* _reader )
 
             filestream() << buffer;
         }
+
+    filestream().close();
 }
 
 // ------------------------------------------------------------------------

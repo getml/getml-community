@@ -228,14 +228,20 @@ class DataFrameManager
     void summarize(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
 
+    /// Writes the dataframe to CSV.
+    void to_csv(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
     /// Writes the dataframe into the data base.
     void to_db(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
-    /// Writes the dataframe to CSV.
-    void to_csv(
+    /// Writes the dataframe to CSV files located in an S3 bucket.
+    void to_s3(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );

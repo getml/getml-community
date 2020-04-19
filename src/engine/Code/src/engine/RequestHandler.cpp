@@ -200,6 +200,10 @@ void RequestHandler::run()
                 {
                     data_frame_manager().to_db( name, cmd, &socket() );
                 }
+            else if ( type == "DataFrame.to_s3" )
+                {
+                    data_frame_manager().to_s3( name, cmd, &socket() );
+                }
             else if ( type == "DataFrame.where" )
                 {
                     data_frame_manager().where( name, cmd, &socket() );
