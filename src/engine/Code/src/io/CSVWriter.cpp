@@ -56,9 +56,10 @@ void CSVWriter::write( io::Reader* _reader )
     // ----------------------------------------------------------------
     // Insert line by line.
 
-    Int line_count = 0;
+    size_t line_count = 0;
 
-    while ( !_reader->eof() )
+    while ( !_reader->eof() &&
+            ( batch_size_ == 0 || line_count < batch_size_ ) )
         {
             const std::vector<std::string> line = _reader->next_line();
 

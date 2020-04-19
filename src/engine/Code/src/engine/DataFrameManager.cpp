@@ -2148,6 +2148,8 @@ void DataFrameManager::to_csv(
 
     const auto fname = JSON::get_value<std::string>( _cmd, "fname_" );
 
+    const auto batch_size = JSON::get_value<size_t>( _cmd, "batch_size_" );
+
     const auto quotechar = JSON::get_value<std::string>( _cmd, "quotechar_" );
 
     const auto sep = JSON::get_value<std::string>( _cmd, "sep_" );
@@ -2166,15 +2168,31 @@ void DataFrameManager::to_csv(
     auto reader = containers::DataFrameReader(
         df, categories_, join_keys_encoding_, '\a', '|' );
 
-    // --------------------------------------------------------------------
-    // Set up the CSVWriter.
-
-    auto writer = io::CSVWriter( fname, reader.colnames(), quotechar, sep );
+    const auto colnames = reader.colnames();
 
     // --------------------------------------------------------------------
-    // Write data to the file.
 
-    writer.write( &reader );
+    size_t fnum = 0;
+
+    while ( !reader.eof() )
+        {
+            auto fnum_str = std::to_string( ++fnum );
+
+            if ( fnum_str.size() < 4 )
+                {
+                    fnum_str =
+                        std::string( 4 - fnum_str.size(), '0' ) + fnum_str;
+                }
+
+            const auto current_fname = batch_size == 0
+                                           ? fname + ".csv"
+                                           : fname + "-" + fnum_str + ".csv";
+
+            auto writer = io::CSVWriter(
+                current_fname, batch_size, colnames, quotechar, sep );
+
+            writer.write( &reader );
+        }
 
     // --------------------------------------------------------------------
 
