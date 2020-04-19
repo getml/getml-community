@@ -187,10 +187,16 @@ void DatabaseManager::read_csv(
 {
     // --------------------------------------------------------------------
 
+    auto colnames = std::optional<std::vector<std::string>>();
+
+    if ( _cmd.has( "colnames_" ) )
+        {
+            colnames = JSON::array_to_vector<std::string>(
+                JSON::get_array( _cmd, "colnames_" ) );
+        }
+
     const auto fnames = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "fnames_" ) );
-
-    const auto header = JSON::get_value<bool>( _cmd, "header_" );
 
     const auto quotechar = JSON::get_value<std::string>( _cmd, "quotechar_" );
 
@@ -216,9 +222,10 @@ void DatabaseManager::read_csv(
 
     for ( const auto& fname : fnames )
         {
-            auto reader = io::CSVReader( fname, quotechar[0], sep[0] );
+            auto reader =
+                io::CSVReader( colnames, fname, quotechar[0], sep[0] );
 
-            connector()->read( _name, header, skip, &reader );
+            connector()->read( _name, skip, &reader );
 
             logger().log( "Read '" + fname + "'." );
         }
@@ -239,10 +246,16 @@ void DatabaseManager::sniff_csv(
 {
     // --------------------------------------------------------------------
 
+    auto colnames = std::optional<std::vector<std::string>>();
+
+    if ( _cmd.has( "colnames_" ) )
+        {
+            colnames = JSON::array_to_vector<std::string>(
+                JSON::get_array( _cmd, "colnames_" ) );
+        }
+
     const auto fnames = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "fnames_" ) );
-
-    const auto header = JSON::get_value<bool>( _cmd, "header_" );
 
     const auto num_lines_sniffed =
         JSON::get_value<size_t>( _cmd, "num_lines_sniffed_" );
@@ -274,9 +287,9 @@ void DatabaseManager::sniff_csv(
     // --------------------------------------------------------------------
 
     auto sniffer = io::CSVSniffer(
+        colnames,
         dialect,
         fnames,
-        header,
         num_lines_sniffed,
         quotechar[0],
         sep[0],
@@ -305,6 +318,14 @@ void DatabaseManager::sniff_s3(
 
     const auto bucket = JSON::get_value<std::string>( _cmd, "bucket_" );
 
+    auto colnames = std::optional<std::vector<std::string>>();
+
+    if ( _cmd.has( "colnames_" ) )
+        {
+            colnames = JSON::array_to_vector<std::string>(
+                JSON::get_array( _cmd, "colnames_" ) );
+        }
+
     const auto keys =
         JSON::array_to_vector<std::string>( JSON::get_array( _cmd, "keys_" ) );
 
@@ -332,7 +353,15 @@ void DatabaseManager::sniff_s3(
     // --------------------------------------------------------------------
 
     auto sniffer = io::S3Sniffer(
-        bucket, dialect, keys, num_lines_sniffed, region, sep[0], skip, _name );
+        bucket,
+        colnames,
+        dialect,
+        keys,
+        num_lines_sniffed,
+        region,
+        sep[0],
+        skip,
+        _name );
 
     const auto create_table_statement = sniffer.sniff();
 

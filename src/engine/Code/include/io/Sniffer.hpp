@@ -14,9 +14,9 @@ class Sniffer
     /// Constructer for CSVSniffer
     template <typename R = ReaderType>
     Sniffer(
+        const std::optional<std::vector<std::string>>& _colnames,
         const std::string& _dialect,
         const std::vector<std::string>& _files,
-        const bool _header,
         const size_t _num_lines_sniffed,
         const char _quotechar,
         const char _sep,
@@ -24,9 +24,9 @@ class Sniffer
         const std::string& _table_name,
         typename std::enable_if<std::is_same<R, CSVReader>::value>::type* = 0 )
         : bucket_( "" ),
+          colnames_( _colnames ),
           dialect_( _dialect ),
           files_( _files ),
-          header_( _header ),
           num_lines_sniffed_( _num_lines_sniffed ),
           quotechar_( _quotechar ),
           region_( "" ),
@@ -45,6 +45,7 @@ class Sniffer
     template <typename R = ReaderType>
     Sniffer(
         const std::string& _bucket,
+        const std::optional<std::vector<std::string>>& _colnames,
         const std::string& _dialect,
         const std::vector<std::string>& _files,
         const size_t _num_lines_sniffed,
@@ -54,9 +55,9 @@ class Sniffer
         const std::string& _table_name,
         typename std::enable_if<std::is_same<R, S3Reader>::value>::type* = 0 )
         : bucket_( _bucket ),
+          colnames_( _colnames ),
           dialect_( _dialect ),
           files_( _files ),
-          header_( true ),
           num_lines_sniffed_( _num_lines_sniffed ),
           quotechar_( '"' ),
           region_( _region ),
@@ -82,21 +83,15 @@ class Sniffer
     // -------------------------------
 
    private:
-    /// Makes sure that the column headers are accurate.
+    /// Makes sure that the column names are accurate.
     void check(
-        const std::vector<std::string>& _line,
+        const std::vector<std::string>& _csv_colnames,
         const std::vector<std::string>& _colnames,
         const std::string& _fname ) const;
 
     /// Parses the datatype from a string.
     Datatype infer_datatype(
         const Datatype _type, const std::string& _str ) const;
-
-    /// Initializes colnames and datatypes.
-    void init(
-        const std::vector<std::string>& _line,
-        std::vector<std::string>* _colnames,
-        std::vector<Datatype>* _datatypes ) const;
 
     // -------------------------------
 
@@ -122,7 +117,7 @@ class Sniffer
             0>
     CSVReader make_reader( const std::string& _fname ) const
     {
-        return CSVReader( _fname, quotechar_, sep_ );
+        return CSVReader( colnames_, _fname, quotechar_, sep_ );
     }
 
     /// Makes a S3Reader, when this is the required type for the reader.
@@ -134,6 +129,7 @@ class Sniffer
     {
         return S3Reader(
             bucket_,
+            colnames_,
             _fname,
             static_cast<Int>( num_lines_sniffed_ + 1 ),
             region_,
@@ -146,15 +142,15 @@ class Sniffer
     /// The bucket to be used (for S3Sniffer only).
     const std::string bucket_;
 
+    /// The colnames are passed on to the reader.
+    const std::optional<std::vector<std::string>> colnames_;
+
     /// The SQL dialect in which the CREATE TABLE statement is to be
     /// returned.
     const std::string dialect_;
 
     /// The files to be sniffed.
     const std::vector<std::string> files_;
-
-    /// Whether the CSV files contain header variables.
-    const bool header_;
 
     /// The number of lines sniffed in each file.
     const size_t num_lines_sniffed_;
@@ -182,29 +178,26 @@ class Sniffer
 
 template <class ReaderType>
 void Sniffer<ReaderType>::check(
-    const std::vector<std::string>& _line,
+    const std::vector<std::string>& _csv_colnames,
     const std::vector<std::string>& _colnames,
     const std::string& _fname ) const
 {
-    if ( _line.size() != _colnames.size() )
+    if ( _csv_colnames.size() != _colnames.size() )
         {
             throw std::invalid_argument(
                 "Wrong number of columns in '" + _fname + "'. Expected " +
                 std::to_string( _colnames.size() ) + ", saw " +
-                std::to_string( _line.size() ) + "." );
+                std::to_string( _csv_colnames.size() ) + "." );
         }
 
-    if ( header_ )
+    for ( size_t i = 0; i < _csv_colnames.size(); ++i )
         {
-            for ( size_t i = 0; i < _line.size(); ++i )
+            if ( _csv_colnames.at( i ) != _colnames.at( i ) )
                 {
-                    if ( _line[i] != _colnames[i] )
-                        {
-                            throw std::runtime_error(
-                                "Column " + std::to_string( i + 1 ) + " in '" +
-                                _fname + "' has wrong name. Expected '" +
-                                _colnames[i] + "', saw '" + _line[i] + "'." );
-                        }
+                    throw std::runtime_error(
+                        "Column " + std::to_string( i + 1 ) + " in '" + _fname +
+                        "' has wrong name. Expected '" + _colnames.at( i ) +
+                        "', saw '" + _csv_colnames.at( i ) + "'." );
                 }
         }
 }
@@ -236,29 +229,6 @@ Datatype Sniffer<ReaderType>::infer_datatype(
 // ----------------------------------------------------------------------------
 
 template <class ReaderType>
-void Sniffer<ReaderType>::init(
-    const std::vector<std::string>& _line,
-    std::vector<std::string>* _colnames,
-    std::vector<Datatype>* _datatypes ) const
-{
-    if ( header_ )
-        {
-            *_colnames = _line;
-        }
-    else
-        {
-            for ( size_t i = 0; i < _line.size(); ++i )
-                {
-                    _colnames->push_back( "COLUMN_" + std::to_string( i + 1 ) );
-                }
-        }
-
-    *_datatypes = std::vector<Datatype>( _line.size(), Datatype::unknown );
-}
-
-// ----------------------------------------------------------------------------
-
-template <class ReaderType>
 std::string Sniffer<ReaderType>::sniff() const
 {
     // ------------------------------------------------------------------------
@@ -275,6 +245,17 @@ std::string Sniffer<ReaderType>::sniff() const
 
             auto reader = make_reader( fname );
 
+            if ( colnames.size() == 0 )
+                {
+                    colnames = reader.colnames();
+                    datatypes = std::vector<io::Datatype>(
+                        colnames.size(), io::Datatype::unknown );
+                }
+            else
+                {
+                    check( reader.colnames(), colnames, fname );
+                }
+
             while ( !reader.eof() && line_count < num_lines_sniffed_ )
                 {
                     // --------------------------------------------------------
@@ -282,23 +263,17 @@ std::string Sniffer<ReaderType>::sniff() const
 
                     std::vector<std::string> line = reader.next_line();
 
-                    if ( line.size() == 0 ) continue;
+                    if ( line.size() == 0 )
+                        {
+                            continue;
+                        }
 
                     // --------------------------------------------------------
                     // Check the line size.
 
                     ++line_count;
 
-                    if ( line_count - 1 == skip_ )
-                        {
-                            if ( colnames.size() == 0 )
-                                init( line, &colnames, &datatypes );
-                            else
-                                check( line, colnames, fname );
-
-                            if ( header_ ) continue;
-                        }
-                    else if ( line_count - 1 < skip_ )
+                    if ( line_count - 1 < skip_ )
                         {
                             continue;
                         }

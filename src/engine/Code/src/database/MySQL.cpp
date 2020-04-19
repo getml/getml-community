@@ -302,10 +302,7 @@ std::string MySQL::make_bulk_insert_query(
 // ----------------------------------------------------------------------------
 
 void MySQL::read(
-    const std::string& _table,
-    const bool _header,
-    const size_t _skip,
-    io::Reader* _reader )
+    const std::string& _table, const size_t _skip, io::Reader* _reader )
 {
     // ------------------------------------------------------------------------
     // Get colnames and coltypes
@@ -330,12 +327,15 @@ void MySQL::read(
     //  ------------------------------------------------------------------------
     // Check headers, if necessary.
 
-    if ( _header )
+    // TODO: Check colnames
+    _reader->colnames();
+
+    /*if ( _header )
         {
             // check_colnames( colnames, _reader ); // TODO
             _reader->next_line();
             ++line_count;
-        }
+        }*/
 
     // ----------------------------------------------------------------
     // Create a temporary file and insert the parsed CSV, line by line.

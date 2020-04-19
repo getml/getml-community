@@ -13,11 +13,13 @@ class S3Reader : public Reader
    public:
     S3Reader(
         const std::string& _bucket,
+        const std::optional<std::vector<std::string>>& _colnames,
         const std::string& _key,
         const Int& _limit,
         const std::string& _region,
         const char _sep )
-        : current_row_( 0 ),
+        : colnames_( _colnames ),
+          current_row_( 0 ),
           ncols_( 0 ),
           nrows_( 0 ),
           nskipped_( 0 ),
@@ -40,6 +42,20 @@ class S3Reader : public Reader
     // -------------------------------
 
    public:
+    /// Colnames are either passed by the user or they are the first line of the
+    /// CSV file.
+    std::vector<std::string> colnames() final
+    {
+        if ( colnames_ )
+            {
+                return *colnames_;
+            }
+        else
+            {
+                return next_line();
+            }
+    }
+
     /// Whether the end of the file has been reached.
     bool eof() const final { return current_row_ >= nrows_; }
 
@@ -52,6 +68,10 @@ class S3Reader : public Reader
     // -------------------------------
 
    private:
+    /// Colnames are either passed by the user or they are the first line of the
+    /// CSV file.
+    const std::optional<std::vector<std::string>> colnames_;
+
     /// The row we are currently in.
     size_t current_row_;
 

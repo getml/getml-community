@@ -48,7 +48,6 @@ std::string CSVWriter::parse_field( const std::string& _raw_field ) const
 void CSVWriter::write( io::Reader* _reader )
 {
     //  ------------------------------------------------------------------------
-    // Check headers, if necessary.
 
     const std::string buffer = make_buffer( colnames_ );
 

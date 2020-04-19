@@ -245,10 +245,7 @@ std::string Postgres::make_connection_string(
 // ----------------------------------------------------------------------------
 
 void Postgres::read(
-    const std::string& _table,
-    const bool _header,
-    const size_t _skip,
-    io::Reader* _reader )
+    const std::string& _table, const size_t _skip, io::Reader* _reader )
 {
     // ------------------------------------------------------------------------
     // Get colnames and coltypes
@@ -273,12 +270,15 @@ void Postgres::read(
     //  ------------------------------------------------------------------------
     // Check headers, if necessary.
 
-    if ( _header )
+    // TODO: Check colnames
+    _reader->colnames();
+
+    /*if ( _header )
         {
             // check_colnames( colnames, _reader ); // TODO
             _reader->next_line();
             ++line_count;
-        }
+        }*/
 
     // ----------------------------------------------------------------
     // Insert line by line.

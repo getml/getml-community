@@ -440,6 +440,7 @@ const Column<Float> &DataFrame::float_column(
 // ----------------------------------------------------------------------------
 
 void DataFrame::from_csv(
+    const std::optional<std::vector<std::string>> &_colnames,
     const std::vector<std::string> &_fnames,
     const std::string &_quotechar,
     const std::string &_sep,
@@ -477,7 +478,7 @@ void DataFrame::from_csv(
 
             const std::shared_ptr<io::Reader> reader =
                 std::make_shared<io::CSVReader>(
-                    _fnames[i], _quotechar[0], _sep[0] );
+                    _colnames, _fnames[i], _quotechar[0], _sep[0] );
 
             local_df.from_reader(
                 reader,
@@ -964,7 +965,7 @@ void DataFrame::from_reader(
 
     assert_true( _reader );
 
-    const auto csv_colnames = _reader->next_line();
+    const auto csv_colnames = _reader->colnames();
 
     // ------------------------------------------------------------------------
 
@@ -1121,6 +1122,7 @@ void DataFrame::from_reader(
 
 void DataFrame::from_s3(
     const std::string &_bucket,
+    const std::optional<std::vector<std::string>> &_colnames,
     const std::vector<std::string> &_fnames,
     const std::string &_region,
     const std::string &_sep,
@@ -1152,7 +1154,7 @@ void DataFrame::from_s3(
 
             const std::shared_ptr<io::Reader> reader =
                 std::make_shared<io::S3Reader>(
-                    _bucket, _fnames[i], 0, _region, _sep[0] );
+                    _bucket, _colnames, _fnames[i], 0, _region, _sep[0] );
 
             local_df.from_reader(
                 reader,

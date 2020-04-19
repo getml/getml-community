@@ -16,9 +16,9 @@ void test6( std::filesystem::path _test_path )
     auto sqlite_db = database::Sqlite3( ":memory:", {"%Y-%m-%d %H:%M:%S"} );
 
     auto population_sniffer = io::CSVSniffer(
+        std::nullopt,
         "sqlite",
         {_test_path.string(), _test_path.string()},
-        true,
         100,
         '\"',
         ',',
@@ -31,9 +31,9 @@ void test6( std::filesystem::path _test_path )
 
     sqlite_db.execute( population_statement );
 
-    auto reader = io::CSVReader( _test_path.string(), '\"', ',' );
+    auto reader = io::CSVReader( std::nullopt, _test_path.string(), '\"', ',' );
 
-    sqlite_db.read( "POPULATION", true, 0, &reader );
+    sqlite_db.read( "POPULATION", 0, &reader );
 
     sqlite_db.drop_table( "POPULATION" );
 

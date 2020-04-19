@@ -11,8 +11,12 @@ class CSVReader : public Reader
 
    public:
     CSVReader(
-        const std::string& _fname, const char _quotechar, const char _sep )
-        : filestream_( std::make_shared<std::ifstream>(
+        const std::optional<std::vector<std::string>>& _colnames,
+        const std::string& _fname,
+        const char _quotechar,
+        const char _sep )
+        : colnames_( _colnames ),
+          filestream_( std::make_shared<std::ifstream>(
               std::ifstream( _fname, std::ifstream::in ) ) ),
           quotechar_( _quotechar ),
           sep_( _sep )
@@ -35,6 +39,20 @@ class CSVReader : public Reader
     // -------------------------------
 
    public:
+    /// Colnames are either passed by the user or they are the first line of the
+    /// CSV file.
+    std::vector<std::string> colnames() final
+    {
+        if ( colnames_ )
+            {
+                return *colnames_;
+            }
+        else
+            {
+                return next_line();
+            }
+    }
+
     /// Whether the end of the file has been reached.
     bool eof() const final { return filestream_->eof(); }
 
@@ -47,6 +65,10 @@ class CSVReader : public Reader
     // -------------------------------
 
    private:
+    /// Colnames are either passed by the user or they are the first line of the
+    /// CSV file.
+    const std::optional<std::vector<std::string>> colnames_;
+
     /// The filestream of the CSV source file.
     const std::shared_ptr<std::ifstream> filestream_;
 

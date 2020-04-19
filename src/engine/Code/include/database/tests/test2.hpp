@@ -16,9 +16,10 @@ void test2( std::filesystem::path _test_path )
     auto sqlite_db = database::Sqlite3( ":memory:", {"%Y-%m-%d %H:%M:%S"} );
 
     auto population_sniffer = io::CSVSniffer(
+        std::vector<std::string>(
+            {"column_01", "join_key", "time_stamp", "targets"} ),
         "sqlite",
         {_test_path.string(), _test_path.string()},
-        true,
         100,
         '\"',
         ',',
@@ -31,16 +32,21 @@ void test2( std::filesystem::path _test_path )
 
     sqlite_db.execute( population_statement );
 
-    auto reader = io::CSVReader( _test_path.string(), '\"', ',' );
+    auto reader = io::CSVReader(
+        std::vector<std::string>(
+            {"column_01", "join_key", "time_stamp", "targets"} ),
+        _test_path.string(),
+        '\"',
+        ',' );
 
-    sqlite_db.read( "POPULATION", false, 0, &reader );
+    sqlite_db.read( "POPULATION", 0, &reader );
 
     auto it = sqlite_db.select(
         {"column_01", "join_key", "time_stamp", "targets"}, "POPULATION", "" );
 
     // Header line (read in and formatted):
     assert_true( std::isnan( it->get_double() ) );
-    assert_true( it->get_string() == "NULL" );
+    assert_true( std::isnan( it->get_double() ) );
     assert_true( std::isnan( it->get_time_stamp() ) );
     assert_true( std::isnan( it->get_double() ) );
 

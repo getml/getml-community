@@ -11,6 +11,7 @@
 #include <iostream>
 #include <locale>
 #include <memory>
+#include <optional>
 #include <sstream>
 #include <stdexcept>
 #include <string>

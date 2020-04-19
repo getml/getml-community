@@ -839,6 +839,14 @@ void DataFrameManager::from_csv(
     // --------------------------------------------------------------------
     // Parse the command.
 
+    auto colnames = std::optional<std::vector<std::string>>();
+
+    if ( _cmd.has( "colnames_" ) )
+        {
+            colnames = JSON::array_to_vector<std::string>(
+                JSON::get_array( _cmd, "colnames_" ) );
+        }
+
     const auto fnames = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "fnames_" ) );
 
@@ -889,6 +897,7 @@ void DataFrameManager::from_csv(
         _name, local_categories, local_join_keys_encoding );
 
     df.from_csv(
+        colnames,
         fnames,
         quotechar,
         sep,
@@ -1276,6 +1285,14 @@ void DataFrameManager::from_s3(
 
     const auto bucket = JSON::get_value<std::string>( _cmd, "bucket_" );
 
+    auto colnames = std::optional<std::vector<std::string>>();
+
+    if ( _cmd.has( "colnames_" ) )
+        {
+            colnames = JSON::array_to_vector<std::string>(
+                JSON::get_array( _cmd, "colnames_" ) );
+        }
+
     const auto keys =
         JSON::array_to_vector<std::string>( JSON::get_array( _cmd, "keys_" ) );
 
@@ -1327,6 +1344,7 @@ void DataFrameManager::from_s3(
 
     df.from_s3(
         bucket,
+        colnames,
         keys,
         region,
         sep,
@@ -2193,7 +2211,7 @@ void DataFrameManager::to_db(
     // --------------------------------------------------------------------
     // Write data to the data base.
 
-    connector()->read( table_name, false, 0, &reader );
+    connector()->read( table_name, 0, &reader );
 
     database_manager_->post_tables();
 

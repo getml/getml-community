@@ -739,10 +739,7 @@ std::optional<ODBCIterator> ODBC::make_limited_iterator(
 // ----------------------------------------------------------------------------
 
 void ODBC::read(
-    const std::string& _table,
-    const bool _header,
-    const size_t _skip,
-    io::Reader* _reader )
+    const std::string& _table, const size_t _skip, io::Reader* _reader )
 {
     // ------------------------------------------------------------------------
 
@@ -771,12 +768,15 @@ void ODBC::read(
     //  ------------------------------------------------------------------------
     // Check headers, if necessary.
 
-    if ( _header )
+    // TODO: Check colnames
+    _reader->colnames();
+
+    /*if ( _header )
         {
             // check_colnames( colnames, _reader ); // TODO
             _reader->next_line();
             ++line_count;
-        }
+        }*/
 
     // ------------------------------------------------------------------------
 

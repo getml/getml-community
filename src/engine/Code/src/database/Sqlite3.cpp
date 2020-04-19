@@ -8,7 +8,7 @@ namespace database
 void Sqlite3::check_colnames(
     const std::vector<std::string>& _colnames, io::Reader* _reader )
 {
-    std::vector<std::string> csv_colnames = _reader->next_line();
+    const auto csv_colnames = _reader->colnames();
 
     if ( csv_colnames.size() != _colnames.size() )
         {
@@ -471,10 +471,7 @@ Sqlite3::make_insert_statement(
 // ----------------------------------------------------------------------------
 
 void Sqlite3::read(
-    const std::string& _table,
-    const bool _header,
-    const size_t _skip,
-    io::Reader* _reader )
+    const std::string& _table, const size_t _skip, io::Reader* _reader )
 {
     // ------------------------------------------------------------------------
     // Get colnames and coltypes
@@ -506,13 +503,9 @@ void Sqlite3::read(
         }
 
     // ------------------------------------------------------------------------
-    // Check headers, if necessary.
+    // Check colnames.
 
-    if ( _header )
-        {
-            check_colnames( colnames, _reader );
-            ++line_count;
-        }
+    check_colnames( colnames, _reader );
 
     // ------------------------------------------------------------------------
 

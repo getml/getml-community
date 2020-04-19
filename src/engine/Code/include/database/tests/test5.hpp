@@ -20,9 +20,9 @@ void test5( std::filesystem::path _test_path )
     try
         {
             auto population_sniffer = io::CSVSniffer(
+                std::nullopt,
                 "sqlite",
                 {"DOESNOTEXIST.CSV"},
-                true,
                 100,
                 '\"',
                 ',',
@@ -40,7 +40,8 @@ void test5( std::filesystem::path _test_path )
 
     try
         {
-            auto reader = io::CSVReader( "DOESNOTEXIST.CSV", '\"', ',' );
+            auto reader =
+                io::CSVReader( std::nullopt, "DOESNOTEXIST.CSV", '\"', ',' );
 
             assert_true( false );
         }
@@ -49,7 +50,7 @@ void test5( std::filesystem::path _test_path )
             // std::cout << e.what() << std::endl;
         }
 
-    auto reader = io::CSVReader( _test_path.string(), '\"', ',' );
+    auto reader = io::CSVReader( std::nullopt, _test_path.string(), '\"', ',' );
 
     // ---------------------------------------------------------------
 

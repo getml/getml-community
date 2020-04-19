@@ -405,7 +405,7 @@ void PipelineManager::to_db(
 
     connector()->execute( statement );
 
-    connector()->read( table_name, false, 0, &reader );
+    connector()->read( table_name, 0, &reader );
 
     database_manager_->post_tables();
 

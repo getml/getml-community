@@ -44,9 +44,10 @@ void test17( std::filesystem::path _test_path )
         database::MySQL( connectionObject, "testbert", timeFormats );
 
     auto population_sniffer = io::CSVSniffer(
+        std::vector<std::string>(
+            {"column_01", "join_key", "time_stamp", "targets"} ),
         "mysql",
         {_test_path.string(), _test_path.string()},
-        false,
         100,
         '\"',
         ',',
@@ -59,12 +60,17 @@ void test17( std::filesystem::path _test_path )
 
     mysql_db.execute( population_statement );
 
-    auto reader = io::CSVReader( _test_path.string(), '\"', ',' );
+    auto reader = io::CSVReader(
+        std::vector<std::string>(
+            {"column_01", "join_key", "time_stamp", "targets"} ),
+        _test_path.string(),
+        '\"',
+        ',' );
 
-    mysql_db.read( "POPULATION", false, 0, &reader );
+    mysql_db.read( "POPULATION", 0, &reader );
 
     auto it = mysql_db.select(
-        {"COLUMN_1", "COLUMN_2", "COLUMN_3", "COLUMN_4"}, "POPULATION", "" );
+        {"column_01", "join_key", "time_stamp", "targets"}, "POPULATION", "" );
 
     // Header line (read in and formatted):
     assert_true( std::isnan( it->get_double() ) );

@@ -63,6 +63,7 @@ class DataFrame
 
     /// Builds a dataframe from one or several CSV files.
     void from_csv(
+        const std::optional<std::vector<std::string>> &_colnames,
         const std::vector<std::string> &_fnames,
         const std::string &_quotechar,
         const std::string &_sep,
@@ -115,6 +116,7 @@ class DataFrame
     /// bucket.
     void from_s3(
         const std::string &_bucket,
+        const std::optional<std::vector<std::string>> &_colnames,
         const std::vector<std::string> &_fnames,
         const std::string &_region,
         const std::string &_sep,

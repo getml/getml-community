@@ -71,7 +71,6 @@ class MySQL : public Connector
     /// Reads a CSV file or another data source into a table.
     void read(
         const std::string& _table,
-        const bool _header,
         const size_t _skip,
         io::Reader* _reader ) final;
 

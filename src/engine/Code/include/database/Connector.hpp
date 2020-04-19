@@ -52,7 +52,6 @@ class Connector
     /// Reads from a CSV file or another data source.
     virtual void read(
         const std::string& _table,
-        const bool _header,
         const size_t _skip,
         io::Reader* _reader ) = 0;
 
