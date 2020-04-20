@@ -184,6 +184,20 @@ class FeatureEngineerer : public AbstractFeatureEngineerer
         return *feature_engineerer_;
     }
 
+    /// Trivial accessor.
+    const std::vector<std::string>& peripheral() const
+    {
+        assert_true( peripheral_ );
+        return *peripheral_;
+    }
+
+    /// Trivial accessor.
+    const Poco::JSON::Object& placeholder() const
+    {
+        assert_true( placeholder_ );
+        return *placeholder_;
+    }
+
     // --------------------------------------------------------
 
    private:
@@ -488,8 +502,16 @@ Poco::JSON::Object::Ptr FeatureEngineerer<FeatureEngineererType>::fingerprint()
 {
     auto obj = Poco::JSON::Object::Ptr( new Poco::JSON::Object() );
 
+    const auto placeholder_ptr =
+        Poco::JSON::Object::Ptr( new Poco::JSON::Object( placeholder() ) );
+
     obj->set( "cmd_", cmd_ );
+
     obj->set( "dependencies_", JSON::vector_to_array_ptr( dependencies_ ) );
+
+    obj->set( "peripheral_", JSON::vector_to_array_ptr( peripheral() ) );
+
+    obj->set( "placeholder_", placeholder_ptr );
 
     return obj;
 }
