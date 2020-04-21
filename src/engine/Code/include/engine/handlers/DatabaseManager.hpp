@@ -66,8 +66,14 @@ class DatabaseManager
     /// monitor.
     std::string post_tables();
 
-    /// Reads a CSV file into the database.
+    /// Reads CSV files into the database.
     void read_csv(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
+    /// Reads CSV files located in an S3 bucket into the database.
+    void read_s3(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );

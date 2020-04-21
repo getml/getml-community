@@ -72,6 +72,10 @@ void RequestHandler::run()
                 {
                     database_manager().read_csv( name, cmd, &socket() );
                 }
+            else if ( type == "Database.read_s3" )
+                {
+                    database_manager().read_s3( name, cmd, &socket() );
+                }
             else if ( type == "Database.sniff_csv" )
                 {
                     database_manager().sniff_csv( name, cmd, &socket() );
