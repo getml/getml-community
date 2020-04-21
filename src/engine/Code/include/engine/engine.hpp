@@ -28,6 +28,8 @@
 
 #include "engine/featureengineerers/featureengineerers.hpp"
 
+#include "engine/hyperparam/hyperparam.hpp"
+
 #include "engine/handlers/handlers.hpp"
 
 #include "engine/srv/srv.hpp"

@@ -15,6 +15,7 @@ class ServerConnectionFactoryImpl : public Poco::Net::TCPServerConnectionFactory
     ServerConnectionFactoryImpl(
         const std::shared_ptr<handlers::DatabaseManager>& _database_manager,
         const std::shared_ptr<handlers::DataFrameManager>& _data_frame_manager,
+        const std::shared_ptr<handlers::HyperoptManager>& _hyperopt_manager,
         const std::shared_ptr<const monitoring::Logger>& _logger,
         const config::Options& _options,
         const std::shared_ptr<handlers::PipelineManager>& _pipeline_manager,
@@ -22,6 +23,7 @@ class ServerConnectionFactoryImpl : public Poco::Net::TCPServerConnectionFactory
         const std::shared_ptr<std::atomic<bool>>& _shutdown )
         : database_manager_( _database_manager ),
           data_frame_manager_( _data_frame_manager ),
+          hyperopt_manager_( _hyperopt_manager ),
           logger_( _logger ),
           options_( _options ),
           pipeline_manager_( _pipeline_manager ),
@@ -39,6 +41,7 @@ class ServerConnectionFactoryImpl : public Poco::Net::TCPServerConnectionFactory
             _socket,
             database_manager_,
             data_frame_manager_,
+            hyperopt_manager_,
             logger_,
             pipeline_manager_,
             options_,
@@ -54,6 +57,9 @@ class ServerConnectionFactoryImpl : public Poco::Net::TCPServerConnectionFactory
 
     /// Handles requests related to the data frames.
     const std::shared_ptr<handlers::DataFrameManager> data_frame_manager_;
+
+    /// Handles requests related to the hyperparameter optimization.
+    const std::shared_ptr<handlers::HyperoptManager> hyperopt_manager_;
 
     /// Logs commands.
     const std::shared_ptr<const monitoring::Logger> logger_;

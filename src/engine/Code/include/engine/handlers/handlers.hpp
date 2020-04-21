@@ -54,6 +54,8 @@
 
 #include "engine/communication/communication.hpp"
 
+#include "engine/hyperparam/hyperparam.hpp"
+
 #include "engine/licensing/licensing.hpp"
 
 #include "engine/pipelines/pipelines.hpp"
@@ -75,6 +77,8 @@
 #include "engine/handlers/DatabaseManager.hpp"
 
 #include "engine/handlers/DataFrameManager.hpp"
+
+#include "engine/handlers/HyperoptManager.hpp"
 
 #include "engine/handlers/PipelineManager.hpp"
 

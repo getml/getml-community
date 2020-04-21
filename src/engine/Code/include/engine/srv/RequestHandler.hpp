@@ -17,6 +17,7 @@ class RequestHandler : public Poco::Net::TCPServerConnection
         const Poco::Net::StreamSocket& _socket,
         const std::shared_ptr<handlers::DatabaseManager>& _database_manager,
         const std::shared_ptr<handlers::DataFrameManager>& _data_frame_manager,
+        const std::shared_ptr<handlers::HyperoptManager>& _hyperopt_manager,
         const std::shared_ptr<const monitoring::Logger>& _logger,
         const std::shared_ptr<handlers::PipelineManager>& _pipeline_manager,
         const config::Options& _options,
@@ -25,6 +26,7 @@ class RequestHandler : public Poco::Net::TCPServerConnection
         : Poco::Net::TCPServerConnection( _socket ),
           database_manager_( _database_manager ),
           data_frame_manager_( _data_frame_manager ),
+          hyperopt_manager_( _hyperopt_manager ),
           logger_( _logger ),
           pipeline_manager_( _pipeline_manager ),
           options_( _options ),
@@ -56,6 +58,13 @@ class RequestHandler : public Poco::Net::TCPServerConnection
     }
 
     /// Trivial accessor
+    handlers::HyperoptManager& hyperopt_manager()
+    {
+        assert_true( hyperopt_manager_ );
+        return *hyperopt_manager_;
+    }
+
+    /// Trivial accessor
     const monitoring::Logger& logger() { return *logger_; }
 
     /// Trivial accessor
@@ -80,6 +89,9 @@ class RequestHandler : public Poco::Net::TCPServerConnection
 
     /// Handles requests related to the data frames.
     const std::shared_ptr<handlers::DataFrameManager> data_frame_manager_;
+
+    /// Handles all requests related to the hyperparameter optimization
+    const std::shared_ptr<handlers::HyperoptManager>& hyperopt_manager_;
 
     /// Logs commands.
     const std::shared_ptr<const monitoring::Logger> logger_;

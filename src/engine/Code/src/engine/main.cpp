@@ -79,6 +79,9 @@ int main( int argc, char* argv[] )
     const auto data_frames = std::make_shared<
         std::map<std::string, engine::containers::DataFrame>>();
 
+    const auto hyperopts =
+        std::make_shared<std::map<std::string, engine::hyperparam::Hyperopt>>();
+
     const auto pipelines =
         std::make_shared<engine::handlers::PipelineManager::PipelineMapType>();
 
@@ -109,6 +112,10 @@ int main( int argc, char* argv[] )
             logger,
             monitor,
             read_write_lock );
+
+    const auto hyperopt_manager =
+        std::make_shared<engine::handlers::HyperoptManager>(
+            hyperopts, monitor, project_mtx, read_write_lock );
 
     const auto pipeline_manager =
         std::make_shared<engine::handlers::PipelineManager>(
@@ -157,6 +164,7 @@ int main( int argc, char* argv[] )
         new engine::srv::ServerConnectionFactoryImpl(
             database_manager,
             data_frame_manager,
+            hyperopt_manager,
             logger,
             options,
             pipeline_manager,

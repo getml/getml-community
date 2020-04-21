@@ -237,6 +237,10 @@ void RequestHandler::run()
                 {
                     project_manager().delete_project( name, &socket() );
                 }
+            else if ( type == "Hyperopt.launch" )
+                {
+                    hyperopt_manager().launch( name, &socket() );
+                }
             else if ( type == "list_data_frames" )
                 {
                     project_manager().list_data_frames( &socket() );
@@ -280,10 +284,6 @@ void RequestHandler::run()
             else if ( type == "Pipeline.get_hyperopt_scores" )
                 {
                     pipeline_manager().get_hyperopt_scores( name, &socket() );
-                }
-            else if ( type == "Pipeline.launch_hyperopt" )
-                {
-                    pipeline_manager().launch_hyperopt( name, &socket() );
                 }
             else if ( type == "Pipeline.load" )
                 {

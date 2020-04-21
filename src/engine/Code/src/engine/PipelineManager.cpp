@@ -127,50 +127,6 @@ void PipelineManager::get_hyperopt_scores(
 
 // ------------------------------------------------------------------------
 
-void PipelineManager::launch_hyperopt(
-    const std::string& _name, Poco::Net::StreamSocket* _socket )
-{
-    // -------------------------------------------------------
-    // The project guard will prevent any attempts to
-    // change or delete the project while the hyperparameter
-    // optimization is running.
-
-    std::lock_guard<std::mutex> project_guard( project_mtx() );
-
-    // -------------------------------------------------------
-    // Find the reference pipeline.
-
-    auto pipeline = get_pipeline( _name );
-
-    if ( pipeline.premium_only() )
-        {
-            license_checker().check_enterprise();
-        }
-
-    communication::Sender::send_string( "Found!", _socket );
-
-    // -------------------------------------------------------
-    // Receive the complete command and send to engine.
-
-    const auto json_str = communication::Receiver::recv_string( _socket );
-
-    const auto [status, response] =
-        monitor_->send( "launchhyperopt", json_str );
-
-    if ( status == Poco::Net::HTTPResponse::HTTPStatus::HTTP_OK )
-        {
-            communication::Sender::send_string( "Success!", _socket );
-        }
-    else
-        {
-            communication::Sender::send_string( response, _socket );
-        }
-
-    // -------------------------------------------------------
-}
-
-// ------------------------------------------------------------------------
-
 Poco::JSON::Object PipelineManager::receive_data(
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<containers::Encoding>& _categories,
