@@ -42,7 +42,8 @@ void test21_time_windows( std::filesystem::path _test_path )
         multirel::containers::Column<double>(
             time_stamps_peripheral.data(),
             "time_stamp",
-            time_stamps_peripheral.size() );
+            time_stamps_peripheral.size(),
+            "time stamp, comparison only" );
 
     const auto peripheral_df = multirel::containers::DataFrame(
         {},
@@ -80,7 +81,8 @@ void test21_time_windows( std::filesystem::path _test_path )
         multirel::containers::Column<double>(
             time_stamps_population.data(),
             "time_stamp",
-            time_stamps_population.size() );
+            time_stamps_population.size(),
+            "time stamp, comparison only" );
 
     auto targets_population = std::vector<double>( 500 );
 

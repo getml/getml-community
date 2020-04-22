@@ -42,7 +42,8 @@ void test6_time_stamps_diff( std::filesystem::path _test_path )
         multirel::containers::Column<double>(
             time_stamps_peripheral.data(),
             "time_stamp",
-            time_stamps_peripheral.size() );
+            time_stamps_peripheral.size(),
+            "time stamp, comparison only" );
 
     const auto peripheral_df = multirel::containers::DataFrame(
         {},
@@ -80,7 +81,8 @@ void test6_time_stamps_diff( std::filesystem::path _test_path )
         multirel::containers::Column<double>(
             time_stamps_population.data(),
             "time_stamp",
-            time_stamps_population.size() );
+            time_stamps_population.size(),
+            "time stamp, comparison only" );
 
     auto targets_population = std::vector<double>( 500 );
 
@@ -180,9 +182,9 @@ void test6_time_stamps_diff( std::filesystem::path _test_path )
         {
             for ( size_t i = 0; i < predictions[j]->size(); ++i )
                 {
-                    /*std::cout << "target: " << population_df.target( i, 0 )
-                              << ", prediction: " << ( *predictions[j] )[i]
-                              << std::endl;*/
+                    /*   std::cout << "target: " << population_df.target( i, 0 )
+                                 << ", prediction: " << ( *predictions[j] )[i]
+                                 << std::endl;*/
 
                     assert_true(
                         std::abs(
