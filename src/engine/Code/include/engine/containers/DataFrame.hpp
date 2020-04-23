@@ -49,6 +49,9 @@ class DataFrame
     /// and consistent.
     void check_plausibility() const;
 
+    /// Creates a deep copy of the DataFrame
+    DataFrame clone( const std::string _name ) const;
+
     /// Builds indices_, which serve the role of
     /// an "index" over the join keys
     void create_indices();

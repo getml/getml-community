@@ -830,6 +830,67 @@ std::pair<size_t, bool> DataFrameManager::check_nrows(
 
 // ------------------------------------------------------------------------
 
+void DataFrameManager::concat(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    // ------------------------------------------------------------------------
+
+    const auto df_names = JSON::array_to_vector<std::string>(
+        JSON::get_array( _cmd, "df_names_" ) );
+
+    if ( df_names.size() == 0 )
+        {
+            throw std::invalid_argument(
+                "You should provide at least one data frame to concatenate!" );
+        }
+
+    // ------------------------------------------------------------------------
+
+    multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
+
+    // ------------------------------------------------------------------------
+
+    auto df_list = std::vector<containers::DataFrame>();
+
+    for ( const auto& name : df_names )
+        {
+            df_list.push_back( utils::Getter::get( name, data_frames() ) );
+        }
+
+    // ------------------------------------------------------------------------
+
+    auto df = df_list.at( 0 ).clone( _name );
+
+    for ( size_t i = 1; i < df_list.size(); ++i )
+        {
+            df.append( df_list.at( i ) );
+        }
+
+    df.create_indices();
+
+    df.check_plausibility();
+
+    // ------------------------------------------------------------------------
+
+    weak_write_lock.upgrade();
+
+    // ------------------------------------------------------------------------
+
+    data_frames()[_name] = df;
+
+    // ------------------------------------------------------------------------
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    monitor_->send( "postdataframe", df.to_monitor() );
+
+    // ------------------------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
 void DataFrameManager::from_csv(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,

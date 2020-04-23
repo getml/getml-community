@@ -117,6 +117,10 @@ void RequestHandler::run()
                     data_frame_manager().calc_column_plots(
                         name, cmd, &socket() );
                 }
+            else if ( type == "DataFrame.concat" )
+                {
+                    data_frame_manager().concat( name, cmd, &socket() );
+                }
             else if ( type == "DataFrame.delete" )
                 {
                     project_manager().delete_data_frame( name, cmd, &socket() );

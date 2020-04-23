@@ -86,6 +86,12 @@ class DataFrameManager
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
+    /// Concatenates a list of data frames.
+    void concat(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
     /// Creates a new data frame from a set of CSV files.
     void from_csv(
         const std::string& _name,

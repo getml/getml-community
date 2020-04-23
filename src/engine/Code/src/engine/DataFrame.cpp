@@ -146,83 +146,164 @@ void DataFrame::append( const DataFrame &_other )
     if ( categoricals_.size() != _other.categoricals_.size() )
         {
             throw std::invalid_argument(
-                "Append: Number of categorical columns does not match!" );
+                "Can not append: Number of categorical columns does not "
+                "match!" );
         }
 
     if ( join_keys_.size() != _other.join_keys_.size() )
         {
             throw std::invalid_argument(
-                "Append: Number of join keys does not match!" );
+                "Can not append: Number of join keys does not match!" );
         }
 
     if ( numericals_.size() != _other.numericals_.size() )
         {
             throw std::invalid_argument(
-                "Append: Number of numerical columns does not match!" );
+                "Can not append: Number of numerical columns does not match!" );
         }
 
     if ( targets_.size() != _other.targets_.size() )
         {
             throw std::invalid_argument(
-                "Append: Number of targets does not match!" );
+                "Can not append: Number of targets does not match!" );
         }
 
     if ( time_stamps_.size() != _other.time_stamps_.size() )
         {
             throw std::invalid_argument(
-                "Append: Number of time stamps does not match!" );
+                "Can not append: Number of time stamps does not match!" );
         }
 
     if ( unused_floats_.size() != _other.unused_floats_.size() )
         {
             throw std::invalid_argument(
-                "Append: Number of unused floats does not match!" );
+                "Can not append: Number of unused floats does not match!" );
         }
 
     if ( unused_strings_.size() != _other.unused_strings_.size() )
         {
             throw std::invalid_argument(
-                "Append: Number of unused integers does not match!" );
+                "Can not append: Number of unused integers does not match!" );
         }
 
     // -------------------------------------------------------------------------
 
-    for ( size_t i = 0; i < categoricals_.size(); ++i )
+    for ( const auto &col : categoricals_ )
         {
-            categoricals_[i].append( _other.categorical( i ) );
+            if ( !_other.has_categorical( col.name() ) )
+                {
+                    throw std::invalid_argument(
+                        "Can not append: Data frame '" + _other.name() +
+                        "' has no categorical column named '" + col.name() +
+                        "'!" );
+                }
         }
 
-    for ( size_t i = 0; i < join_keys_.size(); ++i )
+    for ( const auto &col : join_keys_ )
         {
-            join_keys_[i].append( _other.join_key( i ) );
+            if ( !_other.has_join_key( col.name() ) )
+                {
+                    throw std::invalid_argument(
+                        "Can not append: Data frame '" + _other.name() +
+                        "' has no join key named '" + col.name() + "'!" );
+                }
         }
 
-    for ( size_t i = 0; i < numericals_.size(); ++i )
+    for ( const auto &col : numericals_ )
         {
-            numericals_[i].append( _other.numerical( i ) );
+            if ( !_other.has_numerical( col.name() ) )
+                {
+                    throw std::invalid_argument(
+                        "Can not append: Data frame '" + _other.name() +
+                        "' has no numerical column named '" + col.name() +
+                        "'!" );
+                }
         }
 
-    for ( size_t i = 0; i < targets_.size(); ++i )
+    for ( const auto &col : targets_ )
         {
-            targets_[i].append( _other.target( i ) );
+            if ( !_other.has_target( col.name() ) )
+                {
+                    throw std::invalid_argument(
+                        "Can not append: Data frame '" + _other.name() +
+                        "' has no target named '" + col.name() + "'!" );
+                }
         }
 
-    for ( size_t i = 0; i < time_stamps_.size(); ++i )
+    for ( const auto &col : time_stamps_ )
         {
-            time_stamps_[i].append( _other.time_stamp( i ) );
+            if ( !_other.has_time_stamp( col.name() ) )
+                {
+                    throw std::invalid_argument(
+                        "Can not append: Data frame '" + _other.name() +
+                        "' has no time stamp named '" + col.name() + "'!" );
+                }
         }
 
-    for ( size_t i = 0; i < unused_floats_.size(); ++i )
+    for ( const auto &col : unused_floats_ )
         {
-            unused_floats_[i].append( _other.unused_float( i ) );
+            if ( !_other.has_unused_float( col.name() ) )
+                {
+                    throw std::invalid_argument(
+                        "Can not append: Data frame '" + _other.name() +
+                        "' has no unused float column named '" + col.name() +
+                        "'!" );
+                }
         }
 
-    for ( size_t i = 0; i < unused_strings_.size(); ++i )
+    for ( const auto &col : unused_strings_ )
         {
-            unused_strings_[i].append( _other.unused_string( i ) );
+            if ( !_other.has_unused_string( col.name() ) )
+                {
+                    throw std::invalid_argument(
+                        "Can not append: Data frame '" + _other.name() +
+                        "' has no unused string column named '" + col.name() +
+                        "'!" );
+                }
         }
 
     // -------------------------------------------------------------------------
+
+    for ( auto &col : categoricals_ )
+        {
+            col.append( _other.categorical( col.name() ) );
+        }
+
+    for ( auto &col : join_keys_ )
+        {
+            col.append( _other.join_key( col.name() ) );
+        }
+
+    for ( auto &col : numericals_ )
+        {
+            col.append( _other.numerical( col.name() ) );
+        }
+
+    for ( auto &col : targets_ )
+        {
+            col.append( _other.target( col.name() ) );
+        }
+
+    for ( auto &col : time_stamps_ )
+        {
+            col.append( _other.time_stamp( col.name() ) );
+        }
+
+    for ( auto &col : unused_floats_ )
+        {
+            col.append( _other.unused_float( col.name() ) );
+        }
+
+    for ( auto &col : unused_strings_ )
+        {
+            col.append( _other.unused_string( col.name() ) );
+        }
+
+    // -------------------------------------------------------------------------
+
+    create_indices();
+
+    check_plausibility();
 
     update_last_change();
 
@@ -325,6 +406,54 @@ void DataFrame::check_plausibility() const
         }
 
     // -------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+DataFrame DataFrame::clone( const std::string _name ) const
+{
+    auto df = DataFrame( _name, categories_, join_keys_encoding_ );
+
+    for ( size_t i = 0; i < num_categoricals(); ++i )
+        {
+            df.add_int_column( categorical( i ).clone(), "categorical" );
+        }
+
+    for ( size_t i = 0; i < num_join_keys(); ++i )
+        {
+            df.add_int_column( join_key( i ).clone(), "join_key" );
+        }
+
+    for ( size_t i = 0; i < num_numericals(); ++i )
+        {
+            df.add_float_column( numerical( i ).clone(), "numerical" );
+        }
+
+    for ( size_t i = 0; i < num_targets(); ++i )
+        {
+            df.add_float_column( target( i ).clone(), "target" );
+        }
+
+    for ( size_t i = 0; i < num_time_stamps(); ++i )
+        {
+            df.add_float_column( time_stamp( i ).clone(), "time_stamp" );
+        }
+
+    for ( size_t i = 0; i < num_unused_floats(); ++i )
+        {
+            df.add_float_column( unused_float( i ).clone(), "unused_float" );
+        }
+
+    for ( size_t i = 0; i < num_unused_strings(); ++i )
+        {
+            df.add_string_column( unused_string( i ).clone() );
+        }
+
+    df.create_indices();
+
+    df.check_plausibility();
+
+    return df;
 }
 
 // ----------------------------------------------------------------------------
