@@ -1862,8 +1862,7 @@ void DataFrameManager::group_by(
 
     const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
 
-    const auto join_key_name =
-        JSON::get_value<std::string>( _cmd, "join_key_name_" );
+    const auto key_name = JSON::get_value<std::string>( _cmd, "key_name_" );
 
     multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
 
@@ -1873,7 +1872,7 @@ void DataFrameManager::group_by(
 
     const auto grouped_df =
         GroupByParser( categories_, join_keys_encoding_, {df} )
-            .group_by( _name, join_key_name, aggregations );
+            .group_by( _name, key_name, aggregations );
 
     weak_write_lock.upgrade();
 

@@ -7,11 +7,11 @@ namespace containers
 {
 // -------------------------------------------------------------------------
 
-template <class T>
+template <class T, class Hash = std::hash<T>>
 class Index
 {
    public:
-    typedef std::unordered_map<T, std::vector<size_t>> MapType;
+    typedef std::unordered_map<T, std::vector<size_t>, Hash> MapType;
 
    public:
     Index() : begin_( 0 ), map_( std::make_shared<MapType>() ) {}
@@ -31,6 +31,12 @@ class Index
     // -------------------------------
 
    private:
+    // Determines whether this is a NULL value
+    bool is_null( const T& _val ) const;
+
+    // -------------------------------
+
+   private:
     /// Stores the first row number for which we do not have an index.
     size_t begin_;
 
@@ -43,8 +49,8 @@ class Index
 // -------------------------------------------------------------------------
 // -------------------------------------------------------------------------
 
-template <class T>
-void Index<T>::calculate( const Column<T>& _key )
+template <class T, class Hash>
+void Index<T, Hash>::calculate( const Column<T>& _key )
 {
     if ( _key.size() < begin_ )
         {
@@ -54,7 +60,7 @@ void Index<T>::calculate( const Column<T>& _key )
 
     for ( size_t i = begin_; i < _key.nrows(); ++i )
         {
-            if ( _key[i] >= 0 )
+            if ( !is_null( _key[i] ) )
                 {
                     auto it = map_->find( _key[i] );
 
@@ -70,6 +76,31 @@ void Index<T>::calculate( const Column<T>& _key )
         }
 
     begin_ = _key.nrows();
+}
+
+// -------------------------------------------------------------------------
+
+template <class T, class Hash>
+bool Index<T, Hash>::is_null( const T& _val ) const
+{
+    if constexpr ( std::is_same<T, Int>() )
+        {
+            return _val < 0;
+        }
+
+    if constexpr ( std::is_same<T, Float>() )
+        {
+            return ( std::isnan( _val ) || std::isinf( _val ) );
+        }
+
+    if constexpr ( std::is_same<T, strings::String>() )
+        {
+            return (
+                _val == "" || _val == "nan" || _val == "NaN" || _val == "NA" ||
+                _val == "NULL" );
+        }
+
+    return false;
 }
 
 // -------------------------------------------------------------------------
