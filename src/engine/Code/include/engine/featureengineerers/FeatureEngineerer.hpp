@@ -44,6 +44,7 @@ class FeatureEngineerer : public AbstractFeatureEngineerer
         const Poco::JSON::Object& _cmd,
         const std::shared_ptr<const monitoring::Logger>& _logger,
         const std::map<std::string, containers::DataFrame>& _data_frames,
+        const Int _target_num,
         Poco::Net::StreamSocket* _socket ) final;
 
     /// Generate features.
@@ -138,8 +139,8 @@ class FeatureEngineerer : public AbstractFeatureEngineerer
     template <typename DataFrameType>
     DataFrameType extract_df(
         const std::string& _name,
-        const std::map<std::string, containers::DataFrame>& _data_frames )
-        const;
+        const std::map<std::string, containers::DataFrame>& _data_frames,
+        const Int _target_num ) const;
 
     /// Extract a data frame of type FeatureEngineererType::DataFrameType from
     /// an engine::containers::DataFrame using the pre-stored schema.
@@ -239,7 +240,8 @@ template <typename FeatureEngineererType>
 template <typename DataFrameType>
 DataFrameType FeatureEngineerer<FeatureEngineererType>::extract_df(
     const std::string& _name,
-    const std::map<std::string, containers::DataFrame>& _data_frames ) const
+    const std::map<std::string, containers::DataFrame>& _data_frames,
+    const Int _target_num ) const
 {
     // ------------------------------------------------------------------------
 
@@ -307,12 +309,34 @@ DataFrameType FeatureEngineerer<FeatureEngineererType>::extract_df(
 
     std::vector<typename DataFrameType::FloatColumnType> targets;
 
-    for ( size_t i = 0; i < df.num_targets(); ++i )
+    switch ( _target_num )
         {
-            const auto& mat = df.target( i );
+            case AbstractFeatureEngineerer::IGNORE_TARGETS:
+                break;
 
-            targets.push_back( typename DataFrameType::FloatColumnType(
-                mat.data(), mat.name(), mat.nrows(), mat.unit() ) );
+            case AbstractFeatureEngineerer::USE_ALL_TARGETS:
+                for ( size_t i = 0; i < df.num_targets(); ++i )
+                    {
+                        const auto& mat = df.target( i );
+
+                        targets.push_back(
+                            typename DataFrameType::FloatColumnType(
+                                mat.data(),
+                                mat.name(),
+                                mat.nrows(),
+                                mat.unit() ) );
+                    }
+                break;
+
+            default:
+                assert_true( _target_num >= 0 );
+                assert_true(
+                    _target_num < static_cast<Int>( df.num_targets() ) );
+
+                const auto& mat = df.target( _target_num );
+
+                targets.push_back( typename DataFrameType::FloatColumnType(
+                    mat.data(), mat.name(), mat.nrows(), mat.unit() ) );
         }
 
     // ------------------------------------------------------------------------
@@ -523,6 +547,7 @@ void FeatureEngineerer<FeatureEngineererType>::fit(
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<const monitoring::Logger>& _logger,
     const std::map<std::string, containers::DataFrame>& _data_frames,
+    const Int _target_num,
     Poco::Net::StreamSocket* _socket )
 {
     // ------------------------------------------------
@@ -538,7 +563,9 @@ void FeatureEngineerer<FeatureEngineererType>::fit(
         {
             const auto df =
                 extract_df<typename FeatureEngineererType::DataFrameType>(
-                    name, _data_frames );
+                    name,
+                    _data_frames,
+                    AbstractFeatureEngineerer::IGNORE_TARGETS );
 
             peripheral_tables.push_back( df );
         }
@@ -551,7 +578,7 @@ void FeatureEngineerer<FeatureEngineererType>::fit(
 
     const auto population_table =
         extract_df<typename FeatureEngineererType::DataFrameType>(
-            population_name, _data_frames );
+            population_name, _data_frames, _target_num );
 
     const auto population_df =
         utils::Getter::get( population_name, _data_frames );

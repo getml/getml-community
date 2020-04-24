@@ -14,6 +14,12 @@ class AbstractFeatureEngineerer
     // --------------------------------------------------------
 
    public:
+    static constexpr Int IGNORE_TARGETS = -2;
+    static constexpr Int USE_ALL_TARGETS = -1;
+
+    // --------------------------------------------------------
+
+   public:
     AbstractFeatureEngineerer() {}
 
     virtual ~AbstractFeatureEngineerer() = default;
@@ -33,6 +39,7 @@ class AbstractFeatureEngineerer
         const Poco::JSON::Object& _cmd,
         const std::shared_ptr<const monitoring::Logger>& _logger,
         const std::map<std::string, containers::DataFrame>& _data_frames,
+        const Int _target_num,
         Poco::Net::StreamSocket* _socket ) = 0;
 
     /// Whether this is a classification problem.

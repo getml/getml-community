@@ -207,7 +207,10 @@ class Pipeline
         const;
 
     /// Prepares the feature engineerers from the JSON object.
-    std::vector<std::shared_ptr<featureengineerers::AbstractFeatureEngineerer>>
+    std::pair<
+        std::vector<
+            std::shared_ptr<featureengineerers::AbstractFeatureEngineerer>>,
+        std::vector<Int>>
     init_feature_engineerers(
         const size_t _num_targets,
         const std::vector<Poco::JSON::Object::Ptr>& _df_fingerprints ) const;

@@ -585,11 +585,15 @@ void Pipeline::fit(
     // -------------------------------------------------------------------------
     // Fit the feature engineering algorithms.
 
-    auto feature_engineerers =
+    auto [feature_engineerers, target_nums] =
         init_feature_engineerers( num_targets(), df_fingerprints() );
 
-    for ( auto& fe : feature_engineerers )
+    assert_true( feature_engineerers.size() == target_nums.size() );
+
+    for ( size_t i = 0; i < feature_engineerers.size(); ++i )
         {
+            auto& fe = feature_engineerers.at( i );
+
             assert_true( fe );
 
             const auto fingerprint = fe->fingerprint();
@@ -602,7 +606,8 @@ void Pipeline::fit(
                     continue;
                 }
 
-            fe->fit( _cmd, _logger, _data_frames, _socket );
+            fe->fit(
+                _cmd, _logger, _data_frames, target_nums.at( i ), _socket );
 
             _fe_tracker->add( fe );
         }
@@ -799,7 +804,9 @@ std::vector<std::string> Pipeline::get_targets(
 
 // ----------------------------------------------------------------------
 
-std::vector<std::shared_ptr<featureengineerers::AbstractFeatureEngineerer>>
+std::pair<
+    std::vector<std::shared_ptr<featureengineerers::AbstractFeatureEngineerer>>,
+    std::vector<Int>>
 Pipeline::init_feature_engineerers(
     const size_t _num_targets,
     const std::vector<Poco::JSON::Object::Ptr>& _df_fingerprints ) const
@@ -818,6 +825,8 @@ Pipeline::init_feature_engineerers(
 
     std::vector<std::shared_ptr<featureengineerers::AbstractFeatureEngineerer>>
         feature_engineerers;
+
+    std::vector<Int> target_nums;
 
     for ( auto ptr : obj_vector )
         {
@@ -841,13 +850,23 @@ Pipeline::init_feature_engineerers(
                 {
                     feature_engineerers.emplace_back(
                         std::move( new_feature_engineerer ) );
+
+                    target_nums.push_back(
+                        featureengineerers::AbstractFeatureEngineerer::
+                            USE_ALL_TARGETS );
                 }
             else
                 {
                     for ( size_t t = 0; t < _num_targets; ++t )
                         {
-                            // TODO: Find elegant way to pass on information
-                            // about target_num_
+                            auto obj = Poco::JSON::Object::Ptr(
+                                new Poco::JSON::Object() );
+
+                            obj->set( "target_num_", t );
+
+                            auto dependencies = _df_fingerprints;
+
+                            dependencies.push_back( obj );
 
                             feature_engineerers.emplace_back(
                                 featureengineerers::FeatureEngineererParser::
@@ -856,7 +875,9 @@ Pipeline::init_feature_engineerers(
                                         population,
                                         peripheral,
                                         categories(),
-                                        _df_fingerprints ) );
+                                        dependencies ) );
+
+                            target_nums.push_back( static_cast<Int>( t ) );
                         }
                 }
 
@@ -865,7 +886,7 @@ Pipeline::init_feature_engineerers(
 
     // ----------------------------------------------------------------------
 
-    return feature_engineerers;
+    return std::make_pair( feature_engineerers, target_nums );
 
     // ----------------------------------------------------------------------
 }
@@ -1001,8 +1022,9 @@ Pipeline Pipeline::load(
 
     assert_true( _fe_tracker );
 
-    pipeline.feature_engineerers_ = pipeline.init_feature_engineerers(
-        pipeline.num_targets(), pipeline.df_fingerprints() );
+    pipeline.feature_engineerers_ =
+        std::get<0>( pipeline.init_feature_engineerers(
+            pipeline.num_targets(), pipeline.df_fingerprints() ) );
 
     for ( size_t i = 0; i < pipeline.feature_engineerers_.size(); ++i )
         {
