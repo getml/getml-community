@@ -18,6 +18,8 @@ struct PipelineImpl
         const Poco::JSON::Object& _obj )
         : allow_http_( false ),
           categories_( _categories ),
+          include_categorical_(
+              JSON::get_value<bool>( _obj, "include_categorical_" ) ),
           obj_( _obj ),
           session_name_( JSON::get_value<std::string>( _obj, "session_name_" ) )
     {
@@ -27,6 +29,7 @@ struct PipelineImpl
         const std::shared_ptr<const std::vector<strings::String>>& _categories )
         : allow_http_( false ),
           categories_( _categories ),
+          include_categorical_( false ),
           obj_( Poco::JSON::Object() ),
           session_name_( "" )
     {
@@ -53,6 +56,9 @@ struct PipelineImpl
 
     /// The fingerprints of the feature selectors used for fitting.
     std::vector<Poco::JSON::Object::Ptr> fs_fingerprints_;
+
+    /// Whether we want to include categorical features
+    bool include_categorical_;
 
     /// The JSON Object used to construct the pipeline.
     Poco::JSON::Object obj_;

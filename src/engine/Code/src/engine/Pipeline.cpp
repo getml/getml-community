@@ -755,11 +755,10 @@ containers::CategoricalFeatures Pipeline::get_categorical_features(
 {
     auto categorical_features = containers::CategoricalFeatures();
 
-    // TODO
-    /*if ( !feature_engineerer().hyperparameters().include_categorical_ )
+    if ( !impl_.include_categorical_ )
         {
             return categorical_features;
-        }*/
+        }
 
     const auto population_name =
         JSON::get_value<std::string>( _cmd, "population_name_" );
@@ -1128,9 +1127,6 @@ void Pipeline::make_feature_selector_impl(
     const auto population_df =
         utils::Getter::get( population_name, _data_frames );
 
-    // TODO
-    const auto allow_null = false;
-
     const auto is_null = []( const Float val ) {
         return ( std::isnan( val ) || std::isinf( val ) );
     };
@@ -1139,21 +1135,20 @@ void Pipeline::make_feature_selector_impl(
 
     auto categorical_colnames = std::vector<std::string>();
 
-    // TODO
-    /*if ( feature_engineerer().hyperparameters().include_categorical_ )
-        {*/
-    for ( size_t i = 0; i < population_df.num_categoricals(); ++i )
+    if ( impl_.include_categorical_ )
         {
-            if ( population_df.categorical( i ).unit().find(
-                     "comparison only" ) != std::string::npos )
+            for ( size_t i = 0; i < population_df.num_categoricals(); ++i )
                 {
-                    continue;
-                }
+                    if ( population_df.categorical( i ).unit().find(
+                             "comparison only" ) != std::string::npos )
+                        {
+                            continue;
+                        }
 
-            categorical_colnames.push_back(
-                population_df.categorical( i ).name() );
+                    categorical_colnames.push_back(
+                        population_df.categorical( i ).name() );
+                }
         }
-    //}
 
     // --------------------------------------------------------------------
 
@@ -1167,17 +1162,14 @@ void Pipeline::make_feature_selector_impl(
                     continue;
                 }
 
-            if ( !allow_null )
-                {
-                    const auto contains_null = std::any_of(
-                        population_df.numerical( i ).begin(),
-                        population_df.numerical( i ).end(),
-                        is_null );
+            const auto contains_null = std::any_of(
+                population_df.numerical( i ).begin(),
+                population_df.numerical( i ).end(),
+                is_null );
 
-                    if ( contains_null )
-                        {
-                            continue;
-                        }
+            if ( contains_null )
+                {
+                    continue;
                 }
 
             numerical_colnames.push_back( population_df.numerical( i ).name() );
