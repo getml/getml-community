@@ -31,6 +31,23 @@ void MySQL::check_colnames(
 
 // ----------------------------------------------------------------------------
 
+Poco::JSON::Object MySQL::describe() const
+{
+    Poco::JSON::Object obj;
+
+    obj.set( "dbname", dbname_ );
+
+    obj.set( "dialect", dialect() );
+
+    obj.set( "host", host_ );
+
+    obj.set( "port", port_ );
+
+    return obj;
+}
+
+// ----------------------------------------------------------------------------
+
 std::shared_ptr<MYSQL_RES> MySQL::exec(
     const std::string& _sql, const std::shared_ptr<MYSQL>& _conn ) const
 {

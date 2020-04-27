@@ -347,10 +347,10 @@ class DataFrameManager
     }
 
     /// Trivial accessor
-    std::shared_ptr<database::Connector> connector()
+    std::shared_ptr<database::Connector> connector( const std::string& _name )
     {
         assert_true( database_manager_ );
-        return database_manager_->connector();
+        return database_manager_->connector( _name );
     }
 
     /// Trivial accessor

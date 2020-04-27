@@ -6,7 +6,8 @@ namespace database
 // ----------------------------------------------------------------------------
 
 std::string DatabaseSniffer::sniff(
-    const std::shared_ptr<Connector>& _conn, const std::string& _table_name )
+    const std::shared_ptr<const Connector>& _conn,
+    const std::string& _table_name )
 {
     assert_true( _conn );
 

@@ -31,6 +31,28 @@ void ODBC::check_colnames(
 
 // ----------------------------------------------------------------------------
 
+Poco::JSON::Object ODBC::describe() const
+{
+    Poco::JSON::Object obj;
+
+    std::string escape_chars;
+
+    escape_chars += escape_char1_;
+    escape_chars += escape_char2_;
+
+    obj.set( "dialect", dialect() );
+
+    obj.set( "escape_chars", escape_chars );
+
+    obj.set( "server_name", server_name_ );
+
+    obj.set( "user", user_ );
+
+    return obj;
+}
+
+// ----------------------------------------------------------------------------
+
 void ODBC::drop_table( const std::string& _tname )
 {
     std::string query = "DROP TABLE ";

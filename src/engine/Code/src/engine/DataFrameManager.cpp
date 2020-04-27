@@ -1025,6 +1025,8 @@ void DataFrameManager::from_db(
     // --------------------------------------------------------------------
     // Parse the command.
 
+    const auto conn_id = JSON::get_value<std::string>( _cmd, "conn_id_" );
+
     const auto table_name = JSON::get_value<std::string>( _cmd, "table_name_" );
 
     const auto categoricals = JSON::array_to_vector<std::string>(
@@ -1069,7 +1071,7 @@ void DataFrameManager::from_db(
     // Get the data from the data base.
 
     df.from_db(
-        connector(),
+        connector( conn_id ),
         table_name,
         categoricals,
         join_keys,
@@ -1244,6 +1246,8 @@ void DataFrameManager::from_query(
     // --------------------------------------------------------------------
     // Parse the command.
 
+    const auto conn_id = JSON::get_value<std::string>( _cmd, "conn_id_" );
+
     const auto query = JSON::get_value<std::string>( _cmd, "query_" );
 
     const auto categoricals = JSON::array_to_vector<std::string>(
@@ -1294,7 +1298,7 @@ void DataFrameManager::from_query(
     // Get the data from the data base.
 
     df.from_query(
-        connector(),
+        connector( conn_id ),
         query,
         categoricals,
         join_keys,
@@ -2271,6 +2275,8 @@ void DataFrameManager::to_db(
     // --------------------------------------------------------------------
     // Parse the command.
 
+    const auto conn_id = JSON::get_value<std::string>( _cmd, "conn_id_" );
+
     const auto table_name = JSON::get_value<std::string>( _cmd, "table_name_" );
 
     // --------------------------------------------------------------------
@@ -2292,18 +2298,18 @@ void DataFrameManager::to_db(
 
     const auto statement = io::StatementMaker::make_statement(
         table_name,
-        connector()->dialect(),
+        connector( conn_id )->dialect(),
         reader.colnames(),
         reader.coltypes() );
 
     logger().log( statement );
 
-    connector()->execute( statement );
+    connector( conn_id )->execute( statement );
 
     // --------------------------------------------------------------------
     // Write data to the data base.
 
-    connector()->read( table_name, 0, &reader );
+    connector( conn_id )->read( table_name, 0, &reader );
 
     database_manager_->post_tables();
 

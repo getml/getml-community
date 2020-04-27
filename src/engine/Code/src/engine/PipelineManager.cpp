@@ -344,6 +344,8 @@ void PipelineManager::to_db(
     // -------------------------------------------------------
     // Write data frame to data base.
 
+    const auto conn_id = JSON::get_value<std::string>( _cmd, "conn_id_" );
+
     const auto table_name = JSON::get_value<std::string>( _cmd, "table_name_" );
 
     // We are using the bell character (\a) as the quotechar. It is least likely
@@ -353,15 +355,15 @@ void PipelineManager::to_db(
 
     const auto statement = io::StatementMaker::make_statement(
         table_name,
-        connector()->dialect(),
+        connector( conn_id )->dialect(),
         reader.colnames(),
         reader.coltypes() );
 
     logger().log( statement );
 
-    connector()->execute( statement );
+    connector( conn_id )->execute( statement );
 
-    connector()->read( table_name, 0, &reader );
+    connector( conn_id )->read( table_name, 0, &reader );
 
     database_manager_->post_tables();
 

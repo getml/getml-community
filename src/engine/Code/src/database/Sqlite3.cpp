@@ -32,6 +32,19 @@ void Sqlite3::check_colnames(
 
 // ----------------------------------------------------------------------------
 
+Poco::JSON::Object Sqlite3::describe() const
+{
+    Poco::JSON::Object obj;
+
+    obj.set( "dialect", dialect() );
+
+    obj.set( "name", name_ );
+
+    return obj;
+}
+
+// ----------------------------------------------------------------------------
+
 void Sqlite3::execute( const std::string& _sql )
 {
     multithreading::WriteLock write_lock( read_write_lock_ );

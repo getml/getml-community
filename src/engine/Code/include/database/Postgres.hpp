@@ -29,6 +29,9 @@ class Postgres : public Connector
     // -------------------------------
 
    public:
+    /// Returns a Poco::JSON::Object describing the connection.
+    Poco::JSON::Object describe() const final;
+
     /// Returns the names of the table columns.
     std::vector<std::string> get_colnames(
         const std::string& _table ) const final;

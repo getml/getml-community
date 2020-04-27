@@ -9,19 +9,25 @@ namespace handlers
 
 class DatabaseManager
 {
+   private:
+    typedef std::map<std::string, std::shared_ptr<database::Connector>>
+        ConnectorMap;
+
    public:
     DatabaseManager(
         const std::shared_ptr<const monitoring::Logger>& _logger,
         const std::shared_ptr<const monitoring::Monitor>& _monitor )
-        : connector_( std::make_shared<database::Sqlite3>( database::Sqlite3(
-              "../database.db",
-              {"%Y-%m-%dT%H:%M:%s%z",
-               "%Y/%m/%d %H:%M:%S",
-               "%Y-%m-%d %H:%M:%S"} ) ) ),
-          logger_( _logger ),
+        : logger_( _logger ),
           monitor_( _monitor ),
           read_write_lock_( std::make_shared<multithreading::ReadWriteLock>() )
     {
+        connector_map_["default"] =
+            std::make_shared<database::Sqlite3>( database::Sqlite3(
+                "../database.db",
+                {"%Y-%m-%dT%H:%M:%s%z",
+                 "%Y/%m/%d %H:%M:%S",
+                 "%Y-%m-%d %H:%M:%S"} ) );
+
         post_tables();
     }
 
@@ -32,17 +38,25 @@ class DatabaseManager
    public:
     /// Drops the table signified by _name.
     void drop_table(
-        const std::string& _name, Poco::Net::StreamSocket* _socket );
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
+    /// Describes the connection signified by _name.
+    void describe_connection(
+        const std::string& _name, Poco::Net::StreamSocket* _socket ) const;
 
     /// Runs a query on the database.
-    void execute( Poco::Net::StreamSocket* _socket );
+    void execute( const std::string& _name, Poco::Net::StreamSocket* _socket );
 
     /// Returns the contents of an SQL query in JSON format.
     void get( const std::string& _name, Poco::Net::StreamSocket* _socket );
 
     /// Lists the column names of the table signified by _name.
     void get_colnames(
-        const std::string& _name, Poco::Net::StreamSocket* _socket );
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
 
     /// Sends the content of a table in a format that is compatible with
     /// DataTables.js server-side processing.
@@ -53,10 +67,16 @@ class DatabaseManager
 
     /// Returns the number of rows of the table signified by _name.
     void get_nrows(
-        const std::string& _name, Poco::Net::StreamSocket* _socket );
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
+    /// Returns a list of all active connections.
+    void list_connections( Poco::Net::StreamSocket* _socket ) const;
 
     /// Lists all tables contained in the database.
-    void list_tables( Poco::Net::StreamSocket* _socket );
+    void list_tables(
+        const std::string& _name, Poco::Net::StreamSocket* _socket );
 
     /// Creates a new database connector.
     void new_db(
@@ -64,7 +84,7 @@ class DatabaseManager
 
     /// Sends the name of all tables currently held in the database to the
     /// monitor.
-    std::string post_tables();
+    void post_tables();
 
     /// Reads CSV files into the database.
     void read_csv(
@@ -96,25 +116,30 @@ class DatabaseManager
     /// to build a DataFrame.
     void sniff_table(
         const std::string& _table_name,
+        const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket ) const;
 
     // ------------------------------------------------------------------------
 
    public:
     /// Trivial accessor
-    const std::shared_ptr<database::Connector> connector()
+    const std::shared_ptr<database::Connector> connector(
+        const std::string& _name )
     {
         multithreading::ReadLock read_lock( read_write_lock_ );
-        assert_true( connector_ );
-        return connector_;
+        const auto conn = utils::Getter::get( _name, connector_map_ );
+        assert_true( conn );
+        return conn;
     }
 
     /// Trivial accessor
-    const std::shared_ptr<const database::Connector> connector() const
+    const std::shared_ptr<const database::Connector> connector(
+        const std::string& _name ) const
     {
         multithreading::ReadLock read_lock( read_write_lock_ );
-        assert_true( connector_ );
-        return connector_;
+        const auto conn = utils::Getter::get( _name, connector_map_ );
+        assert_true( conn );
+        return conn;
     }
 
     /// Sets the S3 Access Key ID
@@ -142,8 +167,9 @@ class DatabaseManager
     // ------------------------------------------------------------------------
 
    private:
-    /// Connector to the underlying database.
-    std::shared_ptr<database::Connector> connector_;
+    /// Keeps the connectors to the databases.
+    /// The type ConnectorMap is a private typedef.
+    ConnectorMap connector_map_;
 
     /// For logging
     const std::shared_ptr<const monitoring::Logger> logger_;

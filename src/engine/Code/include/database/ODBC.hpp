@@ -46,6 +46,9 @@ class ODBC : public Connector
     // -------------------------------
 
    public:
+    /// Returns a Poco::JSON::Object describing the connection.
+    Poco::JSON::Object describe() const final;
+
     /// Drops a table from the data base.
     void drop_table( const std::string& _tname ) final;
 

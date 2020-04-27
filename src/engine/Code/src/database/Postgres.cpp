@@ -28,6 +28,20 @@ void Postgres::check_colnames(
                 }
         }
 }
+
+// ----------------------------------------------------------------------------
+
+Poco::JSON::Object Postgres::describe() const
+{
+    Poco::JSON::Object obj;
+
+    obj.set( "connection_string", connection_string_ );
+
+    obj.set( "dialect", dialect() );
+
+    return obj;
+}
+
 // ----------------------------------------------------------------------------
 
 std::vector<std::string> Postgres::get_colnames(

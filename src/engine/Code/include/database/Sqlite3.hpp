@@ -25,6 +25,9 @@ class Sqlite3 : public Connector
     // -------------------------------
 
    public:
+    /// Returns a Poco::JSON::Object describing the connection.
+    Poco::JSON::Object describe() const final;
+
     /// Executes an SQL query.
     void execute( const std::string& _sql ) final;
 

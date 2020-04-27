@@ -17,6 +17,9 @@ class Connector
     // -------------------------------
 
    public:
+    /// Returns a Poco::JSON::Object describing the connection.
+    virtual Poco::JSON::Object describe() const = 0;
+
     /// Describes the dialect used by the connector.
     virtual std::string dialect() const = 0;
 

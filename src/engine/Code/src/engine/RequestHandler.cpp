@@ -31,18 +31,22 @@ void RequestHandler::run()
                     data_frame_manager().get_boolean_column(
                         name, cmd, &socket() );
                 }
-            if ( type == "BooleanColumn.get_string" )
+            else if ( type == "BooleanColumn.get_string" )
                 {
                     data_frame_manager().get_boolean_column_string(
                         name, cmd, &socket() );
                 }
+            else if ( type == "Database.describe_connection" )
+                {
+                    database_manager().describe_connection( name, &socket() );
+                }
             else if ( type == "Database.drop_table" )
                 {
-                    database_manager().drop_table( name, &socket() );
+                    database_manager().drop_table( name, cmd, &socket() );
                 }
             else if ( type == "Database.execute" )
                 {
-                    database_manager().execute( &socket() );
+                    database_manager().execute( name, &socket() );
                 }
             else if ( type == "Database.get" )
                 {
@@ -50,7 +54,7 @@ void RequestHandler::run()
                 }
             else if ( type == "Database.get_colnames" )
                 {
-                    database_manager().get_colnames( name, &socket() );
+                    database_manager().get_colnames( name, cmd, &socket() );
                 }
             else if ( type == "Database.get_content" )
                 {
@@ -58,11 +62,15 @@ void RequestHandler::run()
                 }
             else if ( type == "Database.get_nrows" )
                 {
-                    database_manager().get_nrows( name, &socket() );
+                    database_manager().get_nrows( name, cmd, &socket() );
+                }
+            else if ( type == "Database.list_connections" )
+                {
+                    database_manager().list_connections( &socket() );
                 }
             else if ( type == "Database.list_tables" )
                 {
-                    database_manager().list_tables( &socket() );
+                    database_manager().list_tables( name, &socket() );
                 }
             else if ( type == "Database.new" )
                 {
@@ -86,7 +94,7 @@ void RequestHandler::run()
                 }
             else if ( type == "Database.sniff_table" )
                 {
-                    database_manager().sniff_table( name, &socket() );
+                    database_manager().sniff_table( name, cmd, &socket() );
                 }
             else if ( type == "DataFrame" )
                 {
