@@ -38,9 +38,7 @@ class DatabaseManager
    public:
     /// Copy a table from one database connection to another.
     void copy_table(
-        const std::string& _name,
-        const Poco::JSON::Object& _cmd,
-        Poco::Net::StreamSocket* _socket );
+        const Poco::JSON::Object& _cmd, Poco::Net::StreamSocket* _socket );
 
     /// Drops the table signified by _name.
     void drop_table(

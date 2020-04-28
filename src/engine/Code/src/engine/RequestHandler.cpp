@@ -36,6 +36,10 @@ void RequestHandler::run()
                     data_frame_manager().get_boolean_column_string(
                         name, cmd, &socket() );
                 }
+            else if ( type == "Database.copy_table" )
+                {
+                    database_manager().copy_table( cmd, &socket() );
+                }
             else if ( type == "Database.describe_connection" )
                 {
                     database_manager().describe_connection( name, &socket() );

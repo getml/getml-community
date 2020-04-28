@@ -7,9 +7,7 @@ namespace handlers
 // ----------------------------------------------------------------------------
 
 void DatabaseManager::copy_table(
-    const std::string& _name,
-    const Poco::JSON::Object& _cmd,
-    Poco::Net::StreamSocket* _socket )
+    const Poco::JSON::Object& _cmd, Poco::Net::StreamSocket* _socket )
 {
     // -----------------------------------------------------------------------
 
@@ -17,13 +15,13 @@ void DatabaseManager::copy_table(
         JSON::get_value<std::string>( _cmd, "source_conn_id_" );
 
     const auto source_table_name =
-        JSON::get_value<std::string>( _cmd, "source_table_name_" );
+        JSON::get_value<std::string>( _cmd, "source_table_" );
 
     const auto target_conn_id =
         JSON::get_value<std::string>( _cmd, "target_conn_id_" );
 
     const auto target_table_name =
-        JSON::get_value<std::string>( _cmd, "target_table_name_" );
+        JSON::get_value<std::string>( _cmd, "target_table_" );
 
     // -----------------------------------------------------------------------
 
@@ -70,6 +68,8 @@ void DatabaseManager::copy_table(
     // -----------------------------------------------------------------------
 
     communication::Sender::send_string( "Success!", _socket );
+
+    post_tables();
 
     // -----------------------------------------------------------------------
 }
