@@ -89,59 +89,65 @@ std::string DecisionTreeImpl::get_colname(
 
             case enums::DataUsed::x_perip_categorical:
 
-                colname = "t2." + input().categorical_name( _ix_column_used );
+                colname = "t2.\"" +
+                          input().categorical_name( _ix_column_used ) + "\"";
 
                 break;
 
             case enums::DataUsed::x_perip_numerical:
 
-                colname = "t2." + input().numerical_name( _ix_column_used );
+                colname =
+                    "t2.\"" + input().numerical_name( _ix_column_used ) + "\"";
 
                 break;
 
             case enums::DataUsed::x_perip_discrete:
 
-                colname = "t2." + input().discrete_name( _ix_column_used );
+                colname =
+                    "t2.\"" + input().discrete_name( _ix_column_used ) + "\"";
 
                 break;
 
             case enums::DataUsed::x_popul_categorical:
 
-                colname = "t1." + output().categorical_name( _ix_column_used );
+                colname = "t1.\"" +
+                          output().categorical_name( _ix_column_used ) + "\"";
 
                 break;
 
             case enums::DataUsed::x_popul_numerical:
 
-                colname = "t1." + output().numerical_name( _ix_column_used );
+                colname =
+                    "t1.\"" + output().numerical_name( _ix_column_used ) + "\"";
 
                 break;
 
             case enums::DataUsed::x_popul_discrete:
 
-                colname = "t1." + output().discrete_name( _ix_column_used );
+                colname =
+                    "t1.\"" + output().discrete_name( _ix_column_used ) + "\"";
 
                 break;
 
             case enums::DataUsed::x_subfeature:
 
-                colname = "t2.feature_" +
+                colname = "t2.\"feature_" +
                           std::to_string( ix_perip_used() + 1 ) + "_" +
-                          std::to_string( _ix_column_used + 1 );
+                          std::to_string( _ix_column_used + 1 ) + "\"";
 
                 break;
 
             case enums::DataUsed::time_stamps_diff:
 
-                colname = "t1." + output().time_stamps_name() + " - t2." +
-                          input().time_stamps_name();
+                colname = "t1.\"" + output().time_stamps_name() + "\" - t2.\"" +
+                          input().time_stamps_name() + "\"";
 
                 break;
 
             case enums::DataUsed::time_stamps_window:
 
-                colname = "t1." + output().time_stamps_name() + " - t2." +
-                          input().time_stamps_name();
+                colname = "t1.\"" + output().time_stamps_name() + "\" - t2.\"" +
+                          input().time_stamps_name() + "\"";
 
                 break;
 
