@@ -77,7 +77,7 @@ std::vector<std::string> Sqlite3::get_colnames(
     // ------------------------------------------------------------------------
     // Prepare statement.
 
-    const std::string sql = "SELECT * FROM " + _table + " LIMIT 0";
+    const std::string sql = "SELECT * FROM \"" + _table + "\" LIMIT 0";
 
     // ------------------------------------------------------------------------
 
@@ -430,9 +430,9 @@ Sqlite3::make_insert_statement(
     // ------------------------------------------------------------------------
     // Prepare statement as string
 
-    std::string sql = "INSERT INTO '";
+    std::string sql = "INSERT INTO \"";
     sql += _table;
-    sql += "' VALUES (";
+    sql += "\" VALUES (";
 
     for ( size_t col = 0; col < _colnames.size(); ++col )
         {

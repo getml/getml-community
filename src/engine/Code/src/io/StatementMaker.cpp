@@ -248,14 +248,14 @@ std::string StatementMaker::make_statement_sqlite(
 
     std::stringstream statement;
 
-    statement << "DROP TABLE IF EXISTS " << _table_name << ";" << std::endl
+    statement << "DROP TABLE IF EXISTS \"" << _table_name << "\";" << std::endl
               << std::endl;
 
-    statement << "CREATE TABLE " << _table_name << "(" << std::endl;
+    statement << "CREATE TABLE \"" << _table_name << "\"(" << std::endl;
 
     for ( size_t i = 0; i < _colnames.size(); ++i )
         {
-            statement << "    " << _colnames[i] << " "
+            statement << "    \"" << _colnames[i] << "\" "
                       << make_gap( _colnames[i], max_size )
                       << to_string_sqlite( _datatypes[i] );
 

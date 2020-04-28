@@ -66,7 +66,7 @@ class Sqlite3 : public Connector
     /// Drops a table and cleans up, if necessary.
     void drop_table( const std::string& _tname ) final
     {
-        execute( "DROP TABLE " + _tname + "; VACUUM;" );
+        execute( "DROP TABLE \"" + _tname + "\"; VACUUM;" );
     }
 
     /// Returns the number of rows in the table signified by _tname.
