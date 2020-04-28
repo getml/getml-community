@@ -78,6 +78,7 @@ extern "C"
 #endif
 
 #include "database/DatabaseParser.hpp"
+#include "database/DatabaseReader.hpp"
 #include "database/DatabaseSniffer.hpp"
 
 // ----------------------------------------------------------------------------

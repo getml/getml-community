@@ -40,4 +40,7 @@
 #include "database/tests/test20.hpp"
 #include "database/tests/test21.hpp"
 
+// Copying from one database to another
+#include "database/tests/test22.hpp"
+
 #endif  // DATABASE_TESTS_TESTS_HPP_

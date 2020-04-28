@@ -64,4 +64,7 @@ int main( int argc, char* argv[] )
     test19( test_path );
     test20( test_path );
     test21();
+
+    // Test for copying tables from one database to another
+    test22( test_path );
 }

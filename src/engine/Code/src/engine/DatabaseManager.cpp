@@ -6,6 +6,76 @@ namespace handlers
 {
 // ----------------------------------------------------------------------------
 
+void DatabaseManager::copy_table(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    // -----------------------------------------------------------------------
+
+    const auto source_conn_id =
+        JSON::get_value<std::string>( _cmd, "source_conn_id_" );
+
+    const auto source_table_name =
+        JSON::get_value<std::string>( _cmd, "source_table_name_" );
+
+    const auto target_conn_id =
+        JSON::get_value<std::string>( _cmd, "target_conn_id_" );
+
+    const auto target_table_name =
+        JSON::get_value<std::string>( _cmd, "target_table_name_" );
+
+    // -----------------------------------------------------------------------
+
+    if ( source_conn_id == target_conn_id )
+        {
+            throw std::invalid_argument(
+                "Tables must be copied from different database connections!" );
+        }
+
+    // -----------------------------------------------------------------------
+
+    const auto source_conn = connector( source_conn_id );
+
+    assert_true( source_conn );
+
+    const auto target_conn = connector( target_conn_id );
+
+    assert_true( target_conn );
+
+    // -----------------------------------------------------------------------
+    // Infer the table schema from the source connection and create an
+    // appropriate table in the target database.
+
+    const auto stmt = database::DatabaseSniffer::sniff(
+        source_conn,
+        target_conn->dialect(),
+        source_table_name,
+        target_table_name );
+
+    target_conn->execute( stmt );
+
+    // -----------------------------------------------------------------------
+    // Transfer the table contents into the newly created table.
+
+    const auto colnames = source_conn->get_colnames( source_table_name );
+
+    const auto iterator =
+        source_conn->select( colnames, source_table_name, "" );
+
+    auto reader = database::DatabaseReader( iterator );
+
+    target_conn->read( target_table_name, 0, &reader );
+
+    // -----------------------------------------------------------------------
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    // -----------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
 void DatabaseManager::drop_table(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,
@@ -535,12 +605,12 @@ void DatabaseManager::sniff_table(
 {
     const auto conn_id = JSON::get_value<std::string>( _cmd, "conn_id_" );
 
-    const auto kwargs =
-        database::DatabaseSniffer::sniff( connector( conn_id ), _name );
+    const auto roles = database::DatabaseSniffer::sniff(
+        connector( conn_id ), "python", _name, _name );
 
     communication::Sender::send_string( "Success!", _socket );
 
-    communication::Sender::send_string( kwargs, _socket );
+    communication::Sender::send_string( roles, _socket );
 }
 
 // ----------------------------------------------------------------------------
