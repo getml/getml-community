@@ -1356,6 +1356,24 @@ Poco::JSON::Object DataFrame::get_content(
 
     // ----------------------------------------
 
+    Poco::JSON::Object obj;
+
+    // ----------------------------------------
+
+    obj.set( "draw", _draw );
+
+    obj.set( "recordsTotal", nrows() );
+
+    obj.set( "recordsFiltered", nrows() );
+
+    if ( nrows() == 0 )
+        {
+            obj.set( "data", Poco::JSON::Array() );
+            return obj;
+        }
+
+    // ----------------------------------------
+
     if ( _length < 0 )
         {
             throw std::invalid_argument( "length must be positive!" );
@@ -1371,18 +1389,6 @@ Poco::JSON::Object DataFrame::get_content(
             throw std::invalid_argument(
                 "start must be smaller than number of rows!" );
         }
-
-    // ----------------------------------------
-
-    Poco::JSON::Object obj;
-
-    // ----------------------------------------
-
-    obj.set( "draw", _draw );
-
-    obj.set( "recordsTotal", nrows() );
-
-    obj.set( "recordsFiltered", nrows() );
 
     // ----------------------------------------
 
