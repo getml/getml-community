@@ -98,7 +98,7 @@ class Parser
 
                 return std::pair<Float, bool>(
                     static_cast<Float>( time_stamp.epochMicroseconds() ) /
-                        8.64e10,
+                        1.0e6,
                     true );
             }
 

@@ -93,8 +93,7 @@ std::vector<std::string> CatOpParser::numerical_as_string(
                     }
 
                 const auto microseconds_since_epoch =
-                    static_cast<Poco::Timestamp::TimeVal>(
-                        86400000000.0 * val );
+                    static_cast<Poco::Timestamp::TimeVal>( 1.0e06 * val );
 
                 const auto time_stamp =
                     Poco::Timestamp( microseconds_since_epoch );

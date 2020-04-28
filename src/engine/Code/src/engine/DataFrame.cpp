@@ -2054,8 +2054,8 @@ std::string DataFrame::to_time_stamp( const Float &_time_stamp_float ) const
             return "NULL";
         }
 
-    const auto microseconds_since_epoch = static_cast<Poco::Timestamp::TimeVal>(
-        86400000000.0 * _time_stamp_float );
+    const auto microseconds_since_epoch =
+        static_cast<Poco::Timestamp::TimeVal>( 1e06 * _time_stamp_float );
 
     const auto time_stamp = Poco::Timestamp( microseconds_since_epoch );
 
