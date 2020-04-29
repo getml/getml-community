@@ -144,6 +144,9 @@ class TimeSeriesModel
         const std::string &_lower_time_stamp_used,
         const std::string &_upper_time_stamp_used ) const;
 
+    /// Creates a time stamps difference in interpretable form.
+    std::string make_time_stamp_diff( const Float _diff ) const;
+
     /// Little helper function. Replaces all occurences of _from with _to.
     std::string replace_all(
         const std::string &_str,
@@ -617,6 +620,34 @@ void TimeSeriesModel<FEType>::fit(
     model().fit( new_population, new_peripheral, _logger );
 }
 
+// ----------------------------------------------------------------------------
+
+template <class FEType>
+std::string TimeSeriesModel<FEType>::make_time_stamp_diff(
+    const Float _diff ) const
+{
+    constexpr Float seconds_per_day = 24.0 * 60.0 * 60.0;
+    constexpr Float seconds_per_hour = 60.0 * 60.0;
+    constexpr Float seconds_per_minute = 60.0;
+
+    auto diffstr = std::to_string( _diff ) + " seconds";
+
+    if ( _diff >= seconds_per_day )
+        {
+            diffstr = std::to_string( _diff / seconds_per_day ) + " days";
+        }
+    else if ( _diff >= seconds_per_hour )
+        {
+            diffstr = std::to_string( _diff / seconds_per_hour ) + " hours";
+        }
+    else if ( _diff >= seconds_per_minute )
+        {
+            diffstr = std::to_string( _diff / seconds_per_minute ) + " minutes";
+        }
+
+    return ", '+" + diffstr + "'";
+}
+
 // -----------------------------------------------------------------------------
 
 template <class FEType>
@@ -651,14 +682,22 @@ std::string TimeSeriesModel<FEType>::replace_macros(
 {
     // --------------------------------------------------------------
 
-    const auto getml_lower_ts =
+    const auto getml_lower_ts_rowid =
         hyperparameters().horizon_ > 0.0
             ? " + " + std::to_string( hyperparameters().horizon_ )
             : std::string( "" );
 
-    const auto getml_upper_ts =
+    const auto getml_upper_ts_rowid =
         " + " + std::to_string(
                     hyperparameters().horizon_ + hyperparameters().memory_ );
+
+    const auto getml_lower_ts =
+        hyperparameters().horizon_ > 0.0
+            ? make_time_stamp_diff( hyperparameters().horizon_ )
+            : std::string( "" );
+
+    const auto getml_upper_ts = make_time_stamp_diff(
+        hyperparameters().horizon_ + hyperparameters().memory_ );
 
     std::stringstream one;
 
@@ -666,15 +705,27 @@ std::string TimeSeriesModel<FEType>::replace_macros(
 
     // --------------------------------------------------------------
 
-    auto new_query = replace_all( _query, "$GETML_LOWER_TS", getml_lower_ts );
+    auto new_query = replace_all(
+        _query,
+        "datetime( t1.\"$GETML_TS_USED$GETML_UPPER_TS\" )",
+        "t1.rowid" + getml_upper_ts_rowid );
 
-    new_query = replace_all( new_query, "$GETML_UPPER_TS", getml_upper_ts );
+    new_query = replace_all(
+        new_query,
+        "datetime( t2.\"$GETML_TS_USED$GETML_UPPER_TS\" )",
+        "t2.rowid" + getml_upper_ts_rowid );
+
+    new_query =
+        replace_all( new_query, "$GETML_LOWER_TS\"", "\"" + getml_lower_ts );
+
+    new_query =
+        replace_all( new_query, "$GETML_UPPER_TS\"", "\"" + getml_upper_ts );
 
     new_query = replace_all( new_query, "$GETML_PERIPHERAL", "" );
 
-    new_query = replace_all( new_query, "t1.$GETML_SELF_JOIN_KEY", "1" );
+    new_query = replace_all( new_query, "t1.\"$GETML_SELF_JOIN_KEY\"", "1" );
 
-    new_query = replace_all( new_query, "t2.$GETML_SELF_JOIN_KEY", "1" );
+    new_query = replace_all( new_query, "t2.\"$GETML_SELF_JOIN_KEY\"", "1" );
 
     new_query = replace_all( new_query, "  " + one.str(), "" );
 
@@ -682,7 +733,11 @@ std::string TimeSeriesModel<FEType>::replace_macros(
 
     new_query = replace_all( new_query, "$GETML_SELF_JOIN_KEY, ", "" );
 
-    new_query = replace_all( new_query, "$GETML_TS_USED", "rowid" );
+    new_query = replace_all(
+        new_query, "datetime( t1.\"$GETML_TS_USED\" )", "t1.rowid" );
+
+    new_query = replace_all(
+        new_query, "datetime( t2.\"$GETML_TS_USED\" )", "t2.rowid" );
 
     // --------------------------------------------------------------
 
