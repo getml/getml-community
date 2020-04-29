@@ -388,6 +388,7 @@ std::vector<containers::Match>::iterator DecisionTreeNode::partition(
                     enums::DataUsed::same_units_categorical>::
                     partition( _split, *_input, _output, _begin, _end );
 
+            case enums::DataUsed::same_units_discrete_ts:
             case enums::DataUsed::same_units_discrete:
                 assert_true( _input );
                 return utils::Partitioner<
@@ -406,6 +407,7 @@ std::vector<containers::Match>::iterator DecisionTreeNode::partition(
                         _begin,
                         _end );
 
+            case enums::DataUsed::same_units_numerical_ts:
             case enums::DataUsed::same_units_numerical:
                 assert_true( _input );
                 return utils::Partitioner<
@@ -626,6 +628,7 @@ Float DecisionTreeNode::transform(
                     is_greater( split_, *_input, _output, _match );
                 break;
 
+            case enums::DataUsed::same_units_discrete_ts:
             case enums::DataUsed::same_units_discrete:
                 assert_true( _input );
                 is_greater =
@@ -645,6 +648,7 @@ Float DecisionTreeNode::transform(
                         _match );
                 break;
 
+            case enums::DataUsed::same_units_numerical_ts:
             case enums::DataUsed::same_units_numerical:
                 assert_true( _input );
                 is_greater =
@@ -1517,8 +1521,14 @@ void DecisionTreeNode::try_same_units_discrete(
                             continue;
                         }
 
+                    const auto data_used =
+                        _output.discrete_unit( output_col )
+                                    .find( "time stamp" ) == std::string::npos
+                            ? enums::DataUsed::same_units_discrete
+                            : enums::DataUsed::same_units_discrete_ts;
+
                     try_numerical_or_discrete(
-                        enums::DataUsed::same_units_discrete,
+                        data_used,
                         output_col,
                         input_col,
                         _old_intercept,
@@ -1604,8 +1614,14 @@ void DecisionTreeNode::try_same_units_numerical(
                             continue;
                         }
 
+                    const auto data_used =
+                        _output.numerical_unit( output_col )
+                                    .find( "time stamp" ) == std::string::npos
+                            ? enums::DataUsed::same_units_numerical
+                            : enums::DataUsed::same_units_numerical_ts;
+
                     try_numerical_or_discrete(
-                        enums::DataUsed::same_units_numerical,
+                        data_used,
                         output_col,
                         input_col,
                         _old_intercept,

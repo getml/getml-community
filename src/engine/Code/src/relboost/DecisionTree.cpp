@@ -214,15 +214,19 @@ std::string DecisionTree::to_sql(
         {
             sql << "WHERE ";
 
-            sql << "t2.\"" << input().time_stamps_name() << "\" <= t1.\""
-                << output().time_stamps_name() << "\"" << std::endl;
+            sql << "datetime( t2.\"" << input().time_stamps_name()
+                << "\" ) <= datetime( t1.\"" << output().time_stamps_name()
+                << "\" )" << std::endl;
 
             if ( input().num_time_stamps() > 1 )
                 {
-                    sql << "AND ( t2.\"" << input().upper_time_stamps_name()
-                        << "\" > t1.\"" << output().time_stamps_name()
-                        << "\" OR t2.\"" << input().upper_time_stamps_name()
-                        << "\" IS NULL )" << std::endl;
+                    sql << "AND ( datetime( t2.\""
+                        << input().upper_time_stamps_name()
+                        << "\" ) > datetime( t1.\""
+                        << output().time_stamps_name()
+                        << "\" ) OR datetime( t2.\""
+                        << input().upper_time_stamps_name() << "\" ) IS NULL )"
+                        << std::endl;
                 }
         }
 

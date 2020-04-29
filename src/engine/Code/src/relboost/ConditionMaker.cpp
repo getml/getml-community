@@ -102,6 +102,15 @@ std::string ConditionMaker::condition_greater(
                        _input.discrete_name( _split.column_input_ ) +
                        "\" IS NOT NULL )";
 
+            case enums::DataUsed::same_units_discrete_ts:
+                assert_true( _split.column_ < _output.num_discretes() );
+                assert_true( _split.column_input_ < _input.num_discretes() );
+                return make_time_stamp_diff(
+                    _output.discrete_name( _split.column_ ),
+                    _input.discrete_name( _split.column_input_ ),
+                    _split.critical_value_,
+                    true );
+
             case enums::DataUsed::same_units_numerical:
                 assert_true( _split.column_ < _output.num_numericals() );
                 assert_true( _split.column_input_ < _input.num_numericals() );
@@ -117,6 +126,15 @@ std::string ConditionMaker::condition_greater(
                        "\" IS NOT NULL AND t2.\"" +
                        _input.numerical_name( _split.column_input_ ) +
                        "\" IS NOT NULL )";
+
+            case enums::DataUsed::same_units_numerical_ts:
+                assert_true( _split.column_ < _output.num_numericals() );
+                assert_true( _split.column_input_ < _input.num_numericals() );
+                return make_time_stamp_diff(
+                    _output.numerical_name( _split.column_ ),
+                    _input.numerical_name( _split.column_input_ ),
+                    _split.critical_value_,
+                    true );
 
             case enums::DataUsed::subfeatures:
                 return "( t2.\"feature_" +
@@ -249,6 +267,15 @@ std::string ConditionMaker::condition_smaller(
                        _input.discrete_name( _split.column_input_ ) +
                        "\" IS NULL )";
 
+            case enums::DataUsed::same_units_discrete_ts:
+                assert_true( _split.column_ < _output.num_discretes() );
+                assert_true( _split.column_input_ < _input.num_discretes() );
+                return make_time_stamp_diff(
+                    _output.discrete_name( _split.column_ ),
+                    _input.discrete_name( _split.column_input_ ),
+                    _split.critical_value_,
+                    false );
+
             case enums::DataUsed::same_units_numerical:
                 assert_true( _split.column_ < _output.num_numericals() );
                 assert_true( _split.column_input_ < _input.num_numericals() );
@@ -268,6 +295,15 @@ std::string ConditionMaker::condition_smaller(
                        "\" IS NULL OR t2.\"" +
                        _input.numerical_name( _split.column_input_ ) +
                        "\" IS NULL )";
+
+            case enums::DataUsed::same_units_numerical_ts:
+                assert_true( _split.column_ < _output.num_numericals() );
+                assert_true( _split.column_input_ < _input.num_numericals() );
+                return make_time_stamp_diff(
+                    _output.numerical_name( _split.column_ ),
+                    _input.numerical_name( _split.column_input_ ),
+                    _split.critical_value_,
+                    false );
 
             case enums::DataUsed::subfeatures:
                 return "( t2.\"feature_" +
@@ -325,6 +361,48 @@ std::string ConditionMaker::list_categories(
     categories += " )";
 
     return categories;
+}
+
+// ----------------------------------------------------------------------------
+
+std::string ConditionMaker::make_time_stamp_diff(
+    const std::string& _ts1,
+    const std::string& _ts2,
+    const Float _diff,
+    const bool _is_greater ) const
+{
+    constexpr Float seconds_per_day = 24.0 * 60.0 * 60.0;
+    constexpr Float seconds_per_hour = 60.0 * 60.0;
+    constexpr Float seconds_per_minute = 60.0;
+
+    auto diffstr = make_diffstr( _diff, "seconds" );
+
+    if ( _diff > seconds_per_day )
+        {
+            diffstr = make_diffstr( _diff / seconds_per_day, "days" );
+        }
+    else if ( _diff > seconds_per_hour )
+        {
+            diffstr = make_diffstr( _diff / seconds_per_hour, "hours" );
+        }
+    else if ( _diff > seconds_per_minute )
+        {
+            diffstr = make_diffstr( _diff / seconds_per_minute, "minutes" );
+        }
+
+    const auto comparison =
+        _is_greater ? std::string( " > " ) : std::string( " <= " );
+
+    const auto condition = "datetime( t1.\"" + _ts1 + "\" )" + comparison +
+                           "datetime( t2.\"" + _ts2 + "\", " + diffstr + " )";
+
+    if ( _is_greater )
+        {
+            return "( " + condition + " )";
+        }
+
+    return "( " + condition + " OR t1.\"" + _ts1 + "\" IS NULL OR t2.\"" +
+           _ts2 + "\" IS NULL )";
 }
 
 // ----------------------------------------------------------------------------

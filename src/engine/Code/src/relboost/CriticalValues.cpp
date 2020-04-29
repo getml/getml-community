@@ -511,6 +511,7 @@ void CriticalValues::find_min_max(
         {
             switch ( _data_used )
                 {
+                    case enums::DataUsed::same_units_discrete_ts:
                     case enums::DataUsed::same_units_discrete:
 
                         *_max =
@@ -524,6 +525,7 @@ void CriticalValues::find_min_max(
 
                         break;
 
+                    case enums::DataUsed::same_units_numerical_ts:
                     case enums::DataUsed::same_units_numerical:
 
                         *_max =
