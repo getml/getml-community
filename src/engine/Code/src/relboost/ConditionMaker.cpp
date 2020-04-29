@@ -377,15 +377,15 @@ std::string ConditionMaker::make_time_stamp_diff(
 
     auto diffstr = make_diffstr( _diff, "seconds" );
 
-    if ( _diff > seconds_per_day )
+    if ( _diff >= seconds_per_day )
         {
             diffstr = make_diffstr( _diff / seconds_per_day, "days" );
         }
-    else if ( _diff > seconds_per_hour )
+    else if ( _diff >= seconds_per_hour )
         {
             diffstr = make_diffstr( _diff / seconds_per_hour, "hours" );
         }
-    else if ( _diff > seconds_per_minute )
+    else if ( _diff >= seconds_per_minute )
         {
             diffstr = make_diffstr( _diff / seconds_per_minute, "minutes" );
         }
