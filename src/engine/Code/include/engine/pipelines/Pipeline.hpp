@@ -423,18 +423,18 @@ class Pipeline
     predictors::Predictor* predictor( size_t _i, size_t _j )
     {
         assert_true( _i < predictors_.size() );
-        assert_true( _j < predictors_[_j].size() );
-        assert_true( predictors_[_i][_j] );
-        return predictors_[_i][_j].get();
+        assert_true( _j < predictors_.at( _i ).size() );
+        assert_true( predictors_.at( _i ).at( _j ) );
+        return predictors_.at( _i ).at( _j ).get();
     }
 
     /// Trivial (private) accessor
     const predictors::Predictor* predictor( size_t _i, size_t _j ) const
     {
         assert_true( _i < predictors_.size() );
-        assert_true( _j < predictors_[_j].size() );
-        assert_true( predictors_[_i][_j] );
-        return predictors_[_i][_j].get();
+        assert_true( _j < predictors_.at( _i ).size() );
+        assert_true( predictors_.at( _i ).at( _j ) );
+        return predictors_.at( _i ).at( _j ).get();
     }
 
     /// Trivial (private) accessor
