@@ -9,7 +9,6 @@ set(
     ${MULTIREL_SOURCE_DIRECTORY}/DataFrameScatterer.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/DecisionTree.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/DecisionTreeEnsemble.cpp 
-    ${MULTIREL_SOURCE_DIRECTORY}/DecisionTreeImpl.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/DecisionTreeNode.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/DiscreteBinner.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/Hyperparameters.cpp 
@@ -25,6 +24,7 @@ set(
     ${MULTIREL_SOURCE_DIRECTORY}/Sampler.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/SameUnitIdentifier.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/SameUnits.cpp 
+    ${MULTIREL_SOURCE_DIRECTORY}/SQLMaker.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/SquareLoss.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/SubtreeHelper.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/TableHolder.cpp 

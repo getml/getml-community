@@ -251,7 +251,7 @@ TimeSeriesModel<FEType>::TimeSeriesModel(
     // --------------------------------------------------------------------
 
     const auto ts_name = hyperparameters().ts_name_ == ""
-                             ? "$GETML_TS_USED"
+                             ? "$GETML_ROWID"
                              : hyperparameters().ts_name_;
 
     const auto lower_ts_name = ts_name + "$GETML_LOWER_TS";
@@ -334,7 +334,7 @@ TimeSeriesModel<FEType>::create_modified_time_stamps(
     // -----------------------------------------------------------------
 
     const auto ts_name =
-        _ts_name == "" ? std::string( "$GETML_TS_USED" ) : _ts_name;
+        _ts_name == "" ? std::string( "$GETML_ROWID" ) : _ts_name;
 
     size_t ix = 0;
 
@@ -510,7 +510,7 @@ TimeSeriesModel<FEType>::create_population(
 
             const auto new_ts = FloatColumnType(
                 ts_data->data(),
-                "$GETML_TS_USED",
+                "$GETML_ROWID",
                 ts_data->size(),
                 "$GETML_ROWID, comparison only" );
 
@@ -707,12 +707,12 @@ std::string TimeSeriesModel<FEType>::replace_macros(
 
     auto new_query = replace_all(
         _query,
-        "datetime( t1.\"$GETML_TS_USED$GETML_UPPER_TS\" )",
+        "datetime( t1.\"$GETML_ROWID$GETML_UPPER_TS\" )",
         "t1.rowid" + getml_upper_ts_rowid );
 
     new_query = replace_all(
         new_query,
-        "datetime( t2.\"$GETML_TS_USED$GETML_UPPER_TS\" )",
+        "datetime( t2.\"$GETML_ROWID$GETML_UPPER_TS\" )",
         "t2.rowid" + getml_upper_ts_rowid );
 
     new_query =
@@ -733,11 +733,13 @@ std::string TimeSeriesModel<FEType>::replace_macros(
 
     new_query = replace_all( new_query, "$GETML_SELF_JOIN_KEY, ", "" );
 
-    new_query = replace_all(
-        new_query, "datetime( t1.\"$GETML_TS_USED\" )", "t1.rowid" );
+    new_query =
+        replace_all( new_query, "datetime( t1.\"$GETML_ROWID\" )", "t1.rowid" );
 
-    new_query = replace_all(
-        new_query, "datetime( t2.\"$GETML_TS_USED\" )", "t2.rowid" );
+    new_query =
+        replace_all( new_query, "datetime( t2.\"$GETML_ROWID\" )", "t2.rowid" );
+
+    new_query = replace_all( new_query, "\"$GETML_ROWID\"", "rowid" );
 
     // --------------------------------------------------------------
 

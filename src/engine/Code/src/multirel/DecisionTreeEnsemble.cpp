@@ -761,20 +761,6 @@ Poco::JSON::Object DecisionTreeEnsemble::to_monitor(
                     "population_schema_", population_schema().to_json_obj() );
 
                 // ----------------------------------------
-                // Extract features
-
-                Poco::JSON::Array features;
-
-                for ( size_t i = 0; i < trees().size(); ++i )
-                    {
-                        features.add( trees()[i].to_monitor(
-                            std::to_string( i + 1 ),
-                            hyperparameters().use_timestamps_ ) );
-                    }
-
-                obj_json.set( "features_", features );
-
-                // ----------------------------------------
                 // Extract targets
 
                 obj.set(

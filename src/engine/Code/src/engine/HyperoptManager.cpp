@@ -6,8 +6,24 @@ namespace handlers
 {
 // ------------------------------------------------------------------------
 
+void HyperoptManager::add_hyperopt(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    multithreading::WriteLock write_lock( read_write_lock_ );
+
+    hyperopts().insert_or_assign( _name, hyperparam::Hyperopt( _cmd ) );
+
+    communication::Sender::send_string( "Success!", _socket );
+}
+
+// ------------------------------------------------------------------------
+
 void HyperoptManager::launch(
-    const std::string& _name, Poco::Net::StreamSocket* _socket )
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
 {
     // -------------------------------------------------------
     // The project guard will prevent any attempts to
@@ -17,12 +33,30 @@ void HyperoptManager::launch(
     std::lock_guard<std::mutex> project_guard( project_mtx() );
 
     // -------------------------------------------------------
-    // Receive the complete command and send to engine.
+
+    const auto population_training_name =
+        JSON::get_value<std::string>( _cmd, "population_training_name_" );
+
+    const auto population_validation_name =
+        JSON::get_value<std::string>( _cmd, "population_validation_name_" );
+
+    const auto peripheral_names = JSON::get_array( _cmd, "peripheral_names_" );
+
+    // -------------------------------------------------------
 
     auto& hyperopt = utils::Getter::get( _name, &hyperopts() );
 
-    const auto [status, response] =
-        monitor_->send( "launchhyperopt", hyperopt.cmd_str() );
+    auto cmd = hyperopt.cmd();
+
+    cmd.set( "population_training_name_", population_training_name );
+
+    cmd.set( "population_validation_name_", population_validation_name );
+
+    cmd.set( "peripheral_names_", peripheral_names );
+
+    const auto cmd_str = JSON::stringify( cmd );
+
+    const auto [status, response] = monitor_->send( "launchhyperopt", cmd_str );
 
     if ( status == Poco::Net::HTTPResponse::HTTPStatus::HTTP_OK )
         {

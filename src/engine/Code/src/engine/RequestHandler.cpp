@@ -228,6 +228,10 @@ void RequestHandler::run()
                 {
                     data_frame_manager().where( name, cmd, &socket() );
                 }
+            else if ( type == "delete_project" )
+                {
+                    project_manager().delete_project( name, &socket() );
+                }
             else if ( type == "FloatColumn" )
                 {
                     data_frame_manager().add_float_column( cmd, &socket() );
@@ -253,13 +257,13 @@ void RequestHandler::run()
                 {
                     data_frame_manager().set_unit( name, cmd, &socket() );
                 }
-            else if ( type == "delete_project" )
+            else if ( type == "GaussianHyperparameterSearch" )
                 {
-                    project_manager().delete_project( name, &socket() );
+                    hyperopt_manager().add_hyperopt( name, cmd, &socket() );
                 }
             else if ( type == "Hyperopt.launch" )
                 {
-                    hyperopt_manager().launch( name, &socket() );
+                    hyperopt_manager().launch( name, cmd, &socket() );
                 }
             else if ( type == "list_data_frames" )
                 {

@@ -47,6 +47,12 @@ size_t JSON::data_used_to_int( const enums::DataUsed& _data_used )
             case enums::DataUsed::time_stamps_window:
                 return 12;
 
+            case enums::DataUsed::same_unit_discrete_ts:
+                return 13;
+
+            case enums::DataUsed::same_unit_numerical_ts:
+                return 14;
+
             default:
                 assert_true( !"Unknown enums::DataUsed!" );
                 return 0;
@@ -140,6 +146,12 @@ enums::DataUsed JSON::int_to_data_used( const size_t& _val )
 
             case 12:
                 return enums::DataUsed::time_stamps_window;
+
+            case 13:
+                return enums::DataUsed::same_unit_discrete_ts;
+
+            case 14:
+                return enums::DataUsed::same_unit_numerical_ts;
 
             default:
                 assert_true( !"Unknown enums::DataUsed!" );

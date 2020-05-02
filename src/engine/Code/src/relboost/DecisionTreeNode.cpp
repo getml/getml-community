@@ -1521,11 +1521,15 @@ void DecisionTreeNode::try_same_units_discrete(
                             continue;
                         }
 
-                    const auto data_used =
+                    const bool is_ts =
                         _output.discrete_unit( output_col )
-                                    .find( "time stamp" ) == std::string::npos
-                            ? enums::DataUsed::same_units_discrete
-                            : enums::DataUsed::same_units_discrete_ts;
+                                .find( "time stamp" ) != std::string::npos &&
+                        _output.discrete_name( output_col )
+                                .find( "$GETML_ROWID" ) == std::string::npos;
+
+                    const auto data_used =
+                        is_ts ? enums::DataUsed::same_units_discrete_ts
+                              : enums::DataUsed::same_units_discrete;
 
                     try_numerical_or_discrete(
                         data_used,
@@ -1614,11 +1618,15 @@ void DecisionTreeNode::try_same_units_numerical(
                             continue;
                         }
 
-                    const auto data_used =
+                    const bool is_ts =
                         _output.numerical_unit( output_col )
-                                    .find( "time stamp" ) == std::string::npos
-                            ? enums::DataUsed::same_units_numerical
-                            : enums::DataUsed::same_units_numerical_ts;
+                                .find( "time stamp" ) != std::string::npos &&
+                        _output.numerical_name( output_col )
+                                .find( "$GETML_ROWID" ) == std::string::npos;
+
+                    const auto data_used =
+                        is_ts ? enums::DataUsed::same_units_numerical_ts
+                              : enums::DataUsed::same_units_numerical;
 
                     try_numerical_or_discrete(
                         data_used,

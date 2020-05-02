@@ -481,7 +481,7 @@ DataFrameType FeatureEngineerer<FeatureEngineererType>::extract_df_by_colnames(
                     const auto& name = _schema.time_stamps_name( i );
 
                     if ( FeatureEngineererType::is_time_series_ &&
-                         name == "$GETML_TS_USED" )
+                         name == "$GETML_ROWID" )
                         {
                             continue;
                         }

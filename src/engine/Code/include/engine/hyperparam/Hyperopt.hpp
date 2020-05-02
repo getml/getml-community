@@ -10,25 +10,18 @@ namespace hyperparam
 class Hyperopt
 {
    public:
-    Hyperopt( const Poco::JSON::Object& _cmd )
-        : cmd_( Poco::JSON::Object::Ptr( new Poco::JSON::Object( _cmd ) ) )
-    {
-    }
+    Hyperopt( const Poco::JSON::Object& _cmd ) : cmd_( _cmd ) {}
 
     ~Hyperopt() = default;
 
    public:
     /// Returns the command as a string.
-    std::string cmd_str() const
-    {
-        assert_true( cmd_ );
-        return JSON::stringify( *cmd_ );
-    }
+    Poco::JSON::Object cmd() const { return cmd_; }
 
    private:
     /// The command originally sent by the API to construct this hyperparameter
     /// optimization object.
-    Poco::JSON::Object::Ptr cmd_;
+    Poco::JSON::Object cmd_;
 };
 
 // ----------------------------------------------------

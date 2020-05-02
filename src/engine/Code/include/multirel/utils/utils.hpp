@@ -14,6 +14,8 @@
 #include <type_traits>
 #include <vector>
 
+#include "strings/strings.hpp"
+
 #include "multithreading/multithreading.hpp"
 
 #include "multirel/enums/enums.hpp"
@@ -36,6 +38,7 @@
 #include "multirel/utils/Matchmaker.hpp"
 #include "multirel/utils/MinMaxFinder.hpp"
 #include "multirel/utils/RandomNumberGenerator.hpp"
+#include "multirel/utils/SQLMaker.hpp"
 
 // ----------------------------------------------------------------------------
 
