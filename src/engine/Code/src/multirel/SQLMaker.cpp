@@ -451,35 +451,30 @@ std::string SQLMaker::value_to_be_aggregated(
 
                     return name2 + " - " + name1;
                 }
-                // TODO
-                /*
-                            case enums::DataUsed::same_unit_discrete_ts:
-                                {
-                                    const auto [name1, name2] = get_names(
-                                        _input,
-                                        _output,
-                                        same_units_.same_units_discrete_,
-                                        _split );
 
-                                    return make_time_stamp_diff(
-                                        name1, name2, _split.critical_value,
-                   true );
-                                }
+            case enums::DataUsed::same_unit_discrete_ts:
+                {
+                    const auto [name1, name2] = get_names(
+                        _input,
+                        _output,
+                        same_units_.same_units_discrete_,
+                        _column_used );
 
-                            case enums::DataUsed::same_unit_numerical_ts:
-                                {
-                                    const auto [name1, name2] = get_names(
-                                        _input,
-                                        _output,
-                                        same_units_.same_units_numerical_,
-                                        _split );
+                    return "( julianday( " + name2 + " ) - julianday( " +
+                           name1 + " ) ) * 86400.0";
+                }
 
-                                    return make_time_stamp_diff(
-                                        name1, name2, _split.critical_value,
-                   true );
-                                }
-                */
+            case enums::DataUsed::same_unit_numerical_ts:
+                {
+                    const auto [name1, name2] = get_names(
+                        _input,
+                        _output,
+                        same_units_.same_units_numerical_,
+                        _column_used );
 
+                    return "( julianday( " + name2 + " ) - julianday( " +
+                           name1 + " ) ) * 86400.0";
+                }
             case enums::DataUsed::time_stamps_diff:
                 {
                     const auto name1 =

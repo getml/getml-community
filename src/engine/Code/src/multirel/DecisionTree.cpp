@@ -133,6 +133,7 @@ void DecisionTree::create_value_to_be_aggregated(
                 break;
 
             case enums::DataUsed::same_unit_numerical:
+            case enums::DataUsed::same_unit_numerical_ts:
 
                 assert_true(
                     static_cast<Int>( impl()->same_units_numerical().size() ) >
@@ -200,6 +201,7 @@ void DecisionTree::create_value_to_be_aggregated(
                 break;
 
             case enums::DataUsed::same_unit_discrete:
+            case enums::DataUsed::same_unit_discrete_ts:
 
                 assert_true(
                     impl()->same_units_discrete().size() > ix_column_used );

@@ -1217,11 +1217,11 @@ void DecisionTreeNode::to_sql(
 
             if ( apply_from_above() != is_activated_ )
                 {
-                    _sql += sql_greater;
+                    _sql = sql_greater;
                 }
             else
                 {
-                    _sql += sql_smaller;
+                    _sql = sql_smaller;
                 }
         }
 
@@ -2265,9 +2265,15 @@ void DecisionTreeNode::try_same_units_discrete(
                         _population, _peripheral, *it, col );
                 }
 
+            const auto is_ts = tree_->same_units_.is_ts(
+                _population, _peripheral, same_units_discrete(), col );
+
+            const auto data_used = is_ts
+                                       ? enums::DataUsed::same_unit_discrete_ts
+                                       : enums::DataUsed::same_unit_discrete;
             try_discrete_values(
                 col,
-                enums::DataUsed::same_unit_discrete,
+                data_used,
                 _sample_size,
                 _match_container_begin,
                 _match_container_end,
@@ -2303,10 +2309,12 @@ void DecisionTreeNode::try_same_units_numerical(
                         _population, _peripheral, *it, col );
                 }
 
-            const auto data_used =
-                is_ts_numerical( _population, _peripheral, col )
-                    ? enums::DataUsed::same_unit_numerical_ts
-                    : enums::DataUsed::same_unit_numerical;
+            const auto is_ts = tree_->same_units_.is_ts(
+                _population, _peripheral, same_units_numerical(), col );
+
+            const auto data_used = is_ts
+                                       ? enums::DataUsed::same_unit_numerical_ts
+                                       : enums::DataUsed::same_unit_numerical;
 
             try_numerical_values(
                 col,

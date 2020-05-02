@@ -27,6 +27,13 @@ struct SameUnits
     /// Reconstructs a SameUnits object from a JSON object.
     SameUnits from_json_obj( const Poco::JSON::Object& _obj ) const;
 
+    /// Figures out whether a same unit object is a time stamp
+    bool is_ts(
+        const containers::DataFrameView& _population,
+        const containers::DataFrame& _peripheral,
+        const descriptors::SameUnitsContainer& _same_units,
+        const size_t _col ) const;
+
     /// Helper function.
     descriptors::SameUnitsContainer json_arr_to_same_units(
         const Poco::JSON::Array& _json_arr ) const;

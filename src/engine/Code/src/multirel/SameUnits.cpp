@@ -11,18 +11,73 @@ SameUnits SameUnits::from_json_obj( const Poco::JSON::Object& _obj ) const
     SameUnits same_units;
 
     same_units.same_units_categorical_ =
-        std::make_shared<descriptors::SameUnitsContainer>( json_arr_to_same_units(
-            *JSON::get_array( _obj, "same_units_categorical_" ) ) );
+        std::make_shared<descriptors::SameUnitsContainer>(
+            json_arr_to_same_units(
+                *JSON::get_array( _obj, "same_units_categorical_" ) ) );
 
     same_units.same_units_discrete_ =
-        std::make_shared<descriptors::SameUnitsContainer>( json_arr_to_same_units(
-            *JSON::get_array( _obj, "same_units_discrete_" ) ) );
+        std::make_shared<descriptors::SameUnitsContainer>(
+            json_arr_to_same_units(
+                *JSON::get_array( _obj, "same_units_discrete_" ) ) );
 
     same_units.same_units_numerical_ =
-        std::make_shared<descriptors::SameUnitsContainer>( json_arr_to_same_units(
-            *JSON::get_array( _obj, "same_units_numerical_" ) ) );
+        std::make_shared<descriptors::SameUnitsContainer>(
+            json_arr_to_same_units(
+                *JSON::get_array( _obj, "same_units_numerical_" ) ) );
 
     return same_units;
+}
+
+// ----------------------------------------------------------------------------
+
+bool SameUnits::is_ts(
+    const containers::DataFrameView& _population,
+    const containers::DataFrame& _peripheral,
+    const descriptors::SameUnitsContainer& _same_units,
+    const size_t _col ) const
+{
+    assert_true( _col < _same_units.size() );
+
+    const auto ix = std::get<0>( _same_units.at( _col ) ).ix_column_used;
+
+    std::string name;
+
+    std::string unit;
+
+    switch ( std::get<0>( _same_units.at( _col ) ).data_used )
+        {
+            case enums::DataUsed::x_perip_discrete:
+                name = _peripheral.discrete_name( ix );
+                unit = _peripheral.discrete_unit( ix );
+                break;
+
+            case enums::DataUsed::x_perip_numerical:
+                name = _peripheral.numerical_name( ix );
+                unit = _peripheral.numerical_unit( ix );
+                break;
+
+            case enums::DataUsed::x_popul_discrete:
+                name = _population.discrete_name( ix );
+                unit = _population.discrete_unit( ix );
+                break;
+
+            case enums::DataUsed::x_popul_numerical:
+                name = _population.numerical_name( ix );
+                unit = _population.numerical_unit( ix );
+                break;
+
+            default:
+                assert_true( !"is_ts: enums::DataUsed not known!" );
+                break;
+        }
+
+    const auto not_contains_rowid =
+        name.find( "$GETML_ROWID" ) == std::string::npos;
+
+    const auto contains_time_stamp =
+        unit.find( "time stamp" ) != std::string::npos;
+
+    return contains_time_stamp && not_contains_rowid;
 }
 
 // ----------------------------------------------------------------------------
