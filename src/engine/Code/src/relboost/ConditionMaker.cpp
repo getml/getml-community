@@ -375,17 +375,19 @@ std::string ConditionMaker::make_time_stamp_diff(
     constexpr Float seconds_per_hour = 60.0 * 60.0;
     constexpr Float seconds_per_minute = 60.0;
 
+    const auto abs_diff = std::abs( _diff );
+
     auto diffstr = make_diffstr( _diff, "seconds" );
 
-    if ( _diff >= seconds_per_day )
+    if ( abs_diff >= seconds_per_day )
         {
             diffstr = make_diffstr( _diff / seconds_per_day, "days" );
         }
-    else if ( _diff >= seconds_per_hour )
+    else if ( abs_diff >= seconds_per_hour )
         {
             diffstr = make_diffstr( _diff / seconds_per_hour, "hours" );
         }
-    else if ( _diff >= seconds_per_minute )
+    else if ( abs_diff >= seconds_per_minute )
         {
             diffstr = make_diffstr( _diff / seconds_per_minute, "minutes" );
         }
