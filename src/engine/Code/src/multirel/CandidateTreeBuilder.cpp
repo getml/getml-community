@@ -404,28 +404,35 @@ bool CandidateTreeBuilder::is_comparison_only(
     const size_t _ix_perip_used,
     const size_t _ix_column_used )
 {
-    if ( _data_used == enums::DataUsed::x_perip_numerical )
+    switch ( _data_used )
         {
-            if ( _table_holder.peripheral_tables_[_ix_perip_used]
-                     .numerical_unit( _ix_column_used )
-                     .find( "comparison "
-                            "only" ) != std::string::npos )
+            case enums::DataUsed::x_perip_numerical:
                 {
-                    return true;
-                }
-        }
-    else if ( _data_used == enums::DataUsed::x_perip_discrete )
-        {
-            if ( _table_holder.peripheral_tables_[_ix_perip_used]
-                     .discrete_unit( _ix_column_used )
-                     .find( "comparison "
-                            "only" ) != std::string::npos )
-                {
-                    return true;
-                }
-        }
+                    const bool contains_comparison_only =
+                        _table_holder.peripheral_tables_[_ix_perip_used]
+                            .numerical_unit( _ix_column_used )
+                            .find(
+                                "comparison "
+                                "only" ) != std::string::npos;
 
-    return false;
+                    return contains_comparison_only;
+                }
+
+            case enums::DataUsed::x_perip_discrete:
+                {
+                    const bool contains_comparison_only =
+                        _table_holder.peripheral_tables_[_ix_perip_used]
+                            .discrete_unit( _ix_column_used )
+                            .find(
+                                "comparison "
+                                "only" ) != std::string::npos;
+
+                    return contains_comparison_only;
+                }
+
+            default:
+                return false;
+        }
 }
 
 // ----------------------------------------------------------------------------
