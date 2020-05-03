@@ -733,16 +733,13 @@ std::string TimeSeriesModel<FEType>::replace_macros(
 
     new_query = replace_all( new_query, "$GETML_SELF_JOIN_KEY, ", "" );
 
-    new_query = replace_all(
-        new_query, "datetime( t1.\"$GETML_ROWID\" )", "t1.\"rownum\"" );
+    new_query =
+        replace_all( new_query, "datetime( t1.\"$GETML_ROWID\" )", "t1.rowid" );
 
     new_query =
         replace_all( new_query, "datetime( t2.\"$GETML_ROWID\" )", "t2.rowid" );
 
-    new_query =
-        replace_all( new_query, "t1.\"$GETML_ROWID\"", "t1.\"rownum\"" );
-
-    new_query = replace_all( new_query, "t2.\"$GETML_ROWID\"", "t2.rowid" );
+    new_query = replace_all( new_query, "\"$GETML_ROWID\"", "rowid" );
 
     // --------------------------------------------------------------
 

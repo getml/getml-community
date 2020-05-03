@@ -499,21 +499,13 @@ std::string DecisionTree::to_sql(
 
     sql << " AS \"feature_" << _feature_num << "\"," << std::endl;
 
-    sql << "       t1.\"rownum\"" << std::endl;
+    sql << "       t1.rowid AS \"rownum\"" << std::endl;
 
     // -------------------------------------------------------------------
 
-    sql << "FROM (" << std::endl;
+    sql << "FROM \"" << output().name() << "\" t1" << std::endl;
 
-    sql << "     SELECT *," << std::endl;
-
-    sql << "            rowid AS \"rownum\"" << std::endl;
-
-    sql << "     FROM \"" << output().name() << "\"" << std::endl;
-
-    sql << ") t1" << std::endl;
-
-    sql << "LEFT JOIN " << input().name() << " t2" << std::endl;
+    sql << "LEFT JOIN \"" << input().name() << "\" t2" << std::endl;
 
     sql << "ON t1.\"" << output().join_keys_name() << "\" = t2.\""
         << input().join_keys_name() << "\"" << std::endl;
@@ -574,7 +566,7 @@ std::string DecisionTree::to_sql(
                 }
         }
 
-    sql << "GROUP BY t1.\"rownum\";" << std::endl << std::endl << std::endl;
+    sql << "GROUP BY t1.rowid;" << std::endl << std::endl << std::endl;
 
     // -------------------------------------------------------------------
 
