@@ -70,9 +70,9 @@ class AbstractFeatureEngineerer
     /// understand.
     virtual Poco::JSON::Object to_monitor( const std::string& _name ) const = 0;
 
-    /// Return feature engineerer as SQL code.
+    /// Return features as SQL code.
     virtual std::vector<std::string> to_sql(
-        const size_t _offset, const bool _subfeatures ) const = 0;
+        const std::string& _prefix, const bool _subfeatures ) const = 0;
 
     /// Generate features.
     virtual containers::Features transform(
