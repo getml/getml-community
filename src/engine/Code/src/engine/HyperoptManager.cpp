@@ -44,7 +44,7 @@ void HyperoptManager::launch(
 
     // -------------------------------------------------------
 
-    auto& hyperopt = utils::Getter::get( _name, &hyperopts() );
+    const auto hyperopt = utils::Getter::get( _name, &hyperopts() );
 
     auto cmd = hyperopt.cmd();
 
@@ -58,14 +58,27 @@ void HyperoptManager::launch(
 
     const auto [status, response] = monitor_->send( "launchhyperopt", cmd_str );
 
-    if ( status == Poco::Net::HTTPResponse::HTTPStatus::HTTP_OK )
-        {
-            communication::Sender::send_string( "Success!", _socket );
-        }
-    else
+    // -------------------------------------------------------
+
+    if ( status != Poco::Net::HTTPResponse::HTTPStatus::HTTP_OK )
         {
             communication::Sender::send_string( response, _socket );
         }
+
+    // -------------------------------------------------------
+
+    Poco::JSON::Parser parser;
+
+    const auto evaluations =
+        parser.parse( response ).extract<Poco::JSON::Array::Ptr>();
+
+    auto obj = hyperopt.cmd();
+
+    obj.set( "evaluations_", evaluations );
+
+    // -------------------------------------------------------
+
+    add_hyperopt( _name, obj, _socket );
 
     // -------------------------------------------------------
 }
