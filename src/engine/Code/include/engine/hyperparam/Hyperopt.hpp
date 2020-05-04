@@ -15,6 +15,10 @@ class Hyperopt
     ~Hyperopt() = default;
 
    public:
+    /// Saves the hyperopt object.
+    void save( const std::string& _path, const std::string& _name ) const;
+
+   public:
     /// Returns the underlying parameters as a JSON object.
     Poco::JSON::Object obj() const { return obj_; }
 

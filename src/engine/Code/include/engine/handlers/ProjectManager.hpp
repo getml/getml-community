@@ -24,6 +24,8 @@ class ProjectManager
             _data_frames,
         const std::shared_ptr<dependency::FETracker>& _fe_tracker,
         const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
+        const std::shared_ptr<std::map<std::string, hyperparam::Hyperopt>>&
+            _hyperopts,
         const std::shared_ptr<licensing::LicenseChecker>& _license_checker,
         const std::shared_ptr<const monitoring::Logger>& _logger,
         const std::shared_ptr<const monitoring::Monitor>& _monitor,
@@ -37,6 +39,7 @@ class ProjectManager
           data_frames_( _data_frames ),
           fe_tracker_( _fe_tracker ),
           join_keys_encoding_( _join_keys_encoding ),
+          hyperopts_( _hyperopts ),
           license_checker_( _license_checker ),
           logger_( _logger ),
           monitor_( _monitor ),
@@ -141,6 +144,10 @@ class ProjectManager
     void save_data_frame(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
 
+    /// Saves a hyperparameter optimization object
+    void save_hyperopt(
+        const std::string& _name, Poco::Net::StreamSocket* _socket );
+
     /// Saves a pipeline to disc.
     void save_pipeline(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
@@ -228,6 +235,13 @@ class ProjectManager
         return *join_keys_encoding_;
     }
 
+    /// Trivial (private) accessor
+    std::map<std::string, hyperparam::Hyperopt>& hyperopts()
+    {
+        assert_true( hyperopts_ );
+        return *hyperopts_;
+    }
+
     /// Trivial accessor
     engine::licensing::LicenseChecker& license_checker()
     {
@@ -296,6 +310,10 @@ class ProjectManager
 
     /// Maps integers to join key names
     const std::shared_ptr<containers::Encoding> join_keys_encoding_;
+
+    /// The Hyperopts currently held in memory
+    const std::shared_ptr<std::map<std::string, hyperparam::Hyperopt>>
+        hyperopts_;
 
     /// For checking the license and memory usage
     const std::shared_ptr<licensing::LicenseChecker> license_checker_;

@@ -269,6 +269,10 @@ void RequestHandler::run()
                 {
                     hyperopt_manager().refresh( name, &socket() );
                 }
+            else if ( type == "GaussianHyperparameterSearch.save" )
+                {
+                    project_manager().save_hyperopt( name, &socket() );
+                }
             else if ( type == "list_data_frames" )
                 {
                     project_manager().list_data_frames( &socket() );

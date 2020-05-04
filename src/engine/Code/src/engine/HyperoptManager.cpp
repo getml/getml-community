@@ -56,13 +56,16 @@ void HyperoptManager::launch(
 
     const auto cmd_str = JSON::stringify( cmd );
 
+    // TODO: Remove
+    std::cout << "cmd_str: " << std::endl << cmd_str << std::endl << std::endl;
+
     const auto [status, response] = monitor_->send( "launchhyperopt", cmd_str );
 
     // -------------------------------------------------------
 
     if ( status != Poco::Net::HTTPResponse::HTTPStatus::HTTP_OK )
         {
-            communication::Sender::send_string( response, _socket );
+            throw std::runtime_error( response );
         }
 
     // -------------------------------------------------------

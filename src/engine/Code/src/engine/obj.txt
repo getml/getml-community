@@ -12,6 +12,7 @@ set(
     ${ENGINE_SOURCE_DIRECTORY}/FeatureEngineererParser.cpp
     ${ENGINE_SOURCE_DIRECTORY}/FileHandler.cpp
     ${ENGINE_SOURCE_DIRECTORY}/GroupByParser.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/Hyperopt.cpp
     ${ENGINE_SOURCE_DIRECTORY}/HyperoptManager.cpp
     ${ENGINE_SOURCE_DIRECTORY}/JSON.cpp
     ${ENGINE_SOURCE_DIRECTORY}/LicenseChecker.cpp

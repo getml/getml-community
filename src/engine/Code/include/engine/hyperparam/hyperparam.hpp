@@ -4,7 +4,10 @@
 // ----------------------------------------------------
 // Dependencies
 
+#include <fstream>
+
 #include <Poco/JSON/Object.h>
+#include <Poco/TemporaryFile.h>
 
 #include "engine/JSON.hpp"
 

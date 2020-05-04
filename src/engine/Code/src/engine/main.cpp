@@ -139,6 +139,7 @@ int main( int argc, char* argv[] )
             data_frames,
             fe_tracker,
             join_keys_encoding,
+            hyperopts,
             license_checker,
             logger,
             monitor,
