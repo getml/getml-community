@@ -546,7 +546,7 @@ void ProjectManager::save_hyperopt(
 
     const auto hyperopt = utils::Getter::get( _name, hyperopts() );
 
-    hyperopt.save( project_directory_ + "hyperopt/", _name );
+    hyperopt.save( project_directory_ + "hyperopts/", _name );
 
     communication::Sender::send_string( "Success!", _socket );
 }
