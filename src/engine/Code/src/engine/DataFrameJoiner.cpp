@@ -499,9 +499,6 @@ containers::DataFrame DataFrameJoiner::join(
                 }
             else
                 {
-                    std::cout
-                        << "_df2.num_numericals: " << _df2.num_numericals()
-                        << std::endl;
                     add_all(
                         _df2,
                         rindices2,
