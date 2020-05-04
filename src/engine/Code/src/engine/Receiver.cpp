@@ -35,7 +35,7 @@ Poco::JSON::Object Receiver::recv_cmd(
 
     Poco::JSON::Parser parser;
 
-    auto obj = parser.parse( str ).extract<Poco::JSON::Object::Ptr>();
+    const auto obj = parser.parse( str ).extract<Poco::JSON::Object::Ptr>();
 
     return *obj;
 
