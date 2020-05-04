@@ -38,12 +38,23 @@ class HyperoptManager
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
+    /// Sends a JSON string representation of the hyperparameter optimization to
+    /// the client.
+    void refresh( const std::string& _name, Poco::Net::StreamSocket* _socket );
+
    private:
     /// Trivial (private) accessor
     std::map<std::string, hyperparam::Hyperopt>& hyperopts()
     {
         assert_true( hyperopts_ );
         return *hyperopts_;
+    }
+
+    /// Trivial (private) getter
+    hyperparam::Hyperopt get_hyperopt( const std::string& _name )
+    {
+        multithreading::ReadLock read_lock( read_write_lock_ );
+        return utils::Getter::get( _name, hyperopts() );
     }
 
     /// Trivial (private) accessor

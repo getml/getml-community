@@ -261,9 +261,13 @@ void RequestHandler::run()
                 {
                     hyperopt_manager().add_hyperopt( name, cmd, &socket() );
                 }
-            else if ( type == "Hyperopt.launch" )
+            else if ( type == "GaussianHyperparameterSearch.launch" )
                 {
                     hyperopt_manager().launch( name, cmd, &socket() );
+                }
+            else if ( type == "GaussianHyperparameterSearch.refresh" )
+                {
+                    hyperopt_manager().refresh( name, &socket() );
                 }
             else if ( type == "list_data_frames" )
                 {

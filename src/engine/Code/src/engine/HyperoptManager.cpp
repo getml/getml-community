@@ -44,9 +44,9 @@ void HyperoptManager::launch(
 
     // -------------------------------------------------------
 
-    const auto hyperopt = utils::Getter::get( _name, &hyperopts() );
+    const auto hyperopt = get_hyperopt( _name );
 
-    auto cmd = hyperopt.cmd();
+    auto cmd = hyperopt.obj();
 
     cmd.set( "population_training_name_", population_training_name );
 
@@ -72,7 +72,7 @@ void HyperoptManager::launch(
     const auto evaluations =
         parser.parse( response ).extract<Poco::JSON::Array::Ptr>();
 
-    auto obj = hyperopt.cmd();
+    auto obj = hyperopt.obj();
 
     obj.set( "evaluations_", evaluations );
 
@@ -81,6 +81,18 @@ void HyperoptManager::launch(
     add_hyperopt( _name, obj, _socket );
 
     // -------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
+void HyperoptManager::refresh(
+    const std::string& _name, Poco::Net::StreamSocket* _socket )
+{
+    const auto hyperopt = get_hyperopt( _name );
+
+    const auto obj = hyperopt.obj();
+
+    communication::Sender::send_string( JSON::stringify( obj ), _socket );
 }
 
 // ------------------------------------------------------------------------
