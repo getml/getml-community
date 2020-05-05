@@ -259,7 +259,7 @@ void RequestHandler::run()
                 }
             else if ( type == "GaussianHyperparameterSearch" )
                 {
-                    hyperopt_manager().add_hyperopt( name, cmd, &socket() );
+                    project_manager().add_hyperopt( name, cmd, &socket() );
                 }
             else if ( type == "GaussianHyperparameterSearch.launch" )
                 {
@@ -276,6 +276,10 @@ void RequestHandler::run()
             else if ( type == "list_data_frames" )
                 {
                     project_manager().list_data_frames( &socket() );
+                }
+            else if ( type == "list_hyperopts" )
+                {
+                    project_manager().list_hyperopts( &socket() );
                 }
             else if ( type == "list_pipelines" )
                 {

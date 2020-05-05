@@ -91,6 +91,12 @@ class ProjectManager
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
+    /// Adds a new hyperparameter optimization.
+    void add_hyperopt(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
     /// Adds a new Pipeline to the project.
     void add_pipeline(
         const std::string& _name,
@@ -122,6 +128,9 @@ class ProjectManager
     /// Returns a list of all data_frames currently held in memory and held
     /// in the project directory.
     void list_data_frames( Poco::Net::StreamSocket* _socket ) const;
+
+    /// Returns a list of all hyperopts currently held in memory.
+    void list_hyperopts( Poco::Net::StreamSocket* _socket ) const;
 
     /// Returns a list of all pipelines currently held in memory.
     void list_pipelines( Poco::Net::StreamSocket* _socket ) const;
@@ -168,6 +177,9 @@ class ProjectManager
     /// Deletes all pipelines and data frames (from memory only) and clears all
     /// encodings.
     void clear();
+
+    /// Loads all hyperparameter optimization objects.
+    void load_all_hyperopts();
 
     /// Loads all pipelines.
     void load_all_pipelines();
@@ -242,6 +254,13 @@ class ProjectManager
         return *hyperopts_;
     }
 
+    /// Trivial (private) accessor
+    const std::map<std::string, hyperparam::Hyperopt>& hyperopts() const
+    {
+        assert_true( hyperopts_ );
+        return *hyperopts_;
+    }
+
     /// Trivial accessor
     engine::licensing::LicenseChecker& license_checker()
     {
@@ -284,7 +303,15 @@ class ProjectManager
         return *project_mtx_;
     }
 
-    /// Sets a pipeline.
+    /// Trivial (private) setter.
+    void set_hyperopt(
+        const std::string& _name, const hyperparam::Hyperopt& _hyperopt )
+    {
+        multithreading::WriteLock write_lock( read_write_lock_ );
+        hyperopts().insert_or_assign( _name, _hyperopt );
+    }
+
+    /// Trivial (private) setter.
     void set_pipeline(
         const std::string& _name, const pipelines::Pipeline& _pipeline )
     {

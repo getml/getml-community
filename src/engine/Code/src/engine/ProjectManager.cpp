@@ -128,6 +128,20 @@ void ProjectManager::add_data_frame_from_query(
 
 // ------------------------------------------------------------------------
 
+void ProjectManager::add_hyperopt(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    const auto hyperopt = hyperparam::Hyperopt( _cmd );
+
+    set_hyperopt( _name, hyperopt );
+
+    communication::Sender::send_string( "Success!", _socket );
+}
+
+// ------------------------------------------------------------------------
+
 void ProjectManager::add_pipeline(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,
@@ -180,6 +194,8 @@ void ProjectManager::clear()
     // --------------------------------
 
     data_frames() = std::map<std::string, engine::containers::DataFrame>();
+
+    hyperopts() = std::map<std::string, engine::hyperparam::Hyperopt>();
 
     pipelines() = engine::handlers::PipelineManager::PipelineMapType();
 
@@ -322,6 +338,31 @@ void ProjectManager::list_data_frames( Poco::Net::StreamSocket* _socket ) const
 
 // ------------------------------------------------------------------------
 
+void ProjectManager::list_hyperopts( Poco::Net::StreamSocket* _socket ) const
+{
+    Poco::JSON::Object obj;
+
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    Poco::JSON::Array names;
+
+    for ( const auto& [key, value] : hyperopts() )
+        {
+            names.add( key );
+        }
+
+    read_lock.unlock();
+
+    obj.set( "names", names );
+
+    engine::communication::Sender::send_string( "Success!", _socket );
+
+    engine::communication::Sender::send_string(
+        JSON::stringify( obj ), _socket );
+}
+
+// ------------------------------------------------------------------------
+
 void ProjectManager::list_pipelines( Poco::Net::StreamSocket* _socket ) const
 {
     Poco::JSON::Object obj;
@@ -375,6 +416,51 @@ void ProjectManager::list_projects( Poco::Net::StreamSocket* _socket ) const
 
     engine::communication::Sender::send_string(
         JSON::stringify( obj ), _socket );
+}
+
+// ------------------------------------------------------------------------
+
+void ProjectManager::load_all_hyperopts()
+{
+    // --------------------------------------------------------------------
+
+    if ( project_directory_ == "" )
+        {
+            throw std::invalid_argument( "You have not set a project!" );
+        }
+
+    Poco::DirectoryIterator end;
+
+    // --------------------------------------------------------------------
+
+    for ( Poco::DirectoryIterator it( project_directory_ + "hyperopts/" );
+          it != end;
+          ++it )
+        {
+            if ( !it->isDirectory() )
+                {
+                    continue;
+                }
+
+            try
+                {
+                    const auto hyperopt =
+                        hyperparam::Hyperopt( it->path() + "/" );
+
+                    set_hyperopt( it.name(), hyperopt );
+
+                    // TODO
+                    /*monitor_->send(
+                        "posthyperopt", pipeline.to_monitor( it.name() ) );*/
+                }
+            catch ( std::exception& e )
+                {
+                    logger().log(
+                        "Error loading " + it.name() + ": " + e.what() );
+                }
+        }
+
+    // --------------------------------------------------------------------
 }
 
 // ------------------------------------------------------------------------
@@ -604,6 +690,8 @@ void ProjectManager::set_project(
     write_lock.unlock();
 
     load_all_pipelines();
+
+    load_all_hyperopts();
 
     engine::communication::Sender::send_string( "Success!", _socket );
 }

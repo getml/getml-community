@@ -26,12 +26,6 @@ class HyperoptManager
     ~HyperoptManager() = default;
 
    public:
-    /// Adds a new hyperparameter optimization.
-    void add_hyperopt(
-        const std::string& _name,
-        const Poco::JSON::Object& _cmd,
-        Poco::Net::StreamSocket* _socket );
-
     /// Launches a hyperparameter optimization.
     void launch(
         const std::string& _name,

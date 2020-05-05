@@ -6,7 +6,9 @@
 
 #include <cmath>
 
+#include <fstream>
 #include <memory>
+#include <sstream>
 #include <type_traits>
 #include <vector>
 

@@ -6,20 +6,6 @@ namespace handlers
 {
 // ------------------------------------------------------------------------
 
-void HyperoptManager::add_hyperopt(
-    const std::string& _name,
-    const Poco::JSON::Object& _cmd,
-    Poco::Net::StreamSocket* _socket )
-{
-    multithreading::WriteLock write_lock( read_write_lock_ );
-
-    hyperopts().insert_or_assign( _name, hyperparam::Hyperopt( _cmd ) );
-
-    communication::Sender::send_string( "Success!", _socket );
-}
-
-// ------------------------------------------------------------------------
-
 void HyperoptManager::launch(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,
@@ -56,9 +42,6 @@ void HyperoptManager::launch(
 
     const auto cmd_str = JSON::stringify( cmd );
 
-    // TODO: Remove
-    std::cout << "cmd_str: " << std::endl << cmd_str << std::endl << std::endl;
-
     const auto [status, response] = monitor_->send( "launchhyperopt", cmd_str );
 
     // -------------------------------------------------------
@@ -81,7 +64,11 @@ void HyperoptManager::launch(
 
     // -------------------------------------------------------
 
-    add_hyperopt( _name, obj, _socket );
+    multithreading::WriteLock write_lock( read_write_lock_ );
+
+    hyperopts().insert_or_assign( _name, hyperparam::Hyperopt( obj ) );
+
+    communication::Sender::send_string( "Success!", _socket );
 
     // -------------------------------------------------------
 }

@@ -12,6 +12,11 @@ class Hyperopt
    public:
     Hyperopt( const Poco::JSON::Object& _obj ) : obj_( _obj ) {}
 
+    Hyperopt( const std::string& _path )
+        : obj_( jsonutils::JSON::load( _path + "obj.json" ) )
+    {
+    }
+
     ~Hyperopt() = default;
 
    public:

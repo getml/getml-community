@@ -9,7 +9,7 @@
 #include <Poco/JSON/Object.h>
 #include <Poco/TemporaryFile.h>
 
-#include "engine/JSON.hpp"
+#include "jsonutils/jsonutils.hpp"
 
 // ----------------------------------------------------
 // Module files
