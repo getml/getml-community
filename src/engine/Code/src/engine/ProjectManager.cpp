@@ -185,6 +185,8 @@ void ProjectManager::clear()
                 "removedataframe", "{\"name\":\"" + pair.first + "\"}" );
         }
 
+    // TODO: Remove hyperopts
+
     for ( auto& pair : pipelines() )
         {
             monitor_->send(
