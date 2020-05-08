@@ -6,6 +6,35 @@ namespace handlers
 {
 // ------------------------------------------------------------------------
 
+void PipelineManager::check(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    // -------------------------------------------------------
+
+    const auto pipeline = get_pipeline( _name );
+
+    // -------------------------------------------------------
+
+    if ( pipeline.premium_only() )
+        {
+            license_checker().check_enterprise();
+        }
+
+    communication::Sender::send_string( "Found!", _socket );
+
+    // -------------------------------------------------------
+
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    pipeline.check( _cmd, logger_, data_frames(), _socket );
+
+    // -------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
 void PipelineManager::deploy(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,

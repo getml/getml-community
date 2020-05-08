@@ -131,6 +131,53 @@ void Pipeline::calculate_feature_stats(
     // ------------------------------------------------------------------------
 }
 
+// ----------------------------------------------------------------------------
+
+void Pipeline::check(
+    const Poco::JSON::Object& _cmd,
+    const std::shared_ptr<const monitoring::Logger>& _logger,
+    const std::map<std::string, containers::DataFrame>& _data_frames,
+    Poco::Net::StreamSocket* _socket ) const
+{
+    // ----------------------------------------------------------------------
+
+    const auto population_placeholder = std::make_shared<Poco::JSON::Object>(
+        *JSON::get_object( obj(), "population_" ) );
+
+    const auto peripheral_names = parse_peripheral();
+
+    // -------------------------------------------------------------------------
+
+    const auto population_name =
+        JSON::get_value<std::string>( _cmd, "population_name_" );
+
+    const auto peripheral_df_names = JSON::array_to_vector<std::string>(
+        JSON::get_array( _cmd, "peripheral_names_" ) );
+
+    const auto population = utils::Getter::get( population_name, _data_frames );
+
+    auto peripheral = std::vector<containers::DataFrame>();
+
+    for ( const auto& df_name : peripheral_df_names )
+        {
+            const auto df = utils::Getter::get( df_name, _data_frames );
+
+            peripheral.push_back( df );
+        }
+
+    // -------------------------------------------------------------------------
+
+    DataModelChecker::check(
+        population_placeholder,
+        peripheral_names,
+        population,
+        peripheral,
+        _logger,
+        _socket );
+
+    // -------------------------------------------------------------------------
+}
+
 // ----------------------------------------------------------------------
 
 std::vector<Poco::JSON::Object::Ptr> Pipeline::extract_df_fingerprints(
@@ -579,8 +626,78 @@ void Pipeline::fit(
     df_fingerprints() = extract_df_fingerprints( _cmd, _data_frames );
 
     // -------------------------------------------------------------------------
-    // Fit the feature engineering algorithms.
 
+    fit_feature_engineerers(
+        _cmd, _logger, _data_frames, _fe_tracker, _socket );
+
+    // -------------------------------------------------------------------------
+
+    make_feature_selector_impl( _cmd, _data_frames );
+
+    // -------------------------------------------------------------------------
+    // Fit the feature selectors
+
+    auto feature_selectors = init_predictors(
+        "feature_selectors_",
+        num_targets(),
+        impl_.feature_selector_impl_,
+        fe_fingerprints() );
+
+    fit_predictors(
+        _cmd,
+        _logger,
+        _data_frames,
+        _pred_tracker,
+        feature_selector_impl(),
+        &feature_selectors,
+        _socket );
+
+    feature_selectors_ = std::move( feature_selectors );
+
+    fs_fingerprints() = extract_fs_fingerprints();
+
+    // -------------------------------------------------------------------------
+    // Prepare the predictor impl - this also uses the results from the feature
+    // selection.
+
+    make_predictor_impl( _cmd, _data_frames );
+
+    // -------------------------------------------------------------------------
+    // Fit the predictors.
+
+    auto predictors = init_predictors(
+        "predictors_",
+        num_targets(),
+        impl_.predictor_impl_,
+        fs_fingerprints() );
+
+    fit_predictors(
+        _cmd,
+        _logger,
+        _data_frames,
+        _pred_tracker,
+        predictor_impl(),
+        &predictors,
+        _socket );
+
+    predictors_ = std::move( predictors );
+
+    // -------------------------------------------------------------------------
+
+    scores().from_json_obj( feature_importances_as_obj() );
+
+    // -------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+void Pipeline::fit_feature_engineerers(
+    const Poco::JSON::Object& _cmd,
+    const std::shared_ptr<const monitoring::Logger>& _logger,
+    const std::map<std::string, containers::DataFrame>& _data_frames,
+    const std::shared_ptr<dependency::FETracker> _fe_tracker,
+    Poco::Net::StreamSocket* _socket )
+{
     auto [feature_engineerers, target_nums] =
         init_feature_engineerers( num_targets(), df_fingerprints() );
 
@@ -611,65 +728,6 @@ void Pipeline::fit(
     feature_engineerers_ = std::move( feature_engineerers );
 
     fe_fingerprints() = extract_fe_fingerprints();
-
-    // -------------------------------------------------------------------------
-
-    make_feature_selector_impl( _cmd, _data_frames );
-
-    // -------------------------------------------------------------------------
-    // Fit the feature selectors
-
-    auto feature_selectors = init_predictors(
-        "feature_selectors_",
-        num_targets(),
-        impl_.feature_selector_impl_,
-        fe_fingerprints() );
-
-    fit_predictors(
-        _cmd,
-        _logger,
-        _data_frames,
-        _pred_tracker,
-        feature_selector_impl(),
-        &feature_selectors,
-        _socket );
-
-    feature_selectors_ = std::move( feature_selectors );
-
-    fs_fingerprints() = extract_fs_fingerprints();
-
-    // -------------------------------------------------------------------------
-    // Prepare the predictor - this also uses the results from the feature
-    // selection.
-
-    make_predictor_impl( _cmd, _data_frames );
-
-    // -------------------------------------------------------------------------
-    // Fit the predictors.
-
-    auto predictors = init_predictors(
-        "predictors_",
-        num_targets(),
-        impl_.predictor_impl_,
-        fs_fingerprints() );
-
-    fit_predictors(
-        _cmd,
-        _logger,
-        _data_frames,
-        _pred_tracker,
-        predictor_impl(),
-        &predictors,
-        _socket );
-
-    predictors_ = std::move( predictors );
-
-    // -------------------------------------------------------------------------
-    // Store the feature importances.
-
-    scores().from_json_obj( feature_importances_as_obj() );
-
-    // -------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------

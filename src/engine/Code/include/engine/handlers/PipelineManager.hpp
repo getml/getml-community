@@ -52,6 +52,12 @@ class PipelineManager
     // ------------------------------------------------------------------------
 
    public:
+    /// Checks the validity of the data model.
+    void check(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
     /// Determines whether the pipeline should
     /// allow HTTP requests.
     void deploy(

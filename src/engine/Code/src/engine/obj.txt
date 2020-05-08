@@ -8,6 +8,7 @@ set(
     ${ENGINE_SOURCE_DIRECTORY}/DataFrameJoiner.cpp
     ${ENGINE_SOURCE_DIRECTORY}/DataFrameManager.cpp
     ${ENGINE_SOURCE_DIRECTORY}/DataFrameReader.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/DataModelChecker.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Encoding.cpp
     ${ENGINE_SOURCE_DIRECTORY}/FeatureEngineererParser.cpp
     ${ENGINE_SOURCE_DIRECTORY}/FileHandler.cpp

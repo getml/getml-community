@@ -15,7 +15,9 @@
 #include <unordered_map>
 #include <vector>
 
+#include "engine/communication/communication.hpp"
 #include "engine/containers/containers.hpp"
+#include "engine/utils/utils.hpp"
 
 #include "metrics/metrics.hpp"
 
@@ -28,6 +30,7 @@
 // ----------------------------------------------------
 // Module files
 
+#include "engine/pipelines/DataModelChecker.hpp"
 #include "engine/pipelines/PipelineImpl.hpp"
 
 #include "engine/pipelines/Pipeline.hpp"

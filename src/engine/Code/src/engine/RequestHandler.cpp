@@ -257,19 +257,21 @@ void RequestHandler::run()
                 {
                     data_frame_manager().set_unit( name, cmd, &socket() );
                 }
-            else if ( type == "GaussianHyperparameterSearch" )
+            else if (
+                type == "GaussianHyperparameterSearch" ||
+                type == "LatinHypercubeSearch" || type == "RandomSearch" )
                 {
                     project_manager().add_hyperopt( name, cmd, &socket() );
                 }
-            else if ( type == "GaussianHyperparameterSearch.launch" )
+            else if ( type == "Hyperopt.launch" )
                 {
                     hyperopt_manager().launch( name, cmd, &socket() );
                 }
-            else if ( type == "GaussianHyperparameterSearch.refresh" )
+            else if ( type == "Hyperopt.refresh" )
                 {
                     hyperopt_manager().refresh( name, &socket() );
                 }
-            else if ( type == "GaussianHyperparameterSearch.save" )
+            else if ( type == "Hyperopt.save" )
                 {
                     project_manager().save_hyperopt( name, &socket() );
                 }
@@ -296,6 +298,10 @@ void RequestHandler::run()
             else if ( type == "Pipeline" )
                 {
                     project_manager().add_pipeline( name, cmd, &socket() );
+                }
+            else if ( type == "Pipeline.check" )
+                {
+                    pipeline_manager().check( name, cmd, &socket() );
                 }
             else if ( type == "Pipeline.copy" )
                 {
