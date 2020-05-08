@@ -150,8 +150,6 @@ Poco::JSON::Object::Ptr Hyperparameters::to_json_obj() const
 
     obj->set( "silent_", silent_ );
 
-    obj->set( "target_num_", target_num_ );
-
     obj->set( "use_timestamps_", use_timestamps_ );
 
     // ---------------------------------------------------------
