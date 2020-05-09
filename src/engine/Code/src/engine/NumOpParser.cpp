@@ -312,10 +312,7 @@ containers::Column<Float> NumOpParser::unary_operation(
         }
     else if ( op == "day" )
         {
-            const std::chrono::time_point<std::chrono::system_clock>
-                epoch_point;
-
-            const auto day = [epoch_point]( const Float val ) {
+            const auto day = []( const Float val ) {
                 if ( std::isnan( val ) || std::isinf( val ) )
                     {
                         return static_cast<Float>( NAN );
@@ -324,12 +321,10 @@ containers::Column<Float> NumOpParser::unary_operation(
                 const auto seconds_since_epoch =
                     static_cast<std::time_t>( val );
 
-                const auto time_stamp = std::chrono::system_clock::to_time_t(
-                    epoch_point + std::chrono::seconds( seconds_since_epoch ) );
-
                 return static_cast<Float>(
-                    std::gmtime( &time_stamp )->tm_mday );
+                    std::gmtime( &seconds_since_epoch )->tm_mday );
             };
+
             return un_op( _col, day );
         }
     else if ( op == "erf" )
@@ -351,10 +346,7 @@ containers::Column<Float> NumOpParser::unary_operation(
         }
     else if ( op == "hour" )
         {
-            const std::chrono::time_point<std::chrono::system_clock>
-                epoch_point;
-
-            const auto hour = [epoch_point]( const Float val ) {
+            const auto hour = []( const Float val ) {
                 if ( std::isnan( val ) || std::isinf( val ) )
                     {
                         return static_cast<Float>( NAN );
@@ -363,11 +355,8 @@ containers::Column<Float> NumOpParser::unary_operation(
                 const auto seconds_since_epoch =
                     static_cast<std::time_t>( val );
 
-                const auto time_stamp = std::chrono::system_clock::to_time_t(
-                    epoch_point + std::chrono::seconds( seconds_since_epoch ) );
-
                 return static_cast<Float>(
-                    std::gmtime( &time_stamp )->tm_hour );
+                    std::gmtime( &seconds_since_epoch )->tm_hour );
             };
             return un_op( _col, hour );
         }
@@ -385,10 +374,7 @@ containers::Column<Float> NumOpParser::unary_operation(
         }
     else if ( op == "minute" )
         {
-            const std::chrono::time_point<std::chrono::system_clock>
-                epoch_point;
-
-            const auto minute = [epoch_point]( const Float val ) {
+            const auto minute = []( const Float val ) {
                 if ( std::isnan( val ) || std::isinf( val ) )
                     {
                         return static_cast<Float>( NAN );
@@ -397,19 +383,14 @@ containers::Column<Float> NumOpParser::unary_operation(
                 const auto seconds_since_epoch =
                     static_cast<std::time_t>( val );
 
-                const auto time_stamp = std::chrono::system_clock::to_time_t(
-                    epoch_point + std::chrono::seconds( seconds_since_epoch ) );
-
-                return static_cast<Float>( std::gmtime( &time_stamp )->tm_min );
+                return static_cast<Float>(
+                    std::gmtime( &seconds_since_epoch )->tm_min );
             };
             return un_op( _col, minute );
         }
     else if ( op == "month" )
         {
-            const std::chrono::time_point<std::chrono::system_clock>
-                epoch_point;
-
-            const auto month = [epoch_point]( const Float val ) {
+            const auto month = []( const Float val ) {
                 if ( std::isnan( val ) || std::isinf( val ) )
                     {
                         return static_cast<Float>( NAN );
@@ -418,11 +399,8 @@ containers::Column<Float> NumOpParser::unary_operation(
                 const auto seconds_since_epoch =
                     static_cast<std::time_t>( val );
 
-                const auto time_stamp = std::chrono::system_clock::to_time_t(
-                    epoch_point + std::chrono::seconds( seconds_since_epoch ) );
-
                 return static_cast<Float>(
-                    std::gmtime( &time_stamp )->tm_mon + 1 );
+                    std::gmtime( &seconds_since_epoch )->tm_mon + 1 );
             };
             return un_op( _col, month );
         }
@@ -443,10 +421,7 @@ containers::Column<Float> NumOpParser::unary_operation(
         }
     else if ( op == "second" )
         {
-            const std::chrono::time_point<std::chrono::system_clock>
-                epoch_point;
-
-            const auto second = [epoch_point]( const Float val ) {
+            const auto second = []( const Float val ) {
                 if ( std::isnan( val ) || std::isinf( val ) )
                     {
                         return static_cast<Float>( NAN );
@@ -455,10 +430,8 @@ containers::Column<Float> NumOpParser::unary_operation(
                 const auto seconds_since_epoch =
                     static_cast<std::time_t>( val );
 
-                const auto time_stamp = std::chrono::system_clock::to_time_t(
-                    epoch_point + std::chrono::seconds( seconds_since_epoch ) );
-
-                return static_cast<Float>( std::gmtime( &time_stamp )->tm_sec );
+                return static_cast<Float>(
+                    std::gmtime( &seconds_since_epoch )->tm_sec );
             };
             return un_op( _col, second );
         }
@@ -492,10 +465,7 @@ containers::Column<Float> NumOpParser::unary_operation(
         }
     else if ( op == "weekday" )
         {
-            const std::chrono::time_point<std::chrono::system_clock>
-                epoch_point;
-
-            const auto weekday = [epoch_point]( const Float val ) {
+            const auto weekday = []( const Float val ) {
                 if ( std::isnan( val ) || std::isinf( val ) )
                     {
                         return static_cast<Float>( NAN );
@@ -504,20 +474,14 @@ containers::Column<Float> NumOpParser::unary_operation(
                 const auto seconds_since_epoch =
                     static_cast<std::time_t>( val );
 
-                const auto time_stamp = std::chrono::system_clock::to_time_t(
-                    epoch_point + std::chrono::seconds( seconds_since_epoch ) );
-
                 return static_cast<Float>(
-                    std::gmtime( &time_stamp )->tm_wday );
+                    std::gmtime( &seconds_since_epoch )->tm_wday );
             };
             return un_op( _col, weekday );
         }
     else if ( op == "year" )
         {
-            const std::chrono::time_point<std::chrono::system_clock>
-                epoch_point;
-
-            const auto year = [epoch_point]( const Float val ) {
+            const auto year = []( const Float val ) {
                 if ( std::isnan( val ) || std::isinf( val ) )
                     {
                         return static_cast<Float>( NAN );
@@ -526,21 +490,15 @@ containers::Column<Float> NumOpParser::unary_operation(
                 const auto seconds_since_epoch =
                     static_cast<std::time_t>( val );
 
-                const auto time_stamp = std::chrono::system_clock::to_time_t(
-                    epoch_point + std::chrono::seconds( seconds_since_epoch ) );
-
                 return static_cast<Float>(
-                    std::gmtime( &time_stamp )->tm_year + 1900 );
+                    std::gmtime( &seconds_since_epoch )->tm_year + 1900 );
             };
 
             return un_op( _col, year );
         }
     else if ( op == "yearday" )
         {
-            const std::chrono::time_point<std::chrono::system_clock>
-                epoch_point;
-
-            const auto yearday = [epoch_point]( const Float val ) {
+            const auto yearday = []( const Float val ) {
                 if ( std::isnan( val ) || std::isinf( val ) )
                     {
                         return static_cast<Float>( NAN );
@@ -549,11 +507,8 @@ containers::Column<Float> NumOpParser::unary_operation(
                 const auto seconds_since_epoch =
                     static_cast<std::time_t>( val );
 
-                const auto time_stamp = std::chrono::system_clock::to_time_t(
-                    epoch_point + std::chrono::seconds( seconds_since_epoch ) );
-
                 return static_cast<Float>(
-                    std::gmtime( &time_stamp )->tm_yday + 1 );
+                    std::gmtime( &seconds_since_epoch )->tm_yday + 1 );
             };
 
             return un_op( _col, yearday );
