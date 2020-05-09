@@ -322,7 +322,7 @@ containers::Column<Float> NumOpParser::unary_operation(
                     }
 
                 const auto seconds_since_epoch =
-                    static_cast<std::time_t>( 86400.0 * val );
+                    static_cast<std::time_t>( val );
 
                 const auto time_stamp = std::chrono::system_clock::to_time_t(
                     epoch_point + std::chrono::seconds( seconds_since_epoch ) );
@@ -361,7 +361,7 @@ containers::Column<Float> NumOpParser::unary_operation(
                     }
 
                 const auto seconds_since_epoch =
-                    static_cast<std::time_t>( 86400.0 * val );
+                    static_cast<std::time_t>( val );
 
                 const auto time_stamp = std::chrono::system_clock::to_time_t(
                     epoch_point + std::chrono::seconds( seconds_since_epoch ) );
@@ -395,7 +395,7 @@ containers::Column<Float> NumOpParser::unary_operation(
                     }
 
                 const auto seconds_since_epoch =
-                    static_cast<std::time_t>( 86400.0 * val );
+                    static_cast<std::time_t>( val );
 
                 const auto time_stamp = std::chrono::system_clock::to_time_t(
                     epoch_point + std::chrono::seconds( seconds_since_epoch ) );
@@ -416,7 +416,7 @@ containers::Column<Float> NumOpParser::unary_operation(
                     }
 
                 const auto seconds_since_epoch =
-                    static_cast<std::time_t>( 86400.0 * val );
+                    static_cast<std::time_t>( val );
 
                 const auto time_stamp = std::chrono::system_clock::to_time_t(
                     epoch_point + std::chrono::seconds( seconds_since_epoch ) );
@@ -453,7 +453,7 @@ containers::Column<Float> NumOpParser::unary_operation(
                     }
 
                 const auto seconds_since_epoch =
-                    static_cast<std::time_t>( 86400.0 * val );
+                    static_cast<std::time_t>( val );
 
                 const auto time_stamp = std::chrono::system_clock::to_time_t(
                     epoch_point + std::chrono::seconds( seconds_since_epoch ) );
@@ -502,7 +502,7 @@ containers::Column<Float> NumOpParser::unary_operation(
                     }
 
                 const auto seconds_since_epoch =
-                    static_cast<std::time_t>( 86400.0 * val );
+                    static_cast<std::time_t>( val );
 
                 const auto time_stamp = std::chrono::system_clock::to_time_t(
                     epoch_point + std::chrono::seconds( seconds_since_epoch ) );
@@ -524,7 +524,7 @@ containers::Column<Float> NumOpParser::unary_operation(
                     }
 
                 const auto seconds_since_epoch =
-                    static_cast<std::time_t>( 86400.0 * val );
+                    static_cast<std::time_t>( val );
 
                 const auto time_stamp = std::chrono::system_clock::to_time_t(
                     epoch_point + std::chrono::seconds( seconds_since_epoch ) );
@@ -532,6 +532,7 @@ containers::Column<Float> NumOpParser::unary_operation(
                 return static_cast<Float>(
                     std::gmtime( &time_stamp )->tm_year + 1900 );
             };
+
             return un_op( _col, year );
         }
     else if ( op == "yearday" )
@@ -546,7 +547,7 @@ containers::Column<Float> NumOpParser::unary_operation(
                     }
 
                 const auto seconds_since_epoch =
-                    static_cast<std::time_t>( 86400.0 * val );
+                    static_cast<std::time_t>( val );
 
                 const auto time_stamp = std::chrono::system_clock::to_time_t(
                     epoch_point + std::chrono::seconds( seconds_since_epoch ) );
@@ -554,6 +555,7 @@ containers::Column<Float> NumOpParser::unary_operation(
                 return static_cast<Float>(
                     std::gmtime( &time_stamp )->tm_yday + 1 );
             };
+
             return un_op( _col, yearday );
         }
     else
