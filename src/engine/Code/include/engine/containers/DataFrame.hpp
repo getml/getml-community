@@ -348,7 +348,10 @@ class DataFrame
     }
 
     /// Returns the index signified by index _i
-    template <class T>
+    template <
+        typename T,
+        typename std::enable_if<!std::is_same<T, std::string>::value, int>::
+            type = 0>
     DataFrameIndex &index( T _i )
     {
         assert_true( indices_.size() == join_keys_.size() );
@@ -356,11 +359,14 @@ class DataFrame
         assert_true( _i >= 0 );
         assert_true( static_cast<size_t>( _i ) < indices_.size() );
 
-        return indices_[_i];
+        return indices_.at( _i );
     }
 
     /// Returns the index signified by index _i
-    template <class T>
+    template <
+        typename T,
+        typename std::enable_if<!std::is_same<T, std::string>::value, int>::
+            type = 0>
     const DataFrameIndex index( T _i ) const
     {
         assert_true( indices_.size() == join_keys_.size() );
@@ -368,7 +374,26 @@ class DataFrame
         assert_true( _i >= 0 );
         assert_true( static_cast<size_t>( _i ) < indices_.size() );
 
-        return indices_[_i];
+        return indices_.at( _i );
+    }
+
+    /// Returns the index corresponding to join key _name
+    const DataFrameIndex index( const std::string &_name ) const
+    {
+        assert_true( indices_.size() == join_keys_.size() );
+        assert_true( join_keys_.size() > 0 );
+
+        for ( size_t i = 0; i < num_join_keys(); ++i )
+            {
+                if ( join_key( i ).name() == _name )
+                    {
+                        return indices_.at( i );
+                    }
+            }
+
+        throw std::invalid_argument(
+            "Data frame '" + name_ + "' contains no join key named '" + _name +
+            "'!" );
     }
 
     /// Trivial accessor

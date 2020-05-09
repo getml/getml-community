@@ -83,6 +83,24 @@ class ColumnOperators
         return result;
     }
 
+    /// Counts the non-null number of entries.
+    static Float count_categorical( const std::vector<Int>& _vec )
+    {
+        Float result = 0.0;
+
+        for ( const auto& val : _vec )
+            {
+                if ( val < 0 )
+                    {
+                        continue;
+                    }
+
+                ++result;
+            }
+
+        return result;
+    }
+
     /// Counts the non-null distinct number of entries.
     static Float count_distinct( const std::vector<std::string>& _vec )
     {
@@ -97,6 +115,24 @@ class ColumnOperators
                     }
 
                 set.insert( str );
+            }
+
+        return static_cast<Float>( set.size() );
+    }
+
+    /// Counts the non-null distinct number of entries.
+    static Float count_distinct( const std::vector<Int>& _vec )
+    {
+        auto set = std::unordered_set<Int>();
+
+        for ( const auto& val : _vec )
+            {
+                if ( val < 0 )
+                    {
+                        continue;
+                    }
+
+                set.insert( val );
             }
 
         return static_cast<Float>( set.size() );
