@@ -60,6 +60,8 @@
 
 #include "engine/pipelines/pipelines.hpp"
 
+#include "engine/temp_dir.hpp"
+
 // ----------------------------------------------------
 // Module files
 

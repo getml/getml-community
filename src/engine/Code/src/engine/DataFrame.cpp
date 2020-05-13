@@ -1917,7 +1917,7 @@ void DataFrame::save( const std::string &_path, const std::string &_name )
 {
     // ---------------------------------------------------------------------
 
-    auto tfile = Poco::TemporaryFile();
+    auto tfile = Poco::TemporaryFile( engine::temp_dir );
 
     tfile.createDirectories();
 

@@ -77,6 +77,14 @@ struct FileHandler
 
     // ------------------------------------------------------------------------
 
+    /// Deletes the temporary directory
+    static void delete_temp_dir()
+    {
+        auto file = Poco::File( engine::temp_dir );
+        file.createDirectories();
+        file.remove( true );
+    }
+
     /// Makes the filename for a data frame.
     template <
         typename RType,

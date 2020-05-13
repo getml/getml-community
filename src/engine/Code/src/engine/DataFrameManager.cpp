@@ -717,7 +717,7 @@ void DataFrameManager::calc_column_plots(
 
     // --------------------------------------------------------------------
 
-    const containers::Features features = {col.data_ptr()};
+    const containers::Features features = { col.data_ptr() };
 
     const auto obj = metrics::Summarizer::calculate_feature_plots(
         features, col.nrows(), 1, num_bins, targets );
@@ -1875,7 +1875,7 @@ void DataFrameManager::group_by(
     check_nrows( _cmd, df_name, df.nrows() );
 
     const auto grouped_df =
-        GroupByParser( categories_, join_keys_encoding_, {df} )
+        GroupByParser( categories_, join_keys_encoding_, { df } )
             .group_by( _name, key_name, aggregations );
 
     weak_write_lock.upgrade();
@@ -2361,7 +2361,7 @@ void DataFrameManager::to_s3(
 
     while ( !reader.eof() )
         {
-            auto tfile = Poco::TemporaryFile();
+            auto tfile = Poco::TemporaryFile( engine::temp_dir );
 
             auto writer =
                 io::CSVWriter( tfile.path(), batch_size, colnames, "\"", sep );

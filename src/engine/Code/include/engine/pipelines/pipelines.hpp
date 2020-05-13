@@ -25,6 +25,8 @@
 
 #include "engine/featureengineerers/featureengineerers.hpp"
 
+#include "engine/temp_dir.hpp"
+
 #include "predictors/predictors.hpp"
 
 // ----------------------------------------------------

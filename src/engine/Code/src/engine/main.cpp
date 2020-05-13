@@ -20,6 +20,8 @@ int main( int argc, char* argv[] )
                 "you have provided in your config.json." );
         }
 
+    engine::handlers::FileHandler::delete_temp_dir();
+
     // -------------------------------------------
 
     const auto monitor =
@@ -183,6 +185,10 @@ int main( int argc, char* argv[] )
         {
             std::this_thread::sleep_for( std::chrono::seconds( 1 ) );
         }
+
+    // -------------------------------------------
+
+    engine::handlers::FileHandler::delete_temp_dir();
 
     // -------------------------------------------
 

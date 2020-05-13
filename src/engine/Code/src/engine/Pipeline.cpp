@@ -1470,7 +1470,7 @@ void Pipeline::save( const std::string& _path, const std::string& _name ) const
 {
     // ------------------------------------------------------------------
 
-    auto tfile = Poco::TemporaryFile();
+    auto tfile = Poco::TemporaryFile( engine::temp_dir );
 
     tfile.createDirectories();
 

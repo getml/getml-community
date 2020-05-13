@@ -11,6 +11,8 @@
 
 #include "jsonutils/jsonutils.hpp"
 
+#include "engine/temp_dir.hpp"
+
 // ----------------------------------------------------
 // Module files
 

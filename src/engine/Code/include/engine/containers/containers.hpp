@@ -48,6 +48,8 @@
 
 #include "engine/utils/utils.hpp"
 
+#include "engine/temp_dir.hpp"
+
 // ----------------------------------------------------
 // Module files
 
