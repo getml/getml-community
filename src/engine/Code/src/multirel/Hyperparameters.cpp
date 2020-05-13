@@ -30,10 +30,6 @@ Hyperparameters::Hyperparameters( const Poco::JSON::Object& _json_obj )
       sampling_factor_(
           JSON::get_value<Float>( _json_obj, "sampling_factor_" ) ),
       seed_( JSON::get_value<unsigned int>( _json_obj, "seed_" ) ),
-      session_name_(
-          _json_obj.has( "session_name_" )
-              ? JSON::get_value<std::string>( _json_obj, "session_name_" )
-              : "" ),
       share_aggregations_(
           JSON::get_value<Float>( _json_obj, "share_aggregations_" ) ),
       share_selected_features_(
@@ -134,8 +130,6 @@ Poco::JSON::Object::Ptr Hyperparameters::to_json_obj() const
     obj->set( "regularization_", tree_hyperparameters_->regularization_ );
 
     obj->set( "seed_", seed_ );
-
-    obj->set( "session_name_", session_name_ );
 
     obj->set( "num_threads_", num_threads_ );
 

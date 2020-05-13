@@ -295,12 +295,6 @@ class DecisionTreeEnsemble
         return *loss_function_;
     }
 
-    /// Trivial (const) accessor
-    const std::string session_name() const
-    {
-        return hyperparameters().session_name_;  // TODO
-    }
-
     /// Trivial (private) setter.
     void set_comm( multithreading::Communicator* _comm )
     {

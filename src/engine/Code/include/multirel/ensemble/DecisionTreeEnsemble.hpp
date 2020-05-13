@@ -177,12 +177,6 @@ class DecisionTreeEnsemble
         return *impl().population_schema_;
     }
 
-    /// Trivial (const) accessor
-    const std::string &session_name() const
-    {
-        return hyperparameters().session_name_;
-    }
-
     /// Trivial setter
     void set_comm( multithreading::Communicator *_comm )
     {

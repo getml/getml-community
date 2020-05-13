@@ -20,8 +20,7 @@ struct PipelineImpl
           categories_( _categories ),
           include_categorical_(
               JSON::get_value<bool>( _obj, "include_categorical_" ) ),
-          obj_( _obj ),
-          session_name_( JSON::get_value<std::string>( _obj, "session_name_" ) )
+          obj_( _obj )
     {
     }
 
@@ -30,8 +29,7 @@ struct PipelineImpl
         : allow_http_( false ),
           categories_( _categories ),
           include_categorical_( false ),
-          obj_( Poco::JSON::Object() ),
-          session_name_( "" )
+          obj_( Poco::JSON::Object() )
     {
     }
 
@@ -74,10 +72,6 @@ struct PipelineImpl
 
     /// The scores used to evaluate this pipeline
     metrics::Scores scores_;
-
-    /// Allows us to associate the pipeline with a hyperparameter optimization
-    /// routine.
-    std::string session_name_;
 
     /// The names of the targets.
     std::vector<std::string> targets_;

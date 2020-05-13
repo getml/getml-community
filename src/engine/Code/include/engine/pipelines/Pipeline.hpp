@@ -121,9 +121,6 @@ class Pipeline
     }
 
     /// Trivial (const) accessor
-    const std::string& session_name() const { return impl_.session_name_; }
-
-    /// Trivial (const) accessor
     const std::vector<std::string>& targets() const { return impl_.targets_; }
 
     // --------------------------------------------------------

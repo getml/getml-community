@@ -71,14 +71,6 @@ class PipelineManager
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
-    /// Returns the scores of all pipelines belonging to the session _name.
-    void get_hyperopt_names(
-        const std::string& _name, Poco::Net::StreamSocket* _socket ) const;
-
-    /// Returns the scores of all pipelines belonging to the session _name.
-    void get_hyperopt_scores(
-        const std::string& _name, Poco::Net::StreamSocket* _socket ) const;
-
     /// Sends a command to the monitor to launch a hyperparameter optimization.
     void launch_hyperopt(
         const std::string& _name, Poco::Net::StreamSocket* _socket );

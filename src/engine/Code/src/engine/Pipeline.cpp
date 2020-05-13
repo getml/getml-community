@@ -1694,6 +1694,8 @@ Poco::JSON::Object Pipeline::to_monitor( const std::string& _name ) const
 
     json_obj.set( "sql_", to_sql_arr() );
 
+    json_obj.set( "tags_", JSON::get_array( obj(), "tags_" ) );
+
     json_obj.set( "targets_", JSON::vector_to_array( targets() ) );
 
     return json_obj;

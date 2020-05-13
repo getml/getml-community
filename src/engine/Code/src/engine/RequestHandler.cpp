@@ -319,14 +319,6 @@ void RequestHandler::run()
                 {
                     pipeline_manager().fit( name, cmd, &socket() );
                 }
-            else if ( type == "Pipeline.get_hyperopt_names" )
-                {
-                    pipeline_manager().get_hyperopt_names( name, &socket() );
-                }
-            else if ( type == "Pipeline.get_hyperopt_scores" )
-                {
-                    pipeline_manager().get_hyperopt_scores( name, &socket() );
-                }
             else if ( type == "Pipeline.load" )
                 {
                     project_manager().load_pipeline( name, &socket() );

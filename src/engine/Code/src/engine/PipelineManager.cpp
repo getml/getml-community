@@ -105,57 +105,6 @@ void PipelineManager::fit(
 
 // ------------------------------------------------------------------------
 
-void PipelineManager::get_hyperopt_names(
-    const std::string& _name, Poco::Net::StreamSocket* _socket ) const
-{
-    multithreading::ReadLock read_lock( read_write_lock_ );
-
-    Poco::JSON::Array names;
-
-    for ( const auto& [key, pipeline] : pipelines() )
-        {
-            if ( pipeline.session_name() == _name )
-                {
-                    names.add( key );
-                }
-        }
-
-    Poco::JSON::Object obj;
-
-    obj.set( "names_", names );
-
-    communication::Sender::send_string( "Success!", _socket );
-
-    communication::Sender::send_string( JSON::stringify( obj ), _socket );
-}
-
-// ------------------------------------------------------------------------
-
-void PipelineManager::get_hyperopt_scores(
-    const std::string& _name, Poco::Net::StreamSocket* _socket ) const
-{
-    multithreading::ReadLock read_lock( read_write_lock_ );
-
-    Poco::JSON::Object scores;
-
-    for ( const auto& [key, pipeline] : pipelines() )
-        {
-            if ( pipeline.session_name() == _name )
-                {
-                    const auto new_scores = metrics::Scorer::get_metrics(
-                        pipeline.scores().to_json_obj() );
-
-                    scores.set( key, new_scores );
-                }
-        }
-
-    communication::Sender::send_string( "Success!", _socket );
-
-    communication::Sender::send_string( JSON::stringify( scores ), _socket );
-}
-
-// ------------------------------------------------------------------------
-
 Poco::JSON::Object PipelineManager::receive_data(
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<containers::Encoding>& _categories,
@@ -246,77 +195,6 @@ void PipelineManager::refresh(
 
     communication::Sender::send_string( JSON::stringify( obj ), _socket );
 }
-
-// ------------------------------------------------------------------------
-
-/*void PipelineManager::send_data(
-    const std::shared_ptr<containers::Encoding>& _categories,
-    const std::shared_ptr<std::map<std::string, containers::DataFrame>>&
-        _local_data_frames,
-    Poco::Net::StreamSocket* _socket )
-{
-    // -------------------------------------------------------
-    // Declare local variables. The idea of the local variables
-    // is to prevent the global variables from being affected
-    // by local data frames.
-
-    const auto local_read_write_lock =
-        std::make_shared<multithreading::ReadWriteLock>();
-
-    auto local_join_keys_encoding =
-        std::make_shared<containers::Encoding>( join_keys_encoding_ );
-
-    auto local_data_frame_manager = DataFrameManager(
-        _categories,
-        database_manager_,
-        _local_data_frames,
-        local_join_keys_encoding,
-        license_checker_,
-        logger_,
-        monitor_,
-        local_read_write_lock );
-
-    auto local_pipeline_manager = PipelineManager(
-        _categories,
-        database_manager_,
-        _local_data_frames,
-        local_join_keys_encoding,
-        license_checker_,
-        logger_,
-        monitor_,
-        pipelines_,
-        project_mtx_,
-        local_read_write_lock );
-
-    // -------------------------------------------------------
-    // Send data.
-
-    while ( true )
-        {
-            const auto cmd =
-                communication::Receiver::recv_cmd( logger_, _socket );
-
-            const auto name = JSON::get_value<std::string>( cmd, "name_" );
-
-            const auto type = JSON::get_value<std::string>( cmd, "type_" );
-
-            if ( type == "FloatColumn.get" )
-                {
-                    local_data_frame_manager.get_column( name, cmd, _socket );
-                }
-            else if ( type == "transform" )
-                {
-                    local_pipeline_manager.transform( name, cmd, _socket );
-                }
-            else
-                {
-                    communication::Sender::send_string( "Success!", _socket );
-                    return;
-                }
-        }
-
-    // -------------------------------------------------------
-}*/
 
 // ------------------------------------------------------------------------
 
