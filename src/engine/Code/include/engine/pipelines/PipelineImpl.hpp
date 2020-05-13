@@ -18,6 +18,7 @@ struct PipelineImpl
         const Poco::JSON::Object& _obj )
         : allow_http_( false ),
           categories_( _categories ),
+          creation_time_( make_creation_time() ),
           include_categorical_(
               JSON::get_value<bool>( _obj, "include_categorical_" ) ),
           obj_( _obj )
@@ -28,6 +29,7 @@ struct PipelineImpl
         const std::shared_ptr<const std::vector<strings::String>>& _categories )
         : allow_http_( false ),
           categories_( _categories ),
+          creation_time_( make_creation_time() ),
           include_categorical_( false ),
           obj_( Poco::JSON::Object() )
     {
@@ -37,11 +39,24 @@ struct PipelineImpl
 
     // -----------------------------------------------
 
+    // Helper function for the creation time.
+    static std::string make_creation_time()
+    {
+        const auto now = Poco::LocalDateTime();
+        return Poco::DateTimeFormatter::format(
+            now, Poco::DateTimeFormat::SORTABLE_FORMAT );
+    }
+
+    // -----------------------------------------------
+
     /// Whether the pipeline is allowed to handle HTTP requests.
     bool allow_http_;
 
     /// The categories used for the mapping - needed by the feature engineerers.
     std::shared_ptr<const std::vector<strings::String>> categories_;
+
+    /// Date and time of creation, expressed as a string
+    std::string creation_time_;
 
     /// The fingerprints of the data frames used for fitting.
     std::vector<Poco::JSON::Object::Ptr> df_fingerprints_;

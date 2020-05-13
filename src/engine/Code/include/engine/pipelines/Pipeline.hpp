@@ -314,6 +314,12 @@ class Pipeline
     }
 
     /// Trivial accessor
+    std::string& creation_time() { return impl_.creation_time_; }
+
+    /// Trivial (const) accessor
+    const std::string& creation_time() const { return impl_.creation_time_; }
+
+    /// Trivial accessor
     std::vector<Poco::JSON::Object::Ptr>& df_fingerprints()
     {
         return impl_.df_fingerprints_;

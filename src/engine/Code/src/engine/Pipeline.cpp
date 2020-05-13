@@ -1049,6 +1049,9 @@ Pipeline Pipeline::load(
     pipeline.allow_http() =
         JSON::get_value<bool>( pipeline_json, "allow_http_" );
 
+    pipeline.creation_time() =
+        JSON::get_value<std::string>( pipeline_json, "creation_time_" );
+
     pipeline.df_fingerprints() = df_fingerprints;
 
     pipeline.fe_fingerprints() = fe_fingerprints;
@@ -1498,6 +1501,8 @@ void Pipeline::save( const std::string& _path, const std::string& _name ) const
 
     pipeline_json.set( "allow_http_", allow_http() );
 
+    pipeline_json.set( "creation_time_", creation_time() );
+
     pipeline_json.set(
         "df_fingerprints_", JSON::vector_to_array( df_fingerprints() ) );
 
@@ -1672,6 +1677,8 @@ Poco::JSON::Object Pipeline::to_monitor( const std::string& _name ) const
     json_obj.set( "name_", _name );
 
     json_obj.set( "allow_http_", allow_http() );
+
+    json_obj.set( "creation_time_", creation_time() );
 
     json_obj.set(
         "feature_engineerers_",
