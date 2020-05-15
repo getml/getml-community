@@ -23,7 +23,7 @@ void test22( std::filesystem::path _test_path )
     connectionObject.set( "user_", "testbert" );
 
     // Customized time format used within the database.
-    const std::vector<std::string> time_formats = {"%Y-%m-%d %H:%M:%S"};
+    const std::vector<std::string> time_formats = { "%Y-%m-%d %H:%M:%S" };
 
     // ---------------------------------------------------------------
 
@@ -42,6 +42,7 @@ void test22( std::filesystem::path _test_path )
     const auto stmt = database::DatabaseSniffer::sniff(
         source_conn,
         target_conn->dialect(),
+        target_conn->describe(),
         source_table_name,
         target_table_name );
 
@@ -61,7 +62,9 @@ void test22( std::filesystem::path _test_path )
     // ---------------------------------------------------------------
 
     auto it = target_conn->select(
-        {"column_01", "join_key", "time_stamp", "targets"}, "POPULATION", "" );
+        { "column_01", "join_key", "time_stamp", "targets" },
+        "POPULATION",
+        "" );
 
     // First line:
     // 0.09902457667435494, 0, 0.7386545235592108, 113.0

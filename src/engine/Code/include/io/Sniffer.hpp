@@ -15,6 +15,7 @@ class Sniffer
     template <typename R = ReaderType>
     Sniffer(
         const std::optional<std::vector<std::string>>& _colnames,
+        const Poco::JSON::Object& _conn_description,
         const std::string& _dialect,
         const std::vector<std::string>& _files,
         const size_t _num_lines_sniffed,
@@ -25,6 +26,7 @@ class Sniffer
         typename std::enable_if<std::is_same<R, CSVReader>::value>::type* = 0 )
         : bucket_( "" ),
           colnames_( _colnames ),
+          conn_description_( _conn_description ),
           dialect_( _dialect ),
           files_( _files ),
           num_lines_sniffed_( _num_lines_sniffed ),
@@ -46,6 +48,7 @@ class Sniffer
     Sniffer(
         const std::string& _bucket,
         const std::optional<std::vector<std::string>>& _colnames,
+        const Poco::JSON::Object& _conn_description,
         const std::string& _dialect,
         const std::vector<std::string>& _files,
         const size_t _num_lines_sniffed,
@@ -56,6 +59,7 @@ class Sniffer
         typename std::enable_if<std::is_same<R, S3Reader>::value>::type* = 0 )
         : bucket_( _bucket ),
           colnames_( _colnames ),
+          conn_description_( _conn_description ),
           dialect_( _dialect ),
           files_( _files ),
           num_lines_sniffed_( _num_lines_sniffed ),
@@ -140,6 +144,9 @@ class Sniffer
 
     /// The colnames are passed on to the reader.
     const std::optional<std::vector<std::string>> colnames_;
+
+    /// Describes the connection for which we produce the statement.
+    const Poco::JSON::Object conn_description_;
 
     /// The SQL dialect in which the CREATE TABLE statement is to be
     /// returned.
@@ -303,7 +310,7 @@ std::string Sniffer<ReaderType>::sniff() const
     // ------------------------------------------------------------------------
 
     return StatementMaker::make_statement(
-        table_name_, dialect_, colnames, datatypes );
+        table_name_, dialect_, conn_description_, colnames, datatypes );
 
     // ------------------------------------------------------------------------
 }

@@ -42,9 +42,15 @@ Poco::JSON::Object ODBC::describe() const
 
     obj.set( "dialect", dialect() );
 
+    obj.set( "double_precision", double_precision_ );
+
     obj.set( "escape_chars", escape_chars );
 
+    obj.set( "integer", integer_ );
+
     obj.set( "server_name", server_name_ );
+
+    obj.set( "text", text_ );
 
     obj.set( "user", user_ );
 
@@ -242,7 +248,7 @@ std::vector<std::string> ODBC::get_catalogs() const
                 SQL_HANDLE_STMT );
         }
 
-    auto vec = std::vector<std::string>( {""} );
+    auto vec = std::vector<std::string>( { "" } );
 
     while ( true )
         {
@@ -415,7 +421,7 @@ std::vector<std::string> ODBC::get_schemas( const std::string& _catalog ) const
                 SQL_HANDLE_STMT );
         }
 
-    auto vec = std::vector<std::string>( {""} );
+    auto vec = std::vector<std::string>( { "" } );
 
     while ( true )
         {

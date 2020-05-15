@@ -38,7 +38,7 @@ void test16( std::filesystem::path _test_path )
     connectionObject.set( "user_", "testbert" );
 
     // Customized time format used within the database.
-    const std::vector<std::string> timeFormats = {"%Y-%m-%d %H:%M:%S"};
+    const std::vector<std::string> timeFormats = { "%Y-%m-%d %H:%M:%S" };
 
     // ---------------------------------------------------------------
 
@@ -47,8 +47,9 @@ void test16( std::filesystem::path _test_path )
 
     auto population_sniffer = io::CSVSniffer(
         std::nullopt,
+        Poco::JSON::Object(),
         "mysql",
-        {_test_path.string(), _test_path.string()},
+        { _test_path.string(), _test_path.string() },
         100,
         '\"',
         ',',
@@ -63,7 +64,7 @@ void test16( std::filesystem::path _test_path )
 
     auto reader = io::CSVReader(
         std::vector<std::string>(
-            {"column_01", "join_key", "time_stamp", "targets"} ),
+            { "column_01", "join_key", "time_stamp", "targets" } ),
         _test_path.string(),
         0,
         '\"',
@@ -73,7 +74,9 @@ void test16( std::filesystem::path _test_path )
     mysql_db.read( "POPULATION", 0, &reader );
 
     auto it = mysql_db.select(
-        {"column_01", "join_key", "time_stamp", "targets"}, "POPULATION", "" );
+        { "column_01", "join_key", "time_stamp", "targets" },
+        "POPULATION",
+        "" );
 
     // Header line (read in and formatted):
     assert_true( std::isnan( it->get_double() ) );

@@ -13,12 +13,13 @@ void test7( std::filesystem::path _test_path )
     // folder only the filename has to be replaced.
     _test_path.append( "database" ).append( "POPULATION.CSV" );
 
-    auto sqlite_db = database::Sqlite3( ":memory:", {"%Y-%m-%d %H:%M:%S"} );
+    auto sqlite_db = database::Sqlite3( ":memory:", { "%Y-%m-%d %H:%M:%S" } );
 
     auto population_sniffer = io::CSVSniffer(
         std::nullopt,
+        Poco::JSON::Object(),
         "sqlite",
-        {_test_path.string(), _test_path.string()},
+        { _test_path.string(), _test_path.string() },
         100,
         '\"',
         ',',

@@ -30,6 +30,7 @@ size_t StatementMaker::find_max_size(
 std::string StatementMaker::make_statement(
     const std::string& _table_name,
     const std::string& _dialect,
+    const Poco::JSON::Object& _description,
     const std::vector<std::string>& _colnames,
     const std::vector<Datatype>& _datatypes )
 {
@@ -37,11 +38,10 @@ std::string StatementMaker::make_statement(
         {
             return make_statement_mysql( _table_name, _colnames, _datatypes );
         }
-    else if (
-        _dialect.find( "odbc" ) != std::string::npos && _dialect.size() == 6 )
+    else if ( _dialect == "odbc" )
         {
             return make_statement_odbc(
-                _table_name, _colnames, _datatypes, _dialect[4], _dialect[5] );
+                _table_name, _colnames, _datatypes, _description );
         }
     else if ( _dialect == "postgres" )
         {
@@ -107,10 +107,26 @@ std::string StatementMaker::make_statement_odbc(
     const std::string& _table_name,
     const std::vector<std::string>& _colnames,
     const std::vector<Datatype>& _datatypes,
-    const char _escape_char1,
-    const char _escape_char2 )
+    const Poco::JSON::Object& _description )
 {
     assert_true( _colnames.size() == _datatypes.size() );
+
+    const auto double_precision = jsonutils::JSON::get_value<std::string>(
+        _description, "double_precision" );
+
+    const auto escape_chars =
+        jsonutils::JSON::get_value<std::string>( _description, "escape_chars" );
+
+    const auto integer =
+        jsonutils::JSON::get_value<std::string>( _description, "integer" );
+
+    const auto text =
+        jsonutils::JSON::get_value<std::string>( _description, "text" );
+
+    assert_true( escape_chars.size() == 2 );
+
+    const auto escape_char1 = escape_chars[0];
+    const auto escape_char2 = escape_chars[1];
 
     const auto max_size = find_max_size( _colnames );
 
@@ -118,16 +134,16 @@ std::string StatementMaker::make_statement_odbc(
 
     statement << "CREATE TABLE ";
 
-    if ( _escape_char1 != ' ' )
+    if ( escape_char1 != ' ' )
         {
-            statement << _escape_char1;
+            statement << escape_char1;
         }
 
     statement << _table_name;
 
-    if ( _escape_char2 != ' ' )
+    if ( escape_char2 != ' ' )
         {
-            statement << _escape_char2;
+            statement << escape_char2;
         }
 
     statement << "(" << std::endl;
@@ -136,20 +152,21 @@ std::string StatementMaker::make_statement_odbc(
         {
             statement << "    ";
 
-            if ( _escape_char1 != ' ' )
+            if ( escape_char1 != ' ' )
                 {
-                    statement << _escape_char1;
+                    statement << escape_char1;
                 }
 
             statement << _colnames[i];
 
-            if ( _escape_char2 != ' ' )
+            if ( escape_char2 != ' ' )
                 {
-                    statement << _escape_char2;
+                    statement << escape_char2;
                 }
 
             statement << " " << make_gap( _colnames[i], max_size )
-                      << to_string_postgres( _datatypes[i] );
+                      << to_string_odbc(
+                             _datatypes[i], double_precision, integer, text );
 
             if ( i < _colnames.size() - 1 )
                 {
@@ -286,6 +303,31 @@ std::string StatementMaker::to_string_mysql( const Datatype _type )
 
             case Datatype::string:
                 return "TEXT";
+
+            default:
+                assert_true( false );
+                return "";
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+std::string StatementMaker::to_string_odbc(
+    const Datatype _type,
+    const std::string& _double_precision,
+    const std::string& _integer,
+    const std::string& _text )
+{
+    switch ( _type )
+        {
+            case Datatype::double_precision:
+                return _double_precision;
+
+            case Datatype::integer:
+                return _integer;
+
+            case Datatype::string:
+                return _integer;
 
             default:
                 assert_true( false );

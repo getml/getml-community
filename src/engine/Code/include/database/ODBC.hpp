@@ -14,31 +14,19 @@ class ODBC : public Connector
         const Poco::JSON::Object& _obj,
         const std::string& _passwd,
         const std::vector<std::string>& _time_formats )
-        : env_( std::make_shared<ODBCEnv>() ),
+        : double_precision_( jsonutils::JSON::get_value<std::string>(
+              _obj, "double_precision_" ) ),
+          env_( std::make_shared<ODBCEnv>() ),
+          integer_(
+              jsonutils::JSON::get_value<std::string>( _obj, "integer_" ) ),
           passwd_( _passwd ),
           server_name_(
               jsonutils::JSON::get_value<std::string>( _obj, "server_name_" ) ),
+          text_( jsonutils::JSON::get_value<std::string>( _obj, "text_" ) ),
           time_formats_( _time_formats ),
           user_( jsonutils::JSON::get_value<std::string>( _obj, "user_" ) )
     {
         std::tie( escape_char1_, escape_char2_ ) = extract_escape_chars( _obj );
-    }
-
-    ODBC(
-        const std::string& _passwd,
-        const std::string& _server_name,
-        const std::string& _user,
-        const std::vector<std::string>& _time_formats,
-        const char _escape_char1,
-        const char _escape_char2 )
-        : env_( std::make_shared<ODBCEnv>() ),
-          escape_char1_( _escape_char1 ),
-          escape_char2_( _escape_char2 ),
-          passwd_( _passwd ),
-          server_name_( _server_name ),
-          time_formats_( _time_formats ),
-          user_( _user )
-    {
     }
 
     ~ODBC() = default;
@@ -90,18 +78,12 @@ class ODBC : public Connector
 
    public:
     /// Returns the dialect of the connector.
-    std::string dialect() const final
-    {
-        auto d = std::string( "odbc" );
-        d += escape_char1_;
-        d += escape_char2_;
-        return d;
-    }
+    std::string dialect() const final { return "odbc"; }
 
     /// Returns the number of rows in the table signified by _tname.
     std::int32_t get_nrows( const std::string& _tname ) final
     {
-        return select( {"COUNT(*)"}, _tname, "" )->get_int();
+        return select( { "COUNT(*)" }, _tname, "" )->get_int();
     }
 
     /// Returns a shared_ptr containing a MySQLIterator.
@@ -238,6 +220,9 @@ class ODBC : public Connector
     // -------------------------------
 
    private:
+    /// The keyword used to mark double precision columns.
+    const std::string double_precision_;
+
     /// The environment handle.
     const std::shared_ptr<ODBCEnv> env_;
 
@@ -251,11 +236,17 @@ class ODBC : public Connector
     /// that.
     char escape_char2_;
 
+    /// The keyword used to mark integer columns.
+    const std::string integer_;
+
     /// The password used.
     const std::string passwd_;
 
     /// The server to be connect to.
     const std::string server_name_;
+
+    /// The keyword used to mark text columns.
+    const std::string text_;
 
     /// Vector containing the time formats.
     const std::vector<std::string> time_formats_;

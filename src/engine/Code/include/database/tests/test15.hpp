@@ -38,7 +38,7 @@ void test15( std::filesystem::path _test_path )
     connectionObject.set( "user_", "testbert" );
 
     // Customized time format used within the database.
-    const std::vector<std::string> timeFormats = {"%Y-%m-%d %H:%M:%S"};
+    const std::vector<std::string> timeFormats = { "%Y-%m-%d %H:%M:%S" };
 
     // ---------------------------------------------------------------
 
@@ -47,8 +47,9 @@ void test15( std::filesystem::path _test_path )
 
     auto population_sniffer = io::CSVSniffer(
         std::nullopt,
+        Poco::JSON::Object(),
         "mysql",
-        {_test_path.string(), _test_path.string()},
+        { _test_path.string(), _test_path.string() },
         100,
         '\"',
         ',',
@@ -65,7 +66,9 @@ void test15( std::filesystem::path _test_path )
     mysql_db.read( "POPULATION", 0, &reader );
 
     auto it = mysql_db.select(
-        {"column_01", "join_key", "time_stamp", "targets"}, "POPULATION", "" );
+        { "column_01", "join_key", "time_stamp", "targets" },
+        "POPULATION",
+        "" );
 
     // First line:
     // 0.09902457667435494, 0, 0.7386545235592108, 113.0

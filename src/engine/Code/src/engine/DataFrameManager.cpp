@@ -2296,20 +2296,25 @@ void DataFrameManager::to_db(
     // --------------------------------------------------------------------
     // Create the table.
 
+    const auto conn = connector( conn_id );
+
+    assert_true( conn );
+
     const auto statement = io::StatementMaker::make_statement(
         table_name,
-        connector( conn_id )->dialect(),
+        conn->dialect(),
+        conn->describe(),
         reader.colnames(),
         reader.coltypes() );
 
     logger().log( statement );
 
-    connector( conn_id )->execute( statement );
+    conn->execute( statement );
 
     // --------------------------------------------------------------------
     // Write data to the data base.
 
-    connector( conn_id )->read( table_name, 0, &reader );
+    conn->read( table_name, 0, &reader );
 
     database_manager_->post_tables();
 

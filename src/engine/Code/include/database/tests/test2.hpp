@@ -13,13 +13,14 @@ void test2( std::filesystem::path _test_path )
     // folder only the filename has to be replaced.
     _test_path.append( "database" ).append( "POPULATION.CSV" );
 
-    auto sqlite_db = database::Sqlite3( ":memory:", {"%Y-%m-%d %H:%M:%S"} );
+    auto sqlite_db = database::Sqlite3( ":memory:", { "%Y-%m-%d %H:%M:%S" } );
 
     auto population_sniffer = io::CSVSniffer(
         std::vector<std::string>(
-            {"column_01", "join_key", "time_stamp", "targets"} ),
+            { "column_01", "join_key", "time_stamp", "targets" } ),
+        Poco::JSON::Object(),
         "sqlite",
-        {_test_path.string(), _test_path.string()},
+        { _test_path.string(), _test_path.string() },
         100,
         '\"',
         ',',
@@ -34,7 +35,7 @@ void test2( std::filesystem::path _test_path )
 
     auto reader = io::CSVReader(
         std::vector<std::string>(
-            {"column_01", "join_key", "time_stamp", "targets"} ),
+            { "column_01", "join_key", "time_stamp", "targets" } ),
         _test_path.string(),
         0,
         '\"',
@@ -43,7 +44,9 @@ void test2( std::filesystem::path _test_path )
     sqlite_db.read( "POPULATION", 0, &reader );
 
     auto it = sqlite_db.select(
-        {"column_01", "join_key", "time_stamp", "targets"}, "POPULATION", "" );
+        { "column_01", "join_key", "time_stamp", "targets" },
+        "POPULATION",
+        "" );
 
     // Header line (read in and formatted):
     assert_true( std::isnan( it->get_double() ) );

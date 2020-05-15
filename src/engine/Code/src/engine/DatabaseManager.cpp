@@ -48,6 +48,7 @@ void DatabaseManager::copy_table(
     const auto stmt = database::DatabaseSniffer::sniff(
         source_conn,
         target_conn->dialect(),
+        target_conn->describe(),
         source_table_name,
         target_table_name );
 
@@ -490,6 +491,16 @@ void DatabaseManager::sniff_csv(
                              ? JSON::get_value<std::string>( _cmd, "dialect_" )
                              : connector( conn_id )->dialect();
 
+    const auto conn_description = _cmd.has( "dialect_" )
+                                      ? Poco::JSON::Object()
+                                      : connector( conn_id )->describe();
+
+    if ( _cmd.has( "dialect_" ) && dialect != "python" )
+        {
+            throw std::invalid_argument(
+                "If you explicitly pass a dialect, it must be 'python'!" );
+        }
+
     // --------------------------------------------------------------------
 
     if ( quotechar.size() != 1 )
@@ -508,6 +519,7 @@ void DatabaseManager::sniff_csv(
 
     auto sniffer = io::CSVSniffer(
         colnames,
+        conn_description,
         dialect,
         fnames,
         num_lines_sniffed,
@@ -564,6 +576,16 @@ void DatabaseManager::sniff_s3(
                              ? JSON::get_value<std::string>( _cmd, "dialect_" )
                              : connector( conn_id )->dialect();
 
+    const auto conn_description = _cmd.has( "dialect_" )
+                                      ? Poco::JSON::Object()
+                                      : connector( conn_id )->describe();
+
+    if ( _cmd.has( "dialect_" ) && dialect != "python" )
+        {
+            throw std::invalid_argument(
+                "If you explicitly pass a dialect, it must be 'python'!" );
+        }
+
     // --------------------------------------------------------------------
 
     if ( sep.size() != 1 )
@@ -577,6 +599,7 @@ void DatabaseManager::sniff_s3(
     auto sniffer = io::S3Sniffer(
         bucket,
         colnames,
+        conn_description,
         dialect,
         keys,
         num_lines_sniffed,
@@ -606,7 +629,7 @@ void DatabaseManager::sniff_table(
     const auto conn_id = JSON::get_value<std::string>( _cmd, "conn_id_" );
 
     const auto roles = database::DatabaseSniffer::sniff(
-        connector( conn_id ), "python", _name, _name );
+        connector( conn_id ), "python", Poco::JSON::Object(), _name, _name );
 
     communication::Sender::send_string( "Success!", _socket );
 

@@ -21,8 +21,9 @@ void test5( std::filesystem::path _test_path )
         {
             auto population_sniffer = io::CSVSniffer(
                 std::nullopt,
+                Poco::JSON::Object(),
                 "sqlite",
-                {"DOESNOTEXIST.CSV"},
+                { "DOESNOTEXIST.CSV" },
                 100,
                 '\"',
                 ',',

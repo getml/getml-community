@@ -7,6 +7,7 @@ namespace database
 std::string DatabaseSniffer::sniff(
     const std::shared_ptr<const Connector>& _conn,
     const std::string& _dialect,
+    const Poco::JSON::Object& _description,
     const std::string& _source_table_name,
     const std::string& _target_table_name )
 {
@@ -19,7 +20,7 @@ std::string DatabaseSniffer::sniff(
     assert_true( colnames.size() == coltypes.size() );
 
     return io::StatementMaker::make_statement(
-        _target_table_name, _dialect, colnames, coltypes );
+        _target_table_name, _dialect, _description, colnames, coltypes );
 }
 
 // ----------------------------------------------------------------------------
