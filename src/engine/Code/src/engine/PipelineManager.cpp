@@ -78,7 +78,7 @@ void PipelineManager::fit(
     // -------------------------------------------------------
     // Do the actual fitting
 
-    multithreading::ReadLock read_lock( read_write_lock_ );
+    multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
 
     pipeline.fit(
         _cmd, logger_, data_frames(), fe_tracker_, pred_tracker_, _socket );
@@ -86,19 +86,25 @@ void PipelineManager::fit(
     // -------------------------------------------------------
     // Fitting has been a success - store the pipeline.
 
-    read_lock.unlock();
+    auto it = pipelines().find( _name );
 
-    set_pipeline( _name, pipeline );
+    if ( it == pipelines().end() )
+        {
+            throw std::runtime_error(
+                "Pipeline '" + _name + "' does not exist!" );
+        }
+
+    weak_write_lock.upgrade();
+
+    it->second = pipeline;
+
+    weak_write_lock.unlock();
 
     // -------------------------------------------------------
 
     post_pipeline( pipeline.to_monitor( _name ) );
 
     communication::Sender::send_string( "Trained pipeline.", _socket );
-
-    // read_lock.lock();
-
-    // send_data( categories_, data_frames_, _socket );
 
     // -------------------------------------------------------
 }
