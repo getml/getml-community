@@ -251,6 +251,12 @@ containers::Column<Float> NumOpParser::parse( const Poco::JSON::Object& _col )
 containers::Column<Float> NumOpParser::unary_operation(
     const Poco::JSON::Object& _col )
 {
+    const auto to_time_stamp = []( const Float val ) {
+        const auto seconds_since_epoch = static_cast<std::time_t>( val );
+        return Poco::DateTime(
+            Poco::Timestamp::fromEpochTime( seconds_since_epoch ) );
+    };
+
     const auto op = JSON::get_value<std::string>( _col, "operator_" );
 
     if ( op == "abs" )
@@ -312,17 +318,12 @@ containers::Column<Float> NumOpParser::unary_operation(
         }
     else if ( op == "day" )
         {
-            const auto day = []( const Float val ) {
+            const auto day = [to_time_stamp]( const Float val ) {
                 if ( std::isnan( val ) || std::isinf( val ) )
                     {
                         return static_cast<Float>( NAN );
                     }
-
-                const auto seconds_since_epoch =
-                    static_cast<std::time_t>( val );
-
-                return static_cast<Float>(
-                    std::gmtime( &seconds_since_epoch )->tm_mday );
+                return static_cast<Float>( to_time_stamp( val ).day() );
             };
 
             return un_op( _col, day );
@@ -346,18 +347,14 @@ containers::Column<Float> NumOpParser::unary_operation(
         }
     else if ( op == "hour" )
         {
-            const auto hour = []( const Float val ) {
+            const auto hour = [to_time_stamp]( const Float val ) {
                 if ( std::isnan( val ) || std::isinf( val ) )
                     {
                         return static_cast<Float>( NAN );
                     }
-
-                const auto seconds_since_epoch =
-                    static_cast<std::time_t>( val );
-
-                return static_cast<Float>(
-                    std::gmtime( &seconds_since_epoch )->tm_hour );
+                return static_cast<Float>( to_time_stamp( val ).hour() );
             };
+
             return un_op( _col, hour );
         }
     else if ( op == "lgamma" )
@@ -374,34 +371,26 @@ containers::Column<Float> NumOpParser::unary_operation(
         }
     else if ( op == "minute" )
         {
-            const auto minute = []( const Float val ) {
+            const auto minute = [to_time_stamp]( const Float val ) {
                 if ( std::isnan( val ) || std::isinf( val ) )
                     {
                         return static_cast<Float>( NAN );
                     }
-
-                const auto seconds_since_epoch =
-                    static_cast<std::time_t>( val );
-
-                return static_cast<Float>(
-                    std::gmtime( &seconds_since_epoch )->tm_min );
+                return static_cast<Float>( to_time_stamp( val ).minute() );
             };
+
             return un_op( _col, minute );
         }
     else if ( op == "month" )
         {
-            const auto month = []( const Float val ) {
+            const auto month = [to_time_stamp]( const Float val ) {
                 if ( std::isnan( val ) || std::isinf( val ) )
                     {
                         return static_cast<Float>( NAN );
                     }
-
-                const auto seconds_since_epoch =
-                    static_cast<std::time_t>( val );
-
-                return static_cast<Float>(
-                    std::gmtime( &seconds_since_epoch )->tm_mon + 1 );
+                return static_cast<Float>( to_time_stamp( val ).month() );
             };
+
             return un_op( _col, month );
         }
     else if ( op == "random" )
@@ -421,18 +410,14 @@ containers::Column<Float> NumOpParser::unary_operation(
         }
     else if ( op == "second" )
         {
-            const auto second = []( const Float val ) {
+            const auto second = [to_time_stamp]( const Float val ) {
                 if ( std::isnan( val ) || std::isinf( val ) )
                     {
                         return static_cast<Float>( NAN );
                     }
-
-                const auto seconds_since_epoch =
-                    static_cast<std::time_t>( val );
-
-                return static_cast<Float>(
-                    std::gmtime( &seconds_since_epoch )->tm_sec );
+                return static_cast<Float>( to_time_stamp( val ).second() );
             };
+
             return un_op( _col, second );
         }
     else if ( op == "sin" )
@@ -465,50 +450,36 @@ containers::Column<Float> NumOpParser::unary_operation(
         }
     else if ( op == "weekday" )
         {
-            const auto weekday = []( const Float val ) {
+            const auto weekday = [to_time_stamp]( const Float val ) {
                 if ( std::isnan( val ) || std::isinf( val ) )
                     {
                         return static_cast<Float>( NAN );
                     }
-
-                const auto seconds_since_epoch =
-                    static_cast<std::time_t>( val );
-
-                return static_cast<Float>(
-                    std::gmtime( &seconds_since_epoch )->tm_wday );
+                return static_cast<Float>( to_time_stamp( val ).dayOfWeek() );
             };
+
             return un_op( _col, weekday );
         }
     else if ( op == "year" )
         {
-            const auto year = []( const Float val ) {
+            const auto year = [to_time_stamp]( const Float val ) {
                 if ( std::isnan( val ) || std::isinf( val ) )
                     {
                         return static_cast<Float>( NAN );
                     }
-
-                const auto seconds_since_epoch =
-                    static_cast<std::time_t>( val );
-
-                return static_cast<Float>(
-                    std::gmtime( &seconds_since_epoch )->tm_year + 1900 );
+                return static_cast<Float>( to_time_stamp( val ).year() );
             };
 
             return un_op( _col, year );
         }
     else if ( op == "yearday" )
         {
-            const auto yearday = []( const Float val ) {
+            const auto yearday = [to_time_stamp]( const Float val ) {
                 if ( std::isnan( val ) || std::isinf( val ) )
                     {
                         return static_cast<Float>( NAN );
                     }
-
-                const auto seconds_since_epoch =
-                    static_cast<std::time_t>( val );
-
-                return static_cast<Float>(
-                    std::gmtime( &seconds_since_epoch )->tm_yday + 1 );
+                return static_cast<Float>( to_time_stamp( val ).dayOfYear() );
             };
 
             return un_op( _col, yearday );
