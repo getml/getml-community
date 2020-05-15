@@ -657,6 +657,9 @@ void ProjectManager::save_pipeline(
 
     pipeline.save( path, _name );
 
+    FileHandler::save_encodings(
+        project_directory_, categories(), containers::Encoding() );
+
     engine::communication::Sender::send_string( "Success!", _socket );
 }
 
