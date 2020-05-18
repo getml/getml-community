@@ -26,6 +26,8 @@ void Options::parse_flags( int _argc, char* argv[] )
 {
     std::string allow_push_notifications;
 
+    std::string launch_browser;
+
     std::size_t app_pid = 0;
 
     for ( int i = 1; i < _argc; ++i )
@@ -52,6 +54,10 @@ void Options::parse_flags( int _argc, char* argv[] )
                                      arg,
                                      "allow-push-notifications",
                                      &allow_push_notifications );
+
+            // This is to avoid a warning message.
+            success = success ||
+                      parse_string( arg, "launch-browser", &launch_browser );
 
             // This is to avoid a warning message.
             success = success || parse_size_t( arg, "app-pid", &app_pid );
