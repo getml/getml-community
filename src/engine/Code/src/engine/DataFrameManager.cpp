@@ -91,14 +91,18 @@ void DataFrameManager::add_float_column(
                 "has been referred." );
         }
 
-    auto col =
-        NumOpParser(
-            categories_, join_keys_encoding_, data_frames_, nrows, false )
-            .parse( json_col );
+    auto parser = NumOpParser(
+        categories_, join_keys_encoding_, data_frames_, nrows, false );
+
+    auto col = parser.parse( json_col );
 
     col.set_name( name );
 
     col.set_unit( unit );
+
+    // ------------------------------------------------------------------------
+
+    parser.check( col, logger_, _socket );
 
     // ------------------------------------------------------------------------
 
@@ -383,10 +387,14 @@ void DataFrameManager::add_string_column(
                 "has been referred." );
         }
 
-    const auto vec =
-        CatOpParser(
-            categories_, join_keys_encoding_, data_frames_, nrows, false )
-            .parse( json_col );
+    const auto parser = CatOpParser(
+        categories_, join_keys_encoding_, data_frames_, nrows, false );
+
+    const auto vec = parser.parse( json_col );
+
+    // ------------------------------------------------------------------------
+
+    parser.check( vec, name, logger_, _socket );
 
     // ------------------------------------------------------------------------
 

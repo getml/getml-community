@@ -35,28 +35,37 @@ class CatOpParser
     // ------------------------------------------------------------------------
 
    public:
+    /// Checks the string column for any obvious problems.
+    void check(
+        const std::vector<std::string>& _col,
+        const std::string& _name,
+        const std::shared_ptr<const monitoring::Logger>& _logger,
+        Poco::Net::StreamSocket* _socket ) const;
+
     /// Parses a numerical column.
-    std::vector<std::string> parse( const Poco::JSON::Object& _col );
+    std::vector<std::string> parse( const Poco::JSON::Object& _col ) const;
 
     // ------------------------------------------------------------------------
 
    private:
     /// Parses the operator and undertakes a binary operation.
-    std::vector<std::string> binary_operation( const Poco::JSON::Object& _col );
+    std::vector<std::string> binary_operation(
+        const Poco::JSON::Object& _col ) const;
 
     /// Transforms a boolean column to a string.
     std::vector<std::string> boolean_as_string(
-        const Poco::JSON::Object& _col );
+        const Poco::JSON::Object& _col ) const;
 
     /// Transforms a float column to a string.
     std::vector<std::string> numerical_as_string(
-        const Poco::JSON::Object& _col );
+        const Poco::JSON::Object& _col ) const;
 
     /// Parses the operator and undertakes a unary operation.
-    std::vector<std::string> unary_operation( const Poco::JSON::Object& _col );
+    std::vector<std::string> unary_operation(
+        const Poco::JSON::Object& _col ) const;
 
     /// Returns an updated version of the column.
-    std::vector<std::string> update( const Poco::JSON::Object& _col );
+    std::vector<std::string> update( const Poco::JSON::Object& _col ) const;
 
     // ------------------------------------------------------------------------
 
@@ -64,7 +73,7 @@ class CatOpParser
     /// Operator.
     template <class Operator>
     std::vector<std::string> bin_op(
-        const Poco::JSON::Object& _col, const Operator& _op )
+        const Poco::JSON::Object& _col, const Operator& _op ) const
     {
         const auto operand1 = parse( *JSON::get_object( _col, "operand1_" ) );
 
@@ -93,7 +102,7 @@ class CatOpParser
     /// Operator.
     template <class Operator>
     std::vector<std::string> un_op(
-        const Poco::JSON::Object& _col, const Operator& _op )
+        const Poco::JSON::Object& _col, const Operator& _op ) const
     {
         const auto operand1 = parse( *JSON::get_object( _col, "operand1_" ) );
 
@@ -107,7 +116,7 @@ class CatOpParser
     /// Transforms a column to vector of equal length.
     std::vector<std::string> to_vec(
         const containers::Column<Int>& _col,
-        const containers::Encoding& _encoding )
+        const containers::Encoding& _encoding ) const
     {
         const bool wrong_length =
             ( !subselection_ && _col.size() != num_elem_ ) ||
@@ -133,7 +142,7 @@ class CatOpParser
 
     /// Transforms an unused string column to a vector of equal length.
     std::vector<std::string> to_vec(
-        const containers::Column<strings::String>& _col )
+        const containers::Column<strings::String>& _col ) const
     {
         const bool wrong_length =
             ( !subselection_ && _col.size() != num_elem_ ) ||

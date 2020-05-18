@@ -6,7 +6,8 @@ namespace handlers
 {
 // ----------------------------------------------------------------------------
 
-containers::Column<Float> NumOpParser::as_num( const Poco::JSON::Object& _col )
+containers::Column<Float> NumOpParser::as_num(
+    const Poco::JSON::Object& _col ) const
 {
     const auto operand1 = CatOpParser(
                               categories_,
@@ -38,7 +39,8 @@ containers::Column<Float> NumOpParser::as_num( const Poco::JSON::Object& _col )
 
 // ----------------------------------------------------------------------------
 
-containers::Column<Float> NumOpParser::as_ts( const Poco::JSON::Object& _col )
+containers::Column<Float> NumOpParser::as_ts(
+    const Poco::JSON::Object& _col ) const
 {
     const auto time_formats = JSON::array_to_vector<std::string>(
         JSON::get_array( _col, "time_formats_" ) );
@@ -79,8 +81,61 @@ containers::Column<Float> NumOpParser::as_ts( const Poco::JSON::Object& _col )
 
 // ----------------------------------------------------------------------------
 
+void NumOpParser::check(
+    const containers::Column<Float>& _col,
+    const std::shared_ptr<const monitoring::Logger>& _logger,
+    Poco::Net::StreamSocket* _socket ) const
+{
+    // --------------------------------------------------------------------------
+
+    communication::Warner warner;
+
+    // --------------------------------------------------------------------------
+
+    if ( _col.size() == 0 )
+        {
+            warner.send( _socket );
+            return;
+        }
+
+    // --------------------------------------------------------------------------
+
+    const Float length = static_cast<Float>( _col.size() );
+
+    const Float num_non_null =
+        utils::ColumnOperators::count( _col.begin(), _col.end() );
+
+    const auto share_null = 1.0 - num_non_null / length;
+
+    if ( share_null > 0.9 )
+        {
+            warner.add(
+                std::to_string( share_null * 100.0 ) +
+                "\% of all entries of column '" + _col.name() +
+                "' are NULL values." );
+        }
+
+    // --------------------------------------------------------------------------
+
+    if ( _logger )
+        {
+            for ( const auto& warning : warner.warnings() )
+                {
+                    _logger->log( "WARNING: " + warning );
+                }
+        }
+
+    // --------------------------------------------------------------------------
+
+    warner.send( _socket );
+
+    // --------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
 containers::Column<Float> NumOpParser::binary_operation(
-    const Poco::JSON::Object& _col )
+    const Poco::JSON::Object& _col ) const
 {
     const auto op = JSON::get_value<std::string>( _col, "operator_" );
 
@@ -130,7 +185,7 @@ containers::Column<Float> NumOpParser::binary_operation(
 // ----------------------------------------------------------------------------
 
 containers::Column<Float> NumOpParser::boolean_as_num(
-    const Poco::JSON::Object& _col )
+    const Poco::JSON::Object& _col ) const
 {
     const auto obj = *JSON::get_object( _col, "operand1_" );
 
@@ -163,7 +218,7 @@ containers::Column<Float> NumOpParser::boolean_as_num(
 // ----------------------------------------------------------------------------
 
 containers::Column<Float> NumOpParser::get_column(
-    const Poco::JSON::Object& _col )
+    const Poco::JSON::Object& _col ) const
 {
     const auto name = JSON::get_value<std::string>( _col, "name_" );
 
@@ -212,7 +267,8 @@ containers::Column<Float> NumOpParser::get_column(
 
 // ----------------------------------------------------------------------------
 
-containers::Column<Float> NumOpParser::parse( const Poco::JSON::Object& _col )
+containers::Column<Float> NumOpParser::parse(
+    const Poco::JSON::Object& _col ) const
 {
     const auto type = JSON::get_value<std::string>( _col, "type_" );
 
@@ -249,7 +305,7 @@ containers::Column<Float> NumOpParser::parse( const Poco::JSON::Object& _col )
 // ----------------------------------------------------------------------------
 
 containers::Column<Float> NumOpParser::unary_operation(
-    const Poco::JSON::Object& _col )
+    const Poco::JSON::Object& _col ) const
 {
     const auto to_time_stamp = []( const Float val ) {
         const auto seconds_since_epoch = static_cast<std::time_t>( val );
@@ -495,7 +551,8 @@ containers::Column<Float> NumOpParser::unary_operation(
 
 // ----------------------------------------------------------------------------
 
-containers::Column<Float> NumOpParser::update( const Poco::JSON::Object& _col )
+containers::Column<Float> NumOpParser::update(
+    const Poco::JSON::Object& _col ) const
 {
     const auto operand1 = parse( *JSON::get_object( _col, "operand1_" ) );
 

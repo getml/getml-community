@@ -7,7 +7,7 @@ namespace handlers
 // ----------------------------------------------------------------------------
 
 std::vector<std::string> CatOpParser::binary_operation(
-    const Poco::JSON::Object& _col )
+    const Poco::JSON::Object& _col ) const
 {
     const auto op = JSON::get_value<std::string>( _col, "operator_" );
 
@@ -32,7 +32,7 @@ std::vector<std::string> CatOpParser::binary_operation(
 // ----------------------------------------------------------------------------
 
 std::vector<std::string> CatOpParser::boolean_as_string(
-    const Poco::JSON::Object& _col )
+    const Poco::JSON::Object& _col ) const
 {
     const auto obj = *JSON::get_object( _col, "operand1_" );
 
@@ -64,8 +64,62 @@ std::vector<std::string> CatOpParser::boolean_as_string(
 
 // ----------------------------------------------------------------------------
 
+void CatOpParser::check(
+    const std::vector<std::string>& _col,
+    const std::string& _name,
+    const std::shared_ptr<const monitoring::Logger>& _logger,
+    Poco::Net::StreamSocket* _socket ) const
+{
+    // --------------------------------------------------------------------------
+
+    communication::Warner warner;
+
+    // --------------------------------------------------------------------------
+
+    if ( _col.size() == 0 )
+        {
+            warner.send( _socket );
+            return;
+        }
+
+    // --------------------------------------------------------------------------
+
+    const Float length = static_cast<Float>( _col.size() );
+
+    const Float num_non_null =
+        utils::ColumnOperators::count_categorical( _col );
+
+    const auto share_null = 1.0 - num_non_null / length;
+
+    if ( share_null > 0.9 )
+        {
+            warner.add(
+                std::to_string( share_null * 100.0 ) +
+                "\% of all entries of column '" + _name +
+                "' are NULL values." );
+        }
+
+    // --------------------------------------------------------------------------
+
+    if ( _logger )
+        {
+            for ( const auto& warning : warner.warnings() )
+                {
+                    _logger->log( "WARNING: " + warning );
+                }
+        }
+
+    // --------------------------------------------------------------------------
+
+    warner.send( _socket );
+
+    // --------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
 std::vector<std::string> CatOpParser::numerical_as_string(
-    const Poco::JSON::Object& _col )
+    const Poco::JSON::Object& _col ) const
 {
     const auto obj = *JSON::get_object( _col, "operand1_" );
 
@@ -122,7 +176,8 @@ std::vector<std::string> CatOpParser::numerical_as_string(
 
 // ----------------------------------------------------------------------------
 
-std::vector<std::string> CatOpParser::parse( const Poco::JSON::Object& _col )
+std::vector<std::string> CatOpParser::parse(
+    const Poco::JSON::Object& _col ) const
 {
     const auto type = JSON::get_value<std::string>( _col, "type_" );
 
@@ -201,7 +256,7 @@ std::vector<std::string> CatOpParser::parse( const Poco::JSON::Object& _col )
 // ----------------------------------------------------------------------------
 
 std::vector<std::string> CatOpParser::unary_operation(
-    const Poco::JSON::Object& _col )
+    const Poco::JSON::Object& _col ) const
 {
     const auto op = JSON::get_value<std::string>( _col, "operator_" );
 
@@ -247,7 +302,8 @@ std::vector<std::string> CatOpParser::unary_operation(
 
 // ----------------------------------------------------------------------------
 
-std::vector<std::string> CatOpParser::update( const Poco::JSON::Object& _col )
+std::vector<std::string> CatOpParser::update(
+    const Poco::JSON::Object& _col ) const
 {
     const auto operand1 = parse( *JSON::get_object( _col, "operand1_" ) );
 

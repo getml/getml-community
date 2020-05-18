@@ -7,7 +7,7 @@ namespace handlers
 // ----------------------------------------------------------------------------
 
 std::vector<bool> BoolOpParser::binary_operation(
-    const Poco::JSON::Object& _col )
+    const Poco::JSON::Object& _col ) const
 {
     const auto op = JSON::get_value<std::string>( _col, "operator_" );
 
@@ -98,7 +98,7 @@ std::vector<bool> BoolOpParser::binary_operation(
 
 // ----------------------------------------------------------------------------
 
-std::vector<bool> BoolOpParser::parse( const Poco::JSON::Object& _col )
+std::vector<bool> BoolOpParser::parse( const Poco::JSON::Object& _col ) const
 {
     const auto type = JSON::get_value<std::string>( _col, "type_" );
 
@@ -136,7 +136,7 @@ std::vector<bool> BoolOpParser::parse( const Poco::JSON::Object& _col )
 // ----------------------------------------------------------------------------
 
 std::vector<bool> BoolOpParser::unary_operation(
-    const Poco::JSON::Object& _col )
+    const Poco::JSON::Object& _col ) const
 {
     const auto op = JSON::get_value<std::string>( _col, "operator_" );
 

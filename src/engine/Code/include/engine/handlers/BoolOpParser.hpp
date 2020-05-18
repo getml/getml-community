@@ -36,16 +36,16 @@ class BoolOpParser
 
    public:
     /// Parses a numerical column.
-    std::vector<bool> parse( const Poco::JSON::Object& _col );
+    std::vector<bool> parse( const Poco::JSON::Object& _col ) const;
 
     // ------------------------------------------------------------------------
 
    private:
     /// Parses the operator and undertakes a binary operation.
-    std::vector<bool> binary_operation( const Poco::JSON::Object& _col );
+    std::vector<bool> binary_operation( const Poco::JSON::Object& _col ) const;
 
     /// Parses the operator and undertakes a unary operation.
-    std::vector<bool> unary_operation( const Poco::JSON::Object& _col );
+    std::vector<bool> unary_operation( const Poco::JSON::Object& _col ) const;
 
     // ------------------------------------------------------------------------
 
@@ -53,7 +53,7 @@ class BoolOpParser
     /// Operator.
     template <class Operator>
     std::vector<bool> bin_op(
-        const Poco::JSON::Object& _col, const Operator& _op )
+        const Poco::JSON::Object& _col, const Operator& _op ) const
     {
         const auto operand1 = parse( *JSON::get_object( _col, "operand1_" ) );
 
@@ -77,7 +77,7 @@ class BoolOpParser
     /// Operator for categorical columns.
     template <class Operator>
     std::vector<bool> cat_bin_op(
-        const Poco::JSON::Object& _col, const Operator& _op )
+        const Poco::JSON::Object& _col, const Operator& _op ) const
     {
         const auto operand1 =
             CatOpParser(
@@ -120,7 +120,7 @@ class BoolOpParser
     /// Operator for numerical columns.
     template <class Operator>
     std::vector<bool> num_bin_op(
-        const Poco::JSON::Object& _col, const Operator& _op )
+        const Poco::JSON::Object& _col, const Operator& _op ) const
     {
         const auto operand1 =
             NumOpParser(
@@ -163,7 +163,7 @@ class BoolOpParser
     /// Operator for numerical columns.
     template <class Operator>
     std::vector<bool> num_un_op(
-        const Poco::JSON::Object& _col, const Operator& _op )
+        const Poco::JSON::Object& _col, const Operator& _op ) const
     {
         const auto operand1 =
             NumOpParser(
@@ -185,7 +185,7 @@ class BoolOpParser
     /// Operator.
     template <class Operator>
     std::vector<bool> un_op(
-        const Poco::JSON::Object& _col, const Operator& _op )
+        const Poco::JSON::Object& _col, const Operator& _op ) const
     {
         const auto operand1 = parse( *JSON::get_object( _col, "operand1_" ) );
 
