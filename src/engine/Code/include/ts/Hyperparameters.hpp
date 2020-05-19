@@ -56,7 +56,7 @@ struct Hyperparameters
     /// The length of the memory used for the time series prediction.
     const Float memory_;
 
-    /// The hyperparameters for the underlying feature engineerer.
+    /// The hyperparameters for the underlying feature learner.
     const std::shared_ptr<const HypType> model_hyperparams_;
 
     /// The join keys used for the self join.

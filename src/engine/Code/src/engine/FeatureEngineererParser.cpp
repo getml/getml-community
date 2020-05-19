@@ -1,12 +1,12 @@
-#include "engine/featureengineerers/featureengineerers.hpp"
+#include "engine/featurelearners/featurelearners.hpp"
 
 namespace engine
 {
-namespace featureengineerers
+namespace featurelearners
 {
 // ----------------------------------------------------------------------
 
-std::shared_ptr<AbstractFeatureEngineerer> FeatureEngineererParser::parse(
+std::shared_ptr<AbstractFeatureLearner> FeatureLearnerParser::parse(
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<const Poco::JSON::Object>& _placeholder,
     const std::shared_ptr<const std::vector<std::string>>& _peripheral,
@@ -18,35 +18,35 @@ std::shared_ptr<AbstractFeatureEngineerer> FeatureEngineererParser::parse(
     if ( type == "MultirelModel" )
         {
             return std::make_shared<
-                FeatureEngineerer<multirel::ensemble::DecisionTreeEnsemble>>(
+                FeatureLearner<multirel::ensemble::DecisionTreeEnsemble>>(
                 _categories, _cmd, _placeholder, _peripheral, _dependencies );
         }
     else if ( type == "MultirelTimeSeries" )
         {
-            return std::make_shared<FeatureEngineerer<ts::MultirelTimeSeries>>(
+            return std::make_shared<FeatureLearner<ts::MultirelTimeSeries>>(
                 _categories, _cmd, _placeholder, _peripheral, _dependencies );
         }
     else if ( type == "RelboostModel" )
         {
             return std::make_shared<
-                FeatureEngineerer<relboost::ensemble::DecisionTreeEnsemble>>(
+                FeatureLearner<relboost::ensemble::DecisionTreeEnsemble>>(
                 _categories, _cmd, _placeholder, _peripheral, _dependencies );
         }
     else if ( type == "RelboostTimeSeries" )
         {
-            return std::make_shared<FeatureEngineerer<ts::RelboostTimeSeries>>(
+            return std::make_shared<FeatureLearner<ts::RelboostTimeSeries>>(
                 _categories, _cmd, _placeholder, _peripheral, _dependencies );
         }
     else
         {
             throw std::invalid_argument(
-                "Feature engineering algorithm of type '" + type +
+                "Feature learning algorithm of type '" + type +
                 "' not known!" );
 
-            return std::shared_ptr<AbstractFeatureEngineerer>();
+            return std::shared_ptr<AbstractFeatureLearner>();
         }
 }
 
 // ----------------------------------------------------------------------
-}  // namespace featureengineerers
+}  // namespace featurelearners
 }  // namespace engine

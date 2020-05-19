@@ -7,7 +7,7 @@ namespace dependency
 {
 // -------------------------------------------------------------------------
 
-typedef Tracker<featureengineerers::AbstractFeatureEngineerer> FETracker;
+typedef Tracker<featurelearners::AbstractFeatureLearner> FETracker;
 
 // -------------------------------------------------------------------------
 }  // namespace dependency

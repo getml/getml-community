@@ -23,7 +23,7 @@ void Threadutils::copy(
 
 // ----------------------------------------------------------------------------
 
-void Threadutils::fit_as_feature_engineerer(
+void Threadutils::fit_as_feature_learner(
     const size_t _this_thread_num,
     const std::vector<size_t>& _thread_nums,
     const containers::DataFrame& _population,
@@ -36,8 +36,7 @@ void Threadutils::fit_as_feature_engineerer(
             _population, _thread_nums, _this_thread_num );
 
     const auto [loss_function, table_holder] =
-        _ensemble->init_as_feature_engineerer(
-            population_subview, _peripheral );
+        _ensemble->init_as_feature_learner( population_subview, _peripheral );
 
     _ensemble->fit_subensembles( table_holder, _logger, loss_function );
 
@@ -120,7 +119,7 @@ void Threadutils::fit_ensemble(
         {
             if ( _peripheral.size() > 0 )
                 {
-                    fit_as_feature_engineerer(
+                    fit_as_feature_learner(
                         _this_thread_num,
                         _thread_nums,
                         _population,
@@ -165,7 +164,7 @@ Int Threadutils::get_num_threads( const Int _num_threads )
 
 // ----------------------------------------------------------------------------
 
-void Threadutils::transform_as_feature_engineerer(
+void Threadutils::transform_as_feature_learner(
     const size_t _this_thread_num,
     const std::vector<size_t> _thread_nums,
     const containers::DataFrame& _population,
@@ -250,7 +249,7 @@ void Threadutils::transform_ensemble(
         {
             if ( _peripheral.size() > 0 )
                 {
-                    transform_as_feature_engineerer(
+                    transform_as_feature_learner(
                         _this_thread_num,
                         _thread_nums,
                         _population,

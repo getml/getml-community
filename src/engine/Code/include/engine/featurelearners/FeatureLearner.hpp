@@ -1,21 +1,21 @@
-#ifndef ENGINE_FEATUREENGINEERERS_FEATUREENGINEERER_HPP_
-#define ENGINE_FEATUREENGINEERERS_FEATUREENGINEERER_HPP_
+#ifndef ENGINE_FEATURELEARNERS_FEATURELEARNER_HPP_
+#define ENGINE_FEATURELEARNERS_FEATURELEARNER_HPP_
 
 // ----------------------------------------------------------------------------
 
 namespace engine
 {
-namespace featureengineerers
+namespace featurelearners
 {
 // ----------------------------------------------------------------------------
 
-template <class FeatureEngineererType>
-class FeatureEngineerer : public AbstractFeatureEngineerer
+template <class FeatureLearnerType>
+class FeatureLearner : public AbstractFeatureLearner
 {
     // --------------------------------------------------------
 
    public:
-    FeatureEngineerer(
+    FeatureLearner(
         const std::shared_ptr<const std::vector<strings::String>>& _categories,
         const Poco::JSON::Object& _cmd,
         const std::shared_ptr<const Poco::JSON::Object>& _placeholder,
@@ -30,12 +30,12 @@ class FeatureEngineerer : public AbstractFeatureEngineerer
     }
 
     /// Destructor.
-    ~FeatureEngineerer() = default;
+    ~FeatureLearner() = default;
 
     // --------------------------------------------------------
 
    public:
-    /// Returns the fingerprint of the feature engineerer (necessary to build
+    /// Returns the fingerprint of the feature learner (necessary to build
     /// the dependency graphs).
     Poco::JSON::Object::Ptr fingerprint() const final;
 
@@ -59,13 +59,12 @@ class FeatureEngineerer : public AbstractFeatureEngineerer
 
    public:
     /// Creates a deep copy.
-    std::shared_ptr<AbstractFeatureEngineerer> clone() const final
+    std::shared_ptr<AbstractFeatureLearner> clone() const final
     {
-        return std::make_shared<FeatureEngineerer<FeatureEngineererType>>(
-            *this );
+        return std::make_shared<FeatureLearner<FeatureLearnerType>>( *this );
     }
 
-    /// Whether the feature engineerer is used for classification.
+    /// Whether the feature learner is used for classification.
     bool is_classification() const final
     {
         const auto loss_function =
@@ -73,68 +72,68 @@ class FeatureEngineerer : public AbstractFeatureEngineerer
         return ( loss_function != "SquareLoss" );
     }
 
-    /// Loads the feature engineerer from a file designated by _fname.
+    /// Loads the feature learner from a file designated by _fname.
     void load( const std::string& _fname ) final
     {
         const auto obj = load_json_obj( _fname );
-        feature_engineerer_ =
-            std::make_optional<FeatureEngineererType>( categories_, obj );
+        feature_learner_ =
+            std::make_optional<FeatureLearnerType>( categories_, obj );
     }
 
-    /// Returns the number of features in the feature engineerer.
+    /// Returns the number of features in the feature learner.
     size_t num_features() const final
     {
-        return feature_engineerer().num_features();
+        return feature_learner().num_features();
     }
 
-    /// Whether the feature engineerer is for the premium version only.
+    /// Whether the feature learner is for the premium version only.
     bool premium_only() const final
     {
-        return FeatureEngineererType::premium_only_;
+        return FeatureLearnerType::premium_only_;
     }
 
-    /// Saves the feature engineerer in JSON format, if applicable
+    /// Saves the feature learner in JSON format, if applicable
     void save( const std::string& _fname ) const final
     {
-        feature_engineerer().save( _fname );
+        feature_learner().save( _fname );
     }
 
     /// Selects the features according to the index given.
     void select_features( const std::vector<size_t>& _index ) final
     {
-        feature_engineerer().select_features( _index );
+        feature_learner().select_features( _index );
     }
 
-    /// Whether the feature engineerer supports multiple targets.
+    /// Whether the feature learner supports multiple targets.
     bool supports_multiple_targets() const final
     {
-        return FeatureEngineererType::supports_multiple_targets_;
+        return FeatureLearnerType::supports_multiple_targets_;
     }
 
     /// Return model as a JSON Object.
     Poco::JSON::Object to_json_obj( const bool _schema_only ) const final
     {
-        return feature_engineerer().to_json_obj( _schema_only );
+        return feature_learner().to_json_obj( _schema_only );
     }
 
     /// Returns model as a JSON Object in a form that the monitor can
     /// understand.
     Poco::JSON::Object to_monitor( const std::string& _name ) const final
     {
-        return feature_engineerer().to_monitor( _name );
+        return feature_learner().to_monitor( _name );
     }
 
-    /// Return feature engineerer as SQL code.
+    /// Return feature learner as SQL code.
     std::vector<std::string> to_sql(
         const std::string& _prefix, const bool _subfeatures ) const final
     {
-        return feature_engineerer().to_sql( _prefix, 0, _subfeatures );
+        return feature_learner().to_sql( _prefix, 0, _subfeatures );
     }
 
     // --------------------------------------------------------
 
    private:
-    /// Extract a data frame of type FeatureEngineererType::DataFrameType from
+    /// Extract a data frame of type FeatureLearnerType::DataFrameType from
     /// an engine::containers::DataFrame.
     template <typename DataFrameType>
     DataFrameType extract_df(
@@ -142,7 +141,7 @@ class FeatureEngineerer : public AbstractFeatureEngineerer
         const std::map<std::string, containers::DataFrame>& _data_frames,
         const Int _target_num ) const;
 
-    /// Extract a data frame of type FeatureEngineererType::DataFrameType from
+    /// Extract a data frame of type FeatureLearnerType::DataFrameType from
     /// an engine::containers::DataFrame using the pre-stored schema.
     template <typename DataFrameType, typename SchemaType>
     DataFrameType extract_df_by_colnames(
@@ -151,8 +150,8 @@ class FeatureEngineerer : public AbstractFeatureEngineerer
         const std::map<std::string, containers::DataFrame>& _data_frames )
         const;
 
-    /// Initializes the feature engineerer.
-    std::optional<FeatureEngineererType> make_feature_engineerer(
+    /// Initializes the feature learner.
+    std::optional<FeatureLearnerType> make_feature_learner(
         const Poco::JSON::Object& _cmd ) const;
 
     /// Helper function for loading a json object.
@@ -162,27 +161,27 @@ class FeatureEngineerer : public AbstractFeatureEngineerer
 
    private:
     /// Trivial accessor.
-    FeatureEngineererType& feature_engineerer()
+    FeatureLearnerType& feature_learner()
     {
-        if ( !feature_engineerer_ )
+        if ( !feature_learner_ )
             {
                 throw std::invalid_argument(
-                    "Feature engineering algorithm has not been fitted!" );
+                    "Feature learning algorithm has not been fitted!" );
             }
 
-        return *feature_engineerer_;
+        return *feature_learner_;
     }
 
     /// Trivial accessor.
-    const FeatureEngineererType& feature_engineerer() const
+    const FeatureLearnerType& feature_learner() const
     {
-        if ( !feature_engineerer_ )
+        if ( !feature_learner_ )
             {
                 throw std::invalid_argument(
-                    "Feature engineering algorithm has not been fitted!" );
+                    "Feature learning algorithm has not been fitted!" );
             }
 
-        return *feature_engineerer_;
+        return *feature_learner_;
     }
 
     /// Trivial accessor.
@@ -205,14 +204,14 @@ class FeatureEngineerer : public AbstractFeatureEngineerer
     /// The categories used for the mapping.
     std::shared_ptr<const std::vector<strings::String>> categories_;
 
-    /// The command used to create the feature engineerer.
+    /// The command used to create the feature learner.
     Poco::JSON::Object cmd_;
 
     /// The dependencies used to build the fingerprint.
     std::vector<Poco::JSON::Object::Ptr> dependencies_;
 
-    /// The underlying feature engineering algorithm.
-    std::optional<FeatureEngineererType> feature_engineerer_;
+    /// The underlying feature learning algorithm.
+    std::optional<FeatureLearnerType> feature_learner_;
 
     /// The placeholder describing the data schema.
     std::shared_ptr<const Poco::JSON::Object> placeholder_;
@@ -224,7 +223,7 @@ class FeatureEngineerer : public AbstractFeatureEngineerer
 };
 
 // ----------------------------------------------------------------------------
-}  // namespace featureengineerers
+}  // namespace featurelearners
 }  // namespace engine
 
 // ----------------------------------------------------------------------------
@@ -232,13 +231,13 @@ class FeatureEngineerer : public AbstractFeatureEngineerer
 
 namespace engine
 {
-namespace featureengineerers
+namespace featurelearners
 {
 // ----------------------------------------------------------------------------
 
-template <typename FeatureEngineererType>
+template <typename FeatureLearnerType>
 template <typename DataFrameType>
-DataFrameType FeatureEngineerer<FeatureEngineererType>::extract_df(
+DataFrameType FeatureLearner<FeatureLearnerType>::extract_df(
     const std::string& _name,
     const std::map<std::string, containers::DataFrame>& _data_frames,
     const Int _target_num ) const
@@ -311,10 +310,10 @@ DataFrameType FeatureEngineerer<FeatureEngineererType>::extract_df(
 
     switch ( _target_num )
         {
-            case AbstractFeatureEngineerer::IGNORE_TARGETS:
+            case AbstractFeatureLearner::IGNORE_TARGETS:
                 break;
 
-            case AbstractFeatureEngineerer::USE_ALL_TARGETS:
+            case AbstractFeatureLearner::USE_ALL_TARGETS:
                 for ( size_t i = 0; i < df.num_targets(); ++i )
                     {
                         const auto& mat = df.target( i );
@@ -368,9 +367,9 @@ DataFrameType FeatureEngineerer<FeatureEngineererType>::extract_df(
 
 // ----------------------------------------------------------------------------
 
-template <typename FeatureEngineererType>
+template <typename FeatureLearnerType>
 template <typename DataFrameType, typename SchemaType>
-DataFrameType FeatureEngineerer<FeatureEngineererType>::extract_df_by_colnames(
+DataFrameType FeatureLearner<FeatureLearnerType>::extract_df_by_colnames(
     const std::string& _name,
     const SchemaType& _schema,
     const std::map<std::string, containers::DataFrame>& _data_frames ) const
@@ -424,7 +423,7 @@ DataFrameType FeatureEngineerer<FeatureEngineererType>::extract_df_by_colnames(
                 {
                     const auto& name = _schema.join_keys_name( i );
 
-                    if ( FeatureEngineererType::is_time_series_ &&
+                    if ( FeatureLearnerType::is_time_series_ &&
                          name == "$GETML_SELF_JOIN_KEY" )
                         {
                             continue;
@@ -480,7 +479,7 @@ DataFrameType FeatureEngineerer<FeatureEngineererType>::extract_df_by_colnames(
                 {
                     const auto& name = _schema.time_stamps_name( i );
 
-                    if ( FeatureEngineererType::is_time_series_ &&
+                    if ( FeatureLearnerType::is_time_series_ &&
                          name == "$GETML_ROWID" )
                         {
                             continue;
@@ -520,9 +519,8 @@ DataFrameType FeatureEngineerer<FeatureEngineererType>::extract_df_by_colnames(
 
 // ----------------------------------------------------------------------------
 
-template <typename FeatureEngineererType>
-Poco::JSON::Object::Ptr FeatureEngineerer<FeatureEngineererType>::fingerprint()
-    const
+template <typename FeatureLearnerType>
+Poco::JSON::Object::Ptr FeatureLearner<FeatureLearnerType>::fingerprint() const
 {
     auto obj = Poco::JSON::Object::Ptr( new Poco::JSON::Object() );
 
@@ -542,8 +540,8 @@ Poco::JSON::Object::Ptr FeatureEngineerer<FeatureEngineererType>::fingerprint()
 
 // ----------------------------------------------------------------------------
 
-template <typename FeatureEngineererType>
-void FeatureEngineerer<FeatureEngineererType>::fit(
+template <typename FeatureLearnerType>
+void FeatureLearner<FeatureLearnerType>::fit(
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<const monitoring::Logger>& _logger,
     const std::map<std::string, containers::DataFrame>& _data_frames,
@@ -556,16 +554,16 @@ void FeatureEngineerer<FeatureEngineererType>::fit(
     const auto peripheral_names = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "peripheral_names_" ) );
 
-    std::vector<typename FeatureEngineererType::DataFrameType>
-        peripheral_tables = {};
+    std::vector<typename FeatureLearnerType::DataFrameType> peripheral_tables =
+        {};
 
     for ( auto& name : peripheral_names )
         {
             const auto df =
-                extract_df<typename FeatureEngineererType::DataFrameType>(
+                extract_df<typename FeatureLearnerType::DataFrameType>(
                     name,
                     _data_frames,
-                    AbstractFeatureEngineerer::IGNORE_TARGETS );
+                    AbstractFeatureLearner::IGNORE_TARGETS );
 
             peripheral_tables.push_back( df );
         }
@@ -577,31 +575,31 @@ void FeatureEngineerer<FeatureEngineererType>::fit(
         JSON::get_value<std::string>( _cmd, "population_name_" );
 
     const auto population_table =
-        extract_df<typename FeatureEngineererType::DataFrameType>(
+        extract_df<typename FeatureLearnerType::DataFrameType>(
             population_name, _data_frames, _target_num );
 
     const auto population_df =
         utils::Getter::get( population_name, _data_frames );
 
     // ------------------------------------------------
-    // Fit the feature engineerer.
+    // Fit the feature learner.
 
-    auto new_feature_engineerer = make_feature_engineerer( cmd_ );
+    auto new_feature_learner = make_feature_learner( cmd_ );
 
-    new_feature_engineerer->fit( population_table, peripheral_tables, _logger );
+    new_feature_learner->fit( population_table, peripheral_tables, _logger );
 
     // ------------------------------------------------
     // Fitting ran through without any problems - let's store the result.
 
-    feature_engineerer_ = std::move( new_feature_engineerer );
+    feature_learner_ = std::move( new_feature_learner );
 
     // ------------------------------------------------
 }
 
 // ------------------------------------------------------------------------
 
-template <typename FeatureEngineererType>
-Poco::JSON::Object FeatureEngineerer<FeatureEngineererType>::load_json_obj(
+template <typename FeatureLearnerType>
+Poco::JSON::Object FeatureLearner<FeatureLearnerType>::load_json_obj(
     const std::string& _fname ) const
 {
     std::ifstream input( _fname );
@@ -638,21 +636,21 @@ Poco::JSON::Object FeatureEngineerer<FeatureEngineererType>::load_json_obj(
 
 // ----------------------------------------------------------------------------
 
-template <typename FeatureEngineererType>
-std::optional<FeatureEngineererType>
-FeatureEngineerer<FeatureEngineererType>::make_feature_engineerer(
+template <typename FeatureLearnerType>
+std::optional<FeatureLearnerType>
+FeatureLearner<FeatureLearnerType>::make_feature_learner(
     const Poco::JSON::Object& _cmd ) const
 {
     const auto hyperparameters =
-        std::make_shared<typename FeatureEngineererType::HypType>( _cmd );
+        std::make_shared<typename FeatureLearnerType::HypType>( _cmd );
 
     const auto placeholder =
-        std::make_shared<const typename FeatureEngineererType::PlaceholderType>(
+        std::make_shared<const typename FeatureLearnerType::PlaceholderType>(
             *placeholder_ );
 
     // TODO
-    auto population_schema = std::shared_ptr<
-        const typename FeatureEngineererType::PlaceholderType>();
+    auto population_schema =
+        std::shared_ptr<const typename FeatureLearnerType::PlaceholderType>();
 
     /*if ( _cmd.has( "population_schema_" ) )
         {
@@ -662,7 +660,7 @@ FeatureEngineerer<FeatureEngineererType>::make_feature_engineerer(
         }*/
 
     auto peripheral_schema = std::shared_ptr<
-        const std::vector<typename FeatureEngineererType::PlaceholderType>>();
+        const std::vector<typename FeatureLearnerType::PlaceholderType>>();
 
     // TODO
     /*if ( _cmd.has( "peripheral_schema_" ) )
@@ -694,7 +692,7 @@ FeatureEngineerer<FeatureEngineererType>::make_feature_engineerer(
                 peripheral );
         }*/
 
-    return std::make_optional<FeatureEngineererType>(
+    return std::make_optional<FeatureLearnerType>(
         categories_,
         hyperparameters,
         peripheral_,
@@ -705,8 +703,8 @@ FeatureEngineerer<FeatureEngineererType>::make_feature_engineerer(
 
 // ----------------------------------------------------------------------------
 
-template <typename FeatureEngineererType>
-containers::Features FeatureEngineerer<FeatureEngineererType>::transform(
+template <typename FeatureLearnerType>
+containers::Features FeatureLearner<FeatureLearnerType>::transform(
     const Poco::JSON::Object& _cmd,
     const std::vector<size_t>& _index,
     const std::shared_ptr<const monitoring::Logger>& _logger,
@@ -716,12 +714,12 @@ containers::Features FeatureEngineerer<FeatureEngineererType>::transform(
     // -------------------------------------------------------------------------
     // Extract the peripheral tables
 
-    const auto peripheral_schema = feature_engineerer().peripheral_schema();
+    const auto peripheral_schema = feature_learner().peripheral_schema();
 
     const auto peripheral_names = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "peripheral_names_" ) );
 
-    if constexpr ( FeatureEngineererType::is_time_series_ )
+    if constexpr ( FeatureLearnerType::is_time_series_ )
         {
             assert_true( peripheral_schema.size() > 0 );
 
@@ -746,13 +744,13 @@ containers::Features FeatureEngineerer<FeatureEngineererType>::transform(
                 }
         }
 
-    std::vector<typename FeatureEngineererType::DataFrameType>
-        peripheral_tables = {};
+    std::vector<typename FeatureLearnerType::DataFrameType> peripheral_tables =
+        {};
 
     for ( size_t i = 0; i < peripheral_names.size(); ++i )
         {
             const auto df = extract_df_by_colnames<
-                typename FeatureEngineererType::DataFrameType>(
+                typename FeatureLearnerType::DataFrameType>(
                 peripheral_names[i], peripheral_schema[i], _data_frames );
 
             peripheral_tables.push_back( df );
@@ -761,19 +759,19 @@ containers::Features FeatureEngineerer<FeatureEngineererType>::transform(
     // -------------------------------------------------------------------------
     // Extract the population table
 
-    const auto population_schema = feature_engineerer().population_schema();
+    const auto population_schema = feature_learner().population_schema();
 
     const auto population_name =
         JSON::get_value<std::string>( _cmd, "population_name_" );
 
     const auto population_table =
-        extract_df_by_colnames<typename FeatureEngineererType::DataFrameType>(
+        extract_df_by_colnames<typename FeatureLearnerType::DataFrameType>(
             population_name, population_schema, _data_frames );
 
     // -------------------------------------------------------------------------
     // Generate the features.
 
-    return feature_engineerer().transform(
+    return feature_learner().transform(
         population_table, peripheral_tables, _index, _logger );
 
     // -------------------------------------------------------------------------
@@ -781,12 +779,12 @@ containers::Features FeatureEngineerer<FeatureEngineererType>::transform(
 
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
-}  // namespace featureengineerers
+}  // namespace featurelearners
 }  // namespace engine
 
 // ----------------------------------------------------------------------------
 
 // ----------------------------------------------------------------------------
 
-#endif  // ENGINE_FEATUREENGINEERERS_FEATUREENGINEERER_HPP_
+#endif  // ENGINE_FEATURELEARNERS_FEATURELEARNER_HPP_
 

@@ -52,7 +52,7 @@ struct PipelineImpl
     /// Whether the pipeline is allowed to handle HTTP requests.
     bool allow_http_;
 
-    /// The categories used for the mapping - needed by the feature engineerers.
+    /// The categories used for the mapping - needed by the feature learners.
     std::shared_ptr<const std::vector<strings::String>> categories_;
 
     /// Date and time of creation, expressed as a string
@@ -64,7 +64,7 @@ struct PipelineImpl
     /// Pimpl for the feature selectors.
     std::shared_ptr<const predictors::PredictorImpl> feature_selector_impl_;
 
-    /// The fingerprints of the feature engineerers used for fitting.
+    /// The fingerprints of the feature learners used for fitting.
     std::vector<Poco::JSON::Object::Ptr> fe_fingerprints_;
 
     /// The fingerprints of the feature selectors used for fitting.

@@ -206,7 +206,7 @@ class TimeSeriesModel
     std::shared_ptr<const HypType> hyperparameters_;
 
     /// The underlying model - TimeSeriesModel is just a thin
-    /// layer over the actual feature engineerer.
+    /// layer over the actual feature learner.
     std::optional<FEType> model_;
 
     // -----------------------------------------------------------------

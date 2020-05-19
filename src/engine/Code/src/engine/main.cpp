@@ -34,8 +34,7 @@ int main( int argc, char* argv[] )
     // Instruct the user to log in and wait for the token.
 
     std::cout << "getML - Automated Machine Learning and Automated Feature"
-              << " Engineering for Relational Data and Time Series."
-              << std::endl;
+              << " Learning for Relational Data and Time Series." << std::endl;
 
     std::cout << "version: " << GETML_VERSION << std::endl << std::endl;
 

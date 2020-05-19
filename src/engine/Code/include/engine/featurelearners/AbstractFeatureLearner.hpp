@@ -1,15 +1,15 @@
-#ifndef ENGINE_FEATUREENGINEERERS_ABSTRACTFEATUREENGINEERER_HPP_
-#define ENGINE_FEATUREENGINEERERS_ABSTRACTFEATUREENGINEERER_HPP_
+#ifndef ENGINE_FEATURELEARNERS_ABSTRACTFEATURELEARNER_HPP_
+#define ENGINE_FEATURELEARNERS_ABSTRACTFEATURELEARNER_HPP_
 
 // ----------------------------------------------------------------------------
 
 namespace engine
 {
-namespace featureengineerers
+namespace featurelearners
 {
 // ----------------------------------------------------------------------------
 
-class AbstractFeatureEngineerer
+class AbstractFeatureLearner
 {
     // --------------------------------------------------------
 
@@ -20,17 +20,17 @@ class AbstractFeatureEngineerer
     // --------------------------------------------------------
 
    public:
-    AbstractFeatureEngineerer() {}
+    AbstractFeatureLearner() {}
 
-    virtual ~AbstractFeatureEngineerer() = default;
+    virtual ~AbstractFeatureLearner() = default;
 
     // --------------------------------------------------------
 
    public:
     /// Creates a deep copy.
-    virtual std::shared_ptr<AbstractFeatureEngineerer> clone() const = 0;
+    virtual std::shared_ptr<AbstractFeatureLearner> clone() const = 0;
 
-    /// Returns the fingerprint of the feature engineerer (necessary to build
+    /// Returns the fingerprint of the feature learner (necessary to build
     /// the dependency graphs).
     virtual Poco::JSON::Object::Ptr fingerprint() const = 0;
 
@@ -45,13 +45,13 @@ class AbstractFeatureEngineerer
     /// Whether this is a classification problem.
     virtual bool is_classification() const = 0;
 
-    /// Loads the feature engineerer from a file designated by _fname.
+    /// Loads the feature learner from a file designated by _fname.
     virtual void load( const std::string& _fname ) = 0;
 
-    /// Returns the number of features in the feature engineerer.
+    /// Returns the number of features in the feature learner.
     virtual size_t num_features() const = 0;
 
-    /// Whether the feature engineerer is for the premium version only.
+    /// Whether the feature learner is for the premium version only.
     virtual bool premium_only() const = 0;
 
     /// Saves the Model in JSON format, if applicable
@@ -60,7 +60,7 @@ class AbstractFeatureEngineerer
     /// Selects the features according to the index given.
     virtual void select_features( const std::vector<size_t>& _index ) = 0;
 
-    /// Whether the feature engineerer supports multiple targets.
+    /// Whether the feature learner supports multiple targets.
     virtual bool supports_multiple_targets() const = 0;
 
     /// Return model as a JSON Object.
@@ -87,10 +87,10 @@ class AbstractFeatureEngineerer
 
 // ----------------------------------------------------------------------------
 
-}  // namespace featureengineerers
+}  // namespace featurelearners
 }  // namespace engine
 
 // ----------------------------------------------------------------------------
 
-#endif  // ENGINE_FEATUREENGINEERERS_ABSTRACTFEATUREENGINEERER_HPP_
+#endif  // ENGINE_FEATURELEARNERS_ABSTRACTFEATURELEARNER_HPP_
 

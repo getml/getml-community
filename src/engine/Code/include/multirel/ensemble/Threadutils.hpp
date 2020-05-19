@@ -12,7 +12,7 @@ class Threadutils
     // ------------------------------------------------------------------------
 
    public:
-    /// Fits a feature engineerer  or throws an exception.
+    /// Fits a feature learner  or throws an exception.
     static void fit_ensemble(
         const size_t _this_thread_num,
         const std::vector<size_t> _thread_nums,

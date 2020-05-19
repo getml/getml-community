@@ -95,14 +95,14 @@ class Pipeline
     /// Trivial (const) accessor
     const Poco::JSON::Object& obj() const { return impl_.obj_; }
 
-    /// Whether the pipeline contains any premium_only feature engineerers
+    /// Whether the pipeline contains any premium_only feature learners
     bool premium_only() const
     {
         return std::any_of(
-            feature_engineerers_.begin(),
-            feature_engineerers_.end(),
-            []( const std::shared_ptr<
-                featureengineerers::AbstractFeatureEngineerer>& fe ) {
+            feature_learners_.begin(),
+            feature_learners_.end(),
+            []( const std::shared_ptr<featurelearners::AbstractFeatureLearner>&
+                    fe ) {
                 assert_true( fe );
                 return fe->premium_only();
             } );
@@ -149,7 +149,7 @@ class Pipeline
         const std::map<std::string, containers::DataFrame>& _data_frames )
         const;
 
-    /// Extracts the fingerprints of the feature engineerers.
+    /// Extracts the fingerprints of the feature learners.
     std::vector<Poco::JSON::Object::Ptr> extract_fe_fingerprints() const;
 
     /// Extracts the fingerprints of the feature selectors.
@@ -161,8 +161,8 @@ class Pipeline
         const std::map<std::string, containers::DataFrame>& _data_frames )
         const;
 
-    /// Fits the feature engineering algorithms.
-    void fit_feature_engineerers(
+    /// Fits the feature learning algorithms.
+    void fit_feature_learners(
         const Poco::JSON::Object& _cmd,
         const std::shared_ptr<const monitoring::Logger>& _logger,
         const std::map<std::string, containers::DataFrame>& _data_frames,
@@ -218,12 +218,11 @@ class Pipeline
         const std::map<std::string, containers::DataFrame>& _data_frames )
         const;
 
-    /// Prepares the feature engineerers from the JSON object.
+    /// Prepares the feature learners from the JSON object.
     std::pair<
-        std::vector<
-            std::shared_ptr<featureengineerers::AbstractFeatureEngineerer>>,
+        std::vector<std::shared_ptr<featurelearners::AbstractFeatureLearner>>,
         std::vector<Int>>
-    init_feature_engineerers(
+    init_feature_learners(
         const size_t _num_targets,
         const std::vector<Poco::JSON::Object::Ptr>& _df_fingerprints ) const;
 
@@ -284,7 +283,7 @@ class Pipeline
         return impl_.categories_;
     }
 
-    /// Helper class used to clone the feature engineerers, selectors
+    /// Helper class used to clone the feature learners, selectors
     /// and predictors.
     template <class T>
     std::vector<std::shared_ptr<T>> clone(
@@ -299,7 +298,7 @@ class Pipeline
         return out;
     }
 
-    /// Helper class used to clone the feature engineerers, selectors
+    /// Helper class used to clone the feature learners, selectors
     /// and predictors.
     template <class T>
     std::vector<std::vector<std::shared_ptr<T>>> clone(
@@ -368,13 +367,13 @@ class Pipeline
     bool is_classification() const
     {
         const auto is_cl =
-            []( const std::shared_ptr<
-                featureengineerers::AbstractFeatureEngineerer>& fe ) {
+            []( const std::shared_ptr<featurelearners::AbstractFeatureLearner>&
+                    fe ) {
                 assert_true( fe );
                 return fe->is_classification();
             };
         return std::all_of(
-            feature_engineerers_.begin(), feature_engineerers_.end(), is_cl );
+            feature_learners_.begin(), feature_learners_.end(), is_cl );
     }
 
     /// Calculates the number of automated and manual features used.
@@ -471,9 +470,9 @@ class Pipeline
     // --------------------------------------------------------
 
    private:
-    /// The feature engineerers used in this pipeline.
-    std::vector<std::shared_ptr<featureengineerers::AbstractFeatureEngineerer>>
-        feature_engineerers_;
+    /// The feature learners used in this pipeline.
+    std::vector<std::shared_ptr<featurelearners::AbstractFeatureLearner>>
+        feature_learners_;
 
     /// The feature selectors used in this pipeline (every target has its own
     /// set of feature selectors).

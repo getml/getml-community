@@ -8,7 +8,7 @@
 
 #include <Poco/JSON/Object.h>
 
-#include "engine/featureengineerers/featureengineerers.hpp"
+#include "engine/featurelearners/featurelearners.hpp"
 
 #include "predictors/predictors.hpp"
 

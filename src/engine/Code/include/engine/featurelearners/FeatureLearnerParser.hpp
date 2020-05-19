@@ -1,18 +1,18 @@
-#ifndef ENGINE_FEATUREENGINEERERS_FEATUREENGINEERERPARSER_HPP_
-#define ENGINE_FEATUREENGINEERERS_FEATUREENGINEERERPARSER_HPP_
+#ifndef ENGINE_FEATURELEARNERS_FEATURELEARNERPARSER_HPP_
+#define ENGINE_FEATURELEARNERS_FEATURELEARNERPARSER_HPP_
 
 // ----------------------------------------------------------------------------
 
 namespace engine
 {
-namespace featureengineerers
+namespace featurelearners
 {
 // ----------------------------------------------------------------------------
 
-struct FeatureEngineererParser
+struct FeatureLearnerParser
 {
-    /// Returns the correct feature engineerer
-    static std::shared_ptr<AbstractFeatureEngineerer> parse(
+    /// Returns the correct feature learner
+    static std::shared_ptr<AbstractFeatureLearner> parse(
         const Poco::JSON::Object& _cmd,
         const std::shared_ptr<const Poco::JSON::Object>& _placeholder,
         const std::shared_ptr<const std::vector<std::string>>& _peripheral,
@@ -22,10 +22,10 @@ struct FeatureEngineererParser
 
 // ----------------------------------------------------------------------------
 
-}  // namespace featureengineerers
+}  // namespace featurelearners
 }  // namespace engine
 
 // ----------------------------------------------------------------------------
 
-#endif  // ENGINE_FEATUREENGINEERERS_FEATUREENGINEERERPARSER_HPP_
+#endif  // ENGINE_FEATURELEARNERS_FEATURELEARNERPARSER_HPP_
 

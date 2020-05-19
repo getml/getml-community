@@ -664,7 +664,7 @@ void DecisionTreeEnsemble::fit_subensembles(
 std::pair<
     std::shared_ptr<lossfunctions::LossFunction>,
     std::shared_ptr<const TableHolder>>
-DecisionTreeEnsemble::init_as_feature_engineerer(
+DecisionTreeEnsemble::init_as_feature_learner(
     const containers::DataFrameView &_population,
     const std::vector<containers::DataFrame> &_peripheral )
 {

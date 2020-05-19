@@ -30,7 +30,7 @@ class DataFrameScatterer
 
    private:
     /// Returns a vector of the same length as the keys that signifies
-    /// the thread to which each row belongs - for feature engineerers.
+    /// the thread to which each row belongs - for feature learners.
     static std::pair<std::vector<size_t>, size_t> build_thread_nums(
         const std::map<Int, size_t>& _min_keys_map,
         const containers::Column<Int>& min_join_key );

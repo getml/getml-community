@@ -332,7 +332,7 @@ class ProjectManager
     const std::shared_ptr<std::map<std::string, containers::DataFrame>>
         data_frames_;
 
-    /// Keeps track of all feature engineerers.
+    /// Keeps track of all feature learners.
     const std::shared_ptr<dependency::FETracker> fe_tracker_;
 
     /// Maps integers to join key names

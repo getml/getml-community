@@ -26,7 +26,7 @@
 
 #include "engine/containers/containers.hpp"
 
-#include "engine/featureengineerers/featureengineerers.hpp"
+#include "engine/featurelearners/featurelearners.hpp"
 
 #include "engine/hyperparam/hyperparam.hpp"
 

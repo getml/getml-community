@@ -64,7 +64,7 @@ class DecisionTreeEnsemble
             std::shared_ptr<const logging::AbstractLogger>() );
 
     /// Fits one more feature - implies that this is used as a feature
-    /// engineerer.
+    /// learner.
     void fit_new_feature(
         const std::shared_ptr<lossfunctions::LossFunction>& _loss_function,
         const std::shared_ptr<const TableHolder>& _table_holder,
@@ -83,15 +83,15 @@ class DecisionTreeEnsemble
         const std::shared_ptr<const logging::AbstractLogger> _logger,
         const std::shared_ptr<lossfunctions::LossFunction>& _loss_function );
 
-    /// Initializes the fitting process, if this is a feature engineerer.
+    /// Initializes the fitting process, if this is a feature learner.
     std::pair<
         std::shared_ptr<lossfunctions::LossFunction>,
         std::shared_ptr<const TableHolder>>
-    init_as_feature_engineerer(
+    init_as_feature_learner(
         const containers::DataFrameView& _population,
         const std::vector<containers::DataFrame>& _peripheral );
 
-    /// Initializes the fitting process, if this is a feature engineerer.
+    /// Initializes the fitting process, if this is a feature learner.
     std::shared_ptr<lossfunctions::LossFunction> init_as_predictor(
         const containers::DataFrameView& _population );
 
@@ -107,7 +107,7 @@ class DecisionTreeEnsemble
     /// Copy assignment constructor
     DecisionTreeEnsemble& operator=( DecisionTreeEnsemble&& _other ) noexcept;
 
-    /// Generates predictions when this is a feature engineerer. Mainly used
+    /// Generates predictions when this is a feature learner. Mainly used
     /// for testing.
     std::vector<Float> predict(
         const containers::DataFrame& _population,

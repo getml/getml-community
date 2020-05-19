@@ -14,7 +14,7 @@ Pipeline::Pipeline(
 {
     // This won't to anything - the point it to make sure that it can be
     // parsed correctly.
-    init_feature_engineerers( 1, df_fingerprints() );
+    init_feature_learners( 1, df_fingerprints() );
 
     init_predictors(
         "feature_selectors_",
@@ -42,7 +42,7 @@ Pipeline::Pipeline(
 
 Pipeline::Pipeline( const Pipeline& _other ) : impl_( _other.impl_ )
 {
-    feature_engineerers_ = clone( _other.feature_engineerers_ );
+    feature_learners_ = clone( _other.feature_learners_ );
 
     feature_selectors_ = clone( _other.feature_selectors_ );
 
@@ -54,7 +54,7 @@ Pipeline::Pipeline( const Pipeline& _other ) : impl_( _other.impl_ )
 Pipeline::Pipeline( Pipeline&& _other ) noexcept
     : impl_( std::move( _other.impl_ ) )
 {
-    feature_engineerers_ = std::move( _other.feature_engineerers_ );
+    feature_learners_ = std::move( _other.feature_learners_ );
 
     feature_selectors_ = std::move( _other.feature_selectors_ );
 
@@ -212,14 +212,14 @@ std::vector<Poco::JSON::Object::Ptr> Pipeline::extract_df_fingerprints(
 
 std::vector<Poco::JSON::Object::Ptr> Pipeline::extract_fe_fingerprints() const
 {
-    if ( feature_engineerers_.size() == 0 )
+    if ( feature_learners_.size() == 0 )
         {
             return df_fingerprints();
         }
 
     std::vector<Poco::JSON::Object::Ptr> fe_fingerprints;
 
-    for ( const auto& fe : feature_engineerers_ )
+    for ( const auto& fe : feature_learners_ )
         {
             assert_true( fe );
             fe_fingerprints.push_back( fe->fingerprint() );
@@ -410,12 +410,12 @@ Pipeline::feature_names() const
     if ( impl_.predictor_impl_ )
         {
             assert_true(
-                feature_engineerers_.size() ==
+                feature_learners_.size() ==
                 predictor_impl().autofeatures().size() );
 
-            for ( size_t i = 0; i < feature_engineerers_.size(); ++i )
+            for ( size_t i = 0; i < feature_learners_.size(); ++i )
                 {
-                    const auto& fe = feature_engineerers_.at( i );
+                    const auto& fe = feature_learners_.at( i );
 
                     const auto& index = predictor_impl().autofeatures().at( i );
 
@@ -438,7 +438,7 @@ Pipeline::feature_names() const
         {
             size_t i = 0;
 
-            for ( const auto& fe : feature_engineerers_ )
+            for ( const auto& fe : feature_learners_ )
                 {
                     for ( size_t j = 0; j < fe->num_features(); ++j )
                         {
@@ -496,16 +496,16 @@ containers::Features Pipeline::generate_numerical_features(
     // -------------------------------------------------------------------------
 
     assert_true(
-        feature_engineerers_.size() == _predictor_impl.autofeatures().size() );
+        feature_learners_.size() == _predictor_impl.autofeatures().size() );
 
     // -------------------------------------------------------------------------
     // Generate the features.
 
     auto numerical_features = containers::Features();
 
-    for ( size_t i = 0; i < feature_engineerers_.size(); ++i )
+    for ( size_t i = 0; i < feature_learners_.size(); ++i )
         {
-            const auto& fe = feature_engineerers_.at( i );
+            const auto& fe = feature_learners_.at( i );
 
             const auto& index = _predictor_impl.autofeatures().at( i );
 
@@ -627,8 +627,7 @@ void Pipeline::fit(
 
     // -------------------------------------------------------------------------
 
-    fit_feature_engineerers(
-        _cmd, _logger, _data_frames, _fe_tracker, _socket );
+    fit_feature_learners( _cmd, _logger, _data_frames, _fe_tracker, _socket );
 
     // -------------------------------------------------------------------------
 
@@ -691,21 +690,21 @@ void Pipeline::fit(
 
 // ----------------------------------------------------------------------------
 
-void Pipeline::fit_feature_engineerers(
+void Pipeline::fit_feature_learners(
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<const monitoring::Logger>& _logger,
     const std::map<std::string, containers::DataFrame>& _data_frames,
     const std::shared_ptr<dependency::FETracker> _fe_tracker,
     Poco::Net::StreamSocket* _socket )
 {
-    auto [feature_engineerers, target_nums] =
-        init_feature_engineerers( num_targets(), df_fingerprints() );
+    auto [feature_learners, target_nums] =
+        init_feature_learners( num_targets(), df_fingerprints() );
 
-    assert_true( feature_engineerers.size() == target_nums.size() );
+    assert_true( feature_learners.size() == target_nums.size() );
 
-    for ( size_t i = 0; i < feature_engineerers.size(); ++i )
+    for ( size_t i = 0; i < feature_learners.size(); ++i )
         {
-            auto& fe = feature_engineerers.at( i );
+            auto& fe = feature_learners.at( i );
 
             assert_true( fe );
 
@@ -725,7 +724,7 @@ void Pipeline::fit_feature_engineerers(
             _fe_tracker->add( fe );
         }
 
-    feature_engineerers_ = std::move( feature_engineerers );
+    feature_learners_ = std::move( feature_learners );
 
     fe_fingerprints() = extract_fe_fingerprints();
 }
@@ -859,9 +858,9 @@ std::vector<std::string> Pipeline::get_targets(
 // ----------------------------------------------------------------------
 
 std::pair<
-    std::vector<std::shared_ptr<featureengineerers::AbstractFeatureEngineerer>>,
+    std::vector<std::shared_ptr<featurelearners::AbstractFeatureLearner>>,
     std::vector<Int>>
-Pipeline::init_feature_engineerers(
+Pipeline::init_feature_learners(
     const size_t _num_targets,
     const std::vector<Poco::JSON::Object::Ptr>& _df_fingerprints ) const
 {
@@ -873,12 +872,12 @@ Pipeline::init_feature_engineerers(
     const auto peripheral = parse_peripheral();
 
     const auto obj_vector = JSON::array_to_obj_vector(
-        JSON::get_array( obj(), "feature_engineerers_" ) );
+        JSON::get_array( obj(), "feature_learners_" ) );
 
     // ----------------------------------------------------------------------
 
-    std::vector<std::shared_ptr<featureengineerers::AbstractFeatureEngineerer>>
-        feature_engineerers;
+    std::vector<std::shared_ptr<featurelearners::AbstractFeatureLearner>>
+        feature_learners;
 
     std::vector<Int> target_nums;
 
@@ -890,8 +889,8 @@ Pipeline::init_feature_engineerers(
 
             // --------------------------------------------------------------
 
-            auto new_feature_engineerer =
-                featureengineerers::FeatureEngineererParser::parse(
+            auto new_feature_learner =
+                featurelearners::FeatureLearnerParser::parse(
                     *ptr,
                     population,
                     peripheral,
@@ -900,13 +899,13 @@ Pipeline::init_feature_engineerers(
 
             // --------------------------------------------------------------
 
-            if ( new_feature_engineerer->supports_multiple_targets() )
+            if ( new_feature_learner->supports_multiple_targets() )
                 {
-                    feature_engineerers.emplace_back(
-                        std::move( new_feature_engineerer ) );
+                    feature_learners.emplace_back(
+                        std::move( new_feature_learner ) );
 
                     target_nums.push_back(
-                        featureengineerers::AbstractFeatureEngineerer::
+                        featurelearners::AbstractFeatureLearner::
                             USE_ALL_TARGETS );
                 }
             else
@@ -922,14 +921,13 @@ Pipeline::init_feature_engineerers(
 
                             dependencies.push_back( obj );
 
-                            feature_engineerers.emplace_back(
-                                featureengineerers::FeatureEngineererParser::
-                                    parse(
-                                        *ptr,
-                                        population,
-                                        peripheral,
-                                        categories(),
-                                        dependencies ) );
+                            feature_learners.emplace_back(
+                                featurelearners::FeatureLearnerParser::parse(
+                                    *ptr,
+                                    population,
+                                    peripheral,
+                                    categories(),
+                                    dependencies ) );
 
                             target_nums.push_back( static_cast<Int>( t ) );
                         }
@@ -940,7 +938,7 @@ Pipeline::init_feature_engineerers(
 
     // ----------------------------------------------------------------------
 
-    return std::make_pair( feature_engineerers, target_nums );
+    return std::make_pair( feature_learners, target_nums );
 
     // ----------------------------------------------------------------------
 }
@@ -1075,22 +1073,21 @@ Pipeline Pipeline::load(
     pipeline.scores() = scores;
 
     // ------------------------------------------------------------
-    // Load feature engineerers
+    // Load feature learners
 
     assert_true( _fe_tracker );
 
-    pipeline.feature_engineerers_ =
-        std::get<0>( pipeline.init_feature_engineerers(
-            pipeline.num_targets(), pipeline.df_fingerprints() ) );
+    pipeline.feature_learners_ = std::get<0>( pipeline.init_feature_learners(
+        pipeline.num_targets(), pipeline.df_fingerprints() ) );
 
-    for ( size_t i = 0; i < pipeline.feature_engineerers_.size(); ++i )
+    for ( size_t i = 0; i < pipeline.feature_learners_.size(); ++i )
         {
-            auto& fe = pipeline.feature_engineerers_[i];
+            auto& fe = pipeline.feature_learners_[i];
 
             assert_true( fe );
 
             fe->load(
-                _path + "feature-engineerer-" + std::to_string( i ) + ".json" );
+                _path + "feature-learner-" + std::to_string( i ) + ".json" );
 
             _fe_tracker->add( fe );
         }
@@ -1258,7 +1255,7 @@ void Pipeline::make_feature_selector_impl(
 
     std::vector<size_t> num_autofeatures;
 
-    for ( const auto& fe : feature_engineerers_ )
+    for ( const auto& fe : feature_learners_ )
         {
             assert_true( fe );
 
@@ -1396,7 +1393,7 @@ Pipeline& Pipeline::operator=( Pipeline&& _other ) noexcept
 
     impl_ = std::move( _other.impl_ );
 
-    feature_engineerers_ = std::move( _other.feature_engineerers_ );
+    feature_learners_ = std::move( _other.feature_learners_ );
 
     feature_selectors_ = std::move( _other.feature_selectors_ );
 
@@ -1479,19 +1476,19 @@ void Pipeline::save( const std::string& _path, const std::string& _name ) const
 
     // ------------------------------------------------------------------
 
-    for ( size_t i = 0; i < feature_engineerers_.size(); ++i )
+    for ( size_t i = 0; i < feature_learners_.size(); ++i )
         {
-            const auto& fe = feature_engineerers_[i];
+            const auto& fe = feature_learners_[i];
 
             if ( !fe )
                 {
                     throw std::invalid_argument(
-                        "Feature engineering algorithm #" +
-                        std::to_string( i ) + " has not been fitted!" );
+                        "Feature learning algorithm #" + std::to_string( i ) +
+                        " has not been fitted!" );
                 }
 
             fe->save(
-                tfile.path() + "/feature-engineerer-" + std::to_string( i ) +
+                tfile.path() + "/feature-learner-" + std::to_string( i ) +
                 ".json" );
         }
 
@@ -1669,8 +1666,7 @@ Poco::JSON::Object Pipeline::score(
 
 Poco::JSON::Object Pipeline::to_monitor( const std::string& _name ) const
 {
-    auto feature_engineerers =
-        Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
+    auto feature_learners = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
 
     Poco::JSON::Object json_obj;
 
@@ -1681,8 +1677,7 @@ Poco::JSON::Object Pipeline::to_monitor( const std::string& _name ) const
     json_obj.set( "creation_time_", creation_time() );
 
     json_obj.set(
-        "feature_engineerers_",
-        JSON::get_array( obj(), "feature_engineerers_" ) );
+        "feature_learners_", JSON::get_array( obj(), "feature_learners_" ) );
 
     json_obj.set(
         "feature_selectors_", JSON::get_array( obj(), "feature_selectors_" ) );
@@ -1716,9 +1711,9 @@ std::string Pipeline::to_sql() const
 
     size_t offset = 0;
 
-    for ( size_t i = 0; i < feature_engineerers_.size(); ++i )
+    for ( size_t i = 0; i < feature_learners_.size(); ++i )
         {
-            const auto& fe = feature_engineerers_.at( i );
+            const auto& fe = feature_learners_.at( i );
 
             const auto vec = fe->to_sql( std::to_string( i + 1 ) + "_", true );
 
@@ -1742,11 +1737,11 @@ Poco::JSON::Array::Ptr Pipeline::to_sql_arr() const
     size_t offset = 0;
 
     assert_true(
-        feature_engineerers_.size() == predictor_impl().autofeatures().size() );
+        feature_learners_.size() == predictor_impl().autofeatures().size() );
 
-    for ( size_t i = 0; i < feature_engineerers_.size(); ++i )
+    for ( size_t i = 0; i < feature_learners_.size(); ++i )
         {
-            const auto& fe = feature_engineerers_.at( i );
+            const auto& fe = feature_learners_.at( i );
 
             const auto& index = predictor_impl().autofeatures().at( i );
 
@@ -1790,7 +1785,7 @@ containers::Features Pipeline::transform(
 {
     // -------------------------------------------------------------------------
 
-    if ( feature_engineerers_.size() == 0 && predictors_.size() == 0 )
+    if ( feature_learners_.size() == 0 && predictors_.size() == 0 )
         {
             throw std::runtime_error( "Pipeline has not been fitted!" );
         }

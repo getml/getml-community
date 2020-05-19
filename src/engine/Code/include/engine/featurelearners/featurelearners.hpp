@@ -1,5 +1,5 @@
-#ifndef ENGINE_FEATUREENGINEERERS_FEATUREENGINEERERS_HPP_
-#define ENGINE_FEATUREENGINEERERS_FEATUREENGINEERERS_HPP_
+#ifndef ENGINE_FEATURELEARNERS_FEATURELEARNERS_HPP_
+#define ENGINE_FEATURELEARNERS_FEATURELEARNERS_HPP_
 
 // ----------------------------------------------------
 // Dependencies
@@ -35,12 +35,12 @@
 // ----------------------------------------------------
 // Module files
 
-#include "engine/featureengineerers/AbstractFeatureEngineerer.hpp"
+#include "engine/featurelearners/AbstractFeatureLearner.hpp"
 
-#include "engine/featureengineerers/FeatureEngineerer.hpp"
+#include "engine/featurelearners/FeatureLearner.hpp"
 
-#include "engine/featureengineerers/FeatureEngineererParser.hpp"
+#include "engine/featurelearners/FeatureLearnerParser.hpp"
 
 // ----------------------------------------------------
 
-#endif  // ENGINE_FEATUREENGINEERERS_FEATUREENGINEERERS_HPP_
+#endif  // ENGINE_FEATURELEARNERS_FEATURELEARNERS_HPP_
