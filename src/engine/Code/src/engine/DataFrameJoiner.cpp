@@ -176,7 +176,7 @@ void DataFrameJoiner::add_col(
             col.set_name( _as );
             _joined_df->add_float_column( col, _role );
         }
-    else if ( _role == "unused" )
+    else if ( _role == "unused" || _role == "unused_float" || "unused_string" )
         {
             if ( _joined_df->has( _as ) )
                 {
