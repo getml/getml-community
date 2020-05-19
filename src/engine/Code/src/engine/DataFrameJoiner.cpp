@@ -126,7 +126,7 @@ void DataFrameJoiner::add_col(
             if ( _joined_df->has( _as ) )
                 {
                     throw std::invalid_argument(
-                        "Duplicate column: '" + _name + "'." );
+                        "Duplicate column: '" + _as + "'." );
                 }
             auto col = _df.categorical( _name ).sort_by_key( _rindices );
             col.set_name( _as );
@@ -137,7 +137,7 @@ void DataFrameJoiner::add_col(
             if ( _joined_df->has( _as ) )
                 {
                     throw std::invalid_argument(
-                        "Duplicate column: '" + _name + "'." );
+                        "Duplicate column: '" + _as + "'." );
                 }
             auto col = _df.join_key( _name ).sort_by_key( _rindices );
             col.set_name( _as );
@@ -148,7 +148,7 @@ void DataFrameJoiner::add_col(
             if ( _joined_df->has( _as ) )
                 {
                     throw std::invalid_argument(
-                        "Duplicate column: '" + _name + "'." );
+                        "Duplicate column: '" + _as + "'." );
                 }
             auto col = _df.numerical( _name ).sort_by_key( _rindices );
             col.set_name( _as );
@@ -159,7 +159,7 @@ void DataFrameJoiner::add_col(
             if ( _joined_df->has( _as ) )
                 {
                     throw std::invalid_argument(
-                        "Duplicate column: '" + _name + "'." );
+                        "Duplicate column: '" + _as + "'." );
                 }
             auto col = _df.target( _name ).sort_by_key( _rindices );
             col.set_name( _as );
@@ -170,7 +170,7 @@ void DataFrameJoiner::add_col(
             if ( _joined_df->has( _as ) )
                 {
                     throw std::invalid_argument(
-                        "Duplicate column: '" + _name + "'." );
+                        "Duplicate column: '" + _as + "'." );
                 }
             auto col = _df.time_stamp( _name ).sort_by_key( _rindices );
             col.set_name( _as );
@@ -181,7 +181,7 @@ void DataFrameJoiner::add_col(
             if ( _joined_df->has( _as ) )
                 {
                     throw std::invalid_argument(
-                        "Duplicate column: '" + _name + "'." );
+                        "Duplicate column: '" + _as + "'." );
                 }
 
             if ( _df.has_unused_float( _name ) )
