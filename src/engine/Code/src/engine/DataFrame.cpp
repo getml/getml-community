@@ -1416,7 +1416,7 @@ Poco::JSON::Object DataFrame::get_content(
 
             for ( size_t j = 0; j < num_targets(); ++j )
                 {
-                    row->add( to_string( target( j )[i] ) );
+                    row->add( io::Parser::to_string( target( j )[i] ) );
                 }
 
             for ( size_t j = 0; j < num_categoricals(); ++j )
@@ -1433,7 +1433,8 @@ Poco::JSON::Object DataFrame::get_content(
                         }
                     else
                         {
-                            row->add( to_string( numerical( j )[i] ) );
+                            row->add(
+                                io::Parser::to_string( numerical( j )[i] ) );
                         }
                 }
 
@@ -1446,7 +1447,8 @@ Poco::JSON::Object DataFrame::get_content(
                         }
                     else
                         {
-                            row->add( to_string( unused_float( j )[i] ) );
+                            row->add(
+                                io::Parser::to_string( unused_float( j )[i] ) );
                         }
                 }
 

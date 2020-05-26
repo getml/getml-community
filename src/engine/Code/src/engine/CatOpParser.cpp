@@ -161,14 +161,12 @@ std::vector<std::string> CatOpParser::numerical_as_string(
         }
     else
         {
-            const auto to_str = []( const Float val ) {
-                std::ostringstream stream;
-                stream << val;
-                return stream.str();
+            const auto as_str = []( const Float val ) {
+                return io::Parser::to_string( val );
             };
 
             std::transform(
-                operand1.begin(), operand1.end(), result.begin(), to_str );
+                operand1.begin(), operand1.end(), result.begin(), as_str );
         }
 
     return result;

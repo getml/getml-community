@@ -73,6 +73,30 @@ class Parser
 
     // -------------------------------
 
+    /// Custom floating-point-to-string conversion (produces more beautiful
+    /// numbers than std::to_string)
+    static std::string to_string( const Float _val )
+    {
+        const auto is_full = []( const Float val ) {
+            return std::floor( val ) == val;
+        };
+
+        std::ostringstream stream;
+
+        if ( is_full( _val ) )
+            {
+                stream << static_cast<long>( _val );
+            }
+        else
+            {
+                stream << _val;
+            }
+
+        return stream.str();
+    }
+
+    // -------------------------------
+
     /// Transforms a string to a time stamp.
     static std::pair<Float, bool> to_time_stamp(
         const std::string& _str, const std::vector<std::string>& _time_formats )
