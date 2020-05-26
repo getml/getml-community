@@ -81,7 +81,7 @@ void DataModelChecker::check_categorical_column(
         {
             _warner->add(
                 std::to_string( share_null * 100.0 ) +
-                "\% of all entries of column '" + _col.name() +
+                "\% of all entries in column '" + _col.name() +
                 "' in data frame '" + _df_name +
                 "' are NULL values. You should "
                 "consider setting its role to unused_string." );
@@ -100,7 +100,7 @@ void DataModelChecker::check_categorical_column(
     if ( num_distinct == 1.0 )
         {
             _warner->add(
-                "All non-NULL entries of column '" + _col.name() +
+                "All non-NULL entries in column '" + _col.name() +
                 "' in data frame '" + _df_name +
                 "' are equal to each other. You should "
                 "consider setting its role to unused_string." );
@@ -116,7 +116,7 @@ void DataModelChecker::check_categorical_column(
     if ( !is_comparison_only && unique_share > 0.4 )
         {
             _warner->add(
-                "The ratio of unique entries to non-NULL entries of column '" +
+                "The ratio of unique entries to non-NULL entries in column '" +
                 _col.name() + "' in data frame '" + _df_name + "' is " +
                 std::to_string( unique_share * 100.0 ) +
                 "\%. You should "
@@ -185,7 +185,7 @@ void DataModelChecker::check_float_column(
         {
             _warner->add(
                 std::to_string( share_null * 100.0 ) +
-                "\% of all entries of column '" + _col.name() +
+                "\% of all entries in column '" + _col.name() +
                 "' in data frame '" + _df_name +
                 "' are NULL values. You should "
                 "consider setting its role to unused_float." );
@@ -198,7 +198,7 @@ void DataModelChecker::check_float_column(
     if ( all_equal )
         {
             _warner->add(
-                "All non-NULL entries of column '" + _col.name() +
+                "All non-NULL entries in column '" + _col.name() +
                 "' in data frame '" + _df_name +
                 "' are equal to each other. You should "
                 "consider setting its role to unused_float." );
