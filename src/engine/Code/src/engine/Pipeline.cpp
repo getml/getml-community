@@ -167,11 +167,17 @@ void Pipeline::check(
 
     // -------------------------------------------------------------------------
 
+    const auto [feature_learners, target_nums] =
+        init_feature_learners( num_targets(), df_fingerprints() );
+
+    // -------------------------------------------------------------------------
+
     DataModelChecker::check(
         population_placeholder,
         peripheral_names,
         population,
         peripheral,
+        feature_learners,
         _logger,
         _socket );
 

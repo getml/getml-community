@@ -11,6 +11,8 @@ void DataModelChecker::check(
     const std::shared_ptr<std::vector<std::string>> _peripheral_names,
     const containers::DataFrame& _population,
     const std::vector<containers::DataFrame>& _peripheral,
+    const std::vector<std::shared_ptr<featurelearners::AbstractFeatureLearner>>
+        _feature_learners,
     const std::shared_ptr<const monitoring::Logger>& _logger,
     Poco::Net::StreamSocket* _socket )
 {
@@ -20,12 +22,7 @@ void DataModelChecker::check(
 
     // --------------------------------------------------------------------------
 
-    check_df( _population, &warner );
-
-    for ( const auto& df : _peripheral )
-        {
-            check_df( df, &warner );
-        }
+    check_data_frames( _population, _peripheral, _feature_learners, &warner );
 
     // --------------------------------------------------------------------------
 
@@ -116,21 +113,76 @@ void DataModelChecker::check_categorical_column(
     if ( !is_comparison_only && unique_share > 0.4 )
         {
             _warner->add(
-                "The ratio of unique entries to non-NULL entries in column '" +
+                "The ratio of unique entries to non-NULL entries in column "
+                "'" +
                 _col.name() + "' in data frame '" + _df_name + "' is " +
                 std::to_string( unique_share * 100.0 ) +
                 "\%. You should "
-                "consider setting its role to unused_string or using it for "
-                "comparison only (you can do the latter by setting a unit that "
+                "consider setting its role to unused_string or using it "
+                "for "
+                "comparison only (you can do the latter by setting a unit "
+                "that "
                 "contains 'comparison only')." );
         }
 
     // --------------------------------------------------------------------------
 }
+
+// ----------------------------------------------------------------------------
+
+void DataModelChecker::check_data_frames(
+    const containers::DataFrame& _population,
+    const std::vector<containers::DataFrame>& _peripheral,
+    const std::vector<std::shared_ptr<featurelearners::AbstractFeatureLearner>>
+        _feature_learners,
+    communication::Warner* _warner )
+{
+    // --------------------------------------------------------------------------
+
+    const auto is_multirel = []( const std::shared_ptr<
+                                 const featurelearners::AbstractFeatureLearner>&
+                                     fl ) {
+        assert_true( fl );
+        return fl->type() ==
+                   featurelearners::AbstractFeatureLearner::MULTIREL_MODEL ||
+               fl->type() == featurelearners::AbstractFeatureLearner::
+                                 MULTIREL_TIME_SERIES;
+    };
+
+    const auto is_multirel_ts =
+        []( const std::shared_ptr<
+            const featurelearners::AbstractFeatureLearner>& fl ) {
+            assert_true( fl );
+            return fl->type() == featurelearners::AbstractFeatureLearner::
+                                     MULTIREL_TIME_SERIES;
+        };
+
+    const bool has_multirel = std::any_of(
+        _feature_learners.begin(), _feature_learners.end(), is_multirel );
+
+    const bool has_multirel_ts = std::any_of(
+        _feature_learners.begin(), _feature_learners.end(), is_multirel_ts );
+
+    // --------------------------------------------------------------------------
+
+    // Too many columns in the population table are only a problem if there is a
+    // multirel time series, as the population table is usually not aggregated.
+    check_df( _population, has_multirel_ts, _warner );
+
+    for ( const auto& df : _peripheral )
+        {
+            check_df( df, has_multirel, _warner );
+        }
+
+    // --------------------------------------------------------------------------
+}
+
 // ----------------------------------------------------------------------------
 
 void DataModelChecker::check_df(
-    const containers::DataFrame& _df, communication::Warner* _warner )
+    const containers::DataFrame& _df,
+    const bool _check_num_columns,
+    communication::Warner* _warner )
 {
     // --------------------------------------------------------------------------
 
@@ -138,6 +190,30 @@ void DataModelChecker::check_df(
         {
             _warner->add( "Data frame '" + _df.name() + "' is empty." );
             return;
+        }
+
+    // --------------------------------------------------------------------------
+
+    if ( _check_num_columns )
+        {
+            const auto num_columns =
+                _df.num_numericals() + _df.num_categoricals();
+
+            if ( num_columns > 20 )
+                {
+                    _warner->add(
+                        "Data frame '" + _df.name() + "' contains " +
+                        std::to_string( num_columns ) +
+                        " categorical and numerical columns. The multirel "
+                        "algorithm does not scale very well to data frames "
+                        "with many columns. This pipeline might take a very "
+                        "long time to fit. You should consider removing some "
+                        "columns. You could also replace MultirelModel or "
+                        "MultirelTimeSeries with RelboostModel or "
+                        "RelboostTimeSeries respectively. The relboost "
+                        "algorithm has been designed to scale well to data "
+                        "frames with many columns." );
+                }
         }
 
     // --------------------------------------------------------------------------
@@ -221,7 +297,8 @@ void DataModelChecker::check_join(
     if ( _peripheral_names.size() != _peripheral.size() )
         {
             throw std::invalid_argument(
-                "The number of peripheral tables in the placeholder  must be "
+                "The number of peripheral tables in the placeholder  must "
+                "be "
                 "equal to the number of peripheral tables passed (" +
                 std::to_string( _peripheral_names.size() ) + " vs. " +
                 std::to_string( _peripheral.size() ) +
@@ -254,7 +331,8 @@ void DataModelChecker::check_join(
     if ( !other_join_keys_used_arr )
         {
             throw std::invalid_argument(
-                "The placeholder has no array named 'other_join_keys_used_'!" );
+                "The placeholder has no array named "
+                "'other_join_keys_used_'!" );
         }
 
     // ------------------------------------------------------------------------
@@ -291,7 +369,8 @@ void DataModelChecker::check_join(
                 {
                     throw std::invalid_argument(
                         "Element " + std::to_string( i + 1 ) +
-                        " in 'joined_tables_' is not a proper JSON object!" );
+                        " in 'joined_tables_' is not a proper JSON "
+                        "object!" );
                 }
 
             const auto& obj = *ptr;
@@ -395,10 +474,12 @@ void DataModelChecker::check_matches(
         {
             _warner->add(
                 "'" + _population.name() + "' and '" + _peripheral_df.name() +
-                "' are in a many-to-one or one-to-one relationship when joined "
+                "' are in a many-to-one or one-to-one relationship when "
+                "joined "
                 "over '" +
                 _join_key_used + "' and '" + _other_join_key_used +
-                "'. Aggregating over such relationships makes little sense. "
+                "'. Aggregating over such relationships makes little "
+                "sense. "
                 "You should consider removing this join from your data "
                 "model and directly joining '" +
                 _peripheral_df.name() + "' on '" + _population.name() +

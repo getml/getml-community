@@ -55,6 +55,9 @@ class FeatureLearner : public AbstractFeatureLearner
         const std::map<std::string, containers::DataFrame>& _data_frames,
         Poco::Net::StreamSocket* _socket ) const final;
 
+    /// Returns a string describing the type of the feature learner.
+    std::string type() const final;
+
     // --------------------------------------------------------
 
    public:
@@ -775,6 +778,50 @@ containers::Features FeatureLearner<FeatureLearnerType>::transform(
         population_table, peripheral_tables, _index, _logger );
 
     // -------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+template <typename FeatureLearnerType>
+std::string FeatureLearner<FeatureLearnerType>::type() const
+{
+    // ----------------------------------------------------------------------
+
+    constexpr bool is_multirel = std::
+        is_same<FeatureLearnerType, multirel::ensemble::DecisionTreeEnsemble>();
+
+    constexpr bool is_multirel_ts =
+        std::is_same<FeatureLearnerType, ts::MultirelTimeSeries>();
+
+    constexpr bool is_relboost = std::
+        is_same<FeatureLearnerType, relboost::ensemble::DecisionTreeEnsemble>();
+
+    constexpr bool is_relboost_ts =
+        std::is_same<FeatureLearnerType, ts::RelboostTimeSeries>();
+
+    // ----------------------------------------------------------------------
+
+    if constexpr ( is_multirel )
+        {
+            return AbstractFeatureLearner::MULTIREL_MODEL;
+        }
+
+    if constexpr ( is_multirel_ts )
+        {
+            return AbstractFeatureLearner::MULTIREL_TIME_SERIES;
+        }
+
+    if constexpr ( is_relboost )
+        {
+            return AbstractFeatureLearner::RELBOOST_MODEL;
+        }
+
+    if constexpr ( is_relboost_ts )
+        {
+            return AbstractFeatureLearner::RELBOOST_TIME_SERIES;
+        }
+
+    // ----------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------

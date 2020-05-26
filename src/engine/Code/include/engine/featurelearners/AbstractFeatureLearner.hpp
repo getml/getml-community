@@ -17,6 +17,11 @@ class AbstractFeatureLearner
     static constexpr Int IGNORE_TARGETS = -2;
     static constexpr Int USE_ALL_TARGETS = -1;
 
+    static constexpr const char* MULTIREL_MODEL = "MultirelModel";
+    static constexpr const char* MULTIREL_TIME_SERIES = "MultirelTimeSeries";
+    static constexpr const char* RELBOOST_MODEL = "RelboostModel";
+    static constexpr const char* RELBOOST_TIME_SERIES = "RelboostTimeSeries";
+
     // --------------------------------------------------------
 
    public:
@@ -81,6 +86,9 @@ class AbstractFeatureLearner
         const std::shared_ptr<const monitoring::Logger>& _logger,
         const std::map<std::string, containers::DataFrame>& _data_frames,
         Poco::Net::StreamSocket* _socket ) const = 0;
+
+    /// Returns a string describing the type of the feature learner.
+    virtual std::string type() const = 0;
 
     // --------------------------------------------------------
 };

@@ -18,6 +18,9 @@ class DataModelChecker
         const std::shared_ptr<std::vector<std::string>> _peripheral_names,
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral,
+        const std::vector<
+            std::shared_ptr<featurelearners::AbstractFeatureLearner>>
+            _feature_learners,
         const std::shared_ptr<const monitoring::Logger>& _logger,
         Poco::Net::StreamSocket* _socket );
 
@@ -28,9 +31,20 @@ class DataModelChecker
         const std::string& _df_name,
         communication::Warner* _warner );
 
+    /// Checks the validity of the data frames.
+    static void check_data_frames(
+        const containers::DataFrame& _population,
+        const std::vector<containers::DataFrame>& _peripheral,
+        const std::vector<
+            std::shared_ptr<featurelearners::AbstractFeatureLearner>>
+            _feature_learners,
+        communication::Warner* _warner );
+
     /// Checks all of the columns in the data frame make sense.
     static void check_df(
-        const containers::DataFrame& _df, communication::Warner* _warner );
+        const containers::DataFrame& _df,
+        const bool _check_num_columns,
+        communication::Warner* _warner );
 
     /// Checks the plausibility of a float column.
     static void check_float_column(
