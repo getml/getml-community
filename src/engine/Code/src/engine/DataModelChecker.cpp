@@ -297,7 +297,7 @@ void DataModelChecker::check_join(
     if ( _peripheral_names.size() != _peripheral.size() )
         {
             throw std::invalid_argument(
-                "The number of peripheral tables in the placeholder  must "
+                "The number of peripheral tables in the placeholder must "
                 "be "
                 "equal to the number of peripheral tables passed (" +
                 std::to_string( _peripheral_names.size() ) + " vs. " +
@@ -316,48 +316,32 @@ void DataModelChecker::check_join(
                 "The placeholder has no array named 'joined_tables_'!" );
         }
 
-    const auto join_keys_used_arr =
-        _population_placeholder.getArray( "join_keys_used_" );
+    // ------------------------------------------------------------------------
 
-    if ( !join_keys_used_arr )
-        {
-            throw std::invalid_argument(
-                "The placeholder has no array named 'join_keys_used_'!" );
-        }
-
-    const auto other_join_keys_used_arr =
-        _population_placeholder.getArray( "other_join_keys_used_" );
-
-    if ( !other_join_keys_used_arr )
-        {
-            throw std::invalid_argument(
-                "The placeholder has no array named "
-                "'other_join_keys_used_'!" );
-        }
+    const auto expected_size = joined_tables_arr->size();
 
     // ------------------------------------------------------------------------
 
-    const auto join_keys_used =
-        JSON::array_to_vector<std::string>( join_keys_used_arr );
-
-    const auto other_join_keys_used =
-        JSON::array_to_vector<std::string>( other_join_keys_used_arr );
+    const auto [join_keys_used, other_join_keys_used] =
+        get_join_keys_used( _population_placeholder, expected_size );
 
     // ------------------------------------------------------------------------
 
-    if ( joined_tables_arr->size() != join_keys_used.size() )
-        {
-            throw std::invalid_argument(
-                "Length of 'joined_tables_' must match length of "
-                "'join_keys_used_'." );
-        }
+    const auto
+        [time_stamps_used, other_time_stamps_used, upper_time_stamps_used] =
+            get_time_stamps_used( _population_placeholder, expected_size );
 
-    if ( joined_tables_arr->size() != other_join_keys_used.size() )
-        {
-            throw std::invalid_argument(
-                "Length of 'joined_tables_' must match length of "
-                "'other_join_keys_used_'." );
-        }
+    // ------------------------------------------------------------------------
+
+    assert_true( join_keys_used.size() == expected_size );
+
+    assert_true( other_join_keys_used.size() == expected_size );
+
+    assert_true( time_stamps_used.size() == expected_size );
+
+    assert_true( other_time_stamps_used.size() == expected_size );
+
+    assert_true( upper_time_stamps_used.size() == expected_size );
 
     // ------------------------------------------------------------------------
 
@@ -389,21 +373,22 @@ void DataModelChecker::check_join(
 
             const auto dist = std::distance( _peripheral_names.begin(), it );
 
-            const auto& peripheral_df = _peripheral.at( dist );
-
-            const auto& join_key_used = join_keys_used.at( i );
-
-            const auto& other_join_key_used = other_join_keys_used.at( i );
-
             check_matches(
-                join_key_used,
-                other_join_key_used,
+                join_keys_used.at( i ),
+                other_join_keys_used.at( i ),
+                time_stamps_used.at( i ),
+                other_time_stamps_used.at( i ),
+                upper_time_stamps_used.at( i ),
                 _population,
-                peripheral_df,
+                _peripheral.at( dist ),
                 _warner );
 
             check_join(
-                obj, _peripheral_names, peripheral_df, _peripheral, _warner );
+                obj,
+                _peripheral_names,
+                _peripheral.at( dist ),
+                _peripheral,
+                _warner );
         }
 
     // ------------------------------------------------------------------------
@@ -414,13 +399,16 @@ void DataModelChecker::check_join(
 void DataModelChecker::check_matches(
     const std::string& _join_key_used,
     const std::string& _other_join_key_used,
-    const containers::DataFrame& _population,
+    const std::string& _time_stamp_used,
+    const std::string& _other_time_stamp_used,
+    const std::string& _upper_time_stamp_used,
+    const containers::DataFrame& _population_df,
     const containers::DataFrame& _peripheral_df,
     communication::Warner* _warner )
 {
     // ------------------------------------------------------------------------
 
-    const auto jk1 = _population.join_key( _join_key_used );
+    const auto jk1 = _population_df.join_key( _join_key_used );
 
     const auto ptr2 = _peripheral_df.index( _other_join_key_used ).map();
 
@@ -430,27 +418,56 @@ void DataModelChecker::check_matches(
 
     // ------------------------------------------------------------------------
 
+    const auto [ts1, ts2, upper] = find_time_stamps(
+        _time_stamp_used,
+        _other_time_stamp_used,
+        _upper_time_stamp_used,
+        _population_df,
+        _peripheral_df );
+
+    // ------------------------------------------------------------------------
+
     bool no_matches = true;
 
     bool is_many_to_one = true;
 
+    size_t num_matches = 0;
+
     // ------------------------------------------------------------------------
 
-    for ( const auto val : jk1 )
+    for ( size_t ix1 = 0; ix1 < jk1.size(); ++ix1 )
         {
-            const auto it2 = map2.find( val );
+            const auto it2 = map2.find( jk1[ix1] );
 
             if ( it2 == map2.end() )
                 {
                     continue;
                 }
 
-            no_matches = false;
+            size_t local_num_matches = 0;
 
-            if ( it2->second.size() > 1 )
+            for ( const auto ix2 : it2->second )
                 {
-                    is_many_to_one = false;
-                    break;
+                    const bool in_range = is_in_range(
+                        ts1 ? ts1->at( ix1 ) : 0.0,
+                        ts1 ? ts2->at( ix2 ) : 0.0,
+                        upper ? upper->at( ix2 ) : NAN );
+
+                    if ( !in_range )
+                        {
+                            continue;
+                        }
+
+                    no_matches = false;
+
+                    ++num_matches;
+
+                    ++local_num_matches;
+
+                    if ( local_num_matches > 1 )
+                        {
+                            is_many_to_one = false;
+                        }
                 }
         }
 
@@ -459,8 +476,8 @@ void DataModelChecker::check_matches(
     if ( no_matches )
         {
             _warner->add(
-                "There are not matches between '" + _join_key_used + "' in '" +
-                _population.name() + "' and '" + _other_join_key_used +
+                "There are no matches between '" + _join_key_used + "' in '" +
+                _population_df.name() + "' and '" + _other_join_key_used +
                 "' in '" + _peripheral_df.name() +
                 "'. You should consider removing this join from your data "
                 "model or re-examine your join keys." );
@@ -473,7 +490,8 @@ void DataModelChecker::check_matches(
     if ( is_many_to_one )
         {
             _warner->add(
-                "'" + _population.name() + "' and '" + _peripheral_df.name() +
+                "'" + _population_df.name() + "' and '" +
+                _peripheral_df.name() +
                 "' are in a many-to-one or one-to-one relationship when "
                 "joined "
                 "over '" +
@@ -482,9 +500,229 @@ void DataModelChecker::check_matches(
                 "sense. "
                 "You should consider removing this join from your data "
                 "model and directly joining '" +
-                _peripheral_df.name() + "' on '" + _population.name() +
+                _peripheral_df.name() + "' on '" + _population_df.name() +
                 "' using the data frame's built-in join method." );
         }
+
+    // ------------------------------------------------------------------------
+
+    const auto avg_num_matches = static_cast<Float>( num_matches ) /
+                                 static_cast<Float>( _population_df.nrows() );
+
+    if ( avg_num_matches > 300.0 )
+        {
+            _warner->add(
+                "There are " + std::to_string( num_matches ) +
+                " matches between '" + _population_df.name() + "' and '" +
+                _peripheral_df.name() + "' when joined over '" +
+                _join_key_used + "' and '" + _other_join_key_used +
+                "'. This pipeline might take a very long time to fit. "
+                "You should consider imposing a narrower limit on the scope of "
+                "this join by setting an upper time stamp. You can set an "
+                "upper time stamp in the .join(...)-method of the "
+                "Placeholder." );
+        }
+
+    // ------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+std::tuple<
+    std::optional<containers::Column<Float>>,
+    std::optional<containers::Column<Float>>,
+    std::optional<containers::Column<Float>>>
+DataModelChecker::find_time_stamps(
+    const std::string& _time_stamp_used,
+    const std::string& _other_time_stamp_used,
+    const std::string& _upper_time_stamp_used,
+    const containers::DataFrame& _population_df,
+    const containers::DataFrame& _peripheral_df )
+{
+    // ------------------------------------------------------------------------
+
+    if ( ( _time_stamp_used == "" ) != ( _other_time_stamp_used == "" ) )
+        {
+            throw std::invalid_argument(
+                "You have to pass both time_stamp_used and "
+                "other_time_stamps_used or neither of them." );
+        }
+
+    if ( _time_stamp_used == "" && _upper_time_stamp_used != "" )
+        {
+            throw std::invalid_argument(
+                "If you pass no time_stamp_used, then passing an "
+                "upper_time_stamp_used makes no sense." );
+        }
+
+    // ------------------------------------------------------------------------
+
+    auto ts1 = std::optional<containers::Column<Float>>();
+
+    if ( _time_stamp_used != "" )
+        {
+            ts1 = _population_df.time_stamp( _time_stamp_used );
+        }
+
+    auto ts2 = std::optional<containers::Column<Float>>();
+
+    if ( _other_time_stamp_used != "" )
+        {
+            ts2 = _peripheral_df.time_stamp( _other_time_stamp_used );
+        }
+
+    auto upper = std::optional<containers::Column<Float>>();
+
+    if ( _upper_time_stamp_used != "" )
+        {
+            upper = _peripheral_df.time_stamp( _upper_time_stamp_used );
+        }
+
+    // ------------------------------------------------------------------------
+
+    return std::make_tuple( ts1, ts2, upper );
+
+    // ------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+std::pair<std::vector<std::string>, std::vector<std::string>>
+DataModelChecker::get_join_keys_used(
+    const Poco::JSON::Object& _population_placeholder,
+    const size_t _expected_size )
+{
+    // ------------------------------------------------------------------------
+
+    const auto join_keys_used_arr =
+        _population_placeholder.getArray( "join_keys_used_" );
+
+    if ( !join_keys_used_arr )
+        {
+            throw std::invalid_argument(
+                "The placeholder has no array named 'join_keys_used_'!" );
+        }
+
+    const auto other_join_keys_used_arr =
+        _population_placeholder.getArray( "other_join_keys_used_" );
+
+    if ( !other_join_keys_used_arr )
+        {
+            throw std::invalid_argument(
+                "The placeholder has no array named "
+                "'other_join_keys_used_'!" );
+        }
+
+    // ------------------------------------------------------------------------
+
+    const auto join_keys_used =
+        JSON::array_to_vector<std::string>( join_keys_used_arr );
+
+    const auto other_join_keys_used =
+        JSON::array_to_vector<std::string>( other_join_keys_used_arr );
+
+    // ------------------------------------------------------------------------
+
+    if ( _expected_size != join_keys_used.size() )
+        {
+            throw std::invalid_argument(
+                "Length of 'joined_tables_' must match length of "
+                "'join_keys_used_'." );
+        }
+
+    if ( _expected_size != other_join_keys_used.size() )
+        {
+            throw std::invalid_argument(
+                "Length of 'joined_tables_' must match length of "
+                "'other_join_keys_used_'." );
+        }
+
+    // ------------------------------------------------------------------------
+
+    return std::make_pair( join_keys_used, other_join_keys_used );
+
+    // ------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+std::tuple<
+    std::vector<std::string>,
+    std::vector<std::string>,
+    std::vector<std::string>>
+DataModelChecker::get_time_stamps_used(
+    const Poco::JSON::Object& _population_placeholder,
+    const size_t _expected_size )
+{
+    // ------------------------------------------------------------------------
+
+    const auto time_stamps_used_arr =
+        _population_placeholder.getArray( "time_stamps_used_" );
+
+    if ( !time_stamps_used_arr )
+        {
+            throw std::invalid_argument(
+                "The placeholder has no array named 'time_stamps_used_'!" );
+        }
+
+    const auto other_time_stamps_used_arr =
+        _population_placeholder.getArray( "other_time_stamps_used_" );
+
+    if ( !other_time_stamps_used_arr )
+        {
+            throw std::invalid_argument(
+                "The placeholder has no array named "
+                "'other_time_stamps_used_'!" );
+        }
+
+    const auto upper_time_stamps_used_arr =
+        _population_placeholder.getArray( "upper_time_stamps_used_" );
+
+    if ( !upper_time_stamps_used_arr )
+        {
+            throw std::invalid_argument(
+                "The placeholder has no array named "
+                "'upper_time_stamps_used_'!" );
+        }
+
+    // ------------------------------------------------------------------------
+
+    const auto time_stamps_used =
+        JSON::array_to_vector<std::string>( time_stamps_used_arr );
+
+    const auto other_time_stamps_used =
+        JSON::array_to_vector<std::string>( other_time_stamps_used_arr );
+
+    const auto upper_time_stamps_used =
+        JSON::array_to_vector<std::string>( upper_time_stamps_used_arr );
+
+    // ------------------------------------------------------------------------
+
+    if ( _expected_size != time_stamps_used.size() )
+        {
+            throw std::invalid_argument(
+                "Length of 'joined_tables_' must match length of "
+                "'time_stamps_used_'." );
+        }
+
+    if ( _expected_size != other_time_stamps_used.size() )
+        {
+            throw std::invalid_argument(
+                "Length of 'joined_tables_' must match length of "
+                "'other_time_stamps_used_'." );
+        }
+
+    if ( _expected_size != upper_time_stamps_used.size() )
+        {
+            throw std::invalid_argument(
+                "Length of 'joined_tables_' must match length of "
+                "'upper_time_stamps_used_'." );
+        }
+
+    // ------------------------------------------------------------------------
+
+    return std::make_tuple(
+        time_stamps_used, other_time_stamps_used, upper_time_stamps_used );
 
     // ------------------------------------------------------------------------
 }

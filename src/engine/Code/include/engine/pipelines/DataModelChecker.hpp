@@ -64,12 +64,53 @@ class DataModelChecker
     static void check_matches(
         const std::string& _join_key_used,
         const std::string& _other_join_key_used,
-        const containers::DataFrame& _population,
-        const containers::DataFrame& _peripheral,
+        const std::string& _time_stamp_used,
+        const std::string& _other_time_stamp_used,
+        const std::string& _upper_time_stamp_used,
+        const containers::DataFrame& _population_df,
+        const containers::DataFrame& _peripheral_df,
         communication::Warner* _warner );
+
+    /// Finds the time stamps, if necessary.
+    static std::tuple<
+        std::optional<containers::Column<Float>>,
+        std::optional<containers::Column<Float>>,
+        std::optional<containers::Column<Float>>>
+    find_time_stamps(
+        const std::string& _time_stamp_used,
+        const std::string& _other_time_stamp_used,
+        const std::string& _upper_time_stamp_used,
+        const containers::DataFrame& _population_df,
+        const containers::DataFrame& _peripheral_df );
+
+    /// Extracts the join keys from the population placeholder.
+    static std::pair<std::vector<std::string>, std::vector<std::string>>
+    get_join_keys_used(
+        const Poco::JSON::Object& _population_placeholder,
+        const size_t _expected_size );
+
+    /// Extracts the time stamps from the population placeholder.
+    static std::tuple<
+        std::vector<std::string>,
+        std::vector<std::string>,
+        std::vector<std::string>>
+    get_time_stamps_used(
+        const Poco::JSON::Object& _population_placeholder,
+        const size_t _expected_size );
 
     /// Checks whether all non-NULL elements in _col are equal to each other
     static bool is_all_equal( const containers::Column<Float>& _col );
+
+    // -------------------------------------------------------------------------
+
+    /// Checks whether ts1 lies between ts2 and upper.
+    static bool is_in_range(
+        const Float ts1, const Float ts2, const Float upper )
+    {
+        return ts2 <= ts1 && ( std::isnan( upper ) || ts1 < upper );
+    }
+
+    // -------------------------------------------------------------------------
 };
 
 //  ----------------------------------------------------------------------------

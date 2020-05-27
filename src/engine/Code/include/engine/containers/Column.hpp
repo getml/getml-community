@@ -70,6 +70,32 @@ class Column
 
     // -------------------------------
 
+    /// Boundary-checked accessor to data
+    template <class T2>
+    T &at( const T2 _i )
+    {
+        if ( !data_ptr_ || _i < 0 || static_cast<size_t>( _i ) >= nrows() )
+            {
+                throw std::invalid_argument(
+                    "Out-of-bounds access to column '" + name_ + "'" );
+            }
+
+        return ( *data_ptr_ )[_i];
+    }
+
+    /// Boundary-checker accessor to data
+    template <class T2>
+    T at( const T2 _i ) const
+    {
+        if ( !data_ptr_ || _i < 0 || static_cast<size_t>( _i ) >= nrows() )
+            {
+                throw std::invalid_argument(
+                    "Out-of-bounds access to column '" + name_ + "'" );
+            }
+
+        return ( *data_ptr_ )[_i];
+    }
+
     /// Iterator to beginning of data
     T *begin() { return data_ptr_->data(); }
 
