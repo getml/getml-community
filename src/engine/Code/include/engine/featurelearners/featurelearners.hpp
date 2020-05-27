@@ -30,7 +30,7 @@
 
 #include "relboost/ensemble/ensemble.hpp"
 
-#include "ts/ts.hpp"
+#include "engine/ts/ts.hpp"
 
 // ----------------------------------------------------
 // Module files

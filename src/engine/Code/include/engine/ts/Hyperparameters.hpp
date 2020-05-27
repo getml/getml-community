@@ -1,6 +1,8 @@
-#ifndef TS_HYPERPARAMETERS_HPP_
-#define TS_HYPERPARAMETERS_HPP_
+#ifndef ENGINE_TS_HYPERPARAMETERS_HPP_
+#define ENGINE_TS_HYPERPARAMETERS_HPP_
 
+namespace engine
+{
 namespace ts
 {
 // ----------------------------------------------------------------------------
@@ -68,5 +70,6 @@ struct Hyperparameters
 
 // ----------------------------------------------------------------------------
 }  // namespace ts
+}  // namespace engine
 
-#endif  // TS_HYPERPARAMETERS_HPP_
+#endif  // ENGINE_TS_HYPERPARAMETERS_HPP_

@@ -1,5 +1,5 @@
-#ifndef TS_TS_HPP_
-#define TS_TS_HPP_
+#ifndef ENGINE_TS_TS_HPP_
+#define ENGINE_TS_TS_HPP_
 
 // ----------------------------------------------------
 // Dependencies
@@ -18,16 +18,16 @@
 
 // ----------------------------------------------------
 
-#include "ts/Float.hpp"
-#include "ts/Int.hpp"
+#include "engine/ts/Float.hpp"
+#include "engine/ts/Int.hpp"
 
-#include "ts/Hyperparameters.hpp"
+#include "engine/ts/Hyperparameters.hpp"
 
-#include "ts/TimeSeriesModel.hpp"
+#include "engine/ts/TimeSeriesModel.hpp"
 
-#include "ts/MultirelTimeSeries.hpp"
-#include "ts/RelboostTimeSeries.hpp"
+#include "engine/ts/MultirelTimeSeries.hpp"
+#include "engine/ts/RelboostTimeSeries.hpp"
 
 // ----------------------------------------------------
 
-#endif  // TS_TS_HPP_
+#endif  // ENGINE_TS_TS_HPP_

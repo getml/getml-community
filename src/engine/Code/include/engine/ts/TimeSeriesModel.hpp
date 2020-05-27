@@ -1,6 +1,8 @@
-#ifndef TS_TIMESERIESMODEL_HPP_
-#define TS_TIMESERIESMODEL_HPP_
+#ifndef ENGINE_TS_TIMESERIESMODEL_HPP_
+#define ENGINE_TS_TIMESERIESMODEL_HPP_
 
+namespace engine
+{
 namespace ts
 {
 // ----------------------------------------------------------------------------
@@ -214,10 +216,13 @@ class TimeSeriesModel
 
 // ----------------------------------------------------------------------------
 }  // namespace ts
+}  // namespace engine
 
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
 
+namespace engine
+{
 namespace ts
 {
 // ----------------------------------------------------------------------------
@@ -807,6 +812,6 @@ typename FEType::FeaturesType TimeSeriesModel<FEType>::transform(
 
 // ----------------------------------------------------------------------------
 }  // namespace ts
-
-#endif  // TS_TIMESERIESMODEL_HPP_
+}  // namespace engine
+#endif  // ENGINE_TS_TIMESERIESMODEL_HPP_
 

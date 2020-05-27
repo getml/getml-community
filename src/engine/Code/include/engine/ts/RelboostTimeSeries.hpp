@@ -1,6 +1,8 @@
-#ifndef TS_RELBOOSTTIMESERIES_HPP_
-#define TS_RELBOOSTTIMESERIES_HPP_
+#ifndef ENGINE_TS_RELBOOSTTIMESERIES_HPP_
+#define ENGINE_TS_RELBOOSTTIMESERIES_HPP_
 
+namespace engine
+{
 namespace ts
 {
 // ----------------------------------------------------------------------------
@@ -10,5 +12,6 @@ typedef TimeSeriesModel<relboost::ensemble::DecisionTreeEnsemble>
 
 // ----------------------------------------------------------------------------
 }  // namespace ts
+}  // namespace engine
 
-#endif  // TS_RELBOOSTTIMESERIES_HPP_
+#endif  // ENGINE_TS_RELBOOSTTIMESERIES_HPP_

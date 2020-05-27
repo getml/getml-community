@@ -1,6 +1,8 @@
-#ifndef TS_MULTIRELTIMESERIES_HPP_
-#define TS_MULTIRELTIMESERIES_HPP_
+#ifndef ENGINE_TS_MULTIRELTIMESERIES_HPP_
+#define ENGINE_TS_MULTIRELTIMESERIES_HPP_
 
+namespace engine
+{
 namespace ts
 {
 // ----------------------------------------------------------------------------
@@ -10,5 +12,6 @@ typedef TimeSeriesModel<multirel::ensemble::DecisionTreeEnsemble>
 
 // ----------------------------------------------------------------------------
 }  // namespace ts
+}  // namespace engine
 
-#endif  // TS_MULTIRELTIMESERIES_HPP_
+#endif  // ENGINE_TS_MULTIRELTIMESERIES_HPP_
