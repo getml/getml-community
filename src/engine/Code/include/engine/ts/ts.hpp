@@ -16,6 +16,8 @@
 
 #include "relboost/ensemble/ensemble.hpp"
 
+#include "engine/containers/containers.hpp"
+
 // ----------------------------------------------------
 
 #include "engine/ts/Float.hpp"
