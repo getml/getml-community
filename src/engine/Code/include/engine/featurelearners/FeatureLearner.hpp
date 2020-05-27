@@ -27,6 +27,8 @@ class FeatureLearner : public AbstractFeatureLearner
           placeholder_( _placeholder ),
           peripheral_( _peripheral )
     {
+        assert_true( placeholder_ );
+        assert_true( peripheral_ );
     }
 
     /// Destructor.
