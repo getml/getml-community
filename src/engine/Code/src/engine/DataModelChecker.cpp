@@ -39,6 +39,17 @@ void DataModelChecker::check(
 
     // --------------------------------------------------------------------------
 
+    assert_true( _population_placeholder );
+
+    check_self_joins(
+        *_population_placeholder,
+        _population,
+        _peripheral,
+        _feature_learners,
+        &warner );
+
+    // --------------------------------------------------------------------------
+
     if ( _logger )
         {
             for ( const auto& warning : warner.warnings() )
@@ -373,12 +384,20 @@ void DataModelChecker::check_join(
 
             const auto dist = std::distance( _peripheral_names.begin(), it );
 
-            check_matches(
+            const auto [is_many_to_one, num_matches] = check_matches(
                 join_keys_used.at( i ),
                 other_join_keys_used.at( i ),
                 time_stamps_used.at( i ),
                 other_time_stamps_used.at( i ),
                 upper_time_stamps_used.at( i ),
+                _population,
+                _peripheral.at( dist ) );
+
+            raise_join_warnings(
+                is_many_to_one,
+                num_matches,
+                join_keys_used.at( i ),
+                other_join_keys_used.at( i ),
                 _population,
                 _peripheral.at( dist ),
                 _warner );
@@ -396,15 +415,14 @@ void DataModelChecker::check_join(
 
 // ----------------------------------------------------------------------------
 
-void DataModelChecker::check_matches(
+std::pair<bool, size_t> DataModelChecker::check_matches(
     const std::string& _join_key_used,
     const std::string& _other_join_key_used,
     const std::string& _time_stamp_used,
     const std::string& _other_time_stamp_used,
     const std::string& _upper_time_stamp_used,
     const containers::DataFrame& _population_df,
-    const containers::DataFrame& _peripheral_df,
-    communication::Warner* _warner )
+    const containers::DataFrame& _peripheral_df )
 {
     // ------------------------------------------------------------------------
 
@@ -426,8 +444,6 @@ void DataModelChecker::check_matches(
         _peripheral_df );
 
     // ------------------------------------------------------------------------
-
-    bool no_matches = true;
 
     bool is_many_to_one = true;
 
@@ -458,8 +474,6 @@ void DataModelChecker::check_matches(
                             continue;
                         }
 
-                    no_matches = false;
-
                     ++num_matches;
 
                     ++local_num_matches;
@@ -473,54 +487,96 @@ void DataModelChecker::check_matches(
 
     // ------------------------------------------------------------------------
 
-    if ( no_matches )
-        {
-            _warner->add(
-                "There are no matches between '" + _join_key_used + "' in '" +
-                _population_df.name() + "' and '" + _other_join_key_used +
-                "' in '" + _peripheral_df.name() +
-                "'. You should consider removing this join from your data "
-                "model or re-examine your join keys." );
+    return std::make_pair( is_many_to_one, num_matches );
 
-            return;
-        }
+    // ------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+void DataModelChecker::check_self_joins(
+    const Poco::JSON::Object& _population_placeholder,
+    const containers::DataFrame& _population,
+    const std::vector<containers::DataFrame>& _peripheral,
+    const std::vector<std::shared_ptr<featurelearners::AbstractFeatureLearner>>
+        _feature_learners,
+    communication::Warner* _warner )
+{
+    // ----------------------------------------------------------------
+
+    const auto original_joined_tables_arr =
+        _population_placeholder.getArray( "joined_tables_" );
+
+    assert_true( original_joined_tables_arr );
 
     // ------------------------------------------------------------------------
 
-    if ( is_many_to_one )
+    for ( const auto& fl : _feature_learners )
         {
-            _warner->add(
-                "'" + _population_df.name() + "' and '" +
-                _peripheral_df.name() +
-                "' are in a many-to-one or one-to-one relationship when "
-                "joined "
-                "over '" +
-                _join_key_used + "' and '" + _other_join_key_used +
-                "'. Aggregating over such relationships makes little "
-                "sense. "
-                "You should consider removing this join from your data "
-                "model and directly joining '" +
-                _peripheral_df.name() + "' on '" + _population_df.name() +
-                "' using the data frame's built-in join method." );
-        }
+            // ----------------------------------------------------------------
 
-    // ------------------------------------------------------------------------
+            assert_true( fl );
 
-    const auto avg_num_matches = static_cast<Float>( num_matches ) /
-                                 static_cast<Float>( _population_df.nrows() );
+            if ( !fl->is_time_series() )
+                {
+                    continue;
+                }
 
-    if ( avg_num_matches > 300.0 )
-        {
-            _warner->add(
-                "There are " + std::to_string( num_matches ) +
-                " matches between '" + _population_df.name() + "' and '" +
-                _peripheral_df.name() + "' when joined over '" +
-                _join_key_used + "' and '" + _other_join_key_used +
-                "'. This pipeline might take a very long time to fit. "
-                "You should consider imposing a narrower limit on the scope of "
-                "this join by setting an upper time stamp. You can set an "
-                "upper time stamp in the .join(...)-method of the "
-                "Placeholder." );
+            // ----------------------------------------------------------------
+
+            const auto [new_population, new_peripheral] =
+                fl->add_self_joins( _population, _peripheral );
+
+            // ----------------------------------------------------------------
+
+            const auto new_placeholder = fl->make_placeholder();
+
+            // ----------------------------------------------------------------
+
+            const auto new_joined_tables_arr =
+                new_placeholder.getArray( "joined_tables_" );
+
+            assert_true( new_joined_tables_arr );
+
+            // ----------------------------------------------------------------
+
+            const auto expected_size = new_joined_tables_arr->size();
+
+            // ----------------------------------------------------------------
+
+            const auto [join_keys_used, other_join_keys_used] =
+                get_join_keys_used( new_placeholder, expected_size );
+
+            // ----------------------------------------------------------------
+
+            const auto
+                [time_stamps_used,
+                 other_time_stamps_used,
+                 upper_time_stamps_used] =
+                    get_time_stamps_used( new_placeholder, expected_size );
+
+            // ----------------------------------------------------------------
+
+            assert_true( new_peripheral.size() == _peripheral.size() + 1 );
+
+            for ( size_t i = original_joined_tables_arr->size();
+                  i < expected_size;
+                  ++i )
+                {
+                    const auto [is_many_to_one, num_matches] = check_matches(
+                        join_keys_used.at( i ),
+                        other_join_keys_used.at( i ),
+                        time_stamps_used.at( i ),
+                        other_time_stamps_used.at( i ),
+                        upper_time_stamps_used.at( i ),
+                        new_population,
+                        new_peripheral.back() );
+
+                    raise_self_join_warnings(
+                        is_many_to_one, num_matches, new_population, _warner );
+                }
+
+            // ----------------------------------------------------------------
         }
 
     // ------------------------------------------------------------------------
@@ -758,6 +814,130 @@ bool DataModelChecker::is_all_equal( const containers::Column<Float>& _col )
     return true;
 }
 
+// ------------------------------------------------------------------------
+
+void DataModelChecker::raise_join_warnings(
+    const bool _is_many_to_one,
+    const size_t _num_matches,
+    const std::string& _join_key_used,
+    const std::string& _other_join_key_used,
+    const containers::DataFrame& _population_df,
+    const containers::DataFrame& _peripheral_df,
+    communication::Warner* _warner )
+{
+    // ------------------------------------------------------------------------
+
+    if ( _num_matches == 0 )
+        {
+            _warner->add(
+                "There are no matches between '" + _join_key_used + "' in '" +
+                _population_df.name() + "' and '" + _other_join_key_used +
+                "' in '" + _peripheral_df.name() +
+                "'. You should consider removing this join from your data "
+                "model or re-examine your join keys." );
+
+            return;
+        }
+
+    // ------------------------------------------------------------------------
+
+    if ( _is_many_to_one )
+        {
+            _warner->add(
+                "'" + _population_df.name() + "' and '" +
+                _peripheral_df.name() +
+                "' are in a many-to-one or one-to-one relationship when "
+                "joined "
+                "over '" +
+                _join_key_used + "' and '" + _other_join_key_used +
+                "'. Aggregating over such relationships makes little "
+                "sense. "
+                "You should consider removing this join from your data "
+                "model and directly joining '" +
+                _peripheral_df.name() + "' on '" + _population_df.name() +
+                "' using the data frame's built-in join method." );
+        }
+
+    // ------------------------------------------------------------------------
+
+    const auto avg_num_matches = static_cast<Float>( _num_matches ) /
+                                 static_cast<Float>( _population_df.nrows() );
+
+    if ( avg_num_matches > 300.0 )
+        {
+            _warner->add(
+                "There are " + std::to_string( _num_matches ) +
+                " matches between '" + _population_df.name() + "' and '" +
+                _peripheral_df.name() + "' when joined over '" +
+                _join_key_used + "' and '" + _other_join_key_used +
+                "'. This pipeline might take a very long time to fit. "
+                "You should consider imposing a narrower limit on the scope of "
+                "this join by setting an upper time stamp. You can set an "
+                "upper time stamp in the .join(...)-method of the "
+                "Placeholder." );
+        }
+
+    // ------------------------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
+void DataModelChecker::raise_self_join_warnings(
+    const bool _is_many_to_one,
+    const size_t _num_matches,
+    const containers::DataFrame& _population_df,
+    communication::Warner* _warner )
+{
+    // ------------------------------------------------------------------------
+
+    if ( _num_matches == 0 )
+        {
+            _warner->add(
+                "The self-join on '" + _population_df.name() +
+                "' created by the time series feature learner has no matches. "
+                "You should examine your join keys." );
+
+            return;
+        }
+
+    // ------------------------------------------------------------------------
+
+    if ( _is_many_to_one )
+        {
+            _warner->add(
+                "The self-join on '" + _population_df.name() +
+                "' created by the time series feature learner is a "
+                "one-to-one relationship. Using a time series feature learner "
+                "for such a data set makes little sense. You should consider "
+                "using a normal feature learner instead." );
+        }
+
+    // ------------------------------------------------------------------------
+
+    const auto avg_num_matches = static_cast<Float>( _num_matches ) /
+                                 static_cast<Float>( _population_df.nrows() );
+
+    if ( avg_num_matches > 300.0 )
+        {
+            _warner->add(
+                "The self-join on '" + _population_df.name() +
+                "' created by the time series feature learner "
+                "has a total of " +
+                std::to_string( _num_matches ) +
+                " matches.  This can take a long time to fit. "
+                "You should consider imposing a narrower limit on the scope of "
+                "this join by reducing the memory (the period of time until "
+                "the time series feature learner 'forgets' past data). You can "
+                "do so by setting the appropriate hyperparameter in the "
+                "feature learner. Please note that a memory of 0.0 means that "
+                "the time series feature learner will not forget any past "
+                "data." );
+        }
+
+    // ------------------------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
 }  // namespace pipelines
 }  // namespace engine

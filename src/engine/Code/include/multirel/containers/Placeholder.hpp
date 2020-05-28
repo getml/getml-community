@@ -93,7 +93,7 @@ struct Placeholder
     void check_vector_length();
 
     /// Returns the joined tables as a JSON array
-    static Poco::JSON::Array joined_tables_to_array(
+    static Poco::JSON::Array::Ptr joined_tables_to_array(
         const std::vector<Placeholder>& _vector );
 
     /// Parses the joined tables
@@ -101,7 +101,7 @@ struct Placeholder
         const Poco::JSON::Array::Ptr _array );
 
     /// Transforms the placeholder into a JSON object
-    Poco::JSON::Object to_json_obj() const;
+    Poco::JSON::Object::Ptr to_json_obj() const;
 
     // --------------------------------------------------------
 
@@ -204,7 +204,12 @@ struct Placeholder
     }
 
     /// Transforms the placeholder into a JSON string
-    std::string to_json() const { return JSON::stringify( to_json_obj() ); }
+    std::string to_json() const
+    {
+        const auto ptr = to_json_obj();
+        assert_true( ptr );
+        return JSON::stringify( *ptr );
+    }
 
     /// Getter for the time stamps name.
     const std::string& upper_time_stamps_name() const

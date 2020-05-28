@@ -61,14 +61,23 @@ class DataModelChecker
         communication::Warner* _warner );
 
     /// Raises a warning if there is something wrong with the matches.
-    static void check_matches(
+    static std::pair<bool, size_t> check_matches(
         const std::string& _join_key_used,
         const std::string& _other_join_key_used,
         const std::string& _time_stamp_used,
         const std::string& _other_time_stamp_used,
         const std::string& _upper_time_stamp_used,
         const containers::DataFrame& _population_df,
-        const containers::DataFrame& _peripheral_df,
+        const containers::DataFrame& _peripheral_df );
+
+    /// Checks the self joins for the time series models.
+    static void check_self_joins(
+        const Poco::JSON::Object& _population_placeholder,
+        const containers::DataFrame& _population,
+        const std::vector<containers::DataFrame>& _peripheral,
+        const std::vector<
+            std::shared_ptr<featurelearners::AbstractFeatureLearner>>
+            _feature_learners,
         communication::Warner* _warner );
 
     /// Finds the time stamps, if necessary.
@@ -100,6 +109,23 @@ class DataModelChecker
 
     /// Checks whether all non-NULL elements in _col are equal to each other
     static bool is_all_equal( const containers::Column<Float>& _col );
+
+    /// Adds warning messages related to the joins.
+    static void raise_join_warnings(
+        const bool _is_many_to_one,
+        const size_t _num_matches,
+        const std::string& _join_key_used,
+        const std::string& _other_join_key_used,
+        const containers::DataFrame& _population_df,
+        const containers::DataFrame& _peripheral_df,
+        communication::Warner* _warner );
+
+    /// Adds warning messages related to the joins.
+    static void raise_self_join_warnings(
+        const bool _is_many_to_one,
+        const size_t _num_matches,
+        const containers::DataFrame& _population_df,
+        communication::Warner* _warner );
 
     // -------------------------------------------------------------------------
 

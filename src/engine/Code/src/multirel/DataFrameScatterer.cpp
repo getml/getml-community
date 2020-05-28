@@ -129,7 +129,7 @@ void DataFrameScatterer::scatter_keys(
     // ---------------------------------------------------------------------------
     // Identify the map in keys_maps_temp with the least amount of entries
     // The idea is that more often than not, keys are hierarchical: A
-    // customer_id can be associatedwith several transaction_ids, but any
+    // customer_id can be associated with several transaction_ids, but any
     // transaction_id can only be associated with one customer_id
 
     *_ix_min_keys_map = 0;

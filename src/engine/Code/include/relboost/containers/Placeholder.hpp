@@ -204,7 +204,12 @@ struct Placeholder
     }
 
     /// Transforms the placeholder into a JSON string
-    std::string to_json() const { return JSON::stringify( *to_json_obj() ); }
+    std::string to_json() const
+    {
+        const auto ptr = to_json_obj();
+        assert_true( ptr );
+        return JSON::stringify( *ptr );
+    }
 
     /// Getter for the time stamps name.
     const std::string& upper_time_stamps_name() const

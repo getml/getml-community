@@ -90,6 +90,9 @@ class TimeSeriesModel
     }
 
     /// Trivial (const) accessor
+    const PlaceholderType &placeholder() const { return model().placeholder(); }
+
+    /// Trivial (const) accessor
     const PlaceholderType &population_schema() const
     {
         return model().population_schema();

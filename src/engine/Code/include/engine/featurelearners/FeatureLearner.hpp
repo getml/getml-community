@@ -37,6 +37,13 @@ class FeatureLearner : public AbstractFeatureLearner
     // --------------------------------------------------------
 
    public:
+    /// If this is a time series model, this will add the data necessary for the
+    /// self joins. Otherwise, it will just return the original data
+    std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
+    add_self_joins(
+        const containers::DataFrame& _population,
+        const std::vector<containers::DataFrame>& _peripheral ) const final;
+
     /// Returns the fingerprint of the feature learner (necessary to build
     /// the dependency graphs).
     Poco::JSON::Object::Ptr fingerprint() const final;
@@ -77,12 +84,28 @@ class FeatureLearner : public AbstractFeatureLearner
         return ( loss_function != "SquareLoss" );
     }
 
+    /// Whether this is a time series model (based on a self-join).
+    bool is_time_series() const final
+    {
+        return FeatureLearnerType::is_time_series_;
+    }
+
     /// Loads the feature learner from a file designated by _fname.
     void load( const std::string& _fname ) final
     {
         const auto obj = load_json_obj( _fname );
         feature_learner_ =
             std::make_optional<FeatureLearnerType>( categories_, obj );
+    }
+
+    /// Returns the placeholder not as passed by the user, but as seen by the
+    /// feature learner (the difference matters for time series).
+    Poco::JSON::Object make_placeholder() const final
+    {
+        const auto ptr =
+            make_feature_learner( cmd_ )->placeholder().to_json_obj();
+        assert_true( ptr );
+        return *ptr;
     }
 
     /// Returns the number of features in the feature learner.
@@ -163,8 +186,8 @@ class FeatureLearner : public AbstractFeatureLearner
         typename FeatureLearnerType::DataFrameType,
         std::vector<typename FeatureLearnerType::DataFrameType>>
     extract_tables(
-        const Poco::JSON::Object& _cmd,
-        const std::map<std::string, containers::DataFrame>& _data_frames,
+        const containers::DataFrame& _population_df,
+        const std::vector<containers::DataFrame>& _peripheral_dfs,
         const Int _target_num ) const;
 
     /// Extract a vector of FeatureLearnerType::DataFrameType from
@@ -173,9 +196,8 @@ class FeatureLearner : public AbstractFeatureLearner
         typename FeatureLearnerType::DataFrameType,
         std::vector<typename FeatureLearnerType::DataFrameType>>
     extract_tables_by_colnames(
-        const Poco::JSON::Object& _cmd,
-        const std::map<std::string, containers::DataFrame>& _data_frames )
-        const;
+        const containers::DataFrame& _population_df,
+        const std::vector<containers::DataFrame>& _peripheral_dfs ) const;
 
     /// Initializes the feature learner.
     std::optional<FeatureLearnerType> make_feature_learner(
@@ -264,6 +286,23 @@ namespace featurelearners
 
 template <typename FeatureLearnerType>
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
+FeatureLearner<FeatureLearnerType>::add_self_joins(
+    const containers::DataFrame& _population,
+    const std::vector<containers::DataFrame>& _peripheral ) const
+{
+    if constexpr ( FeatureLearnerType::is_time_series_ )
+        {
+            return make_feature_learner( cmd_ )->create_data_frames(
+                _population, _peripheral );
+        }
+
+    return std::make_pair( _population, _peripheral );
+}
+
+// ------------------------------------------------------------------------
+
+template <typename FeatureLearnerType>
+std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
 FeatureLearner<FeatureLearnerType>::extract_data_frames(
     const Poco::JSON::Object& _cmd,
     const std::map<std::string, containers::DataFrame>& _data_frames ) const
@@ -293,7 +332,7 @@ FeatureLearner<FeatureLearnerType>::extract_data_frames(
 
     if constexpr ( FeatureLearnerType::is_time_series_ )
         {
-            return feature_learner().create_data_frames(
+            return make_feature_learner( cmd_ )->create_data_frames(
                 population_df, peripheral_dfs );
         }
 
@@ -478,20 +517,20 @@ DataFrameType FeatureLearner<FeatureLearnerType>::extract_table_by_colnames(
 
             std::vector<typename DataFrameType::IntColumnType> join_keys;
 
+            std::vector<
+                std::shared_ptr<typename containers::DataFrameIndex::MapType>>
+                indices;
+
             for ( size_t i = 0; i < _schema.num_join_keys(); ++i )
                 {
                     const auto& name = _schema.join_keys_name( i );
-
-                    if ( FeatureLearnerType::is_time_series_ &&
-                         name == "$GETML_SELF_JOIN_KEY" )
-                        {
-                            continue;
-                        }
 
                     const auto& mat = _df.join_key( name );
 
                     join_keys.push_back( typename DataFrameType::IntColumnType(
                         mat.data(), name, mat.nrows(), mat.unit() ) );
+
+                    indices.push_back( _df.index( name ).map() );
                 }
 
             // ------------------------------------------------------------------------
@@ -538,12 +577,6 @@ DataFrameType FeatureLearner<FeatureLearnerType>::extract_table_by_colnames(
                 {
                     const auto& name = _schema.time_stamps_name( i );
 
-                    if ( FeatureLearnerType::is_time_series_ &&
-                         name == "$GETML_ROWID" )
-                        {
-                            continue;
-                        }
-
                     const auto& mat = _df.time_stamp( name );
 
                     time_stamps.push_back(
@@ -556,7 +589,7 @@ DataFrameType FeatureLearner<FeatureLearnerType>::extract_table_by_colnames(
             return DataFrameType(
                 categoricals,
                 discretes,
-                _df.maps(),
+                indices,
                 join_keys,
                 _df.name(),
                 numericals,
@@ -583,26 +616,21 @@ std::pair<
     typename FeatureLearnerType::DataFrameType,
     std::vector<typename FeatureLearnerType::DataFrameType>>
 FeatureLearner<FeatureLearnerType>::extract_tables(
-    const Poco::JSON::Object& _cmd,
-    const std::map<std::string, containers::DataFrame>& _data_frames,
+    const containers::DataFrame& _population_df,
+    const std::vector<containers::DataFrame>& _peripheral_dfs,
     const Int _target_num ) const
 {
     // ------------------------------------------------
 
-    const auto [population_df, peripheral_dfs] =
-        extract_data_frames( _cmd, _data_frames );
-
-    // ------------------------------------------------
-
     const auto population_table =
         extract_table<typename FeatureLearnerType::DataFrameType>(
-            population_df, _target_num );
+            _population_df, _target_num );
 
     // ------------------------------------------------
 
     std::vector<typename FeatureLearnerType::DataFrameType> peripheral_tables;
 
-    for ( const auto& df : peripheral_dfs )
+    for ( const auto& df : _peripheral_dfs )
         {
             const auto table =
                 extract_table<typename FeatureLearnerType::DataFrameType>(
@@ -625,35 +653,30 @@ std::pair<
     typename FeatureLearnerType::DataFrameType,
     std::vector<typename FeatureLearnerType::DataFrameType>>
 FeatureLearner<FeatureLearnerType>::extract_tables_by_colnames(
-    const Poco::JSON::Object& _cmd,
-    const std::map<std::string, containers::DataFrame>& _data_frames ) const
+    const containers::DataFrame& _population_df,
+    const std::vector<containers::DataFrame>& _peripheral_dfs ) const
 {
-    // ------------------------------------------------
-
-    const auto [population_df, peripheral_dfs] =
-        extract_data_frames( _cmd, _data_frames );
-
     // -------------------------------------------------------------------------
 
     const auto population_schema = feature_learner().population_schema();
 
     const auto population_table =
         extract_table_by_colnames<typename FeatureLearnerType::DataFrameType>(
-            population_schema, population_df );
+            population_schema, _population_df );
 
     // ------------------------------------------------
 
     const auto peripheral_schema = feature_learner().peripheral_schema();
 
-    if ( peripheral_schema.size() != peripheral_dfs.size() )
+    if ( peripheral_schema.size() != _peripheral_dfs.size() )
         {
             const auto expected = FeatureLearnerType::is_time_series_
                                       ? peripheral_schema.size() - 1
                                       : peripheral_schema.size();
 
             const auto got = FeatureLearnerType::is_time_series_
-                                 ? peripheral_dfs.size() - 1
-                                 : peripheral_dfs.size();
+                                 ? _peripheral_dfs.size() - 1
+                                 : _peripheral_dfs.size();
 
             throw std::invalid_argument(
                 "Expected " + std::to_string( expected ) +
@@ -666,11 +689,11 @@ FeatureLearner<FeatureLearnerType>::extract_tables_by_colnames(
 
     for ( size_t i = 0; i < peripheral_schema.size(); ++i )
         {
-            const auto df = extract_table_by_colnames<
+            const auto table = extract_table_by_colnames<
                 typename FeatureLearnerType::DataFrameType>(
-                peripheral_schema.at( i ), peripheral_dfs.at( i ) );
+                peripheral_schema.at( i ), _peripheral_dfs.at( i ) );
 
-            peripheral_tables.push_back( df );
+            peripheral_tables.push_back( table );
         }
 
     // ------------------------------------------------
@@ -713,8 +736,13 @@ void FeatureLearner<FeatureLearnerType>::fit(
 {
     // ------------------------------------------------
 
+    const auto [population_df, peripheral_dfs] =
+        extract_data_frames( _cmd, _data_frames );
+
+    // ------------------------------------------------
+
     const auto [population_table, peripheral_tables] =
-        extract_tables( _cmd, _data_frames, _target_num );
+        extract_tables( population_df, peripheral_dfs, _target_num );
 
     // ------------------------------------------------
 
@@ -806,8 +834,11 @@ containers::Features FeatureLearner<FeatureLearnerType>::transform(
     const std::map<std::string, containers::DataFrame>& _data_frames,
     Poco::Net::StreamSocket* _socket ) const
 {
+    const auto [population_df, peripheral_dfs] =
+        extract_data_frames( _cmd, _data_frames );
+
     const auto [population_table, peripheral_tables] =
-        extract_tables_by_colnames( _cmd, _data_frames );
+        extract_tables_by_colnames( population_df, peripheral_dfs );
 
     return feature_learner().transform(
         population_table, peripheral_tables, _index, _logger );

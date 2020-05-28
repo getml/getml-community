@@ -32,6 +32,13 @@ class AbstractFeatureLearner
     // --------------------------------------------------------
 
    public:
+    /// If this is a time series model, this will add the data necessary for the
+    /// self joins. Otherwise, it will just return the original data
+    virtual std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
+    add_self_joins(
+        const containers::DataFrame& _population,
+        const std::vector<containers::DataFrame>& _peripheral ) const = 0;
+
     /// Creates a deep copy.
     virtual std::shared_ptr<AbstractFeatureLearner> clone() const = 0;
 
@@ -50,8 +57,15 @@ class AbstractFeatureLearner
     /// Whether this is a classification problem.
     virtual bool is_classification() const = 0;
 
+    /// Whether this is a time series model (based on a self-join).
+    virtual bool is_time_series() const = 0;
+
     /// Loads the feature learner from a file designated by _fname.
     virtual void load( const std::string& _fname ) = 0;
+
+    /// Returns the placeholder not as passed by the user, but as seen by the
+    /// feature learner (the difference matters for time series).
+    virtual Poco::JSON::Object make_placeholder() const = 0;
 
     /// Returns the number of features in the feature learner.
     virtual size_t num_features() const = 0;
