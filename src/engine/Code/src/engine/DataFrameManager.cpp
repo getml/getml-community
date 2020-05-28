@@ -1735,13 +1735,17 @@ void DataFrameManager::get_data_frame_html(
 {
     const auto max_rows = JSON::get_value<std::int32_t>( _cmd, "max_rows_" );
 
+    const auto border = JSON::get_value<std::int32_t>( _cmd, "border_" );
+
     multithreading::ReadLock read_lock( read_write_lock_ );
 
     const auto& df = utils::Getter::get( _name, &data_frames() );
 
-    const auto str = df.get_html( max_rows );
+    const auto str = df.get_html( max_rows, border );
 
     read_lock.unlock();
+
+    communication::Sender::send_string( "Success!", _socket );
 
     communication::Sender::send_string( str, _socket );
 }

@@ -1471,7 +1471,8 @@ Poco::JSON::Object DataFrame::get_content(
 
 // ----------------------------------------------------------------------------
 
-std::string DataFrame::get_html( const std::int32_t _max_rows ) const
+std::string DataFrame::get_html(
+    const std::int32_t _max_rows, const std::int32_t _border ) const
 {
     // ------------------------------------------------------------------------
 
@@ -1481,7 +1482,8 @@ std::string DataFrame::get_html( const std::int32_t _max_rows ) const
 
     // ------------------------------------------------------------------------
 
-    std::string html = "<table border=\"1\" class=\"dataframe\">";
+    std::string html = "<table border=\"" + std::to_string( _border ) +
+                       "\" class=\"dataframe\">";
 
     // ------------------------------------------------------------------------
 
