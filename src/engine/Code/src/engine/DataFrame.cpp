@@ -1471,7 +1471,73 @@ Poco::JSON::Object DataFrame::get_content(
 
 // ----------------------------------------------------------------------------
 
-std::string DataFrame::get_string( const std::int32_t _n ) const
+std::string DataFrame::get_html( const std::int32_t _max_rows ) const
+{
+    // ------------------------------------------------------------------------
+
+    const auto rows = get_rows( _max_rows, -1 );
+
+    assert_true( rows.size() >= 2 );
+
+    // ------------------------------------------------------------------------
+
+    std::string html = "<table border=\"1\" class=\"dataframe\">";
+
+    // ------------------------------------------------------------------------
+
+    html += "<thead>";
+
+    for ( size_t i = 0; i < 2; ++i )
+        {
+            html += "<tr style=\"text-align: right;\">";
+
+            for ( const auto &field : rows.at( i ) )
+                {
+                    html += "<th>";
+                    html += field;
+                    html += "</th>";
+                }
+
+            html += "</tr>";
+        }
+
+    html += "</thead>";
+
+    // ------------------------------------------------------------------------
+
+    html += "<tbody>";
+
+    for ( size_t i = 2; i < rows.size(); ++i )
+        {
+            html += "<tr>";
+
+            for ( const auto &field : rows.at( i ) )
+                {
+                    html += "<td>";
+                    html += field;
+                    html += "</td>";
+                }
+
+            html += "</tr>";
+        }
+
+    html += "</tbody>";
+
+    // ------------------------------------------------------------------------
+
+    html += "</table>";
+
+    // ------------------------------------------------------------------------
+
+    return html;
+
+    // ------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<std::vector<std::string>> DataFrame::get_rows(
+    const std::int32_t _max_rows, const std::int32_t _max_cols ) const
 {
     // ------------------------------------------------------------------------
 
@@ -1527,15 +1593,16 @@ std::string DataFrame::get_string( const std::int32_t _n ) const
 
     // ------------------------------------------------------------------------
 
-    const auto truncate_row = []( const std::vector<std::string> &row ) {
-        if ( row.size() < 9 )
+    const auto truncate_row = [_max_cols](
+                                  const std::vector<std::string> &row ) {
+        if ( _max_cols <= 0 || row.size() < static_cast<size_t>( _max_cols ) )
             {
                 return row;
             }
         else
             {
-                auto truncated =
-                    std::vector<std::string>( row.begin(), row.begin() + 8 );
+                auto truncated = std::vector<std::string>(
+                    row.begin(), row.begin() + _max_cols - 1 );
                 truncated.push_back( "..." );
                 return truncated;
             }
@@ -1559,7 +1626,7 @@ std::string DataFrame::get_string( const std::int32_t _n ) const
 
     if ( nrows() > 0 )
         {
-            const auto obj = get_content( 1, 0, 20 );
+            const auto obj = get_content( 1, 0, _max_rows );
 
             const auto data = JSON::get_array( obj, "data" );
 
@@ -1587,7 +1654,7 @@ std::string DataFrame::get_string( const std::int32_t _n ) const
 
     // ------------------------------------------------------------------------
 
-    if ( _n < nrows() )
+    if ( _max_rows < nrows() )
         {
             auto row = std::vector<std::string>( colnames.size() );
 
@@ -1601,7 +1668,24 @@ std::string DataFrame::get_string( const std::int32_t _n ) const
 
     // ------------------------------------------------------------------------
 
-    auto max_sizes = std::vector<size_t>( colnames.size() );
+    return rows;
+
+    // ------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+std::string DataFrame::get_string( const std::int32_t _n ) const
+{
+    // ------------------------------------------------------------------------
+
+    const auto rows = get_rows( _n, 9 );
+
+    assert_true( rows.size() > 0 );
+
+    // ------------------------------------------------------------------------
+
+    auto max_sizes = std::vector<size_t>( rows[0].size() );
 
     for ( const auto &row : rows )
         {

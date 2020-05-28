@@ -280,7 +280,10 @@ void DataModelChecker::check_float_column(
 
     // --------------------------------------------------------------------------
 
-    const auto all_equal = is_all_equal( _col );
+    const bool is_comparison_only =
+        ( _col.unit().find( "comparison only" ) != std::string::npos );
+
+    const auto all_equal = !is_comparison_only && is_all_equal( _col );
 
     if ( all_equal )
         {
@@ -288,7 +291,9 @@ void DataModelChecker::check_float_column(
                 "All non-NULL entries in column '" + _col.name() +
                 "' in data frame '" + _df_name +
                 "' are equal to each other. You should "
-                "consider setting its role to unused_float." );
+                "consider setting its role to unused_float or using it for "
+                "comparison only (you can do the latter by setting a unit "
+                "that contains 'comparison only')." );
         }
 
     // --------------------------------------------------------------------------
@@ -927,7 +932,8 @@ void DataModelChecker::raise_self_join_warnings(
                 " matches.  This can take a long time to fit. "
                 "You should consider imposing a narrower limit on the scope of "
                 "this join by reducing the memory (the period of time until "
-                "the time series feature learner 'forgets' past data). You can "
+                "the time series feature learner 'forgets' historical data). "
+                "You can "
                 "do so by setting the appropriate hyperparameter in the "
                 "feature learner. Please note that a memory of 0.0 means that "
                 "the time series feature learner will not forget any past "

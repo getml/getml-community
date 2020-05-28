@@ -1728,6 +1728,26 @@ void DataFrameManager::get_data_frame_content(
 
 // ------------------------------------------------------------------------
 
+void DataFrameManager::get_data_frame_html(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    const auto max_rows = JSON::get_value<std::int32_t>( _cmd, "max_rows_" );
+
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    const auto& df = utils::Getter::get( _name, &data_frames() );
+
+    const auto str = df.get_html( max_rows );
+
+    read_lock.unlock();
+
+    communication::Sender::send_string( str, _socket );
+}
+
+// ------------------------------------------------------------------------
+
 void DataFrameManager::get_data_frame_string(
     const std::string& _name, Poco::Net::StreamSocket* _socket )
 {

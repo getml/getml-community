@@ -166,6 +166,12 @@ class DataFrameManager
     /// Sends a data frame back to the client, column-by-column.
     void get_data_frame( Poco::Net::StreamSocket* _socket );
 
+    /// Expresses the data frame in HTML format, for a Jupyter notebook.
+    void get_data_frame_html(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
     /// Expresses the data frame as a string.
     void get_data_frame_string(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
