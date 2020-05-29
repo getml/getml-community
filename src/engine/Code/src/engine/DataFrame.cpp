@@ -1471,75 +1471,95 @@ Poco::JSON::Object DataFrame::get_content(
 
 // ----------------------------------------------------------------------------
 
-std::string DataFrame::get_html(
-    const std::int32_t _max_rows, const std::int32_t _border ) const
+std::tuple<
+    std::vector<std::string>,
+    std::vector<std::string>,
+    std::vector<std::string>>
+DataFrame::get_headers() const
 {
     // ------------------------------------------------------------------------
 
-    const auto rows = get_rows( _max_rows, -1 );
+    std::vector<std::string> colnames;
 
-    assert_true( rows.size() >= 2 );
+    std::vector<std::string> roles;
 
-    // ------------------------------------------------------------------------
-
-    std::string html = "<table border=\"" + std::to_string( _border ) +
-                       "\" class=\"dataframe\">";
+    std::vector<std::string> units;
 
     // ------------------------------------------------------------------------
 
-    html += "<thead>";
-
-    for ( size_t i = 0; i < 2; ++i )
+    for ( size_t j = 0; j < num_time_stamps(); ++j )
         {
-            html += "<tr style=\"text-align: right;\">";
-
-            for ( const auto &field : rows.at( i ) )
-                {
-                    html += "<th>";
-                    html += field;
-                    html += "</th>";
-                }
-
-            html += "</tr>";
+            colnames.push_back( time_stamp( j ).name() );
+            roles.push_back( "time stamp" );
+            units.push_back( time_stamp( j ).unit() );
         }
 
-    html += "</thead>";
-
-    // ------------------------------------------------------------------------
-
-    html += "<tbody>";
-
-    for ( size_t i = 2; i < rows.size(); ++i )
+    for ( size_t j = 0; j < num_join_keys(); ++j )
         {
-            html += "<tr>";
-
-            for ( const auto &field : rows.at( i ) )
-                {
-                    html += "<td>";
-                    html += field;
-                    html += "</td>";
-                }
-
-            html += "</tr>";
+            colnames.push_back( join_key( j ).name() );
+            roles.push_back( "join key" );
+            units.push_back( join_key( j ).unit() );
         }
 
-    html += "</tbody>";
+    for ( size_t j = 0; j < num_targets(); ++j )
+        {
+            colnames.push_back( target( j ).name() );
+            roles.push_back( "target" );
+            units.push_back( target( j ).unit() );
+        }
+
+    for ( size_t j = 0; j < num_categoricals(); ++j )
+        {
+            colnames.push_back( categorical( j ).name() );
+            roles.push_back( "categorical" );
+            units.push_back( categorical( j ).unit() );
+        }
+
+    for ( size_t j = 0; j < num_numericals(); ++j )
+        {
+            colnames.push_back( numerical( j ).name() );
+            roles.push_back( "numerical" );
+            units.push_back( numerical( j ).unit() );
+        }
+
+    for ( size_t j = 0; j < num_unused_floats(); ++j )
+        {
+            colnames.push_back( unused_float( j ).name() );
+            roles.push_back( "unused float" );
+            units.push_back( unused_float( j ).unit() );
+        }
+
+    for ( size_t j = 0; j < num_unused_strings(); ++j )
+        {
+            colnames.push_back( unused_string( j ).name() );
+            roles.push_back( "unused string" );
+            units.push_back( unused_string( j ).unit() );
+        }
 
     // ------------------------------------------------------------------------
 
-    html += "</table>";
-
-    // ------------------------------------------------------------------------
-
-    return html;
+    return std::make_tuple( colnames, roles, units );
 
     // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
 
+std::string DataFrame::get_html(
+    const std::int32_t _max_rows, const std::int32_t _border ) const
+{
+    const auto [colnames, roles, units] = get_headers();
+
+    const auto rows = get_rows( _max_rows );
+
+    return DataFramePrinter( nrows(), ncols() )
+        .get_html( colnames, roles, units, rows, _border );
+}
+
+// ----------------------------------------------------------------------------
+
 std::vector<std::vector<std::string>> DataFrame::get_rows(
-    const std::int32_t _max_rows, const std::int32_t _max_cols ) const
+    const std::int32_t _max_rows ) const
 {
     // ------------------------------------------------------------------------
 
@@ -1547,118 +1567,45 @@ std::vector<std::vector<std::string>> DataFrame::get_rows(
 
     // ------------------------------------------------------------------------
 
-    std::vector<std::string> colnames;
-
-    std::vector<std::string> roles;
-
-    for ( size_t j = 0; j < num_time_stamps(); ++j )
+    if ( nrows() == 0 || _max_rows <= 0 )
         {
-            colnames.push_back( time_stamp( j ).name() );
-            roles.push_back( "time stamp" );
-        }
-
-    for ( size_t j = 0; j < num_join_keys(); ++j )
-        {
-            colnames.push_back( join_key( j ).name() );
-            roles.push_back( "join key" );
-        }
-
-    for ( size_t j = 0; j < num_targets(); ++j )
-        {
-            colnames.push_back( target( j ).name() );
-            roles.push_back( "target" );
-        }
-
-    for ( size_t j = 0; j < num_categoricals(); ++j )
-        {
-            colnames.push_back( categorical( j ).name() );
-            roles.push_back( "categorical" );
-        }
-
-    for ( size_t j = 0; j < num_numericals(); ++j )
-        {
-            colnames.push_back( numerical( j ).name() );
-            roles.push_back( "numerical" );
-        }
-
-    for ( size_t j = 0; j < num_unused_floats(); ++j )
-        {
-            colnames.push_back( unused_float( j ).name() );
-            roles.push_back( "unused float" );
-        }
-
-    for ( size_t j = 0; j < num_unused_strings(); ++j )
-        {
-            colnames.push_back( unused_string( j ).name() );
-            roles.push_back( "unused string" );
+            return rows;
         }
 
     // ------------------------------------------------------------------------
 
-    const auto truncate_row = [_max_cols](
-                                  const std::vector<std::string> &row ) {
-        if ( _max_cols <= 0 || row.size() < static_cast<size_t>( _max_cols ) )
-            {
-                return row;
-            }
-        else
-            {
-                auto truncated = std::vector<std::string>(
-                    row.begin(), row.begin() + _max_cols - 1 );
-                truncated.push_back( "..." );
-                return truncated;
-            }
-    };
+    const auto obj = get_content( 1, 0, _max_rows );
 
-    // ------------------------------------------------------------------------
+    const auto data = JSON::get_array( obj, "data" );
 
-    colnames = truncate_row( colnames );
+    assert_true( data );
 
-    roles = truncate_row( roles );
-
-    // ------------------------------------------------------------------------
-
-    assert_true( colnames.size() == roles.size() );
-
-    rows.push_back( colnames );
-
-    rows.push_back( roles );
-
-    // ------------------------------------------------------------------------
-
-    if ( nrows() > 0 )
+    for ( size_t i = 0; i < data->size(); ++i )
         {
-            const auto obj = get_content( 1, 0, _max_rows );
+            const auto json_row =
+                data->getArray( static_cast<unsigned int>( i ) );
 
-            const auto data = JSON::get_array( obj, "data" );
+            assert_true( json_row );
 
-            assert_true( data );
+            assert_true( json_row->size() == ncols() );
 
-            for ( size_t i = 0; i < data->size(); ++i )
+            auto row = std::vector<std::string>( json_row->size() );
+
+            for ( size_t j = 0; j < row.size(); ++j )
                 {
-                    const auto json_row =
-                        data->getArray( static_cast<unsigned int>( i ) );
-
-                    assert_true( json_row );
-
-                    assert_true( json_row->size() == ncols() );
-
-                    auto row = std::vector<std::string>( json_row->size() );
-
-                    for ( size_t j = 0; j < row.size(); ++j )
-                        {
-                            row[j] = json_row->getElement<std::string>( j );
-                        }
-
-                    rows.emplace_back( truncate_row( row ) );
+                    row[j] = json_row->getElement<std::string>( j );
                 }
+
+            rows.emplace_back( row );
         }
 
     // ------------------------------------------------------------------------
 
     if ( _max_rows < nrows() )
         {
-            auto row = std::vector<std::string>( colnames.size() );
+            assert_true( rows.size() > 0 );
+
+            auto row = std::vector<std::string>( rows.at( 0 ) );
 
             for ( auto &r : row )
                 {
@@ -1677,75 +1624,14 @@ std::vector<std::vector<std::string>> DataFrame::get_rows(
 
 // ----------------------------------------------------------------------------
 
-std::string DataFrame::get_string( const std::int32_t _n ) const
+std::string DataFrame::get_string( const std::int32_t _max_rows ) const
 {
-    // ------------------------------------------------------------------------
+    const auto [colnames, roles, units] = get_headers();
 
-    const auto rows = get_rows( _n, 9 );
+    const auto rows = get_rows( _max_rows );
 
-    assert_true( rows.size() > 0 );
-
-    // ------------------------------------------------------------------------
-
-    auto max_sizes = std::vector<size_t>( rows[0].size() );
-
-    for ( const auto &row : rows )
-        {
-            for ( size_t j = 0; j < row.size(); ++j )
-                {
-                    if ( row[j].size() > max_sizes[j] )
-                        {
-                            max_sizes[j] = row[j].size();
-                        }
-                }
-        }
-
-    // ------------------------------------------------------------------------
-
-    std::string result;
-
-    for ( size_t i = 0; i < rows.size(); ++i )
-        {
-            const auto &row = rows[i];
-
-            result += "| ";
-
-            for ( size_t j = 0; j < row.size(); ++j )
-                {
-                    result += row[j];
-
-                    assert_true( max_sizes[j] >= row[j].size() );
-
-                    const auto n_fill = max_sizes[j] - row[j].size() + 1;
-
-                    result += std::string( n_fill, ' ' );
-
-                    if ( j < row.size() - 1 || row.size() == ncols() )
-                        {
-                            result += "| ";
-                        }
-                }
-
-            result += "\n";
-
-            if ( i == 1 )
-                {
-                    const auto length =
-                        std::accumulate(
-                            max_sizes.begin(), max_sizes.end(), 0 ) +
-                        max_sizes.size() * 3 + 1;
-
-                    result += std::string( length, '-' );
-
-                    result += "\n";
-                }
-        }
-
-    // ------------------------------------------------------------------------
-
-    return result;
-
-    // ------------------------------------------------------------------------
+    return DataFramePrinter( nrows(), ncols() )
+        .get_string( colnames, roles, units, rows );
 }
 
 // ----------------------------------------------------------------------------

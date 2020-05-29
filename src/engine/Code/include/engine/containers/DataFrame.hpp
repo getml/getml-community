@@ -145,10 +145,11 @@ class DataFrame
 
     /// Returns the first _n rows as a html that is compatible with Jupyter
     /// notebooks.
-    std::string get_html( const std::int32_t _max_rows ) const;
+    std::string get_html(
+        const std::int32_t _max_rows, const std::int32_t _border ) const;
 
     /// Returns the first _n rows as a formatted string.
-    std::string get_string( const std::int32_t _n ) const;
+    std::string get_string( const std::int32_t _max_rows ) const;
 
     /// Getter for an int_column (either join keys or categorical)
     const Column<Int> &int_column(
@@ -740,9 +741,16 @@ class DataFrame
     Poco::JSON::Array::Ptr get_colnames(
         const std::vector<Column<T>> &_columns ) const;
 
+    /// Returns the colnames, roles and units of columns.
+    std::tuple<
+        std::vector<std::string>,
+        std::vector<std::string>,
+        std::vector<std::string>>
+    get_headers() const;
+
     /// Represents the first _max rows as a set of rows.
     std::vector<std::vector<std::string>> get_rows(
-        const std::int32_t _max_rows, const std::int32_t _max_cols ) const;
+        const std::int32_t _max_rows ) const;
 
     /// Returns the units of a vector of columns
     template <class T>

@@ -64,6 +64,8 @@
 
 #include "engine/containers/DataFrameIndex.hpp"
 
+#include "engine/containers/DataFramePrinter.hpp"
+
 #include "engine/containers/DataFrame.hpp"
 
 #include "engine/containers/DataFrameReader.hpp"
