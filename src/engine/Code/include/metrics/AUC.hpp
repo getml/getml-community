@@ -16,9 +16,38 @@ class AUC : public Metric
 
     // ------------------------------------------------------------------------
 
+   public:
     /// This calculates the loss based on the predictions _yhat
     /// and the targets _y.
     Poco::JSON::Object score( const Features _yhat, const Features _y ) final;
+
+    // ------------------------------------------------------------------------
+
+   private:
+    Float calc_auc(
+        const std::vector<Float>& _true_positive_rate,
+        const std::vector<Float>& _false_positive_rate ) const;
+
+    std::vector<Float> calc_false_positives(
+        const std::vector<Float>& _true_positives,
+        const std::vector<Float>& _predicted_negative ) const;
+
+    std::vector<Float> calc_rate(
+        const std::vector<Float>& _raw, const Float _all ) const;
+
+    std::pair<std::vector<Float>, Float> calc_true_positives_uncompressed(
+        const std::vector<std::pair<Float, Float>>& _pairs ) const;
+
+    std::pair<std::vector<Float>, std::vector<Float>> compress(
+        const std::vector<std::pair<Float, Float>>& _pairs,
+        const std::vector<Float>& _true_positives_uncompressed,
+        const Float _all_positives ) const;
+
+    std::vector<Float> downsample( const std::vector<Float>& _original ) const;
+
+    std::pair<Float, Float> find_min_max( const size_t _j ) const;
+
+    std::vector<std::pair<Float, Float>> make_pairs( const size_t _j ) const;
 
     // ------------------------------------------------------------------------
 
