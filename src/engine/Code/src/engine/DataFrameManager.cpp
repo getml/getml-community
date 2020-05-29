@@ -2204,11 +2204,18 @@ void DataFrameManager::set_unit_categorical(
 
     auto& df = utils::Getter::get( df_name, &data_frames() );
 
-    auto column = df.int_column( _name, role );
-
-    column.set_unit( unit );
-
-    df.add_int_column( column, role );
+    if ( role == "unused" || role == "unused_string" )
+        {
+            auto column = df.unused_string( _name );
+            column.set_unit( unit );
+            df.add_string_column( column );
+        }
+    else
+        {
+            auto column = df.int_column( _name, role );
+            column.set_unit( unit );
+            df.add_int_column( column, role );
+        }
 
     monitor_->send( "postdataframe", df.to_monitor() );
 
