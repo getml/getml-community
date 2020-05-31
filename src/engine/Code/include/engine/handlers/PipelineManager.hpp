@@ -75,8 +75,27 @@ class PipelineManager
     void launch_hyperopt(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
 
+    /// Writes a JSON representation of the lift curve into the socket.
+    void lift_curve(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
+    /// Writes a JSON representation of the precision-recall curve into the
+    /// socket.
+    void precision_recall_curve(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
     /// Refreshes a pipeline in the target language
     void refresh( const std::string& _name, Poco::Net::StreamSocket* _socket );
+
+    /// Writes a JSON representation of the ROC curve into the socket.
+    void roc_curve(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
 
     /// Transform a pipeline to a JSON string
     void to_json( const std::string& _name, Poco::Net::StreamSocket* _socket );
@@ -93,6 +112,12 @@ class PipelineManager
     // ------------------------------------------------------------------------
 
    private:
+    /// Retrieves an Poco::JSON::Array::Ptr from a scores object.
+    Poco::JSON::Array::Ptr get_array(
+        const Poco::JSON::Object& _scores,
+        const std::string& _name,
+        const unsigned int _target_num ) const;
+
     /// Receives data from the client. This data will not be stored permanently,
     /// but locally. Once the training/transformation process is complete, it
     /// will be deleted.

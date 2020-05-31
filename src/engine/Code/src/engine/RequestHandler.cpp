@@ -324,13 +324,26 @@ void RequestHandler::run()
                 {
                     pipeline_manager().fit( name, cmd, &socket() );
                 }
+            else if ( type == "Pipeline.lift_curve" )
+                {
+                    pipeline_manager().lift_curve( name, cmd, &socket() );
+                }
             else if ( type == "Pipeline.load" )
                 {
                     project_manager().load_pipeline( name, &socket() );
                 }
+            else if ( type == "Pipeline.precision_recall_curve" )
+                {
+                    pipeline_manager().precision_recall_curve(
+                        name, cmd, &socket() );
+                }
             else if ( type == "Pipeline.refresh" )
                 {
                     pipeline_manager().refresh( name, &socket() );
+                }
+            else if ( type == "Pipeline.roc_curve" )
+                {
+                    pipeline_manager().roc_curve( name, cmd, &socket() );
                 }
             else if ( type == "Pipeline.save" )
                 {

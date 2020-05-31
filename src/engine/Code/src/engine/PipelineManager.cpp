@@ -111,6 +111,104 @@ void PipelineManager::fit(
 
 // ------------------------------------------------------------------------
 
+Poco::JSON::Array::Ptr PipelineManager::get_array(
+    const Poco::JSON::Object& _scores,
+    const std::string& _name,
+    const unsigned int _target_num ) const
+{
+    const auto arr = JSON::get_array( _scores, _name );
+
+    if ( static_cast<size_t>( _target_num ) >= arr->size() )
+        {
+            std::string msg = "target_num_ out of bounds! Got " +
+                              std::to_string( _target_num ) + ", but '" +
+                              _name + "' has " + std::to_string( arr->size() ) +
+                              " entries.";
+
+            if ( arr->size() == 0 )
+                {
+                    msg += " Did you maybe for get to call .score(...)?";
+                }
+
+            throw std::invalid_argument( msg );
+        }
+
+    return arr->getArray( _target_num );
+}
+
+// ------------------------------------------------------------------------
+
+void PipelineManager::lift_curve(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    // -------------------------------------------------------
+
+    const auto target_num =
+        JSON::get_value<unsigned int>( _cmd, "target_num_" );
+
+    // -------------------------------------------------------
+
+    const auto pipeline = get_pipeline( _name );
+
+    const auto scores = pipeline.scores().to_json_obj();
+
+    // -------------------------------------------------------
+
+    Poco::JSON::Object response;
+
+    response.set(
+        "proportion_", get_array( scores, "proportion_", target_num ) );
+
+    response.set( "lift_", get_array( scores, "lift_", target_num ) );
+
+    // -------------------------------------------------------
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    communication::Sender::send_string( JSON::stringify( response ), _socket );
+
+    // -------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
+void PipelineManager::precision_recall_curve(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    // -------------------------------------------------------
+
+    const auto target_num =
+        JSON::get_value<unsigned int>( _cmd, "target_num_" );
+
+    // -------------------------------------------------------
+
+    const auto pipeline = get_pipeline( _name );
+
+    const auto scores = pipeline.scores().to_json_obj();
+
+    // -------------------------------------------------------
+
+    Poco::JSON::Object response;
+
+    response.set( "precision_", get_array( scores, "precision_", target_num ) );
+
+    response.set( "tpr_", get_array( scores, "tpr_", target_num ) );
+
+    // -------------------------------------------------------
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    communication::Sender::send_string( JSON::stringify( response ), _socket );
+
+    // -------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
 Poco::JSON::Object PipelineManager::receive_data(
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<containers::Encoding>& _categories,
@@ -200,6 +298,41 @@ void PipelineManager::refresh(
     const auto obj = pipeline.obj();
 
     communication::Sender::send_string( JSON::stringify( obj ), _socket );
+}
+
+// ------------------------------------------------------------------------
+
+void PipelineManager::roc_curve(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    // -------------------------------------------------------
+
+    const auto target_num =
+        JSON::get_value<unsigned int>( _cmd, "target_num_" );
+
+    // -------------------------------------------------------
+
+    const auto pipeline = get_pipeline( _name );
+
+    const auto scores = pipeline.scores().to_json_obj();
+
+    // -------------------------------------------------------
+
+    Poco::JSON::Object response;
+
+    response.set( "fpr_", get_array( scores, "fpr_", target_num ) );
+
+    response.set( "tpr_", get_array( scores, "tpr_", target_num ) );
+
+    // -------------------------------------------------------
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    communication::Sender::send_string( JSON::stringify( response ), _socket );
+
+    // -------------------------------------------------------
 }
 
 // ------------------------------------------------------------------------
