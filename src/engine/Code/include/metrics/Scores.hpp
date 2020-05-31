@@ -117,6 +117,30 @@ class Scores
     const std::vector<std::vector<Float>>& labels() const { return labels_; }
 
     /// Trivial accessor
+    std::vector<std::vector<Float>>& lift() { return lift_; }
+
+    /// Trivial accessor
+    const std::vector<std::vector<Float>>& lift() const { return lift_; }
+
+    /// Trivial accessor
+    std::vector<std::vector<Float>>& precision() { return precision_; }
+
+    /// Trivial accessor
+    const std::vector<std::vector<Float>>& precision() const
+    {
+        return precision_;
+    }
+
+    /// Trivial accessor
+    std::vector<std::vector<Float>>& proportion() { return proportion_; }
+
+    /// Trivial accessor
+    const std::vector<std::vector<Float>>& proportion() const
+    {
+        return proportion_;
+    }
+
+    /// Trivial accessor
     std::vector<std::vector<Float>>& tpr() { return tpr_; }
 
     /// Trivial accessor
@@ -158,14 +182,23 @@ class Scores
     /// Min, max and step_size for feature_densities and average targets.
     std::vector<std::vector<Float>> labels_;
 
+    /// The lift (for classification problems)
+    std::vector<std::vector<Float>> lift_;
+
     /// Mean absolute error
     std::vector<Float> mae_;
+
+    /// Precision
+    std::vector<std::vector<Float>> precision_;
 
     /// Minimum prediction - needed for plotting the accuracy.
     std::vector<Float> prediction_min_;
 
     /// Stepsize - needed for plotting the accuracy.
     std::vector<Float> prediction_step_size_;
+
+    /// Proportion of samples called (for the lift curve)
+    std::vector<std::vector<Float>> proportion_;
 
     /// Root mean squared error
     std::vector<Float> rmse_;

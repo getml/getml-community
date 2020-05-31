@@ -193,6 +193,21 @@ void Scores::from_json_obj( const Poco::JSON::Object& _json_obj )
 
     // -------------------------
 
+    if ( !_json_obj.getArray( "lift_" ).isNull() )
+        {
+            lift().clear();
+
+            auto arr = jsonutils::JSON::get_array( _json_obj, "lift_" );
+
+            for ( size_t i = 0; i < arr->size(); ++i )
+                {
+                    lift().push_back( jsonutils::JSON::array_to_vector<Float>(
+                        arr->getArray( static_cast<unsigned int>( i ) ) ) );
+                }
+        }
+
+    // -------------------------
+
     if ( !_json_obj.getArray( "labels_" ).isNull() )
         {
             labels_.clear();
@@ -203,6 +218,38 @@ void Scores::from_json_obj( const Poco::JSON::Object& _json_obj )
                 {
                     labels_.push_back( jsonutils::JSON::array_to_vector<Float>(
                         arr->getArray( static_cast<unsigned int>( i ) ) ) );
+                }
+        }
+
+    // -------------------------
+
+    if ( !_json_obj.getArray( "precision_" ).isNull() )
+        {
+            precision().clear();
+
+            auto arr = jsonutils::JSON::get_array( _json_obj, "precision_" );
+
+            for ( size_t i = 0; i < arr->size(); ++i )
+                {
+                    precision().push_back(
+                        jsonutils::JSON::array_to_vector<Float>(
+                            arr->getArray( static_cast<unsigned int>( i ) ) ) );
+                }
+        }
+
+    // -------------------------
+
+    if ( !_json_obj.getArray( "proportion_" ).isNull() )
+        {
+            proportion().clear();
+
+            auto arr = jsonutils::JSON::get_array( _json_obj, "proportion_" );
+
+            for ( size_t i = 0; i < arr->size(); ++i )
+                {
+                    proportion().push_back(
+                        jsonutils::JSON::array_to_vector<Float>(
+                            arr->getArray( static_cast<unsigned int>( i ) ) ) );
                 }
         }
 
@@ -336,6 +383,39 @@ Poco::JSON::Object Scores::to_json_obj() const
     Poco::JSON::Array labels_arr = jsonutils::JSON::vector_to_array( labels() );
 
     obj.set( "labels_", labels_arr );
+
+    // -------------------------
+
+    auto lift_arr = Poco::JSON::Array();
+
+    for ( auto& vec : lift() )
+        {
+            lift_arr.add( jsonutils::JSON::vector_to_array_ptr( vec ) );
+        }
+
+    obj.set( "lift_", lift_arr );
+
+    // -------------------------
+
+    auto precision_arr = Poco::JSON::Array();
+
+    for ( auto& vec : precision() )
+        {
+            precision_arr.add( jsonutils::JSON::vector_to_array_ptr( vec ) );
+        }
+
+    obj.set( "precision_", precision_arr );
+
+    // -------------------------
+
+    auto proportion_arr = Poco::JSON::Array();
+
+    for ( auto& vec : proportion() )
+        {
+            proportion_arr.add( jsonutils::JSON::vector_to_array_ptr( vec ) );
+        }
+
+    obj.set( "proportion_", proportion_arr );
 
     // -------------------------
 

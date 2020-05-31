@@ -44,6 +44,64 @@ std::vector<Float> AUC::calc_false_positives(
 
 // ----------------------------------------------------------------------------
 
+std::pair<std::vector<Float>, std::vector<Float>> AUC::calc_lift(
+    const std::vector<Float>& _precision,
+    const std::vector<Float>& _predicted_negative,
+    const Float _all_negatives ) const
+{
+    const auto nrows_float = static_cast<Float>( nrows() );
+
+    const auto positive_share = ( nrows_float - _all_negatives ) / nrows_float;
+
+    std::vector<Float> lift;
+
+    std::vector<Float> proportion;
+
+    for ( size_t i = 0; i < _precision.size(); ++i )
+        {
+            if ( positive_share > 0.0 )
+                {
+                    lift.push_back( _precision.at( i ) / positive_share );
+
+                    proportion.push_back(
+                        1.0 - _predicted_negative.at( i ) / nrows_float );
+                }
+        }
+
+    return std::make_pair( lift, proportion );
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<Float> AUC::calc_precision(
+    const std::vector<Float>& _true_positives,
+    const std::vector<Float>& _predicted_negative ) const
+{
+    const auto nrows_float = static_cast<Float>( nrows() );
+
+    std::vector<Float> precision( _true_positives.size() );
+
+    for ( size_t i = 0; i < _true_positives.size(); ++i )
+        {
+            const auto predicted_positive =
+                nrows_float - _predicted_negative.at( i );
+
+            if ( predicted_positive > 0.0 )
+                {
+                    precision.at( i ) =
+                        _true_positives.at( i ) / predicted_positive;
+                }
+            else
+                {
+                    precision.at( i ) = 1.0;
+                }
+        }
+
+    return precision;
+}
+
+// ----------------------------------------------------------------------------
+
 std::vector<Float> AUC::calc_rate(
     const std::vector<Float>& _raw, const Float _all ) const
 {
@@ -171,6 +229,61 @@ std::pair<Float, Float> AUC::find_min_max( const size_t _j ) const
 
 // ----------------------------------------------------------------------------
 
+void AUC::make_default_values(
+    Poco::JSON::Array::Ptr _true_positive_arr,
+    Poco::JSON::Array::Ptr _false_positive_arr,
+    Poco::JSON::Array::Ptr _lift_arr,
+    Poco::JSON::Array::Ptr _precision_arr,
+    Poco::JSON::Array::Ptr _proportion_arr,
+    Float* _auc ) const
+{
+    _true_positive_arr->add( jsonutils::JSON::vector_to_array_ptr(
+        std::vector<Float>( { 1.0, 0.0 } ) ) );
+
+    _false_positive_arr->add( jsonutils::JSON::vector_to_array_ptr(
+        std::vector<Float>( { 0.0, 1.0 } ) ) );
+
+    _lift_arr->add( jsonutils::JSON::vector_to_array_ptr(
+        std::vector<Float>( { 1.0, 1.0 } ) ) );
+
+    _precision_arr->add( jsonutils::JSON::vector_to_array_ptr(
+        std::vector<Float>( { 0.0, 0.0 } ) ) );
+
+    _proportion_arr->add( jsonutils::JSON::vector_to_array_ptr(
+        std::vector<Float>( { 0.0, 1.0 } ) ) );
+
+    *_auc = 0.5;
+}
+
+// ----------------------------------------------------------------------------
+
+Poco::JSON::Object AUC::make_object(
+    const Poco::JSON::Array::Ptr _true_positive_arr,
+    const Poco::JSON::Array::Ptr _false_positive_arr,
+    const Poco::JSON::Array::Ptr _lift_arr,
+    const Poco::JSON::Array::Ptr _precision_arr,
+    const Poco::JSON::Array::Ptr _proportion_arr,
+    const std::vector<Float>& _auc ) const
+{
+    Poco::JSON::Object obj;
+
+    obj.set( "auc_", jsonutils::JSON::vector_to_array_ptr( _auc ) );
+
+    obj.set( "fpr_", _false_positive_arr );
+
+    obj.set( "tpr_", _true_positive_arr );
+
+    obj.set( "lift_", _lift_arr );
+
+    obj.set( "precision_", _precision_arr );
+
+    obj.set( "proportion_", _proportion_arr );
+
+    return obj;
+}
+
+// ----------------------------------------------------------------------------
+
 std::vector<std::pair<Float, Float>> AUC::make_pairs( const size_t _j ) const
 {
     // ---------------------------------------------
@@ -223,6 +336,12 @@ Poco::JSON::Object AUC::score( const Features _yhat, const Features _y )
 
     auto false_positive_arr = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
 
+    auto lift_arr = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
+
+    auto precision_arr = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
+
+    auto proportion_arr = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
+
     // -----------------------------------------------------
 
     for ( size_t j = 0; j < ncols(); ++j )
@@ -235,15 +354,13 @@ Poco::JSON::Object AUC::score( const Features _yhat, const Features _y )
 
             if ( yhat_min == yhat_max )
                 {
-                    true_positive_arr->add(
-                        jsonutils::JSON::vector_to_array_ptr(
-                            std::vector<Float>( { 1.0, 0.0 } ) ) );
-
-                    false_positive_arr->add(
-                        jsonutils::JSON::vector_to_array_ptr(
-                            std::vector<Float>( { 0.0, 1.0 } ) ) );
-
-                    auc[j] = 0.5;
+                    make_default_values(
+                        true_positive_arr,
+                        false_positive_arr,
+                        lift_arr,
+                        precision_arr,
+                        proportion_arr,
+                        &auc.at( j ) );
 
                     continue;
                 }
@@ -274,6 +391,16 @@ Poco::JSON::Object AUC::score( const Features _yhat, const Features _y )
 
             // ---------------------------------------------
 
+            const auto precision =
+                calc_precision( true_positives, predicted_negative );
+
+            // ---------------------------------------------
+
+            const auto [lift, proportion] =
+                calc_lift( precision, predicted_negative, all_negatives );
+
+            // ---------------------------------------------
+
             auc[j] = calc_auc( true_positive_rate, false_positive_rate );
 
             // ---------------------------------------------
@@ -281,6 +408,12 @@ Poco::JSON::Object AUC::score( const Features _yhat, const Features _y )
             const auto tpr_downsampled = downsample( true_positive_rate );
 
             const auto fpr_downsampled = downsample( false_positive_rate );
+
+            const auto lift_downsampled = downsample( lift );
+
+            const auto precision_downsampled = downsample( precision );
+
+            const auto proportion_downsampled = downsample( proportion );
 
             // -----------------------------------------------------
 
@@ -290,22 +423,29 @@ Poco::JSON::Object AUC::score( const Features _yhat, const Features _y )
             false_positive_arr->add(
                 jsonutils::JSON::vector_to_array_ptr( fpr_downsampled ) );
 
+            lift_arr->add(
+                jsonutils::JSON::vector_to_array_ptr( lift_downsampled ) );
+
+            precision_arr->add(
+                jsonutils::JSON::vector_to_array_ptr( precision_downsampled ) );
+
+            proportion_arr->add( jsonutils::JSON::vector_to_array_ptr(
+                proportion_downsampled ) );
+
             // ---------------------------------------------
         }
 
     // -----------------------------------------------------
 
-    Poco::JSON::Object obj;
-
-    obj.set( "auc_", jsonutils::JSON::vector_to_array_ptr( auc ) );
-
-    obj.set( "fpr_", false_positive_arr );
-
-    obj.set( "tpr_", true_positive_arr );
+    return make_object(
+        true_positive_arr,
+        false_positive_arr,
+        lift_arr,
+        precision_arr,
+        proportion_arr,
+        auc );
 
     // -----------------------------------------------------
-
-    return obj;
 }
 
 // ----------------------------------------------------------------------------
