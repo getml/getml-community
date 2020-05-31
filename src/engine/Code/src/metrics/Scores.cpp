@@ -9,264 +9,71 @@ void Scores::from_json_obj( const Poco::JSON::Object& _json_obj )
     // -------------------------
 
     accuracy_.clear();
+
     auc_.clear();
+
     cross_entropy_.clear();
+
     mae_.clear();
+
     rmse_.clear();
+
     rsquared_.clear();
 
     // -------------------------
 
     prediction_min_.clear();
+
     prediction_step_size_.clear();
 
     // -------------------------
 
-    if ( _json_obj.has( "prediction_min_" ) )
-        {
-            prediction_min_ = jsonutils::JSON::array_to_vector<Float>(
-                jsonutils::JSON::get_array( _json_obj, "prediction_min_" ) );
-        }
+    update_1d_vector( _json_obj, "prediction_min_", &prediction_min_ );
 
-    if ( _json_obj.has( "prediction_step_size_" ) )
-        {
-            prediction_step_size_ = jsonutils::JSON::array_to_vector<Float>(
-                jsonutils::JSON::get_array(
-                    _json_obj, "prediction_step_size_" ) );
-        }
+    update_1d_vector(
+        _json_obj, "prediction_step_size_", &prediction_step_size_ );
 
-    // -------------------------
+    update_1d_vector( _json_obj, "feature_names_", &feature_names_ );
 
-    if ( _json_obj.has( "feature_names_" ) )
-        {
-            feature_names_ = jsonutils::JSON::array_to_vector<std::string>(
-                jsonutils::JSON::get_array( _json_obj, "feature_names_" ) );
-        }
+    update_1d_vector( _json_obj, "accuracy_", &accuracy_ );
+
+    update_1d_vector( _json_obj, "auc_", &auc_ );
+
+    update_1d_vector( _json_obj, "cross_entropy_", &cross_entropy_ );
+
+    update_1d_vector( _json_obj, "mae_", &mae_ );
+
+    update_1d_vector( _json_obj, "rmse_", &rmse_ );
+
+    update_1d_vector( _json_obj, "rsquared_", &rsquared_ );
 
     // -------------------------
 
-    if ( _json_obj.has( "accuracy_" ) )
-        {
-            accuracy_ = jsonutils::JSON::array_to_vector<Float>(
-                jsonutils::JSON::get_array( _json_obj, "accuracy_" ) );
-        }
+    update_2d_vector( _json_obj, "accuracy_curves_", &accuracy_curves() );
 
-    if ( _json_obj.has( "auc_" ) )
-        {
-            auc_ = jsonutils::JSON::array_to_vector<Float>(
-                jsonutils::JSON::get_array( _json_obj, "auc_" ) );
-        }
+    update_2d_vector(
+        _json_obj, "feature_correlations_", &feature_correlations() );
 
-    if ( _json_obj.has( "cross_entropy_" ) )
-        {
-            cross_entropy_ = jsonutils::JSON::array_to_vector<Float>(
-                jsonutils::JSON::get_array( _json_obj, "cross_entropy_" ) );
-        }
+    update_2d_vector( _json_obj, "feature_densities_", &feature_densities() );
 
-    if ( _json_obj.has( "mae_" ) )
-        {
-            mae_ = jsonutils::JSON::array_to_vector<Float>(
-                jsonutils::JSON::get_array( _json_obj, "mae_" ) );
-        }
+    update_2d_vector(
+        _json_obj, "feature_importances_", &feature_importances() );
 
-    if ( _json_obj.has( "rmse_" ) )
-        {
-            rmse_ = jsonutils::JSON::array_to_vector<Float>(
-                jsonutils::JSON::get_array( _json_obj, "rmse_" ) );
-        }
+    update_2d_vector( _json_obj, "fpr_", &fpr() );
 
-    if ( _json_obj.has( "rsquared_" ) )
-        {
-            rsquared_ = jsonutils::JSON::array_to_vector<Float>(
-                jsonutils::JSON::get_array( _json_obj, "rsquared_" ) );
-        }
+    update_2d_vector( _json_obj, "lift_", &lift() );
+
+    update_2d_vector( _json_obj, "labels_", &labels() );
+
+    update_2d_vector( _json_obj, "precision_", &precision() );
+
+    update_2d_vector( _json_obj, "proportion_", &proportion() );
+
+    update_2d_vector( _json_obj, "tpr_", &tpr() );
 
     // -------------------------
 
-    if ( !_json_obj.getArray( "accuracy_curves_" ).isNull() )
-        {
-            accuracy_curves().clear();
-
-            auto arr =
-                jsonutils::JSON::get_array( _json_obj, "accuracy_curves_" );
-
-            for ( size_t i = 0; i < arr->size(); ++i )
-                {
-                    accuracy_curves().push_back(
-                        jsonutils::JSON::array_to_vector<Float>(
-                            arr->getArray( static_cast<unsigned int>( i ) ) ) );
-                }
-        }
-
-    // -------------------------
-
-    if ( !_json_obj.getArray( "average_targets_" ).isNull() )
-        {
-            average_targets_.clear();
-
-            auto arr =
-                jsonutils::JSON::get_array( _json_obj, "average_targets_" );
-
-            for ( size_t i = 0; i < arr->size(); ++i )
-                {
-                    auto vec = std::vector<std::vector<Float>>( 0 );
-
-                    auto arr2 = arr->getArray( static_cast<unsigned int>( i ) );
-
-                    for ( size_t j = 0; j < arr2->size(); ++j )
-                        {
-                            vec.push_back(
-                                jsonutils::JSON::array_to_vector<Float>(
-                                    arr2->getArray(
-                                        static_cast<unsigned int>( j ) ) ) );
-                        }
-
-                    average_targets_.emplace_back( std::move( vec ) );
-                }
-        }
-
-    // -------------------------
-
-    if ( !_json_obj.getArray( "feature_correlations_" ).isNull() )
-        {
-            feature_correlations_.clear();
-
-            auto arr = jsonutils::JSON::get_array(
-                _json_obj, "feature_correlations_" );
-
-            for ( size_t i = 0; i < arr->size(); ++i )
-                {
-                    feature_correlations_.push_back(
-                        jsonutils::JSON::array_to_vector<Float>(
-                            arr->getArray( static_cast<unsigned int>( i ) ) ) );
-                }
-        }
-
-    // -------------------------
-
-    if ( !_json_obj.getArray( "feature_densities_" ).isNull() )
-        {
-            feature_densities_.clear();
-
-            auto arr =
-                jsonutils::JSON::get_array( _json_obj, "feature_densities_" );
-
-            for ( size_t i = 0; i < arr->size(); ++i )
-                {
-                    feature_densities_.push_back(
-                        jsonutils::JSON::array_to_vector<Int>(
-                            arr->getArray( static_cast<unsigned int>( i ) ) ) );
-                }
-        }
-
-    // -------------------------
-
-    if ( !_json_obj.getArray( "feature_importances_" ).isNull() )
-        {
-            feature_importances_.clear();
-
-            auto arr =
-                jsonutils::JSON::get_array( _json_obj, "feature_importances_" );
-
-            for ( size_t i = 0; i < arr->size(); ++i )
-                {
-                    feature_importances_.push_back(
-                        jsonutils::JSON::array_to_vector<Float>(
-                            arr->getArray( static_cast<unsigned int>( i ) ) ) );
-                }
-        }
-
-    // -------------------------
-
-    if ( !_json_obj.getArray( "fpr_" ).isNull() )
-        {
-            fpr().clear();
-
-            auto arr = jsonutils::JSON::get_array( _json_obj, "fpr_" );
-
-            for ( size_t i = 0; i < arr->size(); ++i )
-                {
-                    fpr().push_back( jsonutils::JSON::array_to_vector<Float>(
-                        arr->getArray( static_cast<unsigned int>( i ) ) ) );
-                }
-        }
-
-    // -------------------------
-
-    if ( !_json_obj.getArray( "lift_" ).isNull() )
-        {
-            lift().clear();
-
-            auto arr = jsonutils::JSON::get_array( _json_obj, "lift_" );
-
-            for ( size_t i = 0; i < arr->size(); ++i )
-                {
-                    lift().push_back( jsonutils::JSON::array_to_vector<Float>(
-                        arr->getArray( static_cast<unsigned int>( i ) ) ) );
-                }
-        }
-
-    // -------------------------
-
-    if ( !_json_obj.getArray( "labels_" ).isNull() )
-        {
-            labels_.clear();
-
-            auto arr = jsonutils::JSON::get_array( _json_obj, "labels_" );
-
-            for ( size_t i = 0; i < arr->size(); ++i )
-                {
-                    labels_.push_back( jsonutils::JSON::array_to_vector<Float>(
-                        arr->getArray( static_cast<unsigned int>( i ) ) ) );
-                }
-        }
-
-    // -------------------------
-
-    if ( !_json_obj.getArray( "precision_" ).isNull() )
-        {
-            precision().clear();
-
-            auto arr = jsonutils::JSON::get_array( _json_obj, "precision_" );
-
-            for ( size_t i = 0; i < arr->size(); ++i )
-                {
-                    precision().push_back(
-                        jsonutils::JSON::array_to_vector<Float>(
-                            arr->getArray( static_cast<unsigned int>( i ) ) ) );
-                }
-        }
-
-    // -------------------------
-
-    if ( !_json_obj.getArray( "proportion_" ).isNull() )
-        {
-            proportion().clear();
-
-            auto arr = jsonutils::JSON::get_array( _json_obj, "proportion_" );
-
-            for ( size_t i = 0; i < arr->size(); ++i )
-                {
-                    proportion().push_back(
-                        jsonutils::JSON::array_to_vector<Float>(
-                            arr->getArray( static_cast<unsigned int>( i ) ) ) );
-                }
-        }
-
-    // -------------------------
-
-    if ( !_json_obj.getArray( "tpr_" ).isNull() )
-        {
-            tpr().clear();
-
-            auto arr = jsonutils::JSON::get_array( _json_obj, "tpr_" );
-
-            for ( size_t i = 0; i < arr->size(); ++i )
-                {
-                    tpr().push_back( jsonutils::JSON::array_to_vector<Float>(
-                        arr->getArray( static_cast<unsigned int>( i ) ) ) );
-                }
-        }
+    update_3d_vector( _json_obj, "average_targets_", &average_targets_ );
 
     // -------------------------
 }
@@ -324,109 +131,29 @@ Poco::JSON::Object Scores::to_json_obj() const
 
     // -------------------------
 
-    auto accuracy_curves_arr = Poco::JSON::Array();
+    obj.set( "accuracy_curves_", to_2d_array( accuracy_curves() ) );
 
-    for ( auto& vec : accuracy_curves() )
-        {
-            accuracy_curves_arr.add(
-                jsonutils::JSON::vector_to_array_ptr( vec ) );
-        }
+    obj.set( "feature_correlations_", to_2d_array( feature_correlations() ) );
 
-    obj.set( "accuracy_curves_", accuracy_curves_arr );
+    obj.set( "feature_densities_", to_2d_array( feature_densities() ) );
 
-    // -------------------------
+    obj.set( "feature_importances_", to_2d_array( feature_importances() ) );
 
-    auto average_targets_arr = Poco::JSON::Array();
+    obj.set( "fpr_", to_2d_array( fpr() ) );
 
-    for ( auto& vec : average_targets() )
-        {
-            average_targets_arr.add(
-                jsonutils::JSON::vector_to_array_ptr( vec ) );
-        }
+    obj.set( "labels_", to_2d_array( labels() ) );
 
-    obj.set( "average_targets_", average_targets_arr );
+    obj.set( "lift_", to_2d_array( lift() ) );
+
+    obj.set( "precision_", to_2d_array( precision() ) );
+
+    obj.set( "proportion_", to_2d_array( proportion() ) );
+
+    obj.set( "tpr_", to_2d_array( tpr() ) );
 
     // -------------------------
 
-    auto feature_correlations_arr =
-        jsonutils::JSON::vector_to_array_ptr( feature_correlations() );
-
-    obj.set( "feature_correlations_", feature_correlations_arr );
-
-    // -------------------------
-
-    auto feature_densities_arr =
-        jsonutils::JSON::vector_to_array_ptr( feature_densities() );
-
-    obj.set( "feature_densities_", feature_densities_arr );
-
-    // -------------------------
-
-    auto feature_importances_arr =
-        jsonutils::JSON::vector_to_array_ptr( feature_importances() );
-
-    obj.set( "feature_importances_", feature_importances_arr );
-
-    // -------------------------
-
-    auto fpr_arr = Poco::JSON::Array();
-
-    for ( auto& vec : fpr() )
-        {
-            fpr_arr.add( jsonutils::JSON::vector_to_array_ptr( vec ) );
-        }
-
-    obj.set( "fpr_", fpr_arr );
-
-    // -------------------------
-
-    Poco::JSON::Array labels_arr = jsonutils::JSON::vector_to_array( labels() );
-
-    obj.set( "labels_", labels_arr );
-
-    // -------------------------
-
-    auto lift_arr = Poco::JSON::Array();
-
-    for ( auto& vec : lift() )
-        {
-            lift_arr.add( jsonutils::JSON::vector_to_array_ptr( vec ) );
-        }
-
-    obj.set( "lift_", lift_arr );
-
-    // -------------------------
-
-    auto precision_arr = Poco::JSON::Array();
-
-    for ( auto& vec : precision() )
-        {
-            precision_arr.add( jsonutils::JSON::vector_to_array_ptr( vec ) );
-        }
-
-    obj.set( "precision_", precision_arr );
-
-    // -------------------------
-
-    auto proportion_arr = Poco::JSON::Array();
-
-    for ( auto& vec : proportion() )
-        {
-            proportion_arr.add( jsonutils::JSON::vector_to_array_ptr( vec ) );
-        }
-
-    obj.set( "proportion_", proportion_arr );
-
-    // -------------------------
-
-    auto tpr_arr = Poco::JSON::Array();
-
-    for ( auto& vec : tpr() )
-        {
-            tpr_arr.add( jsonutils::JSON::vector_to_array_ptr( vec ) );
-        }
-
-    obj.set( "tpr_", tpr_arr );
+    obj.set( "average_targets_", to_3d_array( average_targets() ) );
 
     // -------------------------
 

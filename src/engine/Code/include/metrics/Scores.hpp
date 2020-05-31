@@ -34,7 +34,7 @@ class Scores
 
     // ------------------------------------------------------
 
-   public:
+   private:
     /// Trivial accessor
     std::vector<std::vector<Float>>& accuracy_curves()
     {
@@ -145,6 +145,108 @@ class Scores
 
     /// Trivial accessor
     const std::vector<std::vector<Float>>& tpr() const { return tpr_; }
+
+    /// If the 1-dimensional array exists, this updated the corresponding
+    /// vector.
+    template <class T>
+    void update_1d_vector(
+        const Poco::JSON::Object& _json_obj,
+        const std::string& _name,
+        std::vector<T>* _vec ) const
+    {
+        if ( _json_obj.has( _name ) )
+            {
+                *_vec = jsonutils::JSON::array_to_vector<T>(
+                    jsonutils::JSON::get_array( _json_obj, _name ) );
+            }
+    }
+
+    /// If the 2-dimensional array exists, this updated the corresponding
+    /// vector.
+    template <class T>
+    void update_2d_vector(
+        const Poco::JSON::Object& _json_obj,
+        const std::string& _name,
+        std::vector<std::vector<T>>* _vec ) const
+    {
+        if ( !_json_obj.getArray( _name ).isNull() )
+            {
+                _vec->clear();
+
+                auto arr = jsonutils::JSON::get_array( _json_obj, _name );
+
+                for ( size_t i = 0; i < arr->size(); ++i )
+                    {
+                        _vec->push_back( jsonutils::JSON::array_to_vector<T>(
+                            arr->getArray( static_cast<unsigned int>( i ) ) ) );
+                    }
+            }
+    }
+
+    /// If the 3-dimensional array exists, this updated the corresponding
+    /// vector.
+    template <class T>
+    void update_3d_vector(
+        const Poco::JSON::Object& _json_obj,
+        const std::string& _name,
+        std::vector<std::vector<std::vector<T>>>* _vec ) const
+    {
+        if ( !_json_obj.getArray( _name ).isNull() )
+            {
+                _vec->clear();
+
+                auto arr = jsonutils::JSON::get_array( _json_obj, _name );
+
+                for ( size_t i = 0; i < arr->size(); ++i )
+                    {
+                        auto vec = std::vector<std::vector<T>>( 0 );
+
+                        auto arr2 =
+                            arr->getArray( static_cast<unsigned int>( i ) );
+
+                        for ( size_t j = 0; j < arr2->size(); ++j )
+                            {
+                                vec.push_back(
+                                    jsonutils::JSON::array_to_vector<T>(
+                                        arr2->getArray(
+                                            static_cast<unsigned int>(
+                                                j ) ) ) );
+                            }
+
+                        _vec->emplace_back( std::move( vec ) );
+                    }
+            }
+    }
+
+    /// Transforms a 2-dimensional vector to a 2-dimensional array
+    template <class T>
+    Poco::JSON::Array::Ptr to_2d_array(
+        const std::vector<std::vector<T>>& _2d_vec ) const
+    {
+        auto arr = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
+
+        for ( auto& vec : _2d_vec )
+            {
+                arr->add( jsonutils::JSON::vector_to_array_ptr( vec ) );
+            }
+
+        return arr;
+    }
+
+    /// Transforms a 3-dimensional vector to a 3-dimensional array
+    template <class T>
+    Poco::JSON::Array::Ptr to_3d_array(
+        const std::vector<std::vector<std::vector<T>>>& _3d_vec ) const
+    {
+        auto arr = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
+
+        for ( auto& vec : _3d_vec )
+            {
+                arr->add( to_2d_array( vec ) );
+            }
+
+        return arr;
+    }
 
     // ------------------------------------------------------
 
