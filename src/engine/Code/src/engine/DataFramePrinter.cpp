@@ -104,7 +104,7 @@ std::string DataFramePrinter::get_string(
 
     for ( auto &row : rows )
         {
-            truncate_row( row );
+            row = truncate_row( row );
         }
 
     // ------------------------------------------------------------------------
