@@ -32,13 +32,6 @@ class AbstractFeatureLearner
     // --------------------------------------------------------
 
    public:
-    /// If this is a time series model, this will add the data necessary for the
-    /// self joins. Otherwise, it will just return the original data
-    virtual std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
-    add_self_joins(
-        const containers::DataFrame& _population,
-        const std::vector<containers::DataFrame>& _peripheral ) const = 0;
-
     /// Creates a deep copy.
     virtual std::shared_ptr<AbstractFeatureLearner> clone() const = 0;
 
@@ -66,6 +59,13 @@ class AbstractFeatureLearner
     /// Returns the placeholder not as passed by the user, but as seen by the
     /// feature learner (the difference matters for time series).
     virtual Poco::JSON::Object make_placeholder() const = 0;
+
+    /// Data frames might have to be modified, such as adding upper time stamps
+    /// or self joins.
+    virtual std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
+    modify_data_frames(
+        const containers::DataFrame& _population_df,
+        const std::vector<containers::DataFrame>& _peripheral_df ) const = 0;
 
     /// Returns the number of features in the feature learner.
     virtual size_t num_features() const = 0;

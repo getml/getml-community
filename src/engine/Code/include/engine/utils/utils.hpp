@@ -21,6 +21,8 @@
 #include "engine/utils/ColumnOperators.hpp"
 #include "engine/utils/Endianness.hpp"
 #include "engine/utils/Getter.hpp"
+#include "engine/utils/StringReplacer.hpp"
+#include "engine/utils/TSDiffMaker.hpp"
 
 // ----------------------------------------------------------------------------
 

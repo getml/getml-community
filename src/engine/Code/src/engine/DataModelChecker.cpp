@@ -18,6 +18,21 @@ void DataModelChecker::check(
 {
     // --------------------------------------------------------------------------
 
+    assert_true( _peripheral_names );
+
+    if ( _peripheral_names->size() != _peripheral.size() )
+        {
+            throw std::invalid_argument(
+                "The number of peripheral tables in the placeholder must "
+                "be "
+                "equal to the number of peripheral tables passed (" +
+                std::to_string( _peripheral_names->size() ) + " vs. " +
+                std::to_string( _peripheral.size() ) +
+                "). This is the point of having placeholders." );
+        }
+
+    // --------------------------------------------------------------------------
+
     communication::Warner warner;
 
     // --------------------------------------------------------------------------
@@ -30,12 +45,22 @@ void DataModelChecker::check(
 
     assert_true( _peripheral_names );
 
-    check_join(
-        *_population_placeholder,
-        *_peripheral_names,
-        _population,
-        _peripheral,
-        &warner );
+    if ( _feature_learners.size() > 0 )
+        {
+            const auto [new_placeholder, new_population, new_peripheral] =
+                modify(
+                    *_population_placeholder,
+                    _population,
+                    _peripheral,
+                    _feature_learners );
+
+            check_join(
+                new_placeholder,
+                *_peripheral_names,
+                new_population,
+                new_peripheral,
+                &warner );
+        }
 
     // --------------------------------------------------------------------------
 
@@ -310,27 +335,14 @@ void DataModelChecker::check_join(
 {
     // ------------------------------------------------------------------------
 
-    if ( _peripheral_names.size() != _peripheral.size() )
-        {
-            throw std::invalid_argument(
-                "The number of peripheral tables in the placeholder must "
-                "be "
-                "equal to the number of peripheral tables passed (" +
-                std::to_string( _peripheral_names.size() ) + " vs. " +
-                std::to_string( _peripheral.size() ) +
-                "). This is the point of having placeholders." );
-        }
+    assert_true( _peripheral_names.size() <= _peripheral.size() );
 
     // ------------------------------------------------------------------------
 
     const auto joined_tables_arr =
         _population_placeholder.getArray( "joined_tables_" );
 
-    if ( !joined_tables_arr )
-        {
-            throw std::invalid_argument(
-                "The placeholder has no array named 'joined_tables_'!" );
-        }
+    assert_true( joined_tables_arr );
 
     // ------------------------------------------------------------------------
 
@@ -376,6 +388,11 @@ void DataModelChecker::check_join(
             const auto& obj = *ptr;
 
             const auto name = JSON::get_value<std::string>( obj, "name_" );
+
+            if ( name.find( "$GETML_PERIPHERAL" ) != std::string::npos )
+                {
+                    continue;
+                }
 
             const auto it = std::find(
                 _peripheral_names.begin(), _peripheral_names.end(), name );
@@ -530,7 +547,7 @@ void DataModelChecker::check_self_joins(
             // ----------------------------------------------------------------
 
             const auto [new_population, new_peripheral] =
-                fl->add_self_joins( _population, _peripheral );
+                fl->modify_data_frames( _population, _peripheral );
 
             // ----------------------------------------------------------------
 
@@ -817,6 +834,127 @@ bool DataModelChecker::is_all_equal( const containers::Column<Float>& _col )
         }
 
     return true;
+}
+
+// ----------------------------------------------------------------------------
+
+std::tuple<
+    Poco::JSON::Object,
+    containers::DataFrame,
+    std::vector<containers::DataFrame>>
+DataModelChecker::modify(
+    const Poco::JSON::Object& _population_placeholder,
+    const containers::DataFrame& _population,
+    const std::vector<containers::DataFrame>& _peripheral,
+    const std::vector<std::shared_ptr<featurelearners::AbstractFeatureLearner>>
+        _feature_learners )
+{
+    // ------------------------------------------------------------------------
+
+    assert_true( _feature_learners.size() > 0 );
+
+    const auto feature_learner = _feature_learners.at( 0 );
+
+    assert_true( feature_learner );
+
+    // ------------------------------------------------------------------------
+
+    const auto original_joined_tables_arr =
+        _population_placeholder.getArray( "joined_tables_" );
+
+    if ( !original_joined_tables_arr )
+        {
+            throw std::invalid_argument(
+                "The placeholder has no array named 'joined_tables_'!" );
+        }
+
+    // ------------------------------------------------------------------------
+
+    const auto new_placeholder = feature_learner->make_placeholder();
+
+    // ------------------------------------------------------------------------
+
+    const auto new_joined_tables_arr =
+        _population_placeholder.getArray( "joined_tables_" );
+
+    if ( !new_joined_tables_arr )
+        {
+            throw std::invalid_argument(
+                "The modified placeholder has no array named "
+                "'joined_tables_'!" );
+        }
+
+    // ------------------------------------------------------------------------
+
+    const auto [new_population, new_peripheral] =
+        feature_learner->modify_data_frames( _population, _peripheral );
+
+    // ------------------------------------------------------------------------
+
+    assert_true(
+        original_joined_tables_arr->size() <= new_joined_tables_arr->size() );
+
+    for ( size_t i = 0; i < original_joined_tables_arr->size(); ++i )
+        {
+            const auto ptr1 = original_joined_tables_arr->getObject( i );
+            const auto ptr2 = new_joined_tables_arr->getObject( i );
+
+            if ( !ptr1 )
+                {
+                    throw std::invalid_argument(
+                        "Element " + std::to_string( i ) +
+                        " of 'joined_tables_' is not a proper JSON object!" );
+                }
+
+            if ( !ptr2 )
+                {
+                    throw std::invalid_argument(
+                        "Element " + std::to_string( i ) +
+                        " of 'joined_tables_' in the modified placeholder is "
+                        "not a proper JSON object!" );
+                }
+
+            assert_true(
+                JSON::get_value<std::string>( *ptr1, "name_" ) ==
+                JSON::get_value<std::string>( *ptr2, "name_" ) );
+        }
+
+    // ------------------------------------------------------------------------
+
+    for ( size_t i = original_joined_tables_arr->size();
+          i < new_joined_tables_arr->size();
+          ++i )
+        {
+            const auto ptr = new_joined_tables_arr->getObject( i );
+
+            if ( !ptr )
+                {
+                    throw std::invalid_argument(
+                        "Element " + std::to_string( i ) +
+                        " of 'joined_tables_' in the modified placeholder is "
+                        "not a proper JSON object!" );
+                }
+
+            assert_true(
+                JSON::get_value<std::string>( *ptr, "name_" )
+                    .find( "$GETML_PERIPHERAL" ) != std::string::npos );
+        }
+
+    // ------------------------------------------------------------------------
+
+    assert_true( _peripheral.size() <= new_peripheral.size() );
+
+    for ( size_t i = 0; i < _peripheral.size(); ++i )
+        {
+            assert_true(
+                _peripheral.at( i ).name() == new_peripheral.at( i ).name() );
+        }
+
+    // ------------------------------------------------------------------------
+
+    return std::make_tuple( new_placeholder, new_population, new_peripheral );
+
+    // ------------------------------------------------------------------------
 }
 
 // ------------------------------------------------------------------------

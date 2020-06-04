@@ -14,6 +14,13 @@ class FeatureLearner : public AbstractFeatureLearner
 {
     // --------------------------------------------------------
 
+   private:
+    typedef typename FeatureLearnerType::DataFrameType DataFrameType;
+    typedef typename FeatureLearnerType::HypType HypType;
+    typedef typename FeatureLearnerType::PlaceholderType PlaceholderType;
+
+    // --------------------------------------------------------
+
    public:
     FeatureLearner(
         const std::shared_ptr<const std::vector<strings::String>>& _categories,
@@ -37,13 +44,6 @@ class FeatureLearner : public AbstractFeatureLearner
     // --------------------------------------------------------
 
    public:
-    /// If this is a time series model, this will add the data necessary for the
-    /// self joins. Otherwise, it will just return the original data
-    std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
-    add_self_joins(
-        const containers::DataFrame& _population,
-        const std::vector<containers::DataFrame>& _peripheral ) const final;
-
     /// Returns the fingerprint of the feature learner (necessary to build
     /// the dependency graphs).
     Poco::JSON::Object::Ptr fingerprint() const final;
@@ -55,6 +55,13 @@ class FeatureLearner : public AbstractFeatureLearner
         const std::map<std::string, containers::DataFrame>& _data_frames,
         const Int _target_num,
         Poco::Net::StreamSocket* _socket ) final;
+
+    /// Data frames might have to be modified, such as adding upper time stamps
+    /// or self joins.
+    std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
+    modify_data_frames(
+        const containers::DataFrame& _population_df,
+        const std::vector<containers::DataFrame>& _peripheral_dfs ) const final;
 
     /// Generate features.
     containers::Features transform(
@@ -102,8 +109,7 @@ class FeatureLearner : public AbstractFeatureLearner
     /// feature learner (the difference matters for time series).
     Poco::JSON::Object make_placeholder() const final
     {
-        const auto ptr =
-            make_feature_learner( cmd_ )->placeholder().to_json_obj();
+        const auto ptr = make_feature_learner()->placeholder().to_json_obj();
         assert_true( ptr );
         return *ptr;
     }
@@ -155,12 +161,51 @@ class FeatureLearner : public AbstractFeatureLearner
     std::vector<std::string> to_sql(
         const std::string& _prefix, const bool _subfeatures ) const final
     {
-        return feature_learner().to_sql( _prefix, 0, _subfeatures );
+        auto queries = feature_learner().to_sql( _prefix, 0, _subfeatures );
+        for ( auto& query : queries )
+            {
+                query = replace_macros( query );
+            }
+        return queries;
     }
 
     // --------------------------------------------------------
 
    private:
+    /// If this is a time series model, this will add the data necessary for the
+    /// self joins. Otherwise, it will just return the original data
+    std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
+    add_self_joins(
+        const containers::DataFrame& _population,
+        const std::vector<containers::DataFrame>& _peripheral ) const;
+
+    /// Extracts upper time stamps from the memory parameter. (Memory is just
+    /// syntactic sugar for upper time stamps. The feature learners don't know
+    /// about this concept).
+    std::vector<containers::DataFrame> add_upper_time_stamps(
+        const Poco::JSON::Object _population_placeholder,
+        const std::vector<containers::DataFrame>& _peripheral_dfs ) const;
+
+    /// Adds an upper time stamp to the data frame.
+    void add_upper_ts(
+        const Poco::JSON::Object& _joined_table,
+        const std::string& _ts_used,
+        const std::string& _upper_ts_used,
+        const Float _mem,
+        std::vector<containers::DataFrame>* _peripheral_dfs ) const;
+
+    /// Creates the placeholder, including transforming memory into upper time
+    /// stamps.
+    PlaceholderType create_placeholder( const Poco::JSON::Object& _obj ) const;
+
+    /// Extracts a vector named _name of size _expected_size from the
+    /// _population_placeholder
+    template <typename T>
+    std::vector<T> extract_vector(
+        const Poco::JSON::Object& _population_placeholder,
+        const std::string& _name,
+        const size_t _expected_size ) const;
+
     /// Extracts the necessary containers::DataFrames.
     std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
     extract_data_frames(
@@ -170,38 +215,34 @@ class FeatureLearner : public AbstractFeatureLearner
 
     /// Extract a data frame of type FeatureLearnerType::DataFrameType from
     /// an engine::containers::DataFrame.
-    template <typename DataFrameType>
     DataFrameType extract_table(
         const containers::DataFrame& _df, const Int _target_num ) const;
 
     /// Extract a data frame of type FeatureLearnerType::DataFrameType from
     /// an engine::containers::DataFrame using the pre-stored schema.
-    template <typename DataFrameType, typename SchemaType>
+    template <typename SchemaType>
     DataFrameType extract_table_by_colnames(
         const SchemaType& _schema, const containers::DataFrame& _df ) const;
 
     /// Extract a vector of FeatureLearnerType::DataFrameType from
     /// an engine::containers::DataFrame using the pre-stored schema.
-    std::pair<
-        typename FeatureLearnerType::DataFrameType,
-        std::vector<typename FeatureLearnerType::DataFrameType>>
-    extract_tables(
+    std::pair<DataFrameType, std::vector<DataFrameType>> extract_tables(
         const containers::DataFrame& _population_df,
         const std::vector<containers::DataFrame>& _peripheral_dfs,
         const Int _target_num ) const;
 
     /// Extract a vector of FeatureLearnerType::DataFrameType from
     /// an engine::containers::DataFrame using the pre-stored schema.
-    std::pair<
-        typename FeatureLearnerType::DataFrameType,
-        std::vector<typename FeatureLearnerType::DataFrameType>>
+    std::pair<DataFrameType, std::vector<DataFrameType>>
     extract_tables_by_colnames(
         const containers::DataFrame& _population_df,
         const std::vector<containers::DataFrame>& _peripheral_dfs ) const;
 
     /// Initializes the feature learner.
-    std::optional<FeatureLearnerType> make_feature_learner(
-        const Poco::JSON::Object& _cmd ) const;
+    std::optional<FeatureLearnerType> make_feature_learner() const;
+
+    /// Replaces macros inside the SQL queries with actual code.
+    std::string replace_macros( const std::string& _query ) const;
 
     /// Helper function for loading a json object.
     Poco::JSON::Object load_json_obj( const std::string& _fname ) const;
@@ -247,6 +288,16 @@ class FeatureLearner : public AbstractFeatureLearner
         return *placeholder_;
     }
 
+    /// Generates the name for the upper time stamp that is produced using
+    /// memory.
+    std::string make_upper_ts_name(
+        const std::string& _ts_used, const Float _mem ) const
+    {
+        return "$GETML_MEMORY" + _ts_used + "\"" +
+               utils::TSDiffMaker::make_time_stamp_diff( _mem ) +
+               "$GETML_REMOVE_CHAR";
+    }
+
     // --------------------------------------------------------
 
    private:
@@ -290,13 +341,281 @@ FeatureLearner<FeatureLearnerType>::add_self_joins(
     const containers::DataFrame& _population,
     const std::vector<containers::DataFrame>& _peripheral ) const
 {
-    if constexpr ( FeatureLearnerType::is_time_series_ )
+    return std::make_pair( _population, _peripheral );
+}
+
+// ------------------------------------------------------------------------
+
+template <typename FeatureLearnerType>
+void FeatureLearner<FeatureLearnerType>::add_upper_ts(
+    const Poco::JSON::Object& _joined_table,
+    const std::string& _ts_used,
+    const std::string& _upper_ts_used,
+    const Float _mem,
+    std::vector<containers::DataFrame>* _peripheral_dfs ) const
+{
+    // ------------------------------------------------------------------------
+
+    if ( _upper_ts_used != "" )
         {
-            return make_feature_learner( cmd_ )->create_data_frames(
-                _population, _peripheral );
+            throw std::invalid_argument(
+                "You can either set an upper time stamp or memory, but not "
+                "both!" );
         }
 
-    return std::make_pair( _population, _peripheral );
+    // ------------------------------------------------------------------------
+
+    const auto name = JSON::get_value<std::string>( _joined_table, "name_" );
+
+    const auto it = std::find( peripheral().begin(), peripheral().end(), name );
+
+    if ( it == peripheral().end() )
+        {
+            throw std::invalid_argument(
+                "Placeholder named '" + name +
+                "' not among the peripheral tables." );
+        }
+
+    const auto dist = std::distance( peripheral().begin(), it );
+
+    // ------------------------------------------------------------------------
+
+    auto& df = _peripheral_dfs->at( dist );
+
+    const auto time_stamp = df.time_stamp( _ts_used );
+
+    // ------------------------------------------------------------------------
+
+    const auto add_memory = [_mem]( const Float val ) { return val + _mem; };
+
+    // ------------------------------------------------------------------------
+
+    auto new_upper_time_stamp = containers::Column<Float>( df.nrows() );
+
+    new_upper_time_stamp.set_name( make_upper_ts_name( _ts_used, _mem ) );
+
+    // ------------------------------------------------------------------------
+
+    std::transform(
+        time_stamp.begin(),
+        time_stamp.end(),
+        new_upper_time_stamp.begin(),
+        add_memory );
+
+    // ------------------------------------------------------------------------
+
+    df.add_float_column( new_upper_time_stamp, "time_stamp" );
+
+    // ------------------------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
+template <typename FeatureLearnerType>
+std::vector<containers::DataFrame>
+FeatureLearner<FeatureLearnerType>::add_upper_time_stamps(
+    const Poco::JSON::Object _population_placeholder,
+    const std::vector<containers::DataFrame>& _peripheral_dfs ) const
+{
+    // ------------------------------------------------------------------------
+
+    auto peripheral_dfs = _peripheral_dfs;
+
+    // ------------------------------------------------------------------------
+
+    if ( peripheral().size() != peripheral_dfs.size() )
+        {
+            throw std::invalid_argument(
+                "There must be one peripheral table for every peripheral "
+                "placeholder (" +
+                std::to_string( peripheral_dfs.size() ) + " vs. " +
+                std::to_string( peripheral().size() ) + ")." );
+        }
+
+    // ------------------------------------------------------------------------
+
+    const auto joined_tables_arr =
+        _population_placeholder.getArray( "joined_tables_" );
+
+    if ( !joined_tables_arr )
+        {
+            throw std::invalid_argument(
+                "The placeholder has no array named 'joined_tables_'!" );
+        }
+
+    const auto expected_size = joined_tables_arr->size();
+
+    // ------------------------------------------------------------------------
+
+    const auto other_time_stamps_used = extract_vector<std::string>(
+        _population_placeholder, "other_time_stamps_used_", expected_size );
+
+    const auto upper_time_stamps_used = extract_vector<std::string>(
+        _population_placeholder, "upper_time_stamps_used_", expected_size );
+
+    const auto memory = extract_vector<Float>(
+        _population_placeholder, "memory_", expected_size );
+
+    // ------------------------------------------------------------------------
+
+    for ( unsigned int i = 0; i < static_cast<unsigned int>( memory.size() );
+          ++i )
+        {
+            const auto joined_table = joined_tables_arr->getObject( i );
+
+            if ( !joined_table )
+                {
+                    throw std::invalid_argument(
+                        "Element " + std::to_string( i ) +
+                        " in 'joined_tables_' is not a proper JSON object!" );
+                }
+
+            if ( memory.at( i ) > 0.0 )
+                {
+                    add_upper_ts(
+                        *joined_table,
+                        other_time_stamps_used.at( i ),
+                        upper_time_stamps_used.at( i ),
+                        memory.at( i ),
+                        &peripheral_dfs );
+                }
+
+            peripheral_dfs =
+                add_upper_time_stamps( *joined_table, peripheral_dfs );
+        }
+
+    // ------------------------------------------------------------------------
+
+    return peripheral_dfs;
+
+    // ------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+template <typename FeatureLearnerType>
+typename FeatureLearnerType::PlaceholderType
+FeatureLearner<FeatureLearnerType>::create_placeholder(
+    const Poco::JSON::Object& _obj ) const
+{
+    // ----------------------------------------------------------
+
+    const auto placeholder = PlaceholderType( _obj );
+
+    // ------------------------------------------------------------------------
+
+    auto upper_time_stamps_used = placeholder.upper_time_stamps_used_;
+
+    // ------------------------------------------------------------------------
+
+    const auto joined_tables_arr = _obj.getArray( "joined_tables_" );
+
+    if ( !joined_tables_arr )
+        {
+            throw std::invalid_argument(
+                "The placeholder has no array named 'joined_tables_'!" );
+        }
+
+    const auto expected_size = joined_tables_arr->size();
+
+    // ------------------------------------------------------------------------
+
+    const auto memory = extract_vector<Float>( _obj, "memory_", expected_size );
+
+    // ------------------------------------------------------------------------
+
+    assert_true( placeholder.other_time_stamps_used_.size() == expected_size );
+
+    assert_true( memory.size() == expected_size );
+
+    // ------------------------------------------------------------------------
+
+    for ( size_t i = 0; i < memory.size(); ++i )
+        {
+            if ( memory.at( i ) <= 0.0 )
+                {
+                    continue;
+                }
+
+            if ( upper_time_stamps_used.at( i ) != "" )
+                {
+                    throw std::invalid_argument(
+                        "You can either set an upper time stamp or "
+                        "memory, but not both!" );
+                }
+
+            upper_time_stamps_used.at( i ) = make_upper_ts_name(
+                placeholder.other_time_stamps_used_.at( i ), memory.at( i ) );
+        }
+
+    // ------------------------------------------------------------------------
+
+    std::vector<PlaceholderType> joined_tables;
+
+    for ( size_t i = 0; i < expected_size; ++i )
+        {
+            const auto joined_table_obj =
+                joined_tables_arr->getObject( static_cast<unsigned int>( i ) );
+
+            if ( !joined_table_obj )
+                {
+                    throw std::invalid_argument(
+                        "Element " + std::to_string( i ) +
+                        " in 'joined_tables_' is not a proper JSON object!" );
+                }
+
+            joined_tables.push_back( create_placeholder( *joined_table_obj ) );
+        }
+
+    // ------------------------------------------------------------------------
+
+    return PlaceholderType(
+        joined_tables,
+        placeholder.join_keys_used_,
+        placeholder.name(),
+        placeholder.other_join_keys_used_,
+        placeholder.other_time_stamps_used_,
+        placeholder.time_stamps_used_,
+        upper_time_stamps_used );
+
+    // ------------------------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
+template <typename FeatureLearnerType>
+template <typename T>
+std::vector<T> FeatureLearner<FeatureLearnerType>::extract_vector(
+    const Poco::JSON::Object& _population_placeholder,
+    const std::string& _name,
+    const size_t _expected_size ) const
+{
+    // ------------------------------------------------------------------------
+
+    if ( !_population_placeholder.getArray( _name ) )
+        {
+            throw std::invalid_argument(
+                "The placeholder has no array named '" + _name + "'!" );
+        }
+
+    const auto vec =
+        JSON::array_to_vector<T>( _population_placeholder.getArray( _name ) );
+
+    // ------------------------------------------------------------------------
+
+    if ( vec.size() != _expected_size )
+        {
+            throw std::invalid_argument(
+                "Size of '" + _name + "' unexpected. Expected " +
+                std::to_string( _expected_size ) + ", got " +
+                std::to_string( vec.size() ) + "." );
+        }
+
+    // ------------------------------------------------------------------------
+
+    return vec;
+
+    // ------------------------------------------------------------------------
 }
 
 // ------------------------------------------------------------------------
@@ -330,15 +649,7 @@ FeatureLearner<FeatureLearnerType>::extract_data_frames(
 
     // ------------------------------------------------
 
-    if constexpr ( FeatureLearnerType::is_time_series_ )
-        {
-            return make_feature_learner( cmd_ )->create_data_frames(
-                population_df, peripheral_dfs );
-        }
-
-    // ------------------------------------------------
-
-    return std::make_pair( population_df, peripheral_dfs );
+    return modify_data_frames( population_df, peripheral_dfs );
 
     // ------------------------------------------------
 }
@@ -346,8 +657,8 @@ FeatureLearner<FeatureLearnerType>::extract_data_frames(
 // ----------------------------------------------------------------------------
 
 template <typename FeatureLearnerType>
-template <typename DataFrameType>
-DataFrameType FeatureLearner<FeatureLearnerType>::extract_table(
+typename FeatureLearnerType::DataFrameType
+FeatureLearner<FeatureLearnerType>::extract_table(
     const containers::DataFrame& _df, const Int _target_num ) const
 {
     // ------------------------------------------------------------------------
@@ -472,8 +783,9 @@ DataFrameType FeatureLearner<FeatureLearnerType>::extract_table(
 // ----------------------------------------------------------------------------
 
 template <typename FeatureLearnerType>
-template <typename DataFrameType, typename SchemaType>
-DataFrameType FeatureLearner<FeatureLearnerType>::extract_table_by_colnames(
+template <typename SchemaType>
+typename FeatureLearnerType::DataFrameType
+FeatureLearner<FeatureLearnerType>::extract_table_by_colnames(
     const SchemaType& _schema, const containers::DataFrame& _df ) const
 {
     // ------------------------------------------------------------------------
@@ -609,6 +921,7 @@ DataFrameType FeatureLearner<FeatureLearnerType>::extract_table_by_colnames(
 
     // ------------------------------------------------------------------------
 }
+
 // ------------------------------------------------------------------------
 
 template <typename FeatureLearnerType>
@@ -622,19 +935,16 @@ FeatureLearner<FeatureLearnerType>::extract_tables(
 {
     // ------------------------------------------------
 
-    const auto population_table =
-        extract_table<typename FeatureLearnerType::DataFrameType>(
-            _population_df, _target_num );
+    const auto population_table = extract_table( _population_df, _target_num );
 
     // ------------------------------------------------
 
-    std::vector<typename FeatureLearnerType::DataFrameType> peripheral_tables;
+    std::vector<DataFrameType> peripheral_tables;
 
     for ( const auto& df : _peripheral_dfs )
         {
             const auto table =
-                extract_table<typename FeatureLearnerType::DataFrameType>(
-                    df, AbstractFeatureLearner::IGNORE_TARGETS );
+                extract_table( df, AbstractFeatureLearner::IGNORE_TARGETS );
 
             peripheral_tables.push_back( table );
         }
@@ -661,8 +971,7 @@ FeatureLearner<FeatureLearnerType>::extract_tables_by_colnames(
     const auto population_schema = feature_learner().population_schema();
 
     const auto population_table =
-        extract_table_by_colnames<typename FeatureLearnerType::DataFrameType>(
-            population_schema, _population_df );
+        extract_table_by_colnames( population_schema, _population_df );
 
     // ------------------------------------------------
 
@@ -685,12 +994,11 @@ FeatureLearner<FeatureLearnerType>::extract_tables_by_colnames(
 
     // ------------------------------------------------
 
-    std::vector<typename FeatureLearnerType::DataFrameType> peripheral_tables;
+    std::vector<DataFrameType> peripheral_tables;
 
     for ( size_t i = 0; i < peripheral_schema.size(); ++i )
         {
-            const auto table = extract_table_by_colnames<
-                typename FeatureLearnerType::DataFrameType>(
+            const auto table = extract_table_by_colnames(
                 peripheral_schema.at( i ), _peripheral_dfs.at( i ) );
 
             peripheral_tables.push_back( table );
@@ -746,7 +1054,7 @@ void FeatureLearner<FeatureLearnerType>::fit(
 
     // ------------------------------------------------
 
-    auto new_feature_learner = make_feature_learner( cmd_ );
+    auto new_feature_learner = make_feature_learner();
 
     new_feature_learner->fit( population_table, peripheral_tables, _logger );
 
@@ -799,29 +1107,75 @@ Poco::JSON::Object FeatureLearner<FeatureLearnerType>::load_json_obj(
 
 template <typename FeatureLearnerType>
 std::optional<FeatureLearnerType>
-FeatureLearner<FeatureLearnerType>::make_feature_learner(
-    const Poco::JSON::Object& _cmd ) const
+FeatureLearner<FeatureLearnerType>::make_feature_learner() const
 {
     const auto hyperparameters =
-        std::make_shared<typename FeatureLearnerType::HypType>( _cmd );
+        std::make_shared<typename FeatureLearnerType::HypType>( cmd_ );
 
-    const auto placeholder =
-        std::make_shared<const typename FeatureLearnerType::PlaceholderType>(
-            *placeholder_ );
+    const auto placeholder_struct = std::make_shared<PlaceholderType>(
+        create_placeholder( placeholder() ) );
 
-    auto population_schema =
-        std::shared_ptr<const typename FeatureLearnerType::PlaceholderType>();
+    const auto population_schema = std::shared_ptr<const PlaceholderType>();
 
-    auto peripheral_schema = std::shared_ptr<
-        const std::vector<typename FeatureLearnerType::PlaceholderType>>();
+    const auto peripheral_schema =
+        std::shared_ptr<const std::vector<PlaceholderType>>();
 
     return std::make_optional<FeatureLearnerType>(
         categories_,
         hyperparameters,
         peripheral_,
-        placeholder,
+        placeholder_struct,
         peripheral_schema,
         population_schema );
+}
+
+// -----------------------------------------------------------------------------
+
+template <typename FeatureLearnerType>
+std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
+FeatureLearner<FeatureLearnerType>::modify_data_frames(
+    const containers::DataFrame& _population_df,
+    const std::vector<containers::DataFrame>& _peripheral_dfs ) const
+{
+    // ------------------------------------------------
+
+    const auto peripheral_dfs =
+        add_upper_time_stamps( placeholder(), _peripheral_dfs );
+
+    // ------------------------------------------------
+
+    if constexpr ( FeatureLearnerType::is_time_series_ )
+        {
+            return make_feature_learner()->create_data_frames(
+                _population_df, peripheral_dfs );
+        }
+
+    // ------------------------------------------------
+
+    return std::make_pair( _population_df, peripheral_dfs );
+
+    // ------------------------------------------------
+}
+
+// -----------------------------------------------------------------------------
+
+template <typename FeatureLearnerType>
+std::string FeatureLearner<FeatureLearnerType>::replace_macros(
+    const std::string& _query ) const
+{
+    // --------------------------------------------------------------
+
+    auto new_query =
+        utils::StringReplacer::replace_all( _query, "$GETML_MEMORY", "" );
+
+    new_query = utils::StringReplacer::replace_all(
+        new_query, "$GETML_REMOVE_CHAR\"", "" );
+
+    // --------------------------------------------------------------
+
+    return new_query;
+
+    // --------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------

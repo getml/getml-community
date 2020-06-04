@@ -110,6 +110,20 @@ class DataModelChecker
     /// Checks whether all non-NULL elements in _col are equal to each other
     static bool is_all_equal( const containers::Column<Float>& _col );
 
+    /// Returns a modified version of the placeholder, the population and
+    /// peripheral tables.
+    static std::tuple<
+        Poco::JSON::Object,
+        containers::DataFrame,
+        std::vector<containers::DataFrame>>
+    modify(
+        const Poco::JSON::Object& _population_placeholder,
+        const containers::DataFrame& _population,
+        const std::vector<containers::DataFrame>& _peripheral,
+        const std::vector<
+            std::shared_ptr<featurelearners::AbstractFeatureLearner>>
+            _feature_learners );
+
     /// Adds warning messages related to the joins.
     static void raise_join_warnings(
         const bool _is_many_to_one,

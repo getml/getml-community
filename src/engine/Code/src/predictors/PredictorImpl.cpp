@@ -226,7 +226,7 @@ void PredictorImpl::select_features(
 
     for ( size_t i = 0; i < size; ++i )
         {
-            auto& vec = autofeatures_[size - 1 - i];
+            auto& vec = autofeatures_.at( size - 1 - i );
 
             assert_true( vec.size() >= num_preceding );
 

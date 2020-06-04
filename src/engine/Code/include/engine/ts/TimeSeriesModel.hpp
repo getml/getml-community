@@ -146,15 +146,6 @@ class TimeSeriesModel
     std::shared_ptr<PlaceholderType> create_placeholder(
         const PlaceholderType &_placeholder ) const;
 
-    /// Creates a time stamps difference in interpretable form.
-    std::string make_time_stamp_diff( const Float _diff ) const;
-
-    /// Little helper function. Replaces all occurences of _from with _to.
-    std::string replace_all(
-        const std::string &_str,
-        const std::string &_from,
-        const std::string &_to ) const;
-
     /// Replaces all of occurences of temporary names in an SQL query with
     /// something more meaningful.
     std::string replace_macros( const std::string &_query ) const;
@@ -574,60 +565,6 @@ void TimeSeriesModel<FEType>::fit(
     model().fit( _population, _peripheral, _logger );
 }
 
-// ----------------------------------------------------------------------------
-
-template <class FEType>
-std::string TimeSeriesModel<FEType>::make_time_stamp_diff(
-    const Float _diff ) const
-{
-    constexpr Float seconds_per_day = 24.0 * 60.0 * 60.0;
-    constexpr Float seconds_per_hour = 60.0 * 60.0;
-    constexpr Float seconds_per_minute = 60.0;
-
-    auto diffstr = std::to_string( _diff ) + " seconds";
-
-    if ( _diff >= seconds_per_day )
-        {
-            diffstr = std::to_string( _diff / seconds_per_day ) + " days";
-        }
-    else if ( _diff >= seconds_per_hour )
-        {
-            diffstr = std::to_string( _diff / seconds_per_hour ) + " hours";
-        }
-    else if ( _diff >= seconds_per_minute )
-        {
-            diffstr = std::to_string( _diff / seconds_per_minute ) + " minutes";
-        }
-
-    return ", '+" + diffstr + "'";
-}
-
-// -----------------------------------------------------------------------------
-
-template <class FEType>
-std::string TimeSeriesModel<FEType>::replace_all(
-    const std::string &_str,
-    const std::string &_from,
-    const std::string &_to ) const
-{
-    if ( _from.empty() )
-        {
-            return _str;
-        }
-
-    auto modified = _str;
-
-    size_t pos = 0;
-
-    while ( ( pos = modified.find( _from, pos ) ) != std::string::npos )
-        {
-            modified.replace( pos, _from.length(), _to );
-            pos += _to.length();
-        }
-
-    return modified;
-}
-
 // -----------------------------------------------------------------------------
 
 template <class FEType>
@@ -645,12 +582,12 @@ std::string TimeSeriesModel<FEType>::replace_macros(
         " + " + std::to_string(
                     hyperparameters().horizon_ + hyperparameters().memory_ );
 
-    const auto getml_lower_ts =
-        hyperparameters().horizon_ > 0.0
-            ? make_time_stamp_diff( hyperparameters().horizon_ )
-            : std::string( "" );
+    const auto getml_lower_ts = hyperparameters().horizon_ > 0.0
+                                    ? utils::TSDiffMaker::make_time_stamp_diff(
+                                          hyperparameters().horizon_ )
+                                    : std::string( "" );
 
-    const auto getml_upper_ts = make_time_stamp_diff(
+    const auto getml_upper_ts = utils::TSDiffMaker::make_time_stamp_diff(
         hyperparameters().horizon_ + hyperparameters().memory_ );
 
     std::stringstream one;
@@ -659,41 +596,47 @@ std::string TimeSeriesModel<FEType>::replace_macros(
 
     // --------------------------------------------------------------
 
-    auto new_query = replace_all(
+    auto new_query = utils::StringReplacer::replace_all(
         _query,
         "datetime( t1.\"$GETML_ROWID$GETML_UPPER_TS\" )",
         "t1.rowid" + getml_upper_ts_rowid );
 
-    new_query = replace_all(
+    new_query = utils::StringReplacer::replace_all(
         new_query,
         "datetime( t2.\"$GETML_ROWID$GETML_UPPER_TS\" )",
         "t2.rowid" + getml_upper_ts_rowid );
 
-    new_query =
-        replace_all( new_query, "$GETML_LOWER_TS\"", "\"" + getml_lower_ts );
+    new_query = utils::StringReplacer::replace_all(
+        new_query, "$GETML_LOWER_TS\"", "\"" + getml_lower_ts );
+
+    new_query = utils::StringReplacer::replace_all(
+        new_query, "$GETML_UPPER_TS\"", "\"" + getml_upper_ts );
+
+    new_query = utils::StringReplacer::replace_all(
+        new_query, "$GETML_PERIPHERAL", "" );
+
+    new_query = utils::StringReplacer::replace_all(
+        new_query, "t1.\"$GETML_SELF_JOIN_KEY\"", "1" );
+
+    new_query = utils::StringReplacer::replace_all(
+        new_query, "t2.\"$GETML_SELF_JOIN_KEY\"", "1" );
 
     new_query =
-        replace_all( new_query, "$GETML_UPPER_TS\"", "\"" + getml_upper_ts );
+        utils::StringReplacer::replace_all( new_query, "  " + one.str(), "" );
 
-    new_query = replace_all( new_query, "$GETML_PERIPHERAL", "" );
+    new_query = utils::StringReplacer::replace_all( new_query, one.str(), "" );
 
-    new_query = replace_all( new_query, "t1.\"$GETML_SELF_JOIN_KEY\"", "1" );
+    new_query = utils::StringReplacer::replace_all(
+        new_query, "$GETML_SELF_JOIN_KEY, ", "" );
 
-    new_query = replace_all( new_query, "t2.\"$GETML_SELF_JOIN_KEY\"", "1" );
+    new_query = utils::StringReplacer::replace_all(
+        new_query, "datetime( t1.\"$GETML_ROWID\" )", "t1.rowid" );
 
-    new_query = replace_all( new_query, "  " + one.str(), "" );
+    new_query = utils::StringReplacer::replace_all(
+        new_query, "datetime( t2.\"$GETML_ROWID\" )", "t2.rowid" );
 
-    new_query = replace_all( new_query, one.str(), "" );
-
-    new_query = replace_all( new_query, "$GETML_SELF_JOIN_KEY, ", "" );
-
-    new_query =
-        replace_all( new_query, "datetime( t1.\"$GETML_ROWID\" )", "t1.rowid" );
-
-    new_query =
-        replace_all( new_query, "datetime( t2.\"$GETML_ROWID\" )", "t2.rowid" );
-
-    new_query = replace_all( new_query, "\"$GETML_ROWID\"", "rowid" );
+    new_query = utils::StringReplacer::replace_all(
+        new_query, "\"$GETML_ROWID\"", "rowid" );
 
     // --------------------------------------------------------------
 
@@ -756,5 +699,6 @@ typename FEType::FeaturesType TimeSeriesModel<FEType>::transform(
 // ----------------------------------------------------------------------------
 }  // namespace ts
 }  // namespace engine
+
 #endif  // ENGINE_TS_TIMESERIESMODEL_HPP_
 
