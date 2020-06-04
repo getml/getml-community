@@ -110,13 +110,12 @@ class PredictorImpl
     /// Trivial (const) getter.
     const size_t num_autofeatures() const
     {
-        return std::accumulate(
-            autofeatures_.begin(),
-            autofeatures_.end(),
-            size_t( 0 ),
-            []( size_t s, const std::vector<size_t>& _vec ) {
-                return s + _vec.size();
-            } );
+        size_t n = 0;
+        for ( const auto& vec : autofeatures_ )
+            {
+                n += vec.size();
+            }
+        return n;
     }
 
     /// Trivial (const) getter.

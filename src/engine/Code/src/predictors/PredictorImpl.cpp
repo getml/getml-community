@@ -228,7 +228,7 @@ void PredictorImpl::select_features(
         {
             auto& vec = autofeatures_.at( size - 1 - i );
 
-            assert_true( vec.size() >= num_preceding );
+            assert_true( vec.size() <= num_preceding );
 
             num_preceding -= vec.size();
 
