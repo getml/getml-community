@@ -298,81 +298,33 @@ TimeSeriesModel<FEType>::create_modified_time_stamps(
     const Float _memory,
     const containers::DataFrame &_population ) const
 {
-    // -----------------------------------------------------------------
-
-    if ( _population.num_time_stamps() == 0 )
-        {
-            throw std::invalid_argument(
-                "DataFrame '" + _population.name() + "' has no time stamps!" );
-        }
-
-    // -----------------------------------------------------------------
-
-    const auto horizon_op = [_horizon]( const Float val ) {
-        return val + _horizon;
-    };
-
-    const auto mem_op = [_horizon, _memory]( const Float val ) {
-        return val + _horizon + _memory;
-    };
-
-    // -----------------------------------------------------------------
-
     const auto ts_name =
         _ts_name == "" ? std::string( "$GETML_ROWID" ) : _ts_name;
 
-    size_t ix = 0;
+    auto cols = TimeStampMaker::make_time_stamps(
+        ts_name, _horizon, _memory, _population );
 
-    for ( ; ix < _population.num_time_stamps(); ++ix )
+    assert_true( cols.size() == 0 || cols.size() == 1 || cols.size() == 2 );
+
+    assert_true( _horizon != 0.0 || _memory > 0.0 || cols.size() == 0 );
+
+    assert_true( _horizon == 0.0 || _memory <= 0.0 || cols.size() == 2 );
+
+    if ( _horizon != 0.0 )
         {
-            if ( _population.time_stamp( ix ).name() == ts_name )
-                {
-                    break;
-                }
+            assert_true( cols.size() > 0 );
+
+            cols.at( 0 ).set_name( ts_name + "$GETML_LOWER_TS" );
         }
-
-    if ( ix == _population.num_time_stamps() )
-        {
-            throw std::invalid_argument(
-                "DataFrame '" + _population.name() +
-                "' has no time stamps named '" + _ts_name + "'!" );
-        }
-
-    const auto ts = _population.time_stamp( ix );
-
-    // -----------------------------------------------------------------
-
-    std::vector<containers::Column<Float>> cols;
-
-    // -----------------------------------------------------------------
-
-    cols.emplace_back( containers::Column<Float>( _population.nrows() ) );
-
-    cols.back().set_name( ts.name() + "$GETML_LOWER_TS" );
-
-    cols.back().set_unit( ts.unit() );
-
-    std::transform( ts.begin(), ts.end(), cols.back().begin(), horizon_op );
-
-    // -----------------------------------------------------------------
 
     if ( _memory > 0.0 )
         {
-            cols.emplace_back(
-                containers::Column<Float>( _population.nrows() ) );
+            assert_true( cols.size() > 0 );
 
-            cols.back().set_name( ts.name() + "$GETML_UPPER_TS" );
-
-            cols.back().set_unit( ts.unit() );
-
-            std::transform( ts.begin(), ts.end(), cols.back().begin(), mem_op );
+            cols.back().set_name( ts_name + "$GETML_UPPER_TS" );
         }
 
-    // -----------------------------------------------------------------
-
     return cols;
-
-    // -----------------------------------------------------------------
 }
 
 // -----------------------------------------------------------------------------
@@ -492,7 +444,9 @@ TimeSeriesModel<FEType>::create_placeholder(
                              ? "$GETML_ROWID"
                              : hyperparameters().ts_name_;
 
-    const auto lower_ts_name = ts_name + "$GETML_LOWER_TS";
+    const auto lower_ts_name = hyperparameters().horizon_ != 0.0
+                                   ? ts_name + "$GETML_LOWER_TS"
+                                   : ts_name;
 
     const auto upper_ts_name = hyperparameters().memory_ > 0.0
                                    ? ts_name + "$GETML_UPPER_TS"

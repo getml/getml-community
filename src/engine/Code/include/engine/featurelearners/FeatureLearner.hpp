@@ -186,12 +186,13 @@ class FeatureLearner : public AbstractFeatureLearner
         const Poco::JSON::Object _population_placeholder,
         const std::vector<containers::DataFrame>& _peripheral_dfs ) const;
 
-    /// Adds an upper time stamp to the data frame.
-    void add_upper_ts(
+    /// Adds lower and upper time stamps to the data frame.
+    void add_ts(
         const Poco::JSON::Object& _joined_table,
         const std::string& _ts_used,
         const std::string& _upper_ts_used,
-        const Float _mem,
+        const Float _horizon,
+        const Float _memory,
         std::vector<containers::DataFrame>* _peripheral_dfs ) const;
 
     /// Creates the placeholder, including transforming memory into upper time
@@ -290,11 +291,11 @@ class FeatureLearner : public AbstractFeatureLearner
 
     /// Generates the name for the upper time stamp that is produced using
     /// memory.
-    std::string make_upper_ts_name(
-        const std::string& _ts_used, const Float _mem ) const
+    std::string make_ts_name(
+        const std::string& _ts_used, const Float _diff ) const
     {
-        return "$GETML_MEMORY" + _ts_used + "\"" +
-               utils::TSDiffMaker::make_time_stamp_diff( _mem ) +
+        return "$GETML_GENERATED_TS" + _ts_used + "\"" +
+               utils::TSDiffMaker::make_time_stamp_diff( _diff ) +
                "$GETML_REMOVE_CHAR";
     }
 
@@ -347,16 +348,17 @@ FeatureLearner<FeatureLearnerType>::add_self_joins(
 // ------------------------------------------------------------------------
 
 template <typename FeatureLearnerType>
-void FeatureLearner<FeatureLearnerType>::add_upper_ts(
+void FeatureLearner<FeatureLearnerType>::add_ts(
     const Poco::JSON::Object& _joined_table,
     const std::string& _ts_used,
     const std::string& _upper_ts_used,
-    const Float _mem,
+    const Float _horizon,
+    const Float _memory,
     std::vector<containers::DataFrame>* _peripheral_dfs ) const
 {
     // ------------------------------------------------------------------------
 
-    if ( _upper_ts_used != "" )
+    if ( _memory > 0.0 && _upper_ts_used != "" )
         {
             throw std::invalid_argument(
                 "You can either set an upper time stamp or memory, but not "
@@ -364,6 +366,8 @@ void FeatureLearner<FeatureLearnerType>::add_upper_ts(
         }
 
     // ------------------------------------------------------------------------
+
+    assert_true( peripheral().size() == _peripheral_dfs->size() );
 
     const auto name = JSON::get_value<std::string>( _joined_table, "name_" );
 
@@ -382,29 +386,38 @@ void FeatureLearner<FeatureLearnerType>::add_upper_ts(
 
     auto& df = _peripheral_dfs->at( dist );
 
-    const auto time_stamp = df.time_stamp( _ts_used );
+    auto cols =
+        ts::TimeStampMaker::make_time_stamps( _ts_used, _horizon, _memory, df );
 
     // ------------------------------------------------------------------------
 
-    const auto add_memory = [_mem]( const Float val ) { return val + _mem; };
+    assert_true( cols.size() == 0 || cols.size() == 1 || cols.size() == 2 );
+
+    assert_true( _horizon != 0.0 || _memory > 0.0 || cols.size() == 0 );
+
+    assert_true( _horizon == 0.0 || _memory <= 0.0 || cols.size() == 2 );
+
+    if ( _horizon != 0.0 )
+        {
+            assert_true( cols.size() > 0 );
+
+            cols.at( 0 ).set_name( make_ts_name( _ts_used, _horizon ) );
+        }
+
+    if ( _memory > 0.0 )
+        {
+            assert_true( cols.size() > 0 );
+
+            cols.back().set_name(
+                make_ts_name( _ts_used, _horizon + _memory ) );
+        }
 
     // ------------------------------------------------------------------------
 
-    auto new_upper_time_stamp = containers::Column<Float>( df.nrows() );
-
-    new_upper_time_stamp.set_name( make_upper_ts_name( _ts_used, _mem ) );
-
-    // ------------------------------------------------------------------------
-
-    std::transform(
-        time_stamp.begin(),
-        time_stamp.end(),
-        new_upper_time_stamp.begin(),
-        add_memory );
-
-    // ------------------------------------------------------------------------
-
-    df.add_float_column( new_upper_time_stamp, "time_stamp" );
+    for ( auto& col : cols )
+        {
+            df.add_float_column( col, "time_stamp" );
+        }
 
     // ------------------------------------------------------------------------
 }
@@ -453,6 +466,9 @@ FeatureLearner<FeatureLearnerType>::add_upper_time_stamps(
     const auto upper_time_stamps_used = extract_vector<std::string>(
         _population_placeholder, "upper_time_stamps_used_", expected_size );
 
+    const auto horizon = extract_vector<Float>(
+        _population_placeholder, "horizon_", expected_size );
+
     const auto memory = extract_vector<Float>(
         _population_placeholder, "memory_", expected_size );
 
@@ -470,15 +486,13 @@ FeatureLearner<FeatureLearnerType>::add_upper_time_stamps(
                         " in 'joined_tables_' is not a proper JSON object!" );
                 }
 
-            if ( memory.at( i ) > 0.0 )
-                {
-                    add_upper_ts(
-                        *joined_table,
-                        other_time_stamps_used.at( i ),
-                        upper_time_stamps_used.at( i ),
-                        memory.at( i ),
-                        &peripheral_dfs );
-                }
+            add_ts(
+                *joined_table,
+                other_time_stamps_used.at( i ),
+                upper_time_stamps_used.at( i ),
+                horizon.at( i ),
+                memory.at( i ),
+                &peripheral_dfs );
 
             peripheral_dfs =
                 add_upper_time_stamps( *joined_table, peripheral_dfs );
@@ -504,6 +518,8 @@ FeatureLearner<FeatureLearnerType>::create_placeholder(
 
     // ------------------------------------------------------------------------
 
+    auto other_time_stamps_used = placeholder.other_time_stamps_used_;
+
     auto upper_time_stamps_used = placeholder.upper_time_stamps_used_;
 
     // ------------------------------------------------------------------------
@@ -520,13 +536,31 @@ FeatureLearner<FeatureLearnerType>::create_placeholder(
 
     // ------------------------------------------------------------------------
 
+    const auto horizon =
+        extract_vector<Float>( _obj, "horizon_", expected_size );
+
     const auto memory = extract_vector<Float>( _obj, "memory_", expected_size );
 
     // ------------------------------------------------------------------------
 
     assert_true( placeholder.other_time_stamps_used_.size() == expected_size );
 
+    assert_true( horizon.size() == expected_size );
+
     assert_true( memory.size() == expected_size );
+
+    // ------------------------------------------------------------------------
+
+    for ( size_t i = 0; i < horizon.size(); ++i )
+        {
+            if ( horizon.at( i ) == 0.0 )
+                {
+                    continue;
+                }
+
+            other_time_stamps_used.at( i ) = make_ts_name(
+                placeholder.other_time_stamps_used_.at( i ), horizon.at( i ) );
+        }
 
     // ------------------------------------------------------------------------
 
@@ -544,8 +578,9 @@ FeatureLearner<FeatureLearnerType>::create_placeholder(
                         "memory, but not both!" );
                 }
 
-            upper_time_stamps_used.at( i ) = make_upper_ts_name(
-                placeholder.other_time_stamps_used_.at( i ), memory.at( i ) );
+            upper_time_stamps_used.at( i ) = make_ts_name(
+                placeholder.other_time_stamps_used_.at( i ),
+                horizon.at( i ) + memory.at( i ) );
         }
 
     // ------------------------------------------------------------------------
@@ -574,7 +609,7 @@ FeatureLearner<FeatureLearnerType>::create_placeholder(
         placeholder.join_keys_used_,
         placeholder.name(),
         placeholder.other_join_keys_used_,
-        placeholder.other_time_stamps_used_,
+        other_time_stamps_used,
         placeholder.time_stamps_used_,
         upper_time_stamps_used );
 
@@ -1166,7 +1201,7 @@ std::string FeatureLearner<FeatureLearnerType>::replace_macros(
     // --------------------------------------------------------------
 
     auto new_query =
-        utils::StringReplacer::replace_all( _query, "$GETML_MEMORY", "" );
+        utils::StringReplacer::replace_all( _query, "$GETML_GENERATED_TS", "" );
 
     new_query = utils::StringReplacer::replace_all(
         new_query, "$GETML_REMOVE_CHAR\"", "" );

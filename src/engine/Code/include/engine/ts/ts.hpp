@@ -26,6 +26,7 @@
 #include "engine/ts/Int.hpp"
 
 #include "engine/ts/Hyperparameters.hpp"
+#include "engine/ts/TimeStampMaker.hpp"
 
 #include "engine/ts/TimeSeriesModel.hpp"
 

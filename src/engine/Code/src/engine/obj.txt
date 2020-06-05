@@ -27,5 +27,8 @@ set(
     ${ENGINE_SOURCE_DIRECTORY}/Receiver.cpp
     ${ENGINE_SOURCE_DIRECTORY}/RequestHandler.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Sender.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/StringReplacer.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/TimeStampMaker.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Token.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/TSDiffMaker.cpp
 )
