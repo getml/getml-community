@@ -112,7 +112,7 @@ void Pipeline::calculate_feature_stats(
 
     // ------------------------------------------------------------------------
 
-    size_t num_bins = 200;
+    size_t num_bins = 30;
 
     num_bins = std::min( num_bins, _nrows / 30 );
 
