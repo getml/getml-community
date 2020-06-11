@@ -61,7 +61,7 @@ class DataModelChecker
         communication::Warner* _warner );
 
     /// Raises a warning if there is something wrong with the matches.
-    static std::pair<bool, size_t> check_matches(
+    static std::tuple<bool, size_t, size_t> check_matches(
         const std::string& _join_key_used,
         const std::string& _other_join_key_used,
         const std::string& _time_stamp_used,
@@ -128,6 +128,7 @@ class DataModelChecker
     static void raise_join_warnings(
         const bool _is_many_to_one,
         const size_t _num_matches,
+        const size_t _num_jk_not_found,
         const std::string& _join_key_used,
         const std::string& _other_join_key_used,
         const containers::DataFrame& _population_df,
@@ -143,12 +144,43 @@ class DataModelChecker
 
     // -------------------------------------------------------------------------
 
+   private:
+    /// Standard header for a column that should be unused.
+    static std::string column_should_be_unused()
+    {
+        return warning() + "[COLUMN SHOULD BE UNUSED]: ";
+    }
+
+    /// Standard header for an ill-defined data model.
+    static std::string ill_defined_data_model()
+    {
+        return warning() + "[ILL-DEFINED DATA MODEL]: ";
+    }
+
+    /// Standard header for an info message.
+    static std::string info() { return "INFO "; }
+
     /// Checks whether ts1 lies between ts2 and upper.
     static bool is_in_range(
         const Float ts1, const Float ts2, const Float upper )
     {
         return ts2 <= ts1 && ( std::isnan( upper ) || ts1 < upper );
     }
+
+    /// Standard header for when some joine keys where not found.
+    static std::string join_keys_not_found()
+    {
+        return info() + "[JOIN KEYS NOT FOUND]: ";
+    }
+
+    /// Standard header for something that might take long.
+    static std::string might_take_long()
+    {
+        return info() + "[MIGHT TAKE LONG]: ";
+    }
+
+    /// Standard header for a warning message.
+    static std::string warning() { return "WARNING "; }
 
     // -------------------------------------------------------------------------
 };

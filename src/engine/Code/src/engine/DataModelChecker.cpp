@@ -79,7 +79,7 @@ void DataModelChecker::check(
         {
             for ( const auto& warning : warner.warnings() )
                 {
-                    _logger->log( "WARNING: " + warning );
+                    _logger->log( warning );
                 }
         }
 
@@ -113,7 +113,7 @@ void DataModelChecker::check_categorical_column(
     if ( share_null > 0.9 )
         {
             _warner->add(
-                std::to_string( share_null * 100.0 ) +
+                info() + std::to_string( share_null * 100.0 ) +
                 "\% of all entries in column '" + _col.name() +
                 "' in data frame '" + _df_name +
                 "' are NULL values. You should "
@@ -133,8 +133,8 @@ void DataModelChecker::check_categorical_column(
     if ( num_distinct == 1.0 )
         {
             _warner->add(
-                "All non-NULL entries in column '" + _col.name() +
-                "' in data frame '" + _df_name +
+                column_should_be_unused() + "All non-NULL entries in column '" +
+                _col.name() + "' in data frame '" + _df_name +
                 "' are equal to each other. You should "
                 "consider setting its role to unused_string." );
         }
@@ -144,11 +144,30 @@ void DataModelChecker::check_categorical_column(
     const bool is_comparison_only =
         ( _col.unit().find( "comparison only" ) != std::string::npos );
 
-    const auto unique_share = num_distinct / num_non_null;
-
-    if ( !is_comparison_only && unique_share > 0.4 )
+    if ( num_distinct > 1000.0 && !is_comparison_only )
         {
             _warner->add(
+                might_take_long() +
+                "The number of unique entries in column "
+                "'" +
+                _col.name() + "' in data frame '" + _df_name + "' is " +
+                std::to_string( num_distinct ) +
+                ". This might take a long time to fit. You should "
+                "consider setting its role to unused_string or using it "
+                "for "
+                "comparison only (you can do the latter by setting a unit "
+                "that "
+                "contains 'comparison only')." );
+        }
+
+    // --------------------------------------------------------------------------
+
+    const auto unique_share = num_distinct / num_non_null;
+
+    if ( !is_comparison_only && unique_share > 0.25 )
+        {
+            _warner->add(
+                column_should_be_unused() +
                 "The ratio of unique entries to non-NULL entries in column "
                 "'" +
                 _col.name() + "' in data frame '" + _df_name + "' is " +
@@ -238,8 +257,8 @@ void DataModelChecker::check_df(
             if ( num_columns > 20 )
                 {
                     _warner->add(
-                        "Data frame '" + _df.name() + "' contains " +
-                        std::to_string( num_columns ) +
+                        might_take_long() + "Data frame '" + _df.name() +
+                        "' contains " + std::to_string( num_columns ) +
                         " categorical and numerical columns. The multirel "
                         "algorithm does not scale very well to data frames "
                         "with many columns. This pipeline might take a very "
@@ -296,6 +315,7 @@ void DataModelChecker::check_float_column(
     if ( share_null > 0.9 )
         {
             _warner->add(
+                column_should_be_unused() +
                 std::to_string( share_null * 100.0 ) +
                 "\% of all entries in column '" + _col.name() +
                 "' in data frame '" + _df_name +
@@ -313,8 +333,8 @@ void DataModelChecker::check_float_column(
     if ( all_equal )
         {
             _warner->add(
-                "All non-NULL entries in column '" + _col.name() +
-                "' in data frame '" + _df_name +
+                column_should_be_unused() + "All non-NULL entries in column '" +
+                _col.name() + "' in data frame '" + _df_name +
                 "' are equal to each other. You should "
                 "consider setting its role to unused_float or using it for "
                 "comparison only (you can do the latter by setting a unit "
@@ -406,18 +426,20 @@ void DataModelChecker::check_join(
 
             const auto dist = std::distance( _peripheral_names.begin(), it );
 
-            const auto [is_many_to_one, num_matches] = check_matches(
-                join_keys_used.at( i ),
-                other_join_keys_used.at( i ),
-                time_stamps_used.at( i ),
-                other_time_stamps_used.at( i ),
-                upper_time_stamps_used.at( i ),
-                _population,
-                _peripheral.at( dist ) );
+            const auto [is_many_to_one, num_matches, num_jk_not_found] =
+                check_matches(
+                    join_keys_used.at( i ),
+                    other_join_keys_used.at( i ),
+                    time_stamps_used.at( i ),
+                    other_time_stamps_used.at( i ),
+                    upper_time_stamps_used.at( i ),
+                    _population,
+                    _peripheral.at( dist ) );
 
             raise_join_warnings(
                 is_many_to_one,
                 num_matches,
+                num_jk_not_found,
                 join_keys_used.at( i ),
                 other_join_keys_used.at( i ),
                 _population,
@@ -437,7 +459,7 @@ void DataModelChecker::check_join(
 
 // ----------------------------------------------------------------------------
 
-std::pair<bool, size_t> DataModelChecker::check_matches(
+std::tuple<bool, size_t, size_t> DataModelChecker::check_matches(
     const std::string& _join_key_used,
     const std::string& _other_join_key_used,
     const std::string& _time_stamp_used,
@@ -471,6 +493,8 @@ std::pair<bool, size_t> DataModelChecker::check_matches(
 
     size_t num_matches = 0;
 
+    size_t num_jk_not_found = 0;
+
     // ------------------------------------------------------------------------
 
     for ( size_t ix1 = 0; ix1 < jk1.size(); ++ix1 )
@@ -479,6 +503,7 @@ std::pair<bool, size_t> DataModelChecker::check_matches(
 
             if ( it2 == map2.end() )
                 {
+                    num_jk_not_found++;
                     continue;
                 }
 
@@ -509,7 +534,7 @@ std::pair<bool, size_t> DataModelChecker::check_matches(
 
     // ------------------------------------------------------------------------
 
-    return std::make_pair( is_many_to_one, num_matches );
+    return std::make_tuple( is_many_to_one, num_matches, num_jk_not_found );
 
     // ------------------------------------------------------------------------
 }
@@ -585,14 +610,15 @@ void DataModelChecker::check_self_joins(
                   i < expected_size;
                   ++i )
                 {
-                    const auto [is_many_to_one, num_matches] = check_matches(
-                        join_keys_used.at( i ),
-                        other_join_keys_used.at( i ),
-                        time_stamps_used.at( i ),
-                        other_time_stamps_used.at( i ),
-                        upper_time_stamps_used.at( i ),
-                        new_population,
-                        new_peripheral.back() );
+                    const auto [is_many_to_one, num_matches, num_jk_not_found] =
+                        check_matches(
+                            join_keys_used.at( i ),
+                            other_join_keys_used.at( i ),
+                            time_stamps_used.at( i ),
+                            other_time_stamps_used.at( i ),
+                            upper_time_stamps_used.at( i ),
+                            new_population,
+                            new_peripheral.back() );
 
                     raise_self_join_warnings(
                         is_many_to_one, num_matches, new_population, _warner );
@@ -962,6 +988,7 @@ DataModelChecker::modify(
 void DataModelChecker::raise_join_warnings(
     const bool _is_many_to_one,
     const size_t _num_matches,
+    const size_t _num_jk_not_found,
     const std::string& _join_key_used,
     const std::string& _other_join_key_used,
     const containers::DataFrame& _population_df,
@@ -973,9 +1000,9 @@ void DataModelChecker::raise_join_warnings(
     if ( _num_matches == 0 )
         {
             _warner->add(
-                "There are no matches between '" + _join_key_used + "' in '" +
-                _population_df.name() + "' and '" + _other_join_key_used +
-                "' in '" + _peripheral_df.name() +
+                ill_defined_data_model() + "There are no matches between '" +
+                _join_key_used + "' in '" + _population_df.name() + "' and '" +
+                _other_join_key_used + "' in '" + _peripheral_df.name() +
                 "'. You should consider removing this join from your data "
                 "model or re-examine your join keys." );
 
@@ -987,8 +1014,8 @@ void DataModelChecker::raise_join_warnings(
     if ( _is_many_to_one )
         {
             _warner->add(
-                "'" + _population_df.name() + "' and '" +
-                _peripheral_df.name() +
+                ill_defined_data_model() + "'" + _population_df.name() +
+                "' and '" + _peripheral_df.name() +
                 "' are in a many-to-one or one-to-one relationship when "
                 "joined "
                 "over '" +
@@ -1009,15 +1036,40 @@ void DataModelChecker::raise_join_warnings(
     if ( avg_num_matches > 300.0 )
         {
             _warner->add(
-                "There are " + std::to_string( _num_matches ) +
-                " matches between '" + _population_df.name() + "' and '" +
-                _peripheral_df.name() + "' when joined over '" +
-                _join_key_used + "' and '" + _other_join_key_used +
+                might_take_long() + "There are " +
+                std::to_string( _num_matches ) + " matches between '" +
+                _population_df.name() + "' and '" + _peripheral_df.name() +
+                "' when joined over '" + _join_key_used + "' and '" +
+                _other_join_key_used +
                 "'. This pipeline might take a very long time to fit. "
                 "You should consider imposing a narrower limit on the scope of "
-                "this join by setting an upper time stamp. You can set an "
-                "upper time stamp in the .join(...)-method of the "
-                "Placeholder." );
+                "this join by reducing the memory (the period of time until "
+                "the time series feature learner 'forgets' historical data). "
+                "You can reduce the memory "
+                "by setting the appropriate parameter in the .add(...)-method "
+                "of the StarSchema or the .join(...)-method of the "
+                "Placeholder. "
+                "Please note that a memory of 0.0 means that "
+                "the time series feature learner will not forget any past "
+                "data." );
+        }
+
+    // ------------------------------------------------------------------------
+
+    const auto not_found_ratio = static_cast<Float>( _num_jk_not_found ) /
+                                 static_cast<Float>( _population_df.nrows() );
+
+    if ( not_found_ratio > 0.0 )
+        {
+            _warner->add(
+                join_keys_not_found() + "When joining '" +
+                _population_df.name() + "' and '" + _peripheral_df.name() +
+                "' over '" + _join_key_used + "' and '" + _other_join_key_used +
+                "', there are no corresponding entries for " +
+                std::to_string( not_found_ratio * 100.0 ) +
+                "\% of entries in join key '" + _join_key_used + "' in '" +
+                _population_df.name() +
+                "'. You might want to double-check your join keys." );
         }
 
     // ------------------------------------------------------------------------
@@ -1036,7 +1088,8 @@ void DataModelChecker::raise_self_join_warnings(
     if ( _num_matches == 0 )
         {
             _warner->add(
-                "The self-join on '" + _population_df.name() +
+                ill_defined_data_model() + "The self-join on '" +
+                _population_df.name() +
                 "' created by the time series feature learner has no matches. "
                 "You should examine your join keys." );
 
@@ -1048,7 +1101,8 @@ void DataModelChecker::raise_self_join_warnings(
     if ( _is_many_to_one )
         {
             _warner->add(
-                "The self-join on '" + _population_df.name() +
+                ill_defined_data_model() + "The self-join on '" +
+                _population_df.name() +
                 "' created by the time series feature learner is a "
                 "one-to-one relationship. Using a time series feature learner "
                 "for such a data set makes little sense. You should consider "
@@ -1063,7 +1117,8 @@ void DataModelChecker::raise_self_join_warnings(
     if ( avg_num_matches > 300.0 )
         {
             _warner->add(
-                "The self-join on '" + _population_df.name() +
+                might_take_long() + "The self-join on '" +
+                _population_df.name() +
                 "' created by the time series feature learner "
                 "has a total of " +
                 std::to_string( _num_matches ) +
