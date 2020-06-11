@@ -182,7 +182,7 @@ class FeatureLearner : public AbstractFeatureLearner
     /// Extracts upper time stamps from the memory parameter. (Memory is just
     /// syntactic sugar for upper time stamps. The feature learners don't know
     /// about this concept).
-    std::vector<containers::DataFrame> add_upper_time_stamps(
+    std::vector<containers::DataFrame> add_time_stamps(
         const Poco::JSON::Object _population_placeholder,
         const std::vector<containers::DataFrame>& _peripheral_dfs ) const;
 
@@ -426,7 +426,7 @@ void FeatureLearner<FeatureLearnerType>::add_ts(
 
 template <typename FeatureLearnerType>
 std::vector<containers::DataFrame>
-FeatureLearner<FeatureLearnerType>::add_upper_time_stamps(
+FeatureLearner<FeatureLearnerType>::add_time_stamps(
     const Poco::JSON::Object _population_placeholder,
     const std::vector<containers::DataFrame>& _peripheral_dfs ) const
 {
@@ -494,8 +494,7 @@ FeatureLearner<FeatureLearnerType>::add_upper_time_stamps(
                 memory.at( i ),
                 &peripheral_dfs );
 
-            peripheral_dfs =
-                add_upper_time_stamps( *joined_table, peripheral_dfs );
+            peripheral_dfs = add_time_stamps( *joined_table, peripheral_dfs );
         }
 
     // ------------------------------------------------------------------------
@@ -605,6 +604,7 @@ FeatureLearner<FeatureLearnerType>::create_placeholder(
     // ------------------------------------------------------------------------
 
     return PlaceholderType(
+        placeholder.allow_lagged_targets_,
         joined_tables,
         placeholder.join_keys_used_,
         placeholder.name(),
@@ -760,9 +760,6 @@ FeatureLearner<FeatureLearnerType>::extract_table(
 
     switch ( _target_num )
         {
-            case AbstractFeatureLearner::IGNORE_TARGETS:
-                break;
-
             case AbstractFeatureLearner::USE_ALL_TARGETS:
                 for ( size_t i = 0; i < _df.num_targets(); ++i )
                     {
@@ -979,7 +976,7 @@ FeatureLearner<FeatureLearnerType>::extract_tables(
     for ( const auto& df : _peripheral_dfs )
         {
             const auto table =
-                extract_table( df, AbstractFeatureLearner::IGNORE_TARGETS );
+                extract_table( df, AbstractFeatureLearner::USE_ALL_TARGETS );
 
             peripheral_tables.push_back( table );
         }
@@ -1175,7 +1172,7 @@ FeatureLearner<FeatureLearnerType>::modify_data_frames(
     // ------------------------------------------------
 
     const auto peripheral_dfs =
-        add_upper_time_stamps( placeholder(), _peripheral_dfs );
+        add_time_stamps( placeholder(), _peripheral_dfs );
 
     // ------------------------------------------------
 

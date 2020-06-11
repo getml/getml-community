@@ -51,7 +51,8 @@ struct DataFrame
         const std::string& _name,
         const std::string& _join_key,
         const std::string& _time_stamp,
-        const std::string& _upper_time_stamp ) const;
+        const std::string& _upper_time_stamp,
+        const bool _allow_lagged_targets ) const;
 
     // ---------------------------------------------------------------------
 

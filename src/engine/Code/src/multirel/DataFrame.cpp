@@ -127,7 +127,8 @@ DataFrame DataFrame::create_subview(
     const std::string& _name,
     const std::string& _join_key,
     const std::string& _time_stamp,
-    const std::string& _upper_time_stamp ) const
+    const std::string& _upper_time_stamp,
+    const bool _allow_lagged_targets ) const
 {
     // ---------------------------------------------------------------------------
 
@@ -159,6 +160,14 @@ DataFrame DataFrame::create_subview(
     for ( const auto& col : numericals_ )
         {
             numericals_and_time_stamps.push_back( col );
+        }
+
+    if ( _allow_lagged_targets )
+        {
+            for ( const auto& col : targets_ )
+                {
+                    numericals_and_time_stamps.push_back( col );
+                }
         }
 
     for ( const auto& col : time_stamps_ )

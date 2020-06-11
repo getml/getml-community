@@ -342,16 +342,6 @@ std::vector<containers::DataFrame> TimeSeriesModel<FEType>::create_peripheral(
 
     // ------------------------------------------------------------
 
-    if ( hyperparameters().allow_lagged_targets_ )
-        {
-            for ( size_t i = 0; i < new_df.num_targets(); ++i )
-                {
-                    new_df.add_float_column( new_df.target( i ), "numerical" );
-                }
-        }
-
-    // ------------------------------------------------------------
-
     const auto ts_cols = create_modified_time_stamps(
         hyperparameters().ts_name_,
         hyperparameters().horizon_,
@@ -465,6 +455,8 @@ TimeSeriesModel<FEType>::create_placeholder(
 
     // ----------------------------------------------------------
 
+    auto allow_lagged_targets = _placeholder.allow_lagged_targets_;
+
     auto joined_tables = _placeholder.joined_tables_;
 
     auto join_keys_used = _placeholder.join_keys_used_;
@@ -481,11 +473,14 @@ TimeSeriesModel<FEType>::create_placeholder(
 
     for ( size_t i = 0; i < self_join_keys.size(); ++i )
         {
+            allow_lagged_targets.push_back(
+                hyperparameters().allow_lagged_targets_ );
+
             joined_tables.push_back( joined_table );
 
-            join_keys_used.push_back( self_join_keys[i] );
+            join_keys_used.push_back( self_join_keys.at( i ) );
 
-            other_join_keys_used.push_back( self_join_keys[i] );
+            other_join_keys_used.push_back( self_join_keys.at( i ) );
 
             other_time_stamps_used.push_back( lower_ts_name );
 
@@ -497,6 +492,7 @@ TimeSeriesModel<FEType>::create_placeholder(
     // ----------------------------------------------------------
 
     return std::make_shared<PlaceholderType>(
+        allow_lagged_targets,
         joined_tables,
         join_keys_used,
         _placeholder.name(),

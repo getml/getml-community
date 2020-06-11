@@ -14,7 +14,6 @@ class AbstractFeatureLearner
     // --------------------------------------------------------
 
    public:
-    static constexpr Int IGNORE_TARGETS = -2;
     static constexpr Int USE_ALL_TARGETS = -1;
 
     static constexpr const char* MULTIREL_MODEL = "MultirelModel";

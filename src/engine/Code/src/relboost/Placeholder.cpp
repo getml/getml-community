@@ -41,6 +41,14 @@ void Placeholder::check_vector_length()
 {
     const size_t expected = joined_tables_.size();
 
+    if ( allow_lagged_targets_.size() != expected )
+        {
+            throw std::invalid_argument(
+                "Error: Length of 'allow lagged targets' does not match length "
+                "of "
+                "joined tables!" );
+        }
+
     if ( join_keys_used_.size() != expected )
         {
             throw std::invalid_argument(
@@ -124,6 +132,10 @@ Poco::JSON::Object::Ptr Placeholder::to_json_obj() const
     Poco::JSON::Object::Ptr obj( new Poco::JSON::Object() );
 
     // ---------------------------------------------------------
+
+    obj->set(
+        "allow_lagged_targets_",
+        JSON::vector_to_array_ptr( allow_lagged_targets_ ) );
 
     obj->set(
         "joined_tables_",
