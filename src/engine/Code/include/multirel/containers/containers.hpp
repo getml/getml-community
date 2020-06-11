@@ -18,6 +18,8 @@
 
 #include "debug/debug.hpp"
 
+#include "helpers/helpers.hpp"
+
 #include "multirel/Float.hpp"
 #include "multirel/Int.hpp"
 
