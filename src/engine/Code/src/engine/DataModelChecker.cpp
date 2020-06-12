@@ -151,7 +151,7 @@ void DataModelChecker::check_categorical_column(
                 "The number of unique entries in column "
                 "'" +
                 _col.name() + "' in data frame '" + _df_name + "' is " +
-                std::to_string( num_distinct ) +
+                std::to_string( static_cast<int>( num_distinct ) ) +
                 ". This might take a long time to fit. You should "
                 "consider setting its role to unused_string or using it "
                 "for "
