@@ -269,6 +269,7 @@ void ProjectManager::delete_project(
     if ( project_directory_ == options_.all_projects_directory() + _name + "/" )
         {
             project_directory_ = "";
+            clear();
         }
 
     Poco::File( options_.all_projects_directory() + _name + "/" )
