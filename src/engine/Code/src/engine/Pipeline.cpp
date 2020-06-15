@@ -168,7 +168,7 @@ void Pipeline::check(
     // -------------------------------------------------------------------------
 
     const auto [feature_learners, target_nums] =
-        init_feature_learners( num_targets(), df_fingerprints() );
+        init_feature_learners( 1, df_fingerprints() );
 
     // -------------------------------------------------------------------------
 
@@ -870,6 +870,14 @@ Pipeline::init_feature_learners(
     const size_t _num_targets,
     const std::vector<Poco::JSON::Object::Ptr>& _df_fingerprints ) const
 {
+    // ----------------------------------------------------------------------
+
+    if ( _num_targets == 0 )
+        {
+            throw std::invalid_argument(
+                "You must provide at least one target." );
+        }
+
     // ----------------------------------------------------------------------
 
     const auto population = std::make_shared<Poco::JSON::Object>(
