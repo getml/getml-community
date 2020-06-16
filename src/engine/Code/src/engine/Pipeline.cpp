@@ -518,7 +518,7 @@ containers::Features Pipeline::generate_numerical_features(
             assert_true( fe );
 
             auto new_features =
-                fe->transform( _cmd, index, _logger, _data_frames, _socket );
+                fe->transform( _cmd, index, _logger, _data_frames );
 
             numerical_features.insert(
                 numerical_features.end(),
@@ -708,6 +708,8 @@ void Pipeline::fit_feature_learners(
 
     assert_true( feature_learners.size() == target_nums.size() );
 
+    communication::SocketChecker socket_checker( _socket );
+
     for ( size_t i = 0; i < feature_learners.size(); ++i )
         {
             auto& fe = feature_learners.at( i );
@@ -724,8 +726,7 @@ void Pipeline::fit_feature_learners(
                     continue;
                 }
 
-            fe->fit(
-                _cmd, _logger, _data_frames, target_nums.at( i ), _socket );
+            fe->fit( _cmd, _logger, _data_frames, target_nums.at( i ) );
 
             _fe_tracker->add( fe );
         }

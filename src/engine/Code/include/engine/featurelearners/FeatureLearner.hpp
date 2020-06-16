@@ -53,8 +53,7 @@ class FeatureLearner : public AbstractFeatureLearner
         const Poco::JSON::Object& _cmd,
         const std::shared_ptr<const monitoring::Logger>& _logger,
         const std::map<std::string, containers::DataFrame>& _data_frames,
-        const Int _target_num,
-        Poco::Net::StreamSocket* _socket ) final;
+        const Int _target_num ) final;
 
     /// Data frames might have to be modified, such as adding upper time stamps
     /// or self joins.
@@ -68,8 +67,8 @@ class FeatureLearner : public AbstractFeatureLearner
         const Poco::JSON::Object& _cmd,
         const std::vector<size_t>& _index,
         const std::shared_ptr<const monitoring::Logger>& _logger,
-        const std::map<std::string, containers::DataFrame>& _data_frames,
-        Poco::Net::StreamSocket* _socket ) const final;
+        const std::map<std::string, containers::DataFrame>& _data_frames )
+        const final;
 
     /// Returns a string describing the type of the feature learner.
     std::string type() const final;
@@ -1071,8 +1070,7 @@ void FeatureLearner<FeatureLearnerType>::fit(
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<const monitoring::Logger>& _logger,
     const std::map<std::string, containers::DataFrame>& _data_frames,
-    const Int _target_num,
-    Poco::Net::StreamSocket* _socket )
+    const Int _target_num )
 {
     // ------------------------------------------------
 
@@ -1217,8 +1215,7 @@ containers::Features FeatureLearner<FeatureLearnerType>::transform(
     const Poco::JSON::Object& _cmd,
     const std::vector<size_t>& _index,
     const std::shared_ptr<const monitoring::Logger>& _logger,
-    const std::map<std::string, containers::DataFrame>& _data_frames,
-    Poco::Net::StreamSocket* _socket ) const
+    const std::map<std::string, containers::DataFrame>& _data_frames ) const
 {
     const auto [population_df, peripheral_dfs] =
         extract_data_frames( _cmd, _data_frames );
