@@ -86,6 +86,9 @@ class XGBoostPredictor : public Predictor
     /// Whether the predictor has been fitted.
     bool is_fitted() const final { return len() > 0; }
 
+    /// Whether we want the predictor to be silent.
+    bool silent() const final { return hyperparams_.silent_; }
+
     // -----------------------------------------
 
    private:

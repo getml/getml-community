@@ -75,7 +75,8 @@ void SubtreeHelper::fit_subensemble(
         ->fit_subensembles( subtable_holder, _logger, intermediate_agg );
 
     auto predictions =
-        ( *_subensemble )->make_subpredictions( *subtable_holder );
+        ( *_subensemble )
+            ->make_subpredictions( *subtable_holder, _logger, _comm );
 
     auto subfeatures =
         SubtreeHelper::make_subfeatures( *subtable_holder, predictions );
@@ -83,12 +84,7 @@ void SubtreeHelper::fit_subensemble(
     const auto num_features =
         static_cast<size_t>( _hyperparameters.num_subfeatures_ );
 
-    const auto silent = _hyperparameters.silent_;
-
-    if ( !silent && _logger )
-        {
-            _logger->log( "Training subfeatures..." );
-        }
+    utils::Logger::log( "Training features...", _logger, _comm );
 
     for ( size_t i = 0; i < num_features; ++i )
         {
@@ -96,11 +92,13 @@ void SubtreeHelper::fit_subensemble(
                 ->fit_new_feature(
                     intermediate_agg, subtable_holder, subfeatures );
 
-            if ( !silent && _logger )
-                {
-                    _logger->log(
-                        "Trained FEATURE_" + std::to_string( i + 1 ) + "." );
-                }
+            const auto progress = ( ( i + 1 ) * 100 ) / num_features;
+
+            utils::Logger::log(
+                "Trained FEATURE_" + std::to_string( i + 1 ) +
+                    ". Progress: " + std::to_string( progress ) + "\%.",
+                _logger,
+                _comm );
         }
 
     _loss_function->reset_yhat_old();
@@ -268,7 +266,9 @@ void SubtreeHelper::fit_subensembles(
 std::vector<containers::Predictions> SubtreeHelper::make_predictions(
     const TableHolder& _table_holder,
     const std::vector<std::optional<DecisionTreeEnsemble>>& _subensembles_avg,
-    const std::vector<std::optional<DecisionTreeEnsemble>>& _subensembles_sum )
+    const std::vector<std::optional<DecisionTreeEnsemble>>& _subensembles_sum,
+    const std::shared_ptr<const logging::AbstractLogger> _logger,
+    multithreading::Communicator* _comm )
 {
     const auto size = _table_holder.subtables_.size();
 
@@ -279,63 +279,78 @@ std::vector<containers::Predictions> SubtreeHelper::make_predictions(
 
     for ( size_t i = 0; i < size; ++i )
         {
-            if ( !_table_holder.subtables_[i] )
+            if ( !_table_holder.subtables_.at( i ) )
                 {
                     continue;
                 }
 
-            assert_true( _table_holder.subtables_[i] );
-
-            const auto& subtable_holder = *_table_holder.subtables_[i];
+            const auto& subtable_holder = *_table_holder.subtables_.at( i );
 
             assert_true( subtable_holder.main_tables_.size() > 0 );
 
-            assert_true( _subensembles_avg[i] );
+            assert_true( _subensembles_avg.at( i ) );
 
-            assert_true( _subensembles_sum[i] );
+            assert_true( _subensembles_sum.at( i ) );
 
-            auto subpredictions =
-                _subensembles_avg[i]->make_subpredictions( subtable_holder );
+            make_predictions_for_one_subensemble(
+                _subensembles_avg.at( i ),
+                subtable_holder,
+                _logger,
+                _comm,
+                &predictions.at( i ) );
 
-            auto subsubfeatures = SubtreeHelper::make_subfeatures(
-                subtable_holder, subpredictions );
-
-            for ( size_t j = 0; j < _subensembles_avg[i]->num_features(); ++j )
-                {
-                    predictions[i].emplace_back(
-                        _subensembles_avg[i]->transform(
-                            subtable_holder, subsubfeatures, j ) );
-
-                    assert_true( std::all_of(
-                        predictions[i].back().begin(),
-                        predictions[i].back().end(),
-                        []( Float val ) {
-                            return !std::isnan( val ) && !std::isinf( val );
-                        } ) );
-                }
-
-            subpredictions =
-                _subensembles_sum[i]->make_subpredictions( subtable_holder );
-
-            subsubfeatures = SubtreeHelper::make_subfeatures(
-                subtable_holder, subpredictions );
-
-            for ( size_t j = 0; j < _subensembles_sum[i]->num_features(); ++j )
-                {
-                    predictions[i].emplace_back(
-                        _subensembles_sum[i]->transform(
-                            subtable_holder, subsubfeatures, j ) );
-
-                    assert_true( std::all_of(
-                        predictions[i].back().begin(),
-                        predictions[i].back().end(),
-                        []( Float val ) {
-                            return !std::isnan( val ) && !std::isinf( val );
-                        } ) );
-                }
+            make_predictions_for_one_subensemble(
+                _subensembles_sum.at( i ),
+                subtable_holder,
+                _logger,
+                _comm,
+                &predictions.at( i ) );
         }
 
     return predictions;
+}
+
+// ----------------------------------------------------------------------------
+
+void SubtreeHelper::make_predictions_for_one_subensemble(
+    const std::optional<DecisionTreeEnsemble>& _subensemble,
+    const TableHolder& _subtable_holder,
+    const std::shared_ptr<const logging::AbstractLogger> _logger,
+    multithreading::Communicator* _comm,
+    containers::Predictions* _predictions )
+{
+    assert_true( _subensemble );
+
+    const auto subpredictions =
+        _subensemble->make_subpredictions( _subtable_holder, _logger, _comm );
+
+    const auto subsubfeatures =
+        SubtreeHelper::make_subfeatures( _subtable_holder, subpredictions );
+
+    utils::Logger::log( "Building features...", _logger, _comm );
+
+    const auto num_features = _subensemble->num_features();
+
+    for ( size_t i = 0; i < num_features; ++i )
+        {
+            _predictions->emplace_back( _subensemble->transform(
+                _subtable_holder, subsubfeatures, i ) );
+
+            assert_true( std::all_of(
+                _predictions->back().begin(),
+                _predictions->back().end(),
+                []( Float val ) {
+                    return !std::isnan( val ) && !std::isinf( val );
+                } ) );
+
+            const auto progress = ( ( i + 1 ) * 100 ) / num_features;
+
+            utils::Logger::log(
+                "Built FEATURE_" + std::to_string( i + 1 ) +
+                    ". Progress: " + std::to_string( progress ) + "\%.",
+                _logger,
+                _comm );
+        }
 }
 
 // ----------------------------------------------------------------------------
@@ -352,40 +367,46 @@ std::vector<containers::Subfeatures> SubtreeHelper::make_subfeatures(
 
     for ( size_t i = 0; i < size; ++i )
         {
-            if ( !_table_holder.subtables_[i] )
+            if ( !_table_holder.subtables_.at( i ) )
                 {
                     continue;
                 }
 
-            assert_true( _table_holder.subtables_[i] );
-
-            assert_true( _table_holder.subtables_[i]->main_tables_.size() > 0 );
+            assert_true( _table_holder.subtables_.at( i ) );
 
             assert_true(
-                _table_holder.subtables_[i]->main_tables_[0].rows_ptr() );
+                _table_holder.subtables_.at( i )->main_tables_.size() > 0 );
+
+            assert_true( _table_holder.subtables_.at( i )
+                             ->main_tables_.at( 0 )
+                             .rows_ptr() );
 
             const auto rows_map = utils::Mapper::create_rows_map(
-                _table_holder.subtables_[i]->main_tables_[0].rows_ptr() );
+                _table_holder.subtables_.at( i )
+                    ->main_tables_.at( 0 )
+                    .rows_ptr() );
 
-            const auto& p = _predictions[i];
+            const auto& p = _predictions.at( i );
 
             for ( size_t j = 0; j < p.size(); ++j )
                 {
                     assert_true(
-                        _table_holder.subtables_[i]
-                            ->main_tables_[0]
+                        _table_holder.subtables_.at( i )
+                            ->main_tables_.at( 0 )
                             .rows_ptr()
-                            ->size() == p[j].size() );
+                            ->size() == p.at( j ).size() );
 
                     assert_true( std::all_of(
-                        p[j].begin(), p[j].end(), []( const Float val ) {
+                        p.at( j ).begin(),
+                        p.at( j ).end(),
+                        []( const Float val ) {
                             return !std::isnan( val ) && !std::isinf( val );
                         } ) );
 
                     const auto column = containers::Column<Float>(
-                        p[j].data(),
+                        p.at( j ).data(),
                         "FEATURE_" + std::to_string( j + 1 ),
-                        p[j].size() );
+                        p.at( j ).size() );
 
                     assert_true( std::all_of(
                         column.begin(), column.end(), []( const Float val ) {
@@ -403,7 +424,7 @@ std::vector<containers::Subfeatures> SubtreeHelper::make_subfeatures(
                             return !std::isnan( val ) && !std::isinf( val );
                         } ) );
 
-                    subfeatures[i].push_back( view );
+                    subfeatures.at( i ).push_back( view );
                 }
         }
 

@@ -27,6 +27,8 @@
 
 #include "debug/debug.hpp"
 
+#include "relboost/utils/utils.hpp"
+
 #include "relboost/Hyperparameters.hpp"
 
 #include "relboost/lossfunctions/lossfunctions.hpp"

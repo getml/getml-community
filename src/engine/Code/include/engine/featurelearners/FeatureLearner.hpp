@@ -51,7 +51,7 @@ class FeatureLearner : public AbstractFeatureLearner
     /// Fits the model.
     void fit(
         const Poco::JSON::Object& _cmd,
-        const std::shared_ptr<const monitoring::Logger>& _logger,
+        const std::shared_ptr<const communication::SocketLogger>& _logger,
         const std::map<std::string, containers::DataFrame>& _data_frames,
         const Int _target_num ) final;
 
@@ -66,7 +66,7 @@ class FeatureLearner : public AbstractFeatureLearner
     containers::Features transform(
         const Poco::JSON::Object& _cmd,
         const std::vector<size_t>& _index,
-        const std::shared_ptr<const monitoring::Logger>& _logger,
+        const std::shared_ptr<const communication::SocketLogger>& _logger,
         const std::map<std::string, containers::DataFrame>& _data_frames )
         const final;
 
@@ -135,6 +135,12 @@ class FeatureLearner : public AbstractFeatureLearner
     void select_features( const std::vector<size_t>& _index ) final
     {
         feature_learner().select_features( _index );
+    }
+
+    /// Whether the feature learner is to be silent.
+    bool silent() const final
+    {
+        return make_feature_learner()->hyperparameters().silent_;
     }
 
     /// Whether the feature learner supports multiple targets.
@@ -1068,7 +1074,7 @@ Poco::JSON::Object::Ptr FeatureLearner<FeatureLearnerType>::fingerprint() const
 template <typename FeatureLearnerType>
 void FeatureLearner<FeatureLearnerType>::fit(
     const Poco::JSON::Object& _cmd,
-    const std::shared_ptr<const monitoring::Logger>& _logger,
+    const std::shared_ptr<const communication::SocketLogger>& _logger,
     const std::map<std::string, containers::DataFrame>& _data_frames,
     const Int _target_num )
 {
@@ -1214,7 +1220,7 @@ template <typename FeatureLearnerType>
 containers::Features FeatureLearner<FeatureLearnerType>::transform(
     const Poco::JSON::Object& _cmd,
     const std::vector<size_t>& _index,
-    const std::shared_ptr<const monitoring::Logger>& _logger,
+    const std::shared_ptr<const communication::SocketLogger>& _logger,
     const std::map<std::string, containers::DataFrame>& _data_frames ) const
 {
     const auto [population_df, peripheral_dfs] =

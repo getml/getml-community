@@ -40,6 +40,7 @@ class Threadutils
         const std::vector<size_t>& _index,
         const std::shared_ptr<const logging::AbstractLogger> _logger,
         const DecisionTreeEnsemble& _ensemble,
+        multithreading::Communicator* _comm,
         containers::Features* _features );
 
     // ------------------------------------------------------------------------

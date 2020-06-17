@@ -95,10 +95,11 @@ class DecisionTreeEnsemble
         const std::shared_ptr<const logging::AbstractLogger> _logger =
             std::shared_ptr<const logging::AbstractLogger>() ) const;
 
-    /// Transforms table holders into a predictions. This is used for
-    /// subfeatures, so no logging.
+    /// Transforms table holders into predictions, used for subtree predictions.
     containers::Predictions transform(
         const decisiontrees::TableHolder &_table_holder,
+        const std::shared_ptr<const logging::AbstractLogger> _logger,
+        multithreading::Communicator *_comm,
         containers::Optional<aggregations::AggregationImpl> *_impl ) const;
 
     /// Transforms a specific feature.

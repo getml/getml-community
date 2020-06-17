@@ -499,7 +499,7 @@ containers::Features Pipeline::generate_numerical_features(
     const predictors::PredictorImpl& _predictor_impl,
     Poco::Net::StreamSocket* _socket ) const
 {
-    // -------------------------------------------------------------------------
+    // --------------------------------------------------------------------
 
     assert_true(
         feature_learners_.size() == _predictor_impl.autofeatures().size() );
@@ -513,12 +513,16 @@ containers::Features Pipeline::generate_numerical_features(
         {
             const auto& fe = feature_learners_.at( i );
 
+            const auto socket_logger =
+                std::make_shared<const communication::SocketLogger>(
+                    _logger, fe->silent(), _socket );
+
             const auto& index = _predictor_impl.autofeatures().at( i );
 
             assert_true( fe );
 
             auto new_features =
-                fe->transform( _cmd, index, _logger, _data_frames );
+                fe->transform( _cmd, index, socket_logger, _data_frames );
 
             numerical_features.insert(
                 numerical_features.end(),
@@ -708,11 +712,13 @@ void Pipeline::fit_feature_learners(
 
     assert_true( feature_learners.size() == target_nums.size() );
 
-    communication::SocketChecker socket_checker( _socket );
-
     for ( size_t i = 0; i < feature_learners.size(); ++i )
         {
             auto& fe = feature_learners.at( i );
+
+            const auto socket_logger =
+                std::make_shared<const communication::SocketLogger>(
+                    _logger, fe->silent(), _socket );
 
             assert_true( fe );
 
@@ -726,7 +732,7 @@ void Pipeline::fit_feature_learners(
                     continue;
                 }
 
-            fe->fit( _cmd, _logger, _data_frames, target_nums.at( i ) );
+            fe->fit( _cmd, socket_logger, _data_frames, target_nums.at( i ) );
 
             _fe_tracker->add( fe );
         }
@@ -798,8 +804,12 @@ void Pipeline::fit_predictors(
                             continue;
                         }
 
+                    const auto socket_logger =
+                        std::make_shared<const communication::SocketLogger>(
+                            _logger, p->silent(), _socket );
+
                     p->fit(
-                        _logger,
+                        socket_logger,
                         categorical_features,
                         numerical_features,
                         target_col );

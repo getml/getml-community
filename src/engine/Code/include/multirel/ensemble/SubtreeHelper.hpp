@@ -30,7 +30,9 @@ class SubtreeHelper
         const std::vector<containers::Optional<DecisionTreeEnsemble>>&
             _subensembles_avg,
         const std::vector<containers::Optional<DecisionTreeEnsemble>>&
-            _subensembles_sum );
+            _subensembles_sum,
+        const std::shared_ptr<const logging::AbstractLogger> _logger,
+        multithreading::Communicator* _comm );
 
     /// Builds appropriate views on the features. The purpose of the ColumnView
     /// is to reverse the effect of the row indices in the DataFrameView.
@@ -107,11 +109,6 @@ void SubtreeHelper::fit_subensemble(
             new aggregations::IntermediateAggregation<AggType>( opt_impl ) );
 
     const auto silent = _hyperparameters.silent_;
-
-    if ( !silent && _logger )
-        {
-            _logger->log( "Training subfeatures..." );
-        }
 
     _subensemble->fit(
         subtable_holder,

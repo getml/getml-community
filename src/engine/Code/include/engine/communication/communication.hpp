@@ -30,6 +30,7 @@
 #include "engine/communication/Receiver.hpp"
 #include "engine/communication/Sender.hpp"
 
+#include "engine/communication/SocketLogger.hpp"
 #include "engine/communication/Warner.hpp"
 
 // ----------------------------------------------------

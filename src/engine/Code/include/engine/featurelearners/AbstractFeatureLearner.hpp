@@ -41,7 +41,7 @@ class AbstractFeatureLearner
     /// Fits the model.
     virtual void fit(
         const Poco::JSON::Object& _cmd,
-        const std::shared_ptr<const monitoring::Logger>& _logger,
+        const std::shared_ptr<const communication::SocketLogger>& _logger,
         const std::map<std::string, containers::DataFrame>& _data_frames,
         const Int _target_num ) = 0;
 
@@ -77,6 +77,9 @@ class AbstractFeatureLearner
     /// Selects the features according to the index given.
     virtual void select_features( const std::vector<size_t>& _index ) = 0;
 
+    /// Whether the feature learner is to be silent.
+    virtual bool silent() const = 0;
+
     /// Whether the feature learner supports multiple targets.
     virtual bool supports_multiple_targets() const = 0;
 
@@ -95,7 +98,7 @@ class AbstractFeatureLearner
     virtual containers::Features transform(
         const Poco::JSON::Object& _cmd,
         const std::vector<size_t>& _index,
-        const std::shared_ptr<const monitoring::Logger>& _logger,
+        const std::shared_ptr<const communication::SocketLogger>& _logger,
         const std::map<std::string, containers::DataFrame>& _data_frames )
         const = 0;
 
