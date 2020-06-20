@@ -108,8 +108,6 @@ void SubtreeHelper::fit_subensemble(
         std::unique_ptr<optimizationcriteria::OptimizationCriterion>(
             new aggregations::IntermediateAggregation<AggType>( opt_impl ) );
 
-    const auto silent = _hyperparameters.silent_;
-
     _subensemble->fit(
         subtable_holder,
         _logger,
