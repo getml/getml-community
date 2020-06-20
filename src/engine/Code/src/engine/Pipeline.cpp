@@ -695,6 +695,8 @@ void Pipeline::fit(
 
     scores().from_json_obj( feature_importances_as_obj() );
 
+    scores().from_json_obj( feature_names_as_obj() );
+
     // -------------------------------------------------------------------------
 }
 
