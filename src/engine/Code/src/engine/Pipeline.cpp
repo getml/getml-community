@@ -730,7 +730,14 @@ void Pipeline::fit_feature_learners(
 
             if ( retrieved_fe )
                 {
+                    socket_logger->log(
+                        "Retrieving features (because a similar feature "
+                        "learner has already been fitted)..." );
+
+                    socket_logger->log( "Progress: 100%." );
+
                     fe = retrieved_fe;
+
                     continue;
                 }
 
@@ -799,16 +806,20 @@ void Pipeline::fit_predictors(
                 {
                     assert_true( p );
 
+                    const auto socket_logger =
+                        std::make_shared<const communication::SocketLogger>(
+                            _logger, p->silent(), _socket );
+
                     // If p is already fitted, that is because it has been
                     // retrieved.
                     if ( p->is_fitted() )
                         {
+                            socket_logger->log( "Retrieving predictor..." );
+
+                            socket_logger->log( "Progress: 100%." );
+
                             continue;
                         }
-
-                    const auto socket_logger =
-                        std::make_shared<const communication::SocketLogger>(
-                            _logger, p->silent(), _socket );
 
                     p->fit(
                         socket_logger,
