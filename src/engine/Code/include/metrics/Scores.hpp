@@ -308,6 +308,9 @@ class Scores
     /// Predictive rsquared
     std::vector<Float> rsquared_;
 
+    /// Marks the training/testing/validation set
+    std::string set_used_;
+
     /// True positive rate.
     std::vector<std::vector<Float>> tpr_;
 };

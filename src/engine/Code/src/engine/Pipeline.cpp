@@ -1691,6 +1691,8 @@ Poco::JSON::Object Pipeline::score(
 
     auto obj = metrics::Scorer::score( is_classification(), _yhat, y );
 
+    obj.set( "set_used_", population_name );
+
     scores().from_json_obj( obj );
 
     // ------------------------------------------------
