@@ -73,6 +73,18 @@ class Parser
 
     // -------------------------------
 
+    /// Custom boolean-to-string conversion
+    static std::string to_string( const bool _val )
+    {
+        if ( _val )
+            {
+                return "true";
+            }
+        return "false";
+    }
+
+    // -------------------------------
+
     /// Custom floating-point-to-string conversion (produces more beautiful
     /// numbers than std::to_string)
     static std::string to_string( const Float _val )
@@ -144,6 +156,26 @@ class Parser
         const auto len = _str.find_last_not_of( "\t\v\f\r\n " ) - pos + 1;
 
         return _str.substr( pos, len );
+    }
+
+    // -------------------------------
+
+    /// Represents as time stamp in string format.
+    static std::string ts_to_string( const Float& _time_stamp_float )
+    {
+        if ( std::isnan( _time_stamp_float ) ||
+             std::isinf( _time_stamp_float ) )
+            {
+                return "NULL";
+            }
+
+        const auto microseconds_since_epoch =
+            static_cast<Poco::Timestamp::TimeVal>( 1e06 * _time_stamp_float );
+
+        const auto time_stamp = Poco::Timestamp( microseconds_since_epoch );
+
+        return Poco::DateTimeFormatter::format(
+            time_stamp, Poco::DateTimeFormat::ISO8601_FRAC_FORMAT );
     }
 
     // -------------------------------

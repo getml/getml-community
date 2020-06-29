@@ -13,7 +13,8 @@ containers::Column<Float> NumOpParser::as_num(
                               categories_,
                               join_keys_encoding_,
                               data_frames_,
-                              num_elem_,
+                              begin_,
+                              length_,
                               subselection_ )
                               .parse( *JSON::get_object( _col, "operand1_" ) );
 
@@ -49,7 +50,8 @@ containers::Column<Float> NumOpParser::as_ts(
                               categories_,
                               join_keys_encoding_,
                               data_frames_,
-                              num_elem_,
+                              begin_,
+                              length_,
                               subselection_ )
                               .parse( *JSON::get_object( _col, "operand1_" ) );
 
@@ -193,7 +195,8 @@ containers::Column<Float> NumOpParser::boolean_as_num(
                               categories_,
                               join_keys_encoding_,
                               data_frames_,
-                              num_elem_,
+                              begin_,
+                              length_,
                               subselection_ )
                               .parse( obj );
 
@@ -236,8 +239,8 @@ containers::Column<Float> NumOpParser::get_column(
         }
 
     const bool wrong_length =
-        ( !subselection_ && it->second.nrows() != num_elem_ ) ||
-        it->second.nrows() < num_elem_;
+        ( !subselection_ && it->second.nrows() != length_ ) ||
+        it->second.nrows() < begin_ + length_;
 
     if ( wrong_length )
         {
@@ -248,7 +251,7 @@ containers::Column<Float> NumOpParser::get_column(
             return containers::Column<Float>( 0 );
         }
 
-    if ( it->second.nrows() == num_elem_ )
+    if ( it->second.nrows() == length_ )
         {
             return it->second.float_column( name, role );
         }
@@ -256,10 +259,12 @@ containers::Column<Float> NumOpParser::get_column(
         {
             const auto long_col = it->second.float_column( name, role );
 
-            auto col = containers::Column<Float>( num_elem_ );
+            auto col = containers::Column<Float>( length_ );
 
             std::copy(
-                long_col.begin(), long_col.begin() + num_elem_, col.begin() );
+                long_col.begin() + begin_,
+                long_col.begin() + begin_ + length_,
+                col.begin() );
 
             return col;
         }
@@ -280,7 +285,7 @@ containers::Column<Float> NumOpParser::parse(
         {
             const auto val = JSON::get_value<Float>( _col, "value_" );
 
-            auto col = containers::Column<Float>( num_elem_ );
+            auto col = containers::Column<Float>( length_ );
 
             std::fill( col.begin(), col.end(), val );
 
@@ -563,7 +568,8 @@ containers::Column<Float> NumOpParser::update(
             categories_,
             join_keys_encoding_,
             data_frames_,
-            num_elem_,
+            begin_,
+            length_,
             subselection_ )
             .parse( *JSON::get_object( _col, "condition_" ) );
 

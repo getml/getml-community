@@ -31,9 +31,9 @@ void RequestHandler::run()
                     data_frame_manager().get_boolean_column(
                         name, cmd, &socket() );
                 }
-            else if ( type == "BooleanColumn.get_string" )
+            else if ( type == "BooleanColumn.get_content" )
                 {
-                    data_frame_manager().get_boolean_column_string(
+                    data_frame_manager().get_boolean_column_content(
                         name, cmd, &socket() );
                 }
             else if ( type == "Database.copy_table" )
@@ -249,9 +249,9 @@ void RequestHandler::run()
                 {
                     data_frame_manager().get_column( name, cmd, &socket() );
                 }
-            else if ( type == "FloatColumn.get_string" )
+            else if ( type == "FloatColumn.get_content" )
                 {
-                    data_frame_manager().get_column_string(
+                    data_frame_manager().get_float_column_content(
                         name, cmd, &socket() );
                 }
             else if ( type == "FloatColumn.get_unit" )
@@ -382,9 +382,9 @@ void RequestHandler::run()
                     data_frame_manager().get_categorical_column(
                         name, cmd, &socket() );
                 }
-            else if ( type == "StringColumn.get_string" )
+            else if ( type == "StringColumn.get_content" )
                 {
-                    data_frame_manager().get_categorical_column_string(
+                    data_frame_manager().get_categorical_column_content(
                         name, cmd, &socket() );
                 }
             else if ( type == "StringColumn.get_unit" )

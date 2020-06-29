@@ -40,7 +40,8 @@ std::vector<std::string> CatOpParser::boolean_as_string(
                               categories_,
                               join_keys_encoding_,
                               data_frames_,
-                              num_elem_,
+                              begin_,
+                              length_,
                               subselection_ )
                               .parse( obj );
 
@@ -127,7 +128,8 @@ std::vector<std::string> CatOpParser::numerical_as_string(
                               categories_,
                               join_keys_encoding_,
                               data_frames_,
-                              num_elem_,
+                              begin_,
+                              length_,
                               subselection_ )
                               .parse( obj );
 
@@ -224,7 +226,7 @@ std::vector<std::string> CatOpParser::parse(
         {
             const auto val = JSON::get_value<std::string>( _col, "value_" );
 
-            auto vec = std::vector<std::string>( num_elem_ );
+            auto vec = std::vector<std::string>( length_ );
 
             std::fill( vec.begin(), vec.end(), val );
 
@@ -312,7 +314,8 @@ std::vector<std::string> CatOpParser::update(
             categories_,
             join_keys_encoding_,
             data_frames_,
-            num_elem_,
+            begin_,
+            length_,
             subselection_ )
             .parse( *JSON::get_object( _col, "condition_" ) );
 

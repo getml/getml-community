@@ -133,8 +133,8 @@ class DataFrameManager
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
-    /// Sends a string representing the column to the client.
-    void get_boolean_column_string(
+    /// Sends a JSON representing the column to the client.
+    void get_boolean_column_content(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
@@ -145,20 +145,14 @@ class DataFrameManager
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
-    /// Sends a string representing the column to the client.
-    void get_categorical_column_string(
+    /// Sends a JSON representing the column to the client.
+    void get_categorical_column_content(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
     /// Sends a column to the client
     void get_column(
-        const std::string& _name,
-        const Poco::JSON::Object& _cmd,
-        Poco::Net::StreamSocket* _socket );
-
-    /// Sends a string representing the column to the client.
-    void get_column_string(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
@@ -179,6 +173,12 @@ class DataFrameManager
     /// Sends the content of a data frame in a format that is compatible with
     /// DataTables.js server-side processing.
     void get_data_frame_content(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
+    /// Sends a JSON representing the column to the client.
+    void get_float_column_content(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
@@ -313,6 +313,13 @@ class DataFrameManager
         const std::string& _cmp_df_name = "",
         const size_t _cmp_nrows = 0 ) const;
 
+    template <typename T, typename IterType>
+    std::string make_column_string(
+        const Int _draw,
+        const size_t _nrows,
+        IterType _begin,
+        IterType _end ) const;
+
     /// Receives the actual data contained in a DataFrame
     void receive_data(
         const std::shared_ptr<containers::Encoding>& _local_categories,
@@ -434,6 +441,64 @@ class DataFrameManager
 
     // ------------------------------------------------------------------------
 };
+
+// ------------------------------------------------------------------------
+// ------------------------------------------------------------------------
+
+template <typename T, typename IterType>
+std::string DataFrameManager::make_column_string(
+    const Int _draw, const size_t _nrows, IterType _begin, IterType _end ) const
+{
+    // ----------------------------------------
+
+    Poco::JSON::Object obj;
+
+    // ----------------------------------------
+
+    obj.set( "draw", _draw );
+
+    obj.set( "recordsTotal", _nrows );
+
+    obj.set( "recordsFiltered", _nrows );
+
+    if ( _nrows == 0 )
+        {
+            obj.set( "data", Poco::JSON::Array() );
+
+            return JSON::stringify( obj );
+        }
+
+    // ----------------------------------------
+
+    auto data = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
+
+    for ( auto it = _begin; it < _end; ++it )
+        {
+            auto row = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
+
+            if constexpr ( std::is_same<T, std::string>() )
+                {
+                    row->add( *it );
+                }
+
+            if constexpr ( !std::is_same<T, std::string>() )
+                {
+                    row->add( io::Parser::to_string( *it ) );
+                }
+
+            data->add( row );
+        }
+
+    // ----------------------------------------
+
+    obj.set( "data", data );
+
+    // ----------------------------------------
+
+    return JSON::stringify( obj );
+
+    // ----------------------------------------
+}
 
 // ------------------------------------------------------------------------
 }  // namespace handlers

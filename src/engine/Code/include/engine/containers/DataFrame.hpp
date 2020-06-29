@@ -185,9 +185,6 @@ class DataFrame
     /// Expresses the schema of the DataFrame as a JSON object.
     Poco::JSON::Object::Ptr to_schema() const;
 
-    /// Transforms a float to a time stamp
-    std::string to_time_stamp( const Float &_time_stamp_float ) const;
-
     /// Selects all rows for which the corresponding entry in _condition is
     /// true.
     void where( const std::vector<bool> &_condition );
