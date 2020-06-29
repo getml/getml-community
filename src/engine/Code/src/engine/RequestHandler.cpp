@@ -300,6 +300,12 @@ void RequestHandler::run()
                 {
                     return;
                 }
+            else if ( type == "monitor_port" )
+                {
+                    communication::Sender::send_string(
+                        std::to_string( options_.monitor().http_port_ ),
+                        &socket() );
+                }
             else if ( type == "Pipeline" )
                 {
                     project_manager().add_pipeline( name, cmd, &socket() );
