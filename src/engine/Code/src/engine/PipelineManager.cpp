@@ -55,6 +55,107 @@ void PipelineManager::deploy(
 
 // ------------------------------------------------------------------------
 
+void PipelineManager::feature_correlations(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    // -------------------------------------------------------
+
+    const auto target_num =
+        JSON::get_value<unsigned int>( _cmd, "target_num_" );
+
+    // -------------------------------------------------------
+
+    const auto pipeline = get_pipeline( _name );
+
+    const auto scores = pipeline.scores();
+
+    // -------------------------------------------------------
+
+    auto correlations = std::vector<Float>();
+
+    for ( const auto& vec : scores.feature_correlations() )
+        {
+            if ( static_cast<size_t>( target_num ) >= vec.size() )
+                {
+                    throw std::invalid_argument( "target_num out of range!" );
+                }
+
+            correlations.push_back( vec.at( target_num ) );
+        }
+
+    // -------------------------------------------------------
+
+    Poco::JSON::Object response;
+
+    response.set(
+        "feature_names_", JSON::vector_to_array( scores.feature_names() ) );
+
+    response.set(
+        "feature_correlations_", JSON::vector_to_array( correlations ) );
+
+    // -------------------------------------------------------
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    communication::Sender::send_string( JSON::stringify( response ), _socket );
+
+    // -------------------------------------------------------
+}
+// ------------------------------------------------------------------------
+
+void PipelineManager::feature_importances(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    // -------------------------------------------------------
+
+    const auto target_num =
+        JSON::get_value<unsigned int>( _cmd, "target_num_" );
+
+    // -------------------------------------------------------
+
+    const auto pipeline = get_pipeline( _name );
+
+    const auto scores = pipeline.scores();
+
+    // -------------------------------------------------------
+
+    auto importances = std::vector<Float>();
+
+    for ( const auto& vec : scores.feature_importances() )
+        {
+            if ( static_cast<size_t>( target_num ) >= vec.size() )
+                {
+                    throw std::invalid_argument( "target_num out of range!" );
+                }
+
+            importances.push_back( vec.at( target_num ) );
+        }
+
+    // -------------------------------------------------------
+
+    Poco::JSON::Object response;
+
+    response.set(
+        "feature_names_", JSON::vector_to_array( scores.feature_names() ) );
+
+    response.set(
+        "feature_importances_", JSON::vector_to_array( importances ) );
+
+    // -------------------------------------------------------
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    communication::Sender::send_string( JSON::stringify( response ), _socket );
+
+    // -------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
 void PipelineManager::fit(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,

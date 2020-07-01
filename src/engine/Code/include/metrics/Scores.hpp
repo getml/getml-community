@@ -34,6 +34,27 @@ class Scores
 
     // ------------------------------------------------------
 
+   public:
+    /// Trivial accessor
+    const std::vector<std::vector<Float>>& feature_correlations() const
+    {
+        return feature_correlations_;
+    }
+
+    /// Trivial accessor
+    const std::vector<std::vector<Float>>& feature_importances() const
+    {
+        return feature_importances_;
+    }
+
+    /// Trivial accessor
+    const std::vector<std::string>& feature_names() const
+    {
+        return feature_names_;
+    }
+
+    // ------------------------------------------------------
+
    private:
     /// Trivial accessor
     std::vector<std::vector<Float>>& accuracy_curves()
@@ -66,12 +87,6 @@ class Scores
     }
 
     /// Trivial accessor
-    const std::vector<std::vector<Float>>& feature_correlations() const
-    {
-        return feature_correlations_;
-    }
-
-    /// Trivial accessor
     std::vector<std::vector<Int>>& feature_densities()
     {
         return feature_densities_;
@@ -90,19 +105,7 @@ class Scores
     }
 
     /// Trivial accessor
-    const std::vector<std::vector<Float>>& feature_importances() const
-    {
-        return feature_importances_;
-    }
-
-    /// Trivial accessor
     std::vector<std::string>& feature_names() { return feature_names_; }
-
-    /// Trivial accessor
-    const std::vector<std::string>& feature_names() const
-    {
-        return feature_names_;
-    }
 
     /// Trivial accessor
     std::vector<std::vector<Float>>& fpr() { return fpr_; }

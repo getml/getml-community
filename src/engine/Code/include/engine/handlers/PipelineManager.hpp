@@ -65,6 +65,18 @@ class PipelineManager
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
+    /// Returns the feature correlations of a pipeline.
+    void feature_correlations(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
+    /// Returns the feature importances of a pipeline.
+    void feature_importances(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
     /// Fits a pipeline
     void fit(
         const std::string& _name,

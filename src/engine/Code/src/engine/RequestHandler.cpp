@@ -326,6 +326,16 @@ void RequestHandler::run()
                 {
                     pipeline_manager().deploy( name, cmd, &socket() );
                 }
+            else if ( type == "Pipeline.feature_correlations" )
+                {
+                    pipeline_manager().feature_correlations(
+                        name, cmd, &socket() );
+                }
+            else if ( type == "Pipeline.feature_importances" )
+                {
+                    pipeline_manager().feature_importances(
+                        name, cmd, &socket() );
+                }
             else if ( type == "Pipeline.fit" )
                 {
                     pipeline_manager().fit( name, cmd, &socket() );
