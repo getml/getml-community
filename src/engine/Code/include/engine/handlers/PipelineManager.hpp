@@ -109,6 +109,9 @@ class PipelineManager
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
+    /// Writes a pipeline's targets into the socket.
+    void targets( const std::string& _name, Poco::Net::StreamSocket* _socket );
+
     /// Transform a pipeline to a JSON string
     void to_json( const std::string& _name, Poco::Net::StreamSocket* _socket );
 

@@ -103,6 +103,7 @@ void PipelineManager::feature_correlations(
 
     // -------------------------------------------------------
 }
+
 // ------------------------------------------------------------------------
 
 void PipelineManager::feature_importances(
@@ -460,6 +461,30 @@ void PipelineManager::score(
     post_pipeline( _pipeline->to_monitor( _name ) );
 
     communication::Sender::send_string( JSON::stringify( scores ), _socket );
+
+    // -------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
+void PipelineManager::targets(
+    const std::string& _name, Poco::Net::StreamSocket* _socket )
+{
+    // -------------------------------------------------------
+
+    const auto pipeline = get_pipeline( _name );
+
+    // -------------------------------------------------------
+
+    Poco::JSON::Object response;
+
+    response.set( "targets_", JSON::vector_to_array( pipeline.targets() ) );
+
+    // -------------------------------------------------------
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    communication::Sender::send_string( JSON::stringify( response ), _socket );
 
     // -------------------------------------------------------
 }

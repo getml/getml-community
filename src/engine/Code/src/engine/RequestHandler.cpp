@@ -369,6 +369,10 @@ void RequestHandler::run()
                 {
                     pipeline_manager().to_sql( name, &socket() );
                 }
+            else if ( type == "Pipeline.targets" )
+                {
+                    pipeline_manager().targets( name, &socket() );
+                }
             else if ( type == "Pipeline.transform" )
                 {
                     pipeline_manager().transform( name, cmd, &socket() );
