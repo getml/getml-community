@@ -725,7 +725,7 @@ void DataFrameManager::calc_column_plots(
 
     // --------------------------------------------------------------------
 
-    const containers::Features features = {col.data_ptr()};
+    const containers::Features features = { col.data_ptr() };
 
     const auto obj = metrics::Summarizer::calculate_feature_plots(
         features, col.nrows(), 1, num_bins, targets );
@@ -1361,6 +1361,12 @@ void DataFrameManager::from_s3(
     Poco::Net::StreamSocket* _socket )
 {
     // --------------------------------------------------------------------
+
+#if ( defined( _WIN32 ) || defined( _WIN64 ) )
+    throw std::invalid_argument( "S3 is not supported on Windows!" );
+#else
+
+    // --------------------------------------------------------------------
     // Parse the command.
 
     const auto bucket = JSON::get_value<std::string>( _cmd, "bucket_" );
@@ -1478,6 +1484,8 @@ void DataFrameManager::from_s3(
     communication::Sender::send_string( "Success!", _socket );
 
     // --------------------------------------------------------------------
+
+#endif
 }
 
 // ------------------------------------------------------------------------
@@ -1895,7 +1903,7 @@ void DataFrameManager::group_by(
     check_nrows( _cmd, df_name, df.nrows() );
 
     const auto grouped_df =
-        GroupByParser( categories_, join_keys_encoding_, {df} )
+        GroupByParser( categories_, join_keys_encoding_, { df } )
             .group_by( _name, key_name, aggregations );
 
     weak_write_lock.upgrade();
@@ -2361,6 +2369,12 @@ void DataFrameManager::to_s3(
 {
     // --------------------------------------------------------------------
 
+#if ( defined( _WIN32 ) || defined( _WIN64 ) )
+    throw std::invalid_argument( "S3 is not supported on Windows!" );
+#else
+
+    // --------------------------------------------------------------------
+
     const auto batch_size = JSON::get_value<size_t>( _cmd, "batch_size_" );
 
     const auto bucket = JSON::get_value<std::string>( _cmd, "bucket_" );
@@ -2420,6 +2434,8 @@ void DataFrameManager::to_s3(
     communication::Sender::send_string( "Success!", _socket );
 
     // --------------------------------------------------------------------
+
+#endif
 }
 
 // ------------------------------------------------------------------------

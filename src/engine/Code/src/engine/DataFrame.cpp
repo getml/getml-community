@@ -1283,6 +1283,12 @@ void DataFrame::from_s3(
     const std::vector<std::string> &_unused_floats,
     const std::vector<std::string> &_unused_strings )
 {
+    // --------------------------------------------------------------------
+
+#if ( defined( _WIN32 ) || defined( _WIN64 ) )
+    throw std::invalid_argument( "S3 is not supported on Windows!" );
+#else
+
     // ------------------------------------------------------------------------
 
     if ( _sep.size() != 1 )
@@ -1341,6 +1347,8 @@ void DataFrame::from_s3(
     *this = std::move( df );
 
     // ------------------------------------------------------------------------
+
+#endif
 }
 
 // ----------------------------------------------------------------------------
