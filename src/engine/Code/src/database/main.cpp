@@ -65,6 +65,11 @@ int main( int argc, char* argv[] )
     test20( test_path );
     test21();
 
+#if ( defined( _WIN32 ) || defined( _WIN64 ) )
+        // postgres is not supported on windows
+#else
     // Test for copying tables from one database to another
     test22( test_path );
+#endif
+
 }

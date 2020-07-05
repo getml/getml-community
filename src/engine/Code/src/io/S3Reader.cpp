@@ -1,3 +1,7 @@
+#if ( defined( _WIN32 ) || defined( _WIN64 ) )
+    // S3 is not supported on windows
+#else
+
 #include "io/io.hpp"
 
 namespace io
@@ -47,3 +51,5 @@ std::vector<std::string> S3Reader::next_line()
 
 // ----------------------------------------------------------------------------
 }  // namespace io
+
+#endif
