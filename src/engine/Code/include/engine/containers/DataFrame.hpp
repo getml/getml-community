@@ -357,7 +357,6 @@ class DataFrame
     DataFrameIndex &index( T _i )
     {
         assert_true( indices_.size() == join_keys_.size() );
-        assert_true( join_keys_.size() > 0 );
         assert_true( _i >= 0 );
         assert_true( static_cast<size_t>( _i ) < indices_.size() );
 
@@ -372,7 +371,6 @@ class DataFrame
     const DataFrameIndex index( T _i ) const
     {
         assert_true( indices_.size() == join_keys_.size() );
-        assert_true( join_keys_.size() > 0 );
         assert_true( _i >= 0 );
         assert_true( static_cast<size_t>( _i ) < indices_.size() );
 
@@ -383,7 +381,6 @@ class DataFrame
     const DataFrameIndex index( const std::string &_name ) const
     {
         assert_true( indices_.size() == join_keys_.size() );
-        assert_true( join_keys_.size() > 0 );
 
         for ( size_t i = 0; i < num_join_keys(); ++i )
             {
