@@ -27,5 +27,6 @@ set(
     ${MULTIREL_SOURCE_DIRECTORY}/SubtreeHelper.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/Threadutils.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/TreeFitter.cpp 
+    ${MULTIREL_SOURCE_DIRECTORY}/ValueToBeAggregatedCreator.cpp 
 )
 

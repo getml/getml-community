@@ -143,7 +143,7 @@ void TreeFitter::fit_tree(
             debug_log( "fit_tree: Creating value to be aggregated..." );
 
             _tree->create_value_to_be_aggregated(
-                _population, _peripheral, _subfeatures, match_ptrs );
+                _population, _peripheral, _subfeatures );
 
             debug_log( "fit_tree: Separating NULL values..." );
 

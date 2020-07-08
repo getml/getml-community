@@ -37,15 +37,6 @@ class DecisionTree
 
     // --------------------------------------
 
-    /// A sample containers contains a value to be aggregated. This is set by
-    /// this function.
-    void create_value_to_be_aggregated(
-        const containers::DataFrameView &_population,
-        const containers::DataFrame &_peripheral,
-        const containers::Subfeatures &_subfeatures,
-        const containers::MatchPtrs &_match_container,
-        aggregations::AbstractAggregation *_aggregation ) const;
-
     /// Fits the decision tree
     void fit(
         const containers::DataFrameView &_population,
@@ -111,19 +102,31 @@ class DecisionTree
         return impl()->column_to_be_aggregated_;
     }
 
-    /// Calls create_value_to_be_aggregated on the tree's own aggregation.
+    /// An aggregation contains a value to be aggregated. This is set by
+    /// this function.
     void create_value_to_be_aggregated(
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
         const containers::Subfeatures &_subfeatures,
-        const containers::MatchPtrs &_match_container )
+        aggregations::AbstractAggregation *_aggregation ) const
     {
-        create_value_to_be_aggregated(
+        ValueToBeAggregatedCreator::create(
+            *impl(),
+            column_to_be_aggregated(),
             _population,
             _peripheral,
             _subfeatures,
-            _match_container,
-            aggregation() );
+            _aggregation );
+    }
+
+    /// Calls create_value_to_be_aggregated on the tree's own aggregation.
+    void create_value_to_be_aggregated(
+        const containers::DataFrameView &_population,
+        const containers::DataFrame &_peripheral,
+        const containers::Subfeatures &_subfeatures )
+    {
+        create_value_to_be_aggregated(
+            _population, _peripheral, _subfeatures, aggregation() );
     }
 
     /// Whether the decision tree has subtrees.
