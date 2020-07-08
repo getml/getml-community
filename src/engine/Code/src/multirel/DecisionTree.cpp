@@ -110,6 +110,8 @@ void DecisionTree::create_value_to_be_aggregated(
         {
             case enums::DataUsed::x_perip_numerical:
 
+                debug_log( "x_perip_numerical" );
+
                 _aggregation->set_value_to_be_aggregated(
                     _peripheral.numerical_col( ix_column_used ) );
 
@@ -117,12 +119,16 @@ void DecisionTree::create_value_to_be_aggregated(
 
             case enums::DataUsed::x_perip_discrete:
 
+                debug_log( "x_perip_discrete" );
+
                 _aggregation->set_value_to_be_aggregated(
                     _peripheral.discrete_col( ix_column_used ) );
 
                 break;
 
             case enums::DataUsed::time_stamps_diff:
+
+                debug_log( "time_stamps_diff" );
 
                 _aggregation->set_value_to_be_aggregated(
                     _peripheral.time_stamp_col() );
@@ -135,29 +141,31 @@ void DecisionTree::create_value_to_be_aggregated(
             case enums::DataUsed::same_unit_numerical:
             case enums::DataUsed::same_unit_numerical_ts:
 
+                debug_log( "same_unit_numerical" );
+
                 assert_true(
                     static_cast<Int>( impl()->same_units_numerical().size() ) >
                     ix_column_used );
 
                 {
                     const enums::DataUsed data_used1 =
-                        std::get<0>(
-                            impl()->same_units_numerical()[ix_column_used] )
+                        std::get<0>( impl()->same_units_numerical().at(
+                                         ix_column_used ) )
                             .data_used;
 
                     const enums::DataUsed data_used2 =
-                        std::get<1>(
-                            impl()->same_units_numerical()[ix_column_used] )
+                        std::get<1>( impl()->same_units_numerical().at(
+                                         ix_column_used ) )
                             .data_used;
 
                     const auto ix_column_used1 =
-                        std::get<0>(
-                            impl()->same_units_numerical()[ix_column_used] )
+                        std::get<0>( impl()->same_units_numerical().at(
+                                         ix_column_used ) )
                             .ix_column_used;
 
                     const auto ix_column_used2 =
-                        std::get<1>(
-                            impl()->same_units_numerical()[ix_column_used] )
+                        std::get<1>( impl()->same_units_numerical().at(
+                                         ix_column_used ) )
                             .ix_column_used;
 
                     if ( data_used1 == enums::DataUsed::x_perip_numerical )
@@ -165,6 +173,8 @@ void DecisionTree::create_value_to_be_aggregated(
                             assert_true(
                                 _peripheral.num_numericals() >
                                 ix_column_used1 );
+
+                            debug_log( "set_value_to_be_aggregated" );
 
                             _aggregation->set_value_to_be_aggregated(
                                 _peripheral.numerical_col( ix_column_used1 ) );
@@ -176,15 +186,25 @@ void DecisionTree::create_value_to_be_aggregated(
 
                     if ( data_used2 == enums::DataUsed::x_popul_numerical )
                         {
+                            debug_log( "set_value_to_be_compared (1)" );
+
                             assert_true(
                                 _population.num_numericals() >
                                 ix_column_used2 );
 
-                            _aggregation->set_value_to_be_compared(
-                                _population.numerical_col( ix_column_used2 ) );
+                            debug_log( "getting column..." );
+
+                            const auto col =
+                                _population.numerical_col( ix_column_used2 );
+
+                            debug_log( "setting column..." );
+
+                            _aggregation->set_value_to_be_compared( col );
                         }
                     else if ( data_used2 == enums::DataUsed::x_perip_numerical )
                         {
+                            debug_log( "set_value_to_be_compared (2)" );
+
                             assert_true(
                                 _peripheral.num_numericals() >
                                 ix_column_used2 );
@@ -196,12 +216,16 @@ void DecisionTree::create_value_to_be_aggregated(
                         {
                             assert_true( !"Unknown data_used2 in set_value_to_be_compared(...)!" );
                         }
+
+                    debug_log( "Done" );
                 }
 
                 break;
 
             case enums::DataUsed::same_unit_discrete:
             case enums::DataUsed::same_unit_discrete_ts:
+
+                debug_log( "same_unit_discrete" );
 
                 assert_true(
                     impl()->same_units_discrete().size() > ix_column_used );
@@ -266,12 +290,16 @@ void DecisionTree::create_value_to_be_aggregated(
 
             case enums::DataUsed::x_perip_categorical:
 
+                debug_log( "x_perip_categorical" );
+
                 _aggregation->set_value_to_be_aggregated(
                     _peripheral.categorical_col( ix_column_used ) );
 
                 break;
 
             case enums::DataUsed::x_subfeature:
+
+                debug_log( "x_subfeature" );
 
                 assert_true( ix_column_used < _subfeatures.size() );
 
@@ -281,6 +309,8 @@ void DecisionTree::create_value_to_be_aggregated(
                 break;
 
             case enums::DataUsed::not_applicable:
+
+                debug_log( "not_applicable" );
 
                 break;
 

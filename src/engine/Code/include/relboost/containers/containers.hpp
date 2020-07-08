@@ -18,6 +18,8 @@
 
 #include "debug/debug.hpp"
 
+#include "helpers/helpers.hpp"
+
 #include "relboost/Float.hpp"
 #include "relboost/Int.hpp"
 

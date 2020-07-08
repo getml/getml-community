@@ -1301,7 +1301,7 @@ class Aggregation : public AbstractAggregation
 
     /// Trivial setter
     void set_value_to_be_aggregated(
-        const containers::Column<Float> &_value_to_be_aggregated ) final
+        const containers::Column<Float> _value_to_be_aggregated ) final
     {
         value_to_be_aggregated() =
             containers::ColumnView<Float, std::map<Int, Int>>(
@@ -1310,7 +1310,7 @@ class Aggregation : public AbstractAggregation
 
     /// Trivial setter
     void set_value_to_be_aggregated(
-        const containers::Column<Int> &_value_to_be_aggregated ) final
+        const containers::Column<Int> _value_to_be_aggregated ) final
     {
         value_to_be_aggregated_categorical() =
             containers::ColumnView<Int, std::map<Int, Int>>(
@@ -1320,14 +1320,14 @@ class Aggregation : public AbstractAggregation
     /// Trivial setter
     void set_value_to_be_aggregated(
         const containers::ColumnView<Float, std::map<Int, Int>>
-            &_value_to_be_aggregated ) final
+            _value_to_be_aggregated ) final
     {
         value_to_be_aggregated() = _value_to_be_aggregated;
     }
 
     /// Trivial setter
     void set_value_to_be_compared(
-        const containers::Column<Float> &_value_to_be_compared ) final
+        const containers::Column<Float> _value_to_be_compared ) final
     {
         value_to_be_compared() =
             containers::ColumnView<Float, std::vector<size_t>>(
@@ -1337,7 +1337,7 @@ class Aggregation : public AbstractAggregation
     /// Trivial setter
     void set_value_to_be_compared(
         const containers::ColumnView<Float, std::vector<size_t>>
-            &_value_to_be_compared ) final
+            _value_to_be_compared ) final
     {
         value_to_be_compared() = _value_to_be_compared;
     }

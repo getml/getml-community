@@ -1,0 +1,69 @@
+#ifndef HELPERS_TABLEHOLDER_HPP_
+#define HELPERS_TABLEHOLDER_HPP_
+
+namespace helpers
+{
+// ----------------------------------------------------------------------------
+
+struct TableHolder
+{
+    TableHolder(
+        const Placeholder& _placeholder,
+        const DataFrameView& _population,
+        const std::vector<DataFrame>& _peripheral,
+        const std::vector<std::string>& _peripheral_names )
+        : main_tables_(
+              TableHolder::parse_main_tables( _placeholder, _population ) ),
+          peripheral_tables_( TableHolder::parse_peripheral_tables(
+              _placeholder, _peripheral, _peripheral_names ) ),
+          subtables_( TableHolder::parse_subtables(
+              _placeholder, _population, _peripheral, _peripheral_names ) )
+
+    {
+        assert_true( main_tables_.size() == peripheral_tables_.size() );
+        assert_true( main_tables_.size() == subtables_.size() );
+    }
+
+    ~TableHolder() = default;
+
+    // ------------------------------
+
+    /// Creates the row indices for the subtables.
+    static std::shared_ptr<const std::vector<size_t>> make_subrows(
+        const DataFrameView& _population_subview,
+        const DataFrame& _peripheral_subview );
+
+    /// Creates the main tables during construction.
+    static std::vector<DataFrameView> parse_main_tables(
+        const Placeholder& _placeholder, const DataFrameView& _population );
+
+    /// Creates the peripheral tables during construction.
+    static std::vector<DataFrame> parse_peripheral_tables(
+        const Placeholder& _placeholder,
+        const std::vector<DataFrame>& _peripheral,
+        const std::vector<std::string>& _peripheral_names );
+
+    /// Creates the subtables during construction.
+    static std::vector<std::optional<TableHolder>> parse_subtables(
+        const Placeholder& _placeholder,
+        const DataFrameView& _population,
+        const std::vector<DataFrame>& _peripheral,
+        const std::vector<std::string>& _peripheral_names );
+
+    // ------------------------------
+
+    /// The TableHolder has a population table, which may or may not be
+    /// identical with the actual population table.
+    const std::vector<DataFrameView> main_tables_;
+
+    /// The TableHolder can have peripheral tables.
+    const std::vector<DataFrame> peripheral_tables_;
+
+    /// The TableHolder may or may not have subtables.
+    const std::vector<std::optional<TableHolder>> subtables_;
+};
+
+// ----------------------------------------------------------------------------
+}  // namespace helpers
+
+#endif  // HELPERS_TABLEHOLDER_HPP_

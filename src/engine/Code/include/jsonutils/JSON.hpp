@@ -124,7 +124,7 @@ struct JSON
     {
         Poco::JSON::Array arr;
 
-        for ( auto& elem : _vector )
+        for ( const auto& elem : _vector )
             {
                 if constexpr ( std::is_floating_point<T>() )
                     {

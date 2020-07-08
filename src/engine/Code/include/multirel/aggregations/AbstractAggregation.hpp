@@ -274,25 +274,25 @@ class AbstractAggregation
 
     /// Trivial setter
     virtual void set_value_to_be_aggregated(
-        const containers::Column<Float> &_value_to_be_aggregated ) = 0;
+        const containers::Column<Float> _value_to_be_aggregated ) = 0;
 
     /// Trivial setter
     virtual void set_value_to_be_aggregated(
         const containers::ColumnView<Float, std::map<Int, Int>>
-            &_value_to_be_aggregated ) = 0;
+            _value_to_be_aggregated ) = 0;
 
     /// Trivial setter
     virtual void set_value_to_be_aggregated(
-        const containers::Column<Int> &_value_to_be_aggregated ) = 0;
+        const containers::Column<Int> _value_to_be_aggregated ) = 0;
 
     /// Trivial setter
     virtual void set_value_to_be_compared(
-        const containers::Column<Float> &_value_to_be_compared ) = 0;
+        const containers::Column<Float> _value_to_be_compared ) = 0;
 
     /// Trivial setter
     virtual void set_value_to_be_compared(
         const containers::ColumnView<Float, std::vector<size_t>>
-            &_value_to_be_compared ) = 0;
+            _value_to_be_compared ) = 0;
 
     /// Sorts the samples by value to be aggregated (within the element in
     /// population table)
