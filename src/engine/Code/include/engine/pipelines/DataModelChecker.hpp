@@ -152,9 +152,9 @@ class DataModelChecker
     }
 
     /// Standard header for an ill-defined data model.
-    static std::string ill_defined_data_model()
+    static std::string data_model_can_be_improved()
     {
-        return warning() + "[ILL-DEFINED DATA MODEL]: ";
+        return warning() + "[DATA MODEL CAN BE IMPROVED]: ";
     }
 
     /// Standard header for an info message.
@@ -167,7 +167,7 @@ class DataModelChecker
         return ts2 <= ts1 && ( std::isnan( upper ) || ts1 < upper );
     }
 
-    /// Standard header for when some joine keys where not found.
+    /// Standard header for when some join keys where not found.
     static std::string join_keys_not_found()
     {
         return info() + "[JOIN KEYS NOT FOUND]: ";

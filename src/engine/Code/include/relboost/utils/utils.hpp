@@ -13,6 +13,8 @@
 #include <type_traits>
 #include <vector>
 
+#include "logging/logging.hpp"
+
 #include "multithreading/multithreading.hpp"
 
 #include "strings/strings.hpp"
@@ -30,6 +32,7 @@
 #include "relboost/utils/CriticalValues.hpp"
 #include "relboost/utils/DataFrameScatterer.hpp"
 #include "relboost/utils/Finder.hpp"
+#include "relboost/utils/Logger.hpp"
 #include "relboost/utils/Mapper.hpp"
 #include "relboost/utils/Matchmaker.hpp"
 #include "relboost/utils/NumericalBinner.hpp"

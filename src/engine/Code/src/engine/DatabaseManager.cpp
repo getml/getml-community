@@ -398,6 +398,12 @@ void DatabaseManager::read_s3(
 {
     // --------------------------------------------------------------------
 
+#if ( defined( _WIN32 ) || defined( _WIN64 ) )
+    throw std::invalid_argument( "S3 is not supported on Windows!" );
+#else
+
+    // --------------------------------------------------------------------
+
     const auto bucket = JSON::get_value<std::string>( _cmd, "bucket_" );
 
     auto colnames = std::optional<std::vector<std::string>>();
@@ -454,6 +460,7 @@ void DatabaseManager::read_s3(
     communication::Sender::send_string( "Success!", _socket );
 
     // --------------------------------------------------------------------
+#endif
 }
 
 // ----------------------------------------------------------------------------
@@ -548,6 +555,12 @@ void DatabaseManager::sniff_s3(
 {
     // --------------------------------------------------------------------
 
+#if ( defined( _WIN32 ) || defined( _WIN64 ) )
+    throw std::invalid_argument( "S3 is not supported on Windows!" );
+#else
+
+    // --------------------------------------------------------------------
+
     const auto bucket = JSON::get_value<std::string>( _cmd, "bucket_" );
 
     auto colnames = std::optional<std::vector<std::string>>();
@@ -617,6 +630,8 @@ void DatabaseManager::sniff_s3(
     communication::Sender::send_string( create_table_statement, _socket );
 
     // --------------------------------------------------------------------
+
+#endif
 }
 
 // ----------------------------------------------------------------------------

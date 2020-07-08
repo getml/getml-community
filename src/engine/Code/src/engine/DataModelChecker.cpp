@@ -151,7 +151,7 @@ void DataModelChecker::check_categorical_column(
                 "The number of unique entries in column "
                 "'" +
                 _col.name() + "' in data frame '" + _df_name + "' is " +
-                std::to_string( num_distinct ) +
+                std::to_string( static_cast<int>( num_distinct ) ) +
                 ". This might take a long time to fit. You should "
                 "consider setting its role to unused_string or using it "
                 "for "
@@ -1000,9 +1000,10 @@ void DataModelChecker::raise_join_warnings(
     if ( _num_matches == 0 )
         {
             _warner->add(
-                ill_defined_data_model() + "There are no matches between '" +
-                _join_key_used + "' in '" + _population_df.name() + "' and '" +
-                _other_join_key_used + "' in '" + _peripheral_df.name() +
+                data_model_can_be_improved() +
+                "There are no matches between '" + _join_key_used + "' in '" +
+                _population_df.name() + "' and '" + _other_join_key_used +
+                "' in '" + _peripheral_df.name() +
                 "'. You should consider removing this join from your data "
                 "model or re-examine your join keys." );
 
@@ -1014,7 +1015,7 @@ void DataModelChecker::raise_join_warnings(
     if ( _is_many_to_one )
         {
             _warner->add(
-                ill_defined_data_model() + "'" + _population_df.name() +
+                data_model_can_be_improved() + "'" + _population_df.name() +
                 "' and '" + _peripheral_df.name() +
                 "' are in a many-to-one or one-to-one relationship when "
                 "joined "
@@ -1044,13 +1045,12 @@ void DataModelChecker::raise_join_warnings(
                 "'. This pipeline might take a very long time to fit. "
                 "You should consider imposing a narrower limit on the scope of "
                 "this join by reducing the memory (the period of time until "
-                "the time series feature learner 'forgets' historical data). "
+                "the feature learner 'forgets' historical data). "
                 "You can reduce the memory "
-                "by setting the appropriate parameter in the .add(...)-method "
-                "of the StarSchema or the .join(...)-method of the "
-                "Placeholder. "
+                "by setting the appropriate parameter in the .join(...)-method "
+                "of the Placeholder. "
                 "Please note that a memory of 0.0 means that "
-                "the time series feature learner will not forget any past "
+                "the time series will not forget any past "
                 "data." );
         }
 
@@ -1088,7 +1088,7 @@ void DataModelChecker::raise_self_join_warnings(
     if ( _num_matches == 0 )
         {
             _warner->add(
-                ill_defined_data_model() + "The self-join on '" +
+                data_model_can_be_improved() + "The self-join on '" +
                 _population_df.name() +
                 "' created by the time series feature learner has no matches. "
                 "You should examine your join keys." );
@@ -1101,7 +1101,7 @@ void DataModelChecker::raise_self_join_warnings(
     if ( _is_many_to_one )
         {
             _warner->add(
-                ill_defined_data_model() + "The self-join on '" +
+                data_model_can_be_improved() + "The self-join on '" +
                 _population_df.name() +
                 "' created by the time series feature learner is a "
                 "one-to-one relationship. Using a time series feature learner "

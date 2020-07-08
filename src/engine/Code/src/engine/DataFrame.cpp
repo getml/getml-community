@@ -1283,6 +1283,12 @@ void DataFrame::from_s3(
     const std::vector<std::string> &_unused_floats,
     const std::vector<std::string> &_unused_strings )
 {
+    // --------------------------------------------------------------------
+
+#if ( defined( _WIN32 ) || defined( _WIN64 ) )
+    throw std::invalid_argument( "S3 is not supported on Windows!" );
+#else
+
     // ------------------------------------------------------------------------
 
     if ( _sep.size() != 1 )
@@ -1341,6 +1347,8 @@ void DataFrame::from_s3(
     *this = std::move( df );
 
     // ------------------------------------------------------------------------
+
+#endif
 }
 
 // ----------------------------------------------------------------------------
@@ -1406,7 +1414,7 @@ Poco::JSON::Object DataFrame::get_content(
 
             for ( size_t j = 0; j < num_time_stamps(); ++j )
                 {
-                    row->add( to_time_stamp( time_stamp( j )[i] ) );
+                    row->add( io::Parser::ts_to_string( time_stamp( j )[i] ) );
                 }
 
             for ( size_t j = 0; j < num_join_keys(); ++j )
@@ -1429,7 +1437,8 @@ Poco::JSON::Object DataFrame::get_content(
                     if ( numerical( j ).unit().find( "time stamp" ) !=
                          std::string::npos )
                         {
-                            row->add( to_time_stamp( numerical( j )[i] ) );
+                            row->add(
+                                io::Parser::ts_to_string( numerical( j )[i] ) );
                         }
                     else
                         {
@@ -1443,7 +1452,8 @@ Poco::JSON::Object DataFrame::get_content(
                     if ( unused_float( j ).unit().find( "time stamp" ) !=
                          std::string::npos )
                         {
-                            row->add( to_time_stamp( unused_float( j )[i] ) );
+                            row->add( io::Parser::ts_to_string(
+                                unused_float( j )[i] ) );
                         }
                     else
                         {
@@ -2017,24 +2027,6 @@ Poco::JSON::Object::Ptr DataFrame::to_schema() const
     obj->set( "unused_string_", get_colnames( unused_strings_ ) );
 
     return obj;
-}
-
-// ----------------------------------------------------------------------------
-
-std::string DataFrame::to_time_stamp( const Float &_time_stamp_float ) const
-{
-    if ( std::isnan( _time_stamp_float ) || std::isinf( _time_stamp_float ) )
-        {
-            return "NULL";
-        }
-
-    const auto microseconds_since_epoch =
-        static_cast<Poco::Timestamp::TimeVal>( 1e06 * _time_stamp_float );
-
-    const auto time_stamp = Poco::Timestamp( microseconds_since_epoch );
-
-    return Poco::DateTimeFormatter::format(
-        time_stamp, Poco::DateTimeFormat::ISO8601_FRAC_FORMAT );
 }
 
 // ----------------------------------------------------------------------------

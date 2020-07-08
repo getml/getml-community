@@ -100,7 +100,7 @@ void Receiver::recv(
                 }
         }
 
-    assert( j == _size );
+    assert_true( j == _size );
 
     // -------------------------------------------------------------------
     // Handle endianness issues, which only apply for numeric types.

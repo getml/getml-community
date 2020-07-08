@@ -51,10 +51,9 @@ class FeatureLearner : public AbstractFeatureLearner
     /// Fits the model.
     void fit(
         const Poco::JSON::Object& _cmd,
-        const std::shared_ptr<const monitoring::Logger>& _logger,
+        const std::shared_ptr<const communication::SocketLogger>& _logger,
         const std::map<std::string, containers::DataFrame>& _data_frames,
-        const Int _target_num,
-        Poco::Net::StreamSocket* _socket ) final;
+        const Int _target_num ) final;
 
     /// Data frames might have to be modified, such as adding upper time stamps
     /// or self joins.
@@ -67,9 +66,9 @@ class FeatureLearner : public AbstractFeatureLearner
     containers::Features transform(
         const Poco::JSON::Object& _cmd,
         const std::vector<size_t>& _index,
-        const std::shared_ptr<const monitoring::Logger>& _logger,
-        const std::map<std::string, containers::DataFrame>& _data_frames,
-        Poco::Net::StreamSocket* _socket ) const final;
+        const std::shared_ptr<const communication::SocketLogger>& _logger,
+        const std::map<std::string, containers::DataFrame>& _data_frames )
+        const final;
 
     /// Returns a string describing the type of the feature learner.
     std::string type() const final;
@@ -136,6 +135,12 @@ class FeatureLearner : public AbstractFeatureLearner
     void select_features( const std::vector<size_t>& _index ) final
     {
         feature_learner().select_features( _index );
+    }
+
+    /// Whether the feature learner is to be silent.
+    bool silent() const final
+    {
+        return make_feature_learner()->hyperparameters().silent_;
     }
 
     /// Whether the feature learner supports multiple targets.
@@ -223,7 +228,9 @@ class FeatureLearner : public AbstractFeatureLearner
     /// an engine::containers::DataFrame using the pre-stored schema.
     template <typename SchemaType>
     DataFrameType extract_table_by_colnames(
-        const SchemaType& _schema, const containers::DataFrame& _df ) const;
+        const SchemaType& _schema,
+        const containers::DataFrame& _df,
+        const bool _needs_targets ) const;
 
     /// Extract a vector of FeatureLearnerType::DataFrameType from
     /// an engine::containers::DataFrame using the pre-stored schema.
@@ -238,6 +245,12 @@ class FeatureLearner : public AbstractFeatureLearner
     extract_tables_by_colnames(
         const containers::DataFrame& _population_df,
         const std::vector<containers::DataFrame>& _peripheral_dfs ) const;
+
+    /// Infers whether we need the targets of a peripheral table.
+    std::vector<bool> infer_needs_targets(
+        const Poco::JSON::Object& _placeholder,
+        const size_t _num_peripheral,
+        std::vector<bool>* _needs_targets = nullptr ) const;
 
     /// Initializes the feature learner.
     std::optional<FeatureLearnerType> make_feature_learner() const;
@@ -287,6 +300,20 @@ class FeatureLearner : public AbstractFeatureLearner
     {
         assert_true( placeholder_ );
         return *placeholder_;
+    }
+
+    /// Determines whether the population table needs targets during
+    /// transform(...).
+    const bool population_needs_targets() const
+    {
+        if constexpr ( FeatureLearnerType::is_time_series_ )
+            {
+                return feature_learner()
+                    .hyperparameters()
+                    .allow_lagged_targets_;
+            }
+
+        return false;
     }
 
     /// Generates the name for the upper time stamp that is produced using
@@ -818,138 +845,125 @@ template <typename FeatureLearnerType>
 template <typename SchemaType>
 typename FeatureLearnerType::DataFrameType
 FeatureLearner<FeatureLearnerType>::extract_table_by_colnames(
-    const SchemaType& _schema, const containers::DataFrame& _df ) const
+    const SchemaType& _schema,
+    const containers::DataFrame& _df,
+    const bool _needs_targets ) const
 {
     // ------------------------------------------------------------------------
 
-    try
+    std::vector<typename DataFrameType::IntColumnType> categoricals;
+
+    for ( size_t i = 0; i < _schema.num_categoricals(); ++i )
         {
-            // ------------------------------------------------------------------------
+            const auto& name = _schema.categorical_name( i );
 
-            std::vector<typename DataFrameType::IntColumnType> categoricals;
+            const auto& mat = _df.categorical( name );
 
-            for ( size_t i = 0; i < _schema.num_categoricals(); ++i )
+            categoricals.push_back( typename DataFrameType::IntColumnType(
+                mat.data(), name, mat.nrows(), mat.unit() ) );
+        }
+
+    // ------------------------------------------------------------------------
+
+    std::vector<typename DataFrameType::FloatColumnType> discretes;
+
+    for ( size_t i = 0; i < _schema.num_discretes(); ++i )
+        {
+            const auto& name = _schema.discrete_name( i );
+
+            // Note that discrete columns actually do not exist
+            // in the DataFrame - they are taken from numerical
+            // instead.
+            const auto& mat = _df.numerical( name );
+
+            discretes.push_back( typename DataFrameType::FloatColumnType(
+                mat.data(), name, mat.nrows(), mat.unit() ) );
+        }
+
+    // ------------------------------------------------------------------------
+
+    std::vector<typename DataFrameType::IntColumnType> join_keys;
+
+    std::vector<std::shared_ptr<typename containers::DataFrameIndex::MapType>>
+        indices;
+
+    for ( size_t i = 0; i < _schema.num_join_keys(); ++i )
+        {
+            const auto& name = _schema.join_keys_name( i );
+
+            const auto& mat = _df.join_key( name );
+
+            join_keys.push_back( typename DataFrameType::IntColumnType(
+                mat.data(), name, mat.nrows(), mat.unit() ) );
+
+            indices.push_back( _df.index( name ).map() );
+        }
+
+    // ------------------------------------------------------------------------
+
+    std::vector<typename DataFrameType::FloatColumnType> numericals;
+
+    for ( size_t i = 0; i < _schema.num_numericals(); ++i )
+        {
+            const auto& name = _schema.numerical_name( i );
+
+            const auto& mat = _df.numerical( name );
+
+            numericals.push_back( typename DataFrameType::FloatColumnType(
+                mat.data(), name, mat.nrows(), mat.unit() ) );
+        }
+
+    // ------------------------------------------------------------------------
+
+    std::vector<typename DataFrameType::FloatColumnType> targets;
+
+    for ( size_t i = 0; i < _schema.num_targets(); ++i )
+        {
+            const auto& name = _schema.target_name( i );
+
+            if ( _df.has_target( name ) )
                 {
-                    const auto& name = _schema.categorical_name( i );
+                    const auto& mat = _df.target( name );
 
-                    const auto& mat = _df.categorical( name );
-
-                    categoricals.push_back(
-                        typename DataFrameType::IntColumnType(
-                            mat.data(), name, mat.nrows(), mat.unit() ) );
-                }
-
-            // ------------------------------------------------------------------------
-
-            std::vector<typename DataFrameType::FloatColumnType> discretes;
-
-            for ( size_t i = 0; i < _schema.num_discretes(); ++i )
-                {
-                    const auto& name = _schema.discrete_name( i );
-
-                    // Note that discrete columns actually do not exist
-                    // in the DataFrame - they are taken from numerical
-                    // instead.
-                    const auto& mat = _df.numerical( name );
-
-                    discretes.push_back(
-                        typename DataFrameType::FloatColumnType(
-                            mat.data(), name, mat.nrows(), mat.unit() ) );
-                }
-
-            // ------------------------------------------------------------------------
-
-            std::vector<typename DataFrameType::IntColumnType> join_keys;
-
-            std::vector<
-                std::shared_ptr<typename containers::DataFrameIndex::MapType>>
-                indices;
-
-            for ( size_t i = 0; i < _schema.num_join_keys(); ++i )
-                {
-                    const auto& name = _schema.join_keys_name( i );
-
-                    const auto& mat = _df.join_key( name );
-
-                    join_keys.push_back( typename DataFrameType::IntColumnType(
+                    targets.push_back( typename DataFrameType::FloatColumnType(
                         mat.data(), name, mat.nrows(), mat.unit() ) );
-
-                    indices.push_back( _df.index( name ).map() );
                 }
-
-            // ------------------------------------------------------------------------
-
-            std::vector<typename DataFrameType::FloatColumnType> numericals;
-
-            for ( size_t i = 0; i < _schema.num_numericals(); ++i )
+            else if ( _needs_targets )
                 {
-                    const auto& name = _schema.numerical_name( i );
-
-                    const auto& mat = _df.numerical( name );
-
-                    numericals.push_back(
-                        typename DataFrameType::FloatColumnType(
-                            mat.data(), name, mat.nrows(), mat.unit() ) );
+                    throw std::invalid_argument(
+                        "Target '" + name + "' not found in data frame '" +
+                        _df.name() +
+                        "', but is required to generate the "
+                        "prediction. This is because you have set "
+                        "allow_lagged_targets to True." );
                 }
-
-            // ------------------------------------------------------------------------
-
-            std::vector<typename DataFrameType::FloatColumnType> targets;
-
-            for ( size_t i = 0; i < _schema.num_targets(); ++i )
-                {
-                    const auto& name = _schema.target_name( i );
-
-                    if ( _df.has_target( name ) )
-                        {
-                            const auto& mat = _df.target( name );
-
-                            targets.push_back(
-                                typename DataFrameType::FloatColumnType(
-                                    mat.data(),
-                                    name,
-                                    mat.nrows(),
-                                    mat.unit() ) );
-                        }
-                }
-
-            // ------------------------------------------------------------------------
-
-            std::vector<typename DataFrameType::FloatColumnType> time_stamps;
-
-            for ( size_t i = 0; i < _schema.num_time_stamps(); ++i )
-                {
-                    const auto& name = _schema.time_stamps_name( i );
-
-                    const auto& mat = _df.time_stamp( name );
-
-                    time_stamps.push_back(
-                        typename DataFrameType::FloatColumnType(
-                            mat.data(), name, mat.nrows(), mat.unit() ) );
-                }
-
-            // ------------------------------------------------------------------------
-
-            return DataFrameType(
-                categoricals,
-                discretes,
-                indices,
-                join_keys,
-                _df.name(),
-                numericals,
-                targets,
-                time_stamps );
-
-            // ------------------------------------------------------------------------
         }
-    catch ( std::exception& e )
+
+    // ------------------------------------------------------------------------
+
+    std::vector<typename DataFrameType::FloatColumnType> time_stamps;
+
+    for ( size_t i = 0; i < _schema.num_time_stamps(); ++i )
         {
-            throw std::invalid_argument(
-                std::string( e.what() ) +
-                " Is it possible that your peripheral tables are in the "
-                "wrong "
-                "order?" );
+            const auto& name = _schema.time_stamps_name( i );
+
+            const auto& mat = _df.time_stamp( name );
+
+            time_stamps.push_back( typename DataFrameType::FloatColumnType(
+                mat.data(), name, mat.nrows(), mat.unit() ) );
         }
+
+    // ------------------------------------------------------------------------
+
+    return DataFrameType(
+        categoricals,
+        discretes,
+        indices,
+        join_keys,
+        _df.name(),
+        numericals,
+        targets,
+        time_stamps );
 
     // ------------------------------------------------------------------------
 }
@@ -1002,8 +1016,8 @@ FeatureLearner<FeatureLearnerType>::extract_tables_by_colnames(
 
     const auto population_schema = feature_learner().population_schema();
 
-    const auto population_table =
-        extract_table_by_colnames( population_schema, _population_df );
+    const auto population_table = extract_table_by_colnames(
+        population_schema, _population_df, population_needs_targets() );
 
     // ------------------------------------------------
 
@@ -1026,12 +1040,21 @@ FeatureLearner<FeatureLearnerType>::extract_tables_by_colnames(
 
     // ------------------------------------------------
 
+    const auto needs_targets =
+        infer_needs_targets( placeholder(), peripheral_schema.size() );
+
+    assert_true( needs_targets.size() == peripheral_schema.size() );
+
+    // ------------------------------------------------
+
     std::vector<DataFrameType> peripheral_tables;
 
     for ( size_t i = 0; i < peripheral_schema.size(); ++i )
         {
             const auto table = extract_table_by_colnames(
-                peripheral_schema.at( i ), _peripheral_dfs.at( i ) );
+                peripheral_schema.at( i ),
+                _peripheral_dfs.at( i ),
+                needs_targets.at( i ) );
 
             peripheral_tables.push_back( table );
         }
@@ -1069,10 +1092,9 @@ Poco::JSON::Object::Ptr FeatureLearner<FeatureLearnerType>::fingerprint() const
 template <typename FeatureLearnerType>
 void FeatureLearner<FeatureLearnerType>::fit(
     const Poco::JSON::Object& _cmd,
-    const std::shared_ptr<const monitoring::Logger>& _logger,
+    const std::shared_ptr<const communication::SocketLogger>& _logger,
     const std::map<std::string, containers::DataFrame>& _data_frames,
-    const Int _target_num,
-    Poco::Net::StreamSocket* _socket )
+    const Int _target_num )
 {
     // ------------------------------------------------
 
@@ -1095,6 +1117,91 @@ void FeatureLearner<FeatureLearnerType>::fit(
     feature_learner_ = std::move( new_feature_learner );
 
     // ------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
+template <typename FeatureLearnerType>
+std::vector<bool> FeatureLearner<FeatureLearnerType>::infer_needs_targets(
+    const Poco::JSON::Object& _placeholder,
+    const size_t _num_peripheral,
+    std::vector<bool>* _needs_targets ) const
+{
+    // ------------------------------------------------------------------------
+
+    std::vector<bool> needs_targets;
+
+    // ------------------------------------------------------------------------
+
+    if ( _needs_targets != nullptr )
+        {
+            needs_targets = *_needs_targets;
+            assert_true( needs_targets.size() == _num_peripheral );
+        }
+    else
+        {
+            needs_targets = std::vector<bool>( _num_peripheral, false );
+        }
+
+    // ------------------------------------------------------------------------
+
+    const auto joined_tables_arr = _placeholder.getArray( "joined_tables_" );
+
+    if ( !joined_tables_arr )
+        {
+            throw std::invalid_argument(
+                "The placeholder has no array named 'joined_tables_'!" );
+        }
+
+    const auto expected_size = joined_tables_arr->size();
+
+    // ------------------------------------------------------------------------
+
+    const auto allow_lagged_targets = extract_vector<bool>(
+        _placeholder, "allow_lagged_targets_", expected_size );
+
+    // ------------------------------------------------------------------------
+
+    for ( size_t i = 0; i < expected_size; ++i )
+        {
+            const auto joined_table = joined_tables_arr->getObject( i );
+
+            if ( !joined_table )
+                {
+                    throw std::invalid_argument(
+                        "Element " + std::to_string( i ) +
+                        " in 'joined_tables_' is not a proper JSON object!" );
+                }
+
+            if ( allow_lagged_targets.at( i ) )
+                {
+                    const auto name =
+                        JSON::get_value<std::string>( *joined_table, "name_" );
+
+                    const auto it = std::find(
+                        peripheral().begin(), peripheral().end(), name );
+
+                    if ( it == peripheral().end() )
+                        {
+                            throw std::invalid_argument(
+                                "Peripheral placeholder named '" + name +
+                                "' not found!" );
+                        }
+
+                    const auto dist = std::distance( peripheral().begin(), it );
+
+                    needs_targets.at( dist ) = true;
+                }
+
+            needs_targets = infer_needs_targets(
+                *joined_table, _num_peripheral, &needs_targets );
+        }
+
+    // ------------------------------------------------------------------------
+
+    return needs_targets;
+
+    // ------------------------------------------------------------------------
 }
 
 // ------------------------------------------------------------------------
@@ -1216,9 +1323,8 @@ template <typename FeatureLearnerType>
 containers::Features FeatureLearner<FeatureLearnerType>::transform(
     const Poco::JSON::Object& _cmd,
     const std::vector<size_t>& _index,
-    const std::shared_ptr<const monitoring::Logger>& _logger,
-    const std::map<std::string, containers::DataFrame>& _data_frames,
-    Poco::Net::StreamSocket* _socket ) const
+    const std::shared_ptr<const communication::SocketLogger>& _logger,
+    const std::map<std::string, containers::DataFrame>& _data_frames ) const
 {
     const auto [population_df, peripheral_dfs] =
         extract_data_frames( _cmd, _data_frames );

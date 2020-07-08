@@ -13,7 +13,7 @@ class Encoding
     Encoding(
         const std::shared_ptr<const Encoding> _subencoding =
             std::shared_ptr<const Encoding>() )
-        : null_value_( "" ),
+        : null_value_( "NULL" ),
           subencoding_( _subencoding ),
           subsize_( _subencoding ? _subencoding->size() : 0 ),
           vector_( std::make_shared<std::vector<strings::String>>( 0 ) )
@@ -119,14 +119,14 @@ const strings::String& Encoding::operator[]( const T _i ) const
 {
     static_assert( std::is_integral<T>::value, "Integral required." );
 
-    assert_true( size() > 0 );
-
-    assert_true( _i < 0 || static_cast<size_t>( _i ) < size() );
-
     if ( _i < 0 || static_cast<size_t>( _i ) >= size() )
         {
             return null_value_;
         }
+
+    assert_true( size() > 0 );
+
+    assert_true( _i < 0 || static_cast<size_t>( _i ) < size() );
 
     if ( subencoding_ )
         {

@@ -71,8 +71,7 @@ class ColumnOperators
 
         for ( const auto& str : _vec )
             {
-                if ( str == "" || str == "nan" || str == "NaN" || str == "NA" ||
-                     str == "NULL" )
+                if ( NullChecker::is_null( str ) )
                     {
                         continue;
                     }
@@ -108,8 +107,7 @@ class ColumnOperators
 
         for ( const auto& str : _vec )
             {
-                if ( str == "" || str == "nan" || str == "NaN" || str == "NA" ||
-                     str == "NULL" )
+                if ( NullChecker::is_null( str ) )
                     {
                         continue;
                     }

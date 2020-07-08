@@ -43,6 +43,9 @@ class Sniffer
             }
     }
 
+#if ( defined( _WIN32 ) || defined( _WIN64 ) )
+    // S3 is not supported on windows
+#else
     /// Constructer for S3Sniffer
     template <typename R = ReaderType>
     Sniffer(
@@ -75,6 +78,7 @@ class Sniffer
                     "You need to provide at least one input key!" );
             }
     }
+#endif
 
     ~Sniffer() = default;
 
@@ -125,6 +129,9 @@ class Sniffer
         return CSVReader( colnames_, _fname, limit, quotechar_, sep_ );
     }
 
+#if ( defined( _WIN32 ) || defined( _WIN64 ) )
+    // S3 is not supported on windows
+#else
     /// Makes a S3Reader, when this is the required type for the reader.
     template <
         typename R = ReaderType,
@@ -135,6 +142,7 @@ class Sniffer
         const auto limit = static_cast<Int>( num_lines_sniffed_ + skip_ );
         return S3Reader( bucket_, colnames_, _fname, limit, region_, sep_ );
     }
+#endif
 
     // -------------------------------
 

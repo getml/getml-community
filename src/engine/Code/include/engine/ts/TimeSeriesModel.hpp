@@ -80,6 +80,13 @@ class TimeSeriesModel
     // -----------------------------------------------------------------
 
    public:
+    /// Trivial (const) accessor
+    const HypType &hyperparameters() const
+    {
+        assert_true( hyperparameters_ );
+        return *hyperparameters_;
+    }
+
     /// Returns the number of features.
     size_t num_features() const { return model().num_features(); }
 
@@ -168,13 +175,6 @@ class TimeSeriesModel
     // -----------------------------------------------------------------
 
    private:
-    /// Trivial (const) accessor
-    const HypType &hyperparameters() const
-    {
-        assert_true( hyperparameters_ );
-        return *hyperparameters_;
-    }
-
     /// Trivial accessor
     FEType &model()
     {

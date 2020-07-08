@@ -28,6 +28,14 @@ void Scores::from_json_obj( const Poco::JSON::Object& _json_obj )
 
     // -------------------------
 
+    if ( _json_obj.has( "set_used_" ) )
+        {
+            set_used_ = jsonutils::JSON::get_value<std::string>(
+                _json_obj, "set_used_" );
+        }
+
+    // -------------------------
+
     update_1d_vector( _json_obj, "prediction_min_", &prediction_min_ );
 
     update_1d_vector(
@@ -96,6 +104,10 @@ Poco::JSON::Object Scores::to_json_obj() const
     // -------------------------
 
     Poco::JSON::Object obj;
+
+    // -------------------------
+
+    obj.set( "set_used_", set_used_ );
 
     // -------------------------
 

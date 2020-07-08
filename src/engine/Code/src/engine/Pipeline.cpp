@@ -168,7 +168,7 @@ void Pipeline::check(
     // -------------------------------------------------------------------------
 
     const auto [feature_learners, target_nums] =
-        init_feature_learners( num_targets(), df_fingerprints() );
+        init_feature_learners( 1, df_fingerprints() );
 
     // -------------------------------------------------------------------------
 
@@ -499,7 +499,7 @@ containers::Features Pipeline::generate_numerical_features(
     const predictors::PredictorImpl& _predictor_impl,
     Poco::Net::StreamSocket* _socket ) const
 {
-    // -------------------------------------------------------------------------
+    // --------------------------------------------------------------------
 
     assert_true(
         feature_learners_.size() == _predictor_impl.autofeatures().size() );
@@ -513,12 +513,16 @@ containers::Features Pipeline::generate_numerical_features(
         {
             const auto& fe = feature_learners_.at( i );
 
+            const auto socket_logger =
+                std::make_shared<const communication::SocketLogger>(
+                    _logger, fe->silent(), _socket );
+
             const auto& index = _predictor_impl.autofeatures().at( i );
 
             assert_true( fe );
 
             auto new_features =
-                fe->transform( _cmd, index, _logger, _data_frames, _socket );
+                fe->transform( _cmd, index, socket_logger, _data_frames );
 
             numerical_features.insert(
                 numerical_features.end(),
@@ -691,6 +695,8 @@ void Pipeline::fit(
 
     scores().from_json_obj( feature_importances_as_obj() );
 
+    scores().from_json_obj( feature_names_as_obj() );
+
     // -------------------------------------------------------------------------
 }
 
@@ -712,6 +718,10 @@ void Pipeline::fit_feature_learners(
         {
             auto& fe = feature_learners.at( i );
 
+            const auto socket_logger =
+                std::make_shared<const communication::SocketLogger>(
+                    _logger, fe->silent(), _socket );
+
             assert_true( fe );
 
             const auto fingerprint = fe->fingerprint();
@@ -720,12 +730,18 @@ void Pipeline::fit_feature_learners(
 
             if ( retrieved_fe )
                 {
+                    socket_logger->log(
+                        "Retrieving features (because a similar feature "
+                        "learner has already been fitted)..." );
+
+                    socket_logger->log( "Progress: 100%." );
+
                     fe = retrieved_fe;
+
                     continue;
                 }
 
-            fe->fit(
-                _cmd, _logger, _data_frames, target_nums.at( i ), _socket );
+            fe->fit( _cmd, socket_logger, _data_frames, target_nums.at( i ) );
 
             _fe_tracker->add( fe );
         }
@@ -790,15 +806,23 @@ void Pipeline::fit_predictors(
                 {
                     assert_true( p );
 
+                    const auto socket_logger =
+                        std::make_shared<const communication::SocketLogger>(
+                            _logger, p->silent(), _socket );
+
                     // If p is already fitted, that is because it has been
                     // retrieved.
                     if ( p->is_fitted() )
                         {
+                            socket_logger->log( "Retrieving predictor..." );
+
+                            socket_logger->log( "Progress: 100%." );
+
                             continue;
                         }
 
                     p->fit(
-                        _logger,
+                        socket_logger,
                         categorical_features,
                         numerical_features,
                         target_col );
@@ -870,6 +894,14 @@ Pipeline::init_feature_learners(
     const size_t _num_targets,
     const std::vector<Poco::JSON::Object::Ptr>& _df_fingerprints ) const
 {
+    // ----------------------------------------------------------------------
+
+    if ( _num_targets == 0 )
+        {
+            throw std::invalid_argument(
+                "You must provide at least one target." );
+        }
+
     // ----------------------------------------------------------------------
 
     const auto population = std::make_shared<Poco::JSON::Object>(
@@ -1658,6 +1690,8 @@ Poco::JSON::Object Pipeline::score(
     debug_log( "Calculating score..." );
 
     auto obj = metrics::Scorer::score( is_classification(), _yhat, y );
+
+    obj.set( "set_used_", population_name );
 
     scores().from_json_obj( obj );
 

@@ -123,6 +123,7 @@ void Threadutils::transform_ensemble(
     const std::vector<size_t>& _index,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
     const ensemble::DecisionTreeEnsemble& _ensemble,
+    multithreading::Communicator* _comm,
     containers::Features* _features )
 {
     try
@@ -150,7 +151,9 @@ void Threadutils::transform_ensemble(
             const auto subpredictions = SubtreeHelper::make_predictions(
                 table_holder,
                 _ensemble.subensembles_avg(),
-                _ensemble.subensembles_sum() );
+                _ensemble.subensembles_sum(),
+                _logger,
+                _comm );
 
             const auto subfeatures =
                 SubtreeHelper::make_subfeatures( table_holder, subpredictions );
@@ -162,6 +165,10 @@ void Threadutils::transform_ensemble(
             auto impl = containers::Optional<aggregations::AggregationImpl>(
                 new aggregations::AggregationImpl(
                     population_subview.nrows() ) );
+
+            // ----------------------------------------------------------------
+
+            utils::Logger::log( "Building features...", _logger, _comm );
 
             // ----------------------------------------------------------------
             // Build the actual features.
@@ -182,12 +189,13 @@ void Threadutils::transform_ensemble(
                         new_feature,
                         _features->at( i ).get() );
 
-                    if ( _logger && !_hyperparameters->silent_ )
-                        {
-                            _logger->log(
-                                "Built FEATURE_" + std::to_string( ix + 1 ) +
-                                "." );
-                        }
+                    const auto progress = ( ( i + 1 ) * 100 ) / _index.size();
+
+                    utils::Logger::log(
+                        "Built FEATURE_" + std::to_string( ix + 1 ) +
+                            ". Progress: " + std::to_string( progress ) + "\%.",
+                        _logger,
+                        _comm );
                 }
 
             // ----------------------------------------------------------------

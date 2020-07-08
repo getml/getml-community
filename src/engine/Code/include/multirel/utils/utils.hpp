@@ -16,6 +16,8 @@
 
 #include "strings/strings.hpp"
 
+#include "logging/logging.hpp"
+
 #include "multithreading/multithreading.hpp"
 
 #include "multirel/enums/enums.hpp"
@@ -34,6 +36,7 @@
 #include "multirel/utils/CategoricalBinner.hpp"
 #include "multirel/utils/DiscreteBinner.hpp"
 #include "multirel/utils/LinearRegression.hpp"
+#include "multirel/utils/Logger.hpp"
 #include "multirel/utils/Mapper.hpp"
 #include "multirel/utils/Matchmaker.hpp"
 #include "multirel/utils/MinMaxFinder.hpp"

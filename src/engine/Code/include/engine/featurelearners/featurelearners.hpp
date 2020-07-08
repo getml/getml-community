@@ -26,6 +26,8 @@
 #include "engine/containers/containers.hpp"
 #include "engine/monitoring/monitoring.hpp"
 
+#include "engine/communication/communication.hpp"
+
 #include "multirel/ensemble/ensemble.hpp"
 
 #include "relboost/ensemble/ensemble.hpp"

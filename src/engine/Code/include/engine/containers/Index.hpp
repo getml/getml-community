@@ -66,7 +66,7 @@ void Index<T, Hash>::calculate( const Column<T>& _key )
 
                     if ( it == map_->end() )
                         {
-                            ( *map_ )[_key[i]] = {i};
+                            ( *map_ )[_key[i]] = { i };
                         }
                     else
                         {
@@ -95,9 +95,7 @@ bool Index<T, Hash>::is_null( const T& _val ) const
 
     if constexpr ( std::is_same<T, strings::String>() )
         {
-            return (
-                _val == "" || _val == "nan" || _val == "NaN" || _val == "NA" ||
-                _val == "NULL" );
+            return utils::NullChecker::is_null( _val );
         }
 
     return false;

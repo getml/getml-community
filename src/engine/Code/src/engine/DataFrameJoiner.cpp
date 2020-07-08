@@ -400,7 +400,7 @@ void DataFrameJoiner::filter(
 
     const auto condition =
         BoolOpParser(
-            _categories, _join_keys_encoding, data_frames, nrows, false )
+            _categories, _join_keys_encoding, data_frames, 0, nrows, false )
             .parse( _where );
 
     // ------------------------------------------------------------------------

@@ -21,6 +21,7 @@ struct Hyperparameters
           model_hyperparams_( std::make_shared<HypType>( _json_obj ) ),
           self_join_keys_( jsonutils::JSON::array_to_vector<std::string>(
               jsonutils::JSON::get_array( _json_obj, "self_join_keys_" ) ) ),
+          silent_( model_hyperparams_->silent_ ),
           ts_name_(
               jsonutils::JSON::get_value<std::string>( _json_obj, "ts_name_" ) )
     {
@@ -63,6 +64,9 @@ struct Hyperparameters
 
     /// The join keys used for the self join.
     const std::vector<std::string> self_join_keys_;
+
+    /// Whether we want the time series to be silent.
+    const bool silent_;
 
     /// The name of the time stamp used for the time series.
     const std::string ts_name_;

@@ -94,7 +94,7 @@ std::shared_ptr<Index> DataFrame::create_index( const Column<Int>& _join_key )
                     if ( it == new_index->end() )
                         {
                             new_index->insert_or_assign(
-                                _join_key[ix], std::vector<size_t>( {ix} ) );
+                                _join_key[ix], std::vector<size_t>( { ix } ) );
                         }
                     else
                         {
@@ -162,14 +162,6 @@ DataFrame DataFrame::create_subview(
             numericals_and_time_stamps.push_back( col );
         }
 
-    if ( _allow_lagged_targets )
-        {
-            for ( const auto& col : targets_ )
-                {
-                    numericals_and_time_stamps.push_back( col );
-                }
-        }
-
     for ( const auto& col : time_stamps_ )
         {
             if ( _upper_time_stamp != "" && col.name_ == _upper_time_stamp )
@@ -183,6 +175,14 @@ DataFrame DataFrame::create_subview(
             numericals_and_time_stamps.push_back( ts );
         }
 
+    if ( _allow_lagged_targets )
+        {
+            for ( const auto& col : targets_ )
+                {
+                    numericals_and_time_stamps.push_back( col );
+                }
+        }
+
     // ---------------------------------------------------------------------------
 
     if ( _time_stamp == "" )
@@ -190,8 +190,8 @@ DataFrame DataFrame::create_subview(
             return DataFrame(
                 categoricals_,
                 discretes_,
-                {indices_[ix_join_key]},
-                {join_keys_[ix_join_key]},
+                { indices_[ix_join_key] },
+                { join_keys_[ix_join_key] },
                 _name,
                 numericals_and_time_stamps,
                 targets_,
@@ -224,12 +224,12 @@ DataFrame DataFrame::create_subview(
             return DataFrame(
                 categoricals_,
                 discretes_,
-                {indices_[ix_join_key]},
-                {join_keys_[ix_join_key]},
+                { indices_[ix_join_key] },
+                { join_keys_[ix_join_key] },
                 _name,
                 numericals_and_time_stamps,
                 targets_,
-                {time_stamps_[ix_time_stamp]} );
+                { time_stamps_[ix_time_stamp] } );
         }
 
     // ---------------------------------------------------------------------------
@@ -256,12 +256,12 @@ DataFrame DataFrame::create_subview(
     return DataFrame(
         categoricals_,
         discretes_,
-        {indices_[ix_join_key]},
-        {join_keys_[ix_join_key]},
+        { indices_[ix_join_key] },
+        { join_keys_[ix_join_key] },
         _name,
         numericals_and_time_stamps,
         targets_,
-        {time_stamps_[ix_time_stamp], time_stamps_[ix_upper_time_stamp]} );
+        { time_stamps_[ix_time_stamp], time_stamps_[ix_upper_time_stamp] } );
 
     // ---------------------------------------------------------------------------
 }

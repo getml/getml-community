@@ -86,6 +86,13 @@ std::string LogisticRegression::fit(
 
     // -------------------------------------------------------------------------
 
+    if ( _logger )
+        {
+            _logger->log( "Progress: 100%." );
+        }
+
+    // -------------------------------------------------------------------------
+
     return "";
 
     // -------------------------------------------------------------------------
@@ -188,13 +195,6 @@ void LogisticRegression::fit_dense(
 
             if ( has_converged )
                 {
-                    if ( _logger )
-                        {
-                            _logger->log(
-                                "Converged after " + std::to_string( epoch ) +
-                                " updates." );
-                        }
-
                     break;
                 }
         }

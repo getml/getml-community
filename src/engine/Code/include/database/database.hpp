@@ -4,6 +4,7 @@
 // ----------------------------------------------------------------------------
 // Dependencies
 
+#include <array>
 #include <cmath>
 #include <iostream>
 #include <memory>
@@ -11,6 +12,11 @@
 #include <string>
 
 #include <mysql.h>
+
+#if ( defined( _WIN32 ) || defined( _WIN64 ) )
+#include <winsock2.h>
+#include <windows.h>
+#endif
 
 #include <sql.h>
 #include <sqlext.h>

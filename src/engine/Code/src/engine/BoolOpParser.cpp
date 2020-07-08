@@ -106,7 +106,7 @@ std::vector<bool> BoolOpParser::parse( const Poco::JSON::Object& _col ) const
         {
             const auto val = JSON::get_value<bool>( _col, "value_" );
 
-            auto vec = std::vector<bool>( num_elem_ );
+            auto vec = std::vector<bool>( length_ );
 
             std::fill( vec.begin(), vec.end(), val );
 

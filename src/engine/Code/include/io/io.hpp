@@ -23,7 +23,11 @@
 #include <Poco/JSON/Array.h>
 #include <Poco/JSON/Object.h>
 
+#if ( defined( _WIN32 ) || defined( _WIN64 ) )
+// goutils is not supported on windows
+#else
 #include <goutils.hpp>
+#endif
 
 #include "debug/debug.hpp"
 
@@ -41,12 +45,22 @@
 
 #include "io/CSVReader.hpp"
 #include "io/CSVWriter.hpp"
+
+#if ( defined( _WIN32 ) || defined( _WIN64 ) )
+// goutils is not supported on windows
+#else
 #include "io/S3Reader.hpp"
+#endif
 
 #include "io/Sniffer.hpp"
 
 #include "io/CSVSniffer.hpp"
+
+#if ( defined( _WIN32 ) || defined( _WIN64 ) )
+// goutils is not supported on windows
+#else
 #include "io/S3Sniffer.hpp"
+#endif
 
 // ----------------------------------------------------------------------------
 

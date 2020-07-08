@@ -24,9 +24,9 @@ class DatabaseManager
         connector_map_["default"] =
             std::make_shared<database::Sqlite3>( database::Sqlite3(
                 "../database.db",
-                {"%Y-%m-%dT%H:%M:%s%z",
-                 "%Y/%m/%d %H:%M:%S",
-                 "%Y-%m-%d %H:%M:%S"} ) );
+                { "%Y-%m-%dT%H:%M:%s%z",
+                  "%Y/%m/%d %H:%M:%S",
+                  "%Y-%m-%d %H:%M:%S" } ) );
 
         post_tables();
     }
@@ -149,17 +149,26 @@ class DatabaseManager
     /// Sets the S3 Access Key ID
     void set_s3_access_key_id( Poco::Net::StreamSocket* _socket ) const
     {
+#if ( defined( _WIN32 ) || defined( _WIN64 ) )
+        throw std::invalid_argument( "S3 is not supported on Windows!" );
+#else
         const auto value = communication::Receiver::recv_string( _socket );
         goutils::S3::set_access_key_id( value );
         communication::Sender::send_string( "Success!", _socket );
+
+#endif
     }
 
     /// Sets the S3 Access Key ID
     void set_s3_secret_access_key( Poco::Net::StreamSocket* _socket ) const
     {
+#if ( defined( _WIN32 ) || defined( _WIN64 ) )
+        throw std::invalid_argument( "S3 is not supported on Windows!" );
+#else
         const auto value = communication::Receiver::recv_string( _socket );
         goutils::S3::set_secret_access_key( value );
         communication::Sender::send_string( "Success!", _socket );
+#endif
     }
 
     // ------------------------------------------------------------------------

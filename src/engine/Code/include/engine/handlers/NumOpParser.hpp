@@ -17,12 +17,14 @@ class NumOpParser
         const std::shared_ptr<const containers::Encoding>& _join_keys_encoding,
         const std::shared_ptr<
             const std::map<std::string, containers::DataFrame>>& _data_frames,
-        const size_t _num_elem,
+        const size_t _begin,
+        const size_t _length,
         const bool _subselection )
-        : categories_( _categories ),
+        : begin_( _begin ),
+          categories_( _categories ),
           data_frames_( _data_frames ),
           join_keys_encoding_( _join_keys_encoding ),
-          num_elem_( _num_elem ),
+          length_( _length ),
           subselection_( _subselection )
     {
         assert_true( categories_ );
@@ -113,7 +115,7 @@ class NumOpParser
 
         std::uniform_real_distribution<Float> dis( 0.0, 1.0 );
 
-        auto result = containers::Column<Float>( num_elem_ );
+        auto result = containers::Column<Float>( length_ );
 
         for ( auto& val : result )
             {
@@ -126,11 +128,11 @@ class NumOpParser
     /// Returns a columns containing the rowids.
     containers::Column<Float> rowid() const
     {
-        auto result = containers::Column<Float>( num_elem_ );
+        auto result = containers::Column<Float>( length_ );
 
         for ( size_t i = 0; i < result.size(); ++i )
             {
-                result[i] = static_cast<Float>( i );
+                result[i] = begin_ + static_cast<Float>( i );
             }
 
         return result;
@@ -154,6 +156,9 @@ class NumOpParser
     // ------------------------------------------------------------------------
 
    private:
+    /// The index of the first element to be drawn
+    const size_t begin_;
+
     /// Encodes the categories used.
     const std::shared_ptr<const containers::Encoding> categories_;
 
@@ -166,7 +171,7 @@ class NumOpParser
 
     /// The number of elements required (must not be greater than the number of
     /// rows in df)
-    const size_t num_elem_;
+    const size_t length_;
 
     /// Whether we want to get a subselection.
     const bool subselection_;

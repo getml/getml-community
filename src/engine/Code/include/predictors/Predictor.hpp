@@ -55,6 +55,9 @@ class Predictor
     /// Stores the predictor
     virtual void save( const std::string& _fname ) const = 0;
 
+    /// Whether we want the predictor to be silent.
+    virtual bool silent() const = 0;
+
     // -----------------------------------------
 };
 

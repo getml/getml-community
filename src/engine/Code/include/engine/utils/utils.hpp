@@ -11,12 +11,16 @@
 #include <utility>
 #include <vector>
 
+#include "strings/strings.hpp"
+
 #include "engine/Float.hpp"
 #include "engine/Int.hpp"
 
 #include "engine/monitoring/monitoring.hpp"
 
 // ----------------------------------------------------------------------------
+
+#include "engine/utils/NullChecker.hpp"
 
 #include "engine/utils/ColumnOperators.hpp"
 #include "engine/utils/Endianness.hpp"

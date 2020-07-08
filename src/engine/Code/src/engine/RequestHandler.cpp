@@ -31,9 +31,9 @@ void RequestHandler::run()
                     data_frame_manager().get_boolean_column(
                         name, cmd, &socket() );
                 }
-            else if ( type == "BooleanColumn.get_string" )
+            else if ( type == "BooleanColumn.get_content" )
                 {
-                    data_frame_manager().get_boolean_column_string(
+                    data_frame_manager().get_boolean_column_content(
                         name, cmd, &socket() );
                 }
             else if ( type == "Database.copy_table" )
@@ -249,9 +249,9 @@ void RequestHandler::run()
                 {
                     data_frame_manager().get_column( name, cmd, &socket() );
                 }
-            else if ( type == "FloatColumn.get_string" )
+            else if ( type == "FloatColumn.get_content" )
                 {
-                    data_frame_manager().get_column_string(
+                    data_frame_manager().get_float_column_content(
                         name, cmd, &socket() );
                 }
             else if ( type == "FloatColumn.get_unit" )
@@ -300,6 +300,12 @@ void RequestHandler::run()
                 {
                     return;
                 }
+            else if ( type == "monitor_port" )
+                {
+                    communication::Sender::send_string(
+                        std::to_string( options_.monitor().http_port_ ),
+                        &socket() );
+                }
             else if ( type == "Pipeline" )
                 {
                     project_manager().add_pipeline( name, cmd, &socket() );
@@ -319,6 +325,16 @@ void RequestHandler::run()
             else if ( type == "Pipeline.deploy" )
                 {
                     pipeline_manager().deploy( name, cmd, &socket() );
+                }
+            else if ( type == "Pipeline.feature_correlations" )
+                {
+                    pipeline_manager().feature_correlations(
+                        name, cmd, &socket() );
+                }
+            else if ( type == "Pipeline.feature_importances" )
+                {
+                    pipeline_manager().feature_importances(
+                        name, cmd, &socket() );
                 }
             else if ( type == "Pipeline.fit" )
                 {
@@ -353,6 +369,10 @@ void RequestHandler::run()
                 {
                     pipeline_manager().to_sql( name, &socket() );
                 }
+            else if ( type == "Pipeline.targets" )
+                {
+                    pipeline_manager().targets( name, &socket() );
+                }
             else if ( type == "Pipeline.transform" )
                 {
                     pipeline_manager().transform( name, cmd, &socket() );
@@ -382,9 +402,9 @@ void RequestHandler::run()
                     data_frame_manager().get_categorical_column(
                         name, cmd, &socket() );
                 }
-            else if ( type == "StringColumn.get_string" )
+            else if ( type == "StringColumn.get_content" )
                 {
-                    data_frame_manager().get_categorical_column_string(
+                    data_frame_manager().get_categorical_column_content(
                         name, cmd, &socket() );
                 }
             else if ( type == "StringColumn.get_unit" )

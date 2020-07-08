@@ -17,12 +17,14 @@ class BoolOpParser
         const std::shared_ptr<const containers::Encoding>& _join_keys_encoding,
         const std::shared_ptr<
             const std::map<std::string, containers::DataFrame>>& _data_frames,
-        const size_t _num_elem,
+        const size_t _begin,
+        const size_t _length,
         const bool _subselection )
-        : categories_( _categories ),
+        : begin_( _begin ),
+          categories_( _categories ),
           data_frames_( _data_frames ),
           join_keys_encoding_( _join_keys_encoding ),
-          num_elem_( _num_elem ),
+          length_( _length ),
           subselection_( _subselection )
     {
         assert_true( categories_ );
@@ -84,7 +86,8 @@ class BoolOpParser
                 categories_,
                 join_keys_encoding_,
                 data_frames_,
-                num_elem_,
+                begin_,
+                length_,
                 subselection_ )
                 .parse( *JSON::get_object( _col, "operand1_" ) );
 
@@ -93,7 +96,8 @@ class BoolOpParser
                 categories_,
                 join_keys_encoding_,
                 data_frames_,
-                num_elem_,
+                begin_,
+                length_,
                 subselection_ )
                 .parse( *JSON::get_object( _col, "operand2_" ) );
 
@@ -127,7 +131,8 @@ class BoolOpParser
                 categories_,
                 join_keys_encoding_,
                 data_frames_,
-                num_elem_,
+                begin_,
+                length_,
                 subselection_ )
                 .parse( *JSON::get_object( _col, "operand1_" ) );
 
@@ -136,7 +141,8 @@ class BoolOpParser
                 categories_,
                 join_keys_encoding_,
                 data_frames_,
-                num_elem_,
+                begin_,
+                length_,
                 subselection_ )
                 .parse( *JSON::get_object( _col, "operand2_" ) );
 
@@ -170,7 +176,8 @@ class BoolOpParser
                 categories_,
                 join_keys_encoding_,
                 data_frames_,
-                num_elem_,
+                begin_,
+                length_,
                 subselection_ )
                 .parse( *JSON::get_object( _col, "operand1_" ) );
 
@@ -199,6 +206,9 @@ class BoolOpParser
     // ------------------------------------------------------------------------
 
    private:
+    /// The index of the first element to be drawn
+    const size_t begin_;
+
     /// Encodes the categories used.
     const std::shared_ptr<const containers::Encoding> categories_;
 
@@ -211,7 +221,7 @@ class BoolOpParser
 
     /// The number of elements required (must not be greater than the number of
     /// rows in df)
-    const size_t num_elem_;
+    const size_t length_;
 
     /// Whether we want to get a subselection.
     const bool subselection_;

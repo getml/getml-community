@@ -318,7 +318,7 @@ void DecisionTreeEnsemble::fit(
 
     if ( _table_holder->main_tables_[0].num_targets() > 0 )
         {
-            targets() = {_table_holder->main_tables_[0].target_name( 0 )};
+            targets() = { _table_holder->main_tables_[0].target_name( 0 ) };
         }
 
     // ----------------------------------------------------------------
@@ -337,7 +337,7 @@ void DecisionTreeEnsemble::fit(
     // If there are any subfeatures, create them.
 
     const auto subpredictions = SubtreeHelper::make_predictions(
-        *_table_holder, subensembles_avg_, subensembles_sum_ );
+        *_table_holder, subensembles_avg_, subensembles_sum_, _logger, _comm );
 
     const auto subfeatures =
         SubtreeHelper::make_subfeatures( *_table_holder, subpredictions );
@@ -415,6 +415,10 @@ void DecisionTreeEnsemble::fit(
                         utils::Matchmaker::make_pointers( &matches[i] );
                 }
         }
+
+    // ----------------------------------------------------------------
+
+    utils::Logger::log( "Training features...", _logger, _comm );
 
     // ----------------------------------------------------------------
 
@@ -517,12 +521,13 @@ void DecisionTreeEnsemble::fit(
             debug_log(
                 "Trained FEATURE_" + std::to_string( ix_feature + 1 ) + "." );
 
-            if ( _logger && !hyperparameters().silent_ )
-                {
-                    _logger->log(
-                        "Trained FEATURE_" + std::to_string( ix_feature + 1 ) +
-                        "." );
-                }
+            const auto progress = ( ( ix_feature + 1 ) * 100 ) / _num_features;
+
+            utils::Logger::log(
+                "Trained FEATURE_" + std::to_string( ix_feature + 1 ) +
+                    ". Progress: " + std::to_string( progress ) + "\%.",
+                _logger,
+                _comm );
 
             // -------------------------------------------------------------
         }
@@ -1031,6 +1036,10 @@ containers::Features DecisionTreeEnsemble::transform(
         }
 
     // -------------------------------------------------------
+
+    multithreading::Communicator comm( num_threads );
+
+    // -------------------------------------------------------
     // Launch threads and generate predictions on the subviews.
 
     auto features = containers::Features( index.size() );
@@ -1054,6 +1063,7 @@ containers::Features DecisionTreeEnsemble::transform(
                 index,
                 std::shared_ptr<const logging::AbstractLogger>(),
                 *this,
+                &comm,
                 &features ) );
         }
 
@@ -1071,6 +1081,7 @@ containers::Features DecisionTreeEnsemble::transform(
                 index,
                 _logger,
                 *this,
+                &comm,
                 &features );
         }
     catch ( std::exception &e )
@@ -1101,6 +1112,8 @@ containers::Features DecisionTreeEnsemble::transform(
 
 containers::Predictions DecisionTreeEnsemble::transform(
     const decisiontrees::TableHolder &_table_holder,
+    const std::shared_ptr<const logging::AbstractLogger> _logger,
+    multithreading::Communicator *_comm,
     containers::Optional<aggregations::AggregationImpl> *_impl ) const
 {
     // ----------------------------------------------------------------
@@ -1111,7 +1124,7 @@ containers::Predictions DecisionTreeEnsemble::transform(
     // If there are any subfeatures, create them.
 
     const auto subpredictions = SubtreeHelper::make_predictions(
-        _table_holder, subensembles_avg_, subensembles_sum_ );
+        _table_holder, subensembles_avg_, subensembles_sum_, _logger, _comm );
 
     const auto subfeatures =
         SubtreeHelper::make_subfeatures( _table_holder, subpredictions );
@@ -1119,12 +1132,22 @@ containers::Predictions DecisionTreeEnsemble::transform(
     // ----------------------------------------------------------------
     // Generate the actual predictions.
 
+    utils::Logger::log( "Building features...", _logger, _comm );
+
     containers::Predictions predictions;
 
     for ( size_t i = 0; i < trees().size(); ++i )
         {
             const auto new_prediction =
                 transform( _table_holder, subfeatures, i, _impl );
+
+            const auto progress = ( ( i + 1 ) * 100 ) / trees().size();
+
+            utils::Logger::log(
+                "Built FEATURE_" + std::to_string( i + 1 ) +
+                    ". Progress: " + std::to_string( progress ) + "\%.",
+                _logger,
+                _comm );
 
             predictions.emplace_back( std::move( new_prediction ) );
         }

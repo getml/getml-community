@@ -69,6 +69,9 @@ class LinearRegression : public Predictor
     /// Whether the predictor has been fitted.
     bool is_fitted() const final { return weights_.size() > 0; }
 
+    /// Whether we want the predictor to be silent.
+    bool silent() const final { return true; }
+
     // -------------------------------------------------------------------------
 
    private:

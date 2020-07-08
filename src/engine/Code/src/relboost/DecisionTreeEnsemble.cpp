@@ -376,6 +376,7 @@ void DecisionTreeEnsemble::fit(
                 _population,
                 _peripheral,
                 std::shared_ptr<const logging::AbstractLogger>(),
+                &comm,
                 &ensembles[i] ) );
         }
 
@@ -385,7 +386,13 @@ void DecisionTreeEnsemble::fit(
     try
         {
             Threadutils::fit_ensemble(
-                0, thread_nums, _population, _peripheral, _logger, this );
+                0,
+                thread_nums,
+                _population,
+                _peripheral,
+                _logger,
+                &comm,
+                this );
         }
     catch ( std::exception &e )
         {
@@ -777,10 +784,12 @@ DecisionTreeEnsemble::init_as_predictor(
 // ----------------------------------------------------------------------------
 
 std::vector<containers::Predictions> DecisionTreeEnsemble::make_subpredictions(
-    const TableHolder &_table_holder ) const
+    const TableHolder &_table_holder,
+    const std::shared_ptr<const logging::AbstractLogger> _logger,
+    multithreading::Communicator *_comm ) const
 {
     return SubtreeHelper::make_predictions(
-        _table_holder, subensembles_avg_, subensembles_sum_ );
+        _table_holder, subensembles_avg_, subensembles_sum_, _logger, _comm );
 }
 
 // ----------------------------------------------------------------------------
@@ -1061,6 +1070,10 @@ containers::Features DecisionTreeEnsemble::transform(
         }
 
     // -------------------------------------------------------
+
+    multithreading::Communicator comm( num_threads );
+
+    // -------------------------------------------------------
     // Launch threads and generate predictions on the subviews.
 
     auto features = containers::Features( 1 );
@@ -1088,6 +1101,7 @@ containers::Features DecisionTreeEnsemble::transform(
                 index,
                 std::shared_ptr<const logging::AbstractLogger>(),
                 *this,
+                &comm,
                 &features ) );
         }
 
@@ -1104,6 +1118,7 @@ containers::Features DecisionTreeEnsemble::transform(
                 index,
                 _logger,
                 *this,
+                &comm,
                 &features );
         }
     catch ( std::exception &e )

@@ -17,12 +17,14 @@ class CatOpParser
         const std::shared_ptr<const containers::Encoding>& _join_keys_encoding,
         const std::shared_ptr<
             const std::map<std::string, containers::DataFrame>>& _data_frames,
-        const size_t _num_elem,
+        const size_t _begin,
+        const size_t _length,
         const bool _subselection )
-        : categories_( _categories ),
+        : begin_( _begin ),
+          categories_( _categories ),
           data_frames_( _data_frames ),
           join_keys_encoding_( _join_keys_encoding ),
-          num_elem_( _num_elem ),
+          length_( _length ),
           subselection_( _subselection )
     {
         assert_true( categories_ );
@@ -119,8 +121,8 @@ class CatOpParser
         const containers::Encoding& _encoding ) const
     {
         const bool wrong_length =
-            ( !subselection_ && _col.size() != num_elem_ ) ||
-            _col.size() < num_elem_;
+            ( !subselection_ && _col.size() != length_ ) ||
+            _col.size() < begin_ + length_;
 
         if ( wrong_length )
             {
@@ -129,11 +131,11 @@ class CatOpParser
                     "to be possible!" );
             }
 
-        auto result = std::vector<std::string>( num_elem_ );
+        auto result = std::vector<std::string>( length_ );
 
         std::transform(
-            _col.begin(),
-            _col.begin() + num_elem_,
+            _col.begin() + begin_,
+            _col.begin() + begin_ + length_,
             result.begin(),
             [_encoding]( const Int val ) { return _encoding[val].str(); } );
 
@@ -145,8 +147,8 @@ class CatOpParser
         const containers::Column<strings::String>& _col ) const
     {
         const bool wrong_length =
-            ( !subselection_ && _col.size() != num_elem_ ) ||
-            _col.size() < num_elem_;
+            ( !subselection_ && _col.size() != length_ ) ||
+            _col.size() < length_;
 
         if ( wrong_length )
             {
@@ -155,11 +157,11 @@ class CatOpParser
                     "to be possible!" );
             }
 
-        auto result = std::vector<std::string>( num_elem_ );
+        auto result = std::vector<std::string>( length_ );
 
         std::transform(
-            _col.begin(),
-            _col.begin() + num_elem_,
+            _col.begin() + begin_,
+            _col.begin() + begin_ + length_,
             result.begin(),
             []( const strings::String& val ) { return val.str(); } );
 
@@ -169,6 +171,9 @@ class CatOpParser
     // ------------------------------------------------------------------------
 
    private:
+    /// The index of the first element to be drawn
+    const size_t begin_;
+
     /// Encodes the categories used.
     const std::shared_ptr<const containers::Encoding> categories_;
 
@@ -181,7 +186,7 @@ class CatOpParser
 
     /// The number of elements required (must not be greater than the number of
     /// rows in df)
-    const size_t num_elem_;
+    const size_t length_;
 
     /// Whether we want to get a subselection.
     const bool subselection_;
