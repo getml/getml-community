@@ -36,9 +36,11 @@ class DataFrameView
     }
 
     /// Getter for a categorical column.
-    const Column<Int> categorical_col( size_t _j ) const
+    const ColumnView<Int, std::vector<size_t>> categorical_col(
+        size_t _j ) const
     {
-        return df_.categorical_col( _j );
+        return ColumnView<Int, std::vector<size_t>>(
+            df_.categorical_col( _j ), rows_ );
     }
 
     /// Getter for a categorical name.
@@ -76,9 +78,10 @@ class DataFrameView
     }
 
     /// Getter for a discrete column.
-    const Column<Float> discrete_col( size_t _j ) const
+    const ColumnView<Float, std::vector<size_t>> discrete_col( size_t _j ) const
     {
-        return df_.discrete_col( _j );
+        return ColumnView<Float, std::vector<size_t>>(
+            df_.discrete_col( _j ), rows_ );
     }
 
     /// Getter for a discrete name.
@@ -146,9 +149,11 @@ class DataFrameView
     }
 
     /// Getter for a numerical column.
-    const Column<Float> numerical_col( size_t _j ) const
+    const ColumnView<Float, std::vector<size_t>> numerical_col(
+        size_t _j ) const
     {
-        return df_.numerical_col( _j );
+        return ColumnView<Float, std::vector<size_t>>(
+            df_.numerical_col( _j ), rows_ );
     }
 
     /// Getter for a numerical name.
@@ -176,12 +181,6 @@ class DataFrameView
     Float target( size_t _i, size_t _j ) const
     {
         return df_.target( row( _i ), _j );
-    }
-
-    /// Getter for a target column.
-    const Column<Float> target_col( size_t _j ) const
-    {
-        return df_.target_col( _j );
     }
 
     /// Getter for a target name.

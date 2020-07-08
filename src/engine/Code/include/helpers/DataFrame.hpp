@@ -218,13 +218,6 @@ struct DataFrame
         return targets_[_j][_i];
     }
 
-    /// Getter for a target column.
-    const Column<Float> target_col( size_t _j ) const
-    {
-        assert_true( _j < targets_.size() );
-        return targets_[_j];
-    }
-
     /// Getter for a target name.
     const std::string& target_name( size_t _j ) const
     {

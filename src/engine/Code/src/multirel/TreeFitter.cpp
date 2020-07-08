@@ -140,12 +140,17 @@ void TreeFitter::fit_tree(
 
     if ( _tree->aggregation_type() != "COUNT" )
         {
-            debug_log( "fit: Creating value to be aggregated.." );
+            debug_log( "fit_tree: Creating value to be aggregated..." );
 
             _tree->create_value_to_be_aggregated(
                 _population, _peripheral, _subfeatures, match_ptrs );
 
-            auto null_value_separator = _tree->separate_null_values( &matches );
+            debug_log( "fit_tree: Separating NULL values..." );
+
+            const auto null_value_separator =
+                _tree->separate_null_values( &matches );
+
+            debug_log( "fit_tree: Separated NULL values." );
 
             null_values_dist =
                 std::distance( matches.begin(), null_value_separator );
