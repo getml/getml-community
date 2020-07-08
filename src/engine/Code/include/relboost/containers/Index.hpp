@@ -7,10 +7,10 @@ namespace containers
 {
 // -------------------------------------------------------------------------
 
-typedef std::unordered_map<size_t, std::vector<size_t>> Index;
+typedef std::unordered_map<Int, std::vector<size_t>> Index;
 
 // -------------------------------------------------------------------------
 }  // namespace containers
 }  // namespace relboost
 
-#endif // RELBOOST_CONTAINERS_INDEX_HPP_
+#endif  // RELBOOST_CONTAINERS_INDEX_HPP_

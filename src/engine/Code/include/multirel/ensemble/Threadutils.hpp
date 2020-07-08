@@ -12,7 +12,7 @@ class Threadutils
     // ------------------------------------------------------------------------
 
    public:
-    /// Fits a feature engineerer  or throws an exception.
+    /// Fits a feature learner  or throws an exception.
     static void fit_ensemble(
         const size_t _this_thread_num,
         const std::vector<size_t> _thread_nums,
@@ -37,8 +37,10 @@ class Threadutils
             _hyperparameters,
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral,
+        const std::vector<size_t>& _index,
         const std::shared_ptr<const logging::AbstractLogger> _logger,
         const DecisionTreeEnsemble& _ensemble,
+        multithreading::Communicator* _comm,
         containers::Features* _features );
 
     // ------------------------------------------------------------------------

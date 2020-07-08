@@ -58,6 +58,10 @@ enums::DataUsed JSON::destringify( const std::string& _data_used )
         {
             return enums::DataUsed::same_units_discrete_is_nan;
         }
+    else if ( _data_used == "same_units_discrete_ts" )
+        {
+            return enums::DataUsed::same_units_discrete_ts;
+        }
     else if ( _data_used == "same_units_numerical" )
         {
             return enums::DataUsed::same_units_numerical;
@@ -65,6 +69,10 @@ enums::DataUsed JSON::destringify( const std::string& _data_used )
     else if ( _data_used == "same_units_numerical_is_nan" )
         {
             return enums::DataUsed::same_units_numerical_is_nan;
+        }
+    else if ( _data_used == "same_units_numerical_ts" )
+        {
+            return enums::DataUsed::same_units_numerical_ts;
         }
     else if ( _data_used == "subfeatures" )
         {
@@ -173,11 +181,17 @@ std::string JSON::stringify( const enums::DataUsed& _data_used )
             case enums::DataUsed::same_units_discrete_is_nan:
                 return "same_units_discrete_is_nan";
 
+            case enums::DataUsed::same_units_discrete_ts:
+                return "same_units_discrete_ts";
+
             case enums::DataUsed::same_units_numerical:
                 return "same_units_numerical";
 
             case enums::DataUsed::same_units_numerical_is_nan:
                 return "same_units_numerical_is_nan";
+
+            case enums::DataUsed::same_units_numerical_ts:
+                return "same_units_numerical_ts";
 
             case enums::DataUsed::subfeatures:
                 return "subfeatures";

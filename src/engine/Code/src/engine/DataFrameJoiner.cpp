@@ -126,7 +126,7 @@ void DataFrameJoiner::add_col(
             if ( _joined_df->has( _as ) )
                 {
                     throw std::invalid_argument(
-                        "Duplicate column: '" + _name + "'." );
+                        "Duplicate column: '" + _as + "'." );
                 }
             auto col = _df.categorical( _name ).sort_by_key( _rindices );
             col.set_name( _as );
@@ -137,7 +137,7 @@ void DataFrameJoiner::add_col(
             if ( _joined_df->has( _as ) )
                 {
                     throw std::invalid_argument(
-                        "Duplicate column: '" + _name + "'." );
+                        "Duplicate column: '" + _as + "'." );
                 }
             auto col = _df.join_key( _name ).sort_by_key( _rindices );
             col.set_name( _as );
@@ -148,7 +148,7 @@ void DataFrameJoiner::add_col(
             if ( _joined_df->has( _as ) )
                 {
                     throw std::invalid_argument(
-                        "Duplicate column: '" + _name + "'." );
+                        "Duplicate column: '" + _as + "'." );
                 }
             auto col = _df.numerical( _name ).sort_by_key( _rindices );
             col.set_name( _as );
@@ -159,7 +159,7 @@ void DataFrameJoiner::add_col(
             if ( _joined_df->has( _as ) )
                 {
                     throw std::invalid_argument(
-                        "Duplicate column: '" + _name + "'." );
+                        "Duplicate column: '" + _as + "'." );
                 }
             auto col = _df.target( _name ).sort_by_key( _rindices );
             col.set_name( _as );
@@ -170,18 +170,18 @@ void DataFrameJoiner::add_col(
             if ( _joined_df->has( _as ) )
                 {
                     throw std::invalid_argument(
-                        "Duplicate column: '" + _name + "'." );
+                        "Duplicate column: '" + _as + "'." );
                 }
             auto col = _df.time_stamp( _name ).sort_by_key( _rindices );
             col.set_name( _as );
             _joined_df->add_float_column( col, _role );
         }
-    else if ( _role == "unused" )
+    else if ( _role == "unused" || _role == "unused_float" || "unused_string" )
         {
             if ( _joined_df->has( _as ) )
                 {
                     throw std::invalid_argument(
-                        "Duplicate column: '" + _name + "'." );
+                        "Duplicate column: '" + _as + "'." );
                 }
 
             if ( _df.has_unused_float( _name ) )
@@ -400,7 +400,7 @@ void DataFrameJoiner::filter(
 
     const auto condition =
         BoolOpParser(
-            _categories, _join_keys_encoding, data_frames, nrows, false )
+            _categories, _join_keys_encoding, data_frames, 0, nrows, false )
             .parse( _where );
 
     // ------------------------------------------------------------------------
@@ -499,9 +499,6 @@ containers::DataFrame DataFrameJoiner::join(
                 }
             else
                 {
-                    std::cout
-                        << "_df2.num_numericals: " << _df2.num_numericals()
-                        << std::endl;
                     add_all(
                         _df2,
                         rindices2,

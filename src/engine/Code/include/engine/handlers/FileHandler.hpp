@@ -77,16 +77,12 @@ struct FileHandler
 
     // ------------------------------------------------------------------------
 
-    /// Makes the filename for an Multirel model.
-    template <
-        typename RType,
-        typename std::enable_if<
-            std::is_same<RType, std::shared_ptr<models::MultirelModel>>::value,
-            int>::type = 0>
-    static std::string make_fname(
-        const std::string& _project_directory, const std::string& _name )
+    /// Deletes the temporary directory
+    static void delete_temp_dir()
     {
-        return _project_directory + "multirel-models/" + _name;
+        auto file = Poco::File( engine::temp_dir );
+        file.createDirectories();
+        file.remove( true );
     }
 
     /// Makes the filename for a data frame.
@@ -101,16 +97,16 @@ struct FileHandler
         return _project_directory + "data/" + _name;
     }
 
-    /// Makes the filename for a relboost model.
+    /// Makes the filename for a pipeline.
     template <
         typename RType,
         typename std::enable_if<
-            std::is_same<RType, std::shared_ptr<models::RelboostModel>>::value,
+            std::is_same<RType, pipelines::Pipeline>::value,
             int>::type = 0>
     static std::string make_fname(
         const std::string& _project_directory, const std::string& _name )
     {
-        return _project_directory + "relboost-models/" + _name;
+        return _project_directory + "pipelines/" + _name;
     }
 
     // ------------------------------------------------------------------------

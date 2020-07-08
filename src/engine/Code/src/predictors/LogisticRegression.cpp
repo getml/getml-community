@@ -14,13 +14,14 @@ std::vector<Float> LogisticRegression::feature_importances(
                 "not been trained!" );
         }
 
-    if ( _num_features != impl().num_autofeatures() + impl().num_columns() )
+    if ( _num_features !=
+         impl().num_autofeatures() + impl().num_manual_features() )
         {
             throw std::invalid_argument(
                 "Incorrect number of features when retrieving in feature "
                 "importances! Expected " +
                 std::to_string(
-                    impl().num_autofeatures() + impl().num_columns() ) +
+                    impl().num_autofeatures() + impl().num_manual_features() ) +
                 ", got " + std::to_string( _num_features ) + "." );
         }
 
@@ -49,6 +50,19 @@ std::vector<Float> LogisticRegression::feature_importances(
 
 // -----------------------------------------------------------------------------
 
+Poco::JSON::Object::Ptr LogisticRegression::fingerprint() const
+{
+    auto obj = Poco::JSON::Object::Ptr( new Poco::JSON::Object() );
+
+    obj->set( "cmd_", cmd_ );
+    obj->set( "dependencies_", JSON::vector_to_array_ptr( dependencies_ ) );
+    obj->set( "impl_", impl().to_json_obj() );
+
+    return obj;
+}
+
+// -----------------------------------------------------------------------------
+
 std::string LogisticRegression::fit(
     const std::shared_ptr<const logging::AbstractLogger> _logger,
     const std::vector<CIntColumn>& _X_categorical,
@@ -68,6 +82,13 @@ std::string LogisticRegression::fit(
     else
         {
             fit_sparse( _logger, _X_categorical, _X_numerical, _y );
+        }
+
+    // -------------------------------------------------------------------------
+
+    if ( _logger )
+        {
+            _logger->log( "Progress: 100%." );
         }
 
     // -------------------------------------------------------------------------
@@ -174,13 +195,6 @@ void LogisticRegression::fit_dense(
 
             if ( has_converged )
                 {
-                    if ( _logger )
-                        {
-                            _logger->log(
-                                "Converged after " + std::to_string( epoch ) +
-                                " updates." );
-                        }
-
                     break;
                 }
         }
@@ -293,7 +307,7 @@ void LogisticRegression::load( const std::string& _fname )
     const auto obj = load_json_obj( _fname + ".json" );
 
     hyperparams_ = std::make_shared<LinearHyperparams>(
-        JSON::get_value<Float>( obj, "lambda_" ),
+        JSON::get_value<Float>( obj, "reg_lambda_" ),
         JSON::get_value<Float>( obj, "learning_rate_" ) );
 
     scaler_ = StandardScaler( *JSON::get_object( obj, "scaler_" ) );
@@ -345,10 +359,9 @@ CFloatColumn LogisticRegression::predict(
     const std::vector<CIntColumn>& _X_categorical,
     const std::vector<CFloatColumn>& _X_numerical ) const
 {
-    if ( weights_.size() == 0 )
+    if ( !is_fitted() )
         {
-            throw std::runtime_error(
-                "LinearRegression has not been trained!" );
+            throw std::runtime_error( "LinearRegression has not been fitted!" );
         }
 
     impl().check_plausibility( _X_categorical, _X_numerical );
@@ -480,9 +493,9 @@ void LogisticRegression::save( const std::string& _fname ) const
 {
     Poco::JSON::Object obj;
 
-    obj.set( "lambda_", hyperparams().lambda_ );
-
     obj.set( "learning_rate_", hyperparams().learning_rate_ );
+
+    obj.set( "reg_lambda_", hyperparams().reg_lambda_ );
 
     obj.set( "scaler_", scaler_.to_json_obj() );
 

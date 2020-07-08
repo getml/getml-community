@@ -9,8 +9,11 @@ struct DatabaseSniffer
 {
     /// Returns the datatype associate
     static std::string sniff(
-        const std::shared_ptr<Connector>& _conn,
-        const std::string& _table_name );
+        const std::shared_ptr<const Connector>& _conn,
+        const std::string& _dialect,
+        const Poco::JSON::Object& _description,
+        const std::string& _source_table_name,
+        const std::string& _target_table_name );
 };
 
 // ----------------------------------------------------------------------------

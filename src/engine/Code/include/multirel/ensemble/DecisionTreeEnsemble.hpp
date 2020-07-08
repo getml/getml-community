@@ -14,7 +14,14 @@ class DecisionTreeEnsemble
    public:
     typedef multirel::containers::DataFrame DataFrameType;
     typedef multirel::containers::DataFrameView DataFrameViewType;
+    typedef multirel::containers::Features FeaturesType;
+    typedef multirel::descriptors::Hyperparameters HypType;
+    typedef multirel::containers::Placeholder PlaceholderType;
 
+    typedef DataFrameType::FloatColumnType FloatColumnType;
+    typedef DataFrameType::IntColumnType IntColumnType;
+
+    constexpr static bool is_time_series_ = false;
     constexpr static bool premium_only_ = false;
     constexpr static bool supports_multiple_targets_ = true;
 
@@ -73,21 +80,26 @@ class DecisionTreeEnsemble
     Poco::JSON::Object to_monitor( const std::string _name ) const;
 
     /// Expresses DecisionTreeEnsemble as SQL code.
-    std::string to_sql(
+    std::vector<std::string> to_sql(
         const std::string &_feature_prefix = "",
-        const size_t _offset = 0 ) const;
+        const size_t _offset = 0,
+        const bool _subfeatures = true ) const;
 
     /// Transforms a set of raw data into extracted features.
+    /// Only the features signified by _index will be used, if such an index is
+    /// passed.
     containers::Features transform(
         const containers::DataFrame &_population,
         const std::vector<containers::DataFrame> &_peripheral,
+        const std::optional<std::vector<size_t>> &_index = std::nullopt,
         const std::shared_ptr<const logging::AbstractLogger> _logger =
             std::shared_ptr<const logging::AbstractLogger>() ) const;
 
-    /// Transforms table holders into a predictions. This is used for
-    /// subfeatures, so no logging.
+    /// Transforms table holders into predictions, used for subtree predictions.
     containers::Predictions transform(
         const decisiontrees::TableHolder &_table_holder,
+        const std::shared_ptr<const logging::AbstractLogger> _logger,
+        multithreading::Communicator *_comm,
         containers::Optional<aggregations::AggregationImpl> *_impl ) const;
 
     /// Transforms a specific feature.
@@ -164,12 +176,6 @@ class DecisionTreeEnsemble
             "Model has no population schema - did you may be forget to fit "
             "it?" );
         return *impl().population_schema_;
-    }
-
-    /// Trivial (const) accessor
-    const std::string &session_name() const
-    {
-        return hyperparameters().session_name_;
     }
 
     /// Trivial setter

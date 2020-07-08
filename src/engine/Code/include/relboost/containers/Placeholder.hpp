@@ -14,26 +14,32 @@ struct Placeholder
     // --------------------------------------------------------
 
     Placeholder( const Poco::JSON::Object& _json_obj )
-        : categoricals_(
-              Placeholder::parse_columns( _json_obj, "categoricals_" ) ),
-          discretes_( Placeholder::parse_columns( _json_obj, "discretes_" ) ),
+        : allow_lagged_targets_( Placeholder::parse_columns<bool>(
+              _json_obj, "allow_lagged_targets_" ) ),
+          categoricals_( Placeholder::parse_columns<std::string>(
+              _json_obj, "categorical_" ) ),
+          discretes_( Placeholder::parse_columns<std::string>(
+              _json_obj, "discrete_" ) ),
           joined_tables_( Placeholder::parse_joined_tables(
               _json_obj.getArray( "joined_tables_" ) ) ),
-          join_keys_( Placeholder::parse_columns( _json_obj, "join_keys_" ) ),
-          join_keys_used_(
-              Placeholder::parse_columns( _json_obj, "join_keys_used_" ) ),
+          join_keys_( Placeholder::parse_columns<std::string>(
+              _json_obj, "join_keys_" ) ),
+          join_keys_used_( Placeholder::parse_columns<std::string>(
+              _json_obj, "join_keys_used_" ) ),
           name_( JSON::get_value<std::string>( _json_obj, "name_" ) ),
-          numericals_( Placeholder::parse_columns( _json_obj, "numericals_" ) ),
-          other_join_keys_used_( Placeholder::parse_columns(
+          numericals_( Placeholder::parse_columns<std::string>(
+              _json_obj, "numerical_" ) ),
+          other_join_keys_used_( Placeholder::parse_columns<std::string>(
               _json_obj, "other_join_keys_used_" ) ),
-          other_time_stamps_used_( Placeholder::parse_columns(
+          other_time_stamps_used_( Placeholder::parse_columns<std::string>(
               _json_obj, "other_time_stamps_used_" ) ),
-          targets_( Placeholder::parse_columns( _json_obj, "targets_" ) ),
-          time_stamps_(
-              Placeholder::parse_columns( _json_obj, "time_stamps_" ) ),
-          time_stamps_used_(
-              Placeholder::parse_columns( _json_obj, "time_stamps_used_" ) ),
-          upper_time_stamps_used_( Placeholder::parse_columns(
+          targets_( Placeholder::parse_columns<std::string>(
+              _json_obj, "targets_" ) ),
+          time_stamps_( Placeholder::parse_columns<std::string>(
+              _json_obj, "time_stamps_" ) ),
+          time_stamps_used_( Placeholder::parse_columns<std::string>(
+              _json_obj, "time_stamps_used_" ) ),
+          upper_time_stamps_used_( Placeholder::parse_columns<std::string>(
               _json_obj, "upper_time_stamps_used_" ) )
     {
         check_vector_length();
@@ -42,6 +48,27 @@ struct Placeholder
     Placeholder( const Poco::JSON::Object::Ptr& _json_obj )
         : Placeholder( *_json_obj )
     {
+    }
+
+    Placeholder(
+        const std::vector<bool>& _allow_lagged_targets,
+        const std::vector<Placeholder>& _joined_tables,
+        const std::vector<std::string>& _join_keys_used,
+        const std::string& _name,
+        const std::vector<std::string>& _other_join_keys_used,
+        const std::vector<std::string>& _other_time_stamps_used,
+        const std::vector<std::string>& _time_stamps_used,
+        const std::vector<std::string>& _upper_time_stamps_used )
+        : allow_lagged_targets_( _allow_lagged_targets ),
+          joined_tables_( _joined_tables ),
+          join_keys_used_( _join_keys_used ),
+          name_( _name ),
+          other_join_keys_used_( _other_join_keys_used ),
+          other_time_stamps_used_( _other_time_stamps_used ),
+          time_stamps_used_( _time_stamps_used ),
+          upper_time_stamps_used_( _upper_time_stamps_used )
+    {
+        check_vector_length();
     }
 
     Placeholder(
@@ -146,17 +173,18 @@ struct Placeholder
 
     /// Checks whether an array exists (because only the Python API has one),
     /// and returns and empty array, if it doesn't.
-    static std::vector<std::string> parse_columns(
+    template <typename T>
+    static std::vector<T> parse_columns(
         const Poco::JSON::Object& _json_obj, const std::string& _name )
     {
         if ( _json_obj.has( _name ) )
             {
-                return JSON::array_to_vector<std::string>(
+                return JSON::array_to_vector<T>(
                     JSON::get_array( _json_obj, _name ) );
             }
         else
             {
-                return std::vector<std::string>();
+                return std::vector<T>();
             }
     }
 
@@ -186,7 +214,12 @@ struct Placeholder
     }
 
     /// Transforms the placeholder into a JSON string
-    std::string to_json() const { return JSON::stringify( *to_json_obj() ); }
+    std::string to_json() const
+    {
+        const auto ptr = to_json_obj();
+        assert_true( ptr );
+        return JSON::stringify( *ptr );
+    }
 
     /// Getter for the time stamps name.
     const std::string& upper_time_stamps_name() const
@@ -197,6 +230,9 @@ struct Placeholder
     }
 
     // --------------------------------------------------------
+
+    /// Whether you want to allow the targets to be used as numerical values.
+    const std::vector<bool> allow_lagged_targets_;
 
     /// The name of the categorical columns
     /// (this is only required for the Python API).

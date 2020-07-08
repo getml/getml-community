@@ -12,10 +12,12 @@ class CSVWriter
    public:
     CSVWriter(
         const std::string& _fname,
+        const size_t _batch_size,
         const std::vector<std::string>& _colnames,
         const std::string& _quotechar,
         const std::string& _sep )
-        : colnames_( _colnames ),
+        : batch_size_( _batch_size ),
+          colnames_( _colnames ),
           filestream_( std::make_shared<std::ofstream>(
               std::ofstream( _fname, std::ofstream::out ) ) ),
           quotechar_( _quotechar ),
@@ -85,6 +87,9 @@ class CSVWriter
     // -------------------------------
 
    private:
+    /// The maximum number of lines per file.
+    const size_t batch_size_;
+
     /// The column names to use.
     const std::vector<std::string> colnames_;
 

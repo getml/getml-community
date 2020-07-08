@@ -21,6 +21,11 @@ struct JSON
 {
     // ------------------------------------------------------------------------
 
+    /// Turns an array into a vector of Poco::JSON::Object::Ptr.
+    /// Throws an exception if any Object::Ptr cannot be retrieved.
+    static std::vector<Poco::JSON::Object::Ptr> array_to_obj_vector(
+        const Poco::JSON::Array::Ptr _arr );
+
     /// Gets an array from a JSON object or throws.
     static Poco::JSON::Array::Ptr get_array(
         const Poco::JSON::Object& _obj, const std::string& _key );
@@ -77,6 +82,21 @@ struct JSON
         for ( auto& elem : _vector )
             {
                 arr.add( elem );
+            }
+
+        return arr;
+    }
+
+    /// Transforms a vector to a Poco array
+    template <typename T>
+    static Poco::JSON::Array::Ptr vector_to_array_ptr(
+        const std::vector<T>& _vector )
+    {
+        auto arr = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
+
+        for ( auto& elem : _vector )
+            {
+                arr->add( elem );
             }
 
         return arr;

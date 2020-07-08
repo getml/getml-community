@@ -11,6 +11,8 @@
 #include <utility>
 #include <vector>
 
+#include "strings/strings.hpp"
+
 #include "engine/Float.hpp"
 #include "engine/Int.hpp"
 
@@ -18,9 +20,13 @@
 
 // ----------------------------------------------------------------------------
 
+#include "engine/utils/NullChecker.hpp"
+
 #include "engine/utils/ColumnOperators.hpp"
 #include "engine/utils/Endianness.hpp"
 #include "engine/utils/Getter.hpp"
+#include "engine/utils/StringReplacer.hpp"
+#include "engine/utils/TSDiffMaker.hpp"
 
 // ----------------------------------------------------------------------------
 

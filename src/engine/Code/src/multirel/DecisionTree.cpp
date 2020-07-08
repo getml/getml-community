@@ -133,6 +133,7 @@ void DecisionTree::create_value_to_be_aggregated(
                 break;
 
             case enums::DataUsed::same_unit_numerical:
+            case enums::DataUsed::same_unit_numerical_ts:
 
                 assert_true(
                     static_cast<Int>( impl()->same_units_numerical().size() ) >
@@ -200,6 +201,7 @@ void DecisionTree::create_value_to_be_aggregated(
                 break;
 
             case enums::DataUsed::same_unit_discrete:
+            case enums::DataUsed::same_unit_discrete_ts:
 
                 assert_true(
                     impl()->same_units_discrete().size() > ix_column_used );
@@ -431,38 +433,6 @@ DecisionTree &DecisionTree::operator=( DecisionTree &&_other ) noexcept
 
 // ----------------------------------------------------------------------------
 
-std::string DecisionTree::select_statement(
-    const std::string &_feature_num ) const
-{
-    std::string select;
-
-    if ( aggregation()->type() == "COUNT DISTINCT" )
-        {
-            select.append( "COUNT( DISTINCT " );
-        }
-    else if ( aggregation()->type() == "COUNT MINUS COUNT DISTINCT" )
-        {
-            select.append( "COUNT( * ) - COUNT( DISTINCT " );
-        }
-    else
-        {
-            select.append( aggregation()->type() );
-
-            select.append( "( " );
-        }
-
-    select.append( impl()->get_colname(
-        _feature_num,
-        column_to_be_aggregated().data_used,
-        column_to_be_aggregated().ix_column_used ) );
-
-    select.append( " )" );
-
-    return select;
-}
-
-// ----------------------------------------------------------------------------
-
 Poco::JSON::Object DecisionTree::to_json_obj() const
 {
     // -----------------------------------
@@ -499,116 +469,46 @@ Poco::JSON::Object DecisionTree::to_json_obj() const
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object DecisionTree::to_monitor(
-    const std::string &_feature_num, const bool _use_timestamps ) const
-{
-    // -------------------------------------------------------------------
-
-    Poco::JSON::Object obj;
-
-    // -------------------------------------------------------------------
-
-    obj.set( "aggregation_", select_statement( _feature_num ) );
-
-    obj.set( "join_keys_popul_", output().join_keys_name() );
-
-    if ( output().num_time_stamps() > 0 )
-        {
-            obj.set( "time_stamps_popul_", output().time_stamps_name() );
-        }
-
-    obj.set( "join_keys_perip_", input().join_keys_name() );
-
-    if ( input().num_time_stamps() > 0 )
-        {
-            obj.set( "time_stamps_perip_", input().time_stamps_name() );
-        }
-
-    if ( input().num_time_stamps() == 2 )
-        {
-            obj.set( "upper_time_stamps_", input().upper_time_stamps_name() );
-        }
-
-    obj.set( "peripheral_", input().name() );
-
-    obj.set( "placeholder_", output().name() );
-
-    // -------------------------------------------------------------------
-
-    Poco::JSON::Array node;
-
-    Poco::JSON::Array conditions;
-
-    root()->to_monitor( _feature_num, node, conditions );
-
-    obj.set( "conditions_", conditions );
-
-    // -------------------------------------------------------------------
-
-    return obj;
-}
-
-// ----------------------------------------------------------------------------
-
 std::string DecisionTree::to_sql(
     const std::string _feature_num, const bool _use_timestamps ) const
 {
+    // -------------------------------------------------------------------
+
     std::stringstream sql;
 
-    // -------------------------------------------------------------------
-
-    for ( size_t i = 0; i < subtrees().size(); ++i )
-        {
-            sql << subtrees()[i].to_sql(
-                _feature_num + "_" + std::to_string( i + 1 ), _use_timestamps );
-        }
+    const auto sql_maker = utils::SQLMaker(
+        impl()->categories_,
+        impl()->delta_t(),
+        ix_perip_used(),
+        impl()->same_units_ );
 
     // -------------------------------------------------------------------
 
-    sql << "CREATE TABLE FEATURE_" << _feature_num << " AS" << std::endl;
+    sql << "CREATE TABLE \"FEATURE_" << _feature_num << "\" AS" << std::endl;
 
     // -------------------------------------------------------------------
 
     sql << "SELECT ";
 
-    sql << select_statement( _feature_num );
+    sql << sql_maker.select_statement(
+        input(),
+        output(),
+        column_to_be_aggregated().ix_column_used,
+        column_to_be_aggregated().data_used,
+        aggregation_type() );
 
-    sql << " AS feature_" << _feature_num << "," << std::endl;
+    sql << " AS \"feature_" << _feature_num << "\"," << std::endl;
 
-    sql << "       t1." << output().join_keys_name();
-
-    if ( output().num_time_stamps() > 0 )
-        {
-            sql << "," << std::endl;
-            sql << "       t1." << output().time_stamps_name();
-        }
-
-    sql << std::endl;
+    sql << "       t1.rowid AS \"rownum\"" << std::endl;
 
     // -------------------------------------------------------------------
 
-    sql << "FROM (" << std::endl;
+    sql << "FROM \"" << output().name() << "\" t1" << std::endl;
 
-    sql << "     SELECT *," << std::endl;
+    sql << "LEFT JOIN \"" << input().name() << "\" t2" << std::endl;
 
-    sql << "            ROW_NUMBER() OVER ( ORDER BY "
-        << output().join_keys_name();
-
-    if ( output().num_time_stamps() > 0 )
-        {
-            sql << ", " << output().time_stamps_name();
-        }
-
-    sql << " ASC ) AS rownum" << std::endl;
-
-    sql << "     FROM " << output().name() << std::endl;
-
-    sql << ") t1" << std::endl;
-
-    sql << "LEFT JOIN " << input().name() << " t2" << std::endl;
-
-    sql << "ON t1." << output().join_keys_name() << " = t2."
-        << input().join_keys_name() << std::endl;
+    sql << "ON t1.\"" << output().join_keys_name() << "\" = t2.\""
+        << input().join_keys_name() << "\"" << std::endl;
 
     // -------------------------------------------------------------------
 
@@ -643,14 +543,18 @@ std::string DecisionTree::to_sql(
                     sql << "WHERE ";
                 }
 
-            sql << "t2." << input().time_stamps_name() << " <= t1."
-                << output().time_stamps_name() << std::endl;
+            sql << "datetime( t2.\"" << input().time_stamps_name()
+                << "\" ) <= datetime( t1.\"" << output().time_stamps_name()
+                << "\" )" << std::endl;
 
             if ( input().num_time_stamps() == 2 )
                 {
-                    sql << "AND ( t2." << input().upper_time_stamps_name()
-                        << " > t1." << output().time_stamps_name() << " OR t2."
-                        << input().upper_time_stamps_name() << " IS NULL )"
+                    sql << "AND ( datetime( t2.\""
+                        << input().upper_time_stamps_name()
+                        << "\" ) > datetime( t1.\""
+                        << output().time_stamps_name()
+                        << "\" ) OR datetime( t2.\""
+                        << input().upper_time_stamps_name() << "\" ) IS NULL )"
                         << std::endl;
                 }
         }
@@ -662,17 +566,7 @@ std::string DecisionTree::to_sql(
                 }
         }
 
-    sql << "GROUP BY t1.rownum," << std::endl;
-
-    sql << "         t1." << output().join_keys_name();
-
-    if ( output().num_time_stamps() > 0 )
-        {
-            sql << "," << std::endl;
-            sql << "         t1." << output().time_stamps_name();
-        }
-
-    sql << ";" << std::endl << std::endl << std::endl;
+    sql << "GROUP BY t1.rowid;" << std::endl << std::endl << std::endl;
 
     // -------------------------------------------------------------------
 

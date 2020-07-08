@@ -7,7 +7,7 @@ namespace containers
 {
 // -------------------------------------------------------------------------
 
-class DataFrame
+struct DataFrame
 {
     // ---------------------------------------------------------------------
 
@@ -43,12 +43,16 @@ class DataFrame
     // ---------------------------------------------------------------------
 
    public:
+    /// Creates a new index.
+    static std::shared_ptr<Index> create_index( const Column<Int>& _join_key );
+
     /// Creates a subview.
     DataFrame create_subview(
         const std::string& _name,
         const std::string& _join_key,
         const std::string& _time_stamp,
-        const std::string& _upper_time_stamp ) const;
+        const std::string& _upper_time_stamp,
+        const bool _allow_lagged_targets ) const;
 
     // ---------------------------------------------------------------------
 
@@ -154,27 +158,13 @@ class DataFrame
     /// Trivial getter
     size_t nrows() const
     {
-        if ( join_keys_.size() > 0 )
-            {
-                return join_keys_[0].nrows_;
-            }
-        else if ( categoricals_.size() > 0 )
-            {
-                return categoricals_[0].nrows_;
-            }
-        else if ( numericals_.size() > 0 )
-            {
-                return numericals_[0].nrows_;
-            }
-        else if ( targets_.size() > 0 )
-            {
-                return targets_[0].nrows_;
-            }
-        else
-            {
-                assert_true( false && "DataFrame has no columns." );
-                return 0;
-            }
+        if ( num_categoricals() > 0 ) return categoricals_[0].nrows_;
+        if ( num_discretes() > 0 ) return discretes_[0].nrows_;
+        if ( num_join_keys() > 0 ) return join_keys_[0].nrows_;
+        if ( num_numericals() > 0 ) return numericals_[0].nrows_;
+        if ( num_targets() > 0 ) return targets_[0].nrows_;
+        if ( num_time_stamps() > 0 ) return time_stamps_[0].nrows_;
+        return 0;
     }
 
     /// Trivial getter
@@ -324,7 +314,7 @@ class DataFrame
 
     // ---------------------------------------------------------------------
 
-   private:
+   public:
     /// Pointer to categorical columns.
     const std::vector<Column<Int>> categoricals_;
 

@@ -64,7 +64,7 @@ class DataFrameView
     {
         return DataFrameView(
             df_.create_subview(
-                _name, _join_key, _time_stamp, _upper_time_stamp ),
+                _name, _join_key, _time_stamp, _upper_time_stamp, false ),
             rows_ );
     }
 

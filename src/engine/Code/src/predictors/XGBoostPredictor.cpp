@@ -197,6 +197,19 @@ std::vector<Float> XGBoostPredictor::feature_importances(
 
 // -----------------------------------------------------------------------------
 
+Poco::JSON::Object::Ptr XGBoostPredictor::fingerprint() const
+{
+    auto obj = Poco::JSON::Object::Ptr( new Poco::JSON::Object() );
+
+    obj->set( "cmd_", cmd_ );
+    obj->set( "dependencies_", JSON::vector_to_array_ptr( dependencies_ ) );
+    obj->set( "impl_", impl().to_json_obj() );
+
+    return obj;
+}
+
+// -----------------------------------------------------------------------------
+
 std::string XGBoostPredictor::fit(
     const std::shared_ptr<const logging::AbstractLogger> _logger,
     const std::vector<CIntColumn> &_X_categorical,
@@ -206,10 +219,6 @@ std::string XGBoostPredictor::fit(
     // --------------------------------------------------------------------
 
     impl().check_plausibility( _X_categorical, _X_numerical, _y );
-
-    // --------------------------------------------------------------------
-
-    _logger->log( "XGBoost: Preparing..." );
 
     // --------------------------------------------------------------------
     // Build DMatrix
@@ -348,7 +357,11 @@ std::string XGBoostPredictor::fit(
     // --------------------------------------------------------------------
     // Do the actual fitting
 
-    for ( int i = 0; i < static_cast<int>( hyperparams_.n_iter_ ); ++i )
+    const auto n_iter = static_cast<int>( hyperparams_.n_iter_ );
+
+    _logger->log( "Training XGBoost..." );
+
+    for ( int i = 0; i < n_iter; ++i )
         {
             if ( XGBoosterUpdateOneIter( *handle, i, *d_matrix ) != 0 )
                 {
@@ -357,19 +370,24 @@ std::string XGBoostPredictor::fit(
                         std::to_string( i + 1 ) + " failed!" );
                 }
 
+            const auto progress = ( ( i + 1 ) * 100 ) / n_iter;
+
+            const auto progress_str =
+                "Progress: " + std::to_string( progress ) + "\%.";
+
             if ( _logger )
                 {
                     if ( hyperparams_.booster_ == "gblinear" )
                         {
                             _logger->log(
                                 "XGBoost: Trained linear model " +
-                                std::to_string( i + 1 ) + "." );
+                                std::to_string( i + 1 ) + ". " + progress_str );
                         }
                     else
                         {
                             _logger->log(
                                 "XGBoost: Trained tree " +
-                                std::to_string( i + 1 ) + "." );
+                                std::to_string( i + 1 ) + ". " + progress_str );
                         }
                 }
         }
@@ -544,7 +562,7 @@ CFloatColumn XGBoostPredictor::predict(
 
     // --------------------------------------------------------------------
 
-    if ( len() == 0 )
+    if ( !is_fitted() )
         {
             throw std::runtime_error( "XGBoostPredictor has not been fitted!" );
         }

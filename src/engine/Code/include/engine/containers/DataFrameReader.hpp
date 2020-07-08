@@ -42,6 +42,9 @@ class DataFrameReader : public io::Reader
     // -------------------------------
 
    public:
+    /// Returns the column names.
+    std::vector<std::string> colnames() final { return colnames_; }
+
     /// Trivial accessor.
     const std::vector<std::string>& colnames() const { return colnames_; }
 

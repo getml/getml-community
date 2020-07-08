@@ -41,8 +41,7 @@ Int Encoding::operator[]( const strings::String& _val )
     // -----------------------------------
     // If this is a NULL value, return -1.
 
-    if ( _val == "" || _val == "nan" || _val == "NaN" || _val == "NA" ||
-         _val == "NULL" )
+    if ( utils::NullChecker::is_null( _val ) )
         {
             return -1;
         }
@@ -84,8 +83,7 @@ Int Encoding::operator[]( const strings::String& _val ) const
     // -----------------------------------
     // If this is a NULL value, return -1.
 
-    if ( _val == "" || _val == "nan" || _val == "NaN" || _val == "NA" ||
-         _val == "NULL" )
+    if ( utils::NullChecker::is_null( _val ) )
         {
             return -1;
         }

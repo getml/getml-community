@@ -8,7 +8,7 @@ namespace database
 void Sqlite3::check_colnames(
     const std::vector<std::string>& _colnames, io::Reader* _reader )
 {
-    std::vector<std::string> csv_colnames = _reader->next_line();
+    const auto csv_colnames = _reader->colnames();
 
     if ( csv_colnames.size() != _colnames.size() )
         {
@@ -20,14 +20,27 @@ void Sqlite3::check_colnames(
 
     for ( size_t i = 0; i < _colnames.size(); ++i )
         {
-            if ( csv_colnames[i] != _colnames[i] )
+            if ( csv_colnames.at( i ) != _colnames.at( i ) )
                 {
                     throw std::runtime_error(
                         "Column " + std::to_string( i + 1 ) +
-                        " has wrong name. Expected '" + _colnames[i] +
-                        "', saw '" + csv_colnames[i] + "'." );
+                        " has wrong name. Expected '" + _colnames.at( i ) +
+                        "', saw '" + csv_colnames.at( i ) + "'." );
                 }
         }
+}
+
+// ----------------------------------------------------------------------------
+
+Poco::JSON::Object Sqlite3::describe() const
+{
+    Poco::JSON::Object obj;
+
+    obj.set( "dialect", dialect() );
+
+    obj.set( "name", name_ );
+
+    return obj;
 }
 
 // ----------------------------------------------------------------------------
@@ -64,7 +77,7 @@ std::vector<std::string> Sqlite3::get_colnames(
     // ------------------------------------------------------------------------
     // Prepare statement.
 
-    const std::string sql = "SELECT * FROM " + _table + " LIMIT 0";
+    const std::string sql = "SELECT * FROM \"" + _table + "\" LIMIT 0";
 
     // ------------------------------------------------------------------------
 
@@ -189,6 +202,24 @@ Poco::JSON::Object Sqlite3::get_content(
 
     // ----------------------------------------
 
+    Poco::JSON::Object obj;
+
+    // ----------------------------------------
+
+    obj.set( "draw", _draw );
+
+    obj.set( "recordsTotal", nrows );
+
+    obj.set( "recordsFiltered", nrows );
+
+    if ( nrows == 0 )
+        {
+            obj.set( "data", Poco::JSON::Array() );
+            return obj;
+        }
+
+    // ----------------------------------------
+
     if ( _length < 0 )
         {
             throw std::invalid_argument( "length must be positive!" );
@@ -204,18 +235,6 @@ Poco::JSON::Object Sqlite3::get_content(
             throw std::invalid_argument(
                 "start must be smaller than number of rows!" );
         }
-
-    // ----------------------------------------
-
-    Poco::JSON::Object obj;
-
-    // ----------------------------------------
-
-    obj.set( "draw", _draw );
-
-    obj.set( "recordsTotal", nrows );
-
-    obj.set( "recordsFiltered", nrows );
 
     // ----------------------------------------
 
@@ -417,9 +436,9 @@ Sqlite3::make_insert_statement(
     // ------------------------------------------------------------------------
     // Prepare statement as string
 
-    std::string sql = "INSERT INTO '";
+    std::string sql = "INSERT INTO \"";
     sql += _table;
-    sql += "' VALUES (";
+    sql += "\" VALUES (";
 
     for ( size_t col = 0; col < _colnames.size(); ++col )
         {
@@ -471,10 +490,7 @@ Sqlite3::make_insert_statement(
 // ----------------------------------------------------------------------------
 
 void Sqlite3::read(
-    const std::string& _table,
-    const bool _header,
-    const size_t _skip,
-    io::Reader* _reader )
+    const std::string& _table, const size_t _skip, io::Reader* _reader )
 {
     // ------------------------------------------------------------------------
     // Get colnames and coltypes
@@ -495,6 +511,10 @@ void Sqlite3::read(
     const auto stmt = make_insert_statement( _table, colnames );
 
     // ------------------------------------------------------------------------
+
+    check_colnames( colnames, _reader );
+
+    // ------------------------------------------------------------------------
     // Skip lines, if necessary.
 
     size_t line_count = 0;
@@ -502,15 +522,6 @@ void Sqlite3::read(
     for ( size_t i = 0; i < _skip; ++i )
         {
             _reader->next_line();
-            ++line_count;
-        }
-
-    // ------------------------------------------------------------------------
-    // Check headers, if necessary.
-
-    if ( _header )
-        {
-            check_colnames( colnames, _reader );
             ++line_count;
         }
 

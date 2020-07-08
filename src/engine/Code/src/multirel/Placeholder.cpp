@@ -41,6 +41,14 @@ void Placeholder::check_vector_length()
 {
     const size_t expected = joined_tables_.size();
 
+    if ( allow_lagged_targets_.size() != expected )
+        {
+            throw std::invalid_argument(
+                "Error: Length of 'allow lagged targets' does not match length "
+                "of "
+                "joined tables!" );
+        }
+
     if ( join_keys_used_.size() != expected )
         {
             throw std::invalid_argument(
@@ -83,14 +91,14 @@ void Placeholder::check_vector_length()
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Array Placeholder::joined_tables_to_array(
+Poco::JSON::Array::Ptr Placeholder::joined_tables_to_array(
     const std::vector<Placeholder>& _vector )
 {
-    Poco::JSON::Array arr;
+    Poco::JSON::Array::Ptr arr( new Poco::JSON::Array() );
 
     for ( auto& elem : _vector )
         {
-            arr.add( elem.to_json_obj() );
+            arr->add( elem.to_json_obj() );
         }
 
     return arr;
@@ -128,41 +136,54 @@ std::vector<Placeholder> Placeholder::parse_joined_tables(
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object Placeholder::to_json_obj() const
+Poco::JSON::Object::Ptr Placeholder::to_json_obj() const
 {
-    Poco::JSON::Object obj;
+    // ---------------------------------------------------------
+
+    auto obj = Poco::JSON::Object::Ptr( new Poco::JSON::Object() );
 
     // ---------------------------------------------------------
 
-    obj.set(
+    obj->set(
+        "allow_lagged_targets_",
+        JSON::vector_to_array_ptr( allow_lagged_targets_ ) );
+
+    obj->set(
         "joined_tables_",
         Placeholder::joined_tables_to_array( joined_tables_ ) );
 
-    obj.set( "join_keys_used_", join_keys_used_ );
+    obj->set( "join_keys_used_", JSON::vector_to_array_ptr( join_keys_used_ ) );
 
-    obj.set( "other_join_keys_used_", other_join_keys_used_ );
+    obj->set(
+        "other_join_keys_used_",
+        JSON::vector_to_array_ptr( other_join_keys_used_ ) );
 
-    obj.set( "other_time_stamps_used_", other_time_stamps_used_ );
+    obj->set(
+        "other_time_stamps_used_",
+        JSON::vector_to_array_ptr( other_time_stamps_used_ ) );
 
-    obj.set( "name_", name_ );
+    obj->set( "name_", name_ );
 
-    obj.set( "time_stamps_used_", time_stamps_used_ );
+    obj->set(
+        "time_stamps_used_", JSON::vector_to_array_ptr( time_stamps_used_ ) );
 
-    obj.set( "upper_time_stamps_used_", upper_time_stamps_used_ );
+    obj->set(
+        "upper_time_stamps_used_",
+        JSON::vector_to_array_ptr( upper_time_stamps_used_ ) );
 
     // ---------------------------------------------------------
 
-    obj.set( "categoricals_", categoricals_ );
+    obj->set( "categorical_", JSON::vector_to_array_ptr( categoricals_ ) );
 
-    obj.set( "discretes_", discretes_ );
+    obj->set( "discrete_", JSON::vector_to_array_ptr( discretes_ ) );
 
-    obj.set( "join_keys_", join_keys_ );
+    obj->set( "join_keys_", JSON::vector_to_array_ptr( join_keys_ ) );
 
-    obj.set( "numericals_", numericals_ );
+    obj->set( "numerical_", JSON::vector_to_array_ptr( numericals_ ) );
 
-    obj.set( "targets_", targets_ );
+    obj->set( "targets_", JSON::vector_to_array_ptr( targets_ ) );
 
-    obj.set( "time_stamps_", time_stamps_ );
+    obj->set( "time_stamps_", JSON::vector_to_array_ptr( time_stamps_ ) );
 
     // ---------------------------------------------------------
 

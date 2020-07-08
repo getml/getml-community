@@ -44,6 +44,8 @@
 
 #include "engine/config/config.hpp"
 
+#include "engine/dependency/dependency.hpp"
+
 #include "engine/utils/utils.hpp"
 
 #include "engine/JSON.hpp"
@@ -52,9 +54,13 @@
 
 #include "engine/communication/communication.hpp"
 
-#include "engine/models/models.hpp"
+#include "engine/hyperparam/hyperparam.hpp"
 
 #include "engine/licensing/licensing.hpp"
+
+#include "engine/pipelines/pipelines.hpp"
+
+#include "engine/temp_dir.hpp"
 
 // ----------------------------------------------------
 // Module files
@@ -73,10 +79,10 @@
 #include "engine/handlers/DatabaseManager.hpp"
 
 #include "engine/handlers/DataFrameManager.hpp"
-#include "engine/handlers/ModelManager.hpp"
 
-#include "engine/handlers/MultirelModelManager.hpp"
-#include "engine/handlers/RelboostModelManager.hpp"
+#include "engine/handlers/HyperoptManager.hpp"
+
+#include "engine/handlers/PipelineManager.hpp"
 
 #include "engine/handlers/ProjectManager.hpp"
 

@@ -12,9 +12,13 @@ class LogisticRegression : public Predictor
 
    public:
     LogisticRegression(
-        const std::shared_ptr<LinearHyperparams>& _hyperparams,
-        const std::shared_ptr<const PredictorImpl>& _impl )
-        : hyperparams_( _hyperparams ), impl_( _impl ){};
+        const Poco::JSON::Object& _cmd,
+        const std::shared_ptr<const PredictorImpl>& _impl,
+        const std::vector<Poco::JSON::Object::Ptr>& _dependencies )
+        : cmd_( _cmd ),
+          dependencies_( _dependencies ),
+          hyperparams_( std::make_shared<LinearHyperparams>( _cmd ) ),
+          impl_( _impl ){};
 
     ~LogisticRegression() = default;
 
@@ -24,6 +28,10 @@ class LogisticRegression : public Predictor
     /// Returns an importance measure for the individual features.
     std::vector<Float> feature_importances(
         const size_t _num_features ) const final;
+
+    /// Returns the fingerprint of the predictor (necessary to build
+    /// the dependency graphs).
+    Poco::JSON::Object::Ptr fingerprint() const final;
 
     /// Implements the fit(...) method in scikit-learn style
     std::string fit(
@@ -48,6 +56,21 @@ class LogisticRegression : public Predictor
    public:
     /// Whether the predictor accepts null values.
     bool accepts_null() const final { return false; }
+
+    /// Returns a deep copy.
+    std::shared_ptr<Predictor> clone() const final
+    {
+        return std::make_shared<LogisticRegression>( *this );
+    }
+
+    /// Whether the predictor is used for classification;
+    bool is_classification() const final { return true; }
+
+    /// Whether the predictor has been fitted.
+    bool is_fitted() const final { return weights_.size() > 0; }
+
+    /// Whether we want the predictor to be silent.
+    bool silent() const final { return true; }
 
     // -------------------------------------------------------------------------
 
@@ -132,12 +155,12 @@ class LogisticRegression : public Predictor
     const void calculate_regularization(
         const Float _bsize_float, std::vector<Float>* _gradients )
     {
-        if ( hyperparams().lambda_ > 0.0 )
+        if ( hyperparams().reg_lambda_ > 0.0 )
             {
                 for ( size_t i = 0; i < weights_.size(); ++i )
                     {
-                        ( *_gradients )[i] +=
-                            hyperparams().lambda_ * weights_[i] * _bsize_float;
+                        ( *_gradients )[i] += hyperparams().reg_lambda_ *
+                                              weights_[i] * _bsize_float;
                     }
             }
     }
@@ -189,6 +212,12 @@ class LogisticRegression : public Predictor
     // -------------------------------------------------------------------------
 
    private:
+    /// The JSON command used to construct this predictor.
+    const Poco::JSON::Object cmd_;
+
+    /// The dependencies used to build the fingerprint.
+    const std::vector<Poco::JSON::Object::Ptr> dependencies_;
+
     /// The hyperparameters used for the LinearRegression.
     std::shared_ptr<const LinearHyperparams> hyperparams_;
 

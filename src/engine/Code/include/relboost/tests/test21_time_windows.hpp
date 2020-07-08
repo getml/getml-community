@@ -67,7 +67,8 @@ void test21_time_windows( std::filesystem::path _test_path )
         relboost::containers::Column<std::int32_t>(
             join_keys_population.data(),
             "join_key",
-            join_keys_population.size() );
+            join_keys_population.size(),
+            "time stamp, comparison only" );
 
     auto numerical_population = make_column<double>( 500, rng );
 
@@ -80,7 +81,8 @@ void test21_time_windows( std::filesystem::path _test_path )
         relboost::containers::Column<double>(
             time_stamps_population.data(),
             "time_stamp",
-            time_stamps_population.size() );
+            time_stamps_population.size(),
+            "time stamp, comparison only" );
 
     auto targets_population = std::vector<double>( 500 );
 
@@ -168,7 +170,8 @@ void test21_time_windows( std::filesystem::path _test_path )
     // Express as SQL code.
 
     std::ofstream sql( tmp_filename_sql );
-    sql << model.to_sql();
+    const auto vec = model.to_sql();
+    for ( const auto& str : vec ) sql << str;
     sql.close();
 
     // ------------------------------------------------------------------------
@@ -180,12 +183,12 @@ void test21_time_windows( std::filesystem::path _test_path )
 
     for ( size_t i = 0; i < predictions.size(); ++i )
         {
-            // std::cout << "target: " << population_df.target( i, 0 )
-            //           << ", prediction: " << predictions[i] << std::endl;
+            /*std::cout << "target: " << population_df.target( i, 0 )
+                      << ", prediction: " << predictions[i] << std::endl;*/
 
             assert_true(
                 std::abs( population_df.target( i, 0 ) - predictions[i] ) <
-                10.0 );
+                5.0 );
         }
 
     // ------------------------------------------------------------------------

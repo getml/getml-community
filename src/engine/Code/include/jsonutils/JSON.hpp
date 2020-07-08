@@ -71,6 +71,43 @@ struct JSON
         return _obj.get( _key ).convert<T>();
     }
 
+    /// Loads a JSON object from disc.
+    static Poco::JSON::Object load( const std::string& _fname )
+    {
+        std::ifstream input( _fname );
+
+        std::stringstream json;
+
+        std::string line;
+
+        if ( input.is_open() )
+            {
+                while ( std::getline( input, line ) )
+                    {
+                        json << line;
+                    }
+
+                input.close();
+            }
+        else
+            {
+                throw std::invalid_argument(
+                    "File '" + _fname + "' not found!" );
+            }
+
+        const auto ptr = Poco::JSON::Parser()
+                             .parse( json.str() )
+                             .extract<Poco::JSON::Object::Ptr>();
+
+        if ( !ptr )
+            {
+                throw std::runtime_error(
+                    "JSON file did not contain an object!" );
+            }
+
+        return *ptr;
+    }
+
     /// Expresses JSON object as JSON string
     static std::string stringify( const Poco::JSON::Object& _obj )
     {

@@ -23,12 +23,13 @@ void Threadutils::copy(
 
 // ----------------------------------------------------------------------------
 
-void Threadutils::fit_as_feature_engineerer(
+void Threadutils::fit_as_feature_learner(
     const size_t _this_thread_num,
     const std::vector<size_t>& _thread_nums,
     const containers::DataFrame& _population,
     const std::vector<containers::DataFrame>& _peripheral,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
+    multithreading::Communicator* _comm,
     ensemble::DecisionTreeEnsemble* _ensemble )
 {
     const auto population_subview =
@@ -36,35 +37,32 @@ void Threadutils::fit_as_feature_engineerer(
             _population, _thread_nums, _this_thread_num );
 
     const auto [loss_function, table_holder] =
-        _ensemble->init_as_feature_engineerer(
-            population_subview, _peripheral );
+        _ensemble->init_as_feature_learner( population_subview, _peripheral );
 
     _ensemble->fit_subensembles( table_holder, _logger, loss_function );
 
-    auto predictions = _ensemble->make_subpredictions( *table_holder );
+    auto predictions =
+        _ensemble->make_subpredictions( *table_holder, _logger, _comm );
 
     auto subfeatures =
         SubtreeHelper::make_subfeatures( *table_holder, predictions );
 
     const auto num_features = _ensemble->hyperparameters().num_features_;
 
-    const auto silent = _ensemble->hyperparameters().silent_;
+    utils::Logger::log( "Training features...", _logger, _comm );
 
-    if ( !silent && _logger )
-        {
-            _logger->log( "Training features..." );
-        }
-
-    for ( size_t i = 0; i < num_features; ++i )
+    for ( int i = 0; i < num_features; ++i )
         {
             _ensemble->fit_new_feature(
                 loss_function, table_holder, subfeatures );
 
-            if ( !silent && _logger )
-                {
-                    _logger->log(
-                        "Trained FEATURE_" + std::to_string( i + 1 ) + "." );
-                }
+            const auto progress = ( ( i + 1 ) * 100 ) / num_features;
+
+            utils::Logger::log(
+                "Trained FEATURE_" + std::to_string( i + 1 ) +
+                    ". Progress: " + std::to_string( progress ) + "\%.",
+                _logger,
+                _comm );
         }
 }
 
@@ -75,6 +73,7 @@ void Threadutils::fit_as_predictor(
     const std::vector<size_t>& _thread_nums,
     const containers::DataFrame& _population,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
+    multithreading::Communicator* _comm,
     ensemble::DecisionTreeEnsemble* _ensemble )
 {
     const auto population_subview =
@@ -86,8 +85,6 @@ void Threadutils::fit_as_predictor(
 
     const auto num_features = _ensemble->hyperparameters().num_features_;
 
-    const auto silent = _ensemble->hyperparameters().silent_;
-
     auto matches = utils::Matchmaker::make_matches( population_subview );
 
     for ( size_t i = 0; i < num_features; ++i )
@@ -98,11 +95,10 @@ void Threadutils::fit_as_predictor(
                 matches.begin(),
                 matches.end() );
 
-            if ( !silent && _logger )
-                {
-                    _logger->log(
-                        "Trained tree " + std::to_string( i + 1 ) + "." );
-                }
+            utils::Logger::log(
+                "Trained tree " + std::to_string( i + 1 ) + ".",
+                _logger,
+                _comm );
         }
 }
 
@@ -114,18 +110,20 @@ void Threadutils::fit_ensemble(
     const containers::DataFrame& _population,
     const std::vector<containers::DataFrame>& _peripheral,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
+    multithreading::Communicator* _comm,
     ensemble::DecisionTreeEnsemble* _ensemble )
 {
     try
         {
             if ( _peripheral.size() > 0 )
                 {
-                    fit_as_feature_engineerer(
+                    fit_as_feature_learner(
                         _this_thread_num,
                         _thread_nums,
                         _population,
                         _peripheral,
                         _logger,
+                        _comm,
                         _ensemble );
                 }
             else
@@ -135,6 +133,7 @@ void Threadutils::fit_ensemble(
                         _thread_nums,
                         _population,
                         _logger,
+                        _comm,
                         _ensemble );
                 }
         }
@@ -165,13 +164,15 @@ Int Threadutils::get_num_threads( const Int _num_threads )
 
 // ----------------------------------------------------------------------------
 
-void Threadutils::transform_as_feature_engineerer(
+void Threadutils::transform_as_feature_learner(
     const size_t _this_thread_num,
     const std::vector<size_t> _thread_nums,
     const containers::DataFrame& _population,
     const std::vector<containers::DataFrame>& _peripheral,
+    const std::vector<size_t>& _index,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
     const ensemble::DecisionTreeEnsemble& _ensemble,
+    multithreading::Communicator* _comm,
     containers::Features* _features )
 {
     auto population_subview =
@@ -184,30 +185,35 @@ void Threadutils::transform_as_feature_engineerer(
         _peripheral,
         _ensemble.peripheral() );
 
-    auto predictions = _ensemble.make_subpredictions( table_holder );
+    auto predictions =
+        _ensemble.make_subpredictions( table_holder, _logger, _comm );
 
     auto subfeatures =
         SubtreeHelper::make_subfeatures( table_holder, predictions );
 
-    const auto silent = _ensemble.hyperparameters().silent_;
+    assert_true( _features->size() == _index.size() );
 
-    assert_true( _features->size() >= _ensemble.num_features() );
+    utils::Logger::log( "Building features...", _logger, _comm );
 
-    for ( size_t i = 0; i < _ensemble.num_features(); ++i )
+    for ( size_t i = 0; i < _index.size(); ++i )
         {
+            const auto ix = _index.at( i );
+
             const auto new_feature =
-                _ensemble.transform( table_holder, subfeatures, i );
+                _ensemble.transform( table_holder, subfeatures, ix );
 
             copy(
                 population_subview.rows(),
                 new_feature,
-                ( *_features )[i].get() );
+                _features->at( i ).get() );
 
-            if ( !silent && _logger )
-                {
-                    _logger->log(
-                        "Built FEATURE_" + std::to_string( i + 1 ) + "." );
-                }
+            const auto progress = ( ( i + 1 ) * 100 ) / _index.size();
+
+            utils::Logger::log(
+                "Built FEATURE_" + std::to_string( ix + 1 ) +
+                    ". Progress: " + std::to_string( progress ) + "\%.",
+                _logger,
+                _comm );
         }
 }
 
@@ -218,6 +224,7 @@ void Threadutils::transform_as_predictor(
     const std::vector<size_t> _thread_nums,
     const containers::DataFrame& _population,
     const ensemble::DecisionTreeEnsemble& _ensemble,
+    multithreading::Communicator* _comm,
     containers::Features* _features )
 {
     const auto population_subview =
@@ -238,21 +245,25 @@ void Threadutils::transform_ensemble(
     const std::vector<size_t> _thread_nums,
     const containers::DataFrame& _population,
     const std::vector<containers::DataFrame>& _peripheral,
+    const std::vector<size_t>& _index,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
     const ensemble::DecisionTreeEnsemble& _ensemble,
+    multithreading::Communicator* _comm,
     containers::Features* _features )
 {
     try
         {
             if ( _peripheral.size() > 0 )
                 {
-                    transform_as_feature_engineerer(
+                    transform_as_feature_learner(
                         _this_thread_num,
                         _thread_nums,
                         _population,
                         _peripheral,
+                        _index,
                         _logger,
                         _ensemble,
+                        _comm,
                         _features );
                 }
             else
@@ -262,6 +273,7 @@ void Threadutils::transform_ensemble(
                         _thread_nums,
                         _population,
                         _ensemble,
+                        _comm,
                         _features );
                 }
         }

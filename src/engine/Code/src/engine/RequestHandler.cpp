@@ -31,18 +31,26 @@ void RequestHandler::run()
                     data_frame_manager().get_boolean_column(
                         name, cmd, &socket() );
                 }
-            if ( type == "BooleanColumn.get_string" )
+            else if ( type == "BooleanColumn.get_content" )
                 {
-                    data_frame_manager().get_boolean_column_string(
+                    data_frame_manager().get_boolean_column_content(
                         name, cmd, &socket() );
+                }
+            else if ( type == "Database.copy_table" )
+                {
+                    database_manager().copy_table( cmd, &socket() );
+                }
+            else if ( type == "Database.describe_connection" )
+                {
+                    database_manager().describe_connection( name, &socket() );
                 }
             else if ( type == "Database.drop_table" )
                 {
-                    database_manager().drop_table( name, &socket() );
+                    database_manager().drop_table( name, cmd, &socket() );
                 }
             else if ( type == "Database.execute" )
                 {
-                    database_manager().execute( &socket() );
+                    database_manager().execute( name, &socket() );
                 }
             else if ( type == "Database.get" )
                 {
@@ -50,7 +58,7 @@ void RequestHandler::run()
                 }
             else if ( type == "Database.get_colnames" )
                 {
-                    database_manager().get_colnames( name, &socket() );
+                    database_manager().get_colnames( name, cmd, &socket() );
                 }
             else if ( type == "Database.get_content" )
                 {
@@ -58,11 +66,15 @@ void RequestHandler::run()
                 }
             else if ( type == "Database.get_nrows" )
                 {
-                    database_manager().get_nrows( name, &socket() );
+                    database_manager().get_nrows( name, cmd, &socket() );
+                }
+            else if ( type == "Database.list_connections" )
+                {
+                    database_manager().list_connections( &socket() );
                 }
             else if ( type == "Database.list_tables" )
                 {
-                    database_manager().list_tables( &socket() );
+                    database_manager().list_tables( name, &socket() );
                 }
             else if ( type == "Database.new" )
                 {
@@ -72,13 +84,21 @@ void RequestHandler::run()
                 {
                     database_manager().read_csv( name, cmd, &socket() );
                 }
+            else if ( type == "Database.read_s3" )
+                {
+                    database_manager().read_s3( name, cmd, &socket() );
+                }
             else if ( type == "Database.sniff_csv" )
                 {
                     database_manager().sniff_csv( name, cmd, &socket() );
                 }
+            else if ( type == "Database.sniff_s3" )
+                {
+                    database_manager().sniff_s3( name, cmd, &socket() );
+                }
             else if ( type == "Database.sniff_table" )
                 {
-                    database_manager().sniff_table( name, &socket() );
+                    database_manager().sniff_table( name, cmd, &socket() );
                 }
             else if ( type == "DataFrame" )
                 {
@@ -108,6 +128,10 @@ void RequestHandler::run()
                 {
                     data_frame_manager().calc_column_plots(
                         name, cmd, &socket() );
+                }
+            else if ( type == "DataFrame.concat" )
+                {
+                    data_frame_manager().concat( name, cmd, &socket() );
                 }
             else if ( type == "DataFrame.delete" )
                 {
@@ -141,6 +165,11 @@ void RequestHandler::run()
                     data_frame_manager().get_data_frame_content(
                         name, cmd, &socket() );
                 }
+            else if ( type == "DataFrame.get_html" )
+                {
+                    data_frame_manager().get_data_frame_html(
+                        name, cmd, &socket() );
+                }
             else if ( type == "DataFrame.get_string" )
                 {
                     data_frame_manager().get_data_frame_string(
@@ -167,6 +196,11 @@ void RequestHandler::run()
                     project_manager().add_data_frame_from_csv(
                         name, cmd, &socket() );
                 }
+            else if ( type == "DataFrame.read_s3" )
+                {
+                    project_manager().add_data_frame_from_s3(
+                        name, cmd, &socket() );
+                }
             else if ( type == "DataFrame.refresh" )
                 {
                     data_frame_manager().refresh( name, &socket() );
@@ -191,9 +225,17 @@ void RequestHandler::run()
                 {
                     data_frame_manager().to_db( name, cmd, &socket() );
                 }
+            else if ( type == "DataFrame.to_s3" )
+                {
+                    data_frame_manager().to_s3( name, cmd, &socket() );
+                }
             else if ( type == "DataFrame.where" )
                 {
                     data_frame_manager().where( name, cmd, &socket() );
+                }
+            else if ( type == "delete_project" )
+                {
+                    project_manager().delete_project( name, &socket() );
                 }
             else if ( type == "FloatColumn" )
                 {
@@ -207,9 +249,9 @@ void RequestHandler::run()
                 {
                     data_frame_manager().get_column( name, cmd, &socket() );
                 }
-            else if ( type == "FloatColumn.get_string" )
+            else if ( type == "FloatColumn.get_content" )
                 {
-                    data_frame_manager().get_column_string(
+                    data_frame_manager().get_float_column_content(
                         name, cmd, &socket() );
                 }
             else if ( type == "FloatColumn.get_unit" )
@@ -220,21 +262,35 @@ void RequestHandler::run()
                 {
                     data_frame_manager().set_unit( name, cmd, &socket() );
                 }
-            else if ( type == "delete_project" )
+            else if (
+                type == "GaussianHyperparameterSearch" ||
+                type == "LatinHypercubeSearch" || type == "RandomSearch" )
                 {
-                    project_manager().delete_project( name, &socket() );
+                    project_manager().add_hyperopt( name, cmd, &socket() );
                 }
-            else if ( type == "get_model" )
+            else if ( type == "Hyperopt.launch" )
                 {
-                    project_manager().get_model( name, &socket() );
+                    hyperopt_manager().launch( name, cmd, &socket() );
+                }
+            else if ( type == "Hyperopt.refresh" )
+                {
+                    hyperopt_manager().refresh( name, &socket() );
+                }
+            else if ( type == "Hyperopt.save" )
+                {
+                    project_manager().save_hyperopt( name, &socket() );
                 }
             else if ( type == "list_data_frames" )
                 {
                     project_manager().list_data_frames( &socket() );
                 }
-            else if ( type == "list_models" )
+            else if ( type == "list_hyperopts" )
                 {
-                    project_manager().list_models( &socket() );
+                    project_manager().list_hyperopts( &socket() );
+                }
+            else if ( type == "list_pipelines" )
+                {
+                    project_manager().list_pipelines( &socket() );
                 }
             else if ( type == "list_projects" )
                 {
@@ -244,143 +300,97 @@ void RequestHandler::run()
                 {
                     return;
                 }
-            else if ( type == "MultirelModel" )
+            else if ( type == "monitor_port" )
                 {
-                    project_manager().add_multirel_model(
+                    communication::Sender::send_string(
+                        std::to_string( options_.monitor().http_port_ ),
+                        &socket() );
+                }
+            else if ( type == "Pipeline" )
+                {
+                    project_manager().add_pipeline( name, cmd, &socket() );
+                }
+            else if ( type == "Pipeline.check" )
+                {
+                    pipeline_manager().check( name, cmd, &socket() );
+                }
+            else if ( type == "Pipeline.copy" )
+                {
+                    project_manager().copy_pipeline( name, cmd, &socket() );
+                }
+            else if ( type == "Pipeline.delete" )
+                {
+                    project_manager().delete_pipeline( name, cmd, &socket() );
+                }
+            else if ( type == "Pipeline.deploy" )
+                {
+                    pipeline_manager().deploy( name, cmd, &socket() );
+                }
+            else if ( type == "Pipeline.feature_correlations" )
+                {
+                    pipeline_manager().feature_correlations(
                         name, cmd, &socket() );
                 }
-            else if ( type == "MultirelModel.copy" )
+            else if ( type == "Pipeline.feature_importances" )
                 {
-                    project_manager().copy_multirel_model(
+                    pipeline_manager().feature_importances(
                         name, cmd, &socket() );
                 }
-            else if ( type == "MultirelModel.delete" )
+            else if ( type == "Pipeline.fit" )
                 {
-                    project_manager().delete_multirel_model(
+                    pipeline_manager().fit( name, cmd, &socket() );
+                }
+            else if ( type == "Pipeline.lift_curve" )
+                {
+                    pipeline_manager().lift_curve( name, cmd, &socket() );
+                }
+            else if ( type == "Pipeline.load" )
+                {
+                    project_manager().load_pipeline( name, &socket() );
+                }
+            else if ( type == "Pipeline.precision_recall_curve" )
+                {
+                    pipeline_manager().precision_recall_curve(
                         name, cmd, &socket() );
                 }
-            else if ( type == "MultirelModel.deploy" )
+            else if ( type == "Pipeline.refresh" )
                 {
-                    multirel_model_manager().deploy( name, cmd, &socket() );
+                    pipeline_manager().refresh( name, &socket() );
                 }
-            else if ( type == "MultirelModel.fit" )
+            else if ( type == "Pipeline.roc_curve" )
                 {
-                    multirel_model_manager().fit_model( name, cmd, &socket() );
+                    pipeline_manager().roc_curve( name, cmd, &socket() );
                 }
-            else if ( type == "MultirelModel.get_hyperopt_names" )
+            else if ( type == "Pipeline.save" )
                 {
-                    multirel_model_manager().get_hyperopt_names(
-                        name, &socket() );
+                    project_manager().save_pipeline( name, &socket() );
                 }
-            else if ( type == "MultirelModel.get_hyperopt_scores" )
+            else if ( type == "Pipeline.to_sql" )
                 {
-                    multirel_model_manager().get_hyperopt_scores(
-                        name, &socket() );
+                    pipeline_manager().to_sql( name, &socket() );
                 }
-            else if ( type == "MultirelModel.launch_hyperopt" )
+            else if ( type == "Pipeline.targets" )
                 {
-                    multirel_model_manager().launch_hyperopt( name, &socket() );
+                    pipeline_manager().targets( name, &socket() );
                 }
-            else if ( type == "MultirelModel.load" )
+            else if ( type == "Pipeline.transform" )
                 {
-                    project_manager().load_multirel_model( name, &socket() );
-                }
-            else if ( type == "MultirelModel.refresh" )
-                {
-                    multirel_model_manager().refresh_model( name, &socket() );
-                }
-            else if ( type == "MultirelModel.save" )
-                {
-                    project_manager().save_multirel_model( name, &socket() );
-                }
-            else if ( type == "MultirelModel.score" )
-                {
-                    multirel_model_manager().score( name, cmd, &socket() );
-                }
-            else if ( type == "MultirelModel.to_json" )
-                {
-                    multirel_model_manager().to_json( name, &socket() );
-                }
-            else if ( type == "MultirelModel.to_sql" )
-                {
-                    multirel_model_manager().to_sql( name, &socket() );
-                }
-            else if ( type == "MultirelModel.transform" )
-                {
-                    multirel_model_manager().transform( name, cmd, &socket() );
-                }
-            else if ( type == "RelboostModel" )
-                {
-                    project_manager().add_relboost_model(
-                        name, cmd, &socket() );
-                }
-            else if ( type == "RelboostModel.copy" )
-                {
-                    project_manager().copy_relboost_model(
-                        name, cmd, &socket() );
-                }
-            else if ( type == "RelboostModel.delete" )
-                {
-                    project_manager().delete_relboost_model(
-                        name, cmd, &socket() );
-                }
-            else if ( type == "RelboostModel.deploy" )
-                {
-                    relboost_model_manager().deploy( name, cmd, &socket() );
-                }
-            else if ( type == "RelboostModel.fit" )
-                {
-                    relboost_model_manager().fit_model( name, cmd, &socket() );
-                }
-            else if ( type == "RelboostModel.get_hyperopt_names" )
-                {
-                    relboost_model_manager().get_hyperopt_names(
-                        name, &socket() );
-                }
-            else if ( type == "RelboostModel.get_hyperopt_scores" )
-                {
-                    relboost_model_manager().get_hyperopt_scores(
-                        name, &socket() );
-                }
-            else if ( type == "RelboostModel.launch_hyperopt" )
-                {
-                    relboost_model_manager().launch_hyperopt( name, &socket() );
-                }
-            else if ( type == "RelboostModel.load" )
-                {
-                    project_manager().load_relboost_model( name, &socket() );
-                }
-            else if ( type == "RelboostModel.refresh" )
-                {
-                    relboost_model_manager().refresh_model( name, &socket() );
-                }
-            else if ( type == "RelboostModel.save" )
-                {
-                    project_manager().save_relboost_model( name, &socket() );
-                }
-            else if ( type == "RelboostModel.score" )
-                {
-                    relboost_model_manager().score( name, cmd, &socket() );
-                }
-            else if ( type == "RelboostModel.to_json" )
-                {
-                    relboost_model_manager().to_json( name, &socket() );
-                }
-            else if ( type == "RelboostModel.to_sql" )
-                {
-                    relboost_model_manager().to_sql( name, &socket() );
-                }
-            else if ( type == "RelboostModel.transform" )
-                {
-                    relboost_model_manager().transform( name, cmd, &socket() );
+                    pipeline_manager().transform( name, cmd, &socket() );
                 }
             else if ( type == "set_project" )
                 {
                     project_manager().set_project( name, &socket() );
                 }
+            else if ( type == "set_s3_access_key_id" )
+                {
+                    database_manager().set_s3_access_key_id( &socket() );
+                }
+            else if ( type == "set_s3_secret_access_key" )
+                {
+                    database_manager().set_s3_secret_access_key( &socket() );
+                }
             else if ( type == "shutdown" )
                 {
-                    //    monitor().shutdown();
                     *shutdown_ = true;
                 }
             else if ( type == "StringColumn" )
@@ -392,9 +402,9 @@ void RequestHandler::run()
                     data_frame_manager().get_categorical_column(
                         name, cmd, &socket() );
                 }
-            else if ( type == "StringColumn.get_string" )
+            else if ( type == "StringColumn.get_content" )
                 {
-                    data_frame_manager().get_categorical_column_string(
+                    data_frame_manager().get_categorical_column_content(
                         name, cmd, &socket() );
                 }
             else if ( type == "StringColumn.get_unit" )

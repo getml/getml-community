@@ -17,12 +17,14 @@ class NumOpParser
         const std::shared_ptr<const containers::Encoding>& _join_keys_encoding,
         const std::shared_ptr<
             const std::map<std::string, containers::DataFrame>>& _data_frames,
-        const size_t _num_elem,
+        const size_t _begin,
+        const size_t _length,
         const bool _subselection )
-        : categories_( _categories ),
+        : begin_( _begin ),
+          categories_( _categories ),
           data_frames_( _data_frames ),
           join_keys_encoding_( _join_keys_encoding ),
-          num_elem_( _num_elem ),
+          length_( _length ),
           subselection_( _subselection )
     {
         assert_true( categories_ );
@@ -35,33 +37,43 @@ class NumOpParser
     // ------------------------------------------------------------------------
 
    public:
+    /// Checks a column for any obvious issues (such as high share of NULL
+    /// values).
+    void check(
+        const containers::Column<Float>& _col,
+        const std::shared_ptr<const monitoring::Logger>& _logger,
+        Poco::Net::StreamSocket* _socket ) const;
+
     /// Parses a numerical column.
-    containers::Column<Float> parse( const Poco::JSON::Object& _col );
+    containers::Column<Float> parse( const Poco::JSON::Object& _col ) const;
 
     // ------------------------------------------------------------------------
 
    private:
     /// Transforms a string column to a float.
-    containers::Column<Float> as_num( const Poco::JSON::Object& _col );
+    containers::Column<Float> as_num( const Poco::JSON::Object& _col ) const;
 
     /// Transforms a string column to a time stamp.
-    containers::Column<Float> as_ts( const Poco::JSON::Object& _col );
+    containers::Column<Float> as_ts( const Poco::JSON::Object& _col ) const;
 
     /// Parses the operator and undertakes a binary operation.
     containers::Column<Float> binary_operation(
-        const Poco::JSON::Object& _col );
+        const Poco::JSON::Object& _col ) const;
 
     /// Transforms a boolean column to a float column.
-    containers::Column<Float> boolean_as_num( const Poco::JSON::Object& _col );
+    containers::Column<Float> boolean_as_num(
+        const Poco::JSON::Object& _col ) const;
 
     /// Returns an actual column.
-    containers::Column<Float> get_column( const Poco::JSON::Object& _col );
+    containers::Column<Float> get_column(
+        const Poco::JSON::Object& _col ) const;
 
     /// Parses the operator and undertakes a unary operation.
-    containers::Column<Float> unary_operation( const Poco::JSON::Object& _col );
+    containers::Column<Float> unary_operation(
+        const Poco::JSON::Object& _col ) const;
 
     /// Returns an updated version of the column.
-    containers::Column<Float> update( const Poco::JSON::Object& _col );
+    containers::Column<Float> update( const Poco::JSON::Object& _col ) const;
 
     // ------------------------------------------------------------------------
 
@@ -69,7 +81,7 @@ class NumOpParser
     /// Operator.
     template <class Operator>
     containers::Column<Float> bin_op(
-        const Poco::JSON::Object& _col, const Operator& _op )
+        const Poco::JSON::Object& _col, const Operator& _op ) const
     {
         const auto operand1 = parse( *JSON::get_object( _col, "operand1_" ) );
 
@@ -95,7 +107,7 @@ class NumOpParser
     }
 
     /// Returns a columns containing random values.
-    containers::Column<Float> random( const Poco::JSON::Object& _col )
+    containers::Column<Float> random( const Poco::JSON::Object& _col ) const
     {
         const auto seed = JSON::get_value<unsigned int>( _col, "seed_" );
 
@@ -103,7 +115,7 @@ class NumOpParser
 
         std::uniform_real_distribution<Float> dis( 0.0, 1.0 );
 
-        auto result = containers::Column<Float>( num_elem_ );
+        auto result = containers::Column<Float>( length_ );
 
         for ( auto& val : result )
             {
@@ -114,13 +126,13 @@ class NumOpParser
     }
 
     /// Returns a columns containing the rowids.
-    containers::Column<Float> rowid()
+    containers::Column<Float> rowid() const
     {
-        auto result = containers::Column<Float>( num_elem_ );
+        auto result = containers::Column<Float>( length_ );
 
         for ( size_t i = 0; i < result.size(); ++i )
             {
-                result[i] = static_cast<Float>( i );
+                result[i] = begin_ + static_cast<Float>( i );
             }
 
         return result;
@@ -130,7 +142,7 @@ class NumOpParser
     /// Operator.
     template <class Operator>
     containers::Column<Float> un_op(
-        const Poco::JSON::Object& _col, const Operator& _op )
+        const Poco::JSON::Object& _col, const Operator& _op ) const
     {
         const auto operand1 = parse( *JSON::get_object( _col, "operand1_" ) );
 
@@ -144,6 +156,9 @@ class NumOpParser
     // ------------------------------------------------------------------------
 
    private:
+    /// The index of the first element to be drawn
+    const size_t begin_;
+
     /// Encodes the categories used.
     const std::shared_ptr<const containers::Encoding> categories_;
 
@@ -156,7 +171,7 @@ class NumOpParser
 
     /// The number of elements required (must not be greater than the number of
     /// rows in df)
-    const size_t num_elem_;
+    const size_t length_;
 
     /// Whether we want to get a subselection.
     const bool subselection_;

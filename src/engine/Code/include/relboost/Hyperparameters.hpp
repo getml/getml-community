@@ -117,11 +117,6 @@ struct Hyperparameters
     /// The seed used for initializing the random number generator.
     const unsigned int seed_;
 
-    /// The session name is used to identify models belonging to a particular
-    /// hyperparameter optimization. It is therefore not required for normal
-    /// training and one of the few parameters that are optional.
-    const std::string session_name_;
-
     /// The share of features to be selected.
     /// When set to 0, then there is no feature selection.
     const Float share_selected_features_;

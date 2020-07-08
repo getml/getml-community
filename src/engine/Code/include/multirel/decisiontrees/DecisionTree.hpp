@@ -64,15 +64,8 @@ class DecisionTree
     /// Copy assignment constructor
     DecisionTree &operator=( DecisionTree &&_other ) noexcept;
 
-    /// Generates the select statement
-    std::string select_statement( const std::string &_feature_num ) const;
-
     /// Extracts the tree as a JSON object
     Poco::JSON::Object to_json_obj() const;
-
-    /// Extracts the tree in a format the monitor can understand
-    Poco::JSON::Object to_monitor(
-        const std::string &_feature_num, const bool _use_timestamps ) const;
 
     /// Extracts the SQL statement underlying the tree
     /// as a string

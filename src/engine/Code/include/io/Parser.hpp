@@ -1,3 +1,4 @@
+;
 #ifndef IO_PARSER_HPP_
 #define IO_PARSER_HPP_
 
@@ -72,6 +73,42 @@ class Parser
 
     // -------------------------------
 
+    /// Custom boolean-to-string conversion
+    static std::string to_string( const bool _val )
+    {
+        if ( _val )
+            {
+                return "true";
+            }
+        return "false";
+    }
+
+    // -------------------------------
+
+    /// Custom floating-point-to-string conversion (produces more beautiful
+    /// numbers than std::to_string)
+    static std::string to_string( const Float _val )
+    {
+        const auto is_full = []( const Float val ) {
+            return std::floor( val ) == val;
+        };
+
+        std::ostringstream stream;
+
+        if ( is_full( _val ) )
+            {
+                stream << static_cast<long>( _val );
+            }
+        else
+            {
+                stream << _val;
+            }
+
+        return stream.str();
+    }
+
+    // -------------------------------
+
     /// Transforms a string to a time stamp.
     static std::pair<Float, bool> to_time_stamp(
         const std::string& _str, const std::vector<std::string>& _time_formats )
@@ -97,7 +134,7 @@ class Parser
 
                 return std::pair<Float, bool>(
                     static_cast<Float>( time_stamp.epochMicroseconds() ) /
-                        8.64e10,
+                        1.0e6,
                     true );
             }
 
@@ -109,16 +146,36 @@ class Parser
     /// Removes all whitespaces at the beginning and end of the string.
     static std::string trim( const std::string& _str )
     {
-        const auto pos = _str.find_first_not_of( "\t\v\f\r " );
+        const auto pos = _str.find_first_not_of( "\t\v\f\r\n " );
 
         if ( pos == std::string::npos )
             {
                 return "";
             }
 
-        const auto len = _str.find_last_not_of( "\t\v\f\r " ) - pos + 1;
+        const auto len = _str.find_last_not_of( "\t\v\f\r\n " ) - pos + 1;
 
         return _str.substr( pos, len );
+    }
+
+    // -------------------------------
+
+    /// Represents as time stamp in string format.
+    static std::string ts_to_string( const Float& _time_stamp_float )
+    {
+        if ( std::isnan( _time_stamp_float ) ||
+             std::isinf( _time_stamp_float ) )
+            {
+                return "NULL";
+            }
+
+        const auto microseconds_since_epoch =
+            static_cast<Poco::Timestamp::TimeVal>( 1e06 * _time_stamp_float );
+
+        const auto time_stamp = Poco::Timestamp( microseconds_since_epoch );
+
+        return Poco::DateTimeFormatter::format(
+            time_stamp, Poco::DateTimeFormat::ISO8601_FRAC_FORMAT );
     }
 
     // -------------------------------

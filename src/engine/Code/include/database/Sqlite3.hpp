@@ -25,6 +25,9 @@ class Sqlite3 : public Connector
     // -------------------------------
 
    public:
+    /// Returns a Poco::JSON::Object describing the connection.
+    Poco::JSON::Object describe() const final;
+
     /// Executes an SQL query.
     void execute( const std::string& _sql ) final;
 
@@ -39,7 +42,6 @@ class Sqlite3 : public Connector
     /// Reads a CSV file or another data source into a table.
     void read(
         const std::string& _table,
-        const bool _header,
         const size_t _skip,
         io::Reader* _reader ) final;
 
@@ -64,7 +66,7 @@ class Sqlite3 : public Connector
     /// Drops a table and cleans up, if necessary.
     void drop_table( const std::string& _tname ) final
     {
-        execute( "DROP TABLE " + _tname + "; VACUUM;" );
+        execute( "DROP TABLE \"" + _tname + "\"; VACUUM;" );
     }
 
     /// Returns the number of rows in the table signified by _tname.

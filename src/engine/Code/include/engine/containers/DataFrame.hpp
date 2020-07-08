@@ -14,6 +14,7 @@ class DataFrame
         : categories_( std::make_shared<Encoding>() ),
           join_keys_encoding_( std::make_shared<Encoding>() )
     {
+        update_last_change();
     }
 
     DataFrame(
@@ -24,6 +25,7 @@ class DataFrame
           join_keys_encoding_( _join_keys_encoding ),
           name_( _name )
     {
+        update_last_change();
     }
 
     ~DataFrame() = default;
@@ -47,6 +49,9 @@ class DataFrame
     /// and consistent.
     void check_plausibility() const;
 
+    /// Creates a deep copy of the DataFrame
+    DataFrame clone( const std::string _name ) const;
+
     /// Builds indices_, which serve the role of
     /// an "index" over the join keys
     void create_indices();
@@ -61,9 +66,12 @@ class DataFrame
 
     /// Builds a dataframe from one or several CSV files.
     void from_csv(
+        const std::optional<std::vector<std::string>> &_colnames,
         const std::vector<std::string> &_fnames,
         const std::string &_quotechar,
         const std::string &_sep,
+        const size_t _num_lines_read,
+        const size_t _skip,
         const std::vector<std::string> &_time_formats,
         const std::vector<std::string> &_categorical_names,
         const std::vector<std::string> &_join_key_names,
@@ -85,18 +93,6 @@ class DataFrame
         const std::vector<std::string> &_unused_float_names,
         const std::vector<std::string> &_unused_string_names );
 
-    /// Builds a dataframe from a query.
-    void from_query(
-        const std::shared_ptr<database::Connector> _connector,
-        const std::string &_query,
-        const std::vector<std::string> &_categoricals,
-        const std::vector<std::string> &_join_keys,
-        const std::vector<std::string> &_numericals,
-        const std::vector<std::string> &_targets,
-        const std::vector<std::string> &_time_stamp_names,
-        const std::vector<std::string> &_unused_float_names,
-        const std::vector<std::string> &_unused_string_names );
-
     /// Builds a dataframe from a JSON Object.
     void from_json(
         const Poco::JSON::Object &_obj,
@@ -109,6 +105,37 @@ class DataFrame
         const std::vector<std::string> &_unused_float_names,
         const std::vector<std::string> &_unused_string_names );
 
+    /// Builds a dataframe from a query.
+    void from_query(
+        const std::shared_ptr<database::Connector> _connector,
+        const std::string &_query,
+        const std::vector<std::string> &_categoricals,
+        const std::vector<std::string> &_join_keys,
+        const std::vector<std::string> &_numericals,
+        const std::vector<std::string> &_targets,
+        const std::vector<std::string> &_time_stamp_names,
+        const std::vector<std::string> &_unused_float_names,
+        const std::vector<std::string> &_unused_string_names );
+
+    /// Builds a dataframe from one or several CSV files located in an S3
+    /// bucket.
+    void from_s3(
+        const std::string &_bucket,
+        const std::optional<std::vector<std::string>> &_colnames,
+        const std::vector<std::string> &_fnames,
+        const std::string &_region,
+        const std::string &_sep,
+        const size_t _num_lines_read,
+        const size_t _skip,
+        const std::vector<std::string> &_time_formats,
+        const std::vector<std::string> &_categorical_names,
+        const std::vector<std::string> &_join_key_names,
+        const std::vector<std::string> &_numerical_names,
+        const std::vector<std::string> &_target_names,
+        const std::vector<std::string> &_time_stamp_names,
+        const std::vector<std::string> &_unused_floats,
+        const std::vector<std::string> &_unused_strings );
+
     /// Returns the content of the data frame in a format that is compatible
     /// with the DataTables.js server-side processing API.
     Poco::JSON::Object get_content(
@@ -116,8 +143,13 @@ class DataFrame
         const std::int32_t _start,
         const std::int32_t _length ) const;
 
+    /// Returns the first _n rows as a html that is compatible with Jupyter
+    /// notebooks.
+    std::string get_html(
+        const std::int32_t _max_rows, const std::int32_t _border ) const;
+
     /// Returns the first _n rows as a formatted string.
-    std::string get_string( const std::int32_t _n ) const;
+    std::string get_string( const std::int32_t _max_rows ) const;
 
     /// Getter for an int_column (either join keys or categorical)
     const Column<Int> &int_column(
@@ -150,8 +182,8 @@ class DataFrame
     /// understand
     Poco::JSON::Object to_monitor() const;
 
-    /// Transforms a float to a time stamp
-    std::string to_time_stamp( const Float &_time_stamp_float ) const;
+    /// Expresses the schema of the DataFrame as a JSON object.
+    Poco::JSON::Object::Ptr to_schema() const;
 
     /// Selects all rows for which the corresponding entry in _condition is
     /// true.
@@ -198,6 +230,16 @@ class DataFrame
         assert_true( _i < categories().size() );
 
         return categories()[_i].str();
+    }
+
+    /// Returns the fingerprint of the data frame (necessary to build the
+    /// dependency graphs).
+    Poco::JSON::Object::Ptr fingerprint() const
+    {
+        auto obj = Poco::JSON::Object::Ptr( new Poco::JSON::Object() );
+        obj->set( "name_", name_ );
+        obj->set( "last_change_", last_change_ );
+        return obj;
     }
 
     /// Whether the DataFrame has any column named _name.
@@ -308,27 +350,49 @@ class DataFrame
     }
 
     /// Returns the index signified by index _i
-    template <class T>
+    template <
+        typename T,
+        typename std::enable_if<!std::is_same<T, std::string>::value, int>::
+            type = 0>
     DataFrameIndex &index( T _i )
     {
         assert_true( indices_.size() == join_keys_.size() );
-        assert_true( join_keys_.size() > 0 );
         assert_true( _i >= 0 );
         assert_true( static_cast<size_t>( _i ) < indices_.size() );
 
-        return indices_[_i];
+        return indices_.at( _i );
     }
 
     /// Returns the index signified by index _i
-    template <class T>
+    template <
+        typename T,
+        typename std::enable_if<!std::is_same<T, std::string>::value, int>::
+            type = 0>
     const DataFrameIndex index( T _i ) const
     {
         assert_true( indices_.size() == join_keys_.size() );
-        assert_true( join_keys_.size() > 0 );
         assert_true( _i >= 0 );
         assert_true( static_cast<size_t>( _i ) < indices_.size() );
 
-        return indices_[_i];
+        return indices_.at( _i );
+    }
+
+    /// Returns the index corresponding to join key _name
+    const DataFrameIndex index( const std::string &_name ) const
+    {
+        assert_true( indices_.size() == join_keys_.size() );
+
+        for ( size_t i = 0; i < num_join_keys(); ++i )
+            {
+                if ( join_key( i ).name() == _name )
+                    {
+                        return indices_.at( i );
+                    }
+            }
+
+        throw std::invalid_argument(
+            "Data frame '" + name_ + "' contains no join key named '" + _name +
+            "'!" );
     }
 
     /// Trivial accessor
@@ -377,9 +441,10 @@ class DataFrame
     }
 
     /// Returns the maps underlying the indices.
-    const std::vector<std::shared_ptr<Index>> maps() const
+    const std::vector<std::shared_ptr<typename DataFrameIndex::MapType>> maps()
+        const
     {
-        std::vector<std::shared_ptr<Index>> maps;
+        std::vector<std::shared_ptr<typename DataFrameIndex::MapType>> maps;
         for ( const auto &ix : indices_ ) maps.push_back( ix.map() );
         return maps;
     }
@@ -618,6 +683,10 @@ class DataFrame
     template <class T>
     ULong calc_nbytes( const std::vector<Column<T>> &_columns ) const;
 
+    /// Makes sure that the values contained in _col are all positive and
+    /// finite.
+    void check_null( const Column<Float> &_col ) const;
+
     /// Concatenate a set of colnames.
     std::vector<std::string> concat_colnames(
         const std::vector<std::string> &_categorical_names,
@@ -627,20 +696,6 @@ class DataFrame
         const std::vector<std::string> &_time_stamp_names,
         const std::vector<std::string> &_unused_float_names,
         const std::vector<std::string> &_unused_string_names ) const;
-
-    /// Builds a dataframe from a CSV file.
-    void from_csv(
-        const std::string &_fname,
-        const std::string &_quotechar,
-        const std::string &_sep,
-        const std::vector<std::string> &_time_formats,
-        const std::vector<std::string> &_categorical_names,
-        const std::vector<std::string> &_join_key_names,
-        const std::vector<std::string> &_numerical_names,
-        const std::vector<std::string> &_target_names,
-        const std::vector<std::string> &_time_stamp_names,
-        const std::vector<std::string> &_unused_float_names,
-        const std::vector<std::string> &_unused_string_names );
 
     /// Parses int columns.
     void from_json(
@@ -661,10 +716,35 @@ class DataFrame
         const std::vector<std::string> &_names,
         const std::vector<std::string> &_time_formats );
 
+    /// Builds a dataframe from a reader.
+    void from_reader(
+        const std::shared_ptr<io::Reader> &_reader,
+        const std::string &_fname,
+        const size_t _skip,
+        const std::vector<std::string> &_time_formats,
+        const std::vector<std::string> &_categorical_names,
+        const std::vector<std::string> &_join_key_names,
+        const std::vector<std::string> &_numerical_names,
+        const std::vector<std::string> &_target_names,
+        const std::vector<std::string> &_time_stamp_names,
+        const std::vector<std::string> &_unused_float_names,
+        const std::vector<std::string> &_unused_string_names );
+
     /// Returns the colnames of a vector of columns
     template <class T>
-    Poco::JSON::Array get_colnames(
+    Poco::JSON::Array::Ptr get_colnames(
         const std::vector<Column<T>> &_columns ) const;
+
+    /// Returns the colnames, roles and units of columns.
+    std::tuple<
+        std::vector<std::string>,
+        std::vector<std::string>,
+        std::vector<std::string>>
+    get_headers() const;
+
+    /// Represents the first _max rows as a set of rows.
+    std::vector<std::vector<std::string>> get_rows(
+        const std::int32_t _max_rows ) const;
 
     /// Returns the units of a vector of columns
     template <class T>
@@ -672,7 +752,7 @@ class DataFrame
 
     /// Loads columns.
     template <class T>
-    std::vector<Column<T>> load_matrices(
+    std::vector<Column<T>> load_columns(
         const std::string &_path, const std::string &_prefix ) const;
 
     /// Creates a vector of vectors of type T.
@@ -695,13 +775,12 @@ class DataFrame
         const std::string &_prefix ) const;
 
    private:
-    /// Custom string conversions (produces more beautiful numbers than
-    /// std::to_string)
-    std::string to_string( const Float &_val ) const
+    /// Records the current time as the last time something was changed.
+    void update_last_change()
     {
-        std::ostringstream stream;
-        stream << _val;
-        return stream.str();
+        const auto now = Poco::Timestamp();
+        last_change_ = Poco::DateTimeFormatter::format(
+            now, Poco::DateTimeFormat::ISO8601_FRAC_FORMAT );
     }
 
     // -------------------------------
@@ -721,6 +800,9 @@ class DataFrame
 
     /// Maps integers to names of join keys
     std::shared_ptr<Encoding> join_keys_encoding_;
+
+    /// The last time something was changed that is relevant to the pipeline.
+    std::string last_change_;
 
     /// Name of the data frame
     std::string name_;
@@ -790,7 +872,7 @@ ULong DataFrame::calc_nbytes( const std::vector<Column<T>> &_columns ) const
 // -------------------------------------------------------------------------
 
 template <class T>
-Poco::JSON::Array DataFrame::get_colnames(
+Poco::JSON::Array::Ptr DataFrame::get_colnames(
     const std::vector<Column<T>> &_columns ) const
 {
     std::vector<std::string> colnames;
@@ -800,7 +882,7 @@ Poco::JSON::Array DataFrame::get_colnames(
             colnames.push_back( col.name() );
         } );
 
-    return JSON::vector_to_array( colnames );
+    return JSON::vector_to_array_ptr( colnames );
 }
 
 // -------------------------------------------------------------------------
@@ -822,10 +904,10 @@ Poco::JSON::Array DataFrame::get_units(
 // ----------------------------------------------------------------------------
 
 template <class T>
-std::vector<Column<T>> DataFrame::load_matrices(
+std::vector<Column<T>> DataFrame::load_columns(
     const std::string &_path, const std::string &_prefix ) const
 {
-    std::vector<Column<T>> matrices;
+    std::vector<Column<T>> columns;
 
     for ( size_t i = 0; true; ++i )
         {
@@ -840,10 +922,10 @@ std::vector<Column<T>> DataFrame::load_matrices(
 
             col.load( fname );
 
-            matrices.push_back( col );
+            columns.push_back( col );
         }
 
-    return matrices;
+    return columns;
 }
 
 // ----------------------------------------------------------------------------

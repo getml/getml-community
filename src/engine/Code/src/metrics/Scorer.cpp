@@ -75,8 +75,6 @@ Poco::JSON::Object Scorer::score(
 
     for ( const auto& name : names )
         {
-            // TODO: Replace nullptr with &comm() after multithreading is
-            // implemented.
             const auto metric = metrics::MetricParser::parse( name, nullptr );
 
             const auto scores = metric->score( _yhat, _y );

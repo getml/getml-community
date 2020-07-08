@@ -38,18 +38,19 @@ void test3_linear_regression_sparse()
         }
 
     const auto impl = std::make_shared<predictors::PredictorImpl>(
+        std::vector<size_t>( {3} ),
         std::vector<std::string>( {"categorical"} ),
-        std::vector<std::string>(),
-        3 );
+        std::vector<std::string>() );
 
     impl->fit_encodings( X_categorical );
 
     X_categorical = impl->transform_encodings( X_categorical );
 
-    const auto hyperparams =
-        std::make_shared<predictors::LinearHyperparams>( 1e-12, 0.9 );
+    auto hyperparams = Poco::JSON::Object();
+    hyperparams.set( "reg_lambda_", 1e-10 );
+    hyperparams.set( "learning_rate_", 0.9 );
 
-    auto lin_reg = predictors::LinearRegression( hyperparams, impl );
+    auto lin_reg = predictors::LinearRegression( hyperparams, impl, {} );
 
     lin_reg.fit(
         std::shared_ptr<const logging::AbstractLogger>(),
@@ -61,10 +62,10 @@ void test3_linear_regression_sparse()
 
     for ( size_t i = 0; i < yhat->size(); ++i )
         {
-            /*  std::cout << "target: " << y->at( i )
-                        << ", prediction: " << yhat->at( i ) << std::endl;*/
+            /* std::cout << "target: " << y->at( i )
+                       << ", prediction: " << yhat->at( i ) << std::endl;*/
 
-            assert_true( std::abs( y->at( i ) - yhat->at( i ) < 10.0 ) );
+            assert_true( std::abs( y->at( i ) - yhat->at( i ) < 300.0 ) );
         }
 
     // ------------------------------------------------------------------------

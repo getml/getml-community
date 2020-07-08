@@ -8,6 +8,9 @@ namespace io
 class Reader
 {
    public:
+    /// Returns the colnames.
+    virtual std::vector<std::string> colnames() = 0;
+
     /// Whether the end has been reached.
     virtual bool eof() const = 0;
 

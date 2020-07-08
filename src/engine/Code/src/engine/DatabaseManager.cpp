@@ -6,10 +6,85 @@ namespace handlers
 {
 // ----------------------------------------------------------------------------
 
-void DatabaseManager::drop_table(
-    const std::string& _name, Poco::Net::StreamSocket* _socket )
+void DatabaseManager::copy_table(
+    const Poco::JSON::Object& _cmd, Poco::Net::StreamSocket* _socket )
 {
-    connector()->drop_table( _name );
+    // -----------------------------------------------------------------------
+
+    const auto source_conn_id =
+        JSON::get_value<std::string>( _cmd, "source_conn_id_" );
+
+    const auto source_table_name =
+        JSON::get_value<std::string>( _cmd, "source_table_" );
+
+    const auto target_conn_id =
+        JSON::get_value<std::string>( _cmd, "target_conn_id_" );
+
+    const auto target_table_name =
+        JSON::get_value<std::string>( _cmd, "target_table_" );
+
+    // -----------------------------------------------------------------------
+
+    if ( source_conn_id == target_conn_id )
+        {
+            throw std::invalid_argument(
+                "Tables must be copied from different database connections!" );
+        }
+
+    // -----------------------------------------------------------------------
+
+    const auto source_conn = connector( source_conn_id );
+
+    assert_true( source_conn );
+
+    const auto target_conn = connector( target_conn_id );
+
+    assert_true( target_conn );
+
+    // -----------------------------------------------------------------------
+    // Infer the table schema from the source connection and create an
+    // appropriate table in the target database.
+
+    const auto stmt = database::DatabaseSniffer::sniff(
+        source_conn,
+        target_conn->dialect(),
+        target_conn->describe(),
+        source_table_name,
+        target_table_name );
+
+    target_conn->execute( stmt );
+
+    // -----------------------------------------------------------------------
+    // Transfer the table contents into the newly created table.
+
+    const auto colnames = source_conn->get_colnames( source_table_name );
+
+    const auto iterator =
+        source_conn->select( colnames, source_table_name, "" );
+
+    auto reader = database::DatabaseReader( iterator );
+
+    target_conn->read( target_table_name, 0, &reader );
+
+    // -----------------------------------------------------------------------
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    post_tables();
+
+    // -----------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+void DatabaseManager::drop_table(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    const auto conn_id = JSON::get_value<std::string>( _cmd, "conn_id_" );
+
+    connector( conn_id )->drop_table( _name );
 
     post_tables();
 
@@ -18,11 +93,27 @@ void DatabaseManager::drop_table(
 
 // ----------------------------------------------------------------------------
 
-void DatabaseManager::execute( Poco::Net::StreamSocket* _socket )
+void DatabaseManager::describe_connection(
+    const std::string& _name, Poco::Net::StreamSocket* _socket ) const
+{
+    auto description = connector( _name )->describe();
+
+    description.set( "conn_id", _name );
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    communication::Sender::send_string(
+        jsonutils::JSON::stringify( description ), _socket );
+}
+
+// ----------------------------------------------------------------------------
+
+void DatabaseManager::execute(
+    const std::string& _name, Poco::Net::StreamSocket* _socket )
 {
     const auto query = communication::Receiver::recv_string( _socket );
 
-    connector()->execute( query );
+    connector( _name )->execute( query );
 
     post_tables();
 
@@ -36,7 +127,7 @@ void DatabaseManager::get(
 {
     const auto query = communication::Receiver::recv_string( _socket );
 
-    auto db_iterator = connector()->select( query );
+    auto db_iterator = connector( _name )->select( query );
 
     const auto colnames = db_iterator->colnames();
 
@@ -65,9 +156,13 @@ void DatabaseManager::get(
 // ------------------------------------------------------------------------
 
 void DatabaseManager::get_colnames(
-    const std::string& _name, Poco::Net::StreamSocket* _socket )
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
 {
-    const auto colnames = connector()->get_colnames( _name );
+    const auto conn_id = JSON::get_value<std::string>( _cmd, "conn_id_" );
+
+    const auto colnames = connector( conn_id )->get_colnames( _name );
 
     std::string array = "[";
 
@@ -103,7 +198,9 @@ void DatabaseManager::get_content(
 
     const auto start = JSON::get_value<Int>( _cmd, "start_" );
 
-    auto obj = connector()->get_content( _name, draw, start, length );
+    const auto conn_id = JSON::get_value<std::string>( _cmd, "conn_id_" );
+
+    auto obj = connector( conn_id )->get_content( _name, draw, start, length );
 
     communication::Sender::send_string( "Success!", _socket );
 
@@ -113,24 +210,72 @@ void DatabaseManager::get_content(
 // ------------------------------------------------------------------------
 
 void DatabaseManager::get_nrows(
-    const std::string& _name, Poco::Net::StreamSocket* _socket )
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
 {
-    const std::int32_t nrows = connector()->get_nrows( _name );
+    const auto conn_id = JSON::get_value<std::string>( _cmd, "conn_id_" );
+
+    const std::int32_t nrows = connector( conn_id )->get_nrows( _name );
 
     communication::Sender::send_string( "Success!", _socket );
 
     communication::Sender::send( sizeof( std::int32_t ), &nrows, _socket );
 }
 
-// ------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
-void DatabaseManager::list_tables( Poco::Net::StreamSocket* _socket )
+void DatabaseManager::list_connections( Poco::Net::StreamSocket* _socket ) const
 {
-    const auto array = post_tables();
+    std::string str = "[";
+
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    for ( auto& [key, value] : connector_map_ )
+        {
+            str += "\"" + key + "\",";
+        }
+
+    if ( connector_map_.size() == 0 )
+        {
+            str += "]";
+        }
+    else
+        {
+            str.back() = ']';
+        }
 
     communication::Sender::send_string( "Success!", _socket );
 
-    communication::Sender::send_string( array, _socket );
+    communication::Sender::send_string( str, _socket );
+}
+
+// ------------------------------------------------------------------------
+
+void DatabaseManager::list_tables(
+    const std::string& _name, Poco::Net::StreamSocket* _socket )
+{
+    std::string str = "[";
+
+    const auto tables = connector( _name )->list_tables();
+
+    for ( const auto& table : tables )
+        {
+            str += "\"" + table + "\",";
+        }
+
+    if ( tables.size() == 0 )
+        {
+            str += "]";
+        }
+    else
+        {
+            str.back() = ']';
+        }
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    communication::Sender::send_string( str, _socket );
 }
 
 // ----------------------------------------------------------------------------
@@ -138,11 +283,13 @@ void DatabaseManager::list_tables( Poco::Net::StreamSocket* _socket )
 void DatabaseManager::new_db(
     const Poco::JSON::Object& _cmd, Poco::Net::StreamSocket* _socket )
 {
+    const auto conn_id = JSON::get_value<std::string>( _cmd, "conn_id_" );
+
     const auto password = communication::Receiver::recv_string( _socket );
 
     multithreading::WriteLock write_lock( read_write_lock_ );
 
-    connector_ = database::DatabaseParser::parse( _cmd, password );
+    connector_map_[conn_id] = database::DatabaseParser::parse( _cmd, password );
 
     write_lock.unlock();
 
@@ -153,29 +300,22 @@ void DatabaseManager::new_db(
 
 // ----------------------------------------------------------------------------
 
-std::string DatabaseManager::post_tables()
+void DatabaseManager::post_tables()
 {
-    const auto tables = connector()->list_tables();
+    Poco::JSON::Object obj;
 
-    std::string array = "[";
+    multithreading::ReadLock read_lock( read_write_lock_ );
 
-    for ( auto& table : tables )
+    for ( const auto [name, conn] : connector_map_ )
         {
-            array += std::string( "\"" ) + table + "\",";
+            assert_true( conn );
+
+            const auto tables = conn->list_tables();
+
+            obj.set( name, jsonutils::JSON::vector_to_array_ptr( tables ) );
         }
 
-    if ( array.size() > 1 )
-        {
-            array.back() = ']';
-        }
-    else
-        {
-            array += ']';
-        }
-
-    monitor_->send( "postdatabasetables", array );
-
-    return array;
+    monitor_->send( "postdatabasetables", jsonutils::JSON::stringify( obj ) );
 }
 
 // ----------------------------------------------------------------------------
@@ -187,10 +327,21 @@ void DatabaseManager::read_csv(
 {
     // --------------------------------------------------------------------
 
+    auto colnames = std::optional<std::vector<std::string>>();
+
+    if ( _cmd.has( "colnames_" ) )
+        {
+            colnames = JSON::array_to_vector<std::string>(
+                JSON::get_array( _cmd, "colnames_" ) );
+        }
+
+    const auto conn_id = JSON::get_value<std::string>( _cmd, "conn_id_" );
+
     const auto fnames = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "fnames_" ) );
 
-    const auto header = JSON::get_value<bool>( _cmd, "header_" );
+    const auto num_lines_read =
+        JSON::get_value<size_t>( _cmd, "num_lines_read_" );
 
     const auto quotechar = JSON::get_value<std::string>( _cmd, "quotechar_" );
 
@@ -212,13 +363,21 @@ void DatabaseManager::read_csv(
                 "The separator (sep) must consist of exactly one character!" );
         }
 
+    auto limit = num_lines_read > 0 ? num_lines_read + skip : num_lines_read;
+
+    if ( !colnames && limit > 0 )
+        {
+            ++limit;
+        }
+
     // --------------------------------------------------------------------
 
     for ( const auto& fname : fnames )
         {
-            auto reader = io::CSVReader( fname, quotechar[0], sep[0] );
+            auto reader =
+                io::CSVReader( colnames, fname, limit, quotechar[0], sep[0] );
 
-            connector()->read( _name, header, skip, &reader );
+            connector( conn_id )->read( _name, skip, &reader );
 
             logger().log( "Read '" + fname + "'." );
         }
@@ -232,6 +391,80 @@ void DatabaseManager::read_csv(
 
 // ----------------------------------------------------------------------------
 
+void DatabaseManager::read_s3(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    // --------------------------------------------------------------------
+
+#if ( defined( _WIN32 ) || defined( _WIN64 ) )
+    throw std::invalid_argument( "S3 is not supported on Windows!" );
+#else
+
+    // --------------------------------------------------------------------
+
+    const auto bucket = JSON::get_value<std::string>( _cmd, "bucket_" );
+
+    auto colnames = std::optional<std::vector<std::string>>();
+
+    if ( _cmd.has( "colnames_" ) )
+        {
+            colnames = JSON::array_to_vector<std::string>(
+                JSON::get_array( _cmd, "colnames_" ) );
+        }
+
+    const auto conn_id = JSON::get_value<std::string>( _cmd, "conn_id_" );
+
+    const auto keys =
+        JSON::array_to_vector<std::string>( JSON::get_array( _cmd, "keys_" ) );
+
+    const auto num_lines_read =
+        JSON::get_value<size_t>( _cmd, "num_lines_read_" );
+
+    const auto region = JSON::get_value<std::string>( _cmd, "region_" );
+
+    const auto sep = JSON::get_value<std::string>( _cmd, "sep_" );
+
+    const auto skip = JSON::get_value<size_t>( _cmd, "skip_" );
+
+    // --------------------------------------------------------------------
+
+    if ( sep.size() != 1 )
+        {
+            throw std::invalid_argument(
+                "The separator (sep) must consist of exactly one character!" );
+        }
+
+    auto limit = num_lines_read > 0 ? num_lines_read + skip : num_lines_read;
+
+    if ( !colnames && limit > 0 )
+        {
+            ++limit;
+        }
+
+    // --------------------------------------------------------------------
+
+    for ( const auto& key : keys )
+        {
+            auto reader =
+                io::S3Reader( bucket, colnames, key, limit, region, sep[0] );
+
+            connector( conn_id )->read( _name, skip, &reader );
+
+            logger().log( "Read '" + key + "'." );
+        }
+
+    // --------------------------------------------------------------------
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    // --------------------------------------------------------------------
+#endif
+}
+
+// ----------------------------------------------------------------------------
+
 void DatabaseManager::sniff_csv(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,
@@ -239,10 +472,18 @@ void DatabaseManager::sniff_csv(
 {
     // --------------------------------------------------------------------
 
+    auto colnames = std::optional<std::vector<std::string>>();
+
+    if ( _cmd.has( "colnames_" ) )
+        {
+            colnames = JSON::array_to_vector<std::string>(
+                JSON::get_array( _cmd, "colnames_" ) );
+        }
+
+    const auto conn_id = JSON::get_value<std::string>( _cmd, "conn_id_" );
+
     const auto fnames = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "fnames_" ) );
-
-    const auto header = JSON::get_value<bool>( _cmd, "header_" );
 
     const auto num_lines_sniffed =
         JSON::get_value<size_t>( _cmd, "num_lines_sniffed_" );
@@ -255,7 +496,17 @@ void DatabaseManager::sniff_csv(
 
     const auto dialect = _cmd.has( "dialect_" )
                              ? JSON::get_value<std::string>( _cmd, "dialect_" )
-                             : connector()->dialect();
+                             : connector( conn_id )->dialect();
+
+    const auto conn_description = _cmd.has( "dialect_" )
+                                      ? Poco::JSON::Object()
+                                      : connector( conn_id )->describe();
+
+    if ( _cmd.has( "dialect_" ) && dialect != "python" )
+        {
+            throw std::invalid_argument(
+                "If you explicitly pass a dialect, it must be 'python'!" );
+        }
 
     // --------------------------------------------------------------------
 
@@ -274,9 +525,10 @@ void DatabaseManager::sniff_csv(
     // --------------------------------------------------------------------
 
     auto sniffer = io::CSVSniffer(
+        colnames,
+        conn_description,
         dialect,
         fnames,
-        header,
         num_lines_sniffed,
         quotechar[0],
         sep[0],
@@ -296,20 +548,107 @@ void DatabaseManager::sniff_csv(
 
 // ----------------------------------------------------------------------------
 
-void DatabaseManager::sniff_table(
-    const std::string& _table_name, Poco::Net::StreamSocket* _socket ) const
+void DatabaseManager::sniff_s3(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket ) const
 {
-    if ( !connector_ )
+    // --------------------------------------------------------------------
+
+#if ( defined( _WIN32 ) || defined( _WIN64 ) )
+    throw std::invalid_argument( "S3 is not supported on Windows!" );
+#else
+
+    // --------------------------------------------------------------------
+
+    const auto bucket = JSON::get_value<std::string>( _cmd, "bucket_" );
+
+    auto colnames = std::optional<std::vector<std::string>>();
+
+    if ( _cmd.has( "colnames_" ) )
         {
-            throw std::invalid_argument( "No connector set!" );
+            colnames = JSON::array_to_vector<std::string>(
+                JSON::get_array( _cmd, "colnames_" ) );
         }
 
-    const auto kwargs =
-        database::DatabaseSniffer::sniff( connector_, _table_name );
+    const auto conn_id = JSON::get_value<std::string>( _cmd, "conn_id_" );
+
+    const auto keys =
+        JSON::array_to_vector<std::string>( JSON::get_array( _cmd, "keys_" ) );
+
+    const auto num_lines_sniffed =
+        JSON::get_value<size_t>( _cmd, "num_lines_sniffed_" );
+
+    const auto region = JSON::get_value<std::string>( _cmd, "region_" );
+
+    const auto sep = JSON::get_value<std::string>( _cmd, "sep_" );
+
+    const auto skip = JSON::get_value<size_t>( _cmd, "skip_" );
+
+    const auto dialect = _cmd.has( "dialect_" )
+                             ? JSON::get_value<std::string>( _cmd, "dialect_" )
+                             : connector( conn_id )->dialect();
+
+    const auto conn_description = _cmd.has( "dialect_" )
+                                      ? Poco::JSON::Object()
+                                      : connector( conn_id )->describe();
+
+    if ( _cmd.has( "dialect_" ) && dialect != "python" )
+        {
+            throw std::invalid_argument(
+                "If you explicitly pass a dialect, it must be 'python'!" );
+        }
+
+    // --------------------------------------------------------------------
+
+    if ( sep.size() != 1 )
+        {
+            throw std::invalid_argument(
+                "The separator (sep) must consist of exactly one character!" );
+        }
+
+    // --------------------------------------------------------------------
+
+    auto sniffer = io::S3Sniffer(
+        bucket,
+        colnames,
+        conn_description,
+        dialect,
+        keys,
+        num_lines_sniffed,
+        region,
+        sep[0],
+        skip,
+        _name );
+
+    const auto create_table_statement = sniffer.sniff();
+
+    // --------------------------------------------------------------------
 
     communication::Sender::send_string( "Success!", _socket );
 
-    communication::Sender::send_string( kwargs, _socket );
+    communication::Sender::send_string( create_table_statement, _socket );
+
+    // --------------------------------------------------------------------
+
+#endif
+}
+
+// ----------------------------------------------------------------------------
+
+void DatabaseManager::sniff_table(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket ) const
+{
+    const auto conn_id = JSON::get_value<std::string>( _cmd, "conn_id_" );
+
+    const auto roles = database::DatabaseSniffer::sniff(
+        connector( conn_id ), "python", Poco::JSON::Object(), _name, _name );
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    communication::Sender::send_string( roles, _socket );
 }
 
 // ----------------------------------------------------------------------------

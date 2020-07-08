@@ -10,6 +10,7 @@ class Communicator
    public:
     Communicator( size_t _num_threads )
         : barrier_( _num_threads ),
+          checkpoint_( true ),
           num_threads_( _num_threads ),
           num_threads_left_( _num_threads )
     {
@@ -22,6 +23,23 @@ class Communicator
 
     /// Waits until all threads have reached this point
     inline void barrier() { barrier_.wait(); }
+
+    /// Forces all threads to throw an exception, if any thread does not pass
+    /// true.
+    inline void checkpoint( const bool _ok )
+    {
+        if ( !_ok )
+            {
+                checkpoint_ = false;
+            }
+
+        barrier();
+
+        if ( !checkpoint_ )
+            {
+                throw std::runtime_error( "Interrupted." );
+            }
+    }
 
     /// Accessor to the shared data
     template <class T>
@@ -74,6 +92,9 @@ class Communicator
    private:
     /// Barrier used for the communicator
     Barrier barrier_;
+
+    /// Whether we are allowed to pass the checkpoint.
+    std::atomic<bool> checkpoint_;
 
     /// Storage for the global data. Note that
     /// sizeof(char) is 1 by definition.

@@ -20,6 +20,8 @@ int main( int argc, char* argv[] )
                 "you have provided in your config.json." );
         }
 
+    engine::handlers::FileHandler::delete_temp_dir();
+
     // -------------------------------------------
 
     const auto monitor =
@@ -32,8 +34,7 @@ int main( int argc, char* argv[] )
     // Instruct the user to log in and wait for the token.
 
     std::cout << "getML - Automated Machine Learning and Automated Feature"
-              << " Engineering for Relational Data and Time Series."
-              << std::endl;
+              << " Learning for Relational Data and Time Series." << std::endl;
 
     std::cout << "version: " << GETML_VERSION << std::endl << std::endl;
 
@@ -57,13 +58,6 @@ int main( int argc, char* argv[] )
     license_checker->receive_token( "main" );
 
     // -------------------------------------------
-    // Tell the monitor the process ID of the engine.
-    // This is necessary so the monitor can check whether the engine is still
-    // alive.
-
-    monitor->send( "postpid", engine::Process::get_process_id() );
-
-    // -------------------------------------------
     // Check whether the port is currently occupied
 
     const auto [status, response] = monitor->send( "checkengineport", "" );
@@ -83,14 +77,21 @@ int main( int argc, char* argv[] )
 
     // -------------------------------------------
 
-    const auto multirel_models = std::make_shared<
-        engine::handlers::MultirelModelManager::ModelMapType>();
-
     const auto data_frames = std::make_shared<
         std::map<std::string, engine::containers::DataFrame>>();
 
-    const auto relboost_models = std::make_shared<
-        engine::handlers::RelboostModelManager::ModelMapType>();
+    const auto hyperopts =
+        std::make_shared<std::map<std::string, engine::hyperparam::Hyperopt>>();
+
+    const auto pipelines =
+        std::make_shared<engine::handlers::PipelineManager::PipelineMapType>();
+
+    // -------------------------------------------
+
+    const auto fe_tracker = std::make_shared<engine::dependency::FETracker>();
+
+    const auto pred_tracker =
+        std::make_shared<engine::dependency::PredTracker>();
 
     // -------------------------------------------
 
@@ -101,19 +102,6 @@ int main( int argc, char* argv[] )
 
     const auto database_manager =
         std::make_shared<engine::handlers::DatabaseManager>( logger, monitor );
-
-    const auto multirel_model_manager =
-        std::make_shared<engine::handlers::MultirelModelManager>(
-            categories,
-            database_manager,
-            data_frames,
-            join_keys_encoding,
-            license_checker,
-            logger,
-            multirel_models,
-            monitor,
-            project_mtx,
-            read_write_lock );
 
     const auto data_frame_manager =
         std::make_shared<engine::handlers::DataFrameManager>(
@@ -126,33 +114,41 @@ int main( int argc, char* argv[] )
             monitor,
             read_write_lock );
 
-    const auto relboost_model_manager =
-        std::make_shared<engine::handlers::RelboostModelManager>(
+    const auto hyperopt_manager =
+        std::make_shared<engine::handlers::HyperoptManager>(
+            hyperopts, monitor, project_mtx, read_write_lock );
+
+    const auto pipeline_manager =
+        std::make_shared<engine::handlers::PipelineManager>(
             categories,
             database_manager,
             data_frames,
+            fe_tracker,
             join_keys_encoding,
             license_checker,
             logger,
-            relboost_models,
             monitor,
+            pipelines,
+            pred_tracker,
             project_mtx,
             read_write_lock );
 
     const auto project_manager =
         std::make_shared<engine::handlers::ProjectManager>(
-            multirel_models,
             categories,
             data_frame_manager,
             data_frames,
+            fe_tracker,
             join_keys_encoding,
+            hyperopts,
             license_checker,
             logger,
             monitor,
             options,
+            pipelines,
+            pred_tracker,
             project_mtx,
-            read_write_lock,
-            relboost_models );
+            read_write_lock );
 
     // -------------------------------------------
     // This is where the actual communication begins
@@ -168,12 +164,12 @@ int main( int argc, char* argv[] )
 
     Poco::Net::TCPServer srv(
         new engine::srv::ServerConnectionFactoryImpl(
-            multirel_model_manager,
             database_manager,
             data_frame_manager,
+            hyperopt_manager,
             logger,
-            relboost_model_manager,
             options,
+            pipeline_manager,
             project_manager,
             shutdown ),
         server_socket );
@@ -188,6 +184,10 @@ int main( int argc, char* argv[] )
         {
             std::this_thread::sleep_for( std::chrono::seconds( 1 ) );
         }
+
+    // -------------------------------------------
+
+    engine::handlers::FileHandler::delete_temp_dir();
 
     // -------------------------------------------
 

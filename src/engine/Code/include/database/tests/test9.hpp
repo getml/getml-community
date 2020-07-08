@@ -26,7 +26,7 @@ void test9( std::filesystem::path _test_path )
     connectionObject.set( "user_", "testbert" );
 
     // Customized time format used within the database.
-    const std::vector<std::string> timeFormats = {"%Y-%m-%d %H:%M:%S"};
+    const std::vector<std::string> timeFormats = { "%Y-%m-%d %H:%M:%S" };
 
     // ---------------------------------------------------------------
 
@@ -34,9 +34,11 @@ void test9( std::filesystem::path _test_path )
         database::Postgres( connectionObject, "testbert", timeFormats );
 
     auto population_sniffer = io::CSVSniffer(
+        std::vector<std::string>(
+            { "column_01", "join_key", "time_stamp", "targets" } ),
+        Poco::JSON::Object(),
         "postgres",
-        {_test_path.string(), _test_path.string()},
-        true,
+        { _test_path.string(), _test_path.string() },
         100,
         '\"',
         ',',
@@ -49,17 +51,25 @@ void test9( std::filesystem::path _test_path )
 
     postgres_db.execute( population_statement );
 
-    auto reader = io::CSVReader( _test_path.string(), '\"', ',' );
+    auto reader = io::CSVReader(
+        std::vector<std::string>(
+            { "column_01", "join_key", "time_stamp", "targets" } ),
+        _test_path.string(),
+        0,
+        '\"',
+        ',' );
 
     // We read in the header, which should be parsed as NULL values.
-    postgres_db.read( "POPULATION", false, 0, &reader );
+    postgres_db.read( "POPULATION", 0, &reader );
 
     auto it = postgres_db.select(
-        {"column_01", "join_key", "time_stamp", "targets"}, "POPULATION", "" );
+        { "column_01", "join_key", "time_stamp", "targets" },
+        "POPULATION",
+        "" );
 
     // Header line (read in and formatted):
     assert_true( std::isnan( it->get_double() ) );
-    assert_true( it->get_string() == "NULL" );
+    assert_true( std::isnan( it->get_double() ) );
     assert_true( std::isnan( it->get_time_stamp() ) );
     assert_true( std::isnan( it->get_double() ) );
 

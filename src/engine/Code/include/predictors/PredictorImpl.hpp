@@ -12,31 +12,13 @@ class PredictorImpl
 
    public:
     PredictorImpl(
+        const std::vector<size_t>& _num_autofeatures,
         const std::vector<std::string>& _categorical_colnames,
-        const std::vector<std::string>& _numerical_colnames,
-        const size_t _num_autofeatures )
-        : categorical_colnames_( _categorical_colnames ),
-          numerical_colnames_( _numerical_colnames ),
-          num_autofeatures_( _num_autofeatures ){};
+        const std::vector<std::string>& _numerical_colnames );
 
-    PredictorImpl( const Poco::JSON::Object& _obj )
-        : categorical_colnames_( JSON::array_to_vector<std::string>(
-              JSON::get_array( _obj, "categorical_colnames_" ) ) ),
-          numerical_colnames_( JSON::array_to_vector<std::string>(
-              JSON::get_array( _obj, "numerical_colnames_" ) ) ),
-          num_autofeatures_(
-              JSON::get_value<size_t>( _obj, "num_autofeatures_" ) )
-    {
-        auto arr = JSON::get_array( _obj, "encodings_" );
+    PredictorImpl( const Poco::JSON::Object& _obj );
 
-        for ( size_t i = 0; i < arr->size(); ++i )
-            {
-                encodings_.push_back( Encoding(
-                    *arr->getObject( static_cast<unsigned int>( i ) ) ) );
-            }
-    };
-
-    ~PredictorImpl() = default;
+    ~PredictorImpl();
 
     // -----------------------------------------
 
@@ -68,10 +50,8 @@ class PredictorImpl
         const std::vector<CFloatColumn>& _X_numerical ) const;
 
     /// Select the columns that have made the cut during the feature selection.
-    void select_cols(
-        const size_t _n_selected,
-        const size_t _n_autofeatures,
-        const std::vector<size_t>& _index );
+    void select_features(
+        const size_t _n_selected, const std::vector<size_t>& _index );
 
     /// Saves the predictor impl as a JSON.
     void save( const std::string& _fname ) const;
@@ -86,6 +66,12 @@ class PredictorImpl
     // -----------------------------------------
 
    public:
+    /// Trivial (const) getter.
+    const std::vector<std::vector<size_t>>& autofeatures() const
+    {
+        return autofeatures_;
+    }
+
     /// Trivial (const) getter.
     const std::vector<std::string>& categorical_colnames() const
     {
@@ -111,7 +97,7 @@ class PredictorImpl
     /// The number of columns in CSR Matrix resulting from this Impl.
     size_t ncols_csr() const
     {
-        size_t ncols = num_autofeatures_ + numerical_colnames_.size();
+        size_t ncols = num_autofeatures() + numerical_colnames_.size();
 
         for ( const auto& enc : encodings_ )
             {
@@ -122,10 +108,18 @@ class PredictorImpl
     }
 
     /// Trivial (const) getter.
-    const size_t num_autofeatures() const { return num_autofeatures_; }
+    const size_t num_autofeatures() const
+    {
+        size_t n = 0;
+        for ( const auto& vec : autofeatures_ )
+            {
+                n += vec.size();
+            }
+        return n;
+    }
 
     /// Trivial (const) getter.
-    const size_t num_columns() const
+    const size_t num_manual_features() const
     {
         return categorical_colnames_.size() + numerical_colnames_.size();
     }
@@ -134,11 +128,12 @@ class PredictorImpl
 
    private:
     /// Select columns that have made the cut during the feature selection.
-    void select_cols(
+    template <class T>
+    std::vector<T> select_cols(
         const size_t _n_selected,
         const std::vector<size_t>& _index,
         const size_t _ix_begin,
-        std::vector<std::string>* _colnames ) const;
+        const std::vector<T>& _colnames ) const;
 
     /// Extracts the impl as a JSON.
     std::string to_json() const { return JSON::stringify( to_json_obj() ); }
@@ -146,6 +141,9 @@ class PredictorImpl
     // -----------------------------------------
 
    private:
+    /// The index of the autofeatures used.
+    std::vector<std::vector<size_t>> autofeatures_;
+
     /// Names of the categorical columns taken from the population table as
     /// features.
     std::vector<std::string> categorical_colnames_;
@@ -156,9 +154,6 @@ class PredictorImpl
     /// Names of the numerical columns taken from the population table as
     /// features.
     std::vector<std::string> numerical_colnames_;
-
-    /// The number of autofeatures used.
-    size_t num_autofeatures_;
 
     // -----------------------------------------
 };
@@ -192,6 +187,39 @@ CSRMatrix<DataType, IndicesType, IndptrType> PredictorImpl::make_csr(
 
     return csr_mat;
 }
+
+// ----------------------------------------------------------------------------
+
+template <class T>
+std::vector<T> PredictorImpl::select_cols(
+    const size_t _n_selected,
+    const std::vector<size_t>& _index,
+    const size_t _ix_begin,
+    const std::vector<T>& _cols ) const
+{
+    std::vector<T> selected;
+
+    const auto begin = _index.begin();
+
+    const auto end = _index.begin() + _n_selected;
+
+    for ( size_t i = 0; i < _cols.size(); ++i )
+        {
+            const auto is_included = [_ix_begin, i]( size_t ix ) {
+                return ix == _ix_begin + i;
+            };
+
+            const auto it = std::find_if( begin, end, is_included );
+
+            if ( it != end )
+                {
+                    selected.push_back( _cols[i] );
+                }
+        }
+
+    return selected;
+}
+
 // ----------------------------------------------------------------------------
 }  // namespace predictors
 

@@ -19,7 +19,7 @@
 
 // Tests for postgres
 #if ( defined( _WIN32 ) || defined( _WIN64 ) )
-// postgres is not supported in windows
+// postgres is not supported on windows
 #else
 #include "database/tests/test8.hpp"
 #include "database/tests/test9.hpp"
@@ -39,5 +39,12 @@
 #include "database/tests/test19.hpp"
 #include "database/tests/test20.hpp"
 #include "database/tests/test21.hpp"
+
+#if ( defined( _WIN32 ) || defined( _WIN64 ) )
+// postgres is not supported on windows
+#else
+// Copying from one database to another
+#include "database/tests/test22.hpp"
+#endif
 
 #endif  // DATABASE_TESTS_TESTS_HPP_

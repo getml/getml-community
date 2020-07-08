@@ -238,7 +238,7 @@ std::string Sqlite3Iterator::make_sql(
                 }
         }
 
-    sql += " FROM " + _tname;
+    sql += " FROM \"" + _tname + "\"";
 
     if ( _where != "" )
         {

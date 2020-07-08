@@ -133,7 +133,7 @@ class MySQLIterator : public Iterator
     unsigned int colnum_;
 
     /// The connection used.
-    const std::shared_ptr<MYSQL>& connection_;
+    const std::shared_ptr<MYSQL> connection_;
 
     /// The total number of columns.
     unsigned int num_cols_;

@@ -81,39 +81,41 @@ DataFrame::DataFrame(
 
 // ----------------------------------------------------------------------------
 
-std::vector<std::shared_ptr<containers::Index>> DataFrame::create_indices(
-    const std::vector<Column<Int>>& _join_keys )
+std::shared_ptr<Index> DataFrame::create_index( const Column<Int>& _join_key )
 {
-    std::vector<std::shared_ptr<containers::Index>> indices;
+    const auto new_index = std::make_shared<Index>();
 
-    for ( size_t i = 0; i < _join_keys.size(); ++i )
+    for ( size_t ix = 0; ix < _join_key.nrows_; ++ix )
         {
-            containers::Index new_index;
-
-            const auto& current_join_key = _join_keys[i];
-
-            for ( size_t ix_x_perip = 0; ix_x_perip < current_join_key.nrows_;
-                  ++ix_x_perip )
+            if ( _join_key[ix] >= 0 )
                 {
-                    if ( current_join_key[ix_x_perip] >= 0 )
-                        {
-                            auto it =
-                                new_index.find( current_join_key[ix_x_perip] );
+                    const auto it = new_index->find( _join_key[ix] );
 
-                            if ( it == new_index.end() )
-                                {
-                                    new_index[current_join_key[ix_x_perip]] = {
-                                        ix_x_perip};
-                                }
-                            else
-                                {
-                                    it->second.push_back( ix_x_perip );
-                                }
+                    if ( it == new_index->end() )
+                        {
+                            new_index->insert_or_assign(
+                                _join_key[ix], std::vector<size_t>( { ix } ) );
+                        }
+                    else
+                        {
+                            it->second.push_back( ix );
                         }
                 }
+        }
 
-            indices.push_back(
-                std::make_shared<containers::Index>( new_index ) );
+    return new_index;
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<std::shared_ptr<Index>> DataFrame::create_indices(
+    const std::vector<Column<Int>>& _join_keys )
+{
+    std::vector<std::shared_ptr<Index>> indices;
+
+    for ( const auto& jk : _join_keys )
+        {
+            indices.push_back( DataFrame::create_index( jk ) );
         }
 
     return indices;
@@ -125,7 +127,8 @@ DataFrame DataFrame::create_subview(
     const std::string& _name,
     const std::string& _join_key,
     const std::string& _time_stamp,
-    const std::string& _upper_time_stamp ) const
+    const std::string& _upper_time_stamp,
+    const bool _allow_lagged_targets ) const
 {
     // ---------------------------------------------------------------------------
 
@@ -167,12 +170,17 @@ DataFrame DataFrame::create_subview(
                 }
 
             const auto ts = containers::Column<Float>(
-                col.data_,
-                col.name_,
-                col.nrows_,
-                "unit: getml_time_stamp, comparison only" );
+                col.data_, col.name_, col.nrows_, col.unit_ );
 
             numericals_and_time_stamps.push_back( ts );
+        }
+
+    if ( _allow_lagged_targets )
+        {
+            for ( const auto& col : targets_ )
+                {
+                    numericals_and_time_stamps.push_back( col );
+                }
         }
 
     // ---------------------------------------------------------------------------
@@ -182,8 +190,8 @@ DataFrame DataFrame::create_subview(
             return DataFrame(
                 categoricals_,
                 discretes_,
-                {indices_[ix_join_key]},
-                {join_keys_[ix_join_key]},
+                { indices_[ix_join_key] },
+                { join_keys_[ix_join_key] },
                 _name,
                 numericals_and_time_stamps,
                 targets_,
@@ -216,12 +224,12 @@ DataFrame DataFrame::create_subview(
             return DataFrame(
                 categoricals_,
                 discretes_,
-                {indices_[ix_join_key]},
-                {join_keys_[ix_join_key]},
+                { indices_[ix_join_key] },
+                { join_keys_[ix_join_key] },
                 _name,
                 numericals_and_time_stamps,
                 targets_,
-                {time_stamps_[ix_time_stamp]} );
+                { time_stamps_[ix_time_stamp] } );
         }
 
     // ---------------------------------------------------------------------------
@@ -248,12 +256,12 @@ DataFrame DataFrame::create_subview(
     return DataFrame(
         categoricals_,
         discretes_,
-        {indices_[ix_join_key]},
-        {join_keys_[ix_join_key]},
+        { indices_[ix_join_key] },
+        { join_keys_[ix_join_key] },
         _name,
         numericals_and_time_stamps,
         targets_,
-        {time_stamps_[ix_time_stamp], time_stamps_[ix_upper_time_stamp]} );
+        { time_stamps_[ix_time_stamp], time_stamps_[ix_upper_time_stamp] } );
 
     // ---------------------------------------------------------------------------
 }

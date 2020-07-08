@@ -40,13 +40,6 @@ class DecisionTreeNode
     /// Builds the node from a Poco::JSON::Object.
     void from_json_obj( const Poco::JSON::Object &_json_obj );
 
-    /// Expresses the conditions in a form that can be understood
-    /// by the monitor application (professional only)
-    void to_monitor(
-        const std::string &_feature_num,
-        Poco::JSON::Array _node,
-        Poco::JSON::Array &_conditions ) const;
-
     /// Extracts the node (and its children) as a Poco::JSON::Object
     Poco::JSON::Object to_json_obj() const;
 
@@ -521,9 +514,11 @@ class DecisionTreeNode
         containers::MatchPtrs::iterator _match_container_begin,
         containers::MatchPtrs::iterator _match_container_end );
 
-    /// Returns the > condition (for numerical variables)
-    /// or the != condition (for categorical variables)
-    std::string greater_or_not_equal_to( const std::string &_colname ) const;
+    /// Determines whether a same unit numerical refers to time stamps.
+    bool is_ts_numerical(
+        const containers::DataFrameView &_population,
+        const containers::DataFrame &_peripheral,
+        const size_t _col ) const;
 
     /// Returns the index necessary for catagorical data as well as the
     /// associated categories.
@@ -563,10 +558,6 @@ class DecisionTreeNode
         const containers::Subfeatures &_subfeatures,
         containers::MatchPtrs::iterator _match_container_begin,
         containers::MatchPtrs::iterator _match_container_end ) const;
-
-    /// Appends the <= condition (for numerical variables)
-    /// or the == condition (for categorical variables)
-    std::string smaller_or_equal_to( const std::string &_colname ) const;
 
     /// Spawns two new child nodes in the fit(...) function
     void spawn_child_nodes(

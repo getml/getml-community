@@ -28,7 +28,9 @@ class SubtreeHelper
         const std::vector<std::optional<DecisionTreeEnsemble>>&
             _subensembles_avg,
         const std::vector<std::optional<DecisionTreeEnsemble>>&
-            _subensembles_sum );
+            _subensembles_sum,
+        const std::shared_ptr<const logging::AbstractLogger> _logger,
+        multithreading::Communicator* _comm );
 
     /// Builds appropriate views on the features. The purpose of the ColumnView
     /// is to reverse the effect of the row indices in the DataFrameView.
@@ -49,6 +51,14 @@ class SubtreeHelper
         const std::shared_ptr<lossfunctions::LossFunction>& _loss_function,
         multithreading::Communicator* _comm,
         std::optional<DecisionTreeEnsemble>* _subensemble );
+
+    /// Makes the predictions for a single subensemble
+    static void make_predictions_for_one_subensemble(
+        const std::optional<DecisionTreeEnsemble>& _subensemble,
+        const TableHolder& _subtable_holder,
+        const std::shared_ptr<const logging::AbstractLogger> _logger,
+        multithreading::Communicator* _comm,
+        containers::Predictions* _predictions );
 };
 
 // ------------------------------------------------------------------------

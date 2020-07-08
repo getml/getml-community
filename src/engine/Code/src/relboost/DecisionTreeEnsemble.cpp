@@ -376,6 +376,7 @@ void DecisionTreeEnsemble::fit(
                 _population,
                 _peripheral,
                 std::shared_ptr<const logging::AbstractLogger>(),
+                &comm,
                 &ensembles[i] ) );
         }
 
@@ -385,7 +386,13 @@ void DecisionTreeEnsemble::fit(
     try
         {
             Threadutils::fit_ensemble(
-                0, thread_nums, _population, _peripheral, _logger, this );
+                0,
+                thread_nums,
+                _population,
+                _peripheral,
+                _logger,
+                &comm,
+                this );
         }
     catch ( std::exception &e )
         {
@@ -664,7 +671,7 @@ void DecisionTreeEnsemble::fit_subensembles(
 std::pair<
     std::shared_ptr<lossfunctions::LossFunction>,
     std::shared_ptr<const TableHolder>>
-DecisionTreeEnsemble::init_as_feature_engineerer(
+DecisionTreeEnsemble::init_as_feature_learner(
     const containers::DataFrameView &_population,
     const std::vector<containers::DataFrame> &_peripheral )
 {
@@ -777,10 +784,12 @@ DecisionTreeEnsemble::init_as_predictor(
 // ----------------------------------------------------------------------------
 
 std::vector<containers::Predictions> DecisionTreeEnsemble::make_subpredictions(
-    const TableHolder &_table_holder ) const
+    const TableHolder &_table_holder,
+    const std::shared_ptr<const logging::AbstractLogger> _logger,
+    multithreading::Communicator *_comm ) const
 {
     return SubtreeHelper::make_predictions(
-        _table_holder, subensembles_avg_, subensembles_sum_ );
+        _table_holder, subensembles_avg_, subensembles_sum_, _logger, _comm );
 }
 
 // ----------------------------------------------------------------------------
@@ -1005,6 +1014,7 @@ Poco::JSON::Object DecisionTreeEnsemble::to_monitor(
 containers::Features DecisionTreeEnsemble::transform(
     const containers::DataFrame &_population,
     const std::vector<containers::DataFrame> &_peripheral,
+    const std::optional<std::vector<size_t>> &_index,
     const std::shared_ptr<const logging::AbstractLogger> _logger ) const
 {
     // ------------------------------------------------------
@@ -1014,6 +1024,25 @@ containers::Features DecisionTreeEnsemble::transform(
         {
             throw std::runtime_error(
                 "Population table needs to contain at least some data!" );
+        }
+
+    // ------------------------------------------------------
+    // If no index is passed, take all features.
+
+    std::vector<size_t> index;
+
+    if ( _index )
+        {
+            index = *_index;
+        }
+    else
+        {
+            index = std::vector<size_t>( num_features() );
+
+            for ( size_t i = 0; i < index.size(); ++i )
+                {
+                    index[i] = i;
+                }
         }
 
     // ------------------------------------------------------
@@ -1041,13 +1070,17 @@ containers::Features DecisionTreeEnsemble::transform(
         }
 
     // -------------------------------------------------------
+
+    multithreading::Communicator comm( num_threads );
+
+    // -------------------------------------------------------
     // Launch threads and generate predictions on the subviews.
 
     auto features = containers::Features( 1 );
 
     if ( has_peripheral )
         {
-            features = containers::Features( num_features() );
+            features = containers::Features( index.size() );
         }
 
     for ( auto &f : features )
@@ -1065,8 +1098,10 @@ containers::Features DecisionTreeEnsemble::transform(
                 thread_nums,
                 _population,
                 _peripheral,
+                index,
                 std::shared_ptr<const logging::AbstractLogger>(),
                 *this,
+                &comm,
                 &features ) );
         }
 
@@ -1080,8 +1115,10 @@ containers::Features DecisionTreeEnsemble::transform(
                 thread_nums,
                 _population,
                 _peripheral,
+                index,
                 _logger,
                 *this,
+                &comm,
                 &features );
         }
     catch ( std::exception &e )
@@ -1257,34 +1294,48 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json_obj(
 
 // ----------------------------------------------------------------------------
 
-std::string DecisionTreeEnsemble::to_sql(
-    const std::string &_feature_prefix, const size_t _offset ) const
+std::vector<std::string> DecisionTreeEnsemble::to_sql(
+    const std::string &_feature_prefix,
+    const size_t _offset,
+    const bool _subfeatures ) const
 {
-    std::stringstream sql;
+    std::vector<std::string> sql;
 
-    for ( size_t i = 0; i < subensembles_avg_.size(); ++i )
+    if ( _subfeatures )
         {
-            if ( subensembles_avg_[i] )
+            assert_true( subensembles_avg_.size() == subensembles_sum_.size() );
+
+            for ( size_t i = 0; i < subensembles_avg_.size(); ++i )
                 {
-                    sql << subensembles_avg_[i]->to_sql(
-                        std::to_string( i + 1 ) + "_", 0 );
+                    if ( subensembles_avg_[i] )
+                        {
+                            const auto sub_avg = subensembles_avg_[i]->to_sql(
+                                std::to_string( i + 1 ) + "_", 0, true );
 
-                    assert_true( subensembles_sum_[i] );
+                            sql.insert(
+                                sql.end(), sub_avg.begin(), sub_avg.end() );
 
-                    sql << subensembles_sum_[i]->to_sql(
-                        std::to_string( i + 1 ) + "_",
-                        subensembles_avg_[i]->num_features() );
+                            assert_true( subensembles_sum_[i] );
+
+                            const auto sub_sum = subensembles_sum_[i]->to_sql(
+                                std::to_string( i + 1 ) + "_",
+                                subensembles_avg_[i]->num_features(),
+                                true );
+
+                            sql.insert(
+                                sql.end(), sub_sum.begin(), sub_sum.end() );
+                        }
                 }
         }
 
     for ( size_t i = 0; i < trees().size(); ++i )
         {
-            sql << trees()[i].to_sql(
+            sql.push_back( trees()[i].to_sql(
                 _feature_prefix + std::to_string( _offset + i + 1 ),
-                hyperparameters().use_timestamps_ );
+                hyperparameters().use_timestamps_ ) );
         }
 
-    return sql.str();
+    return sql;
 }
 
 // ----------------------------------------------------------------------------

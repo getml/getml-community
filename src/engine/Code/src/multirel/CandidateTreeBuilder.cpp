@@ -60,8 +60,7 @@ void CandidateTreeBuilder::add_count_distincts(
                 }
 
             for ( auto data_used : {enums::DataUsed::x_perip_categorical,
-                                    enums::DataUsed::x_perip_discrete,
-                                    enums::DataUsed::time_stamps_diff} )
+                                    enums::DataUsed::x_perip_discrete} )
                 {
                     size_t ncols = get_ncols(
                         _table_holder.peripheral_tables_,
@@ -112,7 +111,6 @@ void CandidateTreeBuilder::add_other_aggs(
 
             for ( auto data_used : {enums::DataUsed::x_perip_numerical,
                                     enums::DataUsed::x_perip_discrete,
-                                    enums::DataUsed::time_stamps_diff,
                                     enums::DataUsed::same_unit_numerical,
                                     enums::DataUsed::same_unit_discrete} )
                 {
@@ -137,6 +135,15 @@ void CandidateTreeBuilder::add_other_aggs(
                                 {
                                     continue;
                                 }
+
+                            // -----------------------------------------------------
+
+                            data_used = to_ts(
+                                _table_holder,
+                                _same_units,
+                                data_used,
+                                _ix_perip_used,
+                                ix_column_used );
 
                             // -----------------------------------------------------
 
@@ -404,28 +411,35 @@ bool CandidateTreeBuilder::is_comparison_only(
     const size_t _ix_perip_used,
     const size_t _ix_column_used )
 {
-    if ( _data_used == enums::DataUsed::x_perip_numerical )
+    switch ( _data_used )
         {
-            if ( _table_holder.peripheral_tables_[_ix_perip_used]
-                     .numerical_unit( _ix_column_used )
-                     .find( "comparison "
-                            "only" ) != std::string::npos )
+            case enums::DataUsed::x_perip_numerical:
                 {
-                    return true;
-                }
-        }
-    else if ( _data_used == enums::DataUsed::x_perip_discrete )
-        {
-            if ( _table_holder.peripheral_tables_[_ix_perip_used]
-                     .discrete_unit( _ix_column_used )
-                     .find( "comparison "
-                            "only" ) != std::string::npos )
-                {
-                    return true;
-                }
-        }
+                    const bool contains_comparison_only =
+                        _table_holder.peripheral_tables_[_ix_perip_used]
+                            .numerical_unit( _ix_column_used )
+                            .find(
+                                "comparison "
+                                "only" ) != std::string::npos;
 
-    return false;
+                    return contains_comparison_only;
+                }
+
+            case enums::DataUsed::x_perip_discrete:
+                {
+                    const bool contains_comparison_only =
+                        _table_holder.peripheral_tables_[_ix_perip_used]
+                            .discrete_unit( _ix_column_used )
+                            .find(
+                                "comparison "
+                                "only" ) != std::string::npos;
+
+                    return contains_comparison_only;
+                }
+
+            default:
+                return false;
+        }
 }
 
 // ----------------------------------------------------------------------------
@@ -481,6 +495,89 @@ void CandidateTreeBuilder::round_robin(
     candidate_trees.emplace_back( std::move( *it ) );
 
     *_candidate_trees = std::move( candidate_trees );
+}
+
+// ----------------------------------------------------------------------------
+
+enums::DataUsed CandidateTreeBuilder::to_ts(
+    const decisiontrees::TableHolder &_table_holder,
+    const std::vector<descriptors::SameUnits> &_same_units,
+    const enums::DataUsed _data_used,
+    const size_t _ix_perip_used,
+    const size_t _ix_column_used )
+{
+    // ------------------------------------------------------------------
+
+    assert_true(
+        _table_holder.main_tables_.size() ==
+        _table_holder.peripheral_tables_.size() );
+
+    assert_true( _table_holder.main_tables_.size() == _same_units.size() );
+
+    assert_true( _ix_perip_used < _table_holder.peripheral_tables_.size() );
+
+    const auto population = _table_holder.main_tables_.at( _ix_perip_used );
+
+    const auto peripheral =
+        _table_holder.peripheral_tables_.at( _ix_perip_used );
+
+    // ------------------------------------------------------------------
+
+    switch ( _data_used )
+        {
+            case enums::DataUsed::same_unit_numerical:
+                {
+                    const auto same_unit =
+                        _same_units.at( _ix_perip_used ).same_units_numerical_;
+
+                    assert_true( same_unit );
+
+                    const auto is_ts = _same_units.at( _ix_perip_used )
+                                           .is_ts(
+                                               population,
+                                               peripheral,
+                                               *same_unit,
+                                               _ix_column_used );
+
+                    if ( is_ts )
+                        {
+                            return enums::DataUsed::same_unit_numerical_ts;
+                        }
+
+                    return _data_used;
+                }
+
+            case enums::DataUsed::same_unit_discrete:
+                {
+                    const auto same_unit =
+                        _same_units.at( _ix_perip_used ).same_units_discrete_;
+
+                    assert_true( same_unit );
+
+                    const auto is_ts = _same_units.at( _ix_perip_used )
+                                           .is_ts(
+                                               population,
+                                               peripheral,
+                                               *same_unit,
+                                               _ix_column_used );
+
+                    if ( is_ts )
+                        {
+                            return enums::DataUsed::same_unit_discrete_ts;
+                        }
+
+                    return _data_used;
+                }
+
+            default:
+                return _data_used;
+        }
+
+    // ------------------------------------------------------------------
+
+    return _data_used;
+
+    // ------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------

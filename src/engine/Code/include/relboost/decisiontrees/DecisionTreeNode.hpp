@@ -293,7 +293,9 @@ class DecisionTreeNode
         return (
             _data_used == enums::DataUsed::same_units_categorical ||
             _data_used == enums::DataUsed::same_units_discrete ||
-            _data_used == enums::DataUsed::same_units_numerical );
+            _data_used == enums::DataUsed::same_units_discrete_ts ||
+            _data_used == enums::DataUsed::same_units_numerical ||
+            _data_used == enums::DataUsed::same_units_numerical_ts );
     }
 
     /// Trivial accessor.

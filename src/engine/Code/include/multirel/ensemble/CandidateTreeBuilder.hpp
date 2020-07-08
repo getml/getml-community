@@ -120,6 +120,15 @@ class CandidateTreeBuilder
         const size_t _ix_perip_used,
         const enums::DataUsed _data_used );
 
+    /// Transforms a same_unit enum to a same_unit_..._ts, if applicable.
+    /// Otherwise, it just returns the original value.
+    static enums::DataUsed to_ts(
+        const decisiontrees::TableHolder &_table_holder,
+        const std::vector<descriptors::SameUnits> &_same_units,
+        const enums::DataUsed _data_used,
+        const size_t _ix_perip_used,
+        const size_t _ix_column_used );
+
     // -------------------------------------------------------------------------
 };
 

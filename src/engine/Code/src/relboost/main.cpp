@@ -78,7 +78,5 @@ int main( int argc, char* argv[] )
     test26_snowflake_model5( test_path );
     test27_snowflake_model6( test_path );
 
-    test28_multiple_targets( test_path );
-
     return 0;
 }

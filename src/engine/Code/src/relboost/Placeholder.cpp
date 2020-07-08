@@ -41,6 +41,14 @@ void Placeholder::check_vector_length()
 {
     const size_t expected = joined_tables_.size();
 
+    if ( allow_lagged_targets_.size() != expected )
+        {
+            throw std::invalid_argument(
+                "Error: Length of 'allow lagged targets' does not match length "
+                "of "
+                "joined tables!" );
+        }
+
     if ( join_keys_used_.size() != expected )
         {
             throw std::invalid_argument(
@@ -126,6 +134,10 @@ Poco::JSON::Object::Ptr Placeholder::to_json_obj() const
     // ---------------------------------------------------------
 
     obj->set(
+        "allow_lagged_targets_",
+        JSON::vector_to_array_ptr( allow_lagged_targets_ ) );
+
+    obj->set(
         "joined_tables_",
         Placeholder::joined_tables_to_array( joined_tables_ ) );
 
@@ -150,13 +162,13 @@ Poco::JSON::Object::Ptr Placeholder::to_json_obj() const
 
     // ---------------------------------------------------------
 
-    obj->set( "categoricals_", JSON::vector_to_array_ptr( categoricals_ ) );
+    obj->set( "categorical_", JSON::vector_to_array_ptr( categoricals_ ) );
 
-    obj->set( "discretes_", JSON::vector_to_array_ptr( discretes_ ) );
+    obj->set( "discrete_", JSON::vector_to_array_ptr( discretes_ ) );
 
     obj->set( "join_keys_", JSON::vector_to_array_ptr( join_keys_ ) );
 
-    obj->set( "numericals_", JSON::vector_to_array_ptr( numericals_ ) );
+    obj->set( "numerical_", JSON::vector_to_array_ptr( numericals_ ) );
 
     obj->set( "targets_", JSON::vector_to_array_ptr( targets_ ) );
 

@@ -12,6 +12,7 @@ class StatementMaker
     static std::string make_statement(
         const std::string& _table_name,
         const std::string& _dialect,
+        const Poco::JSON::Object& _description,
         const std::vector<std::string>& _colnames,
         const std::vector<Datatype>& _datatypes );
 
@@ -24,6 +25,13 @@ class StatementMaker
         const std::string& _table_name,
         const std::vector<std::string>& _colnames,
         const std::vector<Datatype>& _datatypes );
+
+    /// Produces the CREATE TABLE statement for ODBC.
+    static std::string make_statement_odbc(
+        const std::string& _table_name,
+        const std::vector<std::string>& _colnames,
+        const std::vector<Datatype>& _datatypes,
+        const Poco::JSON::Object& _description );
 
     /// Produces the CREATE TABLE statement for postgres.
     static std::string make_statement_postgres(
@@ -44,6 +52,13 @@ class StatementMaker
 
     /// Transforms a datatype to the string required for the mysql dialect.
     static std::string to_string_mysql( const Datatype _type );
+
+    /// Transforms a datatype to the string required for odbc.
+    static std::string to_string_odbc(
+        const Datatype _type,
+        const std::string& _double_precision,
+        const std::string& _integer,
+        const std::string& _text );
 
     /// Transforms a datatype to the string required for the postgres dialect.
     static std::string to_string_postgres( const Datatype _type );

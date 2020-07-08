@@ -120,8 +120,10 @@ void Threadutils::transform_ensemble(
     const std::shared_ptr<const descriptors::Hyperparameters>& _hyperparameters,
     const containers::DataFrame& _population,
     const std::vector<containers::DataFrame>& _peripheral,
+    const std::vector<size_t>& _index,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
     const ensemble::DecisionTreeEnsemble& _ensemble,
+    multithreading::Communicator* _comm,
     containers::Features* _features )
 {
     try
@@ -149,7 +151,9 @@ void Threadutils::transform_ensemble(
             const auto subpredictions = SubtreeHelper::make_predictions(
                 table_holder,
                 _ensemble.subensembles_avg(),
-                _ensemble.subensembles_sum() );
+                _ensemble.subensembles_sum(),
+                _logger,
+                _comm );
 
             const auto subfeatures =
                 SubtreeHelper::make_subfeatures( table_holder, subpredictions );
@@ -163,26 +167,35 @@ void Threadutils::transform_ensemble(
                     population_subview.nrows() ) );
 
             // ----------------------------------------------------------------
+
+            utils::Logger::log( "Building features...", _logger, _comm );
+
+            // ----------------------------------------------------------------
             // Build the actual features.
 
-            assert_true( _ensemble.trees().size() == _features->size() );
+            assert_true( _index.size() == _features->size() );
 
-            for ( size_t i = 0; i < _ensemble.trees().size(); ++i )
+            for ( size_t i = 0; i < _index.size(); ++i )
                 {
+                    const auto ix = _index.at( i );
+
+                    assert_true( ix < _ensemble.num_features() );
+
                     const auto new_feature = _ensemble.transform(
-                        table_holder, subfeatures, i, &impl );
+                        table_holder, subfeatures, ix, &impl );
 
                     copy(
                         population_subview.rows(),
                         new_feature,
-                        ( *_features )[i].get() );
+                        _features->at( i ).get() );
 
-                    if ( _logger && !_hyperparameters->silent_ )
-                        {
-                            _logger->log(
-                                "Built FEATURE_" + std::to_string( i + 1 ) +
-                                "." );
-                        }
+                    const auto progress = ( ( i + 1 ) * 100 ) / _index.size();
+
+                    utils::Logger::log(
+                        "Built FEATURE_" + std::to_string( ix + 1 ) +
+                            ". Progress: " + std::to_string( progress ) + "\%.",
+                        _logger,
+                        _comm );
                 }
 
             // ----------------------------------------------------------------

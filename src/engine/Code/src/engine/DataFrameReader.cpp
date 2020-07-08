@@ -167,7 +167,7 @@ std::vector<std::string> DataFrameReader::next_line()
         {
             const auto& val = df_.numerical( i )[rownum_];
             if ( coltypes()[col] == io::Datatype::string )
-                result[col++] = df_.to_time_stamp( val );
+                result[col++] = io::Parser::ts_to_string( val );
             else
                 result[col++] = std::to_string( val );
         }
@@ -181,14 +181,14 @@ std::vector<std::string> DataFrameReader::next_line()
     for ( size_t i = 0; i < df_.num_time_stamps(); ++i )
         {
             const auto& val = df_.time_stamp( i )[rownum_];
-            result[col++] = df_.to_time_stamp( val );
+            result[col++] = io::Parser::ts_to_string( val );
         }
 
     for ( size_t i = 0; i < df_.num_unused_floats(); ++i )
         {
             const auto& val = df_.unused_float( i )[rownum_];
             if ( coltypes()[col] == io::Datatype::string )
-                result[col++] = df_.to_time_stamp( val );
+                result[col++] = io::Parser::ts_to_string( val );
             else
                 result[col++] = std::to_string( val );
         }

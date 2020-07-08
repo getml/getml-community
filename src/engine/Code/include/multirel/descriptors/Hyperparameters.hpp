@@ -19,7 +19,7 @@ struct Hyperparameters
     // ------------------------------------------------------
 
     /// Transforms the hyperparameters into a JSON object
-    Poco::JSON::Object to_json_obj() const;
+    Poco::JSON::Object::Ptr to_json_obj() const;
 
     // ------------------------------------------------------
 
@@ -27,7 +27,7 @@ struct Hyperparameters
     size_t num_selected_features() const;
 
     /// Transforms the hyperparameters into a JSON string
-    std::string to_json() const { return JSON::stringify( to_json_obj() ); }
+    std::string to_json() const { return JSON::stringify( *to_json_obj() ); }
 
     // ------------------------------------------------------
 
@@ -67,11 +67,6 @@ struct Hyperparameters
 
     /// The seed used for sampling.
     const unsigned int seed_;
-
-    /// The session name is used to identify models belonging to a particular
-    /// hyperparameter optimization. It is therefore not required for normal
-    /// training and one of the few parameters that are optional.
-    const std::string session_name_;
 
     /// The share of aggregations randomly selected
     const Float share_aggregations_;

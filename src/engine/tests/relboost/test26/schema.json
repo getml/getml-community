@@ -1,4 +1,5 @@
 {
+    "allow_lagged_targets_": [false],
     "categorical_": [],
     "discrete_": [],
     "join_keys_": [],
@@ -7,6 +8,7 @@
     ],
     "joined_tables_": [
         {
+            "allow_lagged_targets_": [false],
             "categorical_": [],
             "discrete_": [],
             "join_keys_": [],
@@ -15,6 +17,7 @@
             ],
             "joined_tables_": [
                 {
+                    "allow_lagged_targets_": [],
                     "categorical_": [],
                     "discrete_": [],
                     "join_keys_": [],

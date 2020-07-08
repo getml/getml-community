@@ -4,6 +4,7 @@
 // ----------------------------------------------------------------------------
 // Dependencies
 
+#include <array>
 #include <cmath>
 #include <iostream>
 #include <memory>
@@ -11,6 +12,14 @@
 #include <string>
 
 #include <mysql.h>
+
+#if ( defined( _WIN32 ) || defined( _WIN64 ) )
+#include <winsock2.h>
+#include <windows.h>
+#endif
+
+#include <sql.h>
+#include <sqlext.h>
 
 #if ( defined( _WIN32 ) || defined( _WIN64 ) )
 // postgres is not supported in windows
@@ -54,6 +63,18 @@ extern "C"
 
 #include "database/MySQL.hpp"
 
+#include "database/ODBCError.hpp"
+
+#include "database/ODBCEnv.hpp"
+
+#include "database/ODBCConn.hpp"
+
+#include "database/ODBCStmt.hpp"
+
+#include "database/ODBCIterator.hpp"
+
+#include "database/ODBC.hpp"
+
 #if ( defined( _WIN32 ) || defined( _WIN64 ) )
 // postgres is not supported in windows
 #else
@@ -63,6 +84,7 @@ extern "C"
 #endif
 
 #include "database/DatabaseParser.hpp"
+#include "database/DatabaseReader.hpp"
 #include "database/DatabaseSniffer.hpp"
 
 // ----------------------------------------------------------------------------

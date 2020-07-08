@@ -21,11 +21,11 @@ std::string FileHandler::create_project_directory(
 
     Poco::File( project_directory ).createDirectories();
 
-    Poco::File( project_directory + "multirel-models/" ).createDirectories();
-
     Poco::File( project_directory + "data/" ).createDirectories();
 
-    Poco::File( project_directory + "relboost-models/" ).createDirectories();
+    Poco::File( project_directory + "hyperopts/" ).createDirectories();
+
+    Poco::File( project_directory + "pipelines/" ).createDirectories();
 
     return project_directory;
 }

@@ -26,6 +26,10 @@
 
 #include "engine/containers/containers.hpp"
 
+#include "engine/featurelearners/featurelearners.hpp"
+
+#include "engine/hyperparam/hyperparam.hpp"
+
 #include "engine/handlers/handlers.hpp"
 
 #include "engine/srv/srv.hpp"

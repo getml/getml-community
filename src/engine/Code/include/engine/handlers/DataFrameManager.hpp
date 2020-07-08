@@ -86,6 +86,12 @@ class DataFrameManager
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
+    /// Concatenates a list of data frames.
+    void concat(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
     /// Creates a new data frame from a set of CSV files.
     void from_csv(
         const std::string& _name,
@@ -114,14 +120,21 @@ class DataFrameManager
         const bool _append,
         Poco::Net::StreamSocket* _socket );
 
+    /// Creates a new data frame from a set of S3 files located in a bucket.
+    void from_s3(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        const bool _append,
+        Poco::Net::StreamSocket* _socket );
+
     /// Sends a boolean columm to the client
     void get_boolean_column(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
-    /// Sends a string representing the column to the client.
-    void get_boolean_column_string(
+    /// Sends a JSON representing the column to the client.
+    void get_boolean_column_content(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
@@ -132,8 +145,8 @@ class DataFrameManager
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
-    /// Sends a string representing the column to the client.
-    void get_categorical_column_string(
+    /// Sends a JSON representing the column to the client.
+    void get_categorical_column_content(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
@@ -144,14 +157,14 @@ class DataFrameManager
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
-    /// Sends a string representing the column to the client.
-    void get_column_string(
+    /// Sends a data frame back to the client, column-by-column.
+    void get_data_frame( Poco::Net::StreamSocket* _socket );
+
+    /// Expresses the data frame in HTML format, for a Jupyter notebook.
+    void get_data_frame_html(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
-
-    /// Sends a data frame back to the client, column-by-column.
-    void get_data_frame( Poco::Net::StreamSocket* _socket );
 
     /// Expresses the data frame as a string.
     void get_data_frame_string(
@@ -160,6 +173,12 @@ class DataFrameManager
     /// Sends the content of a data frame in a format that is compatible with
     /// DataTables.js server-side processing.
     void get_data_frame_content(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
+    /// Sends a JSON representing the column to the client.
+    void get_float_column_content(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
@@ -221,14 +240,20 @@ class DataFrameManager
     void summarize(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
 
+    /// Writes the dataframe to CSV.
+    void to_csv(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
     /// Writes the dataframe into the data base.
     void to_db(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
-    /// Writes the dataframe to CSV.
-    void to_csv(
+    /// Writes the dataframe to CSV files located in an S3 bucket.
+    void to_s3(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
@@ -288,6 +313,13 @@ class DataFrameManager
         const std::string& _cmp_df_name = "",
         const size_t _cmp_nrows = 0 ) const;
 
+    template <typename T, typename IterType>
+    std::string make_column_string(
+        const Int _draw,
+        const size_t _nrows,
+        IterType _begin,
+        IterType _end ) const;
+
     /// Receives the actual data contained in a DataFrame
     void receive_data(
         const std::shared_ptr<containers::Encoding>& _local_categories,
@@ -328,10 +360,10 @@ class DataFrameManager
     }
 
     /// Trivial accessor
-    std::shared_ptr<database::Connector> connector()
+    std::shared_ptr<database::Connector> connector( const std::string& _name )
     {
         assert_true( database_manager_ );
-        return database_manager_->connector();
+        return database_manager_->connector( _name );
     }
 
     /// Trivial accessor
@@ -409,6 +441,64 @@ class DataFrameManager
 
     // ------------------------------------------------------------------------
 };
+
+// ------------------------------------------------------------------------
+// ------------------------------------------------------------------------
+
+template <typename T, typename IterType>
+std::string DataFrameManager::make_column_string(
+    const Int _draw, const size_t _nrows, IterType _begin, IterType _end ) const
+{
+    // ----------------------------------------
+
+    Poco::JSON::Object obj;
+
+    // ----------------------------------------
+
+    obj.set( "draw", _draw );
+
+    obj.set( "recordsTotal", _nrows );
+
+    obj.set( "recordsFiltered", _nrows );
+
+    if ( _nrows == 0 )
+        {
+            obj.set( "data", Poco::JSON::Array() );
+
+            return JSON::stringify( obj );
+        }
+
+    // ----------------------------------------
+
+    auto data = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
+
+    for ( auto it = _begin; it < _end; ++it )
+        {
+            auto row = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
+
+            if constexpr ( std::is_same<T, std::string>() )
+                {
+                    row->add( *it );
+                }
+
+            if constexpr ( !std::is_same<T, std::string>() )
+                {
+                    row->add( io::Parser::to_string( *it ) );
+                }
+
+            data->add( row );
+        }
+
+    // ----------------------------------------
+
+    obj.set( "data", data );
+
+    // ----------------------------------------
+
+    return JSON::stringify( obj );
+
+    // ----------------------------------------
+}
 
 // ------------------------------------------------------------------------
 }  // namespace handlers

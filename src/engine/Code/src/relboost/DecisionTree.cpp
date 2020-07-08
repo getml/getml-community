@@ -153,7 +153,7 @@ std::string DecisionTree::to_sql(
 
     // -------------------------------------------------------------------
 
-    sql << "CREATE TABLE FEATURE_" << _feature_num << " AS" << std::endl;
+    sql << "CREATE TABLE \"FEATURE_" << _feature_num << "\" AS" << std::endl;
 
     // -------------------------------------------------------------------
     // First part of SELECT statement
@@ -184,43 +184,19 @@ std::string DecisionTree::to_sql(
     // Second part of SELECT statement
 
     sql << tab << "END" << std::endl
-        << ") AS feature_" << _feature_num << "," << std::endl;
+        << ") AS \"feature_" << _feature_num << "\"," << std::endl;
 
-    sql << tab << " t1." << output().join_keys_name();
-
-    if ( output().num_time_stamps() > 0 )
-        {
-            sql << "," << std::endl;
-            sql << tab << " t1." << output().time_stamps_name();
-        }
-
-    sql << std::endl;
+    sql << tab << " t1.rowid AS \"rownum\"" << std::endl;
 
     // -------------------------------------------------------------------
     // JOIN statement
 
-    sql << "FROM (" << std::endl;
+    sql << "FROM \"" << output().name() << "\" t1" << std::endl;
 
-    sql << tab << "SELECT *," << std::endl;
+    sql << "LEFT JOIN \"" << input().name() << "\" t2" << std::endl;
 
-    sql << tab << tab << "ROW_NUMBER() OVER ( ORDER BY "
-        << output().join_keys_name();
-
-    if ( output().num_time_stamps() > 0 )
-        {
-            sql << ", " << output().time_stamps_name();
-        }
-
-    sql << " ASC ) AS rownum" << std::endl;
-
-    sql << tab << "FROM " << output().name() << std::endl;
-
-    sql << ") t1" << std::endl;
-
-    sql << "LEFT JOIN " << input().name() << " t2" << std::endl;
-
-    sql << "ON t1." << output().join_keys_name() << " = t2."
-        << input().join_keys_name() << std::endl;
+    sql << "ON t1.\"" << output().join_keys_name() << "\" = t2.\""
+        << input().join_keys_name() << "\"" << std::endl;
 
     // -------------------------------------------------------------------
     // WHERE statement
@@ -230,14 +206,18 @@ std::string DecisionTree::to_sql(
         {
             sql << "WHERE ";
 
-            sql << "t2." << input().time_stamps_name() << " <= t1."
-                << output().time_stamps_name() << std::endl;
+            sql << "datetime( t2.\"" << input().time_stamps_name()
+                << "\" ) <= datetime( t1.\"" << output().time_stamps_name()
+                << "\" )" << std::endl;
 
             if ( input().num_time_stamps() > 1 )
                 {
-                    sql << "AND ( t2." << input().upper_time_stamps_name()
-                        << " > t1." << output().time_stamps_name() << " OR t2."
-                        << input().upper_time_stamps_name() << " IS NULL )"
+                    sql << "AND ( datetime( t2.\""
+                        << input().upper_time_stamps_name()
+                        << "\" ) > datetime( t1.\""
+                        << output().time_stamps_name()
+                        << "\" ) OR datetime( t2.\""
+                        << input().upper_time_stamps_name() << "\" ) IS NULL )"
                         << std::endl;
                 }
         }
@@ -245,17 +225,10 @@ std::string DecisionTree::to_sql(
     // -------------------------------------------------------------------
     // GROUP BY statement
 
-    sql << "GROUP BY t1.rownum," << std::endl;
-
-    sql << tab << tab << " t1." << output().join_keys_name();
-
-    if ( output().num_time_stamps() > 0 )
-        {
-            sql << "," << std::endl;
-            sql << tab << tab << " t1." << output().time_stamps_name();
-        }
-
-    sql << ";" << std::endl << std::endl << std::endl;
+    sql << "GROUP BY t1.rowid"
+        << ";" << std::endl
+        << std::endl
+        << std::endl;
 
     // -------------------------------------------------------------------
 

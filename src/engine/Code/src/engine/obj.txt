@@ -5,21 +5,30 @@ set(
     ${ENGINE_SOURCE_DIRECTORY}/CatOpParser.cpp
     ${ENGINE_SOURCE_DIRECTORY}/DatabaseManager.cpp
     ${ENGINE_SOURCE_DIRECTORY}/DataFrame.cpp
-    ${ENGINE_SOURCE_DIRECTORY}/DataFrameIndex.cpp
     ${ENGINE_SOURCE_DIRECTORY}/DataFrameJoiner.cpp
     ${ENGINE_SOURCE_DIRECTORY}/DataFrameManager.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/DataFramePrinter.cpp
     ${ENGINE_SOURCE_DIRECTORY}/DataFrameReader.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/DataModelChecker.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Encoding.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/FeatureLearnerParser.cpp
     ${ENGINE_SOURCE_DIRECTORY}/FileHandler.cpp
     ${ENGINE_SOURCE_DIRECTORY}/GroupByParser.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/Hyperopt.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/HyperoptManager.cpp
     ${ENGINE_SOURCE_DIRECTORY}/JSON.cpp
     ${ENGINE_SOURCE_DIRECTORY}/LicenseChecker.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Monitor.cpp
     ${ENGINE_SOURCE_DIRECTORY}/NumOpParser.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Options.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/Pipeline.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/PipelineManager.cpp
     ${ENGINE_SOURCE_DIRECTORY}/ProjectManager.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Receiver.cpp
     ${ENGINE_SOURCE_DIRECTORY}/RequestHandler.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Sender.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/StringReplacer.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/TimeStampMaker.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Token.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/TSDiffMaker.cpp
 )

@@ -737,76 +737,39 @@ void DecisionTreeNode::from_json_obj( const Poco::JSON::Object &_json_obj )
                 }
         }
 }
-
 // ----------------------------------------------------------------------------
 
-std::string DecisionTreeNode::greater_or_not_equal_to(
-    const std::string &_colname ) const
+bool DecisionTreeNode::is_ts_numerical(
+    const containers::DataFrameView &_population,
+    const containers::DataFrame &_peripheral,
+    const size_t _col ) const
 {
-    if ( data_used() == enums::DataUsed::same_unit_categorical )
+    assert_true( _col < tree_->same_units_numerical().size() );
+
+    const auto ix =
+        std::get<0>( tree_->same_units_numerical().at( _col ) ).ix_column_used;
+
+    std::string unit;
+
+    switch ( std::get<0>( tree_->same_units_numerical().at( _col ) ).data_used )
         {
-            return _colname;
+            case enums::DataUsed::x_perip_numerical:
+                unit = _peripheral.numerical_unit( ix );
+                break;
+
+            case enums::DataUsed::x_popul_numerical:
+                unit = _population.numerical_unit( ix );
+                break;
+
+            default:
+                assert_true( !"is_ts_numerical: enums::DataUsed not known!" );
+                break;
         }
 
-    std::stringstream sql;
+    const auto is_ts = unit.find( "time stamp" ) != std::string::npos &&
+                       unit.find( "$GETML_ROWID" ) == std::string::npos;
 
-    if ( categorical_data_used() )
-        {
-            sql << _colname << " NOT IN ( ";
-
-            for ( auto it = categories_used_begin(); it < categories_used_end();
-                  ++it )
-                {
-                    const auto category_used = *it;
-
-                    assert_true( category_used >= 0 );
-                    assert_true(
-                        category_used <
-                        static_cast<Int>( tree_->categories().size() ) );
-
-                    sql << "'";
-
-                    sql << tree_->categories()[category_used];
-
-                    sql << "'";
-
-                    if ( std::next( it, 1 ) != categories_used_end() )
-                        {
-                            sql << ", ";
-                        }
-                }
-
-            sql << " )";
-        }
-    else
-        {
-            if ( lag_used() )
-                {
-                    sql << "( ";
-
-                    sql << _colname;
-
-                    sql << " <= ";
-
-                    sql << std::to_string(
-                        critical_value() - tree_->delta_t() );
-
-                    sql << " OR ";
-                }
-
-            sql << _colname;
-
-            sql << " > ";
-
-            sql << std::to_string( critical_value() );
-
-            if ( lag_used() )
-                {
-                    sql << " )";
-                }
-        }
-
-    return sql.str();
+    return is_ts;
 }
 
 // ----------------------------------------------------------------------------
@@ -992,6 +955,7 @@ void DecisionTreeNode::set_samples(
 
                 break;
 
+            case enums::DataUsed::same_unit_discrete_ts:
             case enums::DataUsed::same_unit_discrete:
 
                 for ( auto it = _match_container_begin;
@@ -1004,6 +968,7 @@ void DecisionTreeNode::set_samples(
 
                 break;
 
+            case enums::DataUsed::same_unit_numerical_ts:
             case enums::DataUsed::same_unit_numerical:
 
                 for ( auto it = _match_container_begin;
@@ -1121,77 +1086,6 @@ void DecisionTreeNode::set_samples(
 
 // ----------------------------------------------------------------------------
 
-std::string DecisionTreeNode::smaller_or_equal_to(
-    const std::string &_colname ) const
-{
-    if ( data_used() == enums::DataUsed::same_unit_categorical )
-        {
-            return _colname;
-        }
-
-    std::stringstream sql;
-
-    if ( categorical_data_used() )
-        {
-            sql << _colname << " IN ( ";
-
-            for ( auto it = categories_used_begin(); it < categories_used_end();
-                  ++it )
-                {
-                    const auto category_used = *it;
-
-                    assert_true( category_used >= 0 );
-                    assert_true(
-                        category_used <
-                        static_cast<Int>( tree_->categories().size() ) );
-
-                    sql << "'";
-
-                    sql << tree_->categories()[category_used];
-
-                    sql << "'";
-
-                    if ( std::next( it, 1 ) != categories_used_end() )
-                        {
-                            sql << ", ";
-                        }
-                }
-
-            sql << " )";
-        }
-    else
-        {
-            if ( lag_used() )
-                {
-                    sql << "( ";
-
-                    sql << _colname;
-
-                    sql << " > ";
-
-                    sql << std::to_string(
-                        critical_value() - tree_->delta_t() );
-
-                    sql << " AND ";
-                }
-
-            sql << _colname;
-
-            sql << " <= ";
-
-            sql << std::to_string( critical_value() );
-
-            if ( lag_used() )
-                {
-                    sql << " )";
-                }
-        }
-
-    return sql.str();
-}
-
-// ----------------------------------------------------------------------------
-
 void DecisionTreeNode::spawn_child_nodes(
     const containers::DataFrameView &_population,
     const containers::DataFrame &_peripheral,
@@ -1288,146 +1182,52 @@ void DecisionTreeNode::to_sql(
     std::vector<std::string> &_conditions,
     std::string _sql ) const
 {
-    if ( child_node_greater_ )
+    if ( split_ )
         {
-            if ( _sql.size() > 0 )
+            const auto sql_maker = utils::SQLMaker(
+                tree_->categories_,
+                tree_->delta_t(),
+                tree_->ix_perip_used(),
+                tree_->same_units_ );
+
+            const auto prefix = ( _sql == "" ) ? "" : " AND ";
+
+            const auto sql_greater =
+                _sql + prefix +
+                sql_maker.condition_greater(
+                    tree_->input(), tree_->output(), *split_ );
+
+            const auto sql_smaller =
+                _sql + prefix +
+                sql_maker.condition_smaller(
+                    tree_->input(), tree_->output(), *split_ );
+
+            if ( child_node_greater_ )
                 {
-                    _sql.append( " AND " );
+                    assert_true( child_node_smaller_ );
+
+                    child_node_greater_->to_sql(
+                        _feature_num, _conditions, sql_greater );
+
+                    child_node_smaller_->to_sql(
+                        _feature_num, _conditions, sql_smaller );
+
+                    return;
                 }
 
-            // Append conditions greater
-            std::string sql_greater = _sql;
-
-            // There is a difference between colname_greater and colname_smaller
-            // because of the same units.
-            const auto colname_greater = tree_->get_colname(
-                _feature_num, data_used(), column_used(), false );
-
-            sql_greater.append( greater_or_not_equal_to( colname_greater ) );
-
-            child_node_greater_->to_sql(
-                _feature_num, _conditions, sql_greater );
-
-            // Append conditions smaller
-            std::string sql_smaller = _sql;
-
-            // There is a difference between colname_greater and colname_smaller
-            // because of the same units.
-            const auto colname_smaller = tree_->get_colname(
-                _feature_num, data_used(), column_used(), true );
-
-            sql_smaller.append( smaller_or_equal_to( colname_smaller ) );
-
-            child_node_smaller_->to_sql(
-                _feature_num, _conditions, sql_smaller );
-        }
-    else
-        {
-            if ( split_ )
+            if ( apply_from_above() != is_activated_ )
                 {
-                    if ( _sql.size() > 0 )
-                        {
-                            _sql.append( " AND " );
-                        }
-
-                    const auto colname = tree_->get_colname(
-                        _feature_num,
-                        data_used(),
-                        column_used(),
-                        apply_from_above() == is_activated_ );
-
-                    if ( apply_from_above() != is_activated_ )
-                        {
-                            _sql.append( greater_or_not_equal_to( colname ) );
-                        }
-                    else
-                        {
-                            _sql.append( smaller_or_equal_to( colname ) );
-                        }
-
-                    _conditions.push_back( _sql );
+                    _sql = sql_greater;
                 }
             else
                 {
-                    if ( is_activated_ && _sql != "" )
-                        {
-                            _conditions.push_back( _sql );
-                        }
+                    _sql = sql_smaller;
                 }
         }
-}
 
-// ----------------------------------------------------------------------------
-
-void DecisionTreeNode::to_monitor(
-    const std::string &_feature_num,
-    Poco::JSON::Array _node,
-    Poco::JSON::Array &_conditions ) const
-{
-    if ( child_node_greater_ )
+    if ( is_activated_ && _sql != "" )
         {
-            // -----------------------------------------------
-            // Append conditions greater
-
-            {
-                std::string condition = "";
-
-                const auto colname = tree_->get_colname(
-                    _feature_num, data_used(), column_used(), false );
-
-                condition.append( greater_or_not_equal_to( colname ) );
-
-                _node.add( condition );
-
-                child_node_greater_.get()->to_monitor(
-                    _feature_num, _node, _conditions );
-            }
-
-            // -----------------------------------------------
-            // Append conditions smaller
-
-            {
-                std::string condition = "";
-
-                const auto colname = tree_->get_colname(
-                    _feature_num, data_used(), column_used(), false );
-
-                condition.append( smaller_or_equal_to( colname ) );
-
-                _node.add( condition );
-
-                child_node_greater_.get()->to_monitor(
-                    _feature_num, _node, _conditions );
-            }
-
-            // -----------------------------------------------
-        }
-    else
-        {
-            if ( split_ )
-                {
-                    std::string condition = "";
-
-                    const auto colname = tree_->get_colname(
-                        _feature_num,
-                        data_used(),
-                        column_used(),
-                        apply_from_above() == is_activated_ );
-
-                    if ( apply_from_above() != is_activated_ )
-                        {
-                            condition.append(
-                                greater_or_not_equal_to( colname ) );
-                        }
-                    else
-                        {
-                            condition.append( smaller_or_equal_to( colname ) );
-                        }
-
-                    _node.add( condition );
-                }
-
-            _conditions.add( _node );
+            _conditions.push_back( _sql );
         }
 }
 
@@ -1958,7 +1758,7 @@ void DecisionTreeNode::try_categorical_values(
     // Add new splits to the candidate splits.
 
     for ( auto cat = sorted_by_containing->cbegin();
-          cat < sorted_by_containing->cbegin() + num_categories / 2;
+          cat < sorted_by_containing->cend();
           ++cat )
         {
             _candidate_splits->push_back( descriptors::Split(
@@ -1971,22 +1771,8 @@ void DecisionTreeNode::try_categorical_values(
                 ) );
         }
 
-    for ( auto cat = sorted_by_containing->cbegin() + num_categories / 2;
-          cat < sorted_by_containing->cend();
-          ++cat )
-        {
-            _candidate_splits->push_back( descriptors::Split(
-                true,                          // _apply_from_above
-                sorted_by_containing,          // _categories_used
-                cat + 1,                       // _categories_used_begin
-                sorted_by_containing->cend(),  // _categories_used_end
-                _column_used,                  // _column_used
-                _data_used                     // _data_used
-                ) );
-        }
-
     for ( auto cat = sorted_by_not_containing->cbegin();
-          cat < sorted_by_not_containing->cbegin() + num_categories / 2;
+          cat < sorted_by_not_containing->cend();
           ++cat )
         {
             _candidate_splits->push_back( descriptors::Split(
@@ -1996,20 +1782,6 @@ void DecisionTreeNode::try_categorical_values(
                 cat + 1,                             // _categories_used_end
                 _column_used,                        // _column_used
                 _data_used                           // _data_used
-                ) );
-        }
-
-    for ( auto cat = sorted_by_not_containing->cbegin() + num_categories / 2;
-          cat < sorted_by_not_containing->cend();
-          ++cat )
-        {
-            _candidate_splits->push_back( descriptors::Split(
-                false,                             // _apply_from_above
-                sorted_by_not_containing,          // _categories_used
-                cat + 1,                           // _categories_used_begin
-                sorted_by_not_containing->cend(),  // _categories_used_end
-                _column_used,                      // _column_used
-                _data_used                         // _data_used
                 ) );
         }
 
@@ -2493,9 +2265,15 @@ void DecisionTreeNode::try_same_units_discrete(
                         _population, _peripheral, *it, col );
                 }
 
+            const auto is_ts = tree_->same_units_.is_ts(
+                _population, _peripheral, same_units_discrete(), col );
+
+            const auto data_used = is_ts
+                                       ? enums::DataUsed::same_unit_discrete_ts
+                                       : enums::DataUsed::same_unit_discrete;
             try_discrete_values(
                 col,
-                enums::DataUsed::same_unit_discrete,
+                data_used,
                 _sample_size,
                 _match_container_begin,
                 _match_container_end,
@@ -2531,9 +2309,16 @@ void DecisionTreeNode::try_same_units_numerical(
                         _population, _peripheral, *it, col );
                 }
 
+            const auto is_ts = tree_->same_units_.is_ts(
+                _population, _peripheral, same_units_numerical(), col );
+
+            const auto data_used = is_ts
+                                       ? enums::DataUsed::same_unit_numerical_ts
+                                       : enums::DataUsed::same_unit_numerical;
+
             try_numerical_values(
                 col,
-                enums::DataUsed::same_unit_numerical,
+                data_used,
                 _sample_size,
                 _match_container_begin,
                 _match_container_end,

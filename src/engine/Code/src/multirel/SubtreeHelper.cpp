@@ -161,7 +161,9 @@ std::vector<containers::Predictions> SubtreeHelper::make_predictions(
     const std::vector<containers::Optional<DecisionTreeEnsemble>>&
         _subensembles_avg,
     const std::vector<containers::Optional<DecisionTreeEnsemble>>&
-        _subensembles_sum )
+        _subensembles_sum,
+    const std::shared_ptr<const logging::AbstractLogger> _logger,
+    multithreading::Communicator* _comm )
 {
     const auto size = _table_holder.subtables_.size();
 
@@ -172,35 +174,37 @@ std::vector<containers::Predictions> SubtreeHelper::make_predictions(
 
     for ( size_t i = 0; i < size; ++i )
         {
-            if ( !_table_holder.subtables_[i] )
+            if ( !_table_holder.subtables_.at( i ) )
                 {
                     continue;
                 }
 
-            assert_true( _table_holder.subtables_[i]->main_tables_.size() > 0 );
+            assert_true(
+                _table_holder.subtables_.at( i )->main_tables_.size() > 0 );
 
             auto impl = containers::Optional<aggregations::AggregationImpl>(
-                new aggregations::AggregationImpl(
-                    _table_holder.subtables_[i]->main_tables_[0].nrows() ) );
+                new aggregations::AggregationImpl( _table_holder.subtables_[i]
+                                                       ->main_tables_.at( 0 )
+                                                       .nrows() ) );
 
-            assert_true( _subensembles_avg[i] );
+            assert_true( _subensembles_avg.at( i ) );
 
-            assert_true( _subensembles_sum[i] );
+            assert_true( _subensembles_sum.at( i ) );
 
-            auto predictions_avg = _subensembles_avg[i]->transform(
-                *_table_holder.subtables_[i], &impl );
+            auto predictions_avg = _subensembles_avg.at( i )->transform(
+                *_table_holder.subtables_.at( i ), _logger, _comm, &impl );
 
-            auto predictions_sum = _subensembles_sum[i]->transform(
-                *_table_holder.subtables_[i], &impl );
+            auto predictions_sum = _subensembles_sum.at( i )->transform(
+                *_table_holder.subtables_.at( i ), _logger, _comm, &impl );
 
             for ( auto& p : predictions_avg )
                 {
-                    predictions[i].emplace_back( std::move( p ) );
+                    predictions.at( i ).emplace_back( std::move( p ) );
                 }
 
             for ( auto& p : predictions_sum )
                 {
-                    predictions[i].emplace_back( std::move( p ) );
+                    predictions.at( i ).emplace_back( std::move( p ) );
                 }
         }
 

@@ -29,6 +29,9 @@ class Postgres : public Connector
     // -------------------------------
 
    public:
+    /// Returns a Poco::JSON::Object describing the connection.
+    Poco::JSON::Object describe() const final;
+
     /// Returns the names of the table columns.
     std::vector<std::string> get_colnames(
         const std::string& _table ) const final;
@@ -52,7 +55,6 @@ class Postgres : public Connector
     /// Reads a CSV file or another data source into a table.
     void read(
         const std::string& _table,
-        const bool _header,
         const size_t _skip,
         io::Reader* _reader ) final;
 
@@ -113,8 +115,8 @@ class Postgres : public Connector
    private:
     /// Makes sure that the colnames of the CSV file match the colnames of the
     /// target table.
-    /*    void check_colnames(
-            const std::vector<std::string>& _colnames, io::Reader* _reader );*/
+    void check_colnames(
+        const std::vector<std::string>& _colnames, io::Reader* _reader );
 
     /// Returns the io::Datatype associated with a oid.
     io::Datatype interpret_oid( Oid _oid ) const;

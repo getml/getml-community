@@ -40,6 +40,13 @@ class ConditionMaker
     /// Returns a list of the categories.
     std::string list_categories( const containers::Split& _split ) const;
 
+    /// Transforms the time stamps diff into SQLite-compliant code.
+    std::string make_time_stamp_diff(
+        const std::string& _ts1,
+        const std::string& _ts2,
+        const Float _diff,
+        const bool _is_greater ) const;
+
    private:
     /// Trivial accessor.
     strings::String encoding( size_t _i ) const
@@ -55,6 +62,15 @@ class ConditionMaker
                 assert_true( false && "Encoding out of range!" );
                 return strings::String( "" );
             }
+    }
+
+    /// Returns the timediff string for time comparisons
+    std::string make_diffstr(
+        const Float _timediff, const std::string _timeunit ) const
+    {
+        return ( _timediff >= 0.0 )
+                   ? "'+" + std::to_string( _timediff ) + " " + _timeunit + "'"
+                   : "'" + std::to_string( _timediff ) + " " + _timeunit + "'";
     }
 
    private:

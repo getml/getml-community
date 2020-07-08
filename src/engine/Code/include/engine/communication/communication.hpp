@@ -7,6 +7,7 @@
 #include <array>
 #include <memory>
 
+#include <Poco/JSON/Object.h>
 #include <Poco/Net/StreamSocket.h>
 
 #include "debug/debug.hpp"
@@ -28,6 +29,9 @@
 
 #include "engine/communication/Receiver.hpp"
 #include "engine/communication/Sender.hpp"
+
+#include "engine/communication/SocketLogger.hpp"
+#include "engine/communication/Warner.hpp"
 
 // ----------------------------------------------------
 

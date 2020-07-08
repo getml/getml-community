@@ -7,7 +7,7 @@ namespace containers
 {
 // -------------------------------------------------------------------------
 
-class DataFrame
+struct DataFrame
 {
     // ---------------------------------------------------------------------
 
@@ -43,17 +43,16 @@ class DataFrame
     // ---------------------------------------------------------------------
 
    public:
-    /// Creates a version of the table that can be used for self joining
-    /// in a time series model.
-    DataFrame create_self_join(
-        const std::vector<Column<Float>>& _modified_time_stamps ) const;
+    /// Creates a new index.
+    static std::shared_ptr<Index> create_index( const Column<Int>& _join_key );
 
     /// Creates a subview.
     DataFrame create_subview(
         const std::string& _name,
         const std::string& _join_key,
         const std::string& _time_stamp,
-        const std::string& _upper_time_stamp ) const;
+        const std::string& _upper_time_stamp,
+        const bool _allow_lagged_targets ) const;
 
     // ---------------------------------------------------------------------
 
@@ -159,8 +158,13 @@ class DataFrame
     /// Trivial getter
     size_t nrows() const
     {
-        assert_true( join_keys_.size() > 0 );
-        return join_keys_[0].nrows_;
+        if ( num_categoricals() > 0 ) return categoricals_[0].nrows_;
+        if ( num_discretes() > 0 ) return discretes_[0].nrows_;
+        if ( num_join_keys() > 0 ) return join_keys_[0].nrows_;
+        if ( num_numericals() > 0 ) return numericals_[0].nrows_;
+        if ( num_targets() > 0 ) return targets_[0].nrows_;
+        if ( num_time_stamps() > 0 ) return time_stamps_[0].nrows_;
+        return 0;
     }
 
     /// Trivial getter
@@ -313,7 +317,7 @@ class DataFrame
     // ---------------------------------------------------------------------
 
    private:
-    /// Creates the indices for this data frame
+    /// Creates the indices for the data frame
     static std::vector<std::shared_ptr<Index>> create_indices(
         const std::vector<Column<Int>>& _join_keys );
 
@@ -324,7 +328,7 @@ class DataFrame
 
     // ---------------------------------------------------------------------
 
-   private:
+   public:
     /// Pointer to categorical columns.
     const std::vector<Column<Int>> categoricals_;
 

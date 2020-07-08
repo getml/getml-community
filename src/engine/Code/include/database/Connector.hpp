@@ -17,6 +17,9 @@ class Connector
     // -------------------------------
 
    public:
+    /// Returns a Poco::JSON::Object describing the connection.
+    virtual Poco::JSON::Object describe() const = 0;
+
     /// Describes the dialect used by the connector.
     virtual std::string dialect() const = 0;
 
@@ -52,7 +55,6 @@ class Connector
     /// Reads from a CSV file or another data source.
     virtual void read(
         const std::string& _table,
-        const bool _header,
         const size_t _skip,
         io::Reader* _reader ) = 0;
 

@@ -14,13 +14,14 @@ std::vector<Float> LinearRegression::feature_importances(
                 "not been trained!" );
         }
 
-    if ( _num_features != impl().num_autofeatures() + impl().num_columns() )
+    if ( _num_features !=
+         impl().num_autofeatures() + impl().num_manual_features() )
         {
             throw std::invalid_argument(
                 "Incorrect number of features when retrieving in feature "
                 "importances! Expected " +
                 std::to_string(
-                    impl().num_autofeatures() + impl().num_columns() ) +
+                    impl().num_autofeatures() + impl().num_manual_features() ) +
                 ", got " + std::to_string( _num_features ) + "." );
         }
 
@@ -45,6 +46,19 @@ std::vector<Float> LinearRegression::feature_importances(
         }
 
     return feature_importances;
+}
+
+// -----------------------------------------------------------------------------
+
+Poco::JSON::Object::Ptr LinearRegression::fingerprint() const
+{
+    auto obj = Poco::JSON::Object::Ptr( new Poco::JSON::Object() );
+
+    obj->set( "cmd_", cmd_ );
+    obj->set( "dependencies_", JSON::vector_to_array_ptr( dependencies_ ) );
+    obj->set( "impl_", impl().to_json_obj() );
+
+    return obj;
 }
 
 // -----------------------------------------------------------------------------
@@ -83,6 +97,13 @@ std::string LinearRegression::fit(
 
     // -------------------------------------------------------------------------
 
+    if ( _logger )
+        {
+            _logger->log( "Progress: 100%." );
+        }
+
+    // -------------------------------------------------------------------------
+
     return "";
 
     // -------------------------------------------------------------------------
@@ -95,7 +116,7 @@ void LinearRegression::load( const std::string& _fname )
     const auto obj = load_json_obj( _fname + ".json" );
 
     hyperparams_ = std::make_shared<LinearHyperparams>(
-        JSON::get_value<Float>( obj, "lambda_" ),
+        JSON::get_value<Float>( obj, "reg_lambda_" ),
         JSON::get_value<Float>( obj, "learning_rate_" ) );
 
     scaler_ = StandardScaler( *JSON::get_object( obj, "scaler_" ) );
@@ -147,10 +168,9 @@ CFloatColumn LinearRegression::predict(
     const std::vector<CIntColumn>& _X_categorical,
     const std::vector<CFloatColumn>& _X_numerical ) const
 {
-    if ( weights_.size() == 0 )
+    if ( !is_fitted() )
         {
-            throw std::runtime_error(
-                "LinearRegression has not been trained!" );
+            throw std::runtime_error( "LinearRegression has not been fitted!" );
         }
 
     impl().check_plausibility( _X_categorical, _X_numerical );
@@ -280,9 +300,9 @@ void LinearRegression::save( const std::string& _fname ) const
 {
     Poco::JSON::Object obj;
 
-    obj.set( "lambda_", hyperparams().lambda_ );
-
     obj.set( "learning_rate_", hyperparams().learning_rate_ );
+
+    obj.set( "reg_lambda_", hyperparams().reg_lambda_ );
 
     obj.set( "scaler_", scaler_.to_json_obj() );
 
@@ -334,11 +354,11 @@ void LinearRegression::solve_arithmetically(
 
     XtX( X.size(), X.size() ) = n;
 
-    if ( hyperparams().lambda_ > 0.0 )
+    if ( hyperparams().reg_lambda_ > 0.0 )
         {
             for ( size_t i = 0; i < X.size(); ++i )
                 {
-                    XtX( i, i ) += hyperparams().lambda_ * n;
+                    XtX( i, i ) += hyperparams().reg_lambda_ * n;
                 }
         }
 

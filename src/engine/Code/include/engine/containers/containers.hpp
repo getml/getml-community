@@ -48,8 +48,12 @@
 
 #include "engine/utils/utils.hpp"
 
+#include "engine/temp_dir.hpp"
+
 // ----------------------------------------------------
 // Module files
+
+#include "engine/containers/Optional.hpp"
 
 #include "engine/containers/CategoricalFeatures.hpp"
 #include "engine/containers/Features.hpp"
@@ -59,6 +63,8 @@
 #include "engine/containers/Index.hpp"
 
 #include "engine/containers/DataFrameIndex.hpp"
+
+#include "engine/containers/DataFramePrinter.hpp"
 
 #include "engine/containers/DataFrame.hpp"
 

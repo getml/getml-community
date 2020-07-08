@@ -6,13 +6,15 @@ namespace handlers
 {
 // ----------------------------------------------------------------------------
 
-containers::Column<Float> NumOpParser::as_num( const Poco::JSON::Object& _col )
+containers::Column<Float> NumOpParser::as_num(
+    const Poco::JSON::Object& _col ) const
 {
     const auto operand1 = CatOpParser(
                               categories_,
                               join_keys_encoding_,
                               data_frames_,
-                              num_elem_,
+                              begin_,
+                              length_,
                               subselection_ )
                               .parse( *JSON::get_object( _col, "operand1_" ) );
 
@@ -38,7 +40,8 @@ containers::Column<Float> NumOpParser::as_num( const Poco::JSON::Object& _col )
 
 // ----------------------------------------------------------------------------
 
-containers::Column<Float> NumOpParser::as_ts( const Poco::JSON::Object& _col )
+containers::Column<Float> NumOpParser::as_ts(
+    const Poco::JSON::Object& _col ) const
 {
     const auto time_formats = JSON::array_to_vector<std::string>(
         JSON::get_array( _col, "time_formats_" ) );
@@ -47,7 +50,8 @@ containers::Column<Float> NumOpParser::as_ts( const Poco::JSON::Object& _col )
                               categories_,
                               join_keys_encoding_,
                               data_frames_,
-                              num_elem_,
+                              begin_,
+                              length_,
                               subselection_ )
                               .parse( *JSON::get_object( _col, "operand1_" ) );
 
@@ -79,8 +83,61 @@ containers::Column<Float> NumOpParser::as_ts( const Poco::JSON::Object& _col )
 
 // ----------------------------------------------------------------------------
 
+void NumOpParser::check(
+    const containers::Column<Float>& _col,
+    const std::shared_ptr<const monitoring::Logger>& _logger,
+    Poco::Net::StreamSocket* _socket ) const
+{
+    // --------------------------------------------------------------------------
+
+    communication::Warner warner;
+
+    // --------------------------------------------------------------------------
+
+    if ( _col.size() == 0 )
+        {
+            warner.send( _socket );
+            return;
+        }
+
+    // --------------------------------------------------------------------------
+
+    const Float length = static_cast<Float>( _col.size() );
+
+    const Float num_non_null =
+        utils::ColumnOperators::count( _col.begin(), _col.end() );
+
+    const auto share_null = 1.0 - num_non_null / length;
+
+    if ( share_null > 0.9 )
+        {
+            warner.add(
+                std::to_string( share_null * 100.0 ) +
+                "\% of all entries of column '" + _col.name() +
+                "' are NULL values." );
+        }
+
+    // --------------------------------------------------------------------------
+
+    if ( _logger )
+        {
+            for ( const auto& warning : warner.warnings() )
+                {
+                    _logger->log( "WARNING: " + warning );
+                }
+        }
+
+    // --------------------------------------------------------------------------
+
+    warner.send( _socket );
+
+    // --------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
 containers::Column<Float> NumOpParser::binary_operation(
-    const Poco::JSON::Object& _col )
+    const Poco::JSON::Object& _col ) const
 {
     const auto op = JSON::get_value<std::string>( _col, "operator_" );
 
@@ -130,7 +187,7 @@ containers::Column<Float> NumOpParser::binary_operation(
 // ----------------------------------------------------------------------------
 
 containers::Column<Float> NumOpParser::boolean_as_num(
-    const Poco::JSON::Object& _col )
+    const Poco::JSON::Object& _col ) const
 {
     const auto obj = *JSON::get_object( _col, "operand1_" );
 
@@ -138,7 +195,8 @@ containers::Column<Float> NumOpParser::boolean_as_num(
                               categories_,
                               join_keys_encoding_,
                               data_frames_,
-                              num_elem_,
+                              begin_,
+                              length_,
                               subselection_ )
                               .parse( obj );
 
@@ -163,7 +221,7 @@ containers::Column<Float> NumOpParser::boolean_as_num(
 // ----------------------------------------------------------------------------
 
 containers::Column<Float> NumOpParser::get_column(
-    const Poco::JSON::Object& _col )
+    const Poco::JSON::Object& _col ) const
 {
     const auto name = JSON::get_value<std::string>( _col, "name_" );
 
@@ -181,8 +239,8 @@ containers::Column<Float> NumOpParser::get_column(
         }
 
     const bool wrong_length =
-        ( !subselection_ && it->second.nrows() != num_elem_ ) ||
-        it->second.nrows() < num_elem_;
+        ( !subselection_ && it->second.nrows() != length_ ) ||
+        it->second.nrows() < begin_ + length_;
 
     if ( wrong_length )
         {
@@ -193,7 +251,7 @@ containers::Column<Float> NumOpParser::get_column(
             return containers::Column<Float>( 0 );
         }
 
-    if ( it->second.nrows() == num_elem_ )
+    if ( it->second.nrows() == length_ )
         {
             return it->second.float_column( name, role );
         }
@@ -201,10 +259,12 @@ containers::Column<Float> NumOpParser::get_column(
         {
             const auto long_col = it->second.float_column( name, role );
 
-            auto col = containers::Column<Float>( num_elem_ );
+            auto col = containers::Column<Float>( length_ );
 
             std::copy(
-                long_col.begin(), long_col.begin() + num_elem_, col.begin() );
+                long_col.begin() + begin_,
+                long_col.begin() + begin_ + length_,
+                col.begin() );
 
             return col;
         }
@@ -212,7 +272,8 @@ containers::Column<Float> NumOpParser::get_column(
 
 // ----------------------------------------------------------------------------
 
-containers::Column<Float> NumOpParser::parse( const Poco::JSON::Object& _col )
+containers::Column<Float> NumOpParser::parse(
+    const Poco::JSON::Object& _col ) const
 {
     const auto type = JSON::get_value<std::string>( _col, "type_" );
 
@@ -224,7 +285,7 @@ containers::Column<Float> NumOpParser::parse( const Poco::JSON::Object& _col )
         {
             const auto val = JSON::get_value<Float>( _col, "value_" );
 
-            auto col = containers::Column<Float>( num_elem_ );
+            auto col = containers::Column<Float>( length_ );
 
             std::fill( col.begin(), col.end(), val );
 
@@ -249,8 +310,14 @@ containers::Column<Float> NumOpParser::parse( const Poco::JSON::Object& _col )
 // ----------------------------------------------------------------------------
 
 containers::Column<Float> NumOpParser::unary_operation(
-    const Poco::JSON::Object& _col )
+    const Poco::JSON::Object& _col ) const
 {
+    const auto to_time_stamp = []( const Float val ) {
+        const auto seconds_since_epoch = static_cast<std::time_t>( val );
+        return Poco::DateTime(
+            Poco::Timestamp::fromEpochTime( seconds_since_epoch ) );
+    };
+
     const auto op = JSON::get_value<std::string>( _col, "operator_" );
 
     if ( op == "abs" )
@@ -312,24 +379,14 @@ containers::Column<Float> NumOpParser::unary_operation(
         }
     else if ( op == "day" )
         {
-            const std::chrono::time_point<std::chrono::system_clock>
-                epoch_point;
-
-            const auto day = [epoch_point]( const Float val ) {
+            const auto day = [to_time_stamp]( const Float val ) {
                 if ( std::isnan( val ) || std::isinf( val ) )
                     {
                         return static_cast<Float>( NAN );
                     }
-
-                const auto seconds_since_epoch =
-                    static_cast<std::time_t>( 86400.0 * val );
-
-                const auto time_stamp = std::chrono::system_clock::to_time_t(
-                    epoch_point + std::chrono::seconds( seconds_since_epoch ) );
-
-                return static_cast<Float>(
-                    std::gmtime( &time_stamp )->tm_mday );
+                return static_cast<Float>( to_time_stamp( val ).day() );
             };
+
             return un_op( _col, day );
         }
     else if ( op == "erf" )
@@ -351,24 +408,14 @@ containers::Column<Float> NumOpParser::unary_operation(
         }
     else if ( op == "hour" )
         {
-            const std::chrono::time_point<std::chrono::system_clock>
-                epoch_point;
-
-            const auto hour = [epoch_point]( const Float val ) {
+            const auto hour = [to_time_stamp]( const Float val ) {
                 if ( std::isnan( val ) || std::isinf( val ) )
                     {
                         return static_cast<Float>( NAN );
                     }
-
-                const auto seconds_since_epoch =
-                    static_cast<std::time_t>( 86400.0 * val );
-
-                const auto time_stamp = std::chrono::system_clock::to_time_t(
-                    epoch_point + std::chrono::seconds( seconds_since_epoch ) );
-
-                return static_cast<Float>(
-                    std::gmtime( &time_stamp )->tm_hour );
+                return static_cast<Float>( to_time_stamp( val ).hour() );
             };
+
             return un_op( _col, hour );
         }
     else if ( op == "lgamma" )
@@ -385,45 +432,26 @@ containers::Column<Float> NumOpParser::unary_operation(
         }
     else if ( op == "minute" )
         {
-            const std::chrono::time_point<std::chrono::system_clock>
-                epoch_point;
-
-            const auto minute = [epoch_point]( const Float val ) {
+            const auto minute = [to_time_stamp]( const Float val ) {
                 if ( std::isnan( val ) || std::isinf( val ) )
                     {
                         return static_cast<Float>( NAN );
                     }
-
-                const auto seconds_since_epoch =
-                    static_cast<std::time_t>( 86400.0 * val );
-
-                const auto time_stamp = std::chrono::system_clock::to_time_t(
-                    epoch_point + std::chrono::seconds( seconds_since_epoch ) );
-
-                return static_cast<Float>( std::gmtime( &time_stamp )->tm_min );
+                return static_cast<Float>( to_time_stamp( val ).minute() );
             };
+
             return un_op( _col, minute );
         }
     else if ( op == "month" )
         {
-            const std::chrono::time_point<std::chrono::system_clock>
-                epoch_point;
-
-            const auto month = [epoch_point]( const Float val ) {
+            const auto month = [to_time_stamp]( const Float val ) {
                 if ( std::isnan( val ) || std::isinf( val ) )
                     {
                         return static_cast<Float>( NAN );
                     }
-
-                const auto seconds_since_epoch =
-                    static_cast<std::time_t>( 86400.0 * val );
-
-                const auto time_stamp = std::chrono::system_clock::to_time_t(
-                    epoch_point + std::chrono::seconds( seconds_since_epoch ) );
-
-                return static_cast<Float>(
-                    std::gmtime( &time_stamp )->tm_mon + 1 );
+                return static_cast<Float>( to_time_stamp( val ).month() );
             };
+
             return un_op( _col, month );
         }
     else if ( op == "random" )
@@ -443,23 +471,14 @@ containers::Column<Float> NumOpParser::unary_operation(
         }
     else if ( op == "second" )
         {
-            const std::chrono::time_point<std::chrono::system_clock>
-                epoch_point;
-
-            const auto second = [epoch_point]( const Float val ) {
+            const auto second = [to_time_stamp]( const Float val ) {
                 if ( std::isnan( val ) || std::isinf( val ) )
                     {
                         return static_cast<Float>( NAN );
                     }
-
-                const auto seconds_since_epoch =
-                    static_cast<std::time_t>( 86400.0 * val );
-
-                const auto time_stamp = std::chrono::system_clock::to_time_t(
-                    epoch_point + std::chrono::seconds( seconds_since_epoch ) );
-
-                return static_cast<Float>( std::gmtime( &time_stamp )->tm_sec );
+                return static_cast<Float>( to_time_stamp( val ).second() );
             };
+
             return un_op( _col, second );
         }
     else if ( op == "sin" )
@@ -492,68 +511,38 @@ containers::Column<Float> NumOpParser::unary_operation(
         }
     else if ( op == "weekday" )
         {
-            const std::chrono::time_point<std::chrono::system_clock>
-                epoch_point;
-
-            const auto weekday = [epoch_point]( const Float val ) {
+            const auto weekday = [to_time_stamp]( const Float val ) {
                 if ( std::isnan( val ) || std::isinf( val ) )
                     {
                         return static_cast<Float>( NAN );
                     }
-
-                const auto seconds_since_epoch =
-                    static_cast<std::time_t>( 86400.0 * val );
-
-                const auto time_stamp = std::chrono::system_clock::to_time_t(
-                    epoch_point + std::chrono::seconds( seconds_since_epoch ) );
-
-                return static_cast<Float>(
-                    std::gmtime( &time_stamp )->tm_wday );
+                return static_cast<Float>( to_time_stamp( val ).dayOfWeek() );
             };
+
             return un_op( _col, weekday );
         }
     else if ( op == "year" )
         {
-            const std::chrono::time_point<std::chrono::system_clock>
-                epoch_point;
-
-            const auto year = [epoch_point]( const Float val ) {
+            const auto year = [to_time_stamp]( const Float val ) {
                 if ( std::isnan( val ) || std::isinf( val ) )
                     {
                         return static_cast<Float>( NAN );
                     }
-
-                const auto seconds_since_epoch =
-                    static_cast<std::time_t>( 86400.0 * val );
-
-                const auto time_stamp = std::chrono::system_clock::to_time_t(
-                    epoch_point + std::chrono::seconds( seconds_since_epoch ) );
-
-                return static_cast<Float>(
-                    std::gmtime( &time_stamp )->tm_year + 1900 );
+                return static_cast<Float>( to_time_stamp( val ).year() );
             };
+
             return un_op( _col, year );
         }
     else if ( op == "yearday" )
         {
-            const std::chrono::time_point<std::chrono::system_clock>
-                epoch_point;
-
-            const auto yearday = [epoch_point]( const Float val ) {
+            const auto yearday = [to_time_stamp]( const Float val ) {
                 if ( std::isnan( val ) || std::isinf( val ) )
                     {
                         return static_cast<Float>( NAN );
                     }
-
-                const auto seconds_since_epoch =
-                    static_cast<std::time_t>( 86400.0 * val );
-
-                const auto time_stamp = std::chrono::system_clock::to_time_t(
-                    epoch_point + std::chrono::seconds( seconds_since_epoch ) );
-
-                return static_cast<Float>(
-                    std::gmtime( &time_stamp )->tm_yday + 1 );
+                return static_cast<Float>( to_time_stamp( val ).dayOfYear() );
             };
+
             return un_op( _col, yearday );
         }
     else
@@ -567,7 +556,8 @@ containers::Column<Float> NumOpParser::unary_operation(
 
 // ----------------------------------------------------------------------------
 
-containers::Column<Float> NumOpParser::update( const Poco::JSON::Object& _col )
+containers::Column<Float> NumOpParser::update(
+    const Poco::JSON::Object& _col ) const
 {
     const auto operand1 = parse( *JSON::get_object( _col, "operand1_" ) );
 
@@ -578,7 +568,8 @@ containers::Column<Float> NumOpParser::update( const Poco::JSON::Object& _col )
             categories_,
             join_keys_encoding_,
             data_frames_,
-            num_elem_,
+            begin_,
+            length_,
             subselection_ )
             .parse( *JSON::get_object( _col, "condition_" ) );
 

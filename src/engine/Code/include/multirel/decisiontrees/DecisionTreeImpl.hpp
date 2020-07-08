@@ -150,16 +150,6 @@ struct DecisionTreeImpl
 
     // ------------------------------------------------------------
 
-    /// Returns the colname corresponding to _data used and
-    /// _ix_column_used
-    std::string get_colname(
-        const std::string& _feature_num,
-        const enums::DataUsed _data_used,
-        const size_t _ix_column_used,
-        const bool _equals = true ) const;
-
-    // ------------------------------------------------------------
-
     /// The aggregation is what connects the peripheral table
     /// to the population table and thus the targets.
     std::shared_ptr<aggregations::AbstractAggregation> aggregation_;

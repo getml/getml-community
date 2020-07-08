@@ -103,8 +103,10 @@ struct Split
         assert_true(
             _data_used == enums::DataUsed::same_units_discrete ||
             _data_used == enums::DataUsed::same_units_discrete_is_nan ||
+            _data_used == enums::DataUsed::same_units_discrete_ts ||
             _data_used == enums::DataUsed::same_units_numerical ||
-            _data_used == enums::DataUsed::same_units_numerical_is_nan );
+            _data_used == enums::DataUsed::same_units_numerical_is_nan ||
+            _data_used == enums::DataUsed::same_units_numerical_ts );
     }
 
     /// Constructor for deep copies and reconstruction from JSON.

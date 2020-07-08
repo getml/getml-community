@@ -11,12 +11,13 @@ void test1( std::filesystem::path _test_path )
     // folder only the filename has to be replaced.
     _test_path.append( "database" ).append( "POPULATION.CSV" );
 
-    auto sqlite_db = database::Sqlite3( ":memory:", {"%Y-%m-%d %H:%M:%S"} );
+    auto sqlite_db = database::Sqlite3( ":memory:", { "%Y-%m-%d %H:%M:%S" } );
 
     auto population_sniffer = io::CSVSniffer(
+        std::nullopt,
+        Poco::JSON::Object(),
         "sqlite",
-        {_test_path.string(), _test_path.string()},
-        true,
+        { _test_path.string(), _test_path.string() },
         100,
         '\"',
         ',',
@@ -29,12 +30,15 @@ void test1( std::filesystem::path _test_path )
 
     sqlite_db.execute( population_statement );
 
-    auto reader = io::CSVReader( _test_path.string(), '\"', ',' );
+    auto reader =
+        io::CSVReader( std::nullopt, _test_path.string(), 0, '\"', ',' );
 
-    sqlite_db.read( "POPULATION", true, 0, &reader );
+    sqlite_db.read( "POPULATION", 0, &reader );
 
     auto it = sqlite_db.select(
-        {"column_01", "join_key", "time_stamp", "targets"}, "POPULATION", "" );
+        { "column_01", "join_key", "time_stamp", "targets" },
+        "POPULATION",
+        "" );
 
     // First line:
     // 0.09902457667435494, 0, 0.7386545235592108, 113.0

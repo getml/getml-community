@@ -12,6 +12,8 @@
 
 #include "strings/strings.hpp"
 
+#include "multirel/utils/utils.hpp"
+
 #include "multirel/decisiontrees/decisiontrees.hpp"
 
 // ----------------------------------------------------

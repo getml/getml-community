@@ -99,7 +99,7 @@ std::shared_ptr<AbstractAggregation> AggregationParser::make_aggregation(
                 break;
 
             case enums::DataUsed::same_unit_numerical:
-
+            case enums::DataUsed::same_unit_numerical_ts:
                 {
                     const enums::DataUsed data_used2 =
                         std::get<1>( _same_units_numerical[_ix_column_used] )
@@ -133,7 +133,7 @@ std::shared_ptr<AbstractAggregation> AggregationParser::make_aggregation(
                 break;
 
             case enums::DataUsed::same_unit_discrete:
-
+            case enums::DataUsed::same_unit_discrete_ts:
                 {
                     const enums::DataUsed data_used2 =
                         std::get<1>( _same_units_discrete[_ix_column_used] )

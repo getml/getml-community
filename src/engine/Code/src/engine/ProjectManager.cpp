@@ -35,7 +35,28 @@ void ProjectManager::add_data_frame_from_csv(
 
     const auto append = JSON::get_value<bool>( _cmd, "append_" );
 
-    data_frame_manager_->from_csv( _name, _cmd, append, _socket );
+    data_frame_manager().from_csv( _name, _cmd, append, _socket );
+
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    monitor_->send( "postdataframe", data_frames()[_name].to_monitor() );
+}
+
+// ------------------------------------------------------------------------
+
+void ProjectManager::add_data_frame_from_s3(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    if ( project_directory_ == "" )
+        {
+            throw std::invalid_argument( "You have not set a project!" );
+        }
+
+    const auto append = JSON::get_value<bool>( _cmd, "append_" );
+
+    data_frame_manager().from_s3( _name, _cmd, append, _socket );
 
     multithreading::ReadLock read_lock( read_write_lock_ );
 
@@ -107,205 +128,46 @@ void ProjectManager::add_data_frame_from_query(
 
 // ------------------------------------------------------------------------
 
-void ProjectManager::add_multirel_model(
+void ProjectManager::add_hyperopt(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,
     Poco::Net::StreamSocket* _socket )
 {
-    if ( project_directory_ == "" )
-        {
-            throw std::invalid_argument( "You have not set a project!" );
-        }
+    const auto hyperopt = hyperparam::Hyperopt( _cmd );
 
-    const auto hyperparameters_obj =
-        JSON::get_object( _cmd, "hyperparameters_" );
-
-    const auto hyperparameters =
-        std::make_shared<multirel::descriptors::Hyperparameters>(
-            *hyperparameters_obj );
-
-    const auto peripheral = std::make_shared<std::vector<std::string>>(
-        JSON::array_to_vector<std::string>(
-            JSON::get_array( _cmd, "peripheral_" ) ) );
-
-    const auto placeholder =
-        std::make_shared<multirel::containers::Placeholder>(
-            JSON::get_object( _cmd, "placeholder_" ) );
-
-    auto population_schema =
-        std::shared_ptr<const multirel::containers::Placeholder>();
-
-    if ( _cmd.has( "population_schema_" ) )
-        {
-            population_schema =
-                std::make_shared<const multirel::containers::Placeholder>(
-                    *JSON::get_object( _cmd, "population_schema_" ) );
-        }
-
-    auto peripheral_schema =
-        std::shared_ptr<const std::vector<multirel::containers::Placeholder>>();
-
-    if ( _cmd.has( "peripheral_schema_" ) )
-        {
-            std::vector<multirel::containers::Placeholder> peripheral;
-
-            const auto peripheral_arr =
-                *JSON::get_array( _cmd, "peripheral_schema_" );
-
-            for ( size_t i = 0; i < peripheral_arr.size(); ++i )
-                {
-                    const auto ptr = peripheral_arr.getObject(
-                        static_cast<unsigned int>( i ) );
-
-                    if ( !ptr )
-                        {
-                            throw std::invalid_argument(
-                                "peripheral_schema_, element " +
-                                std::to_string( i ) + " is not an Object!" );
-                        }
-
-                    peripheral.push_back(
-                        multirel::containers::Placeholder( *ptr ) );
-                }
-
-            peripheral_schema = std::make_shared<
-                const std::vector<multirel::containers::Placeholder>>(
-                peripheral );
-        }
-
-    const auto model = models::MultirelModel(
-        multirel::ensemble::DecisionTreeEnsemble(
-            categories_->vector(),
-            hyperparameters,
-            peripheral,
-            placeholder,
-            peripheral_schema,
-            population_schema ),
-        *hyperparameters_obj );
-
-    set_multirel_model( _name, model, false );
-
-    monitor_->send( "postmultirelmodel", model.to_monitor( _name ) );
-
-    engine::communication::Sender::send_string( "Success!", _socket );
-}
-
-// ------------------------------------------------------------------------
-
-void ProjectManager::add_relboost_model(
-    const std::string& _name,
-    const Poco::JSON::Object& _cmd,
-    Poco::Net::StreamSocket* _socket )
-{
-    if ( project_directory_ == "" )
-        {
-            throw std::invalid_argument( "You have not set a project!" );
-        }
-
-    const auto hyperparameters_obj =
-        JSON::get_object( _cmd, "hyperparameters_" );
-
-    const auto hyperparameters =
-        std::make_shared<relboost::Hyperparameters>( hyperparameters_obj );
-
-    const auto peripheral = std::make_shared<std::vector<std::string>>(
-        JSON::array_to_vector<std::string>(
-            JSON::get_array( _cmd, "peripheral_" ) ) );
-
-    const auto placeholder =
-        std::make_shared<relboost::containers::Placeholder>(
-            JSON::get_object( _cmd, "placeholder_" ) );
-
-    auto population_schema =
-        std::shared_ptr<const relboost::containers::Placeholder>();
-
-    if ( _cmd.has( "population_schema_" ) )
-        {
-            population_schema =
-                std::make_shared<const relboost::containers::Placeholder>(
-                    *JSON::get_object( _cmd, "population_schema_" ) );
-        }
-
-    auto peripheral_schema =
-        std::shared_ptr<const std::vector<relboost::containers::Placeholder>>();
-
-    if ( _cmd.has( "peripheral_schema_" ) )
-        {
-            std::vector<relboost::containers::Placeholder> peripheral;
-
-            const auto peripheral_arr =
-                *JSON::get_array( _cmd, "peripheral_schema_" );
-
-            for ( size_t i = 0; i < peripheral_arr.size(); ++i )
-                {
-                    const auto ptr = peripheral_arr.getObject(
-                        static_cast<unsigned int>( i ) );
-
-                    if ( !ptr )
-                        {
-                            throw std::invalid_argument(
-                                "peripheral_schema_, element " +
-                                std::to_string( i ) + " is not an Object!" );
-                        }
-
-                    peripheral.push_back(
-                        relboost::containers::Placeholder( *ptr ) );
-                }
-
-            peripheral_schema = std::make_shared<
-                const std::vector<relboost::containers::Placeholder>>(
-                peripheral );
-        }
-
-    const auto model = models::RelboostModel(
-        relboost::ensemble::DecisionTreeEnsemble(
-            categories_->vector(),
-            hyperparameters,
-            peripheral,
-            placeholder,
-            peripheral_schema,
-            population_schema ),
-        *hyperparameters_obj );
-
-    set_relboost_model( _name, model, false );
-
-    monitor_->send( "postrelboostmodel", model.to_monitor( _name ) );
-
-    engine::communication::Sender::send_string( "Success!", _socket );
-}
-
-// ------------------------------------------------------------------------
-
-void ProjectManager::copy_multirel_model(
-    const std::string& _name,
-    const Poco::JSON::Object& _cmd,
-    Poco::Net::StreamSocket* _socket )
-{
-    const std::string other = JSON::get_value<std::string>( _cmd, "other_" );
-
-    auto other_model = get_multirel_model( other );
-
-    set_multirel_model( _name, other_model, false );
-
-    monitor_->send( "postmultirelmodel", other_model.to_monitor( _name ) );
+    set_hyperopt( _name, hyperopt );
 
     communication::Sender::send_string( "Success!", _socket );
 }
 
 // ------------------------------------------------------------------------
 
-void ProjectManager::copy_relboost_model(
+void ProjectManager::add_pipeline(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    const auto pipeline = pipelines::Pipeline( categories().vector(), _cmd );
+
+    set_pipeline( _name, pipeline );
+
+    engine::communication::Sender::send_string( "Success!", _socket );
+}
+
+// ------------------------------------------------------------------------
+
+void ProjectManager::copy_pipeline(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,
     Poco::Net::StreamSocket* _socket )
 {
     const std::string other = JSON::get_value<std::string>( _cmd, "other_" );
 
-    auto other_model = get_relboost_model( other );
+    const auto other_pipeline = get_pipeline( other );
 
-    set_relboost_model( _name, other_model, false );
+    set_pipeline( _name, other_pipeline );
 
-    monitor_->send( "postrelboostmodel", other_model.to_monitor( _name ) );
+    monitor_->send( "postpipeline", other_pipeline.to_monitor( _name ) );
 
     communication::Sender::send_string( "Success!", _socket );
 }
@@ -323,48 +185,35 @@ void ProjectManager::clear()
                 "removedataframe", "{\"name\":\"" + pair.first + "\"}" );
         }
 
-    for ( auto& pair : multirel_models() )
-        {
-            monitor_->send(
-                "removemultirelmodel", "{\"name\":\"" + pair.first + "\"}" );
-        }
+    // TODO: Remove hyperopts
 
-    for ( auto& pair : relboost_models() )
+    for ( auto& pair : pipelines() )
         {
             monitor_->send(
-                "removerelboostmodel", "{\"name\":\"" + pair.first + "\"}" );
+                "removepipeline", "{\"name\":\"" + pair.first + "\"}" );
         }
 
     // --------------------------------
-    // Remove from engine.
-
-    multirel_models() = engine::handlers::MultirelModelManager::ModelMapType();
 
     data_frames() = std::map<std::string, engine::containers::DataFrame>();
 
-    relboost_models() = engine::handlers::RelboostModelManager::ModelMapType();
+    hyperopts() = std::map<std::string, engine::hyperparam::Hyperopt>();
+
+    pipelines() = engine::handlers::PipelineManager::PipelineMapType();
+
+    // --------------------------------
 
     categories().clear();
 
     join_keys_encoding().clear();
 
     // --------------------------------
-}
 
-// ------------------------------------------------------------------------
+    fe_tracker().clear();
 
-void ProjectManager::delete_multirel_model(
-    const std::string& _name,
-    const Poco::JSON::Object& _cmd,
-    Poco::Net::StreamSocket* _socket )
-{
-    multithreading::WriteLock write_lock( read_write_lock_ );
+    pred_tracker().clear();
 
-    FileHandler::remove( _name, project_directory_, _cmd, &multirel_models() );
-
-    monitor_->send( "removemultirelmodel", "{\"name\":\"" + _name + "\"}" );
-
-    communication::Sender::send_string( "Success!", _socket );
+    // --------------------------------
 }
 
 // ------------------------------------------------------------------------
@@ -385,16 +234,16 @@ void ProjectManager::delete_data_frame(
 
 // ------------------------------------------------------------------------
 
-void ProjectManager::delete_relboost_model(
+void ProjectManager::delete_pipeline(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,
     Poco::Net::StreamSocket* _socket )
 {
     multithreading::WriteLock write_lock( read_write_lock_ );
 
-    FileHandler::remove( _name, project_directory_, _cmd, &relboost_models() );
+    FileHandler::remove( _name, project_directory_, _cmd, &pipelines() );
 
-    monitor_->send( "removerelboostmodel", "{\"name\":\"" + _name + "\"}" );
+    monitor_->send( "removepipeline", "{\"name\":\"" + _name + "\"}" );
 
     communication::Sender::send_string( "Success!", _socket );
 }
@@ -420,49 +269,13 @@ void ProjectManager::delete_project(
     if ( project_directory_ == options_.all_projects_directory() + _name + "/" )
         {
             project_directory_ = "";
+            clear();
         }
 
     Poco::File( options_.all_projects_directory() + _name + "/" )
         .remove( true );
 
     engine::communication::Sender::send_string( "Success!", _socket );
-}
-
-// ------------------------------------------------------------------------
-
-void ProjectManager::get_model(
-    const std::string& _name, Poco::Net::StreamSocket* _socket ) const
-{
-    // --------------------------------------------------------------------
-
-    multithreading::ReadLock read_lock( read_write_lock_ );
-
-    // --------------------------------------------------------------------
-
-    const auto itm = multirel_models().find( _name );
-
-    if ( itm != multirel_models().end() )
-        {
-            communication::Sender::send_string( "MultirelModel", _socket );
-            return;
-        }
-
-    // --------------------------------------------------------------------
-
-    const auto itr = relboost_models().find( _name );
-
-    if ( itr != relboost_models().end() )
-        {
-            communication::Sender::send_string( "RelboostModel", _socket );
-            return;
-        }
-
-    // --------------------------------------------------------------------
-
-    throw std::invalid_argument(
-        "Model named '" + _name + "' does not exist!" );
-
-    // --------------------------------------------------------------------
 }
 
 // ------------------------------------------------------------------------
@@ -528,31 +341,47 @@ void ProjectManager::list_data_frames( Poco::Net::StreamSocket* _socket ) const
 
 // ------------------------------------------------------------------------
 
-void ProjectManager::list_models( Poco::Net::StreamSocket* _socket ) const
+void ProjectManager::list_hyperopts( Poco::Net::StreamSocket* _socket ) const
 {
     Poco::JSON::Object obj;
 
     multithreading::ReadLock read_lock( read_write_lock_ );
 
-    Poco::JSON::Array multirel_names;
+    Poco::JSON::Array names;
 
-    for ( const auto& [key, value] : multirel_models() )
+    for ( const auto& [key, value] : hyperopts() )
         {
-            multirel_names.add( key );
-        }
-
-    Poco::JSON::Array relboost_names;
-
-    for ( const auto& [key, value] : relboost_models() )
-        {
-            relboost_names.add( key );
+            names.add( key );
         }
 
     read_lock.unlock();
 
-    obj.set( "multirel_models", multirel_names );
+    obj.set( "names", names );
 
-    obj.set( "relboost_models", relboost_names );
+    engine::communication::Sender::send_string( "Success!", _socket );
+
+    engine::communication::Sender::send_string(
+        JSON::stringify( obj ), _socket );
+}
+
+// ------------------------------------------------------------------------
+
+void ProjectManager::list_pipelines( Poco::Net::StreamSocket* _socket ) const
+{
+    Poco::JSON::Object obj;
+
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    Poco::JSON::Array names;
+
+    for ( const auto& [key, value] : pipelines() )
+        {
+            names.add( key );
+        }
+
+    read_lock.unlock();
+
+    obj.set( "names", names );
 
     engine::communication::Sender::send_string( "Success!", _socket );
 
@@ -594,7 +423,7 @@ void ProjectManager::list_projects( Poco::Net::StreamSocket* _socket ) const
 
 // ------------------------------------------------------------------------
 
-void ProjectManager::load_all_models()
+void ProjectManager::load_all_hyperopts()
 {
     // --------------------------------------------------------------------
 
@@ -607,7 +436,7 @@ void ProjectManager::load_all_models()
 
     // --------------------------------------------------------------------
 
-    for ( Poco::DirectoryIterator it( project_directory_ + "multirel-models/" );
+    for ( Poco::DirectoryIterator it( project_directory_ + "hyperopts/" );
           it != end;
           ++it )
         {
@@ -618,41 +447,14 @@ void ProjectManager::load_all_models()
 
             try
                 {
-                    auto model = models::MultirelModel(
-                        categories().vector(), it->path() + "/" );
+                    const auto hyperopt =
+                        hyperparam::Hyperopt( it->path() + "/" );
 
-                    set_multirel_model( it.name(), model, true );
+                    set_hyperopt( it.name(), hyperopt );
 
-                    monitor_->send(
-                        "postmultirelmodel", model.to_monitor( it.name() ) );
-                }
-            catch ( std::exception& e )
-                {
-                    logger().log(
-                        "Error loading " + it.name() + ": " + e.what() );
-                }
-        }
-
-    // --------------------------------------------------------------------
-
-    for ( Poco::DirectoryIterator it( project_directory_ + "relboost-models/" );
-          it != end;
-          ++it )
-        {
-            if ( !it->isDirectory() )
-                {
-                    continue;
-                }
-
-            try
-                {
-                    auto model = models::RelboostModel(
-                        categories().vector(), it->path() + "/" );
-
-                    set_relboost_model( it.name(), model, true );
-
-                    monitor_->send(
-                        "postrelboostmodel", model.to_monitor( it.name() ) );
+                    // TODO
+                    /*monitor_->send(
+                        "posthyperopt", pipeline.to_monitor( it.name() ) );*/
                 }
             catch ( std::exception& e )
                 {
@@ -666,23 +468,49 @@ void ProjectManager::load_all_models()
 
 // ------------------------------------------------------------------------
 
-void ProjectManager::load_multirel_model(
-    const std::string& _name, Poco::Net::StreamSocket* _socket )
+void ProjectManager::load_all_pipelines()
 {
+    // --------------------------------------------------------------------
+
     if ( project_directory_ == "" )
         {
             throw std::invalid_argument( "You have not set a project!" );
         }
 
-    const auto path = project_directory_ + "multirel-models/" + _name + "/";
+    Poco::DirectoryIterator end;
 
-    auto model = models::MultirelModel( categories().vector(), path );
+    // --------------------------------------------------------------------
 
-    set_multirel_model( _name, model, true );
+    for ( Poco::DirectoryIterator it( project_directory_ + "pipelines/" );
+          it != end;
+          ++it )
+        {
+            if ( !it->isDirectory() )
+                {
+                    continue;
+                }
 
-    monitor_->send( "postmultirelmodel", model.to_monitor( _name ) );
+            try
+                {
+                    const auto pipeline = pipelines::Pipeline(
+                        categories().vector(),
+                        it->path() + "/",
+                        fe_tracker_,
+                        pred_tracker_ );
 
-    engine::communication::Sender::send_string( "Success!", _socket );
+                    set_pipeline( it.name(), pipeline );
+
+                    monitor_->send(
+                        "postpipeline", pipeline.to_monitor( it.name() ) );
+                }
+            catch ( std::exception& e )
+                {
+                    logger().log(
+                        "Error loading " + it.name() + ": " + e.what() );
+                }
+        }
+
+    // --------------------------------------------------------------------
 }
 
 // ------------------------------------------------------------------------
@@ -733,7 +561,7 @@ void ProjectManager::load_data_frame(
 
 // ------------------------------------------------------------------------
 
-void ProjectManager::load_relboost_model(
+void ProjectManager::load_pipeline(
     const std::string& _name, Poco::Net::StreamSocket* _socket )
 {
     if ( project_directory_ == "" )
@@ -741,53 +569,16 @@ void ProjectManager::load_relboost_model(
             throw std::invalid_argument( "You have not set a project!" );
         }
 
-    const auto path = project_directory_ + "relboost-models/" + _name + "/";
+    const auto path = project_directory_ + "pipelines/" + _name + "/";
 
-    auto model = models::RelboostModel( categories().vector(), path );
+    auto pipeline = pipelines::Pipeline(
+        categories().vector(), path, fe_tracker_, pred_tracker_ );
 
-    set_relboost_model( _name, model, true );
+    set_pipeline( _name, pipeline );
 
-    monitor_->send( "postrelboostmodel", model.to_monitor( _name ) );
+    monitor_->send( "postpipeline", pipeline.to_monitor( _name ) );
 
     engine::communication::Sender::send_string( "Success!", _socket );
-}
-
-// ------------------------------------------------------------------------
-
-void ProjectManager::purge_model(
-    const std::string& _name, const bool _mem_only )
-{
-    // --------------------------------------------------------------------
-
-    Poco::JSON::Object cmd;
-
-    cmd.set( "mem_only_", _mem_only );
-
-    // --------------------------------------------------------------------
-
-    const auto itm = multirel_models().find( _name );
-
-    if ( itm != multirel_models().end() )
-        {
-            FileHandler::remove(
-                _name, project_directory_, cmd, &multirel_models() );
-            monitor_->send(
-                "removemultirelmodel", "{\"name\":\"" + _name + "\"}" );
-        }
-
-    // --------------------------------------------------------------------
-
-    const auto itr = relboost_models().find( _name );
-
-    if ( itr != relboost_models().end() )
-        {
-            FileHandler::remove(
-                _name, project_directory_, cmd, &relboost_models() );
-            monitor_->send(
-                "removerelboostmodel", "{\"name\":\"" + _name + "\"}" );
-        }
-
-    // --------------------------------------------------------------------
 }
 
 // ------------------------------------------------------------------------
@@ -832,7 +623,7 @@ void ProjectManager::save_data_frame(
 
 // ------------------------------------------------------------------------
 
-void ProjectManager::save_multirel_model(
+void ProjectManager::save_hyperopt(
     const std::string& _name, Poco::Net::StreamSocket* _socket )
 {
     if ( project_directory_ == "" )
@@ -842,23 +633,16 @@ void ProjectManager::save_multirel_model(
 
     multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
 
-    auto model = get_multirel_model( _name );
+    const auto hyperopt = utils::Getter::get( _name, hyperopts() );
 
-    const auto path = project_directory_ + "multirel-models/";
+    hyperopt.save( project_directory_ + "hyperopts/", _name );
 
-    model.save( path, _name );
-
-    // Note that the join keys encoding will be unaffected by models,
-    // passing a zero-length-encoding means that it will not be saved.
-    FileHandler::save_encodings(
-        project_directory_, categories(), containers::Encoding() );
-
-    engine::communication::Sender::send_string( "Success!", _socket );
+    communication::Sender::send_string( "Success!", _socket );
 }
 
 // ------------------------------------------------------------------------
 
-void ProjectManager::save_relboost_model(
+void ProjectManager::save_pipeline(
     const std::string& _name, Poco::Net::StreamSocket* _socket )
 {
     if ( project_directory_ == "" )
@@ -868,14 +652,12 @@ void ProjectManager::save_relboost_model(
 
     multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
 
-    auto model = get_relboost_model( _name );
+    const auto pipeline = get_pipeline( _name );
 
-    const auto path = project_directory_ + "relboost-models/";
+    const auto path = project_directory_ + "pipelines/";
 
-    model.save( path, _name );
+    pipeline.save( path, _name );
 
-    // Note that the join keys encoding will be unaffected by models,
-    // passing a zero-length-encoding means that it will not be saved.
     FileHandler::save_encodings(
         project_directory_, categories(), containers::Encoding() );
 
@@ -913,7 +695,9 @@ void ProjectManager::set_project(
 
     write_lock.unlock();
 
-    load_all_models();
+    load_all_pipelines();
+
+    load_all_hyperopts();
 
     engine::communication::Sender::send_string( "Success!", _socket );
 }
