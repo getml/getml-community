@@ -274,6 +274,26 @@ void DecisionTreeEnsemble::clean_up()
 
 // ----------------------------------------------------------------------------
 
+std::map<std::string, Float> DecisionTreeEnsemble::column_importances(
+    const std::vector<Float> &_importance_factors ) const
+{
+    assert_true( _importance_factors.size() == trees().size() );
+
+    auto importance_maker = utils::ImportanceMaker();
+
+    for ( size_t i = 0; i < trees().size(); ++i )
+        {
+            const auto importances = trees().at( i ).column_importances(
+                _importance_factors.at( i ) );
+
+            importance_maker.merge( importances );
+        }
+
+    return importance_maker.importances();
+}
+
+// ----------------------------------------------------------------------------
+
 void DecisionTreeEnsemble::extract_schemas(
     const containers::DataFrame &_population,
     const std::vector<containers::DataFrame> &_peripheral )

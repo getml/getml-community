@@ -29,6 +29,11 @@ class DecisionTree
 
     // -----------------------------------------------------------------
 
+   public:
+    /// Calculates the column importances for this tree.
+    std::map<std::string, Float> column_importances(
+        const Float _importance_factor ) const;
+
     /// Fits the decision tree.
     void fit(
         const containers::DataFrameView& _output,

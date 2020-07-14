@@ -82,6 +82,13 @@ class FeatureLearner : public AbstractFeatureLearner
         return std::make_shared<FeatureLearner<FeatureLearnerType>>( *this );
     }
 
+    /// Calculates the column importances for this ensemble.
+    std::map<std::string, Float> column_importances(
+        const std::vector<Float>& _importance_factors ) const final
+    {
+        return feature_learner().column_importances( _importance_factors );
+    }
+
     /// Whether the feature learner is used for classification.
     bool is_classification() const final
     {

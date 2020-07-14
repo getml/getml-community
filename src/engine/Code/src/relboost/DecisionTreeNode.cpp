@@ -18,6 +18,7 @@ DecisionTreeNode::DecisionTreeNode(
       depth_( _depth ),
       hyperparameters_( _hyperparameters ),
       loss_function_( _loss_function ),
+      loss_reduction_( NAN ),
       weight_( _weight )
 {
 }
@@ -35,6 +36,7 @@ DecisionTreeNode::DecisionTreeNode(
       depth_( _depth ),
       hyperparameters_( _hyperparameters ),
       loss_function_( _loss_function ),
+      loss_reduction_( NAN ),
       weight_(
           _obj.has( "weight_" ) ? JSON::get_value<Float>( _obj, "weight_" )
                                 : NAN )
@@ -65,6 +67,13 @@ DecisionTreeNode::DecisionTreeNode(
 
             const auto data_used = JSON::destringify(
                 JSON::get_value<std::string>( _obj, "data_used_" ) );
+
+            // For backwards compatatability.
+            if ( _obj.has( "loss_reduction_" ) )
+                {
+                    loss_reduction_ =
+                        JSON::get_value<Float>( _obj, "loss_reduction_" );
+                }
 
             split_ = containers::Split(
                 categories_used,
@@ -189,6 +198,33 @@ void DecisionTreeNode::assert_aligned(
 
 // ----------------------------------------------------------------------------
 
+void DecisionTreeNode::column_importances(
+    utils::ImportanceMaker* _importance_maker ) const
+{
+    assert_true( input_ );
+    assert_true( output_ );
+    assert_true( !std::isnan( loss_reduction_ ) );
+
+    _importance_maker->add(
+        *input_,
+        *output_,
+        split_.data_used_,
+        split_.column_,
+        split_.column_input_,
+        loss_reduction_ );
+
+    if ( child_greater_ )
+        {
+            assert_true( child_smaller_ );
+
+            child_greater_->column_importances( _importance_maker );
+
+            child_smaller_->column_importances( _importance_maker );
+        }
+}
+
+// ----------------------------------------------------------------------------
+
 void DecisionTreeNode::fit(
     const containers::DataFrameView& _output,
     const std::optional<containers::DataFrame>& _input,
@@ -288,6 +324,8 @@ void DecisionTreeNode::fit(
         }
 
     split_ = best_split.split_.deep_copy();
+
+    loss_reduction_ = loss_reduction;
 
     loss_function().commit( *_intercept, weight_, best_split.weights_ );
 
@@ -490,6 +528,12 @@ Poco::JSON::Object::Ptr DecisionTreeNode::to_json_obj() const
             obj->set( "child_greater_", child_greater_->to_json_obj() );
 
             obj->set( "child_smaller_", child_smaller_->to_json_obj() );
+
+            // For backwards compatatability.
+            if ( !std::isnan( loss_reduction_ ) )
+                {
+                    obj->set( "loss_reduction_", loss_reduction_ );
+                }
         }
 
     return obj;

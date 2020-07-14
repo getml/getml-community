@@ -142,6 +142,9 @@ class Pipeline
         const Poco::JSON::Object& _cmd,
         const std::map<std::string, containers::DataFrame>& _data_frames );
 
+    /// Calculates the column importances.
+    std::vector<std::map<std::string, Float>> column_importances() const;
+
     /// Extracts the fingerprints of all data frames that are inserted into
     /// this.
     std::vector<Poco::JSON::Object::Ptr> extract_df_fingerprints(
@@ -249,6 +252,14 @@ class Pipeline
     void make_feature_selector_impl(
         const Poco::JSON::Object& _cmd,
         const std::map<std::string, containers::DataFrame>& _data_frames );
+
+    /// Calculate the importance factors, which are needed to generate the
+    /// column importances.
+    std::vector<Float> make_importance_factors(
+        const size_t _num_features,
+        const std::vector<size_t>& _autofeatures,
+        const std::vector<Float>::const_iterator _begin,
+        const std::vector<Float>::const_iterator _end ) const;
 
     /// Contains only the selected features.
     void make_predictor_impl(

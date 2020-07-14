@@ -56,6 +56,10 @@ class DecisionTreeEnsemble
     /// Deletes ressources that are no longer needed.
     void clean_up();
 
+    /// Calculates the column importances for this ensemble.
+    std::map<std::string, Float> column_importances(
+        const std::vector<Float>& _importance_factors ) const;
+
     /// Fits the DecisionTreeEnsemble.
     void fit(
         const containers::DataFrame& _population,

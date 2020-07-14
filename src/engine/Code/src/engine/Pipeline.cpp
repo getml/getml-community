@@ -184,6 +184,51 @@ void Pipeline::check(
     // -------------------------------------------------------------------------
 }
 
+// ----------------------------------------------------------------------------
+
+std::vector<std::map<std::string, Float>> Pipeline::column_importances() const
+{
+    auto c_importances = std::vector<std::map<std::string, Float>>();
+
+    if ( predictors_.size() == 0 )
+        {
+            return c_importances;
+        }
+
+    const auto f_importances = feature_importances( predictors_ );
+
+    const auto autofeatures = predictor_impl().autofeatures();
+
+    assert_true( autofeatures.size() == feature_learners_.size() );
+
+    for ( const auto& f_imp_for_target : f_importances )
+        {
+            size_t ix_begin = 0;
+
+            for ( size_t i = 0; i < feature_learners_.size(); ++i )
+                {
+                    const auto& fl = feature_learners_.at( i );
+
+                    assert_true( fl );
+
+                    const auto ix_end = ix_begin + fl->num_features();
+
+                    const auto importance_factors = make_importance_factors(
+                        fl->num_features(),
+                        autofeatures.at( i ),
+                        f_imp_for_target.begin() + ix_begin,
+                        f_imp_for_target.begin() + ix_end );
+
+                    ix_begin = ix_end;
+
+                    c_importances.push_back(
+                        fl->column_importances( importance_factors ) );
+                }
+        }
+
+    return c_importances;
+}
+
 // ----------------------------------------------------------------------
 
 std::vector<Poco::JSON::Object::Ptr> Pipeline::extract_df_fingerprints(
@@ -1315,6 +1360,34 @@ void Pipeline::make_feature_selector_impl(
     local_fs_impl->fit_encodings( categorical_features );
 
     // --------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<Float> Pipeline::make_importance_factors(
+    const size_t _num_features,
+    const std::vector<size_t>& _autofeatures,
+    const std::vector<Float>::const_iterator _begin,
+    const std::vector<Float>::const_iterator _end ) const
+{
+    auto importance_factors = std::vector<Float>( _num_features );
+
+    assert_true( _end >= _begin );
+
+    assert_true(
+        _autofeatures.size() ==
+        static_cast<size_t>( std::distance( _begin, _end ) ) );
+
+    for ( size_t i = 0; i < _autofeatures.size(); ++i )
+        {
+            const auto ix = _autofeatures.at( i );
+
+            assert_true( ix < importance_factors.size() );
+
+            importance_factors.at( ix ) = *( _begin + i );
+        }
+
+    return importance_factors;
 }
 
 // ------------------------------------------------------------------------

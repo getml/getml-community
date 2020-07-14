@@ -80,6 +80,14 @@ class TimeSeriesModel
     // -----------------------------------------------------------------
 
    public:
+    /// Calculates the column importances for this ensemble.
+    std::map<std::string, Float> column_importances(
+        const std::vector<Float> &_importance_factors ) const
+    {
+        // TODO: Columns, self joins.
+        return model().column_importances( _importance_factors );
+    }
+
     /// Trivial (const) accessor
     const HypType &hyperparameters() const
     {
