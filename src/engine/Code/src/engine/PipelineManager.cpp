@@ -35,6 +35,55 @@ void PipelineManager::check(
 
 // ------------------------------------------------------------------------
 
+void PipelineManager::column_importances(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    // -------------------------------------------------------
+
+    const auto target_num = JSON::get_value<size_t>( _cmd, "target_num_" );
+
+    // -------------------------------------------------------
+
+    const auto pipeline = get_pipeline( _name );
+
+    const auto scores = pipeline.scores();
+
+    // -------------------------------------------------------
+
+    auto importances = std::vector<Float>();
+
+    for ( const auto& vec : scores.column_importances() )
+        {
+            if ( static_cast<size_t>( target_num ) >= vec.size() )
+                {
+                    throw std::invalid_argument( "target_num out of range!" );
+                }
+
+            importances.push_back( vec.at( target_num ) );
+        }
+
+    // -------------------------------------------------------
+
+    Poco::JSON::Object response;
+
+    response.set(
+        "column_names_", JSON::vector_to_array( scores.column_names() ) );
+
+    response.set( "column_importances_", JSON::vector_to_array( importances ) );
+
+    // -------------------------------------------------------
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    communication::Sender::send_string( JSON::stringify( response ), _socket );
+
+    // -------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
 void PipelineManager::deploy(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,

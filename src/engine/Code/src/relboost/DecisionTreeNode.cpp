@@ -201,20 +201,20 @@ void DecisionTreeNode::assert_aligned(
 void DecisionTreeNode::column_importances(
     utils::ImportanceMaker* _importance_maker ) const
 {
-    assert_true( input_ );
-    assert_true( output_ );
-    assert_true( !std::isnan( loss_reduction_ ) );
-
-    _importance_maker->add(
-        *input_,
-        *output_,
-        split_.data_used_,
-        split_.column_,
-        split_.column_input_,
-        loss_reduction_ );
-
-    if ( child_greater_ )
+    if ( !std::isnan( loss_reduction_ ) )
         {
+            assert_true( input_ );
+            assert_true( output_ );
+
+            _importance_maker->add(
+                *input_,
+                *output_,
+                split_.data_used_,
+                split_.column_,
+                split_.column_input_,
+                loss_reduction_ );
+
+            assert_true( child_greater_ );
             assert_true( child_smaller_ );
 
             child_greater_->column_importances( _importance_maker );

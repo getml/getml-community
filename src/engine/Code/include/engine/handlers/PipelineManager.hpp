@@ -58,6 +58,12 @@ class PipelineManager
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
+    /// Returns the column importances of a pipeline.
+    void column_importances(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
     /// Determines whether the pipeline should
     /// allow HTTP requests.
     void deploy(

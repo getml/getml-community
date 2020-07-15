@@ -207,6 +207,37 @@ void ImportanceMaker::add_to_importances(
 
 // ----------------------------------------------------------------------------
 
+void ImportanceMaker::fill_zeros(
+    const containers::Placeholder& _pl, const bool _is_population )
+{
+    const auto marker = _is_population ? population() : peripheral();
+
+    fill_zeros_from_columns( marker, _pl.name(), _pl.categoricals_ );
+
+    fill_zeros_from_columns( marker, _pl.name(), _pl.discretes_ );
+
+    fill_zeros_from_columns( marker, _pl.name(), _pl.numericals_ );
+
+    fill_zeros_from_columns( marker, _pl.name(), _pl.time_stamps_ );
+}
+
+// ----------------------------------------------------------------------------
+
+void ImportanceMaker::fill_zeros_from_columns(
+    const std::string& _marker,
+    const std::string& _pname,
+    const std::vector<std::string>& _colnames )
+{
+    for ( const auto colname : _colnames )
+        {
+            const std::string name = _marker + _pname + "." + colname;
+
+            add_to_importances( name, 0.0 );
+        }
+}
+
+// ----------------------------------------------------------------------------
+
 void ImportanceMaker::merge( const std::map<std::string, Float>& _importances )
 {
     for ( const auto& [key, value] : _importances )

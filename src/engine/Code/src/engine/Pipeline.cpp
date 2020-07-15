@@ -186,13 +186,16 @@ void Pipeline::check(
 
 // ----------------------------------------------------------------------------
 
-std::vector<std::map<std::string, Float>> Pipeline::column_importances() const
+std::pair<std::vector<std::string>, std::vector<std::vector<Float>>>
+Pipeline::column_importances() const
 {
-    auto c_importances = std::vector<std::map<std::string, Float>>();
+    auto c_names = std::vector<std::string>();
+
+    auto c_importances = std::vector<std::vector<Float>>();
 
     if ( predictors_.size() == 0 )
         {
-            return c_importances;
+            return std::make_pair( c_names, c_importances );
         }
 
     const auto f_importances = feature_importances( predictors_ );
@@ -201,13 +204,15 @@ std::vector<std::map<std::string, Float>> Pipeline::column_importances() const
 
     assert_true( autofeatures.size() == feature_learners_.size() );
 
-    for ( const auto& f_imp_for_target : f_importances )
+    for ( size_t i = 0; i < f_importances.size(); ++i )
         {
+            const auto& f_imp_for_target = f_importances.at( i );
+
             size_t ix_begin = 0;
 
-            for ( size_t i = 0; i < feature_learners_.size(); ++i )
+            for ( size_t j = 0; j < feature_learners_.size(); ++j )
                 {
-                    const auto& fl = feature_learners_.at( i );
+                    const auto& fl = feature_learners_.at( j );
 
                     assert_true( fl );
 
@@ -215,18 +220,89 @@ std::vector<std::map<std::string, Float>> Pipeline::column_importances() const
 
                     const auto importance_factors = make_importance_factors(
                         fl->num_features(),
-                        autofeatures.at( i ),
+                        autofeatures.at( j ),
                         f_imp_for_target.begin() + ix_begin,
                         f_imp_for_target.begin() + ix_end );
 
                     ix_begin = ix_end;
 
-                    c_importances.push_back(
-                        fl->column_importances( importance_factors ) );
+                    const auto c_imp_for_target =
+                        fl->column_importances( importance_factors );
+
+                    extract_colnames( c_imp_for_target, &c_names );
+
+                    extract_importance_values(
+                        c_imp_for_target, &c_importances );
                 }
         }
 
-    return c_importances;
+    return std::make_pair( c_names, c_importances );
+}
+
+// ----------------------------------------------------------------------------
+
+Poco::JSON::Object Pipeline::column_importances_as_obj() const
+{
+    // ----------------------------------------------------------------
+
+    const auto [c_names, c_importances] = column_importances();
+
+    // ----------------------------------------------------------------
+
+    if ( c_importances.size() == 0 )
+        {
+            return Poco::JSON::Object();
+        }
+
+    // ----------------------------------------------------------------
+
+    auto column_names = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
+
+    for ( const auto& name : c_names )
+        {
+            column_names->add( name );
+        }
+
+    // ----------------------------------------------------------------
+
+    const auto column_importances = transpose( c_importances );
+
+    // ----------------------------------------------------------------
+
+    Poco::JSON::Object obj;
+
+    obj.set( "column_names_", column_names );
+
+    obj.set( "column_importances_", column_importances );
+
+    return obj;
+
+    // ----------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+void Pipeline::extract_colnames(
+    const std::map<std::string, Float>& _column_importances,
+    std::vector<std::string>* _colnames ) const
+{
+    auto colnames = std::vector<std::string>();
+
+    for ( const auto& [key, _] : _column_importances )
+        {
+            colnames.push_back( key );
+        }
+
+    if ( _colnames->size() == 0 )
+        {
+            *_colnames = colnames;
+            return;
+        }
+
+    assert_true( colnames.size() == _colnames->size() );
+
+    assert_true(
+        std::equal( colnames.begin(), colnames.end(), _colnames->begin() ) );
 }
 
 // ----------------------------------------------------------------------
@@ -300,6 +376,22 @@ std::vector<Poco::JSON::Object::Ptr> Pipeline::extract_fs_fingerprints() const
         }
 
     return fs_fingerprints;
+}
+
+// ----------------------------------------------------------------------------
+
+void Pipeline::extract_importance_values(
+    const std::map<std::string, Float>& _column_importances,
+    std::vector<std::vector<Float>>* _all_column_importances ) const
+{
+    auto importance_values = std::vector<Float>();
+
+    for ( const auto& [_, value] : _column_importances )
+        {
+            importance_values.push_back( value );
+        }
+
+    _all_column_importances->push_back( importance_values );
 }
 
 // ----------------------------------------------------------------------
@@ -403,41 +495,24 @@ Poco::JSON::Object Pipeline::feature_importances_as_obj() const
 {
     // ----------------------------------------------------------------
 
-    const auto n_features = num_features();
-
-    // ----------------------------------------------------------------
-    // Extract feature importances
-
     const auto feature_importances_transposed =
         feature_importances( predictors_ );
 
     assert_true( feature_importances_transposed.size() == num_targets() );
 
     // ----------------------------------------------------------------
-    // Transpose feature importances and transform to arrays.
 
     if ( feature_importances_transposed.size() == 0 )
         {
             return Poco::JSON::Object();
         }
 
-    Poco::JSON::Array::Ptr feature_importances( new Poco::JSON::Array() );
+    // ----------------------------------------------------------------
 
-    for ( std::size_t i = 0; i < n_features; ++i )
-        {
-            Poco::JSON::Array::Ptr temp( new Poco::JSON::Array() );
-
-            for ( const auto& feat : feature_importances_transposed )
-                {
-                    assert_true( feat.size() == n_features );
-                    temp->add( feat[i] );
-                }
-
-            feature_importances->add( temp );
-        }
+    const auto feature_importances =
+        transpose( feature_importances_transposed );
 
     // ----------------------------------------------------------------
-    // Insert array into object and return.
 
     Poco::JSON::Object obj;
 
@@ -737,6 +812,8 @@ void Pipeline::fit(
     predictors_ = std::move( predictors );
 
     // -------------------------------------------------------------------------
+
+    scores().from_json_obj( column_importances_as_obj() );
 
     scores().from_json_obj( feature_importances_as_obj() );
 
@@ -1959,6 +2036,33 @@ containers::Features Pipeline::transform(
         }
 
     // ------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+Poco::JSON::Array::Ptr Pipeline::transpose(
+    const std::vector<std::vector<Float>>& _original ) const
+{
+    assert_true( _original.size() > 0 );
+
+    const auto n = _original.at( 0 ).size();
+
+    Poco::JSON::Array::Ptr transposed( new Poco::JSON::Array() );
+
+    for ( std::size_t i = 0; i < n; ++i )
+        {
+            Poco::JSON::Array::Ptr temp( new Poco::JSON::Array() );
+
+            for ( const auto& vec : _original )
+                {
+                    assert_true( vec.size() == n );
+                    temp->add( vec.at( i ) );
+                }
+
+            transposed->add( temp );
+        }
+
+    return transposed;
 }
 
 // ----------------------------------------------------------------------------

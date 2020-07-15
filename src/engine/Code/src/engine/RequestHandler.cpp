@@ -314,6 +314,11 @@ void RequestHandler::run()
                 {
                     pipeline_manager().check( name, cmd, &socket() );
                 }
+            else if ( type == "Pipeline.column_importances" )
+                {
+                    pipeline_manager().column_importances(
+                        name, cmd, &socket() );
+                }
             else if ( type == "Pipeline.copy" )
                 {
                     project_manager().copy_pipeline( name, cmd, &socket() );

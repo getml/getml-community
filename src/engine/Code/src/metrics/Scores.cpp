@@ -41,6 +41,8 @@ void Scores::from_json_obj( const Poco::JSON::Object& _json_obj )
     update_1d_vector(
         _json_obj, "prediction_step_size_", &prediction_step_size_ );
 
+    update_1d_vector( _json_obj, "column_names_", &column_names_ );
+
     update_1d_vector( _json_obj, "feature_names_", &feature_names_ );
 
     update_1d_vector( _json_obj, "accuracy_", &accuracy_ );
@@ -58,6 +60,8 @@ void Scores::from_json_obj( const Poco::JSON::Object& _json_obj )
     // -------------------------
 
     update_2d_vector( _json_obj, "accuracy_curves_", &accuracy_curves() );
+
+    update_2d_vector( _json_obj, "column_importances_", &column_importances() );
 
     update_2d_vector(
         _json_obj, "feature_correlations_", &feature_correlations() );
@@ -122,6 +126,10 @@ Poco::JSON::Object Scores::to_json_obj() const
     // -------------------------
 
     obj.set(
+        "column_names_",
+        jsonutils::JSON::vector_to_array_ptr( column_names() ) );
+
+    obj.set(
         "feature_names_",
         jsonutils::JSON::vector_to_array_ptr( feature_names() ) );
 
@@ -144,6 +152,8 @@ Poco::JSON::Object Scores::to_json_obj() const
     // -------------------------
 
     obj.set( "accuracy_curves_", to_2d_array( accuracy_curves() ) );
+
+    obj.set( "column_importances_", to_2d_array( column_importances() ) );
 
     obj.set( "feature_correlations_", to_2d_array( feature_correlations() ) );
 

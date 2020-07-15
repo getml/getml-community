@@ -289,6 +289,13 @@ std::map<std::string, Float> DecisionTreeEnsemble::column_importances(
             importance_maker.merge( importances );
         }
 
+    importance_maker.fill_zeros( population_schema(), true );
+
+    for ( const auto &p : peripheral_schema() )
+        {
+            importance_maker.fill_zeros( p, false );
+        }
+
     return importance_maker.importances();
 }
 

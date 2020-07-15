@@ -26,6 +26,10 @@ class ImportanceMaker
         const size_t _column_input,
         const Float _value );
 
+    /// Adds all of the colnames with importance 0.0.
+    void fill_zeros(
+        const containers::Placeholder& _pl, const bool _is_population );
+
     /// Merges the map into the existing importances.
     void merge( const std::map<std::string, Float>& _importances );
 
@@ -42,6 +46,12 @@ class ImportanceMaker
    private:
     /// Adds the _value to the column signified by _name in the map.
     void add_to_importances( const std::string& _name, const Float _value );
+
+    /// Adds all of the elements from this column.
+    void fill_zeros_from_columns(
+        const std::string& _marker,
+        const std::string& _pname,
+        const std::vector<std::string>& _colnames );
 
    private:
     /// Marks a table as peripheral.

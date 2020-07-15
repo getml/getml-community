@@ -143,7 +143,16 @@ class Pipeline
         const std::map<std::string, containers::DataFrame>& _data_frames );
 
     /// Calculates the column importances.
-    std::vector<std::map<std::string, Float>> column_importances() const;
+    std::pair<std::vector<std::string>, std::vector<std::vector<Float>>>
+    column_importances() const;
+
+    /// Returns a JSON object containing all column importances.
+    Poco::JSON::Object column_importances_as_obj() const;
+
+    /// Extract column names from the column importances.
+    void extract_colnames(
+        const std::map<std::string, Float>& _column_importances,
+        std::vector<std::string>* _colnames ) const;
 
     /// Extracts the fingerprints of all data frames that are inserted into
     /// this.
@@ -157,6 +166,11 @@ class Pipeline
 
     /// Extracts the fingerprints of the feature selectors.
     std::vector<Poco::JSON::Object::Ptr> extract_fs_fingerprints() const;
+
+    /// Extracts the importance values from the column importances.
+    void extract_importance_values(
+        const std::map<std::string, Float>& _column_importances,
+        std::vector<std::vector<Float>>* _all_column_importances ) const;
 
     /// Extracts the schemata from the data frame used for training.
     std::pair<Poco::JSON::Object::Ptr, Poco::JSON::Array::Ptr> extract_schemata(
@@ -278,6 +292,11 @@ class Pipeline
 
     /// Returns a the SQL features.
     Poco::JSON::Array::Ptr to_sql_arr() const;
+
+    /// Returns a transposed version Poco::JSON::Array::Ptr of the original
+    /// vector-of-vectors.
+    Poco::JSON::Array::Ptr transpose(
+        const std::vector<std::vector<Float>>& _original ) const;
 
     // --------------------------------------------------------
 
