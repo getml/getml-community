@@ -35,6 +35,7 @@
 
 #include "multirel/utils/CategoricalBinner.hpp"
 #include "multirel/utils/DiscreteBinner.hpp"
+#include "multirel/utils/ImportanceMaker.hpp"
 #include "multirel/utils/LinearRegression.hpp"
 #include "multirel/utils/Logger.hpp"
 #include "multirel/utils/Mapper.hpp"

@@ -11,6 +11,7 @@ set(
     ${MULTIREL_SOURCE_DIRECTORY}/DecisionTreeNode.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/DiscreteBinner.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/Hyperparameters.cpp 
+    ${MULTIREL_SOURCE_DIRECTORY}/ImportanceMaker.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/JSON.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/LinearRegression.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/LossFunctionParser.cpp 

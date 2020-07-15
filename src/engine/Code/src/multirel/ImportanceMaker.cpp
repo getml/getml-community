@@ -1,6 +1,6 @@
-#include "relboost/utils/utils.hpp"
+#include "multirel/utils/utils.hpp"
 
-namespace relboost
+namespace multirel
 {
 namespace utils
 {
@@ -11,12 +11,12 @@ void ImportanceMaker::add(
     const containers::Placeholder& _output,
     const enums::DataUsed _data_used,
     const size_t _column,
-    const size_t _column_input,
+    const descriptors::SameUnits& _same_units,
     const Float _value )
 {
     switch ( _data_used )
         {
-            case enums::DataUsed::categorical_input:
+            case enums::DataUsed::x_perip_categorical:
                 {
                     assert_true( _column < _input.num_categoricals() );
 
@@ -29,7 +29,7 @@ void ImportanceMaker::add(
                     return;
                 }
 
-            case enums::DataUsed::categorical_output:
+            case enums::DataUsed::x_popul_categorical:
                 {
                     assert_true( _column < _output.num_categoricals() );
 
@@ -42,8 +42,7 @@ void ImportanceMaker::add(
                     return;
                 }
 
-            case enums::DataUsed::discrete_input_is_nan:
-            case enums::DataUsed::discrete_input:
+            case enums::DataUsed::x_perip_discrete:
                 {
                     assert_true( _column < _input.num_discretes() );
 
@@ -56,8 +55,7 @@ void ImportanceMaker::add(
                     return;
                 }
 
-            case enums::DataUsed::discrete_output_is_nan:
-            case enums::DataUsed::discrete_output:
+            case enums::DataUsed::x_popul_discrete:
                 {
                     assert_true( _column < _output.num_discretes() );
 
@@ -70,8 +68,7 @@ void ImportanceMaker::add(
                     return;
                 }
 
-            case enums::DataUsed::numerical_input_is_nan:
-            case enums::DataUsed::numerical_input:
+            case enums::DataUsed::x_perip_numerical:
                 {
                     assert_true( _column < _input.num_numericals() );
 
@@ -84,8 +81,7 @@ void ImportanceMaker::add(
                     return;
                 }
 
-            case enums::DataUsed::numerical_output_is_nan:
-            case enums::DataUsed::numerical_output:
+            case enums::DataUsed::x_popul_numerical:
                 {
                     assert_true( _column < _output.num_numericals() );
 
@@ -98,69 +94,85 @@ void ImportanceMaker::add(
                     return;
                 }
 
-            case enums::DataUsed::same_units_categorical:
-                assert_true( _column < _output.num_categoricals() );
-                assert_true( _column_input < _input.num_categoricals() );
+            case enums::DataUsed::same_unit_categorical:
+                {
+                    assert_true( _same_units.same_units_categorical_ );
+                    assert_true(
+                        _column < _same_units.same_units_categorical_->size() );
 
-                add( _input,
-                     _output,
-                     enums::DataUsed::categorical_output,
-                     _column,
-                     0,
-                     _value * 0.5 );
+                    const auto& upair =
+                        _same_units.same_units_categorical_->at( _column );
 
-                add( _input,
-                     _output,
-                     enums::DataUsed::categorical_input,
-                     _column_input,
-                     0,
-                     _value * 0.5 );
+                    add( _input,
+                         _output,
+                         std::get<0>( upair ).data_used,
+                         std::get<0>( upair ).ix_column_used,
+                         _same_units,
+                         _value * 0.5 );
 
-                return;
+                    add( _input,
+                         _output,
+                         std::get<1>( upair ).data_used,
+                         std::get<1>( upair ).ix_column_used,
+                         _same_units,
+                         _value * 0.5 );
 
-            case enums::DataUsed::same_units_discrete_is_nan:
-            case enums::DataUsed::same_units_discrete_ts:
-            case enums::DataUsed::same_units_discrete:
-                assert_true( _column < _output.num_discretes() );
-                assert_true( _column_input < _input.num_discretes() );
+                    return;
+                }
 
-                add( _input,
-                     _output,
-                     enums::DataUsed::discrete_output,
-                     _column,
-                     0,
-                     _value * 0.5 );
+            case enums::DataUsed::same_unit_discrete_ts:
+            case enums::DataUsed::same_unit_discrete:
+                {
+                    assert_true( _same_units.same_units_discrete_ );
+                    assert_true(
+                        _column < _same_units.same_units_discrete_->size() );
 
-                add( _input,
-                     _output,
-                     enums::DataUsed::discrete_input,
-                     _column_input,
-                     0,
-                     _value * 0.5 );
+                    const auto& upair =
+                        _same_units.same_units_discrete_->at( _column );
 
-                return;
+                    add( _input,
+                         _output,
+                         std::get<0>( upair ).data_used,
+                         std::get<0>( upair ).ix_column_used,
+                         _same_units,
+                         _value * 0.5 );
 
-            case enums::DataUsed::same_units_numerical_is_nan:
-            case enums::DataUsed::same_units_numerical_ts:
-            case enums::DataUsed::same_units_numerical:
-                assert_true( _column < _output.num_numericals() );
-                assert_true( _column_input < _input.num_numericals() );
+                    add( _input,
+                         _output,
+                         std::get<1>( upair ).data_used,
+                         std::get<1>( upair ).ix_column_used,
+                         _same_units,
+                         _value * 0.5 );
 
-                add( _input,
-                     _output,
-                     enums::DataUsed::numerical_output,
-                     _column,
-                     0,
-                     _value * 0.5 );
+                    return;
+                }
 
-                add( _input,
-                     _output,
-                     enums::DataUsed::numerical_input,
-                     _column_input,
-                     0,
-                     _value * 0.5 );
+            case enums::DataUsed::same_unit_numerical_ts:
+            case enums::DataUsed::same_unit_numerical:
+                {
+                    assert_true( _same_units.same_units_numerical_ );
+                    assert_true(
+                        _column < _same_units.same_units_numerical_->size() );
 
-                return;
+                    const auto& upair =
+                        _same_units.same_units_numerical_->at( _column );
+
+                    add( _input,
+                         _output,
+                         std::get<0>( upair ).data_used,
+                         std::get<0>( upair ).ix_column_used,
+                         _same_units,
+                         _value * 0.5 );
+
+                    add( _input,
+                         _output,
+                         std::get<1>( upair ).data_used,
+                         std::get<1>( upair ).ix_column_used,
+                         _same_units,
+                         _value * 0.5 );
+
+                    return;
+                }
 
             case enums::DataUsed::time_stamps_diff:
             case enums::DataUsed::time_stamps_window:
@@ -179,8 +191,11 @@ void ImportanceMaker::add(
                 }
 
                 // TODO
-            case enums::DataUsed::subfeatures:
+            case enums::DataUsed::x_subfeature:
                 assert_true( false && "TODO" );
+                return;
+
+            case enums::DataUsed::not_applicable:
                 return;
 
             default:
@@ -191,4 +206,4 @@ void ImportanceMaker::add(
 
 // ----------------------------------------------------------------------------
 }  // namespace utils
-}  // namespace relboost
+}  // namespace multirel

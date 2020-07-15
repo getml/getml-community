@@ -1,9 +1,9 @@
-#ifndef RELBOOST_UTILS_IMPORTANCEMAKER_HPP_
-#define RELBOOST_UTILS_IMPORTANCEMAKER_HPP_
+#ifndef MULTIREL_UTILS_IMPORTANCEMAKER_HPP_
+#define MULTIREL_UTILS_IMPORTANCEMAKER_HPP_
 
 // ----------------------------------------------------------------------------
 
-namespace relboost
+namespace multirel
 {
 namespace utils
 {
@@ -23,7 +23,7 @@ class ImportanceMaker
         const containers::Placeholder& _output,
         const enums::DataUsed _data_used,
         const size_t _column,
-        const size_t _column_input,
+        const descriptors::SameUnits& _same_units,
         const Float _value );
 
    public:
@@ -76,6 +76,6 @@ class ImportanceMaker
 
 // ------------------------------------------------------------------------
 }  // namespace utils
-}  // namespace relboost
+}  // namespace multirel
 
-#endif  // RELBOOST_UTILS_IMPORTANCEMAKER_HPP_
+#endif  // MULTIREL_UTILS_IMPORTANCEMAKER_HPP_

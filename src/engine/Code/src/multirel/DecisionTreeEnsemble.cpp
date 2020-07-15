@@ -112,6 +112,33 @@ void DecisionTreeEnsemble::check_plausibility_of_targets(
 
 // ----------------------------------------------------------------------------
 
+std::map<std::string, Float> DecisionTreeEnsemble::column_importances(
+    const std::vector<Float> &_importance_factors ) const
+{
+    assert_true( _importance_factors.size() == trees().size() );
+
+    auto importance_maker = utils::ImportanceMaker();
+
+    for ( size_t i = 0; i < trees().size(); ++i )
+        {
+            const auto importances = trees().at( i ).column_importances(
+                _importance_factors.at( i ) );
+
+            importance_maker.merge( importances );
+        }
+
+    importance_maker.fill_zeros( population_schema(), true );
+
+    for ( const auto &p : peripheral_schema() )
+        {
+            importance_maker.fill_zeros( p, false );
+        }
+
+    return importance_maker.importances();
+}
+
+// ----------------------------------------------------------------------------
+
 void DecisionTreeEnsemble::extract_schemas(
     const containers::DataFrame &_population,
     const std::vector<containers::DataFrame> &_peripheral )
@@ -318,7 +345,7 @@ void DecisionTreeEnsemble::fit(
 
     if ( _table_holder->main_tables_[0].num_targets() > 0 )
         {
-            targets() = { _table_holder->main_tables_[0].target_name( 0 ) };
+            targets() = {_table_holder->main_tables_[0].target_name( 0 )};
         }
 
     // ----------------------------------------------------------------
