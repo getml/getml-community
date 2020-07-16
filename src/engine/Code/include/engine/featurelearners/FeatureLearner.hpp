@@ -44,6 +44,10 @@ class FeatureLearner : public AbstractFeatureLearner
     // --------------------------------------------------------
 
    public:
+    /// Calculates the column importances for this ensemble.
+    std::map<std::string, Float> column_importances(
+        const std::vector<Float>& _importance_factors ) const final;
+
     /// Returns the fingerprint of the feature learner (necessary to build
     /// the dependency graphs).
     Poco::JSON::Object::Ptr fingerprint() const final;
@@ -80,13 +84,6 @@ class FeatureLearner : public AbstractFeatureLearner
     std::shared_ptr<AbstractFeatureLearner> clone() const final
     {
         return std::make_shared<FeatureLearner<FeatureLearnerType>>( *this );
-    }
-
-    /// Calculates the column importances for this ensemble.
-    std::map<std::string, Float> column_importances(
-        const std::vector<Float>& _importance_factors ) const final
-    {
-        return feature_learner().column_importances( _importance_factors );
     }
 
     /// Whether the feature learner is used for classification.
@@ -536,6 +533,33 @@ FeatureLearner<FeatureLearnerType>::add_time_stamps(
     return peripheral_dfs;
 
     // ------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+template <typename FeatureLearnerType>
+std::map<std::string, Float>
+FeatureLearner<FeatureLearnerType>::column_importances(
+    const std::vector<Float>& _importance_factors ) const
+{
+    const auto importances =
+        feature_learner().column_importances( _importance_factors );
+
+    auto importance_maker = helpers::ImportanceMaker( importances );
+
+    const auto colnames = importance_maker.colnames();
+
+    for ( const auto& from_colname : colnames )
+        {
+            const auto to_colname = replace_macros( from_colname );
+
+            if ( from_colname != to_colname )
+                {
+                    importance_maker.transfer( from_colname, to_colname );
+                }
+        }
+
+    return importance_maker.importances();
 }
 
 // ----------------------------------------------------------------------------
