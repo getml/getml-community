@@ -200,40 +200,17 @@ Pipeline::column_importances() const
 
     const auto f_importances = feature_importances( predictors_ );
 
-    const auto autofeatures = predictor_impl().autofeatures();
+    auto importance_makers =
+        std::vector<helpers::ImportanceMaker>( f_importances.size() );
 
-    assert_true( autofeatures.size() == feature_learners_.size() );
+    column_importances_auto( f_importances, &importance_makers );
 
-    for ( size_t i = 0; i < f_importances.size(); ++i )
+    column_importances_manual( f_importances, &importance_makers );
+
+    for ( const auto& i_maker : importance_makers )
         {
-            const auto& f_imp_for_target = f_importances.at( i );
-
-            size_t ix_begin = 0;
-
-            for ( size_t j = 0; j < feature_learners_.size(); ++j )
-                {
-                    const auto& fl = feature_learners_.at( j );
-
-                    assert_true( fl );
-
-                    const auto ix_end = ix_begin + fl->num_features();
-
-                    const auto importance_factors = make_importance_factors(
-                        fl->num_features(),
-                        autofeatures.at( j ),
-                        f_imp_for_target.begin() + ix_begin,
-                        f_imp_for_target.begin() + ix_end );
-
-                    ix_begin = ix_end;
-
-                    const auto c_imp_for_target =
-                        fl->column_importances( importance_factors );
-
-                    extract_colnames( c_imp_for_target, &c_names );
-
-                    extract_importance_values(
-                        c_imp_for_target, &c_importances );
-                }
+            extract_colnames( i_maker.importances(), &c_names );
+            extract_importance_values( i_maker.importances(), &c_importances );
         }
 
     return std::make_pair( c_names, c_importances );
@@ -278,6 +255,97 @@ Poco::JSON::Object Pipeline::column_importances_as_obj() const
     return obj;
 
     // ----------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+void Pipeline::column_importances_auto(
+    const std::vector<std::vector<Float>>& _f_importances,
+    std::vector<helpers::ImportanceMaker>* _importance_makers ) const
+{
+    assert_true( _f_importances.size() == _importance_makers->size() );
+
+    const auto autofeatures = predictor_impl().autofeatures();
+
+    assert_true( autofeatures.size() == feature_learners_.size() );
+
+    for ( size_t i = 0; i < _f_importances.size(); ++i )
+        {
+            const auto& f_imp_for_target = _f_importances.at( i );
+
+            size_t ix_begin = 0;
+
+            for ( size_t j = 0; j < feature_learners_.size(); ++j )
+                {
+                    const auto& fl = feature_learners_.at( j );
+
+                    assert_true( fl );
+
+                    const auto ix_end = ix_begin + autofeatures.at( j ).size();
+
+                    const auto importance_factors = make_importance_factors(
+                        fl->num_features(),
+                        autofeatures.at( j ),
+                        f_imp_for_target.begin() + ix_begin,
+                        f_imp_for_target.begin() + ix_end );
+
+                    ix_begin = ix_end;
+
+                    const auto c_imp_for_target =
+                        fl->column_importances( importance_factors );
+
+                    _importance_makers->at( i ).merge( c_imp_for_target );
+                }
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+void Pipeline::column_importances_manual(
+    const std::vector<std::vector<Float>>& _f_importances,
+    std::vector<helpers::ImportanceMaker>* _importance_makers ) const
+{
+    assert_true( _f_importances.size() == _importance_makers->size() );
+
+    for ( size_t i = 0; i < _f_importances.size(); ++i )
+        {
+            const auto& f_imp_for_target = _f_importances.at( i );
+
+            auto j = predictor_impl().num_autofeatures();
+
+            assert_true(
+                j + predictor_impl().num_manual_features() ==
+                f_imp_for_target.size() );
+
+            const auto population_name = parse_population();
+
+            assert_true( population_name );
+
+            for ( const auto& colname : predictor_impl().numerical_colnames() )
+                {
+                    const auto full_name =
+                        _importance_makers->at( i ).population() +
+                        *population_name + "." + colname;
+
+                    const auto value = f_imp_for_target.at( j++ );
+
+                    _importance_makers->at( i ).add_to_importances(
+                        full_name, value );
+                }
+
+            for ( const auto& colname :
+                  predictor_impl().categorical_colnames() )
+                {
+                    const auto full_name =
+                        _importance_makers->at( i ).population() +
+                        *population_name + "." + colname;
+
+                    const auto value = f_imp_for_target.at( j++ );
+
+                    _importance_makers->at( i ).add_to_importances(
+                        full_name, value );
+                }
+        }
 }
 
 // ----------------------------------------------------------------------------
@@ -1588,6 +1656,23 @@ Pipeline& Pipeline::operator=( Pipeline&& _other ) noexcept
     predictors_ = std::move( _other.predictors_ );
 
     return *this;
+}
+
+// ----------------------------------------------------------------------
+
+std::shared_ptr<std::string> Pipeline::parse_population() const
+{
+    const auto ptr = JSON::get_object( obj(), "population_" );
+
+    if ( !ptr )
+        {
+            throw std::invalid_argument(
+                "'population_' is not a proper JSON object!" );
+        }
+
+    const auto name = JSON::get_value<std::string>( *ptr, "name_" );
+
+    return std::make_shared<std::string>( name );
 }
 
 // ----------------------------------------------------------------------

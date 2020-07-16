@@ -149,6 +149,16 @@ class Pipeline
     /// Returns a JSON object containing all column importances.
     Poco::JSON::Object column_importances_as_obj() const;
 
+    /// Calculates the column importances for the autofeatures.
+    void column_importances_auto(
+        const std::vector<std::vector<Float>>& _f_importances,
+        std::vector<helpers::ImportanceMaker>* _importance_makers ) const;
+
+    /// Calculates the column importances for the manual features.
+    void column_importances_manual(
+        const std::vector<std::vector<Float>>& _f_importances,
+        std::vector<helpers::ImportanceMaker>* _importance_makers ) const;
+
     /// Extract column names from the column importances.
     void extract_colnames(
         const std::map<std::string, Float>& _column_importances,
@@ -279,6 +289,9 @@ class Pipeline
     void make_predictor_impl(
         const Poco::JSON::Object& _cmd,
         const std::map<std::string, containers::DataFrame>& _data_frames );
+
+    /// Parses the population name.
+    std::shared_ptr<std::string> parse_population() const;
 
     /// Parses the peripheral names.
     std::shared_ptr<std::vector<std::string>> parse_peripheral() const;
