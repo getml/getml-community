@@ -21,17 +21,19 @@ void ImportanceMaker::add_to_importances(
 // ----------------------------------------------------------------------------
 
 void ImportanceMaker::fill_zeros(
-    const Placeholder& _pl, const bool _is_population )
+    const Placeholder& _pl,
+    const std::string& _tname,
+    const bool _is_population )
 {
     const auto marker = _is_population ? population() : peripheral();
 
-    fill_zeros_from_columns( marker, _pl.name(), _pl.categoricals_ );
+    fill_zeros_from_columns( marker, _tname, _pl.categoricals_ );
 
-    fill_zeros_from_columns( marker, _pl.name(), _pl.discretes_ );
+    fill_zeros_from_columns( marker, _tname, _pl.discretes_ );
 
-    fill_zeros_from_columns( marker, _pl.name(), _pl.numericals_ );
+    fill_zeros_from_columns( marker, _tname, _pl.numericals_ );
 
-    fill_zeros_from_columns( marker, _pl.name(), _pl.time_stamps_ );
+    fill_zeros_from_columns( marker, _tname, _pl.time_stamps_ );
 }
 
 // ----------------------------------------------------------------------------
@@ -87,6 +89,20 @@ void ImportanceMaker::normalize()
                     value /= sum;
                 }
         }
+}
+
+// ----------------------------------------------------------------------------
+
+void ImportanceMaker::transfer(
+    const std::string& _from, const std::string& _to )
+{
+    auto it = importances_.find( _from );
+
+    assert_true( it != importances_.end() );
+
+    add_to_importances( _to, it->second );
+
+    importances_.erase( it );
 }
 
 // ----------------------------------------------------------------------------

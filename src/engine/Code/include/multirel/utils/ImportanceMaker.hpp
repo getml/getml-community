@@ -29,9 +29,11 @@ class ImportanceMaker
    public:
     /// Adds all of the colnames with importance 0.0.
     void fill_zeros(
-        const containers::Placeholder& _pl, const bool _is_population )
+        const containers::Placeholder& _pl,
+        const std::string& _tname,
+        const bool _is_population )
     {
-        helper_.fill_zeros( _pl, _is_population );
+        helper_.fill_zeros( _pl, _tname, _is_population );
     }
 
     /// Merges the map into the existing importances.

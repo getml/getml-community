@@ -49,6 +49,10 @@ class TimeSeriesModel
     // -----------------------------------------------------------------
 
    public:
+    /// Calculates the column importances for this ensemble.
+    std::map<std::string, Float> column_importances(
+        const std::vector<Float> &_importance_factors ) const;
+
     /// Creates a modified version of the population table and the peripheral
     /// tables.
     std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
@@ -80,14 +84,6 @@ class TimeSeriesModel
     // -----------------------------------------------------------------
 
    public:
-    /// Calculates the column importances for this ensemble.
-    std::map<std::string, Float> column_importances(
-        const std::vector<Float> &_importance_factors ) const
-    {
-        // TODO: Columns, self joins.
-        return model().column_importances( _importance_factors );
-    }
-
     /// Trivial (const) accessor
     const HypType &hyperparameters() const
     {
@@ -161,15 +157,21 @@ class TimeSeriesModel
     std::shared_ptr<PlaceholderType> create_placeholder(
         const PlaceholderType &_placeholder ) const;
 
-    /// Replaces all of occurences of temporary names in an SQL query with
-    /// something more meaningful.
-    std::string replace_macros( const std::string &_query ) const;
-
     /// Creates a modified version of the population table that contains an
     /// additional join key and an additional time stamp, if necessary.
     /// Otherwise, it just returns the original population table.
     containers::DataFrame create_population(
         const containers::DataFrame &_population ) const;
+
+    /// Replaces all of occurences of temporary names in an SQL query with
+    /// something more meaningful.
+    std::string replace_macros( const std::string &_query ) const;
+
+    /// Transfers the importances values from colnames containing macros to
+    /// actual columns.
+    void transfer_importance_value(
+        const std::string &_colname,
+        helpers::ImportanceMaker *_importance_maker ) const;
 
     // -----------------------------------------------------------------
 
@@ -279,6 +281,26 @@ TimeSeriesModel<FEType>::TimeSeriesModel(
 
 template <class FEType>
 TimeSeriesModel<FEType>::~TimeSeriesModel() = default;
+
+// ----------------------------------------------------------------------------
+
+template <class FEType>
+std::map<std::string, Float> TimeSeriesModel<FEType>::column_importances(
+    const std::vector<Float> &_importance_factors ) const
+{
+    const auto importances = model().column_importances( _importance_factors );
+
+    auto importance_maker = helpers::ImportanceMaker( importances );
+
+    const auto colnames = importance_maker.colnames();
+
+    for ( const auto &colname : colnames )
+        {
+            transfer_importance_value( colname, &importance_maker );
+        }
+
+    return importance_maker.importances();
+}
 
 // ----------------------------------------------------------------------------
 
@@ -640,6 +662,61 @@ Poco::JSON::Object TimeSeriesModel<FEType>::to_json_obj(
     hyp_obj->set( "ts_name_", hyperparameters().ts_name_ );
 
     return obj;
+}
+
+// ----------------------------------------------------------------------------
+
+template <class FEType>
+void TimeSeriesModel<FEType>::transfer_importance_value(
+    const std::string &_from_colname,
+    helpers::ImportanceMaker *_importance_maker ) const
+{
+    auto from_colname = _from_colname;
+
+    if ( from_colname.find( "$GETML_PERIPHERAL" ) != std::string::npos )
+        {
+            auto to_colname = utils::StringReplacer::replace_all(
+                from_colname, "$GETML_PERIPHERAL", "" );
+
+            to_colname = utils::StringReplacer::replace_all(
+                to_colname,
+                _importance_maker->peripheral(),
+                _importance_maker->population() );
+
+            _importance_maker->transfer( from_colname, to_colname );
+
+            from_colname = to_colname;
+        }
+
+    if ( from_colname.find( "$GETML_UPPER_TS" ) != std::string::npos )
+        {
+            auto to_colname = utils::StringReplacer::replace_all(
+                from_colname, "$GETML_UPPER_TS", "" );
+
+            _importance_maker->transfer( from_colname, to_colname );
+
+            from_colname = to_colname;
+        }
+
+    if ( from_colname.find( "$GETML_LOWER_TS" ) != std::string::npos )
+        {
+            auto to_colname = utils::StringReplacer::replace_all(
+                from_colname, "$GETML_LOWER_TS", "" );
+
+            _importance_maker->transfer( from_colname, to_colname );
+
+            from_colname = to_colname;
+        }
+
+    if ( from_colname.find( "$GETML_ROWID" ) != std::string::npos )
+        {
+            auto to_colname = utils::StringReplacer::replace_all(
+                from_colname, "$GETML_ROWID", "rowid" );
+
+            _importance_maker->transfer( from_colname, to_colname );
+
+            from_colname = to_colname;
+        }
 }
 
 // -----------------------------------------------------------------------------

@@ -127,11 +127,15 @@ std::map<std::string, Float> DecisionTreeEnsemble::column_importances(
             importance_maker.merge( importances );
         }
 
-    importance_maker.fill_zeros( population_schema(), true );
+    importance_maker.fill_zeros(
+        population_schema(), placeholder().name(), true );
 
-    for ( const auto &p : peripheral_schema() )
+    assert_true( peripheral_schema().size() == peripheral().size() );
+
+    for ( size_t i = 0; i < peripheral().size(); ++i )
         {
-            importance_maker.fill_zeros( p, false );
+            importance_maker.fill_zeros(
+                peripheral_schema().at( i ), peripheral().at( i ), false );
         }
 
     return importance_maker.importances();
