@@ -262,6 +262,10 @@ class FeatureLearner : public AbstractFeatureLearner
     /// Replaces macros inside the SQL queries with actual code.
     std::string replace_macros( const std::string& _query ) const;
 
+    /// Removes the time difference marker from the colnames, needed for the
+    /// column importances.
+    std::string remove_time_diff( const std::string& _from_colname ) const;
+
     /// Helper function for loading a json object.
     Poco::JSON::Object load_json_obj( const std::string& _fname ) const;
 
@@ -551,7 +555,9 @@ FeatureLearner<FeatureLearnerType>::column_importances(
 
     for ( const auto& from_colname : colnames )
         {
-            const auto to_colname = replace_macros( from_colname );
+            auto to_colname = remove_time_diff( from_colname );
+
+            to_colname = replace_macros( to_colname );
 
             if ( from_colname != to_colname )
                 {
@@ -1325,6 +1331,35 @@ FeatureLearner<FeatureLearnerType>::modify_data_frames(
     return std::make_pair( _population_df, peripheral_dfs );
 
     // ------------------------------------------------
+}
+
+// -----------------------------------------------------------------------------
+
+template <typename FeatureLearnerType>
+std::string FeatureLearner<FeatureLearnerType>::remove_time_diff(
+    const std::string& _from_colname ) const
+{
+    // --------------------------------------------------------------
+
+    if ( _from_colname.find( "$GETML_GENERATED_TS" ) == std::string::npos )
+        {
+            return _from_colname;
+        }
+
+    // --------------------------------------------------------------
+
+    const auto pos = _from_colname.find( "\", '" );
+
+    if ( pos == std::string::npos )
+        {
+            return _from_colname;
+        }
+
+    // --------------------------------------------------------------
+
+    return _from_colname.substr( 0, pos );
+
+    // --------------------------------------------------------------
 }
 
 // -----------------------------------------------------------------------------
