@@ -190,9 +190,8 @@ void ImportanceMaker::add(
                     return;
                 }
 
-                // TODO
             case enums::DataUsed::x_subfeature:
-                assert_true( false && "TODO" );
+                add_to_importance_factors( _column, _value );
                 return;
 
             case enums::DataUsed::not_applicable:

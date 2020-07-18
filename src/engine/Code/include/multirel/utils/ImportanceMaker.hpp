@@ -12,7 +12,8 @@ namespace utils
 class ImportanceMaker
 {
    public:
-    ImportanceMaker(){};
+    ImportanceMaker( const size_t _num_subfeatures = 0 )
+        : helper_( helpers::ImportanceMaker( _num_subfeatures ) ){};
 
     ~ImportanceMaker() = default;
 
@@ -34,6 +35,18 @@ class ImportanceMaker
         const bool _is_population )
     {
         helper_.fill_zeros( _pl, _tname, _is_population );
+    }
+
+    /// Trivial (const) accessor
+    const std::vector<Float>& importance_factors_avg() const
+    {
+        return helper_.importance_factors_avg();
+    }
+
+    /// Trivial (const) accessor
+    const std::vector<Float>& importance_factors_sum() const
+    {
+        return helper_.importance_factors_sum();
     }
 
     /// Merges the map into the existing importances.
@@ -62,6 +75,13 @@ class ImportanceMaker
     void add_to_importances( const std::string& _name, const Float _value )
     {
         helper_.add_to_importances( _name, _value );
+    }
+
+    /// Adds the _value to the column signified by _ix in the importance
+    /// factors.
+    void add_to_importance_factors( const size_t _ix, const Float _value )
+    {
+        helper_.add_to_importance_factors( _ix, _value );
     }
 
    private:

@@ -37,10 +37,6 @@ class DecisionTree
 
     // --------------------------------------
 
-    /// Generates the column importances for this tree.
-    std::map<std::string, Float> column_importances(
-        const Float _importance_factor ) const;
-
     /// Fits the decision tree
     void fit(
         const containers::DataFrameView &_population,
@@ -89,6 +85,14 @@ class DecisionTree
     inline const std::string aggregation_type() const
     {
         return aggregation()->type();
+    }
+
+    /// Calculates the column importances for this tree.
+    inline void column_importances(
+        utils::ImportanceMaker *_importance_maker ) const
+    {
+        assert_true( root_ );
+        root_->column_importances( _importance_maker );
     }
 
     /// Returns the information required for identifying the

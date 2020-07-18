@@ -150,29 +150,6 @@ void DecisionTree::fit(
 
 // ----------------------------------------------------------------------------
 
-std::map<std::string, Float> DecisionTree::column_importances(
-    const Float _importance_factor ) const
-{
-    if ( _importance_factor == 0.0 )
-        {
-            return std::map<std::string, Float>();
-        }
-
-    auto importance_maker = utils::ImportanceMaker();
-
-    assert_true( root_ );
-
-    root_->column_importances( &importance_maker );
-
-    importance_maker.normalize();
-
-    importance_maker.multiply( _importance_factor );
-
-    return importance_maker.importances();
-}
-
-// ----------------------------------------------------------------------------
-
 void DecisionTree::from_json_obj( const Poco::JSON::Object &_json_obj )
 {
     // -----------------------------------
