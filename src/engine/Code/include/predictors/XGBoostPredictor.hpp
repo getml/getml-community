@@ -89,6 +89,9 @@ class XGBoostPredictor : public Predictor
     /// Whether we want the predictor to be silent.
     bool silent() const final { return hyperparams_.silent_; }
 
+    /// The type of the predictor.
+    std::string type() const final { return "XGBoost"; }
+
     // -----------------------------------------
 
    private:

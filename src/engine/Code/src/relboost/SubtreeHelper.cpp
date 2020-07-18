@@ -84,7 +84,8 @@ void SubtreeHelper::fit_subensemble(
     const auto num_features =
         static_cast<size_t>( _hyperparameters.num_subfeatures_ );
 
-    utils::Logger::log( "Training features...", _logger, _comm );
+    utils::Logger::log(
+        "RelboostModel: Training subfeatures...", _logger, _comm );
 
     for ( size_t i = 0; i < num_features; ++i )
         {
@@ -327,7 +328,8 @@ void SubtreeHelper::make_predictions_for_one_subensemble(
     const auto subsubfeatures =
         SubtreeHelper::make_subfeatures( _subtable_holder, subpredictions );
 
-    utils::Logger::log( "Building features...", _logger, _comm );
+    utils::Logger::log(
+        "RelboostModel: Building subfeatures...", _logger, _comm );
 
     const auto num_features = _subensemble->num_features();
 

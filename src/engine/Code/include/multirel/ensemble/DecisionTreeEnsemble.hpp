@@ -151,6 +151,9 @@ class DecisionTreeEnsemble
         return hyperparameters().loss_function_ != "SquareLoss";
     }
 
+    /// Whether the ensemble is a subensemble
+    const bool is_subensemble() const { return !impl().population_schema_; }
+
     /// Trivial accessor
     const size_t num_features() const { return trees().size(); }
 

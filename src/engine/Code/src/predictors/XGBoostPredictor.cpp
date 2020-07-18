@@ -359,8 +359,6 @@ std::string XGBoostPredictor::fit(
 
     const auto n_iter = static_cast<int>( hyperparams_.n_iter_ );
 
-    _logger->log( "Training XGBoost..." );
-
     for ( int i = 0; i < n_iter; ++i )
         {
             if ( XGBoosterUpdateOneIter( *handle, i, *d_matrix ) != 0 )

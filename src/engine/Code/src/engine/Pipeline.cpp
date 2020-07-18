@@ -846,6 +846,7 @@ void Pipeline::fit(
         _data_frames,
         _pred_tracker,
         feature_selector_impl(),
+        "feature selector",
         &feature_selectors,
         _socket );
 
@@ -874,6 +875,7 @@ void Pipeline::fit(
         _data_frames,
         _pred_tracker,
         predictor_impl(),
+        "predictor",
         &predictors,
         _socket );
 
@@ -949,6 +951,7 @@ void Pipeline::fit_predictors(
     const std::map<std::string, containers::DataFrame>& _data_frames,
     const std::shared_ptr<dependency::PredTracker> _pred_tracker,
     const predictors::PredictorImpl& _predictor_impl,
+    const std::string& _purpose,
     std::vector<std::vector<std::shared_ptr<predictors::Predictor>>>*
         _predictors,
     Poco::Net::StreamSocket* _socket ) const
@@ -1010,6 +1013,9 @@ void Pipeline::fit_predictors(
 
                             continue;
                         }
+
+                    socket_logger->log(
+                        p->type() + ": Training as " + _purpose + "..." );
 
                     p->fit(
                         socket_logger,
