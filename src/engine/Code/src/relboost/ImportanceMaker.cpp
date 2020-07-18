@@ -178,9 +178,8 @@ void ImportanceMaker::add(
                     return;
                 }
 
-                // TODO
             case enums::DataUsed::subfeatures:
-                assert_true( false && "TODO" );
+                add_to_importance_factors( _column, _value );
                 return;
 
             default:

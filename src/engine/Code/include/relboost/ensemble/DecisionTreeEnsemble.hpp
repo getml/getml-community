@@ -60,6 +60,11 @@ class DecisionTreeEnsemble
     std::map<std::string, Float> column_importances(
         const std::vector<Float>& _importance_factors ) const;
 
+    /// Calculates the column importance for a particular tree.
+    std::map<std::string, Float> column_importance_for_tree(
+        const Float _importance_factors,
+        const decisiontrees::DecisionTree& _tree ) const;
+
     /// Fits the DecisionTreeEnsemble.
     void fit(
         const containers::DataFrame& _population,

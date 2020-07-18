@@ -30,10 +30,6 @@ class DecisionTree
     // -----------------------------------------------------------------
 
    public:
-    /// Calculates the column importances for this tree.
-    std::map<std::string, Float> column_importances(
-        const Float _importance_factor ) const;
-
     /// Fits the decision tree.
     void fit(
         const containers::DataFrameView& _output,
@@ -61,6 +57,13 @@ class DecisionTree
     void calc_update_rate( const std::vector<Float>& _predictions )
     {
         update_rate_ = loss_function().calc_update_rate( _predictions );
+    }
+
+    /// Calculates the column importances for this tree.
+    void column_importances( utils::ImportanceMaker* _importance_maker ) const
+    {
+        assert_true( root_ );
+        root_->column_importances( _importance_maker );
     }
 
     /// Clears data no longer needed.

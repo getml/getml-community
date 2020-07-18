@@ -20,6 +20,25 @@ void ImportanceMaker::add_to_importances(
 
 // ----------------------------------------------------------------------------
 
+void ImportanceMaker::add_to_importance_factors(
+    const size_t _ix, const Float _value )
+{
+    if ( _ix < importance_factors_avg_.size() )
+        {
+            importance_factors_avg_.at( _ix ) += _value;
+            return;
+        }
+
+    assert_true(
+        _ix < importance_factors_avg_.size() + importance_factors_sum_.size() );
+
+    const auto ix = _ix - importance_factors_avg_.size();
+
+    importance_factors_sum_.at( ix ) += _value;
+}
+
+// ----------------------------------------------------------------------------
+
 void ImportanceMaker::fill_zeros(
     const Placeholder& _pl,
     const std::string& _tname,

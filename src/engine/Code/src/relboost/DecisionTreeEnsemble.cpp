@@ -276,29 +276,87 @@ void DecisionTreeEnsemble::clean_up()
 
 std::map<std::string, Float> DecisionTreeEnsemble::column_importances(
     const std::vector<Float> &_importance_factors ) const
-{
-    assert_true( _importance_factors.size() == trees().size() );
 
+{
     auto importance_maker = utils::ImportanceMaker();
+
+    assert_true( _importance_factors.size() == trees().size() );
 
     for ( size_t i = 0; i < trees().size(); ++i )
         {
-            const auto importances = trees().at( i ).column_importances(
-                _importance_factors.at( i ) );
+            const auto importances = column_importance_for_tree(
+                _importance_factors.at( i ), trees().at( i ) );
 
             importance_maker.merge( importances );
         }
 
-    importance_maker.fill_zeros(
-        population_schema(), placeholder().name(), true );
-
-    assert_true( peripheral_schema().size() == peripheral().size() );
-
-    for ( size_t i = 0; i < peripheral().size(); ++i )
+    if ( impl().population_schema_ )
         {
             importance_maker.fill_zeros(
-                peripheral_schema().at( i ), peripheral().at( i ), false );
+                population_schema(), placeholder().name(), true );
+
+            assert_true( peripheral_schema().size() == peripheral().size() );
+
+            for ( size_t i = 0; i < peripheral().size(); ++i )
+                {
+                    importance_maker.fill_zeros(
+                        peripheral_schema().at( i ),
+                        peripheral().at( i ),
+                        false );
+                }
         }
+
+    return importance_maker.importances();
+}
+
+// ----------------------------------------------------------------------------
+
+std::map<std::string, Float> DecisionTreeEnsemble::column_importance_for_tree(
+    const Float _importance_factor,
+    const decisiontrees::DecisionTree &_tree ) const
+{
+    if ( _importance_factor == 0.0 )
+        {
+            return std::map<std::string, Float>();
+        }
+
+    const auto p = _tree.peripheral_used();
+
+    assert_true( subensembles_avg_.size() == subensembles_sum_.size() );
+
+    assert_true( p < subensembles_avg_.size() );
+
+    const auto &sub_avg = subensembles_avg_.at( p );
+
+    const auto &sub_sum = subensembles_sum_.at( p );
+
+    assert_true( ( sub_avg && true ) == ( sub_sum && true ) );
+
+    assert_true(
+        !sub_avg || ( sub_avg->num_features() == sub_sum->num_features() ) );
+
+    const size_t num_subfeatures = sub_avg ? sub_avg->num_features() : 0;
+
+    auto importance_maker = utils::ImportanceMaker( num_subfeatures );
+
+    _tree.column_importances( &importance_maker );
+
+    if ( sub_avg )
+        {
+            const auto importances_avg = sub_avg->column_importances(
+                importance_maker.importance_factors_avg() );
+
+            importance_maker.merge( importances_avg );
+
+            const auto importances_sum = sub_sum->column_importances(
+                importance_maker.importance_factors_sum() );
+
+            importance_maker.merge( importances_sum );
+        }
+
+    importance_maker.normalize();
+
+    importance_maker.multiply( _importance_factor );
 
     return importance_maker.importances();
 }

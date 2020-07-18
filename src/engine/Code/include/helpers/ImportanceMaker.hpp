@@ -10,16 +10,27 @@ namespace helpers
 class ImportanceMaker
 {
    public:
-    ImportanceMaker(){};
+    ImportanceMaker( const size_t _num_subfeatures = 0 )
+        : importance_factors_avg_( std::vector<Float>( _num_subfeatures ) ),
+          importance_factors_sum_( std::vector<Float>( _num_subfeatures ) ){};
 
-    ImportanceMaker( const std::map<std::string, Float>& _importances )
-        : importances_( _importances ){};
+    ImportanceMaker(
+        const std::map<std::string, Float>& _importances,
+        const size_t _num_subfeatures = 0 )
+        : ImportanceMaker( _num_subfeatures )
+    {
+        importances_ = _importances;
+    };
 
     ~ImportanceMaker() = default;
 
    public:
     /// Adds the _value to the column signified by _name in the map.
     void add_to_importances( const std::string& _name, const Float _value );
+
+    /// Adds the _value to the column signified by _ix in the importance
+    /// factors.
+    void add_to_importance_factors( const size_t _ix, const Float _value );
 
     /// Adds all of the colnames with importance 0.0.
     void fill_zeros(
@@ -52,7 +63,22 @@ class ImportanceMaker
     }
 
     /// Trivial (const) accessor.
-    std::map<std::string, Float> importances() const { return importances_; }
+    const std::map<std::string, Float>& importances() const
+    {
+        return importances_;
+    }
+
+    /// Trivial (const) accessor.
+    const std::vector<Float>& importance_factors_avg() const
+    {
+        return importance_factors_avg_;
+    }
+
+    /// Trivial (const) accessor.
+    const std::vector<Float>& importance_factors_sum() const
+    {
+        return importance_factors_sum_;
+    }
 
     /// Marks a table as peripheral.
     std::string peripheral() const { return "[PERIPHERAL] "; }
@@ -68,6 +94,12 @@ class ImportanceMaker
         const std::vector<std::string>& _colnames );
 
    private:
+    /// The importance factors for the AVG subfeatures.
+    std::vector<Float> importance_factors_avg_;
+
+    /// The importance factors for the SUM subfeatures.
+    std::vector<Float> importance_factors_sum_;
+
     /// Maps the column names to the importance values.
     std::map<std::string, Float> importances_;
 };
