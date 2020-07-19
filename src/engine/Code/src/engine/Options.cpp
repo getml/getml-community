@@ -46,6 +46,9 @@ void Options::parse_flags( int _argc, char* argv[] )
                 parse_size_t( arg, "https-port", &( monitor_.https_port_ ) );
 
             success = success ||
+                      parse_size_t( arg, "tcp-port", &( monitor_.tcp_port_ ) );
+
+            success = success ||
                       parse_string(
                           arg, "project-directory", &all_projects_directory_ );
 

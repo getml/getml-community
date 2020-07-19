@@ -40,23 +40,46 @@ void HyperoptManager::launch(
 
     cmd.set( "peripheral_names_", peripheral_names );
 
-    const auto cmd_str = JSON::stringify( cmd );
+    // -------------------------------------------------------
 
-    const auto [status, response] = monitor_->send( "launchhyperopt", cmd_str );
+    const auto monitor_socket = monitor().connect();
+
+    const auto cmd_str = monitor().make_cmd( "launchhyperopt", cmd );
+
+    communication::Sender::send_string( cmd_str, monitor_socket.get() );
 
     // -------------------------------------------------------
 
-    if ( status != Poco::Net::HTTPResponse::HTTPStatus::HTTP_OK )
+    while ( true )
         {
-            throw std::runtime_error( response );
+            const auto msg =
+                communication::Receiver::recv_string( monitor_socket.get() );
+
+            if ( msg.size() > 4 && msg.substr( 0, 5 ) == "log: " )
+                {
+                    communication::Sender::send_string( msg, _socket );
+                }
+            else if ( msg == "Success!" )
+                {
+                    break;
+                }
+            else
+                {
+                    throw std::runtime_error( msg );
+                }
         }
+
+    // -------------------------------------------------------
+
+    const auto evaluations_str =
+        communication::Receiver::recv_string( monitor_socket.get() );
 
     // -------------------------------------------------------
 
     Poco::JSON::Parser parser;
 
     const auto evaluations =
-        parser.parse( response ).extract<Poco::JSON::Array::Ptr>();
+        parser.parse( evaluations_str ).extract<Poco::JSON::Array::Ptr>();
 
     auto obj = hyperopt.obj();
 

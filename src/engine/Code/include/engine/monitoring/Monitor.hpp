@@ -42,10 +42,18 @@ class Monitor
 
     // ------------------------------------------------------------------------
 
+    /// Connects to the TCP port of the monitor.
+    std::shared_ptr<Poco::Net::StreamSocket> connect() const;
+
     /// Makes sure that the monitor has started.
     bool get_start_message() const;
 
-    /// Sends a message (consisting of _type and _json) to the Multirel monitor
+    /// Generates a command string from _type and _body.
+    std::string make_cmd(
+        const std::string& _type, const Poco::JSON::Object& _body ) const;
+
+    /// Sends a message (consisting of _type and _json) to the Multirel
+    /// monitor
     std::pair<Poco::Net::HTTPResponse::HTTPStatus, std::string> send(
         const std::string& _type, const std::string& _json ) const;
 

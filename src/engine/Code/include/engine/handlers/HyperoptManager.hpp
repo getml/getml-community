@@ -52,6 +52,13 @@ class HyperoptManager
     }
 
     /// Trivial (private) accessor
+    const monitoring::Monitor& monitor() const
+    {
+        assert_true( monitor_ );
+        return *monitor_;
+    }
+
+    /// Trivial (private) accessor
     std::mutex& project_mtx()
     {
         assert_true( project_mtx_ );
