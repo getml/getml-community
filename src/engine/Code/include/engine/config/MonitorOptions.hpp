@@ -16,6 +16,7 @@ struct MonitorOptions
     MonitorOptions( const Poco::JSON::Object& _json_obj )
         : http_port_( JSON::get_value<size_t>( _json_obj, "httpPort" ) ),
           https_port_( JSON::get_value<size_t>( _json_obj, "httpsPort" ) ),
+          proxy_( JSON::get_value<std::string>( _json_obj, "proxy" ) ),
           tcp_port_( JSON::get_value<size_t>( _json_obj, "tcpPort" ) )
     {
     }
@@ -35,9 +36,28 @@ struct MonitorOptions
     /// Trivial accessor
     const size_t https_port() const { return https_port_; }
 
+    /// Trivial accessor.
+    const std::string proxy() const { return proxy_; }
+
     /// Trivial accessor
     const size_t tcp_port() const { return tcp_port_; }
 
+    /// Returns a URL underwhich the monitor can be reached.
+    const std::string url() const
+    {
+        if ( proxy_ == "" )
+            {
+                return "http://localhost:" + std::to_string( http_port() ) +
+                       "/";
+            }
+
+        if ( proxy_.back() == '/' )
+            {
+                return proxy_;
+            }
+
+        return proxy_ + "/";
+    }
     // ------------------------------------------------------
 
     /// The HTTP port of the monitor, used for local connections.
@@ -47,6 +67,9 @@ struct MonitorOptions
     /// remote connections. (The engine will never communicate
     /// with this port. It is only needed to print out the initial message).
     size_t https_port_;
+
+    /// Any proxy server the getML monitor might be hidden behind.
+    std::string proxy_;
 
     /// The port used for local connections to the monitor.
     size_t tcp_port_;

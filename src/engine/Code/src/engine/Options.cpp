@@ -52,6 +52,9 @@ void Options::parse_flags( int _argc, char* argv[] )
                       parse_string(
                           arg, "project-directory", &all_projects_directory_ );
 
+            success =
+                success || parse_string( arg, "proxy", &( monitor_.proxy_ ) );
+
             // This is to avoid a warning message.
             success = success || parse_string(
                                      arg,
