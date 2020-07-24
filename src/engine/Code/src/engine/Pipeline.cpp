@@ -1229,6 +1229,84 @@ Pipeline::init_predictors(
 
 // ----------------------------------------------------------------------------
 
+bool Pipeline::is_classification() const
+{
+    // -----------------------------------------------------------------------
+
+    const auto fl_is_cl =
+        []( const std::shared_ptr<featurelearners::AbstractFeatureLearner>&
+                fe ) {
+            assert_true( fe );
+            return fe->is_classification();
+        };
+
+    const auto pred_is_cl =
+        []( const std::shared_ptr<predictors::Predictor>& pred ) {
+            assert_true( pred );
+            return pred->is_classification();
+        };
+
+    // -----------------------------------------------------------------------
+
+    bool all_classifiers = std::all_of(
+        feature_learners_.begin(), feature_learners_.end(), fl_is_cl );
+
+    for ( const auto& fs : feature_selectors_ )
+        {
+            all_classifiers = all_classifiers &&
+                              std::all_of( fs.begin(), fs.end(), pred_is_cl );
+        }
+
+    for ( const auto& p : predictors_ )
+        {
+            all_classifiers = all_classifiers &&
+                              std::all_of( p.begin(), p.end(), pred_is_cl );
+        }
+
+    // -----------------------------------------------------------------------
+
+    bool all_regressors = std::none_of(
+        feature_learners_.begin(), feature_learners_.end(), fl_is_cl );
+
+    for ( const auto& fs : feature_selectors_ )
+        {
+            all_regressors = all_regressors &&
+                             std::none_of( fs.begin(), fs.end(), pred_is_cl );
+        }
+
+    for ( const auto& p : predictors_ )
+        {
+            all_regressors = all_regressors &&
+                             std::none_of( p.begin(), p.end(), pred_is_cl );
+        }
+
+    // -----------------------------------------------------------------------
+
+    if ( !all_classifiers && !all_regressors )
+        {
+            throw std::invalid_argument(
+                "You are mixing classification and regression algorithms. "
+                "Please make sure that all of your feature learners, feature "
+                "selectors and predictors are either all regression algorithms "
+                "or all classifications algorithms." );
+        }
+
+    if ( all_classifiers == all_regressors )
+        {
+            throw std::invalid_argument(
+                "The pipelines needs at least one feature learner, feature "
+                "selector or predictor." );
+        }
+
+    // -----------------------------------------------------------------------
+
+    return all_classifiers;
+
+    // -----------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
 Pipeline Pipeline::load(
     const std::shared_ptr<const std::vector<strings::String>>& _categories,
     const std::string& _path,

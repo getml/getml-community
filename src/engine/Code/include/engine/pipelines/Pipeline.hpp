@@ -254,6 +254,9 @@ class Pipeline
         const size_t _num_targets,
         const std::vector<Poco::JSON::Object::Ptr>& _df_fingerprints ) const;
 
+    /// Whether the pipeline is used for classification problems
+    bool is_classification() const;
+
     /// Prepares the predictors.
     std::vector<std::vector<std::shared_ptr<predictors::Predictor>>>
     init_predictors(
@@ -404,20 +407,6 @@ class Pipeline
     const std::vector<Poco::JSON::Object::Ptr>& fs_fingerprints() const
     {
         return impl_.fs_fingerprints_;
-    }
-
-    // TODO: This needs to be implemented more consistently.
-    /// Whether the pipeline is used for classification problems
-    bool is_classification() const
-    {
-        const auto is_cl =
-            []( const std::shared_ptr<featurelearners::AbstractFeatureLearner>&
-                    fe ) {
-                assert_true( fe );
-                return fe->is_classification();
-            };
-        return std::all_of(
-            feature_learners_.begin(), feature_learners_.end(), is_cl );
     }
 
     /// Calculates the number of automated and manual features used.
