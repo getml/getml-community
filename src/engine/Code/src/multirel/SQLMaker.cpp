@@ -98,10 +98,10 @@ std::string SQLMaker::condition_greater(
             case enums::DataUsed::time_stamps_window:
                 {
                     const auto name1 =
-                        "t1.\"" + _output.time_stamps_name() + "\"";
+                        "t2.\"" + _input.time_stamps_name() + "\"";
 
                     const auto name2 =
-                        "t2.\"" + _input.time_stamps_name() + "\"";
+                        "t1.\"" + _output.time_stamps_name() + "\"";
 
                     const auto condition1 = make_time_stamp_diff(
                         name1, name2, _split.critical_value - lag_, false );
@@ -215,10 +215,10 @@ std::string SQLMaker::condition_smaller(
             case enums::DataUsed::time_stamps_window:
                 {
                     const auto name1 =
-                        "t1.\"" + _output.time_stamps_name() + "\"";
+                        "t2.\"" + _input.time_stamps_name() + "\"";
 
                     const auto name2 =
-                        "t2.\"" + _input.time_stamps_name() + "\"";
+                        "t1.\"" + _output.time_stamps_name() + "\"";
 
                     const auto condition1 = make_time_stamp_diff(
                         name1, name2, _split.critical_value - lag_, true );
