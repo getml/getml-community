@@ -16,7 +16,7 @@ struct MonitorOptions
     MonitorOptions( const Poco::JSON::Object& _json_obj )
         : http_port_( JSON::get_value<size_t>( _json_obj, "httpPort" ) ),
           https_port_( JSON::get_value<size_t>( _json_obj, "httpsPort" ) ),
-          proxy_( JSON::get_value<std::string>( _json_obj, "proxy" ) ),
+          proxy_url_( JSON::get_value<std::string>( _json_obj, "proxyUrl" ) ),
           tcp_port_( JSON::get_value<size_t>( _json_obj, "tcpPort" ) )
     {
     }
@@ -37,26 +37,26 @@ struct MonitorOptions
     const size_t https_port() const { return https_port_; }
 
     /// Trivial accessor.
-    const std::string proxy() const { return proxy_; }
+    const std::string proxy_url() const { return proxy_url_; }
 
     /// Trivial accessor
     const size_t tcp_port() const { return tcp_port_; }
 
-    /// Returns a URL underwhich the monitor can be reached.
+    /// Returns a URL under which the monitor can be reached.
     const std::string url() const
     {
-        if ( proxy_ == "" )
+        if ( proxy_url_ == "" )
             {
                 return "http://localhost:" + std::to_string( http_port() ) +
                        "/";
             }
 
-        if ( proxy_.back() == '/' )
+        if ( proxy_url_.back() == '/' )
             {
-                return proxy_;
+                return proxy_url_;
             }
 
-        return proxy_ + "/";
+        return proxy_url_ + "/";
     }
     // ------------------------------------------------------
 
@@ -69,7 +69,7 @@ struct MonitorOptions
     size_t https_port_;
 
     /// Any proxy server the getML monitor might be hidden behind.
-    std::string proxy_;
+    std::string proxy_url_;
 
     /// The port used for local connections to the monitor.
     size_t tcp_port_;
