@@ -13,7 +13,7 @@ class HyperoptManager
     HyperoptManager(
         const std::shared_ptr<std::map<std::string, hyperparam::Hyperopt>>&
             _hyperopts,
-        const std::shared_ptr<const monitoring::Monitor>& _monitor,
+        const std::shared_ptr<const communication::Monitor>& _monitor,
         const std::shared_ptr<std::mutex>& _project_mtx,
         const std::shared_ptr<multithreading::ReadWriteLock>& _read_write_lock )
         : hyperopts_( _hyperopts ),
@@ -52,7 +52,7 @@ class HyperoptManager
     }
 
     /// Trivial (private) accessor
-    const monitoring::Monitor& monitor() const
+    const communication::Monitor& monitor() const
     {
         assert_true( monitor_ );
         return *monitor_;
@@ -71,7 +71,7 @@ class HyperoptManager
         hyperopts_;
 
     /// For communication with the monitor
-    const std::shared_ptr<const monitoring::Monitor> monitor_;
+    const std::shared_ptr<const communication::Monitor> monitor_;
 
     /// It is sometimes necessary to prevent us from changing the project.
     const std::shared_ptr<std::mutex> project_mtx_;

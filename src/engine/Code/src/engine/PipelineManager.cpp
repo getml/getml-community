@@ -325,6 +325,18 @@ void PipelineManager::lift_curve(
 
 // ------------------------------------------------------------------------
 
+void PipelineManager::post_pipeline( const Poco::JSON::Object& _obj )
+{
+    const auto response = monitor().send_tcp( "postpipeline", _obj );
+
+    if ( response != "Success!" )
+        {
+            throw std::runtime_error( response );
+        }
+}
+
+// ------------------------------------------------------------------------
+
 void PipelineManager::precision_recall_curve(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,
@@ -819,7 +831,7 @@ void PipelineManager::transform(
 
             data_frames()[df_name] = df;
 
-            monitor_->send( "postdataframe", df.to_monitor() );
+            monitor_->send_tcp( "postdataframe", df.to_monitor() );
         }
 
     // -------------------------------------------------------

@@ -41,7 +41,7 @@ class NumOpParser
     /// values).
     void check(
         const containers::Column<Float>& _col,
-        const std::shared_ptr<const monitoring::Logger>& _logger,
+        const std::shared_ptr<const communication::Logger>& _logger,
         Poco::Net::StreamSocket* _socket ) const;
 
     /// Parses a numerical column.

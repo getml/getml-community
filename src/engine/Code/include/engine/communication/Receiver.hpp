@@ -24,7 +24,7 @@ class Receiver
 
     /// Receives a command from the client
     static Poco::JSON::Object recv_cmd(
-        const std::shared_ptr<const monitoring::Logger> &_logger,
+        const std::shared_ptr<const communication::Logger> &_logger,
         Poco::Net::StreamSocket *_socket );
 
     /// Receives features from the client, transposing them.

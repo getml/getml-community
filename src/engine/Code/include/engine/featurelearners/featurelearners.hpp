@@ -24,7 +24,6 @@
 #include "logging/logging.hpp"
 
 #include "engine/containers/containers.hpp"
-#include "engine/monitoring/monitoring.hpp"
 
 #include "engine/communication/communication.hpp"
 

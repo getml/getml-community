@@ -26,8 +26,8 @@ class PipelineManager
         const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
         const std::shared_ptr<engine::licensing::LicenseChecker>&
             _license_checker,
-        const std::shared_ptr<const monitoring::Logger>& _logger,
-        const std::shared_ptr<const monitoring::Monitor>& _monitor,
+        const std::shared_ptr<const communication::Logger>& _logger,
+        const std::shared_ptr<const communication::Monitor>& _monitor,
         const std::shared_ptr<PipelineMapType>& _pipelines,
         const std::shared_ptr<dependency::PredTracker>& _pred_tracker,
         const std::shared_ptr<std::mutex>& _project_mtx,
@@ -139,6 +139,9 @@ class PipelineManager
         const std::string& _name,
         const unsigned int _target_num ) const;
 
+    /// Posts a pipeline to the monitor.
+    void post_pipeline( const Poco::JSON::Object& _obj );
+
     /// Receives data from the client. This data will not be stored permanently,
     /// but locally. Once the training/transformation process is complete, it
     /// will be deleted.
@@ -222,10 +225,17 @@ class PipelineManager
     }
 
     /// Trivial (private) accessor
-    const monitoring::Logger& logger()
+    const communication::Logger& logger()
     {
         assert_true( logger_ );
         return *logger_;
+    }
+
+    /// Trivial (private) accessor
+    const communication::Monitor& monitor()
+    {
+        assert_true( monitor_ );
+        return *monitor_;
     }
 
     /// Trivial (private) accessor
@@ -241,12 +251,6 @@ class PipelineManager
         assert_true( pipelines_ );
         multithreading::ReadLock read_lock( read_write_lock_ );
         return *pipelines_;
-    }
-
-    /// Posts a pipeline.
-    void post_pipeline( const Poco::JSON::Object& _obj )
-    {
-        monitor_->send( "postpipeline", _obj );
     }
 
     /// Trivial (private) accessor
@@ -298,10 +302,10 @@ class PipelineManager
     const std::shared_ptr<licensing::LicenseChecker> license_checker_;
 
     /// For logging
-    const std::shared_ptr<const monitoring::Logger> logger_;
+    const std::shared_ptr<const communication::Logger> logger_;
 
     /// For communication with the monitor
-    const std::shared_ptr<const monitoring::Monitor> monitor_;
+    const std::shared_ptr<const communication::Monitor> monitor_;
 
     /// The pipelines currently held in memory
     const std::shared_ptr<PipelineMapType> pipelines_;

@@ -42,14 +42,14 @@ class Pipeline
     /// Checks the validity of the data model.
     void check(
         const Poco::JSON::Object& _cmd,
-        const std::shared_ptr<const monitoring::Logger>& _logger,
+        const std::shared_ptr<const communication::Logger>& _logger,
         const std::map<std::string, containers::DataFrame>& _data_frames,
         Poco::Net::StreamSocket* _socket ) const;
 
     /// Fit the pipeline.
     void fit(
         const Poco::JSON::Object& _cmd,
-        const std::shared_ptr<const monitoring::Logger>& _logger,
+        const std::shared_ptr<const communication::Logger>& _logger,
         const std::map<std::string, containers::DataFrame>& _data_frames,
         const std::shared_ptr<dependency::FETracker> _fe_tracker,
         const std::shared_ptr<dependency::PredTracker> _pred_tracker,
@@ -73,7 +73,7 @@ class Pipeline
     /// Generate features.
     containers::Features transform(
         const Poco::JSON::Object& _cmd,
-        const std::shared_ptr<const monitoring::Logger>& _logger,
+        const std::shared_ptr<const communication::Logger>& _logger,
         const std::map<std::string, containers::DataFrame>& _data_frames,
         Poco::Net::StreamSocket* _socket );
 
@@ -191,7 +191,7 @@ class Pipeline
     /// Fits the feature learning algorithms.
     void fit_feature_learners(
         const Poco::JSON::Object& _cmd,
-        const std::shared_ptr<const monitoring::Logger>& _logger,
+        const std::shared_ptr<const communication::Logger>& _logger,
         const std::map<std::string, containers::DataFrame>& _data_frames,
         const std::shared_ptr<dependency::FETracker> _fe_tracker,
         Poco::Net::StreamSocket* _socket );
@@ -199,7 +199,7 @@ class Pipeline
     /// Fits the predictors.
     void fit_predictors(
         const Poco::JSON::Object& _cmd,
-        const std::shared_ptr<const monitoring::Logger>& _logger,
+        const std::shared_ptr<const communication::Logger>& _logger,
         const std::map<std::string, containers::DataFrame>& _data_frames,
         const std::shared_ptr<dependency::PredTracker> _pred_tracker,
         const predictors::PredictorImpl& _predictor_impl,
@@ -223,7 +223,7 @@ class Pipeline
     /// from the population table).
     containers::Features generate_numerical_features(
         const Poco::JSON::Object& _cmd,
-        const std::shared_ptr<const monitoring::Logger>& _logger,
+        const std::shared_ptr<const communication::Logger>& _logger,
         const std::map<std::string, containers::DataFrame>& _data_frames,
         const predictors::PredictorImpl& _predictor_impl,
         Poco::Net::StreamSocket* _socket ) const;

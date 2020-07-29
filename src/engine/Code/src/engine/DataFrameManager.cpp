@@ -112,7 +112,7 @@ void DataFrameManager::add_float_column(
         {
             add_float_column_to_df( role, col, df, &weak_write_lock );
 
-            monitor_->send( "postdataframe", df->to_monitor() );
+            monitor_->send_tcp( "postdataframe", df->to_monitor() );
         }
     else
         {
@@ -125,7 +125,7 @@ void DataFrameManager::add_float_column(
 
             data_frames()[df_name].create_indices();
 
-            monitor_->send( "postdataframe", new_df.to_monitor() );
+            monitor_->send_tcp( "postdataframe", new_df.to_monitor() );
         }
 
     // ------------------------------------------------------------------------
@@ -158,7 +158,7 @@ void DataFrameManager::add_float_column(
         {
             recv_and_add_float_column( _cmd, df, &weak_write_lock, _socket );
 
-            monitor_->send( "postdataframe", df->to_monitor() );
+            monitor_->send_tcp( "postdataframe", df->to_monitor() );
         }
     else
         {
@@ -172,7 +172,7 @@ void DataFrameManager::add_float_column(
 
             data_frames()[df_name].create_indices();
 
-            monitor_->send( "postdataframe", new_df.to_monitor() );
+            monitor_->send_tcp( "postdataframe", new_df.to_monitor() );
         }
 
     // ------------------------------------------------------------------------
@@ -329,7 +329,7 @@ void DataFrameManager::add_string_column(
         {
             recv_and_add_string_column( _cmd, df, &weak_write_lock, _socket );
 
-            monitor_->send( "postdataframe", df->to_monitor() );
+            monitor_->send_tcp( "postdataframe", df->to_monitor() );
         }
     else
         {
@@ -343,7 +343,7 @@ void DataFrameManager::add_string_column(
 
             data_frames()[df_name].create_indices();
 
-            monitor_->send( "postdataframe", new_df.to_monitor() );
+            monitor_->send_tcp( "postdataframe", new_df.to_monitor() );
         }
 
     // ------------------------------------------------------------------------
@@ -431,7 +431,7 @@ void DataFrameManager::add_string_column(
 
     // ------------------------------------------------------------------------
 
-    monitor_->send( "postdataframe", df->to_monitor() );
+    monitor_->send_tcp( "postdataframe", df->to_monitor() );
 
     communication::Sender::send_string( "Success!", _socket );
 
@@ -565,7 +565,7 @@ void DataFrameManager::append_to_data_frame(
 
     // --------------------------------------------------------------------
 
-    monitor_->send( "postdataframe", data_frames()[_name].to_monitor() );
+    monitor_->send_tcp( "postdataframe", data_frames()[_name].to_monitor() );
 
     // --------------------------------------------------------------------
 }
@@ -892,7 +892,7 @@ void DataFrameManager::concat(
 
     communication::Sender::send_string( "Success!", _socket );
 
-    monitor_->send( "postdataframe", df.to_monitor() );
+    monitor_->send_tcp( "postdataframe", df.to_monitor() );
 
     // ------------------------------------------------------------------------
 }
@@ -1910,7 +1910,7 @@ void DataFrameManager::group_by(
 
     data_frames()[_name] = grouped_df;
 
-    monitor_->send( "postdataframe", grouped_df.to_monitor() );
+    monitor_->send_tcp( "postdataframe", grouped_df.to_monitor() );
 
     weak_write_lock.unlock();
 
@@ -1973,7 +1973,7 @@ void DataFrameManager::join(
 
     data_frames()[_name] = joined_df;
 
-    monitor_->send( "postdataframe", data_frames()[_name].to_monitor() );
+    monitor_->send_tcp( "postdataframe", data_frames()[_name].to_monitor() );
 
     weak_write_lock.unlock();
 
@@ -2148,7 +2148,7 @@ void DataFrameManager::remove_column(
                 "' not found." );
         }
 
-    monitor_->send( "postdataframe", df.to_monitor() );
+    monitor_->send_tcp( "postdataframe", df.to_monitor() );
 
     communication::Sender::send_string( "Success!", _socket );
 }
@@ -2176,7 +2176,7 @@ void DataFrameManager::set_unit(
 
     df.add_float_column( column, role );
 
-    monitor_->send( "postdataframe", df.to_monitor() );
+    monitor_->send_tcp( "postdataframe", df.to_monitor() );
 
     write_lock.unlock();
 
@@ -2213,7 +2213,7 @@ void DataFrameManager::set_unit_categorical(
             df.add_int_column( column, role );
         }
 
-    monitor_->send( "postdataframe", df.to_monitor() );
+    monitor_->send_tcp( "postdataframe", df.to_monitor() );
 
     write_lock.unlock();
 
@@ -2482,7 +2482,7 @@ void DataFrameManager::where(
 
     data_frames()[new_df_name] = df;
 
-    monitor_->send( "postdataframe", df.to_monitor() );
+    monitor_->send_tcp( "postdataframe", df.to_monitor() );
 
     weak_write_lock.unlock();
 

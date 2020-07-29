@@ -13,7 +13,7 @@ void DataModelChecker::check(
     const std::vector<containers::DataFrame>& _peripheral,
     const std::vector<std::shared_ptr<featurelearners::AbstractFeatureLearner>>
         _feature_learners,
-    const std::shared_ptr<const monitoring::Logger>& _logger,
+    const std::shared_ptr<const communication::Logger>& _logger,
     Poco::Net::StreamSocket* _socket )
 {
     // --------------------------------------------------------------------------

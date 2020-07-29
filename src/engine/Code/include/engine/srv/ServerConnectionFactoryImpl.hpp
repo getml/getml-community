@@ -16,7 +16,7 @@ class ServerConnectionFactoryImpl : public Poco::Net::TCPServerConnectionFactory
         const std::shared_ptr<handlers::DatabaseManager>& _database_manager,
         const std::shared_ptr<handlers::DataFrameManager>& _data_frame_manager,
         const std::shared_ptr<handlers::HyperoptManager>& _hyperopt_manager,
-        const std::shared_ptr<const monitoring::Logger>& _logger,
+        const std::shared_ptr<const communication::Logger>& _logger,
         const config::Options& _options,
         const std::shared_ptr<handlers::PipelineManager>& _pipeline_manager,
         const std::shared_ptr<handlers::ProjectManager>& _project_manager,
@@ -62,7 +62,7 @@ class ServerConnectionFactoryImpl : public Poco::Net::TCPServerConnectionFactory
     const std::shared_ptr<handlers::HyperoptManager> hyperopt_manager_;
 
     /// Logs commands.
-    const std::shared_ptr<const monitoring::Logger> logger_;
+    const std::shared_ptr<const communication::Logger> logger_;
 
     /// Contains information on the port of the monitor process
     const config::Options options_;

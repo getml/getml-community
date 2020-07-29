@@ -3,6 +3,9 @@
 
 // ----------------------------------------------------------------------------
 
+#include <cmath>
+
+#include <algorithm>
 #include <map>
 #include <memory>
 #include <numeric>
@@ -15,8 +18,6 @@
 
 #include "engine/Float.hpp"
 #include "engine/Int.hpp"
-
-#include "engine/monitoring/monitoring.hpp"
 
 // ----------------------------------------------------------------------------
 

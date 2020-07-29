@@ -68,7 +68,7 @@ std::vector<std::string> CatOpParser::boolean_as_string(
 void CatOpParser::check(
     const std::vector<std::string>& _col,
     const std::string& _name,
-    const std::shared_ptr<const monitoring::Logger>& _logger,
+    const std::shared_ptr<const communication::Logger>& _logger,
     Poco::Net::StreamSocket* _socket ) const
 {
     // --------------------------------------------------------------------------

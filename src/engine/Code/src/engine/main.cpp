@@ -25,10 +25,10 @@ int main( int argc, char* argv[] )
     // -------------------------------------------
 
     const auto monitor =
-        std::make_shared<const engine::monitoring::Monitor>( options );
+        std::make_shared<const engine::communication::Monitor>( options );
 
     const auto logger =
-        std::make_shared<const engine::monitoring::Logger>( monitor );
+        std::make_shared<const engine::communication::Logger>( monitor );
 
     // -------------------------------------------
     // Instruct the user to log in and wait for the token.
@@ -60,9 +60,9 @@ int main( int argc, char* argv[] )
     // -------------------------------------------
     // Check whether the port is currently occupied
 
-    const auto [status, response] = monitor->send( "checkengineport", "" );
+    const auto response = monitor->send_tcp( "checkengineport" );
 
-    if ( status != Poco::Net::HTTPResponse::HTTPStatus::HTTP_OK )
+    if ( response != "Success!" )
         {
             monitor->log( response );
             exit( 0 );

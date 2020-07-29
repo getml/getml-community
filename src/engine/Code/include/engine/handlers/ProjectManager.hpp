@@ -27,8 +27,8 @@ class ProjectManager
         const std::shared_ptr<std::map<std::string, hyperparam::Hyperopt>>&
             _hyperopts,
         const std::shared_ptr<licensing::LicenseChecker>& _license_checker,
-        const std::shared_ptr<const monitoring::Logger>& _logger,
-        const std::shared_ptr<const monitoring::Monitor>& _monitor,
+        const std::shared_ptr<const communication::Logger>& _logger,
+        const std::shared_ptr<const communication::Monitor>& _monitor,
         const config::Options& _options,
         const std::shared_ptr<PipelineMapType>& _pipelines,
         const std::shared_ptr<dependency::PredTracker>& _pred_tracker,
@@ -187,6 +187,12 @@ class ProjectManager
     /// Loads a JSON object from a file.
     Poco::JSON::Object load_json_obj( const std::string& _fname ) const;
 
+    /// Posts an object to the monitor.
+    void post( const std::string& _what, const Poco::JSON::Object& _obj ) const;
+
+    /// Removes an object from the monitor.
+    void remove( const std::string& _what, const std::string& _name ) const;
+
     // ------------------------------------------------------------------------
 
    private:
@@ -269,10 +275,17 @@ class ProjectManager
     }
 
     /// Trivial (private) accessor
-    const monitoring::Logger& logger()
+    const communication::Logger& logger()
     {
         assert_true( logger_ );
         return *logger_;
+    }
+
+    /// Trivial (private) accessor
+    const communication::Monitor& monitor() const
+    {
+        assert_true( monitor_ );
+        return *monitor_;
     }
 
     /// Trivial (private) accessor
@@ -346,10 +359,10 @@ class ProjectManager
     const std::shared_ptr<licensing::LicenseChecker> license_checker_;
 
     /// For logging
-    const std::shared_ptr<const monitoring::Logger> logger_;
+    const std::shared_ptr<const communication::Logger> logger_;
 
     /// For communication with the monitor
-    const std::shared_ptr<const monitoring::Monitor> monitor_;
+    const std::shared_ptr<const communication::Monitor> monitor_;
 
     /// Settings for the engine
     const config::Options options_;

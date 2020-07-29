@@ -135,7 +135,7 @@ void Pipeline::calculate_feature_stats(
 
 void Pipeline::check(
     const Poco::JSON::Object& _cmd,
-    const std::shared_ptr<const monitoring::Logger>& _logger,
+    const std::shared_ptr<const communication::Logger>& _logger,
     const std::map<std::string, containers::DataFrame>& _data_frames,
     Poco::Net::StreamSocket* _socket ) const
 {
@@ -682,7 +682,7 @@ Poco::JSON::Object Pipeline::feature_names_as_obj() const
 
 containers::Features Pipeline::generate_numerical_features(
     const Poco::JSON::Object& _cmd,
-    const std::shared_ptr<const monitoring::Logger>& _logger,
+    const std::shared_ptr<const communication::Logger>& _logger,
     const std::map<std::string, containers::DataFrame>& _data_frames,
     const predictors::PredictorImpl& _predictor_impl,
     Poco::Net::StreamSocket* _socket ) const
@@ -803,7 +803,7 @@ containers::Features Pipeline::generate_predictions(
 
 void Pipeline::fit(
     const Poco::JSON::Object& _cmd,
-    const std::shared_ptr<const monitoring::Logger>& _logger,
+    const std::shared_ptr<const communication::Logger>& _logger,
     const std::map<std::string, containers::DataFrame>& _data_frames,
     const std::shared_ptr<dependency::FETracker> _fe_tracker,
     const std::shared_ptr<dependency::PredTracker> _pred_tracker,
@@ -896,7 +896,7 @@ void Pipeline::fit(
 
 void Pipeline::fit_feature_learners(
     const Poco::JSON::Object& _cmd,
-    const std::shared_ptr<const monitoring::Logger>& _logger,
+    const std::shared_ptr<const communication::Logger>& _logger,
     const std::map<std::string, containers::DataFrame>& _data_frames,
     const std::shared_ptr<dependency::FETracker> _fe_tracker,
     Poco::Net::StreamSocket* _socket )
@@ -947,7 +947,7 @@ void Pipeline::fit_feature_learners(
 
 void Pipeline::fit_predictors(
     const Poco::JSON::Object& _cmd,
-    const std::shared_ptr<const monitoring::Logger>& _logger,
+    const std::shared_ptr<const communication::Logger>& _logger,
     const std::map<std::string, containers::DataFrame>& _data_frames,
     const std::shared_ptr<dependency::PredTracker> _pred_tracker,
     const predictors::PredictorImpl& _predictor_impl,
@@ -2138,7 +2138,7 @@ Poco::JSON::Array::Ptr Pipeline::to_sql_arr() const
 
 containers::Features Pipeline::transform(
     const Poco::JSON::Object& _cmd,
-    const std::shared_ptr<const monitoring::Logger>& _logger,
+    const std::shared_ptr<const communication::Logger>& _logger,
     const std::map<std::string, containers::DataFrame>& _data_frames,
     Poco::Net::StreamSocket* _socket )
 {
