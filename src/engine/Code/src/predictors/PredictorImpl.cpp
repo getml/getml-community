@@ -189,6 +189,22 @@ void PredictorImpl::fit_encodings(
         }
 }
 
+// -----------------------------------------------------------------------------
+
+Int PredictorImpl::get_num_threads( const Int _num_threads ) const
+{
+    auto num_threads = _num_threads;
+
+    if ( num_threads <= 0 )
+        {
+            num_threads = std::max(
+                2,
+                static_cast<Int>( std::thread::hardware_concurrency() ) / 2 );
+        }
+
+    return num_threads;
+}
+
 // -------------------------------------------------------------------------
 
 void PredictorImpl::save( const std::string& _fname ) const

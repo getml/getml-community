@@ -131,6 +131,7 @@ class XGBoostPredictor : public Predictor
 
     // -----------------------------------------
 
+   private:
     /// Allocates the booster
     std::unique_ptr<BoosterHandle, XGBoostPredictor::BoosterDestructor>
     allocate_booster( const DMatrixHandle _dmats[], bst_ulong _len ) const;
@@ -149,10 +150,26 @@ class XGBoostPredictor : public Predictor
         const std::vector<CIntColumn>& _X_categorical,
         const std::vector<CFloatColumn>& _X_numerical ) const;
 
+    /// Does the actual fitting.
+    void fit_handle(
+        const std::shared_ptr<const logging::AbstractLogger> _logger,
+        const std::unique_ptr<
+            DMatrixHandle,
+            XGBoostPredictor::DMatrixDestructor>& _d_matrix,
+        const std::unique_ptr<
+            BoosterHandle,
+            XGBoostPredictor::BoosterDestructor>& _handle ) const;
+
     /// Extracts feature importances from XGBoost dump
     void parse_dump(
         const std::string& _dump,
         std::vector<Float>* _feature_importances ) const;
+
+    /// Sets the hyperparameter for the handle.
+    void set_hyperparameters(
+        const std::unique_ptr<
+            BoosterHandle,
+            XGBoostPredictor::BoosterDestructor>& _handle ) const;
 
     // -----------------------------------------
 

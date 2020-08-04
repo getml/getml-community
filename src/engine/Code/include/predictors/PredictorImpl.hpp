@@ -43,6 +43,9 @@ class PredictorImpl
     /// Fits the encodings.
     void fit_encodings( const std::vector<CIntColumn>& _X_categorical );
 
+    /// Infers the appropriate number of threads to use.
+    Int get_num_threads( const Int _num_threads ) const;
+
     /// Generates a CSRMatrix from the categorical and numerical columns.
     template <typename DataType, typename IndicesType, typename IndptrType>
     CSRMatrix<DataType, IndicesType, IndptrType> make_csr(
