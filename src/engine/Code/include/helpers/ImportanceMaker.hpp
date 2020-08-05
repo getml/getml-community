@@ -15,7 +15,7 @@ class ImportanceMaker
           importance_factors_sum_( std::vector<Float>( _num_subfeatures ) ){};
 
     ImportanceMaker(
-        const std::map<std::string, Float>& _importances,
+        const std::map<ColumnDescription, Float>& _importances,
         const size_t _num_subfeatures = 0 )
         : ImportanceMaker( _num_subfeatures )
     {
@@ -25,8 +25,9 @@ class ImportanceMaker
     ~ImportanceMaker() = default;
 
    public:
-    /// Adds the _value to the column signified by _name in the map.
-    void add_to_importances( const std::string& _name, const Float _value );
+    /// Adds the _value to the column signified by _desc in the map.
+    void add_to_importances(
+        const ColumnDescription& _desc, const Float _value );
 
     /// Adds the _value to the column signified by _ix in the importance
     /// factors.
@@ -39,7 +40,7 @@ class ImportanceMaker
         const bool _is_population );
 
     /// Merges the map into the existing importances.
-    void merge( const std::map<std::string, Float>& _importances );
+    void merge( const std::map<ColumnDescription, Float>& _importances );
 
     /// Multiplies all importances with the importance factor.
     void multiply( const Float _importance_factor );
@@ -48,22 +49,23 @@ class ImportanceMaker
     void normalize();
 
     /// Transfers the value from _from to _to.
-    void transfer( const std::string& _from, const std::string& _to );
+    void transfer(
+        const ColumnDescription& _from, const ColumnDescription& _to );
 
    public:
     /// Returns the names of the columns.
     std::vector<std::string> colnames() const
     {
         auto names = std::vector<std::string>();
-        for ( const auto& [name, _] : importances_ )
+        for ( const auto& [desc, _] : importances_ )
             {
-                names.push_back( name );
+                names.push_back( desc.name() );
             }
         return names;
     }
 
     /// Trivial (const) accessor.
-    const std::map<std::string, Float>& importances() const
+    const std::map<ColumnDescription, Float>& importances() const
     {
         return importances_;
     }
@@ -81,10 +83,10 @@ class ImportanceMaker
     }
 
     /// Marks a table as peripheral.
-    std::string peripheral() const { return "[PERIPHERAL] "; }
+    std::string peripheral() const { return "[PERIPHERAL]"; }
 
     /// Marks a table as population.
-    std::string population() const { return "[POPULATION] "; }
+    std::string population() const { return "[POPULATION]"; }
 
    private:
     /// Adds all of the elements from this column.
@@ -101,7 +103,7 @@ class ImportanceMaker
     std::vector<Float> importance_factors_sum_;
 
     /// Maps the column names to the importance values.
-    std::map<std::string, Float> importances_;
+    std::map<ColumnDescription, Float> importances_;
 };
 
 // ------------------------------------------------------------------------

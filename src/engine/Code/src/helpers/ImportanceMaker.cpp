@@ -5,9 +5,9 @@ namespace helpers
 // ----------------------------------------------------------------------------
 
 void ImportanceMaker::add_to_importances(
-    const std::string& _name, const Float _value )
+    const ColumnDescription& _desc, const Float _value )
 {
-    const auto it = importances_.find( _name );
+    const auto it = importances_.find( _desc );
 
     if ( it != importances_.end() )
         {
@@ -15,7 +15,7 @@ void ImportanceMaker::add_to_importances(
             return;
         }
 
-    importances_[_name] = _value;
+    importances_[_desc] = _value;
 }
 
 // ----------------------------------------------------------------------------
@@ -64,15 +64,16 @@ void ImportanceMaker::fill_zeros_from_columns(
 {
     for ( const auto colname : _colnames )
         {
-            const std::string name = _marker + _pname + "." + colname;
+            const auto desc = ColumnDescription( _marker, _pname, colname );
 
-            add_to_importances( name, 0.0 );
+            add_to_importances( desc, 0.0 );
         }
 }
 
 // ----------------------------------------------------------------------------
 
-void ImportanceMaker::merge( const std::map<std::string, Float>& _importances )
+void ImportanceMaker::merge(
+    const std::map<ColumnDescription, Float>& _importances )
 {
     for ( const auto& [key, value] : _importances )
         {
@@ -113,7 +114,7 @@ void ImportanceMaker::normalize()
 // ----------------------------------------------------------------------------
 
 void ImportanceMaker::transfer(
-    const std::string& _from, const std::string& _to )
+    const ColumnDescription& _from, const ColumnDescription& _to )
 {
     auto it = importances_.find( _from );
 

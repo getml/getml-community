@@ -186,16 +186,18 @@ void Pipeline::check(
 
 // ----------------------------------------------------------------------------
 
-std::pair<std::vector<std::string>, std::vector<std::vector<Float>>>
+std::pair<
+    std::vector<helpers::ColumnDescription>,
+    std::vector<std::vector<Float>>>
 Pipeline::column_importances() const
 {
-    auto c_names = std::vector<std::string>();
+    auto c_desc = std::vector<helpers::ColumnDescription>();
 
     auto c_importances = std::vector<std::vector<Float>>();
 
     if ( predictors_.size() == 0 )
         {
-            return std::make_pair( c_names, c_importances );
+            return std::make_pair( c_desc, c_importances );
         }
 
     const auto f_importances = feature_importances( predictors_ );
@@ -209,11 +211,11 @@ Pipeline::column_importances() const
 
     for ( const auto& i_maker : importance_makers )
         {
-            extract_colnames( i_maker.importances(), &c_names );
+            extract_coldesc( i_maker.importances(), &c_desc );
             extract_importance_values( i_maker.importances(), &c_importances );
         }
 
-    return std::make_pair( c_names, c_importances );
+    return std::make_pair( c_desc, c_importances );
 }
 
 // ----------------------------------------------------------------------------
@@ -222,7 +224,7 @@ Poco::JSON::Object Pipeline::column_importances_as_obj() const
 {
     // ----------------------------------------------------------------
 
-    const auto [c_names, c_importances] = column_importances();
+    const auto [c_desc, c_importances] = column_importances();
 
     // ----------------------------------------------------------------
 
@@ -233,11 +235,12 @@ Poco::JSON::Object Pipeline::column_importances_as_obj() const
 
     // ----------------------------------------------------------------
 
-    auto column_names = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
+    auto column_descriptions =
+        Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
 
-    for ( const auto& name : c_names )
+    for ( const auto& desc : c_desc )
         {
-            column_names->add( name );
+            column_descriptions->add( desc.to_json_obj() );
         }
 
     // ----------------------------------------------------------------
@@ -248,7 +251,7 @@ Poco::JSON::Object Pipeline::column_importances_as_obj() const
 
     Poco::JSON::Object obj;
 
-    obj.set( "column_names_", column_names );
+    obj.set( "column_descriptions_", column_descriptions );
 
     obj.set( "column_importances_", column_importances );
 
@@ -323,54 +326,46 @@ void Pipeline::column_importances_manual(
 
             for ( const auto& colname : predictor_impl().numerical_colnames() )
                 {
-                    const auto full_name =
-                        _importance_makers->at( i ).population() +
-                        *population_name + "." + colname;
+                    const auto desc = helpers::ColumnDescription(
+                        _importance_makers->at( i ).population(),
+                        *population_name,
+                        colname );
 
                     const auto value = f_imp_for_target.at( j++ );
 
                     _importance_makers->at( i ).add_to_importances(
-                        full_name, value );
+                        desc, value );
                 }
 
             for ( const auto& colname :
                   predictor_impl().categorical_colnames() )
                 {
-                    const auto full_name =
-                        _importance_makers->at( i ).population() +
-                        *population_name + "." + colname;
+                    const auto desc = helpers::ColumnDescription(
+                        _importance_makers->at( i ).population(),
+                        *population_name,
+                        colname );
 
                     const auto value = f_imp_for_target.at( j++ );
 
                     _importance_makers->at( i ).add_to_importances(
-                        full_name, value );
+                        desc, value );
                 }
         }
 }
 
 // ----------------------------------------------------------------------------
 
-void Pipeline::extract_colnames(
-    const std::map<std::string, Float>& _column_importances,
-    std::vector<std::string>* _colnames ) const
+void Pipeline::extract_coldesc(
+    const std::map<helpers::ColumnDescription, Float>& _column_importances,
+    std::vector<helpers::ColumnDescription>* _coldesc ) const
 {
-    auto colnames = std::vector<std::string>();
-
-    for ( const auto& [key, _] : _column_importances )
+    if ( _coldesc->size() == 0 )
         {
-            colnames.push_back( key );
+            for ( const auto& [key, _] : _column_importances )
+                {
+                    _coldesc->push_back( key );
+                }
         }
-
-    if ( _colnames->size() == 0 )
-        {
-            *_colnames = colnames;
-            return;
-        }
-
-    assert_true( colnames.size() == _colnames->size() );
-
-    assert_true(
-        std::equal( colnames.begin(), colnames.end(), _colnames->begin() ) );
 }
 
 // ----------------------------------------------------------------------
@@ -449,7 +444,7 @@ std::vector<Poco::JSON::Object::Ptr> Pipeline::extract_fs_fingerprints() const
 // ----------------------------------------------------------------------------
 
 void Pipeline::extract_importance_values(
-    const std::map<std::string, Float>& _column_importances,
+    const std::map<helpers::ColumnDescription, Float>& _column_importances,
     std::vector<std::vector<Float>>* _all_column_importances ) const
 {
     auto importance_values = std::vector<Float>();

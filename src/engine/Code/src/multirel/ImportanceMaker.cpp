@@ -20,11 +20,12 @@ void ImportanceMaker::add(
                 {
                     assert_true( _column < _input.num_categoricals() );
 
-                    const std::string name = peripheral() + _input.name() +
-                                             "." +
-                                             _input.categorical_name( _column );
+                    const auto desc = helpers::ColumnDescription(
+                        peripheral(),
+                        _input.name(),
+                        _input.categorical_name( _column ) );
 
-                    add_to_importances( name, _value );
+                    add_to_importances( desc, _value );
 
                     return;
                 }
@@ -33,11 +34,12 @@ void ImportanceMaker::add(
                 {
                     assert_true( _column < _output.num_categoricals() );
 
-                    const std::string name =
-                        population() + _output.name() + "." +
-                        _output.categorical_name( _column );
+                    const auto desc = helpers::ColumnDescription(
+                        population(),
+                        _output.name(),
+                        _output.categorical_name( _column ) );
 
-                    add_to_importances( name, _value );
+                    add_to_importances( desc, _value );
 
                     return;
                 }
@@ -46,11 +48,12 @@ void ImportanceMaker::add(
                 {
                     assert_true( _column < _input.num_discretes() );
 
-                    const std::string name = peripheral() + _input.name() +
-                                             "." +
-                                             _input.discrete_name( _column );
+                    const auto desc = helpers::ColumnDescription(
+                        peripheral(),
+                        _input.name(),
+                        _input.discrete_name( _column ) );
 
-                    add_to_importances( name, _value );
+                    add_to_importances( desc, _value );
 
                     return;
                 }
@@ -59,11 +62,12 @@ void ImportanceMaker::add(
                 {
                     assert_true( _column < _output.num_discretes() );
 
-                    const std::string name = population() + _output.name() +
-                                             "." +
-                                             _output.discrete_name( _column );
+                    const auto desc = helpers::ColumnDescription(
+                        population(),
+                        _output.name(),
+                        _output.discrete_name( _column ) );
 
-                    add_to_importances( name, _value );
+                    add_to_importances( desc, _value );
 
                     return;
                 }
@@ -72,11 +76,12 @@ void ImportanceMaker::add(
                 {
                     assert_true( _column < _input.num_numericals() );
 
-                    const std::string name = peripheral() + _input.name() +
-                                             "." +
-                                             _input.numerical_name( _column );
+                    const auto desc = helpers::ColumnDescription(
+                        peripheral(),
+                        _input.name(),
+                        _input.numerical_name( _column ) );
 
-                    add_to_importances( name, _value );
+                    add_to_importances( desc, _value );
 
                     return;
                 }
@@ -85,11 +90,12 @@ void ImportanceMaker::add(
                 {
                     assert_true( _column < _output.num_numericals() );
 
-                    const std::string name = population() + _output.name() +
-                                             "." +
-                                             _output.numerical_name( _column );
+                    const auto desc = helpers::ColumnDescription(
+                        population(),
+                        _output.name(),
+                        _output.numerical_name( _column ) );
 
-                    add_to_importances( name, _value );
+                    add_to_importances( desc, _value );
 
                     return;
                 }
@@ -177,15 +183,19 @@ void ImportanceMaker::add(
             case enums::DataUsed::time_stamps_diff:
             case enums::DataUsed::time_stamps_window:
                 {
-                    const std::string name1 = peripheral() + _input.name() +
-                                              "." + _input.time_stamps_name();
+                    const auto desc1 = helpers::ColumnDescription(
+                        peripheral(),
+                        _input.name(),
+                        _input.time_stamps_name() );
 
-                    const std::string name2 = population() + _output.name() +
-                                              "." + _output.time_stamps_name();
+                    const auto desc2 = helpers::ColumnDescription(
+                        population(),
+                        _output.name(),
+                        _output.time_stamps_name() );
 
-                    add_to_importances( name1, _value * 0.5 );
+                    add_to_importances( desc1, _value * 0.5 );
 
-                    add_to_importances( name2, _value * 0.5 );
+                    add_to_importances( desc2, _value * 0.5 );
 
                     return;
                 }

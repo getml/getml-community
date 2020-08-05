@@ -50,7 +50,7 @@ class TimeSeriesModel
 
    public:
     /// Calculates the column importances for this ensemble.
-    std::map<std::string, Float> column_importances(
+    std::map<helpers::ColumnDescription, Float> column_importances(
         const std::vector<Float> &_importance_factors ) const;
 
     /// Creates a modified version of the population table and the peripheral
@@ -170,7 +170,7 @@ class TimeSeriesModel
     /// Transfers the importances values from colnames containing macros to
     /// actual columns.
     void transfer_importance_value(
-        const std::string &_colname,
+        const helpers::ColumnDescription &_from,
         helpers::ImportanceMaker *_importance_maker ) const;
 
     // -----------------------------------------------------------------
@@ -285,18 +285,17 @@ TimeSeriesModel<FEType>::~TimeSeriesModel() = default;
 // ----------------------------------------------------------------------------
 
 template <class FEType>
-std::map<std::string, Float> TimeSeriesModel<FEType>::column_importances(
+std::map<helpers::ColumnDescription, Float>
+TimeSeriesModel<FEType>::column_importances(
     const std::vector<Float> &_importance_factors ) const
 {
     const auto importances = model().column_importances( _importance_factors );
 
     auto importance_maker = helpers::ImportanceMaker( importances );
 
-    const auto colnames = importance_maker.colnames();
-
-    for ( const auto &colname : colnames )
+    for ( const auto &[desc, _] : importances )
         {
-            transfer_importance_value( colname, &importance_maker );
+            transfer_importance_value( desc, &importance_maker );
         }
 
     return importance_maker.importances();
@@ -668,54 +667,62 @@ Poco::JSON::Object TimeSeriesModel<FEType>::to_json_obj(
 
 template <class FEType>
 void TimeSeriesModel<FEType>::transfer_importance_value(
-    const std::string &_from_colname,
+    const helpers::ColumnDescription &_from,
     helpers::ImportanceMaker *_importance_maker ) const
 {
-    auto from_colname = _from_colname;
+    std::unique_ptr<helpers::ColumnDescription> from_desc =
+        std::make_unique<helpers::ColumnDescription>( _from );
 
-    if ( from_colname.find( "$GETML_PERIPHERAL" ) != std::string::npos )
+    if ( from_desc->table_.find( "$GETML_PERIPHERAL" ) != std::string::npos )
         {
-            auto to_colname = utils::StringReplacer::replace_all(
-                from_colname, "$GETML_PERIPHERAL", "" );
+            const auto to_table = utils::StringReplacer::replace_all(
+                from_desc->table_, "$GETML_PERIPHERAL", "" );
 
-            to_colname = utils::StringReplacer::replace_all(
-                to_colname,
-                _importance_maker->peripheral(),
-                _importance_maker->population() );
+            auto to_desc = std::make_unique<helpers::ColumnDescription>(
+                _importance_maker->population(), to_table, from_desc->name_ );
 
-            _importance_maker->transfer( from_colname, to_colname );
+            _importance_maker->transfer( *from_desc, *to_desc );
 
-            from_colname = to_colname;
+            from_desc = std::move( to_desc );
         }
 
-    if ( from_colname.find( "$GETML_UPPER_TS" ) != std::string::npos )
+    if ( from_desc->name_.find( "$GETML_UPPER_TS" ) != std::string::npos )
         {
-            auto to_colname = utils::StringReplacer::replace_all(
-                from_colname, "$GETML_UPPER_TS", "" );
+            const auto to_name = utils::StringReplacer::replace_all(
+                from_desc->name_, "$GETML_UPPER_TS", "" );
 
-            _importance_maker->transfer( from_colname, to_colname );
+            auto to_desc = std::make_unique<helpers::ColumnDescription>(
+                _importance_maker->population(), from_desc->table_, to_name );
 
-            from_colname = to_colname;
+            _importance_maker->transfer( *from_desc, *to_desc );
+
+            from_desc = std::move( to_desc );
         }
 
-    if ( from_colname.find( "$GETML_LOWER_TS" ) != std::string::npos )
+    if ( from_desc->name_.find( "$GETML_LOWER_TS" ) != std::string::npos )
         {
-            auto to_colname = utils::StringReplacer::replace_all(
-                from_colname, "$GETML_LOWER_TS", "" );
+            const auto to_name = utils::StringReplacer::replace_all(
+                from_desc->name_, "$GETML_LOWER_TS", "" );
 
-            _importance_maker->transfer( from_colname, to_colname );
+            auto to_desc = std::make_unique<helpers::ColumnDescription>(
+                _importance_maker->population(), from_desc->table_, to_name );
 
-            from_colname = to_colname;
+            _importance_maker->transfer( *from_desc, *to_desc );
+
+            from_desc = std::move( to_desc );
         }
 
-    if ( from_colname.find( "$GETML_ROWID" ) != std::string::npos )
+    if ( from_desc->name_.find( "$GETML_ROWID" ) != std::string::npos )
         {
-            auto to_colname = utils::StringReplacer::replace_all(
-                from_colname, "$GETML_ROWID", "rowid" );
+            const auto to_name = utils::StringReplacer::replace_all(
+                from_desc->name_, "$GETML_ROWID", "rowid" );
 
-            _importance_maker->transfer( from_colname, to_colname );
+            auto to_desc = std::make_unique<helpers::ColumnDescription>(
+                _importance_maker->population(), from_desc->table_, to_name );
 
-            from_colname = to_colname;
+            _importance_maker->transfer( *from_desc, *to_desc );
+
+            from_desc = std::move( to_desc );
         }
 }
 

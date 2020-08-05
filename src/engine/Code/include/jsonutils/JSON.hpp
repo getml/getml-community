@@ -57,6 +57,27 @@ struct JSON
         return ptr;
     }
 
+    /// Gets an array of JSON objects or throws.
+    static Poco::JSON::Array::Ptr get_object_array(
+        const Poco::JSON::Object& _obj, const std::string& _key )
+    {
+        const auto arr = get_array( _obj, _key );
+
+        for ( size_t i = 0; i < arr->size(); ++i )
+            {
+                const auto ptr = arr->getObject( i );
+
+                if ( !ptr )
+                    {
+                        throw std::invalid_argument(
+                            "Element " + std::to_string( i ) + " in array '" +
+                            _key + "' is not a proper JSON object." );
+                    }
+            }
+
+        return arr;
+    }
+
     /// Gets a value from a JSON object or throws.
     template <typename T>
     static T get_value(

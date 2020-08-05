@@ -42,7 +42,7 @@ void PipelineManager::column_importances(
 {
     // -------------------------------------------------------
 
-    const auto target_num = JSON::get_value<size_t>( _cmd, "target_num_" );
+    const auto target_num = JSON::get_value<Int>( _cmd, "target_num_" );
 
     // -------------------------------------------------------
 
@@ -56,6 +56,18 @@ void PipelineManager::column_importances(
 
     for ( const auto& vec : scores.column_importances() )
         {
+            if ( target_num < 0 )
+                {
+                    const auto sum_importances =
+                        std::accumulate( vec.begin(), vec.end(), 0.0 );
+
+                    const auto length = static_cast<Float>( vec.size() );
+
+                    importances.push_back( sum_importances / length );
+
+                    continue;
+                }
+
             if ( static_cast<size_t>( target_num ) >= vec.size() )
                 {
                     throw std::invalid_argument( "target_num out of range!" );
@@ -69,7 +81,8 @@ void PipelineManager::column_importances(
     Poco::JSON::Object response;
 
     response.set(
-        "column_names_", JSON::vector_to_array( scores.column_names() ) );
+        "column_descriptions_",
+        JSON::vector_to_array( scores.column_descriptions() ) );
 
     response.set( "column_importances_", JSON::vector_to_array( importances ) );
 

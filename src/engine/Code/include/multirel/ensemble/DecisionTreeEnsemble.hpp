@@ -49,11 +49,11 @@ class DecisionTreeEnsemble
 
    public:
     /// Calculates the column importances for this ensemble.
-    std::map<std::string, Float> column_importances(
+    std::map<helpers::ColumnDescription, Float> column_importances(
         const std::vector<Float> &_importance_factors ) const;
 
     /// Calculates the column importance for a particular tree.
-    std::map<std::string, Float> column_importance_for_tree(
+    std::map<helpers::ColumnDescription, Float> column_importance_for_tree(
         const Float _importance_factors,
         const decisiontrees::DecisionTree &_tree ) const;
 

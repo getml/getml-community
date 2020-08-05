@@ -143,7 +143,9 @@ class Pipeline
         const std::map<std::string, containers::DataFrame>& _data_frames );
 
     /// Calculates the column importances.
-    std::pair<std::vector<std::string>, std::vector<std::vector<Float>>>
+    std::pair<
+        std::vector<helpers::ColumnDescription>,
+        std::vector<std::vector<Float>>>
     column_importances() const;
 
     /// Returns a JSON object containing all column importances.
@@ -160,9 +162,9 @@ class Pipeline
         std::vector<helpers::ImportanceMaker>* _importance_makers ) const;
 
     /// Extract column names from the column importances.
-    void extract_colnames(
-        const std::map<std::string, Float>& _column_importances,
-        std::vector<std::string>* _colnames ) const;
+    void extract_coldesc(
+        const std::map<helpers::ColumnDescription, Float>& _column_importances,
+        std::vector<helpers::ColumnDescription>* _coldesc ) const;
 
     /// Extracts the fingerprints of all data frames that are inserted into
     /// this.
@@ -179,7 +181,7 @@ class Pipeline
 
     /// Extracts the importance values from the column importances.
     void extract_importance_values(
-        const std::map<std::string, Float>& _column_importances,
+        const std::map<helpers::ColumnDescription, Float>& _column_importances,
         std::vector<std::vector<Float>>* _all_column_importances ) const;
 
     /// Extracts the schemata from the data frame used for training.

@@ -32,7 +32,7 @@ class AbstractFeatureLearner
 
    public:
     /// Calculates the column importances for this ensemble.
-    virtual std::map<std::string, Float> column_importances(
+    virtual std::map<helpers::ColumnDescription, Float> column_importances(
         const std::vector<Float>& _importance_factors ) const = 0;
 
     /// Creates a deep copy.

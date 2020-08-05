@@ -50,7 +50,8 @@ class ImportanceMaker
     }
 
     /// Merges the map into the existing importances.
-    void merge( const std::map<std::string, Float>& _importances )
+    void merge(
+        const std::map<helpers::ColumnDescription, Float>& _importances )
     {
         helper_.merge( _importances );
     }
@@ -65,16 +66,17 @@ class ImportanceMaker
     void normalize() { helper_.normalize(); }
 
     /// Trivial (const) accessor.
-    std::map<std::string, Float> importances() const
+    std::map<helpers::ColumnDescription, Float> importances() const
     {
         return helper_.importances();
     }
 
    private:
     /// Adds the _value to the column signified by _name in the map.
-    void add_to_importances( const std::string& _name, const Float _value )
+    void add_to_importances(
+        const helpers::ColumnDescription& _desc, const Float _value )
     {
-        helper_.add_to_importances( _name, _value );
+        helper_.add_to_importances( _desc, _value );
     }
 
     /// Adds the _value to the column signified by _ix in the importance

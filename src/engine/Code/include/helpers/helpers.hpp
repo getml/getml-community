@@ -32,6 +32,8 @@
 #include "helpers/IntSet.hpp"
 #include "helpers/Placeholder.hpp"
 
+#include "helpers/ColumnDescription.hpp"
+
 #include "helpers/ImportanceMaker.hpp"
 
 #include "helpers/ColumnView.hpp"

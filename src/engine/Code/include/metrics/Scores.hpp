@@ -42,9 +42,9 @@ class Scores
     }
 
     /// Trivial accessor
-    const std::vector<std::string>& column_names() const
+    const std::vector<Poco::JSON::Object::Ptr>& column_descriptions() const
     {
-        return column_names_;
+        return column_descriptions_;
     }
 
     /// Trivial accessor
@@ -99,7 +99,10 @@ class Scores
     }
 
     /// Trivial accessor
-    std::vector<std::string>& column_names() { return column_names_; }
+    std::vector<Poco::JSON::Object::Ptr>& column_descriptions()
+    {
+        return column_descriptions_;
+    }
 
     /// Trivial accessor
     std::vector<std::vector<Float>>& feature_correlations()
@@ -287,11 +290,11 @@ class Scores
     /// Average of targets w.r.t. different bins of the feature.
     std::vector<std::vector<std::vector<Float>>> average_targets_;
 
+    /// The column descriptions, correspond to the column importances.
+    std::vector<Poco::JSON::Object::Ptr> column_descriptions_;
+
     /// Importances of individual column w.r.t. targets.
     std::vector<std::vector<Float>> column_importances_;
-
-    /// The column names, correspond to the column importances.
-    std::vector<std::string> column_names_;
 
     /// Logarithm of likelihood of predictions
     std::vector<Float> cross_entropy_;

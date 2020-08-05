@@ -45,7 +45,7 @@ class FeatureLearner : public AbstractFeatureLearner
 
    public:
     /// Calculates the column importances for this ensemble.
-    std::map<std::string, Float> column_importances(
+    std::map<helpers::ColumnDescription, Float> column_importances(
         const std::vector<Float>& _importance_factors ) const final;
 
     /// Returns the fingerprint of the feature learner (necessary to build
@@ -542,7 +542,7 @@ FeatureLearner<FeatureLearnerType>::add_time_stamps(
 // ----------------------------------------------------------------------------
 
 template <typename FeatureLearnerType>
-std::map<std::string, Float>
+std::map<helpers::ColumnDescription, Float>
 FeatureLearner<FeatureLearnerType>::column_importances(
     const std::vector<Float>& _importance_factors ) const
 {
@@ -551,17 +551,18 @@ FeatureLearner<FeatureLearnerType>::column_importances(
 
     auto importance_maker = helpers::ImportanceMaker( importances );
 
-    const auto colnames = importance_maker.colnames();
-
-    for ( const auto& from_colname : colnames )
+    for ( const auto& [from_desc, _] : importances )
         {
-            auto to_colname = remove_time_diff( from_colname );
+            auto to_colname = remove_time_diff( from_desc.name_ );
 
             to_colname = replace_macros( to_colname );
 
-            if ( from_colname != to_colname )
+            if ( from_desc.name_ != to_colname )
                 {
-                    importance_maker.transfer( from_colname, to_colname );
+                    const auto to_desc = helpers::ColumnDescription(
+                        from_desc.marker_, from_desc.table_, to_colname );
+
+                    importance_maker.transfer( from_desc, to_desc );
                 }
         }
 

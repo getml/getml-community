@@ -112,7 +112,8 @@ void DecisionTreeEnsemble::check_plausibility_of_targets(
 
 // ----------------------------------------------------------------------------
 
-std::map<std::string, Float> DecisionTreeEnsemble::column_importances(
+std::map<helpers::ColumnDescription, Float>
+DecisionTreeEnsemble::column_importances(
     const std::vector<Float> &_importance_factors ) const
 
 {
@@ -149,13 +150,14 @@ std::map<std::string, Float> DecisionTreeEnsemble::column_importances(
 
 // ----------------------------------------------------------------------------
 
-std::map<std::string, Float> DecisionTreeEnsemble::column_importance_for_tree(
+std::map<helpers::ColumnDescription, Float>
+DecisionTreeEnsemble::column_importance_for_tree(
     const Float _importance_factor,
     const decisiontrees::DecisionTree &_tree ) const
 {
     if ( _importance_factor == 0.0 )
         {
-            return std::map<std::string, Float>();
+            return std::map<helpers::ColumnDescription, Float>();
         }
 
     const auto p = _tree.ix_perip_used();
