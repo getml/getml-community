@@ -131,6 +131,62 @@ void Pipeline::calculate_feature_stats(
     // ------------------------------------------------------------------------
 }
 
+// ------------------------------------------------------------------------
+
+std::vector<size_t> Pipeline::calculate_importance_index() const
+{
+    const auto sum_importances = calculate_sum_importances();
+
+    auto pairs = std::vector<std::pair<size_t, Float>>();
+
+    for ( size_t i = 0; i < sum_importances.size(); ++i )
+        {
+            pairs.emplace_back( std::make_pair( i, sum_importances[i] ) );
+        }
+
+    std::sort(
+        pairs.begin(),
+        pairs.end(),
+        []( const std::pair<size_t, Float>& p1,
+            const std::pair<size_t, Float>& p2 ) {
+            return p1.second > p2.second;
+        } );
+
+    auto index = std::vector<size_t>( pairs.size() );
+
+    for ( size_t i = 0; i < index.size(); ++i )
+        {
+            index.at( i ) = pairs.at( i ).first;
+        }
+
+    return index;
+}
+
+// ------------------------------------------------------------------------
+
+std::vector<Float> Pipeline::calculate_sum_importances() const
+{
+    const auto importances = feature_importances( feature_selectors_ );
+
+    assert_true( importances.size() == feature_selectors_.size() );
+
+    auto sum_importances = importances.at( 0 );
+
+    for ( size_t i = 1; i < importances.size(); ++i )
+        {
+            assert_true( sum_importances.size() == importances[i].size() );
+
+            std::transform(
+                importances.at( i ).begin(),
+                importances.at( i ).end(),
+                sum_importances.begin(),
+                sum_importances.begin(),
+                std::plus<Float>() );
+        }
+
+    return sum_importances;
+}
+
 // ----------------------------------------------------------------------------
 
 void Pipeline::check(
@@ -675,7 +731,7 @@ Poco::JSON::Object Pipeline::feature_names_as_obj() const
 
 // ----------------------------------------------------------------------------
 
-containers::Features Pipeline::generate_numerical_features(
+containers::Features Pipeline::generate_autofeatures(
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<const communication::Logger>& _logger,
     const std::map<std::string, containers::DataFrame>& _data_frames,
@@ -688,9 +744,8 @@ containers::Features Pipeline::generate_numerical_features(
         feature_learners_.size() == _predictor_impl.autofeatures().size() );
 
     // -------------------------------------------------------------------------
-    // Generate the features.
 
-    auto numerical_features = containers::Features();
+    auto autofeatures = containers::Features();
 
     for ( size_t i = 0; i < feature_learners_.size(); ++i )
         {
@@ -707,21 +762,13 @@ containers::Features Pipeline::generate_numerical_features(
             auto new_features =
                 fe->transform( _cmd, index, socket_logger, _data_frames );
 
-            numerical_features.insert(
-                numerical_features.end(),
-                new_features.begin(),
-                new_features.end() );
+            autofeatures.insert(
+                autofeatures.end(), new_features.begin(), new_features.end() );
         }
 
     // -------------------------------------------------------------------------
-    // Add the numerical columns from the population table.
 
-    add_population_cols(
-        _cmd, _data_frames, _predictor_impl, &numerical_features );
-
-    // -------------------------------------------------------------------------
-
-    return numerical_features;
+    return autofeatures;
 
     // -------------------------------------------------------------------------
 }
@@ -827,7 +874,11 @@ void Pipeline::fit(
     make_feature_selector_impl( _cmd, _data_frames );
 
     // -------------------------------------------------------------------------
-    // Fit the feature selectors
+
+    const auto autofeatures = generate_autofeatures(
+        _cmd, _logger, _data_frames, feature_selector_impl(), _socket );
+
+    // -------------------------------------------------------------------------
 
     auto feature_selectors = init_predictors(
         "feature_selectors_",
@@ -836,6 +887,7 @@ void Pipeline::fit(
         fe_fingerprints() );
 
     fit_predictors(
+        autofeatures,
         _cmd,
         _logger,
         _data_frames,
@@ -865,6 +917,7 @@ void Pipeline::fit(
         fs_fingerprints() );
 
     fit_predictors(
+        autofeatures,
         _cmd,
         _logger,
         _data_frames,
@@ -941,6 +994,7 @@ void Pipeline::fit_feature_learners(
 // ----------------------------------------------------------------------------
 
 void Pipeline::fit_predictors(
+    const containers::Features& _autofeatures,
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<const communication::Logger>& _logger,
     const std::map<std::string, containers::DataFrame>& _data_frames,
@@ -971,8 +1025,11 @@ void Pipeline::fit_predictors(
 
     // --------------------------------------------------------------------
 
-    const auto numerical_features = generate_numerical_features(
-        _cmd, _logger, _data_frames, _predictor_impl, _socket );
+    const auto selected_autofeatures =
+        select_autofeatures( _autofeatures, _predictor_impl );
+
+    const auto numerical_features = get_numerical_features(
+        selected_autofeatures, _cmd, _data_frames, _predictor_impl );
 
     // --------------------------------------------------------------------
 
@@ -1052,6 +1109,30 @@ containers::CategoricalFeatures Pipeline::get_categorical_features(
         }
 
     return categorical_features;
+}
+
+// ----------------------------------------------------------------------------
+
+containers::Features Pipeline::get_numerical_features(
+    const containers::Features& _autofeatures,
+    const Poco::JSON::Object& _cmd,
+    const std::map<std::string, containers::DataFrame>& _data_frames,
+    const predictors::PredictorImpl& _predictor_impl ) const
+{
+    // --------------------------------------------------------------------
+
+    auto numerical_features = _autofeatures;
+
+    // -------------------------------------------------------------------------
+
+    add_population_cols(
+        _cmd, _data_frames, _predictor_impl, &numerical_features );
+
+    // -------------------------------------------------------------------------
+
+    return numerical_features;
+
+    // -------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------
@@ -1643,50 +1724,8 @@ void Pipeline::make_predictor_impl(
         }
 
     // --------------------------------------------------------------------
-    // Get importances
 
-    const auto importances = feature_importances( feature_selectors_ );
-
-    assert_true( importances.size() == feature_selectors_.size() );
-
-    auto sum_importances = importances[0];
-
-    for ( size_t i = 1; i < importances.size(); ++i )
-        {
-            assert_true( sum_importances.size() == importances[i].size() );
-
-            std::transform(
-                importances.at( i ).begin(),
-                importances.at( i ).end(),
-                sum_importances.begin(),
-                sum_importances.begin(),
-                std::plus<Float>() );
-        }
-
-    // --------------------------------------------------------------------
-    // Make index
-
-    auto pairs = std::vector<std::pair<size_t, Float>>();
-
-    for ( size_t i = 0; i < sum_importances.size(); ++i )
-        {
-            pairs.emplace_back( std::make_pair( i, sum_importances[i] ) );
-        }
-
-    std::sort(
-        pairs.begin(),
-        pairs.end(),
-        []( const std::pair<size_t, Float>& p1,
-            const std::pair<size_t, Float>& p2 ) {
-            return p1.second > p2.second;
-        } );
-
-    auto index = std::vector<size_t>( pairs.size() );
-
-    for ( size_t i = 0; i < index.size(); ++i )
-        {
-            index.at( i ) = pairs.at( i ).first;
-        }
+    const auto index = calculate_importance_index();
 
     // --------------------------------------------------------------------
 
@@ -2018,6 +2057,50 @@ Poco::JSON::Object Pipeline::score(
 
 // ----------------------------------------------------------------------------
 
+containers::Features Pipeline::select_autofeatures(
+    const containers::Features& _autofeatures,
+    const predictors::PredictorImpl& _predictor_impl ) const
+{
+    // ------------------------------------------------
+
+    assert_true(
+        feature_learners_.size() == _predictor_impl.autofeatures().size() );
+
+    // ------------------------------------------------
+
+    containers::Features selected;
+
+    // ------------------------------------------------
+
+    size_t offset = 0;
+
+    for ( size_t i = 0; i < feature_learners_.size(); ++i )
+        {
+            for ( const size_t ix : _predictor_impl.autofeatures().at( i ) )
+                {
+                    assert_true( offset + ix < _autofeatures.size() );
+
+                    selected.push_back( _autofeatures.at( offset + ix ) );
+                }
+
+            assert_true( feature_learners_.at( i ) );
+
+            offset += feature_learners_.at( i )->num_features();
+        }
+
+    // ------------------------------------------------
+
+    assert_true( offset == _autofeatures.size() );
+
+    // ------------------------------------------------
+
+    return selected;
+
+    // ------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
 Poco::JSON::Object Pipeline::to_monitor( const std::string& _name ) const
 {
     auto feature_learners = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
@@ -2145,10 +2228,12 @@ containers::Features Pipeline::transform(
         }
 
     // -------------------------------------------------------------------------
-    // Generate the numerical features.
 
-    const auto numerical_features = generate_numerical_features(
+    const auto autofeatures = generate_autofeatures(
         _cmd, _logger, _data_frames, predictor_impl(), _socket );
+
+    const auto numerical_features = get_numerical_features(
+        autofeatures, _cmd, _data_frames, predictor_impl() );
 
     // -------------------------------------------------------------------------
     // If we do not want to score or predict, then we can stop here.

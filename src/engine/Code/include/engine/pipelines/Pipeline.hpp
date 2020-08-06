@@ -134,6 +134,12 @@ class Pipeline
         const predictors::PredictorImpl& _predictor_impl,
         containers::Features* _features ) const;
 
+    /// Calculates an index ordering the features by importance.
+    std::vector<size_t> calculate_importance_index() const;
+
+    /// Calculates the sum of the feature importances for all targets.
+    std::vector<Float> calculate_sum_importances() const;
+
     /// Calculates the feature statistics to be displayed in the monitor.
     void calculate_feature_stats(
         const containers::Features _features,
@@ -200,6 +206,7 @@ class Pipeline
 
     /// Fits the predictors.
     void fit_predictors(
+        const containers::Features& _autofeatures,
         const Poco::JSON::Object& _cmd,
         const std::shared_ptr<const communication::Logger>& _logger,
         const std::map<std::string, containers::DataFrame>& _data_frames,
@@ -221,9 +228,8 @@ class Pipeline
     /// Returns a JSON object containing all feature names.
     Poco::JSON::Object feature_names_as_obj() const;
 
-    /// Generates the numerical features (which also includes numerical columns
-    /// from the population table).
-    containers::Features generate_numerical_features(
+    /// Generate the autofeatures.
+    containers::Features generate_autofeatures(
         const Poco::JSON::Object& _cmd,
         const std::shared_ptr<const communication::Logger>& _logger,
         const std::map<std::string, containers::DataFrame>& _data_frames,
@@ -238,6 +244,14 @@ class Pipeline
     /// Gets the categorical columns in the population table that are to be
     /// included in the predictor.
     containers::CategoricalFeatures get_categorical_features(
+        const Poco::JSON::Object& _cmd,
+        const std::map<std::string, containers::DataFrame>& _data_frames,
+        const predictors::PredictorImpl& _predictor_impl ) const;
+
+    /// Gets all of the numerical features needed from the autofeatures and the
+    /// columns in the population table.
+    containers::Features get_numerical_features(
+        const containers::Features& _autofeatures,
         const Poco::JSON::Object& _cmd,
         const std::map<std::string, containers::DataFrame>& _data_frames,
         const predictors::PredictorImpl& _predictor_impl ) const;
@@ -308,6 +322,11 @@ class Pipeline
         const std::shared_ptr<dependency::PredTracker> _pred_tracker,
         std::vector<std::vector<std::shared_ptr<predictors::Predictor>>>*
             _predictors ) const;
+
+    /// Selects the autofeatures that are needed for the prediction.
+    containers::Features select_autofeatures(
+        const containers::Features& _autofeatures,
+        const predictors::PredictorImpl& _predictor_impl ) const;
 
     /// Returns a the SQL features.
     Poco::JSON::Array::Ptr to_sql_arr() const;
