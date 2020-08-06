@@ -181,6 +181,13 @@ class FeatureLearner : public AbstractFeatureLearner
     // --------------------------------------------------------
 
    private:
+    void add_join_keys(
+        const Poco::JSON::Object& _population_placeholder,
+        containers::DataFrame* _population_df,
+        std::vector<containers::DataFrame>* _peripheral_dfs ) const;
+
+    void add_jk( containers::DataFrame* df ) const;
+
     /// If this is a time series model, this will add the data necessary for the
     /// self joins. Otherwise, it will just return the original data
     std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
@@ -192,7 +199,7 @@ class FeatureLearner : public AbstractFeatureLearner
     /// syntactic sugar for upper time stamps. The feature learners don't know
     /// about this concept).
     std::vector<containers::DataFrame> add_time_stamps(
-        const Poco::JSON::Object _population_placeholder,
+        const Poco::JSON::Object& _population_placeholder,
         const std::vector<containers::DataFrame>& _peripheral_dfs ) const;
 
     /// Adds lower and upper time stamps to the data frame.
@@ -249,6 +256,12 @@ class FeatureLearner : public AbstractFeatureLearner
     extract_tables_by_colnames(
         const containers::DataFrame& _population_df,
         const std::vector<containers::DataFrame>& _peripheral_dfs ) const;
+
+    /// Returns a pointer to the peripheral data frame referenced by
+    /// _joined_table.
+    containers::DataFrame* find_data_frame(
+        const Poco::JSON::Object& _joined_table,
+        std::vector<containers::DataFrame>* _peripheral_dfs ) const;
 
     /// Infers whether we need the targets of a peripheral table.
     std::vector<bool> infer_needs_targets(
@@ -372,6 +385,80 @@ namespace featurelearners
 // ------------------------------------------------------------------------
 
 template <typename FeatureLearnerType>
+void FeatureLearner<FeatureLearnerType>::add_join_keys(
+    const Poco::JSON::Object& _population_placeholder,
+    containers::DataFrame* _population_df,
+    std::vector<containers::DataFrame>* _peripheral_dfs ) const
+{
+    // ------------------------------------------------------------------------
+
+    const auto joined_tables_arr =
+        _population_placeholder.getArray( "joined_tables_" );
+
+    if ( !joined_tables_arr )
+        {
+            throw std::invalid_argument(
+                "The placeholder has no array named 'joined_tables_'!" );
+        }
+
+    const auto expected_size = joined_tables_arr->size();
+
+    // ------------------------------------------------------------------------
+
+    const auto join_keys_used = extract_vector<std::string>(
+        _population_placeholder, "join_keys_used_", expected_size );
+
+    // ------------------------------------------------------------------------
+
+    for ( size_t i = 0; i < join_keys_used.size(); ++i )
+        {
+            const auto ptr = joined_tables_arr->getObject( i );
+
+            if ( !ptr )
+                {
+                    throw std::runtime_error(
+                        "Element " + std::to_string( i ) +
+                        " of 'joined_tables_' is not a proper JSON "
+                        "object!" );
+                }
+
+            if ( join_keys_used.at( i ) == "$GETML_NO_JOIN_KEY" )
+                {
+                    auto peripheral_df =
+                        find_data_frame( *ptr, _peripheral_dfs );
+
+                    add_jk( peripheral_df );
+
+                    add_jk( _population_df );
+                }
+
+            add_join_keys( *ptr, _population_df, _peripheral_dfs );
+        }
+
+    // ------------------------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
+template <typename FeatureLearnerType>
+void FeatureLearner<FeatureLearnerType>::add_jk(
+    containers::DataFrame* _df ) const
+{
+    if ( _df->has_join_key( "$GETML_NO_JOIN_KEY" ) )
+        {
+            return;
+        }
+
+    auto new_jk = containers::Column<Int>( _df->nrows() );
+
+    new_jk.set_name( "$GETML_NO_JOIN_KEY" );
+
+    _df->add_int_column( new_jk, "join_key" );
+}
+
+// ------------------------------------------------------------------------
+
+template <typename FeatureLearnerType>
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
 FeatureLearner<FeatureLearnerType>::add_self_joins(
     const containers::DataFrame& _population,
@@ -402,27 +489,12 @@ void FeatureLearner<FeatureLearnerType>::add_ts(
 
     // ------------------------------------------------------------------------
 
-    assert_true( peripheral().size() == _peripheral_dfs->size() );
-
-    const auto name = JSON::get_value<std::string>( _joined_table, "name_" );
-
-    const auto it = std::find( peripheral().begin(), peripheral().end(), name );
-
-    if ( it == peripheral().end() )
-        {
-            throw std::invalid_argument(
-                "Placeholder named '" + name +
-                "' not among the peripheral tables." );
-        }
-
-    const auto dist = std::distance( peripheral().begin(), it );
+    auto df = find_data_frame( _joined_table, _peripheral_dfs );
 
     // ------------------------------------------------------------------------
 
-    auto& df = _peripheral_dfs->at( dist );
-
-    auto cols =
-        ts::TimeStampMaker::make_time_stamps( _ts_used, _horizon, _memory, df );
+    auto cols = ts::TimeStampMaker::make_time_stamps(
+        _ts_used, _horizon, _memory, *df );
 
     // ------------------------------------------------------------------------
 
@@ -451,7 +523,7 @@ void FeatureLearner<FeatureLearnerType>::add_ts(
 
     for ( auto& col : cols )
         {
-            df.add_float_column( col, "time_stamp" );
+            df->add_float_column( col, "time_stamp" );
         }
 
     // ------------------------------------------------------------------------
@@ -462,7 +534,7 @@ void FeatureLearner<FeatureLearnerType>::add_ts(
 template <typename FeatureLearnerType>
 std::vector<containers::DataFrame>
 FeatureLearner<FeatureLearnerType>::add_time_stamps(
-    const Poco::JSON::Object _population_placeholder,
+    const Poco::JSON::Object& _population_placeholder,
     const std::vector<containers::DataFrame>& _peripheral_dfs ) const
 {
     // ------------------------------------------------------------------------
@@ -1107,6 +1179,31 @@ FeatureLearner<FeatureLearnerType>::extract_tables_by_colnames(
 // ----------------------------------------------------------------------------
 
 template <typename FeatureLearnerType>
+containers::DataFrame* FeatureLearner<FeatureLearnerType>::find_data_frame(
+    const Poco::JSON::Object& _joined_table,
+    std::vector<containers::DataFrame>* _peripheral_dfs ) const
+{
+    assert_true( peripheral().size() == _peripheral_dfs->size() );
+
+    const auto name = JSON::get_value<std::string>( _joined_table, "name_" );
+
+    const auto it = std::find( peripheral().begin(), peripheral().end(), name );
+
+    if ( it == peripheral().end() )
+        {
+            throw std::invalid_argument(
+                "Placeholder named '" + name +
+                "' not among the peripheral tables." );
+        }
+
+    const auto dist = std::distance( peripheral().begin(), it );
+
+    return &( _peripheral_dfs->at( dist ) );
+}
+
+// ----------------------------------------------------------------------------
+
+template <typename FeatureLearnerType>
 Poco::JSON::Object::Ptr FeatureLearner<FeatureLearnerType>::fingerprint() const
 {
     auto obj = Poco::JSON::Object::Ptr( new Poco::JSON::Object() );
@@ -1316,20 +1413,23 @@ FeatureLearner<FeatureLearnerType>::modify_data_frames(
 {
     // ------------------------------------------------
 
-    const auto peripheral_dfs =
-        add_time_stamps( placeholder(), _peripheral_dfs );
+    auto population_df = _population_df;
+
+    auto peripheral_dfs = add_time_stamps( placeholder(), _peripheral_dfs );
+
+    add_join_keys( placeholder(), &population_df, &peripheral_dfs );
 
     // ------------------------------------------------
 
     if constexpr ( FeatureLearnerType::is_time_series_ )
         {
             return make_feature_learner()->create_data_frames(
-                _population_df, peripheral_dfs );
+                population_df, peripheral_dfs );
         }
 
     // ------------------------------------------------
 
-    return std::make_pair( _population_df, peripheral_dfs );
+    return std::make_pair( population_df, peripheral_dfs );
 
     // ------------------------------------------------
 }
@@ -1376,6 +1476,12 @@ std::string FeatureLearner<FeatureLearnerType>::replace_macros(
 
     new_query = utils::StringReplacer::replace_all(
         new_query, "$GETML_REMOVE_CHAR\"", "" );
+
+    new_query = utils::StringReplacer::replace_all(
+        new_query, "t1.\"$GETML_NO_JOIN_KEY\"", "1" );
+
+    new_query = utils::StringReplacer::replace_all(
+        new_query, "t2.\"$GETML_NO_JOIN_KEY\"", "1" );
 
     // --------------------------------------------------------------
 
