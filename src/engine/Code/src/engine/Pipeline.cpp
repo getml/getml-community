@@ -875,8 +875,7 @@ void Pipeline::fit(
 
     // -------------------------------------------------------------------------
 
-    const auto autofeatures = generate_autofeatures(
-        _cmd, _logger, _data_frames, feature_selector_impl(), _socket );
+    containers::Features autofeatures;
 
     // -------------------------------------------------------------------------
 
@@ -887,13 +886,13 @@ void Pipeline::fit(
         fe_fingerprints() );
 
     fit_predictors(
-        autofeatures,
         _cmd,
         _logger,
         _data_frames,
         _pred_tracker,
         feature_selector_impl(),
         "feature selector",
+        &autofeatures,
         &feature_selectors,
         _socket );
 
@@ -917,13 +916,13 @@ void Pipeline::fit(
         fs_fingerprints() );
 
     fit_predictors(
-        autofeatures,
         _cmd,
         _logger,
         _data_frames,
         _pred_tracker,
         predictor_impl(),
         "predictor",
+        &autofeatures,
         &predictors,
         _socket );
 
@@ -994,13 +993,13 @@ void Pipeline::fit_feature_learners(
 // ----------------------------------------------------------------------------
 
 void Pipeline::fit_predictors(
-    const containers::Features& _autofeatures,
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<const communication::Logger>& _logger,
     const std::map<std::string, containers::DataFrame>& _data_frames,
     const std::shared_ptr<dependency::PredTracker> _pred_tracker,
     const predictors::PredictorImpl& _predictor_impl,
     const std::string& _purpose,
+    containers::Features* _autofeatures,
     std::vector<std::vector<std::shared_ptr<predictors::Predictor>>>*
         _predictors,
     Poco::Net::StreamSocket* _socket ) const
@@ -1025,11 +1024,19 @@ void Pipeline::fit_predictors(
 
     // --------------------------------------------------------------------
 
-    const auto selected_autofeatures =
-        select_autofeatures( _autofeatures, _predictor_impl );
+    if ( _autofeatures->size() == 0 )
+        {
+            *_autofeatures = generate_autofeatures(
+                _cmd, _logger, _data_frames, _predictor_impl, _socket );
+        }
+    else
+        {
+            *_autofeatures =
+                select_autofeatures( *_autofeatures, _predictor_impl );
+        }
 
     const auto numerical_features = get_numerical_features(
-        selected_autofeatures, _cmd, _data_frames, _predictor_impl );
+        *_autofeatures, _cmd, _data_frames, _predictor_impl );
 
     // --------------------------------------------------------------------
 

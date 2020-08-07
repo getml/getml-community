@@ -206,13 +206,13 @@ class Pipeline
 
     /// Fits the predictors.
     void fit_predictors(
-        const containers::Features& _autofeatures,
         const Poco::JSON::Object& _cmd,
         const std::shared_ptr<const communication::Logger>& _logger,
         const std::map<std::string, containers::DataFrame>& _data_frames,
         const std::shared_ptr<dependency::PredTracker> _pred_tracker,
         const predictors::PredictorImpl& _predictor_impl,
         const std::string& _purpose,
+        containers::Features* _autofeatures,
         std::vector<std::vector<std::shared_ptr<predictors::Predictor>>>*
             _predictors,
         Poco::Net::StreamSocket* _socket ) const;
