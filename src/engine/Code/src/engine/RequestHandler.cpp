@@ -280,6 +280,10 @@ void RequestHandler::run()
                 {
                     project_manager().save_hyperopt( name, &socket() );
                 }
+            else if ( type == "Hyperopt.tune" )
+                {
+                    hyperopt_manager().tune( name, cmd, &socket() );
+                }
             else if ( type == "list_data_frames" )
                 {
                     project_manager().list_data_frames( &socket() );

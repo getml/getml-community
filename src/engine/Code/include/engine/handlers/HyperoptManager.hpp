@@ -36,6 +36,18 @@ class HyperoptManager
     /// the client.
     void refresh( const std::string& _name, Poco::Net::StreamSocket* _socket );
 
+    /// Launches a hyperparameter tuning routine.
+    void tune(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
+   private:
+    /// Handles the logging for the hyperparameter optimization.
+    void handle_logging(
+        const std::shared_ptr<Poco::Net::StreamSocket>& _monitor_socket,
+        Poco::Net::StreamSocket* _socket ) const;
+
    private:
     /// Trivial (private) accessor
     std::map<std::string, hyperparam::Hyperopt>& hyperopts()
