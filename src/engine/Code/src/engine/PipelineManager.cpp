@@ -244,6 +244,10 @@ void PipelineManager::fit(
 
     multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
 
+    // TODO
+    /*auto local_categories =
+        std::make_shared<containers::Encoding>( categories_ );*/
+
     pipeline.fit(
         _cmd, logger_, data_frames(), fe_tracker_, pred_tracker_, _socket );
 

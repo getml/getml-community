@@ -14,11 +14,11 @@ class Pipeline
 
    public:
     Pipeline(
-        const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const std::shared_ptr<containers::Encoding>& _categories,
         const Poco::JSON::Object& _obj );
 
     Pipeline(
-        const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const std::shared_ptr<containers::Encoding>& _categories,
         const std::string& _path,
         const std::shared_ptr<dependency::FETracker> _fe_tracker,
         const std::shared_ptr<dependency::PredTracker> _pred_tracker );
@@ -134,6 +134,12 @@ class Pipeline
         const predictors::PredictorImpl& _predictor_impl,
         containers::Features* _features ) const;
 
+    /// Applies the fitted preprocessors.
+    std::map<std::string, containers::DataFrame> apply_preprocessors(
+        const Poco::JSON::Object& _cmd,
+        const std::map<std::string, containers::DataFrame>& _data_frames,
+        Poco::Net::StreamSocket* _socket ) const;
+
     /// Calculates an index ordering the features by importance.
     std::vector<size_t> calculate_importance_index() const;
 
@@ -217,6 +223,12 @@ class Pipeline
             _predictors,
         Poco::Net::StreamSocket* _socket ) const;
 
+    /// Fits the preprocessors. Returns a map of transformed data frames.
+    std::map<std::string, containers::DataFrame> fit_preprocessors(
+        const Poco::JSON::Object& _cmd,
+        const std::map<std::string, containers::DataFrame>& _data_frames,
+        Poco::Net::StreamSocket* _socket );
+
     /// Calculates the feature importances vis-a-vis each target.
     std::vector<std::vector<Float>> feature_importances(
         const std::vector<std::vector<std::shared_ptr<predictors::Predictor>>>&
@@ -281,9 +293,14 @@ class Pipeline
         const std::shared_ptr<const predictors::PredictorImpl>& _predictor_impl,
         const std::vector<Poco::JSON::Object::Ptr>& _dependencies ) const;
 
+    /// Prepares the preprocessors.
+    std::vector<std::shared_ptr<preprocessors::Preprocessor>>
+    init_preprocessors(
+        const std::vector<Poco::JSON::Object::Ptr>& _dependencies ) const;
+
     /// Loads a new Pipeline from disc.
     Pipeline load(
-        const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const std::shared_ptr<containers::Encoding>& _categories,
         const std::string& _path,
         const std::shared_ptr<dependency::FETracker> _fe_tracker,
         const std::shared_ptr<dependency::PredTracker> _pred_tracker ) const;
@@ -340,15 +357,17 @@ class Pipeline
 
    private:
     /// Trivial accessor
-    std::shared_ptr<const std::vector<strings::String>>& categories()
+    containers::Encoding& categories()
     {
-        return impl_.categories_;
+        assert_true( impl_.categories_ );
+        return *impl_.categories_;
     }
 
     /// Trivial accessor
-    std::shared_ptr<const std::vector<strings::String>> categories() const
+    const containers::Encoding& categories() const
     {
-        return impl_.categories_;
+        assert_true( impl_.categories_ );
+        return *impl_.categories_;
     }
 
     /// Helper class used to clone the feature learners, selectors
@@ -540,6 +559,9 @@ class Pipeline
     /// predictors).
     std::vector<std::vector<std::shared_ptr<predictors::Predictor>>>
         predictors_;
+
+    /// The preprocessors used in this pipeline.
+    std::vector<std::shared_ptr<preprocessors::Preprocessor>> preprocessors_;
 
     // -----------------------------------------------
 };

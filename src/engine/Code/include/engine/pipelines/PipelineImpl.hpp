@@ -14,7 +14,7 @@ struct PipelineImpl
     // -----------------------------------------------
 
     PipelineImpl(
-        const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const std::shared_ptr<containers::Encoding>& _categories,
         const Poco::JSON::Object& _obj )
         : allow_http_( false ),
           categories_( _categories ),
@@ -25,8 +25,7 @@ struct PipelineImpl
     {
     }
 
-    PipelineImpl(
-        const std::shared_ptr<const std::vector<strings::String>>& _categories )
+    PipelineImpl( const std::shared_ptr<containers::Encoding>& _categories )
         : allow_http_( false ),
           categories_( _categories ),
           creation_time_( make_creation_time() ),
@@ -52,8 +51,9 @@ struct PipelineImpl
     /// Whether the pipeline is allowed to handle HTTP requests.
     bool allow_http_;
 
-    /// The categories used for the mapping - needed by the feature learners.
-    std::shared_ptr<const std::vector<strings::String>> categories_;
+    /// The categories used for the mapping - needed by some preprocessors and
+    /// the feature learners.
+    std::shared_ptr<containers::Encoding> categories_;
 
     /// Date and time of creation, expressed as a string
     std::string creation_time_;

@@ -10,6 +10,15 @@ namespace containers
 class DataFrame
 {
    public:
+    static constexpr const char *ROLE_CATEGORICAL = "categorical";
+    static constexpr const char *ROLE_JOIN_KEY = "join_key";
+    static constexpr const char *ROLE_NUMERICAL = "numerical";
+    static constexpr const char *ROLE_TARGET = "target";
+    static constexpr const char *ROLE_TIME_STAMP = "time_stamp";
+    static constexpr const char *ROLE_UNUSED = "unused";
+    static constexpr const char *ROLE_UNUSED_FLOAT = "unused_float";
+
+   public:
     DataFrame()
         : categories_( std::make_shared<Encoding>() ),
           join_keys_encoding_( std::make_shared<Encoding>() )

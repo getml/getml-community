@@ -24,9 +24,12 @@ set(
     ${ENGINE_SOURCE_DIRECTORY}/Options.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Pipeline.cpp
     ${ENGINE_SOURCE_DIRECTORY}/PipelineManager.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/PreprocessorImpl.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/PreprocessorParser.cpp
     ${ENGINE_SOURCE_DIRECTORY}/ProjectManager.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Receiver.cpp
     ${ENGINE_SOURCE_DIRECTORY}/RequestHandler.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/Seasonal.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Sender.cpp
     ${ENGINE_SOURCE_DIRECTORY}/StringReplacer.cpp
     ${ENGINE_SOURCE_DIRECTORY}/TimeStampMaker.cpp

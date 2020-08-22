@@ -16,6 +16,9 @@
 
 #include "strings/strings.hpp"
 
+#include <Poco/DateTime.h>
+#include <Poco/Timestamp.h>
+
 #include "engine/Float.hpp"
 #include "engine/Int.hpp"
 
@@ -28,6 +31,7 @@
 #include "engine/utils/Getter.hpp"
 #include "engine/utils/StringReplacer.hpp"
 #include "engine/utils/TSDiffMaker.hpp"
+#include "engine/utils/Time.hpp"
 
 // ----------------------------------------------------------------------------
 

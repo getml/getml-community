@@ -1,11 +1,11 @@
-#ifndef ENGINE_PIPELINES_DATAMODELCHECKER_HPP_
-#define ENGINE_PIPELINES_DATAMODELCHECKER_HPP_
+#ifndef ENGINE_PREPROCESSORS_DATAMODELCHECKER_HPP_
+#define ENGINE_PREPROCESSORS_DATAMODELCHECKER_HPP_
 
 // ----------------------------------------------------------------------------
 
 namespace engine
 {
-namespace pipelines
+namespace preprocessors
 {
 // ----------------------------------------------------------------------------
 
@@ -24,13 +24,19 @@ class DataModelChecker
         const std::shared_ptr<const communication::Logger>& _logger,
         Poco::Net::StreamSocket* _socket );
 
-   private:
     /// Checks the plausibility of a categorical column.
     static void check_categorical_column(
         const containers::Column<Int>& _col,
         const std::string& _df_name,
         communication::Warner* _warner );
 
+    /// Checks the plausibility of a float column.
+    static void check_float_column(
+        const containers::Column<Float>& _col,
+        const std::string& _df_name,
+        communication::Warner* _warner );
+
+   private:
     /// Checks the validity of the data frames.
     static void check_data_frames(
         const containers::DataFrame& _population,
@@ -44,12 +50,6 @@ class DataModelChecker
     static void check_df(
         const containers::DataFrame& _df,
         const bool _check_num_columns,
-        communication::Warner* _warner );
-
-    /// Checks the plausibility of a float column.
-    static void check_float_column(
-        const containers::Column<Float>& _col,
-        const std::string& _df_name,
         communication::Warner* _warner );
 
     /// Recursively checks the plausibility of the joins.
@@ -186,8 +186,9 @@ class DataModelChecker
 };
 
 //  ----------------------------------------------------------------------------
-}  // namespace pipelines
+}  // namespace preprocessors
 }  // namespace engine
 
 // ----------------------------------------------------------------------------
-#endif  // ENGINE_PIPELINES_DATAMODELCHECKER_HPP_
+
+#endif  // ENGINE_PREPROCESSORS_DATAMODELCHECKER_HPP_

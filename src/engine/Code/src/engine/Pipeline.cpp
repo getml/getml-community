@@ -7,7 +7,7 @@ namespace pipelines
 // ----------------------------------------------------------------------------
 
 Pipeline::Pipeline(
-    const std::shared_ptr<const std::vector<strings::String>>& _categories,
+    const std::shared_ptr<containers::Encoding>& _categories,
     const Poco::JSON::Object& _obj )
     : impl_( PipelineImpl( _categories, _obj ) )
 
@@ -29,7 +29,7 @@ Pipeline::Pipeline(
 // ----------------------------------------------------------------------------
 
 Pipeline::Pipeline(
-    const std::shared_ptr<const std::vector<strings::String>>& _categories,
+    const std::shared_ptr<containers::Encoding>& _categories,
     const std::string& _path,
     const std::shared_ptr<dependency::FETracker> _fe_tracker,
     const std::shared_ptr<dependency::PredTracker> _pred_tracker )
@@ -47,6 +47,8 @@ Pipeline::Pipeline( const Pipeline& _other ) : impl_( _other.impl_ )
     feature_selectors_ = clone( _other.feature_selectors_ );
 
     predictors_ = clone( _other.predictors_ );
+
+    preprocessors_ = clone( _other.preprocessors_ );
 }
 
 // ----------------------------------------------------------------------------
@@ -59,6 +61,8 @@ Pipeline::Pipeline( Pipeline&& _other ) noexcept
     feature_selectors_ = std::move( _other.feature_selectors_ );
 
     predictors_ = std::move( _other.predictors_ );
+
+    preprocessors_ = std::move( _other.preprocessors_ );
 }
 
 // ----------------------------------------------------------------------------
@@ -83,6 +87,25 @@ void Pipeline::add_population_cols(
         {
             _features->push_back( population_df.numerical( col ).data_ptr() );
         }
+}
+
+// ----------------------------------------------------------------------------
+
+std::map<std::string, containers::DataFrame> Pipeline::apply_preprocessors(
+    const Poco::JSON::Object& _cmd,
+    const std::map<std::string, containers::DataFrame>& _data_frames,
+    Poco::Net::StreamSocket* _socket ) const
+{
+    auto data_frames = _data_frames;
+
+    for ( const auto& p : preprocessors_ )
+        {
+            assert_true( p );
+
+            p->transform( _cmd, &data_frames );
+        }
+
+    return data_frames;
 }
 
 // ----------------------------------------------------------------------
@@ -228,7 +251,7 @@ void Pipeline::check(
 
     // -------------------------------------------------------------------------
 
-    DataModelChecker::check(
+    preprocessors::DataModelChecker::check(
         population_placeholder,
         peripheral_names,
         population,
@@ -867,11 +890,15 @@ void Pipeline::fit(
 
     // -------------------------------------------------------------------------
 
-    fit_feature_learners( _cmd, _logger, _data_frames, _fe_tracker, _socket );
+    const auto data_frames = fit_preprocessors( _cmd, _data_frames, _socket );
 
     // -------------------------------------------------------------------------
 
-    make_feature_selector_impl( _cmd, _data_frames );
+    fit_feature_learners( _cmd, _logger, data_frames, _fe_tracker, _socket );
+
+    // -------------------------------------------------------------------------
+
+    make_feature_selector_impl( _cmd, data_frames );
 
     // -------------------------------------------------------------------------
 
@@ -888,7 +915,7 @@ void Pipeline::fit(
     fit_predictors(
         _cmd,
         _logger,
-        _data_frames,
+        data_frames,
         _pred_tracker,
         feature_selector_impl(),
         "feature selector",
@@ -904,7 +931,7 @@ void Pipeline::fit(
     // Prepare the predictor impl - this also uses the results from the feature
     // selection.
 
-    make_predictor_impl( _cmd, _data_frames );
+    make_predictor_impl( _cmd, data_frames );
 
     // -------------------------------------------------------------------------
     // Fit the predictors.
@@ -918,7 +945,7 @@ void Pipeline::fit(
     fit_predictors(
         _cmd,
         _logger,
-        _data_frames,
+        data_frames,
         _pred_tracker,
         predictor_impl(),
         "predictor",
@@ -1091,6 +1118,29 @@ void Pipeline::fit_predictors(
 
 // ----------------------------------------------------------------------------
 
+std::map<std::string, containers::DataFrame> Pipeline::fit_preprocessors(
+    const Poco::JSON::Object& _cmd,
+    const std::map<std::string, containers::DataFrame>& _data_frames,
+    Poco::Net::StreamSocket* _socket )
+{
+    auto data_frames = _data_frames;
+
+    auto preprocessors = init_preprocessors( df_fingerprints() );
+
+    for ( auto& p : preprocessors )
+        {
+            assert_true( p );
+
+            p->fit_transform( _cmd, &data_frames );
+        }
+
+    preprocessors_ = preprocessors;
+
+    return data_frames;
+}
+
+// ----------------------------------------------------------------------------
+
 containers::CategoricalFeatures Pipeline::get_categorical_features(
     const Poco::JSON::Object& _cmd,
     const std::map<std::string, containers::DataFrame>& _data_frames,
@@ -1211,7 +1261,7 @@ Pipeline::init_feature_learners(
                     *ptr,
                     population,
                     peripheral,
-                    categories(),
+                    categories().vector(),
                     _df_fingerprints );
 
             // --------------------------------------------------------------
@@ -1243,7 +1293,7 @@ Pipeline::init_feature_learners(
                                     *ptr,
                                     population,
                                     peripheral,
-                                    categories(),
+                                    categories().vector(),
                                     dependencies ) );
 
                             target_nums.push_back( static_cast<Int>( t ) );
@@ -1294,7 +1344,10 @@ Pipeline::init_predictors(
                         }
 
                     auto new_predictor = predictors::PredictorParser::parse(
-                        *ptr, _predictor_impl, categories(), _dependencies );
+                        *ptr,
+                        _predictor_impl,
+                        categories().vector(),
+                        _dependencies );
 
                     predictors_for_target.emplace_back(
                         std::move( new_predictor ) );
@@ -1308,6 +1361,35 @@ Pipeline::init_predictors(
     return predictors;
 
     // --------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------
+
+std::vector<std::shared_ptr<preprocessors::Preprocessor>>
+Pipeline::init_preprocessors(
+    const std::vector<Poco::JSON::Object::Ptr>& _dependencies ) const
+{
+    auto vec = std::vector<std::shared_ptr<preprocessors::Preprocessor>>();
+
+    if ( !obj().has( "preprocessors_" ) )
+        {
+            return vec;
+        }
+
+    const auto arr =
+        jsonutils::JSON::get_object_array( obj(), "preprocessors_" );
+
+    for ( size_t i = 0; i < arr->size(); ++i )
+        {
+            const auto ptr = arr->getObject( i );
+
+            assert_true( ptr );
+
+            vec.push_back( preprocessors::PreprocessorParser::parse(
+                impl_.categories_, *ptr ) );
+        }
+
+    return vec;
 }
 
 // ----------------------------------------------------------------------------
@@ -1391,7 +1473,7 @@ bool Pipeline::is_classification() const
 // ----------------------------------------------------------------------------
 
 Pipeline Pipeline::load(
-    const std::shared_ptr<const std::vector<strings::String>>& _categories,
+    const std::shared_ptr<containers::Encoding>& _categories,
     const std::string& _path,
     const std::shared_ptr<dependency::FETracker> _fe_tracker,
     const std::shared_ptr<dependency::PredTracker> _pred_tracker ) const
@@ -1779,6 +1861,8 @@ Pipeline& Pipeline::operator=( Pipeline&& _other ) noexcept
     feature_selectors_ = std::move( _other.feature_selectors_ );
 
     predictors_ = std::move( _other.predictors_ );
+
+    preprocessors_ = std::move( _other.preprocessors_ );
 
     return *this;
 }
@@ -2236,11 +2320,13 @@ containers::Features Pipeline::transform(
 
     // -------------------------------------------------------------------------
 
+    const auto data_frames = apply_preprocessors( _cmd, _data_frames, _socket );
+
     const auto autofeatures = generate_autofeatures(
-        _cmd, _logger, _data_frames, predictor_impl(), _socket );
+        _cmd, _logger, data_frames, predictor_impl(), _socket );
 
     const auto numerical_features = get_numerical_features(
-        autofeatures, _cmd, _data_frames, predictor_impl() );
+        autofeatures, _cmd, data_frames, predictor_impl() );
 
     // -------------------------------------------------------------------------
     // If we do not want to score or predict, then we can stop here.
@@ -2260,7 +2346,7 @@ containers::Features Pipeline::transform(
     // Retrieve the categorical features.
 
     auto categorical_features =
-        get_categorical_features( _cmd, _data_frames, predictor_impl() );
+        get_categorical_features( _cmd, data_frames, predictor_impl() );
 
     categorical_features =
         predictor_impl().transform_encodings( categorical_features );
@@ -2275,7 +2361,7 @@ containers::Features Pipeline::transform(
             const auto nrows = numerical_features[0]->size();
 
             calculate_feature_stats(
-                numerical_features, nrows, ncols, _cmd, _data_frames );
+                numerical_features, nrows, ncols, _cmd, data_frames );
         }
 
     //-------------------------------------------------------------------------

@@ -282,7 +282,7 @@ class PipelineManager
     // ------------------------------------------------------------------------
 
    private:
-    /// Maps integeres to category names
+    /// Maps integers to category names
     const std::shared_ptr<containers::Encoding> categories_;
 
     /// Connector to the underlying database.

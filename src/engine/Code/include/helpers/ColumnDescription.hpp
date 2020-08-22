@@ -7,11 +7,22 @@ namespace helpers
 
 struct ColumnDescription
 {
+    static constexpr const char* PERIPHERAL = "[PERIPHERAL]";
+    static constexpr const char* POPULATION = "[POPULATION]";
+
     ColumnDescription(
         const std::string& _marker,
         const std::string& _table,
         const std::string& _name )
         : marker_( _marker ), name_( _name ), table_( _table )
+    {
+    }
+
+    ColumnDescription( const Poco::JSON::Object& _obj )
+        : ColumnDescription(
+              jsonutils::JSON::get_value<std::string>( _obj, "marker_" ),
+              jsonutils::JSON::get_value<std::string>( _obj, "table_" ),
+              jsonutils::JSON::get_value<std::string>( _obj, "name_" ) )
     {
     }
 

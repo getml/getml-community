@@ -29,6 +29,8 @@
 
 #include "engine/featurelearners/featurelearners.hpp"
 
+#include "engine/preprocessors/preprocessors.hpp"
+
 #include "engine/temp_dir.hpp"
 
 #include "predictors/predictors.hpp"
@@ -36,7 +38,6 @@
 // ----------------------------------------------------
 // Module files
 
-#include "engine/pipelines/DataModelChecker.hpp"
 #include "engine/pipelines/PipelineImpl.hpp"
 
 #include "engine/pipelines/Pipeline.hpp"

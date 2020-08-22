@@ -1,8 +1,8 @@
-#include "engine/pipelines/pipelines.hpp"
+#include "engine/preprocessors/preprocessors.hpp"
 
 namespace engine
 {
-namespace pipelines
+namespace preprocessors
 {
 // ----------------------------------------------------------------------------
 
@@ -1138,5 +1138,5 @@ void DataModelChecker::raise_self_join_warnings(
 
 // ------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
-}  // namespace pipelines
+}  // namespace preprocessors
 }  // namespace engine

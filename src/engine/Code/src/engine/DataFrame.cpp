@@ -9,18 +9,18 @@ namespace containers
 void DataFrame::add_float_column(
     const Column<Float> &_col, const std::string &_role )
 {
-    if ( _role == "numerical" )
+    if ( _role == DataFrame::ROLE_NUMERICAL )
         {
             add_column( _col, &numericals_ );
             update_last_change();
         }
-    else if ( _role == "target" )
+    else if ( _role == DataFrame::ROLE_TARGET )
         {
             check_null( _col );
             add_column( _col, &targets_ );
             update_last_change();
         }
-    else if ( _role == "time_stamp" )
+    else if ( _role == DataFrame::ROLE_TIME_STAMP )
         {
             auto col = _col;
             if ( col.unit() == "" )
@@ -28,7 +28,7 @@ void DataFrame::add_float_column(
             add_column( col, &time_stamps_ );
             update_last_change();
         }
-    else if ( _role == "unused" || _role == "unused_float" )
+    else if ( _role == DataFrame::ROLE_UNUSED || _role == ROLE_UNUSED_FLOAT )
         {
             add_column( _col, &unused_floats_ );
         }
@@ -65,12 +65,12 @@ void DataFrame::add_float_vectors(
 void DataFrame::add_int_column(
     const Column<Int> &_col, const std::string _role )
 {
-    if ( _role == "categorical" )
+    if ( _role == DataFrame::ROLE_CATEGORICAL )
         {
             add_column( _col, &categoricals_ );
             update_last_change();
         }
-    else if ( _role == "join_key" )
+    else if ( _role == DataFrame::ROLE_JOIN_KEY )
         {
             add_column( _col, &join_keys_ );
 

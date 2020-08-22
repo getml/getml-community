@@ -83,10 +83,10 @@ class ImportanceMaker
     }
 
     /// Marks a table as peripheral.
-    std::string peripheral() const { return "[PERIPHERAL]"; }
+    std::string peripheral() const { return ColumnDescription::PERIPHERAL; }
 
     /// Marks a table as population.
-    std::string population() const { return "[POPULATION]"; }
+    std::string population() const { return ColumnDescription::POPULATION; }
 
    private:
     /// Adds all of the elements from this column.

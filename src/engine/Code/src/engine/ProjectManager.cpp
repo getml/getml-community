@@ -147,7 +147,7 @@ void ProjectManager::add_pipeline(
     const Poco::JSON::Object& _cmd,
     Poco::Net::StreamSocket* _socket )
 {
-    const auto pipeline = pipelines::Pipeline( categories().vector(), _cmd );
+    const auto pipeline = pipelines::Pipeline( categories_, _cmd );
 
     set_pipeline( _name, pipeline );
 
@@ -489,7 +489,7 @@ void ProjectManager::load_all_pipelines()
             try
                 {
                     const auto pipeline = pipelines::Pipeline(
-                        categories().vector(),
+                        categories_,
                         it->path() + "/",
                         fe_tracker_,
                         pred_tracker_ );
@@ -566,8 +566,8 @@ void ProjectManager::load_pipeline(
 
     const auto path = project_directory_ + "pipelines/" + _name + "/";
 
-    auto pipeline = pipelines::Pipeline(
-        categories().vector(), path, fe_tracker_, pred_tracker_ );
+    auto pipeline =
+        pipelines::Pipeline( categories_, path, fe_tracker_, pred_tracker_ );
 
     set_pipeline( _name, pipeline );
 
