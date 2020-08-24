@@ -13,12 +13,9 @@ class Pipeline
     // --------------------------------------------------------
 
    public:
-    Pipeline(
-        const std::shared_ptr<containers::Encoding>& _categories,
-        const Poco::JSON::Object& _obj );
+    Pipeline( const Poco::JSON::Object& _obj );
 
     Pipeline(
-        const std::shared_ptr<containers::Encoding>& _categories,
         const std::string& _path,
         const std::shared_ptr<dependency::FETracker> _fe_tracker,
         const std::shared_ptr<dependency::PredTracker> _pred_tracker );
@@ -51,6 +48,7 @@ class Pipeline
         const Poco::JSON::Object& _cmd,
         const std::shared_ptr<const communication::Logger>& _logger,
         const std::map<std::string, containers::DataFrame>& _data_frames,
+        const std::shared_ptr<containers::Encoding>& _categories,
         const std::shared_ptr<dependency::FETracker> _fe_tracker,
         const std::shared_ptr<dependency::PredTracker> _pred_tracker,
         Poco::Net::StreamSocket* _socket );
@@ -75,6 +73,7 @@ class Pipeline
         const Poco::JSON::Object& _cmd,
         const std::shared_ptr<const communication::Logger>& _logger,
         const std::map<std::string, containers::DataFrame>& _data_frames,
+        const std::shared_ptr<const containers::Encoding> _categories,
         Poco::Net::StreamSocket* _socket );
 
     /// Expresses the Pipeline in a form the monitor can understand.
@@ -142,6 +141,7 @@ class Pipeline
     std::map<std::string, containers::DataFrame> apply_preprocessors(
         const Poco::JSON::Object& _cmd,
         const std::map<std::string, containers::DataFrame>& _data_frames,
+        const std::shared_ptr<const containers::Encoding>& _categories,
         Poco::Net::StreamSocket* _socket ) const;
 
     /// Calculates an index ordering the features by importance.
@@ -231,6 +231,7 @@ class Pipeline
     std::map<std::string, containers::DataFrame> fit_preprocessors(
         const Poco::JSON::Object& _cmd,
         const std::map<std::string, containers::DataFrame>& _data_frames,
+        const std::shared_ptr<containers::Encoding>& _categories,
         Poco::Net::StreamSocket* _socket );
 
     /// Calculates the feature importances vis-a-vis each target.
@@ -304,7 +305,6 @@ class Pipeline
 
     /// Loads a new Pipeline from disc.
     Pipeline load(
-        const std::shared_ptr<containers::Encoding>& _categories,
         const std::string& _path,
         const std::shared_ptr<dependency::FETracker> _fe_tracker,
         const std::shared_ptr<dependency::PredTracker> _pred_tracker ) const;
@@ -362,20 +362,6 @@ class Pipeline
     // --------------------------------------------------------
 
    private:
-    /// Trivial accessor
-    containers::Encoding& categories()
-    {
-        assert_true( impl_.categories_ );
-        return *impl_.categories_;
-    }
-
-    /// Trivial accessor
-    const containers::Encoding& categories() const
-    {
-        assert_true( impl_.categories_ );
-        return *impl_.categories_;
-    }
-
     /// Helper class used to clone the feature learners, selectors
     /// and predictors.
     template <class T>

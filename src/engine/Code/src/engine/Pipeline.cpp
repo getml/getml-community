@@ -6,10 +6,8 @@ namespace pipelines
 {
 // ----------------------------------------------------------------------------
 
-Pipeline::Pipeline(
-    const std::shared_ptr<containers::Encoding>& _categories,
-    const Poco::JSON::Object& _obj )
-    : impl_( PipelineImpl( _categories, _obj ) )
+Pipeline::Pipeline( const Poco::JSON::Object& _obj )
+    : impl_( PipelineImpl( _obj ) )
 
 {
     // This won't to anything - the point it to make sure that it can be
@@ -29,13 +27,12 @@ Pipeline::Pipeline(
 // ----------------------------------------------------------------------------
 
 Pipeline::Pipeline(
-    const std::shared_ptr<containers::Encoding>& _categories,
     const std::string& _path,
     const std::shared_ptr<dependency::FETracker> _fe_tracker,
     const std::shared_ptr<dependency::PredTracker> _pred_tracker )
-    : impl_( PipelineImpl( _categories ) )
+    : impl_( PipelineImpl() )
 {
-    *this = load( _categories, _path, _fe_tracker, _pred_tracker );
+    *this = load( _path, _fe_tracker, _pred_tracker );
 }
 
 // ----------------------------------------------------------------------------
@@ -94,6 +91,7 @@ void Pipeline::add_population_cols(
 std::map<std::string, containers::DataFrame> Pipeline::apply_preprocessors(
     const Poco::JSON::Object& _cmd,
     const std::map<std::string, containers::DataFrame>& _data_frames,
+    const std::shared_ptr<const containers::Encoding>& _categories,
     Poco::Net::StreamSocket* _socket ) const
 {
     auto data_frames = _data_frames;
@@ -102,7 +100,7 @@ std::map<std::string, containers::DataFrame> Pipeline::apply_preprocessors(
         {
             assert_true( p );
 
-            p->transform( _cmd, impl_.categories_, &data_frames );
+            p->transform( _cmd, _categories, &data_frames );
         }
 
     return data_frames;
@@ -870,6 +868,7 @@ void Pipeline::fit(
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<const communication::Logger>& _logger,
     const std::map<std::string, containers::DataFrame>& _data_frames,
+    const std::shared_ptr<containers::Encoding>& _categories,
     const std::shared_ptr<dependency::FETracker> _fe_tracker,
     const std::shared_ptr<dependency::PredTracker> _pred_tracker,
     Poco::Net::StreamSocket* _socket )
@@ -890,7 +889,8 @@ void Pipeline::fit(
 
     // -------------------------------------------------------------------------
 
-    const auto data_frames = fit_preprocessors( _cmd, _data_frames, _socket );
+    const auto data_frames =
+        fit_preprocessors( _cmd, _data_frames, _categories, _socket );
 
     // -------------------------------------------------------------------------
 
@@ -1121,6 +1121,7 @@ void Pipeline::fit_predictors(
 std::map<std::string, containers::DataFrame> Pipeline::fit_preprocessors(
     const Poco::JSON::Object& _cmd,
     const std::map<std::string, containers::DataFrame>& _data_frames,
+    const std::shared_ptr<containers::Encoding>& _categories,
     Poco::Net::StreamSocket* _socket )
 {
     auto data_frames = _data_frames;
@@ -1131,7 +1132,7 @@ std::map<std::string, containers::DataFrame> Pipeline::fit_preprocessors(
         {
             assert_true( p );
 
-            p->fit_transform( _cmd, impl_.categories_, &data_frames );
+            p->fit_transform( _cmd, _categories, &data_frames );
         }
 
     preprocessors_ = preprocessors;
@@ -1464,7 +1465,6 @@ bool Pipeline::is_classification() const
 // ----------------------------------------------------------------------------
 
 Pipeline Pipeline::load(
-    const std::shared_ptr<containers::Encoding>& _categories,
     const std::string& _path,
     const std::shared_ptr<dependency::FETracker> _fe_tracker,
     const std::shared_ptr<dependency::PredTracker> _pred_tracker ) const
@@ -1510,7 +1510,7 @@ Pipeline Pipeline::load(
 
     // ------------------------------------------------------------------
 
-    auto pipeline = Pipeline( _categories, obj );
+    auto pipeline = Pipeline( obj );
 
     pipeline.allow_http() =
         JSON::get_value<bool>( pipeline_json, "allow_http_" );
@@ -2258,7 +2258,7 @@ Poco::JSON::Array::Ptr Pipeline::to_sql_arr(
     const std::shared_ptr<const std::vector<strings::String>>& _categories )
     const
 {
-    assert_true( impl_.categories_ );
+    assert_true( _categories );
 
     auto sql = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
 
@@ -2310,6 +2310,7 @@ containers::Features Pipeline::transform(
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<const communication::Logger>& _logger,
     const std::map<std::string, containers::DataFrame>& _data_frames,
+    const std::shared_ptr<const containers::Encoding> _categories,
     Poco::Net::StreamSocket* _socket )
 {
     // -------------------------------------------------------------------------
@@ -2321,7 +2322,8 @@ containers::Features Pipeline::transform(
 
     // -------------------------------------------------------------------------
 
-    const auto data_frames = apply_preprocessors( _cmd, _data_frames, _socket );
+    const auto data_frames =
+        apply_preprocessors( _cmd, _data_frames, _categories, _socket );
 
     const auto autofeatures = generate_autofeatures(
         _cmd, _logger, data_frames, predictor_impl(), _socket );

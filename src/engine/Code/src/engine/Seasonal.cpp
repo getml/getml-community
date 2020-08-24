@@ -379,18 +379,23 @@ void Seasonal::transform(
     const std::shared_ptr<const containers::Encoding> _categories,
     std::map<std::string, containers::DataFrame>* _data_frames ) const
 {
+    assert_true( _categories );
+
     auto [population_df, peripheral_dfs] =
         PreprocessorImpl::extract_data_frames( _cmd, *_data_frames );
 
     population_df = transform_df(
-        _categories, population_df, helpers::ColumnDescription::POPULATION, 0 );
+        *_categories,
+        population_df,
+        helpers::ColumnDescription::POPULATION,
+        0 );
 
     for ( size_t i = 0; i < peripheral_dfs.size(); ++i )
         {
             auto& df = peripheral_dfs.at( i );
 
             df = transform_df(
-                _categories, df, helpers::ColumnDescription::PERIPHERAL, i );
+                *_categories, df, helpers::ColumnDescription::PERIPHERAL, i );
         }
 
     PreprocessorImpl::insert_data_frames(

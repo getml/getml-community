@@ -225,12 +225,10 @@ void PipelineManager::fit(
     Poco::Net::StreamSocket* _socket )
 {
     // -------------------------------------------------------
-    // Find the pipeline.
 
     auto pipeline = get_pipeline( _name );
 
     // -------------------------------------------------------
-    // Some models are only supported by the premium version.
 
     if ( pipeline.premium_only() )
         {
@@ -240,16 +238,20 @@ void PipelineManager::fit(
     communication::Sender::send_string( "Found!", _socket );
 
     // -------------------------------------------------------
-    // Do the actual fitting
 
     multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
 
-    // TODO
-    /*auto local_categories =
-        std::make_shared<containers::Encoding>( categories_ );*/
+    auto local_categories =
+        std::make_shared<containers::Encoding>( categories_ );
 
     pipeline.fit(
-        _cmd, logger_, data_frames(), fe_tracker_, pred_tracker_, _socket );
+        _cmd,
+        logger_,
+        data_frames(),
+        local_categories,
+        fe_tracker_,
+        pred_tracker_,
+        _socket );
 
     // -------------------------------------------------------
     // Fitting has been a success - store the pipeline.
@@ -262,7 +264,11 @@ void PipelineManager::fit(
                 "Pipeline '" + _name + "' does not exist!" );
         }
 
+    // -------------------------------------------------------
+
     weak_write_lock.upgrade();
+
+    categories_->append( *local_categories );
 
     it->second = pipeline;
 
@@ -790,7 +796,10 @@ void PipelineManager::transform(
     // -------------------------------------------------------
     // Do the actual transformation
 
-    auto yhat = pipeline.transform( cmd, logger_, *local_data_frames, _socket );
+    // IMPORTANT: Use categories_, not local_categories, otherwise
+    // .vector() might not work.
+    auto yhat = pipeline.transform(
+        cmd, logger_, *local_data_frames, categories_, _socket );
 
     communication::Sender::send_string( "Success!", _socket );
 
