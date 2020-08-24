@@ -1339,10 +1339,7 @@ Pipeline::init_predictors(
                         }
 
                     auto new_predictor = predictors::PredictorParser::parse(
-                        *ptr,
-                        _predictor_impl,
-                        categories().vector(),
-                        _dependencies );
+                        *ptr, _predictor_impl, _dependencies );
 
                     predictors_for_target.emplace_back(
                         std::move( new_predictor ) );
