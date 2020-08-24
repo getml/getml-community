@@ -1472,6 +1472,60 @@ std::string FeatureLearner<FeatureLearnerType>::replace_macros(
     new_query = utils::StringReplacer::replace_all(
         new_query, "t2.\"$GETML_NO_JOIN_KEY\"", "1" );
 
+    new_query = utils::StringReplacer::replace_all(
+        new_query, "t1.\"$GETML_NO_JOIN_KEY\"", "1" );
+
+    new_query = utils::StringReplacer::replace_all(
+        new_query, "$GETML_CLOSE_BRACKET\"", "\" )" );
+
+    new_query = utils::StringReplacer::replace_all(
+        new_query, "$GETML_CLOSE_BRACKET", "" );
+
+    new_query = utils::StringReplacer::replace_all(
+        new_query, "t1.\"$GETML_HOUR", "hour( t1.\"" );
+
+    new_query = utils::StringReplacer::replace_all(
+        new_query, "t2.\"$GETML_HOUR", "hour( t2.\"" );
+
+    new_query =
+        utils::StringReplacer::replace_all( new_query, "$GETML_HOUR", "" );
+
+    new_query = utils::StringReplacer::replace_all(
+        new_query, "t1.\"$GETML_MINUTE", "minute( t1.\"" );
+
+    new_query = utils::StringReplacer::replace_all(
+        new_query, "t2.\"$GETML_MINUTE", "minute( t2.\"" );
+
+    new_query =
+        utils::StringReplacer::replace_all( new_query, "$GETML_MINUTE", "" );
+
+    new_query = utils::StringReplacer::replace_all(
+        new_query, "t1.\"$GETML_MONTH", "month( t1.\"" );
+
+    new_query = utils::StringReplacer::replace_all(
+        new_query, "t2.\"$GETML_MONTH", "month( t2.\"" );
+
+    new_query =
+        utils::StringReplacer::replace_all( new_query, "$GETML_MONTH", "" );
+
+    new_query = utils::StringReplacer::replace_all(
+        new_query, "t1.\"$GETML_WEEKDAY", "weekday( t1.\"" );
+
+    new_query = utils::StringReplacer::replace_all(
+        new_query, "t2.\"$GETML_WEEKDAY", "weekday( t2.\"" );
+
+    new_query =
+        utils::StringReplacer::replace_all( new_query, "$GETML_WEEKDAY", "" );
+
+    new_query = utils::StringReplacer::replace_all(
+        new_query, "t1.\"$GETML_YEAR", "year( t1.\"" );
+
+    new_query = utils::StringReplacer::replace_all(
+        new_query, "t2.\"$GETML_YEAR", "year( t2.\"" );
+
+    new_query =
+        utils::StringReplacer::replace_all( new_query, "$GETML_YEAR", "" );
+
     // --------------------------------------------------------------
 
     return new_query;

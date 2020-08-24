@@ -12,7 +12,7 @@ std::optional<containers::Column<Int>> Seasonal::extract_hour(
 {
     auto result = to_categorical( _col, utils::Time::hour, _categories );
 
-    result.set_name( "$GETML_HOUR" + _col.name() );
+    result.set_name( "$GETML_HOUR" + _col.name() + "$GETML_CLOSE_BRACKET" );
     result.set_unit( "hour" );
 
     if ( PreprocessorImpl::has_warnings( result ) )
@@ -31,7 +31,7 @@ containers::Column<Int> Seasonal::extract_hour(
 {
     auto result = to_categorical( _categories, _col, utils::Time::hour );
 
-    result.set_name( "$GETML_HOUR" + _col.name() );
+    result.set_name( "$GETML_HOUR" + _col.name() + "$GETML_CLOSE_BRACKET" );
     result.set_unit( "hour" );
 
     return result;
@@ -45,7 +45,7 @@ std::optional<containers::Column<Int>> Seasonal::extract_minute(
 {
     auto result = to_categorical( _col, utils::Time::minute, _categories );
 
-    result.set_name( "$GETML_MINUTE" + _col.name() );
+    result.set_name( "$GETML_MINUTE" + _col.name() + "$GETML_CLOSE_BRACKET" );
     result.set_unit( "minute" );
 
     if ( PreprocessorImpl::has_warnings( result ) )
@@ -64,7 +64,7 @@ containers::Column<Int> Seasonal::extract_minute(
 {
     auto result = to_categorical( _categories, _col, utils::Time::hour );
 
-    result.set_name( "$GETML_MINUTE" + _col.name() );
+    result.set_name( "$GETML_MINUTE" + _col.name() + "$GETML_CLOSE_BRACKET" );
     result.set_unit( "minute" );
 
     return result;
@@ -78,7 +78,7 @@ std::optional<containers::Column<Int>> Seasonal::extract_month(
 {
     auto result = to_categorical( _col, utils::Time::month, _categories );
 
-    result.set_name( "$GETML_MONTH" + _col.name() );
+    result.set_name( "$GETML_MONTH" + _col.name() + "$GETML_CLOSE_BRACKET" );
     result.set_unit( "month" );
 
     if ( PreprocessorImpl::has_warnings( result ) )
@@ -97,7 +97,7 @@ containers::Column<Int> Seasonal::extract_month(
 {
     auto result = to_categorical( _categories, _col, utils::Time::month );
 
-    result.set_name( "$GETML_MONTH" + _col.name() );
+    result.set_name( "$GETML_MONTH" + _col.name() + "$GETML_CLOSE_BRACKET" );
     result.set_unit( "month" );
 
     return result;
@@ -111,7 +111,7 @@ std::optional<containers::Column<Int>> Seasonal::extract_weekday(
 {
     auto result = to_categorical( _col, utils::Time::weekday, _categories );
 
-    result.set_name( "$GETML_WEEKDAY" + _col.name() );
+    result.set_name( "$GETML_WEEKDAY" + _col.name() + "$GETML_CLOSE_BRACKET" );
     result.set_unit( "weekday" );
 
     if ( PreprocessorImpl::has_warnings( result ) )
@@ -130,7 +130,7 @@ containers::Column<Int> Seasonal::extract_weekday(
 {
     auto result = to_categorical( _categories, _col, utils::Time::weekday );
 
-    result.set_name( "$GETML_WEEKDAY" + _col.name() );
+    result.set_name( "$GETML_WEEKDAY" + _col.name() + "$GETML_CLOSE_BRACKET" );
     result.set_unit( "weekday" );
 
     return result;
@@ -143,7 +143,7 @@ std::optional<containers::Column<Float>> Seasonal::extract_year(
 {
     auto result = to_numerical( _col, utils::Time::year );
 
-    result.set_name( "$GETML_YEAR" + _col.name() );
+    result.set_name( "$GETML_YEAR" + _col.name() + "$GETML_CLOSE_BRACKET" );
     result.set_unit( "year, comparison only" );
 
     if ( PreprocessorImpl::has_warnings( result ) )
@@ -161,7 +161,7 @@ containers::Column<Float> Seasonal::extract_year(
 {
     auto result = to_numerical( _col, utils::Time::year );
 
-    result.set_name( "$GETML_YEAR" + _col.name() );
+    result.set_name( "$GETML_YEAR" + _col.name() + "$GETML_CLOSE_BRACKET" );
     result.set_unit( "year, comparison only" );
 
     return result;

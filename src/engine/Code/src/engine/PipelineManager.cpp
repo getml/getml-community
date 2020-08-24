@@ -254,7 +254,6 @@ void PipelineManager::fit(
         _socket );
 
     // -------------------------------------------------------
-    // Fitting has been a success - store the pipeline.
 
     auto it = pipelines().find( _name );
 
