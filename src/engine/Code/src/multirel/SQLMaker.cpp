@@ -7,6 +7,7 @@ namespace utils
 // ----------------------------------------------------------------------------
 
 std::string SQLMaker::condition_greater(
+    const std::vector<strings::String>& _categories,
     const containers::Placeholder& _input,
     const containers::Placeholder& _output,
     const descriptors::Split& _split ) const
@@ -20,7 +21,7 @@ std::string SQLMaker::condition_greater(
                         _input, _output, _split.column_used, _split.data_used );
 
                     return "( " + name + " NOT IN " +
-                           list_categories( _split ) + " )";
+                           list_categories( _categories, _split ) + " )";
                 }
 
             case enums::DataUsed::x_perip_discrete:
@@ -121,6 +122,7 @@ std::string SQLMaker::condition_greater(
 // ----------------------------------------------------------------------------
 
 std::string SQLMaker::condition_smaller(
+    const std::vector<strings::String>& _categories,
     const containers::Placeholder& _input,
     const containers::Placeholder& _output,
     const descriptors::Split& _split ) const
@@ -133,8 +135,8 @@ std::string SQLMaker::condition_smaller(
                     const auto name = get_name(
                         _input, _output, _split.column_used, _split.data_used );
 
-                    return "( " + name + " IN " + list_categories( _split ) +
-                           " )";
+                    return "( " + name + " IN " +
+                           list_categories( _categories, _split ) + " )";
                 }
 
             case enums::DataUsed::x_perip_discrete:
@@ -313,7 +315,9 @@ std::pair<std::string, std::string> SQLMaker::get_names(
 
 // ----------------------------------------------------------------------------
 
-std::string SQLMaker::list_categories( const descriptors::Split& _split ) const
+std::string SQLMaker::list_categories(
+    const std::vector<strings::String>& _categories,
+    const descriptors::Split& _split ) const
 {
     std::string categories = "( ";
 
@@ -323,7 +327,9 @@ std::string SQLMaker::list_categories( const descriptors::Split& _split ) const
           it != _split.categories_used_end;
           ++it )
         {
-            categories += "'" + encoding( *it ).str() + "'";
+            assert_true( *it < _categories.size() );
+
+            categories += "'" + _categories.at( *it ).str() + "'";
 
             if ( std::next( it, 1 ) != _split.categories_used_end )
                 {

@@ -48,6 +48,7 @@ class DecisionTreeNode
 
     /// Returns the SQL condition associated with this node
     void to_sql(
+        const std::vector<strings::String> &_categories,
         const std::string &_feature_num,
         std::vector<std::string> &_conditions,
         std::string _sql ) const;

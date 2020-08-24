@@ -49,6 +49,7 @@ class DecisionTreeNode
 
     /// Expresses the DecisionTreeNode as SQL code.
     void to_sql(
+        const std::vector<strings::String>& _categories,
         const std::string& _feature_num,
         const std::string& _sql,
         std::vector<std::string>* _conditions ) const;

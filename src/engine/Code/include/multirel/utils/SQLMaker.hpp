@@ -13,28 +13,27 @@ class SQLMaker
 {
    public:
     SQLMaker(
-        const std::shared_ptr<const std::vector<strings::String>>& _encoding,
         const Float _lag,
         const size_t _peripheral_used,
         const descriptors::SameUnits& _same_units )
-        : encoding_( _encoding ),
-          lag_( _lag ),
+        : lag_( _lag ),
           peripheral_used_( _peripheral_used ),
           same_units_( _same_units )
     {
-        assert_true( encoding_ );
     }
 
     ~SQLMaker() = default;
 
     /// Creates a condition that must be greater than a critical value.
     std::string condition_greater(
+        const std::vector<strings::String>& _categories,
         const containers::Placeholder& _input,
         const containers::Placeholder& _output,
         const descriptors::Split& _split ) const;
 
     /// Creates a condition that must be smaller than a critical value.
     std::string condition_smaller(
+        const std::vector<strings::String>& _categories,
         const containers::Placeholder& _input,
         const containers::Placeholder& _output,
         const descriptors::Split& _split ) const;
@@ -65,7 +64,9 @@ class SQLMaker
         const size_t _column_used ) const;
 
     /// Returns a list of the categories.
-    std::string list_categories( const descriptors::Split& _split ) const;
+    std::string list_categories(
+        const std::vector<strings::String>& _categories,
+        const descriptors::Split& _split ) const;
 
     /// Transforms the time stamps diff into SQLite-compliant code.
     std::string make_time_stamp_diff(
@@ -83,22 +84,6 @@ class SQLMaker
         const enums::DataUsed& _data_used ) const;
 
    private:
-    /// Trivial accessor.
-    strings::String encoding( size_t _i ) const
-    {
-        assert_true( encoding_ );
-
-        if ( _i < encoding_->size() )
-            {
-                return ( *encoding_ )[_i];
-            }
-        else
-            {
-                assert_true( false && "Encoding out of range!" );
-                return strings::String( "" );
-            }
-    }
-
     /// Returns the timediff string for time comparisons
     std::string make_diffstr(
         const Float _timediff, const std::string _timeunit ) const
@@ -109,9 +94,6 @@ class SQLMaker
     }
 
    private:
-    /// Encoding for the categorical data, maps integers to underlying category.
-    const std::shared_ptr<const std::vector<strings::String>> encoding_;
-
     /// The lag variable used for the moving time window.
     const Float lag_;
 

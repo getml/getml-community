@@ -1258,11 +1258,7 @@ Pipeline::init_feature_learners(
 
             auto new_feature_learner =
                 featurelearners::FeatureLearnerParser::parse(
-                    *ptr,
-                    population,
-                    peripheral,
-                    categories().vector(),
-                    _df_fingerprints );
+                    *ptr, population, peripheral, _df_fingerprints );
 
             // --------------------------------------------------------------
 
@@ -1293,7 +1289,6 @@ Pipeline::init_feature_learners(
                                     *ptr,
                                     population,
                                     peripheral,
-                                    categories().vector(),
                                     dependencies ) );
 
                             target_nums.push_back( static_cast<Int>( t ) );
@@ -2235,6 +2230,8 @@ Poco::JSON::Object Pipeline::to_monitor( const std::string& _name ) const
 
 std::string Pipeline::to_sql() const
 {
+    assert_true( impl_.categories_ );
+
     std::string sql;
 
     size_t offset = 0;
@@ -2243,7 +2240,10 @@ std::string Pipeline::to_sql() const
         {
             const auto& fe = feature_learners_.at( i );
 
-            const auto vec = fe->to_sql( std::to_string( i + 1 ) + "_", true );
+            const auto vec = fe->to_sql(
+                impl_.categories_->vector(),
+                std::to_string( i + 1 ) + "_",
+                true );
 
             for ( const auto& str : vec )
                 {
@@ -2260,6 +2260,8 @@ std::string Pipeline::to_sql() const
 
 Poco::JSON::Array::Ptr Pipeline::to_sql_arr() const
 {
+    assert_true( impl_.categories_ );
+
     auto sql = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
 
     size_t offset = 0;
@@ -2273,7 +2275,10 @@ Poco::JSON::Array::Ptr Pipeline::to_sql_arr() const
 
             const auto& index = predictor_impl().autofeatures().at( i );
 
-            const auto vec = fe->to_sql( std::to_string( i + 1 ) + "_", false );
+            const auto vec = fe->to_sql(
+                impl_.categories_->vector(),
+                std::to_string( i + 1 ) + "_",
+                false );
 
             for ( const auto ix : index )
                 {

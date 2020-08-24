@@ -13,14 +13,12 @@ class DecisionTree
 {
    public:
     DecisionTree(
-        const std::shared_ptr<const std::vector<strings::String>>& _encoding,
         const std::shared_ptr<const Hyperparameters>& _hyperparameters,
         const std::shared_ptr<lossfunctions::LossFunction>& _loss_function,
         const size_t _peripheral_used,
         multithreading::Communicator* _comm );
 
     DecisionTree(
-        const std::shared_ptr<const std::vector<strings::String>>& _encoding,
         const std::shared_ptr<const Hyperparameters>& _hyperparameters,
         const std::shared_ptr<lossfunctions::LossFunction>& _loss_function,
         const Poco::JSON::Object& _obj );
@@ -49,7 +47,9 @@ class DecisionTree
 
     /// Expresses the decision tree as SQL code.
     std::string to_sql(
-        const std::string _feature_num, const bool _use_timestamps ) const;
+        const std::vector<strings::String>& _categories,
+        const std::string _feature_num,
+        const bool _use_timestamps ) const;
 
     // -----------------------------------------------------------------
 
@@ -137,9 +137,6 @@ class DecisionTree
    private:
     /// raw pointer to the communicator.
     multithreading::Communicator* comm_;
-
-    /// Encoding for the categorical data, maps integers to underlying category.
-    std::shared_ptr<const std::vector<strings::String>> encoding_;
 
     /// Hyperparameters used to train the relboost model
     std::shared_ptr<const Hyperparameters> hyperparameters_;

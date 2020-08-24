@@ -1248,6 +1248,7 @@ Poco::JSON::Object DecisionTreeNode::to_json_obj() const
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::to_sql(
+    const std::vector<strings::String> &_categories,
     const std::string &_feature_num,
     std::vector<std::string> &_conditions,
     std::string _sql ) const
@@ -1255,32 +1256,29 @@ void DecisionTreeNode::to_sql(
     if ( split_ )
         {
             const auto sql_maker = utils::SQLMaker(
-                tree_->categories_,
-                tree_->delta_t(),
-                tree_->ix_perip_used(),
-                tree_->same_units_ );
+                tree_->delta_t(), tree_->ix_perip_used(), tree_->same_units_ );
 
             const auto prefix = ( _sql == "" ) ? "" : " AND ";
 
             const auto sql_greater =
                 _sql + prefix +
                 sql_maker.condition_greater(
-                    tree_->input(), tree_->output(), *split_ );
+                    _categories, tree_->input(), tree_->output(), *split_ );
 
             const auto sql_smaller =
                 _sql + prefix +
                 sql_maker.condition_smaller(
-                    tree_->input(), tree_->output(), *split_ );
+                    _categories, tree_->input(), tree_->output(), *split_ );
 
             if ( child_node_greater_ )
                 {
                     assert_true( child_node_smaller_ );
 
                     child_node_greater_->to_sql(
-                        _feature_num, _conditions, sql_greater );
+                        _categories, _feature_num, _conditions, sql_greater );
 
                     child_node_smaller_->to_sql(
-                        _feature_num, _conditions, sql_smaller );
+                        _categories, _feature_num, _conditions, sql_smaller );
 
                     return;
                 }

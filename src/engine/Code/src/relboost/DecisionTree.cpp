@@ -7,13 +7,11 @@ namespace decisiontrees
 // ----------------------------------------------------------------------------
 
 DecisionTree::DecisionTree(
-    const std::shared_ptr<const std::vector<strings::String>>& _encoding,
     const std::shared_ptr<const Hyperparameters>& _hyperparameters,
     const std::shared_ptr<lossfunctions::LossFunction>& _loss_function,
     const size_t _peripheral_used,
     multithreading::Communicator* _comm )
     : comm_( _comm ),
-      encoding_( _encoding ),
       hyperparameters_( _hyperparameters ),
       intercept_( 0.0 ),
       loss_function_( _loss_function ),
@@ -25,13 +23,10 @@ DecisionTree::DecisionTree(
 // ----------------------------------------------------------------------------
 
 DecisionTree::DecisionTree(
-    const std::shared_ptr<const std::vector<strings::String>>& _encoding,
     const std::shared_ptr<const Hyperparameters>& _hyperparameters,
     const std::shared_ptr<lossfunctions::LossFunction>& _loss_function,
     const Poco::JSON::Object& _obj )
-    : comm_( nullptr ),
-      encoding_( _encoding ),
-      hyperparameters_( _hyperparameters )
+    : comm_( nullptr ), hyperparameters_( _hyperparameters )
 {
     if ( _obj.has( "input_" ) )
         {
@@ -59,8 +54,7 @@ DecisionTree::DecisionTree(
     update_rate_ = JSON::get_value<Float>( _obj, "update_rate_" );
 
     root_.reset( new DecisionTreeNode(
-        utils::ConditionMaker(
-            encoding_, hyperparameters().delta_t_, peripheral_used() ),
+        utils::ConditionMaker( hyperparameters().delta_t_, peripheral_used() ),
         0,  // _depth
         hyperparameters_,
         loss_function_,
@@ -91,11 +85,8 @@ void DecisionTree::fit(
 
     debug_log( "Set up and fit root node." );
 
-    assert_true( encoding_ );
-
     root_.reset( new DecisionTreeNode(
-        utils::ConditionMaker(
-            encoding_, hyperparameters().delta_t_, peripheral_used() ),
+        utils::ConditionMaker( hyperparameters().delta_t_, peripheral_used() ),
         0,
         hyperparameters_,
         loss_function_,
@@ -143,7 +134,9 @@ Poco::JSON::Object::Ptr DecisionTree::to_json_obj() const
 // ----------------------------------------------------------------------------
 
 std::string DecisionTree::to_sql(
-    const std::string _feature_num, const bool _use_timestamps ) const
+    const std::vector<strings::String>& _categories,
+    const std::string _feature_num,
+    const bool _use_timestamps ) const
 {
     // -------------------------------------------------------------------
 
@@ -171,11 +164,11 @@ std::string DecisionTree::to_sql(
 
     assert_true( root_ );
 
-    root_->to_sql( _feature_num, "", &conditions );
+    root_->to_sql( _categories, _feature_num, "", &conditions );
 
     for ( size_t i = 0; i < conditions.size(); ++i )
         {
-            sql << tab << tab << conditions[i] << std::endl;
+            sql << tab << tab << conditions.at( i ) << std::endl;
         }
 
     sql << tab << tab << "ELSE NULL" << std::endl;
@@ -272,7 +265,7 @@ std::vector<Float> DecisionTree::transform(
                 }
             else
                 {
-                    matches = {containers::Match{0, ix_output}};
+                    matches = { containers::Match{ 0, ix_output } };
                 }
 
             // ------------------------------------------------------------------------

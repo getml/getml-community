@@ -31,7 +31,6 @@ class TimeSeriesModel
 
    public:
     TimeSeriesModel(
-        const std::shared_ptr<const std::vector<strings::String>> &_categories,
         const std::shared_ptr<const HypType> &_hyperparameters,
         const std::shared_ptr<const std::vector<std::string>> &_peripheral,
         const std::shared_ptr<const PlaceholderType> &_placeholder,
@@ -40,9 +39,7 @@ class TimeSeriesModel
         const std::shared_ptr<const PlaceholderType> &_population_schema =
             nullptr );
 
-    TimeSeriesModel(
-        const std::shared_ptr<const std::vector<strings::String>> &_categories,
-        const Poco::JSON::Object &_obj );
+    TimeSeriesModel( const Poco::JSON::Object &_obj );
 
     ~TimeSeriesModel();
 
@@ -116,20 +113,15 @@ class TimeSeriesModel
         model().select_features( _index );
     }
 
-    /// Extracts the ensemble as a Boost property tree the monitor process can
-    /// understand
-    Poco::JSON::Object to_monitor( const std::string _name ) const
-    {
-        return model().to_monitor( _name );
-    }
-
     /// Expresses DecisionTreeEnsemble as SQL code.
     std::vector<std::string> to_sql(
+        const std::shared_ptr<const std::vector<strings::String>> &_categories,
         const std::string &_feature_prefix = "",
         const size_t _offset = 0,
         const bool _subfeatures = true ) const
     {
-        auto queries = model().to_sql( _feature_prefix, _offset, _subfeatures );
+        auto queries = model().to_sql(
+            _categories, _feature_prefix, _offset, _subfeatures );
         for ( auto &query : queries )
             {
                 query = replace_macros( query );
@@ -227,7 +219,6 @@ namespace ts
 
 template <class FEType>
 TimeSeriesModel<FEType>::TimeSeriesModel(
-    const std::shared_ptr<const std::vector<strings::String>> &_categories,
     const std::shared_ptr<const HypType> &_hyperparameters,
     const std::shared_ptr<const std::vector<std::string>> &_peripheral,
     const std::shared_ptr<const PlaceholderType> &_placeholder,
@@ -254,7 +245,6 @@ TimeSeriesModel<FEType>::TimeSeriesModel(
     // --------------------------------------------------------------------
 
     model_ = std::make_optional<FEType>(
-        _categories,
         hyperparameters().model_hyperparams_,
         new_peripheral,
         new_placeholder,
@@ -267,12 +257,10 @@ TimeSeriesModel<FEType>::TimeSeriesModel(
 // ----------------------------------------------------------------------------
 
 template <class FEType>
-TimeSeriesModel<FEType>::TimeSeriesModel(
-    const std::shared_ptr<const std::vector<strings::String>> &_categories,
-    const Poco::JSON::Object &_obj )
+TimeSeriesModel<FEType>::TimeSeriesModel( const Poco::JSON::Object &_obj )
     : hyperparameters_( std::make_shared<const HypType>(
           *jsonutils::JSON::get_object( _obj, "hyperparameters_" ) ) ),
-      model_( std::make_optional<FEType>( _categories, _obj ) )
+      model_( std::make_optional<FEType>( _obj ) )
 {
     assert_true( hyperparameters().model_hyperparams_ );
 }

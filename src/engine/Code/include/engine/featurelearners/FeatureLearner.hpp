@@ -23,13 +23,11 @@ class FeatureLearner : public AbstractFeatureLearner
 
    public:
     FeatureLearner(
-        const std::shared_ptr<const std::vector<strings::String>>& _categories,
         const Poco::JSON::Object& _cmd,
         const std::shared_ptr<const Poco::JSON::Object>& _placeholder,
         const std::shared_ptr<const std::vector<std::string>>& _peripheral,
         const std::vector<Poco::JSON::Object::Ptr>& _dependencies )
-        : categories_( _categories ),
-          cmd_( _cmd ),
+        : cmd_( _cmd ),
           dependencies_( _dependencies ),
           placeholder_( _placeholder ),
           peripheral_( _peripheral )
@@ -104,8 +102,7 @@ class FeatureLearner : public AbstractFeatureLearner
     void load( const std::string& _fname ) final
     {
         const auto obj = load_json_obj( _fname );
-        feature_learner_ =
-            std::make_optional<FeatureLearnerType>( categories_, obj );
+        feature_learner_ = std::make_optional<FeatureLearnerType>( obj );
     }
 
     /// Returns the placeholder not as passed by the user, but as seen by the
@@ -159,18 +156,14 @@ class FeatureLearner : public AbstractFeatureLearner
         return feature_learner().to_json_obj( _schema_only );
     }
 
-    /// Returns model as a JSON Object in a form that the monitor can
-    /// understand.
-    Poco::JSON::Object to_monitor( const std::string& _name ) const final
-    {
-        return feature_learner().to_monitor( _name );
-    }
-
     /// Return feature learner as SQL code.
     std::vector<std::string> to_sql(
-        const std::string& _prefix, const bool _subfeatures ) const final
+        const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const std::string& _prefix,
+        const bool _subfeatures ) const final
     {
-        auto queries = feature_learner().to_sql( _prefix, 0, _subfeatures );
+        auto queries =
+            feature_learner().to_sql( _categories, _prefix, 0, _subfeatures );
         for ( auto& query : queries )
             {
                 query = replace_macros( query );
@@ -350,9 +343,6 @@ class FeatureLearner : public AbstractFeatureLearner
     // --------------------------------------------------------
 
    private:
-    /// The categories used for the mapping.
-    std::shared_ptr<const std::vector<strings::String>> categories_;
-
     /// The command used to create the feature learner.
     Poco::JSON::Object cmd_;
 
@@ -1395,7 +1385,6 @@ FeatureLearner<FeatureLearnerType>::make_feature_learner() const
         std::shared_ptr<const std::vector<PlaceholderType>>();
 
     return std::make_optional<FeatureLearnerType>(
-        categories_,
         hyperparameters,
         peripheral_,
         placeholder_struct,

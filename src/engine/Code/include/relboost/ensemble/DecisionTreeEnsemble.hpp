@@ -31,7 +31,6 @@ class DecisionTreeEnsemble
 
    public:
     DecisionTreeEnsemble(
-        const std::shared_ptr<const std::vector<strings::String>>& _categories,
         const std::shared_ptr<const Hyperparameters>& _hyperparameters,
         const std::shared_ptr<const std::vector<std::string>>& _peripheral,
         const std::shared_ptr<const containers::Placeholder>& _placeholder,
@@ -40,9 +39,7 @@ class DecisionTreeEnsemble
         const std::shared_ptr<const containers::Placeholder>&
             _population_schema = nullptr );
 
-    DecisionTreeEnsemble(
-        const std::shared_ptr<const std::vector<strings::String>>& _categories,
-        const Poco::JSON::Object& _obj );
+    DecisionTreeEnsemble( const Poco::JSON::Object& _obj );
 
     DecisionTreeEnsemble( const DecisionTreeEnsemble& _other );
 
@@ -134,9 +131,6 @@ class DecisionTreeEnsemble
     /// Selects the features according to the index given.
     void select_features( const std::vector<size_t>& _index );
 
-    /// Expresses the model in a format that the monitor can understand.
-    Poco::JSON::Object to_monitor( const std::string _name ) const;
-
     /// Returns the features underlying the model (the predictions of the
     /// individual trees as opposed to the entire prediction)
     containers::Features transform(
@@ -157,6 +151,7 @@ class DecisionTreeEnsemble
 
     /// Expresses DecisionTreeEnsemble as SQL code.
     std::vector<std::string> to_sql(
+        const std::shared_ptr<const std::vector<strings::String>>& _categories,
         const std::string& _feature_prefix = "",
         const size_t _offset = 0,
         const bool _subfeatures = true ) const;
@@ -169,13 +164,6 @@ class DecisionTreeEnsemble
 
     /// Trivial accessor
     bool allow_http() const { return impl().allow_http_; }
-
-    /// Trivial (const) accessor
-    const std::shared_ptr<const std::vector<strings::String>>& categories()
-        const
-    {
-        return impl().categories_;
-    }
 
     /// Trivial (const) accessor
     const Hyperparameters& hyperparameters() const

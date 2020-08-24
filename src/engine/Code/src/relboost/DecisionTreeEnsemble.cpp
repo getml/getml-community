@@ -7,7 +7,6 @@ namespace ensemble
 // ----------------------------------------------------------------------------
 
 DecisionTreeEnsemble::DecisionTreeEnsemble(
-    const std::shared_ptr<const std::vector<strings::String>> &_categories,
     const std::shared_ptr<const Hyperparameters> &_hyperparameters,
     const std::shared_ptr<const std::vector<std::string>> &_peripheral,
     const std::shared_ptr<const containers::Placeholder> &_placeholder,
@@ -15,7 +14,6 @@ DecisionTreeEnsemble::DecisionTreeEnsemble(
         &_peripheral_schema,
     const std::shared_ptr<const containers::Placeholder> &_population_schema )
     : impl_( DecisionTreeEnsembleImpl(
-          _categories,
           _hyperparameters,
           _peripheral,
           _placeholder,
@@ -34,11 +32,8 @@ DecisionTreeEnsemble::DecisionTreeEnsemble(
 
 // ----------------------------------------------------------------------------
 
-DecisionTreeEnsemble::DecisionTreeEnsemble(
-    const std::shared_ptr<const std::vector<strings::String>> &_categories,
-    const Poco::JSON::Object &_obj )
+DecisionTreeEnsemble::DecisionTreeEnsemble( const Poco::JSON::Object &_obj )
     : impl_( DecisionTreeEnsembleImpl(
-          _categories,
           std::make_shared<const Hyperparameters>(
               *JSON::get_object( _obj, "hyperparameters_" ) ),
           _obj.has( "peripheral_" )
@@ -113,7 +108,6 @@ DecisionTreeEnsemble::DecisionTreeEnsemble(
     for ( size_t i = 0; i < trees_objects.size(); ++i )
         {
             trees().push_back( decisiontrees::DecisionTree(
-                _categories,
                 impl().hyperparameters_,
                 loss_function_,
                 *trees_objects.getObject( static_cast<unsigned int>( i ) ) ) );
@@ -135,8 +129,7 @@ DecisionTreeEnsemble::DecisionTreeEnsemble(
             if ( obj )
                 {
                     subensembles_avg_[i] =
-                        std::make_optional<DecisionTreeEnsemble>(
-                            categories(), *obj );
+                        std::make_optional<DecisionTreeEnsemble>( *obj );
                 }
         }
 
@@ -156,8 +149,7 @@ DecisionTreeEnsemble::DecisionTreeEnsemble(
             if ( obj )
                 {
                     subensembles_sum_[i] =
-                        std::make_optional<DecisionTreeEnsemble>(
-                            categories(), *obj );
+                        std::make_optional<DecisionTreeEnsemble>( *obj );
                 }
         }
 
@@ -269,7 +261,7 @@ void DecisionTreeEnsemble::check_plausibility_of_targets(
 
 void DecisionTreeEnsemble::clean_up()
 {
-    *this = DecisionTreeEnsemble( impl().categories_, to_json_obj() );
+    *this = DecisionTreeEnsemble( to_json_obj() );
 }
 
 // ----------------------------------------------------------------------------
@@ -603,7 +595,6 @@ void DecisionTreeEnsemble::fit_new_feature(
                     _loss_function->commit();
 
                     candidates.push_back( decisiontrees::DecisionTree(
-                        impl().categories_,
                         impl().hyperparameters_,
                         agg,
                         ix_table_used,
@@ -701,11 +692,7 @@ void DecisionTreeEnsemble::fit_new_tree(
     // ------------------------------------------------------------------------
 
     auto new_tree = decisiontrees::DecisionTree(
-        impl().categories_,
-        impl().hyperparameters_,
-        _loss_function,
-        0,
-        &comm() );
+        impl().hyperparameters_, _loss_function, 0, &comm() );
 
     new_tree.fit(
         _population,
@@ -1027,81 +1014,6 @@ void DecisionTreeEnsemble::select_features( const std::vector<size_t> &_index )
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object DecisionTreeEnsemble::to_monitor(
-    const std::string _name ) const
-{
-    // ----------------------------------------
-
-    Poco::JSON::Object obj;
-
-    obj.set( "name_", _name );
-
-    obj.set( "allow_http_", allow_http() );
-
-    // ----------------------------------------
-
-    if ( has_population_schema() )
-        {
-            // ----------------------------------------
-            // Insert placeholders
-
-            obj.set( "peripheral_", JSON::vector_to_array_ptr( peripheral() ) );
-
-            obj.set( "placeholder_", placeholder().to_json_obj() );
-
-            // ----------------------------------------
-            // Insert schema
-
-            Poco::JSON::Array::Ptr peripheral_schema_arr(
-                new Poco::JSON::Array() );
-
-            for ( size_t i = 0; i < peripheral_schema().size(); ++i )
-                {
-                    peripheral_schema_arr->add(
-                        peripheral_schema()[i].to_json_obj() );
-                }
-
-            obj.set( "peripheral_schema_", peripheral_schema_arr );
-
-            obj.set( "population_schema_", population_schema().to_json_obj() );
-
-            // ----------------------------------------
-            // Insert hyperparameters
-
-            obj.set( "hyperparameters_", hyperparameters().to_json_obj() );
-
-            // ----------------------------------------
-            // Insert sql
-
-            std::vector<std::string> sql;
-
-            for ( size_t i = 0; i < trees().size(); ++i )
-                {
-                    sql.push_back( trees()[i].to_sql(
-                        std::to_string( i + 1 ),
-                        hyperparameters().use_timestamps_ ) );
-                }
-
-            obj.set( "sql_", sql );
-
-            // ----------------------------------------
-            // Insert other pieces of information
-
-            obj.set( "nfeatures_", trees().size() );
-
-            obj.set(
-                "targets_",
-                JSON::vector_to_array<std::string>(
-                    population_schema().targets() ) );
-
-            // ----------------------------------------
-        }
-
-    return obj;
-}
-
-// ----------------------------------------------------------------------------
-
 containers::Features DecisionTreeEnsemble::transform(
     const containers::DataFrame &_population,
     const std::vector<containers::DataFrame> &_peripheral,
@@ -1386,10 +1298,13 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json_obj(
 // ----------------------------------------------------------------------------
 
 std::vector<std::string> DecisionTreeEnsemble::to_sql(
+    const std::shared_ptr<const std::vector<strings::String>> &_categories,
     const std::string &_feature_prefix,
     const size_t _offset,
     const bool _subfeatures ) const
 {
+    assert_true( _categories );
+
     std::vector<std::string> sql;
 
     if ( _subfeatures )
@@ -1398,20 +1313,26 @@ std::vector<std::string> DecisionTreeEnsemble::to_sql(
 
             for ( size_t i = 0; i < subensembles_avg_.size(); ++i )
                 {
-                    if ( subensembles_avg_[i] )
+                    if ( subensembles_avg_.at( i ) )
                         {
-                            const auto sub_avg = subensembles_avg_[i]->to_sql(
-                                std::to_string( i + 1 ) + "_", 0, true );
+                            const auto sub_avg =
+                                subensembles_avg_.at( i )->to_sql(
+                                    _categories,
+                                    std::to_string( i + 1 ) + "_",
+                                    0,
+                                    true );
 
                             sql.insert(
                                 sql.end(), sub_avg.begin(), sub_avg.end() );
 
-                            assert_true( subensembles_sum_[i] );
+                            assert_true( subensembles_sum_.at( i ) );
 
-                            const auto sub_sum = subensembles_sum_[i]->to_sql(
-                                std::to_string( i + 1 ) + "_",
-                                subensembles_avg_[i]->num_features(),
-                                true );
+                            const auto sub_sum =
+                                subensembles_sum_.at( i )->to_sql(
+                                    _categories,
+                                    std::to_string( i + 1 ) + "_",
+                                    subensembles_avg_.at( i )->num_features(),
+                                    true );
 
                             sql.insert(
                                 sql.end(), sub_sum.begin(), sub_sum.end() );
@@ -1421,7 +1342,8 @@ std::vector<std::string> DecisionTreeEnsemble::to_sql(
 
     for ( size_t i = 0; i < trees().size(); ++i )
         {
-            sql.push_back( trees()[i].to_sql(
+            sql.push_back( trees().at( i ).to_sql(
+                *_categories,
                 _feature_prefix + std::to_string( _offset + i + 1 ),
                 hyperparameters().use_timestamps_ ) );
         }

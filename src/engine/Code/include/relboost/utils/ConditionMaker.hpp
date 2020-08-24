@@ -12,33 +12,31 @@ namespace utils
 class ConditionMaker
 {
    public:
-    ConditionMaker(
-        const std::shared_ptr<const std::vector<strings::String>>& _encoding,
-        const Float _lag,
-        const size_t _peripheral_used )
-        : encoding_( _encoding ),
-          lag_( _lag ),
-          peripheral_used_( _peripheral_used )
+    ConditionMaker( const Float _lag, const size_t _peripheral_used )
+        : lag_( _lag ), peripheral_used_( _peripheral_used )
     {
-        assert_true( encoding_ );
     }
 
     ~ConditionMaker() = default;
 
     /// Identifies matches between population table and peripheral tables.
     std::string condition_greater(
+        const std::vector<strings::String>& _categories,
         const containers::Placeholder& _input,
         const containers::Placeholder& _output,
         const containers::Split& _split ) const;
 
     std::string condition_smaller(
+        const std::vector<strings::String>& _categories,
         const containers::Placeholder& _input,
         const containers::Placeholder& _output,
         const containers::Split& _split ) const;
 
    private:
     /// Returns a list of the categories.
-    std::string list_categories( const containers::Split& _split ) const;
+    std::string list_categories(
+        const std::vector<strings::String>& _categories,
+        const containers::Split& _split ) const;
 
     /// Transforms the time stamps diff into SQLite-compliant code.
     std::string make_time_stamp_diff(
@@ -48,22 +46,6 @@ class ConditionMaker
         const bool _is_greater ) const;
 
    private:
-    /// Trivial accessor.
-    strings::String encoding( size_t _i ) const
-    {
-        assert_true( encoding_ );
-
-        if ( _i < encoding_->size() )
-            {
-                return ( *encoding_ )[_i];
-            }
-        else
-            {
-                assert_true( false && "Encoding out of range!" );
-                return strings::String( "" );
-            }
-    }
-
     /// Returns the timediff string for time comparisons
     std::string make_diffstr(
         const Float _timediff, const std::string _timeunit ) const
@@ -74,9 +56,6 @@ class ConditionMaker
     }
 
    private:
-    /// Encoding for the categorical data, maps integers to underlying category.
-    const std::shared_ptr<const std::vector<strings::String>> encoding_;
-
     /// The lag variable used for the moving time window.
     const Float lag_;
 

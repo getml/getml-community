@@ -7,11 +7,10 @@ namespace decisiontrees
 // ----------------------------------------------------------------------------
 
 DecisionTree::DecisionTree(
-    const std::shared_ptr<const std::vector<strings::String>> &_categories,
     const std::shared_ptr<const descriptors::TreeHyperparameters>
         &_tree_hyperparameters,
     const Poco::JSON::Object &_json_obj )
-    : impl_( _categories, _tree_hyperparameters )
+    : impl_( _tree_hyperparameters )
 {
     debug_log( "Feature: Normal constructor..." );
 
@@ -24,7 +23,6 @@ DecisionTree::DecisionTree(
 
 DecisionTree::DecisionTree(
     const std::string &_agg,
-    const std::shared_ptr<const std::vector<strings::String>> &_categories,
     const std::shared_ptr<const descriptors::TreeHyperparameters>
         &_tree_hyperparameters,
     const size_t _ix_perip_used,
@@ -34,7 +32,7 @@ DecisionTree::DecisionTree(
     std::mt19937 *_random_number_generator,
     containers::Optional<aggregations::AggregationImpl> *_aggregation_impl,
     multithreading::Communicator *_comm )
-    : impl_( _categories, _tree_hyperparameters )
+    : impl_( _tree_hyperparameters )
 {
     set_same_units( _same_units );
 
@@ -271,17 +269,16 @@ Poco::JSON::Object DecisionTree::to_json_obj() const
 // ----------------------------------------------------------------------------
 
 std::string DecisionTree::to_sql(
-    const std::string _feature_num, const bool _use_timestamps ) const
+    const std::vector<strings::String> &_categories,
+    const std::string _feature_num,
+    const bool _use_timestamps ) const
 {
     // -------------------------------------------------------------------
 
     std::stringstream sql;
 
     const auto sql_maker = utils::SQLMaker(
-        impl()->categories_,
-        impl()->delta_t(),
-        ix_perip_used(),
-        impl()->same_units_ );
+        impl()->delta_t(), ix_perip_used(), impl()->same_units_ );
 
     // -------------------------------------------------------------------
 
@@ -315,18 +312,18 @@ std::string DecisionTree::to_sql(
 
     std::vector<std::string> conditions;
 
-    root()->to_sql( _feature_num, conditions, "" );
+    root()->to_sql( _categories, _feature_num, conditions, "" );
 
     for ( size_t i = 0; i < conditions.size(); ++i )
         {
             if ( i == 0 )
                 {
                     sql << "WHERE (" << std::endl
-                        << "   ( " << conditions[i] << " )" << std::endl;
+                        << "   ( " << conditions.at( i ) << " )" << std::endl;
                 }
             else
                 {
-                    sql << "OR ( " << conditions[i] << " )" << std::endl;
+                    sql << "OR ( " << conditions.at( i ) << " )" << std::endl;
                 }
         }
 

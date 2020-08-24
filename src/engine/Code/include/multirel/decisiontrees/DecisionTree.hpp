@@ -11,14 +11,12 @@ class DecisionTree
 {
    public:
     DecisionTree(
-        const std::shared_ptr<const std::vector<strings::String>> &_categories,
         const std::shared_ptr<const descriptors::TreeHyperparameters>
             &_tree_hyperparameters,
         const Poco::JSON::Object &_json_obj );
 
     DecisionTree(
         const std::string &_agg,
-        const std::shared_ptr<const std::vector<strings::String>> &_categories,
         const std::shared_ptr<const descriptors::TreeHyperparameters>
             &_tree_hyperparameters,
         const size_t _ix_perip_used,
@@ -61,7 +59,9 @@ class DecisionTree
     /// Extracts the SQL statement underlying the tree
     /// as a string
     std::string to_sql(
-        const std::string _feature_num, const bool _use_timestamps ) const;
+        const std::vector<strings::String> &_categories,
+        const std::string _feature_num,
+        const bool _use_timestamps ) const;
 
     /// Transforms a set of raw data into extracted features
     std::vector<Float> transform(

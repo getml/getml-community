@@ -90,13 +90,11 @@ class AbstractFeatureLearner
     /// Return model as a JSON Object.
     virtual Poco::JSON::Object to_json_obj( const bool _schema_only ) const = 0;
 
-    /// Returns model as a JSON Object in a form that the monitor can
-    /// understand.
-    virtual Poco::JSON::Object to_monitor( const std::string& _name ) const = 0;
-
     /// Return features as SQL code.
     virtual std::vector<std::string> to_sql(
-        const std::string& _prefix, const bool _subfeatures ) const = 0;
+        const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const std::string& _prefix,
+        const bool _subfeatures ) const = 0;
 
     /// Generate features.
     virtual containers::Features transform(

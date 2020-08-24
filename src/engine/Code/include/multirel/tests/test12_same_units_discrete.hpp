@@ -54,12 +54,12 @@ void test12_same_units_discrete( std::filesystem::path _test_path )
 
     const auto peripheral_df = multirel::containers::DataFrame(
         {},
-        {discrete_peripheral_col},
-        {join_keys_peripheral_col},
+        { discrete_peripheral_col },
+        { join_keys_peripheral_col },
         "PERIPHERAL",
         {},
         {},
-        {time_stamps_peripheral_col} );
+        { time_stamps_peripheral_col } );
 
     // ------------------------------------------------------------------------
     // Build population table.
@@ -105,12 +105,12 @@ void test12_same_units_discrete( std::filesystem::path _test_path )
 
     const auto population_df = multirel::containers::DataFrame(
         {},
-        {discrete_population_col},
-        {join_keys_population_col},
+        { discrete_population_col },
+        { join_keys_population_col },
         "POPULATION",
         {},
-        {target_population_col},
-        {time_stamps_population_col} );
+        { target_population_col },
+        { time_stamps_population_col } );
 
     // ---------------------------------------------
     // Define targets.
@@ -148,7 +148,7 @@ void test12_same_units_discrete( std::filesystem::path _test_path )
             *population_json );
 
     const auto peripheral = std::make_shared<std::vector<std::string>>(
-        std::vector<std::string>{"PERIPHERAL"} );
+        std::vector<std::string>{ "PERIPHERAL" } );
 
     // ------------------------------------------------------------------------
     // Load hyperparameters.
@@ -169,15 +169,15 @@ void test12_same_units_discrete( std::filesystem::path _test_path )
 
     const auto encoding = std::make_shared<const std::vector<strings::String>>(
         std::vector<strings::String>(
-            {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"} ) );
+            { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10" } ) );
 
     auto model = multirel::ensemble::DecisionTreeEnsemble(
-        encoding, hyperparameters, peripheral, population );
+        hyperparameters, peripheral, population );
 
     // ------------------------------------------------------------------------
     // Fit model.
 
-    model.fit( population_df, {peripheral_df} );
+    model.fit( population_df, { peripheral_df } );
 
     model.save( tmp_filename_json );
 
@@ -185,14 +185,15 @@ void test12_same_units_discrete( std::filesystem::path _test_path )
     // Express as SQL code.
 
     std::ofstream sql( tmp_filename_sql );
-    const auto vec = model.to_sql();
+    const auto vec = model.to_sql( encoding );
     for ( const auto& str : vec ) sql << str;
     sql.close();
 
     // ------------------------------------------------------------------------
     // Generate predictions.
 
-    const auto predictions = model.transform( population_df, {peripheral_df} );
+    const auto predictions =
+        model.transform( population_df, { peripheral_df } );
 
     for ( size_t j = 0; j < predictions.size(); ++j )
         {
