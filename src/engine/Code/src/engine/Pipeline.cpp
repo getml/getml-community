@@ -102,7 +102,7 @@ std::map<std::string, containers::DataFrame> Pipeline::apply_preprocessors(
         {
             assert_true( p );
 
-            p->transform( _cmd, &data_frames );
+            p->transform( _cmd, impl_.categories_, &data_frames );
         }
 
     return data_frames;
@@ -1131,7 +1131,7 @@ std::map<std::string, containers::DataFrame> Pipeline::fit_preprocessors(
         {
             assert_true( p );
 
-            p->fit_transform( _cmd, &data_frames );
+            p->fit_transform( _cmd, impl_.categories_, &data_frames );
         }
 
     preprocessors_ = preprocessors;
@@ -1377,8 +1377,7 @@ Pipeline::init_preprocessors(
 
             assert_true( ptr );
 
-            vec.push_back( preprocessors::PreprocessorParser::parse(
-                impl_.categories_, *ptr ) );
+            vec.push_back( preprocessors::PreprocessorParser::parse( *ptr ) );
         }
 
     return vec;
@@ -2184,7 +2183,9 @@ containers::Features Pipeline::select_autofeatures(
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object Pipeline::to_monitor( const std::string& _name ) const
+Poco::JSON::Object Pipeline::to_monitor(
+    const std::shared_ptr<const std::vector<strings::String>>& _categories,
+    const std::string& _name ) const
 {
     auto feature_learners = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
 
@@ -2214,7 +2215,7 @@ Poco::JSON::Object Pipeline::to_monitor( const std::string& _name ) const
 
     json_obj.set( "scores_", scores().to_json_obj() );
 
-    json_obj.set( "sql_", to_sql_arr() );
+    json_obj.set( "sql_", to_sql_arr( _categories ) );
 
     json_obj.set( "tags_", JSON::get_array( obj(), "tags_" ) );
 
@@ -2225,10 +2226,10 @@ Poco::JSON::Object Pipeline::to_monitor( const std::string& _name ) const
 
 // ----------------------------------------------------------------------------
 
-std::string Pipeline::to_sql() const
+std::string Pipeline::to_sql(
+    const std::shared_ptr<const std::vector<strings::String>>& _categories )
+    const
 {
-    assert_true( impl_.categories_ );
-
     std::string sql;
 
     size_t offset = 0;
@@ -2237,10 +2238,8 @@ std::string Pipeline::to_sql() const
         {
             const auto& fe = feature_learners_.at( i );
 
-            const auto vec = fe->to_sql(
-                impl_.categories_->vector(),
-                std::to_string( i + 1 ) + "_",
-                true );
+            const auto vec =
+                fe->to_sql( _categories, std::to_string( i + 1 ) + "_", true );
 
             for ( const auto& str : vec )
                 {
@@ -2255,7 +2254,9 @@ std::string Pipeline::to_sql() const
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Array::Ptr Pipeline::to_sql_arr() const
+Poco::JSON::Array::Ptr Pipeline::to_sql_arr(
+    const std::shared_ptr<const std::vector<strings::String>>& _categories )
+    const
 {
     assert_true( impl_.categories_ );
 
@@ -2272,10 +2273,8 @@ Poco::JSON::Array::Ptr Pipeline::to_sql_arr() const
 
             const auto& index = predictor_impl().autofeatures().at( i );
 
-            const auto vec = fe->to_sql(
-                impl_.categories_->vector(),
-                std::to_string( i + 1 ) + "_",
-                false );
+            const auto vec =
+                fe->to_sql( _categories, std::to_string( i + 1 ) + "_", false );
 
             for ( const auto ix : index )
                 {

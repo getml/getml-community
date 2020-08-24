@@ -24,11 +24,13 @@ class Preprocessor
     /// Fits the preprocessor. Returns the transformed data frames.
     virtual void fit_transform(
         const Poco::JSON::Object& _cmd,
+        const std::shared_ptr<containers::Encoding>& _categories,
         std::map<std::string, containers::DataFrame>* _data_frames ) = 0;
 
     /// Generates the new column.
     virtual void transform(
         const Poco::JSON::Object& _cmd,
+        const std::shared_ptr<const containers::Encoding> _categories,
         std::map<std::string, containers::DataFrame>* _data_frames ) const = 0;
 
     /// Expresses the preprocessor as a JSON object.

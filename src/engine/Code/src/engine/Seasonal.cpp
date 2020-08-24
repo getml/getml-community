@@ -7,9 +7,10 @@ namespace preprocessors
 // ----------------------------------------------------
 
 std::optional<containers::Column<Int>> Seasonal::extract_hour(
-    const containers::Column<Float>& _col )
+    const containers::Column<Float>& _col,
+    containers::Encoding* _categories ) const
 {
-    auto result = to_categorical( _col, utils::Time::hour );
+    auto result = to_categorical( _col, utils::Time::hour, _categories );
 
     result.set_name( "$GETML_HOUR" + _col.name() );
     result.set_unit( "hour" );
@@ -25,9 +26,10 @@ std::optional<containers::Column<Int>> Seasonal::extract_hour(
 // ----------------------------------------------------
 
 containers::Column<Int> Seasonal::extract_hour(
+    const containers::Encoding& _categories,
     const containers::Column<Float>& _col ) const
 {
-    auto result = to_categorical( _col, utils::Time::hour );
+    auto result = to_categorical( _categories, _col, utils::Time::hour );
 
     result.set_name( "$GETML_HOUR" + _col.name() );
     result.set_unit( "hour" );
@@ -38,9 +40,10 @@ containers::Column<Int> Seasonal::extract_hour(
 // ----------------------------------------------------
 
 std::optional<containers::Column<Int>> Seasonal::extract_minute(
-    const containers::Column<Float>& _col )
+    const containers::Column<Float>& _col,
+    containers::Encoding* _categories ) const
 {
-    auto result = to_categorical( _col, utils::Time::minute );
+    auto result = to_categorical( _col, utils::Time::minute, _categories );
 
     result.set_name( "$GETML_MINUTE" + _col.name() );
     result.set_unit( "minute" );
@@ -56,9 +59,10 @@ std::optional<containers::Column<Int>> Seasonal::extract_minute(
 // ----------------------------------------------------
 
 containers::Column<Int> Seasonal::extract_minute(
+    const containers::Encoding& _categories,
     const containers::Column<Float>& _col ) const
 {
-    auto result = to_categorical( _col, utils::Time::hour );
+    auto result = to_categorical( _categories, _col, utils::Time::hour );
 
     result.set_name( "$GETML_MINUTE" + _col.name() );
     result.set_unit( "minute" );
@@ -69,9 +73,10 @@ containers::Column<Int> Seasonal::extract_minute(
 // ----------------------------------------------------
 
 std::optional<containers::Column<Int>> Seasonal::extract_month(
-    const containers::Column<Float>& _col )
+    const containers::Column<Float>& _col,
+    containers::Encoding* _categories ) const
 {
-    auto result = to_categorical( _col, utils::Time::month );
+    auto result = to_categorical( _col, utils::Time::month, _categories );
 
     result.set_name( "$GETML_MONTH" + _col.name() );
     result.set_unit( "month" );
@@ -87,9 +92,10 @@ std::optional<containers::Column<Int>> Seasonal::extract_month(
 // ----------------------------------------------------
 
 containers::Column<Int> Seasonal::extract_month(
+    const containers::Encoding& _categories,
     const containers::Column<Float>& _col ) const
 {
-    auto result = to_categorical( _col, utils::Time::month );
+    auto result = to_categorical( _categories, _col, utils::Time::month );
 
     result.set_name( "$GETML_MONTH" + _col.name() );
     result.set_unit( "month" );
@@ -100,9 +106,10 @@ containers::Column<Int> Seasonal::extract_month(
 // ----------------------------------------------------
 
 std::optional<containers::Column<Int>> Seasonal::extract_weekday(
-    const containers::Column<Float>& _col )
+    const containers::Column<Float>& _col,
+    containers::Encoding* _categories ) const
 {
-    auto result = to_categorical( _col, utils::Time::weekday );
+    auto result = to_categorical( _col, utils::Time::weekday, _categories );
 
     result.set_name( "$GETML_WEEKDAY" + _col.name() );
     result.set_unit( "weekday" );
@@ -118,9 +125,10 @@ std::optional<containers::Column<Int>> Seasonal::extract_weekday(
 // ----------------------------------------------------
 
 containers::Column<Int> Seasonal::extract_weekday(
+    const containers::Encoding& _categories,
     const containers::Column<Float>& _col ) const
 {
-    auto result = to_categorical( _col, utils::Time::weekday );
+    auto result = to_categorical( _categories, _col, utils::Time::weekday );
 
     result.set_name( "$GETML_WEEKDAY" + _col.name() );
     result.set_unit( "weekday" );
@@ -163,20 +171,29 @@ containers::Column<Float> Seasonal::extract_year(
 
 void Seasonal::fit_transform(
     const Poco::JSON::Object& _cmd,
+    const std::shared_ptr<containers::Encoding>& _categories,
     std::map<std::string, containers::DataFrame>* _data_frames )
 {
+    assert_true( _categories );
+
     auto [population_df, peripheral_dfs] =
         PreprocessorImpl::extract_data_frames( _cmd, *_data_frames );
 
     population_df = fit_transform_df(
-        population_df, helpers::ColumnDescription::POPULATION, 0 );
+        population_df,
+        helpers::ColumnDescription::POPULATION,
+        0,
+        _categories.get() );
 
     for ( size_t i = 0; i < peripheral_dfs.size(); ++i )
         {
             auto& df = peripheral_dfs.at( i );
 
             df = fit_transform_df(
-                df, helpers::ColumnDescription::PERIPHERAL, i );
+                df,
+                helpers::ColumnDescription::PERIPHERAL,
+                i,
+                _categories.get() );
         }
 
     PreprocessorImpl::insert_data_frames(
@@ -188,7 +205,8 @@ void Seasonal::fit_transform(
 containers::DataFrame Seasonal::fit_transform_df(
     const containers::DataFrame& _df,
     const std::string& _marker,
-    const size_t _table )
+    const size_t _table,
+    containers::Encoding* _categories )
 {
     auto df = _df;
 
@@ -200,7 +218,7 @@ containers::DataFrame Seasonal::fit_transform_df(
 
             // -----------------------------------
 
-            auto col = extract_hour( ts );
+            auto col = extract_hour( ts, _categories );
 
             if ( col )
                 {
@@ -211,7 +229,7 @@ containers::DataFrame Seasonal::fit_transform_df(
 
             // -----------------------------------
 
-            col = extract_minute( ts );
+            col = extract_minute( ts, _categories );
 
             if ( col )
                 {
@@ -223,7 +241,7 @@ containers::DataFrame Seasonal::fit_transform_df(
 
             // -----------------------------------
 
-            col = extract_month( ts );
+            col = extract_month( ts, _categories );
 
             if ( col )
                 {
@@ -235,7 +253,7 @@ containers::DataFrame Seasonal::fit_transform_df(
 
             // -----------------------------------
 
-            col = extract_weekday( ts );
+            col = extract_weekday( ts, _categories );
 
             if ( col )
                 {
@@ -266,7 +284,7 @@ containers::DataFrame Seasonal::fit_transform_df(
 
 Seasonal Seasonal::from_json_obj( const Poco::JSON::Object& _obj ) const
 {
-    Seasonal that( categories_ );
+    Seasonal that;
 
     if ( _obj.has( "hour_" ) )
         {
@@ -304,10 +322,11 @@ Seasonal Seasonal::from_json_obj( const Poco::JSON::Object& _obj ) const
 // ----------------------------------------------------
 
 containers::Column<Int> Seasonal::to_int(
-    const containers::Column<Float>& _col )
+    const containers::Column<Float>& _col,
+    containers::Encoding* _categories ) const
 {
-    const auto to_str = [this]( const Float val ) {
-        return categories()[io::Parser::to_string( val )];
+    const auto to_str = [_categories]( const Float val ) {
+        return ( *_categories )[io::Parser::to_string( val )];
     };
 
     auto result = containers::Column<Int>( _col.nrows() );
@@ -320,10 +339,11 @@ containers::Column<Int> Seasonal::to_int(
 // ----------------------------------------------------
 
 containers::Column<Int> Seasonal::to_int(
+    const containers::Encoding& _categories,
     const containers::Column<Float>& _col ) const
 {
-    const auto to_str = [this]( const Float val ) {
-        return categories()[io::Parser::to_string( val )];
+    const auto to_str = [&_categories]( const Float val ) {
+        return _categories[io::Parser::to_string( val )];
     };
 
     auto result = containers::Column<Int>( _col.nrows() );
@@ -356,19 +376,21 @@ Poco::JSON::Object::Ptr Seasonal::to_json_obj() const
 
 void Seasonal::transform(
     const Poco::JSON::Object& _cmd,
+    const std::shared_ptr<const containers::Encoding> _categories,
     std::map<std::string, containers::DataFrame>* _data_frames ) const
 {
     auto [population_df, peripheral_dfs] =
         PreprocessorImpl::extract_data_frames( _cmd, *_data_frames );
 
     population_df = transform_df(
-        population_df, helpers::ColumnDescription::POPULATION, 0 );
+        _categories, population_df, helpers::ColumnDescription::POPULATION, 0 );
 
     for ( size_t i = 0; i < peripheral_dfs.size(); ++i )
         {
             auto& df = peripheral_dfs.at( i );
 
-            df = transform_df( df, helpers::ColumnDescription::PERIPHERAL, i );
+            df = transform_df(
+                _categories, df, helpers::ColumnDescription::PERIPHERAL, i );
         }
 
     PreprocessorImpl::insert_data_frames(
@@ -378,6 +400,7 @@ void Seasonal::transform(
 // ----------------------------------------------------
 
 containers::DataFrame Seasonal::transform_df(
+    const containers::Encoding& _categories,
     const containers::DataFrame& _df,
     const std::string& _marker,
     const size_t _table ) const
@@ -392,7 +415,7 @@ containers::DataFrame Seasonal::transform_df(
 
     for ( const auto& name : names )
         {
-            const auto col = extract_hour( df.time_stamp( name ) );
+            const auto col = extract_hour( _categories, df.time_stamp( name ) );
 
             df.add_int_column( col, containers::DataFrame::ROLE_CATEGORICAL );
         }
@@ -403,7 +426,8 @@ containers::DataFrame Seasonal::transform_df(
 
     for ( const auto& name : names )
         {
-            const auto col = extract_minute( df.time_stamp( name ) );
+            const auto col =
+                extract_minute( _categories, df.time_stamp( name ) );
 
             df.add_int_column( col, containers::DataFrame::ROLE_CATEGORICAL );
         }
@@ -414,7 +438,8 @@ containers::DataFrame Seasonal::transform_df(
 
     for ( const auto& name : names )
         {
-            const auto col = extract_month( df.time_stamp( name ) );
+            const auto col =
+                extract_month( _categories, df.time_stamp( name ) );
 
             df.add_int_column( col, containers::DataFrame::ROLE_CATEGORICAL );
         }
@@ -425,7 +450,8 @@ containers::DataFrame Seasonal::transform_df(
 
     for ( const auto& name : names )
         {
-            const auto col = extract_weekday( df.time_stamp( name ) );
+            const auto col =
+                extract_weekday( _categories, df.time_stamp( name ) );
 
             df.add_int_column( col, containers::DataFrame::ROLE_CATEGORICAL );
         }

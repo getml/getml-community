@@ -78,10 +78,14 @@ class Pipeline
         Poco::Net::StreamSocket* _socket );
 
     /// Expresses the Pipeline in a form the monitor can understand.
-    Poco::JSON::Object to_monitor( const std::string& _name ) const;
+    Poco::JSON::Object to_monitor(
+        const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const std::string& _name ) const;
 
     /// Express features as SQL code
-    std::string to_sql() const;
+    std::string to_sql(
+        const std::shared_ptr<const std::vector<strings::String>>& _categories )
+        const;
 
     // --------------------------------------------------------
 
@@ -346,7 +350,9 @@ class Pipeline
         const predictors::PredictorImpl& _predictor_impl ) const;
 
     /// Returns a the SQL features.
-    Poco::JSON::Array::Ptr to_sql_arr() const;
+    Poco::JSON::Array::Ptr to_sql_arr(
+        const std::shared_ptr<const std::vector<strings::String>>& _categories )
+        const;
 
     /// Returns a transposed version Poco::JSON::Array::Ptr of the original
     /// vector-of-vectors.

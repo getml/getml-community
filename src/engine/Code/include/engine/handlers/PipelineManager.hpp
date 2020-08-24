@@ -196,6 +196,13 @@ class PipelineManager
 
    private:
     /// Trivial accessor
+    const containers::Encoding& categories() const
+    {
+        assert_true( categories_ );
+        return *categories_;
+    }
+
+    /// Trivial accessor
     std::shared_ptr<database::Connector> connector( const std::string& _name )
     {
         assert_true( database_manager_ );

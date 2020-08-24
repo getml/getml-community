@@ -110,7 +110,7 @@ void PipelineManager::deploy(
 
     set_pipeline( _name, pipeline );
 
-    post_pipeline( pipeline.to_monitor( _name ) );
+    post_pipeline( pipeline.to_monitor( categories().vector(), _name ) );
 
     communication::Sender::send_string( "Success!", _socket );
 }
@@ -270,7 +270,7 @@ void PipelineManager::fit(
 
     // -------------------------------------------------------
 
-    post_pipeline( pipeline.to_monitor( _name ) );
+    post_pipeline( pipeline.to_monitor( categories().vector(), _name ) );
 
     communication::Sender::send_string( "Trained pipeline.", _socket );
 
@@ -536,7 +536,7 @@ void PipelineManager::score(
 
     set_pipeline( _name, *_pipeline );
 
-    post_pipeline( _pipeline->to_monitor( _name ) );
+    post_pipeline( _pipeline->to_monitor( categories().vector(), _name ) );
 
     communication::Sender::send_string( JSON::stringify( scores ), _socket );
 
@@ -723,7 +723,8 @@ void PipelineManager::to_sql(
 
     communication::Sender::send_string( "Found!", _socket );
 
-    communication::Sender::send_string( pipeline.to_sql(), _socket );
+    communication::Sender::send_string(
+        pipeline.to_sql( categories().vector() ), _socket );
 }
 
 // ------------------------------------------------------------------------

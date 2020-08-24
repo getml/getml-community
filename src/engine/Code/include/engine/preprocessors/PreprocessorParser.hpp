@@ -11,7 +11,6 @@ struct PreprocessorParser
 {
     /// Returns the correct preprocessor to use based on the JSON object.
     static std::shared_ptr<Preprocessor> parse(
-        const std::shared_ptr<containers::Encoding>& _categories,
         const Poco::JSON::Object& _obj );
 };
 

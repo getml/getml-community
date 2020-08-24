@@ -167,7 +167,8 @@ void ProjectManager::copy_pipeline(
 
     set_pipeline( _name, other_pipeline );
 
-    post( "pipeline", other_pipeline.to_monitor( _name ) );
+    post(
+        "pipeline", other_pipeline.to_monitor( categories().vector(), _name ) );
 
     communication::Sender::send_string( "Success!", _socket );
 }
@@ -447,10 +448,6 @@ void ProjectManager::load_all_hyperopts()
                         hyperparam::Hyperopt( it->path() + "/" );
 
                     set_hyperopt( it.name(), hyperopt );
-
-                    // TODO
-                    /*monitor_->send(
-                        "posthyperopt", pipeline.to_monitor( it.name() ) );*/
                 }
             catch ( std::exception& e )
                 {
@@ -496,7 +493,10 @@ void ProjectManager::load_all_pipelines()
 
                     set_pipeline( it.name(), pipeline );
 
-                    post( "pipeline", pipeline.to_monitor( it.name() ) );
+                    post(
+                        "pipeline",
+                        pipeline.to_monitor(
+                            categories().vector(), it.name() ) );
                 }
             catch ( std::exception& e )
                 {
@@ -571,7 +571,7 @@ void ProjectManager::load_pipeline(
 
     set_pipeline( _name, pipeline );
 
-    post( "pipeline", pipeline.to_monitor( _name ) );
+    post( "pipeline", pipeline.to_monitor( categories().vector(), _name ) );
 
     engine::communication::Sender::send_string( "Success!", _socket );
 }

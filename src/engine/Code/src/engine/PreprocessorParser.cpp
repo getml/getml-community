@@ -7,14 +7,13 @@ namespace preprocessors
 // ----------------------------------------------------
 
 std::shared_ptr<Preprocessor> PreprocessorParser::parse(
-    const std::shared_ptr<containers::Encoding>& _categories,
     const Poco::JSON::Object& _obj )
 {
     const auto type = jsonutils::JSON::get_value<std::string>( _obj, "type_" );
 
     if ( type == Preprocessor::SEASONAL )
         {
-            return std::make_shared<Seasonal>( _categories, _obj );
+            return std::make_shared<Seasonal>( _obj );
         }
 
     throw std::invalid_argument(
