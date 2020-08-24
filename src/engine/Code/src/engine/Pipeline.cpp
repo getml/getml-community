@@ -12,7 +12,9 @@ Pipeline::Pipeline( const Poco::JSON::Object& _obj )
 {
     // This won't to anything - the point it to make sure that it can be
     // parsed correctly.
-    init_feature_learners( 1, df_fingerprints() );
+    init_preprocessors( df_fingerprints() );
+
+    init_feature_learners( 1, preprocessor_fingerprints() );
 
     init_predictors(
         "feature_selectors_",
@@ -481,7 +483,7 @@ std::vector<Poco::JSON::Object::Ptr> Pipeline::extract_fe_fingerprints() const
 {
     if ( feature_learners_.size() == 0 )
         {
-            return df_fingerprints();
+            return preprocessor_fingerprints();
         }
 
     std::vector<Poco::JSON::Object::Ptr> fe_fingerprints;
@@ -532,6 +534,27 @@ void Pipeline::extract_importance_values(
         }
 
     _all_column_importances->push_back( importance_values );
+}
+
+// ----------------------------------------------------------------------
+
+std::vector<Poco::JSON::Object::Ptr>
+Pipeline::extract_preprocessor_fingerprints() const
+{
+    if ( preprocessors_.size() == 0 )
+        {
+            return df_fingerprints();
+        }
+
+    std::vector<Poco::JSON::Object::Ptr> fingerprints;
+
+    for ( const auto& p : preprocessors_ )
+        {
+            assert_true( p );
+            fingerprints.push_back( p->fingerprint() );
+        }
+
+    return fingerprints;
 }
 
 // ----------------------------------------------------------------------
@@ -976,7 +999,7 @@ void Pipeline::fit_feature_learners(
     Poco::Net::StreamSocket* _socket )
 {
     auto [feature_learners, target_nums] =
-        init_feature_learners( num_targets(), df_fingerprints() );
+        init_feature_learners( num_targets(), preprocessor_fingerprints() );
 
     assert_true( feature_learners.size() == target_nums.size() );
 
@@ -1137,6 +1160,8 @@ std::map<std::string, containers::DataFrame> Pipeline::fit_preprocessors(
 
     preprocessors_ = preprocessors;
 
+    preprocessor_fingerprints() = extract_preprocessor_fingerprints();
+
     return data_frames;
 }
 
@@ -1222,7 +1247,7 @@ std::pair<
     std::vector<Int>>
 Pipeline::init_feature_learners(
     const size_t _num_targets,
-    const std::vector<Poco::JSON::Object::Ptr>& _df_fingerprints ) const
+    const std::vector<Poco::JSON::Object::Ptr>& _dependencies ) const
 {
     // ----------------------------------------------------------------------
 
@@ -1259,7 +1284,7 @@ Pipeline::init_feature_learners(
 
             auto new_feature_learner =
                 featurelearners::FeatureLearnerParser::parse(
-                    *ptr, population, peripheral, _df_fingerprints );
+                    *ptr, population, peripheral, _dependencies );
 
             // --------------------------------------------------------------
 
@@ -1281,7 +1306,7 @@ Pipeline::init_feature_learners(
 
                             obj->set( "target_num_", t );
 
-                            auto dependencies = _df_fingerprints;
+                            auto dependencies = _dependencies;
 
                             dependencies.push_back( obj );
 
@@ -1378,7 +1403,8 @@ Pipeline::init_preprocessors(
 
             assert_true( ptr );
 
-            vec.push_back( preprocessors::PreprocessorParser::parse( *ptr ) );
+            vec.push_back( preprocessors::PreprocessorParser::parse(
+                *ptr, df_fingerprints() ) );
         }
 
     return vec;
@@ -1546,11 +1572,11 @@ Pipeline Pipeline::load(
     assert_true( _fe_tracker );
 
     pipeline.feature_learners_ = std::get<0>( pipeline.init_feature_learners(
-        pipeline.num_targets(), pipeline.df_fingerprints() ) );
+        pipeline.num_targets(), pipeline.preprocessor_fingerprints() ) );
 
     for ( size_t i = 0; i < pipeline.feature_learners_.size(); ++i )
         {
-            auto& fe = pipeline.feature_learners_[i];
+            auto& fe = pipeline.feature_learners_.at( i );
 
             assert_true( fe );
 

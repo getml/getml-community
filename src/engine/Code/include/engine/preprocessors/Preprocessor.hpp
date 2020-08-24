@@ -21,6 +21,10 @@ class Preprocessor
     /// Returns a deep copy.
     virtual std::shared_ptr<Preprocessor> clone() const = 0;
 
+    /// Returns the fingerprint of the feature learner (necessary to build
+    /// the dependency graphs).
+    virtual Poco::JSON::Object::Ptr fingerprint() const = 0;
+
     /// Fits the preprocessor. Returns the transformed data frames.
     virtual void fit_transform(
         const Poco::JSON::Object& _cmd,

@@ -12,7 +12,10 @@ class Seasonal : public Preprocessor
    public:
     Seasonal() {}
 
-    Seasonal( const Poco::JSON::Object& _obj )
+    Seasonal(
+        const Poco::JSON::Object& _obj,
+        const std::vector<Poco::JSON::Object::Ptr>& _dependencies )
+        : dependencies_( _dependencies )
     {
         *this = from_json_obj( _obj );
     }
@@ -20,14 +23,18 @@ class Seasonal : public Preprocessor
     ~Seasonal() = default;
 
    public:
-    /// Expresses the Seasonal preprocessor as a JSON object.
-    Poco::JSON::Object::Ptr to_json_obj() const final;
+    /// Returns the fingerprint of the preprocessor (necessary to build
+    /// the dependency graphs).
+    Poco::JSON::Object::Ptr fingerprint() const final;
 
     /// Identifies which features should be extracted from which time stamps.
     void fit_transform(
         const Poco::JSON::Object& _cmd,
         const std::shared_ptr<containers::Encoding>& _categories,
         std::map<std::string, containers::DataFrame>* _data_frames ) final;
+
+    /// Expresses the Seasonal preprocessor as a JSON object.
+    Poco::JSON::Object::Ptr to_json_obj() const final;
 
     /// Transforms the data frames by adding the desired time series
     /// transformations.
@@ -173,6 +180,9 @@ class Seasonal : public Preprocessor
     }
 
    private:
+    /// The dependencies inserted into the the preprocessor.
+    std::vector<Poco::JSON::Object::Ptr> dependencies_;
+
     /// List of all columns to which the hour transformation applies.
     std::vector<std::shared_ptr<helpers::ColumnDescription>> hour_;
 

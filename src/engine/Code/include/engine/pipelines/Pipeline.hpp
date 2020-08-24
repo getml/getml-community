@@ -200,6 +200,10 @@ class Pipeline
         const std::map<helpers::ColumnDescription, Float>& _column_importances,
         std::vector<std::vector<Float>>* _all_column_importances ) const;
 
+    /// Extracts the fingerprints of the preprocessors.
+    std::vector<Poco::JSON::Object::Ptr> extract_preprocessor_fingerprints()
+        const;
+
     /// Extracts the schemata from the data frame used for training.
     std::pair<Poco::JSON::Object::Ptr, Poco::JSON::Array::Ptr> extract_schemata(
         const Poco::JSON::Object& _cmd,
@@ -285,7 +289,7 @@ class Pipeline
         std::vector<Int>>
     init_feature_learners(
         const size_t _num_targets,
-        const std::vector<Poco::JSON::Object::Ptr>& _df_fingerprints ) const;
+        const std::vector<Poco::JSON::Object::Ptr>& _dependencies ) const;
 
     /// Whether the pipeline is used for classification problems
     bool is_classification() const;
@@ -524,6 +528,19 @@ class Pipeline
     {
         throw_unless( impl_.predictor_impl_, "Pipeline has not been fitted." );
         return *impl_.predictor_impl_;
+    }
+
+    /// Trivial accessor
+    std::vector<Poco::JSON::Object::Ptr>& preprocessor_fingerprints()
+    {
+        return impl_.preprocessor_fingerprints_;
+    }
+
+    /// Trivial (const) accessor
+    const std::vector<Poco::JSON::Object::Ptr>& preprocessor_fingerprints()
+        const
+    {
+        return impl_.preprocessor_fingerprints_;
     }
 
     /// Trivial accessor

@@ -77,6 +77,9 @@ struct PipelineImpl
     /// Pimpl for the predictors.
     std::shared_ptr<const predictors::PredictorImpl> predictor_impl_;
 
+    /// The fingerprints of the preprocessor used for fitting.
+    std::vector<Poco::JSON::Object::Ptr> preprocessor_fingerprints_;
+
     /// The scores used to evaluate this pipeline
     metrics::Scores scores_;
 

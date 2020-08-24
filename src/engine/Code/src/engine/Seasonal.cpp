@@ -169,6 +169,18 @@ containers::Column<Float> Seasonal::extract_year(
 
 // ----------------------------------------------------
 
+Poco::JSON::Object::Ptr Seasonal::fingerprint() const
+{
+    auto obj = Poco::JSON::Object::Ptr( new Poco::JSON::Object() );
+
+    obj->set( "type_", "Seasonal" );
+    // obj->set( "dependencies_", JSON::vector_to_array_ptr( dependencies_ ) );
+
+    return obj;
+}
+
+// ----------------------------------------------------
+
 void Seasonal::fit_transform(
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<containers::Encoding>& _categories,
