@@ -368,6 +368,13 @@ class Pipeline
         const Poco::JSON::Object& _cmd,
         const std::map<std::string, containers::DataFrame>& _data_frames );
 
+    /// Moves the temporary folder to its final destination at the end of
+    /// .save(...).
+    void move_tfile(
+        const std::string& _path,
+        const std::string& _name,
+        Poco::TemporaryFile* _tfile ) const;
+
     /// Parses the population name.
     std::shared_ptr<std::string> parse_population() const;
 

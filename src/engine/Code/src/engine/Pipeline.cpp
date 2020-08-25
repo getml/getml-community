@@ -1924,6 +1924,26 @@ void Pipeline::make_predictor_impl(
 
 // ----------------------------------------------------------------------------
 
+void Pipeline::move_tfile(
+    const std::string& _path,
+    const std::string& _name,
+    Poco::TemporaryFile* _tfile ) const
+{
+    auto file = Poco::File( _path + _name );
+
+    // Create all parent directories, if necessary.
+    file.createDirectories();
+
+    // If the actual folder already exists, delete it.
+    file.remove( true );
+
+    _tfile->renameTo( file.path() );
+
+    _tfile->keep();
+}
+
+// ----------------------------------------------------------------------------
+
 Pipeline& Pipeline::operator=( const Pipeline& _other )
 {
     Pipeline temp( _other );
@@ -2077,17 +2097,7 @@ void Pipeline::save( const std::string& _path, const std::string& _name ) const
 
     // ------------------------------------------------------------------
 
-    auto file = Poco::File( _path + _name );
-
-    // Create all parent directories, if necessary.
-    file.createDirectories();
-
-    // If the actual folder already exists, delete it.
-    file.remove( true );
-
-    tfile.renameTo( file.path() );
-
-    tfile.keep();
+    move_tfile( _path, _name, &tfile );
 
     // ------------------------------------------------------------------
 }
