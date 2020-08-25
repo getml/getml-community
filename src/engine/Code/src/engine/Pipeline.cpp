@@ -216,6 +216,7 @@ void Pipeline::check(
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<const communication::Logger>& _logger,
     const std::map<std::string, containers::DataFrame>& _data_frames,
+    const std::shared_ptr<containers::Encoding>& _categories,
     Poco::Net::StreamSocket* _socket ) const
 {
     // ----------------------------------------------------------------------
@@ -227,22 +228,11 @@ void Pipeline::check(
 
     // -------------------------------------------------------------------------
 
-    const auto population_name =
-        JSON::get_value<std::string>( _cmd, "population_name_" );
+    const auto [_, data_frames] =
+        fit_transform_preprocessors( _cmd, _data_frames, _categories, _socket );
 
-    const auto peripheral_df_names = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "peripheral_names_" ) );
-
-    const auto population = utils::Getter::get( population_name, _data_frames );
-
-    auto peripheral = std::vector<containers::DataFrame>();
-
-    for ( const auto& df_name : peripheral_df_names )
-        {
-            const auto df = utils::Getter::get( df_name, _data_frames );
-
-            peripheral.push_back( df );
-        }
+    const auto [population, peripheral] =
+        extract_data_frames( _cmd, data_frames );
 
     // -------------------------------------------------------------------------
 
@@ -447,31 +437,48 @@ void Pipeline::extract_coldesc(
         }
 }
 
+// ----------------------------------------------------------------------------
+
+std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
+Pipeline::extract_data_frames(
+    const Poco::JSON::Object& _cmd,
+    const std::map<std::string, containers::DataFrame>& _data_frames ) const
+{
+    const auto population_name =
+        JSON::get_value<std::string>( _cmd, "population_name_" );
+
+    const auto peripheral_names = JSON::array_to_vector<std::string>(
+        JSON::get_array( _cmd, "peripheral_names_" ) );
+
+    const auto population = utils::Getter::get( population_name, _data_frames );
+
+    auto peripheral = std::vector<containers::DataFrame>();
+
+    for ( const auto& df_name : peripheral_names )
+        {
+            const auto df = utils::Getter::get( df_name, _data_frames );
+
+            peripheral.push_back( df );
+        }
+
+    return std::make_pair( population, peripheral );
+}
+
 // ----------------------------------------------------------------------
 
 std::vector<Poco::JSON::Object::Ptr> Pipeline::extract_df_fingerprints(
     const Poco::JSON::Object& _cmd,
     const std::map<std::string, containers::DataFrame>& _data_frames ) const
 {
-    const auto peripheral_names = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "peripheral_names_" ) );
+    const auto [population, peripheral] =
+        extract_data_frames( _cmd, _data_frames );
 
-    const auto population_name =
-        JSON::get_value<std::string>( _cmd, "population_name_" );
+    std::vector<Poco::JSON::Object::Ptr> df_fingerprints = {
+        population.fingerprint() };
 
-    std::vector<Poco::JSON::Object::Ptr> df_fingerprints;
-
-    const auto population_fingerprint =
-        utils::Getter::get( population_name, _data_frames ).fingerprint();
-
-    df_fingerprints.push_back( population_fingerprint );
-
-    for ( const auto& name : peripheral_names )
+    for ( const auto& df : peripheral )
         {
-            const auto fingerprint =
-                utils::Getter::get( name, _data_frames ).fingerprint();
-
-            df_fingerprints.push_back( fingerprint );
+            df_fingerprints.push_back( df.fingerprint() );
         }
 
     return df_fingerprints;
@@ -912,8 +919,12 @@ void Pipeline::fit(
 
     // -------------------------------------------------------------------------
 
-    const auto data_frames =
-        fit_preprocessors( _cmd, _data_frames, _categories, _socket );
+    const auto [preprocessors, data_frames] =
+        fit_transform_preprocessors( _cmd, _data_frames, _categories, _socket );
+
+    preprocessors_ = preprocessors;
+
+    preprocessor_fingerprints() = extract_preprocessor_fingerprints();
 
     // -------------------------------------------------------------------------
 
@@ -1141,11 +1152,14 @@ void Pipeline::fit_predictors(
 
 // ----------------------------------------------------------------------------
 
-std::map<std::string, containers::DataFrame> Pipeline::fit_preprocessors(
+std::pair<
+    std::vector<std::shared_ptr<preprocessors::Preprocessor>>,
+    std::map<std::string, containers::DataFrame>>
+Pipeline::fit_transform_preprocessors(
     const Poco::JSON::Object& _cmd,
     const std::map<std::string, containers::DataFrame>& _data_frames,
     const std::shared_ptr<containers::Encoding>& _categories,
-    Poco::Net::StreamSocket* _socket )
+    Poco::Net::StreamSocket* _socket ) const
 {
     auto data_frames = _data_frames;
 
@@ -1158,11 +1172,7 @@ std::map<std::string, containers::DataFrame> Pipeline::fit_preprocessors(
             p->fit_transform( _cmd, _categories, &data_frames );
         }
 
-    preprocessors_ = preprocessors;
-
-    preprocessor_fingerprints() = extract_preprocessor_fingerprints();
-
-    return data_frames;
+    return std::make_pair( preprocessors, data_frames );
 }
 
 // ----------------------------------------------------------------------------

@@ -28,7 +28,10 @@ void PipelineManager::check(
 
     multithreading::ReadLock read_lock( read_write_lock_ );
 
-    pipeline.check( _cmd, logger_, data_frames(), _socket );
+    const auto local_categories =
+        std::make_shared<containers::Encoding>( categories_ );
+
+    pipeline.check( _cmd, logger_, data_frames(), local_categories, _socket );
 
     // -------------------------------------------------------
 }

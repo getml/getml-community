@@ -41,6 +41,7 @@ class Pipeline
         const Poco::JSON::Object& _cmd,
         const std::shared_ptr<const communication::Logger>& _logger,
         const std::map<std::string, containers::DataFrame>& _data_frames,
+        const std::shared_ptr<containers::Encoding>& _categories,
         Poco::Net::StreamSocket* _socket ) const;
 
     /// Fit the pipeline.
@@ -177,10 +178,17 @@ class Pipeline
         const std::vector<std::vector<Float>>& _f_importances,
         std::vector<helpers::ImportanceMaker>* _importance_makers ) const;
 
-    /// Extract column names from the column importances.
+    /// Extracts column names from the column importances.
     void extract_coldesc(
         const std::map<helpers::ColumnDescription, Float>& _column_importances,
         std::vector<helpers::ColumnDescription>* _coldesc ) const;
+
+    /// Extracts the data frames referenced in the command _cmd.
+    std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
+    extract_data_frames(
+        const Poco::JSON::Object& _cmd,
+        const std::map<std::string, containers::DataFrame>& _data_frames )
+        const;
 
     /// Extracts the fingerprints of all data frames that are inserted into
     /// this.
@@ -232,11 +240,14 @@ class Pipeline
         Poco::Net::StreamSocket* _socket ) const;
 
     /// Fits the preprocessors. Returns a map of transformed data frames.
-    std::map<std::string, containers::DataFrame> fit_preprocessors(
+    std::pair<
+        std::vector<std::shared_ptr<preprocessors::Preprocessor>>,
+        std::map<std::string, containers::DataFrame>>
+    fit_transform_preprocessors(
         const Poco::JSON::Object& _cmd,
         const std::map<std::string, containers::DataFrame>& _data_frames,
         const std::shared_ptr<containers::Encoding>& _categories,
-        Poco::Net::StreamSocket* _socket );
+        Poco::Net::StreamSocket* _socket ) const;
 
     /// Calculates the feature importances vis-a-vis each target.
     std::vector<std::vector<Float>> feature_importances(
@@ -291,6 +302,11 @@ class Pipeline
         const size_t _num_targets,
         const std::vector<Poco::JSON::Object::Ptr>& _dependencies ) const;
 
+    /// Prepares the preprocessors.
+    std::vector<std::shared_ptr<preprocessors::Preprocessor>>
+    init_preprocessors(
+        const std::vector<Poco::JSON::Object::Ptr>& _dependencies ) const;
+
     /// Whether the pipeline is used for classification problems
     bool is_classification() const;
 
@@ -300,11 +316,6 @@ class Pipeline
         const std::string& _elem,
         const size_t _num_targets,
         const std::shared_ptr<const predictors::PredictorImpl>& _predictor_impl,
-        const std::vector<Poco::JSON::Object::Ptr>& _dependencies ) const;
-
-    /// Prepares the preprocessors.
-    std::vector<std::shared_ptr<preprocessors::Preprocessor>>
-    init_preprocessors(
         const std::vector<Poco::JSON::Object::Ptr>& _dependencies ) const;
 
     /// Loads a new Pipeline from disc.

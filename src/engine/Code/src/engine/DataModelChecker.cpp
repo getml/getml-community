@@ -259,11 +259,14 @@ void DataModelChecker::check_df(
                     _warner->add(
                         might_take_long() + "Data frame '" + _df.name() +
                         "' contains " + std::to_string( num_columns ) +
-                        " categorical and numerical columns. The multirel "
+                        " categorical and numerical columns. "
+                        "Please note that columns created by the preprocessors "
+                        "are also part of this count. The multirel "
                         "algorithm does not scale very well to data frames "
                         "with many columns. This pipeline might take a very "
                         "long time to fit. You should consider removing some "
-                        "columns. You could also replace MultirelModel or "
+                        "columns or preprocessors. You could also replace "
+                        "MultirelModel or "
                         "MultirelTimeSeries with RelboostModel or "
                         "RelboostTimeSeries respectively. The relboost "
                         "algorithm has been designed to scale well to data "
