@@ -313,8 +313,41 @@ class Pipeline
         const std::shared_ptr<dependency::FETracker> _fe_tracker,
         const std::shared_ptr<dependency::PredTracker> _pred_tracker ) const;
 
+    /// Loads the feature learners.
+    void load_feature_learners(
+        const std::string& _path,
+        const std::shared_ptr<dependency::FETracker> _fe_tracker,
+        Pipeline* _pipeline ) const;
+
+    /// Loads the feature selectors.
+    void load_feature_selectors(
+        const std::string& _path,
+        const std::shared_ptr<dependency::PredTracker> _pred_tracker,
+        Pipeline* _pipeline ) const;
+
+    /// Loads the fingerprints.
+    void load_fingerprints(
+        const Poco::JSON::Object& _pipeline_json, Pipeline* _pipeline ) const;
+
+    /// Loads the impls for the predictors and feature selectors.
+    void load_impls( const std::string& _path, Pipeline* _pipeline ) const;
+
     /// Loads a JSON object from disc.
     Poco::JSON::Object load_json_obj( const std::string& _fname ) const;
+
+    /// Loads the pipeline.json.
+    void load_pipeline_json(
+        const std::string& _path, Pipeline* _pipeline ) const;
+
+    /// Loads the predictors.
+    void load_predictors(
+        const std::string& _path,
+        const std::shared_ptr<dependency::PredTracker> _pred_tracker,
+        Pipeline* _pipeline ) const;
+
+    /// Loads the preprocessors.
+    void load_preprocessors(
+        const std::string& _path, Pipeline* _pipeline ) const;
 
     /// Figures out which columns from the population table we would like to
     /// add.
@@ -347,6 +380,21 @@ class Pipeline
         const std::shared_ptr<dependency::PredTracker> _pred_tracker,
         std::vector<std::vector<std::shared_ptr<predictors::Predictor>>>*
             _predictors ) const;
+
+    /// Saves the feature learners.
+    void save_feature_learners( const Poco::TemporaryFile& _tfile ) const;
+
+    /// Saves the feature selectors.
+    void save_feature_selectors( const Poco::TemporaryFile& _tfile ) const;
+
+    /// Saves the pipeline meta-information into the pipeline.json file.
+    void save_pipeline_json( const Poco::TemporaryFile& _tfile ) const;
+
+    /// Saves the predictors.
+    void save_predictors( const Poco::TemporaryFile& _tfile ) const;
+
+    /// Saves the preprocessors.
+    void save_preprocessors( const Poco::TemporaryFile& _tfile ) const;
 
     /// Selects the autofeatures that are needed for the prediction.
     containers::Features select_autofeatures(

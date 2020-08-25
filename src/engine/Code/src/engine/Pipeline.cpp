@@ -1505,78 +1505,55 @@ Pipeline Pipeline::load(
 
     const auto obj = load_json_obj( _path + "obj.json" );
 
-    const auto pipeline_json = load_json_obj( _path + "pipeline.json" );
-
     const auto scores =
         metrics::Scores( load_json_obj( _path + "scores.json" ) );
-
-    auto feature_selector_impl = std::shared_ptr<predictors::PredictorImpl>();
-
-    auto predictor_impl = std::shared_ptr<predictors::PredictorImpl>();
-
-    feature_selector_impl = std::make_shared<predictors::PredictorImpl>(
-        load_json_obj( _path + "feature-selector-impl.json" ) );
-
-    predictor_impl = std::make_shared<predictors::PredictorImpl>(
-        load_json_obj( _path + "predictor-impl.json" ) );
-
-    // ------------------------------------------------------------
-
-    const auto df_fingerprints = JSON::array_to_obj_vector(
-        JSON::get_array( pipeline_json, "df_fingerprints_" ) );
-
-    const auto fe_fingerprints = JSON::array_to_obj_vector(
-        JSON::get_array( pipeline_json, "fe_fingerprints_" ) );
-
-    const auto fs_fingerprints = JSON::array_to_obj_vector(
-        JSON::get_array( pipeline_json, "fs_fingerprints_" ) );
-
-    const auto target_names = JSON::array_to_vector<std::string>(
-        JSON::get_array( pipeline_json, "targets_" ) );
 
     // ------------------------------------------------------------------
 
     auto pipeline = Pipeline( obj );
 
-    pipeline.allow_http() =
-        JSON::get_value<bool>( pipeline_json, "allow_http_" );
-
-    pipeline.creation_time() =
-        JSON::get_value<std::string>( pipeline_json, "creation_time_" );
-
-    pipeline.df_fingerprints() = df_fingerprints;
-
-    pipeline.fe_fingerprints() = fe_fingerprints;
-
-    pipeline.fs_fingerprints() = fs_fingerprints;
-
-    pipeline.peripheral_schema() =
-        JSON::get_array( pipeline_json, "peripheral_schema_" );
-
-    pipeline.population_schema() =
-        JSON::get_object( pipeline_json, "population_schema_" );
-
-    pipeline.targets() = target_names;
-
     pipeline.obj() = obj;
-
-    pipeline.impl_.feature_selector_impl_ = feature_selector_impl;
-
-    pipeline.impl_.predictor_impl_ = predictor_impl;
 
     pipeline.scores() = scores;
 
     // ------------------------------------------------------------
-    // Load feature learners
 
+    load_pipeline_json( _path, &pipeline );
+
+    load_impls( _path, &pipeline );
+
+    load_preprocessors( _path, &pipeline );
+
+    load_feature_learners( _path, _fe_tracker, &pipeline );
+
+    load_feature_selectors( _path, _pred_tracker, &pipeline );
+
+    load_predictors( _path, _pred_tracker, &pipeline );
+
+    // ------------------------------------------------------------
+
+    return pipeline;
+
+    // ------------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
+void Pipeline::load_feature_learners(
+    const std::string& _path,
+    const std::shared_ptr<dependency::FETracker> _fe_tracker,
+    Pipeline* _pipeline ) const
+{
     assert_true( _fe_tracker );
 
-    pipeline.feature_learners_ = std::get<0>( pipeline.init_feature_learners(
-        pipeline.num_targets(), pipeline.preprocessor_fingerprints() ) );
+    _pipeline->feature_learners_ =
+        std::get<0>( _pipeline->init_feature_learners(
+            _pipeline->num_targets(),
+            _pipeline->preprocessor_fingerprints() ) );
 
-    for ( size_t i = 0; i < pipeline.feature_learners_.size(); ++i )
+    for ( size_t i = 0; i < _pipeline->feature_learners_.size(); ++i )
         {
-            auto& fe = pipeline.feature_learners_.at( i );
+            auto& fe = _pipeline->feature_learners_.at( i );
 
             assert_true( fe );
 
@@ -1585,23 +1562,31 @@ Pipeline Pipeline::load(
 
             _fe_tracker->add( fe );
         }
+}
 
-    // ------------------------------------------------------------
-    // Load feature selectors
+// ------------------------------------------------------------------------
 
-    pipeline.feature_selectors_ = pipeline.init_predictors(
+void Pipeline::load_feature_selectors(
+    const std::string& _path,
+    const std::shared_ptr<dependency::PredTracker> _pred_tracker,
+    Pipeline* _pipeline ) const
+{
+    _pipeline->feature_selectors_ = _pipeline->init_predictors(
         "feature_selectors_",
-        pipeline.num_targets(),
-        pipeline.impl_.feature_selector_impl_,
-        pipeline.fe_fingerprints() );
+        _pipeline->num_targets(),
+        _pipeline->impl_.feature_selector_impl_,
+        _pipeline->fe_fingerprints() );
 
-    assert_true( pipeline.num_targets() == pipeline.feature_selectors_.size() );
+    assert_true(
+        _pipeline->num_targets() == _pipeline->feature_selectors_.size() );
 
-    for ( size_t i = 0; i < pipeline.num_targets(); ++i )
+    for ( size_t i = 0; i < _pipeline->num_targets(); ++i )
         {
-            for ( size_t j = 0; j < pipeline.feature_selectors_[i].size(); ++j )
+            for ( size_t j = 0;
+                  j < _pipeline->feature_selectors_.at( i ).size();
+                  ++j )
                 {
-                    auto& p = pipeline.feature_selectors_[i][j];
+                    auto& p = _pipeline->feature_selectors_.at( i ).at( j );
 
                     assert_true( p );
 
@@ -1612,39 +1597,48 @@ Pipeline Pipeline::load(
                     _pred_tracker->add( p );
                 }
         }
+}
 
-    // ------------------------------------------------------------
-    // Load predictors
+// ------------------------------------------------------------------------
 
-    pipeline.predictors_ = pipeline.init_predictors(
-        "predictors_",
-        pipeline.num_targets(),
-        pipeline.impl_.predictor_impl_,
-        pipeline.fs_fingerprints() );
+void Pipeline::load_fingerprints(
+    const Poco::JSON::Object& _pipeline_json, Pipeline* _pipeline ) const
+{
+    const auto df_fingerprints = JSON::array_to_obj_vector(
+        JSON::get_array( _pipeline_json, "df_fingerprints_" ) );
 
-    assert_true( pipeline.num_targets() == pipeline.predictors_.size() );
+    const auto preprocessor_fingerprints = JSON::array_to_obj_vector(
+        JSON::get_array( _pipeline_json, "preprocessor_fingerprints_" ) );
 
-    for ( size_t i = 0; i < pipeline.num_targets(); ++i )
-        {
-            for ( size_t j = 0; j < pipeline.predictors_[i].size(); ++j )
-                {
-                    auto& p = pipeline.predictors_[i][j];
+    const auto fe_fingerprints = JSON::array_to_obj_vector(
+        JSON::get_array( _pipeline_json, "fe_fingerprints_" ) );
 
-                    assert_true( p );
+    const auto fs_fingerprints = JSON::array_to_obj_vector(
+        JSON::get_array( _pipeline_json, "fs_fingerprints_" ) );
 
-                    p->load(
-                        _path + "predictor-" + std::to_string( i ) + "-" +
-                        std::to_string( j ) );
+    _pipeline->df_fingerprints() = df_fingerprints;
 
-                    _pred_tracker->add( p );
-                }
-        }
+    _pipeline->preprocessor_fingerprints() = preprocessor_fingerprints;
 
-    // ------------------------------------------------------------
+    _pipeline->fe_fingerprints() = fe_fingerprints;
 
-    return pipeline;
+    _pipeline->fs_fingerprints() = fs_fingerprints;
+}
 
-    // ------------------------------------------------------------
+// ------------------------------------------------------------------------
+
+void Pipeline::load_impls( const std::string& _path, Pipeline* _pipeline ) const
+{
+    const auto feature_selector_impl =
+        std::make_shared<predictors::PredictorImpl>(
+            load_json_obj( _path + "feature-selector-impl.json" ) );
+
+    const auto predictor_impl = std::make_shared<predictors::PredictorImpl>(
+        load_json_obj( _path + "predictor-impl.json" ) );
+
+    _pipeline->impl_.feature_selector_impl_ = feature_selector_impl;
+
+    _pipeline->impl_.predictor_impl_ = predictor_impl;
 }
 
 // ------------------------------------------------------------------------
@@ -1681,6 +1675,83 @@ Poco::JSON::Object Pipeline::load_json_obj( const std::string& _fname ) const
         }
 
     return *ptr;
+}
+
+// ------------------------------------------------------------------------
+
+void Pipeline::load_pipeline_json(
+    const std::string& _path, Pipeline* _pipeline ) const
+{
+    const auto pipeline_json = load_json_obj( _path + "pipeline.json" );
+
+    _pipeline->allow_http() =
+        JSON::get_value<bool>( pipeline_json, "allow_http_" );
+
+    _pipeline->creation_time() =
+        JSON::get_value<std::string>( pipeline_json, "creation_time_" );
+
+    _pipeline->peripheral_schema() =
+        JSON::get_array( pipeline_json, "peripheral_schema_" );
+
+    _pipeline->population_schema() =
+        JSON::get_object( pipeline_json, "population_schema_" );
+
+    _pipeline->targets() = JSON::array_to_vector<std::string>(
+        JSON::get_array( pipeline_json, "targets_" ) );
+
+    load_fingerprints( pipeline_json, _pipeline );
+}
+
+// ------------------------------------------------------------------------
+
+void Pipeline::load_predictors(
+    const std::string& _path,
+    const std::shared_ptr<dependency::PredTracker> _pred_tracker,
+    Pipeline* _pipeline ) const
+{
+    _pipeline->predictors_ = _pipeline->init_predictors(
+        "predictors_",
+        _pipeline->num_targets(),
+        _pipeline->impl_.predictor_impl_,
+        _pipeline->fs_fingerprints() );
+
+    assert_true( _pipeline->num_targets() == _pipeline->predictors_.size() );
+
+    for ( size_t i = 0; i < _pipeline->num_targets(); ++i )
+        {
+            for ( size_t j = 0; j < _pipeline->predictors_.at( i ).size(); ++j )
+                {
+                    auto& p = _pipeline->predictors_.at( i ).at( j );
+
+                    assert_true( p );
+
+                    p->load(
+                        _path + "predictor-" + std::to_string( i ) + "-" +
+                        std::to_string( j ) );
+
+                    _pred_tracker->add( p );
+                }
+        }
+}
+
+// ------------------------------------------------------------------------
+
+void Pipeline::load_preprocessors(
+    const std::string& _path, Pipeline* _pipeline ) const
+{
+    _pipeline->preprocessors_ =
+        init_preprocessors( _pipeline->df_fingerprints() );
+
+    for ( size_t i = 0; i < _pipeline->preprocessors_.size(); ++i )
+        {
+            const auto json_obj = load_json_obj(
+                _path + "preprocessor-" + std::to_string( i ) + ".json" );
+
+            auto& p = _pipeline->preprocessors_.at( i );
+
+            p = preprocessors::PreprocessorParser::parse(
+                json_obj, _pipeline->df_fingerprints() );
+        }
 }
 
 // ------------------------------------------------------------------------
@@ -1975,46 +2046,13 @@ void Pipeline::save( const std::string& _path, const std::string& _name ) const
 
     // ------------------------------------------------------------------
 
-    for ( size_t i = 0; i < feature_learners_.size(); ++i )
-        {
-            const auto& fe = feature_learners_[i];
+    save_preprocessors( tfile );
 
-            if ( !fe )
-                {
-                    throw std::invalid_argument(
-                        "Feature learning algorithm #" + std::to_string( i ) +
-                        " has not been fitted!" );
-                }
-
-            fe->save(
-                tfile.path() + "/feature-learner-" + std::to_string( i ) +
-                ".json" );
-        }
+    save_feature_learners( tfile );
 
     // ------------------------------------------------------------------
 
-    Poco::JSON::Object pipeline_json;
-
-    pipeline_json.set( "allow_http_", allow_http() );
-
-    pipeline_json.set( "creation_time_", creation_time() );
-
-    pipeline_json.set(
-        "df_fingerprints_", JSON::vector_to_array( df_fingerprints() ) );
-
-    pipeline_json.set(
-        "fe_fingerprints_", JSON::vector_to_array( fe_fingerprints() ) );
-
-    pipeline_json.set(
-        "fs_fingerprints_", JSON::vector_to_array( fs_fingerprints() ) );
-
-    pipeline_json.set( "targets_", JSON::vector_to_array( targets() ) );
-
-    pipeline_json.set( "peripheral_schema_", peripheral_schema() );
-
-    pipeline_json.set( "population_schema_", population_schema() );
-
-    save_json_obj( pipeline_json, tfile.path() + "/pipeline.json" );
+    save_pipeline_json( tfile );
 
     // ------------------------------------------------------------------
 
@@ -2033,46 +2071,9 @@ void Pipeline::save( const std::string& _path, const std::string& _name ) const
 
     // ------------------------------------------------------------------
 
-    for ( size_t i = 0; i < feature_selectors_.size(); ++i )
-        {
-            for ( size_t j = 0; j < feature_selectors_[i].size(); ++j )
-                {
-                    const auto& p = feature_selectors_[i][j];
+    save_feature_selectors( tfile );
 
-                    if ( !p )
-                        {
-                            throw std::invalid_argument(
-                                "Feature selector " + std::to_string( i ) +
-                                "-" + std::to_string( j ) +
-                                " has not been fitted!" );
-                        }
-
-                    p->save(
-                        tfile.path() + "/feature-selector-" +
-                        std::to_string( i ) + "-" + std::to_string( j ) );
-                }
-        }
-
-    // ------------------------------------------------------------------
-
-    for ( size_t i = 0; i < predictors_.size(); ++i )
-        {
-            for ( size_t j = 0; j < predictors_[i].size(); ++j )
-                {
-                    const auto& p = predictors_[i][j];
-
-                    if ( !p )
-                        {
-                            throw std::invalid_argument(
-                                "Predictor " + std::to_string( i ) + "-" +
-                                std::to_string( j ) + " has not been fitted!" );
-                        }
-
-                    p->save(
-                        tfile.path() + "/predictor-" + std::to_string( i ) +
-                        "-" + std::to_string( j ) );
-                }
-        }
+    save_predictors( tfile );
 
     // ------------------------------------------------------------------
 
@@ -2089,6 +2090,134 @@ void Pipeline::save( const std::string& _path, const std::string& _name ) const
     tfile.keep();
 
     // ------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+void Pipeline::save_feature_learners( const Poco::TemporaryFile& _tfile ) const
+{
+    for ( size_t i = 0; i < feature_learners_.size(); ++i )
+        {
+            const auto& fe = feature_learners_.at( i );
+
+            if ( !fe )
+                {
+                    throw std::invalid_argument(
+                        "Feature learning algorithm #" + std::to_string( i ) +
+                        " has not been fitted!" );
+                }
+
+            fe->save(
+                _tfile.path() + "/feature-learner-" + std::to_string( i ) +
+                ".json" );
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+void Pipeline::save_feature_selectors( const Poco::TemporaryFile& _tfile ) const
+{
+    for ( size_t i = 0; i < feature_selectors_.size(); ++i )
+        {
+            for ( size_t j = 0; j < feature_selectors_.at( i ).size(); ++j )
+                {
+                    const auto& p = feature_selectors_.at( i ).at( j );
+
+                    if ( !p )
+                        {
+                            throw std::invalid_argument(
+                                "Feature selector " + std::to_string( i ) +
+                                "-" + std::to_string( j ) +
+                                " has not been fitted!" );
+                        }
+
+                    p->save(
+                        _tfile.path() + "/feature-selector-" +
+                        std::to_string( i ) + "-" + std::to_string( j ) );
+                }
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+void Pipeline::save_pipeline_json( const Poco::TemporaryFile& _tfile ) const
+{
+    Poco::JSON::Object pipeline_json;
+
+    pipeline_json.set( "allow_http_", allow_http() );
+
+    pipeline_json.set( "creation_time_", creation_time() );
+
+    pipeline_json.set(
+        "df_fingerprints_", JSON::vector_to_array( df_fingerprints() ) );
+
+    pipeline_json.set(
+        "fe_fingerprints_", JSON::vector_to_array( fe_fingerprints() ) );
+
+    pipeline_json.set(
+        "fs_fingerprints_", JSON::vector_to_array( fs_fingerprints() ) );
+
+    pipeline_json.set(
+        "preprocessor_fingerprints_",
+        JSON::vector_to_array( preprocessor_fingerprints() ) );
+
+    pipeline_json.set( "targets_", JSON::vector_to_array( targets() ) );
+
+    pipeline_json.set( "peripheral_schema_", peripheral_schema() );
+
+    pipeline_json.set( "population_schema_", population_schema() );
+
+    save_json_obj( pipeline_json, _tfile.path() + "/pipeline.json" );
+}
+
+// ----------------------------------------------------------------------------
+
+void Pipeline::save_predictors( const Poco::TemporaryFile& _tfile ) const
+{
+    for ( size_t i = 0; i < predictors_.size(); ++i )
+        {
+            for ( size_t j = 0; j < predictors_.at( i ).size(); ++j )
+                {
+                    const auto& p = predictors_.at( i ).at( j );
+
+                    if ( !p )
+                        {
+                            throw std::invalid_argument(
+                                "Predictor " + std::to_string( i ) + "-" +
+                                std::to_string( j ) + " has not been fitted!" );
+                        }
+
+                    p->save(
+                        _tfile.path() + "/predictor-" + std::to_string( i ) +
+                        "-" + std::to_string( j ) );
+                }
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+void Pipeline::save_preprocessors( const Poco::TemporaryFile& _tfile ) const
+{
+    for ( size_t i = 0; i < preprocessors_.size(); ++i )
+        {
+            const auto& p = preprocessors_.at( i );
+
+            if ( !p )
+                {
+                    throw std::invalid_argument(
+                        "Preprocessor #" + std::to_string( i ) +
+                        " has not been fitted!" );
+                }
+
+            const auto ptr = p->to_json_obj();
+
+            assert_true( ptr );
+
+            save_json_obj(
+                *ptr,
+                _tfile.path() + "/preprocessor-" + std::to_string( i ) +
+                    ".json" );
+        }
 }
 
 // ----------------------------------------------------------------------------
