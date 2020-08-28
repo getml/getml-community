@@ -61,7 +61,7 @@ class AbstractFeatureLearner
 
     /// Returns the placeholder not as passed by the user, but as seen by the
     /// feature learner (the difference matters for time series).
-    virtual Poco::JSON::Object make_placeholder() const = 0;
+    virtual helpers::Placeholder make_placeholder() const = 0;
 
     /// Data frames might have to be modified, such as adding upper time stamps
     /// or self joins.

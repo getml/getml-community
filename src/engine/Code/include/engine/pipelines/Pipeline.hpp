@@ -379,6 +379,13 @@ class Pipeline
         const std::vector<Float>::const_iterator _begin,
         const std::vector<Float>::const_iterator _end ) const;
 
+    /// Generates the placeholder and the peripheral names, integrating the
+    /// many-to-one joins and all other modifications.
+    std::pair<
+        std::shared_ptr<const helpers::Placeholder>,
+        std::shared_ptr<const std::vector<std::string>>>
+    make_placeholder() const;
+
     /// Contains only the selected features.
     void make_predictor_impl(
         const Poco::JSON::Object& _cmd,

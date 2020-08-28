@@ -7,8 +7,8 @@ namespace preprocessors
 // ----------------------------------------------------------------------------
 
 void DataModelChecker::check(
-    const std::shared_ptr<Poco::JSON::Object> _population_placeholder,
-    const std::shared_ptr<std::vector<std::string>> _peripheral_names,
+    const std::shared_ptr<const helpers::Placeholder> _placeholder,
+    const std::shared_ptr<const std::vector<std::string>> _peripheral_names,
     const containers::DataFrame& _population,
     const std::vector<containers::DataFrame>& _peripheral,
     const std::vector<std::shared_ptr<featurelearners::AbstractFeatureLearner>>
@@ -41,37 +41,24 @@ void DataModelChecker::check(
 
     // --------------------------------------------------------------------------
 
-    assert_true( _population_placeholder );
-
-    assert_true( _peripheral_names );
+    assert_true( _placeholder );
 
     if ( _feature_learners.size() > 0 )
         {
-            const auto [new_placeholder, new_population, new_peripheral] =
-                modify(
-                    *_population_placeholder,
-                    _population,
-                    _peripheral,
-                    _feature_learners );
-
             check_join(
-                new_placeholder,
-                *_peripheral_names,
-                new_population,
-                new_peripheral,
+                *_placeholder,
+                _peripheral_names,
+                _population,
+                _peripheral,
+                &warner );
+
+            check_self_joins(
+                *_placeholder,
+                _population,
+                _peripheral,
+                _feature_learners,
                 &warner );
         }
-
-    // --------------------------------------------------------------------------
-
-    assert_true( _population_placeholder );
-
-    check_self_joins(
-        *_population_placeholder,
-        _population,
-        _peripheral,
-        _feature_learners,
-        &warner );
 
     // --------------------------------------------------------------------------
 
@@ -350,84 +337,63 @@ void DataModelChecker::check_float_column(
 // ----------------------------------------------------------------------------
 
 void DataModelChecker::check_join(
-    const Poco::JSON::Object& _population_placeholder,
-    const std::vector<std::string>& _peripheral_names,
+    const helpers::Placeholder& _placeholder,
+    const std::shared_ptr<const std::vector<std::string>> _peripheral_names,
     const containers::DataFrame& _population,
     const std::vector<containers::DataFrame>& _peripheral,
     communication::Warner* _warner )
 {
     // ------------------------------------------------------------------------
 
-    assert_true( _peripheral_names.size() <= _peripheral.size() );
+    assert_true( _peripheral_names );
+
+    assert_true( _peripheral_names->size() == _peripheral.size() );
 
     // ------------------------------------------------------------------------
 
-    const auto joined_tables_arr =
-        _population_placeholder.getArray( "joined_tables_" );
+    const auto& joined_tables = _placeholder.joined_tables_;
 
-    assert_true( joined_tables_arr );
+    const auto& join_keys_used = _placeholder.join_keys_used_;
 
-    // ------------------------------------------------------------------------
+    const auto& other_join_keys_used = _placeholder.other_join_keys_used_;
 
-    const auto expected_size = joined_tables_arr->size();
+    const auto& time_stamps_used = _placeholder.time_stamps_used_;
 
-    // ------------------------------------------------------------------------
+    const auto& other_time_stamps_used = _placeholder.other_time_stamps_used_;
 
-    const auto [join_keys_used, other_join_keys_used] =
-        get_join_keys_used( _population_placeholder, expected_size );
+    const auto& upper_time_stamps_used = _placeholder.upper_time_stamps_used_;
 
     // ------------------------------------------------------------------------
 
-    const auto
-        [time_stamps_used, other_time_stamps_used, upper_time_stamps_used] =
-            get_time_stamps_used( _population_placeholder, expected_size );
+    const auto size = joined_tables.size();
+
+    assert_true( join_keys_used.size() == size );
+
+    assert_true( other_join_keys_used.size() == size );
+
+    assert_true( time_stamps_used.size() == size );
+
+    assert_true( other_time_stamps_used.size() == size );
+
+    assert_true( upper_time_stamps_used.size() == size );
 
     // ------------------------------------------------------------------------
 
-    assert_true( join_keys_used.size() == expected_size );
-
-    assert_true( other_join_keys_used.size() == expected_size );
-
-    assert_true( time_stamps_used.size() == expected_size );
-
-    assert_true( other_time_stamps_used.size() == expected_size );
-
-    assert_true( upper_time_stamps_used.size() == expected_size );
-
-    // ------------------------------------------------------------------------
-
-    for ( size_t i = 0; i < joined_tables_arr->size(); ++i )
+    for ( size_t i = 0; i < size; ++i )
         {
-            const auto ptr = joined_tables_arr->getObject( i );
-
-            if ( !ptr )
-                {
-                    throw std::invalid_argument(
-                        "Element " + std::to_string( i + 1 ) +
-                        " in 'joined_tables_' is not a proper JSON "
-                        "object!" );
-                }
-
-            const auto& obj = *ptr;
-
-            const auto name = JSON::get_value<std::string>( obj, "name_" );
-
-            if ( name.find( "$GETML_PERIPHERAL" ) != std::string::npos )
-                {
-                    continue;
-                }
+            const auto& name = joined_tables.at( i ).name_;
 
             const auto it = std::find(
-                _peripheral_names.begin(), _peripheral_names.end(), name );
+                _peripheral_names->begin(), _peripheral_names->end(), name );
 
-            if ( it == _peripheral_names.end() )
+            if ( it == _peripheral_names->end() )
                 {
                     throw std::invalid_argument(
                         "No placeholder called '" + name +
                         "' among the peripheral placeholders." );
                 }
 
-            const auto dist = std::distance( _peripheral_names.begin(), it );
+            const auto dist = std::distance( _peripheral_names->begin(), it );
 
             const auto [is_many_to_one, num_matches, num_jk_not_found] =
                 check_matches(
@@ -450,7 +416,7 @@ void DataModelChecker::check_join(
                 _warner );
 
             check_join(
-                obj,
+                joined_tables.at( i ),
                 _peripheral_names,
                 _peripheral.at( dist ),
                 _peripheral,
@@ -545,19 +511,16 @@ std::tuple<bool, size_t, size_t> DataModelChecker::check_matches(
 // ----------------------------------------------------------------------------
 
 void DataModelChecker::check_self_joins(
-    const Poco::JSON::Object& _population_placeholder,
+    const helpers::Placeholder& _placeholder,
     const containers::DataFrame& _population,
     const std::vector<containers::DataFrame>& _peripheral,
     const std::vector<std::shared_ptr<featurelearners::AbstractFeatureLearner>>
         _feature_learners,
     communication::Warner* _warner )
 {
-    // ----------------------------------------------------------------
+    // ------------------------------------------------------------------------
 
-    const auto original_joined_tables_arr =
-        _population_placeholder.getArray( "joined_tables_" );
-
-    assert_true( original_joined_tables_arr );
+    const auto old_size = _placeholder.joined_tables_.size();
 
     // ------------------------------------------------------------------------
 
@@ -583,35 +546,40 @@ void DataModelChecker::check_self_joins(
 
             // ----------------------------------------------------------------
 
-            const auto new_joined_tables_arr =
-                new_placeholder.getArray( "joined_tables_" );
+            const auto& joined_tables = new_placeholder.joined_tables_;
 
-            assert_true( new_joined_tables_arr );
+            const auto& join_keys_used = new_placeholder.join_keys_used_;
+
+            const auto& other_join_keys_used =
+                new_placeholder.other_join_keys_used_;
+
+            const auto& time_stamps_used = new_placeholder.time_stamps_used_;
+
+            const auto& other_time_stamps_used =
+                new_placeholder.other_time_stamps_used_;
+
+            const auto& upper_time_stamps_used =
+                new_placeholder.upper_time_stamps_used_;
 
             // ----------------------------------------------------------------
 
-            const auto expected_size = new_joined_tables_arr->size();
+            const auto new_size = joined_tables.size();
 
-            // ----------------------------------------------------------------
+            assert_true( join_keys_used.size() == new_size );
 
-            const auto [join_keys_used, other_join_keys_used] =
-                get_join_keys_used( new_placeholder, expected_size );
+            assert_true( other_join_keys_used.size() == new_size );
 
-            // ----------------------------------------------------------------
+            assert_true( time_stamps_used.size() == new_size );
 
-            const auto
-                [time_stamps_used,
-                 other_time_stamps_used,
-                 upper_time_stamps_used] =
-                    get_time_stamps_used( new_placeholder, expected_size );
+            assert_true( other_time_stamps_used.size() == new_size );
+
+            assert_true( upper_time_stamps_used.size() == new_size );
 
             // ----------------------------------------------------------------
 
             assert_true( new_peripheral.size() == _peripheral.size() + 1 );
 
-            for ( size_t i = original_joined_tables_arr->size();
-                  i < expected_size;
-                  ++i )
+            for ( size_t i = old_size; i < new_size; ++i )
                 {
                     const auto [is_many_to_one, num_matches, num_jk_not_found] =
                         check_matches(
@@ -688,65 +656,6 @@ DataModelChecker::find_time_stamps(
     // ------------------------------------------------------------------------
 
     return std::make_tuple( ts1, ts2, upper );
-
-    // ------------------------------------------------------------------------
-}
-
-// ----------------------------------------------------------------------------
-
-std::pair<std::vector<std::string>, std::vector<std::string>>
-DataModelChecker::get_join_keys_used(
-    const Poco::JSON::Object& _population_placeholder,
-    const size_t _expected_size )
-{
-    // ------------------------------------------------------------------------
-
-    const auto join_keys_used_arr =
-        _population_placeholder.getArray( "join_keys_used_" );
-
-    if ( !join_keys_used_arr )
-        {
-            throw std::invalid_argument(
-                "The placeholder has no array named 'join_keys_used_'!" );
-        }
-
-    const auto other_join_keys_used_arr =
-        _population_placeholder.getArray( "other_join_keys_used_" );
-
-    if ( !other_join_keys_used_arr )
-        {
-            throw std::invalid_argument(
-                "The placeholder has no array named "
-                "'other_join_keys_used_'!" );
-        }
-
-    // ------------------------------------------------------------------------
-
-    const auto join_keys_used =
-        JSON::array_to_vector<std::string>( join_keys_used_arr );
-
-    const auto other_join_keys_used =
-        JSON::array_to_vector<std::string>( other_join_keys_used_arr );
-
-    // ------------------------------------------------------------------------
-
-    if ( _expected_size != join_keys_used.size() )
-        {
-            throw std::invalid_argument(
-                "Length of 'joined_tables_' must match length of "
-                "'join_keys_used_'." );
-        }
-
-    if ( _expected_size != other_join_keys_used.size() )
-        {
-            throw std::invalid_argument(
-                "Length of 'joined_tables_' must match length of "
-                "'other_join_keys_used_'." );
-        }
-
-    // ------------------------------------------------------------------------
-
-    return std::make_pair( join_keys_used, other_join_keys_used );
 
     // ------------------------------------------------------------------------
 }
@@ -863,127 +772,6 @@ bool DataModelChecker::is_all_equal( const containers::Column<Float>& _col )
         }
 
     return true;
-}
-
-// ----------------------------------------------------------------------------
-
-std::tuple<
-    Poco::JSON::Object,
-    containers::DataFrame,
-    std::vector<containers::DataFrame>>
-DataModelChecker::modify(
-    const Poco::JSON::Object& _population_placeholder,
-    const containers::DataFrame& _population,
-    const std::vector<containers::DataFrame>& _peripheral,
-    const std::vector<std::shared_ptr<featurelearners::AbstractFeatureLearner>>
-        _feature_learners )
-{
-    // ------------------------------------------------------------------------
-
-    assert_true( _feature_learners.size() > 0 );
-
-    const auto feature_learner = _feature_learners.at( 0 );
-
-    assert_true( feature_learner );
-
-    // ------------------------------------------------------------------------
-
-    const auto original_joined_tables_arr =
-        _population_placeholder.getArray( "joined_tables_" );
-
-    if ( !original_joined_tables_arr )
-        {
-            throw std::invalid_argument(
-                "The placeholder has no array named 'joined_tables_'!" );
-        }
-
-    // ------------------------------------------------------------------------
-
-    const auto new_placeholder = feature_learner->make_placeholder();
-
-    // ------------------------------------------------------------------------
-
-    const auto new_joined_tables_arr =
-        _population_placeholder.getArray( "joined_tables_" );
-
-    if ( !new_joined_tables_arr )
-        {
-            throw std::invalid_argument(
-                "The modified placeholder has no array named "
-                "'joined_tables_'!" );
-        }
-
-    // ------------------------------------------------------------------------
-
-    const auto [new_population, new_peripheral] =
-        feature_learner->modify_data_frames( _population, _peripheral );
-
-    // ------------------------------------------------------------------------
-
-    assert_true(
-        original_joined_tables_arr->size() <= new_joined_tables_arr->size() );
-
-    for ( size_t i = 0; i < original_joined_tables_arr->size(); ++i )
-        {
-            const auto ptr1 = original_joined_tables_arr->getObject( i );
-            const auto ptr2 = new_joined_tables_arr->getObject( i );
-
-            if ( !ptr1 )
-                {
-                    throw std::invalid_argument(
-                        "Element " + std::to_string( i ) +
-                        " of 'joined_tables_' is not a proper JSON object!" );
-                }
-
-            if ( !ptr2 )
-                {
-                    throw std::invalid_argument(
-                        "Element " + std::to_string( i ) +
-                        " of 'joined_tables_' in the modified placeholder is "
-                        "not a proper JSON object!" );
-                }
-
-            assert_true(
-                JSON::get_value<std::string>( *ptr1, "name_" ) ==
-                JSON::get_value<std::string>( *ptr2, "name_" ) );
-        }
-
-    // ------------------------------------------------------------------------
-
-    for ( size_t i = original_joined_tables_arr->size();
-          i < new_joined_tables_arr->size();
-          ++i )
-        {
-            const auto ptr = new_joined_tables_arr->getObject( i );
-
-            if ( !ptr )
-                {
-                    throw std::invalid_argument(
-                        "Element " + std::to_string( i ) +
-                        " of 'joined_tables_' in the modified placeholder is "
-                        "not a proper JSON object!" );
-                }
-
-            assert_true(
-                JSON::get_value<std::string>( *ptr, "name_" )
-                    .find( "$GETML_PERIPHERAL" ) != std::string::npos );
-        }
-
-    // ------------------------------------------------------------------------
-
-    assert_true( _peripheral.size() <= new_peripheral.size() );
-
-    for ( size_t i = 0; i < _peripheral.size(); ++i )
-        {
-            assert_true(
-                _peripheral.at( i ).name() == new_peripheral.at( i ).name() );
-        }
-
-    // ------------------------------------------------------------------------
-
-    return std::make_tuple( new_placeholder, new_population, new_peripheral );
-
-    // ------------------------------------------------------------------------
 }
 
 // ------------------------------------------------------------------------

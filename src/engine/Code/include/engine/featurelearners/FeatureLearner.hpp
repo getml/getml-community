@@ -23,7 +23,7 @@ class FeatureLearner : public AbstractFeatureLearner
    public:
     FeatureLearner(
         const Poco::JSON::Object& _cmd,
-        const std::shared_ptr<const Poco::JSON::Object>& _placeholder,
+        const std::shared_ptr<const helpers::Placeholder>& _placeholder,
         const std::shared_ptr<const std::vector<std::string>>& _peripheral,
         const std::vector<Poco::JSON::Object::Ptr>& _dependencies )
         : cmd_( _cmd ),
@@ -107,11 +107,9 @@ class FeatureLearner : public AbstractFeatureLearner
 
     /// Returns the placeholder not as passed by the user, but as seen by the
     /// feature learner (the difference matters for time series).
-    Poco::JSON::Object make_placeholder() const final
+    helpers::Placeholder make_placeholder() const final
     {
-        const auto ptr = make_feature_learner()->placeholder().to_json_obj();
-        assert_true( ptr );
-        return *ptr;
+        return make_feature_learner()->placeholder();
     }
 
     /// Returns the number of features in the feature learner.
@@ -174,14 +172,6 @@ class FeatureLearner : public AbstractFeatureLearner
     // --------------------------------------------------------
 
    private:
-    /// Extracts a vector named _name of size _expected_size from the
-    /// _population_placeholder
-    template <typename T>
-    std::vector<T> extract_vector(
-        const Poco::JSON::Object& _population_placeholder,
-        const std::string& _name,
-        const size_t _expected_size ) const;
-
     /// Extract a data frame of type FeatureLearnerType::DataFrameType from
     /// an engine::containers::DataFrame.
     DataFrameType extract_table(
@@ -211,7 +201,7 @@ class FeatureLearner : public AbstractFeatureLearner
 
     /// Infers whether we need the targets of a peripheral table.
     std::vector<bool> infer_needs_targets(
-        const Poco::JSON::Object& _placeholder,
+        const helpers::Placeholder& _placeholder,
         const size_t _num_peripheral,
         std::vector<bool>* _needs_targets = nullptr ) const;
 
@@ -263,7 +253,7 @@ class FeatureLearner : public AbstractFeatureLearner
     }
 
     /// Trivial accessor.
-    const Poco::JSON::Object& placeholder() const
+    const helpers::Placeholder& placeholder() const
     {
         assert_true( placeholder_ );
         return *placeholder_;
@@ -296,7 +286,7 @@ class FeatureLearner : public AbstractFeatureLearner
     std::optional<FeatureLearnerType> feature_learner_;
 
     /// The placeholder describing the data schema.
-    std::shared_ptr<const Poco::JSON::Object> placeholder_;
+    std::shared_ptr<const helpers::Placeholder> placeholder_;
 
     /// The names of the peripheral tables
     std::shared_ptr<const std::vector<std::string>> peripheral_;
@@ -343,43 +333,6 @@ FeatureLearner<FeatureLearnerType>::column_importances(
         }
 
     return importance_maker.importances();
-}
-
-// ------------------------------------------------------------------------
-
-template <typename FeatureLearnerType>
-template <typename T>
-std::vector<T> FeatureLearner<FeatureLearnerType>::extract_vector(
-    const Poco::JSON::Object& _population_placeholder,
-    const std::string& _name,
-    const size_t _expected_size ) const
-{
-    // ------------------------------------------------------------------------
-
-    if ( !_population_placeholder.getArray( _name ) )
-        {
-            throw std::invalid_argument(
-                "The placeholder has no array named '" + _name + "'!" );
-        }
-
-    const auto vec =
-        JSON::array_to_vector<T>( _population_placeholder.getArray( _name ) );
-
-    // ------------------------------------------------------------------------
-
-    if ( vec.size() != _expected_size )
-        {
-            throw std::invalid_argument(
-                "Size of '" + _name + "' unexpected. Expected " +
-                std::to_string( _expected_size ) + ", got " +
-                std::to_string( vec.size() ) + "." );
-        }
-
-    // ------------------------------------------------------------------------
-
-    return vec;
-
-    // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -739,16 +692,13 @@ Poco::JSON::Object::Ptr FeatureLearner<FeatureLearnerType>::fingerprint() const
 {
     auto obj = Poco::JSON::Object::Ptr( new Poco::JSON::Object() );
 
-    const auto placeholder_ptr =
-        Poco::JSON::Object::Ptr( new Poco::JSON::Object( placeholder() ) );
-
     obj->set( "cmd_", cmd_ );
 
     obj->set( "dependencies_", JSON::vector_to_array_ptr( dependencies_ ) );
 
     obj->set( "peripheral_", JSON::vector_to_array_ptr( peripheral() ) );
 
-    obj->set( "placeholder_", placeholder_ptr );
+    obj->set( "placeholder_", placeholder().to_json_obj() );
 
     return obj;
 }
@@ -790,7 +740,7 @@ void FeatureLearner<FeatureLearnerType>::fit(
 
 template <typename FeatureLearnerType>
 std::vector<bool> FeatureLearner<FeatureLearnerType>::infer_needs_targets(
-    const Poco::JSON::Object& _placeholder,
+    const helpers::Placeholder& _placeholder,
     const size_t _num_peripheral,
     std::vector<bool>* _needs_targets ) const
 {
@@ -812,38 +762,21 @@ std::vector<bool> FeatureLearner<FeatureLearnerType>::infer_needs_targets(
 
     // ------------------------------------------------------------------------
 
-    const auto joined_tables_arr = _placeholder.getArray( "joined_tables_" );
+    const auto& allow_lagged_targets = _placeholder.allow_lagged_targets_;
 
-    if ( !joined_tables_arr )
-        {
-            throw std::invalid_argument(
-                "The placeholder has no array named 'joined_tables_'!" );
-        }
+    const auto& joined_tables = _placeholder.joined_tables_;
 
-    const auto expected_size = joined_tables_arr->size();
+    assert_true( allow_lagged_targets.size() == joined_tables.size() );
 
     // ------------------------------------------------------------------------
 
-    const auto allow_lagged_targets = extract_vector<bool>(
-        _placeholder, "allow_lagged_targets_", expected_size );
-
-    // ------------------------------------------------------------------------
-
-    for ( size_t i = 0; i < expected_size; ++i )
+    for ( size_t i = 0; i < joined_tables.size(); ++i )
         {
-            const auto joined_table = joined_tables_arr->getObject( i );
-
-            if ( !joined_table )
-                {
-                    throw std::invalid_argument(
-                        "Element " + std::to_string( i ) +
-                        " in 'joined_tables_' is not a proper JSON object!" );
-                }
+            const auto& joined_table = joined_tables.at( i );
 
             if ( allow_lagged_targets.at( i ) )
                 {
-                    const auto name =
-                        JSON::get_value<std::string>( *joined_table, "name_" );
+                    const auto name = joined_table.name_;
 
                     const auto it = std::find(
                         peripheral().begin(), peripheral().end(), name );
@@ -861,7 +794,7 @@ std::vector<bool> FeatureLearner<FeatureLearnerType>::infer_needs_targets(
                 }
 
             needs_targets = infer_needs_targets(
-                *joined_table, _num_peripheral, &needs_targets );
+                joined_table, _num_peripheral, &needs_targets );
         }
 
     // ------------------------------------------------------------------------
@@ -918,12 +851,6 @@ FeatureLearner<FeatureLearnerType>::make_feature_learner() const
     const auto hyperparameters =
         std::make_shared<typename FeatureLearnerType::HypType>( cmd_ );
 
-    const auto placeholder_struct = std::make_shared<helpers::Placeholder>(
-        PlaceholderMaker::make_placeholder( placeholder() ) );
-
-    const auto peripheral_names = std::make_shared<std::vector<std::string>>(
-        PlaceholderMaker::make_peripheral( *placeholder_struct ) );
-
     const auto population_schema =
         std::shared_ptr<const helpers::Placeholder>();
 
@@ -932,8 +859,8 @@ FeatureLearner<FeatureLearnerType>::make_feature_learner() const
 
     return std::make_optional<FeatureLearnerType>(
         hyperparameters,
-        peripheral_names,
-        placeholder_struct,
+        peripheral_,
+        placeholder_,
         peripheral_schema,
         population_schema );
 }

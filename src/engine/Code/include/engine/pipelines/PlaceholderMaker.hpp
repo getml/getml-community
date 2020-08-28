@@ -1,9 +1,9 @@
-#ifndef ENGINE_FEATURELEARNERS_PLACEHOLDERMAKER_HPP_
-#define ENGINE_FEATURELEARNERS_PLACEHOLDERMAKER_HPP_
+#ifndef ENGINE_PIPELINES_PLACEHOLDERMAKER_HPP_
+#define ENGINE_PIPELINES_PLACEHOLDERMAKER_HPP_
 
 namespace engine
 {
-namespace featurelearners
+namespace pipelines
 {
 // ----------------------------------------------------------------------------
 
@@ -128,7 +128,7 @@ std::vector<T> PlaceholderMaker::extract_vector(
 }
 
 // ----------------------------------------------------------------------------
-}  // namespace featurelearners
+}  // namespace pipelines
 }  // namespace engine
 
-#endif  // ENGINE_FEATURELEARNERS_PLACEHOLDERMAKER_HPP_
+#endif  // ENGINE_PIPELINES_PLACEHOLDERMAKER_HPP_

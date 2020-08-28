@@ -38,6 +38,8 @@
 // ----------------------------------------------------
 // Module files
 
+#include "engine/pipelines/PlaceholderMaker.hpp"
+
 #include "engine/pipelines/DataFrameModifier.hpp"
 #include "engine/pipelines/ManyToOneJoiner.hpp"
 

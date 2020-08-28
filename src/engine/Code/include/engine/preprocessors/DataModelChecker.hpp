@@ -14,8 +14,8 @@ class DataModelChecker
    public:
     /// Generates warnings, if there are obvious issues in the data model.
     static void check(
-        const std::shared_ptr<Poco::JSON::Object> _population_placeholder,
-        const std::shared_ptr<std::vector<std::string>> _peripheral_names,
+        const std::shared_ptr<const helpers::Placeholder> _placeholder,
+        const std::shared_ptr<const std::vector<std::string>> _peripheral_names,
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral,
         const std::vector<
@@ -54,8 +54,8 @@ class DataModelChecker
 
     /// Recursively checks the plausibility of the joins.
     static void check_join(
-        const Poco::JSON::Object& _population_placeholder,
-        const std::vector<std::string>& _peripheral_names,
+        const helpers::Placeholder& _placeholder,
+        const std::shared_ptr<const std::vector<std::string>> _peripheral_names,
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral,
         communication::Warner* _warner );
@@ -72,7 +72,7 @@ class DataModelChecker
 
     /// Checks the self joins for the time series models.
     static void check_self_joins(
-        const Poco::JSON::Object& _population_placeholder,
+        const helpers::Placeholder& _placeholder,
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral,
         const std::vector<
@@ -92,12 +92,6 @@ class DataModelChecker
         const containers::DataFrame& _population_df,
         const containers::DataFrame& _peripheral_df );
 
-    /// Extracts the join keys from the population placeholder.
-    static std::pair<std::vector<std::string>, std::vector<std::string>>
-    get_join_keys_used(
-        const Poco::JSON::Object& _population_placeholder,
-        const size_t _expected_size );
-
     /// Extracts the time stamps from the population placeholder.
     static std::tuple<
         std::vector<std::string>,
@@ -112,7 +106,7 @@ class DataModelChecker
 
     /// Returns a modified version of the placeholder, the population and
     /// peripheral tables.
-    static std::tuple<
+    /*static std::tuple<
         Poco::JSON::Object,
         containers::DataFrame,
         std::vector<containers::DataFrame>>
@@ -122,7 +116,7 @@ class DataModelChecker
         const std::vector<containers::DataFrame>& _peripheral,
         const std::vector<
             std::shared_ptr<featurelearners::AbstractFeatureLearner>>
-            _feature_learners );
+           _feature_learners );*/
 
     /// Adds warning messages related to the joins.
     static void raise_join_warnings(

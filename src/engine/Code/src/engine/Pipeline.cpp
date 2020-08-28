@@ -229,19 +229,11 @@ void Pipeline::check(
 
     // -------------------------------------------------------------------------
 
-    // TODO: More beautiful solution needed!
-
-    const auto population = *JSON::get_object( obj(), "population_" );
-
-    const auto placeholder =
-        featurelearners::PlaceholderMaker::make_placeholder( population );
-
-    const auto peripheral_names =
-        featurelearners::PlaceholderMaker::make_peripheral( placeholder );
+    const auto [placeholder, peripheral_names] = make_placeholder();
 
     preprocessors::DataModelChecker::check(
-        std::make_shared<Poco::JSON::Object>( *placeholder.to_json_obj() ),
-        std::make_shared<std::vector<std::string>>( peripheral_names ),
+        placeholder,
+        peripheral_names,
         population_df,
         peripheral_dfs,
         feature_learners,
@@ -1272,10 +1264,7 @@ Pipeline::init_feature_learners(
 
     // ----------------------------------------------------------------------
 
-    const auto population = std::make_shared<Poco::JSON::Object>(
-        *JSON::get_object( obj(), "population_" ) );
-
-    const auto peripheral = parse_peripheral();
+    const auto [placeholder, peripheral] = make_placeholder();
 
     const auto obj_vector = JSON::array_to_obj_vector(
         JSON::get_array( obj(), "feature_learners_" ) );
@@ -1297,7 +1286,7 @@ Pipeline::init_feature_learners(
 
             auto new_feature_learner =
                 featurelearners::FeatureLearnerParser::parse(
-                    *ptr, population, peripheral, _dependencies );
+                    *ptr, placeholder, peripheral, _dependencies );
 
             // --------------------------------------------------------------
 
@@ -1326,7 +1315,7 @@ Pipeline::init_feature_learners(
                             feature_learners.emplace_back(
                                 featurelearners::FeatureLearnerParser::parse(
                                     *ptr,
-                                    population,
+                                    placeholder,
                                     peripheral,
                                     dependencies ) );
 
@@ -1882,6 +1871,25 @@ std::vector<Float> Pipeline::make_importance_factors(
 
 // ------------------------------------------------------------------------
 
+std::pair<
+    std::shared_ptr<const helpers::Placeholder>,
+    std::shared_ptr<const std::vector<std::string>>>
+Pipeline::make_placeholder() const
+{
+    const auto population = *JSON::get_object( obj(), "population_" );
+
+    const auto placeholder = std::make_shared<const helpers::Placeholder>(
+        PlaceholderMaker::make_placeholder( population ) );
+
+    const auto peripheral_names =
+        std::make_shared<const std::vector<std::string>>(
+            PlaceholderMaker::make_peripheral( *placeholder ) );
+
+    return std::make_pair( placeholder, peripheral_names );
+}
+
+// ------------------------------------------------------------------------
+
 void Pipeline::make_predictor_impl(
     const Poco::JSON::Object& _cmd,
     const containers::DataFrame& _population_df )
@@ -1959,11 +1967,10 @@ Pipeline::modify_data_frames(
 
     // ----------------------------------------------------------------------
 
-    const auto placeholder =
-        featurelearners::PlaceholderMaker::make_placeholder( population );
+    const auto placeholder = PlaceholderMaker::make_placeholder( population );
 
     const auto joined_peripheral_names =
-        featurelearners::PlaceholderMaker::make_peripheral( placeholder );
+        PlaceholderMaker::make_peripheral( placeholder );
 
     ManyToOneJoiner::join_tables(
         true,

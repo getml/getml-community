@@ -39,8 +39,6 @@
 // ----------------------------------------------------
 // Module files
 
-#include "engine/featurelearners/PlaceholderMaker.hpp"
-
 #include "engine/featurelearners/AbstractFeatureLearner.hpp"
 
 #include "engine/featurelearners/FeatureLearner.hpp"

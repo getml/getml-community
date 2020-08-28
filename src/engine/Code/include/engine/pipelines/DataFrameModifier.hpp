@@ -64,8 +64,7 @@ class DataFrameModifier
     static std::string make_ts_name(
         const std::string& _ts_used, const Float _diff )
     {
-        return featurelearners::PlaceholderMaker::make_ts_name(
-            _ts_used, _diff );
+        return PlaceholderMaker::make_ts_name( _ts_used, _diff );
     }
 };
 

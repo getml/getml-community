@@ -1,8 +1,8 @@
-#include "engine/featurelearners/featurelearners.hpp"
+#include "engine/pipelines/pipelines.hpp"
 
 namespace engine
 {
-namespace featurelearners
+namespace pipelines
 {
 // ----------------------------------------------------------------------------
 
@@ -258,5 +258,5 @@ helpers::Placeholder PlaceholderMaker::make_placeholder(
 }
 
 // ----------------------------------------------------------------------------
-}  // namespace featurelearners
+}  // namespace pipelines
 }  // namespace engine
