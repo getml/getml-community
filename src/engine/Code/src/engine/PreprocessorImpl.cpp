@@ -6,41 +6,6 @@ namespace preprocessors
 {
 // ----------------------------------------------------
 
-std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
-PreprocessorImpl::extract_data_frames(
-    const Poco::JSON::Object& _cmd,
-    const std::map<std::string, containers::DataFrame>& _data_frames )
-{
-    // ------------------------------------------------
-
-    const auto population_name =
-        JSON::get_value<std::string>( _cmd, "population_name_" );
-
-    const auto population_df =
-        utils::Getter::get( population_name, _data_frames );
-
-    // ------------------------------------------------
-
-    const auto peripheral_names = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "peripheral_names_" ) );
-
-    std::vector<containers::DataFrame> peripheral_dfs;
-
-    for ( auto& name : peripheral_names )
-        {
-            peripheral_dfs.emplace_back(
-                utils::Getter::get( name, _data_frames ) );
-        }
-
-    // ------------------------------------------------
-
-    return std::make_pair( population_df, peripheral_dfs );
-
-    // ------------------------------------------------
-}
-
-// ----------------------------------------------------
-
 std::vector<std::shared_ptr<helpers::ColumnDescription>>
 PreprocessorImpl::from_array( const Poco::JSON::Array::Ptr& _arr )
 {
@@ -59,40 +24,6 @@ PreprocessorImpl::from_array( const Poco::JSON::Array::Ptr& _arr )
         }
 
     return desc;
-}
-
-// ----------------------------------------------------
-
-void PreprocessorImpl::insert_data_frames(
-    const Poco::JSON::Object& _cmd,
-    const containers::DataFrame& _population_df,
-    const std::vector<containers::DataFrame>& _peripheral_dfs,
-    std::map<std::string, containers::DataFrame>* _data_frames )
-{
-    // ------------------------------------------------
-
-    auto& data_frames = *_data_frames;
-
-    // ------------------------------------------------
-
-    const auto population_name =
-        JSON::get_value<std::string>( _cmd, "population_name_" );
-
-    data_frames[population_name] = _population_df;
-
-    // ------------------------------------------------
-
-    const auto peripheral_names = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "peripheral_names_" ) );
-
-    assert_true( peripheral_names.size() == _peripheral_dfs.size() );
-
-    for ( size_t i = 0; i < _peripheral_dfs.size(); ++i )
-        {
-            data_frames[peripheral_names.at( i )] = _peripheral_dfs.at( i );
-        }
-
-    // ------------------------------------------------
 }
 
 // ----------------------------------------------------

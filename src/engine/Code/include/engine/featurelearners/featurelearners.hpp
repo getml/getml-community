@@ -12,6 +12,7 @@
 #include <numeric>
 #include <optional>
 #include <random>
+#include <set>
 #include <unordered_map>
 #include <vector>
 
@@ -22,6 +23,8 @@
 #include <Poco/Net/StreamSocket.h>
 
 #include "logging/logging.hpp"
+
+#include "helpers/helpers.hpp"
 
 #include "engine/containers/containers.hpp"
 
@@ -35,6 +38,8 @@
 
 // ----------------------------------------------------
 // Module files
+
+#include "engine/featurelearners/PlaceholderMaker.hpp"
 
 #include "engine/featurelearners/AbstractFeatureLearner.hpp"
 

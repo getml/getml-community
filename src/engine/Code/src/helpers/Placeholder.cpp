@@ -42,9 +42,10 @@ void Placeholder::check_vector_length()
     if ( allow_lagged_targets_.size() != expected )
         {
             throw std::invalid_argument(
-                "Error: Length of 'allow lagged targets' does not match length "
-                "of "
-                "joined tables!" );
+                "Length of 'allow lagged targets' does not match length "
+                "of joined tables (expected: " +
+                std::to_string( expected ) + ", got: " +
+                std::to_string( allow_lagged_targets_.size() ) + ")." );
         }
 
     if ( join_keys_used_.size() != expected )

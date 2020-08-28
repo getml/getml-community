@@ -38,6 +38,9 @@
 // ----------------------------------------------------
 // Module files
 
+#include "engine/pipelines/DataFrameModifier.hpp"
+#include "engine/pipelines/ManyToOneJoiner.hpp"
+
 #include "engine/pipelines/PipelineImpl.hpp"
 
 #include "engine/pipelines/Pipeline.hpp"

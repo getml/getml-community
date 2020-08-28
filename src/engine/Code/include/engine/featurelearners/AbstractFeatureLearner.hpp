@@ -46,7 +46,8 @@ class AbstractFeatureLearner
     virtual void fit(
         const Poco::JSON::Object& _cmd,
         const std::shared_ptr<const communication::SocketLogger>& _logger,
-        const std::map<std::string, containers::DataFrame>& _data_frames,
+        const containers::DataFrame& _population_df,
+        const std::vector<containers::DataFrame>& _peripheral_dfs,
         const Int _target_num ) = 0;
 
     /// Whether this is a classification problem.
@@ -101,8 +102,8 @@ class AbstractFeatureLearner
         const Poco::JSON::Object& _cmd,
         const std::vector<size_t>& _index,
         const std::shared_ptr<const communication::SocketLogger>& _logger,
-        const std::map<std::string, containers::DataFrame>& _data_frames )
-        const = 0;
+        const containers::DataFrame& _population_df,
+        const std::vector<containers::DataFrame>& _peripheral_dfs ) const = 0;
 
     /// Returns a string describing the type of the feature learner.
     virtual std::string type() const = 0;

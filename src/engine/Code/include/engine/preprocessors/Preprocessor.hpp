@@ -26,16 +26,20 @@ class Preprocessor
     virtual Poco::JSON::Object::Ptr fingerprint() const = 0;
 
     /// Fits the preprocessor. Returns the transformed data frames.
-    virtual void fit_transform(
+    virtual std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
+    fit_transform(
         const Poco::JSON::Object& _cmd,
         const std::shared_ptr<containers::Encoding>& _categories,
-        std::map<std::string, containers::DataFrame>* _data_frames ) = 0;
+        const containers::DataFrame& _population_df,
+        const std::vector<containers::DataFrame>& _peripheral_dfs ) = 0;
 
     /// Generates the new column.
-    virtual void transform(
+    virtual std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
+    transform(
         const Poco::JSON::Object& _cmd,
         const std::shared_ptr<const containers::Encoding> _categories,
-        std::map<std::string, containers::DataFrame>* _data_frames ) const = 0;
+        const containers::DataFrame& _population_df,
+        const std::vector<containers::DataFrame>& _peripheral_dfs ) const = 0;
 
     /// Expresses the preprocessor as a JSON object.
     virtual Poco::JSON::Object::Ptr to_json_obj() const = 0;

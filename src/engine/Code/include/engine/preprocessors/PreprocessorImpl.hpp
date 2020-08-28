@@ -9,22 +9,9 @@ namespace preprocessors
 
 struct PreprocessorImpl
 {
-    /// Extracts the data frames from the command.
-    static std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
-    extract_data_frames(
-        const Poco::JSON::Object& _cmd,
-        const std::map<std::string, containers::DataFrame>& _data_frames );
-
     /// Generates a vector of column of descriptions from an array.
     static std::vector<std::shared_ptr<helpers::ColumnDescription>> from_array(
         const Poco::JSON::Array::Ptr& _arr );
-
-    /// Inserts the data frames into the map.
-    static void insert_data_frames(
-        const Poco::JSON::Object& _cmd,
-        const containers::DataFrame& _population_df,
-        const std::vector<containers::DataFrame>& _peripheral_dfs,
-        std::map<std::string, containers::DataFrame>* _data_frames );
 
     /// Retrieves the column names of all column descriptions that match the
     /// marker and table.

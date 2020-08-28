@@ -174,42 +174,43 @@ Poco::JSON::Object::Ptr Seasonal::fingerprint() const
     auto obj = Poco::JSON::Object::Ptr( new Poco::JSON::Object() );
 
     obj->set( "type_", "Seasonal" );
-    // obj->set( "dependencies_", JSON::vector_to_array_ptr( dependencies_ ) );
 
     return obj;
 }
 
 // ----------------------------------------------------
 
-void Seasonal::fit_transform(
+std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
+Seasonal::fit_transform(
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<containers::Encoding>& _categories,
-    std::map<std::string, containers::DataFrame>* _data_frames )
+    const containers::DataFrame& _population_df,
+    const std::vector<containers::DataFrame>& _peripheral_dfs )
 {
     assert_true( _categories );
 
-    auto [population_df, peripheral_dfs] =
-        PreprocessorImpl::extract_data_frames( _cmd, *_data_frames );
-
-    population_df = fit_transform_df(
-        population_df,
+    const auto population_df = fit_transform_df(
+        _population_df,
         helpers::ColumnDescription::POPULATION,
         0,
         _categories.get() );
 
-    for ( size_t i = 0; i < peripheral_dfs.size(); ++i )
-        {
-            auto& df = peripheral_dfs.at( i );
+    auto peripheral_dfs = std::vector<containers::DataFrame>();
 
-            df = fit_transform_df(
+    for ( size_t i = 0; i < _peripheral_dfs.size(); ++i )
+        {
+            const auto& df = _peripheral_dfs.at( i );
+
+            const auto new_df = fit_transform_df(
                 df,
                 helpers::ColumnDescription::PERIPHERAL,
                 i,
                 _categories.get() );
+
+            peripheral_dfs.push_back( new_df );
         }
 
-    PreprocessorImpl::insert_data_frames(
-        _cmd, population_df, peripheral_dfs, _data_frames );
+    return std::make_pair( population_df, peripheral_dfs );
 }
 
 // ----------------------------------------------------
@@ -227,6 +228,13 @@ containers::DataFrame Seasonal::fit_transform_df(
             // -----------------------------------
 
             const auto& ts = _df.time_stamp( i );
+
+            // -----------------------------------
+
+            if ( ts.name().find( "$GETML_GENERATED_TS" ) != std::string::npos )
+                {
+                    continue;
+                }
 
             // -----------------------------------
 
@@ -386,32 +394,34 @@ Poco::JSON::Object::Ptr Seasonal::to_json_obj() const
 
 // ----------------------------------------------------
 
-void Seasonal::transform(
+std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
+Seasonal::transform(
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<const containers::Encoding> _categories,
-    std::map<std::string, containers::DataFrame>* _data_frames ) const
+    const containers::DataFrame& _population_df,
+    const std::vector<containers::DataFrame>& _peripheral_dfs ) const
 {
     assert_true( _categories );
 
-    auto [population_df, peripheral_dfs] =
-        PreprocessorImpl::extract_data_frames( _cmd, *_data_frames );
-
-    population_df = transform_df(
+    const auto population_df = transform_df(
         *_categories,
-        population_df,
+        _population_df,
         helpers::ColumnDescription::POPULATION,
         0 );
 
-    for ( size_t i = 0; i < peripheral_dfs.size(); ++i )
-        {
-            auto& df = peripheral_dfs.at( i );
+    auto peripheral_dfs = std::vector<containers::DataFrame>();
 
-            df = transform_df(
+    for ( size_t i = 0; i < _peripheral_dfs.size(); ++i )
+        {
+            const auto& df = _peripheral_dfs.at( i );
+
+            const auto new_df = transform_df(
                 *_categories, df, helpers::ColumnDescription::PERIPHERAL, i );
+
+            peripheral_dfs.push_back( new_df );
         }
 
-    PreprocessorImpl::insert_data_frames(
-        _cmd, population_df, peripheral_dfs, _data_frames );
+    return std::make_pair( population_df, peripheral_dfs );
 }
 
 // ----------------------------------------------------

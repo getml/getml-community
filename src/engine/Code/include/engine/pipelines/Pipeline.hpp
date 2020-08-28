@@ -1,5 +1,6 @@
 #ifndef ENGINE_PIPELINES_PIPELINE_HPP_
 #define ENGINE_PIPELINES_PIPELINE_HPP_
+
 // ----------------------------------------------------------------------------
 
 namespace engine
@@ -134,14 +135,16 @@ class Pipeline
     /// haven't been explicitly marked "comparison only".
     void add_population_cols(
         const Poco::JSON::Object& _cmd,
-        const std::map<std::string, containers::DataFrame>& _data_frames,
+        const containers::DataFrame& _population_df,
         const predictors::PredictorImpl& _predictor_impl,
         containers::Features* _features ) const;
 
     /// Applies the fitted preprocessors.
-    std::map<std::string, containers::DataFrame> apply_preprocessors(
+    std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
+    apply_preprocessors(
         const Poco::JSON::Object& _cmd,
-        const std::map<std::string, containers::DataFrame>& _data_frames,
+        const containers::DataFrame& _population_df,
+        const std::vector<containers::DataFrame>& _peripheral_dfs,
         const std::shared_ptr<const containers::Encoding>& _categories,
         Poco::Net::StreamSocket* _socket ) const;
 
@@ -157,7 +160,7 @@ class Pipeline
         const size_t _nrows,
         const size_t _ncols,
         const Poco::JSON::Object& _cmd,
-        const std::map<std::string, containers::DataFrame>& _data_frames );
+        const containers::DataFrame& _population_df );
 
     /// Calculates the column importances.
     std::pair<
@@ -222,7 +225,8 @@ class Pipeline
     void fit_feature_learners(
         const Poco::JSON::Object& _cmd,
         const std::shared_ptr<const communication::Logger>& _logger,
-        const std::map<std::string, containers::DataFrame>& _data_frames,
+        const containers::DataFrame& _population_df,
+        const std::vector<containers::DataFrame>& _peripheral_dfs,
         const std::shared_ptr<dependency::FETracker> _fe_tracker,
         Poco::Net::StreamSocket* _socket );
 
@@ -230,7 +234,8 @@ class Pipeline
     void fit_predictors(
         const Poco::JSON::Object& _cmd,
         const std::shared_ptr<const communication::Logger>& _logger,
-        const std::map<std::string, containers::DataFrame>& _data_frames,
+        const containers::DataFrame& _population_df,
+        const std::vector<containers::DataFrame>& _peripheral_dfs,
         const std::shared_ptr<dependency::PredTracker> _pred_tracker,
         const predictors::PredictorImpl& _predictor_impl,
         const std::string& _purpose,
@@ -240,13 +245,12 @@ class Pipeline
         Poco::Net::StreamSocket* _socket ) const;
 
     /// Fits the preprocessors. Returns a map of transformed data frames.
-    std::pair<
-        std::vector<std::shared_ptr<preprocessors::Preprocessor>>,
-        std::map<std::string, containers::DataFrame>>
+    std::vector<std::shared_ptr<preprocessors::Preprocessor>>
     fit_transform_preprocessors(
         const Poco::JSON::Object& _cmd,
-        const std::map<std::string, containers::DataFrame>& _data_frames,
         const std::shared_ptr<containers::Encoding>& _categories,
+        containers::DataFrame* _population_df,
+        std::vector<containers::DataFrame>* _peripheral_dfs,
         Poco::Net::StreamSocket* _socket ) const;
 
     /// Calculates the feature importances vis-a-vis each target.
@@ -264,7 +268,8 @@ class Pipeline
     containers::Features generate_autofeatures(
         const Poco::JSON::Object& _cmd,
         const std::shared_ptr<const communication::Logger>& _logger,
-        const std::map<std::string, containers::DataFrame>& _data_frames,
+        const containers::DataFrame& _population_df,
+        const std::vector<containers::DataFrame>& _peripheral_dfs,
         const predictors::PredictorImpl& _predictor_impl,
         Poco::Net::StreamSocket* _socket ) const;
 
@@ -277,7 +282,7 @@ class Pipeline
     /// included in the predictor.
     containers::CategoricalFeatures get_categorical_features(
         const Poco::JSON::Object& _cmd,
-        const std::map<std::string, containers::DataFrame>& _data_frames,
+        const containers::DataFrame& _population_df,
         const predictors::PredictorImpl& _predictor_impl ) const;
 
     /// Gets all of the numerical features needed from the autofeatures and the
@@ -285,7 +290,7 @@ class Pipeline
     containers::Features get_numerical_features(
         const containers::Features& _autofeatures,
         const Poco::JSON::Object& _cmd,
-        const std::map<std::string, containers::DataFrame>& _data_frames,
+        const containers::DataFrame& _population_df,
         const predictors::PredictorImpl& _predictor_impl ) const;
 
     /// Get the targets from the population table.
@@ -364,7 +369,7 @@ class Pipeline
     /// add.
     void make_feature_selector_impl(
         const Poco::JSON::Object& _cmd,
-        const std::map<std::string, containers::DataFrame>& _data_frames );
+        const containers::DataFrame& _population_df );
 
     /// Calculate the importance factors, which are needed to generate the
     /// column importances.
@@ -377,7 +382,13 @@ class Pipeline
     /// Contains only the selected features.
     void make_predictor_impl(
         const Poco::JSON::Object& _cmd,
-        const std::map<std::string, containers::DataFrame>& _data_frames );
+        const containers::DataFrame& _population_df );
+
+    /// Implements such things as memory, horizon, many-to-joins etc.
+    std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
+    modify_data_frames(
+        const containers::DataFrame& _population_df,
+        const std::vector<containers::DataFrame>& _peripheral_dfs ) const;
 
     /// Moves the temporary folder to its final destination at the end of
     /// .save(...).
