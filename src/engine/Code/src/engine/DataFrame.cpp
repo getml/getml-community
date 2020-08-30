@@ -9,18 +9,18 @@ namespace containers
 void DataFrame::add_float_column(
     const Column<Float> &_col, const std::string &_role )
 {
-    if ( _role == DataFrame::ROLE_NUMERICAL )
+    if ( _role == ROLE_NUMERICAL )
         {
             add_column( _col, &numericals_ );
             update_last_change();
         }
-    else if ( _role == DataFrame::ROLE_TARGET )
+    else if ( _role == ROLE_TARGET )
         {
             check_null( _col );
             add_column( _col, &targets_ );
             update_last_change();
         }
-    else if ( _role == DataFrame::ROLE_TIME_STAMP )
+    else if ( _role == ROLE_TIME_STAMP )
         {
             auto col = _col;
             if ( col.unit() == "" )
@@ -28,7 +28,7 @@ void DataFrame::add_float_column(
             add_column( col, &time_stamps_ );
             update_last_change();
         }
-    else if ( _role == DataFrame::ROLE_UNUSED || _role == ROLE_UNUSED_FLOAT )
+    else if ( _role == ROLE_UNUSED || _role == ROLE_UNUSED_FLOAT )
         {
             add_column( _col, &unused_floats_ );
         }
@@ -65,12 +65,12 @@ void DataFrame::add_float_vectors(
 void DataFrame::add_int_column(
     const Column<Int> &_col, const std::string _role )
 {
-    if ( _role == DataFrame::ROLE_CATEGORICAL )
+    if ( _role == ROLE_CATEGORICAL )
         {
             add_column( _col, &categoricals_ );
             update_last_change();
         }
-    else if ( _role == DataFrame::ROLE_JOIN_KEY )
+    else if ( _role == ROLE_JOIN_KEY )
         {
             add_column( _col, &join_keys_ );
 
@@ -416,32 +416,32 @@ DataFrame DataFrame::clone( const std::string _name ) const
 
     for ( size_t i = 0; i < num_categoricals(); ++i )
         {
-            df.add_int_column( categorical( i ).clone(), "categorical" );
+            df.add_int_column( categorical( i ).clone(), ROLE_CATEGORICAL );
         }
 
     for ( size_t i = 0; i < num_join_keys(); ++i )
         {
-            df.add_int_column( join_key( i ).clone(), "join_key" );
+            df.add_int_column( join_key( i ).clone(), ROLE_JOIN_KEY );
         }
 
     for ( size_t i = 0; i < num_numericals(); ++i )
         {
-            df.add_float_column( numerical( i ).clone(), "numerical" );
+            df.add_float_column( numerical( i ).clone(), ROLE_NUMERICAL );
         }
 
     for ( size_t i = 0; i < num_targets(); ++i )
         {
-            df.add_float_column( target( i ).clone(), "target" );
+            df.add_float_column( target( i ).clone(), ROLE_TARGET );
         }
 
     for ( size_t i = 0; i < num_time_stamps(); ++i )
         {
-            df.add_float_column( time_stamp( i ).clone(), "time_stamp" );
+            df.add_float_column( time_stamp( i ).clone(), ROLE_TIME_STAMP );
         }
 
     for ( size_t i = 0; i < num_unused_floats(); ++i )
         {
-            df.add_float_column( unused_float( i ).clone(), "unused_float" );
+            df.add_float_column( unused_float( i ).clone(), ROLE_UNUSED_FLOAT );
         }
 
     for ( size_t i = 0; i < num_unused_strings(); ++i )
@@ -521,19 +521,19 @@ void DataFrame::create_indices()
 const Column<Float> &DataFrame::float_column(
     const std::string &_role, const size_t _num ) const
 {
-    if ( _role == "numerical" )
+    if ( _role == ROLE_NUMERICAL )
         {
             return numerical( _num );
         }
-    else if ( _role == "target" )
+    else if ( _role == ROLE_TARGET )
         {
             return target( _num );
         }
-    else if ( _role == "time_stamp" )
+    else if ( _role == ROLE_TIME_STAMP )
         {
             return time_stamp( _num );
         }
-    else if ( _role == "unused" || _role == "unused_float" )
+    else if ( _role == ROLE_UNUSED || _role == ROLE_UNUSED_FLOAT )
         {
             return unused_float( _num );
         }
@@ -546,19 +546,19 @@ const Column<Float> &DataFrame::float_column(
 const Column<Float> &DataFrame::float_column(
     const std::string &_name, const std::string &_role ) const
 {
-    if ( _role == "numerical" )
+    if ( _role == ROLE_NUMERICAL )
         {
             return numerical( _name );
         }
-    else if ( _role == "target" )
+    else if ( _role == ROLE_TARGET )
         {
             return target( _name );
         }
-    else if ( _role == "time_stamp" )
+    else if ( _role == ROLE_TIME_STAMP )
         {
             return time_stamp( _name );
         }
-    else if ( _role == "unused" || _role == "unused_float" )
+    else if ( _role == ROLE_UNUSED || _role == ROLE_UNUSED_FLOAT )
         {
             return unused_float( _name );
         }
@@ -723,17 +723,17 @@ void DataFrame::from_db(
 
     auto df = DataFrame( name(), categories_, join_keys_encoding_ );
 
-    df.add_int_vectors( _categorical_names, categoricals, "categorical" );
+    df.add_int_vectors( _categorical_names, categoricals, ROLE_CATEGORICAL );
 
-    df.add_int_vectors( _join_key_names, join_keys, "join_key" );
+    df.add_int_vectors( _join_key_names, join_keys, ROLE_JOIN_KEY );
 
-    df.add_float_vectors( _numerical_names, numericals, "numerical" );
+    df.add_float_vectors( _numerical_names, numericals, ROLE_NUMERICAL );
 
-    df.add_float_vectors( _target_names, targets, "target" );
+    df.add_float_vectors( _target_names, targets, ROLE_TARGET );
 
-    df.add_float_vectors( _time_stamp_names, time_stamps, "time_stamp" );
+    df.add_float_vectors( _time_stamp_names, time_stamps, ROLE_TIME_STAMP );
 
-    df.add_float_vectors( _unused_float_names, unused_floats, "unused" );
+    df.add_float_vectors( _unused_float_names, unused_floats, ROLE_UNUSED );
 
     df.add_string_vectors( _unused_string_names, unused_strings );
 
@@ -765,20 +765,21 @@ void DataFrame::from_json(
 
     auto df = DataFrame( name(), categories_, join_keys_encoding_ );
 
-    df.from_json( _obj, _categorical_names, "categorical", categories_.get() );
+    df.from_json(
+        _obj, _categorical_names, ROLE_CATEGORICAL, categories_.get() );
 
     df.from_json(
-        _obj, _join_key_names, "join_key", join_keys_encoding_.get() );
+        _obj, _join_key_names, ROLE_JOIN_KEY, join_keys_encoding_.get() );
 
-    df.from_json( _obj, _numerical_names, "numerical" );
+    df.from_json( _obj, _numerical_names, ROLE_NUMERICAL );
 
-    df.from_json( _obj, _target_names, "target" );
+    df.from_json( _obj, _target_names, ROLE_TARGET );
 
     df.from_json( _obj, _time_stamp_names, _time_formats );
 
-    df.from_json( _obj, _unused_float_names, "unused_float" );
+    df.from_json( _obj, _unused_float_names, ROLE_UNUSED_FLOAT );
 
-    df.from_json( _obj, _unused_string_names, "unused_string" );
+    df.from_json( _obj, _unused_string_names, ROLE_UNUSED_STRING );
 
     // ----------------------------------------
 
@@ -847,14 +848,14 @@ void DataFrame::from_json(
         {
             const auto &name = _names[i];
 
-            if ( _role == "target" && !_obj.has( name ) )
+            if ( _role == ROLE_TARGET && !_obj.has( name ) )
                 {
                     continue;
                 }
 
             const auto arr = JSON::get_array( _obj, name );
 
-            if ( _role == "unused" || _role == "unused_string" )
+            if ( _role == ROLE_UNUSED || _role == ROLE_UNUSED_STRING )
                 {
                     auto column = Column<strings::String>( arr->size() );
 
@@ -918,7 +919,7 @@ void DataFrame::from_json(
 
             column.set_name( _names[i] );
 
-            add_float_column( column, "time_stamp" );
+            add_float_column( column, ROLE_TIME_STAMP );
         }
 }
 
@@ -1062,17 +1063,17 @@ void DataFrame::from_query(
 
     auto df = DataFrame( name(), categories_, join_keys_encoding_ );
 
-    df.add_int_vectors( _categorical_names, categoricals, "categorical" );
+    df.add_int_vectors( _categorical_names, categoricals, ROLE_CATEGORICAL );
 
-    df.add_int_vectors( _join_key_names, join_keys, "join_key" );
+    df.add_int_vectors( _join_key_names, join_keys, ROLE_JOIN_KEY );
 
-    df.add_float_vectors( _numerical_names, numericals, "numerical" );
+    df.add_float_vectors( _numerical_names, numericals, ROLE_NUMERICAL );
 
-    df.add_float_vectors( _target_names, targets, "target" );
+    df.add_float_vectors( _target_names, targets, ROLE_TARGET );
 
-    df.add_float_vectors( _time_stamp_names, time_stamps, "time_stamp" );
+    df.add_float_vectors( _time_stamp_names, time_stamps, ROLE_TIME_STAMP );
 
-    df.add_float_vectors( _unused_float_names, unused_floats, "unused" );
+    df.add_float_vectors( _unused_float_names, unused_floats, ROLE_UNUSED );
 
     df.add_string_vectors( _unused_string_names, unused_strings );
 
@@ -1239,17 +1240,18 @@ void DataFrame::from_reader(
 
     auto df = DataFrame( name(), categories_, join_keys_encoding_ );
 
-    df.add_int_vectors( _categorical_names, categoricals, "categorical" );
+    df.add_int_vectors( _categorical_names, categoricals, ROLE_CATEGORICAL );
 
-    df.add_int_vectors( _join_key_names, join_keys, "join_key" );
+    df.add_int_vectors( _join_key_names, join_keys, ROLE_JOIN_KEY );
 
-    df.add_float_vectors( _numerical_names, numericals, "numerical" );
+    df.add_float_vectors( _numerical_names, numericals, ROLE_NUMERICAL );
 
-    df.add_float_vectors( _target_names, targets, "target" );
+    df.add_float_vectors( _target_names, targets, ROLE_TARGET );
 
-    df.add_float_vectors( _time_stamp_names, time_stamps, "time_stamp" );
+    df.add_float_vectors( _time_stamp_names, time_stamps, ROLE_TIME_STAMP );
 
-    df.add_float_vectors( _unused_float_names, unused_floats, "unused_float" );
+    df.add_float_vectors(
+        _unused_float_names, unused_floats, ROLE_UNUSED_FLOAT );
 
     df.add_string_vectors( _unused_string_names, unused_strings );
 
@@ -1514,21 +1516,21 @@ DataFrame::get_headers() const
     for ( size_t j = 0; j < num_targets(); ++j )
         {
             colnames.push_back( target( j ).name() );
-            roles.push_back( "target" );
+            roles.push_back( ROLE_TARGET );
             units.push_back( target( j ).unit() );
         }
 
     for ( size_t j = 0; j < num_categoricals(); ++j )
         {
             colnames.push_back( categorical( j ).name() );
-            roles.push_back( "categorical" );
+            roles.push_back( ROLE_CATEGORICAL );
             units.push_back( categorical( j ).unit() );
         }
 
     for ( size_t j = 0; j < num_numericals(); ++j )
         {
             colnames.push_back( numerical( j ).name() );
-            roles.push_back( "numerical" );
+            roles.push_back( ROLE_NUMERICAL );
             units.push_back( numerical( j ).unit() );
         }
 
@@ -1649,11 +1651,11 @@ std::string DataFrame::get_string( const std::int32_t _max_rows ) const
 const Column<Int> &DataFrame::int_column(
     const std::string &_role, const size_t _num ) const
 {
-    if ( _role == "categorical" )
+    if ( _role == ROLE_CATEGORICAL )
         {
             return categorical( _num );
         }
-    else if ( _role == "join_key" )
+    else if ( _role == ROLE_JOIN_KEY )
         {
             return join_key( _num );
         }
@@ -1666,11 +1668,11 @@ const Column<Int> &DataFrame::int_column(
 const Column<Int> &DataFrame::int_column(
     const std::string &_name, const std::string &_role ) const
 {
-    if ( _role == "categorical" )
+    if ( _role == ROLE_CATEGORICAL )
         {
             return categorical( _name );
         }
-    else if ( _role == "join_key" )
+    else if ( _role == ROLE_JOIN_KEY )
         {
             return join_key( _name );
         }
@@ -1813,19 +1815,19 @@ Poco::JSON::Object DataFrame::refresh() const
 
     // ----------------------------------------
 
-    obj.set( "categorical", get_colnames( categoricals_ ) );
+    obj.set( ROLE_CATEGORICAL, get_colnames( categoricals_ ) );
 
-    obj.set( "join_key", get_colnames( join_keys_ ) );
+    obj.set( ROLE_JOIN_KEY, get_colnames( join_keys_ ) );
 
-    obj.set( "numerical", get_colnames( numericals_ ) );
+    obj.set( ROLE_NUMERICAL, get_colnames( numericals_ ) );
 
-    obj.set( "target", get_colnames( targets_ ) );
+    obj.set( ROLE_TARGET, get_colnames( targets_ ) );
 
-    obj.set( "time_stamp", get_colnames( time_stamps_ ) );
+    obj.set( ROLE_TIME_STAMP, get_colnames( time_stamps_ ) );
 
-    obj.set( "unused_float", get_colnames( unused_floats_ ) );
+    obj.set( ROLE_UNUSED_FLOAT, get_colnames( unused_floats_ ) );
 
-    obj.set( "unused_string", get_colnames( unused_strings_ ) );
+    obj.set( ROLE_UNUSED_STRING, get_colnames( unused_strings_ ) );
 
     // ----------------------------------------
 
@@ -2038,35 +2040,36 @@ void DataFrame::where( const std::vector<bool> &_condition )
     for ( size_t i = 0; i < num_categoricals(); ++i )
         {
             df.add_int_column(
-                categorical( i ).where( _condition ), "categorical" );
+                categorical( i ).where( _condition ), ROLE_CATEGORICAL );
         }
 
     for ( size_t i = 0; i < num_join_keys(); ++i )
         {
-            df.add_int_column( join_key( i ).where( _condition ), "join_key" );
+            df.add_int_column(
+                join_key( i ).where( _condition ), ROLE_JOIN_KEY );
         }
 
     for ( size_t i = 0; i < num_numericals(); ++i )
         {
             df.add_float_column(
-                numerical( i ).where( _condition ), "numerical" );
+                numerical( i ).where( _condition ), ROLE_NUMERICAL );
         }
 
     for ( size_t i = 0; i < num_targets(); ++i )
         {
-            df.add_float_column( target( i ).where( _condition ), "target" );
+            df.add_float_column( target( i ).where( _condition ), ROLE_TARGET );
         }
 
     for ( size_t i = 0; i < num_time_stamps(); ++i )
         {
             df.add_float_column(
-                time_stamp( i ).where( _condition ), "time_stamp" );
+                time_stamp( i ).where( _condition ), ROLE_TIME_STAMP );
         }
 
     for ( size_t i = 0; i < num_unused_floats(); ++i )
         {
             df.add_float_column(
-                unused_float( i ).where( _condition ), "unused_float" );
+                unused_float( i ).where( _condition ), ROLE_UNUSED_FLOAT );
         }
 
     for ( size_t i = 0; i < num_unused_strings(); ++i )

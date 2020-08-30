@@ -367,7 +367,8 @@ std::vector<containers::DataFrame> TimeSeriesModel<FEType>::create_peripheral(
 
     for ( const auto &col : ts_cols )
         {
-            new_df.add_float_column( col, "time_stamp" );
+            new_df.add_float_column(
+                col, containers::DataFrame::ROLE_TIME_STAMP );
         }
 
     // ------------------------------------------------------------
@@ -419,7 +420,8 @@ containers::DataFrame TimeSeriesModel<FEType>::create_population(
                     new_ts[i] = static_cast<Float>( i );
                 }
 
-            new_df.add_float_column( new_ts, "time_stamp" );
+            new_df.add_float_column(
+                new_ts, containers::DataFrame::ROLE_TIME_STAMP );
         }
 
     // -----------------------------------------------------------------

@@ -675,20 +675,23 @@ containers::DataFrame PipelineManager::to_df(
                 {
                     auto col = containers::Column( _yhat[j++] );
                     col.set_name( autofeatures[i] );
-                    df.add_float_column( col, "numerical" );
+                    df.add_float_column(
+                        col, containers::DataFrame::ROLE_NUMERICAL );
                 }
 
             for ( size_t i = 0; i < numerical.size(); ++i )
                 {
                     auto col = containers::Column( _yhat[j++] );
                     col.set_name( numerical[i] );
-                    df.add_float_column( col, "numerical" );
+                    df.add_float_column(
+                        col, containers::DataFrame::ROLE_NUMERICAL );
                 }
 
             for ( const auto& colname : categorical )
                 {
                     auto col = population_table.categorical( colname ).clone();
-                    df.add_int_column( col, "categorical" );
+                    df.add_int_column(
+                        col, containers::DataFrame::ROLE_CATEGORICAL );
                 }
         }
 
@@ -698,19 +701,19 @@ containers::DataFrame PipelineManager::to_df(
     for ( size_t i = 0; i < population_table.num_join_keys(); ++i )
         {
             const auto col = population_table.join_key( i ).clone();
-            df.add_int_column( col, "join_key" );
+            df.add_int_column( col, containers::DataFrame::ROLE_JOIN_KEY );
         }
 
     for ( size_t i = 0; i < population_table.num_time_stamps(); ++i )
         {
             const auto col = population_table.time_stamp( i ).clone();
-            df.add_float_column( col, "time_stamp" );
+            df.add_float_column( col, containers::DataFrame::ROLE_TIME_STAMP );
         }
 
     for ( size_t i = 0; i < population_table.num_targets(); ++i )
         {
             const auto col = population_table.target( i ).clone();
-            df.add_float_column( col, "target" );
+            df.add_float_column( col, containers::DataFrame::ROLE_TARGET );
         }
 
     // -------------------------------------------------------

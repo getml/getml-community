@@ -17,6 +17,7 @@ class DataFrame
     static constexpr const char *ROLE_TIME_STAMP = "time_stamp";
     static constexpr const char *ROLE_UNUSED = "unused";
     static constexpr const char *ROLE_UNUSED_FLOAT = "unused_float";
+    static constexpr const char *ROLE_UNUSED_STRING = "unused_string";
 
    public:
     DataFrame()

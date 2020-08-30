@@ -255,14 +255,16 @@ void GroupByParser::group_by_unique(
                     const auto col = categorical_aggregation(
                         type, as, json_col, _unique, _index );
 
-                    _result->add_float_column( col, "unused_float" );
+                    _result->add_float_column(
+                        col, containers::DataFrame::ROLE_UNUSED_FLOAT );
                 }
             else
                 {
                     const auto col = numerical_aggregation(
                         type, as, json_col, _unique, _index );
 
-                    _result->add_float_column( col, "unused_float" );
+                    _result->add_float_column(
+                        col, containers::DataFrame::ROLE_UNUSED_FLOAT );
                 }
         }
 }

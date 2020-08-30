@@ -217,7 +217,7 @@ void DataFrameModifier::add_ts(
 
     for ( auto& col : cols )
         {
-            df->add_float_column( col, "time_stamp" );
+            df->add_float_column( col, containers::DataFrame::ROLE_TIME_STAMP );
         }
 
     // ------------------------------------------------------------------------

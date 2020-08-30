@@ -51,34 +51,39 @@ containers::DataFrame GroupByParser::group_by(
         {
             const auto col = df().categorical( _join_key_name );
             const auto [index, unique] = make_index( col );
-            result.add_int_column( unique, "categorical" );
+            result.add_int_column(
+                unique, containers::DataFrame::ROLE_CATEGORICAL );
             group_by_unique( _aggregations, unique, index, &result );
         }
     else if ( df().has_join_key( _join_key_name ) )
         {
             const auto [index, unique] = find_index( _join_key_name );
-            result.add_int_column( unique, "join_key" );
+            result.add_int_column(
+                unique, containers::DataFrame::ROLE_JOIN_KEY );
             group_by_unique( _aggregations, unique, index, &result );
         }
     else if ( df().has_numerical( _join_key_name ) )
         {
             const auto col = df().numerical( _join_key_name );
             const auto [index, unique] = make_index( col );
-            result.add_float_column( unique, "numerical" );
+            result.add_float_column(
+                unique, containers::DataFrame::ROLE_NUMERICAL );
             group_by_unique( _aggregations, unique, index, &result );
         }
     else if ( df().has_target( _join_key_name ) )
         {
             const auto col = df().target( _join_key_name );
             const auto [index, unique] = make_index( col );
-            result.add_float_column( unique, "target" );
+            result.add_float_column(
+                unique, containers::DataFrame::ROLE_TARGET );
             group_by_unique( _aggregations, unique, index, &result );
         }
     else if ( df().has_unused_float( _join_key_name ) )
         {
             const auto col = df().unused_float( _join_key_name );
             const auto [index, unique] = make_index( col );
-            result.add_float_column( unique, "unused_float" );
+            result.add_float_column(
+                unique, containers::DataFrame::ROLE_UNUSED_FLOAT );
             group_by_unique( _aggregations, unique, index, &result );
         }
     else if ( df().has_unused_string( _join_key_name ) )
