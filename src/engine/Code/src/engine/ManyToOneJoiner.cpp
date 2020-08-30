@@ -122,7 +122,9 @@ containers::DataFrame ManyToOneJoiner::join_one(
     for ( size_t i = 0; i < peripheral.num_categoricals(); ++i )
         {
             auto col = peripheral.categorical( i ).sort_by_key( index );
-            col.set_name( containers::Macros::joined() + col.name() );
+            col.set_name(
+                containers::Macros::table() + "=" + name +
+                containers::Macros::column() + "=" + col.name() );
             joined.add_int_column(
                 col, containers::DataFrame::ROLE_CATEGORICAL );
         }
@@ -130,14 +132,18 @@ containers::DataFrame ManyToOneJoiner::join_one(
     for ( size_t i = 0; i < peripheral.num_join_keys(); ++i )
         {
             auto col = peripheral.join_key( i ).sort_by_key( index );
-            col.set_name( containers::Macros::joined() + col.name() );
+            col.set_name(
+                containers::Macros::table() + "=" + name +
+                containers::Macros::column() + "=" + col.name() );
             joined.add_int_column( col, containers::DataFrame::ROLE_JOIN_KEY );
         }
 
     for ( size_t i = 0; i < peripheral.num_numericals(); ++i )
         {
             auto col = peripheral.numerical( i ).sort_by_key( index );
-            col.set_name( containers::Macros::joined() + col.name() );
+            col.set_name(
+                containers::Macros::table() + "=" + name +
+                containers::Macros::column() + "=" + col.name() );
             joined.add_float_column(
                 col, containers::DataFrame::ROLE_NUMERICAL );
         }
@@ -145,7 +151,9 @@ containers::DataFrame ManyToOneJoiner::join_one(
     for ( size_t i = 0; i < peripheral.num_time_stamps(); ++i )
         {
             auto col = peripheral.time_stamp( i ).sort_by_key( index );
-            col.set_name( containers::Macros::joined() + col.name() );
+            col.set_name(
+                containers::Macros::table() + "=" + name +
+                containers::Macros::column() + "=" + col.name() );
             joined.add_float_column(
                 col, containers::DataFrame::ROLE_TIME_STAMP );
         }
@@ -274,7 +282,7 @@ std::tuple<
 ManyToOneJoiner::parse_splitted( const std::string& _splitted )
 {
     const auto name = _splitted.substr(
-        0, _splitted.find( containers::Macros::name() + "=" ) );
+        0, _splitted.find( containers::Macros::join_param() ) );
 
     const auto join_key =
         get_param( _splitted, containers::Macros::join_key() + "=" );

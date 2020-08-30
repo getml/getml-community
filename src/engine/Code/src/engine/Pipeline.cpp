@@ -268,6 +268,11 @@ Pipeline::column_importances() const
 
     column_importances_manual( f_importances, &importance_makers );
 
+    for ( auto& i_maker : importance_makers )
+        {
+            i_maker = containers::Macros::modify_column_importances( i_maker );
+        }
+
     for ( const auto& i_maker : importance_makers )
         {
             extract_coldesc( i_maker.importances(), &c_desc );
@@ -464,7 +469,7 @@ std::vector<Poco::JSON::Object::Ptr> Pipeline::extract_df_fingerprints(
         extract_data_frames( _cmd, _data_frames );
 
     std::vector<Poco::JSON::Object::Ptr> df_fingerprints = {
-        population.fingerprint() };
+        population.fingerprint()};
 
     for ( const auto& df : peripheral )
         {

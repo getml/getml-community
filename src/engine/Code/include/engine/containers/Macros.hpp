@@ -7,17 +7,32 @@ namespace containers
 {
 // -------------------------------------------------------------------------
 
-struct Macros
+class Macros
 {
+   public:
+    /// Removes macros from column importances.
+    static helpers::ImportanceMaker modify_column_importances(
+        const helpers::ImportanceMaker& _importance_maker );
+
+    /// Replaces all instances of macros from a query or a colunm name.
+    static std::string replace( const std::string& _query );
+
+   private:
+    static std::string remove_time_diff( const std::string& _from_colname );
+
+    static std::pair<std::string, std::string> parse_table_colname(
+        const std::string& _table, const std::string& _colname );
+
+   public:
     static std::string close_bracket() { return "$GETML_CLOSE_BRACKET"; }
+
+    static std::string column() { return "$GETML_JOIN_PARAM_COLUMN"; }
 
     static std::string end() { return "$GETML_JOIN_PARAM_END"; }
 
     static std::string generated_ts() { return "$GETML_GENERATED_TS"; }
 
     static std::string hour() { return "$GETML_HOUR"; }
-
-    static std::string joined() { return "$GETML_JOINED"; }
 
     static std::string join_key() { return "$GETML_JOIN_PARAM_JOIN_KEY"; }
 
@@ -55,6 +70,8 @@ struct Macros
     }
 
     static std::string self_join_key() { return "$GETML_SELF_JOIN_KEY"; }
+
+    static std::string table() { return "$GETML_JOIN_PARAM_TABLE"; }
 
     static std::string time_stamp() { return "$GETML_JOIN_PARAM_TIME_STAMP"; }
 

@@ -41,10 +41,6 @@ class FeatureLearner : public AbstractFeatureLearner
     // --------------------------------------------------------
 
    public:
-    /// Calculates the column importances for this ensemble.
-    std::map<helpers::ColumnDescription, Float> column_importances(
-        const std::vector<Float>& _importance_factors ) const final;
-
     /// Returns the fingerprint of the feature learner (necessary to build
     /// the dependency graphs).
     Poco::JSON::Object::Ptr fingerprint() const final;
@@ -82,6 +78,13 @@ class FeatureLearner : public AbstractFeatureLearner
     std::shared_ptr<AbstractFeatureLearner> clone() const final
     {
         return std::make_shared<FeatureLearner<FeatureLearnerType>>( *this );
+    }
+
+    /// Calculates the column importances for this ensemble.
+    std::map<helpers::ColumnDescription, Float> column_importances(
+        const std::vector<Float>& _importance_factors ) const final
+    {
+        return feature_learner().column_importances( _importance_factors );
     }
 
     /// Whether the feature learner is used for classification.
@@ -211,6 +214,11 @@ class FeatureLearner : public AbstractFeatureLearner
     /// Replaces macros inside the SQL queries with actual code.
     std::string replace_macros( const std::string& _query ) const;
 
+    /// Extracts the table and column name, if they are from a many-to-one join,
+    /// needed for the column importances.
+    std::pair<std::string, std::string> parse_table_colname(
+        const std::string& _table, const std::string& _colname ) const;
+
     /// Removes the time difference marker from the colnames, needed for the
     /// column importances.
     std::string remove_time_diff( const std::string& _from_colname ) const;
@@ -305,36 +313,6 @@ namespace engine
 {
 namespace featurelearners
 {
-// ----------------------------------------------------------------------------
-
-template <typename FeatureLearnerType>
-std::map<helpers::ColumnDescription, Float>
-FeatureLearner<FeatureLearnerType>::column_importances(
-    const std::vector<Float>& _importance_factors ) const
-{
-    const auto importances =
-        feature_learner().column_importances( _importance_factors );
-
-    auto importance_maker = helpers::ImportanceMaker( importances );
-
-    for ( const auto& [from_desc, _] : importances )
-        {
-            auto to_colname = remove_time_diff( from_desc.name_ );
-
-            to_colname = replace_macros( to_colname );
-
-            if ( from_desc.name_ != to_colname )
-                {
-                    const auto to_desc = helpers::ColumnDescription(
-                        from_desc.marker_, from_desc.table_, to_colname );
-
-                    importance_maker.transfer( from_desc, to_desc );
-                }
-        }
-
-    return importance_maker.importances();
-}
-
 // ----------------------------------------------------------------------------
 
 template <typename FeatureLearnerType>
@@ -880,6 +858,47 @@ FeatureLearner<FeatureLearnerType>::modify_data_frames(
         }
 
     return std::make_pair( _population_df, _peripheral_dfs );
+}
+
+// -----------------------------------------------------------------------------
+
+template <typename FeatureLearnerType>
+std::pair<std::string, std::string>
+FeatureLearner<FeatureLearnerType>::parse_table_colname(
+    const std::string& _table, const std::string& _colname ) const
+{
+    if ( _colname.find( containers::Macros::table() ) == std::string::npos )
+        {
+            if ( _table.find( containers::Macros::name() ) ==
+                 std::string::npos )
+                {
+                    return std::make_pair( _table, _colname );
+                }
+
+            const auto table_end = _colname.find( containers::Macros::name() );
+
+            const auto table = _colname.substr( 0, table_end );
+
+            return std::make_pair( table, _colname );
+        }
+
+    const auto table_begin = _colname.rfind( containers::Macros::table() ) +
+                             containers::Macros::table().length() + 1;
+
+    const auto table_end = _colname.rfind( containers::Macros::column() );
+
+    assert_true( table_end >= table_begin );
+
+    const auto table_len = table_end - table_begin;
+
+    const auto table = _colname.substr( table_begin, table_len );
+
+    const auto colname_begin =
+        table_end + containers::Macros::column().length() + 1;
+
+    const auto colname = _colname.substr( colname_begin );
+
+    return std::make_pair( table, colname );
 }
 
 // -----------------------------------------------------------------------------

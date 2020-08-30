@@ -40,6 +40,8 @@
 
 #include "strings/strings.hpp"
 
+#include "helpers/helpers.hpp"
+
 #include "engine/Float.hpp"
 #include "engine/Int.hpp"
 #include "engine/ULong.hpp"
