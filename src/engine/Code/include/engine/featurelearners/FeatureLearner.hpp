@@ -890,7 +890,8 @@ std::string FeatureLearner<FeatureLearnerType>::remove_time_diff(
 {
     // --------------------------------------------------------------
 
-    if ( _from_colname.find( "$GETML_GENERATED_TS" ) == std::string::npos )
+    if ( _from_colname.find( containers::Macros::generated_ts() ) ==
+         std::string::npos )
         {
             return _from_colname;
         }
@@ -919,71 +920,71 @@ std::string FeatureLearner<FeatureLearnerType>::replace_macros(
 {
     // --------------------------------------------------------------
 
-    auto new_query =
-        utils::StringReplacer::replace_all( _query, "$GETML_GENERATED_TS", "" );
+    auto new_query = utils::StringReplacer::replace_all(
+        _query, containers::Macros::generated_ts(), "" );
 
     new_query = utils::StringReplacer::replace_all(
-        new_query, "$GETML_REMOVE_CHAR\"", "" );
+        new_query, containers::Macros::remove_char() + "\"", "" );
 
     new_query = utils::StringReplacer::replace_all(
-        new_query, "t1.\"$GETML_NO_JOIN_KEY\"", "1" );
+        new_query, "t1.\"" + containers::Macros::no_join_key() + "\"", "1" );
 
     new_query = utils::StringReplacer::replace_all(
-        new_query, "t2.\"$GETML_NO_JOIN_KEY\"", "1" );
+        new_query, "t2.\"" + containers::Macros::no_join_key() + "\"", "1" );
 
     new_query = utils::StringReplacer::replace_all(
-        new_query, "t1.\"$GETML_NO_JOIN_KEY\"", "1" );
+        new_query, "t1.\"" + containers::Macros::no_join_key() + "\"", "1" );
 
     new_query = utils::StringReplacer::replace_all(
-        new_query, "$GETML_CLOSE_BRACKET\"", "\" )" );
+        new_query, containers::Macros::close_bracket() + "\"", "\" )" );
 
     new_query = utils::StringReplacer::replace_all(
-        new_query, "$GETML_CLOSE_BRACKET", "" );
+        new_query, containers::Macros::close_bracket(), "" );
 
     new_query = utils::StringReplacer::replace_all(
-        new_query, "t1.\"$GETML_HOUR", "hour( t1.\"" );
+        new_query, "t1.\"" + containers::Macros::hour(), "hour( t1.\"" );
 
     new_query = utils::StringReplacer::replace_all(
-        new_query, "t2.\"$GETML_HOUR", "hour( t2.\"" );
-
-    new_query =
-        utils::StringReplacer::replace_all( new_query, "$GETML_HOUR", "" );
+        new_query, "t2.\"" + containers::Macros::hour(), "hour( t2.\"" );
 
     new_query = utils::StringReplacer::replace_all(
-        new_query, "t1.\"$GETML_MINUTE", "minute( t1.\"" );
+        new_query, containers::Macros::hour(), "" );
 
     new_query = utils::StringReplacer::replace_all(
-        new_query, "t2.\"$GETML_MINUTE", "minute( t2.\"" );
-
-    new_query =
-        utils::StringReplacer::replace_all( new_query, "$GETML_MINUTE", "" );
+        new_query, "t1.\"" + containers::Macros::minute(), "minute( t1.\"" );
 
     new_query = utils::StringReplacer::replace_all(
-        new_query, "t1.\"$GETML_MONTH", "month( t1.\"" );
+        new_query, "t2.\"" + containers::Macros::minute(), "minute( t2.\"" );
 
     new_query = utils::StringReplacer::replace_all(
-        new_query, "t2.\"$GETML_MONTH", "month( t2.\"" );
-
-    new_query =
-        utils::StringReplacer::replace_all( new_query, "$GETML_MONTH", "" );
+        new_query, containers::Macros::minute(), "" );
 
     new_query = utils::StringReplacer::replace_all(
-        new_query, "t1.\"$GETML_WEEKDAY", "weekday( t1.\"" );
+        new_query, "t1.\"" + containers::Macros::month(), "month( t1.\"" );
 
     new_query = utils::StringReplacer::replace_all(
-        new_query, "t2.\"$GETML_WEEKDAY", "weekday( t2.\"" );
-
-    new_query =
-        utils::StringReplacer::replace_all( new_query, "$GETML_WEEKDAY", "" );
+        new_query, "t2.\"" + containers::Macros::month(), "month( t2.\"" );
 
     new_query = utils::StringReplacer::replace_all(
-        new_query, "t1.\"$GETML_YEAR", "year( t1.\"" );
+        new_query, containers::Macros::month(), "" );
 
     new_query = utils::StringReplacer::replace_all(
-        new_query, "t2.\"$GETML_YEAR", "year( t2.\"" );
+        new_query, "t1.\"" + containers::Macros::weekday(), "weekday( t1.\"" );
 
-    new_query =
-        utils::StringReplacer::replace_all( new_query, "$GETML_YEAR", "" );
+    new_query = utils::StringReplacer::replace_all(
+        new_query, "t2.\"" + containers::Macros::weekday(), "weekday( t2.\"" );
+
+    new_query = utils::StringReplacer::replace_all(
+        new_query, containers::Macros::weekday(), "" );
+
+    new_query = utils::StringReplacer::replace_all(
+        new_query, "t1.\"" + containers::Macros::year(), "year( t1.\"" );
+
+    new_query = utils::StringReplacer::replace_all(
+        new_query, "t2.\"" + containers::Macros::year(), "year( t2.\"" );
+
+    new_query = utils::StringReplacer::replace_all(
+        new_query, containers::Macros::year(), "" );
 
     // --------------------------------------------------------------
 

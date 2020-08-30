@@ -43,7 +43,7 @@ std::string ManyToOneJoiner::get_param(
 
     assert_true( begin != std::string::npos );
 
-    const auto end = _splitted.find( "$GETML_JOIN_PARAM", begin );
+    const auto end = _splitted.find( containers::Macros::join_param(), begin );
 
     assert_true( end != std::string::npos );
 
@@ -122,7 +122,7 @@ containers::DataFrame ManyToOneJoiner::join_one(
     for ( size_t i = 0; i < peripheral.num_categoricals(); ++i )
         {
             auto col = peripheral.categorical( i ).sort_by_key( index );
-            col.set_name( "$GETML_JOINED" + col.name() );
+            col.set_name( containers::Macros::joined() + col.name() );
             joined.add_int_column(
                 col, containers::DataFrame::ROLE_CATEGORICAL );
         }
@@ -130,14 +130,14 @@ containers::DataFrame ManyToOneJoiner::join_one(
     for ( size_t i = 0; i < peripheral.num_join_keys(); ++i )
         {
             auto col = peripheral.join_key( i ).sort_by_key( index );
-            col.set_name( "$GETML_JOINED" + col.name() );
+            col.set_name( containers::Macros::joined() + col.name() );
             joined.add_int_column( col, containers::DataFrame::ROLE_JOIN_KEY );
         }
 
     for ( size_t i = 0; i < peripheral.num_numericals(); ++i )
         {
             auto col = peripheral.numerical( i ).sort_by_key( index );
-            col.set_name( "$GETML_JOINED" + col.name() );
+            col.set_name( containers::Macros::joined() + col.name() );
             joined.add_float_column(
                 col, containers::DataFrame::ROLE_NUMERICAL );
         }
@@ -145,7 +145,7 @@ containers::DataFrame ManyToOneJoiner::join_one(
     for ( size_t i = 0; i < peripheral.num_time_stamps(); ++i )
         {
             auto col = peripheral.time_stamp( i ).sort_by_key( index );
-            col.set_name( "$GETML_JOINED" + col.name() );
+            col.set_name( containers::Macros::joined() + col.name() );
             joined.add_float_column(
                 col, containers::DataFrame::ROLE_TIME_STAMP );
         }
@@ -273,22 +273,23 @@ std::tuple<
     std::string>
 ManyToOneJoiner::parse_splitted( const std::string& _splitted )
 {
-    const auto name =
-        _splitted.substr( 0, _splitted.find( "$GETML_JOIN_PARAM_JOIN_KEY=" ) );
+    const auto name = _splitted.substr(
+        0, _splitted.find( containers::Macros::name() + "=" ) );
 
-    const auto join_key = get_param( _splitted, "$GETML_JOIN_PARAM_JOIN_KEY=" );
+    const auto join_key =
+        get_param( _splitted, containers::Macros::join_key() + "=" );
 
     const auto other_join_key =
-        get_param( _splitted, "$GETML_JOIN_PARAM_OTHER_JOIN_KEY=" );
+        get_param( _splitted, containers::Macros::other_join_key() + "=" );
 
     const auto time_stamp =
-        get_param( _splitted, "$GETML_JOIN_PARAM_TIME_STAMP=" );
+        get_param( _splitted, containers::Macros::time_stamp() + "=" );
 
     const auto other_time_stamp =
-        get_param( _splitted, "$GETML_JOIN_PARAM_OTHER_TIME_STAMP=" );
+        get_param( _splitted, containers::Macros::other_time_stamp() + "=" );
 
     const auto upper_time_stamp =
-        get_param( _splitted, "$GETML_JOIN_PARAM_UPPER_TIME_STAMP=" );
+        get_param( _splitted, containers::Macros::upper_time_stamp() + "=" );
 
     return std::make_tuple(
         name,
@@ -357,7 +358,7 @@ std::vector<std::string> ManyToOneJoiner::split_joined_name(
 
     auto joined_name = _joined_name;
 
-    const auto delimiter = std::string( "$GETML_JOIN_PARAM_NAME=" );
+    const auto delimiter = std::string( containers::Macros::name() + "=" );
 
     while ( true )
         {

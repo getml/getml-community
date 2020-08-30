@@ -240,7 +240,8 @@ TimeSeriesModel<FEType>::TimeSeriesModel(
     const auto new_peripheral =
         std::make_shared<std::vector<std::string>>( *_peripheral );
 
-    new_peripheral->push_back( _placeholder->name() + "$GETML_PERIPHERAL" );
+    new_peripheral->push_back(
+        _placeholder->name() + containers::Macros::peripheral() );
 
     // --------------------------------------------------------------------
 
@@ -316,7 +317,7 @@ TimeSeriesModel<FEType>::create_modified_time_stamps(
     const containers::DataFrame &_population ) const
 {
     const auto ts_name =
-        _ts_name == "" ? std::string( "$GETML_ROWID" ) : _ts_name;
+        _ts_name == "" ? containers::Macros::rowid() : _ts_name;
 
     auto cols = TimeStampMaker::make_time_stamps(
         ts_name, _horizon, _memory, _population );
@@ -331,14 +332,14 @@ TimeSeriesModel<FEType>::create_modified_time_stamps(
         {
             assert_true( cols.size() > 0 );
 
-            cols.at( 0 ).set_name( ts_name + "$GETML_LOWER_TS" );
+            cols.at( 0 ).set_name( ts_name + containers::Macros::lower_ts() );
         }
 
     if ( _memory > 0.0 )
         {
             assert_true( cols.size() > 0 );
 
-            cols.back().set_name( ts_name + "$GETML_UPPER_TS" );
+            cols.back().set_name( ts_name + containers::Macros::upper_ts() );
         }
 
     return cols;
@@ -355,7 +356,7 @@ std::vector<containers::DataFrame> TimeSeriesModel<FEType>::create_peripheral(
 
     auto new_df = _population;
 
-    new_df.set_name( new_df.name() + "$GETML_PERIPHERAL" );
+    new_df.set_name( new_df.name() + containers::Macros::peripheral() );
 
     // ------------------------------------------------------------
 
@@ -400,9 +401,10 @@ containers::DataFrame TimeSeriesModel<FEType>::create_population(
         {
             auto new_jk = containers::Column<Int>( new_df.nrows() );
 
-            new_jk.set_name( "$GETML_SELF_JOIN_KEY" );
+            new_jk.set_name( containers::Macros::self_join_key() );
 
-            new_df.add_int_column( new_jk, "join_key" );
+            new_df.add_int_column(
+                new_jk, containers::DataFrame::ROLE_JOIN_KEY );
         }
 
     // -----------------------------------------------------------------
@@ -411,9 +413,9 @@ containers::DataFrame TimeSeriesModel<FEType>::create_population(
         {
             auto new_ts = containers::Column<Float>( new_df.nrows() );
 
-            new_ts.set_name( "$GETML_ROWID" );
+            new_ts.set_name( containers::Macros::rowid() );
 
-            new_ts.set_unit( "$GETML_ROWID, comparison only" );
+            new_ts.set_unit( containers::Macros::rowid_comparison_only() );
 
             for ( size_t i = 0; i < new_ts.size(); ++i )
                 {
@@ -444,21 +446,21 @@ TimeSeriesModel<FEType>::create_placeholder(
 
     if ( self_join_keys.size() == 0 )
         {
-            self_join_keys.push_back( "$GETML_SELF_JOIN_KEY" );
+            self_join_keys.push_back( containers::Macros::self_join_key() );
         }
 
     // --------------------------------------------------------------------
 
     const auto ts_name = hyperparameters().ts_name_ == ""
-                             ? "$GETML_ROWID"
+                             ? containers::Macros::rowid()
                              : hyperparameters().ts_name_;
 
     const auto lower_ts_name = hyperparameters().horizon_ != 0.0
-                                   ? ts_name + "$GETML_LOWER_TS"
+                                   ? ts_name + containers::Macros::lower_ts()
                                    : ts_name;
 
     const auto upper_ts_name = hyperparameters().memory_ > 0.0
-                                   ? ts_name + "$GETML_UPPER_TS"
+                                   ? ts_name + containers::Macros::upper_ts()
                                    : std::string( "" );
 
     // ----------------------------------------------------------
@@ -467,7 +469,7 @@ TimeSeriesModel<FEType>::create_placeholder(
         _placeholder.categoricals_,
         _placeholder.discretes_,
         _placeholder.join_keys_,
-        _placeholder.name_ + "$GETML_PERIPHERAL",
+        _placeholder.name_ + containers::Macros::peripheral(),
         _placeholder.numericals_,
         _placeholder.targets_,
         _placeholder.time_stamps_ );
@@ -567,28 +569,34 @@ std::string TimeSeriesModel<FEType>::replace_macros(
 
     auto new_query = utils::StringReplacer::replace_all(
         _query,
-        "datetime( t1.\"$GETML_ROWID$GETML_UPPER_TS\" )",
+        "datetime( t1.\"" + containers::Macros::rowid() +
+            containers::Macros::upper_ts() + "\" )",
         "t1.rowid" + getml_upper_ts_rowid );
 
     new_query = utils::StringReplacer::replace_all(
         new_query,
-        "datetime( t2.\"$GETML_ROWID$GETML_UPPER_TS\" )",
+        "datetime( t2.\"" + containers::Macros::rowid() +
+            containers::Macros::upper_ts() + "\" )",
         "t2.rowid" + getml_upper_ts_rowid );
 
     new_query = utils::StringReplacer::replace_all(
-        new_query, "$GETML_LOWER_TS\"", "\"" + getml_lower_ts );
+        new_query,
+        containers::Macros::lower_ts() + "\"",
+        "\"" + getml_lower_ts );
 
     new_query = utils::StringReplacer::replace_all(
-        new_query, "$GETML_UPPER_TS\"", "\"" + getml_upper_ts );
+        new_query,
+        containers::Macros::upper_ts() + "\"",
+        "\"" + getml_upper_ts );
 
     new_query = utils::StringReplacer::replace_all(
-        new_query, "$GETML_PERIPHERAL", "" );
+        new_query, containers::Macros::peripheral(), "" );
 
     new_query = utils::StringReplacer::replace_all(
-        new_query, "t1.\"$GETML_SELF_JOIN_KEY\"", "1" );
+        new_query, "t1.\"" + containers::Macros::self_join_key() + "\"", "1" );
 
     new_query = utils::StringReplacer::replace_all(
-        new_query, "t2.\"$GETML_SELF_JOIN_KEY\"", "1" );
+        new_query, "t2.\"" + containers::Macros::self_join_key() + "\"", "1" );
 
     new_query =
         utils::StringReplacer::replace_all( new_query, "  " + one.str(), "" );
@@ -596,16 +604,20 @@ std::string TimeSeriesModel<FEType>::replace_macros(
     new_query = utils::StringReplacer::replace_all( new_query, one.str(), "" );
 
     new_query = utils::StringReplacer::replace_all(
-        new_query, "$GETML_SELF_JOIN_KEY, ", "" );
+        new_query, containers::Macros::self_join_key() + ", ", "" );
 
     new_query = utils::StringReplacer::replace_all(
-        new_query, "datetime( t1.\"$GETML_ROWID\" )", "t1.rowid" );
+        new_query,
+        "datetime( t1.\"" + containers::Macros::rowid() + "\" )",
+        "t1.rowid" );
 
     new_query = utils::StringReplacer::replace_all(
-        new_query, "datetime( t2.\"$GETML_ROWID\" )", "t2.rowid" );
+        new_query,
+        "datetime( t2.\"" + containers::Macros::rowid() + "\" )",
+        "t2.rowid" );
 
     new_query = utils::StringReplacer::replace_all(
-        new_query, "\"$GETML_ROWID\"", "rowid" );
+        new_query, "\"" + containers::Macros::rowid() + "\"", "rowid" );
 
     // --------------------------------------------------------------
 
@@ -663,10 +675,11 @@ void TimeSeriesModel<FEType>::transfer_importance_value(
     std::unique_ptr<helpers::ColumnDescription> from_desc =
         std::make_unique<helpers::ColumnDescription>( _from );
 
-    if ( from_desc->table_.find( "$GETML_PERIPHERAL" ) != std::string::npos )
+    if ( from_desc->table_.find( containers::Macros::peripheral() ) !=
+         std::string::npos )
         {
             const auto to_table = utils::StringReplacer::replace_all(
-                from_desc->table_, "$GETML_PERIPHERAL", "" );
+                from_desc->table_, containers::Macros::peripheral(), "" );
 
             auto to_desc = std::make_unique<helpers::ColumnDescription>(
                 _importance_maker->population(), to_table, from_desc->name_ );
@@ -676,10 +689,11 @@ void TimeSeriesModel<FEType>::transfer_importance_value(
             from_desc = std::move( to_desc );
         }
 
-    if ( from_desc->name_.find( "$GETML_UPPER_TS" ) != std::string::npos )
+    if ( from_desc->name_.find( containers::Macros::upper_ts() ) !=
+         std::string::npos )
         {
             const auto to_name = utils::StringReplacer::replace_all(
-                from_desc->name_, "$GETML_UPPER_TS", "" );
+                from_desc->name_, containers::Macros::upper_ts(), "" );
 
             auto to_desc = std::make_unique<helpers::ColumnDescription>(
                 _importance_maker->population(), from_desc->table_, to_name );
@@ -689,10 +703,11 @@ void TimeSeriesModel<FEType>::transfer_importance_value(
             from_desc = std::move( to_desc );
         }
 
-    if ( from_desc->name_.find( "$GETML_LOWER_TS" ) != std::string::npos )
+    if ( from_desc->name_.find( containers::Macros::lower_ts() ) !=
+         std::string::npos )
         {
             const auto to_name = utils::StringReplacer::replace_all(
-                from_desc->name_, "$GETML_LOWER_TS", "" );
+                from_desc->name_, containers::Macros::lower_ts(), "" );
 
             auto to_desc = std::make_unique<helpers::ColumnDescription>(
                 _importance_maker->population(), from_desc->table_, to_name );
@@ -702,10 +717,11 @@ void TimeSeriesModel<FEType>::transfer_importance_value(
             from_desc = std::move( to_desc );
         }
 
-    if ( from_desc->name_.find( "$GETML_ROWID" ) != std::string::npos )
+    if ( from_desc->name_.find( containers::Macros::rowid() ) !=
+         std::string::npos )
         {
             const auto to_name = utils::StringReplacer::replace_all(
-                from_desc->name_, "$GETML_ROWID", "rowid" );
+                from_desc->name_, containers::Macros::rowid(), "rowid" );
 
             auto to_desc = std::make_unique<helpers::ColumnDescription>(
                 _importance_maker->population(), from_desc->table_, to_name );

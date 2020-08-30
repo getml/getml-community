@@ -44,7 +44,7 @@ void DataFrameModifier::add_join_keys(
                         "object!" );
                 }
 
-            if ( join_keys_used.at( i ) == "$GETML_NO_JOIN_KEY" )
+            if ( join_keys_used.at( i ) == containers::Macros::no_join_key() )
                 {
                     auto peripheral_df = find_data_frame(
                         *ptr, _peripheral_names, _peripheral_dfs );
@@ -65,14 +65,14 @@ void DataFrameModifier::add_join_keys(
 
 void DataFrameModifier::add_jk( containers::DataFrame* _df )
 {
-    if ( _df->has_join_key( "$GETML_NO_JOIN_KEY" ) )
+    if ( _df->has_join_key( containers::Macros::no_join_key() ) )
         {
             return;
         }
 
     auto new_jk = containers::Column<Int>( _df->nrows() );
 
-    new_jk.set_name( "$GETML_NO_JOIN_KEY" );
+    new_jk.set_name( containers::Macros::no_join_key() );
 
     _df->add_int_column( new_jk, containers::DataFrame::ROLE_JOIN_KEY );
 }

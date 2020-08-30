@@ -19,14 +19,14 @@ class PlaceholderMaker
     static std::vector<std::string> make_peripheral(
         const helpers::Placeholder& _placeholder );
 
-    /// Generates the name for the upper time stamp that is produced using
+    /// Generates the name for the time stamp that is produced using
     /// memory.
     static std::string make_ts_name(
         const std::string& _ts_used, const Float _diff )
     {
-        return "$GETML_GENERATED_TS" + _ts_used + "\"" +
+        return containers::Macros::generated_ts() + _ts_used + "\"" +
                utils::TSDiffMaker::make_time_stamp_diff( _diff ) +
-               "$GETML_REMOVE_CHAR";
+               containers::Macros::remove_char();
     }
 
    private:
@@ -68,13 +68,13 @@ class PlaceholderMaker
         const std::string& _upper_time_stamp,
         const std::string& _name )
     {
-        return "$GETML_JOIN_PARAM_NAME=" + _name +
-               "$GETML_JOIN_PARAM_JOIN_KEY=" + _join_key +
-               "$GETML_JOIN_PARAM_OTHER_JOIN_KEY=" + _other_join_key +
-               "$GETML_JOIN_PARAM_TIME_STAMP=" + _time_stamp +
-               "$GETML_JOIN_PARAM_OTHER_TIME_STAMP=" + _other_time_stamp +
-               "$GETML_JOIN_PARAM_UPPER_TIME_STAMP=" + _upper_time_stamp +
-               "$GETML_JOIN_PARAM_END";
+        return containers::Macros::name() + "=" + _name +
+               containers::Macros::join_key() + "=" + _join_key +
+               containers::Macros::other_join_key() + "=" + _other_join_key +
+               containers::Macros::time_stamp() + "=" + _time_stamp +
+               containers::Macros::other_time_stamp() + "=" +
+               _other_time_stamp + containers::Macros::upper_time_stamp() +
+               "=" + _upper_time_stamp + containers::Macros::end();
     }
 };
 
