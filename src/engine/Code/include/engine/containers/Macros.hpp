@@ -18,6 +18,9 @@ class Macros
     static helpers::ImportanceMaker modify_column_importances(
         const helpers::ImportanceMaker& _importance_maker );
 
+    /// Removes macros from generated SQL code.
+    static std::string modify_sql( const std::string& _sql );
+
     /// Extracts all relevant parameters from the output of split_joined_name.
     static std::tuple<
         std::string,
@@ -33,14 +36,23 @@ class Macros
     static std::vector<std::string> split_joined_name(
         const std::string& _joined_name );
 
-    /// Replaces all instances of macros from a query or a colunm name.
-    static std::string replace( const std::string& _query );
-
    private:
     static std::string get_param(
         const std::string& _splitted, const std::string& _key );
 
+    static std::string make_left_join( const std::string& _splitted );
+
+    static std::string make_subquery( const std::string& _joined_name );
+
+    static std::string remove_many_to_one(
+        const std::string& _query,
+        const std::string& _key1,
+        const std::string& _key2 );
+
     static std::string remove_time_diff( const std::string& _from_colname );
+
+    /// Replaces all instances of macros from a query or a colunm name.
+    static std::string replace( const std::string& _query );
 
     static std::pair<std::string, std::string> parse_table_colname(
         const std::string& _table, const std::string& _colname );

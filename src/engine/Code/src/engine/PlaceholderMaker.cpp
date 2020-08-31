@@ -199,6 +199,43 @@ std::vector<std::string> PlaceholderMaker::handle_memory(
 
 // ----------------------------------------------------------------------------
 
+std::string PlaceholderMaker::make_name(
+    const std::string& _join_key,
+    const std::string& _other_join_key,
+    const std::string& _time_stamp,
+    const std::string& _other_time_stamp,
+    const std::string& _upper_time_stamp,
+    const std::string& _name )
+{
+    if ( _name.find( containers::Macros::name() ) != std::string::npos )
+        {
+            const auto split = _name.find( containers::Macros::name() );
+
+            const auto name = _name.substr( 0, split );
+
+            const auto remainder = _name.substr( split );
+
+            return make_name(
+                       _join_key,
+                       _other_join_key,
+                       _time_stamp,
+                       _other_time_stamp,
+                       _upper_time_stamp,
+                       name ) +
+                   remainder;
+        }
+
+    return containers::Macros::name() + "=" + _name +
+           containers::Macros::join_key() + "=" + _join_key +
+           containers::Macros::other_join_key() + "=" + _other_join_key +
+           containers::Macros::time_stamp() + "=" + _time_stamp +
+           containers::Macros::other_time_stamp() + "=" + _other_time_stamp +
+           containers::Macros::upper_time_stamp() + "=" + _upper_time_stamp +
+           containers::Macros::end();
+}
+
+// ----------------------------------------------------------------------------
+
 std::vector<std::string> PlaceholderMaker::make_peripheral(
     const helpers::Placeholder& _placeholder )
 {

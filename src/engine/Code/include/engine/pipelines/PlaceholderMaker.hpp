@@ -59,23 +59,13 @@ class PlaceholderMaker
         const std::vector<Float>& _horizon,
         const std::vector<Float>& _memory );
 
-   private:
     static std::string make_name(
         const std::string& _join_key,
         const std::string& _other_join_key,
         const std::string& _time_stamp,
         const std::string& _other_time_stamp,
         const std::string& _upper_time_stamp,
-        const std::string& _name )
-    {
-        return containers::Macros::name() + "=" + _name +
-               containers::Macros::join_key() + "=" + _join_key +
-               containers::Macros::other_join_key() + "=" + _other_join_key +
-               containers::Macros::time_stamp() + "=" + _time_stamp +
-               containers::Macros::other_time_stamp() + "=" +
-               _other_time_stamp + containers::Macros::upper_time_stamp() +
-               "=" + _upper_time_stamp + containers::Macros::end();
-    }
+        const std::string& _name );
 };
 
 // ------------------------------------------------------------------------

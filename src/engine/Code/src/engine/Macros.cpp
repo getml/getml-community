@@ -24,6 +24,63 @@ std::string Macros::get_param(
 
 // ----------------------------------------------------------------------------
 
+std::string Macros::make_left_join( const std::string& _splitted )
+{
+    const auto
+        [name,
+         join_key,
+         other_join_key,
+         time_stamp,
+         other_time_stamp,
+         upper_time_stamp] = containers::Macros::parse_splitted( _splitted );
+
+    auto left_join = "       LEFT JOIN \"" + name + "\"\n";
+
+    left_join +=
+        "       ON \"" + join_key + "\" = \"" + other_join_key + "\"\n";
+
+    if ( other_time_stamp != "" )
+        {
+            left_join += "       AND \"" + other_time_stamp + "\" <= \"" +
+                         time_stamp + "\"\n";
+        }
+
+    if ( other_time_stamp != "" )
+        {
+            left_join += "       AND \"" + upper_time_stamp + "\" > \"" +
+                         time_stamp + "\"\n";
+        }
+
+    return left_join;
+}
+
+// ----------------------------------------------------------------------------
+
+std::string Macros::make_subquery( const std::string& _joined_name )
+{
+    const auto splitted = split_joined_name( _joined_name );
+
+    assert_true( splitted.size() != 0 );
+
+    if ( splitted.size() == 1 )
+        {
+            return splitted.at( 0 );
+        }
+
+    auto subquery = "( SELECT * FROM \"" + splitted.at( 0 ) + "\"\n";
+
+    for ( size_t i = 1; i < splitted.size(); ++i )
+        {
+            subquery += make_left_join( splitted.at( i ) );
+        }
+
+    subquery += "     )";
+
+    return subquery;
+}
+
+// ----------------------------------------------------------------------------
+
 std::vector<std::string> Macros::modify_colnames(
     const std::vector<std::string>& _names )
 {
@@ -37,6 +94,7 @@ std::vector<std::string> Macros::modify_colnames(
 
     return names;
 }
+
 // ----------------------------------------------------------------------------
 
 helpers::ImportanceMaker Macros::modify_column_importances(
@@ -63,6 +121,19 @@ helpers::ImportanceMaker Macros::modify_column_importances(
         }
 
     return importance_maker;
+}
+
+// ----------------------------------------------------------------------------
+
+std::string Macros::modify_sql( const std::string& _sql )
+{
+    auto sql = replace( _sql );
+
+    sql = remove_many_to_one( sql, "LEFT JOIN \"", "\" t2" );
+
+    sql = remove_many_to_one( sql, "FROM \"", "\" t1" );
+
+    return sql;
 }
 
 // ----------------------------------------------------------------------------
@@ -137,6 +208,37 @@ std::pair<std::string, std::string> Macros::parse_table_colname(
     const auto colname = _colname.substr( colname_begin );
 
     return std::make_pair( table, colname );
+}
+
+// ----------------------------------------------------------------------------
+
+std::string Macros::remove_many_to_one(
+    const std::string& _query,
+    const std::string& _key1,
+    const std::string& _key2 )
+{
+    const auto begin = _query.find( _key1 ) + _key1.length();
+
+    const auto end = _query.find( _key2 );
+
+    assert_true( end >= begin );
+
+    const auto len = end - begin;
+
+    const auto original = _query.substr( begin, len );
+
+    const auto subquery = make_subquery( original );
+
+    if ( subquery == original )
+        {
+            return _query;
+        }
+
+    auto query = _query;
+
+    query.replace( begin - 1, len + 2, subquery );
+
+    return query;
 }
 
 // ----------------------------------------------------------------------------

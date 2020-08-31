@@ -167,7 +167,7 @@ class FeatureLearner : public AbstractFeatureLearner
             feature_learner().to_sql( _categories, _prefix, 0, _subfeatures );
         for ( auto& query : queries )
             {
-                query = replace_macros( query );
+                query = containers::Macros::modify_sql( query );
             }
         return queries;
     }
@@ -210,9 +210,6 @@ class FeatureLearner : public AbstractFeatureLearner
 
     /// Initializes the feature learner.
     std::optional<FeatureLearnerType> make_feature_learner() const;
-
-    /// Replaces macros inside the SQL queries with actual code.
-    std::string replace_macros( const std::string& _query ) const;
 
     /// Extracts the table and column name, if they are from a many-to-one join,
     /// needed for the column importances.
@@ -927,87 +924,6 @@ std::string FeatureLearner<FeatureLearnerType>::remove_time_diff(
     // --------------------------------------------------------------
 
     return _from_colname.substr( 0, pos );
-
-    // --------------------------------------------------------------
-}
-
-// -----------------------------------------------------------------------------
-
-template <typename FeatureLearnerType>
-std::string FeatureLearner<FeatureLearnerType>::replace_macros(
-    const std::string& _query ) const
-{
-    // --------------------------------------------------------------
-
-    auto new_query = utils::StringReplacer::replace_all(
-        _query, containers::Macros::generated_ts(), "" );
-
-    new_query = utils::StringReplacer::replace_all(
-        new_query, containers::Macros::remove_char() + "\"", "" );
-
-    new_query = utils::StringReplacer::replace_all(
-        new_query, "t1.\"" + containers::Macros::no_join_key() + "\"", "1" );
-
-    new_query = utils::StringReplacer::replace_all(
-        new_query, "t2.\"" + containers::Macros::no_join_key() + "\"", "1" );
-
-    new_query = utils::StringReplacer::replace_all(
-        new_query, "t1.\"" + containers::Macros::no_join_key() + "\"", "1" );
-
-    new_query = utils::StringReplacer::replace_all(
-        new_query, containers::Macros::close_bracket() + "\"", "\" )" );
-
-    new_query = utils::StringReplacer::replace_all(
-        new_query, containers::Macros::close_bracket(), "" );
-
-    new_query = utils::StringReplacer::replace_all(
-        new_query, "t1.\"" + containers::Macros::hour(), "hour( t1.\"" );
-
-    new_query = utils::StringReplacer::replace_all(
-        new_query, "t2.\"" + containers::Macros::hour(), "hour( t2.\"" );
-
-    new_query = utils::StringReplacer::replace_all(
-        new_query, containers::Macros::hour(), "" );
-
-    new_query = utils::StringReplacer::replace_all(
-        new_query, "t1.\"" + containers::Macros::minute(), "minute( t1.\"" );
-
-    new_query = utils::StringReplacer::replace_all(
-        new_query, "t2.\"" + containers::Macros::minute(), "minute( t2.\"" );
-
-    new_query = utils::StringReplacer::replace_all(
-        new_query, containers::Macros::minute(), "" );
-
-    new_query = utils::StringReplacer::replace_all(
-        new_query, "t1.\"" + containers::Macros::month(), "month( t1.\"" );
-
-    new_query = utils::StringReplacer::replace_all(
-        new_query, "t2.\"" + containers::Macros::month(), "month( t2.\"" );
-
-    new_query = utils::StringReplacer::replace_all(
-        new_query, containers::Macros::month(), "" );
-
-    new_query = utils::StringReplacer::replace_all(
-        new_query, "t1.\"" + containers::Macros::weekday(), "weekday( t1.\"" );
-
-    new_query = utils::StringReplacer::replace_all(
-        new_query, "t2.\"" + containers::Macros::weekday(), "weekday( t2.\"" );
-
-    new_query = utils::StringReplacer::replace_all(
-        new_query, containers::Macros::weekday(), "" );
-
-    new_query = utils::StringReplacer::replace_all(
-        new_query, "t1.\"" + containers::Macros::year(), "year( t1.\"" );
-
-    new_query = utils::StringReplacer::replace_all(
-        new_query, "t2.\"" + containers::Macros::year(), "year( t2.\"" );
-
-    new_query = utils::StringReplacer::replace_all(
-        new_query, containers::Macros::year(), "" );
-
-    // --------------------------------------------------------------
-
-    return new_query;
 
     // --------------------------------------------------------------
 }
