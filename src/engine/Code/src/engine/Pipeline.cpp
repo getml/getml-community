@@ -720,10 +720,13 @@ Pipeline::feature_names() const
                     assert_true( fe );
                 }
 
-            return std::make_tuple(
-                autofeatures,
-                predictor_impl().numerical_colnames(),
+            const auto numerical = containers::Macros::modify_colnames(
+                predictor_impl().numerical_colnames() );
+
+            const auto categorical = containers::Macros::modify_colnames(
                 predictor_impl().categorical_colnames() );
+
+            return std::make_tuple( autofeatures, numerical, categorical );
         }
     else
         {

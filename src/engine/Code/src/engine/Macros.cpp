@@ -6,6 +6,39 @@ namespace containers
 {
 // ----------------------------------------------------------------------------
 
+std::string Macros::get_param(
+    const std::string& _splitted, const std::string& _key )
+{
+    const auto begin = _splitted.find( _key ) + _key.size();
+
+    assert_true( begin != std::string::npos );
+
+    const auto end = _splitted.find( containers::Macros::join_param(), begin );
+
+    assert_true( end != std::string::npos );
+
+    assert_true( end >= begin );
+
+    return _splitted.substr( begin, end - begin );
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<std::string> Macros::modify_colnames(
+    const std::vector<std::string>& _names )
+{
+    auto names = _names;
+
+    for ( auto& name : names )
+        {
+            const auto [_, to_colname] = parse_table_colname( "", name );
+            name = to_colname;
+        }
+
+    return names;
+}
+// ----------------------------------------------------------------------------
+
 helpers::ImportanceMaker Macros::modify_column_importances(
     const helpers::ImportanceMaker& _importance_maker )
 {
@@ -32,6 +65,44 @@ helpers::ImportanceMaker Macros::modify_column_importances(
     return importance_maker;
 }
 
+// ----------------------------------------------------------------------------
+
+std::tuple<
+    std::string,
+    std::string,
+    std::string,
+    std::string,
+    std::string,
+    std::string>
+Macros::parse_splitted( const std::string& _splitted )
+{
+    const auto name = _splitted.substr(
+        0, _splitted.find( containers::Macros::join_param() ) );
+
+    const auto join_key =
+        get_param( _splitted, containers::Macros::join_key() + "=" );
+
+    const auto other_join_key =
+        get_param( _splitted, containers::Macros::other_join_key() + "=" );
+
+    const auto time_stamp =
+        get_param( _splitted, containers::Macros::time_stamp() + "=" );
+
+    const auto other_time_stamp =
+        get_param( _splitted, containers::Macros::other_time_stamp() + "=" );
+
+    const auto upper_time_stamp =
+        get_param( _splitted, containers::Macros::upper_time_stamp() + "=" );
+
+    return std::make_tuple(
+        name,
+        join_key,
+        other_join_key,
+        time_stamp,
+        other_time_stamp,
+        upper_time_stamp );
+}
+
 // -----------------------------------------------------------------------------
 
 std::pair<std::string, std::string> Macros::parse_table_colname(
@@ -51,8 +122,7 @@ std::pair<std::string, std::string> Macros::parse_table_colname(
             return std::make_pair( table, _colname );
         }
 
-    const auto table_begin = _colname.rfind( containers::Macros::table() ) +
-                             containers::Macros::table().length() + 1;
+    const auto table_begin = _colname.rfind( table() ) + table().length() + 1;
 
     const auto table_end = _colname.rfind( containers::Macros::column() );
 
@@ -62,8 +132,7 @@ std::pair<std::string, std::string> Macros::parse_table_colname(
 
     const auto table = _colname.substr( table_begin, table_len );
 
-    const auto colname_begin =
-        table_end + containers::Macros::column().length() + 1;
+    const auto colname_begin = table_end + column().length() + 1;
 
     const auto colname = _colname.substr( colname_begin );
 
@@ -170,6 +239,40 @@ std::string Macros::replace( const std::string& _query )
     return new_query;
 
     // --------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<std::string> Macros::split_joined_name(
+    const std::string& _joined_name )
+{
+    auto splitted = std::vector<std::string>();
+
+    auto joined_name = _joined_name;
+
+    const auto delimiter = std::string( containers::Macros::name() + "=" );
+
+    while ( true )
+        {
+            const auto pos = joined_name.find( delimiter );
+
+            if ( pos == std::string::npos )
+                {
+                    splitted.push_back( joined_name );
+                    break;
+                }
+
+            splitted.push_back( joined_name.substr( 0, pos ) );
+
+            joined_name.erase( 0, pos + delimiter.size() );
+        }
+
+    if ( splitted.size() == 0 )
+        {
+            splitted.push_back( _joined_name );
+        }
+
+    return splitted;
 }
 
 // ----------------------------------------------------------------------------

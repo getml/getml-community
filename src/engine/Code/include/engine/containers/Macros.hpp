@@ -10,14 +10,36 @@ namespace containers
 class Macros
 {
    public:
+    /// Removes macros from a vector of column names.
+    static std::vector<std::string> modify_colnames(
+        const std::vector<std::string>& _names );
+
     /// Removes macros from column importances.
     static helpers::ImportanceMaker modify_column_importances(
         const helpers::ImportanceMaker& _importance_maker );
+
+    /// Extracts all relevant parameters from the output of split_joined_name.
+    static std::tuple<
+        std::string,
+        std::string,
+        std::string,
+        std::string,
+        std::string,
+        std::string>
+    parse_splitted( const std::string& _splitted );
+
+    /// Splits the name of a joined tabled into all tables that are part of the
+    /// join.
+    static std::vector<std::string> split_joined_name(
+        const std::string& _joined_name );
 
     /// Replaces all instances of macros from a query or a colunm name.
     static std::string replace( const std::string& _query );
 
    private:
+    static std::string get_param(
+        const std::string& _splitted, const std::string& _key );
+
     static std::string remove_time_diff( const std::string& _from_colname );
 
     static std::pair<std::string, std::string> parse_table_colname(

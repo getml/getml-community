@@ -22,26 +22,11 @@ class ManyToOneJoiner
         containers::DataFrame* _population_df,
         std::vector<containers::DataFrame>* _peripheral_dfs );
 
-    static std::vector<std::string> split_joined_name(
-        const std::string& _joined_name );
-
-    static std::tuple<
-        std::string,
-        std::string,
-        std::string,
-        std::string,
-        std::string,
-        std::string>
-    parse_splitted( const std::string& _splitted );
-
    private:
     static containers::DataFrame find_peripheral(
         const std::string& _name,
         const std::vector<std::string>& _peripheral_names,
         const std::vector<containers::DataFrame>& _peripheral_dfs );
-
-    static std::string get_param(
-        const std::string& _splitted, const std::string& _key );
 
     static containers::DataFrame join_all(
         const bool _use_timestamps,
