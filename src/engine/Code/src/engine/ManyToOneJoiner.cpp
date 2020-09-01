@@ -6,6 +6,63 @@ namespace pipelines
 {
 // ----------------------------------------------------------------------------
 
+containers::Column<Int> ManyToOneJoiner::extract_join_key(
+    const containers::DataFrame& _df,
+    const std::string& _tname,
+    const std::string& _colname )
+{
+    const auto name = containers::Macros::make_colname( _tname, _colname );
+
+    if ( _df.has_join_key( name ) )
+        {
+            return _df.join_key( name );
+        }
+
+    return _df.join_key( _colname );
+}
+
+// ----------------------------------------------------------------------------
+
+std::shared_ptr<const typename containers::DataFrameIndex::MapType>
+ManyToOneJoiner::extract_map(
+    const containers::DataFrame& _df,
+    const std::string& _tname,
+    const std::string& _colname )
+{
+    const auto name = containers::Macros::make_colname( _tname, _colname );
+
+    if ( _df.has_join_key( name ) )
+        {
+            return _df.index( name ).map();
+        }
+
+    return _df.index( _colname ).map();
+}
+
+// ----------------------------------------------------------------------------
+
+std::optional<containers::Column<Float>> ManyToOneJoiner::extract_time_stamp(
+    const containers::DataFrame& _df,
+    const std::string& _tname,
+    const std::string& _colname )
+{
+    if ( _colname == "" )
+        {
+            return std::nullopt;
+        }
+
+    const auto name = containers::Macros::make_colname( _tname, _colname );
+
+    if ( _df.has_time_stamp( name ) )
+        {
+            return _df.time_stamp( name );
+        }
+
+    return _df.time_stamp( _colname );
+}
+
+// ----------------------------------------------------------------------------
+
 containers::DataFrame ManyToOneJoiner::find_peripheral(
     const std::string& _name,
     const std::vector<std::string>& _peripheral_names,
@@ -94,11 +151,13 @@ containers::DataFrame ManyToOneJoiner::join_one(
 
     const auto index = make_index(
         _use_timestamps,
+        name,
         join_key,
         other_join_key,
         time_stamp,
         other_time_stamp,
         upper_time_stamp,
+        joined_to,
         _population,
         peripheral );
 
@@ -106,8 +165,7 @@ containers::DataFrame ManyToOneJoiner::join_one(
         {
             auto col = peripheral.categorical( i ).sort_by_key( index );
             col.set_name(
-                containers::Macros::table() + "=" + name +
-                containers::Macros::column() + "=" + col.name() );
+                containers::Macros::make_colname( name, col.name() ) );
             joined.add_int_column(
                 col, containers::DataFrame::ROLE_CATEGORICAL );
         }
@@ -116,8 +174,7 @@ containers::DataFrame ManyToOneJoiner::join_one(
         {
             auto col = peripheral.join_key( i ).sort_by_key( index );
             col.set_name(
-                containers::Macros::table() + "=" + name +
-                containers::Macros::column() + "=" + col.name() );
+                containers::Macros::make_colname( name, col.name() ) );
             joined.add_int_column( col, containers::DataFrame::ROLE_JOIN_KEY );
         }
 
@@ -125,8 +182,7 @@ containers::DataFrame ManyToOneJoiner::join_one(
         {
             auto col = peripheral.numerical( i ).sort_by_key( index );
             col.set_name(
-                containers::Macros::table() + "=" + name +
-                containers::Macros::column() + "=" + col.name() );
+                containers::Macros::make_colname( name, col.name() ) );
             joined.add_float_column(
                 col, containers::DataFrame::ROLE_NUMERICAL );
         }
@@ -135,8 +191,7 @@ containers::DataFrame ManyToOneJoiner::join_one(
         {
             auto col = peripheral.time_stamp( i ).sort_by_key( index );
             col.set_name(
-                containers::Macros::table() + "=" + name +
-                containers::Macros::column() + "=" + col.name() );
+                containers::Macros::make_colname( name, col.name() ) );
             joined.add_float_column(
                 col, containers::DataFrame::ROLE_TIME_STAMP );
         }
@@ -185,27 +240,32 @@ void ManyToOneJoiner::join_tables(
 
 std::vector<size_t> ManyToOneJoiner::make_index(
     const bool _use_timestamps,
+    const std::string& _name,
     const std::string& _join_key,
     const std::string& _other_join_key,
     const std::string& _time_stamp,
     const std::string& _other_time_stamp,
     const std::string& _upper_time_stamp,
+    const std::string& _joined_to,
     const containers::DataFrame& _population,
     const containers::DataFrame& _peripheral )
 {
     // -------------------------------------------------------
 
-    const auto join_key = _population.join_key( _join_key );
+    const auto join_key =
+        extract_join_key( _population, _joined_to, _join_key );
 
-    const auto peripheral_index = _peripheral.index( _other_join_key ).map();
+    const auto peripheral_index =
+        extract_map( _peripheral, _name, _other_join_key );
 
-    const auto time_stamp = extract_time_stamp( _population, _time_stamp );
+    const auto time_stamp =
+        extract_time_stamp( _population, _joined_to, _time_stamp );
 
     const auto other_time_stamp =
-        extract_time_stamp( _peripheral, _other_time_stamp );
+        extract_time_stamp( _peripheral, _name, _other_time_stamp );
 
     const auto upper_time_stamp =
-        extract_time_stamp( _peripheral, _upper_time_stamp );
+        extract_time_stamp( _peripheral, _name, _upper_time_stamp );
 
     // -------------------------------------------------------
 

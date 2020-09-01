@@ -235,7 +235,7 @@ std::pair<std::string, std::string> Macros::parse_table_colname(
 {
     if ( _colname.find( table() ) == std::string::npos )
         {
-            if ( _table.find( name() ) == std::string::npos )
+            if ( _table.find( Macros::name() ) == std::string::npos )
                 {
                     return std::make_pair( _table, _colname );
                 }
@@ -245,19 +245,9 @@ std::pair<std::string, std::string> Macros::parse_table_colname(
             return std::make_pair( table, _colname );
         }
 
-    const auto table_begin = _colname.rfind( table() ) + table().length() + 1;
+    const auto table = get_param( _colname, Macros::table() + "=" );
 
-    const auto table_end = _colname.rfind( containers::Macros::column() );
-
-    assert_true( table_end >= table_begin );
-
-    const auto table_len = table_end - table_begin;
-
-    const auto table = _colname.substr( table_begin, table_len );
-
-    const auto colname_begin = table_end + column().length() + 1;
-
-    const auto colname = _colname.substr( colname_begin );
+    const auto colname = get_param( _colname, Macros::column() + "=" );
 
     return std::make_pair( table, colname );
 }

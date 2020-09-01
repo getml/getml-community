@@ -90,6 +90,17 @@ class Macros
 
     static std::string lower_ts() { return "$GETML_LOWER_TS"; }
 
+    static std::string make_colname(
+        const std::string& _tname, const std::string& _colname )
+    {
+        if ( _colname.find( Macros::column() ) != std::string::npos )
+            {
+                return _colname;
+            }
+        return Macros::table() + "=" + _tname + Macros::column() + "=" +
+               _colname + Macros::end();
+    }
+
     static std::string minute() { return "$GETML_MINUTE"; }
 
     static std::string month() { return "$GETML_MONTH"; }
