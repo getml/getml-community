@@ -9,7 +9,10 @@ namespace containers
 std::string Macros::get_param(
     const std::string& _splitted, const std::string& _key )
 {
-    const auto begin = _splitted.find( _key ) + _key.size();
+    const auto key =
+        ( _key.size() > 0 && _key.back() == '=' ) ? _key : _key + '=';
+
+    const auto begin = _splitted.find( key ) + key.size();
 
     assert_true( begin != std::string::npos );
 
@@ -24,6 +27,55 @@ std::string Macros::get_param(
 
 // ----------------------------------------------------------------------------
 
+std::string Macros::make_table_name(
+    const std::string& _join_key,
+    const std::string& _other_join_key,
+    const std::string& _time_stamp,
+    const std::string& _other_time_stamp,
+    const std::string& _upper_time_stamp,
+    const std::string& _name,
+    const std::string& _joined_to )
+{
+    if ( _name.find( Macros::name() ) != std::string::npos )
+        {
+            const auto name = get_param( _name, Macros::name() + "=" );
+
+            return make_table_name(
+                       _join_key,
+                       _other_join_key,
+                       _time_stamp,
+                       _other_time_stamp,
+                       _upper_time_stamp,
+                       name,
+                       _joined_to ) +
+                   _name;
+        }
+
+    if ( _joined_to.find( Macros::name() ) != std::string::npos )
+        {
+            const auto joined_to =
+                get_param( _joined_to, Macros::name() + "=" );
+
+            return joined_to + make_table_name(
+                                   _join_key,
+                                   _other_join_key,
+                                   _time_stamp,
+                                   _other_time_stamp,
+                                   _upper_time_stamp,
+                                   _name,
+                                   joined_to );
+        }
+
+    return Macros::delimiter() + Macros::name() + "=" + _name +
+           Macros::join_key() + "=" + _join_key + Macros::other_join_key() +
+           "=" + _other_join_key + Macros::time_stamp() + "=" + _time_stamp +
+           Macros::other_time_stamp() + "=" + _other_time_stamp +
+           Macros::upper_time_stamp() + "=" + _upper_time_stamp +
+           Macros::joined_to() + "=" + _joined_to + Macros::end();
+}
+
+// ----------------------------------------------------------------------------
+
 std::string Macros::make_left_join( const std::string& _splitted )
 {
     const auto
@@ -32,23 +84,24 @@ std::string Macros::make_left_join( const std::string& _splitted )
          other_join_key,
          time_stamp,
          other_time_stamp,
-         upper_time_stamp] = containers::Macros::parse_splitted( _splitted );
+         upper_time_stamp,
+         joined_to] = parse_table_name( _splitted );
 
     auto left_join = "       LEFT JOIN \"" + name + "\"\n";
 
-    left_join +=
-        "       ON \"" + join_key + "\" = \"" + other_join_key + "\"\n";
+    left_join += "       ON \"" + joined_to + "\".\"" + join_key + "\" = \"" +
+                 name + "\".\"" + other_join_key + "\"\n";
 
     if ( other_time_stamp != "" )
         {
-            left_join += "       AND \"" + other_time_stamp + "\" <= \"" +
-                         time_stamp + "\"\n";
+            left_join += "       AND \"" + name + "\".\"" + other_time_stamp +
+                         "\" <= \"" + joined_to + "\".\"" + time_stamp + "\"\n";
         }
 
     if ( other_time_stamp != "" )
         {
-            left_join += "       AND \"" + upper_time_stamp + "\" > \"" +
-                         time_stamp + "\"\n";
+            left_join += "       AND \"" + name + "\".\"" + upper_time_stamp +
+                         "\" > \"" + joined_to + "\".\"" + time_stamp + "\"\n";
         }
 
     return left_join;
@@ -144,26 +197,26 @@ std::tuple<
     std::string,
     std::string,
     std::string,
+    std::string,
     std::string>
-Macros::parse_splitted( const std::string& _splitted )
+Macros::parse_table_name( const std::string& _splitted )
 {
-    const auto name = _splitted.substr(
-        0, _splitted.find( containers::Macros::join_param() ) );
+    const auto name = get_param( _splitted, Macros::name() + "=" );
 
-    const auto join_key =
-        get_param( _splitted, containers::Macros::join_key() + "=" );
+    const auto join_key = get_param( _splitted, Macros::join_key() + "=" );
 
     const auto other_join_key =
-        get_param( _splitted, containers::Macros::other_join_key() + "=" );
+        get_param( _splitted, Macros::other_join_key() + "=" );
 
-    const auto time_stamp =
-        get_param( _splitted, containers::Macros::time_stamp() + "=" );
+    const auto time_stamp = get_param( _splitted, Macros::time_stamp() + "=" );
 
     const auto other_time_stamp =
-        get_param( _splitted, containers::Macros::other_time_stamp() + "=" );
+        get_param( _splitted, Macros::other_time_stamp() + "=" );
 
     const auto upper_time_stamp =
-        get_param( _splitted, containers::Macros::upper_time_stamp() + "=" );
+        get_param( _splitted, Macros::upper_time_stamp() + "=" );
+
+    const auto joined_to = get_param( _splitted, Macros::joined_to() + "=" );
 
     return std::make_tuple(
         name,
@@ -171,7 +224,8 @@ Macros::parse_splitted( const std::string& _splitted )
         other_join_key,
         time_stamp,
         other_time_stamp,
-        upper_time_stamp );
+        upper_time_stamp,
+        joined_to );
 }
 
 // -----------------------------------------------------------------------------
@@ -186,9 +240,7 @@ std::pair<std::string, std::string> Macros::parse_table_colname(
                     return std::make_pair( _table, _colname );
                 }
 
-            const auto table_end = _table.find( name() );
-
-            const auto table = _table.substr( 0, table_end );
+            const auto table = get_param( _table, Macros::name() + "=" );
 
             return std::make_pair( table, _colname );
         }
@@ -352,11 +404,9 @@ std::vector<std::string> Macros::split_joined_name(
 
     auto joined_name = _joined_name;
 
-    const auto delimiter = std::string( containers::Macros::name() + "=" );
-
     while ( true )
         {
-            const auto pos = joined_name.find( delimiter );
+            const auto pos = joined_name.find( delimiter() );
 
             if ( pos == std::string::npos )
                 {
@@ -366,7 +416,7 @@ std::vector<std::string> Macros::split_joined_name(
 
             splitted.push_back( joined_name.substr( 0, pos ) );
 
-            joined_name.erase( 0, pos + delimiter.size() );
+            joined_name.erase( 0, pos + delimiter().size() );
         }
 
     if ( splitted.size() == 0 )

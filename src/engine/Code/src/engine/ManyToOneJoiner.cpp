@@ -86,7 +86,8 @@ containers::DataFrame ManyToOneJoiner::join_one(
          other_join_key,
          time_stamp,
          other_time_stamp,
-         upper_time_stamp] = containers::Macros::parse_splitted( _splitted );
+         upper_time_stamp,
+         joined_to] = containers::Macros::parse_table_name( _splitted );
 
     const auto peripheral =
         find_peripheral( name, _peripheral_names, _peripheral_dfs );

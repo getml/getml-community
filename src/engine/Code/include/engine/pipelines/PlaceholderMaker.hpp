@@ -65,7 +65,8 @@ class PlaceholderMaker
         const std::string& _time_stamp,
         const std::string& _other_time_stamp,
         const std::string& _upper_time_stamp,
-        const std::string& _name );
+        const std::string& _name,
+        const std::string& _joined_to );
 };
 
 // ------------------------------------------------------------------------

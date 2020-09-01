@@ -139,13 +139,14 @@ helpers::Placeholder PlaceholderMaker::handle_joined_tables(
             append(
                 joined_table.upper_time_stamps_used_, &upper_time_stamps_used );
 
-            name += make_name(
+            name += containers::Macros::make_table_name(
                 _placeholder.join_keys_used_.at( i ),
                 _placeholder.other_join_keys_used_.at( i ),
                 _placeholder.time_stamps_used_.at( i ),
                 _placeholder.other_time_stamps_used_.at( i ),
                 _placeholder.upper_time_stamps_used_.at( i ),
-                joined_table.name() );
+                joined_table.name(),
+                _placeholder.name() );
         }
 
     // ------------------------------------------------------------------------
@@ -195,43 +196,6 @@ std::vector<std::string> PlaceholderMaker::handle_memory(
         }
 
     return upper_time_stamps_used;
-}
-
-// ----------------------------------------------------------------------------
-
-std::string PlaceholderMaker::make_name(
-    const std::string& _join_key,
-    const std::string& _other_join_key,
-    const std::string& _time_stamp,
-    const std::string& _other_time_stamp,
-    const std::string& _upper_time_stamp,
-    const std::string& _name )
-{
-    if ( _name.find( containers::Macros::name() ) != std::string::npos )
-        {
-            const auto split = _name.find( containers::Macros::name() );
-
-            const auto name = _name.substr( 0, split );
-
-            const auto remainder = _name.substr( split );
-
-            return make_name(
-                       _join_key,
-                       _other_join_key,
-                       _time_stamp,
-                       _other_time_stamp,
-                       _upper_time_stamp,
-                       name ) +
-                   remainder;
-        }
-
-    return containers::Macros::name() + "=" + _name +
-           containers::Macros::join_key() + "=" + _join_key +
-           containers::Macros::other_join_key() + "=" + _other_join_key +
-           containers::Macros::time_stamp() + "=" + _time_stamp +
-           containers::Macros::other_time_stamp() + "=" + _other_time_stamp +
-           containers::Macros::upper_time_stamp() + "=" + _upper_time_stamp +
-           containers::Macros::end();
 }
 
 // ----------------------------------------------------------------------------
