@@ -180,7 +180,9 @@ helpers::ImportanceMaker Macros::modify_column_importances(
 
 std::string Macros::modify_sql( const std::string& _sql )
 {
-    auto sql = replace( _sql );
+    auto sql = remove_colnames( _sql );
+
+    sql = replace( sql );
 
     sql = remove_many_to_one( sql, "LEFT JOIN \"", "\" t2" );
 
@@ -250,6 +252,39 @@ std::pair<std::string, std::string> Macros::parse_table_colname(
     const auto colname = get_param( _colname, Macros::column() + "=" );
 
     return std::make_pair( table, colname );
+}
+
+// ----------------------------------------------------------------------------
+
+std::string Macros::remove_colnames( const std::string& _sql )
+{
+    auto sql = _sql;
+
+    while ( true )
+        {
+            const auto begin = sql.find( Macros::table() );
+
+            if ( begin == std::string::npos )
+                {
+                    break;
+                }
+
+            const auto end = sql.find( Macros::end(), begin );
+
+            assert_true( end != std::string::npos );
+
+            assert_true( end > begin );
+
+            const auto len = end - begin + Macros::end().length();
+
+            const auto name = sql.substr( begin, len );
+
+            const auto [_, colname] = parse_table_colname( "", name );
+
+            sql.replace( begin, len, colname );
+        }
+
+    return sql;
 }
 
 // ----------------------------------------------------------------------------

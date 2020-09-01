@@ -56,6 +56,8 @@ class Macros
 
     static std::string make_subquery( const std::string& _joined_name );
 
+    static std::string remove_colnames( const std::string& _sql );
+
     static std::string remove_many_to_one(
         const std::string& _query,
         const std::string& _key1,
