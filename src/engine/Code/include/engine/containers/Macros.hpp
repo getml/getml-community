@@ -18,7 +18,8 @@ class Macros
         const std::string& _other_time_stamp,
         const std::string& _upper_time_stamp,
         const std::string& _name,
-        const std::string& _joined_to );
+        const std::string& _joined_to,
+        const bool _one_to_one );
 
     /// Removes macros from a vector of column names.
     static std::vector<std::string> modify_colnames(
@@ -45,7 +46,8 @@ class Macros
         std::string,
         std::string,
         std::string,
-        std::string>
+        std::string,
+        bool>
     parse_table_name( const std::string& _splitted );
 
    private:
@@ -108,6 +110,8 @@ class Macros
     static std::string month() { return "$GETML_MONTH"; }
 
     static std::string name() { return "$GETML_JOIN_PARAM_NAME"; }
+
+    static std::string one_to_one() { return "$GETML_JOIN_PARAM_ONE_TO_ONE"; }
 
     static std::string no_join_key() { return "$GETML_NO_JOIN_KEY"; }
 

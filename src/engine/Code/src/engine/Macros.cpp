@@ -34,7 +34,8 @@ std::string Macros::make_table_name(
     const std::string& _other_time_stamp,
     const std::string& _upper_time_stamp,
     const std::string& _name,
-    const std::string& _joined_to )
+    const std::string& _joined_to,
+    const bool _one_to_one )
 {
     if ( _name.find( Macros::name() ) != std::string::npos )
         {
@@ -47,7 +48,8 @@ std::string Macros::make_table_name(
                        _other_time_stamp,
                        _upper_time_stamp,
                        name,
-                       _joined_to ) +
+                       _joined_to,
+                       _one_to_one ) +
                    _name;
         }
 
@@ -63,15 +65,20 @@ std::string Macros::make_table_name(
                                    _other_time_stamp,
                                    _upper_time_stamp,
                                    _name,
-                                   joined_to );
+                                   joined_to,
+                                   _one_to_one );
         }
+
+    const auto one_to_one =
+        _one_to_one ? std::string( "true" ) : std::string( "false" );
 
     return Macros::delimiter() + Macros::name() + "=" + _name +
            Macros::join_key() + "=" + _join_key + Macros::other_join_key() +
            "=" + _other_join_key + Macros::time_stamp() + "=" + _time_stamp +
            Macros::other_time_stamp() + "=" + _other_time_stamp +
            Macros::upper_time_stamp() + "=" + _upper_time_stamp +
-           Macros::joined_to() + "=" + _joined_to + Macros::end();
+           Macros::joined_to() + "=" + _joined_to + Macros::one_to_one() + "=" +
+           one_to_one + Macros::end();
 }
 
 // ----------------------------------------------------------------------------
@@ -85,7 +92,8 @@ std::string Macros::make_left_join( const std::string& _splitted )
          time_stamp,
          other_time_stamp,
          upper_time_stamp,
-         joined_to] = parse_table_name( _splitted );
+         joined_to,
+         _] = parse_table_name( _splitted );
 
     auto left_join = "       LEFT JOIN \"" + name + "\"\n";
 
@@ -200,7 +208,8 @@ std::tuple<
     std::string,
     std::string,
     std::string,
-    std::string>
+    std::string,
+    bool>
 Macros::parse_table_name( const std::string& _splitted )
 {
     const auto name = get_param( _splitted, Macros::name() + "=" );
@@ -220,6 +229,9 @@ Macros::parse_table_name( const std::string& _splitted )
 
     const auto joined_to = get_param( _splitted, Macros::joined_to() + "=" );
 
+    const bool one_to_one =
+        ( get_param( _splitted, Macros::one_to_one() + "=" ) == "true" );
+
     return std::make_tuple(
         name,
         join_key,
@@ -227,7 +239,8 @@ Macros::parse_table_name( const std::string& _splitted )
         time_stamp,
         other_time_stamp,
         upper_time_stamp,
-        joined_to );
+        joined_to,
+        one_to_one );
 }
 
 // -----------------------------------------------------------------------------

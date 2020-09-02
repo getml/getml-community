@@ -46,7 +46,7 @@ std::vector<std::string> PlaceholderMaker::handle_horizon(
 helpers::Placeholder PlaceholderMaker::handle_joined_tables(
     const helpers::Placeholder& _placeholder,
     const Poco::JSON::Array& _joined_tables_arr,
-    const std::vector<bool>& _many_to_one,
+    const std::vector<std::string>& _relationship,
     const std::vector<std::string>& _other_time_stamps_used,
     const std::vector<std::string>& _upper_time_stamps_used )
 {
@@ -54,7 +54,7 @@ helpers::Placeholder PlaceholderMaker::handle_joined_tables(
 
     const auto size = _joined_tables_arr.size();
 
-    assert_true( _many_to_one.size() == size );
+    assert_true( _relationship.size() == size );
 
     assert_true( _placeholder.allow_lagged_targets_.size() == size );
 
@@ -98,7 +98,7 @@ helpers::Placeholder PlaceholderMaker::handle_joined_tables(
 
             const auto joined_table = make_placeholder( *joined_table_obj );
 
-            if ( !_many_to_one.at( i ) )
+            if ( _relationship.at( i ) == RELATIONSHIP_DEFAULT )
                 {
                     allow_lagged_targets.push_back(
                         _placeholder.allow_lagged_targets_.at( i ) );
@@ -139,6 +139,9 @@ helpers::Placeholder PlaceholderMaker::handle_joined_tables(
             append(
                 joined_table.upper_time_stamps_used_, &upper_time_stamps_used );
 
+            const auto one_to_one =
+                ( _relationship.at( i ) == RELATIONSHIP_ONE_TO_ONE );
+
             name += containers::Macros::make_table_name(
                 _placeholder.join_keys_used_.at( i ),
                 _placeholder.other_join_keys_used_.at( i ),
@@ -146,7 +149,8 @@ helpers::Placeholder PlaceholderMaker::handle_joined_tables(
                 _placeholder.other_time_stamps_used_.at( i ),
                 _placeholder.upper_time_stamps_used_.at( i ),
                 joined_table.name(),
-                _placeholder.name() );
+                _placeholder.name(),
+                one_to_one );
         }
 
     // ------------------------------------------------------------------------
@@ -234,8 +238,8 @@ helpers::Placeholder PlaceholderMaker::make_placeholder(
 
     const auto memory = extract_vector<Float>( _obj, "memory_", expected_size );
 
-    const auto many_to_one =
-        extract_vector<bool>( _obj, "many_to_one_", expected_size );
+    const auto relationship =
+        extract_vector<std::string>( _obj, "relationship_", expected_size );
 
     // ------------------------------------------------------------------------
 
@@ -251,7 +255,7 @@ helpers::Placeholder PlaceholderMaker::make_placeholder(
     return handle_joined_tables(
         placeholder,
         *joined_tables_arr,
-        many_to_one,
+        relationship,
         other_time_stamps_used,
         upper_time_stamps_used );
 

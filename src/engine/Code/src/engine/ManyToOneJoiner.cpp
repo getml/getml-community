@@ -144,7 +144,8 @@ containers::DataFrame ManyToOneJoiner::join_one(
          time_stamp,
          other_time_stamp,
          upper_time_stamp,
-         joined_to] = containers::Macros::parse_table_name( _splitted );
+         joined_to,
+         one_to_one] = containers::Macros::parse_table_name( _splitted );
 
     const auto peripheral =
         find_peripheral( name, _peripheral_names, _peripheral_dfs );
@@ -158,6 +159,7 @@ containers::DataFrame ManyToOneJoiner::join_one(
         other_time_stamp,
         upper_time_stamp,
         joined_to,
+        one_to_one,
         _population,
         peripheral );
 
@@ -247,6 +249,7 @@ std::vector<size_t> ManyToOneJoiner::make_index(
     const std::string& _other_time_stamp,
     const std::string& _upper_time_stamp,
     const std::string& _joined_to,
+    const bool _one_to_one,
     const containers::DataFrame& _population,
     const containers::DataFrame& _peripheral )
 {
@@ -282,6 +285,8 @@ std::vector<size_t> ManyToOneJoiner::make_index(
 
     std::vector<size_t> index( _population.nrows() );
 
+    std::set<size_t> unique_indices;
+
     for ( size_t i = 0; i < _population.nrows(); ++i )
         {
             const auto ts = time_stamp ? ( *time_stamp )[i] : 0.0;
@@ -299,8 +304,25 @@ std::vector<size_t> ManyToOneJoiner::make_index(
                     throw std::invalid_argument(
                         "The join of '" + _population.name() + "' and '" +
                         _peripheral.name() +
-                        "' was marked many-to-one, but there is more than one "
-                        "match." );
+                        "' was marked many-to-one or one-to-one, "
+                        "but there is more than one "
+                        "match in '" +
+                        _peripheral.name() + "'." );
+                }
+
+            if ( _one_to_one && ix < _population.nrows() )
+                {
+                    if ( unique_indices.find( ix ) != unique_indices.end() )
+                        {
+                            throw std::invalid_argument(
+                                "The join of '" + _population.name() +
+                                "' and '" + _peripheral.name() +
+                                "' was marked one-to-one, but there is more "
+                                "than one match in '" +
+                                _population.name() + "'." );
+                        }
+
+                    unique_indices.insert( ix );
                 }
 
             index[i] = ix;

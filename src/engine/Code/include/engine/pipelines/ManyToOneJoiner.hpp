@@ -68,6 +68,7 @@ class ManyToOneJoiner
         const std::string& _other_time_stamp,
         const std::string& _upper_time_stamp,
         const std::string& _joined_to,
+        const bool _one_to_one,
         const containers::DataFrame& _population,
         const containers::DataFrame& _peripheral );
 

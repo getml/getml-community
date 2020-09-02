@@ -9,6 +9,11 @@ namespace pipelines
 
 class PlaceholderMaker
 {
+   private:
+    static constexpr const char* RELATIONSHIP_DEFAULT = "default";
+    static constexpr const char* RELATIONSHIP_MANY_TO_ONE = "many-to-one";
+    static constexpr const char* RELATIONSHIP_ONE_TO_ONE = "one-to-one";
+
    public:
     /// Creates the placeholder, including transforming memory into upper time
     /// stamps.
@@ -50,7 +55,7 @@ class PlaceholderMaker
     static helpers::Placeholder handle_joined_tables(
         const helpers::Placeholder& _placeholder,
         const Poco::JSON::Array& _joined_tables_arr,
-        const std::vector<bool>& _many_to_one,
+        const std::vector<std::string>& _relationship,
         const std::vector<std::string>& _other_time_stamps_used,
         const std::vector<std::string>& _upper_time_stamps_used );
 
