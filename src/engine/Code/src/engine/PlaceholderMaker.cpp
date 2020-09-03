@@ -239,7 +239,10 @@ helpers::Placeholder PlaceholderMaker::make_placeholder(
     const auto memory = extract_vector<Float>( _obj, "memory_", expected_size );
 
     const auto relationship =
-        extract_vector<std::string>( _obj, "relationship_", expected_size );
+        _obj.has( "relationship_" )
+            ? extract_vector<std::string>(
+                  _obj, "relationship_", expected_size )
+            : std::vector<std::string>( expected_size, RELATIONSHIP_DEFAULT );
 
     // ------------------------------------------------------------------------
 
