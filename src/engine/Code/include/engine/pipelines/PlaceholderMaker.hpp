@@ -10,8 +10,9 @@ namespace pipelines
 class PlaceholderMaker
 {
    private:
-    static constexpr const char* RELATIONSHIP_DEFAULT = "default";
+    static constexpr const char* RELATIONSHIP_MANY_TO_MANY = "many-to-many";
     static constexpr const char* RELATIONSHIP_MANY_TO_ONE = "many-to-one";
+    static constexpr const char* RELATIONSHIP_ONE_TO_MANY = "one-to-many";
     static constexpr const char* RELATIONSHIP_ONE_TO_ONE = "one-to-one";
 
    public:
@@ -72,6 +73,14 @@ class PlaceholderMaker
         const std::string& _upper_time_stamp,
         const std::string& _name,
         const std::string& _joined_to );
+
+   private:
+    static bool is_to_many( const std::string& _relationship )
+    {
+        return (
+            _relationship == RELATIONSHIP_MANY_TO_MANY ||
+            _relationship == RELATIONSHIP_ONE_TO_MANY );
+    }
 };
 
 // ------------------------------------------------------------------------

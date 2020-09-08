@@ -98,7 +98,7 @@ helpers::Placeholder PlaceholderMaker::handle_joined_tables(
 
             const auto joined_table = make_placeholder( *joined_table_obj );
 
-            if ( _relationship.at( i ) == RELATIONSHIP_DEFAULT )
+            if ( is_to_many( _relationship.at( i ) ) )
                 {
                     allow_lagged_targets.push_back(
                         _placeholder.allow_lagged_targets_.at( i ) );
@@ -242,7 +242,8 @@ helpers::Placeholder PlaceholderMaker::make_placeholder(
         _obj.has( "relationship_" )
             ? extract_vector<std::string>(
                   _obj, "relationship_", expected_size )
-            : std::vector<std::string>( expected_size, RELATIONSHIP_DEFAULT );
+            : std::vector<std::string>(
+                  expected_size, RELATIONSHIP_MANY_TO_MANY );
 
     // ------------------------------------------------------------------------
 
