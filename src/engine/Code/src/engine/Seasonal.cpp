@@ -193,7 +193,9 @@ Poco::JSON::Object::Ptr Seasonal::fingerprint() const
 {
     auto obj = Poco::JSON::Object::Ptr( new Poco::JSON::Object() );
 
-    obj->set( "type_", "Seasonal" );
+    obj->set( "type_", type() );
+
+    obj->set( "dependencies_", JSON::vector_to_array_ptr( dependencies_ ) );
 
     return obj;
 }

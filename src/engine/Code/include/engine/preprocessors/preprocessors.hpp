@@ -30,6 +30,7 @@
 #include "engine/preprocessors/Preprocessor.hpp"
 #include "engine/preprocessors/PreprocessorImpl.hpp"
 
+#include "engine/preprocessors/EMailDomain.hpp"
 #include "engine/preprocessors/Seasonal.hpp"
 
 #include "engine/preprocessors/PreprocessorParser.hpp"

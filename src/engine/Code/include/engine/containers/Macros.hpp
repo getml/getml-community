@@ -80,6 +80,8 @@ class Macros
 
     static std::string delimiter() { return "$GETML_JOIN_PARAM_DELIMITER"; }
 
+    static std::string email_domain() { return "$GETML_EMAIL_DOMAIN"; }
+
     static std::string end() { return "$GETML_JOIN_PARAM_END"; }
 
     static std::string generated_ts() { return "$GETML_GENERATED_TS"; }

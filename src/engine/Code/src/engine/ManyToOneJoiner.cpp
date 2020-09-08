@@ -198,6 +198,18 @@ containers::DataFrame ManyToOneJoiner::join_one(
                 col, containers::DataFrame::ROLE_TIME_STAMP );
         }
 
+    for ( size_t i = 0; i < peripheral.num_unused_strings(); ++i )
+        {
+            if ( peripheral.unused_string( i ).unit() == "" )
+                {
+                    continue;
+                }
+            auto col = peripheral.unused_string( i ).sort_by_key( index );
+            col.set_name(
+                containers::Macros::make_colname( name, col.name() ) );
+            joined.add_string_column( col );
+        }
+
     return joined;
 }
 

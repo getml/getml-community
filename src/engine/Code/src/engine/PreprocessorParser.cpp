@@ -12,6 +12,11 @@ std::shared_ptr<Preprocessor> PreprocessorParser::parse(
 {
     const auto type = jsonutils::JSON::get_value<std::string>( _obj, "type_" );
 
+    if ( type == Preprocessor::EMAILDOMAIN )
+        {
+            return std::make_shared<EMailDomain>( _obj, _dependencies );
+        }
+
     if ( type == Preprocessor::SEASONAL )
         {
             return std::make_shared<Seasonal>( _obj, _dependencies );
