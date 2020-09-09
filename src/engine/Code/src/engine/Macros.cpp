@@ -400,6 +400,9 @@ std::string Macros::replace( const std::string& _query )
         utils::StringReplacer::replace_all( _query, generated_ts(), "" );
 
     new_query = utils::StringReplacer::replace_all(
+        new_query, close_bracket() + remove_char() + "\"", " )" );
+
+    new_query = utils::StringReplacer::replace_all(
         new_query, remove_char() + "\"", "" );
 
     new_query = utils::StringReplacer::replace_all(
@@ -416,6 +419,17 @@ std::string Macros::replace( const std::string& _query )
 
     new_query =
         utils::StringReplacer::replace_all( new_query, close_bracket(), "" );
+
+    new_query = utils::StringReplacer::replace_all(
+        new_query, "t1.\"" + substring(), "SUBSTR( t1.\"" );
+
+    new_query = utils::StringReplacer::replace_all(
+        new_query, "t2.\"" + substring(), "SUBSTR( t2.\"" );
+
+    new_query =
+        utils::StringReplacer::replace_all( new_query, begin(), "\", " );
+
+    new_query = utils::StringReplacer::replace_all( new_query, length(), ", " );
 
     new_query = utils::StringReplacer::replace_all(
         new_query, "t1.\"" + hour(), "hour( t1.\"" );

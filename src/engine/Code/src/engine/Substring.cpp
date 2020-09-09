@@ -19,15 +19,9 @@ std::optional<containers::Column<Int>> Substring::extract_substring(
             int_col[i] = ( *_categories )[str_col[i]];
         }
 
-    int_col.set_name(
-        containers::Macros::substring() + _col.name() +
-        containers::Macros::begin() + std::to_string( begin_ ) +
-        containers::Macros::length() + std::to_string( length_ ) +
-        containers::Macros::close_bracket() );
+    int_col.set_name( make_name( _col.name() ) );
 
-    int_col.set_unit(
-        str_col.unit() + ", " + std::to_string( begin_ ) + ", " +
-        std::to_string( length_ ) );
+    int_col.set_unit( make_unit( _col.unit() ) );
 
     if ( PreprocessorImpl::has_warnings( int_col ) )
         {
@@ -52,15 +46,9 @@ containers::Column<Int> Substring::extract_substring(
             int_col[i] = _categories[str_col[i]];
         }
 
-    int_col.set_name(
-        containers::Macros::substring() + _col.name() +
-        containers::Macros::begin() + std::to_string( begin_ ) +
-        containers::Macros::length() + std::to_string( length_ ) +
-        containers::Macros::close_bracket() );
+    int_col.set_name( make_name( _col.name() ) );
 
-    int_col.set_unit(
-        str_col.unit() + ", " + std::to_string( begin_ ) + ", " +
-        std::to_string( length_ ) );
+    int_col.set_unit( make_unit( _col.unit() ) );
 
     return int_col;
 }

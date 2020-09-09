@@ -138,6 +138,23 @@ class Substring : public Preprocessor
         return extract_substring( _categories, str_col );
     }
 
+    /// Generates the colname for the newly created column.
+    std::string make_name( const std::string& _colname ) const
+    {
+        return containers::Macros::substring() + _colname +
+               containers::Macros::begin() + std::to_string( begin_ ) +
+               containers::Macros::length() + std::to_string( length_ ) +
+               containers::Macros::close_bracket() +
+               containers::Macros::remove_char();
+    }
+
+    /// Generates the unit for the newly created column.
+    std::string make_unit( const std::string& _unit ) const
+    {
+        return _unit + ", " + std::to_string( begin_ ) + ", " +
+               std::to_string( length_ );
+    }
+
    private:
     /// The beginning of the substring to extract.
     size_t begin_;
