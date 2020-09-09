@@ -65,6 +65,8 @@ class Macros
         const std::string& _key1,
         const std::string& _key2 );
 
+    static std::string remove_substring( const std::string& _from_colname );
+
     static std::string remove_time_diff( const std::string& _from_colname );
 
     /// Replaces all instances of macros from a query or a colunm name.
@@ -74,6 +76,8 @@ class Macros
         const std::string& _table, const std::string& _colname );
 
    public:
+    static std::string begin() { return "$GETML_BEGIN"; }
+
     static std::string close_bracket() { return "$GETML_CLOSE_BRACKET"; }
 
     static std::string column() { return "$GETML_JOIN_PARAM_COLUMN"; }
@@ -83,6 +87,8 @@ class Macros
     static std::string email_domain() { return "$GETML_EMAIL_DOMAIN"; }
 
     static std::string end() { return "$GETML_JOIN_PARAM_END"; }
+
+    static std::string length() { return "$GETML_LENGTH"; }
 
     static std::string generated_ts() { return "$GETML_GENERATED_TS"; }
 
@@ -139,6 +145,8 @@ class Macros
     }
 
     static std::string self_join_key() { return "$GETML_SELF_JOIN_KEY"; }
+
+    static std::string substring() { return "$GETML_SUBSTRING"; }
 
     static std::string table() { return "$GETML_JOIN_PARAM_TABLE"; }
 

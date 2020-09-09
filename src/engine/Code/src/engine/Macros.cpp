@@ -168,6 +168,8 @@ helpers::ImportanceMaker Macros::modify_column_importances(
             auto [to_table, to_colname] =
                 parse_table_colname( from_desc.table_, from_desc.name_ );
 
+            to_colname = remove_substring( to_colname );
+
             to_colname = remove_time_diff( to_colname );
 
             to_colname = replace( to_colname );
@@ -329,6 +331,35 @@ std::string Macros::remove_many_to_one(
     query.replace( begin - 1, len + 2, subquery );
 
     return query;
+}
+
+// ----------------------------------------------------------------------------
+
+std::string Macros::remove_substring( const std::string& _from_colname )
+{
+    // --------------------------------------------------------------
+
+    if ( _from_colname.find( Macros::substring() ) == std::string::npos )
+        {
+            return _from_colname;
+        }
+
+    // --------------------------------------------------------------
+
+    const auto begin = _from_colname.find( Macros::substring() ) +
+                       Macros::substring().length();
+
+    const auto end = _from_colname.find( Macros::begin() );
+
+    assert_true( end >= begin );
+
+    const auto length = end - begin;
+
+    // --------------------------------------------------------------
+
+    return _from_colname.substr( begin, length );
+
+    // --------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------

@@ -12,6 +12,7 @@ class Preprocessor
    public:
     static constexpr const char* EMAILDOMAIN = "EMailDomain";
     static constexpr const char* SEASONAL = "Seasonal";
+    static constexpr const char* SUBSTRING = "Substring";
 
    public:
     Preprocessor(){};

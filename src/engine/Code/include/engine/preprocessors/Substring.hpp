@@ -1,5 +1,5 @@
-#ifndef ENGINE_PREPROCESSORS_EMAILDOMAIN_HPP_
-#define ENGINE_PREPROCESSORS_EMAILDOMAIN_HPP_
+#ifndef ENGINE_PREPROCESSORS_SUBSTRING_HPP_
+#define ENGINE_PREPROCESSORS_SUBSTRING_HPP_
 
 namespace engine
 {
@@ -7,12 +7,12 @@ namespace preprocessors
 {
 // ----------------------------------------------------
 
-class EMailDomain : public Preprocessor
+class Substring : public Preprocessor
 {
    public:
-    EMailDomain() {}
+    Substring() : begin_( 0 ), length_( 0 ) {}
 
-    EMailDomain(
+    Substring(
         const Poco::JSON::Object& _obj,
         const std::vector<Poco::JSON::Object::Ptr>& _dependencies )
     {
@@ -20,7 +20,7 @@ class EMailDomain : public Preprocessor
         dependencies_ = _dependencies;
     }
 
-    ~EMailDomain() = default;
+    ~Substring() = default;
 
    public:
     /// Returns the fingerprint of the preprocessor (necessary to build
@@ -51,25 +51,25 @@ class EMailDomain : public Preprocessor
     /// Creates a deep copy.
     std::shared_ptr<Preprocessor> clone() const final
     {
-        return std::make_shared<EMailDomain>( *this );
+        return std::make_shared<Substring>( *this );
     }
 
     /// Returns the type of the preprocessor.
-    std::string type() const final { return Preprocessor::EMAILDOMAIN; }
+    std::string type() const final { return Preprocessor::SUBSTRING; }
 
    private:
-    /// Extracts the domain during fitting.
-    std::optional<containers::Column<Int>> extract_domain(
+    /// Extracts the substring during fitting.
+    std::optional<containers::Column<Int>> extract_substring(
         const containers::Column<strings::String>& _col,
         containers::Encoding* _categories ) const;
 
-    /// Extracts the domain during transformation.
-    containers::Column<Int> extract_domain(
+    /// Extracts the substring during transformation.
+    containers::Column<Int> extract_substring(
         const containers::Encoding& _categories,
         const containers::Column<strings::String>& _col ) const;
 
-    /// Extracts the domain as a string.
-    containers::Column<strings::String> extract_domain_string(
+    /// Extracts the substring as a string.
+    containers::Column<strings::String> extract_substring_string(
         const containers::Column<strings::String>& _col ) const;
 
     /// Fits and transforms an individual data frame.
@@ -80,7 +80,12 @@ class EMailDomain : public Preprocessor
         containers::Encoding* _categories );
 
     /// Parses a JSON object.
-    EMailDomain from_json_obj( const Poco::JSON::Object& _obj ) const;
+    Substring from_json_obj( const Poco::JSON::Object& _obj ) const;
+
+    /// Generates a string column from the _categories and the int column.
+    containers::Column<strings::String> make_str_col(
+        const containers::Encoding& _categories,
+        const containers::Column<Int>& _col ) const;
 
     /// Transforms a single data frame.
     containers::DataFrame transform_df(
@@ -90,16 +95,69 @@ class EMailDomain : public Preprocessor
         const size_t _table ) const;
 
    private:
+    /// Extracts the columns and adds it to the data frame
+    template <class T>
+    void extract_and_add(
+        const std::string& _marker,
+        const size_t _table,
+        const containers::Column<T>& _original_col,
+        containers::Encoding* _categories,
+        containers::DataFrame* _df )
+    {
+        if ( _original_col.unit() != unit_ )
+            {
+                return;
+            }
+
+        const auto col = extract_substring( _original_col, _categories );
+
+        if ( col )
+            {
+                PreprocessorImpl::add(
+                    _marker, _table, _original_col.name(), &cols_ );
+                _df->add_int_column(
+                    *col, containers::DataFrame::ROLE_CATEGORICAL );
+            }
+    }
+
+    /// Extracts the substring during fitting.
+    std::optional<containers::Column<Int>> extract_substring(
+        const containers::Column<Int>& _col,
+        containers::Encoding* _categories ) const
+    {
+        const auto str_col = make_str_col( *_categories, _col );
+        return extract_substring( str_col, _categories );
+    }
+
+    /// Extracts the substring during transformation.
+    containers::Column<Int> extract_substring(
+        const containers::Encoding& _categories,
+        const containers::Column<Int>& _col ) const
+    {
+        const auto str_col = make_str_col( _categories, _col );
+        return extract_substring( _categories, str_col );
+    }
+
+   private:
+    /// The beginning of the substring to extract.
+    size_t begin_;
+
     /// List of all columns to which the email domain transformation applies.
     std::vector<std::shared_ptr<helpers::ColumnDescription>> cols_;
 
     /// The dependencies inserted into the the preprocessor.
     std::vector<Poco::JSON::Object::Ptr> dependencies_;
+
+    /// The length of the substring to extract.
+    size_t length_;
+
+    /// The unit to which we want to apply the substring preprocessor
+    std::string unit_;
 };
 
 // ----------------------------------------------------
 }  // namespace preprocessors
 }  // namespace engine
 
-#endif  // ENGINE_PREPROCESSORS_EMAILDOMAIN_HPP_
+#endif  // ENGINE_PREPROCESSORS_SUBSTRING_HPP_
 

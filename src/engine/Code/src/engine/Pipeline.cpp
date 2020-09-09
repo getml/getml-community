@@ -469,7 +469,7 @@ std::vector<Poco::JSON::Object::Ptr> Pipeline::extract_df_fingerprints(
         extract_data_frames( _cmd, _data_frames );
 
     std::vector<Poco::JSON::Object::Ptr> df_fingerprints = {
-        population.fingerprint()};
+        population.fingerprint() };
 
     for ( const auto& df : peripheral )
         {
@@ -1414,7 +1414,7 @@ Pipeline::init_preprocessors(
             assert_true( ptr );
 
             vec.push_back( preprocessors::PreprocessorParser::parse(
-                *ptr, df_fingerprints() ) );
+                *ptr, _dependencies ) );
         }
 
     return vec;
@@ -1749,19 +1749,29 @@ void Pipeline::load_predictors(
 void Pipeline::load_preprocessors(
     const std::string& _path, Pipeline* _pipeline ) const
 {
-    _pipeline->preprocessors_ =
-        init_preprocessors( _pipeline->df_fingerprints() );
+    if ( !_pipeline->obj().has( "preprocessors_" ) )
+        {
+            return;
+        }
 
-    for ( size_t i = 0; i < _pipeline->preprocessors_.size(); ++i )
+    auto preprocessors =
+        std::vector<std::shared_ptr<preprocessors::Preprocessor>>();
+
+    const auto arr =
+        jsonutils::JSON::get_object_array( _pipeline->obj(), "preprocessors_" );
+
+    for ( size_t i = 0; i < arr->size(); ++i )
         {
             const auto json_obj = load_json_obj(
                 _path + "preprocessor-" + std::to_string( i ) + ".json" );
 
-            auto& p = _pipeline->preprocessors_.at( i );
-
-            p = preprocessors::PreprocessorParser::parse(
+            const auto p = preprocessors::PreprocessorParser::parse(
                 json_obj, _pipeline->df_fingerprints() );
+
+            preprocessors.push_back( p );
         }
+
+    _pipeline->preprocessors_ = preprocessors;
 }
 
 // ------------------------------------------------------------------------

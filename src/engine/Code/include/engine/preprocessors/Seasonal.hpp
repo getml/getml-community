@@ -15,9 +15,9 @@ class Seasonal : public Preprocessor
     Seasonal(
         const Poco::JSON::Object& _obj,
         const std::vector<Poco::JSON::Object::Ptr>& _dependencies )
-        : dependencies_( _dependencies )
     {
         *this = from_json_obj( _obj );
+        dependencies_ = _dependencies;
     }
 
     ~Seasonal() = default;

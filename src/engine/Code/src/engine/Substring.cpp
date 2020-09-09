@@ -6,11 +6,11 @@ namespace preprocessors
 {
 // ----------------------------------------------------
 
-std::optional<containers::Column<Int>> EMailDomain::extract_domain(
+std::optional<containers::Column<Int>> Substring::extract_substring(
     const containers::Column<strings::String>& _col,
     containers::Encoding* _categories ) const
 {
-    auto str_col = extract_domain_string( _col );
+    auto str_col = extract_substring_string( _col );
 
     auto int_col = containers::Column<Int>( str_col.nrows() );
 
@@ -20,10 +20,14 @@ std::optional<containers::Column<Int>> EMailDomain::extract_domain(
         }
 
     int_col.set_name(
-        containers::Macros::email_domain() + _col.name() +
+        containers::Macros::substring() + _col.name() +
+        containers::Macros::begin() + std::to_string( begin_ ) +
+        containers::Macros::length() + std::to_string( length_ ) +
         containers::Macros::close_bracket() );
 
-    int_col.set_unit( "email domain" );
+    int_col.set_unit(
+        str_col.unit() + ", " + std::to_string( begin_ ) + ", " +
+        std::to_string( length_ ) );
 
     if ( PreprocessorImpl::has_warnings( int_col ) )
         {
@@ -35,11 +39,11 @@ std::optional<containers::Column<Int>> EMailDomain::extract_domain(
 
 // ----------------------------------------------------
 
-containers::Column<Int> EMailDomain::extract_domain(
+containers::Column<Int> Substring::extract_substring(
     const containers::Encoding& _categories,
     const containers::Column<strings::String>& _col ) const
 {
-    auto str_col = extract_domain_string( _col );
+    auto str_col = extract_substring_string( _col );
 
     auto int_col = containers::Column<Int>( str_col.nrows() );
 
@@ -49,17 +53,21 @@ containers::Column<Int> EMailDomain::extract_domain(
         }
 
     int_col.set_name(
-        containers::Macros::email_domain() + _col.name() +
+        containers::Macros::substring() + _col.name() +
+        containers::Macros::begin() + std::to_string( begin_ ) +
+        containers::Macros::length() + std::to_string( length_ ) +
         containers::Macros::close_bracket() );
 
-    int_col.set_unit( "email domain" );
+    int_col.set_unit(
+        str_col.unit() + ", " + std::to_string( begin_ ) + ", " +
+        std::to_string( length_ ) );
 
     return int_col;
 }
 
 // ----------------------------------------------------
 
-containers::Column<strings::String> EMailDomain::extract_domain_string(
+containers::Column<strings::String> Substring::extract_substring_string(
     const containers::Column<strings::String>& _col ) const
 {
     auto result = containers::Column<strings::String>( _col.nrows() );
@@ -68,21 +76,9 @@ containers::Column<strings::String> EMailDomain::extract_domain_string(
         {
             const auto str = _col[i].str();
 
-            const auto at_pos = str.find( "@" );
+            const auto substr = str.substr( begin_, length_ );
 
-            if ( at_pos == std::string::npos )
-                {
-                    continue;
-                }
-
-            const auto domain = str.substr( at_pos );
-
-            if ( domain.find( "." ) == std::string::npos )
-                {
-                    continue;
-                }
-
-            result[i] = strings::String( domain );
+            result[i] = strings::String( substr );
         }
 
     return result;
@@ -90,11 +86,17 @@ containers::Column<strings::String> EMailDomain::extract_domain_string(
 
 // ----------------------------------------------------
 
-Poco::JSON::Object::Ptr EMailDomain::fingerprint() const
+Poco::JSON::Object::Ptr Substring::fingerprint() const
 {
     auto obj = Poco::JSON::Object::Ptr( new Poco::JSON::Object() );
 
     obj->set( "type_", type() );
+
+    obj->set( "begin_", begin_ );
+
+    obj->set( "length_", length_ );
+
+    obj->set( "unit_", unit_ );
 
     obj->set( "dependencies_", JSON::vector_to_array_ptr( dependencies_ ) );
 
@@ -104,7 +106,7 @@ Poco::JSON::Object::Ptr EMailDomain::fingerprint() const
 // ----------------------------------------------------
 
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
-EMailDomain::fit_transform(
+Substring::fit_transform(
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<containers::Encoding>& _categories,
     const containers::DataFrame& _population_df,
@@ -138,7 +140,7 @@ EMailDomain::fit_transform(
 
 // ----------------------------------------------------
 
-containers::DataFrame EMailDomain::fit_transform_df(
+containers::DataFrame Substring::fit_transform_df(
     const containers::DataFrame& _df,
     const std::string& _marker,
     const size_t _table,
@@ -146,32 +148,18 @@ containers::DataFrame EMailDomain::fit_transform_df(
 {
     auto df = _df;
 
+    for ( size_t i = 0; i < _df.num_categoricals(); ++i )
+        {
+            const auto& original_col = _df.categorical( i );
+
+            extract_and_add( _marker, _table, original_col, _categories, &df );
+        }
+
     for ( size_t i = 0; i < _df.num_unused_strings(); ++i )
         {
-            // -----------------------------------
+            const auto& original_col = _df.unused_string( i );
 
-            const auto& email_col = _df.unused_string( i );
-
-            // -----------------------------------
-
-            if ( email_col.unit() != "email" )
-                {
-                    continue;
-                }
-
-            // -----------------------------------
-
-            const auto col = extract_domain( email_col, _categories );
-
-            if ( col )
-                {
-                    PreprocessorImpl::add(
-                        _marker, _table, email_col.name(), &cols_ );
-                    df.add_int_column(
-                        *col, containers::DataFrame::ROLE_CATEGORICAL );
-                }
-
-            // -----------------------------------
+            extract_and_add( _marker, _table, original_col, _categories, &df );
         }
 
     return df;
@@ -179,9 +167,15 @@ containers::DataFrame EMailDomain::fit_transform_df(
 
 // ----------------------------------------------------
 
-EMailDomain EMailDomain::from_json_obj( const Poco::JSON::Object& _obj ) const
+Substring Substring::from_json_obj( const Poco::JSON::Object& _obj ) const
 {
-    EMailDomain that;
+    Substring that;
+
+    that.begin_ = jsonutils::JSON::get_value<size_t>( _obj, "begin_" );
+
+    that.length_ = jsonutils::JSON::get_value<size_t>( _obj, "length_" );
+
+    that.unit_ = jsonutils::JSON::get_value<std::string>( _obj, "unit_" );
 
     if ( _obj.has( "cols_" ) )
         {
@@ -194,7 +188,26 @@ EMailDomain EMailDomain::from_json_obj( const Poco::JSON::Object& _obj ) const
 
 // ----------------------------------------------------
 
-Poco::JSON::Object::Ptr EMailDomain::to_json_obj() const
+containers::Column<strings::String> Substring::make_str_col(
+    const containers::Encoding& _categories,
+    const containers::Column<Int>& _col ) const
+{
+    auto result = containers::Column<strings::String>( _col.nrows() );
+
+    for ( size_t i = 0; i < _col.nrows(); ++i )
+        {
+            result[i] = _categories[_col[i]];
+        }
+
+    result.set_name( _col.name() );
+    result.set_unit( _col.unit() );
+
+    return result;
+}
+
+// ----------------------------------------------------
+
+Poco::JSON::Object::Ptr Substring::to_json_obj() const
 {
     auto obj = Poco::JSON::Object::Ptr( new Poco::JSON::Object() );
 
@@ -202,13 +215,19 @@ Poco::JSON::Object::Ptr EMailDomain::to_json_obj() const
 
     obj->set( "cols_", PreprocessorImpl::to_array( cols_ ) );
 
+    obj->set( "begin_", begin_ );
+
+    obj->set( "length_", length_ );
+
+    obj->set( "unit_", unit_ );
+
     return obj;
 }
 
 // ----------------------------------------------------
 
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
-EMailDomain::transform(
+Substring::transform(
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<const containers::Encoding> _categories,
     const containers::DataFrame& _population_df,
@@ -239,7 +258,7 @@ EMailDomain::transform(
 
 // ----------------------------------------------------
 
-containers::DataFrame EMailDomain::transform_df(
+containers::DataFrame Substring::transform_df(
     const containers::Encoding& _categories,
     const containers::DataFrame& _df,
     const std::string& _marker,
@@ -255,10 +274,29 @@ containers::DataFrame EMailDomain::transform_df(
 
     for ( const auto& name : names )
         {
-            const auto col =
-                extract_domain( _categories, df.unused_string( name ) );
+            if ( _df.has_categorical( name ) )
+                {
+                    const auto col = extract_substring(
+                        _categories, _df.categorical( name ) );
 
-            df.add_int_column( col, containers::DataFrame::ROLE_CATEGORICAL );
+                    df.add_int_column(
+                        col, containers::DataFrame::ROLE_CATEGORICAL );
+                }
+            else if ( _df.has_unused_string( name ) )
+                {
+                    const auto col = extract_substring(
+                        _categories, _df.unused_string( name ) );
+
+                    df.add_int_column(
+                        col, containers::DataFrame::ROLE_CATEGORICAL );
+                }
+            else
+                {
+                    throw std::invalid_argument(
+                        "'" + _df.name() +
+                        "' has no categorical or unused string column named '" +
+                        name + "'!" );
+                }
         }
 
     // ----------------------------------------------------

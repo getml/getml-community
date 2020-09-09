@@ -402,6 +402,8 @@ Poco::JSON::Object::Ptr Seasonal::to_json_obj() const
 {
     auto obj = Poco::JSON::Object::Ptr( new Poco::JSON::Object() );
 
+    obj->set( "type_", type() );
+
     obj->set( "hour_", PreprocessorImpl::to_array( hour_ ) );
 
     obj->set( "minute_", PreprocessorImpl::to_array( minute_ ) );
