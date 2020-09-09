@@ -37,9 +37,9 @@ std::string Macros::make_table_name(
     const std::string& _joined_to,
     const bool _one_to_one )
 {
-    if ( _name.find( Macros::name() ) != std::string::npos )
+    if ( _name.find( Macros::joined_to() ) != std::string::npos )
         {
-            const auto name = get_param( _name, Macros::name() + "=" );
+            const auto name = get_param( _name, Macros::joined_to() + "=" );
 
             return make_table_name(
                        _join_key,
@@ -53,20 +53,20 @@ std::string Macros::make_table_name(
                    _name;
         }
 
-    if ( _joined_to.find( Macros::name() ) != std::string::npos )
+    if ( _joined_to.find( Macros::joined_to() ) != std::string::npos )
         {
             const auto joined_to =
-                get_param( _joined_to, Macros::name() + "=" );
+                get_param( _joined_to, Macros::joined_to() + "=" );
 
-            return joined_to + make_table_name(
-                                   _join_key,
-                                   _other_join_key,
-                                   _time_stamp,
-                                   _other_time_stamp,
-                                   _upper_time_stamp,
-                                   _name,
-                                   joined_to,
-                                   _one_to_one );
+            return _joined_to + make_table_name(
+                                    _join_key,
+                                    _other_join_key,
+                                    _time_stamp,
+                                    _other_time_stamp,
+                                    _upper_time_stamp,
+                                    _name,
+                                    joined_to,
+                                    _one_to_one );
         }
 
     const auto one_to_one =
@@ -255,12 +255,12 @@ std::pair<std::string, std::string> Macros::parse_table_colname(
 {
     if ( _colname.find( table() ) == std::string::npos )
         {
-            if ( _table.find( Macros::name() ) == std::string::npos )
+            if ( _table.find( Macros::joined_to() ) == std::string::npos )
                 {
                     return std::make_pair( _table, _colname );
                 }
 
-            const auto table = get_param( _table, Macros::name() + "=" );
+            const auto table = get_param( _table, Macros::joined_to() + "=" );
 
             return std::make_pair( table, _colname );
         }
