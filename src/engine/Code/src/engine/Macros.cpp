@@ -150,7 +150,8 @@ std::vector<std::string> Macros::modify_colnames(
     for ( auto& name : names )
         {
             const auto [_, to_colname] = parse_table_colname( "", name );
-            name = to_colname;
+
+            name = replace( to_colname );
         }
 
     return names;
@@ -169,6 +170,8 @@ helpers::ImportanceMaker Macros::modify_column_importances(
                 parse_table_colname( from_desc.table_, from_desc.name_ );
 
             to_colname = remove_substring( to_colname );
+
+            to_colname = remove_seasonal( to_colname );
 
             to_colname = remove_time_diff( to_colname );
 
@@ -364,6 +367,28 @@ std::string Macros::remove_substring( const std::string& _from_colname )
 
 // ----------------------------------------------------------------------------
 
+std::string Macros::remove_seasonal( const std::string& _from_colname )
+{
+    auto to_colname =
+        utils::StringReplacer::replace_all( _from_colname, hour(), "" );
+
+    to_colname = utils::StringReplacer::replace_all( to_colname, minute(), "" );
+
+    to_colname = utils::StringReplacer::replace_all( to_colname, month(), "" );
+
+    to_colname =
+        utils::StringReplacer::replace_all( to_colname, weekday(), "" );
+
+    to_colname = utils::StringReplacer::replace_all( to_colname, year(), "" );
+
+    to_colname =
+        utils::StringReplacer::replace_all( to_colname, seasonal_end(), "" );
+
+    return to_colname;
+}
+
+// ----------------------------------------------------------------------------
+
 std::string Macros::remove_time_diff( const std::string& _from_colname )
 {
     // --------------------------------------------------------------
@@ -403,6 +428,21 @@ std::string Macros::replace( const std::string& _query )
         new_query, close_bracket() + remove_char() + "\"", " )" );
 
     new_query = utils::StringReplacer::replace_all(
+        new_query, close_bracket() + remove_char(), " )" );
+
+    new_query = utils::StringReplacer::replace_all(
+        new_query, close_bracket() + "\"", "\" )" );
+
+    new_query =
+        utils::StringReplacer::replace_all( new_query, close_bracket(), " )" );
+
+    new_query = utils::StringReplacer::replace_all(
+        new_query, seasonal_end() + "\"", "\" )" );
+
+    new_query =
+        utils::StringReplacer::replace_all( new_query, seasonal_end(), " )" );
+
+    new_query = utils::StringReplacer::replace_all(
         new_query, remove_char() + "\"", "" );
 
     new_query = utils::StringReplacer::replace_all(
@@ -415,16 +455,13 @@ std::string Macros::replace( const std::string& _query )
         new_query, "t1.\"" + no_join_key() + "\"", "1" );
 
     new_query = utils::StringReplacer::replace_all(
-        new_query, close_bracket() + "\"", "\" )" );
-
-    new_query =
-        utils::StringReplacer::replace_all( new_query, close_bracket(), "" );
+        new_query, "t1.\"" + substring(), "substr( t1.\"" );
 
     new_query = utils::StringReplacer::replace_all(
-        new_query, "t1.\"" + substring(), "SUBSTR( t1.\"" );
+        new_query, "t2.\"" + substring(), "substr( t2.\"" );
 
     new_query = utils::StringReplacer::replace_all(
-        new_query, "t2.\"" + substring(), "SUBSTR( t2.\"" );
+        new_query, substring(), "substr( \"" );
 
     new_query =
         utils::StringReplacer::replace_all( new_query, begin(), "\", " );
@@ -437,7 +474,8 @@ std::string Macros::replace( const std::string& _query )
     new_query = utils::StringReplacer::replace_all(
         new_query, "t2.\"" + hour(), "hour( t2.\"" );
 
-    new_query = utils::StringReplacer::replace_all( new_query, hour(), "" );
+    new_query =
+        utils::StringReplacer::replace_all( new_query, hour(), "hour( " );
 
     new_query = utils::StringReplacer::replace_all(
         new_query, "t1.\"" + minute(), "minute( t1.\"" );
@@ -445,7 +483,8 @@ std::string Macros::replace( const std::string& _query )
     new_query = utils::StringReplacer::replace_all(
         new_query, "t2.\"" + minute(), "minute( t2.\"" );
 
-    new_query = utils::StringReplacer::replace_all( new_query, minute(), "" );
+    new_query =
+        utils::StringReplacer::replace_all( new_query, minute(), "minute( " );
 
     new_query = utils::StringReplacer::replace_all(
         new_query, "t1.\"" + month(), "month( t1.\"" );
@@ -453,7 +492,8 @@ std::string Macros::replace( const std::string& _query )
     new_query = utils::StringReplacer::replace_all(
         new_query, "t2.\"" + month(), "month( t2.\"" );
 
-    new_query = utils::StringReplacer::replace_all( new_query, month(), "" );
+    new_query =
+        utils::StringReplacer::replace_all( new_query, month(), "month( " );
 
     new_query = utils::StringReplacer::replace_all(
         new_query, "t1.\"" + weekday(), "weekday( t1.\"" );
@@ -461,7 +501,8 @@ std::string Macros::replace( const std::string& _query )
     new_query = utils::StringReplacer::replace_all(
         new_query, "t2.\"" + weekday(), "weekday( t2.\"" );
 
-    new_query = utils::StringReplacer::replace_all( new_query, weekday(), "" );
+    new_query =
+        utils::StringReplacer::replace_all( new_query, weekday(), "weekday( " );
 
     new_query = utils::StringReplacer::replace_all(
         new_query, "t1.\"" + year(), "year( t1.\"" );
@@ -469,7 +510,8 @@ std::string Macros::replace( const std::string& _query )
     new_query = utils::StringReplacer::replace_all(
         new_query, "t2.\"" + year(), "year( t2.\"" );
 
-    new_query = utils::StringReplacer::replace_all( new_query, year(), "" );
+    new_query =
+        utils::StringReplacer::replace_all( new_query, year(), "year( " );
 
     // --------------------------------------------------------------
 

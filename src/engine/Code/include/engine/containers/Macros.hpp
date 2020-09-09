@@ -65,6 +65,8 @@ class Macros
         const std::string& _key1,
         const std::string& _key2 );
 
+    static std::string remove_seasonal( const std::string& _from_colname );
+
     static std::string remove_substring( const std::string& _from_colname );
 
     static std::string remove_time_diff( const std::string& _from_colname );
@@ -143,6 +145,8 @@ class Macros
     {
         return "$GETML_ROWID, comparison only";
     }
+
+    static std::string seasonal_end() { return "$GETML_SEASONAL_END"; }
 
     static std::string self_join_key() { return "$GETML_SELF_JOIN_KEY"; }
 

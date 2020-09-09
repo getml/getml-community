@@ -2461,13 +2461,28 @@ Poco::JSON::Object Pipeline::to_monitor(
 
     json_obj.set( "predictors_", JSON::get_array( obj(), "predictors_" ) );
 
-    json_obj.set( "scores_", scores().to_json_obj() );
-
     json_obj.set( "sql_", to_sql_arr( _categories ) );
 
     json_obj.set( "tags_", JSON::get_array( obj(), "tags_" ) );
 
     json_obj.set( "targets_", JSON::vector_to_array( targets() ) );
+
+    // -------------------------------------------------
+
+    auto scores_obj = scores().to_json_obj();
+
+    const auto modified_names =
+        containers::Macros::modify_colnames( scores().feature_names() );
+
+    const auto feature_names = JSON::vector_to_array( modified_names );
+
+    scores_obj.set( "feature_names_", feature_names );
+
+    // -------------------------------------------------
+
+    json_obj.set( "scores_", scores_obj );
+
+    // -------------------------------------------------
 
     return json_obj;
 }

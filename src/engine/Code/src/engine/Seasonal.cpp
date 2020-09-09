@@ -14,7 +14,7 @@ std::optional<containers::Column<Int>> Seasonal::extract_hour(
 
     result.set_name(
         containers::Macros::hour() + _col.name() +
-        containers::Macros::close_bracket() );
+        containers::Macros::seasonal_end() );
     result.set_unit( "hour" );
 
     if ( PreprocessorImpl::has_warnings( result ) )
@@ -35,7 +35,7 @@ containers::Column<Int> Seasonal::extract_hour(
 
     result.set_name(
         containers::Macros::hour() + _col.name() +
-        containers::Macros::close_bracket() );
+        containers::Macros::seasonal_end() );
     result.set_unit( "hour" );
 
     return result;
@@ -51,7 +51,7 @@ std::optional<containers::Column<Int>> Seasonal::extract_minute(
 
     result.set_name(
         containers::Macros::minute() + _col.name() +
-        containers::Macros::close_bracket() );
+        containers::Macros::seasonal_end() );
     result.set_unit( "minute" );
 
     if ( PreprocessorImpl::has_warnings( result ) )
@@ -72,7 +72,7 @@ containers::Column<Int> Seasonal::extract_minute(
 
     result.set_name(
         containers::Macros::minute() + _col.name() +
-        containers::Macros::close_bracket() );
+        containers::Macros::seasonal_end() );
     result.set_unit( "minute" );
 
     return result;
@@ -88,7 +88,7 @@ std::optional<containers::Column<Int>> Seasonal::extract_month(
 
     result.set_name(
         containers::Macros::month() + _col.name() +
-        containers::Macros::close_bracket() );
+        containers::Macros::seasonal_end() );
     result.set_unit( "month" );
 
     if ( PreprocessorImpl::has_warnings( result ) )
@@ -109,7 +109,7 @@ containers::Column<Int> Seasonal::extract_month(
 
     result.set_name(
         containers::Macros::month() + _col.name() +
-        containers::Macros::close_bracket() );
+        containers::Macros::seasonal_end() );
     result.set_unit( "month" );
 
     return result;
@@ -125,7 +125,7 @@ std::optional<containers::Column<Int>> Seasonal::extract_weekday(
 
     result.set_name(
         containers::Macros::weekday() + _col.name() +
-        containers::Macros::close_bracket() );
+        containers::Macros::seasonal_end() );
     result.set_unit( "weekday" );
 
     if ( PreprocessorImpl::has_warnings( result ) )
@@ -146,7 +146,7 @@ containers::Column<Int> Seasonal::extract_weekday(
 
     result.set_name(
         containers::Macros::weekday() + _col.name() +
-        containers::Macros::close_bracket() );
+        containers::Macros::seasonal_end() );
     result.set_unit( "weekday" );
 
     return result;
@@ -161,7 +161,7 @@ std::optional<containers::Column<Float>> Seasonal::extract_year(
 
     result.set_name(
         containers::Macros::year() + _col.name() +
-        containers::Macros::close_bracket() );
+        containers::Macros::seasonal_end() );
     result.set_unit( "year, comparison only" );
 
     if ( PreprocessorImpl::has_warnings( result ) )
@@ -181,7 +181,7 @@ containers::Column<Float> Seasonal::extract_year(
 
     result.set_name(
         containers::Macros::year() + _col.name() +
-        containers::Macros::close_bracket() );
+        containers::Macros::seasonal_end() );
     result.set_unit( "year, comparison only" );
 
     return result;
