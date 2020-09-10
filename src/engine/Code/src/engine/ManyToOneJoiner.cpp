@@ -101,7 +101,8 @@ containers::DataFrame ManyToOneJoiner::join_all(
     const containers::DataFrame& _population_df,
     const std::vector<containers::DataFrame>& _peripheral_dfs )
 {
-    const auto splitted = containers::Macros::split_joined_name( _joined_name );
+    const auto splitted = utils::StringSplitter::split(
+        _joined_name, containers::Macros::delimiter() );
 
     assert_true( splitted.size() != 0 );
 

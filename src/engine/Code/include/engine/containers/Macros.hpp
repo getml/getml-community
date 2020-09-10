@@ -32,11 +32,6 @@ class Macros
     /// Removes macros from generated SQL code.
     static std::string modify_sql( const std::string& _sql );
 
-    /// Splits the name of a joined tabled into all tables that are part of the
-    /// join.
-    static std::vector<std::string> split_joined_name(
-        const std::string& _joined_name );
-
     /// Extracts all relevant parameters from the output of split_joined_name.
     /// Effectively reverses make_table_name(...).
     static std::tuple<
@@ -51,6 +46,10 @@ class Macros
     parse_table_name( const std::string& _splitted );
 
    private:
+    /// Finds the beginning and end of multiple join keys.
+    static std::tuple<size_t, size_t, bool> find_begin_end(
+        const std::string& _query, const size_t _pos );
+
     static std::string get_param(
         const std::string& _splitted, const std::string& _key );
 
@@ -73,6 +72,8 @@ class Macros
 
     /// Replaces all instances of macros from a query or a colunm name.
     static std::string replace( const std::string& _query );
+
+    static std::string replace_multiple_join_keys( const std::string& _query );
 
     static std::pair<std::string, std::string> parse_table_colname(
         const std::string& _table, const std::string& _colname );
@@ -118,6 +119,18 @@ class Macros
     static std::string minute() { return "$GETML_MINUTE"; }
 
     static std::string month() { return "$GETML_MONTH"; }
+
+    static std::string multiple_join_key_begin()
+    {
+        return "$GETML_MULTIPLE_JOIN_KEYS_BEGIN";
+    }
+
+    static std::string multiple_join_key_end()
+    {
+        return "$GETML_MULTIPLE_JOIN_KEYS_END";
+    }
+
+    static std::string multiple_join_key_sep() { return "$GETML_JOIN_KEY_SEP"; }
 
     static std::string name() { return "$GETML_JOIN_PARAM_NAME"; }
 

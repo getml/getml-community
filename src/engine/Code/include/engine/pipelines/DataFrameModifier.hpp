@@ -18,7 +18,8 @@ class DataFrameModifier
         const Poco::JSON::Object& _population_placeholder,
         const std::vector<std::string>& _peripheral_names,
         containers::DataFrame* _population_df,
-        std::vector<containers::DataFrame>* _peripheral_dfs );
+        std::vector<containers::DataFrame>* _peripheral_dfs,
+        std::shared_ptr<containers::Encoding> _encoding = nullptr );
 
     /// Extracts upper time stamps from the memory parameter. (Memory is just
     /// syntactic sugar for upper time stamps. The feature learners don't know
@@ -43,6 +44,13 @@ class DataFrameModifier
         const std::vector<std::string>& _peripheral_names,
         std::vector<containers::DataFrame>* _peripheral_dfs );
 
+    /// Concatenates a set of join keys to replicate an ON ... AND ... AND
+    /// logic.
+    static void concat_join_keys(
+        const std::string& _name,
+        const std::shared_ptr<containers::Encoding> _encoding,
+        containers::DataFrame* _df );
+
     /// Extracts a vector named _name of size _expected_size from the
     /// _population_placeholder
     template <typename T>
@@ -57,6 +65,10 @@ class DataFrameModifier
         const Poco::JSON::Object& _joined_table,
         const std::vector<std::string>& _peripheral_names,
         std::vector<containers::DataFrame>* _peripheral_dfs );
+
+    /// Retrieves the vector of join keys to be concatnated.
+    static std::vector<containers::Column<Int>> get_old_join_keys(
+        const std::string& _name, const containers::DataFrame& _df );
 
    private:
     /// Generates the name for the upper time stamp that is produced using

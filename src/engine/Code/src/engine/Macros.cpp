@@ -6,6 +6,29 @@ namespace containers
 {
 // ----------------------------------------------------------------------------
 
+std::tuple<size_t, size_t, bool> Macros::find_begin_end(
+    const std::string& _query, const size_t _pos )
+{
+    const auto begin =
+        _query.find( "\"" + Macros::multiple_join_key_begin(), _pos );
+    const auto end =
+        _query.find( Macros::multiple_join_key_end() + "\"", begin );
+
+    if ( begin == std::string::npos )
+        {
+            return std::make_tuple( 0, 0, false );
+        }
+
+    if ( end == std::string::npos )
+        {
+            return std::make_tuple( 0, 0, false );
+        }
+
+    return std::make_tuple( begin, end, true );
+}
+
+// ----------------------------------------------------------------------------
+
 std::string Macros::get_param(
     const std::string& _splitted, const std::string& _key )
 {
@@ -119,7 +142,8 @@ std::string Macros::make_left_join( const std::string& _splitted )
 
 std::string Macros::make_subquery( const std::string& _joined_name )
 {
-    const auto splitted = split_joined_name( _joined_name );
+    const auto splitted =
+        utils::StringSplitter::split( _joined_name, delimiter() );
 
     assert_true( splitted.size() != 0 );
 
@@ -515,6 +539,10 @@ std::string Macros::replace( const std::string& _query )
 
     // --------------------------------------------------------------
 
+    new_query = replace_multiple_join_keys( new_query );
+
+    // --------------------------------------------------------------
+
     return new_query;
 
     // --------------------------------------------------------------
@@ -522,34 +550,80 @@ std::string Macros::replace( const std::string& _query )
 
 // ----------------------------------------------------------------------------
 
-std::vector<std::string> Macros::split_joined_name(
-    const std::string& _joined_name )
+std::string Macros::replace_multiple_join_keys( const std::string& _query )
 {
-    auto splitted = std::vector<std::string>();
+    auto query = _query;
 
-    auto joined_name = _joined_name;
+    const auto begin = "\"" + Macros::multiple_join_key_begin();
+    const auto end = Macros::multiple_join_key_end() + "\"";
+    const auto sep = Macros::multiple_join_key_sep();
 
     while ( true )
         {
-            const auto pos = joined_name.find( delimiter() );
+            const auto [begin1, end1, ok1] = find_begin_end( query, 0 );
 
-            if ( pos == std::string::npos )
+            if ( !ok1 )
                 {
-                    splitted.push_back( joined_name );
                     break;
                 }
 
-            splitted.push_back( joined_name.substr( 0, pos ) );
+            const auto [begin2, end2, ok2] =
+                find_begin_end( query, end1 + end.length() );
 
-            joined_name.erase( 0, pos + delimiter().size() );
+            if ( !ok2 )
+                {
+                    break;
+                }
+
+            const auto substr1 = query.substr(
+                begin1 + begin.length(), end1 - begin1 - begin.length() );
+
+            const auto join_keys1 =
+                utils::StringSplitter::split( substr1, sep );
+
+            const auto substr2 = query.substr(
+                begin2 + begin.length(), end2 - begin2 - begin.length() );
+
+            const auto join_keys2 =
+                utils::StringSplitter::split( substr2, sep );
+
+            if ( join_keys1.size() != join_keys2.size() )
+                {
+                    break;
+                }
+
+            std::string replacement;
+
+            const auto on = query.rfind( "ON ", begin1 ) + 3;
+
+            const auto equals = query.rfind( " = ", begin2 ) + 3;
+
+            const auto table1 = query.substr( on, begin1 - on );
+
+            const auto table2 = query.substr( equals, begin2 - equals );
+
+            for ( size_t i = 0; i < join_keys1.size(); ++i )
+                {
+                    replacement += table1 + "\"" + join_keys1.at( i ) + "\"";
+                    replacement += " = ";
+                    replacement += table2 + "\"" + join_keys2.at( i ) + "\"";
+
+                    if ( i != join_keys1.size() - 1 )
+                        {
+                            replacement += " AND ";
+                        }
+                }
+
+            // This is to prevent being caught in an endless loop.
+            if ( replacement.find( begin ) != std::string::npos )
+                {
+                    break;
+                }
+
+            query = query.replace( on, end2 - on + end.length(), replacement );
         }
 
-    if ( splitted.size() == 0 )
-        {
-            splitted.push_back( _joined_name );
-        }
-
-    return splitted;
+    return query;
 }
 
 // ----------------------------------------------------------------------------

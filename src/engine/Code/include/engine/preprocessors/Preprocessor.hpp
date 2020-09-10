@@ -10,7 +10,7 @@ namespace preprocessors
 class Preprocessor
 {
    public:
-    static constexpr const char* EMAILDOMAIN = "EMailDomain";
+    static constexpr const char* EMAILDOMAIN = "EmailDomain";
     static constexpr const char* SEASONAL = "Seasonal";
     static constexpr const char* SUBSTRING = "Substring";
 

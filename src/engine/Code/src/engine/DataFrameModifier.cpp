@@ -10,8 +10,14 @@ void DataFrameModifier::add_join_keys(
     const Poco::JSON::Object& _population_placeholder,
     const std::vector<std::string>& _peripheral_names,
     containers::DataFrame* _population_df,
-    std::vector<containers::DataFrame>* _peripheral_dfs )
+    std::vector<containers::DataFrame>* _peripheral_dfs,
+    std::shared_ptr<containers::Encoding> _encoding )
 {
+    // ------------------------------------------------------------------------
+
+    const auto encoding =
+        _encoding ? _encoding : std::make_shared<containers::Encoding>();
+
     // ------------------------------------------------------------------------
 
     const auto joined_tables_arr =
@@ -29,6 +35,9 @@ void DataFrameModifier::add_join_keys(
 
     const auto join_keys_used = extract_vector<std::string>(
         _population_placeholder, "join_keys_used_", expected_size );
+
+    const auto other_join_keys_used = extract_vector<std::string>(
+        _population_placeholder, "other_join_keys_used_", expected_size );
 
     // ------------------------------------------------------------------------
 
@@ -53,9 +62,27 @@ void DataFrameModifier::add_join_keys(
 
                     add_jk( _population_df );
                 }
+            else if (
+                join_keys_used.at( i ).find(
+                    containers::Macros::multiple_join_key_sep() ) !=
+                std::string::npos )
+                {
+                    auto peripheral_df = find_data_frame(
+                        *ptr, _peripheral_names, _peripheral_dfs );
+
+                    concat_join_keys(
+                        other_join_keys_used.at( i ), encoding, peripheral_df );
+
+                    concat_join_keys(
+                        join_keys_used.at( i ), encoding, _population_df );
+                }
 
             add_join_keys(
-                *ptr, _peripheral_names, _population_df, _peripheral_dfs );
+                *ptr,
+                _peripheral_names,
+                _population_df,
+                _peripheral_dfs,
+                encoding );
         }
 
     // ------------------------------------------------------------------------
@@ -225,6 +252,52 @@ void DataFrameModifier::add_ts(
 
 // ----------------------------------------------------------------------------
 
+void DataFrameModifier::concat_join_keys(
+    const std::string& _name,
+    const std::shared_ptr<containers::Encoding> _encoding,
+    containers::DataFrame* _df )
+{
+    assert_true( _encoding );
+
+    if ( _df->has_join_key( _name ) )
+        {
+            return;
+        }
+
+    const auto old_join_keys = get_old_join_keys( _name, *_df );
+
+    auto new_join_key = containers::Column<Int>( _df->nrows() );
+
+    new_join_key.set_name( _name );
+
+    for ( size_t i = 0; i < _df->nrows(); ++i )
+        {
+            std::string str;
+
+            for ( const auto& jk : old_join_keys )
+                {
+                    const auto val = jk[i];
+
+                    if ( val < 0 )
+                        {
+                            new_join_key[i] = -1;
+                            break;
+                        }
+
+                    str += std::to_string( val ) + "-";
+                }
+
+            if ( new_join_key[i] != -1 )
+                {
+                    new_join_key[i] = ( *_encoding )[str];
+                }
+        }
+
+    _df->add_int_column( new_join_key, containers::DataFrame::ROLE_JOIN_KEY );
+}
+
+// ----------------------------------------------------------------------------
+
 containers::DataFrame* DataFrameModifier::find_data_frame(
     const Poco::JSON::Object& _joined_table,
     const std::vector<std::string>& _peripheral_names,
@@ -246,6 +319,32 @@ containers::DataFrame* DataFrameModifier::find_data_frame(
         "Placeholder named '" + name + "' not among the peripheral tables." );
 
     return nullptr;
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<containers::Column<Int>> DataFrameModifier::get_old_join_keys(
+    const std::string& _name, const containers::DataFrame& _df )
+{
+    auto jk_names = utils::StringSplitter::split(
+        _name, containers::Macros::multiple_join_key_sep() );
+
+    assert_true( jk_names.size() > 1 );
+
+    jk_names.front() = utils::StringReplacer::replace_all(
+        jk_names.front(), containers::Macros::multiple_join_key_begin(), "" );
+
+    jk_names.back() = utils::StringReplacer::replace_all(
+        jk_names.front(), containers::Macros::multiple_join_key_end(), "" );
+
+    auto old_join_keys = std::vector<containers::Column<Int>>();
+
+    for ( const auto& jk : jk_names )
+        {
+            old_join_keys.push_back( _df.join_key( jk ) );
+        }
+
+    return old_join_keys;
 }
 
 // ----------------------------------------------------------------------------

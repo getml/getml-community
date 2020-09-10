@@ -30,6 +30,7 @@
 #include "engine/utils/Endianness.hpp"
 #include "engine/utils/Getter.hpp"
 #include "engine/utils/StringReplacer.hpp"
+#include "engine/utils/StringSplitter.hpp"
 #include "engine/utils/TSDiffMaker.hpp"
 #include "engine/utils/Time.hpp"
 
