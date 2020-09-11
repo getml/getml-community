@@ -106,7 +106,6 @@ void LicenseChecker::receive_token( const std::string& _caller_id )
 
     while ( !success )
         {
-            std::cout << response << std::endl;
             std::this_thread::sleep_for( std::chrono::seconds( 1 ) );
             std::tie( response, success ) = send( request );
         }
@@ -158,7 +157,7 @@ void LicenseChecker::receive_token( const std::string& _caller_id )
         }
 
     // --------------------------------------------------------------
-}  // namespace licensing
+}
 
 // ------------------------------------------------------------------------
 
