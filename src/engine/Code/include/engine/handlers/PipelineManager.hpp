@@ -174,7 +174,8 @@ class PipelineManager
     void to_db(
         const pipelines::Pipeline& _pipeline,
         const Poco::JSON::Object& _cmd,
-        const containers::Features& _yhat,
+        const containers::Features& _numerical_features,
+        const containers::CategoricalFeatures& _categorical_features,
         const std::shared_ptr<containers::Encoding>& _categories,
         const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
         const std::shared_ptr<std::map<std::string, containers::DataFrame>>&
@@ -185,7 +186,8 @@ class PipelineManager
     containers::DataFrame to_df(
         const pipelines::Pipeline& _pipeline,
         const Poco::JSON::Object& _cmd,
-        const containers::Features& _yhat,
+        const containers::Features& _numerical_features,
+        const containers::CategoricalFeatures& _categorical_features,
         const std::shared_ptr<containers::Encoding>& _categories,
         const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
         const std::shared_ptr<std::map<std::string, containers::DataFrame>>&

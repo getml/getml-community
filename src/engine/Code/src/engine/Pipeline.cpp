@@ -107,6 +107,32 @@ Pipeline::apply_preprocessors(
     return std::make_pair( population_df, peripheral_dfs );
 }
 
+// ----------------------------------------------------------------------------
+
+std::vector<std::string> Pipeline::autofeature_names() const
+{
+    if ( !impl_.predictor_impl_ )
+        {
+            throw std::invalid_argument( "Pipeline has not been fitted!" );
+        }
+
+    std::vector<std::string> autofeatures;
+
+    for ( size_t i = 0; i < predictor_impl().autofeatures().size(); ++i )
+        {
+            const auto& index = predictor_impl().autofeatures().at( i );
+
+            for ( const auto ix : index )
+                {
+                    autofeatures.push_back(
+                        "feature_" + std::to_string( i + 1 ) + "_" +
+                        std::to_string( ix + 1 ) );
+                }
+        }
+
+    return autofeatures;
+}
+
 // ----------------------------------------------------------------------
 
 void Pipeline::calculate_feature_stats(
@@ -469,7 +495,7 @@ std::vector<Poco::JSON::Object::Ptr> Pipeline::extract_df_fingerprints(
         extract_data_frames( _cmd, _data_frames );
 
     std::vector<Poco::JSON::Object::Ptr> df_fingerprints = {
-        population.fingerprint() };
+        population.fingerprint()};
 
     for ( const auto& df : peripheral )
         {
@@ -696,56 +722,23 @@ std::tuple<
     std::vector<std::string>>
 Pipeline::feature_names() const
 {
-    std::vector<std::string> autofeatures;
-
-    if ( impl_.predictor_impl_ )
+    if ( !impl_.predictor_impl_ )
         {
-            assert_true(
-                feature_learners_.size() ==
-                predictor_impl().autofeatures().size() );
-
-            for ( size_t i = 0; i < feature_learners_.size(); ++i )
-                {
-                    const auto& fe = feature_learners_.at( i );
-
-                    const auto& index = predictor_impl().autofeatures().at( i );
-
-                    for ( const auto ix : index )
-                        {
-                            autofeatures.push_back(
-                                "feature_" + std::to_string( i + 1 ) + "_" +
-                                std::to_string( ix + 1 ) );
-                        }
-
-                    assert_true( fe );
-                }
-
-            const auto numerical = containers::Macros::modify_colnames(
-                predictor_impl().numerical_colnames() );
-
-            const auto categorical = containers::Macros::modify_colnames(
-                predictor_impl().categorical_colnames() );
-
-            return std::make_tuple( autofeatures, numerical, categorical );
+            throw std::invalid_argument( "Pipeline has not been fitted!" );
         }
-    else
-        {
-            size_t i = 0;
 
-            for ( const auto& fe : feature_learners_ )
-                {
-                    for ( size_t j = 0; j < fe->num_features(); ++j )
-                        {
-                            autofeatures.push_back(
-                                "feature_" + std::to_string( ++i ) );
-                        }
-                }
+    assert_true(
+        feature_learners_.size() == predictor_impl().autofeatures().size() );
 
-            return std::make_tuple(
-                autofeatures,
-                std::vector<std::string>(),
-                std::vector<std::string>() );
-        }
+    const auto autofeatures = autofeature_names();
+
+    const auto numerical = containers::Macros::modify_colnames(
+        predictor_impl().numerical_colnames() );
+
+    const auto categorical = containers::Macros::modify_colnames(
+        predictor_impl().categorical_colnames() );
+
+    return std::make_tuple( autofeatures, numerical, categorical );
 }
 
 // ----------------------------------------------------------------------------
@@ -2552,7 +2545,7 @@ Poco::JSON::Array::Ptr Pipeline::to_sql_arr(
 
     const auto tname = JSON::get_value<std::string>( *population, "name_" );
 
-    const auto [autofeature, numerical, categorical] = feature_names();
+    const auto [_, numerical, categorical] = feature_names();
 
     for ( const auto& cname : numerical )
         {
@@ -2569,7 +2562,8 @@ Poco::JSON::Array::Ptr Pipeline::to_sql_arr(
 
 // ----------------------------------------------------------------------------
 
-containers::Features Pipeline::transform(
+std::pair<containers::Features, containers::CategoricalFeatures>
+Pipeline::transform(
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<const communication::Logger>& _logger,
     const std::map<std::string, containers::DataFrame>& _data_frames,
@@ -2609,6 +2603,9 @@ containers::Features Pipeline::transform(
     const auto numerical_features = get_numerical_features(
         autofeatures, _cmd, population_df, predictor_impl() );
 
+    const auto categorical_features =
+        get_categorical_features( _cmd, population_df, predictor_impl() );
+
     // -------------------------------------------------------------------------
     // If we do not want to score or predict, then we can stop here.
 
@@ -2620,20 +2617,10 @@ containers::Features Pipeline::transform(
 
     if ( !score && !predict )
         {
-            return numerical_features;
+            return std::make_pair( numerical_features, categorical_features );
         }
 
     // -------------------------------------------------------------------------
-    // Retrieve the categorical features.
-
-    auto categorical_features =
-        get_categorical_features( _cmd, population_df, predictor_impl() );
-
-    categorical_features =
-        predictor_impl().transform_encodings( categorical_features );
-
-    // -------------------------------------------------------------------------
-    // Calculate the feature statistics, if applicable.
 
     const auto ncols = numerical_features.size();
 
@@ -2645,17 +2632,24 @@ containers::Features Pipeline::transform(
                 numerical_features, nrows, ncols, _cmd, population_df );
         }
 
+    // -------------------------------------------------------------------------
+
     //-------------------------------------------------------------------------
-    // Generate predictions, if applicable.
 
     if ( predict && num_predictors_per_set() > 0 )
         {
-            return generate_predictions(
-                categorical_features, numerical_features );
+            const auto transformed_categorical_features =
+                predictor_impl().transform_encodings( categorical_features );
+
+            const auto predictions = generate_predictions(
+                transformed_categorical_features, numerical_features );
+
+            return std::make_pair(
+                predictions, containers::CategoricalFeatures() );
         }
     else
         {
-            return numerical_features;
+            return std::make_pair( numerical_features, categorical_features );
         }
 
     // ------------------------------------------------------------------------

@@ -580,7 +580,8 @@ void PipelineManager::targets(
 void PipelineManager::to_db(
     const pipelines::Pipeline& _pipeline,
     const Poco::JSON::Object& _cmd,
-    const containers::Features& _yhat,
+    const containers::Features& _numerical_features,
+    const containers::CategoricalFeatures& _categorical_features,
     const std::shared_ptr<containers::Encoding>& _categories,
     const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
     const std::shared_ptr<std::map<std::string, containers::DataFrame>>&
@@ -588,12 +589,12 @@ void PipelineManager::to_db(
     Poco::Net::StreamSocket* _socket )
 {
     // -------------------------------------------------------
-    // Transforms the features into a data frame.
 
     const auto df = to_df(
         _pipeline,
         _cmd,
-        _yhat,
+        _numerical_features,
+        _categorical_features,
         _categories,
         _join_keys_encoding,
         _local_data_frames,
@@ -638,7 +639,8 @@ void PipelineManager::to_db(
 containers::DataFrame PipelineManager::to_df(
     const pipelines::Pipeline& _pipeline,
     const Poco::JSON::Object& _cmd,
-    const containers::Features& _yhat,
+    const containers::Features& _numerical_features,
+    const containers::CategoricalFeatures& _categorical_features,
     const std::shared_ptr<containers::Encoding>& _categories,
     const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
     const std::shared_ptr<std::map<std::string, containers::DataFrame>>&
@@ -646,7 +648,6 @@ containers::DataFrame PipelineManager::to_df(
     Poco::Net::StreamSocket* _socket )
 {
     // -------------------------------------------------------
-    // Get population table.
 
     const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
 
@@ -657,46 +658,53 @@ containers::DataFrame PipelineManager::to_df(
         utils::Getter::get( population_name, _local_data_frames.get() );
 
     // -------------------------------------------------------
-    // Build data frame.
 
     containers::DataFrame df( df_name, _categories, _join_keys_encoding );
 
     if ( !_cmd.has( "predict_" ) || !JSON::get_value<bool>( _cmd, "predict_" ) )
         {
-            const auto [autofeatures, categorical, numerical] =
+            const auto [autofeatures, numerical, categorical] =
                 _pipeline.feature_names();
 
             assert_true(
-                autofeatures.size() + numerical.size() == _yhat.size() );
+                autofeatures.size() + numerical.size() ==
+                _numerical_features.size() );
 
             size_t j = 0;
 
             for ( size_t i = 0; i < autofeatures.size(); ++i )
                 {
-                    auto col = containers::Column( _yhat[j++] );
-                    col.set_name( autofeatures[i] );
+                    auto col =
+                        containers::Column( _numerical_features.at( j++ ) );
+                    col.set_name( autofeatures.at( i ) );
                     df.add_float_column(
                         col, containers::DataFrame::ROLE_NUMERICAL );
                 }
 
             for ( size_t i = 0; i < numerical.size(); ++i )
                 {
-                    auto col = containers::Column( _yhat[j++] );
-                    col.set_name( numerical[i] );
+                    auto col =
+                        containers::Column( _numerical_features.at( j++ ) )
+                            .clone();
+                    col.set_name( numerical.at( i ) );
                     df.add_float_column(
                         col, containers::DataFrame::ROLE_NUMERICAL );
                 }
 
-            for ( const auto& colname : categorical )
+            assert_true( categorical.size() == _categorical_features.size() );
+
+            for ( size_t i = 0; i < categorical.size(); ++i )
                 {
-                    auto col = population_table.categorical( colname ).clone();
+                    auto col =
+                        containers::Column( _categorical_features.at( i ) )
+                            .clone();
+                    col.set_name( categorical.at( i ) );
                     df.add_int_column(
                         col, containers::DataFrame::ROLE_CATEGORICAL );
                 }
         }
 
     // -------------------------------------------------------
-    // Add join keys, time stamps and targets.
 
     for ( size_t i = 0; i < population_table.num_join_keys(); ++i )
         {
@@ -803,10 +811,8 @@ void PipelineManager::transform(
 
     // IMPORTANT: Use categories_, not local_categories, otherwise
     // .vector() might not work.
-    auto yhat = pipeline.transform(
+    const auto [numerical_features, categorical_features] = pipeline.transform(
         cmd, logger_, *local_data_frames, categories_, _socket );
-
-    communication::Sender::send_string( "Success!", _socket );
 
     // -------------------------------------------------------
     // Send data to client or write to data base
@@ -819,7 +825,7 @@ void PipelineManager::transform(
 
     if ( table_name == "" && df_name == "" && !score )
         {
-            communication::Sender::send_features( yhat, _socket );
+            communication::Sender::send_features( numerical_features, _socket );
         }
     else if ( table_name != "" )
         {
@@ -828,7 +834,8 @@ void PipelineManager::transform(
             to_db(
                 pipeline,
                 cmd,
-                yhat,
+                numerical_features,
+                categorical_features,
                 local_categories,
                 local_join_keys_encoding,
                 local_data_frames,
@@ -845,7 +852,8 @@ void PipelineManager::transform(
             auto df = to_df(
                 pipeline,
                 cmd,
-                yhat,
+                numerical_features,
+                categorical_features,
                 local_categories,
                 local_join_keys_encoding,
                 local_data_frames,
@@ -867,7 +875,10 @@ void PipelineManager::transform(
         }
 
     // -------------------------------------------------------
-    // Score model, if necessary.
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    // -------------------------------------------------------
 
     weak_write_lock.unlock();
 
@@ -875,7 +886,12 @@ void PipelineManager::transform(
         {
             assert_true( local_data_frames );
             this->score(
-                _name, cmd, *local_data_frames, yhat, &pipeline, _socket );
+                _name,
+                cmd,
+                *local_data_frames,
+                numerical_features,
+                &pipeline,
+                _socket );
         }
 
     // -------------------------------------------------------

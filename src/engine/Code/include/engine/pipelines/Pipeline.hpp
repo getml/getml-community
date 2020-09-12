@@ -70,8 +70,8 @@ class Pipeline
         const std::map<std::string, containers::DataFrame>& _data_frames,
         const containers::Features& _yhat );
 
-    /// Generate features.
-    containers::Features transform(
+    /// Generate features and predictions.
+    std::pair<containers::Features, containers::CategoricalFeatures> transform(
         const Poco::JSON::Object& _cmd,
         const std::shared_ptr<const communication::Logger>& _logger,
         const std::map<std::string, containers::DataFrame>& _data_frames,
@@ -147,6 +147,9 @@ class Pipeline
         const std::vector<containers::DataFrame>& _peripheral_dfs,
         const std::shared_ptr<const containers::Encoding>& _categories,
         Poco::Net::StreamSocket* _socket ) const;
+
+    /// Returns the feature names.
+    std::vector<std::string> autofeature_names() const;
 
     /// Calculates an index ordering the features by importance.
     std::vector<size_t> calculate_importance_index() const;
