@@ -22,6 +22,8 @@ class PipelineManager
         const std::shared_ptr<DatabaseManager>& _database_manager,
         const std::shared_ptr<std::map<std::string, containers::DataFrame>>
             _data_frames,
+        const std::shared_ptr<engine::dependency::DataFrameTracker>&
+            _data_frame_tracker,
         const std::shared_ptr<dependency::FETracker>& _fe_tracker,
         const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
         const std::shared_ptr<engine::licensing::LicenseChecker>&
@@ -35,6 +37,7 @@ class PipelineManager
         : categories_( _categories ),
           database_manager_( _database_manager ),
           data_frames_( _data_frames ),
+          data_frame_tracker_( _data_frame_tracker ),
           fe_tracker_( _fe_tracker ),
           join_keys_encoding_( _join_keys_encoding ),
           license_checker_( _license_checker ),
@@ -133,6 +136,13 @@ class PipelineManager
     // ------------------------------------------------------------------------
 
    private:
+    /// Adds a data frame to the data frame tracker.
+    void add_to_tracker(
+        const pipelines::Pipeline& _pipeline,
+        const Poco::JSON::Object& _cmd,
+        const std::map<std::string, containers::DataFrame>& _data_frames,
+        containers::DataFrame* _df );
+
     /// Retrieves an Poco::JSON::Array::Ptr from a scores object.
     Poco::JSON::Array::Ptr get_array(
         const Poco::JSON::Object& _scores,
@@ -218,6 +228,13 @@ class PipelineManager
         return *data_frames_;
     }
 
+    /// Trivial accessor
+    dependency::DataFrameTracker& data_frame_tracker()
+    {
+        assert_true( data_frame_tracker_ );
+        return *data_frame_tracker_;
+    }
+
     /// Returns a deep copy of a pipeline.
     pipelines::Pipeline get_pipeline( const std::string& _name )
     {
@@ -300,6 +317,10 @@ class PipelineManager
     /// The data frames currently held in memory
     const std::shared_ptr<std::map<std::string, containers::DataFrame>>
         data_frames_;
+
+    /// Keeps track of all data frames, so we don't have to
+    /// reconstruct the features all of the time.
+    const std::shared_ptr<dependency::DataFrameTracker> data_frame_tracker_;
 
     /// Keeps track of all feature learners.
     const std::shared_ptr<dependency::FETracker> fe_tracker_;

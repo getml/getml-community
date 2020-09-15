@@ -72,6 +72,7 @@
 
 #include "engine/containers/DataFrame.hpp"
 
+#include "engine/containers/DataFrameExtractor.hpp"
 #include "engine/containers/DataFrameReader.hpp"
 
 // ----------------------------------------------------

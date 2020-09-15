@@ -88,6 +88,9 @@ int main( int argc, char* argv[] )
 
     // -------------------------------------------
 
+    const auto data_frame_tracker =
+        std::make_shared<engine::dependency::DataFrameTracker>( data_frames );
+
     const auto fe_tracker = std::make_shared<engine::dependency::FETracker>();
 
     const auto pred_tracker =
@@ -123,6 +126,7 @@ int main( int argc, char* argv[] )
             categories,
             database_manager,
             data_frames,
+            data_frame_tracker,
             fe_tracker,
             join_keys_encoding,
             license_checker,

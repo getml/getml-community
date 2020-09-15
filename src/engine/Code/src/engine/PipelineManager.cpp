@@ -6,6 +6,28 @@ namespace handlers
 {
 // ------------------------------------------------------------------------
 
+void PipelineManager::add_to_tracker(
+    const pipelines::Pipeline& _pipeline,
+    const Poco::JSON::Object& _cmd,
+    const std::map<std::string, containers::DataFrame>& _data_frames,
+    containers::DataFrame* _df )
+{
+    const auto dependencies = _pipeline.dependencies();
+
+    const auto df_fingerprints =
+        containers::DataFrameExtractor::extract_df_fingerprints(
+            _cmd, _data_frames );
+
+    const auto build_history = data_frame_tracker().make_build_history(
+        dependencies, df_fingerprints );
+
+    _df->set_build_history( build_history );
+
+    data_frame_tracker().add( *_df );
+}
+
+// ------------------------------------------------------------------------
+
 void PipelineManager::check(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,
@@ -252,6 +274,7 @@ void PipelineManager::fit(
         logger_,
         data_frames(),
         local_categories,
+        data_frame_tracker(),
         fe_tracker_,
         pred_tracker_,
         _socket );
@@ -681,12 +704,16 @@ containers::DataFrame PipelineManager::to_df(
                         col, containers::DataFrame::ROLE_NUMERICAL );
                 }
 
+            size_t num_manual = 0;
+
             for ( size_t i = 0; i < numerical.size(); ++i )
                 {
                     auto col =
                         containers::Column( _numerical_features.at( j++ ) )
                             .clone();
-                    col.set_name( numerical.at( i ) );
+                    col.set_name(
+                        "manual_feature_" + std::to_string( ++num_manual ) +
+                        "__" + numerical.at( i ) );
                     df.add_float_column(
                         col, containers::DataFrame::ROLE_NUMERICAL );
                 }
@@ -698,7 +725,9 @@ containers::DataFrame PipelineManager::to_df(
                     auto col =
                         containers::Column( _categorical_features.at( i ) )
                             .clone();
-                    col.set_name( categorical.at( i ) );
+                    col.set_name(
+                        "manual_feature_" + std::to_string( ++num_manual ) +
+                        "__" + categorical.at( i ) );
                     df.add_int_column(
                         col, containers::DataFrame::ROLE_CATEGORICAL );
                 }
@@ -812,7 +841,12 @@ void PipelineManager::transform(
     // IMPORTANT: Use categories_, not local_categories, otherwise
     // .vector() might not work.
     const auto [numerical_features, categorical_features] = pipeline.transform(
-        cmd, logger_, *local_data_frames, categories_, _socket );
+        cmd,
+        logger_,
+        *local_data_frames,
+        data_frame_tracker(),
+        categories_,
+        _socket );
 
     // -------------------------------------------------------
     // Send data to client or write to data base
@@ -843,7 +877,6 @@ void PipelineManager::transform(
         }
 
     // -------------------------------------------------------
-    // Write to DataFrame.
 
     if ( df_name != "" )
         {
@@ -872,6 +905,13 @@ void PipelineManager::transform(
             data_frames()[df_name] = df;
 
             monitor_->send_tcp( "postdataframe", df.to_monitor() );
+
+            const auto predict = JSON::get_value<bool>( cmd, "predict_" );
+
+            if ( !predict )
+                {
+                    add_to_tracker( pipeline, cmd, *local_data_frames, &df );
+                }
         }
 
     // -------------------------------------------------------

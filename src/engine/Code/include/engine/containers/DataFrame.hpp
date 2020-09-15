@@ -202,6 +202,17 @@ class DataFrame
     // -------------------------------
 
     /// Trivial accessor
+    Poco::JSON::Object::Ptr build_history() const
+    {
+        if ( !build_history_ )
+            {
+                return nullptr;
+            }
+        return Poco::JSON::Object::Ptr(
+            new Poco::JSON::Object( *build_history_ ) );
+    }
+
+    /// Trivial accessor
     template <
         typename T,
         typename std::enable_if<!std::is_same<T, std::string>::value, int>::
@@ -359,6 +370,10 @@ class DataFrame
         return false;
     }
 
+    /// Returns the exact date and and time at which the data frame was last
+    /// changed.
+    std::string last_change() const { return last_change_; }
+
     /// Returns the index signified by index _i
     template <
         typename T,
@@ -460,7 +475,7 @@ class DataFrame
     }
 
     /// Primitive abstraction for member name_
-    const std::string &name() const { return name_; }
+    std::string name() const { return name_; }
 
     /// Get the number of columns.
     const size_t ncols() const
@@ -521,7 +536,13 @@ class DataFrame
             _name + "'!" );
     }
 
-    /// Primitive setter
+    /// Trivial setter
+    void set_build_history( Poco::JSON::Object::Ptr _build_history )
+    {
+        build_history_ = _build_history;
+    }
+
+    /// Trivial setter
     void set_categories( const std::shared_ptr<Encoding> &_categories )
     {
         categories_ = _categories;
@@ -788,6 +809,7 @@ class DataFrame
     /// Records the current time as the last time something was changed.
     void update_last_change()
     {
+        build_history_ = nullptr;
         const auto now = Poco::Timestamp();
         last_change_ = Poco::DateTimeFormatter::format(
             now, Poco::DateTimeFormat::ISO8601_FRAC_FORMAT );
@@ -796,6 +818,10 @@ class DataFrame
     // -------------------------------
 
    private:
+    /// The build history is relevant for when the data frame contains generated
+    /// features. It enables us to retrieve features we have already build.
+    Poco::JSON::Object::Ptr build_history_;
+
     /// Categorical data
     std::vector<Column<Int>> categoricals_;
 

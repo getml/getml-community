@@ -240,7 +240,8 @@ void Pipeline::check(
     // -------------------------------------------------------------------------
 
     auto [population_df, peripheral_dfs] =
-        extract_data_frames( _cmd, _data_frames );
+        containers::DataFrameExtractor::extract_data_frames(
+            _cmd, _data_frames );
 
     std::tie( population_df, peripheral_dfs ) =
         modify_data_frames( population_df, peripheral_dfs );
@@ -458,53 +459,6 @@ void Pipeline::extract_coldesc(
         }
 }
 
-// ----------------------------------------------------------------------------
-
-std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
-Pipeline::extract_data_frames(
-    const Poco::JSON::Object& _cmd,
-    const std::map<std::string, containers::DataFrame>& _data_frames ) const
-{
-    const auto population_name =
-        JSON::get_value<std::string>( _cmd, "population_name_" );
-
-    const auto peripheral_names = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "peripheral_names_" ) );
-
-    const auto population = utils::Getter::get( population_name, _data_frames );
-
-    auto peripheral = std::vector<containers::DataFrame>();
-
-    for ( const auto& df_name : peripheral_names )
-        {
-            const auto df = utils::Getter::get( df_name, _data_frames );
-
-            peripheral.push_back( df );
-        }
-
-    return std::make_pair( population, peripheral );
-}
-
-// ----------------------------------------------------------------------
-
-std::vector<Poco::JSON::Object::Ptr> Pipeline::extract_df_fingerprints(
-    const Poco::JSON::Object& _cmd,
-    const std::map<std::string, containers::DataFrame>& _data_frames ) const
-{
-    const auto [population, peripheral] =
-        extract_data_frames( _cmd, _data_frames );
-
-    std::vector<Poco::JSON::Object::Ptr> df_fingerprints = {
-        population.fingerprint()};
-
-    for ( const auto& df : peripheral )
-        {
-            df_fingerprints.push_back( df.fingerprint() );
-        }
-
-    return df_fingerprints;
-}
-
 // ----------------------------------------------------------------------
 
 std::vector<Poco::JSON::Object::Ptr> Pipeline::extract_fe_fingerprints() const
@@ -527,25 +481,35 @@ std::vector<Poco::JSON::Object::Ptr> Pipeline::extract_fe_fingerprints() const
 
 // ----------------------------------------------------------------------
 
+std::vector<Poco::JSON::Object::Ptr> Pipeline::extract_fingerprints(
+    const std::vector<std::vector<std::shared_ptr<predictors::Predictor>>>&
+        _predictors ) const
+{
+    std::vector<Poco::JSON::Object::Ptr> fingerprints;
+
+    for ( const auto& vec : _predictors )
+        {
+            for ( const auto& p : vec )
+                {
+                    assert_true( p );
+                    fingerprints.push_back( p->fingerprint() );
+                }
+        }
+
+    return fingerprints;
+}
+
+// ----------------------------------------------------------------------
+
 std::vector<Poco::JSON::Object::Ptr> Pipeline::extract_fs_fingerprints() const
 {
-    if ( feature_selectors_.size() == 0 || feature_selectors_[0].size() == 0 )
+    if ( feature_selectors_.size() == 0 ||
+         feature_selectors_.at( 0 ).size() == 0 )
         {
             return fe_fingerprints();
         }
 
-    std::vector<Poco::JSON::Object::Ptr> fs_fingerprints;
-
-    for ( const auto& vec : feature_selectors_ )
-        {
-            for ( const auto& fs : vec )
-                {
-                    assert_true( fs );
-                    fs_fingerprints.push_back( fs->fingerprint() );
-                }
-        }
-
-    return fs_fingerprints;
+    return extract_fingerprints( feature_selectors_ );
 }
 
 // ----------------------------------------------------------------------------
@@ -891,6 +855,7 @@ void Pipeline::fit(
     const std::shared_ptr<const communication::Logger>& _logger,
     const std::map<std::string, containers::DataFrame>& _data_frames,
     const std::shared_ptr<containers::Encoding>& _categories,
+    const dependency::DataFrameTracker& _data_frame_tracker,
     const std::shared_ptr<dependency::FETracker> _fe_tracker,
     const std::shared_ptr<dependency::PredTracker> _pred_tracker,
     Poco::Net::StreamSocket* _socket )
@@ -907,12 +872,14 @@ void Pipeline::fit(
     std::tie( population_schema(), peripheral_schema() ) =
         extract_schemata( _cmd, _data_frames );
 
-    df_fingerprints() = extract_df_fingerprints( _cmd, _data_frames );
+    df_fingerprints() = containers::DataFrameExtractor::extract_df_fingerprints(
+        _cmd, _data_frames );
 
     // -------------------------------------------------------------------------
 
     auto [population_df, peripheral_dfs] =
-        extract_data_frames( _cmd, _data_frames );
+        containers::DataFrameExtractor::extract_data_frames(
+            _cmd, _data_frames );
 
     std::tie( population_df, peripheral_dfs ) =
         modify_data_frames( population_df, peripheral_dfs );
@@ -947,10 +914,13 @@ void Pipeline::fit(
 
     fit_predictors(
         _cmd,
+        _data_frames,
         _logger,
         population_df,
         peripheral_dfs,
+        _data_frame_tracker,
         _pred_tracker,
+        fe_fingerprints(),
         feature_selector_impl(),
         "feature selector",
         &autofeatures,
@@ -975,10 +945,13 @@ void Pipeline::fit(
 
     fit_predictors(
         _cmd,
+        _data_frames,
         _logger,
         population_df,
         peripheral_dfs,
+        _data_frame_tracker,
         _pred_tracker,
+        fs_fingerprints(),
         predictor_impl(),
         "predictor",
         &autofeatures,
@@ -1059,10 +1032,13 @@ void Pipeline::fit_feature_learners(
 
 void Pipeline::fit_predictors(
     const Poco::JSON::Object& _cmd,
+    const std::map<std::string, containers::DataFrame>& _data_frames,
     const std::shared_ptr<const communication::Logger>& _logger,
     const containers::DataFrame& _population_df,
     const std::vector<containers::DataFrame>& _peripheral_dfs,
+    const dependency::DataFrameTracker& _data_frame_tracker,
     const std::shared_ptr<dependency::PredTracker> _pred_tracker,
+    const std::vector<Poco::JSON::Object::Ptr>& _dependencies,
     const predictors::PredictorImpl& _predictor_impl,
     const std::string& _purpose,
     containers::Features* _autofeatures,
@@ -1082,32 +1058,23 @@ void Pipeline::fit_predictors(
 
     // --------------------------------------------------------------------
 
-    auto categorical_features =
-        get_categorical_features( _cmd, _population_df, _predictor_impl );
+    auto [numerical_features, categorical_features, autofeatures] =
+        make_features(
+            _cmd,
+            _data_frames,
+            _data_frame_tracker,
+            _logger,
+            _population_df,
+            _peripheral_dfs,
+            _dependencies,
+            _predictor_impl,
+            *_autofeatures,
+            _socket );
+
+    *_autofeatures = autofeatures;
 
     categorical_features =
         _predictor_impl.transform_encodings( categorical_features );
-
-    // --------------------------------------------------------------------
-
-    if ( _autofeatures->size() == 0 )
-        {
-            *_autofeatures = generate_autofeatures(
-                _cmd,
-                _logger,
-                _population_df,
-                _peripheral_dfs,
-                _predictor_impl,
-                _socket );
-        }
-    else
-        {
-            *_autofeatures =
-                select_autofeatures( *_autofeatures, _predictor_impl );
-        }
-
-    const auto numerical_features = get_numerical_features(
-        *_autofeatures, _cmd, _population_df, _predictor_impl );
 
     // --------------------------------------------------------------------
 
@@ -1767,6 +1734,70 @@ void Pipeline::load_preprocessors(
     _pipeline->preprocessors_ = preprocessors;
 }
 
+// ----------------------------------------------------------------------------
+
+std::tuple<
+    containers::Features,
+    containers::CategoricalFeatures,
+    containers::Features>
+Pipeline::make_features(
+    const Poco::JSON::Object& _cmd,
+    const std::map<std::string, containers::DataFrame>& _data_frames,
+    const dependency::DataFrameTracker& _data_frame_tracker,
+    const std::shared_ptr<const communication::Logger>& _logger,
+    const containers::DataFrame& _population_df,
+    const std::vector<containers::DataFrame>& _peripheral_dfs,
+    const std::vector<Poco::JSON::Object::Ptr>& _dependencies,
+    const predictors::PredictorImpl& _predictor_impl,
+    const std::optional<containers::Features> _autofeatures,
+    Poco::Net::StreamSocket* _socket ) const
+{
+    // --------------------------------------------------------------------
+
+    const auto df =
+        _data_frame_tracker.retrieve( _cmd, _data_frames, _dependencies );
+
+    if ( df )
+        {
+            return retrieve_features( *df );
+        }
+
+    // --------------------------------------------------------------------
+
+    containers::Features autofeatures;
+
+    if ( _autofeatures && _autofeatures->size() != 0 )
+        {
+            autofeatures =
+                select_autofeatures( *_autofeatures, _predictor_impl );
+        }
+    else
+        {
+            autofeatures = generate_autofeatures(
+                _cmd,
+                _logger,
+                _population_df,
+                _peripheral_dfs,
+                _predictor_impl,
+                _socket );
+        }
+
+    const auto numerical_features = get_numerical_features(
+        autofeatures, _cmd, _population_df, _predictor_impl );
+
+    // --------------------------------------------------------------------
+
+    const auto categorical_features =
+        get_categorical_features( _cmd, _population_df, _predictor_impl );
+
+    // --------------------------------------------------------------------
+
+    return std::make_tuple(
+        numerical_features, categorical_features, autofeatures );
+
+    // --------------------------------------------------------------------
+}
+
 // ------------------------------------------------------------------------
 
 void Pipeline::make_feature_selector_impl(
@@ -2096,6 +2127,43 @@ std::shared_ptr<std::vector<std::string>> Pipeline::parse_peripheral() const
         }
 
     return peripheral;
+}
+
+// ----------------------------------------------------------------------------
+
+std::tuple<
+    containers::Features,
+    containers::CategoricalFeatures,
+    containers::Features>
+Pipeline::retrieve_features( const containers::DataFrame& _df ) const
+{
+    containers::Features autofeatures;
+
+    containers::Features numerical_features;
+
+    for ( size_t i = 0; i < _df.num_numericals(); ++i )
+        {
+            const auto col = _df.numerical( i );
+
+            numerical_features.push_back( col.data_ptr() );
+
+            if ( col.name().substr( 0, 8 ) == "feature_" )
+                {
+                    autofeatures.push_back( numerical_features.back() );
+                }
+        }
+
+    containers::CategoricalFeatures categorical_features;
+
+    for ( size_t i = 0; i < _df.num_categoricals(); ++i )
+        {
+            const auto col = _df.categorical( i );
+
+            categorical_features.push_back( col.data_ptr() );
+        }
+
+    return std::make_tuple(
+        numerical_features, categorical_features, autofeatures );
 }
 
 // ----------------------------------------------------------------------------
@@ -2567,6 +2635,7 @@ Pipeline::transform(
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<const communication::Logger>& _logger,
     const std::map<std::string, containers::DataFrame>& _data_frames,
+    const dependency::DataFrameTracker& _data_frame_tracker,
     const std::shared_ptr<const containers::Encoding> _categories,
     Poco::Net::StreamSocket* _socket )
 {
@@ -2580,7 +2649,8 @@ Pipeline::transform(
     // -------------------------------------------------------------------------
 
     auto [population_df, peripheral_dfs] =
-        extract_data_frames( _cmd, _data_frames );
+        containers::DataFrameExtractor::extract_data_frames(
+            _cmd, _data_frames );
 
     std::tie( population_df, peripheral_dfs ) =
         modify_data_frames( population_df, peripheral_dfs );
@@ -2592,19 +2662,17 @@ Pipeline::transform(
 
     // -------------------------------------------------------------------------
 
-    const auto autofeatures = generate_autofeatures(
+    const auto [numerical_features, categorical_features, _] = make_features(
         _cmd,
+        _data_frames,
+        _data_frame_tracker,
         _logger,
         population_df,
         peripheral_dfs,
+        dependencies(),
         predictor_impl(),
+        std::nullopt,
         _socket );
-
-    const auto numerical_features = get_numerical_features(
-        autofeatures, _cmd, population_df, predictor_impl() );
-
-    const auto categorical_features =
-        get_categorical_features( _cmd, population_df, predictor_impl() );
 
     // -------------------------------------------------------------------------
     // If we do not want to score or predict, then we can stop here.
@@ -2631,8 +2699,6 @@ Pipeline::transform(
             calculate_feature_stats(
                 numerical_features, nrows, ncols, _cmd, population_df );
         }
-
-    // -------------------------------------------------------------------------
 
     //-------------------------------------------------------------------------
 
