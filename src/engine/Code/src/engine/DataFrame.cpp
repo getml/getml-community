@@ -1707,23 +1707,28 @@ void DataFrame::load( const std::string &_path )
 
     // ---------------------------------------------------------------------
 
-    std::ifstream lfile( _path + "last_change.txt" );
+    const auto last_change = load_textfile( _path, "last_change.txt" );
 
-    if ( lfile.is_open() )
-        {
-            std::getline( lfile, last_change_ );
-
-            lfile.close();
-        }
-    else
+    if ( !last_change )
         {
             throw std::runtime_error(
-                "Could not open '" +
-                Poco::Path( _path ).makeAbsolute().toString() + "'!" );
+                "'last_change.txt' could not be loaded!" );
+        }
+
+    last_change_ = *last_change;
+
+    // ---------------------------------------------------------------------
+
+    const auto build_history = load_textfile( _path, "build_history.json" );
+
+    if ( build_history )
+        {
+            Poco::JSON::Parser parser;
+            build_history_ = parser.parse( *build_history )
+                                 .extract<Poco::JSON::Object::Ptr>();
         }
 
     // ---------------------------------------------------------------------
-    // Load contents.
 
     categoricals_ = load_columns<Int>( _path, "categorical_" );
 
@@ -1744,6 +1749,30 @@ void DataFrame::load( const std::string &_path )
     check_plausibility();
 
     // ---------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+std::optional<std::string> DataFrame::load_textfile(
+    const std::string &_path, const std::string &_fname ) const
+{
+    std::ifstream textfile( _path + _fname );
+
+    std::string content;
+
+    if ( textfile.is_open() )
+        {
+            for ( std::string line; std::getline( textfile, line ); )
+                {
+                    content += line;
+                }
+
+            textfile.close();
+
+            return content;
+        }
+
+    return std::nullopt;
 }
 
 // ----------------------------------------------------------------------------
@@ -1903,7 +1932,7 @@ bool DataFrame::remove_column( const std::string &_name )
 
 // ----------------------------------------------------------------------------
 
-void DataFrame::save( const std::string &_path, const std::string &_name )
+void DataFrame::save( const std::string &_path, const std::string &_name ) const
 {
     // ---------------------------------------------------------------------
 
@@ -1931,10 +1960,17 @@ void DataFrame::save( const std::string &_path, const std::string &_name )
 
     // ---------------------------------------------------------------------
 
-    std::ofstream lfile;
-    lfile.open( tpath + "last_change.txt" );
-    lfile << last_change_;
-    lfile.close();
+    save_text( tpath, "last_change.txt", last_change_ );
+
+    // ---------------------------------------------------------------------
+
+    if ( build_history_ )
+        {
+            save_text(
+                tpath,
+                "build_history.json",
+                JSON::stringify( *build_history_ ) );
+        }
 
     // ---------------------------------------------------------------------
     // If the path already exists, delete it to avoid
@@ -1952,6 +1988,19 @@ void DataFrame::save( const std::string &_path, const std::string &_name )
     tfile.keep();
 
     // ---------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+void DataFrame::save_text(
+    const std::string &_tpath,
+    const std::string &_fname,
+    const std::string &_text ) const
+{
+    std::ofstream textfile;
+    textfile.open( _tpath + _fname );
+    textfile << _text;
+    textfile.close();
 }
 
 // ----------------------------------------------------------------------------

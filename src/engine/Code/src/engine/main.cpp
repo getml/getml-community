@@ -142,6 +142,7 @@ int main( int argc, char* argv[] )
             categories,
             data_frame_manager,
             data_frames,
+            data_frame_tracker,
             fe_tracker,
             join_keys_encoding,
             hyperopts,

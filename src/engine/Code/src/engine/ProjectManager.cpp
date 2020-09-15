@@ -522,7 +522,6 @@ void ProjectManager::load_data_frame(
     multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
 
     // --------------------------------------------------------------------
-    // Load data frame
 
     auto df = FileHandler::load(
         data_frames(),
@@ -533,18 +532,22 @@ void ProjectManager::load_data_frame(
 
     license_checker().check_mem_size( data_frames(), df.nbytes() );
 
+    df.create_indices();
+
     // --------------------------------------------------------------------
 
     weak_write_lock.upgrade();
 
     // --------------------------------------------------------------------
-    // No problems while loading the data frame - we can store it!
 
     data_frames()[_name] = df;
 
-    data_frames()[_name].create_indices();
+    if ( df.build_history() )
+        {
+            data_frame_tracker().add( df );
+        }
 
-    post( "dataframe", data_frames()[_name].to_monitor() );
+    post( "dataframe", df.to_monitor() );
 
     engine::communication::Sender::send_string( "Success!", _socket );
 

@@ -902,16 +902,16 @@ void PipelineManager::transform(
 
             df.set_join_keys_encoding( join_keys_encoding_ );
 
-            data_frames()[df_name] = df;
-
-            monitor_->send_tcp( "postdataframe", df.to_monitor() );
-
             const auto predict = JSON::get_value<bool>( cmd, "predict_" );
 
             if ( !predict )
                 {
                     add_to_tracker( pipeline, cmd, *local_data_frames, &df );
                 }
+
+            data_frames()[df_name] = df;
+
+            monitor_->send_tcp( "postdataframe", df.to_monitor() );
         }
 
     // -------------------------------------------------------

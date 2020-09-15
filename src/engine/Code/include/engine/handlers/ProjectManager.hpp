@@ -22,6 +22,8 @@ class ProjectManager
         const std::shared_ptr<DataFrameManager>& _data_frame_manager,
         const std::shared_ptr<std::map<std::string, containers::DataFrame>>
             _data_frames,
+        const std::shared_ptr<engine::dependency::DataFrameTracker>&
+            _data_frame_tracker,
         const std::shared_ptr<dependency::FETracker>& _fe_tracker,
         const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
         const std::shared_ptr<std::map<std::string, hyperparam::Hyperopt>>&
@@ -37,6 +39,7 @@ class ProjectManager
         : categories_( _categories ),
           data_frame_manager_( _data_frame_manager ),
           data_frames_( _data_frames ),
+          data_frame_tracker_( _data_frame_tracker ),
           fe_tracker_( _fe_tracker ),
           join_keys_encoding_( _join_keys_encoding ),
           hyperopts_( _hyperopts ),
@@ -216,6 +219,13 @@ class ProjectManager
     }
 
     /// Trivial accessor
+    dependency::DataFrameTracker& data_frame_tracker()
+    {
+        assert_true( data_frame_tracker_ );
+        return *data_frame_tracker_;
+    }
+
+    /// Trivial accessor
     DataFrameManager& data_frame_manager()
     {
         assert_true( data_frame_manager_ );
@@ -344,6 +354,10 @@ class ProjectManager
     /// The data frames currently held in memory
     const std::shared_ptr<std::map<std::string, containers::DataFrame>>
         data_frames_;
+
+    /// Keeps track of all data frames, so we don't have to
+    /// reconstruct the features all of the time.
+    const std::shared_ptr<dependency::DataFrameTracker> data_frame_tracker_;
 
     /// Keeps track of all feature learners.
     const std::shared_ptr<dependency::FETracker> fe_tracker_;
