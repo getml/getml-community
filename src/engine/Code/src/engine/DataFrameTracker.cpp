@@ -8,6 +8,8 @@ namespace dependency
 
 void DataFrameTracker::add( const containers::DataFrame& _df )
 {
+    clean_up();
+
     const auto build_history = _df.build_history();
 
     assert_true( build_history );
@@ -23,9 +25,61 @@ void DataFrameTracker::add( const containers::DataFrame& _df )
 
 // -------------------------------------------------------------------------
 
+void DataFrameTracker::clean_up()
+{
+    std::vector<size_t> remove_keys;
+
+    for ( const auto [key, _] : pairs_ )
+        {
+            if ( !get_df( key ) )
+                {
+                    remove_keys.push_back( key );
+                }
+        }
+
+    for ( const auto key : remove_keys )
+        {
+            pairs_.erase( key );
+        }
+}
+
+// -------------------------------------------------------------------------
+
 void DataFrameTracker::clear()
 {
     pairs_ = std::map<size_t, std::pair<std::string, std::string>>();
+}
+
+// ----------------------------------------------------------------------
+
+std::optional<containers::DataFrame> DataFrameTracker::get_df(
+    const size_t _b_hash ) const
+{
+    const auto it = pairs_.find( _b_hash );
+
+    if ( it == pairs_.end() )
+        {
+            return std::nullopt;
+        }
+
+    const auto name = it->second.first;
+
+    const auto last_change = it->second.second;
+
+    const auto [df, exists] =
+        utils::Getter::get_if_exists( name, data_frames_.get() );
+
+    if ( !exists )
+        {
+            return std::nullopt;
+        }
+
+    if ( df->last_change() != last_change )
+        {
+            return std::nullopt;
+        }
+
+    return *df;
 }
 
 // ----------------------------------------------------------------------
@@ -68,31 +122,7 @@ std::optional<containers::DataFrame> DataFrameTracker::retrieve(
 
     const auto b_hash = std::hash<std::string>()( b_str );
 
-    const auto it = pairs_.find( b_hash );
-
-    if ( it == pairs_.end() )
-        {
-            return std::nullopt;
-        }
-
-    const auto name = it->second.first;
-
-    const auto last_change = it->second.second;
-
-    const auto [df, exists] =
-        utils::Getter::get_if_exists( name, data_frames_.get() );
-
-    if ( !exists )
-        {
-            return std::nullopt;
-        }
-
-    if ( df->last_change() != last_change )
-        {
-            return std::nullopt;
-        }
-
-    return *df;
+    return get_df( b_hash );
 }
 
 // -------------------------------------------------------------------------

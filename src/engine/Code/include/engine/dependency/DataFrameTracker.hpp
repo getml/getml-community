@@ -53,6 +53,14 @@ class DataFrameTracker
     }
 
    private:
+    /// Removes all data frames that are no longer accessable.
+    void clean_up();
+
+    /// Returns the data frame designated by the hash, if such a data frame
+    /// exists.
+    std::optional<containers::DataFrame> get_df( const size_t _b_hash ) const;
+
+   private:
     /// The underlying data frames.
     const std::shared_ptr<std::map<std::string, engine::containers::DataFrame>>
         data_frames_;
