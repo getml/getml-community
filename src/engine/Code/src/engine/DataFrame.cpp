@@ -31,6 +31,7 @@ void DataFrame::add_float_column(
     else if ( _role == ROLE_UNUSED || _role == ROLE_UNUSED_FLOAT )
         {
             add_column( _col, &unused_floats_ );
+            update_last_change();
         }
     else
         {
@@ -115,6 +116,7 @@ void DataFrame::add_int_vectors(
 void DataFrame::add_string_column( const Column<strings::String> &_col )
 {
     add_column( _col, &unused_strings_ );
+    update_last_change();
 }
 
 // ----------------------------------------------------------------------------
@@ -1884,6 +1886,7 @@ bool DataFrame::remove_column( const std::string &_name )
 
     if ( success )
         {
+            update_last_change();
             return true;
         }
 
@@ -1891,6 +1894,7 @@ bool DataFrame::remove_column( const std::string &_name )
 
     if ( success )
         {
+            update_last_change();
             return true;
         }
 
