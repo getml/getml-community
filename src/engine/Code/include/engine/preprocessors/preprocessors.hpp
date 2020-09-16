@@ -31,6 +31,7 @@
 #include "engine/preprocessors/PreprocessorImpl.hpp"
 
 #include "engine/preprocessors/EMailDomain.hpp"
+#include "engine/preprocessors/Imputation.hpp"
 #include "engine/preprocessors/Seasonal.hpp"
 #include "engine/preprocessors/Substring.hpp"
 

@@ -59,6 +59,8 @@ class Macros
 
     static std::string remove_colnames( const std::string& _sql );
 
+    static std::string remove_imputation( const std::string& _from_colname );
+
     static std::string remove_many_to_one(
         const std::string& _query,
         const std::string& _key1,
@@ -87,6 +89,10 @@ class Macros
 
     static std::string delimiter() { return "$GETML_JOIN_PARAM_DELIMITER"; }
 
+    static std::string dummy_begin() { return "$GETML_DUMMY_BEGIN"; }
+
+    static std::string dummy_end() { return "$GETML_DUMMY_END"; }
+
     static std::string email_domain() { return "$GETML_EMAIL_DOMAIN"; }
 
     static std::string end() { return "$GETML_JOIN_PARAM_END"; }
@@ -96,6 +102,15 @@ class Macros
     static std::string generated_ts() { return "$GETML_GENERATED_TS"; }
 
     static std::string hour() { return "$GETML_HOUR"; }
+
+    static std::string imputation_begin() { return "$GETML_IMPUTATION_BEGIN"; }
+
+    static std::string imputation_end() { return "$GETML_IMPUTATION_END"; }
+
+    static std::string imputation_replacement()
+    {
+        return "$GETML_IMPUTATION_REPLACEMENT";
+    }
 
     static std::string join_key() { return "$GETML_JOIN_PARAM_JOIN_KEY"; }
 

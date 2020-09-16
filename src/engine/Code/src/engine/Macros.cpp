@@ -193,6 +193,8 @@ helpers::ImportanceMaker Macros::modify_column_importances(
             auto [to_table, to_colname] =
                 parse_table_colname( from_desc.table_, from_desc.name_ );
 
+            to_colname = remove_imputation( to_colname );
+
             to_colname = remove_substring( to_colname );
 
             to_colname = remove_seasonal( to_colname );
@@ -327,6 +329,35 @@ std::string Macros::remove_colnames( const std::string& _sql )
         }
 
     return sql;
+}
+
+// ----------------------------------------------------------------------------
+
+std::string Macros::remove_imputation( const std::string& _from_colname )
+{
+    // --------------------------------------------------------------
+
+    if ( _from_colname.find( Macros::imputation_begin() ) == std::string::npos )
+        {
+            return _from_colname;
+        }
+
+    // --------------------------------------------------------------
+
+    const auto begin = _from_colname.find( Macros::imputation_begin() ) +
+                       Macros::imputation_begin().length();
+
+    const auto end = _from_colname.find( Macros::imputation_replacement() );
+
+    assert_true( end >= begin );
+
+    const auto length = end - begin;
+
+    // --------------------------------------------------------------
+
+    return _from_colname.substr( begin, length );
+
+    // --------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -468,6 +499,24 @@ std::string Macros::replace( const std::string& _query )
 
     new_query = utils::StringReplacer::replace_all(
         new_query, remove_char() + "\"", "" );
+
+    new_query = utils::StringReplacer::replace_all(
+        new_query, "t1.\"" + imputation_begin(), "COALESCE( t1.\"" );
+
+    new_query = utils::StringReplacer::replace_all(
+        new_query, "t2.\"" + imputation_begin(), "COALESCE( t2.\"" );
+
+    new_query = utils::StringReplacer::replace_all(
+        new_query, imputation_begin(), "COALESCE( \"" );
+
+    new_query = utils::StringReplacer::replace_all(
+        new_query, imputation_replacement(), "\", " );
+
+    new_query = utils::StringReplacer::replace_all(
+        new_query, imputation_end() + "\"", " )" );
+
+    new_query =
+        utils::StringReplacer::replace_all( new_query, imputation_end(), " )" );
 
     new_query = utils::StringReplacer::replace_all(
         new_query, "t1.\"" + no_join_key() + "\"", "1" );

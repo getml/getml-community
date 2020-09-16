@@ -17,6 +17,11 @@ std::shared_ptr<Preprocessor> PreprocessorParser::parse(
             return std::make_shared<EMailDomain>( _obj, _dependencies );
         }
 
+    if ( type == Preprocessor::IMPUTATION )
+        {
+            return std::make_shared<Imputation>( _obj, _dependencies );
+        }
+
     if ( type == Preprocessor::SEASONAL )
         {
             return std::make_shared<Seasonal>( _obj, _dependencies );
