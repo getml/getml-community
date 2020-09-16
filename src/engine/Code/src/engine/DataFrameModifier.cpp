@@ -77,6 +77,8 @@ void DataFrameModifier::add_join_keys(
                         join_keys_used.at( i ), encoding, _population_df );
                 }
 
+            std::cout << "unique join keys: " << encoding->size() << std::endl;
+
             add_join_keys(
                 *ptr,
                 _peripheral_names,
@@ -335,7 +337,7 @@ std::vector<containers::Column<Int>> DataFrameModifier::get_old_join_keys(
         jk_names.front(), containers::Macros::multiple_join_key_begin(), "" );
 
     jk_names.back() = utils::StringReplacer::replace_all(
-        jk_names.front(), containers::Macros::multiple_join_key_end(), "" );
+        jk_names.back(), containers::Macros::multiple_join_key_end(), "" );
 
     auto old_join_keys = std::vector<containers::Column<Int>>();
 
