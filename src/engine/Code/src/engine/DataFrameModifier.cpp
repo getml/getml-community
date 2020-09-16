@@ -77,8 +77,6 @@ void DataFrameModifier::add_join_keys(
                         join_keys_used.at( i ), encoding, _population_df );
                 }
 
-            std::cout << "unique join keys: " << encoding->size() << std::endl;
-
             add_join_keys(
                 *ptr,
                 _peripheral_names,
