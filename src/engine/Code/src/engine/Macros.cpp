@@ -337,17 +337,25 @@ std::string Macros::remove_imputation( const std::string& _from_colname )
 {
     // --------------------------------------------------------------
 
-    if ( _from_colname.find( Macros::imputation_begin() ) == std::string::npos )
+    auto to_colname =
+        utils::StringReplacer::replace_all( _from_colname, dummy_begin(), "" );
+
+    to_colname =
+        utils::StringReplacer::replace_all( to_colname, dummy_end(), "" );
+
+    // --------------------------------------------------------------
+
+    if ( to_colname.find( Macros::imputation_begin() ) == std::string::npos )
         {
-            return _from_colname;
+            return to_colname;
         }
 
     // --------------------------------------------------------------
 
-    const auto begin = _from_colname.find( Macros::imputation_begin() ) +
+    const auto begin = to_colname.find( Macros::imputation_begin() ) +
                        Macros::imputation_begin().length();
 
-    const auto end = _from_colname.find( Macros::imputation_replacement() );
+    const auto end = to_colname.find( Macros::imputation_replacement() );
 
     assert_true( end >= begin );
 
@@ -355,7 +363,7 @@ std::string Macros::remove_imputation( const std::string& _from_colname )
 
     // --------------------------------------------------------------
 
-    return _from_colname.substr( begin, length );
+    return to_colname.substr( begin, length );
 
     // --------------------------------------------------------------
 }
@@ -517,6 +525,21 @@ std::string Macros::replace( const std::string& _query )
 
     new_query =
         utils::StringReplacer::replace_all( new_query, imputation_end(), " )" );
+
+    new_query = utils::StringReplacer::replace_all(
+        new_query, "t1.\"" + dummy_begin(), "( CASE WHEN t1.\"" );
+
+    new_query = utils::StringReplacer::replace_all(
+        new_query, "t2.\"" + dummy_begin(), "( CASE WHEN t2.\"" );
+
+    new_query = utils::StringReplacer::replace_all(
+        new_query, dummy_begin(), "( CASE WHEN \"" );
+
+    new_query = utils::StringReplacer::replace_all(
+        new_query, dummy_end() + "\"", "\" IS NULL THEN 1 ELSE 0 END )" );
+
+    new_query = utils::StringReplacer::replace_all(
+        new_query, dummy_end(), "\" IS NULL THEN 1 ELSE 0 END )" );
 
     new_query = utils::StringReplacer::replace_all(
         new_query, "t1.\"" + no_join_key() + "\"", "1" );
