@@ -193,6 +193,8 @@ helpers::ImportanceMaker Macros::modify_column_importances(
             auto [to_table, to_colname] =
                 parse_table_colname( from_desc.table_, from_desc.name_ );
 
+            to_colname = remove_email( to_colname );
+
             to_colname = remove_imputation( to_colname );
 
             to_colname = remove_substring( to_colname );
@@ -329,6 +331,19 @@ std::string Macros::remove_colnames( const std::string& _sql )
         }
 
     return sql;
+}
+
+// ----------------------------------------------------------------------------
+
+std::string Macros::remove_email( const std::string& _from_colname )
+{
+    auto to_colname = utils::StringReplacer::replace_all(
+        _from_colname, email_domain_begin(), "" );
+
+    to_colname = utils::StringReplacer::replace_all(
+        to_colname, email_domain_end(), "" );
+
+    return to_colname;
 }
 
 // ----------------------------------------------------------------------------
@@ -507,6 +522,21 @@ std::string Macros::replace( const std::string& _query )
 
     new_query = utils::StringReplacer::replace_all(
         new_query, remove_char() + "\"", "" );
+
+    new_query = utils::StringReplacer::replace_all(
+        new_query, "t1.\"" + email_domain_begin(), "email_domain( t1.\"" );
+
+    new_query = utils::StringReplacer::replace_all(
+        new_query, "t2.\"" + email_domain_begin(), "email_domain( t2.\"" );
+
+    new_query = utils::StringReplacer::replace_all(
+        new_query, email_domain_begin(), "email_domain( \"" );
+
+    new_query = utils::StringReplacer::replace_all(
+        new_query, email_domain_end() + "\"", " )" );
+
+    new_query = utils::StringReplacer::replace_all(
+        new_query, email_domain_end(), " )" );
 
     new_query = utils::StringReplacer::replace_all(
         new_query, "t1.\"" + imputation_begin(), "COALESCE( t1.\"" );

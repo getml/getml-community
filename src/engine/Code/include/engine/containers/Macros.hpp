@@ -59,6 +59,8 @@ class Macros
 
     static std::string remove_colnames( const std::string& _sql );
 
+    static std::string remove_email( const std::string& _from_colname );
+
     static std::string remove_imputation( const std::string& _from_colname );
 
     static std::string remove_many_to_one(
@@ -93,7 +95,9 @@ class Macros
 
     static std::string dummy_end() { return "$GETML_DUMMY_END"; }
 
-    static std::string email_domain() { return "$GETML_EMAIL_DOMAIN"; }
+    static std::string email_domain_begin() { return "$GETML_EMAIL_DOMAIN"; }
+
+    static std::string email_domain_end() { return "$GETML_EMAIL_END"; }
 
     static std::string end() { return "$GETML_JOIN_PARAM_END"; }
 

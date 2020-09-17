@@ -90,6 +90,14 @@ class EMailDomain : public Preprocessor
         const size_t _table ) const;
 
    private:
+    /// Generates the name for the newly created column.
+    std::string make_name( const std::string& _colname ) const
+    {
+        return containers::Macros::email_domain_begin() + _colname +
+               containers::Macros::email_domain_end();
+    }
+
+   private:
     /// List of all columns to which the email domain transformation applies.
     std::vector<std::shared_ptr<helpers::ColumnDescription>> cols_;
 

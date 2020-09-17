@@ -19,9 +19,7 @@ std::optional<containers::Column<Int>> EMailDomain::extract_domain(
             int_col[i] = ( *_categories )[str_col[i]];
         }
 
-    int_col.set_name(
-        containers::Macros::email_domain() + _col.name() +
-        containers::Macros::close_bracket() );
+    int_col.set_name( make_name( _col.name() ) );
 
     int_col.set_unit( "email domain" );
 
@@ -48,9 +46,7 @@ containers::Column<Int> EMailDomain::extract_domain(
             int_col[i] = _categories[str_col[i]];
         }
 
-    int_col.set_name(
-        containers::Macros::email_domain() + _col.name() +
-        containers::Macros::close_bracket() );
+    int_col.set_name( make_name( _col.name() ) );
 
     int_col.set_unit( "email domain" );
 
