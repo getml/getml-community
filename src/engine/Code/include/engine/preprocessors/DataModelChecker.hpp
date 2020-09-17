@@ -104,6 +104,12 @@ class DataModelChecker
     /// Checks whether all non-NULL elements in _col are equal to each other
     static bool is_all_equal( const containers::Column<Float>& _col );
 
+    /// Accounts for the fact that data frames might be joined.
+    static std::string modify_df_name( const std::string& _df_name );
+
+    /// Accounts for the fact that we might have joined over several join keys.
+    static std::string modify_join_key_name( const std::string& _jk_name );
+
     /// Adds warning messages related to the joins.
     static void raise_join_warnings(
         const bool _is_many_to_one,
@@ -242,6 +248,14 @@ class DataModelChecker
     static std::string might_take_long()
     {
         return info() + "[MIGHT TAKE LONG]: ";
+    }
+
+    /// Removes any macros from a colname.
+    static std::string modify_colname( const std::string& _colname )
+    {
+        const auto colnames = containers::Macros::modify_colnames( {_colname} );
+        assert_true( colnames.size() == 1 );
+        return colnames.at( 0 );
     }
 
     /// Standard header for a warning message.

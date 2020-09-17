@@ -326,16 +326,7 @@ containers::DataFrame* DataFrameModifier::find_data_frame(
 std::vector<containers::Column<Int>> DataFrameModifier::get_old_join_keys(
     const std::string& _name, const containers::DataFrame& _df )
 {
-    auto jk_names = utils::StringSplitter::split(
-        _name, containers::Macros::multiple_join_key_sep() );
-
-    assert_true( jk_names.size() > 1 );
-
-    jk_names.front() = utils::StringReplacer::replace_all(
-        jk_names.front(), containers::Macros::multiple_join_key_begin(), "" );
-
-    jk_names.back() = utils::StringReplacer::replace_all(
-        jk_names.back(), containers::Macros::multiple_join_key_end(), "" );
+    const auto jk_names = containers::Macros::parse_join_key_name( _name );
 
     auto old_join_keys = std::vector<containers::Column<Int>>();
 

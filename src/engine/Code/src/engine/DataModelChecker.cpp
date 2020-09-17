@@ -724,6 +724,58 @@ bool DataModelChecker::is_all_equal( const containers::Column<Float>& _col )
 
 // ------------------------------------------------------------------------
 
+std::string DataModelChecker::modify_df_name( const std::string& _df_name )
+{
+    const auto names = containers::Macros::extract_table_names( _df_name );
+
+    std::string modified;
+
+    for ( size_t i = 0; i < names.size(); ++i )
+        {
+            modified += "'" + names.at( i ) + "'";
+
+            if ( i != names.size() - 1 )
+                {
+                    modified += "-";
+                }
+        }
+
+    if ( names.size() == 1 )
+        {
+            return " data frame " + modified;
+        }
+    else
+        {
+            return "the composite data frame " + modified +
+                   " that has been created by many-to-one joins or one-to-one "
+                   "joins";
+        }
+}
+
+// ------------------------------------------------------------------------
+
+std::string DataModelChecker::modify_join_key_name(
+    const std::string& _jk_name )
+{
+    const auto names = containers::Macros::parse_join_key_name( _jk_name );
+
+    std::string modified;
+
+    for ( size_t i = 0; i < names.size(); ++i )
+        {
+            modified += "'" + names.at( i ) + "'";
+
+            if ( i != names.size() - 1 )
+                {
+                    modified += ", ";
+                }
+        }
+
+    return modified;
+}
+
+// ------------------------------------------------------------------------
+
 void DataModelChecker::raise_join_warnings(
     const bool _is_many_to_one,
     const size_t _num_matches,
@@ -843,10 +895,14 @@ void DataModelChecker::warn_all_equal(
                                  ? containers::DataFrame::ROLE_UNUSED_FLOAT
                                  : containers::DataFrame::ROLE_UNUSED_STRING;
 
+    const auto colname = modify_colname( _colname );
+
+    const auto df_name = modify_df_name( _df_name );
+
     _warner->add(
         column_should_be_unused() + "All non-NULL entries in column '" +
-        _colname + "' in data frame '" + _df_name +
-        "' are equal to each other. You should "
+        colname + "' in " + df_name +
+        " are equal to each other. You should "
         "consider setting its role to " +
         role +
         " or using it for "
@@ -859,7 +915,8 @@ void DataModelChecker::warn_all_equal(
 void DataModelChecker::warn_is_empty(
     const std::string& _df_name, communication::Warner* _warner )
 {
-    _warner->add( "Data frame '" + _df_name + "' is empty." );
+    const auto df_name = modify_df_name( _df_name );
+    _warner->add( "It appears that " + df_name + " is empty." );
 }
 
 // ------------------------------------------------------------------------
@@ -871,19 +928,26 @@ void DataModelChecker::warn_many_to_one(
     const containers::DataFrame& _peripheral_df,
     communication::Warner* _warner )
 {
+    const auto join_key_used = modify_join_key_name( _join_key_used );
+
+    const auto other_join_key_used =
+        modify_join_key_name( _other_join_key_used );
+
+    const auto population_name = modify_df_name( _population_df.name() );
+
+    const auto peripheral_name = modify_df_name( _peripheral_df.name() );
+
     _warner->add(
-        data_model_can_be_improved() + "'" + _population_df.name() + "' and '" +
-        _peripheral_df.name() +
-        "' are in a many-to-one or one-to-one relationship when "
-        "joined "
-        "over '" +
-        _join_key_used + "' and '" + _other_join_key_used +
-        "'. Aggregating over such relationships makes little "
-        "sense. "
-        "You should consider removing this join from your data "
-        "model and directly joining '" +
-        _peripheral_df.name() + "' on '" + _population_df.name() +
-        "' using the data frame's built-in join method." );
+        data_model_can_be_improved() + "It appears that " + population_name +
+        " and " + peripheral_name +
+        " are in a many-to-one or one-to-one relationship when "
+        "joined over " +
+        join_key_used + " and " + other_join_key_used +
+        ". If the relationship must always be many-to-one or one-to-one, you "
+        "should "
+        "mark the relationship as such in the .join(...) method of the "
+        "placeholder. If this is just an idiosyncracy of the training set, you "
+        "should consider using a different training set." );
 }
 
 // ------------------------------------------------------------------------
@@ -895,11 +959,20 @@ void DataModelChecker::warn_no_matches(
     const containers::DataFrame& _peripheral_df,
     communication::Warner* _warner )
 {
+    const auto join_key_used = modify_join_key_name( _join_key_used );
+
+    const auto other_join_key_used =
+        modify_join_key_name( _other_join_key_used );
+
+    const auto population_name = modify_df_name( _population_df.name() );
+
+    const auto peripheral_name = modify_df_name( _peripheral_df.name() );
+
     _warner->add(
-        data_model_can_be_improved() + "There are no matches between '" +
-        _join_key_used + "' in '" + _population_df.name() + "' and '" +
-        _other_join_key_used + "' in '" + _peripheral_df.name() +
-        "'. You should consider removing this join from your data "
+        data_model_can_be_improved() + "There are no matches between " +
+        join_key_used + " in " + population_name + " and " +
+        other_join_key_used + " in " + peripheral_name +
+        ". You should consider removing this join from your data "
         "model or re-examine your join keys." );
 }
 
@@ -913,14 +986,21 @@ void DataModelChecker::warn_not_found(
     const containers::DataFrame& _peripheral_df,
     communication::Warner* _warner )
 {
+    const auto join_key_used = modify_join_key_name( _join_key_used );
+
+    const auto other_join_key_used =
+        modify_join_key_name( _other_join_key_used );
+
+    const auto population_name = modify_df_name( _population_df.name() );
+
+    const auto peripheral_name = modify_df_name( _peripheral_df.name() );
+
     _warner->add(
-        join_keys_not_found() + "When joining '" + _population_df.name() +
-        "' and '" + _peripheral_df.name() + "' over '" + _join_key_used +
-        "' and '" + _other_join_key_used +
-        "', there are no corresponding entries for " +
-        std::to_string( _not_found_ratio * 100.0 ) +
-        "\% of entries in join key '" + _join_key_used + "' in '" +
-        _population_df.name() +
+        join_keys_not_found() + "When joining " + population_name + " and " +
+        peripheral_name + " over " + join_key_used + " and " +
+        other_join_key_used + ", there are no corresponding entries for " +
+        std::to_string( _not_found_ratio * 100.0 ) + "\% of entries in " +
+        join_key_used + " in '" + population_name +
         "'. You might want to double-check your join keys." );
 }
 
@@ -930,10 +1010,11 @@ void DataModelChecker::warn_self_join_no_matches(
     const containers::DataFrame& _population_df,
     communication::Warner* _warner )
 {
+    const auto population_name = modify_df_name( _population_df.name() );
+
     _warner->add(
-        data_model_can_be_improved() + "The self-join on '" +
-        _population_df.name() +
-        "' created by the time series feature learner has no matches. "
+        data_model_can_be_improved() + "The self-join on " + population_name +
+        " created by the time series feature learner has no matches. "
         "You should examine your join keys." );
 }
 
@@ -944,9 +1025,11 @@ void DataModelChecker::warn_self_join_too_many_matches(
     const containers::DataFrame& _population_df,
     communication::Warner* _warner )
 {
+    const auto population_name = modify_df_name( _population_df.name() );
+
     _warner->add(
-        might_take_long() + "The self-join on '" + _population_df.name() +
-        "' created by the time series feature learner "
+        might_take_long() + "The self-join on " + population_name +
+        " created by the time series feature learner "
         "has a total of " +
         std::to_string( _num_matches ) +
         " matches.  This can take a long time to fit. "
@@ -967,8 +1050,10 @@ void DataModelChecker::warn_too_many_columns_multirel(
     const std::string& _df_name,
     communication::Warner* _warner )
 {
+    const auto df_name = modify_df_name( _df_name );
+
     _warner->add(
-        might_take_long() + "Data frame '" + _df_name + "' contains " +
+        might_take_long() + "Data frame " + df_name + " contains " +
         std::to_string( _num_columns ) +
         " categorical and numerical columns. "
         "Please note that columns created by the preprocessors "
@@ -994,12 +1079,20 @@ void DataModelChecker::warn_too_many_matches(
     const containers::DataFrame& _peripheral_df,
     communication::Warner* _warner )
 {
+    const auto join_key_used = modify_join_key_name( _join_key_used );
+
+    const auto other_join_key_used =
+        modify_join_key_name( _other_join_key_used );
+
+    const auto population_name = modify_df_name( _population_df.name() );
+
+    const auto peripheral_name = modify_df_name( _peripheral_df.name() );
+
     _warner->add(
         might_take_long() + "There are " + std::to_string( _num_matches ) +
-        " matches between '" + _population_df.name() + "' and '" +
-        _peripheral_df.name() + "' when joined over '" + _join_key_used +
-        "' and '" + _other_join_key_used +
-        "'. This pipeline might take a very long time to fit. "
+        " matches between " + population_name + " and " + peripheral_name +
+        " when joined over " + join_key_used + " and " + other_join_key_used +
+        ". This pipeline might take a very long time to fit. "
         "You should consider imposing a narrower limit on the scope of "
         "this join by reducing the memory (the period of time until "
         "the feature learner 'forgets' historical data). "
@@ -1024,11 +1117,14 @@ void DataModelChecker::warn_too_many_nulls(
                                  ? containers::DataFrame::ROLE_UNUSED_FLOAT
                                  : containers::DataFrame::ROLE_UNUSED_STRING;
 
+    const auto colname = modify_colname( _colname );
+
+    const auto df_name = modify_df_name( _df_name );
+
     _warner->add(
         column_should_be_unused() + std::to_string( _share_null * 100.0 ) +
-        "\% of all entries in column '" + _colname + "' in data frame '" +
-        _df_name +
-        "' are NULL values. You should "
+        "\% of all entries in column '" + colname + "' in " + df_name +
+        " are NULL values. You should "
         "consider setting its role to " +
         role + "." );
 }
@@ -1041,11 +1137,15 @@ void DataModelChecker::warn_too_many_unique(
     const std::string& _df_name,
     communication::Warner* _warner )
 {
+    const auto colname = modify_colname( _colname );
+
+    const auto df_name = modify_df_name( _df_name );
+
     _warner->add(
         might_take_long() +
         "The number of unique entries in column "
         "'" +
-        _colname + "' in data frame '" + _df_name + "' is " +
+        colname + "' in " + df_name + " is " +
         std::to_string( static_cast<int>( _num_distinct ) ) +
         ". This might take a long time to fit. You should "
         "consider setting its role to unused_string or using it "
@@ -1063,11 +1163,15 @@ void DataModelChecker::warn_unique_share_too_high(
     const std::string& _df_name,
     communication::Warner* _warner )
 {
+    const auto colname = modify_colname( _colname );
+
+    const auto df_name = modify_df_name( _df_name );
+
     _warner->add(
         column_should_be_unused() +
         "The ratio of unique entries to non-NULL entries in column "
         "'" +
-        _colname + "' in data frame '" + _df_name + "' is " +
+        colname + "' in data frame " + df_name + " is " +
         std::to_string( _unique_share * 100.0 ) +
         "\%. You should "
         "consider setting its role to unused_string or using it "

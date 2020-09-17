@@ -124,6 +124,8 @@ containers::DataFrame ManyToOneJoiner::join_all(
                 _origin_peripheral_names );
         }
 
+    population.set_name( _joined_name );
+
     return population;
 }
 

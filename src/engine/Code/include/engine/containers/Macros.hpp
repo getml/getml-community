@@ -10,6 +10,11 @@ namespace containers
 class Macros
 {
    public:
+    /// Extracts the table from a _joined_name, effectively reversing
+    /// make_table_name(...)/
+    static std::vector<std::string> extract_table_names(
+        const std::string& _joined_name );
+
     /// Generates the name of a table.
     static std::string make_table_name(
         const std::string& _join_key,
@@ -31,6 +36,11 @@ class Macros
 
     /// Removes macros from generated SQL code.
     static std::string modify_sql( const std::string& _sql );
+
+    /// Returns the names of the individual join keys from a composite join key
+    /// name.
+    static std::vector<std::string> parse_join_key_name(
+        const std::string& _jk_name );
 
     /// Extracts all relevant parameters from the output of split_joined_name.
     /// Effectively reverses make_table_name(...).

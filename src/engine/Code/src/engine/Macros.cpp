@@ -6,6 +6,38 @@ namespace containers
 {
 // ----------------------------------------------------------------------------
 
+std::vector<std::string> Macros::extract_table_names(
+    const std::string& _joined_name )
+{
+    if ( _joined_name.find( Macros::delimiter() ) == std::string::npos )
+        {
+            return {_joined_name};
+        }
+
+    const auto splitted =
+        utils::StringSplitter::split( _joined_name, delimiter() );
+
+    std::vector<std::string> table_names;
+
+    for ( const auto& s : splitted )
+        {
+            const bool has_name =
+                ( s.find( Macros::name() ) != std::string::npos );
+
+            const auto name =
+                has_name ? std::get<0>( parse_table_name( s ) ) : s;
+
+            if ( name.length() != 0 )
+                {
+                    table_names.push_back( name );
+                }
+        }
+
+    return table_names;
+}
+
+// ----------------------------------------------------------------------------
+
 std::tuple<size_t, size_t, bool> Macros::find_begin_end(
     const std::string& _query, const size_t _pos )
 {
@@ -230,6 +262,30 @@ std::string Macros::modify_sql( const std::string& _sql )
     sql = remove_many_to_one( sql, "FROM \"", "\" t1" );
 
     return sql;
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<std::string> Macros::parse_join_key_name(
+    const std::string& _jk_name )
+{
+    if ( _jk_name.find( Macros::multiple_join_key_sep() ) == std::string::npos )
+        {
+            return {_jk_name};
+        }
+
+    auto jk_names = utils::StringSplitter::split(
+        _jk_name, Macros::multiple_join_key_sep() );
+
+    assert_true( jk_names.size() > 1 );
+
+    jk_names.front() = utils::StringReplacer::replace_all(
+        jk_names.front(), Macros::multiple_join_key_begin(), "" );
+
+    jk_names.back() = utils::StringReplacer::replace_all(
+        jk_names.back(), Macros::multiple_join_key_end(), "" );
+
+    return jk_names;
 }
 
 // ----------------------------------------------------------------------------
