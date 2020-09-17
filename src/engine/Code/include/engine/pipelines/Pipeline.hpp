@@ -580,7 +580,7 @@ class Pipeline
                 return 0;
             }
 
-        const auto n_expected = predictors_at( 0 ).size();
+        const auto n_expected = predictors_.at( 0 ).size();
 
         for ( const auto& pset : predictors_ )
             {
