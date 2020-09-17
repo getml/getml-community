@@ -153,11 +153,40 @@ Imputation Imputation::from_json_obj( const Poco::JSON::Object& _obj ) const
     that.add_dummies_ =
         jsonutils::JSON::get_value<bool>( _obj, "add_dummies_" );
 
-    /*    if ( _obj.has( "cols_" ) )
-            {
-                that.cols_ = PreprocessorImpl::from_array(
-                    jsonutils::JSON::get_object_array( _obj, "cols_" ) );
-            }*/
+    if ( _obj.has( "column_descriptions_" ) )
+        {
+            const auto column_descriptions = jsonutils::JSON::get_object_array(
+                _obj, "column_descriptions_" );
+
+            const auto means = jsonutils::JSON::array_to_vector<Float>(
+                jsonutils::JSON::get_array( _obj, "means_" ) );
+
+            const auto needs_dummies = jsonutils::JSON::array_to_vector<bool>(
+                jsonutils::JSON::get_array( _obj, "needs_dummies_" ) );
+
+            assert_true( column_descriptions );
+
+            if ( column_descriptions->size() != means.size() ||
+                 needs_dummies.size() != means.size() )
+                {
+                    throw std::invalid_argument(
+                        "Could not load Imputation preprocessor. JSON is "
+                        "poorly "
+                        "formatted." );
+                }
+
+            for ( size_t i = 0; i < means.size(); ++i )
+                {
+                    const auto ptr = column_descriptions->getObject( i );
+
+                    assert_true( ptr );
+
+                    const auto coldesc = helpers::ColumnDescription( *ptr );
+
+                    that.cols()[coldesc] =
+                        std::make_pair( means.at( i ), needs_dummies.at( i ) );
+                }
+        }
 
     return that;
 }
@@ -227,9 +256,27 @@ Poco::JSON::Object::Ptr Imputation::to_json_obj() const
 
     obj->set( "type_", type() );
 
-    //    obj->set( "cols_", PreprocessorImpl::to_array( cols_ ) );
-
     obj->set( "add_dummies_", add_dummies_ );
+
+    auto column_descriptions =
+        Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
+
+    auto means = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
+
+    auto needs_dummies = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
+
+    for ( const auto& [key, value] : cols() )
+        {
+            column_descriptions->add( key.to_json_obj() );
+            means->add( value.first );
+            needs_dummies->add( value.second );
+        }
+
+    obj->set( "column_descriptions_", column_descriptions );
+
+    obj->set( "means_", means );
+
+    obj->set( "needs_dummies_", needs_dummies );
 
     return obj;
 }
