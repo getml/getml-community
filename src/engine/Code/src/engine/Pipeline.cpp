@@ -2690,6 +2690,15 @@ Pipeline::transform(
 
     // -------------------------------------------------------------------------
 
+    if ( predictors_.size() == 0 )
+        {
+            throw std::invalid_argument(
+                "You cannot call .predict(...) or .score(...) on a pipeline "
+                "that doesn't have any predictors." );
+        }
+
+    // -------------------------------------------------------------------------
+
     const auto ncols = numerical_features.size();
 
     if ( score && ncols > 0 )
