@@ -104,20 +104,6 @@ class DataModelChecker
     /// Checks whether all non-NULL elements in _col are equal to each other
     static bool is_all_equal( const containers::Column<Float>& _col );
 
-    /// Returns a modified version of the placeholder, the population and
-    /// peripheral tables.
-    /*static std::tuple<
-        Poco::JSON::Object,
-        containers::DataFrame,
-        std::vector<containers::DataFrame>>
-    modify(
-        const Poco::JSON::Object& _population_placeholder,
-        const containers::DataFrame& _population,
-        const std::vector<containers::DataFrame>& _peripheral,
-        const std::vector<
-            std::shared_ptr<featurelearners::AbstractFeatureLearner>>
-           _feature_learners );*/
-
     /// Adds warning messages related to the joins.
     static void raise_join_warnings(
         const bool _is_many_to_one,
@@ -134,6 +120,91 @@ class DataModelChecker
         const bool _is_many_to_one,
         const size_t _num_matches,
         const containers::DataFrame& _population_df,
+        communication::Warner* _warner );
+
+    /// Adds a warning that all values are equal.
+    static void warn_all_equal(
+        const bool _is_float,
+        const std::string& _colname,
+        const std::string& _df_name,
+        communication::Warner* _warner );
+
+    /// Adds a warning that a data frame is empty.
+    static void warn_is_empty(
+        const std::string& _df_name, communication::Warner* _warner );
+
+    /// Adds a warning message for when there are no matches on a self-join.
+    static void warn_self_join_no_matches(
+        const containers::DataFrame& _population_df,
+        communication::Warner* _warner );
+
+    /// Adds a warning message for when there are no matches on a self-join.
+    static void warn_self_join_too_many_matches(
+        const size_t _num_matches,
+        const containers::DataFrame& _population_df,
+        communication::Warner* _warner );
+
+    /// Adds a warning message related to many-to-one or one-to-one
+    /// relationships.
+    static void warn_many_to_one(
+        const std::string& _join_key_used,
+        const std::string& _other_join_key_used,
+        const containers::DataFrame& _population_df,
+        const containers::DataFrame& _peripheral_df,
+        communication::Warner* _warner );
+
+    /// Generates a no-matches warning.
+    static void warn_no_matches(
+        const std::string& _join_key_used,
+        const std::string& _other_join_key_used,
+        const containers::DataFrame& _population_df,
+        const containers::DataFrame& _peripheral_df,
+        communication::Warner* _warner );
+
+    /// Generates a not-found warning
+    static void warn_not_found(
+        const Float _not_found_ratio,
+        const std::string& _join_key_used,
+        const std::string& _other_join_key_used,
+        const containers::DataFrame& _population_df,
+        const containers::DataFrame& _peripheral_df,
+        communication::Warner* _warner );
+
+    /// Generates a warning that there are to many columns for MultirelModel.
+    static void warn_too_many_columns_multirel(
+        const size_t _num_columns,
+        const std::string& _df_name,
+        communication::Warner* _warner );
+
+    /// Generates a too-many-matches warning.
+    static void warn_too_many_matches(
+        const size_t _num_matches,
+        const std::string& _join_key_used,
+        const std::string& _other_join_key_used,
+        const containers::DataFrame& _population_df,
+        const containers::DataFrame& _peripheral_df,
+        communication::Warner* _warner );
+
+    /// Generates a warning for when there are too many nulls.
+    static void warn_too_many_nulls(
+        const bool _is_float,
+        const Float _share_null,
+        const std::string& _colname,
+        const std::string& _df_name,
+        communication::Warner* _warner );
+
+    /// Generates a warning that there too many unique values.
+    static void warn_too_many_unique(
+        const Float _num_distinct,
+        const std::string& _colname,
+        const std::string& _df_name,
+        communication::Warner* _warner );
+
+    /// Generates a warning that the share of unique columns is too high.
+    static void warn_unique_share_too_high(
+        const Float _unique_share,
+        const std::string& _colname,
+        const std::string& _df_name,
         communication::Warner* _warner );
 
     // -------------------------------------------------------------------------

@@ -99,12 +99,8 @@ void DataModelChecker::check_categorical_column(
 
     if ( share_null > 0.9 )
         {
-            _warner->add(
-                info() + std::to_string( share_null * 100.0 ) +
-                "\% of all entries in column '" + _col.name() +
-                "' in data frame '" + _df_name +
-                "' are NULL values. You should "
-                "consider setting its role to unused_string." );
+            warn_too_many_nulls(
+                false, share_null, _col.name(), _df_name, _warner );
         }
 
     if ( num_non_null < 0.5 )
@@ -114,37 +110,23 @@ void DataModelChecker::check_categorical_column(
 
     // --------------------------------------------------------------------------
 
+    const bool is_comparison_only =
+        ( _col.unit().find( "comparison only" ) != std::string::npos );
+
     const Float num_distinct =
         utils::ColumnOperators::count_distinct( *_col.data_ptr() );
 
-    if ( num_distinct == 1.0 )
+    if ( num_distinct == 1.0 && !is_comparison_only )
         {
-            _warner->add(
-                column_should_be_unused() + "All non-NULL entries in column '" +
-                _col.name() + "' in data frame '" + _df_name +
-                "' are equal to each other. You should "
-                "consider setting its role to unused_string." );
+            warn_all_equal( false, _col.name(), _df_name, _warner );
         }
 
     // --------------------------------------------------------------------------
 
-    const bool is_comparison_only =
-        ( _col.unit().find( "comparison only" ) != std::string::npos );
-
     if ( num_distinct > 1000.0 && !is_comparison_only )
         {
-            _warner->add(
-                might_take_long() +
-                "The number of unique entries in column "
-                "'" +
-                _col.name() + "' in data frame '" + _df_name + "' is " +
-                std::to_string( static_cast<int>( num_distinct ) ) +
-                ". This might take a long time to fit. You should "
-                "consider setting its role to unused_string or using it "
-                "for "
-                "comparison only (you can do the latter by setting a unit "
-                "that "
-                "contains 'comparison only')." );
+            warn_too_many_unique(
+                num_distinct, _col.name(), _df_name, _warner );
         }
 
     // --------------------------------------------------------------------------
@@ -153,18 +135,8 @@ void DataModelChecker::check_categorical_column(
 
     if ( !is_comparison_only && unique_share > 0.25 )
         {
-            _warner->add(
-                column_should_be_unused() +
-                "The ratio of unique entries to non-NULL entries in column "
-                "'" +
-                _col.name() + "' in data frame '" + _df_name + "' is " +
-                std::to_string( unique_share * 100.0 ) +
-                "\%. You should "
-                "consider setting its role to unused_string or using it "
-                "for "
-                "comparison only (you can do the latter by setting a unit "
-                "that "
-                "contains 'comparison only')." );
+            warn_unique_share_too_high(
+                unique_share, _col.name(), _df_name, _warner );
         }
 
     // --------------------------------------------------------------------------
@@ -230,7 +202,7 @@ void DataModelChecker::check_df(
 
     if ( _df.nrows() == 0 )
         {
-            _warner->add( "Data frame '" + _df.name() + "' is empty." );
+            warn_is_empty( _df.name(), _warner );
             return;
         }
 
@@ -243,21 +215,8 @@ void DataModelChecker::check_df(
 
             if ( num_columns > 20 )
                 {
-                    _warner->add(
-                        might_take_long() + "Data frame '" + _df.name() +
-                        "' contains " + std::to_string( num_columns ) +
-                        " categorical and numerical columns. "
-                        "Please note that columns created by the preprocessors "
-                        "are also part of this count. The multirel "
-                        "algorithm does not scale very well to data frames "
-                        "with many columns. This pipeline might take a very "
-                        "long time to fit. You should consider removing some "
-                        "columns or preprocessors. You could also replace "
-                        "MultirelModel or "
-                        "MultirelTimeSeries with RelboostModel or "
-                        "RelboostTimeSeries respectively. The relboost "
-                        "algorithm has been designed to scale well to data "
-                        "frames with many columns." );
+                    warn_too_many_columns_multirel(
+                        num_columns, _df.name(), _warner );
                 }
         }
 
@@ -304,13 +263,8 @@ void DataModelChecker::check_float_column(
 
     if ( share_null > 0.9 )
         {
-            _warner->add(
-                column_should_be_unused() +
-                std::to_string( share_null * 100.0 ) +
-                "\% of all entries in column '" + _col.name() +
-                "' in data frame '" + _df_name +
-                "' are NULL values. You should "
-                "consider setting its role to unused_float." );
+            warn_too_many_nulls(
+                true, share_null, _col.name(), _df_name, _warner );
         }
 
     // --------------------------------------------------------------------------
@@ -322,13 +276,7 @@ void DataModelChecker::check_float_column(
 
     if ( all_equal )
         {
-            _warner->add(
-                column_should_be_unused() + "All non-NULL entries in column '" +
-                _col.name() + "' in data frame '" + _df_name +
-                "' are equal to each other. You should "
-                "consider setting its role to unused_float or using it for "
-                "comparison only (you can do the latter by setting a unit "
-                "that contains 'comparison only')." );
+            warn_all_equal( true, _col.name(), _df_name, _warner );
         }
 
     // --------------------------------------------------------------------------
@@ -790,13 +738,12 @@ void DataModelChecker::raise_join_warnings(
 
     if ( _num_matches == 0 )
         {
-            _warner->add(
-                data_model_can_be_improved() +
-                "There are no matches between '" + _join_key_used + "' in '" +
-                _population_df.name() + "' and '" + _other_join_key_used +
-                "' in '" + _peripheral_df.name() +
-                "'. You should consider removing this join from your data "
-                "model or re-examine your join keys." );
+            warn_no_matches(
+                _join_key_used,
+                _other_join_key_used,
+                _population_df,
+                _peripheral_df,
+                _warner );
 
             return;
         }
@@ -805,19 +752,12 @@ void DataModelChecker::raise_join_warnings(
 
     if ( _is_many_to_one )
         {
-            _warner->add(
-                data_model_can_be_improved() + "'" + _population_df.name() +
-                "' and '" + _peripheral_df.name() +
-                "' are in a many-to-one or one-to-one relationship when "
-                "joined "
-                "over '" +
-                _join_key_used + "' and '" + _other_join_key_used +
-                "'. Aggregating over such relationships makes little "
-                "sense. "
-                "You should consider removing this join from your data "
-                "model and directly joining '" +
-                _peripheral_df.name() + "' on '" + _population_df.name() +
-                "' using the data frame's built-in join method." );
+            warn_many_to_one(
+                _join_key_used,
+                _other_join_key_used,
+                _population_df,
+                _peripheral_df,
+                _warner );
         }
 
     // ------------------------------------------------------------------------
@@ -827,22 +767,13 @@ void DataModelChecker::raise_join_warnings(
 
     if ( avg_num_matches > 300.0 )
         {
-            _warner->add(
-                might_take_long() + "There are " +
-                std::to_string( _num_matches ) + " matches between '" +
-                _population_df.name() + "' and '" + _peripheral_df.name() +
-                "' when joined over '" + _join_key_used + "' and '" +
-                _other_join_key_used +
-                "'. This pipeline might take a very long time to fit. "
-                "You should consider imposing a narrower limit on the scope of "
-                "this join by reducing the memory (the period of time until "
-                "the feature learner 'forgets' historical data). "
-                "You can reduce the memory "
-                "by setting the appropriate parameter in the .join(...)-method "
-                "of the Placeholder. "
-                "Please note that a memory of 0.0 means that "
-                "the time series will not forget any past "
-                "data." );
+            warn_too_many_matches(
+                _num_matches,
+                _join_key_used,
+                _other_join_key_used,
+                _population_df,
+                _peripheral_df,
+                _warner );
         }
 
     // ------------------------------------------------------------------------
@@ -852,15 +783,13 @@ void DataModelChecker::raise_join_warnings(
 
     if ( not_found_ratio > 0.0 )
         {
-            _warner->add(
-                join_keys_not_found() + "When joining '" +
-                _population_df.name() + "' and '" + _peripheral_df.name() +
-                "' over '" + _join_key_used + "' and '" + _other_join_key_used +
-                "', there are no corresponding entries for " +
-                std::to_string( not_found_ratio * 100.0 ) +
-                "\% of entries in join key '" + _join_key_used + "' in '" +
-                _population_df.name() +
-                "'. You might want to double-check your join keys." );
+            warn_not_found(
+                not_found_ratio,
+                _join_key_used,
+                _other_join_key_used,
+                _population_df,
+                _peripheral_df,
+                _warner );
         }
 
     // ------------------------------------------------------------------------
@@ -878,12 +807,6 @@ void DataModelChecker::raise_self_join_warnings(
 
     if ( _num_matches == 0 )
         {
-            _warner->add(
-                data_model_can_be_improved() + "The self-join on '" +
-                _population_df.name() +
-                "' created by the time series feature learner has no matches. "
-                "You should examine your join keys." );
-
             return;
         }
 
@@ -891,13 +814,7 @@ void DataModelChecker::raise_self_join_warnings(
 
     if ( _is_many_to_one )
         {
-            _warner->add(
-                data_model_can_be_improved() + "The self-join on '" +
-                _population_df.name() +
-                "' created by the time series feature learner is a "
-                "one-to-one relationship. Using a time series feature learner "
-                "for such a data set makes little sense. You should consider "
-                "using a normal feature learner instead." );
+            warn_self_join_no_matches( _population_df, _warner );
         }
 
     // ------------------------------------------------------------------------
@@ -907,27 +824,259 @@ void DataModelChecker::raise_self_join_warnings(
 
     if ( avg_num_matches > 300.0 )
         {
-            _warner->add(
-                might_take_long() + "The self-join on '" +
-                _population_df.name() +
-                "' created by the time series feature learner "
-                "has a total of " +
-                std::to_string( _num_matches ) +
-                " matches.  This can take a long time to fit. "
-                "You should consider imposing a narrower limit on the scope of "
-                "this join by reducing the memory (the period of time until "
-                "the time series feature learner 'forgets' historical data). "
-                "You can "
-                "do so by setting the appropriate hyperparameter in the "
-                "feature learner. Please note that a memory of 0.0 means that "
-                "the time series feature learner will not forget any past "
-                "data." );
+            warn_self_join_too_many_matches(
+                _num_matches, _population_df, _warner );
         }
 
     // ------------------------------------------------------------------------
 }
 
 // ------------------------------------------------------------------------
+
+void DataModelChecker::warn_all_equal(
+    const bool _is_float,
+    const std::string& _colname,
+    const std::string& _df_name,
+    communication::Warner* _warner )
+{
+    const std::string role = _is_float
+                                 ? containers::DataFrame::ROLE_UNUSED_FLOAT
+                                 : containers::DataFrame::ROLE_UNUSED_STRING;
+
+    _warner->add(
+        column_should_be_unused() + "All non-NULL entries in column '" +
+        _colname + "' in data frame '" + _df_name +
+        "' are equal to each other. You should "
+        "consider setting its role to " +
+        role +
+        " or using it for "
+        "comparison only (you can do the latter by setting a unit "
+        "that contains 'comparison only')." );
+}
+
+// ------------------------------------------------------------------------
+
+void DataModelChecker::warn_is_empty(
+    const std::string& _df_name, communication::Warner* _warner )
+{
+    _warner->add( "Data frame '" + _df_name + "' is empty." );
+}
+
+// ------------------------------------------------------------------------
+
+void DataModelChecker::warn_many_to_one(
+    const std::string& _join_key_used,
+    const std::string& _other_join_key_used,
+    const containers::DataFrame& _population_df,
+    const containers::DataFrame& _peripheral_df,
+    communication::Warner* _warner )
+{
+    _warner->add(
+        data_model_can_be_improved() + "'" + _population_df.name() + "' and '" +
+        _peripheral_df.name() +
+        "' are in a many-to-one or one-to-one relationship when "
+        "joined "
+        "over '" +
+        _join_key_used + "' and '" + _other_join_key_used +
+        "'. Aggregating over such relationships makes little "
+        "sense. "
+        "You should consider removing this join from your data "
+        "model and directly joining '" +
+        _peripheral_df.name() + "' on '" + _population_df.name() +
+        "' using the data frame's built-in join method." );
+}
+
+// ------------------------------------------------------------------------
+
+void DataModelChecker::warn_no_matches(
+    const std::string& _join_key_used,
+    const std::string& _other_join_key_used,
+    const containers::DataFrame& _population_df,
+    const containers::DataFrame& _peripheral_df,
+    communication::Warner* _warner )
+{
+    _warner->add(
+        data_model_can_be_improved() + "There are no matches between '" +
+        _join_key_used + "' in '" + _population_df.name() + "' and '" +
+        _other_join_key_used + "' in '" + _peripheral_df.name() +
+        "'. You should consider removing this join from your data "
+        "model or re-examine your join keys." );
+}
+
+// ------------------------------------------------------------------------
+
+void DataModelChecker::warn_not_found(
+    const Float _not_found_ratio,
+    const std::string& _join_key_used,
+    const std::string& _other_join_key_used,
+    const containers::DataFrame& _population_df,
+    const containers::DataFrame& _peripheral_df,
+    communication::Warner* _warner )
+{
+    _warner->add(
+        join_keys_not_found() + "When joining '" + _population_df.name() +
+        "' and '" + _peripheral_df.name() + "' over '" + _join_key_used +
+        "' and '" + _other_join_key_used +
+        "', there are no corresponding entries for " +
+        std::to_string( _not_found_ratio * 100.0 ) +
+        "\% of entries in join key '" + _join_key_used + "' in '" +
+        _population_df.name() +
+        "'. You might want to double-check your join keys." );
+}
+
+// ------------------------------------------------------------------------
+
+void DataModelChecker::warn_self_join_no_matches(
+    const containers::DataFrame& _population_df,
+    communication::Warner* _warner )
+{
+    _warner->add(
+        data_model_can_be_improved() + "The self-join on '" +
+        _population_df.name() +
+        "' created by the time series feature learner has no matches. "
+        "You should examine your join keys." );
+}
+
+// ------------------------------------------------------------------------
+
+void DataModelChecker::warn_self_join_too_many_matches(
+    const size_t _num_matches,
+    const containers::DataFrame& _population_df,
+    communication::Warner* _warner )
+{
+    _warner->add(
+        might_take_long() + "The self-join on '" + _population_df.name() +
+        "' created by the time series feature learner "
+        "has a total of " +
+        std::to_string( _num_matches ) +
+        " matches.  This can take a long time to fit. "
+        "You should consider imposing a narrower limit on the scope of "
+        "this join by reducing the memory (the period of time until "
+        "the time series feature learner 'forgets' historical data). "
+        "You can "
+        "do so by setting the appropriate hyperparameter in the "
+        "feature learner. Please note that a memory of 0.0 means that "
+        "the time series feature learner will not forget any past "
+        "data." );
+}
+
+// ------------------------------------------------------------------------
+
+void DataModelChecker::warn_too_many_columns_multirel(
+    const size_t _num_columns,
+    const std::string& _df_name,
+    communication::Warner* _warner )
+{
+    _warner->add(
+        might_take_long() + "Data frame '" + _df_name + "' contains " +
+        std::to_string( _num_columns ) +
+        " categorical and numerical columns. "
+        "Please note that columns created by the preprocessors "
+        "are also part of this count. The multirel "
+        "algorithm does not scale very well to data frames "
+        "with many columns. This pipeline might take a very "
+        "long time to fit. You should consider removing some "
+        "columns or preprocessors. You could also replace "
+        "MultirelModel or "
+        "MultirelTimeSeries with RelboostModel or "
+        "RelboostTimeSeries respectively. The relboost "
+        "algorithm has been designed to scale well to data "
+        "frames with many columns." );
+}
+
+// ------------------------------------------------------------------------
+
+void DataModelChecker::warn_too_many_matches(
+    const size_t _num_matches,
+    const std::string& _join_key_used,
+    const std::string& _other_join_key_used,
+    const containers::DataFrame& _population_df,
+    const containers::DataFrame& _peripheral_df,
+    communication::Warner* _warner )
+{
+    _warner->add(
+        might_take_long() + "There are " + std::to_string( _num_matches ) +
+        " matches between '" + _population_df.name() + "' and '" +
+        _peripheral_df.name() + "' when joined over '" + _join_key_used +
+        "' and '" + _other_join_key_used +
+        "'. This pipeline might take a very long time to fit. "
+        "You should consider imposing a narrower limit on the scope of "
+        "this join by reducing the memory (the period of time until "
+        "the feature learner 'forgets' historical data). "
+        "You can reduce the memory "
+        "by setting the appropriate parameter in the .join(...)-method "
+        "of the Placeholder. "
+        "Please note that a memory of 0.0 means that "
+        "the time series will not forget any past "
+        "data." );
+}
+
+// ------------------------------------------------------------------------
+
+void DataModelChecker::warn_too_many_nulls(
+    const bool _is_float,
+    const Float _share_null,
+    const std::string& _colname,
+    const std::string& _df_name,
+    communication::Warner* _warner )
+{
+    const std::string role = _is_float
+                                 ? containers::DataFrame::ROLE_UNUSED_FLOAT
+                                 : containers::DataFrame::ROLE_UNUSED_STRING;
+
+    _warner->add(
+        column_should_be_unused() + std::to_string( _share_null * 100.0 ) +
+        "\% of all entries in column '" + _colname + "' in data frame '" +
+        _df_name +
+        "' are NULL values. You should "
+        "consider setting its role to " +
+        role + "." );
+}
+
+// ------------------------------------------------------------------------
+
+void DataModelChecker::warn_too_many_unique(
+    const Float _num_distinct,
+    const std::string& _colname,
+    const std::string& _df_name,
+    communication::Warner* _warner )
+{
+    _warner->add(
+        might_take_long() +
+        "The number of unique entries in column "
+        "'" +
+        _colname + "' in data frame '" + _df_name + "' is " +
+        std::to_string( static_cast<int>( _num_distinct ) ) +
+        ". This might take a long time to fit. You should "
+        "consider setting its role to unused_string or using it "
+        "for "
+        "comparison only (you can do the latter by setting a unit "
+        "that "
+        "contains 'comparison only')." );
+}
+
+// ------------------------------------------------------------------------
+
+void DataModelChecker::warn_unique_share_too_high(
+    const Float _unique_share,
+    const std::string& _colname,
+    const std::string& _df_name,
+    communication::Warner* _warner )
+{
+    _warner->add(
+        column_should_be_unused() +
+        "The ratio of unique entries to non-NULL entries in column "
+        "'" +
+        _colname + "' in data frame '" + _df_name + "' is " +
+        std::to_string( _unique_share * 100.0 ) +
+        "\%. You should "
+        "consider setting its role to unused_string or using it "
+        "for "
+        "comparison only (you can do the latter by setting a unit "
+        "that "
+        "contains 'comparison only')." );
+}
+
 // ----------------------------------------------------------------------------
 }  // namespace preprocessors
 }  // namespace engine
