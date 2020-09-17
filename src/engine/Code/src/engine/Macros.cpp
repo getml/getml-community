@@ -589,10 +589,10 @@ std::string Macros::replace( const std::string& _query )
         new_query, email_domain_begin(), "email_domain( \"" );
 
     new_query = utils::StringReplacer::replace_all(
-        new_query, email_domain_end() + "\"", " )" );
+        new_query, email_domain_end() + "\"", "\" )" );
 
     new_query = utils::StringReplacer::replace_all(
-        new_query, email_domain_end(), " )" );
+        new_query, email_domain_end(), "\" )" );
 
     new_query = utils::StringReplacer::replace_all(
         new_query, "t1.\"" + imputation_begin(), "COALESCE( t1.\"" );
