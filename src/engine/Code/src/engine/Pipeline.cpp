@@ -2690,7 +2690,7 @@ Pipeline::transform(
 
     // -------------------------------------------------------------------------
 
-    if ( predictors_.size() == 0 )
+    if ( num_predictors_per_set() == 0 )
         {
             throw std::invalid_argument(
                 "You cannot call .predict(...) or .score(...) on a pipeline "
@@ -2711,21 +2711,13 @@ Pipeline::transform(
 
     //-------------------------------------------------------------------------
 
-    if ( predict && num_predictors_per_set() > 0 )
-        {
-            const auto transformed_categorical_features =
-                predictor_impl().transform_encodings( categorical_features );
+    const auto transformed_categorical_features =
+        predictor_impl().transform_encodings( categorical_features );
 
-            const auto predictions = generate_predictions(
-                transformed_categorical_features, numerical_features );
+    const auto predictions = generate_predictions(
+        transformed_categorical_features, numerical_features );
 
-            return std::make_pair(
-                predictions, containers::CategoricalFeatures() );
-        }
-    else
-        {
-            return std::make_pair( numerical_features, categorical_features );
-        }
+    return std::make_pair( predictions, containers::CategoricalFeatures() );
 
     // ------------------------------------------------------------------------
 }
