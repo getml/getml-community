@@ -205,9 +205,9 @@ std::vector<std::string> Macros::modify_colnames(
 
     for ( auto& name : names )
         {
-            name = replace( name );
-
             name = std::get<1>( parse_table_colname( "", name ) );
+
+            name = replace( name );
         }
 
     return names;
@@ -220,11 +220,12 @@ helpers::ImportanceMaker Macros::modify_column_importances(
 {
     auto importance_maker = helpers::ImportanceMaker( _importance_maker );
 
-    std::string to_table;
-
     for ( const auto& [from_desc, _] : _importance_maker.importances() )
         {
-            auto to_colname = remove_email( from_desc.name_ );
+            auto [to_table, to_colname] =
+                parse_table_colname( from_desc.table_, from_desc.name_ );
+
+            to_colname = remove_email( to_colname );
 
             to_colname = remove_imputation( to_colname );
 
@@ -235,9 +236,6 @@ helpers::ImportanceMaker Macros::modify_column_importances(
             to_colname = remove_time_diff( to_colname );
 
             to_colname = replace( to_colname );
-
-            std::tie( to_table, to_colname ) =
-                parse_table_colname( from_desc.table_, to_colname );
 
             if ( from_desc.table_ != to_table || from_desc.name_ != to_colname )
                 {
@@ -353,7 +351,21 @@ std::pair<std::string, std::string> Macros::parse_table_colname(
 
     const auto table = get_param( _colname, Macros::table() + "=" );
 
-    const auto colname = get_param( _colname, Macros::column() + "=" );
+    const auto column = get_param( _colname, Macros::column() + "=" );
+
+    auto colname = _colname;
+
+    const auto begin = colname.find( Macros::table() );
+
+    assert_true( colname.find( Macros::end() ) != std::string::npos );
+
+    const auto end = colname.find( Macros::end() ) + Macros::end().length();
+
+    assert_true( end > begin );
+
+    const auto len = end - begin;
+
+    colname.replace( begin, len, column );
 
     return std::make_pair( table, colname );
 }
@@ -383,7 +395,7 @@ std::string Macros::remove_colnames( const std::string& _sql )
 
             const auto name = sql.substr( begin, len );
 
-            const auto [_, colname] = parse_table_colname( "", name );
+            const auto colname = std::get<1>( parse_table_colname( "", name ) );
 
             sql.replace( begin, len, colname );
         }
