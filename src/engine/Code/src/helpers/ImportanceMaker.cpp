@@ -118,7 +118,10 @@ void ImportanceMaker::transfer(
 {
     auto it = importances_.find( _from );
 
-    assert_true( it != importances_.end() );
+    if ( it == importances_.end() )
+        {
+            return;
+        }
 
     add_to_importances( _to, it->second );
 
