@@ -143,6 +143,12 @@ class PipelineManager
         const std::map<std::string, containers::DataFrame>& _data_frames,
         containers::DataFrame* _df );
 
+    /// Makes sure that the user is allowed to transform this pipeline.
+    void check_user_privileges(
+        const pipelines::Pipeline& _pipeline,
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd ) const;
+
     /// Retrieves an Poco::JSON::Array::Ptr from a scores object.
     Poco::JSON::Array::Ptr get_array(
         const Poco::JSON::Object& _scores,
@@ -180,6 +186,17 @@ class PipelineManager
         pipelines::Pipeline* _pipeline,
         Poco::Net::StreamSocket* _socket );
 
+    /// Stores the newly created data frame.
+    void store_df(
+        const pipelines::Pipeline& _pipeline,
+        const Poco::JSON::Object& _cmd,
+        const std::shared_ptr<containers::Encoding>& _local_categories,
+        const std::shared_ptr<containers::Encoding>& _local_join_keys_encoding,
+        const std::shared_ptr<std::map<std::string, containers::DataFrame>>&
+            _local_data_frames,
+        containers::DataFrame* _df,
+        multithreading::WeakWriteLock* _weak_write_lock );
+
     /// Writes a set of features to the data base.
     void to_db(
         const pipelines::Pipeline& _pipeline,
@@ -189,8 +206,7 @@ class PipelineManager
         const std::shared_ptr<containers::Encoding>& _categories,
         const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
         const std::shared_ptr<std::map<std::string, containers::DataFrame>>&
-            _local_data_frames,
-        Poco::Net::StreamSocket* _socket );
+            _local_data_frames );
 
     /// Writes a set of features to a DataFrame.
     containers::DataFrame to_df(
@@ -201,8 +217,7 @@ class PipelineManager
         const std::shared_ptr<containers::Encoding>& _categories,
         const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
         const std::shared_ptr<std::map<std::string, containers::DataFrame>>&
-            _local_data_frames,
-        Poco::Net::StreamSocket* _socket );
+            _local_data_frames );
 
     // ------------------------------------------------------------------------
 

@@ -60,6 +60,36 @@ void PipelineManager::check(
 
 // ------------------------------------------------------------------------
 
+void PipelineManager::check_user_privileges(
+    const pipelines::Pipeline& _pipeline,
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd ) const
+{
+    if ( _pipeline.premium_only() )
+        {
+            license_checker().check_enterprise();
+        }
+
+    if ( JSON::get_value<bool>( _cmd, "http_request_" ) )
+        {
+            if ( !_pipeline.allow_http() )
+                {
+                    throw std::invalid_argument(
+                        "Pipeline '" + _name +
+                        "' does not allow HTTP requests. You can activate "
+                        "this "
+                        "via the API or the getML monitor!" );
+                }
+
+            if ( !_pipeline.premium_only() )
+                {
+                    license_checker().check_enterprise();
+                }
+        }
+}
+
+// ------------------------------------------------------------------------
+
 void PipelineManager::column_importances(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,
@@ -557,7 +587,6 @@ void PipelineManager::score(
     Poco::Net::StreamSocket* _socket )
 {
     // -------------------------------------------------------
-    // Do the actual scoring.
 
     auto scores = _pipeline->score( _cmd, _data_frames, _yhat );
 
@@ -572,6 +601,40 @@ void PipelineManager::score(
     communication::Sender::send_string( JSON::stringify( scores ), _socket );
 
     // -------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
+void PipelineManager::store_df(
+    const pipelines::Pipeline& _pipeline,
+    const Poco::JSON::Object& _cmd,
+    const std::shared_ptr<containers::Encoding>& _local_categories,
+    const std::shared_ptr<containers::Encoding>& _local_join_keys_encoding,
+    const std::shared_ptr<std::map<std::string, containers::DataFrame>>&
+        _local_data_frames,
+    containers::DataFrame* _df,
+    multithreading::WeakWriteLock* _weak_write_lock )
+{
+    _weak_write_lock->upgrade();
+
+    categories_->append( *_local_categories );
+
+    join_keys_encoding_->append( *_local_join_keys_encoding );
+
+    _df->set_categories( categories_ );
+
+    _df->set_join_keys_encoding( join_keys_encoding_ );
+
+    const auto predict = JSON::get_value<bool>( _cmd, "predict_" );
+
+    if ( !predict )
+        {
+            add_to_tracker( _pipeline, _cmd, *_local_data_frames, _df );
+        }
+
+    data_frames()[_df->name()] = *_df;
+
+    monitor_->send_tcp( "postdataframe", _df->to_monitor() );
 }
 
 // ------------------------------------------------------------------------
@@ -608,8 +671,7 @@ void PipelineManager::to_db(
     const std::shared_ptr<containers::Encoding>& _categories,
     const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
     const std::shared_ptr<std::map<std::string, containers::DataFrame>>&
-        _local_data_frames,
-    Poco::Net::StreamSocket* _socket )
+        _local_data_frames )
 {
     // -------------------------------------------------------
 
@@ -620,8 +682,7 @@ void PipelineManager::to_db(
         _categorical_features,
         _categories,
         _join_keys_encoding,
-        _local_data_frames,
-        _socket );
+        _local_data_frames );
 
     // -------------------------------------------------------
     // Write data frame to data base.
@@ -667,8 +728,7 @@ containers::DataFrame PipelineManager::to_df(
     const std::shared_ptr<containers::Encoding>& _categories,
     const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
     const std::shared_ptr<std::map<std::string, containers::DataFrame>>&
-        _local_data_frames,
-    Poco::Net::StreamSocket* _socket )
+        _local_data_frames )
 {
     // -------------------------------------------------------
 
@@ -783,36 +843,14 @@ void PipelineManager::transform(
     Poco::Net::StreamSocket* _socket )
 {
     // -------------------------------------------------------
-    // Find the model.
 
     auto pipeline = get_pipeline( _name );
 
-    if ( pipeline.premium_only() )
-        {
-            license_checker().check_enterprise();
-        }
-
-    if ( JSON::get_value<bool>( _cmd, "http_request_" ) )
-        {
-            if ( !pipeline.allow_http() )
-                {
-                    throw std::invalid_argument(
-                        "Pipeline '" + _name +
-                        "' does not allow HTTP requests. You can activate "
-                        "this "
-                        "via the API or the getML monitor!" );
-                }
-
-            if ( !pipeline.premium_only() )
-                {
-                    license_checker().check_enterprise();
-                }
-        }
+    check_user_privileges( pipeline, _name, _cmd );
 
     communication::Sender::send_string( "Found!", _socket );
 
     // -------------------------------------------------------
-    // Receive data
 
     multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
 
@@ -836,7 +874,6 @@ void PipelineManager::transform(
         _socket );
 
     // -------------------------------------------------------
-    // Do the actual transformation
 
     // IMPORTANT: Use categories_, not local_categories, otherwise
     // .vector() might not work.
@@ -849,7 +886,6 @@ void PipelineManager::transform(
         _socket );
 
     // -------------------------------------------------------
-    // Send data to client or write to data base
 
     const auto table_name = JSON::get_value<std::string>( cmd, "table_name_" );
 
@@ -857,11 +893,18 @@ void PipelineManager::transform(
 
     const auto score = JSON::get_value<bool>( cmd, "score_" );
 
+    // -------------------------------------------------------
+
     if ( table_name == "" && df_name == "" && !score )
         {
+            communication::Sender::send_string( "Success!", _socket );
             communication::Sender::send_features( numerical_features, _socket );
+            return;
         }
-    else if ( table_name != "" )
+
+    // -------------------------------------------------------
+
+    if ( table_name != "" )
         {
             license_checker().check_enterprise();
 
@@ -872,8 +915,7 @@ void PipelineManager::transform(
                 categorical_features,
                 local_categories,
                 local_join_keys_encoding,
-                local_data_frames,
-                _socket );
+                local_data_frames );
         }
 
     // -------------------------------------------------------
@@ -889,29 +931,16 @@ void PipelineManager::transform(
                 categorical_features,
                 local_categories,
                 local_join_keys_encoding,
+                local_data_frames );
+
+            store_df(
+                pipeline,
+                cmd,
+                local_categories,
+                local_join_keys_encoding,
                 local_data_frames,
-                _socket );
-
-            weak_write_lock.upgrade();
-
-            categories_->append( *local_categories );
-
-            join_keys_encoding_->append( *local_join_keys_encoding );
-
-            df.set_categories( categories_ );
-
-            df.set_join_keys_encoding( join_keys_encoding_ );
-
-            const auto predict = JSON::get_value<bool>( cmd, "predict_" );
-
-            if ( !predict )
-                {
-                    add_to_tracker( pipeline, cmd, *local_data_frames, &df );
-                }
-
-            data_frames()[df_name] = df;
-
-            monitor_->send_tcp( "postdataframe", df.to_monitor() );
+                &df,
+                &weak_write_lock );
         }
 
     // -------------------------------------------------------
@@ -925,6 +954,7 @@ void PipelineManager::transform(
     if ( score )
         {
             assert_true( local_data_frames );
+
             this->score(
                 _name,
                 cmd,
