@@ -14,11 +14,11 @@ class HyperoptManager
         const std::shared_ptr<std::map<std::string, hyperparam::Hyperopt>>&
             _hyperopts,
         const std::shared_ptr<const communication::Monitor>& _monitor,
-        const std::shared_ptr<std::mutex>& _project_mtx,
+        const std::shared_ptr<multithreading::ReadWriteLock>& _project_lock,
         const std::shared_ptr<multithreading::ReadWriteLock>& _read_write_lock )
         : hyperopts_( _hyperopts ),
           monitor_( _monitor ),
-          project_mtx_( _project_mtx ),
+          project_lock_( _project_lock ),
           read_write_lock_( _read_write_lock )
     {
     }
@@ -71,10 +71,10 @@ class HyperoptManager
     }
 
     /// Trivial (private) accessor
-    std::mutex& project_mtx()
+    multithreading::ReadWriteLock& project_lock()
     {
-        assert_true( project_mtx_ );
-        return *project_mtx_;
+        assert_true( project_lock_ );
+        return *project_lock_;
     }
 
    private:
@@ -86,7 +86,7 @@ class HyperoptManager
     const std::shared_ptr<const communication::Monitor> monitor_;
 
     /// It is sometimes necessary to prevent us from changing the project.
-    const std::shared_ptr<std::mutex> project_mtx_;
+    const std::shared_ptr<multithreading::ReadWriteLock> project_lock_;
 
     /// For coordinating the read and write process of the data
     const std::shared_ptr<multithreading::ReadWriteLock> read_write_lock_;

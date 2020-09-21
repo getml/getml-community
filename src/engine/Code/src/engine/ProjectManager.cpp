@@ -206,6 +206,8 @@ void ProjectManager::clear()
 
     // --------------------------------
 
+    data_frame_tracker().clear();
+
     fe_tracker().clear();
 
     pred_tracker().clear();
@@ -252,7 +254,7 @@ void ProjectManager::delete_project(
 {
     // Some methods, particularly the hyperparameter optimization,
     // require us to keep the project fixed while they run.
-    std::lock_guard<std::mutex> project_guard( project_mtx() );
+    multithreading::WriteLock project_guard( project_lock_ );
 
     multithreading::WriteLock write_lock( read_write_lock_ );
 
@@ -694,7 +696,7 @@ void ProjectManager::set_project(
 {
     // Some methods, particularly the hyperparameter optimization,
     // require us to keep the project fixed while they run.
-    std::lock_guard<std::mutex> project_guard( project_mtx() );
+    multithreading::WriteLock project_guard( project_lock_ );
 
     auto absolute_path =
         handlers::FileHandler::create_project_directory( _name, options_ );

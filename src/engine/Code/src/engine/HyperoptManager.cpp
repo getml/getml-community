@@ -16,7 +16,7 @@ void HyperoptManager::launch(
     // change or delete the project while the hyperparameter
     // optimization is running.
 
-    std::lock_guard<std::mutex> project_guard( project_mtx() );
+    multithreading::ReadLock project_guard( project_lock_ );
 
     // -------------------------------------------------------
 
@@ -131,7 +131,7 @@ void HyperoptManager::tune(
     // change or delete the project while the hyperparameter
     // optimization is running.
 
-    // std::lock_guard<std::mutex> project_guard( project_mtx() );
+    multithreading::ReadLock project_guard( project_lock_ );
 
     // -------------------------------------------------------
 

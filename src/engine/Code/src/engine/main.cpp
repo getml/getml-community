@@ -98,7 +98,7 @@ int main( int argc, char* argv[] )
 
     // -------------------------------------------
 
-    const auto project_mtx = std::make_shared<std::mutex>();
+    const auto project_lock = std::make_shared<multithreading::ReadWriteLock>();
 
     const auto read_write_lock =
         std::make_shared<multithreading::ReadWriteLock>();
@@ -119,7 +119,7 @@ int main( int argc, char* argv[] )
 
     const auto hyperopt_manager =
         std::make_shared<engine::handlers::HyperoptManager>(
-            hyperopts, monitor, project_mtx, read_write_lock );
+            hyperopts, monitor, project_lock, read_write_lock );
 
     const auto pipeline_manager =
         std::make_shared<engine::handlers::PipelineManager>(
@@ -134,7 +134,6 @@ int main( int argc, char* argv[] )
             monitor,
             pipelines,
             pred_tracker,
-            project_mtx,
             read_write_lock );
 
     const auto project_manager =
@@ -152,7 +151,7 @@ int main( int argc, char* argv[] )
             options,
             pipelines,
             pred_tracker,
-            project_mtx,
+            project_lock,
             read_write_lock );
 
     // -------------------------------------------

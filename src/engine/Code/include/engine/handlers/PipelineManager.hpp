@@ -32,7 +32,6 @@ class PipelineManager
         const std::shared_ptr<const communication::Monitor>& _monitor,
         const std::shared_ptr<PipelineMapType>& _pipelines,
         const std::shared_ptr<dependency::PredTracker>& _pred_tracker,
-        const std::shared_ptr<std::mutex>& _project_mtx,
         const std::shared_ptr<multithreading::ReadWriteLock>& _read_write_lock )
         : categories_( _categories ),
           database_manager_( _database_manager ),
@@ -45,7 +44,6 @@ class PipelineManager
           monitor_( _monitor ),
           pipelines_( _pipelines ),
           pred_tracker_( _pred_tracker ),
-          project_mtx_( _project_mtx ),
           read_write_lock_( _read_write_lock )
     {
     }
@@ -294,13 +292,6 @@ class PipelineManager
         return *pipelines_;
     }
 
-    /// Trivial (private) accessor
-    std::mutex& project_mtx()
-    {
-        assert_true( project_mtx_ );
-        return *project_mtx_;
-    }
-
     /// Sets a pipeline.
     void set_pipeline(
         const std::string& _name, const pipelines::Pipeline& _pipeline )
@@ -357,9 +348,6 @@ class PipelineManager
 
     /// Keeps track of all predictors.
     const std::shared_ptr<dependency::PredTracker> pred_tracker_;
-
-    /// It is sometimes necessary to prevent us from changing the project.
-    const std::shared_ptr<std::mutex> project_mtx_;
 
     /// For coordinating the read and write process of the data
     const std::shared_ptr<multithreading::ReadWriteLock> read_write_lock_;
