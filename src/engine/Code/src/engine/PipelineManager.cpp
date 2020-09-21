@@ -60,7 +60,7 @@ void PipelineManager::add_join_keys_to_df(
 {
     for ( size_t i = 0; i < _population_table.num_join_keys(); ++i )
         {
-            const auto col = _population_table.join_key( i ).clone();
+            auto col = _population_table.join_key( i ).clone();
 
             if ( col.name().find(
                      containers::Macros::multiple_join_key_begin() ) !=
@@ -74,6 +74,9 @@ void PipelineManager::add_join_keys_to_df(
                 {
                     continue;
                 }
+
+            col.set_name(
+                containers::Macros::modify_colnames( { col.name() } ).at( 0 ) );
 
             _df->add_int_column( col, containers::DataFrame::ROLE_JOIN_KEY );
         }
@@ -108,7 +111,7 @@ void PipelineManager::add_time_stamps_to_df(
 {
     for ( size_t i = 0; i < _population_table.num_time_stamps(); ++i )
         {
-            const auto col = _population_table.time_stamp( i ).clone();
+            auto col = _population_table.time_stamp( i ).clone();
 
             if ( col.name().find( containers::Macros::lower_ts() ) !=
                  std::string::npos )
@@ -139,6 +142,9 @@ void PipelineManager::add_time_stamps_to_df(
                 {
                     continue;
                 }
+
+            col.set_name(
+                containers::Macros::modify_colnames( { col.name() } ).at( 0 ) );
 
             _df->add_float_column(
                 col, containers::DataFrame::ROLE_TIME_STAMP );
