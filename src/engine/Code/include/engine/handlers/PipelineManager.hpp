@@ -134,6 +134,29 @@ class PipelineManager
     // ------------------------------------------------------------------------
 
    private:
+    /// Adds a pipeline's features to the data frame.
+    void add_features_to_df(
+        const pipelines::Pipeline& _pipeline,
+        const containers::Features& _numerical_features,
+        const containers::CategoricalFeatures& _categorical_features,
+        containers::DataFrame* _df ) const;
+
+    /// Adds the join keys from the population table to the data frame.
+    void add_join_keys_to_df(
+        const containers::DataFrame& _population_table,
+        containers::DataFrame* _df ) const;
+
+    /// Adds a pipeline's predictions to the data frame.
+    void add_predictions_to_df(
+        const pipelines::Pipeline& _pipeline,
+        const containers::Features& _numerical_features,
+        containers::DataFrame* _df ) const;
+
+    /// Adds the join keys from the population table to the data frame.
+    void add_time_stamps_to_df(
+        const containers::DataFrame& _population_table,
+        containers::DataFrame* _df ) const;
+
     /// Adds a data frame to the data frame tracker.
     void add_to_tracker(
         const pipelines::Pipeline& _pipeline,

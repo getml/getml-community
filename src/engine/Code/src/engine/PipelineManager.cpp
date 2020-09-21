@@ -6,6 +6,147 @@ namespace handlers
 {
 // ------------------------------------------------------------------------
 
+void PipelineManager::add_features_to_df(
+    const pipelines::Pipeline& _pipeline,
+    const containers::Features& _numerical_features,
+    const containers::CategoricalFeatures& _categorical_features,
+    containers::DataFrame* _df ) const
+{
+    const auto [autofeatures, numerical, categorical] =
+        _pipeline.feature_names();
+
+    assert_true(
+        autofeatures.size() + numerical.size() == _numerical_features.size() );
+
+    size_t j = 0;
+
+    for ( size_t i = 0; i < autofeatures.size(); ++i )
+        {
+            auto col = containers::Column( _numerical_features.at( j++ ) );
+            col.set_name( autofeatures.at( i ) );
+            _df->add_float_column( col, containers::DataFrame::ROLE_NUMERICAL );
+        }
+
+    size_t num_manual = 0;
+
+    for ( size_t i = 0; i < numerical.size(); ++i )
+        {
+            auto col =
+                containers::Column( _numerical_features.at( j++ ) ).clone();
+            col.set_name(
+                "manual_feature_" + std::to_string( ++num_manual ) + "__" +
+                numerical.at( i ) );
+            _df->add_float_column( col, containers::DataFrame::ROLE_NUMERICAL );
+        }
+
+    assert_true( categorical.size() == _categorical_features.size() );
+
+    for ( size_t i = 0; i < categorical.size(); ++i )
+        {
+            auto col =
+                containers::Column( _categorical_features.at( i ) ).clone();
+            col.set_name(
+                "manual_feature_" + std::to_string( ++num_manual ) + "__" +
+                categorical.at( i ) );
+            _df->add_int_column( col, containers::DataFrame::ROLE_CATEGORICAL );
+        }
+}
+
+// ------------------------------------------------------------------------
+
+void PipelineManager::add_join_keys_to_df(
+    const containers::DataFrame& _population_table,
+    containers::DataFrame* _df ) const
+{
+    for ( size_t i = 0; i < _population_table.num_join_keys(); ++i )
+        {
+            const auto col = _population_table.join_key( i ).clone();
+
+            if ( col.name().find(
+                     containers::Macros::multiple_join_key_begin() ) !=
+                 std::string::npos )
+                {
+                    continue;
+                }
+
+            if ( col.name().find( containers::Macros::no_join_key() ) !=
+                 std::string::npos )
+                {
+                    continue;
+                }
+
+            _df->add_int_column( col, containers::DataFrame::ROLE_JOIN_KEY );
+        }
+}
+
+// ------------------------------------------------------------------------
+
+void PipelineManager::add_predictions_to_df(
+    const pipelines::Pipeline& _pipeline,
+    const containers::Features& _numerical_features,
+    containers::DataFrame* _df ) const
+{
+    const auto targets = _pipeline.targets();
+
+    assert_true( targets.size() == _numerical_features.size() );
+
+    for ( size_t i = 0; i < targets.size(); ++i )
+        {
+            auto col = containers::Column( _numerical_features.at( i ) );
+            col.set_name(
+                "prediction_" + std::to_string( i + 1 ) + "__" +
+                targets.at( i ) );
+            _df->add_float_column( col, containers::DataFrame::ROLE_NUMERICAL );
+        }
+}
+
+// ------------------------------------------------------------------------
+
+void PipelineManager::add_time_stamps_to_df(
+    const containers::DataFrame& _population_table,
+    containers::DataFrame* _df ) const
+{
+    for ( size_t i = 0; i < _population_table.num_time_stamps(); ++i )
+        {
+            const auto col = _population_table.time_stamp( i ).clone();
+
+            if ( col.name().find( containers::Macros::lower_ts() ) !=
+                 std::string::npos )
+                {
+                    continue;
+                }
+
+            if ( col.name().find( containers::Macros::other_time_stamp() ) !=
+                 std::string::npos )
+                {
+                    continue;
+                }
+
+            if ( col.name().find( containers::Macros::rowid() ) !=
+                 std::string::npos )
+                {
+                    continue;
+                }
+
+            if ( col.name().find( containers::Macros::upper_time_stamp() ) !=
+                 std::string::npos )
+                {
+                    continue;
+                }
+
+            if ( col.name().find( containers::Macros::upper_ts() ) !=
+                 std::string::npos )
+                {
+                    continue;
+                }
+
+            _df->add_float_column(
+                col, containers::DataFrame::ROLE_TIME_STAMP );
+        }
+}
+
+// ------------------------------------------------------------------------
+
 void PipelineManager::add_to_tracker(
     const pipelines::Pipeline& _pipeline,
     const Poco::JSON::Object& _cmd,
@@ -687,8 +828,6 @@ void PipelineManager::to_db(
     // -------------------------------------------------------
     // Write data frame to data base.
 
-    const auto conn_id = JSON::get_value<std::string>( _cmd, "conn_id_" );
-
     const auto table_name = JSON::get_value<std::string>( _cmd, "table_name_" );
 
     // We are using the bell character (\a) as the quotechar. It is least likely
@@ -696,7 +835,7 @@ void PipelineManager::to_db(
     auto reader = containers::DataFrameReader(
         df, _categories, _join_keys_encoding, '\a', '|' );
 
-    const auto conn = connector( conn_id );
+    const auto conn = connector( "default" );
 
     assert_true( conn );
 
@@ -746,66 +885,19 @@ containers::DataFrame PipelineManager::to_df(
 
     if ( !_cmd.has( "predict_" ) || !JSON::get_value<bool>( _cmd, "predict_" ) )
         {
-            const auto [autofeatures, numerical, categorical] =
-                _pipeline.feature_names();
-
-            assert_true(
-                autofeatures.size() + numerical.size() ==
-                _numerical_features.size() );
-
-            size_t j = 0;
-
-            for ( size_t i = 0; i < autofeatures.size(); ++i )
-                {
-                    auto col =
-                        containers::Column( _numerical_features.at( j++ ) );
-                    col.set_name( autofeatures.at( i ) );
-                    df.add_float_column(
-                        col, containers::DataFrame::ROLE_NUMERICAL );
-                }
-
-            size_t num_manual = 0;
-
-            for ( size_t i = 0; i < numerical.size(); ++i )
-                {
-                    auto col =
-                        containers::Column( _numerical_features.at( j++ ) )
-                            .clone();
-                    col.set_name(
-                        "manual_feature_" + std::to_string( ++num_manual ) +
-                        "__" + numerical.at( i ) );
-                    df.add_float_column(
-                        col, containers::DataFrame::ROLE_NUMERICAL );
-                }
-
-            assert_true( categorical.size() == _categorical_features.size() );
-
-            for ( size_t i = 0; i < categorical.size(); ++i )
-                {
-                    auto col =
-                        containers::Column( _categorical_features.at( i ) )
-                            .clone();
-                    col.set_name(
-                        "manual_feature_" + std::to_string( ++num_manual ) +
-                        "__" + categorical.at( i ) );
-                    df.add_int_column(
-                        col, containers::DataFrame::ROLE_CATEGORICAL );
-                }
+            add_features_to_df(
+                _pipeline, _numerical_features, _categorical_features, &df );
+        }
+    else
+        {
+            add_predictions_to_df( _pipeline, _numerical_features, &df );
         }
 
     // -------------------------------------------------------
 
-    for ( size_t i = 0; i < population_table.num_join_keys(); ++i )
-        {
-            const auto col = population_table.join_key( i ).clone();
-            df.add_int_column( col, containers::DataFrame::ROLE_JOIN_KEY );
-        }
+    add_join_keys_to_df( population_table, &df );
 
-    for ( size_t i = 0; i < population_table.num_time_stamps(); ++i )
-        {
-            const auto col = population_table.time_stamp( i ).clone();
-            df.add_float_column( col, containers::DataFrame::ROLE_TIME_STAMP );
-        }
+    add_time_stamps_to_df( population_table, &df );
 
     for ( size_t i = 0; i < population_table.num_targets(); ++i )
         {
