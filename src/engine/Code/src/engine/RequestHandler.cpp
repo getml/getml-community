@@ -280,6 +280,10 @@ void RequestHandler::run()
                 {
                     project_manager().save_hyperopt( name, &socket() );
                 }
+            else if ( type == "Hyperopt.tune" )
+                {
+                    hyperopt_manager().tune( name, cmd, &socket() );
+                }
             else if ( type == "list_data_frames" )
                 {
                     project_manager().list_data_frames( &socket() );
@@ -300,11 +304,10 @@ void RequestHandler::run()
                 {
                     return;
                 }
-            else if ( type == "monitor_port" )
+            else if ( type == "monitor_url" )
                 {
                     communication::Sender::send_string(
-                        std::to_string( options_.monitor().http_port_ ),
-                        &socket() );
+                        options_.monitor().url(), &socket() );
                 }
             else if ( type == "Pipeline" )
                 {
@@ -313,6 +316,11 @@ void RequestHandler::run()
             else if ( type == "Pipeline.check" )
                 {
                     pipeline_manager().check( name, cmd, &socket() );
+                }
+            else if ( type == "Pipeline.column_importances" )
+                {
+                    pipeline_manager().column_importances(
+                        name, cmd, &socket() );
                 }
             else if ( type == "Pipeline.copy" )
                 {

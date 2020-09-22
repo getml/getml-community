@@ -17,6 +17,9 @@ class DecisionTreeNode
 
     // --------------------------------------
 
+    /// Calculates the column importances for this node.
+    void column_importances( utils::ImportanceMaker *_importance_maker ) const;
+
     /// Fits the decision tree node
     void fit(
         const containers::DataFrameView &_population,
@@ -45,6 +48,7 @@ class DecisionTreeNode
 
     /// Returns the SQL condition associated with this node
     void to_sql(
+        const std::vector<strings::String> &_categories,
         const std::string &_feature_num,
         std::vector<std::string> &_conditions,
         std::string _sql ) const;
@@ -736,6 +740,14 @@ class DecisionTreeNode
 
     /// Depth at this node
     Int depth_;
+
+    /// The improvement of the optimization criterion that was accomplished by
+    /// this node. If the node has no split, the improvement should be NAN.
+    Float improvement_;
+
+    /// The initial value of the optimization criterion after all matches have
+    /// been activated. Should be NAN for all nodes but the root node.
+    Float initial_value_;
 
     /// Denotes whether this is an activated
     /// or a deactivated node. If this is an activated node,

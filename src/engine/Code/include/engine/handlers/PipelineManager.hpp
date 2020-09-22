@@ -22,19 +22,21 @@ class PipelineManager
         const std::shared_ptr<DatabaseManager>& _database_manager,
         const std::shared_ptr<std::map<std::string, containers::DataFrame>>
             _data_frames,
+        const std::shared_ptr<engine::dependency::DataFrameTracker>&
+            _data_frame_tracker,
         const std::shared_ptr<dependency::FETracker>& _fe_tracker,
         const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
         const std::shared_ptr<engine::licensing::LicenseChecker>&
             _license_checker,
-        const std::shared_ptr<const monitoring::Logger>& _logger,
-        const std::shared_ptr<const monitoring::Monitor>& _monitor,
+        const std::shared_ptr<const communication::Logger>& _logger,
+        const std::shared_ptr<const communication::Monitor>& _monitor,
         const std::shared_ptr<PipelineMapType>& _pipelines,
         const std::shared_ptr<dependency::PredTracker>& _pred_tracker,
-        const std::shared_ptr<std::mutex>& _project_mtx,
         const std::shared_ptr<multithreading::ReadWriteLock>& _read_write_lock )
         : categories_( _categories ),
           database_manager_( _database_manager ),
           data_frames_( _data_frames ),
+          data_frame_tracker_( _data_frame_tracker ),
           fe_tracker_( _fe_tracker ),
           join_keys_encoding_( _join_keys_encoding ),
           license_checker_( _license_checker ),
@@ -42,7 +44,6 @@ class PipelineManager
           monitor_( _monitor ),
           pipelines_( _pipelines ),
           pred_tracker_( _pred_tracker ),
-          project_mtx_( _project_mtx ),
           read_write_lock_( _read_write_lock )
     {
     }
@@ -54,6 +55,12 @@ class PipelineManager
    public:
     /// Checks the validity of the data model.
     void check(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
+    /// Returns the column importances of a pipeline.
+    void column_importances(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
@@ -127,11 +134,50 @@ class PipelineManager
     // ------------------------------------------------------------------------
 
    private:
+    /// Adds a pipeline's features to the data frame.
+    void add_features_to_df(
+        const pipelines::Pipeline& _pipeline,
+        const containers::Features& _numerical_features,
+        const containers::CategoricalFeatures& _categorical_features,
+        containers::DataFrame* _df ) const;
+
+    /// Adds the join keys from the population table to the data frame.
+    void add_join_keys_to_df(
+        const containers::DataFrame& _population_table,
+        containers::DataFrame* _df ) const;
+
+    /// Adds a pipeline's predictions to the data frame.
+    void add_predictions_to_df(
+        const pipelines::Pipeline& _pipeline,
+        const containers::Features& _numerical_features,
+        containers::DataFrame* _df ) const;
+
+    /// Adds the join keys from the population table to the data frame.
+    void add_time_stamps_to_df(
+        const containers::DataFrame& _population_table,
+        containers::DataFrame* _df ) const;
+
+    /// Adds a data frame to the data frame tracker.
+    void add_to_tracker(
+        const pipelines::Pipeline& _pipeline,
+        const Poco::JSON::Object& _cmd,
+        const std::map<std::string, containers::DataFrame>& _data_frames,
+        containers::DataFrame* _df );
+
+    /// Makes sure that the user is allowed to transform this pipeline.
+    void check_user_privileges(
+        const pipelines::Pipeline& _pipeline,
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd ) const;
+
     /// Retrieves an Poco::JSON::Array::Ptr from a scores object.
     Poco::JSON::Array::Ptr get_array(
         const Poco::JSON::Object& _scores,
         const std::string& _name,
         const unsigned int _target_num ) const;
+
+    /// Posts a pipeline to the monitor.
+    void post_pipeline( const Poco::JSON::Object& _obj );
 
     /// Receives data from the client. This data will not be stored permanently,
     /// but locally. Once the training/transformation process is complete, it
@@ -161,31 +207,49 @@ class PipelineManager
         pipelines::Pipeline* _pipeline,
         Poco::Net::StreamSocket* _socket );
 
+    /// Stores the newly created data frame.
+    void store_df(
+        const pipelines::Pipeline& _pipeline,
+        const Poco::JSON::Object& _cmd,
+        const std::shared_ptr<containers::Encoding>& _local_categories,
+        const std::shared_ptr<containers::Encoding>& _local_join_keys_encoding,
+        const std::shared_ptr<std::map<std::string, containers::DataFrame>>&
+            _local_data_frames,
+        containers::DataFrame* _df,
+        multithreading::WeakWriteLock* _weak_write_lock );
+
     /// Writes a set of features to the data base.
     void to_db(
         const pipelines::Pipeline& _pipeline,
         const Poco::JSON::Object& _cmd,
-        const containers::Features& _yhat,
+        const containers::Features& _numerical_features,
+        const containers::CategoricalFeatures& _categorical_features,
         const std::shared_ptr<containers::Encoding>& _categories,
         const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
         const std::shared_ptr<std::map<std::string, containers::DataFrame>>&
-            _local_data_frames,
-        Poco::Net::StreamSocket* _socket );
+            _local_data_frames );
 
     /// Writes a set of features to a DataFrame.
     containers::DataFrame to_df(
         const pipelines::Pipeline& _pipeline,
         const Poco::JSON::Object& _cmd,
-        const containers::Features& _yhat,
+        const containers::Features& _numerical_features,
+        const containers::CategoricalFeatures& _categorical_features,
         const std::shared_ptr<containers::Encoding>& _categories,
         const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
         const std::shared_ptr<std::map<std::string, containers::DataFrame>>&
-            _local_data_frames,
-        Poco::Net::StreamSocket* _socket );
+            _local_data_frames );
 
     // ------------------------------------------------------------------------
 
    private:
+    /// Trivial accessor
+    const containers::Encoding& categories() const
+    {
+        assert_true( categories_ );
+        return *categories_;
+    }
+
     /// Trivial accessor
     std::shared_ptr<database::Connector> connector( const std::string& _name )
     {
@@ -198,6 +262,13 @@ class PipelineManager
     {
         assert_true( data_frames_ );
         return *data_frames_;
+    }
+
+    /// Trivial accessor
+    dependency::DataFrameTracker& data_frame_tracker()
+    {
+        assert_true( data_frame_tracker_ );
+        return *data_frame_tracker_;
     }
 
     /// Returns a deep copy of a pipeline.
@@ -216,10 +287,17 @@ class PipelineManager
     }
 
     /// Trivial (private) accessor
-    const monitoring::Logger& logger()
+    const communication::Logger& logger()
     {
         assert_true( logger_ );
         return *logger_;
+    }
+
+    /// Trivial (private) accessor
+    const communication::Monitor& monitor()
+    {
+        assert_true( monitor_ );
+        return *monitor_;
     }
 
     /// Trivial (private) accessor
@@ -235,19 +313,6 @@ class PipelineManager
         assert_true( pipelines_ );
         multithreading::ReadLock read_lock( read_write_lock_ );
         return *pipelines_;
-    }
-
-    /// Posts a pipeline.
-    void post_pipeline( const Poco::JSON::Object& _obj )
-    {
-        monitor_->send( "postpipeline", _obj );
-    }
-
-    /// Trivial (private) accessor
-    std::mutex& project_mtx()
-    {
-        assert_true( project_mtx_ );
-        return *project_mtx_;
     }
 
     /// Sets a pipeline.
@@ -272,7 +337,7 @@ class PipelineManager
     // ------------------------------------------------------------------------
 
    private:
-    /// Maps integeres to category names
+    /// Maps integers to category names
     const std::shared_ptr<containers::Encoding> categories_;
 
     /// Connector to the underlying database.
@@ -281,6 +346,10 @@ class PipelineManager
     /// The data frames currently held in memory
     const std::shared_ptr<std::map<std::string, containers::DataFrame>>
         data_frames_;
+
+    /// Keeps track of all data frames, so we don't have to
+    /// reconstruct the features all of the time.
+    const std::shared_ptr<dependency::DataFrameTracker> data_frame_tracker_;
 
     /// Keeps track of all feature learners.
     const std::shared_ptr<dependency::FETracker> fe_tracker_;
@@ -292,19 +361,16 @@ class PipelineManager
     const std::shared_ptr<licensing::LicenseChecker> license_checker_;
 
     /// For logging
-    const std::shared_ptr<const monitoring::Logger> logger_;
+    const std::shared_ptr<const communication::Logger> logger_;
 
     /// For communication with the monitor
-    const std::shared_ptr<const monitoring::Monitor> monitor_;
+    const std::shared_ptr<const communication::Monitor> monitor_;
 
     /// The pipelines currently held in memory
     const std::shared_ptr<PipelineMapType> pipelines_;
 
     /// Keeps track of all predictors.
     const std::shared_ptr<dependency::PredTracker> pred_tracker_;
-
-    /// It is sometimes necessary to prevent us from changing the project.
-    const std::shared_ptr<std::mutex> project_mtx_;
 
     /// For coordinating the read and write process of the data
     const std::shared_ptr<multithreading::ReadWriteLock> read_write_lock_;

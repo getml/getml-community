@@ -63,6 +63,8 @@
 
 #include "multirel/decisiontrees/DecisionTreeImpl.hpp"
 
+#include "multirel/decisiontrees/ValueToBeAggregatedCreator.hpp"
+
 #include "multirel/decisiontrees/DecisionTreeNode.hpp"
 
 #include "multirel/decisiontrees/DecisionTree.hpp"

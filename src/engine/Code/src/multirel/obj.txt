@@ -5,13 +5,13 @@ set(
     ${MULTIREL_SOURCE_DIRECTORY}/CandidateTreeBuilder.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/CategoricalBinner.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/CrossEntropyLoss.cpp 
-    ${MULTIREL_SOURCE_DIRECTORY}/DataFrame.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/DataFrameScatterer.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/DecisionTree.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/DecisionTreeEnsemble.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/DecisionTreeNode.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/DiscreteBinner.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/Hyperparameters.cpp 
+    ${MULTIREL_SOURCE_DIRECTORY}/ImportanceMaker.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/JSON.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/LinearRegression.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/LossFunctionParser.cpp 
@@ -19,7 +19,6 @@ set(
     ${MULTIREL_SOURCE_DIRECTORY}/Matchmaker.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/NumericalBinner.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/OptimizationCriterionImpl.cpp 
-    ${MULTIREL_SOURCE_DIRECTORY}/Placeholder.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/RSquaredCriterion.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/Sampler.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/SameUnitIdentifier.cpp 
@@ -27,8 +26,8 @@ set(
     ${MULTIREL_SOURCE_DIRECTORY}/SQLMaker.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/SquareLoss.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/SubtreeHelper.cpp 
-    ${MULTIREL_SOURCE_DIRECTORY}/TableHolder.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/Threadutils.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/TreeFitter.cpp 
+    ${MULTIREL_SOURCE_DIRECTORY}/ValueToBeAggregatedCreator.cpp 
 )
 

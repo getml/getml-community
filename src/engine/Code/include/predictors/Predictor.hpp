@@ -58,6 +58,9 @@ class Predictor
     /// Whether we want the predictor to be silent.
     virtual bool silent() const = 0;
 
+    /// The type of the predictor.
+    virtual std::string type() const = 0;
+
     // -----------------------------------------
 };
 

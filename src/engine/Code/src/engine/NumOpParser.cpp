@@ -85,7 +85,7 @@ containers::Column<Float> NumOpParser::as_ts(
 
 void NumOpParser::check(
     const containers::Column<Float>& _col,
-    const std::shared_ptr<const monitoring::Logger>& _logger,
+    const std::shared_ptr<const communication::Logger>& _logger,
     Poco::Net::StreamSocket* _socket ) const
 {
     // --------------------------------------------------------------------------
@@ -312,12 +312,6 @@ containers::Column<Float> NumOpParser::parse(
 containers::Column<Float> NumOpParser::unary_operation(
     const Poco::JSON::Object& _col ) const
 {
-    const auto to_time_stamp = []( const Float val ) {
-        const auto seconds_since_epoch = static_cast<std::time_t>( val );
-        return Poco::DateTime(
-            Poco::Timestamp::fromEpochTime( seconds_since_epoch ) );
-    };
-
     const auto op = JSON::get_value<std::string>( _col, "operator_" );
 
     if ( op == "abs" )
@@ -379,15 +373,7 @@ containers::Column<Float> NumOpParser::unary_operation(
         }
     else if ( op == "day" )
         {
-            const auto day = [to_time_stamp]( const Float val ) {
-                if ( std::isnan( val ) || std::isinf( val ) )
-                    {
-                        return static_cast<Float>( NAN );
-                    }
-                return static_cast<Float>( to_time_stamp( val ).day() );
-            };
-
-            return un_op( _col, day );
+            return un_op( _col, utils::Time::day );
         }
     else if ( op == "erf" )
         {
@@ -408,15 +394,7 @@ containers::Column<Float> NumOpParser::unary_operation(
         }
     else if ( op == "hour" )
         {
-            const auto hour = [to_time_stamp]( const Float val ) {
-                if ( std::isnan( val ) || std::isinf( val ) )
-                    {
-                        return static_cast<Float>( NAN );
-                    }
-                return static_cast<Float>( to_time_stamp( val ).hour() );
-            };
-
-            return un_op( _col, hour );
+            return un_op( _col, utils::Time::hour );
         }
     else if ( op == "lgamma" )
         {
@@ -432,27 +410,11 @@ containers::Column<Float> NumOpParser::unary_operation(
         }
     else if ( op == "minute" )
         {
-            const auto minute = [to_time_stamp]( const Float val ) {
-                if ( std::isnan( val ) || std::isinf( val ) )
-                    {
-                        return static_cast<Float>( NAN );
-                    }
-                return static_cast<Float>( to_time_stamp( val ).minute() );
-            };
-
-            return un_op( _col, minute );
+            return un_op( _col, utils::Time::minute );
         }
     else if ( op == "month" )
         {
-            const auto month = [to_time_stamp]( const Float val ) {
-                if ( std::isnan( val ) || std::isinf( val ) )
-                    {
-                        return static_cast<Float>( NAN );
-                    }
-                return static_cast<Float>( to_time_stamp( val ).month() );
-            };
-
-            return un_op( _col, month );
+            return un_op( _col, utils::Time::month );
         }
     else if ( op == "random" )
         {
@@ -471,15 +433,7 @@ containers::Column<Float> NumOpParser::unary_operation(
         }
     else if ( op == "second" )
         {
-            const auto second = [to_time_stamp]( const Float val ) {
-                if ( std::isnan( val ) || std::isinf( val ) )
-                    {
-                        return static_cast<Float>( NAN );
-                    }
-                return static_cast<Float>( to_time_stamp( val ).second() );
-            };
-
-            return un_op( _col, second );
+            return un_op( _col, utils::Time::second );
         }
     else if ( op == "sin" )
         {
@@ -511,39 +465,15 @@ containers::Column<Float> NumOpParser::unary_operation(
         }
     else if ( op == "weekday" )
         {
-            const auto weekday = [to_time_stamp]( const Float val ) {
-                if ( std::isnan( val ) || std::isinf( val ) )
-                    {
-                        return static_cast<Float>( NAN );
-                    }
-                return static_cast<Float>( to_time_stamp( val ).dayOfWeek() );
-            };
-
-            return un_op( _col, weekday );
+            return un_op( _col, utils::Time::weekday );
         }
     else if ( op == "year" )
         {
-            const auto year = [to_time_stamp]( const Float val ) {
-                if ( std::isnan( val ) || std::isinf( val ) )
-                    {
-                        return static_cast<Float>( NAN );
-                    }
-                return static_cast<Float>( to_time_stamp( val ).year() );
-            };
-
-            return un_op( _col, year );
+            return un_op( _col, utils::Time::year );
         }
     else if ( op == "yearday" )
         {
-            const auto yearday = [to_time_stamp]( const Float val ) {
-                if ( std::isnan( val ) || std::isinf( val ) )
-                    {
-                        return static_cast<Float>( NAN );
-                    }
-                return static_cast<Float>( to_time_stamp( val ).dayOfYear() );
-            };
-
-            return un_op( _col, yearday );
+            return un_op( _col, utils::Time::yearday );
         }
     else
         {

@@ -15,8 +15,8 @@ class DatabaseManager
 
    public:
     DatabaseManager(
-        const std::shared_ptr<const monitoring::Logger>& _logger,
-        const std::shared_ptr<const monitoring::Monitor>& _monitor )
+        const std::shared_ptr<const communication::Logger>& _logger,
+        const std::shared_ptr<const communication::Monitor>& _monitor )
         : logger_( _logger ),
           monitor_( _monitor ),
           read_write_lock_( std::make_shared<multithreading::ReadWriteLock>() )
@@ -175,7 +175,7 @@ class DatabaseManager
 
    private:
     /// Trivial accessor
-    const monitoring::Logger& logger() { return *logger_; }
+    const communication::Logger& logger() { return *logger_; }
 
     // ------------------------------------------------------------------------
 
@@ -185,10 +185,10 @@ class DatabaseManager
     ConnectorMap connector_map_;
 
     /// For logging
-    const std::shared_ptr<const monitoring::Logger> logger_;
+    const std::shared_ptr<const communication::Logger> logger_;
 
     /// For communication with the monitor
-    const std::shared_ptr<const monitoring::Monitor> monitor_;
+    const std::shared_ptr<const communication::Monitor> monitor_;
 
     /// Protects the shared_ptr of the connector - the connector might have to
     /// implement its own locking strategy!

@@ -18,7 +18,7 @@ class RequestHandler : public Poco::Net::TCPServerConnection
         const std::shared_ptr<handlers::DatabaseManager>& _database_manager,
         const std::shared_ptr<handlers::DataFrameManager>& _data_frame_manager,
         const std::shared_ptr<handlers::HyperoptManager>& _hyperopt_manager,
-        const std::shared_ptr<const monitoring::Logger>& _logger,
+        const std::shared_ptr<const communication::Logger>& _logger,
         const std::shared_ptr<handlers::PipelineManager>& _pipeline_manager,
         const config::Options& _options,
         const std::shared_ptr<handlers::ProjectManager>& _project_manager,
@@ -65,7 +65,7 @@ class RequestHandler : public Poco::Net::TCPServerConnection
     }
 
     /// Trivial accessor
-    const monitoring::Logger& logger() { return *logger_; }
+    const communication::Logger& logger() { return *logger_; }
 
     /// Trivial accessor
     handlers::PipelineManager& pipeline_manager()
@@ -94,7 +94,7 @@ class RequestHandler : public Poco::Net::TCPServerConnection
     const std::shared_ptr<handlers::HyperoptManager>& hyperopt_manager_;
 
     /// Logs commands.
-    const std::shared_ptr<const monitoring::Logger> logger_;
+    const std::shared_ptr<const communication::Logger> logger_;
 
     /// Handles requests related to a pipeline
     const std::shared_ptr<handlers::PipelineManager> pipeline_manager_;

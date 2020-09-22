@@ -13,8 +13,8 @@ class LicenseChecker
 
    public:
     LicenseChecker(
-        const std::shared_ptr<const monitoring::Logger> _logger,
-        const std::shared_ptr<const monitoring::Monitor> _monitor,
+        const std::shared_ptr<const communication::Logger> _logger,
+        const std::shared_ptr<const communication::Monitor> _monitor,
         const config::Options& _options )
         : logger_( _logger ),
           monitor_( _monitor ),
@@ -79,17 +79,20 @@ class LicenseChecker
     /// Encrypts a message using a one-way encryption algorithm.
     std::string encrypt( const std::string& _msg );
 
-    /// Sends a POST request to the license server
-    std::pair<std::string, bool> send( const std::string& _request );
+    /// Returns the operating system we are running on.
+    std::string os() const;
+
+    /// Sends a POST request to the license server (via the getML monitor).
+    std::pair<std::string, bool> send( const Poco::JSON::Object& _request );
 
     // ------------------------------------------------------------------------
 
    private:
     /// For logging the licensing process.
-    const std::shared_ptr<const monitoring::Logger> logger_;
+    const std::shared_ptr<const communication::Logger> logger_;
 
     /// The user management and licensing process is handled by the monitor.
-    const std::shared_ptr<const monitoring::Monitor> monitor_;
+    const std::shared_ptr<const communication::Monitor> monitor_;
 
     /// Contains information on the port of the license checker process
     const config::Options options_;

@@ -6,6 +6,175 @@ namespace handlers
 {
 // ------------------------------------------------------------------------
 
+void PipelineManager::add_features_to_df(
+    const pipelines::Pipeline& _pipeline,
+    const containers::Features& _numerical_features,
+    const containers::CategoricalFeatures& _categorical_features,
+    containers::DataFrame* _df ) const
+{
+    const auto [autofeatures, numerical, categorical] =
+        _pipeline.feature_names();
+
+    assert_true(
+        autofeatures.size() + numerical.size() == _numerical_features.size() );
+
+    size_t j = 0;
+
+    for ( size_t i = 0; i < autofeatures.size(); ++i )
+        {
+            auto col = containers::Column( _numerical_features.at( j++ ) );
+            col.set_name( autofeatures.at( i ) );
+            _df->add_float_column( col, containers::DataFrame::ROLE_NUMERICAL );
+        }
+
+    size_t num_manual = 0;
+
+    for ( size_t i = 0; i < numerical.size(); ++i )
+        {
+            auto col =
+                containers::Column( _numerical_features.at( j++ ) ).clone();
+            col.set_name(
+                "manual_feature_" + std::to_string( ++num_manual ) + "__" +
+                numerical.at( i ) );
+            _df->add_float_column( col, containers::DataFrame::ROLE_NUMERICAL );
+        }
+
+    assert_true( categorical.size() == _categorical_features.size() );
+
+    for ( size_t i = 0; i < categorical.size(); ++i )
+        {
+            auto col =
+                containers::Column( _categorical_features.at( i ) ).clone();
+            col.set_name(
+                "manual_feature_" + std::to_string( ++num_manual ) + "__" +
+                categorical.at( i ) );
+            _df->add_int_column( col, containers::DataFrame::ROLE_CATEGORICAL );
+        }
+}
+
+// ------------------------------------------------------------------------
+
+void PipelineManager::add_join_keys_to_df(
+    const containers::DataFrame& _population_table,
+    containers::DataFrame* _df ) const
+{
+    for ( size_t i = 0; i < _population_table.num_join_keys(); ++i )
+        {
+            auto col = _population_table.join_key( i ).clone();
+
+            if ( col.name().find(
+                     containers::Macros::multiple_join_key_begin() ) !=
+                 std::string::npos )
+                {
+                    continue;
+                }
+
+            if ( col.name().find( containers::Macros::no_join_key() ) !=
+                 std::string::npos )
+                {
+                    continue;
+                }
+
+            col.set_name(
+                containers::Macros::modify_colnames( { col.name() } ).at( 0 ) );
+
+            _df->add_int_column( col, containers::DataFrame::ROLE_JOIN_KEY );
+        }
+}
+
+// ------------------------------------------------------------------------
+
+void PipelineManager::add_predictions_to_df(
+    const pipelines::Pipeline& _pipeline,
+    const containers::Features& _numerical_features,
+    containers::DataFrame* _df ) const
+{
+    const auto targets = _pipeline.targets();
+
+    assert_true( targets.size() == _numerical_features.size() );
+
+    for ( size_t i = 0; i < targets.size(); ++i )
+        {
+            auto col = containers::Column( _numerical_features.at( i ) );
+            col.set_name(
+                "prediction_" + std::to_string( i + 1 ) + "__" +
+                targets.at( i ) );
+            _df->add_float_column( col, containers::DataFrame::ROLE_NUMERICAL );
+        }
+}
+
+// ------------------------------------------------------------------------
+
+void PipelineManager::add_time_stamps_to_df(
+    const containers::DataFrame& _population_table,
+    containers::DataFrame* _df ) const
+{
+    for ( size_t i = 0; i < _population_table.num_time_stamps(); ++i )
+        {
+            auto col = _population_table.time_stamp( i ).clone();
+
+            if ( col.name().find( containers::Macros::lower_ts() ) !=
+                 std::string::npos )
+                {
+                    continue;
+                }
+
+            if ( col.name().find( containers::Macros::other_time_stamp() ) !=
+                 std::string::npos )
+                {
+                    continue;
+                }
+
+            if ( col.name().find( containers::Macros::rowid() ) !=
+                 std::string::npos )
+                {
+                    continue;
+                }
+
+            if ( col.name().find( containers::Macros::upper_time_stamp() ) !=
+                 std::string::npos )
+                {
+                    continue;
+                }
+
+            if ( col.name().find( containers::Macros::upper_ts() ) !=
+                 std::string::npos )
+                {
+                    continue;
+                }
+
+            col.set_name(
+                containers::Macros::modify_colnames( { col.name() } ).at( 0 ) );
+
+            _df->add_float_column(
+                col, containers::DataFrame::ROLE_TIME_STAMP );
+        }
+}
+
+// ------------------------------------------------------------------------
+
+void PipelineManager::add_to_tracker(
+    const pipelines::Pipeline& _pipeline,
+    const Poco::JSON::Object& _cmd,
+    const std::map<std::string, containers::DataFrame>& _data_frames,
+    containers::DataFrame* _df )
+{
+    const auto dependencies = _pipeline.dependencies();
+
+    const auto df_fingerprints =
+        containers::DataFrameExtractor::extract_df_fingerprints(
+            _cmd, _data_frames );
+
+    const auto build_history = data_frame_tracker().make_build_history(
+        dependencies, df_fingerprints );
+
+    _df->set_build_history( build_history );
+
+    data_frame_tracker().add( *_df );
+}
+
+// ------------------------------------------------------------------------
+
 void PipelineManager::check(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,
@@ -28,7 +197,102 @@ void PipelineManager::check(
 
     multithreading::ReadLock read_lock( read_write_lock_ );
 
-    pipeline.check( _cmd, logger_, data_frames(), _socket );
+    const auto local_categories =
+        std::make_shared<containers::Encoding>( categories_ );
+
+    pipeline.check( _cmd, logger_, data_frames(), local_categories, _socket );
+
+    // -------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
+void PipelineManager::check_user_privileges(
+    const pipelines::Pipeline& _pipeline,
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd ) const
+{
+    if ( _pipeline.premium_only() )
+        {
+            license_checker().check_enterprise();
+        }
+
+    if ( JSON::get_value<bool>( _cmd, "http_request_" ) )
+        {
+            if ( !_pipeline.allow_http() )
+                {
+                    throw std::invalid_argument(
+                        "Pipeline '" + _name +
+                        "' does not allow HTTP requests. You can activate "
+                        "this "
+                        "via the API or the getML monitor!" );
+                }
+
+            if ( !_pipeline.premium_only() )
+                {
+                    license_checker().check_enterprise();
+                }
+        }
+}
+
+// ------------------------------------------------------------------------
+
+void PipelineManager::column_importances(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    // -------------------------------------------------------
+
+    const auto target_num = JSON::get_value<Int>( _cmd, "target_num_" );
+
+    // -------------------------------------------------------
+
+    const auto pipeline = get_pipeline( _name );
+
+    const auto scores = pipeline.scores();
+
+    // -------------------------------------------------------
+
+    auto importances = std::vector<Float>();
+
+    for ( const auto& vec : scores.column_importances() )
+        {
+            if ( target_num < 0 )
+                {
+                    const auto sum_importances =
+                        std::accumulate( vec.begin(), vec.end(), 0.0 );
+
+                    const auto length = static_cast<Float>( vec.size() );
+
+                    importances.push_back( sum_importances / length );
+
+                    continue;
+                }
+
+            if ( static_cast<size_t>( target_num ) >= vec.size() )
+                {
+                    throw std::invalid_argument( "target_num out of range!" );
+                }
+
+            importances.push_back( vec.at( target_num ) );
+        }
+
+    // -------------------------------------------------------
+
+    Poco::JSON::Object response;
+
+    response.set(
+        "column_descriptions_",
+        JSON::vector_to_array( scores.column_descriptions() ) );
+
+    response.set( "column_importances_", JSON::vector_to_array( importances ) );
+
+    // -------------------------------------------------------
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    communication::Sender::send_string( JSON::stringify( response ), _socket );
 
     // -------------------------------------------------------
 }
@@ -48,7 +312,7 @@ void PipelineManager::deploy(
 
     set_pipeline( _name, pipeline );
 
-    post_pipeline( pipeline.to_monitor( _name ) );
+    post_pipeline( pipeline.to_monitor( categories().vector(), _name ) );
 
     communication::Sender::send_string( "Success!", _socket );
 }
@@ -163,12 +427,10 @@ void PipelineManager::fit(
     Poco::Net::StreamSocket* _socket )
 {
     // -------------------------------------------------------
-    // Find the pipeline.
 
     auto pipeline = get_pipeline( _name );
 
     // -------------------------------------------------------
-    // Some models are only supported by the premium version.
 
     if ( pipeline.premium_only() )
         {
@@ -178,15 +440,23 @@ void PipelineManager::fit(
     communication::Sender::send_string( "Found!", _socket );
 
     // -------------------------------------------------------
-    // Do the actual fitting
 
     multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
 
+    auto local_categories =
+        std::make_shared<containers::Encoding>( categories_ );
+
     pipeline.fit(
-        _cmd, logger_, data_frames(), fe_tracker_, pred_tracker_, _socket );
+        _cmd,
+        logger_,
+        data_frames(),
+        local_categories,
+        data_frame_tracker(),
+        fe_tracker_,
+        pred_tracker_,
+        _socket );
 
     // -------------------------------------------------------
-    // Fitting has been a success - store the pipeline.
 
     auto it = pipelines().find( _name );
 
@@ -196,7 +466,11 @@ void PipelineManager::fit(
                 "Pipeline '" + _name + "' does not exist!" );
         }
 
+    // -------------------------------------------------------
+
     weak_write_lock.upgrade();
+
+    categories_->append( *local_categories );
 
     it->second = pipeline;
 
@@ -204,7 +478,7 @@ void PipelineManager::fit(
 
     // -------------------------------------------------------
 
-    post_pipeline( pipeline.to_monitor( _name ) );
+    post_pipeline( pipeline.to_monitor( categories().vector(), _name ) );
 
     communication::Sender::send_string( "Trained pipeline.", _socket );
 
@@ -272,6 +546,18 @@ void PipelineManager::lift_curve(
     communication::Sender::send_string( JSON::stringify( response ), _socket );
 
     // -------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
+void PipelineManager::post_pipeline( const Poco::JSON::Object& _obj )
+{
+    const auto response = monitor().send_tcp( "postpipeline", _obj );
+
+    if ( response != "Success!" )
+        {
+            throw std::runtime_error( response );
+        }
 }
 
 // ------------------------------------------------------------------------
@@ -448,7 +734,6 @@ void PipelineManager::score(
     Poco::Net::StreamSocket* _socket )
 {
     // -------------------------------------------------------
-    // Do the actual scoring.
 
     auto scores = _pipeline->score( _cmd, _data_frames, _yhat );
 
@@ -458,11 +743,45 @@ void PipelineManager::score(
 
     set_pipeline( _name, *_pipeline );
 
-    post_pipeline( _pipeline->to_monitor( _name ) );
+    post_pipeline( _pipeline->to_monitor( categories().vector(), _name ) );
 
     communication::Sender::send_string( JSON::stringify( scores ), _socket );
 
     // -------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
+void PipelineManager::store_df(
+    const pipelines::Pipeline& _pipeline,
+    const Poco::JSON::Object& _cmd,
+    const std::shared_ptr<containers::Encoding>& _local_categories,
+    const std::shared_ptr<containers::Encoding>& _local_join_keys_encoding,
+    const std::shared_ptr<std::map<std::string, containers::DataFrame>>&
+        _local_data_frames,
+    containers::DataFrame* _df,
+    multithreading::WeakWriteLock* _weak_write_lock )
+{
+    _weak_write_lock->upgrade();
+
+    categories_->append( *_local_categories );
+
+    join_keys_encoding_->append( *_local_join_keys_encoding );
+
+    _df->set_categories( categories_ );
+
+    _df->set_join_keys_encoding( join_keys_encoding_ );
+
+    const auto predict = JSON::get_value<bool>( _cmd, "predict_" );
+
+    if ( !predict )
+        {
+            add_to_tracker( _pipeline, _cmd, *_local_data_frames, _df );
+        }
+
+    data_frames()[_df->name()] = *_df;
+
+    monitor_->send_tcp( "postdataframe", _df->to_monitor() );
 }
 
 // ------------------------------------------------------------------------
@@ -494,29 +813,26 @@ void PipelineManager::targets(
 void PipelineManager::to_db(
     const pipelines::Pipeline& _pipeline,
     const Poco::JSON::Object& _cmd,
-    const containers::Features& _yhat,
+    const containers::Features& _numerical_features,
+    const containers::CategoricalFeatures& _categorical_features,
     const std::shared_ptr<containers::Encoding>& _categories,
     const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
     const std::shared_ptr<std::map<std::string, containers::DataFrame>>&
-        _local_data_frames,
-    Poco::Net::StreamSocket* _socket )
+        _local_data_frames )
 {
     // -------------------------------------------------------
-    // Transforms the features into a data frame.
 
     const auto df = to_df(
         _pipeline,
         _cmd,
-        _yhat,
+        _numerical_features,
+        _categorical_features,
         _categories,
         _join_keys_encoding,
-        _local_data_frames,
-        _socket );
+        _local_data_frames );
 
     // -------------------------------------------------------
     // Write data frame to data base.
-
-    const auto conn_id = JSON::get_value<std::string>( _cmd, "conn_id_" );
 
     const auto table_name = JSON::get_value<std::string>( _cmd, "table_name_" );
 
@@ -525,7 +841,7 @@ void PipelineManager::to_db(
     auto reader = containers::DataFrameReader(
         df, _categories, _join_keys_encoding, '\a', '|' );
 
-    const auto conn = connector( conn_id );
+    const auto conn = connector( "default" );
 
     assert_true( conn );
 
@@ -552,15 +868,14 @@ void PipelineManager::to_db(
 containers::DataFrame PipelineManager::to_df(
     const pipelines::Pipeline& _pipeline,
     const Poco::JSON::Object& _cmd,
-    const containers::Features& _yhat,
+    const containers::Features& _numerical_features,
+    const containers::CategoricalFeatures& _categorical_features,
     const std::shared_ptr<containers::Encoding>& _categories,
     const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
     const std::shared_ptr<std::map<std::string, containers::DataFrame>>&
-        _local_data_frames,
-    Poco::Net::StreamSocket* _socket )
+        _local_data_frames )
 {
     // -------------------------------------------------------
-    // Get population table.
 
     const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
 
@@ -571,60 +886,29 @@ containers::DataFrame PipelineManager::to_df(
         utils::Getter::get( population_name, _local_data_frames.get() );
 
     // -------------------------------------------------------
-    // Build data frame.
 
     containers::DataFrame df( df_name, _categories, _join_keys_encoding );
 
     if ( !_cmd.has( "predict_" ) || !JSON::get_value<bool>( _cmd, "predict_" ) )
         {
-            const auto [autofeatures, categorical, numerical] =
-                _pipeline.feature_names();
-
-            assert_true(
-                autofeatures.size() + numerical.size() == _yhat.size() );
-
-            size_t j = 0;
-
-            for ( size_t i = 0; i < autofeatures.size(); ++i )
-                {
-                    auto col = containers::Column( _yhat[j++] );
-                    col.set_name( autofeatures[i] );
-                    df.add_float_column( col, "numerical" );
-                }
-
-            for ( size_t i = 0; i < numerical.size(); ++i )
-                {
-                    auto col = containers::Column( _yhat[j++] );
-                    col.set_name( numerical[i] );
-                    df.add_float_column( col, "numerical" );
-                }
-
-            for ( const auto& colname : categorical )
-                {
-                    auto col = population_table.categorical( colname ).clone();
-                    df.add_int_column( col, "categorical" );
-                }
+            add_features_to_df(
+                _pipeline, _numerical_features, _categorical_features, &df );
+        }
+    else
+        {
+            add_predictions_to_df( _pipeline, _numerical_features, &df );
         }
 
     // -------------------------------------------------------
-    // Add join keys, time stamps and targets.
 
-    for ( size_t i = 0; i < population_table.num_join_keys(); ++i )
-        {
-            const auto col = population_table.join_key( i ).clone();
-            df.add_int_column( col, "join_key" );
-        }
+    add_join_keys_to_df( population_table, &df );
 
-    for ( size_t i = 0; i < population_table.num_time_stamps(); ++i )
-        {
-            const auto col = population_table.time_stamp( i ).clone();
-            df.add_float_column( col, "time_stamp" );
-        }
+    add_time_stamps_to_df( population_table, &df );
 
     for ( size_t i = 0; i < population_table.num_targets(); ++i )
         {
             const auto col = population_table.target( i ).clone();
-            df.add_float_column( col, "target" );
+            df.add_float_column( col, containers::DataFrame::ROLE_TARGET );
         }
 
     // -------------------------------------------------------
@@ -645,7 +929,8 @@ void PipelineManager::to_sql(
 
     communication::Sender::send_string( "Found!", _socket );
 
-    communication::Sender::send_string( pipeline.to_sql(), _socket );
+    communication::Sender::send_string(
+        pipeline.to_sql( categories().vector() ), _socket );
 }
 
 // ------------------------------------------------------------------------
@@ -656,36 +941,14 @@ void PipelineManager::transform(
     Poco::Net::StreamSocket* _socket )
 {
     // -------------------------------------------------------
-    // Find the model.
 
     auto pipeline = get_pipeline( _name );
 
-    if ( pipeline.premium_only() )
-        {
-            license_checker().check_enterprise();
-        }
-
-    if ( JSON::get_value<bool>( _cmd, "http_request_" ) )
-        {
-            if ( !pipeline.allow_http() )
-                {
-                    throw std::invalid_argument(
-                        "Pipeline '" + _name +
-                        "' does not allow HTTP requests. You can activate "
-                        "this "
-                        "via the API or the getML monitor!" );
-                }
-
-            if ( !pipeline.premium_only() )
-                {
-                    license_checker().check_enterprise();
-                }
-        }
+    check_user_privileges( pipeline, _name, _cmd );
 
     communication::Sender::send_string( "Found!", _socket );
 
     // -------------------------------------------------------
-    // Receive data
 
     multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
 
@@ -709,14 +972,18 @@ void PipelineManager::transform(
         _socket );
 
     // -------------------------------------------------------
-    // Do the actual transformation
 
-    auto yhat = pipeline.transform( cmd, logger_, *local_data_frames, _socket );
-
-    communication::Sender::send_string( "Success!", _socket );
+    // IMPORTANT: Use categories_, not local_categories, otherwise
+    // .vector() might not work.
+    const auto [numerical_features, categorical_features] = pipeline.transform(
+        cmd,
+        logger_,
+        *local_data_frames,
+        data_frame_tracker(),
+        categories_,
+        _socket );
 
     // -------------------------------------------------------
-    // Send data to client or write to data base
 
     const auto table_name = JSON::get_value<std::string>( cmd, "table_name_" );
 
@@ -724,26 +991,32 @@ void PipelineManager::transform(
 
     const auto score = JSON::get_value<bool>( cmd, "score_" );
 
+    // -------------------------------------------------------
+
     if ( table_name == "" && df_name == "" && !score )
         {
-            communication::Sender::send_features( yhat, _socket );
+            communication::Sender::send_string( "Success!", _socket );
+            communication::Sender::send_features( numerical_features, _socket );
+            return;
         }
-    else if ( table_name != "" )
+
+    // -------------------------------------------------------
+
+    if ( table_name != "" )
         {
             license_checker().check_enterprise();
 
             to_db(
                 pipeline,
                 cmd,
-                yhat,
+                numerical_features,
+                categorical_features,
                 local_categories,
                 local_join_keys_encoding,
-                local_data_frames,
-                _socket );
+                local_data_frames );
         }
 
     // -------------------------------------------------------
-    // Write to DataFrame.
 
     if ( df_name != "" )
         {
@@ -752,37 +1025,41 @@ void PipelineManager::transform(
             auto df = to_df(
                 pipeline,
                 cmd,
-                yhat,
+                numerical_features,
+                categorical_features,
+                local_categories,
+                local_join_keys_encoding,
+                local_data_frames );
+
+            store_df(
+                pipeline,
+                cmd,
                 local_categories,
                 local_join_keys_encoding,
                 local_data_frames,
-                _socket );
-
-            weak_write_lock.upgrade();
-
-            categories_->append( *local_categories );
-
-            join_keys_encoding_->append( *local_join_keys_encoding );
-
-            df.set_categories( categories_ );
-
-            df.set_join_keys_encoding( join_keys_encoding_ );
-
-            data_frames()[df_name] = df;
-
-            monitor_->send( "postdataframe", df.to_monitor() );
+                &df,
+                &weak_write_lock );
         }
 
     // -------------------------------------------------------
-    // Score model, if necessary.
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    // -------------------------------------------------------
 
     weak_write_lock.unlock();
 
     if ( score )
         {
             assert_true( local_data_frames );
+
             this->score(
-                _name, cmd, *local_data_frames, yhat, &pipeline, _socket );
+                _name,
+                cmd,
+                *local_data_frames,
+                numerical_features,
+                &pipeline,
+                _socket );
         }
 
     // -------------------------------------------------------

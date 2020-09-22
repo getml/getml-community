@@ -20,8 +20,6 @@
 
 #include "engine/config/config.hpp"
 
-#include "engine/monitoring/monitoring.hpp"
-
 #include "engine/communication/communication.hpp"
 
 #include "engine/handlers/handlers.hpp"

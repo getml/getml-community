@@ -34,6 +34,21 @@ void Scores::from_json_obj( const Poco::JSON::Object& _json_obj )
                 _json_obj, "set_used_" );
         }
 
+    if ( _json_obj.has( "column_descriptions_" ) )
+        {
+            const auto arr = jsonutils::JSON::get_object_array(
+                _json_obj, "column_descriptions_" );
+
+            auto column_desc = std::vector<Poco::JSON::Object::Ptr>();
+
+            for ( size_t i = 0; i < arr->size(); ++i )
+                {
+                    column_desc.push_back( arr->getObject( i ) );
+                }
+
+            column_descriptions() = column_desc;
+        }
+
     // -------------------------
 
     update_1d_vector( _json_obj, "prediction_min_", &prediction_min_ );
@@ -58,6 +73,8 @@ void Scores::from_json_obj( const Poco::JSON::Object& _json_obj )
     // -------------------------
 
     update_2d_vector( _json_obj, "accuracy_curves_", &accuracy_curves() );
+
+    update_2d_vector( _json_obj, "column_importances_", &column_importances() );
 
     update_2d_vector(
         _json_obj, "feature_correlations_", &feature_correlations() );
@@ -121,6 +138,18 @@ Poco::JSON::Object Scores::to_json_obj() const
 
     // -------------------------
 
+    auto column_descriptions_arr =
+        Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
+
+    for ( const auto& desc : column_descriptions() )
+        {
+            column_descriptions_arr->add( desc );
+        }
+
+    obj.set( "column_descriptions_", column_descriptions_arr );
+
+    // -------------------------
+
     obj.set(
         "feature_names_",
         jsonutils::JSON::vector_to_array_ptr( feature_names() ) );
@@ -144,6 +173,8 @@ Poco::JSON::Object Scores::to_json_obj() const
     // -------------------------
 
     obj.set( "accuracy_curves_", to_2d_array( accuracy_curves() ) );
+
+    obj.set( "column_importances_", to_2d_array( column_importances() ) );
 
     obj.set( "feature_correlations_", to_2d_array( feature_correlations() ) );
 

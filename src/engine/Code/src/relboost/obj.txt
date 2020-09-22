@@ -8,25 +8,23 @@ set(
     ${RELBOOST_SOURCE_DIRECTORY}/CriticalValues.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/CriticalValueSorter.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/CrossEntropyLoss.cpp
-    ${RELBOOST_SOURCE_DIRECTORY}/DataFrame.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/DataFrameScatterer.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/DecisionTree.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/DecisionTreeEnsemble.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/DecisionTreeEnsembleImpl.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/DecisionTreeNode.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/Hyperparameters.cpp
+    ${RELBOOST_SOURCE_DIRECTORY}/ImportanceMaker.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/IntermediateAggregationImpl.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/JSON.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/LossFunctionImpl.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/LossFunctionParser.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/Matchmaker.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/Mapper.cpp
-    ${RELBOOST_SOURCE_DIRECTORY}/Placeholder.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/Sampler.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/SquareLoss.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/SubtreeHelper.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/Sum.cpp
-    ${RELBOOST_SOURCE_DIRECTORY}/TableHolder.cpp
     ${RELBOOST_SOURCE_DIRECTORY}/Threadutils.cpp
 )
 

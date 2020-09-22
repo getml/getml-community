@@ -1,11 +1,11 @@
-#ifndef ENGINE_PIPELINES_DATAMODELCHECKER_HPP_
-#define ENGINE_PIPELINES_DATAMODELCHECKER_HPP_
+#ifndef ENGINE_PREPROCESSORS_DATAMODELCHECKER_HPP_
+#define ENGINE_PREPROCESSORS_DATAMODELCHECKER_HPP_
 
 // ----------------------------------------------------------------------------
 
 namespace engine
 {
-namespace pipelines
+namespace preprocessors
 {
 // ----------------------------------------------------------------------------
 
@@ -14,23 +14,29 @@ class DataModelChecker
    public:
     /// Generates warnings, if there are obvious issues in the data model.
     static void check(
-        const std::shared_ptr<Poco::JSON::Object> _population_placeholder,
-        const std::shared_ptr<std::vector<std::string>> _peripheral_names,
+        const std::shared_ptr<const helpers::Placeholder> _placeholder,
+        const std::shared_ptr<const std::vector<std::string>> _peripheral_names,
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral,
         const std::vector<
             std::shared_ptr<featurelearners::AbstractFeatureLearner>>
             _feature_learners,
-        const std::shared_ptr<const monitoring::Logger>& _logger,
+        const std::shared_ptr<const communication::Logger>& _logger,
         Poco::Net::StreamSocket* _socket );
 
-   private:
     /// Checks the plausibility of a categorical column.
     static void check_categorical_column(
         const containers::Column<Int>& _col,
         const std::string& _df_name,
         communication::Warner* _warner );
 
+    /// Checks the plausibility of a float column.
+    static void check_float_column(
+        const containers::Column<Float>& _col,
+        const std::string& _df_name,
+        communication::Warner* _warner );
+
+   private:
     /// Checks the validity of the data frames.
     static void check_data_frames(
         const containers::DataFrame& _population,
@@ -46,16 +52,10 @@ class DataModelChecker
         const bool _check_num_columns,
         communication::Warner* _warner );
 
-    /// Checks the plausibility of a float column.
-    static void check_float_column(
-        const containers::Column<Float>& _col,
-        const std::string& _df_name,
-        communication::Warner* _warner );
-
     /// Recursively checks the plausibility of the joins.
     static void check_join(
-        const Poco::JSON::Object& _population_placeholder,
-        const std::vector<std::string>& _peripheral_names,
+        const helpers::Placeholder& _placeholder,
+        const std::shared_ptr<const std::vector<std::string>> _peripheral_names,
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral,
         communication::Warner* _warner );
@@ -72,7 +72,7 @@ class DataModelChecker
 
     /// Checks the self joins for the time series models.
     static void check_self_joins(
-        const Poco::JSON::Object& _population_placeholder,
+        const helpers::Placeholder& _placeholder,
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral,
         const std::vector<
@@ -92,12 +92,6 @@ class DataModelChecker
         const containers::DataFrame& _population_df,
         const containers::DataFrame& _peripheral_df );
 
-    /// Extracts the join keys from the population placeholder.
-    static std::pair<std::vector<std::string>, std::vector<std::string>>
-    get_join_keys_used(
-        const Poco::JSON::Object& _population_placeholder,
-        const size_t _expected_size );
-
     /// Extracts the time stamps from the population placeholder.
     static std::tuple<
         std::vector<std::string>,
@@ -110,19 +104,11 @@ class DataModelChecker
     /// Checks whether all non-NULL elements in _col are equal to each other
     static bool is_all_equal( const containers::Column<Float>& _col );
 
-    /// Returns a modified version of the placeholder, the population and
-    /// peripheral tables.
-    static std::tuple<
-        Poco::JSON::Object,
-        containers::DataFrame,
-        std::vector<containers::DataFrame>>
-    modify(
-        const Poco::JSON::Object& _population_placeholder,
-        const containers::DataFrame& _population,
-        const std::vector<containers::DataFrame>& _peripheral,
-        const std::vector<
-            std::shared_ptr<featurelearners::AbstractFeatureLearner>>
-            _feature_learners );
+    /// Accounts for the fact that data frames might be joined.
+    static std::string modify_df_name( const std::string& _df_name );
+
+    /// Accounts for the fact that we might have joined over several join keys.
+    static std::string modify_join_key_name( const std::string& _jk_name );
 
     /// Adds warning messages related to the joins.
     static void raise_join_warnings(
@@ -140,6 +126,91 @@ class DataModelChecker
         const bool _is_many_to_one,
         const size_t _num_matches,
         const containers::DataFrame& _population_df,
+        communication::Warner* _warner );
+
+    /// Adds a warning that all values are equal.
+    static void warn_all_equal(
+        const bool _is_float,
+        const std::string& _colname,
+        const std::string& _df_name,
+        communication::Warner* _warner );
+
+    /// Adds a warning that a data frame is empty.
+    static void warn_is_empty(
+        const std::string& _df_name, communication::Warner* _warner );
+
+    /// Adds a warning message for when there are no matches on a self-join.
+    static void warn_self_join_no_matches(
+        const containers::DataFrame& _population_df,
+        communication::Warner* _warner );
+
+    /// Adds a warning message for when there are no matches on a self-join.
+    static void warn_self_join_too_many_matches(
+        const size_t _num_matches,
+        const containers::DataFrame& _population_df,
+        communication::Warner* _warner );
+
+    /// Adds a warning message related to many-to-one or one-to-one
+    /// relationships.
+    static void warn_many_to_one(
+        const std::string& _join_key_used,
+        const std::string& _other_join_key_used,
+        const containers::DataFrame& _population_df,
+        const containers::DataFrame& _peripheral_df,
+        communication::Warner* _warner );
+
+    /// Generates a no-matches warning.
+    static void warn_no_matches(
+        const std::string& _join_key_used,
+        const std::string& _other_join_key_used,
+        const containers::DataFrame& _population_df,
+        const containers::DataFrame& _peripheral_df,
+        communication::Warner* _warner );
+
+    /// Generates a not-found warning
+    static void warn_not_found(
+        const Float _not_found_ratio,
+        const std::string& _join_key_used,
+        const std::string& _other_join_key_used,
+        const containers::DataFrame& _population_df,
+        const containers::DataFrame& _peripheral_df,
+        communication::Warner* _warner );
+
+    /// Generates a warning that there are to many columns for MultirelModel.
+    static void warn_too_many_columns_multirel(
+        const size_t _num_columns,
+        const std::string& _df_name,
+        communication::Warner* _warner );
+
+    /// Generates a too-many-matches warning.
+    static void warn_too_many_matches(
+        const size_t _num_matches,
+        const std::string& _join_key_used,
+        const std::string& _other_join_key_used,
+        const containers::DataFrame& _population_df,
+        const containers::DataFrame& _peripheral_df,
+        communication::Warner* _warner );
+
+    /// Generates a warning for when there are too many nulls.
+    static void warn_too_many_nulls(
+        const bool _is_float,
+        const Float _share_null,
+        const std::string& _colname,
+        const std::string& _df_name,
+        communication::Warner* _warner );
+
+    /// Generates a warning that there too many unique values.
+    static void warn_too_many_unique(
+        const Float _num_distinct,
+        const std::string& _colname,
+        const std::string& _df_name,
+        communication::Warner* _warner );
+
+    /// Generates a warning that the share of unique columns is too high.
+    static void warn_unique_share_too_high(
+        const Float _unique_share,
+        const std::string& _colname,
+        const std::string& _df_name,
         communication::Warner* _warner );
 
     // -------------------------------------------------------------------------
@@ -179,6 +250,14 @@ class DataModelChecker
         return info() + "[MIGHT TAKE LONG]: ";
     }
 
+    /// Removes any macros from a colname.
+    static std::string modify_colname( const std::string& _colname )
+    {
+        const auto colnames = containers::Macros::modify_colnames( {_colname} );
+        assert_true( colnames.size() == 1 );
+        return colnames.at( 0 );
+    }
+
     /// Standard header for a warning message.
     static std::string warning() { return "WARNING "; }
 
@@ -186,8 +265,9 @@ class DataModelChecker
 };
 
 //  ----------------------------------------------------------------------------
-}  // namespace pipelines
+}  // namespace preprocessors
 }  // namespace engine
 
 // ----------------------------------------------------------------------------
-#endif  // ENGINE_PIPELINES_DATAMODELCHECKER_HPP_
+
+#endif  // ENGINE_PREPROCESSORS_DATAMODELCHECKER_HPP_

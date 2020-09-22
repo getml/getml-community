@@ -18,7 +18,7 @@ void ProjectManager::add_data_frame(
 
     multithreading::ReadLock read_lock( read_write_lock_ );
 
-    monitor_->send( "postdataframe", data_frames()[_name].to_monitor() );
+    post( "dataframe", data_frames()[_name].to_monitor() );
 }
 
 // ------------------------------------------------------------------------
@@ -39,7 +39,7 @@ void ProjectManager::add_data_frame_from_csv(
 
     multithreading::ReadLock read_lock( read_write_lock_ );
 
-    monitor_->send( "postdataframe", data_frames()[_name].to_monitor() );
+    post( "dataframe", data_frames()[_name].to_monitor() );
 }
 
 // ------------------------------------------------------------------------
@@ -60,7 +60,7 @@ void ProjectManager::add_data_frame_from_s3(
 
     multithreading::ReadLock read_lock( read_write_lock_ );
 
-    monitor_->send( "postdataframe", data_frames()[_name].to_monitor() );
+    post( "dataframe", data_frames()[_name].to_monitor() );
 }
 
 // ------------------------------------------------------------------------
@@ -81,7 +81,7 @@ void ProjectManager::add_data_frame_from_db(
 
     multithreading::ReadLock read_lock( read_write_lock_ );
 
-    monitor_->send( "postdataframe", data_frames()[_name].to_monitor() );
+    post( "dataframe", data_frames()[_name].to_monitor() );
 }
 
 // ------------------------------------------------------------------------
@@ -102,7 +102,7 @@ void ProjectManager::add_data_frame_from_json(
 
     multithreading::ReadLock read_lock( read_write_lock_ );
 
-    monitor_->send( "postdataframe", data_frames()[_name].to_monitor() );
+    post( "dataframe", data_frames()[_name].to_monitor() );
 }
 
 // ------------------------------------------------------------------------
@@ -123,7 +123,7 @@ void ProjectManager::add_data_frame_from_query(
 
     multithreading::ReadLock read_lock( read_write_lock_ );
 
-    monitor_->send( "postdataframe", data_frames()[_name].to_monitor() );
+    post( "dataframe", data_frames()[_name].to_monitor() );
 }
 
 // ------------------------------------------------------------------------
@@ -147,7 +147,7 @@ void ProjectManager::add_pipeline(
     const Poco::JSON::Object& _cmd,
     Poco::Net::StreamSocket* _socket )
 {
-    const auto pipeline = pipelines::Pipeline( categories().vector(), _cmd );
+    const auto pipeline = pipelines::Pipeline( _cmd );
 
     set_pipeline( _name, pipeline );
 
@@ -167,7 +167,8 @@ void ProjectManager::copy_pipeline(
 
     set_pipeline( _name, other_pipeline );
 
-    monitor_->send( "postpipeline", other_pipeline.to_monitor( _name ) );
+    post(
+        "pipeline", other_pipeline.to_monitor( categories().vector(), _name ) );
 
     communication::Sender::send_string( "Success!", _socket );
 }
@@ -181,16 +182,12 @@ void ProjectManager::clear()
 
     for ( auto& pair : data_frames() )
         {
-            monitor_->send(
-                "removedataframe", "{\"name\":\"" + pair.first + "\"}" );
+            remove( "dataframe", pair.first );
         }
-
-    // TODO: Remove hyperopts
 
     for ( auto& pair : pipelines() )
         {
-            monitor_->send(
-                "removepipeline", "{\"name\":\"" + pair.first + "\"}" );
+            remove( "pipeline", pair.first );
         }
 
     // --------------------------------
@@ -208,6 +205,8 @@ void ProjectManager::clear()
     join_keys_encoding().clear();
 
     // --------------------------------
+
+    data_frame_tracker().clear();
 
     fe_tracker().clear();
 
@@ -227,7 +226,7 @@ void ProjectManager::delete_data_frame(
 
     FileHandler::remove( _name, project_directory_, _cmd, &data_frames() );
 
-    monitor_->send( "removedataframe", "{\"name\":\"" + _name + "\"}" );
+    remove( "dataframe", _name );
 
     engine::communication::Sender::send_string( "Success!", _socket );
 }
@@ -243,7 +242,7 @@ void ProjectManager::delete_pipeline(
 
     FileHandler::remove( _name, project_directory_, _cmd, &pipelines() );
 
-    monitor_->send( "removepipeline", "{\"name\":\"" + _name + "\"}" );
+    remove( "pipeline", _name );
 
     communication::Sender::send_string( "Success!", _socket );
 }
@@ -255,7 +254,7 @@ void ProjectManager::delete_project(
 {
     // Some methods, particularly the hyperparameter optimization,
     // require us to keep the project fixed while they run.
-    std::lock_guard<std::mutex> project_guard( project_mtx() );
+    multithreading::WriteLock project_guard( project_lock_ );
 
     multithreading::WriteLock write_lock( read_write_lock_ );
 
@@ -451,10 +450,6 @@ void ProjectManager::load_all_hyperopts()
                         hyperparam::Hyperopt( it->path() + "/" );
 
                     set_hyperopt( it.name(), hyperopt );
-
-                    // TODO
-                    /*monitor_->send(
-                        "posthyperopt", pipeline.to_monitor( it.name() ) );*/
                 }
             catch ( std::exception& e )
                 {
@@ -493,15 +488,14 @@ void ProjectManager::load_all_pipelines()
             try
                 {
                     const auto pipeline = pipelines::Pipeline(
-                        categories().vector(),
-                        it->path() + "/",
-                        fe_tracker_,
-                        pred_tracker_ );
+                        it->path() + "/", fe_tracker_, pred_tracker_ );
 
                     set_pipeline( it.name(), pipeline );
 
-                    monitor_->send(
-                        "postpipeline", pipeline.to_monitor( it.name() ) );
+                    post(
+                        "pipeline",
+                        pipeline.to_monitor(
+                            categories().vector(), it.name() ) );
                 }
             catch ( std::exception& e )
                 {
@@ -530,7 +524,6 @@ void ProjectManager::load_data_frame(
     multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
 
     // --------------------------------------------------------------------
-    // Load data frame
 
     auto df = FileHandler::load(
         data_frames(),
@@ -541,18 +534,22 @@ void ProjectManager::load_data_frame(
 
     license_checker().check_mem_size( data_frames(), df.nbytes() );
 
+    df.create_indices();
+
     // --------------------------------------------------------------------
 
     weak_write_lock.upgrade();
 
     // --------------------------------------------------------------------
-    // No problems while loading the data frame - we can store it!
 
     data_frames()[_name] = df;
 
-    data_frames()[_name].create_indices();
+    if ( df.build_history() )
+        {
+            data_frame_tracker().add( df );
+        }
 
-    monitor_->send( "postdataframe", data_frames()[_name].to_monitor() );
+    post( "dataframe", df.to_monitor() );
 
     engine::communication::Sender::send_string( "Success!", _socket );
 
@@ -571,16 +568,27 @@ void ProjectManager::load_pipeline(
 
     const auto path = project_directory_ + "pipelines/" + _name + "/";
 
-    auto pipeline = pipelines::Pipeline(
-        categories().vector(), path, fe_tracker_, pred_tracker_ );
+    auto pipeline = pipelines::Pipeline( path, fe_tracker_, pred_tracker_ );
 
     set_pipeline( _name, pipeline );
 
-    monitor_->send( "postpipeline", pipeline.to_monitor( _name ) );
+    post( "pipeline", pipeline.to_monitor( categories().vector(), _name ) );
 
     engine::communication::Sender::send_string( "Success!", _socket );
 }
 
+// ------------------------------------------------------------------------
+
+void ProjectManager::post(
+    const std::string& _what, const Poco::JSON::Object& _obj ) const
+{
+    const auto response = monitor().send_tcp( "post" + _what, _obj );
+
+    if ( response != "Success!" )
+        {
+            throw std::runtime_error( response );
+        }
+}
 // ------------------------------------------------------------------------
 
 void ProjectManager::refresh( Poco::Net::StreamSocket* _socket ) const
@@ -597,6 +605,23 @@ void ProjectManager::refresh( Poco::Net::StreamSocket* _socket ) const
 
     engine::communication::Sender::send_string(
         JSON::stringify( obj ), _socket );
+}
+
+// ------------------------------------------------------------------------
+
+void ProjectManager::remove(
+    const std::string& _what, const std::string& _name ) const
+{
+    auto obj = Poco::JSON::Object();
+
+    obj.set( "name", _name );
+
+    const auto response = monitor().send_tcp( "remove" + _what, obj );
+
+    if ( response != "Success!" )
+        {
+            throw std::runtime_error( response );
+        }
 }
 
 // ------------------------------------------------------------------------
@@ -671,7 +696,7 @@ void ProjectManager::set_project(
 {
     // Some methods, particularly the hyperparameter optimization,
     // require us to keep the project fixed while they run.
-    std::lock_guard<std::mutex> project_guard( project_mtx() );
+    multithreading::WriteLock project_guard( project_lock_ );
 
     auto absolute_path =
         handlers::FileHandler::create_project_directory( _name, options_ );
@@ -686,7 +711,11 @@ void ProjectManager::set_project(
 
     project_directory_ = absolute_path;
 
-    monitor_->send( "postproject", "{\"name\":\"" + _name + "\"}" );
+    auto obj = Poco::JSON::Object();
+
+    obj.set( "name", _name );
+
+    post( "project", obj );
 
     clear();
 

@@ -15,7 +15,7 @@ class SocketLogger : public logging::AbstractLogger
 
    public:
     SocketLogger(
-        const std::shared_ptr<const monitoring::Logger>& _logger,
+        const std::shared_ptr<const communication::Logger>& _logger,
         const bool _silent,
         Poco::Net::StreamSocket* _socket )
         : logger_( _logger ), silent_( _silent ), socket_( _socket )
@@ -42,7 +42,7 @@ class SocketLogger : public logging::AbstractLogger
 
    private:
     /// The Monitor is supposed to monitor all of the logs as well.
-    const std::shared_ptr<const monitoring::Logger> logger_;
+    const std::shared_ptr<const communication::Logger> logger_;
 
     /// Whether we want the progress to appear in the engine and the monitor
     /// log.

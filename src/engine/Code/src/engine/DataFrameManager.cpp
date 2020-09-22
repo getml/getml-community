@@ -112,7 +112,7 @@ void DataFrameManager::add_float_column(
         {
             add_float_column_to_df( role, col, df, &weak_write_lock );
 
-            monitor_->send( "postdataframe", df->to_monitor() );
+            monitor_->send_tcp( "postdataframe", df->to_monitor() );
         }
     else
         {
@@ -125,7 +125,7 @@ void DataFrameManager::add_float_column(
 
             data_frames()[df_name].create_indices();
 
-            monitor_->send( "postdataframe", new_df.to_monitor() );
+            monitor_->send_tcp( "postdataframe", new_df.to_monitor() );
         }
 
     // ------------------------------------------------------------------------
@@ -158,7 +158,7 @@ void DataFrameManager::add_float_column(
         {
             recv_and_add_float_column( _cmd, df, &weak_write_lock, _socket );
 
-            monitor_->send( "postdataframe", df->to_monitor() );
+            monitor_->send_tcp( "postdataframe", df->to_monitor() );
         }
     else
         {
@@ -172,7 +172,7 @@ void DataFrameManager::add_float_column(
 
             data_frames()[df_name].create_indices();
 
-            monitor_->send( "postdataframe", new_df.to_monitor() );
+            monitor_->send_tcp( "postdataframe", new_df.to_monitor() );
         }
 
     // ------------------------------------------------------------------------
@@ -222,7 +222,7 @@ void DataFrameManager::add_int_column_to_df(
 
     auto encoding = local_join_keys_encoding;
 
-    if ( _role == "categorical" )
+    if ( _role == containers::DataFrame::ROLE_CATEGORICAL )
         {
             encoding = local_categories;
         }
@@ -254,11 +254,11 @@ void DataFrameManager::add_int_column_to_df(
 
     // ------------------------------------------------------------------------
 
-    if ( _role == "categorical" )
+    if ( _role == containers::DataFrame::ROLE_CATEGORICAL )
         {
             categories_->append( *local_categories );
         }
-    else if ( _role == "join_key" )
+    else if ( _role == containers::DataFrame::ROLE_JOIN_KEY )
         {
             join_keys_encoding_->append( *local_join_keys_encoding );
         }
@@ -287,7 +287,7 @@ void DataFrameManager::add_int_column_to_df(
 
     auto encoding = _local_join_keys_encoding;
 
-    if ( _role == "categorical" )
+    if ( _role == containers::DataFrame::ROLE_CATEGORICAL )
         {
             encoding = _local_categories;
         }
@@ -329,7 +329,7 @@ void DataFrameManager::add_string_column(
         {
             recv_and_add_string_column( _cmd, df, &weak_write_lock, _socket );
 
-            monitor_->send( "postdataframe", df->to_monitor() );
+            monitor_->send_tcp( "postdataframe", df->to_monitor() );
         }
     else
         {
@@ -343,7 +343,7 @@ void DataFrameManager::add_string_column(
 
             data_frames()[df_name].create_indices();
 
-            monitor_->send( "postdataframe", new_df.to_monitor() );
+            monitor_->send_tcp( "postdataframe", new_df.to_monitor() );
         }
 
     // ------------------------------------------------------------------------
@@ -410,7 +410,8 @@ void DataFrameManager::add_string_column(
 
     // ------------------------------------------------------------------------
 
-    if ( role == "unused" || role == "unused_string" )
+    if ( role == containers::DataFrame::ROLE_UNUSED ||
+         role == containers::DataFrame::ROLE_UNUSED_STRING )
         {
             add_string_column_to_df( name, unit, vec, df, &weak_write_lock );
         }
@@ -431,7 +432,7 @@ void DataFrameManager::add_string_column(
 
     // ------------------------------------------------------------------------
 
-    monitor_->send( "postdataframe", df->to_monitor() );
+    monitor_->send_tcp( "postdataframe", df->to_monitor() );
 
     communication::Sender::send_string( "Success!", _socket );
 
@@ -565,7 +566,7 @@ void DataFrameManager::append_to_data_frame(
 
     // --------------------------------------------------------------------
 
-    monitor_->send( "postdataframe", data_frames()[_name].to_monitor() );
+    monitor_->send_tcp( "postdataframe", data_frames()[_name].to_monitor() );
 
     // --------------------------------------------------------------------
 }
@@ -601,7 +602,7 @@ void DataFrameManager::calc_categorical_column_plots(
 
     auto vec = std::vector<strings::String>();
 
-    if ( role == "categorical" )
+    if ( role == containers::DataFrame::ROLE_CATEGORICAL )
         {
             const auto col = df.int_column( _name, role );
 
@@ -612,7 +613,7 @@ void DataFrameManager::calc_categorical_column_plots(
                     vec[i] = categories()[col[i]];
                 }
         }
-    else if ( role == "join_key" )
+    else if ( role == containers::DataFrame::ROLE_JOIN_KEY )
         {
             const auto col = df.int_column( _name, role );
 
@@ -623,7 +624,9 @@ void DataFrameManager::calc_categorical_column_plots(
                     vec[i] = join_keys_encoding()[col[i]];
                 }
         }
-    else if ( role == "unused" || role == "unused_string" )
+    else if (
+        role == containers::DataFrame::ROLE_UNUSED ||
+        role == containers::DataFrame::ROLE_UNUSED_STRING )
         {
             const auto col = df.unused_string( _name );
 
@@ -725,7 +728,7 @@ void DataFrameManager::calc_column_plots(
 
     // --------------------------------------------------------------------
 
-    const containers::Features features = { col.data_ptr() };
+    const containers::Features features = {col.data_ptr()};
 
     const auto obj = metrics::Summarizer::calculate_feature_plots(
         features, col.nrows(), 1, num_bins, targets );
@@ -892,7 +895,7 @@ void DataFrameManager::concat(
 
     communication::Sender::send_string( "Success!", _socket );
 
-    monitor_->send( "postdataframe", df.to_monitor() );
+    monitor_->send_tcp( "postdataframe", df.to_monitor() );
 
     // ------------------------------------------------------------------------
 }
@@ -1867,7 +1870,8 @@ void DataFrameManager::get_unit_categorical(
 
     std::string unit;
 
-    if ( role == "unused" || role == "unused_string" )
+    if ( role == containers::DataFrame::ROLE_UNUSED ||
+         role == containers::DataFrame::ROLE_UNUSED_STRING )
         {
             unit = df.unused_string( _name ).unit();
         }
@@ -1903,14 +1907,14 @@ void DataFrameManager::group_by(
     check_nrows( _cmd, df_name, df.nrows() );
 
     const auto grouped_df =
-        GroupByParser( categories_, join_keys_encoding_, { df } )
+        GroupByParser( categories_, join_keys_encoding_, {df} )
             .group_by( _name, key_name, aggregations );
 
     weak_write_lock.upgrade();
 
     data_frames()[_name] = grouped_df;
 
-    monitor_->send( "postdataframe", grouped_df.to_monitor() );
+    monitor_->send_tcp( "postdataframe", grouped_df.to_monitor() );
 
     weak_write_lock.unlock();
 
@@ -1973,7 +1977,7 @@ void DataFrameManager::join(
 
     data_frames()[_name] = joined_df;
 
-    monitor_->send( "postdataframe", data_frames()[_name].to_monitor() );
+    monitor_->send_tcp( "postdataframe", data_frames()[_name].to_monitor() );
 
     weak_write_lock.unlock();
 
@@ -2065,7 +2069,8 @@ void DataFrameManager::recv_and_add_string_column(
 
     const auto str_col = communication::Receiver::recv_string_column( _socket );
 
-    if ( role == "unused" || role == "unused_string" )
+    if ( role == containers::DataFrame::ROLE_UNUSED ||
+         role == containers::DataFrame::ROLE_UNUSED_STRING )
         {
             add_string_column_to_df( name, "", str_col, _df, _weak_write_lock );
         }
@@ -2091,7 +2096,8 @@ void DataFrameManager::recv_and_add_string_column(
 
     const auto str_col = communication::Receiver::recv_string_column( _socket );
 
-    if ( role == "unused" || role == "unused_string" )
+    if ( role == containers::DataFrame::ROLE_UNUSED ||
+         role == containers::DataFrame::ROLE_UNUSED_STRING )
         {
             add_string_column_to_df( name, "", str_col, _df, nullptr );
         }
@@ -2148,7 +2154,7 @@ void DataFrameManager::remove_column(
                 "' not found." );
         }
 
-    monitor_->send( "postdataframe", df.to_monitor() );
+    monitor_->send_tcp( "postdataframe", df.to_monitor() );
 
     communication::Sender::send_string( "Success!", _socket );
 }
@@ -2176,7 +2182,7 @@ void DataFrameManager::set_unit(
 
     df.add_float_column( column, role );
 
-    monitor_->send( "postdataframe", df.to_monitor() );
+    monitor_->send_tcp( "postdataframe", df.to_monitor() );
 
     write_lock.unlock();
 
@@ -2200,7 +2206,8 @@ void DataFrameManager::set_unit_categorical(
 
     auto& df = utils::Getter::get( df_name, &data_frames() );
 
-    if ( role == "unused" || role == "unused_string" )
+    if ( role == containers::DataFrame::ROLE_UNUSED ||
+         role == containers::DataFrame::ROLE_UNUSED_STRING )
         {
             auto column = df.unused_string( _name );
             column.set_unit( unit );
@@ -2213,7 +2220,7 @@ void DataFrameManager::set_unit_categorical(
             df.add_int_column( column, role );
         }
 
-    monitor_->send( "postdataframe", df.to_monitor() );
+    monitor_->send_tcp( "postdataframe", df.to_monitor() );
 
     write_lock.unlock();
 
@@ -2482,7 +2489,7 @@ void DataFrameManager::where(
 
     data_frames()[new_df_name] = df;
 
-    monitor_->send( "postdataframe", df.to_monitor() );
+    monitor_->send_tcp( "postdataframe", df.to_monitor() );
 
     weak_write_lock.unlock();
 

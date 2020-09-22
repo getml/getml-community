@@ -1,185 +1,69 @@
-#include "engine/monitoring/monitoring.hpp"
+#include "engine/communication/communication.hpp"
 
 namespace engine
 {
-namespace monitoring
+namespace communication
 {
 // ------------------------------------------------------------------------
 
-bool Monitor::get_start_message() const
+std::shared_ptr<Poco::Net::StreamSocket> Monitor::connect() const
 {
-    // --------------------------------------------------------------
-    // Create HTTPRequest
+    const auto host_and_port =
+        "127.0.0.1:" + std::to_string( options_.monitor().tcp_port() );
 
-    const std::string url =
-        "127.0.0.1:" + std::to_string( options_.monitor().http_port() );
+    const auto addr = Poco::Net::SocketAddress( host_and_port );
 
-    const std::string path = "/getstartmessage/";
+    const auto socket = std::make_shared<Poco::Net::StreamSocket>( addr );
 
-    Poco::Net::HTTPRequest req(
-        Poco::Net::HTTPRequest::HTTP_POST,
-        path,
-        Poco::Net::HTTPMessage::HTTP_1_1 );
-
-    // --------------------------------------------------------------
-    // Send HTTPRequest and receive response
-
-    Poco::Net::HTTPResponse res;
-
-    std::string response_content;
-
-    size_t attempts = 0;
-
-    while ( true )
-        {
-            try
-                {
-                    send_and_receive( "", &req, &res, &response_content );
-
-                    break;
-                }
-            catch ( std::exception& e )
-                {
-                    if ( attempts++ < 21 )
-                        {
-                            std::this_thread::sleep_for(
-                                std::chrono::milliseconds( 10 ) );
-                        }
-                    else
-                        {
-                            log( "getML has not started." );
-
-                            return false;
-                        }
-                }
-        }
-
-    // --------------------------------------------------------------
-
-    log( response_content );
-
-    // --------------------------------------------------------------
-
-    return true;
-
-    // --------------------------------------------------------------
+    return socket;
 }
 
 // ------------------------------------------------------------------------
 
-std::pair<Poco::Net::HTTPResponse::HTTPStatus, std::string> Monitor::send(
-    const std::string& _type, const std::string& _json ) const
+void Monitor::log( const std::string& _msg ) const
 {
-    // --------------------------------------------------------------
-    // Create HTTPRequest
+    auto now = std::chrono::system_clock::now();
 
-    const std::string url =
-        "127.0.0.1:" + std::to_string( options_.monitor().http_port() );
+    std::time_t current_time = std::chrono::system_clock::to_time_t( now );
 
-    const std::string path = "/" + _type + "/";
+    std::cout << std::ctime( &current_time ) << _msg << std::endl << std::endl;
+}
 
-    Poco::Net::HTTPRequest req(
-        Poco::Net::HTTPRequest::HTTP_POST,
-        path,
-        Poco::Net::HTTPMessage::HTTP_1_1 );
+// ------------------------------------------------------------------------
 
-    req.setContentType( _type );
+std::string Monitor::make_cmd(
+    const std::string& _type, const Poco::JSON::Object& _body ) const
+{
+    auto cmd = Poco::JSON::Object();
 
-    req.setContentLength( _json.length() );
+    cmd.set( "type_", _type );
 
-    // --------------------------------------------------------------
-    // Send HTTPRequest and receive response
+    cmd.set( "body_", _body );
 
-    Poco::Net::HTTPResponse res;
+    return JSON::stringify( cmd );
+}
 
-    std::string response_content;
+// ------------------------------------------------------------------------
 
+std::string Monitor::send_tcp(
+    const std::string& _type, const Poco::JSON::Object& _body ) const
+{
     try
         {
-            send_and_receive( _json, &req, &res, &response_content );
+            const auto socket = connect();
+
+            const auto cmd_str = make_cmd( _type, _body );
+
+            Sender::send_string( cmd_str, socket.get() );
+
+            return Receiver::recv_string( socket.get() );
         }
     catch ( std::exception& e )
         {
-            log( "Communication with getML monitor failed: " +
-                 std::string( e.what() ) + "." );
-
-            return std::pair<Poco::Net::HTTPResponse::HTTPStatus, std::string>(
-                Poco::Net::HTTPResponse::HTTPStatus::HTTP_MOVED_PERMANENTLY,
-                "" );
+            return std::string( "Connection with the getML monitor failed: " ) +
+                   e.what();
         }
-
-    // --------------------------------------------------------------
-
-    return std::pair<Poco::Net::HTTPResponse::HTTPStatus, std::string>(
-        res.getStatus(), response_content );
-
-    // --------------------------------------------------------------
 }
-
-// ------------------------------------------------------------------------
-
-void Monitor::send_and_receive(
-    const std::string& _json,
-    Poco::Net::HTTPRequest* _req,
-    Poco::Net::HTTPResponse* _res,
-    std::string* _response_content ) const
-{
-    Poco::Net::HTTPClientSession session(
-        "127.0.0.1",
-        static_cast<Poco::UInt16>( options_.monitor().http_port() ) );
-
-    const auto one_year = Poco::Timespan( 365, 0, 0, 0, 0 );
-
-    session.setTimeout( one_year );
-
-    auto& req_stream = session.sendRequest( *_req );
-
-    req_stream << _json;
-
-    std::istream& rs = session.receiveResponse( *_res );
-
-    Poco::StreamCopier::copyToString( rs, *_response_content );
-}
-
-// ------------------------------------------------------------------------
-
-bool Monitor::shutdown() const
-{
-    // --------------------------------------------------------------
-    // Create HTTPRequest
-
-    const std::string path = "/exit/";
-
-    Poco::Net::HTTPRequest req(
-        Poco::Net::HTTPRequest::HTTP_GET,
-        path,
-        Poco::Net::HTTPMessage::HTTP_1_1 );
-
-    // --------------------------------------------------------------
-    // Send HTTPRequest
-
-    try
-        {
-            Poco::Net::HTTPClientSession session(
-                "127.0.0.1",
-                static_cast<Poco::UInt16>( options_.monitor().http_port() ) );
-
-            session.sendRequest( req );
-        }
-    catch ( std::exception& e )
-        {
-            log( "Communication with getML monitor failed: " +
-                 std::string( e.what() ) + "." );
-
-            return false;
-        }
-
-    // --------------------------------------------------------------
-
-    return true;
-
-    // --------------------------------------------------------------
-};
 
 // ------------------------------------------------------------------------
 
@@ -191,9 +75,9 @@ void Monitor::shutdown_when_monitor_dies( const Monitor _monitor )
         {
             std::this_thread::sleep_for( std::chrono::seconds( 3 ) );
 
-            const auto [status, res] = _monitor.send( "isalive", "" );
+            const auto response = _monitor.send_tcp( "isalive" );
 
-            if ( status == Poco::Net::HTTPResponse::HTTP_OK && res == "yes" )
+            if ( response == "yes" )
                 {
                     num_failed = 0;
                 }
@@ -213,5 +97,5 @@ void Monitor::shutdown_when_monitor_dies( const Monitor _monitor )
 }
 
 // ------------------------------------------------------------------------
-}  // namespace monitoring
+}  // namespace communication
 }  // namespace engine

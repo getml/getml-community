@@ -20,7 +20,7 @@
 
 // ----------------------------------------------------------------------------
 
-#include "engine/monitoring/monitoring.hpp"
+#include "engine/communication/communication.hpp"
 
 #include "engine/licensing/licensing.hpp"
 

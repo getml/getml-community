@@ -12,7 +12,6 @@ namespace ensemble
 struct DecisionTreeEnsembleImpl
 {
     DecisionTreeEnsembleImpl(
-        const std::shared_ptr<const std::vector<strings::String>> &_categories,
         const std::shared_ptr<const descriptors::Hyperparameters>
             &_hyperparameters,
         const std::vector<std::string> &_peripheral,
@@ -22,7 +21,6 @@ struct DecisionTreeEnsembleImpl
         const std::shared_ptr<const containers::Placeholder>
             &_population_schema )
         : allow_http_( false ),
-          categories_( _categories ),
           comm_( nullptr ),
           hyperparameters_( _hyperparameters ),
           peripheral_( _peripheral ),
@@ -39,12 +37,6 @@ struct DecisionTreeEnsembleImpl
 
     /// Whether we want to allow this model to be used as an http endpoint.
     bool allow_http_;
-
-    /// Vector containing the names of the categories. It is used
-    /// for generating the SQL code, because categorical data is
-    /// stored in the form of integers, whereas we want actual categories
-    /// in our code.
-    std::shared_ptr<const std::vector<strings::String>> categories_;
 
     /// MPI Communicator or self-defined communicator object (for
     /// multithreading)

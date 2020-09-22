@@ -84,7 +84,8 @@ void SubtreeHelper::fit_subensemble(
     const auto num_features =
         static_cast<size_t>( _hyperparameters.num_subfeatures_ );
 
-    utils::Logger::log( "Training features...", _logger, _comm );
+    utils::Logger::log(
+        "RelboostModel: Training subfeatures...", _logger, _comm );
 
     for ( size_t i = 0; i < num_features; ++i )
         {
@@ -157,7 +158,7 @@ void SubtreeHelper::fit_subensembles(
 
     for ( size_t i = 0; i < num_tables; ++i )
         {
-            if ( _table_holder->subtables_[i] )
+            if ( _table_holder->subtables_.at( i ) )
                 {
                     const auto joined_table =
                         std::make_shared<const containers::Placeholder>(
@@ -165,25 +166,19 @@ void SubtreeHelper::fit_subensembles(
 
                     assert_true( joined_table->joined_tables_.size() > 0 );
 
-                    subensembles_avg[i] =
+                    subensembles_avg.at( i ) =
                         std::make_optional<DecisionTreeEnsemble>(
-                            _ensemble.categories(),
-                            hyperparameters,
-                            peripheral,
-                            joined_table );
+                            hyperparameters, peripheral, joined_table );
 
-                    subensembles_sum[i] =
+                    subensembles_sum.at( i ) =
                         std::make_optional<DecisionTreeEnsemble>(
-                            _ensemble.categories(),
-                            hyperparameters,
-                            peripheral,
-                            joined_table );
+                            hyperparameters, peripheral, joined_table );
                 }
             else
                 {
                     assert_true(
-                        placeholder.joined_tables_[i].joined_tables_.size() ==
-                        0 );
+                        placeholder.joined_tables_.at( i )
+                            .joined_tables_.size() == 0 );
                 }
         }
 
@@ -327,7 +322,8 @@ void SubtreeHelper::make_predictions_for_one_subensemble(
     const auto subsubfeatures =
         SubtreeHelper::make_subfeatures( _subtable_holder, subpredictions );
 
-    utils::Logger::log( "Building features...", _logger, _comm );
+    utils::Logger::log(
+        "RelboostModel: Building subfeatures...", _logger, _comm );
 
     const auto num_features = _subensemble->num_features();
 

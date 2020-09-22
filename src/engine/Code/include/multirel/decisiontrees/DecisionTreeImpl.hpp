@@ -17,11 +17,9 @@ struct DecisionTreeImpl
     // ----------------------------------------
 
     DecisionTreeImpl(
-        const std::shared_ptr<const std::vector<strings::String>>& _categories,
         const std::shared_ptr<const descriptors::TreeHyperparameters>&
             _tree_hyperparameters )
-        : categories_( _categories ),
-          comm_( nullptr ),
+        : comm_( nullptr ),
           optimization_criterion_( nullptr ),
           random_number_generator_( nullptr ),
           tree_hyperparameters_( _tree_hyperparameters )
@@ -37,13 +35,6 @@ struct DecisionTreeImpl
     {
         assert_true( tree_hyperparameters_ );
         return tree_hyperparameters_->allow_sets_;
-    }
-
-    /// Trivial accessor
-    inline const std::vector<strings::String>& categories() const
-    {
-        assert_true( categories_ );
-        return *categories_;
     }
 
     /// Clears up the memory
@@ -156,9 +147,6 @@ struct DecisionTreeImpl
 
     /// Type of the aggregation used (needed for copy constructor)
     std::string aggregation_type_;
-
-    /// Pointer to the vector that maps the integers to categories
-    std::shared_ptr<const std::vector<strings::String>> categories_;
 
     /// Pointer to the structure that contains information
     /// about the column aggregated by this tree

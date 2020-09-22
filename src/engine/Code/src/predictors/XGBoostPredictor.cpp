@@ -221,7 +221,6 @@ std::string XGBoostPredictor::fit(
     impl().check_plausibility( _X_categorical, _X_numerical, _y );
 
     // --------------------------------------------------------------------
-    // Build DMatrix
 
     auto d_matrix = convert_to_dmatrix( _X_categorical, _X_numerical );
 
@@ -242,128 +241,65 @@ std::string XGBoostPredictor::fit(
         }
 
     // --------------------------------------------------------------------
-    // Allocate the booster
 
     auto handle = allocate_booster( d_matrix.get(), 1 );
 
-    // --------------------------------------------------------------------
-    // Set the hyperparameters
-
-    XGBoosterSetParam(
-        *handle, "alpha", std::to_string( hyperparams_.alpha_ ).c_str() );
-
-    XGBoosterSetParam( *handle, "booster", hyperparams_.booster_.c_str() );
-
-    XGBoosterSetParam(
-        *handle,
-        "colsample_bytree",
-        std::to_string( hyperparams_.colsample_bytree_ ).c_str() );
-
-    XGBoosterSetParam(
-        *handle,
-        "colsample_bylevel",
-        std::to_string( hyperparams_.colsample_bylevel_ ).c_str() );
-
-    XGBoosterSetParam(
-        *handle, "eta", std::to_string( hyperparams_.eta_ ).c_str() );
-
-    XGBoosterSetParam(
-        *handle, "gamma", std::to_string( hyperparams_.gamma_ ).c_str() );
-
-    XGBoosterSetParam(
-        *handle, "lambda", std::to_string( hyperparams_.lambda_ ).c_str() );
-
-    XGBoosterSetParam(
-        *handle,
-        "max_delta_step",
-        std::to_string( hyperparams_.max_delta_step_ ).c_str() );
-
-    XGBoosterSetParam(
-        *handle,
-        "max_depth",
-        std::to_string( hyperparams_.max_depth_ ).c_str() );
-
-    XGBoosterSetParam(
-        *handle,
-        "min_child_weight",
-        std::to_string( hyperparams_.min_child_weights_ ).c_str() );
-
-    XGBoosterSetParam(
-        *handle,
-        "num_parallel_tree",
-        std::to_string( hyperparams_.num_parallel_tree_ ).c_str() );
-
-    XGBoosterSetParam(
-        *handle, "normalize_type", hyperparams_.normalize_type_.c_str() );
-
-    XGBoosterSetParam(
-        *handle, "nthread", std::to_string( hyperparams_.nthread_ ).c_str() );
-
-    // XGBoost has deprecated reg::linear, but we will continue to support it.
-    // Strangely enough, its exactly the other way around for windows.
-#if ( defined( _WIN32 ) || defined( _WIN64 ) )
-    if ( hyperparams_.objective_ == "reg:squarederror" )
-        {
-            XGBoosterSetParam( *handle, "objective", "reg:linear" );
-        }
-#else
-    if ( hyperparams_.objective_ == "reg:linear" )
-        {
-            XGBoosterSetParam( *handle, "objective", "reg:squarederror" );
-        }
-#endif
-    else
-        {
-            XGBoosterSetParam(
-                *handle, "objective", hyperparams_.objective_.c_str() );
-        }
-
-    if ( hyperparams_.one_drop_ )
-        {
-            XGBoosterSetParam( *handle, "one_drop", "1" );
-        }
-    else
-        {
-            XGBoosterSetParam( *handle, "one_drop", "0" );
-        }
-
-    XGBoosterSetParam(
-        *handle,
-        "rate_drop",
-        std::to_string( hyperparams_.rate_drop_ ).c_str() );
-
-    XGBoosterSetParam(
-        *handle, "sample_type", hyperparams_.sample_type_.c_str() );
-
-    if ( hyperparams_.silent_ )
-        {
-            XGBoosterSetParam( *handle, "silent", "1" );
-        }
-    else
-        {
-            XGBoosterSetParam( *handle, "silent", "0" );
-        }
-
-    XGBoosterSetParam(
-        *handle,
-        "skip_drop",
-        std::to_string( hyperparams_.skip_drop_ ).c_str() );
-
-    XGBoosterSetParam(
-        *handle,
-        "subsample",
-        std::to_string( hyperparams_.subsample_ ).c_str() );
+    set_hyperparameters( handle );
 
     // --------------------------------------------------------------------
-    // Do the actual fitting
 
+    fit_handle( _logger, d_matrix, handle );
+
+    // ----------------------------------------------------------------
+
+    const char *out_dptr;
+
+    bst_ulong len = 0;
+
+    if ( XGBoosterGetModelRaw( *handle, &len, &out_dptr ) != 0 )
+        {
+            throw std::invalid_argument( "Storing of booster failed!" );
+        }
+
+    model_ = std::vector<char>( out_dptr, out_dptr + len );
+
+    // ----------------------------------------------------------------
+
+    std::stringstream msg;
+
+    if ( hyperparams_.booster_ == "gblinear" )
+        {
+            msg << std::endl
+                << "XGBoost: Trained " << hyperparams_.n_iter_
+                << " linear models.";
+        }
+    else
+        {
+            msg << std::endl
+                << "XGBoost: Trained " << hyperparams_.n_iter_ << " trees.";
+        }
+
+    // ----------------------------------------------------------------
+
+    return msg.str();
+
+    // ----------------------------------------------------------------
+}
+
+// -----------------------------------------------------------------------------
+
+void XGBoostPredictor::fit_handle(
+    const std::shared_ptr<const logging::AbstractLogger> _logger,
+    const std::unique_ptr<DMatrixHandle, XGBoostPredictor::DMatrixDestructor>
+        &_d_matrix,
+    const std::unique_ptr<BoosterHandle, XGBoostPredictor::BoosterDestructor>
+        &_handle ) const
+{
     const auto n_iter = static_cast<int>( hyperparams_.n_iter_ );
-
-    _logger->log( "Training XGBoost..." );
 
     for ( int i = 0; i < n_iter; ++i )
         {
-            if ( XGBoosterUpdateOneIter( *handle, i, *d_matrix ) != 0 )
+            if ( XGBoosterUpdateOneIter( *_handle, i, *_d_matrix ) != 0 )
                 {
                     std::runtime_error(
                         "XGBoost: Fitting tree or linear model " +
@@ -391,39 +327,6 @@ std::string XGBoostPredictor::fit(
                         }
                 }
         }
-
-    // ----------------------------------------------------------------
-    // Dump booster
-
-    const char *out_dptr;
-
-    bst_ulong len = 0;
-
-    if ( XGBoosterGetModelRaw( *handle, &len, &out_dptr ) != 0 )
-        {
-            throw std::invalid_argument( "Storing of booster failed!" );
-        }
-
-    model_ = std::vector<char>( out_dptr, out_dptr + len );
-
-    // ----------------------------------------------------------------
-    // Return message
-
-    std::stringstream msg;
-
-    if ( hyperparams_.booster_ == "gblinear" )
-        {
-            msg << std::endl
-                << "XGBoost: Trained " << hyperparams_.n_iter_
-                << " linear models.";
-        }
-    else
-        {
-            msg << std::endl
-                << "XGBoost: Trained " << hyperparams_.n_iter_ << " trees.";
-        }
-
-    return msg.str();
 }
 
 // -----------------------------------------------------------------------------
@@ -641,6 +544,119 @@ void XGBoostPredictor::save( const std::string &_fname ) const
         }
 
     // --------------------------------------------------------------------
+}
+
+// -----------------------------------------------------------------------------
+
+void XGBoostPredictor::set_hyperparameters(
+    const std::unique_ptr<BoosterHandle, XGBoostPredictor::BoosterDestructor>
+        &_handle ) const
+{
+    XGBoosterSetParam(
+        *_handle, "alpha", std::to_string( hyperparams_.alpha_ ).c_str() );
+
+    XGBoosterSetParam( *_handle, "booster", hyperparams_.booster_.c_str() );
+
+    XGBoosterSetParam(
+        *_handle,
+        "colsample_bytree",
+        std::to_string( hyperparams_.colsample_bytree_ ).c_str() );
+
+    XGBoosterSetParam(
+        *_handle,
+        "colsample_bylevel",
+        std::to_string( hyperparams_.colsample_bylevel_ ).c_str() );
+
+    XGBoosterSetParam(
+        *_handle, "eta", std::to_string( hyperparams_.eta_ ).c_str() );
+
+    XGBoosterSetParam(
+        *_handle, "gamma", std::to_string( hyperparams_.gamma_ ).c_str() );
+
+    XGBoosterSetParam(
+        *_handle, "lambda", std::to_string( hyperparams_.lambda_ ).c_str() );
+
+    XGBoosterSetParam(
+        *_handle,
+        "max_delta_step",
+        std::to_string( hyperparams_.max_delta_step_ ).c_str() );
+
+    XGBoosterSetParam(
+        *_handle,
+        "max_depth",
+        std::to_string( hyperparams_.max_depth_ ).c_str() );
+
+    XGBoosterSetParam(
+        *_handle,
+        "min_child_weight",
+        std::to_string( hyperparams_.min_child_weights_ ).c_str() );
+
+    XGBoosterSetParam(
+        *_handle,
+        "num_parallel_tree",
+        std::to_string( hyperparams_.num_parallel_tree_ ).c_str() );
+
+    XGBoosterSetParam(
+        *_handle, "normalize_type", hyperparams_.normalize_type_.c_str() );
+
+    const auto nthread = impl().get_num_threads( hyperparams_.nthread_ );
+
+    XGBoosterSetParam( *_handle, "nthread", std::to_string( nthread ).c_str() );
+
+    // XGBoost has deprecated reg::linear, but we will continue to support it.
+    // Strangely enough, its exactly the other way around for windows.
+#if ( defined( _WIN32 ) || defined( _WIN64 ) )
+    if ( hyperparams_.objective_ == "reg:squarederror" )
+        {
+            XGBoosterSetParam( *_handle, "objective", "reg:linear" );
+        }
+#else
+    if ( hyperparams_.objective_ == "reg:linear" )
+        {
+            XGBoosterSetParam( *_handle, "objective", "reg:squarederror" );
+        }
+#endif
+    else
+        {
+            XGBoosterSetParam(
+                *_handle, "objective", hyperparams_.objective_.c_str() );
+        }
+
+    if ( hyperparams_.one_drop_ )
+        {
+            XGBoosterSetParam( *_handle, "one_drop", "1" );
+        }
+    else
+        {
+            XGBoosterSetParam( *_handle, "one_drop", "0" );
+        }
+
+    XGBoosterSetParam(
+        *_handle,
+        "rate_drop",
+        std::to_string( hyperparams_.rate_drop_ ).c_str() );
+
+    XGBoosterSetParam(
+        *_handle, "sample_type", hyperparams_.sample_type_.c_str() );
+
+    if ( hyperparams_.silent_ )
+        {
+            XGBoosterSetParam( *_handle, "silent", "1" );
+        }
+    else
+        {
+            XGBoosterSetParam( *_handle, "silent", "0" );
+        }
+
+    XGBoosterSetParam(
+        *_handle,
+        "skip_drop",
+        std::to_string( hyperparams_.skip_drop_ ).c_str() );
+
+    XGBoosterSetParam(
+        *_handle,
+        "subsample",
+        std::to_string( hyperparams_.subsample_ ).c_str() );
 }
 
 // -----------------------------------------------------------------------------

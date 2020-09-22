@@ -6,15 +6,15 @@ namespace pipelines
 {
 // ----------------------------------------------------------------------------
 
-Pipeline::Pipeline(
-    const std::shared_ptr<const std::vector<strings::String>>& _categories,
-    const Poco::JSON::Object& _obj )
-    : impl_( PipelineImpl( _categories, _obj ) )
+Pipeline::Pipeline( const Poco::JSON::Object& _obj )
+    : impl_( PipelineImpl( _obj ) )
 
 {
     // This won't to anything - the point it to make sure that it can be
     // parsed correctly.
-    init_feature_learners( 1, df_fingerprints() );
+    init_preprocessors( df_fingerprints() );
+
+    init_feature_learners( 1, preprocessor_fingerprints() );
 
     init_predictors(
         "feature_selectors_",
@@ -29,13 +29,12 @@ Pipeline::Pipeline(
 // ----------------------------------------------------------------------------
 
 Pipeline::Pipeline(
-    const std::shared_ptr<const std::vector<strings::String>>& _categories,
     const std::string& _path,
     const std::shared_ptr<dependency::FETracker> _fe_tracker,
     const std::shared_ptr<dependency::PredTracker> _pred_tracker )
-    : impl_( PipelineImpl( _categories ) )
+    : impl_( PipelineImpl() )
 {
-    *this = load( _categories, _path, _fe_tracker, _pred_tracker );
+    *this = load( _path, _fe_tracker, _pred_tracker );
 }
 
 // ----------------------------------------------------------------------------
@@ -47,6 +46,8 @@ Pipeline::Pipeline( const Pipeline& _other ) : impl_( _other.impl_ )
     feature_selectors_ = clone( _other.feature_selectors_ );
 
     predictors_ = clone( _other.predictors_ );
+
+    preprocessors_ = clone( _other.preprocessors_ );
 }
 
 // ----------------------------------------------------------------------------
@@ -59,6 +60,8 @@ Pipeline::Pipeline( Pipeline&& _other ) noexcept
     feature_selectors_ = std::move( _other.feature_selectors_ );
 
     predictors_ = std::move( _other.predictors_ );
+
+    preprocessors_ = std::move( _other.preprocessors_ );
 }
 
 // ----------------------------------------------------------------------------
@@ -69,20 +72,65 @@ Pipeline::~Pipeline() = default;
 
 void Pipeline::add_population_cols(
     const Poco::JSON::Object& _cmd,
-    const std::map<std::string, containers::DataFrame>& _data_frames,
+    const containers::DataFrame& _population_df,
     const predictors::PredictorImpl& _predictor_impl,
     containers::Features* _features ) const
 {
-    const auto population_name =
-        JSON::get_value<std::string>( _cmd, "population_name_" );
-
-    const auto population_df =
-        utils::Getter::get( population_name, _data_frames );
-
     for ( const auto& col : _predictor_impl.numerical_colnames() )
         {
-            _features->push_back( population_df.numerical( col ).data_ptr() );
+            _features->push_back( _population_df.numerical( col ).data_ptr() );
         }
+}
+
+// ----------------------------------------------------------------------------
+
+std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
+Pipeline::apply_preprocessors(
+    const Poco::JSON::Object& _cmd,
+    const containers::DataFrame& _population_df,
+    const std::vector<containers::DataFrame>& _peripheral_dfs,
+    const std::shared_ptr<const containers::Encoding>& _categories,
+    Poco::Net::StreamSocket* _socket ) const
+{
+    auto population_df = _population_df;
+
+    auto peripheral_dfs = _peripheral_dfs;
+
+    for ( const auto& p : preprocessors_ )
+        {
+            assert_true( p );
+
+            std::tie( population_df, peripheral_dfs ) = p->transform(
+                _cmd, _categories, population_df, peripheral_dfs );
+        }
+
+    return std::make_pair( population_df, peripheral_dfs );
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<std::string> Pipeline::autofeature_names() const
+{
+    if ( !impl_.predictor_impl_ )
+        {
+            throw std::invalid_argument( "Pipeline has not been fitted!" );
+        }
+
+    std::vector<std::string> autofeatures;
+
+    for ( size_t i = 0; i < predictor_impl().autofeatures().size(); ++i )
+        {
+            const auto& index = predictor_impl().autofeatures().at( i );
+
+            for ( const auto ix : index )
+                {
+                    autofeatures.push_back(
+                        "feature_" + std::to_string( i + 1 ) + "_" +
+                        std::to_string( ix + 1 ) );
+                }
+        }
+
+    return autofeatures;
 }
 
 // ----------------------------------------------------------------------
@@ -92,22 +140,15 @@ void Pipeline::calculate_feature_stats(
     const size_t _nrows,
     const size_t _ncols,
     const Poco::JSON::Object& _cmd,
-    const std::map<std::string, containers::DataFrame>& _data_frames )
+    const containers::DataFrame& _population_df )
 {
-    // ------------------------------------------------------------------------
-
-    const auto population_name =
-        JSON::get_value<std::string>( _cmd, "population_name_" );
-
-    const auto df = utils::Getter::get( population_name, _data_frames );
-
     // ------------------------------------------------------------------------
 
     std::vector<const Float*> targets;
 
-    for ( size_t j = 0; j < df.num_targets(); ++j )
+    for ( size_t j = 0; j < _population_df.num_targets(); ++j )
         {
-            targets.push_back( df.target( j ).data() );
+            targets.push_back( _population_df.target( j ).data() );
         }
 
     // ------------------------------------------------------------------------
@@ -131,39 +172,82 @@ void Pipeline::calculate_feature_stats(
     // ------------------------------------------------------------------------
 }
 
+// ------------------------------------------------------------------------
+
+std::vector<size_t> Pipeline::calculate_importance_index() const
+{
+    const auto sum_importances = calculate_sum_importances();
+
+    auto pairs = std::vector<std::pair<size_t, Float>>();
+
+    for ( size_t i = 0; i < sum_importances.size(); ++i )
+        {
+            pairs.emplace_back( std::make_pair( i, sum_importances[i] ) );
+        }
+
+    std::sort(
+        pairs.begin(),
+        pairs.end(),
+        []( const std::pair<size_t, Float>& p1,
+            const std::pair<size_t, Float>& p2 ) {
+            return p1.second > p2.second;
+        } );
+
+    auto index = std::vector<size_t>( pairs.size() );
+
+    for ( size_t i = 0; i < index.size(); ++i )
+        {
+            index.at( i ) = pairs.at( i ).first;
+        }
+
+    return index;
+}
+
+// ------------------------------------------------------------------------
+
+std::vector<Float> Pipeline::calculate_sum_importances() const
+{
+    const auto importances = feature_importances( feature_selectors_ );
+
+    assert_true( importances.size() == feature_selectors_.size() );
+
+    auto sum_importances = importances.at( 0 );
+
+    for ( size_t i = 1; i < importances.size(); ++i )
+        {
+            assert_true( sum_importances.size() == importances[i].size() );
+
+            std::transform(
+                importances.at( i ).begin(),
+                importances.at( i ).end(),
+                sum_importances.begin(),
+                sum_importances.begin(),
+                std::plus<Float>() );
+        }
+
+    return sum_importances;
+}
+
 // ----------------------------------------------------------------------------
 
 void Pipeline::check(
     const Poco::JSON::Object& _cmd,
-    const std::shared_ptr<const monitoring::Logger>& _logger,
+    const std::shared_ptr<const communication::Logger>& _logger,
     const std::map<std::string, containers::DataFrame>& _data_frames,
+    const std::shared_ptr<containers::Encoding>& _categories,
     Poco::Net::StreamSocket* _socket ) const
 {
-    // ----------------------------------------------------------------------
-
-    const auto population_placeholder = std::make_shared<Poco::JSON::Object>(
-        *JSON::get_object( obj(), "population_" ) );
-
-    const auto peripheral_names = parse_peripheral();
-
     // -------------------------------------------------------------------------
 
-    const auto population_name =
-        JSON::get_value<std::string>( _cmd, "population_name_" );
+    auto [population_df, peripheral_dfs] =
+        containers::DataFrameExtractor::extract_data_frames(
+            _cmd, _data_frames );
 
-    const auto peripheral_df_names = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "peripheral_names_" ) );
+    std::tie( population_df, peripheral_dfs ) =
+        modify_data_frames( population_df, peripheral_dfs );
 
-    const auto population = utils::Getter::get( population_name, _data_frames );
-
-    auto peripheral = std::vector<containers::DataFrame>();
-
-    for ( const auto& df_name : peripheral_df_names )
-        {
-            const auto df = utils::Getter::get( df_name, _data_frames );
-
-            peripheral.push_back( df );
-        }
+    fit_transform_preprocessors(
+        _cmd, _categories, &population_df, &peripheral_dfs, _socket );
 
     // -------------------------------------------------------------------------
 
@@ -172,11 +256,13 @@ void Pipeline::check(
 
     // -------------------------------------------------------------------------
 
-    DataModelChecker::check(
-        population_placeholder,
+    const auto [placeholder, peripheral_names] = make_placeholder();
+
+    preprocessors::DataModelChecker::check(
+        placeholder,
         peripheral_names,
-        population,
-        peripheral,
+        population_df,
+        peripheral_dfs,
         feature_learners,
         _logger,
         _socket );
@@ -184,34 +270,193 @@ void Pipeline::check(
     // -------------------------------------------------------------------------
 }
 
-// ----------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
-std::vector<Poco::JSON::Object::Ptr> Pipeline::extract_df_fingerprints(
-    const Poco::JSON::Object& _cmd,
-    const std::map<std::string, containers::DataFrame>& _data_frames ) const
+std::pair<
+    std::vector<helpers::ColumnDescription>,
+    std::vector<std::vector<Float>>>
+Pipeline::column_importances() const
 {
-    const auto peripheral_names = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "peripheral_names_" ) );
+    auto c_desc = std::vector<helpers::ColumnDescription>();
 
-    const auto population_name =
-        JSON::get_value<std::string>( _cmd, "population_name_" );
+    auto c_importances = std::vector<std::vector<Float>>();
 
-    std::vector<Poco::JSON::Object::Ptr> df_fingerprints;
-
-    const auto population_fingerprint =
-        utils::Getter::get( population_name, _data_frames ).fingerprint();
-
-    df_fingerprints.push_back( population_fingerprint );
-
-    for ( const auto& name : peripheral_names )
+    if ( predictors_.size() == 0 )
         {
-            const auto fingerprint =
-                utils::Getter::get( name, _data_frames ).fingerprint();
-
-            df_fingerprints.push_back( fingerprint );
+            return std::make_pair( c_desc, c_importances );
         }
 
-    return df_fingerprints;
+    const auto f_importances = feature_importances( predictors_ );
+
+    auto importance_makers =
+        std::vector<helpers::ImportanceMaker>( f_importances.size() );
+
+    column_importances_auto( f_importances, &importance_makers );
+
+    column_importances_manual( f_importances, &importance_makers );
+
+    for ( auto& i_maker : importance_makers )
+        {
+            i_maker = containers::Macros::modify_column_importances( i_maker );
+        }
+
+    for ( const auto& i_maker : importance_makers )
+        {
+            extract_coldesc( i_maker.importances(), &c_desc );
+            extract_importance_values( i_maker.importances(), &c_importances );
+        }
+
+    return std::make_pair( c_desc, c_importances );
+}
+
+// ----------------------------------------------------------------------------
+
+Poco::JSON::Object Pipeline::column_importances_as_obj() const
+{
+    // ----------------------------------------------------------------
+
+    const auto [c_desc, c_importances] = column_importances();
+
+    // ----------------------------------------------------------------
+
+    if ( c_importances.size() == 0 )
+        {
+            return Poco::JSON::Object();
+        }
+
+    // ----------------------------------------------------------------
+
+    auto column_descriptions =
+        Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
+
+    for ( const auto& desc : c_desc )
+        {
+            column_descriptions->add( desc.to_json_obj() );
+        }
+
+    // ----------------------------------------------------------------
+
+    const auto column_importances = transpose( c_importances );
+
+    // ----------------------------------------------------------------
+
+    Poco::JSON::Object obj;
+
+    obj.set( "column_descriptions_", column_descriptions );
+
+    obj.set( "column_importances_", column_importances );
+
+    return obj;
+
+    // ----------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+void Pipeline::column_importances_auto(
+    const std::vector<std::vector<Float>>& _f_importances,
+    std::vector<helpers::ImportanceMaker>* _importance_makers ) const
+{
+    assert_true( _f_importances.size() == _importance_makers->size() );
+
+    const auto autofeatures = predictor_impl().autofeatures();
+
+    assert_true( autofeatures.size() == feature_learners_.size() );
+
+    for ( size_t i = 0; i < _f_importances.size(); ++i )
+        {
+            const auto& f_imp_for_target = _f_importances.at( i );
+
+            size_t ix_begin = 0;
+
+            for ( size_t j = 0; j < feature_learners_.size(); ++j )
+                {
+                    const auto& fl = feature_learners_.at( j );
+
+                    assert_true( fl );
+
+                    const auto ix_end = ix_begin + autofeatures.at( j ).size();
+
+                    const auto importance_factors = make_importance_factors(
+                        fl->num_features(),
+                        autofeatures.at( j ),
+                        f_imp_for_target.begin() + ix_begin,
+                        f_imp_for_target.begin() + ix_end );
+
+                    ix_begin = ix_end;
+
+                    const auto c_imp_for_target =
+                        fl->column_importances( importance_factors );
+
+                    _importance_makers->at( i ).merge( c_imp_for_target );
+                }
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+void Pipeline::column_importances_manual(
+    const std::vector<std::vector<Float>>& _f_importances,
+    std::vector<helpers::ImportanceMaker>* _importance_makers ) const
+{
+    assert_true( _f_importances.size() == _importance_makers->size() );
+
+    for ( size_t i = 0; i < _f_importances.size(); ++i )
+        {
+            const auto& f_imp_for_target = _f_importances.at( i );
+
+            auto j = predictor_impl().num_autofeatures();
+
+            assert_true(
+                j + predictor_impl().num_manual_features() ==
+                f_imp_for_target.size() );
+
+            const auto population_name = parse_population();
+
+            assert_true( population_name );
+
+            for ( const auto& colname : predictor_impl().numerical_colnames() )
+                {
+                    const auto desc = helpers::ColumnDescription(
+                        _importance_makers->at( i ).population(),
+                        *population_name,
+                        colname );
+
+                    const auto value = f_imp_for_target.at( j++ );
+
+                    _importance_makers->at( i ).add_to_importances(
+                        desc, value );
+                }
+
+            for ( const auto& colname :
+                  predictor_impl().categorical_colnames() )
+                {
+                    const auto desc = helpers::ColumnDescription(
+                        _importance_makers->at( i ).population(),
+                        *population_name,
+                        colname );
+
+                    const auto value = f_imp_for_target.at( j++ );
+
+                    _importance_makers->at( i ).add_to_importances(
+                        desc, value );
+                }
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+void Pipeline::extract_coldesc(
+    const std::map<helpers::ColumnDescription, Float>& _column_importances,
+    std::vector<helpers::ColumnDescription>* _coldesc ) const
+{
+    if ( _coldesc->size() == 0 )
+        {
+            for ( const auto& [key, _] : _column_importances )
+                {
+                    _coldesc->push_back( key );
+                }
+        }
 }
 
 // ----------------------------------------------------------------------
@@ -220,7 +465,7 @@ std::vector<Poco::JSON::Object::Ptr> Pipeline::extract_fe_fingerprints() const
 {
     if ( feature_learners_.size() == 0 )
         {
-            return df_fingerprints();
+            return preprocessor_fingerprints();
         }
 
     std::vector<Poco::JSON::Object::Ptr> fe_fingerprints;
@@ -236,25 +481,72 @@ std::vector<Poco::JSON::Object::Ptr> Pipeline::extract_fe_fingerprints() const
 
 // ----------------------------------------------------------------------
 
+std::vector<Poco::JSON::Object::Ptr> Pipeline::extract_fingerprints(
+    const std::vector<std::vector<std::shared_ptr<predictors::Predictor>>>&
+        _predictors ) const
+{
+    std::vector<Poco::JSON::Object::Ptr> fingerprints;
+
+    for ( const auto& vec : _predictors )
+        {
+            for ( const auto& p : vec )
+                {
+                    assert_true( p );
+                    fingerprints.push_back( p->fingerprint() );
+                }
+        }
+
+    return fingerprints;
+}
+
+// ----------------------------------------------------------------------
+
 std::vector<Poco::JSON::Object::Ptr> Pipeline::extract_fs_fingerprints() const
 {
-    if ( feature_selectors_.size() == 0 || feature_selectors_[0].size() == 0 )
+    if ( feature_selectors_.size() == 0 ||
+         feature_selectors_.at( 0 ).size() == 0 )
         {
             return fe_fingerprints();
         }
 
-    std::vector<Poco::JSON::Object::Ptr> fs_fingerprints;
+    return extract_fingerprints( feature_selectors_ );
+}
 
-    for ( const auto& vec : feature_selectors_ )
+// ----------------------------------------------------------------------------
+
+void Pipeline::extract_importance_values(
+    const std::map<helpers::ColumnDescription, Float>& _column_importances,
+    std::vector<std::vector<Float>>* _all_column_importances ) const
+{
+    auto importance_values = std::vector<Float>();
+
+    for ( const auto& [_, value] : _column_importances )
         {
-            for ( const auto& fs : vec )
-                {
-                    assert_true( fs );
-                    fs_fingerprints.push_back( fs->fingerprint() );
-                }
+            importance_values.push_back( value );
         }
 
-    return fs_fingerprints;
+    _all_column_importances->push_back( importance_values );
+}
+
+// ----------------------------------------------------------------------
+
+std::vector<Poco::JSON::Object::Ptr>
+Pipeline::extract_preprocessor_fingerprints() const
+{
+    if ( preprocessors_.size() == 0 )
+        {
+            return df_fingerprints();
+        }
+
+    std::vector<Poco::JSON::Object::Ptr> fingerprints;
+
+    for ( const auto& p : preprocessors_ )
+        {
+            assert_true( p );
+            fingerprints.push_back( p->fingerprint() );
+        }
+
+    return fingerprints;
 }
 
 // ----------------------------------------------------------------------
@@ -358,41 +650,24 @@ Poco::JSON::Object Pipeline::feature_importances_as_obj() const
 {
     // ----------------------------------------------------------------
 
-    const auto n_features = num_features();
-
-    // ----------------------------------------------------------------
-    // Extract feature importances
-
     const auto feature_importances_transposed =
         feature_importances( predictors_ );
 
     assert_true( feature_importances_transposed.size() == num_targets() );
 
     // ----------------------------------------------------------------
-    // Transpose feature importances and transform to arrays.
 
     if ( feature_importances_transposed.size() == 0 )
         {
             return Poco::JSON::Object();
         }
 
-    Poco::JSON::Array::Ptr feature_importances( new Poco::JSON::Array() );
+    // ----------------------------------------------------------------
 
-    for ( std::size_t i = 0; i < n_features; ++i )
-        {
-            Poco::JSON::Array::Ptr temp( new Poco::JSON::Array() );
-
-            for ( const auto& feat : feature_importances_transposed )
-                {
-                    assert_true( feat.size() == n_features );
-                    temp->add( feat[i] );
-                }
-
-            feature_importances->add( temp );
-        }
+    const auto feature_importances =
+        transpose( feature_importances_transposed );
 
     // ----------------------------------------------------------------
-    // Insert array into object and return.
 
     Poco::JSON::Object obj;
 
@@ -411,53 +686,23 @@ std::tuple<
     std::vector<std::string>>
 Pipeline::feature_names() const
 {
-    std::vector<std::string> autofeatures;
-
-    if ( impl_.predictor_impl_ )
+    if ( !impl_.predictor_impl_ )
         {
-            assert_true(
-                feature_learners_.size() ==
-                predictor_impl().autofeatures().size() );
-
-            for ( size_t i = 0; i < feature_learners_.size(); ++i )
-                {
-                    const auto& fe = feature_learners_.at( i );
-
-                    const auto& index = predictor_impl().autofeatures().at( i );
-
-                    for ( const auto ix : index )
-                        {
-                            autofeatures.push_back(
-                                "feature_" + std::to_string( i + 1 ) + "_" +
-                                std::to_string( ix + 1 ) );
-                        }
-
-                    assert_true( fe );
-                }
-
-            return std::make_tuple(
-                autofeatures,
-                predictor_impl().numerical_colnames(),
-                predictor_impl().categorical_colnames() );
+            throw std::invalid_argument( "Pipeline has not been fitted!" );
         }
-    else
-        {
-            size_t i = 0;
 
-            for ( const auto& fe : feature_learners_ )
-                {
-                    for ( size_t j = 0; j < fe->num_features(); ++j )
-                        {
-                            autofeatures.push_back(
-                                "feature_" + std::to_string( ++i ) );
-                        }
-                }
+    assert_true(
+        feature_learners_.size() == predictor_impl().autofeatures().size() );
 
-            return std::make_tuple(
-                autofeatures,
-                std::vector<std::string>(),
-                std::vector<std::string>() );
-        }
+    const auto autofeatures = autofeature_names();
+
+    const auto numerical = containers::Macros::modify_colnames(
+        predictor_impl().numerical_colnames() );
+
+    const auto categorical = containers::Macros::modify_colnames(
+        predictor_impl().categorical_colnames() );
+
+    return std::make_tuple( autofeatures, numerical, categorical );
 }
 
 // ----------------------------------------------------------------------------
@@ -492,10 +737,11 @@ Poco::JSON::Object Pipeline::feature_names_as_obj() const
 
 // ----------------------------------------------------------------------------
 
-containers::Features Pipeline::generate_numerical_features(
+containers::Features Pipeline::generate_autofeatures(
     const Poco::JSON::Object& _cmd,
-    const std::shared_ptr<const monitoring::Logger>& _logger,
-    const std::map<std::string, containers::DataFrame>& _data_frames,
+    const std::shared_ptr<const communication::Logger>& _logger,
+    const containers::DataFrame& _population_df,
+    const std::vector<containers::DataFrame>& _peripheral_dfs,
     const predictors::PredictorImpl& _predictor_impl,
     Poco::Net::StreamSocket* _socket ) const
 {
@@ -505,9 +751,8 @@ containers::Features Pipeline::generate_numerical_features(
         feature_learners_.size() == _predictor_impl.autofeatures().size() );
 
     // -------------------------------------------------------------------------
-    // Generate the features.
 
-    auto numerical_features = containers::Features();
+    auto autofeatures = containers::Features();
 
     for ( size_t i = 0; i < feature_learners_.size(); ++i )
         {
@@ -521,24 +766,16 @@ containers::Features Pipeline::generate_numerical_features(
 
             assert_true( fe );
 
-            auto new_features =
-                fe->transform( _cmd, index, socket_logger, _data_frames );
+            auto new_features = fe->transform(
+                _cmd, index, socket_logger, _population_df, _peripheral_dfs );
 
-            numerical_features.insert(
-                numerical_features.end(),
-                new_features.begin(),
-                new_features.end() );
+            autofeatures.insert(
+                autofeatures.end(), new_features.begin(), new_features.end() );
         }
 
     // -------------------------------------------------------------------------
-    // Add the numerical columns from the population table.
 
-    add_population_cols(
-        _cmd, _data_frames, _predictor_impl, &numerical_features );
-
-    // -------------------------------------------------------------------------
-
-    return numerical_features;
+    return autofeatures;
 
     // -------------------------------------------------------------------------
 }
@@ -615,8 +852,10 @@ containers::Features Pipeline::generate_predictions(
 
 void Pipeline::fit(
     const Poco::JSON::Object& _cmd,
-    const std::shared_ptr<const monitoring::Logger>& _logger,
+    const std::shared_ptr<const communication::Logger>& _logger,
     const std::map<std::string, containers::DataFrame>& _data_frames,
+    const std::shared_ptr<containers::Encoding>& _categories,
+    const dependency::DataFrameTracker& _data_frame_tracker,
     const std::shared_ptr<dependency::FETracker> _fe_tracker,
     const std::shared_ptr<dependency::PredTracker> _pred_tracker,
     Poco::Net::StreamSocket* _socket )
@@ -633,18 +872,39 @@ void Pipeline::fit(
     std::tie( population_schema(), peripheral_schema() ) =
         extract_schemata( _cmd, _data_frames );
 
-    df_fingerprints() = extract_df_fingerprints( _cmd, _data_frames );
+    df_fingerprints() = containers::DataFrameExtractor::extract_df_fingerprints(
+        _cmd, _data_frames );
 
     // -------------------------------------------------------------------------
 
-    fit_feature_learners( _cmd, _logger, _data_frames, _fe_tracker, _socket );
+    auto [population_df, peripheral_dfs] =
+        containers::DataFrameExtractor::extract_data_frames(
+            _cmd, _data_frames );
+
+    std::tie( population_df, peripheral_dfs ) =
+        modify_data_frames( population_df, peripheral_dfs );
 
     // -------------------------------------------------------------------------
 
-    make_feature_selector_impl( _cmd, _data_frames );
+    preprocessors_ = fit_transform_preprocessors(
+        _cmd, _categories, &population_df, &peripheral_dfs, _socket );
+
+    preprocessor_fingerprints() = extract_preprocessor_fingerprints();
 
     // -------------------------------------------------------------------------
-    // Fit the feature selectors
+
+    fit_feature_learners(
+        _cmd, _logger, population_df, peripheral_dfs, _fe_tracker, _socket );
+
+    // -------------------------------------------------------------------------
+
+    make_feature_selector_impl( _cmd, population_df );
+
+    // -------------------------------------------------------------------------
+
+    containers::Features autofeatures;
+
+    // -------------------------------------------------------------------------
 
     auto feature_selectors = init_predictors(
         "feature_selectors_",
@@ -654,10 +914,16 @@ void Pipeline::fit(
 
     fit_predictors(
         _cmd,
-        _logger,
         _data_frames,
+        _logger,
+        population_df,
+        peripheral_dfs,
+        _data_frame_tracker,
         _pred_tracker,
+        fe_fingerprints(),
         feature_selector_impl(),
+        "feature selector",
+        &autofeatures,
         &feature_selectors,
         _socket );
 
@@ -666,13 +932,10 @@ void Pipeline::fit(
     fs_fingerprints() = extract_fs_fingerprints();
 
     // -------------------------------------------------------------------------
-    // Prepare the predictor impl - this also uses the results from the feature
-    // selection.
 
-    make_predictor_impl( _cmd, _data_frames );
+    make_predictor_impl( _cmd, population_df );
 
     // -------------------------------------------------------------------------
-    // Fit the predictors.
 
     auto predictors = init_predictors(
         "predictors_",
@@ -682,16 +945,24 @@ void Pipeline::fit(
 
     fit_predictors(
         _cmd,
-        _logger,
         _data_frames,
+        _logger,
+        population_df,
+        peripheral_dfs,
+        _data_frame_tracker,
         _pred_tracker,
+        fs_fingerprints(),
         predictor_impl(),
+        "predictor",
+        &autofeatures,
         &predictors,
         _socket );
 
     predictors_ = std::move( predictors );
 
     // -------------------------------------------------------------------------
+
+    scores().from_json_obj( column_importances_as_obj() );
 
     scores().from_json_obj( feature_importances_as_obj() );
 
@@ -704,13 +975,14 @@ void Pipeline::fit(
 
 void Pipeline::fit_feature_learners(
     const Poco::JSON::Object& _cmd,
-    const std::shared_ptr<const monitoring::Logger>& _logger,
-    const std::map<std::string, containers::DataFrame>& _data_frames,
+    const std::shared_ptr<const communication::Logger>& _logger,
+    const containers::DataFrame& _population_df,
+    const std::vector<containers::DataFrame>& _peripheral_dfs,
     const std::shared_ptr<dependency::FETracker> _fe_tracker,
     Poco::Net::StreamSocket* _socket )
 {
     auto [feature_learners, target_nums] =
-        init_feature_learners( num_targets(), df_fingerprints() );
+        init_feature_learners( num_targets(), preprocessor_fingerprints() );
 
     assert_true( feature_learners.size() == target_nums.size() );
 
@@ -741,7 +1013,12 @@ void Pipeline::fit_feature_learners(
                     continue;
                 }
 
-            fe->fit( _cmd, socket_logger, _data_frames, target_nums.at( i ) );
+            fe->fit(
+                _cmd,
+                socket_logger,
+                _population_df,
+                _peripheral_dfs,
+                target_nums.at( i ) );
 
             _fe_tracker->add( fe );
         }
@@ -755,10 +1032,16 @@ void Pipeline::fit_feature_learners(
 
 void Pipeline::fit_predictors(
     const Poco::JSON::Object& _cmd,
-    const std::shared_ptr<const monitoring::Logger>& _logger,
     const std::map<std::string, containers::DataFrame>& _data_frames,
+    const std::shared_ptr<const communication::Logger>& _logger,
+    const containers::DataFrame& _population_df,
+    const std::vector<containers::DataFrame>& _peripheral_dfs,
+    const dependency::DataFrameTracker& _data_frame_tracker,
     const std::shared_ptr<dependency::PredTracker> _pred_tracker,
+    const std::vector<Poco::JSON::Object::Ptr>& _dependencies,
     const predictors::PredictorImpl& _predictor_impl,
+    const std::string& _purpose,
+    containers::Features* _autofeatures,
     std::vector<std::vector<std::shared_ptr<predictors::Predictor>>>*
         _predictors,
     Poco::Net::StreamSocket* _socket ) const
@@ -775,32 +1058,33 @@ void Pipeline::fit_predictors(
 
     // --------------------------------------------------------------------
 
-    auto categorical_features =
-        get_categorical_features( _cmd, _data_frames, _predictor_impl );
+    auto [numerical_features, categorical_features, autofeatures] =
+        make_features(
+            _cmd,
+            _data_frames,
+            _data_frame_tracker,
+            _logger,
+            _population_df,
+            _peripheral_dfs,
+            _dependencies,
+            _predictor_impl,
+            *_autofeatures,
+            _socket );
+
+    *_autofeatures = autofeatures;
 
     categorical_features =
         _predictor_impl.transform_encodings( categorical_features );
 
     // --------------------------------------------------------------------
 
-    const auto numerical_features = generate_numerical_features(
-        _cmd, _logger, _data_frames, _predictor_impl, _socket );
+    assert_true( _population_df.num_targets() == _predictors->size() );
 
     // --------------------------------------------------------------------
 
-    const auto population_name =
-        JSON::get_value<std::string>( _cmd, "population_name_" );
-
-    const auto population_df =
-        utils::Getter::get( population_name, _data_frames );
-
-    assert_true( population_df.num_targets() == _predictors->size() );
-
-    // --------------------------------------------------------------------
-
-    for ( size_t t = 0; t < population_df.num_targets(); ++t )
+    for ( size_t t = 0; t < _population_df.num_targets(); ++t )
         {
-            const auto target_col = population_df.target( t ).data_ptr();
+            const auto target_col = _population_df.target( t ).data_ptr();
 
             for ( auto& p : ( *_predictors )[t] )
                 {
@@ -821,6 +1105,9 @@ void Pipeline::fit_predictors(
                             continue;
                         }
 
+                    socket_logger->log(
+                        p->type() + ": Training as " + _purpose + "..." );
+
                     p->fit(
                         socket_logger,
                         categorical_features,
@@ -836,9 +1123,32 @@ void Pipeline::fit_predictors(
 
 // ----------------------------------------------------------------------------
 
+std::vector<std::shared_ptr<preprocessors::Preprocessor>>
+Pipeline::fit_transform_preprocessors(
+    const Poco::JSON::Object& _cmd,
+    const std::shared_ptr<containers::Encoding>& _categories,
+    containers::DataFrame* _population_df,
+    std::vector<containers::DataFrame>* _peripheral_dfs,
+    Poco::Net::StreamSocket* _socket ) const
+{
+    auto preprocessors = init_preprocessors( df_fingerprints() );
+
+    for ( auto& p : preprocessors )
+        {
+            assert_true( p );
+
+            std::tie( *_population_df, *_peripheral_dfs ) = p->fit_transform(
+                _cmd, _categories, *_population_df, *_peripheral_dfs );
+        }
+
+    return preprocessors;
+}
+
+// ----------------------------------------------------------------------------
+
 containers::CategoricalFeatures Pipeline::get_categorical_features(
     const Poco::JSON::Object& _cmd,
-    const std::map<std::string, containers::DataFrame>& _data_frames,
+    const containers::DataFrame& _population_df,
     const predictors::PredictorImpl& _predictor_impl ) const
 {
     auto categorical_features = containers::CategoricalFeatures();
@@ -848,19 +1158,37 @@ containers::CategoricalFeatures Pipeline::get_categorical_features(
             return categorical_features;
         }
 
-    const auto population_name =
-        JSON::get_value<std::string>( _cmd, "population_name_" );
-
-    const auto population_df =
-        utils::Getter::get( population_name, _data_frames );
-
     for ( const auto& col : _predictor_impl.categorical_colnames() )
         {
             categorical_features.push_back(
-                population_df.categorical( col ).data_ptr() );
+                _population_df.categorical( col ).data_ptr() );
         }
 
     return categorical_features;
+}
+
+// ----------------------------------------------------------------------------
+
+containers::Features Pipeline::get_numerical_features(
+    const containers::Features& _autofeatures,
+    const Poco::JSON::Object& _cmd,
+    const containers::DataFrame& _population_df,
+    const predictors::PredictorImpl& _predictor_impl ) const
+{
+    // --------------------------------------------------------------------
+
+    auto numerical_features = _autofeatures;
+
+    // -------------------------------------------------------------------------
+
+    add_population_cols(
+        _cmd, _population_df, _predictor_impl, &numerical_features );
+
+    // -------------------------------------------------------------------------
+
+    return numerical_features;
+
+    // -------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------
@@ -892,7 +1220,7 @@ std::pair<
     std::vector<Int>>
 Pipeline::init_feature_learners(
     const size_t _num_targets,
-    const std::vector<Poco::JSON::Object::Ptr>& _df_fingerprints ) const
+    const std::vector<Poco::JSON::Object::Ptr>& _dependencies ) const
 {
     // ----------------------------------------------------------------------
 
@@ -904,10 +1232,7 @@ Pipeline::init_feature_learners(
 
     // ----------------------------------------------------------------------
 
-    const auto population = std::make_shared<Poco::JSON::Object>(
-        *JSON::get_object( obj(), "population_" ) );
-
-    const auto peripheral = parse_peripheral();
+    const auto [placeholder, peripheral] = make_placeholder();
 
     const auto obj_vector = JSON::array_to_obj_vector(
         JSON::get_array( obj(), "feature_learners_" ) );
@@ -929,11 +1254,7 @@ Pipeline::init_feature_learners(
 
             auto new_feature_learner =
                 featurelearners::FeatureLearnerParser::parse(
-                    *ptr,
-                    population,
-                    peripheral,
-                    categories(),
-                    _df_fingerprints );
+                    *ptr, placeholder, peripheral, _dependencies );
 
             // --------------------------------------------------------------
 
@@ -955,16 +1276,15 @@ Pipeline::init_feature_learners(
 
                             obj->set( "target_num_", t );
 
-                            auto dependencies = _df_fingerprints;
+                            auto dependencies = _dependencies;
 
                             dependencies.push_back( obj );
 
                             feature_learners.emplace_back(
                                 featurelearners::FeatureLearnerParser::parse(
                                     *ptr,
-                                    population,
+                                    placeholder,
                                     peripheral,
-                                    categories(),
                                     dependencies ) );
 
                             target_nums.push_back( static_cast<Int>( t ) );
@@ -1015,7 +1335,7 @@ Pipeline::init_predictors(
                         }
 
                     auto new_predictor = predictors::PredictorParser::parse(
-                        *ptr, _predictor_impl, categories(), _dependencies );
+                        *ptr, _predictor_impl, _dependencies );
 
                     predictors_for_target.emplace_back(
                         std::move( new_predictor ) );
@@ -1031,10 +1351,116 @@ Pipeline::init_predictors(
     // --------------------------------------------------------------------
 }
 
+// ----------------------------------------------------------------------
+
+std::vector<std::shared_ptr<preprocessors::Preprocessor>>
+Pipeline::init_preprocessors(
+    const std::vector<Poco::JSON::Object::Ptr>& _dependencies ) const
+{
+    auto vec = std::vector<std::shared_ptr<preprocessors::Preprocessor>>();
+
+    if ( !obj().has( "preprocessors_" ) )
+        {
+            return vec;
+        }
+
+    const auto arr =
+        jsonutils::JSON::get_object_array( obj(), "preprocessors_" );
+
+    for ( size_t i = 0; i < arr->size(); ++i )
+        {
+            const auto ptr = arr->getObject( i );
+
+            assert_true( ptr );
+
+            vec.push_back( preprocessors::PreprocessorParser::parse(
+                *ptr, _dependencies ) );
+        }
+
+    return vec;
+}
+
+// ----------------------------------------------------------------------------
+
+bool Pipeline::is_classification() const
+{
+    // -----------------------------------------------------------------------
+
+    const auto fl_is_cl =
+        []( const std::shared_ptr<featurelearners::AbstractFeatureLearner>&
+                fe ) {
+            assert_true( fe );
+            return fe->is_classification();
+        };
+
+    const auto pred_is_cl =
+        []( const std::shared_ptr<predictors::Predictor>& pred ) {
+            assert_true( pred );
+            return pred->is_classification();
+        };
+
+    // -----------------------------------------------------------------------
+
+    bool all_classifiers = std::all_of(
+        feature_learners_.begin(), feature_learners_.end(), fl_is_cl );
+
+    for ( const auto& fs : feature_selectors_ )
+        {
+            all_classifiers = all_classifiers &&
+                              std::all_of( fs.begin(), fs.end(), pred_is_cl );
+        }
+
+    for ( const auto& p : predictors_ )
+        {
+            all_classifiers = all_classifiers &&
+                              std::all_of( p.begin(), p.end(), pred_is_cl );
+        }
+
+    // -----------------------------------------------------------------------
+
+    bool all_regressors = std::none_of(
+        feature_learners_.begin(), feature_learners_.end(), fl_is_cl );
+
+    for ( const auto& fs : feature_selectors_ )
+        {
+            all_regressors = all_regressors &&
+                             std::none_of( fs.begin(), fs.end(), pred_is_cl );
+        }
+
+    for ( const auto& p : predictors_ )
+        {
+            all_regressors = all_regressors &&
+                             std::none_of( p.begin(), p.end(), pred_is_cl );
+        }
+
+    // -----------------------------------------------------------------------
+
+    if ( !all_classifiers && !all_regressors )
+        {
+            throw std::invalid_argument(
+                "You are mixing classification and regression algorithms. "
+                "Please make sure that all of your feature learners, feature "
+                "selectors and predictors are either all regression algorithms "
+                "or all classifications algorithms." );
+        }
+
+    if ( all_classifiers == all_regressors )
+        {
+            throw std::invalid_argument(
+                "The pipelines needs at least one feature learner, feature "
+                "selector or predictor." );
+        }
+
+    // -----------------------------------------------------------------------
+
+    return all_classifiers;
+
+    // -----------------------------------------------------------------------
+}
+
 // ----------------------------------------------------------------------------
 
 Pipeline Pipeline::load(
-    const std::shared_ptr<const std::vector<strings::String>>& _categories,
     const std::string& _path,
     const std::shared_ptr<dependency::FETracker> _fe_tracker,
     const std::shared_ptr<dependency::PredTracker> _pred_tracker ) const
@@ -1049,78 +1475,55 @@ Pipeline Pipeline::load(
 
     const auto obj = load_json_obj( _path + "obj.json" );
 
-    const auto pipeline_json = load_json_obj( _path + "pipeline.json" );
-
     const auto scores =
         metrics::Scores( load_json_obj( _path + "scores.json" ) );
 
-    auto feature_selector_impl = std::shared_ptr<predictors::PredictorImpl>();
-
-    auto predictor_impl = std::shared_ptr<predictors::PredictorImpl>();
-
-    feature_selector_impl = std::make_shared<predictors::PredictorImpl>(
-        load_json_obj( _path + "feature-selector-impl.json" ) );
-
-    predictor_impl = std::make_shared<predictors::PredictorImpl>(
-        load_json_obj( _path + "predictor-impl.json" ) );
-
-    // ------------------------------------------------------------
-
-    const auto df_fingerprints = JSON::array_to_obj_vector(
-        JSON::get_array( pipeline_json, "df_fingerprints_" ) );
-
-    const auto fe_fingerprints = JSON::array_to_obj_vector(
-        JSON::get_array( pipeline_json, "fe_fingerprints_" ) );
-
-    const auto fs_fingerprints = JSON::array_to_obj_vector(
-        JSON::get_array( pipeline_json, "fs_fingerprints_" ) );
-
-    const auto target_names = JSON::array_to_vector<std::string>(
-        JSON::get_array( pipeline_json, "targets_" ) );
-
     // ------------------------------------------------------------------
 
-    auto pipeline = Pipeline( _categories, obj );
-
-    pipeline.allow_http() =
-        JSON::get_value<bool>( pipeline_json, "allow_http_" );
-
-    pipeline.creation_time() =
-        JSON::get_value<std::string>( pipeline_json, "creation_time_" );
-
-    pipeline.df_fingerprints() = df_fingerprints;
-
-    pipeline.fe_fingerprints() = fe_fingerprints;
-
-    pipeline.fs_fingerprints() = fs_fingerprints;
-
-    pipeline.peripheral_schema() =
-        JSON::get_array( pipeline_json, "peripheral_schema_" );
-
-    pipeline.population_schema() =
-        JSON::get_object( pipeline_json, "population_schema_" );
-
-    pipeline.targets() = target_names;
+    auto pipeline = Pipeline( obj );
 
     pipeline.obj() = obj;
-
-    pipeline.impl_.feature_selector_impl_ = feature_selector_impl;
-
-    pipeline.impl_.predictor_impl_ = predictor_impl;
 
     pipeline.scores() = scores;
 
     // ------------------------------------------------------------
-    // Load feature learners
 
+    load_pipeline_json( _path, &pipeline );
+
+    load_impls( _path, &pipeline );
+
+    load_preprocessors( _path, &pipeline );
+
+    load_feature_learners( _path, _fe_tracker, &pipeline );
+
+    load_feature_selectors( _path, _pred_tracker, &pipeline );
+
+    load_predictors( _path, _pred_tracker, &pipeline );
+
+    // ------------------------------------------------------------
+
+    return pipeline;
+
+    // ------------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
+void Pipeline::load_feature_learners(
+    const std::string& _path,
+    const std::shared_ptr<dependency::FETracker> _fe_tracker,
+    Pipeline* _pipeline ) const
+{
     assert_true( _fe_tracker );
 
-    pipeline.feature_learners_ = std::get<0>( pipeline.init_feature_learners(
-        pipeline.num_targets(), pipeline.df_fingerprints() ) );
+    _pipeline->feature_learners_ =
+        std::get<0>( _pipeline->init_feature_learners(
+            _pipeline->num_targets(),
+            _pipeline->preprocessor_fingerprints() ) );
 
-    for ( size_t i = 0; i < pipeline.feature_learners_.size(); ++i )
+    for ( size_t i = 0; i < _pipeline->feature_learners_.size(); ++i )
         {
-            auto& fe = pipeline.feature_learners_[i];
+            auto& fe = _pipeline->feature_learners_.at( i );
 
             assert_true( fe );
 
@@ -1129,23 +1532,31 @@ Pipeline Pipeline::load(
 
             _fe_tracker->add( fe );
         }
+}
 
-    // ------------------------------------------------------------
-    // Load feature selectors
+// ------------------------------------------------------------------------
 
-    pipeline.feature_selectors_ = pipeline.init_predictors(
+void Pipeline::load_feature_selectors(
+    const std::string& _path,
+    const std::shared_ptr<dependency::PredTracker> _pred_tracker,
+    Pipeline* _pipeline ) const
+{
+    _pipeline->feature_selectors_ = _pipeline->init_predictors(
         "feature_selectors_",
-        pipeline.num_targets(),
-        pipeline.impl_.feature_selector_impl_,
-        pipeline.fe_fingerprints() );
+        _pipeline->num_targets(),
+        _pipeline->impl_.feature_selector_impl_,
+        _pipeline->fe_fingerprints() );
 
-    assert_true( pipeline.num_targets() == pipeline.feature_selectors_.size() );
+    assert_true(
+        _pipeline->num_targets() == _pipeline->feature_selectors_.size() );
 
-    for ( size_t i = 0; i < pipeline.num_targets(); ++i )
+    for ( size_t i = 0; i < _pipeline->num_targets(); ++i )
         {
-            for ( size_t j = 0; j < pipeline.feature_selectors_[i].size(); ++j )
+            for ( size_t j = 0;
+                  j < _pipeline->feature_selectors_.at( i ).size();
+                  ++j )
                 {
-                    auto& p = pipeline.feature_selectors_[i][j];
+                    auto& p = _pipeline->feature_selectors_.at( i ).at( j );
 
                     assert_true( p );
 
@@ -1156,39 +1567,48 @@ Pipeline Pipeline::load(
                     _pred_tracker->add( p );
                 }
         }
+}
 
-    // ------------------------------------------------------------
-    // Load predictors
+// ------------------------------------------------------------------------
 
-    pipeline.predictors_ = pipeline.init_predictors(
-        "predictors_",
-        pipeline.num_targets(),
-        pipeline.impl_.predictor_impl_,
-        pipeline.fs_fingerprints() );
+void Pipeline::load_fingerprints(
+    const Poco::JSON::Object& _pipeline_json, Pipeline* _pipeline ) const
+{
+    const auto df_fingerprints = JSON::array_to_obj_vector(
+        JSON::get_array( _pipeline_json, "df_fingerprints_" ) );
 
-    assert_true( pipeline.num_targets() == pipeline.predictors_.size() );
+    const auto preprocessor_fingerprints = JSON::array_to_obj_vector(
+        JSON::get_array( _pipeline_json, "preprocessor_fingerprints_" ) );
 
-    for ( size_t i = 0; i < pipeline.num_targets(); ++i )
-        {
-            for ( size_t j = 0; j < pipeline.predictors_[i].size(); ++j )
-                {
-                    auto& p = pipeline.predictors_[i][j];
+    const auto fe_fingerprints = JSON::array_to_obj_vector(
+        JSON::get_array( _pipeline_json, "fe_fingerprints_" ) );
 
-                    assert_true( p );
+    const auto fs_fingerprints = JSON::array_to_obj_vector(
+        JSON::get_array( _pipeline_json, "fs_fingerprints_" ) );
 
-                    p->load(
-                        _path + "predictor-" + std::to_string( i ) + "-" +
-                        std::to_string( j ) );
+    _pipeline->df_fingerprints() = df_fingerprints;
 
-                    _pred_tracker->add( p );
-                }
-        }
+    _pipeline->preprocessor_fingerprints() = preprocessor_fingerprints;
 
-    // ------------------------------------------------------------
+    _pipeline->fe_fingerprints() = fe_fingerprints;
 
-    return pipeline;
+    _pipeline->fs_fingerprints() = fs_fingerprints;
+}
 
-    // ------------------------------------------------------------
+// ------------------------------------------------------------------------
+
+void Pipeline::load_impls( const std::string& _path, Pipeline* _pipeline ) const
+{
+    const auto feature_selector_impl =
+        std::make_shared<predictors::PredictorImpl>(
+            load_json_obj( _path + "feature-selector-impl.json" ) );
+
+    const auto predictor_impl = std::make_shared<predictors::PredictorImpl>(
+        load_json_obj( _path + "predictor-impl.json" ) );
+
+    _pipeline->impl_.feature_selector_impl_ = feature_selector_impl;
+
+    _pipeline->impl_.predictor_impl_ = predictor_impl;
 }
 
 // ------------------------------------------------------------------------
@@ -1229,17 +1649,162 @@ Poco::JSON::Object Pipeline::load_json_obj( const std::string& _fname ) const
 
 // ------------------------------------------------------------------------
 
-void Pipeline::make_feature_selector_impl(
+void Pipeline::load_pipeline_json(
+    const std::string& _path, Pipeline* _pipeline ) const
+{
+    const auto pipeline_json = load_json_obj( _path + "pipeline.json" );
+
+    _pipeline->allow_http() =
+        JSON::get_value<bool>( pipeline_json, "allow_http_" );
+
+    _pipeline->creation_time() =
+        JSON::get_value<std::string>( pipeline_json, "creation_time_" );
+
+    _pipeline->peripheral_schema() =
+        JSON::get_array( pipeline_json, "peripheral_schema_" );
+
+    _pipeline->population_schema() =
+        JSON::get_object( pipeline_json, "population_schema_" );
+
+    _pipeline->targets() = JSON::array_to_vector<std::string>(
+        JSON::get_array( pipeline_json, "targets_" ) );
+
+    load_fingerprints( pipeline_json, _pipeline );
+}
+
+// ------------------------------------------------------------------------
+
+void Pipeline::load_predictors(
+    const std::string& _path,
+    const std::shared_ptr<dependency::PredTracker> _pred_tracker,
+    Pipeline* _pipeline ) const
+{
+    _pipeline->predictors_ = _pipeline->init_predictors(
+        "predictors_",
+        _pipeline->num_targets(),
+        _pipeline->impl_.predictor_impl_,
+        _pipeline->fs_fingerprints() );
+
+    assert_true( _pipeline->num_targets() == _pipeline->predictors_.size() );
+
+    for ( size_t i = 0; i < _pipeline->num_targets(); ++i )
+        {
+            for ( size_t j = 0; j < _pipeline->predictors_.at( i ).size(); ++j )
+                {
+                    auto& p = _pipeline->predictors_.at( i ).at( j );
+
+                    assert_true( p );
+
+                    p->load(
+                        _path + "predictor-" + std::to_string( i ) + "-" +
+                        std::to_string( j ) );
+
+                    _pred_tracker->add( p );
+                }
+        }
+}
+
+// ------------------------------------------------------------------------
+
+void Pipeline::load_preprocessors(
+    const std::string& _path, Pipeline* _pipeline ) const
+{
+    if ( !_pipeline->obj().has( "preprocessors_" ) )
+        {
+            return;
+        }
+
+    auto preprocessors =
+        std::vector<std::shared_ptr<preprocessors::Preprocessor>>();
+
+    const auto arr =
+        jsonutils::JSON::get_object_array( _pipeline->obj(), "preprocessors_" );
+
+    for ( size_t i = 0; i < arr->size(); ++i )
+        {
+            const auto json_obj = load_json_obj(
+                _path + "preprocessor-" + std::to_string( i ) + ".json" );
+
+            const auto p = preprocessors::PreprocessorParser::parse(
+                json_obj, _pipeline->df_fingerprints() );
+
+            preprocessors.push_back( p );
+        }
+
+    _pipeline->preprocessors_ = preprocessors;
+}
+
+// ----------------------------------------------------------------------------
+
+std::tuple<
+    containers::Features,
+    containers::CategoricalFeatures,
+    containers::Features>
+Pipeline::make_features(
     const Poco::JSON::Object& _cmd,
-    const std::map<std::string, containers::DataFrame>& _data_frames )
+    const std::map<std::string, containers::DataFrame>& _data_frames,
+    const dependency::DataFrameTracker& _data_frame_tracker,
+    const std::shared_ptr<const communication::Logger>& _logger,
+    const containers::DataFrame& _population_df,
+    const std::vector<containers::DataFrame>& _peripheral_dfs,
+    const std::vector<Poco::JSON::Object::Ptr>& _dependencies,
+    const predictors::PredictorImpl& _predictor_impl,
+    const std::optional<containers::Features> _autofeatures,
+    Poco::Net::StreamSocket* _socket ) const
 {
     // --------------------------------------------------------------------
 
-    const auto population_name =
-        JSON::get_value<std::string>( _cmd, "population_name_" );
+    const auto df =
+        _data_frame_tracker.retrieve( _cmd, _data_frames, _dependencies );
 
-    const auto population_df =
-        utils::Getter::get( population_name, _data_frames );
+    if ( df )
+        {
+            return retrieve_features( *df );
+        }
+
+    // --------------------------------------------------------------------
+
+    containers::Features autofeatures;
+
+    if ( _autofeatures && _autofeatures->size() != 0 )
+        {
+            autofeatures =
+                select_autofeatures( *_autofeatures, _predictor_impl );
+        }
+    else
+        {
+            autofeatures = generate_autofeatures(
+                _cmd,
+                _logger,
+                _population_df,
+                _peripheral_dfs,
+                _predictor_impl,
+                _socket );
+        }
+
+    const auto numerical_features = get_numerical_features(
+        autofeatures, _cmd, _population_df, _predictor_impl );
+
+    // --------------------------------------------------------------------
+
+    const auto categorical_features =
+        get_categorical_features( _cmd, _population_df, _predictor_impl );
+
+    // --------------------------------------------------------------------
+
+    return std::make_tuple(
+        numerical_features, categorical_features, autofeatures );
+
+    // --------------------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
+void Pipeline::make_feature_selector_impl(
+    const Poco::JSON::Object& _cmd,
+    const containers::DataFrame& _population_df )
+{
+    // --------------------------------------------------------------------
 
     const auto is_null = []( const Float val ) {
         return ( std::isnan( val ) || std::isinf( val ) );
@@ -1251,16 +1816,16 @@ void Pipeline::make_feature_selector_impl(
 
     if ( impl_.include_categorical_ )
         {
-            for ( size_t i = 0; i < population_df.num_categoricals(); ++i )
+            for ( size_t i = 0; i < _population_df.num_categoricals(); ++i )
                 {
-                    if ( population_df.categorical( i ).unit().find(
+                    if ( _population_df.categorical( i ).unit().find(
                              "comparison only" ) != std::string::npos )
                         {
                             continue;
                         }
 
                     categorical_colnames.push_back(
-                        population_df.categorical( i ).name() );
+                        _population_df.categorical( i ).name() );
                 }
         }
 
@@ -1268,17 +1833,17 @@ void Pipeline::make_feature_selector_impl(
 
     auto numerical_colnames = std::vector<std::string>();
 
-    for ( size_t i = 0; i < population_df.num_numericals(); ++i )
+    for ( size_t i = 0; i < _population_df.num_numericals(); ++i )
         {
-            if ( population_df.numerical( i ).unit().find(
+            if ( _population_df.numerical( i ).unit().find(
                      "comparison only" ) != std::string::npos )
                 {
                     continue;
                 }
 
             const auto contains_null = std::any_of(
-                population_df.numerical( i ).begin(),
-                population_df.numerical( i ).end(),
+                _population_df.numerical( i ).begin(),
+                _population_df.numerical( i ).end(),
                 is_null );
 
             if ( contains_null )
@@ -1286,7 +1851,8 @@ void Pipeline::make_feature_selector_impl(
                     continue;
                 }
 
-            numerical_colnames.push_back( population_df.numerical( i ).name() );
+            numerical_colnames.push_back(
+                _population_df.numerical( i ).name() );
         }
 
     // --------------------------------------------------------------------
@@ -1310,18 +1876,65 @@ void Pipeline::make_feature_selector_impl(
     // --------------------------------------------------------------------
 
     auto categorical_features =
-        get_categorical_features( _cmd, _data_frames, *local_fs_impl );
+        get_categorical_features( _cmd, _population_df, *local_fs_impl );
 
     local_fs_impl->fit_encodings( categorical_features );
 
     // --------------------------------------------------------------------
 }
 
+// ----------------------------------------------------------------------------
+
+std::vector<Float> Pipeline::make_importance_factors(
+    const size_t _num_features,
+    const std::vector<size_t>& _autofeatures,
+    const std::vector<Float>::const_iterator _begin,
+    const std::vector<Float>::const_iterator _end ) const
+{
+    auto importance_factors = std::vector<Float>( _num_features );
+
+    assert_true( _end >= _begin );
+
+    assert_true(
+        _autofeatures.size() ==
+        static_cast<size_t>( std::distance( _begin, _end ) ) );
+
+    for ( size_t i = 0; i < _autofeatures.size(); ++i )
+        {
+            const auto ix = _autofeatures.at( i );
+
+            assert_true( ix < importance_factors.size() );
+
+            importance_factors.at( ix ) = *( _begin + i );
+        }
+
+    return importance_factors;
+}
+
+// ------------------------------------------------------------------------
+
+std::pair<
+    std::shared_ptr<const helpers::Placeholder>,
+    std::shared_ptr<const std::vector<std::string>>>
+Pipeline::make_placeholder() const
+{
+    const auto population = *JSON::get_object( obj(), "population_" );
+
+    const auto placeholder = std::make_shared<const helpers::Placeholder>(
+        PlaceholderMaker::make_placeholder( population ) );
+
+    const auto peripheral_names =
+        std::make_shared<const std::vector<std::string>>(
+            PlaceholderMaker::make_peripheral( *placeholder ) );
+
+    return std::make_pair( placeholder, peripheral_names );
+}
+
 // ------------------------------------------------------------------------
 
 void Pipeline::make_predictor_impl(
     const Poco::JSON::Object& _cmd,
-    const std::map<std::string, containers::DataFrame>& _data_frames )
+    const containers::DataFrame& _population_df )
 {
     // --------------------------------------------------------------------
 
@@ -1346,50 +1959,8 @@ void Pipeline::make_predictor_impl(
         }
 
     // --------------------------------------------------------------------
-    // Get importances
 
-    const auto importances = feature_importances( feature_selectors_ );
-
-    assert_true( importances.size() == feature_selectors_.size() );
-
-    auto sum_importances = importances[0];
-
-    for ( size_t i = 1; i < importances.size(); ++i )
-        {
-            assert_true( sum_importances.size() == importances[i].size() );
-
-            std::transform(
-                importances.at( i ).begin(),
-                importances.at( i ).end(),
-                sum_importances.begin(),
-                sum_importances.begin(),
-                std::plus<Float>() );
-        }
-
-    // --------------------------------------------------------------------
-    // Make index
-
-    auto pairs = std::vector<std::pair<size_t, Float>>();
-
-    for ( size_t i = 0; i < sum_importances.size(); ++i )
-        {
-            pairs.emplace_back( std::make_pair( i, sum_importances[i] ) );
-        }
-
-    std::sort(
-        pairs.begin(),
-        pairs.end(),
-        []( const std::pair<size_t, Float>& p1,
-            const std::pair<size_t, Float>& p2 ) {
-            return p1.second > p2.second;
-        } );
-
-    auto index = std::vector<size_t>( pairs.size() );
-
-    for ( size_t i = 0; i < index.size(); ++i )
-        {
-            index.at( i ) = pairs.at( i ).first;
-        }
+    const auto index = calculate_importance_index();
 
     // --------------------------------------------------------------------
 
@@ -1402,11 +1973,80 @@ void Pipeline::make_predictor_impl(
     // --------------------------------------------------------------------
 
     auto categorical_features =
-        get_categorical_features( _cmd, _data_frames, *local_predictor_impl );
+        get_categorical_features( _cmd, _population_df, *local_predictor_impl );
 
     local_predictor_impl->fit_encodings( categorical_features );
 
     // --------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
+Pipeline::modify_data_frames(
+    const containers::DataFrame& _population_df,
+    const std::vector<containers::DataFrame>& _peripheral_dfs ) const
+{
+    // ----------------------------------------------------------------------
+
+    const auto population = *JSON::get_object( obj(), "population_" );
+
+    const auto peripheral_names = parse_peripheral();
+
+    assert_true( peripheral_names );
+
+    // ----------------------------------------------------------------------
+
+    auto population_df = _population_df;
+
+    auto peripheral_dfs = DataFrameModifier::add_time_stamps(
+        population, *peripheral_names, _peripheral_dfs );
+
+    // ----------------------------------------------------------------------
+
+    DataFrameModifier::add_join_keys(
+        population, *peripheral_names, &population_df, &peripheral_dfs );
+
+    // ----------------------------------------------------------------------
+
+    const auto placeholder = PlaceholderMaker::make_placeholder( population );
+
+    const auto joined_peripheral_names =
+        PlaceholderMaker::make_peripheral( placeholder );
+
+    ManyToOneJoiner::join_tables(
+        true,
+        *peripheral_names,
+        placeholder.name_,
+        joined_peripheral_names,
+        &population_df,
+        &peripheral_dfs );
+
+    // ----------------------------------------------------------------------
+
+    return std::make_pair( population_df, peripheral_dfs );
+
+    // ----------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+void Pipeline::move_tfile(
+    const std::string& _path,
+    const std::string& _name,
+    Poco::TemporaryFile* _tfile ) const
+{
+    auto file = Poco::File( _path + _name );
+
+    // Create all parent directories, if necessary.
+    file.createDirectories();
+
+    // If the actual folder already exists, delete it.
+    file.remove( true );
+
+    _tfile->renameTo( file.path() );
+
+    _tfile->keep();
 }
 
 // ----------------------------------------------------------------------------
@@ -1437,7 +2077,26 @@ Pipeline& Pipeline::operator=( Pipeline&& _other ) noexcept
 
     predictors_ = std::move( _other.predictors_ );
 
+    preprocessors_ = std::move( _other.preprocessors_ );
+
     return *this;
+}
+
+// ----------------------------------------------------------------------
+
+std::shared_ptr<std::string> Pipeline::parse_population() const
+{
+    const auto ptr = JSON::get_object( obj(), "population_" );
+
+    if ( !ptr )
+        {
+            throw std::invalid_argument(
+                "'population_' is not a proper JSON object!" );
+        }
+
+    const auto name = JSON::get_value<std::string>( *ptr, "name_" );
+
+    return std::make_shared<std::string>( name );
 }
 
 // ----------------------------------------------------------------------
@@ -1468,6 +2127,43 @@ std::shared_ptr<std::vector<std::string>> Pipeline::parse_peripheral() const
         }
 
     return peripheral;
+}
+
+// ----------------------------------------------------------------------------
+
+std::tuple<
+    containers::Features,
+    containers::CategoricalFeatures,
+    containers::Features>
+Pipeline::retrieve_features( const containers::DataFrame& _df ) const
+{
+    containers::Features autofeatures;
+
+    containers::Features numerical_features;
+
+    for ( size_t i = 0; i < _df.num_numericals(); ++i )
+        {
+            const auto col = _df.numerical( i );
+
+            numerical_features.push_back( col.data_ptr() );
+
+            if ( col.name().substr( 0, 8 ) == "feature_" )
+                {
+                    autofeatures.push_back( numerical_features.back() );
+                }
+        }
+
+    containers::CategoricalFeatures categorical_features;
+
+    for ( size_t i = 0; i < _df.num_categoricals(); ++i )
+        {
+            const auto col = _df.categorical( i );
+
+            categorical_features.push_back( col.data_ptr() );
+        }
+
+    return std::make_tuple(
+        numerical_features, categorical_features, autofeatures );
 }
 
 // ----------------------------------------------------------------------------
@@ -1514,46 +2210,13 @@ void Pipeline::save( const std::string& _path, const std::string& _name ) const
 
     // ------------------------------------------------------------------
 
-    for ( size_t i = 0; i < feature_learners_.size(); ++i )
-        {
-            const auto& fe = feature_learners_[i];
+    save_preprocessors( tfile );
 
-            if ( !fe )
-                {
-                    throw std::invalid_argument(
-                        "Feature learning algorithm #" + std::to_string( i ) +
-                        " has not been fitted!" );
-                }
-
-            fe->save(
-                tfile.path() + "/feature-learner-" + std::to_string( i ) +
-                ".json" );
-        }
+    save_feature_learners( tfile );
 
     // ------------------------------------------------------------------
 
-    Poco::JSON::Object pipeline_json;
-
-    pipeline_json.set( "allow_http_", allow_http() );
-
-    pipeline_json.set( "creation_time_", creation_time() );
-
-    pipeline_json.set(
-        "df_fingerprints_", JSON::vector_to_array( df_fingerprints() ) );
-
-    pipeline_json.set(
-        "fe_fingerprints_", JSON::vector_to_array( fe_fingerprints() ) );
-
-    pipeline_json.set(
-        "fs_fingerprints_", JSON::vector_to_array( fs_fingerprints() ) );
-
-    pipeline_json.set( "targets_", JSON::vector_to_array( targets() ) );
-
-    pipeline_json.set( "peripheral_schema_", peripheral_schema() );
-
-    pipeline_json.set( "population_schema_", population_schema() );
-
-    save_json_obj( pipeline_json, tfile.path() + "/pipeline.json" );
+    save_pipeline_json( tfile );
 
     // ------------------------------------------------------------------
 
@@ -1572,11 +2235,47 @@ void Pipeline::save( const std::string& _path, const std::string& _name ) const
 
     // ------------------------------------------------------------------
 
+    save_feature_selectors( tfile );
+
+    save_predictors( tfile );
+
+    // ------------------------------------------------------------------
+
+    move_tfile( _path, _name, &tfile );
+
+    // ------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+void Pipeline::save_feature_learners( const Poco::TemporaryFile& _tfile ) const
+{
+    for ( size_t i = 0; i < feature_learners_.size(); ++i )
+        {
+            const auto& fe = feature_learners_.at( i );
+
+            if ( !fe )
+                {
+                    throw std::invalid_argument(
+                        "Feature learning algorithm #" + std::to_string( i ) +
+                        " has not been fitted!" );
+                }
+
+            fe->save(
+                _tfile.path() + "/feature-learner-" + std::to_string( i ) +
+                ".json" );
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+void Pipeline::save_feature_selectors( const Poco::TemporaryFile& _tfile ) const
+{
     for ( size_t i = 0; i < feature_selectors_.size(); ++i )
         {
-            for ( size_t j = 0; j < feature_selectors_[i].size(); ++j )
+            for ( size_t j = 0; j < feature_selectors_.at( i ).size(); ++j )
                 {
-                    const auto& p = feature_selectors_[i][j];
+                    const auto& p = feature_selectors_.at( i ).at( j );
 
                     if ( !p )
                         {
@@ -1587,18 +2286,53 @@ void Pipeline::save( const std::string& _path, const std::string& _name ) const
                         }
 
                     p->save(
-                        tfile.path() + "/feature-selector-" +
+                        _tfile.path() + "/feature-selector-" +
                         std::to_string( i ) + "-" + std::to_string( j ) );
                 }
         }
+}
 
-    // ------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
+void Pipeline::save_pipeline_json( const Poco::TemporaryFile& _tfile ) const
+{
+    Poco::JSON::Object pipeline_json;
+
+    pipeline_json.set( "allow_http_", allow_http() );
+
+    pipeline_json.set( "creation_time_", creation_time() );
+
+    pipeline_json.set(
+        "df_fingerprints_", JSON::vector_to_array( df_fingerprints() ) );
+
+    pipeline_json.set(
+        "fe_fingerprints_", JSON::vector_to_array( fe_fingerprints() ) );
+
+    pipeline_json.set(
+        "fs_fingerprints_", JSON::vector_to_array( fs_fingerprints() ) );
+
+    pipeline_json.set(
+        "preprocessor_fingerprints_",
+        JSON::vector_to_array( preprocessor_fingerprints() ) );
+
+    pipeline_json.set( "targets_", JSON::vector_to_array( targets() ) );
+
+    pipeline_json.set( "peripheral_schema_", peripheral_schema() );
+
+    pipeline_json.set( "population_schema_", population_schema() );
+
+    save_json_obj( pipeline_json, _tfile.path() + "/pipeline.json" );
+}
+
+// ----------------------------------------------------------------------------
+
+void Pipeline::save_predictors( const Poco::TemporaryFile& _tfile ) const
+{
     for ( size_t i = 0; i < predictors_.size(); ++i )
         {
-            for ( size_t j = 0; j < predictors_[i].size(); ++j )
+            for ( size_t j = 0; j < predictors_.at( i ).size(); ++j )
                 {
-                    const auto& p = predictors_[i][j];
+                    const auto& p = predictors_.at( i ).at( j );
 
                     if ( !p )
                         {
@@ -1608,26 +2342,36 @@ void Pipeline::save( const std::string& _path, const std::string& _name ) const
                         }
 
                     p->save(
-                        tfile.path() + "/predictor-" + std::to_string( i ) +
+                        _tfile.path() + "/predictor-" + std::to_string( i ) +
                         "-" + std::to_string( j ) );
                 }
         }
+}
 
-    // ------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
-    auto file = Poco::File( _path + _name );
+void Pipeline::save_preprocessors( const Poco::TemporaryFile& _tfile ) const
+{
+    for ( size_t i = 0; i < preprocessors_.size(); ++i )
+        {
+            const auto& p = preprocessors_.at( i );
 
-    // Create all parent directories, if necessary.
-    file.createDirectories();
+            if ( !p )
+                {
+                    throw std::invalid_argument(
+                        "Preprocessor #" + std::to_string( i ) +
+                        " has not been fitted!" );
+                }
 
-    // If the actual folder already exists, delete it.
-    file.remove( true );
+            const auto ptr = p->to_json_obj();
 
-    tfile.renameTo( file.path() );
+            assert_true( ptr );
 
-    tfile.keep();
-
-    // ------------------------------------------------------------------
+            save_json_obj(
+                *ptr,
+                _tfile.path() + "/preprocessor-" + std::to_string( i ) +
+                    ".json" );
+        }
 }
 
 // ----------------------------------------------------------------------------
@@ -1704,7 +2448,53 @@ Poco::JSON::Object Pipeline::score(
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object Pipeline::to_monitor( const std::string& _name ) const
+containers::Features Pipeline::select_autofeatures(
+    const containers::Features& _autofeatures,
+    const predictors::PredictorImpl& _predictor_impl ) const
+{
+    // ------------------------------------------------
+
+    assert_true(
+        feature_learners_.size() == _predictor_impl.autofeatures().size() );
+
+    // ------------------------------------------------
+
+    containers::Features selected;
+
+    // ------------------------------------------------
+
+    size_t offset = 0;
+
+    for ( size_t i = 0; i < feature_learners_.size(); ++i )
+        {
+            for ( const size_t ix : _predictor_impl.autofeatures().at( i ) )
+                {
+                    assert_true( offset + ix < _autofeatures.size() );
+
+                    selected.push_back( _autofeatures.at( offset + ix ) );
+                }
+
+            assert_true( feature_learners_.at( i ) );
+
+            offset += feature_learners_.at( i )->num_features();
+        }
+
+    // ------------------------------------------------
+
+    assert_true( offset == _autofeatures.size() );
+
+    // ------------------------------------------------
+
+    return selected;
+
+    // ------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+Poco::JSON::Object Pipeline::to_monitor(
+    const std::shared_ptr<const std::vector<strings::String>>& _categories,
+    const std::string& _name ) const
 {
     auto feature_learners = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
 
@@ -1732,20 +2522,37 @@ Poco::JSON::Object Pipeline::to_monitor( const std::string& _name ) const
 
     json_obj.set( "predictors_", JSON::get_array( obj(), "predictors_" ) );
 
-    json_obj.set( "scores_", scores().to_json_obj() );
-
-    json_obj.set( "sql_", to_sql_arr() );
+    json_obj.set( "sql_", to_sql_arr( _categories ) );
 
     json_obj.set( "tags_", JSON::get_array( obj(), "tags_" ) );
 
     json_obj.set( "targets_", JSON::vector_to_array( targets() ) );
+
+    // -------------------------------------------------
+
+    auto scores_obj = scores().to_json_obj();
+
+    const auto modified_names =
+        containers::Macros::modify_colnames( scores().feature_names() );
+
+    const auto feature_names = JSON::vector_to_array( modified_names );
+
+    scores_obj.set( "feature_names_", feature_names );
+
+    // -------------------------------------------------
+
+    json_obj.set( "scores_", scores_obj );
+
+    // -------------------------------------------------
 
     return json_obj;
 }
 
 // ----------------------------------------------------------------------------
 
-std::string Pipeline::to_sql() const
+std::string Pipeline::to_sql(
+    const std::shared_ptr<const std::vector<strings::String>>& _categories )
+    const
 {
     std::string sql;
 
@@ -1755,7 +2562,8 @@ std::string Pipeline::to_sql() const
         {
             const auto& fe = feature_learners_.at( i );
 
-            const auto vec = fe->to_sql( std::to_string( i + 1 ) + "_", true );
+            const auto vec =
+                fe->to_sql( _categories, std::to_string( i + 1 ) + "_", true );
 
             for ( const auto& str : vec )
                 {
@@ -1770,8 +2578,12 @@ std::string Pipeline::to_sql() const
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Array::Ptr Pipeline::to_sql_arr() const
+Poco::JSON::Array::Ptr Pipeline::to_sql_arr(
+    const std::shared_ptr<const std::vector<strings::String>>& _categories )
+    const
 {
+    assert_true( _categories );
+
     auto sql = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
 
     size_t offset = 0;
@@ -1785,7 +2597,8 @@ Poco::JSON::Array::Ptr Pipeline::to_sql_arr() const
 
             const auto& index = predictor_impl().autofeatures().at( i );
 
-            const auto vec = fe->to_sql( std::to_string( i + 1 ) + "_", false );
+            const auto vec =
+                fe->to_sql( _categories, std::to_string( i + 1 ) + "_", false );
 
             for ( const auto ix : index )
                 {
@@ -1800,7 +2613,7 @@ Poco::JSON::Array::Ptr Pipeline::to_sql_arr() const
 
     const auto tname = JSON::get_value<std::string>( *population, "name_" );
 
-    const auto [autofeature, numerical, categorical] = feature_names();
+    const auto [_, numerical, categorical] = feature_names();
 
     for ( const auto& cname : numerical )
         {
@@ -1817,10 +2630,13 @@ Poco::JSON::Array::Ptr Pipeline::to_sql_arr() const
 
 // ----------------------------------------------------------------------------
 
-containers::Features Pipeline::transform(
+std::pair<containers::Features, containers::CategoricalFeatures>
+Pipeline::transform(
     const Poco::JSON::Object& _cmd,
-    const std::shared_ptr<const monitoring::Logger>& _logger,
+    const std::shared_ptr<const communication::Logger>& _logger,
     const std::map<std::string, containers::DataFrame>& _data_frames,
+    const dependency::DataFrameTracker& _data_frame_tracker,
+    const std::shared_ptr<const containers::Encoding> _categories,
     Poco::Net::StreamSocket* _socket )
 {
     // -------------------------------------------------------------------------
@@ -1831,10 +2647,32 @@ containers::Features Pipeline::transform(
         }
 
     // -------------------------------------------------------------------------
-    // Generate the numerical features.
 
-    const auto numerical_features = generate_numerical_features(
-        _cmd, _logger, _data_frames, predictor_impl(), _socket );
+    auto [population_df, peripheral_dfs] =
+        containers::DataFrameExtractor::extract_data_frames(
+            _cmd, _data_frames );
+
+    std::tie( population_df, peripheral_dfs ) =
+        modify_data_frames( population_df, peripheral_dfs );
+
+    // -------------------------------------------------------------------------
+
+    std::tie( population_df, peripheral_dfs ) = apply_preprocessors(
+        _cmd, population_df, peripheral_dfs, _categories, _socket );
+
+    // -------------------------------------------------------------------------
+
+    const auto [numerical_features, categorical_features, _] = make_features(
+        _cmd,
+        _data_frames,
+        _data_frame_tracker,
+        _logger,
+        population_df,
+        peripheral_dfs,
+        dependencies(),
+        predictor_impl(),
+        std::nullopt,
+        _socket );
 
     // -------------------------------------------------------------------------
     // If we do not want to score or predict, then we can stop here.
@@ -1847,20 +2685,19 @@ containers::Features Pipeline::transform(
 
     if ( !score && !predict )
         {
-            return numerical_features;
+            return std::make_pair( numerical_features, categorical_features );
         }
 
     // -------------------------------------------------------------------------
-    // Retrieve the categorical features.
 
-    auto categorical_features =
-        get_categorical_features( _cmd, _data_frames, predictor_impl() );
-
-    categorical_features =
-        predictor_impl().transform_encodings( categorical_features );
+    if ( num_predictors_per_set() == 0 )
+        {
+            throw std::invalid_argument(
+                "You cannot call .predict(...) or .score(...) on a pipeline "
+                "that doesn't have any predictors." );
+        }
 
     // -------------------------------------------------------------------------
-    // Calculate the feature statistics, if applicable.
 
     const auto ncols = numerical_features.size();
 
@@ -1869,23 +2706,47 @@ containers::Features Pipeline::transform(
             const auto nrows = numerical_features[0]->size();
 
             calculate_feature_stats(
-                numerical_features, nrows, ncols, _cmd, _data_frames );
+                numerical_features, nrows, ncols, _cmd, population_df );
         }
 
     //-------------------------------------------------------------------------
-    // Generate predictions, if applicable.
 
-    if ( predict && num_predictors_per_set() > 0 )
-        {
-            return generate_predictions(
-                categorical_features, numerical_features );
-        }
-    else
-        {
-            return numerical_features;
-        }
+    const auto transformed_categorical_features =
+        predictor_impl().transform_encodings( categorical_features );
+
+    const auto predictions = generate_predictions(
+        transformed_categorical_features, numerical_features );
+
+    return std::make_pair( predictions, containers::CategoricalFeatures() );
 
     // ------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+Poco::JSON::Array::Ptr Pipeline::transpose(
+    const std::vector<std::vector<Float>>& _original ) const
+{
+    assert_true( _original.size() > 0 );
+
+    const auto n = _original.at( 0 ).size();
+
+    Poco::JSON::Array::Ptr transposed( new Poco::JSON::Array() );
+
+    for ( std::size_t i = 0; i < n; ++i )
+        {
+            Poco::JSON::Array::Ptr temp( new Poco::JSON::Array() );
+
+            for ( const auto& vec : _original )
+                {
+                    assert_true( vec.size() == n );
+                    temp->add( vec.at( i ) );
+                }
+
+            transposed->add( temp );
+        }
+
+    return transposed;
 }
 
 // ----------------------------------------------------------------------------

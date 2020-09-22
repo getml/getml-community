@@ -8,7 +8,11 @@ namespace decisiontrees
 
 DecisionTreeNode::DecisionTreeNode(
     bool _is_activated, Int _depth, const DecisionTreeImpl *_tree )
-    : depth_( _depth ), is_activated_( _is_activated ), tree_( _tree ){};
+    : depth_( _depth ),
+      improvement_( NAN ),
+      initial_value_( NAN ),
+      is_activated_( _is_activated ),
+      tree_( _tree ){};
 
 // ----------------------------------------------------------------------------
 
@@ -532,6 +536,45 @@ std::vector<Float> DecisionTreeNode::calculate_critical_values_window(
 
 // ----------------------------------------------------------------------------
 
+void DecisionTreeNode::column_importances(
+    utils::ImportanceMaker *_importance_maker ) const
+{
+    if ( !std::isnan( initial_value_ ) )
+        {
+            _importance_maker->add(
+                tree_->input(),
+                tree_->output(),
+                tree_->column_to_be_aggregated_.data_used,
+                tree_->column_to_be_aggregated_.ix_column_used,
+                tree_->same_units_,
+                initial_value_ );
+        }
+
+    if ( !std::isnan( improvement_ ) )
+        {
+            assert_true( split_ );
+
+            _importance_maker->add(
+                tree_->input(),
+                tree_->output(),
+                split_->data_used,
+                split_->column_used,
+                tree_->same_units_,
+                improvement_ );
+        }
+
+    if ( child_node_greater_ )
+        {
+            assert_true( child_node_smaller_ );
+
+            child_node_greater_->column_importances( _importance_maker );
+
+            child_node_smaller_->column_importances( _importance_maker );
+        }
+}
+
+// ----------------------------------------------------------------------------
+
 void DecisionTreeNode::commit(
     const containers::DataFrameView &_population,
     const containers::DataFrame &_peripheral,
@@ -541,6 +584,8 @@ void DecisionTreeNode::commit(
     containers::MatchPtrs::iterator _match_container_end )
 {
     debug_log( "fit: Improvement possible..." );
+
+    const auto old_value = optimization_criterion()->value();
 
     update(
         _population,
@@ -555,6 +600,8 @@ void DecisionTreeNode::commit(
     aggregation()->commit();
 
     optimization_criterion()->commit();
+
+    improvement_ = optimization_criterion()->value() - old_value;
 
     debug_log(
         "commit: optimization_criterion()->value(): " +
@@ -692,6 +739,8 @@ void DecisionTreeNode::fit_as_root(
 
     optimization_criterion()->commit();
 
+    initial_value_ = optimization_criterion()->value();
+
     if ( tree_->max_length() > 0 )
         {
             fit( _population,
@@ -709,6 +758,17 @@ void DecisionTreeNode::from_json_obj( const Poco::JSON::Object &_json_obj )
     is_activated_ = JSON::get_value<bool>( _json_obj, "act_" );
 
     const bool imposes_condition = JSON::get_value<bool>( _json_obj, "imp_" );
+
+    if ( _json_obj.has( "improvement_" ) )
+        {
+            improvement_ = JSON::get_value<Float>( _json_obj, "improvement_" );
+        }
+
+    if ( _json_obj.has( "initial_value_" ) )
+        {
+            initial_value_ =
+                JSON::get_value<Float>( _json_obj, "initial_value_" );
+        }
 
     if ( imposes_condition )
         {
@@ -1150,6 +1210,16 @@ Poco::JSON::Object DecisionTreeNode::to_json_obj() const
 
     obj.set( "imp_", ( split_ && true ) );
 
+    if ( !std::isnan( improvement_ ) )
+        {
+            obj.set( "improvement_", improvement_ );
+        }
+
+    if ( !std::isnan( initial_value_ ) )
+        {
+            obj.set( "initial_value_", initial_value_ );
+        }
+
     if ( split_ )
         {
             obj.set( "app_", apply_from_above() );
@@ -1178,6 +1248,7 @@ Poco::JSON::Object DecisionTreeNode::to_json_obj() const
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::to_sql(
+    const std::vector<strings::String> &_categories,
     const std::string &_feature_num,
     std::vector<std::string> &_conditions,
     std::string _sql ) const
@@ -1185,32 +1256,29 @@ void DecisionTreeNode::to_sql(
     if ( split_ )
         {
             const auto sql_maker = utils::SQLMaker(
-                tree_->categories_,
-                tree_->delta_t(),
-                tree_->ix_perip_used(),
-                tree_->same_units_ );
+                tree_->delta_t(), tree_->ix_perip_used(), tree_->same_units_ );
 
             const auto prefix = ( _sql == "" ) ? "" : " AND ";
 
             const auto sql_greater =
                 _sql + prefix +
                 sql_maker.condition_greater(
-                    tree_->input(), tree_->output(), *split_ );
+                    _categories, tree_->input(), tree_->output(), *split_ );
 
             const auto sql_smaller =
                 _sql + prefix +
                 sql_maker.condition_smaller(
-                    tree_->input(), tree_->output(), *split_ );
+                    _categories, tree_->input(), tree_->output(), *split_ );
 
             if ( child_node_greater_ )
                 {
                     assert_true( child_node_smaller_ );
 
                     child_node_greater_->to_sql(
-                        _feature_num, _conditions, sql_greater );
+                        _categories, _feature_num, _conditions, sql_greater );
 
                     child_node_smaller_->to_sql(
-                        _feature_num, _conditions, sql_smaller );
+                        _categories, _feature_num, _conditions, sql_smaller );
 
                     return;
                 }

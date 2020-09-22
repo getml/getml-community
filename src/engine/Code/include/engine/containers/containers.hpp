@@ -40,6 +40,8 @@
 
 #include "strings/strings.hpp"
 
+#include "helpers/helpers.hpp"
+
 #include "engine/Float.hpp"
 #include "engine/Int.hpp"
 #include "engine/ULong.hpp"
@@ -52,6 +54,8 @@
 
 // ----------------------------------------------------
 // Module files
+
+#include "engine/containers/Macros.hpp"
 
 #include "engine/containers/Optional.hpp"
 
@@ -68,6 +72,7 @@
 
 #include "engine/containers/DataFrame.hpp"
 
+#include "engine/containers/DataFrameExtractor.hpp"
 #include "engine/containers/DataFrameReader.hpp"
 
 // ----------------------------------------------------

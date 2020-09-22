@@ -32,6 +32,7 @@
 #include "relboost/utils/CriticalValues.hpp"
 #include "relboost/utils/DataFrameScatterer.hpp"
 #include "relboost/utils/Finder.hpp"
+#include "relboost/utils/ImportanceMaker.hpp"
 #include "relboost/utils/Logger.hpp"
 #include "relboost/utils/Mapper.hpp"
 #include "relboost/utils/Matchmaker.hpp"

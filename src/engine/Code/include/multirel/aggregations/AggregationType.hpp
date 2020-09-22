@@ -102,7 +102,9 @@ struct IsComparison
     static constexpr bool value =
         ( data_used_ == enums::DataUsed::time_stamps_diff ||
           data_used_ == enums::DataUsed::same_unit_numerical ||
-          data_used_ == enums::DataUsed::same_unit_discrete );
+          data_used_ == enums::DataUsed::same_unit_numerical_ts ||
+          data_used_ == enums::DataUsed::same_unit_discrete ||
+          data_used_ == enums::DataUsed::same_unit_discrete_ts );
 };
 }  // namespace AggregationType
 

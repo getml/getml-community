@@ -16,7 +16,7 @@ void HyperoptManager::launch(
     // change or delete the project while the hyperparameter
     // optimization is running.
 
-    std::lock_guard<std::mutex> project_guard( project_mtx() );
+    multithreading::ReadLock project_guard( project_lock_ );
 
     // -------------------------------------------------------
 
@@ -40,23 +40,29 @@ void HyperoptManager::launch(
 
     cmd.set( "peripheral_names_", peripheral_names );
 
-    const auto cmd_str = JSON::stringify( cmd );
+    // -------------------------------------------------------
 
-    const auto [status, response] = monitor_->send( "launchhyperopt", cmd_str );
+    const auto monitor_socket = monitor().connect();
+
+    const auto cmd_str = monitor().make_cmd( "launchhyperopt", cmd );
+
+    communication::Sender::send_string( cmd_str, monitor_socket.get() );
 
     // -------------------------------------------------------
 
-    if ( status != Poco::Net::HTTPResponse::HTTPStatus::HTTP_OK )
-        {
-            throw std::runtime_error( response );
-        }
+    handle_logging( monitor_socket, _socket );
+
+    // -------------------------------------------------------
+
+    const auto evaluations_str =
+        communication::Receiver::recv_string( monitor_socket.get() );
 
     // -------------------------------------------------------
 
     Poco::JSON::Parser parser;
 
     const auto evaluations =
-        parser.parse( response ).extract<Poco::JSON::Array::Ptr>();
+        parser.parse( evaluations_str ).extract<Poco::JSON::Array::Ptr>();
 
     auto obj = hyperopt.obj();
 
@@ -75,6 +81,34 @@ void HyperoptManager::launch(
 
 // ------------------------------------------------------------------------
 
+void HyperoptManager::handle_logging(
+    const std::shared_ptr<Poco::Net::StreamSocket>& _monitor_socket,
+    Poco::Net::StreamSocket* _socket ) const
+{
+    assert_true( _monitor_socket );
+
+    while ( true )
+        {
+            const auto msg =
+                communication::Receiver::recv_string( _monitor_socket.get() );
+
+            if ( msg.size() > 4 && msg.substr( 0, 5 ) == "log: " )
+                {
+                    communication::Sender::send_string( msg, _socket );
+                }
+            else if ( msg == "Success!" )
+                {
+                    break;
+                }
+            else
+                {
+                    throw std::runtime_error( msg );
+                }
+        }
+}
+
+// ------------------------------------------------------------------------
+
 void HyperoptManager::refresh(
     const std::string& _name, Poco::Net::StreamSocket* _socket )
 {
@@ -83,6 +117,46 @@ void HyperoptManager::refresh(
     const auto obj = hyperopt.obj();
 
     communication::Sender::send_string( JSON::stringify( obj ), _socket );
+}
+
+// ------------------------------------------------------------------------
+
+void HyperoptManager::tune(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    // -------------------------------------------------------
+    // The project guard will prevent any attempts to
+    // change or delete the project while the hyperparameter
+    // optimization is running.
+
+    multithreading::ReadLock project_guard( project_lock_ );
+
+    // -------------------------------------------------------
+
+    const auto monitor_socket = monitor().connect();
+
+    const auto cmd_str = monitor().make_cmd( "tune", _cmd );
+
+    communication::Sender::send_string( cmd_str, monitor_socket.get() );
+
+    // -------------------------------------------------------
+
+    handle_logging( monitor_socket, _socket );
+
+    // -------------------------------------------------------
+
+    const auto best_pipeline_name =
+        communication::Receiver::recv_string( monitor_socket.get() );
+
+    // -------------------------------------------------------
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    communication::Sender::send_string( best_pipeline_name, _socket );
+
+    // -------------------------------------------------------
 }
 
 // ------------------------------------------------------------------------

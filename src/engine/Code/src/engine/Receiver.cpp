@@ -7,7 +7,7 @@ namespace communication
 // -----------------------------------------------------------------------------
 
 Poco::JSON::Object Receiver::recv_cmd(
-    const std::shared_ptr<const monitoring::Logger> &_logger,
+    const std::shared_ptr<const communication::Logger> &_logger,
     Poco::Net::StreamSocket *_socket )
 {
     // ------------------------------------------------

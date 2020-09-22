@@ -7,7 +7,6 @@ namespace predictors
 std::shared_ptr<Predictor> PredictorParser::parse(
     const Poco::JSON::Object& _json_obj,
     const std::shared_ptr<const PredictorImpl>& _impl,
-    const std::shared_ptr<const std::vector<strings::String>>& _categories,
     const std::vector<Poco::JSON::Object::Ptr>& _dependencies )
 {
     const auto type = JSON::get_value<std::string>( _json_obj, "type_" );

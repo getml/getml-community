@@ -23,7 +23,8 @@ void DataFrameJoiner::add_all(
                 }
 
             _joined_df->add_int_column(
-                _df.categorical( i ).sort_by_key( _rindices ), "categorical" );
+                _df.categorical( i ).sort_by_key( _rindices ),
+                containers::DataFrame::ROLE_CATEGORICAL );
         }
 
     for ( size_t i = 0; i < _df.num_join_keys(); ++i )
@@ -42,7 +43,8 @@ void DataFrameJoiner::add_all(
                 }
 
             _joined_df->add_int_column(
-                _df.join_key( i ).sort_by_key( _rindices ), "join_key" );
+                _df.join_key( i ).sort_by_key( _rindices ),
+                containers::DataFrame::ROLE_JOIN_KEY );
         }
 
     for ( size_t i = 0; i < _df.num_numericals(); ++i )
@@ -55,7 +57,8 @@ void DataFrameJoiner::add_all(
                 }
 
             _joined_df->add_float_column(
-                _df.numerical( i ).sort_by_key( _rindices ), "numerical" );
+                _df.numerical( i ).sort_by_key( _rindices ),
+                containers::DataFrame::ROLE_NUMERICAL );
         }
 
     for ( size_t i = 0; i < _df.num_targets(); ++i )
@@ -67,7 +70,8 @@ void DataFrameJoiner::add_all(
                 }
 
             _joined_df->add_float_column(
-                _df.target( i ).sort_by_key( _rindices ), "target" );
+                _df.target( i ).sort_by_key( _rindices ),
+                containers::DataFrame::ROLE_TARGET );
         }
 
     for ( size_t i = 0; i < _df.num_time_stamps(); ++i )
@@ -80,7 +84,8 @@ void DataFrameJoiner::add_all(
                 }
 
             _joined_df->add_float_column(
-                _df.time_stamp( i ).sort_by_key( _rindices ), "time_stamp" );
+                _df.time_stamp( i ).sort_by_key( _rindices ),
+                containers::DataFrame::ROLE_TIME_STAMP );
         }
 
     for ( size_t i = 0; i < _df.num_unused_floats(); ++i )
@@ -94,7 +99,7 @@ void DataFrameJoiner::add_all(
 
             _joined_df->add_float_column(
                 _df.unused_float( i ).sort_by_key( _rindices ),
-                "unused_float" );
+                containers::DataFrame::ROLE_UNUSED_FLOAT );
         }
 
     for ( size_t i = 0; i < _df.num_unused_strings(); ++i )
@@ -121,7 +126,7 @@ void DataFrameJoiner::add_col(
     const std::string& _as,
     containers::DataFrame* _joined_df )
 {
-    if ( _role == "categorical" )
+    if ( _role == containers::DataFrame::ROLE_CATEGORICAL )
         {
             if ( _joined_df->has( _as ) )
                 {
@@ -132,7 +137,7 @@ void DataFrameJoiner::add_col(
             col.set_name( _as );
             _joined_df->add_int_column( col, _role );
         }
-    else if ( _role == "join_key" )
+    else if ( _role == containers::DataFrame::ROLE_JOIN_KEY )
         {
             if ( _joined_df->has( _as ) )
                 {
@@ -143,7 +148,7 @@ void DataFrameJoiner::add_col(
             col.set_name( _as );
             _joined_df->add_int_column( col, _role );
         }
-    else if ( _role == "numerical" )
+    else if ( _role == containers::DataFrame::ROLE_NUMERICAL )
         {
             if ( _joined_df->has( _as ) )
                 {
@@ -154,7 +159,7 @@ void DataFrameJoiner::add_col(
             col.set_name( _as );
             _joined_df->add_float_column( col, _role );
         }
-    else if ( _role == "target" )
+    else if ( _role == containers::DataFrame::ROLE_TARGET )
         {
             if ( _joined_df->has( _as ) )
                 {
@@ -165,7 +170,7 @@ void DataFrameJoiner::add_col(
             col.set_name( _as );
             _joined_df->add_float_column( col, _role );
         }
-    else if ( _role == "time_stamp" )
+    else if ( _role == containers::DataFrame::ROLE_TIME_STAMP )
         {
             if ( _joined_df->has( _as ) )
                 {
@@ -176,7 +181,10 @@ void DataFrameJoiner::add_col(
             col.set_name( _as );
             _joined_df->add_float_column( col, _role );
         }
-    else if ( _role == "unused" || _role == "unused_float" || "unused_string" )
+    else if (
+        _role == containers::DataFrame::ROLE_UNUSED ||
+        _role == containers::DataFrame::ROLE_UNUSED_FLOAT ||
+        containers::DataFrame::ROLE_UNUSED_STRING )
         {
             if ( _joined_df->has( _as ) )
                 {
@@ -242,9 +250,9 @@ void DataFrameJoiner::add_cols(
                     ? jsonutils::JSON::get_value<std::string>( obj, "as_" )
                     : name;
 
-            if ( role == "join_key" && _join_key_used == _other_join_key_used &&
-                 as == name && name == _join_key_used &&
-                 _joined_df->has( name ) )
+            if ( role == containers::DataFrame::ROLE_JOIN_KEY &&
+                 _join_key_used == _other_join_key_used && as == name &&
+                 name == _join_key_used && _joined_df->has( name ) )
                 {
                     continue;
                 }

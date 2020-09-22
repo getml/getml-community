@@ -72,6 +72,9 @@ class LinearRegression : public Predictor
     /// Whether we want the predictor to be silent.
     bool silent() const final { return true; }
 
+    /// The type of the predictor.
+    std::string type() const final { return "LinearRegression"; }
+
     // -------------------------------------------------------------------------
 
    private:

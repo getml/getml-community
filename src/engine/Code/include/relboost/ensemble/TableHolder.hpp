@@ -7,64 +7,7 @@ namespace ensemble
 {
 // ----------------------------------------------------------------------------
 
-struct TableHolder
-{
-    TableHolder(
-        const containers::Placeholder& _placeholder,
-        const containers::DataFrameView& _population,
-        const std::vector<containers::DataFrame>& _peripheral,
-        const std::vector<std::string>& _peripheral_names )
-        : main_tables_(
-              TableHolder::parse_main_tables( _placeholder, _population ) ),
-          peripheral_tables_( TableHolder::parse_peripheral_tables(
-              _placeholder, _peripheral, _peripheral_names ) ),
-          subtables_( TableHolder::parse_subtables(
-              _placeholder, _population, _peripheral, _peripheral_names ) )
-
-    {
-        assert_true( main_tables_.size() == peripheral_tables_.size() );
-        assert_true( main_tables_.size() == subtables_.size() );
-    }
-
-    ~TableHolder() = default;
-
-    // ------------------------------
-
-    /// Creates the row indices for the subtables.
-    static std::shared_ptr<const std::vector<size_t>> make_subrows(
-        const containers::DataFrameView& _population_subview,
-        const containers::DataFrame& _peripheral_subview );
-
-    /// Creates the main tables during construction.
-    static std::vector<containers::DataFrameView> parse_main_tables(
-        const containers::Placeholder& _placeholder,
-        const containers::DataFrameView& _population );
-
-    /// Creates the peripheral tables during construction.
-    static std::vector<containers::DataFrame> parse_peripheral_tables(
-        const containers::Placeholder& _placeholder,
-        const std::vector<containers::DataFrame>& _peripheral,
-        const std::vector<std::string>& _peripheral_names );
-
-    /// Creates the subtables during construction.
-    static std::vector<std::optional<TableHolder>> parse_subtables(
-        const containers::Placeholder& _placeholder,
-        const containers::DataFrameView& _population,
-        const std::vector<containers::DataFrame>& _peripheral,
-        const std::vector<std::string>& _peripheral_names );
-
-    // ------------------------------
-
-    /// The TableHolder has a population table, which may or may not be
-    /// identical with the actual population table.
-    const std::vector<containers::DataFrameView> main_tables_;
-
-    /// The TableHolder can have peripheral tables.
-    const std::vector<containers::DataFrame> peripheral_tables_;
-
-    /// The TableHolder may or may not have subtables.
-    const std::vector<std::optional<TableHolder>> subtables_;
-};
+typedef typename helpers::TableHolder TableHolder;
 
 // ----------------------------------------------------------------------------
 }  // namespace ensemble

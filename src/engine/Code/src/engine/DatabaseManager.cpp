@@ -315,7 +315,7 @@ void DatabaseManager::post_tables()
             obj.set( name, jsonutils::JSON::vector_to_array_ptr( tables ) );
         }
 
-    monitor_->send( "postdatabasetables", jsonutils::JSON::stringify( obj ) );
+    monitor_->send_tcp( "postdatabasetables", obj );
 }
 
 // ----------------------------------------------------------------------------

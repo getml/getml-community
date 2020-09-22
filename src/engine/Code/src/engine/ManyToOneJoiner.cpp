@@ -1,0 +1,404 @@
+#include "engine/pipelines/pipelines.hpp"
+
+namespace engine
+{
+namespace pipelines
+{
+// ----------------------------------------------------------------------------
+
+containers::Column<Int> ManyToOneJoiner::extract_join_key(
+    const containers::DataFrame& _df,
+    const std::string& _tname,
+    const std::string& _colname )
+{
+    const auto name = containers::Macros::make_colname( _tname, _colname );
+
+    if ( _df.has_join_key( name ) )
+        {
+            return _df.join_key( name );
+        }
+
+    return _df.join_key( _colname );
+}
+
+// ----------------------------------------------------------------------------
+
+std::shared_ptr<const typename containers::DataFrameIndex::MapType>
+ManyToOneJoiner::extract_map(
+    const containers::DataFrame& _df,
+    const std::string& _tname,
+    const std::string& _colname )
+{
+    const auto name = containers::Macros::make_colname( _tname, _colname );
+
+    if ( _df.has_join_key( name ) )
+        {
+            return _df.index( name ).map();
+        }
+
+    return _df.index( _colname ).map();
+}
+
+// ----------------------------------------------------------------------------
+
+std::optional<containers::Column<Float>> ManyToOneJoiner::extract_time_stamp(
+    const containers::DataFrame& _df,
+    const std::string& _tname,
+    const std::string& _colname )
+{
+    if ( _colname == "" )
+        {
+            return std::nullopt;
+        }
+
+    const auto name = containers::Macros::make_colname( _tname, _colname );
+
+    if ( _df.has_time_stamp( name ) )
+        {
+            return _df.time_stamp( name );
+        }
+
+    return _df.time_stamp( _colname );
+}
+
+// ----------------------------------------------------------------------------
+
+containers::DataFrame ManyToOneJoiner::find_peripheral(
+    const std::string& _name,
+    const std::vector<std::string>& _peripheral_names,
+    const std::vector<containers::DataFrame>& _peripheral_dfs )
+{
+    if ( _peripheral_dfs.size() != _peripheral_names.size() )
+        {
+            throw std::invalid_argument(
+                "The number of peripheral tables must match the number of "
+                "placeholders passed. This is the point of having "
+                "placeholders!" );
+        }
+
+    for ( size_t i = 0; i < _peripheral_names.size(); ++i )
+        {
+            if ( _peripheral_names.at( i ) == _name )
+                {
+                    return _peripheral_dfs.at( i );
+                }
+        }
+
+    throw std::invalid_argument(
+        "Could not find any placeholder named '" + _name +
+        "' among the peripheral placeholders!" );
+
+    return _peripheral_dfs.at( 0 );
+}
+
+// ----------------------------------------------------------------------------
+
+containers::DataFrame ManyToOneJoiner::join_all(
+    const bool _use_timestamps,
+    const bool _is_population,
+    const std::string& _joined_name,
+    const std::vector<std::string>& _origin_peripheral_names,
+    const containers::DataFrame& _population_df,
+    const std::vector<containers::DataFrame>& _peripheral_dfs )
+{
+    const auto splitted = utils::StringSplitter::split(
+        _joined_name, containers::Macros::delimiter() );
+
+    assert_true( splitted.size() != 0 );
+
+    auto population = _population_df;
+
+    if ( !_is_population )
+        {
+            population = find_peripheral(
+                splitted.at( 0 ), _origin_peripheral_names, _peripheral_dfs );
+        }
+
+    for ( size_t i = 1; i < splitted.size(); ++i )
+        {
+            population = join_one(
+                _use_timestamps,
+                splitted.at( i ),
+                population,
+                _peripheral_dfs,
+                _origin_peripheral_names );
+        }
+
+    population.set_name( _joined_name );
+
+    return population;
+}
+
+// ----------------------------------------------------------------------------
+
+containers::DataFrame ManyToOneJoiner::join_one(
+    const bool _use_timestamps,
+    const std::string& _splitted,
+    const containers::DataFrame& _population,
+    const std::vector<containers::DataFrame>& _peripheral_dfs,
+    const std::vector<std::string>& _peripheral_names )
+{
+    auto joined = _population;
+
+    const auto
+        [name,
+         join_key,
+         other_join_key,
+         time_stamp,
+         other_time_stamp,
+         upper_time_stamp,
+         joined_to,
+         one_to_one] = containers::Macros::parse_table_name( _splitted );
+
+    const auto peripheral =
+        find_peripheral( name, _peripheral_names, _peripheral_dfs );
+
+    const auto index = make_index(
+        _use_timestamps,
+        name,
+        join_key,
+        other_join_key,
+        time_stamp,
+        other_time_stamp,
+        upper_time_stamp,
+        joined_to,
+        one_to_one,
+        _population,
+        peripheral );
+
+    for ( size_t i = 0; i < peripheral.num_categoricals(); ++i )
+        {
+            auto col = peripheral.categorical( i ).sort_by_key( index );
+            col.set_name(
+                containers::Macros::make_colname( name, col.name() ) );
+            joined.add_int_column(
+                col, containers::DataFrame::ROLE_CATEGORICAL );
+        }
+
+    for ( size_t i = 0; i < peripheral.num_join_keys(); ++i )
+        {
+            auto col = peripheral.join_key( i ).sort_by_key( index );
+            col.set_name(
+                containers::Macros::make_colname( name, col.name() ) );
+            joined.add_int_column( col, containers::DataFrame::ROLE_JOIN_KEY );
+        }
+
+    for ( size_t i = 0; i < peripheral.num_numericals(); ++i )
+        {
+            auto col = peripheral.numerical( i ).sort_by_key( index );
+            col.set_name(
+                containers::Macros::make_colname( name, col.name() ) );
+            joined.add_float_column(
+                col, containers::DataFrame::ROLE_NUMERICAL );
+        }
+
+    for ( size_t i = 0; i < peripheral.num_time_stamps(); ++i )
+        {
+            auto col = peripheral.time_stamp( i ).sort_by_key( index );
+            col.set_name(
+                containers::Macros::make_colname( name, col.name() ) );
+            joined.add_float_column(
+                col, containers::DataFrame::ROLE_TIME_STAMP );
+        }
+
+    for ( size_t i = 0; i < peripheral.num_unused_strings(); ++i )
+        {
+            if ( peripheral.unused_string( i ).unit() == "" )
+                {
+                    continue;
+                }
+            auto col = peripheral.unused_string( i ).sort_by_key( index );
+            col.set_name(
+                containers::Macros::make_colname( name, col.name() ) );
+            joined.add_string_column( col );
+        }
+
+    return joined;
+}
+
+// ----------------------------------------------------------------------------
+
+void ManyToOneJoiner::join_tables(
+    const bool _use_timestamps,
+    const std::vector<std::string>& _origin_peripheral_names,
+    const std::string& _joined_population_name,
+    const std::vector<std::string>& _joined_peripheral_names,
+    containers::DataFrame* _population_df,
+    std::vector<containers::DataFrame>* _peripheral_dfs )
+{
+    const auto population_df = join_all(
+        _use_timestamps,
+        true,
+        _joined_population_name,
+        _origin_peripheral_names,
+        *_population_df,
+        *_peripheral_dfs );
+
+    auto peripheral_dfs =
+        std::vector<containers::DataFrame>( _joined_peripheral_names.size() );
+
+    for ( size_t i = 0; i < peripheral_dfs.size(); ++i )
+        {
+            peripheral_dfs.at( i ) = join_all(
+                _use_timestamps,
+                false,
+                _joined_peripheral_names.at( i ),
+                _origin_peripheral_names,
+                *_population_df,
+                *_peripheral_dfs );
+        }
+
+    *_population_df = population_df;
+
+    *_peripheral_dfs = peripheral_dfs;
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<size_t> ManyToOneJoiner::make_index(
+    const bool _use_timestamps,
+    const std::string& _name,
+    const std::string& _join_key,
+    const std::string& _other_join_key,
+    const std::string& _time_stamp,
+    const std::string& _other_time_stamp,
+    const std::string& _upper_time_stamp,
+    const std::string& _joined_to,
+    const bool _one_to_one,
+    const containers::DataFrame& _population,
+    const containers::DataFrame& _peripheral )
+{
+    // -------------------------------------------------------
+
+    const auto join_key =
+        extract_join_key( _population, _joined_to, _join_key );
+
+    const auto peripheral_index =
+        extract_map( _peripheral, _name, _other_join_key );
+
+    const auto time_stamp =
+        extract_time_stamp( _population, _joined_to, _time_stamp );
+
+    const auto other_time_stamp =
+        extract_time_stamp( _peripheral, _name, _other_time_stamp );
+
+    const auto upper_time_stamp =
+        extract_time_stamp( _peripheral, _name, _upper_time_stamp );
+
+    // -------------------------------------------------------
+
+    if ( ( time_stamp && true ) != ( other_time_stamp && true ) )
+        {
+            throw std::invalid_argument(
+                "If you pass a time stamp, there must also be another time "
+                "stamp and vice versa!" );
+        }
+
+    // -------------------------------------------------------
+
+    assert_true( peripheral_index );
+
+    std::vector<size_t> index( _population.nrows() );
+
+    std::set<size_t> unique_indices;
+
+    for ( size_t i = 0; i < _population.nrows(); ++i )
+        {
+            const auto ts = time_stamp ? ( *time_stamp )[i] : 0.0;
+
+            const auto [ix, ok] = retrieve_index(
+                _population.nrows(),
+                join_key[i],
+                ts,
+                *peripheral_index,
+                other_time_stamp,
+                upper_time_stamp );
+
+            if ( !ok )
+                {
+                    throw std::invalid_argument(
+                        "The join of '" + _population.name() + "' and '" +
+                        _peripheral.name() +
+                        "' was marked many-to-one or one-to-one, "
+                        "but there is more than one "
+                        "match in '" +
+                        _peripheral.name() + "'." );
+                }
+
+            if ( _one_to_one && ix < _population.nrows() )
+                {
+                    if ( unique_indices.find( ix ) != unique_indices.end() )
+                        {
+                            throw std::invalid_argument(
+                                "The join of '" + _population.name() +
+                                "' and '" + _peripheral.name() +
+                                "' was marked one-to-one, but there is more "
+                                "than one match in '" +
+                                _population.name() + "'." );
+                        }
+
+                    unique_indices.insert( ix );
+                }
+
+            index[i] = ix;
+        }
+
+    // -------------------------------------------------------
+
+    return index;
+
+    // -------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+std::pair<size_t, bool> ManyToOneJoiner::retrieve_index(
+    const size_t _nrows,
+    const Int _jk,
+    const Float _ts,
+    const containers::DataFrameIndex::MapType& _peripheral_index,
+    const std::optional<containers::Column<Float>>& _other_time_stamp,
+    const std::optional<containers::Column<Float>>& _upper_time_stamp )
+{
+    const auto it = _peripheral_index.find( _jk );
+
+    if ( it == _peripheral_index.end() )
+        {
+            return std::make_pair( _nrows, true );
+        }
+
+    std::vector<size_t> local_indices;
+
+    for ( size_t ix : it->second )
+        {
+            const auto lower =
+                _other_time_stamp ? ( *_other_time_stamp )[ix] : 0.0;
+
+            const auto upper =
+                _upper_time_stamp ? ( *_upper_time_stamp )[ix] : NAN;
+
+            const bool match_in_range =
+                lower <= _ts && ( std::isnan( upper ) || upper > _ts );
+
+            if ( match_in_range )
+                {
+                    local_indices.push_back( ix );
+                }
+        }
+
+    if ( local_indices.size() == 0 )
+        {
+            return std::make_pair( _nrows, true );
+        }
+
+    if ( local_indices.size() == 1 )
+        {
+            return std::make_pair( local_indices[0], true );
+        }
+
+    return std::make_pair( _nrows, false );
+}
+
+// ----------------------------------------------------------------------------
+}  // namespace pipelines
+}  // namespace engine

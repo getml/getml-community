@@ -22,21 +22,24 @@ class ProjectManager
         const std::shared_ptr<DataFrameManager>& _data_frame_manager,
         const std::shared_ptr<std::map<std::string, containers::DataFrame>>
             _data_frames,
+        const std::shared_ptr<engine::dependency::DataFrameTracker>&
+            _data_frame_tracker,
         const std::shared_ptr<dependency::FETracker>& _fe_tracker,
         const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
         const std::shared_ptr<std::map<std::string, hyperparam::Hyperopt>>&
             _hyperopts,
         const std::shared_ptr<licensing::LicenseChecker>& _license_checker,
-        const std::shared_ptr<const monitoring::Logger>& _logger,
-        const std::shared_ptr<const monitoring::Monitor>& _monitor,
+        const std::shared_ptr<const communication::Logger>& _logger,
+        const std::shared_ptr<const communication::Monitor>& _monitor,
         const config::Options& _options,
         const std::shared_ptr<PipelineMapType>& _pipelines,
         const std::shared_ptr<dependency::PredTracker>& _pred_tracker,
-        const std::shared_ptr<std::mutex>& _project_mtx,
+        const std::shared_ptr<multithreading::ReadWriteLock>& _project_lock,
         const std::shared_ptr<multithreading::ReadWriteLock>& _read_write_lock )
         : categories_( _categories ),
           data_frame_manager_( _data_frame_manager ),
           data_frames_( _data_frames ),
+          data_frame_tracker_( _data_frame_tracker ),
           fe_tracker_( _fe_tracker ),
           join_keys_encoding_( _join_keys_encoding ),
           hyperopts_( _hyperopts ),
@@ -46,7 +49,7 @@ class ProjectManager
           options_( _options ),
           pipelines_( _pipelines ),
           pred_tracker_( _pred_tracker ),
-          project_mtx_( _project_mtx ),
+          project_lock_( _project_lock ),
           read_write_lock_( _read_write_lock )
     {
     }
@@ -187,6 +190,12 @@ class ProjectManager
     /// Loads a JSON object from a file.
     Poco::JSON::Object load_json_obj( const std::string& _fname ) const;
 
+    /// Posts an object to the monitor.
+    void post( const std::string& _what, const Poco::JSON::Object& _obj ) const;
+
+    /// Removes an object from the monitor.
+    void remove( const std::string& _what, const std::string& _name ) const;
+
     // ------------------------------------------------------------------------
 
    private:
@@ -207,6 +216,13 @@ class ProjectManager
     {
         assert_true( data_frames_ );
         return *data_frames_;
+    }
+
+    /// Trivial accessor
+    dependency::DataFrameTracker& data_frame_tracker()
+    {
+        assert_true( data_frame_tracker_ );
+        return *data_frame_tracker_;
     }
 
     /// Trivial accessor
@@ -269,10 +285,17 @@ class ProjectManager
     }
 
     /// Trivial (private) accessor
-    const monitoring::Logger& logger()
+    const communication::Logger& logger()
     {
         assert_true( logger_ );
         return *logger_;
+    }
+
+    /// Trivial (private) accessor
+    const communication::Monitor& monitor() const
+    {
+        assert_true( monitor_ );
+        return *monitor_;
     }
 
     /// Trivial (private) accessor
@@ -294,13 +317,6 @@ class ProjectManager
     {
         assert_true( pred_tracker_ );
         return *pred_tracker_;
-    }
-
-    /// Trivial (private) accessor
-    std::mutex& project_mtx()
-    {
-        assert_true( project_mtx_ );
-        return *project_mtx_;
     }
 
     /// Trivial (private) setter.
@@ -332,6 +348,10 @@ class ProjectManager
     const std::shared_ptr<std::map<std::string, containers::DataFrame>>
         data_frames_;
 
+    /// Keeps track of all data frames, so we don't have to
+    /// reconstruct the features all of the time.
+    const std::shared_ptr<dependency::DataFrameTracker> data_frame_tracker_;
+
     /// Keeps track of all feature learners.
     const std::shared_ptr<dependency::FETracker> fe_tracker_;
 
@@ -346,10 +366,10 @@ class ProjectManager
     const std::shared_ptr<licensing::LicenseChecker> license_checker_;
 
     /// For logging
-    const std::shared_ptr<const monitoring::Logger> logger_;
+    const std::shared_ptr<const communication::Logger> logger_;
 
     /// For communication with the monitor
-    const std::shared_ptr<const monitoring::Monitor> monitor_;
+    const std::shared_ptr<const communication::Monitor> monitor_;
 
     /// Settings for the engine
     const config::Options options_;
@@ -361,7 +381,7 @@ class ProjectManager
     const std::shared_ptr<dependency::PredTracker> pred_tracker_;
 
     /// It is sometimes necessary to prevent us from changing the project.
-    const std::shared_ptr<std::mutex> project_mtx_;
+    const std::shared_ptr<multithreading::ReadWriteLock> project_lock_;
 
     /// The current project directory
     std::string project_directory_;

@@ -32,6 +32,9 @@ class DecisionTreeNode
     // -----------------------------------------------------------------
 
    public:
+    /// Updates the column importances based on the data of the this node.
+    void column_importances( utils::ImportanceMaker* _importance_maker ) const;
+
     /// Fits the decision tree node.
     void fit(
         const containers::DataFrameView& _output,
@@ -46,6 +49,7 @@ class DecisionTreeNode
 
     /// Expresses the DecisionTreeNode as SQL code.
     void to_sql(
+        const std::vector<strings::String>& _categories,
         const std::string& _feature_num,
         const std::string& _sql,
         std::vector<std::string>* _conditions ) const;
@@ -338,6 +342,9 @@ class DecisionTreeNode
 
     /// Reference to the loss function used.
     const std::shared_ptr<lossfunctions::LossFunction> loss_function_;
+
+    /// The reduction of the loss achieved by this node (if applicable)
+    Float loss_reduction_;
 
     /// The output table used (we keep it, because we need the colnames)
     containers::Optional<containers::Placeholder> output_;

@@ -23,7 +23,7 @@ XGBoostHyperparams::XGBoostHyperparams( const Poco::JSON::Object &_json_obj )
           JSON::get_value<std::string>( _json_obj, "normalize_type_" ) ),
       num_parallel_tree_(
           JSON::get_value<size_t>( _json_obj, "num_parallel_tree_" ) ),
-      nthread_( JSON::get_value<size_t>( _json_obj, "n_jobs_" ) ),
+      nthread_( JSON::get_value<Int>( _json_obj, "n_jobs_" ) ),
       objective_( JSON::get_value<std::string>( _json_obj, "objective_" ) ),
       one_drop_( JSON::get_value<bool>( _json_obj, "one_drop_" ) ),
       rate_drop_( JSON::get_value<Float>( _json_obj, "rate_drop_" ) ),
@@ -45,7 +45,8 @@ XGBoostHyperparams::XGBoostHyperparams( const Poco::JSON::Object &_json_obj )
         {
             throw std::invalid_argument(
                 "Objective of type '" + objective_ +
-                "' not known! Please use 'reg:squarederror', 'reg:linear', 'reg:logistic', "
+                "' not known! Please use 'reg:squarederror', 'reg:linear', "
+                "'reg:logistic', "
                 "'binary:logistic', 'binary:logitraw' or 'reg:tweedie'!" );
         }
 

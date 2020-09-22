@@ -62,6 +62,25 @@ void LicenseChecker::check_mem_size(
 
 // ------------------------------------------------------------------------
 
+std::string LicenseChecker::os() const
+{
+#ifdef _WIN32
+
+    return "windows";
+
+#elif __APPLE__
+
+    return "macOS";
+
+#else
+
+    return "linux";
+
+#endif
+}
+
+// ------------------------------------------------------------------------
+
 void LicenseChecker::receive_token( const std::string& _caller_id )
 {
     // -------------------------------------------------------------
@@ -72,26 +91,13 @@ void LicenseChecker::receive_token( const std::string& _caller_id )
 
     // -------------------------------------------------------------
 
-#ifdef _WIN32
+    auto request = Poco::JSON::Object();
 
-    const std::string os = "windows";
+    request.set( "caller_id_", _caller_id );
 
-#elif __APPLE__
+    request.set( "product_id_", GETML_VERSION );
 
-    const std::string os = "macOS";
-
-#else
-
-    const std::string os = "linux";
-
-#endif
-
-    // -------------------------------------------------------------
-    // Make request
-
-    const std::string request = "{\"caller_id_\":\"" + _caller_id +
-                                "\",\"product_id_\":\"" + GETML_VERSION +
-                                "\",\"os_\":\"" + os + "\"}";
+    request.set( "os_", os() );
 
     // -------------------------------------------------------------
     // Get token
@@ -151,37 +157,22 @@ void LicenseChecker::receive_token( const std::string& _caller_id )
         }
 
     // --------------------------------------------------------------
-}  // namespace licensing
+}
 
 // ------------------------------------------------------------------------
 
-std::pair<std::string, bool> LicenseChecker::send( const std::string& _request )
+std::pair<std::string, bool> LicenseChecker::send(
+    const Poco::JSON::Object& _request )
 {
-    // --------------------------------------------------------------
-    // Send request
-
-    const auto [status, response] = monitor_->send( "gettoken", _request );
-
-    // --------------------------------------------------------------
-
-    if ( status != Poco::Net::HTTPResponse::HTTPStatus::HTTP_OK )
-        {
-            return std::make_pair( response, false );
-        }
-
-    // --------------------------------------------------------------
+    const auto response = monitor_->send_tcp( "gettoken", _request );
 
     if ( response.size() == 0 || response[0] != '{' )
         {
             return std::make_pair( response, false );
         }
 
-    // --------------------------------------------------------------
-
     return std::make_pair( response, true );
-
-    // --------------------------------------------------------------
-};
+}
 
 // ------------------------------------------------------------------------
 }  // namespace licensing

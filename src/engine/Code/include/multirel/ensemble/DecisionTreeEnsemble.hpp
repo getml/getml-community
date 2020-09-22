@@ -29,7 +29,6 @@ class DecisionTreeEnsemble
 
    public:
     DecisionTreeEnsemble(
-        const std::shared_ptr<const std::vector<strings::String>> &_categories,
         const std::shared_ptr<const descriptors::Hyperparameters>
             &_hyperparameters,
         const std::shared_ptr<const std::vector<std::string>> &_peripheral,
@@ -39,15 +38,22 @@ class DecisionTreeEnsemble
         const std::shared_ptr<const containers::Placeholder>
             &_population_schema = nullptr );
 
-    DecisionTreeEnsemble(
-        const std::shared_ptr<const std::vector<strings::String>> &_categories,
-        const Poco::JSON::Object &_obj );
+    DecisionTreeEnsemble( const Poco::JSON::Object &_obj );
 
     ~DecisionTreeEnsemble() = default;
 
     // -----------------------------------------------------------------
 
    public:
+    /// Calculates the column importances for this ensemble.
+    std::map<helpers::ColumnDescription, Float> column_importances(
+        const std::vector<Float> &_importance_factors ) const;
+
+    /// Calculates the column importance for a particular tree.
+    std::map<helpers::ColumnDescription, Float> column_importance_for_tree(
+        const Float _importance_factors,
+        const decisiontrees::DecisionTree &_tree ) const;
+
     /// Calculates feature importances
     void feature_importances();
 
@@ -75,19 +81,16 @@ class DecisionTreeEnsemble
     /// Extracts the ensemble as a Poco::JSON object
     Poco::JSON::Object to_json_obj( const bool _schema_only = false ) const;
 
-    /// Extracts the ensemble as a Boost property tree the monitor process can
-    /// understand
-    Poco::JSON::Object to_monitor( const std::string _name ) const;
-
     /// Expresses DecisionTreeEnsemble as SQL code.
     std::vector<std::string> to_sql(
+        const std::shared_ptr<const std::vector<strings::String>> &_categories,
         const std::string &_feature_prefix = "",
         const size_t _offset = 0,
         const bool _subfeatures = true ) const;
 
     /// Transforms a set of raw data into extracted features.
-    /// Only the features signified by _index will be used, if such an index is
-    /// passed.
+    /// Only the features signified by _index will be used, if such an index
+    /// is passed.
     containers::Features transform(
         const containers::DataFrame &_population,
         const std::vector<containers::DataFrame> &_peripheral,
@@ -95,7 +98,8 @@ class DecisionTreeEnsemble
         const std::shared_ptr<const logging::AbstractLogger> _logger =
             std::shared_ptr<const logging::AbstractLogger>() ) const;
 
-    /// Transforms table holders into predictions, used for subtree predictions.
+    /// Transforms table holders into predictions, used for subtree
+    /// predictions.
     containers::Predictions transform(
         const decisiontrees::TableHolder &_table_holder,
         const std::shared_ptr<const logging::AbstractLogger> _logger,
@@ -118,13 +122,6 @@ class DecisionTreeEnsemble
     /// Trivial accessor
     bool allow_http() const { return impl().allow_http_; }
 
-    /// Trivial accessor
-    inline const std::shared_ptr<const std::vector<strings::String>>
-        &categories() const
-    {
-        return impl().categories_;
-    }
-
     /// Trivial getter
     inline multithreading::Communicator *comm() { return impl().comm_; }
 
@@ -141,6 +138,9 @@ class DecisionTreeEnsemble
     {
         return hyperparameters().loss_function_ != "SquareLoss";
     }
+
+    /// Whether the ensemble is a subensemble
+    const bool is_subensemble() const { return !impl().population_schema_; }
 
     /// Trivial accessor
     const size_t num_features() const { return trees().size(); }
@@ -256,8 +256,8 @@ class DecisionTreeEnsemble
     /// Trivial accessor
     inline const DecisionTreeEnsembleImpl &impl() const { return impl_; }
 
-    /// Abstraction that returns the last tree that has actually been added to
-    /// the ensemble
+    /// Abstraction that returns the last tree that has actually been added
+    /// to the ensemble
     inline decisiontrees::DecisionTree *last_tree()
     {
         assert_true( trees().size() > 0 );
@@ -300,12 +300,12 @@ class DecisionTreeEnsemble
     /// Contains all variables other than the subensembles.
     DecisionTreeEnsembleImpl impl_;
 
-    /// Contains the ensembles for the subfeatures trained with the intermediate
-    /// aggregation AVG.
+    /// Contains the ensembles for the subfeatures trained with the
+    /// intermediate aggregation AVG.
     std::vector<containers::Optional<DecisionTreeEnsemble>> subensembles_avg_;
 
-    /// Contains the ensembles for the subfeatures trained with the intermediate
-    /// aggregation SUM.
+    /// Contains the ensembles for the subfeatures trained with the
+    /// intermediate aggregation SUM.
     std::vector<containers::Optional<DecisionTreeEnsemble>> subensembles_sum_;
 
     // -----------------------------------------------------------------

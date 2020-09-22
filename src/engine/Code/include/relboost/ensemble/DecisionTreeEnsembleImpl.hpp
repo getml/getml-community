@@ -12,7 +12,6 @@ namespace ensemble
 struct DecisionTreeEnsembleImpl
 {
     DecisionTreeEnsembleImpl(
-        const std::shared_ptr<const std::vector<strings::String>>& _categories,
         const std::shared_ptr<const Hyperparameters>& _hyperparameters,
         const std::shared_ptr<const std::vector<std::string>>& _peripheral,
         const std::shared_ptr<const containers::Placeholder>& _placeholder,
@@ -22,7 +21,6 @@ struct DecisionTreeEnsembleImpl
             _population_schema )
         : allow_http_( false ),
           comm_( nullptr ),
-          categories_( _categories ),
           hyperparameters_( _hyperparameters ),
           initial_prediction_( 0.0 ),
           peripheral_( _peripheral ),
@@ -50,10 +48,6 @@ struct DecisionTreeEnsembleImpl
 
     /// raw pointer to the communicator.
     multithreading::Communicator* comm_;
-
-    /// Encoding for the categorical data, maps integers to underlying
-    /// category.
-    std::shared_ptr<const std::vector<strings::String>> categories_;
 
     /// Hyperparameters used to train the relboost model.
     std::shared_ptr<const Hyperparameters> hyperparameters_;

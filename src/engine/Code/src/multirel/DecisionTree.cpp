@@ -7,11 +7,10 @@ namespace decisiontrees
 // ----------------------------------------------------------------------------
 
 DecisionTree::DecisionTree(
-    const std::shared_ptr<const std::vector<strings::String>> &_categories,
     const std::shared_ptr<const descriptors::TreeHyperparameters>
         &_tree_hyperparameters,
     const Poco::JSON::Object &_json_obj )
-    : impl_( _categories, _tree_hyperparameters )
+    : impl_( _tree_hyperparameters )
 {
     debug_log( "Feature: Normal constructor..." );
 
@@ -24,7 +23,6 @@ DecisionTree::DecisionTree(
 
 DecisionTree::DecisionTree(
     const std::string &_agg,
-    const std::shared_ptr<const std::vector<strings::String>> &_categories,
     const std::shared_ptr<const descriptors::TreeHyperparameters>
         &_tree_hyperparameters,
     const size_t _ix_perip_used,
@@ -34,7 +32,7 @@ DecisionTree::DecisionTree(
     std::mt19937 *_random_number_generator,
     containers::Optional<aggregations::AggregationImpl> *_aggregation_impl,
     multithreading::Communicator *_comm )
-    : impl_( _categories, _tree_hyperparameters )
+    : impl_( _tree_hyperparameters )
 {
     set_same_units( _same_units );
 
@@ -91,205 +89,6 @@ DecisionTree::DecisionTree( DecisionTree &&_other ) noexcept
         {
             root().get()->set_tree( impl() );
         }
-}
-
-// ----------------------------------------------------------------------------
-
-void DecisionTree::create_value_to_be_aggregated(
-    const containers::DataFrameView &_population,
-    const containers::DataFrame &_peripheral,
-    const containers::Subfeatures &_subfeatures,
-    const containers::MatchPtrs &_match_container,
-    aggregations::AbstractAggregation *_aggregation ) const
-{
-    // ------------------------------------------------------------------------
-
-    const auto ix_column_used = column_to_be_aggregated().ix_column_used;
-
-    switch ( column_to_be_aggregated().data_used )
-        {
-            case enums::DataUsed::x_perip_numerical:
-
-                _aggregation->set_value_to_be_aggregated(
-                    _peripheral.numerical_col( ix_column_used ) );
-
-                break;
-
-            case enums::DataUsed::x_perip_discrete:
-
-                _aggregation->set_value_to_be_aggregated(
-                    _peripheral.discrete_col( ix_column_used ) );
-
-                break;
-
-            case enums::DataUsed::time_stamps_diff:
-
-                _aggregation->set_value_to_be_aggregated(
-                    _peripheral.time_stamp_col() );
-
-                _aggregation->set_value_to_be_compared(
-                    _population.time_stamp_col() );
-
-                break;
-
-            case enums::DataUsed::same_unit_numerical:
-            case enums::DataUsed::same_unit_numerical_ts:
-
-                assert_true(
-                    static_cast<Int>( impl()->same_units_numerical().size() ) >
-                    ix_column_used );
-
-                {
-                    const enums::DataUsed data_used1 =
-                        std::get<0>(
-                            impl()->same_units_numerical()[ix_column_used] )
-                            .data_used;
-
-                    const enums::DataUsed data_used2 =
-                        std::get<1>(
-                            impl()->same_units_numerical()[ix_column_used] )
-                            .data_used;
-
-                    const auto ix_column_used1 =
-                        std::get<0>(
-                            impl()->same_units_numerical()[ix_column_used] )
-                            .ix_column_used;
-
-                    const auto ix_column_used2 =
-                        std::get<1>(
-                            impl()->same_units_numerical()[ix_column_used] )
-                            .ix_column_used;
-
-                    if ( data_used1 == enums::DataUsed::x_perip_numerical )
-                        {
-                            assert_true(
-                                _peripheral.num_numericals() >
-                                ix_column_used1 );
-
-                            _aggregation->set_value_to_be_aggregated(
-                                _peripheral.numerical_col( ix_column_used1 ) );
-                        }
-                    else
-                        {
-                            assert_true( !"Unknown data_used1 in set_value_to_be_aggregated(...)!" );
-                        }
-
-                    if ( data_used2 == enums::DataUsed::x_popul_numerical )
-                        {
-                            assert_true(
-                                _population.num_numericals() >
-                                ix_column_used2 );
-
-                            _aggregation->set_value_to_be_compared(
-                                _population.numerical_col( ix_column_used2 ) );
-                        }
-                    else if ( data_used2 == enums::DataUsed::x_perip_numerical )
-                        {
-                            assert_true(
-                                _peripheral.num_numericals() >
-                                ix_column_used2 );
-
-                            _aggregation->set_value_to_be_compared(
-                                _peripheral.numerical_col( ix_column_used2 ) );
-                        }
-                    else
-                        {
-                            assert_true( !"Unknown data_used2 in set_value_to_be_compared(...)!" );
-                        }
-                }
-
-                break;
-
-            case enums::DataUsed::same_unit_discrete:
-            case enums::DataUsed::same_unit_discrete_ts:
-
-                assert_true(
-                    impl()->same_units_discrete().size() > ix_column_used );
-
-                {
-                    const enums::DataUsed data_used1 =
-                        std::get<0>(
-                            impl()->same_units_discrete()[ix_column_used] )
-                            .data_used;
-
-                    const enums::DataUsed data_used2 =
-                        std::get<1>(
-                            impl()->same_units_discrete()[ix_column_used] )
-                            .data_used;
-
-                    const auto ix_column_used1 =
-                        std::get<0>(
-                            impl()->same_units_discrete()[ix_column_used] )
-                            .ix_column_used;
-
-                    const auto ix_column_used2 =
-                        std::get<1>(
-                            impl()->same_units_discrete()[ix_column_used] )
-                            .ix_column_used;
-
-                    if ( data_used1 == enums::DataUsed::x_perip_discrete )
-                        {
-                            assert_true(
-                                _peripheral.num_discretes() > ix_column_used1 );
-
-                            _aggregation->set_value_to_be_aggregated(
-                                _peripheral.discrete_col( ix_column_used1 ) );
-                        }
-                    else
-                        {
-                            assert_true( !"Unknown data_used1 in set_value_to_be_aggregated(...)!" );
-                        }
-
-                    if ( data_used2 == enums::DataUsed::x_popul_discrete )
-                        {
-                            assert_true(
-                                _population.num_discretes() > ix_column_used2 );
-
-                            _aggregation->set_value_to_be_compared(
-                                _population.discrete_col( ix_column_used2 ) );
-                        }
-                    else if ( data_used2 == enums::DataUsed::x_perip_discrete )
-                        {
-                            assert_true(
-                                _peripheral.num_discretes() > ix_column_used2 );
-
-                            _aggregation->set_value_to_be_compared(
-                                _peripheral.discrete_col( ix_column_used2 ) );
-                        }
-                    else
-                        {
-                            assert_true( !"Unknown data_used2 in set_value_to_be_compared(...)!" );
-                        }
-                }
-
-                break;
-
-            case enums::DataUsed::x_perip_categorical:
-
-                _aggregation->set_value_to_be_aggregated(
-                    _peripheral.categorical_col( ix_column_used ) );
-
-                break;
-
-            case enums::DataUsed::x_subfeature:
-
-                assert_true( ix_column_used < _subfeatures.size() );
-
-                _aggregation->set_value_to_be_aggregated(
-                    _subfeatures[ix_column_used] );
-
-                break;
-
-            case enums::DataUsed::not_applicable:
-
-                break;
-
-            default:
-
-                assert_true( !"Unknown enums::DataUsed in column_to_be_aggregated(...)!" );
-        }
-
-    // ---------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -470,17 +269,16 @@ Poco::JSON::Object DecisionTree::to_json_obj() const
 // ----------------------------------------------------------------------------
 
 std::string DecisionTree::to_sql(
-    const std::string _feature_num, const bool _use_timestamps ) const
+    const std::vector<strings::String> &_categories,
+    const std::string _feature_num,
+    const bool _use_timestamps ) const
 {
     // -------------------------------------------------------------------
 
     std::stringstream sql;
 
     const auto sql_maker = utils::SQLMaker(
-        impl()->categories_,
-        impl()->delta_t(),
-        ix_perip_used(),
-        impl()->same_units_ );
+        impl()->delta_t(), ix_perip_used(), impl()->same_units_ );
 
     // -------------------------------------------------------------------
 
@@ -514,18 +312,18 @@ std::string DecisionTree::to_sql(
 
     std::vector<std::string> conditions;
 
-    root()->to_sql( _feature_num, conditions, "" );
+    root()->to_sql( _categories, _feature_num, conditions, "" );
 
     for ( size_t i = 0; i < conditions.size(); ++i )
         {
             if ( i == 0 )
                 {
                     sql << "WHERE (" << std::endl
-                        << "   ( " << conditions[i] << " )" << std::endl;
+                        << "   ( " << conditions.at( i ) << " )" << std::endl;
                 }
             else
                 {
-                    sql << "OR ( " << conditions[i] << " )" << std::endl;
+                    sql << "OR ( " << conditions.at( i ) << " )" << std::endl;
                 }
         }
 
@@ -615,11 +413,7 @@ std::vector<Float> DecisionTree::transform(
             // ------------------------------------------------------
 
             create_value_to_be_aggregated(
-                _population,
-                _peripheral,
-                _subfeatures,
-                match_ptrs,
-                _aggregation );
+                _population, _peripheral, _subfeatures, _aggregation );
 
             // ------------------------------------------------------
             // Separate null values, tell the aggregation where the samples

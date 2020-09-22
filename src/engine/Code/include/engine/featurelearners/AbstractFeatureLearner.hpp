@@ -31,6 +31,10 @@ class AbstractFeatureLearner
     // --------------------------------------------------------
 
    public:
+    /// Calculates the column importances for this ensemble.
+    virtual std::map<helpers::ColumnDescription, Float> column_importances(
+        const std::vector<Float>& _importance_factors ) const = 0;
+
     /// Creates a deep copy.
     virtual std::shared_ptr<AbstractFeatureLearner> clone() const = 0;
 
@@ -42,7 +46,8 @@ class AbstractFeatureLearner
     virtual void fit(
         const Poco::JSON::Object& _cmd,
         const std::shared_ptr<const communication::SocketLogger>& _logger,
-        const std::map<std::string, containers::DataFrame>& _data_frames,
+        const containers::DataFrame& _population_df,
+        const std::vector<containers::DataFrame>& _peripheral_dfs,
         const Int _target_num ) = 0;
 
     /// Whether this is a classification problem.
@@ -56,7 +61,7 @@ class AbstractFeatureLearner
 
     /// Returns the placeholder not as passed by the user, but as seen by the
     /// feature learner (the difference matters for time series).
-    virtual Poco::JSON::Object make_placeholder() const = 0;
+    virtual helpers::Placeholder make_placeholder() const = 0;
 
     /// Data frames might have to be modified, such as adding upper time stamps
     /// or self joins.
@@ -86,21 +91,19 @@ class AbstractFeatureLearner
     /// Return model as a JSON Object.
     virtual Poco::JSON::Object to_json_obj( const bool _schema_only ) const = 0;
 
-    /// Returns model as a JSON Object in a form that the monitor can
-    /// understand.
-    virtual Poco::JSON::Object to_monitor( const std::string& _name ) const = 0;
-
     /// Return features as SQL code.
     virtual std::vector<std::string> to_sql(
-        const std::string& _prefix, const bool _subfeatures ) const = 0;
+        const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const std::string& _prefix,
+        const bool _subfeatures ) const = 0;
 
     /// Generate features.
     virtual containers::Features transform(
         const Poco::JSON::Object& _cmd,
         const std::vector<size_t>& _index,
         const std::shared_ptr<const communication::SocketLogger>& _logger,
-        const std::map<std::string, containers::DataFrame>& _data_frames )
-        const = 0;
+        const containers::DataFrame& _population_df,
+        const std::vector<containers::DataFrame>& _peripheral_dfs ) const = 0;
 
     /// Returns a string describing the type of the feature learner.
     virtual std::string type() const = 0;

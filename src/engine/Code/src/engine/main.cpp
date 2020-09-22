@@ -25,10 +25,10 @@ int main( int argc, char* argv[] )
     // -------------------------------------------
 
     const auto monitor =
-        std::make_shared<const engine::monitoring::Monitor>( options );
+        std::make_shared<const engine::communication::Monitor>( options );
 
     const auto logger =
-        std::make_shared<const engine::monitoring::Logger>( monitor );
+        std::make_shared<const engine::communication::Logger>( monitor );
 
     // -------------------------------------------
     // Instruct the user to log in and wait for the token.
@@ -60,9 +60,9 @@ int main( int argc, char* argv[] )
     // -------------------------------------------
     // Check whether the port is currently occupied
 
-    const auto [status, response] = monitor->send( "checkengineport", "" );
+    const auto response = monitor->send_tcp( "checkengineport" );
 
-    if ( status != Poco::Net::HTTPResponse::HTTPStatus::HTTP_OK )
+    if ( response != "Success!" )
         {
             monitor->log( response );
             exit( 0 );
@@ -88,6 +88,9 @@ int main( int argc, char* argv[] )
 
     // -------------------------------------------
 
+    const auto data_frame_tracker =
+        std::make_shared<engine::dependency::DataFrameTracker>( data_frames );
+
     const auto fe_tracker = std::make_shared<engine::dependency::FETracker>();
 
     const auto pred_tracker =
@@ -95,7 +98,7 @@ int main( int argc, char* argv[] )
 
     // -------------------------------------------
 
-    const auto project_mtx = std::make_shared<std::mutex>();
+    const auto project_lock = std::make_shared<multithreading::ReadWriteLock>();
 
     const auto read_write_lock =
         std::make_shared<multithreading::ReadWriteLock>();
@@ -116,13 +119,14 @@ int main( int argc, char* argv[] )
 
     const auto hyperopt_manager =
         std::make_shared<engine::handlers::HyperoptManager>(
-            hyperopts, monitor, project_mtx, read_write_lock );
+            hyperopts, monitor, project_lock, read_write_lock );
 
     const auto pipeline_manager =
         std::make_shared<engine::handlers::PipelineManager>(
             categories,
             database_manager,
             data_frames,
+            data_frame_tracker,
             fe_tracker,
             join_keys_encoding,
             license_checker,
@@ -130,7 +134,6 @@ int main( int argc, char* argv[] )
             monitor,
             pipelines,
             pred_tracker,
-            project_mtx,
             read_write_lock );
 
     const auto project_manager =
@@ -138,6 +141,7 @@ int main( int argc, char* argv[] )
             categories,
             data_frame_manager,
             data_frames,
+            data_frame_tracker,
             fe_tracker,
             join_keys_encoding,
             hyperopts,
@@ -147,7 +151,7 @@ int main( int argc, char* argv[] )
             options,
             pipelines,
             pred_tracker,
-            project_mtx,
+            project_lock,
             read_write_lock );
 
     // -------------------------------------------

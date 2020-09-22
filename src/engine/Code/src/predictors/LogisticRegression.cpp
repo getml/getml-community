@@ -106,15 +106,6 @@ void LogisticRegression::fit_dense(
     const CFloatColumn& _y )
 {
     // -------------------------------------------------------------------------
-
-    if ( _logger )
-        {
-            _logger->log(
-                "Training the logistic regression using the "
-                "Broyden–Fletcher–Goldfarb–Shanno (BFGS) algorithm..." );
-        }
-
-    // -------------------------------------------------------------------------
     // Rescale training set.
 
     scaler_.fit( _X_numerical );
@@ -210,15 +201,6 @@ void LogisticRegression::fit_sparse(
     const std::vector<CFloatColumn>& _X_numerical,
     const CFloatColumn& _y )
 {
-    // -------------------------------------------------------------------------
-
-    if ( _logger )
-        {
-            _logger->log(
-                "Training the logistic regression using the Adaptive Moments "
-                "(Adam) algorithm..." );
-        }
-
     // -------------------------------------------------------------------------
     // Build up CSRMatrix.
 

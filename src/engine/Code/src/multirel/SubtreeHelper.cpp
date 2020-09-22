@@ -63,16 +63,10 @@ void SubtreeHelper::fit_subensembles(
                     assert_true( joined_table->joined_tables_.size() > 0 );
 
                     subensembles_avg[i].reset( new DecisionTreeEnsemble(
-                        _ensemble.categories(),
-                        hyperparameters,
-                        peripheral,
-                        joined_table ) );
+                        hyperparameters, peripheral, joined_table ) );
 
                     subensembles_sum[i].reset( new DecisionTreeEnsemble(
-                        _ensemble.categories(),
-                        hyperparameters,
-                        peripheral,
-                        joined_table ) );
+                        hyperparameters, peripheral, joined_table ) );
                 }
             else
                 {

@@ -68,7 +68,7 @@ std::vector<std::string> CatOpParser::boolean_as_string(
 void CatOpParser::check(
     const std::vector<std::string>& _col,
     const std::string& _name,
-    const std::shared_ptr<const monitoring::Logger>& _logger,
+    const std::shared_ptr<const communication::Logger>& _logger,
     Poco::Net::StreamSocket* _socket ) const
 {
     // --------------------------------------------------------------------------
@@ -139,7 +139,7 @@ std::vector<std::string> CatOpParser::numerical_as_string(
 
     auto result = std::vector<std::string>( operand1.nrows() );
 
-    if ( role == "time_stamp" ||
+    if ( role == containers::DataFrame::ROLE_TIME_STAMP ||
          operand1.unit().find( "time stamp" ) != std::string::npos )
         {
             const auto to_str = []( const Float val ) {
@@ -199,18 +199,20 @@ std::vector<std::string> CatOpParser::parse(
                         "', but such a DataFrame is not known." );
                 }
 
-            if ( role == "categorical" )
+            if ( role == containers::DataFrame::ROLE_CATEGORICAL )
                 {
                     return to_vec(
                         it->second.int_column( name, role ), categories_ );
                 }
-            else if ( role == "join_key" )
+            else if ( role == containers::DataFrame::ROLE_JOIN_KEY )
                 {
                     return to_vec(
                         it->second.int_column( name, role ),
                         join_keys_encoding_ );
                 }
-            else if ( role == "unused" || role == "unused_string" )
+            else if (
+                role == containers::DataFrame::ROLE_UNUSED ||
+                role == containers::DataFrame::ROLE_UNUSED_STRING )
                 {
                     return to_vec( it->second.unused_string( name ) );
                 }

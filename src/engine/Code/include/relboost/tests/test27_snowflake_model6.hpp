@@ -50,13 +50,13 @@ void test27_snowflake_model6( std::filesystem::path _test_path )
             time_stamp2_peripheral2.size() );
 
     const auto peripheral2_df = relboost::containers::DataFrame(
-        {categorical_peripheral2_col},
+        { categorical_peripheral2_col },
         {},
-        {join_key2_peripheral2_col},
+        { join_key2_peripheral2_col },
         "PERIPHERAL2",
         {},
         {},
-        {time_stamp2_peripheral2_col} );
+        { time_stamp2_peripheral2_col } );
 
     // ------------------------------------------------------------------------
     // Build peripheral table 1.
@@ -103,11 +103,11 @@ void test27_snowflake_model6( std::filesystem::path _test_path )
     const auto peripheral1_df = relboost::containers::DataFrame(
         {},
         {},
-        {join_key1_peripheral1_col, join_key2_peripheral1_col},
+        { join_key1_peripheral1_col, join_key2_peripheral1_col },
         "PERIPHERAL1",
-        {numerical_peripheral1_col},
+        { numerical_peripheral1_col },
         {},
-        {time_stamp1_peripheral1_col, time_stamp2_peripheral1_col} );
+        { time_stamp1_peripheral1_col, time_stamp2_peripheral1_col } );
 
     // ------------------------------------------------------------------------
     // Build population table.
@@ -146,11 +146,11 @@ void test27_snowflake_model6( std::filesystem::path _test_path )
     const auto population_df = relboost::containers::DataFrame(
         {},
         {},
-        {join_keys_population_col},
+        { join_keys_population_col },
         "POPULATION",
-        {numerical_population_col},
-        {target_population_col},
-        {time_stamps_population_col} );
+        { numerical_population_col },
+        { target_population_col },
+        { time_stamps_population_col } );
 
     // ---------------------------------------------
     // Define subtargets.
@@ -225,7 +225,7 @@ void test27_snowflake_model6( std::filesystem::path _test_path )
             *population_json );
 
     const auto peripheral = std::make_shared<std::vector<std::string>>(
-        std::vector<std::string>{"PERIPHERAL1", "PERIPHERAL2"} );
+        std::vector<std::string>{ "PERIPHERAL1", "PERIPHERAL2" } );
 
     // ------------------------------------------------------------------------
     // Load hyperparameters.
@@ -245,15 +245,15 @@ void test27_snowflake_model6( std::filesystem::path _test_path )
 
     const auto encoding = std::make_shared<const std::vector<strings::String>>(
         std::vector<strings::String>(
-            {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"} ) );
+            { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10" } ) );
 
     auto model = relboost::ensemble::DecisionTreeEnsemble(
-        encoding, hyperparameters, peripheral, population );
+        hyperparameters, peripheral, population );
 
     // ------------------------------------------------------------------------
     // Fit model.
 
-    model.fit( population_df, {peripheral1_df, peripheral2_df} );
+    model.fit( population_df, { peripheral1_df, peripheral2_df } );
 
     model.save( tmp_filename_json );
 
@@ -261,7 +261,7 @@ void test27_snowflake_model6( std::filesystem::path _test_path )
     // Express as SQL code.
 
     std::ofstream sql( tmp_filename_sql );
-    const auto vec = model.to_sql();
+    const auto vec = model.to_sql( encoding );
     for ( const auto& str : vec ) sql << str;
     sql.close();
 
@@ -269,7 +269,7 @@ void test27_snowflake_model6( std::filesystem::path _test_path )
     // Generate predictions.
 
     const auto predictions =
-        model.predict( population_df, {peripheral1_df, peripheral2_df} );
+        model.predict( population_df, { peripheral1_df, peripheral2_df } );
 
     for ( size_t i = 0; i < predictions.size(); ++i )
         {

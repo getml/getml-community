@@ -10,6 +10,16 @@ namespace containers
 class DataFrame
 {
    public:
+    static constexpr const char *ROLE_CATEGORICAL = "categorical";
+    static constexpr const char *ROLE_JOIN_KEY = "join_key";
+    static constexpr const char *ROLE_NUMERICAL = "numerical";
+    static constexpr const char *ROLE_TARGET = "target";
+    static constexpr const char *ROLE_TIME_STAMP = "time_stamp";
+    static constexpr const char *ROLE_UNUSED = "unused";
+    static constexpr const char *ROLE_UNUSED_FLOAT = "unused_float";
+    static constexpr const char *ROLE_UNUSED_STRING = "unused_string";
+
+   public:
     DataFrame()
         : categories_( std::make_shared<Encoding>() ),
           join_keys_encoding_( std::make_shared<Encoding>() )
@@ -176,7 +186,7 @@ class DataFrame
     bool remove_column( const std::string &_name );
 
     /// Saves the data on the engine
-    void save( const std::string &_path, const std::string &_name );
+    void save( const std::string &_path, const std::string &_name ) const;
 
     /// Extracts the data frame as a Poco::JSON::Object the monitor process can
     /// understand
@@ -190,6 +200,17 @@ class DataFrame
     void where( const std::vector<bool> &_condition );
 
     // -------------------------------
+
+    /// Trivial accessor
+    Poco::JSON::Object::Ptr build_history() const
+    {
+        if ( !build_history_ )
+            {
+                return nullptr;
+            }
+        return Poco::JSON::Object::Ptr(
+            new Poco::JSON::Object( *build_history_ ) );
+    }
 
     /// Trivial accessor
     template <
@@ -349,6 +370,10 @@ class DataFrame
         return false;
     }
 
+    /// Returns the exact date and and time at which the data frame was last
+    /// changed.
+    std::string last_change() const { return last_change_; }
+
     /// Returns the index signified by index _i
     template <
         typename T,
@@ -450,7 +475,7 @@ class DataFrame
     }
 
     /// Primitive abstraction for member name_
-    const std::string &name() const { return name_; }
+    std::string name() const { return name_; }
 
     /// Get the number of columns.
     const size_t ncols() const
@@ -511,7 +536,13 @@ class DataFrame
             _name + "'!" );
     }
 
-    /// Primitive setter
+    /// Trivial setter
+    void set_build_history( Poco::JSON::Object::Ptr _build_history )
+    {
+        build_history_ = _build_history;
+    }
+
+    /// Trivial setter
     void set_categories( const std::shared_ptr<Encoding> &_categories )
     {
         categories_ = _categories;
@@ -755,6 +786,10 @@ class DataFrame
     std::vector<Column<T>> load_columns(
         const std::string &_path, const std::string &_prefix ) const;
 
+    /// Loads a textfile from disc.
+    std::optional<std::string> load_textfile(
+        const std::string &_path, const std::string &_fname ) const;
+
     /// Creates a vector of vectors of type T.
     template <class T>
     std::vector<std::shared_ptr<std::vector<T>>> make_vectors(
@@ -774,10 +809,17 @@ class DataFrame
         const std::string &_path,
         const std::string &_prefix ) const;
 
+    /// Saves a string to a textfile.
+    void save_text(
+        const std::string &_tpath,
+        const std::string &_fname,
+        const std::string &_text ) const;
+
    private:
     /// Records the current time as the last time something was changed.
     void update_last_change()
     {
+        build_history_ = nullptr;
         const auto now = Poco::Timestamp();
         last_change_ = Poco::DateTimeFormatter::format(
             now, Poco::DateTimeFormat::ISO8601_FRAC_FORMAT );
@@ -786,6 +828,10 @@ class DataFrame
     // -------------------------------
 
    private:
+    /// The build history is relevant for when the data frame contains generated
+    /// features. It enables us to retrieve features we have already build.
+    Poco::JSON::Object::Ptr build_history_;
+
     /// Categorical data
     std::vector<Column<Int>> categoricals_;
 
@@ -985,7 +1031,7 @@ void DataFrame::save_matrices(
 {
     for ( size_t i = 0; i < _matrices.size(); ++i )
         {
-            _matrices[i].save( _path + _prefix + std::to_string( i ) );
+            _matrices.at( i ).save( _path + _prefix + std::to_string( i ) );
         }
 }
 

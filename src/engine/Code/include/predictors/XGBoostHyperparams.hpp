@@ -57,7 +57,7 @@ struct XGBoostHyperparams
     const size_t num_parallel_tree_;
 
     /// Number of parallel threads used to run xgboost
-    const size_t nthread_;
+    const Int nthread_;
 
     /// The objective for the learning function.
     const std::string objective_;

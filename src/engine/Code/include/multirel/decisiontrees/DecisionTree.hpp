@@ -11,14 +11,12 @@ class DecisionTree
 {
    public:
     DecisionTree(
-        const std::shared_ptr<const std::vector<strings::String>> &_categories,
         const std::shared_ptr<const descriptors::TreeHyperparameters>
             &_tree_hyperparameters,
         const Poco::JSON::Object &_json_obj );
 
     DecisionTree(
         const std::string &_agg,
-        const std::shared_ptr<const std::vector<strings::String>> &_categories,
         const std::shared_ptr<const descriptors::TreeHyperparameters>
             &_tree_hyperparameters,
         const size_t _ix_perip_used,
@@ -36,15 +34,6 @@ class DecisionTree
     ~DecisionTree() = default;
 
     // --------------------------------------
-
-    /// A sample containers contains a value to be aggregated. This is set by
-    /// this function.
-    void create_value_to_be_aggregated(
-        const containers::DataFrameView &_population,
-        const containers::DataFrame &_peripheral,
-        const containers::Subfeatures &_subfeatures,
-        const containers::MatchPtrs &_match_container,
-        aggregations::AbstractAggregation *_aggregation ) const;
 
     /// Fits the decision tree
     void fit(
@@ -70,7 +59,9 @@ class DecisionTree
     /// Extracts the SQL statement underlying the tree
     /// as a string
     std::string to_sql(
-        const std::string _feature_num, const bool _use_timestamps ) const;
+        const std::vector<strings::String> &_categories,
+        const std::string _feature_num,
+        const bool _use_timestamps ) const;
 
     /// Transforms a set of raw data into extracted features
     std::vector<Float> transform(
@@ -96,6 +87,14 @@ class DecisionTree
         return aggregation()->type();
     }
 
+    /// Calculates the column importances for this tree.
+    inline void column_importances(
+        utils::ImportanceMaker *_importance_maker ) const
+    {
+        assert_true( root_ );
+        root_->column_importances( _importance_maker );
+    }
+
     /// Returns the information required for identifying the
     /// columns to be aggregated by this tree.
     inline descriptors::ColumnToBeAggregated &column_to_be_aggregated()
@@ -111,19 +110,31 @@ class DecisionTree
         return impl()->column_to_be_aggregated_;
     }
 
-    /// Calls create_value_to_be_aggregated on the tree's own aggregation.
+    /// An aggregation contains a value to be aggregated. This is set by
+    /// this function.
     void create_value_to_be_aggregated(
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
         const containers::Subfeatures &_subfeatures,
-        const containers::MatchPtrs &_match_container )
+        aggregations::AbstractAggregation *_aggregation ) const
     {
-        create_value_to_be_aggregated(
+        ValueToBeAggregatedCreator::create(
+            *impl(),
+            column_to_be_aggregated(),
             _population,
             _peripheral,
             _subfeatures,
-            _match_container,
-            aggregation() );
+            _aggregation );
+    }
+
+    /// Calls create_value_to_be_aggregated on the tree's own aggregation.
+    void create_value_to_be_aggregated(
+        const containers::DataFrameView &_population,
+        const containers::DataFrame &_peripheral,
+        const containers::Subfeatures &_subfeatures )
+    {
+        create_value_to_be_aggregated(
+            _population, _peripheral, _subfeatures, aggregation() );
     }
 
     /// Whether the decision tree has subtrees.

@@ -36,6 +36,18 @@ class Scores
 
    public:
     /// Trivial accessor
+    const std::vector<std::vector<Float>>& column_importances() const
+    {
+        return column_importances_;
+    }
+
+    /// Trivial accessor
+    const std::vector<Poco::JSON::Object::Ptr>& column_descriptions() const
+    {
+        return column_descriptions_;
+    }
+
+    /// Trivial accessor
     const std::vector<std::vector<Float>>& feature_correlations() const
     {
         return feature_correlations_;
@@ -78,6 +90,18 @@ class Scores
     const std::vector<std::vector<std::vector<Float>>>& average_targets() const
     {
         return average_targets_;
+    }
+
+    /// Trivial accessor
+    std::vector<std::vector<Float>>& column_importances()
+    {
+        return column_importances_;
+    }
+
+    /// Trivial accessor
+    std::vector<Poco::JSON::Object::Ptr>& column_descriptions()
+    {
+        return column_descriptions_;
     }
 
     /// Trivial accessor
@@ -265,6 +289,12 @@ class Scores
 
     /// Average of targets w.r.t. different bins of the feature.
     std::vector<std::vector<std::vector<Float>>> average_targets_;
+
+    /// The column descriptions, correspond to the column importances.
+    std::vector<Poco::JSON::Object::Ptr> column_descriptions_;
+
+    /// Importances of individual column w.r.t. targets.
+    std::vector<std::vector<Float>> column_importances_;
 
     /// Logarithm of likelihood of predictions
     std::vector<Float> cross_entropy_;
