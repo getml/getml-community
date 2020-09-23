@@ -138,13 +138,13 @@ class ColumnOperators
 
     /// Finds the maximum of all non-null entries.
     template <class IteratorType>
-    static Float max( IteratorType _begin, IteratorType _end )
+    static Float maximum( IteratorType _begin, IteratorType _end )
     {
-        const auto max = []( const Float init, const Float val ) {
+        const auto max_op = []( const Float init, const Float val ) {
             return ( ( val > init || std::isnan( init ) ) ? val : init );
         };
 
-        return num_agg( _begin, _end, max, NAN );
+        return num_agg( _begin, _end, max_op, NAN );
     }
 
     template <class IteratorType>
@@ -173,13 +173,13 @@ class ColumnOperators
 
     /// Finds the minimum of all non-null entries.
     template <class IteratorType>
-    static Float min( IteratorType _begin, IteratorType _end )
+    static Float minimum( IteratorType _begin, IteratorType _end )
     {
-        const auto min = []( const Float init, const Float val ) {
+        const auto min_op = []( const Float init, const Float val ) {
             return ( ( val < init || std::isnan( init ) ) ? val : init );
         };
 
-        return num_agg( _begin, _end, min, NAN );
+        return num_agg( _begin, _end, min_op, NAN );
     }
 
     /// Takes the standard deviation of all non-null entries.
