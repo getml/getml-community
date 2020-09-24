@@ -83,7 +83,7 @@ Float AggOpParser::numerical_aggregation(
         }
     else if ( _type == "max" )
         {
-            return utils::ColumnOperators::max( col.begin(), col.end() );
+            return utils::ColumnOperators::maximum( col.begin(), col.end() );
         }
     else if ( _type == "median" )
         {
@@ -91,7 +91,7 @@ Float AggOpParser::numerical_aggregation(
         }
     else if ( _type == "min" )
         {
-            return utils::ColumnOperators::min( col.begin(), col.end() );
+            return utils::ColumnOperators::minimum( col.begin(), col.end() );
         }
     else if ( _type == "stddev" )
         {
