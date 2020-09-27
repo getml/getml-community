@@ -28,12 +28,8 @@ class Tracker
         const Poco::JSON::Object::Ptr _fingerprint ) const;
 
    private:
-    /// Removes elements that are no longer referenced.
-    void clean_up();
-
-   private:
     /// A map keeping track of the elements.
-    std::map<size_t, std::weak_ptr<const T>> elements_;
+    std::map<size_t, std::shared_ptr<const T>> elements_;
 };
 
 // -------------------------------------------------------------------------
@@ -52,30 +48,7 @@ void Tracker<T>::add( std::shared_ptr<const T> _elem )
 
     const auto f_hash = std::hash<std::string>()( f_str );
 
-    clean_up();
-
     elements_.insert_or_assign( f_hash, _elem );
-}
-
-// -------------------------------------------------------------------------
-
-template <class T>
-void Tracker<T>::clean_up()
-{
-    std::vector<size_t> remove;
-
-    for ( const auto& [key, value] : elements_ )
-        {
-            if ( value.expired() )
-                {
-                    remove.push_back( key );
-                }
-        }
-
-    for ( auto key : remove )
-        {
-            elements_.erase( key );
-        }
 }
 
 // -------------------------------------------------------------------------
@@ -105,12 +78,7 @@ std::shared_ptr<T> Tracker<T>::retrieve(
             return std::shared_ptr<T>();
         }
 
-    if ( it->second.expired() )
-        {
-            return std::shared_ptr<T>();
-        }
-
-    const auto ptr = it->second.lock();
+    const auto ptr = it->second;
 
     const auto fingerprint2 = ptr->fingerprint();
 
