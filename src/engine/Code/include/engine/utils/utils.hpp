@@ -12,6 +12,7 @@
 #include <thread>
 #include <unordered_set>
 #include <utility>
+#include <string>
 #include <vector>
 
 #include "strings/strings.hpp"

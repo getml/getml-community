@@ -347,7 +347,7 @@ containers::Column<Float> GroupByParser::numerical_aggregation(
     else if ( _type == "max" )
         {
             const auto max = []( const std::vector<Float>& vec ) {
-                return utils::ColumnOperators::max( vec.begin(), vec.end() );
+                return utils::ColumnOperators::maximum( vec.begin(), vec.end() );
             };
 
             return aggregate( _unique, _index, col, _as, max );
@@ -363,7 +363,7 @@ containers::Column<Float> GroupByParser::numerical_aggregation(
     else if ( _type == "min" )
         {
             const auto min = []( const std::vector<Float>& vec ) {
-                return utils::ColumnOperators::min( vec.begin(), vec.end() );
+                return utils::ColumnOperators::minimum( vec.begin(), vec.end() );
             };
 
             return aggregate( _unique, _index, col, _as, min );

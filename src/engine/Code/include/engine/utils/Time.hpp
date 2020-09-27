@@ -92,7 +92,7 @@ class Time
 
    private:
     /// Transforms a Float into a Poco::DateTime object.
-    static Poco::DateTime to_time_stamp( const engine::Float _val )
+    static Poco::DateTime to_time_stamp( const Float _val )
     {
         const auto seconds_since_epoch = static_cast<std::time_t>( _val );
 
