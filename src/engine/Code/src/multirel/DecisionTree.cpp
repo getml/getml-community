@@ -110,7 +110,6 @@ void DecisionTree::fit(
         new containers::Placeholder( _population.df().to_schema() ) );
 
     // ------------------------------------------------------------
-    // Prepare the root, the aggregation and the optimization criterion
 
     debug_log( "fit: Preparing new candidate..." );
 
@@ -127,7 +126,6 @@ void DecisionTree::fit(
     aggregation()->set_optimization_criterion( optimization_criterion() );
 
     // ------------------------------------------------------------
-    // Do the actual fitting (most of the time will be spent here)
 
     debug_log( "fit: Trying conditions..." );
 
@@ -139,7 +137,6 @@ void DecisionTree::fit(
         _match_container_end );
 
     // ------------------------------------------------------------
-    // Clean up
 
     impl()->clear();
 

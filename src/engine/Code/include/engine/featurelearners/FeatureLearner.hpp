@@ -133,12 +133,6 @@ class FeatureLearner : public AbstractFeatureLearner
         feature_learner().save( _fname );
     }
 
-    /// Selects the features according to the index given.
-    void select_features( const std::vector<size_t>& _index ) final
-    {
-        feature_learner().select_features( _index );
-    }
-
     /// Whether the feature learner is to be silent.
     bool silent() const final
     {
@@ -964,8 +958,14 @@ std::string FeatureLearner<FeatureLearnerType>::type() const
     constexpr bool is_relboost = std::
         is_same<FeatureLearnerType, relboost::ensemble::DecisionTreeEnsemble>();
 
+    constexpr bool is_relboost_plus = std::
+        is_same<FeatureLearnerType, relcit::ensemble::DecisionTreeEnsemble>();
+
     constexpr bool is_relboost_ts =
         std::is_same<FeatureLearnerType, ts::RelboostTimeSeries>();
+
+    constexpr bool is_relboost_plus_ts =
+        std::is_same<FeatureLearnerType, ts::RelCITTimeSeries>();
 
     // ----------------------------------------------------------------------
 
@@ -984,9 +984,19 @@ std::string FeatureLearner<FeatureLearnerType>::type() const
             return AbstractFeatureLearner::RELBOOST_MODEL;
         }
 
+    if constexpr ( is_relboost_plus )
+        {
+            return AbstractFeatureLearner::RELCIT_MODEL;
+        }
+
     if constexpr ( is_relboost_ts )
         {
             return AbstractFeatureLearner::RELBOOST_TIME_SERIES;
+        }
+
+    if constexpr ( is_relboost_plus_ts )
+        {
+            return AbstractFeatureLearner::RELCIT_TIME_SERIES;
         }
 
     // ----------------------------------------------------------------------

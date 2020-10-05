@@ -1,0 +1,44 @@
+#ifndef RELBOOSTXX_UTILS_LOGGER_HPP_
+#define RELBOOSTXX_UTILS_LOGGER_HPP_
+
+namespace relcit
+{
+namespace utils
+{
+// ----------------------------------------------------------------------------
+
+struct Logger
+{
+    // ------------------------------------------------------------------------
+
+    /// Logs the message both on the monitor and in the API.
+    static void log(
+        const std::string& _msg,
+        const std::shared_ptr<const logging::AbstractLogger> _logger,
+        multithreading::Communicator* _comm )
+    {
+        if ( _logger )
+            {
+                try
+                    {
+                        _logger->log( _msg );
+                    }
+                catch ( std::exception& e )
+                    {
+                        _comm->checkpoint( false );
+                    }
+            }
+
+        _comm->checkpoint( true );
+    }
+
+    // ------------------------------------------------------------------------
+};
+
+// ----------------------------------------------------------------------------
+}  // namespace utils
+}  // namespace relcit
+
+// ----------------------------------------------------------------------------
+
+#endif  // RELBOOSTXX_UTILS_REDUCER_HPP_

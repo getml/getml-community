@@ -31,9 +31,20 @@ std::shared_ptr<AbstractFeatureLearner> FeatureLearnerParser::parse(
                 FeatureLearner<relboost::ensemble::DecisionTreeEnsemble>>(
                 _cmd, _placeholder, _peripheral, _dependencies );
         }
+    else if ( type == "RelCITModel" )
+        {
+            return std::make_shared<
+                FeatureLearner<relcit::ensemble::DecisionTreeEnsemble>>(
+                _cmd, _placeholder, _peripheral, _dependencies );
+        }
     else if ( type == "RelboostTimeSeries" )
         {
             return std::make_shared<FeatureLearner<ts::RelboostTimeSeries>>(
+                _cmd, _placeholder, _peripheral, _dependencies );
+        }
+    else if ( type == "RelCITTimeSeries" )
+        {
+            return std::make_shared<FeatureLearner<ts::RelCITTimeSeries>>(
                 _cmd, _placeholder, _peripheral, _dependencies );
         }
     else

@@ -106,13 +106,6 @@ class TimeSeriesModel
         return model().population_schema();
     }
 
-    /// Selects the features according to the index given.
-    /// TODO: Remove.
-    void select_features( const std::vector<size_t> &_index )
-    {
-        model().select_features( _index );
-    }
-
     /// Expresses DecisionTreeEnsemble as SQL code.
     std::vector<std::string> to_sql(
         const std::shared_ptr<const std::vector<strings::String>> &_categories,

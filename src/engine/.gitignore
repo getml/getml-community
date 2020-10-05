@@ -10,5 +10,8 @@ projects/*
 
 /**/.vscode
 
+**/model.json
+**/model.sql
+
 *~
 #~

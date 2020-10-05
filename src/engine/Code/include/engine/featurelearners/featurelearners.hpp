@@ -34,6 +34,8 @@
 
 #include "relboost/ensemble/ensemble.hpp"
 
+#include "relcit/ensemble/ensemble.hpp"
+
 #include "engine/ts/ts.hpp"
 
 // ----------------------------------------------------

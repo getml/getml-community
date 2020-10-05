@@ -19,7 +19,9 @@ class AbstractFeatureLearner
     static constexpr const char* MULTIREL_MODEL = "MultirelModel";
     static constexpr const char* MULTIREL_TIME_SERIES = "MultirelTimeSeries";
     static constexpr const char* RELBOOST_MODEL = "RelboostModel";
+    static constexpr const char* RELCIT_MODEL = "RelCITModel";
     static constexpr const char* RELBOOST_TIME_SERIES = "RelboostTimeSeries";
+    static constexpr const char* RELCIT_TIME_SERIES = "RelCITTimeSeries";
 
     // --------------------------------------------------------
 
@@ -78,9 +80,6 @@ class AbstractFeatureLearner
 
     /// Saves the Model in JSON format, if applicable
     virtual void save( const std::string& _fname ) const = 0;
-
-    /// Selects the features according to the index given.
-    virtual void select_features( const std::vector<size_t>& _index ) = 0;
 
     /// Whether the feature learner is to be silent.
     virtual bool silent() const = 0;

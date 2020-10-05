@@ -16,6 +16,8 @@
 
 #include "relboost/ensemble/ensemble.hpp"
 
+#include "relcit/ensemble/ensemble.hpp"
+
 #include "engine/containers/containers.hpp"
 
 #include "engine/utils/utils.hpp"
@@ -31,6 +33,7 @@
 #include "engine/ts/TimeSeriesModel.hpp"
 
 #include "engine/ts/MultirelTimeSeries.hpp"
+#include "engine/ts/RelCITTimeSeries.hpp"
 #include "engine/ts/RelboostTimeSeries.hpp"
 
 // ----------------------------------------------------

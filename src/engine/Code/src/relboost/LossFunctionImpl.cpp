@@ -34,7 +34,7 @@ std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_all(
 
     // ------------------------------------------------------------------------
 
-    *_sufficient_stats = std::array<Float, 6>{0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+    *_sufficient_stats = std::array<Float, 6>{ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
 
     // ------------------------------------------------------------------------
 
@@ -88,7 +88,7 @@ std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_all(
         {
             return std::make_pair(
                 static_cast<Float>( NAN ),
-                std::array<Float, 3>{0.0, 0.0, 0.0} );
+                std::array<Float, 3>{ 0.0, 0.0, 0.0 } );
         }
 
     // ------------------------------------------------------------------------
@@ -99,7 +99,7 @@ std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_all(
 
     const auto loss_reduction = *_loss_old - loss1 - loss2;
 
-    const auto weights = std::array<Float, 3>{0.0, weight1, weight2};
+    const auto weights = std::array<Float, 3>{ 0.0, weight1, weight2 };
 
     // ------------------------------------------------------------------------
 
@@ -146,7 +146,7 @@ std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_diff(
         {
             return std::make_pair(
                 static_cast<Float>( NAN ),
-                std::array<Float, 3>{0.0, 0.0, 0.0} );
+                std::array<Float, 3>{ 0.0, 0.0, 0.0 } );
         }
 
     assert_true( n_diff <= n2 );
@@ -166,13 +166,13 @@ std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_diff(
                 {
                     return std::make_pair(
                         static_cast<Float>( NAN ),
-                        std::array<Float, 3>{0.0, 0.0, 0.0} );
+                        std::array<Float, 3>{ 0.0, 0.0, 0.0 } );
                 }
         }
 
     // ------------------------------------------------------------------------
 
-    auto g_h_diff = std::array<Float, 2>{0.0, 0.0};
+    auto g_h_diff = std::array<Float, 2>{ 0.0, 0.0 };
 
     auto& g_diff = std::get<0>( g_h_diff );
     auto& h_diff = std::get<1>( g_h_diff );
@@ -206,7 +206,7 @@ std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_diff(
                 {
                     return std::make_pair(
                         static_cast<Float>( NAN ),
-                        std::array<Float, 3>{0.0, 0.0, 0.0} );
+                        std::array<Float, 3>{ 0.0, 0.0, 0.0 } );
                 }
         }
 
@@ -220,7 +220,7 @@ std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_diff(
 
     const auto loss_reduction = _loss_old - loss1 - loss2;
 
-    const auto weights = std::array<Float, 3>{0.0, weight1, weight2};
+    const auto weights = std::array<Float, 3>{ 0.0, weight1, weight2 };
 
     // ------------------------------------------------------------------------
 
@@ -350,18 +350,18 @@ std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_pair_avg_null(
 
     // ------------------------------------------------------------------------
 
-    auto weights_arr = std::array<Float, 3>{0.0, 0.0, 0.0};
+    auto weights_arr = std::array<Float, 3>{ 0.0, 0.0, 0.0 };
 
     switch ( _agg )
         {
             case enums::Aggregation::avg_first_null:
                 weights_arr =
-                    std::array<Float, 3>( {weights[0], NAN, weights[1]} );
+                    std::array<Float, 3>( { weights[0], NAN, weights[1] } );
                 break;
 
             case enums::Aggregation::avg_second_null:
                 weights_arr =
-                    std::array<Float, 3>( {weights[0], weights[1], NAN} );
+                    std::array<Float, 3>( { weights[0], weights[1], NAN } );
                 break;
 
             default:
@@ -455,7 +455,7 @@ std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_pair_non_null(
     const Float partial_loss = -0.5 * b.dot( weights ) + loss_w_fixed;
 
     const auto weights_arr =
-        std::array<Float, 3>( {weights[0], weights[1], weights[2]} );
+        std::array<Float, 3>( { weights[0], weights[1], weights[2] } );
 
     // ------------------------------------------------------------------------
 

@@ -1,0 +1,102 @@
+#ifndef RELBOOSTXX_HYPERPARAMETERS_HPP_
+#define RELBOOSTXX_HYPERPARAMETERS_HPP_
+
+// ----------------------------------------------------------------------------
+// Dependencies
+
+#include <string>
+
+#include <Poco/JSON/Object.h>
+
+#include "relcit/Float.hpp"
+#include "relcit/Int.hpp"
+
+#include "relcit/JSON.hpp"
+
+// ----------------------------------------------------------------------------
+
+namespace relcit
+{
+// ----------------------------------------------------------------------------
+
+struct Hyperparameters
+{
+    // -----------------------------------------------------------------
+
+    Hyperparameters();
+
+    Hyperparameters( const Poco::JSON::Object& _obj );
+
+    Hyperparameters( const Poco::JSON::Object::Ptr& _obj )
+        : Hyperparameters( *_obj )
+    {
+    }
+
+    ~Hyperparameters() = default;
+
+    // --------------------------------------------------------
+
+    /// Transforms the Hyperparameters into a JSON object
+    Poco::JSON::Object::Ptr to_json_obj() const;
+
+    // --------------------------------------------------------
+
+    /// Transforms the Hyperparameters into a JSON string
+    std::string to_json() const { return JSON::stringify( *to_json_obj() ); }
+
+    // -----------------------------------------------------------------
+
+    /// Whether we want to allow an AVG aggregation.
+    const bool allow_avg_;
+
+    /// The lag variable used for calculating the moving time windows. When set
+    /// to 0.0 or negative value, moving time windows will be omitted.
+    const Float delta_t_;
+
+    /// Minimum loss reduction required to make a further partition on a leaf
+    /// node of the tree.
+    const Float gamma_;
+
+    /// The loss function used for the learning function.
+    const std::string loss_function_;
+
+    /// Maximum tree depth for base learners
+    const Int max_depth_;
+
+    /// Minimum number of samples.
+    const Int min_num_samples_;
+
+    /// Number of features (number of trees in boosted ensemble)
+    const Int num_features_;
+
+    /// Number of subfeatures
+    const Int num_subfeatures_;
+
+    /// Number of parallel threads used to run xgboost
+    const Int num_threads_;
+
+    /// L2 regularization term on weights
+    const Float reg_lambda_;
+
+    /// Proportional to the subsample ratio.
+    const Float sampling_factor_;
+
+    /// The seed used for initializing the random number generator.
+    const unsigned int seed_;
+
+    /// Boosting learning rate
+    const Float shrinkage_;
+
+    /// Whether to print messages while running boosting
+    const bool silent_;
+
+    /// Whether to use timestamps,
+    const bool use_timestamps_;
+};
+
+// ----------------------------------------------------------------------------
+}  // namespace relcit
+
+// ----------------------------------------------------------------------------
+
+#endif  // RELBOOSTXX_HYPERPARAMETERS_HPP_
