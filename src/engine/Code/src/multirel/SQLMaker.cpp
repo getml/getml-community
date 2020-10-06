@@ -10,7 +10,8 @@ std::string SQLMaker::condition_greater(
     const std::vector<strings::String>& _categories,
     const containers::Placeholder& _input,
     const containers::Placeholder& _output,
-    const descriptors::Split& _split ) const
+    const descriptors::Split& _split,
+    const bool _add_null ) const
 {
     switch ( _split.data_used )
         {
@@ -33,8 +34,13 @@ std::string SQLMaker::condition_greater(
                     const auto name = get_name(
                         _input, _output, _split.column_used, _split.data_used );
 
+                    const auto null_condition =
+                        _add_null ? " OR " + name + " IS NULL "
+                                  : std::string( "" );
+
                     return "( " + name + " > " +
-                           std::to_string( _split.critical_value ) + " )";
+                           std::to_string( _split.critical_value ) +
+                           null_condition + " )";
                 }
 
             case enums::DataUsed::same_unit_categorical:
@@ -125,7 +131,8 @@ std::string SQLMaker::condition_smaller(
     const std::vector<strings::String>& _categories,
     const containers::Placeholder& _input,
     const containers::Placeholder& _output,
-    const descriptors::Split& _split ) const
+    const descriptors::Split& _split,
+    const bool _add_null ) const
 {
     switch ( _split.data_used )
         {
@@ -148,9 +155,13 @@ std::string SQLMaker::condition_smaller(
                     const auto name = get_name(
                         _input, _output, _split.column_used, _split.data_used );
 
+                    const auto null_condition =
+                        _add_null ? " OR " + name + " IS NULL "
+                                  : std::string( "" );
+
                     return "( " + name +
                            " <= " + std::to_string( _split.critical_value ) +
-                           " )";
+                           null_condition + " )";
                 }
 
             case enums::DataUsed::same_unit_categorical:

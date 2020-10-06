@@ -29,14 +29,16 @@ class SQLMaker
         const std::vector<strings::String>& _categories,
         const containers::Placeholder& _input,
         const containers::Placeholder& _output,
-        const descriptors::Split& _split ) const;
+        const descriptors::Split& _split,
+        const bool _add_null ) const;
 
     /// Creates a condition that must be smaller than a critical value.
     std::string condition_smaller(
         const std::vector<strings::String>& _categories,
         const containers::Placeholder& _input,
         const containers::Placeholder& _output,
-        const descriptors::Split& _split ) const;
+        const descriptors::Split& _split,
+        const bool _add_null ) const;
 
     /// Creates a select statement (SELECT AGGREGATION(VALUE TO TO BE
     /// AGGREGATED)).

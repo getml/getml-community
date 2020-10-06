@@ -1255,20 +1255,29 @@ void DecisionTreeNode::to_sql(
 {
     if ( split_ )
         {
+            const bool activate_greater =
+                ( apply_from_above() != is_activated_ );
+
             const auto sql_maker = utils::SQLMaker(
                 tree_->delta_t(), tree_->ix_perip_used(), tree_->same_units_ );
 
             const auto prefix = ( _sql == "" ) ? "" : " AND ";
 
-            const auto sql_greater =
-                _sql + prefix +
-                sql_maker.condition_greater(
-                    _categories, tree_->input(), tree_->output(), *split_ );
+            const auto sql_greater = _sql + prefix +
+                                     sql_maker.condition_greater(
+                                         _categories,
+                                         tree_->input(),
+                                         tree_->output(),
+                                         *split_,
+                                         !activate_greater );
 
-            const auto sql_smaller =
-                _sql + prefix +
-                sql_maker.condition_smaller(
-                    _categories, tree_->input(), tree_->output(), *split_ );
+            const auto sql_smaller = _sql + prefix +
+                                     sql_maker.condition_smaller(
+                                         _categories,
+                                         tree_->input(),
+                                         tree_->output(),
+                                         *split_,
+                                         activate_greater );
 
             if ( child_node_greater_ )
                 {
@@ -1283,7 +1292,7 @@ void DecisionTreeNode::to_sql(
                     return;
                 }
 
-            if ( apply_from_above() != is_activated_ )
+            if ( activate_greater )
                 {
                     _sql = sql_greater;
                 }
