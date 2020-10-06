@@ -207,14 +207,14 @@ void DataFrameModifier::add_ts(
                 "both!" );
         }
 
-    if ( _ts_used == "" && horizon != 0.0 )
+    if ( _ts_used == "" && _horizon != 0.0 )
         {
             throw std::invalid_argument(
                 "If the horizon is non-zero, you must pass a time stamp to the "
                 ".join(...) method in the placeholder!" );
         }
 
-    if ( _ts_used == "" && memory > 0.0 )
+    if ( _ts_used == "" && _memory > 0.0 )
         {
             throw std::invalid_argument(
                 "If the memory is non-zero, you must pass a time stamp to the "
