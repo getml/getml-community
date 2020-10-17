@@ -2,7 +2,11 @@ set(
     HELPERS_OBJ 
     ${HELPERS_SOURCE_DIRECTORY}/DataFrame.cpp
     ${HELPERS_SOURCE_DIRECTORY}/ImportanceMaker.cpp
+    ${HELPERS_SOURCE_DIRECTORY}/Macros.cpp
     ${HELPERS_SOURCE_DIRECTORY}/Placeholder.cpp
+    ${HELPERS_SOURCE_DIRECTORY}/SQLGenerator.cpp
+    ${HELPERS_SOURCE_DIRECTORY}/StringReplacer.cpp
+    ${HELPERS_SOURCE_DIRECTORY}/StringSplitter.cpp
     ${HELPERS_SOURCE_DIRECTORY}/TableHolder.cpp
 )
 

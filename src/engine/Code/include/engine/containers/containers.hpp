@@ -55,8 +55,6 @@
 // ----------------------------------------------------
 // Module files
 
-#include "engine/containers/Macros.hpp"
-
 #include "engine/containers/Optional.hpp"
 
 #include "engine/containers/CategoricalFeatures.hpp"

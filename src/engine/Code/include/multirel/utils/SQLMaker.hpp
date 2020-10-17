@@ -27,6 +27,7 @@ class SQLMaker
     /// Creates a condition that must be greater than a critical value.
     std::string condition_greater(
         const std::vector<strings::String>& _categories,
+        const std::string& _feature_prefix,
         const containers::Placeholder& _input,
         const containers::Placeholder& _output,
         const descriptors::Split& _split,
@@ -35,6 +36,7 @@ class SQLMaker
     /// Creates a condition that must be smaller than a critical value.
     std::string condition_smaller(
         const std::vector<strings::String>& _categories,
+        const std::string& _feature_prefix,
         const containers::Placeholder& _input,
         const containers::Placeholder& _output,
         const descriptors::Split& _split,
@@ -43,6 +45,7 @@ class SQLMaker
     /// Creates a select statement (SELECT AGGREGATION(VALUE TO TO BE
     /// AGGREGATED)).
     std::string select_statement(
+        const std::string& _feature_prefix,
         const containers::Placeholder& _input,
         const containers::Placeholder& _output,
         const size_t _column_used,
@@ -52,6 +55,7 @@ class SQLMaker
    private:
     /// Returns the column name signified by _column_used and _data_used.
     std::string get_name(
+        const std::string& _feature_prefix,
         const containers::Placeholder& _input,
         const containers::Placeholder& _output,
         const size_t _column_used,
@@ -59,6 +63,24 @@ class SQLMaker
 
     /// Extracts the proper name from a same units struct.
     std::pair<std::string, std::string> get_names(
+        const std::string& _feature_prefix,
+        const containers::Placeholder& _input,
+        const containers::Placeholder& _output,
+        const std::shared_ptr<const descriptors::SameUnitsContainer>
+            _same_units,
+        const size_t _column_used ) const;
+
+    /// Returns the column name signified by _column_used and _data_used as a
+    /// time stamp
+    std::string get_ts_name(
+        const containers::Placeholder& _input,
+        const containers::Placeholder& _output,
+        const size_t _column_used,
+        const enums::DataUsed& _data_used,
+        const std::string& _diffstr ) const;
+
+    /// Extracts the proper name from a same units struct.
+    std::pair<std::string, std::string> get_ts_names(
         const containers::Placeholder& _input,
         const containers::Placeholder& _output,
         const std::shared_ptr<const descriptors::SameUnitsContainer>
@@ -72,14 +94,32 @@ class SQLMaker
 
     /// Transforms the time stamps diff into SQLite-compliant code.
     std::string make_time_stamp_diff(
-        const std::string& _ts1,
-        const std::string& _ts2,
+        const containers::Placeholder& _input,
+        const containers::Placeholder& _output,
+        const std::shared_ptr<const descriptors::SameUnitsContainer>
+            _same_units,
+        const size_t _column_used,
+        const Float _diff,
+        const bool _is_greater ) const;
+
+    /// Transforms the time stamps diff into SQLite-compliant given the
+    /// colnames.
+    std::string make_time_stamp_diff(
+        const std::string& _colname1,
+        const std::string& _colname2,
+        const bool _is_greater ) const;
+
+    /// Makes a window
+    std::string make_time_stamp_window(
+        const containers::Placeholder& _input,
+        const containers::Placeholder& _output,
         const Float _diff,
         const bool _is_greater ) const;
 
     /// Creates the value to be aggregated (for instance a column name or the
     /// difference between two columns)
     std::string value_to_be_aggregated(
+        const std::string& _feature_prefix,
         const containers::Placeholder& _input,
         const containers::Placeholder& _output,
         const size_t _column_used,

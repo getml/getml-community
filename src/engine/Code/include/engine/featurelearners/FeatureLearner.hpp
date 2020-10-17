@@ -157,13 +157,8 @@ class FeatureLearner : public AbstractFeatureLearner
         const std::string& _prefix,
         const bool _subfeatures ) const final
     {
-        auto queries =
-            feature_learner().to_sql( _categories, _prefix, 0, _subfeatures );
-        for ( auto& query : queries )
-            {
-                query = containers::Macros::modify_sql( query );
-            }
-        return queries;
+        return feature_learner().to_sql(
+            _categories, _prefix, 0, _subfeatures );
     }
 
     // --------------------------------------------------------
@@ -858,25 +853,24 @@ std::pair<std::string, std::string>
 FeatureLearner<FeatureLearnerType>::parse_table_colname(
     const std::string& _table, const std::string& _colname ) const
 {
-    if ( _colname.find( containers::Macros::table() ) == std::string::npos )
+    if ( _colname.find( helpers::Macros::table() ) == std::string::npos )
         {
-            if ( _table.find( containers::Macros::name() ) ==
-                 std::string::npos )
+            if ( _table.find( helpers::Macros::name() ) == std::string::npos )
                 {
                     return std::make_pair( _table, _colname );
                 }
 
-            const auto table_end = _colname.find( containers::Macros::name() );
+            const auto table_end = _colname.find( helpers::Macros::name() );
 
             const auto table = _colname.substr( 0, table_end );
 
             return std::make_pair( table, _colname );
         }
 
-    const auto table_begin = _colname.rfind( containers::Macros::table() ) +
-                             containers::Macros::table().length() + 1;
+    const auto table_begin = _colname.rfind( helpers::Macros::table() ) +
+                             helpers::Macros::table().length() + 1;
 
-    const auto table_end = _colname.rfind( containers::Macros::column() );
+    const auto table_end = _colname.rfind( helpers::Macros::column() );
 
     assert_true( table_end >= table_begin );
 
@@ -885,7 +879,7 @@ FeatureLearner<FeatureLearnerType>::parse_table_colname(
     const auto table = _colname.substr( table_begin, table_len );
 
     const auto colname_begin =
-        table_end + containers::Macros::column().length() + 1;
+        table_end + helpers::Macros::column().length() + 1;
 
     const auto colname = _colname.substr( colname_begin );
 
@@ -900,7 +894,7 @@ std::string FeatureLearner<FeatureLearnerType>::remove_time_diff(
 {
     // --------------------------------------------------------------
 
-    if ( _from_colname.find( containers::Macros::generated_ts() ) ==
+    if ( _from_colname.find( helpers::Macros::generated_ts() ) ==
          std::string::npos )
         {
             return _from_colname;

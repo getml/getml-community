@@ -136,18 +136,18 @@ class Imputation : public Preprocessor
     /// Generates the colname for the newly created column.
     std::string make_dummy_name( const std::string& _colname ) const
     {
-        return containers::Macros::dummy_begin() + _colname +
-               containers::Macros::dummy_end();
+        return helpers::Macros::dummy_begin() + _colname +
+               helpers::Macros::dummy_end();
     }
 
     /// Generates the colname for the newly created column.
     std::string make_name(
         const std::string& _colname, const Float _replacement ) const
     {
-        return containers::Macros::imputation_begin() + _colname +
-               containers::Macros::imputation_replacement() +
+        return helpers::Macros::imputation_begin() + _colname +
+               helpers::Macros::imputation_replacement() +
                std::to_string( _replacement ) +
-               containers::Macros::imputation_end();
+               helpers::Macros::imputation_end();
     }
 
    private:

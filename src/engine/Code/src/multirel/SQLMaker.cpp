@@ -8,6 +8,7 @@ namespace utils
 
 std::string SQLMaker::condition_greater(
     const std::vector<strings::String>& _categories,
+    const std::string& _feature_prefix,
     const containers::Placeholder& _input,
     const containers::Placeholder& _output,
     const descriptors::Split& _split,
@@ -19,7 +20,11 @@ std::string SQLMaker::condition_greater(
             case enums::DataUsed::x_popul_categorical:
                 {
                     const auto name = get_name(
-                        _input, _output, _split.column_used, _split.data_used );
+                        _feature_prefix,
+                        _input,
+                        _output,
+                        _split.column_used,
+                        _split.data_used );
 
                     return "( " + name + " NOT IN " +
                            list_categories( _categories, _split ) + " )";
@@ -32,7 +37,11 @@ std::string SQLMaker::condition_greater(
             case enums::DataUsed::x_subfeature:
                 {
                     const auto name = get_name(
-                        _input, _output, _split.column_used, _split.data_used );
+                        _feature_prefix,
+                        _input,
+                        _output,
+                        _split.column_used,
+                        _split.data_used );
 
                     const auto null_condition =
                         _add_null ? " OR " + name + " IS NULL "
@@ -46,6 +55,7 @@ std::string SQLMaker::condition_greater(
             case enums::DataUsed::same_unit_categorical:
                 {
                     const auto [name1, name2] = get_names(
+                        _feature_prefix,
                         _input,
                         _output,
                         same_units_.same_units_categorical_,
@@ -57,6 +67,7 @@ std::string SQLMaker::condition_greater(
             case enums::DataUsed::same_unit_discrete:
                 {
                     const auto [name1, name2] = get_names(
+                        _feature_prefix,
                         _input,
                         _output,
                         same_units_.same_units_discrete_,
@@ -69,6 +80,7 @@ std::string SQLMaker::condition_greater(
             case enums::DataUsed::same_unit_numerical:
                 {
                     const auto [name1, name2] = get_names(
+                        _feature_prefix,
                         _input,
                         _output,
                         same_units_.same_units_numerical_,
@@ -80,43 +92,30 @@ std::string SQLMaker::condition_greater(
 
             case enums::DataUsed::same_unit_discrete_ts:
                 {
-                    const auto [name1, name2] = get_names(
+                    make_time_stamp_diff(
                         _input,
                         _output,
                         same_units_.same_units_discrete_,
-                        _split.column_used );
-
-                    return make_time_stamp_diff(
-                        name1, name2, _split.critical_value, true );
+                        _split.column_used,
+                        _split.critical_value,
+                        true );
                 }
 
             case enums::DataUsed::same_unit_numerical_ts:
                 {
-                    const auto [name1, name2] = get_names(
+                    return make_time_stamp_diff(
                         _input,
                         _output,
                         same_units_.same_units_numerical_,
-                        _split.column_used );
-
-                    return make_time_stamp_diff(
-                        name1, name2, _split.critical_value, true );
+                        _split.column_used,
+                        _split.critical_value,
+                        true );
                 }
 
             case enums::DataUsed::time_stamps_window:
                 {
-                    const auto name1 =
-                        "t2.\"" + _input.time_stamps_name() + "\"";
-
-                    const auto name2 =
-                        "t1.\"" + _output.time_stamps_name() + "\"";
-
-                    const auto condition1 = make_time_stamp_diff(
-                        name1, name2, _split.critical_value - lag_, false );
-
-                    const auto condition2 = make_time_stamp_diff(
-                        name1, name2, _split.critical_value, true );
-
-                    return "( " + condition1 + " OR " + condition2 + " )";
+                    return make_time_stamp_window(
+                        _input, _output, _split.critical_value, true );
                 }
 
             default:
@@ -129,6 +128,7 @@ std::string SQLMaker::condition_greater(
 
 std::string SQLMaker::condition_smaller(
     const std::vector<strings::String>& _categories,
+    const std::string& _feature_prefix,
     const containers::Placeholder& _input,
     const containers::Placeholder& _output,
     const descriptors::Split& _split,
@@ -140,7 +140,11 @@ std::string SQLMaker::condition_smaller(
             case enums::DataUsed::x_popul_categorical:
                 {
                     const auto name = get_name(
-                        _input, _output, _split.column_used, _split.data_used );
+                        _feature_prefix,
+                        _input,
+                        _output,
+                        _split.column_used,
+                        _split.data_used );
 
                     return "( " + name + " IN " +
                            list_categories( _categories, _split ) + " )";
@@ -150,10 +154,13 @@ std::string SQLMaker::condition_smaller(
             case enums::DataUsed::x_popul_discrete:
             case enums::DataUsed::x_perip_numerical:
             case enums::DataUsed::x_popul_numerical:
-            case enums::DataUsed::x_subfeature:
                 {
                     const auto name = get_name(
-                        _input, _output, _split.column_used, _split.data_used );
+                        _feature_prefix,
+                        _input,
+                        _output,
+                        _split.column_used,
+                        _split.data_used );
 
                     const auto null_condition =
                         _add_null ? " OR " + name + " IS NULL "
@@ -167,6 +174,7 @@ std::string SQLMaker::condition_smaller(
             case enums::DataUsed::same_unit_categorical:
                 {
                     const auto [name1, name2] = get_names(
+                        _feature_prefix,
                         _input,
                         _output,
                         same_units_.same_units_categorical_,
@@ -178,6 +186,7 @@ std::string SQLMaker::condition_smaller(
             case enums::DataUsed::same_unit_discrete:
                 {
                     const auto [name1, name2] = get_names(
+                        _feature_prefix,
                         _input,
                         _output,
                         same_units_.same_units_discrete_,
@@ -191,6 +200,7 @@ std::string SQLMaker::condition_smaller(
             case enums::DataUsed::same_unit_numerical:
                 {
                     const auto [name1, name2] = get_names(
+                        _feature_prefix,
                         _input,
                         _output,
                         same_units_.same_units_numerical_,
@@ -203,43 +213,30 @@ std::string SQLMaker::condition_smaller(
 
             case enums::DataUsed::same_unit_discrete_ts:
                 {
-                    const auto [name1, name2] = get_names(
+                    return make_time_stamp_diff(
                         _input,
                         _output,
                         same_units_.same_units_discrete_,
-                        _split.column_used );
-
-                    return make_time_stamp_diff(
-                        name1, name2, _split.critical_value, false );
+                        _split.column_used,
+                        _split.critical_value,
+                        false );
                 }
 
             case enums::DataUsed::same_unit_numerical_ts:
                 {
-                    const auto [name1, name2] = get_names(
+                    return make_time_stamp_diff(
                         _input,
                         _output,
                         same_units_.same_units_numerical_,
-                        _split.column_used );
-
-                    return make_time_stamp_diff(
-                        name1, name2, _split.critical_value, false );
+                        _split.column_used,
+                        _split.critical_value,
+                        false );
                 }
 
             case enums::DataUsed::time_stamps_window:
                 {
-                    const auto name1 =
-                        "t2.\"" + _input.time_stamps_name() + "\"";
-
-                    const auto name2 =
-                        "t1.\"" + _output.time_stamps_name() + "\"";
-
-                    const auto condition1 = make_time_stamp_diff(
-                        name1, name2, _split.critical_value - lag_, true );
-
-                    const auto condition2 = make_time_stamp_diff(
-                        name1, name2, _split.critical_value, false );
-
-                    return "( " + condition1 + " AND " + condition2 + " )";
+                    return make_time_stamp_window(
+                        _input, _output, _split.critical_value, false );
                 }
 
             default:
@@ -251,6 +248,7 @@ std::string SQLMaker::condition_smaller(
 // ----------------------------------------------------------------------------
 
 std::string SQLMaker::get_name(
+    const std::string& _feature_prefix,
     const containers::Placeholder& _input,
     const containers::Placeholder& _output,
     const size_t _column_used,
@@ -260,33 +258,81 @@ std::string SQLMaker::get_name(
         {
             case enums::DataUsed::x_perip_categorical:
                 assert_true( _column_used < _input.num_categoricals() );
-                return "t2.\"" + _input.categorical_name( _column_used ) + "\"";
+                return helpers::SQLGenerator::edit_colname(
+                    _input.categorical_name( _column_used ), "t2" );
 
             case enums::DataUsed::x_popul_categorical:
                 assert_true( _column_used < _output.num_categoricals() );
-                return "t1.\"" + _output.categorical_name( _column_used ) +
-                       "\"";
+                return helpers::SQLGenerator::edit_colname(
+                    _output.categorical_name( _column_used ), "t1" );
 
             case enums::DataUsed::x_perip_discrete:
                 assert_true( _column_used < _input.num_discretes() );
-                return "t2.\"" + _input.discrete_name( _column_used ) + "\"";
+                return helpers::SQLGenerator::edit_colname(
+                    _input.discrete_name( _column_used ), "t2" );
 
             case enums::DataUsed::x_popul_discrete:
                 assert_true( _column_used < _output.num_discretes() );
-                return "t1.\"" + _output.discrete_name( _column_used ) + "\"";
+                return helpers::SQLGenerator::edit_colname(
+                    _output.discrete_name( _column_used ), "t1" );
 
             case enums::DataUsed::x_perip_numerical:
                 assert_true( _column_used < _input.num_numericals() );
-                return "t2.\"" + _input.numerical_name( _column_used ) + "\"";
+                return helpers::SQLGenerator::edit_colname(
+                    _input.numerical_name( _column_used ), "t2" );
 
             case enums::DataUsed::x_popul_numerical:
                 assert_true( _column_used < _output.num_numericals() );
-                return "t1.\"" + _output.numerical_name( _column_used ) + "\"";
+                return helpers::SQLGenerator::edit_colname(
+                    _output.numerical_name( _column_used ), "t1" );
 
             case enums::DataUsed::x_subfeature:
-                return "t2.\"feature_" +
-                       std::to_string( peripheral_used_ + 1 ) + "_" +
-                       std::to_string( _column_used + 1 ) + "\"";
+                {
+                    const auto number =
+                        helpers::SQLGenerator::make_subfeature_identifier(
+                            _feature_prefix, peripheral_used_, _column_used );
+
+                    return "COALESCE( f_" + number + ".\"feature_" + number +
+                           "\", 0.0 )";
+                }
+
+            default:
+                assert_true( false && "Unknown DataUsed!" );
+        }
+
+    return "";
+}
+
+// ----------------------------------------------------------------------------
+
+std::string SQLMaker::get_ts_name(
+    const containers::Placeholder& _input,
+    const containers::Placeholder& _output,
+    const size_t _column_used,
+    const enums::DataUsed& _data_used,
+    const std::string& _diffstr ) const
+{
+    switch ( _data_used )
+        {
+            case enums::DataUsed::x_perip_discrete:
+                assert_true( _column_used < _input.num_discretes() );
+                return helpers::SQLGenerator::make_relative_time(
+                    _input.discrete_name( _column_used ) + _diffstr, "t2" );
+
+            case enums::DataUsed::x_popul_discrete:
+                assert_true( _column_used < _output.num_discretes() );
+                return helpers::SQLGenerator::make_relative_time(
+                    _output.discrete_name( _column_used ) + _diffstr, "t1" );
+
+            case enums::DataUsed::x_perip_numerical:
+                assert_true( _column_used < _input.num_numericals() );
+                return helpers::SQLGenerator::make_relative_time(
+                    _input.numerical_name( _column_used ) + _diffstr, "t2" );
+
+            case enums::DataUsed::x_popul_numerical:
+                assert_true( _column_used < _output.num_numericals() );
+                return helpers::SQLGenerator::make_relative_time(
+                    _output.numerical_name( _column_used ) + _diffstr, "t1" );
 
             default:
                 assert_true( false && "Unknown DataUsed!" );
@@ -298,6 +344,7 @@ std::string SQLMaker::get_name(
 // ----------------------------------------------------------------------------
 
 std::pair<std::string, std::string> SQLMaker::get_names(
+    const std::string& _feature_prefix,
     const containers::Placeholder& _input,
     const containers::Placeholder& _output,
     const std::shared_ptr<const descriptors::SameUnitsContainer> _same_units,
@@ -310,16 +357,49 @@ std::pair<std::string, std::string> SQLMaker::get_names(
     const auto same_unit = _same_units->at( _column_used );
 
     const auto name1 = get_name(
+        _feature_prefix,
         _input,
         _output,
         std::get<0>( same_unit ).ix_column_used,
         std::get<0>( same_unit ).data_used );
 
     const auto name2 = get_name(
+        _feature_prefix,
         _input,
         _output,
         std::get<1>( same_unit ).ix_column_used,
         std::get<1>( same_unit ).data_used );
+
+    return std::make_pair( name1, name2 );
+}
+
+// ----------------------------------------------------------------------------
+
+std::pair<std::string, std::string> SQLMaker::get_ts_names(
+    const containers::Placeholder& _input,
+    const containers::Placeholder& _output,
+    const std::shared_ptr<const descriptors::SameUnitsContainer> _same_units,
+    const size_t _column_used ) const
+{
+    assert_true( _same_units );
+
+    assert_true( _column_used < _same_units->size() );
+
+    const auto same_unit = _same_units->at( _column_used );
+
+    const auto name1 = get_ts_name(
+        _input,
+        _output,
+        std::get<0>( same_unit ).ix_column_used,
+        std::get<0>( same_unit ).data_used,
+        "" );
+
+    const auto name2 = get_ts_name(
+        _input,
+        _output,
+        std::get<1>( same_unit ).ix_column_used,
+        std::get<1>( same_unit ).data_used,
+        "" );
 
     return std::make_pair( name1, name2 );
 }
@@ -356,44 +436,88 @@ std::string SQLMaker::list_categories(
 // ----------------------------------------------------------------------------
 
 std::string SQLMaker::make_time_stamp_diff(
-    const std::string& _ts1,
-    const std::string& _ts2,
+    const containers::Placeholder& _input,
+    const containers::Placeholder& _output,
+    const std::shared_ptr<const descriptors::SameUnitsContainer> _same_units,
+    const size_t _column_used,
     const Float _diff,
     const bool _is_greater ) const
 {
-    constexpr Float seconds_per_day = 24.0 * 60.0 * 60.0;
-    constexpr Float seconds_per_hour = 60.0 * 60.0;
-    constexpr Float seconds_per_minute = 60.0;
+    const auto diffstr =
+        helpers::SQLGenerator::make_time_stamp_diff( _diff, false );
 
-    const auto abs_diff = std::abs( _diff );
+    const auto same_unit = _same_units->at( _column_used );
 
-    auto diffstr = make_diffstr( _diff, "seconds" );
+    const auto colname1 = get_ts_name(
+        _input,
+        _output,
+        std::get<0>( same_unit ).ix_column_used,
+        std::get<0>( same_unit ).data_used,
+        "" );
 
-    if ( abs_diff >= seconds_per_day )
-        {
-            diffstr = make_diffstr( _diff / seconds_per_day, "days" );
-        }
-    else if ( abs_diff >= seconds_per_hour )
-        {
-            diffstr = make_diffstr( _diff / seconds_per_hour, "hours" );
-        }
-    else if ( abs_diff >= seconds_per_minute )
-        {
-            diffstr = make_diffstr( _diff / seconds_per_minute, "minutes" );
-        }
+    const auto colname2 = get_ts_name(
+        _input,
+        _output,
+        std::get<1>( same_unit ).ix_column_used,
+        std::get<1>( same_unit ).data_used,
+        diffstr );
 
+    return make_time_stamp_diff( colname1, colname2, _is_greater );
+}
+
+// ----------------------------------------------------------------------------
+
+std::string SQLMaker::make_time_stamp_diff(
+    const std::string& _colname1,
+    const std::string& _colname2,
+    const bool _is_greater ) const
+{
     const auto comparison =
         _is_greater ? std::string( " > " ) : std::string( " <= " );
 
-    const auto condition = "datetime( " + _ts2 + " )" + comparison +
-                           "datetime( " + _ts1 + ", " + diffstr + " )";
+    const auto condition = _colname1 + comparison + _colname2;
 
     return "( " + condition + " )";
 }
 
 // ----------------------------------------------------------------------------
 
+std::string SQLMaker::make_time_stamp_window(
+    const containers::Placeholder& _input,
+    const containers::Placeholder& _output,
+    const Float _diff,
+    const bool _is_greater ) const
+{
+    const auto name1 = _input.time_stamps_name();
+
+    const auto name2 = _output.time_stamps_name();
+
+    const bool is_rowid =
+        ( name1.find( helpers::Macros::rowid() ) != std::string::npos );
+
+    const auto diffstr1 =
+        helpers::SQLGenerator::make_time_stamp_diff( _diff - lag_, is_rowid );
+
+    const auto diffstr2 =
+        helpers::SQLGenerator::make_time_stamp_diff( _diff, is_rowid );
+
+    const auto condition1 = make_time_stamp_diff(
+        helpers::SQLGenerator::make_relative_time( name1, "t2" ),
+        helpers::SQLGenerator::make_relative_time( name2 + diffstr1, "t1" ),
+        !_is_greater );
+
+    const auto condition2 = make_time_stamp_diff(
+        helpers::SQLGenerator::make_relative_time( name1, "t2" ),
+        helpers::SQLGenerator::make_relative_time( name2 + diffstr2, "t1" ),
+        _is_greater );
+
+    return "( " + condition1 + " OR " + condition2 + " )";
+}
+
+// ----------------------------------------------------------------------------
+
 std::string SQLMaker::select_statement(
+    const std::string& _feature_prefix,
     const containers::Placeholder& _input,
     const containers::Placeholder& _output,
     const size_t _column_used,
@@ -417,8 +541,8 @@ std::string SQLMaker::select_statement(
             select += "( ";
         }
 
-    select +=
-        value_to_be_aggregated( _input, _output, _column_used, _data_used );
+    select += value_to_be_aggregated(
+        _feature_prefix, _input, _output, _column_used, _data_used );
 
     select += " )";
 
@@ -428,6 +552,7 @@ std::string SQLMaker::select_statement(
 // ----------------------------------------------------------------------------
 
 std::string SQLMaker::value_to_be_aggregated(
+    const std::string& _feature_prefix,
     const containers::Placeholder& _input,
     const containers::Placeholder& _output,
     const size_t _column_used,
@@ -444,12 +569,17 @@ std::string SQLMaker::value_to_be_aggregated(
             case enums::DataUsed::x_subfeature:
                 {
                     return get_name(
-                        _input, _output, _column_used, _data_used );
+                        _feature_prefix,
+                        _input,
+                        _output,
+                        _column_used,
+                        _data_used );
                 }
 
             case enums::DataUsed::same_unit_discrete:
                 {
                     const auto [name1, name2] = get_names(
+                        _feature_prefix,
                         _input,
                         _output,
                         same_units_.same_units_discrete_,
@@ -461,6 +591,7 @@ std::string SQLMaker::value_to_be_aggregated(
             case enums::DataUsed::same_unit_numerical:
                 {
                     const auto [name1, name2] = get_names(
+                        _feature_prefix,
                         _input,
                         _output,
                         same_units_.same_units_numerical_,
@@ -471,37 +602,24 @@ std::string SQLMaker::value_to_be_aggregated(
 
             case enums::DataUsed::same_unit_discrete_ts:
                 {
-                    const auto [name1, name2] = get_names(
+                    const auto [name1, name2] = get_ts_names(
                         _input,
                         _output,
                         same_units_.same_units_discrete_,
                         _column_used );
 
-                    return "( julianday( " + name2 + " ) - julianday( " +
-                           name1 + " ) ) * 86400.0";
+                    return "( " + name2 + " - " + name1 + " ) * 86000.0";
                 }
 
             case enums::DataUsed::same_unit_numerical_ts:
                 {
-                    const auto [name1, name2] = get_names(
+                    const auto [name1, name2] = get_ts_names(
                         _input,
                         _output,
                         same_units_.same_units_numerical_,
                         _column_used );
 
-                    return "( julianday( " + name2 + " ) - julianday( " +
-                           name1 + " ) ) * 86400.0";
-                }
-            case enums::DataUsed::time_stamps_diff:
-                {
-                    const auto name1 =
-                        "t1.\"" + _output.time_stamps_name() + "\"";
-
-                    const auto name2 =
-                        "t2.\"" + _input.time_stamps_name() + "\"";
-
-                    return "( julianday( " + name1 + " ) - julianday( " +
-                           name2 + " ) ) * 86400.0";
+                    return "( " + name2 + " - " + name1 + " ) * 86000.0";
                 }
 
             default:

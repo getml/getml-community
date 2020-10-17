@@ -48,7 +48,8 @@ class DecisionTree
     /// Expresses the decision tree as SQL code.
     std::string to_sql(
         const std::vector<strings::String>& _categories,
-        const std::string _feature_num,
+        const std::string& _feature_prefix,
+        const std::string& _feature_num,
         const bool _use_timestamps ) const;
 
     // -----------------------------------------------------------------

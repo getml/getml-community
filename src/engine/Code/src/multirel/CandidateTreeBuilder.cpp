@@ -368,11 +368,6 @@ size_t CandidateTreeBuilder::get_ncols(
             case enums::DataUsed::x_perip_categorical:
                 return _peripheral_tables[_ix_perip_used].num_categoricals();
 
-            case enums::DataUsed::time_stamps_diff:
-                return std::min(
-                    _peripheral_tables[_ix_perip_used].num_time_stamps(),
-                    static_cast<size_t>( 1 ) );
-
             case enums::DataUsed::same_unit_discrete:
                 assert_true( _same_units[_ix_perip_used].same_units_discrete_ );
                 return static_cast<Int>(

@@ -201,7 +201,6 @@ void DecisionTree::fit(
     const std::vector<containers::Match>::iterator _end )
 {
     // ------------------------------------------------------------------------
-    // Store input and output (we need the column names).
 
     if ( _input )
         {
@@ -218,6 +217,8 @@ void DecisionTree::fit(
     std::tie( initial_loss_reduction_, intercept_, initial_weights_ ) =
         calc_initial_weights( _output, *_input, _subfeatures, _begin, _end );
 
+    is_ts_ = make_is_ts( _output, *_input );
+
     // ------------------------------------------------------------------------
 
     debug_log( "Set up and fit root node." );
@@ -227,7 +228,8 @@ void DecisionTree::fit(
             hyperparameters().delta_t_,
             peripheral_used(),
             input_scaler_,
-            output_scaler_ ),
+            output_scaler_,
+            std::make_shared<const std::vector<bool>>( is_ts_ ) ),
         0,
         hyperparameters_,
         loss_function_,
@@ -285,16 +287,54 @@ void DecisionTree::from_json_obj(
     initial_weights_ = JSON::array_to_vector<Float>(
         JSON::get_array( _obj, "initial_weights_" ) );
 
+    is_ts_ = JSON::array_to_vector<bool>( JSON::get_array( _obj, "is_ts_" ) );
+
     root_.reset( new DecisionTreeNode(
         utils::ConditionMaker(
             hyperparameters().delta_t_,
             peripheral_used(),
             input_scaler_,
-            output_scaler_ ),
+            output_scaler_,
+            std::make_shared<const std::vector<bool>>( is_ts_ ) ),
         0,  // _depth
         hyperparameters_,
         loss_function_,
         *JSON::get_object( _obj, "root_" ) ) );
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<bool> DecisionTree::make_is_ts(
+    const containers::DataFrameView& _output,
+    const containers::DataFrame& _input ) const
+{
+    const auto unit_has_ts = []( const std::string unit ) {
+        return unit.find( "time stamp" ) != std::string::npos;
+    };
+
+    auto is_ts = std::vector<bool>();
+
+    for ( size_t j = 0; j < _input.num_discretes(); ++j )
+        {
+            is_ts.push_back( unit_has_ts( _input.discrete_unit( j ) ) );
+        }
+
+    for ( size_t j = 0; j < _input.num_numericals(); ++j )
+        {
+            is_ts.push_back( unit_has_ts( _input.numerical_unit( j ) ) );
+        }
+
+    for ( size_t j = 0; j < _output.num_discretes(); ++j )
+        {
+            is_ts.push_back( unit_has_ts( _output.discrete_unit( j ) ) );
+        }
+
+    for ( size_t j = 0; j < _output.num_numericals(); ++j )
+        {
+            is_ts.push_back( unit_has_ts( _output.numerical_unit( j ) ) );
+        }
+
+    return is_ts;
 }
 
 // ----------------------------------------------------------------------------
@@ -329,13 +369,40 @@ Poco::JSON::Object::Ptr DecisionTree::to_json_obj() const
 
     obj->set( "initial_weights_", JSON::vector_to_array( initial_weights_ ) );
 
+    obj->set( "is_ts_", JSON::vector_to_array( is_ts_ ) );
+
     return obj;
+}
+
+// ----------------------------------------------------------------------------
+
+std::set<size_t> DecisionTree::make_subfeatures_used() const
+{
+    assert_true(
+        initial_weights_.size() >=
+        input().num_discretes() + input().num_numericals() +
+            output().num_discretes() + output().num_numericals() + 1 );
+
+    const auto num_subfeatures =
+        initial_weights_.size() - input().num_discretes() -
+        input().num_numericals() - output().num_discretes() -
+        output().num_numericals() - 1;
+
+    std::set<size_t> subfeatures_used;
+
+    for ( size_t i = 0; i < num_subfeatures; ++i )
+        {
+            subfeatures_used.insert( i );
+        }
+
+    return subfeatures_used;
 }
 
 // ----------------------------------------------------------------------------
 
 std::string DecisionTree::to_sql(
     const std::vector<strings::String>& _categories,
+    const std::string& _feature_prefix,
     const std::string _feature_num,
     const bool _use_timestamps ) const
 {
@@ -347,10 +414,15 @@ std::string DecisionTree::to_sql(
 
     // -------------------------------------------------------------------
 
-    sql << "CREATE TABLE \"FEATURE_" << _feature_num << "\" AS" << std::endl;
+    sql << "DROP TABLE IF EXISTS \"FEATURE_" << _feature_prefix << _feature_num
+        << "\";" << std::endl;
 
     // -------------------------------------------------------------------
-    // First part of SELECT statement
+
+    sql << "CREATE TABLE \"FEATURE_" << _feature_prefix << _feature_num
+        << "\" AS" << std::endl;
+
+    // -------------------------------------------------------------------
 
     sql << "SELECT ";
 
@@ -362,7 +434,8 @@ std::string DecisionTree::to_sql(
 
     assert_true( root_ );
 
-    root_->to_sql( _categories, _feature_num, "", &conditions );
+    root_->to_sql(
+        _categories, _feature_prefix, _feature_num, "", &conditions );
 
     // -------------------------------------------------------------------
 
@@ -386,48 +459,46 @@ std::string DecisionTree::to_sql(
         }
 
     // -------------------------------------------------------------------
-    // Second part of SELECT statement
 
-    sql << ") AS \"feature_" << _feature_num << "\"," << std::endl;
+    sql << ") AS \"feature_" << _feature_prefix << _feature_num << "\","
+        << std::endl;
 
     sql << tab << " t1.rowid AS \"rownum\"" << std::endl;
 
     // -------------------------------------------------------------------
-    // JOIN statement
 
-    sql << "FROM \"" << output().name() << "\" t1" << std::endl;
-
-    sql << "LEFT JOIN \"" << input().name() << "\" t2" << std::endl;
-
-    sql << "ON t1.\"" << output().join_keys_name() << "\" = t2.\""
-        << input().join_keys_name() << "\"" << std::endl;
+    sql << helpers::SQLGenerator::make_joins(
+        output().name(),
+        input().name(),
+        output().join_keys_name(),
+        input().join_keys_name() );
 
     // -------------------------------------------------------------------
-    // WHERE statement
+
+    sql << helpers::SQLGenerator::make_subfeature_joins(
+        _feature_prefix, peripheral_used_, make_subfeatures_used() );
+
+    // -------------------------------------------------------------------
 
     if ( _use_timestamps && input().num_time_stamps() > 0 &&
          output().num_time_stamps() > 0 )
         {
             sql << "WHERE ";
 
-            sql << "datetime( t2.\"" << input().time_stamps_name()
-                << "\" ) <= datetime( t1.\"" << output().time_stamps_name()
-                << "\" )" << std::endl;
+            const auto upper_ts = input().num_time_stamps() > 1
+                                      ? input().upper_time_stamps_name()
+                                      : std::string( "" );
 
-            if ( input().num_time_stamps() > 1 )
-                {
-                    sql << "AND ( datetime( t2.\""
-                        << input().upper_time_stamps_name()
-                        << "\" ) > datetime( t1.\""
-                        << output().time_stamps_name()
-                        << "\" ) OR datetime( t2.\""
-                        << input().upper_time_stamps_name() << "\" ) IS NULL )"
-                        << std::endl;
-                }
+            sql << helpers::SQLGenerator::make_time_stamps(
+                output().time_stamps_name(),
+                input().time_stamps_name(),
+                upper_ts,
+                "t1",
+                "t2",
+                "t1" );
         }
 
     // -------------------------------------------------------------------
-    // GROUP BY statement
 
     sql << "GROUP BY t1.rowid"
         << ";" << std::endl

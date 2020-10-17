@@ -1,8 +1,6 @@
-#include "engine/utils/utils.hpp"
+#include "helpers/helpers.hpp"
 
-namespace engine
-{
-namespace utils
+namespace helpers
 {
 // ----------------------------------------------------------------------------
 
@@ -34,5 +32,4 @@ std::vector<std::string> StringSplitter::split(
 }
 
 // ----------------------------------------------------------------------------
-}  // namespace utils
-}  // namespace engine
+}  // namespace helpers

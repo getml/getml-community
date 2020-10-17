@@ -26,6 +26,9 @@
 #include "helpers/Float.hpp"
 #include "helpers/Int.hpp"
 
+#include "helpers/StringReplacer.hpp"
+#include "helpers/StringSplitter.hpp"
+
 #include "helpers/Index.hpp"
 
 #include "helpers/Column.hpp"
@@ -43,6 +46,10 @@
 #include "helpers/DataFrameView.hpp"
 
 #include "helpers/TableHolder.hpp"
+
+#include "helpers/Macros.hpp"
+
+#include "helpers/SQLGenerator.hpp"
 
 // ----------------------------------------------------------------------------
 

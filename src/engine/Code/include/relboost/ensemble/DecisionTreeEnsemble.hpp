@@ -249,6 +249,13 @@ class DecisionTreeEnsemble
         const size_t _nrows,
         const std::vector<const containers::Match*>& _matches_ptr );
 
+    /// Transforms the subfeatures to SQL code.
+    void subfeatures_to_sql(
+        const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const std::string& _feature_prefix,
+        const size_t _offset,
+        std::vector<std::string>* _sql ) const;
+
     // -----------------------------------------------------------------
 
    private:

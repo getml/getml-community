@@ -63,20 +63,20 @@ void PipelineManager::add_join_keys_to_df(
             auto col = _population_table.join_key( i ).clone();
 
             if ( col.name().find(
-                     containers::Macros::multiple_join_key_begin() ) !=
+                     helpers::Macros::multiple_join_key_begin() ) !=
                  std::string::npos )
                 {
                     continue;
                 }
 
-            if ( col.name().find( containers::Macros::no_join_key() ) !=
+            if ( col.name().find( helpers::Macros::no_join_key() ) !=
                  std::string::npos )
                 {
                     continue;
                 }
 
             col.set_name(
-                containers::Macros::modify_colnames( { col.name() } ).at( 0 ) );
+                helpers::Macros::modify_colnames( { col.name() } ).at( 0 ) );
 
             _df->add_int_column( col, containers::DataFrame::ROLE_JOIN_KEY );
         }
@@ -113,38 +113,38 @@ void PipelineManager::add_time_stamps_to_df(
         {
             auto col = _population_table.time_stamp( i ).clone();
 
-            if ( col.name().find( containers::Macros::lower_ts() ) !=
+            if ( col.name().find( helpers::Macros::lower_ts() ) !=
                  std::string::npos )
                 {
                     continue;
                 }
 
-            if ( col.name().find( containers::Macros::other_time_stamp() ) !=
+            if ( col.name().find( helpers::Macros::other_time_stamp() ) !=
                  std::string::npos )
                 {
                     continue;
                 }
 
-            if ( col.name().find( containers::Macros::rowid() ) !=
+            if ( col.name().find( helpers::Macros::rowid() ) !=
                  std::string::npos )
                 {
                     continue;
                 }
 
-            if ( col.name().find( containers::Macros::upper_time_stamp() ) !=
+            if ( col.name().find( helpers::Macros::upper_time_stamp() ) !=
                  std::string::npos )
                 {
                     continue;
                 }
 
-            if ( col.name().find( containers::Macros::upper_ts() ) !=
+            if ( col.name().find( helpers::Macros::upper_ts() ) !=
                  std::string::npos )
                 {
                     continue;
                 }
 
             col.set_name(
-                containers::Macros::modify_colnames( { col.name() } ).at( 0 ) );
+                helpers::Macros::modify_colnames( { col.name() } ).at( 0 ) );
 
             _df->add_float_column(
                 col, containers::DataFrame::ROLE_TIME_STAMP );

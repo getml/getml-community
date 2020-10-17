@@ -50,6 +50,7 @@ class DecisionTreeNode
     /// Expresses the DecisionTreeNode as SQL code.
     void to_sql(
         const std::vector<strings::String>& _categories,
+        const std::string& _feature_prefix,
         const std::string& _feature_num,
         const std::string& _sql,
         std::vector<std::string>* _conditions ) const;
@@ -68,6 +69,21 @@ class DecisionTreeNode
     // -----------------------------------------------------------------
 
    public:
+    /// Generates a list of all subfeatures used
+    void add_subfeatures( std::set<size_t>* _subfeatures_used ) const
+    {
+        if ( child_greater_ )
+            {
+                if ( split_.data_used_ == enums::DataUsed::subfeatures )
+                    {
+                        _subfeatures_used->insert( split_.column_ );
+                    }
+                assert_true( child_smaller_ );
+                child_greater_->add_subfeatures( _subfeatures_used );
+                child_smaller_->add_subfeatures( _subfeatures_used );
+            }
+    }
+
     /// Trivial setter.
     void set_comm( multithreading::Communicator* _comm )
     {

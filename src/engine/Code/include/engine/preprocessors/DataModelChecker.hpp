@@ -253,7 +253,7 @@ class DataModelChecker
     /// Removes any macros from a colname.
     static std::string modify_colname( const std::string& _colname )
     {
-        const auto colnames = containers::Macros::modify_colnames( {_colname} );
+        const auto colnames = helpers::Macros::modify_colnames( { _colname } );
         assert_true( colnames.size() == 1 );
         return colnames.at( 0 );
     }

@@ -24,7 +24,6 @@ set(
     ${ENGINE_SOURCE_DIRECTORY}/JSON.cpp
     ${ENGINE_SOURCE_DIRECTORY}/LicenseChecker.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Logger.cpp
-    ${ENGINE_SOURCE_DIRECTORY}/Macros.cpp
     ${ENGINE_SOURCE_DIRECTORY}/ManyToOneJoiner.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Monitor.cpp
     ${ENGINE_SOURCE_DIRECTORY}/NumOpParser.cpp
@@ -39,10 +38,8 @@ set(
     ${ENGINE_SOURCE_DIRECTORY}/RequestHandler.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Seasonal.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Sender.cpp
-    ${ENGINE_SOURCE_DIRECTORY}/StringReplacer.cpp
-    ${ENGINE_SOURCE_DIRECTORY}/StringSplitter.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/SQLMaker.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Substring.cpp
     ${ENGINE_SOURCE_DIRECTORY}/TimeStampMaker.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Token.cpp
-    ${ENGINE_SOURCE_DIRECTORY}/TSDiffMaker.cpp
 )

@@ -8,6 +8,7 @@ namespace utils
 
 std::string ConditionMaker::condition_greater(
     const std::vector<strings::String>& _categories,
+    const std::string& _feature_prefix,
     const containers::Placeholder& _input,
     const containers::Placeholder& _output,
     const containers::Split& _split ) const
@@ -18,10 +19,12 @@ std::string ConditionMaker::condition_greater(
                 {
                     assert_true( _split.column_ < _input.num_categoricals() );
 
+                    const auto colname = helpers::SQLGenerator::edit_colname(
+                        _input.categorical_name( _split.column_ ), "t2" );
+
                     const std::string condition =
-                        "( t2.\"" + _input.categorical_name( _split.column_ ) +
-                        "\" IN " + list_categories( _categories, _split ) +
-                        " )";
+                        "( " + colname + " IN " +
+                        list_categories( _categories, _split ) + " )";
 
                     return condition;
                 }
@@ -30,133 +33,221 @@ std::string ConditionMaker::condition_greater(
                 {
                     assert_true( _split.column_ < _output.num_categoricals() );
 
+                    const auto colname = helpers::SQLGenerator::edit_colname(
+                        _output.categorical_name( _split.column_ ), "t1" );
+
                     const std::string condition =
-                        "( t1.\"" + _output.categorical_name( _split.column_ ) +
-                        "\" IN " + list_categories( _categories, _split ) +
-                        " )";
+                        "( " + colname + " IN " +
+                        list_categories( _categories, _split ) + " )";
 
                     return condition;
                 }
 
             case enums::DataUsed::discrete_input:
-                assert_true( _split.column_ < _input.num_discretes() );
-                return "( t2.\"" + _input.discrete_name( _split.column_ ) +
-                       "\" > " + std::to_string( _split.critical_value_ ) +
-                       " )";
+                {
+                    assert_true( _split.column_ < _input.num_discretes() );
+
+                    const auto colname = helpers::SQLGenerator::edit_colname(
+                        _input.discrete_name( _split.column_ ), "t2" );
+
+                    return "( " + colname + " > " +
+                           std::to_string( _split.critical_value_ ) + " )";
+                }
 
             case enums::DataUsed::discrete_input_is_nan:
-                assert_true( _split.column_ < _input.num_discretes() );
-                return "( t2.\"" + _input.discrete_name( _split.column_ ) +
-                       "\" IS NOT NULL )";
+                {
+                    assert_true( _split.column_ < _input.num_discretes() );
+
+                    const auto colname = helpers::SQLGenerator::edit_colname(
+                        _input.discrete_name( _split.column_ ), "t2" );
+
+                    return "( " + colname + " IS NOT NULL )";
+                }
 
             case enums::DataUsed::discrete_output:
-                assert_true( _split.column_ < _output.num_discretes() );
-                return "( t1.\"" + _output.discrete_name( _split.column_ ) +
-                       "\" > " + std::to_string( _split.critical_value_ ) +
-                       " )";
+                {
+                    assert_true( _split.column_ < _output.num_discretes() );
+
+                    const auto colname = helpers::SQLGenerator::edit_colname(
+                        _output.discrete_name( _split.column_ ), "t1" );
+
+                    return "( " + colname + " > " +
+                           std::to_string( _split.critical_value_ ) + " )";
+                }
 
             case enums::DataUsed::discrete_output_is_nan:
-                assert_true( _split.column_ < _output.num_discretes() );
-                return "( t1.\"" + _output.discrete_name( _split.column_ ) +
-                       "\" IS NOT NULL )";
+                {
+                    assert_true( _split.column_ < _output.num_discretes() );
+
+                    const auto colname = helpers::SQLGenerator::edit_colname(
+                        _output.discrete_name( _split.column_ ), "t1" );
+
+                    return "( " + colname + " IS NOT NULL )";
+                }
 
             case enums::DataUsed::numerical_input:
-                assert_true( _split.column_ < _input.num_numericals() );
-                return "( t2.\"" + _input.numerical_name( _split.column_ ) +
-                       "\" > " + std::to_string( _split.critical_value_ ) +
-                       " )";
+                {
+                    assert_true( _split.column_ < _input.num_numericals() );
+
+                    const auto colname = helpers::SQLGenerator::edit_colname(
+                        _input.numerical_name( _split.column_ ), "t2" );
+
+                    return "( " + colname + " > " +
+                           std::to_string( _split.critical_value_ ) + " )";
+                }
 
             case enums::DataUsed::numerical_input_is_nan:
-                assert_true( _split.column_ < _input.num_numericals() );
-                return "( t2.\"" + _input.numerical_name( _split.column_ ) +
-                       "\" IS NOT NULL )";
+                {
+                    assert_true( _split.column_ < _input.num_numericals() );
+
+                    const auto colname = helpers::SQLGenerator::edit_colname(
+                        _input.numerical_name( _split.column_ ), "t2" );
+
+                    return "( " + colname + " IS NOT NULL )";
+                }
 
             case enums::DataUsed::numerical_output:
-                assert_true( _split.column_ < _output.num_numericals() );
-                return "( t1.\"" + _output.numerical_name( _split.column_ ) +
-                       "\" > " + std::to_string( _split.critical_value_ ) +
-                       " )";
+                {
+                    assert_true( _split.column_ < _output.num_numericals() );
+
+                    const auto colname = helpers::SQLGenerator::edit_colname(
+                        _output.numerical_name( _split.column_ ), "t1" );
+
+                    return "( " + colname + " > " +
+                           std::to_string( _split.critical_value_ ) + " )";
+                }
 
             case enums::DataUsed::numerical_output_is_nan:
-                assert_true( _split.column_ < _output.num_numericals() );
-                return "( t1.\"" + _output.numerical_name( _split.column_ ) +
-                       "\" IS NOT NULL )";
+                {
+                    assert_true( _split.column_ < _output.num_numericals() );
+
+                    const auto colname = helpers::SQLGenerator::edit_colname(
+                        _output.numerical_name( _split.column_ ), "t1" );
+
+                    return "( " + colname + " IS NOT NULL )";
+                }
 
             case enums::DataUsed::same_units_categorical:
-                assert_true( _split.column_ < _output.num_categoricals() );
-                assert_true( _split.column_input_ < _input.num_categoricals() );
-                return "( t1.\"" + _output.categorical_name( _split.column_ ) +
-                       "\" = t2.\"" +
-                       _input.categorical_name( _split.column_input_ ) + "\" )";
+                {
+                    assert_true( _split.column_ < _output.num_categoricals() );
+                    assert_true(
+                        _split.column_input_ < _input.num_categoricals() );
+
+                    const auto colname1 = helpers::SQLGenerator::edit_colname(
+                        _output.categorical_name( _split.column_ ), "t1" );
+
+                    const auto colname2 = helpers::SQLGenerator::edit_colname(
+                        _input.categorical_name( _split.column_ ), "t2" );
+
+                    return "( " + colname1 + " = " + colname2 + " )";
+                }
 
             case enums::DataUsed::same_units_discrete:
-                assert_true( _split.column_ < _output.num_discretes() );
-                assert_true( _split.column_input_ < _input.num_discretes() );
-                return "( t1.\"" + _output.discrete_name( _split.column_ ) +
-                       "\" - t2.\"" +
-                       _input.discrete_name( _split.column_input_ ) + "\" > " +
-                       std::to_string( _split.critical_value_ ) + " )";
+                {
+                    assert_true( _split.column_ < _output.num_discretes() );
+                    assert_true(
+                        _split.column_input_ < _input.num_discretes() );
+
+                    const auto colname1 = helpers::SQLGenerator::edit_colname(
+                        _output.discrete_name( _split.column_ ), "t1" );
+
+                    const auto colname2 = helpers::SQLGenerator::edit_colname(
+                        _input.discrete_name( _split.column_ ), "t2" );
+
+                    return "( " + colname1 + " - " + colname2 + " > " +
+                           std::to_string( _split.critical_value_ ) + " )";
+                }
 
             case enums::DataUsed::same_units_discrete_is_nan:
-                assert_true( _split.column_ < _output.num_discretes() );
-                assert_true( _split.column_input_ < _input.num_discretes() );
-                return "( t1.\"" + _output.discrete_name( _split.column_ ) +
-                       "\" IS NOT NULL AND t2.\"" +
-                       _input.discrete_name( _split.column_input_ ) +
-                       "\" IS NOT NULL )";
+                {
+                    assert_true( _split.column_ < _output.num_discretes() );
+                    assert_true(
+                        _split.column_input_ < _input.num_discretes() );
+
+                    const auto colname1 = helpers::SQLGenerator::edit_colname(
+                        _output.discrete_name( _split.column_ ), "t1" );
+
+                    const auto colname2 = helpers::SQLGenerator::edit_colname(
+                        _input.discrete_name( _split.column_ ), "t2" );
+
+                    return "( " + colname1 + " IS NOT NULL AND " + colname2 +
+                           " IS NOT NULL )";
+                }
 
             case enums::DataUsed::same_units_discrete_ts:
-                assert_true( _split.column_ < _output.num_discretes() );
-                assert_true( _split.column_input_ < _input.num_discretes() );
-                return make_time_stamp_diff(
-                    _output.discrete_name( _split.column_ ),
-                    _input.discrete_name( _split.column_input_ ),
-                    _split.critical_value_,
-                    true );
+                {
+                    assert_true( _split.column_ < _output.num_discretes() );
+                    assert_true(
+                        _split.column_input_ < _input.num_discretes() );
+
+                    return make_time_stamp_diff(
+                        _output.discrete_name( _split.column_ ),
+                        _input.discrete_name( _split.column_input_ ),
+                        _split.critical_value_,
+                        true );
+                }
 
             case enums::DataUsed::same_units_numerical:
-                assert_true( _split.column_ < _output.num_numericals() );
-                assert_true( _split.column_input_ < _input.num_numericals() );
-                return "( t1.\"" + _output.numerical_name( _split.column_ ) +
-                       "\" - t2.\"" +
-                       _input.numerical_name( _split.column_input_ ) + "\" > " +
-                       std::to_string( _split.critical_value_ ) + " )";
+                {
+                    assert_true( _split.column_ < _output.num_numericals() );
+                    assert_true(
+                        _split.column_input_ < _input.num_numericals() );
+
+                    const auto colname1 = helpers::SQLGenerator::edit_colname(
+                        _output.numerical_name( _split.column_ ), "t1" );
+
+                    const auto colname2 = helpers::SQLGenerator::edit_colname(
+                        _input.numerical_name( _split.column_ ), "t2" );
+
+                    return "( " + colname1 + " - " + colname2 + " > " +
+                           std::to_string( _split.critical_value_ ) + " )";
+                }
 
             case enums::DataUsed::same_units_numerical_is_nan:
-                assert_true( _split.column_ < _output.num_numericals() );
-                assert_true( _split.column_input_ < _input.num_numericals() );
-                return "( t1.\"" + _output.numerical_name( _split.column_ ) +
-                       "\" IS NOT NULL AND t2.\"" +
-                       _input.numerical_name( _split.column_input_ ) +
-                       "\" IS NOT NULL )";
+                {
+                    assert_true( _split.column_ < _output.num_numericals() );
+                    assert_true(
+                        _split.column_input_ < _input.num_numericals() );
+
+                    const auto colname1 = helpers::SQLGenerator::edit_colname(
+                        _output.numerical_name( _split.column_ ), "t1" );
+
+                    const auto colname2 = helpers::SQLGenerator::edit_colname(
+                        _input.numerical_name( _split.column_ ), "t2" );
+
+                    return "( " + colname1 + " IS NOT NULL AND " + colname2 +
+                           " IS NOT NULL )";
+                }
 
             case enums::DataUsed::same_units_numerical_ts:
-                assert_true( _split.column_ < _output.num_numericals() );
-                assert_true( _split.column_input_ < _input.num_numericals() );
-                return make_time_stamp_diff(
-                    _output.numerical_name( _split.column_ ),
-                    _input.numerical_name( _split.column_input_ ),
-                    _split.critical_value_,
-                    true );
+                {
+                    assert_true( _split.column_ < _output.num_numericals() );
+                    assert_true(
+                        _split.column_input_ < _input.num_numericals() );
+
+                    return make_time_stamp_diff(
+                        _output.numerical_name( _split.column_ ),
+                        _input.numerical_name( _split.column_input_ ),
+                        _split.critical_value_,
+                        true );
+                }
 
             case enums::DataUsed::subfeatures:
-                return "( t2.\"feature_" +
-                       std::to_string( peripheral_used_ + 1 ) + "_" +
-                       std::to_string( _split.column_ + 1 ) + "\" > " +
-                       std::to_string( _split.critical_value_ ) + " )";
+                {
+                    const auto number =
+                        helpers::SQLGenerator::make_subfeature_identifier(
+                            _feature_prefix, peripheral_used_, _split.column_ );
 
-            case enums::DataUsed::time_stamps_diff:
-                return "( t1.\"" + _output.time_stamps_name() + "\" - t2.\"" +
-                       _input.time_stamps_name() + "\" > " +
-                       std::to_string( _split.critical_value_ ) + " )";
+                    return "( COALESCE( f_" + number + ".\"feature_" + number +
+                           "\", 0.0 ) > " +
+                           std::to_string( _split.critical_value_ ) + " )";
+                }
 
             case enums::DataUsed::time_stamps_window:
-                return "( t1.\"" + _output.time_stamps_name() + "\" - t2.\"" +
-                       _input.time_stamps_name() + "\" > " +
-                       std::to_string( _split.critical_value_ ) + " AND t1.\"" +
-                       _output.time_stamps_name() + "\" - t2.\"" +
-                       _input.time_stamps_name() + "\" <= " +
-                       std::to_string( _split.critical_value_ + lag_ ) + " )";
+                {
+                    return make_time_stamp_window(
+                        _input, _output, _split.critical_value_, true );
+                }
 
             default:
                 assert_true( false && "Unknown data_used_" );
@@ -168,6 +259,7 @@ std::string ConditionMaker::condition_greater(
 
 std::string ConditionMaker::condition_smaller(
     const std::vector<strings::String>& _categories,
+    const std::string& _feature_prefix,
     const containers::Placeholder& _input,
     const containers::Placeholder& _output,
     const containers::Split& _split ) const
@@ -178,10 +270,12 @@ std::string ConditionMaker::condition_smaller(
                 {
                     assert_true( _split.column_ < _input.num_categoricals() );
 
+                    const auto colname = helpers::SQLGenerator::edit_colname(
+                        _input.categorical_name( _split.column_ ), "t2" );
+
                     const std::string condition =
-                        "( t2.\"" + _input.categorical_name( _split.column_ ) +
-                        "\" NOT IN " + list_categories( _categories, _split ) +
-                        " )";
+                        "( " + colname + " NOT IN " +
+                        list_categories( _categories, _split ) + " )";
 
                     return condition;
                 }
@@ -190,152 +284,229 @@ std::string ConditionMaker::condition_smaller(
                 {
                     assert_true( _split.column_ < _output.num_categoricals() );
 
+                    const auto colname = helpers::SQLGenerator::edit_colname(
+                        _output.categorical_name( _split.column_ ), "t1" );
+
                     const std::string condition =
-                        "( t1.\"" + _output.categorical_name( _split.column_ ) +
-                        "\" NOT IN " + list_categories( _categories, _split ) +
-                        " )";
+                        "( " + colname + " NOT IN " +
+                        list_categories( _categories, _split ) + " )";
 
                     return condition;
                 }
 
             case enums::DataUsed::discrete_input:
-                assert_true( _split.column_ < _input.num_discretes() );
-                return "( t2.\"" + _input.discrete_name( _split.column_ ) +
-                       "\" <= " + std::to_string( _split.critical_value_ ) +
-                       " OR t2.\"" + _input.discrete_name( _split.column_ ) +
-                       "\" IS NULL )";
+                {
+                    assert_true( _split.column_ < _input.num_discretes() );
+
+                    const auto colname = helpers::SQLGenerator::edit_colname(
+                        _input.discrete_name( _split.column_ ), "t2" );
+
+                    return "( " + colname +
+                           " <= " + std::to_string( _split.critical_value_ ) +
+                           " OR " + colname + " IS NULL )";
+                }
 
             case enums::DataUsed::discrete_input_is_nan:
-                assert_true( _split.column_ < _input.num_discretes() );
-                return "( t2.\"" + _input.discrete_name( _split.column_ ) +
-                       "\" IS NULL )";
+                {
+                    assert_true( _split.column_ < _input.num_discretes() );
+
+                    const auto colname = helpers::SQLGenerator::edit_colname(
+                        _input.discrete_name( _split.column_ ), "t2" );
+
+                    return "( " + colname + " IS NULL )";
+                }
 
             case enums::DataUsed::discrete_output:
-                assert_true( _split.column_ < _output.num_discretes() );
-                return "( t1.\"" + _output.discrete_name( _split.column_ ) +
-                       "\" <= " + std::to_string( _split.critical_value_ ) +
-                       " OR t1.\"" + _output.discrete_name( _split.column_ ) +
-                       "\" IS NULL )";
+                {
+                    assert_true( _split.column_ < _output.num_discretes() );
+
+                    const auto colname = helpers::SQLGenerator::edit_colname(
+                        _output.discrete_name( _split.column_ ), "t1" );
+
+                    return "( " + colname + " < " +
+                           std::to_string( _split.critical_value_ ) + " OR " +
+                           colname + " IS NULL )";
+                }
 
             case enums::DataUsed::discrete_output_is_nan:
-                assert_true( _split.column_ < _output.num_discretes() );
-                return "( t1.\"" + _output.discrete_name( _split.column_ ) +
-                       "\" IS NULL )";
+                {
+                    assert_true( _split.column_ < _output.num_discretes() );
+
+                    const auto colname = helpers::SQLGenerator::edit_colname(
+                        _output.discrete_name( _split.column_ ), "t1" );
+
+                    return "( " + colname + " IS NULL )";
+                }
 
             case enums::DataUsed::numerical_input:
-                assert_true( _split.column_ < _input.num_numericals() );
-                return "( t2.\"" + _input.numerical_name( _split.column_ ) +
-                       "\" <= " + std::to_string( _split.critical_value_ ) +
-                       " OR t2.\"" + _input.numerical_name( _split.column_ ) +
-                       "\" IS NULL )";
+                {
+                    assert_true( _split.column_ < _input.num_numericals() );
+
+                    const auto colname = helpers::SQLGenerator::edit_colname(
+                        _input.numerical_name( _split.column_ ), "t2" );
+
+                    return "( " + colname +
+                           " <= " + std::to_string( _split.critical_value_ ) +
+                           " OR " + colname + " IS NULL )";
+                }
 
             case enums::DataUsed::numerical_input_is_nan:
-                assert_true( _split.column_ < _input.num_numericals() );
-                return "( t2.\"" + _input.numerical_name( _split.column_ ) +
-                       "\" IS NULL )";
+                {
+                    assert_true( _split.column_ < _input.num_numericals() );
+
+                    const auto colname = helpers::SQLGenerator::edit_colname(
+                        _input.numerical_name( _split.column_ ), "t2" );
+
+                    return "( " + colname + " IS NULL )";
+                }
 
             case enums::DataUsed::numerical_output:
-                assert_true( _split.column_ < _output.num_numericals() );
-                return "( t1.\"" + _output.numerical_name( _split.column_ ) +
-                       "\" <= " + std::to_string( _split.critical_value_ ) +
-                       " OR t1.\"" + _output.numerical_name( _split.column_ ) +
-                       "\" IS NULL )";
+                {
+                    assert_true( _split.column_ < _output.num_numericals() );
+
+                    const auto colname = helpers::SQLGenerator::edit_colname(
+                        _output.numerical_name( _split.column_ ), "t1" );
+
+                    return "( " + colname +
+                           " <= " + std::to_string( _split.critical_value_ ) +
+                           " OR " + colname + " IS NULL )";
+                }
 
             case enums::DataUsed::numerical_output_is_nan:
-                assert_true( _split.column_ < _output.num_numericals() );
-                return "( t1.\"" + _output.numerical_name( _split.column_ ) +
-                       "\" IS NULL )";
+                {
+                    assert_true( _split.column_ < _output.num_numericals() );
+
+                    const auto colname = helpers::SQLGenerator::edit_colname(
+                        _output.numerical_name( _split.column_ ), "t1" );
+
+                    return "( " + colname + " IS NOT NULL )";
+                }
 
             case enums::DataUsed::same_units_categorical:
-                assert_true( _split.column_ < _output.num_categoricals() );
-                assert_true( _split.column_input_ < _input.num_categoricals() );
-                return "( t1.\"" + _output.categorical_name( _split.column_ ) +
-                       "\" != t2.\"" +
-                       _input.categorical_name( _split.column_input_ ) + "\" )";
+                {
+                    assert_true( _split.column_ < _output.num_categoricals() );
+                    assert_true(
+                        _split.column_input_ < _input.num_categoricals() );
+
+                    const auto colname1 = helpers::SQLGenerator::edit_colname(
+                        _output.categorical_name( _split.column_ ), "t1" );
+
+                    const auto colname2 = helpers::SQLGenerator::edit_colname(
+                        _input.categorical_name( _split.column_ ), "t2" );
+
+                    return "( " + colname1 + " != " + colname2 + " )";
+                }
 
             case enums::DataUsed::same_units_discrete:
-                assert_true( _split.column_ < _output.num_discretes() );
-                assert_true( _split.column_input_ < _input.num_discretes() );
-                return "( t1.\"" + _output.discrete_name( _split.column_ ) +
-                       "\" - t2.\"" +
-                       _input.discrete_name( _split.column_input_ ) +
-                       "\" <= " + std::to_string( _split.critical_value_ ) +
-                       " OR t1.\"" + _output.discrete_name( _split.column_ ) +
-                       "\" IS NULL OR t2.\"" +
-                       _input.discrete_name( _split.column_input_ ) +
-                       "\" IS NULL )";
+                {
+                    assert_true( _split.column_ < _output.num_discretes() );
+                    assert_true(
+                        _split.column_input_ < _input.num_discretes() );
+
+                    const auto colname1 = helpers::SQLGenerator::edit_colname(
+                        _output.discrete_name( _split.column_ ), "t1" );
+
+                    const auto colname2 = helpers::SQLGenerator::edit_colname(
+                        _input.discrete_name( _split.column_ ), "t2" );
+
+                    return "( " + colname1 + " - " + colname2 +
+                           " <= " + std::to_string( _split.critical_value_ ) +
+                           " OR " + colname1 + " IS NULL OR " + colname2 +
+                           " IS NULL )";
+                }
 
             case enums::DataUsed::same_units_discrete_is_nan:
-                assert_true( _split.column_ < _output.num_discretes() );
-                assert_true( _split.column_input_ < _input.num_discretes() );
-                return "( t1.\"" + _output.discrete_name( _split.column_ ) +
-                       "\" IS NULL OR t2.\"" +
-                       _input.discrete_name( _split.column_input_ ) +
-                       "\" IS NULL )";
+                {
+                    assert_true( _split.column_ < _output.num_discretes() );
+                    assert_true(
+                        _split.column_input_ < _input.num_discretes() );
+
+                    const auto colname1 = helpers::SQLGenerator::edit_colname(
+                        _output.discrete_name( _split.column_ ), "t1" );
+
+                    const auto colname2 = helpers::SQLGenerator::edit_colname(
+                        _input.discrete_name( _split.column_ ), "t2" );
+
+                    return "( " + colname1 + " IS NULL OR " + colname2 +
+                           " IS NULL )";
+                }
 
             case enums::DataUsed::same_units_discrete_ts:
-                assert_true( _split.column_ < _output.num_discretes() );
-                assert_true( _split.column_input_ < _input.num_discretes() );
-                return make_time_stamp_diff(
-                    _output.discrete_name( _split.column_ ),
-                    _input.discrete_name( _split.column_input_ ),
-                    _split.critical_value_,
-                    false );
+                {
+                    assert_true( _split.column_ < _output.num_discretes() );
+                    assert_true(
+                        _split.column_input_ < _input.num_discretes() );
+
+                    return make_time_stamp_diff(
+                        _output.discrete_name( _split.column_ ),
+                        _input.discrete_name( _split.column_input_ ),
+                        _split.critical_value_,
+                        false );
+                }
 
             case enums::DataUsed::same_units_numerical:
-                assert_true( _split.column_ < _output.num_numericals() );
-                assert_true( _split.column_input_ < _input.num_numericals() );
-                return "( t1.\"" + _output.numerical_name( _split.column_ ) +
-                       "\" - t2.\"" +
-                       _input.numerical_name( _split.column_input_ ) +
-                       "\" <= " + std::to_string( _split.critical_value_ ) +
-                       " OR t1.\"" + _output.numerical_name( _split.column_ ) +
-                       "\" IS NULL OR t2.\"" +
-                       _input.numerical_name( _split.column_input_ ) +
-                       "\" IS NULL )";
+                {
+                    assert_true( _split.column_ < _output.num_numericals() );
+                    assert_true(
+                        _split.column_input_ < _input.num_numericals() );
+
+                    const auto colname1 = helpers::SQLGenerator::edit_colname(
+                        _output.numerical_name( _split.column_ ), "t1" );
+
+                    const auto colname2 = helpers::SQLGenerator::edit_colname(
+                        _input.numerical_name( _split.column_ ), "t2" );
+
+                    return "( " + colname1 + " - " + colname2 +
+                           " <= " + std::to_string( _split.critical_value_ ) +
+                           " OR " + colname1 + " IS NULL OR " + colname2 +
+                           " IS NULL )";
+                }
 
             case enums::DataUsed::same_units_numerical_is_nan:
-                assert_true( _split.column_ < _output.num_numericals() );
-                assert_true( _split.column_input_ < _input.num_numericals() );
-                return "( t1.\"" + _output.numerical_name( _split.column_ ) +
-                       "\" IS NULL OR t2.\"" +
-                       _input.numerical_name( _split.column_input_ ) +
-                       "\" IS NULL )";
+                {
+                    assert_true( _split.column_ < _output.num_numericals() );
+                    assert_true(
+                        _split.column_input_ < _input.num_numericals() );
+
+                    const auto colname1 = helpers::SQLGenerator::edit_colname(
+                        _output.numerical_name( _split.column_ ), "t1" );
+
+                    const auto colname2 = helpers::SQLGenerator::edit_colname(
+                        _input.numerical_name( _split.column_ ), "t2" );
+
+                    return "( " + colname1 + " IS NULL OR " + colname2 +
+                           " IS NULL )";
+                }
 
             case enums::DataUsed::same_units_numerical_ts:
-                assert_true( _split.column_ < _output.num_numericals() );
-                assert_true( _split.column_input_ < _input.num_numericals() );
-                return make_time_stamp_diff(
-                    _output.numerical_name( _split.column_ ),
-                    _input.numerical_name( _split.column_input_ ),
-                    _split.critical_value_,
-                    false );
+                {
+                    assert_true( _split.column_ < _output.num_numericals() );
+                    assert_true(
+                        _split.column_input_ < _input.num_numericals() );
+
+                    return make_time_stamp_diff(
+                        _output.numerical_name( _split.column_ ),
+                        _input.numerical_name( _split.column_input_ ),
+                        _split.critical_value_,
+                        false );
+                }
 
             case enums::DataUsed::subfeatures:
-                return "( t2.\"feature_" +
-                       std::to_string( peripheral_used_ + 1 ) + "_" +
-                       std::to_string( _split.column_ + 1 ) +
-                       "\" <= " + std::to_string( _split.critical_value_ ) +
-                       " )";
+                {
+                    const auto number =
+                        helpers::SQLGenerator::make_subfeature_identifier(
+                            _feature_prefix, peripheral_used_, _split.column_ );
 
-            case enums::DataUsed::time_stamps_diff:
-                return "( t1.\"" + _output.time_stamps_name() + "\" - t2.\"" +
-                       _input.time_stamps_name() +
-                       "\" <= " + std::to_string( _split.critical_value_ ) +
-                       " OR t1.\"" + _output.time_stamps_name() +
-                       "\" IS NULL OR t2.\"" + _input.time_stamps_name() +
-                       "\" IS NULL )";
+                    return "( COALESCE( f_" + number + ".\"feature_" + number +
+                           "\", 0.0 ) <= " +
+                           std::to_string( _split.critical_value_ ) + " )";
+                }
 
             case enums::DataUsed::time_stamps_window:
-                return "( t1.\"" + _output.time_stamps_name() + "\" - t2.\"" +
-                       _input.time_stamps_name() +
-                       "\" <= " + std::to_string( _split.critical_value_ ) +
-                       " OR t1.\"" + _output.time_stamps_name() + "\" - t2.\"" +
-                       _input.time_stamps_name() + "\" > " +
-                       std::to_string( _split.critical_value_ + lag_ ) +
-                       " OR t1.\"" + _output.time_stamps_name() +
-                       "\" IS NULL OR t2.\"" + _input.time_stamps_name() +
-                       "\" IS NULL )";
+                {
+                    return make_time_stamp_window(
+                        _input, _output, _split.critical_value_, false );
+                }
 
             default:
                 assert_true( false && "Unknown data_used_" );
@@ -380,40 +551,78 @@ std::string ConditionMaker::make_time_stamp_diff(
     const Float _diff,
     const bool _is_greater ) const
 {
-    constexpr Float seconds_per_day = 24.0 * 60.0 * 60.0;
-    constexpr Float seconds_per_hour = 60.0 * 60.0;
-    constexpr Float seconds_per_minute = 60.0;
+    const auto diffstr =
+        helpers::SQLGenerator::make_time_stamp_diff( _diff, false );
 
-    const auto abs_diff = std::abs( _diff );
+    const auto colname1 =
+        helpers::SQLGenerator::make_relative_time( _ts1, "t1" );
 
-    auto diffstr = make_diffstr( _diff, "seconds" );
+    const auto colname2 =
+        helpers::SQLGenerator::make_relative_time( _ts2 + diffstr, "t2" );
 
-    if ( abs_diff >= seconds_per_day )
-        {
-            diffstr = make_diffstr( _diff / seconds_per_day, "days" );
-        }
-    else if ( abs_diff >= seconds_per_hour )
-        {
-            diffstr = make_diffstr( _diff / seconds_per_hour, "hours" );
-        }
-    else if ( abs_diff >= seconds_per_minute )
-        {
-            diffstr = make_diffstr( _diff / seconds_per_minute, "minutes" );
-        }
-
-    const auto comparison =
-        _is_greater ? std::string( " > " ) : std::string( " <= " );
-
-    const auto condition = "datetime( t1.\"" + _ts1 + "\" )" + comparison +
-                           "datetime( t2.\"" + _ts2 + "\", " + diffstr + " )";
+    const auto condition =
+        make_time_stamp_diff( colname1, colname2, _is_greater );
 
     if ( _is_greater )
         {
             return "( " + condition + " )";
         }
 
-    return "( " + condition + " OR t1.\"" + _ts1 + "\" IS NULL OR t2.\"" +
-           _ts2 + "\" IS NULL )";
+    return "( " + condition + " OR " + colname1 + " IS NULL OR " + colname2 +
+           " IS NULL )";
+}
+
+// ----------------------------------------------------------------------------
+
+std::string ConditionMaker::make_time_stamp_diff(
+    const std::string& _colname1,
+    const std::string& _colname2,
+    const bool _is_greater ) const
+{
+    const auto comparison =
+        _is_greater ? std::string( " > " ) : std::string( " <= " );
+
+    return _colname1 + comparison + _colname2;
+}
+
+// ----------------------------------------------------------------------------
+
+std::string ConditionMaker::make_time_stamp_window(
+    const containers::Placeholder& _input,
+    const containers::Placeholder& _output,
+    const Float _diff,
+    const bool _is_greater ) const
+{
+    const auto colname1 = _output.time_stamps_name();
+
+    const auto colname2 = _input.time_stamps_name();
+
+    const bool is_rowid =
+        ( colname1.find( helpers::Macros::rowid() ) != std::string::npos );
+
+    const auto diffstr1 =
+        helpers::SQLGenerator::make_time_stamp_diff( _diff, is_rowid );
+
+    const auto diffstr2 =
+        helpers::SQLGenerator::make_time_stamp_diff( _diff + lag_, is_rowid );
+
+    const auto condition1 = make_time_stamp_diff(
+        helpers::SQLGenerator::make_relative_time( colname1, "t1" ),
+        helpers::SQLGenerator::make_relative_time( colname2 + diffstr1, "t2" ),
+        _is_greater );
+
+    const auto condition2 = make_time_stamp_diff(
+        helpers::SQLGenerator::make_relative_time( colname1, "t1" ),
+        helpers::SQLGenerator::make_relative_time( colname2 + diffstr2, "t2" ),
+        !_is_greater );
+
+    if ( _is_greater )
+        {
+            return "( " + condition1 + " AND " + condition2 + " )";
+        }
+
+    return "( " + condition1 + " OR " + condition2 + " OR " + colname1 +
+           " IS NULL OR " + colname2 + " IS NULL )";
 }
 
 // ----------------------------------------------------------------------------

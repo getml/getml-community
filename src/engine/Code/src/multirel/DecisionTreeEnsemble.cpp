@@ -947,7 +947,8 @@ std::vector<std::string> DecisionTreeEnsemble::to_sql(
                             const auto sub_avg =
                                 subensembles_avg_.at( i )->to_sql(
                                     _categories,
-                                    std::to_string( i + 1 ) + "_",
+                                    _feature_prefix + std::to_string( i + 1 ) +
+                                        "_",
                                     0,
                                     true );
 
@@ -959,7 +960,8 @@ std::vector<std::string> DecisionTreeEnsemble::to_sql(
                             const auto sub_sum =
                                 subensembles_sum_.at( i )->to_sql(
                                     _categories,
-                                    std::to_string( i + 1 ) + "_",
+                                    _feature_prefix + std::to_string( i + 1 ) +
+                                        "_",
                                     subensembles_avg_.at( i )->num_features(),
                                     true );
 
@@ -973,7 +975,8 @@ std::vector<std::string> DecisionTreeEnsemble::to_sql(
         {
             sql.push_back( trees().at( i ).to_sql(
                 *_categories,
-                _feature_prefix + std::to_string( _offset + i + 1 ),
+                _feature_prefix,
+                std::to_string( _offset + i + 1 ),
                 hyperparameters().use_timestamps_ ) );
         }
 

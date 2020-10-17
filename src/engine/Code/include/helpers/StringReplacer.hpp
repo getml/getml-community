@@ -1,9 +1,7 @@
-#ifndef ENGINE_UTILS_STRINGREPLACER_HPP_
-#define ENGINE_UTILS_STRINGREPLACER_HPP_
+#ifndef HELPERS_STRINGREPLACER_HPP_
+#define HELPERS_STRINGREPLACER_HPP_
 
-namespace engine
-{
-namespace utils
+namespace helpers
 {
 // ----------------------------------------------------------------------------
 
@@ -17,7 +15,7 @@ struct StringReplacer
 };
 
 // ----------------------------------------------------------------------------
-}  // namespace utils
-}  // namespace engine
+}  // namespace helpers
 
-#endif  // ENGINE_UTILS_STRINGREPLACER_HPP_
+#endif  // HELPERS_STRINGREPLACER_HPP_
+

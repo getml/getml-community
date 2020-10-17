@@ -13,8 +13,8 @@ std::optional<containers::Column<Int>> Seasonal::extract_hour(
     auto result = to_categorical( _col, utils::Time::hour, _categories );
 
     result.set_name(
-        containers::Macros::hour() + _col.name() +
-        containers::Macros::seasonal_end() );
+        helpers::Macros::hour() + _col.name() +
+        helpers::Macros::seasonal_end() );
     result.set_unit( "hour" );
 
     if ( PreprocessorImpl::has_warnings( result ) )
@@ -34,8 +34,8 @@ containers::Column<Int> Seasonal::extract_hour(
     auto result = to_categorical( _categories, _col, utils::Time::hour );
 
     result.set_name(
-        containers::Macros::hour() + _col.name() +
-        containers::Macros::seasonal_end() );
+        helpers::Macros::hour() + _col.name() +
+        helpers::Macros::seasonal_end() );
     result.set_unit( "hour" );
 
     return result;
@@ -50,8 +50,8 @@ std::optional<containers::Column<Int>> Seasonal::extract_minute(
     auto result = to_categorical( _col, utils::Time::minute, _categories );
 
     result.set_name(
-        containers::Macros::minute() + _col.name() +
-        containers::Macros::seasonal_end() );
+        helpers::Macros::minute() + _col.name() +
+        helpers::Macros::seasonal_end() );
     result.set_unit( "minute" );
 
     if ( PreprocessorImpl::has_warnings( result ) )
@@ -71,8 +71,8 @@ containers::Column<Int> Seasonal::extract_minute(
     auto result = to_categorical( _categories, _col, utils::Time::hour );
 
     result.set_name(
-        containers::Macros::minute() + _col.name() +
-        containers::Macros::seasonal_end() );
+        helpers::Macros::minute() + _col.name() +
+        helpers::Macros::seasonal_end() );
     result.set_unit( "minute" );
 
     return result;
@@ -87,8 +87,8 @@ std::optional<containers::Column<Int>> Seasonal::extract_month(
     auto result = to_categorical( _col, utils::Time::month, _categories );
 
     result.set_name(
-        containers::Macros::month() + _col.name() +
-        containers::Macros::seasonal_end() );
+        helpers::Macros::month() + _col.name() +
+        helpers::Macros::seasonal_end() );
     result.set_unit( "month" );
 
     if ( PreprocessorImpl::has_warnings( result ) )
@@ -108,8 +108,8 @@ containers::Column<Int> Seasonal::extract_month(
     auto result = to_categorical( _categories, _col, utils::Time::month );
 
     result.set_name(
-        containers::Macros::month() + _col.name() +
-        containers::Macros::seasonal_end() );
+        helpers::Macros::month() + _col.name() +
+        helpers::Macros::seasonal_end() );
     result.set_unit( "month" );
 
     return result;
@@ -124,8 +124,8 @@ std::optional<containers::Column<Int>> Seasonal::extract_weekday(
     auto result = to_categorical( _col, utils::Time::weekday, _categories );
 
     result.set_name(
-        containers::Macros::weekday() + _col.name() +
-        containers::Macros::seasonal_end() );
+        helpers::Macros::weekday() + _col.name() +
+        helpers::Macros::seasonal_end() );
     result.set_unit( "weekday" );
 
     if ( PreprocessorImpl::has_warnings( result ) )
@@ -145,8 +145,8 @@ containers::Column<Int> Seasonal::extract_weekday(
     auto result = to_categorical( _categories, _col, utils::Time::weekday );
 
     result.set_name(
-        containers::Macros::weekday() + _col.name() +
-        containers::Macros::seasonal_end() );
+        helpers::Macros::weekday() + _col.name() +
+        helpers::Macros::seasonal_end() );
     result.set_unit( "weekday" );
 
     return result;
@@ -160,8 +160,8 @@ std::optional<containers::Column<Float>> Seasonal::extract_year(
     auto result = to_numerical( _col, utils::Time::year );
 
     result.set_name(
-        containers::Macros::year() + _col.name() +
-        containers::Macros::seasonal_end() );
+        helpers::Macros::year() + _col.name() +
+        helpers::Macros::seasonal_end() );
     result.set_unit( "year, comparison only" );
 
     if ( PreprocessorImpl::has_warnings( result ) )
@@ -180,8 +180,8 @@ containers::Column<Float> Seasonal::extract_year(
     auto result = to_numerical( _col, utils::Time::year );
 
     result.set_name(
-        containers::Macros::year() + _col.name() +
-        containers::Macros::seasonal_end() );
+        helpers::Macros::year() + _col.name() +
+        helpers::Macros::seasonal_end() );
     result.set_unit( "year, comparison only" );
 
     return result;
@@ -253,7 +253,7 @@ containers::DataFrame Seasonal::fit_transform_df(
 
             // -----------------------------------
 
-            if ( ts.name().find( containers::Macros::generated_ts() ) !=
+            if ( ts.name().find( helpers::Macros::generated_ts() ) !=
                  std::string::npos )
                 {
                     continue;

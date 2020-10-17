@@ -297,7 +297,7 @@ Pipeline::column_importances() const
 
     for ( auto& i_maker : importance_makers )
         {
-            i_maker = containers::Macros::modify_column_importances( i_maker );
+            i_maker = helpers::Macros::modify_column_importances( i_maker );
         }
 
     for ( const auto& i_maker : importance_makers )
@@ -696,10 +696,10 @@ Pipeline::feature_names() const
 
     const auto autofeatures = autofeature_names();
 
-    const auto numerical = containers::Macros::modify_colnames(
+    const auto numerical = helpers::Macros::modify_colnames(
         predictor_impl().numerical_colnames() );
 
-    const auto categorical = containers::Macros::modify_colnames(
+    const auto categorical = helpers::Macros::modify_colnames(
         predictor_impl().categorical_colnames() );
 
     return std::make_tuple( autofeatures, numerical, categorical );
@@ -1921,7 +1921,7 @@ Pipeline::make_placeholder() const
     const auto population = *JSON::get_object( obj(), "population_" );
 
     const auto placeholder = std::make_shared<const helpers::Placeholder>(
-        PlaceholderMaker::make_placeholder( population ) );
+        PlaceholderMaker::make_placeholder( population, "t1" ) );
 
     const auto peripheral_names =
         std::make_shared<const std::vector<std::string>>(
@@ -2009,7 +2009,8 @@ Pipeline::modify_data_frames(
 
     // ----------------------------------------------------------------------
 
-    const auto placeholder = PlaceholderMaker::make_placeholder( population );
+    const auto placeholder =
+        PlaceholderMaker::make_placeholder( population, "t1" );
 
     const auto joined_peripheral_names =
         PlaceholderMaker::make_peripheral( placeholder );
@@ -2533,7 +2534,7 @@ Poco::JSON::Object Pipeline::to_monitor(
     auto scores_obj = scores().to_json_obj();
 
     const auto modified_names =
-        containers::Macros::modify_colnames( scores().feature_names() );
+        helpers::Macros::modify_colnames( scores().feature_names() );
 
     const auto feature_names = JSON::vector_to_array( modified_names );
 
@@ -2554,26 +2555,55 @@ std::string Pipeline::to_sql(
     const std::shared_ptr<const std::vector<strings::String>>& _categories )
     const
 {
-    std::string sql;
+    assert_true(
+        feature_learners_.size() == predictor_impl().autofeatures().size() );
 
-    size_t offset = 0;
+    std::vector<std::string> features;
+
+    std::vector<std::string> sql;
 
     for ( size_t i = 0; i < feature_learners_.size(); ++i )
         {
             const auto& fe = feature_learners_.at( i );
 
+            assert_true( fe );
+
             const auto vec =
                 fe->to_sql( _categories, std::to_string( i + 1 ) + "_", true );
 
-            for ( const auto& str : vec )
+            assert_true( vec.size() >= fe->num_features() );
+
+            const auto subfeatures_begin = vec.begin();
+
+            const auto features_begin = vec.end() - fe->num_features();
+
+            for ( auto it = subfeatures_begin; it != features_begin; ++it )
                 {
-                    sql += str;
+                    sql.push_back( *it );
                 }
 
-            offset += fe->num_features();
+            const auto& autofeatures = predictor_impl().autofeatures().at( i );
+
+            for ( const auto& ix : autofeatures )
+                {
+                    assert_true( ix < fe->num_features() );
+
+                    const auto feature = "feature_" + std::to_string( i + 1 ) +
+                                         "_" + std::to_string( ix + 1 );
+
+                    sql.push_back( features_begin[ix] );
+
+                    features.push_back( feature );
+                }
         }
 
-    return sql;
+    const auto population = *JSON::get_object( obj(), "population_" );
+
+    const auto placeholder =
+        PlaceholderMaker::make_placeholder( population, "t1" );
+
+    return utils::SQLMaker::make_sql(
+        placeholder.name_, features, sql, predictor_impl() );
 }
 
 // ----------------------------------------------------------------------------

@@ -26,17 +26,20 @@ class ManyToOneJoiner
     static containers::Column<Int> extract_join_key(
         const containers::DataFrame& _df,
         const std::string& _tname,
+        const std::string& _alias,
         const std::string& _colname );
 
     static std::shared_ptr<const typename containers::DataFrameIndex::MapType>
     extract_map(
         const containers::DataFrame& _df,
         const std::string& _tname,
+        const std::string& _alias,
         const std::string& _colname );
 
     static std::optional<containers::Column<Float>> extract_time_stamp(
         const containers::DataFrame& _df,
         const std::string& _tname,
+        const std::string& _alias,
         const std::string& _colname );
 
     static containers::DataFrame find_peripheral(
@@ -62,12 +65,14 @@ class ManyToOneJoiner
     static std::vector<size_t> make_index(
         const bool _use_timestamps,
         const std::string& _name,
+        const std::string& _alias,
         const std::string& _join_key,
         const std::string& _other_join_key,
         const std::string& _time_stamp,
         const std::string& _other_time_stamp,
         const std::string& _upper_time_stamp,
-        const std::string& _joined_to,
+        const std::string& _joined_to_name,
+        const std::string& _joined_to_alias,
         const bool _one_to_one,
         const containers::DataFrame& _population,
         const containers::DataFrame& _peripheral );

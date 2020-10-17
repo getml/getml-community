@@ -726,7 +726,7 @@ bool DataModelChecker::is_all_equal( const containers::Column<Float>& _col )
 
 std::string DataModelChecker::modify_df_name( const std::string& _df_name )
 {
-    const auto names = containers::Macros::extract_table_names( _df_name );
+    const auto names = helpers::Macros::extract_table_names( _df_name );
 
     std::string modified;
 
@@ -757,7 +757,7 @@ std::string DataModelChecker::modify_df_name( const std::string& _df_name )
 std::string DataModelChecker::modify_join_key_name(
     const std::string& _jk_name )
 {
-    const auto names = containers::Macros::parse_join_key_name( _jk_name );
+    const auto names = helpers::Macros::parse_join_key_name( _jk_name );
 
     std::string modified;
 

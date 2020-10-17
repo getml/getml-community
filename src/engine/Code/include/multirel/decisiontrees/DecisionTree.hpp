@@ -60,7 +60,8 @@ class DecisionTree
     /// as a string
     std::string to_sql(
         const std::vector<strings::String> &_categories,
-        const std::string _feature_num,
+        const std::string &_feature_prefix,
+        const std::string &_feature_num,
         const bool _use_timestamps ) const;
 
     /// Transforms a set of raw data into extracted features
@@ -70,6 +71,12 @@ class DecisionTree
         const containers::Subfeatures &_subfeatures,
         const bool _use_timestamps,
         aggregations::AbstractAggregation *_aggregation ) const;
+
+    // --------------------------------------
+
+   private:
+    /// Returns a set containing the unique subfeatures used.
+    std::set<size_t> make_subfeatures_used() const;
 
     // --------------------------------------
 

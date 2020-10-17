@@ -93,8 +93,8 @@ class EMailDomain : public Preprocessor
     /// Generates the name for the newly created column.
     std::string make_name( const std::string& _colname ) const
     {
-        return containers::Macros::email_domain_begin() + _colname +
-               containers::Macros::email_domain_end();
+        return helpers::Macros::email_domain_begin() + _colname +
+               helpers::Macros::email_domain_end();
     }
 
    private:

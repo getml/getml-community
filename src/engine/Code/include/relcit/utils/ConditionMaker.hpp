@@ -16,8 +16,10 @@ class ConditionMaker
         const Float _lag,
         const size_t _peripheral_used,
         const std::shared_ptr<const StandardScaler>& _input_scaler,
-        const std::shared_ptr<const StandardScaler>& _output_scaler )
+        const std::shared_ptr<const StandardScaler>& _output_scaler,
+        const std::shared_ptr<const std::vector<bool>>& _is_ts )
         : input_scaler_( _input_scaler ),
+          is_ts_( _is_ts ),
           lag_( _lag ),
           output_scaler_( _output_scaler ),
           peripheral_used_( _peripheral_used )
@@ -30,6 +32,7 @@ class ConditionMaker
     /// value.
     std::string condition_greater(
         const std::vector<strings::String>& _categories,
+        const std::string& _feature_prefix,
         const containers::Placeholder& _input,
         const containers::Placeholder& _output,
         const containers::Split& _split ) const;
@@ -38,12 +41,14 @@ class ConditionMaker
     /// value.
     std::string condition_smaller(
         const std::vector<strings::String>& _categories,
+        const std::string& _feature_prefix,
         const containers::Placeholder& _input,
         const containers::Placeholder& _output,
         const containers::Split& _split ) const;
 
     /// Generates the equation at the end of the condition.
     std::string make_equation(
+        const std::string& _feature_prefix,
         const containers::Placeholder& _input,
         const containers::Placeholder& _output,
         const std::vector<Float>& _weights ) const;
@@ -54,10 +59,30 @@ class ConditionMaker
         const std::vector<strings::String>& _categories,
         const containers::Split& _split ) const;
 
+    /// Generates the column name for the equation.
+    std::string make_colname(
+        const std::string& _raw_name,
+        const std::string& _alias,
+        const bool _is_ts ) const;
+
     /// Transforms the time stamps diff into SQLite-compliant code.
     std::string make_time_stamp_diff(
         const std::string& _ts1,
         const std::string& _ts2,
+        const Float _diff,
+        const bool _is_greater ) const;
+
+    /// Transforms the time stamps diff into SQLite-compliant code,
+    /// when the colnames are already known.
+    std::string make_time_stamp_diff(
+        const std::string& _colname1,
+        const std::string& _colname2,
+        const bool _is_greater ) const;
+
+    /// Transforms the time stamps windows into SQLite-compliant code.
+    std::string make_time_stamp_window(
+        const containers::Placeholder& _input,
+        const containers::Placeholder& _output,
         const Float _diff,
         const bool _is_greater ) const;
 
@@ -92,6 +117,9 @@ class ConditionMaker
    private:
     /// The scaler used for the output table.
     const std::shared_ptr<const StandardScaler> input_scaler_;
+
+    /// Signifies whether column are a time stamp.
+    const std::shared_ptr<const std::vector<bool>> is_ts_;
 
     /// The lag variable used for the moving time window.
     const Float lag_;

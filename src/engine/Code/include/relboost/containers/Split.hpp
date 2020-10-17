@@ -17,7 +17,7 @@ struct Split
           column_( 0 ),
           column_input_( 0 ),
           critical_value_( 0.0 ),
-          data_used_( enums::DataUsed::time_stamps_diff )
+          data_used_( enums::DataUsed::same_units_numerical_ts )
     {
     }
 
@@ -64,11 +64,7 @@ struct Split
             _data_used == enums::DataUsed::numerical_output ||
             _data_used == enums::DataUsed::numerical_output_is_nan ||
             _data_used == enums::DataUsed::subfeatures ||
-            _data_used == enums::DataUsed::time_stamps_diff ||
             _data_used == enums::DataUsed::time_stamps_window );
-
-        assert_true(
-            _data_used != enums::DataUsed::time_stamps_diff || _column == 0 );
 
         assert_true(
             _data_used != enums::DataUsed::time_stamps_window || _column == 0 );

@@ -22,12 +22,14 @@ class ConditionMaker
     /// Identifies matches between population table and peripheral tables.
     std::string condition_greater(
         const std::vector<strings::String>& _categories,
+        const std::string& _feature_prefix,
         const containers::Placeholder& _input,
         const containers::Placeholder& _output,
         const containers::Split& _split ) const;
 
     std::string condition_smaller(
         const std::vector<strings::String>& _categories,
+        const std::string& _feature_prefix,
         const containers::Placeholder& _input,
         const containers::Placeholder& _output,
         const containers::Split& _split ) const;
@@ -42,6 +44,20 @@ class ConditionMaker
     std::string make_time_stamp_diff(
         const std::string& _ts1,
         const std::string& _ts2,
+        const Float _diff,
+        const bool _is_greater ) const;
+
+    /// Transforms the time stamps diff into SQLite-compliant code,
+    /// when the colnames are already known.
+    std::string make_time_stamp_diff(
+        const std::string& _colname1,
+        const std::string& _colname2,
+        const bool _is_greater ) const;
+
+    /// Transforms the time stamps windows into SQLite-compliant code.
+    std::string make_time_stamp_window(
+        const containers::Placeholder& _input,
+        const containers::Placeholder& _output,
         const Float _diff,
         const bool _is_greater ) const;
 

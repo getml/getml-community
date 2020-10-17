@@ -55,6 +55,7 @@ class DecisionTree
     /// Expresses the decision tree as SQL code.
     std::string to_sql(
         const std::vector<strings::String>& _categories,
+        const std::string& _feature_prefix,
         const std::string _feature_num,
         const bool _use_timestamps ) const;
 
@@ -101,6 +102,16 @@ class DecisionTree
     void from_json_obj(
         const Poco::JSON::Object& _obj,
         const std::shared_ptr<lossfunctions::LossFunction>& _loss_function );
+
+    /// We need to know which columns associated with the weights are actually
+    /// time stamps, so we can correctly generate the SQLite3 code.
+    std::vector<bool> make_is_ts(
+        const containers::DataFrameView& _output,
+        const containers::DataFrame& _input ) const;
+
+    /// Returns a set of all the subfeatures used. This is required for the
+    /// joins.
+    std::set<size_t> make_subfeatures_used() const;
 
     // -----------------------------------------------------------------
 
@@ -184,6 +195,10 @@ class DecisionTree
 
     /// The intercept term that is added after aggregation.
     Float intercept_;
+
+    /// Determines whether the columns associated with the weights are time
+    /// stamps.
+    std::vector<bool> is_ts_;
 
     /// Loss function used to train the relcit model
     std::shared_ptr<lossfunctions::LossFunction> loss_function_;

@@ -17,6 +17,9 @@ class DecisionTreeNode
 
     // --------------------------------------
 
+    /// Adds the subfeatures used by this node and its children to the set.
+    void add_subfeatures( std::set<size_t> *_subfeatures_used ) const;
+
     /// Calculates the column importances for this node.
     void column_importances( utils::ImportanceMaker *_importance_maker ) const;
 
@@ -49,6 +52,7 @@ class DecisionTreeNode
     /// Returns the SQL condition associated with this node
     void to_sql(
         const std::vector<strings::String> &_categories,
+        const std::string &_feature_prefix,
         const std::string &_feature_num,
         std::vector<std::string> &_conditions,
         std::string _sql ) const;

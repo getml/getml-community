@@ -1,8 +1,6 @@
-#include "engine/utils/utils.hpp"
+#include "helpers/helpers.hpp"
 
-namespace engine
-{
-namespace utils
+namespace helpers
 {
 // ----------------------------------------------------------------------------
 
@@ -28,5 +26,4 @@ std::string StringReplacer::replace_all(
 }
 
 // ----------------------------------------------------------------------------
-}  // namespace utils
-}  // namespace engine
+}  // namespace helpers

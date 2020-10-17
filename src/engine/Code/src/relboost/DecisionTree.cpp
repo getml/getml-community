@@ -135,7 +135,8 @@ Poco::JSON::Object::Ptr DecisionTree::to_json_obj() const
 
 std::string DecisionTree::to_sql(
     const std::vector<strings::String>& _categories,
-    const std::string _feature_num,
+    const std::string& _feature_prefix,
+    const std::string& _feature_num,
     const bool _use_timestamps ) const
 {
     // -------------------------------------------------------------------
@@ -146,10 +147,16 @@ std::string DecisionTree::to_sql(
 
     // -------------------------------------------------------------------
 
-    sql << "CREATE TABLE \"FEATURE_" << _feature_num << "\" AS" << std::endl;
+    sql << "DROP TABLE IF EXISTS \"FEATURE_" << _feature_prefix << _feature_num
+        << "\";" << std::endl
+        << std::endl;
 
     // -------------------------------------------------------------------
-    // First part of SELECT statement
+
+    sql << "CREATE TABLE \"FEATURE_" << _feature_prefix << _feature_num
+        << "\" AS" << std::endl;
+
+    // -------------------------------------------------------------------
 
     sql << "SELECT ";
 
@@ -158,13 +165,13 @@ std::string DecisionTree::to_sql(
     sql << tab << "CASE" << std::endl;
 
     // -------------------------------------------------------------------
-    // Conditions for the feature
 
     std::vector<std::string> conditions;
 
     assert_true( root_ );
 
-    root_->to_sql( _categories, _feature_num, "", &conditions );
+    root_->to_sql(
+        _categories, _feature_prefix, _feature_num, "", &conditions );
 
     for ( size_t i = 0; i < conditions.size(); ++i )
         {
@@ -174,49 +181,51 @@ std::string DecisionTree::to_sql(
     sql << tab << tab << "ELSE NULL" << std::endl;
 
     // -------------------------------------------------------------------
-    // Second part of SELECT statement
 
     sql << tab << "END" << std::endl
-        << ") AS \"feature_" << _feature_num << "\"," << std::endl;
+        << ") AS \"feature_" << _feature_prefix << _feature_num << "\","
+        << std::endl;
 
     sql << tab << " t1.rowid AS \"rownum\"" << std::endl;
 
     // -------------------------------------------------------------------
-    // JOIN statement
 
-    sql << "FROM \"" << output().name() << "\" t1" << std::endl;
-
-    sql << "LEFT JOIN \"" << input().name() << "\" t2" << std::endl;
-
-    sql << "ON t1.\"" << output().join_keys_name() << "\" = t2.\""
-        << input().join_keys_name() << "\"" << std::endl;
+    sql << helpers::SQLGenerator::make_joins(
+        output().name(),
+        input().name(),
+        output().join_keys_name(),
+        input().join_keys_name() );
 
     // -------------------------------------------------------------------
-    // WHERE statement
+
+    std::set<size_t> subfeatures_used;
+
+    root_->add_subfeatures( &subfeatures_used );
+
+    sql << helpers::SQLGenerator::make_subfeature_joins(
+        _feature_prefix, peripheral_used_, subfeatures_used );
+
+    // -------------------------------------------------------------------
 
     if ( _use_timestamps && input().num_time_stamps() > 0 &&
          output().num_time_stamps() > 0 )
         {
             sql << "WHERE ";
 
-            sql << "datetime( t2.\"" << input().time_stamps_name()
-                << "\" ) <= datetime( t1.\"" << output().time_stamps_name()
-                << "\" )" << std::endl;
+            const auto upper_ts = input().num_time_stamps() > 1
+                                      ? input().upper_time_stamps_name()
+                                      : std::string( "" );
 
-            if ( input().num_time_stamps() > 1 )
-                {
-                    sql << "AND ( datetime( t2.\""
-                        << input().upper_time_stamps_name()
-                        << "\" ) > datetime( t1.\""
-                        << output().time_stamps_name()
-                        << "\" ) OR datetime( t2.\""
-                        << input().upper_time_stamps_name() << "\" ) IS NULL )"
-                        << std::endl;
-                }
+            sql << helpers::SQLGenerator::make_time_stamps(
+                output().time_stamps_name(),
+                input().time_stamps_name(),
+                upper_ts,
+                "t1",
+                "t2",
+                "t1" );
         }
 
     // -------------------------------------------------------------------
-    // GROUP BY statement
 
     sql << "GROUP BY t1.rowid"
         << ";" << std::endl

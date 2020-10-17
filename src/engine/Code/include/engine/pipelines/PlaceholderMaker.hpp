@@ -19,21 +19,13 @@ class PlaceholderMaker
     /// Creates the placeholder, including transforming memory into upper time
     /// stamps.
     static helpers::Placeholder make_placeholder(
-        const Poco::JSON::Object& _obj );
+        const Poco::JSON::Object& _obj,
+        const std::string& _alias,
+        const std::shared_ptr<size_t> _num_alias = nullptr );
 
     /// Returns a list of all peripheral tables used in the placeholder.
     static std::vector<std::string> make_peripheral(
         const helpers::Placeholder& _placeholder );
-
-    /// Generates the name for the time stamp that is produced using
-    /// memory.
-    static std::string make_ts_name(
-        const std::string& _ts_used, const Float _diff )
-    {
-        return containers::Macros::generated_ts() + _ts_used + "\"" +
-               utils::TSDiffMaker::make_time_stamp_diff( _diff ) +
-               containers::Macros::remove_char();
-    }
 
    private:
     template <typename T>
@@ -55,6 +47,8 @@ class PlaceholderMaker
 
     static helpers::Placeholder handle_joined_tables(
         const helpers::Placeholder& _placeholder,
+        const std::string& _alias,
+        const std::shared_ptr<size_t> _num_alias,
         const Poco::JSON::Array& _joined_tables_arr,
         const std::vector<std::string>& _relationship,
         const std::vector<std::string>& _other_time_stamps_used,
@@ -65,21 +59,27 @@ class PlaceholderMaker
         const std::vector<Float>& _horizon,
         const std::vector<Float>& _memory );
 
-    static std::string make_name(
-        const std::string& _join_key,
-        const std::string& _other_join_key,
-        const std::string& _time_stamp,
-        const std::string& _other_time_stamp,
-        const std::string& _upper_time_stamp,
-        const std::string& _name,
-        const std::string& _joined_to );
-
    private:
     static bool is_to_many( const std::string& _relationship )
     {
         return (
             _relationship == RELATIONSHIP_MANY_TO_MANY ||
             _relationship == RELATIONSHIP_ONE_TO_MANY );
+    }
+
+    static std::string make_alias( const std::shared_ptr<size_t> _num_alias )
+    {
+        assert_true( _num_alias );
+        auto& num_alias = *_num_alias;
+        return "t" + std::to_string( ++num_alias );
+    }
+
+    /// Generates the name for the time stamp that is produced using
+    /// memory.
+    static std::string make_ts_name(
+        const std::string& _ts_used, const Float _diff )
+    {
+        return ts::TimeStampMaker::make_ts_name( _ts_used, _diff );
     }
 };
 

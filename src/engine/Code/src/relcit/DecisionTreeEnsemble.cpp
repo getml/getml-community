@@ -1374,24 +1374,28 @@ std::vector<std::string> DecisionTreeEnsemble::to_sql(
 
             for ( size_t i = 0; i < subensembles_avg_.size(); ++i )
                 {
-                    if ( subensembles_avg_[i] )
+                    if ( subensembles_avg_.at( i ) )
                         {
-                            const auto sub_avg = subensembles_avg_[i]->to_sql(
-                                _categories,
-                                std::to_string( i + 1 ) + "_",
-                                0,
-                                true );
+                            const auto sub_avg =
+                                subensembles_avg_.at( i )->to_sql(
+                                    _categories,
+                                    _feature_prefix + std::to_string( i + 1 ) +
+                                        "_",
+                                    0,
+                                    true );
 
                             sql.insert(
                                 sql.end(), sub_avg.begin(), sub_avg.end() );
 
-                            assert_true( subensembles_sum_[i] );
+                            assert_true( subensembles_sum_.at( i ) );
 
-                            const auto sub_sum = subensembles_sum_[i]->to_sql(
-                                _categories,
-                                std::to_string( i + 1 ) + "_",
-                                subensembles_avg_[i]->num_features(),
-                                true );
+                            const auto sub_sum =
+                                subensembles_sum_.at( i )->to_sql(
+                                    _categories,
+                                    _feature_prefix + std::to_string( i + 1 ) +
+                                        "_",
+                                    subensembles_avg_.at( i )->num_features(),
+                                    true );
 
                             sql.insert(
                                 sql.end(), sub_sum.begin(), sub_sum.end() );
@@ -1401,9 +1405,10 @@ std::vector<std::string> DecisionTreeEnsemble::to_sql(
 
     for ( size_t i = 0; i < trees().size(); ++i )
         {
-            sql.push_back( trees()[i].to_sql(
+            sql.push_back( trees().at( i ).to_sql(
                 *_categories,
-                _feature_prefix + std::to_string( _offset + i + 1 ),
+                _feature_prefix,
+                std::to_string( _offset + i + 1 ),
                 hyperparameters().use_timestamps_ ) );
         }
 

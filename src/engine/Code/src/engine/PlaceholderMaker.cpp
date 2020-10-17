@@ -45,6 +45,8 @@ std::vector<std::string> PlaceholderMaker::handle_horizon(
 
 helpers::Placeholder PlaceholderMaker::handle_joined_tables(
     const helpers::Placeholder& _placeholder,
+    const std::string& _alias,
+    const std::shared_ptr<size_t> _num_alias,
     const Poco::JSON::Array& _joined_tables_arr,
     const std::vector<std::string>& _relationship,
     const std::vector<std::string>& _other_time_stamps_used,
@@ -96,10 +98,13 @@ helpers::Placeholder PlaceholderMaker::handle_joined_tables(
             // Has already been checked when initializing the Placeholder.
             assert_true( joined_table_obj );
 
-            const auto joined_table = make_placeholder( *joined_table_obj );
-
             if ( is_to_many( _relationship.at( i ) ) )
                 {
+                    const auto joined_table = make_placeholder(
+                        *joined_table_obj,
+                        helpers::Macros::t1_or_t2(),
+                        _num_alias );
+
                     allow_lagged_targets.push_back(
                         _placeholder.allow_lagged_targets_.at( i ) );
 
@@ -123,6 +128,11 @@ helpers::Placeholder PlaceholderMaker::handle_joined_tables(
                     continue;
                 }
 
+            const auto alias = make_alias( _num_alias );
+
+            const auto joined_table =
+                make_placeholder( *joined_table_obj, alias, _num_alias );
+
             append( joined_table.allow_lagged_targets_, &allow_lagged_targets );
 
             append( joined_table.join_keys_used_, &join_keys_used );
@@ -142,14 +152,16 @@ helpers::Placeholder PlaceholderMaker::handle_joined_tables(
             const auto one_to_one =
                 ( _relationship.at( i ) == RELATIONSHIP_ONE_TO_ONE );
 
-            name += containers::Macros::make_table_name(
+            name += helpers::Macros::make_table_name(
                 _placeholder.join_keys_used_.at( i ),
                 _placeholder.other_join_keys_used_.at( i ),
                 _placeholder.time_stamps_used_.at( i ),
                 _placeholder.other_time_stamps_used_.at( i ),
                 _placeholder.upper_time_stamps_used_.at( i ),
                 joined_table.name(),
+                alias,
                 _placeholder.name(),
+                _alias,
                 one_to_one );
         }
 
@@ -217,8 +229,15 @@ std::vector<std::string> PlaceholderMaker::make_peripheral(
 // ----------------------------------------------------------------------------
 
 helpers::Placeholder PlaceholderMaker::make_placeholder(
-    const Poco::JSON::Object& _obj )
+    const Poco::JSON::Object& _obj,
+    const std::string& _alias,
+    const std::shared_ptr<size_t> _num_alias )
 {
+    // ----------------------------------------------------------
+
+    const auto num_alias =
+        _num_alias ? _num_alias : std::make_shared<size_t>( 2 );
+
     // ----------------------------------------------------------
 
     const auto placeholder = helpers::Placeholder( _obj );
@@ -258,6 +277,8 @@ helpers::Placeholder PlaceholderMaker::make_placeholder(
 
     return handle_joined_tables(
         placeholder,
+        _alias,
+        num_alias,
         *joined_tables_arr,
         relationship,
         other_time_stamps_used,

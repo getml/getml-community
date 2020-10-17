@@ -702,50 +702,6 @@ struct Partitioner<enums::DataUsed::subfeatures>
 // ----------------------------------------------------------------------------
 
 template <>
-struct Partitioner<enums::DataUsed::time_stamps_diff>
-{
-    // --------------------------------------------------------------------
-
-    static std::vector<containers::Match>::iterator partition(
-        const containers::Split& _split,
-        const containers::DataFrame& _input,
-        const containers::DataFrameView& _output,
-        const std::vector<containers::Match>::iterator _begin,
-        const std::vector<containers::Match>::iterator _end )
-    {
-        const auto partition_function =
-            [_split, &_input, &_output]( containers::Match m ) {
-                return is_greater( _split, _input, _output, m );
-            };
-
-        return std::partition( _begin, _end, partition_function );
-    }
-
-    // --------------------------------------------------------------------
-
-    static bool is_greater(
-        const containers::Split& _split,
-        const containers::DataFrame& _input,
-        const containers::DataFrameView& _output,
-        const containers::Match& _match )
-    {
-        const auto in = _match.ix_input;
-        const auto out = _match.ix_output;
-
-        assert_true( in < _input.nrows() );
-        assert_true( out < _output.nrows() );
-
-        return (
-            _output.time_stamp( out ) - _input.time_stamp( in ) >
-            _split.critical_value_ );
-    }
-
-    // --------------------------------------------------------------------
-};
-
-// ----------------------------------------------------------------------------
-
-template <>
 struct Partitioner<enums::DataUsed::time_stamps_window>
 {
     // --------------------------------------------------------------------

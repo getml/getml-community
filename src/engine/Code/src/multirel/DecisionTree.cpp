@@ -184,6 +184,22 @@ void DecisionTree::from_json_obj( const Poco::JSON::Object &_json_obj )
     // -----------------------------------
 }
 
+// ----------------------------------------------------------------------------
+
+std::set<size_t> DecisionTree::make_subfeatures_used() const
+{
+    std::set<size_t> subfeatures_used;
+
+    if ( column_to_be_aggregated().data_used == enums::DataUsed::x_subfeature )
+        {
+            subfeatures_used.insert( column_to_be_aggregated().ix_column_used );
+        }
+
+    root()->add_subfeatures( &subfeatures_used );
+
+    return subfeatures_used;
+}
+
 // ---------------------------------------------------------------------------
 
 DecisionTree &DecisionTree::operator=( const DecisionTree &_other )
@@ -267,7 +283,8 @@ Poco::JSON::Object DecisionTree::to_json_obj() const
 
 std::string DecisionTree::to_sql(
     const std::vector<strings::String> &_categories,
-    const std::string _feature_num,
+    const std::string &_feature_prefix,
+    const std::string &_feature_num,
     const bool _use_timestamps ) const
 {
     // -------------------------------------------------------------------
@@ -279,37 +296,51 @@ std::string DecisionTree::to_sql(
 
     // -------------------------------------------------------------------
 
-    sql << "CREATE TABLE \"FEATURE_" << _feature_num << "\" AS" << std::endl;
+    sql << "DROP TABLE IF EXISTS \"FEATURE_" << _feature_prefix << _feature_num
+        << "\";" << std::endl
+        << std::endl;
+
+    // -------------------------------------------------------------------
+
+    sql << "CREATE TABLE \"FEATURE_" << _feature_prefix << _feature_num
+        << "\" AS" << std::endl;
 
     // -------------------------------------------------------------------
 
     sql << "SELECT ";
 
     sql << sql_maker.select_statement(
+        _feature_prefix,
         input(),
         output(),
         column_to_be_aggregated().ix_column_used,
         column_to_be_aggregated().data_used,
         aggregation_type() );
 
-    sql << " AS \"feature_" << _feature_num << "\"," << std::endl;
+    sql << " AS \"feature_" << _feature_prefix << _feature_num << "\","
+        << std::endl;
 
     sql << "       t1.rowid AS \"rownum\"" << std::endl;
 
     // -------------------------------------------------------------------
 
-    sql << "FROM \"" << output().name() << "\" t1" << std::endl;
+    sql << helpers::SQLGenerator::make_joins(
+        output().name(),
+        input().name(),
+        output().join_keys_name(),
+        input().join_keys_name() );
 
-    sql << "LEFT JOIN \"" << input().name() << "\" t2" << std::endl;
+    // -------------------------------------------------------------------
 
-    sql << "ON t1.\"" << output().join_keys_name() << "\" = t2.\""
-        << input().join_keys_name() << "\"" << std::endl;
+    sql << helpers::SQLGenerator::make_subfeature_joins(
+        _feature_prefix, ix_perip_used(), make_subfeatures_used() );
 
     // -------------------------------------------------------------------
 
     std::vector<std::string> conditions;
 
-    root()->to_sql( _categories, _feature_num, conditions, "" );
+    root()->to_sql(
+        _categories, _feature_prefix, _feature_num, conditions, "" );
 
     for ( size_t i = 0; i < conditions.size(); ++i )
         {
@@ -338,20 +369,17 @@ std::string DecisionTree::to_sql(
                     sql << "WHERE ";
                 }
 
-            sql << "datetime( t2.\"" << input().time_stamps_name()
-                << "\" ) <= datetime( t1.\"" << output().time_stamps_name()
-                << "\" )" << std::endl;
+            const auto upper_ts = input().num_time_stamps() > 1
+                                      ? input().upper_time_stamps_name()
+                                      : std::string( "" );
 
-            if ( input().num_time_stamps() == 2 )
-                {
-                    sql << "AND ( datetime( t2.\""
-                        << input().upper_time_stamps_name()
-                        << "\" ) > datetime( t1.\""
-                        << output().time_stamps_name()
-                        << "\" ) OR datetime( t2.\""
-                        << input().upper_time_stamps_name() << "\" ) IS NULL )"
-                        << std::endl;
-                }
+            sql << helpers::SQLGenerator::make_time_stamps(
+                output().time_stamps_name(),
+                input().time_stamps_name(),
+                upper_ts,
+                "t1",
+                "t2",
+                "t1" );
         }
     else
         {

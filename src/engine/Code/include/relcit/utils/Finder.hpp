@@ -192,32 +192,6 @@ struct Finder<enums::DataUsed::subfeatures>
 };
 
 // ----------------------------------------------------------------------------
-
-template <>
-struct Finder<enums::DataUsed::time_stamps_diff>
-{
-    static std::vector<containers::Match>::iterator next_split(
-        const Float _cv,
-        const containers::DataFrame& _input,
-        const containers::DataFrameView& _output,
-        const std::vector<containers::Match>::iterator _begin,
-        const std::vector<containers::Match>::iterator _end )
-    {
-        auto smaller_than_cv = [&_input, &_output, _cv]( containers::Match m ) {
-            assert_true( m.ix_input < _input.nrows() );
-            assert_true( m.ix_output < _output.nrows() );
-
-            const auto diff = _output.time_stamp( m.ix_output ) -
-                              _input.time_stamp( m.ix_input );
-
-            return ( diff <= _cv );
-        };
-
-        return std::find_if( _begin, _end, smaller_than_cv );
-    }
-};
-
-// ----------------------------------------------------------------------------
 }  // namespace utils
 }  // namespace relcit
 

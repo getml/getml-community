@@ -141,11 +141,10 @@ class Substring : public Preprocessor
     /// Generates the colname for the newly created column.
     std::string make_name( const std::string& _colname ) const
     {
-        return containers::Macros::substring() + _colname +
-               containers::Macros::begin() + std::to_string( begin_ ) +
-               containers::Macros::length() + std::to_string( length_ ) +
-               containers::Macros::close_bracket() +
-               containers::Macros::remove_char();
+        return helpers::Macros::substring() + _colname +
+               helpers::Macros::begin() + std::to_string( begin_ + 1 ) +
+               helpers::Macros::length() + std::to_string( length_ ) +
+               helpers::Macros::close_bracket();
     }
 
     /// Generates the unit for the newly created column.

@@ -168,7 +168,6 @@ void ImportanceMaker::add(
 
                 return;
 
-            case enums::DataUsed::time_stamps_diff:
             case enums::DataUsed::time_stamps_window:
                 {
                     const auto desc1 = helpers::ColumnDescription(

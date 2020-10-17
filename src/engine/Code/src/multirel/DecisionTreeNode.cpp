@@ -16,6 +16,29 @@ DecisionTreeNode::DecisionTreeNode(
 
 // ----------------------------------------------------------------------------
 
+void DecisionTreeNode::add_subfeatures(
+    std::set<size_t> *_subfeatures_used ) const
+{
+    if ( !split_ )
+        {
+            return;
+        }
+
+    if ( split_->data_used == enums::DataUsed::x_subfeature )
+        {
+            _subfeatures_used->insert( split_->column_used );
+        }
+
+    if ( child_node_greater_ )
+        {
+            assert_true( child_node_smaller_ );
+            child_node_greater_->add_subfeatures( _subfeatures_used );
+            child_node_smaller_->add_subfeatures( _subfeatures_used );
+        }
+}
+
+// ----------------------------------------------------------------------------
+
 void DecisionTreeNode::apply_by_categories_used(
     containers::MatchPtrs::iterator _match_container_begin,
     containers::MatchPtrs::iterator _match_container_end,
@@ -1249,6 +1272,7 @@ Poco::JSON::Object DecisionTreeNode::to_json_obj() const
 
 void DecisionTreeNode::to_sql(
     const std::vector<strings::String> &_categories,
+    const std::string &_feature_prefix,
     const std::string &_feature_num,
     std::vector<std::string> &_conditions,
     std::string _sql ) const
@@ -1266,6 +1290,7 @@ void DecisionTreeNode::to_sql(
             const auto sql_greater = _sql + prefix +
                                      sql_maker.condition_greater(
                                          _categories,
+                                         _feature_prefix,
                                          tree_->input(),
                                          tree_->output(),
                                          *split_,
@@ -1274,6 +1299,7 @@ void DecisionTreeNode::to_sql(
             const auto sql_smaller = _sql + prefix +
                                      sql_maker.condition_smaller(
                                          _categories,
+                                         _feature_prefix,
                                          tree_->input(),
                                          tree_->output(),
                                          *split_,
@@ -1284,10 +1310,18 @@ void DecisionTreeNode::to_sql(
                     assert_true( child_node_smaller_ );
 
                     child_node_greater_->to_sql(
-                        _categories, _feature_num, _conditions, sql_greater );
+                        _categories,
+                        _feature_prefix,
+                        _feature_num,
+                        _conditions,
+                        sql_greater );
 
                     child_node_smaller_->to_sql(
-                        _categories, _feature_num, _conditions, sql_smaller );
+                        _categories,
+                        _feature_prefix,
+                        _feature_num,
+                        _conditions,
+                        sql_smaller );
 
                     return;
                 }

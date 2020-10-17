@@ -469,11 +469,6 @@ std::vector<containers::Match>::iterator DecisionTreeNode::partition(
                 return utils::Partitioner<enums::DataUsed::subfeatures>::
                     partition( _split, _subfeatures, _begin, _end );
 
-            case enums::DataUsed::time_stamps_diff:
-                assert_true( _input );
-                return utils::Partitioner<enums::DataUsed::time_stamps_diff>::
-                    partition( _split, *_input, _output, _begin, _end );
-
             case enums::DataUsed::time_stamps_window:
                 assert_true( _input );
                 return utils::Partitioner<enums::DataUsed::time_stamps_window>::
@@ -543,6 +538,7 @@ Poco::JSON::Object::Ptr DecisionTreeNode::to_json_obj() const
 
 void DecisionTreeNode::to_sql(
     const std::vector<strings::String>& _categories,
+    const std::string& _feature_prefix,
     const std::string& _feature_num,
     const std::string& _sql,
     std::vector<std::string>* _conditions ) const
@@ -556,18 +552,26 @@ void DecisionTreeNode::to_sql(
             const auto sql_greater =
                 _sql + prefix +
                 condition_maker_.condition_greater(
-                    _categories, input(), output(), split_ );
+                    _categories, _feature_prefix, input(), output(), split_ );
 
             child_greater_->to_sql(
-                _categories, _feature_num, sql_greater, _conditions );
+                _categories,
+                _feature_prefix,
+                _feature_num,
+                sql_greater,
+                _conditions );
 
             const auto sql_smaller =
                 _sql + prefix +
                 condition_maker_.condition_smaller(
-                    _categories, input(), output(), split_ );
+                    _categories, _feature_prefix, input(), output(), split_ );
 
             child_smaller_->to_sql(
-                _categories, _feature_num, sql_smaller, _conditions );
+                _categories,
+                _feature_prefix,
+                _feature_num,
+                sql_smaller,
+                _conditions );
         }
     else
         {
@@ -721,13 +725,6 @@ Float DecisionTreeNode::transform(
                 assert_true( _input );
                 is_greater = utils::Partitioner<enums::DataUsed::subfeatures>::
                     is_greater( split_, _subfeatures, _match );
-                break;
-
-            case enums::DataUsed::time_stamps_diff:
-                assert_true( _input );
-                is_greater =
-                    utils::Partitioner<enums::DataUsed::time_stamps_diff>::
-                        is_greater( split_, *_input, _output, _match );
                 break;
 
             case enums::DataUsed::time_stamps_window:

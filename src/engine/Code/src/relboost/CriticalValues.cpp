@@ -384,7 +384,7 @@ std::vector<Float> CriticalValues::calc_time_window(
     Float max = std::numeric_limits<Float>::lowest();
 
     find_min_max(
-        enums::DataUsed::time_stamps_diff,
+        enums::DataUsed::time_stamps_window,
         0,
         _input,
         _output,
@@ -610,7 +610,7 @@ void CriticalValues::find_min_max(
 
                         break;
 
-                    case enums::DataUsed::time_stamps_diff:
+                    case enums::DataUsed::time_stamps_window:
 
                         *_max = _output.time_stamp( _begin->ix_output ) -
                                 _input.time_stamp( _begin->ix_input );

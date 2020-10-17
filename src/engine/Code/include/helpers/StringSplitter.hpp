@@ -1,9 +1,7 @@
-#ifndef ENGINE_UTILS_STRINGSPLITTER_HPP_
-#define ENGINE_UTILS_STRINGSPLITTER_HPP_
+#ifndef HELPERS_STRINGSPLITTER_HPP_
+#define HELPERS_STRINGSPLITTER_HPP_
 
-namespace engine
-{
-namespace utils
+namespace helpers
 {
 // ----------------------------------------------------------------------------
 
@@ -15,7 +13,6 @@ struct StringSplitter
 };
 
 // ----------------------------------------------------------------------------
-}  // namespace utils
-}  // namespace engine
+}  // namespace helpers
 
-#endif  // ENGINE_UTILS_STRINGSPLITTER_HPP_
+#endif  // HELPERS_STRINGSPLITTER_HPP_
