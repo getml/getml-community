@@ -598,8 +598,7 @@ std::string ConditionMaker::make_equation(
             const auto colname = make_colname(
                 _input.numerical_name( j ), "t2", is_ts_->at( i - 1 ) );
 
-            equation << colname << " * " << rescaled_weights.at( i - 1 )
-                     << " + ";
+            equation << colname << " * " << rescaled_weights.at( i ) << " + ";
         }
 
     for ( size_t j = 0; j < _output.num_discretes(); ++i, ++j )
@@ -740,8 +739,8 @@ std::vector<Float> ConditionMaker::rescale(
         {
             rescaled_weights.at( i ) *= input_scaler().inverse_stddev().at( j );
 
-            rescaled_weights.at( 0 ) -= input_scaler().means().at( j ) *
-                                        input_scaler().inverse_stddev().at( j );
+            rescaled_weights.at( 0 ) -=
+                input_scaler().means().at( j ) * rescaled_weights.at( i );
         }
 
     for ( size_t j = 0; j < output_scaler().means().size(); ++i, ++j )
@@ -750,8 +749,7 @@ std::vector<Float> ConditionMaker::rescale(
                 output_scaler().inverse_stddev().at( j );
 
             rescaled_weights.at( 0 ) -=
-                output_scaler().means().at( j ) *
-                output_scaler().inverse_stddev().at( j );
+                output_scaler().means().at( j ) * rescaled_weights.at( i );
         }
 
     return rescaled_weights;
