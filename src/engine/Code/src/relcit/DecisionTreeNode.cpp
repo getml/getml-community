@@ -184,18 +184,18 @@ Float DecisionTreeNode::calc_prediction(
 
     size_t i = 1;
 
-    const auto input_row = _input_rescaled.row( _match.ix_input );
-
-    for ( size_t j = 0; j < _input_rescaled.ncols(); ++i, ++j )
-        {
-            p += input_row[j] * weights_[i];
-        }
-
     const auto output_row = _output_rescaled.row( _match.ix_output );
 
     for ( size_t j = 0; j < _output_rescaled.ncols(); ++i, ++j )
         {
             p += output_row[j] * weights_[i];
+        }
+
+    const auto input_row = _input_rescaled.row( _match.ix_input );
+
+    for ( size_t j = 0; j < _input_rescaled.ncols(); ++i, ++j )
+        {
+            p += input_row[j] * weights_[i];
         }
 
     return p;

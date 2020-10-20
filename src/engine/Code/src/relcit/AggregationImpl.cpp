@@ -124,18 +124,18 @@ void AggregationImpl::update_eta(
 
     size_t i = 1;
 
-    const auto input_row = input().row( _ix_input );
-
-    for ( size_t j = 0; j < input().ncols(); ++i, ++j )
-        {
-            _eta[i] += input_row[j] / _divisor;
-        }
-
     const auto output_row = output().row( _ix_output );
 
     for ( size_t j = 0; j < output().ncols(); ++i, ++j )
         {
             _eta[i] += output_row[j] / _divisor;
+        }
+
+    const auto input_row = input().row( _ix_input );
+
+    for ( size_t j = 0; j < input().ncols(); ++i, ++j )
+        {
+            _eta[i] += input_row[j] / _divisor;
         }
 }
 
@@ -156,20 +156,20 @@ void AggregationImpl::update_etas(
 
     size_t i = 1;
 
-    const auto input_row = input().row( _ix_input );
-
-    for ( size_t j = 0; j < input().ncols(); ++i, ++j )
-        {
-            const auto val = input_row[j] / _divisor;
-            _eta1[i] += val;
-            _eta2[i] -= val;
-        }
-
     const auto output_row = output().row( _ix_output );
 
     for ( size_t j = 0; j < output().ncols(); ++i, ++j )
         {
             const auto val = output_row[j] / _divisor;
+            _eta1[i] += val;
+            _eta2[i] -= val;
+        }
+
+    const auto input_row = input().row( _ix_input );
+
+    for ( size_t j = 0; j < input().ncols(); ++i, ++j )
+        {
+            const auto val = input_row[j] / _divisor;
             _eta1[i] += val;
             _eta2[i] -= val;
         }
