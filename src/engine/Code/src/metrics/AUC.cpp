@@ -12,8 +12,10 @@ Float AUC::calc_auc(
 
     for ( size_t i = 1; i < _true_positive_rate.size(); ++i )
         {
-            auc += ( _false_positive_rate[i - 1] - _false_positive_rate[i] ) *
-                   ( _true_positive_rate[i] + _true_positive_rate[i - 1] ) *
+            auc += ( _false_positive_rate.at( i - 1 ) -
+                     _false_positive_rate.at( i ) ) *
+                   ( _true_positive_rate.at( i ) +
+                     _true_positive_rate.at( i - 1 ) ) *
                    0.5;
         }
 
@@ -126,7 +128,7 @@ std::pair<std::vector<Float>, Float> AUC::calc_true_positives_uncompressed(
 
     for ( size_t i = 0; i < nrows(); ++i )
         {
-            true_positives_uncompressed[i] = std::get<1>( _pairs[i] );
+            true_positives_uncompressed.at( i ) = std::get<1>( _pairs.at( i ) );
         }
 
     std::partial_sum(
@@ -177,7 +179,7 @@ std::pair<std::vector<Float>, std::vector<Float>> AUC::compress(
             assert_true( i + dist - 1 < _true_positives_uncompressed.size() );
 
             true_positives.push_back(
-                _true_positives_uncompressed[i + dist - 1] );
+                _true_positives_uncompressed.at( i + dist - 1 ) );
 
             predicted_negative.push_back(
                 predicted_negative.back() + static_cast<Float>( dist ) );
@@ -197,9 +199,14 @@ std::vector<Float> AUC::downsample( const std::vector<Float>& _original ) const
 
     auto downsampled = std::vector<Float>( 0 );
 
+    if ( _original.size() == 0 )
+        {
+            return downsampled;
+        }
+
     for ( size_t i = 0; i < _original.size(); i += step_size )
         {
-            downsampled.push_back( _original[i] );
+            downsampled.push_back( _original.at( i ) );
         }
 
     downsampled.push_back( _original.back() );
@@ -292,7 +299,7 @@ std::vector<std::pair<Float, Float>> AUC::make_pairs( const size_t _j ) const
 
     for ( size_t i = 0; i < pairs.size(); ++i )
         {
-            pairs[i] = std::make_pair( yhat( i, _j ), y( i, _j ) );
+            pairs.at( i ) = std::make_pair( yhat( i, _j ), y( i, _j ) );
         }
 
     // ---------------------------------------------
@@ -401,7 +408,7 @@ Poco::JSON::Object AUC::score( const Features _yhat, const Features _y )
 
             // ---------------------------------------------
 
-            auc[j] = calc_auc( true_positive_rate, false_positive_rate );
+            auc.at( j ) = calc_auc( true_positive_rate, false_positive_rate );
 
             // ---------------------------------------------
 
