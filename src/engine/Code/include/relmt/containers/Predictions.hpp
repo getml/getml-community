@@ -1,0 +1,16 @@
+#ifndef RELMT_CONTAINERS_PREDICTIONS_HPP_
+#define RELMT_CONTAINERS_PREDICTIONS_HPP_
+
+namespace relmt
+{
+namespace containers
+{
+// ----------------------------------------------------------------------------
+
+typedef std::vector<std::vector<Float>> Predictions;
+
+// ----------------------------------------------------------------------------
+}  // namespace containers
+}  // namespace relmt
+
+#endif  // RELMT_CONTAINERS_PREDICTIONS_HPP_

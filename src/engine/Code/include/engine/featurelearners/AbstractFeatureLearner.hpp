@@ -19,9 +19,9 @@ class AbstractFeatureLearner
     static constexpr const char* MULTIREL_MODEL = "MultirelModel";
     static constexpr const char* MULTIREL_TIME_SERIES = "MultirelTimeSeries";
     static constexpr const char* RELBOOST_MODEL = "RelboostModel";
-    static constexpr const char* RELCIT_MODEL = "RelCITModel";
+    static constexpr const char* RELCIT_MODEL = "RelMTModel";
     static constexpr const char* RELBOOST_TIME_SERIES = "RelboostTimeSeries";
-    static constexpr const char* RELCIT_TIME_SERIES = "RelCITTimeSeries";
+    static constexpr const char* RELCIT_TIME_SERIES = "RelMTTimeSeries";
 
     // --------------------------------------------------------
 

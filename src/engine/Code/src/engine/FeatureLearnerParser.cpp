@@ -31,10 +31,10 @@ std::shared_ptr<AbstractFeatureLearner> FeatureLearnerParser::parse(
                 FeatureLearner<relboost::ensemble::DecisionTreeEnsemble>>(
                 _cmd, _placeholder, _peripheral, _dependencies );
         }
-    else if ( type == "RelCITModel" )
+    else if ( type == "RelMTModel" )
         {
             return std::make_shared<
-                FeatureLearner<relcit::ensemble::DecisionTreeEnsemble>>(
+                FeatureLearner<relmt::ensemble::DecisionTreeEnsemble>>(
                 _cmd, _placeholder, _peripheral, _dependencies );
         }
     else if ( type == "RelboostTimeSeries" )
@@ -42,9 +42,9 @@ std::shared_ptr<AbstractFeatureLearner> FeatureLearnerParser::parse(
             return std::make_shared<FeatureLearner<ts::RelboostTimeSeries>>(
                 _cmd, _placeholder, _peripheral, _dependencies );
         }
-    else if ( type == "RelCITTimeSeries" )
+    else if ( type == "RelMTTimeSeries" )
         {
-            return std::make_shared<FeatureLearner<ts::RelCITTimeSeries>>(
+            return std::make_shared<FeatureLearner<ts::RelMTTimeSeries>>(
                 _cmd, _placeholder, _peripheral, _dependencies );
         }
     else

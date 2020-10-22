@@ -1,0 +1,30 @@
+set(
+    RELMT_OBJ 
+    ${RELMT_SOURCE_DIRECTORY}/AggregationIndex.cpp
+    ${RELMT_SOURCE_DIRECTORY}/AggregationParser.cpp
+    ${RELMT_SOURCE_DIRECTORY}/Avg.cpp
+    ${RELMT_SOURCE_DIRECTORY}/AggregationImpl.cpp
+    ${RELMT_SOURCE_DIRECTORY}/ConditionMaker.cpp
+    ${RELMT_SOURCE_DIRECTORY}/CriticalValues.cpp
+    ${RELMT_SOURCE_DIRECTORY}/CriticalValueSorter.cpp
+    ${RELMT_SOURCE_DIRECTORY}/CrossEntropyLoss.cpp
+    ${RELMT_SOURCE_DIRECTORY}/DataFrameScatterer.cpp
+    ${RELMT_SOURCE_DIRECTORY}/DecisionTree.cpp
+    ${RELMT_SOURCE_DIRECTORY}/DecisionTreeEnsemble.cpp
+    ${RELMT_SOURCE_DIRECTORY}/DecisionTreeEnsembleImpl.cpp
+    ${RELMT_SOURCE_DIRECTORY}/DecisionTreeNode.cpp
+    ${RELMT_SOURCE_DIRECTORY}/Hyperparameters.cpp
+    ${RELMT_SOURCE_DIRECTORY}/ImportanceMaker.cpp
+    ${RELMT_SOURCE_DIRECTORY}/IntermediateAggregationImpl.cpp
+    ${RELMT_SOURCE_DIRECTORY}/JSON.cpp
+    ${RELMT_SOURCE_DIRECTORY}/LossFunctionImpl.cpp
+    ${RELMT_SOURCE_DIRECTORY}/LossFunctionParser.cpp
+    ${RELMT_SOURCE_DIRECTORY}/Matchmaker.cpp
+    ${RELMT_SOURCE_DIRECTORY}/Mapper.cpp
+    ${RELMT_SOURCE_DIRECTORY}/Sampler.cpp
+    ${RELMT_SOURCE_DIRECTORY}/SquareLoss.cpp
+    ${RELMT_SOURCE_DIRECTORY}/SubtreeHelper.cpp
+    ${RELMT_SOURCE_DIRECTORY}/Sum.cpp
+    ${RELMT_SOURCE_DIRECTORY}/Threadutils.cpp
+)
+

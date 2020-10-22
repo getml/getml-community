@@ -953,13 +953,13 @@ std::string FeatureLearner<FeatureLearnerType>::type() const
         is_same<FeatureLearnerType, relboost::ensemble::DecisionTreeEnsemble>();
 
     constexpr bool is_relboost_plus = std::
-        is_same<FeatureLearnerType, relcit::ensemble::DecisionTreeEnsemble>();
+        is_same<FeatureLearnerType, relmt::ensemble::DecisionTreeEnsemble>();
 
     constexpr bool is_relboost_ts =
         std::is_same<FeatureLearnerType, ts::RelboostTimeSeries>();
 
     constexpr bool is_relboost_plus_ts =
-        std::is_same<FeatureLearnerType, ts::RelCITTimeSeries>();
+        std::is_same<FeatureLearnerType, ts::RelMTTimeSeries>();
 
     // ----------------------------------------------------------------------
 
