@@ -236,7 +236,7 @@ std::vector<Float> StandardScaler::calc_inverse_stddev(
 
     if ( _subfeatures )
         {
-            for ( size_t j = 0; j < _subfeatures->size(); ++j )
+            for ( size_t j = 0; j < _subfeatures->size(); ++i, ++j )
                 {
                     inverse_stddev.at( i ) = calc_variance(
                         _subfeatures->at( j ),

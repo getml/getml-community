@@ -68,42 +68,6 @@ void Threadutils::fit_as_feature_learner(
 
 // ----------------------------------------------------------------------------
 
-void Threadutils::fit_as_predictor(
-    const size_t _this_thread_num,
-    const std::vector<size_t>& _thread_nums,
-    const containers::DataFrame& _population,
-    const std::shared_ptr<const logging::AbstractLogger> _logger,
-    multithreading::Communicator* _comm,
-    ensemble::DecisionTreeEnsemble* _ensemble )
-{
-    const auto population_subview =
-        relcit::utils::DataFrameScatterer::scatter_data_frame(
-            _population, _thread_nums, _this_thread_num );
-
-    const auto loss_function =
-        _ensemble->init_as_predictor( population_subview );
-
-    const auto num_features = _ensemble->hyperparameters().num_features_;
-
-    auto matches = utils::Matchmaker::make_matches( population_subview );
-
-    for ( size_t i = 0; i < num_features; ++i )
-        {
-            _ensemble->fit_new_tree(
-                loss_function,
-                population_subview,
-                matches.begin(),
-                matches.end() );
-
-            utils::Logger::log(
-                "Trained tree " + std::to_string( i + 1 ) + ".",
-                _logger,
-                _comm );
-        }
-}
-
-// ----------------------------------------------------------------------------
-
 void Threadutils::fit_ensemble(
     const size_t _this_thread_num,
     const std::vector<size_t> _thread_nums,
@@ -115,38 +79,20 @@ void Threadutils::fit_ensemble(
 {
     try
         {
-            if ( _peripheral.size() > 0 )
-                {
-                    fit_as_feature_learner(
-                        _this_thread_num,
-                        _thread_nums,
-                        _population,
-                        _peripheral,
-                        _logger,
-                        _comm,
-                        _ensemble );
-                }
-            else
-                {
-                    fit_as_predictor(
-                        _this_thread_num,
-                        _thread_nums,
-                        _population,
-                        _logger,
-                        _comm,
-                        _ensemble );
-                }
+            fit_as_feature_learner(
+                _this_thread_num,
+                _thread_nums,
+                _population,
+                _peripheral,
+                _logger,
+                _comm,
+                _ensemble );
         }
     catch ( std::exception& e )
         {
             if ( _logger )
                 {
                     throw std::runtime_error( e.what() );
-                }
-            // TODO: Remove
-            else
-                {
-                    std::cout << e.what() << std::endl;
                 }
         }
 }
@@ -224,27 +170,6 @@ void Threadutils::transform_as_feature_learner(
 
 // ----------------------------------------------------------------------------
 
-void Threadutils::transform_as_predictor(
-    const size_t _this_thread_num,
-    const std::vector<size_t> _thread_nums,
-    const containers::DataFrame& _population,
-    const ensemble::DecisionTreeEnsemble& _ensemble,
-    multithreading::Communicator* _comm,
-    containers::Features* _features )
-{
-    const auto population_subview =
-        relcit::utils::DataFrameScatterer::scatter_data_frame(
-            _population, _thread_nums, _this_thread_num );
-
-    assert_true( _features->size() == 1 );
-
-    const auto predictions = _ensemble.predict( population_subview );
-
-    copy( population_subview.rows(), predictions, ( *_features )[0].get() );
-}
-
-// ----------------------------------------------------------------------------
-
 void Threadutils::transform_ensemble(
     const size_t _this_thread_num,
     const std::vector<size_t> _thread_nums,
@@ -258,40 +183,22 @@ void Threadutils::transform_ensemble(
 {
     try
         {
-            if ( _peripheral.size() > 0 )
-                {
-                    transform_as_feature_learner(
-                        _this_thread_num,
-                        _thread_nums,
-                        _population,
-                        _peripheral,
-                        _index,
-                        _logger,
-                        _ensemble,
-                        _comm,
-                        _features );
-                }
-            else
-                {
-                    transform_as_predictor(
-                        _this_thread_num,
-                        _thread_nums,
-                        _population,
-                        _ensemble,
-                        _comm,
-                        _features );
-                }
+            transform_as_feature_learner(
+                _this_thread_num,
+                _thread_nums,
+                _population,
+                _peripheral,
+                _index,
+                _logger,
+                _ensemble,
+                _comm,
+                _features );
         }
     catch ( std::exception& e )
         {
             if ( _logger )
                 {
                     throw std::runtime_error( e.what() );
-                }
-            // TODO: Remove
-            else
-                {
-                    std::cout << e.what() << std::endl;
                 }
         }
 }

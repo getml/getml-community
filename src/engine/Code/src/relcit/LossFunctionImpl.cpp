@@ -435,15 +435,6 @@ void LossFunctionImpl::calc_sufficient_stats(
 
     assert_true( nrows_ == targets().size() );
 
-    if ( _eta1.size() != nrows_ * ncolsplus1 )
-        {
-            std::cout << "_eta1.size(): " << _eta1.size() << std::endl;
-            std::cout << "nrows_: " << nrows_ << std::endl;
-            std::cout << "ncolsplus1: " << ncolsplus1 << std::endl;
-            std::cout << "_eta1.size(): " << _eta1.size() << std::endl
-                      << std::endl;
-        }
-
     assert_true( _eta1.size() == nrows_ * ncolsplus1 );
     assert_true( _eta2.size() == nrows_ * ncolsplus1 );
     assert_true( _eta1_old.size() == nrows_ * ncolsplus1 );
