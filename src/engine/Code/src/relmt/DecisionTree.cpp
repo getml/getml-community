@@ -314,16 +314,6 @@ std::vector<bool> DecisionTree::make_is_ts(
 
     auto is_ts = std::vector<bool>();
 
-    for ( size_t j = 0; j < _input.num_discretes(); ++j )
-        {
-            is_ts.push_back( unit_has_ts( _input.discrete_unit( j ) ) );
-        }
-
-    for ( size_t j = 0; j < _input.num_numericals(); ++j )
-        {
-            is_ts.push_back( unit_has_ts( _input.numerical_unit( j ) ) );
-        }
-
     for ( size_t j = 0; j < _output.num_discretes(); ++j )
         {
             is_ts.push_back( unit_has_ts( _output.discrete_unit( j ) ) );
@@ -332,6 +322,16 @@ std::vector<bool> DecisionTree::make_is_ts(
     for ( size_t j = 0; j < _output.num_numericals(); ++j )
         {
             is_ts.push_back( unit_has_ts( _output.numerical_unit( j ) ) );
+        }
+
+    for ( size_t j = 0; j < _input.num_discretes(); ++j )
+        {
+            is_ts.push_back( unit_has_ts( _input.discrete_unit( j ) ) );
+        }
+
+    for ( size_t j = 0; j < _input.num_numericals(); ++j )
+        {
+            is_ts.push_back( unit_has_ts( _input.numerical_unit( j ) ) );
         }
 
     return is_ts;
@@ -415,7 +415,8 @@ std::string DecisionTree::to_sql(
     // -------------------------------------------------------------------
 
     sql << "DROP TABLE IF EXISTS \"FEATURE_" << _feature_prefix << _feature_num
-        << "\";" << std::endl;
+        << "\";" << std::endl
+        << std::endl;
 
     // -------------------------------------------------------------------
 
