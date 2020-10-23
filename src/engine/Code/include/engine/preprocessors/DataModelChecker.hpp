@@ -58,17 +58,20 @@ class DataModelChecker
         const std::shared_ptr<const std::vector<std::string>> _peripheral_names,
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral,
+        const std::vector<Float>& _prob_pick,
         communication::Warner* _warner );
 
     /// Raises a warning if there is something wrong with the matches.
-    static std::tuple<bool, size_t, size_t> check_matches(
+    static std::tuple<bool, size_t, Float, size_t, std::vector<Float>>
+    check_matches(
         const std::string& _join_key_used,
         const std::string& _other_join_key_used,
         const std::string& _time_stamp_used,
         const std::string& _other_time_stamp_used,
         const std::string& _upper_time_stamp_used,
         const containers::DataFrame& _population_df,
-        const containers::DataFrame& _peripheral_df );
+        const containers::DataFrame& _peripheral_df,
+        const std::vector<Float>& _prob_pick );
 
     /// Checks whether there are too many columns for relmt.
     static void check_num_columns_relmt(
@@ -127,6 +130,7 @@ class DataModelChecker
     static void raise_join_warnings(
         const bool _is_many_to_one,
         const size_t _num_matches,
+        const Float _num_expected,
         const size_t _num_jk_not_found,
         const std::string& _join_key_used,
         const std::string& _other_join_key_used,

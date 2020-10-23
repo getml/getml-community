@@ -45,11 +45,24 @@ void DataModelChecker::check(
 
     if ( _feature_learners.size() > 0 )
         {
+            if ( _population.nrows() == 0 )
+                {
+                    throw std::invalid_argument(
+                        "There are no rows in the population table." );
+                }
+
+            // The probability of being picked is equal for all rows in the
+            // population table.
+            const auto prob_pick = std::vector<Float>(
+                _population.nrows(),
+                1.0 / static_cast<Float>( _population.nrows() ) );
+
             check_join(
                 *_placeholder,
                 _peripheral_names,
                 _population,
                 _peripheral,
+                prob_pick,
                 &warner );
 
             check_self_joins(
@@ -292,6 +305,7 @@ void DataModelChecker::check_join(
     const std::shared_ptr<const std::vector<std::string>> _peripheral_names,
     const containers::DataFrame& _population,
     const std::vector<containers::DataFrame>& _peripheral,
+    const std::vector<Float>& _prob_pick,
     communication::Warner* _warner )
 {
     // ------------------------------------------------------------------------
@@ -346,19 +360,26 @@ void DataModelChecker::check_join(
 
             const auto dist = std::distance( _peripheral_names->begin(), it );
 
-            const auto [is_many_to_one, num_matches, num_jk_not_found] =
-                check_matches(
-                    join_keys_used.at( i ),
-                    other_join_keys_used.at( i ),
-                    time_stamps_used.at( i ),
-                    other_time_stamps_used.at( i ),
-                    upper_time_stamps_used.at( i ),
-                    _population,
-                    _peripheral.at( dist ) );
+            const auto
+                [is_many_to_one,
+                 num_matches,
+                 num_expected,
+                 num_jk_not_found,
+                 prob_pick] =
+                    check_matches(
+                        join_keys_used.at( i ),
+                        other_join_keys_used.at( i ),
+                        time_stamps_used.at( i ),
+                        other_time_stamps_used.at( i ),
+                        upper_time_stamps_used.at( i ),
+                        _population,
+                        _peripheral.at( dist ),
+                        _prob_pick );
 
             raise_join_warnings(
                 is_many_to_one,
                 num_matches,
+                num_expected,
                 num_jk_not_found,
                 join_keys_used.at( i ),
                 other_join_keys_used.at( i ),
@@ -371,6 +392,7 @@ void DataModelChecker::check_join(
                 _peripheral_names,
                 _peripheral.at( dist ),
                 _peripheral,
+                prob_pick,
                 _warner );
         }
 
@@ -379,15 +401,21 @@ void DataModelChecker::check_join(
 
 // ----------------------------------------------------------------------------
 
-std::tuple<bool, size_t, size_t> DataModelChecker::check_matches(
+std::tuple<bool, size_t, Float, size_t, std::vector<Float>>
+DataModelChecker::check_matches(
     const std::string& _join_key_used,
     const std::string& _other_join_key_used,
     const std::string& _time_stamp_used,
     const std::string& _other_time_stamp_used,
     const std::string& _upper_time_stamp_used,
     const containers::DataFrame& _population_df,
-    const containers::DataFrame& _peripheral_df )
+    const containers::DataFrame& _peripheral_df,
+    const std::vector<Float>& _prob_pick )
 {
+    // ------------------------------------------------------------------------
+
+    assert_true( _population_df.nrows() == _prob_pick.size() );
+
     // ------------------------------------------------------------------------
 
     const auto jk1 = _population_df.join_key( _join_key_used );
@@ -415,6 +443,10 @@ std::tuple<bool, size_t, size_t> DataModelChecker::check_matches(
 
     size_t num_jk_not_found = 0;
 
+    auto prob_pick = std::vector<Float>( _peripheral_df.nrows() );
+
+    auto local_num_matches = std::vector<Float>( _population_df.nrows() );
+
     // ------------------------------------------------------------------------
 
     for ( size_t ix1 = 0; ix1 < jk1.size(); ++ix1 )
@@ -426,8 +458,6 @@ std::tuple<bool, size_t, size_t> DataModelChecker::check_matches(
                     num_jk_not_found++;
                     continue;
                 }
-
-            size_t local_num_matches = 0;
 
             for ( const auto ix2 : it2->second )
                 {
@@ -443,9 +473,11 @@ std::tuple<bool, size_t, size_t> DataModelChecker::check_matches(
 
                     ++num_matches;
 
-                    ++local_num_matches;
+                    local_num_matches.at( ix1 ) += 1.0;
 
-                    if ( local_num_matches > 1 )
+                    prob_pick.at( ix2 ) += _prob_pick.at( ix1 );
+
+                    if ( local_num_matches.at( ix1 ) > 1.0 )
                         {
                             is_many_to_one = false;
                         }
@@ -454,7 +486,20 @@ std::tuple<bool, size_t, size_t> DataModelChecker::check_matches(
 
     // ------------------------------------------------------------------------
 
-    return std::make_tuple( is_many_to_one, num_matches, num_jk_not_found );
+    const auto num_expected = std::inner_product(
+        local_num_matches.begin(),
+        local_num_matches.end(),
+        _prob_pick.begin(),
+        0.0 );
+
+    // ------------------------------------------------------------------------
+
+    return std::make_tuple(
+        is_many_to_one,
+        num_matches,
+        num_expected,
+        num_jk_not_found,
+        prob_pick );
 
     // ------------------------------------------------------------------------
 }
@@ -548,17 +593,29 @@ void DataModelChecker::check_self_joins(
 
             assert_true( new_peripheral.size() == _peripheral.size() + 1 );
 
+            // The probability of being picked is equal for all rows in the
+            // population table.
+            const auto prob_pick = std::vector<Float>(
+                _population.nrows(),
+                1.0 / static_cast<Float>( _population.nrows() ) );
+
             for ( size_t i = old_size; i < new_size; ++i )
                 {
-                    const auto [is_many_to_one, num_matches, num_jk_not_found] =
-                        check_matches(
-                            join_keys_used.at( i ),
-                            other_join_keys_used.at( i ),
-                            time_stamps_used.at( i ),
-                            other_time_stamps_used.at( i ),
-                            upper_time_stamps_used.at( i ),
-                            new_population,
-                            new_peripheral.back() );
+                    const auto
+                        [is_many_to_one,
+                         num_expected,
+                         num_matches,
+                         num_jk_not_found,
+                         _] =
+                            check_matches(
+                                join_keys_used.at( i ),
+                                other_join_keys_used.at( i ),
+                                time_stamps_used.at( i ),
+                                other_time_stamps_used.at( i ),
+                                upper_time_stamps_used.at( i ),
+                                new_population,
+                                new_peripheral.back(),
+                                prob_pick );
 
                     raise_self_join_warnings(
                         is_many_to_one, num_matches, new_population, _warner );
@@ -831,6 +888,7 @@ std::string DataModelChecker::modify_join_key_name(
 void DataModelChecker::raise_join_warnings(
     const bool _is_many_to_one,
     const size_t _num_matches,
+    const Float _num_expected,
     const size_t _num_jk_not_found,
     const std::string& _join_key_used,
     const std::string& _other_join_key_used,
@@ -866,10 +924,7 @@ void DataModelChecker::raise_join_warnings(
 
     // ------------------------------------------------------------------------
 
-    const auto avg_num_matches = static_cast<Float>( _num_matches ) /
-                                 static_cast<Float>( _population_df.nrows() );
-
-    if ( avg_num_matches > 300.0 )
+    if ( _num_expected > 300.0 )
         {
             warn_too_many_matches(
                 _num_matches,
