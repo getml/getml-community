@@ -14,35 +14,35 @@ std::shared_ptr<AbstractFeatureLearner> FeatureLearnerParser::parse(
 {
     const auto type = JSON::get_value<std::string>( _cmd, "type_" );
 
-    if ( type == "MultirelModel" )
+    if ( type == AbstractFeatureLearner::MULTIREL_MODEL )
         {
             return std::make_shared<
                 FeatureLearner<multirel::ensemble::DecisionTreeEnsemble>>(
                 _cmd, _placeholder, _peripheral, _dependencies );
         }
-    else if ( type == "MultirelTimeSeries" )
+    else if ( type == AbstractFeatureLearner::MULTIREL_TIME_SERIES )
         {
             return std::make_shared<FeatureLearner<ts::MultirelTimeSeries>>(
                 _cmd, _placeholder, _peripheral, _dependencies );
         }
-    else if ( type == "RelboostModel" )
+    else if ( type == AbstractFeatureLearner::RELBOOST_MODEL )
         {
             return std::make_shared<
                 FeatureLearner<relboost::ensemble::DecisionTreeEnsemble>>(
                 _cmd, _placeholder, _peripheral, _dependencies );
         }
-    else if ( type == "RelMTModel" )
+    else if ( type == AbstractFeatureLearner::RELMT_MODEL )
         {
             return std::make_shared<
                 FeatureLearner<relmt::ensemble::DecisionTreeEnsemble>>(
                 _cmd, _placeholder, _peripheral, _dependencies );
         }
-    else if ( type == "RelboostTimeSeries" )
+    else if ( type == AbstractFeatureLearner::RELBOOST_TIME_SERIES )
         {
             return std::make_shared<FeatureLearner<ts::RelboostTimeSeries>>(
                 _cmd, _placeholder, _peripheral, _dependencies );
         }
-    else if ( type == "RelMTTimeSeries" )
+    else if ( type == AbstractFeatureLearner::RELMT_TIME_SERIES )
         {
             return std::make_shared<FeatureLearner<ts::RelMTTimeSeries>>(
                 _cmd, _placeholder, _peripheral, _dependencies );

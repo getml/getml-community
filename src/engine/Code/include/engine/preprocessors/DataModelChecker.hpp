@@ -70,6 +70,12 @@ class DataModelChecker
         const containers::DataFrame& _population_df,
         const containers::DataFrame& _peripheral_df );
 
+    /// Checks whether there are too many columns for relmt.
+    static void check_num_columns_relmt(
+        const containers::DataFrame& _population,
+        const containers::DataFrame& _peripheral,
+        communication::Warner* _warner );
+
     /// Checks the self joins for the time series models.
     static void check_self_joins(
         const helpers::Placeholder& _placeholder,
@@ -79,6 +85,13 @@ class DataModelChecker
             std::shared_ptr<featurelearners::AbstractFeatureLearner>>
             _feature_learners,
         communication::Warner* _warner );
+
+    /// Checks whether there is a particular type of feature learner.
+    static std::pair<bool, bool> find_feature_learner(
+        const std::vector<std::shared_ptr<
+            featurelearners::AbstractFeatureLearner>>& _feature_learners,
+        const std::string& _model,
+        const std::string& _ts );
 
     /// Finds the time stamps, if necessary.
     static std::tuple<
@@ -176,10 +189,17 @@ class DataModelChecker
         const containers::DataFrame& _peripheral_df,
         communication::Warner* _warner );
 
-    /// Generates a warning that there are to many columns for MultirelModel.
+    /// Generates a warning that there are to many columns for Multirel.
     static void warn_too_many_columns_multirel(
         const size_t _num_columns,
         const std::string& _df_name,
+        communication::Warner* _warner );
+
+    /// Generates a warning that there are too many columns for RelMT.
+    static void warn_too_many_columns_relmt(
+        const size_t _num_columns,
+        const std::string& _population_name,
+        const std::string& _peripheral_name,
         communication::Warner* _warner );
 
     /// Generates a too-many-matches warning.
@@ -253,7 +273,7 @@ class DataModelChecker
     /// Removes any macros from a colname.
     static std::string modify_colname( const std::string& _colname )
     {
-        const auto colnames = helpers::Macros::modify_colnames( { _colname } );
+        const auto colnames = helpers::Macros::modify_colnames( {_colname} );
         assert_true( colnames.size() == 1 );
         return colnames.at( 0 );
     }

@@ -153,29 +153,15 @@ void DataModelChecker::check_data_frames(
 {
     // --------------------------------------------------------------------------
 
-    const auto is_multirel = []( const std::shared_ptr<
-                                 const featurelearners::AbstractFeatureLearner>&
-                                     fl ) {
-        assert_true( fl );
-        return fl->type() ==
-                   featurelearners::AbstractFeatureLearner::MULTIREL_MODEL ||
-               fl->type() == featurelearners::AbstractFeatureLearner::
-                                 MULTIREL_TIME_SERIES;
-    };
+    const auto [has_multirel, has_multirel_ts] = find_feature_learner(
+        _feature_learners,
+        featurelearners::AbstractFeatureLearner::MULTIREL_MODEL,
+        featurelearners::AbstractFeatureLearner::MULTIREL_TIME_SERIES );
 
-    const auto is_multirel_ts =
-        []( const std::shared_ptr<
-            const featurelearners::AbstractFeatureLearner>& fl ) {
-            assert_true( fl );
-            return fl->type() == featurelearners::AbstractFeatureLearner::
-                                     MULTIREL_TIME_SERIES;
-        };
-
-    const bool has_multirel = std::any_of(
-        _feature_learners.begin(), _feature_learners.end(), is_multirel );
-
-    const bool has_multirel_ts = std::any_of(
-        _feature_learners.begin(), _feature_learners.end(), is_multirel_ts );
+    const auto [has_relmt, has_relmt_ts] = find_feature_learner(
+        _feature_learners,
+        featurelearners::AbstractFeatureLearner::RELMT_MODEL,
+        featurelearners::AbstractFeatureLearner::RELMT_TIME_SERIES );
 
     // --------------------------------------------------------------------------
 
@@ -186,6 +172,23 @@ void DataModelChecker::check_data_frames(
     for ( const auto& df : _peripheral )
         {
             check_df( df, has_multirel, _warner );
+        }
+
+    // --------------------------------------------------------------------------
+
+    if ( has_relmt )
+        {
+            for ( const auto& df : _peripheral )
+                {
+                    check_num_columns_relmt( _population, df, _warner );
+                }
+        }
+
+    // --------------------------------------------------------------------------
+
+    if ( has_relmt_ts )
+        {
+            check_num_columns_relmt( _population, _population, _warner );
         }
 
     // --------------------------------------------------------------------------
@@ -458,6 +461,24 @@ std::tuple<bool, size_t, size_t> DataModelChecker::check_matches(
 
 // ----------------------------------------------------------------------------
 
+void DataModelChecker::check_num_columns_relmt(
+    const containers::DataFrame& _population,
+    const containers::DataFrame& _peripheral,
+    communication::Warner* _warner )
+{
+    const auto num_columns =
+        _population.num_numericals() + _population.num_time_stamps() +
+        _peripheral.num_numericals() + _peripheral.num_time_stamps();
+
+    if ( num_columns > 40 )
+        {
+            warn_too_many_columns_relmt(
+                num_columns, _population.name(), _peripheral.name(), _warner );
+        }
+}
+
+// ----------------------------------------------------------------------------
+
 void DataModelChecker::check_self_joins(
     const helpers::Placeholder& _placeholder,
     const containers::DataFrame& _population,
@@ -547,6 +568,37 @@ void DataModelChecker::check_self_joins(
         }
 
     // ------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+std::pair<bool, bool> DataModelChecker::find_feature_learner(
+    const std::vector<std::shared_ptr<featurelearners::AbstractFeatureLearner>>&
+        _feature_learners,
+    const std::string& _model,
+    const std::string& _ts )
+{
+    const auto is_model_or_ts =
+        [_model, _ts]( const std::shared_ptr<
+                       const featurelearners::AbstractFeatureLearner>& fl ) {
+            assert_true( fl );
+            return fl->type() == _model || fl->type() == _ts;
+        };
+
+    const auto is_ts =
+        [_ts]( const std::shared_ptr<
+               const featurelearners::AbstractFeatureLearner>& fl ) {
+            assert_true( fl );
+            return fl->type() == _ts;
+        };
+
+    const bool has_model_or_ts = std::any_of(
+        _feature_learners.begin(), _feature_learners.end(), is_model_or_ts );
+
+    const bool has_ts = std::any_of(
+        _feature_learners.begin(), _feature_learners.end(), is_ts );
+
+    return std::make_pair( has_model_or_ts, has_ts );
 }
 
 // ----------------------------------------------------------------------------
@@ -1053,7 +1105,7 @@ void DataModelChecker::warn_too_many_columns_multirel(
     const auto df_name = modify_df_name( _df_name );
 
     _warner->add(
-        might_take_long() + "Data frame " + df_name + " contains " +
+        might_take_long() + df_name + " contains " +
         std::to_string( _num_columns ) +
         " categorical and numerical columns. "
         "Please note that columns created by the preprocessors "
@@ -1061,12 +1113,57 @@ void DataModelChecker::warn_too_many_columns_multirel(
         "algorithm does not scale very well to data frames "
         "with many columns. This pipeline might take a very "
         "long time to fit. You should consider removing some "
-        "columns or preprocessors. You could also replace "
+        "columns or preprocessors. You could use a column selection "
+        "to pick the right columns. "
+        "You could also replace "
         "MultirelModel or "
         "MultirelTimeSeries with RelboostModel or "
         "RelboostTimeSeries respectively. The relboost "
         "algorithm has been designed to scale well to data "
         "frames with many columns." );
+}
+
+// ------------------------------------------------------------------------
+
+void DataModelChecker::warn_too_many_columns_relmt(
+    const size_t _num_columns,
+    const std::string& _population_name,
+    const std::string& _peripheral_name,
+    communication::Warner* _warner )
+{
+    const auto population_name = modify_df_name( _population_name );
+
+    const auto peripheral_name = modify_df_name( _peripheral_name );
+
+    std::string warning = might_take_long() + population_name;
+
+    if ( population_name != peripheral_name )
+        {
+            warning += " and " + peripheral_name + " contain " +
+                       std::to_string( _num_columns );
+        }
+    else
+        {
+            warning += " contains " + std::to_string( _num_columns / 2 );
+        }
+
+    warning +=
+        " numerical columns and time stamps. "
+        "Please note that columns created by the preprocessors "
+        "are also part of this count. The relmt "
+        "algorithm does not scale very well to data frames "
+        "with many columns. This pipeline might take a very "
+        "long time to fit. You should consider removing some "
+        "columns or preprocessors. You can use a column selection "
+        "to pick the right columns. "
+        "You could also replace "
+        "RelMTModel or "
+        "RelMTTimeSeries with RelboostModel or "
+        "RelboostTimeSeries respectively. The relboost "
+        "algorithm has been designed to scale well to data "
+        "frames with many columns.";
+
+    _warner->add( warning );
 }
 
 // ------------------------------------------------------------------------

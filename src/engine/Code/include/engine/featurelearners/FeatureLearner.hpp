@@ -952,13 +952,13 @@ std::string FeatureLearner<FeatureLearnerType>::type() const
     constexpr bool is_relboost = std::
         is_same<FeatureLearnerType, relboost::ensemble::DecisionTreeEnsemble>();
 
-    constexpr bool is_relboost_plus = std::
+    constexpr bool is_relmt = std::
         is_same<FeatureLearnerType, relmt::ensemble::DecisionTreeEnsemble>();
 
     constexpr bool is_relboost_ts =
         std::is_same<FeatureLearnerType, ts::RelboostTimeSeries>();
 
-    constexpr bool is_relboost_plus_ts =
+    constexpr bool is_relmt_ts =
         std::is_same<FeatureLearnerType, ts::RelMTTimeSeries>();
 
     // ----------------------------------------------------------------------
@@ -978,9 +978,9 @@ std::string FeatureLearner<FeatureLearnerType>::type() const
             return AbstractFeatureLearner::RELBOOST_MODEL;
         }
 
-    if constexpr ( is_relboost_plus )
+    if constexpr ( is_relmt )
         {
-            return AbstractFeatureLearner::RELCIT_MODEL;
+            return AbstractFeatureLearner::RELMT_MODEL;
         }
 
     if constexpr ( is_relboost_ts )
@@ -988,9 +988,9 @@ std::string FeatureLearner<FeatureLearnerType>::type() const
             return AbstractFeatureLearner::RELBOOST_TIME_SERIES;
         }
 
-    if constexpr ( is_relboost_plus_ts )
+    if constexpr ( is_relmt_ts )
         {
-            return AbstractFeatureLearner::RELCIT_TIME_SERIES;
+            return AbstractFeatureLearner::RELMT_TIME_SERIES;
         }
 
     // ----------------------------------------------------------------------
