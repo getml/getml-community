@@ -323,9 +323,9 @@ std::string ConditionMaker::condition_smaller(
                     const auto colname = helpers::SQLGenerator::edit_colname(
                         _output.discrete_name( _split.column_ ), "t1" );
 
-                    return "( " + colname + " < " +
-                           std::to_string( _split.critical_value_ ) + " OR " +
-                           colname + " IS NULL )";
+                    return "( " + colname +
+                           " <= " + std::to_string( _split.critical_value_ ) +
+                           " OR " + colname + " IS NULL )";
                 }
 
             case enums::DataUsed::discrete_output_is_nan:

@@ -143,12 +143,12 @@ std::vector<io::Datatype> Sqlite3::get_coltypes(
             char const* pzCollSeq = nullptr;
 
             int rc = sqlite3_table_column_metadata(
-                db(),                  // Connection handle
-                NULL,                  // Database name or NULL
-                _table.c_str(),        // Table name
-                _colnames[i].c_str(),  // Column name
-                &data_type,            // OUTPUT: Declared data type
-                &pzCollSeq,            // OUTPUT: Collation sequence name
+                db(),                       // Connection handle
+                NULL,                       // Database name or NULL
+                _table.c_str(),             // Table name
+                _colnames.at( i ).c_str(),  // Column name
+                &data_type,                 // OUTPUT: Declared data type
+                &pzCollSeq,                 // OUTPUT: Collation sequence name
                 &pNotNull,     // OUTPUT: True if NOT NULL constraint exists
                 &pPrimaryKey,  // OUTPUT: True if column part of PK
                 &pAutoinc      // OUTPUT: True if column is auto-increment
@@ -393,7 +393,7 @@ void Sqlite3::insert_text(
 
 std::vector<std::string> Sqlite3::list_tables()
 {
-    auto iterator = select( {"name"}, "sqlite_master", "type='table'" );
+    auto iterator = select( { "name" }, "sqlite_master", "type='table'" );
 
     std::vector<std::string> tables;
 
