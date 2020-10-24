@@ -42,6 +42,7 @@ Sqlite3Iterator::Sqlite3Iterator(
         {
             throw std::runtime_error( sqlite3_errmsg( db() ) );
         }
+
     // ------------------------------------------------------------------------
 
     num_cols_ = sqlite3_column_count( stmt_.get() );

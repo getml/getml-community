@@ -1328,12 +1328,14 @@ void DecisionTreeNode::to_sql(
 
             if ( activate_greater )
                 {
-                    _sql = sql_greater;
+                    _conditions.push_back( sql_greater );
                 }
             else
                 {
-                    _sql = sql_smaller;
+                    _conditions.push_back( sql_smaller );
                 }
+
+            return;
         }
 
     if ( is_activated_ && _sql != "" )

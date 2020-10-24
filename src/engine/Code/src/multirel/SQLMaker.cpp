@@ -180,7 +180,7 @@ std::string SQLMaker::condition_smaller(
                         same_units_.same_units_categorical_,
                         _split.column_used );
 
-                    return "( " + name1 + " == " + name2 + " )";
+                    return "( " + name1 + " = " + name2 + " )";
                 }
 
             case enums::DataUsed::same_unit_discrete:
@@ -608,7 +608,7 @@ std::string SQLMaker::value_to_be_aggregated(
                         same_units_.same_units_discrete_,
                         _column_used );
 
-                    return "( " + name2 + " - " + name1 + " ) * 86000.0";
+                    return "( " + name2 + " - " + name1 + " ) * 86400.0";
                 }
 
             case enums::DataUsed::same_unit_numerical_ts:
@@ -619,7 +619,7 @@ std::string SQLMaker::value_to_be_aggregated(
                         same_units_.same_units_numerical_,
                         _column_used );
 
-                    return "( " + name2 + " - " + name1 + " ) * 86000.0";
+                    return "( " + name2 + " - " + name1 + " ) * 86400.0";
                 }
 
             default:
