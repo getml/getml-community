@@ -441,13 +441,6 @@ containers::Rescaled StandardScaler::transform(
     const std::vector<containers::Match>::iterator _begin,
     const std::vector<containers::Match>::iterator _end ) const
 {
-    if ( means_.size() != inverse_stddev_.size() )
-        {
-            std::cout << "means_.size(): " << means_.size() << std::endl;
-            std::cout << "inverse_stddev_.size(): " << inverse_stddev_.size()
-                      << std::endl;
-        }
-
     assert_true( means_.size() == inverse_stddev_.size() );
 
     const auto [rows_map, unique_indices] =

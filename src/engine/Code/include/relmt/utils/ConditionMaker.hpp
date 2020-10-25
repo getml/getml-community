@@ -63,6 +63,7 @@ class ConditionMaker
     std::string make_colname(
         const std::string& _raw_name,
         const std::string& _alias,
+        const Float _mean,
         const bool _is_ts ) const;
 
     /// Transforms the time stamps diff into SQLite-compliant code.

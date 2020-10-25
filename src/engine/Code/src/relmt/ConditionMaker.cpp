@@ -548,14 +548,29 @@ std::string ConditionMaker::list_categories(
 std::string ConditionMaker::make_colname(
     const std::string& _raw_name,
     const std::string& _alias,
+    const Float _mean,
     const bool _is_ts ) const
 {
+    const auto impute = []( const std::string& name ) {
+        return "COALESCE( " + name + ", 0.0 )";
+    };
+
+    const auto center = [_mean]( const std::string& name ) {
+        return name + " - " + std::to_string( _mean );
+    };
+
     if ( _is_ts )
         {
-            return helpers::SQLGenerator::make_epoch_time( _raw_name, _alias );
+            const auto centered = center(
+                helpers::SQLGenerator::make_epoch_time( _raw_name, _alias ) );
+
+            return impute( centered );
         }
 
-    return helpers::SQLGenerator::edit_colname( _raw_name, _alias );
+    const auto centered =
+        center( helpers::SQLGenerator::edit_colname( _raw_name, _alias ) );
+
+    return impute( centered );
 }
 
 // ----------------------------------------------------------------------------
@@ -579,6 +594,16 @@ std::string ConditionMaker::make_equation(
 
     const auto rescaled_weights = rescale( _weights );
 
+    const auto concat = []( const std::vector<Float>& _vec1,
+                            const std::vector<Float>& _vec2 ) {
+        auto vec = _vec1;
+        vec.insert( vec.end(), _vec2.begin(), _vec2.end() );
+        return vec;
+    };
+
+    const auto means =
+        concat( output_scaler().means(), input_scaler().means() );
+
     std::stringstream equation;
 
     equation << std::scientific;
@@ -588,7 +613,10 @@ std::string ConditionMaker::make_equation(
     for ( size_t j = 0; j < _output.num_discretes(); ++i, ++j )
         {
             const auto colname = make_colname(
-                _output.discrete_name( j ), "t1", is_ts_->at( i - 1 ) );
+                _output.discrete_name( j ),
+                "t1",
+                means.at( i - 1 ),
+                is_ts_->at( i - 1 ) );
 
             equation << colname << " * " << rescaled_weights.at( i ) << " + ";
         }
@@ -596,7 +624,10 @@ std::string ConditionMaker::make_equation(
     for ( size_t j = 0; j < _output.num_numericals(); ++i, ++j )
         {
             const auto colname = make_colname(
-                _output.numerical_name( j ), "t1", is_ts_->at( i - 1 ) );
+                _output.numerical_name( j ),
+                "t1",
+                means.at( i - 1 ),
+                is_ts_->at( i - 1 ) );
 
             equation << colname << " * " << rescaled_weights.at( i ) << " + ";
         }
@@ -604,7 +635,10 @@ std::string ConditionMaker::make_equation(
     for ( size_t j = 0; j < _input.num_discretes(); ++i, ++j )
         {
             const auto colname = make_colname(
-                _input.discrete_name( j ), "t2", is_ts_->at( i - 1 ) );
+                _input.discrete_name( j ),
+                "t2",
+                means.at( i - 1 ),
+                is_ts_->at( i - 1 ) );
 
             equation << colname << " * " << rescaled_weights.at( i ) << " + ";
         }
@@ -612,7 +646,10 @@ std::string ConditionMaker::make_equation(
     for ( size_t j = 0; j < _input.num_numericals(); ++i, ++j )
         {
             const auto colname = make_colname(
-                _input.numerical_name( j ), "t2", is_ts_->at( i - 1 ) );
+                _input.numerical_name( j ),
+                "t2",
+                means.at( i - 1 ),
+                is_ts_->at( i - 1 ) );
 
             equation << colname << " * " << rescaled_weights.at( i ) << " + ";
         }
@@ -720,11 +757,11 @@ std::vector<Float> ConditionMaker::rescale(
     const std::vector<Float>& _weights ) const
 {
     assert_true(
-        input_scaler().means().size() +
+        input_scaler().means().size() ==
         input_scaler().inverse_stddev().size() );
 
     assert_true(
-        output_scaler().means().size() +
+        output_scaler().means().size() ==
         output_scaler().inverse_stddev().size() );
 
     assert_true(
@@ -739,17 +776,11 @@ std::vector<Float> ConditionMaker::rescale(
         {
             rescaled_weights.at( i ) *=
                 output_scaler().inverse_stddev().at( j );
-
-            rescaled_weights.at( 0 ) -=
-                output_scaler().means().at( j ) * rescaled_weights.at( i );
         }
 
     for ( size_t j = 0; j < input_scaler().means().size(); ++i, ++j )
         {
             rescaled_weights.at( i ) *= input_scaler().inverse_stddev().at( j );
-
-            rescaled_weights.at( 0 ) -=
-                input_scaler().means().at( j ) * rescaled_weights.at( i );
         }
 
     return rescaled_weights;
