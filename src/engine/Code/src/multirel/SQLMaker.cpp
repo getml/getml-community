@@ -453,16 +453,16 @@ std::string SQLMaker::make_time_stamp_diff(
         _output,
         std::get<0>( same_unit ).ix_column_used,
         std::get<0>( same_unit ).data_used,
-        "" );
+        diffstr );
 
     const auto colname2 = get_ts_name(
         _input,
         _output,
         std::get<1>( same_unit ).ix_column_used,
         std::get<1>( same_unit ).data_used,
-        diffstr );
+        "" );
 
-    return make_time_stamp_diff( colname1, colname2, _is_greater );
+    return make_time_stamp_diff( colname2, colname1, _is_greater );
 }
 
 // ----------------------------------------------------------------------------

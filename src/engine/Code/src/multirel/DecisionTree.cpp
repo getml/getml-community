@@ -337,37 +337,13 @@ std::string DecisionTree::to_sql(
 
     // -------------------------------------------------------------------
 
-    std::vector<std::string> conditions;
+    const bool use_time_stamps =
+        ( _use_timestamps && input().num_time_stamps() > 0 &&
+          output().num_time_stamps() > 0 );
 
-    root()->to_sql(
-        _categories, _feature_prefix, _feature_num, conditions, "" );
-
-    for ( size_t i = 0; i < conditions.size(); ++i )
+    if ( use_time_stamps )
         {
-            if ( i == 0 )
-                {
-                    sql << "WHERE (" << std::endl
-                        << "   ( " << conditions.at( i ) << " )" << std::endl;
-                }
-            else
-                {
-                    sql << "OR ( " << conditions.at( i ) << " )" << std::endl;
-                }
-        }
-
-    // -------------------------------------------------------------------
-
-    if ( _use_timestamps && input().num_time_stamps() > 0 &&
-         output().num_time_stamps() > 0 )
-        {
-            if ( conditions.size() > 0 )
-                {
-                    sql << ") AND ";
-                }
-            else
-                {
-                    sql << "WHERE ";
-                }
+            sql << "WHERE ( ";
 
             const auto upper_ts = input().num_time_stamps() > 1
                                       ? input().upper_time_stamps_name()
@@ -380,14 +356,37 @@ std::string DecisionTree::to_sql(
                 "t1",
                 "t2",
                 "t1" );
+
+            sql << ") ";
         }
-    else
+
+    // -------------------------------------------------------------------
+
+    std::vector<std::string> conditions;
+
+    root()->to_sql(
+        _categories, _feature_prefix, _feature_num, conditions, "" );
+
+    // -------------------------------------------------------------------
+
+    for ( size_t i = 0; i < conditions.size(); ++i )
         {
-            if ( conditions.size() > 0 )
+            if ( i == 0 )
                 {
-                    sql << ")" << std::endl;
+                    const auto where_or_and = use_time_stamps ? "AND" : "WHERE";
+
+                    sql << where_or_and << " (" << std::endl
+                        << "   ( " << conditions.at( i ) << " )" << std::endl;
+                }
+            else
+                {
+                    sql << "OR ( " << conditions.at( i ) << " )" << std::endl;
                 }
         }
+
+    sql << ")" << std::endl;
+
+    // -------------------------------------------------------------------
 
     sql << "GROUP BY t1.rowid;" << std::endl << std::endl << std::endl;
 
