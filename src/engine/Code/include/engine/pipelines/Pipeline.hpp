@@ -87,8 +87,8 @@ class Pipeline
 
     /// Express features as SQL code
     std::string to_sql(
-        const std::shared_ptr<const std::vector<strings::String>>& _categories )
-        const;
+        const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const bool _targets ) const;
 
     // --------------------------------------------------------
 

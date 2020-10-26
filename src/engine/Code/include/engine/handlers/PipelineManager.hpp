@@ -123,7 +123,10 @@ class PipelineManager
     void to_json( const std::string& _name, Poco::Net::StreamSocket* _socket );
 
     /// Extracts the SQL code
-    void to_sql( const std::string& _name, Poco::Net::StreamSocket* _socket );
+    void to_sql(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
 
     /// Generate features
     void transform(

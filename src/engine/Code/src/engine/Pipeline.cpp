@@ -2552,8 +2552,8 @@ Poco::JSON::Object Pipeline::to_monitor(
 // ----------------------------------------------------------------------------
 
 std::string Pipeline::to_sql(
-    const std::shared_ptr<const std::vector<strings::String>>& _categories )
-    const
+    const std::shared_ptr<const std::vector<strings::String>>& _categories,
+    const bool _targets ) const
 {
     assert_true(
         feature_learners_.size() == predictor_impl().autofeatures().size() );
@@ -2602,8 +2602,10 @@ std::string Pipeline::to_sql(
     const auto placeholder =
         PlaceholderMaker::make_placeholder( population, "t1" );
 
+    const auto target_names = _targets ? targets() : std::vector<std::string>();
+
     return utils::SQLMaker::make_sql(
-        placeholder.name_, features, sql, predictor_impl() );
+        placeholder.name_, features, sql, target_names, predictor_impl() );
 }
 
 // ----------------------------------------------------------------------------

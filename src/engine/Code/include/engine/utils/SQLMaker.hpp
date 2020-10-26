@@ -18,6 +18,7 @@ class SQLMaker
         const std::string& _main_table,
         const std::vector<std::string>& _autofeatures,
         const std::vector<std::string>& _sql,
+        const std::vector<std::string>& _targets,
         const predictors::PredictorImpl& _predictor_impl );
 
    private:
@@ -26,6 +27,7 @@ class SQLMaker
         const std::string& _main_table,
         const std::vector<std::string>& _autofeatures,
         const std::vector<std::string>& _sql,
+        const std::vector<std::string>& _targets,
         const predictors::PredictorImpl& _predictor_impl );
 
     /// Generates the SQL code needed to join the feature tables.
@@ -41,6 +43,7 @@ class SQLMaker
     static std::string make_select(
         const std::string& _main_table,
         const std::vector<std::string>& _autofeatures,
+        const std::vector<std::string>& _targets,
         const predictors::PredictorImpl& _predictor_impl );
 };
 

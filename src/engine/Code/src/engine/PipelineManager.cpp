@@ -921,16 +921,21 @@ containers::DataFrame PipelineManager::to_df(
 // ------------------------------------------------------------------------
 
 void PipelineManager::to_sql(
-    const std::string& _name, Poco::Net::StreamSocket* _socket )
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
 {
+    const auto targets = JSON::get_value<bool>( _cmd, "targets_" );
+
     multithreading::ReadLock read_lock( read_write_lock_ );
 
     const auto pipeline = get_pipeline( _name );
 
+    const auto sql = pipeline.to_sql( categories().vector(), targets );
+
     communication::Sender::send_string( "Found!", _socket );
 
-    communication::Sender::send_string(
-        pipeline.to_sql( categories().vector() ), _socket );
+    communication::Sender::send_string( sql, _socket );
 }
 
 // ------------------------------------------------------------------------

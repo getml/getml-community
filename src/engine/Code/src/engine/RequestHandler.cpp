@@ -375,7 +375,7 @@ void RequestHandler::run()
                 }
             else if ( type == "Pipeline.to_sql" )
                 {
-                    pipeline_manager().to_sql( name, &socket() );
+                    pipeline_manager().to_sql( name, cmd, &socket() );
                 }
             else if ( type == "Pipeline.targets" )
                 {

@@ -10,13 +10,14 @@ std::string SQLMaker::make_feature_table(
     const std::string& _main_table,
     const std::vector<std::string>& _autofeatures,
     const std::vector<std::string>& _sql,
+    const std::vector<std::string>& _targets,
     const predictors::PredictorImpl& _predictor_impl )
 {
     std::string sql = "DROP TABLE IF EXISTS \"FEATURES\";\n\n";
 
     sql += "CREATE TABLE \"FEATURES\" AS\n";
 
-    sql += make_select( _main_table, _autofeatures, _predictor_impl );
+    sql += make_select( _main_table, _autofeatures, _targets, _predictor_impl );
 
     const auto main_table =
         helpers::SQLGenerator::get_table_name( _main_table );
@@ -78,14 +79,25 @@ std::string SQLMaker::make_postprocessing(
 std::string SQLMaker::make_select(
     const std::string& _main_table,
     const std::vector<std::string>& _autofeatures,
+    const std::vector<std::string>& _targets,
     const predictors::PredictorImpl& _predictor_impl )
 {
-    const auto concat = []( const std::vector<std::string>& _vec1,
-                            const std::vector<std::string>& _vec2 ) {
-        auto vec = _vec1;
-        vec.insert( vec.end(), _vec2.begin(), _vec2.end() );
-        return vec;
-    };
+    const auto concat =
+        []( const std::vector<std::vector<std::string>>& _vecs ) {
+            auto vec = std::vector<std::string>();
+
+            if ( _vecs.size() == 0 )
+                {
+                    return vec;
+                }
+
+            for ( const auto& v : _vecs )
+                {
+                    vec.insert( vec.end(), v.begin(), v.end() );
+                }
+
+            return vec;
+        };
 
     std::string sql = "SELECT ";
 
@@ -93,30 +105,34 @@ std::string SQLMaker::make_select(
 
     const auto categorical = _predictor_impl.categorical_colnames();
 
-    const auto manual_features = concat( numerical, categorical );
+    const auto manual = concat( { _targets, numerical, categorical } );
 
-    const auto modified_colnames =
-        helpers::Macros::modify_colnames( manual_features );
+    const auto modified_colnames = helpers::Macros::modify_colnames( manual );
 
-    for ( size_t i = 0; i < manual_features.size(); ++i )
+    for ( size_t i = 0; i < manual.size(); ++i )
         {
             const std::string begin = ( i == 0 ? "" : "       " );
 
+            const auto edited_colname =
+                helpers::SQLGenerator::edit_colname( manual.at( i ), "t1" );
+
             const std::string data_type =
-                ( i < numerical.size() ? "REAL" : "TEXT" );
+                ( i < _targets.size() + numerical.size() ? "REAL" : "TEXT" );
+
+            const auto target_or_feature =
+                i < _targets.size()
+                    ? "\"target_" + std::to_string( i + 1 )
+                    : "\"manual_feature_" +
+                          std::to_string( i - _targets.size() + 1 );
 
             const bool no_comma =
-                ( i == manual_features.size() - 1 &&
-                  _autofeatures.size() == 0 );
+                ( i == manual.size() - 1 && _autofeatures.size() == 0 );
 
             const auto end = no_comma ? "\"\n" : "\",\n";
 
-            sql += begin + "CAST( " +
-                   helpers::SQLGenerator::edit_colname(
-                       manual_features.at( i ), "t1" ) +
-                   " AS " + data_type + " ) AS \"manual_feature_" +
-                   std::to_string( i + 1 ) + "__" + modified_colnames.at( i ) +
-                   end;
+            sql += begin + "CAST( " + edited_colname + " AS " + data_type +
+                   " ) AS " + target_or_feature + "__" +
+                   modified_colnames.at( i ) + end;
         }
 
     for ( size_t i = 0; i < _autofeatures.size(); ++i )
@@ -138,6 +154,7 @@ std::string SQLMaker::make_sql(
     const std::string& _main_table,
     const std::vector<std::string>& _autofeatures,
     const std::vector<std::string>& _sql,
+    const std::vector<std::string>& _targets,
     const predictors::PredictorImpl& _predictor_impl )
 {
     std::string sql;
@@ -147,8 +164,8 @@ std::string SQLMaker::make_sql(
             sql += feature;
         }
 
-    sql +=
-        make_feature_table( _main_table, _autofeatures, _sql, _predictor_impl );
+    sql += make_feature_table(
+        _main_table, _autofeatures, _sql, _targets, _predictor_impl );
 
     sql += make_postprocessing( _sql );
 
