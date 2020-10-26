@@ -1567,6 +1567,8 @@ void DecisionTreeNode::try_same_units_discrete(
                             continue;
                         }
 
+                    assert_true( output_col < _output.num_discretes() );
+
                     const bool is_ts =
                         _output.discrete_unit( output_col )
                                 .find( "time stamp" ) != std::string::npos &&
