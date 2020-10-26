@@ -488,9 +488,9 @@ std::string SQLMaker::make_time_stamp_window(
     const Float _diff,
     const bool _is_greater ) const
 {
-    const auto name1 = _input.time_stamps_name();
+    const auto name1 = _output.time_stamps_name();
 
-    const auto name2 = _output.time_stamps_name();
+    const auto name2 = _input.time_stamps_name();
 
     const bool is_rowid =
         ( name1.find( helpers::Macros::rowid() ) != std::string::npos );
@@ -502,16 +502,21 @@ std::string SQLMaker::make_time_stamp_window(
         helpers::SQLGenerator::make_time_stamp_diff( _diff, is_rowid );
 
     const auto condition1 = make_time_stamp_diff(
-        helpers::SQLGenerator::make_relative_time( name1, "t2" ),
-        helpers::SQLGenerator::make_relative_time( name2 + diffstr1, "t1" ),
+        helpers::SQLGenerator::make_relative_time( name1, "t1" ),
+        helpers::SQLGenerator::make_relative_time( name2 + diffstr1, "t2" ),
         !_is_greater );
 
     const auto condition2 = make_time_stamp_diff(
-        helpers::SQLGenerator::make_relative_time( name1, "t2" ),
-        helpers::SQLGenerator::make_relative_time( name2 + diffstr2, "t1" ),
+        helpers::SQLGenerator::make_relative_time( name1, "t1" ),
+        helpers::SQLGenerator::make_relative_time( name2 + diffstr2, "t2" ),
         _is_greater );
 
-    return "( " + condition1 + " OR " + condition2 + " )";
+    if ( _is_greater )
+        {
+            return "( " + condition1 + " OR " + condition2 + " )";
+        }
+
+    return "( " + condition1 + " AND " + condition2 + " )";
 }
 
 // ----------------------------------------------------------------------------
