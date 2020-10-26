@@ -10,10 +10,19 @@ class WeakWriteLock
     // -------------------------------
 
    public:
+    /// WeakWriteLock without a timeout.
     WeakWriteLock( const std::shared_ptr<ReadWriteLock>& _lock )
         : lock_( _lock ), released_( true ), weak_released_( false )
     {
         lock_->weak_write_lock();
+    }
+    /// WeakWriteLock with timeout.
+    WeakWriteLock(
+        const std::shared_ptr<ReadWriteLock>& _lock,
+        const std::chrono::milliseconds _duration )
+        : lock_( _lock ), released_( true ), weak_released_( false )
+    {
+        lock_->weak_write_lock( _duration );
     }
 
     ~WeakWriteLock() { unlock(); };

@@ -44,6 +44,21 @@ class ReadWriteLock
         lock.unlock();
     }
 
+    /// Tries to acquire a read lock, but with a timeout.
+    void read_lock( const std::chrono::milliseconds _duration )
+    {
+        std::unique_lock<std::mutex> lock( mtx_ );
+        const auto acquired = reader_cond_.wait_for(
+            lock, _duration, [this] { return no_active_writers(); } );
+        if ( !acquired )
+            {
+                throw std::invalid_argument(
+                    "Could not acquire lock: Timeout." );
+            }
+        ++num_active_readers_;
+        lock.unlock();
+    }
+
     /// Releases a read lock.
     void read_unlock()
     {
@@ -87,6 +102,25 @@ class ReadWriteLock
         lock.unlock();
     }
 
+    /// Tries to acquire a weak write lock, but with a timeout.
+    void weak_write_lock( const std::chrono::milliseconds _duration )
+    {
+        ++num_waiting_weak_writers_;
+        std::unique_lock<std::mutex> lock( mtx_ );
+        const auto acquired =
+            weak_writer_cond_.wait_for( lock, _duration, [this] {
+                return no_active_writers() && no_active_weak_writers();
+            } );
+        if ( !acquired )
+            {
+                throw std::invalid_argument(
+                    "Could not acquire lock: Timeout." );
+            }
+        --num_waiting_weak_writers_;
+        active_weak_writer_exists_ = true;
+        lock.unlock();
+    }
+
     /// Releases a weak write lock.
     void weak_write_unlock()
     {
@@ -115,6 +149,25 @@ class ReadWriteLock
             return no_active_readers() && no_active_writers() &&
                    no_active_weak_writers();
         } );
+        --num_waiting_writers_;
+        active_writer_exists_ = true;
+        lock.unlock();
+    }
+
+    /// Tries to acquire a write lock, but with a timeout
+    void write_lock( const std::chrono::milliseconds _duration )
+    {
+        ++num_waiting_writers_;
+        std::unique_lock<std::mutex> lock( mtx_ );
+        const auto acquired = writer_cond_.wait_for( lock, _duration, [this] {
+            return no_active_readers() && no_active_writers() &&
+                   no_active_weak_writers();
+        } );
+        if ( !acquired )
+            {
+                throw std::invalid_argument(
+                    "Could not acquire lock: Timeout." );
+            }
         --num_waiting_writers_;
         active_writer_exists_ = true;
         lock.unlock();

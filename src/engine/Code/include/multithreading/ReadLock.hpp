@@ -10,10 +10,20 @@ class ReadLock
     // -------------------------------
 
    public:
+    /// ReadLock without a timeout.
     ReadLock( const std::shared_ptr<ReadWriteLock>& _lock )
         : lock_( _lock ), released_( false )
     {
         lock_->read_lock();
+    }
+
+    /// Read lock with timeout.
+    ReadLock(
+        const std::shared_ptr<ReadWriteLock>& _lock,
+        const std::chrono::milliseconds _duration )
+        : lock_( _lock ), released_( false )
+    {
+        lock_->read_lock( _duration );
     }
 
     ~ReadLock() { unlock(); };

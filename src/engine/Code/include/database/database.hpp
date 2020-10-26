@@ -5,6 +5,7 @@
 // Dependencies
 
 #include <array>
+#include <chrono>
 #include <cmath>
 #include <iostream>
 #include <memory>
@@ -14,8 +15,8 @@
 #include <mysql.h>
 
 #if ( defined( _WIN32 ) || defined( _WIN64 ) )
-#include <winsock2.h>
 #include <windows.h>
+#include <winsock2.h>
 #endif
 
 #include <sql.h>

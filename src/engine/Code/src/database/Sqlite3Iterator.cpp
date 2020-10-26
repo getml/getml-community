@@ -13,7 +13,8 @@ Sqlite3Iterator::Sqlite3Iterator(
     : colnum_( 0 ),
       db_( _db ),
       end_( false ),
-      read_lock_( multithreading::ReadLock( _read_write_lock ) ),
+      read_lock_( multithreading::ReadLock(
+          _read_write_lock, std::chrono::milliseconds( 1000 ) ) ),
       stmt_( std::unique_ptr<sqlite3_stmt, int ( * )( sqlite3_stmt* )>(
           nullptr, sqlite3_finalize ) ),
       time_formats_( _time_formats )

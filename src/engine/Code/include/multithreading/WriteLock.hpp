@@ -10,10 +10,20 @@ class WriteLock
     // -------------------------------
 
    public:
+    /// WriteLock without a timeout.
     WriteLock( const std::shared_ptr<ReadWriteLock>& _lock )
         : lock_( _lock ), released_( false )
     {
         lock_->write_lock();
+    }
+
+    /// WriteLock with timeout.
+    WriteLock(
+        const std::shared_ptr<ReadWriteLock>& _lock,
+        const std::chrono::milliseconds _duration )
+        : lock_( _lock ), released_( false )
+    {
+        lock_->write_lock( _duration );
     }
 
     ~WriteLock() { unlock(); };

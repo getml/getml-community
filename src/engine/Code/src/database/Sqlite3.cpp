@@ -47,7 +47,8 @@ Poco::JSON::Object Sqlite3::describe() const
 
 void Sqlite3::execute( const std::string& _sql )
 {
-    multithreading::WriteLock write_lock( read_write_lock_ );
+    multithreading::WriteLock write_lock(
+        read_write_lock_, std::chrono::milliseconds( 1000 ) );
 
     char* error_message = nullptr;
 
@@ -72,7 +73,8 @@ std::vector<std::string> Sqlite3::get_colnames(
 {
     // ------------------------------------------------------------------------
 
-    multithreading::ReadLock read_lock( read_write_lock_ );
+    multithreading::ReadLock read_lock(
+        read_write_lock_, std::chrono::milliseconds( 1000 ) );
 
     // ------------------------------------------------------------------------
     // Prepare statement.
@@ -130,7 +132,8 @@ std::vector<std::string> Sqlite3::get_colnames(
 std::vector<io::Datatype> Sqlite3::get_coltypes(
     const std::string& _table, const std::vector<std::string>& _colnames ) const
 {
-    multithreading::ReadLock read_lock( read_write_lock_ );
+    multithreading::ReadLock read_lock(
+        read_write_lock_, std::chrono::milliseconds( 1000 ) );
 
     std::vector<io::Datatype> datatypes;
 
@@ -431,7 +434,8 @@ Sqlite3::make_insert_statement(
 {
     // ------------------------------------------------------------------------
 
-    multithreading::ReadLock read_lock( read_write_lock_ );
+    multithreading::ReadLock read_lock(
+        read_write_lock_, std::chrono::milliseconds( 1000 ) );
 
     // ------------------------------------------------------------------------
     // Prepare statement as string
