@@ -552,7 +552,7 @@ std::string ConditionMaker::make_colname(
     const bool _is_ts ) const
 {
     const bool needs_imputation =
-        ( _alias[0] == 'f' ) ||
+        ( _alias.at( 0 ) == 'f' ) ||
         ( _raw_name.find( helpers::Macros::imputation_begin() ) ==
           std::string::npos );
 
