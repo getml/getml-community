@@ -23,13 +23,14 @@ ULong LicenseChecker::calc_mem_size(
 
 void LicenseChecker::check_enterprise() const
 {
-    if ( !is_enterprise() )
+    // TODO
+    /*if ( !is_enterprise() )
         {
             throw std::runtime_error(
                 "This operation is only allowed for premium users. Please "
                 "upgrade to the getML premium version to access this "
                 "function." );
-        }
+        }*/
 }
 
 // ------------------------------------------------------------------------
