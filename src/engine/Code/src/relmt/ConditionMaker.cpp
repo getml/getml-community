@@ -551,7 +551,17 @@ std::string ConditionMaker::make_colname(
     const Float _mean,
     const bool _is_ts ) const
 {
-    const auto impute = []( const std::string& name ) {
+    const bool needs_imputation =
+        ( _alias[0] == 'f' ) ||
+        ( _raw_name.find( helpers::Macros::imputation_begin() ) ==
+          std::string::npos );
+
+    const auto impute = [needs_imputation]( const std::string& name ) {
+        if ( !needs_imputation )
+            {
+                return "( " + name + " )";
+            }
+
         return "COALESCE( " + name + ", 0.0 )";
     };
 
@@ -660,8 +670,10 @@ std::string ConditionMaker::make_equation(
                 helpers::SQLGenerator::make_subfeature_identifier(
                     _feature_prefix, peripheral_used_, j );
 
-            equation << "f_" << number << ".\"feature_" << number << "\" * "
-                     << rescaled_weights.at( i ) << " + ";
+            const auto colname = make_colname(
+                "feature_" + number, "f_" + number, means.at( i - 1 ), false );
+
+            equation << colname << " * " << rescaled_weights.at( i ) << " + ";
         }
 
     equation << rescaled_weights.at( 0 );
