@@ -162,7 +162,13 @@ void DatabaseManager::get_colnames(
 {
     const auto conn_id = JSON::get_value<std::string>( _cmd, "conn_id_" );
 
-    const auto colnames = connector( conn_id )->get_colnames( _name );
+    const auto query = ( _name == "" )
+                           ? JSON::get_value<std::string>( _cmd, "query_" )
+                           : std::string( "" );
+
+    const auto colnames =
+        ( query == "" ) ? connector( conn_id )->get_colnames( _name )
+                        : connector( conn_id )->select( query )->colnames();
 
     std::string array = "[";
 
