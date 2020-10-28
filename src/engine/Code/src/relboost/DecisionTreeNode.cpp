@@ -572,16 +572,22 @@ void DecisionTreeNode::to_sql(
                 _feature_num,
                 sql_smaller,
                 _conditions );
-        }
-    else
-        {
-            const auto weight =
-                std::isnan( weight_ ) ? "NULL" : std::to_string( weight_ );
 
-            const auto condition = _sql + " THEN " + weight;
-
-            _conditions->push_back( condition );
+            return;
         }
+
+    const auto to_string = []( const Float val ) {
+        std::stringstream stream;
+        stream.precision( 16 );
+        stream << val;
+        return stream.str();
+    };
+
+    const auto weight = std::isnan( weight_ ) ? "NULL" : to_string( weight_ );
+
+    const auto condition = _sql + " THEN " + weight;
+
+    _conditions->push_back( condition );
 }
 
 // ----------------------------------------------------------------------------

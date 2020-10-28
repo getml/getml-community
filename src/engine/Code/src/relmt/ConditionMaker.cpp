@@ -548,13 +548,34 @@ std::string ConditionMaker::list_categories(
 std::string ConditionMaker::make_colname(
     const std::string& _raw_name,
     const std::string& _alias,
+    const Float _weight,
     const Float _mean,
     const bool _is_ts ) const
 {
+    // ------------------------------------------------------
+
+    const bool is_ts = _is_ts && ( _raw_name.find( helpers::Macros::rowid() ) ==
+                                   std::string::npos );
+
+    const Float mean = is_ts ? _mean / 86400.0 : _mean;
+
     const bool needs_imputation =
         ( _alias.at( 0 ) == 'f' ) ||
         ( _raw_name.find( helpers::Macros::imputation_begin() ) ==
           std::string::npos );
+
+    // ------------------------------------------------------
+
+    const auto to_string = []( const Float val ) {
+        std::stringstream stream;
+        stream.precision( 16 );
+        stream << val;
+        return stream.str();
+    };
+
+    const auto center = [mean, to_string]( const std::string& name ) {
+        return name + " - " + to_string( mean );
+    };
 
     const auto impute = [needs_imputation]( const std::string& name ) {
         if ( !needs_imputation )
@@ -565,22 +586,23 @@ std::string ConditionMaker::make_colname(
         return "COALESCE( " + name + ", 0.0 )";
     };
 
-    const auto center = [_mean]( const std::string& name ) {
-        return name + " - " + std::to_string( _mean );
-    };
+    // ------------------------------------------------------
 
-    if ( _is_ts )
+    if ( is_ts )
         {
             const auto centered = center(
-                helpers::SQLGenerator::make_epoch_time( _raw_name, _alias ) );
+                helpers::SQLGenerator::make_relative_time( _raw_name, _alias ) +
+                " - julianday( '1970-01-01' )" );
 
-            return impute( centered );
+            return impute( centered ) + " * " + to_string( _weight * 86400.0 );
         }
+
+    // ------------------------------------------------------
 
     const auto centered =
         center( helpers::SQLGenerator::edit_colname( _raw_name, _alias ) );
 
-    return impute( centered );
+    return impute( centered ) + " * " + to_string( _weight );
 }
 
 // ----------------------------------------------------------------------------
@@ -616,6 +638,8 @@ std::string ConditionMaker::make_equation(
 
     std::stringstream equation;
 
+    equation.precision( 16 );
+
     equation << std::scientific;
 
     size_t i = 1;
@@ -625,10 +649,11 @@ std::string ConditionMaker::make_equation(
             const auto colname = make_colname(
                 _output.discrete_name( j ),
                 "t1",
+                rescaled_weights.at( i ),
                 means.at( i - 1 ),
                 is_ts_->at( i - 1 ) );
 
-            equation << colname << " * " << rescaled_weights.at( i ) << " + ";
+            equation << colname << " + ";
         }
 
     for ( size_t j = 0; j < _output.num_numericals(); ++i, ++j )
@@ -636,10 +661,11 @@ std::string ConditionMaker::make_equation(
             const auto colname = make_colname(
                 _output.numerical_name( j ),
                 "t1",
+                rescaled_weights.at( i ),
                 means.at( i - 1 ),
                 is_ts_->at( i - 1 ) );
 
-            equation << colname << " * " << rescaled_weights.at( i ) << " + ";
+            equation << colname << " + ";
         }
 
     for ( size_t j = 0; j < _input.num_discretes(); ++i, ++j )
@@ -647,10 +673,11 @@ std::string ConditionMaker::make_equation(
             const auto colname = make_colname(
                 _input.discrete_name( j ),
                 "t2",
+                rescaled_weights.at( i ),
                 means.at( i - 1 ),
                 is_ts_->at( i - 1 ) );
 
-            equation << colname << " * " << rescaled_weights.at( i ) << " + ";
+            equation << colname << " + ";
         }
 
     for ( size_t j = 0; j < _input.num_numericals(); ++i, ++j )
@@ -658,10 +685,11 @@ std::string ConditionMaker::make_equation(
             const auto colname = make_colname(
                 _input.numerical_name( j ),
                 "t2",
+                rescaled_weights.at( i ),
                 means.at( i - 1 ),
                 is_ts_->at( i - 1 ) );
 
-            equation << colname << " * " << rescaled_weights.at( i ) << " + ";
+            equation << colname << " + ";
         }
 
     for ( size_t j = 0; i < rescaled_weights.size(); ++i, ++j )
@@ -671,9 +699,13 @@ std::string ConditionMaker::make_equation(
                     _feature_prefix, peripheral_used_, j );
 
             const auto colname = make_colname(
-                "feature_" + number, "f_" + number, means.at( i - 1 ), false );
+                "feature_" + number,
+                "f_" + number,
+                rescaled_weights.at( i ),
+                means.at( i - 1 ),
+                false );
 
-            equation << colname << " * " << rescaled_weights.at( i ) << " + ";
+            equation << colname << " + ";
         }
 
     equation << rescaled_weights.at( 0 );
