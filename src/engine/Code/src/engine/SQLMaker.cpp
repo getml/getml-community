@@ -109,6 +109,19 @@ std::string SQLMaker::make_select(
 
     const auto modified_colnames = helpers::Macros::modify_colnames( manual );
 
+    for ( size_t i = 0; i < _autofeatures.size(); ++i )
+        {
+            const bool no_comma =
+                ( i == _autofeatures.size() - 1 && manual.size() == 0 );
+
+            const auto end = ( no_comma ? "\n" : ",\n" );
+
+            sql += "       CAST( COALESCE( f_" +
+                   _autofeatures.at( i ).substr( 8 ) + ".\"" +
+                   _autofeatures.at( i ) + "\", 0.0 ) AS REAL ) AS \"" +
+                   _autofeatures.at( i ) + "\"" + end;
+        }
+
     for ( size_t i = 0; i < manual.size(); ++i )
         {
             const std::string begin = ( i == 0 ? "" : "       " );
@@ -125,24 +138,13 @@ std::string SQLMaker::make_select(
                     : "\"manual_feature_" +
                           std::to_string( i - _targets.size() + 1 );
 
-            const bool no_comma =
-                ( i == manual.size() - 1 && _autofeatures.size() == 0 );
+            const bool no_comma = ( i == manual.size() - 1 );
 
             const auto end = no_comma ? "\"\n" : "\",\n";
 
             sql += begin + "CAST( " + edited_colname + " AS " + data_type +
                    " ) AS " + target_or_feature + "__" +
                    modified_colnames.at( i ) + end;
-        }
-
-    for ( size_t i = 0; i < _autofeatures.size(); ++i )
-        {
-            const auto end = ( i == _autofeatures.size() - 1 ? "\n" : ",\n" );
-
-            sql += "       CAST( COALESCE( f_" +
-                   _autofeatures.at( i ).substr( 8 ) + ".\"" +
-                   _autofeatures.at( i ) + "\", 0.0 ) AS REAL ) AS \"" +
-                   _autofeatures.at( i ) + "\"" + end;
         }
 
     return sql;
