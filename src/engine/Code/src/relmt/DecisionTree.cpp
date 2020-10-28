@@ -125,28 +125,6 @@ void DecisionTree::column_importances(
 
     size_t i = 0;
 
-    for ( size_t j = 0; j < input_->discretes_.size(); ++i, ++j )
-        {
-            _importance_maker->add(
-                *input_,
-                *output_,
-                enums::DataUsed::discrete_input,
-                j,
-                0,
-                initial_loss_reduction_ * rescaled_weights.at( i ) );
-        }
-
-    for ( size_t j = 0; j < input_->numericals_.size(); ++i, ++j )
-        {
-            _importance_maker->add(
-                *input_,
-                *output_,
-                enums::DataUsed::numerical_input,
-                j,
-                0,
-                initial_loss_reduction_ * rescaled_weights.at( i ) );
-        }
-
     for ( size_t j = 0; j < output_->discretes_.size(); ++i, ++j )
         {
             _importance_maker->add(
@@ -164,6 +142,28 @@ void DecisionTree::column_importances(
                 *input_,
                 *output_,
                 enums::DataUsed::numerical_output,
+                j,
+                0,
+                initial_loss_reduction_ * rescaled_weights.at( i ) );
+        }
+
+    for ( size_t j = 0; j < input_->discretes_.size(); ++i, ++j )
+        {
+            _importance_maker->add(
+                *input_,
+                *output_,
+                enums::DataUsed::discrete_input,
+                j,
+                0,
+                initial_loss_reduction_ * rescaled_weights.at( i ) );
+        }
+
+    for ( size_t j = 0; j < input_->numericals_.size(); ++i, ++j )
+        {
+            _importance_maker->add(
+                *input_,
+                *output_,
+                enums::DataUsed::numerical_input,
                 j,
                 0,
                 initial_loss_reduction_ * rescaled_weights.at( i ) );
