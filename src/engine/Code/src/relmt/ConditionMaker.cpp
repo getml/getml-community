@@ -554,10 +554,14 @@ std::string ConditionMaker::make_colname(
 {
     // ------------------------------------------------------
 
-    const bool is_ts = _is_ts && ( _raw_name.find( helpers::Macros::rowid() ) ==
-                                   std::string::npos );
+    const bool is_rowid =
+        ( _raw_name.find( helpers::Macros::rowid() ) != std::string::npos );
 
-    const Float mean = is_ts ? _mean / 86400.0 : _mean;
+    const bool is_ts = _is_ts && !is_rowid;
+
+    // Sqlite3 rowid start with 1, so we have to add 1 to the mean.
+    const Float mean =
+        is_ts ? _mean / 86400.0 : ( is_rowid ? ( _mean + 1.0 ) : _mean );
 
     const bool needs_imputation =
         ( _alias.at( 0 ) == 'f' ) ||
@@ -801,28 +805,20 @@ std::vector<Float> ConditionMaker::rescale(
     const std::vector<Float>& _weights ) const
 {
     assert_true(
-        input_scaler().means().size() ==
-        input_scaler().inverse_stddev().size() );
+        _weights.size() == input_scaler().inverse_stddev().size() +
+                               output_scaler().inverse_stddev().size() + 1 );
 
-    assert_true(
-        output_scaler().means().size() ==
-        output_scaler().inverse_stddev().size() );
-
-    assert_true(
-        _weights.size() ==
-        input_scaler().means().size() + output_scaler().means().size() + 1 );
-
-    std::vector<Float> rescaled_weights = _weights;
+    auto rescaled_weights = _weights;
 
     size_t i = 1;
 
-    for ( size_t j = 0; j < output_scaler().means().size(); ++i, ++j )
+    for ( size_t j = 0; j < output_scaler().inverse_stddev().size(); ++i, ++j )
         {
             rescaled_weights.at( i ) *=
                 output_scaler().inverse_stddev().at( j );
         }
 
-    for ( size_t j = 0; j < input_scaler().means().size(); ++i, ++j )
+    for ( size_t j = 0; j < input_scaler().inverse_stddev().size(); ++i, ++j )
         {
             rescaled_weights.at( i ) *= input_scaler().inverse_stddev().at( j );
         }

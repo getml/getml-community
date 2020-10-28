@@ -49,7 +49,7 @@ void Threadutils::fit_as_feature_learner(
 
     const auto num_features = _ensemble->hyperparameters().num_features_;
 
-    utils::Logger::log( "RelMTModel: Training features...", _logger, _comm );
+    utils::Logger::log( "RelMT: Training features...", _logger, _comm );
 
     for ( int i = 0; i < num_features; ++i )
         {
@@ -144,7 +144,7 @@ void Threadutils::transform_as_feature_learner(
 
     assert_true( _features->size() == _index.size() );
 
-    utils::Logger::log( "RelMTModel: Building features...", _logger, _comm );
+    utils::Logger::log( "RelMT: Building features...", _logger, _comm );
 
     for ( size_t i = 0; i < _index.size(); ++i )
         {

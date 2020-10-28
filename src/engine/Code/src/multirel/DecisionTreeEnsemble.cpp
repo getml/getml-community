@@ -507,12 +507,12 @@ void DecisionTreeEnsemble::fit(
     if ( !is_subensemble() )
         {
             utils::Logger::log(
-                "MultirelModel: Training features...", _logger, _comm );
+                "Multirel: Training features...", _logger, _comm );
         }
     else
         {
             utils::Logger::log(
-                "MultirelModel: Training subfeatures...", _logger, _comm );
+                "Multirel: Training subfeatures...", _logger, _comm );
         }
 
     // ----------------------------------------------------------------
@@ -1140,8 +1140,7 @@ containers::Predictions DecisionTreeEnsemble::transform(
     // ----------------------------------------------------------------
     // Generate the actual predictions.
 
-    utils::Logger::log(
-        "MultirelModel: Building subfeatures...", _logger, _comm );
+    utils::Logger::log( "Multirel: Building subfeatures...", _logger, _comm );
 
     containers::Predictions predictions;
 

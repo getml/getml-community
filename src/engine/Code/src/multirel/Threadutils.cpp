@@ -169,7 +169,7 @@ void Threadutils::transform_ensemble(
             // ----------------------------------------------------------------
 
             utils::Logger::log(
-                "MultirelModel: Building features...", _logger, _comm );
+                "Multirel: Building features...", _logger, _comm );
 
             // ----------------------------------------------------------------
             // Build the actual features.
