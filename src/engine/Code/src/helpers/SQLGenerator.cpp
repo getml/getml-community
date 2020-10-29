@@ -37,6 +37,9 @@ std::string SQLGenerator::edit_colname(
         StringReplacer::replace_all( new_name, Macros::rowid(), "rowid" );
 
     new_name = StringReplacer::replace_all(
+        new_name, Macros::open_bracket(), "( " + Macros::prefix() );
+
+    new_name = StringReplacer::replace_all(
         new_name, Macros::close_bracket(), Macros::postfix() + " )" );
 
     new_name = StringReplacer::replace_all(
@@ -80,19 +83,19 @@ std::string SQLGenerator::edit_colname(
         new_name, Macros::length(), Macros::postfix() + ", " );
 
     new_name = StringReplacer::replace_all(
-        new_name, Macros::hour(), "hour( " + Macros::prefix() );
+        new_name, Macros::hour(), "strftime('%H', " + Macros::prefix() );
 
     new_name = StringReplacer::replace_all(
-        new_name, Macros::minute(), "minute( " + Macros::prefix() );
+        new_name, Macros::minute(), "strftime('%M', " + Macros::prefix() );
 
     new_name = StringReplacer::replace_all(
-        new_name, Macros::month(), "month( " + Macros::prefix() );
+        new_name, Macros::month(), "strftime('%m', " + Macros::prefix() );
 
     new_name = StringReplacer::replace_all(
-        new_name, Macros::weekday(), "weekday( " + Macros::prefix() );
+        new_name, Macros::weekday(), "strftime('%w', " + Macros::prefix() );
 
     new_name = StringReplacer::replace_all(
-        new_name, Macros::year(), "year( " + Macros::prefix() );
+        new_name, Macros::year(), "strftime('%Y', " + Macros::prefix() );
 
     // --------------------------------------------------------------
 

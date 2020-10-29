@@ -18,14 +18,7 @@ struct TimeStampMaker
 
     /// Generates the columns name for the time stamp.
     static std::string make_ts_name(
-        const std::string &_ts_used, const Float _diff )
-    {
-        const bool is_rowid =
-            ( _ts_used.find( helpers::Macros::rowid() ) != std::string::npos );
-
-        return helpers::Macros::generated_ts() + _ts_used +
-               helpers::SQLGenerator::make_time_stamp_diff( _diff, is_rowid );
-    }
+        const std::string &_ts_used, const Float _diff );
 };
 
 // ----------------------------------------------------------------------------

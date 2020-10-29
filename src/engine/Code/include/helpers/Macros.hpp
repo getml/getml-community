@@ -161,6 +161,8 @@ class Macros
 
     static std::string one_to_one() { return "$GETML_JOIN_PARAM_ONE_TO_ONE"; }
 
+    static std::string open_bracket() { return "$GETML_OPEN_BRACKET"; }
+
     static std::string no_join_key() { return "$GETML_NO_JOIN_KEY"; }
 
     static std::string peripheral() { return "$GETML_PERIPHERAL"; }
