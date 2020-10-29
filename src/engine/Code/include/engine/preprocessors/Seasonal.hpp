@@ -9,6 +9,10 @@ namespace preprocessors
 
 class Seasonal : public Preprocessor
 {
+   private:
+    static constexpr bool ADD_ZERO = true;
+    static constexpr bool DONT_ADD_ZERO = false;
+
    public:
     Seasonal() {}
 
@@ -124,11 +128,13 @@ class Seasonal : public Preprocessor
     // Transforms a float column to a categorical column.
     containers::Column<Int> to_int(
         const containers::Column<Float>& _col,
+        const bool _add_zero,
         containers::Encoding* _categories ) const;
 
     /// Transforms a float column to a categorical column.
     containers::Column<Int> to_int(
         const containers::Encoding& _categories,
+        const bool _add_zero,
         const containers::Column<Float>& _col ) const;
 
     /// Transforms a single data frame.
@@ -144,6 +150,7 @@ class Seasonal : public Preprocessor
     template <class Operator>
     containers::Column<Int> to_categorical(
         const containers::Column<Float>& _col,
+        const bool _add_zero,
         const Operator& _op,
         containers::Encoding* _categories ) const
     {
@@ -151,7 +158,7 @@ class Seasonal : public Preprocessor
 
         std::transform( _col.begin(), _col.end(), result.begin(), _op );
 
-        return to_int( result, _categories );
+        return to_int( result, _add_zero, _categories );
     }
 
     /// Undertakes a transformation based on the template class
@@ -160,13 +167,14 @@ class Seasonal : public Preprocessor
     containers::Column<Int> to_categorical(
         const containers::Encoding& _categories,
         const containers::Column<Float>& _col,
+        const bool _add_zero,
         const Operator& _op ) const
     {
         auto result = containers::Column<Float>( _col.nrows() );
 
         std::transform( _col.begin(), _col.end(), result.begin(), _op );
 
-        return to_int( _categories, result );
+        return to_int( _categories, _add_zero, result );
     }
 
     /// Undertakes a transformation based on the template class

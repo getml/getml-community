@@ -10,7 +10,8 @@ std::optional<containers::Column<Int>> Seasonal::extract_hour(
     const containers::Column<Float>& _col,
     containers::Encoding* _categories ) const
 {
-    auto result = to_categorical( _col, utils::Time::hour, _categories );
+    auto result =
+        to_categorical( _col, ADD_ZERO, utils::Time::hour, _categories );
 
     result.set_name(
         helpers::Macros::hour() + _col.name() +
@@ -31,7 +32,8 @@ containers::Column<Int> Seasonal::extract_hour(
     const containers::Encoding& _categories,
     const containers::Column<Float>& _col ) const
 {
-    auto result = to_categorical( _categories, _col, utils::Time::hour );
+    auto result =
+        to_categorical( _categories, _col, ADD_ZERO, utils::Time::hour );
 
     result.set_name(
         helpers::Macros::hour() + _col.name() +
@@ -47,7 +49,8 @@ std::optional<containers::Column<Int>> Seasonal::extract_minute(
     const containers::Column<Float>& _col,
     containers::Encoding* _categories ) const
 {
-    auto result = to_categorical( _col, utils::Time::minute, _categories );
+    auto result =
+        to_categorical( _col, ADD_ZERO, utils::Time::minute, _categories );
 
     result.set_name(
         helpers::Macros::minute() + _col.name() +
@@ -68,7 +71,8 @@ containers::Column<Int> Seasonal::extract_minute(
     const containers::Encoding& _categories,
     const containers::Column<Float>& _col ) const
 {
-    auto result = to_categorical( _categories, _col, utils::Time::hour );
+    auto result =
+        to_categorical( _categories, _col, ADD_ZERO, utils::Time::minute );
 
     result.set_name(
         helpers::Macros::minute() + _col.name() +
@@ -84,7 +88,8 @@ std::optional<containers::Column<Int>> Seasonal::extract_month(
     const containers::Column<Float>& _col,
     containers::Encoding* _categories ) const
 {
-    auto result = to_categorical( _col, utils::Time::month, _categories );
+    auto result =
+        to_categorical( _col, ADD_ZERO, utils::Time::month, _categories );
 
     result.set_name(
         helpers::Macros::month() + _col.name() +
@@ -105,7 +110,8 @@ containers::Column<Int> Seasonal::extract_month(
     const containers::Encoding& _categories,
     const containers::Column<Float>& _col ) const
 {
-    auto result = to_categorical( _categories, _col, utils::Time::month );
+    auto result =
+        to_categorical( _categories, _col, ADD_ZERO, utils::Time::month );
 
     result.set_name(
         helpers::Macros::month() + _col.name() +
@@ -121,7 +127,8 @@ std::optional<containers::Column<Int>> Seasonal::extract_weekday(
     const containers::Column<Float>& _col,
     containers::Encoding* _categories ) const
 {
-    auto result = to_categorical( _col, utils::Time::weekday, _categories );
+    auto result = to_categorical(
+        _col, DONT_ADD_ZERO, utils::Time::weekday, _categories );
 
     result.set_name(
         helpers::Macros::weekday() + _col.name() +
@@ -142,7 +149,8 @@ containers::Column<Int> Seasonal::extract_weekday(
     const containers::Encoding& _categories,
     const containers::Column<Float>& _col ) const
 {
-    auto result = to_categorical( _categories, _col, utils::Time::weekday );
+    auto result = to_categorical(
+        _categories, _col, DONT_ADD_ZERO, utils::Time::weekday );
 
     result.set_name(
         helpers::Macros::weekday() + _col.name() +
@@ -366,10 +374,16 @@ Seasonal Seasonal::from_json_obj( const Poco::JSON::Object& _obj ) const
 
 containers::Column<Int> Seasonal::to_int(
     const containers::Column<Float>& _col,
+    const bool _add_zero,
     containers::Encoding* _categories ) const
 {
-    const auto to_str = [_categories]( const Float val ) {
-        return ( *_categories )[io::Parser::to_string( val )];
+    const auto to_str = [_categories, _add_zero]( const Float val ) {
+        auto str = io::Parser::to_string( val );
+        if ( _add_zero && str.size() == 1 )
+            {
+                str = '0' + str;
+            }
+        return ( *_categories )[str];
     };
 
     auto result = containers::Column<Int>( _col.nrows() );
@@ -383,10 +397,16 @@ containers::Column<Int> Seasonal::to_int(
 
 containers::Column<Int> Seasonal::to_int(
     const containers::Encoding& _categories,
+    const bool _add_zero,
     const containers::Column<Float>& _col ) const
 {
-    const auto to_str = [&_categories]( const Float val ) {
-        return _categories[io::Parser::to_string( val )];
+    const auto to_str = [&_categories, _add_zero]( const Float val ) {
+        auto str = io::Parser::to_string( val );
+        if ( _add_zero && str.size() == 1 )
+            {
+                str = '0' + str;
+            }
+        return _categories[str];
     };
 
     auto result = containers::Column<Int>( _col.nrows() );
