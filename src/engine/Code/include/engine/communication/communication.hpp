@@ -4,6 +4,10 @@
 // ----------------------------------------------------
 // Dependencies
 
+#if ( defined( _WIN32 ) || defined( _WIN64 ) )
+#define _WINSOCKAPI_    // stops windows.h including winsock.h
+#endif
+
 #include <array>
 #include <memory>
 
